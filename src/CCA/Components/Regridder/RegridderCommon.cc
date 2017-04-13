@@ -39,7 +39,6 @@
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Util/DebugStream.h>
-#include <Core/Util/Time.h>
 
 //-- system includes --//
 #include <iostream>

@@ -24,8 +24,9 @@
 
 #if !defined(HAVE_DRAND48)
 #include <Core/Math/Rand48.h>
-#include <Core/Util/Time.h>
+
 #include <cstdlib>
+
 static bool initialized = false;
 
 static void drand_initialize()

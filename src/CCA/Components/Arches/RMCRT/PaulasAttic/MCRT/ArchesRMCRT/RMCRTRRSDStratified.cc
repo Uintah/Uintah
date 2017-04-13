@@ -47,7 +47,7 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <Core/Grid/Variables/CellIterator.h>
-#include <Core/Util/Time.h>
+#include <Core/Util/Timers/Timers.hpp>
 #include <cmath>
 #include <iostream>
 #include <ctime>
@@ -1213,7 +1213,9 @@ RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
   // tracking time for surface elements and volume elements use Time.h
   double surface_start, volume_start, surface_time, volume_time;
   
-  surface_start = Uintah::Time::currentSeconds();  
+  Timers::Simple timer;
+  time.start();
+
   if ( rayNoSurface != 0 ) { // have rays emitting from surface elements
 
     // stratificaty sampling
@@ -1587,7 +1589,7 @@ RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
     // ----------------- end of right surface -----------------------
     //  cout << "done with right " << endl;
 
-    surface_time = Uintah::Time::currentSeconds() - surface_start;
+    surface_time = timer().seconds();
     
   // surface cell
  
@@ -1611,7 +1613,8 @@ RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
    
     
  
-  volume_start = Uintah::Time::currentSeconds();
+  Timers::Simple timer;
+  time.start();
   
   //  cout << " i am here after one iggNo" << endl;
   if ( rayNoVol != 0 ) { // emitting ray from volume
@@ -1870,7 +1873,7 @@ RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
 
   // Vol cell
 
-    volume_time= Uintah::Time::currentSeconds() - volume_start;
+    volume_time = timer.seconds();
     
   for (int i = 0 ; i < VolElementNo; i ++ ) {
     global_qdiv[i] = 4 * pi * netInten_Vol[i];

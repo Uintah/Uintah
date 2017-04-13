@@ -21,8 +21,8 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Util/Time.h>
 #include <Core/Containers/StaticArray.h>
+#include <Core/Util/Timers/Timers.hpp>
 
 #include <iostream>
 #include <sstream>
@@ -269,14 +269,14 @@ void CQMOM::solveCQMOMInversion( const ProcessorGroup* pc,
                                  DataWarehouse* new_dw)
 {
   //time how long the CQMOM solve takes in total
-  double start_SolveTime = Time::currentSeconds();
+  Timers::Simple timer;
+  timer.start();
   
   for (int p = 0; p< patches->size(); ++p) {
     const Patch* patch = patches->get(p);
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
    
-    
     // get moments from data warehouse and put into CCVariable
     StaticArray <constCCVariable<double> > momentCCVars ( nMoments );
     int i = 0;
@@ -376,8 +376,8 @@ void CQMOM::solveCQMOMInversion( const ProcessorGroup* pc,
       delete cqmomWeights[i];
     }
   } //end patch loop
-  double total_SolveTime = (Time::currentSeconds() - start_SolveTime);
-  proc0cout << "CQMOM Solve time: " << total_SolveTime << endl;
+
+  proc0cout << "CQMOM Solve time: " << timer().seconds() << endl;
 }
 
 
@@ -599,7 +599,8 @@ void CQMOM::solveCQMOMInversion321( const ProcessorGroup* pc,
                                 DataWarehouse* new_dw)
 {
   //time how long the CQMOM solve takes in total
-  double start_SolveTime = Time::currentSeconds();
+  Timers::Simple timer;
+  timer.start();
   
   for (int p = 0; p< patches->size(); ++p) {
     const Patch* patch = patches->get(p);
@@ -706,8 +707,8 @@ void CQMOM::solveCQMOMInversion321( const ProcessorGroup* pc,
       delete cqmomWeights[i];
     }
   } //end patch loop
-  double total_SolveTime = (Time::currentSeconds() - start_SolveTime);
-  proc0cout << "CQMOM Solve time: " << total_SolveTime << endl;
+  
+  proc0cout << "CQMOM Solve time: " << timer().seconds() << endl;
 }
 
 
@@ -752,7 +753,8 @@ void CQMOM::solveCQMOMInversion312( const ProcessorGroup* pc,
                                    DataWarehouse* new_dw)
 {
   //time how long the CQMOM solve takes in total
-  double start_SolveTime = Time::currentSeconds();
+  Timers::Simple timer;
+  timer.start();
   
   //change Ni and maxInd to match new varaible order
   vector<int> maxInd_tmp (3);
@@ -874,8 +876,8 @@ void CQMOM::solveCQMOMInversion312( const ProcessorGroup* pc,
       delete cqmomWeights[i];
     }
   } //end patch loop
-  double total_SolveTime = (Time::currentSeconds() - start_SolveTime);
-  proc0cout << "CQMOM Solve time: " << total_SolveTime << endl;
+
+  proc0cout << "CQMOM Solve time: " << timer().seconds() << endl;
 }
 
 // **********************************************
@@ -919,7 +921,8 @@ void CQMOM::solveCQMOMInversion213( const ProcessorGroup* pc,
                                    DataWarehouse* new_dw)
 {
   //time how long the CQMOM solve takes in total
-  double start_SolveTime = Time::currentSeconds();
+  Timers::Simple timer;
+  timer.start();
   
   for (int p = 0; p< patches->size(); ++p) {
     const Patch* patch = patches->get(p);
@@ -1042,6 +1045,6 @@ void CQMOM::solveCQMOMInversion213( const ProcessorGroup* pc,
       delete cqmomWeights[i];
     }
   } //end patch loop
-  double total_SolveTime = (Time::currentSeconds() - start_SolveTime);
-  proc0cout << "CQMOM Solve time: " << total_SolveTime << endl;
+
+  proc0cout << "CQMOM Solve time: " << timer().seconds() << endl;
 }

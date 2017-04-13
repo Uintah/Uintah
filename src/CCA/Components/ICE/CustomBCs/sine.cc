@@ -198,7 +198,7 @@ int  set_Sine_Velocity_BC(const Patch* patch,
     double A       = gv->A;
     double omega   = gv->omega; 
     Vector vel_ref = gv->vel_ref;           
-    double t       = sharedState->getElapsedTime(); 
+    double t       = sharedState->getElapsedSimTime(); 
     t += lv->delT;
     double change  = A * sin(omega*t);
     
@@ -276,7 +276,7 @@ int set_Sine_press_BC(const Patch* patch,
   double A     =  gv->A;
   double omega =  gv->omega;   
   double p_ref =  gv->p_ref;                               
-  double t     =  sharedState->getElapsedTime();               
+  double t     =  sharedState->getElapsedSimTime();               
   t += lv->delT;  // delT is either 0 or delT 
   double change = A * sin(omega*t);                               
 

@@ -29,6 +29,10 @@
 // Date:   Mar. 2008
 //
 
+#include <Core/Parallel/UintahMPI.h>
+#include <Core/Util/FileUtils.h>     // for testFilesystem()
+#include <Core/Util/Timers/Timers.hpp>
+
 #include <unistd.h> // for gethostname()
 
 #include <algorithm>
@@ -36,10 +40,6 @@
 #include <iostream>
 #include <string>
 #include <sstream>
-
-#include <Core/Parallel/UintahMPI.h>
-#include <Core/Util/Time.h>          // for currentSeconds()
-#include <Core/Util/FileUtils.h>     // for testFilesystem()
 
 using std::stringstream;
 using std::cout;
@@ -224,17 +224,12 @@ testme(int (*testfunc)(void),const char* name)
     cout.flush();
   }
 
-  double startTime = -1, endTime = -1;
-  if( rank == 0) {
-    startTime = Uintah::Time::currentSeconds();
-  }
+  Timers::Simple timer;
 
+  timer.start();  
   int pass = testfunc();
-
-  if( rank == 0) {
-    endTime   = Uintah::Time::currentSeconds();  
-  }
-
+  timer.stop();
+  
   int all_pass = false;
   
   Uintah::MPI::Allreduce( &pass, &all_pass, 1, MPI_INT, MPI_LAND, MPI_COMM_WORLD);
@@ -247,7 +242,7 @@ testme(int (*testfunc)(void),const char* name)
     else {
       cout << "Failed" ;
     }
-    cout << " (Test took " << endTime - startTime << " seconds.)\n";
+    cout << " (Test took " << timer().seconds() << " seconds.)\n";
   }
   
   if( !all_pass ) {
@@ -396,9 +391,8 @@ fileSystem_test()
       bool done = false;
       int  totalCompleted = 0;
 
-      double startTime = -1, curTime = -1;
-
-      startTime = Uintah::Time::currentSeconds();
+      Timers::Simple timer;
+      timer.start();
 
       int          totalPassed = (int)pass, totalFailed = (int)(!pass);
       int          numCompleted = -1;
@@ -438,17 +432,21 @@ fileSystem_test()
         }
         else {
           const double secsToWait = 30.0;
-          curTime = Uintah::Time::currentSeconds();
-          
-          if( curTime > (startTime + (secsToWait*generation)) ) { // Give it 'secsToWait' seconds, then print some info
-            if( rank == 0 ) {
-              cout << "\nWarning: Some processors have not responded after " << generation * secsToWait << " seconds.\n"
-                   << "           Continuing to wait...  Number of processors that have responded: " 
+	    
+	  // Give it 'secsToWait' seconds, then print some info          
+	  if( timer().seconds() > secsToWait*generation ) {
+	    if( rank == 0 ) {
+              cout << "\nWarning: Some processors have not responded after "
+		   << generation * secsToWait << " seconds.\n"
+                   << "           Continuing to wait...  "
+		   << "Number of processors that have responded: " 
                    << totalPassed + totalFailed << " of " << procs-1 << ".\n";
               generation++;
             }
-          }
-          if( curTime > (startTime + totalSecsToWait) ) { // Give it 'totalSecsToWait' seconds to finish completely
+	  }
+	  
+	  // Give it 'totalSecsToWait' seconds to finish completely	
+	  if( timer().seconds() > totalSecsToWait ) {
             done = true;
           }
         }
@@ -530,9 +528,8 @@ point2pointasync_test()
   bool done = false;
   int  totalCompleted = 0;
 
-  double startTime = -1, curTime = -1, lastTime = -1 ;
-  
-  lastTime = startTime = Uintah::Time::currentSeconds();
+  Timers::Simple timer;
+  timer.start();
   
   while( !done ) {
 
@@ -543,18 +540,20 @@ point2pointasync_test()
 
     //reset timer if progress is made
     if(numCompleted>0)
-      lastTime=Uintah::Time::currentSeconds();
+      timer.reset( true );
     
-    curTime = Uintah::Time::currentSeconds();
-
     double secsToWait = 100.0;
-    if( curTime - lastTime > secsToWait ) { // Give it 'secsToWait' seconds to finish
-      cout << "Proc " << rank << ": No progress has been made in the last " << curTime - lastTime << " seconds.\n";
+    
+    // Give it 'secsToWait' seconds to finish
+    if( timer().seconds() > secsToWait ) {
+      cout << "Proc " << rank << ": No progress has been made in the last "
+	   << timer().seconds() << " seconds.\n";
  
       // Find out (and display) which processors did not successfully respond...
       for( int pos = 0; pos < procs; pos++ ) {
         if( completed[ pos ] == false ) {
-          cout << "Proc " << rank << ": failed to hear from processor " << pos << ".\n";
+          cout << "Proc " << rank << ": failed to hear from processor "
+	       << pos << ".\n";
           pass = false;
         }
       }

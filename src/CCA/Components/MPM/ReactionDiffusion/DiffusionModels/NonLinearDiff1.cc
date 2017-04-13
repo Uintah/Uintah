@@ -144,7 +144,8 @@ void NonLinearDiff1::computeFlux(
   std::vector<IntVector> ni(interpolator->size());
   std::vector<double> S(interpolator->size());
 
-  double current_time1 = d_sharedState->getElapsedTime();
+  // Get the current simulation time
+  double current_time1 = d_sharedState->getElapsedSimTime();
 
   int dwi = matl->getDWIndex();
   Vector dx = patch->dCell();

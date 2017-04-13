@@ -225,7 +225,8 @@ ErosionModel::updateStress_Erosion( ParticleSubset * pset,
   new_dw->allocateAndPut( pTimeOfLoc_new, pTimeOfLocLabel_preReloc, pset);
   pTimeOfLoc_new.copyData( pTimeOfLoc );
 
-  double time = d_sharedState->getElapsedTime();
+  // Get the current simulation time
+  double time = d_sharedState->getElapsedSimTime();
                          
   //__________________________________
   // If the particle has failed, apply various erosion algorithms

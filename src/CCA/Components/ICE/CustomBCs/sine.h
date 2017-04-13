@@ -139,7 +139,7 @@ namespace Uintah {
   double A     = gv->A;
   double omega = gv->omega;
   Vector vel_ref=gv->vel_ref;                                
-  double t     = sharedState->getElapsedTime();                         
+  double t     = sharedState->getElapsedSimTime();                         
   t += lv->delT;     
   double change =   A * sin(omega*t);
                                              

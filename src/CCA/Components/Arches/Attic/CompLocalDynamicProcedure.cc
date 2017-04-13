@@ -51,7 +51,7 @@
 #include <Core/Grid/Variables/Array3.h>
 #include <Core/Parallel/ProcessorGroup.h>
 
-#include <Core/Util/Time.h>
+#include <Core/Util/Timers/Timers.hpp>
 #include <Core/Math/MinMax.h>
 #include <Core/Math/MiscMath.h>
 
@@ -1913,8 +1913,9 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
 
     IntVector indexLow = patch->getFortranCellLowIndex();
     IntVector indexHigh = patch->getFortranCellHighIndex();
-    double start_turbTime = Time::currentSeconds();
-
+    Timers::Simple timer;
+    timer.start();
+    
 #ifdef PetscFilter
     d_filter->applyFilter<Array3<double> >(pc, patch, rhoU, filterRhoU);
     d_filter->applyFilter<Array3<double> >(pc, patch, rhoV, filterRhoV);
@@ -1959,7 +1960,7 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
 
     if (pc->myrank() == 0)
       cerr << "Time for the Filter operation in Turbulence Model: " << 
-        Time::currentSeconds()-start_turbTime << " seconds\n";
+        timer().seconds() << " seconds\n";
 #endif
 #ifdef use_fortran
     fort_comp_dynamic_2loop(cellinfo->sew,cellinfo->sns,cellinfo->stb,

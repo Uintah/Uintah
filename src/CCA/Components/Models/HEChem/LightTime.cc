@@ -276,7 +276,7 @@ void LightTime::computeModelSources(const ProcessorGroup*,
     new_dw->get(vol_frac_prd,  Ilb->vol_frac_CCLabel,  m1,patch,gn, 0);
 
     const Level* level = patch->getLevel();
-    double time = d_sharedState->getElapsedTime();
+    double time = d_sharedState->getElapsedSimTime();
     double delta_L = 1.5*pow(cell_vol,1./3.)/d_D;
 //    double delta_L = 1.5*dx.x()/d_D;
     double A=d_direction.x();

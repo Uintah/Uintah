@@ -41,8 +41,8 @@
 #include <Core/Containers/Array2.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Math/MinMax.h>
-#include <Core/Util/Time.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Util/Timers/Timers.hpp>
 #include <iomanip>
 
 using namespace std;
@@ -103,7 +103,9 @@ public:
     DataWarehouse* A_dw = new_dw->getOtherDataWarehouse(which_A_dw);
     DataWarehouse* b_dw = new_dw->getOtherDataWarehouse(which_b_dw);
     
-    double tstart = Time::currentSeconds();
+    Timers::Simple timer;
+    timer.start();
+
     long64 flops = 0, memrefs = 0;
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
@@ -236,7 +238,7 @@ public:
         X[idx] = x[row];
       }
     }
-    double dt=Time::currentSeconds()-tstart;
+    double dt = timer().seconds();    
     double mflops = (double(flops)*1.e-6)/dt;
     double memrate = (double(memrefs)*1.e-9)/dt;
     if(pg->myrank() == 0){

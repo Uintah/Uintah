@@ -49,9 +49,9 @@
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/OS/ProcessInfo.h>
-#include <Core/Util/Time.h>
 #include <Core/Util/DOUT.hpp>
 #include <Core/Util/FancyAssert.h>
+#include <Core/Util/Timers/Timers.hpp>
 
 #include <cerrno>
 #include <cstdlib>
@@ -471,7 +471,9 @@ SchedulerCommon::printTrackedVars( DetailedTask * dtask, int when )
     return;
   }
 
-  if (m_shared_state && (m_tracking_start_time > m_shared_state->getElapsedTime() || m_tracking_end_time < m_shared_state->getElapsedTime())) {
+  if (m_shared_state &&
+      (m_tracking_start_time > m_shared_state->getElapsedSimTime() ||
+       m_tracking_end_time   < m_shared_state->getElapsedSimTime())) {
     return;
   }
 
@@ -1207,7 +1209,9 @@ SchedulerCommon::finalizeTimestep()
 void
 SchedulerCommon::scheduleAndDoDataCopy( const GridP & grid, SimulationInterface * sim )
 {
-  double start = Time::currentSeconds();
+  Timers::Simple timer;
+  timer.start();
+
   // TODO - use the current initReqs and push them back, instead of doing this...
   // clear the old list of vars and matls
   for (unsigned i = 0; i < m_label_matls.size(); i++) {
@@ -1475,14 +1479,15 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP & grid, SimulationInterface 
 
   this->compile();
 
-  m_shared_state->d_runTimeStats[SimulationState::RegriddingCompilationTime] += Time::currentSeconds() - start;
+  m_shared_state->d_runTimeStats[SimulationState::RegriddingCompilationTime] +=
+    timer().seconds();
 
   // save these and restore them, since the next execute will append the scheduler's, and we don't want to.
   double executeTime    = m_shared_state->d_runTimeStats[SimulationState::TaskExecTime];
   double globalCommTime = m_shared_state->d_runTimeStats[SimulationState::TaskGlobalCommTime];
   double localCommTime  = m_shared_state->d_runTimeStats[SimulationState::TaskLocalCommTime];
 
-  start = Time::currentSeconds();
+  timer.reset( true );
   this->execute();
 
 #if !defined( DISABLE_SCI_MALLOC )
@@ -1525,7 +1530,8 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP & grid, SimulationInterface 
 
   newDataWarehouse->refinalize();
 
-  m_shared_state->d_runTimeStats[SimulationState::RegriddingCopyDataTime] += Time::currentSeconds() - start;
+  m_shared_state->d_runTimeStats[SimulationState::RegriddingCopyDataTime] +=
+    timer().seconds();
   m_shared_state->d_runTimeStats[SimulationState::TaskExecTime] = executeTime;
   m_shared_state->d_runTimeStats[SimulationState::TaskGlobalCommTime] = globalCommTime;
   m_shared_state->d_runTimeStats[SimulationState::TaskLocalCommTime] = localCommTime;

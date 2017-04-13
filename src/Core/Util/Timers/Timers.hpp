@@ -113,7 +113,7 @@ struct Simple
     return *this; };
 
   // reset the timer
-  void reset( bool running = true )
+  void reset( bool running )
   {
     m_start = m_finish = clock_type::now();
     m_offset = 0;

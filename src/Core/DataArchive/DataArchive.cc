@@ -45,9 +45,8 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Util/Assert.h>
 #include <Core/Util/DebugStream.h>
-#include <Core/Util/Time.h>
-#include <Core/Util/XMLUtils.h>
 #include <Core/Util/StringUtil.h>
+#include <Core/Util/XMLUtils.h>
 
 #include <libxml/xmlreader.h>
 
@@ -227,7 +226,9 @@ void
 DataArchive::queryTimesteps( vector<int>    & index,
                              vector<double> & times )
 {
-  double start = Time::currentSeconds();
+  Timers::Simple timer;
+  timer.start();
+
   if( d_timeData.size() == 0 ){
     d_lock.lock();
 
@@ -296,9 +297,12 @@ DataArchive::queryTimesteps( vector<int>    & index,
     }
     d_lock.unlock();
   }
+
   index = d_ts_indices;
   times = d_ts_times;
-  dbg << "DataArchive::queryTimesteps completed in " << Time::currentSeconds()-start << " seconds\n";
+
+  dbg << "DataArchive::queryTimesteps completed in " << timer().seconds()
+      << " seconds\n";
 }
 //______________________________________________________________________
 //
@@ -354,6 +358,9 @@ DataArchive::queryPatchwiseProcessor( const Patch * patch, const int index )
 GridP
 DataArchive::queryGrid( int index, const ProblemSpecP & ups /* = nullptr */, bool assignBCs /* = true */ )
 {
+  Timers::Simple timer;
+  timer.start();
+
   // The following variable along with d_cell_scale is necessary to allow the
   // UdaScale module work.  Small domains are a problem for the SCIRun widgets
   // so UdaScale allows the user increase the domain by setting the
@@ -363,7 +370,6 @@ DataArchive::queryGrid( int index, const ProblemSpecP & ups /* = nullptr */, boo
 
   d_lock.lock();
 
-  double     start    = Time::currentSeconds();
   TimeData & timedata = getTimeData( index );
 
   //  FILE* fp = 0;
@@ -461,7 +467,8 @@ DataArchive::queryGrid( int index, const ProblemSpecP & ups /* = nullptr */, boo
 
   timedata.d_grid = grid;
 
-  dbg << "DataArchive::queryGrid completed in " << Time::currentSeconds()-start << " seconds\n";
+  dbg << "DataArchive::queryGrid completed in " << timer().seconds()
+      << " seconds\n";
 
   return grid;
 
@@ -489,7 +496,9 @@ void
 DataArchive::queryVariables( vector<string>                         & names,
                              vector<const Uintah::TypeDescription*> & types )
 {
-  double start = Time::currentSeconds();
+  Timers::Simple timer;
+  timer.start();
+
   d_lock.lock();
 
   rewind( d_indexFile ); // Start at beginning of file.
@@ -498,10 +507,13 @@ DataArchive::queryVariables( vector<string>                         & names,
   if( !found ) {
     throw InternalError( "DataArchive::queryVariables:variables section not found", __FILE__, __LINE__ );
   }
+
   queryVariables( d_indexFile, names, types );
 
   d_lock.unlock();
-  dbg << "DataArchive::queryVariables completed in " << Time::currentSeconds()-start << " seconds\n";
+
+  dbg << "DataArchive::queryVariables completed in " << timer().seconds()
+      << " seconds\n";
 }
 //______________________________________________________________________
 //
@@ -509,7 +521,8 @@ void
 DataArchive::queryGlobals( vector<string>                         & names,
                            vector<const Uintah::TypeDescription*> & types )
 {
-  double start = Time::currentSeconds();
+  Timers::Simple timer;
+  timer.start();
 
   d_lock.lock();
 
@@ -520,11 +533,13 @@ DataArchive::queryGlobals( vector<string>                         & names,
   if( !result ) {
     return;
   }
+
   queryVariables( d_indexFile, names, types, true );
 
   d_lock.unlock();
 
-  dbg << "DataArchive::queryGlobals completed in " << Time::currentSeconds()-start << " seconds\n";
+  dbg << "DataArchive::queryGlobals completed in " << timer().seconds()
+      << " seconds\n";
 }
 //______________________________________________________________________
 //
@@ -593,7 +608,8 @@ DataArchive::query(       Variable     & var,
                     const int            timeIndex,
                           DataFileInfo * dfi /* = 0 */ )
 {
-  double tstart = Time::currentSeconds();
+  Timers::Simple timer;
+  timer.start();
 
 #if !defined( DISABLE_SCI_MALLOC )
   const char* tag = AllocatorSetDefaultTag("QUERY");
@@ -714,11 +730,15 @@ DataArchive::query(       Variable     & var,
 
     // read in the variable
     InputContext ic( fd, data_filename.c_str(), dfi->start );
-    double starttime = Time::currentSeconds();
+
+    Timers::Simple read_timer;
+    timer.start();
 
     var.read( ic, dfi->end, timedata.d_swapBytes, timedata.d_nBytes, varinfo.compression );
 
-    dbg << "DataArchive::query: time to read raw data: "<<Time::currentSeconds() - starttime<<endl;
+    dbg << "DataArchive::query: time to read raw data: "
+	<< read_timer().seconds() << " seconds\n";
+
     ASSERTEQ( dfi->end, ic.cur );
 
     int result = close( fd );
@@ -882,7 +902,9 @@ DataArchive::query(       Variable     & var,
 #if !defined( DISABLE_SCI_MALLOC )
   AllocatorSetDefaultTag(tag);
 #endif
-  dbg << "DataArchive::query() completed in " << Time::currentSeconds()-tstart << " seconds\n";
+
+  dbg << "DataArchive::query() completed in " << timer().seconds()
+      << " seconds\n";
 }
 //______________________________________________________________________
 //
@@ -1759,7 +1781,9 @@ DataArchive::queryMaterials( const string & varname,
                              const Patch  * patch,
                                    int      index )
 {
-  double start = Time::currentSeconds();
+  Timers::Simple timer;
+  timer.start();
+
   d_lock.lock();
 
   TimeData& timedata = getTimeData( index );
@@ -1778,7 +1802,9 @@ DataArchive::queryMaterials( const string & varname,
   }
 
   d_lock.unlock();
-  dbg << "DataArchive::queryMaterials completed in " << Time::currentSeconds()-start << " seconds\n";
+
+  dbg << "DataArchive::queryMaterials completed in " << timer().seconds()
+      << " seconds\n";
 
   return matls;
 }
@@ -1787,7 +1813,8 @@ DataArchive::queryMaterials( const string & varname,
 int
 DataArchive::queryNumMaterials(const Patch* patch, int index)
 {
-  double start = Time::currentSeconds();
+  Timers::Simple timer;
+  timer.start();
 
   d_lock.lock();
 
@@ -1803,9 +1830,11 @@ DataArchive::queryNumMaterials(const Patch* patch, int index)
     }
   }
 
-  dbg << "DataArchive::queryNumMaterials completed in " << Time::currentSeconds()-start << " seconds\n";
-
   d_lock.unlock();
+
+  dbg << "DataArchive::queryNumMaterials completed in " << timer().seconds()
+      << " seconds\n";
+
   return numMatls;
 }
 
@@ -1834,6 +1863,7 @@ DataArchive::exists( const string& varname,
       return true;
     }
   }
+
   d_lock.unlock();
 
   return false;

@@ -25,6 +25,11 @@
 #ifndef _SFC
 #define _SFC
 
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Exceptions/InternalError.h>
+#include <Core/Util/Assert.h>
+#include <Core/Util/Timers/Timers.hpp>
+
 #include <vector>
 #include <queue>
 #include <iostream>
@@ -33,11 +38,6 @@
 #include <cmath>
 #include <climits>
 #include <cstring>
-
-#include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Util/Time.h>
-#include <Core/Exceptions/InternalError.h>
-#include <Core/Util/Assert.h>
 
 namespace Uintah{
 
@@ -266,8 +266,6 @@ protected:
   int dim;
   Curve curve;
 
-  Uintah::Time *timer;
-
   //order and orientation arrays
   int (*order)[8];
   int (*orientation)[8];
@@ -437,27 +435,28 @@ void SFC<LOCS>::ProfileMergeParameters(int repeat)
   }
 }
 
-#define sample(median,block_size, merge_size, blocks, sample_size)                                  \
-{                                                                                                   \
-   float start,finish;                                                                              \
-   float median_sum;                                                                                \
-   SetMergeParameters(block_size,merge_size,blocks,sample_size);                                    \
-   for(int r=0;r<repeat;r++)                                                                        \
-   {                                                                                                \
-    histories.assign(histories_original.begin(),histories_original.end());                          \
-    start=timer->currentSeconds();                                                                  \
-    PrimaryMerge<BITS>(histories,rbuf,mbuf);                                                        \
-    finish=timer->currentSeconds();                                                                 \
-    times[r]=finish-start;                                                                          \
-   }                                                                                                \
-   sort(times.begin(),times.end());                                                                 \
-   int mid=times.size()/2;                                                                          \
-   if(times.size()%2==0)                                                                            \
-    median=(times[mid-1]+times[mid])/2;                                                             \
-   else                                                                                             \
-    median=times[mid];                                                                              \
-    Uintah::MPI::Allreduce(&median,&median_sum,1,MPI_FLOAT,MPI_SUM,Comm);                                    \
-    median=median_sum/P;                                                                            \
+#define sample(median,block_size, merge_size, blocks, sample_size)          \
+{                                                                           \
+   Timers::Simple timer;                                                    \
+   float start,finish;                                                      \
+   float median_sum;                                                        \
+   SetMergeParameters(block_size,merge_size,blocks,sample_size);            \
+   for(int r=0;r<repeat;r++)                                                \
+   {                                                                        \
+    histories.assign(histories_original.begin(),histories_original.end());  \
+    timer.reset( true );                                                    \
+    PrimaryMerge<BITS>(histories,rbuf,mbuf);                                \
+    timer.stop();                                                           \
+    times[r]=timer().seconds();                                             \
+   }                                                                        \
+   sort(times.begin(),times.end());                                         \
+   int mid=times.size()/2;                                                  \
+   if(times.size()%2==0)                                                    \
+    median=(times[mid-1]+times[mid])/2;                                     \
+   else                                                                     \
+    median=times[mid];                                                      \
+    Uintah::MPI::Allreduce(&median,&median_sum,1,MPI_FLOAT,MPI_SUM,Comm);   \
+    median=median_sum/P;                                                    \
 }
 
 
@@ -1152,7 +1151,8 @@ void SFC<LOCS>::Parallel3()
   std::vector<MPI_Request> rreqs(rpartners.size()), sreqs(spartners.size());
   std::vector<int> rindices(rreqs.size()),sindices(sreqs.size());
 #ifdef _TIMESFC_
-  start=timer->currentSeconds();
+  Timers::Simple timer;
+  timer.start();
 #endif
   std::vector<History<BITS> > myhistories(n);//,recv_histories(n),merge_histories(n),temp_histories(n);
 
@@ -1160,9 +1160,9 @@ void SFC<LOCS>::Parallel3()
   SerialH<DIM,BITS>(&myhistories[0]);  //Saves results in sendbuf
 
 #ifdef _TIMESFC_
-  finish=timer->currentSeconds();
-  timers[0]+=finish-start;
-  start=timer->currentSeconds();
+  timer.stop();
+  timers[0] += timer().seconds();
+  timer.reset( true );
 #endif
   /*
   std::cout << rank << ": histories:";
@@ -1196,9 +1196,9 @@ void SFC<LOCS>::Parallel3()
   //std::cout << rank << ": done creating histogram\n";
 
 #ifdef _TIMESFC_
-  finish=timer->currentSeconds();
-  timers[6]+=finish-start;
-  start=timer->currentSeconds();
+  timer.stop();
+  timers[6] += timer().seconds();
+  timer.reset( true );
 #endif
 
 
@@ -1257,9 +1257,9 @@ void SFC<LOCS>::Parallel3()
   histogram.swap(sum_histogram);
 
 #ifdef _TIMESFC_
-  finish=timer->currentSeconds();
-  timers[1]+=finish-start;
-  start=timer->currentSeconds();
+  timer.stop();
+  timers[1] += timer().seconds();
+  timer.reset( true );
 #endif
 
   //start first histogram send
@@ -1311,9 +1311,9 @@ void SFC<LOCS>::Parallel3()
     }
   }
 #ifdef _TIMESFC_
-  finish=timer->currentSeconds();
-  timers[3]+=finish-start;
-  start=timer->currentSeconds();
+  timer.stop();
+  timers[3] += timer().seconds();
+  timer.reset( true );
 #endif
 
   std::vector<History<BITS> > recv_histories(n),merge_histories,temp_histories;
@@ -1350,9 +1350,9 @@ void SFC<LOCS>::Parallel3()
     if(group.partner_group!=-1)
     {
 #ifdef _TIMESFC_
-      finish=timer->currentSeconds();
-      timers[1]+=finish-start;
-      start=timer->currentSeconds();
+      timer.stop();
+      timers[1] += timer().seconds();
+      timer.reset( true );
 #endif
       //wait for histogram communiation to complete
       Uintah::MPI::Wait(&rreq,&status);
@@ -1360,9 +1360,9 @@ void SFC<LOCS>::Parallel3()
       hsreqs.clear();
 
 #ifdef _TIMESFC_
-      finish=timer->currentSeconds();
-      timers[3]+=finish-start;
-      start=timer->currentSeconds();
+      timer.stop();
+      timers[3] += timer().seconds();
+      timer.reset( true );
 #endif
 
       //swap histograms, histogram is now the current histogram
@@ -1426,9 +1426,9 @@ void SFC<LOCS>::Parallel3()
     }
 
 #ifdef _TIMESFC_
-    finish=timer->currentSeconds();
-    timers[2]+=finish-start;
-    start=timer->currentSeconds();
+    timer.stop();
+    timers[2] += timer().seconds();
+    timer.reset( true );
 #endif
     if(next_group.partner_group!=-1)
     {
@@ -1466,9 +1466,9 @@ void SFC<LOCS>::Parallel3()
       }
     }
 #ifdef _TIMESFC_
-    finish=timer->currentSeconds();
-    timers[3]+=finish-start;
-    start=timer->currentSeconds();
+    timer.stop();
+    timers[3] += timer().seconds();
+    timer.reset( true );
 #endif
     //redistribute keys
     if(group.partner_group!=-1)
@@ -1602,9 +1602,9 @@ void SFC<LOCS>::Parallel3()
         }
       }
 #ifdef _TIMESFC_
-     finish=timer->currentSeconds();
-     timers[2]+=finish-start;
-     start=timer->currentSeconds();
+     timer.stop();
+     timers[2] += timer().seconds();
+     timer.reset( true );
 #endif
      //std::cout << rank << ": spartners:" << spartners.size() << " rpartners:" << rpartners.size() << std::endl;
      //begin sends
@@ -1654,9 +1654,9 @@ void SFC<LOCS>::Parallel3()
         }
       }
 #ifdef _TIMESFC_
-      finish=timer->currentSeconds();
-      timers[5]+=finish-start;
-      start=timer->currentSeconds();
+      timer.stop();
+      timers[5] += timer().seconds();
+      timer.reset( true );
 #endif
 
       temp_histories.reserve(newn);
@@ -1695,16 +1695,16 @@ void SFC<LOCS>::Parallel3()
           int completed;
 
 #ifdef _TIMESFC_
-          finish=timer->currentSeconds();
-          timers[4]+=finish-start;
-          start=timer->currentSeconds();
+          timer.stop();
+          timers[4] += timer().seconds();
+          timer.reset( true );
 #endif
           //testsome on sends
           Uintah::MPI::Testsome(sreqs.size(),&sreqs[0],&completed,&sindices[0],MPI_STATUSES_IGNORE);
 #ifdef _TIMESFC_
-          finish=timer->currentSeconds();
-          timers[5]+=finish-start;
-          start=timer->currentSeconds();
+          timer.stop();
+          timers[5] += timer().seconds();
+          timer.reset( true );
 #endif
 
           for(int i=0;i<completed;i++)
@@ -1750,16 +1750,16 @@ void SFC<LOCS>::Parallel3()
         {
           int completed;
 #ifdef _TIMESFC_
-          finish=timer->currentSeconds();
-          timers[4]+=finish-start;
-          start=timer->currentSeconds();
+          timer.stop();
+          timers[4] += timer().seconds();
+          timer.reset( true );
 #endif
           //testsome on recvs
           Uintah::MPI::Testsome(rreqs.size(),&rreqs[0],&completed,&rindices[0],MPI_STATUSES_IGNORE);
 #ifdef _TIMESFC_
-          finish=timer->currentSeconds();
-          timers[5]+=finish-start;
-          start=timer->currentSeconds();
+          timer.stop();
+          timers[5] += timer().seconds();
+          timer.reset( true );
 #endif
 
           for(int i=0;i<completed;i++)
@@ -1843,18 +1843,18 @@ void SFC<LOCS>::Parallel3()
 
           } //end for completed
 #ifdef _TIMESFC_
-          finish=timer->currentSeconds();
-          timers[4]+=finish-start;
-          start=timer->currentSeconds();
+          timer.stop();
+          timers[4] += timer().seconds();
+          timer.reset( true );
 #endif
         } //end if rdone!=rsize
       } //end while rdone!=rsize && sdone!=ssize
 
 
 #ifdef _TIMESFC_
-      finish=timer->currentSeconds();
-      timers[5]+=finish-start;
-      start=timer->currentSeconds();
+      timer.stop();
+      timers[5] += timer().seconds();
+      timer.reset( true );
 #endif
 
       myhistories.swap(merge_histories);
@@ -1875,9 +1875,9 @@ void SFC<LOCS>::Parallel3()
   std::cout << std::endl;
   */
 #ifdef _TIMESFC_
-  finish=timer->currentSeconds();
-  timers[1]+=finish-start;
-  start=timer->currentSeconds();
+  timer.stop();
+  timers[1] += timer().seconds();
+  timer.reset( true );
 #endif
 #if 0
   double avg_recvs=double(total_recvs)/num_recvs;
@@ -1899,7 +1899,7 @@ void SFC<LOCS>::Parallel2()
   int total_recvs=0;
   int num_recvs=0;
 #ifdef _TIMESFC_
-  start=timer->currentSeconds();
+  timer.start();
 #endif
   std::vector<History<BITS> > myhistories(n);//,recv_histories(n),merge_histories(n),temp_histories(n);
 
@@ -1907,9 +1907,9 @@ void SFC<LOCS>::Parallel2()
   SerialH<DIM,BITS>(&myhistories[0]);  //Saves results in sendbuf
 
 #ifdef _TIMESFC_
-  finish=timer->currentSeconds();
-  timers[0]+=finish-start;
-  start=timer->currentSeconds();
+  timer.stop();
+  timers[0] += timer().seconds();
+  timer.reset( true );
 #endif
   /*
   std::cout << rank << ": histories:";
@@ -1943,9 +1943,9 @@ void SFC<LOCS>::Parallel2()
   //std::cout << rank << ": done creating histogram\n";
 
 #ifdef _TIMESFC_
-  finish=timer->currentSeconds();
-  timers[6]+=finish-start;
-  start=timer->currentSeconds();
+  timer.stop();
+  timers[6] += timer().seconds();
+  timer.reset( true );
 #endif
 
 
@@ -2004,9 +2004,9 @@ void SFC<LOCS>::Parallel2()
   histogram.swap(sum_histogram);
 
 #ifdef _TIMESFC_
-  finish=timer->currentSeconds();
-  timers[1]+=finish-start;
-  start=timer->currentSeconds();
+  timer.stop();
+  timers[1] += timer().seconds();
+  timer.reset( true );
 #endif
 
   //start first histogram send
@@ -2058,9 +2058,9 @@ void SFC<LOCS>::Parallel2()
     }
   }
 #ifdef _TIMESFC_
-  finish=timer->currentSeconds();
-  timers[3]+=finish-start;
-  start=timer->currentSeconds();
+  timer.stop();
+  timers[3] += timer().seconds();
+  timer.reset( true );
 #endif
   std::vector<History<BITS> > recv_histories(n),merge_histories,temp_histories;
 
@@ -2096,9 +2096,9 @@ void SFC<LOCS>::Parallel2()
     if(group.partner_group!=-1)
     {
 #ifdef _TIMESFC_
-      finish=timer->currentSeconds();
-      timers[1]+=finish-start;
-      start=timer->currentSeconds();
+      timer.stop();
+      timers[1] += timer().seconds();
+      timer.reset( true );
 #endif
       //wait for histogram communiation to complete
       Uintah::MPI::Wait(&rreq,&status);
@@ -2106,9 +2106,9 @@ void SFC<LOCS>::Parallel2()
       hsreqs.clear();
 
 #ifdef _TIMESFC_
-      finish=timer->currentSeconds();
-      timers[3]+=finish-start;
-      start=timer->currentSeconds();
+      timer.stop();
+      timers[3] += timer().seconds();
+      timer.reset( true );
 #endif
 
       //swap histograms, histogram is now the current histogram
@@ -2172,9 +2172,9 @@ void SFC<LOCS>::Parallel2()
     }
 
 #ifdef _TIMESFC_
-    finish=timer->currentSeconds();
-    timers[2]+=finish-start;
-    start=timer->currentSeconds();
+    timer.stop();
+    timers[2] += timer().seconds();
+    timer.reset( true );
 #endif
     if(next_group.partner_group!=-1)
     {
@@ -2212,9 +2212,9 @@ void SFC<LOCS>::Parallel2()
       }
     }
 #ifdef _TIMESFC_
-    finish=timer->currentSeconds();
-    timers[3]+=finish-start;
-    start=timer->currentSeconds();
+    timer.stop();
+    timers[3] += timer().seconds();
+    timer.reset( true );
 #endif
     //redistribute keys
     if(group.partner_group!=-1)
@@ -2321,9 +2321,9 @@ void SFC<LOCS>::Parallel2()
       std::vector<MPI_Request> rreqs,sreqs;
 
 #ifdef _TIMESFC_
-     finish=timer->currentSeconds();
-     timers[2]+=finish-start;
-     start=timer->currentSeconds();
+     timer.stop();
+     timers[2] += timer().seconds();
+     timer.reset( true );
 #endif
       for(int p=0;p<parent_group.size;p++)
       {
@@ -2359,9 +2359,9 @@ void SFC<LOCS>::Parallel2()
 
       }
 #ifdef _TIMESFC_
-     finish=timer->currentSeconds();
-     timers[5]+=finish-start;
-     start=timer->currentSeconds();
+     timer.stop();
+     timers[5] += timer().seconds();
+     timer.reset( true );
 #endif
      total_recvs+=rreqs.size();
      num_recvs++;
@@ -2384,16 +2384,16 @@ void SFC<LOCS>::Parallel2()
        int index;
 
 #ifdef _TIMESFC_
-       finish=timer->currentSeconds();
-       timers[4]+=finish-start;
-       start=timer->currentSeconds();
+       timer.stop();
+       timers[4] += timer().seconds();
+       timer.reset( true );
 #endif
        //wait any
        Uintah::MPI::Waitany(rreqs.size(),&rreqs[0],&index,&status);
 #ifdef _TIMESFC_
-       finish=timer->currentSeconds();
-       timers[5]+=finish-start;
-       start=timer->currentSeconds();
+       timer.stop();
+       timers[5] += timer().seconds();
+       timer.reset( true );
 #endif
 
        int p=status.MPI_SOURCE-parent_group.start_rank;
@@ -2414,17 +2414,17 @@ void SFC<LOCS>::Parallel2()
 
 
 #ifdef _TIMESFC_
-        finish=timer->currentSeconds();
-        timers[4]+=finish-start;
-        start=timer->currentSeconds();
+        timer.stop();
+        timers[4] += timer().seconds();
+        timer.reset( true );
 #endif
         //wait any
         // Uintah::MPI::Waitany(rreqs.size(),&rreqs[0],&index,&status);
         Uintah::MPI::Waitsome(rreqs.size(),&rreqs[0],&completed,&indices[0],&statuses[0]);
 #ifdef _TIMESFC_
-        finish=timer->currentSeconds();
-        timers[5]+=finish-start;
-        start=timer->currentSeconds();
+        timer.stop();
+        timers[5] += timer().seconds();
+        timer.reset( true );
 #endif
         for(int j=0;j<completed;j++)
         {
@@ -2465,9 +2465,9 @@ void SFC<LOCS>::Parallel2()
       }
 
 #ifdef _TIMESFC_
-      finish=timer->currentSeconds();
-      timers[4]+=finish-start;
-      start=timer->currentSeconds();
+      timer.stop();
+      timers[4] += timer().seconds();
+      timer.reset( true );
 #endif
 
       //wait for sends
@@ -2475,9 +2475,9 @@ void SFC<LOCS>::Parallel2()
         Uintah::MPI::Waitall(sreqs.size(), &sreqs[0], MPI_STATUSES_IGNORE);
 
 #ifdef _TIMESFC_
-      finish=timer->currentSeconds();
-      timers[5]+=finish-start;
-      start=timer->currentSeconds();
+      timer.stop();
+      timers[5] += timer().seconds();
+      timer.reset( true );
 #endif
 
       myhistories.swap(merge_histories);
@@ -2498,9 +2498,9 @@ void SFC<LOCS>::Parallel2()
   std::cout << std::endl;
   */
 #ifdef _TIMESFC_
-  finish=timer->currentSeconds();
-  timers[1]+=finish-start;
-  start=timer->currentSeconds();
+  timer.stop();
+  timers[1] += timer().seconds();
+  timer.reset( true );
 #endif
 #if 0
   double avg_recvs=double(total_recvs)/num_recvs;
@@ -2521,7 +2521,7 @@ void SFC<LOCS>::Parallel1()
 {
 
 #ifdef _TIMESFC_
-  start=timer->currentSeconds();
+  timer.start();
 #endif
   std::vector<History<BITS> > myhistories(n), mergefrom(n), mergeto(n);
 
@@ -2530,9 +2530,9 @@ void SFC<LOCS>::Parallel1()
   SerialH<DIM,BITS>(&myhistories[0]);
 
 #ifdef _TIMESFC_
-  finish=timer->currentSeconds();
-  timers[0]+=finish-start;
-  start=timer->currentSeconds();
+  timer.stop();
+  timers[0] += timer().seconds();
+  timer.start();
 #endif
 
   std::vector<BITS> histograms,cuts;
@@ -2577,9 +2577,9 @@ void SFC<LOCS>::Parallel1()
   histograms.resize(0);
 
 #ifdef _TIMESFC_
-  finish=timer->currentSeconds();
-  timers[1]+=finish-start;
-  start=timer->currentSeconds();
+  timer.stop();
+  timers[1] += timer().seconds();
+  timer.reset( true );
 #endif
   /*
   if(rank==0)
@@ -2617,9 +2617,9 @@ void SFC<LOCS>::Parallel1()
     Uintah::MPI::Alltoallv(&myhistories[0],&sendcounts[0],&senddisp[0],MPI_BYTE,
                  &mergefrom[0],&recvcounts[0],&recvdisp[0],MPI_BYTE,Comm);
 #ifdef _TIMESFC_
-    finish=timer->currentSeconds();
-    timers[2]+=finish-start;
-    start=timer->currentSeconds();
+    timer.stop();
+    timers[2] += timer().seconds();
+    timer.reset( true );
 #endif
     /*
     if(rank==31)
@@ -2732,9 +2732,9 @@ void SFC<LOCS>::Parallel1()
       }
     }
 #ifdef _TIMESFC_
-    finish=timer->currentSeconds();
-    timers[3]+=finish-start;
-    start=timer->currentSeconds();
+    timer.stop();
+    timers[3] += timer().seconds();
+    timer.reset( true );
 #endif
     if(mergemode==3)
     {
@@ -2749,15 +2749,15 @@ void SFC<LOCS>::Parallel1()
         //std::cout << "doing waitany\n";
         //wait any
 #ifdef _TIMESFC_
-  finish=timer->currentSeconds();
-  timers[2]+=finish-start;
-  start=timer->currentSeconds();
+  timer.stop();
+  timers[2] += timer().seconds();
+  timer.reset( true );
 #endif
         Uintah::MPI::Waitany(rreqs.size(),&rreqs[0],&index,&status);
 #ifdef _TIMESFC_
-  finish=timer->currentSeconds();
-  timers[3]+=finish-start;
-  start=timer->currentSeconds();
+  timer.stop();
+  timers[3] += timer().seconds();
+  timer.reset( true );
 #endif
 
         mergeto.resize(0);
@@ -2797,16 +2797,16 @@ void SFC<LOCS>::Parallel1()
         int index;
 
 #ifdef _TIMESFC_
-  finish=timer->currentSeconds();
-  timers[2]+=finish-start;
-  start=timer->currentSeconds();
+  timer.stop();
+  timers[2] += timer().seconds();
+  timer.reset( true );
 #endif
         //wait any
         Uintah::MPI::Waitany(rreqs.size(),&rreqs[0],&index,&status);
 #ifdef _TIMESFC_
-  finish=timer->currentSeconds();
-  timers[3]+=finish-start;
-  start=timer->currentSeconds();
+  timer.stop();
+  timers[3] += timer().seconds();
+  timer.reset( true );
 #endif
 
         int mstage=0;
@@ -2866,9 +2866,9 @@ void SFC<LOCS>::Parallel1()
     }
 
 #ifdef _TIMESFC_
-  finish=timer->currentSeconds();
-  timers[3]+=finish-start;
-  start=timer->currentSeconds();
+  timer.stop();
+  timers[3] += timer().seconds();
+  timer.reset( true );
 #endif
     //wait for sends
     for(unsigned int i=0;i<sreqs.size();i++)
@@ -2878,9 +2878,9 @@ void SFC<LOCS>::Parallel1()
     }
   }
 #ifdef _TIMESFC_
-  finish=timer->currentSeconds();
-  timers[2]+=finish-start;
-  start=timer->currentSeconds();
+  timer.stop();
+  timers[2] += timer().seconds();
+  timer.reset( true );
 #endif
   //Copy permutation to orders
   orders->resize(newn);
@@ -2897,8 +2897,8 @@ void SFC<LOCS>::Parallel1()
    std::cout << std::endl;
  */
 #ifdef _TIMESFC_
-  finish=timer->currentSeconds();
-  timers[3]+=finish-start;
+  timer.stop();
+  timers[3] += timer().seconds();
 #endif
 
 }
@@ -2906,7 +2906,7 @@ template<class LOCS> template<int DIM, class BITS>
 void SFC<LOCS>::Parallel0()
 {
 #ifdef _TIMESFC_
-  start=timer->currentSeconds();
+  timer.reset( true );
 #endif
   std::vector<History<BITS> > histories(n);
   unsigned int i;
@@ -2914,30 +2914,30 @@ void SFC<LOCS>::Parallel0()
   SerialH<DIM,BITS>(&histories[0]);  //Saves results in sendbuf
 
 #ifdef _TIMESFC_
-  finish=timer->currentSeconds();
-  timers[0]+=finish-start;
+  timer.stop();
+  timers[0] += timer().seconds();
 #endif
   std::vector<History<BITS> > rbuf, mbuf(n);
 
  if(mergemode==0)
  {
 #ifdef _TIMESFC_
-    start=timer->currentSeconds();
+    timer.reset( true );
 #endif
     PrimaryMerge<BITS>(histories,rbuf,mbuf);
 #ifdef _TIMESFC_
-    finish=timer->currentSeconds();
-    timers[1]+=finish-start;
+    timer.stop();
+    timers[1] += timer().seconds();
 #endif
  }
 
 #ifdef _TIMESFC_
-  start=timer->currentSeconds();
+  timer.reset( true );
 #endif
   Cleanup<BITS>(histories,rbuf,mbuf);
 #ifdef _TIMESFC_
-  finish=timer->currentSeconds();
-  timers[2]+=finish-start;
+  timer.stop();
+  timers[2] += timer().seconds();
 #endif
 
   orders->resize(n);

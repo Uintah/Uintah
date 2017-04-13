@@ -569,7 +569,7 @@ void SimpleRxn::computeModelSources(const ProcessorGroup*,
       old_dw->get(lastDumpTime, Slb->lastProbeDumpTimeLabel);
       double oldProbeDumpTime = lastDumpTime;
       
-      double time = d_sharedState->getElapsedTime();
+      double time = d_sharedState->getElapsedSimTime();
       double nextDumpTime = oldProbeDumpTime + 1.0/d_probeFreq;
       
       if (time >= nextDumpTime){        // is it time to dump the points

@@ -264,7 +264,7 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
 
     const Patch* patch = patches->get(p);
     HTVariables vars;
-    vars.time = _shared_state->getElapsedTime();
+    vars.time = _shared_state->getElapsedSimTime();
     delt_vartype DT;
     old_dw->get(DT, _shared_state->get_delt_label());
     vars.delta_t = DT;

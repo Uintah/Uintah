@@ -44,8 +44,8 @@
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Math/MinMax.h>
-#include <Core/Util/Time.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Util/Timers/Timers.hpp>
 #include <iomanip>
 
 using namespace std;
@@ -660,7 +660,10 @@ public:
   {
     if(cout_doing.active())
       cout_doing << "CGSolver::solve" << endl;
-    double tstart = Time::currentSeconds();
+
+    Timers::Simple timer;
+    timer.start();
+
     SchedulerP subsched = sched->createSubScheduler();
     DataWarehouse::ScrubMode old_dw_scrubmode = old_dw->setScrubbing(DataWarehouse::ScrubNone);
     DataWarehouse::ScrubMode new_dw_scrubmode = new_dw->setScrubbing(DataWarehouse::ScrubNone);
@@ -879,7 +882,7 @@ public:
     old_dw->setScrubbing(old_dw_scrubmode);
     new_dw->setScrubbing(new_dw_scrubmode);
 
-    double dt=Time::currentSeconds()-tstart;
+    double dt = timer().seconds();
     double mflops = (double(flops)*1.e-6)/dt;
     double memrate = (double(memrefs)*1.e-9)/dt;
     if(pg->myrank() == 0){

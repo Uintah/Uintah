@@ -48,7 +48,7 @@
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/VariableNotFoundInGrid.h>
 #include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Util/Time.h>
+#include <Core/Util/Timers/TImers.hpp>
 
 using namespace std;
 using namespace Uintah;
@@ -855,7 +855,9 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     filterWVel.initialize(0.0);
     IntVector indexLow = patch->getFortranCellLowIndex();
     IntVector indexHigh = patch->getFortranCellHighIndex();
-    double start_turbTime = Time::currentSeconds();
+
+    Timers::Simple timer;
+    timer.start();
 
     d_filter->applyFilter_noPetsc(pc, patch, ccVel, filterVolume, cellType, filterUVel, 0);
     d_filter->applyFilter_noPetsc(pc, patch, ccVel, filterVolume, cellType, filterVVel, 1);
@@ -873,7 +875,7 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     }
 
     string msg = "Time for the Filter operation in Turbulence Model: ";
-    proc0cerr << msg << Time::currentSeconds() - start_turbTime << " seconds\n";
+    proc0cerr << msg << timer().seconds() << " seconds\n";
 
     for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {

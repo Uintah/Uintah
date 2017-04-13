@@ -354,7 +354,7 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
     
     // set velocity to appropriate vel
-    const double tcurr = d_sharedState->getElapsedTime(); // FIXME: + dt ?
+    const double tcurr = d_sharedState->getElapsedSimTime(); // FIXME: + dt ?
     
     bool  rigid_velocity = true;
     Vector requested_velocity(0.0, 0.0, 0.0);

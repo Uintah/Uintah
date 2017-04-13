@@ -48,7 +48,6 @@
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
-#include <Core/Util/Time.h>
 
 #include <CCA/Components/ReduceUda/UdaReducer.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
@@ -89,7 +88,6 @@ AMRSimulationController::AMRSimulationController( const ProcessorGroup * myworld
 
 //______________________________________________________________________
 //
-
 void
 AMRSimulationController::run()
 {
@@ -267,12 +265,24 @@ AMRSimulationController::run()
   // The main loop where the specified problem is solved.
   while( !isLast() ) {
 
+    // Set the current wall time - note the DataAchiever uses it for
+    // determining when to output or checkpoint.
+    d_sharedState->setElapsedWallTime( walltimers.GetWallTime() );
+    
     // Put the current time into the shared state so other components
     // can access it.  Also increment (by one) the current time step
     // number so components can tell what timestep they are on.
-    d_sharedState->setElapsedTime( d_simTime );
+    d_sharedState->setElapsedSimTime( d_simTime );
     d_sharedState->incrementCurrentTopLevelTimeStep();
 
+    // Determines if this time step may be the last one. The only real
+    // unknown is the actual wall time to calculate the time step. The
+    // best guess is based on the ExpMovingAverage of the previous
+    // time steps. Used by the DataArchiver for dumping checkpoints.
+
+    // NOTE: Assumes incrementCurrentTopLevelTimeStep has been called.
+    d_sharedState->maybeLast( maybeLast() );    
+    
 #ifdef USE_GPERFTOOLS
     if (gheapprofile.active()){
       char heapename[512];
@@ -296,38 +306,35 @@ AMRSimulationController::run()
 
       int currentTimeStep = d_sharedState->getCurrentTopLevelTimeStep();
 
-      // NOTE: When using Wall Clock Time for checkpoints, there is a
-      // sync issue. Here the current wall time may not be greater
-      // than the getNextCheckpointWalltime thus no
-      // checkpoint. Whereas in DataArchiver::beginOutputTimestep the
-      // actual checkpoint determination is made and the walltime may
-      // be greater than the getNextCheckpointWalltime and a
-      // checkpoint is saved. The result is that a checkpoint may not
-      // have the needed xml file.
+      pidx_checkpointing =
+	// Output the checkpoint based on the simulation time.
+	( (d_output->getCheckpointInterval() > 0 &&
+	   (d_simTime+d_delt) >= d_output->getNextCheckpointTime()) ||
 
-      // When using Wall Clock Time for checkpoints, we need to have
-      // rank 0 determine this time and then send it to all other
-      // ranks.
-      int currsecs = -1;
+	  // Output the checkpoint based on the timestep interval.
+	  (d_output->getCheckpointTimestepInterval() > 0 &&
+	   currentTimeStep == d_output->getNextCheckpointTimestep()) ||
+
+	  // Output the checkpoint based on the being the last timestep.
+	  (d_timeinfo->max_wall_time > 0 && d_sharedState->maybeLast()) );
+
+      // When using the wall clock time for checkpoints, rank 0
+      // determines the wall time and sends it to all other ranks.
       if( d_output->getCheckpointWalltimeInterval() > 0 ) {
-        // If checkpointing based on wall clock time, then have
-        // process 0 determine the current time and share it will
-        // everyone else.
+	int tmp_time = -1;
+
         if( Parallel::getMPIRank() == 0 ) {
-          currsecs = (int)Time::currentSeconds();
+          tmp_time = (int) d_sharedState->getElapsedWallTime();
         }
-        Uintah::MPI::Bcast( &currsecs, 1, MPI_INT, 0, d_myworld->getComm() );
+        Uintah::MPI::Bcast( &tmp_time, 1, MPI_INT, 0, d_myworld->getComm() );
+
+	if( tmp_time >= d_output->getNextCheckpointWalltime() )
+	  checkpointing = true;	
       }
 
+      
       // Checkpointing
-      if( ( d_output->getCheckpointTimestepInterval() > 0 &&
-            currentTimeStep == d_output->getNextCheckpointTimestep() ) ||
-          ( d_output->getCheckpointInterval() > 0         &&
-            ( d_simTime + d_delt ) >= d_output->getNextCheckpointTime() ) ||
-          ( d_output->getCheckpointWalltimeInterval() > 0 &&
-            ( currsecs >= d_output->getNextCheckpointWalltime() ) ) ) {
-
-        pidx_checkpointing = true;
+      if( pidx_checkpointing ) {
 
         if( pidx_requested_nth_rank > 1 ) {
           proc0cout << "This is a checkpoint timestep (" << currentTimeStep
@@ -404,7 +411,7 @@ AMRSimulationController::run()
     }
      
     if( dbg_barrier.active() ) {
-      barrierTimer.start();
+      barrierTimer.reset( true );
       Uintah::MPI::Barrier( d_myworld->getComm() );
       barrier_times[2] += barrierTimer().seconds();
     }
@@ -490,7 +497,7 @@ AMRSimulationController::run()
     }
 
     if( dbg_barrier.active() ) {
-      barrierTimer.start();
+      barrierTimer.reset( true );
       Uintah::MPI::Barrier( d_myworld->getComm() );
       barrier_times[3] += barrierTimer().seconds();
     }
@@ -551,7 +558,7 @@ AMRSimulationController::run()
 
     // If debugging, output the barrier times.
     if( dbg_barrier.active() ) {
-      barrierTimer.start();
+      barrierTimer.reset( true );
       Uintah::MPI::Barrier( d_myworld->getComm() );
       barrier_times[4] += barrierTimer().seconds();
 
@@ -572,13 +579,7 @@ AMRSimulationController::run()
 #ifdef HAVE_PIDX
       // For PIDX only save timestep.xml when checkpointing.  Normal
       // time step dumps using PIDX do not need to write the xml
-      // information.
-
-      // Note: d_output->isCheckpointTimestep() should be used instead
-      // of pidx_checkpointing but because of the sync issue when
-      // doing checkpointing based on the wall time use
-      // pidx_checkpointing instead.
-      
+      // information.      
       if ( d_output->savingAsPIDX() && pidx_checkpointing )
 #endif    
       {
@@ -639,7 +640,6 @@ AMRSimulationController::run()
 
 //______________________________________________________________________
 //
-
 void
 AMRSimulationController::doInitialTimestep()
 {
@@ -673,13 +673,13 @@ AMRSimulationController::doInitialTimestep()
       d_sim->scheduleRestartInitialize( d_currentGridP->getLevel(i), d_scheduler );
     }
 
-    taskGraphTimer.start();
+    taskGraphTimer.reset( true );
     d_scheduler->compile();
     taskGraphTimer.stop();
 
     d_sharedState->d_runTimeStats[ SimulationState::CompilationTime ] += taskGraphTimer().seconds();
 
-    proc0cout << "done taskgraph compile (" << taskGraphTimer().seconds() << " seconds)\n";
+    proc0cout << "Done with taskgraph compile (" << taskGraphTimer().seconds() << " seconds)\n";
 
     // No scrubbing for initial step
     d_scheduler->get_dw( 1 )->setScrubbing( DataWarehouse::ScrubNone );
@@ -742,12 +742,13 @@ AMRSimulationController::doInitialTimestep()
         d_output->sched_allOutputTasks(        d_delt, d_currentGridP, d_scheduler, recompile );
       }
       
-      taskGraphTimer.start();
+      taskGraphTimer.reset( true );
       d_scheduler->compile();
       taskGraphTimer.stop();
 
       d_sharedState->d_runTimeStats[ SimulationState::CompilationTime ] += taskGraphTimer().seconds();
-      proc0cout << "done taskgraph compile (" << taskGraphTimer().seconds() << " seconds)\n";
+
+      proc0cout << "Done with taskgraph compile (" << taskGraphTimer().seconds() << " seconds)\n";
 
       // No scrubbing for initial step
       d_scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNone);
@@ -767,7 +768,6 @@ AMRSimulationController::doInitialTimestep()
 
 //______________________________________________________________________
 //
-
 void
 AMRSimulationController::executeTimestep( int totalFine )
 {
@@ -870,7 +870,6 @@ AMRSimulationController::executeTimestep( int totalFine )
 
 //______________________________________________________________________
 //
-
 bool
 AMRSimulationController::doRegridding( bool initialTimestep )
 {
@@ -890,7 +889,7 @@ AMRSimulationController::doRegridding( bool initialTimestep )
   d_currentGridP = d_regridder->regrid(oldGrid.get_rep());
   
   if(dbg_barrier.active()) {
-    barrierTimer.start();
+    barrierTimer.reset( true );
     Uintah::MPI::Barrier(d_myworld->getComm());
     barrier_times[0] += barrierTimer().seconds();
   }
@@ -909,7 +908,7 @@ AMRSimulationController::doRegridding( bool initialTimestep )
     d_lb->possiblyDynamicallyReallocate(d_currentGridP, lbstate); 
 
     if(dbg_barrier.active()) {
-      barrierTimer.start();
+      barrierTimer.reset( true );
       Uintah::MPI::Barrier(d_myworld->getComm());
       barrier_times[1] += barrierTimer().seconds();
     }
@@ -979,7 +978,6 @@ AMRSimulationController::doRegridding( bool initialTimestep )
 
 //______________________________________________________________________
 //
-
 bool
 AMRSimulationController::needRecompile()
 {
@@ -1019,7 +1017,6 @@ AMRSimulationController::needRecompile()
 
 //______________________________________________________________________
 //
-
 void
 AMRSimulationController::recompile( int totalFine )
 {
@@ -1113,19 +1110,17 @@ AMRSimulationController::recompile( int totalFine )
   taskGraphTimer.stop();
 
   d_sharedState->d_runTimeStats[ SimulationState::CompilationTime ] += taskGraphTimer().seconds();
-  
-  proc0cout << "DONE TASKGRAPH RE-COMPILE (" << taskGraphTimer().seconds() << " seconds)\n";
+
+  proc0cout << "Done with taskgraph re-compile (" << taskGraphTimer().seconds() << " seconds)\n";
 } // end recompile()
 
 //______________________________________________________________________
 //
-
 void
-AMRSimulationController::subCycleCompile( int startDW
-                                        , int dwStride
-                                        , int numLevel
-                                        , int step
-                                        )
+AMRSimulationController::subCycleCompile( int startDW,
+					  int dwStride,
+					  int numLevel,
+                                          int step )
 {
   MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::subCycleCompile()");
   //amrout << "Start AMRSimulationController::subCycleCompile, level=" << numLevel << '\n';
@@ -1208,7 +1203,6 @@ AMRSimulationController::subCycleCompile( int startDW
 
 //______________________________________________________________________
 //
-
 void
 AMRSimulationController::subCycleExecute( int startDW
                                         , int dwStride
@@ -1329,7 +1323,6 @@ AMRSimulationController::subCycleExecute( int startDW
 
 //______________________________________________________________________
 //
-
 void
 AMRSimulationController::scheduleComputeStableTimestep()
 {
@@ -1366,7 +1359,6 @@ AMRSimulationController::scheduleComputeStableTimestep()
 
 //______________________________________________________________________
 //
-
 void
 AMRSimulationController::reduceSysVar( const ProcessorGroup *
                                      , const PatchSubset    * patches

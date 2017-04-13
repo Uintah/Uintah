@@ -353,7 +353,7 @@ void FirstLawThermo::compute_ICE_Contributions(const ProcessorGroup* pg,
   
   double lastCompTime = analysisTime;
   double nextCompTime = lastCompTime + 1.0/d_analysisFreq;  
-  double now = d_sharedState->getElapsedTime();
+  double now = d_sharedState->getElapsedSimTime();
 
   if( now < nextCompTime  ){
     return;
@@ -589,7 +589,7 @@ void FirstLawThermo::compute_MPM_Contributions(const ProcessorGroup* pg,
 
   double lastCompTime = analysisTime;
   double nextCompTime = lastCompTime + 1.0/d_analysisFreq;  
-  double now = d_sharedState->getElapsedTime();
+  double now = d_sharedState->getElapsedSimTime();
 
   if( now < nextCompTime  ){
     return;
@@ -642,7 +642,7 @@ void FirstLawThermo::doAnalysis(const ProcessorGroup* pg,
   max_vartype lastTime;
   old_dw->get( lastTime, FL_lb->lastCompTimeLabel );
 
-  double now = d_sharedState->getElapsedTime();
+  double now = d_sharedState->getElapsedSimTime();
   double nextTime = lastTime + 1.0/d_analysisFreq;
   
   double time_dw  = lastTime;  

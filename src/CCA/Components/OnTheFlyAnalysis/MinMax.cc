@@ -463,9 +463,9 @@ void MinMax::computeMinMax(const ProcessorGroup* pg,
 
   // delt_vartype delt_var;
   // old_dw->get( delt_var, d_sharedState->get_delt_label() );
-  // double now = d_sharedState->getElapsedTime() + delt_var;
+  // double now = d_sharedState->getElapsedSimTime() + delt_var;
 
-  double now = d_sharedState->getElapsedTime();
+  double now = d_sharedState->getElapsedSimTime();
 
   if(now < d_startTime || now > d_stopTime){
     return;
@@ -593,9 +593,9 @@ void MinMax::doAnalysis(const ProcessorGroup* pg,
 
   // delt_vartype delt_var;
   // new_dw->get( delt_var, d_sharedState->get_delt_label() );
-  // double now = d_sharedState->getElapsedTime() + delt_var;
+  // double now = d_sharedState->getElapsedSimTime() + delt_var;
 
-  double now = d_sharedState->getElapsedTime();
+  double now = d_sharedState->getElapsedSimTime();
 
   if(now < d_startTime || now > d_stopTime){
     new_dw->put(max_vartype(lastWriteTime), d_lb->lastCompTimeLabel);

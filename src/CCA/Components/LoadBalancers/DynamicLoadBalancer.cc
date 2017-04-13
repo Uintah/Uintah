@@ -41,9 +41,9 @@
 #include <Core/Grid/SimulationState.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Util/Time.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Util/Timers/Timers.hpp>
 
 #include <sci_defs/visit_defs.h>
 
@@ -366,29 +366,30 @@ DynamicLoadBalancer::assignPatchesFactor( const GridP & grid, bool force )
 {
   doing << d_myworld->myrank() << "   APF\n";
   vector<vector<double> > patch_costs;
-  double time = Time::currentSeconds();
+
+  Timers::Simple timer;
+  timer.start();
   
-  for(int i=0;i<5;i++){
-    lbtimes[i]=0;
+  Timers::Simple lb_timer;
+  lb_timer.start();
+  
+  for(int i=0; i<5; ++i) {
+    lbtimes[i] = 0;
   }
       
+  // THIS TIME PROVIDES NO INFORMATION OTHER THAN THE
+  // TIME TO DO THE ABOVE LOOP.
+  lbtimes[0] += lb_timer().seconds();
+  lb_timer.reset( true );
 
-  double start=Time::currentSeconds();
-  
-  lbtimes[0]+=Time::currentSeconds()-start;
-  start=Time::currentSeconds();
-
-  static int lbiter=-1; //counter to identify which regrid
+  static int lbiter = -1; //counter to identify which regrid
   lbiter++;
 
   int num_procs = d_myworld->size();
 
   getCosts(grid.get_rep(),patch_costs);
 
-  lbtimes[1]+=Time::currentSeconds()-start;
-  start=Time::currentSeconds();
-
-  int level_offset=0;
+  int level_offset = 0;
 
   vector<double> totalProcCosts(num_procs,0);
   vector<double> procCosts(num_procs,0);
@@ -396,6 +397,9 @@ DynamicLoadBalancer::assignPatchesFactor( const GridP & grid, bool force )
   
   double previous_total_cost=0;
   
+  lbtimes[1] += lb_timer().seconds();
+  lb_timer.reset( true );
+
   //__________________________________
   //
   for(int l=0;l<grid->numLevels();l++){
@@ -414,8 +418,8 @@ DynamicLoadBalancer::assignPatchesFactor( const GridP & grid, bool force )
       useSFC(level, &order[0]);
     }
     
-    lbtimes[2]+=Time::currentSeconds()-start;
-    start=Time::currentSeconds();
+    lbtimes[2] += lb_timer().seconds();
+    lb_timer.reset( true );
 
     //hard maximum cost for assigning a patch to a processor
     double avgCost     = (total_cost+previous_total_cost) / num_procs;
@@ -571,8 +575,8 @@ DynamicLoadBalancer::assignPatchesFactor( const GridP & grid, bool force )
       iter++;
     }
 
-    lbtimes[3]+=Time::currentSeconds()-start;
-    start=Time::currentSeconds();
+    lbtimes[3] += lb_timer().seconds();
+    lb_timer.reset( true );
 
     if(minProcLoc!=-1 && num_procs>1)
     {
@@ -651,9 +655,9 @@ DynamicLoadBalancer::assignPatchesFactor( const GridP & grid, bool force )
       }
     }
     
-    level_offset+=num_patches;
-    lbtimes[4]+=Time::currentSeconds()-start;
-    start=Time::currentSeconds();
+    level_offset += num_patches;
+    lbtimes[4] += lb_timer().seconds();
+    lb_timer.reset( true );
   }
 
   //__________________________________
@@ -714,10 +718,9 @@ DynamicLoadBalancer::assignPatchesFactor( const GridP & grid, bool force )
   //__________________________________
   //
   bool doLoadBalancing = force || thresholdExceeded(patch_costs);
-  time = Time::currentSeconds() - time;
- 
+  
   if (d_myworld->myrank() == 0){
-    dbg << " Time to LB: " << time << endl;
+    dbg << " Time to LB: " << timer().seconds() << endl;
   }
   doing << d_myworld->myrank() << "   APF END\n";
   
@@ -818,6 +821,8 @@ DynamicLoadBalancer::thresholdExceeded( const vector< vector<double> >& patch_co
   }
 }
 
+#include <sys/time.h>
+
 //______________________________________________________________________
 //
 bool
@@ -832,7 +837,9 @@ DynamicLoadBalancer::assignPatchesRandom( const GridP &, bool force )
   int seed;
 
   if (d_myworld->myrank() == 0) {
-    seed = (int) Time::currentSeconds();
+    struct timeval time; 
+    gettimeofday(&time,NULL);
+    seed = (time.tv_sec * 1000) + (time.tv_usec / 1000);
   }
  
   Uintah::MPI::Bcast(&seed, 1, MPI_INT,0,d_myworld->getComm());
@@ -889,7 +896,7 @@ DynamicLoadBalancer::needRecompile(       double /*time*/,
                                           double /*delt*/, 
                                     const GridP & grid )
 {
-  double time = m_shared_state->getElapsedTime();
+  double time = m_shared_state->getElapsedSimTime();
   int timestep = m_shared_state->getCurrentTopLevelTimeStep();
 
   bool do_check = false;
@@ -986,7 +993,8 @@ DynamicLoadBalancer::possiblyDynamicallyReallocate( const GridP & grid, int stat
     dbg << d_myworld->myrank() << " In DLB, state " << state << endl;
   }
 
-  double start = Time::currentSeconds();
+  Timers::Simple timer;
+  timer.start();
 
   bool changed = false;
   bool force = false;
@@ -1000,7 +1008,7 @@ DynamicLoadBalancer::possiblyDynamicallyReallocate( const GridP & grid, int stat
         d_lastLbTimestep = m_shared_state->getCurrentTopLevelTimeStep();
       }
       else if (m_lb_interval != 0) {
-        m_last_lb_time = m_shared_state->getElapsedTime();
+        m_last_lb_time = m_shared_state->getElapsedSimTime();
       }
     }
     
@@ -1086,7 +1094,9 @@ DynamicLoadBalancer::possiblyDynamicallyReallocate( const GridP & grid, int stat
   // this must be called here (it creates the new per-proc patch sets) even if DLB does nothing.  Don't move or return earlier.
   LoadBalancerCommon::possiblyDynamicallyReallocate(grid, flag);
   
-  m_shared_state->d_runTimeStats[SimulationState::LoadBalancerTime] += Time::currentSeconds() - start;
+  m_shared_state->d_runTimeStats[SimulationState::LoadBalancerTime] +=
+    timer().seconds();
+
   return changed;
 }
 //______________________________________________________________________

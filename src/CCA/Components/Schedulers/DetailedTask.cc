@@ -36,7 +36,6 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Util/DOUT.hpp>
-#include <Core/Util/Time.h>
 
 #include <sci_defs/config_defs.h>
 #include <sci_defs/cuda_defs.h>

@@ -2911,8 +2911,9 @@ void SerialMPM::setPrescribedMotion(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing, "Doing setPrescribedMotion");
 
-    // Get the current time
-    double time = d_sharedState->getElapsedTime();
+    // Get the current simulation time
+    double time = d_sharedState->getElapsedSimTime();
+
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
 
@@ -3071,8 +3072,8 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
                                    DataWarehouse* old_dw,
                                    DataWarehouse* new_dw)
 {
-  // Get the current time
-  double time = d_sharedState->getElapsedTime();
+  // Get the current simulation time
+  double time = d_sharedState->getElapsedSimTime();
 
   if (cout_doing.active())
     cout_doing << "Current Time (applyExternalLoads) = " << time << endl;
@@ -3957,8 +3958,9 @@ void SerialMPM::insertParticles(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing, "Doing insertParticles");
 
-    // Get current time and timestep size
-    double time = d_sharedState->getElapsedTime();
+    // Get the current simulation time
+    double time = d_sharedState->getElapsedSimTime();
+
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
 

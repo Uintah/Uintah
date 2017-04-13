@@ -804,7 +804,7 @@ void AdiabaticTable::computeModelSources(const ProcessorGroup*,
       //__________________________________
       //  dump out the probe points
       if( d_usingProbePts ) {
-        double time = d_sharedState->getElapsedTime();
+        double time = d_sharedState->getElapsedSimTime();
         double nextDumpTime = oldProbeDumpTime + 1.0/d_probeFreq;
         
         if (time >= nextDumpTime){        // is it time to dump the points

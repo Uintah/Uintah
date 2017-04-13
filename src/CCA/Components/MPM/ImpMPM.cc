@@ -1845,8 +1845,8 @@ void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
                                 DataWarehouse* old_dw,
                                 DataWarehouse* new_dw)
 {
-  // Get the current time
-  double time = d_sharedState->getElapsedTime();
+  // Get the current simulation time
+  double time = d_sharedState->getElapsedSimTime();
 
   if (cout_doing.active())
     cout_doing << "Current Time (applyExternalLoads) = " << time << endl;
@@ -3682,7 +3682,8 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       }
  
       if(mpm_matl->getIsRigid()) {
-        const double tcurr = d_sharedState->getElapsedTime(); 
+	// Get the current simulation time
+	const double tcurr = d_sharedState->getElapsedSimTime();
         if(tcurr >= d_stop_time){
           for(ParticleSubset::iterator iter = pset->begin();
               iter != pset->end(); iter++){

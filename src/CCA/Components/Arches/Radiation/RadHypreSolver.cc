@@ -24,9 +24,10 @@
 
 //----- RadHypreSolver.cc ----------------------------------------------
 #include <CCA/Components/Arches/Radiation/RadHypreSolver.h>
-#include <Core/Util/Time.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Util/Timers/Timers.hpp>
+
 #include <_hypre_utilities.h>
 #include <HYPRE_struct_ls.h>
 #include <krylov.h>
@@ -327,8 +328,8 @@ RadHypreSolver::setMatrix(const ProcessorGroup* pc,
                           const bool print_all_info )
 
 { 
-  double start_time = Time::currentSeconds();
-  
+  Timers::Simple timer;
+  timer.start();
   
   int i;
  
@@ -426,7 +427,7 @@ RadHypreSolver::setMatrix(const ProcessorGroup* pc,
   
 
   if ( print_all_info ) {
-    proc0cout << " Time in HYPRE setMatrix: " << Time::currentSeconds()-start_time << " seconds\n";
+    proc0cout << " Time in HYPRE setMatrix: " << timer().seconds() << " seconds\n";
   } 
 }
 //______________________________________________________________________
@@ -477,8 +478,10 @@ RadHypreSolver::radLinearSolve( const int direcn, const bool print_all_info )
   skip = 1;
   HYPRE_StructSolver solver, precond;
 
-  double start_time = Time::currentSeconds();
-  double solveTime=0;
+  Timers::Simple timer;
+  timer.start();
+  
+  Timers::Simple solveTimer;
 
   if( d_kspType == "1" ) {
     /*Solve the system using SMG*/
@@ -492,14 +495,14 @@ RadHypreSolver::radLinearSolve( const int direcn, const bool print_all_info )
     HYPRE_StructSMGSetLogging(solver, 1);
     HYPRE_StructSMGSetup(solver, d_A, d_b, d_x);
 
-   solveTime = Time::currentSeconds();
+  solveTimer.start();
     HYPRE_StructSMGSolve(solver, d_A, d_b, d_x);
-   solveTime = Time::currentSeconds() - solveTime;
+  solveTimer.stop();
     
     HYPRE_StructSMGGetNumIterations(solver, &num_iterations);
     HYPRE_StructSMGGetFinalRelativeResidualNorm(solver, &final_res_norm);
     HYPRE_StructSMGDestroy(solver);
-    //    cerr << "SMG Solve time = " << Time::currentSeconds()-start_time << endl;
+    //    cerr << "SMG Solve time = " << timer().seconds() << endl;
   }
   else if( d_kspType == "2" ) {
     /*Solve the system using PFMG*/
@@ -515,14 +518,14 @@ RadHypreSolver::radLinearSolve( const int direcn, const bool print_all_info )
     /*HYPRE_StructPFMGSetDxyz(solver, dxyz);*/
     HYPRE_StructPFMGSetLogging(solver, 1);
     HYPRE_StructPFMGSetup(solver, d_A, d_b, d_x);
-   solveTime = Time::currentSeconds();
+  solveTimer.start();
     HYPRE_StructPFMGSolve(solver, d_A, d_b, d_x);
-   solveTime = Time::currentSeconds() - solveTime;
+  solveTimer.stop();
     
     HYPRE_StructPFMGGetNumIterations(solver, &num_iterations);
     HYPRE_StructPFMGGetFinalRelativeResidualNorm(solver, &final_res_norm);
     HYPRE_StructPFMGDestroy(solver);
-    //    cerr << "PFMG Solve time = " << Time::currentSeconds()-start_time << endl;
+    //    cerr << "PFMG Solve time = " << timer().seconds() << endl;
   }
   else if (d_kspFix == "gmres") {
     HYPRE_StructGMRESCreate(MPI_COMM_WORLD, &solver);
@@ -546,7 +549,7 @@ RadHypreSolver::radLinearSolve( const int direcn, const bool print_all_info )
                            (HYPRE_PtrToSolverFcn) HYPRE_StructSMGSolve,
                            (HYPRE_PtrToSolverFcn) HYPRE_StructSMGSetup,
                            (HYPRE_Solver) precond);
-      //      cerr << "SMG Precond time = " << Time::currentSeconds()-start_time << endl;
+      //      cerr << "SMG Precond time = " << timer().seconds() << endl;
     }
 
     else if (d_kspType == "4") {  
@@ -567,7 +570,7 @@ RadHypreSolver::radLinearSolve( const int direcn, const bool print_all_info )
                            (HYPRE_PtrToSolverFcn) HYPRE_StructPFMGSolve,
                            (HYPRE_PtrToSolverFcn) HYPRE_StructPFMGSetup,
                            (HYPRE_Solver) precond);
-      //      cerr << "PFMG Precond time = " << Time::currentSeconds()-start_time << endl;
+      //      cerr << "PFMG Precond time = " << timer().seconds() << endl;
     }
 
     else if (d_kspType == "5") {
@@ -581,20 +584,20 @@ RadHypreSolver::radLinearSolve( const int direcn, const bool print_all_info )
                            (HYPRE_PtrToSolverFcn) HYPRE_StructJacobiSolve,
                            (HYPRE_PtrToSolverFcn) HYPRE_StructJacobiSetup,
                            (HYPRE_Solver) precond);
-      //      cerr << "SMG Precond time = " << Time::currentSeconds()-start_time << endl;
+      //      cerr << "SMG Precond time = " << timer().seconds() << endl;
     }
-    //double dummy_start = Time::currentSeconds();
+
+  solveTimer.start();
     HYPRE_GMRESSetup
       ( (HYPRE_Solver)solver, (HYPRE_Matrix)d_A, (HYPRE_Vector)d_b, (HYPRE_Vector)d_x );
-    //cerr << "PCG Setup time = " << Time::currentSeconds()-dummy_start << endl;
-    //dummy_start = Time::currentSeconds();
+  solveTimer.stop();
+    //cerr << "PCG Setup time = " << solveTimer().seconds << endl;
 
-   solveTime = Time::currentSeconds();
+  solveTimer.reset( true );
     HYPRE_GMRESSolve
       ( (HYPRE_Solver)solver, (HYPRE_Matrix)d_A, (HYPRE_Vector)d_b, (HYPRE_Vector)d_x);
-   solveTime = Time::currentSeconds() - solveTime;
-
-    //cerr << "PCG Solve time = " << Time::currentSeconds()-dummy_start << endl;
+  solveTimer.stop();
+    //cerr << "PCG Solve time = " << solveTimer().seconds << endl;
     
     HYPRE_GMRESGetNumIterations( (HYPRE_Solver)solver, &num_iterations );
     HYPRE_GMRESGetFinalRelativeResidualNorm( (HYPRE_Solver)solver, &final_res_norm );
@@ -609,7 +612,7 @@ RadHypreSolver::radLinearSolve( const int direcn, const bool print_all_info )
     else if (d_kspType == "5") {
       HYPRE_StructJacobiDestroy(precond);
     }
- }
+  }
   else if (d_kspFix == "cg") {
     HYPRE_StructPCGCreate(MPI_COMM_WORLD, &solver);
     HYPRE_PCGSetMaxIter( (HYPRE_Solver)solver, d_maxSweeps);
@@ -632,8 +635,8 @@ RadHypreSolver::radLinearSolve( const int direcn, const bool print_all_info )
                            (HYPRE_PtrToSolverFcn) HYPRE_StructSMGSolve,
                            (HYPRE_PtrToSolverFcn) HYPRE_StructSMGSetup,
                            (HYPRE_Solver) precond);
-      //      cerr << "SMG Precond time = " << Time::currentSeconds()-start_time << endl;
-    }else if (d_kspType == "7") {  
+      //      cerr << "SMG Precond time = " << timer().seconds() << endl;
+    } else if (d_kspType == "7") {  
       /* use symmetric PFMG as preconditioner */
       HYPRE_StructPFMGCreate(MPI_COMM_WORLD, &precond);
       HYPRE_StructPFMGSetMaxIter(precond, 1);
@@ -650,8 +653,8 @@ RadHypreSolver::radLinearSolve( const int direcn, const bool print_all_info )
                            (HYPRE_PtrToSolverFcn) HYPRE_StructPFMGSolve,
                            (HYPRE_PtrToSolverFcn) HYPRE_StructPFMGSetup,
                            (HYPRE_Solver) precond);
-      //      cerr << "PFMG Precond time = " << Time::currentSeconds()-start_time << endl;
-    }else if (d_kspType == "8") {
+      //      cerr << "PFMG Precond time = " << timer().seconds() << endl;
+    } else if (d_kspType == "8") {
       /* use two-step Jacobi as preconditioner */
       HYPRE_StructJacobiCreate(MPI_COMM_WORLD, &precond);
       HYPRE_StructJacobiSetMaxIter(precond, 2);
@@ -661,20 +664,20 @@ RadHypreSolver::radLinearSolve( const int direcn, const bool print_all_info )
                            (HYPRE_PtrToSolverFcn) HYPRE_StructJacobiSolve,
                            (HYPRE_PtrToSolverFcn) HYPRE_StructJacobiSetup,
                            (HYPRE_Solver) precond);
-      //      cerr << "Jacobi Precond time = " << Time::currentSeconds()-start_time << endl;
+      //      cerr << "Jacobi Precond time = " << timer().seconds() << endl;
     }
     
-    //double dummy_start = Time::currentSeconds();
+  solveTimer.start();
     HYPRE_PCGSetup
       ( (HYPRE_Solver)solver, (HYPRE_Matrix)d_A, (HYPRE_Vector)d_b, (HYPRE_Vector)d_x );
-    //cerr << "PCG Setup time = " << Time::currentSeconds()-dummy_start << endl;
+  solveTimer.stop();
+    //cerr << "PCG Setup time = " << solveTimer().seconds << endl;
 
-    //dummy_start = Time::currentSeconds();
-   solveTime = Time::currentSeconds();
+  solveTimer.reset( true );
     HYPRE_PCGSolve
       ( (HYPRE_Solver)solver, (HYPRE_Matrix)d_A, (HYPRE_Vector)d_b, (HYPRE_Vector)d_x);
-   solveTime = Time::currentSeconds() - solveTime;
-    //cerr << "PCG Solve time = " << Time::currentSeconds()-dummy_start << endl;
+  solveTimer.stop();
+    //cerr << "PCG Solve time = " << solveTimer().seconds << endl;
     
     HYPRE_PCGGetNumIterations( (HYPRE_Solver)solver, &num_iterations );
     HYPRE_PCGGetFinalRelativeResidualNorm( (HYPRE_Solver)solver, &final_res_norm );
@@ -689,14 +692,12 @@ RadHypreSolver::radLinearSolve( const int direcn, const bool print_all_info )
     else if (d_kspType == "8") {
       HYPRE_StructJacobiDestroy(precond);
     }
-
   }
 
-   
   if ( print_all_info ){ 
-    proc0cout << "    Direction: " << direcn << "     Sum(B) = " << sum_b << "      Init Norm: " << init_norm << "      Total Iter: " << num_iterations << "     Final Norm: " <<  final_res_norm << "     Total Time(sec): " << Time::currentSeconds()-start_time << endl;
+    proc0cout << "    Direction: " << direcn << "     Sum(B) = " << sum_b << "      Init Norm: " << init_norm << "      Total Iter: " << num_iterations << "     Final Norm: " <<  final_res_norm << "     Total Time(sec): " << timer().seconds() << endl;
   } else { 
-    proc0cout << "  Direction: " << direcn << "   Total Iter: " << num_iterations << "   Final Norm: " <<  final_res_norm << "     Total Time(sec): " << Time::currentSeconds()-start_time << "  Solve Only:"<< solveTime<< endl;
+    proc0cout << "  Direction: " << direcn << "   Total Iter: " << num_iterations << "   Final Norm: " <<  final_res_norm << "     Total Time(sec): " << timer().seconds() << "  Solve Only:"<< solveTimer().seconds() << endl;
   } 
 
   if (final_res_norm < d_residual)
@@ -744,9 +745,6 @@ RadHypreSolver::destroyMatrix()
   /*-----------------------------------------------------------
    * Finalize things
    *-----------------------------------------------------------*/
-
-  double destroyTime = Time::currentSeconds();
-
   HYPRE_StructGridDestroy(d_grid);
   HYPRE_StructStencilDestroy(d_stencil);
   HYPRE_StructMatrixDestroy(d_A);
@@ -773,8 +771,6 @@ RadHypreSolver::destroyMatrix()
 
   
   hypre_FinalizeMemoryDebug();
-
-  destroyTime = Time::currentSeconds()-destroyTime;
 }
 
 void

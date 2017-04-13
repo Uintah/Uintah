@@ -42,7 +42,7 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/Handle.h>
-#include <Core/Util/Time.h>
+#include <Core/Util/Timers/Timers.hpp>
 
 #include <list>
 #include <mutex>
@@ -488,7 +488,8 @@ private:
                             int              levelIndex,
                             double           startTime,
                             double           endTime ) {
-    double call_start = Uintah::Time::currentSeconds();
+    Timers::Simple timer;
+    timer.start();
 
     std::vector<int> index;
     std::vector<double> times;
@@ -543,7 +544,9 @@ private:
       // std::cerr <<" time = "<<t<<",  value = "<<var[idx]<<std::endl;
       values.push_back(var[idx]);
     }
-    dbg << "DataArchive::query(values) completed in " << (Uintah::Time::currentSeconds() - call_start) << " seconds\n";
+
+    dbg << "DataArchive::query(values) completed in " << timer().seconds()
+	<< " seconds\n";
   }  
   //______________________________________________________________________
   //
@@ -556,7 +559,8 @@ private:
                             double           startTime,
                             double           endTime,
                             int              levelIndex /* = -1 */ ) {
-    double call_start = Uintah::Time::currentSeconds();
+    Timers::Simple timer;
+    timer.start();
 
     std::vector<int> index;
     std::vector<double> times;
@@ -702,8 +706,8 @@ private:
       //std::cerr << "DataArchive::query:data extracted" << std::endl;
     }
 
-    dbg << "DataArchive::query(values) completed in "
-        << (Uintah::Time::currentSeconds() - call_start) << " seconds\n";
+    dbg << "DataArchive::query(values) completed in " << timer().seconds()
+        << " seconds\n";
   }
   
 } // end namespace Uintah

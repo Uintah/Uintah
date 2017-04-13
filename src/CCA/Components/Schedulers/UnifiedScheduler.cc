@@ -35,6 +35,7 @@
 #include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Parallel/CommunicationList.hpp>
 #include <Core/Util/DOUT.hpp>
+#include <Core/Util/Timers/Timers.hpp>
 #include <Core/Util/Time.h>
 
 #ifdef HAVE_CUDA
@@ -154,6 +155,8 @@ void thread_driver( const int tid )
   set_affinity( g_cpu_affinities[tid] );
 
   try {
+    g_runners[tid]->resetWaitTime();
+  
     // wait until main thread sets function and changes states
     g_thread_states[tid] = ThreadState::Inactive;
     while (g_thread_states[tid] == ThreadState::Inactive) {
@@ -162,14 +165,21 @@ void thread_driver( const int tid )
 
     while (g_thread_states[tid] == ThreadState::Active) {
 
+      g_runners[tid]->stopWaitTime();
+
       // run the function and wait for main thread to reset state
       g_runners[tid]->run();
+
+      g_runners[tid]->startWaitTime();
 
       g_thread_states[tid] = ThreadState::Inactive;
       while (g_thread_states[tid] == ThreadState::Inactive) {
         std::this_thread::yield();
       }
     }
+
+    g_runners[tid]->stopWaitTime();
+    
   } catch (const std::exception & e) {
     std::cerr << "Exception thrown from worker thread: " << e.what() << std::endl;
     std::cerr.flush();
@@ -488,11 +498,13 @@ UnifiedScheduler::runTask( DetailedTask*         task
                          , Task::CallBackEvent   event
                          )
 {
+  Timers::Simple timer;
+
   // Only execute CPU or GPU tasks.  Don't execute postGPU tasks a second time.
   if ( event == Task::CPU || event == Task::GPU) {
     // -------------------------< begin task execution timing >-------------------------
-    double task_start_time = Time::currentSeconds();
-
+    timer.start();
+    
     if (m_tracking_vars_print_location & SchedulerCommon::PRINT_BEFORE_EXEC) {
       printTrackedVars(task, SchedulerCommon::PRINT_BEFORE_EXEC);
     }
@@ -509,7 +521,9 @@ UnifiedScheduler::runTask( DetailedTask*         task
       printTrackedVars(task, SchedulerCommon::PRINT_AFTER_EXEC);
     }
 
-    double total_task_time = Time::currentSeconds() - task_start_time;
+    timer.stop();
+    double total_task_time = timer().seconds();
+
     // -------------------------< end task execution timing >-------------------------
 
     g_lb_lock.lock();
@@ -587,7 +601,7 @@ UnifiedScheduler::runTask( DetailedTask*         task
     task->done(m_dws);  // should this be timed with taskstart? - BJW
 
     // -------------------------< begin MPI test timing >-------------------------
-    double test_start_time = Time::currentSeconds();
+    timer.start();
 
     if (Uintah::Parallel::usingMPI()) {
       //---------------------------------------------------------------------------
@@ -605,7 +619,8 @@ UnifiedScheduler::runTask( DetailedTask*         task
       //-----------------------------------
     }
 
-    mpi_info_[TotalTestMPI] += Time::currentSeconds() - test_start_time;
+    mpi_info_[TotalTestMPI] += timer().seconds();
+    
     // -------------------------< end MPI test timing >-------------------------
 
     // Add subscheduler timings to the parent scheduler and reset subscheduler timings
@@ -785,9 +800,9 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
   emitTime("Total recv time"     , mpi_info_[TotalRecv]   - mpi_info_[TotalRecvMPI] - mpi_info_[TotalWaitMPI]);
   emitTime("Total comm time"     , mpi_info_[TotalRecv]   + mpi_info_[TotalSend]    + mpi_info_[TotalReduce]);
 
-  double time = Time::currentSeconds();
-  double totalexec = time - m_last_time;
-  m_last_time = time;
+  m_timer.stop();
+  double totalexec = m_timer().seconds();
+  m_timer.start();
 
   emitTime("Other execution time", totalexec - mpi_info_[TotalSend] - mpi_info_[TotalRecv] - mpi_info_[TotalTask] - mpi_info_[TotalReduce]);
 
@@ -4683,8 +4698,6 @@ void
 UnifiedSchedulerWorker::run()
 {
   while( Impl::g_run_tasks ) {
-    m_waittime += Time::currentSeconds() - m_waitstart;
-
     try {
       m_scheduler->runTasks(Impl::t_tid);
     }
@@ -4700,20 +4713,35 @@ UnifiedSchedulerWorker::run()
 
 //______________________________________________________________________
 //
-
-double
-UnifiedSchedulerWorker::getWaittime()
+void
+UnifiedSchedulerWorker::resetWaitTime()
 {
-  return m_waittime;
+  m_waitTimer.reset( true );
 }
 
 
 //______________________________________________________________________
 //
-
 void
-UnifiedSchedulerWorker::resetWaittime( double start )
+UnifiedSchedulerWorker::startWaitTime()
 {
-  m_waitstart = start;
-  m_waittime  = 0.0;
+  m_waitTimer.stop();
+}
+
+
+//______________________________________________________________________
+//
+void
+UnifiedSchedulerWorker::stopWaitTime()
+{
+  m_waitTimer.stop();
+}
+
+
+//______________________________________________________________________
+//
+double
+UnifiedSchedulerWorker::getWaitTime()
+{
+  return m_waitTimer().seconds();
 }

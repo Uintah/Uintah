@@ -117,9 +117,12 @@
 #include <vector>
 #include <stdexcept>
 
+#include <sys/time.h>
 #include <sys/stat.h>
-#include <time.h>
 
+#ifdef __linux
+  #include <time.h>
+#endif
 
 using namespace Uintah;
 
@@ -218,9 +221,6 @@ usage( const std::string& message, const std::string& badarg, const std::string&
 void
 sanityChecks()
 {
-  // This set the global time.
-  Time::currentSeconds();
-  
 #if defined( DISABLE_SCI_MALLOC )
   if (getenv("MALLOC_STATS")) {
     printf("\nERROR:\n");
@@ -597,7 +597,12 @@ main( int argc, char *argv[], char *env[] )
       }
       std::cout << "PID for rank " << Uintah::Parallel::getMPIRank() << " (" << name << ") is " << getpid() << "\n";
       std::cout.flush();
-      Time::waitFor( (double)sleepTime );
+
+      struct timespec ts;
+      ts.tv_sec = (int) sleepTime;
+      ts.tv_nsec = (int)(1.e9 * (sleepTime - ts.tv_sec));
+
+      nanosleep(&ts, &ts);
     }
 
     //__________________________________

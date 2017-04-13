@@ -4548,7 +4548,7 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
     
       //__________________________________
       //  User specified source/sink 
-      double Time = d_sharedState->getElapsedTime();  
+      double Time = d_sharedState->getElapsedSimTime();  
       if (  d_add_heat &&
             Time >= d_add_heat_t_start && 
             Time <= d_add_heat_t_final ) { 

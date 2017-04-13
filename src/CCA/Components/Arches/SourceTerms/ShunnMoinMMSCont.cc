@@ -102,7 +102,7 @@ ShunnMoinMMSCont::computeSource( const ProcessorGroup* pc,
     int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<double> src; 
-    double time = _shared_state->getElapsedTime(); 
+    double time = _shared_state->getElapsedSimTime(); 
     double pi = acos(-1.0);
     double t = _w * pi * time; 
 

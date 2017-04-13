@@ -90,19 +90,19 @@ if ("$visit:t" != "visit") then
     else if ("$hostname" == "ash") then
         set visit = "/uufs/chpc.utah.edu/sys/installdir/VisIt/install/bin/visit"
     else if ("$hostname" == "cooley") then
-	set visit = "/soft/visualization/visit/bin/visit"
+        set visit = "/soft/visualization/visit/bin/visit"
     else if ("$hostname" == "rhea") then
-	set visit = "/sw/redhat6/visit/bin/visit"
+        set visit = "/sw/redhat6/visit/bin/visit"
     else if ("$hostname" == "surface") then
-	set visit = "/usr/gapps/visit/bin/visit"
+        set visit = "/usr/gapps/visit/bin/visit"
     else
-	echo "Can not find VISITHOME or a machine for the visit executable ... exiting"
-	exit
+        echo "Can not find VISITHOME or a machine for the visit executable ... exiting"
+        exit
     endif
 
     if (! -e $visit) then
-	echo "Can not find the visit executable in $visit ... exiting"
-	exit
+        echo "Can not find the visit executable in $visit ... exiting"
+        exit
     endif
 endif
 
@@ -163,26 +163,26 @@ if ("$hostname" == "ash") then
     sed -i 's/\"SOURCE02\" type=\"string\">ash[0-9]*.chpc.utah.edu:/\"SOURCE02\" type=\"string\">localhost:/g' $sessionFile
     sed -i 's/\"SOURCE03\" type=\"string\">ash[0-9]*.chpc.utah.edu:/\"SOURCE03\" type=\"string\">localhost:/g' $sessionFile
     sed -i 's/\"SOURCE04\" type=\"string\">ash[0-9]*.chpc.utah.edu:/\"SOURCE04\" type=\"string\">localhost:/g' $sessionFile
-		    
+                    
     # Replace ash.chpc.utah.edu by localhost for the SourcePlugins
     sed -i 's/Field name=\"ash[0-9]*.chpc.utah.edu:/Field name=\"localhost:/g' $sessionFile
-		
+                
     if($batch == "true") then
-	# Replace ash.chpc.utah.edu by ash.wasatch.peaks
+        # Replace ash.chpc.utah.edu by ash.wasatch.peaks
         # for the MachineProfile host
-	sed -i 's/\"host\" type=\"string\">ash[0-9]*.chpc.utah.edu/\"host\" type=\"string\">ash.wasatch.peaks/g' $sessionFile
+        sed -i 's/\"host\" type=\"string\">ash[0-9]*.chpc.utah.edu/\"host\" type=\"string\">ash.wasatch.peaks/g' $sessionFile
 
     else #if($batch == "false") then
         # Replace ash.chpc.utah.edu by ash1.wasatch.peaks or ash2.wasatch.peaks
-	# for the MachineProfile host
-	set host = `hostname`
-	sed -i "s/ash[0-9]*.chpc.utah.edu/${host}.wasatch.peaks/g" $sessionFile
+        # for the MachineProfile host
+        set host = `hostname`
+        sed -i "s/ash[0-9]*.chpc.utah.edu/${host}.wasatch.peaks/g" $sessionFile
 
-#	if (`hostname` == "ash1") then
-#	    sed -i 's/\"host\" type=\"string\">ash[0-9]*.chpc.utah.edu/\"host\" type=\"string\">ash1.wasatch.peaks/g' $sessionFile
+#       if (`hostname` == "ash1") then
+#           sed -i 's/\"host\" type=\"string\">ash[0-9]*.chpc.utah.edu/\"host\" type=\"string\">ash1.wasatch.peaks/g' $sessionFile
 #        else if (`hostname` == "ash2") then
-#	    sed -i 's/\"host\" type=\"string\">ash[0-9]*.chpc.utah.edu/\"host\" type=\"string\">ash2.wasatch.peaks/g' $sessionFile
-#	endif
+#           sed -i 's/\"host\" type=\"string\">ash[0-9]*.chpc.utah.edu/\"host\" type=\"string\">ash2.wasatch.peaks/g' $sessionFile
+#       endif
     endif
 
 else if ("$hostname" == "cooley") then
@@ -193,20 +193,20 @@ else if ("$hostname" == "cooley") then
     sed -i 's/\"SOURCE02\" type=\"string\">cooley.alcf.anl.gov:/\"SOURCE02\" type=\"string\">localhost:/g' $sessionFile
     sed -i 's/\"SOURCE03\" type=\"string\">cooley.alcf.anl.gov:/\"SOURCE03\" type=\"string\">localhost:/g' $sessionFile
     sed -i 's/\"SOURCE04\" type=\"string\">cooley.alcf.anl.gov:/\"SOURCE04\" type=\"string\">localhost:/g' $sessionFile
-		    
+                    
     # Replace cooley.alcf.anl.gov by localhost for the SourcePlugins
     sed -i 's/Field name=\"cooley.alcf.anl.gov:/Field name=\"localhost:/g' $sessionFile
-		
+                
     if($batch == "true") then
-	# Replace cooley.alcf.anl.gov by cooley.fst.alcf.anl.gov
+        # Replace cooley.alcf.anl.gov by cooley.fst.alcf.anl.gov
         # for the MachineProfile host
-	sed -i 's/\"host\" type=\"string\">cooley.alcf.anl.gov/\"host\" type=\"string\">cooley.fst.alcf.anl.gov/g' $sessionFile
+        sed -i 's/\"host\" type=\"string\">cooley.alcf.anl.gov/\"host\" type=\"string\">cooley.fst.alcf.anl.gov/g' $sessionFile
 
     else #if($batch == "false") then
         # Replace cooley.alcf.anl.gov by cooleylogin#.fst.alcf.anl.gov
-	# for the MachineProfile host
-	set host = `hostname`
-	sed -i "s/cooley.alcf.anl.gov/${host}.fst.alcf.anl.gov/g" $sessionFile
+        # for the MachineProfile host
+        set host = `hostname`
+        sed -i "s/cooley.alcf.anl.gov/${host}.fst.alcf.anl.gov/g" $sessionFile
     endif
 
 # Rhea
@@ -224,16 +224,16 @@ else if ("$hostname" == "rhea") then
     sed -i 's/Field name=\"rhea.ccs.ornl.gov:/Field name=\"localhost:/g' $sessionFile
 
     if($batch == "true") then
-	# Replace rhea.ccs.ornl.gov by rhea.ccs.ornl.gov
+        # Replace rhea.ccs.ornl.gov by rhea.ccs.ornl.gov
         # for the MachineProfile host
-	# This step is done in the batch script as there is no local name.
-#	sed -i 's/\"host\" type=\"string\">rhea.ccs.ornl.gov/\"host\" type=\"string\">rhea.ccs.ornl.gov/g' $sessionFile
+        # This step is done in the batch script as there is no local name.
+#       sed -i 's/\"host\" type=\"string\">rhea.ccs.ornl.gov/\"host\" type=\"string\">rhea.ccs.ornl.gov/g' $sessionFile
 
     else #if($batch == "false") then
         # Replace rhea.ccs.ornl.gov by rhea-login#g.ccs.ornl.gov
-	# for the MachineProfile host
-	set host = `hostname`
-	sed -i "s/rhea.ccs.ornl.gov/${host}.ccs.ornl.gov/g" $sessionFile
+        # for the MachineProfile host
+        set host = `hostname`
+        sed -i "s/rhea.ccs.ornl.gov/${host}.ccs.ornl.gov/g" $sessionFile
     endif
 
 # Surface
@@ -294,18 +294,18 @@ set version = ""
     set launchMethodSet = `grep '"launchMethodSet"' $sessionFile | sed -e 's/<[^>]*>//g' -e 's/^[ \t]*//'`
 
     if ("$launchMethodSet" == "true") then
-	set launchMethod = `grep '"launchMethod"' $sessionFile | sed -e 's/<[^>]*>//g' -e 's/^[ \t]*//'`
+        set launchMethod = `grep '"launchMethod"' $sessionFile | sed -e 's/<[^>]*>//g' -e 's/^[ \t]*//'`
     else if ("$hostname" == "ash") then
-	set launchMethod = sbatch/mpirun
+        set launchMethod = sbatch/mpirun
     else if ("$hostname" == "cooley") then
-	set launchMethod = qsub/mpirun
+        set launchMethod = qsub/mpirun
     else if ("$hostname" == "rhea") then
-	set launchMethod = qsub/mpirun
+        set launchMethod = qsub/mpirun
     else if ("$hostname" == "surface") then
-	set launchMethod = msub/srun
+        set launchMethod = msub/srun
     else
-	echo "Can not figure out a launchMethod for this machine : $hostname ... bailing out"
-	exit
+        echo "Can not figure out a launchMethod for this machine : $hostname ... bailing out"
+        exit
     endif
 
     set queue = $launchMethod:h
@@ -314,76 +314,76 @@ set version = ""
     # Addiional launch arguments
     set launchArgsSet = `grep '"launchArgsSet"' $sessionFile | sed -e 's/<[^>]*>//g' -e 's/^[ \t]*//'`
     if ("$launchArgsSet" == "true") then
-	set launchArgs = `grep '"launchArgs"' $sessionFile | sed -e 's/<[^>]*>//g' -e 's/^[ \t]*//' -e 's/"//g'`
+        set launchArgs = `grep '"launchArgs"' $sessionFile | sed -e 's/<[^>]*>//g' -e 's/^[ \t]*//' -e 's/"//g'`
     else
-	set launchArgs = ""
+        set launchArgs = ""
     endif
 
     # Number of nodes
     set nNodesSet = `grep '"numNodesSet"' $sessionFile | sed -e 's/<[^>]*>//g' -e 's/^[ \t]*//'`
     if ("$nNodesSet" == "true") then
-	set nNodes = `grep '"numNodes"' $sessionFile | sed -e 's/<[^>]*>//g' -e 's/^[ \t]*//'`
+        set nNodes = `grep '"numNodes"' $sessionFile | sed -e 's/<[^>]*>//g' -e 's/^[ \t]*//'`
     else
-	set nNodes = 4
+        set nNodes = 4
     endif
 
     set nProcs = `grep '"numProcessors"' $sessionFile | sed -e 's/<[^>]*>//g' -e 's/^[ \t]*//'`
 
     # Total number of processors (ranks)
     if ("$nProcs" != "") then
-	@ nProcsPerNode = $nProcs / $nNodes
+        @ nProcsPerNode = $nProcs / $nNodes
     else if ("$hostname" == "ash") then
-	set nProcsPerNode = 12
+        set nProcsPerNode = 12
     else if ("$hostname" == "cooley") then
-	set nProcsPerNode = 12
+        set nProcsPerNode = 12
     else if ("$hostname" == "rhea") then
-	set nProcsPerNode = 16
+        set nProcsPerNode = 16
     else if ("$hostname" == "surface") then
-	set nProcsPerNode = 16
+        set nProcsPerNode = 16
     else
-	echo "Can not figure out a the number of processors per node for this machine : $hostname ... bailing out"
-	exit
+        echo "Can not figure out a the number of processors per node for this machine : $hostname ... bailing out"
+        exit
     endif
 
     # Time limit
     set timeLimitSet = `grep '"timeLimitSet"' $sessionFile | sed -e 's/<[^>]*>//g' -e 's/^[ \t]*//'`
     if ("$timeLimitSet" == "true") then
-	set time = `grep '"timeLimit"' $sessionFile | sed -e 's/<[^>]*>//g' -e 's/^[ \t]*//'`
+        set time = `grep '"timeLimit"' $sessionFile | sed -e 's/<[^>]*>//g' -e 's/^[ \t]*//'`
     else
-	set time = "0:25:00"
+        set time = "0:25:00"
     endif
 
     # Bank (project)
     set bankSet = `grep '"bankSet"' $sessionFile | sed -e 's/<[^>]*>//g' -e 's/^[ \t]*//'`
     if ("$bankSet" == "true") then
-	set bank = `grep '"bank"' $sessionFile | sed -e 's/<[^>]*>//g' -e 's/^[ \t]*//'`
+        set bank = `grep '"bank"' $sessionFile | sed -e 's/<[^>]*>//g' -e 's/^[ \t]*//'`
     else if ("$hostname" == "ash") then
-	set bank = "smithp-ash-cs"
+        set bank = "smithp-ash-cs"
     else if ("$hostname" == "cooley") then
-	set bank = "SoPE_2"
+        set bank = "SoPE_2"
     else if ("$hostname" == "rhea") then
-	set bank = "CMB122"
+        set bank = "CMB122"
     else if ("$hostname" == "surface") then
-	set bank = "utah"
+        set bank = "utah"
     else
-	echo "Can not figure out a the bank for this machine : $hostname ... bailing out"
-	exit
+        echo "Can not figure out a the bank for this machine : $hostname ... bailing out"
+        exit
     endif
 
     # Partition
     set partitionSet = `grep '"partitionSet"' $sessionFile | sed -e 's/<[^>]*>//g' -e 's/^[ \t]*//'`
     if ("$partitionSet" == "true") then
-	set partition = `grep '"partition"' $sessionFile | sed -e 's/<[^>]*>//g' -e 's/^[ \t]*//'`
+        set partition = `grep '"partition"' $sessionFile | sed -e 's/<[^>]*>//g' -e 's/^[ \t]*//'`
     else if ("$hostname" == "ash") then
-	set partition = "smithp-ash"
+        set partition = "smithp-ash"
     else if ("$hostname" == "cooley") then
-	set partition = ""
+        set partition = ""
     else if ("$hostname" == "rhea") then
-	set partition = ""
+        set partition = ""
     else if ("$hostname" == "surface") then
-	set partition = "pbatch"
+        set partition = "pbatch"
     else
-	set partition = ""
+        set partition = ""
     endif
 #endif
 
@@ -431,39 +431,39 @@ while ($i <= $#argv)
     else if (X${argv[$i]} =~ X-*) then
 
         if (X${argv[$i]} =~ X-v*) then             # version
-	    set version = ${argv[$j]}
+            set version = ${argv[$j]}
         else if (X${argv[$i]} =~ X-l*) then        # launch method
-	    set launchMethod = ${argv[$j]}
+            set launchMethod = ${argv[$j]}
         else if (X${argv[$i]} =~ X-q*) then        # queue
-	    set queue = ${argv[$j]}
+            set queue = ${argv[$j]}
         else if (X${argv[$i]} =~ X-nn) then        # number of nodes
-	    set nNodes = ${argv[$j]}
+            set nNodes = ${argv[$j]}
         else if (X${argv[$i]} =~ X-npn) then       # number of processors/nodes
-	    set nProcsPerNode = ${argv[$j]}
+            set nProcsPerNode = ${argv[$j]}
         else if (X${argv[$i]} =~ X-t*) then        # time
-	    set time = ${argv[$j]}
+            set time = ${argv[$j]}
         else if (X${argv[$i]} =~ X-b*) then        # bank
-	    set bank = ${argv[$j]}
+            set bank = ${argv[$j]}
         else if (X${argv[$i]} =~ X-p*) then        # partition
-	    set partition = "${argv[$j]}"
+            set partition = "${argv[$j]}"
         else if (X${argv[$i]} =~ X-g*) then        # geometry
-	    set geometry = "${argv[$j]}"
+            set geometry = "${argv[$j]}"
         else if (X${argv[$i]} =~ X-fo*) then       # format
-	    set format = "${argv[$j]}"
+            set format = "${argv[$j]}"
         else if (X${argv[$i]} =~ X-j*) then        # jobs
-	    set nJobs = "${argv[$j]}"
-	else
-	    echo "Unknown option ${argv[$i]} ... exiting"
-	    echo "Usage: $0 <movie name> <start frame> <end frame> <frames per batch> <session file>"
-	    echo "       [-batch use the batch system]"
-	    echo "       [-jobs <number of batch jobs>]"
-	    echo "       [-version version of VisIt to execute]"
-	    echo "       [-launch launchMethod] [-queue <queue>]"
-	    echo "       [-geometry <width>x<height>] [-format <image format>]"
-	    echo "       [-nn <Number of nodes>] [-npn <Number of processors per node>] [-time <Maximum job run time>]"
-	    echo "       [-bank <Bank from which to draw resources>] [-partition <Partition to utilize>]"
-	    exit
-	endif
+            set nJobs = "${argv[$j]}"
+        else
+            echo "Unknown option ${argv[$i]} ... exiting"
+            echo "Usage: $0 <movie name> <start frame> <end frame> <frames per batch> <session file>"
+            echo "       [-batch use the batch system]"
+            echo "       [-jobs <number of batch jobs>]"
+            echo "       [-version version of VisIt to execute]"
+            echo "       [-launch launchMethod] [-queue <queue>]"
+            echo "       [-geometry <width>x<height>] [-format <image format>]"
+            echo "       [-nn <Number of nodes>] [-npn <Number of processors per node>] [-time <Maximum job run time>]"
+            echo "       [-bank <Bank from which to draw resources>] [-partition <Partition to utilize>]"
+            exit
+        endif
 
         @ i = $i + 1
         @ j = $j + 1
@@ -480,24 +480,24 @@ if ($batch == "true") then
     @ nProcs = $nNodes * $nProcsPerNode
 else
     if( $nJobs > 1 ) then
-	echo "Not running in batch mode ignoring the number of jobs request"
-	set nJobs = 1
+        echo "Not running in batch mode ignoring the number of jobs request"
+        set nJobs = 1
     endif
-	
+        
     if( $nNodes == "" && $nProcsPerNode == "") then
-	set nProcs = ""
+        set nProcs = ""
     else if ($nNodes == "") then
-	set nNodes = 8
-	@ nProcs = $nNodes * $nProcsPerNode
+        set nNodes = 8
+        @ nProcs = $nNodes * $nProcsPerNode
     else if ("$nProcsPerNode" == "") then
-	set nProcsPerNode = 12
-	@ nProcs = $nNodes * $nProcsPerNode
+        set nProcsPerNode = 12
+        @ nProcs = $nNodes * $nProcsPerNode
     else
         @ nProcs = $nNodes * $nProcsPerNode
     endif
 
     if ("$queue" != "" && $queue != $launchMethod) then
-	set launchMethod = $queue/$launchMethod
+        set launchMethod = $queue/$launchMethod
         set queue = ""
     endif
 endif
@@ -562,11 +562,11 @@ set job = 0
 while ($job < $nJobs)
 
     if($job < $nExtraFramesPerJob) then
-	@ start = $startFrame + $job * ($nFramesPerJob + 1)
-	@ end   = $start + ($nFramesPerJob + 1) - 1
+        @ start = $startFrame + $job * ($nFramesPerJob + 1)
+        @ end   = $start + ($nFramesPerJob + 1) - 1
     else
-	@ start = $startFrame + $job * ($nFramesPerJob) + $nExtraFramesPerJob
-	@ end   = $start + $nFramesPerJob - 1
+        @ start = $startFrame + $job * ($nFramesPerJob) + $nExtraFramesPerJob
+        @ end   = $start + $nFramesPerJob - 1
     endif
 
     # For each job figure out how many times VisIt must be run.
@@ -574,7 +574,7 @@ while ($job < $nJobs)
     @ nRuns           = $nFramesToRender / $maxFramesToRender
 
     if( $nFramesToRender % $maxFramesToRender != 0 ) then
-	@ nRuns = $nRuns + 1
+        @ nRuns = $nRuns + 1
     endif
 
     set fullMovieName = "-output $movieName"
@@ -582,12 +582,12 @@ while ($job < $nJobs)
     # Batch
     if( $batch == "true" ) then
 
-	if( $nJobs == 1 ) then
-	    echo "Creating $nRuns VisIt runs in a single batch job."
-	endif
+        if( $nJobs == 1 ) then
+            echo "Creating $nRuns VisIt runs in a single batch job."
+        endif
 
-	set jobName = $movieName:t_job_$job
-	echo "Creating frames $start through $end using job name $jobName"
+        set jobName = $movieName:t_job_$job
+        echo "Creating frames $start through $end using job name $jobName"
 
 # $queue = qsub && $launchmethod = mpirun
         if ("$hostname" == "QSUB_STDIN") then
@@ -616,39 +616,39 @@ EOF
             /bin/touch $jobName
             echo "#! /bin/csh" >> $jobName
             echo "#SBATCH -N $nNodes" >> $jobName
-	    echo "#SBATCH -n $nProcs" >> $jobName
+            echo "#SBATCH -n $nProcs" >> $jobName
             echo "#SBATCH -p $partition" >> $jobName
             echo "#SBATCH -A $bank" >> $jobName
             echo "#SBATCH -t $time" >> $jobName
-	    if ("$launchArgs" != "") echo "#SBATCH $launchArgs" >> $jobName
+            if ("$launchArgs" != "") echo "#SBATCH $launchArgs" >> $jobName
             echo "#SBATCH -J $jobName" >> $jobName
             echo " " >> $jobName
             echo "cd $cwd" >> $jobName
             echo " " >> $jobName
             echo '#==============visit command below======================'  >> $jobName
-	    set run = 0
+            set run = 0
 
-	    while ($run < $nRuns)
-		@ runStart = $start + $run * $maxFramesToRender
-		@ runEnd   = $runStart + $maxFramesToRender - 1
+            while ($run < $nRuns)
+                @ runStart = $start + $run * $maxFramesToRender
+                @ runEnd   = $runStart + $maxFramesToRender - 1
 
-		if( $runEnd > $end ) set runEnd = $end
+                if( $runEnd > $end ) set runEnd = $end
 
-#		echo 'srun hostname | sort > nodefile.${SLURM_JOBID}' >> $jobName
-		echo -n "$visit $version " >> $jobName
-		echo -n "-movie -start $runStart -end $runEnd " >> $jobName
-		echo -n "-frame $runStart " >> $jobName
-		echo -n "$geometry $format $fullMovieName " >> $jobName
-		echo -n "-sessionfile $sessionFile " >> $jobName
-		echo -n "-ignoresessionengines " >> $jobName
-		echo -n "-par -l $launchMethod " >> $jobName
-		echo -n "-nn $nNodes -np $nProcs " >> $jobName
-		#echo-n '-machinefile nodefile.${SLURM_JOBID}' >> $jobName
-		echo " " >> $jobName
-		@ run = $run + 1
-	    end
+#               echo 'srun hostname | sort > nodefile.${SLURM_JOBID}' >> $jobName
+                echo -n "$visit $version " >> $jobName
+                echo -n "-movie -start $runStart -end $runEnd " >> $jobName
+                echo -n "-frame $runStart " >> $jobName
+                echo -n "$geometry $format $fullMovieName " >> $jobName
+                echo -n "-sessionfile $sessionFile " >> $jobName
+                echo -n "-ignoresessionengines " >> $jobName
+                echo -n "-par -l $launchMethod " >> $jobName
+                echo -n "-nn $nNodes -np $nProcs " >> $jobName
+                #echo-n '-machinefile nodefile.${SLURM_JOBID}' >> $jobName
+                echo " " >> $jobName
+                @ run = $run + 1
+            end
 
-	    echo "Submitting $queue script for $jobName"
+            echo "Submitting $queue script for $jobName"
             $queue $jobName
 
 # Cooley
@@ -664,26 +664,26 @@ EOF
             echo "cd $cwd" >> $jobName
             echo " " >> $jobName
             echo '#==============visit command below======================'  >> $jobName
-	    set run = 0
+            set run = 0
 
-	    while ($run < $nRuns)
-		@ runStart = $start + $run * $maxFramesToRender
-		@ runEnd   = $runStart + $maxFramesToRender - 1
+            while ($run < $nRuns)
+                @ runStart = $start + $run * $maxFramesToRender
+                @ runEnd   = $runStart + $maxFramesToRender - 1
 
-		if( $runEnd > $end ) set runEnd = $end
+                if( $runEnd > $end ) set runEnd = $end
 
-		echo -n "$visit $version " >> $jobName
-		echo -n "-movie -start $runStart -end $runEnd " >> $jobName
-		echo -n "-frame $runStart " >> $jobName
-		echo -n "$geometry $format $fullMovieName " >> $jobName
-		echo -n "-sessionfile $sessionFile " >> $jobName
-		echo -n "-ignoresessionengines " >> $jobName
-		echo -n "-par -l $launchMethod " >> $jobName
-		echo -n "-nn $nNodes -np $nProcs " >> $jobName
-		echo -n '-machinefile ${COBALT_NODEFILE} ' >> $jobName
-		echo " " >> $jobName
-		@ run = $run + 1
-	    end
+                echo -n "$visit $version " >> $jobName
+                echo -n "-movie -start $runStart -end $runEnd " >> $jobName
+                echo -n "-frame $runStart " >> $jobName
+                echo -n "$geometry $format $fullMovieName " >> $jobName
+                echo -n "-sessionfile $sessionFile " >> $jobName
+                echo -n "-ignoresessionengines " >> $jobName
+                echo -n "-par -l $launchMethod " >> $jobName
+                echo -n "-nn $nNodes -np $nProcs " >> $jobName
+                echo -n '-machinefile ${COBALT_NODEFILE} ' >> $jobName
+                echo " " >> $jobName
+                @ run = $run + 1
+            end
 
             echo "Submitting $queue script for $jobName"
             $queue --nodecount=$nNodes --proccount=$nProcs --project=$bank --time=$time $launchArgs --jobname=$jobName --mode=script $jobName
@@ -693,66 +693,66 @@ EOF
 # $queue = qsub && $launchmethod = mpirun
         else if ("$hostname" == "rhea") then
 
-	    # Create a job specific session file as the Machine Profile will
-	    # need to specify the first node allocated.
-	    set jobSessionFile = "${jobName}.session"
+            # Create a job specific session file as the Machine Profile will
+            # need to specify the first node allocated.
+            set jobSessionFile = "${jobName}.session"
 
-	    if (-e $jobSessionFile) then
-		rm -f $jobSessionFile
-	    endif
+            if (-e $jobSessionFile) then
+                rm -f $jobSessionFile
+            endif
 
-	    cp $sessionFile $jobSessionFile
+            cp $sessionFile $jobSessionFile
 
             echo "Creating $queue script for $jobName"
             /bin/rm -f $jobName
             /bin/touch $jobName
             echo "#! /bin/csh" >> $jobName
-	    # For rhea do not add procs because one gets the whole node.
+            # For rhea do not add procs because one gets the whole node.
             echo "#PBS -l nodes=${nNodes},walltime=$time" >> $jobName
             echo "#PBS -A $bank" >> $jobName
-	    if ("$launchArgs" != "") echo "#PBS $launchArgs" >> $jobName
+            if ("$launchArgs" != "") echo "#PBS $launchArgs" >> $jobName
             echo "#PBS -N $jobName" >> $jobName
             echo " " >> $jobName
 
-	    # add xalt because the default throw errors
-	    echo "module add xalt/0.7.5" >> $jobName
+            # add xalt because the default throw errors
+            echo "module add xalt/0.7.5" >> $jobName
             echo " " >> $jobName
             echo "cd $cwd" >> $jobName
             echo " " >> $jobName
 
-	    # Set the hostname to be the first node allocated 
-	    # in the session file.
-	    echo 'set host = `hostname`' >> $jobName
+            # Set the hostname to be the first node allocated 
+            # in the session file.
+            echo 'set host = `hostname`' >> $jobName
             echo " " >> $jobName
-	    echo -n 'sed -i "s/rhea.ccs.ornl.gov/${host}.ccs.ornl.gov/g" ' >> $jobName
-	    echo "$jobSessionFile " >> $jobName
-	    echo " " >> $jobName
+            echo -n 'sed -i "s/rhea.ccs.ornl.gov/${host}.ccs.ornl.gov/g" ' >> $jobName
+            echo "$jobSessionFile " >> $jobName
+            echo " " >> $jobName
             echo '#==============visit command below======================'  >> $jobName
-	    set run = 0
+            set run = 0
 
-	    while ($run < $nRuns)
-		@ runStart = $start + $run * $maxFramesToRender
-		@ runEnd   = $runStart + $maxFramesToRender - 1
+            while ($run < $nRuns)
+                @ runStart = $start + $run * $maxFramesToRender
+                @ runEnd   = $runStart + $maxFramesToRender - 1
 
-		if( $runEnd > $end ) set runEnd = $end
+                if( $runEnd > $end ) set runEnd = $end
 
-		echo -n "$visit $version " >> $jobName
-		echo -n "-movie -start $runStart -end $runEnd " >> $jobName
-		echo -n "-frame $runStart " >> $jobName
-		echo -n "$geometry $format $fullMovieName " >> $jobName
-		echo -n "-sessionfile $jobSessionFile " >> $jobName
-		echo -n "-ignoresessionengines " >> $jobName
-		echo -n "-par -l $launchMethod " >> $jobName
-		echo -n "-nn $nNodes -np $nProcs " >> $jobName
-		echo -n '-machinefile ${PBS_NODEFILE} ' >> $jobName
-		echo " " >> $jobName
-		@ run = $run + 1
-	    end
+                echo -n "$visit $version " >> $jobName
+                echo -n "-movie -start $runStart -end $runEnd " >> $jobName
+                echo -n "-frame $runStart " >> $jobName
+                echo -n "$geometry $format $fullMovieName " >> $jobName
+                echo -n "-sessionfile $jobSessionFile " >> $jobName
+                echo -n "-ignoresessionengines " >> $jobName
+                echo -n "-par -l $launchMethod " >> $jobName
+                echo -n "-nn $nNodes -np $nProcs " >> $jobName
+                echo -n '-machinefile ${PBS_NODEFILE} ' >> $jobName
+                echo " " >> $jobName
+                @ run = $run + 1
+            end
 
-	    echo "Submitting $queue script for $jobName"
+            echo "Submitting $queue script for $jobName"
             $queue $jobName
 
-# Surface	    
+# Surface           
 # $queue = msub && $launchmethod = srun
         else if ("$hostname" == "surface") then
 
@@ -765,31 +765,31 @@ EOF
             echo "#MSUB -l partition=$hostname" >> $jobName
             echo "#MSUB -A $bank" >> $jobName
             echo "#MSUB -l walltime=$time" >> $jobName
-	    if ("$launchArgs" != "") echo "#MSUB $launchArgs" >> $jobName
+            if ("$launchArgs" != "") echo "#MSUB $launchArgs" >> $jobName
             echo "#MSUB -N $jobName" >> $jobName
             echo " " >> $jobName
             echo "cd $cwd" >> $jobName
             echo " " >> $jobName
             echo '#==============visit command below======================'  >> $jobName
-	    set run = 0
+            set run = 0
 
-	    while ($run < $nRuns)
-		@ runStart = $start + $run * $maxFramesToRender
-		@ runEnd   = $runStart + $maxFramesToRender - 1
+            while ($run < $nRuns)
+                @ runStart = $start + $run * $maxFramesToRender
+                @ runEnd   = $runStart + $maxFramesToRender - 1
 
-		if( $runEnd > $end ) set runEnd = $end
+                if( $runEnd > $end ) set runEnd = $end
 
-		echo -n "$visit $version " >> $jobName
-		echo -n "-movie -start $runStart -end $runEnd " >> $jobName
-		echo -n "-frame $runStart " >> $jobName
-		echo -n "$geometry $format $fullMovieName " >> $jobName
-		echo -n "-sessionfile $sessionFile " >> $jobName
-		echo -n "-ignoresessionengines " >> $jobName
-		echo -n "-par -l $launchMethod " >> $jobName
-		echo -n "-nn $nNodes -np $nProcs" >> $jobName
-		echo " " >> $jobName
-		@ run = $run + 1
-	    end
+                echo -n "$visit $version " >> $jobName
+                echo -n "-movie -start $runStart -end $runEnd " >> $jobName
+                echo -n "-frame $runStart " >> $jobName
+                echo -n "$geometry $format $fullMovieName " >> $jobName
+                echo -n "-sessionfile $sessionFile " >> $jobName
+                echo -n "-ignoresessionengines " >> $jobName
+                echo -n "-par -l $launchMethod " >> $jobName
+                echo -n "-nn $nNodes -np $nProcs" >> $jobName
+                echo " " >> $jobName
+                @ run = $run + 1
+            end
 
             echo "Submitting $queue script for $jobName"
             $queue $jobName
@@ -798,28 +798,28 @@ EOF
 
 # Sequential
     else
-	echo "Running $nRuns VisIt runs via the command line."
+        echo "Running $nRuns VisIt runs via the command line."
 
-	set run = 0
+        set run = 0
 
-	while ($run < $nRuns)
-	    @ runStart = $start + $run * $maxFramesToRender
-	    @ runEnd   = $runStart + $maxFramesToRender - 1
+        while ($run < $nRuns)
+            @ runStart = $start + $run * $maxFramesToRender
+            @ runEnd   = $runStart + $maxFramesToRender - 1
 
-	    if( $runEnd > $end ) set runEnd = $end
+            if( $runEnd > $end ) set runEnd = $end
         
-	    set logFile = $movieName$run.script_log
-	    echo "Creating frames $runStart through $runEnd using logfile $logFile"
+            set logFile = $movieName$run.script_log
+            echo "Creating frames $runStart through $runEnd using logfile $logFile"
 
             /bin/rm -f $logFile
             /bin/touch $logFile
-	    
-	    echo "$visit $version -movie -start $runStart -end $runEnd -frame $runStart $geometry $format $fullMovieName -sessionfile $sessionFile -par $launchMethod $nNodes $nProcs $time $bank $partition" >> $logFile
+            
+            echo "$visit $version -movie -start $runStart -end $runEnd -frame $runStart $geometry $format $fullMovieName -sessionfile $sessionFile -par $launchMethod $nNodes $nProcs $time $bank $partition" >> $logFile
 
-	    nohup $visit $version -movie -start $runStart -end $runEnd -frame $runStart $geometry $format $fullMovieName -sessionfile $sessionFile -par $launchMethod $nNodes $nProcs $time $bank $partition >>&! $logFile
+            nohup $visit $version -movie -start $runStart -end $runEnd -frame $runStart $geometry $format $fullMovieName -sessionfile $sessionFile -par $launchMethod $nNodes $nProcs $time $bank $partition >>&! $logFile
 
-	    @ run = $run + 1
-	end
+            @ run = $run + 1
+        end
     endif
 
     @ job = $job + 1

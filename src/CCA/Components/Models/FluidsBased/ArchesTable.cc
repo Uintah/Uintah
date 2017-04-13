@@ -29,8 +29,8 @@
 #include <Core/IO/UintahZlibUtil.h>
 
 #include <Core/Math/MiscMath.h>
-#include <Core/Util/Time.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Util/Timers/Timers.hpp>
 
 #include <iostream>
 
@@ -299,10 +299,11 @@ void
 ArchesTable::setup(const bool cerrSwitch)
 {
   cerr_dbg.setActive(cerrSwitch);
-  double start = Time::currentSeconds();
+
+  Timers::Simple timer;
+  timer.start();
+
   // Read the index...
-
-
   gzFile gzFp = gzopen( filename_.c_str(), "r" );
 
   if( gzFp == nullptr ) {
@@ -608,8 +609,9 @@ ArchesTable::setup(const bool cerrSwitch)
       dep->addAxis(axes[i]);
   }
   file_read_ = true;
-  double dt = Time::currentSeconds()-start;
-  cerr_dbg << "Read and interpolated table in " << dt << " seconds\n";
+
+  cerr_dbg << "Read and interpolated table in " << timer().seconds()
+	   << " seconds\n";
 }
 
 void

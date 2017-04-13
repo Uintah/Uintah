@@ -249,7 +249,7 @@ void ProgramBurn::computeStressTensor(const PatchSubset* patches,
     new_dw->get(deformationGradient_new,
                                   lb->pDeformationMeasureLabel_preReloc,  pset);
 
-    double time = d_sharedState->getElapsedTime() - d_initialData.d_T0;
+    double time = d_sharedState->getElapsedSimTime() - d_initialData.d_T0;
 
     double K = d_initialData.d_K;
     double n = d_initialData.d_n;

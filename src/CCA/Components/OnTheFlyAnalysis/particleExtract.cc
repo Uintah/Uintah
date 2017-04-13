@@ -388,7 +388,7 @@ particleExtract::doAnalysis( const ProcessorGroup * pg,
     lastWriteTime = writeTime;
   }
 
-  double now = d_sharedState->getElapsedTime();
+  double now = d_sharedState->getElapsedSimTime();
   if(now < d_startTime || now > d_stopTime){
     return;
   }  
@@ -536,7 +536,7 @@ particleExtract::doAnalysis( const ProcessorGroup * pg,
           }
 
           // write particle position and time
-          double time = d_sharedState->getElapsedTime();
+          double time = d_sharedState->getElapsedSimTime();
           fprintf(fp,    "%E\t %E\t %E\t %E",time, px[idx].x(),px[idx].y(),px[idx].z());
 
 

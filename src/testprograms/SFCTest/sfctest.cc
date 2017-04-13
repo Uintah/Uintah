@@ -26,7 +26,7 @@
 
 #include <CCA/Ports/SFC.h>
 #include <Core/Parallel/Parallel.h>
-#include<Core/Util/Time.h>
+#include <Core/Util/Timers/Timers.hpp>
 
 #define depth 1000.0f
 #define height 1000.0f
@@ -136,11 +136,13 @@ int main(int argc, char** argv)
 
   Uintah::MPI::Barrier(Comm);
   
-  double start=Time::currentSeconds();
+  Timers::Simple timer;
+
+  timer.start();
   mycurve.GenerateCurve();
-  double finish=Time::currentSeconds();
+  timer.stop();  
   
-  cout << rank << ": Time to generate curve:" << finish-start << endl;
+  cout << rank << ": Time to generate curve:" << timer().seconds() << endl;
 
   Uintah::MPI::Barrier(Comm);
 
@@ -153,11 +155,11 @@ int main(int argc, char** argv)
     cout << " Generating curve in serial\n";
   Uintah::MPI::Barrier(Comm);
 
-  start=Time::currentSeconds();
+  timer.reset( true );
   mycurve.GenerateCurve(true);
-  finish=Time::currentSeconds();
+  timer.stop();  
   
-  cout << rank << ": Time to generate curve:" << finish-start << endl;
+  cout << rank << ": Time to generate curve:" << timer().seconds() << endl;
 
   Uintah::MPI::Barrier(Comm);
 

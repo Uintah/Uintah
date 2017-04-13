@@ -110,7 +110,7 @@ ShunnMoinMMSMF::computeSource( const ProcessorGroup* pc,
     CCVariable<double> src; 
     constCCVariable<double> density; 
 
-    double time = _shared_state->getElapsedTime(); 
+    double time = _shared_state->getElapsedSimTime(); 
     double pi = acos(-1.0); 
 
     if ( timeSubStep ==0 ){  

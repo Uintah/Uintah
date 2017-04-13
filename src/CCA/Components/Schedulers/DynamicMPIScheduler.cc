@@ -376,11 +376,11 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
     emitTime("Total reduction time", mpi_info_[TotalReduce] - mpi_info_[TotalReduceMPI]);
     emitTime("Total comm time", mpi_info_[TotalRecv] + mpi_info_[TotalSend] + mpi_info_[TotalReduce]);
 
-    double time = Time::currentSeconds();
-    double totalexec = time - m_last_time;
-    m_last_time = time;
+    m_timer.stop();
+    double totalexec = m_timer().seconds();
+    m_timer.start();
 
-    emitTime("Other excution time", totalexec - mpi_info_[TotalSend] - mpi_info_[TotalRecv] - mpi_info_[TotalTask] - mpi_info_[TotalReduce]);
+    emitTime("Other execution time", totalexec - mpi_info_[TotalSend] - mpi_info_[TotalRecv] - mpi_info_[TotalTask] - mpi_info_[TotalReduce]);
   }
 
   // compute the net timings
@@ -388,10 +388,10 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
     computeNetRunTimeStats(m_shared_state->d_runTimeStats);
   }
 
-
   //---------------------------------------------------------------------------
-  // New way of managing single MPI requests - avoids MPI_Waitsome & MPI_Donesome - APH 07/20/16
-  //---------------------------------------------------------------------------
+  // New way of managing single MPI requests - avoids MPI_Waitsome &
+  // MPI_Donesome - APH 07/20/16
+  // ---------------------------------------------------------------------------
   // wait on all pending requests
   auto ready_request = [](CommRequest const& r)->bool { return r.wait(); };
   while ( m_sends.size() != 0u ) {

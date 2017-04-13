@@ -176,8 +176,8 @@ void AutoCycleFluxBC::applyExternalScalarFlux(const ProcessorGroup* , const Patc
                                           const MaterialSubset*, DataWarehouse* old_dw,
                                           DataWarehouse* new_dw)
 {
-  // Get the current time
-  double time = d_shared_state->getElapsedTime();
+  // Get the current simulation time
+  double time = d_shared_state->getElapsedSimTime();
 
   if (cout_doing.active())
     cout_doing << "Current Time (applyExternalScalarFlux) = " << time << std::endl;

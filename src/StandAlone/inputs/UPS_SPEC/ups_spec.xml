@@ -423,19 +423,20 @@
         <ParticlePosition spec="OPTIONAL NO_DATA"
                                                                                 attribute1="label REQUIRED STRING"/>
                                                                                 
-  <Time                   spec="REQUIRED NO_DATA">
-    <maxTime              spec="REQUIRED DOUBLE  'positive'" />
-    <max_Timesteps        spec="OPTIONAL INTEGER 'positive'" />
+  <Time                      spec="REQUIRED NO_DATA">
+    <maxTime                 spec="REQUIRED DOUBLE  'positive'" />
+    <max_Timesteps           spec="OPTIONAL INTEGER 'positive'" />
     <end_at_max_time_exactly spec="OPTIONAL BOOLEAN" />
-    <initTime             spec="REQUIRED DOUBLE  'positive'" />
-    <delt_min             spec="REQUIRED DOUBLE  'positive'" />
-    <delt_max             spec="REQUIRED DOUBLE  'positive'" />
-    <delt_init            spec="OPTIONAL DOUBLE  'positive'" />
-    <max_delt_increase    spec="OPTIONAL DOUBLE  'positive'" />
-    <max_initial_delt     spec="OPTIONAL DOUBLE  'positive'" />
-    <initial_delt_range   spec="OPTIONAL DOUBLE  'positive'" />
-    <override_restart_delt spec="OPTIONAL DOUBLE  'positive'" />
-    <timestep_multiplier  spec="REQUIRED DOUBLE  'positive'" />
+    <initTime                spec="REQUIRED DOUBLE  'positive'" />
+    <delt_min                spec="REQUIRED DOUBLE  'positive'" />
+    <delt_max                spec="REQUIRED DOUBLE  'positive'" />
+    <delt_init               spec="OPTIONAL DOUBLE  'positive'" />
+    <max_delt_increase       spec="OPTIONAL DOUBLE  'positive'" />
+    <max_initial_delt        spec="OPTIONAL DOUBLE  'positive'" />
+    <initial_delt_range      spec="OPTIONAL DOUBLE  'positive'" />
+    <override_restart_delt   spec="OPTIONAL DOUBLE  'positive'" />
+    <timestep_multiplier     spec="REQUIRED DOUBLE  'positive'" />
+    <max_wall_time           spec="OPTIONAL DOUBLE  'positive'" />
   </Time>
 
   <!-- NOTE: while the DataArchiver section is required, if no 'save' tags are specified,
@@ -462,13 +463,15 @@
                                 attribute4="walltimeStart         OPTIONAL INTEGER 'positive'"
                                 attribute5="walltimeInterval      OPTIONAL INTEGER 'positive'"
                                 attribute6="walltimeStartHours    OPTIONAL DOUBLE  'positive'"
-                                attribute7="walltimeIntervalHours OPTIONAL DOUBLE  'positive'" />
+                                attribute7="walltimeIntervalHours OPTIONAL DOUBLE  'positive'"
+                                attribute8="lastTimestep          OPTIONAL BOOLEAN" />
 
       <compression            spec="OPTIONAL STRING 'gzip'" />
       <filebase               spec="REQUIRED STRING" />
       <outputInterval         spec="OPTIONAL DOUBLE 'positive'" />
       <outputInitTimestep     spec="OPTIONAL NO_DATA" />
       <outputTimestepInterval spec="OPTIONAL INTEGER 'positive'" />
+      <outputLastTimestep     spec="OPTIONAL BOOLEAN" />
 
      <!-- HACK: until we know what to do about checking the label names-->
       <save                   spec="MULTIPLE NO_DATA"

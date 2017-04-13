@@ -703,7 +703,7 @@ void statistics::computeStatsWrapper( DataWarehouse* old_dw,
                                       const Patch*    patch,
                                       Qstats& Q)
 {
-  double now = d_sharedState->getElapsedTime();
+  double now = d_sharedState->getElapsedSimTime();
 
   if(now < d_startTime || now > d_stopTime){
 
@@ -846,7 +846,7 @@ void statistics::computeReynoldsStressWrapper( DataWarehouse* old_dw,
                                                const Patch*    patch,
                                                Qstats& Q)
 {
-  double now = d_sharedState->getElapsedTime();
+  double now = d_sharedState->getElapsedSimTime();
 
   if(now < d_startTime || now > d_stopTime){
 

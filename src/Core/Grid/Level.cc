@@ -37,7 +37,7 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Util/Time.h>
+#include <Core/Util/Timers/Timers.hpp>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/Handle.h>
@@ -841,8 +841,11 @@ Level::finalizeLevel( bool periodicX, bool periodicY, bool periodicZ )
 void
 Level::setBCTypes()
 {
-  double rtimes[4] = { 0 };
-  double start = Time::currentSeconds();
+  Timers::Simple timer;
+  timer.start();
+
+  const int nTimes = 3;
+  double rtimes[ nTimes ] = { 0 };
 
   MALLOC_TRACE_TAG_SCOPE("Level::setBCTypes");
 
@@ -852,8 +855,9 @@ Level::setBCTypes()
 
   m_bvh = scinew PatchBVH(m_virtual_and_real_patches);
 
-  rtimes[0] += Time::currentSeconds() - start;
-  start = Time::currentSeconds();
+  rtimes[0] += timer().seconds();
+  timer.reset( true );
+  
   patch_iterator iter;
 
   ProcessorGroup *myworld = nullptr;
@@ -861,7 +865,8 @@ Level::setBCTypes()
   int rank = 0;
 
   if (Parallel::isInitialized()) {
-    // only sus uses Parallel, but anybody else who uses DataArchive to read data does not
+    // only sus uses Parallel, but anybody else who uses DataArchive
+    // to read data does not
     myworld = Parallel::getRootProcessorGroup();
     numProcs = myworld->size();
     rank = myworld->myrank();
@@ -965,8 +970,8 @@ Level::setBCTypes()
     bctypes.swap(mybctypes);
   }
 
-  rtimes[1] += Time::currentSeconds() - start;
-  start = Time::currentSeconds();
+  rtimes[1] += timer().seconds();
+  timer.reset( true );
 
   int i;
   // loop through patches
@@ -1018,29 +1023,29 @@ Level::setBCTypes()
 
   m_finalized = true;
 
-  rtimes[2] += Time::currentSeconds() - start;
-  start = Time::currentSeconds();
+  rtimes[2] += timer().seconds();
+  timer.reset( true );
 
   if (rgtimes.active()) {
-    double avg[3] = { 0 };
-    Uintah::MPI::Reduce(rtimes, avg, 3, MPI_DOUBLE, MPI_SUM, 0, myworld->getComm());
+    double avg[ nTimes ] = { 0 };
+    Uintah::MPI::Reduce(rtimes, avg, nTimes, MPI_DOUBLE, MPI_SUM, 0, myworld->getComm());
 
     if (myworld->myrank() == 0) {
 
       std::cout << "SetBCType Avg Times: ";
-      for (int i = 0; i < 3; i++) {
+      for (int i = 0; i < nTimes; i++) {
         avg[i] /= myworld->size();
         std::cout << avg[i] << " ";
       }
       std::cout << std::endl;
     }
 
-    double max[3] = { 0 };
-    Uintah::MPI::Reduce(rtimes, max, 3, MPI_DOUBLE, MPI_MAX, 0, myworld->getComm());
+    double max[nTimes] = { 0 };
+    Uintah::MPI::Reduce(rtimes, max, nTimes, MPI_DOUBLE, MPI_MAX, 0, myworld->getComm());
 
     if (myworld->myrank() == 0) {
       std::cout << "SetBCType Max Times: ";
-      for (int i = 0; i < 3; i++) {
+      for (int i = 0; i < nTimes; i++) {
         std::cout << max[i] << " ";
       }
       std::cout << std::endl;

@@ -25,7 +25,7 @@
 #include <Core/Exceptions/UintahPetscError.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Util/Time.h>
+#include <Core/Util/Timers/Timers.hpp>
 
 using namespace std;
 using namespace Uintah;
@@ -42,7 +42,9 @@ bool PetscLinearSolve(Mat& A,
                       const int maxIter,
                       const ProcessorGroup* myworld)
 {
-  double solve_start = Uintah::Time::currentSeconds();
+  Timers::Simple timer;
+  timer.start();
+
   KSP solver;
   PC preConditioner;
 
@@ -268,7 +270,7 @@ bool PetscLinearSolve(Mat& A,
     throw UintahPetscError(ierr, "VecNorm", __FILE__, __LINE__);
     
   if(me == 0) {
-    cerr << "KSPSolve: Norm of error: " << norm << ", iterations: " << its << ", solver time: " << Uintah::Time::currentSeconds()-solve_start << " seconds\n";
+    cerr << "KSPSolve: Norm of error: " << norm << ", iterations: " << its << ", solver time: " << timer().seconds() << " seconds\n";
     cerr << "Init Norm: " << init_norm << " Error reduced by: " << norm/(init_norm+1.0e-20) << endl;
     cerr << "Sum of RHS vector: " << sum_b << endl;
   }

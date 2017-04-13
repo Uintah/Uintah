@@ -28,12 +28,17 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Parallel/UintahMPI.h>
-#include <Core/Util/Time.h>
 
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
 #include <thread>
+
+#include <sys/time.h>
+
+#ifdef __linux
+  #include <time.h>
+#endif
 
 using namespace Uintah;
 
@@ -274,7 +279,15 @@ Parallel::finalizeManager( Circumstances circumstances /* = NormalShutdown */ )
     }
     std::cerr.flush();
     std::cout.flush();
-    Time::waitFor(1.0);
+
+    double seconds = 1.0;
+    
+    struct timespec ts;
+    ts.tv_sec = (int)seconds;
+    ts.tv_nsec = (int)(1.e9 * (seconds - ts.tv_sec));
+
+    nanosleep(&ts, &ts);
+    
     Uintah::MPI::Abort(Uintah::worldComm_, errorcode);
   }
   else {

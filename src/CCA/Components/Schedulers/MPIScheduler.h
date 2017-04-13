@@ -33,6 +33,7 @@
 #include <Core/Parallel/CommunicationList.hpp>
 #include <Core/Util/DOUT.hpp>
 #include <Core/Util/InfoMapper.h>
+#include <Core/Util/Timers/Timers.hpp>
 
 #include <fstream>
 #include <map>
@@ -173,7 +174,6 @@ class MPIScheduler : public SchedulerCommon {
     CommRequestPool             m_sends{};
     CommRequestPool             m_recvs{};
 
-    double                      m_last_time;
     std::vector<const char*>    m_labels;
     std::vector<double>         m_times;
 
@@ -184,7 +184,8 @@ class MPIScheduler : public SchedulerCommon {
     unsigned int                m_num_messages{0};
     double                      m_message_volume{0};
 
-
+    Timers::Simple              m_timer;
+  
   private:
 
     // eliminate copy, assignment and move

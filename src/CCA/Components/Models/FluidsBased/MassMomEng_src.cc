@@ -162,8 +162,7 @@ void MassMomEng_src::computeModelSources(const ProcessorGroup*,
   double totalEng_src = 0.0;
   Vector totalMom_src(0,0,0);
 
-  double time= d_sharedState->getElapsedTime();
-
+  double time = d_sharedState->getElapsedSimTime();
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);  

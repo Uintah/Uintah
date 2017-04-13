@@ -105,7 +105,8 @@ SimulationState::SimulationState(ProblemSpecP &ps)
   allInOneMatl      = 0;
 
   d_topLevelTimeStep = 0;
-  d_elapsed_time     = 0.0;
+  d_elapsed_sim_time  = 0.0;
+  d_elapsed_wall_time = 0.0;
 
   d_numDims = 0;
   d_activeDims[0] = d_activeDims[1] = d_activeDims[2] = 0;
@@ -125,7 +126,9 @@ SimulationState::SimulationState(ProblemSpecP &ps)
 
   d_switchState               = false;
   
-  d_simTime         = 0;
+  d_simulationTime            = 0;
+
+  d_maybeLast                 = false;
 
   ProblemSpecP amr = ps->findBlock("AMR");
   

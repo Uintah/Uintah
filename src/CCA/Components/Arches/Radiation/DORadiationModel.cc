@@ -46,10 +46,9 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
-#include <Core/Util/Time.h>
-#include <cmath>
+#include <Core/Util/Timers/Timers.hpp>
+
 #include <sci_defs/hypre_defs.h>
-#include <iomanip>
 
 #ifdef HAVE_HYPRE
 #  include <CCA/Components/Arches/Radiation/RadHypreSolver.h>
@@ -67,6 +66,9 @@
 #include <CCA/Components/Arches/Radiation/fortran/rdomvolq_fort.h>
 #include <CCA/Components/Arches/Radiation/LegendreChebyshevQuad.h>
 
+
+#include <cmath>
+#include <iomanip>
 
 
 using namespace std;
@@ -666,7 +668,8 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
 
   Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
 
-  double solve_start = Time::currentSeconds();
+  Timers::Simple timer;
+  timer.start();
 
   d_linearSolver->matrixInit(patch);
 
@@ -917,7 +920,7 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
 
   d_linearSolver->destroyMatrix();
 
-  proc0cout << "Total Radiation Solve Time: " << Time::currentSeconds()-solve_start << " seconds\n";
+  proc0cout << "Total Radiation Solve Time: " << timer().seconds() << " seconds\n";
 
 }
 // returns the total number of directions, sn*(sn+2)

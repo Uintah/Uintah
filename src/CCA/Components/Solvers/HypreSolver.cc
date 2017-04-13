@@ -45,8 +45,8 @@
 #include <Core/Geometry/IntVector.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Math/MinMax.h>
-#include <Core/Util/Time.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Util/Timers/Timers.hpp>
 #include <iomanip>
 
 // hypre includes
@@ -205,7 +205,10 @@ namespace Uintah {
       DataWarehouse* guess_dw = new_dw->getOtherDataWarehouse(which_guess_dw);
     
       ASSERTEQ(sizeof(Stencil7), 7*sizeof(double));
-      double tstart = Time::currentSeconds();
+
+      Timers::Simple timer;
+      timer.start();
+      
       for(int m = 0;m<matls->size();m++){
         int matl = matls->get(m);
 
@@ -524,7 +527,9 @@ namespace Uintah {
         //  Dynamic tolerances  Arches uses this
         double precond_tolerance = 0.0;
 
-        double solve_start = Time::currentSeconds();
+	Timers::Simple solve_timer;
+	solve_timer.start();
+
         hypre_BeginTiming(tSolveOnly_);
         
         int num_iterations;
@@ -845,7 +850,7 @@ namespace Uintah {
           }
         }
         
-        double solve_dt = Time::currentSeconds()-solve_start;
+        solve_timer.stop();
         hypre_EndTiming (tSolveOnly_);
         
         //__________________________________
@@ -899,24 +904,30 @@ namespace Uintah {
         hypre_FinalizeTiming(tHypreAll_);
         hypre_ClearTiming();
 
-        double dt=Time::currentSeconds()-tstart;
-        if(pg->myrank() == 0){
+        timer.stop();
+	
+        if(pg->myrank() == 0) {
 
           cout << "Solve of " << X_label->getName() 
                << " on level " << level->getIndex()
-               << " completed in " << dt
-               << " s (solve only: " << solve_dt << " s, ";
+               << " completed in " << timer().seconds()
+               << " s (solve only: " << solve_timer().seconds() << " s, ";
+
           if (timestep > 2) {
             // alpha = 2/(N+1)
             // averaging window is 10 timesteps.
             double alpha = 2.0/(std::min(timestep - 2, 10) + 1);
-            movingAverage_ = alpha*solve_dt + (1-alpha)*movingAverage_;
+            movingAverage_ =
+	      alpha*solve_timer().seconds() + (1-alpha)*movingAverage_;
+
             cout << "mean: " <<  movingAverage_ << " s, ";
           }
-               cout << num_iterations << " iterations, residual = " << final_res_norm << ")."
-               << std::endl;
+
+	  cout << num_iterations << " iterations, residual = "
+	       << final_res_norm << ")." << std::endl;
         }
-        tstart = Time::currentSeconds();
+
+        timer.reset( true );
       }
     }
     

@@ -77,7 +77,9 @@ class  SimulationTime;
 class WallTimers {
 
 public:
-  WallTimers() { d_nSamples = 0; };
+  WallTimers() { d_nSamples = 0; d_wallTimer.start(); };
+
+public:
 
   Timers::Simple TimeStep;           // Total time for all time steps
   Timers::Simple ExpMovingAverage;   // Execution exponential moving average
@@ -111,8 +113,12 @@ public:
     return laptime;
   }
 
+  double GetWallTime() { return d_wallTimer().seconds(); };
+
 private:
   int d_nSamples;        // Number of samples for the moving average
+
+  Timers::Simple d_wallTimer;
 };
 
 
@@ -185,6 +191,7 @@ public:
 protected:
 
   bool isLast( void );
+  bool maybeLast( void );
     
   void preGridSetup();
   void gridSetup();

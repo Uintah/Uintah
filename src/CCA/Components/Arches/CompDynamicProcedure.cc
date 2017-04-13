@@ -46,7 +46,7 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Util/Time.h>
+#include <Core/Util/Timers/Timers.hpp>
 
 using namespace std;
 
@@ -825,7 +825,8 @@ CompDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     IntVector indexLow = patch->getFortranCellLowIndex();
     IntVector indexHigh = patch->getFortranCellHighIndex();
 
-    double start_turbTime = Time::currentSeconds();
+    Timers::Simple timer;
+    timer.start();
 
     d_filter->applyFilter<Array3<double> >(pc, patch, rhoU,   filterVolume, vol_fraction, filterRhoU);
     d_filter->applyFilter<Array3<double> >(pc, patch, rhoV,   filterVolume, vol_fraction, filterRhoV);
@@ -842,7 +843,7 @@ CompDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     }
 
     string msg = "Time for the Filter operation in Turbulence Model: (patch: ";
-    proc0cerr << msg << p << ") " << Time::currentSeconds() - start_turbTime << " seconds\n";
+    proc0cerr << msg << p << ") " << timer().seconds() << " seconds\n";
 
     Vector Dx = patch->dCell();
     double fhat = 3.0;

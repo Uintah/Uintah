@@ -896,7 +896,7 @@ BoundaryCondition::velRhoHatInletBC(const Patch* patch,
                                     const int matl_index,
                                     double time_shift)
 {
-  //double time = d_lab->d_sharedState->getElapsedTime();
+  //double time = d_lab->d_sharedState->getElapsedSimTime();
   //double current_time = time + time_shift;
   // Get the low and high index for the patch and the variables
   IntVector idxLo = patch->getFortranCellLowIndex();
@@ -3075,7 +3075,7 @@ void BoundaryCondition::setTurbInlet( const Patch* patch, const Patch::FaceType&
 
   int j, k;
   int ts = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
-  double elapTime = d_lab->d_sharedState->getElapsedTime();
+  double elapTime = d_lab->d_sharedState->getElapsedSimTime();
   int t = TurbInlet->getTimeIndex( ts, elapTime);
 
   IntVector shiftVec;

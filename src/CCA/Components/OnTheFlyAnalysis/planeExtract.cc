@@ -444,7 +444,7 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
     lastWriteTime = writeTime;
   }
 
-  double now = d_sharedState->getElapsedTime();
+  double now = d_sharedState->getElapsedSimTime();
   
   if(now < d_startTime || now > d_stopTime){
     new_dw->put(max_vartype(lastWriteTime), ps_lb->lastWriteTimeLabel);

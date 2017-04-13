@@ -254,7 +254,7 @@ void TestModel::computeModelSources(const ProcessorGroup*,
     //__________________________________
     //  Do some work
     
-    double t  = d_sharedState->getElapsedTime();
+    double t  = d_sharedState->getElapsedSimTime();
     if (t >= d_startTime){
       for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
         IntVector c = *iter;

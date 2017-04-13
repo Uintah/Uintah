@@ -40,9 +40,9 @@
 #include <Core/Grid/SimulationState.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Util/Time.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
+#include <Core/Util/Timers/Timers.hpp>
 
 #include <sci_defs/visit_defs.h>
 
@@ -671,7 +671,7 @@ bool
 ParticleLoadBalancer::needRecompile(double /*time*/, double /*delt*/, 
                                     const GridP& grid)
 {
-  double time = m_shared_state->getElapsedTime();
+  double time = m_shared_state->getElapsedSimTime();
   int timestep = m_shared_state->getCurrentTopLevelTimeStep();
 
   bool do_check = false;
@@ -776,7 +776,8 @@ bool ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int 
   if (d_myworld->myrank() == 0)
     dbg << d_myworld->myrank() << " In DLB, state " << state << endl;
 
-  double start = Time::currentSeconds();
+  Timers::Simple timer;
+  timer.start();
 
   bool changed = false;
   bool force = false;
@@ -790,7 +791,7 @@ bool ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int 
         d_lastLbTimestep = m_shared_state->getCurrentTopLevelTimeStep();
       }
       else if (m_lb_interval != 0) {
-        m_last_lb_time = m_shared_state->getElapsedTime();
+        m_last_lb_time = m_shared_state->getElapsedSimTime();
       }
     }
     m_old_assignment = m_processor_assignment;
@@ -854,9 +855,12 @@ bool ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int 
     flag = LoadBalancerPort::regrid;
   }
   
-  // this must be called here (it creates the new per-proc patch sets) even if DLB does nothing.  Don't move or return earlier.
+  // this must be called here (it creates the new per-proc patch sets)
+  // even if DLB does nothing.  Don't move or return earlier.
   LoadBalancerCommon::possiblyDynamicallyReallocate( grid, flag );
-  m_shared_state->d_runTimeStats[SimulationState::LoadBalancerTime] += Time::currentSeconds() - start;
+  m_shared_state->d_runTimeStats[SimulationState::LoadBalancerTime] +=
+    timer().seconds();
+  
   return changed;
 }
 

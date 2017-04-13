@@ -84,11 +84,6 @@ SimulationController::SimulationController( const ProcessorGroup * myworld,
                                                   ProblemSpecP     pspec ) :
   UintahParallelComponent( myworld ), d_ups( pspec ), d_doAMR( doAMR )
 {
-  // Initialize the global wall timer - this initialization is a fall
-  // back initialization as it should have happened in the main so the
-  // time is as close as possible to actual wall time.
-  Time::currentSeconds();
-
   //initialize the overhead percentage
   overheadIndex = 0;
   
@@ -294,15 +289,50 @@ SimulationController::doRestart( const string & restartFromDir, int timestep,
 
 //______________________________________________________________________
 //
-
+// Determines if the time step was the last one. 
 bool
 SimulationController::isLast( void )
 {
   return ( ( d_simTime >= d_timeinfo->maxTime ) ||
 	   ( d_sharedState->getCurrentTopLevelTimeStep() >=
 	     d_timeinfo->maxTimestep ) ||
-	   ( d_timeinfo->max_wall_time != 0 &&
-	     Time::currentSeconds() >= d_timeinfo->max_wall_time ) );
+	   ( d_timeinfo->max_wall_time > 0 &&
+	     walltimers.GetWallTime() >= d_timeinfo->max_wall_time ) );
+}
+
+//______________________________________________________________________
+//
+// Determines if the time step may be the last one. The simulation
+// time and the time step are known. The only real unknown is the time
+// for the simulation calculation. The best guess is based on the
+// ExpMovingAverage of the previous time steps.
+
+bool
+SimulationController::maybeLast( void )
+{
+  // When using the wall clock time, rank 0 determines the time and
+  // sends it to all other ranks.
+  double walltime = -1;
+  
+  if( Parallel::getMPIRank() == 0 ) {
+    // The time is a best guess at what the wall time will be when the
+    // time step is finished. It is currently used only only for I/O
+    // (output and checkpointing). Which typically takes much longer
+    // than the simulation calculation.
+    walltime = d_sharedState->getElapsedWallTime() +
+      1.5 * walltimers.ExpMovingAverage().seconds();
+  }
+
+  Uintah::MPI::Bcast( &walltime, 1, MPI_DOUBLE, 0, d_myworld->getComm() );
+
+  return ( (d_simTime+d_delt >= d_timeinfo->maxTime) ||
+
+	   // Note the time step has already been incremented.
+	   (d_sharedState->getCurrentTopLevelTimeStep() >=
+	     d_timeinfo->maxTimestep) ||
+
+	   (d_timeinfo->max_wall_time > 0 &&
+	    walltime >= d_timeinfo->max_wall_time) );
 }
 
 //______________________________________________________________________
@@ -771,7 +801,7 @@ SimulationController::ReportStats( bool header /* = false */ )
 //	    << "delT="       << setw(12) << d_prev_delt
 	    << "Next delT="  << setw(12) << d_delt
 
-	    << "Wall Time = " << setw(10) << Time::currentSeconds()
+	    << "Wall Time = " << setw(10) << walltimers.GetWallTime()
 	    // << "All Time steps= " << setw(12) << walltimers.TimeStep().seconds()
 	    // << "Current Time Step= " << setw(12) << timeStep.seconds()
 	    << "EMA="        << setw(12) << walltimers.ExpMovingAverage().seconds();
@@ -1039,7 +1069,8 @@ SimulationController::CheckInSitu( visit_simulation_data *visitSimData,
 	return true;
 
       // This function is no longer used as last is now used in the
-      // check state. 
+      // UpdateSimData which in turn will flip the state.
+      
       // Check to see if at the last iteration. If so stop so the
       // user can have once last chance see the data.
       // if( visitSimData->stopAtLastTimeStep && last )

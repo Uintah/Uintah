@@ -25,17 +25,18 @@
 #ifndef UINTAH_HOMEBREW_SimulationState_H
 #define UINTAH_HOMEBREW_SimulationState_H
 
-#include <Core/Util/InfoMapper.h>
-#include <Core/Util/RefCounted.h>
-#include <Core/Util/DebugStream.h>
-#include <Core/ProblemSpec/ProblemSpecP.h>
-#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Grid/Ghost.h>
+#include <Core/Grid/SimulationTime.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Grid/SimulationTime.h>
-#include <Core/Grid/Ghost.h>
-#include <Core/Geometry/Vector.h>
 #include <Core/Math/MinMax.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Util/DebugStream.h>
+#include <Core/Util/InfoMapper.h>
+#include <Core/Util/RefCounted.h>
+#include <Core/Util/Timers/Timers.hpp>
 
 #include <sci_defs/visit_defs.h>
 
@@ -44,7 +45,6 @@
 #include <iostream>
 
 namespace Uintah {
-
 
 class VarLabel;
 class Material; 
@@ -204,8 +204,14 @@ public:
 
   void setOriginalMatlsFromRestart(MaterialSet* matls);
   
-  double getElapsedTime() const { return d_elapsed_time; }
-  void   setElapsedTime(double t) { d_elapsed_time = t; }
+  double getElapsedSimTime() const { return d_elapsed_sim_time; }
+  void   setElapsedSimTime(double t) { d_elapsed_sim_time = t; }
+
+  double getElapsedWallTime() const { return d_elapsed_wall_time; }
+  void   setElapsedWallTime(double t) { d_elapsed_wall_time = t; }
+
+  bool maybeLast() const { return d_maybeLast; }
+  void maybeLast( bool val) { d_maybeLast = val; }
 
   // Returns the integer timestep index of the top level of the
   // simulation.  All simulations start with a top level time step
@@ -252,8 +258,8 @@ public:
   bool getSwitchState() const { return d_switchState; }   
   void setSwitchState(bool ans) { d_switchState = ans; }    
     
-  SimulationTime * getSimulationTime() const { return d_simTime; }   
-  void setSimulationTime(SimulationTime * simTime) { d_simTime = simTime; }
+  SimulationTime * getSimulationTime() const { return d_simulationTime; }   
+  void setSimulationTime(SimulationTime * simTime) { d_simulationTime = simTime; }
 
   int getNumDims() const { return d_numDims; }
   int* getActiveDims() { return d_activeDims; }
@@ -363,8 +369,17 @@ private:
   // number (it does for non-restarted, non-amr simulations).  I'm going to
   // attempt to make sure that it does also for restarts.
   int    d_topLevelTimeStep;
-  double d_elapsed_time;
 
+  // The elapsed simulation time.
+  double d_elapsed_sim_time;
+
+  // The elapsed wall time.
+  double d_elapsed_wall_time;
+
+  // Flag for indicating the this timestep maybe the last. It is
+  // determined by the Simulation Controller.
+  bool d_maybeLast;
+  
   // which dimensions are active.  Get the number of dimensions, and then
   // that many indices of activeDims are set to which dimensions are being used
   int d_numDims;           
@@ -395,8 +410,8 @@ private:
 
   bool d_switchState;
 
-  SimulationTime* d_simTime;
-
+  SimulationTime* d_simulationTime;
+  
 #ifdef HAVE_VISIT
 public:
   // Reduction analysis variables for on the fly analysis

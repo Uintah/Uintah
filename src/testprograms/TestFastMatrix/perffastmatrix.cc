@@ -26,7 +26,8 @@
 #include <Core/Math/FastMatrix.h>
 #include <Core/Math/Rand48.h>
 #include <Core/Math/MiscMath.h>
-#include <Core/Util/Time.h>
+#include <Core/Util/Timers/Timers.hpp>
+
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
@@ -52,7 +53,10 @@ int main(int argc, char* argv[])
     b[i] = b2[i] = drand48();
   std::vector<double> x(size);
   std::vector<double> x2(size);
-  double start = Uintah::Time::currentSeconds();
+
+  Timers::Simple timer;
+  timer.start();
+
 #if 0
   for(int i=0;i<reps;i++){
     minv.destructiveInvert(m);
@@ -64,8 +68,9 @@ int main(int argc, char* argv[])
     minv.destructiveSolve(&b[0], &b[1]);
   }
 #endif
-  double dt = Uintah::Time::currentSeconds()-start;
-  std::cerr << reps << " in " << dt << " seconds, " << dt/reps*1000000 << " us/rep\n";
+
+  std::cerr << reps << " in " << timer().seconds() << " seconds, "
+	    << timer().seconds()/reps*1000000 << " us/rep\n";
   exit(0);
 }
 

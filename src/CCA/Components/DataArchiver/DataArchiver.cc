@@ -44,13 +44,13 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Util/Time.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/Endian.h>
 #include <Core/Util/Environment.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/FileUtils.h>
 #include <Core/Util/StringUtil.h>
+#include <Core/Util/Timers/Timers.hpp>
 
 #include <sci_defs/visit_defs.h>
 
@@ -177,6 +177,10 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
     throw ProblemSetupException("Use <outputInterval> or <outputTimestepInterval>, not both",__FILE__, __LINE__);
   }
 
+  if ( !p->get("outputLastTimestep", d_outputLastTimestep) ) {
+    d_outputLastTimestep = false; // default
+  }
+
   // set default compression mode - can be "tryall", "gzip", "rle", "rle, gzip", "gzip, rle", or "none"
   string defaultCompressionMode = "";
   if (p->get("compression", defaultCompressionMode)) {
@@ -274,11 +278,13 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
   d_checkpointWalltimeInterval = 0;
   d_checkpointCycle            = 2; /* 2 is the smallest number that is safe
                                     (always keeping an older copy for backup) */
-
+  d_checkpointLastTimestep     = false;
+  
   ProblemSpecP checkpoint = p->findBlock( "checkpoint" );
   if( checkpoint != nullptr ) {
 
-    string interval, timestepInterval, walltimeStart, walltimeInterval, walltimeStartHours, walltimeIntervalHours, cycle;
+    string interval, timestepInterval, walltimeStart, walltimeInterval,
+      walltimeStartHours, walltimeIntervalHours, cycle, lastTimestep;
 
     attributes.clear();
     checkpoint->getAttributes( attributes );
@@ -290,6 +296,7 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
     walltimeStartHours    = attributes[ "walltimeStartHours" ];
     walltimeIntervalHours = attributes[ "walltimeIntervalHours" ];
     cycle                 = attributes[ "cycle" ];
+    lastTimestep          = attributes[ "lastTimestep" ];
 
     if( interval != "" ) {
       d_checkpointInterval = atof( interval.c_str() );
@@ -311,6 +318,10 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
     }
     if( cycle != "" ) {
       d_checkpointCycle = atoi( cycle.c_str() );
+    }
+
+    if( lastTimestep == "true" ) {
+      d_checkpointLastTimestep = true;
     }
 
     // Verify that an interval was specified:
@@ -519,8 +530,11 @@ DataArchiver::restartSetup( Dir    & restartFromDir,
       d_nextCheckpointTimestep += d_checkpointTimestepInterval;
     }
   }
+
   if( d_checkpointWalltimeInterval > 0 ) {
-    d_nextCheckpointWalltime = d_checkpointWalltimeInterval + (int)Time::currentSeconds();
+    d_nextCheckpointWalltime =
+      d_checkpointWalltimeInterval + (int) d_sharedState->getElapsedWallTime();
+
     Uintah::MPI::Bcast( &d_nextCheckpointWalltime, 1, MPI_INT, 0, d_myworld->getComm() );
   }
 } // end restartSetup()
@@ -918,7 +932,9 @@ DataArchiver::finalizeTimestep( double        time,
       d_wereSavesAndCheckpointsInitialized = true;
     
       // Can't do checkpoints on init timestep....
-      if( d_checkpointInterval != 0.0 || d_checkpointTimestepInterval != 0 || d_checkpointWalltimeInterval != 0 ) {
+      if( d_checkpointInterval != 0.0 ||
+	  d_checkpointTimestepInterval != 0 ||
+	  d_checkpointWalltimeInterval != 0 ) {
 
         initCheckpoints( sched );
       }
@@ -979,7 +995,10 @@ DataArchiver::sched_allOutputTasks(       double       delt,
   //__________________________________
   //  Schedule Checkpoint (reduction variables)
   if (delt != 0 && d_checkpointCycle > 0 &&
-      ( d_checkpointInterval>0 || d_checkpointTimestepInterval>0 || d_checkpointWalltimeInterval > 0 ) ) {
+      ( d_checkpointInterval > 0 ||
+	d_checkpointTimestepInterval > 0 ||
+	d_checkpointWalltimeInterval > 0 ) ) {
+    
     // output checkpoint timestep
     Task* t = scinew Task( "DataArchiver::outputVariables (CheckpointReduction)", this, &DataArchiver::outputVariables, CHECKPOINT_REDUCTION );
     
@@ -1014,49 +1033,53 @@ DataArchiver::beginOutputTimestep( double time,
   // do *not* update d_nextOutputTime or others here.  We need the original
   // values to compare if there is a timestep restart.  See 
   // reEvaluateOutputTimestep
-  if (d_outputInterval != 0.0 && (delt != 0 || d_outputInitTimestep)) {
-    if( time + delt >= d_nextOutputTime ) {
-      // This is an output timestep based on simulation time.
-      d_isOutputTimestep = true;
-      if ( d_outputFileFormat != PIDX ) {
-        makeTimestepDirs( d_dir, d_saveLabels, grid, &d_lastTimestepLocation );
-      }
-    }
-    else {
-      d_isOutputTimestep = false;
-    }
+
+  // Check for a outputing a time step.
+  d_isOutputTimestep =
+    // Output the timestep based on the simulation time.
+    ( ((d_outputInterval != 0.0 && (delt != 0 || d_outputInitTimestep)) &&
+       (time + delt >= d_nextOutputTime) ) ||
+			
+      // Output the timestep based on the timestep interval.
+      ((d_outputTimestepInterval != 0 && (delt != 0 || d_outputInitTimestep)) &&
+       (timestep >= d_nextOutputTimestep))  ||
+
+      // Output the timestep based on the being the last timestep.
+      (d_outputLastTimestep && d_sharedState->maybeLast()) );
+
+  // Create the output timestep directories
+  if( d_isOutputTimestep && d_outputFileFormat != PIDX ) {
+    makeTimestepDirs( d_dir, d_saveLabels, grid, &d_lastTimestepLocation );
   }
-  else if (d_outputTimestepInterval != 0 && (delt != 0 || d_outputInitTimestep)) {
-    if(timestep >= d_nextOutputTimestep) {
-      // This is an output timestep based on timestep interval.
-      d_isOutputTimestep = true;
-      if ( d_outputFileFormat != PIDX ) {
-        makeTimestepDirs( d_dir, d_saveLabels, grid, &d_lastTimestepLocation );
-      }
-    }
-    else {
-      d_isOutputTimestep = false;
-    }
-  }
-  
-  int currsecs = -1;
+    
+  // Check for a outputing a checkpoint.
+  d_isCheckpointTimestep =
+    // Output the checkpoint based on the simulation time.
+    ( (d_checkpointInterval > 0.0 && (time + delt) >= d_nextCheckpointTime) ||
+      
+      // Output the checkpoint based on the timestep interval.
+      (d_checkpointTimestepInterval > 0 && timestep >= d_nextCheckpointTimestep) ||
+
+      // Output the checkpoint based on the being the last timestep.
+      (d_checkpointLastTimestep && d_sharedState->maybeLast()) );    
+
+  // When using the wall clock time for checkpoints, rank 0 determines
+  // the wall time and sends it to all other ranks.
   if( d_checkpointWalltimeInterval > 0 ) {
-    // If checkpointing based on wall clock time, then have process 0 determine
-    // the current time and share it will everyone else.
+    int tmp_time = -1;
+    
     if( Parallel::getMPIRank() == 0 ) {
-      currsecs = (int)Time::currentSeconds();
+      tmp_time = (int) d_sharedState->getElapsedWallTime();
     }
-    Uintah::MPI::Bcast( &currsecs, 1, MPI_INT, 0, d_myworld->getComm() );
+    Uintah::MPI::Bcast( &time, 1, MPI_INT, 0, d_myworld->getComm() );
+
+    if( tmp_time >= d_checkpointWalltimeInterval )
+      d_isCheckpointTimestep = true;	
   }
   
-  //__________________________________
-  // same thing for checkpoints
-  if( ( d_checkpointInterval != 0.0 && time+delt >= d_nextCheckpointTime ) ||
-      ( d_checkpointTimestepInterval != 0 && timestep >= d_nextCheckpointTimestep ) ||
-      ( d_checkpointWalltimeInterval != 0 && currsecs >= d_nextCheckpointWalltime ) ) {
-
-    d_isCheckpointTimestep = true;
-
+  // Create the output checkpoint directories
+  if( d_isCheckpointTimestep ) {
+    
     string timestepDir;
     makeTimestepDirs( d_checkpointsDir, d_checkpointLabels, grid, &timestepDir );
     
@@ -1103,8 +1126,6 @@ DataArchiver::beginOutputTimestep( double time,
     }
     //if (d_writeMeta)
     //index->releaseDocument();
-  } else {
-    d_isCheckpointTimestep=false;
   }
   dbg << "    write CheckPoints (" << d_isCheckpointTimestep << ")  write output timestep (" << d_isOutputTimestep << ")";
   dbg << "    end\n";
@@ -1162,7 +1183,7 @@ DataArchiver::reEvaluateOutputTimestep(double /*orig_delt*/, double new_delt)
   // threshold, mark it as not an output timestep
 
   // this is set in finalizeTimestep to time+delt
-  d_tempElapsedTime = d_sharedState->getElapsedTime() + new_delt;
+  d_tempElapsedTime = d_sharedState->getElapsedSimTime() + new_delt;
 
   if (d_isOutputTimestep && d_outputInterval != 0.0 ) {
     if (d_tempElapsedTime < d_nextOutputTime)
@@ -1224,18 +1245,22 @@ DataArchiver::findNext_OutputCheckPoint_Timestep( double /* delt */, const GridP
         d_nextCheckpointTimestep += ( ( timestep - d_nextCheckpointTimestep ) / d_checkpointTimestepInterval ) * d_checkpointTimestepInterval + d_checkpointTimestepInterval;
       }
     }
+
     if( d_checkpointWalltimeInterval > 0 ) {
       int currsecs = -1;
-      // If checkpointing based on wall clock time, then have process 0 determine
-      // the current time and share it will everyone else.
+      // If checkpointing based on wall clock time, then have process
+      // 0 determine the current time and share it will everyone else.
       if( Parallel::getMPIRank() == 0 ) {
-        currsecs = (int)Time::currentSeconds();
+        currsecs = (int) d_sharedState->getElapsedWallTime();
       }
       Uintah::MPI::Bcast( &currsecs, 1, MPI_INT, 0, d_myworld->getComm() );
 
       if( currsecs >= d_nextCheckpointWalltime ) {
-        d_nextCheckpointWalltime += static_cast<int>( floor( ( currsecs - d_nextCheckpointWalltime ) / d_checkpointWalltimeInterval ) *
-                                                      d_checkpointWalltimeInterval + d_checkpointWalltimeInterval );
+        d_nextCheckpointWalltime +=
+	  static_cast<int>( floor( ( currsecs - d_nextCheckpointWalltime ) /
+				   d_checkpointWalltimeInterval ) *
+			    d_checkpointWalltimeInterval +
+			    d_checkpointWalltimeInterval );
       }
     }
   }  
@@ -2123,7 +2148,9 @@ DataArchiver::outputReductionVars( const ProcessorGroup *,
     return;
   }
     
-  double start = Time::currentSeconds();
+  Timers::Simple timer;
+  timer.start();
+
   // Dump the stuff in the reduction saveset into files in the uda
   // at every timestep
   dbg << "  outputReductionVars task begin\n";
@@ -2157,7 +2184,10 @@ DataArchiver::outputReductionVars( const ProcessorGroup *,
       out << "\n";
     }
   }
-  d_sharedState->d_runTimeStats[SimulationState::OutputFileIOTime] += Time::currentSeconds()-start;
+
+  d_sharedState->d_runTimeStats[SimulationState::OutputFileIOTime] +=
+    timer().seconds();
+  
   dbg << "  end\n";
 }
 
@@ -2171,17 +2201,20 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
                                DataWarehouse        * new_dw,
                                int                    type )
 {
-  // IMPORTANT - this function should only be called once per processor per level per type
-  //   (files will be opened and closed, and those operations are heavy on 
-  //   parallel file systems)
+  // IMPORTANT - this function should only be called once per
+  //   processor per level per type (files will be opened and closed,
+  //   and those operations are heavy on parallel file systems)
 
   // return if not an outpoint/checkpoint timestep
   if ((!d_isOutputTimestep && type == OUTPUT) || 
       (!d_isCheckpointTimestep && (type == CHECKPOINT || type == CHECKPOINT_REDUCTION))) {
     return;
   }
+
   dbg << "  outputVariables task begin\n";
-  double start = Time::currentSeconds();  
+
+  Timers::Simple timer;
+  timer.start();
   
 #if SCI_ASSERTION_LEVEL >= 2
   // double-check to make sure only called once per level
@@ -2462,10 +2495,12 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
       
       doc->output(xmlFilename.c_str());
       //doc->releaseDocument();
-      double myTime = Time::currentSeconds()-start;
+      double myTime = timer().seconds();
       double byteToMB = 1024*1024;
-      d_sharedState->d_runTimeStats[SimulationState::OutputFileIOTime] += myTime;
-      d_sharedState->d_runTimeStats[SimulationState::OutputFileIORate] += (double)totalBytes/(byteToMB * myTime);
+      d_sharedState->d_runTimeStats[SimulationState::OutputFileIOTime] +=
+	myTime;
+      d_sharedState->d_runTimeStats[SimulationState::OutputFileIORate] +=
+	(double)totalBytes/(byteToMB * myTime);
     }
     d_outputLock.unlock(); 
   }
@@ -2528,7 +2563,7 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
         totalBytes += saveLabels_PIDX(saveTheseLabels, pg, patches, new_dw, type, TD, ldir, dirName, doc);
       } 
     }
-    double myTime = Time::currentSeconds()-start;
+    double myTime = timer().seconds();
     double byteToMB = 1024*1024;
     d_sharedState->d_runTimeStats[SimulationState::OutputFileIOTime] += myTime;
     d_sharedState->d_runTimeStats[SimulationState::OutputFileIORate] += (double)totalBytes/(byteToMB * myTime);
@@ -3312,7 +3347,7 @@ DataArchiver::needRecompile(double /*time*/, double /*dt*/,
   }
   if ((d_checkpointInterval != 0 && time+dt >= d_nextCheckpointTime) ||
       (d_checkpointTimestepInterval != 0 && d_currentTimestep+1 > d_nextCheckpointTimestep) ||
-      (d_checkpointWalltimeInterval != 0 && Time::currentSeconds() >= d_nextCheckpointWalltime)) {
+      (d_checkpointWalltimeInterval != 0 && d_sharedState->getElapsedWallTime() >= d_nextCheckpointWalltime)) {
     do_output=true;
     if(!d_wasCheckpointTimestep)
       recompile=true;
@@ -3639,7 +3674,9 @@ DataArchiver::saveSVNinfo()
 void
 DataArchiver::setupSharedFileSystem()
 {
-  double start = Time::currentSeconds();
+  Timers::Simple timer;
+  timer.start();
+
   // Verify that all MPI processes can see the common file system (with rank 0).
   string fs_test_file_name;
   if( d_myworld->myrank() == 0 ) {
@@ -3746,8 +3783,8 @@ DataArchiver::setupSharedFileSystem()
   }
 
   if( d_myworld->myrank() == 0 ) {
-    double delta_time = Time::currentSeconds() - start;
-    cerr << "Verified shared file system in " << delta_time << " seconds.\n";
+    cerr << "Verified shared file system in " << timer().seconds()
+	 << " seconds.\n";
   }
 
 } // end setupSharedFileSystem()
@@ -3768,7 +3805,8 @@ DataArchiver::setupSharedFileSystem()
 void
 DataArchiver::setupLocalFileSystems()
 {
-  double start = Time::currentSeconds();
+  Timers::Simple timer;
+  timer.start();
 
   // See how many shared filesystems that we have
   string basename;
@@ -3903,8 +3941,8 @@ DataArchiver::setupLocalFileSystems()
   Uintah::MPI::Allreduce(&count, &nunique, 1, MPI_INT, MPI_SUM,
                 d_myworld->getComm());
   if( d_myworld->myrank() == 0 ) {
-    double dt = Time::currentSeconds() - start;
-    cerr << "Discovered " << nunique << " unique filesystems in " << dt << " seconds\n";
+    cerr << "Discovered " << nunique << " unique filesystems in "
+	 << timer().seconds() << " seconds\n";
   }
   // Remove the tmp files...
   int s = unlink(myname.str().c_str());

@@ -294,10 +294,8 @@ class UnifiedScheduler : public MPIScheduler  {
 #endif
 };
 
-
-
+  
 class UnifiedSchedulerWorker {
-
 
 public:
   
@@ -305,21 +303,19 @@ public:
 
   void run();
 
-  double getWaittime();
-
-  void resetWaittime( double start );
+  double getWaitTime();
+  void start();
+  void stopWaitTime();
+  void resetWaitTime();
   
   friend class UnifiedScheduler;
-
 
 private:
 
   UnifiedScheduler * m_scheduler{nullptr};
   int                m_rank{-1};
-  double             m_waittime{0.0};
-  double             m_waitstart{0.0};
 
-
+  Timers::Simple     m_waitTimer;
 };
 
 } // namespace Uintah

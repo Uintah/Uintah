@@ -33,10 +33,11 @@
  *
  */
 
+#include <Core/Geometry/IntVector.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/CCVariable.h>
-#include <Core/Geometry/IntVector.h>
-#include <Core/Util/Time.h>
+#include <Core/Util/Timers/Timers.hpp>
+
 #include <iostream>
 
 using namespace Uintah;
@@ -131,27 +132,27 @@ int main ( int argc, char** argv )
   x.initialize( 6 );
   b.initialize( 2 );
 
-  {
-    double startTime = Time::currentSeconds();
-    bench1(loop, low, high, result, a, x, b);
+  Timers::Simple timer;
 
-    double deltaTime = Time::currentSeconds() - startTime;
-    double megaFlops = (loop * size * size * size * 2.0) / 1000000.0 / deltaTime;
+  timer.start();
+  bench1(loop, low, high, result, a, x, b);
+  timer.stop();
+  
+  double megaFlops =
+    (loop * size * size * size * 2.0) / 1000000.0 / timer().seconds();
 
-    cout << "Completed in " << deltaTime << " seconds.";
-    cout << " (" << megaFlops << " MFLOPS)" << endl;
-  }
-  {
-    double startTime = Time::currentSeconds();
-    bench2(loop, low, high, result, a, x, b);
+  cout << "Completed in " << timer().seconds() << " seconds.";
+  cout << " (" << megaFlops << " MFLOPS)" << endl;
 
-    double deltaTime = Time::currentSeconds() - startTime;
-    double megaFlops = (loop * size * size * size * 2.0) / 1000000.0 / deltaTime;
+  timer.reset( true );
+  bench2(loop, low, high, result, a, x, b);
+  timer.stop();
+  
+  megaFlops = (loop * size * size * size * 2.0) / 1000000.0 / timer().seconds();
 
-    cout << "Completed in " << deltaTime << " seconds.";
-    cout << " (" << megaFlops << " MFLOPS)" << endl;
-  }
- 
+  cout << "Completed in " << timer().seconds() << " seconds.";
+  cout << " (" << megaFlops << " MFLOPS)" << endl;
+  
   return EXIT_SUCCESS;
 }
 

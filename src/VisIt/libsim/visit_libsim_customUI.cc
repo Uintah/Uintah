@@ -35,7 +35,6 @@
 #include <Core/Grid/Material.h>
 #include <Core/OS/ProcessInfo.h>
 #include <Core/Util/DebugStream.h>
-#include <Core/Util/Time.h>
 
 #include <CCA/Ports/Output.h>
 
@@ -121,10 +120,10 @@ void visit_SetDeltaTValues( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_SetWallTimes( visit_simulation_data *sim )
 {
-  double time = Time::currentSeconds();
-  
   WallTimers* walltimers  = sim->simController->getWallTimers();
   SimulationTime* simTime = sim->simController->getSimulationTime();
+
+  double time = walltimers->GetWallTime();
 
   int row = 0;
 

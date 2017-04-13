@@ -380,6 +380,9 @@ class DataWarehouse;
 
        double d_nextOutputTime;         // used when d_outputInterval != 0
        int    d_nextOutputTimestep;     // used when d_outputTimestepInterval != 0
+
+       bool   d_outputLastTimestep;     // Output the last time step.
+     
        //int d_currentTimestep;
        Dir    d_dir;                    //!< top of uda dir
 
@@ -433,6 +436,8 @@ class DataWarehouse;
        // cannot be used without walltimeInterval.
        int d_checkpointWalltimeStart;     // Amount of (real) time (in seconds) to wait before first checkpoint.
        int d_checkpointWalltimeInterval;  // Amount of (real) time (in seconds) to between checkpoints.
+
+       bool d_checkpointLastTimestep;     // Checkpoint the last time step.
 
        //! How many checkpoint dirs to keep around
        int d_checkpointCycle;

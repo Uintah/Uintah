@@ -453,7 +453,7 @@ void lineExtract::doAnalysis(const ProcessorGroup* pg,
     lastWriteTime = writeTime;
   }
 
-  double now = d_sharedState->getElapsedTime();
+  double now = d_sharedState->getElapsedSimTime();
   if(now < d_startTime || now > d_stopTime){
     return;
   }
@@ -651,7 +651,7 @@ void lineExtract::doAnalysis(const ProcessorGroup* pg,
 
           // write cell position and time
           Point here = patch->cellPosition(c);
-          double time = d_sharedState->getElapsedTime();
+          double time = d_sharedState->getElapsedSimTime();
           fprintf(fp,    "%E\t %E\t %E\t %E",here.x(),here.y(),here.z(), time);
          
          

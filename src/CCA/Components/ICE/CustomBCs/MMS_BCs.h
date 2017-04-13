@@ -140,7 +140,7 @@ int set_MMS_BCs_FC( const Patch* patch,
   // 
   double nu = gv->viscosity;
   double A =  gv->A;
-  double t  = sharedState->getElapsedTime();
+  double t  = sharedState->getElapsedSimTime();
   t += lv->delT;
     
   for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {

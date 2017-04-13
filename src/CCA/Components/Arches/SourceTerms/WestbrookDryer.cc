@@ -376,7 +376,7 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
 
       }
 
-      double total_time = _field_labels->d_sharedState->getElapsedTime();
+      double total_time = _field_labels->d_sharedState->getElapsedSimTime();
       // Overwrite with hot spot if specified -- like a pilot light
       if ( total_time > _start_time_hot_spot && total_time < _stop_time_hot_spot ) {
 

@@ -467,7 +467,8 @@ ViscoTransIsoHyperImplicit::computeStressTensorImplicit(const PatchSubset* patch
                                                         dx, psize,interpolator);
       }
 
-      double time = d_sharedState->getElapsedTime();
+      // Get the current simulation time
+      double time = d_sharedState->getElapsedSimTime();
 
       for(ParticleSubset::iterator iter = pset->begin();
                                    iter != pset->end(); iter++){
@@ -956,7 +957,10 @@ ViscoTransIsoHyperImplicit::computeStressTensorImplicit(const PatchSubset* patch
                                                         deformationGradient,
                                                         dx, psize,interpolator);
      }
-     double time = d_sharedState->getElapsedTime();
+
+     // Get the current simulation time
+     double time = d_sharedState->getElapsedSimTime();
+
      for(ParticleSubset::iterator iter = pset->begin();
                                   iter != pset->end(); iter++){
         particleIndex idx = *iter;

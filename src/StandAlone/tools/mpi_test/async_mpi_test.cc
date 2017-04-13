@@ -22,6 +22,8 @@
  * IN THE SOFTWARE.
  */
 
+#include <Core/Parallel/UintahMPI.h>
+
 #include <cstdlib>
 #include <cstdio>
 #include <iostream>
@@ -29,9 +31,6 @@
 #include <queue>
 #include <unistd.h>
 #include <sys/time.h>
-
-#include <Core/Parallel/UintahMPI.h>
-#include <Core/Util/Time.h>
 
 #define debug_main
 #define debug_main_thread

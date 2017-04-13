@@ -39,6 +39,7 @@
 #include <Core/Parallel/UintahMPI.h>
 #include <Core/Util/DOUT.hpp>
 #include <Core/Util/FancyAssert.h>
+#include <Core/Util/Timers/Timers.hpp>
 #include <Core/Util/Time.h>
 
 #ifdef UINTAH_ENABLE_KOKKOS
@@ -94,7 +95,7 @@ MPIScheduler::MPIScheduler( const ProcessorGroup * myworld
   Kokkos::initialize();
 #endif //UINTAH_ENABLE_KOKKOS
 
-  m_last_time = Time::currentSeconds();
+  m_timer.start();
 
   m_reloc_new_pos_label = nullptr;
 
@@ -237,16 +238,17 @@ MPIScheduler::initiateReduction( DetailedTask* dtask )
 {
   DOUT(g_reductions, "Rank-" << d_myworld->myrank() << " Running Reduction Task: " << dtask->getName());
 
-  double reducestart = Time::currentSeconds();
+  
+  Timers::Simple timer;
 
+  timer.start();
   runReductionTask(dtask);
+  timer.stop();
 
-  double reduceend = Time::currentSeconds();
+  emitNode(dtask, m_timer().seconds(), timer().seconds(), 0);
 
-  emitNode(dtask, reducestart, reduceend - reducestart, 0);
-
-  mpi_info_[TotalReduce   ] += reduceend - reducestart;
-  mpi_info_[TotalReduceMPI] += reduceend - reducestart;
+  mpi_info_[TotalReduce   ] += timer().seconds();
+  mpi_info_[TotalReduceMPI] += timer().seconds();
 }
 
 //______________________________________________________________________
@@ -257,7 +259,8 @@ MPIScheduler::runTask( DetailedTask * dtask
                      , int            thread_id /* = 0 */
                      )
 {
-  double taskstart = Time::currentSeconds();
+  Timers::Simple timer;
+  timer.start();
 
   if (m_tracking_vars_print_location & SchedulerCommon::PRINT_BEFORE_EXEC) {
     printTrackedVars(dtask, SchedulerCommon::PRINT_BEFORE_EXEC);
@@ -273,7 +276,8 @@ MPIScheduler::runTask( DetailedTask * dtask
     printTrackedVars(dtask, SchedulerCommon::PRINT_AFTER_EXEC);
   }
 
-  double total_task_time = Time::currentSeconds() - taskstart;
+  timer.stop();
+  double total_task_time = timer().seconds();
 
   g_lb_mutex.lock();
   {
@@ -297,12 +301,12 @@ MPIScheduler::runTask( DetailedTask * dtask
 
   dtask->done(m_dws);
 
-  double teststart = Time::currentSeconds();
-
-
   //---------------------------------------------------------------------------
-  // New way of managing single MPI requests - avoids MPI_Waitsome & MPI_Donesome - APH 07/20/16
-  //---------------------------------------------------------------------------
+  // New way of managing single MPI requests - avoids MPI_Waitsome &
+  // MPI_Donesome - APH 07/20/16
+  // ---------------------------------------------------------------------------
+  timer.reset( true );
+
   auto ready_request = [](CommRequest const& r)->bool { return r.test(); };
   CommRequestPool::iterator comm_sends_iter = m_sends.find_any(ready_request);
   if (comm_sends_iter) {
@@ -310,12 +314,13 @@ MPIScheduler::runTask( DetailedTask * dtask
     comm_sends_iter->finishedCommunication(d_myworld, status);
     m_sends.erase(comm_sends_iter);
   }
+
+  timer.stop();
+  mpi_info_[TotalTestMPI] += timer().seconds();
   //-----------------------------------
 
-
-  mpi_info_[TotalTestMPI] += Time::currentSeconds() - teststart;
-
-  // Add subscheduler timings to the parent scheduler and reset subscheduler timings
+  // Add subscheduler timings to the parent scheduler and reset
+  // subscheduler timings
   if (m_parent_scheduler) {
     for (size_t i = 0; i < mpi_info_.size(); ++i) {
       MPIScheduler::TimingStat e = (MPIScheduler::TimingStat)i;
@@ -324,7 +329,7 @@ MPIScheduler::runTask( DetailedTask * dtask
     mpi_info_.reset(0);
   }
 
-  emitNode(dtask, taskstart, total_task_time, 0);
+  emitNode(dtask, m_timer().seconds(), total_task_time, 0);
 
 }  // end runTask()
 
@@ -350,7 +355,8 @@ MPIScheduler::postMPISends( DetailedTask * dtask
                           , int            thread_id  /* = 0 */
                           )
 {
-  double sendstart = Time::currentSeconds();
+  Timers::Simple timer;
+  timer.start();
 
   int me = d_myworld->myrank();
 
@@ -429,7 +435,7 @@ MPIScheduler::postMPISends( DetailedTask * dtask
     // Post the send
     if (mpibuff.count() > 0) {
       ASSERT(batch->m_message_tag > 0);
-      double start = Time::currentSeconds();
+      double start = timer().seconds();
       void* buf;
       int count;
       MPI_Datatype datatype;
@@ -455,7 +461,6 @@ MPIScheduler::postMPISends( DetailedTask * dtask
       m_message_volume += count * typeSize;
       volSend += count * typeSize;
 
-
       //---------------------------------------------------------------------------
       // New way of managing single MPI requests - avoids MPI_Waitsome & MPI_Donesome - APH 07/20/16
       //---------------------------------------------------------------------------
@@ -464,20 +469,18 @@ MPIScheduler::postMPISends( DetailedTask * dtask
       comm_sends_iter.clear();
       //---------------------------------------------------------------------------
 
-
-      mpi_info_[TotalSendMPI] += Time::currentSeconds() - start;
+      mpi_info_[TotalSendMPI] += timer().seconds() - start;
 
     }
   }  // end for (DependencyBatch* batch = task->getComputes())
 
-  double dsend = Time::currentSeconds() - sendstart;
-  mpi_info_[TotalSend] += dsend;
+  mpi_info_[TotalSend] += timer().seconds();
 
   size_t sends_size = m_sends.size();
   if (g_send_timings && sends_size > 0) {
     if (d_myworld->myrank() == d_myworld->size() / 2) {
         DOUT(true, " Rank-" << d_myworld->myrank()
-                << " Time: " << Time::currentSeconds()
+	     << " Time: " << timer().seconds()
                 << " , NumSend: " << sends_size
                 << " , VolSend: " << volSend);
     }
@@ -501,7 +504,8 @@ void MPIScheduler::postMPIRecvs( DetailedTask * dtask
                                , int            iteration
                                )
 {
-  double recvstart = Time::currentSeconds();
+  Timers::Simple timer;
+  timer.start();
 
   if (g_dbg) {
     DOUT(true, "Rank-" << d_myworld->myrank() << " postMPIRecvs - task " << *dtask);
@@ -623,7 +627,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask * dtask
       if ( mpibuff.count() > 0 ) {
 
         ASSERT(batch->m_message_tag > 0);
-        double start = Time::currentSeconds();
+        double start = timer().seconds();
         void* buf;
         int count;
         MPI_Datatype datatype;
@@ -653,7 +657,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask * dtask
         comm_recvs_iter.clear();
         //---------------------------------------------------------------------------
 
-        mpi_info_[TotalRecvMPI] += Time::currentSeconds() - start;
+        mpi_info_[TotalRecvMPI] += timer().seconds() - start;
       } else {
         // Nothing really needs to be received, but let everyone else know
         // that it has what is needed (nothing).
@@ -668,8 +672,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask * dtask
       }
     }  // end for loop over requires
 
-    double drecv = Time::currentSeconds() - recvstart;
-    mpi_info_[TotalRecv] += drecv;
+    mpi_info_[TotalRecv] += timer().seconds();
 
   }
   g_recv_mutex.unlock();
@@ -684,7 +687,8 @@ void MPIScheduler::processMPIRecvs( int test_type )
     return;
   }
 
-  double start = Time::currentSeconds();
+  Timers::Simple timer;
+  timer.start();
 
   //---------------------------------------------------------------------------
   // New way of managing single MPI requests - avoids MPI_Waitsome & MPI_Donesome - APH 07/20/16
@@ -727,7 +731,7 @@ void MPIScheduler::processMPIRecvs( int test_type )
 
   }  // end switch
 
-  mpi_info_[TotalWaitMPI] += Time::currentSeconds() - start;
+  mpi_info_[TotalWaitMPI] += timer().seconds();
 
 }  // end processMPIRecvs()
 
@@ -836,10 +840,9 @@ MPIScheduler::execute( int tgnum     /* = 0 */
     emitTime("Total reduction time", mpi_info_[TotalReduce] - mpi_info_[TotalReduceMPI]);
     emitTime("Total comm time", mpi_info_[TotalRecv] + mpi_info_[TotalSend] + mpi_info_[TotalReduce]);
 
-    double time = Time::currentSeconds();
-    double totalexec = time - m_last_time;
-
-    m_last_time = time;
+    m_timer.stop();
+    double totalexec = m_timer().seconds();
+    m_timer.reset( true );
 
     emitTime("Other execution time", totalexec - mpi_info_[TotalSend] - mpi_info_[TotalRecv] - mpi_info_[TotalTask] - mpi_info_[TotalReduce]);
   }
@@ -850,8 +853,9 @@ MPIScheduler::execute( int tgnum     /* = 0 */
 
 
   //---------------------------------------------------------------------------
-  // New way of managing single MPI requests - avoids MPI_Waitsome & MPI_Donesome - APH 07/20/16
-  //---------------------------------------------------------------------------
+  // New way of managing single MPI requests - avoids MPI_Waitsome &
+  // MPI_Donesome - APH 07/20/16
+  // ---------------------------------------------------------------------------
   // wait on all pending requests
   auto ready_request = [](CommRequest const& r)->bool { return r.wait(); };
   CommRequestPool::handle find_handle;
@@ -897,15 +901,15 @@ MPIScheduler::execute( int tgnum     /* = 0 */
 void
 MPIScheduler::emitTime( const char* label )
 {
-   double time = Time::currentSeconds();
-   emitTime(label, time-m_last_time);
-   m_last_time = time;
+  m_timer.stop();
+  emitTime(label, m_timer().seconds() );
+  m_timer.reset( true );
 }
 
 //______________________________________________________________________
 //
 void
-MPIScheduler::emitTime( const char*  label, double dt )
+MPIScheduler::emitTime( const char* label, double dt )
 {
    m_labels.push_back(label);
    m_times.push_back(dt);
@@ -1015,8 +1019,7 @@ MPIScheduler::outputTimingStats( const char* label )
     DOUT(g_time_out, message.str());
   }
 
-  double time = Time::currentSeconds();
-  m_last_time = time;
+  m_timer.reset( true );
 
   if (g_exec_out) {
     static int count = 0;

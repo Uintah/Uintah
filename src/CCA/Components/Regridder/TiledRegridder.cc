@@ -33,7 +33,7 @@
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Util/DebugStream.h>
-#include <Core/Util/Time.h>
+#include <Core/Util/Timers/Timers.hpp>
 
 #include <sci_defs/visit_defs.h>
 
@@ -157,38 +157,44 @@ void TiledRegridder::ComputeTiles( vector<IntVector> &tiles,
     
   }  // patch loop
 }
-double rtimes[20]={0};
 //______________________________________________________________________
 //
 Grid* TiledRegridder::regrid(Grid* oldGrid)
 {
   MALLOC_TRACE_TAG_SCOPE("TiledRegridder::regrid");
 
+  double rtimes[20]={0};
+
   if(rgtimes.active()) {
     for(int i=0;i<20;i++)
       rtimes[i]=0;
   }
-  double start=Time::currentSeconds();
 
   vector< vector<IntVector> > tiles(min(oldGrid->numLevels()+1,d_maxLevels));
 
+  Timers::Simple timer;
+  timer.start();
+
   //for each level fine to coarse 
-  for(int l=min(oldGrid->numLevels()-1,d_maxLevels-2); l >= 0;l--) {
+  for(int l=min(oldGrid->numLevels()-1,d_maxLevels-2); l >= 0; l--) {
     //Uintah::MPI::Barrier(d_myworld->getComm());
-    rtimes[15+l]+=Time::currentSeconds()-start;
-    start=Time::currentSeconds();
+
+    // THE TIMES FOR THE LEVEL PROVIDE NO INFORMATION OTHER THAN THE
+    // TIME TO CHECK THE FOR LOOP.
+    rtimes[15+l] += timer().seconds();
+    timer.reset( true );
     const LevelP level=oldGrid->getLevel(l);
 
     vector<IntVector> mytiles;
     vector<IntVector> myoldtiles;
 
-    rtimes[0]+=Time::currentSeconds()-start;
-    start=Time::currentSeconds();
+    rtimes[0] += timer().seconds();
+    timer.reset( true );
     
     //compute volume using minimum tile size
     ComputeTiles(mytiles, level, d_minTileSize[l+1], d_cellRefinementRatio[l]);
-    rtimes[1]+=Time::currentSeconds()-start;
-    start=Time::currentSeconds();
+    rtimes[1] += timer().seconds();
+    timer.reset( true );
 
     GatherTiles(mytiles,tiles[l+1]);
 
@@ -196,8 +202,8 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
       //add flags to the coarser level to ensure that boundary layers exist and that fine patches have a coarse patches above them.
       CoarsenFlags(oldGrid,l,tiles[l+1]);
     }
-    rtimes[6]+=Time::currentSeconds()-start;
-    start=Time::currentSeconds();
+    rtimes[6] += timer().seconds();
+    timer.reset( true );
   }
 
   //level 0 does not change so just copy the patches over.
@@ -208,15 +214,15 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
   //Create the grid
   Grid *newGrid = CreateGrid(oldGrid,tiles);
 
-  rtimes[7]+=Time::currentSeconds()-start;
-  start=Time::currentSeconds();
+  rtimes[7] += timer().seconds();
+  timer.reset( true );
 
   if(*newGrid==*oldGrid) {
     delete newGrid;
     return oldGrid;
   }
-  rtimes[8]+=Time::currentSeconds()-start;
-  start=Time::currentSeconds();
+  rtimes[8] += timer().seconds();
+  timer.reset( true );
 
   //finalize the grid
   IntVector periodic = oldGrid->getLevel(0)->getPeriodicBoundaries();
@@ -226,8 +232,8 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
     //level->assignBCS(grid_ps_,0);
   }
 
-  rtimes[9]+=Time::currentSeconds()-start;
-  start=Time::currentSeconds();
+  rtimes[9] += timer().seconds();
+  timer.reset( true );
 
   d_newGrid = true;
   d_lastRegridTimestep = d_sharedState->getCurrentTopLevelTimeStep();
@@ -237,17 +243,16 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
   //initialize the weights on new patches
   lb_->initializeWeights(oldGrid,newGrid);
 
-  rtimes[10]+=Time::currentSeconds()-start;
-  start=Time::currentSeconds();
+  rtimes[10] += timer().seconds();
+  timer.reset( true );
 #if SCI_ASSERTION_LEVEL > 0
   if(!verifyGrid(newGrid))
   {
     throw InternalError("Grid is not consistent across processes",__FILE__,__LINE__);
   }
 #endif 
-  rtimes[11]+=Time::currentSeconds()-start;
-  start=Time::currentSeconds();
-
+  rtimes[11] += timer().seconds();
+  timer.reset( true );
 
   // ignore...
   if (rgtimes.active()) {
