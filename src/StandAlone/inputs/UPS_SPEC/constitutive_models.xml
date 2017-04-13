@@ -117,30 +117,32 @@
     <ve_volumetric_viscosity       spec="OPTIONAL DOUBLE" /> <!-- qwerty need_applies_to='type ALL' -->
     <ve_deviatoric_viscosity       spec="OPTIONAL DOUBLE" /> <!-- qwerty need_applies_to='type ALL' -->
     <EoverR                        spec="OPTIONAL DOUBLE" /> <!-- FIXME: what is this for? -->
+    
     <equation_of_state             spec="OPTIONAL NO_DATA"
                                      attribute1="type REQUIRED STRING 'default_hyper, default_hypo, three_region_mie_gruneisen, mie_gruneisen, mie_gruneisen_energy'" >
-      <C_0                         spec="OPTIONAL DOUBLE" />    <!-- FIXME: what is this? optional (DefaultHypoEOS.xml)? Default value? -->
-      <Gamma_0                     spec="OPTIONAL DOUBLE" />
-      <S_alpha                     spec="OPTIONAL DOUBLE" />
-      <S_2                         spec="OPTIONAL DOUBLE" />
-      <S_3                         spec="OPTIONAL DOUBLE" />
-      <R1_C_0                         spec="OPTIONAL DOUBLE" />    <!-- FIXME: what is this? optional (DefaultHypoEOS.xml)? Default value? -->
-      <R1_Gamma_0                     spec="OPTIONAL DOUBLE" />
-      <R1_S_alpha                     spec="OPTIONAL DOUBLE" />
-      <R1_S_2                         spec="OPTIONAL DOUBLE" />
-      <R1_S_3                         spec="OPTIONAL DOUBLE" />
-      <R2_C_0                         spec="OPTIONAL DOUBLE" />    <!-- FIXME: what is this? optional (DefaultHypoEOS.xml)? Default value? -->
-      <R2_Gamma_0                     spec="OPTIONAL DOUBLE" />
-      <R2_S_alpha                     spec="OPTIONAL DOUBLE" />
-      <R2_S_2                         spec="OPTIONAL DOUBLE" />
-      <R2_S_3                         spec="OPTIONAL DOUBLE" />
-      <R3_C_0                         spec="OPTIONAL DOUBLE" />    <!-- FIXME: what is this? optional (DefaultHypoEOS.xml)? Default value? -->
-      <R3_Gamma_0                     spec="OPTIONAL DOUBLE" />
-      <R3_S_alpha                     spec="OPTIONAL DOUBLE" />
-      <R3_S_2                         spec="OPTIONAL DOUBLE" />
-      <R3_S_3                         spec="OPTIONAL DOUBLE" />
+      <C_0                         spec="OPTIONAL DOUBLE" need_applies_to="type three_region_mie_gruneisen, mie_gruneisen, mie_gruneisen_energy" /> 
+      <Gamma_0                     spec="OPTIONAL DOUBLE" need_applies_to="type three_region_mie_gruneisen, mie_gruneisen, mie_gruneisen_energy" />
+      
+      <S_alpha                     spec="OPTIONAL DOUBLE" need_applies_to="type mie_gruneisen, mie_gruneisen_energy" />
+      <S_2                         spec="OPTIONAL DOUBLE" need_applies_to="type mie_gruneisen" />
+      <S_3                         spec="OPTIONAL DOUBLE" need_applies_to="type mie_gruneisen" />
+      <R1_C_0                      spec="OPTIONAL DOUBLE" need_applies_to="type three_region_mie_gruneisen" /> 
+      <R1_Gamma_0                  spec="OPTIONAL DOUBLE" need_applies_to="type three_region_mie_gruneisen" /> 
+      <R1_S_alpha                  spec="OPTIONAL DOUBLE" need_applies_to="type three_region_mie_gruneisen" /> 
+      <R1_S_2                      spec="OPTIONAL DOUBLE" need_applies_to="type three_region_mie_gruneisen" /> 
+      <R1_S_3                      spec="OPTIONAL DOUBLE" need_applies_to="type three_region_mie_gruneisen" /> 
+      <R2_C_0                      spec="OPTIONAL DOUBLE" need_applies_to="type three_region_mie_gruneisen" /> 
+      <R2_Gamma_0                  spec="OPTIONAL DOUBLE" need_applies_to="type three_region_mie_gruneisen" /> 
+      <R2_S_alpha                  spec="OPTIONAL DOUBLE" need_applies_to="type three_region_mie_gruneisen" /> 
+      <R2_S_2                      spec="OPTIONAL DOUBLE" need_applies_to="type three_region_mie_gruneisen" /> 
+      <R2_S_3                      spec="OPTIONAL DOUBLE" need_applies_to="type three_region_mie_gruneisen" /> 
+      <R3_C_0                      spec="OPTIONAL DOUBLE" need_applies_to="type three_region_mie_gruneisen" /> 
+      <R3_Gamma_0                  spec="OPTIONAL DOUBLE" need_applies_to="type three_region_mie_gruneisen" /> 
+      <R3_S_alpha                  spec="OPTIONAL DOUBLE" need_applies_to="type three_region_mie_gruneisen" /> 
+      <R3_S_2                      spec="OPTIONAL DOUBLE" need_applies_to="type three_region_mie_gruneisen" /> 
+      <R3_S_3                      spec="OPTIONAL DOUBLE" need_applies_to="type three_region_mie_gruneisen" /> 
     </equation_of_state>
-    <evolve_damage                 spec="OPTIONAL BOOLEAN" />
+    
     <evolve_porosity               spec="OPTIONAL BOOLEAN" />
     <failure_mean           spec="OPTIONAL DOUBLE" />
     <failure_std            spec="OPTIONAL DOUBLE" />

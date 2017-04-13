@@ -1,0 +1,23 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- EOS for Structural Energetics material-->
+<Uintah_Include>
+  <equation_of_state type = "three_region_mie_gruneisen">
+    <R1_C_0>      5386   </R1_C_0>
+    <R1_Gamma_0>  1.99   </R1_Gamma_0>
+    <R1_S_alpha>  1.339  </R1_S_alpha>
+    <R1_S_2>      0.0    </R1_S_2>
+    <R1_S_3>      0.0    </R1_S_3>
+
+    <R2_C_0>      5386   </R2_C_0>
+    <R2_Gamma_0>  1.99   </R2_Gamma_0>
+    <R2_S_alpha>  1.339  </R2_S_alpha>
+    <R2_S_2>      0.0    </R2_S_2>
+    <R2_S_3>      0.0    </R2_S_3>
+
+    <R3_C_0>      5386   </R3_C_0>
+    <R3_Gamma_0>  1.99   </R3_Gamma_0>
+    <R3_S_alpha>  1.339  </R3_S_alpha>
+    <R3_S_2>      0.0    </R3_S_2>
+    <R3_S_3>      0.0    </R3_S_3>
+  </equation_of_state>
+</Uintah_Include>

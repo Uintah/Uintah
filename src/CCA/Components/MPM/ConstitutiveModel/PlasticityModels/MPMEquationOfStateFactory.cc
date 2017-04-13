@@ -27,6 +27,7 @@
 #include "DefaultHypoElasticEOS.h"
 #include "HyperElasticEOS.h"
 #include "MieGruneisenEOSEnergy.h"
+#include "ThreeRegionMieGruneisenEOSEnergy.h"
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -56,6 +57,8 @@ MPMEquationOfState* MPMEquationOfStateFactory::create(ProblemSpecP& ps)
    
    if (mat_type == "mie_gruneisen")
       return(scinew MieGruneisenEOSEnergy(child));
+   else if (mat_type == "three_region_mie_gruneisen")
+      return(scinew ThreeRegionMieGruneisenEOSEnergy(child));
    else if (mat_type == "default_hypo")
       return(scinew DefaultHypoElasticEOS(child));
    else if (mat_type == "default_hyper")
