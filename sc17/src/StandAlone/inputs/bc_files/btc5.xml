@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<Uintah_Include>
+    <ParticleProperties type="coal">
+    <!--Coal>
+    <Properties-->
+    <!-- REQUIRED ARCHES/PYTHON INPUTS -->
+
+    <!--<particle_sizes>[8.3009e-4,8.2135e-4,2.6695e-3]</particle_sizes>-->
+    <diameter_distribution>[1.50000e-05,6.0e-05,20.0e-05]</diameter_distribution>
+    <!--<particle_weights>[0.387137, 0.566254, 0.046609]</particle_weights>[> [mass fractions for each particle size] <]-->
+    <!--<particle_weights>[0.387137, 0.566254, 0.046609]</particle_weights>-->
+    <density>1300.0</density><!-- [kg/m^3] -->
+    <temperature>422.0</temperature>
+    <ultimate_analysis>
+      <C>0.5934 </C>
+      <H>0.0417</H>
+      <O>0.1361</O>
+      <N>0.0089</N>
+      <S>0.005</S>
+      <CHAR>0.0</CHAR>
+      <ASH>0.064800</ASH>
+      <H2O>0.15000</H2O>
+    </ultimate_analysis> <!--C+H+O+N+S+char+ash+moisture = 1 [wt fractions] -->
+     <raw_coal_enthalpy>-2247724.62188</raw_coal_enthalpy>
+    <!--<raw_coal_enthalpy>-578299.02</raw_coal_enthalpy>-->
+    <char_enthalpy>0.0</char_enthalpy><!-- char enthalpy (at inlet conditions) [J/kg] -->
+    <ash_enthalpy>-9.5686e7</ash_enthalpy><!-- ash enthalpy (at inlet conditions) [J/kg] -->
+
+    <!--<Yamamoto_coefficients>[1.75e10,2.592280258e5,0.53,16.26759,-39.1322,61.04079,-38.3719,0.108926,0.032302]</Yamamoto_coefficients>-->
+
+
+<!-- RichardsFletcher 2 step rate coefficients in the following order: -->
+<!--                           A1[1/s], A2[1/s],         E1[K],         E2[K], Y1[volatile fraction from prox analysis], Y2[fraction devolatilzed at higher temperatures], c0_1-c5_1, c0_2-c5_2 -->
+<!--<RichardsFletcher_coefficients>[1.18e7, 1.46e13,          9044,         29215,                                   0.0309,                                           0.5573, -104.45, 323.46, -54.197, -0.8526, -728.01, -0.0345, 14.590, -53.759, 126.16, -132.02, 44.477, -0.000817]</RichardsFletcher_coefficients>-->
+
+<RichardsFletcher_coefficients>[1860373024.44642,  14274626041082700, 15237.0975975298,  30193.5676688703,   0.4477707833,  0.5758443413, -3.289129027,   23.3856684211, -61.6249307163 35.1255410928,  15.2080305419,  -5.5345777803 -20.822294316,11.2609234884, -87.3004640112,   258.9364074787, -336.4271126132, 118.8392250887, 92.7237287862, -65.5447178934]</RichardsFletcher_coefficients>
+
+ 
+<FOWYDevol>
+  <v_hiT>0.6556</v_hiT>
+  <Tig>590</Tig>
+  <A>2.3550e+07</A>
+  <Ta>1.133e4</Ta>
+  <b>12.3937</b>
+  <c>-8.87596</c>
+  <d>2.25563</d>
+  <e>-0.48052</e>
+  <sigma>1.189e3</sigma>
+</FOWYDevol>
+
+
+    <optics>
+      <RawCoal_real>2.0</RawCoal_real>
+      <RawCoal_imag>-0.6</RawCoal_imag>
+      <Ash_real>1.0</Ash_real>
+      <Ash_imag>-0.01</Ash_imag>
+    </optics>
+
+    
+    <!-- Yamamto 1 step rate coefficients in the following order:  -->
+    <!-- Av[1/s], Ev[J/mole], Yv[-], c0[-], c1[-], c2[-] c3[-], c4[-], c5[-]  -->     
+    <!--Shaddix_char_coefficients>[0.153e-4,0.24e-4,0.219e-4,293,344.0,45.5e3,0.18,-393509.0,-110525.0]</Shaddix_char_coefficients-->
+
+    <ShaddixChar>
+     <As> 344.0 </As>
+     <Es> 45.5e3 </Es>
+     <n> 0.18 </n>
+    </ShaddixChar>
+
+    <!-- Shaddix char oxidation coefficients in the following order:  -->
+    <!-- D1[O2/CO2 m2/s], D2[O2/H2O m2/s], D3[O2/CO2 m2/s], T0[K], As[mol/s.m^2.atm^n], Es[J/mol] n[], HF_CO2[J/mol], HF_CO[J/mol]  -->
+
+
+    <!--<HHV>23639.11</HHV>[>J/g<]-->
+    <!--<use_HHV_est>no</use_HHV_est>[>J/g<]-->
+
+    <!-- OPTIONAL INPUTS -->
+    <ksi>1.00</ksi><!-- Optional Fraction of the heat released by char oxidation that goes to the particle (default=1.0) -->
+  <!--/Properties>
+  </Coal-->
+  <!--/ParticlePropertiesx-->
+  <SmithChar>
+    <use_simple_inversion>true</use_simple_inversion>
+    <char_MW>12.0</char_MW>
+    <surface_area_mult_factor>1.0</surface_area_mult_factor>
+    <species>H2</species>
+    <species>O2</species>
+    <species>OH</species>
+    <species>H2O</species>
+    <species>CO</species>
+    <species>CO2</species>
+    <reaction>
+      <oxidizer_name>O2</oxidizer_name>
+      <oxidizer_MW>32.0</oxidizer_MW>
+      <pre_exponential_factor>47.5</pre_exponential_factor>
+      <activation_energy>21869.02486</activation_energy>
+      <stoich_coeff_ratio>1.0</stoich_coeff_ratio>
+    </reaction>
+    <reaction>
+      <oxidizer_name>CO2</oxidizer_name>
+      <oxidizer_MW>48.0</oxidizer_MW>
+      <pre_exponential_factor>660</pre_exponential_factor>
+      <activation_energy>49832.69598</activation_energy>
+      <stoich_coeff_ratio>1.0</stoich_coeff_ratio>
+    </reaction>
+  </SmithChar>
+
+  </ParticleProperties>
+
+</Uintah_Include>
+
+
+

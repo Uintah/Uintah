@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<Uintah_Include>
+  <BCType id="all" label="mass_inlet_sideWallPrimary05" var="MassFlowInlet">
+    <value>2.7955516116</value>
+  </BCType>
+  <BCType id="all" label="coal_gas_mix_frac" var="Dirichlet">
+    <value>0.3037</value>
+  </BCType>
+  <BCType id="all" label="heat_loss" var="Dirichlet">
+    <value>0.98</value>
+  </BCType>
+  <BCType id="all" label="enthalpy" var="Tabulated">
+    <value>table_enthalpy</value>
+  </BCType>
+  <BCType id="all" label="radiation_temperature" var="Neumann">
+    <value>0.0</value>
+  </BCType>
+  <BCType id="all" label="abskg" var="Dirichlet">
+    <value>1.0</value>
+  </BCType>
+  <BCType id="all" label="residence_time" var="Dirichlet">
+    <value>0.0</value>
+  </BCType>
+  <BCType id="all" label="PartMassFlowInlet23" var="PartMassFlowInlet">
+    <value>1.0537909</value>
+  </BCType>
+  <BCType id="all" label="length_qn0" var="Dirichlet">
+    <value>72.1876429337</value>
+  </BCType>
+  <BCType id="all" label="length_qn1" var="Dirichlet">
+    <value>6.01160498291</value>
+  </BCType>
+  <BCType id="all" label="length_qn2" var="Dirichlet">
+    <value>0.141520680684</value>
+  </BCType>
+  <BCType id="all" label="RCmass_qn0" var="Dirichlet">
+    <value>0.102127923633</value>
+  </BCType>
+  <BCType id="all" label="RCmass_qn1" var="Dirichlet">
+    <value>0.136079297709</value>
+  </BCType>
+  <BCType id="all" label="RCmass_qn2" var="Dirichlet">
+    <value>0.0355941824993</value>
+  </BCType>
+  <BCType id="all" label="Charmass_qn0" var="Dirichlet">
+    <value>0.0</value>
+  </BCType>
+  <BCType id="all" label="Charmass_qn1" var="Dirichlet">
+    <value>0.0</value>
+  </BCType>
+  <BCType id="all" label="Charmass_qn2" var="Dirichlet">
+    <value>0.0</value>
+  </BCType>
+  <BCType id="all" label="w_qn0" var="Dirichlet">
+    <value>4.81250952891</value>
+  </BCType>
+  <BCType id="all" label="w_qn1" var="Dirichlet">
+    <value>0.100193416382</value>
+  </BCType>
+  <BCType id="all" label="w_qn2" var="Dirichlet">
+    <value>0.000707603403421</value>
+  </BCType>
+  <BCType id="all" label="pE_qn0" var="Dirichlet">
+    <value>-1.01841080434</value>
+  </BCType>
+  <BCType id="all" label="pE_qn1" var="Dirichlet">
+    <value>-1.3569709645</value>
+  </BCType>
+  <BCType id="all" label="pE_qn2" var="Dirichlet">
+    <value>-0.35494210339</value>
+  </BCType>
+</Uintah_Include>

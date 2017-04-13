@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<Uintah_Include>
+  <BCType id="all" label="velocity_inlet" var="VelocityInlet">
+    <value>[19.215434789465036, 0, 0]</value>
+  </BCType>
+  <BCType id="all" label="coal_gas_mix_frac" var="Dirichlet">
+    <value>0.3037</value>
+  </BCType>
+  <BCType id="all" label="heat_loss" var="Dirichlet">
+    <value>0.98193</value>
+  </BCType>
+  <BCType id="all" label="enthalpy" var="Tabulated">
+    <value>table_enthalpy</value>
+  </BCType>
+  <BCType id="all" label="radiation_temperature" var="Neumann">
+    <value>0.0</value>
+  </BCType>
+  <BCType id="all" label="abskg" var="Dirichlet">
+    <value>1.0</value>
+  </BCType>
+  <BCType id="all" label="w_qn0" var="Dirichlet">
+    <value>54.8292192256</value>
+  </BCType>
+  <BCType id="all" label="w_qn1" var="Dirichlet">
+    <value>0.0827845754017</value>
+  </BCType>
+  <BCType id="all" label="w_qn2" var="Dirichlet">
+    <value>0.00019847368667</value>
+  </BCType>
+  <BCType id="all" label="length_qn0" var="Dirichlet">
+    <value>455.13186587</value>
+  </BCType>
+  <BCType id="all" label="length_qn1" var="Dirichlet">
+    <value>6.79951110062</value>
+  </BCType>
+  <BCType id="all" label="length_qn2" var="Dirichlet">
+    <value>0.0529825506565</value>
+  </BCType>
+  <BCType id="all" label="ux_qn0" var="Dirichlet">
+    <value>1053.56728659</value>
+  </BCType>
+  <BCType id="all" label="ux_qn1" var="Dirichlet">
+    <value>1.5907416102</value>
+  </BCType>
+  <BCType id="all" label="ux_qn2" var="Dirichlet">
+    <value>0.00381375818363</value>
+  </BCType>
+  <BCType id="all" label="uy_qn0" var="Dirichlet">
+    <value>0.0</value>
+  </BCType>
+  <BCType id="all" label="uy_qn1" var="Dirichlet">
+    <value>0.0</value>
+  </BCType>
+  <BCType id="all" label="uy_qn2" var="Dirichlet">
+    <value>0.0</value>
+  </BCType>
+  <BCType id="all" label="uz_qn0" var="Dirichlet">
+    <value>0.0</value>
+  </BCType>
+  <BCType id="all" label="uz_qn1" var="Dirichlet">
+    <value>0.0</value>
+  </BCType>
+  <BCType id="all" label="uz_qn2" var="Dirichlet">
+    <value>0.0</value>
+  </BCType>
+  <BCType id="all" label="RCmass_qn0" var="Dirichlet">
+    <value>0.197190836923</value>
+  </BCType>
+  <BCType id="all" label="RCmass_qn1" var="Dirichlet">
+    <value>0.28842528658</value>
+  </BCType>
+  <BCType id="all" label="RCmass_qn2" var="Dirichlet">
+    <value>0.0237406078936</value>
+  </BCType>
+  <BCType id="all" label="Charmass_qn0" var="Dirichlet">
+    <value>0.0</value>
+  </BCType>
+  <BCType id="all" label="Charmass_qn1" var="Dirichlet">
+    <value>0.0</value>
+  </BCType>
+  <BCType id="all" label="Charmass_qn2" var="Dirichlet">
+    <value>0.0</value>
+  </BCType>
+  <BCType id="all" label="pE_qn0" var="Dirichlet">
+    <value>-1.51493471888</value>
+  </BCType>
+  <BCType id="all" label="pE_qn1" var="Dirichlet">
+    <value>-2.21585083396</value>
+  </BCType>
+  <BCType id="all" label="pE_qn2" var="Dirichlet">
+    <value>-0.1823891602</value>
+  </BCType>
+</Uintah_Include>

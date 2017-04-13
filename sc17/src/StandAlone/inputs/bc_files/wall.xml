@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<inputs>
+  <!--[kg/s] mass flow rate of coal-->
+  <CoalFeedRate>
+    <value>0.0</value>
+    <!--<useMassFlowInlet/>-->
+    <wall_boundary_condition/>
+    <var>Neumann</var>
+    <notes>[kg/s] mass flow rate of coal, var sets the bcs for all of the coal equations </notes>
+  </CoalFeedRate>
+  <Diameters>
+  <!--[micrometers] particle diameter-->
+    <value>3,6,12</value>
+    <notes>[micrometers] particle diameter for each quadrature node</notes>
+  </Diameters>
+  <Diameter_weights>
+    <value>0.8,0.15,0.05</value>
+    <notes>[-] particle diameter weights (number density) for each quadrature node</notes>
+  </Diameter_weights>
+  <particle_temperature>
+    <value>350</value>
+    <notes>[K] temperature of particles at inlet</notes>
+  </particle_temperature>
+  <gas_phase>
+    <x-wall>
+      <value>0</value>
+      <var>WallBC</var>
+      <notes>[-] wall bc 0 Neumann</notes>
+    </x-wall>
+    <mixture_fraction_2>
+      <value>0.0</value>
+      <var>Neumann</var>
+      <notes>[-] mixture fraction between primary and secondary streams</notes>
+    </mixture_fraction_2>
+    <coal_gas_mix_frac>
+      <value>0.0</value>
+      <var>Neumann</var>
+      <notes>[-] mixture fraction of coal off gas</notes>
+    </coal_gas_mix_frac>
+    <heat_loss>
+      <value>0.0</value>
+      <var>Neumann</var>
+      <notes>[-] heat loss</notes>
+    </heat_loss>
+    <enthalpy>
+      <value>0.0</value>
+      <var>Neumann</var>
+      <notes>[-] enthalpy</notes>
+    </enthalpy>
+    <radiation_temperature>
+      <value>1500</value>
+      <var>Dirichlet</var>
+      <notes>[K] radiation temperature</notes>
+    </radiation_temperature>
+    <residence_time>
+      <value>0.0</value>
+      <var>Neumann</var>
+      <notes>[-] net time in reactor</notes>
+    </residence_time>
+  </gas_phase>
+</inputs>

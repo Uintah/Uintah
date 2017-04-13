@@ -1,0 +1,35 @@
+  2,                                         !NSAY..(SAY(I),I=1,NSAY) follows:
+                   ARCHES %%%%%%%%%%%%% HOT FLOW
+    >>>>>>>>>>     OXYCOAL Utah FURNACE UQ case 7   <<<<<<<<<<
+TRUE,TRUE,FALS,TRUE                          !LCALF,LCALET,LCO,LCALH
+TRUE,FALS,TRUE,TRUE                          !LCOAL,LPRMIX,LCREE,LNASA
+FALS                                         !LEQLS
+  101325.                                    !PRES
+  0.00179, 1.0 , 0.0                         !FLOWPR,FPR,ETAPR
+  0.00208, 0.0 , 0.0                         !FLOWSC,FSC,ETASC
+  1.0                                        !PLOAD 
+  273.0, -0.5                                !TREF, HLMIN
+     24,   30,  30                           !NC(coal gas mix frac),NTX(heat loss),NTZ(mix frac)
+                                             !(Blank line)
+ELEMENTS
+THERMO                                       !The react. sect. is formatted
+REACTANTS 1
+    300.00                                   !TMP (unformatted)
+O 2.       0.       0.       0.     O2       0.0010           G
+C 1.     O 2.       0.       0.     CO2      0.9990           G
+                                             !(Blank line)
+REACTANTS 2
+    488.70                                   !TMP (unformatted)
+O 2.       0.       0.       0.     O2       0.9990           G
+C 1.     O 2.       0.       0.     CO2      0.0010           G
+                                             !(Blank line)
+COAL
+    533.0                                    !TMP (unformatted)
+ -2.390051E+06, 0.000000E+00, -9.562878E+07, !HC0(J),HH0(J),HA0(J)
+ 0.000000E+00, 300.000000,                   !HW0(J),TNBP
+ 9.226167E-01, 0.000000E+00, 7.738330E-02,   !OMEGAC(J),OMEGAH(J),OMEGAA(J)
+ 0.000000E+00,                               !OMEGAW(J)
+ 7.680659E-01, 5.397429E-02, 1.761607E-01,   !(WIC(J,K) K = 1,3)
+ 1.151969E-03, 6.471738E-04,                 !(WIC(J,K) K = 4,NLM)            
+ H2O                                         !SLRCMP
+                                             !(Blank line)
