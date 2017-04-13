@@ -69,6 +69,10 @@ namespace Uintah {
 
     virtual double getMaxConcentration() const;
 
+    virtual double getMinConcentration() const;
+
+    virtual double getConcentrationTolerance() const;
+
     virtual void setIncludeHydroStress(bool value);
 
     virtual void initializeTimeStep(const Patch         * patch,
@@ -199,6 +203,8 @@ namespace Uintah {
     
     double d_D0;
     double d_MaxConcentration;
+    double d_MinConcentration;
+    double d_concTolerance;
     double d_InitialConcentration;
     double d_InverseMaxConcentration;
 

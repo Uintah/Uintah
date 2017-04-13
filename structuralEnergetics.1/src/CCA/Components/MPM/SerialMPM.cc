@@ -3756,7 +3756,15 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
       double Cp=mpm_matl->getSpecificHeat();
 
-      if(flags->d_XPIC2){
+      double sdmMaxEffectiveConc;
+      double sdmMinEffectiveConc;
+      if (flags->d_doScalarDiffusion) {
+        // Grab min/max concentration and conc. tolerance for particle loop.
+        ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
+        sdmMaxEffectiveConc = sdm->getMaxConcentration() - sdm->getConcentrationTolerance();
+        sdmMinEffectiveConc = sdm->getMinConcentration() + sdm->getConcentrationTolerance();
+      }
+      if(flags->d_XPIC2) {
         // Loop over particles
         for(ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++) {
           particleIndex idx = *iter;
@@ -3834,12 +3842,11 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           pConcentrationNew[idx] = pConcentration[idx] + concRate * delT;
           pareanew[idx] = parea[idx];
 
-          const double maxConcTol = 1e-10;
-          if (pConcentrationNew[idx] < maxConcTol ) {
-            pConcentrationNew[idx] = maxConcTol;
+          if (pConcentrationNew[idx] < sdmMinEffectiveConc ) {
+            pConcentrationNew[idx] = sdmMinEffectiveConc;
           }
-          if (pConcentrationNew[idx] > (1.0 - maxConcTol) ) {
-            pConcentrationNew[idx] = (1.0 - maxConcTol);
+          if (pConcentrationNew[idx] > sdmMaxEffectiveConc ) {
+            pConcentrationNew[idx] = sdmMaxEffectiveConc;
           }
 
           pConcPreviousNew[idx] = pConcentration[idx];
@@ -3908,6 +3915,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           pmassNew[idx]    = Max(pmass[idx]*(1.    - burnFraction),0.);
           psizeNew[idx]    = (pmassNew[idx]/pmass[idx])*psize[idx];
         double concRate = 0.0;
+
         if(flags->d_doScalarDiffusion)
         {
           pConcGradNew[idx] = Vector(0.0, 0.0, 0.0);
@@ -3935,12 +3943,11 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           pConcentrationNew[idx] = pConcentration[idx] + concRate * delT;
           pareanew[idx] = parea[idx];
 
-          const double maxConcTol = 1e-10;
-          if (pConcentrationNew[idx] < maxConcTol ) {
-            pConcentrationNew[idx] = maxConcTol;
+          if (pConcentrationNew[idx] < sdmMinEffectiveConc ) {
+            pConcentrationNew[idx] = sdmMinEffectiveConc;
           }
-          if (pConcentrationNew[idx] > (1.0 - maxConcTol) ) {
-            pConcentrationNew[idx] = (1.0 - maxConcTol);
+          if (pConcentrationNew[idx] > sdmMaxEffectiveConc ) {
+            pConcentrationNew[idx] = sdmMaxEffectiveConc;
           }
 
           pConcPreviousNew[idx] = pConcentration[idx];

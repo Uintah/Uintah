@@ -58,6 +58,8 @@ ScalarDiffusionModel::ScalarDiffusionModel(
 
   ps->require("diffusivity", d_D0);
   ps->require("max_concentration", d_MaxConcentration);
+  ps->getWithDefault("min_concentration", d_MinConcentration, 0.0);
+  ps->getWithDefault("conc_tolerance", d_concTolerance, 1e-10);
   ps->getWithDefault("initial_concentration", d_InitialConcentration, 0.0);
 
   d_InverseMaxConcentration = 1.0/d_MaxConcentration;
@@ -121,6 +123,16 @@ std::string ScalarDiffusionModel::getDiffusionType() const
 double ScalarDiffusionModel::getMaxConcentration() const
 {
   return d_MaxConcentration;
+}
+
+double ScalarDiffusionModel::getMinConcentration() const
+{
+  return d_MinConcentration;
+}
+
+double ScalarDiffusionModel::getConcentrationTolerance() const
+{
+  return d_concTolerance;
 }
 
 void ScalarDiffusionModel::setIncludeHydroStress(bool value){

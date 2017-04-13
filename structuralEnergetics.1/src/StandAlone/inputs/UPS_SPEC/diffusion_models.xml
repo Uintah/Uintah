@@ -4,13 +4,19 @@
   <diffusion_model         spec="OPTIONAL NO_DATA"
                            attribute1="type REQUIRED STRING 'jg, rf1, null, 
                                        non_linear1, non_linear2, constant_rate,
-                                       bazant, activated, activated2'">                                       
+                                       bazant, activated, activated2, cahn-hilliard'">                                       
                                        
     <diffusivity           spec="REQUIRED DOUBLE" />
-    <max_concentration     spec="REQUIRED DOUBLE" />
-    <initial_concentration spec="OPTIONAL DOUBLE" />
+    <max_concentration     spec="REQUIRED DOUBLE 'positive' " />
+    <min_concentration     spec="OPTIONAL DOUBLE " />
+    <initial_concentration spec="OPTIONAL DOUBLE " />
+    <conc_tolerance        spec="OPTIONAL DOUBLE 'positive' " />
     
     <BoltzmannConstant          spec="REQUIRED DOUBLE" need_applies_to="type bazant, non_linear2" />
+    
+    <!--  Variables specific to the Cahn-Hilliard test model -->
+    <gamma                      spec="REQUIRED DOUBLE 'positive' " need_applies_to="type cahn-hilliard" />
+    <random_scale               spec="OPTIONAL DOUBLE 'positive' " need_applies_to="type cahn-hilliard" />
     
     <!-- Variables specific to the Bazant model (for now) -->
     <regularSolutionParameter   spec="REQUIRED DOUBLE" need_applies_to="type bazant" />

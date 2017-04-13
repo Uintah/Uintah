@@ -39,5 +39,7 @@ SRCS     += \
 	$(SRCDIR)/ScalarDiffusionModel.cc \
 	$(SRCDIR)/ActivatedDiffusion.cc \
 	$(SRCDIR)/ActivatedDiffusion2.cc \
-	$(SRCDIR)/Null.cc
+	$(SRCDIR)/Null.cc \
+	$(SRCDIR)/CahnHilliard.cc \
+	$(SRCDIR)/Perlin.cc
 	
