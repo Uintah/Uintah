@@ -36,7 +36,6 @@
 #include <Core/Parallel/CommunicationList.hpp>
 #include <Core/Util/DOUT.hpp>
 #include <Core/Util/Timers/Timers.hpp>
-#include <Core/Util/Time.h>
 
 #ifdef HAVE_CUDA
   #include <CCA/Components/Schedulers/GPUDataWarehouse.h>
