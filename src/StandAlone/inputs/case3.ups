@@ -21,7 +21,7 @@
   </LoadBalancer>  
 
   <DataArchiver type="PIDX">
-    <filebase>predIncite.pidx</filebase>
+    <filebase>case3.pidx</filebase>
     <PIDX>
     <outputRawIO>true</outputRawIO>
     <outputPatchSize> [64,64,64] </outputPatchSize>

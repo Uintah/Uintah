@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<inputs>
+  <CoalFeedRate>
+    <!-- Wet coal mass flow rate (as recieved) -->
+    <value>0.00</value>
+    <useMassFlowInlet/>
+    <var>Dirichlet</var>
+    <notes>[kg/s] mass flow rate of coal, var sets the bcs for all of the coal equations </notes>
+  </CoalFeedRate>
+  <gas_phase>
+    <!-- gas flow rate -->
+    <mass_inlet>
+      <var>Swirl</var>
+      <swirl_no>-1.0</swirl_no>
+      <!--<var>VelocityInlet</var>-->
+      <!--<var>MassFlowInlet</var>-->
+      <!--<value>2.231</value>-->
+      <value>1.998035571</value>
+      <notes>[kg/s] mass flow rate of gas</notes>
+    </mass_inlet>
+    <!-- Wet coal mass flow rate (as recieved) -->
+    <coal_gas_mix_frac>
+      <value>0.0</value>
+      <var>Dirichlet</var>
+      <notes>[-] mixture fraction of coal off gas</notes>
+    </coal_gas_mix_frac>
+    <!-- Wet coal mass flow rate (as recieved) -->
+    <heat_loss>
+      <value>0.00</value>
+      <var>Dirichlet</var>
+      <notes>[-] heat loss</notes>
+    </heat_loss>
+    <!-- Wet coal mass flow rate (as recieved) -->
+    <enthalpy>
+      <value>table_enthalpy</value>
+      <var>Tabulated</var>
+      <notes>[-] heat loss</notes>
+    </enthalpy>
+    <!-- Wet coal mass flow rate (as recieved) -->
+    <radiation_temperature>
+      <value>0</value>
+      <var>Neumann</var>
+      <notes>[K] radiation temperature</notes>
+    </radiation_temperature>
+    <abskg>
+      <value>1.0</value>
+      <var>Dirichlet</var>
+      <notes>[-] wall emissivity</notes>
+    </abskg>
+    <residence_time>
+      <value>0.0</value>
+      <var>Dirichlet</var>
+      <notes>[-] net time in reactor</notes>
+    </residence_time>
+  </gas_phase>
+</inputs>

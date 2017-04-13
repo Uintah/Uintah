@@ -1,0 +1,1036 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- @version: -->
+<Uintah_specification>
+  <Meta>
+    <title>OFC_Utah_SUFCO</title>
+  </Meta>
+  <SimulationComponent type="arches"/>
+  <Solver type="hypre"/>
+  <Time>
+    <maxTime>10.0</maxTime>
+    <max_Timesteps>1000</max_Timesteps>
+    <initTime>0.0</initTime>
+    <delt_min>1e-9</delt_min>
+    <delt_max>1e-2</delt_max>
+    <timestep_multiplier>0.1</timestep_multiplier>
+  </Time>
+  <DataArchiver>
+    <filebase>prediction2.uda</filebase>
+    <outputInitTimestep />
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <save label="coal_gas_momentum" />
+    <save label="eta_source1" />
+    <save label="eta_source2" />
+    <save label="heat_source" />
+    <save label="pressurePS" />
+    <save label="CCVelocity" />
+    <save label="uVelocitySPBC" />
+    <save label="vVelocitySPBC" />
+    <save label="wVelocitySPBC" />
+    <save label="cellType" />
+    <!--<save label="radiationVolq" />-->
+    <!--<save label="radiationFluxN" />-->
+    <!--<save label="radiationFluxS" />-->
+    <!--<save label="radiationFluxB" />-->
+    <!--<save label="radiationFluxT" />-->
+    <!--<save label="radiationFluxE" />-->
+    <!--<save label="radiationFluxW" />-->
+    <!--<save label="divQ" />-->
+    <!--<save label="radiation_temperature" />-->
+    <save label="abskp" />
+    <save label="abskg" />
+    <save label="gas_abskg" />
+    <save label="enthalpy" />
+    <save label="length_qn0_icv" />
+    <save label="length_qn1_icv" />
+    <save label="length_qn2_icv" />
+    <save label="w_qn0" />
+    <save label="w_qn1" />
+    <save label="w_qn2" />
+    <save label="ux_qn0_icv" />
+    <save label="ux_qn1_icv" />
+    <save label="ux_qn2_icv" />
+    <save label="uy_qn0_icv" />
+    <save label="uy_qn1_icv" />
+    <save label="uy_qn2_icv" />
+    <save label="uy_qn0_icv" />
+    <save label="uy_qn1_icv" />
+    <save label="uy_qn2_icv" />
+    <save label="RCmass_qn0_icv" />
+    <save label="RCmass_qn1_icv" />
+    <save label="RCmass_qn2_icv" />
+    <save label="char_qn0_surfacerate" />
+    <save label="char_qn1_surfacerate" />
+    <save label="char_qn2_surfacerate" />
+    <save label="devol_qn0" />
+    <save label="devol_qn1" />
+    <save label="devol_qn2" />
+    <save label="char_qn0_PO2surf" />
+    <save label="char_qn1_PO2surf" />
+    <save label="char_qn2_PO2surf" />
+    <save label="Charmass_qn0_icv" />
+    <save label="Charmass_qn1_icv" />
+    <save label="Charmass_qn2_icv" />
+    <save label="vorticity" />
+    <save label="heat_pT_qn0" />
+    <save label="heat_pT_qn1" />
+    <save label="heat_pT_qn2" />
+    <save label="heat_qn0_Qconv" />
+    <save label="heat_qn0_Qrad" />
+    <save label="heat_qn1_Qconv" />
+    <save label="heat_qn1_Qrad" />
+    <save label="heat_qn2_Qconv" />
+    <save label="heat_qn2_Qrad" />
+    <save label="pE_qn0_icv" />
+    <save label="pE_qn1_icv" />
+    <save label="pE_qn2_icv" />
+    
+    <save label="heat_loss" />
+    
+    <save label="coal_gas_mix_frac" />
+    <save label="temperature" table_lookup="true" />
+    <save label="temperature" />
+    <save label="density" table_lookup="true" />
+    <save label="CO" table_lookup="true" />
+    <save label="CO2" table_lookup="true" />
+    <save label="H2O" table_lookup="true" />
+    <save label="OH" table_lookup="true" />
+    <save label="NO" table_lookup="true" />
+    
+    <save label="O2" table_lookup="true" />
+    <save label="sensibleenthalpy" table_lookup="true" />
+    <save label="adiabaticenthalpy" table_lookup="true" />
+    <save label="N2" table_lookup="true" />
+    <save label="mixture_molecular_weight" table_lookup="true" />
+    <checkpoint cycle="2" walltimeInterval="3600" walltimeStart="0" />
+    
+    <outputDoubleAsFloat />
+    <compression>gzip</compression>
+  </DataArchiver>
+  <Grid>
+    <BoundaryConditions>
+      <Face side="x-" name="x- wall">
+        <include href="wall.xml"  section="BCType" />
+      </Face>
+      <Face side="x+" name="x+ face">
+        <include href="wall.xml"  section="BCType" />
+      </Face>
+      <Face side="y-" name="y- wall">
+        <include href="wall.xml"  section="BCType" />
+      </Face>
+      <Face side="y+" name="y+ wall">
+        <include href="wall.xml"  section="BCType" />
+      </Face>
+      <Face side="z-" name="z- wall">
+        <include href="wall.xml"  section="BCType" />
+      </Face>
+      <Face side="z+" name="z+ wall">
+        <include href="wall.xml"  section="BCType" />
+      </Face>
+
+      <Face  rectangle="y-" lower="21.6408 0.0 0.0" upper="33.8328 0.0 12.192" name="outlet" > 
+        <include href="outlet.xml"  section="BCType" />
+      </Face>
+
+
+       <!--<Uintah_Include>-->
+      <Face circle="x-" origin="0.0 15.24 2.4384" radius="0.2286" name="primary01">
+        <include href="primary.xml"  section="BCType" />
+      </Face>
+      <Face circle="x-" origin="0.0 15.24 4.8768" radius="0.2286" name="primary02">
+        <include href="primary.xml"  section="BCType" />
+      </Face>
+      <Face circle="x-" origin="0.0 15.24 7.3152" radius="0.2286" name="primary03">
+        <include href="primary.xml"  section="BCType" />
+      </Face>
+      <Face circle="x-" origin="0.0 15.24 9.7536" radius="0.2286" name="primary04">
+        <include href="primary.xml"  section="BCType" />
+      </Face>
+
+
+      <Face circle="x-" origin="0.0 17.6784 2.4384" radius="0.2286" name="primary05">
+        <include href="primary.xml"  section="BCType" />
+      </Face>
+      <Face circle="x-" origin="0.0 17.6784 4.8768" radius="0.2286" name="primary06">
+        <include href="primary.xml"  section="BCType" />
+      </Face>
+      <Face circle="x-" origin="0.0 17.6784 7.3152" radius="0.2286" name="primary07">
+        <include href="primary.xml"  section="BCType" />
+      </Face>
+      <Face circle="x-" origin="0.0 17.6784 9.7536" radius="0.2286" name="primary08">
+        <include href="primary.xml"  section="BCType" />
+      </Face>
+
+      <Face circle="x-" origin="0.0 20.1168 2.4384" radius="0.2286" name="primary09">
+        <include href="primary.xml"  section="BCType" />
+      </Face>
+      <Face circle="x-" origin="0.0 20.1168  4.8768" radius="0.2286" name="primary10">
+        <include href="primary.xml"  section="BCType" />
+      </Face>
+      <Face circle="x-" origin="0.0 20.1168 7.3152" radius="0.2286" name="primary11">
+        <include href="primary.xml"  section="BCType" />
+      </Face>
+      <Face circle="x-" origin="0.0 20.1168 9.7536" radius="0.2286" name="primary12">
+        <include href="primary.xml"  section="BCType" />
+      </Face>
+  <!--side wall 2-->
+      <Face circle="z-" origin="2.4384 14.0208 0.0" radius="0.1905" name="sideWallPrimary01">
+        <include href="sideWallPrimary.xml"  section="BCType" />
+      </Face>
+      <Face circle="z-" origin="2.4384 16.4592 0.0" radius="0.1905" name="sideWallPrimary02">
+        <include href="sideWallPrimary.xml"  section="BCType" />
+      </Face>
+      <Face circle="z-" origin="2.4384 18.8976 0.0" radius="0.1905" name="sideWallPrimary03">
+        <include href="sideWallPrimary.xml"  section="BCType" />
+      </Face>
+
+      <Face circle="z-" origin="4.8768 14.0208 0.0" radius="0.1905" name="sideWallPrimary04">
+        <include href="sideWallPrimary.xml"  section="BCType" />
+      </Face>
+      <Face circle="z-" origin="4.8768 16.4592 0.0" radius="0.1905" name="sideWallPrimary05">
+        <include href="sideWallPrimary.xml"  section="BCType" />
+      </Face>
+      <Face circle="z-" origin="4.8768 18.8976 0.0" radius="0.1905" name="sideWallPrimary06">
+        <include href="sideWallPrimary.xml"  section="BCType" />
+      </Face>
+
+
+      <Face circle="z-" origin="7.3152 15.24 0.0" radius="0.1905" name="sideWallPrimary07">
+        <include href="sideWallPrimary.xml"  section="BCType" />
+      </Face>
+      <Face circle="z-" origin="7.3152 17.6784 0.0" radius="0.1905" name="sideWallPrimary08">
+        <include href="sideWallPrimary.xml"  section="BCType" />
+      </Face>
+  <!--side wall 1-->
+      <Face circle="z+" origin="2.4384 14.0208 12.192" radius="0.1905" name="sideWallPrimary09">
+        <include href="sideWallPrimary.xml"  section="BCType" />
+      </Face>
+      <Face circle="z+" origin="2.4384 16.4592 12.192" radius="0.1905" name="sideWallPrimary10">
+        <include href="sideWallPrimary.xml"  section="BCType" />
+      </Face>
+      <Face circle="z+" origin="2.4384 18.8976 12.192" radius="0.1905" name="sideWallPrimary11">
+        <include href="sideWallPrimary.xml"  section="BCType" />
+      </Face>
+
+      <Face circle="z+" origin="4.8768 14.0208 12.192" radius="0.1905" name="sideWallPrimary12">
+        <include href="sideWallPrimary.xml"  section="BCType" />
+      </Face>
+      <Face circle="z+" origin="4.8768 16.4592 12.192" radius="0.1905" name="sideWallPrimary13">
+        <include href="sideWallPrimary.xml"  section="BCType" />
+      </Face>
+      <Face circle="z+" origin="4.8768 18.8976 12.192" radius="0.1905" name="sideWallPrimary14">
+        <include href="sideWallPrimary.xml"  section="BCType" />
+      </Face>
+
+
+      <Face circle="z+" origin="7.3152 15.24 12.192" radius="0.1905" name="sideWallPrimary15">
+        <include href="sideWallPrimary.xml"  section="BCType" />
+      </Face>
+      <Face circle="z+" origin="7.3152 17.6784 12.192" radius="0.1905" name="sideWallPrimary16">
+        <include href="sideWallPrimary.xml"  section="BCType" />
+      </Face>
+          <!--burner annulus boundary conditions-->
+      <Face annulus="x-" origin="0.0 15.24 2.4384" inner_radius="0.2286" outer_radius="0.3083870575" name="secondary01">
+        <include href="secondary.xml"  section="BCType"/>
+      </Face>
+      <Face annulus="x-" origin="0.0 15.24 4.8768" inner_radius="0.2286" outer_radius="0.3083870575" name="secondary02">
+        <include href="secondary.xml"  section="BCType"/>
+      </Face>
+      <Face annulus="x-" origin="0.0 15.24 7.3152" inner_radius="0.2286" outer_radius="0.3083870575" name="secondary03">
+        <include href="secondarynegative.xml"  section="BCType"/>
+      </Face>
+      <Face annulus="x-" origin="0.0 15.24 9.7536" inner_radius="0.2286" outer_radius="0.3083870575" name="secondary04">
+        <include href="secondarynegative.xml"  section="BCType"/>
+      </Face>
+
+
+      <Face annulus="x-" origin="0.0 17.6784 2.4384" inner_radius="0.2286" outer_radius="0.3083870575" name="secondary05">
+        <include href="secondary.xml"  section="BCType" />
+      </Face>
+      <Face annulus="x-" origin="0.0 17.6784 4.8768" inner_radius="0.2286" outer_radius="0.3083870575" name="secondary06">
+        <include href="secondary.xml"  section="BCType" />
+      </Face>
+      <Face annulus="x-" origin="0.0 17.6784 7.3152" inner_radius="0.2286" outer_radius="0.3083870575" name="secondary07">
+        <include href="secondarynegative.xml"  section="BCType" />
+      </Face>
+      <Face annulus="x-" origin="0.0 17.6784 9.7536" inner_radius="0.2286" outer_radius="0.3083870575" name="secondary08">
+        <include href="secondarynegative.xml"  section="BCType" />
+      </Face>
+
+      <Face annulus="x-" origin="0.0 20.1168 2.4384" inner_radius="0.2286" outer_radius="0.3083870575" name="secondary09">
+        <include href="secondary.xml"  section="BCType" />
+      </Face>
+      <Face annulus="x-" origin="0.0 20.1168  4.8768" inner_radius="0.2286" outer_radius="0.3083870575" name="secondary10">
+        <include href="secondary.xml"  section="BCType" />
+      </Face>
+      <Face annulus="x-" origin="0.0 20.1168 7.3152" inner_radius="0.2286" outer_radius="0.3083870575" name="secondary11">
+        <include href="secondarynegative.xml"  section="BCType" />
+      </Face>
+      <Face annulus="x-" origin="0.0 20.1168 9.7536" inner_radius="0.2286" outer_radius="0.3083870575" name="secondary12">
+        <include href="secondarynegative.xml"  section="BCType" />
+      </Face>
+
+  <!--side wall 1-->
+      <Face annulus="z-" origin="2.4384 14.0208 0.0" inner_radius="0.1905" outer_radius="0.2546083574" name="sideWallSecondary01">
+        <include href="sideWallSecondarynegative.xml"  section="BCType" />
+      </Face>
+      <Face annulus="z-" origin="2.4384 16.4592 0.0" inner_radius="0.1905" outer_radius="0.2546083574" name="sideWallSecondary02">
+        <include href="sideWallSecondarynegative.xml"  section="BCType" />
+      </Face>
+      <Face annulus="z-" origin="2.4384 18.8976 0.0" inner_radius="0.1905" outer_radius="0.2546083574" name="sideWallSecondary03">
+        <include href="sideWallSecondarynegative.xml"  section="BCType" />
+      </Face>
+
+      <Face annulus="z-" origin="4.8768 14.0208 0.0" inner_radius="0.1905" outer_radius="0.2546083574" name="sideWallSecondary04">
+        <include href="sideWallSecondary.xml"  section="BCType" />
+      </Face>
+      <Face annulus="z-" origin="4.8768 16.4592 0.0" inner_radius="0.1905" outer_radius="0.2546083574" name="sideWallSecondary05">
+        <include href="sideWallSecondary.xml"  section="BCType" />
+      </Face>
+      <Face annulus="z-" origin="4.8768 18.8976 0.0" inner_radius="0.1905" outer_radius="0.2546083574" name="sideWallSecondary06">
+        <include href="sideWallSecondary.xml"  section="BCType" />
+      </Face>
+
+
+      <Face annulus="z-" origin="7.3152 15.24 0.0" inner_radius="0.1905" outer_radius="0.2546083574" name="sideWallSecondary07">
+        <include href="sideWallSecondary.xml"  section="BCType" />
+      </Face>
+      <Face annulus="z-" origin="7.3152 17.6784 0.0" inner_radius="0.1905" outer_radius="0.2546083574" name="sideWallSecondary08">
+        <include href="sideWallSecondary.xml"  section="BCType" />
+      </Face>
+
+      <Face annulus="z+" origin="2.4384 14.0208 12.192" inner_radius="0.1905" outer_radius="0.2546083574" name="sideWallSecondary09">
+        <include href="sideWallSecondarynegative.xml"  section="BCType" />
+      </Face>
+      <Face annulus="z+" origin="2.4384 16.4592 12.192" inner_radius="0.1905" outer_radius="0.2546083574" name="sideWallSecondary10">
+        <include href="sideWallSecondarynegative.xml"  section="BCType" />
+      </Face>
+      <Face annulus="z+" origin="2.4384 18.8976 12.192" inner_radius="0.1905" outer_radius="0.2546083574" name="sideWallSecondary11">
+        <include href="sideWallSecondarynegative.xml"  section="BCType" />
+      </Face>
+
+  <!--side wall 2-->
+      <Face annulus="z+" origin="4.8768 14.0208 12.192" inner_radius="0.1905" outer_radius="0.2546083574" name="sideWallSecondary12">
+        <include href="sideWallSecondary.xml"  section="BCType" />
+      </Face>
+      <Face annulus="z+" origin="4.8768 16.4592 12.192" inner_radius="0.1905" outer_radius="0.2546083574" name="sideWallSecondary13">
+        <include href="sideWallSecondary.xml"  section="BCType" />
+      </Face>
+      <Face annulus="z+" origin="4.8768 18.8976 12.192" inner_radius="0.1905" outer_radius="0.2546083574" name="sideWallSecondary14">
+        <include href="sideWallSecondary.xml"  section="BCType" />
+      </Face>
+
+
+      <Face annulus="z+" origin="7.3152 15.24 12.192" inner_radius="0.1905" outer_radius="0.2546083574" name="sideWallSecondary15">
+        <include href="sideWallSecondary.xml"  section="BCType" />
+      </Face>
+      <Face annulus="z+" origin="7.3152 17.6784 12.192" inner_radius="0.1905" outer_radius="0.2546083574" name="sideWallSecondary16">
+        <include href="sideWallSecondary.xml"  section="BCType" />
+      </Face>
+
+
+      <Face circle="y+" origin="10.0 23.4696 3.6576" radius="0.1340741444" name="OVO01">
+        <include href="OVO1.xml"  section="BCType" />
+      </Face>
+      <Face circle="y+" origin="10.0 23.4696 6.0960" radius="0.1340741444" name="OVO02">
+        <include href="OVO1.xml"  section="BCType" />
+      </Face>
+      <Face circle="y+" origin="10.0 23.4696 8.5344" radius="0.1340741444" name="OVO03">
+        <include href="OVO1.xml"  section="BCType" />
+      </Face>
+
+      <!--<Face circle="y+" origin="17.0 33.8328 2.4384" radius="0.1038533857" name="sOVO01">-->
+      <Face circle="y+" name="sOVO01" origin="15.0 23.4696 1.2192" radius="0.1038533857">
+        <include href="OVO2.xml"  section="BCType" />
+      </Face>
+      <Face circle="y+" origin="15.0 23.4696 3.6576" radius="0.1038533857" name="sOVO02">
+        <include href="OVO2.xml"  section="BCType" />
+      </Face>
+      <Face circle="y+" origin="15.0 23.4696 6.0960" radius="0.1038533857" name="sOVO03">
+        <include href="OVO2.xml"  section="BCType" />
+      </Face>
+      <Face circle="y+" origin="15.0  23.4696 8.5344" radius="0.1038533857" name="sOVO04">
+        <include href="OVO2.xml"  section="BCType" />
+      </Face>
+      <!--<Face circle="y+" origin="17.0 33.8328 9.7536" radius="0.1038533857" name="sOVO05">-->
+      <Face circle="y+" name="sOVO05" origin="15.0 23.4696 10.9728" radius="0.1038533857">
+        <include href="OVO2.xml"  section="BCType" />
+      </Face>
+
+
+     
+       <!--</Uintah_Include>-->
+    </BoundaryConditions>
+    <Level>
+        <!--For a large rectangular box 111 ft by 77 ft by 40 feet-->
+      <Box label="upper">
+        <lower>[0.0,0,0]</lower>
+        <upper>[33.8328,23.4696,12.192]</upper> 
+        <!--<resolution>[33,23,12]</resolution>-->
+        <!--<resolution>[338,235,122]</resolution>-->
+        <resolution>[165,115,61]</resolution>
+        <extraCells>[1,1,1]</extraCells>
+        <patches>[2,2,2]</patches>
+      </Box>
+    </Level>
+  </Grid>
+  <PhysicalConstants>
+    <gravity>[0,-9.81,0]</gravity>
+    <reference_point>[-1,-1,-1]</reference_point>
+    <viscosity>0.000050</viscosity>
+  </PhysicalConstants>
+  <CFD>
+    <!-- ARCHES specification -->
+    <ARCHES>
+      <PropertyModels>
+        <!--<model type="radiation_properties" label="abskg">-->
+          <!--<initialization type="constant">-->
+            <!--<constant>0.0</constant>-->
+          <!--</initialization>-->
+          <!--<calculator type="radprops">-->
+          <!--<opl>0.3</opl>-->
+          <!--<abskg label = "gas_abskg" />-->
+          <!--<abskp label = "abskp" />-->
+            <!--<particles>-->
+              <!--<model_type>planck</model_type>  -->
+              <!--<complex_ir_real>2</complex_ir_real>  -->
+              <!--<complex_ir_imag>-0.6</complex_ir_imag> -->
+              <!--<part_temp_label>heat_pT</part_temp_label>-->
+              <!--<part_size_label>length</part_size_label>-->
+            <!--</particles>-->
+          <!--<grey_gas>-->
+            <!--<inputfile>../tables/GreyGasProperties.txt</inputfile>-->
+          <!--</grey_gas>-->
+          <!--</calculator>-->
+        <!--</model>-->
+
+        <model type="radiation_properties" label="abskg">
+          <initialization type="constant">
+            <constant>0.0</constant>
+          </initialization>
+          <calculator type="hottel_sarofim">
+            <opl>.632</opl>
+            <abskg label="gas_abskg"/>
+            <abskp label="abskp"/>
+          </calculator>
+        </model>
+        <model label="abskp" type="particle_absorption_coefficient">
+          <initialization type="constant">
+            <constant>0.0</constant>
+          </initialization>
+        </model>
+
+        <model type="heat_loss" label="heat_loss">
+          <initialization type="constant">
+            <constant>0.782</constant>
+          </initialization>
+          <!--constant_heat_loss/-->
+          <enthalpy_label>enthalpy</enthalpy_label>
+          <sensible_enthalpy_label>sensibleenthalpy</sensible_enthalpy_label>
+          <adiabatic_enthalpy_label>adiabaticenthalpy</adiabatic_enthalpy_label>
+          <!--noisy_hl_warning/-->
+          <use_Ha_lookup>false</use_Ha_lookup>
+        </model>
+        <model type="cc_constant" label="soot">
+          <initialization type="constant">
+            <constant>0.0</constant>
+          </initialization>
+          <constant>0.0</constant>
+        </model>
+      </PropertyModels>
+
+            <include href="SUFCO_coal.xml" section="Coal_Properties" />
+        <!--<particle_density>1300.0</particle_density>-->
+      
+      <TimeIntegrator>
+        <ExplicitIntegrator order="second"/>
+      </TimeIntegrator>
+      <!-- SCALARS -->
+      <TransportEqns>
+        <Eqn label="enthalpy" type="CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <use_density_guess/>
+          <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+          <D_mol_constant value="5e-5"/>
+          <conv_scheme>roe_minmod</conv_scheme>
+          <initialization type="tabulated">
+            <depend_varname>table_enthalpy</depend_varname>
+          </initialization>
+          <stage value="0"/>
+          <src label="divQ">
+            <weight>1</weight>
+          </src>
+          <src label="heat_source">
+            <weight>1</weight>
+          </src>
+          <scaling_const>1</scaling_const>
+        </Eqn>
+        <Eqn label="coal_gas_mix_frac" type="CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <use_density_guess/>
+          <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+          <D_mol_constant value="5e-5"/>
+          <conv_scheme>roe_minmod</conv_scheme>
+          <initialization type="constant">
+            <constant>0.1830</constant>
+          </initialization>
+          <Clipping>
+            <low>0.0</low>
+            <high>1.0</high>
+            <tol>1e-10</tol>
+          </Clipping>
+          <stage value="0"/>
+          <src label="eta_source1">
+            <weight>1</weight>
+          </src>
+          <src label="eta_source2">
+            <weight>1</weight>
+          </src>
+          <scaling_const>1</scaling_const>
+        </Eqn>
+        <!-- define source terms here-->
+        <Sources>
+          <!--<src label="divQ" type="rmcrt_radiation">-->
+            <!--<calc_frequency>1</calc_frequency>-->
+            <!--<abskg label="abskg" />-->
+            <!--<RMCRT>-->
+                <!--<randomSeed>        true      </randomSeed>-->
+                <!--<nDivQRays>          100      </nDivQRays>-->
+                <!--<Threshold>         0.00000005       </Threshold>-->
+                <!--<solveBoundaryFlux> false       </solveBoundaryFlux>-->
+                <!--<StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>-->
+                <!--<CCRays>true</CCRays> -->
+                <!--<allowReflect>false</allowReflect>-->
+            <!--</RMCRT>-->
+          <!--</src>-->
+
+          <!--<src label="divQ" type="do_radiation">-->
+            <!--<calc_frequency>2</calc_frequency>-->
+            <!--<abskg label="abskg" />-->
+            <!--<DORadiationModel>-->
+              <!--<ordinates>6</ordinates>-->
+              <!--<LinearSolver type="hypre">-->
+                <!--<res_tol>1.0e-10</res_tol>-->
+                <!--<ksptype>gmres</ksptype>-->
+                <!--<pctype>jacobi</pctype>-->
+                <!--<max_iter>1500</max_iter>-->
+              <!--</LinearSolver>-->
+            <!--</DORadiationModel>-->
+          <!--</src>-->
+
+          <src label="eta_source1" type="coal_gas_devol">
+            <devol_model_name>devol</devol_model_name>
+          </src>
+          <src label="eta_source2" type="coal_gas_oxi">
+            <char_oxidation_model_name>char</char_oxidation_model_name>
+          </src>
+          <src label="heat_source" type="coal_gas_heat">
+            <heat_model_name>heat</heat_model_name>
+          </src>
+          <src label="coal_gas_momentum" type="coal_gas_momentum">
+          </src>
+        </Sources>
+      </TransportEqns>
+      <!-- compdynamicprocedure is the best-->
+      <Turbulence model="compdynamicprocedure">
+        <filter_cs_squared>false</filter_cs_squared>
+      </Turbulence>
+      <Properties>
+        <ClassicTable>
+          <inputfile>../tables/btc.mix.gz</inputfile>
+          <mixfrac_with_heatloss f_label="coal_gas_mix_frac"   hl_label="heat_loss" />
+          <enthalpy_label>enthalpy</enthalpy_label>
+          <cold_flow>false</cold_flow>
+          <temperature_label_name>temperature</temperature_label_name>
+          <reference_state f="0.1830"  hl="0.782" />
+        </ClassicTable>
+        <filter_drhodt>false</filter_drhodt>
+        <first_order_drhodt>true</first_order_drhodt>
+        <inverse_density_average>false</inverse_density_average>
+      </Properties>
+      <DQMOM type="weightedAbs">
+        <LinearSolver>
+          <tolerance>1e-5</tolerance>
+          <type>Simplest</type>
+          <maxConditionNumber>10000000000000000</maxConditionNumber>
+          <calcConditionNumber>false</calcConditionNumber>
+        </LinearSolver>
+        <number_quad_nodes>3</number_quad_nodes>
+        <VelModel type="Dragforce">
+          <upper_limit_multiplier>2</upper_limit_multiplier>
+          <clip_low>0</clip_low>
+          <partvelBC_eq_gasvelBC>false</partvelBC_eq_gasvelBC>
+        </VelModel>
+        <Models>
+          <model label="xdragforce" type="XDrag">
+            <ICVars>
+              <variable label="length" role="particle_length"/>
+              <variable label="ux" role="particle_xvel"/>
+              <variable label="RCmass" role="raw_coal_mass"/>
+              <variable label="Charmass" role="char_mass"/>
+            </ICVars>
+            <low_clip>9.9999999999999995e-07</low_clip>
+            <high_clip>999999</high_clip>
+          </model>
+          <model label="ydragforce" type="YDrag">
+            <ICVars>
+              <variable label="length" role="particle_length"/>
+              <variable label="uy" role="particle_yvel"/>
+              <variable label="RCmass" role="raw_coal_mass"/>
+              <variable label="Charmass" role="char_mass"/>
+            </ICVars>
+            <low_clip>9.9999999999999995e-07</low_clip>
+            <high_clip>999999</high_clip>
+          </model>
+          <model label="zdragforce" type="ZDrag">
+            <ICVars>
+              <variable label="length" role="particle_length"/>
+              <variable label="uz" role="particle_zvel"/>
+              <variable label="RCmass" role="raw_coal_mass"/>
+              <variable label="Charmass" role="char_mass"/>
+            </ICVars>
+            <low_clip>9.9999999999999995e-07</low_clip>
+            <high_clip>999999</high_clip>
+          </model>
+          <model label="devol" type="YamamotoDevol">
+            <ICVars>
+              <variable label="heat_pT" role="particle_temperature_from_enthalpy"/>
+              <variable label="RCmass" role="raw_coal_mass"/>
+              <variable label="Charmass" role="char_mass"/>
+            </ICVars>
+            <low_clip>9.9999999999999995e-07</low_clip>
+            <high_clip>999999</high_clip>
+          </model>
+          <model label="heat" type="EnthalpyShaddix">
+            <ICVars>
+              <variable label="length" role="particle_length"/>
+              <variable label="RCmass" role="raw_coal_mass"/>
+              <variable label="pE" role="particle_enthalpy"/>
+              <variable label="Charmass" role="char_mass"/>
+            </ICVars>
+            <low_clip>9.9999999999999995e-07</low_clip>
+            <high_clip>999999</high_clip>
+          </model>
+          <model label="char" type="CharOxidationShaddix">
+            <ICVars>
+              <variable label="length" role="particle_length"/>
+              <variable label="RCmass" role="raw_coal_mass"/>
+              <variable label="Charmass" role="char_mass"/>
+              <variable label="heat_pT" role="particle_temperature_from_enthalpy"/>
+            </ICVars>
+            <low_clip>9.9999999999999995e-07</low_clip>
+            <high_clip>999999</high_clip>
+          </model>
+        </Models>
+        <Weights>
+          <doDiff>false</doDiff>
+          <doConv>true</doConv>
+          <initialization type="env_constant">
+            <env_constant qn="0" value="1e2">
+            </env_constant>
+            <env_constant qn="1" value="1e2">
+            </env_constant>
+            <env_constant qn="2" value="1e2">
+            </env_constant>
+          </initialization>
+          <scaling_const>1e10</scaling_const>
+          <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+          <Clipping>
+            <low>0.0</low>
+            <high>1000.0</high>
+            <tol>1e-9</tol>
+          </Clipping>
+          <conv_scheme>roe_minmod</conv_scheme>
+          <molecular_diffusivity>0</molecular_diffusivity>
+        </Weights>
+        <Ic label="length">
+          <doDiff>false</doDiff>
+          <doConv>true</doConv>
+          <initialization type="env_constant">
+            <env_constant qn="0" value="30e-6">
+            </env_constant>
+            <env_constant qn="1" value="64e-6">
+            </env_constant>
+            <env_constant qn="2" value="125e-6">
+            </env_constant>
+          </initialization>
+          <Clipping>
+            <low>2.99</low>
+            <high>12.51</high>
+            <tol>1e-10</tol>
+          </Clipping>
+          <scaling_const>1e-6</scaling_const>
+          <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+          <conv_scheme>roe_minmod</conv_scheme>
+          <molecular_diffusivity>0</molecular_diffusivity>
+        </Ic>
+        <Ic label="RCmass">
+          <doDiff>false</doDiff>
+          <doConv>true</doConv>
+          <initialization type="env_constant">
+            <env_constant qn="0" value="1.68e-11">
+            </env_constant>
+            <env_constant qn="1" value="1.64e-10">
+            </env_constant>
+            <env_constant qn="2" value="1.22e-9">
+            </env_constant>
+          </initialization>
+          <model label="devol"/>
+          <scaling_const>1.0e-10</scaling_const>
+          <!--Clipping>
+          <low>0.0</low>
+          <high>10.0</high>
+          </Clipping-->
+          <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+          <conv_scheme>roe_minmod</conv_scheme>
+          <molecular_diffusivity>0</molecular_diffusivity>
+        </Ic>
+        <Ic label="Charmass">
+          <doDiff>false</doDiff>
+          <doConv>true</doConv>
+          <initialization type="env_constant">
+            <env_constant qn="0" value="0.0">
+            </env_constant>
+            <env_constant qn="1" value="0.0">
+            </env_constant>
+            <env_constant qn="2" value="0.0">
+            </env_constant>
+          </initialization>
+          <model label="char"/>
+          <scaling_const>1.0e-10</scaling_const>
+          <!--Clipping>
+          <low>-10.0</low>
+          <high>10.0</high>
+          </Clipping-->
+          <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+          <conv_scheme>roe_minmod</conv_scheme>
+          <molecular_diffusivity>0</molecular_diffusivity>
+        </Ic>
+        <Ic label="pE">
+          <doDiff>false</doDiff>
+          <doConv>true</doConv>
+          <initialization type="env_constant">
+            <env_constant qn="0" value="-5.15e-05">
+            </env_constant>
+            <env_constant qn="1" value="-5.00e-04">
+            </env_constant>
+            <env_constant qn="2" value="-3.73e-03">
+            </env_constant>
+          </initialization>
+          <model label="heat"/>
+          <!--Clipping>
+          <low>0.3</low>
+          <high>3.0</high>
+          </Clipping-->
+          <scaling_const>1e-4</scaling_const>
+          <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+          <conv_scheme>roe_minmod</conv_scheme>
+          <molecular_diffusivity>0</molecular_diffusivity>
+        </Ic>
+        <Ic label="ux">
+          <doDiff>false</doDiff>
+          <doConv>true</doConv>
+          <model label="xdragforce"/>
+          <initialization type="env_constant">
+            <env_constant qn="0" value="0.0">
+            </env_constant>
+            <env_constant qn="1" value="0.0">
+            </env_constant>
+            <env_constant qn="2" value="0.0">
+            </env_constant>
+          </initialization>
+          <Clipping>
+            <low>-15.0</low>
+            <high>40.0</high>
+            <tol>1e-10</tol>
+          </Clipping>
+          <scaling_const>1.0</scaling_const>
+          <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+          <conv_scheme>roe_minmod</conv_scheme>
+          <molecular_diffusivity>0</molecular_diffusivity>
+        </Ic>
+        <Ic label="uy">
+          <doDiff>false</doDiff>
+          <doConv>true</doConv>
+          <model label="ydragforce"/>
+          <initialization type="env_constant">
+            <env_constant qn="0" value="0.0">
+            </env_constant>
+            <env_constant qn="1" value="0.0">
+            </env_constant>
+            <env_constant qn="2" value="0.0">
+            </env_constant>
+          </initialization>
+          <Clipping>
+            <low>-15.0</low>
+            <high>15.0</high>
+            <tol>1e-10</tol>
+          </Clipping>
+          <scaling_const>1.0</scaling_const>
+          <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+          <conv_scheme>roe_minmod</conv_scheme>
+          <molecular_diffusivity>0</molecular_diffusivity>
+        </Ic>
+        <Ic label="uz">
+          <doDiff>false</doDiff>
+          <doConv>true</doConv>
+          <model label="zdragforce"/>
+          <initialization type="env_constant">
+            <env_constant qn="0" value="0.0">
+            </env_constant>
+            <env_constant qn="1" value="0.0">
+            </env_constant>
+            <env_constant qn="2" value="0.0">
+            </env_constant>
+          </initialization>
+          <Clipping>
+            <low>-15.0</low>
+            <high>15.0</high>
+            <tol>1e-10</tol>
+          </Clipping>
+          <scaling_const>1.0</scaling_const>
+          <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+          <conv_scheme>roe_minmod</conv_scheme>
+          <molecular_diffusivity>0</molecular_diffusivity>
+        </Ic>
+        <Moment>
+          <m>[0,0,0,0,0,0,0]</m>
+        </Moment>
+        <Moment>
+          <m>[1,0,0,0,0,0,0]</m>
+        </Moment>
+        <Moment>
+          <m>[0,1,0,0,0,0,0]</m>
+        </Moment>
+        <Moment>
+          <m>[0,0,1,0,0,0,0]</m>
+        </Moment>
+        <Moment>
+          <m>[0,0,0,1,0,0,0]</m>
+        </Moment>
+        <Moment>
+          <m>[0,0,0,0,1,0,0]</m>
+        </Moment>
+        <Moment>
+          <m>[0,0,0,0,0,1,0]</m>
+        </Moment>
+        <Moment>
+          <m>[0,0,0,0,0,0,1]</m>
+        </Moment>
+        <Moment>
+          <m>[0,0,3,2,2,3,0]</m>
+        </Moment>
+        <Moment>
+          <m>[2,1,1,0,1,0,3]</m>
+        </Moment>
+        <Moment>
+          <m>[1,3,3,2,2,1,2]</m>
+        </Moment>
+        <Moment>
+          <m>[3,3,0,2,1,1,1]</m>
+        </Moment>
+        <Moment>
+          <m>[1,3,3,3,2,0,1]</m>
+        </Moment>
+        <Moment>
+          <m>[3,0,2,0,1,1,2]</m>
+        </Moment>
+        <Moment>
+          <m>[1,2,1,2,0,2,2]</m>
+        </Moment>
+        <Moment>
+          <m>[0,1,0,0,2,0,0]</m>
+        </Moment>
+        <Moment>
+          <m>[1,3,2,0,2,3,1]</m>
+        </Moment>
+        <Moment>
+          <m>[1,2,3,3,1,1,3]</m>
+        </Moment>
+        <Moment>
+          <m>[1,3,2,2,2,2,3]</m>
+        </Moment>
+        <Moment>
+          <m>[0,1,3,2,1,0,0]</m>
+        </Moment>
+        <Moment>
+          <m>[3,3,2,1,0,3,1]</m>
+        </Moment>
+        <Moment>
+          <m>[3,2,2,2,1,3,0]</m>
+        </Moment>
+        <Moment>
+          <m>[1,0,2,1,3,0,1]</m>
+        </Moment>
+        <Moment>
+          <m>[0,0,0,3,0,0,1]</m>
+        </Moment>
+        <adiabGas_nonadiabPart>false</adiabGas_nonadiabPart>
+        <save_moments>false</save_moments>
+      </DQMOM>
+      <BoundaryConditions>
+        <wall_csmag>0.0</wall_csmag>
+        <intrusions>
+            <intrusion label="SlagWall">
+            <constant_temperature T="1250.0"/>
+
+            <geom_object>
+             <parallelepiped label="z-wall">
+                <p1>[ -0.1,     6.096, -0.1]</p1>
+                <p2>[ 21.6408, 6.096, -0.1]</p2>
+                <p3>[ -0.1,      -0.1,  6.096]</p3>
+                <p4>[-0.1,       -0.1, -0.1]</p4>
+              </parallelepiped>
+            </geom_object>
+            </intrusion>
+
+            <intrusion label="SlagWall2">
+            <constant_temperature T="1250.0"/>
+            <geom_object>
+             <parallelepiped label="z+wall">
+                <p1>[ -0.1,     6.096, 12.192]</p1>
+                <p2>[21.6408, 6.096, 12.192]</p2>
+                <p3>[ -0.1,      -0.1,  6.096]</p3>
+                <p4>[-0.1,       -0.1, 12.192]</p4>
+              </parallelepiped>
+            </geom_object>
+            </intrusion>
+
+
+
+            <intrusion label="SlagWall3">
+            <constant_temperature T="1250.0"/>
+            <geom_object>
+            <union>
+            <difference>
+             <parallelepiped label="noseWall">
+                <p1>[12.8016, -0.1   , 12.192 ]</p1>
+                <p2>[21.6408,-0.1    , 12.192]</p2>
+                <p3>[21.6408,14.9352 , 12.192]</p3>
+                <p4>[12.8016, -0.1   , -0.1]</p4>
+              </parallelepiped>
+                <difference>
+                  <box label="conv">
+                  <min>[0.0000,-0.01 , -0.1] </min>
+                  <max>[33.8328 ,14.9352 ,33.8328 ] </max>
+                  </box>
+                  <box label="conv2">
+                  <min>[0.0000,-0.01 , -0.1] </min>
+                  <max>[21.6408 ,  14.92758   ,33.8328 ] </max>
+                  </box>
+                </difference>
+              </difference>
+
+            </union>
+
+            </geom_object>
+            </intrusion>
+
+            <include href="test.xml" section="intrusion" />
+
+
+
+            <!--<intrusion label="pipe_02">-->
+            <!--<constant_temperature T="1250.0" />-->
+            <!--<geom_object>-->
+            <!--<union>-->
+            <!--<difference>-->
+            <!--<torus                label="donut01">-->
+            <!--<center>[24.8328, 14.9352, 6.0000] </center>-->
+            <!--<major_radius>4.0</major_radius>-->
+            <!--<minor_radius>.254</minor_radius>-->
+            <!--<axis>x</axis>-->
+            <!--<theta>0.00000</theta>-->
+            <!--</torus>-->
+              <!--<box label="conv2">-->
+              <!--<min>[00.0000, 14.9352, 0.0000]</min>-->
+              <!--<max>[55.8328, 55.9352, 55.8328 ]</max>-->
+              <!--</box>-->
+            <!--</difference>-->
+            <!--</union>-->
+            <!--</geom_object>-->
+            <!--</intrusion>-->
+              
+        </intrusions>
+
+            <!--<include href="wall_ht.xml" section="WallHT" />-->
+
+      </BoundaryConditions>
+      <ExplicitSolver>
+        <initial_dt>1</initial_dt>
+        <print_total_ke/>
+        <restartOnNegativeDensityGuess>false</restartOnNegativeDensityGuess>
+        <PressureSolver>
+          <Parameters>
+            <tolerance>     1.0e-17  </tolerance>
+            <solver>          cg    </solver>
+            <preconditioner>  pfmg  </preconditioner>
+            <maxiterations>   500   </maxiterations>
+            <relax_type> 1 </relax_type>
+            <setupFrequency> 0 </setupFrequency>
+            <jump> 0 </jump>
+            <skip> 1 </skip>
+            <npre>1</npre>
+            <npost>1</npost>
+            <logging>0</logging>
+          </Parameters>
+          <src label="eta_source1"/>
+          <src label="eta_source2"/>
+          <normalize_pressure>false</normalize_pressure>
+          <do_only_last_projection>false</do_only_last_projection>
+        </PressureSolver>
+        <MomentumSolver>
+          <convection_scheme>wall_upwind</convection_scheme>
+          <src label="coal_gas_momentum"/>
+          <Re_limit>2</Re_limit>
+          <filter_divergence_constraint>false</filter_divergence_constraint>
+        </MomentumSolver>
+        <extraProjection>false</extraProjection>
+        <turbModelCalcFreq>1</turbModelCalcFreq>
+        <turbModelCalcForAllRKSteps>true</turbModelCalcForAllRKSteps>
+        <NoisyDensityGuess>false</NoisyDensityGuess>
+        <kineticEnergy_fromFC>false</kineticEnergy_fromFC>
+        <maxDensityLag>0</maxDensityLag>
+        <max_ke_allowed>9.9999999999999997e+98</max_ke_allowed>
+      </ExplicitSolver>
+      <turnonMixedModel>false</turnonMixedModel>
+      <recompileTaskgraph>false</recompileTaskgraph>
+    </ARCHES>
+  </CFD>
+  <Multimaterial>
+    <fluidThermalConductivity>0.03</fluidThermalConductivity>
+    <heatExchange>false</heatExchange>
+    <turbulentPrandtNo>0.7</turbulentPrandtNo>
+    <fluidHeatCapacity>1007.</fluidHeatCapacity>
+    <IfCutCell>false</IfCutCell>
+    <StationarySolid>true</StationarySolid>
+    <inviscid>false</inviscid>
+    <restart>true</restart>
+    <fixedCellType>true</fixedCellType>
+    <fixedTemp>true</fixedTemp>
+    <TestCutCells>true</TestCutCells>
+    <stairstep>true</stairstep>
+  </Multimaterial>
+  <!--____________________________________________________________________-->
+  <!--DataAnalysis>
+    <Module name="radiometer">
+      <radiometerCalc_freq>1</radiometerCalc_freq>
+      <Radiometer>                    
+        <temperature label   ="temperature"/>
+        <cellType    label   = "cellType"/>
+        <abskg       label   = "abskg"/>
+        <randomSeed>        false       </randomSeed>
+        <Threshold>         0.05        </Threshold>
+        <VRViewAngle>       2.7         </VRViewAngle>
+        <VROrientation>     [0,0,1]     </VROrientation>
+        <VRLocationsMin>    [0.05,0.0,0.065]   </VRLocationsMin>
+        <VRLocationsMax>    [0.15,0.01,0.085]   </VRLocationsMax>
+        <sigmaScat>         0           </sigmaScat>
+        <allowReflect>      false        </allowReflect>
+        <nRadRays>          2          </nRadRays>
+      </Radiometer>
+    </Module>
+  </DataAnalysis-->
+</Uintah_specification>

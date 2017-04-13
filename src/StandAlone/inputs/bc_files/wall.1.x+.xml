@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<Uintah_Include>
+  <BCType id="all" label="x-wall" var="WallBC">
+    <value>0.0</value>
+  </BCType>
+  <BCType id="all" label="mixture_fraction_2" var="Neumann">
+    <value>0.0</value>
+  </BCType>
+  <BCType id="all" label="coal_gas_mix_frac" var="Neumann">
+    <value>0.0</value>
+  </BCType>
+  <BCType id="all" label="heat_loss" var="Neumann">
+    <value>0.0</value>
+  </BCType>
+  <BCType id="all" label="enthalpy" var="Neumann">
+    <value>0.0</value>
+  </BCType>
+  <BCType id="all" label="radiation_temperature" var="Dirichlet">
+    <value>1500.0</value>
+  </BCType>
+  <BCType id="all" label="residence_time" var="Neumann">
+    <value>0.0</value>
+  </BCType>
+  <BCType id="all" label="ux_qn0" var="Dirichlet">
+    <value>-0.0</value>
+  </BCType>
+  <BCType id="all" label="ux_qn1" var="Dirichlet">
+    <value>-0.0</value>
+  </BCType>
+  <BCType id="all" label="ux_qn2" var="Dirichlet">
+    <value>-0.0</value>
+  </BCType>
+  <BCType id="all" label="uz_qn0" var="Dirichlet">
+    <value>0.0</value>
+  </BCType>
+  <BCType id="all" label="uz_qn1" var="Dirichlet">
+    <value>0.0</value>
+  </BCType>
+  <BCType id="all" label="uz_qn2" var="Dirichlet">
+    <value>0.0</value>
+  </BCType>
+  <BCType id="all" label="uy_qn0" var="Dirichlet">
+    <value>0.0</value>
+  </BCType>
+  <BCType id="all" label="uy_qn1" var="Dirichlet">
+    <value>0.0</value>
+  </BCType>
+  <BCType id="all" label="uy_qn2" var="Dirichlet">
+    <value>0.0</value>
+  </BCType>
+  <BCType id="all" label="length_qn0" var="Neumann">
+    <value>0.0</value>
+  </BCType>
+  <BCType id="all" label="length_qn1" var="Neumann">
+    <value>0.0</value>
+  </BCType>
+  <BCType id="all" label="length_qn2" var="Neumann">
+    <value>0.0</value>
+  </BCType>
+  <BCType id="all" label="RCmass_qn0" var="Neumann">
+    <value>0.0</value>
+  </BCType>
+  <BCType id="all" label="RCmass_qn1" var="Neumann">
+    <value>0.0</value>
+  </BCType>
+  <BCType id="all" label="RCmass_qn2" var="Neumann">
+    <value>0.0</value>
+  </BCType>
+  <BCType id="all" label="Charmass_qn0" var="Neumann">
+    <value>0.0</value>
+  </BCType>
+  <BCType id="all" label="Charmass_qn1" var="Neumann">
+    <value>0.0</value>
+  </BCType>
+  <BCType id="all" label="Charmass_qn2" var="Neumann">
+    <value>0.0</value>
+  </BCType>
+  <BCType id="all" label="w_qn0" var="Neumann">
+    <value>0.0</value>
+  </BCType>
+  <BCType id="all" label="w_qn1" var="Neumann">
+    <value>0.0</value>
+  </BCType>
+  <BCType id="all" label="w_qn2" var="Neumann">
+    <value>0.0</value>
+  </BCType>
+  <BCType id="all" label="pE_qn0" var="Neumann">
+    <value>-0.0</value>
+  </BCType>
+  <BCType id="all" label="pE_qn1" var="Neumann">
+    <value>-0.0</value>
+  </BCType>
+  <BCType id="all" label="pE_qn2" var="Neumann">
+    <value>-0.0</value>
+  </BCType>
+</Uintah_Include>
