@@ -67,7 +67,7 @@
   <MaterialProperties>
     <MPM>
       <material name="Al_Bullet">
-        <include href="MaterialData/Al.xml"/>
+        <include href="MaterialDataSE/Al_SE.xml"/>
         
         <erosion algorithm="ZeroStress">
          <!-- <char_time> 1.0e-8 </char_time> -->
@@ -124,7 +124,7 @@
       <!--__________________________________-->
       <material name="Target">
       
-        <include href="MaterialData/Al.xml"/>
+        <include href="MaterialDataSE/Al_SE.xml"/>
 <!--
         <constitutive_model type="UCNH">
            <shear_modulus>      26.0e9    </shear_modulus>

@@ -20,7 +20,7 @@
     <!--   T  I  M  E     V  A  R  I  A  B  L  E  S                         -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            1e-5     </maxTime>
+       <maxTime>            2e-5     </maxTime>
       <!-- <max_Timesteps>      10      </max_Timesteps> -->
        <initTime>           0.0       </initTime>
        <delt_min>           0.0       </delt_min>
@@ -151,6 +151,7 @@
       <save label="p.localizedMPM"/>
       <save label="p.temperature"/>
       <save label="p.particleID"/>
+      <save label="p.velocity"/>
       <save label="p.mass"/>
       <save label="p.stress"/>
       <save label="p.epsf"/>
@@ -203,7 +204,7 @@
       <MPM>
 
         <material name="cylinder">
-          <include href="MaterialData/Al.xml"/>
+          <include href="MaterialDataSE/Al_SE.xml"/>
 <!--       
           <include href="MaterialData/MatConst6061T6Al.xml"/>
           <constitutive_model type="UCNH">
