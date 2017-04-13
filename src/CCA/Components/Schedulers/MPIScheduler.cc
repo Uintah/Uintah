@@ -40,7 +40,6 @@
 #include <Core/Util/DOUT.hpp>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/Timers/Timers.hpp>
-#include <Core/Util/Time.h>
 
 #ifdef UINTAH_ENABLE_KOKKOS
 #  include <Kokkos_Core.hpp>
