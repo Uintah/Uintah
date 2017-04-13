@@ -48,7 +48,7 @@
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/VariableNotFoundInGrid.h>
 #include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Util/Timers/TImers.hpp>
+#include <Core/Util/Timers/Timers.hpp>
 
 using namespace std;
 using namespace Uintah;
