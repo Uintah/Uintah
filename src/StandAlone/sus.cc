@@ -87,7 +87,6 @@
 #include <Core/Util/DOUT.hpp>
 #include <Core/Util/Environment.h>
 #include <Core/Util/FileUtils.h>
-#include <Core/Util/Time.h>
 
 #include <sci_defs/hypre_defs.h>
 #include <sci_defs/malloc_defs.h>
