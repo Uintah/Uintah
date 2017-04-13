@@ -51,8 +51,89 @@ namespace Uintah
     public:
       CahnHilliardDiffusion(
                             ProblemSpecP      & probSpec,
-                            SimulationStateP  & simState
-                           )
+                            SimulationStateP  & simState,
+                            MPMFlags          * mFlag,
+                            std::string         diff_type
+                           );
+     ~CahnHilliardDiffusion();
+
+     // Required implementations
+     virtual void addInitialComputesAndRequires(
+                                                      Task         * task,
+                                                const MPMMaterial  * matl,
+                                                const PatchSet     * patches
+                                               ) const ;
+     virtual void addParticleState(
+                                   std::vector<const VarLabel*>  & from,
+                                   std::vector<const VarLabel*>  & to
+                                  ) const;
+
+     virtual void computeFlux(
+                              const Patch          * patch,
+                              const MPMMaterial    * matl,
+                                    DataWarehouse  * OldDW,
+                                    DataWarehouse  * NewDW
+                             );
+     virtual void initializeSDMData(
+                                    const Patch          * patch,
+                                    const MPMMaterial    * matl,
+                                          DataWarehouse  * NewDW
+                                   );
+     virtual void scheduleComputeFlux(
+                                            Task * task,
+                                      const MPMMaterial  * matl,
+                                      const PatchSet     * patch
+                                     ) const;
+
+     virtual void addSplitParticlesComputesAndRequires(
+                                                             Task  * task,
+                                                       const MPMMaterial * matl,
+                                                       const PatchSet    * patches
+                                                      ) const;
+
+     virtual void splitSDMSpecificParticleData(
+                                               const Patch                 * patch,
+                                               const int                     dwi,
+                                               const int                     nDims,
+                                                     ParticleVariable<int> & prefOld,
+                                                     ParticleVariable<int> & pref,
+                                               const unsigned int            oldNumPar,
+                                               const int                     numNewPartNeeded,
+                                                     DataWarehouse         * OldDW,
+                                                     DataWarehouse         * NewDW
+                                              );
+
+     virtual void  outputProblemSpec(
+                                     ProblemSpecP  & ps,
+                                     bool            output_rdm_tag = true
+                                    ) const;
+
+     virtual bool usesChemicalPotential() const;
+
+     virtual void addChemPotentialComputesAndRequires(
+                                                            Task         * task,
+                                                      const MPMMaterial  * matl,
+                                                      const PatchSet     * patches
+                                                     ) const;
+     virtual void calculateChemicalPotential(
+                                             const PatchSubset   * patches,
+                                             const MPMMaterial   * matl,
+                                                   DataWarehouse * old_dw,
+                                                   DataWarehouse * new_dw
+                                            );
+
+    private:
+      double divConcentration(
+                              const Vector                 & concGrad  ,
+                              const Vector                 & oodx      ,
+                              const int                    & numNodes  ,
+                              const std::vector<IntVector> & nodeIndices ,
+                              const std::vector<Vector>    & shapeDeriv  ,
+                              const Patch*                   patch
+                             ) const;
+
+      double d_gamma;
+      double d_scalingFactor;
   };
 }
 
