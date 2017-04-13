@@ -1116,7 +1116,7 @@ void HyperelasticPlastic::computeStressTensor(const PatchSubset* patches,
     int dwi              = matl->getDWIndex();
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
     Vector dx            = patch->dCell();
-    double time = d_sharedState->getElapsedTime();
+    double time = d_sharedState->getElapsedSimTime();
 
     // Particle and grid data universal to model type
     // Old data containers
@@ -2088,7 +2088,7 @@ void HyperelasticPlastic::computeStressTensorImplicit(const PatchSubset* patches
       }
       
       // Unused because no "active stress carried over from CNHImplicit    
-      double time = d_sharedState->getElapsedTime();
+      double time = d_sharedState->getElapsedSimTime();
     
       for(iter = pset->begin(); iter != pset->end(); iter++){
         particleIndex idx = *iter;

@@ -194,7 +194,7 @@ void SpecifiedBodyContact::exMomInterpolated(const ProcessorGroup*,
       new_dw->getModifiable(gvelocity[m],lb->gVelocityLabel,     dwi, patch);
       new_dw->getModifiable(frictionWork[m],lb->frictionalWorkLabel,dwi,patch);
     }
-    const double tcurr = d_sharedState->getElapsedTime();
+    const double tcurr = d_sharedState->getElapsedSimTime();
     
     // three ways to get velocity 
     //   if > stop time, always use stop velocity

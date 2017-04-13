@@ -1551,7 +1551,7 @@ namespace WasatchCore{
                              Uintah::DataWarehouse* const newDW )
   {
     // grab the timestep
-    const double simTime = sharedState_->getElapsedTime();
+    const double simTime = sharedState_->getElapsedSimTime();
     const double timeStep = sharedState_->getCurrentTopLevelTimeStep();
     
     typedef Uintah::PerPatch<double> perPatchT;
@@ -1648,7 +1648,7 @@ namespace WasatchCore{
     double rks = (double) rkStage;
     double* timeCor = timeIntegrator_.timeCorrection;
     
-    const double simTime = sharedState_->getElapsedTime();
+    const double simTime = sharedState_->getElapsedSimTime();
     const double timeStep = sharedState_->getCurrentTopLevelTimeStep();
     
     typedef Uintah::PerPatch<double> perPatchT;

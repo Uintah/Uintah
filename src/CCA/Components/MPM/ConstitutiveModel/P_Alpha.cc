@@ -368,7 +368,7 @@ void P_Alpha::computeStressTensor(const PatchSubset* patches,
           p = Ku*(1.-rho_max/rhoM);
       }
 
-//      double etime = d_sharedState->getElapsedTime();
+//      double etime = d_sharedState->getElapsedSimTime();
 //      cout << "12345 " << " " << etime << " " << alpha << " " << ptemperature[idx] << " " << p << endl;
 
       // Compute artificial viscosity term

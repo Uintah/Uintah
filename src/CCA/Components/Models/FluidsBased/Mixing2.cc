@@ -443,10 +443,10 @@ void Mixing2::computeModelSources(const ProcessorGroup*,
 #if 0
       {
         static ofstream outt("temp.dat");
-        outt << sharedState->getElapsedTime() << " " << temperature[IntVector(2,2,0)] << " " << temperature[IntVector(3,2,0)] << " " << temperature[IntVector(3,3,0)] << '\n';
+        outt << sharedState->getElapsedSimTime() << " " << temperature[IntVector(2,2,0)] << " " << temperature[IntVector(3,2,0)] << " " << temperature[IntVector(3,3,0)] << '\n';
         outt.flush();
         static ofstream outp("press.dat");
-        outp << sharedState->getElapsedTime() << " " << pressure[IntVector(2,2,0)] << " " << pressure[IntVector(3,2,0)] << " " << pressure[IntVector(3,3,0)] << '\n';
+        outp << sharedState->getElapsedSimTime() << " " << pressure[IntVector(2,2,0)] << " " << pressure[IntVector(3,2,0)] << " " << pressure[IntVector(3,3,0)] << '\n';
         outp.flush();
       }
 #endif

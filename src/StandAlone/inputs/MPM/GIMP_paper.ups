@@ -15,7 +15,7 @@ Index: SerialMPM.cc
      Ghost::GhostType  gnone = Ghost::None;
 +
      Vector gravity = flags->d_gravity;
-+    double time = d_sharedState->getElapsedTime();
++    double time = d_sharedState->getElapsedSimTime();
 +    if(time<2.0){
 +      gravity = flags->d_gravity/2.0*time;
 +    }

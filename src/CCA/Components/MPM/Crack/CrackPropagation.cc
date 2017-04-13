@@ -423,7 +423,7 @@ void Crack::ConstructNewCrackFrontElems(const ProcessorGroup*,
           // Calculate crack propagation velocity
           double vc1=0.,vc2=0.,vcc=0.;
           /*      
-          double time=d_sharedState->getElapsedTime();
+          double time=d_sharedState->getElapsedSimTime();
           delt_vartype delT;
           old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
           if(sp) { // Record crack incremental and time instant 

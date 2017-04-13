@@ -1212,7 +1212,7 @@ void
 DataArchiver::findNext_OutputCheckPoint_Timestep( double /* delt */, const GridP & /* grid */ )
 {
   dbg << "  findNext_OutputCheckPoint_Timestep() begin\n";
-  // double time = d_sharedState->getElapsedTime();
+  // double time = d_sharedState->getElapsedSimTime();
   int timestep = d_sharedState->getCurrentTopLevelTimeStep();
   // if this was an output/checkpoint timestep,
   // determine when the next one will be.

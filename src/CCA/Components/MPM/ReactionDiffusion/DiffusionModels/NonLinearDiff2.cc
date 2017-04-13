@@ -132,7 +132,7 @@ void NonLinearDiff2::computeFlux(
                                 )
 {
 
-  //double current_time1 = d_sharedState->getElapsedTime();
+  //double current_time1 = d_sharedState->getElapsedSimTime();
 
   int dwi = matl->getDWIndex();
   Vector dx = patch->dCell();

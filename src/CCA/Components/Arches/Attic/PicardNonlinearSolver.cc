@@ -1733,7 +1733,7 @@ PicardNonlinearSolver::probeData(const ProcessorGroup* ,
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-    double time = d_lab->d_sharedState->getElapsedTime();
+    double time = d_lab->d_sharedState->getElapsedSimTime();
 
     constSFCXVariable<double> newUVel;
     constSFCYVariable<double> newVVel;

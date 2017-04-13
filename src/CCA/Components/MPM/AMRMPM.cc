@@ -5715,7 +5715,7 @@ void AMRMPM::applyExternalScalarFlux(const ProcessorGroup* ,
                                      DataWarehouse* new_dw)
 {
   // Get the current time
-  double time = d_sharedState->getElapsedTime();
+  double time = d_sharedState->getElapsedSimTime();
 
   if (cout_doing.active())
     cout_doing << "Current Time (applyExternalScalarFlux) = " << time << endl;

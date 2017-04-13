@@ -111,7 +111,7 @@ void Crack::GetNodalSolutions(const ProcessorGroup*,
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
 
-    double time = d_sharedState->getElapsedTime();
+    double time = d_sharedState->getElapsedSimTime();
 
     // Detect if calculating fracture parameters or
     // doing crack propagation at this time step
@@ -1131,7 +1131,7 @@ void Crack::OutputCrackFrontResults(const int& m)
     ofstream outCrkFrt1(outFileName1, ios::app);
     ofstream outCrkFrt2(outFileName2, ios::app);
     
-    double time=d_sharedState->getElapsedTime();
+    double time=d_sharedState->getElapsedSimTime();
     int timestep=d_sharedState->getCurrentTopLevelTimeStep();
 
     int num=(int)cfSegNodes[m].size();

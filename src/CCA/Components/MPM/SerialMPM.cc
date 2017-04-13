@@ -3721,7 +3721,7 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
     }
 
 /*
-    double time = d_sharedState->getElapsedTime();
+    double time = d_sharedState->getElapsedSimTime();
     string outfile_name = "force_sep.dat";
     ofstream dest;
     dest.open(outfile_name.c_str(),ios::app);

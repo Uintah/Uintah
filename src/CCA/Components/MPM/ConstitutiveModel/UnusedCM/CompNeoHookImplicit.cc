@@ -270,7 +270,7 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
                                                         dx, psize,interpolator);
       }
 
-      double time = d_sharedState->getElapsedTime();
+      double time = d_sharedState->getElapsedSimTime();
 
       for(ParticleSubset::iterator iter = pset->begin();
                                    iter != pset->end(); iter++){
@@ -484,7 +484,7 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
                                                         dx, psize,interpolator);
      }
 
-     double time = d_sharedState->getElapsedTime();
+     double time = d_sharedState->getElapsedSimTime();
 
      for(ParticleSubset::iterator iter = pset->begin();
                                   iter != pset->end(); iter++){
