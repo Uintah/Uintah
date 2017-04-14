@@ -71,6 +71,8 @@ namespace Uintah{
 
     std::string m_vel_name;                               ///<Name of the task that creates all face velocities
 
+    ProblemSpecP create_taskAlegebra_spec( ProblemSpecP db_model, const std::string name );
+
   };
 }
 #endif

@@ -97,7 +97,12 @@ private:
 
   struct Operation{
 
+    std::string label;
+
     bool create_new_variable;
+    bool create_temp_variable;
+    bool ind1_is_temp;
+
     bool use_constant;
 
     std::string dep;
@@ -144,6 +149,7 @@ private:
       //get the name of this op
       std::string label;
       op_db->getAttribute("label",label);
+      new_op.label = label;
 
       //does it create a new variable?
       new_op.create_new_variable = false;
@@ -151,9 +157,24 @@ private:
         new_op.create_new_variable = true;
       }
 
+      //does it create a temp variable?
+      new_op.create_temp_variable = false;
+      if ( op_db->findBlock("temp_variable") ){
+        new_op.create_temp_variable = true;
+      }
+
+      if( new_op.create_temp_variable && new_op.create_new_variable ){
+        throw ProblemSetupException("Error: Pick either TEMP or NEW variable creation (see arches_spec.xml) for task_math operation: "+label, __FILE__, __LINE__ );
+      }
+
       //get variable names:
       op_db->require("dep", new_op.dep);
       op_db->require("ind1", new_op.ind1);
+      if ( op_db->findBlock("ind1")->findAttribute("use_temp_variable") ){
+        new_op.ind1_is_temp = true;
+      } else {
+        new_op.ind1_is_temp = false;
+      }
 
       //get the algebriac expression
       std::string value;
@@ -162,6 +183,9 @@ private:
       new_op.use_constant = false;
       if ( op_db->findBlock("ind2")){
         op_db->require("ind2", new_op.ind2);
+        if ( op_db->findBlock("ind2")->findAttribute("use_temp_variable") ){
+          throw ProblemSetupException("Error: Only ind1 can be temp for operation: "+label, __FILE__,__LINE__);
+        }
       } else if ( op_db->findBlock("constant") ){
         op_db->require("constant", new_op.constant);
         new_op.use_constant = true;
@@ -208,16 +232,29 @@ private:
     }
 
     ProblemSpecP db_order = db->findBlock("exe_order");
+    bool found_order = true;
     if ( db_order == nullptr ){
-      throw ProblemSetupException("Error: must specify an order of operations.",__FILE__,__LINE__);
+      found_order = false;
+      //throw ProblemSetupException("Error: must specify an order of operations.",__FILE__,__LINE__);
     }
-    for ( ProblemSpecP db_oneop = db_order->findBlock("op"); db_oneop !=  nullptr; db_oneop = db_oneop->findNextBlock("op")){
 
-      std::string label;
-      db_oneop->getAttribute("label", label);
-      order.push_back(label);
+    if ( found_order ){
+      //User specified a specific order of operations
+      for ( ProblemSpecP db_oneop = db_order->findBlock("op");
+            db_oneop !=  nullptr; db_oneop = db_oneop->findNextBlock("op")){
 
+        std::string label;
+        db_oneop->getAttribute("label", label);
+        order.push_back(label);
+
+      }
+    } else {
+      //Order of operations is arbitrary
+      for ( auto i = all_operations.begin(); i != all_operations.end(); i++ ){
+        order.push_back(i->second.label);
+      }
     }
+
   }
 
   // Local variable creation -----------------------------------------------------------------------
@@ -322,19 +359,23 @@ private:
         }
       } else {
         if ( !use_variable(op_iter->second.dep, mod_variables)){
-          register_variable( op_iter->second.dep, ArchesFieldContainer::MODIFIES, variable_registry, _task_name );
-          mod_variables.push_back(op_iter->second.dep);
+          if ( !op_iter->second.create_temp_variable ){
+            register_variable( op_iter->second.dep, ArchesFieldContainer::MODIFIES, variable_registry, _task_name );
+            mod_variables.push_back(op_iter->second.dep);
+          }
         }
       }
 
       //require from newdw on everything else?
       if ( !use_variable(op_iter->second.ind1, req_variables) ){
-        register_variable( op_iter->second.ind1, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, _task_name );
-        req_variables.push_back(op_iter->second.ind1);
+        if ( !op_iter->second.ind1_is_temp ){
+          register_variable( op_iter->second.ind1, ArchesFieldContainer::MODIFIES, variable_registry, _task_name );
+          req_variables.push_back(op_iter->second.ind1);
+        }
       }
       if ( !op_iter->second.use_constant ){
         if ( !use_variable(op_iter->second.ind2, req_variables) ){
-          register_variable( op_iter->second.ind2, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, _task_name );
+          register_variable( op_iter->second.ind2, ArchesFieldContainer::MODIFIES, variable_registry, _task_name );
           req_variables.push_back(op_iter->second.ind2);
         }
       }
@@ -345,50 +386,70 @@ private:
   void TaskAlgebra<T>::eval(
     const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
+    T temp_var;
+    IntVector domlo = patch->getCellLowIndex();
+    IntVector domhi = patch->getCellHighIndex();
+    temp_var.allocate(domlo, domhi);
+    temp_var.initialize(0.0);
+
     for (STRVEC::iterator iter = order.begin(); iter != order.end(); iter++){
 
       typename OPMAP::iterator op_iter = all_operations.find(*iter);
 
-      T& dep = *(tsk_info->get_uintah_field<T>(op_iter->second.dep));
-      CT& ind1 = *(tsk_info->get_const_uintah_field<CT>(op_iter->second.ind1));
+      T* dep_ptr;
+      T* ind_ptr;
+
+      if ( op_iter->second.ind1_is_temp ){
+        ind_ptr = &temp_var;
+      } else {
+        ind_ptr = tsk_info->get_uintah_field<T>(op_iter->second.ind1);
+      }
+
       Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
+
+      if ( op_iter->second.create_temp_variable ) {
+        dep_ptr = &temp_var;
+      } else {
+        dep_ptr = tsk_info->get_uintah_field<T>(op_iter->second.dep);
+      }
 
       if ( op_iter->second.use_constant ){
 
         switch ( op_iter->second.expression_type ){
           case ADD:
             Uintah::parallel_for(range, [&](int i, int j, int k){
-              dep(i,j,k) = op_iter->second.constant + ind1(i,j,k);
+              (*dep_ptr)(i,j,k) = op_iter->second.constant + (*ind_ptr)(i,j,k);
             });
             break;
           case SUBTRACT:
             Uintah::parallel_for(range, [&](int i, int j, int k){
-              dep(i,j,k) = ind1(i,j,k) - op_iter->second.constant;
+              (*dep_ptr)(i,j,k) = (*ind_ptr)(i,j,k) - op_iter->second.constant;
             });
             break;
           case MULTIPLY:
             Uintah::parallel_for(range, [&](int i, int j, int k){
-              dep(i,j,k) = ind1(i,j,k) * op_iter->second.constant;
+              (*dep_ptr)(i,j,k) = (*ind_ptr)(i,j,k) * op_iter->second.constant;
             });
             break;
           case DIVIDE_VARIABLE_CONST:
             Uintah::parallel_for(range, [&](int i, int j, int k){
-              dep(i,j,k) = ind1(i,j,k) / op_iter->second.constant;
+              (*dep_ptr)(i,j,k) = (*ind_ptr)(i,j,k) / op_iter->second.constant;
             });
             break;
           case DIVIDE_CONST_VARIABLE:
             Uintah::parallel_for(range, [&](int i, int j, int k){
-              dep(i,j,k) = (ind1(i,j,k) == 0) ? 0.0 : op_iter->second.constant / ind1(i,j,k);
+              (*dep_ptr)(i,j,k) = ((*ind_ptr)(i,j,k) == 0) ? 0.0
+                : op_iter->second.constant / (*ind_ptr)(i,j,k);
             });
             break;
           case POW:
             Uintah::parallel_for(range, [&](int i, int j, int k){
-              dep(i,j,k) = std::pow(ind1(i,j,k),op_iter->second.constant);
+              (*dep_ptr)(i,j,k) = std::pow((*ind_ptr)(i,j,k),op_iter->second.constant);
             });
             break;
           case EXP:
             Uintah::parallel_for(range, [&](int i, int j, int k){
-              dep(i,j,k) = std::exp(ind1(i,j,k));
+              (*dep_ptr)(i,j,k) = std::exp((*ind_ptr)(i,j,k));
             });
             break;
           default:
@@ -397,32 +458,32 @@ private:
 
       } else {
 
-        CT& ind2 = *(tsk_info->get_const_uintah_field<CT>(op_iter->second.ind2));
+        T& ind2 = *(tsk_info->get_uintah_field<T>(op_iter->second.ind2));
 
         switch ( op_iter->second.expression_type ){
           case ADD:
             Uintah::parallel_for(range, [&](int i, int j, int k){
-              dep(i,j,k) = ind1(i,j,k) + ind2(i,j,k);
+              (*dep_ptr)(i,j,k) = (*ind_ptr)(i,j,k) + ind2(i,j,k);
             });
             break;
           case SUBTRACT:
             Uintah::parallel_for(range, [&](int i, int j, int k){
-              dep(i,j,k) = ind1(i,j,k) - ind2(i,j,k);
+              (*dep_ptr)(i,j,k) = (*ind_ptr)(i,j,k) - ind2(i,j,k);
             });
             break;
           case MULTIPLY:
             Uintah::parallel_for(range, [&](int i, int j, int k){
-              dep(i,j,k) = ind1(i,j,k) * ind2(i,j,k);
+              (*dep_ptr)(i,j,k) = (*ind_ptr)(i,j,k) * ind2(i,j,k);
             });
             break;
           case DIVIDE:
             Uintah::parallel_for(range, [&](int i, int j, int k){
-              dep(i,j,k) = ind2(i,j,k) == 0 ? 0.0 : ind1(i,j,k) / ind2(i,j,k);
+              (*dep_ptr)(i,j,k) = (*ind_ptr)(i,j,k) == 0 ? 0.0 : (*ind_ptr)(i,j,k) / ind2(i,j,k);
             });
             break;
           case POW:
             Uintah::parallel_for(range, [&](int i, int j, int k){
-              dep(i,j,k) = std::pow(ind1(i,j,k), ind2(i,j,k));
+              (*dep_ptr)(i,j,k) = std::pow((*ind_ptr)(i,j,k), ind2(i,j,k));
             });
             break;
           default:

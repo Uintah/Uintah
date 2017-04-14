@@ -1,6 +1,7 @@
 #include <CCA/Components/Arches/PropertyModelsV2/PropertyModelFactoryV2.h>
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 //Specific models:
+#include <CCA/Components/Arches/Utility/TaskAlgebra.h>
 #include <CCA/Components/Arches/PropertyModelsV2/WallHFVariable.h>
 #include <CCA/Components/Arches/PropertyModelsV2/VariableStats.h>
 #include <CCA/Components/Arches/PropertyModelsV2/DensityPredictor.h>
@@ -14,6 +15,8 @@
 #include <CCA/Components/Arches/PropertyModelsV2/gasRadProperties.h>
 #include <CCA/Components/Arches/PropertyModelsV2/partRadProperties.h>
 #include <CCA/Components/Arches/PropertyModelsV2/CO.h>
+#include <libxml/parser.h>
+#include <libxml/tree.h>
 
 using namespace Uintah;
 
@@ -63,6 +66,12 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
         register_task( name, tsk );
         _pre_update_property_tasks.push_back( name );
 
+      } if ( type == "wall_thermal_resistance" ){
+
+        TaskInterface::TaskBuilder* tsk = scinew TaskAlgebra<CCVariable<double> >::Builder(name, 0);
+        register_task(name , tsk);
+        _pre_update_property_tasks.push_back(name);
+
       } else if ( type == "variable_stats" ){
 
         TaskInterface::TaskBuilder* tsk = scinew VariableStats::Builder( name, 0 );
@@ -79,7 +88,6 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
         TaskInterface::TaskBuilder* tsk = scinew OneDWallHT::Builder( name, 0 );
         register_task( name, tsk );
         _pre_update_property_tasks.push_back( name );
-
 
       } else if ( type == "CO" ) {
 
@@ -110,13 +118,13 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
         std::string calculator_type = "NA";
         db_model->require("subModel", calculator_type);
         TaskInterface::TaskBuilder* tsk;
- 
+
         tsk = scinew partRadProperties::Builder( name, 0 );
         register_task( name, tsk );
         _pre_table_post_iv_update.push_back(name);
         //_finalize_property_tasks.push_back( name );
         check_for_radiation=true;
-         
+
 
       } else if ( type == "constant_property"){
 
@@ -193,23 +201,45 @@ void
 PropertyModelFactoryV2::build_all_tasks( ProblemSpecP& db )
 {
 
-  ProblemSpecP db_m=db;
-  if ( db->findBlock("PropertyModelsV2") != nullptr){
-    db_m = db->findBlock("PropertyModelsV2");
-  }
+// Temporarily commenting out Derek's commits
+// To aid in a messy merge.
+//ProblemSpecP db_m=db;
+//if ( db->findBlock("PropertyModelsV2") != nullptr){
+//  db_m = db->findBlock("PropertyModelsV2");
+//}//
+//for (unsigned int ix=0; ix< m_task_init_order.size(); ix++){
+//  TaskInterface* tsk = retrieve_task(m_task_init_order[ix]); // builds task
+//  ProblemSpecP db_model = matchNametoSpec(db_m,m_task_init_order[ix]);
 
-    for (unsigned int ix=0; ix< m_task_init_order.size(); ix++){
-      TaskInterface* tsk = retrieve_task(m_task_init_order[ix]); // builds task
-      ProblemSpecP db_model = matchNametoSpec(db_m,m_task_init_order[ix]);
+  if ( db->findBlock("PropertyModelsV2")){
 
-      tsk->problemSetup(db_model);
+    ProblemSpecP db_m = db->findBlock("PropertyModelsV2");
+
+    for ( ProblemSpecP db_model = db_m->findBlock("model");
+          db_model != nullptr; db_model=db_model->findNextBlock("model")){
+
+      std::string name;
+      std::string type;
+
+      db_model->getAttribute("label", name);
+      db_model->getAttribute("type", type);
+
+      TaskInterface* tsk = retrieve_task(name);
+
+      ProblemSpecP db_passed;
+
+      if ( type == "wall_thermal_resistance" ){
+        db_passed = create_taskAlegebra_spec( db_model, name );
+      } else {
+        db_passed = db_model;
+      }
+      tsk->problemSetup(db_passed);
       tsk->create_local_labels();
 
       //Assuming that everything here is independent:
       _task_order.push_back(m_task_init_order[ix]);
 
     }
-
 }
 
 void
@@ -287,6 +317,7 @@ void PropertyModelFactoryV2::schedule_initialization( const LevelP& level,
 
 }
 
+//--------------------------------------------------------------------------------------------------
 ProblemSpecP
 PropertyModelFactoryV2::matchNametoSpec( ProblemSpecP& db_m, std::string name){
 
@@ -301,3 +332,84 @@ PropertyModelFactoryV2::matchNametoSpec( ProblemSpecP& db_m, std::string name){
   return db;
 }
 
+//--------------------------------------------------------------------------------------------------
+ProblemSpecP PropertyModelFactoryV2::create_taskAlegebra_spec( ProblemSpecP db_model,
+                                                               const std::string name ){
+  /*
+  <model label="R_total" type="wall_resistance">
+    <layer R_eff="some_label"/> <!-- where R_eff = k/dx -->
+    <layer R_eff="some_other_label"/>
+    ....
+  </model>
+  */
+
+  xmlDocPtr doc = NULL;       /* document pointer */
+  xmlNodePtr root_node = NULL; /* root node */
+  doc = xmlNewDoc(BAD_CAST "1.0");
+  root_node = xmlNewNode(NULL, BAD_CAST "root");
+  xmlDocSetRootElement(doc, root_node);
+
+  ProblemSpec* temp_db = scinew ProblemSpec( root_node ); /* create a temp db */
+  ProblemSpecP temp_model_db = temp_db->appendChild("model");
+  temp_model_db->setAttribute("type", "task_math");
+  temp_model_db->setAttribute("label", name);
+
+  std::vector<std::string> vec_r_eff;
+  for ( ProblemSpecP db_layer = db_model->findBlock("layer"); db_layer != nullptr;
+        db_layer =db_layer->findNextBlock("layer") ){
+
+    std::string r_eff_label;
+    db_layer->getAttribute("R_eff", r_eff_label);
+    vec_r_eff.push_back( r_eff_label );
+
+  }
+
+  const int N = vec_r_eff.size();
+  if ( N > 1 ){
+    for ( int i = 1; i < N; i++ ){
+      ProblemSpecP db_op = temp_model_db->appendChild("op");
+      std::stringstream string_i;
+      string_i << i;
+      std::stringstream string_im1;
+      string_im1 << i-1;
+
+      db_op->setAttribute("type","ADD");
+      db_op->setAttribute("label","op_"+string_im1.str());
+
+      if ( i == N-1 ){
+        db_op->appendElement("dep", name);
+        db_op->appendChild("new_variable");
+      } else {
+        db_op->appendElement("dep","sum_"+string_i.str());
+        db_op->appendChild("temp_variable");
+      }
+
+      if ( i == 1 ){
+        db_op->appendElement("ind1", vec_r_eff[i-1]);
+        db_op->appendElement("ind2", vec_r_eff[i]);
+      } else {
+        string_i << i-1;
+        db_op->appendElement("ind1", "sum_"+string_im1.str());
+        db_op->findBlock("ind1")->setAttribute("use_temp_variable","true");
+        db_op->appendElement("ind2", vec_r_eff[i] );
+      }
+    }
+
+    ProblemSpecP exe_db = temp_model_db->appendChild("exe_order");
+    for ( int i = 0; i < N-1; i++ ){
+
+      std::stringstream istr;
+      istr << i;
+      ProblemSpecP op_db = exe_db->appendChild("op");
+      op_db->setAttribute("label", "op_"+istr.str() );
+    }
+
+  } else {
+    throw ProblemSetupException("Error: You don\'t have enough operations for R_eff", __FILE__, __LINE__);
+  }
+
+  //temp_model_db->output("inputFrag.xml");
+
+  return temp_model_db;
+
+}

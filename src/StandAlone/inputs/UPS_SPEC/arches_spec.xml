@@ -37,14 +37,19 @@
                                         need_applies_to="type variable_math"> <!-- The label is the label
                                         of the operation (unique/operation) -->
             <dep                        spec="REQUIRED STRING"/> <!-- dependent variable -->
-            <ind1                       spec="REQUIRED STRING"/> <!-- independent variable -->
+            <ind1                       spec="REQUIRED STRING"
+                                        attribute1="use_temp_variable OPTIONAL NO_DATA"/> <!-- independent variable 1
+                                                                              The attribute allows you to use the temp result from the
+                                                                              previous operation if desired.
+                                                                         -->
             <ind2                       spec="OPTIONAL STRING"/> <!-- second independent variable -->
             <new_variable               spec="OPTIONAL NO_DATA"/> <!-- if the dependent variable
                                                                       doesn't exisit -->
+            <temp_varaible              spec="OPTIONAL NO_DATA"/> <!-- creates a temp variable that isn't saved to the DW -->
             <constant                   spec="OPTIONAL DOUBLE"/> <!-- use of a double instead of the
                                                                       second iv -->
           </op>
-          <exe_order                    spec="REQUIRED NO_DATA"> <!-- defines the order of operations -->
+          <exe_order                    spec="OPTIONAL NO_DATA"> <!-- defines the order of operations. If NOT defined, the operations are executed in an arbitrary order. -->
             <op                         spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"/>
           </exe_order>
@@ -65,7 +70,7 @@
                                                                           cloudBenchmark,
                                                                           gasRadProperties,
                                                                           partRadProperties,
-                                                                          CO'">
+                                                                          CO, wall_thermal_resistance'">
 
               <subModel                   spec="REQUIRED STRING  'constantCIF, basic, Coal'"   need_applies_to="type partRadProperties" />
               <part_temp_label            spec="REQUIRED STRING"  need_applies_to="type partRadProperties" />    <!--base label used for particle temp in DQMOM-->
@@ -146,6 +151,11 @@
           <abskg                        spec="OPTIONAL NO_DATA"
                                         attribute1="label REQUIRED STRING"
                                         need_applies_to="type burns_christon, cloudBenchmark"/>
+
+          <!-- Thermal resitance -->
+          <layer                        spec="MULTIPLE NO_DATA"
+                                        attribute1="R_eff REQUIRED STRING"
+                                        need_applies_to="type wall_thermal_resistance"/>
 
           <!-- The variable_stats model produces a sum(phi*dt) or sum(rho*u*phi*dt) (all three components) and the sum(squared value) from which
                a time average can be computed.
@@ -533,7 +543,7 @@
               <stoich_coeff_ratio        spec="REQUIRED DOUBLE"/> <!-- [kmoles char / kmoles oxidizer] from stoichiometric coefficients -->
             </reaction>
           </SmithChar>
-          
+
           <SmithChar2016                     spec="OPTIONAL NO_DATA"
                                          need_applies_to="type coal">
             <Sg0                         spec="OPTIONAL DOUBLE"/> <!-- //UNCERTAIN initial specific surface area [m^2/kg], range [1e3,1e6] default is 9.35e5-->
@@ -844,7 +854,7 @@
                                                                                        label= unique name for this intrusion boundary -->
            <geom_object/>                                                         <!-- geometry object associated with this intrusion -->
 
-           <ignore_missing_bc           spec="OPTIONAL NO_DATA"/>                 <!-- [false] Allows one to specfiy only the BCs that are relevant. 
+           <ignore_missing_bc           spec="OPTIONAL NO_DATA"/>                 <!-- [false] Allows one to specfiy only the BCs that are relevant.
                                                                                        If found, then for intrusion inlets, the flux of any missing variables (scalars)
                                                                                        is zero. Note that one must still specify all IV for a proper table lookup. -->
            <flux_dir                    spec="MULTIPLE STRING 'x-,X-,x+,X+,
@@ -1157,7 +1167,7 @@
                                           attribute1="label REQUIRED STRING"/>
 
             <!-- by default, the scalar is intialized to zero. Other values may be specified -->
-            <initialize                   spec="OPTIONAL NO_DATA" 
+            <initialize                   spec="OPTIONAL NO_DATA"
                                           attribute1="value REQUIRED DOUBLE"/>
           </eqn>
 
@@ -1363,11 +1373,11 @@
             <!-- constant property model: set a constant/environment -->
             <const_size                 spec="OPTIONAL BOOLEAN"
                                         need_applies_to="type coal_temperature "/>  <!-- defaults to true, so no change to DQMOM input files needed -->
-	    
+
 	          <!-- variable density to be consistent with Char Oxidation 2016-->
 	          <model_type                 spec="OPTIONAL STRING"
                                         need_applies_to="type coal_density "/> <!-- default is "constant_volume_dqmom", "cqmom" or "dynamic_dqmom" are variable densities -->
-	                                
+
             <!-- FOWY devolatilization -->
             <birth_label                spec="OPTIONAL STRING"
                                         need_applies_to="type fowy_devolatilization, shaddix_oxidation"/>
@@ -1538,21 +1548,21 @@
             <Ysoot_label                spec="OPTIONAL STRING" need_applies_to="type brown_soot" />
             <Ns_label                   spec="OPTIONAL STRING" need_applies_to="type brown_soot" />
             <soot_off_gas_label       	spec="OPTIONAL STRING" need_applies_to="type brown_soot" />
-            <tar_src                    spec="REQUIRED NO_DATA" 
+            <tar_src                    spec="REQUIRED NO_DATA"
                                         attribute1="label REQUIRED STRING"
                                         need_applies_to="type brown_soot"/> <!-- User defined label for the tar src
                                                                             (as generated by this model) -->
-            <num_density_src            spec="REQUIRED NO_DATA" 
+            <num_density_src            spec="REQUIRED NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        need_applies_to="type brown_soot"/> <!-- User defined label for the num density src 
+                                        need_applies_to="type brown_soot"/> <!-- User defined label for the num density src
                                                                             (as generated by this model) -->
-            <soot_mass_src              spec="REQUIRED NO_DATA" 
+            <soot_mass_src              spec="REQUIRED NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        need_applies_to="type brown_soot"/> <!-- User defined label for the soot mass src 
+                                        need_applies_to="type brown_soot"/> <!-- User defined label for the soot mass src
                                                                             (as generated by this model) -->
-            <mass_balance_src           spec="REQUIRED NO_DATA" 
+            <mass_balance_src           spec="REQUIRED NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        need_applies_to="type brown_soot"/> <!-- User defined label for the soot mass balance src 
+                                        need_applies_to="type brown_soot"/> <!-- User defined label for the soot mass balance src
                                                                             (as generated by this model) -->
 
             <!-- Specs for coal gas devol model -->
