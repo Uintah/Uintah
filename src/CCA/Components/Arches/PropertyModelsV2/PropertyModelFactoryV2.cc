@@ -66,7 +66,7 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
         register_task( name, tsk );
         _pre_update_property_tasks.push_back( name );
 
-      } if ( type == "wall_thermal_resistance" ){
+      } else if ( type == "wall_thermal_resistance" ){
 
         TaskInterface::TaskBuilder* tsk = scinew TaskAlgebra<CCVariable<double> >::Builder(name, 0);
         register_task(name , tsk);
@@ -423,7 +423,7 @@ ProblemSpecP PropertyModelFactoryV2::create_taskAlegebra_spec( ProblemSpecP db_m
 
   }
 
-  temp_model_db->output("inputFrag.xml");
+  //temp_model_db->output("inputFrag.xml");
 
   return temp_model_db;
 
