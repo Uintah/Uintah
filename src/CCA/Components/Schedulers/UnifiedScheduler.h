@@ -304,7 +304,7 @@ public:
   void run();
 
   double getWaitTime();
-  void start();
+  void startWaitTime();
   void stopWaitTime();
   void resetWaitTime();
   

@@ -28,7 +28,6 @@
 
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Util/DOUT.hpp>
-#include <Core/Util/Time.h>
 
 
 using namespace Uintah;

@@ -812,7 +812,7 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
 
     // TaskRunner threads start at g_runners[1]
     for (int i = 1; i < m_num_threads; ++i) {
-      m_shared_state->d_runTimeStats[SimulationState::TaskWaitThreadTime] += Impl::g_runners[i]->getWaittime();
+      m_shared_state->d_runTimeStats[SimulationState::TaskWaitThreadTime] += Impl::g_runners[i]->getWaitTime();
     }
   }
 
