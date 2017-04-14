@@ -38,7 +38,7 @@ namespace Uintah {
 
 public:
 
-    enum EXPR {ADD, SUBTRACT, MULTIPLY, DIVIDE, DIVIDE_CONST_VARIABLE,
+    enum EXPR {EQUALS, ADD, SUBTRACT, MULTIPLY, DIVIDE, DIVIDE_CONST_VARIABLE,
                DIVIDE_VARIABLE_CONST, POW, EXP};
 
     TaskAlgebra<T>( std::string task_name, int matl_index );
@@ -102,6 +102,7 @@ private:
     bool create_new_variable;
     bool create_temp_variable;
     bool ind1_is_temp;
+    bool sum_into_dep;
 
     bool use_constant;
 
@@ -157,10 +158,25 @@ private:
         new_op.create_new_variable = true;
       }
 
+      new_op.sum_into_dep = false;
+      if ( op_db->findBlock("sum_into_dep")){
+        new_op.sum_into_dep = true;
+      }
+
       //does it create a temp variable?
       new_op.create_temp_variable = false;
-      if ( op_db->findBlock("temp_variable") ){
+      if ( op_db->findBlock("dep_is_temp") ){
         new_op.create_temp_variable = true;
+      }
+
+      //does it use a temp variable?
+      new_op.ind1_is_temp = false;
+      if ( op_db->findBlock("ind1_is_temp") ){
+        new_op.ind1_is_temp = true;
+      }
+
+      if ( new_op.ind1_is_temp && new_op.create_temp_variable ){
+        throw ProblemSetupException("Error: One cannot ind1_is_temp and dep_is_temp for task_math op: "+label, __FILE__, __LINE__ );
       }
 
       if( new_op.create_temp_variable && new_op.create_new_variable ){
@@ -170,35 +186,33 @@ private:
       //get variable names:
       op_db->require("dep", new_op.dep);
       op_db->require("ind1", new_op.ind1);
-      if ( op_db->findBlock("ind1")->findAttribute("use_temp_variable") ){
-        new_op.ind1_is_temp = true;
-      } else {
-        new_op.ind1_is_temp = false;
-      }
 
       //get the algebriac expression
       std::string value;
       op_db->getAttribute( "type", value );
 
+      //optional ind2
       new_op.use_constant = false;
       if ( op_db->findBlock("ind2")){
         op_db->require("ind2", new_op.ind2);
-        if ( op_db->findBlock("ind2")->findAttribute("use_temp_variable") ){
-          throw ProblemSetupException("Error: Only ind1 can be temp for operation: "+label, __FILE__,__LINE__);
-        }
       } else if ( op_db->findBlock("constant") ){
         op_db->require("constant", new_op.constant);
         new_op.use_constant = true;
       } else {
-        if (value != "EXP"){
+        if (value != "EXP" && value != "EQUALS"){
           std::stringstream msg;
           msg << "Error: Must specify either a constant or a second independent " <<
           "variable for the algrebra utility for user defined operation labeled: "<< label << std::endl;
           throw ProblemSetupException(msg.str(), __FILE__, __LINE__ );
+        } else {
+          new_op.use_constant = true; // not really, but used as a kludge
         }
       }
 
-      if ( value == "ADD" ) {
+      if ( value == "EQUALS" ){
+        new_op.expression_type = EQUALS;
+      }
+      else if ( value == "ADD" ) {
         new_op.expression_type = ADD;
       }
       else if ( value == "SUBTRACT" ){
@@ -416,41 +430,95 @@ private:
       if ( op_iter->second.use_constant ){
 
         switch ( op_iter->second.expression_type ){
+          case EQUALS:
+            if ( op_iter->second.sum_into_dep ){
+              Uintah::parallel_for(range, [&](int i, int j, int k){
+                (*dep_ptr)(i,j,k) = (*dep_ptr)(i,j,k) + (*ind_ptr)(i,j,k);
+              });
+            } else {
+              Uintah::parallel_for(range, [&](int i, int j, int k){
+                (*dep_ptr)(i,j,k) = (*ind_ptr)(i,j,k);
+              });
+            }
+            break;
           case ADD:
-            Uintah::parallel_for(range, [&](int i, int j, int k){
-              (*dep_ptr)(i,j,k) = op_iter->second.constant + (*ind_ptr)(i,j,k);
-            });
+            if ( op_iter->second.sum_into_dep ){
+              Uintah::parallel_for(range, [&](int i, int j, int k){
+                (*dep_ptr)(i,j,k) = (*dep_ptr)(i,j,k) + op_iter->second.constant + (*ind_ptr)(i,j,k);
+              });
+            } else {
+              Uintah::parallel_for(range, [&](int i, int j, int k){
+                (*dep_ptr)(i,j,k) = op_iter->second.constant + (*ind_ptr)(i,j,k);
+              });
+            }
             break;
           case SUBTRACT:
-            Uintah::parallel_for(range, [&](int i, int j, int k){
-              (*dep_ptr)(i,j,k) = (*ind_ptr)(i,j,k) - op_iter->second.constant;
-            });
+            if ( op_iter->second.sum_into_dep ){
+              Uintah::parallel_for(range, [&](int i, int j, int k){
+                (*dep_ptr)(i,j,k) = (*dep_ptr)(i,j,k) + (*ind_ptr)(i,j,k) - op_iter->second.constant;
+              });
+            } else {
+              Uintah::parallel_for(range, [&](int i, int j, int k){
+                (*dep_ptr)(i,j,k) = (*ind_ptr)(i,j,k) - op_iter->second.constant;
+              });
+            }
             break;
           case MULTIPLY:
-            Uintah::parallel_for(range, [&](int i, int j, int k){
-              (*dep_ptr)(i,j,k) = (*ind_ptr)(i,j,k) * op_iter->second.constant;
-            });
+            if ( op_iter->second.sum_into_dep ){
+              Uintah::parallel_for(range, [&](int i, int j, int k){
+                (*dep_ptr)(i,j,k) = (*dep_ptr)(i,j,k) + (*ind_ptr)(i,j,k) * op_iter->second.constant;
+              });
+            } else {
+              Uintah::parallel_for(range, [&](int i, int j, int k){
+                (*dep_ptr)(i,j,k) = (*ind_ptr)(i,j,k) * op_iter->second.constant;
+              });
+            }
             break;
           case DIVIDE_VARIABLE_CONST:
-            Uintah::parallel_for(range, [&](int i, int j, int k){
-              (*dep_ptr)(i,j,k) = (*ind_ptr)(i,j,k) / op_iter->second.constant;
-            });
+            if ( op_iter->second.sum_into_dep ){
+              Uintah::parallel_for(range, [&](int i, int j, int k){
+                (*dep_ptr)(i,j,k) = (*dep_ptr)(i,j,k) + (*ind_ptr)(i,j,k) / op_iter->second.constant;
+              });
+            } else {
+              Uintah::parallel_for(range, [&](int i, int j, int k){
+                (*dep_ptr)(i,j,k) = (*ind_ptr)(i,j,k) / op_iter->second.constant;
+              });
+            }
             break;
           case DIVIDE_CONST_VARIABLE:
-            Uintah::parallel_for(range, [&](int i, int j, int k){
-              (*dep_ptr)(i,j,k) = ((*ind_ptr)(i,j,k) == 0) ? 0.0
-                : op_iter->second.constant / (*ind_ptr)(i,j,k);
-            });
+            if ( op_iter->second.sum_into_dep ){
+              Uintah::parallel_for(range, [&](int i, int j, int k){
+                (*dep_ptr)(i,j,k) = (*dep_ptr)(i,j,k) + ((*ind_ptr)(i,j,k) == 0) ? 0.0
+                  : op_iter->second.constant / (*ind_ptr)(i,j,k);
+              });
+            } else {
+              Uintah::parallel_for(range, [&](int i, int j, int k){
+                (*dep_ptr)(i,j,k) = ((*ind_ptr)(i,j,k) == 0) ? 0.0
+                  : op_iter->second.constant / (*ind_ptr)(i,j,k);
+              });
+            }
             break;
           case POW:
-            Uintah::parallel_for(range, [&](int i, int j, int k){
-              (*dep_ptr)(i,j,k) = std::pow((*ind_ptr)(i,j,k),op_iter->second.constant);
-            });
+            if ( op_iter->second.sum_into_dep ){
+              Uintah::parallel_for(range, [&](int i, int j, int k){
+                (*dep_ptr)(i,j,k) = (*dep_ptr)(i,j,k) + std::pow((*ind_ptr)(i,j,k),op_iter->second.constant);
+              });
+            } else {
+              Uintah::parallel_for(range, [&](int i, int j, int k){
+                (*dep_ptr)(i,j,k) = std::pow((*ind_ptr)(i,j,k),op_iter->second.constant);
+              });
+            }
             break;
           case EXP:
-            Uintah::parallel_for(range, [&](int i, int j, int k){
-              (*dep_ptr)(i,j,k) = std::exp((*ind_ptr)(i,j,k));
-            });
+            if ( op_iter->second.sum_into_dep ){
+              Uintah::parallel_for(range, [&](int i, int j, int k){
+                (*dep_ptr)(i,j,k) = (*dep_ptr)(i,j,k) + std::exp((*ind_ptr)(i,j,k));
+              });
+            } else {
+              Uintah::parallel_for(range, [&](int i, int j, int k){
+                (*dep_ptr)(i,j,k) = std::exp((*ind_ptr)(i,j,k));
+              });
+            }
             break;
           default:
             throw InvalidValue("Error: TaskAlgebra not supported.",__FILE__,__LINE__);
@@ -462,29 +530,59 @@ private:
 
         switch ( op_iter->second.expression_type ){
           case ADD:
-            Uintah::parallel_for(range, [&](int i, int j, int k){
-              (*dep_ptr)(i,j,k) = (*ind_ptr)(i,j,k) + ind2(i,j,k);
-            });
+            if ( op_iter->second.sum_into_dep ){
+              Uintah::parallel_for(range, [&](int i, int j, int k){
+                (*dep_ptr)(i,j,k) = (*dep_ptr)(i,j,k) + (*ind_ptr)(i,j,k) + ind2(i,j,k);
+              });
+            } else {
+              Uintah::parallel_for(range, [&](int i, int j, int k){
+                (*dep_ptr)(i,j,k) = (*ind_ptr)(i,j,k) + ind2(i,j,k);
+              });
+            }
             break;
           case SUBTRACT:
-            Uintah::parallel_for(range, [&](int i, int j, int k){
-              (*dep_ptr)(i,j,k) = (*ind_ptr)(i,j,k) - ind2(i,j,k);
-            });
+            if ( op_iter->second.sum_into_dep ){
+              Uintah::parallel_for(range, [&](int i, int j, int k){
+                (*dep_ptr)(i,j,k) = (*dep_ptr)(i,j,k) + (*ind_ptr)(i,j,k) - ind2(i,j,k);
+              });
+            } else {
+              Uintah::parallel_for(range, [&](int i, int j, int k){
+                (*dep_ptr)(i,j,k) = (*ind_ptr)(i,j,k) - ind2(i,j,k);
+              });
+            }
             break;
           case MULTIPLY:
-            Uintah::parallel_for(range, [&](int i, int j, int k){
-              (*dep_ptr)(i,j,k) = (*ind_ptr)(i,j,k) * ind2(i,j,k);
-            });
+            if ( op_iter->second.sum_into_dep ){
+              Uintah::parallel_for(range, [&](int i, int j, int k){
+                (*dep_ptr)(i,j,k) = (*dep_ptr)(i,j,k) + (*ind_ptr)(i,j,k) * ind2(i,j,k);
+              });
+            } else {
+              Uintah::parallel_for(range, [&](int i, int j, int k){
+                (*dep_ptr)(i,j,k) = (*ind_ptr)(i,j,k) * ind2(i,j,k);
+              });
+            }
             break;
           case DIVIDE:
-            Uintah::parallel_for(range, [&](int i, int j, int k){
-              (*dep_ptr)(i,j,k) = (*ind_ptr)(i,j,k) == 0 ? 0.0 : (*ind_ptr)(i,j,k) / ind2(i,j,k);
-            });
+            if ( op_iter->second.sum_into_dep ){
+              Uintah::parallel_for(range, [&](int i, int j, int k){
+                (*dep_ptr)(i,j,k) = (*ind_ptr)(i,j,k) == 0 ? 0.0 : (*dep_ptr)(i,j,k) + (*ind_ptr)(i,j,k) / ind2(i,j,k);
+              });
+            } else {
+              Uintah::parallel_for(range, [&](int i, int j, int k){
+                (*dep_ptr)(i,j,k) = (*ind_ptr)(i,j,k) == 0 ? 0.0 : (*ind_ptr)(i,j,k) / ind2(i,j,k);
+              });
+            }
             break;
           case POW:
-            Uintah::parallel_for(range, [&](int i, int j, int k){
-              (*dep_ptr)(i,j,k) = std::pow((*ind_ptr)(i,j,k), ind2(i,j,k));
-            });
+            if ( op_iter->second.sum_into_dep ){
+              Uintah::parallel_for(range, [&](int i, int j, int k){
+                (*dep_ptr)(i,j,k) = (*dep_ptr)(i,j,k) + std::pow((*ind_ptr)(i,j,k), ind2(i,j,k));
+              });
+            } else {
+              Uintah::parallel_for(range, [&](int i, int j, int k){
+                (*dep_ptr)(i,j,k) = std::pow((*ind_ptr)(i,j,k), ind2(i,j,k));
+              });
+            }
             break;
           default:
             throw InvalidValue("Error: TaskAlgebra not supported.",__FILE__,__LINE__);

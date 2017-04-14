@@ -354,49 +354,59 @@ ProblemSpecP PropertyModelFactoryV2::create_taskAlegebra_spec( ProblemSpecP db_m
   temp_model_db->setAttribute("type", "task_math");
   temp_model_db->setAttribute("label", name);
 
-  std::vector<std::string> vec_r_eff;
+  std::vector<std::string> dx_vec;
+  std::vector<std::string> k_vec;
+
   for ( ProblemSpecP db_layer = db_model->findBlock("layer"); db_layer != nullptr;
         db_layer =db_layer->findNextBlock("layer") ){
 
-    std::string r_eff_label;
-    db_layer->getAttribute("R_eff", r_eff_label);
-    vec_r_eff.push_back( r_eff_label );
+    std::string dx;
+    std::string k;
+    db_layer->getAttribute("dx", dx);
+    db_layer->getAttribute("k", k);
+
+    dx_vec.push_back(dx);
+    k_vec.push_back(k);
 
   }
 
-  const int N = vec_r_eff.size();
+  const int N = dx_vec.size();
+
   if ( N > 1 ){
-    for ( int i = 1; i < N; i++ ){
+
+    for ( int i = 0; i < N; i++ ){
+
       ProblemSpecP db_op = temp_model_db->appendChild("op");
       std::stringstream string_i;
       string_i << i;
-      std::stringstream string_im1;
-      string_im1 << i-1;
 
-      db_op->setAttribute("type","ADD");
-      db_op->setAttribute("label","op_"+string_im1.str());
+      db_op->setAttribute("type","DIVIDE");
+      db_op->setAttribute("label","op_"+string_i.str());
 
-      if ( i == N-1 ){
-        db_op->appendElement("dep", name);
-        db_op->appendChild("new_variable");
-      } else {
-        db_op->appendElement("dep","sum_"+string_i.str());
-        db_op->appendChild("temp_variable");
-      }
+      db_op->appendElement("dep","temporary_variable");
+      db_op->appendChild("dep_is_temp");
+      db_op->appendChild("sum_into_dep");
 
-      if ( i == 1 ){
-        db_op->appendElement("ind1", vec_r_eff[i-1]);
-        db_op->appendElement("ind2", vec_r_eff[i]);
-      } else {
-        string_i << i-1;
-        db_op->appendElement("ind1", "sum_"+string_im1.str());
-        db_op->findBlock("ind1")->setAttribute("use_temp_variable","true");
-        db_op->appendElement("ind2", vec_r_eff[i] );
-      }
+      db_op->appendElement("ind1", dx_vec[i]);
+      db_op->appendElement("ind2", k_vec[i]);
+
     }
 
+    //add temp into dw variable
+    ProblemSpecP db_op = temp_model_db->appendChild("op");
+    std::stringstream string_i;
+    string_i << N-1;
+
+    db_op->setAttribute("type","EQUALS");
+    db_op->setAttribute("label","final_op");
+    db_op->appendElement("dep", name);
+    db_op->appendElement("ind1", "temporary_variable" );
+    db_op->appendChild("new_variable");
+    db_op->appendChild("ind1_is_temp");
+
     ProblemSpecP exe_db = temp_model_db->appendChild("exe_order");
-    for ( int i = 0; i < N-1; i++ ){
+
+    for ( int i = 0; i < N; i++ ){
 
       std::stringstream istr;
       istr << i;
@@ -404,11 +414,16 @@ ProblemSpecP PropertyModelFactoryV2::create_taskAlegebra_spec( ProblemSpecP db_m
       op_db->setAttribute("label", "op_"+istr.str() );
     }
 
+    ProblemSpecP op_db = exe_db->appendChild("op");
+    op_db->setAttribute("label", "final_op");
+
   } else {
+
     throw ProblemSetupException("Error: You don\'t have enough operations for R_eff", __FILE__, __LINE__);
+
   }
 
-  //temp_model_db->output("inputFrag.xml");
+  temp_model_db->output("inputFrag.xml");
 
   return temp_model_db;
 
