@@ -754,7 +754,15 @@ DetailedTask::checkCudaStreamDoneForThisTask( unsigned int device_id ) const
     return false;
   } else { //other error
     printf("Waiting for 60\n");
-    Time::waitFor( (double)60 );
+
+    int sleepTime = 60;
+
+    struct timespec ts;
+    ts.tv_sec = (int) sleepTime;
+    ts.tv_nsec = (int)(1.e9 * (sleepTime - ts.tv_sec));
+
+    nanosleep(&ts, &ts);
+
     CUDA_RT_SAFE_CALL (retVal);
     return false;
   }
