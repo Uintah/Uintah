@@ -40,65 +40,71 @@
 
 using namespace Uintah;
 
-TurbulenceModel::TurbulenceModel(const ArchesLabel* label, 
+TurbulenceModel::TurbulenceModel(const ArchesLabel* label,
                                  const MPMArchesLabel* MAlb):
                                  d_lab(label), d_MAlab(MAlb)
 {
   d_filter = 0;
+  d_dissipationRateLabel = VarLabel::create(
+    "dissipationRate", CCVariable<double>::getTypeDescription() );
 }
 
 TurbulenceModel::~TurbulenceModel()
 {
   if (d_filter)
     delete d_filter;
+  VarLabel::destroy( d_dissipationRateLabel );
 }
 
-void 
+void
 TurbulenceModel::problemSetupCommon( const ProblemSpecP& params )
 {
 
-  ProblemSpecP db = params; 
-  ProblemSpecP db_turb; 
+  ProblemSpecP db = params;
+  ProblemSpecP db_turb;
 
-  d_filter_type = "moin98"; 
-  d_filter_width = 3; 
+  d_filter_type = "moin98";
+  d_filter_width = 3;
 
-  if ( db->findBlock("Turbulence") ){ 
-    db_turb = db->findBlock("Turbulence"); 
+  if ( db->findBlock("Turbulence") ){
+    db_turb = db->findBlock("Turbulence");
 
-    //setup the filter: 
-    d_use_old_filter = true; 
+    //setup the filter:
+    d_use_old_filter = true;
     if ( db_turb->findBlock("ignore_filter_bc") ) {
-      //Will not adjust filter weights for the presence of any BC. 
-      d_use_old_filter = false; 
-    } 
+      //Will not adjust filter weights for the presence of any BC.
+      d_use_old_filter = false;
+    }
 
-    if ( db_turb->findBlock("filter_type")){ 
+    if ( db_turb->findBlock("filter_type")){
       db_turb->getWithDefault("filter_type", d_filter_type, "moin98");
     }
 
-    if ( db_turb->findBlock("filter_width")){ 
+    if ( db_turb->findBlock("filter_width")){
       db_turb->getWithDefault("filter_width",d_filter_width,3);
     }
   }
 
-  d_filter = scinew Filter( d_use_old_filter, d_filter_type, d_filter_width ); 
+  d_filter = scinew Filter( d_use_old_filter, d_filter_type, d_filter_width );
 
 }
-void TurbulenceModel::sched_computeFilterVol( SchedulerP& sched, 
-                                              const LevelP& level, 
+void TurbulenceModel::sched_computeFilterVol( SchedulerP& sched,
+                                              const LevelP& level,
                                               const MaterialSet* matls )
 {
 
   Task* tsk = scinew Task( "TurbulenceModel::computeFilterVol",this, &TurbulenceModel::computeFilterVol);
-  tsk->computes( d_lab->d_filterVolumeLabel ); 
-  tsk->requires( Task::NewDW, d_lab->d_cellTypeLabel, Ghost::AroundCells, 1 ); 
- 
+  tsk->computes( d_lab->d_filterVolumeLabel );
+  tsk->requires( Task::NewDW, d_lab->d_cellTypeLabel, Ghost::AroundCells, 1 );
+  //hacking in the dissipation rate here under the assumption that we are
+  // recoding this turbulence models under the kokkos design
+  tsk->computes( d_dissipationRateLabel );
+
   sched->addTask(tsk, level->eachPatch(), matls);
 
 }
 
-void 
+void
 TurbulenceModel::computeFilterVol( const ProcessorGroup*,
                                    const PatchSubset* patches,
                                    const MaterialSubset*,
@@ -110,34 +116,38 @@ TurbulenceModel::computeFilterVol( const ProcessorGroup*,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
-    CCVariable<double>   filter_volume; 
-    constCCVariable<int> cell_type; 
+    CCVariable<double>   filter_volume;
+    CCVariable<double>   dissipation_rate;
+    constCCVariable<int> cell_type;
 
-    new_dw->get( cell_type, d_lab->d_cellTypeLabel, indx, patch, Ghost::AroundCells, 1 ); 
-    new_dw->allocateAndPut( filter_volume, d_lab->d_filterVolumeLabel, indx, patch ); 
+    new_dw->get( cell_type, d_lab->d_cellTypeLabel, indx, patch, Ghost::AroundCells, 1 );
+    new_dw->allocateAndPut( filter_volume, d_lab->d_filterVolumeLabel, indx, patch );
+    new_dw->allocateAndPut( dissipation_rate, d_dissipationRateLabel, indx, patch );
 
     filter_volume.initialize(0.0);
+    dissipation_rate.initialize(0.0);
 
     d_filter->computeFilterVolume( patch, cell_type, filter_volume );
 
   }
 }
 
-void TurbulenceModel::sched_carryForwardFilterVol( SchedulerP& sched, 
-                                                   const PatchSet* patches, 
+void TurbulenceModel::sched_carryForwardFilterVol( SchedulerP& sched,
+                                                   const PatchSet* patches,
                                                    const MaterialSet* matls )
 {
-  Task* tsk = scinew Task( "TurbulenceModel::carryForwardFilterVol", 
+  Task* tsk = scinew Task( "TurbulenceModel::carryForwardFilterVol",
       this, &TurbulenceModel::carryForwardFilterVol);
-  tsk->computes( d_lab->d_filterVolumeLabel ); 
+  tsk->computes( d_lab->d_filterVolumeLabel );
+  tsk->computes( d_dissipationRateLabel );
   tsk->requires( Task::OldDW, d_lab->d_filterVolumeLabel, Ghost::None, 0 );
- 
+
   sched->addTask(tsk, patches, matls);
 }
 
-void 
+void
 TurbulenceModel::carryForwardFilterVol( const ProcessorGroup*,
                                         const PatchSubset* patches,
                                         const MaterialSubset*,
@@ -149,16 +159,20 @@ TurbulenceModel::carryForwardFilterVol( const ProcessorGroup*,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
-    CCVariable<double>   filter_vol; 
-    constCCVariable<double> old_filter_vol; 
+    CCVariable<double>   filter_vol;
+    constCCVariable<double> old_filter_vol;
+    CCVariable<double> dissipation_rate;
 
-    new_dw->allocateAndPut( filter_vol, d_lab->d_filterVolumeLabel, indx, patch ); 
+    new_dw->allocateAndPut( filter_vol, d_lab->d_filterVolumeLabel, indx, patch );
+    new_dw->allocateAndPut( dissipation_rate, d_dissipationRateLabel, indx, patch );
     old_dw->get( old_filter_vol,  d_lab->d_filterVolumeLabel, indx, patch, Ghost::None, 0 );
 
-    filter_vol.copyData(old_filter_vol); 
+    filter_vol.copyData(old_filter_vol);
+    // The specific turbulence model will compute this.
+    // Just initializing it to zero for convenience.
+    dissipation_rate.initialize(0.0);
 
   }
 }
-

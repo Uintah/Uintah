@@ -1132,14 +1132,10 @@ ExplicitSolver::initialize( const LevelP     & level,
 
     sched_scalarInit( level, sched );
 
-    //property models
-    all_tasks.clear();
-    all_tasks = i_property_models_fac->second->retrieve_all_tasks();
-    for ( std::vector<std::string>::iterator iter =i_property_models_fac->second->m_task_init_order.begin(); iter !=i_property_models_fac->second->m_task_init_order.end() ; iter++){
-    all_tasks[*iter]->schedule_init(level, sched, matls, is_restart );
-    }
+    //property models v2
+    i_property_models_fac->second->schedule_initialization( level, sched, matls, false );
 
-    // Property model initialization
+    //(old) Property model initialization
     PropertyModelFactory& propFactory = PropertyModelFactory::self();
     PropertyModelFactory::PropMap& all_prop_models = propFactory.retrieve_all_property_models();
     for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin();

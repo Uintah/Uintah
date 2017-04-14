@@ -42,12 +42,6 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
 
   */
 
-  //Force the face velocity property model to be created:
-
-
-
-
-
   bool check_for_radiation=false;
   if ( db->findBlock("PropertyModelsV2")){
 
@@ -161,7 +155,9 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
     }
 
   }
-    //----Need to generate Property for Rad if present------//
+
+  // MOVE THESE TO THE MODEL SPECIFIC LOCATIONS AND USE ADD_TASK FUNCTION INSTEAD:
+  //----Need to generate Property for Rad if present------//
   if(check_for_radiation){
     if(db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns") != nullptr){
       if(db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources") != nullptr){
@@ -181,10 +177,8 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
         }
       }
     }
-}
-    //-------------------------------------------------------//
+  }
 
-  // going to look for a <VarID>. If not found, use the standary velocity names.
   m_vel_name = "face_velocities";
   TaskInterface::TaskBuilder* vel_tsk = scinew FaceVelocities::Builder( m_vel_name, 0 );
   register_task(m_vel_name, vel_tsk);
@@ -203,10 +197,10 @@ PropertyModelFactoryV2::build_all_tasks( ProblemSpecP& db )
 
 // Temporarily commenting out Derek's commits
 // To aid in a messy merge.
-//ProblemSpecP db_m=db;
-//if ( db->findBlock("PropertyModelsV2") != nullptr){
-//  db_m = db->findBlock("PropertyModelsV2");
-//}//
+ProblemSpecP db_m=db;
+if ( db->findBlock("PropertyModelsV2") != nullptr){
+  db_m = db->findBlock("PropertyModelsV2");
+}//
 //for (unsigned int ix=0; ix< m_task_init_order.size(); ix++){
 //  TaskInterface* tsk = retrieve_task(m_task_init_order[ix]); // builds task
 //  ProblemSpecP db_model = matchNametoSpec(db_m,m_task_init_order[ix]);
@@ -237,9 +231,29 @@ PropertyModelFactoryV2::build_all_tasks( ProblemSpecP& db )
       tsk->create_local_labels();
 
       //Assuming that everything here is independent:
-      _task_order.push_back(m_task_init_order[ix]);
+      _task_order.push_back(name);
 
     }
+  }
+
+  TaskInterface* tsk = retrieve_task("face_velocities");
+  tsk->problemSetup(db);
+  tsk->create_local_labels();
+
+  if ( db->findBlock("KMomentum")){
+    tsk = retrieve_task("u_from_rho_u");
+    tsk->problemSetup(db);
+    tsk->create_local_labels();
+  }
+
+  for ( auto i = m_task_init_order.begin(); i != m_task_init_order.end(); i++ ){
+    if( *i == "sumRadiation::abskt"){
+      TaskInterface* tsk = retrieve_task(*i);
+      tsk->problemSetup( db_m );
+      tsk->create_local_labels();
+    }
+  }
+
 }
 
 void
@@ -309,10 +323,9 @@ void PropertyModelFactoryV2::schedule_initialization( const LevelP& level,
                                                       const MaterialSet* matls,
                                                       bool doing_restart ){
 
-  for ( auto i = _task_order.begin(); i != _task_order.end(); i++ ){
+  for ( auto i = m_task_init_order.begin(); i != m_task_init_order.end(); i++ ){
     TaskInterface* tsk = retrieve_task( *i );
     tsk->schedule_init( level, sched, matls, doing_restart );
-
   }
 
 }

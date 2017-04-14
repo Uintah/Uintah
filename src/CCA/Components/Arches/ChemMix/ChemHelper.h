@@ -3,6 +3,7 @@
 
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Parallel/Parallel.h>
+#include <Core/Exceptions/InvalidValue.h>
 
 namespace Uintah {
 
@@ -23,6 +24,11 @@ namespace Uintah {
       }
 
       inline void add_lookup_species( std::string name, STATE state=NEW ) {
+
+        if ( name == "" ){
+          throw InvalidValue(
+            "Error: Passing an empty string for table lookup.", __FILE__, __LINE__ );
+        }
 
         if ( state == NEW ){
           model_req_species.push_back( name );

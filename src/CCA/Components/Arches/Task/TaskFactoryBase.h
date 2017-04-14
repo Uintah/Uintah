@@ -59,7 +59,6 @@ namespace Uintah{
     /** @brief Set the shared state **/
     void set_shared_state( SimulationStateP shared_state ){ _shared_state = shared_state; }
 
-    std::vector<std::string> m_task_init_order;    ///< Allows a factory to set an execution order for the tasks
     TaskMap   _tasks;             ///< Task map
     ATaskMap   _atomic_tasks;      ///< Atomic Task map
     TaskMap& retrieve_all_tasks(){ return _tasks; }
@@ -154,7 +153,7 @@ namespace Uintah{
     /** @brief Public interface for scheduling a set of tasks through the factory **/
     void schedule_task_group( const std::string group_name,
                               TaskInterface::TASK_TYPE type,
-                              const bool pack_tasks, 
+                              const bool pack_tasks,
                               const LevelP& level,
                               SchedulerP& sched,
                               const MaterialSet* matls,
@@ -200,6 +199,7 @@ namespace Uintah{
     SimulationStateP _shared_state;                ///< Uintah SharedState
     std::string _all_tasks_str;                    ///< Common name across all factories indicating _active_tasks
     std::string _factory_name;                     ///< Name of the factory
+    std::vector<std::string> m_task_init_order;    ///< Allows a factory to set an execution order for the tasks
 
     WBCHelper* m_bcHelper;
 

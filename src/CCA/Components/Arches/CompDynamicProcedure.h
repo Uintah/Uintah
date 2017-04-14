@@ -67,7 +67,7 @@ namespace Uintah {
 class PhysicalConstants;
 class BoundaryCondition;
 
-class CompDynamicProcedure: public TurbulenceModel {
+class CompDynamicProcedure : public TurbulenceModel {
 
 public:
 

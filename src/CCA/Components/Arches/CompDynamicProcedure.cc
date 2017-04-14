@@ -254,6 +254,9 @@ CompDynamicProcedure::sched_reComputeTurbSubmodel( SchedulerP& sched,
     tsk->modifies(d_lab->d_viscosityCTSLabel);
     tsk->modifies(d_lab->d_turbViscosLabel);
 
+    // modifies
+    tsk->modifies(d_dissipationRateLabel);
+
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
       tsk->computes(d_lab->d_CsLabel);
     }
@@ -962,6 +965,7 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     constCCVariable<double> vol_fraction;
     CCVariable<double> viscosity;
     CCVariable<double> turbViscosity;
+    CCVariable<double> dissipation_rate;
     constCCVariable<double> filterVolume;
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
       new_dw->allocateAndPut(Cs, d_lab->d_CsLabel, indx, patch);
@@ -978,6 +982,7 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     Ghost::GhostType  gac = Ghost::AroundCells;
 
     new_dw->get(IsI, d_lab->d_strainMagnitudeLabel,   indx, patch,   gn, 0);
+    new_dw->getModifiable( dissipation_rate, d_dissipationRateLabel, indx, patch );
     new_dw->get(MLI, d_lab->d_strainMagnitudeMLLabel, indx, patch, gac, 1);
     new_dw->get(MMI, d_lab->d_strainMagnitudeMMLabel, indx, patch, gac, 1);
     new_dw->get(filterVolume, d_lab->d_filterVolumeLabel, indx, patch, gn, 0);
@@ -1032,6 +1037,9 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
         Cs[c] = Min(tempCs[c],10.0);
         viscosity[c] =  ( Cs[c] * filter2 * IsI[c] * den[c] + viscos ) * vol_fraction[c];
         turbViscosity[c] = viscosity[c] - viscos;
+        //estimate the dissipation rate
+        // see: git@bitbucket.org:jthornock/stokes_les_analysis.git
+        dissipation_rate[c] = std::sqrt(IsI[c])/(2.*den[c])*turbViscosity[c];
 
       }
 
