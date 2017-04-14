@@ -129,7 +129,7 @@ void fvSootFromYsoot::computeProp(const ProcessorGroup* pc,
 
       old_dw->get( temperature, _T_label,   matlIndex, patch, gn, 0 );
       old_dw->get( density,     _den_label, matlIndex, patch, gn, 0 );
-      old_dw->get( Ysoot,       _den_label, matlIndex, patch, gn, 0 );
+      old_dw->get( Ysoot,       _Ys_label, matlIndex, patch, gn, 0 );
 
     }
 
