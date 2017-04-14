@@ -354,6 +354,7 @@
           <calculator type="hottel_sarofim">
             <opl>3.0</opl>
           </calculator>
+        </model>
         <model type="constant_property" label="a_single_constant_model">
           <grid type="CC"/>
           <value>1.2345</value>
