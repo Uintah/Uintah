@@ -48,6 +48,8 @@
     <save label="total_mass_flux_squared_sum_x"/>
     <save label="total_mass_flux_squared_sum_y"/>
     <save label="total_mass_flux_squared_sum_z"/>
+    <save label="a_single_constant_model"/>
+    <save label="geom_constant_model"/>
     <checkpoint cycle="2" interval="0.001"/>
     <compression>gzip</compression>
   </DataArchiver>
@@ -352,6 +354,49 @@
           <calculator type="hottel_sarofim">
             <opl>3.0</opl>
           </calculator>
+        <model type="constant_property" label="a_single_constant_model">
+          <grid type="CC"/>
+          <value>1.2345</value>
+        </model>
+        <model type="constant_property" label="geom_constant_model">
+          <grid type="CC"/>
+          <regions>
+            <region>
+              <value>3.1416</value>
+              <geom_object>
+                <cylinder label="big cylinder">
+                  <bottom>[ 0.,     1.5, 1.5]</bottom>
+                  <top>   [ 0.1,    1.5, 1.5]</top>
+                  <radius>1.5</radius>
+                </cylinder>
+              </geom_object>
+            </region>
+            <region>
+              <value>3.1416</value>
+              <geom_object>
+                <difference>
+                  <box label="everything else">
+                    <min>[0,0,0]</min>
+                    <max>[3,3,3]</max>
+                  </box>
+                  <box label="a box">
+                    <min>[.5,.5,.5]</min>
+                    <max>[1.5,1.5,1.5]</max>
+                  </box>
+                </difference>
+              </geom_object>
+            </region>
+            <region>
+              <value>1.11111</value>
+              <inverted/>
+              <geom_object>
+                <difference>
+                  <box label="everything else"/>
+                  <box label="a box"/>
+                </difference>
+              </geom_object>
+            </region>
+          </regions>
         </model>
       </PropertyModelsV2>
       <BoundaryConditions>

@@ -130,9 +130,18 @@
                 Just create a variable with a constant value
                 Must specify a grid type (CC,FX,FY,FZ)
                 Specify the value of the constant which is held across the entire simulation.
+                One can use geom_objs to specificy only specific regions with specific values.
           -->
-          <value                        spec="REQUIRED DOUBLE"
-                                        need_applies_to="type constant_property"/>
+          <value                        spec="OPTIONAL DOUBLE"
+                                        need_applies_to="type constant_property"/> <!-- constant value everywhere -->
+          <regions                      spec="OPTIONAL NO_DATA"
+                                        need_applies_to="type constant_property">
+            <region                     spec="MULTIPLE NO_DATA">
+              <value                    spec="REQUIRED DOUBLE"/>
+              <inverted                 spec="OPTIONAL NO_DATA"/><!-- if present, then the space NOT occupied by the geometry is set with the constant -->
+              <geom_object/>
+            </region>
+          </regions> <!-- use regions to specify constant with geometric constraints -->
 
           <!-- Wall heat flux variable:
                 This model produces a few variables, all stored in the first wall/intrusion cell exposed to the gas

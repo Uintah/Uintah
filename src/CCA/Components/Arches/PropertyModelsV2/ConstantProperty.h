@@ -3,6 +3,8 @@
 
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 #include <CCA/Components/Arches/GridTools.h>
+#include <Core/GeometryPiece/GeometryPiece.h>
+#include <Core/GeometryPiece/GeometryPieceFactory.h>
 
 namespace Uintah{
 
@@ -66,52 +68,138 @@ private:
     typedef std::vector<ArchesFieldContainer::VariableInformation> AVarInfo;
 
     double m_constant;
+    bool m_has_regions;
+
+    struct ConstantGeomContainer{
+      double constant;
+      bool inverted;
+      std::vector<GeometryPieceP> geometry;
+    };
+
+    std::vector<ConstantGeomContainer> m_region_info;
 
   };
 
-  //---------------------------------------------------------------------------------------
-  //Function definitions:
+  //------------------------------------------------------------------------------------------------
   template <typename T>
   ConstantProperty<T>::ConstantProperty( std::string task_name, int matl_index ) :
   TaskInterface( task_name, matl_index ){
   }
 
+  //------------------------------------------------------------------------------------------------
   template <typename T>
   ConstantProperty<T>::~ConstantProperty(){}
 
+  //------------------------------------------------------------------------------------------------
   template <typename T>
   void ConstantProperty<T>::problemSetup( ProblemSpecP& db ){
 
-    db->require("value", m_constant );
+
+    if ( db->findBlock("regions") ){
+
+      ProblemSpecP db_regions = db->findBlock("regions");
+
+      //geometrically bound constants
+      m_has_regions = true;
+
+      for ( ProblemSpecP db_r = db_regions->findBlock("region"); db_r != nullptr;
+            db_r = db_r->findNextBlock("region") ){
+
+        ConstantGeomContainer region_info;
+
+        if ( db_r->findBlock("inverted")){
+          region_info.inverted = true;
+        } else {
+          region_info.inverted = false;
+        }
+
+        ProblemSpecP db_geom = db_r->findBlock("geom_object");
+        GeometryPieceFactory::create( db_geom, region_info.geometry );
+        db_r->require("value", region_info.constant);
+        m_region_info.push_back( region_info );
+
+      }
+
+    } else {
+
+      //just one global constant
+      m_has_regions = false;
+
+      db->require("value", m_constant );
+
+    }
 
   }
 
+  //------------------------------------------------------------------------------------------------
   template <typename T>
   void ConstantProperty<T>::register_initialize( AVarInfo& variable_registry ){
     register_variable( _task_name, ArchesFieldContainer::COMPUTES, variable_registry );
   }
 
+  //------------------------------------------------------------------------------------------------
   template <typename T>
-  void ConstantProperty<T>::initialize( const Patch*, ArchesTaskInfoManager* tsk_info ){
+  void ConstantProperty<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-    T& property = *(tsk_info->get_uintah_field<T>( _task_name ));
+    T& property = tsk_info->get_uintah_field_add<T>( _task_name );
+    property.initialize(0.0);
 
-    property.initialize(m_constant);
+    if ( m_has_regions ){
+
+      for ( auto region_iter = m_region_info.begin(); region_iter != m_region_info.end();
+            region_iter++){
+
+        Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+        Uintah::parallel_for( range, [&](int i, int j, int k){
+
+          //not worried about efficiency since this is only at startup:
+          Point p = patch->cellPosition(IntVector(i,j,k));
+
+
+          for ( auto geom_iter = region_iter->geometry.begin();
+                geom_iter != region_iter->geometry.end(); geom_iter++ ){
+
+            GeometryPieceP geom = *geom_iter;
+
+            if ( !region_iter->inverted ){
+              if ( geom->inside(p) ){
+                property(i,j,k) = region_iter->constant;
+              }
+            } else {
+              if ( !geom->inside(p) ){
+                property(i,j,k) = region_iter->constant;
+              }
+            }
+          }
+
+        });
+
+      }
+
+    } else {
+
+      property.initialize(m_constant);
+
+    }
 
   }
 
+
+  //------------------------------------------------------------------------------------------------
   template <typename T>
   void ConstantProperty<T>::register_timestep_init( AVarInfo& variable_registry ){
     register_variable( _task_name, ArchesFieldContainer::COMPUTES, variable_registry );
-    register_variable( _task_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
+    register_variable( _task_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW,
+                      variable_registry );
   }
 
+  //------------------------------------------------------------------------------------------------
   template <typename T>
   void ConstantProperty<T>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
-    T& property = *(tsk_info->get_uintah_field<T>( _task_name ));
-    CT& old_property = *(tsk_info->get_const_uintah_field<CT>( _task_name ));
+    T& property = tsk_info->get_uintah_field_add<T>( _task_name );
+    CT& old_property = tsk_info->get_const_uintah_field_add<CT>( _task_name );
 
     property.copyData(old_property);
 
