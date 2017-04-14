@@ -515,7 +515,6 @@ UnifiedScheduler::runTask( DetailedTask*         task
 
     task->doit(d_myworld, m_dws, plain_old_dws, event);
 
-
     if (m_tracking_vars_print_location & SchedulerCommon::PRINT_AFTER_EXEC) {
       printTrackedVars(task, SchedulerCommon::PRINT_AFTER_EXEC);
     }
@@ -600,7 +599,7 @@ UnifiedScheduler::runTask( DetailedTask*         task
     task->done(m_dws);  // should this be timed with taskstart? - BJW
 
     // -------------------------< begin MPI test timing >-------------------------
-    timer.start();
+    timer.reset( true );
 
     if (Uintah::Parallel::usingMPI()) {
       //---------------------------------------------------------------------------
@@ -618,6 +617,7 @@ UnifiedScheduler::runTask( DetailedTask*         task
       //-----------------------------------
     }
 
+    timer.stop();
     mpi_info_[TotalTestMPI] += timer().seconds();
     
     // -------------------------< end MPI test timing >-------------------------
@@ -801,7 +801,7 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
 
   m_timer.stop();
   double totalexec = m_timer().seconds();
-  m_timer.start();
+  m_timer.reset( true );
 
   emitTime("Other execution time", totalexec - mpi_info_[TotalSend] - mpi_info_[TotalRecv] - mpi_info_[TotalTask] - mpi_info_[TotalReduce]);
 

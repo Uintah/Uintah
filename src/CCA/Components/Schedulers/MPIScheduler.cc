@@ -473,6 +473,7 @@ MPIScheduler::postMPISends( DetailedTask * dtask
     }
   }  // end for (DependencyBatch* batch = task->getComputes())
 
+  timer.stop();
   mpi_info_[TotalSend] += timer().seconds();
 
   size_t sends_size = m_sends.size();

@@ -377,7 +377,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
 
     m_timer.stop();
     double totalexec = m_timer().seconds();
-    m_timer.start();
+    m_timer.reset( true );
 
     emitTime("Other execution time", totalexec - mpi_info_[TotalSend] - mpi_info_[TotalRecv] - mpi_info_[TotalTask] - mpi_info_[TotalReduce]);
   }
