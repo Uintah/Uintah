@@ -1059,6 +1059,10 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
         Cs[c] = Min(value,10.0);
         viscosity[c] =  ( Cs[c] * filter2 * IsI[c] * den[c] + viscos ) * vol_fraction[c];
         turbViscosity[c] = viscosity[c] - viscos;
+        
+        //estimate the dissipation rate
+        // see: git@bitbucket.org:jthornock/stokes_les_analysis.git
+        dissipation_rate[c] = std::sqrt(IsI[c])/(2.*den[c])*turbViscosity[c];
 
       }
     }
