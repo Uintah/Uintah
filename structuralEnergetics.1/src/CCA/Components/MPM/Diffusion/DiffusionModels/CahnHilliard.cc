@@ -53,7 +53,15 @@ namespace Uintah
                                                                     )
   {
     probSpec->require("gamma",d_gamma);
+    probSpec->require("a", d_a);
+    probSpec->require("b", d_b);
     probSpec->getWithDefault("random_scale",d_scalingFactor, 0.0);
+    d_b2 = d_b*d_b;
+    std::cout << "Cahn-Hilliard:\n\tPhase compositions - +/- " << std::sqrt(d_a)/d_b
+              << "\n\tInnate timescale - " << d_gamma/(d_a*d_a*d_b2*d_b2*d_D0)
+              << "\n\tInnate lengthscale - " << sqrt(d_gamma/d_a)/d_b
+              << "\n\t a: " << d_a << " b: " << d_b << " gamma: " << d_gamma << " D: " << d_D0
+              << std::endl;
   }
 
   CahnHilliardDiffusion::~CahnHilliardDiffusion()
@@ -93,9 +101,11 @@ namespace Uintah
     int interpPoints = interpolator->size();
 
     std::vector<IntVector>  nodeIndices(interpPoints);
+    std::vector<double>     S(interpPoints);
     std::vector<Vector>     dS(interpPoints);
 
     Vector    dx  = patch->dCell();
+    Vector  oodx  = dx.inverse();
     int       dwi = matl->getDWIndex();
 
     ParticleSubset* pset  = oldDW->getParticleSubset(dwi, patch);
@@ -113,7 +123,7 @@ namespace Uintah
     for (int pIdx = 0; pIdx < pset->numParticles(); ++pIdx)
     {
       // J = -D*grad(mu)
-      pFluxNew[pIdx] = -d_D0 * pGradChemPotential[pIdx];
+      pFluxNew[pIdx] =  d_D0 * pGradChemPotential[pIdx];
       maxFlux = std::max(maxFlux,pFluxNew[pIdx].maxComponentMag());
     }
 
@@ -265,6 +275,7 @@ namespace Uintah
     task->computes(d_lb->pChemicalPotentialGradientLabel, matlset);
   }
 
+
   void CahnHilliardDiffusion::calculateChemicalPotential(
                                                          const PatchSubset    * patches ,
                                                          const MPMMaterial    * matl    ,
@@ -309,7 +320,7 @@ namespace Uintah
 
       newDW->allocateTemporary(gridMassLocal, patch, Ghost::AroundNodes, NGN);
       newDW->allocateTemporary(gridMu,        patch, Ghost::AroundNodes, NGN);
-      gridMassLocal.initialize(0.0);
+      gridMassLocal.initialize(1e-200);
       gridMu.initialize(0.0);
 
       ParticleVariable<double> pMu;
@@ -327,7 +338,7 @@ namespace Uintah
         Vector gradC  = pConcGradient[pIdx];
 
         double mu_CHTerm = - d_gamma * (divConcentration(gradC, oodx, interpSize, nodeIndices, dS, patch));
-        double mu_total = C*(C*C-1.0) + mu_CHTerm;
+        double mu_total = d_b2*C*(d_b2*C*C-d_a) + mu_CHTerm;
         pMu[pIdx] = mu_total;
 
         // Interpolate mu onto grid
@@ -341,25 +352,29 @@ namespace Uintah
           }
         }
       }
+
       // Loop for ghost particles
-      for (int pIdx = 0; pIdx < pset_noghost->numParticles(); ++pIdx)
+      for (int pIdx = 0; pIdx < pset_ghost->numParticles(); ++pIdx)
       {
-        pInterp->findCellAndWeightsAndShapeDerivatives(pX[pIdx], nodeIndices, S, dS, pSize[pIdx], pDefGrad[pIdx]);
+        if (!(patch->containsPoint(pX[pIdx])))
+        {
+          pInterp->findCellAndWeightsAndShapeDerivatives(pX[pIdx], nodeIndices, S, dS, pSize[pIdx], pDefGrad[pIdx]);
 
-        double C      = pConcentration[pIdx];
-        Vector gradC  = pConcGradient[pIdx];
+          double C      = pConcentration[pIdx];
+          Vector gradC  = pConcGradient[pIdx];
 
-        double mu_CHTerm = d_gamma*(divConcentration(gradC, oodx, interpSize, nodeIndices, dS, patch));
-        double mu_total = C*(C*C-1.0) - mu_CHTerm;
+          double mu_CHTerm = - d_gamma * (divConcentration(gradC, oodx, interpSize, nodeIndices, dS, patch));
+          double mu_total = d_b2*C*(d_b2*C*C-d_a) + mu_CHTerm;
 
-        // Interpolate mu onto grid
-        IntVector node;
-        for (int pNode = 0; pNode < interpSize; ++pNode) {
-          node = nodeIndices[pNode];
-          if (patch->containsNode(node)) {
-            double massWeightedShape = pMass[pIdx] * S[pNode];
-            gridMu[node]        += (massWeightedShape * mu_total);
-            gridMassLocal[node] += massWeightedShape;
+          // Interpolate mu onto grid
+          IntVector node;
+          for (int pNode = 0; pNode < interpSize; ++pNode) {
+            node = nodeIndices[pNode];
+            if (patch->containsNode(node)) {
+              double massWeightedShape = pMass[pIdx] * S[pNode];
+              gridMu[node]        += (massWeightedShape * mu_total);
+              gridMassLocal[node] += massWeightedShape;
+            }
           }
         }
       }
@@ -368,25 +383,29 @@ namespace Uintah
       NodeIterator nodeIt = patch->getExtraNodeIterator(NGN);
       for (nodeIt.begin(); !nodeIt.done(); ++nodeIt)
       {
-        gridMu[*nodeIt] /= gridMassLocal[*nodeIt];
+          double massNormedMu = gridMu[*nodeIt] / gridMassLocal[*nodeIt];
+          gridMu[*nodeIt] = massNormedMu;
+        //gridMu[*nodeIt] /= gridMassLocal[*nodeIt];
       }
 
       // Form gradMu
       ParticleVariable<Vector> pGradMu;
       newDW->allocateAndPut(pGradMu, d_lb->pChemicalPotentialGradientLabel, pset_noghost);
 
-      for (int pIdx = 0; pIdx < pset_noghost->numParticles(); ++pIdx) {
+      int numNoGhost = pset_noghost->numParticles();
+      for (int pIdx = 0; pIdx < numNoGhost; ++pIdx) {
         pInterp->findCellAndWeightsAndShapeDerivatives(pX[pIdx], nodeIndices, S, dS, pSize[pIdx], pDefGrad[pIdx]);
 
-        pGradMu[pIdx] = Vector(0.0);
+        Vector gradMu(0.0);
         for (int pNode = 0; pNode < interpSize; ++pNode)
         {
           IntVector node = nodeIndices[pNode];
           if (patch->containsNode(node))
           {
-            pGradMu[pIdx] += dS[pNode]*oodx*gridMu[node];
+            gradMu += dS[pNode]*oodx*gridMu[node];
           }
         }
+        pGradMu[pIdx] = gradMu;
       }
     }
   }
