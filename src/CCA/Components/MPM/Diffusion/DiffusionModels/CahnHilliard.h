@@ -133,6 +133,9 @@ namespace Uintah
                              ) const;
 
       double d_gamma;
+      double d_a;
+      double d_b;
+      double d_b2;
       double d_scalingFactor;
   };
 }

@@ -695,6 +695,7 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
 
   if(flags->d_doScalarDiffusion)
   {
+    // Need concentration and chemical potential gradients for compute flux.
     scheduleComputeFlux(                  sched, patches, matls);
     scheduleComputeDivergence(            sched, patches, matls);
     scheduleDiffusionInterfaceDiv(        sched, patches, matls);
@@ -725,6 +726,8 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   if(flags->d_refineParticles){
     scheduleAddParticles(                     sched, patches, matls);
   }
+  // Can calculate chemical potential from new concentrations here, but what about conc grad?
+
 
   if(d_analysisModules.size() != 0){
     vector<AnalysisModule*>::iterator iter;

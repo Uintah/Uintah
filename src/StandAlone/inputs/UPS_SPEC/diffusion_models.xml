@@ -15,7 +15,9 @@
     <BoltzmannConstant          spec="REQUIRED DOUBLE" need_applies_to="type bazant, non_linear2" />
     
     <!--  Variables specific to the Cahn-Hilliard test model -->
-    <gamma                      spec="REQUIRED DOUBLE 'positive' " need_applies_to="type cahn-hilliard" />
+    <gamma                      spec="REQUIRED DOUBLE " need_applies_to="type cahn-hilliard" />
+    <a                          spec="REQUIRED DOUBLE 'positive' " need_applies_to="type cahn-hilliard" />
+    <b                          spec="REQUIRED DOUBLE 'positive' " need_applies_to="type cahn-hilliard" />
     <random_scale               spec="OPTIONAL DOUBLE 'positive' " need_applies_to="type cahn-hilliard" />
     
     <!-- Variables specific to the Bazant model (for now) -->
