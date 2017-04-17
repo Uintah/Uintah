@@ -58,8 +58,8 @@ if [ "$OS" = "Linux" ]; then
       --enable-64bit \\
       --enable-scinew-line-numbers \\"
 
-    ENV="       CC=gcc-4.8 \\
-       CXX=g++-4.8 \\
+    ENV="       CC=mpicc \\
+       CXX=mpic++ \\
        F77=gfortran-4.8"
        
     MODIFY_SRC="true"
