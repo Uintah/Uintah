@@ -31,6 +31,7 @@ using namespace Uintah;
 
 SDInterfaceModel::SDInterfaceModel(ProblemSpecP& ps, SimulationStateP& sS,
                                    MPMFlags* Mflag, MPMLabel* mpm_lb)
+                                  : d_materials_list(ps)
 {
   d_mpm_lb = mpm_lb;
   d_shared_state = sS;

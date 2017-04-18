@@ -228,21 +228,22 @@ namespace Uintah
                                                 bool            output_rdm_tag
                                                ) const
   {
+    if (!output_rdm_tag) return;  // If for some reason we don't want to output, return
     ProblemSpecP rdm_ps = probSpec;
-    // JBH -- FIXME TODO Clean this stuff up and put it in a function call for the base class
-    if (output_rdm_tag)
-    {
-      rdm_ps = probSpec->appendChild("diffusion_model");
-      rdm_ps->setAttribute("type","cahn-hilliard");
-    }
-    rdm_ps->appendElement("diffusivity",d_D0);
-    rdm_ps->appendElement("max_concentration",d_MaxConcentration);
-    rdm_ps->appendElement("min_concentration",d_MinConcentration);
-    rdm_ps->appendElement("conc_tolerance", d_concTolerance);
-    rdm_ps->appendElement("initial_concentration", d_InitialConcentration);
+    rdm_ps = probSpec->appendChild("diffusion_model");
+    rdm_ps->setAttribute("type","cahn-hilliard");
+    // Output elements common to all diffusion models.
+    baseOutputSDMProbSpec(probSpec, output_rdm_tag);
+//    rdm_ps->appendElement("diffusivity",d_D0);
+//    rdm_ps->appendElement("max_concentration",d_MaxConcentration);
+//    rdm_ps->appendElement("min_concentration",d_MinConcentration);
+//    rdm_ps->appendElement("conc_tolerance", d_concTolerance);
+//    rdm_ps->appendElement("initial_concentration", d_InitialConcentration);
 
-    // Model specific elements
+    // Output elements specific to just this diffusion model
     rdm_ps->appendElement("gamma",d_gamma);
+    rdm_ps->appendElement("a", d_a);
+    rdm_ps->appendElement("b", d_b);
     rdm_ps->appendElement("random_scale",d_scalingFactor);
   }
 

@@ -481,3 +481,18 @@ void ScalarDiffusionModel::baseInitializeSDMData(
     }
 
 }
+
+
+void ScalarDiffusionModel::baseOutputSDMProbSpec(
+                                                 ProblemSpecP & probSpec  ,
+                                                 bool           /* do_output */
+                                                ) const
+{
+  probSpec->appendElement("diffusivity",d_D0);
+  probSpec->appendElement("max_concentration",d_MaxConcentration);
+  probSpec->appendElement("min_concentration",d_MinConcentration);
+  probSpec->appendElement("conc_tolerance", d_concTolerance);
+  probSpec->appendElement("initial_concentration", d_InitialConcentration);
+
+  return;
+}

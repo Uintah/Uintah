@@ -39,10 +39,10 @@ DiscreteSDInterface::DiscreteSDInterface(
                                          MPMLabel         * mpmLabel
                                         )
                                         : SDInterfaceModel(probSpec, simState,
-                                                           mFlags, mpmLabel),
-                                          d_materials_list(probSpec)
+                                                           mFlags, mpmLabel)
 
 {
+
 
   gSurfaceNormalDiffusion = VarLabel::create("g.surfnormdiffusion", NCVariable<Vector>::getTypeDescription() );
   gPositionDiffusion      = VarLabel::create("g.positiondiffusion", NCVariable<Vector>::getTypeDescription() );
