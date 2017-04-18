@@ -28,6 +28,7 @@
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/SchedulerP.h>
 #include <CCA/Components/MPM/MPMFlags.h>
+#include <CCA/Components/MPM/Contact/ContactMaterialSpec.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/SimulationState.h>
@@ -71,6 +72,7 @@ namespace Uintah {
 
     MPMLabel* d_mpm_lb;
     SimulationStateP d_shared_state;
+    ContactMaterialSpec d_materials_list;
     MPMFlags* d_mpm_flags;
     SDInterfaceModel(const SDInterfaceModel&);
     SDInterfaceModel& operator=(const SDInterfaceModel&);

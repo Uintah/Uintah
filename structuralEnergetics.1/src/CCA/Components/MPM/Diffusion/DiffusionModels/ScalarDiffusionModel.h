@@ -189,6 +189,11 @@ namespace Uintah {
                                      DataWarehouse  * new_dw
                               );
 
+    void baseOutputSDMProbSpec(
+                               ProblemSpecP & ps,
+                               bool         output_rdm_tag = true
+                              ) const;
+
     MPMLabel* d_lb;
     MPMFlags* d_Mflag;
     SimulationStateP d_sharedState;

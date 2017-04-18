@@ -31,7 +31,6 @@
 #ifndef SRC_CCA_COMPONENTS_MPM_DIFFUSION_DIFFUSIONINTERFACES_DISCRETEINTERFACE_H_
 #define SRC_CCA_COMPONENTS_MPM_DIFFUSION_DIFFUSIONINTERFACES_DISCRETEINTERFACE_H_
 
-#include <CCA/Components/MPM/Contact/ContactMaterialSpec.h>
 #include <CCA/Components/MPM/Diffusion/DiffusionInterfaces/SDInterfaceModel.h>
 #include <CCA/Components/MPM/Diffusion/DiffusionModels/AlNi_Diffusivity.h>
 #include <CCA/Components/MPM/MPMBoundCond.h>
@@ -99,7 +98,6 @@ namespace Uintah
       VarLabel* gSurfaceNormalDiffusion;
       VarLabel* gPositionDiffusion;
 
-      ContactMaterialSpec d_materials_list;
       DiscreteSDInterface(const DiscreteSDInterface &);
       DiscreteSDInterface&  operator=(const DiscreteSDInterface&);
 
