@@ -52,7 +52,6 @@
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
-#include <time.h>
 #include <unistd.h>
 //======================================================
 

@@ -29,7 +29,7 @@
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Math/MersenneTwister.h>
-#include <time.h>
+
 #include <fstream>
 
 #include <include/sci_defs/uintah_testdefs.h.in>

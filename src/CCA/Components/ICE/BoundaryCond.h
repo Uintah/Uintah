@@ -43,7 +43,6 @@
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Containers/StaticArray.h>
-#include <time.h>
 
 
 static Uintah::DebugStream BC_dbg(  "ICE_BC_DBG", false);

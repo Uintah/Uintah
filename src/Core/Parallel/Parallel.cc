@@ -34,12 +34,6 @@
 #include <sstream>
 #include <thread>
 
-#include <sys/time.h>
-
-#ifdef __linux
-  #include <time.h>
-#endif
-
 using namespace Uintah;
 
 
