@@ -67,7 +67,6 @@
 #include <cmath>
 #include <cstring>
 
-#include <time.h>
 #include <sys/param.h>
 #include <strings.h>
 #include <unistd.h>
