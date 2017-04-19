@@ -1072,7 +1072,7 @@ DataArchiver::beginOutputTimestep( double time,
     }
     Uintah::MPI::Bcast( &tmp_time, 1, MPI_INT, 0, d_myworld->getComm() );
 
-    if( tmp_time >= d_checkpointWalltimeInterval )
+    if( tmp_time >= d_nextCheckpointWalltime )
       d_isCheckpointTimestep = true;	
   }
   
