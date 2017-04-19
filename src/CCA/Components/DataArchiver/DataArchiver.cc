@@ -1071,7 +1071,7 @@ DataArchiver::beginOutputTimestep( double time,
     if( Parallel::getMPIRank() == 0 ) {
       tmp_time = (int) d_sharedState->getElapsedWallTime();
     }
-    Uintah::MPI::Bcast( &time, 1, MPI_INT, 0, d_myworld->getComm() );
+    Uintah::MPI::Bcast( &tmp_time, 1, MPI_INT, 0, d_myworld->getComm() );
 
     if( tmp_time >= d_checkpointWalltimeInterval )
       d_isCheckpointTimestep = true;	
