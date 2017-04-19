@@ -24,6 +24,7 @@
 
 #include <CCA/Components/ICE/CustomBCs/inletVelocity.h>
 #include <CCA/Components/ICE/ICEMaterial.h>
+#include <Core/Math/MersenneTwister.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Variables/CellIterator.h>
