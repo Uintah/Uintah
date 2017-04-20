@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2017 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -844,7 +844,7 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
                       //radiationFlux_old[2] , radiationFlux_old[3],
                       //radiationFlux_old[4] , radiationFlux_old[5],scatIntensitySource); //  this term needed for scattering
 
-     // new (2-2016) construction of A-matrix and b-matrix
+     // new (2-2017) construction of A-matrix and b-matrix
       computeAMatrix  doMakeMatrixA( omu[direcn], oeta[direcn], oxi[direcn],
                                      areaEW, areaNS, areaTB, volume, ffield,
                                      constvars->cellType,
