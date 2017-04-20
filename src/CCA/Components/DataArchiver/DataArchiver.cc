@@ -1239,7 +1239,9 @@ DataArchiver::findNext_OutputCheckPoint_Timestep( double /* delt */, const GridP
     // Output based on the time step.
     else if( d_outputTimestepInterval > 0 ) {
       if( timestep >= d_nextOutputTimestep )  {
-        d_nextOutputTimestep += d_outputTimestepInterval;
+        d_nextOutputTimestep +=
+	  ( (timestep-d_nextOutputTimestep) / d_outputTimestepInterval ) *
+	  d_outputTimestepInterval + d_outputTimestepInterval;
       }
     }
   }
@@ -1257,7 +1259,10 @@ DataArchiver::findNext_OutputCheckPoint_Timestep( double /* delt */, const GridP
     // Checkpoint based on the time step.
     else if( d_checkpointTimestepInterval > 0 ) {
       if( timestep >= d_nextCheckpointTimestep ) {
-        d_nextCheckpointTimestep += d_checkpointTimestepInterval;
+        d_nextCheckpointTimestep +=
+	  ( (timestep - d_nextCheckpointTimestep) /
+	    d_checkpointTimestepInterval ) *
+	  d_checkpointTimestepInterval + d_checkpointTimestepInterval;
       }
     }
 
