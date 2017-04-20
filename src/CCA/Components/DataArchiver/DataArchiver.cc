@@ -350,11 +350,11 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
   d_nextCheckpointTime     = d_checkpointInterval; 
   d_nextCheckpointTimestep = d_checkpointTimestepInterval+1;
 
+  // When using the wall clock time for checkpoints, rank 0 determines
+  // the wall time and sends it to all other ranks.
   if ( d_checkpointWalltimeInterval > 0 ) {
-    d_nextCheckpointWalltime = d_checkpointWalltimeStart + d_checkpointWalltimeInterval;
+    d_nextCheckpointWalltime = d_checkpointWalltimeStart;
 
-    // Make sure we are all writing at same time.  When node clocks disagree,
-    // make decision based on Rank-0 time.
     Uintah::MPI::Bcast( &d_nextCheckpointWalltime, 1, MPI_INT, 0, d_myworld->getComm() );
   }
   
@@ -530,9 +530,11 @@ DataArchiver::restartSetup( Dir    & restartFromDir,
     }
   }
 
+  // When using the wall clock time for checkpoints, rank 0 determines
+  // the wall time and sends it to all other ranks.
   if( d_checkpointWalltimeInterval > 0 ) {
-    d_nextCheckpointWalltime =
-      d_checkpointWalltimeInterval + (int) d_sharedState->getElapsedWallTime();
+    d_nextCheckpointWalltime = 
+      d_sharedState->getElapsedWallTime() + d_checkpointWalltimeInterval;
 
     Uintah::MPI::Bcast( &d_nextCheckpointWalltime, 1, MPI_INT, 0, d_myworld->getComm() );
   }
@@ -1029,47 +1031,46 @@ DataArchiver::beginOutputTimestep( double time,
   int timestep = d_sharedState->getCurrentTopLevelTimeStep();
   dbg << "    beginOutputTimestep\n";
 
-  // do *not* update d_nextOutputTime or others here.  We need the original
-  // values to compare if there is a timestep restart.  See 
+  // Do *not* update the next values here as the original values are
+  // needed to compare with if there is a timestep restart.  See
   // reEvaluateOutputTimestep
 
-  // Check for a outputing a time step.
+  // Check for an output.
   d_isOutputTimestep =
-    // Output the timestep based on the simulation time.
+    // Output based on the simulation time.
     ( ((d_outputInterval != 0.0 && (delt != 0 || d_outputInitTimestep)) &&
        (time + delt >= d_nextOutputTime) ) ||
 			
-      // Output the timestep based on the timestep interval.
+      // Output based on the timestep interval.
       ((d_outputTimestepInterval != 0 && (delt != 0 || d_outputInitTimestep)) &&
-       (timestep >= d_nextOutputTimestep))  ||
+       (timestep >= d_nextOutputTimestep)) ||
 
-      // Output the timestep based on the being the last timestep.
+      // Output based on the being the last timestep.
       (d_outputLastTimestep && d_sharedState->maybeLast()) );
 
   // Create the output timestep directories
   if( d_isOutputTimestep && d_outputFileFormat != PIDX ) {
     makeTimestepDirs( d_dir, d_saveLabels, grid, &d_lastTimestepLocation );
   }
-    
-  // Check for a outputing a checkpoint.
+
+  
+  // Check for a checkpoint.
   d_isCheckpointTimestep =
-    // Output the checkpoint based on the simulation time.
+    // Checkpoint based on the simulation time.
     ( (d_checkpointInterval > 0.0 && (time + delt) >= d_nextCheckpointTime) ||
       
-      // Output the checkpoint based on the timestep interval.
+      // Checkpoint based on the timestep interval.
       (d_checkpointTimestepInterval > 0 && timestep >= d_nextCheckpointTimestep) ||
 
-      // Output the checkpoint based on the being the last timestep.
+      // Checkpoint based on the being the last timestep.
       (d_checkpointLastTimestep && d_sharedState->maybeLast()) );    
 
-  // When using the wall clock time for checkpoints, rank 0 determines
-  // the wall time and sends it to all other ranks.
+  // Checkpoint based on the being the wall time.
   if( d_checkpointWalltimeInterval > 0 ) {
-    int tmp_time = -1;
-    
-    if( Parallel::getMPIRank() == 0 ) {
-      tmp_time = (int) d_sharedState->getElapsedWallTime();
-    }
+
+    // When using the wall time for checkpoints, rank 0 determines the
+    // wall time and sends it to all other ranks.
+    int tmp_time = d_sharedState->getElapsedWallTime();
     Uintah::MPI::Bcast( &tmp_time, 1, MPI_INT, 0, d_myworld->getComm() );
 
     if( tmp_time >= d_nextCheckpointWalltime )
@@ -1082,7 +1083,7 @@ DataArchiver::beginOutputTimestep( double time,
     string timestepDir;
     makeTimestepDirs( d_checkpointsDir, d_checkpointLabels, grid, &timestepDir );
     
-    string iname = d_checkpointsDir.getName()+"/index.xml";
+    string iname = d_checkpointsDir.getName() + "/index.xml";
 
     ProblemSpecP index;
     
@@ -1211,62 +1212,77 @@ void
 DataArchiver::findNext_OutputCheckPoint_Timestep( double /* delt */, const GridP & /* grid */ )
 {
   dbg << "  findNext_OutputCheckPoint_Timestep() begin\n";
-  // double time = d_sharedState->getElapsedSimTime();
+
   int timestep = d_sharedState->getCurrentTopLevelTimeStep();
-  // if this was an output/checkpoint timestep,
-  // determine when the next one will be.
 
-  // don't do this in beginOutputTimestep because the timestep might restart
-  // and we need to have the output happen exactly when we need it.
+  // If this timestep was an output/checkpoint timestep, determine
+  // when the next one will be.
+
+  // Do *not* do this step in beginOutputTimestep because the original
+  // values are needed to compare with if there is a timestep restart.
+  // See reEvaluateOutputTimestep
+
+  // When outputing/checkpointing using the simulation or wall time
+  // check to see if the simulation or wall time went past more than
+  // one interval. If so adjust accordingly.  
+
   if( d_isOutputTimestep ) {
-    if( d_outputInterval > 0.0 ) {
-      // output timestep
 
+    // Output based on the simulaiton time.
+    if( d_outputInterval > 0.0 ) {
       if( d_tempElapsedTime >= d_nextOutputTime ) {
-        d_nextOutputTime += floor( ( d_tempElapsedTime - d_nextOutputTime ) / d_outputInterval ) * d_outputInterval+d_outputInterval;
+        d_nextOutputTime +=
+	  floor( (d_tempElapsedTime - d_nextOutputTime) / d_outputInterval ) *
+	  d_outputInterval + d_outputInterval;
       }
     }
+    // Output based on the time step.
     else if( d_outputTimestepInterval > 0 ) {
       if( timestep >= d_nextOutputTimestep )  {
-        d_nextOutputTimestep += ( ( timestep - d_nextOutputTimestep ) / d_outputTimestepInterval ) * d_outputTimestepInterval+d_outputTimestepInterval;
+        d_nextOutputTimestep += d_outputTimestepInterval;
       }
     }
   }
 
   if( d_isCheckpointTimestep ) {
+    // Checkpoint based on the simulaiton time.
     if( d_checkpointInterval > 0.0 ) {
       if( d_tempElapsedTime >= d_nextCheckpointTime ) {
-        d_nextCheckpointTime += floor( ( d_tempElapsedTime - d_nextCheckpointTime ) / d_checkpointInterval ) * d_checkpointInterval + d_checkpointInterval;
+        d_nextCheckpointTime +=
+	  floor( (d_tempElapsedTime - d_nextCheckpointTime) /
+		 d_checkpointInterval ) *
+	  d_checkpointInterval + d_checkpointInterval;
       }
     }
+    // Checkpoint based on the time step.
     else if( d_checkpointTimestepInterval > 0 ) {
       if( timestep >= d_nextCheckpointTimestep ) {
-        d_nextCheckpointTimestep += ( ( timestep - d_nextCheckpointTimestep ) / d_checkpointTimestepInterval ) * d_checkpointTimestepInterval + d_checkpointTimestepInterval;
+        d_nextCheckpointTimestep += d_checkpointTimestepInterval;
       }
     }
 
+    // Checkpoint based on the wall time.
     if( d_checkpointWalltimeInterval > 0 ) {
-      int currsecs = -1;
-      // If checkpointing based on wall clock time, then have process
-      // 0 determine the current time and share it will everyone else.
-      if( Parallel::getMPIRank() == 0 ) {
-        currsecs = (int) d_sharedState->getElapsedWallTime();
-      }
-      Uintah::MPI::Bcast( &currsecs, 1, MPI_INT, 0, d_myworld->getComm() );
 
-      if( currsecs >= d_nextCheckpointWalltime ) {
+      // When using the wall time for checkpoints, rank 0 determines
+      // the wall time and sends it to all other ranks.
+      int tmp_time = d_sharedState->getElapsedWallTime();
+      Uintah::MPI::Bcast( &tmp_time, 1, MPI_INT, 0, d_myworld->getComm() );
+
+      if( tmp_time >= d_nextCheckpointWalltime ) {
         d_nextCheckpointWalltime +=
-	  static_cast<int>( floor( ( currsecs - d_nextCheckpointWalltime ) /
-				   d_checkpointWalltimeInterval ) *
-			    d_checkpointWalltimeInterval +
-			    d_checkpointWalltimeInterval );
+	  floor( (tmp_time - d_nextCheckpointWalltime) /
+		 d_checkpointWalltimeInterval ) *
+	  d_checkpointWalltimeInterval + d_checkpointWalltimeInterval;
       }
     }
   }  
   
-  dbg << "    next outputTime:     " << d_nextOutputTime << " next outputTimestep: " << d_nextOutputTimestep << "\n";
-  dbg << "    next checkpointTime: " << d_nextCheckpointTime << " next checkpoint timestep: " << d_nextCheckpointTimestep << "\n";
-  dbg << "  end\n";
+  dbg << "    next outputTime: " << d_nextOutputTime 
+      << "  next outputTimestep: " << d_nextOutputTimestep << "\n"
+      << "    next checkpointTime: " << d_nextCheckpointTime 
+      << "  next checkpoint timestep: " << d_nextCheckpointTimestep << "\n"
+      << "  end\n";
 
 } // end findNext_OutputCheckPoint_Timestep()
 
