@@ -32,8 +32,11 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <CCA/Components/Arches/ChemMix/MixingRxnModel.h>
+#include <Core/Grid/SimulationState.h>
 
 namespace Uintah {
+
+class WBCHelper;
 
 class TableLookup {
 
@@ -73,11 +76,24 @@ public:
   // This is needed for the heat loss model in the current code
   TABLE_TYPE get_table_type(){ return m_table_type; }
 
+  void set_bcHelper( WBCHelper* helper ){ m_bcHelper = helper; }
+
 private:
+
+  void sched_setDependBCs( const LevelP& level,
+                           SchedulerP& sched,
+                           MixingRxnModel* model );
+
+  void setDependBCs( const ProcessorGroup* pc,
+                     const PatchSubset* patches,
+                     const MaterialSubset* matls,
+                     DataWarehouse* old_dw,
+                     DataWarehouse* new_dw, MixingRxnModel* model );
 
   std::map<std::string, MixingRxnModel*> m_tables;        ///< The lookup interface
   SimulationStateP& m_sharedState;                        ///< Simulation state
   TABLE_TYPE m_table_type;                                ///< Describes the table type
+  WBCHelper* m_bcHelper;                                  ////< Interface to BCs
 
 }; // end class ConstantProps
 

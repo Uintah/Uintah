@@ -150,7 +150,7 @@ WallModelDriver::problemSetup( const ProblemSpecP& input_db )
       _all_ht_models.push_back( coal_ht );
 
       _dep_vel_name = get_dep_vel_name( db_model );
-    
+
     } else {
 
       throw InvalidValue("Error: Wall Heat Transfer model not recognized.", __FILE__, __LINE__);
@@ -895,7 +895,7 @@ WallModelDriver::CoalRegionHT::problemSetup( const ProblemSpecP& input_db ){
   db->getWithDefault( "max_it", _max_it, 50 );
   db->getWithDefault( "initial_tol", _init_tol, 1e-3 );
   db->getWithDefault( "tol", _tol, 1e-5 );
-      
+
   int emissivity_model_type = get_emissivity_model_type( db );
   if (emissivity_model_type == 1){
     m_em_model = scinew constant_e();
@@ -904,7 +904,7 @@ WallModelDriver::CoalRegionHT::problemSetup( const ProblemSpecP& input_db ){
   } else {
     throw InvalidValue("ERROR: WallModelDriver: No emissivity model selected.",__FILE__,__LINE__);
   }
-  
+
   int thermal_cond_model_type = get_thermal_cond_model_type( db );
   if (thermal_cond_model_type == 1){
     m_tc_model = scinew constant_tc();
@@ -928,12 +928,12 @@ WallModelDriver::CoalRegionHT::problemSetup( const ProblemSpecP& input_db ){
     if (info.k_dep_en <= 0.0)
     {
       throw InvalidValue("ERROR: k_deposit_enamel must be greater than 0.0.",__FILE__,__LINE__);
-    }   
+    }
     r_db->getWithDefault("k_deposit", info.k_dep_sb,1.0);
     if (info.k_dep_sb <= 0.0)
     {
       throw InvalidValue("ERROR: k_deposit must be greater than 0.0.",__FILE__,__LINE__);
-    }   
+    }
     r_db->getWithDefault("enamel_deposit_thickness", info.dy_dep_en,0.0);
     r_db->getWithDefault("wall_emissivity", info.emissivity, 1.0);
     r_db->require("tube_side_T", info.T_inner);
@@ -972,7 +972,7 @@ WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars,
   //Pad for ghosts
   lowPindex -= IntVector(1,1,1);
   highPindex += IntVector(1,1,1);
-  
+
   for ( std::vector<WallInfo>::iterator region_iter = _regions.begin(); region_iter != _regions.end(); region_iter++ ){
 
     WallInfo wi = *region_iter;
@@ -1047,15 +1047,15 @@ WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars,
               Ti = (TW_new + wi.T_inner)/2.0;
               //Ti = 305;
               m_tc_model->model(k_sb,k_en,wi.k_dep_sb,wi.k_dep_en,Ti);
-              //std::cout << "Ti: " << Ti << " k_sb: " << k_sb << " k_en: " << k_en << std::endl; 
+              //std::cout << "Ti: " << Ti << " k_sb: " << k_sb << " k_en: " << k_en << std::endl;
               Emiss=vars.emissivity_old[c]; // We are using the old emissivity for the calculation of the deposition regime
                                             // and the new temperature. We then update the emissivity using the new temperature.
-                                            // This effectivly time-lags the emissivity by one radiation-solve. We chose to do this 
-                                            // because we didn't want to make the temperature solve more expensive. 
+                                            // This effectivly time-lags the emissivity by one radiation-solve. We chose to do this
+                                            // because we didn't want to make the temperature solve more expensive.
               R_wall = wi.dy / wi.k;
               R_en = wi.dy_dep_en/k_en;
               dp_arrival=vars.d_vol_ave[c];
-              tau_sint=min(dp_arrival/max(vars.ave_deposit_velocity[c],1e-50),1e10); // [s]  
+              tau_sint=min(dp_arrival/max(vars.ave_deposit_velocity[c],1e-50),1e10); // [s]
               vars.deposit_thickness[c] = vars.ave_deposit_velocity[c] * wi.t_sb;
               vars.deposit_thickness[c] = min(vars.deposit_thickness[c],wi.dy_erosion);// Here is our crude erosion model. If the deposit wants to grow above a certain size it will erode.
 
@@ -1067,7 +1067,7 @@ WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars,
               double dy_dep_en_max = k_en * ( (wi.T_slag-wi.T_inner)/qnet_max - R_wall);
               double rad_q_max = (wi.T_slag-wi.T_inner)/(R_wall*Emiss) + _sigma_constant*std::pow(wi.T_slag,4.0);
               double rad_q_en = (wi.T_slag-wi.T_inner)/((R_wall + R_en)*Emiss) + _sigma_constant*std::pow(wi.T_slag,4.0);
-              
+
               dy_dep_sb = vars.deposit_thickness[c];
               dy_dep_en = wi.dy_dep_en;
               if (vars.deposit_thickness[c] < dy_dep_sb_max) {
@@ -1078,10 +1078,10 @@ WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars,
                 // Regime 3
                 // the resulting temperature will be higher than Tslag.
                 vars.deposit_thickness[c] = 0.0;
-                dy_dep_en = 0.0; 
+                dy_dep_en = 0.0;
               } else {
                 // Regime 2
-                vars.deposit_thickness[c] = (rad_q >= rad_q_en) ? 0.0 : dy_dep_sb_max; 
+                vars.deposit_thickness[c] = (rad_q >= rad_q_en) ? 0.0 : dy_dep_sb_max;
                 dy_dep_en = (rad_q >= rad_q_en) ? dy_dep_en_max : dy_dep_en;
               }
 
@@ -1095,9 +1095,9 @@ WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars,
               vars.thermal_cond_sb[c]=k_sb;
               //TW_new = 900.0;
               //dp_arrival = 1e-20;
-              //tau_sint = 0.0;              
+              //tau_sint = 0.0;
               m_em_model->model(Emiss,wi.emissivity,TW_new,dp_arrival, tau_sint);
-              //std::cout << "Tp: " << TW_new << " dp: " << dp_arrival << " tau: " << tau_sint << " e: " << Emiss << std::endl; 
+              //std::cout << "Tp: " << TW_new << " dp: " << dp_arrival << " tau: " << tau_sint << " e: " << Emiss << std::endl;
               vars.emissivity[c]=Emiss;
               vars.T_real[c] = (1 - wi.relax) * vars.T_real_old[c] + wi.relax * TW_new; // this is the real wall temperature, vars.T_real_old is the old solution for "temperature".
               // now to make consistent with assumed emissivity of 1 in radiation model:
@@ -1180,7 +1180,7 @@ WallModelDriver::CoalRegionHT::newton_solve(WallInfo& wi, double &TW_new, double
   net_q = rad_q - _sigma_constant * pow( TW_old, 4 );
   net_q = net_q > 0 ? net_q : 0;
   net_q *= Emiss;
-  Ti = (TW_old + wi.T_inner)/2.0;//evaluating the thermal conductivity at the mid temperature. 
+  Ti = (TW_old + wi.T_inner)/2.0;//evaluating the thermal conductivity at the mid temperature.
   m_tc_model->model(k_sb,k_en,wi.k_dep_sb,wi.k_dep_en,Ti);
   R_sb = dy_dep_sb / k_sb;
   R_en = dy_dep_en / k_en;
@@ -1190,7 +1190,7 @@ WallModelDriver::CoalRegionHT::newton_solve(WallInfo& wi, double &TW_new, double
   net_q = rad_q - _sigma_constant * pow( TW_new, 4 );
   net_q *= Emiss;
   net_q = net_q>0 ? net_q : 0;
-  Ti = (TW_new + wi.T_inner)/2.0; 
+  Ti = (TW_new + wi.T_inner)/2.0;
   m_tc_model->model(k_sb,k_en,wi.k_dep_sb,wi.k_dep_en,Ti);
   R_sb = dy_dep_sb / k_sb;
   R_en = dy_dep_en / k_en;
@@ -1211,7 +1211,7 @@ WallModelDriver::CoalRegionHT::newton_solve(WallInfo& wi, double &TW_new, double
     net_q =  rad_q - _sigma_constant * pow( TW_new, 4 );
     net_q =  net_q>0 ? net_q : 0;
     net_q *= Emiss;
-    Ti = (TW_new + wi.T_inner)/2.0; 
+    Ti = (TW_new + wi.T_inner)/2.0;
     m_tc_model->model(k_sb,k_en,wi.k_dep_sb,wi.k_dep_en,Ti);
     R_sb = dy_dep_sb / k_sb;
     R_en = dy_dep_en / k_en;

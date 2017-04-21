@@ -27,6 +27,8 @@
 #include <CCA/Components/Arches/ChemMix/ClassicTableInterface.h>
 #include <CCA/Components/Arches/ChemMix/ColdFlow.h>
 #include <CCA/Components/Arches/ChemMix/ConstantProps.h>
+#include <CCA/Components/Arches/WBCHelper.h>
+#include <CCA/Components/Arches/ArchesMaterial.h>
 
 // Uintah includes
 #include <Core/Exceptions/InvalidValue.h>
@@ -111,6 +113,8 @@ TableLookup::sched_getState( const LevelP& level,
 
     i->second->sched_getState( level, sched, time_substep, initialize, modify_ref_den );
 
+    sched_setDependBCs( level, sched, i->second );
+
   }
 }
 
@@ -123,6 +127,82 @@ TableLookup::sched_checkTableBCs( const LevelP& level,
 
     i->second->sched_checkTableBCs( level, sched );
 
+  }
+}
+
+//--------------------------------------------------------------------------------------------------
+void
+TableLookup::sched_setDependBCs( const LevelP& level,
+                                 SchedulerP& sched,
+                                 MixingRxnModel* model ){
+
+  Task* tsk = scinew Task("setDependBCs", this, &TableLookup::setDependBCs, model );
+
+  std::map<std::string, const VarLabel*> depend_var_map = model->getDVVars();
+
+  for ( auto i = depend_var_map.begin(); i != depend_var_map.end(); i++ ){
+    tsk->modifies( i->second );
+  }
+
+  sched->addTask( tsk, level->eachPatch(), m_sharedState->allArchesMaterials() );
+
+}
+
+//--------------------------------------------------------------------------------------------------
+void
+TableLookup::setDependBCs( const ProcessorGroup* pc,
+                           const PatchSubset* patches,
+                           const MaterialSubset* matls,
+                           DataWarehouse* old_dw,
+                           DataWarehouse* new_dw,
+                           MixingRxnModel* model )
+{
+  for (int p=0; p < patches->size(); p++){
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int indx = m_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+
+    const BndMapT& bc_info = m_bcHelper->get_boundary_information();
+
+    for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
+
+      if (i_bc->second.has_patch(patch->getID()) ){
+
+        //Get the iterator
+        Uintah::Iterator cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
+
+        std::string facename = i_bc->second.name;
+
+        std::map<std::string, const VarLabel*> depend_var_map = model->getDVVars();
+        for ( auto i_var = depend_var_map.begin(); i_var != depend_var_map.end(); i_var++ ){
+
+          CCVariable<double> var;
+          new_dw->getModifiable( var, i_var->second, indx, patch );
+
+          std::string varname = i_var->first;
+
+          const BndCondSpec* spec = i_bc->second.find(varname);
+
+          if ( spec != NULL ){
+
+            Uintah::Iterator cell_iter =
+              m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
+
+            if ( (*spec).bcType == DIRICHLET ){
+              for (cell_iter.reset(); !cell_iter.done(); cell_iter++){
+                IntVector c = *cell_iter;
+                var[c] = (*spec).value;
+              }
+            } else {
+              throw InvalidValue("Error: BC type for table variable not supported for variable: "+varname,__FILE__,__LINE__);
+            }
+
+
+          }
+        }
+      }
+    }
   }
 }
 
@@ -181,6 +261,5 @@ TableLookup::addLookupSpecies( ){
     }
   }
 }
-
 
 } //namespace Uintah

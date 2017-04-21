@@ -344,7 +344,7 @@ WBCHelper::~WBCHelper()
   //------------------------------------------------------------------------------------------------
 
 void WBCHelper::add_boundary_condition( const std::string& bndName,
-                                       const BndCondSpec& bcSpec )
+                                        const BndCondSpec& bcSpec )
 {
   using namespace std;
   if ( bndNameBndSpecMap_.find(bndName) != bndNameBndSpecMap_.end() ) {
@@ -449,6 +449,7 @@ WBCHelper::get_uintah_extra_bnd_mask( const BndSpec& myBndSpec,
   << "This could be caused by requesting an iterator for a boundary/patch combination that is inconsistent with your input. "
   << "Otherwise, this is likely a major bug that needs to be addressed by a core Arches developer." << std::endl;
   throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+
 }
 
 //------------------------------------------------------------------------------------------------
@@ -628,7 +629,7 @@ void WBCHelper::parse_boundary_conditions(const int ilvl)
                 if ( atomBCTypeEnum == DIRICHLET || atomBCTypeEnum == NEUMANN ){
 
                   if ( bndCondBase->getValueType() == Uintah::BoundCondBase::VECTOR_TYPE ){
-                    // This is a hack to accomidate the Velocity BC in old arches. 
+                    // This is a hack to accomidate the Velocity BC in old arches.
                   } else {
                     // doubles
                     const Uintah::BoundCond<double>* const new_bc = dynamic_cast<const Uintah::BoundCond<double>*>(bndCondBase);

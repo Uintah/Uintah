@@ -1075,6 +1075,8 @@ ExplicitSolver::initialize( const LevelP     & level,
 
   setupBoundaryConditions( level, sched, false );
 
+  d_tabulated_properties->set_bcHelper( m_bcHelper[level->getIndex()] );
+
   if ( level->getIndex() == d_archesLevelIndex ){
 
     //formerly known as paramInit
@@ -1088,7 +1090,7 @@ ExplicitSolver::initialize( const LevelP     & level,
     BFM::iterator i_lag_fac = _task_factory_map.find("lagrangian_factory");
     BFM::iterator i_property_models_fac = _task_factory_map.find("property_models_factory");
 
-    i_trans_fac->second->set_bcHelper( m_bcHelper[level->getID()]);
+    i_trans_fac->second->set_bcHelper( m_bcHelper[level->getID()] );
 
     bool is_restart = false;
     //utility factory
@@ -1328,6 +1330,8 @@ ExplicitSolver::sched_restartInitialize( const LevelP& level, SchedulerP& sched 
   }
 
   setupBoundaryConditions( level, sched, doingRestart );
+
+  d_tabulated_properties->set_bcHelper( m_bcHelper[level->getIndex()]);
 
   //Arches only currently solves on the finest level
   if ( !level->hasFinerLevel() ){
@@ -2089,6 +2093,10 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     }
 
+    if ( d_wall_ht_models != nullptr ){
+      d_wall_ht_models->sched_copyWallTintoT( level, sched );
+    }
+
     d_boundaryCondition->sched_setIntrusionTemperature( sched, level, matls );
 
     d_boundaryCondition->sched_setIntrusionDensity( sched, level, matls );
@@ -2119,10 +2127,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                                d_timeIntegratorLabels[curr_level]);
 
   } // END OF RK LOOP
-
-  if ( d_wall_ht_models != nullptr ){
-    d_wall_ht_models->sched_copyWallTintoT( level, sched );
-  }
 
   //variable math:
   const std::vector<std::string> math_tasks = i_util->second->retrieve_tasks_by_type("variable_math");
@@ -4467,7 +4471,12 @@ ExplicitSolver::setupBoundaryConditions( const LevelP& level,
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
 
   //this is creating a WBCHelper for this specific Level (need one/level)
-  m_bcHelper.insert(std::make_pair(level->getID(), scinew WBCHelper( level, sched, matls, m_arches_spec )));
+  //the check ensures that, in the case of multiple patches/core, we only
+  //create one of them.
+  auto iter_check = m_bcHelper.find(level->getID());
+  if ( iter_check == m_bcHelper.end() ){
+    m_bcHelper.insert(std::make_pair(level->getID(), scinew WBCHelper( level, sched, matls, m_arches_spec )));
+  }
 
   //computes the area for each inlet using reduction variables
   m_bcHelper[level->getID()]->sched_computeBCAreaHelper( sched, level, matls );
