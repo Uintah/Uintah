@@ -2093,11 +2093,11 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     }
 
+    d_boundaryCondition->sched_setIntrusionTemperature( sched, level, matls );
+
     if ( d_wall_ht_models != nullptr ){
       d_wall_ht_models->sched_copyWallTintoT( level, sched );
     }
-
-    d_boundaryCondition->sched_setIntrusionTemperature( sched, level, matls );
 
     d_boundaryCondition->sched_setIntrusionDensity( sched, level, matls );
 
