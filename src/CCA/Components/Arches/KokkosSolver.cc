@@ -364,8 +364,8 @@ KokkosSolver::nonlinearSolve( const LevelP& level,
                                      SchedulerP& sched )
 {
 
-  const bool pack_tasks = true; 
-  const bool dont_pask_tasks = false; 
+  const bool pack_tasks = true;
+  //const bool dont_pack_tasks = false; 
 
   const MaterialSet* matls = m_sharedState->allArchesMaterials();
   BFM::iterator i_util_fac = m_task_factory_map.find("utility_factory");
