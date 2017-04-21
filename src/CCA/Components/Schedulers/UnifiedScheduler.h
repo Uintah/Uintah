@@ -304,9 +304,9 @@ public:
   void run();
 
   double getWaitTime();
-  void startWaitTime();
-  void stopWaitTime();
-  void resetWaitTime();
+  void   startWaitTime();
+  void   stopWaitTime();
+  void   resetWaitTime();
   
   friend class UnifiedScheduler;
 
@@ -315,7 +315,8 @@ private:
   UnifiedScheduler * m_scheduler{nullptr};
   int                m_rank{-1};
 
-  Timers::Simple     m_waitTimer;
+  Timers::Simple     m_wait_timer{};
+  double             m_wait_time{0.0};
 };
 
 } // namespace Uintah

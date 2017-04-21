@@ -213,7 +213,7 @@ inline int tid()
 // ThreadTrip timer
 //
 // RAII timer
-template <typename Tag, int MaxThreads=512>
+template <typename Tag, int MaxThreads=64>
 struct ThreadTrip : public Simple
 {
   using tag = Tag;
@@ -227,10 +227,10 @@ struct ThreadTrip : public Simple
   {}
 
   // disable copy, assignment, and move
-  ThreadTrip( const ThreadTrip & ) = delete;
+  ThreadTrip( const ThreadTrip & )             = delete;
   ThreadTrip & operator=( const ThreadTrip & ) = delete;
-  ThreadTrip( ThreadTrip && ) = delete;
-  ThreadTrip & operator=( ThreadTrip && ) = delete;
+  ThreadTrip( ThreadTrip && )                  = delete;
+  ThreadTrip & operator=( ThreadTrip && )      = delete;
 
   ~ThreadTrip()
   {
@@ -255,7 +255,7 @@ struct ThreadTrip : public Simple
     for (int i=0; i<size; ++i) {
       s_total[i] = 0;
       s_count[i] = 0;
-      s_used[i] = false;
+      s_used[i]  = false;
     }
   }
 

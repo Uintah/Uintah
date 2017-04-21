@@ -23,9 +23,11 @@
  */
 
 #include <CCA/Components/Schedulers/MPIScheduler.h>
-#include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
-#include <CCA/Components/Schedulers/SendState.h>
+
 #include <CCA/Components/Schedulers/DetailedTasks.h>
+#include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
+#include <CCA/Components/Schedulers/RuntimeStats.hpp>
+#include <CCA/Components/Schedulers/SendState.h>
 #include <CCA/Components/Schedulers/TaskGraph.h>
 #include <CCA/Ports/LoadBalancerPort.h>
 #include <CCA/Ports/Output.h>
@@ -34,7 +36,6 @@
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Parallel/CommunicationList.hpp>
-#include <Core/Parallel/CrowdMonitor.hpp>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Parallel/UintahMPI.h>
 #include <Core/Util/DOUT.hpp>
@@ -258,6 +259,9 @@ MPIScheduler::runTask( DetailedTask * dtask
                      , int            thread_id /* = 0 */
                      )
 {
+
+  RuntimeStats::ExecTimer exec_timer;
+
   Timers::Simple timer;
   timer.start();
 
@@ -287,10 +291,10 @@ MPIScheduler::runTask( DetailedTask * dtask
     // if I do not have a sub scheduler
     if (!dtask->getTask()->getHasSubScheduler()) {
       //add my task time to the total time
-      mpi_info_[TotalTask] += total_task_time;
+      mpi_info_[TotalTask] += dtask->task_exec_time();
       if (!m_shared_state->isCopyDataTimestep() && dtask->getTask()->getType() != Task::Output) {
         //add contribution for patchlist
-        getLoadBalancer()->addContribution(dtask, total_task_time);
+        getLoadBalancer()->addContribution(dtask, dtask->task_exec_time());
       }
     }
   }
@@ -354,6 +358,8 @@ MPIScheduler::postMPISends( DetailedTask * dtask
                           , int            thread_id  /* = 0 */
                           )
 {
+  RuntimeStats::SendTimer mpi_send_timer;
+
   Timers::Simple timer;
   timer.start();
 
@@ -474,13 +480,14 @@ MPIScheduler::postMPISends( DetailedTask * dtask
   }  // end for (DependencyBatch* batch = task->getComputes())
 
   timer.stop();
+
   mpi_info_[TotalSend] += timer().seconds();
 
   size_t sends_size = m_sends.size();
   if (g_send_timings && sends_size > 0) {
     if (d_myworld->myrank() == d_myworld->size() / 2) {
-        DOUT(true, " Rank-" << d_myworld->myrank()
-	     << " Time: " << timer().seconds()
+        DOUT(true, " Rank-"       << d_myworld->myrank()
+	              << " Time: "      << timer().seconds()
                 << " , NumSend: " << sends_size
                 << " , VolSend: " << volSend);
     }
@@ -504,6 +511,8 @@ void MPIScheduler::postMPIRecvs( DetailedTask * dtask
                                , int            iteration
                                )
 {
+  RuntimeStats::RecvTimer mpi_recv_timer;
+
   Timers::Simple timer;
   timer.start();
 
@@ -701,6 +710,8 @@ void MPIScheduler::processMPIRecvs( int test_type )
   switch (test_type) {
 
     case TEST :
+    {
+      RuntimeStats::TestTimer mpi_test_timer;
       comm_iter = m_recvs.find_any(test_request);
       if (comm_iter) {
         MPI_Status status;
@@ -708,8 +719,11 @@ void MPIScheduler::processMPIRecvs( int test_type )
         m_recvs.erase(comm_iter);
       }
       break;
+    }
 
     case WAIT_ONCE :
+    {
+      RuntimeStats::WaitTimer mpi_wait_timer;
       comm_iter = m_recvs.find_any(wait_request);
       if (comm_iter) {
         MPI_Status status;
@@ -717,8 +731,11 @@ void MPIScheduler::processMPIRecvs( int test_type )
         m_recvs.erase(comm_iter);
       }
       break;
+    }
 
     case WAIT_ALL :
+    {
+      RuntimeStats::WaitTimer mpi_wait_timer;
       while (m_recvs.size() != 0u) {
         comm_iter = m_recvs.find_any(wait_request);
         if (comm_iter) {
@@ -728,9 +745,10 @@ void MPIScheduler::processMPIRecvs( int test_type )
         }
       }
       break;
+    }
 
   }  // end switch
-
+  timer.stop();
   mpi_info_[TotalWaitMPI] += timer().seconds();
 
 }  // end processMPIRecvs()
@@ -744,6 +762,8 @@ MPIScheduler::execute( int tgnum     /* = 0 */
                      )
 {
   ASSERTRANGE( tgnum, 0, static_cast<int>(m_task_graphs.size()) );
+
+  RuntimeStats::initialize_timestep(m_task_graphs);
 
   TaskGraph* tg = m_task_graphs[tgnum];
   tg->setIteration(iteration);
@@ -894,6 +914,9 @@ MPIScheduler::execute( int tgnum     /* = 0 */
   }
 
   DOUT(g_dbg, me << " MPIScheduler finished");
+
+  RuntimeStats::report(d_myworld->getComm(), m_shared_state->d_runTimeStats);
+
 }
 
 //______________________________________________________________________
@@ -1051,17 +1074,9 @@ MPIScheduler::outputTimingStats( const char* label )
 //  Take the various timers and compute the net results
 void MPIScheduler::computeNetRunTimeStats(InfoMapper< SimulationState::RunTimeStat, double >& runTimeStats)
 {
-    runTimeStats[SimulationState::TaskExecTime]       +=
-      mpi_info_[TotalTask] -
-      // don't count output time
-      runTimeStats[SimulationState::OutputFileIOTime];
-     
-    runTimeStats[SimulationState::TaskLocalCommTime]  +=
-      mpi_info_[TotalRecv] + mpi_info_[TotalSend];
-
-    runTimeStats[SimulationState::TaskWaitCommTime]   +=
-      mpi_info_[TotalWaitMPI];
-
-    runTimeStats[SimulationState::TaskGlobalCommTime] +=
-      mpi_info_[TotalReduce];
+  // don't count output time
+  runTimeStats[SimulationState::TaskExecTime      ] += mpi_info_[TotalTask] - runTimeStats[SimulationState::OutputFileIOTime];
+  runTimeStats[SimulationState::TaskLocalCommTime ] += mpi_info_[TotalRecv] + mpi_info_[TotalSend];
+  runTimeStats[SimulationState::TaskWaitCommTime  ] += mpi_info_[TotalWaitMPI];
+  runTimeStats[SimulationState::TaskGlobalCommTime] += mpi_info_[TotalReduce];
 }

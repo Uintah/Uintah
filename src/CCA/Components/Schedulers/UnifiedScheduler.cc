@@ -24,6 +24,7 @@
 
 #include <CCA/Components/Schedulers/UnifiedScheduler.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
+#include <CCA/Components/Schedulers/RuntimeStats.hpp>
 #include <CCA/Components/Schedulers/TaskGraph.h>
 #include <CCA/Ports/Output.h>
 
@@ -154,8 +155,6 @@ void thread_driver( const int tid )
   set_affinity( g_cpu_affinities[tid] );
 
   try {
-    g_runners[tid]->resetWaitTime();
-  
     // wait until main thread sets function and changes states
     g_thread_states[tid] = ThreadState::Inactive;
     while (g_thread_states[tid] == ThreadState::Inactive) {
@@ -164,12 +163,8 @@ void thread_driver( const int tid )
 
     while (g_thread_states[tid] == ThreadState::Active) {
 
-      g_runners[tid]->stopWaitTime();
-
       // run the function and wait for main thread to reset state
       g_runners[tid]->run();
-
-      g_runners[tid]->startWaitTime();
 
       g_thread_states[tid] = ThreadState::Inactive;
       while (g_thread_states[tid] == ThreadState::Inactive) {
@@ -177,8 +172,6 @@ void thread_driver( const int tid )
       }
     }
 
-    g_runners[tid]->stopWaitTime();
-    
   } catch (const std::exception & e) {
     std::cerr << "Exception thrown from worker thread: " << e.what() << std::endl;
     std::cerr.flush();
@@ -497,12 +490,15 @@ UnifiedScheduler::runTask( DetailedTask*         task
                          , Task::CallBackEvent   event
                          )
 {
+  // end of per-thread wait time
+  if (thread_id > 0) {
+    Impl::g_runners[thread_id]->stopWaitTime();
+  }
+
   Timers::Simple timer;
 
   // Only execute CPU or GPU tasks.  Don't execute postGPU tasks a second time.
   if ( event == Task::CPU || event == Task::GPU) {
-    // -------------------------< begin task execution timing >-------------------------
-    timer.start();
     
     if (m_tracking_vars_print_location & SchedulerCommon::PRINT_BEFORE_EXEC) {
       printTrackedVars(task, SchedulerCommon::PRINT_BEFORE_EXEC);
@@ -513,16 +509,18 @@ UnifiedScheduler::runTask( DetailedTask*         task
       plain_old_dws[i] = m_dws[i].get_rep();
     }
 
+    // -------------------------< begin task execution timing >-------------------------
+    timer.start();
+
     task->doit(d_myworld, m_dws, plain_old_dws, event);
+
+    timer.stop();
+    double total_task_time = timer().seconds();
+    // -------------------------< end task execution timing >-------------------------
 
     if (m_tracking_vars_print_location & SchedulerCommon::PRINT_AFTER_EXEC) {
       printTrackedVars(task, SchedulerCommon::PRINT_AFTER_EXEC);
     }
-
-    timer.stop();
-    double total_task_time = timer().seconds();
-
-    // -------------------------< end task execution timing >-------------------------
 
     g_lb_lock.lock();
     {
@@ -545,6 +543,7 @@ UnifiedScheduler::runTask( DetailedTask*         task
 
   // For CPU and postGPU task runs, post MPI sends and call task->done;
   if (event == Task::CPU || event == Task::postGPU) {
+
 #ifdef HAVE_CUDA
     if (Uintah::Parallel::usingDevice()) {
 
@@ -584,19 +583,29 @@ UnifiedScheduler::runTask( DetailedTask*         task
       // clearForeignGpuVars(deviceVars);
     }
 #endif
+
     if (Uintah::Parallel::usingMPI()) {
       MPIScheduler::postMPISends(task, iteration, thread_id);
+
 #ifdef HAVE_CUDA
 
 #endif
+
     }
+
 #ifdef HAVE_CUDA
 
     if (Uintah::Parallel::usingDevice()) {
       task->deleteTaskGpuDataWarehouses();
     }
 #endif
+
     task->done(m_dws);  // should this be timed with taskstart? - BJW
+
+    // beginning of per-thread wait time
+    if (thread_id > 0) {
+      Impl::g_runners[thread_id]->startWaitTime();
+    }
 
     // -------------------------< begin MPI test timing >-------------------------
     timer.reset( true );
@@ -648,6 +657,9 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
   }
 
   ASSERTRANGE(tgnum, 0, static_cast<int>(m_task_graphs.size()));
+
+  RuntimeStats::initialize_timestep(m_task_graphs);
+
   TaskGraph* tg = m_task_graphs[tgnum];
   tg->setIteration(iteration);
   m_current_task_graph = tgnum;
@@ -838,6 +850,9 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
   }
 
   DOUT(g_dbg, "Rank-" << my_rank << " - UnifiedScheduler finished");
+
+  RuntimeStats::report(d_myworld->getComm(), m_shared_state->d_runTimeStats);
+
 } // end execute()
 
 
@@ -874,7 +889,6 @@ UnifiedScheduler::markTaskConsumed( int          & numTasksDone
 void
 UnifiedScheduler::runTasks( int thread_id )
 {
-
   while( m_num_tasks_done < m_num_tasks ) {
 
     DetailedTask* readyTask = nullptr;
@@ -4698,6 +4712,7 @@ UnifiedSchedulerWorker::run()
 {
   while( Impl::g_run_tasks ) {
     try {
+      resetWaitTime();
       m_scheduler->runTasks(Impl::t_tid);
     }
     catch (Exception& e) {
@@ -4715,7 +4730,8 @@ UnifiedSchedulerWorker::run()
 void
 UnifiedSchedulerWorker::resetWaitTime()
 {
-  m_waitTimer.reset( true );
+  m_wait_timer.reset( true );
+  m_wait_time = 0.0;
 }
 
 
@@ -4724,7 +4740,7 @@ UnifiedSchedulerWorker::resetWaitTime()
 void
 UnifiedSchedulerWorker::startWaitTime()
 {
-  m_waitTimer.stop();
+  m_wait_timer.start();
 }
 
 
@@ -4733,7 +4749,8 @@ UnifiedSchedulerWorker::startWaitTime()
 void
 UnifiedSchedulerWorker::stopWaitTime()
 {
-  m_waitTimer.stop();
+  m_wait_timer.stop();
+  m_wait_time += m_wait_timer().seconds();
 }
 
 
@@ -4742,5 +4759,5 @@ UnifiedSchedulerWorker::stopWaitTime()
 double
 UnifiedSchedulerWorker::getWaitTime()
 {
-  return m_waitTimer().seconds();
+  return m_wait_time;
 }

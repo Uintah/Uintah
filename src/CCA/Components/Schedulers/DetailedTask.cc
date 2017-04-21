@@ -114,6 +114,9 @@ DetailedTask::doit( const ProcessorGroup                      * pg
                   ,       Task::CallBackEvent                   event /* = Task::CPU */
                   )
 {
+  m_wait_timer.stop();
+  m_exec_timer.start();
+
   if ( internaldbg ) {
     std::ostringstream message;
     message << "DetailedTask " << this << " begin doit()\n";
@@ -430,6 +433,9 @@ DetailedTask::resetDependencyCounts()
   externalDependencyCount_.store(     0, std::memory_order_seq_cst);
   externallyReady_.store(         false, std::memory_order_seq_cst);
   initiated_.store(               false, std::memory_order_seq_cst);
+
+  m_wait_timer.reset(true);
+  m_exec_timer.reset(true);
 }
 
 //_____________________________________________________________________________
@@ -476,6 +482,8 @@ DetailedTask::done( std::vector<OnDemandDataWarehouseP> & dws )
 
     DOUT(internaldbg, "Rank-" << Parallel::getMPIRank() << " Dependency satisfied between " << *dep->m_dependent_task << " and " << *this);
   }
+
+  m_exec_timer.stop();
 }
 
 //_____________________________________________________________________________

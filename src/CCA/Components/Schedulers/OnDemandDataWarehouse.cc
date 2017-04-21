@@ -24,12 +24,13 @@
 
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 
-#include <CCA/Ports/LoadBalancerPort.h>
-#include <CCA/Ports/Scheduler.h>
 #include <CCA/Components/Schedulers/DetailedTasks.h>
 #include <CCA/Components/Schedulers/DependencyException.h>
 #include <CCA/Components/Schedulers/MPIScheduler.h>
+#include <CCA/Components/Schedulers/RuntimeStats.hpp>
 #include <CCA/Components/Schedulers/SchedulerCommon.h>
+#include <CCA/Ports/LoadBalancerPort.h>
+#include <CCA/Ports/Scheduler.h>
 
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/TypeMismatchException.h>
@@ -941,6 +942,8 @@ OnDemandDataWarehouse::reduceMPI( const VarLabel       * label,
                                   const MaterialSubset * inmatls,
                                   const int              nComm )
 {
+  RuntimeStats::CollectiveTimer mpi_collective_timer;
+
   const MaterialSubset* matls;
   if( !inmatls ) {
     MaterialSubset* tmpmatls = scinew MaterialSubset();

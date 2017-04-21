@@ -28,6 +28,7 @@
 #include <CCA/Components/Schedulers/DetailedDependency.h>
 #include <CCA/Components/Schedulers/DWDatabase.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
+#include <CCA/Components/Schedulers/RuntimeStats.hpp>
 
 #ifdef HAVE_CUDA
   #include <CCA/Components/Schedulers/GPUGridVariableGhosts.h>
@@ -173,7 +174,11 @@ public:
   // When it hits 0, we can add it to the  DetailedTasks::mpiCompletedTasks list.
   void resetDependencyCounts();
 
-  void markInitiated() { initiated_.store( true, std::memory_order_seq_cst ); }
+  void markInitiated()
+  {
+    m_wait_timer.start();
+    initiated_.store( true, std::memory_order_seq_cst );
+  }
 
   void incrementExternalDepCount() { externalDependencyCount_.fetch_add( 1, std::memory_order_seq_cst ); }
   void decrementExternalDepCount() { externalDependencyCount_.fetch_sub( 1, std::memory_order_seq_cst ); }
@@ -182,6 +187,9 @@ public:
   int  getExternalDepCount() { return externalDependencyCount_.load(std::memory_order_seq_cst); }
 
   bool areInternalDependenciesSatisfied() { return ( numPendingInternalDependencies == 0 ); }
+
+  double task_wait_time() const { return m_wait_timer().seconds(); }
+  double task_exec_time() const { return m_exec_timer().seconds(); }
 
 //-----------------------------------------------------------------------------
 #ifdef HAVE_CUDA
@@ -287,6 +295,9 @@ private:
   //   * Normal executes on either the patches cells or the patches coarse cells
   //   * Fine   executes on the patches fine cells (for example coarsening)
   ProfileType d_profileType { Normal };
+
+  RuntimeStats::TaskExecTimer m_exec_timer{this};
+  RuntimeStats::TaskWaitTimer m_wait_timer{this};
 
   bool operator<(const DetailedTask & other);
 
