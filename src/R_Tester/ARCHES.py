@@ -124,7 +124,6 @@ NIGHTLYTESTS = [
    ("OFC4c"                             , "Coal/OFC4.ups"                                           , 3   , "All"  , ["exactComparison"      , "no_cuda"]) ,
    ("OFC4_smith"                        , "Coal/OFC4_smith.ups"                                     , 3   , "All"  , ["exactComparison"      , "no_cuda"]) ,
    ("OFC4_hybrid"                       , "Coal/OFC4_hybrid.ups"                                    , 3   , "All"  , ["exactComparison"      , "no_cuda"]) ,  
-   ("OFC4_initial_hotwall"              , "Coal/OFC4_initial_hotwall.ups"                           , 3   , "All"  , ["exactComparison"]) ,  
 #__________________________________
 
 
@@ -215,7 +214,6 @@ LOCALTESTS = [
 #   ("coal_channel_Yamamoto"             , "Coal/coal_channel_Yamamoto.ups"                          , 1.1 , "All" , ["exactComparison"     , "no_restart"]) , 
    ("OFC4_smith"                        , "Coal/OFC4_smith.ups"                                     , 3   , "All"  , ["exactComparison"   ,  "no_cuda"]) , 
    ("OFC4_hybrid"                       , "Coal/OFC4_hybrid.ups"                                    , 3   , "All"  , ["exactComparison"   ,  "no_cuda"]) , 
-   ("OFC4_initial_hotwall"              , "Coal/OFC4_initial_hotwall.ups"                           , 3   , "All"  , ["exactComparison"]) ,  
 #__________________________________
    
 # multi-threaded LOCAL tests
@@ -254,8 +252,8 @@ COALTESTS = [
    ("1GW_em_tc"                         , "Coal/1GW_em_tc.ups"                                      , 2   , "All"  , ["exactComparison"     , "no_cuda"]) , 
 #   ("coal_channel_Yamamoto"             , "Coal/coal_channel_Yamamoto.ups"                          , 1.1 , "All" , ["exactComparison"     , "no_restart"]) , 
    ("OFC4_smith"                        , "Coal/OFC4_smith.ups"                                     , 3   , "All"  , ["exactComparison"   ,  "no_cuda"]) , 
-   ("OFC4_hybrid"                       , "Coal/OFC4_hybrid.ups"                                    , 3   , "All"  , ["exactComparison"   ,  "no_cuda"]) 
-   ("OFC4_initial_hotwall"              , "Coal/OFC4_initial_hotwall.ups"                           , 3   , "All"  , ["exactComparison"]) ,  
+   ("OFC4_hybrid"                       , "Coal/OFC4_hybrid.ups"                                    , 3   , "All"  , ["exactComparison"   ,  "no_cuda"]) ,
+   ("OFC4_initial_hotwall"              , "Coal/OFC4_initial_hotwall.ups"                           , 3   , "All"  , ["exactComparison"   ,  "no_cuda"]) , 
 ]
 
 RMCRTTESTS = [
