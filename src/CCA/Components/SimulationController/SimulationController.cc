@@ -293,42 +293,45 @@ SimulationController::doRestart( const string & restartFromDir, int timestep,
 bool
 SimulationController::isLast( void )
 {
+  double walltime = walltimers.GetWallTime();
+
+  // When using the wall clock time, rank 0 determines the time and
+  // sends it to all other ranks.
+  Uintah::MPI::Bcast( &walltime, 1, MPI_DOUBLE, 0, d_myworld->getComm() );
+
   return ( ( d_simTime >= d_timeinfo->maxTime ) ||
 	   ( d_sharedState->getCurrentTopLevelTimeStep() >=
 	     d_timeinfo->maxTimestep ) ||
 	   ( d_timeinfo->max_wall_time > 0 &&
-	     walltimers.GetWallTime() >= d_timeinfo->max_wall_time ) );
+	     walltime >= d_timeinfo->max_wall_time ) );
 }
 
 //______________________________________________________________________
 //
 // Determines if the time step may be the last one. The simulation
-// time and the time step are known. The only real unknown is the time
-// for the simulation calculation. The best guess is based on the
-// ExpMovingAverage of the previous time steps.
+// time, d_delt, and the time step are known. The only real unknown is
+// the wall time for the simulation calculation. The best guess is
+// based on the ExpMovingAverage of the previous time steps.
+//
+// MaybeLast should be called before any time step work is done.
 
 bool
 SimulationController::maybeLast( void )
 {
+  // The predicted time is a best guess at what the wall time will be
+  // when the time step is finished. It is currently used only for
+  // outputing and checkpointing. Both of which typically take much
+  // longer than the simulation calculation.
+  double walltime = walltimers.GetWallTime() +
+    1.5 * walltimers.ExpMovingAverage().seconds();
+
   // When using the wall clock time, rank 0 determines the time and
   // sends it to all other ranks.
-  double walltime = -1;
-  
-  if( Parallel::getMPIRank() == 0 ) {
-    // The time is a best guess at what the wall time will be when the
-    // time step is finished. It is currently used only only for I/O
-    // (output and checkpointing). Which typically takes much longer
-    // than the simulation calculation.
-    walltime = d_sharedState->getElapsedWallTime() +
-      1.5 * walltimers.ExpMovingAverage().seconds();
-  }
-
   Uintah::MPI::Bcast( &walltime, 1, MPI_DOUBLE, 0, d_myworld->getComm() );
 
   return ( (d_simTime+d_delt >= d_timeinfo->maxTime) ||
 
-	   // Note the time step has already been incremented.
-	   (d_sharedState->getCurrentTopLevelTimeStep() >=
+	   (d_sharedState->getCurrentTopLevelTimeStep() + 1 >=
 	     d_timeinfo->maxTimestep) ||
 
 	   (d_timeinfo->max_wall_time > 0 &&

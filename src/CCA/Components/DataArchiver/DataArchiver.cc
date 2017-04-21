@@ -346,18 +346,11 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
 
   // Set up the next output and checkpoint time.
   d_nextOutputTime         = 0.0;
-  d_nextOutputTimestep     = d_outputInitTimestep?0:1;
+  d_nextOutputTimestep     = d_outputInitTimestep ? 0 : 1;
   d_nextCheckpointTime     = d_checkpointInterval; 
-  d_nextCheckpointTimestep = d_checkpointTimestepInterval+1;
+  d_nextCheckpointTimestep = d_checkpointTimestepInterval + 1;
+  d_nextCheckpointWalltime = d_checkpointWalltimeStart;
 
-  // When using the wall clock time for checkpoints, rank 0 determines
-  // the wall time and sends it to all other ranks.
-  if ( d_checkpointWalltimeInterval > 0 ) {
-    d_nextCheckpointWalltime = d_checkpointWalltimeStart;
-
-    Uintah::MPI::Bcast( &d_nextCheckpointWalltime, 1, MPI_INT, 0, d_myworld->getComm() );
-  }
-  
   //__________________________________
   // 
   if ( d_checkpointInterval > 0 ) {
@@ -511,20 +504,24 @@ DataArchiver::restartSetup( Dir    & restartFromDir,
   //d_currentTimestep = timestep;
    
   if( d_outputInterval > 0 ) {
-    d_nextOutputTime = d_outputInterval * ceil(time / d_outputInterval);
+    d_nextOutputTime = ceil(time / d_outputInterval) * d_outputInterval;
   }
   else if( d_outputTimestepInterval > 0 ) {
-    d_nextOutputTimestep = (timestep/d_outputTimestepInterval) * d_outputTimestepInterval + 1;
+    d_nextOutputTimestep =
+      (timestep/d_outputTimestepInterval) * d_outputTimestepInterval + 1;
+
     while( d_nextOutputTimestep <= timestep ) {
       d_nextOutputTimestep += d_outputTimestepInterval;
     }
   }
    
   if( d_checkpointInterval > 0 ) {
-    d_nextCheckpointTime = d_checkpointInterval * ceil(time / d_checkpointInterval);
+    d_nextCheckpointTime =
+      ceil(time / d_checkpointInterval) * d_checkpointInterval;
   }
   else if( d_checkpointTimestepInterval > 0 ) {
-    d_nextCheckpointTimestep = (timestep/d_checkpointTimestepInterval)*d_checkpointTimestepInterval+1;
+    d_nextCheckpointTimestep =
+      (timestep/d_checkpointTimestepInterval) * d_checkpointTimestepInterval + 1;
     while( d_nextCheckpointTimestep <= timestep ) {
       d_nextCheckpointTimestep += d_checkpointTimestepInterval;
     }
@@ -533,10 +530,12 @@ DataArchiver::restartSetup( Dir    & restartFromDir,
   // When using the wall clock time for checkpoints, rank 0 determines
   // the wall time and sends it to all other ranks.
   if( d_checkpointWalltimeInterval > 0 ) {
-    d_nextCheckpointWalltime = 
-      d_sharedState->getElapsedWallTime() + d_checkpointWalltimeInterval;
+    // When using the wall time for checkpoints, rank 0 determines the
+    // wall time and sends it to all other ranks.
+    int walltime = d_sharedState->getElapsedWallTime();
+    Uintah::MPI::Bcast( &walltime, 1, MPI_INT, 0, d_myworld->getComm() );
 
-    Uintah::MPI::Bcast( &d_nextCheckpointWalltime, 1, MPI_INT, 0, d_myworld->getComm() );
+    d_nextCheckpointWalltime = walltime + d_checkpointWalltimeInterval;
   }
 } // end restartSetup()
 
@@ -1070,10 +1069,10 @@ DataArchiver::beginOutputTimestep( double time,
 
     // When using the wall time for checkpoints, rank 0 determines the
     // wall time and sends it to all other ranks.
-    int tmp_time = d_sharedState->getElapsedWallTime();
-    Uintah::MPI::Bcast( &tmp_time, 1, MPI_INT, 0, d_myworld->getComm() );
+    int walltime = d_sharedState->getElapsedWallTime();
+    Uintah::MPI::Bcast( &walltime, 1, MPI_INT, 0, d_myworld->getComm() );
 
-    if( tmp_time >= d_nextCheckpointWalltime )
+    if( walltime >= d_nextCheckpointWalltime )
       d_isCheckpointTimestep = true;	
   }
   
@@ -1224,7 +1223,13 @@ DataArchiver::findNext_OutputCheckPoint_Timestep( double /* delt */, const GridP
 
   // When outputing/checkpointing using the simulation or wall time
   // check to see if the simulation or wall time went past more than
-  // one interval. If so adjust accordingly.  
+  // one interval. If so adjust accordingly.
+
+  // Note - it is not clear why but when outputing/checkpointing using
+  // time steps the mod function must also be used. This does not
+  // affect most simulations except when there are multiple UPS files
+  // such as when components are switched. For example:
+  // StandAlone/inputs/UCF/Switcher/switchExample3.ups
 
   if( d_isOutputTimestep ) {
 
@@ -1271,12 +1276,12 @@ DataArchiver::findNext_OutputCheckPoint_Timestep( double /* delt */, const GridP
 
       // When using the wall time for checkpoints, rank 0 determines
       // the wall time and sends it to all other ranks.
-      int tmp_time = d_sharedState->getElapsedWallTime();
-      Uintah::MPI::Bcast( &tmp_time, 1, MPI_INT, 0, d_myworld->getComm() );
+      int walltime = d_sharedState->getElapsedWallTime();
+      Uintah::MPI::Bcast( &walltime, 1, MPI_INT, 0, d_myworld->getComm() );
 
-      if( tmp_time >= d_nextCheckpointWalltime ) {
+      if( walltime >= d_nextCheckpointWalltime ) {
         d_nextCheckpointWalltime +=
-	  floor( (tmp_time - d_nextCheckpointWalltime) /
+	  floor( (walltime - d_nextCheckpointWalltime) /
 		 d_checkpointWalltimeInterval ) *
 	  d_checkpointWalltimeInterval + d_checkpointWalltimeInterval;
       }
@@ -3357,7 +3362,8 @@ DataArchiver::needRecompile(double /*time*/, double /*dt*/,
   bool recompile=false;
   bool do_output=false;
   if ((d_outputInterval != 0 && time+dt >= d_nextOutputTime) ||
-      (d_outputTimestepInterval != 0 && d_currentTimestep+1 > d_nextOutputTimestep)) {
+      (d_outputTimestepInterval != 0 &&
+      d_currentTimestep+1 > d_nextOutputTimestep)) {
     do_output=true;
     if(!d_wasOutputTimestep)
       recompile=true;
@@ -3365,9 +3371,17 @@ DataArchiver::needRecompile(double /*time*/, double /*dt*/,
     if(d_wasOutputTimestep)
       recompile=true;
   }
+
+  // When using the wall clock time for checkpoints, rank 0 determines
+  // the wall time and sends it to all other ranks.
+  int walltime = d_sharedState->getElapsedWallTime();
+  Uintah::MPI::Bcast( &walltime, 1, MPI_INT, 0, d_myworld->getComm() );
+
   if ((d_checkpointInterval != 0 && time+dt >= d_nextCheckpointTime) ||
-      (d_checkpointTimestepInterval != 0 && d_currentTimestep+1 > d_nextCheckpointTimestep) ||
-      (d_checkpointWalltimeInterval != 0 && d_sharedState->getElapsedWallTime() >= d_nextCheckpointWalltime)) {
+      (d_checkpointTimestepInterval != 0 &&
+      d_currentTimestep+1 > d_nextCheckpointTimestep) ||
+      (d_checkpointWalltimeInterval != 0 &&
+      walltime >= d_nextCheckpointWalltime)) {
     do_output=true;
     if(!d_wasCheckpointTimestep)
       recompile=true;

@@ -265,24 +265,24 @@ AMRSimulationController::run()
   // The main loop where the specified problem is solved.
   while( !isLast() ) {
 
-    // Set the current wall time - note the DataAchiever uses it for
+    // Before any work is done including incrementing the time step
+    // check to see if this iteration may be the last one. The Data
+    // Archive uses it for determining whether to output or checkpoint
+    // the last time step. Maybelast uses the wall time and is sync'd
+    // across all ranks.
+    d_sharedState->maybeLast( maybeLast() );
+    
+    // Set the current wall time for this rank (i.e. this value is NOT
+    // sync'd across all ranks). The Data Archive uses it for
     // determining when to output or checkpoint.
     d_sharedState->setElapsedWallTime( walltimers.GetWallTime() );
     
-    // Put the current time into the shared state so other components
-    // can access it.  Also increment (by one) the current time step
-    // number so components can tell what timestep they are on.
+    // Put the current simulation time into the shared state so other
+    // components can access it.  Also increment (by one) the current
+    // time step number so components know what timestep they are on.
     d_sharedState->setElapsedSimTime( d_simTime );
     d_sharedState->incrementCurrentTopLevelTimeStep();
 
-    // Determines if this time step may be the last one. The only real
-    // unknown is the actual wall time to calculate the time step. The
-    // best guess is based on the ExpMovingAverage of the previous
-    // time steps. Used by the DataArchiver for dumping checkpoints.
-
-    // NOTE: Assumes incrementCurrentTopLevelTimeStep has been called.
-    d_sharedState->maybeLast( maybeLast() );    
-    
 #ifdef USE_GPERFTOOLS
     if (gheapprofile.active()){
       char heapename[512];
