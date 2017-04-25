@@ -807,7 +807,9 @@ SimulationController::ReportStats( bool header /* = false */ )
 	    << "Wall Time = " << setw(10) << walltimers.GetWallTime()
 	    // << "All Time steps= " << setw(12) << walltimers.TimeStep().seconds()
 	    // << "Current Time Step= " << setw(12) << timeStep.seconds()
-	    << "EMA="        << setw(12) << walltimers.ExpMovingAverage().seconds();
+	    << "EMA="        << setw(12) << walltimers.ExpMovingAverage().seconds()
+	    // << "In-situ Time = " << setw(12) << walltimers.InSitu().seconds()
+      ;
 
     // Report on the memory used.
     if (avg_memused == max_memused && avg_highwater == max_highwater) {
@@ -1059,6 +1061,10 @@ SimulationController::CheckInSitu( visit_simulation_data *visitSimData,
     // anything needs to be done.
     if( d_sharedState->getVisIt() )
     {
+      // Note this timer is used as a laptimer so the stop must come
+      // after the lap time is taken so not to affect it.
+      walltimers.TimeStep.stop();
+
       walltimers.InSitu.start();
   
       // Update all of the simulation grid and time dependent variables.
@@ -1090,6 +1096,9 @@ SimulationController::CheckInSitu( visit_simulation_data *visitSimData,
       getOutput()->writeto_xml_files(visitSimData->modifiedVars);
 
       walltimers.InSitu.stop();
+
+      // Note this timer is used as a laptimer.
+      walltimers.TimeStep.start();
     }
 
     return false;

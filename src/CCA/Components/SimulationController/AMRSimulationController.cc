@@ -208,16 +208,14 @@ AMRSimulationController::run()
   // Set the time and get the next (initial) delta T
   getNextDeltaT();
   
-  // Report all of the stats - and if compiled with VisIt the in-situ.
+  // Report all of the stats before doing any possible in-situ work
+  // as that affects the lap timer for the time steps.
   ReportStats( first );
 
+  // If compiled with VisIt check the in-situ status for work.
 #ifdef HAVE_VISIT
-  walltimers.TimeStep.stop();
-
   if( CheckInSitu( &visitSimData, first ) )
     exit(0);
-
-  walltimers.TimeStep.start();
 #endif      
 
   // Reset the runtime performance stats
@@ -602,16 +600,14 @@ AMRSimulationController::run()
 
     getNextDeltaT();
   
-    // Report all of the stats - and if compiled with VisIt the in-situ.
+    // Report all of the stats before doing any possible in-situ work
+    // as that affects the lap timer for the time steps.
     ReportStats( first );
 
+    // If compiled with VisIt check the in-situ status for work.
 #ifdef HAVE_VISIT
-    walltimers.TimeStep.stop();
-
     if( CheckInSitu( &visitSimData, first ) )
       break;
-
-    walltimers.TimeStep.start();    
 #endif      
 
     // Reset the runtime performance stats
