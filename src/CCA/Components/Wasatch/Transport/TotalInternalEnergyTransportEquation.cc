@@ -675,7 +675,7 @@ namespace WasatchCore {
 
       // trigger creation of diffusive flux expression from species diffusive flux spec to determine which directions are active.
       for( Uintah::ProblemSpecP diffFluxParams=speciesParams->findBlock("DiffusiveFlux");
-          diffFluxParams != 0;
+          diffFluxParams != nullptr;
           diffFluxParams=diffFluxParams->findNextBlock("DiffusiveFlux") )
       {
         std::string direction;
