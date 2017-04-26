@@ -604,6 +604,7 @@ Material* SimulationState::parseAndLookupMaterial(ProblemSpecP& params,
 void SimulationState::resetStats()
 {
   d_runTimeStats.reset( 0 );  
+  d_otherStats.reset( 0 );  
 }
 //__________________________________
 //

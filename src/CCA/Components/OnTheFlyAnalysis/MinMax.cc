@@ -44,6 +44,7 @@
 #include <Core/OS/Dir.h> // for MKDIR
 #include <Core/Util/FileUtils.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Util/Timers/Timers.hpp>
 
 #include <sci_defs/visit_defs.h>
 
@@ -452,6 +453,9 @@ void MinMax::computeMinMax(const ProcessorGroup* pg,
                            DataWarehouse* old_dw,
                            DataWarehouse* new_dw)
 { 
+  Timers::Simple timer;
+  timer.start();
+
   // the user may want to restart from an uda that wasn't using the DA module
   // This logic allows that.
   max_vartype writeTime;
@@ -567,6 +571,8 @@ void MinMax::computeMinMax(const ProcessorGroup* pg,
       }  // VarLabel loop          
     }  // patches
   }  // time to write data
+
+  d_sharedState->d_otherStats[OnTheFlyAnalysisMinMaxTime] += timer().seconds();
 }
 
 //______________________________________________________________________
@@ -577,6 +583,9 @@ void MinMax::doAnalysis(const ProcessorGroup* pg,
                         DataWarehouse* old_dw,
                         DataWarehouse* new_dw)
 {
+  Timers::Simple timer;
+  timer.start();
+
   UintahParallelComponent * DA = dynamic_cast<UintahParallelComponent*>(d_dataArchiver);
   LoadBalancerPort        * lb = dynamic_cast<LoadBalancerPort*>( DA->getPort("load balancer"));
     
@@ -592,7 +601,7 @@ void MinMax::doAnalysis(const ProcessorGroup* pg,
   }
 
   // delt_vartype delt_var;
-  // new_dw->get( delt_var, d_sharedState->get_delt_label() );
+  // old_dw->get( delt_var, d_sharedState->get_delt_label() );
   // double now = d_sharedState->getElapsedSimTime() + delt_var;
 
   double now = d_sharedState->getElapsedSimTime();
@@ -744,6 +753,8 @@ void MinMax::doAnalysis(const ProcessorGroup* pg,
     new_dw->put(fileInfo,                   d_lb->fileVarsStructLabel, 0, patch);
     new_dw->put(max_vartype(lastWriteTime), d_lb->lastCompTimeLabel ); 
   }  // patches
+
+  d_sharedState->d_otherStats[OnTheFlyAnalysisMinMaxTime] += timer().seconds();
 }
 
 

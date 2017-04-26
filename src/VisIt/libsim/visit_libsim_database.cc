@@ -94,6 +94,9 @@ void visit_SimGetCustomUIData(void *cbdata)
   // Set the custom UI MPI Stats
   visit_SetMPIStats( sim );
 
+  // Set the custom UI Other Stats
+  visit_SetOtherStats( sim );
+
   // Setup the custom UI Image variables
   visit_SetImageVars( sim );
 

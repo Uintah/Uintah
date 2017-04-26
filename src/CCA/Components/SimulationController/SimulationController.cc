@@ -346,8 +346,8 @@ SimulationController::preGridSetup( void )
 {
   d_output = dynamic_cast<Output*>(getPort("output"));
   if( !d_output ) {
-    cout << "dynamic_cast of 'd_output' failed!\n";
-    throw InternalError("dynamic_cast of 'd_output' failed!", __FILE__, __LINE__);
+    throw InternalError("dynamic_cast of 'd_output' failed!",
+			__FILE__, __LINE__);
   }
 
   d_output->problemSetup( d_ups, d_sharedState.get_rep() );
@@ -486,10 +486,10 @@ SimulationController::postGridSetup()
   // regridder
   d_regridder = dynamic_cast<Regridder*>( getPort("regridder") );
 
-  if ( d_regridder ) {
+  if( d_regridder ) {
     d_regridder->problemSetup( d_ups, d_currentGridP, d_sharedState );
   }
-    
+
   // Initialize load balancer.  Do the initialization here because the
   // dimensionality in the shared state is known, and that
   // initialization time is needed. In addition, do this step after
@@ -633,7 +633,7 @@ SimulationController::getNextDeltaT( void )
   }
 
   // Clamp delt to match the requested output and/or checkpoint times
-  if( d_timeinfo->clamp_time_to_output && d_output ) {
+  if( d_timeinfo->clamp_time_to_output ) {
 
     // Clamp to the output time
     double nextOutput = d_output->getNextOutputTime();
@@ -681,15 +681,19 @@ SimulationController::ReportStats( bool header /* = false */ )
   d_sharedState->d_runTimeStats.reduce(d_regridder &&
 				       d_regridder->useDynamicDilation(),
 				       d_myworld );
+
+  d_sharedState->d_otherStats.reduce(d_regridder &&
+				     d_regridder->useDynamicDilation(),
+				     d_myworld );
+
   // Reduce the mpi run time stats.
   MPIScheduler * mpiScheduler =
     dynamic_cast<MPIScheduler*>( d_scheduler.get_rep() );
   
-  if( mpiScheduler ) {
+  if( mpiScheduler )
     mpiScheduler->mpi_info_.reduce( d_regridder &&
 				    d_regridder->useDynamicDilation(),
 				    d_myworld );
-  }
 
   // Print MPI statistics
   d_scheduler->printMPIStats();

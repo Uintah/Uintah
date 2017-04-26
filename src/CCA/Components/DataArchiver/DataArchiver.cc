@@ -151,14 +151,17 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
   // set to false if restartSetup is called - we can't do it there
   // as the first timestep doesn't have any tasks
   d_outputInitTimestep = p->findBlock("outputInitTimestep") != nullptr;
-
-  // problemSetup is called again from the Switcher to reset vars (and frequency) it wants to save
-  //   DO NOT get it again.  Currently the directory won't change mid-run, so calling problemSetup
-  //   will not change the directory.  What happens then, is even if a switched component wants a 
-  //   different uda name, it will not get one until sus restarts (i.e., when you switch, component
-  //   2's data dumps will be in whichever uda started sus.), which is not optimal.  So we disable
-  //   this feature until we can make the DataArchiver make a new directory mid-run.
-  if (d_filebase == ""){
+  
+  // problemSetup is called again from the Switcher to reset vars (and
+  // frequency) it wants to save DO NOT get it again.  Currently the
+  // directory won't change mid-run, so calling problemSetup will not
+  // change the directory.  What happens then, is even if a switched
+  // component wants a different uda name, it will not get one until
+  // sus restarts (i.e., when you switch, component 2's data dumps
+  // will be in whichever uda started sus.), which is not optimal.  So
+  // we disable this feature until we can make the DataArchiver make a
+  // new directory mid-run.
+  if (d_filebase == "") {
     p->require("filebase", d_filebase);
   }
 
@@ -172,7 +175,7 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
     d_outputInterval = 0.0; // default
   }
 
-  if ( d_outputInterval != 0.0 && d_outputTimestepInterval != 0 ) {
+  if ( d_outputInterval > 0.0 && d_outputTimestepInterval > 0 ) {
     throw ProblemSetupException("Use <outputInterval> or <outputTimestepInterval>, not both",__FILE__, __LINE__);
   }
 
@@ -180,7 +183,8 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
     d_outputLastTimestep = false; // default
   }
 
-  // set default compression mode - can be "tryall", "gzip", "rle", "rle, gzip", "gzip, rle", or "none"
+  // set default compression mode - can be "tryall", "gzip", "rle",
+  // "rle, gzip", "gzip, rle", or "none"
   string defaultCompressionMode = "";
   if (p->get("compression", defaultCompressionMode)) {
     VarLabel::setDefaultCompressionMode(defaultCompressionMode);
@@ -198,8 +202,9 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
   ProblemSpecP save = p->findBlock("save");
 
   if( save == nullptr ) {
-    // If no <save> labels were specified, make sure that an output time interval is not specified...
-    if( d_outputTimestepInterval > 0.0 || d_outputInterval > 0.0 ) {
+    // If no <save> labels were specified, make sure that an output
+    // time interval is not specified...
+    if( d_outputInterval > 0.0 || d_outputTimestepInterval > 0 ) {
       throw ProblemSetupException( "You have no <save> labels, but your output interval is non-0.  If you wish to turn off "
                                    "data output, you must set <outputTimestepInterval> or <outputInterval> to 0.",
                                    __FILE__, __LINE__);
@@ -324,19 +329,20 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
     }
 
     // Verify that an interval was specified:
-    if( interval == "" && timestepInterval == "" && walltimeInterval == "" && walltimeIntervalHours == "" ) {
+    if( interval == "" && timestepInterval == "" &&
+	walltimeInterval == "" && walltimeIntervalHours == "" ) {
       throw ProblemSetupException( "ERROR: \n  <checkpoint> must specify either interval, timestepInterval, walltimeInterval",
                                    __FILE__, __LINE__ );
     }
   }
 
   // Can't use both checkpointInterval and checkpointTimestepInterval.
-  if (d_checkpointInterval != 0.0 && d_checkpointTimestepInterval != 0) {
+  if (d_checkpointInterval > 0.0 && d_checkpointTimestepInterval > 0) {
     throw ProblemSetupException("Use <checkpoint interval=...> or <checkpoint timestepInterval=...>, not both",
                                 __FILE__, __LINE__);
   }
   // Can't have a walltimeStart without a walltimeInterval.
-  if (d_checkpointWalltimeStart != 0 && d_checkpointWalltimeInterval == 0) {
+  if (d_checkpointWalltimeStart > 0.0 && d_checkpointWalltimeInterval == 0) {
     throw ProblemSetupException("<checkpoint walltimeStart must have a corresponding walltimeInterval",
                                 __FILE__, __LINE__);
   }
@@ -344,23 +350,28 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
   d_lastTimestepLocation   = "invalid";
   d_isOutputTimestep       = false;
 
-  // Set up the next output and checkpoint time.
-  d_nextOutputTime         = 0.0;
-  d_nextOutputTimestep     = d_outputInitTimestep ? 0 : 1;
-  d_nextCheckpointTime     = d_checkpointInterval; 
-  d_nextCheckpointTimestep = d_checkpointTimestepInterval + 1;
+  // Set up the next output and checkpoint time. Always output the
+  // first timestep or the inital timestep.
+  d_nextOutputTime     = 0.0; 
+  d_nextOutputTimestep = d_outputInitTimestep ? 0 : 1;
+
+  d_nextCheckpointTime     = d_checkpointInterval;
+  d_nextCheckpointTimestep = d_checkpointTimestepInterval;
   d_nextCheckpointWalltime = d_checkpointWalltimeStart;
 
   //__________________________________
   // 
   if ( d_checkpointInterval > 0 ) {
-    proc0cout << "Checkpointing:"<< std::setw(16)<< " Every "<<  d_checkpointInterval << " physical seconds.\n";
+    proc0cout << "Checkpointing:" << std::setw(16) << " Every "
+	      << d_checkpointInterval << " physical seconds.\n";
   }
   if ( d_checkpointTimestepInterval > 0 ) {
-    proc0cout << "Checkpointing:"<< std::setw(16)<< " Every "<<  d_checkpointTimestepInterval << " timesteps.\n";
+    proc0cout << "Checkpointing:" << std::setw(16)<< " Every "
+	      << d_checkpointTimestepInterval << " timesteps.\n";
   }
   if ( d_checkpointWalltimeInterval > 0 ) {
-    proc0cout << "Checkpointing:"<< std::setw(16)<< " Every "<<  d_checkpointWalltimeInterval << " wall clock seconds,"
+    proc0cout << "Checkpointing:" << std::setw(16)<< " Every "
+	      << d_checkpointWalltimeInterval << " wall clock seconds,"
               << " starting after " << d_checkpointWalltimeStart << " seconds.\n";
   }
 }
@@ -395,9 +406,9 @@ DataArchiver::initializeOutput( const ProblemSpecP & params )
 
     /////////////////////////////////////////////////////////
     // Save the original .ups file in the UDA...
-    //     FIXME: might want to avoid using 'system' copy which the below uses...
-    //     If so, we will need to write our own (simple) file reader and writer
-    //     routine.
+    //     FIXME: might want to avoid using 'system' copy which the
+    //     below uses...  If so, we will need to write our own
+    //     (simple) file reader and writer routine.
 
     cout << "Saving original .ups file in UDA...\n";
     Dir ups_location( pathname( params->getFile() ) );
@@ -409,9 +420,9 @@ DataArchiver::initializeOutput( const ProblemSpecP & params )
     createIndexXML(d_dir);
    
     // create checkpoints/index.xml (if we are saving checkpoints)
-    if ( d_checkpointInterval         != 0.0 || 
-         d_checkpointTimestepInterval != 0   || 
-         d_checkpointWalltimeInterval != 0 ) {
+    if ( d_checkpointInterval         > 0.0 || 
+         d_checkpointTimestepInterval > 0   || 
+         d_checkpointWalltimeInterval > 0 ) {
       d_checkpointsDir = d_dir.createSubdir("checkpoints");
       createIndexXML(d_checkpointsDir);
     }
@@ -448,6 +459,7 @@ DataArchiver::restartSetup( Dir    & restartFromDir,
                             bool     removeOldDir )
 {
   d_outputInitTimestep = false;
+
   if( d_writeMeta && !fromScratch ) {
     // partial copy of dat files
     copyDatFiles( restartFromDir, d_dir, startTimestep, timestep, removeOldDir );
@@ -459,15 +471,19 @@ DataArchiver::restartSetup( Dir    & restartFromDir,
     // partial copy of index.xml and timestep directories and
     // similarly for checkpoints
     copyTimesteps(restartFromDir, d_dir, startTimestep, timestep, removeOldDir);
+
     Dir checkpointsFromDir = restartFromDir.getSubdir("checkpoints");
     bool areCheckpoints = true;
+
     if (time > 0) {
-      // the restart_merger doesn't need checkpoints, and calls this with time=0.
+      // the restart_merger doesn't need checkpoints, and calls this
+      // with time=0.
       copyTimesteps( checkpointsFromDir, d_checkpointsDir, startTimestep,
                      timestep, removeOldDir, areCheckpoints );
       copySection( checkpointsFromDir, d_checkpointsDir, "index.xml", "variables" );
       copySection( checkpointsFromDir, d_checkpointsDir, "index.xml", "globals" );
     }
+
     if (removeOldDir) {
       // Try to remove the old dir...
       if( !Dir::removeDir( restartFromDir.getName().c_str() ) ) {
@@ -491,57 +507,23 @@ DataArchiver::restartSetup( Dir    & restartFromDir,
   }
   else if( d_writeMeta ) { // Just add <restart from = ".." timestep = ".."> tag.
     copySection(restartFromDir, d_dir, "index.xml", "restarts");
+
     string iname = d_dir.getName()+"/index.xml";
     ProblemSpecP indexDoc = loadDocument(iname);
+
     if (timestep >= 0) {
       addRestartStamp(indexDoc, restartFromDir, timestep);
     }
+
     indexDoc->output(iname.c_str());
     //indexDoc->releaseDocument();
-  }
-   
-  // set time and timestep variables appropriately
-  //d_currentTimestep = timestep;
-   
-  if( d_outputInterval > 0 ) {
-    d_nextOutputTime = ceil(time / d_outputInterval) * d_outputInterval;
-  }
-  else if( d_outputTimestepInterval > 0 ) {
-    d_nextOutputTimestep =
-      (timestep/d_outputTimestepInterval) * d_outputTimestepInterval + 1;
-
-    while( d_nextOutputTimestep <= timestep ) {
-      d_nextOutputTimestep += d_outputTimestepInterval;
-    }
-  }
-   
-  if( d_checkpointInterval > 0 ) {
-    d_nextCheckpointTime =
-      ceil(time / d_checkpointInterval) * d_checkpointInterval;
-  }
-  else if( d_checkpointTimestepInterval > 0 ) {
-    d_nextCheckpointTimestep =
-      (timestep/d_checkpointTimestepInterval) * d_checkpointTimestepInterval + 1;
-    while( d_nextCheckpointTimestep <= timestep ) {
-      d_nextCheckpointTimestep += d_checkpointTimestepInterval;
-    }
-  }
-
-  // When using the wall clock time for checkpoints, rank 0 determines
-  // the wall time and sends it to all other ranks.
-  if( d_checkpointWalltimeInterval > 0 ) {
-    // When using the wall time for checkpoints, rank 0 determines the
-    // wall time and sends it to all other ranks.
-    int walltime = d_sharedState->getElapsedWallTime();
-    Uintah::MPI::Bcast( &walltime, 1, MPI_INT, 0, d_myworld->getComm() );
-
-    d_nextCheckpointWalltime = walltime + d_checkpointWalltimeInterval;
   }
 } // end restartSetup()
 
 //______________________________________________________________________
-// This is called after problemSetup. It will copy the dat & checkpoint files to the new directory.
-// This also removes the global (dat) variables from the saveLabels variables
+// This is called after problemSetup. It will copy the dat &
+// checkpoint files to the new directory.  This also removes the
+// global (dat) variables from the saveLabels variables
 void
 DataArchiver::reduceUdaSetup(Dir& fromDir)
 {
@@ -901,40 +883,37 @@ DataArchiver::finalizeTimestep( double        time,
   //this function should get called exactly once per timestep
   
   //  static bool wereSavesAndCheckpointsInitialized = false;
-  dbg << "  finalizeTimestep, delt= " << delt << "\n";
-  d_tempElapsedTime = time + delt;
+  dbg << "  finalizeTimestep, time= " << time << " delt= " << delt << "\n";
   
   beginOutputTimestep( time, delt, grid );
 
   //__________________________________
-  // some changes here - we need to redo this if we add a material, or if we schedule output
-  // on the initialization timestep (because there will be new computes on subsequent timestep)
-  // or if there is a component switch or a new level in the grid
-  // - BJW
-  if (((delt != 0 || d_outputInitTimestep) && !d_wereSavesAndCheckpointsInitialized) || 
+  // some changes here - we need to redo this if we add a material, or
+  // if we schedule output on the initialization timestep (because
+  // there will be new computes on subsequent timestep) or if there is
+  // a component switch or a new level in the grid - BJW
+  if (((delt != 0.0 || d_outputInitTimestep) && !d_wereSavesAndCheckpointsInitialized) || 
       d_sharedState->getSwitchState() || grid->numLevels() != d_numLevelsInOutput) {
-      /* skip the initialization timestep (normally, anyway) for this
-         because it needs all computes to be set
-         to find the save labels */
-    
-    if (d_outputInterval != 0.0 || d_outputTimestepInterval != 0) {
-      initSaveLabels(sched, delt == 0);
+    // Skip the initialization timestep (normally, anyway) for this
+    // because it needs all computes to be set to find the save labels    
+    if( d_outputInterval > 0.0 || d_outputTimestepInterval > 0 ) {
+      initSaveLabels(sched, delt == 0.0);
      
-      if (!d_wereSavesAndCheckpointsInitialized && delt != 0) {
-        indexAddGlobals(); /* add saved global (reduction) variables to index.xml */
+      if (!d_wereSavesAndCheckpointsInitialized && delt != 0.0) {
+        indexAddGlobals(); // add saved global (reduction) variables to index.xml
       }
     }
     
     // This assumes that the TaskGraph doesn't change after the second
     // timestep and will need to change if the TaskGraph becomes dynamic. 
-    //   We also need to do this again if this is the initial timestep
-    if (delt != 0) {
+    // We also need to do this again if this is the initial timestep
+    if (delt != 0.0) {
       d_wereSavesAndCheckpointsInitialized = true;
     
       // Can't do checkpoints on init timestep....
-      if( d_checkpointInterval != 0.0 ||
-	  d_checkpointTimestepInterval != 0 ||
-	  d_checkpointWalltimeInterval != 0 ) {
+      if( d_checkpointInterval > 0.0 ||
+	  d_checkpointTimestepInterval > 0 ||
+	  d_checkpointWalltimeInterval > 0 ) {
 
         initCheckpoints( sched );
       }
@@ -971,8 +950,8 @@ DataArchiver::sched_allOutputTasks(       double       delt,
   //  Reduction Variables
   // Schedule task to dump out reduction variables at every timestep
   
-  if ( (d_outputInterval != 0.0 || d_outputTimestepInterval != 0) &&
-       (delt != 0 || d_outputInitTimestep)) {
+  if( (d_outputInterval  > 0.0 || d_outputTimestepInterval  > 0) &&
+      (delt != 0.0 || d_outputInitTimestep)) {
     
     Task* t = scinew Task( "DataArchiver::outputReductionVars", this, &DataArchiver::outputReductionVars );
     
@@ -987,14 +966,15 @@ DataArchiver::sched_allOutputTasks(       double       delt,
     sched->addTask(t, 0, 0);
     
     dbg << "  scheduled output tasks (reduction variables)\n";
-    if (delt != 0 || d_outputInitTimestep) {
+
+    if (delt != 0.0 || d_outputInitTimestep) {
       scheduleOutputTimestep(d_saveLabels, grid, sched, false);
     }
   }
   
   //__________________________________
   //  Schedule Checkpoint (reduction variables)
-  if (delt != 0 && d_checkpointCycle > 0 &&
+  if (delt != 0.0 && d_checkpointCycle > 0 &&
       ( d_checkpointInterval > 0 ||
 	d_checkpointTimestepInterval > 0 ||
 	d_checkpointWalltimeInterval > 0 ) ) {
@@ -1037,11 +1017,11 @@ DataArchiver::beginOutputTimestep( double time,
   // Check for an output.
   d_isOutputTimestep =
     // Output based on the simulation time.
-    ( ((d_outputInterval != 0.0 && (delt != 0 || d_outputInitTimestep)) &&
+    ( ((d_outputInterval > 0.0 && (delt != 0.0 || d_outputInitTimestep)) &&
        (time + delt >= d_nextOutputTime) ) ||
 			
       // Output based on the timestep interval.
-      ((d_outputTimestepInterval != 0 && (delt != 0 || d_outputInitTimestep)) &&
+      ((d_outputTimestepInterval > 0 && (delt != 0.0 || d_outputInitTimestep)) &&
        (timestep >= d_nextOutputTimestep)) ||
 
       // Output based on the being the last timestep.
@@ -1126,8 +1106,11 @@ DataArchiver::beginOutputTimestep( double time,
     //if (d_writeMeta)
     //index->releaseDocument();
   }
-  dbg << "    write CheckPoints (" << d_isCheckpointTimestep << ")  write output timestep (" << d_isOutputTimestep << ")";
-  dbg << "    end\n";
+
+  dbg << "    write output timestep (" << d_isOutputTimestep << ")" << std::endl
+      << "    write CheckPoints (" << d_isCheckpointTimestep << ")" << std::endl
+      << "    end\n";
+  
 } // end beginOutputTimestep
 
 //______________________________________________________________________
@@ -1175,21 +1158,21 @@ DataArchiver::makeTimestepDirs(       Dir                            & baseDir,
 //______________________________________________________________________
 //
 void
-DataArchiver::reEvaluateOutputTimestep(double /*orig_delt*/, double new_delt)
+DataArchiver::reevaluate_OutputCheckPointTimestep( double time )
 {
-  dbg << "  reEvaluateOutputTimestep() begin\n";
-  // call this on a timestep restart.  If lowering the delt goes beneath the 
-  // threshold, mark it as not an output timestep
+  dbg << "  reevaluate_OutputCheckPointTimestep() begin\n";
 
-  // this is set in finalizeTimestep to time+delt
-  d_tempElapsedTime = d_sharedState->getElapsedSimTime() + new_delt;
+  // Call this on a timestep restart. If lowering the delt goes
+  // beneath the threshold, cancel the output and/or checkpoint
+  // timestep
 
-  if (d_isOutputTimestep && d_outputInterval != 0.0 ) {
-    if (d_tempElapsedTime < d_nextOutputTime)
+  if (d_isOutputTimestep && d_outputInterval > 0.0 ) {
+    if (time < d_nextOutputTime)
       d_isOutputTimestep = false;
   }
-  if (d_isCheckpointTimestep && d_checkpointInterval != 0.0) {
-    if (d_tempElapsedTime < d_nextCheckpointTime) {
+  
+  if (d_isCheckpointTimestep && d_checkpointInterval > 0.0) {
+    if (time < d_nextCheckpointTime) {
       d_isCheckpointTimestep = false;    
       d_checkpointTimestepDirs.pop_back();
     }
@@ -1202,18 +1185,59 @@ DataArchiver::reEvaluateOutputTimestep(double /*orig_delt*/, double new_delt)
   d_checkpointCalled.resize(d_numLevelsInOutput, false);
   d_checkpointReductionCalled = false;
 #endif
-  dbg << "  reEvaluateOutputTimestep() end\n";
+  dbg << "  reevaluate_OutputCheckPointTimestep() end\n";
 }
 
 //______________________________________________________________________
 //
 void
-DataArchiver::findNext_OutputCheckPoint_Timestep( double /* delt */, const GridP & /* grid */ )
+DataArchiver::findNext_OutputCheckPointTimestep( double time, bool restart )
 {
   dbg << "  findNext_OutputCheckPoint_Timestep() begin\n";
 
   int timestep = d_sharedState->getCurrentTopLevelTimeStep();
 
+  if( restart )
+  {
+    // Output based on the simulaiton time.
+    if( d_outputInterval > 0.0 ) {
+      d_nextOutputTime = ceil(time / d_outputInterval) * d_outputInterval;
+    }
+    // Output based on the time step.
+    else if( d_outputTimestepInterval > 0 ) {
+      d_nextOutputTimestep =
+	(timestep/d_outputTimestepInterval) * d_outputTimestepInterval + 1;
+
+      while( d_nextOutputTimestep <= timestep ) {
+	d_nextOutputTimestep += d_outputTimestepInterval;
+      }
+    }
+   
+    // Checkpoint based on the simulaiton time.
+    if( d_checkpointInterval > 0.0 ) {
+      d_nextCheckpointTime =
+	ceil(time / d_checkpointInterval) * d_checkpointInterval;
+    }
+    // Checkpoint based on the time step.
+    else if( d_checkpointTimestepInterval > 0 ) {
+      d_nextCheckpointTimestep =
+	(timestep / d_checkpointTimestepInterval) *
+	d_checkpointTimestepInterval + 1;
+      while( d_nextCheckpointTimestep <= timestep ) {
+	d_nextCheckpointTimestep += d_checkpointTimestepInterval;
+      }
+    }
+    // Checkpoint based on the wall time.
+    else if( d_checkpointWalltimeInterval > 0 ) {
+      // When using the wall time for checkpoints, rank 0 determines the
+      // wall time and sends it to all other ranks.
+      int walltime = d_sharedState->getElapsedWallTime();
+      Uintah::MPI::Bcast( &walltime, 1, MPI_INT, 0, d_myworld->getComm() );
+
+      d_nextCheckpointWalltime = walltime + d_checkpointWalltimeInterval;
+    }
+  }
+  
   // If this timestep was an output/checkpoint timestep, determine
   // when the next one will be.
 
@@ -1231,13 +1255,13 @@ DataArchiver::findNext_OutputCheckPoint_Timestep( double /* delt */, const GridP
   // such as when components are switched. For example:
   // StandAlone/inputs/UCF/Switcher/switchExample3.ups
 
-  if( d_isOutputTimestep ) {
-
+  else if( d_isOutputTimestep ) {
+    
     // Output based on the simulaiton time.
     if( d_outputInterval > 0.0 ) {
-      if( d_tempElapsedTime >= d_nextOutputTime ) {
+      if( time >= d_nextOutputTime ) {
         d_nextOutputTime +=
-	  floor( (d_tempElapsedTime - d_nextOutputTime) / d_outputInterval ) *
+	  floor( (time - d_nextOutputTime) / d_outputInterval ) *
 	  d_outputInterval + d_outputInterval;
       }
     }
@@ -1254,10 +1278,9 @@ DataArchiver::findNext_OutputCheckPoint_Timestep( double /* delt */, const GridP
   if( d_isCheckpointTimestep ) {
     // Checkpoint based on the simulaiton time.
     if( d_checkpointInterval > 0.0 ) {
-      if( d_tempElapsedTime >= d_nextCheckpointTime ) {
+      if( time >= d_nextCheckpointTime ) {
         d_nextCheckpointTime +=
-	  floor( (d_tempElapsedTime - d_nextCheckpointTime) /
-		 d_checkpointInterval ) *
+	  floor( (time - d_nextCheckpointTime) / d_checkpointInterval ) *
 	  d_checkpointInterval + d_checkpointInterval;
       }
     }
@@ -1272,7 +1295,7 @@ DataArchiver::findNext_OutputCheckPoint_Timestep( double /* delt */, const GridP
     }
 
     // Checkpoint based on the wall time.
-    if( d_checkpointWalltimeInterval > 0 ) {
+    else if( d_checkpointWalltimeInterval > 0 ) {
 
       // When using the wall time for checkpoints, rank 0 determines
       // the wall time and sends it to all other ranks.
@@ -1288,11 +1311,13 @@ DataArchiver::findNext_OutputCheckPoint_Timestep( double /* delt */, const GridP
     }
   }  
   
-  dbg << "    next outputTime: " << d_nextOutputTime 
-      << "  next outputTimestep: " << d_nextOutputTimestep << "\n"
-      << "    next checkpointTime: " << d_nextCheckpointTime 
-      << "  next checkpoint timestep: " << d_nextCheckpointTimestep << "\n"
-      << "  end\n";
+  proc0cout << "    next output sim time: " << d_nextOutputTime 
+      << "  next output Timestep: " << d_nextOutputTimestep << "\n"
+      << "    next checkpoint sim time: " << d_nextCheckpointTime 
+      << "  next checkpoint timestep: " << d_nextCheckpointTimestep
+      << "  next checkpoint walltime: " << d_nextCheckpointWalltime << "\n";
+
+  dbg << "  findNext_OutputCheckPoint_Timestep() end\n";
 
 } // end findNext_OutputCheckPoint_Timestep()
 
@@ -1417,6 +1442,9 @@ DataArchiver::writeto_xml_files( double delt, const GridP& grid )
           }
         }
       }
+
+      double time = d_sharedState->getElapsedSimTime();
+      
       //__________________________________
       // add timestep info
       if(!found) {
@@ -1427,7 +1455,7 @@ DataArchiver::writeto_xml_files( double delt, const GridP& grid )
         value << dir_timestep;
         ProblemSpecP newElem = ts->appendElement( "timestep",value.str().c_str() );
         newElem->setAttribute( "href",     timestepindex.c_str() );
-        timeVal << std::setprecision(17) << d_tempElapsedTime;
+        timeVal << std::setprecision(17) << time + delt;
         newElem->setAttribute( "time",     timeVal.str() );
         deltVal << std::setprecision(17) << delt;
         newElem->setAttribute( "oldDelt",  deltVal.str() );
@@ -1454,14 +1482,15 @@ DataArchiver::writeto_xml_files( double delt, const GridP& grid )
       // Timestep information
       ProblemSpecP timeElem = rootElem->appendChild("Time");
       timeElem->appendElement("timestepNumber", dir_timestep);
-      timeElem->appendElement("currentTime", d_tempElapsedTime);
+      timeElem->appendElement("currentTime", time + delt);
       timeElem->appendElement("oldDelt", delt);
 
       //__________________________________
       // Output grid section:
       //
-      // With AMR, we're not guaranteed that a rank has work on a given level.
-      // Quick check to see that, so we don't create a node that points to no data.
+      // With AMR, we're not guaranteed that a rank has work on a
+      // given level.  Quick check to see that, so we don't create a
+      // node that points to no data.
 
       string grid_path = baseDirs[i]->getName() + "/" + tname.str() + "/";
 
@@ -1489,13 +1518,14 @@ DataArchiver::writeto_xml_files( double delt, const GridP& grid )
       //__________________________________
       // output input.xml & input.xml.orig
 
-      // a small convenience to the user who wants to change things when he restarts
-      // let him know that some information to change will need to be done in the timestep.xml
-      // file instead of the input.xml file.  Only do this once, though.  
+      // a small convenience to the user who wants to change things
+      // when he restarts let him know that some information to change
+      // will need to be done in the timestep.xml file instead of the
+      // input.xml file.  Only do this once, though.
       
       if (firstCheckpointTimestep) {
-        // loop over the blocks in timestep.xml and remove them from input.xml, with
-        // some exceptions.
+        // loop over the blocks in timestep.xml and remove them from
+        // input.xml, with some exceptions.
         string inputname = d_dir.getName()+"/input.xml";
         ProblemSpecP inputDoc = loadDocument(inputname);
         inputDoc->output((inputname + ".orig").c_str());
@@ -1592,11 +1622,12 @@ DataArchiver::writeto_xml_files( std::map< std::string, std::pair<std::string, s
 void
 DataArchiver::writeGridBinary( const bool hasGlobals, const string & grid_path, const GridP & grid )
 {
-  // Originally the <Grid> was saved in XML.  While this makes it very human readable, for
-  // large runs (10K+ patches), the (original) timestep.xml file, and now the grid.xml file
-  // become huge, taking a significant amount of disk space, and time to generate/save.
-  // To fix this problem, we will now write the data out in binary.  The original <Grid>
-  // data looks like this:
+  // Originally the <Grid> was saved in XML.  While this makes it very
+  // human readable, for large runs (10K+ patches), the (original)
+  // timestep.xml file, and now the grid.xml file become huge, taking
+  // a significant amount of disk space, and time to generate/save.
+  // To fix this problem, we will now write the data out in binary.
+  // The original <Grid> data looks like this:
   //
   // <Grid>
   //   <numLevels>1</numLevels>
@@ -2087,7 +2118,7 @@ DataArchiver::scheduleOutputTimestep(       vector<SaveItem> & saveLabels,
     
     //__________________________________
     //
-    for( saveIter = saveLabels.begin(); saveIter!= saveLabels.end(); saveIter++ ) {
+    for( saveIter = saveLabels.begin(); saveIter != saveLabels.end(); saveIter++ ) {
     
       const MaterialSubset* matls = saveIter->getMaterialSubset(level.get_rep());
       
@@ -2122,9 +2153,9 @@ DataArchiver::indexAddGlobals()
 {
   dbg << "  indexAddGlobals()\n";
 
-  // add info to index.xml about each global (reduction) var
-  // assume for now that global variables that get computed will not
-  // change from timestep to timestep
+  // add info to index.xml about each global (reduction) var assume
+  // for now that global variables that get computed will not change
+  // from timestep to timestep
   static bool wereGlobalsAdded = false;
   if (d_writeMeta && !wereGlobalsAdded) {
     wereGlobalsAdded = true;
@@ -2166,21 +2197,27 @@ void
 DataArchiver::outputReductionVars( const ProcessorGroup *,
                                    const PatchSubset    * /* pss */,
                                    const MaterialSubset * /* matls */,
-                                   DataWarehouse        * /* old_dw */,
+                                   DataWarehouse        * old_dw,
                                    DataWarehouse        * new_dw )
 {
-  if( new_dw->timestepRestarted() ) {
+  if( new_dw->timestepRestarted() || d_saveReductionLabels.empty() ) {
     return;
   }
     
+  dbg << "  outputReductionVars task begin\n";
+
   Timers::Simple timer;
   timer.start();
 
+  double time = d_sharedState->getElapsedSimTime();
+
+  delt_vartype delt_var;
+  old_dw->get( delt_var, d_sharedState->get_delt_label() );
+  double delt = delt_var;
+
   // Dump the stuff in the reduction saveset into files in the uda
   // at every timestep
-  dbg << "  outputReductionVars task begin\n";
-
-  for(int i=0;i<(int)d_saveReductionLabels.size();i++) {
+  for(int i=0; i<(int)d_saveReductionLabels.size(); ++i) {
     SaveItem& saveItem = d_saveReductionLabels[i];
     const VarLabel* var = saveItem.label;
     // FIX, see above
@@ -2201,10 +2238,13 @@ DataArchiver::outputReductionVars( const ProcessorGroup *,
       ofstream out(filename.str().c_str(), ios_base::app);
 #endif
       if (!out) {
-        throw ErrnoException("DataArchiver::outputReduction(): The file \"" + \
-              filename.str() + "\" could not be opened for writing!",errno, __FILE__, __LINE__);
+        throw ErrnoException("DataArchiver::outputReduction(): The file \"" +
+			     filename.str() +
+			     "\" could not be opened for writing!",
+			     errno, __FILE__, __LINE__);
       }
-      out << setprecision(17) << d_tempElapsedTime << "\t";
+      
+      out << std::setprecision(17) << time + delt << "\t";
       new_dw->print(out, var, 0, matlIndex);
       out << "\n";
     }
@@ -2213,7 +2253,7 @@ DataArchiver::outputReductionVars( const ProcessorGroup *,
   d_sharedState->d_runTimeStats[SimulationState::OutputFileIOTime] +=
     timer().seconds();
   
-  dbg << "  end\n";
+  dbg << "  outputReductionVars task end\n";
 }
 
 //______________________________________________________________________
@@ -2392,8 +2432,8 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
         if( tries >= 50 ) {
           ostringstream msg;
           
-          msg << "DataArchiver::output(): Failed to open file '" << dataFilename << "' (after 50 tries).";
-          cerr << msg.str() << "\n";
+          msg << "DataArchiver::output(): Failed to open file '"
+	      << dataFilename << "' (after 50 tries).";
           throw ErrnoException( msg.str(), errno, __FILE__, __LINE__ );
         }
 
@@ -2405,14 +2445,12 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
         proc0cout << "WARNING: There was a glitch in trying to open the checkpoint file: " 
                   << dataFilename << ". It took " << tries << " tries to successfully open it.";
       }
-      
-      
-      
-    //__________________________________
-    // loop over variables
-      size_t totalBytes = 0;                      // total bytes saved over all variables
+
+      //__________________________________
+      // loop over variables
+      size_t totalBytes = 0;  // total bytes saved over all variables
       vector<SaveItem>::iterator saveIter;
-      for(saveIter = saveLabels.begin(); saveIter!= saveLabels.end(); saveIter++) {
+      for(saveIter = saveLabels.begin(); saveIter != saveLabels.end(); saveIter++) {
         const VarLabel* var = saveIter->label;
         
         const MaterialSubset* var_matls = saveIter->getMaterialSubset(level);
@@ -2520,19 +2558,18 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
       
       doc->output(xmlFilename.c_str());
       //doc->releaseDocument();
+
       double myTime = timer().seconds();
       double byteToMB = 1024*1024;
+
       d_sharedState->d_runTimeStats[SimulationState::OutputFileIOTime] +=
 	myTime;
       d_sharedState->d_runTimeStats[SimulationState::OutputFileIORate] +=
 	(double)totalBytes/(byteToMB * myTime);
     }
+
     d_outputLock.unlock(); 
   }
-
-  dbg << "  end\n";
-
-
 
 #if HAVE_PIDX
   //______________________________________________________________________
@@ -2588,15 +2625,21 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
         totalBytes += saveLabels_PIDX(saveTheseLabels, pg, patches, new_dw, type, TD, ldir, dirName, doc);
       } 
     }
+
     double myTime = timer().seconds();
     double byteToMB = 1024*1024;
-    d_sharedState->d_runTimeStats[SimulationState::OutputFileIOTime] += myTime;
-    d_sharedState->d_runTimeStats[SimulationState::OutputFileIORate] += (double)totalBytes/(byteToMB * myTime);
+
+    d_sharedState->d_runTimeStats[SimulationState::OutputFileIOTime] +=
+      myTime;
+    d_sharedState->d_runTimeStats[SimulationState::OutputFileIORate] +=
+      (double)totalBytes/(byteToMB * myTime);
     
     // write the xml 
     //doc->output(xmlFilename.c_str());
   }
 #endif
+
+  dbg << "  outputVariables task end\n";
 } // end outputVariables()
 
 //______________________________________________________________________
@@ -2633,7 +2676,7 @@ DataArchiver::saveLabels_PIDX( std::vector< SaveItem >     & saveLabels,
   int actual_number_of_variables = 0;
   
   vector<SaveItem>::iterator saveIter;
-  for(saveIter = saveLabels.begin(); saveIter!= saveLabels.end(); saveIter++) {
+  for(saveIter = saveLabels.begin(); saveIter != saveLabels.end(); saveIter++) {
 
     const MaterialSubset* var_matls = saveIter->getMaterialSubset(level);
     if (var_matls == nullptr){
@@ -2700,7 +2743,7 @@ DataArchiver::saveLabels_PIDX( std::vector< SaveItem >     & saveLabels,
   int vc = 0;
   int vcm = 0;
   
-  for(saveIter = saveLabels.begin(); saveIter!= saveLabels.end(); saveIter++) 
+  for(saveIter = saveLabels.begin(); saveIter != saveLabels.end(); saveIter++) 
   {
     const VarLabel* label = saveIter->label;
 
@@ -3361,8 +3404,8 @@ DataArchiver::needRecompile(double /*time*/, double /*dt*/,
   d_currentTimestep++;
   bool recompile=false;
   bool do_output=false;
-  if ((d_outputInterval != 0 && time+dt >= d_nextOutputTime) ||
-      (d_outputTimestepInterval != 0 &&
+  if ((d_outputInterval > 0.0 && time+dt >= d_nextOutputTime) ||
+      (d_outputTimestepInterval > 0 &&
       d_currentTimestep+1 > d_nextOutputTimestep)) {
     do_output=true;
     if(!d_wasOutputTimestep)
@@ -3377,10 +3420,10 @@ DataArchiver::needRecompile(double /*time*/, double /*dt*/,
   int walltime = d_sharedState->getElapsedWallTime();
   Uintah::MPI::Bcast( &walltime, 1, MPI_INT, 0, d_myworld->getComm() );
 
-  if ((d_checkpointInterval != 0 && time+dt >= d_nextCheckpointTime) ||
-      (d_checkpointTimestepInterval != 0 &&
+  if ((d_checkpointInterval > 0.0 && time+dt >= d_nextCheckpointTime) ||
+      (d_checkpointTimestepInterval > 0 &&
       d_currentTimestep+1 > d_nextCheckpointTimestep) ||
-      (d_checkpointWalltimeInterval != 0 &&
+      (d_checkpointWalltimeInterval > 0 &&
       walltime >= d_nextCheckpointWalltime)) {
     do_output=true;
     if(!d_wasCheckpointTimestep)
@@ -3635,7 +3678,7 @@ DataArchiver::checkpointTimestep( double time,
   int nextCheckpointTimestep = d_nextCheckpointTimestep;
   int checkpointTimestepInterval = d_checkpointTimestepInterval;
 
-  d_nextCheckpointTimestep = d_sharedState->getCurrentTopLevelTimeStep();;
+  d_nextCheckpointTimestep = d_sharedState->getCurrentTopLevelTimeStep();
   d_checkpointTimestepInterval = 1;
 
   // If needed create checkpoints/index.xml

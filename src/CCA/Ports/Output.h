@@ -108,13 +108,15 @@ class SimulationState;
                                       SchedulerP&, bool recompile = false ) = 0;
 
     //////////
-    // Call this after a timestep restart to make sure we still
-    // have an output timestep
-    virtual void reEvaluateOutputTimestep(double old_delt, double new_delt)=0;
+    // Call this after a timestep restart where delt is adjusted to
+    // make sure there still will be output and/or checkpoint timestep
+    virtual void reevaluate_OutputCheckPointTimestep(double time) = 0;
 
     //////////
-    // Call this after the timestep has been executed.
-    virtual void findNext_OutputCheckPoint_Timestep(double delt, const GridP&) = 0;
+    // Call this after the timestep has been executed to find the
+    // next time step to output
+    virtual void findNext_OutputCheckPointTimestep(double time,
+						   bool restart = false) = 0;
     
     //////////
     // update or write to the xml files

@@ -444,7 +444,7 @@
         <x>10</x>
         <y>0</y>
         <width>600</width>
-        <height>371</height>
+        <height>291</height>
        </rect>
       </property>
       <property name="title">
@@ -456,7 +456,7 @@
          <x>10</x>
          <y>30</y>
          <width>580</width>
-         <height>331</height>
+         <height>251</height>
         </rect>
        </property>
        <column>
@@ -491,15 +491,16 @@
        </column>
       </widget>
       <zorder>RuntimeStatsTable</zorder>
+      <zorder>MPIStatsGroupBox</zorder>
       <zorder>MPIStatsTable</zorder>
      </widget>
      <widget class="QGroupBox" name="MPIStatsGroupBox">
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>370</y>
+        <y>290</y>
         <width>600</width>
-        <height>371</height>
+        <height>291</height>
        </rect>
       </property>
       <property name="title">
@@ -511,7 +512,60 @@
          <x>10</x>
          <y>30</y>
          <width>580</width>
-         <height>331</height>
+         <height>251</height>
+        </rect>
+       </property>
+       <column>
+        <property name="text">
+         <string>Variable</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Units</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Average</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Maxium</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Rank</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>%</string>
+        </property>
+       </column>
+      </widget>
+     </widget>
+     <widget class="QGroupBox" name="OtherStatsGroupBox">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>580</y>
+        <width>600</width>
+        <height>171</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>Other Performance Stats</string>
+      </property>
+      <widget class="QTableWidget" name="OtherStatsTable">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>30</y>
+         <width>580</width>
+         <height>131</height>
         </rect>
        </property>
        <column>

@@ -26,13 +26,20 @@
 #include <Core/Grid/SimulationState.h>
 
 using namespace Uintah;
+
 AnalysisModule::AnalysisModule()
 {
 }
+
 AnalysisModule::AnalysisModule(ProblemSpecP& prob_spec, 
                                SimulationStateP& sharedState,
                                Output* dataArchiever)
 {
+  sharedState->d_otherStats.insert( (unsigned int) OnTheFlyAnalysisMinMaxTime,
+				    std::string("OnTheFlyAnalysisMinMaxTime"),
+				    "seconds", 0 );
+
+  sharedState->d_otherStats.validate( MAX_OTHER_STATS );
 }
 
 AnalysisModule::~AnalysisModule()

@@ -47,6 +47,13 @@ namespace Uintah {
 
   public:
     
+    // Other stats that can be used by individual components.
+    enum OtherStat
+    {
+      OnTheFlyAnalysisMinMaxTime = 0,
+      MAX_OTHER_STATS
+    };
+    
     AnalysisModule();
     AnalysisModule(ProblemSpecP& prob_spec, SimulationStateP& sharedState, Output* dataArchiver);
     virtual ~AnalysisModule();

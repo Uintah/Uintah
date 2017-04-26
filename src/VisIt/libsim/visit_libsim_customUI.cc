@@ -656,6 +656,50 @@ void visit_SetMPIStats( visit_simulation_data *sim )
 }
 
 //---------------------------------------------------------------------
+// SetOtherStats
+//    Set the Other stats
+//---------------------------------------------------------------------
+void visit_SetOtherStats( visit_simulation_data *sim )
+{
+  SimulationStateP simStateP = sim->simController->getSimulationStateP();
+
+  ReductionInfoMapper< unsigned int, double > &otherStats =
+    simStateP->d_otherStats;
+
+  if( otherStats.size() )
+  {
+    VisItUI_setValueS( "OtherStatsGroupBox", "SHOW_WIDGET", 1);
+    VisItUI_setTableValueS("OtherStatsTable", -1, -1, "CLEAR_TABLE", 0);
+
+    for (unsigned int i=0; i<otherStats.size(); ++i)
+    {
+      std::string name  = otherStats.getName(i);
+      std::string units = otherStats.getUnits(i);
+      
+      double  average = otherStats.getAverage(i);
+      double  maximum = otherStats.getMaximum(i);
+      int     rank    = otherStats.getRank(i);
+      
+      VisItUI_setTableValueS("OtherStatsTable", i, 0, name.c_str(), 0);
+      VisItUI_setTableValueS("OtherStatsTable", i, 1, units.c_str(), 0);
+      VisItUI_setTableValueD("OtherStatsTable", i, 2, average, 0);
+      VisItUI_setTableValueD("OtherStatsTable", i, 3, maximum, 0);
+      VisItUI_setTableValueI("OtherStatsTable", i, 4, rank, 0);
+      VisItUI_setTableValueD("OtherStatsTable", i, 5,
+                             100*(1-(average/maximum)), 0);
+      visit_SetStripChartValue( sim, name, average );
+      visit_SetStripChartValue( sim, name+"_Ave", average );
+      visit_SetStripChartValue( sim, name+"_Max", maximum );
+    }
+  }
+  else
+  {
+    VisItUI_setValueS( "OtherStatsGroupBox", "HIDE_WIDGET", 0);
+    VisItUI_setTableValueS("OtherStatsTable", -1, -1, "CLEAR_TABLE", 0);
+  }
+}
+
+//---------------------------------------------------------------------
 // SetImageVars
 //    
 //---------------------------------------------------------------------

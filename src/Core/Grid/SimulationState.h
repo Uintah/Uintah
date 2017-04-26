@@ -310,6 +310,8 @@ public:
 
   ReductionInfoMapper< RunTimeStat, double > d_runTimeStats;
 
+  ReductionInfoMapper< unsigned int, double > d_otherStats;
+
 private:
 
   void registerMaterial( Material* );

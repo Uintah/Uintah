@@ -105,8 +105,8 @@ class DataWarehouse;
                                   bool     fromScratch,
                                   bool     removeOldDir );
 
-       //! Call this after problemSetup it will copy the data and checkpoint files ignore
-       //! dumping reduction variables.
+       //! Call this after problemSetup it will copy the data and
+       //! checkpoint files ignore dumping reduction variables.
        virtual void reduceUdaSetup( Dir& fromDir );
 
        //! Copy a section between udas .
@@ -131,11 +131,15 @@ class DataWarehouse;
                                                 SchedulerP & /* scheduler */,
                                                 bool         recompile = false );
                                       
-       //! Find the next times to output 
-       //! Call after timestep has completed.
-       virtual void findNext_OutputCheckPoint_Timestep( double delt, const GridP & );
-       
-       
+       //! Call this after a timestep restart where delt is adjusted to
+       //! make sure there still will be output and/or checkpoint timestep
+       virtual void reevaluate_OutputCheckPointTimestep(double time);
+
+     //! Call this after the timestep has been executed to find the
+       //! next time step to output
+       virtual void findNext_OutputCheckPointTimestep( double time,
+						       bool restart = false );
+
        //! write meta data to xml files 
        //! Call after timestep has completed.
        virtual void writeto_xml_files( double delt, const GridP & grid );
@@ -318,10 +322,6 @@ class DataWarehouse;
                                  const double   delt,
                                  const GridP  & grid );
 
-       //! After a timestep restart (delt adjusted), we need to see if we are 
-       //! still an output timestep.
-       virtual void reEvaluateOutputTimestep(double old_delt, double new_delt);
-
        //! helper for initializeOutput - writes the initial index.xml file,
        //! both setting the d_indexDoc var and writing it to disk.
        void createIndexXML(Dir& dir);
@@ -369,12 +369,8 @@ class DataWarehouse;
        //! pointer to simulation state, to get timestep and time info
        SimulationStateP d_sharedState;
 
-       //! set in finalizeTimestep for output tasks to see how far the 
-       //! next timestep will go.  Stored as temp in case of a
-       //! timestep restart.
-       double d_tempElapsedTime; 
-
-       // Only one of these should be non-zero.  The value is read from the .ups file.
+       // Only one of these should be non-zero.  The value is read
+       // from the .ups file.
        double d_outputInterval;         // In seconds.
        int    d_outputTimestepInterval; // Number of time steps.
 
