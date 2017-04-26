@@ -714,6 +714,9 @@ SimulationController::ReportStats( bool header /* = false */ )
   ReductionInfoMapper< SimulationState::RunTimeStat, double > &runTimeStats =
     d_sharedState->d_runTimeStats;
 
+  ReductionInfoMapper< unsigned int, double > &otherStats =
+    d_sharedState->d_otherStats;
+
   // With the sum reduces, use double, since with memory it is possible that
   // it will overflow
   double        avg_memused =
@@ -781,6 +784,8 @@ SimulationController::ReportStats( bool header /* = false */ )
   // Output timestep statistics...
   if (istats.active())
   {
+    istats << "Run time performance stats" << std::endl;
+
     for (unsigned int i=0; i<runTimeStats.size(); i++)
     {
       SimulationState::RunTimeStat e = (SimulationState::RunTimeStat) i;
@@ -791,6 +796,20 @@ SimulationController::ReportStats( bool header /* = false */ )
 	       << left << setw(19) << runTimeStats.getName(e)
 	       << " [" << runTimeStats.getUnits(e) << "]: "
 	       << runTimeStats[e] << "\n";
+      }
+    }
+
+    if( otherStats.size() )
+      istats << "Other performance stats" << std::endl;
+      
+    for (unsigned int i=0; i<otherStats.size(); i++)
+    {
+      if (otherStats[i] > 0)
+      {
+        istats << "rank: " << d_myworld->myrank() << " "
+	       << left << setw(19) << otherStats.getName(i)
+	       << " [" << otherStats.getUnits(i) << "]: "
+	       << otherStats[i] << "\n";
       }
     }
   } 
@@ -845,15 +864,18 @@ SimulationController::ReportStats( bool header /* = false */ )
 
     // Ignore the first sample as that is for initalization.
     if (stats.active() && d_nSamples) {
-	  stats << "  " << left
-		<< setw(21) << "Description"
-		<< setw(15) << "Units"
-		<< setw(15) << "Average"
-		<< setw(15) << "Maximum"
-		<< setw(13) << "Rank"
-		<< setw(13) << "100*(1-ave/max) '% load imbalance'"
-		<< "\n";
 
+      stats << "Run time performance stats" << std::endl;
+      
+      stats << "  " << left
+	    << setw(21) << "Description"
+	    << setw(15) << "Units"
+	    << setw(15) << "Average"
+	    << setw(15) << "Maximum"
+	    << setw(13) << "Rank"
+	    << setw(13) << "100*(1-ave/max) '% load imbalance'"
+	    << "\n";
+      
       for (unsigned int i=0; i<runTimeStats.size(); ++i)
       {
 	SimulationState::RunTimeStat e = (SimulationState::RunTimeStat) i;
@@ -877,6 +899,26 @@ SimulationController::ReportStats( bool header /* = false */ )
       if( !std::isnan(d_sharedState->getOverheadAvg()) ) {
         stats << "  Percentage of time spent in overhead : "
               << d_sharedState->getOverheadAvg()*100.0 <<  "\n";
+      }
+
+      if( otherStats.size() )
+	stats << "Other performance stats" << std::endl;
+      
+      for (unsigned int i=0; i<otherStats.size(); ++i)
+      {
+	if (otherStats.getMaximum(i) > 0)
+	{
+	  stats << "  " << left
+                << setw(21) << otherStats.getName(i)
+		<< "[" << setw(10) << otherStats.getUnits(i) << "]"
+		<< " : " << setw(12) << otherStats.getAverage(i)
+		<< " : " << setw(12) << otherStats.getMaximum(i)
+		<< " : " << setw(10) << otherStats.getRank(i)
+		<< " : " << setw(10)
+		<< 100.0 * (1.0 - (otherStats.getAverage(i) /
+				   otherStats.getMaximum(i)))
+		<< "\n";
+	}
       }
     }
   
