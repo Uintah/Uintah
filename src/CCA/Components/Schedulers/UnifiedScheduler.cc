@@ -541,7 +541,7 @@ UnifiedScheduler::runTask( DetailedTask*         dtask
 
 #ifdef HAVE_CUDA
     if (Uintah::Parallel::usingDevice()) {
-      task->deleteTaskGpuDataWarehouses();
+      dtask->deleteTaskGpuDataWarehouses();
     }
 #endif
 
