@@ -271,6 +271,9 @@ public:
   {
     unsigned int nStats = InfoMapper<E, T>::d_keys.size();
 
+    if( nStats == 0 )
+      return;
+    
     if( myWorld->size() > 1)
     {
       // A little ugly, but do it anyway so only one reduction is needed
