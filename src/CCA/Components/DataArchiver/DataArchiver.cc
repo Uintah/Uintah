@@ -356,8 +356,8 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
   d_nextOutputTimestep = d_outputInitTimestep ? 0 : 1;
 
   d_nextCheckpointTime     = d_checkpointInterval;
-  d_nextCheckpointTimestep = d_checkpointTimestepInterval;
-  d_nextCheckpointWalltime = d_checkpointWalltimeStart + 1;
+  d_nextCheckpointTimestep = d_checkpointTimestepInterval + 1;
+  d_nextCheckpointWalltime = d_checkpointWalltimeStart;
 
   //__________________________________
   // 
