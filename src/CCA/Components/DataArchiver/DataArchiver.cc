@@ -1311,7 +1311,7 @@ DataArchiver::findNext_OutputCheckPointTimestep( double time, bool restart )
     }
   }  
   
-  proc0cout << "    next output sim time: " << d_nextOutputTime 
+  dbg << "    next output sim time: " << d_nextOutputTime 
       << "  next output Timestep: " << d_nextOutputTimestep << "\n"
       << "    next checkpoint sim time: " << d_nextCheckpointTime 
       << "  next checkpoint timestep: " << d_nextCheckpointTimestep

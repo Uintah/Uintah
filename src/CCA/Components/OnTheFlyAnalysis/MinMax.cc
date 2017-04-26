@@ -572,7 +572,7 @@ void MinMax::computeMinMax(const ProcessorGroup* pg,
     }  // patches
   }  // time to write data
 
-  d_sharedState->d_otherStats[OnTheFlyAnalysisMinMaxTime] += timer().seconds();
+  // d_sharedState->d_otherStats[OnTheFlyAnalysisMinMaxTime] += timer().seconds();
 }
 
 //______________________________________________________________________
@@ -754,7 +754,7 @@ void MinMax::doAnalysis(const ProcessorGroup* pg,
     new_dw->put(max_vartype(lastWriteTime), d_lb->lastCompTimeLabel ); 
   }  // patches
 
-  d_sharedState->d_otherStats[OnTheFlyAnalysisMinMaxTime] += timer().seconds();
+  // d_sharedState->d_otherStats[OnTheFlyAnalysisMinMaxTime] += timer().seconds();
 }
 
 
