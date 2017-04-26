@@ -357,33 +357,32 @@ clean::
 	@echo "   find . -name \"*.$(OBJEXT)\" -o -name depend.mk -o -name \\"
 	@echo "                      ii_files -print | xargs rm -rf"
 
-cleanreally::
+# Two names for the same thing...
+cleanreally reallyclean::
+        # Remove object files:
 	rm -f $(patsubst %,%/*.$(OBJEXT), $(ALLOBJSUBDIRS))
-	rm -f $(patsubst %,%/depend.mk, $(ALLOBJSUBDIRS))
-ifneq ($(IS_OSX),yes)
-        # Fails on Mac case-insensitive file systems... (sigh)
-	rm -f $(patsubst %,%/core, $(ALLOBJSUBDIRS))
-endif
-	rm -f $(patsubst %,%/*.d, $(ALLOBJSUBDIRS))
-	@( find CCA/Components -name "*.cu" -exec rm -f {} \;)
-	@( find CCA/Components -name "*.h" -exec rm -f {} \;)
-	@( find CCA/Components -name "*.$(OBJEXT)" -exec rm -f {} \;)
-	@( find CCA/Components -name "*.d" -exec rm -f {} \;)	
-	for fname in $(patsubst %,%/ii_files, $(ALLOBJSUBDIRS)); \
-	  do if test -d $$fname; then rm -rf $$fname; fi; done
-	rm -f $(patsubst %,%/*~, $(ALLOBJSUBDIRS))
-	rm -f $(LIBDIR)/so_locations ./so_locations
-	rm -f $(LIBDIR)/*.$(SO_OR_A_FILE)
-
-reallyclean:: cleanreally
-
+        # Remove dependency files:
 ifeq ($(CC_DEPEND_EXT),depend.mk)
 	rm -f $(patsubst %,%/depend.mk, $(ALLOBJSUBDIRS))
 else
-	rm -f $(patsubst %,%/*.$(CC_DEPEND_EXT), $(ALLOBJSUBDIRS))
+	rm -f $(patsubst %,%/*$(CC_DEPEND_EXT), $(ALLOBJSUBDIRS))
 endif
+        # Remove core files (except on Macs (which have case-insensitive file systems... (sigh))
+ifneq ($(IS_OSX),yes)
+	rm -f $(patsubst %,%/core, $(ALLOBJSUBDIRS))
+endif
+        # Remove any .cu or .h files that live on the binary side...
+	@( find CCA/Components -name "*.cu" -exec rm -f {} \;)
+	@( find CCA/Components -name "*.h" -exec rm -f {} \;)
+        # Remove template instantiation files (old SGI compiler?)
+	for fname in $(patsubst %,%/ii_files, $(ALLOBJSUBDIRS)); \
+	  do if test -d $$fname; then rm -rf $$fname; fi; done
+        # Remove emacs backup files.
+	rm -f $(patsubst %,%/*~, $(ALLOBJSUBDIRS))
+        # Remove all libraries and executables
 	rm -f $(CLEANLIBS)
 	rm -f $(CLEANPROGS)
+        # Remove misc stuff...
 	rm -f y.output
 	rm -Rf $(LIBDIR)
 	-rm -f sciTAGS
