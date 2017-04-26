@@ -228,6 +228,8 @@ CharOxidationSmith::problemSetup(const ProblemSpecP& params, int qn)
   // get model coefficients
   std::string oxidizer_name;
   double oxidizer_MW; //
+  double hrxn; //
+  bool use_co2co;
   double a; //
   double e; //
   double phi; //
@@ -251,11 +253,15 @@ CharOxidationSmith::problemSetup(const ProblemSpecP& params, int qn)
       db_reaction->require("pre_exponential_factor",a);
       db_reaction->require("activation_energy",e);
       db_reaction->require("stoich_coeff_ratio",phi);
+      db_reaction->require("heat_of_reaction_constant",hrxn);
+      db_reaction->getWithDefault("use_co2co",use_co2co,false);
+      _use_co2co_l.push_back(use_co2co);
       _MW_l.push_back(oxidizer_MW);
       _oxid_l.push_back(oxidizer_name);
       _a_l.push_back(a);
       _e_l.push_back(e);
       _phi_l.push_back(phi);
+      _hrxn_l.push_back(hrxn);
       std::string rate_name = "char_reaction";
       std::stringstream str_l;
       str_l << _NUM_reactions;
@@ -641,6 +647,7 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
     int count;
     double relative_velocity;
     double CO_CO2_ratio;
+    double CO2onCO;
     double gas_rho;
     double gas_T;
     double p_T;
@@ -650,6 +657,8 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
     double ch;
     double w;
     double MW;
+    double d_mass;
+    double h_rxn;
     double r_devol;
     double r_devol_ns;
     double RHS;
@@ -663,6 +672,8 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
     double sum_x_D;
     double sum_x;
     double delta;
+    std::vector<double> phi_l(_NUM_reactions);
+    std::vector<double> hrxn_l(_NUM_reactions);
     std::vector<double> oxid_mass_frac(_NUM_reactions);
     std::vector<double> oxid_mole_frac(_NUM_reactions);
     std::vector<double> co_r(_NUM_reactions);
@@ -748,6 +759,11 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
         surfaceAreaFraction=w*p_diam*p_diam/AreaSum; // [-] this is the weighted area fraction for the current particle size.
         CO_CO2_ratio = 200.*exp(-9000./(_R_cal*p_T)); // [ kg CO / kg CO2]
         CO_CO2_ratio=CO_CO2_ratio*44.0/28.0; // [kmoles CO / kmoles CO2]
+        CO2onCO=1./CO_CO2_ratio; // [kmoles CO2 / kmoles CO]
+	      for (int l=0; l<_NUM_reactions; l++) {
+          phi_l[l] = (_use_co2co_l[l]) ? (CO2onCO + 1)/(CO2onCO + 0.5) : _phi_l[l]; 
+          hrxn_l[l] = (_use_co2co_l[l]) ? (CO2onCO*_HF_CO2 + _HF_CO)/(1+CO2onCO) : _hrxn_l[l]; 
+        }
         relative_velocity = sqrt( ( gas_vel.x() - part_vel.x() ) * ( gas_vel.x() - part_vel.x() ) +
                                          ( gas_vel.y() - part_vel.y() ) * ( gas_vel.y() - part_vel.y() ) +
                                          ( gas_vel.z() - part_vel.z() ) * ( gas_vel.z() - part_vel.z() )  );// [m/s]
@@ -770,7 +786,7 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
           Sh[l] = 2.0 + 0.6 * std::sqrt(Re_p) * std::cbrt(Sc[l]); // Sherwood number [-]
           oxid_mole_frac[l] = oxid_mass_frac[l] * MW / _MW_l[l]; // [mole fraction]
           co_r[l] = cg * oxid_mole_frac[l]; // oxidizer concentration, [kmoles/m^3]
-          k_r[l] = ( 10.0 * _a_l[l] * exp( - _e_l[l] / ( _R_cal * p_T)) * _R * p_T * 1000.0) / ( _Mh * _phi_l[l] * 101325. ); // [m / s]
+          k_r[l] = ( 10.0 * _a_l[l] * exp( - _e_l[l] / ( _R_cal * p_T)) * _R * p_T * 1000.0) / ( _Mh * phi_l[l] * 101325. ); // [m / s]
         }
         // Newton-Raphson solve for rh_l.
         // rh_(n+1) = rh_(n) - (dF_(n)/drh_(n))^-1 * F_(n)
@@ -781,13 +797,13 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
             rh_l[l]=rh_l_new[l];
           }
           // get F and Jacobian -> dF/drh
-          root_function( F, rh_l, co_r, gas_rho, cg, k_r, MW, r_devol_ns, p_diam, Sh, w, p_area, _D_oxid_mix_l );
+          root_function( F, rh_l, co_r, gas_rho, cg, k_r, MW, r_devol_ns, p_diam, Sh, w, p_area, _D_oxid_mix_l, phi_l );
           for (int j=0; j<_NUM_reactions; j++) {
             for (int k=0; k<_NUM_reactions; k++) {
               rh_l_delta[k] = rh_l[k];
             }
             rh_l_delta[j] = rh_l[j]+delta;
-            root_function( F_delta, rh_l_delta, co_r, gas_rho, cg, k_r, MW, r_devol_ns, p_diam, Sh, w, p_area, _D_oxid_mix_l );
+            root_function( F_delta, rh_l_delta, co_r, gas_rho, cg, k_r, MW, r_devol_ns, p_diam, Sh, w, p_area, _D_oxid_mix_l, phi_l );
             for (int l=0; l<_NUM_reactions; l++) {
               (*dfdrh)[l][j] = (F_delta[l] - F[l]) / delta;
             }
@@ -834,10 +850,16 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
         }
         // convert rh units from kg/m^3/s to kg/s/#
         char_mass_rate  = 0.0;
+	      d_mass = 0.0;
+	      h_rxn = 0.0; // this is the reaction rate weighted heat of reaction. It is needed so we can used the clipped value when computed the heat of reaction rate.
+                     // h_rxn = sum(hrxn_l * rxn_l)/sum(rxn_l)
         for (int l=0; l<_NUM_reactions; l++) {
           reaction_rate_l[l](i,j,k)=rh_l_new[l];// [kg/m^3/s] this is for the intial guess during the next time-step
           char_mass_rate+= -rh_l_new[l]/w;// [kg/s/#]  negative sign because we are computing the destruction rate for the particles.
+	        d_mass += rh_l_new[l];
+	        h_rxn += hrxn_l[l] * rh_l_new[l];
         }
+	      h_rxn /= (d_mass + 1e-50); // [J/mole]
         // check to see if reaction rate is oxidizer limited.
         for (int l=0; l<_NUM_reactions; l++) {
           char_mass_rate = std::max( char_mass_rate, - (oxid_mass_frac[l] * gas_rho * surfaceAreaFraction) / (dt * w) );// [kg/s/#] // here the surfaceAreaFraction parameter is allowing us to only consume the oxidizer multiplied by the weighted area fraction for the current particle.
@@ -846,12 +868,13 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
         if ( add_rawcoal_birth && add_char_birth ){
           char_mass_rate = std::max( char_mass_rate, - ((rc+ch)/(dt) + (RHS + RHS_v)/(vol*w) + r_devol/w + char_birth(i,j,k)/w + rawcoal_birth(i,j,k)/w )); // [kg/s/#] 
         } else {
+        
           char_mass_rate = std::max( char_mass_rate, - ((rc+ch)/(dt) + (RHS + RHS_v)/(vol*w) + r_devol/w )); // [kg/s/#] 
         }
         char_mass_rate = std::min( 0.0, char_mass_rate); // [kg/s/#] make sure we aren't creating char.
         char_rate(i,j,k) = (char_mass_rate*w)/(_char_scaling_constant*_weight_scaling_constant); // [kg/m^3/s - scaled]
         gas_char_rate(i,j,k) = -char_mass_rate*w;// [kg/m^3/s] (negative sign for exchange between solid and gas)
-        particle_temp_rate(i,j,k) = char_mass_rate*w/_Mh/(1.0+CO_CO2_ratio)*(CO_CO2_ratio*_HF_CO + _HF_CO2)*1000.; // [J/s/m^3] -- the *1000 is need to convert J/mole to J/kmole.
+        particle_temp_rate(i,j,k) = h_rxn*char_mass_rate*w/_Mh*1000.; // [J/s/m^3] -- the *1000 is need to convert J/mole to J/kmole.
         surface_rate(i,j,k) = char_mass_rate/p_area;  // in [kg/(s # m^2)]
         PO2surf_(i,j,k) = 0.0; // multiple oxidizers, so we are leaving this empty.
 
@@ -868,7 +891,7 @@ CharOxidationSmith::root_function( std::vector<double> &F, std::vector<double> &
                                    double &gas_rho, double &cg, std::vector<double> &k_r, double &MW,
                                    double &r_devol, double &p_diam, std::vector<double> &Sh,
                                    double &w, double &p_area,
-                                   std::vector<double> &_D_oxid_mix_l ){
+                                   std::vector<double> &_D_oxid_mix_l, std::vector<double> &phi_l ){
 
   double rh = 0.0;
   double Bjm = 0.0;
@@ -881,7 +904,7 @@ CharOxidationSmith::root_function( std::vector<double> &F, std::vector<double> &
     Bjm = std::min( 80.0 , (rh + r_devol)/w/( 2. * M_PI * _D_oxid_mix_l[l] * p_diam * gas_rho ) ); // [-] // this is the derived for mass flux  BSL chapter 22
     Fac = ( Bjm >= 1e-7 ) ?  Bjm/(exp(Bjm)-1.) : 1.0; // also from BSL chapter 22 the mass transfer correction factor.
     mtc_r = (Sh[l] * _D_oxid_mix_l[l] * Fac) / p_diam; // [m/s]
-    numerator =  SQUARE(p_area * w) * _Mh * MW * _phi_l[l] * k_r[l] * mtc_r * _S * co_r[l] * cg; // [(#^2 kg-char kg-mix) / (s^2 m^6)]
+    numerator =  SQUARE(p_area * w) * _Mh * MW * phi_l[l] * k_r[l] * mtc_r * _S * co_r[l] * cg; // [(#^2 kg-char kg-mix) / (s^2 m^6)]
     denominator = MW * p_area * w *cg * (k_r[l] * _S + mtc_r); // [(kg-mix #) / (m^3 s)]
     F[l] = rh_l[l] - numerator / ( denominator + rh  + r_devol); // [kg-char/m^3/s]
   }

@@ -559,6 +559,8 @@
               <pre_exponential_factor    spec="REQUIRED DOUBLE"/> <!-- [g/(cm^2 s atm O2)] (see pg 87-89 of "Coal Combustion and Gasification" by Smoot and Smith for coal specific parameters) -->
               <activation_energy         spec="REQUIRED DOUBLE"/> <!-- [cal/gmole] (see pg 87-89 of "Coal Combustion and Gasification" by Smoot and Smith for coal specific parameters) -->
               <stoich_coeff_ratio        spec="REQUIRED DOUBLE"/> <!-- [kmoles char / kmoles oxidizer] from stoichiometric coefficients -->
+	            <use_co2co                 spec="OPTIONAL BOOLEAN"/> <!--default is false. If true than overides stoich_coeff_ratio with (CO2onCO + 1)/(CO2onCO + 0.5) model. -->
+              <heat_of_reaction_constant spec="REQUIRED DOUBLE"/> <!-- [J / mole] if use_co2co then it uses (CO2onCO*_HF_CO2 + _HF_CO)/(1+CO2onCO) -->
             </reaction>
           </SmithChar>
 

@@ -115,7 +115,7 @@ public:
 private:
 
   // UDF's
-  inline void root_function( std::vector<double> &F, std::vector<double> &rh_l, std::vector<double> &co_r, double &gas_rho, double &cg, std::vector<double> &k_r, double &MW, double &r_devol, double &p_diam, std::vector<double> &Sh, double &w, double &p_area, std::vector<double> &_D_oxid_mix_l);
+  inline void root_function( std::vector<double> &F, std::vector<double> &rh_l, std::vector<double> &co_r, double &gas_rho, double &cg, std::vector<double> &k_r, double &MW, double &r_devol, double &p_diam, std::vector<double> &Sh, double &w, double &p_area, std::vector<double> &_D_oxid_mix_l, std::vector<double> &phi_l);
   
   struct InversionBase {
     virtual void invert_mat(DenseMatrix* &dfdrh)=0;
@@ -195,11 +195,13 @@ private:
   double _char_scaling_constant;   ///< Scaling factor for char internal coordinate
   double _weight_scaling_constant;   ///< Scaling factor for weight
   double _weight_small;   ///< small weight
+  std::vector<bool> _use_co2co_l;
   std::vector<std::string> _oxid_l;
   std::vector<double> _MW_l;
   std::vector<double> _a_l;
   std::vector<double> _e_l;
   std::vector<double> _phi_l;
+  std::vector<double> _hrxn_l;
   int _NUM_reactions; //
   int _NUM_species; //
   double _Mh; // 12 kg carbon / kmole carbon
