@@ -975,8 +975,8 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     }
     Cs.initialize(0.0);
 
-    new_dw->getModifiable(viscosity,         d_lab->d_viscosityCTSLabel,        indx, patch);
-    new_dw->getModifiable(turbViscosity,            d_lab->d_turbViscosLabel,              indx, patch);
+    new_dw->getModifiable(viscosity, d_lab->d_viscosityCTSLabel, indx, patch);
+    new_dw->getModifiable(turbViscosity, d_lab->d_turbViscosLabel, indx, patch);
 
     Ghost::GhostType  gn = Ghost::None;
     Ghost::GhostType  gac = Ghost::AroundCells;

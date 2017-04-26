@@ -227,6 +227,7 @@ SUBDIRS := $(SRCDIR)/ChemMix             \
            $(SRCDIR)/SourceTerms         \
            $(SRCDIR)/Task                \
            $(SRCDIR)/Transport           \
+					 $(SRCDIR)/TurbulenceModels    \
            $(SRCDIR)/TransportEqns       \
            $(SRCDIR)/Utility             \
            $(SRCDIR)/WallHTModels

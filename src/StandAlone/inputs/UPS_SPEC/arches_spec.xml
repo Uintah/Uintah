@@ -61,6 +61,17 @@
 
       </Utilities>
 
+      <TurbulenceModels                 spec="OPTIONAL NO_DATA">
+         <model                         spec="MULTIPLE NO_DATA"
+                                        attribute1="label REQUIRED STRING"
+                                        attribute2="type REQUIRED STRING 'sigma'">
+
+           <Cs                          spec="OPTIONAL DOUBLE"
+                                        need_applies_to="type sigma"/> <!-- default is 1.35 -->
+
+         </model>
+      </TurbulenceModels>
+ 
       <!-- These are new task properties -->
       <PropertyModelsV2                 spec="OPTIONAL NO_DATA">
         <model                          spec="MULTIPLE NO_DATA"

@@ -32,6 +32,7 @@
 #include <CCA/Components/Arches/ChemMix/TableLookup.h>
 //factories
 #include <CCA/Components/Arches/Task/TaskFactoryHelper.h>
+#include <CCA/Components/Arches/TurbulenceModels/TurbulenceModelFactory.h>
 #include <CCA/Components/Arches/Utility/UtilityFactory.h>
 #include <CCA/Components/Arches/Utility/InitializeFactory.h>
 #include <CCA/Components/Arches/Transport/TransportFactory.h>
@@ -113,6 +114,7 @@ KokkosSolver::problemSetup( const ProblemSpecP& input_db,
   std::shared_ptr<PropertyModelFactoryV2> PropModels(scinew PropertyModelFactoryV2());
   std::shared_ptr<BoundaryConditionFactory> BC(scinew BoundaryConditionFactory());
   std::shared_ptr<ChemMixFactory> TableModels(scinew ChemMixFactory());
+  std::shared_ptr<TurbulenceModelFactory> TurbModelF(scinew TurbulenceModelFactory());
 
   m_task_factory_map.clear();
   m_task_factory_map.insert(std::make_pair("utility_factory",UtilF));
@@ -123,6 +125,7 @@ KokkosSolver::problemSetup( const ProblemSpecP& input_db,
   m_task_factory_map.insert(std::make_pair("property_models_factory", PropModels));
   m_task_factory_map.insert(std::make_pair("boundary_condition_factory", BC));
   m_task_factory_map.insert(std::make_pair("table_factory", TableModels));
+  m_task_factory_map.insert(std::make_pair("turbulence_model_factory", TurbModelF));
 
   typedef std::map<std::string, std::shared_ptr<TaskFactoryBase> > BFM;
   proc0cout << "\n Registering Tasks For: " << std::endl;
@@ -365,7 +368,7 @@ KokkosSolver::nonlinearSolve( const LevelP& level,
 {
 
   const bool pack_tasks = true;
-  //const bool dont_pack_tasks = false; 
+  //const bool dont_pack_tasks = false;
 
   const MaterialSet* matls = m_sharedState->allArchesMaterials();
   BFM::iterator i_util_fac = m_task_factory_map.find("utility_factory");

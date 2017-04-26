@@ -52,9 +52,11 @@
 #include <CCA/Components/Arches/SmagorinskyModel.h>
 #include <CCA/Components/Arches/WBCHelper.h>
 #include <CCA/Components/Arches/ChemMix/TableLookup.h>
+
 //NEW TASK INTERFACE STUFF
 //factories
 #include <CCA/Components/Arches/Task/TaskFactoryHelper.h>
+#include <CCA/Components/Arches/TurbulenceModels/TurbulenceModelFactory.h>
 #include <CCA/Components/Arches/Utility/UtilityFactory.h>
 #include <CCA/Components/Arches/Utility/InitializeFactory.h>
 #include <CCA/Components/Arches/Transport/TransportFactory.h>
@@ -278,6 +280,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
   std::shared_ptr<ParticleModelFactory> PartModF(scinew ParticleModelFactory());
   std::shared_ptr<LagrangianParticleFactory> LagF(scinew LagrangianParticleFactory());
   std::shared_ptr<PropertyModelFactoryV2> PropModels(scinew PropertyModelFactoryV2());
+  std::shared_ptr<TurbulenceModelFactory> TurbModelF(scinew TurbulenceModelFactory());
 
   _task_factory_map.clear();
   _task_factory_map.insert(std::make_pair("utility_factory",UtilF));
@@ -286,6 +289,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
   _task_factory_map.insert(std::make_pair("particle_model_factory",PartModF));
   _task_factory_map.insert(std::make_pair("lagrangian_factory",LagF));
   _task_factory_map.insert(std::make_pair("property_models_factory", PropModels));
+  _task_factory_map.insert(std::make_pair("turbulence_model_factory", TurbModelF));
 
   typedef std::map<std::string, std::shared_ptr<TaskFactoryBase> > BFM;
   proc0cout << "\n Registering Tasks For: " << std::endl;
@@ -455,7 +459,6 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
   d_boundaryCondition->problemSetup(db,  grid);
 
   std::string whichTurbModel = "none";
-
   if ( db->findBlock("Turbulence") ) {
     db->findBlock("Turbulence")->getAttribute("model",whichTurbModel);
   }
@@ -474,7 +477,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
     d_turbModel = scinew TurbulenceModelPlaceholder(d_lab, d_MAlab, d_physicalConsts,
                                                     d_boundaryCondition);
   } else {
-    proc0cout << "\n Notice: No Turbulence model found. \n" << endl;
+    proc0cout << "\n Notice: No (old interface) Turbulence model was found. \n" << endl;
   }
 
   d_turbModel->problemSetup(db);
@@ -1089,6 +1092,7 @@ ExplicitSolver::initialize( const LevelP     & level,
     BFM::iterator i_partmod_fac = _task_factory_map.find("particle_model_factory");
     BFM::iterator i_lag_fac = _task_factory_map.find("lagrangian_factory");
     BFM::iterator i_property_models_fac = _task_factory_map.find("property_models_factory");
+    BFM::iterator i_turb_model_fac = _task_factory_map.find("turbulence_model_factory");
 
     i_trans_fac->second->set_bcHelper( m_bcHelper[level->getID()] );
 
@@ -1132,6 +1136,9 @@ ExplicitSolver::initialize( const LevelP     & level,
       i->second->schedule_init(level, sched, matls, is_restart );
     }
 
+    //turbulence models
+    i_turb_model_fac->second->schedule_initialization( level, sched, matls, is_restart );
+
     sched_scalarInit( level, sched );
 
     //property models v2
@@ -1157,10 +1164,6 @@ ExplicitSolver::initialize( const LevelP     & level,
     bool modify_ref_den = true;
     int time_substep = 0; //no meaning here, but is required to be zero for
                           //variables to be properly allocated.
-                          //
-    //d_props->doTableMatching();
-    //d_props->sched_checkTableBCs( level, sched );
-    //d_props->sched_computeProps( level, sched, initialize_it, modify_ref_den, time_substep );
 
     d_tabulated_properties->sched_checkTableBCs( level, sched );
     d_tabulated_properties->sched_getState( level, sched, initialize_it, modify_ref_den, time_substep );
@@ -1376,6 +1379,10 @@ ExplicitSolver::sched_restartInitialize( const LevelP& level, SchedulerP& sched 
     d_boundaryCondition->sched_setupNewIntrusionCellType( sched, level, matls, doingRestart );
 
     d_boundaryCondition->sched_setupNewIntrusions( sched, level, matls );
+
+    //turbulence models
+    _task_factory_map["turbulence_model_factory"]->schedule_initialization( level, sched, matls, doingRestart );
+
   }
 
 }
@@ -1630,6 +1637,13 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
   for ( TaskFactoryBase::TaskMap::iterator i = all_particle_models.begin(); i != all_particle_models.end(); i++){
     i->second->schedule_timestep_init(level, sched, matls);
   }
+
+  TaskFactoryBase::TaskMap all_turb_models =
+    _task_factory_map["turbulence_model_factory"]->retrieve_all_tasks();
+  for ( TaskFactoryBase::TaskMap::iterator i = all_turb_models.begin(); i != all_turb_models.end(); i++){
+    i->second->schedule_timestep_init(level, sched, matls);
+  }
+
   //===================END NEW STUFF=======================
 
   // --------> START RK LOOP <---------
@@ -2126,6 +2140,13 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       d_turbModel->sched_reComputeTurbSubmodel(sched, level, matls,
                                                d_timeIntegratorLabels[curr_level]);
 
+    TaskFactoryBase::TaskMap all_turb_models =
+      _task_factory_map["turbulence_model_factory"]->retrieve_all_tasks();
+    for ( TaskFactoryBase::TaskMap::iterator i = all_turb_models.begin(); i != all_turb_models.end(); i++){
+      i->second->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, curr_level);
+    }
+
+
   } // END OF RK LOOP
 
   //variable math:
@@ -2187,6 +2208,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
   }
 
   return 0;
+
 }
 
 // ****************************************************************************
