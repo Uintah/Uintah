@@ -44,14 +44,14 @@ BCR_dbg           SCI_DEBUG     print out some information regarding the BC setu
 Scheduler Debugging Information:
 __________________________________
 MPIScheduler_DBG           SCI_DEBUG     Prints general debugging information for the MPIScheduler
-WaitTimes                  SCI_DEBUG     Outputs fine-grained MPI wait time to file per rank, e.g. waittimes.<comm_size>.<rank>
+MPIScheduler_TimingsOut    SCI_DEBUG     Outputs fine-grained MPI communication timings to files: timingStats.avg, timingStats.max
+MPIStats                   SCI_DEBUG     Prints comprehensive, fine-grained MPI summary to stdout 
+WaitTimes                  SCI_DEBUG     Prints detailed summary of task wait times to stdout 
 
 
 DynamicMPIScheduler Related:
 __________________________________
 DynamicMPI_DBG             SCI_DEBUG     Prints general debugging information
-DynamicMPI_TimingsOut      SCI_DEBUG     Outputs fine-grained communication timings to file per rank (e.g. MPI recv time, MPI send time, etc)
-                                           e.g. timingStats.<rank>, timingStats.<rank>.avg, timingStats.<rank>.max
 DynamicMPI_QueueLength     SCI_DEBUG     Prints the average task queue length
 
 
@@ -59,8 +59,6 @@ DynamicMPI_QueueLength     SCI_DEBUG     Prints the average task queue length
 UnifiedScheduler Related:
 __________________________________
 Unified_DBG                SCI_DEBUG     Prints general debugging information
-Unified_TimingsOut         SCI_DEBUG     Outputs fine-grained communication timings to file per rank (e.g. MPI recv time, MPI send time, etc)
-                                           e.g. timingStats.<rank>, timingStats.<rank>.avg, timingStats.<rank>.max
 Unified_QueueLength        SCI_DEBUG     Prints the average task queue length
 
 

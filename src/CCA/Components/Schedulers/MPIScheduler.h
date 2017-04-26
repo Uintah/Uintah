@@ -44,7 +44,7 @@ namespace Uintah {
 
 namespace {
 
-Dout mpi_stats("MPIStats", false);
+Dout mpi_stats("MPIMsgStats", false);
 
 }
 
@@ -123,8 +123,8 @@ class MPIScheduler : public SchedulerCommon {
         Uintah::MPI::Reduce(&m_message_volume, &max_volume    , 1, MPI_DOUBLE  , MPI_MAX, 0, d_myworld->getComm());
 
         if( d_myworld->myrank() == 0 ) {
-          DOUT(true, "MPIStats: Num Messages   (avg): " << total_messages/(float)d_myworld->size() << " (max):" << max_messages);
-          DOUT(true, "MPIStats: Message Volume (avg): " << total_volume/(float)d_myworld->size() << " (max):" << max_volume);
+          DOUT(true, "MPIMsgStats: Num Send Messages   (avg): " << total_messages/(static_cast<double>(d_myworld->size())) << "    (max):" << max_messages);
+          DOUT(true, "MPIMsgStats: Send Message Volume (avg): " << total_volume/(static_cast<double>(d_myworld->size()))   << "    (max):" << max_volume);
         }
       }
     }
@@ -165,8 +165,6 @@ class MPIScheduler : public SchedulerCommon {
 
     virtual void verifyChecksum();
 
-    void emitTime( const char* label );
-
     void emitTime( const char* label, double time );
 
     void outputTimingStats( const char* label );
@@ -177,12 +175,11 @@ class MPIScheduler : public SchedulerCommon {
     std::vector<const char*>    m_labels;
     std::vector<double>         m_times;
 
-    std::ofstream               m_timings_stats;
     std::ofstream               m_max_stats;
     std::ofstream               m_avg_stats;
 
     unsigned int                m_num_messages{0};
-    double                      m_message_volume{0};
+    double                      m_message_volume{0.0};
 
     Timers::Simple              m_timer;
   

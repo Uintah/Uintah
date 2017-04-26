@@ -178,15 +178,15 @@ private:
   static bool     s_used[MPI_MAX_THREADS];
 
   // disable copy, assignment
-  Timer( const Timer & ) = delete;
-  Timer( Timer && ) = delete;
+  Timer( const Timer & )             = delete;
+  Timer( Timer && )                  = delete;
   Timer & operator=( const Timer & ) = delete;
-  Timer & operator=( Timer && ) = delete;
+  Timer & operator=( Timer && )      = delete;
 };
 
 template <typename Tag> int64_t  Timer<Tag>::s_total[MPI_MAX_THREADS] = {};
 template <typename Tag> int64_t  Timer<Tag>::s_count[MPI_MAX_THREADS] = {};
-template <typename Tag> bool     Timer<Tag>::s_used[MPI_MAX_THREADS]  = {};
+template <typename Tag> bool     Timer<Tag>::s_used[ MPI_MAX_THREADS] = {};
 
 //------------------------------------------------------------------------------
 

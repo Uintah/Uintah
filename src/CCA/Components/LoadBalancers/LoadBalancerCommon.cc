@@ -126,7 +126,7 @@ LoadBalancerCommon::assignResources( DetailedTasks & graph )
       }
 #endif
     } else {
-      if( Parallel::usingMPI() && task->getTask()->isReductionTask() ){
+      if( task->getTask()->isReductionTask() ){
         task->assignResource( d_myworld->myrank() );
 
         DOUT(g_lb_dbg, d_myworld->myrank() << "  Resource (for no patch task) " << *task->getTask() << " is : " << d_myworld->myrank());

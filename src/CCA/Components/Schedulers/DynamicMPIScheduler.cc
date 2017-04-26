@@ -42,7 +42,6 @@ namespace {
 
 Dout g_dbg(          "DynamicMPI_DBG",         false);
 Dout g_queue_length( "DynamicMPI_QueueLength", false);
-Dout g_timeout(      "DynamicMPI_TimingsOut",  false);
 
 }
 
@@ -55,31 +54,13 @@ DynamicMPIScheduler::DynamicMPIScheduler( const ProcessorGroup*      myworld,
   : MPIScheduler( myworld, oport, parentScheduler )
 {
   m_task_queue_alg =  MostMessages;
-
-  if (g_timeout) {
-    char filename[64];
-    sprintf(filename, "timingStats.%d", d_myworld->myrank());
-    m_timings_stats.open(filename);
-    if (d_myworld->myrank() == 0) {
-      sprintf(filename, "timingStats.avg");
-      m_avg_stats.open(filename);
-      sprintf(filename, "timingStats.max");
-      m_max_stats.open(filename);
-    }
-  }
 }
 
 //______________________________________________________________________
 //
 DynamicMPIScheduler::~DynamicMPIScheduler()
 {
-  if (g_timeout) {
-    m_timings_stats.close();
-    if (d_myworld->myrank() == 0) {
-      m_avg_stats.close();
-      m_max_stats.close();
-    }
-  }
+
 }
 
 //______________________________________________________________________
@@ -168,14 +149,15 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
     return;
   }
 
+  RuntimeStats::initialize_timestep(m_task_graphs);
+
   ASSERTRANGE(tgnum, 0, static_cast<int>(m_task_graphs.size()));
   TaskGraph* tg = m_task_graphs[tgnum];
   tg->setIteration(iteration);
   m_current_task_graph = tgnum;
 
+  // multi TG model - each graph needs have its dwmap reset here (even with the same tgnum)
   if (static_cast<int>(m_task_graphs.size()) > 1) {
-    // tg model is the multi TG model, where each graph is going to need to
-    // have its dwmap reset here (even with the same tgnum)
     tg->remapTaskDWs(m_dwmap);
   }
 
@@ -187,12 +169,6 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
 
   for (int i = 0; i < ntasks; i++) {
     dts->localTask(i)->resetDependencyCounts();
-  }
-
-  if(g_timeout) {
-    m_labels.clear();
-    m_times.clear();
-    emitTime("time since last execute");
   }
 
   int me = d_myworld->myrank();
@@ -351,6 +327,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
     }
   } // end while( numTasksDone < ntasks )
 
+
   if (g_queue_length) {
     float lengthsum = 0;
     totaltasks += ntasks;
@@ -362,34 +339,9 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
     Uintah::MPI::Reduce(&queuelength, &allqueuelength, 1, MPI_FLOAT, MPI_SUM, 0, d_myworld->getComm());
     proc0cout << "average queue length:" << allqueuelength / d_myworld->size() << std::endl;
   }
-  
-  if (g_timeout) {
-    emitTime("MPI send time", mpi_info_[TotalSendMPI]);
-    emitTime("MPI Testsome time", mpi_info_[TotalTestMPI]);
-    emitTime("Total send time", mpi_info_[TotalSend] - mpi_info_[TotalSendMPI] - mpi_info_[TotalTestMPI]);
-    emitTime("MPI recv time", mpi_info_[TotalRecvMPI]);
-    emitTime("MPI wait time", mpi_info_[TotalWaitMPI]);
-    emitTime("Total recv time", mpi_info_[TotalRecv] - mpi_info_[TotalRecvMPI] - mpi_info_[TotalWaitMPI]);
-    emitTime("Total task time", mpi_info_[TotalTask]);
-    emitTime("Total MPI reduce time", mpi_info_[TotalReduceMPI]);
-    emitTime("Total reduction time", mpi_info_[TotalReduce] - mpi_info_[TotalReduceMPI]);
-    emitTime("Total comm time", mpi_info_[TotalRecv] + mpi_info_[TotalSend] + mpi_info_[TotalReduce]);
-
-    m_timer.stop();
-    double totalexec = m_timer().seconds();
-    m_timer.reset( true );
-
-    emitTime("Other execution time", totalexec - mpi_info_[TotalSend] - mpi_info_[TotalRecv] - mpi_info_[TotalTask] - mpi_info_[TotalReduce]);
-  }
-
-  // compute the net timings
-  if( m_shared_state != nullptr ) {  // subschedulers don't have a sharedState
-    computeNetRunTimeStats(m_shared_state->d_runTimeStats);
-  }
 
   //---------------------------------------------------------------------------
-  // New way of managing single MPI requests - avoids MPI_Waitsome &
-  // MPI_Donesome - APH 07/20/16
+  // New way of managing single MPI requests - avoids MPI_Waitsome & MPI_Donesome - APH 07/20/16
   // ---------------------------------------------------------------------------
   // wait on all pending requests
   auto ready_request = [](CommRequest const& r)->bool { return r.wait(); };
@@ -407,8 +359,8 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
   ASSERT(m_recvs.size() == 0u);
 
 
+  // Copy the restart flag to all processors
   if (m_restartable && tgnum == static_cast<int>(m_task_graphs.size()) - 1) {
-    // Copy the restart flag to all processors
     int myrestart = m_dws[m_dws.size() - 1]->timestepRestarted();
     int netrestart;
 
@@ -424,10 +376,16 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
 
   finalizeTimestep();
   
-  if( ( g_exec_out || g_timeout ) && !m_parent_scheduler ) {  // only do on toplevel scheduler
-    outputTimingStats("DynamicMPIScheduler");
+  // compute the net timings
+  if (m_shared_state != nullptr) {
+    computeNetRunTimeStats(m_shared_state->d_runTimeStats);
   }
 
-  DOUT(g_dbg, "Rank-" <<  me << " DynamicMPIScheduler finished executing");
+  // only do on top-level scheduler
+  if ( m_parent_scheduler == nullptr ) {
+    outputTimingStats( "DynamicMPIScheduler" );
+  }
+
+  RuntimeStats::report(d_myworld->getComm(), m_shared_state->d_runTimeStats);
 }
 

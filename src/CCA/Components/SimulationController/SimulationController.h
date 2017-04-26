@@ -100,8 +100,7 @@ public:
       // Multiplier: (2 / (Time periods + 1) )
       // EMA: {current - EMA(previous)} x multiplier + EMA(previous).
       
-      double mult =
-	2.0 / ((double) std::min(d_nSamples, AVERAGE_WINDOW) + 1.0);  
+      double mult = 2.0 / ((double) std::min(d_nSamples, AVERAGE_WINDOW) + 1.0);
       
       ExpMovingAverage = mult * laptime + (1.0-mult) * ExpMovingAverage();
     }

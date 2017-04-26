@@ -25,18 +25,18 @@
 #ifndef CCA_COMPONENTS_SCHEDULERS_RUNTIME_STATS_HPP
 #define CCA_COMPONENTS_SCHEDULERS_RUNTIME_STATS_HPP
 
-#include <Core/Util/DOUT.hpp>
-#include <Core/Util/Timers/Timers.hpp>
-#include <Core/Util/InfoMapper.h>
 #include <Core/Grid/SimulationState.h>
+#include <Core/Util/DOUT.hpp>
+#include <Core/Util/InfoMapper.h>
+#include <Core/Util/Timers/Timers.hpp>
 
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
 
-#include <string>
-#include <vector>
-#include <memory>
 #include <atomic>
 #include <functional>
+#include <memory>
+#include <string>
+#include <vector>
 
 
 namespace Uintah {
@@ -83,7 +83,6 @@ public:
   struct WaitTag {};       // Total Wait
 
   // RAII timer types
-
   using CollectiveTimer = TripTimer< CollectiveTag >;
   using RecvTimer       = TripTimer< RecvTag >;
   using SendTimer       = TripTimer< SendTag >;
@@ -157,4 +156,4 @@ public:
 
 } // namespace Uintah
 
-#endif //CCA_COMPONENTS_SCHEDULERS_RUNTIME_STATS_HPP
+#endif // CCA_COMPONENTS_SCHEDULERS_RUNTIME_STATS_HPP

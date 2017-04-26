@@ -99,7 +99,7 @@ class UnifiedScheduler : public MPIScheduler  {
     
     virtual bool useInternalDeps() { return !m_shared_state->isCopyDataTimestep(); }
     
-    void runTask( DetailedTask * task , int iteration , int thread_id , Task::CallBackEvent event );
+    void runTask( DetailedTask * dtask , int iteration , int thread_id , Task::CallBackEvent event );
 
     void runTasks( int thread_id );
 

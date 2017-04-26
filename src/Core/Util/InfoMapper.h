@@ -55,8 +55,8 @@ public:
     d_units.clear();
   };
 
-  ~InfoMapper() {};
-    
+  virtual ~InfoMapper() {};
+
   virtual size_t size() const
   {
     return d_values.size();
@@ -73,7 +73,7 @@ public:
     d_names.clear();
     d_units.clear();
   };
-  
+
   virtual void reset( const T val )
   {
     for( unsigned int i=0; i<d_values.size(); ++i )
@@ -86,7 +86,7 @@ public:
     {
       std::stringstream msg;
       msg << "Requesting an undefined key (" << key << ") ";
-      
+
       throw Uintah::InternalError( msg.str(), __FUNCTION__, __LINE__);
     }
   };
@@ -115,11 +115,11 @@ public:
       msg << "The count does not match. Expected "
 	  << (unsigned int) lastKey << " values. But added "
 	  << d_values.size() << " values.";
-      
+
       throw Uintah::InternalError(msg.str(), __FILE__, __LINE__);
     }
   };
-  
+
   virtual void insert( const E key, const std::string name,
 		       const std::string units, const T value )
   {
@@ -133,19 +133,19 @@ public:
     else
     {
       std::stringstream msg;
-      msg << "Adding a key (" << key << ") with name, " 
+      msg << "Adding a key (" << key << ") with name, "
 	  << name << " that already exists.";
 
       throw Uintah::InternalError( msg.str(), __FUNCTION__, __LINE__);
     }
   };
-  
+
   // void erase( const E key )
   // {
   //   typename std::map< E, T >::iterator           vIter = d_values.find( key );
   //   typename std::map< E, std::string >::iterator nIter = d_names.find( key );
   //   typename std::map< E, std::string >::iterator uIter = d_units.find( key );
-    
+
   //   if( vIter != d_values.end() &&
   // 	nIter != d_names.end() && uIter != d_units.end() )
   //   {
@@ -163,7 +163,7 @@ public:
 
         T& operator[](E idx)       { return d_values[idx]; };
   const T& operator[](E idx) const { return d_values[idx]; };
-  
+
   virtual void setValue( const E key, const T value )
   {
     d_values[key] = value;
@@ -175,16 +175,16 @@ public:
 
     return d_values[key];
   };
-  
+
   virtual T getValue( const std::string name )
   {
     E key = getKey(name);
-    
+
     validKey( key );
 
     return d_values[ key ];
   };
-  
+
   virtual std::string getName( const E key )
   {
     validKey( key );
@@ -209,8 +209,8 @@ public:
 
     return (E) d_values.size();
   };
-  
-protected:  
+
+protected:
   std::map< E, int > d_keys;
   std::vector< T > d_values;
   std::vector< std::string > d_names;
@@ -227,7 +227,7 @@ public:
     d_maximum.clear();
   };
 
-  ~ReductionInfoMapper() {};
+  virtual ~ReductionInfoMapper() {};
 
   virtual void clear()
   {
@@ -236,10 +236,10 @@ public:
     d_average.clear();
     d_maximum.clear();
   };
-  
+
   virtual void insert( const E key, const std::string name,
 		       const std::string units, const T value )
-  {    
+  {
     InfoMapper<E, T>::insert( key, name, units, value );
 
     d_average.push_back(-1);
@@ -270,39 +270,39 @@ public:
   virtual void reduce( bool allReduce, const ProcessorGroup* myWorld )
   {
     unsigned int nStats = InfoMapper<E, T>::d_keys.size();
-      
+
     if( myWorld->size() > 1)
     {
       // A little ugly, but do it anyway so only one reduction is needed
       // for the sum and one for the maximum. 
       std::vector<double>      toReduce( nStats );
       std::vector<double_int>  toReduceMax( nStats );
-      
+
       d_average.resize( nStats );
       d_maximum.resize( nStats );
-      
+
       for (size_t i=0; i<nStats; ++i)
       {
-	toReduce[i] = InfoMapper<E, T>::d_values[i];
-	toReduceMax[i] =
+        toReduce[i] = InfoMapper<E, T>::d_values[i];
+        toReduceMax[i] =
 	  double_int( InfoMapper<E, T>::d_values[i], myWorld->myrank() );
       }
 
       if( allReduce )
       {
-	Uintah::MPI::Allreduce( &toReduce[0],    &d_average[0], nStats, MPI_DOUBLE,     MPI_SUM,    myWorld->getComm() );
-	Uintah::MPI::Allreduce( &toReduceMax[0], &d_maximum[0], nStats, MPI_DOUBLE_INT, MPI_MAXLOC, myWorld->getComm() );
+        Uintah::MPI::Allreduce( &toReduce[0],    &d_average[0], nStats, MPI_DOUBLE,     MPI_SUM,    myWorld->getComm() );
+        Uintah::MPI::Allreduce( &toReduceMax[0], &d_maximum[0], nStats, MPI_DOUBLE_INT, MPI_MAXLOC, myWorld->getComm() );
       }
       else
       {
-	Uintah::MPI::Reduce( &toReduce[0],    &d_average[0], nStats, MPI_DOUBLE,     MPI_SUM,    0, myWorld->getComm() );
-	Uintah::MPI::Reduce( &toReduceMax[0], &d_maximum[0], nStats, MPI_DOUBLE_INT, MPI_MAXLOC, 0, myWorld->getComm() );
+        Uintah::MPI::Reduce( &toReduce[0],    &d_average[0], nStats, MPI_DOUBLE,     MPI_SUM,    0, myWorld->getComm() );
+        Uintah::MPI::Reduce( &toReduceMax[0], &d_maximum[0], nStats, MPI_DOUBLE_INT, MPI_MAXLOC, 0, myWorld->getComm() );
       }
 
       // make sums averages
       for (unsigned i = 0; i < nStats; ++i)
       {
-	d_average[i] /= myWorld->size();
+        d_average[i] /= myWorld->size();
       }
     }
     else
@@ -312,13 +312,13 @@ public:
 
       for (size_t i=0; i<nStats; ++i)
       {
-	d_average[i] = InfoMapper<E, T>::d_values[i];
-	d_maximum[i] = double_int(InfoMapper<E, T>::d_values[i], 0);
+        d_average[i] = InfoMapper<E, T>::d_values[i];
+	  d_maximum[i] = double_int(InfoMapper<E, T>::d_values[i], 0);
       }
     }
   };
-  
-protected:  
+
+protected:
   std::vector< double > d_average;
   std::vector< double_int > d_maximum;
 };

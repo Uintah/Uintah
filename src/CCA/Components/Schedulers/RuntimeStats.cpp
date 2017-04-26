@@ -44,6 +44,11 @@ namespace Uintah {
 
 namespace {
 
+Dout mpi_stats{  "MPIStats",  false };
+Dout exec_times{ "ExecTimes", false };
+Dout wait_times{ "WaitTimes", false };
+Dout task_stats{ "TaskStats", false };
+
 struct ReportValue
 {
   ReportValue()                     = default;
@@ -95,10 +100,9 @@ void RuntimeStats::register_report( Dout const& dout
                                   , std::function<void()>    clear_value
                                   )
 {
-//  Dout mpi_report{ "MPIReport", false};
-  if (dout) {
+  if (mpi_stats || exec_times || wait_times || task_stats) {
     std::unique_lock<std::mutex> lock(g_report_lock);
-    ReportValue value{type, get_value, clear_value };
+    ReportValue value { type, get_value, clear_value };
     g_report_values[dout][name] = value;
   }
 }
@@ -106,10 +110,7 @@ void RuntimeStats::register_report( Dout const& dout
 
 std::atomic<int64_t> * RuntimeStats::get_atomic_exec_ptr( DetailedTask const* t)
 {
-  Dout mpi_report{ "MPIReport", false};
-  Dout exec_times{ "ExecTimes", false };
-
-  if (mpi_report && exec_times) {
+  if (exec_times) {
     const size_t id = impl_get_global_id(t);
     return id < g_num_tasks ? & g_task_exec_times[ id ] : nullptr ;
   }
@@ -118,10 +119,7 @@ std::atomic<int64_t> * RuntimeStats::get_atomic_exec_ptr( DetailedTask const* t)
 
 std::atomic<int64_t> * RuntimeStats::get_atomic_wait_ptr( DetailedTask const* t)
 {
-  Dout mpi_report{ "MPIReport", false};
-  Dout wait_times{ "WaitTimes", false };
-
-  if (mpi_report && wait_times) {
+  if (wait_times) {
     const size_t id = impl_get_global_id(t);
     return id < g_num_tasks ? & g_task_wait_times[ id ] : nullptr ;
   }
@@ -130,13 +128,7 @@ std::atomic<int64_t> * RuntimeStats::get_atomic_wait_ptr( DetailedTask const* t)
 
 void RuntimeStats::initialize_timestep( std::vector<TaskGraph *> const &  graphs )
 {
-  Dout mpi_report{ "MPIReport", false};
-
-  if (!mpi_report)  return;
-
-  Dout exec_times{ "ExecTimes", false };
-  Dout wait_times{ "WaitTimes", false };
-  if (exec_times || wait_times) {
+  if (exec_times || wait_times || task_stats) {
 
     std::unique_lock<std::mutex> lock(g_report_lock);
 
@@ -252,9 +244,9 @@ void rank_sum_min_max_impl( int64_t const * in, int64_t * inout, int len )
   for (int i=0; i<size; ++i) {
     const int off = 4*i;
     inout[off+RANK] = in[off+MAX] < inout[off+MAX] ? inout[off+RANK] : in[off+RANK] ; // max_rank
-    inout[off+SUM] += in[off+SUM] ;                                           // sum
-    inout[off+MIN]  = inout[off+MIN] < in[off+MIN] ? inout[off+MIN] : in[off+MIN] ; // min
-    inout[off+MAX]  = in[off+MAX] < inout[off+MAX] ? inout[off+MAX] : in[off+MAX] ; // max
+    inout[off+SUM] += in[off+SUM] ;                                                   // sum
+    inout[off+MIN]  = inout[off+MIN] < in[off+MIN] ? inout[off+MIN] : in[off+MIN] ;   // min
+    inout[off+MAX]  = in[off+MAX] < inout[off+MAX] ? inout[off+MAX] : in[off+MAX] ;   // max
   }
 }
 
@@ -271,6 +263,10 @@ MPI_Op rank_sum_min_max_op;
 
 void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
 {
+  if (!(mpi_stats || exec_times || wait_times || task_stats)) {
+    return;
+  }
+
   {
     static bool init = false;
     if (!init) {
@@ -279,10 +275,6 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
     }
   }
 
-  Dout mpi_report("MPIReport", false);
-  if (!mpi_report) return;
-
-  Dout mpi_stats{"MPIStats", true};
   if (mpi_stats) {
 
     register_report( mpi_stats
@@ -460,7 +452,6 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
                    );
   }
 
-  Dout task_stats{"TaskStats", true};
   if (task_stats) {
 
     register_report( task_stats
@@ -500,8 +491,6 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
                    , []() { ExecTimer::reset_tag(); }
                    );
   }
-
-
 
   std::unique_lock<std::mutex> lock(g_report_lock);
 
