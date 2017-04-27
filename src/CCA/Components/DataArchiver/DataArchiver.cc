@@ -2211,8 +2211,9 @@ DataArchiver::outputReductionVars( const ProcessorGroup *,
 
   double time = d_sharedState->getElapsedSimTime();
 
-  delt_vartype delt_var;
-  old_dw->get( delt_var, d_sharedState->get_delt_label() );
+  delt_vartype delt_var(0);
+  if( old_dw )
+    old_dw->get( delt_var, d_sharedState->get_delt_label() );
   double delt = delt_var;
 
   // Dump the stuff in the reduction saveset into files in the uda
