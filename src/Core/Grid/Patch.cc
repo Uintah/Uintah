@@ -1684,7 +1684,7 @@ IntVector Patch::neighborsHigh() const
 /**
 * Returns the low index for a variable of type basis with extraCells or
 * the boundaryLayer specified in boundaryLayer.  Boundary layers take 
-* precidence over extra cells.
+* precedence over extra cells.
 */
 IntVector Patch::getExtraLowIndex(VariableBasis basis,
                              const IntVector& boundaryLayer) const
@@ -1737,7 +1737,7 @@ IntVector Patch::getExtraLowIndex(VariableBasis basis,
  
 /**
 * Returns the high index for a variable of type basis with extraCells or
-* the boundaryLayer specified in boundaryLayer.  Boundary layers take precidence 
+* the boundaryLayer specified in boundaryLayer.  Boundary layers take precedence 
 * over extra cells.
 */
 IntVector Patch::getExtraHighIndex(VariableBasis basis,
