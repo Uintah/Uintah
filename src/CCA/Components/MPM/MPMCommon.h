@@ -56,6 +56,7 @@ namespace Uintah {
     void scheduleUpdateStress_DamageErosionModels(SchedulerP        & sched,
                                                   const PatchSet    * patches,
                                                   const MaterialSet * matls );
+
    private:
     const ProcessorGroup* d_myworld     = nullptr;
     SimulationStateP      d_sharedState;
@@ -68,7 +69,6 @@ namespace Uintah {
                                           const MaterialSubset  * ,
                                           DataWarehouse         * old_dw,
                                           DataWarehouse         * new_dw );
-
   };
 }
 

@@ -384,8 +384,9 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
 
   MPMPhysicalBCFactory::create(mat_ps, grid, flags);
   
+  bool needNorms;
   contactModel = ContactFactory::create(UintahParallelComponent::d_myworld,
-                                        mat_ps,sharedState,lb,flags);
+                                        mat_ps,sharedState,lb,flags, needNorms);
 
   // Determine extents for coarser level particle data
   // Linear Interpolation:  1 layer of coarse level cells
@@ -629,6 +630,9 @@ void AMRMPM::scheduleTimeAdvance(const LevelP & level,
     const LevelP& level = grid->getLevel(l);
     const PatchSet* patches = level->eachPatch();
     scheduleNormalizeNodalVelTempConc(sched, patches, matls);
+    if(flags->d_computeNormals){
+      scheduleComputeNormals(         sched, patches, matls);
+    }
     scheduleExMomInterpolated(        sched, patches, matls);
     if(flags->d_doScalarDiffusion){
       scheduleConcInterpolated(sched, patches, matls);

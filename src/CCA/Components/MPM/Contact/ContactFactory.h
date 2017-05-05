@@ -44,7 +44,7 @@ namespace Uintah {
     // addMaterial() calls this
     static Contact* create(const ProcessorGroup* myworld,
                            const ProblemSpecP& ps,SimulationStateP& ss,
-                           MPMLabel* lb, MPMFlags* MFlag);
+                           MPMLabel* lb, MPMFlags* MFlag, bool &needNormals);
   };
 } // End namespace Uintah
   

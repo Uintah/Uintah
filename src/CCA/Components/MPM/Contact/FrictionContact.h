@@ -84,7 +84,6 @@ WARNING
          // Nodal volume fraction that must occur before contact is applied
          double d_vol_const;
          double d_sepFac;
-         bool d_compColinearNorms;
          int NGP;
          int NGN;
 

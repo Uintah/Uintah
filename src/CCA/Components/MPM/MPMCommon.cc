@@ -133,9 +133,9 @@ void MPMCommon::cohesiveZoneProblemSetup(const ProblemSpecP& prob_spec,
 }
 //______________________________________________________________________
 //
-void MPMCommon::scheduleUpdateStress_DamageErosionModels(SchedulerP       & sched,
-                                                         const PatchSet    * patches,
-                                                         const MaterialSet * matls )
+void MPMCommon::scheduleUpdateStress_DamageErosionModels(SchedulerP   & sched,
+                                                     const PatchSet * patches,
+                                                     const MaterialSet * matls )
 {
   printSchedule(patches,cout_doing,"MPMCommon::scheduleUpdateStress_DamageErosionModels");
   

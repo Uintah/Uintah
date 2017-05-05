@@ -262,7 +262,13 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
 
   MPMPhysicalBCFactory::create(restart_mat_ps, grid, flags);
 
-  contactModel = ContactFactory::create(UintahParallelComponent::d_myworld, restart_mat_ps,sharedState,lb,flags);
+  bool needNormals=false;
+  contactModel = ContactFactory::create(UintahParallelComponent::d_myworld,
+                                        restart_mat_ps,sharedState,lb,flags,
+                                        needNormals);
+
+  flags->d_computeNormals=needNormals;
+
   thermalContactModel =
     ThermalContactFactory::create(restart_mat_ps, sharedState, lb,flags);
 
@@ -619,6 +625,9 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
 
   scheduleApplyExternalLoads(             sched, patches, matls);
   scheduleInterpolateParticlesToGrid(     sched, patches, matls);
+  if(flags->d_computeNormals){
+    scheduleComputeNormals(               sched, patches, matls);
+  }
   scheduleExMomInterpolated(              sched, patches, matls);
   if(flags->d_useCohesiveZones){
     scheduleUpdateCohesiveZones(          sched, patches, mpm_matls_sub,
@@ -4721,4 +4730,174 @@ SerialMPM::needRecompile( double, double, const GridP& )
   else {
     return false;
   }
+}
+
+//
+void SerialMPM::scheduleComputeNormals(SchedulerP   & sched,
+                                       const PatchSet * patches,
+                                       const MaterialSet * matls )
+{
+  printSchedule(patches,cout_doing,"MPMCommon::scheduleComputeNormals");
+  
+  Task* t = scinew Task("MPM::computeNormals", this, 
+                        &SerialMPM::computeNormals);
+
+  Ghost::GhostType  gp;
+  int ngc_p;
+  d_sharedState->getParticleGhostLayer(gp, ngc_p);
+
+  MaterialSubset* z_matl = scinew MaterialSubset();
+  z_matl->add(0);
+  z_matl->addReference();
+
+//  const MaterialSubset* mss = matls->getUnion();
+
+  t->requires(Task::OldDW, lb->pXLabel,                  gp, ngc_p);
+  t->requires(Task::OldDW, lb->pMassLabel,               gp, ngc_p);
+  t->requires(Task::OldDW, lb->pSizeLabel,               gp, ngc_p);
+  t->requires(Task::OldDW, lb->pDeformationMeasureLabel, gp, ngc_p);
+  t->requires(Task::NewDW, lb->gMassLabel,             Ghost::AroundNodes, 1);
+  t->requires(Task::NewDW, lb->gVolumeLabel,           Ghost::None);
+  t->requires(Task::OldDW, lb->NC_CCweightLabel,z_matl,Ghost::None);
+
+  t->computes(lb->gSurfNormLabel);
+  t->computes(lb->gPositionLabel);
+
+  sched->addTask(t, patches, matls);
+}
+
+//______________________________________________________________________
+//
+void SerialMPM::computeNormals(const ProcessorGroup *,
+                               const PatchSubset    * patches,
+                               const MaterialSubset * ,
+                                     DataWarehouse        * old_dw,
+                                     DataWarehouse        * new_dw)
+{
+  Ghost::GhostType  gan   = Ghost::AroundNodes;
+  Ghost::GhostType  gnone = Ghost::None;
+
+  int numMPMMatls = d_sharedState->getNumMPMMatls();
+  StaticArray<constNCVariable<double> >  gmass(numMPMMatls);
+  StaticArray<NCVariable<Point> >        gposition(numMPMMatls);
+  StaticArray<NCVariable<Vector> >       gvelocity(numMPMMatls);
+  StaticArray<NCVariable<Vector> >       gsurfnorm(numMPMMatls);
+
+  for (int p = 0; p<patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+    Vector dx = patch->dCell();
+    double oodx[3];
+    oodx[0] = 1.0/dx.x();
+    oodx[1] = 1.0/dx.y();
+    oodx[2] = 1.0/dx.z();
+    constNCVariable<double>    NC_CCweight;
+    old_dw->get(NC_CCweight,   lb->NC_CCweightLabel,  0, patch, gnone, 0);
+
+    ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
+    vector<IntVector> ni(interpolator->size());
+    vector<double> S(interpolator->size());
+    vector<Vector> d_S(interpolator->size());
+    string interp_type = flags->d_interpolator_type;
+
+    printTask(patches, patch, cout_doing, "Doing computeNormals");
+
+    for(int m = 0; m < numMPMMatls; m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
+      new_dw->get(gmass[m],                lb->gMassLabel,     dwi,patch,gan,1);
+      new_dw->allocateAndPut(gsurfnorm[m], lb->gSurfNormLabel, dwi,patch);
+      new_dw->allocateAndPut(gposition[m], lb->gPositionLabel, dwi,patch);
+
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+
+      constParticleVariable<Point> px;
+      constParticleVariable<double> pmass, pvolume;
+      constParticleVariable<Matrix3> psize;
+      constParticleVariable<Matrix3> deformationGradient;
+
+      old_dw->get(px,                  lb->pXLabel,                  pset);
+      old_dw->get(pmass,               lb->pMassLabel,               pset);
+      old_dw->get(pvolume,             lb->pVolumeLabel,             pset);
+      old_dw->get(psize,               lb->pSizeLabel,               pset);
+      old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
+
+      gsurfnorm[m].initialize(Vector(0.0,0.0,0.0));
+      gposition[m].initialize(Point(0.0,0.0,0.0));
+
+      int NN = flags->d_8or27;
+      if(flags->d_axisymmetric){
+        for(ParticleSubset::iterator it=pset->begin();it!=pset->end();it++){
+          particleIndex idx = *it;
+
+          NN = interpolator->findCellAndWeightsAndShapeDerivatives(
+                          px[idx],ni,S,d_S,psize[idx],deformationGradient[idx]);
+          double rho = pmass[idx]/pvolume[idx];
+          for(int k = 0; k < NN; k++) {
+            if (patch->containsNode(ni[k])){
+              Vector G(d_S[k].x(),d_S[k].y(),0.0);
+              gsurfnorm[m][ni[k]] += rho * G;
+              gposition[m][ni[k]] += px[idx].asVector()*pmass[idx] * S[k];
+            }
+          }
+        }
+      } else {
+        for(ParticleSubset::iterator it=pset->begin();it!=pset->end();it++){
+          particleIndex idx = *it;
+
+          NN = interpolator->findCellAndWeightsAndShapeDerivatives(
+                          px[idx],ni,S,d_S,psize[idx],deformationGradient[idx]);
+          for(int k = 0; k < NN; k++) {
+            if (patch->containsNode(ni[k])){
+              Vector grad(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
+                          d_S[k].z()*oodx[2]);
+              gsurfnorm[m][ni[k]] += pmass[idx] * grad;
+              gposition[m][ni[k]] += px[idx].asVector()*pmass[idx] * S[k];
+            }
+          }
+        }
+      } // axisymmetric conditional
+    }   // matl loop
+
+    // Make normal vectors colinear by setting all norms to be
+    // in the opposite direction of the norm with the largest magnitude
+    if(flags->d_computeColinearNormals){
+      for(NodeIterator iter=patch->getExtraNodeIterator();
+                       !iter.done();iter++){
+        IntVector c = *iter;
+        double max_mag = gsurfnorm[0][c].length();
+        int max_mag_matl = 0;
+        for(int m=1; m<numMPMMatls; m++){
+          double mag = gsurfnorm[m][c].length();
+          if(mag > max_mag){
+             max_mag = mag;
+             max_mag_matl = m;
+          }
+        }  // loop over matls
+
+        for(int m=0; m<numMPMMatls; m++){
+         if(m!=max_mag_matl){
+           gsurfnorm[m][c] = -gsurfnorm[max_mag_matl][c];
+         }
+        }  // loop over matls
+      }
+    }
+
+    // Make norms unit length
+    for(int m=0;m<numMPMMatls;m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
+      MPMBoundCond bc;
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",  gsurfnorm[m],interp_type);
+
+      for(NodeIterator iter=patch->getExtraNodeIterator();
+                       !iter.done();iter++){
+         IntVector c = *iter;
+         double length = gsurfnorm[m][c].length();
+         if(length>1.0e-15){
+            gsurfnorm[m][c] = gsurfnorm[m][c]/length;
+         }
+         gposition[m][c] /= gmass[m][c];
+      }
+    }  // loop over matls
+  }    // patches
 }

@@ -57,12 +57,10 @@ FrictionContact::FrictionContact(const ProcessorGroup* myworld,
   // Constructor
   d_vol_const=0.;
   d_sepFac=9.9e99;  // Default to large number to provide no constraint
-  d_compColinearNorms=true;
   
   ps->require("mu",d_mu);
   ps->get("volume_constraint",d_vol_const);
   ps->get("separation_factor",d_sepFac);
-  ps->get("colinear_norms",   d_compColinearNorms);
 
   d_sharedState = d_sS;
 
@@ -95,7 +93,7 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
                                         const MaterialSubset* matls,
                                         DataWarehouse* old_dw,
                                         DataWarehouse* new_dw)
-{ 
+{
   Ghost::GhostType  gan   = Ghost::AroundNodes;
   Ghost::GhostType  gnone = Ghost::None;
 
@@ -105,9 +103,9 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
   // Need access to all velocity fields at once
   StaticArray<constNCVariable<double> >  gmass(numMatls);
   StaticArray<constNCVariable<double> >  gvolume(numMatls);
-  StaticArray<NCVariable<Point> >        gposition(numMatls);
+  StaticArray<constNCVariable<Point> >   gposition(numMatls);
+  StaticArray<constNCVariable<Vector> >  gsurfnorm(numMatls);
   StaticArray<NCVariable<Vector> >       gvelocity(numMatls);
-  StaticArray<NCVariable<Vector> >       gsurfnorm(numMatls);
   StaticArray<NCVariable<double> >       frictionWork(numMatls);
   StaticArray<NCVariable<Matrix3> >      gstress(numMatls);
   StaticArray<NCVariable<double> >       gnormtraction(numMatls);
@@ -116,10 +114,6 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     Vector dx = patch->dCell();
     double cell_vol = dx.x()*dx.y()*dx.z();
-    double oodx[3];
-    oodx[0] = 1.0/dx.x();
-    oodx[1] = 1.0/dx.y();
-    oodx[2] = 1.0/dx.z();
     constNCVariable<double> NC_CCweight;
     old_dw->get(NC_CCweight,         lb->NC_CCweightLabel,  0, patch, gnone, 0);
 
@@ -136,108 +130,25 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
     // normalize it, and stick it in surfNorm
     for(int m=0;m<numMatls;m++){
       int dwi = matls->get(m);
-
-      new_dw->get(gmass[m],           lb->gMassLabel,  dwi, patch, gan,   1);
-      new_dw->get(gvolume[m],         lb->gVolumeLabel,dwi, patch, gnone, 0);
-      new_dw->getModifiable(gvelocity[m],  lb->gVelocityLabel,       dwi,patch);
-      new_dw->allocateAndPut(gsurfnorm[m], lb->gSurfNormLabel,       dwi,patch);
-      new_dw->allocateAndPut(gposition[m], lb->gPositionLabel,       dwi,patch);
+      new_dw->get(gmass[m],          lb->gMassLabel,     dwi, patch, gnone, 0);
+      new_dw->get(gvolume[m],        lb->gVolumeLabel,   dwi, patch, gnone, 0);
+      new_dw->get(gsurfnorm[m],      lb->gSurfNormLabel, dwi, patch, gnone, 0);
+      new_dw->get(gposition[m],      lb->gPositionLabel, dwi, patch, gnone, 0);
+      new_dw->getModifiable(gvelocity[m],   lb->gVelocityLabel,      dwi,patch);
       new_dw->getModifiable(frictionWork[m],lb->frictionalWorkLabel, dwi,patch);
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
                                                        gan, NGP, lb->pXLabel);
 
       constParticleVariable<Point> px;
-      constParticleVariable<double> pmass, pvolume;
-      constParticleVariable<Matrix3> psize;
-      constParticleVariable<Matrix3> deformationGradient;
+      constParticleVariable<double> pvolume;
+      constParticleVariable<Matrix3> psize, deformationGradient;
 
       old_dw->get(px,                  lb->pXLabel,                  pset);
-      old_dw->get(pmass,               lb->pMassLabel,               pset);
       old_dw->get(pvolume,             lb->pVolumeLabel,             pset);
       old_dw->get(psize,               lb->pSizeLabel,               pset);
       old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
 
-      gsurfnorm[m].initialize(Vector(0.0,0.0,0.0));
-      gposition[m].initialize(Point(0.0,0.0,0.0));
-
-      if(!d_matls.requested(m)) continue;
-
-      // Compute the normals for all of the interior nodes
-      int NN = flag->d_8or27;
-      if(flag->d_axisymmetric){
-        for(ParticleSubset::iterator it=pset->begin();it!=pset->end();it++){
-          particleIndex idx = *it;
-
-          NN = interpolator->findCellAndWeightsAndShapeDerivatives(
-                          px[idx],ni,S,d_S,psize[idx],deformationGradient[idx]);
-          double rho = pmass[idx]/pvolume[idx];
-
-           for(int k = 0; k < NN; k++) {
-             if (patch->containsNode(ni[k])){
-               Vector G(d_S[k].x(),d_S[k].y(),0.0);
-               gsurfnorm[m][ni[k]] += rho * G;
-               gposition[m][ni[k]] += px[idx].asVector()*pmass[idx] * S[k];
-             }
-           }
-        }
-     } else {
-        for(ParticleSubset::iterator it=pset->begin();it!=pset->end();it++){
-          particleIndex idx = *it;
-
-          NN = interpolator->findCellAndWeightsAndShapeDerivatives(
-                          px[idx],ni,S,d_S,psize[idx],deformationGradient[idx]);
-           for(int k = 0; k < NN; k++) {
-             if (patch->containsNode(ni[k])){
-               Vector grad(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
-                           d_S[k].z()*oodx[2]);
-               gsurfnorm[m][ni[k]] += pmass[idx] * grad;
-               gposition[m][ni[k]] += px[idx].asVector()*pmass[idx] * S[k];
-             }
-           }
-        }
-     }
-    }  // loop over matls
-
-    // Make normal vectors colinear by setting all norms to be
-    // in the opposite direction of the norm with the largest magnitude
-    if(d_compColinearNorms){
-      for(NodeIterator iter=patch->getExtraNodeIterator();
-                       !iter.done();iter++){
-        IntVector c = *iter;
-        double max_mag = gsurfnorm[0][c].length();
-        int max_mag_matl = 0;
-        for(int m=1; m<numMatls; m++){
-          double mag = gsurfnorm[m][c].length();
-          if(mag > max_mag){
-             max_mag = mag;
-             max_mag_matl = m;
-          }
-        }  // loop over matls
-
-        for(int m=0; m<numMatls; m++){
-         if(m!=max_mag_matl){
-           gsurfnorm[m][c] = -gsurfnorm[max_mag_matl][c];
-         }
-        }  // loop over matls
-      }
-    }
-
-    // Make norms unit length
-    for(int m=0;m<numMatls;m++){
-      int dwi = matls->get(m);
-      MPMBoundCond bc;
-      bc.setBoundaryCondition(patch,dwi,"Symmetric",  gsurfnorm[m],interp_type);
-
-      for(NodeIterator iter=patch->getExtraNodeIterator();
-                       !iter.done();iter++){
-         IntVector c = *iter;
-         double length = gsurfnorm[m][c].length();
-         if(length>1.0e-15){
-            gsurfnorm[m][c] = gsurfnorm[m][c]/length;
-         }
-         gposition[m][c] /= gmass[m][c];
-      }
     }  // loop over matls
 
     for(int m=0;m<numMatls;m++){
@@ -664,8 +575,8 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
 }
 
 void FrictionContact::addComputesAndRequiresInterpolated(SchedulerP & sched,
-                                                          const PatchSet* patches,
-                                                          const MaterialSet* ms)
+                                                        const PatchSet* patches,
+                                                        const MaterialSet* ms)
 {
   Task * t = scinew Task("Friction::exMomInterpolated", 
                       this, &FrictionContact::exMomInterpolated);
@@ -680,22 +591,21 @@ void FrictionContact::addComputesAndRequiresInterpolated(SchedulerP & sched,
   
   const MaterialSubset* mss = ms->getUnion();
   t->requires(Task::OldDW, lb->delTLabel);
-  t->requires(Task::OldDW, lb->pXLabel,           gp, ngc_p);
-  t->requires(Task::OldDW, lb->pMassLabel,        gp, ngc_p);
-  t->requires(Task::OldDW, lb->pVolumeLabel,      gp, ngc_p);
-  t->requires(Task::OldDW, lb->pStressLabel,      gp, ngc_p);
-  t->requires(Task::OldDW, lb->pSizeLabel,        gp, ngc_p);
+  t->requires(Task::OldDW, lb->pXLabel,                  gp, ngc_p);
+  t->requires(Task::OldDW, lb->pVolumeLabel,             gp, ngc_p);
+  t->requires(Task::OldDW, lb->pStressLabel,             gp, ngc_p);
+  t->requires(Task::OldDW, lb->pSizeLabel,               gp, ngc_p);
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel, gp, ngc_p);
-  t->requires(Task::NewDW, lb->gMassLabel,        Ghost::AroundNodes, 1);
-  t->requires(Task::NewDW, lb->gVolumeLabel,           Ghost::None);
-  t->requires(Task::OldDW, lb->NC_CCweightLabel,z_matl,Ghost::None);
+  t->requires(Task::NewDW, lb->gMassLabel,               Ghost::None);
+  t->requires(Task::NewDW, lb->gSurfNormLabel,           Ghost::None);
+  t->requires(Task::NewDW, lb->gPositionLabel,           Ghost::None);
+  t->requires(Task::NewDW, lb->gVolumeLabel,             Ghost::None);
+  t->requires(Task::OldDW, lb->NC_CCweightLabel,z_matl,  Ghost::None);
   t->computes(lb->gNormTractionLabel);
-  t->computes(lb->gSurfNormLabel);
   t->computes(lb->gStressLabel);
-  t->computes(lb->gPositionLabel);
   t->modifies(lb->frictionalWorkLabel, mss);
-  t->modifies(lb->gVelocityLabel, mss);
-  
+  t->modifies(lb->gVelocityLabel,      mss);
+
   sched->addTask(t, patches, ms);
 
   if (z_matl->removeReference())

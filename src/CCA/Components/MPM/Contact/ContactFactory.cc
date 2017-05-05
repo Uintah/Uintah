@@ -40,7 +40,7 @@ using namespace Uintah;
 
 Contact* ContactFactory::create(const ProcessorGroup* myworld,
                                 const ProblemSpecP& ps, SimulationStateP &ss,
-                                MPMLabel* lb, MPMFlags* flag)
+                                MPMLabel* lb, MPMFlags* flag, bool &needNormals)
 {
 
    ProblemSpecP mpm_ps = 
@@ -54,6 +54,8 @@ Contact* ContactFactory::create(const ProcessorGroup* myworld,
    
    CompositeContact * contact_list = scinew CompositeContact(myworld, lb, flag);
    
+   needNormals=false;
+
    for( ProblemSpecP child = mpm_ps->findBlock( "contact" ); child != nullptr; child = child->findNextBlock( "contact" ) ) {
      
      std::string con_type;
@@ -70,24 +72,27 @@ Contact* ContactFactory::create(const ProcessorGroup* myworld,
      }
      else if (con_type == "friction") {
        contact_list->add(scinew FrictionContact(myworld,child,ss,lb,flag));
+       needNormals=true;
      }
      else if (con_type == "approach") {
        contact_list->add(scinew ApproachContact(myworld,child,ss,lb,flag));
+       needNormals=true;
      }
      else if (con_type == "specified_velocity" || con_type == "specified" || con_type == "rigid"  ) {
        contact_list->add( scinew SpecifiedBodyContact( myworld, child, ss, lb, flag ) );
+       needNormals=true;
      }
      else {
        cerr << "Unknown Contact Type R (" << con_type << ")" << std::endl;;
        throw ProblemSetupException(" E R R O R----->MPM:Unknown Contact type", __FILE__, __LINE__);
      }
    }
-   
+
    // 
    if( contact_list->size() == 0 ) {
      proc0cout << "no contact - using null\n";
      contact_list->add(scinew NullContact(myworld,ss,lb,flag));
    }
-   
+
    return contact_list;
 }

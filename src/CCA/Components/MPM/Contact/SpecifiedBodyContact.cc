@@ -59,16 +59,15 @@ SpecifiedBodyContact::SpecifiedBodyContact(const ProcessorGroup* myworld,
   // Constructor
   // read a list of values from a file
   ps->get("filename", d_filename);
-  
+
   IntVector defaultDir(0,0,1);
   ps->getWithDefault("direction",d_direction, defaultDir);
-  
+
   ps->getWithDefault("master_material", d_material, 0);
   d_matls.add(d_material); // always need specified material
 
   d_vol_const=0.;
   ps->get("volume_constraint",d_vol_const);
-
   ps->getWithDefault("normal_only", d_NormalOnly, false);
 
   if(d_filename!="") {
@@ -247,8 +246,6 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
                                        DataWarehouse* new_dw)
 {
   Ghost::GhostType  gnone = Ghost::None;
-  Ghost::GhostType  gan   = Ghost::AroundNodes;
-
   int numMatls = d_sharedState->getNumMPMMatls();
 
   // Retrieve necessary data from DataWarehouse
@@ -257,7 +254,7 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
   StaticArray<constNCVariable<Vector> > gvelocity(numMatls);
   StaticArray<constNCVariable<Vector> > ginternalForce(numMatls);
   StaticArray<constNCVariable<double> > gvolume(numMatls);
-  NCVariable<Vector>                    gsurfnorm;
+  constNCVariable<Vector>                    gsurfnorm;
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -277,77 +274,7 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
 
     // Compute the normals for the rigid material
    if(d_NormalOnly){
-     new_dw->allocateAndPut(gsurfnorm,lb->gSurfNormLabel,d_material,patch);
-     gsurfnorm.initialize(Vector(0.0,0.0,0.0));
-
-     ParticleSubset* pset = old_dw->getParticleSubset(d_material, patch,
-                                                      gan, NGP, lb->pXLabel);
-     constParticleVariable<Point> px;
-     constParticleVariable<double> pmass, pvolume;
-     constParticleVariable<Matrix3> psize;
-     constParticleVariable<Matrix3> deformationGradient;
-
-     old_dw->get(px,                  lb->pXLabel,                  pset);
-     old_dw->get(pmass,               lb->pMassLabel,               pset);
-     old_dw->get(pvolume,             lb->pVolumeLabel,             pset);
-     old_dw->get(psize,               lb->pSizeLabel,               pset);
-     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
-
-     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
-     vector<IntVector> ni(interpolator->size());
-     vector<double> S(interpolator->size());
-     vector<Vector> d_S(interpolator->size());
-     string interp_type = flag->d_interpolator_type;
-     double oodx[3];
-     oodx[0] = 1.0/dx.x();
-     oodx[1] = 1.0/dx.y();
-     oodx[2] = 1.0/dx.z();
-
-     int NN=flag->d_8or27;
-     if(flag->d_axisymmetric){
-      for(ParticleSubset::iterator it=pset->begin();it!=pset->end();it++){
-        particleIndex idx = *it;
-
-        NN =interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],
-                                                  deformationGradient[idx]);
-        double rho = pmass[idx]/pvolume[idx];
-
-         for(int k = 0; k < NN; k++) {
-           if (patch->containsNode(ni[k])){
-             Vector G(d_S[k].x(),d_S[k].y(),0.0);
-             gsurfnorm[ni[k]] += rho * G;
-           } // if
-         }   // for
-      }      // for
-     } else {
-      for(ParticleSubset::iterator it=pset->begin();it!=pset->end();it++){
-        particleIndex idx = *it;
-
-        NN =interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],
-                                                  deformationGradient[idx]);
-
-         for(int k = 0; k < NN; k++) {
-           if (patch->containsNode(ni[k])){
-             Vector grad(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
-                         d_S[k].z()*oodx[2]);
-             gsurfnorm[ni[k]] += pmass[idx] * grad;
-           }  // if
-         }    // for
-      }       // for
-     }          // else
-
-     MPMBoundCond bc;
-     bc.setBoundaryCondition(patch,d_material,"Symmetric",
-                             gsurfnorm,interp_type);
-
-     for(NodeIterator iter=patch->getExtraNodeIterator();
-                     !iter.done();iter++){
-       IntVector c = *iter;
-       double length = gsurfnorm[c].length();
-       if(length>1.0e-15){
-          gsurfnorm[c] = gsurfnorm[c]/length;
-       }
-     }
+     new_dw->get(gsurfnorm, lb->gSurfNormLabel, d_material, patch, gnone, 0);
    } // if(d_NormalOnly)
 
     delt_vartype delT;
@@ -449,16 +376,8 @@ void SpecifiedBodyContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
   t->requires(Task::NewDW, lb->gVolumeLabel,           Ghost::None);
   t->requires(Task::OldDW, lb->NC_CCweightLabel,z_matl,Ghost::None);
 
-  Ghost::GhostType  gan   = Ghost::AroundNodes;
-
   if(d_NormalOnly){
-   t->requires(Task::OldDW, lb->pXLabel,           gan, NGP);
-   t->requires(Task::OldDW, lb->pMassLabel,        gan, NGP);
-   t->requires(Task::OldDW, lb->pVolumeLabel,      gan, NGP);
-   t->requires(Task::OldDW, lb->pStressLabel,      gan, NGP);
-   t->requires(Task::OldDW, lb->pSizeLabel,        gan, NGP);
-   t->requires(Task::OldDW, lb->pDeformationMeasureLabel, gan, NGP);
-   t->computes(lb->gSurfNormLabel);
+   t->requires(Task::NewDW, lb->gSurfNormLabel,         Ghost::None);
   }
 
   t->modifies(             lb->gVelocityStarLabel,   mss);
