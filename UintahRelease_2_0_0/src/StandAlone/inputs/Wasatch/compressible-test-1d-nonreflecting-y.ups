@@ -1,0 +1,121 @@
+<?xml version="1.0"?>
+<Uintah_specification>
+  <Meta>
+    <title>Compressible flow in 1D with Non-Reflecting BCs in the y-direction. The initial Temperature pulse is asymmetric.</title>
+  </Meta>
+  <SimulationComponent type="wasatch"/>
+  <Wasatch>
+    <TimeIntegrator> FE </TimeIntegrator>
+    <Density method="COMPRESSIBLE">
+      <NameTag name="density"/>
+    </Density>
+    <NSCBC pfarfield="101325"/>
+    <!-- Set the initial condition on temperature -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="Temperature"/>
+      <GaussianFunction amplitude="500.0" deviation="0.05" mean="0.1" baseline="273.0">
+        <NameTag name="YSVOL"/>
+      </GaussianFunction>
+    </BasicExpression>
+    <!-- Set the initial condition expression for x-velocity -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="v"/>
+      <Constant>0</Constant>
+    </BasicExpression>
+    <!-- Set the initial condition expression for pressure - currently pressure has to be name pressure -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="pressure"/>
+      <Constant>101325.0</Constant>
+    </BasicExpression>
+    <!-- Set the molecular weight - needed both on initial condition and advance solution -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="Mixture_MW"/>
+      <Constant>28.966</Constant>
+    </BasicExpression>
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="Mixture_MW"/>
+      <Constant>28.966</Constant>
+    </BasicExpression>
+    <!-- specify the viscosity -->
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="viscosity"/>
+      <Constant>0.0e-5</Constant>
+    </BasicExpression>
+    <!-- Momentum transport equations -->
+    <MomentumEquations>
+      <Y-Velocity>v</Y-Velocity>
+      <Y-Momentum>y-mom</Y-Momentum>
+      <Viscosity>
+        <NameTag name="viscosity"/>
+      </Viscosity>
+    </MomentumEquations>
+    <EnergyEquation>
+      <SolutionVariable>rhoet</SolutionVariable>
+      <PrimitiveVariable>et</PrimitiveVariable>
+      <DiffusiveFlux direction="Y" coefficient="0.025"/>
+      <ConvectiveFlux direction="Y" method="CENTRAL">
+        <AdvectiveVelocity>
+          <NameTag name="v"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+    </EnergyEquation>
+  </Wasatch>
+  <Time>
+    <maxTime>5.0</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>1.3e-7</delt_min>
+    <delt_max>1.3e-7</delt_max>
+    <max_Timesteps> 20 </max_Timesteps>
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+  <DataArchiver>
+    <filebase>compressible-test-1d-nonreflecting-y.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle="2" timestepInterval="2"/>
+    <save label="Temperature"/>
+    <save label="v"/>
+    <save label="pressure"/>
+    <save label="density"/>
+    <save label="et"/>
+    <save label="rhoet"/>
+    <save label="rhoet_rhs"/>
+    <save label="viscous_dissipation"/>
+    <save label="y-mom"/>
+    <save label="y-mom_rhs"/>
+    <save label="y-mom_rhs_partial"/>
+    <save label="y-mom_convFlux_y"/>
+    <save label="density_convFlux_Y"/>
+    <save label="density_rhs"/>
+    <save label="et"/>
+    <save label="kinetic energy"/>
+    <save label="rhoet_and_pressure_convFlux_Y"/>
+    <save label="Temperature_diffVelocity_Y"/>
+    <save label="density_convFlux_Y"/>
+    <save label="rhoet_and_pressure"/>
+    <save label="viscous_dissipation"/>
+  </DataArchiver>
+  <Grid>
+    <BoundaryConditions>
+      <DefaultMaterial>all</DefaultMaterial>
+      <!-- BOUNDARY CONDITIONS FOR MOMENTUM -->
+      <Face side="y-" type="Open"/>
+      <Face side="y+" type="Open"/>
+    </BoundaryConditions>
+    <Level>
+      <Box label="1">
+        <lower>[-0.5,-0.5,0]</lower>
+        <upper>[ 0.5,0.5,0.1]</upper>
+        <resolution>[1,200,1]</resolution>
+        <patches>[1,1,1]</patches>
+      </Box>
+      <periodic>[1,0,1]</periodic>
+    </Level>
+  </Grid>
+</Uintah_specification>

@@ -1,0 +1,245 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<!-- DOCTYPE Uintah_specification SYSTEM "input.dtd" -->
+<!-- @version: -->
+<Uintah_specification>
+  <Meta>
+    <title>DQMOM test with constant density</title>
+  </Meta>
+  <SimulationComponent type="arches"/>
+  <Solver type="hypre"/>
+  <Time>
+    <maxTime>.20</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>1e-5</delt_min>
+    <delt_max>1</delt_max>
+    <timestep_multiplier>0.3</timestep_multiplier>
+  </Time>
+  <DataArchiver>
+    <filebase>dqmom_test_1.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <save label="pressurePS"/>
+    <save label="CCVelocity"/>
+    <save label="uVelocitySPBC"/>
+    <save label="vVelocitySPBC"/>
+    <save label="continuityResidual"/>
+    <save label="velocityDivergence"/>
+    <save label="length_0"/>
+    <save label="length_1"/>
+    <save label="length_2"/>
+    <save label="w_0"/>
+    <save label="w_1"/>
+    <save label="w_2"/>
+    <save label="density_0"/>
+    <save label="density_1"/>
+    <save label="density_2"/>
+    <save label="ux_0"/>
+    <save label="ux_1"/>
+    <save label="ux_2"/>
+    <save label="uy_0"/>
+    <save label="uy_1"/>
+    <save label="uy_2"/>
+    <checkpoint cycle="2" interval="0.05"/>
+    <compression>gzip</compression>
+  </DataArchiver>
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[1.0,1.0,3.0]</upper>
+        <resolution>[32,32,4]</resolution>
+        <extraCells>[0,0,0]</extraCells>
+        <patches>[1,1,1]</patches>
+      </Box>
+      <periodic>[1,1,1]</periodic>
+    </Level>
+  </Grid>
+  <PhysicalConstants>
+    <gravity>[0,0,0]</gravity>
+    <reference_point>[0,0,0]</reference_point>
+    <viscosity>0.0002</viscosity>
+  </PhysicalConstants>
+  <CFD>
+    <!-- ARCHES specification -->
+    <ARCHES>
+      <!-- TIME INTEGRATOR -->
+      <TimeIntegrator>
+        <ExplicitIntegrator order="second"/>
+      </TimeIntegrator>
+      <EulerianParticles>
+        <ParticleVariables>
+          <variable label="length" role="size"/>
+          <variable label="ux" role="uvel"/>
+          <variable label="uy" role="vvel"/>
+          <variable label="uz" role="wvel"/>
+          <variable label="density" role="density"/>
+        </ParticleVariables>
+      </EulerianParticles>
+      <PropertyModelsV2>
+        <model type="const_environment" label="density">
+          <constants>[10,100,1000]</constants>
+        </model>
+      </PropertyModelsV2>
+      <!-- DQMOM -->
+      <DQMOM type="weightedAbs">
+        <number_quad_nodes>3</number_quad_nodes>
+        <save_moments>false</save_moments>
+        <LinearSolver>
+          <tolerance>1e-5</tolerance>
+          <type>Simplest</type>
+        </LinearSolver>
+        <VelModel type="Dragforce">
+        </VelModel>
+        <Models>
+          <model label="xdragforce" type="Drag">
+            <direction>x</direction>
+          </model>
+          <model label="ydragforce" type="Drag">
+            <direction>y</direction>
+          </model>
+          <model label="zdragforce" type="Drag">
+            <direction>z</direction>
+          </model>
+        </Models>
+        <Weights>
+          <doDiff>false</doDiff>
+          <doConv>true</doConv>
+          <initialization type="env_step">
+            <step_direction>x</step_direction>
+            <step_start>0.</step_start>
+            <step_end>.5</step_end>
+            <env_step_value qn="0" value="100"/>
+            <env_step_value qn="1" value="50"/>
+            <env_step_value qn="2" value="10"/>
+          </initialization>
+          <scaling_const>1</scaling_const>
+        </Weights>
+        <Ic label="length">
+          <doDiff>false</doDiff>
+          <doConv>true</doConv>
+          <initialization type="env_constant">
+            <env_constant qn="0" value="1e-6"/>
+            <env_constant qn="1" value="10e-6"/>
+            <env_constant qn="2" value="100e-6"/>
+          </initialization>
+          <nominal_values>[1e-6, 10e-6, 100e-6]</nominal_values>
+          <scaling_const>1e6</scaling_const>
+        </Ic>
+        <Ic label="ux">
+          <doDiff>false</doDiff>
+          <doConv>true</doConv>
+          <model label="xdragforce"/>
+          <initialization type="env_constant">
+            <env_constant qn="0" value="0"/>
+            <env_constant qn="1" value="0"/>
+            <env_constant qn="2" value="0"/>
+          </initialization>
+          <nominal_values>[0.0,0.0,0.0]</nominal_values>
+          <scaling_const>1.0</scaling_const>
+          <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+          <conv_scheme>roe_minmod</conv_scheme>
+        </Ic>
+        <Ic label="uy">
+          <doDiff>false</doDiff>
+          <doConv>true</doConv>
+          <model label="ydragforce"/>
+          <initialization type="env_constant">
+            <env_constant qn="0" value="0"/>
+            <env_constant qn="1" value="0"/>
+            <env_constant qn="2" value="0"/>
+          </initialization>
+          <nominal_values>[0.0,0.0,0.0]</nominal_values>
+          <scaling_const>1.0</scaling_const>
+          <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+          <conv_scheme>roe_minmod</conv_scheme>
+        </Ic>
+        <Ic label="uz">
+          <doDiff>false</doDiff>
+          <doConv>true</doConv>
+          <model label="zdragforce"/>
+          <initialization type="env_constant">
+            <env_constant qn="0" value="0"/>
+            <env_constant qn="1" value="0"/>
+            <env_constant qn="2" value="0"/>
+          </initialization>
+          <nominal_values>[0.0,0.0,0.0]</nominal_values>
+          <scaling_const>1.0</scaling_const>
+          <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+          <conv_scheme>roe_minmod</conv_scheme>
+        </Ic>
+        <Moment>
+          <m>[0,0,0,0]</m>
+        </Moment>
+        <Moment>
+          <m>[1,0,0,0]</m>
+        </Moment>
+        <Moment>
+          <m>[0,1,0,0]</m>
+        </Moment>
+        <Moment>
+          <m>[0,0,1,0]</m>
+        </Moment>
+        <Moment>
+          <m>[0,0,0,1]</m>
+        </Moment>
+        <Moment>
+          <m>[1,1,0,0]</m>
+        </Moment>
+        <Moment>
+          <m>[0,1,1,0]</m>
+        </Moment>
+        <Moment>
+          <m>[0,0,1,1]</m>
+        </Moment>
+        <Moment>
+          <m>[1,1,1,0]</m>
+        </Moment>
+        <Moment>
+          <m>[0,1,1,1]</m>
+        </Moment>
+        <Moment>
+          <m>[1,0,1,1]</m>
+        </Moment>
+        <Moment>
+          <m>[1,1,0,1]</m>
+        </Moment>
+        <Moment>
+          <m>[1,1,1,1]</m>
+        </Moment>
+        <Moment>
+          <m>[2,0,0,0]</m>
+        </Moment>
+        <Moment>
+          <m>[0,2,0,0]</m>
+        </Moment>
+      </DQMOM>
+      <Turbulence model="none"/>
+      <Properties>
+        <table label="a_user_generated_label" type="constant">
+          <temperature>298.0</temperature>
+          <density>1.0</density>
+        </table>
+      </Properties>
+      <BoundaryConditions>
+      </BoundaryConditions>
+      <ExplicitSolver>
+        <initial_dt>1</initial_dt>
+        <PressureSolver>
+          <Parameters>
+            <solver>           cg     </solver>
+            <preconditioner>  pfmg    </preconditioner>
+            <tolerance>      1.0e-10  </tolerance>
+            <maxiterations>    75     </maxiterations>
+            <skip>              1     </skip>
+          </Parameters>
+        </PressureSolver>
+        <MomentumSolver>
+          <convection_scheme>central</convection_scheme>
+          <initialization type="almgren">
+            <plane>x-y</plane>
+          </initialization>
+        </MomentumSolver>
+      </ExplicitSolver>
+    </ARCHES>
+  </CFD>
+</Uintah_specification>

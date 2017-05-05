@@ -1,0 +1,211 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<!-- DOCTYPE Uintah_specification SYSTEM "input.dtd" -->
+<!-- @version: -->
+<Uintah_specification>
+  <Meta>
+    <title>Test of 1D transport of kokkos-ized scalars - Pure convection </title>
+  </Meta>
+  <SimulationComponent type="arches"/>
+  <Solver type="hypre"/>
+  <Time>
+    <maxTime>100.</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>1e-5</delt_min>
+    <delt_max>1e-1</delt_max>
+    <delt_init>1e-1</delt_init>
+    <timestep_multiplier>0.3</timestep_multiplier>
+    <max_Timesteps>50</max_Timesteps>
+  </Time>
+  <DataArchiver>
+    <filebase>x-mom-plus.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <save label="x-mom"/>
+    <save label="y-mom"/>
+    <save label="z-mom"/>
+    <save label="x-mom_rhs"/>
+    <save label="x-mom_x_psi"/>
+    <save label="x-mom_x_flux"/>
+    <save label="x-mom_y_flux"/>
+    <save label="x-mom_z_flux"/>
+    <save label="uVel"/>
+    <save label="vVel"/>
+    <save label="wVel"/>
+    <save label="ucell_yvel"/>
+    <save label="ucell_zvel"/>
+    <save label="ucell_xvel"/>
+    <save label="gamma"/>
+    <save label="b_press"/>
+    <save label="A_press"/>
+    <checkpoint cycle="2" interval=".3"/>
+    <compression>gzip</compression>
+  </DataArchiver>
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[1.0,1.0,1.0]</upper>
+        <resolution>[24,24,24]</resolution>
+        <extraCells>[1,1,1]</extraCells>
+        <patches>[1,1,1]</patches>
+      </Box>
+      <periodic>[0,0,0]</periodic>
+    </Level>
+    <BoundaryConditions>
+      <DefaultMaterial>all</DefaultMaterial>
+      <Face side="x+">
+        <BCType var="Custom" label="x-mom" type="velocity">
+          <value>-1.3</value>
+        </BCType>
+        <BCType var="Dirichlet" label="y-mom">
+          <value>0</value>
+        </BCType>
+        <BCType var="Dirichlet" label="z-mom">
+          <value>0</value>
+        </BCType>
+      </Face>
+      <Face side="x-">
+        <BCType var="Neumann" label="x-mom">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="y-mom">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="z-mom">
+          <value>0.</value>
+        </BCType>
+      </Face>
+      <Face side="y-">
+        <BCType var="Dirichlet" label="x-mom">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Dirichlet" label="y-mom">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Dirichlet" label="z-mom">
+          <value>0.</value>
+        </BCType>
+      </Face>
+      <Face side="y+">
+        <BCType var="Dirichlet" label="x-mom">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Dirichlet" label="y-mom">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Dirichlet" label="z-mom">
+          <value>0.</value>
+        </BCType>
+      </Face>
+      <Face side="z-">
+        <BCType var="Dirichlet" label="x-mom">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Dirichlet" label="y-mom">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Dirichlet" label="z-mom">
+          <value>0.</value>
+        </BCType>
+      </Face>
+      <Face side="z+">
+        <BCType var="Dirichlet" label="x-mom">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Dirichlet" label="y-mom">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Dirichlet" label="z-mom">
+          <value>0.</value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+  </Grid>
+  <PhysicalConstants>
+    <gravity>[0,0,0]</gravity>
+    <reference_point>[0,0,0]</reference_point>
+    <viscosity>0.0002</viscosity>
+  </PhysicalConstants>
+  <CFD>
+    <ARCHES>
+      <TimeIntegrator order="1">
+        <ExplicitIntegrator order="first"/>
+      </TimeIntegrator>
+      <VarID>
+        <var role="uvelocity" label="uVel"/>
+        <var role="vvelocity" label="vVel"/>
+        <var role="wvelocity" label="wVel"/>
+        <var role="total_viscosity" label="gamma"/>
+        <var role="density" label="density"/>
+      </VarID>
+      <PropertyModelsV2>
+        <model label="density" type="constant_property">
+          <grid type="CC"/>
+          <value>1.</value>
+        </model>
+        <model label="gamma" type="constant_property">
+          <grid type="CC"/>
+          <value>1.e-4</value>
+        </model>
+      </PropertyModelsV2>
+      <KMomentum>
+        <convection scheme="superbee"/>
+        <inviscid/>
+        <PressureSolver>
+          <Parameters>
+            <solver>           cg     </solver>
+            <preconditioner>  pfmg    </preconditioner>
+            <tolerance>      1.0e-10  </tolerance>
+            <maxiterations>    75     </maxiterations>
+            <skip>              1     </skip>
+            <setupFrequency>    0     </setupFrequency>
+            <jump>              0     </jump>
+          </Parameters>
+        </PressureSolver>
+      </KMomentum>
+      <Initialization>
+        <!--<task task_label="x-mom_initialize"-->
+        <!--variable_label="x-mom"-->
+        <!--type="wave">-->
+        <!--<wave type="square">-->
+        <!--<grid type="FX"/>-->
+        <!--<independent_variable label="gridX" type="CC"/>-->
+        <!--<square min="0.0"-->
+        <!--max="1.0"-->
+        <!--f="1.0"-->
+        <!--offset="0.5"/>-->
+        <!--</wave>-->
+        <!--</task>-->
+        <!--<task task_label="y-mom_initialize"-->
+        <!--variable_label="y-mom"-->
+        <!--type="wave">-->
+        <!--<wave type="square">-->
+        <!--<grid type="FY"/>-->
+        <!--<independent_variable label="gridX" type="CC"/>-->
+        <!--<square min="0.0"-->
+        <!--max="1.0"-->
+        <!--f="1.0"-->
+        <!--offset="0.5"/>-->
+        <!--</wave>-->
+        <!--</task>-->
+        <!--<task task_label="z-mom_initialize"-->
+        <!--variable_label="z-mom"-->
+        <!--type="wave">-->
+        <!--<wave type="square">-->
+        <!--<grid type="FZ"/>-->
+        <!--<independent_variable label="gridX" type="CC"/>-->
+        <!--<square min="0.0"-->
+        <!--max="1.0"-->
+        <!--f="1.0"-->
+        <!--offset="0.5"/>-->
+        <!--</wave>-->
+        <!--</task>-->
+      </Initialization>
+      <BoundaryConditions>
+        <force_area_calc/>
+      </BoundaryConditions>
+      <KokkosSolver>
+      </KokkosSolver>
+    </ARCHES>
+  </CFD>
+</Uintah_specification>

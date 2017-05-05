@@ -1,0 +1,361 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<Uintah_specification> 
+<!--Please use a consistent set of units, (mks, cgs,...)-->
+
+   <Meta>
+       <title>Detonation in a half space with layer w/ plastic damage and MG EOS</title>
+   </Meta>
+
+   <SimulationComponent type="mpmice" />
+
+
+    <!--____________________________________________________________________-->
+    <!--   T  I  M  E     V  A  R  I  A  B  L  E  S                         -->
+    <!--____________________________________________________________________-->
+   <Time>
+       <maxTime>            8.00e-3     </maxTime>
+       <initTime>           0.0         </initTime>
+       <delt_min>           1.0e-12     </delt_min>
+       <delt_max>           1.0         </delt_max>
+       <delt_init>          2.1e-8      </delt_init>
+       <max_Timesteps>      99999       </max_Timesteps>
+       <timestep_multiplier>0.3         </timestep_multiplier>
+   </Time>    
+    <!--____________________________________________________________________-->
+    <!--   G  R  I  D     V  A  R  I  A  B  L  E  S                         -->
+    <!--____________________________________________________________________-->
+    <Grid>
+    <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "all" label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "all" label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "all" label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>                  
+      <Face side = "y+">
+        <BCType id = "all" label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>                  
+      <!--
+      <Face side = "y+">
+        <BCType id = "0"   label = "Pressure"   var = "Neumann">
+                              <value> 0.0   </value>
+        </BCType>
+        <BCType id = "all" label = "Velocity"   var = "Dirichlet">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature" var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "Density"      var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+      -->
+      <Face side = "z-">
+        <BCType id = "all" label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>                  
+      <Face side = "z+">
+        <BCType id = "all" label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+       <Level>
+           <Box label = "1">
+              <lower>        [ 0.0,     0.0,     0.0      ]    </lower>
+              <upper>        [ 0.1,     0.1,     0.01     ]    </upper>
+              <extraCells>   [1,1,1]    </extraCells>
+              <patches>      [4,4,1]    </patches>
+              <resolution>   [100, 100, 1]                 </resolution>
+           </Box>
+       </Level>
+    </Grid>
+   
+    <!--____________________________________________________________________-->
+    <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+   <DataArchiver>
+      <filebase>halfSpaceDetLayer_v1_MG_mres.uda</filebase>
+      <!--<outputTimestepInterval> 10 </outputTimestepInterval>-->
+      <outputInterval> 5.0e-8 </outputInterval>
+      <save label = "rho_CC"/>
+      <save label = "press_CC"/>
+      <save label = "temp_CC"/>
+      <save label = "vol_frac_CC"/>
+      <save label = "vel_CC"/>
+      <save label = "g.mass"/>
+      <save label = "p.x"/>
+      <save label = "p.mass"/>
+      <save label = "p.temperature"/>
+      <save label = "p.particleID"/>
+      <save label = "p.velocity"/>
+      <save label = "p.stress"/>
+      <save label = "p.volume"/>
+      <save label = "g.stressFS"/>
+      <save label = "delP_Dilatate"/>
+      <save label = "delP_MassX"/>
+      <save label = "p.deformationMeasure"/>
+      <save label = "p.epsf"/>
+      <save label = "p.plasticStrain"/>
+      <save label = "p.localized"/>
+      <save label = "p.yieldStress"/>
+
+      <checkpoint cycle = "2" timestepInterval = "200"/>
+   </DataArchiver>
+
+    <!--____________________________________________________________________-->
+    <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
+    <!--____________________________________________________________________-->
+    <CFD>
+       <cfl>0.3</cfl>
+       <ICE>
+        <advection type = "SecondOrder"/>
+        <ClampSpecificVolume>true</ClampSpecificVolume>
+        <max_iteration_equilibration> 1000 </max_iteration_equilibration>
+      </ICE>        
+    </CFD>
+
+    <!--____________________________________________________________________-->
+    <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
+    <!--____________________________________________________________________-->   
+    <PhysicalConstants>
+       <gravity>            [0,0,0]   </gravity>
+       <reference_pressure> 101325.0  </reference_pressure>
+    </PhysicalConstants>
+
+    <MPM>
+        <time_integrator>explicit</time_integrator>
+        <interpolator>                   gimp       </interpolator>
+        <minimum_particle_mass>1.0e-8</minimum_particle_mass>
+        <maximum_particle_velocity>3.e4</maximum_particle_velocity>
+        <artificial_damping_coeff>       0.0        </artificial_damping_coeff>
+        <artificial_viscosity>           true       </artificial_viscosity>
+        <use_load_curves>                false      </use_load_curves>
+        <erosion algorithm = "ZeroStress"/>
+        <DoPressureStabilization>true</DoPressureStabilization> 
+    </MPM>
+
+    <!--____________________________________________________________________-->
+    <!--    MATERIAL PROPERTIES INITIAL CONDITIONS                          -->
+    <!--____________________________________________________________________-->
+    <MaterialProperties>
+      <MPM>
+        <material name = "Pavement">
+          <density>2600.0</density>
+          <thermal_conductivity>0.25</thermal_conductivity>
+          <specific_heat>890</specific_heat>
+          <room_temp>294.0</room_temp>
+          <melt_temp>2000.0</melt_temp>
+          <constitutive_model type = "comp_neo_hook">
+            <shear_modulus>1.00e9</shear_modulus>
+            <bulk_modulus>3.00e9</bulk_modulus>
+            <useInitialStress> false </useInitialStress>
+
+            <usePlasticity> true </usePlasticity>
+            <yield_distrib>uniform</yield_distrib>
+            <yield_range> 2.0e8 </yield_range>
+            <yield_stress> 3.0e8 </yield_stress>
+            <hardening_modulus> 1.0e6 </hardening_modulus>
+
+            <useDamage> true </useDamage>
+            <!-- when failure_by_stress is true, values are stress not strain -->
+            <failure_criteria>MaximumPrincipalStrain</failure_criteria>
+            <failure_mean> 0.2 </failure_mean>
+            <failure_std>  0.1 </failure_std>
+            <!-- choices are "constant" or "gauss" (for Gaussian distribution) -->
+            <!-- <failure_distrib>gauss</failure_distrib> -->
+            <!-- <failure_distrib>constant</failure_distrib> -->
+            <failure_distrib>uniform</failure_distrib>
+
+            <useEOSFactory> true </useEOSFactory>
+            <equation_of_state type = "mie_gruneisen">
+              <C_0>     1074.17  </C_0>
+              <Gamma_0> 2.0  </Gamma_0>
+              <S_alpha> 0.5 </S_alpha>
+              <S_2> 0.1 </S_2>
+              <S_3> 0.4 </S_3>
+            </equation_of_state>
+          </constitutive_model>
+          <geom_object>
+            <box label = "asphalt">
+              <min> [-0.2, 0.05, -0.02 ] </min>
+              <max> [0.2, 0.054, 0.02 ] </max>
+            </box>
+            <res> [2,2,2] </res>
+            <velocity> [0.0,0.0,0.0] </velocity>
+            <temperature> 300 </temperature>
+          </geom_object>
+        </material>
+        <material name = "Soil">
+          <density>2600.0</density>
+          <thermal_conductivity>0.25</thermal_conductivity>
+          <specific_heat>890</specific_heat>
+          <room_temp>294.0</room_temp>
+          <melt_temp>2000.0</melt_temp>
+          <constitutive_model type = "comp_neo_hook">
+            <shear_modulus>1.3e6</shear_modulus>
+            <bulk_modulus>3.25e6</bulk_modulus>
+
+            <useEOSFactory> true </useEOSFactory>
+            <equation_of_state type = "mie_gruneisen">
+              <C_0>     35.36  </C_0>
+              <Gamma_0> 0.5  </Gamma_0>
+              <S_alpha> 0.6 </S_alpha>
+              <S_2> 0.1 </S_2>
+              <S_3> 0.0 </S_3>
+            </equation_of_state>
+
+          </constitutive_model>
+          <geom_object>
+            <difference>
+              <box label = "soil">
+                <min> [-0.2, -0.05, -0.02 ] </min>
+                <max> [0.2, 0.05, 0.02 ] </max>
+              </box>
+              <box label = "explosive">
+                <min> [0.04, -0.005, -0.02 ] </min>
+                <max> [0.06, 0.005, 0.02 ] </max>
+              </box>
+            </difference>
+            <res> [2,2,2] </res>
+            <velocity> [0.0,0.0,0.0] </velocity>
+            <temperature> 300 </temperature>
+          </geom_object>
+        </material>
+        <contact>
+          <type>approach</type>
+          <materials> [0,1] </materials>
+          <mu> 0.0 </mu>
+        </contact>
+      </MPM>
+
+      <ICE>
+        <material name = "reactant">
+          <EOS type="Murnaghan">
+            <!-- PBX 9404 parameters -->
+            <!-- These Parameters are from Curtis et al, 2006
+                  However the parameters may need to be n = 14 and
+                  K=1.4041e-11 to get crossing at 37.4 GPa -->
+            <K>         1.9342e-10 </K>
+            <n>         15.2      </n>
+            <P0>   101325.0       </P0>
+            <rho0>   1844.0       </rho0>
+          </EOS>
+          <dynamic_viscosity>      0.0                 </dynamic_viscosity>
+          <thermal_conductivity>   0.3849              </thermal_conductivity>
+          <specific_heat>          1016.29             </specific_heat>
+          <gamma>                  1.4                 </gamma>
+          <geom_object>
+            <difference>
+              <box label = "stick">
+                <min> [0.04, -0.005, -0.02 ] </min>
+                <max> [0.06, 0.005, 0.02 ] </max>
+              </box>
+              <box label = "slapper">
+                <min> [0.04, -0.002, -0.02 ] </min>
+                <max> [0.06, 0.002, 0.02 ] </max>
+              </box>
+            </difference>
+            <res>            [2,2,2]                 </res>
+            <velocity>       [0.0,0.0,0.0]           </velocity>
+            <temperature>    300.0                   </temperature>
+            <density>        1844.0                  </density>
+            <pressure>       101325.0                </pressure>
+          </geom_object>
+          <geom_object>
+            <box label = "slapper"> </box>
+            <res>            [2,2,2]                 </res>
+            <velocity>       [0.0,600.0,0.0]        </velocity>
+            <temperature>    300.0                   </temperature>
+            <density>        1844.0                  </density>
+            <pressure>       101325.0                </pressure>
+          </geom_object>
+        </material>
+
+        <material name = "product">
+          <EOS type="JWLC">
+            <!-- PBX 9404 parameters -->
+            <!-- From Souer's paper on Detonation EOS at LLNL, 1995 -->
+            <A> 7.73037e11 </A>
+            <B> 21.629e9   </B>
+            <C> 1.339e9    </C>
+            <R1> 4.5       </R1>
+            <R2> 1.5       </R2>
+            <om> 0.33      </om>
+            <rho0> 1844.0  </rho0>
+          </EOS>
+          <dynamic_viscosity>      0.0                 </dynamic_viscosity>
+          <thermal_conductivity>   0.0                 </thermal_conductivity>
+          <specific_heat>          544.96               </specific_heat>
+          <gamma>                  1.4                 </gamma>
+          <geom_object>
+            <box label="out_of_domain">
+              <min>       [ 99.0,  99.0,  99.0 ]   </min>
+              <max>       [100.0, 100.0, 100.0 ]   </max>
+            </box>
+            <res>            [2,2,2]                 </res>
+            <velocity>       [0.0,0.0,0.0]           </velocity>
+            <temperature>    300.0                   </temperature>
+            <density>        1.4696591               </density>
+            <pressure>       101325.0                </pressure>
+          </geom_object>
+        </material>
+        <material>
+          <EOS type = "ideal_gas">                     </EOS>
+          <dynamic_viscosity>      0.0                 </dynamic_viscosity>
+          <thermal_conductivity>   0.0                 </thermal_conductivity>
+          <specific_heat>        716.0                 </specific_heat>
+          <gamma>                  1.4                 </gamma>
+          <geom_object>
+            <difference>
+              <box label="whole_domain">
+                <min>           [-99.0, -99.0, -99.0 ]   </min>
+                <max>           [100.0, 100.0, 100.0 ]   </max>
+              </box>
+              <union>
+                <box label = "asphalt"> </box>
+                <box label = "soil"> </box>
+              </union>
+            </difference>
+            <res>            [2,2,2]                 </res>
+            <velocity>       [0.0,0.0,0.0]           </velocity>
+            <temperature>    300.0                   </temperature>
+            <density>        1.1792946927374306      </density>
+            <pressure>       101325.0                </pressure>
+          </geom_object>
+        </material>
+      </ICE>       
+
+      <exchange_properties>  
+         <exchange_coefficients>
+           <momentum>  [0, 1e15, 1e15, 1e15, 1e15, 1e15, 1e15, 1e15, 1e15, 1e15]     </momentum>
+           <heat>      [0, 1e10, 1e10, 1e10, 1e10, 1e10, 1e10, 1e10, 1e10, 1e10]     </heat>
+        </exchange_coefficients>
+      </exchange_properties> 
+    </MaterialProperties>
+
+    <Models>
+      <Model type="JWLpp">
+        <fromMaterial> reactant    </fromMaterial>
+        <toMaterial>   product     </toMaterial>
+        <G>        8.3e-12         </G>             
+        <b>        1.9             </b>             
+        <rho0>     1844.0          </rho0>          
+        <E0>       5.748373e6      </E0>            
+        <ThresholdPressure>  2.1e9 </ThresholdPressure>
+      </Model>
+    </Models>
+
+
+</Uintah_specification>
+

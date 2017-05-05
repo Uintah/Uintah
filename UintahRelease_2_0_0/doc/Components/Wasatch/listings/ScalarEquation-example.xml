@@ -1,0 +1,31 @@
+<TransportEquation equation="generic">
+  <SolutionVariable>f</SolutionVariable>
+
+  <ConvectiveFlux direction="X" method="CENTRAL">
+    <AdvectiveVelocity>
+      <NameTag name="u" state="STATE_NONE"/>
+    </AdvectiveVelocity>
+  </ConvectiveFlux>
+
+  <ConvectiveFlux direction="Y" method="CENTRAL">
+    <AdvectiveVelocity>
+      <NameTag name="v" state="STATE_NONE"/>
+    </AdvectiveVelocity>
+  </ConvectiveFlux>
+
+  <ConvectiveFlux direction="Z" method="CENTRAL">
+    <AdvectiveVelocity>
+      <NameTag name="w" state="STATE_NONE"/>
+    </AdvectiveVelocity>
+  </ConvectiveFlux>
+
+  <DiffusiveFlux direction="X" coefficient="0.1"/>
+
+  <DiffusiveFlux direction="Y">
+    <DiffusionCoefficient>
+      <NameTag name="f-diffcoef" state="STATE_NONE"/><!-- this must be computed by another expression -->
+    </DiffusionCoefficient>
+  </DiffusiveFlux>
+
+  <DiffusiveFlux direction="Z" coefficient="0.3"/>
+</TransportEquation>

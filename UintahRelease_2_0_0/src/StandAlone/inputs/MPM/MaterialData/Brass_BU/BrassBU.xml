@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- CartridgeBrass -->
+<Uintah_Include>
+    <include href="MaterialData/Brass_BU/MaterialConstBrassBU.xml"/>
+    <constitutive_model type="elastic_plastic">
+      <include href="MaterialData/Brass_BU/IsotropicElasticBrassBU.xml"/>
+      <include href="MaterialData/VonMisesYield.xml"/>
+      <include href="MaterialData/Brass_BU/JCPlasticBrassBU.xml"/>
+      <include href="MaterialData/Cu_BU/MieGruneisenEOSAnnCopper.xml"/>
+      <initial_material_temperature>  294.0 </initial_material_temperature>
+    </constitutive_model>
+</Uintah_Include>

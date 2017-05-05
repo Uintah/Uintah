@@ -1,0 +1,39 @@
+<config>
+<postProcessCmd_path></postProcessCmd_path>
+
+<symbolicLinks>../../../../inputs/</symbolicLinks>  <!-- needed for tables -->
+
+
+ <!--Radiation Benchmarks-->
+<test>
+  <name>sineWave</name>
+  <ups>RMCRT_sineWave.ups</ups>
+  <tst>nRaySineWave.tst</tst>
+</test>
+
+<test>
+  <name>expHotSpot</name>
+  <ups>RMCRT_hotspot.ups</ups>
+  <tst>nRayHotSpot.tst</tst>
+</test>
+
+<test>
+  <name>expColdWall</name>
+  <ups>RMCRT_xkexp.ups</ups>
+  <tst>nRayColdWall.tst</tst>
+</test>
+
+<!-- Ray convergence test using Burns & Christon benchmark -->
+<test>
+  <name>RMCRT_OA_Ray</name>
+  <ups>rmcrt_bm1_1L.ups</ups>
+  <tst>ray.tst</tst>
+</test>
+
+<!-- Grid convergence test using Burns & Christon benchmark -->
+<test>
+  <name>RMCRT_OA_dx</name>
+  <ups>rmcrt_bm1_1L.ups</ups>
+  <tst>dx.tst</tst>
+</test>
+</config>

@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- Cartridge Brass -->
+<Uintah_Include>
+  <shear_modulus>41.47e4</shear_modulus>
+  <bulk_modulus>108.15e4</bulk_modulus>
+</Uintah_Include>
+
