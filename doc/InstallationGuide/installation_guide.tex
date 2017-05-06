@@ -41,7 +41,7 @@
 \author{John Schmidt, Todd Harman, Jeremy Thornock, \\
   James Sutherland, J. Davison de St. Germain, Tony Saad}
 
-\date{Version 1.6}
+\date{Version 2.0}
 
 \maketitle
 
@@ -115,9 +115,9 @@ Required libraries:
 \item c++
 \item fortran
 \item subversion
-\item cmake (version 2.8.12 or higher)
+\item cmake (version 3.1.0 or higher) -- \textbf{Required for Arches/Wasatch}
 \item git
-\item boost (version 1.54 or higher)
+\item boost (version 1.54 or higher) -- \textbf{Required for Arches/Wasatch}
 \item Hypre (version 2.9.0b or higher) -- \textbf{Required}
 \item PETSc (version 3.5.2 or higher) -- \textbf{Optional}
 \end{itemize}
@@ -137,44 +137,94 @@ Installing the following libraries will ensure that all dependencies
 required for \textbf{Uintah} are satisfied:
 
 \begin{verbatim} 
-sudo aptitude install subversion libhypre-dev petsc-dev \ 
+sudo apt-get install subversion libhypre-dev petsc-dev \ 
 libxml2-dev zlib1g-dev liblapack-dev cmake libglew-dev \
 libxmu-dev g++ gfortran libboost-all-dev git \
 libxrender-dev libxi-dev
 \end{verbatim}
 
+For Debian \textbf{Jessie, version 8}, add the following to
+/etc/apt/sources:
+
+\begin{verbatim}
+deb http://ftp.debian.org/debian jessie-backports main non-free
+contrib
+\end{verbatim}
+
+\noindent
+then replace an older version of cmake with a newer version of cmake
+that is compatible with the Wasatch component. 
+
+\begin{verbatim}
+sudo apt-get update
+sudo apt-get install -t jessie-backports cmake
+\end{verbatim}
+
+
+
 \subsection{Fedora Core  Dependencies}
 
-\textbf{Fedora Core} \url{http://fedoraproject.org/} offers all the
+\textbf{Fedora Core 25} \url{http://fedoraproject.org/} offers all the
 dependencies except for PETSc and HYPRE.  Install the following
 libraries:
 
 \begin{verbatim}
-sudo yum install make openmpi-devel openmpi lapack-devel \
+sudo dnf install make openmpi-devel openmpi lapack-devel \
 gcc-gfortran blas-devel gcc-c++ libxml2-devel subversion \ 
 cmake tar diffutils libX11-devel libXext-devel patch wget \
 mesa-libGL-devel mesa-libGLU-devel libXt-devel git boost-devel \
-libXrender-devel libXi-devel
+libXrender-devel libXi-devel python qt-devel
 \end{verbatim} 
+
+Please see section~\ref{hypre-fedora-centos} for hypre installlation
+instructions and section~\ref{petsc-fedora-centos} for petsc installation instructions.
+
 
 
 \subsection{CentOS  Dependencies}
 
-\textbf{CentOS} \url{http://www.centos.org/} is similar to \textbf{Fedora
-Core} 
+\textbf{CentOS 7} \url{http://www.centos.org/} is similar to \textbf{Fedora
+Core}.  However, a more recent version of cmake and boost must be installed. 
+Please see the sections for install cmake and boost below, along with 
+instructions for installing hypre (required) and petsc (optional).
 
 \begin{verbatim}
 sudo yum install make openmpi-devel openmpi lapack-devel \
 gcc-gfortran blas-devel gcc-c++ libxml2-devel subversion \ 
 tar diffutils libX11-devel libXext-devel patch wget \
 mesa-libGL-devel mesa-libGLU-devel libXt-devel git \
-libXrender-devel libXi-devel
+libXrender-devel libXi-devel bzip2
 \end{verbatim} 
+
+\subsubsection{Boost}
+
+Install \textbf{Boost 1.64.0} \url{http://www.boost.org/users/download/}.
+After unzipping, then build and install boost:
+
+\begin{verbatim}
+cd path/to/boost_1_64_0
+./bootstrap.sh
+sudo ./b2 install
+\end{verbatim}
+
+
+
+\subsubsection{CMake}
+Install version 3.1.0 or higher of \textbf{CMake} \url{https://cmake.org/download/}
+
+\begin{verbatim}
+./bootstrap
+  make
+  sudo make install
+\end{verbatim}
+
+Please see section~\ref{hypre-fedora-centos} for hypre installlation
+instructions and section~\ref{petsc-fedora-centos} for petsc installation instructions.
 
 
 \subsection{OpenSuse  Dependencies}
 
-\textbf{OpenSuse} \url{http://www.opensuse.org/} is similar to
+\textbf{OpenSuse-Leap} \url{http://www.opensuse.org/} is similar to
 \textbf{Fedora Core}
 
 \begin{verbatim}
@@ -182,49 +232,33 @@ sudo zypper install make openmpi-devel openmpi lapack \
 gcc-fortran blas gcc-c++ libxml2-devel subversion \ 
 cmake tar diffutils libX11-devel libXext-devel patch wget \
 mesa-libGL-devel mesa-libGLU-devel libXt-devel git boost-devel \
-libXrender-devel libXi-devel
+libXrender-devel libXi-devel qt-devel glu-devel
 \end{verbatim} 
 
-\subsection{MacOSX  Dependencies}
+Please see section~\ref{hypre-opensuse} for hypre installlation
+instructions and section~\ref{petsc-opensuse} for petsc installation instructions.
 
-The directions are based on the wiki page
-\url{https://software.crsim.utah.edu/trac/wiki/Wasatch#BuildingonaMac}. Use
-Macports to install the following:
+\subsection{MacOSX  Dependencies}
+Use Macports to install the following:
+
 \begin{verbatim}
-sudo port install dialog 
-sudo port install ncurses
-sudo port install cmake 
-sudo port install git-core +svn
-sudo port install petsc
+sudo port install openssh screen dialog zlib cmake bash autoconf \
+                  xmlstarlet gdb gmake
+sudo port install mpich
+sudo port install mpich-gcc5
+sudo port install lapack +gcc5
+sudo port select --set mpi mpich-gcc5-fortran
+sudo port select --set gcc mp-gcc5
+sudo port install -s icu configure.compiler=macports-gcc-5  \
+                     configure.cxx_stdlib="libstdc++"
+sudo port install -s boost configure.compiler=macports-gcc-5 \
+                     configure.cxx_stdlib="libstdc++"
+sudo port install -s -v hypre +mpich
 \end{verbatim}
+
 You will want to ensure that your path has the macports install
 locations before the system ones, i.e., \texttt{/opt/local/bin} before
 \texttt{/usr/bin}.
-
-\subsubsection{OpenMPI}
-
-Install \textbf{OpenMPI} \url{http://www.open-mpi.org/}.  Use a
-configure line similar to the following:
-
-\begin{verbatim}
-cd [path to downloaded OpenMPI]
-mkdir build; cd build
-../configure --enable-mpi-thread-multiple --prefix=/usr/local
-make
-make install
-\end{verbatim}
-
-\subsubsection{Boost}
-
-Install \textbf{Boost} \url{http://www.boost.org/users/download/}.
-After unzipping the file, copy \texttt{tools/build/v2/user-config.jam}
-to your home directory and edit it to include:
-\begin{verbatim}
-using mpi : /usr/local/bin/mpic++ ;
-\end{verbatim}
-at the bottom.
-
-
 
 
 
@@ -234,23 +268,24 @@ Hypre can be installed by executing the following simplified
 instructions, however, if you encounter problems please refer to the
 hypre website for troubleshooting.
 
-Download hypre-2.9.0b from
+Download hypre-2.11.2 from
 \url{https://computation.llnl.gov/casc/hypre/software.html}
 
 \subsection{Fedora \& CentOS}
-
+\label{hypre-fedora-centos}
 The following configure script assumes the location of MPI libraries
 are in \texttt{/usr/lib64/openmpi/lib}.  Note that the
 \texttt{LD\_LIBRARY\_PATH} must be set.  It is helpful to include the
-\texttt{/usr/lib/64/openmpi/bin} in your path for the location of
+\texttt{/usr/lib64/openmpi/bin} in your path for the location of
 mpirun and mpiCC, mpicc, and mpif77.
 
 
 \begin{verbatim}
-cd hypre-2.9.0b/src
+cd hypre-2.11.2/src
 
 LD_LIBRARY_PATH=/usr/lib64/openmpi/lib/ \
  ./configure --enable-shared \
+             --prefix=/usr/local \
              --with-MPI-lib-dirs=/usr/lib64/openmpi/lib/ \
              --with-MPI-include=/usr/include/openmpi-x86_64/ \
              --with-MPI-libs="mpi mpi_cxx" \
@@ -259,44 +294,28 @@ LD_LIBRARY_PATH=/usr/lib64/openmpi/lib/ \
              F77=/usr/lib64/openmpi/bin/mpif77
 
 make
+sudo make install
 
 \end{verbatim}
 
 \subsection{OpenSuse}
-
+\label{hypre-opensuse}
 \begin{verbatim}
 
-cd hypre-2.9.0b/src
+cd hypre-2.11.2/src
 
 ./configure --enable-shared \
+	    --prefix=/usr/local \
             --with-MPI-libs="mpi mpi_cxx" \
             CC=/usr/lib64/mpi/gcc/openmpi/bin/mpicc \
             CXX=/usr/lib64/mpi/gcc/openmpi/bin/mpic++ \
             F77=/usr/lib64/mpi/gcc/openmpi/bin/mpif77
 
 make
+sudo make install
 
 \end{verbatim}
 
-\subsection{MacOSX}
-
-\begin{verbatim}
-cd hypre-2.9.0b/src
-
-./configure --prefix=/usr/local \
-            --with-MPI-include=/opt/local/include/openmpi\
-            --with-MPI-lib-dires=/opt/local/lib\
-            CC='gcc -arch X86_64' \
-            CXX='g++ -arch X86_64' \
-            F77='gfortran -arch X86_64' 
-
-make
-make install
-\end{verbatim}
-
-
-\emph{Note, under Mac OSX, Hypre does not handle the "--enable-shared" configure
-  flag correctly.}
 
 \section{PETSc Installation -- Optional}
 
@@ -304,10 +323,11 @@ PETSc can be installed by executing the following simplified
 instructions.  Please refer to the PETSc website for comprehensive
 installation instructions if you encounter any difficulties.
 
-Download petsc-v3.5.2 from
+Download petsc-v3.7.6 from
 \url{http://www.mcs.anl.gov/petsc/petsc-as/download/index.html}
 
 \subsection{Fedora \& CentOS}
+\label{petsc-fedora-centos}
 
 The following configure script assumes the location of MPI libraries
 are in \texttt{/usr/lib64/openmpi/lib}.  Note that the
@@ -316,34 +336,33 @@ are in \texttt{/usr/lib64/openmpi/lib}.  Note that the
 mpirun and mpiCC, mpicc, and mpif77.
 
 \begin{verbatim}
-tar zxf petsc-3.5.2.tar.gz
-cd petsc-3.5.2
+tar zxf petsc-3.7.6.tar.gz
+cd petsc-3.7.6
 
 LD_LIBRARY_PATH=/usr/lib64/openmpi/lib \
 ./configure --with-shared-libraries \
-            --with-debugging=O \
-            --with-mpi-dir=/usr/lib64/openmpi  \
-            --prefix=/home/jas/petsc
+            --with-debugging=0 \
+            --with-mpi-dir=/usr/lib64/openmpi/  \
+            --prefix=/usr/local
 
-make PETSC_DIR=/home/jas/petsc-3.5.2 PETSC_ARCH=arch-linux2-c-opt all
+make PETSC_DIR=/home/jas/petsc-3.7.6 PETSC_ARCH=arch-linux2-c-opt all
 
-make PETSC_DIR=/home/jas/petsc-3.5.2 PETSC_ARCH=arch-linux2-c-opt install
-
+sudo make install 
 \end{verbatim}
 
 \subsection{OpenSuse}
-
+\label{petsc-opensuse}
 \begin{verbatim}
-tar zxf petsc-3.5.2.tar.gz
-cd petsc-3.5.2
+tar zxf petsc-3.7.6.tar.gz
+cd petsc-3.7.6
 
 ./configure --with-mpi-dir=/usr/lib64/mpi/gcc/openmpi \
             --with-shared-libraries --with-debugging=0 \
-            --prefix=/home/jas/petsc
+            --prefix=/usr/local
 
-make PETSC_DIR=/home/jas/petsc-3.5.2 PETSC_ARCH=arch-linux2-c-opt all
+make PETSC_DIR=/home/jas/petsc-3.7.6 PETSC_ARCH=arch-linux2-c-opt all
 
-make PETSC_DIR=/home/jas/petsc-3.5.2 PETSC_ARCH=arch-linux2-c-opt install
+sudo make install
 
 \end{verbatim}
 
@@ -364,7 +383,7 @@ Goto the directory \TT{ \textasciitilde/uintah} and create the
 following directories: \TT{dbg} (debug) and \TT{opt} (optimized)
 
 \begin{verbatim}
-cd ~/uintah-1.6.0
+cd ~/uintah-2.0
 mkdir dbg opt
 \end{verbatim}
 
@@ -430,8 +449,8 @@ To turn on components, use the following configure flags:
 --with-mpi=/usr/lib64/openmpi <= Specifies location of MPI
 --enable-64bit                <= Specifies a 32 or 64bit build
 --enable-32bit
---with-petsc=/path/petsc-3.5.2            <= Specifies location of PETSc
---with-hypre=/path/hypre-2.9.0b/hypre_install <= Specifies location of Hypre
+--with-petsc=/path/petsc-3.7.6            <= Specifies location of PETSc
+--with-hypre=/path/hypre-2.11.2./hypre_install <= Specifies location of Hypre
 
 F77=gfortran-4.7              <= Specifies compilers (Fortran, C, C++).
 CC=/usr/bin/gcc-4.7
@@ -463,7 +482,7 @@ To see a full list of all the configure options type:
 \paragraph{Debian \& Ubuntu}
 \begin{verbatim}
     ../src/configure --enable-debug --enable-all-components \
-                     --with-boost=/usr --enable-wasatch_3p
+                     --with-boost=/usr --enable-wasatch_3p F77=gfortan
 \end{verbatim}
 
 
@@ -472,10 +491,11 @@ To see a full list of all the configure options type:
 ../src/configure --enable-debug --enable-all-components \
                  --with-mpi-lib=/usr/lib64/openmpi/lib \
                  --with-mpi-include=/usr/include/openmpi-x86_64 \
-                 --with-boost=/usr --enable-wasatch_3p \
-                 --with-hypre=/home/jas/hypre2.9.0b/src/hypre 
-                 --with-petsc=/home/jas/petsc
+                 --with-boost={/usr,/usr/local} --enable-wasatch_3p \
+                 --with-hypre=/usr/local 
+                 --with-petsc=/usr/local
 \end{verbatim}
+
 
 \paragraph{OpenSuse}
 \begin{verbatim}
@@ -483,9 +503,20 @@ To see a full list of all the configure options type:
                  --with-mpi-lib=/usr/lib64/openmpi/lib \
                  --with-mpi-include=/usr/include/openmpi-x86_64 \
                  --with-boost=/usr --enable-wasatch_3p \
-                 --with-hypre=/home/jas/hypre2.9.0b/src/hypre 
-                 --with-petsc=/home/jas/petsc
+                 --with-hypre=/usr/local
+                 --with-petsc=/usr/local
 \end{verbatim}
+
+\paragraph{MacOSX}
+\begin{verbatim}
+../src/configure --enable-debug --enable-all-components \
+                 --with-boost=/opt/local --enable-wasatch_3p \
+                 --with-hypre=/opt/local --with-lapack=/opt/local \
+                 --with-zlib=/opt/local  \
+                 CXX=mpicxx CC=mpicc F77=mpif77
+
+\end{verbatim}
+
 
 \subsection{Build}
 
@@ -514,8 +545,8 @@ the Uintah team.
 
 \subsection{VisIt Installation}
 
-The latest official release of \textbf{\emph{VisIt}} is 2.8.2.
-However, the instructions apply to earlier versions such as 2.8.X.
+The latest official release of \textbf{\emph{VisIt}} is 2.12.2
+However, the instructions apply to earlier versions such as 2.12.X.
 Using the build\_visit script along with the \emph{--uintah} option,
 UDA reader plugin can be built.  \textbf{\emph{VisIt}} can be
 installed either from one of their binary distributions, or by
@@ -544,8 +575,8 @@ recommended installation method outlined below.
   a glxPtr problem when building the VTK library.  Apply the patch
   found in
   \url{http://visitusers.org/forum/YaBB.pl?action=downloadfile;file=VTK_Mesa_2_8_1_patch.txt}.
-  The current releases of Debian Jessie, Ubuntu 14.10, CentOS-7,
-  Fedora-21, and OpenSuse-13.2 requires patching the build\_visit
+  The current releases of Debian Jessie, Ubuntu 16.04, CentOS-7,
+  Fedora-25, and OpenSuse Leap 42 requires patching the build\_visit
   script.
 \item Building \textbf{\emph{VisIt}} from scratch can take a while.
   As mentioned below, you can \begin{verbatim}tail -f
@@ -564,17 +595,16 @@ recommended installation method outlined below.
 
 \begin{enumerate}
 \item Download the build\_visit script from
-  \url{http://portal.nersc.gov/svn/visit/trunk/releases/2.8.2/build_visit2_8_2}.
-
+  \url{http://portal.nersc.gov/project/visit/releases/2.12.2/build_visit2_12_2}.
 
 \item Change the mode of the build\_visit script so it can execute, and
-  copy it to a VISIT directory (calling it Visit\_2.8.2 in the
+  copy it to a VISIT directory (calling it Visit\_2.12.2 in the
   following description) where you will build the VisIt source code:
 \begin{verbatim}
-mkdir ~/Visit_2.8.2
-cp build_visit_2.8.2 Visit_2.8.2
-cd Visit_2.8.2
-chmod +x build_visit_2.8.2
+mkdir ~/Visit_2.12.2
+cp build_visit_2.12.2 Visit_2.12.2
+cd Visit_2.12.2
+chmod +x build_visit_2.12.2
 \end{verbatim}
 
 \item Build the VisIt source (after it downloads everything) using two
@@ -593,37 +623,46 @@ setenv PAR_COMPILER_CXX `which mpic++` (csh)
 \end{verbatim}
 
 \begin{verbatim}
-./build_visit2_8_2 --makeflags -j2 --no-icet --uintah
+./build_visit2_12_2 --makeflags -j6 --uintah --alt-uintah-dir ~/uintah/opt
+\end{verbatim}
+
+For Fedora 25 and OpenSuse Leap, use the system Qt version, with the following build
+line:
+
+\begin{verbatim}
+./build_visit2_12_2 --makeflags -j6 --uintah --alt-uintah-dir
+~/uintah/opt --system-qt
 \end{verbatim}
 
 
-\item After VisIt finishes building, go into the visit2.8.2/src
+
+\item After VisIt finishes building, go into the visit2.12.2/src
   directory and make a binary distribution for it so it can be
   installed.  
 \begin{verbatim}
-cd visit2.8.2/src
+cd visit2.12.2/src
 make package 
 \end{verbatim}
 
-Within the visit2.8.2/src directory there should be a gzip'ed tar
+Within the visit2.12.2/src directory there should be a gzip'ed tar
 file that can be installed in different location 
 
 \begin{verbatim}
-ls visit2.8.2/src
+ls visit2.12.2/src
  . . . 
- visit2_8_2.linux-x86_64.tar.gz
+ visit2_12_2.linux-x86_64.tar.gz
  . . .
 \end{verbatim}
 
 \item Copy the gzip'd tar file to another location and install VisIt
   (using the visit-install script found in
-  Visit\_2.8.2/visit2.8.2/src/svn\_bin/visit-install) in the directory
+  Visit\_2.12.2/visit2.12.2/src/svn\_bin/visit-install) in the directory
   \emph{visit\_bin\_dir}.
 
 \begin{verbatim}
-cp visit2_8_2.linux-x86_64.tar.gz ~/
+cp visit2_12_2.linux-x86_64.tar.gz ~/
 cd ~/
-~/Visit_2.8.2/visit2.8.2/src/svn_bin/visit-install 2.8.2 linux-x86_64
+~/Visit_2.12.2/visit2.12.2/src/svn_bin/visit-install 2.12.2 linux-x86_64
 visit_bin_dir
 \end{verbatim}
 
