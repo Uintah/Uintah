@@ -427,6 +427,9 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
   d_mpm->scheduleInterpolateParticlesToGrid(  sched, mpm_patches, mpm_matls);
   d_mpm->scheduleComputeHeatExchange(         sched, mpm_patches, mpm_matls);
 
+  if(d_mpm->flags->d_computeNormals){
+    d_mpm->scheduleComputeNormals(            sched, mpm_patches, mpm_matls);
+  }
   d_mpm->scheduleExMomInterpolated(           sched, mpm_patches, mpm_matls);
 
   // schedule the interpolation of mass and volume to the cell centers
