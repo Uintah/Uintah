@@ -4764,6 +4764,9 @@ void SerialMPM::scheduleComputeNormals(SchedulerP   & sched,
   t->computes(lb->gPositionLabel);
 
   sched->addTask(t, patches, matls);
+
+  if (z_matl->removeReference())
+    delete z_matl; // shouln't happen, but...
 }
 
 //______________________________________________________________________
@@ -4899,5 +4902,6 @@ void SerialMPM::computeNormals(const ProcessorGroup *,
          gposition[m][c] /= gmass[m][c];
       }
     }  // loop over matls
+    delete interpolator;
   }    // patches
 }
