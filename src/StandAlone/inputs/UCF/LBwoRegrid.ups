@@ -227,6 +227,7 @@
     <manual_new_material>            false      </manual_new_material>
     <DoThermalExpansion>             false      </DoThermalExpansion>
     <testForNegTemps_mpm>            false      </testForNegTemps_mpm>
+    <computeColinearNormals>         false      </computeColinearNormals>
   </MPM>
 
   <!--____________________________________________________________________-->

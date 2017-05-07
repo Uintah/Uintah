@@ -190,6 +190,7 @@
     <create_new_particles>          false       </create_new_particles>
     <DoThermalExpansion>            false       </DoThermalExpansion>
     <testForNegTemps_mpm>           false       </testForNegTemps_mpm>
+    <computeColinearNormals>        false      </computeColinearNormals>
   </MPM>
 
 
