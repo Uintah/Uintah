@@ -4811,7 +4811,8 @@ void SerialMPM::computeNormals(const ProcessorGroup *,
       new_dw->allocateAndPut(gsurfnorm[m], lb->gSurfNormLabel, dwi,patch);
       new_dw->allocateAndPut(gposition[m], lb->gPositionLabel, dwi,patch);
 
-      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
+                                                       gan, NGP, lb->pXLabel);
 
       constParticleVariable<Point> px;
       constParticleVariable<double> pmass, pvolume;
