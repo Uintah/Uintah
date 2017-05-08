@@ -493,7 +493,7 @@ private:
           Uintah::parallel_for( range, [&](int i, int j, int k){
 
             const double SE = (u(i+1,j,k) - u(i,j,k))/Dx.x();
-            const double SW = (u(i,j,k) - u(i,j,k))/Dx.x();
+            const double SW = (u(i,j,k) - u(i-1,j,k))/Dx.x();
             const double SN = 0.5 * (( u(i,j+1,k) - u(i,j,k) ) / Dx.y() + (v(i,j+1,k) - v(i-1,j+1,k))/Dx.x());
             const double SS = 0.5 * (( u(i,j,k) - u(i,j-1,k) ) / Dx.y() + (v(i,j,k) - v(i-1,j,k))/Dx.x());
             const double ST = 0.5 * (( u(i,j,k+1) - u(i,j,k) ) / Dx.z() + (w(i,j,k+1) - w(i-1,j,k+1))/Dx.x());
