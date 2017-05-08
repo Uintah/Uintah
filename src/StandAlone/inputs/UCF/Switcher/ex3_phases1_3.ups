@@ -79,6 +79,7 @@
      <time_integrator>  explicit</time_integrator>
      <interpolator>     gimp    </interpolator>
      <use_load_curves>  true    </use_load_curves>
+     <computeColinearNormals>  false    </computeColinearNormals>
    </MPM>
 
   <!--____________________________________________________________________-->

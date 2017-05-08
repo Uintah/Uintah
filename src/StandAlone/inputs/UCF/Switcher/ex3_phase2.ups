@@ -62,7 +62,7 @@
     <interpolator>                  linear    </interpolator>
     <dynamic>                       true     </dynamic>
     <solver>                        petsc    </solver>
-     <DoMechanics>                  false    </DoMechanics>
+    <DoMechanics>                   false    </DoMechanics>
     <convergence_criteria_disp>     1.e-5    </convergence_criteria_disp>
     <convergence_criteria_energy>   4.e-5    </convergence_criteria_energy>
     <iters_before_timestep_restart> 12       </iters_before_timestep_restart>
@@ -74,7 +74,7 @@
     <DoImplicitHeatConduction>      true     </DoImplicitHeatConduction>
     <DoTransientImplicitHeatConduction>true</DoTransientImplicitHeatConduction>
     <use_load_curves>               true     </use_load_curves>
-    <DoThermalExpansion>            false     </DoThermalExpansion>
+    <DoThermalExpansion>            false    </DoThermalExpansion>
     <testForNegTemps_mpm>           false    </testForNegTemps_mpm>
   </MPM>
 
