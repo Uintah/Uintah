@@ -54,7 +54,7 @@
 ##  --------------------------------------------------------------------
 
 ##  initialize configure 
-AC_INIT([Uintah],[1.6],[uintah-developer@gforge.sci.utah.edu])
+AC_INIT([Uintah],[2.0],[uintah-developer@gforge.sci.utah.edu])
 
 ##  require autoconf version 2.69
 ##     The reason to require the latest autoconf is to try and get everyone who
@@ -3961,7 +3961,10 @@ if test "$with_boost" != NOT_SET; then
       if test "$USING_GCC" = "yes" -o "$USING_ICC" = "yes"; then
          # If configure specifies a boost dir, then ignore the system dirs to avoid 
          # finding the wrong version of boost.  I know that "--sysroot" works with gcc and icc...
+
+	if test "$IS_OSX" = "no"; then
          ignore_sys_libs="--sysroot=/junk"
+	fi
       fi
 
       BOOST_INCLUDE_DIR=$with_boost/include
