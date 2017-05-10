@@ -10,7 +10,6 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Parallel/Parallel.h>
 #include <CCA/Components/Arches/ConvectionHelper.h>
-#include <CCA/Components/Arches/FunctorSwitch.h>
 
 using namespace std;
 using namespace Uintah;
@@ -389,15 +388,7 @@ DQMOMEqn::sched_evalTransportEqn( const LevelP& level,
     sched_computeSources( level, sched, timeSubStep );
   }
 
-#ifdef USE_FUNCTOR
-  sched_computePsi( level, sched );
-#endif
-
   sched_buildTransportEqn( level, sched, timeSubStep );
-
-#ifdef USE_FUNCTOR
-  sched_buildRHS( level, sched );
-#endif
 
 }
 
@@ -789,14 +780,6 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
     constSFCXVariable<double> uu;
     constSFCYVariable<double> vv;
     constSFCZVariable<double> ww;
-#ifdef USE_FUNCTOR
-    constSFCXVariable<double> psi_x;
-    constSFCYVariable<double> psi_y;
-    constSFCZVariable<double> psi_z;
-    SFCXVariable<double> flux_x;
-    SFCYVariable<double> flux_y;
-    SFCZVariable<double> flux_z;
-#endif
 
     ArchesLabel::PartVelMap::iterator pvel_iter = d_fieldLabels->partVel.find(d_quadNode);
     new_dw->get( partVel, pvel_iter->second, matlIndex, patch, gac, 1 );
@@ -804,15 +787,6 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
     new_dw->get( vv, d_face_pvel_y, matlIndex, patch, gac, 1 );
     new_dw->get( ww, d_face_pvel_z, matlIndex, patch, gac, 1 );
     which_dw->get(phi, d_transportVarLabel, matlIndex, patch, gac, 2);
-
-#ifdef USE_FUNCTOR
-    new_dw->getModifiable(flux_x, d_X_flux_label, matlIndex, patch);
-    new_dw->getModifiable(flux_y, d_Y_flux_label, matlIndex, patch);
-    new_dw->getModifiable(flux_z, d_Z_flux_label, matlIndex, patch);
-    new_dw->get( psi_x, d_X_psi_label, matlIndex, patch, gn, 0 );
-    new_dw->get( psi_y, d_Y_psi_label, matlIndex, patch, gn, 0 );
-    new_dw->get( psi_z, d_Z_psi_label, matlIndex, patch, gn, 0 );
-#endif
 
     old_dw->get(mu_t         ,  d_fieldLabels->d_viscosityCTSLabel  , matlIndex , patch , gac , 1);
     old_dw->get(areaFraction ,  d_fieldLabels->d_areaFractionLabel  , matlIndex , patch , gac , 2);
@@ -843,17 +817,9 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
     //----CONVECTION
     if ( d_doConv ){
 
-#ifdef USE_FUNCTOR
-      Uintah::BlockRange range(patch->getCellLowIndex(), patch->getExtraCellHighIndex());
-      ComputeConvectiveFlux< CCVariable<double> > get_flux( phi, uu, vv, ww, psi_x, psi_y, psi_z,
-                                                         flux_x, flux_y, flux_z, af_x, af_y, af_z );
-
-      Uintah::parallel_for( range, get_flux );
-#else
 
       d_disc->computeConv( patch, Fconv, phi, partVel, areaFraction, d_convScheme );
 
-#endif
 
       if ( _using_new_intrusion ) {
         _intrusions[ilvl]->addScalarRHS( patch, Dx, d_eqnName, RHS );
@@ -868,10 +834,6 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
 
       IntVector c = *iter;
-
-#ifndef USE_FUNCTOR
-      RHS[c] += Fdiff[c] - Fconv[c];
-#endif
 
       if (d_addExtraSources) {
 
