@@ -4781,6 +4781,7 @@ void SerialMPM::scheduleComputeNormals(SchedulerP   & sched,
 
   t->requires(Task::OldDW, lb->pXLabel,                  gp, ngc_p);
   t->requires(Task::OldDW, lb->pMassLabel,               gp, ngc_p);
+  t->requires(Task::OldDW, lb->pVolumeLabel,             gp, ngc_p);
   t->requires(Task::OldDW, lb->pSizeLabel,               gp, ngc_p);
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel, gp, ngc_p);
   t->requires(Task::NewDW, lb->gMassLabel,             Ghost::AroundNodes, 1);
