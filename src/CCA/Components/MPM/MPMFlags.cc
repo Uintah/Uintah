@@ -79,6 +79,7 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_extraSolverFlushes                 =  0;            // Have PETSc do more flushes to save memory
   d_doImplicitHeatConduction           =  false;
   d_doExplicitHeatConduction           =  true;
+  d_deleteGeometryObjects              =  false;
   d_doPressureStabilization            =  false;
   d_computeNodalHeatFlux               =  false;
   d_computeScaleFactor                 =  false;
@@ -220,6 +221,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   mpm_flag_ps->get("DoImplicitHeatConduction",          d_doImplicitHeatConduction);
   mpm_flag_ps->get("DoTransientImplicitHeatConduction", d_doTransientImplicitHeatConduction);
   mpm_flag_ps->get("DoExplicitHeatConduction",          d_doExplicitHeatConduction);
+  mpm_flag_ps->get("DeleteGeometryObjects",             d_deleteGeometryObjects);
   mpm_flag_ps->get("DoPressureStabilization",           d_doPressureStabilization);
   mpm_flag_ps->get("DoThermalExpansion",                d_doThermalExpansion);
   mpm_flag_ps->getWithDefault("UseGradientEnhancedVelocityProjection",  d_GEVelProj,false);
@@ -420,6 +422,7 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("DoImplicitHeatConduction",           d_doImplicitHeatConduction);
   ps->appendElement("DoTransientImplicitHeatConduction",  d_doTransientImplicitHeatConduction);
   ps->appendElement("DoExplicitHeatConduction",           d_doExplicitHeatConduction);
+  ps->appendElement("DeleteGeometryObjects",              d_deleteGeometryObjects);
   ps->appendElement("DoPressureStabilization",            d_doPressureStabilization);
   ps->appendElement("computeNodalHeatFlux",               d_computeNodalHeatFlux);
   ps->appendElement("computeScaleFactor",                 d_computeScaleFactor);

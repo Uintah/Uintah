@@ -227,12 +227,18 @@ MPMMaterial::~MPMMaterial()
   }
 }
 
-/*
-*/
 void MPMMaterial::registerParticleState(SimulationState* sharedState)
 {
   sharedState->d_particleState.push_back(d_particle_creator->returnParticleState());
   sharedState->d_particleState_preReloc.push_back(d_particle_creator->returnParticleStatePreReloc());
+}
+
+void MPMMaterial::deleteGeomObjects()
+{
+  for (int i = 0; i<(int)d_geom_objs.size(); i++) {
+    delete d_geom_objs[i];
+  }
+  d_geom_objs.clear();
 }
 
 ProblemSpecP MPMMaterial::outputProblemSpec(ProblemSpecP& ps)

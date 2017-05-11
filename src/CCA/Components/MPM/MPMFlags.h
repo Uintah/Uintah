@@ -91,6 +91,7 @@ namespace Uintah {
     bool        d_doImplicitHeatConduction;
     bool        d_doTransientImplicitHeatConduction;
     bool        d_doExplicitHeatConduction;
+    bool        d_deleteGeometryObjects;
     bool        d_doPressureStabilization;
     bool        d_computeNormals;
     bool        d_computeColinearNormals;

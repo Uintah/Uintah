@@ -103,6 +103,9 @@ public:
   virtual void scheduleInitialize(const LevelP& level,
                                   SchedulerP&);
                                   
+  virtual void scheduleDeleteGeometryObjects(const LevelP& level,
+                                             SchedulerP& sched);
+
   virtual void scheduleRestartInitialize(const LevelP& level,
                                          SchedulerP& sched);
 
@@ -170,6 +173,12 @@ protected:
                                   const MaterialSubset* matls,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw);
+
+  void deleteGeometryObjects(const ProcessorGroup*,
+                             const PatchSubset* patches,
+                             const MaterialSubset* matls,
+                                   DataWarehouse* old_dw,
+                                   DataWarehouse* new_dw);
 
   void printParticleCount(const ProcessorGroup*,
                           const PatchSubset* patches,

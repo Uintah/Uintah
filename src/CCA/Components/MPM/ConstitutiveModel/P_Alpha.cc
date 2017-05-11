@@ -279,8 +279,10 @@ void P_Alpha::computeStressTensor(const PatchSubset* patches,
       double Jold = deformationGradient[idx].Determinant();
       double Jnew = deformationGradient_new[idx].Determinant();
       double Jinc = Jnew/Jold;
-      double rhoM = rho_orig/Jnew;
+      double rhoM = rho_orig/Jnew;  // Current material density
 
+      // alpha starts at rhoS/rho_orig (>1), drops with compaction
+      // alpha = 1 at full density
       double alpha = rhoS/rhoM;
       alpha_min_new[idx]=min(alpha,alpha_min_old[idx]);
       alpha_new[idx]=alpha;

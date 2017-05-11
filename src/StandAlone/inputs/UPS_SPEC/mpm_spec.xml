@@ -19,6 +19,7 @@
       <do_grid_reset                      spec="OPTIONAL BOOLEAN" />
       <UseGradientEnhancedVelocityProjection spec="OPTIONAL BOOLEAN" />
       <DoExplicitHeatConduction           spec="OPTIONAL BOOLEAN" />
+      <DeleteGeometryObjects              spec="OPTIONAL BOOLEAN" />
       <DoPressureStabilization            spec="OPTIONAL BOOLEAN" />
       <DoDefGradAveraging                 spec="OPTIONAL BOOLEAN" /> 
       <DoThermalExpansion                 spec="OPTIONAL BOOLEAN" />  <!-- FIXME: default is? -->

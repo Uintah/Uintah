@@ -108,6 +108,7 @@ WARNING
    // Return correct constitutive model pointer for this material
    ConstitutiveModel* getConstitutiveModel() const;
    
+   void deleteGeomObjects( );
    
    void set_pLocalizedComputed( const bool ans);
   

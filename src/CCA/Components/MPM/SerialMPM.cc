@@ -135,7 +135,7 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
                              const ProblemSpecP& restart_prob_spec,
                              GridP& grid,
                              SimulationStateP& sharedState)
-{ 
+{
   cout_doing<<"Doing MPM::problemSetup\t\t\t\t\t MPM"<<endl;
   d_sharedState = sharedState;
   dynamic_cast<Scheduler*>(getPort("scheduler"))->setPositionVar(lb->pXLabel);
@@ -458,6 +458,10 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
     ch->scheduleInitialize(level, sched, cz_matl);
   }
 
+  if (flags->d_deleteGeometryObjects) {
+    scheduleDeleteGeometryObjects(level, sched);
+  }
+
 }
 //______________________________________________________________________
 //
@@ -586,6 +590,16 @@ void SerialMPM::scheduleInitializePressureBCs(const LevelP& level,
 
   if(d_loadCurveIndex->removeReference())
     delete d_loadCurveIndex;
+}
+
+void SerialMPM::scheduleDeleteGeometryObjects(const LevelP& level,
+                                              SchedulerP& sched)
+{
+  const PatchSet* patches = level->eachPatch();
+
+  Task* t = scinew Task("MPM::deleteGeometryObjects",
+                  this, &SerialMPM::deleteGeometryObjects);
+  sched->addTask(t, patches, d_sharedState->allMPMMaterials());
 }
 
 void SerialMPM::scheduleComputeStableTimestep(const LevelP& level,
@@ -1811,6 +1825,20 @@ void SerialMPM::initializePressureBC(const ProcessorGroup*,
   }      // patch loop
 }
 
+void SerialMPM::deleteGeometryObjects(const ProcessorGroup*,
+                                      const PatchSubset* patches,
+                                      const MaterialSubset*,
+                                      DataWarehouse* ,
+                                      DataWarehouse* new_dw)
+{
+  cout << "Deleting Geometry Objects " << endl;
+  int numMPMMatls=d_sharedState->getNumMPMMatls();
+  for(int m = 0; m < numMPMMatls; m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+    mpm_matl->deleteGeomObjects();
+  }
+}
+
 void SerialMPM::actuallyInitialize(const ProcessorGroup*,
                                    const PatchSubset* patches,
                                    const MaterialSubset* matls,
@@ -1865,7 +1893,6 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
       mpm_matl->getDamageModel()->initializeLabels( patch, mpm_matl, new_dw );
       
       mpm_matl->getErosionModel()->initializeLabels( patch, mpm_matl, new_dw );
-      
     }
   } // patches
 
@@ -4861,7 +4888,6 @@ void SerialMPM::computeNormals(const ProcessorGroup *,
         }
       } // axisymmetric conditional
     }   // matl loop
-
     // Make normal vectors colinear by setting all norms to be
     // in the opposite direction of the norm with the largest magnitude
     if(flags->d_computeColinearNormals){
