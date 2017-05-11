@@ -806,15 +806,16 @@ DataArchive::query(       Variable     & var,
     string idxFilename = (levelPath.str() + varinfo.filename );               // be careful, the patch.datafilename != varinfo.filename
                                                                               // varinfo.filename == <CCVars.idx, SFC*Vars.idx....>
     PIDX_file idxFile;      // IDX file descriptor
+    PIDX_point global_size;
 
-    int ret = PIDX_file_open(idxFilename.c_str(), PIDX_MODE_RDONLY, access, &idxFile);
+    int ret = PIDX_file_open(idxFilename.c_str(), PIDX_MODE_RDONLY, access, global_size, &idxFile);
     pidx.checkReturnCode( ret,"DataArchive::query() - PIDX_file_open failure", __FILE__, __LINE__);
 
     //__________________________________
     //  Extra Calls that _MAY_ be needed
-    PIDX_point global_size;
-    ret = PIDX_get_dims(idxFile, global_size);          // returns the levelSize  Is this needed?
-    pidx.checkReturnCode( ret,"DataArchive::query() - PIDX_get_dims failure", __FILE__, __LINE__);
+    //PIDX_point global_size;
+    //ret = PIDX_get_dims(idxFile, global_size);          // returns the levelSize  Is this needed?
+    //pidx.checkReturnCode( ret,"DataArchive::query() - PIDX_get_dims failure", __FILE__, __LINE__);
 
     int variable_count = 0;             ///< Number of fields in PIDX file
     ret = PIDX_get_variable_count(idxFile, &variable_count);
@@ -840,7 +841,7 @@ DataArchive::query(       Variable     & var,
     ret = PIDX_get_current_variable(idxFile, &varDesc);
     pidx.checkReturnCode(ret, "DataArchive::query() - PIDX_get_current_variable failure", __FILE__, __LINE__);
 
-    int values_per_sample = varDesc->values_per_sample;
+    int values_per_sample = varDesc->vps;
 
     int bits_per_sample = 0;
     ret = PIDX_default_bits_per_datatype(varDesc->type_name, &bits_per_sample);
@@ -865,7 +866,7 @@ DataArchive::query(       Variable     & var,
                 << "    " << varDesc->var_name
                 << " type_name: " << varDesc->type_name
                 << " varIndex: " << varIndex
-                << " values_per_sample: " << varDesc->values_per_sample
+                << " values_per_sample: " << varDesc->vps
                 << " bits_per_sample: "<< bits_per_sample
                 << " arraySize " << arraySize << endl;
     }
@@ -887,7 +888,7 @@ DataArchive::query(       Variable     & var,
     if (dbg.active() ){
       pidx.printBufferWrap("DataArchive::query    AFTER  close",
                            td->getSubType()->getType(),
-                           varDesc->values_per_sample,
+                           varDesc->vps,
                            patchExts.lo_EC, patchExts.hi_EC,
                            dataPIDX,
                            arraySize );

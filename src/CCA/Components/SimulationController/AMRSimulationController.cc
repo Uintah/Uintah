@@ -327,7 +327,7 @@ AMRSimulationController::run()
         Uintah::MPI::Bcast( &tmp_time, 1, MPI_INT, 0, d_myworld->getComm() );
 
 	if( tmp_time >= d_output->getNextCheckpointWalltime() )
-	  checkpointing = true;	
+	  pidx_checkpointing = true;	
       }
 
       

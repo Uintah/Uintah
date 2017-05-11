@@ -288,13 +288,10 @@ class DataWarehouse;
        // Writes out the <Grid> section (associated with timestep.xml) to a separate binary file.
        void writeGridBinary(     const bool hasGlobals, const std::string & grid_path, const GridP & grid );
 
-
-       PIDXOutputContext::PIDX_flags d_PIDX_flags;    // contains the knobs & switches                      
-       
        //__________________________________
        //! returns a ProblemSpecP reading the xml file xmlName.
        //! You will need to that you need to call ProblemSpec::releaseDocument
-       ProblemSpecP loadDocument(std::string xmlName);     
+       ProblemSpecP loadDocument( const std::string & xmlName );
 
        //! creates the uda directory with a trailing version suffix
        void makeVersionedDir();
@@ -309,6 +306,18 @@ class DataWarehouse;
                               std::vector<SaveItem>& saveLabels,
                               const GridP& grid,
                               std::string* pTimestepDir );
+
+       PIDXOutputContext::PIDX_flags d_PIDX_flags; // Contains the knobs & switches
+#if HAVE_PIDX       
+
+       std::vector<MPI_Comm> d_pidxComms; // Array of MPI Communicators for PIDX usage...
+       
+       //! creates communicator every AMR level required for PIDX
+       void createPIDXCommunicator(       std::vector<SaveItem> & saveLabels,
+                                    const GridP                 & grid, 
+                                          SchedulerP            & sched,
+                                          bool                    isThisACheckpoint );
+#endif
 
        //! helper for finalizeTimestep - schedules a task for each var's output
        void scheduleOutputTimestep(std::vector<SaveItem>& saveLabels,
@@ -411,8 +420,8 @@ class DataWarehouse;
        //! d_saveReductionLabels after mapping VarLabel names to their
        //! actual VarLabel*'s.
        std::list< SaveNameItem > d_saveLabelNames;
-       std::vector< SaveItem > d_saveLabels;
-       std::vector< SaveItem > d_saveReductionLabels;
+       std::vector< SaveItem >   d_saveLabels;
+       std::vector< SaveItem >   d_saveReductionLabels;
 
        // for efficiency of SaveItem's
        ConsecutiveRangeSet d_prevMatls;

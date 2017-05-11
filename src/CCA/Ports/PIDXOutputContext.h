@@ -158,31 +158,31 @@ class PIDXOutputContext {
       }
     };
     
-    
-    void computeBoxSize( const PatchSubset* patches, 
-                         const PIDX_flags flags,
-                         PIDX_point& newBox );
+    void computeBoxSize( const PatchSubset * patches, 
+                         const PIDX_flags    flags,
+                               PIDX_point  & newBox );
 
-    void initialize(std::string filename,
-                    unsigned int timeStep,
-                    MPI_Comm comm,
-                    PIDX_flags flags,
-                    const PatchSubset* patches,
-                    const int type);
+    void initialize( const std::string  & filename,
+                           unsigned int   timeStep,
+                           MPI_Comm       comm,
+                           PIDX_flags     flags,
+                     const PatchSubset  * patches,
+                           PIDX_point     dims,
+                     const int            type);
     
-    void setLevelExtents( std::string desc, 
-                          IntVector lo,
-                          IntVector hi,
-                          PIDX_point& level_size );
+    void setLevelExtents( const std::string & desc, 
+                                IntVector     lo,
+                                IntVector     hi,
+                                PIDX_point  & level_size );
 
-    void setPatchExtents( std::string desc, 
-                          const Patch* patch,
-                          const Level* level,
-                          const IntVector& boundaryLayer,
-                          const TypeDescription* TD,
-                          patchExtents& pExtents,
-                          PIDX_point& patchOffset,
-                          PIDX_point& nPatchCells );
+    void setPatchExtents( const std::string     & desc, 
+                          const Patch           * patch,
+                          const Level           * level,
+                          const IntVector       & boundaryLayer,
+                          const TypeDescription * TD,
+                                patchExtents    & pExtents,
+                                PIDX_point      & patchOffset,
+                                PIDX_point      & nPatchCells );
 
     void checkReturnCode( const int           rc,
                           const std::string   warn,

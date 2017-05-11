@@ -123,6 +123,7 @@ DataArchiver::DataArchiver(const ProcessorGroup* myworld, int udaSuffix)
 DataArchiver::~DataArchiver()
 {
 }
+
 //______________________________________________________________________
 //
 void
@@ -265,9 +266,9 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
       d_saveParticleVariables = true;
     }
 
-    d_saveLabelNames.push_back(saveItem);
+    d_saveLabelNames.push_back( saveItem );
 
-    save = save->findNextBlock("save");
+    save = save->findNextBlock( "save" );
   }
   
   if(d_saveP_x == false && d_saveParticleVariables == true) {
@@ -967,8 +968,8 @@ DataArchiver::sched_allOutputTasks(       double       delt,
     
     dbg << "  scheduled output tasks (reduction variables)\n";
 
-    if (delt != 0.0 || d_outputInitTimestep) {
-      scheduleOutputTimestep(d_saveLabels, grid, sched, false);
+    if ( delt != 0.0 || d_outputInitTimestep ) {
+      scheduleOutputTimestep( d_saveLabels, grid, sched, false );
     }
   }
   
@@ -993,8 +994,18 @@ DataArchiver::sched_allOutputTasks(       double       delt,
     
     dbg << "  scheduled output tasks (checkpoint variables)\n";
     
-    scheduleOutputTimestep(d_checkpointLabels,  grid, sched, true);
+    scheduleOutputTimestep( d_checkpointLabels,  grid, sched, true );
   }
+  
+#if HAVE_PIDX
+  if ( d_outputFileFormat == PIDX ) {
+    /*  Create PIDX communicators (one communicator per AMR level) */
+    // FIXME: It appears that this is called 3 or more times before timestep 0... why is this the case?
+    //        Doesn't hurt anything, but we should figure out why...
+    dbg << "  Creating communicatore per AMR level (required for PIDX)\n";
+    createPIDXCommunicator( d_checkpointLabels,  grid, sched, true );
+  }
+#endif  
 
 } // end sched_allOutputTasks()
 
@@ -2132,10 +2143,63 @@ DataArchiver::scheduleOutputTimestep(       vector<SaveItem> & saveLabels,
   }
   dbg << "  scheduled output task for " << var_cnt << " variables\n";
 }
+
+#if HAVE_PIDX
+void
+DataArchiver::createPIDXCommunicator(       vector<SaveItem> & saveLabels,
+                                      const GridP            & grid, 
+                                            SchedulerP       & sched,
+                                            bool               isThisCheckpoint )
+{
+  int proc = d_myworld->myrank();
+  LoadBalancerPort * lb = dynamic_cast< LoadBalancerPort * >( getPort( "load balancer" ) );
+
+  // Resize the comms back to 0...
+  d_pidxComms.clear();
+
+  // Create new MPI Comms
+  d_pidxComms.reserve( grid->numLevels() );
+  
+  for( int i = 0; i < grid->numLevels(); i++ ) {
+
+    const LevelP& level = grid->getLevel(i);
+    vector< SaveItem >::iterator saveIter;
+    const PatchSet* patches = lb->getOutputPerProcessorPatchSet( level );
+    //cout << "[ "<< d_myworld->myrank() << " ] Patch size: " << patches->size() << "\n";
+    
+    /*
+      int color = 0;
+      if (patches[d_myworld->myrank()].size() != 0)
+        color = 1;
+      MPI_Comm_split(d_myworld->getComm(), color, d_myworld->myrank(), &(pidxComms[i]));
+   */
+    
+    int color = 0;
+    const PatchSubset*  patchsubset = patches->getSubset(proc);
+    if (patchsubset->empty() == true) {
+      color = 0;
+      //cout << "Empty rank: " << proc << "\n";
+    }
+    else {
+      color = 1;
+      //cout << "Patch rank: " << proc << "\n";
+    }
+    
+    MPI_Comm_split( d_myworld->getComm(), color, d_myworld->myrank(), &(d_pidxComms[i]) );
+    //if (color == 1) {
+    //  int nsize;
+    //  MPI_Comm_size(pidxComms[i], &nsize);
+    //  cout << "NewComm Size = " <<  nsize << "\n";
+    //}
+  }
+}
+#endif
+
 //______________________________________________________________________
 //
-// be sure to call releaseDocument on the value returned
-ProblemSpecP DataArchiver::loadDocument(string xmlName)
+// Be sure to call releaseDocument on the value returned.
+ProblemSpecP
+DataArchiver::loadDocument(const string & xmlName )
 {
   return ProblemSpecReader().readInputFile( xmlName );
 }
@@ -2587,12 +2651,6 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
   if ( d_outputFileFormat == PIDX && type != CHECKPOINT_REDUCTION ) {
   
     //__________________________________
-    // bulletproofing
-    if( patches->size() > 1 ){
-      throw Uintah::InternalError("ERROR: (PIDX:outputVariables) Only 1 patch per MPI process is currently supported.", __FILE__, __LINE__);
-    }
-  
-    //__________________________________
     // create the xml dom for this variable
     ProblemSpecP doc = ProblemSpec::createDocument("Uintah_Output-PIDX");
     ASSERT(doc != nullptr);
@@ -2659,7 +2717,7 @@ DataArchiver::saveLabels_PIDX( std::vector< SaveItem >     & saveLabels,
 {
   size_t totalBytesSaved = 0;
 #if HAVE_PIDX
-  
+  int levelid = getLevel(patches)->getIndex(); 
   const Level* level = getLevel(patches);
 
   int nSaveItems =  saveLabels.size();
@@ -2701,9 +2759,6 @@ DataArchiver::saveLabels_PIDX( std::vector< SaveItem >     & saveLabels,
 
   unsigned int timeStep = d_sharedState->getCurrentTopLevelTimeStep();
   
-  // Can this be run in serial without doing a MPI initialize
-  pidx.initialize(full_idxFilename, timeStep, d_myworld->getComm(), d_PIDX_flags, patches, type);
-
   //__________________________________
   // define the level extents for this variable type
   IntVector lo;
@@ -2712,12 +2767,14 @@ DataArchiver::saveLabels_PIDX( std::vector< SaveItem >     & saveLabels,
   
   PIDX_point level_size;
   pidx.setLevelExtents( "DataArchiver::saveLabels_PIDX",  lo, hi, level_size );
-  PIDX_set_dims(pidx.file, level_size);
+
+  // Can this be run in serial without doing a MPI initialize
+  pidx.initialize( full_idxFilename, timeStep, /*d_myworld->getComm()*/d_pidxComms[ levelid ], d_PIDX_flags, patches, level_size, type );
 
   //__________________________________
   // allocate memory for pidx variable descriptor array
   rc = PIDX_set_variable_count(pidx.file, actual_number_of_variables);
-  pidx.checkReturnCode( rc, "DataArchiver::saveLabels_PIDX - PIDX_set_variable_count failure",__FILE__, __LINE__);
+  pidx.checkReturnCode( rc, "DataArchiver::saveLabels_PIDX -PIDX_set_variable_count failure",__FILE__, __LINE__);
   
   size_t pidxVarSize = sizeof (PIDX_variable*);
   pidx.varDesc = (PIDX_variable**) malloc( pidxVarSize * nSaveItems );
@@ -3158,7 +3215,7 @@ DataArchiver::initSaveLabels(SchedulerP& sched, bool initTimestep)
   d_saveReductionLabels.clear();
   d_saveLabels.clear();
    
-  d_saveLabels.reserve(d_saveLabelNames.size());
+  d_saveLabels.reserve( d_saveLabelNames.size() );
   Scheduler::VarLabelMaterialMap* pLabelMatlMap;
   pLabelMatlMap = sched->makeVarLabelMaterialMap();
   
@@ -3218,7 +3275,6 @@ DataArchiver::initSaveLabels(SchedulerP& sched, bool initTimestep)
   //d_saveLabelNames.clear();
   delete pLabelMatlMap;
 }
-
 
 
 //______________________________________________________________________

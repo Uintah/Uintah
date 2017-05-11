@@ -97,12 +97,12 @@ PIDXOutputContext::PIDX_flags::problemSetup( const ProblemSpecP& DA_ps )
     pidx_ps->get( "outputPatchSize", d_outputPatchSize );
   }
   else {
-    proc0cout << "Warning: In input .ups file, the <PIDX> tag was not found in tag <DataArchiver type=\"PIDX\">.  Using defaults...\n";
+    proc0cout << "Warning: In input .ups file, the <PIDX> tag was not found in tag <DataArchiver type=\"PIDX\">. Using defaults...\n";
 
     d_compressionType = PIDX_NO_COMPRESSION;
     d_debugOutput = false;
     d_outputRawIO = true;
-    d_outputPatchSize = IntVector( 16, 16, 16 );
+    d_outputPatchSize = IntVector( 64, 64, 64 );
   }
 }
 
@@ -187,8 +187,9 @@ PIDXOutputContext::computeBoxSize( const PatchSubset* patches,
   
   //__________________________________
   // logic for adjusting the box
-  IntVector box(64,64,64);    // default value
+  IntVector box( 64, 64, 64 );    // default value
   if (nPatchCells <=  cubed16) {
+    
   } else if (nPatchCells >  cubed16  && nPatchCells <= cubed32) {
     box = IntVector(32,32,32);
   } else if ( nPatchCells >  cubed32  && nPatchCells <= cubed64 ) {
@@ -206,10 +207,11 @@ PIDXOutputContext::computeBoxSize( const PatchSubset* patches,
   }
   
   if ( flags.d_debugOutput ) {
-    cout << Parallel::getMPIRank() << " PIDX outputPatchSize: Level- "<< level->getIndex() << " box: " << box  
+    cout << Parallel::getMPIRank() << " PIDX outputPatchSize: Level: "<< level->getIndex() << " box: " << box  
          << " Patchsize: " << nCells << " nPatchCells: " << nPatchCells  << "\n";
   }
-  PIDX_set_point_5D( newBox, box.x(), box.y(), box.z(), 1, 1 );
+  //PIDX_set_point( newBox, box.x(), box.y(), box.z());
+  PIDX_set_point( newBox, 64, 64, 64 );
 }
 
 
@@ -217,12 +219,13 @@ PIDXOutputContext::computeBoxSize( const PatchSubset* patches,
 //______________________________________________________________________
 //
 void
-PIDXOutputContext::initialize( string filename, 
-                               unsigned int timeStep,
-                               MPI_Comm comm,
-                               PIDX_flags flags,
-                               const PatchSubset* patches,
-                               const int typeOutput)
+PIDXOutputContext::initialize( const string       & filename, 
+                                     unsigned int   timeStep,
+                                     MPI_Comm       comm,
+                                     PIDX_flags     flags,
+                               const PatchSubset  * patches,
+			             PIDX_point     dim,
+                               const int            typeOutput )
 {
   this->filename = filename;
   this->timestep = timeStep;
@@ -237,18 +240,21 @@ PIDXOutputContext::initialize( string filename,
     checkReturnCode( rc, desc+" - PIDX_set_mpi_access", __FILE__, __LINE__);
   }
   
-  PIDX_file_create( filename.c_str(), PIDX_MODE_CREATE, access, &(this->file) );
+  PIDX_file_create( filename.c_str(), PIDX_MODE_CREATE, access, dim, &(this->file) );
   checkReturnCode( rc, desc+" - PIDX_file_create", __FILE__, __LINE__);
   
   //__________________________________
   if ( flags.d_debugOutput ){
-    PIDX_debug_output( (this->file) );
+    //PIDX_debug_output( (this->file) );
   }
 
   //__________________________________
   if ( flags.d_outputRawIO ){
-    PIDX_enable_raw_io(this->file);  //Possible performance improvement at low core counts
-    checkReturnCode( rc, desc+" - PIDX_enable_raw_io", __FILE__, __LINE__);
+    PIDX_set_io_mode( this->file, PIDX_RAW_IO );
+
+    // FIXME: The 1 below represents the 1st timestep... but if we begin output on another timestep, this should be changed...
+    PIDX_set_cache_time_step( this->file, 1 );
+    checkReturnCode( rc, desc + " - PIDX_enable_idx_io", __FILE__, __LINE__ );
   }
   
   
@@ -260,10 +266,10 @@ PIDXOutputContext::initialize( string filename,
   PIDX_set_restructuring_box(file, new_box_size);
   checkReturnCode( rc, desc+" - PIDX_set_restructuring_box", __FILE__, __LINE__);
   
-  PIDX_set_block_size(this->file,  16);
+  PIDX_set_block_size(this->file,  13);
   checkReturnCode( rc, desc+" - PIDX_set_block_size", __FILE__, __LINE__);
   
-  PIDX_set_block_count(this->file, 128);
+  PIDX_set_block_count(this->file, 256);
   checkReturnCode( rc, desc+" - PIDX_set_block_count", __FILE__, __LINE__);
   //PIDX_set_resolution(this->file, 0, 2);
   
@@ -291,14 +297,14 @@ PIDXOutputContext::initialize( string filename,
 //______________________________________________________________________
 //  
 void
-PIDXOutputContext::setPatchExtents( string desc, 
-                                    const Patch* patch,
-                                    const Level* level,
-                                    const IntVector& boundaryLayer,
-                                    const TypeDescription* TD,
-                                    patchExtents& pExtents,
-                                    PIDX_point& patchOffset,
-                                    PIDX_point& patchSize )
+PIDXOutputContext::setPatchExtents( const string          & desc, 
+                                    const Patch           * patch,
+                                    const Level           * level,
+                                    const IntVector       & boundaryLayer,
+                                    const TypeDescription * TD,
+                                          patchExtents    & pExtents,
+                                          PIDX_point      & patchOffset,
+                                          PIDX_point      & patchSize )
 {
 
    // compute the extents of this variable (CCVariable, SFC(*)Variable...etc)
@@ -318,26 +324,27 @@ PIDXOutputContext::setPatchExtents( string desc,
    pExtents.patchOffset   = pOffset;
    pExtents.totalCells_EC = totalCells_EC;
 
-   int rc = PIDX_set_point_5D(patchOffset,    pOffset.x(),    pOffset.y(), pOffset.z(),   0, 0);
+   int rc = PIDX_set_point(patchOffset,    pOffset.x(),    pOffset.y(), pOffset.z());
    checkReturnCode( rc, desc + " - PIDX_set_point_5D failure",__FILE__, __LINE__);
 
-   rc = PIDX_set_point_5D(patchSize, nCells_EC.x(), nCells_EC.y(), nCells_EC.z(), 1, 1);
+   rc = PIDX_set_point(patchSize, nCells_EC.x(), nCells_EC.y(), nCells_EC.z());
    checkReturnCode( rc, desc + "- PIDX_set_point_5D failure",__FILE__, __LINE__);
 }
 
 //______________________________________________________________________
 //  
+
 void
-PIDXOutputContext::setLevelExtents( string desc, 
-                                    IntVector lo,
-                                    IntVector hi,
-                                    PIDX_point& level_size )
+PIDXOutputContext::setLevelExtents( const string     & desc, 
+                                          IntVector    lo,
+                                          IntVector    hi,
+                                          PIDX_point & level_size )
 {                                                                             
   d_levelExtents[0] = hi[0] - lo[0] ;                                                                  
   d_levelExtents[1] = hi[1] - lo[1] ;                                                                  
   d_levelExtents[2] = hi[2] - lo[2] ;                                                                  
 
-  int ret = PIDX_set_point_5D(level_size, d_levelExtents[0], d_levelExtents[1], d_levelExtents[2], 1, 1);  
+  int ret = PIDX_set_point(level_size, d_levelExtents[0], d_levelExtents[1], d_levelExtents[2]);  
   checkReturnCode( ret,desc+" - PIDX_set_point_5D failure", __FILE__, __LINE__);                     
 }
 

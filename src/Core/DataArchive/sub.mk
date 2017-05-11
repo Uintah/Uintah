@@ -51,5 +51,10 @@ PSELIBS := \
 
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY)
 
+ifeq ($(HAVE_PIDX),yes)
+        INCLUDES += ${PIDX_INCLUDE}
+        LIBS += $(PIDX_LIBRARY)
+endif
+
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
