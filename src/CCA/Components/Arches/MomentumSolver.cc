@@ -50,6 +50,7 @@
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/SourceTerms/ConstSrcTerm.h>
 #include <Core/Containers/StaticArray.h>
+#include <sci_defs/visit_defs.h>
 
 using namespace Uintah;
 using namespace std;
@@ -204,6 +205,28 @@ MomentumSolver::problemSetup(const ProblemSpecP& params)
 
   d_rhsSolver = scinew RHSSolver();
   d_mixedModel=d_turbModel->getMixedModel();
+#ifdef HAVE_VISIT
+  static bool initialized = false;
+
+  // Running with VisIt so add in the variables that the user can
+  // modify.
+  if( d_sharedState->getVisIt() && !initialized ) {
+    // variable 1 - Must start with the component name and have NO
+    // spaces in the var name
+    SimulationState::interactiveVar var;
+    var.name     = "ARCHES-Re_limit";
+    var.type     = Uintah::TypeDescription::double_type;
+    var.value    = (void *) &d_re_limit;
+    var.range[0]   = 2;
+    var.range[1]   = 1e9;
+    var.modifiable = true;
+    var.recompile  = false;
+    var.modified   = false;
+    d_sharedState->d_UPSVars.push_back( var );
+
+    initialized = true;
+  }
+#endif
 }
 
 void MomentumSolver::setInitVelCondition( const Patch* patch,
