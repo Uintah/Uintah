@@ -742,7 +742,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
                                       d_turbModel, d_boundaryCondition,
                                       d_physicalConsts);
 
-  d_momSolver->problemSetup(db_es);
+  d_momSolver->problemSetup(db_es, state);
 
   const ProblemSpecP params_root = db->getRootNode();
   std::string t_order;

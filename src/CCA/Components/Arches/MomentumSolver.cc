@@ -101,7 +101,8 @@ MomentumSolver::~MomentumSolver()
 // Problem Setup
 //****************************************************************************
 void
-MomentumSolver::problemSetup(const ProblemSpecP& params)
+MomentumSolver::problemSetup(const ProblemSpecP& params,
+			     SimulationStateP & sharedState)
 {
   ProblemSpecP db = params->findBlock("MomentumSolver");
 
