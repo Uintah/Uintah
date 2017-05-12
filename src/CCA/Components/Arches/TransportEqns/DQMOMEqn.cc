@@ -835,6 +835,8 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
 
       IntVector c = *iter;
 
+      RHS[c] += Fdiff[c] - Fconv[c];
+
       if (d_addExtraSources) {
 
         // Get the factory of source terms
