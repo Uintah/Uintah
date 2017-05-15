@@ -220,6 +220,7 @@ MPMMaterial::~MPMMaterial()
   delete d_particle_creator;
 
   for (int i = 0; i<(int)d_geom_objs.size(); i++) {
+    cout << "MPMMaterial.cc destructor" << endl;
     delete d_geom_objs[i];
   }
   if(d_sdm){
@@ -236,6 +237,7 @@ void MPMMaterial::registerParticleState(SimulationState* sharedState)
 void MPMMaterial::deleteGeomObjects()
 {
   for (int i = 0; i<(int)d_geom_objs.size(); i++) {
+    cout << "deleting geom_objs " << i << endl;
     delete d_geom_objs[i];
   }
   d_geom_objs.clear();
