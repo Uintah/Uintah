@@ -39,6 +39,7 @@ using namespace std;
 
 #define INSIDE_NEW
 //#undef INSIDE_NEW
+#undef  USE_PLANES
 
 const string TriGeometryPiece::TYPE_NAME = "tri";
 
@@ -50,7 +51,9 @@ TriGeometryPiece::TriGeometryPiece(ProblemSpecP &ps)
   
   readPoints(d_file);
   readTri(d_file);
+#ifdef USE_PLANES
   makePlanes();
+#endif
 //  makeTriBoxes();
   
   // cout << "Triangulated surfaces read: \t" <<d_tri.size() <<endl;
@@ -70,7 +73,9 @@ TriGeometryPiece::TriGeometryPiece(const TriGeometryPiece& copy)
   d_box = copy.d_box;
   d_points = copy.d_points;
   d_tri = copy.d_tri;
+#ifdef USE_PLANES
   d_planes = copy.d_planes;
+#endif
 //  d_boxes = copy.d_boxes;
 
   d_grid = scinew UniformGrid(*copy.d_grid);
@@ -86,7 +91,10 @@ TriGeometryPiece& TriGeometryPiece::operator=(const TriGeometryPiece& rhs)
 
   d_points.clear();
   d_tri.clear();
+#ifdef USE_PLANES
   d_planes.clear();
+#endif
+
 //  d_boxes.clear();
 
   delete d_grid;
@@ -95,7 +103,9 @@ TriGeometryPiece& TriGeometryPiece::operator=(const TriGeometryPiece& rhs)
   d_box = rhs.d_box;
   d_points = rhs.d_points;
   d_tri = rhs.d_tri;
+#ifdef USE_PLANES
   d_planes = rhs.d_planes;
+#endif
 //  d_boxes = rhs.d_boxes;
 
   d_grid = scinew UniformGrid(*rhs.d_grid);
@@ -105,10 +115,11 @@ TriGeometryPiece& TriGeometryPiece::operator=(const TriGeometryPiece& rhs)
 
 TriGeometryPiece::~TriGeometryPiece()
 {
-  cout << "In TriGeometryPiece Destructor" << endl;
   d_points.clear();
   d_tri.clear();
+#ifdef USE_PLANES
   d_planes.clear();
+#endif
 
   delete d_grid;
 }
@@ -287,6 +298,7 @@ TriGeometryPiece::readTri(const string& file)
   source.close();
 }
 
+#ifdef USE_PLANES
 void
 TriGeometryPiece::makePlanes()
 {
@@ -300,6 +312,7 @@ TriGeometryPiece::makePlanes()
     d_planes.push_back(plane);
   }
 }
+#endif
 
 #if 0
 void
@@ -319,17 +332,18 @@ TriGeometryPiece::makeTriBoxes()
 }
 #endif
 
+#ifdef USE_PLANES
 void
 TriGeometryPiece::insideTriangle( Point& q,int num,int& NCS,
                                   int& NES ) const
 {
-#if 0
+/*
   // Check if the point is inside the bounding box of the triangle.
   if (!(q == Max(q,d_boxes[num].lower()) && q == Min(q,d_boxes[num].upper()))){
     NCS = NES = 0;
     return;
   }
-#endif
+*/
 
   // Pulled from makemesh.77.c
   //  Now we have to do the pt_in_pgon test to determine if ri is
@@ -483,9 +497,8 @@ TriGeometryPiece::insideTriangle( Point& q,int num,int& NCS,
     }
     SH = NSH;
   }
-  
 }
-
+#endif
 
 void TriGeometryPiece::scale(const double factor)
 {

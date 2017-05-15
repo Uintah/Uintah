@@ -91,10 +91,7 @@ public:
 
   //////////
   // Destructor
-  ~GeometryObject()
-    {
-      std::cout << "In GeometryObjectDestructor" << std::endl;
-    }
+  ~GeometryObject() {}
 
   void outputProblemSpec(ProblemSpecP& ps);
 
