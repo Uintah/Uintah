@@ -171,6 +171,7 @@
     <save label="wall_HF_power"/>
     <save label="wall_HF_power_running_sum"/>
     <save label="wall_HF_area"/>
+    <save label="temperature_running_sum"/>
     <save label="temperature" table_lookup="true"/>
     <save label="density" table_lookup="true"/>
     <save label="CO" table_lookup="true"/>
