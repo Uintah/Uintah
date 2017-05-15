@@ -650,23 +650,26 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
               , load
               );
         }
-
       }
     }
-    printf("\n");
 
+    printf("\n");
   }
 
-  // update SimulationState (don't count output time)
-  stats[SimulationState::TaskExecTime]       += TripTimer< TaskExecTag >::max().seconds() - stats[SimulationState::OutputFileIOTime];
+  // update SimulationState (don't count the output time)
+  stats[SimulationState::TaskExecTime] +=
+    TripTimer< TaskExecTag >::max().seconds() - stats[SimulationState::TotalIOTime];
 
-  stats[SimulationState::TaskLocalCommTime]  += 1.0e-9 * (MPI::Impl::RecvTimer::total() + MPI::Impl::SendTimer::total());
+  stats[SimulationState::TaskLocalCommTime] += 1.0e-9 *
+    (MPI::Impl::RecvTimer::total() + MPI::Impl::SendTimer::total());
 
-  stats[SimulationState::TaskWaitCommTime]   += 1.0e-9 * (MPI::Impl::TestTimer::total() + MPI::Impl::WaitTimer::total());
+  stats[SimulationState::TaskWaitCommTime]  += 1.0e-9 *
+    (MPI::Impl::TestTimer::total() + MPI::Impl::WaitTimer::total());
 
-  stats[SimulationState::TaskGlobalCommTime] += 1.0e-9 * ( MPI::Impl::AlltoallTimer::total() + MPI::Impl::BcastTimer::total() +
-                                                           MPI::Impl::GatherTimer::total()   + MPI::Impl::ReduceTimer::total() +
-                                                           MPI::Impl::ScanTimer::total()     + MPI::Impl::ScatterTimer::total() );
+  stats[SimulationState::TaskGlobalCommTime] += 1.0e-9 *
+    ( MPI::Impl::AlltoallTimer::total() + MPI::Impl::BcastTimer::total() +
+      MPI::Impl::GatherTimer::total()   + MPI::Impl::ReduceTimer::total() +
+      MPI::Impl::ScanTimer::total()     + MPI::Impl::ScatterTimer::total() );
 
   // clear the registered report values
   g_report_values.clear();

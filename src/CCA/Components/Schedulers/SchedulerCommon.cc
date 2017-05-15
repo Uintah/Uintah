@@ -53,6 +53,8 @@
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/Timers/Timers.hpp>
 
+#include <sci_defs/visit_defs.h>
+
 #include <cerrno>
 #include <cstdlib>
 #include <fstream>
@@ -385,6 +387,20 @@ SchedulerCommon::problemSetup( const ProblemSpecP & prob_spec, SimulationStateP 
 
   m_no_scrub_vars.insert("refineFlag");
   m_no_scrub_vars.insert("refinePatchFlag");
+  
+#ifdef HAVE_VISIT
+  static bool initialized = false;
+
+  std::cerr << __FILE__ << "  " << m_shared_state->getVisIt() << std::endl;
+
+  // Running with VisIt so add in the variables that the user can
+  // modify.
+  if( m_shared_state->getVisIt() && !initialized ) {
+     m_shared_state->d_douts.push_back( &schedulercommon_dbg  );
+
+    initialized = true;
+  }
+#endif
 }
 
 //______________________________________________________________________
@@ -664,7 +680,7 @@ SchedulerCommon::getLoadBalancer()
 void
 SchedulerCommon::addTaskGraph( Scheduler::tgType type )
 {
-  TaskGraph* tg = scinew TaskGraph(this, d_myworld, type);
+  TaskGraph* tg = scinew TaskGraph(this, m_shared_state, d_myworld, type);
   tg->initialize();
   m_task_graphs.push_back(tg);
 }

@@ -35,6 +35,8 @@
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Util/DebugStream.h>
+#include <Core/Util/DOUT.hpp>
 #include <Core/Util/StringUtil.h>
 
 #include <CCA/Components/Arches/ArchesMaterial.h>
@@ -144,13 +146,24 @@ SimulationState::SimulationState(ProblemSpecP &ps)
   d_runTimeStats.insert( RegriddingCompilationTime, std::string("RegriddingCompilation"), timeStr, 0 );
   d_runTimeStats.insert( RegriddingCopyDataTime,    std::string("RegriddingCopyData"),    timeStr, 0 );
   d_runTimeStats.insert( LoadBalancerTime,   std::string("LoadBalancer"),     timeStr, 0 );
+
   d_runTimeStats.insert( TaskExecTime,       std::string("TaskExec"),         timeStr, 0 );
   d_runTimeStats.insert( TaskLocalCommTime,  std::string("TaskLocalComm"),    timeStr, 0 );
   d_runTimeStats.insert( TaskGlobalCommTime, std::string("TaskGlobalComm"),   timeStr, 0 );
   d_runTimeStats.insert( TaskWaitCommTime,   std::string("TaskWaitComm"),     timeStr, 0 );
   d_runTimeStats.insert( TaskWaitThreadTime, std::string("TaskWaitThread"),   timeStr, 0 );
-  d_runTimeStats.insert( OutputFileIOTime,   std::string("OutputFileIO"),     timeStr, 0 );
-  d_runTimeStats.insert( OutputFileIORate,   std::string("OutputFileIORate"), "MBytes/sec", 0 );
+
+  d_runTimeStats.insert( XMLIOTime,          std::string("XMLIO"),            timeStr, 0 );
+  d_runTimeStats.insert( OutputIOTime,       std::string("OutputIO"),         timeStr, 0 );
+  d_runTimeStats.insert( ReductionIOTime,    std::string("ReductionIO"),      timeStr, 0 );
+  d_runTimeStats.insert( CheckpointIOTime,   std::string("CheckpointIO"),     timeStr, 0 );
+  d_runTimeStats.insert( CheckpointReductionIOTime, std::string("CheckpointReductionIO"),     timeStr, 0 );
+  d_runTimeStats.insert( TotalIOTime,        std::string("TotalIO"),          timeStr, 0 );
+
+  d_runTimeStats.insert( OutputIORate,       std::string("OutputIORate"),     "MBytes/sec", 0 );
+  d_runTimeStats.insert( ReductionIORate,    std::string("ReductionIORate"),  "MBytes/sec", 0 );
+  d_runTimeStats.insert( CheckpointIORate,   std::string("CheckpointIORate"), "MBytes/sec", 0 );
+  d_runTimeStats.insert( CheckpointReductionIORate, std::string("CheckpointReductionIORate"), "MBytes/sec", 0 );
 
   d_runTimeStats.insert( SCIMemoryUsed,      std::string("SCIMemoryUsed"),      bytesStr, 0 );
   d_runTimeStats.insert( SCIMemoryMaxUsed,   std::string("SCIMemoryMaxUsed"),   bytesStr, 0 );

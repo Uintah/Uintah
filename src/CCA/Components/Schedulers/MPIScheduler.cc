@@ -42,6 +42,8 @@
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/Timers/Timers.hpp>
 
+#include <sci_defs/visit_defs.h>
+
 #ifdef UINTAH_ENABLE_KOKKOS
 #  include <Kokkos_Core.hpp>
 #endif //UINTAH_ENABLE_KOKKOS
@@ -130,6 +132,26 @@ MPIScheduler::problemSetup( const ProblemSpecP     & prob_spec
                           )
 {
   SchedulerCommon::problemSetup(prob_spec, state);
+
+#ifdef HAVE_VISIT
+  static bool initialized = false;
+
+  // Running with VisIt so add in the variables that the user can
+  // modify.
+  if( m_shared_state->getVisIt() && !initialized ) {
+    m_shared_state->d_douts.push_back( &g_dbg );
+    m_shared_state->d_douts.push_back( &g_send_timings );
+    m_shared_state->d_douts.push_back( &g_reductions );
+    m_shared_state->d_douts.push_back( &g_time_out );
+    m_shared_state->d_douts.push_back( &g_task_begin_end );
+    m_shared_state->d_douts.push_back( &g_task_order );
+    m_shared_state->d_douts.push_back( &g_task_dbg );
+    m_shared_state->d_douts.push_back( &g_mpi_dbg  );
+    m_shared_state->d_douts.push_back( &g_exec_out  );
+
+    initialized = true;
+  }
+#endif
 }
 
 //______________________________________________________________________
@@ -1034,7 +1056,7 @@ MPIScheduler::outputTimingStats( const char* label )
 void MPIScheduler::computeNetRunTimeStats(InfoMapper< SimulationState::RunTimeStat, double >& runTimeStats)
 {
   // don't count output time
-  runTimeStats[SimulationState::TaskExecTime      ] += mpi_info_[TotalTask] - runTimeStats[SimulationState::OutputFileIOTime];
+  runTimeStats[SimulationState::TaskExecTime      ] += mpi_info_[TotalTask] - runTimeStats[SimulationState::TotalIOTime];
   runTimeStats[SimulationState::TaskLocalCommTime ] += mpi_info_[TotalRecv] + mpi_info_[TotalSend];
   runTimeStats[SimulationState::TaskWaitCommTime  ] += mpi_info_[TotalWaitMPI];
   runTimeStats[SimulationState::TaskGlobalCommTime] += mpi_info_[TotalReduce];

@@ -300,9 +300,11 @@ SimulationController::isLast( void )
   Uintah::MPI::Bcast( &walltime, 1, MPI_DOUBLE, 0, d_myworld->getComm() );
 
   return ( ( d_simTime >= d_timeinfo->maxTime ) ||
+
 	   ( d_timeinfo->maxTimestep > 0 &&
 	     d_sharedState->getCurrentTopLevelTimeStep() >=
 	     d_timeinfo->maxTimestep ) ||
+
 	   ( d_timeinfo->max_wall_time > 0 &&
 	     walltime >= d_timeinfo->max_wall_time ) );
 }

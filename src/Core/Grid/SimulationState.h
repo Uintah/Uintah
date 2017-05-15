@@ -33,7 +33,6 @@
 #include <Core/Math/MinMax.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
-#include <Core/Util/DebugStream.h>
 #include <Core/Util/InfoMapper.h>
 #include <Core/Util/RefCounted.h>
 #include <Core/Util/Timers/Timers.hpp>
@@ -57,6 +56,9 @@ class FVMMaterial;
 class SimpleMaterial;
 class Level;
 
+class DebugStream;
+class Dout;
+  
 /**************************************
       
     CLASS
@@ -288,8 +290,17 @@ public:
     TaskWaitCommTime,          // to determine the total time. 
     TaskWaitThreadTime,
 
-    OutputFileIOTime,
-    OutputFileIORate,
+    XMLIOTime,
+    OutputIOTime,
+    ReductionIOTime,
+    CheckpointIOTime,
+    CheckpointReductionIOTime,
+    TotalIOTime,
+
+    OutputIORate,
+    ReductionIORate,
+    CheckpointIORate,
+    CheckpointReductionIORate,
 
     SCIMemoryUsed,
     SCIMemoryMaxUsed,
@@ -446,6 +457,7 @@ public:
 
   // Debug streams that can be turned on or off.
   std::vector< DebugStream * > d_debugStreams;
+  std::vector< Dout * > d_douts;
   
   void setVisIt( int val ) { d_doVisIt = val; }
   int  getVisIt() { return d_doVisIt; }

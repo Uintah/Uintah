@@ -38,14 +38,15 @@
 #include <Core/Util/DOUT.hpp>
 #include <Core/Util/Timers/Timers.hpp>
 
+#include <sci_defs/cuda_defs.h>
+#include <sci_defs/visit_defs.h>
+
 #ifdef HAVE_CUDA
   #include <CCA/Components/Schedulers/GPUDataWarehouse.h>
   #include <Core/Grid/Variables/GPUGridVariable.h>
   #include <Core/Grid/Variables/GPUStencil7.h>
   #include <Core/Util/DebugStream.h>
 #endif
-
-#include <sci_defs/cuda_defs.h>
 
 #include <atomic>
 #include <cstring>
@@ -449,8 +450,25 @@ UnifiedScheduler::problemSetup( const ProblemSpecP     & prob_spec
   // this spawns threads, sets affinity, etc
   init_threads(this, m_num_threads);
 
-}
+#ifdef HAVE_VISIT
+  static bool initialized = false;
 
+  // Running with VisIt so add in the variables that the user can
+  // modify.
+  if( m_shared_state->getVisIt() && !initialized ) {
+    m_shared_state->d_douts.push_back( &g_dbg  );
+    m_shared_state->d_douts.push_back( &g_queuelength  );
+
+#ifdef HAVE_CUDA
+    m_shared_state->d_debugStreams.push_back( &gpu_stats  );
+    m_shared_state->d_debugStreams.push_back( &simulate_multiple_gpus  );
+    m_shared_state->d_debugStreams.push_back( &gpudbg  );
+#endif
+    
+    initialized = true;
+  }
+#endif
+}
 
 //______________________________________________________________________
 //

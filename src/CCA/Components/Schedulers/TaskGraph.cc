@@ -43,6 +43,8 @@
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/ProgressiveWarning.h>
 
+#include <sci_defs/visit_defs.h>
+
 #include <iostream>
 #include <map>
 #include <set>
@@ -61,6 +63,7 @@ DebugStream compdbg(     "FindComp"         , false);
 //______________________________________________________________________
 //
 TaskGraph::TaskGraph(       SchedulerCommon   * sched
+		    ,       SimulationStateP& state
                     , const ProcessorGroup    * pg
                     ,       Scheduler::tgType   type
                     )
@@ -69,6 +72,21 @@ TaskGraph::TaskGraph(       SchedulerCommon   * sched
   , m_type{type}
 {
   m_load_balancer = dynamic_cast<LoadBalancerPort*>( m_scheduler->getPort("load balancer") );
+
+#ifdef HAVE_VISIT
+  static bool initialized = false;
+
+  // Running with VisIt so add in the variables that the user can
+  // modify.
+  if( state->getVisIt() && !initialized ) {
+     state->d_debugStreams.push_back( &tgdbg );
+     state->d_debugStreams.push_back( &tgphasedbg );
+     state->d_debugStreams.push_back( &detaileddbg );
+     state->d_debugStreams.push_back( &compdbg );
+
+    initialized = true;
+  }
+#endif
 }
 
 //______________________________________________________________________

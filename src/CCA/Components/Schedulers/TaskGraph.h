@@ -200,7 +200,8 @@ class TaskGraph {
   public:
 
     TaskGraph(       SchedulerCommon   * sched
-             , const ProcessorGroup    * proc_group
+		     , SimulationStateP& state
+		     , const ProcessorGroup    * proc_group
              ,       Scheduler::tgType   tg_type
              );
 

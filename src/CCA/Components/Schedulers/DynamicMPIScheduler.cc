@@ -29,6 +29,7 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Util/DOUT.hpp>
 
+#include <sci_defs/visit_defs.h>
 
 using namespace Uintah;
 
@@ -123,6 +124,19 @@ DynamicMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec,
   }
 
   SchedulerCommon::problemSetup(prob_spec, state);
+
+#ifdef HAVE_VISIT
+  static bool initialized = false;
+
+  // Running with VisIt so add in the variables that the user can
+  // modify.
+  if( m_shared_state->getVisIt() && !initialized ) {
+    m_shared_state->d_douts.push_back( &g_dbg );
+    m_shared_state->d_douts.push_back( &g_queue_length );
+
+    initialized = true;
+  }
+#endif
 }
 
 //______________________________________________________________________
