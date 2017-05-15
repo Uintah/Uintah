@@ -49,33 +49,54 @@ SimulationTime::SimulationTime( const ProblemSpecP & params )
 
   if( !time_ps->get( "delt_init", max_initial_delt) &&
       !time_ps->get("max_initial_delt", max_initial_delt ) ) {
-    max_initial_delt = DBL_MAX;
+    max_initial_delt = 0;
   }
+  
   if( !time_ps->get( "initial_delt_range", initial_delt_range ) ) {
     initial_delt_range = 0;
   }
-  if( !time_ps->get( "max_delt_increase", max_delt_increase ) ) {
-    max_delt_increase = 1.e99;
-  }
-  if( !time_ps->get( "max_wall_time", max_wall_time ) ) {
-    max_wall_time = 0;
-  }
-
-  // Use INT_MAX-1, for some reason SGI optimizer doesn't like INT_MAX
-  // in the SimulationController while loop
-  if( !time_ps->get( "max_Timesteps", maxTimestep ) ) {
-    maxTimestep = INT_MAX-1;
-  }
-  else if( maxTimestep < 1 ) {
-    std::cerr << "Negative maxTimesteps is not allowed.\n";
-    std::cerr << "resetting to INT_MAX-1 time steps\n";
-    maxTimestep = INT_MAX - 1;
+  else if( initial_delt_range < 0 ) {
+    std::cerr << "Negative initial_delt_range is not allowed.\n";
+    std::cerr << "resetting to 0 (i.e. the value is ignored)\n";
+    initial_delt_range = 0;
   }
   
+  if( !time_ps->get( "max_delt_increase", max_delt_increase ) ) {
+    max_delt_increase = 0;
+  }
+  else if( max_wall_time < 0 ) {
+    std::cerr << "Negative max_wall_time is not allowed.\n";
+    std::cerr << "resetting to 0 (i.e. the value is ignored)\n";
+    max_delt_increase = 0;
+  }
+    
   if( !time_ps->get( "override_restart_delt", override_restart_delt) ) {
     override_restart_delt = 0.0;
   }
+  else if( maxTimestep < 0 ) {
+    std::cerr << "Negative override_restart_delt is not allowed.\n";
+    std::cerr << "resetting to 0 (i.e. the value is ignored)\n";
+    maxTimestep = 0;
+  }
 
+  if( !time_ps->get( "max_Timesteps", maxTimestep ) ) {
+    maxTimestep = 0;
+  }
+  else if( maxTimestep < 0 ) {
+    std::cerr << "Negative maxTimesteps is not allowed.\n";
+    std::cerr << "resetting to 0 (i.e. the value is ignored)\n";
+    maxTimestep = 0;
+  }
+  
+  if( !time_ps->get( "max_wall_time", max_wall_time ) ) {
+    max_wall_time = 0;
+  }
+  else if( max_wall_time < 0 ) {
+    std::cerr << "Negative max_wall_time is not allowed.\n";
+    std::cerr << "resetting to 0 (i.e. the value is ignored)\n";
+    max_wall_time = 0;
+  }
+  
   if ( !time_ps->get( "clamp_time_to_output", clamp_time_to_output ) ) {
     clamp_time_to_output = false;
   }
@@ -113,13 +134,25 @@ SimulationTime::problemSetup( const ProblemSpecP & params )
   
   if( !time_ps->get("delt_init", max_initial_delt) &&
       !time_ps->get("max_initial_delt", max_initial_delt) ) {
-    max_initial_delt = DBL_MAX;
+    max_initial_delt = 0;
   }
+
   if( !time_ps->get("initial_delt_range", initial_delt_range) ) {
     initial_delt_range = 0;
   }
+  else if( initial_delt_range < 0 ) {
+    std::cerr << "Negative initial_delt_range is not allowed.\n";
+    std::cerr << "resetting to 0 (i.e. the value is ignored)\n";
+    initial_delt_range = 0;
+  }
+
   if( !time_ps->get("max_delt_increase", max_delt_increase) ) {
-    max_delt_increase = 1.e99;
+    max_delt_increase = 0;
+  }
+  else if( max_wall_time < 0 ) {
+    std::cerr << "Negative max_wall_time is not allowed.\n";
+    std::cerr << "resetting to 0 (i.e. the value is ignored)\n";
+    max_delt_increase = 0;
   }
   
   time_ps->get( "override_restart_delt", override_restart_delt);

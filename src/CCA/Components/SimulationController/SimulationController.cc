@@ -300,7 +300,8 @@ SimulationController::isLast( void )
   Uintah::MPI::Bcast( &walltime, 1, MPI_DOUBLE, 0, d_myworld->getComm() );
 
   return ( ( d_simTime >= d_timeinfo->maxTime ) ||
-	   ( d_sharedState->getCurrentTopLevelTimeStep() >=
+	   ( d_timeinfo->maxTimestep > 0 &&
+	     d_sharedState->getCurrentTopLevelTimeStep() >=
 	     d_timeinfo->maxTimestep ) ||
 	   ( d_timeinfo->max_wall_time > 0 &&
 	     walltime >= d_timeinfo->max_wall_time ) );
@@ -601,7 +602,7 @@ SimulationController::getNextDeltaT( void )
   double delt_tmp = (1.0+d_timeinfo->max_delt_increase) * d_prev_delt;
   
   if( d_prev_delt > 0.0 &&
-      d_timeinfo->max_delt_increase < 1.e90 &&
+      d_timeinfo->max_delt_increase > 0 &&
       d_delt > delt_tmp ) {
     proc0cout << "WARNING (a): lowering delt from " << d_delt;
     
@@ -614,6 +615,7 @@ SimulationController::getNextDeltaT( void )
 
   // Check to see if the new delt exceeds the max_initial_delt
   if( d_simTime <= d_timeinfo->initial_delt_range &&
+      d_timeinfo->max_initial_delt > 0 &&
       d_delt > d_timeinfo->max_initial_delt ) {
     proc0cout << "WARNING (b): lowering delt from " << d_delt ;
 
