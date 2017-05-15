@@ -98,6 +98,8 @@ public:
     return a.m_name < b.m_name;
   }
 
+  bool active() { return m_active; }
+  void setActive( bool active ) { m_active = active; }
 
 private:
 
