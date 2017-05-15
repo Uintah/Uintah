@@ -35,7 +35,8 @@ SRCS   += $(SRCDIR)/ElectrostaticSolve.cc \
           $(SRCDIR)/FVMBoundCond.cc       \
           $(SRCDIR)/FVMMaterial.cc        \
           $(SRCDIR)/FVMLabel.cc           \
-          $(SRCDIR)/GaussSolve.cc
+          $(SRCDIR)/GaussSolve.cc         \
+          $(SRCDIR)/MPNP.cc
 
 #include $(SCIRUN_SCRIPTS)/recurse.mk          
 
