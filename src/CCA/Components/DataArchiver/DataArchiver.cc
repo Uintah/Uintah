@@ -1578,7 +1578,7 @@ void
 DataArchiver::writeto_xml_files( std::map< std::string, std::pair<std::string, std::string> > &modifiedVars )
 {
 #ifdef HAVE_VISIT  
-  if( d_sharedState->getVisIt() && modifiedVars.size() )
+  if( isProc0_macro && d_sharedState->getVisIt() && modifiedVars.size() )
   {
     dbg << "  writeto_xml_files() begin\n";
 
