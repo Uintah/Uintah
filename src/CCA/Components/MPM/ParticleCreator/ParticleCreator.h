@@ -116,6 +116,8 @@ namespace Uintah {
     ParticleVariable<double> pExternalScalarFlux;
     ParticleVariable<double> pPosCharge;
     ParticleVariable<double> pNegCharge;
+    ParticleVariable<Vector> pPosChargeGrad;
+    ParticleVariable<Vector> pNegChargeGrad;
     ParticleVariable<double> pPermittivity;
     } ParticleVars;
 

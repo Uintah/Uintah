@@ -136,6 +136,10 @@ namespace Uintah {
       const VarLabel* pNegChargeLabel_preReloc;
       const VarLabel* pPermittivityLabel;
       const VarLabel* pPermittivityLabel_preReloc;
+      const VarLabel* pPosChargeGradLabel;
+      const VarLabel* pPosChargeGradLabel_preReloc;
+      const VarLabel* pNegChargeGradLabel;
+      const VarLabel* pNegChargeGradLabel_preReloc;
       const VarLabel* pPosChargeFluxLabel;
       const VarLabel* pPosChargeFluxLabel_preReloc;
       const VarLabel* pNegChargeFluxLabel;
@@ -189,8 +193,10 @@ namespace Uintah {
       const VarLabel* gNumNearParticlesLabel;
 
       const VarLabel* gPosChargeLabel;
-      const VarLabel* gNegChargeLabel;
+      const VarLabel* gPosChargeStarLabel;
       const VarLabel* gPosChargeNoBCLabel;
+      const VarLabel* gNegChargeLabel;
+      const VarLabel* gNegChargeStarLabel;
       const VarLabel* gNegChargeNoBCLabel;
       const VarLabel* gPosChargeRateLabel;
       const VarLabel* gNegChargeRateLabel;

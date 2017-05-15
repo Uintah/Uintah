@@ -299,13 +299,25 @@ MPMLabel::MPMLabel()
       ParticleVariable<double>::getTypeDescription() );
 
   pPosChargeLabel_preReloc = VarLabel::create( "p.posCharge+",
-        ParticleVariable<double>::getTypeDescription() );
+      ParticleVariable<double>::getTypeDescription() );
 
   pNegChargeLabel = VarLabel::create( "p.negCharge",
       ParticleVariable<double>::getTypeDescription() );
 
   pNegChargeLabel_preReloc = VarLabel::create( "p.negCharge+",
-        ParticleVariable<double>::getTypeDescription() );
+      ParticleVariable<double>::getTypeDescription() );
+
+  pPosChargeGradLabel = VarLabel::create( "p.posChargeGrad",
+      ParticleVariable<Vector>::getTypeDescription() );
+
+  pPosChargeGradLabel_preReloc =VarLabel::create("p.posChargeGrad+",
+      ParticleVariable<Vector>::getTypeDescription() );
+
+  pNegChargeGradLabel = VarLabel::create( "p.negChargeGrad",
+          ParticleVariable<Vector>::getTypeDescription() );
+
+  pNegChargeGradLabel_preReloc =VarLabel::create("p.negChargeGrad+",
+          ParticleVariable<Vector>::getTypeDescription() );
 
   pPermittivityLabel = VarLabel::create( "p.permittivity",
       ParticleVariable<double>::getTypeDescription() );
@@ -479,8 +491,12 @@ MPMLabel::MPMLabel()
 
   gPosChargeLabel = VarLabel::create("g.PosCharge",
       NCVariable<double>::getTypeDescription());
+  gPosChargeStarLabel = VarLabel::create("g.PosChargeStar",
+        NCVariable<double>::getTypeDescription());
   gNegChargeLabel = VarLabel::create("g.NegCharge",
       NCVariable<double>::getTypeDescription());
+  gNegChargeStarLabel = VarLabel::create("g.NegChargeStar",
+          NCVariable<double>::getTypeDescription());
   gPosChargeNoBCLabel = VarLabel::create("g.PosChargeNoBC",
       NCVariable<double>::getTypeDescription());
   gNegChargeNoBCLabel = VarLabel::create("g.NegChargeNoBC",
@@ -918,6 +934,10 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pPosChargeLabel_preReloc);
   VarLabel::destroy(pNegChargeLabel);
   VarLabel::destroy(pNegChargeLabel_preReloc);
+  VarLabel::destroy(pPosChargeGradLabel);
+  VarLabel::destroy(pPosChargeGradLabel_preReloc);
+  VarLabel::destroy(pNegChargeGradLabel);
+  VarLabel::destroy(pNegChargeGradLabel_preReloc);
   VarLabel::destroy(pPermittivityLabel);
   VarLabel::destroy(pPermittivityLabel_preReloc);
   VarLabel::destroy(pPosChargeFluxLabel);
@@ -974,7 +994,9 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(gNumNearParticlesLabel);
 
   VarLabel::destroy(gPosChargeLabel);
+  VarLabel::destroy(gPosChargeStarLabel);
   VarLabel::destroy(gNegChargeLabel);
+  VarLabel::destroy(gNegChargeStarLabel);
   VarLabel::destroy(gPosChargeNoBCLabel);
   VarLabel::destroy(gNegChargeNoBCLabel);
   VarLabel::destroy(gPosChargeRateLabel);

@@ -559,6 +559,10 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
                                           d_lb->pPosChargeLabel,    subset);
      new_dw->allocateAndPut(pvars.pNegCharge,
                                           d_lb->pNegChargeLabel,    subset);
+     new_dw->allocateAndPut(pvars.pPosChargeGrad,
+                                          d_lb->pPosChargeGradLabel,    subset);
+     new_dw->allocateAndPut(pvars.pNegChargeGrad,
+                                          d_lb->pNegChargeGradLabel,    subset);
      new_dw->allocateAndPut(pvars.pPermittivity,
                                           d_lb->pPermittivityLabel, subset);
   }
@@ -783,6 +787,8 @@ ParticleCreator::initializeParticle(const Patch* patch,
                         * (*obj)->getInitialData_double("pos_charge_density");
     pvars.pNegCharge[i] = pvars.pvolume[i]
                         * (*obj)->getInitialData_double("neg_charge_density");
+    pvars.pPosChargeGrad[i]  = Vector(0.0);
+    pvars.pNegChargeGrad[i]  = Vector(0.0);
     pvars.pPermittivity[i] = (*obj)->getInitialData_double("permittivity");
   }
   if(d_artificial_viscosity){
@@ -1017,6 +1023,12 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
 
     particle_state.push_back(d_lb->pNegChargeLabel);
     particle_state_preReloc.push_back(d_lb->pNegChargeLabel_preReloc);
+
+    particle_state.push_back(d_lb->pPosChargeGradLabel);
+    particle_state_preReloc.push_back(d_lb->pPosChargeGradLabel_preReloc);
+
+    particle_state.push_back(d_lb->pNegChargeGradLabel);
+    particle_state_preReloc.push_back(d_lb->pNegChargeGradLabel_preReloc);
 
     particle_state.push_back(d_lb->pPermittivityLabel);
     particle_state_preReloc.push_back(d_lb->pPermittivityLabel_preReloc);

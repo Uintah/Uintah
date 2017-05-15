@@ -115,6 +115,8 @@ void NonLinearDiff2::scheduleComputeFlux(
 
   task->requires(Task::OldDW, d_lb->pPosChargeLabel, matlset, gnone);
   task->requires(Task::OldDW, d_lb->pNegChargeLabel, matlset, gnone);
+  task->requires(Task::OldDW, d_lb->pPosChargeGradLabel, matlset, gnone);
+  task->requires(Task::OldDW, d_lb->pNegChargeGradLabel, matlset, gnone);
   task->requires(Task::NewDW, d_lb->pESGradPotential, matlset, gnone);
 
   task->computes(d_sharedState->get_delt_label(),getLevel(patch));
@@ -137,9 +139,11 @@ void NonLinearDiff2::computeFlux(
   int dwi = matl->getDWIndex();
   Vector dx = patch->dCell();
 
-  constParticleVariable<double>  pPosCharge;
-  constParticleVariable<double>  pNegCharge;
-  constParticleVariable<Vector>  pESGradPotential;
+  constParticleVariable<double> pPosCharge;
+  constParticleVariable<double> pNegCharge;
+  constParticleVariable<Vector> pPosChargeGrad;
+  constParticleVariable<Vector> pNegChargeGrad;
+  constParticleVariable<Vector> pESGradPotential;
 
   ParticleVariable<Vector>       pPosFlux;
   ParticleVariable<Vector>       pNegFlux;
@@ -149,6 +153,8 @@ void NonLinearDiff2::computeFlux(
 
   old_dw->get(pPosCharge,       d_lb->pPosChargeLabel, pset);
   old_dw->get(pNegCharge,       d_lb->pNegChargeLabel, pset);
+  old_dw->get(pPosChargeGrad,   d_lb->pPosChargeGradLabel, pset);
+  old_dw->get(pNegChargeGrad,   d_lb->pNegChargeGradLabel, pset);
   new_dw->get(pESGradPotential, d_lb->pESGradPotential, pset);
 
   new_dw->allocateAndPut(pPosFlux,     d_lb->pPosChargeFluxLabel_preReloc, pset);
@@ -163,8 +169,10 @@ void NonLinearDiff2::computeFlux(
                                                       iter++){
     particleIndex idx = *iter;
 
-    pPosFlux[idx] =  pPosCharge[idx] * d_alpha * pESGradPotential[idx];
-    pNegFlux[idx] = -pNegCharge[idx] * d_alpha * pESGradPotential[idx];
+    pPosFlux[idx] =  pPosCharge[idx] * d_alpha * pESGradPotential[idx]
+                  +  D * pPosChargeGrad[idx];
+    pNegFlux[idx] = -pNegCharge[idx] * d_alpha * pESGradPotential[idx]
+                  +  D * pNegChargeGrad[idx];
 
     pDiffusivity[idx] = D;
     timestep = std::min(timestep, computeStableTimeStep(D, dx));

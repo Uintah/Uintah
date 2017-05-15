@@ -1216,6 +1216,8 @@ void AMRMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
     t->requires(Task::NewDW, lb->gNegChargeNoBCLabel, Ghost::None);
     t->requires(Task::NewDW, lb->gPosChargeLabel,     Ghost::None);
     t->requires(Task::NewDW, lb->gNegChargeLabel,     Ghost::None);
+    t->computes(lb->gPosChargeStarLabel);
+    t->computes(lb->gNegChargeStarLabel);
     t->modifies(lb->gPosChargeRateLabel);
     t->modifies(lb->gNegChargeRateLabel);
   }
@@ -1288,6 +1290,13 @@ void AMRMPM::scheduleComputeLAndF(SchedulerP& sched,
     t->requires(Task::OldDW, lb->pAreaLabel,                    d_gn);
     t->computes(lb->pConcGradientLabel_preReloc);
     t->computes(lb->pAreaLabel_preReloc);
+  }
+
+  if(flags->d_withGaussSolver){
+    t->requires(Task::NewDW, lb->gPosChargeStarLabel, d_gac, NGN);
+    t->requires(Task::NewDW, lb->gNegChargeStarLabel, d_gac, NGN);
+    t->computes(lb->pPosChargeGradLabel_preReloc);
+    t->computes(lb->pNegChargeGradLabel_preReloc);
   }
 
   sched->addTask(t, patches, matls);
@@ -3251,8 +3260,8 @@ void AMRMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
         new_dw->get(gNegCharge,     lb->gNegChargeLabel,     dwi, patch, d_gn, 0);
         new_dw->get(gNegChargeNoBC, lb->gNegChargeNoBCLabel, dwi, patch, d_gn, 0);
 
-        new_dw->allocateTemporary(gPosChargeStar, patch, d_gn, 0);
-        new_dw->allocateTemporary(gNegChargeStar, patch, d_gn, 0);
+        new_dw->allocateAndPut(gPosChargeStar, lb->gPosChargeStarLabel, dwi, patch);
+        new_dw->allocateAndPut(gNegChargeStar, lb->gNegChargeStarLabel, dwi, patch);
 
         new_dw->getModifiable(gPosChargeRate, lb->gPosChargeRateLabel,dwi, patch);
         new_dw->getModifiable(gNegChargeRate, lb->gNegChargeRateLabel,dwi, patch);
@@ -3618,10 +3627,13 @@ void AMRMPM::computeLAndF(const ProcessorGroup*,
       constParticleVariable<Matrix3> pFOld;
       ParticleVariable<Matrix3> pFNew,pVelGrad;
       ParticleVariable<Vector> pConcGradNew,pareanew;
+      ParticleVariable<Vector> pPosChargeGrad, pNegChargeGrad;
 
       // Get the arrays of grid data on which the new particle values depend
       constNCVariable<Vector> gvelocity_star;
       constNCVariable<double> gConcStar;
+      constNCVariable<double> gPosChargeStar;
+      constNCVariable<double> gNegChargeStar;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
@@ -3643,6 +3655,14 @@ void AMRMPM::computeLAndF(const ProcessorGroup*,
         new_dw->allocateAndPut(pareanew,    lb->pAreaLabel_preReloc,      pset);
         new_dw->allocateAndPut(pConcGradNew,lb->pConcGradientLabel_preReloc,
                                                                           pset);
+      }
+
+      if(flags->d_withGaussSolver){
+        new_dw->get(gPosChargeStar, lb->gPosChargeStarLabel, dwi, patch, d_gac, NGP);
+        new_dw->get(gNegChargeStar, lb->gNegChargeStarLabel, dwi, patch, d_gac, NGP);
+
+        new_dw->allocateAndPut(pPosChargeGrad, lb->pPosChargeGradLabel_preReloc, pset);
+        new_dw->allocateAndPut(pNegChargeGrad, lb->pNegChargeGradLabel_preReloc, pset);
       }
 
       double rho_init=mpm_matl->getInitialDensity();
@@ -3676,6 +3696,17 @@ void AMRMPM::computeLAndF(const ProcessorGroup*,
             IntVector node = ni[k];
             for(int j = 0; j < 3; j++){
               pConcGradNew[idx][j] += gConcStar[ni[k]] * d_S[k][j] * oodx[j];
+            }
+          }
+        }
+        if(flags->d_withGaussSolver){
+          pPosChargeGrad[idx] = Vector(0.0, 0.0, 0.0);
+          pNegChargeGrad[idx] = Vector(0.0, 0.0, 0.0);
+          for(int k = 0; k < NN; k++) {
+            IntVector node = ni[k];
+            for(int j = 0; j < 3; j++){
+              pPosChargeGrad[idx][j] += gPosChargeStar[ni[k]] * d_S[k][j] * oodx[j];
+              pNegChargeGrad[idx][j] += gNegChargeStar[ni[k]] * d_S[k][j] * oodx[j];
             }
           }
         }
