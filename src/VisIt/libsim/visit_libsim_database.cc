@@ -62,7 +62,7 @@ void visit_SimGetCustomUIData(void *cbdata)
   SimulationTime* simTime = sim->simController->getSimulationTime();
 
   // Setup the Stripchart names - this should be first so that when
-  // values are added to the charts teh names are already set.
+  // values are added to the charts the names are already set.
   visit_SetStripChartNames( sim );
 
   // Set the custom UI time values.
@@ -143,8 +143,7 @@ visit_handle visit_SimGetMetaData(void *cbdata)
   sim->nodeCentered = false;
   // bool &nodeCentered = sim->nodeCentered;
 
-  sim->stepInfo =
-    getTimeStepInfo(schedulerP, simStateP, gridP, timestate, useExtraCells);
+  sim->stepInfo = getTimeStepInfo(schedulerP, simStateP, gridP, useExtraCells);
 
   TimeStepInfo* &stepInfo = sim->stepInfo;
 
@@ -994,8 +993,7 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
 //  string vars = getParticlePositionName(schedulerP);
 
     ParticleDataRaw *pd =
-      getParticleData(schedulerP, gridP, level, local_patch, vars,
-                      matlNo, timestate);
+      getParticleData(schedulerP, gridP, level, local_patch, vars, matlNo);
 
     visit_handle cordsH = VISIT_INVALID_HANDLE;
 
@@ -1313,8 +1311,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       matlNo = atoi(matl.c_str());
       
     ParticleDataRaw *pd = 
-      getParticleData(schedulerP, gridP, level, local_patch, varName,
-                      matlNo, timestate);
+      getParticleData(schedulerP, gridP, level, local_patch, varName, matlNo);
 
     CheckNaNs(pd->data, pd->num*pd->components, varname, level, local_patch);
 
@@ -1416,7 +1413,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       }
       
       gd = getGridData(schedulerP, gridP, level, local_patch, varName,
-                       atoi(matl.c_str()), timestate, qlow, qhigh);
+                       atoi(matl.c_str()), qlow, qhigh);
 
       if( gd )
       {
