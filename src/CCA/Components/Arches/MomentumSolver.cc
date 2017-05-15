@@ -211,7 +211,7 @@ MomentumSolver::problemSetup(const ProblemSpecP& params,
 
   // Running with VisIt so add in the variables that the user can
   // modify.
-  if( d_sharedState->getVisIt() && !initialized ) {
+  if( sharedState->getVisIt() && !initialized ) {
     // variable 1 - Must start with the component name and have NO
     // spaces in the var name
     SimulationState::interactiveVar var;
@@ -223,7 +223,7 @@ MomentumSolver::problemSetup(const ProblemSpecP& params,
     var.modifiable = true;
     var.recompile  = false;
     var.modified   = false;
-    d_sharedState->d_UPSVars.push_back( var );
+    sharedState->d_UPSVars.push_back( var );
 
     initialized = true;
   }
