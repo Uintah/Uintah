@@ -1443,8 +1443,11 @@ IntrusionBC::prune_per_patch_intrusions( SchedulerP& sched, const LevelP& level,
 
       for ( int i = 0; i < (int)i_intrusion->second.geometry.size(); i++ ){
 
+        //Buffer the search region by one cell so as not to miss inlets on patch boundaries.
         GeometryPieceP piece = i_intrusion->second.geometry[i];
-        Box geometry_box  = piece->getBoundingBox();
+        Point low((*ipatches)->cellPosition((*ipatches)->getCellLowIndex()-IntVector(1,1,1)));
+        Point high((*ipatches)->cellPosition((*ipatches)->getCellHighIndex()+IntVector(1,1,1)));
+        Box geometry_box(low, high);
         Box intersect_box = geometry_box.intersect( patch_box );
 
         if ( !(intersect_box.degenerate()) ) {
