@@ -537,7 +537,7 @@ UnifiedScheduler::runTask( DetailedTask*         dtask
     }
 #endif
 
-  MPIScheduler::postMPISends(dtask, iteration, thread_id);
+  MPIScheduler::postMPISends(dtask, iteration);
 
 #ifdef HAVE_CUDA
     if (Uintah::Parallel::usingDevice()) {
@@ -774,7 +774,7 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
   if ( m_shared_state != nullptr ) {
     MPIScheduler::computeNetRunTimeStats(m_shared_state->d_runTimeStats);
 
-    // Stats specific to this scheduler - TaskRunner threads start at g_runners[1]
+    // Stats specific to this threaded scheduler - TaskRunner threads start at g_runners[1]
     for (int i = 1; i < m_num_threads; ++i) {
       m_shared_state->d_runTimeStats[SimulationState::TaskWaitThreadTime] += Impl::g_runners[i]->getWaitTime();
     }
@@ -4613,13 +4613,12 @@ UnifiedScheduler::copyAllExtGpuDependenciesToHost( DetailedTask * dtask )
 
 
 //______________________________________________________________________
-//  generate string   <MPI rank>.<Thread ID>
-//  useful to see who running what    
+//  generate string   <MPI_rank>.<Thread_ID>
 std::string
 UnifiedScheduler::myRankThread()
 {
   std::ostringstream out;
-  out << Uintah::Parallel::getMPIRank()<< "." << Impl::t_tid;
+  out << Impl::g_runners[Impl::t_tid]->m_rank << "." << Impl::t_tid;
   return out.str();
 }
 

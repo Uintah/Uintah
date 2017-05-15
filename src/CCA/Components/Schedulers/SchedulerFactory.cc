@@ -26,6 +26,7 @@
 #include <CCA/Components/Schedulers/SchedulerCommon.h>
 #include <CCA/Components/Schedulers/MPIScheduler.h>
 #include <CCA/Components/Schedulers/DynamicMPIScheduler.h>
+#include <CCA/Components/Schedulers/KokkosOpenMPScheduler.h>
 #include <CCA/Components/Schedulers/UnifiedScheduler.h>
 
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -78,6 +79,10 @@ SchedulerFactory::create( const ProblemSpecP   & ps
 
   else if (scheduler == "Unified") {
     sch = scinew UnifiedScheduler(world, output, nullptr);
+  }
+
+  else if (scheduler == "KokkosOpenMP") {
+    sch = scinew KokkosOpenMPScheduler(world, output, nullptr);
   }
 
   else {

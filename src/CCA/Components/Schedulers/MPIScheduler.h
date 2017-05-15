@@ -91,11 +91,11 @@ class MPIScheduler : public SchedulerCommon {
 
     virtual void processMPIRecvs( int test_type );
 
-            void postMPISends( DetailedTask* dtask, int iteration, int thread_id = 0 );
+            void postMPISends( DetailedTask* dtask, int iteration );
 
             void postMPIRecvs( DetailedTask* dtask, bool only_old_recvs, int abort_point, int iteration );
 
-            void runTask( DetailedTask* dtask, int iteration, int thread_id = 0 );
+            void runTask( DetailedTask* dtask, int iteration );
 
     virtual void runReductionTask( DetailedTask* dtask );
 
@@ -131,7 +131,7 @@ class MPIScheduler : public SchedulerCommon {
 
     void computeNetRunTimeStats(InfoMapper< SimulationState::RunTimeStat, double >& runTimeStats);
 
-    // Performs the reduction task. (In threaded schedulers, a single worker thread will execute this.)
+    // Performs the reduction task. (In threaded, Unified scheduler, a single worker thread will execute this.)
     virtual void initiateReduction( DetailedTask* dtask );
 
     // timing statistics to test the MPI functionality

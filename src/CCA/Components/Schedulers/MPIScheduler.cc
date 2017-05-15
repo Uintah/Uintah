@@ -247,7 +247,6 @@ MPIScheduler::initiateReduction( DetailedTask* dtask )
 void
 MPIScheduler::runTask( DetailedTask * dtask
                      , int            iteration
-                     , int            thread_id /* = 0 */
                      )
 {
   if (m_tracking_vars_print_location & SchedulerCommon::PRINT_BEFORE_EXEC) {
@@ -264,7 +263,7 @@ MPIScheduler::runTask( DetailedTask * dtask
     printTrackedVars(dtask, SchedulerCommon::PRINT_AFTER_EXEC);
   }
 
-  postMPISends(dtask, iteration, thread_id);
+  postMPISends(dtask, iteration);
 
   dtask->done(m_dws);
 
@@ -329,7 +328,6 @@ MPIScheduler::runReductionTask( DetailedTask* dtask )
 void
 MPIScheduler::postMPISends( DetailedTask * dtask
                           , int            iteration
-                          , int            thread_id  /* = 0 */
                           )
 {
   RuntimeStats::SendTimer mpi_send_timer;

@@ -85,7 +85,7 @@ class UnifiedScheduler : public MPIScheduler  {
 
   public:
 
-    UnifiedScheduler( const ProcessorGroup * myworld, const Output * oport, UnifiedScheduler * parentScheduler = 0 );
+    UnifiedScheduler( const ProcessorGroup * myworld, const Output * oport, UnifiedScheduler * parentScheduler = nullptr );
 
     virtual ~UnifiedScheduler();
     
@@ -104,7 +104,7 @@ class UnifiedScheduler : public MPIScheduler  {
     void runTasks( int thread_id );
 
     static const int bufferPadding = 128;  // 32 threads can write floats out in one coalesced access.  (32 * 4 bytes = 128 bytes).
-                                           // TODO: Ideally, this number should be determined from the cuda arch during the
+                                           // TODO: Ideally, this number should be determined from the CUDA arch during the
                                            // CMAKE/configure step so that future programmers don't have to manually remember to
                                            // update this value if it ever changes.
 

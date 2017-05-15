@@ -35,6 +35,7 @@ SRCS += \
         $(SRCDIR)/DetailedTask.cc             \
         $(SRCDIR)/DetailedTasks.cc            \
         $(SRCDIR)/DynamicMPIScheduler.cc      \
+        $(SRCDIR)/KokkosOpenMPScheduler.cc    \
         $(SRCDIR)/MemoryLog.cc                \
         $(SRCDIR)/MPIScheduler.cc             \
         $(SRCDIR)/OnDemandDataWarehouse.cc    \
