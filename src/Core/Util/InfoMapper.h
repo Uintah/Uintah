@@ -123,9 +123,10 @@ public:
   virtual void insert( const E key, const std::string name,
 		       const std::string units, const T value )
   {
-    if( !exists( key ) && !exists( name ) && (int) key == d_keys.size() )
+    if( !exists( key ) && !exists( name ) &&
+	(unsigned int) key == d_keys.size() )
     {
-      d_keys[key] = (int) key;
+      d_keys[key] = (unsigned int) key;
       d_values.push_back( value );
       d_names.push_back( name );
       d_units.push_back( units );
@@ -211,7 +212,7 @@ public:
   };
 
 protected:
-  std::map< E, int > d_keys;
+  std::map< E, unsigned int > d_keys;
   std::vector< T > d_values;
   std::vector< std::string > d_names;
   std::vector< std::string > d_units;
