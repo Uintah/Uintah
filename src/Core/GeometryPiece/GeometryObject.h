@@ -90,8 +90,11 @@ public:
   GeometryObject(GeometryPieceP piece, ProblemSpecP&,std::list<DataItem>& data);
 
   //////////
-  // Insert Documentation Here:
-  ~GeometryObject() {}
+  // Destructor
+  ~GeometryObject()
+    {
+      std::cout << "In GeometryObjectDestructor" << std::endl;
+    }
 
   void outputProblemSpec(ProblemSpecP& ps);
 
@@ -164,4 +167,3 @@ private:
 } // End namespace Uintah
       
 #endif // __GEOMETRY_OBJECT_H__
-

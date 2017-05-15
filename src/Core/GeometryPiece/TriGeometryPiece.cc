@@ -105,6 +105,11 @@ TriGeometryPiece& TriGeometryPiece::operator=(const TriGeometryPiece& rhs)
 
 TriGeometryPiece::~TriGeometryPiece()
 {
+  cout << "In TriGeometryPiece Destructor" << endl;
+  d_points.clear();
+  d_tri.clear();
+  d_planes.clear();
+
   delete d_grid;
 }
 
