@@ -34,9 +34,11 @@
 
 #include <StandAlone/tools/uda2vis/uda2vis.h>
 
+#include <CCA/Components/Regridder/PerPatchVars.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/LoadBalancerPort.h>
 #include <Core/DataArchive/DataArchive.h>
+#include <Core/Grid/Variables/PerPatch.h>
 
 #include <algorithm>
 #include <cstdio>
@@ -338,8 +340,8 @@ static GridDataRaw* readGridData(DataArchive *archive,
                                  int low[3],
                                  int high[3])
 {
-  IntVector ilow(low[0], low[1], low[2]);
-  IntVector ihigh(high[0], high[1], high[2]);
+  // IntVector ilow(low[0], low[1], low[2]);
+  // IntVector ihigh(high[0], high[1], high[2]);
 
   // this queries the entire patch, including extra cells and boundary cells
   VAR<T> var;
@@ -676,7 +678,6 @@ namespace Uintah {
 TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
                               SimulationStateP simStateP,
                               GridP gridP,
-                              int timestep,
                               bool useExtraCells)
 {
   DataWarehouse    * dw = schedulerP->getLastDW();
@@ -972,14 +973,13 @@ static GridDataRaw* readGridData(SchedulerP schedulerP,
                                  const LevelP level,
                                  const VarLabel *varLabel,
                                  int material,
-                                 int timestep,
                                  int low[3],
                                  int high[3])
 {
   DataWarehouse *dw = schedulerP->getLastDW();
 
-  IntVector ilow(low[0], low[1], low[2]);
-  IntVector ihigh(high[0], high[1], high[2]);
+  // IntVector ilow(low[0], low[1], low[2]);
+  // IntVector ihigh(high[0], high[1], high[2]);
 
   // this queries the entire patch, including extra cells and boundary cells
   VAR<T> var;
@@ -1019,6 +1019,75 @@ static GridDataRaw* readGridData(SchedulerP schedulerP,
   return gd;
 }
 
+/////////////////////////////////////////////////////////////////////
+// Read the grid data for the given index range
+// This uses the scheduler for in-situ.
+template<template <typename> class VAR, typename T>
+static GridDataRaw* readPatchData(SchedulerP schedulerP,
+				  const Patch *patch,
+				  const LevelP level,
+				  const VarLabel *varLabel,
+				  int material,
+				  int low[3],
+				  int high[3])
+{
+  DataWarehouse *dw = schedulerP->getLastDW();
+
+  // IntVector ilow(low[0], low[1], low[2]);
+  // IntVector ihigh(high[0], high[1], high[2]);
+
+  // this queries the entire patch, including extra cells and boundary cells
+  VAR<T> var;
+  schedulerP->getLoadBalancer()->getPatchwiseProcessorAssignment(patch);
+
+  //  IntVector low = var.getLowIndex();
+  //  IntVector high = var.getHighIndex();
+
+  GridDataRaw *gd = new GridDataRaw;
+  gd->components = numComponents<T>();
+
+  for (int i=0; i<3; i++) {
+    gd->low[i] = low[i];
+    gd->high[i] = high[i];
+  }
+
+  gd->num = (high[0]-low[0])*(high[1]-low[1])*(high[2]-low[2]);
+  gd->data = new double[gd->num*gd->components];
+  
+  if( dw->exists( varLabel, material, patch ) )
+  {
+    if (varLabel->getName() == "refinePatchFlag")
+    {
+      VAR< PatchFlagP > refinePatchFlag;
+
+      dw->get(refinePatchFlag, varLabel, material, patch);
+      
+      const T p = refinePatchFlag.get().get_rep()->flag;
+
+      for (int i=0; i<gd->num; ++i)
+	copyComponents<T>(&gd->data[i*gd->components], p);
+    }
+    else
+    {
+      PerPatchBase* patchVar = dynamic_cast<PerPatchBase*>(&var);
+      
+      dw->get(*patchVar, varLabel, material, patch);
+
+      const T *p = (T*) patchVar->getBasePointer();
+
+      for (int i=0; i<gd->num; ++i)
+	copyComponents<T>(&gd->data[i*gd->components], *p);
+    }
+  }
+  else
+  {
+    for (int i=0; i<gd->num*gd->components; ++i)
+      gd->data[i] = 0;
+  }
+  
+  return gd;
+}
+
 
 /////////////////////////////////////////////////////////////////////
 // Read the grid data for a given patch.
@@ -1029,34 +1098,77 @@ GridDataRaw* getGridDataMainType(SchedulerP schedulerP,
                                  const LevelP level,
                                  const VarLabel *varLabel,
                                  int material,
-                                 int timestep,
                                  int low[3],
                                  int high[3],
                                  const Uintah::TypeDescription *subtype)
-{
+{  
   switch (subtype->getType())
   {
   case Uintah::TypeDescription::double_type:
     return readGridData<VAR, double>(schedulerP, patch, level, varLabel,
-                                     material, timestep, low, high);
+                                     material, low, high);
   case Uintah::TypeDescription::float_type:
     return readGridData<VAR, float>(schedulerP, patch, level, varLabel,
-                                    material, timestep, low, high);
+                                    material, low, high);
   case Uintah::TypeDescription::int_type:
     return readGridData<VAR, int>(schedulerP, patch, level, varLabel,
-                                  material, timestep, low, high);
+                                  material, low, high);
   case Uintah::TypeDescription::Vector:
     return readGridData<VAR, Vector>(schedulerP, patch, level, varLabel,
-                                     material, timestep, low, high);
+                                     material, low, high);
   case Uintah::TypeDescription::Stencil7:
     return readGridData<VAR, Stencil7>(schedulerP, patch, level, varLabel,
-                                       material, timestep, low, high);
+                                       material, low, high);
   case Uintah::TypeDescription::Stencil4:
     return readGridData<VAR, Stencil4>(schedulerP, patch, level, varLabel,
-                                       material, timestep, low, high);
+                                       material, low, high);
   case Uintah::TypeDescription::Matrix3:
     return readGridData<VAR, Matrix3>(schedulerP, patch, level, varLabel,
-                                      material, timestep, low, high);
+                                      material, low, high);
+  case Uintah::TypeDescription::bool_type:
+  case Uintah::TypeDescription::short_int_type:
+  case Uintah::TypeDescription::long_type:
+  case Uintah::TypeDescription::long64_type:
+    std::cerr << "Uintah/VisIt Libsim Error: "
+              << "Subtype " << subtype->getName() << " is not implemented..."
+              << std::endl;
+    return nullptr;
+  default:
+    std::cerr << "Uintah/VisIt Libsim Error: unknown subtype: "
+              << subtype->getType() << "  for variable: "
+              << subtype->getName() << std::endl;
+    return nullptr;
+  }
+}
+
+/////////////////////////////////////////////////////////////////////
+// Read the grid data for a given patch.
+// This uses the scheduler for in-situ.
+template<template<typename> class VAR>
+GridDataRaw* getPatchDataMainType(SchedulerP schedulerP,
+				  const Patch *patch,
+				  const LevelP level,
+				  const VarLabel *varLabel,
+				  int material,
+				  int low[3],
+				  int high[3],
+				  const Uintah::TypeDescription *subtype)
+{
+  switch (subtype->getType())
+  {
+  case Uintah::TypeDescription::double_type:
+    return readPatchData<VAR, double>(schedulerP, patch, level, varLabel,
+                                     material, low, high);
+  case Uintah::TypeDescription::float_type:
+    return readPatchData<VAR, float>(schedulerP, patch, level, varLabel,
+                                    material, low, high);
+  case Uintah::TypeDescription::int_type:
+    return readPatchData<VAR, int>(schedulerP, patch, level, varLabel,
+                                  material, low, high);
+  case Uintah::TypeDescription::Vector:
+  case Uintah::TypeDescription::Stencil7:
+  case Uintah::TypeDescription::Stencil4:
+  case Uintah::TypeDescription::Matrix3:
   case Uintah::TypeDescription::bool_type:
   case Uintah::TypeDescription::short_int_type:
   case Uintah::TypeDescription::long_type:
@@ -1083,7 +1195,6 @@ GridDataRaw* getGridData(SchedulerP schedulerP,
                          int patch_i,
                          std::string variable_name,
                          int material,
-                         int timestep,
                          int low[3],
                          int high[3])
 {
@@ -1131,24 +1242,28 @@ GridDataRaw* getGridData(SchedulerP schedulerP,
   {
   case Uintah::TypeDescription::CCVariable:
     return getGridDataMainType<constCCVariable>(schedulerP, patch, level,
-                                                varLabel, material, timestep,
+                                                varLabel, material,
                                                 low, high, subtype);
   case Uintah::TypeDescription::NCVariable:
     return getGridDataMainType<constNCVariable>(schedulerP, patch, level,
-                                                varLabel, material, timestep,
+                                                varLabel, material,
                                                 low, high, subtype);
   case Uintah::TypeDescription::SFCXVariable:
     return getGridDataMainType<constSFCXVariable>(schedulerP, patch, level,
-                                                  varLabel, material, timestep,
+                                                  varLabel, material,
                                                   low, high, subtype);
   case Uintah::TypeDescription::SFCYVariable:
     return getGridDataMainType<constSFCYVariable>(schedulerP, patch, level,
-                                                  varLabel, material, timestep,
+                                                  varLabel, material,
                                                   low, high, subtype);
   case Uintah::TypeDescription::SFCZVariable:
     return getGridDataMainType<constSFCZVariable>(schedulerP, patch, level,
-                                                  varLabel, material, timestep,
+                                                  varLabel, material,
                                                   low, high, subtype);
+  case Uintah::TypeDescription::PerPatch:
+    return getPatchDataMainType<PerPatch>(schedulerP, patch, level,
+					  varLabel, material,
+					  low, high, subtype);
   default:
     std::cerr << "Uintah/VisIt Libsim Error: unknown type: "
               << maintype->getName() << " for variable: "
@@ -1165,8 +1280,7 @@ template<typename T>
 ParticleDataRaw* readParticleData(SchedulerP schedulerP,
                                   const Patch *patch,
                                   const VarLabel *varLabel,
-                                  int material,
-                                  int timestep)
+                                  int material)
 {
   DataWarehouse *dw = schedulerP->getLastDW();
 
@@ -1297,8 +1411,7 @@ ParticleDataRaw* getParticleData(SchedulerP schedulerP,
                                  int level_i,
                                  int patch_i,
                                  std::string variable_name,
-                                 int material,
-                                 int timestep)
+                                 int material)
 {
   LevelP level = gridP->getLevel(level_i);
   const Patch *patch = level->getPatch(patch_i);
@@ -1341,32 +1454,23 @@ ParticleDataRaw* getParticleData(SchedulerP schedulerP,
 
   switch (subtype->getType()) {
   case Uintah::TypeDescription::double_type:
-    return readParticleData<double>(schedulerP, patch, varLabel,
-                                    material, timestep);
+    return readParticleData<double>(schedulerP, patch, varLabel, material);
   case Uintah::TypeDescription::float_type:
-    return readParticleData<float>(schedulerP, patch, varLabel,
-                                   material, timestep);
+    return readParticleData<float>(schedulerP, patch, varLabel, material);
   case Uintah::TypeDescription::int_type:
-    return readParticleData<int>(schedulerP, patch, varLabel,
-                                 material, timestep);
+    return readParticleData<int>(schedulerP, patch, varLabel, material);
   case Uintah::TypeDescription::long64_type:
-    return readParticleData<long64>(schedulerP, patch, varLabel,
-                                    material, timestep);
+    return readParticleData<long64>(schedulerP, patch, varLabel, material);
   case Uintah::TypeDescription::Point:
-    return readParticleData<Point>(schedulerP, patch, varLabel,
-                                   material, timestep);
+    return readParticleData<Point>(schedulerP, patch, varLabel, material);
   case Uintah::TypeDescription::Vector:
-    return readParticleData<Vector>(schedulerP, patch, varLabel,
-                                    material, timestep);
+    return readParticleData<Vector>(schedulerP, patch, varLabel, material);
   case Uintah::TypeDescription::Stencil7:
-    return readParticleData<Stencil7>(schedulerP, patch, varLabel,
-                                      material, timestep);
+    return readParticleData<Stencil7>(schedulerP, patch, varLabel, material);
   case Uintah::TypeDescription::Stencil4:
-    return readParticleData<Stencil4>(schedulerP, patch, varLabel,
-                                      material, timestep);
+    return readParticleData<Stencil4>(schedulerP, patch, varLabel, material);
   case Uintah::TypeDescription::Matrix3:
-    return readParticleData<Matrix3>(schedulerP, patch, varLabel,
-                                     material, timestep);
+    return readParticleData<Matrix3>(schedulerP, patch, varLabel, material);
   default:
     std::cerr << "Uintah/VisIt Libsim Error: " 
               << "unknown subtype for particle data: " << subtype->getName()

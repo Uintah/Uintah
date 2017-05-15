@@ -45,6 +45,7 @@ public:
     if (type.find("SFCZ")!=std::string::npos) return SFCZ;
     if (type.find("CC")  !=std::string::npos) return CC;
     if (type.find("NC")  !=std::string::npos) return NC;
+    if (type.find("PerPatch") !=std::string::npos) return CC;
     return UNKNOWN;
   }
 

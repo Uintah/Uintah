@@ -48,7 +48,6 @@ namespace Uintah {
 TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
 			      SimulationStateP simStateP,
 			      GridP grid,
-			      int timestep,
 			      bool useExtraCells);
 
 GridDataRaw* getGridData(SchedulerP schedulerP,
@@ -57,7 +56,6 @@ GridDataRaw* getGridData(SchedulerP schedulerP,
 			 int patch_i,
 			 std::string variable_name,
 			 int material,
-			 int timestep,
 			 int low[3],
 			 int high[3]);
 
@@ -66,8 +64,7 @@ ParticleDataRaw* getParticleData(SchedulerP schedulerP,
 				 int level_i,
 				 int patch_i,
 				 std::string variable_name,
-				 int material,
-				 int timestep);
+				 int material);
 
 void GetLevelAndLocalPatchNumber(TimeStepInfo* stepInfo,
 				 int global_patch, 
