@@ -92,7 +92,7 @@ SPATIAL_OPS_TAG=abb34f07debc564606397f6a308683c607856ab2
 TAB_PROPS_TAG=0a671fcdaf53cb517666ba760513a7ce141ecb6e
 RAD_PROPS_TAG=a2626cdccfbb97ccb7d68d43bfe085194cccf4d5
 EXPR_LIB_TAG=18466da2aa0fb7145443abace53a029a6b98d7e5
-NSCBC_TAG=3def6a425e9d067b0befd5e7a17757e53ca2bc5e
+NSCBC_TAG=f0aae85a57082762fe2ca072d0fb74aa2bd0b5f2
 
 ############################################################################
 
