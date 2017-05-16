@@ -355,7 +355,10 @@ private:
     // nested class of DataArchive...
 
     // Info in the data file about the patch-matl-var.
-    VarHashMap d_datafileInfo;
+    // Replaced the "VarHashMap d_datafileInfo;" with the two vectors (below) in order to
+    // keep the variables in a defined order.  This occurred after svn revision r56540.
+    std::vector<VarnameMatlPatch> d_datafileInfoIndex;
+    std::vector<DataFileInfo>     d_datafileInfoValue;
 
     // Patch info (separate by levels) - proc, whether parsed, datafile, etc.
     // Gets expanded and proc is set during queryGrid.  Other fields are set

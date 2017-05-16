@@ -660,17 +660,21 @@ DataArchive::query(       Variable     & var,
   if( !dfi ) {
     // If this is a virtual patch, grab the real patch, but only do that here - in the next query, we want
     // the data to be returned in the virtual coordinate space.
-    if (!timedata.d_datafileInfo.lookup(VarnameMatlPatch(name, matlIndex, patchid), datafileinfo)) {
+
+    vector<VarnameMatlPatch>::iterator iter = std::find( timedata.d_datafileInfoIndex.begin(), timedata.d_datafileInfoIndex.end(), VarnameMatlPatch(name, matlIndex, patchid ) );
+    if( iter == timedata.d_datafileInfoIndex.end() ) { // Previously used the hashmap lookup( timedata.d_datafileInfo.lookup() )
       cerr << "VARIABLE NOT FOUND: " << name 
            << ", material index " << matlIndex 
            << ", Level " << patch->getLevel()->getIndex() 
            << ", patch " << patch->getID() 
            << ", time index " << timeIndex << "\n";
-      throw InternalError( "DataArchive::query:Variable not found", __FILE__, __LINE__ );
-    }
-    dfi = &datafileinfo;
-  }
 
+      throw InternalError("DataArchive::query:Variable not found", __FILE__, __LINE__);
+    }
+    
+    int pos = std::distance( timedata.d_datafileInfoIndex.begin(), iter );
+    dfi = &timedata.d_datafileInfoValue[ pos ];
+  }
 
   const TypeDescription* td = var.virtualGetTypeDescription();
   ASSERT(td->getName() == varinfo.type);
@@ -1126,13 +1130,17 @@ DataArchive::restartInitialize( const int                index,
   // Iterate through all entries in the VarData hash table, and load the
   // variables if that data belongs on this processor.
 
-  VarHashMapIterator iter( &timedata.d_datafileInfo );
 
-  for( ; iter.ok(); ++iter ) {
-    VarnameMatlPatch & key  = iter.get_key();
-    DataFileInfo     & data = iter.get_data();
+  //VarHashMapIterator iter( &timedata.d_datafileInfo );
+  vector<VarnameMatlPatch>::iterator iter;
 
-    // get the Patch from the Patch ID (ID of -1 = nullptr - for reduction vars)
+  for( iter = timedata.d_datafileInfoIndex.begin(); iter != timedata.d_datafileInfoIndex.end(); ++iter ) {
+
+    int pos = std::distance( timedata.d_datafileInfoIndex.begin(), iter );
+    VarnameMatlPatch & key  = *iter;
+    DataFileInfo     & data = timedata.d_datafileInfoValue[ pos ];
+
+    // Get the Patch from the Patch ID (ID of -1 = nullptr - for reduction vars)
     const Patch* patch = key.patchid_ == -1 ? nullptr : grid->getPatchByID( key.patchid_, 0 );
     int matl = key.matlIndex_;
 
@@ -1212,22 +1220,23 @@ DataArchive::reduceUda_ReadUda( const ProcessorGroup   * pg,
   //__________________________________
   // Iterate through all entries in the VarData hash table, and load the variables.
 
-  for( VarHashMapIterator iter(&timedata.d_datafileInfo); iter.ok(); ++iter) {
-    VarnameMatlPatch& key = iter.get_key();
-    DataFileInfo& data    = iter.get_data();
+  for( vector<VarnameMatlPatch>::iterator iter = timedata.d_datafileInfoIndex.begin(); iter != timedata.d_datafileInfoIndex.end(); ++iter ) {
 
-    // get the Patch from the Patch ID (ID of -1 = nullptr - for reduction vars)
+    int                pos  = std::distance( timedata.d_datafileInfoIndex.begin(), iter );
+    VarnameMatlPatch & key  = *iter;
+    DataFileInfo     & data = timedata.d_datafileInfoValue[ pos ];
+
+    // Get the Patch from the Patch ID (ID of -1 = nullptr - for reduction vars)
     const Patch* patch = key.patchid_ == -1 ? nullptr : grid->getPatchByID(key.patchid_, 0);
     int matl = key.matlIndex_;
 
     VarLabel* label = varMap[ key.name_ ];
 
-    if (label == 0) {
+    if ( label == nullptr ) {
       continue;
     }
 
-    // If this proc does not own this patch
-    // then ignore the variable
+    // If this process does not own this patch, then ignore the variable...
     int proc = lb->getPatchwiseProcessorAssignment(patch);
     if ( proc != pg->myrank() ) {
       continue;
@@ -1500,7 +1509,9 @@ DataArchive::TimeData::purgeCache()
 {
   d_grid = 0;
 
-  d_datafileInfo.remove_all();
+  d_datafileInfoIndex.clear();
+  d_datafileInfoValue.clear();
+  
   d_patchInfo.clear();
   d_varInfo.clear();
   d_xmlFilenames.clear();
@@ -1611,12 +1622,13 @@ DataArchive::TimeData::parseFile( const string & filename, int levelNum, int bas
       VarnameMatlPatch vmp(varname, index, patchid);
       DataFileInfo     dummy;
 
-      if (d_datafileInfo.lookup(vmp, dummy) == 1) {
-        //cerr << "Duplicate variable name: " << name << endl;
+      if( std::find( d_datafileInfoIndex.begin(), d_datafileInfoIndex.end(), vmp ) != d_datafileInfoIndex.end() ) {
+        // cerr << "Duplicate variable name: " << name << endl;
       }
       else {
-        DataFileInfo dfi(start, end, numParticles);
-        d_datafileInfo.insert(vmp, dfi);
+        DataFileInfo dfi( start, end, numParticles );
+        d_datafileInfoIndex.push_back( vmp );
+        d_datafileInfoValue.push_back( dfi );
       }
     }
     else if( vnode->getNodeType() != ProblemSpec::TEXT_NODE ) {
@@ -1797,7 +1809,7 @@ DataArchive::queryMaterials( const string & varname,
     VarnameMatlPatch vmp(varname, i-1, patch->getRealPatch()->getID());
     DataFileInfo dummy;
 
-    if (timedata.d_datafileInfo.lookup(vmp, dummy) == 1) {
+    if( std::find( timedata.d_datafileInfoIndex.begin(), timedata.d_datafileInfoIndex.end(), vmp ) != timedata.d_datafileInfoIndex.end() ) {
       matls.addInOrder(i-1);
     }
   }
@@ -1859,7 +1871,7 @@ DataArchive::exists( const string& varname,
     VarnameMatlPatch vmp( varname, i-1, patch->getRealPatch()->getID() );
     DataFileInfo dummy;
 
-    if (timedata.d_datafileInfo.lookup(vmp, dummy) == 1){
+    if( std::find( timedata.d_datafileInfoIndex.begin(), timedata.d_datafileInfoIndex.end(), vmp ) != timedata.d_datafileInfoIndex.end() ) {
       d_lock.unlock();
       return true;
     }
