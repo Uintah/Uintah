@@ -268,7 +268,7 @@ SpeciesTransportEquation::setup_convective_flux( FieldTagInfo& info )
   Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
   const Expr::Tag solnVarTag( solnVarName_, Expr::STATE_DYNAMIC );
   for( Uintah::ProblemSpecP convFluxParams=params_->findBlock("ConvectiveFlux");
-      convFluxParams != 0;
+      convFluxParams != nullptr;
       convFluxParams=convFluxParams->findNextBlock("ConvectiveFlux") )
   {
     setup_convective_flux_expression<FieldT>( convFluxParams, solnVarTag, factory, info );

@@ -109,7 +109,7 @@ namespace WasatchCore{
 
     if( psParams_ && psParams_->findBlock("ConvectiveFlux") ){
       for( Uintah::ProblemSpecP convFluxParams=psParams_->findBlock("ConvectiveFlux");
-          convFluxParams != 0;
+          convFluxParams != nullptr;
           convFluxParams=convFluxParams->findNextBlock("ConvectiveFlux") )
       {
         setup_convective_flux_expression<FieldT>( convFluxParams, solnVarTag, factory, info );

@@ -57,7 +57,7 @@ SpeciesTransportEquation::setup_diffusive_flux( FieldTagInfo& info )
   bool isFirstDirection = true;
 
   for( Uintah::ProblemSpecP diffFluxParams=params_->findBlock("DiffusiveFlux");
-       diffFluxParams != 0;
+       diffFluxParams != nullptr;
        diffFluxParams=diffFluxParams->findNextBlock("DiffusiveFlux") )
   {
     const std::string& primVarName = primVarTag_.name();
@@ -114,7 +114,7 @@ SpeciesTransportEquation::setup_diffusive_flux( FieldTagInfo& info )
       if( lewisParams ){
         std::vector<double> lewisNumbers(nspec_,1.0);  // all species default to 1.0 unless otherwise specified
         for( Uintah::ProblemSpecP specParam=lewisParams->findBlock("Species");
-            specParam != 0;
+            specParam != nullptr;
             specParam=lewisParams->findNextBlock("Species") )
         {
           std::string spnam;

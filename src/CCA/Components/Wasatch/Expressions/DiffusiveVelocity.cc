@@ -38,8 +38,8 @@
 template< typename VelT >
 DiffusiveVelocity<VelT>::
 DiffusiveVelocity( const Expr::Tag& turbDiffTag,
-                    const Expr::Tag& phiTag,
-                    const Expr::Tag& coefTag )
+                   const Expr::Tag& phiTag,
+                   const Expr::Tag& coefTag )
   : Expr::Expression<VelT>(),
     isTurbulent_( turbDiffTag != Expr::Tag() ),
     isConstCoef_( false       ),
@@ -57,8 +57,8 @@ DiffusiveVelocity( const Expr::Tag& turbDiffTag,
 template< typename VelT >
 DiffusiveVelocity<VelT>::
 DiffusiveVelocity( const Expr::Tag& turbDiffTag,
-                    const Expr::Tag& phiTag,
-                    const double coefVal )
+                   const Expr::Tag& phiTag,
+                   const double coefVal )
   : Expr::Expression<VelT>(),
     isTurbulent_( turbDiffTag != Expr::Tag() ),
     isConstCoef_( true        ),
