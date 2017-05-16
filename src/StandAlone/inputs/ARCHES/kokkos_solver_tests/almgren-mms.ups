@@ -26,6 +26,12 @@
     <save label="uVel"/>
     <save label="vVel"/>
     <save label="wVel"/>
+    <save label="gridX"/>
+    <save label="gridY"/>
+    <save label="gridZ"/>
+    <save label="ucellX"/>
+    <save label="vcellY"/>
+    <save label="wcellZ"/>
     <save label="gamma"/>
     <save label="pressure"/>
     <save label="b_press"/>
