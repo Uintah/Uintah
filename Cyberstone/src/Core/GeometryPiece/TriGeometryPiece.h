@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2017 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -29,7 +29,7 @@
 #include <Core/GeometryPiece/UniformGrid.h>
 #include <Core/Grid/Box.h>
 
-#include <Core/Geometry/Point.h>
+#include <Core/Geometry/FloatPoint.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Plane.h>
 
@@ -116,11 +116,11 @@ WARNING
          void readTri(const std::string& file);
          void makePlanes();
 //         void makeTriBoxes();
-         void insideTriangle(Point& p, int i, int& NCS, int& NES) const;
+         void insideTriangle(FloatPoint& p, int i, int& NCS, int& NES) const;
          
          std::string d_file;
          Box d_box;
-         std::vector<Point>     d_points;
+         std::vector<FloatPoint>     d_points;
          std::vector<IntVector> d_tri;
          std::vector<Plane>     d_planes;
 //         std::vector<Box>       d_boxes;

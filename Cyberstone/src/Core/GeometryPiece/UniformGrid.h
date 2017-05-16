@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2017 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -28,9 +28,10 @@
 #include <Core/GeometryPiece/GeometryPiece.h>
 #include <Core/Grid/Box.h>
 #include <Core/Grid/Variables/Array3.h>
+#include <Core/Geometry/FloatPoint.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/IntVector.h>
-#include <Core/Geometry/Plane.h>
+#include <Core/Geometry/FloatPlane.h>
 #include <vector>
 #include <list>
 
@@ -70,17 +71,17 @@ WARNING
  public:
    enum coord {X=0,Y=1,Z=2};
 
-   Tri(Point& p1, Point& p2, Point& p3);
+   Tri(FloatPoint& p1, FloatPoint& p2, FloatPoint& p3);
    Tri();
    ~Tri();
-   Point centroid();
-   Point vertex(int i);
-   std::list<Tri> makeTriList(std::vector<IntVector>& tris, std::vector<Point>& pts);
+   FloatPoint centroid();
+   FloatPoint vertex(int i);
+   std::list<Tri> makeTriList(std::vector<IntVector>& tris, std::vector<FloatPoint>& pts);
    bool inside(Point& p);
-   Plane plane();
+   FloatPlane plane();
  private:
-   Point d_points[3];
-   Plane d_plane;
+   FloatPoint d_points[3];
+   FloatPlane d_plane;
  };
  
  class UniformGrid {
@@ -90,14 +91,14 @@ WARNING
    ~UniformGrid();
    UniformGrid& operator=(const UniformGrid&);
    UniformGrid(const UniformGrid&);
-   IntVector cellID(Point point);
+   IntVector cellID(FloatPoint point);
    void buildUniformGrid(std::list<Tri>& polygons);
    void countIntersections(const Point& ray, int& crossings);
       
  private:
    Array3<std::list<Tri> > d_grid;
    Box d_bound_box;
-   Vector d_max_min;
+   FloatVector d_max_min;
  };
 
 
