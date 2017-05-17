@@ -100,7 +100,7 @@ Discretization::calculateVelocityCoeff(const Patch* patch,
                                        SFCYVariable<double>* conv_scheme_y,
                                        SFCZVariable<double>* conv_scheme_z,
                                        MOMCONV conv_scheme,
-                                       double Re_limit)
+                                       double Re_limit, double Re_limit_wall_upwind)
 {
    // ignore faces that lie on the edge of the computational domain
   // in the principal direction
@@ -190,7 +190,7 @@ Discretization::calculateVelocityCoeff(const Patch* patch,
                            coeff_constvars->denRefArray, coeff_vars->uVelNonlinearSrc,
                            *volFraction,
                            delta_t, grav, dx, dy, dz,
-                           wall1, wall2, Re_limit,
+                           wall1, wall2, Re_limit_wall_upwind,
                            idxLoU, idxHiU);
       break;
     case Discretization::HYBRID:

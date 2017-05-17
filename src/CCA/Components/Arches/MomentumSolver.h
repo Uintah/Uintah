@@ -271,6 +271,7 @@ private:
   std::string _init_type;
   Discretization::MOMCONV d_conv_scheme;
   double d_re_limit;
+  double d_re_limit_wall_upwind; 
 
   // constant initialization ------------------------
   class ConstantVel : public VelocityInitBase {

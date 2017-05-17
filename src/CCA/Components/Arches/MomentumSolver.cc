@@ -129,6 +129,7 @@ MomentumSolver::problemSetup(const ProblemSpecP& params,
     throw InvalidValue("Convection scheme not supported: " + conv_scheme, __FILE__, __LINE__);
   }
   db->getWithDefault("Re_limit",d_re_limit,2.0);
+  db->getWithDefault("Re_limit_wall_upwind",d_re_limit_wall_upwind,2.0);
 
   // -------------- initialization
   if ( db->findBlock("initialization") ){
@@ -754,7 +755,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
                                           delta_t, d_central,
                                           cellinfo, &velocityVars,
                                           &constVelocityVars, &volFraction, &conv_scheme_x, &conv_scheme_y, &conv_scheme_z, d_conv_scheme,
-                                          d_re_limit );
+                                          d_re_limit, d_re_limit_wall_upwind );
 
     //  //__________________________________
     //  //  Compute the sources

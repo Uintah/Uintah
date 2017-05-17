@@ -1049,10 +1049,18 @@
         <extra_table_lookup             spec="OPTIONAL NO_DATA"/> <!-- perform an extra table lookup at Stage 2 of the algorithm -->
 
         <MomentumSolver                 spec="REQUIRED NO_DATA" >
+
+          <!-- CONVECTION SCHEMES -->
+          <!-- upwind = always upwind everywhere (generally not encouraged to run with upwind)-->
+          <!-- central = always central everywhere (preferred in most cases) -->
+          <!-- hybrid = upwind when Re limit is met. ALWAYS upwinding tangential velocities on walls -->
+          <!-- wall_upwind = upwinding tangential velocities on walls, central in all interior cells -->
+          <!-- old_* = original schemes from CSAFE Arches -->
+          <convection_scheme            spec="REQUIRED STRING 'central, upwind, wall_upwind, hybrid, old_central, old_upwind'"/>
+          <Re_limit                     spec="OPTIONAL DOUBLE 'positive'"/> <!-- for HYBRID: Upwind if Re > value, else central -->
+          <Re_limit_wall_upwind         spec="OPTIONAL DOUBLE 'positive'"/> <!-- for WALL_UPWIND: Upwind ON WALLS if Re > value, else central -->
+
           <filter_divergence_constraint spec="OPTIONAL BOOLEAN" />
-          <convection_scheme            spec="REQUIRED STRING 'central, upwind, wall_upwind, hybrid, old_central, old_upwind'" />
-          <!-- wallupwind = upwinding on walls, central otherwise (cheap, ad hoc wall model)-->
-          <Re_limit                     spec="OPTIONAL DOUBLE 'positive'"/> <!-- for Upwind and Wallupwind: Upwind > this Re, Central < this Re -->
           <src                          spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"/>
 
