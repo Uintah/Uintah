@@ -365,7 +365,7 @@ cleanreally reallyclean::
 ifeq ($(CC_DEPEND_EXT),depend.mk)
 	rm -f $(patsubst %,%/depend.mk, $(ALLOBJSUBDIRS))
 else
-	rm -f $(patsubst %,%/*$(CC_DEPEND_EXT), $(ALLOBJSUBDIRS))
+	rm -f $(patsubst %,%/*.$(CC_DEPEND_EXT), $(ALLOBJSUBDIRS))
 endif
         # Remove core files (except on Macs (which have case-insensitive file systems... (sigh))
 ifneq ($(IS_OSX),yes)
