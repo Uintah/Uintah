@@ -278,13 +278,6 @@ RMCRTCommon::sched_sigmaT4( const LevelP& level,
   sched->addTask( tsk, level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT );
 }
 
-
-//void Ray::sched_Coarsen_Q ( const LevelP& coarseLevel,
-                            //SchedulerP& sched,
-                            //Task::WhichDW this_dw,
-                            //const bool modifies,
-                            //const int radCalc_freq)
-
 //______________________________________________________________________
 //
 //______________________________________________________________________
