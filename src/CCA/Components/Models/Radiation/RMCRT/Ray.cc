@@ -34,10 +34,13 @@
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Math/MersenneTwister.h>
-
-#include <fstream>
+#include <Core/Util/Timers/Timers.hpp>
 
 #include <include/sci_defs/uintah_testdefs.h.in>
+
+#include <sci_defs/visit_defs.h>
+
+#include <fstream>
 
 // TURN ON debug flag in src/Core/Math/MersenneTwister.h to compare with Ray:CPU
 #define DEBUG -9     // 1: divQ, 2: boundFlux, 3: scattering
@@ -96,6 +99,11 @@ Ray::Ray( const TypeDescription::Type FLT_DBL ) : RMCRTCommon( FLT_DBL)
     d_mag_grad_sigmaT4Label= VarLabel::create( "mag_grad_sigmaT4", CCVariable<float>::getTypeDescription() );
   }
 
+/*`==========TESTING==========*/
+#ifdef HAVE_VISIT
+  d_PPTimerLabel = VarLabel::create( "Ray_PPTimer", PerPatch<double>::getTypeDescription() );
+#endif  
+/*===========TESTING==========`*/
 
   d_isDbgOn       = dbg2.active();
   d_dbgCells.push_back( IntVector(0,0,0));
@@ -144,10 +152,15 @@ Ray::~Ray()
   VarLabel::destroy( d_flaggedCellsLabel );
   VarLabel::destroy( d_ROI_LoCellLabel );
   VarLabel::destroy( d_ROI_HiCellLabel );
+/*`==========TESTING==========*/
+#ifdef HAVE_VISIT
+  VarLabel::destroy( d_PPTimerLabel );
+#endif
+/*===========TESTING==========`*/
+   
 //  VarLabel::destroy( d_divQFiltLabel );
 //  VarLabel::destroy( d_boundFluxFiltLabel );
-
-
+    
   if( d_radiometer) {
     delete d_radiometer;
   }
@@ -493,7 +506,7 @@ Ray::sched_rayTrace( const LevelP& level,
     tsk->requires( sigma_dw ,    d_sigmaT4Label,   gac, n_ghostCells );
     tsk->requires( celltype_dw , d_cellTypeLabel , gac, n_ghostCells );
   }
-
+  
   // TODO This is a temporary fix until we can generalize GPU/CPU carry forward functionality.
   if ( !(Uintah::Parallel::usingDevice()) ) {
     // needed for carry Forward
@@ -525,7 +538,15 @@ Ray::sched_rayTrace( const LevelP& level,
   }
   sched->addTask( tsk, level->eachPatch(), d_matlSet );
 
+/*`==========TESTING==========*/
+#ifdef HAVE_VISIT
+  sched->overrideVariableBehavior(d_PPTimerLabel->getName(),
+				  false, false, true, true, true);
+#endif
+/*===========TESTING==========`*/
 }
+
+
 //______________________________________________________________________
 //
 #ifdef UINTAH_ENABLE_KOKKOS
@@ -1064,7 +1085,6 @@ Ray::rayTrace( const ProcessorGroup* pg,
                Task::WhichDW which_celltype_dw,
                const int radCalc_freq )
 {
-
   const Level* level = getLevel(patches);
 
   // Control code to recompile the task graph
@@ -1077,6 +1097,18 @@ Ray::rayTrace( const ProcessorGroup* pg,
     new_dw->transferFrom( old_dw, d_divQLabel,          patches, matls, replaceVar );
     new_dw->transferFrom( old_dw, d_boundFluxLabel,     patches, matls, replaceVar );
     new_dw->transferFrom( old_dw, d_radiationVolqLabel, patches, matls, replaceVar );
+/*`==========TESTING==========*/
+#ifdef HAVE_VISIT
+    // new_dw->transferFrom( old_dw, d_PPTimerLabel,       patches, matls, replaceVar );
+
+    PerPatch< double > ppTimer = 0;
+    
+    for (int p=0; p<patches->size(); ++p) {
+      const Patch* patch = patches->get(p);
+      new_dw->put( ppTimer, d_PPTimerLabel, d_matl, patch);
+    }
+#endif
+/*===========TESTING==========`*/
     return;
   }
 
@@ -1098,8 +1130,8 @@ Ray::rayTrace( const ProcessorGroup* pg,
     celltype_dw->getLevel( celltype ,     d_cellTypeLabel, d_matl , level );
   }
 
-
-  double start=clock();
+  Timers::Simple timer;
+  timer.start();
 
   // patch loop
   for (int p=0; p < patches->size(); p++){
@@ -1359,17 +1391,26 @@ Ray::rayTrace( const ProcessorGroup* pg,
 
   }  // end of if(_solveDivQ)
 
-
-    double end =clock();
-    double efficiency = size/((end-start)/ CLOCKS_PER_SEC);
+    timer.stop();
+    
     if (patch->getGridIndex() == 0) {
-      cout<< endl;
-      cout << " RMCRT REPORT: Patch 0" << endl;
-      cout << " Used "<< (end-start) * 1000 / CLOCKS_PER_SEC<< " milliseconds of CPU time. \n" << endl;// Convert time to ms
-      cout << " Size: " << size << endl;
-      cout << " Efficiency: " << efficiency << " steps per sec" << endl;
-      cout << endl;
+      cout << endl
+	   << " RMCRT REPORT: Patch 0" << endl
+	   << " Used " << timer().milliseconds()
+	   << " milliseconds of CPU time. \n" << endl // Convert time to ms
+	   << " Size: " << size << endl
+	   << " Efficiency: " << size / timer().seconds()
+	   << " steps per sec" << endl
+	   << endl;
     }
+    
+/*`==========TESTING==========*/
+#ifdef HAVE_VISIT
+    PerPatch< double > ppTimer = timer().seconds();
+    new_dw->put( ppTimer, d_PPTimerLabel, d_matl, patch);
+#endif
+/*===========TESTING==========`*/
+
   }  //end patch loop
 }  // end ray trace method
 
@@ -1483,14 +1524,30 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
     tsk->modifies( d_divQLabel );
     tsk->modifies( d_boundFluxLabel );
     tsk->modifies( d_radiationVolqLabel );
-
+/*`==========TESTING==========*/
+#ifdef HAVE_VISIT
+    tsk->modifies( d_PPTimerLabel );
+#endif
+/*===========TESTING==========`*/
   } else {
     tsk->computes( d_divQLabel );
     tsk->computes( d_boundFluxLabel );
     tsk->computes( d_radiationVolqLabel );
-
+/*`==========TESTING==========*/
+#ifdef HAVE_VISIT
+    tsk->computes( d_PPTimerLabel );
+#endif
+/*===========TESTING==========`*/
   }
+  
   sched->addTask( tsk, level->eachPatch(), d_matlSet );
+
+/*`==========TESTING==========*/
+#ifdef HAVE_VISIT
+  sched->overrideVariableBehavior(d_PPTimerLabel->getName(),
+				  false, false, true, true, true);
+#endif
+/*===========TESTING==========`*/
 }
 
 
@@ -1520,6 +1577,18 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
     new_dw->transferFrom( old_dw, d_divQLabel,          finePatches, matls, replaceVar );
     new_dw->transferFrom( old_dw, d_boundFluxLabel,     finePatches, matls, replaceVar );
     new_dw->transferFrom( old_dw, d_radiationVolqLabel, finePatches, matls, replaceVar );
+/*`==========TESTING==========*/
+#ifdef HAVE_VISIT
+    // new_dw->transferFrom( old_dw, d_PPTimerLabel,       finePatches, matls, replaceVar );
+
+    PerPatch< double > ppTimer = 0;    
+
+    for (int p=0; p<finePatches->size(); ++p) {
+      const Patch* finePatch = finePatches->get(p);
+      new_dw->put( ppTimer, d_PPTimerLabel, d_matl, finePatch );
+    }
+#endif
+/*===========TESTING==========`*/
     return;
   }
 
@@ -1583,7 +1652,8 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
   abskg_fine         = abskg[maxLevels-1];
   sigmaT4OverPi_fine = sigmaT4OverPi[maxLevels-1];
 
-  double start=clock();
+  Timers::Simple timer;
+  timer.start();
 
   // Determine the size of the domain.
   BBox domain_BB;
@@ -1801,16 +1871,27 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
 
     //__________________________________
     //
-    double end =clock();
-    double efficiency = nRaySteps/((end-start)/ CLOCKS_PER_SEC);
+    timer.stop();
+    
     if (finePatch->getGridIndex() == levelPatchID) {
-      cout<< endl;
-      cout << " RMCRT REPORT: Patch " << levelPatchID <<endl;
-      cout << " Used "<< (end-start) * 1000 / CLOCKS_PER_SEC<< " milliseconds of CPU time. \n" << endl;// Convert time to ms
-      cout << " nRaySteps: " << nRaySteps << " nFluxRaySteps: " << nFluxRaySteps << endl;
-      cout << " Efficiency: " << efficiency << " steps per sec" << endl;
-      cout << endl;
+      cout << endl
+	   << " RMCRT REPORT: Patch " << levelPatchID << endl
+	   << " Used "<< timer().milliseconds()
+	   << " milliseconds of CPU time. \n" << endl // Convert time to ms
+	   << " nRaySteps: " << nRaySteps
+	   << " nFluxRaySteps: " << nFluxRaySteps << endl
+	   << " Efficiency: " << nRaySteps / timer().seconds()
+	   << " steps per sec" << endl
+	   << endl;
     }
+    
+/*`==========TESTING==========*/
+#ifdef HAVE_VISIT
+    PerPatch< double > ppTimer = timer().seconds();
+    new_dw->put( ppTimer, d_PPTimerLabel, d_matl, finePatch );
+#endif
+/*===========TESTING==========`*/
+    
   }  // end finePatch loop
 }  // end ray trace method
 
