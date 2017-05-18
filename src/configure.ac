@@ -598,9 +598,15 @@ SCI_ARG_WITH(MallocTrace,
 
 SCI_ARG_ENABLE(wasatch_3p,
   AC_HELP_STRING(--enable-wasatch_3p,
-                 Download and build the Wasatch Thirdparty libraries - TabProps ExprLibs SpatialOps RadProps NSCBC.),
+                 Download and build the Wasatch thirdparty libraries - TabProps ExprLibs SpatialOps RadProps NSCBC.),
   [build_wasatch_3p="$enableval"],
   [build_wasatch_3p="no"])
+
+SCI_ARG_ENABLE(pidx,
+  AC_HELP_STRING(--enable-pidx,
+                 Download and build the PIDX thirdparty library),
+  [build_pidx_lib="$enableval"],
+  [build_pidx_lib="no"])
 
 SCI_ARG_ENABLE(static,
   AC_HELP_STRING(--enable-static,
@@ -2214,10 +2220,10 @@ AC_SUBST(DEF_RAY_SCATTER)
 
 ##  --  Verify CMake -----------------------------
 
-if test "$with_visit" != NOT_SET -o "$build_wasatch_3p" != "no"; then
+if test "$with_visit" != NOT_SET -o "$build_wasatch_3p" != "no" -o "$build_pidx_lib" != "no"; then
    which cmake > /dev/null 2>&1
    if test $? != 0; then
-      AC_MSG_ERROR( Wasatch 3P requires CMake. Please make sure 'cmake' is in your path!)
+      AC_MSG_ERROR( Uintah (VisIt/Wasatch3P/PIDX) requires CMake. Please make sure 'cmake' is in your path!)
    fi
    CMAKE_LOCATION=`which cmake`
 
@@ -3912,7 +3918,33 @@ AC_SUBST(VISUS_LIB_DIR_FLAG)
 sci_defs_files="$sci_defs_files include/sci_defs/visus_testdefs.h"
 AC_LANG(C)
 
-##  --  search for pidx  -------------------------------------------------
+##  --  Handle --enable-pidx... ------------------------
+
+if test "$build_pidx_lib" != "no"; then
+
+  if test "$with_pidx" != NOT_SET; then
+     AC_MSG_ERROR( Do NOT specify both --with-pidx and --enable-pidx )
+  fi
+
+  PIDX_DIR="PIDX_Library"
+
+  mkdir -p $PIDX_DIR
+
+  $path_to_src/build_scripts/build_pidx.sh `$sci_pwd`/$PIDX_DIR "$debug" "$IS_STATIC_BUILD"
+
+  if test $? != 0; then
+     AC_MSG_ERROR( Failed to build PIDX library... )
+  fi
+
+  _sci_lib=`$sci_pwd`/$PIDX_DIR/install/lib
+  _sci_inc=`$sci_pwd`/$PIDX_DIR/install/include
+  _sci_optional=required
+
+  SCI_TRY_LINK(PIDX,pidx library and headers,PIDX.h,$_sci_inc $INC_MPI_H,$MPI_LIB_FLAG pidx,$MPI_LIB_DIR_FLAG $_sci_lib,-DMPIPP_H,,$_sci_optional)
+
+fi
+
+##  --  Verify PIDX lib dir is valid  -------------------------------------------------
 AC_LANG(C++)
 
 # Default values:
@@ -3928,9 +3960,10 @@ if test "$with_pidx" != NOT_SET; then
 
   SCI_TRY_LINK(PIDX,pidx library and headers,PIDX.h,$_sci_inc $INC_MPI_H,$MPI_LIB_FLAG pidx,$MPI_LIB_DIR_FLAG $_sci_lib,-DMPIPP_H,,$_sci_optional)
 
-  if test "$HAVE_PIDX" = "yes"; then
-     DEF_PIDX="#define HAVE_PIDX 1"
-  fi
+fi
+
+if test "$HAVE_PIDX" = "yes"; then
+   DEF_PIDX="#define HAVE_PIDX 1"
 fi
 
 AC_SUBST(HAVE_PIDX)
