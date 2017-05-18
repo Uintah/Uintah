@@ -549,11 +549,14 @@ Ray::sched_rayTrace( const LevelP& level,
     tsk->modifies( d_divQLabel );
     tsk->modifies( d_boundFluxLabel );
     tsk->modifies( d_radiationVolqLabel );
+    tsk->modifies( d_PPTimerLabel );
   } else {
     tsk->computes( d_divQLabel );
     tsk->computes( d_boundFluxLabel );
     tsk->computes( d_radiationVolqLabel );
+    tsk->computes( d_PPTimerLabel );
   }
+
 
   //__________________________________
   // Radiometer
@@ -567,10 +570,11 @@ Ray::sched_rayTrace( const LevelP& level,
     tsk->modifies( VRFluxLabel );
   }
 
-  sched->addTask( tsk, level->eachPatch(), d_matlSet );
-
   sched->overrideVariableBehavior(d_PPTimerLabel->getName(),
 				  false, false, true, true, true);
+
+  sched->addTask( tsk, level->eachPatch(), d_matlSet );
+
 }
 
 
@@ -1551,11 +1555,12 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
     tsk->computes( d_radiationVolqLabel );
     tsk->computes( d_PPTimerLabel );
   }
-  
-  sched->addTask( tsk, level->eachPatch(), d_matlSet );
 
   sched->overrideVariableBehavior(d_PPTimerLabel->getName(),
 				  false, false, true, true, true);
+                                
+  sched->addTask( tsk, level->eachPatch(), d_matlSet );
+
 }
 
 
