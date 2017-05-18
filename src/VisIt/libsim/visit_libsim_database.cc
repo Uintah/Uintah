@@ -59,15 +59,11 @@ namespace Uintah {
 void visit_SimGetCustomUIData(void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
-  SimulationTime* simTime = sim->simController->getSimulationTime();
 
-  // Setup the Stripchart names - this should be first so that when
-  // values are added to the charts the names are already set.
-  visit_SetStripChartNames( sim );
+  VisItUI_setValueS("STRIP_CHART_CLEAR_MENU", "NoOp", 0);
 
   // Set the custom UI time values.
   visit_SetTimeValues( sim );
-  VisItUI_setValueI("EndAtMaxTime", simTime->end_at_max_time, 1);
     
   // Set the custom UI delta t values.
   visit_SetDeltaTValues( sim );
@@ -80,7 +76,6 @@ void visit_SimGetCustomUIData(void *cbdata)
 
   // Set the custom UI output variable table
   visit_SetOutputIntervals( sim );
-  VisItUI_setValueI("ClampTimeToOutput", simTime->clamp_time_to_output, 1);
 
   // Set the custom UI optional min/max variable table
   visit_SetAnalysisVars( sim );
@@ -100,15 +95,17 @@ void visit_SimGetCustomUIData(void *cbdata)
   // Setup the custom UI Image variables
   visit_SetImageVars( sim );
 
-  // These are one time initializations.
-  VisItUI_setValueI("StopAtTimeStep",     sim->stopAtTimeStep,     1);
-  VisItUI_setValueI("StopAtLastTimeStep", sim->stopAtLastTimeStep, 1);
-
   // Set the custom UI optional state variable table
   visit_SetStateVars( sim );
 
   // Set the custom UI debug stream table
   visit_SetDebugStreams( sim );
+
+  // Set the custom UI debug stream table
+  visit_SetDouts( sim );
+
+  // Set the custom UI database behavior
+  visit_SetDatabase( sim );
 }
 
 
@@ -133,14 +130,9 @@ visit_handle visit_SimGetMetaData(void *cbdata)
   }
 
   int timestate = sim->cycle;
-
-  sim->useExtraCells = true;
+  
   bool &useExtraCells = sim->useExtraCells;
-
-  sim->forceMeshReload = true;
   // bool &forceMeshReload = sim->forceMeshReload;
-
-  sim->nodeCentered = false;
   // bool &nodeCentered = sim->nodeCentered;
 
   sim->stepInfo = getTimeStepInfo(schedulerP, simStateP, gridP, useExtraCells);
@@ -223,6 +215,8 @@ visit_handle visit_SimGetMetaData(void *cbdata)
         
     for (int i=0; i<numVars; ++i)
     {
+      bool isPerPatchVar = false;
+      
       if (stepInfo->varInfo[i].type.find("ParticleVariable") == std::string::npos)
       {
         std::string varname = stepInfo->varInfo[i].name;
@@ -257,6 +251,18 @@ visit_handle visit_SimGetMetaData(void *cbdata)
           else if (vartype.find("SFCZ") != std::string::npos)          
             mesh_for_this_var.assign("SFCZ_Mesh");
         }
+        else if (vartype.find("PerPatch") != std::string::npos)
+        {
+          cent = VISIT_VARCENTERING_ZONE;
+          mesh_for_this_var.assign("CC_Mesh");
+          mesh_for_procid = mesh_for_this_var;
+
+	  isPerPatchVar = true;
+        }
+        else if (vartype.find("ReductionVariable") != std::string::npos)
+	{
+          continue;
+	}
         else
         {
           if(sim->isProc0)
@@ -345,6 +351,9 @@ visit_handle visit_SimGetMetaData(void *cbdata)
           sprintf(buffer, "%d", stepInfo->varInfo[i].materials[j]);
           newVarname.append("/");
           newVarname.append(buffer);
+
+	  if( isPerPatchVar )
+	    newVarname = "patch/" + newVarname;
 
           if (mesh_vars_added.find(mesh_for_this_var+newVarname) ==
               mesh_vars_added.end())
@@ -1274,8 +1283,10 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
 
   std::string varName(varname);
   bool isParticleVar = false;
-  
-  size_t found = varName.find("/");  
+
+  // Get the var name sans the material. If a patch or processor
+  // variable then the var name will be either "patch" or "processor".
+  size_t found = varName.find("/");
   std::string matl = varName.substr(found + 1);
   varName = varName.substr(0, found);
 
@@ -1342,11 +1353,17 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
     // The region we're going to ask uintah for (from qlow to qhigh-1)      
     int qlow[3], qhigh[3];
     patchInfo.getBounds(qlow,qhigh,varType);
+
+    const VarLabel *varLabel = simStateP->get_refinePatchFlag_label();
+    
+    const Uintah::TypeDescription* maintype = varLabel->typeDescription();
+    const Uintah::TypeDescription* subtype = varLabel->typeDescription()->getSubType();
       
     GridDataRaw *gd = nullptr;
 
-    if( varName == "patch" || varName == "processor" )
+    if( std::string(varname) == "patch/id" || varName == "processor" )
     {
+      // Strip off the "processor/*/" prefix
       varName = std::string(varname);
       found = varName.find_last_of("/");
       varName = varName.substr(found + 1);
@@ -1397,11 +1414,23 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
     }
     else
     {
+      if( varName == "patch" )
+      {
+	// Get the var name sans "patch/".
+	varName = std::string(varname);
+	found = varName.find("/");  
+	varName = varName.substr(found + 1);
+
+	// Get the var name sans the material.
+	found = varName.find("/");
+	varName = varName.substr(0, found);
+      }
+
       if (nodeCentered == true)
       {
         int glow[3], ghigh[3];
-        getBounds(glow,ghigh,varType, levelInfo);
-        patchInfo.getBounds(qlow,qhigh,varType);
+        getBounds(glow, ghigh, varType, levelInfo);
+        patchInfo.getBounds(qlow, qhigh, varType);
           
         for (int j=0; j<3; ++j)
         {

@@ -73,8 +73,10 @@ namespace Uintah {
   
   void visit_SetStateVars      ( visit_simulation_data *sim );
   void visit_SetDebugStreams   ( visit_simulation_data *sim );
+  void visit_SetDouts          ( visit_simulation_data *sim );
   
-  void visit_SetStripChartNames( visit_simulation_data *sim );
+  void visit_SetDatabase( visit_simulation_data *sim );
+
   void visit_SetStripChartValue( visit_simulation_data *sim,
 				 std::string name,
 				 double value );

@@ -210,39 +210,6 @@
        </property>
       </widget>
      </widget>
-     <widget class="QGroupBox" name="OutputIntervalGroupBox">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>460</y>
-        <width>240</width>
-        <height>131</height>
-       </rect>
-      </property>
-      <property name="title">
-       <string>Output Intervals</string>
-      </property>
-      <widget class="QTableWidget" name="OutputIntervalVariableTable">
-       <property name="geometry">
-        <rect>
-         <x>10</x>
-         <y>30</y>
-         <width>220</width>
-         <height>91</height>
-        </rect>
-       </property>
-       <column>
-        <property name="text">
-         <string>Variable</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>Value</string>
-        </property>
-       </column>
-      </widget>
-     </widget>
      <widget class="QGroupBox" name="GridInfoGroupBox">
       <property name="geometry">
        <rect>
@@ -371,13 +338,13 @@
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>300</y>
+        <y>370</y>
         <width>240</width>
-        <height>161</height>
+        <height>221</height>
        </rect>
       </property>
       <property name="title">
-       <string>Wall times</string>
+       <string>Wall Times</string>
       </property>
       <widget class="QTableWidget" name="WallTimesVariableTable">
        <property name="geometry">
@@ -385,7 +352,7 @@
          <x>10</x>
          <y>30</y>
          <width>220</width>
-         <height>121</height>
+         <height>181</height>
         </rect>
        </property>
        <column>
@@ -406,7 +373,7 @@
         <x>10</x>
         <y>130</y>
         <width>240</width>
-        <height>171</height>
+        <height>241</height>
        </rect>
       </property>
       <property name="title">
@@ -418,7 +385,7 @@
          <x>10</x>
          <y>30</y>
          <width>220</width>
-         <height>131</height>
+         <height>201</height>
         </rect>
        </property>
        <column>
@@ -490,9 +457,6 @@
         </property>
        </column>
       </widget>
-      <zorder>RuntimeStatsTable</zorder>
-      <zorder>MPIStatsGroupBox</zorder>
-      <zorder>MPIStatsTable</zorder>
      </widget>
      <widget class="QGroupBox" name="MPIStatsGroupBox">
       <property name="geometry">
@@ -760,7 +724,7 @@
         <x>10</x>
         <y>80</y>
         <width>600</width>
-        <height>231</height>
+        <height>411</height>
        </rect>
       </property>
       <property name="title">
@@ -772,7 +736,7 @@
          <x>10</x>
          <y>20</y>
          <width>251</width>
-         <height>201</height>
+         <height>251</height>
         </rect>
        </property>
        <property name="title">
@@ -784,7 +748,7 @@
           <x>10</x>
           <y>30</y>
           <width>231</width>
-          <height>161</height>
+          <height>211</height>
          </rect>
         </property>
         <column>
@@ -805,7 +769,7 @@
          <x>270</x>
          <y>20</y>
          <width>321</width>
-         <height>201</height>
+         <height>191</height>
         </rect>
        </property>
        <property name="title">
@@ -817,7 +781,7 @@
           <x>10</x>
           <y>30</y>
           <width>301</width>
-          <height>161</height>
+          <height>151</height>
          </rect>
         </property>
         <column>
@@ -836,79 +800,105 @@
          </property>
         </column>
        </widget>
+       <zorder>DebugStreamTable</zorder>
+       <zorder>OutputIntervalGroupBox</zorder>
+      </widget>
+      <widget class="QGroupBox" name="OutputIntervalGroupBox">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>270</y>
+         <width>251</width>
+         <height>131</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string>Output Intervals</string>
+       </property>
+       <widget class="QTableWidget" name="OutputIntervalVariableTable">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>30</y>
+          <width>231</width>
+          <height>91</height>
+         </rect>
+        </property>
+        <column>
+         <property name="text">
+          <string>Variable</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Value</string>
+         </property>
+        </column>
+       </widget>
+      </widget>
+      <widget class="QGroupBox" name="DoutGroupBox">
+       <property name="geometry">
+        <rect>
+         <x>270</x>
+         <y>210</y>
+         <width>321</width>
+         <height>191</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string>Douts</string>
+       </property>
+       <widget class="QTableWidget" name="DoutTable">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>30</y>
+          <width>301</width>
+          <height>151</height>
+         </rect>
+        </property>
+        <column>
+         <property name="text">
+          <string>Dout</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Active</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Stream</string>
+         </property>
+        </column>
+       </widget>
       </widget>
      </widget>
-     <widget class="QGroupBox" name="StripChartGroupBox">
+     <widget class="QGroupBox" name="groupBox">
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>310</y>
-        <width>600</width>
-        <height>221</height>
+        <y>500</y>
+        <width>261</width>
+        <height>141</height>
        </rect>
       </property>
       <property name="title">
-       <string>Strip Charts</string>
+       <string>Database</string>
       </property>
-      <widget class="QTableWidget" name="StripChartTable">
+      <widget class="QCheckBox" name="LoadExtraCells">
        <property name="geometry">
         <rect>
-         <x>9</x>
+         <x>10</x>
          <y>30</y>
-         <width>581</width>
-         <height>180</height>
+         <width>241</width>
+         <height>20</height>
         </rect>
        </property>
-       <row>
-        <property name="text">
-         <string>Name</string>
-        </property>
-       </row>
-       <row>
-        <property name="text">
-         <string>Variable</string>
-        </property>
-       </row>
-       <row>
-        <property name="text">
-         <string>Variable</string>
-        </property>
-       </row>
-       <row>
-        <property name="text">
-         <string>Variable</string>
-        </property>
-       </row>
-       <row>
-        <property name="text">
-         <string>Variable</string>
-        </property>
-       </row>
-       <column>
-        <property name="text">
-         <string>Strip Chart 0</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>Strip Chart 1</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>Strip Chart 2</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>Strip Chart 3</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>Strip Chart 4</string>
-        </property>
-       </column>
+       <property name="text">
+        <string>Load extra cells</string>
+       </property>
       </widget>
      </widget>
     </widget>
@@ -926,6 +916,32 @@
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
+ <tabstops>
+  <tabstop>tabWidget</tabstop>
+  <tabstop>TimeStep</tabstop>
+  <tabstop>MaxTimeStep</tabstop>
+  <tabstop>Time</tabstop>
+  <tabstop>MaxTime</tabstop>
+  <tabstop>ClampTimestepsToOutput</tabstop>
+  <tabstop>EndOnMaxTime</tabstop>
+  <tabstop>StopAtTimeStep</tabstop>
+  <tabstop>StopAtLastTimeStep</tabstop>
+  <tabstop>DeltaTVariableTable</tabstop>
+  <tabstop>WallTimesVariableTable</tabstop>
+  <tabstop>UPSVariableTable</tabstop>
+  <tabstop>AnalysisVariableTable</tabstop>
+  <tabstop>GridInfoTable</tabstop>
+  <tabstop>RuntimeStatsTable</tabstop>
+  <tabstop>MPIStatsTable</tabstop>
+  <tabstop>OtherStatsTable</tabstop>
+  <tabstop>ImageGroupBox</tabstop>
+  <tabstop>ImageFilename</tabstop>
+  <tabstop>ImageHeight</tabstop>
+  <tabstop>ImageWidth</tabstop>
+  <tabstop>ImageFormat</tabstop>
+  <tabstop>StateVariableTable</tabstop>
+  <tabstop>DebugStreamTable</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

@@ -37,6 +37,7 @@
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Util/DOUT.hpp>
 
 #include <fstream>
 
@@ -95,14 +96,11 @@ void visit_VarModifiedMessage( visit_simulation_data *sim,
     std::pair<std::string, std::string>(oldStr.str(), newStr.str());
 }
 
-
 //---------------------------------------------------------------------
 // getNextString
 //   This method is called to get the next string value and return
 //   the remaining part.
 //
-//   NOTE: it is assumed that there is a space on both sides of the delimiter
-//   EXAMPLE: string | string string | string
 //---------------------------------------------------------------------
 std::string getNextString( std::string &cmd, const std::string delimiter )
 {
@@ -112,8 +110,6 @@ std::string getNextString( std::string &cmd, const std::string delimiter )
 
   if( delim != std::string::npos)
   {
-    // str.erase(delim-1, std::string::npos);  
-    // cmd.erase(0, delim+2);
     str.erase(delim, std::string::npos);  
     cmd.erase(0, delim+delimiter.length());
   }
@@ -122,33 +118,37 @@ std::string getNextString( std::string &cmd, const std::string delimiter )
 }
 
 //---------------------------------------------------------------------
-// getTableCMD
-//   This method is called to parse the table cmd to get the
-//   row, column, and double value.
+// Method: QvisSimulationWindow::parseCompositeCMD
+//
+// Purpose:
+//   This method is called to parse a composite cmd to get the
+//   index and name.
 //---------------------------------------------------------------------
-void getTableCMD( char *cmd,
-                  unsigned int &row, unsigned int &column, double &value )
+void
+parseCompositeCMD( const char *cmd,
+		   unsigned int &index,
+		   std::string &text )
 {
   std::string strcmd(cmd);
 
   std::string str = getNextString( strcmd, " | " );
-  row = atoi( str.c_str() );
+  index = atoi( str.c_str() );
 
-  str = getNextString( strcmd, " | " );
-  column = atoi( str.c_str() );
-
-  str = getNextString( strcmd, " | " );
-  value = atof( str.c_str() );
+  text = getNextString( strcmd, " | " );
 }
 
-
 //---------------------------------------------------------------------
-// getTableCMD
-//   This method is called to parse the table cmd to get the
+// Method: QvisSimulationWindow::parseCompositeCMD
+//
+// Purpose:
+//   This method is called to parse a composite cmd to get the
 //   row, column, and name.
 //---------------------------------------------------------------------
-void getTableCMD( char *cmd,
-                  unsigned int &row, unsigned int &column, char *name )
+void
+parseCompositeCMD( const char *cmd,
+		   unsigned int &row,
+		   unsigned int &column,
+		   std::string &text )
 {
   std::string strcmd(cmd);
 
@@ -158,10 +158,61 @@ void getTableCMD( char *cmd,
   str = getNextString( strcmd, " | " );
   column = atoi( str.c_str() );
 
-  str = getNextString( strcmd, " | " );
-  strcpy( name, str.c_str() );
+  text = getNextString( strcmd, " | " );
 }
-  
+
+//---------------------------------------------------------------------
+// Method: QvisSimulationWindow::parseCompositeCMD
+//
+// Purpose:
+//   This method is called to parse a composite cmd to get the
+//   row, column, x, and y values.
+//---------------------------------------------------------------------
+void
+parseCompositeCMD( const char *cmd,
+		   unsigned int &row,
+		   unsigned int &column,
+		   double &x, double &y )
+{
+  std::string strcmd(cmd);
+
+  std::string str = getNextString( strcmd, " | " );
+  row = atof( str.c_str() );
+
+  str = getNextString( strcmd, " | " );
+  column = atof( str.c_str() );
+
+  str = getNextString( strcmd, " | " );
+  x = atof( str.c_str() );
+
+  str = getNextString( strcmd, " | " );
+  y = atof( str.c_str() );
+}
+
+//---------------------------------------------------------------------
+// Method: QvisSimulationWindow::parseCompositeCMD
+//
+// Purpose:
+//   This method is called to parse a composite cmd to get the
+//   row, column, x, and y values.
+//---------------------------------------------------------------------
+void
+parseCompositeCMD( const char *cmd,
+		   unsigned int &row,
+		   unsigned int &column,
+		   double &val)
+{
+  std::string strcmd(cmd);
+
+  std::string str = getNextString( strcmd, " | " );
+  row = atof( str.c_str() );
+
+  str = getNextString( strcmd, " | " );
+  column = atof( str.c_str() );
+
+  str = getNextString( strcmd, " | " );
+  val = atof( str.c_str() );
+}
 
 //---------------------------------------------------------------------
 // visit_BroadcastIntCallback
@@ -234,6 +285,8 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
   }
   else if(strcmp(cmd, "Unused") == 0 && sim->simMode != VISIT_SIMMODE_FINISHED)
   {
+    // visit_SimGetMetaData(cbdata);
+    // visit_SimGetDomainList(nullptr, cbdata);
   }
   else if(strcmp(cmd, "Save") == 0)
   {
@@ -296,6 +349,8 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
 
       visitdbg << msg.str().c_str() << std::endl;
       visitdbg.flush();
+
+      VisItUI_setValueS("STRIP_CHART_CLEAR_ALL", "NoOp", 1);
     }
   }
   else if(strcmp(cmd, "Abort") == 0)
@@ -309,7 +364,11 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
 
       visitdbg << msg.str().c_str() << std::endl;
       visitdbg.flush();
+
+      VisItUI_setValueS("STRIP_CHART_CLEAR_ALL", "NoOp", 1);
     }
+
+    VisItDisconnect();
 
     exit( 0 );
   }
@@ -349,6 +408,22 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
 
     sim->timeStop = atoi( varStr.c_str() );
   }
+  else if(strcmp(cmd, "StripChartVar") == 0 )
+  {
+    std::string strcmd = std::string(args);
+    size_t pos = strcmd.find_last_of(";");
+    strcmd = strcmd.substr(pos + 1);
+
+    std::string str = getNextString( strcmd, " | " );
+    unsigned int chart = atoi( str.c_str() );
+
+    str = getNextString( strcmd, " | " );
+    unsigned int curve = atoi( str.c_str() );
+
+    std::string var = getNextString( strcmd, " | " );
+
+    sim->stripChartNames[chart][curve] = var;
+  }
   else
   {
     // These messages are really only helpful when debugging. 
@@ -371,7 +446,6 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
     }
   }
 }
-
 
 //---------------------------------------------------------------------
 // ProcessVisItCommand
@@ -450,7 +524,7 @@ void visit_MaxTimeStepCallback(char *val, void *cbdata)
 	<< "Resetting the value.";
     VisItUI_setValueS("SIMULATION_MESSAGE_BOX", msg.str().c_str(), 1);
 
-    VisItUI_setValueI("MaxTimeStep",   simTime->maxTimestep, 1);
+    VisItUI_setValueI("MaxTimeStep", simTime->maxTimestep, 1);
   }
   else
   {  
@@ -481,7 +555,7 @@ void visit_MaxTimeCallback(char *val, void *cbdata)
 	<< "Resetting the value.";
     VisItUI_setValueS("SIMULATION_MESSAGE_BOX", msg.str().c_str(), 1);
 
-    VisItUI_setValueD("MaxTime",       simTime->maxTime, 1);
+    VisItUI_setValueD("MaxTime", simTime->maxTime, 1);
   }
   else
   {  
@@ -518,7 +592,7 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
   unsigned int row, column;
   double oldValue, newValue;
   
-  getTableCMD(val, row, column, newValue);
+  parseCompositeCMD(val, row, column, newValue);
 
   switch( row )
   {
@@ -704,7 +778,7 @@ void visit_WallTimesVariableCallback(char *val, void *cbdata)
   unsigned int row, column;
   double oldValue, newValue;
 
-  getTableCMD( val, row, column, newValue);
+  parseCompositeCMD( val, row, column, newValue);
 
   if( row == 5 )
   {
@@ -725,9 +799,9 @@ void visit_UPSVariableCallback(char *val, void *cbdata)
   SimulationStateP simStateP = sim->simController->getSimulationStateP();
 
   unsigned int row, column;
-  char str[128];
+  std::string text;
 
-  getTableCMD( val, row, column, str);
+  parseCompositeCMD( val, row, column, text);
 
   std::vector< SimulationState::interactiveVar > &vars = simStateP->d_UPSVars;
       
@@ -739,7 +813,7 @@ void visit_UPSVariableCallback(char *val, void *cbdata)
     {
       bool *val = (bool*) var.value;
       bool oldValue = *val;
-      int  newValue = atoi( str );
+      int  newValue = atoi( text.c_str() );
 
       if( newValue != (bool) var.range[0] && newValue != (bool) var.range[1] )
       {
@@ -762,7 +836,7 @@ void visit_UPSVariableCallback(char *val, void *cbdata)
     {
       int *val = (int*) var.value;
       int oldValue = *val;
-      int newValue = atoi( str );
+      int newValue = atoi( text.c_str() );
 
       if( newValue < (int) var.range[0] || (int) var.range[1] < newValue )
       {
@@ -785,7 +859,7 @@ void visit_UPSVariableCallback(char *val, void *cbdata)
     {
       double *val = (double*) var.value;
       double oldValue = *val;
-      double newValue = atof( str );
+      double newValue = atof( text.c_str() );
 
       if( newValue < (double) var.range[0] || (double) var.range[1] < newValue )
       {
@@ -807,7 +881,7 @@ void visit_UPSVariableCallback(char *val, void *cbdata)
     case Uintah::TypeDescription::Vector:
     {
       double x, y, z;
-      sscanf(str, "%lf,%lf,%lf", &x, &y, &z);
+      sscanf(text.c_str(), "%lf,%lf,%lf", &x, &y, &z);
 
       Vector *val = (Vector*) var.value;
       Vector oldValue = *val;
@@ -857,7 +931,7 @@ void visit_OutputIntervalVariableCallback(char *val, void *cbdata)
   unsigned int row, column;
   double value;
 
-  getTableCMD( val, row, column, value);
+  parseCompositeCMD( val, row, column, value);
 
   // Output interval.
   if( row == OutputIntervalRow )
@@ -1020,9 +1094,9 @@ void visit_StateVariableCallback(char *val, void *cbdata)
   SimulationStateP simStateP = sim->simController->getSimulationStateP();
 
   unsigned int row, column;
-  char str[128];
+  std::string text;
 
-  getTableCMD( val, row, column, str);
+  parseCompositeCMD( val, row, column, text);
 
   std::vector< SimulationState::interactiveVar > &vars =
     simStateP->d_stateVars;
@@ -1035,7 +1109,7 @@ void visit_StateVariableCallback(char *val, void *cbdata)
     {
       bool *val = (bool*) var.value;
       bool oldValue = *val;
-      int  newValue = atoi( str );
+      int  newValue = atoi( text.c_str() );
 
       if( newValue != (bool) var.range[0] && newValue != (bool) var.range[1] )
       {
@@ -1058,7 +1132,7 @@ void visit_StateVariableCallback(char *val, void *cbdata)
     {
       int *val = (int*) var.value;
       int oldValue = *val;
-      int newValue = atoi( str );
+      int newValue = atoi( text.c_str() );
 
       if( newValue < (int) var.range[0] || (int) var.range[1] < newValue )
       {
@@ -1081,7 +1155,7 @@ void visit_StateVariableCallback(char *val, void *cbdata)
     {
       double *val = (double*) var.value;
       double oldValue = *val;
-      double newValue = atof( str );
+      double newValue = atof( text.c_str() );
 
       if( newValue < (double) var.range[0] || (double) var.range[1] < newValue )
       {
@@ -1103,7 +1177,7 @@ void visit_StateVariableCallback(char *val, void *cbdata)
     case Uintah::TypeDescription::Vector:
     {
       double x, y, z;
-      sscanf(str, "%lf,%lf,%lf", &x, &y, &z);
+      sscanf(text.c_str(), "%lf,%lf,%lf", &x, &y, &z);
 
       Vector *val = (Vector*) var.value;
       Vector oldValue = *val;
@@ -1140,25 +1214,6 @@ void visit_StateVariableCallback(char *val, void *cbdata)
 }
 
 //---------------------------------------------------------------------
-// StripChartCallback
-//     Custom UI callback for a table
-//---------------------------------------------------------------------
-void visit_StripChartCallback(char *val, void *cbdata)
-{
-  visit_simulation_data *sim = (visit_simulation_data *)cbdata;
-
-  SimulationStateP simStateP = sim->simController->getSimulationStateP();
-
-  unsigned int chart, index;
-  char name[128];
-
-  // Note the row/column are flipped from the actual table.
-  getTableCMD( val, index, chart, name);
-
-  sim->stripChartNames[chart][index] = std::string(name);
-}
-
-//---------------------------------------------------------------------
 // DebugStreamCallback
 //     Custom UI callback for a table
 //---------------------------------------------------------------------
@@ -1169,20 +1224,18 @@ void visit_DebugStreamCallback(char *val, void *cbdata)
   SimulationStateP simStateP = sim->simController->getSimulationStateP();
 
   unsigned int row, column;
-  char value[128];
+  std::string text;
 
-  getTableCMD( val, row, column, value);
+  parseCompositeCMD( val, row, column, text);
 
   if( column == 1 )
   {
-    std::string active( value );
-
-    if( active != "FALSE" && active != "False" && active != "false" &&
-	active != "TRUE"  && active != "True"  && active != "true" && 
-	active != "0" && active != "1" )
+    if( text != "FALSE" && text != "False" && text != "false" &&
+	text != "TRUE"  && text != "True"  && text != "true" && 
+	text != "0" && text != "1" )
     {
       std::stringstream msg;
-      msg << "Visit libsim - the value (" << active << ") for "
+      msg << "Visit libsim - the value (" << text << ") for "
 	  << simStateP->d_debugStreams[row]->getName()
 	  << " is not 'true' or 'false'. Resetting value.";
       VisItUI_setValueS("SIMULATION_MESSAGE_BOX", msg.str().c_str(), 1);
@@ -1190,10 +1243,10 @@ void visit_DebugStreamCallback(char *val, void *cbdata)
       return;
     }
     
-    simStateP->d_debugStreams[row]->setActive( active == "TRUE" ||
-					       active == "True" ||
-					       active == "true" ||
-					       active == "1" );
+    simStateP->d_debugStreams[row]->setActive( text == "TRUE" ||
+					       text == "True" ||
+					       text == "true" ||
+					       text == "1" );
     
     if( simStateP->d_debugStreams[row]->m_outstream == nullptr )
     {
@@ -1203,30 +1256,110 @@ void visit_DebugStreamCallback(char *val, void *cbdata)
   }
   else if( column == 2 )
   {
-    std::string filename( value );
-
-    if( filename.find("cerr") != std::string::npos )
+    if( text.find("cerr") != std::string::npos )
     {
       simStateP->d_debugStreams[row]->setFilename( "cerr" );
       simStateP->d_debugStreams[row]->m_outstream = &std::cerr;
     }
-    else if( filename.find("cout") != std::string::npos )
+    else if( text.find("cout") != std::string::npos )
     {
       simStateP->d_debugStreams[row]->setFilename( "cout" );
       simStateP->d_debugStreams[row]->m_outstream = &std::cout;
     }
     else
     {
-      simStateP->d_debugStreams[row]->setFilename( filename );
+      simStateP->d_debugStreams[row]->setFilename( text );
 
       if( simStateP->d_debugStreams[row]->m_outstream &&
 	  simStateP->d_debugStreams[row]->m_outstream != &std::cerr &&
 	  simStateP->d_debugStreams[row]->m_outstream != &std::cout )
 	delete simStateP->d_debugStreams[row]->m_outstream;
 
-      simStateP->d_debugStreams[row]->m_outstream = new std::ofstream(filename);
+      simStateP->d_debugStreams[row]->m_outstream = new std::ofstream(text);
     }
   }
 }
+
+
+//---------------------------------------------------------------------
+// DoutCallback
+//     Custom UI callback for a table
+//---------------------------------------------------------------------
+void visit_DoutCallback(char *val, void *cbdata)
+{
+  visit_simulation_data *sim = (visit_simulation_data *)cbdata;
+
+  SimulationStateP simStateP = sim->simController->getSimulationStateP();
+
+  unsigned int row, column;
+  std::string text;
+
+  parseCompositeCMD( val, row, column, text);
+
+  if( column == 1 )
+  {
+    if( text != "FALSE" && text != "False" && text != "false" &&
+	text != "TRUE"  && text != "True"  && text != "true" && 
+	text != "0" && text != "1" )
+    {
+      std::stringstream msg;
+      msg << "Visit libsim - the value (" << text << ") for "
+	  << simStateP->d_douts[row]->name()
+	  << " is not 'true' or 'false'. Resetting value.";
+      VisItUI_setValueS("SIMULATION_MESSAGE_BOX", msg.str().c_str(), 1);
+      visit_SetDebugStreams( sim );
+      return;
+    }
+    
+    simStateP->d_douts[row]->setActive( text == "TRUE" ||
+					text == "True" ||
+					text == "true" ||
+					text == "1" );
+    
+    // if( simStateP->d_douts[row]->m_outstream == nullptr )
+    // {
+    //   simStateP->d_douts[row]->setFilename( "cout" );
+    //   simStateP->d_douts[row]->m_outstream = &std::cout;
+    // }
+  }
+  // else if( column == 2 )
+  // {
+  //   std::string filename( value );
+
+  //   if( filename.find("cerr") != std::string::npos )
+  //   {
+  //     simStateP->d_douts[row]->setFilename( "cerr" );
+  //     simStateP->d_douts[row]->m_outstream = &std::cerr;
+  //   }
+  //   else if( filename.find("cout") != std::string::npos )
+  //   {
+  //     simStateP->d_douts[row]->setFilename( "cout" );
+  //     simStateP->d_douts[row]->m_outstream = &std::cout;
+  //   }
+  //   else
+  //   {
+  //     simStateP->d_douts[row]->setFilename( filename );
+
+  //     if( simStateP->d_douts[row]->m_outstream &&
+  // 	  simStateP->d_douts[row]->m_outstream != &std::cerr &&
+  // 	  simStateP->d_douts[row]->m_outstream != &std::cout )
+  // 	delete simStateP->d_douts[row]->m_outstream;
+
+  //     simStateP->d_douts[row]->m_outstream = new std::ofstream(filename);
+  //   }
+  // }
+}
+
+//---------------------------------------------------------------------
+// LoadExtraCellsCallback
+//     Custom UI callback for a check box
+//---------------------------------------------------------------------
+void visit_LoadExtraCellsCallback(int val, void *cbdata)
+{
+  visit_simulation_data *sim = (visit_simulation_data *)cbdata;
+
+  sim->useExtraCells = val;
+}
+
 
 } // End namespace Uintah

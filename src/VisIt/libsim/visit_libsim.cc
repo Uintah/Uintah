@@ -129,6 +129,10 @@ void visit_InitLibSim( visit_simulation_data *sim )
   // initializing.
   sim->simMode = VISIT_SIMMODE_RUNNING;
 
+  sim->useExtraCells = true;
+  sim->forceMeshReload = true;
+  sim->nodeCentered = false;
+
   sim->timeRange = 0;
   sim->timeStart = 0;
   sim->timeStep  = 1;
@@ -428,16 +432,19 @@ bool visit_CheckState( visit_simulation_data *sim )
     {
       if( !visit_ProcessVisItCommand(sim) )
       {
-        /* Disconnect on an error or closed connection. */
-        VisItDisconnect();
+	if(sim->isProc0)
+	{
+	  VisItUI_setValueS("SIMULATION_MESSAGE_CLEAR", "NoOp", 1);    
+	  VisItUI_setValueS("STRIP_CHART_CLEAR_ALL",    "NoOp", 1);
+
+          VisItUI_setValueS("SIMULATION_MODE", "Unknown", 1);
+	}
 
         /* Start running again if VisIt closes. */
         sim->runMode = VISIT_SIMMODE_RUNNING;
 
-        if(sim->isProc0)
-        {
-          VisItUI_setValueS("SIMULATION_MODE", "Unknown", 1);
-        }
+        /* Disconnect on an error or closed connection. */
+        VisItDisconnect();
       }
 
       /* If in step mode return control back to the simulation. */
@@ -552,10 +559,8 @@ void visit_Initialize( visit_simulation_data *sim )
 
   if(sim->isProc0)
   {
-    VisItUI_setValueS("SIMULATION_MESSAGE_CLEAR", "NoOp", 1);
-    
-    for( int i=0; i<5; ++i )
-      VisItUI_setValueI("STRIP_CHART_RESET", i, 1);
+    VisItUI_setValueS("SIMULATION_MESSAGE_CLEAR", "NoOp", 1);    
+    VisItUI_setValueS("STRIP_CHART_CLEAR_ALL",    "NoOp", 1);
     
     // visitdbg << msg.str().c_str() << std::endl;
     // visitdbg.flush();
@@ -620,9 +625,11 @@ void visit_Initialize( visit_simulation_data *sim )
 
   VisItUI_cellChanged("DebugStreamTable",
                       visit_DebugStreamCallback,  (void*) sim);
+  VisItUI_cellChanged("DoutTable",
+                      visit_DoutCallback,  (void*) sim);
 
-  VisItUI_cellChanged("StripChartTable",
-                      visit_StripChartCallback, (void*) sim);
+  VisItUI_valueChanged("LoadExtraCells",
+                       visit_LoadExtraCellsCallback, (void*) sim);        
 }
   
 } // End namespace Uintah

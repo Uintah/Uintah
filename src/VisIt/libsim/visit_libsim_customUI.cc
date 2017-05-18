@@ -35,6 +35,7 @@
 #include <Core/Grid/Material.h>
 #include <Core/OS/ProcessInfo.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Util/DOUT.hpp>
 
 #include <CCA/Ports/Output.h>
 
@@ -59,7 +60,13 @@ void visit_SetTimeValues( visit_simulation_data *sim )
   VisItUI_setValueD("Time",          sim->time, 0);
   VisItUI_setValueD("MaxTime",       simTime->maxTime, 1);
 
-  visit_SetStripChartValue( sim, "TimeStep", (double) sim->cycle );
+  VisItUI_setValueI("EndAtMaxTime",      simTime->end_at_max_time, 1);
+  VisItUI_setValueI("ClampTimeToOutput", simTime->clamp_time_to_output, 1);
+
+  VisItUI_setValueI("StopAtTimeStep",     sim->stopAtTimeStep,     1);
+  VisItUI_setValueI("StopAtLastTimeStep", sim->stopAtLastTimeStep, 1);
+
+  // visit_SetStripChartValue( sim, "TimeStep", (double) sim->cycle );
 }
 
 //---------------------------------------------------------------------
@@ -110,8 +117,8 @@ void visit_SetDeltaTValues( visit_simulation_data *sim )
   VisItUI_setTableValueD("DeltaTVariableTable", row, 1, simTime->override_restart_delt, 1);
   ++row;
 
-  visit_SetStripChartValue( sim, "DeltaT", sim->delt );
-  visit_SetStripChartValue( sim, "DeltaTNext", sim->delt_next );
+  visit_SetStripChartValue( sim, "DeltaT/Current", sim->delt );
+  visit_SetStripChartValue( sim, "DeltaT/Next", sim->delt_next );
 }
 
 //---------------------------------------------------------------------
@@ -150,10 +157,10 @@ void visit_SetWallTimes( visit_simulation_data *sim )
 			 simTime->max_wall_time, 1);
   ++row;
 
-  visit_SetStripChartValue( sim, "TimeStep",     walltimers->TimeStep().seconds() );
-  visit_SetStripChartValue( sim, "ExpMovingAve", walltimers->ExpMovingAverage().seconds() );
-  visit_SetStripChartValue( sim, "InSitu",       walltimers->InSitu().seconds() );
-  visit_SetStripChartValue( sim, "Total",        time );
+  visit_SetStripChartValue( sim, "WallTimes/TimeStep",     walltimers->TimeStep().seconds() );
+  visit_SetStripChartValue( sim, "WallTimes/ExpMovingAve", walltimers->ExpMovingAverage().seconds() );
+  visit_SetStripChartValue( sim, "WallTimes/InSitu",       walltimers->InSitu().seconds() );
+  visit_SetStripChartValue( sim, "WallTimes/Total",        time );
 }
 
 
@@ -231,7 +238,7 @@ void visit_SetAnalysisVars( visit_simulation_data *sim )
 {
   // For some reason when starting a new simulation accessing the
   // on-the-fly for the first time step causes a crash in both Uintah
-  // and Visit. It is not clear where the crash 
+  // and Visit. It is not clear where the crash occurs.
   
   if( sim->cycle < 2 )
     return;
@@ -333,7 +340,8 @@ void visit_SetAnalysisVars( visit_simulation_data *sim )
 		else
 		  VisItUI_setTableValueS(table, row, 4+j*2, "NA", 0);		
 
-	  	visit_SetStripChartValue( sim, analysisVar.name+"_Min", varMin );
+	  	visit_SetStripChartValue( sim, "Analysis/"+
+					  analysisVar.name + "/Minimum", varMin );
 	      }
 	      // Maximum values
 	      else if( sendop == MPI_MAX )
@@ -368,7 +376,8 @@ void visit_SetAnalysisVars( visit_simulation_data *sim )
 		else
 		  VisItUI_setTableValueS(table, row, 4+j*2, "NA", 0);
 
-	  	visit_SetStripChartValue( sim, analysisVar.name+"_Max", varMax );
+	  	visit_SetStripChartValue( sim,  "Analysis/" +
+					  analysisVar.name + "/Maximum", varMax );
 	      }
 	      // Sum values
 	      else if( sendop == MPI_SUM )
@@ -403,7 +412,8 @@ void visit_SetAnalysisVars( visit_simulation_data *sim )
 		else
 		  VisItUI_setTableValueS(table, row, 4+j*2, "NA", 0);
 
-	  	visit_SetStripChartValue( sim, analysisVar.name+"_Sum", varSum );
+	  	visit_SetStripChartValue( sim,  "Analysis/" +
+					  analysisVar.name + "/Sum", varSum );
 	      }
 	      else
 	      {
@@ -599,9 +609,8 @@ void visit_SetRuntimeStats( visit_simulation_data *sim )
       ++cc;
     }
 
-    visit_SetStripChartValue( sim, name, average );
-    visit_SetStripChartValue( sim, name+"_Ave", average );
-    visit_SetStripChartValue( sim, name+"_Max", maximum );
+    visit_SetStripChartValue( sim, "RuntimeStats/"+name+"/Average", average );
+    visit_SetStripChartValue( sim, "RuntimeStats/"+name+"/Maximum", maximum );
   }
 }
 
@@ -643,9 +652,9 @@ void visit_SetMPIStats( visit_simulation_data *sim )
       VisItUI_setTableValueI("MPIStatsTable", i, 4, rank, 0);
       VisItUI_setTableValueD("MPIStatsTable", i, 5,
                              100*(1-(average/maximum)), 0);
-      visit_SetStripChartValue( sim, name, average );
-      visit_SetStripChartValue( sim, name+"_Ave", average );
-      visit_SetStripChartValue( sim, name+"_Max", maximum );
+
+      visit_SetStripChartValue( sim, "MPIStats/"+name+"/Average", average );
+      visit_SetStripChartValue( sim, "MPIStats/"+name+"/Maximum", maximum );
     }
   }
   else
@@ -687,9 +696,8 @@ void visit_SetOtherStats( visit_simulation_data *sim )
       VisItUI_setTableValueI("OtherStatsTable", i, 4, rank, 0);
       VisItUI_setTableValueD("OtherStatsTable", i, 5,
                              100*(1-(average/maximum)), 0);
-      visit_SetStripChartValue( sim, name, average );
-      visit_SetStripChartValue( sim, name+"_Ave", average );
-      visit_SetStripChartValue( sim, name+"_Max", maximum );
+      visit_SetStripChartValue( sim, "OtherStats/"+name+"/Average", average );
+      visit_SetStripChartValue( sim, "OtherStats/"+name+"/Maximum", maximum );
     }
   }
   else
@@ -716,42 +724,17 @@ void visit_SetImageVars( visit_simulation_data *sim )
 // SetStripChartValue
 //    
 //---------------------------------------------------------------------
-void visit_SetStripChartNames( visit_simulation_data *sim )
-{
-  for( unsigned int chart=0; chart<5; ++chart ) // Five Charts
-  {
-    for( unsigned int i=0; i<5; ++i ) // Chart name plus four curves
-    {
-//      if( sim->stripChartNames[chart][i].size() )
-      {
-        char cmd[128];
-      
-        sprintf( cmd, "%d | %d | %s",
-                 chart, i, sim->stripChartNames[chart][i].c_str() );
-        
-        VisItUI_setValueS("STRIP_CHART_SET_NAME", cmd, 1);
-
-        // Restore the table values.
-        VisItUI_setTableValueS("StripChartTable", i, chart,
-                               sim->stripChartNames[chart][i].c_str(), 1);
-      }
-    }
-  }
-}
-
-//---------------------------------------------------------------------
-// SetStripChartValue
-//    
-//---------------------------------------------------------------------
 void visit_SetStripChartValue( visit_simulation_data *sim,
                                std::string name,
                                double value )
 {
+  VisItUI_setValueS("STRIP_CHART_ADD_MENU_ITEM", name.c_str(), 1);
+  
   for( unsigned int chart=0; chart<5; ++chart ) // Five Charts
   {
-    for( unsigned int i=1, curve=0; i<5; ++i, ++curve) // Four curves
+    for( unsigned int curve=0; curve<5; ++curve) // Five curves
     {
-      if( name == sim->stripChartNames[chart][i] )
+      if( name == sim->stripChartNames[chart][curve] )
       {
         char cmd[128];
       
@@ -862,6 +845,51 @@ void visit_SetDebugStreams( visit_simulation_data *sim )
   }
   else
     VisItUI_setValueS( "DebugStreamGroupBox", "HIDE_WIDGET", 0);
+}
+
+//---------------------------------------------------------------------
+// SetDouts
+//    Set the douts so they can be displayed in the Custon UI
+//---------------------------------------------------------------------
+void visit_SetDouts( visit_simulation_data *sim )
+{
+  SimulationStateP simStateP  = sim->simController->getSimulationStateP();
+
+  VisItUI_setTableValueS("DoutTable",
+                         -1, -1, "CLEAR_TABLE", 0);
+
+  if( simStateP->d_douts.size() )
+  {
+    VisItUI_setValueS( "DoutGroupBox", "SHOW_WIDGET", 1);
+
+    unsigned int nStreams = simStateP->d_douts.size();
+    
+    for( unsigned int i=0; i<nStreams; ++i )
+    {
+      // Add in the stream and state.
+      std::string name     = simStateP->d_douts[i]->name();
+      std::string filename = "cout"; //simStateP->d_douts[i]->getFilename();
+      bool        active   = simStateP->d_douts[i]->active();
+
+      VisItUI_setTableValueS("DoutTable",
+			     i, 0, name.c_str(),  0);
+      VisItUI_setTableValueS("DoutTable",
+			     i, 1, (active ? "true":"false"), 1);
+      VisItUI_setTableValueS("DoutTable",
+			     i, 2, filename.c_str(), 0);
+    }
+  }
+  else
+    VisItUI_setValueS( "DoutGroupBox", "HIDE_WIDGET", 0);
+}
+
+//---------------------------------------------------------------------
+// SetDatabase
+//    Set the database behavior so they can be displayed in the Custon UI
+//---------------------------------------------------------------------
+void visit_SetDatabase( visit_simulation_data *sim )
+{
+  VisItUI_setValueI("LoadExtraCells", sim->useExtraCells, 1);
 }
 
 } // End namespace Uintah
