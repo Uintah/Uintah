@@ -220,10 +220,7 @@ namespace Uintah{
       const VarLabel* d_flaggedCellsLabel;
       const VarLabel* d_ROI_LoCellLabel;
       const VarLabel* d_ROI_HiCellLabel;
-      
-/*`==========TESTING==========*/
-      const VarLabel* d_PPTimerLabel;        // Allen's perPatch timer
-/*===========TESTING==========`*/
+      const VarLabel* d_PPTimerLabel;        // perPatch timer
 
       // const VarLabel* d_divQFiltLabel;
       // const VarLabel* d_boundFluxFiltLabel;

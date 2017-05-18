@@ -99,11 +99,7 @@ Ray::Ray( const TypeDescription::Type FLT_DBL ) : RMCRTCommon( FLT_DBL)
     d_mag_grad_sigmaT4Label= VarLabel::create( "mag_grad_sigmaT4", CCVariable<float>::getTypeDescription() );
   }
 
-/*`==========TESTING==========*/
-#ifdef HAVE_VISIT
   d_PPTimerLabel = VarLabel::create( "Ray_PPTimer", PerPatch<double>::getTypeDescription() );
-#endif  
-/*===========TESTING==========`*/
 
   d_isDbgOn       = dbg2.active();
   d_dbgCells.push_back( IntVector(0,0,0));
@@ -152,12 +148,8 @@ Ray::~Ray()
   VarLabel::destroy( d_flaggedCellsLabel );
   VarLabel::destroy( d_ROI_LoCellLabel );
   VarLabel::destroy( d_ROI_HiCellLabel );
-/*`==========TESTING==========*/
-#ifdef HAVE_VISIT
   VarLabel::destroy( d_PPTimerLabel );
-#endif
-/*===========TESTING==========`*/
-   
+
 //  VarLabel::destroy( d_divQFiltLabel );
 //  VarLabel::destroy( d_boundFluxFiltLabel );
     
@@ -373,6 +365,44 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
 #endif
   proc0cout << "__________________________________ " << endl;
 
+#ifdef HAVE_VISIT
+  static bool initialized = false;
+
+  // Running with VisIt so add in the variables that the user can
+  // modify.
+  if( d_sharedState->getVisIt() && !initialized ) {
+    // variable 1 - Must start with the component name and have NO
+    // spaces in the var name
+    SimulationState::interactiveVar var;
+    var.name     = "Ray-nDivQRays";
+    var.type     = Uintah::TypeDescription::int_type;
+    var.value    = (void *) &d_nDivQRays;
+    var.range[0]   = 1;
+    var.range[1]   = 100;
+    var.modifiable = true;
+    var.recompile  = false;
+    var.modified   = false;
+    d_sharedState->d_UPSVars.push_back( var );
+
+    // variable 2 - Must start with the component name and have NO
+    // spaces in the var name
+    var.name     = "Ray-nFluxRays";
+    var.type     = Uintah::TypeDescription::int_type;
+    var.value    = (void *) &d_nFluxRays;
+    var.range[0]   = 1;
+    var.range[1]   = 100;
+    var.modifiable = true;
+    var.recompile  = false;
+    var.modified   = false;
+    d_sharedState->d_UPSVars.push_back( var );
+    
+    d_sharedState->d_debugStreams.push_back( &dbg  );
+    d_sharedState->d_debugStreams.push_back( &dbg2 );
+    d_sharedState->d_debugStreams.push_back( &dbg_BC );
+
+    initialized = true;
+  }
+#endif
 }
 
 //______________________________________________________________________
@@ -536,14 +566,11 @@ Ray::sched_rayTrace( const LevelP& level,
 
     tsk->modifies( VRFluxLabel );
   }
+
   sched->addTask( tsk, level->eachPatch(), d_matlSet );
 
-/*`==========TESTING==========*/
-#ifdef HAVE_VISIT
   sched->overrideVariableBehavior(d_PPTimerLabel->getName(),
 				  false, false, true, true, true);
-#endif
-/*===========TESTING==========`*/
 }
 
 
@@ -1097,18 +1124,15 @@ Ray::rayTrace( const ProcessorGroup* pg,
     new_dw->transferFrom( old_dw, d_divQLabel,          patches, matls, replaceVar );
     new_dw->transferFrom( old_dw, d_boundFluxLabel,     patches, matls, replaceVar );
     new_dw->transferFrom( old_dw, d_radiationVolqLabel, patches, matls, replaceVar );
-/*`==========TESTING==========*/
-#ifdef HAVE_VISIT
-    // new_dw->transferFrom( old_dw, d_PPTimerLabel,       patches, matls, replaceVar );
 
+    // No carry forward just reset the time to zero.
     PerPatch< double > ppTimer = 0;
     
     for (int p=0; p<patches->size(); ++p) {
       const Patch* patch = patches->get(p);
       new_dw->put( ppTimer, d_PPTimerLabel, d_matl, patch);
     }
-#endif
-/*===========TESTING==========`*/
+
     return;
   }
 
@@ -1404,12 +1428,8 @@ Ray::rayTrace( const ProcessorGroup* pg,
 	   << endl;
     }
     
-/*`==========TESTING==========*/
-#ifdef HAVE_VISIT
     PerPatch< double > ppTimer = timer().seconds();
     new_dw->put( ppTimer, d_PPTimerLabel, d_matl, patch);
-#endif
-/*===========TESTING==========`*/
 
   }  //end patch loop
 }  // end ray trace method
@@ -1524,30 +1544,18 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
     tsk->modifies( d_divQLabel );
     tsk->modifies( d_boundFluxLabel );
     tsk->modifies( d_radiationVolqLabel );
-/*`==========TESTING==========*/
-#ifdef HAVE_VISIT
     tsk->modifies( d_PPTimerLabel );
-#endif
-/*===========TESTING==========`*/
   } else {
     tsk->computes( d_divQLabel );
     tsk->computes( d_boundFluxLabel );
     tsk->computes( d_radiationVolqLabel );
-/*`==========TESTING==========*/
-#ifdef HAVE_VISIT
     tsk->computes( d_PPTimerLabel );
-#endif
-/*===========TESTING==========`*/
   }
   
   sched->addTask( tsk, level->eachPatch(), d_matlSet );
 
-/*`==========TESTING==========*/
-#ifdef HAVE_VISIT
   sched->overrideVariableBehavior(d_PPTimerLabel->getName(),
 				  false, false, true, true, true);
-#endif
-/*===========TESTING==========`*/
 }
 
 
@@ -1577,18 +1585,15 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
     new_dw->transferFrom( old_dw, d_divQLabel,          finePatches, matls, replaceVar );
     new_dw->transferFrom( old_dw, d_boundFluxLabel,     finePatches, matls, replaceVar );
     new_dw->transferFrom( old_dw, d_radiationVolqLabel, finePatches, matls, replaceVar );
-/*`==========TESTING==========*/
-#ifdef HAVE_VISIT
-    // new_dw->transferFrom( old_dw, d_PPTimerLabel,       finePatches, matls, replaceVar );
 
+    // No carry forward just reset the time to zero.
     PerPatch< double > ppTimer = 0;    
 
     for (int p=0; p<finePatches->size(); ++p) {
       const Patch* finePatch = finePatches->get(p);
       new_dw->put( ppTimer, d_PPTimerLabel, d_matl, finePatch );
     }
-#endif
-/*===========TESTING==========`*/
+
     return;
   }
 
@@ -1885,13 +1890,9 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
 	   << endl;
     }
     
-/*`==========TESTING==========*/
-#ifdef HAVE_VISIT
     PerPatch< double > ppTimer = timer().seconds();
     new_dw->put( ppTimer, d_PPTimerLabel, d_matl, finePatch );
-#endif
-/*===========TESTING==========`*/
-    
+
   }  // end finePatch loop
 }  // end ray trace method
 
