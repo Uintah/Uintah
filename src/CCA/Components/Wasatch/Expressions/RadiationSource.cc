@@ -152,7 +152,6 @@ namespace WasatchCore {
     GridP grid = level->getGrid();
     const bool modifiesDivQ      = true;
     const bool includeExtraCells = false;  // domain for sigmaT4 computation
-    const int radiationCalcFreq = 5;
     // only sched on RK step 0 and on arches level
     if ( RKStage > 1 ) {
       return;
@@ -167,23 +166,23 @@ namespace WasatchCore {
       Uintah::Task::WhichDW abskgDW  = Task::NewDW;
       
       // if needed convert absorptionLabel: double -> float
-      rmcrt_->sched_DoubleToFloat( fineLevel, sched, abskgDW, radiationCalcFreq );
+      rmcrt_->sched_DoubleToFloat( fineLevel, sched, abskgDW );
       
-      rmcrt_->sched_sigmaT4( fineLevel,  sched, tempDW, 1, includeExtraCells );
+      rmcrt_->sched_sigmaT4( fineLevel,  sched, tempDW );
       
       for (int l = 0; l < maxLevels; l++) {
         const LevelP& level = grid->getLevel(l);
         const bool modifies_abskg   = false;
         const bool modifies_sigmaT4 = false;
         
-        rmcrt_->sched_CoarsenAll( level, sched, modifies_abskg, modifies_sigmaT4, radiationCalcFreq );
+        rmcrt_->sched_CoarsenAll( level, sched, modifies_abskg, modifies_sigmaT4 );
         
         if(level->hasFinerLevel() || maxLevels == 1){
           const Task::WhichDW sigmaT4DW  = Task::NewDW;
           const Task::WhichDW celltypeDW = Task::NewDW;
           
-          rmcrt_->sched_setBoundaryConditions( level, sched, tempDW, radiationCalcFreq, false );
-          rmcrt_->sched_rayTrace( level, sched, abskgDW, sigmaT4DW, celltypeDW, modifiesDivQ, radiationCalcFreq );
+          rmcrt_->sched_setBoundaryConditions( level, sched, tempDW, false );
+          rmcrt_->sched_rayTrace( level, sched, abskgDW, sigmaT4DW, celltypeDW, modifiesDivQ );
         }
       }
       
@@ -191,7 +190,7 @@ namespace WasatchCore {
       for (int l = 0; l < maxLevels; l++) {
         const LevelP& level = grid->getLevel(l);
         const PatchSet* patches = level->eachPatch();
-        rmcrt_->sched_Refine_Q( sched,  patches, materials, radiationCalcFreq );
+        rmcrt_->sched_Refine_Q( sched,  patches, materials );
       }
     }
     
