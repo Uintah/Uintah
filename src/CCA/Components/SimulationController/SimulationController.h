@@ -181,7 +181,6 @@ public:
   SimulationTime*      getSimulationTime() { return d_timeinfo; }
   SimulationInterface* getSimulationInterface() { return d_sim; }
   Regridder*           getRegridder() { return d_regridder; }
-  DataArchive*         getDataArchive() { return d_archive; }
 
   bool                 doAMR() { return d_doAMR; }
 
@@ -212,7 +211,7 @@ protected:
   SimulationTime*      d_timeinfo;
   SimulationInterface* d_sim;
   Regridder*           d_regridder;
-  DataArchive*         d_archive;
+  DataArchive*         d_restart_archive; // Only used when restarting: Data from UDA we are restarting from.
 
   GridP                d_currentGridP;
 

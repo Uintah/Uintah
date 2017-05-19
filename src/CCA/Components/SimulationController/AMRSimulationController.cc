@@ -775,7 +775,6 @@ AMRSimulationController::executeTimestep( int totalFine )
   // If the timestep needs to be restarted, this loop will execute
   // multiple times.
   bool success = true;
-  double orig_delt = d_delt;
 
   do {
     bool restartable = d_sim->restartableTimesteps();
