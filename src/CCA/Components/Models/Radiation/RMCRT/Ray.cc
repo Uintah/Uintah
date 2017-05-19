@@ -549,12 +549,10 @@ Ray::sched_rayTrace( const LevelP& level,
     tsk->modifies( d_divQLabel );
     tsk->modifies( d_boundFluxLabel );
     tsk->modifies( d_radiationVolqLabel );
-    tsk->modifies( d_PPTimerLabel );
   } else {
     tsk->computes( d_divQLabel );
     tsk->computes( d_boundFluxLabel );
     tsk->computes( d_radiationVolqLabel );
-    tsk->computes( d_PPTimerLabel );
   }
 
 
@@ -570,8 +568,15 @@ Ray::sched_rayTrace( const LevelP& level,
     tsk->modifies( VRFluxLabel );
   }
 
+#ifdef USE_TIMER 
+  if( modifies_divQ ){
+    tsk->modifies( d_PPTimerLabel );
+  } else {
+    tsk->computes( d_PPTimerLabel );
+  }
   sched->overrideVariableBehavior(d_PPTimerLabel->getName(),
 				  false, false, true, true, true);
+#endif
 
   sched->addTask( tsk, level->eachPatch(), d_matlSet );
 
@@ -1129,6 +1134,7 @@ Ray::rayTrace( const ProcessorGroup* pg,
     new_dw->transferFrom( old_dw, d_boundFluxLabel,     patches, matls, replaceVar );
     new_dw->transferFrom( old_dw, d_radiationVolqLabel, patches, matls, replaceVar );
 
+#ifdef USE_TIMER 
     // No carry forward just reset the time to zero.
     PerPatch< double > ppTimer = 0;
     
@@ -1136,7 +1142,7 @@ Ray::rayTrace( const ProcessorGroup* pg,
       const Patch* patch = patches->get(p);
       new_dw->put( ppTimer, d_PPTimerLabel, d_matl, patch);
     }
-
+#endif
     return;
   }
 
@@ -1431,10 +1437,10 @@ Ray::rayTrace( const ProcessorGroup* pg,
 	   << " steps per sec" << endl
 	   << endl;
     }
-    
+#ifdef USE_TIMER    
     PerPatch< double > ppTimer = timer().seconds();
     new_dw->put( ppTimer, d_PPTimerLabel, d_matl, patch);
-
+#endif
   }  //end patch loop
 }  // end ray trace method
 
@@ -1548,16 +1554,21 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
     tsk->modifies( d_divQLabel );
     tsk->modifies( d_boundFluxLabel );
     tsk->modifies( d_radiationVolqLabel );
-    tsk->modifies( d_PPTimerLabel );
   } else {
     tsk->computes( d_divQLabel );
     tsk->computes( d_boundFluxLabel );
     tsk->computes( d_radiationVolqLabel );
-    tsk->computes( d_PPTimerLabel );
   }
 
+#ifdef USE_TIMER 
+  if( modifies_divQ ){
+    tsk->modifies( d_PPTimerLabel );
+  } else {
+    tsk->computes( d_PPTimerLabel );
+  }
   sched->overrideVariableBehavior(d_PPTimerLabel->getName(),
 				  false, false, true, true, true);
+#endif
                                 
   sched->addTask( tsk, level->eachPatch(), d_matlSet );
 
@@ -1591,6 +1602,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
     new_dw->transferFrom( old_dw, d_boundFluxLabel,     finePatches, matls, replaceVar );
     new_dw->transferFrom( old_dw, d_radiationVolqLabel, finePatches, matls, replaceVar );
 
+#ifdef USE_TIMER 
     // No carry forward just reset the time to zero.
     PerPatch< double > ppTimer = 0;    
 
@@ -1598,7 +1610,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
       const Patch* finePatch = finePatches->get(p);
       new_dw->put( ppTimer, d_PPTimerLabel, d_matl, finePatch );
     }
-
+#endif
     return;
   }
 
@@ -1894,10 +1906,11 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
 	   << " steps per sec" << endl
 	   << endl;
     }
-    
+
+#ifdef USE_TIMER     
     PerPatch< double > ppTimer = timer().seconds();
     new_dw->put( ppTimer, d_PPTimerLabel, d_matl, finePatch );
-
+#endif
   }  // end finePatch loop
 }  // end ray trace method
 
