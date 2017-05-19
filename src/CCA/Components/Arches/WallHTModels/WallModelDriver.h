@@ -412,7 +412,24 @@ namespace Uintah{
                 yscale = 8.97627710e-2; 
                 ycenter = 0.927990005; 
                 fresnel={0.966128001, -1.14864873e-06, -0.164711924, -0.00571174902};
-	      } else {
+	      } else if (ash_type == "illinois_no6"){
+		a_sv = -1.71194151e4;
+		b_sv = -1.02161804;
+		c_sv = 6.05690164;
+		a_agg = 3.32945976e-3;
+		b_agg = 8.57489020;
+		c_agg = 3.31450986e-1;
+		dp_eff_max=0.67474660;
+		dp_eff_min=0.33333333;
+		dpmax = 0.00300000;
+		coeff_num = {0.60190197, -0.06016279, 0.31530464, 0.26579167, 0.17683372, -1.00111578};
+		coeff_den = {1.00000000, 0.00291437, 0.09952477, -0.00413678, 0.00292903, -0.82206072};
+		xscale = {7.50000000e2, 1.49625000e-3};
+		xcenter = {1.05000000e3, 1.50375000e-3};
+		yscale = 6.20802975e-2;
+		ycenter = 9.61130804e-1;
+		fresnel={9.58768721e-1, -1.80604902e-6, -1.55523143e-1, -5.46986472e-3};
+	      }else {
                 throw InvalidValue("Error, coal_name wasn't recognized in dynamic ash emissivity data-base. ", __FILE__, __LINE__);
               }
 
