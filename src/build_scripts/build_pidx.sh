@@ -7,7 +7,7 @@
 # $2 - whether Uintah is being built in debug mode or not...
 #
 
-PIDX_TAG="tags/v0.9"
+PIDX_TAG="v0.9"
 
 PIDX_DIR=$1
 
@@ -46,15 +46,18 @@ echo   "    Using Cmake: "`which cmake`
 echo   ""
 echo   "------------------------------------------------------------------"
 
+if  [ ! -d "$PIDX_DIR" ]; then
+  run "git clone --branch ${PIDX_TAG} --depth=1 https://github.com/sci-visus/PIDX.git $PIDX_DIR"
+fi
 run "cd $PIDX_DIR"
 
 if  [ ! -d "./build" ]; then
-  run "git init"
-  run "git remote add -t master origin https://github.com/sci-visus/PIDX.git"
   run "mkdir build"
 fi
 
-run "git fetch --depth=1 --prune origin \"$PIDX_TAG\""
+run "git config --unset-all remote.origin.fetch"
+run "git config --add remote.origin.fetch +refs/tags/${PIDX_TAG}:refs/tags/${PIDX_TAG}"
+run "git fetch --depth=1 --prune origin tags/${PIDX_TAG}"
 run "git checkout FETCH_HEAD"
 
 run "cd build"
@@ -72,7 +75,7 @@ run \
     -DPIDX_BUILD_TUTORIAL=FALSE \
   .."
 
-run "make install"
+run "make -j4 install"
 
 echo ""
 echo "Done Building PIDX Library."

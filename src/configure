@@ -37953,8 +37953,6 @@ if test "$build_pidx_lib" != "no"; then
 
   PIDX_DIR="PIDX_Library"
 
-  mkdir -p $PIDX_DIR
-
   $path_to_src/build_scripts/build_pidx.sh `$sci_pwd`/$PIDX_DIR "$debug" "$IS_STATIC_BUILD"
 
   if test $? != 0; then
