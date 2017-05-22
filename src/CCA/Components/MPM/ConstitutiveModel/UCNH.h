@@ -136,7 +136,6 @@ namespace Uintah {
   private:
     // Prevent copying of this class
     // copy constructor
-    //UCNH(const UCNH &cm);
     UCNH& operator=(const UCNH &cm);
 
     // Plasticity requirements
@@ -145,7 +144,6 @@ namespace Uintah {
   public:
     // constructor
     UCNH(ProblemSpecP& ps, MPMFlags* flag, bool plas, bool dam);
-    UCNH(const UCNH* cm);
 
     // specifcy what to output from the constitutive model to an .xml file
     virtual void outputProblemSpec(ProblemSpecP& ps, bool output_cm_tag = true);

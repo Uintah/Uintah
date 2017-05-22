@@ -65,7 +65,7 @@ namespace Uintah {
   public:
     // constructors
     Diamm(ProblemSpecP& ps, MPMFlags* flag);
-    Diamm(const Diamm* cm);
+    //    Diamm(const Diamm* cm);
 
     // destructor
     virtual ~Diamm();

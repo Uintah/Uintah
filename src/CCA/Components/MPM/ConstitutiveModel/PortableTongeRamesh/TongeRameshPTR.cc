@@ -73,14 +73,8 @@ TongeRameshPTR::TongeRameshPTR(ProblemSpecP& ps, MPMFlags* Mflag)
   initializeLocalMPMLabels(); // Create CM specific labels
 }
 
-TongeRameshPTR::TongeRameshPTR(const TongeRameshPTR* cm) : ConstitutiveModel(cm), ImplicitCM(cm)
-{
-  d_nProps = cm->d_nProps;
-  d_matParamArray = cm->d_matParamArray;
-  initializeLocalMPMLabels(); // Create CM specific labels
-}
-
-void TongeRameshPTR::initializeLocalMPMLabels()
+void
+TongeRameshPTR::initializeLocalMPMLabels()
 {
   d_numHistVar = PTR_umat_getNumStateVars(d_nProps, d_matParamArray.data());
   // Based on Kayenta interface:

@@ -158,7 +158,7 @@ namespace Uintah {
     /*! \brief constructors */
     ////////////////////////////////////////////////////////////////////////
     ElasticPlasticHP(ProblemSpecP& ps,MPMFlags* flag);
-    ElasticPlasticHP(const ElasticPlasticHP* cm);
+    //    ElasticPlasticHP(const ElasticPlasticHP* cm);
          
     ////////////////////////////////////////////////////////////////////////
     /*! \brief destructor  */

@@ -24,13 +24,6 @@ CNH_MMS::CNH_MMS(ProblemSpecP& ps, MPMFlags* Mflag)
   ps->get("useModifiedEOS",d_useModifiedEOS); 
 }
 
-CNH_MMS::CNH_MMS(const CNH_MMS* cm) : ConstitutiveModel(cm)
-{
-  d_useModifiedEOS = cm->d_useModifiedEOS ;
-  d_initialData.Bulk = cm->d_initialData.Bulk;
-  d_initialData.Shear = cm->d_initialData.Shear;
-}
-
 CNH_MMS::~CNH_MMS()
 {
 }

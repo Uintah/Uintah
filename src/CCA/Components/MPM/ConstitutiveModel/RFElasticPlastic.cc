@@ -190,46 +190,6 @@ RFElasticPlastic::RFElasticPlastic(ProblemSpecP& ps,MPMFlags* Mflag)
   initializeLocalMPMLabels();
 }
 
-RFElasticPlastic::RFElasticPlastic(const RFElasticPlastic* cm) :
-  ConstitutiveModel(cm)
-{
-  d_initialData.Bulk = cm->d_initialData.Bulk;
-  d_initialData.Shear = cm->d_initialData.Shear;
-  d_initialData.alpha = cm->d_initialData.alpha;
-  d_initialData.Chi = cm->d_initialData.Chi;
-  d_initialData.sigma_crit = cm->d_initialData.sigma_crit;
-  //********** Concentration Component****************************
-  d_initialData.vol_exp_coeff = cm->d_initialData.vol_exp_coeff;
-  //********** Concentration Component****************************
-
-  d_tol = cm->d_tol ;
-  d_useModifiedEOS = cm->d_useModifiedEOS;
-
-  d_initialMaterialTemperature = cm->d_initialMaterialTemperature ;
-  d_checkTeplaFailureCriterion = cm->d_checkTeplaFailureCriterion;
-  d_doMelting = cm->d_doMelting;
-  d_checkStressTriax = cm->d_checkStressTriax;
-
-  d_computeSpecificHeat = cm->d_computeSpecificHeat;
-  /*
-  d_Cp.A = cm->d_Cp.A;
-  d_Cp.B = cm->d_Cp.B;
-  d_Cp.C = cm->d_Cp.C;
-  d_Cp.n = cm->d_Cp.n;
-  */
-  d_Cp      = SpecificHeatModelFactory::createCopy(cm->d_Cp);
-  d_yield   = YieldConditionFactory::createCopy(cm->d_yield);
-  d_stable  = StabilityCheckFactory::createCopy(cm->d_stable);
-  d_flow    = FlowStressModelFactory::createCopy(cm->d_flow);
-  d_eos     = MPMEquationOfStateFactory::createCopy(cm->d_eos);
-  d_eos->setBulkModulus(d_initialData.Bulk);
-  d_shear   = ShearModulusModelFactory::createCopy(cm->d_shear);
-  d_melt    = MeltingTempModelFactory::createCopy(cm->d_melt);
-  d_devStress = 0;
-  
-  initializeLocalMPMLabels();
-}
-
 RFElasticPlastic::~RFElasticPlastic()
 {
   // Destructor 

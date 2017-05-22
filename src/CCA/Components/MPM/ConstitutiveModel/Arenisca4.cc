@@ -151,74 +151,7 @@ Arenisca4::Arenisca4(ProblemSpecP& ps, MPMFlags* Mflag)
 
   initializeLocalMPMLabels();
 }
-Arenisca4::Arenisca4(const Arenisca4* cm)
-  : ConstitutiveModel(cm)
-{
-  one_third      = 1.0/3.0;
-  two_third      = 2.0/3.0;
-  four_third     = 4.0/3.0;
-  sqrt_two       = sqrt(2.0);
-  one_sqrt_two   = 1.0/sqrt_two;
-  sqrt_three     = sqrt(3.0);
-  one_sqrt_three = 1.0/sqrt_three;
-  one_ninth      = 1.0/9.0;
-  one_sixth      = 1.0/6.0;
-  pi  = 3.141592653589793238462;
-  pi_fourth = 0.25*pi;
-  pi_half = 0.5*pi;
 
-  Identity.Identity();
-
-  //Weibull distribution input
-  wdist.WeibMed    = cm->wdist.WeibMed;
-  wdist.WeibMod    = cm->wdist.WeibMod;
-  wdist.WeibRefVol = cm->wdist.WeibRefVol;
-  wdist.WeibSeed   = cm->wdist.WeibSeed;
-  wdist.Perturb    = cm->wdist.Perturb;
-  wdist.WeibDist   = cm->wdist.WeibDist;
-
-  WeibullParser(wdist);
-
-  // Shear Strength
-  d_cm.PEAKI1 = cm->d_cm.PEAKI1;
-  d_cm.FSLOPE = cm->d_cm.FSLOPE;
-  d_cm.STREN = cm->d_cm.STREN;
-  d_cm.YSLOPE = cm->d_cm.YSLOPE;
-  d_cm.BETA_nonassociativity = cm->d_cm.BETA_nonassociativity;
-  // Bulk Modulus
-  d_cm.B0 = cm->d_cm.B0;
-  d_cm.B1 = cm->d_cm.B1;
-  d_cm.B2 = cm->d_cm.B2;
-  d_cm.B3 = cm->d_cm.B3;
-  d_cm.B4 = cm->d_cm.B4;
-  // Shear Modulus
-  d_cm.G0 = cm->d_cm.G0;
-  d_cm.G1 = cm->d_cm.G1; //not used
-  d_cm.G2 = cm->d_cm.G2; //not used
-  d_cm.G3 = cm->d_cm.G3; //not used
-  d_cm.G4 = cm->d_cm.G4; //not used
-  // Porosity (Crush Curve)
-  d_cm.p0_crush_curve = cm->d_cm.p0_crush_curve;
-  d_cm.p1_crush_curve = cm->d_cm.p1_crush_curve;
-  d_cm.p2_crush_curve = cm->d_cm.p2_crush_curve; // not used
-  d_cm.p3_crush_curve = cm->d_cm.p3_crush_curve;
-  d_cm.CR = cm->d_cm.CR;
-  // Fluid Effects
-  d_cm.fluid_B0 = cm->d_cm.fluid_B0;
-  d_cm.fluid_pressure_initial = cm->d_cm.fluid_pressure_initial;
-  // Rate Dependence
-  d_cm.T1_rate_dependence = cm->d_cm.T1_rate_dependence;
-  d_cm.T2_rate_dependence = cm->d_cm.T2_rate_dependence;
-  // Subcycling
-  d_cm.subcycling_characteristic_number = cm->d_cm.subcycling_characteristic_number;
-  initializeLocalMPMLabels();
-  // Disaggregation Strain
-  d_cm.Use_Disaggregation_Algorithm = cm->d_cm.Use_Disaggregation_Algorithm;
-  // 3rd Invariant Dependence
-  d_cm.J3_type = cm->d_cm.J3_type;
-  d_cm.J3_psi = cm->d_cm.J3_psi;
-  d_cm.principal_stress_cutoff = cm->d_cm.principal_stress_cutoff;
-}
 // DESTRUCTOR
 Arenisca4::~Arenisca4()
 {

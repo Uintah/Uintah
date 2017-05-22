@@ -65,13 +65,11 @@ namespace Uintah {
   private:
     // Prevent copying of this class
     // copy constructor
-    //Water(const Water &cm);
     Water& operator=(const Water &cm);
 
   public:
     // constructors
     Water(ProblemSpecP& ps, MPMFlags* flag);
-    Water(const Water* cm);
        
     // destructor
     virtual ~Water();

@@ -127,38 +127,8 @@ ViscoTransIsoHyperImplicit::ViscoTransIsoHyperImplicit(ProblemSpecP& ps,
         ParticleVariable<Matrix3>::getTypeDescription());
 }
 
-ViscoTransIsoHyperImplicit::ViscoTransIsoHyperImplicit(const ViscoTransIsoHyperImplicit* cm) : ConstitutiveModel(cm), ImplicitCM(cm)
-{
-  d_useModifiedEOS = cm->d_useModifiedEOS ;
-
-  d_initialData.Bulk = cm->d_initialData.Bulk;
-  d_initialData.c1 = cm->d_initialData.c1;
-  d_initialData.c2 = cm->d_initialData.c2;
-  d_initialData.c3 = cm->d_initialData.c3;
-  d_initialData.c4 = cm->d_initialData.c4;
-  d_initialData.c5 = cm->d_initialData.c5;
-  d_initialData.lambda_star = cm->d_initialData.lambda_star;
-  d_initialData.a0 = cm->d_initialData.a0;
-  d_initialData.failure = cm->d_initialData.failure;
-  d_initialData.crit_stretch = cm->d_initialData.crit_stretch;
-  d_initialData.crit_shear = cm->d_initialData.crit_shear;
-  
-  d_initialData.y1 = cm->d_initialData.y1;//visco parameters
-  d_initialData.y2 = cm->d_initialData.y2;
-  d_initialData.y3 = cm->d_initialData.y3;
-  d_initialData.y4 = cm->d_initialData.y4;
-  d_initialData.y5 = cm->d_initialData.y5;
-  d_initialData.y6 = cm->d_initialData.y6;
-  d_initialData.t1 = cm->d_initialData.t1;
-  d_initialData.t2 = cm->d_initialData.t2;
-  d_initialData.t3 = cm->d_initialData.t3;
-  d_initialData.t4 = cm->d_initialData.t4;
-  d_initialData.t5 = cm->d_initialData.t5;
-  d_initialData.t6 = cm->d_initialData.t6;
-}
-
-ViscoTransIsoHyperImplicit::~ViscoTransIsoHyperImplicit()
 // _______________________DESTRUCTOR
+ViscoTransIsoHyperImplicit::~ViscoTransIsoHyperImplicit()
 {
   VarLabel::destroy(pStretchLabel);
   VarLabel::destroy(pStretchLabel_preReloc);

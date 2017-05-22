@@ -88,11 +88,13 @@ HypoElasticFortran::HypoElasticFortran( ProblemSpecP& ps,MPMFlags* Mflag ) :
   HOOKECHK(UI,UI,UI);
 }
 
+#if 0
 HypoElasticFortran::HypoElasticFortran(const HypoElasticFortran* cm) : ConstitutiveModel(cm)
 {
   d_initialData.G = cm->d_initialData.G;
   d_initialData.K = cm->d_initialData.K;
 }
+#endif
 
 HypoElasticFortran::~HypoElasticFortran()
 {

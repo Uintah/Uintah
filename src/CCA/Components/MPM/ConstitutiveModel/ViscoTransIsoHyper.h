@@ -106,13 +106,11 @@ namespace Uintah {
 
     // Prevent copying of this class
     // copy constructor
-    //ViscoTransIsoHyper(const ViscoTransIsoHyper &cm);
     ViscoTransIsoHyper& operator=(const ViscoTransIsoHyper &cm);
 
   public:
     // constructors
     ViscoTransIsoHyper(ProblemSpecP& ps, MPMFlags* flag);
-    ViscoTransIsoHyper(const ViscoTransIsoHyper* cm);
        
     // destructor
     virtual ~ViscoTransIsoHyper();

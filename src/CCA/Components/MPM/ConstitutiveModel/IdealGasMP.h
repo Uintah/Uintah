@@ -63,7 +63,7 @@ namespace Uintah {
   public:
     // constructors
     IdealGasMP(ProblemSpecP& ps, MPMFlags* flag);
-    IdealGasMP(const IdealGasMP* cm);
+    //IdealGasMP(const IdealGasMP* cm);
        
     // destructor
     virtual ~IdealGasMP();

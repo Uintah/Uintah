@@ -141,7 +141,6 @@ namespace Uintah {
   public:
     // constructor
     Arenisca(ProblemSpecP& ps, MPMFlags* flag);
-    Arenisca(const Arenisca* cm);
 
     // destructor
     virtual ~Arenisca();

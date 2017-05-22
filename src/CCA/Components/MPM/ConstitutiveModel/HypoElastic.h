@@ -75,7 +75,7 @@ namespace Uintah {
   public:
     // constructors
     HypoElastic(ProblemSpecP& ps, MPMFlags* flag);
-    HypoElastic(const HypoElastic* cm);
+    //    HypoElastic(const HypoElastic* cm);
        
     // destructor
     virtual ~HypoElastic();

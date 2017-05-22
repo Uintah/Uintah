@@ -107,13 +107,11 @@ namespace Uintah {
 
          // Prevent copying of this class
          // copy constructor
-         //ViscoScramImplicit(const ViscoScramImplicit &cm);
          ViscoScramImplicit& operator=(const ViscoScramImplicit &cm);
 
       public:
          // constructors
          ViscoScramImplicit(ProblemSpecP& ps, MPMFlags* flag);
-         ViscoScramImplicit(const ViscoScramImplicit* cm);
        
          // destructor
          virtual ~ViscoScramImplicit();

@@ -71,23 +71,6 @@ P_Alpha::P_Alpha(ProblemSpecP& ps,MPMFlags* Mflag)
                             ParticleVariable<double>::getTypeDescription());
 }
 
-P_Alpha::P_Alpha(const P_Alpha* cm) : ConstitutiveModel(cm)
-{
-  d_initialData.Ps     = cm->d_initialData.Ps;
-  d_initialData.Pe     = cm->d_initialData.Pe;
-  d_initialData.rhoS   = cm->d_initialData.rhoS;
-  // Compute alpha0 from material density and rhoS - Jim 9/8/2011
-  //d_initialData.alpha0 = cm->d_initialData.alpha0;
-  d_initialData.K0     = cm->d_initialData.K0;
-  d_initialData.Ks     = cm->d_initialData.Ks;
-  d_initialData.Ku     = cm->d_initialData.Ku;
-
-  d_initialData.T_0    = cm->d_initialData.T_0;
-  d_initialData.C_0    = cm->d_initialData.C_0;
-  d_initialData.Gamma_0= cm->d_initialData.Gamma_0;
-  d_initialData.S_alpha= cm->d_initialData.S_alpha;
-}
-
 P_Alpha::~P_Alpha()
 {
   VarLabel::destroy(alphaLabel);

@@ -132,36 +132,6 @@ ViscoPlastic::ViscoPlastic(ProblemSpecP& ps, MPMFlags* Mflag) :
 
 }
 
-ViscoPlastic::ViscoPlastic(const ViscoPlastic* cm)
-  : ConstitutiveModel(cm), ImplicitCM(cm)
-{
-  d_initialData.Bulk = cm->d_initialData.Bulk;
-  d_initialData.Shear = cm->d_initialData.Shear;
-  d_initialData.alpha = cm->d_initialData.alpha;
-  d_useModifiedEOS = cm->d_useModifiedEOS;
-  d_removeParticles = cm->d_removeParticles;
-  d_setStressToZero = cm->d_setStressToZero;
-//  d_checkFailureMaxTensileStress = cm->d_checkFailureMaxTensileStress;
-//   d_evolvePorosity = cm->d_evolvePorosity;
-//   d_evolveDamage = cm->d_evolveDamage;
-//   d_checkTeplaFailureCriterion = cm->d_checkTeplaFailureCriterion;
-  d_tol = cm->d_tol ;
-  d_initialMaterialTemperature = cm->d_initialMaterialTemperature ;
-  
-//   d_yield = YieldConditionFactory::createCopy(cm->d_yield);
-  d_stable = StabilityCheckFactory::createCopy(cm->d_stable);
-  d_plastic = ViscoPlasticityModelFactory::createCopy(cm->d_plastic);
-//   d_damage = DamageModelFactory::createCopy(cm->d_damage);
-  d_eos = MPMEquationOfStateFactory::createCopy(cm->d_eos);
-  d_eos->setBulkModulus(d_initialData.Bulk);
-  
-  // Initialize local VarLabels
-  initializeLocalMPMLabels();
-
-  // Set the failure strain data
-  setFailureVariableData(cm);
-}
-
 ViscoPlastic::~ViscoPlastic()
 {
   // Destructor 

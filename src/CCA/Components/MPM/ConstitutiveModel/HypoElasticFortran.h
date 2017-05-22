@@ -63,7 +63,7 @@ namespace Uintah {
   public:
     // constructors
     HypoElasticFortran(ProblemSpecP& ps, MPMFlags* flag);
-    HypoElasticFortran(const HypoElasticFortran* cm);
+    //    HypoElasticFortran(const HypoElasticFortran* cm);
        
     // destructor
     virtual ~HypoElasticFortran();

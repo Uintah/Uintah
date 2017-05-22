@@ -76,7 +76,7 @@ namespace Uintah {
   public:
     // constructors
     MurnaghanMPM(ProblemSpecP& ps, MPMFlags* flag);
-    MurnaghanMPM(const MurnaghanMPM* cm);
+    //    MurnaghanMPM(const MurnaghanMPM* cm);
        
     // destructor
     virtual ~MurnaghanMPM();

@@ -111,13 +111,11 @@ namespace Uintah {
 
          // Prevent copying of this class
          // copy constructor
-         //ViscoTransIsoHyperImplicit(const ViscoTransIsoHyperImplicit &cm);
          ViscoTransIsoHyperImplicit& operator=(const ViscoTransIsoHyperImplicit &cm);
 
       public:
          // constructors
          ViscoTransIsoHyperImplicit(ProblemSpecP& ps,MPMFlags* flag);
-         ViscoTransIsoHyperImplicit(const ViscoTransIsoHyperImplicit* cm);
        
          // destructor
          virtual ~ViscoTransIsoHyperImplicit();

@@ -70,6 +70,7 @@ NonLocalDruckerPrager::NonLocalDruckerPrager(ProblemSpecP& ps, MPMFlags* Mflag)
   initializeLocalMPMLabels();
 }
 
+#if 0
 NonLocalDruckerPrager::NonLocalDruckerPrager(const NonLocalDruckerPrager* cm)
   : ConstitutiveModel(cm)
 {
@@ -98,6 +99,7 @@ NonLocalDruckerPrager::NonLocalDruckerPrager(const NonLocalDruckerPrager* cm)
 
   initializeLocalMPMLabels();
 }
+#endif
 
 NonLocalDruckerPrager::~NonLocalDruckerPrager()
 {

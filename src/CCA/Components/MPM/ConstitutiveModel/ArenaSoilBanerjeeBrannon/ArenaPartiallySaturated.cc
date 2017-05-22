@@ -232,50 +232,6 @@ ArenaPartiallySaturated::checkInputParameters()
   // *TODO*  Add checks for the other parameters
 }
 
-ArenaPartiallySaturated::ArenaPartiallySaturated(const ArenaPartiallySaturated* cm)
-  : ConstitutiveModel(cm)
-{
-  d_elastic = Vaango::ElasticModuliModelFactory::createCopy(cm->d_elastic);
-  d_yield   = Vaango::YieldConditionFactory::createCopy(cm->d_yield);
-
-  // Density-based scaling 
-  d_modulus_scale_fac = cm->d_modulus_scale_fac;
-  d_strength_scale_fac = cm->d_strength_scale_fac;
-
-  // Porosity and saturation
-  d_fluidParam = cm->d_fluidParam;
-
-  // Hydrostatic compression parameters
-  d_crushParam = cm->d_crushParam;
-
-  // Yield surface scaling
-  d_cm.yield_scale_fac = cm->d_cm.yield_scale_fac;
-
-  // Consistency bisection
-  d_cm.consistency_bisection_tolerance = cm->d_cm.consistency_bisection_tolerance;
-  d_cm.max_bisection_iterations = cm->d_cm.max_bisection_iterations;
-
-  // Subcycling
-  d_cm.subcycling_characteristic_number = cm->d_cm.subcycling_characteristic_number;
-
-  // Disaggregation Strain
-  d_cm.use_disaggregation_algorithm = cm->d_cm.use_disaggregation_algorithm;
-
-  // Damage
-  d_cm.do_damage = cm->d_cm.do_damage;
-  d_damageParam = cm->d_damageParam;
-
-  // For initialization with body force
-  d_initializeWithBodyForce = cm->d_initializeWithBodyForce;
-  d_surfaceRefPoint = cm->d_surfaceRefPoint;
-
-  // For MPMICE Murnaghan EOS
-  d_cm.K0_Murnaghan_EOS = cm->d_cm.K0_Murnaghan_EOS;
-  d_cm.n_Murnaghan_EOS = cm->d_cm.n_Murnaghan_EOS;
-
-  initializeLocalMPMLabels();
-}
-
 // Initialize all labels of the particle variables associated with 
 // ArenaPartiallySaturated.
 void 

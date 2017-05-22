@@ -63,33 +63,15 @@ TransIsoHyperImplicit::TransIsoHyperImplicit(ProblemSpecP& ps,MPMFlags* Mflag)
   ps->require("max_matrix_strain",d_initialData.crit_shear);
   ps->get("useModifiedEOS",d_useModifiedEOS);//no negative pressure for solids
 
-  pStretchLabel = VarLabel::create("p.stretch",
-     ParticleVariable<double>::getTypeDescription());
-  pStretchLabel_preReloc = VarLabel::create("p.stretch+",
-     ParticleVariable<double>::getTypeDescription());
+  pStretchLabel = VarLabel::create( "p.stretch",
+                                    ParticleVariable<double>::getTypeDescription() );
+  pStretchLabel_preReloc = VarLabel::create( "p.stretch+",
+                                             ParticleVariable<double>::getTypeDescription() );
 
-  pFailureLabel = VarLabel::create("p.fail",
-     ParticleVariable<double>::getTypeDescription());
-  pFailureLabel_preReloc = VarLabel::create("p.fail+",
-     ParticleVariable<double>::getTypeDescription());
-}
-
-TransIsoHyperImplicit::TransIsoHyperImplicit(const TransIsoHyperImplicit* cm)
-  : ConstitutiveModel(cm), ImplicitCM(cm)
-{
-  d_useModifiedEOS = cm->d_useModifiedEOS ;
-
-  d_initialData.Bulk = cm->d_initialData.Bulk;
-  d_initialData.c1 = cm->d_initialData.c1;
-  d_initialData.c2 = cm->d_initialData.c2;
-  d_initialData.c3 = cm->d_initialData.c3;
-  d_initialData.c4 = cm->d_initialData.c4;
-  d_initialData.c5 = cm->d_initialData.c5;
-  d_initialData.lambda_star = cm->d_initialData.lambda_star;
-  d_initialData.a0 = cm->d_initialData.a0;
-  d_initialData.failure = cm->d_initialData.failure;
-  d_initialData.crit_stretch = cm->d_initialData.crit_stretch;
-  d_initialData.crit_shear = cm->d_initialData.crit_shear;
+  pFailureLabel = VarLabel::create( "p.fail",
+                                    ParticleVariable<double>::getTypeDescription() );
+  pFailureLabel_preReloc = VarLabel::create( "p.fail+",
+                                             ParticleVariable<double>::getTypeDescription() );
 }
 
 TransIsoHyperImplicit::~TransIsoHyperImplicit()

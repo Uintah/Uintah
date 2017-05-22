@@ -74,23 +74,6 @@ TransIsoHyper::TransIsoHyper(ProblemSpecP& ps, MPMFlags* Mflag) :
      ParticleVariable<double>::getTypeDescription());
 }
 
-TransIsoHyper::TransIsoHyper(const TransIsoHyper* cm) : ConstitutiveModel(cm)
-{
-  d_useModifiedEOS = cm->d_useModifiedEOS ;
-
-  d_initialData.Bulk = cm->d_initialData.Bulk;
-  d_initialData.c1 = cm->d_initialData.c1;
-  d_initialData.c2 = cm->d_initialData.c2;
-  d_initialData.c3 = cm->d_initialData.c3;
-  d_initialData.c4 = cm->d_initialData.c4;
-  d_initialData.c5 = cm->d_initialData.c5;
-  d_initialData.lambda_star = cm->d_initialData.lambda_star;
-  d_initialData.a0 = cm->d_initialData.a0;
-  d_initialData.failure = cm->d_initialData.failure;
-  d_initialData.crit_stretch = cm->d_initialData.crit_stretch;
-  d_initialData.crit_shear = cm->d_initialData.crit_shear;
-}
-
 TransIsoHyper::~TransIsoHyper()
   // _______________________DESTRUCTOR
 {
@@ -100,8 +83,8 @@ TransIsoHyper::~TransIsoHyper()
   VarLabel::destroy(pFailureLabel_preReloc);
 }
 
-
-void TransIsoHyper::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
+void
+TransIsoHyper::outputProblemSpec( ProblemSpecP& ps, bool output_cm_tag )
 {
   ProblemSpecP cm_ps = ps;
   if (output_cm_tag) {

@@ -46,12 +46,14 @@ IdealGasMP::IdealGasMP(ProblemSpecP& ps,MPMFlags* Mflag)
   ps->getWithDefault("Pref",d_initialData.Pref,101325.);
 }
 
+#if 0
 IdealGasMP::IdealGasMP(const IdealGasMP* cm) : ConstitutiveModel(cm)
 {
   d_initialData.gamma = cm->d_initialData.gamma;
   d_initialData.cv = cm->d_initialData.cv;
   d_initialData.Pref = cm->d_initialData.Pref;
 }
+#endif
 
 IdealGasMP::~IdealGasMP()
 {

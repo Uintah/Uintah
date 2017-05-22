@@ -41,10 +41,9 @@
 using namespace std;
 using namespace Uintah;
 
-SoilFoam::SoilFoam(ProblemSpecP& ps, MPMFlags* Mflag) 
-  : ConstitutiveModel(Mflag)
+SoilFoam::SoilFoam( ProblemSpecP& ps, MPMFlags* Mflag ) :
+  ConstitutiveModel(Mflag)
 {
-
   ps->require("elastic_shear",d_initialData.G);
   ps->require("bulk",d_initialData.bulk);
   ps->require("a0",d_initialData.a0);
@@ -86,34 +85,9 @@ SoilFoam::SoilFoam(ProblemSpecP& ps, MPMFlags* Mflag)
                 ParticleVariable<double>::getTypeDescription());
 }
 
-SoilFoam::SoilFoam(const SoilFoam* cm)
-  : ConstitutiveModel(cm)
-{
-  d_initialData.G = cm->d_initialData.G;
-  d_initialData.bulk = cm->d_initialData.bulk;
-  d_initialData.a0 = cm->d_initialData.a0;
-  d_initialData.a1 = cm->d_initialData.a1;
-  d_initialData.a2 = cm->d_initialData.a2;
-  d_initialData.pc = cm->d_initialData.pc;
-  int i;
-  for(i=0; i<10; i++){
-     d_initialData.eps[i] = cm->d_initialData.eps[i];
-     d_initialData.p[i] = cm->d_initialData.p[i];
-  }
-  for(i=0; i<9; i++) slope[i] = cm->slope[i];
-
-  sv_minLabel = VarLabel::create("p.sv_minLabel",
-                ParticleVariable<double>::getTypeDescription());
-  sv_minLabel_preReloc = VarLabel::create("p.sv_minLabel+",
-                ParticleVariable<double>::getTypeDescription());
-  p_sv_minLabel = VarLabel::create("p.p_sv_minLabel",
-                ParticleVariable<double>::getTypeDescription());
-  p_sv_minLabel_preReloc = VarLabel::create("p.p_sv_minLabel+",
-                ParticleVariable<double>::getTypeDescription());
-}
-
-void SoilFoam::addParticleState(std::vector<const VarLabel*>& from,
-                                        std::vector<const VarLabel*>& to)
+void
+SoilFoam::addParticleState( std::vector<const VarLabel*> & from,
+                            std::vector<const VarLabel*> & to )
 {
   // Add the local particle state data for this constitutive model.
   from.push_back(sv_minLabel);

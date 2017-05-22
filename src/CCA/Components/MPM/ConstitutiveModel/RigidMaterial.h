@@ -69,7 +69,6 @@ namespace Uintah {
 
     // constructors
     RigidMaterial(ProblemSpecP& ps, MPMFlags* flag);
-    RigidMaterial(const RigidMaterial* cm);
        
     // destructor
     virtual ~RigidMaterial();

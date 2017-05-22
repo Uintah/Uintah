@@ -182,6 +182,7 @@ ElasticPlasticHP::ElasticPlasticHP(ProblemSpecP& ps,MPMFlags* Mflag)
   initializeLocalMPMLabels();
 }
 
+#if 0
 ElasticPlasticHP::ElasticPlasticHP(const ElasticPlasticHP* cm) :
   ConstitutiveModel(cm), ImplicitCM(cm)
 {
@@ -225,6 +226,7 @@ ElasticPlasticHP::ElasticPlasticHP(const ElasticPlasticHP* cm) :
   
   initializeLocalMPMLabels();
 }
+#endif
 
 ElasticPlasticHP::~ElasticPlasticHP()
 {

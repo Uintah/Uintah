@@ -76,13 +76,11 @@ namespace Uintah {
 
          // Prevent copying of this class
          // copy constructor
-         //TransIsoHyperImplicit(const TransIsoHyperImplicit &cm);
          TransIsoHyperImplicit& operator=(const TransIsoHyperImplicit &cm);
 
       public:
          // constructors
          TransIsoHyperImplicit(ProblemSpecP& ps, MPMFlags* flag);
-         TransIsoHyperImplicit(const TransIsoHyperImplicit* cm);
        
          // destructor
          virtual ~TransIsoHyperImplicit();

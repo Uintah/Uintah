@@ -105,6 +105,7 @@ JWLppMPM::JWLppMPM(ProblemSpecP& ps, MPMFlags* Mflag)
                                ParticleVariable<double>::getTypeDescription());
 }
 
+#if 0
 JWLppMPM::JWLppMPM(const JWLppMPM* cm) : ConstitutiveModel(cm)
 {
   d_useModifiedEOS = cm->d_useModifiedEOS ;
@@ -149,6 +150,7 @@ JWLppMPM::JWLppMPM(const JWLppMPM* cm) : ConstitutiveModel(cm)
   pProgressdelFLabel_preReloc = VarLabel::create("p.progressdelF+",
                                ParticleVariable<double>::getTypeDescription());
 }
+#endif
 
 JWLppMPM::~JWLppMPM()
 {

@@ -50,6 +50,7 @@ MurnaghanMPM::MurnaghanMPM(ProblemSpecP& ps, MPMFlags* Mflag)
   ps->require("rho0",         d_initialData.d_rho0);
 }
 
+#if 0
 MurnaghanMPM::MurnaghanMPM(const MurnaghanMPM* cm) : ConstitutiveModel(cm)
 {
   d_useModifiedEOS = cm->d_useModifiedEOS ;
@@ -58,6 +59,7 @@ MurnaghanMPM::MurnaghanMPM(const MurnaghanMPM* cm) : ConstitutiveModel(cm)
   d_initialData.d_Gamma = cm->d_initialData.d_Gamma;
   d_initialData.d_P0 = cm->d_initialData.d_P0;
 }
+#endif
 
 MurnaghanMPM::~MurnaghanMPM()
 {

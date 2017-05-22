@@ -136,7 +136,6 @@ class RFElasticPlastic : public ConstitutiveModel {
     /*! \brief constructors */
     ////////////////////////////////////////////////////////////////////////
     RFElasticPlastic(ProblemSpecP& ps,MPMFlags* flag);
-    RFElasticPlastic(const RFElasticPlastic* cm);
          
     ////////////////////////////////////////////////////////////////////////
     /*! \brief destructor  */

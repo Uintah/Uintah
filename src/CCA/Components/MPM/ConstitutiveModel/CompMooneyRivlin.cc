@@ -53,14 +53,6 @@ CompMooneyRivlin::CompMooneyRivlin(ProblemSpecP& ps, MPMFlags* Mflag)
 
 }
 
-CompMooneyRivlin::CompMooneyRivlin(const CompMooneyRivlin* cm)
-  : ConstitutiveModel(cm)
-{
-  d_initialData.C1 = cm->d_initialData.C1;
-  d_initialData.C2 = cm->d_initialData.C2;
-  d_initialData.PR = cm->d_initialData.PR;
-}
-
 CompMooneyRivlin::~CompMooneyRivlin()
 {
 }

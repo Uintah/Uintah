@@ -52,14 +52,6 @@ Water::Water(ProblemSpecP& ps, MPMFlags* Mflag)
   initializeLocalMPMLabels();
 }
 
-Water::Water(const Water* cm) : ConstitutiveModel(cm)
-{
-  d_useModifiedEOS = cm->d_useModifiedEOS ;
-  d_initialData.d_Bulk = cm->d_initialData.d_Bulk;
-  d_initialData.d_Viscosity = cm->d_initialData.d_Viscosity;
-  d_initialData.d_Gamma = cm->d_initialData.d_Gamma;
-}
-
 Water::~Water()
 {
 }

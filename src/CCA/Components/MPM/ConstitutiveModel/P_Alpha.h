@@ -75,13 +75,11 @@ namespace Uintah {
 
     // Prevent copying of this class
     // copy constructor
-    //P_Alpha(const P_Alpha &cm);
     P_Alpha& operator=(const P_Alpha &cm);
 
   public:
     // constructors
     P_Alpha(ProblemSpecP& ps, MPMFlags* flag);
-    P_Alpha(const P_Alpha* cm);
        
     // destructor
     virtual ~P_Alpha();

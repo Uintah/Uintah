@@ -46,12 +46,14 @@ HypoElasticImplicit::HypoElasticImplicit(ProblemSpecP& ps, MPMFlags* Mflag)
   ps->require("K",d_initialData.K);
 }
 
+#if 0
 HypoElasticImplicit::HypoElasticImplicit(const HypoElasticImplicit* cm)
   : ConstitutiveModel(cm), ImplicitCM(cm)
 {
   d_initialData.G = cm->d_initialData.G;
   d_initialData.K = cm->d_initialData.K;
 }
+#endif
 
 HypoElasticImplicit::~HypoElasticImplicit()
 {

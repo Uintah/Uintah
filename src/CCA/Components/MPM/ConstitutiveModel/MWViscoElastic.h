@@ -79,7 +79,7 @@ namespace Uintah {
   public:
     // constructors
     MWViscoElastic(ProblemSpecP& ps, MPMFlags* flag);
-    MWViscoElastic(const MWViscoElastic* cm);
+    //    MWViscoElastic(const MWViscoElastic* cm);
        
     // destructor
     virtual ~MWViscoElastic();

@@ -73,6 +73,7 @@ MWViscoElastic::MWViscoElastic(ProblemSpecP& ps,MPMFlags* Mflag)
                         ParticleVariable<Matrix3>::getTypeDescription() ); 
 }
 
+#if 0
 MWViscoElastic::MWViscoElastic(const MWViscoElastic* cm)
   : ConstitutiveModel(cm)
 {
@@ -83,6 +84,8 @@ MWViscoElastic::MWViscoElastic(const MWViscoElastic* cm)
   d_initialData.V_Viscosity = cm->d_initialData.V_Viscosity;
   d_initialData.D_Viscosity = cm->d_initialData.D_Viscosity;
 }
+#endif
+
 
 MWViscoElastic::~MWViscoElastic()
 {

@@ -71,7 +71,7 @@ namespace Uintah {
   public:
          
     ConstitutiveModel(MPMFlags* MFlag);
-    ConstitutiveModel(const ConstitutiveModel* cm);
+    //    ConstitutiveModel(const ConstitutiveModel* cm);
     virtual ~ConstitutiveModel();
 
     virtual void outputProblemSpec(ProblemSpecP& ps,

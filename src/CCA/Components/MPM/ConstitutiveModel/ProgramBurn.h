@@ -82,7 +82,6 @@ namespace Uintah {
   public:
     // constructors
     ProgramBurn(ProblemSpecP& ps, MPMFlags* flag);
-    ProgramBurn(const ProgramBurn* cm);
        
     // destructor
     virtual ~ProgramBurn();

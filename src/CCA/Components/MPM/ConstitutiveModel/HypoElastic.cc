@@ -58,12 +58,14 @@ HypoElastic::HypoElastic(ProblemSpecP& ps,MPMFlags* Mflag)
 
 }
 
+#if 0
 HypoElastic::HypoElastic(const HypoElastic* cm) : ConstitutiveModel(cm)
 {
   d_initialData.G = cm->d_initialData.G;
   d_initialData.K = cm->d_initialData.K;
   d_initialData.alpha = cm->d_initialData.alpha; // for thermal stress
 }
+#endif
 
 HypoElastic::~HypoElastic()
 {

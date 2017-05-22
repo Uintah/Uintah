@@ -117,6 +117,7 @@ Diamm::Diamm(ProblemSpecP& ps,MPMFlags* Mflag)
   initializeLocalMPMLabels();
 }
 
+#if 0
 Diamm::Diamm(const Diamm* cm) : ConstitutiveModel(cm)
 {
   for(int i=0;i<d_NDMMPROP;i++){
@@ -126,6 +127,7 @@ Diamm::Diamm(const Diamm* cm) : ConstitutiveModel(cm)
   //Create VarLabels for Diamm internal state variables (ISVs)
   initializeLocalMPMLabels();
 }
+#endif
 
 Diamm::~Diamm()
 {

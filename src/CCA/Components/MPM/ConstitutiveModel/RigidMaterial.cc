@@ -44,12 +44,6 @@ RigidMaterial::RigidMaterial(ProblemSpecP& ps, MPMFlags* Mflag) :
   ps->get("bulk_modulus",d_initialData.K);
 }
 
-RigidMaterial::RigidMaterial(const RigidMaterial* cm) : ConstitutiveModel(cm)
-{
-  d_initialData.G = cm->d_initialData.G;
-  d_initialData.K = cm->d_initialData.K;
-}
-
 RigidMaterial::~RigidMaterial()
 {
 }

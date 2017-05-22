@@ -72,31 +72,6 @@ ProgramBurn::ProgramBurn(ProblemSpecP& ps, MPMFlags* Mflag)
                                ParticleVariable<double>::getTypeDescription());
 }
 
-ProgramBurn::ProgramBurn(const ProgramBurn* cm) : ConstitutiveModel(cm)
-{
-  d_useModifiedEOS = cm->d_useModifiedEOS ;
-
-  d_initialData.d_K = cm->d_initialData.d_K;
-  d_initialData.d_n = cm->d_initialData.d_n;
-
-  d_initialData.d_A = cm->d_initialData.d_A;
-  d_initialData.d_B = cm->d_initialData.d_B;
-  d_initialData.d_C = cm->d_initialData.d_C;
-  d_initialData.d_R1 = cm->d_initialData.d_R1;
-  d_initialData.d_R2 = cm->d_initialData.d_R2;
-  d_initialData.d_om = cm->d_initialData.d_om;
-  d_initialData.d_rho0 = cm->d_initialData.d_rho0;
-
-  d_initialData.d_start_place = cm->d_initialData.d_start_place;
-  d_initialData.d_direction   = cm->d_initialData.d_direction;
-  d_initialData.d_D           = cm->d_initialData.d_D;
-
-  pProgressFLabel          = VarLabel::create("p.progressF",
-                               ParticleVariable<double>::getTypeDescription());
-  pProgressFLabel_preReloc = VarLabel::create("p.progressF+",
-                               ParticleVariable<double>::getTypeDescription());
-}
-
 ProgramBurn::~ProgramBurn()
 {
   VarLabel::destroy(pProgressFLabel);

@@ -93,7 +93,7 @@ namespace Uintah {
   public:
     // constructor
     NonLocalDruckerPrager(ProblemSpecP& ps, MPMFlags* flag);
-    NonLocalDruckerPrager(const NonLocalDruckerPrager* cm);
+    //    NonLocalDruckerPrager(const NonLocalDruckerPrager* cm);
          
     // destructor 
     virtual ~NonLocalDruckerPrager();

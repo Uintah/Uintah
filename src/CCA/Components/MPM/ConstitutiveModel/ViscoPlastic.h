@@ -140,7 +140,6 @@ namespace Uintah {
 
     // Prevent copying of this class
     // copy constructor
-    //ViscoPlastic(const ViscoPlastic &cm);
     ViscoPlastic& operator=(const ViscoPlastic &cm);
 
     void getFailureVariableData(ProblemSpecP& ps);
@@ -153,7 +152,6 @@ namespace Uintah {
     /*! \brief constructors */
     ////////////////////////////////////////////////////////////////////////
     ViscoPlastic(ProblemSpecP& ps,MPMFlags* flag);
-    ViscoPlastic(const ViscoPlastic* cm);
          
     ////////////////////////////////////////////////////////////////////////
     /*! \brief destructor  */

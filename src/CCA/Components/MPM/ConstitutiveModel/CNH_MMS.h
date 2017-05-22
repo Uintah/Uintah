@@ -47,7 +47,6 @@ namespace Uintah {
   public:
     // constructors
     CNH_MMS(ProblemSpecP& ps, MPMFlags* flag);
-    CNH_MMS(const CNH_MMS* cm);
        
     // destructor
     virtual ~CNH_MMS();

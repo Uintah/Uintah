@@ -156,6 +156,7 @@ Arenisca::Arenisca(ProblemSpecP& ps, MPMFlags* Mflag)
 #ifdef JC_3KBY3G_NOFIX
   proc0cout << ",JC_3KBY3G_NOFIX";
 #endif
+
 #ifdef JC_ZETA_HARDENING
   proc0cout << ",JC_ZETA_HARDENING";
 #endif
@@ -226,47 +227,7 @@ Arenisca::Arenisca(ProblemSpecP& ps, MPMFlags* Mflag)
 
   initializeLocalMPMLabels();
 }
-Arenisca::Arenisca(const Arenisca* cm)
-  : ConstitutiveModel(cm)
-{
-  one_third      = 1.0/(3.0);
-  two_third      = 2.0/(3.0);
-  four_third     = 4.0/(3.0);
-  sqrt_three     = sqrt(3.0);
-  one_sqrt_three = 1.0/sqrt_three;
 
-  //Weibull distribution input
-  wdist.WeibMed    = cm->wdist.WeibMed;
-  wdist.WeibMod    = cm->wdist.WeibMod;
-  wdist.WeibRefVol = cm->wdist.WeibRefVol;
-  wdist.WeibSeed   = cm->wdist.WeibSeed;
-  wdist.Perturb    = cm->wdist.Perturb;
-  wdist.WeibDist   = cm->wdist.WeibDist;
-  
-  WeibullParser(wdist);
-   
-  d_cm.Use_Disaggregation_Algorithm = cm->d_cm.Use_Disaggregation_Algorithm;
-  d_cm.FSLOPE = cm->d_cm.FSLOPE;
-  d_cm.FSLOPE_p = cm->d_cm.FSLOPE_p; // not used
-  d_cm.hardening_modulus = cm->d_cm.hardening_modulus;  // not used
-  d_cm.CR = cm->d_cm.CR;
-  d_cm.T1_rate_dependence = cm->d_cm.T1_rate_dependence;
-  d_cm.T2_rate_dependence = cm->d_cm.T2_rate_dependence;
-  d_cm.p0_crush_curve = cm->d_cm.p0_crush_curve;
-  d_cm.p1_crush_curve = cm->d_cm.p1_crush_curve;
-  d_cm.p3_crush_curve = cm->d_cm.p3_crush_curve;
-  d_cm.p4_fluid_effect = cm->d_cm.p4_fluid_effect; // b1
-  d_cm.fluid_B0 = cm->d_cm.fluid_B0;
-  d_cm.fluid_pressure_initial = cm->d_cm.fluid_pressure_initial; //pf0
-  d_cm.gruneisen_parameter = cm->d_cm.gruneisen_parameter; //pf0
-  d_cm.subcycling_characteristic_number = cm->d_cm.subcycling_characteristic_number;
-  d_cm.kinematic_hardening_constant = cm->d_cm.kinematic_hardening_constant;  // not supported
-  d_cm.PEAKI1 = cm->d_cm.PEAKI1;
-  d_cm.B0 = cm->d_cm.B0;
-  d_cm.G0 = cm->d_cm.G0;
-
-  initializeLocalMPMLabels();
-}
 // DESTRUCTOR
 Arenisca::~Arenisca()
 {

@@ -83,7 +83,7 @@ WARNING
   public:
     // constructor
     CompMooneyRivlin(ProblemSpecP& ps, MPMFlags* flag);
-    CompMooneyRivlin(const CompMooneyRivlin* cm);
+    //    CompMooneyRivlin(const CompMooneyRivlin* cm);
          
     // destructor 
     virtual ~CompMooneyRivlin();

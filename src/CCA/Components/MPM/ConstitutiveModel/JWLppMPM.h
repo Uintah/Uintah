@@ -105,7 +105,7 @@ namespace Uintah {
   public:
     // constructors
     JWLppMPM(ProblemSpecP& ps, MPMFlags* flag);
-    JWLppMPM(const JWLppMPM* cm);
+    //    JWLppMPM(const JWLppMPM* cm);
        
     // destructor
     virtual ~JWLppMPM();

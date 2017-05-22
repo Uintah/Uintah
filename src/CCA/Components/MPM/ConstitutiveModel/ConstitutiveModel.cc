@@ -53,6 +53,7 @@ ConstitutiveModel::ConstitutiveModel(MPMFlags* Mflag)
   }
 }
 
+#if 0
 ConstitutiveModel::ConstitutiveModel(const ConstitutiveModel* cm)
 {
   lb = scinew MPMLabel();
@@ -61,6 +62,7 @@ ConstitutiveModel::ConstitutiveModel(const ConstitutiveModel* cm)
   NGP = cm->NGP;
   d_sharedState = cm->d_sharedState;
 }
+#endif
 
 ConstitutiveModel::~ConstitutiveModel()
 {

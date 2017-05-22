@@ -85,7 +85,6 @@ namespace Uintah {
   public:
     // constructors
     TongeRameshPTR(ProblemSpecP& ps, MPMFlags* flag);
-    TongeRameshPTR(const TongeRameshPTR* cm);
 
     // specifcy what to output from the constitutive model to an .xml file
     virtual void outputProblemSpec(ProblemSpecP& ps, bool output_cm_tag = true);

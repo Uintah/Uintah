@@ -109,7 +109,7 @@ namespace Uintah {
   public:
     // constructors
     Kayenta(ProblemSpecP& ps, MPMFlags* flag);
-    Kayenta(const Kayenta* cm);
+    //Kayenta(const Kayenta* cm);
     // destructor
     virtual ~Kayenta();
     virtual void outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag = true);

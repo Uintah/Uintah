@@ -153,7 +153,6 @@ namespace Uintah {
 
     // constructors
     ViscoScram(ProblemSpecP& ps,MPMFlags* flag);
-    ViscoScram(const ViscoScram* cm);
        
     // destructor
     virtual ~ViscoScram();

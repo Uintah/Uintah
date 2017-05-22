@@ -127,6 +127,8 @@ Kayenta::Kayenta(ProblemSpecP& ps,MPMFlags* Mflag)
 //  }
   initializeLocalMPMLabels();
 }
+
+#if 0
 Kayenta::Kayenta(const Kayenta* cm) : ConstitutiveModel(cm)
 {
   for(int i=0;i<d_NKMMPROP;i++){
@@ -143,6 +145,8 @@ Kayenta::Kayenta(const Kayenta* cm) : ConstitutiveModel(cm)
   //Create VarLabels for Kayenta internal state variables (ISVs)
   initializeLocalMPMLabels();
 }
+#endif
+
 Kayenta::~Kayenta()
 {
    for (unsigned int i = 0; i< ISVLabels.size();i++){

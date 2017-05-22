@@ -76,13 +76,11 @@ WARNING
          
     // Prevent copying of this class
     // copy constructor
-    //SoilFoam(const SoilFoam &cm);
     SoilFoam& operator=(const SoilFoam &cm);
 
   public:
     // constructor
-    SoilFoam(ProblemSpecP& ps, MPMFlags* flag);
-    SoilFoam(const SoilFoam* cm);
+    SoilFoam( ProblemSpecP& ps, MPMFlags* flag );
          
     // destructor 
     virtual ~SoilFoam();

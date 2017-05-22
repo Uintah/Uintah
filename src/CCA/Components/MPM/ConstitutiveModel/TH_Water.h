@@ -86,13 +86,11 @@ namespace Uintah {
   private:
     // Prevent copying of this class
     // copy constructor
-    //TH_Water(const TH_Water &cm);
     TH_Water& operator=(const TH_Water &cm);
 
   public:
     // constructors
-    TH_Water(ProblemSpecP& ps, MPMFlags* flag);
-    TH_Water(const TH_Water* cm);
+    TH_Water( ProblemSpecP& ps, MPMFlags* flag );
        
     // destructor
     virtual ~TH_Water();
