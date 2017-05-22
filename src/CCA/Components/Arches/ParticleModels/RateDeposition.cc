@@ -21,7 +21,7 @@ void
 RateDeposition::problemSetup( ProblemSpecP& db ){
 
   const ProblemSpecP db_root = db->getRootNode();
-  db->require("Melting_Temperature",_Tmelt);
+  _Tmelt = ParticleTools::getAshHemisphericalTemperature(db);
   db->getWithDefault("CaO",_CaO,26.49/100.0);
   db->getWithDefault("MgO",_MgO,4.47/100.0);
   db->getWithDefault("AlO",_AlO,14.99/100.0);

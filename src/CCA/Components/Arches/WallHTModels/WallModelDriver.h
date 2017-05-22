@@ -9,7 +9,7 @@
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/GeometryPiece/GeometryPiece.h>
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
-
+#include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
 
 //============================================
 
@@ -287,7 +287,7 @@ namespace Uintah{
               db_model->getWithDefault( "sb_ash_composition", sb_ash_comp, default_comp);
               db_model->getWithDefault( "enamel_deposit_porosity", en_porosity, 0.6);
               db_model->getWithDefault( "sb_deposit_porosity", sb_porosity, 0.6);
-	      db_model->getWithDefault( "mid_melting_temp", T_mid, 1450);
+	            T_mid = ParticleTools::getAshPorosityTemperature(db_model); 
               if (en_ash_comp.size() != 8 || sb_ash_comp.size() != 8){
                 throw InvalidValue("Error ash_compositions (enamel_ash_composition and sb_ash_composition) must have 8 entries: sio2, al2o3, cao, fe2o3, na2o, bao, tio2, mgo. ", __FILE__, __LINE__);
               }

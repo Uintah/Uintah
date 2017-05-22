@@ -32,6 +32,7 @@
 #include <CCA/Components/Arches/WallHTModels/WallModelDriver.h>
 #include <CCA/Components/Arches/BoundaryCond_new.h>
 #include <Core/Grid/Box.h>
+#include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
 
 #include <Core/Parallel/Parallel.h>
 #include <iostream>
@@ -920,7 +921,7 @@ WallModelDriver::CoalRegionHT::problemSetup( const ProblemSpecP& input_db ){
     ProblemSpecP geometry_db = r_db->findBlock("geom_object");
     GeometryPieceFactory::create( geometry_db, info.geometry );
     r_db->require("erosion_thickness", info.dy_erosion);
-    r_db->require("T_slag", info.T_slag);
+    info.T_slag = ParticleTools::getAshFluidTemperature(r_db);
     r_db->require("tscale_dep", info.t_sb);
     r_db->require("k", info.k);
     r_db->require("wall_thickness", info.dy);

@@ -492,7 +492,10 @@
           <small_weights                spec="OPTIONAL MULTIPLE_DOUBLES" />    <!-- small value for each scaled weight (used in temperature calculation -->
           <density                      spec="REQUIRED DOUBLE" />              <!-- Initial coal density -->
           <particle_thermal_conductivity       spec="OPTIONAL DOUBLE" />              <!-- Initial coal density -->
-          <temperature                  spec="REQUIRED DOUBLE" />              <!-- Initial coal temperature -->
+          <temperature                           spec="REQUIRED DOUBLE" />              <!-- Initial coal temperature -->
+          <ash_softening_temperature             spec="OPTIONAL DOUBLE" />     <!-- Base of ash cone is equal to its height. Porosity is set to zero when T > (T_soft + T_fluid ) / 2.  -->
+          <ash_hemispherical_temperature         spec="OPTIONAL DOUBLE" />     <!-- Base of ash cone is twice its height. This is the temperature at which ash particles melting probability is assumed to be 1. -->
+          <ash_fluid_temperature                 spec="OPTIONAL DOUBLE" />     <!-- Ash cone has spread to a fused liquid mass. This is the slagging temperature used in the wallHT model. -->
 
 
         <!-- Coal Properties -->
@@ -997,11 +1000,9 @@
           <frenkel_constant                spec="OPTIONAL DOUBLE" need_applies_to="type coal_region_ht"/> <!-- default is 1.225. This is the constant in the sintering model. -->
           <enamel_deposit_porosity         spec="OPTIONAL DOUBLE" need_applies_to="type coal_region_ht"/> <!-- default is 0.6. This is the ash enamel porosity. -->
           <sb_deposit_porosity             spec="OPTIONAL DOUBLE" need_applies_to="type coal_region_ht"/> <!-- default is 0.6. This is the ash sb prosity. -->
-	  <mid_melting_temp                spec="OPTIONAL DOUBLE" need_applies_to="type coal_region_ht"/> <!-- default is 1450. This is (T_fluid+T_soft)/2. -->
           <enamel_ash_composition          spec="OPTIONAL MULTIPLE_DOUBLES" need_applies_to="type coal_region_ht"/> <!-- species in the following order: sio2, al2o3, cao, fe2o3, na2o, bao, tio2, mgo. -->
           <sb_ash_composition              spec="OPTIONAL MULTIPLE_DOUBLES" need_applies_to="type coal_region_ht"/> <!-- species in the following order: sio2, al2o3, cao, fe2o3, na2o, bao, tio2, mgo. -->
           <coal_region                     spec="MULTIPLE NO_DATA" need_applies_to="type coal_region_ht">
-            <T_slag                        spec="REQUIRED DOUBLE"/>  <!-- Slagging Temperature, [K] -->
             <erosion_thickness             spec="REQUIRED DOUBLE"/>  <!-- maximum deposit thickness, [m] -->
             <tscale_dep                    spec="REQUIRED DOUBLE"/>  <!-- time scale of deposition, [s] -->
             <k                             spec="REQUIRED DOUBLE"/>  <!-- thermal conductivity, [W/(m K)] -->
@@ -1372,8 +1373,6 @@
 
 
             <!-- deposition model -->
-            <Melting_Temperature        spec="REQUIRED DOUBLE 'positive'"
-                                        need_applies_to="type rate_deposition"/>       <!-- temperature where probability of melting is 1 -->
             <CaO                        spec="OPTIONAL DOUBLE 'positive'"
                                         need_applies_to="type rate_deposition"/>       <!-- CaO mass fraction-->
             <MgO                        spec="OPTIONAL DOUBLE 'positive'"

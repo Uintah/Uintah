@@ -1313,6 +1313,9 @@
         <particle_weights>[0.387137, 0.566254, 0.046609]</particle_weights>
         <density>1300.0</density>
         <temperature>300.0</temperature>
+        <ash_softening_temperature>1500.0</ash_softening_temperature>     
+        <ash_hemispherical_temperature>900</ash_hemispherical_temperature> 
+        <ash_fluid_temperature>1400.0</ash_fluid_temperature>
         <ultimate_analysis>
           <C>0.5934 </C>
           <H>0.0417</H>
@@ -1374,7 +1377,6 @@
           <const_size>true</const_size>
         </model>
         <model label="zhou_deposition" type="rate_deposition">
-          <Melting_Temperature>900</Melting_Temperature>
           <CaO>0.26489999999999997</CaO>
           <MgO>0.044699999999999997</MgO>
           <AlO>0.14990000000000001</AlO>
@@ -1786,7 +1788,6 @@
               <tscale_dep>14400.0</tscale_dep>
               <k>0.3</k>
               <k_deposit>0.5</k_deposit>
-              <T_slag>1400</T_slag>
               <wall_thickness>0.0127</wall_thickness>
               <erosion_thickness>0.1</erosion_thickness>
               <wall_emissivity>0.8</wall_emissivity>

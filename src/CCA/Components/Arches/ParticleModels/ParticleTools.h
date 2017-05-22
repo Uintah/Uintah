@@ -305,6 +305,59 @@ namespace Uintah{
 
         return false;
       }
+      
+      // This function retrieves the ash hemispherical melting temperature for use in computing the melting probability in the deposition model.
+      inline static double getAshHemisphericalTemperature(ProblemSpecP& db){ 
+
+        const ProblemSpecP params_root = db->getRootNode();
+        if(params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")->findBlock("ash_hemispherical_temperature")){
+          double T_hemisphere;
+          params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")->require("ash_hemispherical_temperature",T_hemisphere);
+          return T_hemisphere;
+        }
+        else {
+          throw ProblemSetupException("Error: cannot find <ash_hemispherical_temperature> in <ParticleProperties> in arches block.",__FILE__,__LINE__);      
+        }
+        return false;
+      }
+      
+      // This function retrieves the average temperature between the softening and fluid temperatures for use in the porosity model for ash thermal conductivity.
+      inline static double getAshPorosityTemperature(ProblemSpecP& db){ 
+
+        const ProblemSpecP params_root = db->getRootNode();
+        double T_ave;
+        double T_soft;
+        double T_fluid;
+        if(params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")->findBlock("ash_fluid_temperature")){
+          params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")->require("ash_fluid_temperature",T_fluid);
+        }
+        else {
+          throw ProblemSetupException("Error: cannot find <ash_fluid_temperature> in <ParticleProperties> in arches block.",__FILE__,__LINE__);      
+        }
+        if(params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")->findBlock("ash_softening_temperature")){
+          params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")->require("ash_softening_temperature",T_soft);
+        }
+        else {
+          throw ProblemSetupException("Error: cannot find <ash_softening_temperature> in <ParticleProperties> in arches block.",__FILE__,__LINE__);      
+        }
+        T_ave = (T_soft + T_fluid) / 2.0;
+        return T_ave;
+      }
+      
+      // This function retrieves the fluid temperature for use as the slagging temeprature in the wallHT model.
+      inline static double getAshFluidTemperature(ProblemSpecP& db){ 
+
+        const ProblemSpecP params_root = db->getRootNode();
+        if(params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")->findBlock("ash_fluid_temperature")){
+          double T_fluid;
+          params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")->require("ash_fluid_temperature",T_fluid);
+          return T_fluid;
+        }
+        else {
+          throw ProblemSetupException("Error: cannot find <ash_fluid_temperature> in <ParticleProperties> in arches block.",__FILE__,__LINE__);      
+        }
+        return false;
+      }
 
 
 
