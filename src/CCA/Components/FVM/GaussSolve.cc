@@ -120,30 +120,29 @@ void GaussSolve::problemSetup(const ProblemSpecP& prob_spec,
   ProblemSpecP mat_ps = root_ps->findBlockWithOutAttribute("MaterialProperties");
   ProblemSpecP fvm_mat_ps = mat_ps->findBlock("FVM");
 
-  if(!d_with_mpm){
-    for (ProblemSpecP ps = fvm_mat_ps->findBlock("material"); ps != 0;
-        ps = ps->findNextBlock("material") ) {
+  if( !d_with_mpm ){
+    for ( ProblemSpecP ps = fvm_mat_ps->findBlock("material"); ps != nullptr; ps = ps->findNextBlock("material") ) {
 
-      FVMMaterial *mat = scinew FVMMaterial(ps, d_shared_state, FVMMaterial::Gauss);
-      d_shared_state->registerFVMMaterial(mat);
+      FVMMaterial *mat = scinew FVMMaterial( ps, d_shared_state, FVMMaterial::Gauss );
+      d_shared_state->registerFVMMaterial( mat );
     }
   }
 }
 
-void GaussSolve::outputProblemSpec(ProblemSpecP& ps)
+void
+GaussSolve::outputProblemSpec( ProblemSpecP& ps )
 {
-
 }
 
 //__________________________________
 // 
-void GaussSolve::scheduleInitialize(const LevelP& level,
-                               SchedulerP& sched)
+void
+GaussSolve::scheduleInitialize( const LevelP     & level,
+                                      SchedulerP & sched )
 {
   const MaterialSet* fvm_matls = d_shared_state->allFVMMaterials();
 
-  Task* t = scinew Task("GaussSolve::initialize", this,
-                        &GaussSolve::initialize);
+  Task* t = scinew Task( "GaussSolve::initialize", this, &GaussSolve::initialize );
 
   t->computes(d_lb->ccPosCharge);
   t->computes(d_lb->ccNegCharge);
@@ -155,10 +154,12 @@ void GaussSolve::scheduleInitialize(const LevelP& level,
 
 //__________________________________
 //
-void GaussSolve::initialize(const ProcessorGroup*,
-                       const PatchSubset* patches,
-                       const MaterialSubset* matls,
-                       DataWarehouse*, DataWarehouse* new_dw)
+void
+GaussSolve::initialize( const ProcessorGroup *,
+                        const PatchSubset    * patches,
+                        const MaterialSubset * matls,
+                              DataWarehouse  * /* old_dw */,
+                              DataWarehouse  * new_dw )
 {
   FVMBoundCond bc;
   int num_matls = d_shared_state->getNumFVMMatls();
@@ -218,10 +219,13 @@ GaussSolve::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 }
 //__________________________________
 //
-void GaussSolve::computeStableTimestep(const ProcessorGroup*,
-                                  const PatchSubset* pss,
-                                  const MaterialSubset*,
-                                  DataWarehouse*, DataWarehouse* new_dw)
+
+void
+GaussSolve::computeStableTimestep( const ProcessorGroup *,
+                                   const PatchSubset    * pss,
+                                   const MaterialSubset *,
+                                         DataWarehouse  *,
+                                         DataWarehouse  * new_dw )
 {
   new_dw->put(delt_vartype(d_delt), d_shared_state->get_delt_label(),getLevel(pss));
 }
@@ -229,9 +233,10 @@ void GaussSolve::computeStableTimestep(const ProcessorGroup*,
 
 //______________________________________________________________________
 //
-void GaussSolve::scheduleBuildMatrixAndRhs(SchedulerP& sched,
-                                           const LevelP& level,
-                                           const MaterialSet* es_matl)
+void
+GaussSolve::scheduleBuildMatrixAndRhs(       SchedulerP  & sched,
+                                       const LevelP      & level,
+                                       const MaterialSet * es_matl )
 {
   Task* task = scinew Task("GaussSolve::buildMatrixAndRhs", this,
                            &GaussSolve::buildMatrixAndRhs,
@@ -248,11 +253,15 @@ void GaussSolve::scheduleBuildMatrixAndRhs(SchedulerP& sched,
 }
 //______________________________________________________________________
 //
-void GaussSolve::buildMatrixAndRhs(const ProcessorGroup* pg,
-                           const PatchSubset* patches,
-                           const MaterialSubset* ,
-                           DataWarehouse* old_dw, DataWarehouse* new_dw,
-                           LevelP level, Scheduler* sched)
+
+void
+GaussSolve::buildMatrixAndRhs( const ProcessorGroup * pg,
+                               const PatchSubset    * patches,
+                               const MaterialSubset *,
+                                     DataWarehouse  * old_dw,
+                                     DataWarehouse  * new_dw,
+                                     LevelP           level,
+                                     Scheduler      * sched )
 {
   FVMBoundCond bc;
   IntVector xoffset(1,0,0);
