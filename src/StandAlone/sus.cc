@@ -467,7 +467,7 @@ main( int argc, char *argv[], char *env[] )
     }
 #endif
     else {
-      if (filename != "") {
+      if (filename != "") { // A filename was already provided, thus this is an error.
         usage("", arg, argv[0]);
       }
       else if (argv[i][0] == '-') {  // Don't allow 'filename' to begin with '-'.

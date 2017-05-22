@@ -1164,7 +1164,12 @@ THROW_LEVEL="$enable_throw_level"
 extra_cflags=""
 
 if test "$output_avg_walltime" != "no"; then
-  extra_cflags="-DOUTPUT_AVG_ELAPSED_WALLTIME ${extra_cflags}"
+  extra_cflags="${extra_cflags} -DOUTPUT_AVG_ELAPSED_WALLTIME"
+fi
+
+if test "$USING_ICC" = yes; then
+  # Turn off the spamming of vectorizing code remark (which comes with icc 2017+)...
+  extra_cflags="${extra_cflags} -diag-disable=remark"
 fi
 
 LARGESOS=$largesos
@@ -3203,6 +3208,10 @@ fi
 ##  --  search for mpi  --------------------------------------------------
 
 sci_required_mpi="yes"
+
+if test $with_mpi = NOT_SET -a $with_mpi_lib = NOT_SET -a $with_mpi_include = NOT_SET ; then
+  AC_MSG_ERROR( [MPI is requried for Uintah.  You must use either --with-mpi or --with-mpi-lib/include.  If you are using an 'mpicc' compiler, then you should configure with: "--with-mpi=built-in".] )
+fi
 
 if test "$with_mpi" = "built-in"; then
 
