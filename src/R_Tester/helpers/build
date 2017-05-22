@@ -27,11 +27,12 @@ if [ "$OS" = "Linux" ]; then
   OPT_CONFIGURE="    --enable-64bit \\
       --enable-assertion-level=0 \\
      '--enable-optimize=-O3 -mfpmath=sse' \\"
-     
+
   #_________________
   #  machine specific variables
   if [ "$MACHINE" == "uintah-build" ]; then
-    COMMON="      --with-boost=/usr/  \\
+    COMMON="      --with-mpi=/usr/\\
+     --with-boost=/usr/  \\
      --enable-all-components \\
      --enable-wasatch_3p \\
      --enable-ray-scatter \\"
@@ -40,7 +41,7 @@ if [ "$OS" = "Linux" ]; then
      CXX=g++ \\
      F77=gfortran"
   fi
-  
+
   #_________________
   if [ "$MACHINE" == "cyrus.mech.utah.edu" ]; then
 
@@ -53,7 +54,7 @@ if [ "$OS" = "Linux" ]; then
       --enable-ice \\
       --enable-mpm \\
       --enable-wasatch_3p \\"
-    
+
     DBG_CONFIGURE="    --enable-debug \\
       --enable-64bit \\
       --enable-scinew-line-numbers \\"
@@ -61,13 +62,13 @@ if [ "$OS" = "Linux" ]; then
     ENV="       CC=mpicc \\
        CXX=mpic++ \\
        F77=gfortran-4.8"
-       
+
     MODIFY_SRC="true"
   fi
 fi
 
 #__________________________________
-#  If requested modify the src code.  
+#  If requested modify the src code.
 if [ "$MODIFY_SRC" = "true"  ]; then
   echo "Executing modifySrc script"
   "${BUILDROOT}"/"src"/"R_Tester"/"modifySrc"
