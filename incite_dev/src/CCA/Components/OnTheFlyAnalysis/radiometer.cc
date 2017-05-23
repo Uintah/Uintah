@@ -39,7 +39,7 @@
 using namespace Uintah;
 using namespace std;
 
-//#define USE_RADIOMETER
+#define USE_RADIOMETER
 /*______________________________________________________________________
           TO DO
       - Clean up the hardwiring in the problem setup
@@ -156,7 +156,6 @@ void OnTheFly_radiometer::problemSetup(const ProblemSpecP& ,
                                    cellTypeLabel,
                                    notUsed);
 
-  d_module_ps->getWithDefault( "radiometerCalc_freq", d_radiometerCalc_freq, 1 );
   bool getExtraInputs = true;
   d_radiometer->problemSetup(rad_ps, rad_ps, grid, d_sharedState, getExtraInputs);
   
@@ -201,13 +200,13 @@ void OnTheFly_radiometer::scheduleDoAnalysis(SchedulerP& sched,
   Task::WhichDW celltype_dw = Task::NewDW;
   bool includeEC = true;
  
-  d_radiometer->sched_initializeRadVars( level, sched, d_radiometerCalc_freq );
+  d_radiometer->sched_initializeRadVars( level, sched );
   
   // convert abskg:dbl -> abskg:flt if needed
-  d_radiometer->sched_DoubleToFloat( level, sched, abskg_dw, d_radiometerCalc_freq );
+  d_radiometer->sched_DoubleToFloat( level, sched, abskg_dw );
   
-  d_radiometer->sched_sigmaT4( level, sched, temp_dw, d_radiometerCalc_freq, includeEC );
+  d_radiometer->sched_sigmaT4( level, sched, temp_dw, includeEC );
 
-  d_radiometer->sched_radiometer( level, sched, abskg_dw, sigmaT4_dw, celltype_dw, d_radiometerCalc_freq );
+  d_radiometer->sched_radiometer( level, sched, abskg_dw, sigmaT4_dw, celltype_dw );
 #endif
 }
