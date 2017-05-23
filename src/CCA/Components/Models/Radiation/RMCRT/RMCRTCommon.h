@@ -216,7 +216,6 @@ namespace Uintah{
                           DataWarehouse* new_dw,
                           Task::WhichDW which_dw );
 
-      bool doCarryForward( const int radCalc_freq );
 
       bool isDbgCell( IntVector me);
                             

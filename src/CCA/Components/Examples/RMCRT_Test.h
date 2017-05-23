@@ -133,9 +133,6 @@ WARNING
     //                     
     void areGridsEqual( const GridP& uda_grid, 
                         const GridP& grid );
-    //__________________________________
-    //                      
-    bool doCarryForward( const int radCalc_freq);
 
    protected:
     
@@ -147,7 +144,6 @@ WARNING
     VarLabel* d_colorLabel;
     VarLabel* d_divQLabel;
     VarLabel* d_compAbskgLabel;
-    VarLabel* d_sigmaT4Label;
     VarLabel* d_cellTypeLabel; 
     
     Ghost::GhostType d_gn;

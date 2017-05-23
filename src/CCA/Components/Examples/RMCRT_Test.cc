@@ -430,6 +430,7 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
   
     // carry forward if it's time
     for (int l = 0; l < maxLevels; l++) {
+      const LevelP& level = grid->getLevel(l);
       d_RMCRT->sched_CarryForward_AllLabels ( level, sched );
     }
   
@@ -461,7 +462,7 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
         }
    
         if (radiometer ){
-          radiometer->sched_initializeRadVars( level, sched, d_radCalc_freq );
+          radiometer->sched_initializeRadVars( level, sched );
         }
 
         d_RMCRT->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ );
@@ -501,7 +502,7 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
     d_RMCRT->sched_setBoundaryConditions( level, sched, temp_dw, backoutTemp );
 
     if (radiometer ){
-      radiometer->sched_initializeRadVars( level, sched, d_radCalc_freq );
+      radiometer->sched_initializeRadVars( level, sched );
     }
 
     d_RMCRT->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ );
@@ -518,16 +519,19 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
     Task::WhichDW celltype_dw = Task::NewDW;
     const bool backoutTemp = true;
 
+    // carry forward if it is time
+    d_RMCRT->sched_CarryForward_Var ( level, sched, d_RMCRT->d_sigmaT4Label, RMCRTCommon::TG_CARRY_FORWARD);
+     
     // convert abskg:dbl -> abskg:flt if needed
     d_RMCRT->sched_DoubleToFloat(level, sched, abskg_dw);
 
-    radiometer->sched_sigmaT4(level, sched, temp_dw, includeExtraCells);
+    d_RMCRT->sched_sigmaT4(level, sched, temp_dw, includeExtraCells);
 
     d_RMCRT->sched_setBoundaryConditions(level, sched, temp_dw, backoutTemp);
 
-    radiometer->sched_initializeRadVars(level, sched, d_radCalc_freq);
+    radiometer->sched_initializeRadVars(level, sched);
 
-    radiometer->sched_radiometer(level, sched, abskg_dw, sigmaT4_dw, celltype_dw, d_radCalc_freq);
+    radiometer->sched_radiometer(level, sched, abskg_dw, sigmaT4_dw, celltype_dw);
 
   }
 }

@@ -961,18 +961,6 @@ RMCRTCommon::carryForward_Var ( DetailedTask* dtask,
   new_dw->transferFrom(old_dw, variable, patches, matls, dtask, true, nullptr);
 }
 
-//______________________________________________________________________
-//  Logic for determining when to carry forward
-//______________________________________________________________________
-bool
-RMCRTCommon::doCarryForward( const int radCalc_freq )
-{
-
-  int timestep = d_sharedState->getCurrentTopLevelTimeStep();
-  bool test = (timestep%radCalc_freq != 0 && timestep != 1);
-
-  return test;
-}
 
 //______________________________________________________________________
 //
