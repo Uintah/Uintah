@@ -42,7 +42,6 @@ using namespace std;
 #define USE_RADIOMETER
 /*______________________________________________________________________
           TO DO
-      - Clean up the hardwiring in the problem setup
 ______________________________________________________________________*/
 static DebugStream cout_doing("radiometer", false);
 
@@ -199,6 +198,10 @@ void OnTheFly_radiometer::scheduleDoAnalysis(SchedulerP& sched,
   Task::WhichDW sigmaT4_dw  = Task::NewDW;
   Task::WhichDW celltype_dw = Task::NewDW;
   bool includeEC = true;
+
+  // carry forward if it is time
+  d_radiometer->sched_CarryForward_Var ( level, sched, d_radiometer->d_sigmaT4Label, RMCRTCommon::TG_CARRY_FORWARD);
+
  
   d_radiometer->sched_initializeRadVars( level, sched );
   
