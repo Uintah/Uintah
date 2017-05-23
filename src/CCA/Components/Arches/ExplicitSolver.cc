@@ -1491,11 +1491,11 @@ ExplicitSolver::initializeVariables(const ProcessorGroup* ,
     if ( VarLabel::find("deposit_thickness"))
       allocateAndInitializeToC( VarLabel::find("deposit_thickness"), new_dw, indx, patch, 0.0 );
     if ( VarLabel::find("emissivity"))
-      allocateAndInitializeToC( VarLabel::find("emissivity"), new_dw, indx, patch, 0.0 );
+      allocateAndInitializeToC( VarLabel::find("emissivity"), new_dw, indx, patch, 1.0 );
     if ( VarLabel::find("thermal_cond_en"))
-      allocateAndInitializeToC( VarLabel::find("thermal_cond_en"), new_dw, indx, patch, 0.0 );
+      allocateAndInitializeToC( VarLabel::find("thermal_cond_en"), new_dw, indx, patch, 1.0 );
     if ( VarLabel::find("thermal_cond_sb"))
-      allocateAndInitializeToC( VarLabel::find("thermal_cond_sb"), new_dw, indx, patch, 0.0 );
+      allocateAndInitializeToC( VarLabel::find("thermal_cond_sb"), new_dw, indx, patch, 1.0 );
 
     if ( d_MAlab ){
       allocateAndInitializeToC( d_lab->d_pressPlusHydroLabel, new_dw, indx, patch, 0.0 );
@@ -1521,11 +1521,11 @@ ExplicitSolver::allocateAndInitializeToC( const VarLabel* label,
   if ( type_desc == CCVariable<double>::getTypeDescription() ){
     CCVariable<double> var;
     dw->allocateAndPut( var, label, index, patch );
-    var.initialize(0.0);
+    var.initialize(C);
   } else if ( type_desc == CCVariable<int>::getTypeDescription() ){
     CCVariable<int> var;
     dw->allocateAndPut( var, label, index, patch );
-    var.initialize(0);
+    var.initialize(C);
   } else if ( type_desc == CCVariable<Vector>::getTypeDescription() ){
     CCVariable<Vector> var;
     dw->allocateAndPut( var, label, index, patch );

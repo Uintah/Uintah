@@ -267,15 +267,14 @@ namespace Uintah{
         
 
           struct ThermalCondBase {
-            virtual void model(double &k_sb, double &k_en, const double &C_sb, const double &C_en, const double &T)=0;
+            virtual void model(double &k_eff, const double &C, const double &T, const std::string layer_type)=0;
             virtual ~ThermalCondBase(){}};
           
           ThermalCondBase* m_tc_model; 
 
           struct constant_tc : ThermalCondBase {
-            void model(double &k_sb, double &k_en, const double &C_sb, const double &C_en, const double &T) {
-              k_sb = C_sb;
-              k_en = C_en;
+            void model(double &k_eff, const double &C, const double &T, const std::string layer_type) {
+              k_eff = C;
             }
             ~constant_tc(){}
           };
@@ -318,15 +317,17 @@ namespace Uintah{
             }
             std::vector<double> en_ash_comp_tc;
             std::vector<double> sb_ash_comp_tc;
+            std::vector<double> ash_comp_tc;
             std::vector<double> en_ash_comp;
             std::vector<double> sb_ash_comp;
             double f0;
             double en_porosity;
             double sb_porosity;
-	    double T_mid;
+	          double T_mid;
             double poly_data[6][5];
-            void model(double &k_sb, double &k_en, const double &C_sb, const double &C_en, const double &T) {
-              double ks_en, ks_sb, k, kg, a, kappa;
+            void model(double &k_eff, const double &C, const double &T, const std::string layer_type) {
+              ash_comp_tc = (layer_type == "enamel") ? en_ash_comp_tc : sb_ash_comp_tc;
+              double ks, k, kg, a, kappa;
               std::vector<double> ki;
               
               // first compute solid tc as a function of temperature
@@ -334,27 +335,19 @@ namespace Uintah{
                 k = poly_data[i][0] + poly_data[i][1]*T + poly_data[i][2]*T*T + poly_data[i][3]*T*T*T + poly_data[i][4]*T*T*T*T;
                 ki.push_back(k);
               }
-              ks_en=0.0;
-              ks_sb=0.0;
+              ks=0.0;
               for (int i=0; i<6; ++i) {
-                ks_en=ks_en+ki[i]*en_ash_comp_tc[i];
-                ks_sb=ks_sb+ki[i]*sb_ash_comp_tc[i];
+                ks=ks+ki[i]*ash_comp_tc[i];
               }
               // second compute the gas tc as a function of temperature 
               kg = 2.286e-11*T*T*T - 7.022e-8*T*T + 1.209e-4*T - 5.321e-3;
               
-              // third compute effective k for enamel layer using hadley model
-	      double en_phi; // this is a zeroth order porosity model for the enamel layer
-	      en_phi = (T > T_mid) ? 0.0 : en_porosity;
-	      double sb_phi; // this is a zeroth order porosity model for the sootblow layer
-	      sb_phi = (T > T_mid) ? 0.0 : sb_porosity;
-              a = (en_phi>=0.3) ? 1.5266*std::pow(1-en_phi,8.7381) : 0.7079*std::pow(1-en_phi,6.3051);
-              kappa = ks_en/kg;
-              k_en =  (en_phi < 1e-8) ? 0.0 : kg*((1.0-a)*(en_phi*f0 + (1.0-en_phi*f0)*kappa)/(1.0-en_phi*(1.0-f0) + en_phi*(1.0-f0)*kappa) + a*(2.0*(1.0-en_phi)*kappa*kappa + (1.0+2.0*en_phi)*kappa)/((2.0+en_phi)*kappa + 1.0 - en_phi));
-              // fourth compute effective k for sb layer using hadley model
-              a = (sb_phi>=0.3) ? 1.5266*std::pow(1-sb_phi,8.7381) : 0.7079*std::pow(1-sb_phi,6.3051);
-              kappa = ks_sb/kg;
-              k_sb = (sb_phi < 1e-8) ? 0.0 : kg*((1.0-a)*(sb_phi*f0 + (1.0-sb_phi*f0)*kappa)/(1.0-sb_phi*(1.0-f0) + sb_phi*(1.0-f0)*kappa) + a*(2.0*(1.0-sb_phi)*kappa*kappa + (1.0+2.0*sb_phi)*kappa)/((2.0+sb_phi)*kappa + 1.0 - sb_phi));
+	            double phi; // this is a zeroth order porosity model for the sootblow layer
+	            phi = (T > T_mid) ? 0.0 : sb_porosity;
+              // third compute effective k for layer using hadley model
+              a = (phi>=0.3) ? 1.5266*std::pow(1-phi,8.7381) : 0.7079*std::pow(1-phi,6.3051);
+              kappa = ks/kg;
+              k_eff = (phi < 1e-8) ? 0.0 : kg*((1.0-a)*(phi*f0 + (1.0-phi*f0)*kappa)/(1.0-phi*(1.0-f0) + phi*(1.0-f0)*kappa) + a*(2.0*(1.0-phi)*kappa*kappa + (1.0+2.0*phi)*kappa)/((2.0+phi)*kappa + 1.0 - phi));
             }
             ~hadley_tc(){}
           };
@@ -627,7 +620,7 @@ namespace Uintah{
               std::vector<GeometryPieceP> geometry;
           };
 
-          inline void newton_solve(WallInfo& wi, double &TW_new, double &k_sb, double &k_en, double &dy_dep_sb, double &dy_dep_en, double &T_old, double &rad_q, double &net_q, double &R_wall, double &Emiss );
+          inline void newton_solve(WallInfo& wi, double &TW_new, double &k_sb, double &k_en, double &dy_dep_sb, double &dy_dep_en, double &T_old, double &rad_q, double &R_wall, double &Emiss );
 
           std::vector<WallInfo> _regions;
 
