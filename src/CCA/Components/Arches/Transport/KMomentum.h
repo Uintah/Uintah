@@ -288,17 +288,17 @@ private:
 
       double scalar_init_value = m_init_value[ieqn];
 
-      T& phi    = *(tsk_info->get_uintah_field<T>(m_eqn_names[ieqn]+"_rhs"));
-      T& rhs    = *(tsk_info->get_uintah_field<T>(m_eqn_names[ieqn]));
+      T& phi    = tsk_info->get_uintah_field_add<T>(m_eqn_names[ieqn]);
+      T& rhs    = tsk_info->get_uintah_field_add<T>(m_eqn_names[ieqn]+"_rhs");
       Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
       Uintah::parallel_for( range, [&](int i, int j, int k){
         phi(i,j,k) = scalar_init_value;
         rhs(i,j,k) = 0.0;
       });
 
-      FXT& x_flux = *(tsk_info->get_uintah_field<FXT>(m_eqn_names[ieqn]+"_x_flux"));
-      FYT& y_flux = *(tsk_info->get_uintah_field<FYT>(m_eqn_names[ieqn]+"_y_flux"));
-      FZT& z_flux = *(tsk_info->get_uintah_field<FZT>(m_eqn_names[ieqn]+"_z_flux"));
+      FXT& x_flux = tsk_info->get_uintah_field_add<FXT>(m_eqn_names[ieqn]+"_x_flux");
+      FYT& y_flux = tsk_info->get_uintah_field_add<FYT>(m_eqn_names[ieqn]+"_y_flux");
+      FZT& z_flux = tsk_info->get_uintah_field_add<FZT>(m_eqn_names[ieqn]+"_z_flux");
 
       Uintah::parallel_for( range, [&](int i, int j, int k){
         x_flux(i,j,k) = 0.0;

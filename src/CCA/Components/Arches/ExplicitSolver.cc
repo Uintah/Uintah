@@ -740,7 +740,8 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
 
   d_momSolver = scinew MomentumSolver(d_lab, d_MAlab,
                                       d_turbModel, d_boundaryCondition,
-                                      d_physicalConsts);
+                                      d_physicalConsts,
+                                      &_task_factory_map );
 
   d_momSolver->problemSetup(db_es, state);
 

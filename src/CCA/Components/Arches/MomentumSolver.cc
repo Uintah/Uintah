@@ -63,11 +63,14 @@ MomentumSolver(const ArchesLabel* label,
                const MPMArchesLabel* MAlb,
                TurbulenceModel* turb_model,
                BoundaryCondition* bndry_cond,
-               PhysicalConstants* physConst) :
+               PhysicalConstants* physConst,
+               std::map<std::string, std::shared_ptr<TaskFactoryBase> >* task_factory_map
+             ) :
                d_lab(label), d_MAlab(MAlb),
                d_turbModel(turb_model),
                d_boundaryCondition(bndry_cond),
-               d_physicalConsts(physConst)
+               d_physicalConsts(physConst),
+               _task_factory_map(task_factory_map)
 {
   d_discretize = 0;
   d_source = 0;
@@ -185,21 +188,37 @@ MomentumSolver::problemSetup(const ProblemSpecP& params,
     SourceTermFactory& src_factory = SourceTermFactory::self();
 
     for( ProblemSpecP src_db = db->findBlock( "src" ); src_db != nullptr; src_db = src_db->findNextBlock( "src" ) ) {
+
       src_db->getAttribute("label", srcname);
+
       //which sources are turned on for this equation
       d_new_sources.push_back( srcname );
-      SourceTermBase& a_src = src_factory.retrieve_source_term( srcname );
 
-      ProblemSpecP db_root = db->getRootNode();
-      ProblemSpecP db_sources = db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources");
-      for( ProblemSpecP tmp_src_db = db_sources->findBlock( "src" ); tmp_src_db != nullptr; tmp_src_db = tmp_src_db->findNextBlock( "src" ) ) {
-        std::string tempSrcName;
-        tmp_src_db->getAttribute("label", tempSrcName);
+      //Checking in the old source term factory:
+      if ( src_factory.source_term_exists( srcname ) ){
+        SourceTermBase& a_src = src_factory.retrieve_source_term( srcname );
 
-        if ( tempSrcName == srcname ) {
-          //actually call the problem setup on momentum source terms now
-          a_src.problemSetup( tmp_src_db );
-          break;
+        ProblemSpecP db_root = db->getRootNode();
+        ProblemSpecP db_sources = db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources");
+        for( ProblemSpecP tmp_src_db = db_sources->findBlock( "src" ); tmp_src_db != nullptr; tmp_src_db = tmp_src_db->findNextBlock( "src" ) ) {
+          std::string tempSrcName;
+          tmp_src_db->getAttribute("label", tempSrcName);
+
+          if ( tempSrcName == srcname ) {
+            //actually call the problem setup on momentum source terms now
+            a_src.problemSetup( tmp_src_db );
+            break;
+          }
+        }
+      } else {
+        // **HACK** This isn't a generic implementation for any source
+        //look for it in the turbulence model Factory
+        //these should be setup already
+        typedef std::map<std::string, std::shared_ptr<TaskFactoryBase> > BFM;
+        BFM::iterator turb_fac = _task_factory_map->find("turbulence_model_factory");
+        const bool test  = turb_fac->second->has_task(srcname);
+        if ( !test ) {
+          throw ProblemSetupException("Error: Cannot find a source named: "+srcname+" for the momentum transport", __FILE__, __LINE__ );
         }
       }
     }
@@ -911,56 +930,74 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     }
 
     // Adding new sources from factory:
-    SourceTermFactory& factor = SourceTermFactory::self();
+    SourceTermFactory& factory = SourceTermFactory::self();
     for ( auto iter = d_new_sources.begin(); iter != d_new_sources.end(); iter++){
 
-      SourceTermBase& src = factor.retrieve_source_term( *iter );
-      SourceTermBase::MY_GRID_TYPE src_type = src.getSourceGridType();
+      if ( factory.source_term_exists( *iter ) ){
+        SourceTermBase& src = factory.retrieve_source_term( *iter );
+        SourceTermBase::MY_GRID_TYPE src_type = src.getSourceGridType();
 
-      switch (src_type) {
-        case SourceTermBase::CCVECTOR_SRC:
-          { new_dw->get( velocityVars.otherVectorSource, VarLabel::find( *iter ), indx, patch, Ghost::AroundCells, 1);
-          Vector Dx  = patch->dCell();
-          double vol = Dx.x()*Dx.y()*Dx.z();
+        switch (src_type) {
+          case SourceTermBase::CCVECTOR_SRC:
+            { new_dw->get( velocityVars.otherVectorSource, VarLabel::find( *iter ), indx, patch, Ghost::AroundCells, 1);
+            Vector Dx  = patch->dCell();
+            double vol = Dx.x()*Dx.y()*Dx.z();
 
-          Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
-          sumNonlinearSources doSumSrc(vol,velocityVars.uVelNonlinearSrc,
-                                           velocityVars.vVelNonlinearSrc,
-                                           velocityVars.wVelNonlinearSrc,
-                                           velocityVars.otherVectorSource);
-          Uintah::parallel_for( range, doSumSrc);
-          }
-          break;
-        case SourceTermBase::FX_SRC:
-          { new_dw->get( velocityVars.otherFxSource, VarLabel::find( *iter ), indx, patch, Ghost::None, 0);
-          Vector Dx  = patch->dCell();
-          double vol = Dx.x()*Dx.y()*Dx.z();
-          for (CellIterator iter=patch->getSFCXIterator(); !iter.done(); iter++){
-            IntVector c = *iter;
-            velocityVars.uVelNonlinearSrc[c]  += velocityVars.otherFxSource[c]*vol;
-          }}
-          break;
-        case SourceTermBase::FY_SRC:
-          { new_dw->get( velocityVars.otherFySource, VarLabel::find( *iter ), indx, patch, Ghost::None, 0);
-          Vector Dx  = patch->dCell();
-          double vol = Dx.x()*Dx.y()*Dx.z();
-          for (CellIterator iter=patch->getSFCYIterator(); !iter.done(); iter++){
-            IntVector c = *iter;
-            velocityVars.vVelNonlinearSrc[c]  += velocityVars.otherFySource[c]*vol;
-          }}
-          break;
-        case SourceTermBase::FZ_SRC:
-          { new_dw->get( velocityVars.otherFzSource, VarLabel::find( *iter ), indx, patch, Ghost::None, 0);
-          Vector Dx  = patch->dCell();
-          double vol = Dx.x()*Dx.y()*Dx.z();
-          for (CellIterator iter=patch->getSFCZIterator(); !iter.done(); iter++){
-            IntVector c = *iter;
-            velocityVars.wVelNonlinearSrc[c]  += velocityVars.otherFzSource[c]*vol;
-          }}
-          break;
-        default:
-          proc0cout << "For source term of type: " << src_type << endl;
-          throw InvalidValue("Error: Trying to add a source term to momentum equation with incompatible type",__FILE__, __LINE__);
+            Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
+            sumNonlinearSources doSumSrc(vol,velocityVars.uVelNonlinearSrc,
+                                             velocityVars.vVelNonlinearSrc,
+                                             velocityVars.wVelNonlinearSrc,
+                                             velocityVars.otherVectorSource);
+            Uintah::parallel_for( range, doSumSrc);
+            }
+            break;
+          case SourceTermBase::FX_SRC:
+            { new_dw->get( velocityVars.otherFxSource, VarLabel::find( *iter ), indx, patch, Ghost::None, 0);
+            Vector Dx  = patch->dCell();
+            double vol = Dx.x()*Dx.y()*Dx.z();
+            for (CellIterator iter=patch->getSFCXIterator(); !iter.done(); iter++){
+              IntVector c = *iter;
+              velocityVars.uVelNonlinearSrc[c]  += velocityVars.otherFxSource[c]*vol;
+            }}
+            break;
+          case SourceTermBase::FY_SRC:
+            { new_dw->get( velocityVars.otherFySource, VarLabel::find( *iter ), indx, patch, Ghost::None, 0);
+            Vector Dx  = patch->dCell();
+            double vol = Dx.x()*Dx.y()*Dx.z();
+            for (CellIterator iter=patch->getSFCYIterator(); !iter.done(); iter++){
+              IntVector c = *iter;
+              velocityVars.vVelNonlinearSrc[c]  += velocityVars.otherFySource[c]*vol;
+            }}
+            break;
+          case SourceTermBase::FZ_SRC:
+            { new_dw->get( velocityVars.otherFzSource, VarLabel::find( *iter ), indx, patch, Ghost::None, 0);
+            Vector Dx  = patch->dCell();
+            double vol = Dx.x()*Dx.y()*Dx.z();
+            for (CellIterator iter=patch->getSFCZIterator(); !iter.done(); iter++){
+              IntVector c = *iter;
+              velocityVars.wVelNonlinearSrc[c]  += velocityVars.otherFzSource[c]*vol;
+            }}
+            break;
+          default:
+            proc0cout << "For source term of type: " << src_type << endl;
+            throw InvalidValue("Error: Trying to add a source term to momentum equation with incompatible type",__FILE__, __LINE__);
+
+        }
+      } else {
+
+        // **HACK** Look for it in the turbulence model factory.
+        // Error checking for non-existant sources was performed in problemSetup.
+        // !!!!! HARD CODED FOR CCVARIABLE<VECTOR> !!!!!
+        new_dw->get( velocityVars.otherVectorSource, VarLabel::find( *iter ), indx, patch, Ghost::AroundCells, 1);
+        Vector Dx  = patch->dCell();
+        double vol = Dx.x()*Dx.y()*Dx.z();
+
+        Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
+        sumNonlinearSources doSumSrc(vol,velocityVars.uVelNonlinearSrc,
+                                         velocityVars.vVelNonlinearSrc,
+                                         velocityVars.wVelNonlinearSrc,
+                                         velocityVars.otherVectorSource);
+        Uintah::parallel_for( range, doSumSrc);
 
       }
     }

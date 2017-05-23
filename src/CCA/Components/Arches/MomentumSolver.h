@@ -69,6 +69,7 @@ WARNING
 #include <CCA/Components/Arches/ArchesVariables.h>
 #include <CCA/Components/Arches/ArchesConstVariables.h>
 #include <CCA/Components/Arches/Discretization.h>
+#include <CCA/Components/Arches/Task/TaskFactoryBase.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/IO/UintahZlibUtil.h>
 
@@ -99,7 +100,9 @@ public:
                  const MPMArchesLabel* MAlb,
                  TurbulenceModel* turb_model,
                  BoundaryCondition* bndry_cond,
-                 PhysicalConstants* physConst);
+                 PhysicalConstants* physConst,
+                 std::map<std::string, std::shared_ptr<TaskFactoryBase> >* task_factory_map               
+                 );
 
   // GROUP: Destructors:
   ////////////////////////////////////////////////////////////////////////
@@ -248,6 +251,8 @@ private:
   const VarLabel* _v_mom;
   const VarLabel* _w_mom;
 
+  std::map<std::string, std::shared_ptr<TaskFactoryBase> >* _task_factory_map;
+
   //--------------------- for initialization -----------
   class VelocityInitBase {
 
@@ -271,7 +276,7 @@ private:
   std::string _init_type;
   Discretization::MOMCONV d_conv_scheme;
   double d_re_limit;
-  double d_re_limit_wall_upwind; 
+  double d_re_limit_wall_upwind;
 
   // constant initialization ------------------------
   class ConstantVel : public VelocityInitBase {
