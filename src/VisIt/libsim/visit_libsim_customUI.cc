@@ -872,7 +872,7 @@ void visit_SetDouts( visit_simulation_data *sim )
       bool        active   = simStateP->d_douts[i]->active();
 
       VisItUI_setTableValueS("DoutTable",
-			     i, 0, name.c_str(),  0);
+			     i, 0, name.c_str(), 0);
       VisItUI_setTableValueS("DoutTable",
 			     i, 1, (active ? "true":"false"), 1);
       VisItUI_setTableValueS("DoutTable",

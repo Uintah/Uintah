@@ -135,10 +135,13 @@ visit_handle visit_SimGetMetaData(void *cbdata)
   // bool &forceMeshReload = sim->forceMeshReload;
   // bool &nodeCentered = sim->nodeCentered;
 
+  if( sim->stepInfo )
+    delete sim->stepInfo;
+  
   sim->stepInfo = getTimeStepInfo(schedulerP, simStateP, gridP, useExtraCells);
 
   TimeStepInfo* &stepInfo = sim->stepInfo;
-
+  
   visit_handle md = VISIT_INVALID_HANDLE;
 
   /* Create metadata with no variables. */
@@ -727,6 +730,13 @@ void visit_CalculateDomainNesting(TimeStepInfo* stepInfo,
                                   bool &forceMeshReload,
                                   int timestate, const std::string &meshname)
 {
+  static std::vector< int * > cp_ptrs;
+  
+  for (int p=0; p<cp_ptrs.size() ; ++p)
+    delete[] cp_ptrs[p];
+      
+  cp_ptrs.clear();
+
   // ARS - FIX ME - NOT NEEDED
   //lookup mesh in our cache and if it's not there, compute it
   // if (mesh_domains[meshname] == nullptr || forceMeshReload == true)
@@ -905,7 +915,9 @@ void visit_CalculateDomainNesting(TimeStepInfo* stepInfo,
         if( childPatches[p].size() )
         {
           int *cp = new int[childPatches[p].size()];
-          
+
+	  cp_ptrs.push_back( cp );
+	  
           for (int i=0; i<3; ++i)
           {
             cp[i] = childPatches[p][i];
@@ -913,8 +925,6 @@ void visit_CalculateDomainNesting(TimeStepInfo* stepInfo,
             VisIt_DomainNesting_set_nestingForPatch(dn, p, my_level,
                                                     cp, childPatches[p].size(),
                                                     e);
-//          delete cp;
-            
             // dn->SetNestingForDomain(p, my_level, childPatches[p], e);
           }
         }
@@ -1008,7 +1018,7 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
 
     if(VisIt_VariableData_alloc(&cordsH) == VISIT_OKAY)
     {
-      VisIt_VariableData_setDataD(cordsH, VISIT_OWNER_SIM,
+      VisIt_VariableData_setDataD(cordsH, VISIT_OWNER_VISIT,
                                   3, pd->num*pd->components, pd->data);
     }
 
@@ -1035,10 +1045,12 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
     //   onevertex = i; 
     //   ugrid->InsertNextCell(VTK_VERTEX, 1, &onevertex); 
     // } 
-
-    // ARS - FIX ME - CHECK FOR LEAKS
-    // don't delete pd->data - vtk owns it now!
-    // delete pd;
+    
+    // No need to delete as the flag is VISIT_OWNER_VISIT so VisIt
+    // owns the data (VISIT_OWNER_SIM - indicates the sim owns the
+    // data). However pd needs to be delted.
+    // delete pd->data
+    delete pd;
 
 #ifdef COMMENTOUT_FOR_NOW
     //try to retrieve existing cache ref
@@ -1081,18 +1093,18 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
         //debug5<<"\tSetArray...\n";
         rv->SetArray(pd->data, pd->num*pd->components, 0);
 
-        // don't delete pd->data - vtk owns it now!
+        // Don't delete pd->data - vtk owns it now!
         delete pd;
         
-        //todo: this is the unnecesary conversion, from long
-        //int->double->int, to say nothing of the implicit curtailing
-        //that might occur (note also: this is a VisIt bug that uses
-        //ints to store particle ids rather than long ints)
-        vtkIntArray *iv=ConvertToInt(rv);
+        // todo: this is the unnecesary conversion, from long
+        // int->double->int, to say nothing of the implicit curtailing
+        // that might occur (note also: this is a VisIt bug that uses
+        // ints to store particle ids rather than long ints)
+        vtkIntArray *iv = ConvertToInt(rv);
         //vtkLongArray *iv=ConvertToLong(rv);
         rv->Delete(); // this should now delete pd->data
 
-        pID=iv;
+        pID = iv;
       }
 
       //debug5<<"read particleID ("<<pID<<")\n";
@@ -1223,20 +1235,14 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
             (i + low[c] + face_offset) * levelInfo.spacing[c];
         }
 
-        VisIt_VariableData_setDataF(cordH[c], VISIT_OWNER_SIM,
+        VisIt_VariableData_setDataF(cordH[c], VISIT_OWNER_VISIT,
                                     1, dims[c], array);
 
+	// No need to delete as the flag is VISIT_OWNER_VISIT so VisIt
+	// owns the data (VISIT_OWNER_SIM - indicates the sim owns the
+	// data).
 
-        // switch(c) {
-        // case 0:
-        //   rgrid->SetXCoordinates(coords); break;
-        // case 1:
-        //   rgrid->SetYCoordinates(coords); break;
-        // case 2:
-        //   rgrid->SetZCoordinates(coords); break;
-        // }
-
-        // coords->Delete();
+	// delete[] array;
       }
     }
 
@@ -1272,7 +1278,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
   SchedulerP schedulerP = sim->simController->getSchedulerP();
   SimulationStateP simStateP = sim->simController->getSimulationStateP();
   GridP      gridP      = sim->gridP;
-  
+
   // bool &useExtraCells   = sim->useExtraCells;
   // bool &forceMeshReload = sim->forceMeshReload;
   bool &nodeCentered    = sim->nodeCentered;
@@ -1328,16 +1334,18 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
 
     if(VisIt_VariableData_alloc(&varH) == VISIT_OKAY)
     {
-      VisIt_VariableData_setDataD(varH, VISIT_OWNER_SIM, pd->components,
+      VisIt_VariableData_setDataD(varH, VISIT_OWNER_VISIT, pd->components,
                                   pd->num * pd->components, pd->data);
       
       // vtkDoubleArray *rv = vtkDoubleArray::New();
       // rv->SetNumberOfComponents(pd->components);
       // rv->SetArray(pd->data, pd->num*pd->components, 0);
       
-      // ARS - FIX ME - CHECK FOR LEAKS
-      // don't delete pd->data - vtk owns it now!
-      // delete pd;
+      // No need to delete as the flag is VISIT_OWNER_VISIT so VisIt
+      // owns the data (VISIT_OWNER_SIM - indicates the simowns the
+      // data). However, pd needs to be deleted.
+      // delete pd->data
+      delete pd;
     }
   }
 
@@ -1494,16 +1502,18 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
 
     if(VisIt_VariableData_alloc(&varH) == VISIT_OKAY)
     {
-      VisIt_VariableData_setDataD(varH, VISIT_OWNER_SIM, gd->components,
+      VisIt_VariableData_setDataD(varH, VISIT_OWNER_VISIT, gd->components,
                                   gd->num*gd->components, gd->data);
 
       // vtkDoubleArray *rv = vtkDoubleArray::New();
       // rv->SetNumberOfComponents(gd->components);
       // rv->SetArray(gd->data, ncells*gd->components, 0);
       
-      // ARS - FIX ME - CHECK FOR LEAKS
-      // don't delete gd->data - vtk owns it now!
-      // delete gd;
+      // No need to delete as the flag is VISIT_OWNER_VISIT so VisIt
+      // owns the data (VISIT_OWNER_SIM - indicates the sim owns the
+      // data). However, gd needs to be deleted.
+      // delete gd->data
+      delete gd;
     }
   }
 

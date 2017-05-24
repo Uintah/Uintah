@@ -147,6 +147,8 @@ void visit_InitLibSim( visit_simulation_data *sim )
   sim->stopAtTimeStep = 0;
   sim->stopAtLastTimeStep = 0;
 
+  sim->stepInfo = nullptr;
+
   for( int i=0; i<5; ++i )
     for( int j=0; j<5; ++j )
       sim->stripChartNames[i][j] = std::string("");
@@ -434,7 +436,7 @@ bool visit_CheckState( visit_simulation_data *sim )
       {
 	if(sim->isProc0)
 	{
-	  VisItUI_setValueS("SIMULATION_MESSAGE_CLEAR", "NoOp", 1);    
+	  VisItUI_setValueS("SIMULATION_MESSAGE_CLEAR", "NoOp", 1);
 	  VisItUI_setValueS("STRIP_CHART_CLEAR_ALL",    "NoOp", 1);
 
           VisItUI_setValueS("SIMULATION_MODE", "Unknown", 1);
@@ -559,7 +561,7 @@ void visit_Initialize( visit_simulation_data *sim )
 
   if(sim->isProc0)
   {
-    VisItUI_setValueS("SIMULATION_MESSAGE_CLEAR", "NoOp", 1);    
+    VisItUI_setValueS("SIMULATION_MESSAGE_CLEAR", "NoOp", 1);
     VisItUI_setValueS("STRIP_CHART_CLEAR_ALL",    "NoOp", 1);
     
     // visitdbg << msg.str().c_str() << std::endl;
