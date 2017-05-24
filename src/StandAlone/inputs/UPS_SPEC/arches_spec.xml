@@ -71,7 +71,7 @@
 
          </model>
       </TurbulenceModels>
- 
+
       <!-- These are new task properties -->
       <PropertyModelsV2                 spec="OPTIONAL NO_DATA">
         <model                          spec="MULTIPLE NO_DATA"
@@ -206,6 +206,9 @@
                                         attribute1="label REQUIRED STRING"
                                         need_applies_to="type variable_stats"> <!-- time average a single variable -->
 
+            <table_variable             spec="OPTIONAL NO_DATA"/> <!-- This tag ensures that the variable will be allocated in the table lookup in the case where the user is
+                                                                       not saving it to the data archive -->
+
             <new                        spec="OPTIONAL NO_DATA"/> <!-- Turn this flag on only for variables that either you want to reinitialize to zero
                                                                         or if this variable didn't exist in a previous uda -->
           </single_variable>
@@ -217,6 +220,8 @@
                                         need_applies_to="type variable_stats"> <!-- time average a flux variable rho*u*phi - creates all three components
                                                                                If phi isn't specified, then this is the total mass flux -->
 
+            <table_variable             spec="OPTIONAL NO_DATA"/> <!-- This tag ensures that the variable will be allocated in the table lookup in the case where the user is
+                                                                       not saving it to the data archive -->
             <new                        spec="OPTIONAL NO_DATA"/> <!-- Turn this flag on only for variables that either you want to reinitialize to zero
                                                                         or if this variable didn't exist in a previous uda -->
           </flux_variable>

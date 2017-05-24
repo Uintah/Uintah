@@ -1,7 +1,13 @@
 #include <CCA/Components/Arches/Task/FieldContainer.h>
 #include <CCA/Components/Arches/Task/TaskVariableTools.h>
+#include <Core/Util/DebugStream.h>
+
+static Uintah::DebugStream taskvar_dbgstream("ARCHES_TASK_VARS", false);
+#define DBG_ON  taskvar_dbgstream.active()
+#define DBG_STREAM  if( DBG_ON  ) taskvar_dbgstream
 
 namespace Uintah {
+
 
    void register_variable_work( std::string name,
                                 ArchesFieldContainer::VAR_DEPEND dep,
@@ -11,6 +17,13 @@ namespace Uintah {
                                 const int time_substep,
                                 const std::string task_name )
   {
+
+    DBG_STREAM << " For task: " << task_name << " registering: " << std::endl;
+    DBG_STREAM << "             name: " << name << std::endl;
+    DBG_STREAM << "              dep: " << dep << std::endl;
+    DBG_STREAM << "           nGhost: " << nGhost << std::endl;
+    DBG_STREAM << "         which dw: " << dw << std::endl;
+    DBG_STREAM << "     time_substep: " << time_substep << std::endl;
 
     if ( dw == ArchesFieldContainer::LATEST ){
       if ( time_substep == 0 ){
@@ -224,7 +237,6 @@ namespace Uintah {
                           ArchesFieldContainer::VAR_DEPEND dep,
                           std::vector<ArchesFieldContainer::VariableInformation>& var_reg,
                           std::string task_name ){
-
     ArchesFieldContainer::WHICH_DW dw = ArchesFieldContainer::NEWDW;
     int nGhost = 0;
     register_variable_work( name, dep, nGhost, dw, var_reg, 0, task_name );
@@ -236,7 +248,6 @@ namespace Uintah {
                           std::vector<ArchesFieldContainer::VariableInformation>& var_reg,
                           const int timesubstep,
                           std::string task_name){
-
     ArchesFieldContainer::WHICH_DW dw = ArchesFieldContainer::NEWDW;
     int nGhost = 0;
     register_variable_work( name, dep, nGhost, dw, var_reg, timesubstep, task_name );

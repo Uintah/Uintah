@@ -1,5 +1,6 @@
 #include <CCA/Components/Arches/PropertyModelsV2/VariableStats.h>
 #include <CCA/Components/Arches/GridTools.h>
+#include <CCA/Components/Arches/ChemMix/ChemHelper.h>
 
 namespace Uintah{
 
@@ -16,10 +17,16 @@ VariableStats::~VariableStats()
 //--------------------------------------------------------------------------------------------------
 void VariableStats::problemSetup( ProblemSpecP& db ){
 
+  ChemHelper& chem_helper = ChemHelper::self();
+
   for ( ProblemSpecP var_db = db->findBlock("single_variable"); var_db != nullptr; var_db = var_db->findNextBlock("single_variable") ){
 
     std::string var_name;
     var_db->getAttribute("label", var_name);
+
+    if ( var_db->findBlock( "table_variable" ) )  {
+      chem_helper.add_lookup_species( var_name );
+    }
 
     if ( var_name == "uVelocitySPBC" ||
          var_name == "vVelocitySPBC" ||
@@ -44,6 +51,8 @@ void VariableStats::problemSetup( ProblemSpecP& db ){
   bool do_fluxes = false;
 
   for ( ProblemSpecP var_db = db->findBlock("flux_variable"); var_db != nullptr; var_db = var_db->findNextBlock("flux_variable") ){
+
+    bool table_lookup = false;
 
     do_fluxes = true;
 
@@ -71,6 +80,10 @@ void VariableStats::problemSetup( ProblemSpecP& db ){
     //get required information:
     phi_name = "NA";
     var_db->getAttribute("phi",phi_name);
+
+    if ( var_db->findBlock( "table_variable" ) )  {
+      chem_helper.add_lookup_species( phi_name );
+    }
 
     FluxInfo fi;
     fi.phi = phi_name;
