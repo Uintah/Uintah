@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2017 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -112,6 +112,7 @@ public:
 
 protected:
   friend class ESMPM;
+  friend class ESMPM2;
 
   FluxBCModel* d_fluxbc;
 
@@ -200,12 +201,6 @@ protected:
                                    const MaterialSubset* matls,
                                    DataWarehouse* old_dw,
                                    DataWarehouse* new_dw);
-
-  void updateErosionParameter(const ProcessorGroup*,
-                              const PatchSubset* patches,
-                              const MaterialSubset* ,
-                              DataWarehouse* old_dw,
-                              DataWarehouse* new_dw);
 
   virtual void computeInternalForce(const ProcessorGroup*,
                                     const PatchSubset* patches,  
@@ -345,10 +340,6 @@ protected:
   virtual void scheduleComputeStressTensor(SchedulerP&, 
                                            const PatchSet*,
                                            const MaterialSet*);
-  
-  void scheduleUpdateErosionParameter(SchedulerP& sched,
-                                      const PatchSet* patches,
-                                      const MaterialSet* matls);
 
   virtual void scheduleComputeInternalForce(SchedulerP&, 
                                             const PatchSet*,

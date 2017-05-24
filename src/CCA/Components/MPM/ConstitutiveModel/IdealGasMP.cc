@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2017 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -46,12 +46,14 @@ IdealGasMP::IdealGasMP(ProblemSpecP& ps,MPMFlags* Mflag)
   ps->getWithDefault("Pref",d_initialData.Pref,101325.);
 }
 
+#if 0
 IdealGasMP::IdealGasMP(const IdealGasMP* cm) : ConstitutiveModel(cm)
 {
   d_initialData.gamma = cm->d_initialData.gamma;
   d_initialData.cv = cm->d_initialData.cv;
   d_initialData.Pref = cm->d_initialData.Pref;
 }
+#endif
 
 IdealGasMP::~IdealGasMP()
 {

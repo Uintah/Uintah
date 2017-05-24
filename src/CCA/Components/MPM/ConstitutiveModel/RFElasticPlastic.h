@@ -93,12 +93,10 @@ class RFElasticPlastic : public ConstitutiveModel {
 
     const VarLabel* pPlasticStrainLabel;  
     const VarLabel* pPlasticStrainRateLabel;  
-    const VarLabel* pLocalizedLabel;  
     const VarLabel* pEnergyLabel;  
 
     const VarLabel* pPlasticStrainLabel_preReloc;  
     const VarLabel* pPlasticStrainRateLabel_preReloc;  
-    const VarLabel* pLocalizedLabel_preReloc;  
     const VarLabel* pEnergyLabel_preReloc;
 
   protected:
@@ -117,10 +115,6 @@ class RFElasticPlastic : public ConstitutiveModel {
     bool   d_checkStressTriax;
 
     std::string  d_plasticConvergenceAlgo;
-    // Erosion algorithms
-    bool   d_setStressToZero;
-    bool   d_allowNoTension;
-    bool   d_allowNoShear;
 
     YieldCondition*     d_yield;
     StabilityCheck*     d_stable;
@@ -142,7 +136,6 @@ class RFElasticPlastic : public ConstitutiveModel {
     /*! \brief constructors */
     ////////////////////////////////////////////////////////////////////////
     RFElasticPlastic(ProblemSpecP& ps,MPMFlags* flag);
-    RFElasticPlastic(const RFElasticPlastic* cm);
          
     ////////////////////////////////////////////////////////////////////////
     /*! \brief destructor  */
@@ -205,22 +198,6 @@ class RFElasticPlastic : public ConstitutiveModel {
                               const MPMMaterial* matl,
                               DataWarehouse* old_dw,
                               DataWarehouse* new_dw);
-
-    ////////////////////////////////////////////////////////////////////////
-    /*! \brief Put documentation here. */
-    ////////////////////////////////////////////////////////////////////////
-    virtual void addRequiresDamageParameter(Task* task,
-                                            const MPMMaterial* matl,
-                                            const PatchSet* patches) const;
-
-
-    ////////////////////////////////////////////////////////////////////////
-    /*! \brief Put documentation here. */
-    ////////////////////////////////////////////////////////////////////////
-    virtual void getDamageParameter(const Patch* patch, 
-                                    ParticleVariable<int>& damage, int dwi,
-                                    DataWarehouse* old_dw,
-                                    DataWarehouse* new_dw);
 
     ////////////////////////////////////////////////////////////////////////
     /*! \brief initialize  each particle's constitutive model data */
@@ -295,8 +272,6 @@ class RFElasticPlastic : public ConstitutiveModel {
   protected:
 
     void initializeLocalMPMLabels();
-
-    void setErosionAlgorithm();
   };
 
 } // End namespace Uintah

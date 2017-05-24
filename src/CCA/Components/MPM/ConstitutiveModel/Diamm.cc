@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2017 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -117,6 +117,7 @@ Diamm::Diamm(ProblemSpecP& ps,MPMFlags* Mflag)
   initializeLocalMPMLabels();
 }
 
+#if 0
 Diamm::Diamm(const Diamm* cm) : ConstitutiveModel(cm)
 {
   for(int i=0;i<d_NDMMPROP;i++){
@@ -126,6 +127,7 @@ Diamm::Diamm(const Diamm* cm) : ConstitutiveModel(cm)
   //Create VarLabels for Diamm internal state variables (ISVs)
   initializeLocalMPMLabels();
 }
+#endif
 
 Diamm::~Diamm()
 {

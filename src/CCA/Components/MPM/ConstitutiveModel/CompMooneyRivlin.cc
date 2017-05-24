@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2017 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -51,14 +51,6 @@ CompMooneyRivlin::CompMooneyRivlin(ProblemSpecP& ps, MPMFlags* Mflag)
   ps->require("he_constant_2",d_initialData.C2);
   ps->require("he_PR",d_initialData.PR);
 
-}
-
-CompMooneyRivlin::CompMooneyRivlin(const CompMooneyRivlin* cm)
-  : ConstitutiveModel(cm)
-{
-  d_initialData.C1 = cm->d_initialData.C1;
-  d_initialData.C2 = cm->d_initialData.C2;
-  d_initialData.PR = cm->d_initialData.PR;
 }
 
 CompMooneyRivlin::~CompMooneyRivlin()

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2017 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -103,6 +103,9 @@ public:
   virtual void scheduleInitialize(const LevelP& level,
                                   SchedulerP&);
                                   
+  virtual void scheduleDeleteGeometryObjects(const LevelP& level,
+                                             SchedulerP& sched);
+
   virtual void scheduleRestartInitialize(const LevelP& level,
                                          SchedulerP& sched);
 
@@ -171,6 +174,12 @@ protected:
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw);
 
+  void deleteGeometryObjects(const ProcessorGroup*,
+                             const PatchSubset* patches,
+                             const MaterialSubset* matls,
+                                   DataWarehouse* old_dw,
+                                   DataWarehouse* new_dw);
+
   void printParticleCount(const ProcessorGroup*,
                           const PatchSubset* patches,
                           const MaterialSubset* matls,
@@ -235,6 +244,12 @@ protected:
                                           DataWarehouse* old_dw,
                                           DataWarehouse* new_dw);
 
+  virtual void computeNormals(const ProcessorGroup  *,
+                              const PatchSubset     * patches,
+                              const MaterialSubset  * ,
+                                    DataWarehouse   * old_dw,
+                                    DataWarehouse   * new_dw );
+
   virtual void computeSSPlusVp(const ProcessorGroup*,
                                const PatchSubset* patches,
                                const MaterialSubset* matls,
@@ -262,20 +277,6 @@ protected:
                                    const MaterialSubset* matls,
                                    DataWarehouse* old_dw,
                                    DataWarehouse* new_dw);
-
-  /*! Update the erosion parameter if mass is to be removed */
-  void updateErosionParameter(const ProcessorGroup*,
-                              const PatchSubset* patches,
-                              const MaterialSubset* ,
-                              DataWarehouse* old_dw,
-                              DataWarehouse* new_dw);
-
-  /*! Find particles that should be deleted */
-  void findRogueParticles(const ProcessorGroup*,
-                          const PatchSubset* patches,
-                          const MaterialSubset* ,
-                          DataWarehouse* old_dw,
-                          DataWarehouse* new_dw);
 
   //////////
   // Compute Accumulated Strain Energy
@@ -429,6 +430,10 @@ protected:
                             DataWarehouse*,
                             DataWarehouse* new_dw);
 
+  virtual void scheduleComputeNormals(SchedulerP        & sched,
+                                      const PatchSet    * patches,
+                                      const MaterialSet * matls );
+
   virtual void scheduleInterpolateParticlesToGrid(SchedulerP&, const PatchSet*,
                                                   const MaterialSet*);
 
@@ -452,15 +457,6 @@ protected:
 
   virtual void scheduleComputeStressTensor(SchedulerP&, const PatchSet*,
                                            const MaterialSet*);
-  
-
-  void scheduleUpdateErosionParameter(SchedulerP& sched,
-                                      const PatchSet* patches,
-                                      const MaterialSet* matls);
-
-  void scheduleFindRogueParticles(SchedulerP& sched,
-                                  const PatchSet* patches,
-                                  const MaterialSet* matls);
 
   void scheduleComputeAccStrainEnergy(SchedulerP&, const PatchSet*,
                                       const MaterialSet*);

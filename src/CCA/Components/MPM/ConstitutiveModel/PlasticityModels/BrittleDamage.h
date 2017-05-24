@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2017 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -26,7 +26,7 @@
 #define __BRITTLE_DAMAGE_MODEL_H__
 
 
-#include "DamageModel.h"        
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DamageModel.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
@@ -49,51 +49,63 @@ namespace Uintah {
       double Bulk;
       double tauDev;
     };
-    
+
     BrittleDamageData d_brittle_damage;
-    
-    
+
+    //__________________________________
+    //  Labels
+    const VarLabel* pFailureStressOrStrainLabel;
+    const VarLabel* pFailureStressOrStrainLabel_preReloc;
+
+    const VarLabel* pDamageLabel;
+    const VarLabel* pDamageLabel_preReloc;
+
+
     // Prevent copying of this class copy constructor
     BrittleDamage& operator=(const BrittleDamage &cm);
 
   public:
     // constructors
     BrittleDamage( ProblemSpecP& ps );
-                   
+
     BrittleDamage(const BrittleDamage* cm);
-         
-    // destructor 
+
+    // destructor
     virtual ~BrittleDamage();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
 
-    double initialize();
-
-    bool hasFailed(double damage);
-    
-    //////////
-    // Calculate the scalar damage parameter 
-    virtual 
-    double computeScalarDamage(const double& plasticStrainRate,
-                               const Matrix3& stress,
-                               const double& temperature,
-                               const double& delT,
-                               const MPMMaterial* matl,
-                               const double& tolerance,
-                               const double& damage_old);
+    virtual
+    void addComputesAndRequires(Task* task,
+                                const MPMMaterial* matl);
+    virtual
+    void  computeSomething( ParticleSubset    * pset,
+                            const MPMMaterial * matl,           
+                            const Patch       * patch,         
+                            DataWarehouse     * old_dw,        
+                            DataWarehouse     * new_dw );
 
     virtual
-    void updateDamageAndModifyStress2(const Matrix3& FF,
-                                      const double&  pFailureStrain,
-                                      double&        pFailureStrain_new,
-                                      const double&  pVolume,
-                                      const double&  pDamage,
-                                      double&        pDamage_new,
-                                      Matrix3&       pStress_new,
-                                      const long64   particleID);
-  
+    void carryForward( const PatchSubset* patches,
+                       const MPMMaterial* matl,
+                       DataWarehouse*     old_dw,
+                       DataWarehouse*     new_dw);
+
+    virtual
+    void addParticleState(std::vector<const VarLabel*>& from,
+                          std::vector<const VarLabel*>& to);
+
+    virtual 
+    void addInitialComputesAndRequires(Task* task,
+                                       const MPMMaterial* matl );
+                                               
+    virtual
+    void initializeLabels(const Patch*       patch,
+                          const MPMMaterial* matl,
+                          DataWarehouse*     new_dw);
+
   };
 
 } // End namespace Uintah
 
-#endif  // __Brittle_DAMAGE_MODEL_H__ 
+#endif  // __Brittle_DAMAGE_MODEL_H__

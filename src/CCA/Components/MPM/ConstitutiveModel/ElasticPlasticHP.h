@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2017 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -31,7 +31,6 @@
 #include "PlasticityModels/YieldCondition.h"
 #include "PlasticityModels/StabilityCheck.h"
 #include "PlasticityModels/FlowModel.h"
-#include "PlasticityModels/DamageModel.h"
 #include "PlasticityModels/MPMEquationOfState.h"
 #include "PlasticityModels/ShearModulusModel.h"
 #include "PlasticityModels/MeltingTempModel.h"
@@ -62,14 +61,13 @@ namespace Uintah {
     are updated incrementatlly to get the deformation gradient.
 
     Needs :
-    1) Isotropic elastic moduli.
-    2) Flow rule in the form of a Plasticity Model.
-    3) Yield condition.
-    4) Stability condition.
-    5) Damage model.
-    6) Shear modulus model.
-    7) Melting temperature model.
-    8) Specific heat model.
+    - Isotropic elastic moduli.
+    - Flow rule in the form of a Plasticity Model.
+    - Yield condition.
+    - Stability condition.
+    - Shear modulus model.
+    - Melting temperature model.
+    - Specific heat model.
 
     \Modified by Jim Guilkey to use energy based EOS
 
@@ -87,7 +85,6 @@ namespace Uintah {
       double Shear;   /*< Shear Modulus */
       double alpha;   /*< Coeff. of thermal expansion */
       double Chi;     /*< Taylor-Quinney coefficient */
-      double sigma_crit; /*< Critical stress */
     };   
 
     // Create datatype for storing porosity parameters
@@ -101,14 +98,6 @@ namespace Uintah {
       std::string porosityDist; /*< Initial porosity distribution*/
     };
 
-    // Create datatype for storing damage parameters
-    struct ScalarDamageData {
-      double D0;     /*< Initial mean scalar damage */
-      double D0_std; /*< Initial standard deviation of scalar damage */
-      double Dc;     /*< Critical scalar damage */
-      std::string scalarDamageDist; /*< Initial damage distrinution */
-    };
-
     // Create a datatype for storing Cp calculation paramaters
     //struct CpData {
     //  double A;
@@ -120,26 +109,21 @@ namespace Uintah {
     const VarLabel* pRotationLabel;  // For Hypoelastic-plasticity
     const VarLabel* pStrainRateLabel;  
     const VarLabel* pPlasticStrainLabel;  
-    const VarLabel* pPlasticStrainRateLabel;  
-    const VarLabel* pDamageLabel;  
-    const VarLabel* pPorosityLabel;  
-    const VarLabel* pLocalizedLabel;  
+    const VarLabel* pPlasticStrainRateLabel;
+    const VarLabel* pPorosityLabel;
     const VarLabel* pEnergyLabel;  
 
     const VarLabel* pRotationLabel_preReloc;  // For Hypoelastic-plasticity
     const VarLabel* pStrainRateLabel_preReloc;  
     const VarLabel* pPlasticStrainLabel_preReloc;  
-    const VarLabel* pPlasticStrainRateLabel_preReloc;  
-    const VarLabel* pDamageLabel_preReloc;  
-    const VarLabel* pPorosityLabel_preReloc;  
-    const VarLabel* pLocalizedLabel_preReloc;  
+    const VarLabel* pPlasticStrainRateLabel_preReloc;
+    const VarLabel* pPorosityLabel_preReloc;
     const VarLabel* pEnergyLabel_preReloc;
 
   protected:
 
     CMData           d_initialData;
     PorosityData     d_porosity;
-    ScalarDamageData d_scalarDam;
     //CpData           d_Cp;
     
     double d_tol;
@@ -148,22 +132,15 @@ namespace Uintah {
     bool   d_doIsothermal;
     bool   d_useModifiedEOS;
     bool   d_evolvePorosity;
-    bool   d_evolveDamage;
     bool   d_computeSpecificHeat;
     bool   d_checkTeplaFailureCriterion;
     bool   d_doMelting;
-    bool   d_checkStressTriax;
 
     std::string  d_plasticConvergenceAlgo;
-    // Erosion algorithms
-    bool   d_setStressToZero;
-    bool   d_allowNoTension;
-    bool   d_allowNoShear;
 
     YieldCondition*     d_yield;
     StabilityCheck*     d_stable;
     FlowModel*          d_flow;
-    DamageModel*        d_damage;
     MPMEquationOfState* d_eos;
     ShearModulusModel*  d_shear;
     MeltingTempModel*   d_melt;
@@ -181,7 +158,7 @@ namespace Uintah {
     /*! \brief constructors */
     ////////////////////////////////////////////////////////////////////////
     ElasticPlasticHP(ProblemSpecP& ps,MPMFlags* flag);
-    ElasticPlasticHP(const ElasticPlasticHP* cm);
+    //    ElasticPlasticHP(const ElasticPlasticHP* cm);
          
     ////////////////////////////////////////////////////////////////////////
     /*! \brief destructor  */
@@ -263,22 +240,6 @@ namespace Uintah {
                               const MPMMaterial* matl,
                               DataWarehouse* old_dw,
                               DataWarehouse* new_dw);
-
-    ////////////////////////////////////////////////////////////////////////
-    /*! \brief Put documentation here. */
-    ////////////////////////////////////////////////////////////////////////
-    virtual void addRequiresDamageParameter(Task* task,
-                                            const MPMMaterial* matl,
-                                            const PatchSet* patches) const;
-
-
-    ////////////////////////////////////////////////////////////////////////
-    /*! \brief Put documentation here. */
-    ////////////////////////////////////////////////////////////////////////
-    virtual void getDamageParameter(const Patch* patch, 
-                                    ParticleVariable<int>& damage, int dwi,
-                                    DataWarehouse* old_dw,
-                                    DataWarehouse* new_dw);
 
     ////////////////////////////////////////////////////////////////////////
     /*! \brief initialize  each particle's constitutive model data */
@@ -458,10 +419,6 @@ namespace Uintah {
     void initializeLocalMPMLabels();
 
     void getInitialPorosityData(ProblemSpecP& ps);
-
-    void getInitialDamageData(ProblemSpecP& ps);
-
-    void setErosionAlgorithm();
 
     //void getSpecificHeatData(ProblemSpecP& ps);
     //double computeSpecificHeat(double T);

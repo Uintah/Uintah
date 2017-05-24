@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2017 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -66,8 +66,6 @@ namespace Uintah {
 
     const VarLabel* pProgressFLabel;
     const VarLabel* pProgressFLabel_preReloc;
-    const VarLabel* pLocalizedLabel;
-    const VarLabel* pLocalizedLabel_preReloc;
 
   protected:
 
@@ -84,7 +82,6 @@ namespace Uintah {
   public:
     // constructors
     ProgramBurn(ProblemSpecP& ps, MPMFlags* flag);
-    ProgramBurn(const ProgramBurn* cm);
        
     // destructor
     virtual ~ProgramBurn();
@@ -93,15 +90,6 @@ namespace Uintah {
 
     // clone
     ProgramBurn* clone();
-
-    virtual void addRequiresDamageParameter(Task* task,
-                                            const MPMMaterial* matl,
-                                            const PatchSet* patches) const;
-
-    virtual void getDamageParameter(const Patch* patch, 
-                                    ParticleVariable<int>& damage, int dwi,
-                                    DataWarehouse* old_dw,
-                                    DataWarehouse* new_dw);
     
     // compute stable timestep for this patch
     virtual void computeStableTimestep(const Patch* patch,

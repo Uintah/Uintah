@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2017 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -53,6 +53,7 @@ ConstitutiveModel::ConstitutiveModel(MPMFlags* Mflag)
   }
 }
 
+#if 0
 ConstitutiveModel::ConstitutiveModel(const ConstitutiveModel* cm)
 {
   lb = scinew MPMLabel();
@@ -61,6 +62,7 @@ ConstitutiveModel::ConstitutiveModel(const ConstitutiveModel* cm)
   NGP = cm->NGP;
   d_sharedState = cm->d_sharedState;
 }
+#endif
 
 ConstitutiveModel::~ConstitutiveModel()
 {
@@ -208,21 +210,6 @@ ConstitutiveModel::carryForwardSharedData(ParticleSubset* pset,
     pStress_new[idx]=Matrix3(0.0);
     p_q[idx]=0.;
   }
-}
-
-void 
-ConstitutiveModel::addRequiresDamageParameter(Task*, 
-                                              const MPMMaterial*,
-                                              const PatchSet*) const
-{
-}
-
-void 
-ConstitutiveModel::getDamageParameter(const Patch* ,
-                                      ParticleVariable<int>& ,int ,
-                                      DataWarehouse* ,
-                                      DataWarehouse* )
-{
 }
 
 Vector 

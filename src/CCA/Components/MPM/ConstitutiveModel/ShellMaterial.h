@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2017 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -82,15 +82,12 @@ namespace Uintah {
     bool d_includeFlowWork;
 
   private:
-    // Prevent copying of this class
-    // copy constructor
-    //ShellMaterial(const ShellMaterial &cm);
+    // Prevent copying of this class:
     ShellMaterial& operator=(const ShellMaterial &cm);
 
   public:
     // constructors
     ShellMaterial(ProblemSpecP& ps, MPMFlags* flag);
-    ShellMaterial(const ShellMaterial* cm);
        
     // destructor
     virtual ~ShellMaterial();

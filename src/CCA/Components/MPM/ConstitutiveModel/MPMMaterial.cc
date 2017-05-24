@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2017 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -27,6 +27,9 @@
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModelFactory.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DamageModelFactory.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DamageModel.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/ErosionModel.h>
 #include <CCA/Components/MPM/ParticleCreator/ParticleCreatorFactory.h>
 #include <CCA/Components/MPM/ParticleCreator/ParticleCreator.h>
 #include <CCA/Components/MPM/ReactionDiffusion/ScalarDiffusionModelFactory.h>
@@ -66,28 +69,36 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps, SimulationStateP& ss,MPMFlags* flags,
   // Check to see which ParticleCreator object we need
   d_particle_creator = ParticleCreatorFactory::create(ps,this,flags);
 }
-
+//______________________________________________________________________
+//
 void
-MPMMaterial::standardInitialization(ProblemSpecP& ps, SimulationStateP& ss,
-                                    MPMFlags* flags, const bool isRestart)
+MPMMaterial::standardInitialization(ProblemSpecP& ps, 
+                                    SimulationStateP& ss,
+                                    MPMFlags* flags, 
+                                    const bool isRestart)
 
 {
   // Follow the layout of the input file
   // Steps:
   // 1.  Determine the type of constitutive model and create it.
-  // 2.  Determine if scalar diffusion is used and the type of
+  // 2.  Create damage model.
+  //
+  // 3.  Determine if scalar diffusion is used and the type of
   //     scalar diffusion model and create it.
   //     Added for reactive flow component.
-  // 3.  Get the general properties of the material such as
+  // 4.  Get the general properties of the material such as
   //     density, thermal_conductivity, specific_heat.
-  // 4.  Loop through all of the geometry pieces that make up a single
+  // 5.  Loop through all of the geometry pieces that make up a single
   //     geometry object.
-  // 5.  Within the geometry object, assign the boundary conditions
+  // 6.  Within the geometry object, assign the boundary conditions
   //     to the object.
-  // 6.  Assign the velocity field.
+  // 7.  Assign the velocity field.
 
   // Step 1 -- create the constitutive gmodel.
-  d_cm = ConstitutiveModelFactory::create(ps,flags);
+  bool ans;
+  d_cm = ConstitutiveModelFactory::create(ps,flags, ans);
+  set_pLocalizedComputed( ans );
+  
   if(!d_cm){
     ostringstream desc;
     desc << "An error occured in the ConstitutiveModelFactory that has \n" 
@@ -95,16 +106,23 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps, SimulationStateP& ss,
          << " either Jim, John or Todd "<< endl; 
     throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
   }
+  
+  // Step 2 -- create the damage/erosion gmodel.
+  d_damageModel = DamageModelFactory::create(ps,flags,ss.get_rep() );
+  
+  d_erosionModel = scinew ErosionModel( ps, flags, ss.get_rep() );
 
-  // Step 2 -- check if scalar diffusion is used and
+  // Step 3 -- check if scalar diffusion is used and
   // create the scalar diffusion model.
   if(flags->d_doScalarDiffusion){
     d_sdm = ScalarDiffusionModelFactory::create(ps,ss,flags);
   }else{
     d_sdm = nullptr;
   }
+  
+  
 
-  // Step 3 -- get the general material properties
+  // Step 4 -- get the general material properties
 
   ps->require("density",d_density);
   ps->require("thermal_conductivity",d_thermalConductivity);
@@ -133,7 +151,7 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps, SimulationStateP& ss,
   d_includeFlowWork = false;
   ps->get("includeFlowWork",d_includeFlowWork);
 
-  // Step 4 -- Loop through all of the pieces in this geometry object
+  // Step 5 -- Loop through all of the pieces in this geometry object
   //int piece_num = 0;
   list<GeometryObject::DataItem> geom_obj_data;
   geom_obj_data.push_back(GeometryObject::DataItem("res",                    GeometryObject::IntVector));
@@ -153,9 +171,16 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps, SimulationStateP& ss,
     geom_obj_data.push_back(GeometryObject::DataItem("concentration", GeometryObject::Double));
   }
 
+  if(flags->d_withGaussSolver){
+    std::cout << "************With Gauss Solver***********" << std::endl;
+    geom_obj_data.push_back(GeometryObject::DataItem("pos_charge_density", GeometryObject::Double));
+    geom_obj_data.push_back(GeometryObject::DataItem("neg_charge_density", GeometryObject::Double));
+    geom_obj_data.push_back(GeometryObject::DataItem("permittivity", GeometryObject::Double));
+  }
+
   if(!isRestart){
     for (ProblemSpecP geom_obj_ps = ps->findBlock("geom_object");
-         geom_obj_ps != 0; 
+         geom_obj_ps != nullptr; 
          geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
 
      vector<GeometryPieceP> pieces;
@@ -165,9 +190,11 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps, SimulationStateP& ss,
      if(pieces.size() == 0){
        throw ParameterNotFound("No piece specified in geom_object",
                                 __FILE__, __LINE__);
-     } else if(pieces.size() > 1){
+     }
+     else if(pieces.size() > 1){
        mainpiece = scinew UnionGeometryPiece(pieces);
-     } else {
+     }
+     else {
        mainpiece = pieces[0];
      }
 
@@ -188,6 +215,8 @@ MPMMaterial::~MPMMaterial()
 {
   delete d_lb;
   delete d_cm;
+  delete d_damageModel;
+  delete d_erosionModel;
   delete d_particle_creator;
 
   for (int i = 0; i<(int)d_geom_objs.size(); i++) {
@@ -198,12 +227,18 @@ MPMMaterial::~MPMMaterial()
   }
 }
 
-/*
-*/
 void MPMMaterial::registerParticleState(SimulationState* sharedState)
 {
   sharedState->d_particleState.push_back(d_particle_creator->returnParticleState());
   sharedState->d_particleState_preReloc.push_back(d_particle_creator->returnParticleStatePreReloc());
+}
+
+void MPMMaterial::deleteGeomObjects()
+{
+  for (int i = 0; i<(int)d_geom_objs.size(); i++) {
+    delete d_geom_objs[i];
+  }
+  d_geom_objs.clear();
 }
 
 ProblemSpecP MPMMaterial::outputProblemSpec(ProblemSpecP& ps)
@@ -218,6 +253,9 @@ ProblemSpecP MPMMaterial::outputProblemSpec(ProblemSpecP& ps)
   mpm_ps->appendElement("is_rigid",d_is_rigid);
   mpm_ps->appendElement("includeFlowWork",d_includeFlowWork);
   d_cm->outputProblemSpec(mpm_ps);
+  d_damageModel->outputProblemSpec(mpm_ps);
+  d_erosionModel->outputProblemSpec(mpm_ps);
+  
   if(getScalarDiffusionModel()){
     d_sdm->outputProblemSpec(mpm_ps);
   }
@@ -254,6 +292,28 @@ ConstitutiveModel* MPMMaterial::getConstitutiveModel() const
   // with this material
 
   return d_cm;
+}
+
+DamageModel* MPMMaterial::getDamageModel() const
+{
+  return d_damageModel;
+}
+
+ErosionModel* MPMMaterial::getErosionModel() const
+{
+  return d_erosionModel;
+}
+
+// is pLocalizedMPM computed upstream of damage models?
+void
+MPMMaterial::set_pLocalizedComputed( const bool ans ){
+  d_pLocalizedComputed = ans;
+}
+
+bool
+MPMMaterial::is_pLocalizedPreComputed() const
+{
+  return d_pLocalizedComputed;
 }
 
 ScalarDiffusionModel* MPMMaterial::getScalarDiffusionModel() const

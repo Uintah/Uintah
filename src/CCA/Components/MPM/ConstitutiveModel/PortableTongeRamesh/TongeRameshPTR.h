@@ -2,6 +2,7 @@
 
 The MIT License
 
+Copyright (c) 1997-2017 The University of Utah
 Copyright (c) 2013-2016 The Johns Hopkins University
 
 License for the specific language governing rights and limitations under
@@ -67,8 +68,6 @@ namespace Uintah {
     std::vector<const VarLabel*> histVarVect_preReloc;
     const VarLabel* pSSELabel;
     const VarLabel* pSSELabel_preReloc;
-    const VarLabel* pLocalizedLabel;
-    const VarLabel* pLocalizedLabel_preReloc;
       
   private:
     int d_nProps;
@@ -86,7 +85,6 @@ namespace Uintah {
   public:
     // constructors
     TongeRameshPTR(ProblemSpecP& ps, MPMFlags* flag);
-    TongeRameshPTR(const TongeRameshPTR* cm);
 
     // specifcy what to output from the constitutive model to an .xml file
     virtual void outputProblemSpec(ProblemSpecP& ps, bool output_cm_tag = true);
@@ -123,12 +121,6 @@ namespace Uintah {
                                                const MPMMaterial* matl,
                                                const PatchSet* patches) const;
     
-    ////////////////////////////////////////////////////////////////////////
-    /*! \\brief Add the requires for failure simulation. */
-    ////////////////////////////////////////////////////////////////////////
-    virtual void addRequiresDamageParameter(Task* task,
-                                            const MPMMaterial* matl,
-                                            const PatchSet* patches) const;
     
     
     // Compute Functions //
@@ -174,13 +166,7 @@ namespace Uintah {
     // Returns the compressibility of the material
     virtual double getCompressibility();
       
-    ////////////////////////////////////////////////////////////////////////
-    /*! \\brief Get the flag that marks a failed particle. */
-    ////////////////////////////////////////////////////////////////////////
-    virtual void getDamageParameter(const Patch* patch, 
-                                    ParticleVariable<int>& damage, int dwi,
-                                    DataWarehouse* old_dw,
-                                    DataWarehouse* new_dw);
+
   private:
     void initializeLocalMPMLabels();
     

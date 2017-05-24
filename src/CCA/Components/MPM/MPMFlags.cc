@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2017 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -46,65 +46,56 @@ static DebugStream dbg("MPMFlags", false);
 
 MPMFlags::MPMFlags(const ProcessorGroup* myworld)
 {
-  d_gravity = Vector(0.,0.,0.);
-  d_interpolator_type = "linear";
-  d_integrator_type = "explicit";
-  d_integrator = Explicit;
-  d_AMR = false;
-  d_axisymmetric = false;
+  d_gravity                       =  Vector(0.,0.,0.);
+  d_interpolator_type             =  "linear";
+  d_integrator_type               =  "explicit";
+  d_integrator                    =  Explicit;
+  d_AMR                           =  false;
+  d_axisymmetric                  =  false;
+  d_artificial_viscosity          =  false;
+  d_artificial_viscosity_heating  =  false;
+  d_artificialViscCoeff1          =  0.2;
+  d_artificialViscCoeff2          =  2.0;
+  d_useLoadCurves                 =  false;
+  d_useCBDI                       =  false;
+  d_useCPTI                       =  false;
+  d_useCohesiveZones              =  false;
+  d_with_color                    =  false;
+  d_fracture                      =  false;
+  d_minGridLevel                  =  0;
+  d_maxGridLevel                  =  1000;
+  d_deleteRogueParticles          =  false;
+  d_doThermalExpansion            =  true;
+  d_refineParticles               =  false;
+  d_XPIC2                         =  false;
+  d_artificialDampCoeff           =  0.0;
+  d_forceIncrementFactor          =  1.0;
+  d_interpolator                  =  scinew LinearInterpolator();
+  d_do_contact_friction           =  false;
+  d_computeNormals                =  false;
+  d_computeColinearNormals        =  true;
+  d_addFrictionWork               =  0.0;               // don't do frictional heating by default
 
-  d_artificial_viscosity = false;
-  d_artificial_viscosity_heating = false;
-  d_artificialViscCoeff1 = 0.2;
-  d_artificialViscCoeff2 = 2.0;
-  d_useLoadCurves = false;
-  d_useCBDI = false;
-  d_useCPTI = false;
-  d_useCohesiveZones = false;
-  d_useTracers = false;
-  d_with_color = false;
-  d_fracture = false;
-  d_minGridLevel = 0;
-  d_maxGridLevel = 1000;
-                      
-  d_erosionAlgorithm = "none";
-  d_doErosion = false;
-  d_deleteRogueParticles = false;
-  d_doThermalExpansion = true;
-  d_refineParticles = false;
-  d_XPIC2 = false;
-
-  d_artificialDampCoeff = 0.0;
-  d_PICalpha = 0.0;
-  d_forceIncrementFactor = 1.0;
-  d_interpolator = scinew LinearInterpolator(); 
-  d_do_contact_friction = false;
-  d_addFrictionWork = 0.0;  // don't do frictional heating by default
-
-  d_extraSolverFlushes = 0;  // Have PETSc do more flushes to save memory
-  d_doImplicitHeatConduction = false;
-  d_doExplicitHeatConduction = true;
-  d_doPressureStabilization = false;
-  d_computeNodalHeatFlux = false;
-  d_computeScaleFactor = false;
-  d_doTransientImplicitHeatConduction = true;
-  d_prescribeDeformation = false;
-  d_prescribedDeformationFile = "time_defgrad_rotation";
-  d_exactDeformation = false;
-  d_insertParticles = false;
-  d_doGridReset = true;
-  d_min_part_mass = 3.e-15;
-  d_min_subcycles_for_F = 1;
-  d_min_mass_for_acceleration = 0;// Min mass to allow division by in computing acceleration
-  d_max_vel = 3.e105;
-  d_with_ice = false;
-  d_with_arches = false;
-  d_myworld = myworld;
-
-  // Cyberstone
-  d_containerMaterial = -999;
-  d_containerRadius   = 9.e99;
-  d_KEMaterial = -999;
+  d_extraSolverFlushes                 =  0;            // Have PETSc do more flushes to save memory
+  d_doImplicitHeatConduction           =  false;
+  d_doExplicitHeatConduction           =  true;
+  d_deleteGeometryObjects              =  false;
+  d_doPressureStabilization            =  false;
+  d_computeNodalHeatFlux               =  false;
+  d_computeScaleFactor                 =  false;
+  d_doTransientImplicitHeatConduction  =  true;
+  d_prescribeDeformation               =  false;
+  d_prescribedDeformationFile          =  "time_defgrad_rotation";
+  d_exactDeformation                   =  false;
+  d_insertParticles                    =  false;
+  d_doGridReset                        =  true;
+  d_min_part_mass                      =  3.e-15;
+  d_min_subcycles_for_F                =  1;
+  d_min_mass_for_acceleration          =  0;            // Min mass to allow division by in computing acceleration
+  d_max_vel                            =  3.e105;
+  d_with_ice                           =  false;
+  d_with_arches                        =  false;
+  d_myworld                            =  myworld;
   
   d_reductionVars = scinew reductionVars();
   d_reductionVars->mass             = false;
@@ -117,15 +108,14 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_reductionVars->centerOfMass     = false;
 
   //******* Reactive Flow Component
-  d_doScalarDiffusion = false; //for diffusion component found in ReactiveFlow
+  d_doScalarDiffusion   =  false;  // for diffusion component found  in ReactiveFlow
+  d_doAutoCycleBC       =  false;  // for scalar flux boundary conditions
+  d_autoCycleUseMinMax  =  false;
+  d_autoCycleMax        =  .9;
+  d_autoCycleMin        =  .1;
+  d_withGaussSolver     =  false;
 
-  d_doAutoCycleBC = false; //for scalar flux boundary conditions
-  d_autoCycleUseMinMax = false;
-  d_autoCycleMax = .9;
-  d_autoCycleMin = .1;
-
-
-// MMS
+  // MMS
   if(d_mms_type=="AxisAligned"){
     d_mms_type = "AxisAligned";
   } else if(d_mms_type=="GeneralizedVortex"){
@@ -199,7 +189,6 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   mpm_flag_ps->get("axisymmetric", d_axisymmetric);
   mpm_flag_ps->get("withColor",  d_with_color);
   mpm_flag_ps->get("artificial_damping_coeff", d_artificialDampCoeff);
-  mpm_flag_ps->get("PICalpha", d_PICalpha);
   mpm_flag_ps->get("artificial_viscosity",     d_artificial_viscosity);
   mpm_flag_ps->get("refine_particles",         d_refineParticles);
   mpm_flag_ps->get("XPIC2",                    d_XPIC2);
@@ -229,19 +218,21 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
   }
 
-  mpm_flag_ps->get("ForceBC_force_increment_factor", d_forceIncrementFactor);
-  mpm_flag_ps->get("DoImplicitHeatConduction",       d_doImplicitHeatConduction);
+  mpm_flag_ps->get("ForceBC_force_increment_factor",    d_forceIncrementFactor);
+  mpm_flag_ps->get("DoImplicitHeatConduction",          d_doImplicitHeatConduction);
   mpm_flag_ps->get("DoTransientImplicitHeatConduction", d_doTransientImplicitHeatConduction);
-  mpm_flag_ps->get("DoExplicitHeatConduction", d_doExplicitHeatConduction);
-  mpm_flag_ps->get("DoPressureStabilization", d_doPressureStabilization);
-  mpm_flag_ps->get("DoThermalExpansion", d_doThermalExpansion);
-  mpm_flag_ps->getWithDefault("UseGradientEnhancedVelocityProjection", d_GEVelProj,false);
-  mpm_flag_ps->get("do_grid_reset",      d_doGridReset);
-  mpm_flag_ps->get("minimum_particle_mass",    d_min_part_mass);
-  mpm_flag_ps->get("minimum_subcycles_for_F",  d_min_subcycles_for_F);
-  mpm_flag_ps->get("minimum_mass_for_acc",     d_min_mass_for_acceleration);
-  mpm_flag_ps->get("maximum_particle_velocity",d_max_vel);
-  mpm_flag_ps->get("UsePrescribedDeformation",d_prescribeDeformation);
+  mpm_flag_ps->get("DoExplicitHeatConduction",          d_doExplicitHeatConduction);
+  mpm_flag_ps->get("DeleteGeometryObjects",             d_deleteGeometryObjects);
+  mpm_flag_ps->get("DoPressureStabilization",           d_doPressureStabilization);
+  mpm_flag_ps->get("DoThermalExpansion",                d_doThermalExpansion);
+  mpm_flag_ps->getWithDefault("UseGradientEnhancedVelocityProjection",  d_GEVelProj,false);
+  mpm_flag_ps->get("do_grid_reset",                     d_doGridReset);
+  mpm_flag_ps->get("minimum_particle_mass",             d_min_part_mass);
+  mpm_flag_ps->get("minimum_subcycles_for_F",           d_min_subcycles_for_F);
+  mpm_flag_ps->get("minimum_mass_for_acc",              d_min_mass_for_acceleration);
+  mpm_flag_ps->get("maximum_particle_velocity",         d_max_vel);
+  mpm_flag_ps->get("UsePrescribedDeformation",          d_prescribeDeformation);
+
   if(d_prescribeDeformation){
     mpm_flag_ps->get("PrescribedDeformationFile",d_prescribedDeformationFile);
   }
@@ -263,35 +254,28 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   }
 
   mpm_flag_ps->get("do_contact_friction_heating", d_do_contact_friction);
+  mpm_flag_ps->get("computeNormals",              d_computeNormals);
+  mpm_flag_ps->get("computeColinearNormals",      d_computeColinearNormals);
   if (!d_do_contact_friction) d_addFrictionWork = 0.0;
-
-   ProblemSpecP erosion_ps = mpm_flag_ps->findBlock("erosion");
-   if (erosion_ps) {
-     if (erosion_ps->getAttribute("algorithm", d_erosionAlgorithm)) {
-       if (d_erosionAlgorithm == "none") d_doErosion = false;
-       else d_doErosion = true;
-     }
-   }
 
   mpm_flag_ps->get("delete_rogue_particles",  d_deleteRogueParticles);
 
   // Setting Scalar Diffusion
   mpm_flag_ps->get("do_scalar_diffusion", d_doScalarDiffusion);
-
   mpm_flag_ps->get("do_auto_cycle_bc", d_doAutoCycleBC);
   mpm_flag_ps->get("auto_cycle_use_minmax", d_autoCycleUseMinMax);
   mpm_flag_ps->get("auto_cycle_max", d_autoCycleMax);
   mpm_flag_ps->get("auto_cycle_min", d_autoCycleMin);
+  mpm_flag_ps->get("with_gauss_solver", d_withGaussSolver);
 
   // d_doComputeHeatFlux:
   // set to true if the label g.HeatFlux is saved or 
   // flatPlat_heatFlux analysis module is used.
   //
   // orginal problem spec
-  ProblemSpecP DA_ps = root->findBlock("DataArchiver");
-  if(DA_ps){
-    for(ProblemSpecP label_iter = DA_ps->findBlock("save"); label_iter != 0;
-                     label_iter = label_iter->findNextBlock("save")){
+  ProblemSpecP DA_ps = root->findBlock( "DataArchiver" );
+  if( DA_ps != nullptr ){
+    for( ProblemSpecP label_iter = DA_ps->findBlock( "save" ); label_iter != nullptr; label_iter = label_iter->findNextBlock( "save" ) ) {
       map<string,string> labelName;
 
       label_iter->getAttributes(labelName);
@@ -307,9 +291,8 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   ProblemSpecP da_ps = root->findBlock("DataAnalysis");
 
   if (da_ps) {
-    for(ProblemSpecP module_ps = da_ps->findBlock("Module"); module_ps != 0;
-                     module_ps = module_ps->findNextBlock("Module")){
-      if(module_ps){
+    for( ProblemSpecP module_ps = da_ps->findBlock("Module"); module_ps != nullptr; module_ps = module_ps->findNextBlock( "Module" ) ) {
+      if( module_ps ){
         map<string,string> attributes;
         module_ps->getAttributes(attributes);
         if ( attributes["name"]== "flatPlate_heatFlux") {
@@ -402,7 +385,6 @@ else{
     dbg << " Interpolation type          = " << d_interpolator_type << endl;
     dbg << " With Color                  = " << d_with_color << endl;
     dbg << " Artificial Damping Coeff    = " << d_artificialDampCoeff << endl;
-    dbg << " PIC alpha                   = " << d_PICalpha << endl;
     dbg << " Artificial Viscosity On     = " << d_artificial_viscosity<< endl;
     dbg << " Artificial Viscosity Htng   = " << d_artificial_viscosity_heating<< endl;
     dbg << " Artificial Viscosity Coeff1 = " << d_artificialViscCoeff1<< endl;
@@ -432,43 +414,43 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("gravity", d_gravity);
   ps->appendElement("time_integrator", d_integrator_type);
 
-  ps->appendElement("interpolator", d_interpolator_type);
-  ps->appendElement("cpdi_lcrit", d_cpdi_lcrit);
-  ps->appendElement("AMR", d_AMR);
-  ps->appendElement("axisymmetric", d_axisymmetric);
-  ps->appendElement("withColor",  d_with_color);
-  ps->appendElement("artificial_damping_coeff", d_artificialDampCoeff);
-  ps->appendElement("PICalpha", d_PICalpha);
-  ps->appendElement("artificial_viscosity",     d_artificial_viscosity);
-  ps->appendElement("artificial_viscosity_heating",d_artificial_viscosity_heating);
-  ps->appendElement("artificial_viscosity_coeff1", d_artificialViscCoeff1);
-  ps->appendElement("artificial_viscosity_coeff2", d_artificialViscCoeff2);
-  ps->appendElement("refine_particles",   d_refineParticles);
-  ps->appendElement("XPIC2",              d_XPIC2);
-  ps->appendElement("use_cohesive_zones", d_useCohesiveZones);
-  ps->appendElement("use_tracers",        d_useTracers);
-  ps->appendElement("use_load_curves",    d_useLoadCurves);
-  ps->appendElement("use_CBDI_boundary_condition", d_useCBDI);
-  ps->appendElement("exactDeformation",d_exactDeformation);
-  ps->appendElement("ForceBC_force_increment_factor", d_forceIncrementFactor);
-  ps->appendElement("DoImplicitHeatConduction", d_doImplicitHeatConduction);
-  ps->appendElement("DoTransientImplicitHeatConduction", d_doTransientImplicitHeatConduction);
-  ps->appendElement("DoExplicitHeatConduction", d_doExplicitHeatConduction);
-  ps->appendElement("DoPressureStabilization", d_doPressureStabilization);
-  ps->appendElement("computeNodalHeatFlux",d_computeNodalHeatFlux);
-  ps->appendElement("computeScaleFactor",  d_computeScaleFactor);
-  ps->appendElement("DoThermalExpansion", d_doThermalExpansion);
-  ps->appendElement("UseGradientEnhancedVelocityProjection", d_GEVelProj);
-  ps->appendElement("do_grid_reset",      d_doGridReset);
-  ps->appendElement("minimum_particle_mass",    d_min_part_mass);
-  ps->appendElement("minimum_subcycles_for_F",  d_min_subcycles_for_F);
-  ps->appendElement("minimum_mass_for_acc",     d_min_mass_for_acceleration);
-  ps->appendElement("maximum_particle_velocity",d_max_vel);
-  ps->appendElement("UsePrescribedDeformation",d_prescribeDeformation);
+  ps->appendElement("interpolator",                       d_interpolator_type);
+  ps->appendElement("cpdi_lcrit",                         d_cpdi_lcrit);
+  ps->appendElement("AMR",                                d_AMR);
+  ps->appendElement("axisymmetric",                       d_axisymmetric);
+  ps->appendElement("withColor",                          d_with_color);
+  ps->appendElement("artificial_damping_coeff",           d_artificialDampCoeff);
+  ps->appendElement("artificial_viscosity",               d_artificial_viscosity);
+  ps->appendElement("artificial_viscosity_heating",       d_artificial_viscosity_heating);
+  ps->appendElement("artificial_viscosity_coeff1",        d_artificialViscCoeff1);
+  ps->appendElement("artificial_viscosity_coeff2",        d_artificialViscCoeff2);
+  ps->appendElement("refine_particles",                   d_refineParticles);
+  ps->appendElement("XPIC2",                              d_XPIC2);
+  ps->appendElement("use_cohesive_zones",                 d_useCohesiveZones);
+  ps->appendElement("use_load_curves",                    d_useLoadCurves);
+  ps->appendElement("use_CBDI_boundary_condition",        d_useCBDI);
+  ps->appendElement("exactDeformation",                   d_exactDeformation);
+  ps->appendElement("ForceBC_force_increment_factor",     d_forceIncrementFactor);
+  ps->appendElement("DoImplicitHeatConduction",           d_doImplicitHeatConduction);
+  ps->appendElement("DoTransientImplicitHeatConduction",  d_doTransientImplicitHeatConduction);
+  ps->appendElement("DoExplicitHeatConduction",           d_doExplicitHeatConduction);
+  ps->appendElement("DeleteGeometryObjects",              d_deleteGeometryObjects);
+  ps->appendElement("DoPressureStabilization",            d_doPressureStabilization);
+  ps->appendElement("computeNodalHeatFlux",               d_computeNodalHeatFlux);
+  ps->appendElement("computeScaleFactor",                 d_computeScaleFactor);
+  ps->appendElement("DoThermalExpansion",                 d_doThermalExpansion);
+  ps->appendElement("UseGradientEnhancedVelocityProjection",  d_GEVelProj);
+  ps->appendElement("do_grid_reset",                      d_doGridReset);
+  ps->appendElement("minimum_particle_mass",              d_min_part_mass);
+  ps->appendElement("minimum_subcycles_for_F",            d_min_subcycles_for_F);
+  ps->appendElement("minimum_mass_for_acc",               d_min_mass_for_acceleration);
+  ps->appendElement("maximum_particle_velocity",          d_max_vel);
+  ps->appendElement("UsePrescribedDeformation",           d_prescribeDeformation);
+
   if(d_prescribeDeformation){
     ps->appendElement("PrescribedDeformationFile",d_prescribedDeformationFile);
   }
-  //MMS
+//MMS
   ps->appendElement("RunMMSProblem",d_mms_type);
   ps->appendElement("InsertParticles",d_insertParticles);
   if(d_insertParticles){
@@ -476,12 +458,9 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   }
 
   ps->appendElement("do_contact_friction_heating", d_do_contact_friction);
-
+  ps->appendElement("computeNormals", d_computeNormals);
+  ps->appendElement("computeColinearNormals", d_computeColinearNormals);
   ps->appendElement("delete_rogue_particles",d_deleteRogueParticles);
-
-  ProblemSpecP erosion_ps = ps->appendChild("erosion");
-  erosion_ps->setAttribute("algorithm", d_erosionAlgorithm);
- 
   ps->appendElement("extra_solver_flushes", d_extraSolverFlushes);
   ps->appendElement("boundary_traction_faces", d_bndy_face_txt_list);
   ps->appendElement("do_scalar_diffusion", d_doScalarDiffusion);

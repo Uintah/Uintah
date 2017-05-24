@@ -9,7 +9,7 @@ made.
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2017 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -96,8 +96,7 @@ namespace Uintah {
     std::vector<const VarLabel*> ISVLabels_preReloc;
     const VarLabel* peakI1IDistLabel;
     const VarLabel* peakI1IDistLabel_preReloc;
-    const VarLabel* pLocalizedLabel;  
-    const VarLabel* pLocalizedLabel_preReloc;  
+     
   protected:
     bool   d_allowNoTension;
     bool   d_removeMass;
@@ -110,22 +109,13 @@ namespace Uintah {
   public:
     // constructors
     Kayenta(ProblemSpecP& ps, MPMFlags* flag);
-    Kayenta(const Kayenta* cm);
+    //Kayenta(const Kayenta* cm);
     // destructor
     virtual ~Kayenta();
     virtual void outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag = true);
     // clone
     Kayenta* clone();
-    virtual void addRequiresDamageParameter(Task* task,
-                                            const MPMMaterial* matl,
-                                            const PatchSet* patches) const;
-    ////////////////////////////////////////////////////////////////////////
-    /*! \brief Put documentation here. */
-    ////////////////////////////////////////////////////////////////////////
-    virtual void getDamageParameter(const Patch* patch, 
-                                    ParticleVariable<int>& damage, int dwi,
-                                    DataWarehouse* old_dw,
-                                    DataWarehouse* new_dw);
+
     // compute stable timestep for this patch
     virtual void computeStableTimestep(const Patch* patch,
                                        const MPMMaterial* matl,

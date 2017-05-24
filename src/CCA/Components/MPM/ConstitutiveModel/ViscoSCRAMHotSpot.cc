@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2017 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -57,51 +57,6 @@ ViscoSCRAMHotSpot::ViscoSCRAMHotSpot(ProblemSpecP& ps, MPMFlags* Mflag)
   ps->require("EoverR",d_matConst.EoverR);
   ps->require("dynamic_coeff_friction",d_matConst.mu_d);
   ps->require("volfracHE",d_matConst.vfHE);
-
-  // Create labels for the hotspot data
-  pHotSpotT1Label    = 
-    VarLabel::create("p.hotspotT1",
-                     ParticleVariable<double>::getTypeDescription());
-  pHotSpotT2Label    = 
-    VarLabel::create("p.hotspotT2",
-                     ParticleVariable<double>::getTypeDescription());
-  pHotSpotPhi1Label  = 
-    VarLabel::create("p.hotspotPhi1",
-                     ParticleVariable<double>::getTypeDescription());
-  pHotSpotPhi2Label  = 
-    VarLabel::create("p.hotspotPhi2",
-                     ParticleVariable<double>::getTypeDescription());
-  pChemHeatRateLabel = 
-    VarLabel::create("p.chemHeatRate",
-                     ParticleVariable<double>::getTypeDescription());
-
-  pHotSpotT1Label_preReloc    = 
-    VarLabel::create("p.hotspotT1+",
-                     ParticleVariable<double>::getTypeDescription());
-  pHotSpotT2Label_preReloc    = 
-    VarLabel::create("p.hotspotT2+",
-                     ParticleVariable<double>::getTypeDescription());
-  pHotSpotPhi1Label_preReloc  = 
-    VarLabel::create("p.hotspotPhi1+",
-                     ParticleVariable<double>::getTypeDescription());
-  pHotSpotPhi2Label_preReloc  = 
-    VarLabel::create("p.hotspotPhi2+",
-                     ParticleVariable<double>::getTypeDescription());
-  pChemHeatRateLabel_preReloc = 
-    VarLabel::create("p.chemHeatRate+",
-                     ParticleVariable<double>::getTypeDescription());
-}
-
-ViscoSCRAMHotSpot::ViscoSCRAMHotSpot(const ViscoSCRAMHotSpot* cm)
-  : ViscoScram(cm)
-{
-  // Material constants
-  d_matConst.Chi = cm->d_matConst.Chi;
-  d_matConst.delH = cm->d_matConst.delH;
-  d_matConst.Z = cm->d_matConst.Z;
-  d_matConst.EoverR = cm->d_matConst.EoverR;
-  d_matConst.mu_d = cm->d_matConst.mu_d;
-  d_matConst.vfHE = cm->d_matConst.vfHE;
 
   // Create labels for the hotspot data
   pHotSpotT1Label    = 

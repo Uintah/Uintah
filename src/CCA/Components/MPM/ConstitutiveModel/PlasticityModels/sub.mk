@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2016 The University of Utah
+#  Copyright (c) 1997-2017 The University of Utah
 #
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -38,6 +38,7 @@ SRCS   += \
 	$(SRCDIR)/HancockMacKenzieDamage.cc \
 	$(SRCDIR)/ThresholdDamage.cc \
 	$(SRCDIR)/BrittleDamage.cc \
+       $(SRCDIR)/ErosionModel.cc \
 	$(SRCDIR)/MPMEquationOfState.cc \
 	$(SRCDIR)/MPMEquationOfStateFactory.cc \
 	$(SRCDIR)/DefaultHypoElasticEOS.cc \
