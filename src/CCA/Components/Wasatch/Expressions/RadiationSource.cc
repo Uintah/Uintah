@@ -77,15 +77,15 @@ namespace WasatchCore {
                                               WasatchCore::get_uintah_field_type_descriptor<SVolField>() ) ),
   rmcrt_(rmcrt)
   {
-     temperature_ = create_field_request<SVolField>(temperatureTag);
-     absCoef_ = create_field_request<SVolField>(absorptionTag);
-    // cellType_ = create_field_request<FieldT>(celltypeTag );        
+    temperature_ = create_field_request<SVolField>(temperatureTag);
+    absCoef_     = create_field_request<SVolField>(absorptionTag);
+//    cellType_    = create_field_request<SVolField>(celltypeTag );
     
     rmcrt_->registerVarLabels( 0,
-                              absorptionLabel_,
-                              temperatureLabel_,
-                              celltypeLabel_,
-                              divqLabel_ );
+                               absorptionLabel_,
+                               temperatureLabel_,
+                               celltypeLabel_,
+                               divqLabel_ );
     
     rmcrt_->problemSetup(radiationSpec, radiationSpec, grid, sharedState);
     
@@ -100,11 +100,10 @@ namespace WasatchCore {
                                           const Uintah::MaterialSet* const materials )
   {
     // hack in a task to apply boundary condition on the pressure after the pressure solve
-    Uintah::Task* task = scinew Uintah::Task( "RadiationSource: setup bndflux", this,
-                                             &RadiationSource::setup_bndflux );
+    Uintah::Task* task = scinew Uintah::Task( "RadiationSource: setup bndflux", this, &RadiationSource::setup_bndflux );
     
     task->computes(Uintah::VarLabel::find("RMCRTboundFlux"));
-    sched->addTask(task, level->eachPatch(), materials);
+    sched->addTask(task, level->eachPatch(), materials, Uintah::RMCRTCommon::TG_RMCRT);
   }
 
   //--------------------------------------------------------------------
@@ -149,51 +148,30 @@ namespace WasatchCore {
   {
     using namespace Uintah;
     
-    GridP grid = level->getGrid();
-    const bool modifiesDivQ      = true;
-    const bool includeExtraCells = false;  // domain for sigmaT4 computation
     // only sched on RK step 0 and on arches level
     if ( RKStage > 1 ) {
       return;
     }
     
+    rmcrt_->sched_CarryForward_AllLabels ( level, sched );
+
     schedule_setup_bndflux(level, sched, materials);
-    
-    int maxLevels = grid->numLevels();
-    {
-      const LevelP& fineLevel = grid->getLevel(0);
-      Uintah::Task::WhichDW tempDW   = Task::NewDW;
-      Uintah::Task::WhichDW abskgDW  = Task::NewDW;
-      
-      // if needed convert absorptionLabel: double -> float
-      rmcrt_->sched_DoubleToFloat( fineLevel, sched, abskgDW );
-      
-      rmcrt_->sched_sigmaT4( fineLevel,  sched, tempDW );
-      
-      for (int l = 0; l < maxLevels; l++) {
-        const LevelP& level = grid->getLevel(l);
-        const bool modifies_abskg   = false;
-        const bool modifies_sigmaT4 = false;
-        
-        rmcrt_->sched_CoarsenAll( level, sched, modifies_abskg, modifies_sigmaT4 );
-        
-        if(level->hasFinerLevel() || maxLevels == 1){
-          const Task::WhichDW sigmaT4DW  = Task::NewDW;
-          const Task::WhichDW celltypeDW = Task::NewDW;
-          
-          rmcrt_->sched_setBoundaryConditions( level, sched, tempDW, false );
-          rmcrt_->sched_rayTrace( level, sched, abskgDW, sigmaT4DW, celltypeDW, modifiesDivQ );
-        }
-      }
-      
-      // push divQ  to the coarser levels
-      for (int l = 0; l < maxLevels; l++) {
-        const LevelP& level = grid->getLevel(l);
-        const PatchSet* patches = level->eachPatch();
-        rmcrt_->sched_Refine_Q( sched,  patches, materials );
-      }
-    }
-    
+
+    GridP grid = level->getGrid();
+    const bool modifiesDivQ      = true;
+
+    const LevelP& fineLevel = grid->getLevel(0);
+    Uintah::Task::WhichDW tempDW   = Task::NewDW;
+    Uintah::Task::WhichDW abskgDW  = Task::NewDW;
+
+    // if needed convert absorptionLabel: double -> float
+    rmcrt_->sched_DoubleToFloat( fineLevel, sched, abskgDW );
+    rmcrt_->sched_sigmaT4( fineLevel,  sched, tempDW );
+    rmcrt_->sched_setBoundaryConditions( level, sched, tempDW, false );
+
+    const Task::WhichDW sigmaT4DW  = Task::NewDW;
+    const Task::WhichDW celltypeDW = Task::NewDW;
+    rmcrt_->sched_rayTrace( level, sched, abskgDW, sigmaT4DW, celltypeDW, modifiesDivQ );
   }
   
   
