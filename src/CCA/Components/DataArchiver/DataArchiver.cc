@@ -957,17 +957,17 @@ DataArchiver::sched_allOutputTasks(       double       delt,
   if ( (d_outputInterval != 0.0 || d_outputTimestepInterval != 0) &&
        (delt != 0 || d_outputInitTimestep)) {
     
-    Task* t = scinew Task( "DataArchiver::outputReductionVars", this, &DataArchiver::outputReductionVars );
+    Task* task = scinew Task( "DataArchiver::outputReductionVars", this, &DataArchiver::outputReductionVars );
     
     for(int i=0;i<(int)d_saveReductionLabels.size();i++) {
       SaveItem& saveItem = d_saveReductionLabels[i];
       const VarLabel* var = saveItem.label;
       
       const MaterialSubset* matls = saveItem.getMaterialSubset(0);
-      t->requires( Task::NewDW, var, matls, true );
+      task->requires( Task::NewDW, var, matls, true );
     }
     
-    sched->addTask(t, 0, 0);
+    sched->addTask(task, nullptr, nullptr);
     
     dbg << "  scheduled output tasks (reduction variables)\n";
     if (delt != 0 || d_outputInitTimestep) {
@@ -980,16 +980,16 @@ DataArchiver::sched_allOutputTasks(       double       delt,
   if (delt != 0 && d_checkpointCycle > 0 &&
       ( d_checkpointInterval>0 || d_checkpointTimestepInterval>0 || d_checkpointWalltimeInterval > 0 ) ) {
     // output checkpoint timestep
-    Task* t = scinew Task( "DataArchiver::outputVariables (CheckpointReduction)", this, &DataArchiver::outputVariables, CHECKPOINT_REDUCTION );
+    Task* task = scinew Task( "DataArchiver::outputVariables (CheckpointReduction)", this, &DataArchiver::outputVariables, CHECKPOINT_REDUCTION );
     
     for( int i = 0; i < (int) d_checkpointReductionLabels.size(); i++ ) {
       SaveItem& saveItem = d_checkpointReductionLabels[i];
       const VarLabel* var = saveItem.label;
       const MaterialSubset* matls = saveItem.getMaterialSubset(0);
       
-      t->requires(Task::NewDW, var, matls, true);
+      task->requires(Task::NewDW, var, matls, true);
     }
-    sched->addTask(t, 0, 0);
+    sched->addTask(task, nullptr, nullptr);
     
     dbg << "  scheduled output tasks (checkpoint variables)\n";
     
