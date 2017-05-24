@@ -89,8 +89,7 @@ namespace Uintah {
    WARNING
    
    ****************************************/
-  
-  
+
   class Patch {
   public:
     
