@@ -58,6 +58,8 @@ P_Alpha::P_Alpha(ProblemSpecP& ps,MPMFlags* Mflag)
   ps->require("S_alpha",   d_initialData.S_alpha);
   // For the unloading response
   ps->getWithDefault("Ku", d_initialData.Ku,.1*d_initialData.K0);
+  ps->getWithDefault("shear_modulus", d_initialData.shear,      0.0);
+  ps->getWithDefault("yield_stress",  d_initialData.FlowStress, 9.e99);
 
   alphaLabel              = VarLabel::create("p.alpha",
                             ParticleVariable<double>::getTypeDescription());
@@ -69,6 +71,10 @@ P_Alpha::P_Alpha(ProblemSpecP& ps,MPMFlags* Mflag)
                             ParticleVariable<double>::getTypeDescription());
   tempAlpha1Label_preReloc  = VarLabel::create("p.tempAlpha1+",
                             ParticleVariable<double>::getTypeDescription());
+  bElBarLabel               = VarLabel::create("p.bElBar",
+                             ParticleVariable<Matrix3>::getTypeDescription());
+  bElBarLabel_preReloc      = VarLabel::create("p.bElBar+",
+                             ParticleVariable<Matrix3>::getTypeDescription());
 }
 
 P_Alpha::~P_Alpha()
@@ -78,6 +84,8 @@ P_Alpha::~P_Alpha()
   VarLabel::destroy(alphaMinLabel_preReloc);
   VarLabel::destroy(tempAlpha1Label);
   VarLabel::destroy(tempAlpha1Label_preReloc);
+  VarLabel::destroy(bElBarLabel);
+  VarLabel::destroy(bElBarLabel_preReloc);
 }
 
 void P_Alpha::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
@@ -96,6 +104,8 @@ void P_Alpha::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   cm_ps->appendElement("K0",      d_initialData.K0);
   cm_ps->appendElement("Ks",      d_initialData.Ks);
   cm_ps->appendElement("Ku",      d_initialData.Ku);
+  cm_ps->appendElement("shear_modulus", d_initialData.shear);
+  cm_ps->appendElement("yield_stress", d_initialData.FlowStress);
   cm_ps->appendElement("T_0",     d_initialData.T_0);
   cm_ps->appendElement("C_0",     d_initialData.C_0);
   cm_ps->appendElement("Gamma_0", d_initialData.Gamma_0);
@@ -114,6 +124,7 @@ void P_Alpha::addInitialComputesAndRequires(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
   task->computes(alphaMinLabel,  matlset);
   task->computes(tempAlpha1Label,matlset);
+  task->computes(bElBarLabel,    matlset);
 }
 
 void P_Alpha::initializeCMData(const Patch* patch,
@@ -128,18 +139,23 @@ void P_Alpha::initializeCMData(const Patch* patch,
 
   ParticleVariable<double>      alpha_min;
   ParticleVariable<double>      tAlpha1;
-  new_dw->allocateAndPut(alpha_min, alphaMinLabel, pset);
-  new_dw->allocateAndPut(tAlpha1, tempAlpha1Label, pset);
+  ParticleVariable<Matrix3> bElBar;
+  new_dw->allocateAndPut(alpha_min, alphaMinLabel,   pset);
+  new_dw->allocateAndPut(tAlpha1,   tempAlpha1Label, pset);
+  new_dw->allocateAndPut(bElBar,    bElBarLabel,     pset);
 
   double rhoS = d_initialData.rhoS;
   double rho_orig = matl->getInitialDensity();
   double alpha_min0 = rhoS/rho_orig;
+  Matrix3 Identity;
+  Identity.Identity();
 
   for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++){
   // Compute alpha0 from material density and rhoS - Jim 9/8/2011
      // alpha_min[*iter]    = d_initialData.alpha0;
      alpha_min[*iter]    = alpha_min0;
      tAlpha1[*iter]      = d_initialData.T_0;
+     bElBar[*iter]       = Identity;
   }
 
   computeStableTimestep(patch, matl, new_dw);
@@ -153,6 +169,8 @@ void P_Alpha::addParticleState(std::vector<const VarLabel*>& from,
   to.push_back(alphaMinLabel_preReloc);
   from.push_back(tempAlpha1Label);
   to.push_back(tempAlpha1Label_preReloc);
+  from.push_back(bElBarLabel);
+  to.push_back(bElBarLabel_preReloc);
 }
 
 void P_Alpha::computeStableTimestep(const Patch* patch,
@@ -206,14 +224,16 @@ void P_Alpha::computeStressTensor(const PatchSubset* patches,
     double c_dil=0.0;
     Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
     Matrix3 Identity; Identity.Identity();
+    double onethird = (1.0/3.0), sqtwthds = sqrt(2.0/3.0);
+    Matrix3 tauDev, tauDevTrial;
 
     Vector dx = patch->dCell();
 
     int dwi = matl->getDWIndex();
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
     constParticleVariable<Matrix3> deformationGradient_new;
-    constParticleVariable<Matrix3> deformationGradient;
-    ParticleVariable<Matrix3> pstress;
+    constParticleVariable<Matrix3> deformationGradient, bElBar;
+    ParticleVariable<Matrix3> pstress,bElBar_new;
     constParticleVariable<double> alpha_min_old, ptemperature, tempAlpha1_old;
     constParticleVariable<double> pvolume;
     ParticleVariable<double> alpha_min_new, alpha_new, tempAlpha1;
@@ -228,6 +248,7 @@ void P_Alpha::computeStressTensor(const PatchSubset* patches,
     old_dw->get(deformationGradient,         lb->pDeformationMeasureLabel,pset);
     old_dw->get(alpha_min_old,               alphaMinLabel,               pset);
     old_dw->get(tempAlpha1_old,              tempAlpha1Label,             pset);
+    old_dw->get(bElBar,                      bElBarLabel,                 pset);
 
     new_dw->allocateAndPut(pstress,          lb->pStressLabel_preReloc,   pset);
     new_dw->allocateAndPut(pdTdt,            lb->pdTdtLabel,              pset);
@@ -239,6 +260,7 @@ void P_Alpha::computeStressTensor(const PatchSubset* patches,
     new_dw->get(velGrad,          lb->pVelGradLabel_preReloc,             pset);
     new_dw->get(deformationGradient_new,
                                   lb->pDeformationMeasureLabel_preReloc,  pset);
+    new_dw->allocateAndPut(bElBar_new,  bElBarLabel_preReloc,      pset);
 
     double rho_orig = matl->getInitialDensity();
     double Ps = d_initialData.Ps;
@@ -249,6 +271,7 @@ void P_Alpha::computeStressTensor(const PatchSubset* patches,
     double K0 = d_initialData.K0;
     double Ks = d_initialData.Ks;
     double Ku = d_initialData.Ku;
+    double shear = d_initialData.shear;
     double rhoS = d_initialData.rhoS;
 
     double cv = matl->getSpecificHeat();
@@ -259,10 +282,54 @@ void P_Alpha::computeStressTensor(const PatchSubset* patches,
         iter != pset->end(); iter++){
        particleIndex idx = *iter;
 
-      double Jold = deformationGradient[idx].Determinant();
+      Matrix3 pDefGradInc = deformationGradient_new[idx]
+                          * deformationGradient[idx].Inverse();
+      double Jinc = pDefGradInc.Determinant();
       double Jnew = deformationGradient_new[idx].Determinant();
-      double Jinc = Jnew/Jold;
       double rhoM = rho_orig/Jnew;  // Current material density
+
+      // This section computes a deviatoric stress if the shear_modulus
+      // is non-zero.  This is not standard in a P-Alpha model, but without
+      // a deviatoric response, simulations aren't very stable.
+      // The deviatoric stress is based on comp_neo_hook type response
+
+      // Get the volume preserving part of the deformation gradient increment
+      Matrix3 fBar = pDefGradInc/cbrt(Jinc);
+
+      // Compute the trial elastic part of the volume preserving
+      // part of the left Cauchy-Green deformation tensor
+      Matrix3 bElBarTrial = fBar*bElBar[idx]*fBar.Transpose();
+
+      double IEl   = onethird*bElBarTrial.Trace();
+      double muBar = IEl*shear;
+
+      // tauDevTrial is equal to the shear modulus times dev(bElBar)
+      // Compute sTnorm = ||tauDevTrial||
+      Matrix3 tauDevTrial = (bElBarTrial - Identity*IEl)*shear;
+      double sTnorm      = tauDevTrial.Norm();
+
+      // Check for plastic loading
+      double flow = d_initialData.FlowStress;
+      double fTrial = sTnorm - sqtwthds*flow;
+
+      if (fTrial > 0.0) {
+        // plastic
+        // Compute increment of slip in the direction of flow
+        double delgamma = fTrial/(2.0*muBar);
+        Matrix3 normal   = tauDevTrial/sTnorm;
+
+        // The actual shear stress
+        tauDev = tauDevTrial - normal*2.0*muBar*delgamma;
+
+        bElBar_new[idx]     = tauDev/shear + Identity*IEl;
+      } else {
+        // The actual shear stress
+        tauDev          = tauDevTrial;
+        bElBar_new[idx] = bElBarTrial;
+      }
+      // End of the deviatoric stress calculation
+
+      // Begining of the volumetric stress calculation
 
       // alpha starts at rhoS/rho_orig (>1), drops with compaction
       // alpha = 1 at full density
@@ -366,7 +433,7 @@ void P_Alpha::computeStressTensor(const PatchSubset* patches,
         p_q[idx] = 0.;
       }
 
-      pstress[idx] = Identity*(-p);
+      pstress[idx] = Identity*(-p) + tauDev/Jnew;
 
       // Temp increase
       pdTdt[idx] = dTdt_plas + dTdt_MG;
@@ -401,10 +468,13 @@ void P_Alpha::addComputesAndRequires(Task* task,
   Ghost::GhostType  gnone = Ghost::None;
 
   task->requires(Task::OldDW, alphaMinLabel,  matlset, gnone);
+  task->requires(Task::OldDW, tempAlpha1Label,matlset, gnone);
+  task->requires(Task::OldDW, bElBarLabel,    matlset, gnone);
+
   task->computes(alphaMinLabel_preReloc,      matlset);
   task->computes(alphaLabel,                  matlset);
-  task->requires(Task::OldDW, tempAlpha1Label,  matlset, gnone);
-  task->computes(tempAlpha1Label_preReloc,      matlset);
+  task->computes(tempAlpha1Label_preReloc,    matlset);
+  task->computes(bElBarLabel_preReloc,        matlset);
 }
 
 void 

@@ -57,11 +57,14 @@ namespace Uintah {
       double Ks;  // Bulk modulus of fully densified material
       double Ku;  // Bulk modulus in unloading for alpha > alpha0, or p <= 0
                   // Ku defaults to .1*K0
+      double shear;  // Shear modulus.  Defaults to 0.0, set small values to
+                     // stabilize solution 
       // For Mie-Gruneisen response
       double T_0;
       double C_0;
       double Gamma_0;
       double S_alpha;
+      double FlowStress;
     };
 
     const VarLabel* alphaLabel;
@@ -69,6 +72,8 @@ namespace Uintah {
     const VarLabel* alphaMinLabel_preReloc;
     const VarLabel* tempAlpha1Label;
     const VarLabel* tempAlpha1Label_preReloc;
+    const VarLabel* bElBarLabel;
+    const VarLabel* bElBarLabel_preReloc;
 
   private:
     CMData d_initialData;
