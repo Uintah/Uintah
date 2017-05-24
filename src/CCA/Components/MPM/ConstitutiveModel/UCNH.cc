@@ -323,10 +323,8 @@ void UCNH::initializeCMData(const Patch* patch,
   
   //__________________________________
   //  Universal
-  ParticleVariable<Matrix3> deformationGradient, pstress, bElBar;
-
+  ParticleVariable<Matrix3> bElBar;
   new_dw->allocateAndPut(bElBar,      bElBarLabel,      pset);
-
   for(;iterUniv != pset->end(); iterUniv++){
     bElBar[*iterUniv]      = Identity;
   }
