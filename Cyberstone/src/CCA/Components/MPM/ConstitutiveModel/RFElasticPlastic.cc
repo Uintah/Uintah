@@ -33,7 +33,6 @@
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/YieldConditionFactory.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/StabilityCheckFactory.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/FlowStressModelFactory.h>
-#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DamageModelFactory.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/MPMEquationOfStateFactory.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/ShearModulusModelFactory.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/MeltingTempModelFactory.h>
@@ -187,52 +186,7 @@ RFElasticPlastic::RFElasticPlastic(ProblemSpecP& ps,MPMFlags* Mflag)
   ps->get("compute_specific_heat",d_computeSpecificHeat);
   d_Cp = SpecificHeatModelFactory::create(ps);
   
-  setErosionAlgorithm();
   //getSpecificHeatData(ps);
-  initializeLocalMPMLabels();
-}
-
-RFElasticPlastic::RFElasticPlastic(const RFElasticPlastic* cm) :
-  ConstitutiveModel(cm)
-{
-  d_initialData.Bulk = cm->d_initialData.Bulk;
-  d_initialData.Shear = cm->d_initialData.Shear;
-  d_initialData.alpha = cm->d_initialData.alpha;
-  d_initialData.Chi = cm->d_initialData.Chi;
-  d_initialData.sigma_crit = cm->d_initialData.sigma_crit;
-  //********** Concentration Component****************************
-  d_initialData.vol_exp_coeff = cm->d_initialData.vol_exp_coeff;
-  //********** Concentration Component****************************
-
-  d_tol = cm->d_tol ;
-  d_useModifiedEOS = cm->d_useModifiedEOS;
-
-  d_initialMaterialTemperature = cm->d_initialMaterialTemperature ;
-  d_checkTeplaFailureCriterion = cm->d_checkTeplaFailureCriterion;
-  d_doMelting = cm->d_doMelting;
-  d_checkStressTriax = cm->d_checkStressTriax;
-
-  d_setStressToZero = cm->d_setStressToZero;
-  d_allowNoTension = cm->d_allowNoTension;
-  d_allowNoShear = cm->d_allowNoShear;
-
-  d_computeSpecificHeat = cm->d_computeSpecificHeat;
-  /*
-  d_Cp.A = cm->d_Cp.A;
-  d_Cp.B = cm->d_Cp.B;
-  d_Cp.C = cm->d_Cp.C;
-  d_Cp.n = cm->d_Cp.n;
-  */
-  d_Cp      = SpecificHeatModelFactory::createCopy(cm->d_Cp);
-  d_yield   = YieldConditionFactory::createCopy(cm->d_yield);
-  d_stable  = StabilityCheckFactory::createCopy(cm->d_stable);
-  d_flow    = FlowStressModelFactory::createCopy(cm->d_flow);
-  d_eos     = MPMEquationOfStateFactory::createCopy(cm->d_eos);
-  d_eos->setBulkModulus(d_initialData.Bulk);
-  d_shear   = ShearModulusModelFactory::createCopy(cm->d_shear);
-  d_melt    = MeltingTempModelFactory::createCopy(cm->d_melt);
-  d_devStress = 0;
-  
   initializeLocalMPMLabels();
 }
 
@@ -241,12 +195,10 @@ RFElasticPlastic::~RFElasticPlastic()
   // Destructor 
   VarLabel::destroy(pPlasticStrainLabel);
   VarLabel::destroy(pPlasticStrainRateLabel);
-  VarLabel::destroy(pLocalizedLabel);
   VarLabel::destroy(pEnergyLabel);
 
   VarLabel::destroy(pPlasticStrainLabel_preReloc);
   VarLabel::destroy(pPlasticStrainRateLabel_preReloc);
-  VarLabel::destroy(pLocalizedLabel_preReloc);
   VarLabel::destroy(pEnergyLabel_preReloc);
 
   delete d_flow;
@@ -313,8 +265,6 @@ RFElasticPlastic::initializeLocalMPMLabels()
     ParticleVariable<double>::getTypeDescription());
   pPlasticStrainRateLabel = VarLabel::create("p.plasticStrainRate",
     ParticleVariable<double>::getTypeDescription());
-  pLocalizedLabel = VarLabel::create("p.localized",
-    ParticleVariable<int>::getTypeDescription());
   pEnergyLabel = VarLabel::create("p.energy",
     ParticleVariable<double>::getTypeDescription());
 
@@ -322,28 +272,10 @@ RFElasticPlastic::initializeLocalMPMLabels()
     ParticleVariable<double>::getTypeDescription());
   pPlasticStrainRateLabel_preReloc = VarLabel::create("p.plasticStrainRate+",
     ParticleVariable<double>::getTypeDescription());
-  pLocalizedLabel_preReloc = VarLabel::create("p.localized+",
-    ParticleVariable<int>::getTypeDescription());
   pEnergyLabel_preReloc = VarLabel::create("p.energy+",
     ParticleVariable<double>::getTypeDescription());
 }
-//______________________________________________________________________
-//
-void 
-RFElasticPlastic::setErosionAlgorithm()
-{
-  d_setStressToZero = false;
-  d_allowNoTension  = false;
-  d_allowNoShear    = false;
-  if (flag->d_doErosion) {
-    if (flag->d_erosionAlgorithm == "AllowNoTension") 
-      d_allowNoTension = true;
-    else if (flag->d_erosionAlgorithm == "AllowNoShear") 
-      d_allowNoShear = true;
-    else if (flag->d_erosionAlgorithm == "ZeroStress") 
-      d_setStressToZero = true;
-  }
-}
+
 //______________________________________________________________________
 //
 void 
@@ -353,13 +285,11 @@ RFElasticPlastic::addParticleState(std::vector<const VarLabel*>& from,
   // Add the local particle state data for this constitutive model.
   from.push_back(pPlasticStrainLabel);
   from.push_back(pPlasticStrainRateLabel);
-  from.push_back(pLocalizedLabel);
   from.push_back(pEnergyLabel);
   from.push_back(lb->pEquivalentStress_t1);
 
   to.push_back(pPlasticStrainLabel_preReloc);
   to.push_back(pPlasticStrainRateLabel_preReloc);
-  to.push_back(pLocalizedLabel_preReloc);
   to.push_back(pEnergyLabel_preReloc);
   to.push_back(lb->pEquivalentStress_t1_preReloc);
 
@@ -378,7 +308,6 @@ RFElasticPlastic::addInitialComputesAndRequires(Task* task,
 
   task->computes(pPlasticStrainLabel, matlset);
   task->computes(pPlasticStrainRateLabel, matlset);
-  task->computes(pLocalizedLabel,     matlset);
   task->computes(pEnergyLabel,        matlset);
   task->computes(lb->pEquivalentStress_t1, matlset);
  
@@ -407,18 +336,15 @@ RFElasticPlastic::initializeCMData(const Patch* patch,
 
   ParticleVariable<double>  pPlasticStrain, pPlasticStrainRate, pEnergy;
   ParticleVariable<double>  pEquivalentStress;
-  ParticleVariable<int>     pLocalized;
 
   new_dw->allocateAndPut(pPlasticStrain,     pPlasticStrainLabel, pset);
   new_dw->allocateAndPut(pPlasticStrainRate, pPlasticStrainRateLabel, pset);
-  new_dw->allocateAndPut(pLocalized,         pLocalizedLabel, pset);
   new_dw->allocateAndPut(pEnergy,            pEnergyLabel, pset);
   new_dw->allocateAndPut(pEquivalentStress,  lb->pEquivalentStress_t1, pset);
 
   for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++){
     pPlasticStrain[*iter] = 0.0;
     pPlasticStrainRate[*iter] = 0.0;
-    pLocalized[*iter] = 0;
     pEnergy[*iter] = 0.;
     pEquivalentStress[*iter] = 0.;
   }
@@ -498,7 +424,7 @@ RFElasticPlastic::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, lb->pTempPreviousLabel, matlset, gnone); 
   task->requires(Task::OldDW, pPlasticStrainLabel,    matlset, gnone);
   task->requires(Task::OldDW, pPlasticStrainRateLabel,matlset, gnone);
-  task->requires(Task::OldDW, pLocalizedLabel,        matlset, gnone);
+  task->requires(Task::OldDW, lb->pLocalizedMPMLabel, matlset, gnone);
   task->requires(Task::OldDW, lb->pParticleIDLabel,   matlset, gnone);
   task->requires(Task::OldDW, pEnergyLabel,           matlset, gnone);
 
@@ -509,10 +435,10 @@ RFElasticPlastic::addComputesAndRequires(Task* task,
   }
   //********** Concentration Component****************************
 
-  task->computes(pPlasticStrainLabel_preReloc,  matlset);
+  task->computes(pPlasticStrainLabel_preReloc,      matlset);
   task->computes(pPlasticStrainRateLabel_preReloc,  matlset);
-  task->computes(pLocalizedLabel_preReloc,      matlset);
-  task->computes(pEnergyLabel_preReloc,         matlset);
+  task->computes(lb->pLocalizedMPMLabel_preReloc,   matlset);
+  task->computes(pEnergyLabel_preReloc,             matlset);
 
   // Add internal evolution variables computed by flow model
   d_flow->addComputesAndRequires(task, matl, patches);
@@ -623,7 +549,7 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pPlasticStrain,     pPlasticStrainLabel,     pset);
     old_dw->get(pPlasticStrainRate, pPlasticStrainRateLabel, pset);
     old_dw->get(pEnergy,            pEnergyLabel,            pset);
-    old_dw->get(pLocalized,         pLocalizedLabel,         pset);
+    old_dw->get(pLocalized,         lb->pLocalizedMPMLabel,  pset);
 
     // Get the particle IDs, useful in case a simulation goes belly up
     constParticleVariable<long64> pParticleID; 
@@ -651,7 +577,7 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(pPlasticStrainRate_new,      
                            pPlasticStrainRateLabel_preReloc,      pset);
     new_dw->allocateAndPut(pLocalized_new,      
-                           pLocalizedLabel_preReloc,              pset);
+                           lb->pLocalizedMPMLabel_preReloc,       pset);
     new_dw->allocateAndPut(pStress_new,      
                            lb->pStressLabel_preReloc,             pset);
 
@@ -964,32 +890,12 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
       // Calculate the total stress
       sigma = tensorS + tensorHy;
 
-      //********** Concentration Component****************************
-			// -- not used currently in model
-      // // If the particle has already failed, apply various erosion algorithms
-      // if (flag->d_doErosion) {
-      //   if (pLocalized[idx]) {
-      //     if (d_allowNoTension) {
-      //       if (p > 0.0){
-      //          sigma = zero;
-      //       } else{
-      //         sigma = tensorHy;
-      //       }
-      //     }
-      //     if(d_allowNoShear){
-      //       sigma = tensorHy;
-      //     } else if (d_setStressToZero){
-      //       sigma = zero;
-      //     }
-      //   }
-      // }
-      //********** Concentration Component****************************
 
       //-----------------------------------------------------------------------
       // Stage 3:
       //-----------------------------------------------------------------------
 
-      // // Compute porosity/damage/temperature change
+      // // Compute porosity/temperature change
       if (!plastic) {
       
         // Save the updated data
@@ -1307,22 +1213,17 @@ RFElasticPlastic::carryForward(const PatchSubset* patches,
     // Carry forward the data local to this constitutive model 
     constParticleVariable<double>  pPlasticStrain; 
     constParticleVariable<double>  pPlasticStrainRate;
-    constParticleVariable<int>     pLocalized;
 
     old_dw->get(pPlasticStrain,  pPlasticStrainLabel,  pset);
     old_dw->get(pPlasticStrainRate,  pPlasticStrainRateLabel,  pset);
-    old_dw->get(pLocalized,      pLocalizedLabel,      pset);
 
     ParticleVariable<double>       pPlasticStrain_new;
     ParticleVariable<double>       pPlasticStrainRate_new;
-    ParticleVariable<int>          pLocalized_new;
 
     new_dw->allocateAndPut(pPlasticStrain_new,      
                            pPlasticStrainLabel_preReloc,          pset);
     new_dw->allocateAndPut(pPlasticStrainRate_new,      
                            pPlasticStrainRateLabel_preReloc,      pset);
-    new_dw->allocateAndPut(pLocalized_new,      
-                           pLocalizedLabel_preReloc,              pset);
 
     // Get the plastic strain
     d_flow->getInternalVars(pset, old_dw);
@@ -1337,7 +1238,6 @@ RFElasticPlastic::carryForward(const PatchSubset* patches,
       particleIndex idx = *iter;
       pPlasticStrain_new[idx] = pPlasticStrain[idx];
       pPlasticStrainRate_new[idx] = pPlasticStrainRate[idx];
-      pLocalized_new[idx] = pLocalized[idx];
     }
 
     new_dw->put(delt_vartype(1.e10), lb->delTLabel, patch->getLevel());
@@ -1347,35 +1247,6 @@ RFElasticPlastic::carryForward(const PatchSubset* patches,
       new_dw->put(sum_vartype(0.),   lb->StrainEnergyLabel);
     }
   }
-}
-//______________________________________________________________________
-//
-void 
-RFElasticPlastic::addRequiresDamageParameter(Task* task,
-                                           const MPMMaterial* matl,
-                                           const PatchSet* ) const
-{
-  const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::NewDW, pLocalizedLabel_preReloc,matlset,Ghost::None);
-}
-//__________________________________
-//
-void 
-RFElasticPlastic::getDamageParameter(const Patch* patch,
-                                   ParticleVariable<int>& damage,
-                                   int dwi,
-                                   DataWarehouse* old_dw,
-                                   DataWarehouse* new_dw)
-{
-  ParticleSubset* pset = old_dw->getParticleSubset(dwi,patch);
-  constParticleVariable<int> pLocalized;
-  new_dw->get(pLocalized, pLocalizedLabel_preReloc, pset);
-
-  ParticleSubset::iterator iter;
-  for (iter = pset->begin(); iter != pset->end(); iter++) {
-    damage[*iter] = pLocalized[*iter];
-  }
-   
 }
          
 //______________________________________________________________________
@@ -1446,7 +1317,6 @@ RFElasticPlastic::addSplitParticlesComputesAndRequires(Task* task,
 
   task->modifies(pPlasticStrainLabel_preReloc,      matlset);
   task->modifies(pPlasticStrainRateLabel_preReloc,  matlset);
-  task->modifies(pLocalizedLabel_preReloc,          matlset);
   task->modifies(pEnergyLabel_preReloc,             matlset);
   task->modifies(lb->pEquivalentStress_t1_preReloc, matlset);
 }
@@ -1465,12 +1335,12 @@ RFElasticPlastic::splitCMSpecificParticleData(const Patch* patch,
   ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
   ParticleVariable<double>  PlasStrain, PlasStrainRate,Energy;
-  ParticleVariable<int> pLocalized;
   ParticleVariable<double> pEquivStress;
+  ParticleVariable<int> pLocalized;
 
   new_dw->getModifiable(PlasStrain,    pPlasticStrainLabel_preReloc,     pset);
   new_dw->getModifiable(PlasStrainRate,pPlasticStrainRateLabel_preReloc, pset);
-  new_dw->getModifiable(pLocalized,    pLocalizedLabel_preReloc,         pset);
+  new_dw->getModifiable(pLocalized,    lb->pLocalizedMPMLabel_preReloc,  pset);
   new_dw->getModifiable(Energy,        pEnergyLabel_preReloc,            pset);
   new_dw->getModifiable(pEquivStress, lb->pEquivalentStress_t1_preReloc, pset);
 
@@ -1514,7 +1384,7 @@ RFElasticPlastic::splitCMSpecificParticleData(const Patch* patch,
 
   new_dw->put(PlasStrainTmp,      pPlasticStrainLabel_preReloc,       true);
   new_dw->put(PlasStrainRateTmp,  pPlasticStrainRateLabel_preReloc,   true);
-  new_dw->put(pLocalizedTmp,      pLocalizedLabel_preReloc,           true);
+  new_dw->put(pLocalizedTmp,      lb->pLocalizedMPMLabel_preReloc,    true);
   new_dw->put(EnergyTmp,          pEnergyLabel_preReloc,              true);
   new_dw->put(pEquivStressTmp,    lb->pEquivalentStress_t1_preReloc,  true);
 }

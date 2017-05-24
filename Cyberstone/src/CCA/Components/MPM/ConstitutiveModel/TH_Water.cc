@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2017 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -62,19 +62,6 @@ TH_Water::TH_Water(ProblemSpecP& ps, MPMFlags* Mflag)
    L = 8*10^-6          (1/K^2)
    vo = 1.00008*10^-3   (m^3/kg)
 */
-}
-
-TH_Water::TH_Water(const TH_Water* cm) : ConstitutiveModel(cm)
-{
-  d_useModifiedEOS   = cm->d_useModifiedEOS ;
-  d_ID.d_a  = cm->d_ID.d_a;
-  d_ID.d_b  = cm->d_ID.d_b;
-  d_ID.d_co = cm->d_ID.d_co;
-  d_ID.d_ko = cm->d_ID.d_ko;
-  d_ID.d_To = cm->d_ID.d_To;
-  d_ID.d_L  = cm->d_ID.d_L;
-  d_ID.d_vo = cm->d_ID.d_vo;
-  d_ID.Pref = cm->d_ID.Pref;
 }
 
 TH_Water::~TH_Water()

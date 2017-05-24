@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2017 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -88,11 +88,13 @@ HypoElasticFortran::HypoElasticFortran( ProblemSpecP& ps,MPMFlags* Mflag ) :
   HOOKECHK(UI,UI,UI);
 }
 
+#if 0
 HypoElasticFortran::HypoElasticFortran(const HypoElasticFortran* cm) : ConstitutiveModel(cm)
 {
   d_initialData.G = cm->d_initialData.G;
   d_initialData.K = cm->d_initialData.K;
 }
+#endif
 
 HypoElasticFortran::~HypoElasticFortran()
 {

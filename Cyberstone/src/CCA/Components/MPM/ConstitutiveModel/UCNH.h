@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2017 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -90,44 +90,12 @@ namespace Uintah {
       int seed;
     };
 
-    // Damage Requirements //
-    /////////////////////////
-    // Create datatype for failure strains
-    struct FailureStressOrStrainData {
-      double mean;         /* Mean failure stress, strain or cohesion */
-      double std;          /* Standard deviation of failure strain */
-                           /* or Weibull modulus */
-      double exponent;     /* Exponent used in volume scaling of failure crit */
-      double refVol;       /* Reference volume for scaling failure criteria */
-      std::string scaling; /* Volume scaling method: "none" or "kayenta" */
-      std::string dist;    /* Failure distro: "constant", "gauss" or "weibull"*/
-      int seed;            /* seed for random number distribution generator */
-      double t_char;       /* characteristic time for damage to occur */
-    };
-
-    //Create datatype for brittle damage
-    struct BrittleDamageData {
-      double r0b;          /* Initial energy threshold (\sqrt{Pa}) */
-      double Gf;           /* Fracture energy (J/m^3) */
-      double constant_D;   /* Shape factor in softening function */
-      double maxDamageInc; /* Maximum damage increment in a time step */
-      bool allowRecovery;  /* Recovery of stiffness allowed */
-      double recoveryCoeff;  /* Fraction of stiffness to be recovered */
-      bool printDamage;    /* Flag to print damage */
-    };
-
     const VarLabel* bElBarLabel;
     const VarLabel* bElBarLabel_preReloc;
-    const VarLabel* pFailureStressOrStrainLabel;
-    const VarLabel* pLocalizedLabel;
-    const VarLabel* pDamageLabel;
+
     const VarLabel* pDeformRateLabel;
-    const VarLabel* pTimeOfLocLabel;
-    const VarLabel* pFailureStressOrStrainLabel_preReloc;
-    const VarLabel* pLocalizedLabel_preReloc;
-    const VarLabel* pDamageLabel_preReloc;
     const VarLabel* pDeformRateLabel_preReloc;
-    const VarLabel* pTimeOfLocLabel_preReloc;
+    
 
     // Plasticity Requirements //
     /////////////////////////////
@@ -144,16 +112,6 @@ namespace Uintah {
     bool d_useModifiedEOS;
     int d_8or27;
 
-    //__________________________________
-    //  Damage
-    enum DamageAlgo { threshold, brittle, none };
-    DamageAlgo d_damageType = none;
-    bool d_useDamage        = false;
-    FailureStressOrStrainData d_epsf;
-    BrittleDamageData d_brittle_damage;
-    std::string d_failure_criteria; /* Options are:  "MaximumPrincipalStrain" */
-                                    /* "MaximumPrincipalStress", "MohrColoumb"*/
-
     // MohrColoumb options
     double d_friction_angle;  // Assumed to come in degrees
     double d_tensile_cutoff;  // Fraction of the cohesion at which
@@ -164,12 +122,6 @@ namespace Uintah {
     bool d_usePlasticity;
     YieldDistribution d_yield;
 
-    //__________________________________
-    // Erosion algorithms
-    bool d_setStressToZero; /* set stress tensor to zero*/
-    bool d_allowNoTension;  /* retain compressive mean stress after failue*/
-    bool d_allowNoShear;    /* retain mean stress after failure - no deviatoric stress */
-                            /* i.e., no deviatoric stress */
     // Initial stress state
     bool d_useInitialStress;
     double d_init_pressure;  // Initial pressure
@@ -184,7 +136,6 @@ namespace Uintah {
   private:
     // Prevent copying of this class
     // copy constructor
-    //UCNH(const UCNH &cm);
     UCNH& operator=(const UCNH &cm);
 
     // Plasticity requirements
@@ -193,7 +144,6 @@ namespace Uintah {
   public:
     // constructor
     UCNH(ProblemSpecP& ps, MPMFlags* flag, bool plas, bool dam);
-    UCNH(const UCNH* cm);
 
     // specifcy what to output from the constitutive model to an .xml file
     virtual void outputProblemSpec(ProblemSpecP& ps, bool output_cm_tag = true);
@@ -230,13 +180,6 @@ namespace Uintah {
     virtual void addInitialComputesAndRequires(Task* task,
                                                const MPMMaterial* matl,
                                                const PatchSet* patches) const;
-
-    ////////////////////////////////////////////////////////////////////////
-    /*! \\brief Add the requires for failure simulation. */
-    ////////////////////////////////////////////////////////////////////////
-    virtual void addRequiresDamageParameter(Task* task,
-                                            const MPMMaterial* matl,
-                                            const PatchSet* patches) const;
 
 
     // Compute Functions //
@@ -283,13 +226,6 @@ namespace Uintah {
     // Returns the compressibility of the material
     virtual double getCompressibility();
 
-    ////////////////////////////////////////////////////////////////////////
-    /*! \\brief Get the flag that marks a failed particle. */
-    ////////////////////////////////////////////////////////////////////////
-    virtual void getDamageParameter(const Patch* patch,
-                                    ParticleVariable<int>& damage, int dwi,
-                                    DataWarehouse* old_dw,
-                                    DataWarehouse* new_dw);
 
     virtual void addSplitParticlesComputesAndRequires(Task* task,
                                                       const MPMMaterial* matl,
@@ -305,29 +241,13 @@ namespace Uintah {
                                              DataWarehouse* old_dw,
                                              DataWarehouse* new_dw);
 
-
   private:
-    // Damage requirements //
-    /////////////////////////
+    
     void getYieldStressDistribution(ProblemSpecP& ps);
 
     void setYieldStressDistribution(const UCNH* cm);
 
-    void getFailureStressOrStrainData(ProblemSpecP& ps);
-
-    void getBrittleDamageData(ProblemSpecP& ps);
-
-    void setFailureStressOrStrainData(const UCNH* cm);
-
-    void setBrittleDamageData(const UCNH* cm);
-
-    void createDamageLabels();
-
     void createPlasticityLabels();
-
-    void setErosionAlgorithm();
-
-    void setErosionAlgorithm(const UCNH* cm);
 
   protected:
     // compute stress at each particle in the patch
@@ -335,27 +255,6 @@ namespace Uintah {
                                      const MPMMaterial* matl,
                                      DataWarehouse* old_dw,
                                      DataWarehouse* new_dw);
-
-    // Modify the stress if particle has failed
-    void updateFailedParticlesAndModifyStress(const Matrix3& FF,
-                                              const double& pFailureStrain,
-                                              const int& pLocalized,
-                                              int& pLocalized_new,
-                                              const double& pTimeOfLoc,
-                                              double& pTimeOfLoc_new,
-                                              Matrix3& pStress_new,
-                                              const long64 particleID,
-                                              double time);
-
-    // Modify the stress for brittle damage
-    void updateDamageAndModifyStress(const Matrix3& FF,
-                                     const double& pFailureStrain,
-                                     double& pFailureStrain_new,
-                                     const double& pVolume,
-                                     const double& pDamage,
-                                     double& pDamage_new,
-                                     Matrix3& pStress_new,
-                                     const long64 particleID);
 
     /*! Compute tangent stiffness matrix */
     void computeTangentStiffnessMatrix(const Matrix3& sigDev,

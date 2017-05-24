@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2017 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -57,11 +57,14 @@ namespace Uintah {
       double Ks;  // Bulk modulus of fully densified material
       double Ku;  // Bulk modulus in unloading for alpha > alpha0, or p <= 0
                   // Ku defaults to .1*K0
+      double shear;  // Shear modulus.  Defaults to 0.0, set small values to
+                     // stabilize solution 
       // For Mie-Gruneisen response
       double T_0;
       double C_0;
       double Gamma_0;
       double S_alpha;
+      double FlowStress;
     };
 
     const VarLabel* alphaLabel;
@@ -69,19 +72,19 @@ namespace Uintah {
     const VarLabel* alphaMinLabel_preReloc;
     const VarLabel* tempAlpha1Label;
     const VarLabel* tempAlpha1Label_preReloc;
+    const VarLabel* bElBarLabel;
+    const VarLabel* bElBarLabel_preReloc;
 
   private:
     CMData d_initialData;
 
     // Prevent copying of this class
     // copy constructor
-    //P_Alpha(const P_Alpha &cm);
     P_Alpha& operator=(const P_Alpha &cm);
 
   public:
     // constructors
     P_Alpha(ProblemSpecP& ps, MPMFlags* flag);
-    P_Alpha(const P_Alpha* cm);
        
     // destructor
     virtual ~P_Alpha();

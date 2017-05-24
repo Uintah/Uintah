@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2017 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -42,12 +42,6 @@ RigidMaterial::RigidMaterial(ProblemSpecP& ps, MPMFlags* Mflag) :
   ps->get("shear_modulus",d_initialData.G);
   d_initialData.K = 1.0e200;
   ps->get("bulk_modulus",d_initialData.K);
-}
-
-RigidMaterial::RigidMaterial(const RigidMaterial* cm) : ConstitutiveModel(cm)
-{
-  d_initialData.G = cm->d_initialData.G;
-  d_initialData.K = cm->d_initialData.K;
 }
 
 RigidMaterial::~RigidMaterial()

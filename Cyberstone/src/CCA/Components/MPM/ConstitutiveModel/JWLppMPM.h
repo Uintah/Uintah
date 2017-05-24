@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2017 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -76,8 +76,6 @@ namespace Uintah {
     const VarLabel* pProgressdelFLabel_preReloc;
     const VarLabel* pVelGradLabel;
     const VarLabel* pVelGradLabel_preReloc;
-    const VarLabel* pLocalizedLabel;
-    const VarLabel* pLocalizedLabel_preReloc;
 
   protected:
 
@@ -107,7 +105,7 @@ namespace Uintah {
   public:
     // constructors
     JWLppMPM(ProblemSpecP& ps, MPMFlags* flag);
-    JWLppMPM(const JWLppMPM* cm);
+    //    JWLppMPM(const JWLppMPM* cm);
        
     // destructor
     virtual ~JWLppMPM();

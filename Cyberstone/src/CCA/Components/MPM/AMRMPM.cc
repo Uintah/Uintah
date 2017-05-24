@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2017 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -26,6 +26,8 @@
 #include <CCA/Components/MPM/AMRMPM.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DamageModel.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/ErosionModel.h>
 #include <CCA/Components/MPM/Contact/Contact.h>                     // for Contact
 #include <CCA/Components/MPM/Contact/ContactFactory.h>
 #include <CCA/Components/MPM/MPMBoundCond.h>                        // for MPMBoundCond
@@ -263,9 +265,8 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
 
   //__________________________________
   // Pull out the refinement threshold criteria 
-  if(refine_ps ){
-    for (ProblemSpecP var_ps = refine_ps->findBlock("Variable");var_ps != 0;
-                      var_ps = var_ps->findNextBlock("Variable")) {
+  if( refine_ps != nullptr ) {
+    for( ProblemSpecP var_ps = refine_ps->findBlock( "Variable" ); var_ps != nullptr; var_ps = var_ps->findNextBlock( "Variable" ) ) {
       thresholdVar data;
       string name, value, matl;
 
@@ -412,13 +413,14 @@ void AMRMPM::outputProblemSpec(ProblemSpecP& root_ps)
   ProblemSpecP root = root_ps->getRootNode();
 
   ProblemSpecP flags_ps = root->appendChild("MPM");
-  flags->outputProblemSpec(flags_ps);
+  flags->outputProblemSpec( flags_ps );
 
-  ProblemSpecP mat_ps = 0;
+  ProblemSpecP mat_ps = nullptr;
   mat_ps = root->findBlockWithOutAttribute("MaterialProperties");
 
-  if (mat_ps == 0)
+  if( mat_ps == nullptr ) {
     mat_ps = root->appendChild("MaterialProperties");
+  }
 
   ProblemSpecP mpm_ps = mat_ps->appendChild("MPM");
   for (int i = 0; i < d_sharedState->getNumMPMMatls();i++) {
@@ -475,7 +477,6 @@ void AMRMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
   t->computes(lb->pAreaLabel);
   t->computes(lb->pRefinedLabel);
   t->computes(lb->pLastLevelLabel);
-  t->computes(lb->pLocalizedMPMLabel);
   t->computes(d_sharedState->get_delt_label(),level.get_rep());
   t->computes(lb->pCellNAPIDLabel,d_one_matl);
   t->computes(lb->NC_CCweightLabel,d_one_matl);
@@ -516,6 +517,13 @@ void AMRMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     cm->addInitialComputesAndRequires(t, mpm_matl, patches);
+    
+    DamageModel* dm = mpm_matl->getDamageModel();
+    dm->addInitialComputesAndRequires(t, mpm_matl);
+
+    ErosionModel* em = mpm_matl->getErosionModel();
+    em->addInitialComputesAndRequires(t, mpm_matl);
+    
     if(flags->d_doScalarDiffusion){
       ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
       sdm->addInitialComputesAndRequires(t, mpm_matl, patches);
@@ -615,6 +623,9 @@ void AMRMPM::scheduleTimeAdvance(const LevelP & level,
     const LevelP& level = grid->getLevel(l);
     const PatchSet* patches = level->eachPatch();
     scheduleNormalizeNodalVelTempConc(sched, patches, matls);
+    if(flags->d_computeNormals){
+      scheduleComputeNormals(         sched, patches, matls);
+    }
     scheduleExMomInterpolated(        sched, patches, matls);
     if(flags->d_doScalarDiffusion){
       scheduleConcInterpolated(sched, patches, matls);
@@ -1058,36 +1069,15 @@ void AMRMPM::scheduleComputeStressTensor(SchedulerP& sched,
   t->computes(lb->StrainEnergyLabel);
 
   sched->addTask(t, patches, matls);
+  
+  //__________________________________
+  //  Additional tasks
+  scheduleUpdateStress_DamageErosionModels( sched, patches, matls );
 
   if (flags->d_reductionVars->accStrainEnergy) 
     scheduleComputeAccStrainEnergy(sched, patches, matls);
 }
-//______________________________________________________________________
-//
-void AMRMPM::scheduleUpdateErosionParameter(SchedulerP& sched,
-                                            const PatchSet* patches,
-                                            const MaterialSet* matls)
-{
-  const Level* level = getLevel(patches);
-  if (!flags->doMPMOnLevel(level->getIndex(), level->getGrid()->numLevels())){
-    return;
-  }
 
-  printSchedule(patches,cout_doing,"AMRMPM::scheduleUpdateErosionParameter");
-
-  Task* t = scinew Task("AMRMPM::updateErosionParameter",
-                  this, &AMRMPM::updateErosionParameter);
-
-  int numMatls = d_sharedState->getNumMPMMatls();
-
-  for(int m = 0; m < numMatls; m++){
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-    ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-    cm->addRequiresDamageParameter(t, mpm_matl, patches);
-  }
-
-  sched->addTask(t, patches, matls);
-}
 //______________________________________________________________________
 //
 void AMRMPM::scheduleComputeInternalForce(SchedulerP& sched,
@@ -1307,8 +1297,7 @@ void AMRMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pDispLabel,                      d_gn);   
   t->requires(Task::NewDW, lb->pSizeLabel_preReloc,             d_gn);   
   t->requires(Task::OldDW, lb->pVolumeLabel,                    d_gn);   
-  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,        d_gn);   
-  t->requires(Task::OldDW, lb->pLocalizedMPMLabel,              d_gn);
+  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,        d_gn); 
 
   t->computes(lb->pDispLabel_preReloc);
   t->computes(lb->pVelocityLabel_preReloc);
@@ -1317,7 +1306,6 @@ void AMRMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->computes(lb->pTemperatureLabel_preReloc);
   t->computes(lb->pTempPreviousLabel_preReloc); // for thermal stress
   t->computes(lb->pMassLabel_preReloc);
-  t->computes(lb->pLocalizedMPMLabel_preReloc);
 
   // Carry Forward particle refinement flag
   if(flags->d_refineParticles){
@@ -1557,8 +1545,15 @@ void AMRMPM::scheduleRefine(const PatchSet* patches, SchedulerP& sched)
   int numMPM = d_sharedState->getNumMPMMatls();
   for(int m = 0; m < numMPM; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     cm->addInitialComputesAndRequires(t, mpm_matl, patches);
+    
+    DamageModel* dm = mpm_matl->getDamageModel();
+    dm->addInitialComputesAndRequires(t, mpm_matl);
+    
+    ErosionModel* em = mpm_matl->getErosionModel();
+    em->addInitialComputesAndRequires(t, mpm_matl);
   }
   t->computes(d_sharedState->get_delt_label(),getLevel(patches));
 
@@ -1785,6 +1780,11 @@ void AMRMPM::actuallyInitialize(const ProcessorGroup*,
 
       totalParticles+=numParticles;
       mpm_matl->getConstitutiveModel()->initializeCMData(patch,mpm_matl,new_dw);
+      
+      //initialize damage/erosion model
+      mpm_matl->getDamageModel()->initializeLabels( patch, mpm_matl, new_dw );
+      
+      mpm_matl->getErosionModel()->initializeLabels( patch, mpm_matl, new_dw );
       
       if(flags->d_doScalarDiffusion){
     	  mpm_matl->getScalarDiffusionModel()->initializeTimeStep(patch,mpm_matl,new_dw);
@@ -2807,35 +2807,7 @@ void AMRMPM::computeStressTensor(const ProcessorGroup*,
     cm->computeStressTensor(patches, mpm_matl, old_dw, new_dw);
   }
 }
-//______________________________________________________________________
-//
-void AMRMPM::updateErosionParameter(const ProcessorGroup*,
-                                    const PatchSubset* patches,
-                                    const MaterialSubset* ,
-                                    DataWarehouse* old_dw,
-                                    DataWarehouse* new_dw)
-{
-  for (int p = 0; p<patches->size(); p++) {
-    const Patch* patch = patches->get(p);
-    printTask(patches, patch,cout_doing,"Doing AMRMPM::updateErosionParameter");
 
-    int numMPMMatls=d_sharedState->getNumMPMMatls();
-    for(int m = 0; m < numMPMMatls; m++){
-
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      int dwi = mpm_matl->getDWIndex();
-      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
-
-      // Get the localization info
-      ParticleVariable<int> isLocalized;
-      new_dw->allocateTemporary(isLocalized, pset);
-      ParticleSubset::iterator iter = pset->begin(); 
-      for (; iter != pset->end(); iter++) isLocalized[*iter] = 0;
-      mpm_matl->getConstitutiveModel()->getDamageParameter(patch, isLocalized,
-                                                           dwi, old_dw,new_dw);
-    }
-  }
-}
 //______________________________________________________________________
 //
 void AMRMPM::computeInternalForce(const ProcessorGroup*,
@@ -3771,13 +3743,6 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       old_dw->get(pids,                lb->pParticleIDLabel,          pset);
       new_dw->allocateAndPut(pids_new, lb->pParticleIDLabel_preReloc, pset);
       pids_new.copyData(pids);
-
-      ParticleVariable<int> isLocalized;
-      new_dw->allocateAndPut(isLocalized, lb->pLocalizedMPMLabel_preReloc,pset);
-      ParticleSubset::iterator iter = pset->begin();
-      for (; iter != pset->end(); iter++){
-        isLocalized[*iter] = 0;
-      }
 
       new_dw->get(gvelocity_star,  lb->gVelocityStarLabel,   dwi,patch,d_gac,NGP);
       new_dw->get(gacceleration,   lb->gAccelerationLabel,   dwi,patch,d_gac,NGP);
@@ -4754,7 +4719,7 @@ void AMRMPM::refineGrid(const ProcessorGroup*,
         ParticleVariable<Matrix3> psize;
         ParticleVariable<Vector>  parea;
         ParticleVariable<double> pTempPrev,pColor,pConc,pConcPrev,pExtScalFlux;
-        ParticleVariable<int>    pLoadCurve,pLastLevel,pLocalized,pRefined;
+        ParticleVariable<int>    pLoadCurve,pLastLevel,pRefined;
         ParticleVariable<long64> pID;
         ParticleVariable<Matrix3> pdeform, pstress, pVelGrad;
         
@@ -4770,7 +4735,6 @@ void AMRMPM::refineGrid(const ProcessorGroup*,
         new_dw->allocateAndPut(pID,            lb->pParticleIDLabel,    pset);
         new_dw->allocateAndPut(pdisp,          lb->pDispLabel,          pset);
         new_dw->allocateAndPut(pLastLevel,     lb->pLastLevelLabel,     pset);
-        new_dw->allocateAndPut(pLocalized,     lb->pLocalizedMPMLabel,  pset);
         new_dw->allocateAndPut(pRefined,       lb->pRefinedLabel,       pset);
         new_dw->allocateAndPut(pVelGrad,       lb->pVelGradLabel,       pset);
         if (flags->d_useLoadCurves){
@@ -4789,6 +4753,12 @@ void AMRMPM::refineGrid(const ProcessorGroup*,
 
         mpm_matl->getConstitutiveModel()->initializeCMData(patch,
                                                            mpm_matl,new_dw);
+          //initialize Damage/erosion model labels
+        mpm_matl->getDamageModel()->initializeLabels( patch, mpm_matl, new_dw );
+        
+        mpm_matl->getErosionModel()->initializeLabels( patch, mpm_matl, new_dw );
+                                                           
+        
       }
     }
   }

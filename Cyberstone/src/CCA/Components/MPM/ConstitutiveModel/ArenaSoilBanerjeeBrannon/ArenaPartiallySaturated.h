@@ -3,7 +3,7 @@
  *
  * Copyright (c) 1997-2012 The University of Utah
  * Copyright (c) 2013-2014 Callaghan Innovation, New Zealand
- * Copyright (c) 2015-2016 Parresia Research Limited, New Zealand
+ * Copyright (c) 2015-2017 Parresia Research Limited, New Zealand
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -141,8 +141,6 @@ namespace Vaango {
     // Disaggregation, failure, and damage
     const Uintah::VarLabel* pP3Label;                            // Evolution of parameter P3
     const Uintah::VarLabel* pP3Label_preReloc;
-    const Uintah::VarLabel* pLocalizedLabel;                     // Flag for failed particles
-    const Uintah::VarLabel* pLocalizedLabel_preReloc;
     const Uintah::VarLabel* pCoherenceLabel;                     // Coherence parameter
     const Uintah::VarLabel* pCoherenceLabel_preReloc;
     const Uintah::VarLabel* pTGrowLabel;                         // t_grow parameter
@@ -507,22 +505,6 @@ namespace Vaango {
 
 
   public: //Uintah MPM constitutive model specific functions
-    ////////////////////////////////////////////////////////////////////////
-    /* Make the value for pLocalized computed locally available outside of the model. */
-    ////////////////////////////////////////////////////////////////////////
-    virtual void addRequiresDamageParameter(Uintah::Task* task,
-                                            const Uintah::MPMMaterial* matl,
-                                            const Uintah::PatchSet* patches) const;
-
-
-    ////////////////////////////////////////////////////////////////////////
-    /* Make the value for pLocalized computed locally available outside of the model */
-    ////////////////////////////////////////////////////////////////////////
-    virtual void getDamageParameter(const Uintah::Patch* patch,
-                                    Uintah::ParticleVariable<int>& damage, int dwi,
-                                    Uintah::DataWarehouse* old_dw,
-                                    Uintah::DataWarehouse* new_dw);
-
 
     // carry forward CM data for RigidMPM
     virtual void carryForward(const Uintah::PatchSubset* patches,

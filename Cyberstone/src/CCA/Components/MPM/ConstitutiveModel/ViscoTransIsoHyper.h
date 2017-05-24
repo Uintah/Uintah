@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2017 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -106,13 +106,11 @@ namespace Uintah {
 
     // Prevent copying of this class
     // copy constructor
-    //ViscoTransIsoHyper(const ViscoTransIsoHyper &cm);
     ViscoTransIsoHyper& operator=(const ViscoTransIsoHyper &cm);
 
   public:
     // constructors
     ViscoTransIsoHyper(ProblemSpecP& ps, MPMFlags* flag);
-    ViscoTransIsoHyper(const ViscoTransIsoHyper* cm);
        
     // destructor
     virtual ~ViscoTransIsoHyper();

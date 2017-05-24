@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2017 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -39,7 +39,9 @@ namespace Uintah {
   public:
     // this function has a switch for all known mat_types
     
-    static ConstitutiveModel* create(ProblemSpecP& ps, MPMFlags* flags);
+    static ConstitutiveModel* create(ProblemSpecP& ps, 
+                                     MPMFlags* flags,
+                                     bool& computes_pLocalizedMPM);
 
   };
 } // End namespace Uintah

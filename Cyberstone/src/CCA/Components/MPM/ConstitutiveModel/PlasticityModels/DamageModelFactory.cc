@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2017 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,12 +22,12 @@
  * IN THE SOFTWARE.
  */
 
-#include "DamageModelFactory.h"
-#include "NullDamage.h"
-#include "JohnsonCookDamage.h"
-#include "HancockMacKenzieDamage.h"
-#include "ThresholdDamage.h"
-#include "BrittleDamage.h"
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DamageModelFactory.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/NullDamage.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/JohnsonCookDamage.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/HancockMacKenzieDamage.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/ThresholdDamage.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/BrittleDamage.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Malloc/Allocator.h>
@@ -40,41 +40,59 @@ using namespace std;
 using namespace Uintah;
 //______________________________________________________________________
 //
-DamageModel* DamageModelFactory::create(ProblemSpecP& ps,
-                                        MPMFlags* flags)
-{
-  ProblemSpecP child = ps->findBlock("damage_model");
-//  ProblemSpecP child = ps->findBlock("damage");
+DamageModel* DamageModelFactory::create(ProblemSpecP    & matl_ps,
+                                        MPMFlags        * flags,
+                                        SimulationState * sharedState)
+{   
+  ProblemSpecP child = matl_ps->findBlock("damage_model");
   if(!child) {
     proc0cout << "**WARNING** Creating default null damage model" << endl;
     return( scinew NullDamage() );
-    //throw ProblemSetupException("Cannot find damage_model tag", __FILE__, __LINE__);
   }
   
-  string dam_type;
-  if(!child->getAttribute("type", dam_type)){
+  string dam_type = "none";
+  if(!child->getAttribute( "type", dam_type )){
     throw ProblemSetupException("No type for damage_model", __FILE__, __LINE__);
   }
   
+  //__________________________________
+  //  bulletproofing
+  string cm_type = "none";
+
+  if ( matl_ps->getNodeName() != "constitutive_model" ) { 
+    ProblemSpecP cm_ps = matl_ps->findBlock("constitutive_model");
+    cm_ps->getAttribute("type", cm_type);
+  }
+  
+  if (dam_type == "hancock_mackenzie" || dam_type == "johnson_cook" ) {
+    if( cm_type != "elastic_plastic_hp" && cm_type != "elastic_plastic"  ){
+      string txt="MPM:  The only constitute model that works with the johnson_cook and hancock_mackenzie damage models is elastic_plastic/elastic_plastic_hp";
+      txt = txt + " (CM: " + cm_type + " DM: " + dam_type + ")"; 
+      throw ProblemSetupException(txt, __FILE__, __LINE__);
+    }
+  }  
+  
+  
+  //__________________________________
+  //
   if (dam_type == "johnson_cook"){
-    return( scinew JohnsonCookDamage(child) );
+    return( scinew JohnsonCookDamage( child ) );
   }
   else if (dam_type == "hancock_mackenzie") {
-    return( scinew HancockMacKenzieDamage(child) );
+    return( scinew HancockMacKenzieDamage( child ) );
   }
-
   else if (dam_type == "Threshold") {
-    return( scinew ThresholdDamage(child, flags) );
+    return( scinew ThresholdDamage( child, flags, sharedState ) );
   }
   else if (dam_type == "Brittle") {
-    return( scinew BrittleDamage(child) );
+    return( scinew BrittleDamage( child ) );
   }
   else if (dam_type == "none") {
-    return(scinew NullDamage(child) );
+    return(scinew NullDamage( child ) );
   }
   else {
     proc0cout << "**WARNING** Creating default null damage model" << endl;
-    return(scinew NullDamage(child));
+    return( scinew NullDamage( child ) );
     //throw ProblemSetupException("Unknown Damage Model ("+dam_type+")", __FILE__, __LINE__);
   }
 }

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2017 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -73,6 +73,7 @@ MWViscoElastic::MWViscoElastic(ProblemSpecP& ps,MPMFlags* Mflag)
                         ParticleVariable<Matrix3>::getTypeDescription() ); 
 }
 
+#if 0
 MWViscoElastic::MWViscoElastic(const MWViscoElastic* cm)
   : ConstitutiveModel(cm)
 {
@@ -83,6 +84,8 @@ MWViscoElastic::MWViscoElastic(const MWViscoElastic* cm)
   d_initialData.V_Viscosity = cm->d_initialData.V_Viscosity;
   d_initialData.D_Viscosity = cm->d_initialData.D_Viscosity;
 }
+#endif
+
 
 MWViscoElastic::~MWViscoElastic()
 {

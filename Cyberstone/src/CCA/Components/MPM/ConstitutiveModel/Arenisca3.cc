@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2017 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -148,77 +148,12 @@ Arenisca3::Arenisca3(ProblemSpecP& ps, MPMFlags* Mflag)
 
   initializeLocalMPMLabels();
 }
-Arenisca3::Arenisca3(const Arenisca3* cm)
-  : ConstitutiveModel(cm)
-{
-  one_third      = 1.0/3.0;
-  two_third      = 2.0/3.0;
-  four_third     = 4.0/3.0;
-  sqrt_two       = sqrt(2.0);
-  one_sqrt_two   = 1.0/sqrt_two;
-  sqrt_three     = sqrt(3.0);
-  one_sqrt_three = 1.0/sqrt_three;
-  one_ninth      = 1.0/9.0;
-  one_sixth      = 1.0/6.0;
-  pi             = 3.141592653589793238462;
-  pi_fourth      = 0.25*pi;
-  pi_half        = 0.5*pi;
 
-  Identity.Identity();
-
-  //Weibull distribution input
-  wdist.WeibMed    = cm->wdist.WeibMed;
-  wdist.WeibMod    = cm->wdist.WeibMod;
-  wdist.WeibRefVol = cm->wdist.WeibRefVol;
-  wdist.WeibSeed   = cm->wdist.WeibSeed;
-  wdist.Perturb    = cm->wdist.Perturb;
-  wdist.WeibDist   = cm->wdist.WeibDist;
-
-  WeibullParser(wdist);
-
-  // Shear Strength
-  d_cm.PEAKI1 = cm->d_cm.PEAKI1;
-  d_cm.FSLOPE = cm->d_cm.FSLOPE;
-  d_cm.STREN = cm->d_cm.STREN;
-  d_cm.YSLOPE = cm->d_cm.YSLOPE;
-  d_cm.BETA_nonassociativity = cm->d_cm.BETA_nonassociativity;
-  // Bulk Modulus
-  d_cm.B0 = cm->d_cm.B0;
-  d_cm.B1 = cm->d_cm.B1;
-  d_cm.B2 = cm->d_cm.B2;
-  d_cm.B3 = cm->d_cm.B3;
-  d_cm.B4 = cm->d_cm.B4;
-  // Shear Modulus
-  d_cm.G0 = cm->d_cm.G0;
-  d_cm.G1 = cm->d_cm.G1; //not used
-  d_cm.G2 = cm->d_cm.G2; //not used
-  d_cm.G3 = cm->d_cm.G3; //not used
-  d_cm.G4 = cm->d_cm.G4; //not used
-  // Porosity (Crush Curve)
-  d_cm.p0_crush_curve = cm->d_cm.p0_crush_curve;
-  d_cm.p1_crush_curve = cm->d_cm.p1_crush_curve;
-  d_cm.p2_crush_curve = cm->d_cm.p2_crush_curve; // not used
-  d_cm.p3_crush_curve = cm->d_cm.p3_crush_curve;
-  d_cm.CR = cm->d_cm.CR;
-  // Fluid Effects
-  d_cm.fluid_B0 = cm->d_cm.fluid_B0;
-  d_cm.fluid_pressure_initial = cm->d_cm.fluid_pressure_initial;
-  // Rate Dependence
-  d_cm.T1_rate_dependence = cm->d_cm.T1_rate_dependence;
-  d_cm.T2_rate_dependence = cm->d_cm.T2_rate_dependence;
-  // Subcycling
-  d_cm.subcycling_characteristic_number = cm->d_cm.subcycling_characteristic_number;
-  initializeLocalMPMLabels();
-  // Disaggregation Strain
-  d_cm.Use_Disaggregation_Algorithm = cm->d_cm.Use_Disaggregation_Algorithm;
-}
 // DESTRUCTOR
 Arenisca3::~Arenisca3()
 {
   VarLabel::destroy(peakI1IDistLabel);          // For variability
   VarLabel::destroy(peakI1IDistLabel_preReloc); // For variability
-  VarLabel::destroy(pLocalizedLabel);
-  VarLabel::destroy(pLocalizedLabel_preReloc);
   VarLabel::destroy(pAreniscaFlagLabel);
   VarLabel::destroy(pAreniscaFlagLabel_preReloc);
   VarLabel::destroy(pScratchDouble1Label);
@@ -327,8 +262,7 @@ void Arenisca3::initializeCMData(const Patch* patch,
   }
 
   // Allocate particle variables
-  ParticleVariable<int> pLocalized,
-                        pAreniscaFlag;
+  ParticleVariable<int>     pAreniscaFlag;
   ParticleVariable<double>  peakI1IDist;     // Holder for particles PEAKI1 value for variability
   ParticleVariable<double>  pScratchDouble1, // Developer tool
                             pScratchDouble2, // Developer tool
@@ -341,7 +275,6 @@ void Arenisca3::initializeCMData(const Patch* patch,
   ParticleVariable<Matrix3> pScratchMatrix,  // Developer tool
                             pep;             // Plastic Strain Tensor
 
-  new_dw->allocateAndPut(pLocalized,      pLocalizedLabel,      pset);
   new_dw->allocateAndPut(pAreniscaFlag,   pAreniscaFlagLabel,   pset);
   new_dw->allocateAndPut(pScratchDouble1, pScratchDouble1Label, pset);
   new_dw->allocateAndPut(pScratchDouble2, pScratchDouble2Label, pset);
@@ -361,7 +294,6 @@ void Arenisca3::initializeCMData(const Patch* patch,
 
   for(ParticleSubset::iterator iter = pset->begin();
       iter != pset->end();iter++){
-    pLocalized[*iter] = 0;
     pAreniscaFlag[*iter] = 0;
     pScratchDouble1[*iter] = 0;
     pScratchDouble2[*iter] = 0;
@@ -526,7 +458,7 @@ void Arenisca3::computeStressTensor(const PatchSubset* patches,
 
     old_dw->get(delT,            lb->delTLabel,   getLevel(patches));
     old_dw->get(peakI1IDist,     peakI1IDistLabel,             pset);  // For variability
-    old_dw->get(pLocalized,      pLocalizedLabel,              pset); //initializeCMData()
+    old_dw->get(pLocalized,      lb->pLocalizedMPMLabel,       pset); //initializeCMData()
     old_dw->get(pAreniscaFlag,   pAreniscaFlagLabel,           pset); //initializeCMData()
     old_dw->get(pScratchDouble1, pScratchDouble1Label,         pset); //initializeCMData()
     old_dw->get(pScratchDouble2, pScratchDouble2Label,         pset); //initializeCMData()
@@ -557,9 +489,9 @@ void Arenisca3::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<int>     pLocalized_new,
                               pAreniscaFlag_new;
     ParticleVariable<double>  peakI1IDist_new;  // For variability
-    new_dw->allocateAndPut(peakI1IDist_new,   peakI1IDistLabel_preReloc,  pset); // For variability
-    new_dw->allocateAndPut(pLocalized_new,    pLocalizedLabel_preReloc,   pset);
-    new_dw->allocateAndPut(pAreniscaFlag_new, pAreniscaFlagLabel_preReloc,pset);
+    new_dw->allocateAndPut(peakI1IDist_new,   peakI1IDistLabel_preReloc,       pset); // For variability
+    new_dw->allocateAndPut(pLocalized_new,    lb->pLocalizedMPMLabel_preReloc, pset);
+    new_dw->allocateAndPut(pAreniscaFlag_new, pAreniscaFlagLabel_preReloc,     pset);
 
     // Allocate particle variables used in ComputeStressTensor
     ParticleVariable<double>  p_q,
@@ -2059,33 +1991,6 @@ void Arenisca3::checkInputParameters(){
 // ****************************************************************************************************
 // ****************************************************************************************************
 
-void Arenisca3::addRequiresDamageParameter(Task* task,
-    const MPMMaterial* matl,
-    const PatchSet* ) const
-{
-  // Require the damage parameter
-  const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::NewDW, pLocalizedLabel_preReloc,matlset,Ghost::None);
-}
-
-void Arenisca3::getDamageParameter(const Patch* patch,
-                                   ParticleVariable<int>& damage,
-                                   int dwi,
-                                   DataWarehouse* old_dw,
-                                   DataWarehouse* new_dw)
-{
-  // Get the damage parameter
-  ParticleSubset* pset = old_dw->getParticleSubset(dwi,patch);
-  constParticleVariable<int> pLocalized;
-  new_dw->get(pLocalized, pLocalizedLabel_preReloc, pset);
-
-  ParticleSubset::iterator iter;
-  // Loop over the particle in the current patch.
-  for (iter = pset->begin(); iter != pset->end(); iter++) {
-    damage[*iter] = pLocalized[*iter];
-  }
-}
-
 void Arenisca3::carryForward(const PatchSubset* patches,
                              const MPMMaterial* matl,
                              DataWarehouse* old_dw,
@@ -2119,7 +2024,6 @@ void Arenisca3::addParticleState(std::vector<const VarLabel*>& from,
   // Push back all the particle variables associated with Arenisca.
   // Important to keep from and to lists in same order!
   from.push_back(peakI1IDistLabel);  // For variability
-  from.push_back(pLocalizedLabel);
   from.push_back(pAreniscaFlagLabel);
   from.push_back(pScratchDouble1Label);
   from.push_back(pScratchDouble2Label);
@@ -2133,7 +2037,6 @@ void Arenisca3::addParticleState(std::vector<const VarLabel*>& from,
   from.push_back(pStressQSLabel);
   from.push_back(pScratchMatrixLabel);
   to.push_back(  peakI1IDistLabel_preReloc);  // For variability
-  to.push_back(  pLocalizedLabel_preReloc);
   to.push_back(  pAreniscaFlagLabel_preReloc);
   to.push_back(  pScratchDouble1Label_preReloc);
   to.push_back(  pScratchDouble2Label_preReloc);
@@ -2159,7 +2062,6 @@ void Arenisca3::addInitialComputesAndRequires(Task* task,
 
   // Other constitutive model and input dependent computes and requires
   task->computes(peakI1IDistLabel,     matlset);  // For variability
-  task->computes(pLocalizedLabel,      matlset);
   task->computes(pAreniscaFlagLabel,   matlset);
   task->computes(pScratchDouble1Label, matlset);
   task->computes(pScratchDouble2Label, matlset);
@@ -2183,35 +2085,35 @@ void Arenisca3::addComputesAndRequires(Task* task,
   // base class.
   const MaterialSubset* matlset = matl->thisMaterial();
   addSharedCRForHypoExplicit(task, matlset, patches);
-  task->requires(Task::OldDW, peakI1IDistLabel,     matlset, Ghost::None);  // For variability
-  task->requires(Task::OldDW, pLocalizedLabel,      matlset, Ghost::None);
-  task->requires(Task::OldDW, pAreniscaFlagLabel,   matlset, Ghost::None);
-  task->requires(Task::OldDW, pScratchDouble1Label, matlset, Ghost::None);
-  task->requires(Task::OldDW, pScratchDouble2Label, matlset, Ghost::None);
-  task->requires(Task::OldDW, pPorePressureLabel,   matlset, Ghost::None);
-  task->requires(Task::OldDW, pepLabel,             matlset, Ghost::None);
-  task->requires(Task::OldDW, pevpLabel,            matlset, Ghost::None);
-  task->requires(Task::OldDW, peveLabel,            matlset, Ghost::None);
-  task->requires(Task::OldDW, pCapXLabel,           matlset, Ghost::None);
-  task->requires(Task::OldDW, pZetaLabel,           matlset, Ghost::None);
-  task->requires(Task::OldDW, pP3Label,             matlset, Ghost::None);
-  task->requires(Task::OldDW, pStressQSLabel,       matlset, Ghost::None);
-  task->requires(Task::OldDW, pScratchMatrixLabel,  matlset, Ghost::None);
-  task->requires(Task::OldDW, lb->pParticleIDLabel, matlset, Ghost::None);
-  task->computes(peakI1IDistLabel_preReloc,     matlset);  // For variability
-  task->computes(pLocalizedLabel_preReloc,      matlset);
-  task->computes(pAreniscaFlagLabel_preReloc,   matlset);
-  task->computes(pScratchDouble1Label_preReloc, matlset);
-  task->computes(pScratchDouble2Label_preReloc, matlset);
-  task->computes(pPorePressureLabel_preReloc,   matlset);
-  task->computes(pepLabel_preReloc,             matlset);
-  task->computes(pevpLabel_preReloc,            matlset);
-  task->computes(peveLabel_preReloc,            matlset);
-  task->computes(pCapXLabel_preReloc,           matlset);
-  task->computes(pZetaLabel_preReloc,           matlset);
-  task->computes(pP3Label_preReloc,             matlset);
-  task->computes(pStressQSLabel_preReloc,       matlset);
-  task->computes(pScratchMatrixLabel_preReloc,  matlset);
+  task->requires(Task::OldDW, peakI1IDistLabel,       matlset, Ghost::None);  // For variability
+  task->requires(Task::OldDW, lb->pLocalizedMPMLabel, matlset, Ghost::None);
+  task->requires(Task::OldDW, pAreniscaFlagLabel,     matlset, Ghost::None);
+  task->requires(Task::OldDW, pScratchDouble1Label,   matlset, Ghost::None);
+  task->requires(Task::OldDW, pScratchDouble2Label,   matlset, Ghost::None);
+  task->requires(Task::OldDW, pPorePressureLabel,     matlset, Ghost::None);
+  task->requires(Task::OldDW, pepLabel,               matlset, Ghost::None);
+  task->requires(Task::OldDW, pevpLabel,              matlset, Ghost::None);
+  task->requires(Task::OldDW, peveLabel,              matlset, Ghost::None);
+  task->requires(Task::OldDW, pCapXLabel,             matlset, Ghost::None);
+  task->requires(Task::OldDW, pZetaLabel,             matlset, Ghost::None);
+  task->requires(Task::OldDW, pP3Label,               matlset, Ghost::None);
+  task->requires(Task::OldDW, pStressQSLabel,         matlset, Ghost::None);
+  task->requires(Task::OldDW, pScratchMatrixLabel,    matlset, Ghost::None);
+  task->requires(Task::OldDW, lb->pParticleIDLabel,   matlset, Ghost::None);
+  task->computes(peakI1IDistLabel_preReloc,         matlset);  // For variability
+  task->computes(lb->pLocalizedMPMLabel_preReloc,   matlset);
+  task->computes(pAreniscaFlagLabel_preReloc,       matlset);
+  task->computes(pScratchDouble1Label_preReloc,     matlset);
+  task->computes(pScratchDouble2Label_preReloc,     matlset);
+  task->computes(pPorePressureLabel_preReloc,       matlset);
+  task->computes(pepLabel_preReloc,                 matlset);
+  task->computes(pevpLabel_preReloc,                matlset);
+  task->computes(peveLabel_preReloc,                matlset);
+  task->computes(pCapXLabel_preReloc,               matlset);
+  task->computes(pZetaLabel_preReloc,               matlset);
+  task->computes(pP3Label_preReloc,                 matlset);
+  task->computes(pStressQSLabel_preReloc,           matlset);
+  task->computes(pScratchMatrixLabel_preReloc,      matlset);
 }
 
 //T2D: Throw exception that this is not supported
@@ -2276,11 +2178,7 @@ void Arenisca3::initializeLocalMPMLabels()
                                       ParticleVariable<double>::getTypeDescription());
   peakI1IDistLabel_preReloc = VarLabel::create("p.peakI1IDist+",
                               ParticleVariable<double>::getTypeDescription());
-  //pLocalized
-  pLocalizedLabel = VarLabel::create("p.localized",
-                                     ParticleVariable<int>::getTypeDescription());
-  pLocalizedLabel_preReloc = VarLabel::create("p.localized+",
-                             ParticleVariable<int>::getTypeDescription());
+
   //pAreniscaFlag
   pAreniscaFlagLabel = VarLabel::create("p.AreniscaFlag",
                                         ParticleVariable<int>::getTypeDescription());

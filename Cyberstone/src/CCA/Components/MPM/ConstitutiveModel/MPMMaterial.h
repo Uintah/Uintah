@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2017 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -49,6 +49,8 @@ namespace Uintah {
  class VarLabel;
  class GeometryObject;
  class ConstitutiveModel;
+ class DamageModel;
+ class ErosionModel;
  class MPMLabel;
  class ParticleCreator;
  class ScalarDiffusionModel;
@@ -105,6 +107,16 @@ WARNING
    //////////
    // Return correct constitutive model pointer for this material
    ConstitutiveModel* getConstitutiveModel() const;
+   
+   void deleteGeomObjects( );
+   
+   void set_pLocalizedComputed( const bool ans);
+  
+   bool is_pLocalizedPreComputed() const;
+   
+   DamageModel* getDamageModel() const;
+   
+   ErosionModel* getErosionModel() const;
 
    ScalarDiffusionModel* getScalarDiffusionModel() const;
 
@@ -157,14 +169,18 @@ WARNING
  private:
 
    MPMLabel* d_lb;
-   ConstitutiveModel* d_cm;
-   ScalarDiffusionModel* d_sdm;
-   ParticleCreator* d_particle_creator;
+   ConstitutiveModel*     d_cm;
+   DamageModel*           d_damageModel;
+   ErosionModel*          d_erosionModel;
+   ScalarDiffusionModel*  d_sdm;
+   ParticleCreator*       d_particle_creator;
 
    double d_density;
-   bool d_includeFlowWork;
+   bool   d_includeFlowWork;
    double d_specificHeat;
    double d_thermalConductivity;
+   bool   d_pLocalizedComputed  =  false;        // set to true if any task computes pLocalizedMPM or pLocalizedMPM_preReloc
+
 
    // Specific heats at constant pressure and constant volume
    // (values at room temperature - [273.15 + 20] K)

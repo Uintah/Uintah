@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2017 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -88,8 +88,6 @@ namespace Uintah {
 	  double principal_stress_cutoff;
 	  
     };
-    const VarLabel* pLocalizedLabel;
-    const VarLabel* pLocalizedLabel_preReloc;
     const VarLabel* pAreniscaFlagLabel;          //0: ok, 1: pevp<-p3
     const VarLabel* pAreniscaFlagLabel_preReloc;
     const VarLabel* pScratchDouble1Label;
@@ -155,7 +153,6 @@ namespace Uintah {
   public:
     // constructor
     Arenisca4(ProblemSpecP& ps, MPMFlags* flag);
-    Arenisca4(const Arenisca4* cm);
 
     // destructor
     virtual ~Arenisca4();
@@ -297,22 +294,6 @@ namespace Uintah {
 	
 	
   public: //Uintah MPM constitutive model specific functions
-    ////////////////////////////////////////////////////////////////////////
-    /* Make the value for pLocalized computed locally available outside of the model. */
-    ////////////////////////////////////////////////////////////////////////
-    virtual void addRequiresDamageParameter(Task* task,
-                                            const MPMMaterial* matl,
-                                            const PatchSet* patches) const;
-
-
-    ////////////////////////////////////////////////////////////////////////
-    /* Make the value for pLocalized computed locally available outside of the model */
-    ////////////////////////////////////////////////////////////////////////
-    virtual void getDamageParameter(const Patch* patch,
-                                    ParticleVariable<int>& damage, int dwi,
-                                    DataWarehouse* old_dw,
-                                    DataWarehouse* new_dw);
-
 
     // carry forward CM data for RigidMPM
     virtual void carryForward(const PatchSubset* patches,

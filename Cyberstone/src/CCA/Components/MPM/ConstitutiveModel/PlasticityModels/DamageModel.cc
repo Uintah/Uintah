@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2017 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -23,41 +23,75 @@
  */
 
 
-#include "DamageModel.h"
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DamageModel.h>
 
 using namespace Uintah;
+static DebugStream dbg("DamageModel", false);
+//______________________________________________________________________
+//      TO DO
+//______________________________________________________________________
+//
 
 DamageModel::DamageModel()
 {
+  d_lb = scinew MPMLabel();
 }
 
 DamageModel::~DamageModel()
 {
+  delete d_lb;
 }
+
 //______________________________________________________________________
 //
- void 
- DamageModel::updateFailedParticlesAndModifyStress2(const Matrix3& FF,
-                                            const double& pFailureStrain,
-                                            const int& pLocalized,
-                                            int& pLocalized_new,
-                                            const double& pTimeOfLoc,
-                                            double& pTimeOfLoc_new,
-                                            Matrix3& pStress_new,
-                                            const long64 particleID,
-                                            double time)    
+void DamageModel::addComputesAndRequires(Task* task,
+                                         const MPMMaterial* matl)
+{
+}
+
+
+//______________________________________________________________________
+//
+void DamageModel::addParticleState(std::vector<const VarLabel*>& from,
+                                   std::vector<const VarLabel*>& to)
+{
+}
+
+
+//______________________________________________________________________
+//
+void
+DamageModel::carryForward(const PatchSubset* patches,
+                          const MPMMaterial* matl,
+                          DataWarehouse*     old_dw,
+                          DataWarehouse*     new_dw)
+{
+  // do nothing
+}
+
+//______________________________________________________________________
+//
+void 
+DamageModel::addInitialComputesAndRequires(Task* task,
+                                           const MPMMaterial* matl )
 {
 }
 //______________________________________________________________________
 //
 void 
-DamageModel::updateDamageAndModifyStress2(const Matrix3& FF,
-                             const double&  pFailureStrain,
-                             double&        pFailureStrain_new,
-                             const double&  pVolume,
-                             const double&  pDamage,
-                             double&        pDamage_new,
-                             Matrix3&       pStress_new,
-                             const long64   particleID)
+DamageModel::initializeLabels(const Patch*       patch,
+                              const MPMMaterial* matl,
+                              DataWarehouse*     new_dw)
+{
+}
+
+//______________________________________________________________________
+//
+void 
+DamageModel::computeSomething( ParticleSubset    * pset,
+                               const MPMMaterial * matl,
+                               const Patch       * patch,    
+                               DataWarehouse     * old_dw,
+                               DataWarehouse     * new_dw )
 {
 }
