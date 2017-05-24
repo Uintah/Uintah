@@ -199,7 +199,7 @@ namespace Uintah{
                       patch_based,          // The patch extents + halo are the ROI
                       coneGeometry_based,   // The halo values are computed on a per level basis, determined by ray count and grid resolution
                       boundedRayLength,     // the patch extents + boundedRayLength/Dx are the ROI
-                      entireDomain          // The ROI is the entire computatonal Domain
+                      entireDomain          // The ROI is the entire computational Domain
                     };
 
       int d_cellTypeCoarsenLogic{ROUNDUP};           // how to coarsen a cell type

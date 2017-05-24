@@ -767,6 +767,18 @@ namespace WasatchCore{
     
     // radiation
     if( uintahSpec->findBlock("RMCRT") ){
+
+      //---------------------------------------------------------------------------------------------------------------------------
+      // Added for temporal scheduling support when using RMCRT - APH 05/24/17
+      //---------------------------------------------------------------------------------------------------------------------------
+      // Need a cleaner way to do this, but for now, this allows temporal scheduling within Wasatch for RMCRT
+      // For RMCRT there will be 2 task graphs - we put the radiation tasks in TG-1, otherwise tasks go into TG-0 or both
+      //   TG-0 = carry forward and non-radiation timestep tasks
+      //   TG-1 = normal RMCRT computations
+      Uintah::Scheduler* sched = dynamic_cast<Uintah::Scheduler*>(getPort("scheduler"));
+      sched->setNumTaskGraphs(2);
+      //---------------------------------------------------------------------------------------------------------------------------
+
       doRadiation_ = true;
       cellType_ = scinew CellType();
       rmcrt_ = scinew Uintah::Ray( Uintah::TypeDescription::double_type );

@@ -2977,16 +2977,16 @@ void Ray::computeCellType( const ProcessorGroup*,
       CC_pos = level->getCellPosition(cur);           // position could be outside of domain
       in_domain = domain_BB.inside(CC_pos);
 
-      //bool ray_outside_ROI    = ( containsCell( fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir ) == false );
-      //bool ray_outside_Region = ( containsCell( regionLo[L], regionHi[L], cur, dir ) == false );
+      bool ray_outside_ROI    = ( containsCell( fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir ) == false );
+      bool ray_outside_Region = ( containsCell( regionLo[L], regionHi[L], cur, dir ) == false );
       //TODO: The above code was the original patch based version I think.  To get that working again, it
       //might be as simple as an if statement to see which mode (patch or cone geometry), and use it accordingly).
 
       //bool ray_outside_ROI    = (false); // removes patch-layout dependency, assumes that maxLengthFlux = maxLength
       //bool ray_outside_Region = (false);
 
-      bool ray_outside_ROI    = (_maxLength[L]<tMaxV[dir]); // removes patch-layout dependency, assumes that maxLengthFlux = maxLength
-      bool ray_outside_Region = (_maxLength[L]<tMaxV[dir]); 
+//      bool ray_outside_ROI    = (_maxLength[L]<tMaxV[dir]); // removes patch-layout dependency, assumes that maxLengthFlux = maxLength
+//      bool ray_outside_Region = (_maxLength[L]<tMaxV[dir]);
 
       bool jumpFinetoCoarserLevel   = ( onFineLevel &&  ray_outside_ROI && in_domain );
       bool jumpCoarsetoCoarserLevel = ( (onFineLevel == false) && ray_outside_Region && (L > 0) && in_domain );
