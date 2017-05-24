@@ -174,24 +174,23 @@ printTaskLevels( const ProcessorGroup * d_myworld
                )
 {
   if (out) {
-    std::ostringstream message;
     if (dtask->getPatches()) {
-
-      if (dtask->getTask()->getType() != Task::OncePerProc) {
+//      if (dtask->getTask()->getType() != Task::OncePerProc) {
         const PatchSubset* taskPatches = dtask->getPatches();
         const Level* level = getLevel(taskPatches);
         const Patch* firstPatch = level->getPatch(0);
-
         if (taskPatches->contains(firstPatch)) {
-          message << d_myworld->myrank() << "   ";
+          std::ostringstream message;
+          message << "Rank-" << d_myworld->myrank() << "   ";
           message << std::left;
-          message.width(70);
+          message.width(50);
           message << dtask->getTask()->getName();
-          message << " \t  Patch " << firstPatch->getGridIndex() << "\t L-" << level->getIndex() << "\n";
+          message << "\t Patch-" << firstPatch->getGridIndex();
+          message << "\t L-" << level->getIndex();
+          DOUT(true, message.str());
         }
-      }
+//      }
     }
-    DOUT(true, message.str());
   }
 }
 

@@ -32,6 +32,7 @@
 #include <CCA/Ports/LoadBalancerPort.h>
 #include <CCA/Ports/Output.h>
 
+#include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Variables/ParticleSubset.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Malloc/Allocator.h>
@@ -833,6 +834,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */
       runTask( dtask, iteration );
 
       DOUT(g_task_dbg, "Rank-" << d_myworld->myrank() << " Completed task:   " << *dtask);
+      printTaskLevels( d_myworld, g_task_level, dtask );
     }
 
     if(!abort && m_dws[m_dws.size()-1] && m_dws[m_dws.size()-1]->timestepAborted()){
