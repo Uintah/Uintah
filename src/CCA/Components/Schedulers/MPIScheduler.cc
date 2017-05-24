@@ -71,7 +71,7 @@ Dout g_dbg(            "MPIScheduler_DBG"       , false );
 Dout g_send_timings(   "SendTiming"             , false );
 Dout g_reductions(     "ReductionTasks"         , false );
 Dout g_time_out(       "MPIScheduler_TimingsOut", false );
-Dout g_task_begin_end( "TaskBeginEnd"           , false );
+Dout g_task_level(     "TaskLevel"              , false );
 
 }
 
@@ -124,6 +124,22 @@ MPIScheduler::MPIScheduler( const ProcessorGroup * myworld
   mpi_info_.validate( MAX_TIMING_STATS );
 }
 
+
+//______________________________________________________________________
+//
+MPIScheduler::~MPIScheduler()
+{
+  if ( (g_time_out) && (d_myworld->myrank() == 0) ) {
+    m_avg_stats.close();
+    m_max_stats.close();
+  }
+
+#ifdef UINTAH_ENABLE_KOKKOS
+  Kokkos::finalize();
+#endif //UINTAH_ENABLE_KOKKOS
+
+}
+
 //______________________________________________________________________
 //
 void
@@ -152,21 +168,6 @@ MPIScheduler::problemSetup( const ProblemSpecP     & prob_spec
     initialized = true;
   }
 #endif
-}
-
-//______________________________________________________________________
-//
-MPIScheduler::~MPIScheduler()
-{
-  if ( (g_time_out) && (d_myworld->myrank() == 0) ) {
-    m_avg_stats.close();
-    m_max_stats.close();
-  }
-
-#ifdef UINTAH_ENABLE_KOKKOS
-  Kokkos::finalize();
-#endif //UINTAH_ENABLE_KOKKOS
-
 }
 
 //______________________________________________________________________
@@ -818,7 +819,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */
     DOUT(g_task_order, "Rank-" << d_myworld->myrank() << " Running task static order: "
                                << dtask->getStaticOrder() << " , scheduled order: " << numTasksDone);
 
-    DOUT(g_task_begin_end, "Rank-" << me << " Initiating task: " << dtask->getTask()->getName() << "\t" << *dtask);
+    DOUT(g_task_dbg, "Rank-" << me << " Initiating task:  " << *dtask);
 
     if ( dtask->getTask()->getType() == Task::Reduction ) {
       if (!abort) {
@@ -831,7 +832,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */
       ASSERT( m_recvs.size() == 0u );
       runTask( dtask, iteration );
 
-      DOUT(g_task_begin_end, "Rank-" << d_myworld->myrank() << " Completed task: " << dtask->getTask()->getName() << "\t" << *dtask);
+      DOUT(g_task_dbg, "Rank-" << d_myworld->myrank() << " Completed task:   " << *dtask);
     }
 
     if(!abort && m_dws[m_dws.size()-1] && m_dws[m_dws.size()-1]->timestepAborted()){

@@ -3078,7 +3078,7 @@ void Ray::computeCellType( const ProcessorGroup*,
       prevLev  = L;
 
       //__________________________________
-      //  Determine the princple direction the ray is traveling
+      //  Determine the principal direction the ray is traveling
       //
       dir = NONE;
       if ( tMaxV[0] < tMaxV[1] ){    // X < Y

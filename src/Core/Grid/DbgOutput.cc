@@ -21,99 +21,178 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+
+#include <CCA/Components/Schedulers/DetailedTask.h>
+
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Parallel/Parallel.h>
 
-using namespace std;
+namespace Uintah {
 
-namespace Uintah{
-
-//__________________________________
+//______________________________________________________________________
 //
-void printSchedule( const PatchSet      * patches,
-                    Uintah::DebugStream & dbg,
-                    const string        & where )
+void
+printSchedule( const PatchSet    * patches
+             ,       DebugStream & dbg
+             , const std::string & where
+             )
 {
   if (dbg.active()){
     dbg << Uintah::Parallel::getMPIRank() << " ";
-    dbg << left;
+    dbg << std::left;
     dbg.width(50);
     dbg << where << "L-"
-        << getLevel(patches)->getIndex()<< endl;
+        << getLevel(patches)->getIndex()<< std::endl;
   }  
 }
-//__________________________________
+
+//______________________________________________________________________
 //
-void printSchedule( const LevelP        & level,
-                    Uintah::DebugStream & dbg,
-                    const string        & where )
+void
+printSchedule( const LevelP      & level
+             ,       DebugStream & dbg
+             , const std::string & where
+             )
 {
   if (dbg.active()){
     dbg << Uintah::Parallel::getMPIRank() << " ";
-    dbg << left;
+    dbg << std::left;
     dbg.width(50);
     dbg << where << "L-"
-        << level->getIndex()<< endl;
+        << level->getIndex()<< std::endl;
   }  
 }
-//__________________________________
+
+//______________________________________________________________________
 //
-void printTask(const PatchSubset* patches,
-               const Patch* patch,
-               Uintah::DebugStream& dbg,
-               const string& where)
+void
+printTask( const PatchSubset * patches
+         , const Patch       * patch
+         ,       DebugStream & dbg
+         , const std::string & where
+         )
 {
   if (dbg.active()){
     dbg << Uintah::Parallel::getMPIRank() << " ";
-    dbg << left;
+    dbg << std::left;
     dbg.width(50);
     dbg << where << "  \tL-"
         << getLevel(patches)->getIndex()
-        << " patch " << patch->getGridIndex()<< endl;
+        << " patch " << patch->getGridIndex()<< std::endl;
   }  
 }
-//__________________________________
+
+//______________________________________________________________________
 //
-void printTask(const PatchSubset* patches,
-               Uintah::DebugStream& dbg,
-               const string& where)
+void
+printTask( const PatchSubset * patches
+         ,       DebugStream & dbg
+         , const std::string & where
+         )
 {
   if (dbg.active()){
     dbg << Uintah::Parallel::getMPIRank() << " ";
-    dbg << left;
+    dbg << std::left;
     dbg.width(50);
     dbg << where << "  \tL-"
         << getLevel(patches)->getIndex()
-        << " patches " << *patches << endl;
+        << " patches " << *patches << std::endl;
   }  
 }
-//__________________________________
+
+//______________________________________________________________________
 //
-void printTask(const Patch* patch,
-               Uintah::DebugStream& dbg,
-               const string& where)
+void
+printTask( const Patch       * patch
+         ,       DebugStream & dbg
+         , const std::string & where
+         )
 {
   if (dbg.active()){
     dbg << Uintah::Parallel::getMPIRank()  << " ";
-    dbg << left;
+    dbg << std::left;
     dbg.width(50);
     dbg << where << " \tL-"
         << patch->getLevel()->getIndex()
-        << " patch " << patch->getGridIndex()<< endl;
+        << " patch " << patch->getGridIndex()<< std::endl;
   }  
 }
 
-//__________________________________
+//______________________________________________________________________
 //
-void printTask(Uintah::DebugStream& dbg,
-               const string& where)
+void
+printTask(       DebugStream & dbg
+         , const std::string & where
+         )
 {
   if (dbg.active()){
     dbg << Uintah::Parallel::getMPIRank()  << " ";
-    dbg << left;
+    dbg << std::left;
     dbg.width(50);
-    dbg << where << " \tAll Patches" << endl;
+    dbg << where << " \tAll Patches" << std::endl;
   }  
+}
+
+//______________________________________________________________________
+// Output the task name and the level it's executing on and each of the patches
+void
+printTask( Dout         & out
+         , DetailedTask * dtask
+         )
+{
+  if (out) {
+    std::ostringstream message;
+    message << std::left;
+    message.width(70);
+    message << dtask->getTask()->getName();
+    if (dtask->getPatches()) {
+
+      message << " \t on patches ";
+      const PatchSubset* patches = dtask->getPatches();
+      for (int p = 0; p < patches->size(); p++) {
+        if (p != 0) {
+          message << ", ";
+        }
+        message << patches->get(p)->getID();
+      }
+
+      if (dtask->getTask()->getType() != Task::OncePerProc) {
+        const Level* level = getLevel(patches);
+        message << "\t  L-" << level->getIndex();
+      }
+    }
+    DOUT(true, message.str());
+  }
+}
+
+//______________________________________________________________________
+//  Output the task name and the level it's executing on only first patch of that level
+void
+printTaskLevels( const ProcessorGroup * d_myworld
+               ,       Dout           & out
+               ,       DetailedTask   * dtask
+               )
+{
+  if (out) {
+    std::ostringstream message;
+    if (dtask->getPatches()) {
+
+      if (dtask->getTask()->getType() != Task::OncePerProc) {
+        const PatchSubset* taskPatches = dtask->getPatches();
+        const Level* level = getLevel(taskPatches);
+        const Patch* firstPatch = level->getPatch(0);
+
+        if (taskPatches->contains(firstPatch)) {
+          message << d_myworld->myrank() << "   ";
+          message << std::left;
+          message.width(70);
+          message << dtask->getTask()->getName();
+          message << " \t  Patch " << firstPatch->getGridIndex() << "\t L-" << level->getIndex() << "\n";
+        }
+      }
+    }
+    DOUT(true, message.str());
+  }
 }
 
 } // End namespace Uintah

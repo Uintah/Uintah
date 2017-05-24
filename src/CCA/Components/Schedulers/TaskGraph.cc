@@ -40,6 +40,7 @@
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Util/DOUT.hpp>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/ProgressiveWarning.h>
 
@@ -53,8 +54,9 @@ using namespace Uintah;
 
 namespace {
 
+Dout tgphasedbg("TaskGraphPhase", false);
+
 DebugStream tgdbg(       "TaskGraph"        , false);
-DebugStream tgphasedbg(  "TaskGraphPhase"   , false);
 DebugStream detaileddbg( "TaskGraphDetailed", false);
 DebugStream compdbg(     "FindComp"         , false);
 
@@ -63,7 +65,7 @@ DebugStream compdbg(     "FindComp"         , false);
 //______________________________________________________________________
 //
 TaskGraph::TaskGraph(       SchedulerCommon   * sched
-		    ,       SimulationStateP& state
+		                ,       SimulationStateP  & state
                     , const ProcessorGroup    * pg
                     ,       Scheduler::tgType   type
                     )
@@ -76,13 +78,14 @@ TaskGraph::TaskGraph(       SchedulerCommon   * sched
 #ifdef HAVE_VISIT
   static bool initialized = false;
 
-  // Running with VisIt so add in the variables that the user can
-  // modify.
-  if( state->getVisIt() && !initialized ) {
-     state->d_debugStreams.push_back( &tgdbg );
-     state->d_debugStreams.push_back( &tgphasedbg );
-     state->d_debugStreams.push_back( &detaileddbg );
-     state->d_debugStreams.push_back( &compdbg );
+  // Running with VisIt so add in the variables that the user can modify.
+  if (state->getVisIt() && !initialized) {
+
+    state->d_douts.push_back(&tgphasedbg);
+
+    state->d_debugStreams.push_back(&tgdbg);
+    state->d_debugStreams.push_back(&detaileddbg);
+    state->d_debugStreams.push_back(&compdbg);
 
     initialized = true;
   }
@@ -105,11 +108,11 @@ TaskGraph::initialize()
     delete m_detailed_tasks;
   }
 
-  for (std::vector<Task*>::iterator iter = m_tasks.begin(); iter != m_tasks.end(); iter++) {
+  for (auto iter = m_tasks.begin(); iter != m_tasks.end(); ++iter) {
     delete *iter;
   }
 
-  for (std::vector<Task::Edge*>::iterator iter = m_edges.begin(); iter != m_edges.end(); iter++) {
+  for (auto iter = m_edges.begin(); iter != m_edges.end(); ++iter) {
     delete *iter;
   }
 
@@ -607,14 +610,12 @@ void TaskGraph::processDependencies( Task               * task
 void
 TaskGraph::nullSort( std::vector<Task*> & tasks )
 {
-  std::vector<Task*>::iterator iter;
-
   // No longer going to sort them... let the UnifiedScheduler (threaded) take care
   // of calling the tasks when all dependencies are satisfied.
   // Sorting the tasks causes problem because now tasks (actually task
   // groups) run in different orders on different MPI processes.
   int n = 0;
-  for (iter = m_tasks.begin(); iter != m_tasks.end(); iter++) {
+  for (auto iter = m_tasks.begin(); iter != m_tasks.end(); iter++) {
     // For all reduction tasks filtering out the one that is not in ReductionTasksMap 
     if ((*iter)->getType() == Task::Reduction) {
       for (ReductionTasksMap::iterator it = m_scheduler->m_reduction_tasks.begin(); it != m_scheduler->m_reduction_tasks.end(); it++) {
@@ -843,9 +844,9 @@ TaskGraph::createDetailedDependencies()
   for (int i = 0; i < m_detailed_tasks->numTasks(); i++) {
     DetailedTask* task = m_detailed_tasks->getTask(i);
     task->d_task->m_phase = currphase;
-    if (tgphasedbg.active()) {
-      tgphasedbg << "Rank-" << m_proc_group->myrank() << " Task: " << *task << " phase: " << currphase << "\n";
-    }
+
+    DOUT(tgphasedbg, "Rank-" << m_proc_group->myrank() << " Task: " << *task << " phase: " << currphase);
+
     if (task->d_task->getType() == Task::Reduction) {
       task->d_task->m_comm = curr_num_comms;
       curr_num_comms++;

@@ -25,36 +25,59 @@
 #ifndef Uintah_CORE_GRID_DBGOUTPUT_H
 #define Uintah_CORE_GRID_DBGOUTPUT_H
 
-#include <Core/Util/DebugStream.h>
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/Patch.h>
+#include <Core/Util/DebugStream.h>
+#include <Core/Util/DOUT.hpp>
+
 #include <string>
 
-namespace Uintah{
+namespace Uintah {
 
-void printSchedule( const PatchSet       * patches,
-                    Uintah::DebugStream  & dbg,
-                    const std::string    & where );
+void printSchedule( const PatchSet     * patches
+                  ,       DebugStream  & dbg
+                  , const std::string  & where
+                  );
 
-void printSchedule( const LevelP        & level,
-                    Uintah::DebugStream & dbg,
-                    const std::string   & where );
+void printSchedule( const LevelP       & level
+                  ,       DebugStream  & dbg
+                  , const std::string  & where
+                  );
 
-void printTask( const PatchSubset   * patches,
-                const Patch         * patch,
-                Uintah::DebugStream & dbg,
-                const std::string   & where );
+void printTask( const PatchSubset         * patches
+              , const Patch               * patch
+              ,       DebugStream         & dbg
+              , const std::string         & where
+              );
                 
-void printTask( const PatchSubset   * patches,
-                Uintah::DebugStream & dbg,
-                const std::string   & where );
+void printTask( const PatchSubset   * patches
+              ,       DebugStream   & dbg
+              ,  const std::string  & where
+              );
 
-void printTask( const Patch         * patch,
-                Uintah::DebugStream & dbg,
-                const std::string   & where );
+void printTask( const Patch       * patch
+              ,       DebugStream & dbg
+              , const std::string & where
+              );
                 
-void printTask( Uintah::DebugStream & dbg,
-                const std::string   & where );
+void printTask(       DebugStream & dbg
+              , const std::string & where
+              );
+
+/**
+* Output the task name and the level it's executing on and each of the patches
+*/
+void printTask( Dout         & out
+              , DetailedTask * dtask
+              );
+
+/**
+*  Output the task name and the level it's executing on only first patch of that level
+*/
+void printTaskLevels( const ProcessorGroup * d_myworld
+                    ,       Dout           & out
+                    ,       DetailedTask   * dtask
+                    );
 
 } // End namespace Uintah
 

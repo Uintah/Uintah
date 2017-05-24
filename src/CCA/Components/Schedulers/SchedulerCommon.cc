@@ -1121,8 +1121,9 @@ SchedulerCommon::compile()
 
     // pass the first to the rest, so we can share the scrubcountTable
     DetailedTasks* first = nullptr;
-    for (unsigned i = 0; i < m_task_graphs.size(); i++) {
-      if (m_task_graphs.size() > 1) {
+    size_t num_task_graphs = m_task_graphs.size();
+    for (size_t i = 0; i < num_task_graphs; i++) {
+      if (num_task_graphs > 1) {
         DOUT(schedulercommon_dbg, "Rank-" << d_myworld->myrank() << "  Compiling graph#" << i << " of " << m_task_graphs.size());
       }
 

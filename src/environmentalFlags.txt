@@ -27,7 +27,7 @@ RELOCATE_DBG      SCI_DEBUG     prints out debugging information in the code tha
                                 patches inside of particle relocation task.
 AMR               SCI_DEBUG     prints out the patch layout
 AMR_CoarsenRefine SCI_DEBUG     prints out debugging information for coarsening and refining operations
-TaskBeginEnd      SCI_DEBUG     output the name of each task as it begins executing and when it's completed
+TaskDBG           SCI_DEBUG     output the name of each task as it begins executing and when it's completed
 TaskLevel         SCI_DEBUG     output the task name and beginning patch on each level after the 
                                 task has completed.
 TaskGraph         SCI_DEBUG     prints out computes and requires for every task
