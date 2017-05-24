@@ -599,7 +599,9 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
         w_desc = s < w_desc ? w_desc : s;
       }
 
-      const std::string & group_name = group.first.name();
+      const std::string & group_name = group.first.name() +
+	(group.first.active() ? ":+" : ":-");
+      
       printf("\n--------------------------------------------------------------------------------\n");
       printf("%s\n", group_name.c_str() );
       printf("--------------------------------------------------------------------------------\n");

@@ -86,7 +86,7 @@ public:
 
   Dout( std::string const & name, bool default_active )
     : m_active{ is_active(name, default_active) }
-    , m_name{ name + (m_active ? ":+" : ":-") }
+    , m_name{ name }
   {}
 
   explicit operator bool() const { return m_active; }
@@ -98,7 +98,7 @@ public:
     return a.m_name < b.m_name;
   }
 
-  bool active() { return m_active; }
+  bool active() const { return m_active; }
   void setActive( bool active ) { m_active = active; }
 
 private:
