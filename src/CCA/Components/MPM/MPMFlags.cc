@@ -97,6 +97,12 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_with_arches                        =  false;
   d_myworld                            =  myworld;
   
+  // Cyberstone
+  d_containerMaterial                  = -999;
+  d_containerRadius                    =  9.e99;
+  d_KEMaterial                         = -999;
+  d_useTracers                         =  false;
+  
   d_reductionVars = scinew reductionVars();
   d_reductionVars->mass             = false;
   d_reductionVars->momentum         = false;
@@ -202,7 +208,6 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   mpm_flag_ps->get("use_CBDI_boundary_condition", d_useCBDI);
   mpm_flag_ps->get("exactDeformation",            d_exactDeformation);
   mpm_flag_ps->get("use_cohesive_zones",          d_useCohesiveZones);
-  mpm_flag_ps->get("use_tracers",                 d_useTracers);
 
   if(d_artificial_viscosity && d_integrator_type == "implicit"){
     if (d_myworld->myrank() == 0){
@@ -241,6 +246,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   mpm_flag_ps->get("containerMaterial", d_containerMaterial);
   mpm_flag_ps->get("containerRadius",   d_containerRadius);
   mpm_flag_ps->get("KEMaterial",        d_KEMaterial);
+  mpm_flag_ps->get("use_tracers",       d_useTracers);
 
   //MMS
   mpm_flag_ps->get("RunMMSProblem",d_mms_type);
@@ -395,7 +401,6 @@ else{
     dbg << " Use Load Curves             = " << d_useLoadCurves << endl;
     dbg << " Use CBDI boundary condition = " << d_useCBDI << endl;
     dbg << " Use Cohesive Zones          = " << d_useCohesiveZones << endl;
-    dbg << " Use Tracers                 = " << d_useTracers << endl;
     dbg << " ForceBC increment factor    = " << d_forceIncrementFactor<< endl;
     dbg << " Contact Friction Heating    = " << d_addFrictionWork << endl;
     dbg << " Extra Solver flushes        = " << d_extraSolverFlushes << endl;
@@ -403,6 +408,7 @@ else{
     dbg << " containerMaterial           = " << d_containerMaterial << endl;
     dbg << " containerRadius             = " << d_containerRadius   << endl;
     dbg << " KEMaterial                  = " << d_KEMaterial << endl;
+    dbg << " Use Tracers                 = " << d_useTracers << endl;
     dbg << "---------------------------------------------------------\n";
   }
 }
@@ -458,17 +464,18 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   }
 
   ps->appendElement("do_contact_friction_heating", d_do_contact_friction);
-  ps->appendElement("computeNormals", d_computeNormals);
-  ps->appendElement("computeColinearNormals", d_computeColinearNormals);
-  ps->appendElement("delete_rogue_particles",d_deleteRogueParticles);
-  ps->appendElement("extra_solver_flushes", d_extraSolverFlushes);
-  ps->appendElement("boundary_traction_faces", d_bndy_face_txt_list);
-  ps->appendElement("do_scalar_diffusion", d_doScalarDiffusion);
+  ps->appendElement("computeNormals",              d_computeNormals);
+  ps->appendElement("computeColinearNormals",      d_computeColinearNormals);
+  ps->appendElement("delete_rogue_particles",      d_deleteRogueParticles);
+  ps->appendElement("extra_solver_flushes",        d_extraSolverFlushes);
+  ps->appendElement("boundary_traction_faces",     d_bndy_face_txt_list);
+  ps->appendElement("do_scalar_diffusion",         d_doScalarDiffusion);
 
   // Cyberstone
   ps->appendElement("containerMaterial", d_containerMaterial);
   ps->appendElement("containerRadius",   d_containerRadius);
   ps->appendElement("KEMaterial",        d_KEMaterial);
+  ps->appendElement("use_tracers",       d_useTracers);
 }
 
 
