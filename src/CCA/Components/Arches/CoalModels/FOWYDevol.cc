@@ -437,14 +437,6 @@ FOWYDevol::computeModel( const ProcessorGroup * pc,
          devol_rate(i,j,k) = -rate*weightph/(_rc_scaling_constant*_weight_scaling_constant); //rate of consumption of raw coal mass
          gas_devol_rate(i,j,k) = rate*weightph; // rate of creation of coal off gas
          char_rate(i,j,k) = 0; // rate of creation of char
-   
-         //additional check to make sure we have positive rates when we have small amounts of rc and char.. 
-         if( devol_rate(i,j,k)>0.0 || ( rc_weighted_scaled(i,j,k) + char_weighted_scaled(i,j,k) )<1e-16) {
-           devol_rate(i,j,k) = 0;
-           gas_devol_rate(i,j,k) = 0;
-           char_rate(i,j,k) = 0;
-         }
-   
        } else {
          devol_rate(i,j,k) = 0;
          gas_devol_rate(i,j,k) = 0;

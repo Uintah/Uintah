@@ -133,6 +133,7 @@ CoalGasOxiMom::computeSource( const ProcessorGroup* pc,
       oxiSrc.initialize(Vector(0.0,0.0,0.0));
     } else {
       new_dw->getModifiable( oxiSrc, _src_label, matlIndex, patch );
+      oxiSrc.initialize(Vector(0.0,0.0,0.0));
     }
 
 

@@ -150,6 +150,7 @@ CoalGasMomentum::computeSource( const ProcessorGroup* pc,
       dragSrc.initialize(Vector(0.,0.,0.));
     } else {
       new_dw->getModifiable( dragSrc, _src_label, matlIndex, patch );
+      dragSrc.initialize(Vector(0.,0.,0.));
     }
 
     for (int iqn = 0; iqn < dqmomFactory.get_quad_nodes(); iqn++){

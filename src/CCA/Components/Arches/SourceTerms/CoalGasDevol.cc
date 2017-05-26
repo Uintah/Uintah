@@ -131,6 +131,7 @@ CoalGasDevol::computeSource( const ProcessorGroup* pc,
       devolSrc.initialize(0.0);
     } else {
       new_dw->getModifiable( devolSrc, _src_label, matlIndex, patch );
+      devolSrc.initialize(0.0);
     }
 
     for (int iqn = 0; iqn < dqmomFactory.get_quad_nodes(); iqn++){

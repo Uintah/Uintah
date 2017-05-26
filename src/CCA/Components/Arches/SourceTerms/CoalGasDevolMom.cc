@@ -131,6 +131,7 @@ CoalGasDevolMom::computeSource( const ProcessorGroup* pc,
       devolSrc.initialize(Vector(0.0,0.0,0.0));
     } else {
       new_dw->getModifiable( devolSrc, _src_label, matlIndex, patch );
+      devolSrc.initialize(Vector(0.0,0.0,0.0));
     }
 
 

@@ -144,6 +144,7 @@ CoalGasHeat::computeSource( const ProcessorGroup* pc,
       heatSrc.initialize(0.0);
     } else {
       new_dw->getModifiable( heatSrc, _src_label, matlIndex, patch );
+      heatSrc.initialize(0.0);
     }
 
     for (int iqn = 0; iqn < dqmomFactory.get_quad_nodes(); iqn++){
