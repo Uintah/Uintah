@@ -1656,6 +1656,7 @@
             <!-- Radiation models -->
             <calc_frequency             spec="OPTIONAL INTEGER" need_applies_to="type do_radiation rmcrt_radiation" /> <!-- calculate radiation every N steps, default = 3 -->
             <checkForMissingIntensities spec="OPTIONAL BOOLEAN" need_applies_to="type do_radiation" /> <!-- This flag is designed to assist users using DOR with scattering, and changing their ordinate number on a restart -->
+            <sweepMethod                spec="OPTIONAL BOOLEAN" need_applies_to="type do_radiation" /> <!-- true = use linear solve.  False = use sweeping method --> 
             <!--abskp_label                spec="OPTIONAL STRING"  need_applies_to="type do_radiation rmcrt_radiation" /--> <!-- Derek -->
             <calc_on_all_RKsteps        spec="OPTIONAL BOOLEAN" need_applies_to="type do_radiation rmcrt_radiation" /> <!-- calculate radiation every RK step, default = false -->
             <abskt                      spec="REQUIRED NO_DATA"
@@ -1663,7 +1664,9 @@
                                         need_applies_to="type do_radiation rmcrt_radiation" />                         <!-- string label of abskg, default = abskg. NOTE: This is referenced to the
                                                                                                                             total absorption coeffient. When using particles, the abskg label defined there
                                                                                                                             includes the effect of the abskp. abskg = abskg(gas only) + abskp -->
-            <DORadiationModel           spec="OPTIONAL NO_DATA" need_applies_to="type do_radiation" >
+            <DORadiationModel           spec="OPTIONAL NO_DATA"
+                                        attribute1="type REQUIRED STRING 'linearSolve, sweepNoCommunication, sweepSerial, sweepSpatiallyParallel, sweepSerialCopy'"
+                                        need_applies_to="type do_radiation " >
               <ordinates                  spec="OPTIONAL INTEGER" />                                   <!-- number of ordinants, default = 2 -->
               <ReflectOn                  spec="OPTIONAL BOOLEAN" /> <!-- reflections are off by default.-->
               <initialGuess               spec="OPTIONAL STRING 'zeros, prevDir, prevRadSolve'"/> <!-- prevRadSolvei -> use previous radiation solve as previous guess.  prevDir= use previous direction for initial guess.  zeros=use zeros as initial guess (default)-->

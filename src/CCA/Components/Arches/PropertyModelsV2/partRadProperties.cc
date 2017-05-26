@@ -65,7 +65,7 @@ void partRadProperties::problemSetup(  Uintah::ProblemSpecP& db )
       if (_scatteringOn){
         throw ProblemSetupException("Scattering not enabled for basic-radiative-particle-properties.  Use radprops, OR turn off scattering!",__FILE__, __LINE__);
       }
-      db->require("Qabs",_Qabs); //  0.8 was used by Julien for coal particles
+      db->getWithDefault("Qabs",_Qabs,0.8); 
     }else if(_particle_calculator_type == "coal"){
     _isCoal = true;
       //throw ProblemSetupException("Error: The model for Coal radiation properties is incomplete, please alternative model.",__FILE__,__LINE__);

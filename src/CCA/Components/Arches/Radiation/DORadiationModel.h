@@ -55,6 +55,7 @@ GENERAL INFORMATION
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Containers/StaticArray.h>
+#include <Core/Util/Timers/Timers.hpp>
 
 
 namespace Uintah {
@@ -69,7 +70,8 @@ public:
 
       DORadiationModel(const ArchesLabel* label,
                        const MPMArchesLabel* MAlab,
-                       const ProcessorGroup* myworld);
+                       const ProcessorGroup* myworld,
+                       bool sweepMethod);
 
 
       virtual ~DORadiationModel();
@@ -91,6 +93,56 @@ public:
                                   CCVariable<double>& divQ,
                                   int wall_type, int matlIndex, DataWarehouse* new_dw, DataWarehouse* old_dw,
                                   bool old_DW_isMissingIntensities);
+
+      void intensitysolveSweep(const Patch* patch,
+                               int matlIndex,
+                               DataWarehouse* new_dw, 
+                               DataWarehouse* old_dw,
+                               int cdirecn,
+                               int phase);
+
+      void intensitysolveSweepOptimized(const Patch* patch,
+                               int matlIndex,
+                               DataWarehouse* new_dw, 
+                               DataWarehouse* old_dw,
+                               int cdirecn);
+
+      void intensitysolveSweepOrigProto(const Patch* patch,
+                                       int matlIndex,
+                                       DataWarehouse* new_dw, 
+                                       DataWarehouse* old_dw,
+                                       int cdirecn);
+
+      void setExtraSweepingLabels(int nphase);
+
+      void getDOSource(const Patch* patch,
+                       int matlIndex,                    
+                       DataWarehouse* new_dw,            
+                       DataWarehouse* old_dw);           
+
+
+      void computeFluxDiv(const Patch* patch,
+                          int matlIndex,  
+                          DataWarehouse* new_dw, 
+                          DataWarehouse* old_dw);
+
+      void setIntensityBC(const Patch* patch,
+                                  int matlIndex,  
+                                  CCVariable<double>& intensity,
+                                  constCCVariable<double>& radTemp,
+                                  constCCVariable<int>& cellType);
+      void
+        setIntensityBC2Orig(const Patch* patch,
+            int matlIndex,  
+            DataWarehouse* new_dw, 
+            DataWarehouse* old_dw, int ix);
+
+      void
+        setIntensityBC2(const Patch* patch,
+            int matlIndex,  
+            DataWarehouse* new_dw, 
+            DataWarehouse* old_dw, int ix, int ixx);
+
       int getIntOrdinates();
 
       bool reflectionsBool();
@@ -99,7 +151,22 @@ public:
 
       bool ScatteringOnBool();
 
-      void setLabels() ;
+      void setLabels( const VarLabel* abskg ,
+                      const VarLabel* abskt,
+                      const VarLabel* T_label,
+                      const VarLabel* cellType,
+                      const VarLabel* radIntSource,
+                      const VarLabel*  FluxE,
+                      const VarLabel*  FluxW,
+                      const VarLabel*  FluxN,
+                      const VarLabel*  FluxS,
+                      const VarLabel*  FluxT,
+                      const VarLabel*  FluxB,
+                      const VarLabel*  volQ,
+                      const VarLabel*  divQ);
+
+
+      void setLabels(   );
 
       inline std::vector< const VarLabel*> getAbskpLabels(){
         return _abskp_label_vector;
@@ -112,9 +179,19 @@ public:
       inline int get_nQn_part(){
         return _nQn_part;
       }
+      inline int xDir( int ix){
+        return (int) _plusX[ix];
+      }
+      inline int yDir( int ix){
+        return (int) _plusY[ix];
+      }
+      inline int zDir( int ix){
+        return (int) _plusZ[ix];
+      }
 
 private:
-
+      double _nphase; // optical length
+      double _solve_start;
       double d_opl; // optical length
       const ArchesLabel*    d_lab;
       const MPMArchesLabel* d_MAlab;
@@ -126,14 +203,23 @@ private:
 
       void computeOrdinatesOPL();
       int d_lambda;
-      int ffield;
+      const int ffield;
 
       OffsetArray1<double> fraction;
 
+      std::vector< std::vector < std::vector < Ghost::GhostType > > > _gv;
+   
       OffsetArray1<double> oxi;
       OffsetArray1<double> omu;
       OffsetArray1<double> oeta;
       OffsetArray1<double> wt;
+
+      std::vector < bool >  _plusX;
+      std::vector < bool >  _plusY;
+      std::vector < bool >  _plusZ;
+      std::vector < int >  xiter;
+      std::vector < int >  yiter;
+      std::vector < int >  ziter;
 
       OffsetArray1<double> rgamma;
       OffsetArray1<double> sd15;
@@ -155,11 +241,29 @@ private:
       bool _usePreviousIntensity;
       bool _zeroInitialGuess;
       bool _radiateAtGasTemp; // this flag is arbitrary for no particles
+      int _sweepMethod;
 
       const VarLabel* _scatktLabel;
       const VarLabel* _asymmetryLabel;
+      const VarLabel*  _abskg_label;
+      const VarLabel*  _abskt_label;
+      const VarLabel*  _T_label;
+      const VarLabel*  _cellTypeLabel;
+      const VarLabel*  _radIntSource;
+      const VarLabel* _fluxE;
+      const VarLabel* _fluxW;
+      const VarLabel* _fluxN;
+      const VarLabel* _fluxS;
+      const VarLabel* _fluxT;
+      const VarLabel* _fluxB;
+      const VarLabel* _volQ;
+      const VarLabel* _divQ;
+      Timers::Simple _timer;
 
       std::vector< const VarLabel*> _IntensityLabels;
+      std::vector< const VarLabel*> _emiss_plus_scat_source_label; // for sweeps, needed because Intensities fields are solved in parallel
+
+      std::vector< std::vector< const VarLabel*> > _patchIntensityLabels; 
       std::vector< const VarLabel*> _radiationFluxLabels;
 
       std::vector< std::vector < double > > cosineTheta;

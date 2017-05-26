@@ -81,12 +81,14 @@ static DebugStream dbg("ARCHES_RADIATION",false);
 //****************************************************************************
 DORadiationModel::DORadiationModel(const ArchesLabel* label,
                                    const MPMArchesLabel* MAlab,
-                                   const ProcessorGroup* myworld):
+                                   const ProcessorGroup* myworld,bool sweepMethod ):
                                    d_lab(label),
                                    d_MAlab(MAlab),
-                                   d_myworld(myworld)
-{
+                                   d_myworld(myworld),
+                                   ffield(-1)  //WARNING: Hack -- flow cells set to -1
 
+{
+  _sweepMethod = sweepMethod;
   d_linearSolver = 0;
   d_perproc_patches = 0;
 
@@ -228,8 +230,6 @@ DORadiationModel::problemSetup( ProblemSpecP& params )
 
   d_linearSolver->problemSetup(db);
 
-  //WARNING: Hack -- flow cells set to -1
-  ffield = -1;
 
   const TypeDescription* CC_double = CCVariable<double>::getTypeDescription();
   for( int ix=0;  ix<d_totalOrds ;ix++){
@@ -241,6 +241,14 @@ DORadiationModel::problemSetup( ProblemSpecP& params )
     }
   }
 
+  if (_scatteringOn && _sweepMethod){
+    for( int ix=0;  ix< d_totalOrds;ix++){
+      ostringstream my_stringstream_object;
+      my_stringstream_object << "scatSrc_absSrc" << setfill('0') << setw(4)<<  ix  ;
+      _emiss_plus_scat_source_label.push_back(  VarLabel::create(my_stringstream_object.str(),CC_double));
+    }
+  }
+
   _radiationFluxLabels.push_back(  VarLabel::find("radiationFluxE"));
   _radiationFluxLabels.push_back(  VarLabel::find("radiationFluxW"));
   _radiationFluxLabels.push_back(  VarLabel::find("radiationFluxN"));
@@ -248,6 +256,15 @@ DORadiationModel::problemSetup( ProblemSpecP& params )
   _radiationFluxLabels.push_back(  VarLabel::find("radiationFluxT"));
   _radiationFluxLabels.push_back(  VarLabel::find("radiationFluxB"));
 
+   _gv =std::vector< std::vector < std::vector < Ghost::GhostType > > >   (2,  std::vector < std::vector < Ghost::GhostType > > (2, std::vector < Ghost::GhostType > (2) ));
+   _gv[0][0][0] =Ghost::AroundCells ;
+   _gv[0][0][1] =Ghost::AroundCells ;
+   _gv[0][1][0] =Ghost::AroundCells ;
+   _gv[0][1][1] =Ghost::AroundCells ;
+   _gv[1][0][0] =Ghost::AroundCells ;
+   _gv[1][0][1] =Ghost::AroundCells ;
+   _gv[1][1][0] =Ghost::AroundCells ;
+   _gv[1][1][1] =Ghost::AroundCells ;
 
 }
 //______________________________________________________________________
@@ -295,6 +312,28 @@ DORadiationModel::computeOrdinatesOPL(){
   d_xfluxAdjust=M_PI/sumx/4.0;  // sumx, sumy, sumz should equal pi/4 because: Int->0:pi/2 cos(theta) dOmega = pi, 
   d_yfluxAdjust=M_PI/sumy/4.0;
   d_zfluxAdjust=M_PI/sumz/4.0;
+
+  _plusX = vector< bool > (d_totalOrds,false);
+  _plusY = vector< bool > (d_totalOrds,false);
+  _plusZ = vector< bool > (d_totalOrds,false);
+  xiter = vector< int > (d_totalOrds,-1);
+  yiter = vector< int > (d_totalOrds,-1);
+  ziter = vector< int > (d_totalOrds,-1);
+
+  for (int direcn = 1; direcn <=d_totalOrds; direcn++){
+    if (omu[direcn] > 0) {
+      _plusX[direcn-1]= true;
+      xiter[direcn-1]= 1;
+    }
+    if (oeta[direcn] > 0){
+      _plusY[direcn-1]= true;
+      yiter[direcn-1] = 1;
+    }
+    if (oxi[direcn] > 0) {
+      _plusZ[direcn-1]= true;
+      ziter[direcn-1]= 1;
+    }
+  }
 
   _sigma=5.67e-8;  //  w / m^2 k^4
 
@@ -939,8 +978,8 @@ return reflectionsTurnedOn;
 // Yes, if we are using the previous intensity as our initial guess in the linear solve.
 // Yes, if we modeling scattering physics, by lagging the scattering source term.
 bool
-DORadiationModel::needIntensitiesBool(){
-return _usePreviousIntensity || _scatteringOn  ;
+DORadiationModel::needIntensitiesBool(){ //should I compute intensity fields?  sweeps needs to compute for communication purposes
+return _usePreviousIntensity || _scatteringOn || _sweepMethod;
 }
 
 // Model scattering physics of particles?
@@ -950,8 +989,33 @@ return _scatteringOn;
 }
 
 void
-DORadiationModel::setLabels(){
+DORadiationModel::setLabels(const VarLabel* abskg_label,
+                            const VarLabel* abskt_label,
+                            const VarLabel* T_label, 
+                            const VarLabel* cellTypeLabel, 
+                            const VarLabel* radIntSource,
+                            const VarLabel*  fluxE,
+                            const VarLabel*  fluxW,
+                            const VarLabel*  fluxN,
+                            const VarLabel*  fluxS,
+                            const VarLabel*  fluxT,
+                            const VarLabel*  fluxB,
+                            const VarLabel*  volQ,
+                            const VarLabel*  divQ){
 
+    _radIntSource=radIntSource;
+    _abskg_label=abskg_label;
+    _abskt_label=abskt_label;
+    _T_label=T_label;
+    _cellTypeLabel=cellTypeLabel;
+    _fluxE=fluxE;
+    _fluxW=fluxW;
+    _fluxN=fluxN;
+    _fluxS=fluxS;
+    _fluxT=fluxT;
+    _fluxB=fluxB;
+    _volQ=volQ;
+    _divQ=divQ;
 
   for (int qn=0; qn < _nQn_part; qn++){
     _abskp_label_vector.push_back(VarLabel::find(_abskp_name_vector[qn]));
@@ -973,6 +1037,32 @@ DORadiationModel::setLabels(){
   }
   return;
 }
+
+
+void
+DORadiationModel::setLabels(){
+
+  for (int qn=0; qn < _nQn_part; qn++){
+    _abskp_label_vector.push_back(VarLabel::find(_abskp_name_vector[qn]));
+    if (_abskp_label_vector[qn]==0){
+      throw ProblemSetupException("Error: particle absorption coefficient node not found."+_abskp_name_vector[qn], __FILE__, __LINE__);
+    }
+
+    _temperature_label_vector.push_back(VarLabel::find(_temperature_name_vector[qn]));
+
+    if (_temperature_label_vector[qn]==0){
+      throw ProblemSetupException("Error: particle temperature node not foundr! "+_temperature_name_vector[qn], __FILE__, __LINE__);
+    }
+  }
+
+
+  if(_scatteringOn){
+    _scatktLabel= VarLabel::find("scatkt");
+    _asymmetryLabel=VarLabel::find("asymmetryParam");
+  }
+  return;
+}
+
 template<class TYPE>
 void
 DORadiationModel::computeScatteringIntensities(int direction, constCCVariable<double> &scatkt, StaticArray < TYPE > &Intensities, CCVariable<double> &scatIntensitySource,constCCVariable<double> &asymmetryFactor , const Patch* patch){
@@ -999,6 +1089,10 @@ DORadiationModel::computeScatteringIntensities(int direction, constCCVariable<do
   return;
 }
 
+//-----------------------------------------------------------------//
+// This function computes the boundary conditiosn for the intensities
+// for sweeping Discrete-Ordinates
+//-----------------------------------------------------------------//
 void
 DORadiationModel::computeIntensitySource( const Patch* patch, StaticArray <constCCVariable<double> >&abskp,
     StaticArray <constCCVariable<double> > &pTemp,
@@ -1006,23 +1100,945 @@ DORadiationModel::computeIntensitySource( const Patch* patch, StaticArray <const
                   constCCVariable<double>  &gTemp,
                   CCVariable<double> &b_sourceArray){
 
+
   for (int qn=0; qn < _nQn_part; qn++){
     if( _radiateAtGasTemp ){
       for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-        b_sourceArray[*iter]+=(_sigma/M_PI)*abskp[qn][*iter]*pow(gTemp[*iter],4.0);
+        b_sourceArray[*iter]+=(_sigma/M_PI)*abskp[qn][*iter]*std::pow(gTemp[*iter],4.0);
       }
     }else{
       for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-        b_sourceArray[*iter]+=((_sigma/M_PI)*abskp[qn][*iter])*pow(pTemp[qn][*iter],4.0);
+        b_sourceArray[*iter]+=((_sigma/M_PI)*abskp[qn][*iter])*std::pow(pTemp[qn][*iter],4.0);
       }
     }
   }
 
   for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-    b_sourceArray[*iter]+=(_sigma/M_PI)*abskg[*iter]*pow(gTemp[*iter],4.0);
+      b_sourceArray[*iter]+=(_sigma/M_PI)*abskg[*iter]*std::pow(gTemp[*iter],4.0);
   }
 
   return;
 }
 
+//-----------------------------------------------------------------//
+// This function computes the intensities. The fields that are required are
+// cellType, radiation temperature, radiation source, and  abskt.
+// This function is probably the bottle-neck in the radiation solve (sweeping method).
+//-----------------------------------------------------------------//
+void
+DORadiationModel::intensitysolveSweep( const Patch* patch,
+                                       int matlIndex,
+                                       DataWarehouse* new_dw, 
+                                       DataWarehouse* old_dw,
+                                       int cdirecn, int phase){ 
+
+
+
+  int direcn = cdirecn+1;
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
+
+  CCVariable <double > intensity;
+  new_dw->allocateAndPut(intensity,_patchIntensityLabels[phase][cdirecn] , matlIndex, patch);   // change to computes when making it its own task
+  //intensity.initialize(0.0);
+  new_dw->getModifiable(intensity,_patchIntensityLabels[phase][cdirecn] , matlIndex, patch);   // change to computes when making it its own task
+  constCCVariable <double > ghost_intensity;
+  new_dw->get( ghost_intensity, _patchIntensityLabels[phase-1][cdirecn], matlIndex, patch, _gv[(int) _plusX[cdirecn]][(int) _plusY[cdirecn]][(int) _plusZ[cdirecn]],1 );  
+
+
+  constCCVariable <double > emissSrc;
+  if(_scatteringOn){
+    new_dw->get( emissSrc, _emiss_plus_scat_source_label[cdirecn], matlIndex, patch, Ghost::None,0 );  // optimization bug - make this be computed differently for intrusion cells
+
+  }else{
+    new_dw->get( emissSrc, _radIntSource, matlIndex, patch, Ghost::None,0 );  // optimization bug - make this be computed differently for intrusion cells
+  }
+
+  constCCVariable<double> radTemp;
+  new_dw->get(radTemp,_T_label, matlIndex , patch,Ghost::None, 0  );
+  constCCVariable<int> cellType;
+  old_dw->get(cellType,_cellTypeLabel, matlIndex , patch,Ghost::None, 0  );
+  constCCVariable<double> abskt ; // should be WHICH DW !!!!!! BUG - only if rad solve is computed on RK step 2
+  old_dw->get(abskt,_abskt_label, matlIndex , patch,Ghost::None, 0  );
+
+
+  setIntensityBC(patch, matlIndex,intensity, radTemp,cellType);
+
+
+
+
+
+
+  Vector Dx = patch->dCell(); 
+  const double vol = Dx.x()* Dx.y()* Dx.z();  // const for optimization
+  const double  areaew = Dx.y()*Dx.z();
+  const double  areans = Dx.x()*Dx.z();
+  const double  areatb = Dx.x()*Dx.y(); // move into constructor or problem setup?
+  const double  denom = abs(omu[direcn])*areaew+abs(oeta[direcn])*areans+abs(oxi[direcn])*areatb; // denomintor for Intensity in current cell
+
+
+
+  IntVector c(0,0,0); // current cell
+
+  ///  --------------------------------------------------//
+  // ------------perform sweep on one patch -----------//
+  //
+  IntVector czm(0,0,0); // current cell, minus 1 in z
+  IntVector cym(0,0,0); // current cell, minus 1 in y
+  IntVector cxm(0,0,0); // current cell, minus 1 in x
+  // ------------perform sweep on one patch -----------//
+  //--------------------------------------------------------//
+  // Step 1:
+  //  Set seed cell (three ghost cells and no normal cells)
+  //--------------------------------------------------------//
+  c[0]= _plusX[cdirecn] ? idxLo.x() : idxHi.x();
+  czm[0]=c[0];
+  cym[0]=c[0];
+  cxm[0]=c[0]-xiter[cdirecn];
+  c[1]= _plusY[cdirecn] ? idxLo.y() : idxHi.y();
+  czm[1]=c[1];
+  cym[1]=c[1]-yiter[cdirecn];
+  cxm[1]=c[1];
+  c[2]= _plusZ[cdirecn] ? idxLo.z() : idxHi.z();
+  czm[2]=c[2]-ziter[cdirecn];
+  cym[2]=c[2];
+  cxm[2]=c[2];
+  if (cellType[c] !=ffield){ // if intrusions
+    intensity[c] = emissSrc[c] ;
+  } else{ // else flow cell
+    intensity[c] = ( emissSrc[c] +ghost_intensity[czm]*abs(oxi[direcn])*areatb  +  ghost_intensity[cym]*abs(oeta[direcn])*areans  +  ghost_intensity[cxm]*abs(omu[direcn])*areaew)/(denom + abskt[c]*vol );
+  } // end if
+  //--------------------------------------------------------//
+  // Step 2:
+  //  Set seed rows (two ghost cells and one normal cells)
+  //--------------------------------------------------------//
+  ////--------------------set z----------------------//
+  c[1]= _plusY[cdirecn] ? idxLo.y() : idxHi.y();
+  czm[1]=c[1];
+  cym[1]=c[1]-yiter[cdirecn];
+  cxm[1]=c[1];
+  c[2]= _plusZ[cdirecn] ? idxLo.z() : idxHi.z();
+  czm[2]=c[2]-ziter[cdirecn];
+  cym[2]=c[2];
+  cxm[2]=c[2];
+  for (int i = (_plusX[cdirecn] ? idxLo.x()+xiter[cdirecn] : idxHi.x()+xiter[cdirecn]);  (_plusX[cdirecn] ? (i<=idxHi.x()) : (i>=idxLo.x())) ; i=i+xiter[cdirecn]){
+    c[0]=i;
+    czm[0]=i;
+    cym[0]=i;
+    cxm[0]=i-xiter[cdirecn];
+    if (cellType[c] !=ffield){ // if intrusions
+      intensity[c] = emissSrc[c] ;
+    } else{ // else flow cell
+      intensity[c] = ( emissSrc[c] +ghost_intensity[czm]*abs(oxi[direcn])*areatb  +  ghost_intensity[cym]*abs(oeta[direcn])*areans  +  intensity[cxm]*abs(omu[direcn])*areaew)/(denom + abskt[c]*vol );
+    } // end if
+  }
+  ////--------------------set y----------------------//
+  c[0]= _plusX[cdirecn] ? idxLo.x() : idxHi.x();
+  czm[0]=c[0];
+  cym[0]=c[0];
+  cxm[0]=c[0]-xiter[cdirecn];
+  c[2]= _plusZ[cdirecn] ? idxLo.z() : idxHi.z();
+  czm[2]=c[2]-ziter[cdirecn];
+  cym[2]=c[2];
+  cxm[2]=c[2];
+  for (int j = (_plusY[cdirecn] ? idxLo.y()+yiter[cdirecn] : idxHi.y()+yiter[cdirecn]);  (_plusY[cdirecn] ? (j<=idxHi.y()) : (j>=idxLo.y())) ; j=j+yiter[cdirecn]){
+    c[1]=j;
+    czm[1]=j;
+    cym[1]=j-yiter[cdirecn];
+    cxm[1]=j;
+    if (cellType[c] !=ffield){ // if intrusions
+      intensity[c] = emissSrc[c] ;
+    } else{ // else flow cell
+      intensity[c] = ( emissSrc[c] + ghost_intensity[czm]*abs(oxi[direcn])*areatb  +  intensity[cym]*abs(oeta[direcn])*areans  +  ghost_intensity[cxm]*abs(omu[direcn])*areaew)/(denom + abskt[c]*vol );
+    } // end if
+  }
+  ////--------------------set x----------------------//
+  c[0]= _plusX[cdirecn] ? idxLo.x() : idxHi.x();
+  czm[0]=c[0];
+  cym[0]=c[0];
+  cxm[0]=c[0]-xiter[cdirecn];
+  c[1]= _plusY[cdirecn] ? idxLo.y() : idxHi.y();
+  czm[1]=c[1];
+  cym[1]=c[1]-yiter[cdirecn];
+  cxm[1]=c[1];
+  for (int k = (_plusZ[cdirecn] ? idxLo.z()+ziter[cdirecn] : idxHi.z()+ziter[cdirecn]);  (_plusZ[cdirecn] ? (k<=idxHi.z()) : (k>=idxLo.z())) ; k=k+ziter[cdirecn]){  
+    c[2]=k;
+    czm[2]=k-ziter[cdirecn];
+    cym[2]=k;
+    cxm[2]=k;
+    if (cellType[c] !=ffield){ // if intrusions
+      intensity[c] = emissSrc[c] ;
+    } else{ // else flow cell
+      intensity[c] = ( emissSrc[c] + intensity[czm]*abs(oxi[direcn])*areatb  +  ghost_intensity[cym]*abs(oeta[direcn])*areans  +  ghost_intensity[cxm]*abs(omu[direcn])*areaew)/(denom + abskt[c]*vol );
+    } // end if
+  }
+  //
+  //
+  //
+  //-------------------- ghost cells stored in different structure requires this----------------------//
+  //--------------------------------------------------------//
+  // Step 3:
+  //  Set seed faces (one ghost cells and two normal cells)
+  //--------------------------------------------------------//
+  //-------------------- set z ----------------------//
+  c[2]= _plusZ[cdirecn] ? idxLo.z() : idxHi.z();
+  czm[2]=c[2]-ziter[cdirecn];
+  cym[2]=c[2];
+  cxm[2]=c[2];
+  for (int j = (_plusY[cdirecn] ? idxLo.y()+yiter[cdirecn] : idxHi.y()+yiter[cdirecn]);  (_plusY[cdirecn] ? (j<=idxHi.y()) : (j>=idxLo.y())) ; j=j+yiter[cdirecn]){
+    c[1]=j;
+    czm[1]=j;
+    cym[1]=j-yiter[cdirecn];
+    cxm[1]=j;
+    for (int i = (_plusX[cdirecn] ? idxLo.x()+xiter[cdirecn] : idxHi.x()+xiter[cdirecn]);  (_plusX[cdirecn] ? (i<=idxHi.x()) : (i>=idxLo.x())) ; i=i+xiter[cdirecn]){
+      c[0]=i;
+      czm[0]=i;
+      cym[0]=i;
+      cxm[0]=i-xiter[cdirecn];
+      if (cellType[c] !=ffield){ // if intrusions
+        intensity[c] = emissSrc[c] ;
+      } else{ // else flow cell
+        intensity[c] = ( emissSrc[c] + ghost_intensity[czm]*abs(oxi[direcn])*areatb  +  intensity[cym]*abs(oeta[direcn])*areans  +  intensity[cxm]*abs(omu[direcn])*areaew)/(denom + abskt[c]*vol );
+      } // end if
+    }
+  }
+  ////--------------------set y----------------------//
+  c[1]= _plusY[cdirecn] ? idxLo.y() : idxHi.y();
+  czm[1]=c[1];
+  cym[1]=c[1]-yiter[cdirecn];
+  cxm[1]=c[1];
+  for (int k = (_plusZ[cdirecn] ? idxLo.z()+ziter[cdirecn] : idxHi.z()+ziter[cdirecn]);  (_plusZ[cdirecn] ? (k<=idxHi.z()) : (k>=idxLo.z())) ; k=k+ziter[cdirecn]){  
+    c[2]=k;
+    czm[2]=k-ziter[cdirecn];
+    cym[2]=k;
+    cxm[2]=k;
+    for (int i = (_plusX[cdirecn] ? idxLo.x()+xiter[cdirecn] : idxHi.x()+xiter[cdirecn]);  (_plusX[cdirecn] ? (i<=idxHi.x()) : (i>=idxLo.x())) ; i=i+xiter[cdirecn]){
+      c[0]=i;
+      czm[0]=i;
+      cym[0]=i;
+      cxm[0]=i-xiter[cdirecn];
+      if (cellType[c] !=ffield){ // if intrusions
+        intensity[c] = emissSrc[c] ;
+      } else{ // else flow cell
+        intensity[c] = ( emissSrc[c] + intensity[czm]*abs(oxi[direcn])*areatb  +  ghost_intensity[cym]*abs(oeta[direcn])*areans  +  intensity[cxm]*abs(omu[direcn])*areaew)/(denom + abskt[c]*vol );
+      } // end if
+    }
+  }
+  ////--------------------set x----------------------//
+  c[0]= _plusX[cdirecn] ? idxLo.x() : idxHi.x();
+  czm[0]=c[0];
+  cym[0]=c[0];
+  cxm[0]=c[0]-xiter[cdirecn];
+  for (int k = (_plusZ[cdirecn] ? idxLo.z()+ziter[cdirecn] : idxHi.z()+ziter[cdirecn]);  (_plusZ[cdirecn] ? (k<=idxHi.z()) : (k>=idxLo.z())) ; k=k+ziter[cdirecn]){  
+    c[2]=k;
+    czm[2]=k-ziter[cdirecn];
+    cym[2]=k;
+    cxm[2]=k;
+    for (int j = (_plusY[cdirecn] ? idxLo.y()+yiter[cdirecn] : idxHi.y()+yiter[cdirecn]);  (_plusY[cdirecn] ? (j<=idxHi.y()) : (j>=idxLo.y())) ; j=j+yiter[cdirecn]){
+      c[1]=j;
+      czm[1]=j;
+      cym[1]=j-yiter[cdirecn];
+      cxm[1]=j;
+      if (cellType[c] !=ffield){ // if intrusions
+        intensity[c] = emissSrc[c] ;
+      } else{ // else flow cell
+        intensity[c] = ( emissSrc[c] + intensity[czm]*abs(oxi[direcn])*areatb  +  intensity[cym]*abs(oeta[direcn])*areans  +  ghost_intensity[cxm]*abs(omu[direcn])*areaew)/(denom + abskt[c]*vol );
+      } // end if
+    }
+  }
+  ///  --------------------------------------------------//
+  //--------------------------------------------------------//
+  // Step 4:
+  //  Set interior cells (no ghost cells and three normal cells)
+  //--------------------------------------------------------//
+
+  for (int k = (_plusZ[cdirecn] ? idxLo.z()+ziter[cdirecn] : idxHi.z()+ziter[cdirecn]);  (_plusZ[cdirecn] ? (k<=idxHi.z()) : (k>=idxLo.z())) ; k=k+ziter[cdirecn]){  
+    c[2]=k;
+    czm[2]=k-ziter[cdirecn];
+    cym[2]=k;
+    cxm[2]=k;
+    for (int j = (_plusY[cdirecn] ? idxLo.y()+yiter[cdirecn] : idxHi.y()+yiter[cdirecn]);  (_plusY[cdirecn] ? (j<=idxHi.y()) : (j>=idxLo.y())) ; j=j+yiter[cdirecn]){
+      c[1]=j;
+      czm[1]=j;
+      cym[1]=j-yiter[cdirecn];
+      cxm[1]=j;
+      for (int i = (_plusX[cdirecn] ? idxLo.x()+xiter[cdirecn] : idxHi.x()+xiter[cdirecn]);  (_plusX[cdirecn] ? (i<=idxHi.x()) : (i>=idxLo.x())) ; i=i+xiter[cdirecn]){
+        c[0]=i;
+        czm[0]=i;
+        cym[0]=i;
+        cxm[0]=i-xiter[cdirecn];
+        if (cellType[c] !=ffield){ // if intrusions
+          intensity[c] = emissSrc[c] ;
+        } else{ // else flow cell
+          //intensity[c] = ((emissSrc[c] + scatSource[c])*vol + intensity[czm]*abs(oxi[direcn])*areatb  +  
+          intensity[c] = (emissSrc[c] + intensity[czm]*abs(oxi[direcn])*areatb  +  
+              intensity[cym]*abs(oeta[direcn])*areans  +  intensity[cxm]*abs(omu[direcn])*areaew)/(denom + abskt[c]*vol );
+        } // end if
+      } // end i loop
+    } // end j loop   
+  } // end k loop
+  // --------------------------------------------------//
+
+  return;
+}
+
+//-----------------------------------------------------------------//
+// This function computes the intensities. The fields that are required are
+// cellType, radiation temperature, radiation source, and  abskt.
+// This function is probably the bottle-neck in the radiation solve (sweeping method).
+//-----------------------------------------------------------------//
+void
+DORadiationModel::intensitysolveSweepOptimized( const Patch* patch,
+                                       int matlIndex,
+                                       DataWarehouse* new_dw, 
+                                       DataWarehouse* old_dw,
+                                       int cdirecn){ 
+
+
+
+
+
+  int direcn = cdirecn+1;
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
+
+  // -------------------NEEDS TO BE ADDED, REFLCTIONS ON WALLS -----------------//
+  //IntVector domLo = patch->getExtraCellLowIndex();
+  //IntVector domHi = patch->getExtraCellHighIndex();
+  //StaticArray< CCVariable<double> > radiationFlux_old(_radiationFluxLabels.size()); // must always 6, even when reflections are off.
+
+  //if(reflectionsTurnedOn){
+  //for (unsigned int i=0; i<  _radiationFluxLabels.size(); i++){
+  //constCCVariable<double>  radiationFlux_temp;
+  //old_dw->get(radiationFlux_temp,_radiationFluxLabels[i], matlIndex , patch,Ghost::None, 0  );
+  //radiationFlux_old[i].allocate(domLo,domHi);
+  //radiationFlux_old[i].copyData(radiationFlux_temp);
+  //}
+  //}
+  // ---------------------------------------------------------------------------//
+
+
+  CCVariable <double > intensity;
+  new_dw->getModifiable(intensity,_IntensityLabels[cdirecn] , matlIndex, patch);   // change to computes when making it its own task
+
+  constCCVariable <double > ghost_intensity;
+  new_dw->get( ghost_intensity, _IntensityLabels[cdirecn], matlIndex, patch, _gv[(int) _plusX[cdirecn]][(int) _plusY[cdirecn]][(int) _plusZ[cdirecn]],1 );  
+
+  constCCVariable <double > emissSrc;
+  if(_scatteringOn){
+    new_dw->get( emissSrc, _emiss_plus_scat_source_label[cdirecn], matlIndex, patch, Ghost::None,0 );  // optimization bug - make this be computed differently for intrusion cells
+  }else{
+    new_dw->get( emissSrc, _radIntSource, matlIndex, patch, Ghost::None,0 );  // optimization bug - make this be computed differently for intrusion cells
+  }
+
+  constCCVariable<int> cellType;
+  old_dw->get(cellType,_cellTypeLabel, matlIndex , patch,Ghost::None, 0  );
+  constCCVariable<double> abskt;  
+  old_dw->get(abskt,_abskt_label, matlIndex , patch,Ghost::None, 0  );
+
+
+  Vector Dx = patch->dCell(); 
+  double  areaew = Dx.y()*Dx.z();
+  double  areans = Dx.x()*Dx.z();
+  double  areatb = Dx.x()*Dx.y(); // move into constructor or problem setup? Naaa
+
+  const double vol = Dx.x()* Dx.y()* Dx.z();  // const to increase speed?
+  const double  abs_oxi= std::abs(oxi[direcn])*areatb;
+  const double  abs_oeta=std::abs(oeta[direcn])*areans;
+  const double  abs_omu= std::abs(omu[direcn])*areaew;
+  const double  denom = abs(omu[direcn])*areaew+abs(oeta[direcn])*areans+abs(oxi[direcn])*areatb; // denomintor for Intensity in current cell
+
+  IntVector c(0,0,0); // current cell
+
+    
+  ///--------------------------------------------------//
+  ///------------perform sweep on one patch -----------//
+  ///--------------------------------------------------//
+  IntVector czm(0,0,0); // current cell, minus 1 in z
+  IntVector cym(0,0,0); // current cell, minus 1 in y
+  IntVector cxm(0,0,0); // current cell, minus 1 in x
+  //--------------------------------------------------------//
+  // Step 1:
+  //  Set seed cell (three ghost cells and no normal cells)
+  //--------------------------------------------------------//
+  c[0]= _plusX[cdirecn] ? idxLo.x() : idxHi.x();
+  czm[0]=c[0];
+  cym[0]=c[0];
+  cxm[0]=c[0]-xiter[cdirecn];
+  c[1]= _plusY[cdirecn] ? idxLo.y() : idxHi.y();
+  czm[1]=c[1];
+  cym[1]=c[1]-yiter[cdirecn];
+  cxm[1]=c[1];
+  c[2]= _plusZ[cdirecn] ? idxLo.z() : idxHi.z();
+  czm[2]=c[2]-ziter[cdirecn];
+  cym[2]=c[2];
+  cxm[2]=c[2];
+  if (cellType[c] !=ffield){ // if intrusions
+    intensity[c] = emissSrc[c] ;
+    //intensity[c] = 0.0 ;
+  } else{ // else flow cell
+    intensity[c] = (emissSrc[c] +ghost_intensity[czm]*abs_oxi  +  ghost_intensity[cym]*abs_oeta  +  ghost_intensity[cxm]*abs_omu)/(denom + abskt[c]*vol);
+    //intensity[c] = 0.0 ;
+  } // end if
+  //--------------------------------------------------------//
+  // Step 2:
+  //  Set seed rows (two ghost cells and one normal cells)
+  //--------------------------------------------------------//
+  ////--------------------set z----------------------//
+  c[1]= _plusY[cdirecn] ? idxLo.y() : idxHi.y();
+  czm[1]=c[1];
+  cym[1]=c[1]-yiter[cdirecn];
+  cxm[1]=c[1];
+  c[2]= _plusZ[cdirecn] ? idxLo.z() : idxHi.z();
+  czm[2]=c[2]-ziter[cdirecn];
+  cym[2]=c[2];
+  cxm[2]=c[2];
+  for (int i = (_plusX[cdirecn] ? idxLo.x()+xiter[cdirecn] : idxHi.x()+xiter[cdirecn]);  (_plusX[cdirecn] ? (i<=idxHi.x()) : (i>=idxLo.x())) ; i=i+xiter[cdirecn]){
+    c[0]=i;
+    czm[0]=i;
+    cym[0]=i;
+    cxm[0]=i-xiter[cdirecn];
+    if (cellType[c] !=ffield){ // if intrusions
+      intensity[c] = emissSrc[c] ;
+      //intensity[c] = 0.0 ;
+    } else{ // else flow cell
+      intensity[c] = ( emissSrc[c] +ghost_intensity[czm]*abs_oxi  +  ghost_intensity[cym]*abs_oeta  +  intensity[cxm]*abs_omu)/(denom + abskt[c]*vol );
+      //intensity[c] = 0.0 ;
+    } // end if
+  }
+  ////--------------------set y----------------------//
+  c[0]= _plusX[cdirecn] ? idxLo.x() : idxHi.x();
+  czm[0]=c[0];
+  cym[0]=c[0];
+  cxm[0]=c[0]-xiter[cdirecn];
+  c[2]= _plusZ[cdirecn] ? idxLo.z() : idxHi.z();
+  czm[2]=c[2]-ziter[cdirecn];
+  cym[2]=c[2];
+  cxm[2]=c[2];
+  for (int j = (_plusY[cdirecn] ? idxLo.y()+yiter[cdirecn] : idxHi.y()+yiter[cdirecn]);  (_plusY[cdirecn] ? (j<=idxHi.y()) : (j>=idxLo.y())) ; j=j+yiter[cdirecn]){
+    c[1]=j;
+    czm[1]=j;
+    cym[1]=j-yiter[cdirecn];
+    cxm[1]=j;
+    if (cellType[c] !=ffield){ // if intrusions
+      intensity[c] = emissSrc[c] ;
+      //intensity[c] = 0.0 ;
+    } else{ // else flow cell
+      intensity[c] = ( emissSrc[c] + ghost_intensity[czm]*abs_oxi  +  intensity[cym]*abs_oeta  +  ghost_intensity[cxm]*abs_omu)/(denom + abskt[c]*vol );
+      //intensity[c] = 0.0 ;
+    } // end if
+  }
+  ////--------------------set x----------------------//
+  c[0]= _plusX[cdirecn] ? idxLo.x() : idxHi.x();
+  czm[0]=c[0];
+  cym[0]=c[0];
+  cxm[0]=c[0]-xiter[cdirecn];
+  c[1]= _plusY[cdirecn] ? idxLo.y() : idxHi.y();
+  czm[1]=c[1];
+  cym[1]=c[1]-yiter[cdirecn];
+  cxm[1]=c[1];
+  for (int k = (_plusZ[cdirecn] ? idxLo.z()+ziter[cdirecn] : idxHi.z()+ziter[cdirecn]);  (_plusZ[cdirecn] ? (k<=idxHi.z()) : (k>=idxLo.z())) ; k=k+ziter[cdirecn]){  
+    c[2]=k;
+    czm[2]=k-ziter[cdirecn];
+    cym[2]=k;
+    cxm[2]=k;
+    if (cellType[c] !=ffield){ // if intrusions
+      intensity[c] = emissSrc[c] ;
+      //intensity[c] = 0.0 ;
+    } else{ // else flow cell
+      intensity[c] = ( emissSrc[c] + intensity[czm]*abs_oxi  +  ghost_intensity[cym]*abs_oeta  +  ghost_intensity[cxm]*abs_omu)/(denom + abskt[c]*vol );
+      //intensity[c] = 0.0 ;
+    } // end if
+  }
+  //
+  //
+  //
+  //-------------------- ghost cells stored in different structure requires this----------------------//
+  //--------------------------------------------------------//
+  // Step 3:
+  //  Set seed faces (one ghost cells and two normal cells)
+  //--------------------------------------------------------//
+  //-------------------- set z ----------------------//
+  c[2]= _plusZ[cdirecn] ? idxLo.z() : idxHi.z();
+  czm[2]=c[2]-ziter[cdirecn];
+  cym[2]=c[2];
+  cxm[2]=c[2];
+  for (int j = (_plusY[cdirecn] ? idxLo.y()+yiter[cdirecn] : idxHi.y()+yiter[cdirecn]);  (_plusY[cdirecn] ? (j<=idxHi.y()) : (j>=idxLo.y())) ; j=j+yiter[cdirecn]){
+    c[1]=j;
+    czm[1]=j;
+    cym[1]=j-yiter[cdirecn];
+    cxm[1]=j;
+    for (int i = (_plusX[cdirecn] ? idxLo.x()+xiter[cdirecn] : idxHi.x()+xiter[cdirecn]);  (_plusX[cdirecn] ? (i<=idxHi.x()) : (i>=idxLo.x())) ; i=i+xiter[cdirecn]){
+      c[0]=i;
+      czm[0]=i;
+      cym[0]=i;
+      cxm[0]=i-xiter[cdirecn];
+      if (cellType[c] !=ffield){ // if intrusions
+        intensity[c] = emissSrc[c] ;
+        //intensity[c] = 0.0 ;
+      } else{ // else flow cell
+        intensity[c] = ( emissSrc[c] + ghost_intensity[czm]*abs_oxi  +  intensity[cym]*abs_oeta  +  intensity[cxm]*abs_omu)/(denom + abskt[c]*vol );
+        //intensity[c] = 0.0 ;
+      } // end if
+    }
+  }
+  ////--------------------set y----------------------//
+  c[1]= _plusY[cdirecn] ? idxLo.y() : idxHi.y();
+  czm[1]=c[1];
+  cym[1]=c[1]-yiter[cdirecn];
+  cxm[1]=c[1];
+  for (int k = (_plusZ[cdirecn] ? idxLo.z()+ziter[cdirecn] : idxHi.z()+ziter[cdirecn]);  (_plusZ[cdirecn] ? (k<=idxHi.z()) : (k>=idxLo.z())) ; k=k+ziter[cdirecn]){  
+    c[2]=k;
+    czm[2]=k-ziter[cdirecn];
+    cym[2]=k;
+    cxm[2]=k;
+    for (int i = (_plusX[cdirecn] ? idxLo.x()+xiter[cdirecn] : idxHi.x()+xiter[cdirecn]);  (_plusX[cdirecn] ? (i<=idxHi.x()) : (i>=idxLo.x())) ; i=i+xiter[cdirecn]){
+      c[0]=i;
+      czm[0]=i;
+      cym[0]=i;
+      cxm[0]=i-xiter[cdirecn];
+      if (cellType[c] !=ffield){ // if intrusions
+        intensity[c] = emissSrc[c] ;
+        //intensity[c] = 0.0 ;
+      } else{ // else flow cell
+        intensity[c] = ( emissSrc[c] + intensity[czm]*abs_oxi  +  ghost_intensity[cym]*abs_oeta  +  intensity[cxm]*abs_omu)/(denom + abskt[c]*vol );
+        //intensity[c] = 0.0 ;
+      } // end if
+    }
+  }
+  ////--------------------set x----------------------//
+  c[0]= _plusX[cdirecn] ? idxLo.x() : idxHi.x();
+  czm[0]=c[0];
+  cym[0]=c[0];
+  cxm[0]=c[0]-xiter[cdirecn];
+  for (int k = (_plusZ[cdirecn] ? idxLo.z()+ziter[cdirecn] : idxHi.z()+ziter[cdirecn]);  (_plusZ[cdirecn] ? (k<=idxHi.z()) : (k>=idxLo.z())) ; k=k+ziter[cdirecn]){  
+    c[2]=k;
+    czm[2]=k-ziter[cdirecn];
+    cym[2]=k;
+    cxm[2]=k;
+    for (int j = (_plusY[cdirecn] ? idxLo.y()+yiter[cdirecn] : idxHi.y()+yiter[cdirecn]);  (_plusY[cdirecn] ? (j<=idxHi.y()) : (j>=idxLo.y())) ; j=j+yiter[cdirecn]){
+      c[1]=j;
+      czm[1]=j;
+      cym[1]=j-yiter[cdirecn];
+      cxm[1]=j;
+      if (cellType[c] !=ffield){ // if intrusions
+        intensity[c] = emissSrc[c] ;
+        //intensity[c] = 0.0 ;
+      } else{ // else flow cell
+        intensity[c] = ( emissSrc[c] + intensity[czm]*abs_oxi  +  intensity[cym]*abs_oeta  +  ghost_intensity[cxm]*abs_omu)/(denom + abskt[c]*vol);
+        //intensity[c] = 0.0 ;
+      } // end if
+    }
+  }
+  ///  --------------------------------------------------//
+  //--------------------------------------------------------//
+  // Step 4:
+  //  Set interior cells (no ghost cells and three normal cells)
+  //--------------------------------------------------------//
+
+  for (int k = (_plusZ[cdirecn] ? idxLo.z()+ziter[cdirecn] : idxHi.z()+ziter[cdirecn]);  (_plusZ[cdirecn] ? (k<=idxHi.z()) : (k>=idxLo.z())) ; k=k+ziter[cdirecn]){  
+    c[2]=k;
+    czm[2]=k-ziter[cdirecn];
+    cym[2]=k;
+    cxm[2]=k;
+    for (int j = (_plusY[cdirecn] ? idxLo.y()+yiter[cdirecn] : idxHi.y()+yiter[cdirecn]);  (_plusY[cdirecn] ? (j<=idxHi.y()) : (j>=idxLo.y())) ; j=j+yiter[cdirecn]){
+      c[1]=j;
+      czm[1]=j;
+      cym[1]=j-yiter[cdirecn];
+      cxm[1]=j;
+      for (int i = (_plusX[cdirecn] ? idxLo.x()+xiter[cdirecn] : idxHi.x()+xiter[cdirecn]);  (_plusX[cdirecn] ? (i<=idxHi.x()) : (i>=idxLo.x())) ; i=i+xiter[cdirecn]){
+        c[0]=i;
+        czm[0]=i;
+        cym[0]=i;
+        cxm[0]=i-xiter[cdirecn];
+        if (cellType[c] !=ffield){ // if intrusions
+          intensity[c] = emissSrc[c] ;
+        } else{ // else flow cell
+          intensity[c] = (emissSrc[c] + intensity[czm]*abs_oxi  +  intensity[cym]*abs_oeta  +  intensity[cxm]*abs_omu)/(denom + abskt[c]*vol );
+        } // end if
+      } // end i loop
+    } // end j loop   
+  } // end k loop
+  // --------------------------------------------------//
+
+  return;
+}
+
+
+void
+DORadiationModel::intensitysolveSweepOrigProto( const Patch* patch,
+                                                int matlIndex,
+                                                DataWarehouse* new_dw, 
+                                                DataWarehouse* old_dw,
+                                                int cdirecn){ 
+
+
+  int direcn = cdirecn+1; // fortran direcn is 1 plus c++ iterator (cdirecn)
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
+
+  idxLo=IntVector(idxLo[0]-1,idxLo[1]-1,idxLo[2]-1);
+  idxHi=IntVector(idxHi[0]+1,idxHi[1]+1,idxHi[2]+1);
+  cout << idxLo << "  " << idxHi << " \n";
+
+  constCCVariable<double> radTemp;
+  new_dw->get(radTemp,_T_label, matlIndex , patch,Ghost::None, 0  );
+
+  CCVariable <double > intensity;
+  new_dw->allocateAndPut(intensity,_IntensityLabels[cdirecn] , matlIndex, patch);   // change to computes when making it its own task
+  intensity.initialize(0.0);
+  constCCVariable <double > emissSrc;
+  if(_scatteringOn){
+    new_dw->get( emissSrc, _emiss_plus_scat_source_label[cdirecn], matlIndex, patch, Ghost::None,0 );  // optimization bug - make this be computed differently for intrusion cells
+  }else{
+    new_dw->get( emissSrc, _radIntSource, matlIndex, patch, Ghost::None,0 );  // optimization bug - make this be computed differently for intrusion cells
+  }
+
+  constCCVariable<int> cellType;
+  old_dw->get(cellType,_cellTypeLabel, matlIndex , patch,Ghost::None, 0  );
+  constCCVariable<double> abskt;  
+  old_dw->get(abskt,_abskt_label, matlIndex , patch,Ghost::None, 0  );
+
+
+  Vector Dx = patch->dCell(); 
+  const double vol = Dx.x()* Dx.y()* Dx.z();//   const for speed optimizations from compiler
+  const double  areaew = Dx.y()*Dx.z();
+  const double  areans = Dx.x()*Dx.z();
+  const double  areatb = Dx.x()*Dx.y();//  move into constructor or problem setup?
+  const double  denom = abs(omu[direcn])*areaew+abs(oeta[direcn])*areans+abs(oxi[direcn])*areatb; // denomintor for Intensity in current cell
+
+  IntVector czm(0,0,0); // current cell, minus 1 in z
+  IntVector cym(0,0,0);//  current cell, minus 1 in y
+  IntVector cxm(0,0,0);//  current cell, minus 1 in x
+  IntVector c(0,0,0); // current cell
+
+  for (int k = (_plusZ[cdirecn] ? idxLo.z() : idxHi.z());  (_plusZ[cdirecn] ? (k<=idxHi.z()) : (k>=idxLo.z())); k=k+ziter[cdirecn]){  
+    c[2]=k;
+    czm[2]=k-ziter[cdirecn];
+    cym[2]=k;
+    cxm[2]=k;
+    for (int j = (_plusY[cdirecn] ? idxLo.y() : idxHi.y());  (_plusY[cdirecn] ? (j<=idxHi.y()) : (j>=idxLo.y())) ; j=j+yiter[cdirecn]){
+      c[1]=j;
+      czm[1]=j;
+      cym[1]=j-yiter[cdirecn];
+      cxm[1]=j;
+      for (int i = (_plusX[cdirecn] ? idxLo.x() : idxHi.x());  (_plusX[cdirecn] ? (i<=idxHi.x()) : (i>=idxLo.x())) ; i=i+xiter[cdirecn]){
+        c[0]=i;
+        czm[0]=i;
+        cym[0]=i;
+        cxm[0]=i-xiter[cdirecn];
+        if (cellType[c] !=ffield){  //if intrusions
+          intensity[c] = (_sigma/M_PI)*std::pow(radTemp[c],4.0) ;
+        } else{  //else flow cell
+          intensity[c] = (emissSrc[c] + intensity[czm]*abs(oxi[direcn])*areatb  +  intensity[cym]*abs(oeta[direcn])*areans  +  intensity[cxm]*abs(omu[direcn])*areaew)/(denom + abskt[c]*vol );
+        }  //end if
+      } // end i loop
+    } // end j loop   
+  } // end k loop
+  // --------------------------------------------------//
+
+  return;
+}
+
+
+
+//-----------------------------------------------------------------//
+// This function computes the source for radiation transport.  It
+// requires abskg, abskp, radiation temperature, Intensities from the 
+// previous solve, particle temperature, asymmetry factor,
+// and scatkt (last two only needed when including scattering)
+//-----------------------------------------------------------------//
+void
+DORadiationModel::getDOSource(const Patch* patch,
+                              int matlIndex,  
+                              DataWarehouse* new_dw, 
+                              DataWarehouse* old_dw){
+
+
+  _timer.reset(true);
+
+  proc0cout << " Radiation Solve start: " << endl;
+  CCVariable <double > emissSrc;
+  new_dw->allocateAndPut( emissSrc, _radIntSource, matlIndex, patch );  // optimization bug - make this be computed differently for intrusion cells
+  emissSrc.initialize(0.0);  // a sum will be performed on this variable, intialize it to zero.
+
+      constCCVariable<double> abskt;
+      old_dw->get(abskt,_abskt_label, matlIndex , patch,Ghost::None, 0  );
+      constCCVariable<double> abskg;
+      old_dw->get(abskg,_abskg_label, matlIndex , patch,Ghost::None, 0  );
+      constCCVariable<double> radTemp ; 
+      new_dw->get(radTemp,_T_label, matlIndex , patch,Ghost::None, 0  );
+
+  constCCVariable<int> cellType;
+  old_dw->get(cellType,_cellTypeLabel,matlIndex,patch,Ghost::None,0);
+
+  StaticArray< constCCVariable<double> > abskp(_nQn_part);
+  StaticArray< constCCVariable<double> > partTemp(_nQn_part);
+  for (int ix=0;  ix< _nQn_part; ix++){
+    old_dw->get(abskp[ix],_abskp_label_vector[ix], matlIndex , patch,Ghost::None, 0  ); 
+    old_dw->get(partTemp[ix],_temperature_label_vector[ix], matlIndex , patch,Ghost::None, 0  );
+  }
+
+
+  computeIntensitySource(patch,abskp,partTemp,abskg,radTemp,emissSrc);
+
+
+   Vector Dx = patch->dCell();
+   double volume = Dx.x()* Dx.y()* Dx.z();
+  if(_scatteringOn){
+    constCCVariable<double> scatkt;   //total scattering coefficient
+    constCCVariable<double> asymmetryParam;  
+    StaticArray< constCCVariable<double> > IntensitiesOld( d_totalOrds);
+
+    old_dw->get(asymmetryParam,_asymmetryLabel, matlIndex , patch,Ghost::None, 0);
+    old_dw->get(scatkt,_scatktLabel, matlIndex , patch,Ghost::None, 0);
+
+    for( int ix=0;  ix<d_totalOrds ;ix++){
+      old_dw->get(IntensitiesOld[ix],_IntensityLabels[ix], matlIndex , patch,Ghost::None, 0  );
+    }
+    for( int ix=0;  ix<d_totalOrds ;ix++){
+      CCVariable<double> scatIntensitySource;  
+      new_dw->allocateAndPut(scatIntensitySource,_emiss_plus_scat_source_label[ix], matlIndex, patch);
+
+      computeScatteringIntensities(ix+1,scatkt, IntensitiesOld,scatIntensitySource,asymmetryParam, patch); // function expects fortran indices
+    Uintah::BlockRange range(patch->getExtraCellLowIndex(),patch->getExtraCellHighIndex());
+    Uintah::parallel_for( range,[&](int i, int j, int k){ 
+        if(cellType(i,j,k)==ffield){
+          scatIntensitySource(i,j,k)+=emissSrc(i,j,k);
+          scatIntensitySource(i,j,k)*=volume;
+        }else{
+          scatIntensitySource(i,j,k)=(_sigma/M_PI)*std::pow(radTemp(i,j,k),4.0)*abskt(i,j,k);
+        }
+        });
+              
+    }
+  }else{
+    Uintah::BlockRange range(patch->getExtraCellLowIndex(),patch->getExtraCellHighIndex());
+    Uintah::parallel_for( range,[&](int i, int j, int k) { 
+        if(cellType(i,j,k)==ffield){
+          emissSrc(i,j,k)*=volume;
+        }else{
+          emissSrc(i,j,k)=(_sigma/M_PI)*std::pow(radTemp(i,j,k),4.0)*abskt(i,j,k);
+        }
+         });
+  }
+
+
+return ;
+}
+
+
+//-----------------------------------------------------------------//
+// This function computes 6 radiative fluxes, incident radiation,
+//  and divQ. This function requires the required intensity fields
+// sn*(2+sn), radiation temperature, abskt, and scatkt (scattering
+// only)
+//-----------------------------------------------------------------//
+void
+DORadiationModel::computeFluxDiv(const Patch* patch,
+                                 int matlIndex,  
+                                 DataWarehouse* new_dw, 
+                                 DataWarehouse* old_dw){
+
+  Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
+
+  CCVariable <double > fluxE;
+  CCVariable <double > fluxW;
+  CCVariable <double > fluxN;
+  CCVariable <double > fluxS;
+  CCVariable <double > fluxT;
+  CCVariable <double > fluxB;
+  CCVariable <double > volQ;
+  CCVariable <double > divQ;
+
+  new_dw->allocateAndPut( divQ, _divQ, matlIndex, patch );  
+  new_dw->allocateAndPut( volQ, _volQ, matlIndex, patch );  
+  new_dw->allocateAndPut( fluxE, _fluxE, matlIndex, patch );  
+  new_dw->allocateAndPut( fluxW, _fluxW, matlIndex, patch ); 
+  new_dw->allocateAndPut( fluxN, _fluxN, matlIndex, patch );  
+  new_dw->allocateAndPut( fluxS, _fluxS, matlIndex, patch );  
+  new_dw->allocateAndPut( fluxT, _fluxT, matlIndex, patch );  
+  new_dw->allocateAndPut( fluxB, _fluxB, matlIndex, patch );  
+
+  divQ.initialize(0.0);
+  volQ.initialize(0.0);
+  fluxE.initialize(0.0);
+  fluxW.initialize(0.0);
+  fluxN.initialize(0.0);
+  fluxS.initialize(0.0);
+  fluxT.initialize(0.0);
+  fluxB.initialize(0.0);
+
+  CCVariable <double > emissSrc;
+  constCCVariable<double> abskt ; 
+  new_dw->getModifiable(emissSrc, _radIntSource, matlIndex, patch, Ghost::None,0 ); // this is not actually going to modify the rad source.   technically should create 2 new fortran functions.
+  old_dw->get(abskt,_abskt_label, matlIndex , patch,Ghost::None, 0  );      // should be WHICH DW !!!!!! BUG
+
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
+
+
+      for (int direcn = 1; direcn <=d_totalOrds; direcn++){
+
+        CCVariable <double > intensity;
+        new_dw->getModifiable(intensity,_IntensityLabels[direcn-1] , matlIndex, patch, Ghost::None,0 );   // this should be a requires,  type restriction
+
+        fort_rdomvolq( idxLo, idxHi, direcn, wt, intensity, volQ);
+        bool bx=_plusX[direcn-1];
+        bool by=_plusY[direcn-1];
+        bool bz=_plusZ[direcn-1];
+        fort_rdomflux( idxLo, idxHi, direcn, oxi, omu, oeta, wt, intensity,
+            //plusX[direcn-1],plusY[direcn-1], plusZ[direcn-1], 
+            bx,by,bz, 
+            fluxE, fluxW,  fluxN, fluxS, fluxT, fluxB);
+      }
+
+    if(_scatteringOn){
+      constCCVariable<double> scatkt;   //total scattering coefficient
+      old_dw->get(scatkt,_scatktLabel, matlIndex , patch,Ghost::None, 0);
+      computeDivQScat doDivQ(abskt, emissSrc,volQ, divQ, scatkt);
+      Uintah::parallel_for( range, doDivQ );
+    }else{
+      computeDivQ doDivQ(abskt, emissSrc,volQ, divQ);
+      Uintah::parallel_for( range, doDivQ );
+    }
+
+
+
+  proc0cout << "Total Radiation Solve Time (Approximate): " << _timer().seconds() << " seconds for " << d_totalOrds<< " sweeps  \n";
+return ;
+
+}
+
+
+
+void
+DORadiationModel::setIntensityBC(const Patch* patch,
+                                 int matlIndex,  
+                                 CCVariable<double>& intensity,
+                                 constCCVariable<double>& radTemp,
+                                 constCCVariable<int>& cellType){
+
+
+    //-------------- Compute Intensity on boundarys------------//
+    // loop over computational domain faces
+    vector<Patch::FaceType> bf;
+    patch->getBoundaryFaces(bf); 
+
+    for( vector<Patch::FaceType>::const_iterator iter = bf.begin(); iter != bf.end(); ++iter ){
+      Patch::FaceType face = *iter;
+
+      Patch::FaceIteratorType PEC = Patch::ExtraPlusEdgeCells;
+
+      for (CellIterator iter =  patch->getFaceIterator(face, PEC); !iter.done(); iter++) {
+        IntVector c = *iter;
+        if (cellType[c] != ffield ){
+          intensity[c] =  _sigma/M_PI*pow(radTemp[c],4.0) ; // No reflections here!  Needs to be developed for reflections!
+        }
+      }
+    }
+
+    // ----------faster way to set BCs----------//
+      //IntVector c(0,0,0); // current cell
+  //IntVector idxLo = patch->getFortranCellLowIndex();
+  //IntVector idxHi = patch->getFortranCellHighIndex();
+
+      /////  -------1 - patch boundary conditions set----------//
+      ////--------------------set z----------------------//
+      //for (int k = 0;  k<2 ; k++){
+      //c[2]= k ? idxHi.z()+1 : idxLo.z()-1;
+       ////if (cellType[IntVector(idxLo.x()+1,idxLo.y()+1, c.z()] == 
+      //for (int j = idxLo.y() ;  j<=idxHi.y(); j++){
+      //c[1]=j;
+      //for (int i = idxLo.x() ;  i<=idxHi.x(); i++){
+      //c[0]=i;
+      //intensity[c] =  _sigma/M_PI*pow(radTemp[c],4.0) ;
+      //}
+      //}
+      //}
+      //////--------------------set y----------------------//
+      //for (int k = idxLo.z();  k<=idxHi.z() ; k++){  
+      //c[2]=k;
+      //for (int j = 0;  j<2 ; j++){
+      //c[1]= j ? idxHi.y()+1 : idxLo.y()-1;
+      //for (int i = idxLo.x();  i<=idxHi.x() ; i++){
+      //c[0]=i;
+      //intensity[c] =  _sigma/M_PI*pow(radTemp[c],4.0) ;
+      //}
+      //}
+      //}
+      //////--------------------set x----------------------//
+      //for (int k = idxLo.z();  k<=idxHi.z() ; k++){  
+      //c[2]=k;
+      //for (int j = idxLo.y();  j<=idxHi.y() ; j++){
+      //c[1]=j;
+      //for (int i = 0;  i<2 ; i++){
+      //c[0]= i ? idxHi.x()+1 : idxLo.x()-1;
+      //intensity[c] =  _sigma/M_PI*pow(radTemp[c],4.0) ;
+      //}
+      //}
+      //}
+      ///  --------------------------------------------------//
+
+  return;
+}
+
+void
+DORadiationModel::setIntensityBC2Orig(const Patch* patch,
+                                 int matlIndex,  
+                                       DataWarehouse* new_dw, 
+                                       DataWarehouse* old_dw, int ix){
+
+
+
+  CCVariable <double > intensity;
+  new_dw->getModifiable(intensity,_IntensityLabels[ix] , matlIndex, patch);   // change to computes when making it its own task
+
+  constCCVariable<double> radTemp;
+  new_dw->get(radTemp,_T_label, matlIndex , patch,Ghost::None, 0  ); 
+  constCCVariable<int> cellType;
+  old_dw->get(cellType,_cellTypeLabel, matlIndex , patch,Ghost::None, 0  );
+
+ setIntensityBC(patch, matlIndex,intensity, radTemp,cellType);
+  return;
+}
+
+
+
+void
+DORadiationModel::setIntensityBC2(const Patch* patch,
+                                 int matlIndex,  
+                                       DataWarehouse* new_dw, 
+                                       DataWarehouse* old_dw, int ix, int phase){
+
+
+
+  CCVariable <double > intensity;
+  new_dw->getModifiable(intensity,_patchIntensityLabels[phase][ix] , matlIndex, patch);   // change to computes when making it its own task
+
+  constCCVariable<double> radTemp;
+  new_dw->get(radTemp,_T_label, matlIndex , patch,Ghost::None, 0  );
+  constCCVariable<int> cellType;
+  old_dw->get(cellType,_cellTypeLabel, matlIndex , patch,Ghost::None, 0  );
+
+ setIntensityBC(patch, matlIndex,intensity, radTemp,cellType);
+  return;
+}
+
+
+void
+DORadiationModel::setExtraSweepingLabels(int nphase){
+
+  IntVector patchIntVector (0,0,0);
+  const TypeDescription* CC_double = CCVariable<double>::getTypeDescription();
+  _nphase=nphase;
+  for( int ixx=0;  ixx<_nphase;ixx++){
+    _patchIntensityLabels.push_back(std::vector< const VarLabel*> (0) ); 
+    for( int ix=0;  ix<d_totalOrds ;ix++){
+      ostringstream my_stringstream_object;
+      my_stringstream_object << "Intensity" << setfill('0') << setw(4)<<  ix << ixx ;
+      _patchIntensityLabels[ixx].push_back(VarLabel::create(my_stringstream_object.str(), CC_double));
+    }
+  }
+}
 

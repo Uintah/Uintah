@@ -371,7 +371,7 @@
           <src label="divQ_do" type="do_radiation">
             <calc_frequency>    10      </calc_frequency>
             <abskg label="gas_abskg"/>
-            <DORadiationModel>
+            <DORadiationModel type="linearSolve">
               <LinearSolver type="hypre">
                   <res_tol>   1.0e-10   </res_tol>
                   <ksptype>   gmres     </ksptype>

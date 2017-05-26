@@ -241,7 +241,7 @@
           <!--<calc_frequency>1</calc_frequency>-->
           <!--<calc_on_all_RKsteps>false</calc_on_all_RKsteps>-->
           <!--<abskg label="abskg"/>-->
-          <!--<DORadiationModel>-->
+          <!--<DORadiationModel type="linearSolve">-->
           <!--<ordinates>16</ordinates>-->
           <!--<LinearSolver type="hypre">-->
           <!--<res_tol>1.0e-10</res_tol>-->

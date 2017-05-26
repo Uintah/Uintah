@@ -1258,15 +1258,15 @@ TaskGraph::createDetailedDependencies( DetailedTask     * task
                   if (prevReqTask->d_task == task->d_task) {
                     if (!task->d_task->getHasSubScheduler()) {
                       std::ostringstream message;
-                      message << " WARNING - task (" << task->getName()
-                              << ") requires with Ghost cells *and* modifies and may not be correct" << std::endl;
-                      static ProgressiveWarning warn(message.str(), 10);
-                      warn.invoke();
-                      if (detaileddbg.active()) {
-                        detaileddbg << m_proc_group->myrank() << " Task that requires with ghost cells and modifies\n";
-                        detaileddbg << m_proc_group->myrank() << " RGM: var: " << *req->m_var << " compute: " << *creator << " mod "
-                                    << *task << " PRT " << *prevReqTask << " " << from_l << " " << from_h << "\n";
-                      }
+                      //message << " WARNING - task (" << task->getName()
+                              //<< ") requires with Ghost cells *and* modifies and may not be correct" << std::endl;
+                      //static ProgressiveWarning warn(message.str(), 1);
+                      //warn.invoke();
+                      //if (detaileddbg.active()) {
+                        //std::cout << m_proc_group->myrank() << " Task that requires with ghost cells and modifies\n";
+                        //std::cout << m_proc_group->myrank() << " RGM: var: " << *req->m_var << " compute: " << *creator << " mod "
+                                    //<< *task << " PRT " << *prevReqTask << " " << from_l << " " << from_h << "\n";
+                      //}
                     }
                   }
                   else {

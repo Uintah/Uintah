@@ -952,7 +952,7 @@
           <src label="divQ" type="do_radiation">
             <calc_frequency>5</calc_frequency>
             <abskt label="abskg"/>
-            <DORadiationModel>
+            <DORadiationModel type="linearSolve">
               <LinearSolver type="hypre">
                 <res_tol>1.0e-10</res_tol>
                 <ksptype>gmres</ksptype>

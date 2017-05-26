@@ -1025,7 +1025,7 @@
           <src label="divQ" type="do_radiation">
             <calc_frequency>6</calc_frequency>
             <abskt label="abskg"/>
-            <DORadiationModel>
+            <DORadiationModel type="linearSolve">
               <ordinates>2</ordinates>
               <LinearSolver type="hypre">
                 <res_tol>1.0e-10</res_tol>

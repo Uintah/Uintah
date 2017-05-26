@@ -1603,7 +1603,7 @@
             <!-- <calc_frequency>20<calc_frequency> -->
             <calc_frequency>3</calc_frequency>
             <abskt label="abskg"/>
-            <DORadiationModel>
+            <DORadiationModel type="linearSolve">
               <!-- originalOFC -->
               <!-- <ordinates>8<ordinates> -->
               <ordinates>2</ordinates>
