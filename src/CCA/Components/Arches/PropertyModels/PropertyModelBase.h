@@ -64,6 +64,9 @@ public:
   inline const std::string getPropType(){
     return _prop_type; };
 
+  /** @brief Returns the name of the property **/
+  inline const std::string retrieve_property_name(){ return _prop_name; } 
+
   /** @brief Returns the initialization type as set in the derived class **/
   inline const std::string initType(){
     return _init_type; };

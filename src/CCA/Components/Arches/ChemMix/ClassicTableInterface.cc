@@ -213,8 +213,39 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& db )
             << "     Automatically setting density guess = true. " << endl;
           eqn.setDensityGuessBool( true );
         }
-      }
+      } else {
 
+        PropertyModelFactory& propFactory = PropertyModelFactory::self();
+        PropertyModelFactory::PropMap& all_prop_models = propFactory.retrieve_all_property_models();
+        for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin();
+              iprop != all_prop_models.end(); iprop++){
+
+          PropertyModelBase* prop_model = iprop->second;
+          const std::string prop_name = prop_model->retrieve_property_name();
+          if ( var_name == prop_name ){
+
+            std::string prop_type = prop_model->getPropType();
+            if ( prop_type == "heat_loss" ){
+
+              HeatLoss* hl_model = dynamic_cast<HeatLoss*>(prop_model);
+              std::string enthalpy_name = hl_model->get_enthalpy_name();
+              EqnBase& enthalpy_eqn = eqn_factory.retrieve_scalar_eqn( enthalpy_name );
+              proc0cout << "\n  NOTICE: For variable: " << var_name <<  endl;
+              proc0cout << "          Density guess must be used for the enthalpy equation because it determines properties." << endl;
+              proc0cout << "          Automatically setting density guess = true (same as stage=0) for you. \n" << endl;
+              enthalpy_eqn.setDensityGuessBool(true);
+
+            } else {
+              proc0cout << "\n WARNING: An independent variable for the table wasn\'t found in the  " << std::endl;
+              proc0cout << "          In the transported variables or as a heat_loss model. Arches " << std::endl;
+              proc0cout << "          will assume that this is intentional and not try to force a  " << std::endl;
+              proc0cout << "          specific algorithmic ordering for this variable: " << var_name << "\n" <<  std::endl;
+            }
+
+          }
+
+        }
+      }
     }
   }
 
