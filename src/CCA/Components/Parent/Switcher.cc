@@ -287,7 +287,7 @@ Switcher::problemSetup( const ProblemSpecP     & /*params*/,
   //Read the ups file for the first subcomponent   
   ProblemSpecP subCompUps = ProblemSpecReader().readInputFile(d_in_file[d_componentIndex]);  
   
-  dataArchiver->problemSetup( subCompUps, d_sharedState.get_rep() );
+  dataArchiver->problemSetup( subCompUps, restart_prob_spec, d_sharedState.get_rep() );
   
   d_sim->problemSetup(subCompUps, restart_prob_spec, grid, sharedState );
   
@@ -851,7 +851,7 @@ Switcher::needRecompile(       double   time,
     d_sim->problemSetup(subCompUps, restart_prob_spec, const_cast<GridP&>(grid), d_sharedState);
 
     // read in <DataArchiver> section
-    dataArchiver->problemSetup(subCompUps, d_sharedState.get_rep());
+    dataArchiver->problemSetup(subCompUps, restart_prob_spec, d_sharedState.get_rep());
     //   dataArchiver->initializeOutput(subCompUps);
 
     // we need this to get the "ICE surrounding matl"

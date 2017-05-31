@@ -191,9 +191,15 @@ protected:
   bool isLast( void );
   bool maybeLast( void );
     
-  void preGridSetup();
+  void restartArchiveSetup();
   void gridSetup();
-  void postGridSetup();
+  void regridderSetup();
+  void simulationInterfaceSetup();
+  void schedulerSetup();
+  void loadBalancerSetup();
+  void outputSetup();
+  void timeStateSetup();
+  void miscSetup();
 
   // Get the next delta T
   void getNextDeltaT( void );
@@ -204,6 +210,7 @@ protected:
   
   ProblemSpecP         d_ups;
   ProblemSpecP         d_grid_ps;         // Problem Spec for the Grid
+  ProblemSpecP         d_restart_ps;      // Problem Spec for restarting
   SimulationStateP     d_sharedState;
   SchedulerP           d_scheduler;
   LoadBalancerPort*    d_lb;

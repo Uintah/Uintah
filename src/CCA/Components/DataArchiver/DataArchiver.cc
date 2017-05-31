@@ -131,14 +131,49 @@ DataArchiver::~DataArchiver()
 //
 void
 DataArchiver::problemSetup( const ProblemSpecP    & params,
+			    const ProblemSpecP    & restart_prob_spec,
                                   SimulationState * state )
 {
   dbg << "Doing ProblemSetup \t\t\t\tDataArchiver\n";
 
   d_sharedState = state;
   d_upsFile = params;
-
   ProblemSpecP p = params->findBlock("DataArchiver");
+  
+  if( restart_prob_spec ) {
+
+    ProblemSpecP insitu_ps = restart_prob_spec->findBlock( "InSitu" );
+
+    if( insitu_ps != nullptr ) {
+
+      bool haveModifiedVars;
+      
+      insitu_ps = insitu_ps->get("haveModifiedVars", haveModifiedVars);
+
+      d_sharedState->haveModifiedVars( haveModifiedVars );
+
+      if( haveModifiedVars )
+      {
+	std::stringstream tmpstr;
+	tmpstr << "DataArchiver found previously modified variables that "
+	       << "have not been merged into the checkpoint restart "
+	       << "input.xml file from the from index.xml file. " << std::endl
+	       << "The modified variables can be found in the "
+	       << "index.xml file under the 'InSitu' block." << std::endl
+	       << "Once merged, change the variable 'haveModifiedVars' in "
+	       << "the 'InSitu' block in the checkpoint restart timestep.xml "
+	       << "file to 'false'";
+	
+	throw ProblemSetupException( tmpstr.str() ,__FILE__, __LINE__);
+      }
+      else
+      {
+	proc0cout << "DataArchiver found previously modified vars. "
+		  << "Assuming the checkpoint restart input.xml file "
+		  << "has been updated." << std::endl;
+      }
+    }
+  }
   
   //__________________________________
   // PIDX related
@@ -393,6 +428,28 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
   }
 #endif
 }
+
+//______________________________________________________________________
+//
+void
+DataArchiver::outputProblemSpec( ProblemSpecP & root_ps )
+{
+  dbg << "Doing outputProblemSpec \t\t\t\tDataArchiver\n";
+
+  ProblemSpecP root = root_ps->getRootNode();
+
+  if( d_sharedState->haveModifiedVars() ) {
+
+    ProblemSpecP is_ps = root->findBlockWithOutAttribute( "InSitu" );
+
+    if( is_ps == nullptr )
+      is_ps = root->appendChild("InSitu");
+
+    is_ps->appendElement("haveModifiedVars", d_sharedState->haveModifiedVars());
+  }
+}
+
+
 //______________________________________________________________________
 //
 void
@@ -1541,6 +1598,8 @@ DataArchiver::writeto_xml_files( double delt, const GridP& grid )
 
       // output each components output Problem spec
       sim->outputProblemSpec( rootElem );
+
+      outputProblemSpec( rootElem );
 
       // write out the timestep.xml file
       string name = baseDirs[i]->getName()+"/"+tname.str()+"/timestep.xml";

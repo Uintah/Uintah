@@ -108,7 +108,8 @@ SimulationController::SimulationController( const ProcessorGroup * myworld,
   d_sim                    = 0;
 
   d_grid_ps                = d_ups->findBlock( "Grid" );
-
+  d_restart_ps             = 0;
+  
   d_timeinfo    = scinew SimulationTime( d_ups );
   d_sharedState = scinew SimulationState( d_ups );
 
@@ -343,56 +344,21 @@ SimulationController::maybeLast( void )
 
 //______________________________________________________________________
 //
-
 void
-SimulationController::preGridSetup( void )
-{
-  d_output = dynamic_cast<Output*>(getPort("output"));
-  if( !d_output ) {
-    throw InternalError("dynamic_cast of 'd_output' failed!",
-                        __FILE__, __LINE__);
-  }
-
-  d_output->problemSetup( d_ups, d_sharedState.get_rep() );
-
-  d_scheduler = dynamic_cast<Scheduler*>(getPort("scheduler"));
-  d_scheduler->problemSetup(d_ups, d_sharedState);
-    
-  ProblemSpecP amr_ps = d_ups->findBlock("AMR");
-  if( amr_ps ) {
-    amr_ps->get( "doMultiTaskgraphing", d_doMultiTaskgraphing );
-  }
-
-  d_sim = dynamic_cast<SimulationInterface*>( getPort( "sim" ) );
-  if( !d_sim ) {
-    throw InternalError( "No simulation component", __FILE__, __LINE__ );
-  }
-#ifdef HAVE_VISIT
-  if( d_sharedState->getVisIt() ) {
-    d_sharedState->d_debugStreams.push_back( &dbg );
-    d_sharedState->d_debugStreams.push_back( &dbgTime );
-    d_sharedState->d_debugStreams.push_back( &simdbg );
-    d_sharedState->d_debugStreams.push_back( &stats );
-    d_sharedState->d_debugStreams.push_back( &istats );
-  }
-#endif
-} // end preGridSetup()
-
-//______________________________________________________________________
-//
-
-void
-SimulationController::gridSetup( void )
+SimulationController::restartArchiveSetup( void )
 {
   if( d_restarting ) {
-    // Create the DataArchive here, and store it, as we use it a few times...
-    // We need to read the grid before ProblemSetup, and we can't load all
-    // the data until after problemSetup, so we have to do a few 
-    // different DataArchive operations
+    // Create the DataArchive here, and store it, as it is used a few
+    // times. The grid needs to be read before the ProblemSetup, and
+    // not all of the data can be read until after ProblemSetup, so
+    // DataArchive operations are needed.
 
     Dir restartFromDir( d_fromDir );
     Dir checkpointRestartDir = restartFromDir.getSubdir( "checkpoints" );
-    d_restart_archive = scinew DataArchive( checkpointRestartDir.getName(), d_myworld->myrank(), d_myworld->size() );
+
+    d_restart_archive = scinew DataArchive( checkpointRestartDir.getName(),
+					    d_myworld->myrank(),
+					    d_myworld->size() );
 
     vector<int>    indices;
     vector<double> times;
@@ -438,6 +404,19 @@ SimulationController::gridSetup( void )
       throw InternalError(message.str(), __FILE__, __LINE__);
     }
 
+    // Do these before calling archive->restartInitialize, because
+    // problemSetup() creates VarLabels the DA needs.
+    d_restart_ps =
+      d_restart_archive->getTimestepDocForComponent( d_restartIndex );
+  }
+}
+
+//______________________________________________________________________
+//
+void
+SimulationController::gridSetup( void )
+{
+  if( d_restarting ) {
     // tsaad & bisaac: At this point, and during a restart, there not
     // legitimate load balancer. This means that the grid obtained
     // from the data archiver will global domain BCs on every MPI Rank
@@ -449,18 +428,18 @@ SimulationController::gridSetup( void )
     // conditions. Once that is done, a legitimate load balancer will
     // be created later on - after which we use said balancer and
     // assign BCs to the grid.  NOTE the "false" argument below.
-    d_currentGridP = d_restart_archive->queryGrid( d_restartIndex, d_ups, false );
+    d_currentGridP =
+      d_restart_archive->queryGrid( d_restartIndex, d_ups, false );
   }
   else /* if( !d_restarting ) */ {
     d_currentGridP = scinew Grid();
         
-    d_sim->preGridProblemSetup( d_ups, d_currentGridP, d_sharedState );
-    
     d_currentGridP->problemSetup( d_ups, d_myworld, d_doAMR );
   }
 
   if( d_currentGridP->numLevels() == 0 ) {
-    throw InternalError("No problem (no levels in grid) specified.", __FILE__, __LINE__);
+    throw InternalError("No problem (no levels in grid) specified.",
+			__FILE__, __LINE__);
   }
    
   // Print out meta data
@@ -474,23 +453,64 @@ SimulationController::gridSetup( void )
   d_currentGridP->getLevel(0)->findCellIndexRange(low, high);
   size = high-low - d_currentGridP->getLevel(0)->getExtraCells()*IntVector(2,2,2);
   d_sharedState->setDimensionality(size[0] > 1, size[1] > 1, size[2] > 1);
-} // end gridSetup()
+}
 
 //______________________________________________________________________
 //
-
 void
-SimulationController::postGridSetup()
+SimulationController::regridderSetup( void )
 {
-  // Set up regridder with initial information about grid.  Do before
-  // sim - so that Switcher (being a sim) can reset the state of the
-  // regridder
+  // Initalize the regridder with the initial information about grid.
+  // Do this step before initalizing the sim so that Switcher (being
+  // a sim) can reset the state of the regridder.
   d_regridder = dynamic_cast<Regridder*>( getPort("regridder") );
 
   if( d_regridder ) {
     d_regridder->problemSetup( d_ups, d_currentGridP, d_sharedState );
   }
+}
 
+//______________________________________________________________________
+//
+void
+SimulationController::simulationInterfaceSetup( void )
+{
+  d_sim = dynamic_cast<SimulationInterface*>( getPort( "sim" ) );
+  if( !d_sim ) {
+    throw InternalError( "No simulation component", __FILE__, __LINE__ );
+  }
+
+  // Pass the restart_prob_spec_for_component to the component's
+  // problemSetup.  For restarting, pull the <MaterialProperties> from
+  // the restart_prob_spec.  If the properties are not available, then
+  // pull the properties from the d_ups instead.  This step needs to
+  // be done before DataArchive::restartInitialize.
+  d_sim->problemSetup(d_ups, d_restart_ps, d_currentGridP, d_sharedState);
+
+  if( !d_restarting )
+    d_sim->preGridProblemSetup( d_ups, d_currentGridP, d_sharedState );
+}
+
+//______________________________________________________________________
+//
+void
+SimulationController::schedulerSetup( void )
+{
+  // Initalize the scheduler
+  d_scheduler = dynamic_cast<Scheduler*>(getPort("scheduler"));
+  d_scheduler->problemSetup(d_ups, d_sharedState);
+
+  d_scheduler->initialize( 1, 1 );
+  d_scheduler->setInitTimestep( true );
+  d_scheduler->setRestartInitTimestep( d_restarting );
+  d_scheduler->advanceDataWarehouse( d_currentGridP, true );
+}
+
+//______________________________________________________________________
+//
+void
+SimulationController::loadBalancerSetup( void )
+{
   // Initialize load balancer.  Do the initialization here because the
   // dimensionality in the shared state is known, and that
   // initialization time is needed. In addition, do this step after
@@ -498,28 +518,25 @@ SimulationController::postGridSetup()
   // create will be known.
   d_lb = d_scheduler->getLoadBalancer();
   d_lb->problemSetup( d_ups, d_currentGridP, d_sharedState );
+}
 
-  ProblemSpecP restart_prob_spec_for_component = 0;
-
+//______________________________________________________________________
+//
+void
+SimulationController::timeStateSetup()
+{
+  // Restarting so initialize time state using the archive data.
   if( d_restarting ) {
-    // Do these before calling archive->restartInitialize, becasue problemSetup() creates VarLabels the DA needs.
-    restart_prob_spec_for_component = d_restart_archive->getTimestepDocForComponent( d_restartIndex );
-  }
-
-  // Pass the restart_prob_spec_for_component to the component's
-  // problemSetup.  For restarting, pull the <MaterialProperties> from
-  // the restart_prob_spec.  If it is not available, then we will pull
-  // the properties from the d_ups instead.  Needs to be done before
-  // DataArchive::restartInitialize.
-  d_sim->problemSetup(d_ups, restart_prob_spec_for_component, d_currentGridP,
-                      d_sharedState);
-
-  if( d_restarting ) {
-    simdbg << "Restarting... loading data\n";    
-    d_restart_archive->restartInitialize( d_restartIndex, d_currentGridP, d_scheduler->get_dw(1), d_lb, &d_startSimTime );
+    simdbg << "Restarting... loading data\n";
+    
+    d_restart_archive->restartInitialize( d_restartIndex,
+					  d_currentGridP,
+					  d_scheduler->get_dw(1),
+					  d_lb,
+					  &d_startSimTime );
       
-    // Set the delt to what it was in the last simulation.  If in the last 
-    // sim we were clamping delt based on the values of prevDelt, then
+    // Set the delt to the value from the last simulation.  If in the
+    // last sim delt was clamped based on the values of prevDelt, then
     // delt will be off if it doesn't match.
     d_delt = d_restart_archive->getOldDelt( d_restartIndex );
 
@@ -552,12 +569,24 @@ SimulationController::postGridSetup()
     
     d_sharedState->setCurrentTopLevelTimeStep( 0 );
   }
-    
-  // Finalize the shared state/materials
-  d_sharedState->finalizeMaterials();
-    
-  // Done after the sim->problemSetup to get defaults into the
-  // input.xml, which it writes along with index.xml
+}
+
+//______________________________________________________________________
+//
+void
+SimulationController::outputSetup( void )
+{
+  // Initalize the output archiver.
+  d_output = dynamic_cast<Output*>(getPort("output"));
+  if( !d_output ) {
+    throw InternalError("dynamic_cast of 'd_output' failed!",
+                        __FILE__, __LINE__);
+  }
+
+  // This step is done after the sim->problemSetup to get defaults
+  // into the input.xml, which it writes along with index.xml
+  d_output->problemSetup( d_ups, d_restart_ps, d_sharedState.get_rep() );
+
   d_output->initializeOutput(d_ups);
 
   if( d_restarting ) {
@@ -565,7 +594,32 @@ SimulationController::postGridSetup()
     d_output->restartSetup( dir, 0, d_restartTimestep, d_startSimTime,
                             d_restartFromScratch, d_restartRemoveOldDir );
   }
-} // end postGridSetup()
+}
+
+//______________________________________________________________________
+//
+void
+SimulationController::miscSetup()
+{
+  // Finalize the shared state/materials
+  d_sharedState->finalizeMaterials();
+
+  // Finial miscellaneous initializations
+  ProblemSpecP amr_ps = d_ups->findBlock("AMR");
+  if( amr_ps ) {
+    amr_ps->get( "doMultiTaskgraphing", d_doMultiTaskgraphing );
+  }
+
+#ifdef HAVE_VISIT
+  if( d_sharedState->getVisIt() ) {
+    d_sharedState->d_debugStreams.push_back( &dbg );
+    d_sharedState->d_debugStreams.push_back( &dbgTime );
+    d_sharedState->d_debugStreams.push_back( &simdbg );
+    d_sharedState->d_debugStreams.push_back( &stats );
+    d_sharedState->d_debugStreams.push_back( &istats );
+  }
+#endif
+}
 
 //______________________________________________________________________
 //

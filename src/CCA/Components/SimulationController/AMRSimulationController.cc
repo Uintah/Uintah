@@ -162,21 +162,24 @@ AMRSimulationController::run()
   // Start the wall timer for the initialization timestep
   walltimers.TimeStep.reset( true );
 
-  // Sets up sharedState, timeinfo, output, scheduler, lb.
-  preGridSetup();
-  
-  // Create grid:
+  // Setup the restart archive first. 
+  restartArchiveSetup();
+  // Set the grid as the components below need it.
   gridSetup();
-
-  // Initalize the scheduler - needs to be done before calling postGridSetup.
-  d_scheduler->initialize( 1, 1 );
-  d_scheduler->setInitTimestep( true );
-  d_scheduler->setRestartInitTimestep( d_restarting );
-  d_scheduler->advanceDataWarehouse( d_currentGridP, true );
-
-  // Set up sim, regridder, and finalize sharedState also reload from
-  // the DataArchive on restart.
-  postGridSetup();
+  // Setup the regridder using the grid.
+  regridderSetup();
+  // Setup the sim interface using the grid.
+  simulationInterfaceSetup();
+  // Setup the scheduler using the grid.
+  schedulerSetup();
+  // Setup the load balancer  using the scheduler and grid.
+  loadBalancerSetup();
+  // Setup the time state using the grid, scheduler, and load balnacer
+  timeStateSetup();
+  // Setup the output.
+  outputSetup();
+  // Setup the misc bits.
+  miscSetup();
 
   // Once the grid is set up pass it on to the GPU.
 #ifdef HAVE_CUDA

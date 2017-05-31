@@ -84,7 +84,10 @@ class DataWarehouse;
        //! in the simulation.  (If you only need to use DataArchiver to copy 
        //! data, then you can pass a nullptr SimulationState
        virtual void problemSetup( const ProblemSpecP    & params,
+				  const ProblemSpecP    & restart_prob_spec,
                                         SimulationState * state );
+
+       virtual void outputProblemSpec( ProblemSpecP & root_ps );
 
        //! This function will set up the output for the simulation.  As part
        //! of this it will output the input.xml and index.xml in the uda

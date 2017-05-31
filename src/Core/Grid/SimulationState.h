@@ -260,6 +260,9 @@ public:
   bool getSwitchState() const { return d_switchState; }   
   void setSwitchState(bool ans) { d_switchState = ans; }    
     
+  void haveModifiedVars( bool val ) { d_haveModifiedVars = val; }
+  bool haveModifiedVars() { return d_haveModifiedVars; }
+
   SimulationTime * getSimulationTime() const { return d_simulationTime; }   
   void setSimulationTime(SimulationTime * simTime) { d_simulationTime = simTime; }
 
@@ -422,6 +425,7 @@ private:
   bool d_usingLocalFileSystems;
 
   bool d_switchState;
+  bool d_haveModifiedVars;
 
   SimulationTime* d_simulationTime;
   

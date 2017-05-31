@@ -183,6 +183,7 @@ SimulationState::SimulationState(ProblemSpecP &ps)
 
 #ifdef HAVE_VISIT
   d_doVisIt = false;
+  d_haveModifiedVars = false;
 #endif
 }
 //__________________________________

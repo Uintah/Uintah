@@ -82,6 +82,7 @@ class SimulationState;
     //////////
     // Insert Documentation Here:
     virtual void problemSetup(const ProblemSpecP& params,
+			      const ProblemSpecP& restart_prob_spec,
                               SimulationState* state) = 0;
 
     virtual void initializeOutput(const ProblemSpecP& params) = 0;

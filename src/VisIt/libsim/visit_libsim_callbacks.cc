@@ -94,6 +94,8 @@ void visit_VarModifiedMessage( visit_simulation_data *sim,
   // Store the old and new values.
   sim->modifiedVars[ name ] =
     std::pair<std::string, std::string>(oldStr.str(), newStr.str());
+
+  sim->simController->getSimulationStateP()->haveModifiedVars( true );
 }
 
 //---------------------------------------------------------------------
