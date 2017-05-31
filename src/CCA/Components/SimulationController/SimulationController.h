@@ -191,10 +191,10 @@ protected:
   bool isLast( void );
   bool maybeLast( void );
     
+  void simulationInterfaceSetup();
   void restartArchiveSetup();
   void gridSetup();
   void regridderSetup();
-  void simulationInterfaceSetup();
   void schedulerSetup();
   void loadBalancerSetup();
   void outputSetup();

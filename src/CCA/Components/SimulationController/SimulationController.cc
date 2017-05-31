@@ -414,6 +414,25 @@ SimulationController::restartArchiveSetup( void )
 //______________________________________________________________________
 //
 void
+SimulationController::simulationInterfaceSetup( void )
+{
+
+  d_sim = dynamic_cast<SimulationInterface*>( getPort( "sim" ) );
+  if( !d_sim ) {
+    throw InternalError( "No simulation component", __FILE__, __LINE__ );
+  }
+
+  // Pass the d_restart_ps to the component's problemSetup.  For
+  // restarting, pull the <MaterialProperties> from the d_restart_ps.
+  // If the properties are not available, then pull the properties
+  // from the d_ups instead.  This step needs to be done before
+  // DataArchive::restartInitialize.
+  d_sim->problemSetup(d_ups, d_restart_ps, d_currentGridP, d_sharedState);
+}
+
+//______________________________________________________________________
+//
+void
 SimulationController::gridSetup( void )
 {
   if( d_restarting ) {
@@ -433,7 +452,9 @@ SimulationController::gridSetup( void )
   }
   else /* if( !d_restarting ) */ {
     d_currentGridP = scinew Grid();
-        
+
+    d_sim->preGridProblemSetup( d_ups, d_currentGridP, d_sharedState );
+
     d_currentGridP->problemSetup( d_ups, d_myworld, d_doAMR );
   }
 
@@ -468,27 +489,6 @@ SimulationController::regridderSetup( void )
   if( d_regridder ) {
     d_regridder->problemSetup( d_ups, d_currentGridP, d_sharedState );
   }
-}
-
-//______________________________________________________________________
-//
-void
-SimulationController::simulationInterfaceSetup( void )
-{
-  d_sim = dynamic_cast<SimulationInterface*>( getPort( "sim" ) );
-  if( !d_sim ) {
-    throw InternalError( "No simulation component", __FILE__, __LINE__ );
-  }
-
-  // Pass the restart_prob_spec_for_component to the component's
-  // problemSetup.  For restarting, pull the <MaterialProperties> from
-  // the restart_prob_spec.  If the properties are not available, then
-  // pull the properties from the d_ups instead.  This step needs to
-  // be done before DataArchive::restartInitialize.
-  d_sim->problemSetup(d_ups, d_restart_ps, d_currentGridP, d_sharedState);
-
-  if( !d_restarting )
-    d_sim->preGridProblemSetup( d_ups, d_currentGridP, d_sharedState );
 }
 
 //______________________________________________________________________
