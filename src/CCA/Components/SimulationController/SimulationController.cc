@@ -421,13 +421,6 @@ SimulationController::simulationInterfaceSetup( void )
   if( !d_sim ) {
     throw InternalError( "No simulation component", __FILE__, __LINE__ );
   }
-
-  // Pass the d_restart_ps to the component's problemSetup.  For
-  // restarting, pull the <MaterialProperties> from the d_restart_ps.
-  // If the properties are not available, then pull the properties
-  // from the d_ups instead.  This step needs to be done before
-  // DataArchive::restartInitialize.
-  d_sim->problemSetup(d_ups, d_restart_ps, d_currentGridP, d_sharedState);
 }
 
 //______________________________________________________________________
@@ -453,6 +446,14 @@ SimulationController::gridSetup( void )
   else /* if( !d_restarting ) */ {
     d_currentGridP = scinew Grid();
 
+    // The call to preGridProblemSetup() allows simulation components
+    // to call grid->setExtraCells() before the grid problemSetup() so
+    // that if there are no extra cells defined in the ups file, all
+    // levels will use the grid extra cell value.
+
+    // For instance, Wasatch does not allow users to specify extra
+    // cells through the input file. Instead, Wasatch wants to specify
+    // it internally. This call gives the option to do just that.
     d_sim->preGridProblemSetup( d_ups, d_currentGridP, d_sharedState );
 
     d_currentGridP->problemSetup( d_ups, d_myworld, d_doAMR );
@@ -474,6 +475,13 @@ SimulationController::gridSetup( void )
   d_currentGridP->getLevel(0)->findCellIndexRange(low, high);
   size = high-low - d_currentGridP->getLevel(0)->getExtraCells()*IntVector(2,2,2);
   d_sharedState->setDimensionality(size[0] > 1, size[1] > 1, size[2] > 1);
+
+  // Pass the d_restart_ps to the component's problemSetup.  For
+  // restarting, pull the <MaterialProperties> from the d_restart_ps.
+  // If the properties are not available, then pull the properties
+  // from the d_ups instead.  This step needs to be done before
+  // DataArchive::restartInitialize.
+  d_sim->problemSetup(d_ups, d_restart_ps, d_currentGridP, d_sharedState);
 }
 
 //______________________________________________________________________
