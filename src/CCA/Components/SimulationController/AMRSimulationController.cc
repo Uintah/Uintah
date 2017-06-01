@@ -165,10 +165,15 @@ AMRSimulationController::run()
     
   // Setup the restart archive first. 
   restartArchiveSetup();
-  // Setup the sim interface using the restart archive.
+  // Setup the output
+  outputSetup();
+  // Setup the sim interface using the restart archive and under the
+  // hood the output.
   simulationInterfaceSetup();
-  // Set the grid using the restart archive sim interface.
+  // Setup the grid using the restart archive and sim interface.
   gridSetup();
+  // Complete the setup of the output and sim interface.
+  outOfSyncSetup();
   // Setup the regridder using the grid.
   regridderSetup();
   // Setup the scheduler using the grid.
@@ -176,10 +181,8 @@ AMRSimulationController::run()
   // Setup the load balancer using the scheduler and grid.
   loadBalancerSetup();
   // Setup the time state using the restart archive, grid, scheduler, and
-  // load balnacer
+  // load balnacer.
   timeStateSetup();
-  // Setup the output using the restart archive.
-  outputSetup();
   // Setup the misc bits.
   miscSetup();
 
@@ -496,7 +499,7 @@ AMRSimulationController::run()
     }
     else {
       // This is not correct if we have switched to a different
-      // component, since the delt will be wrong 
+      // component, since the delt will be wrong
       d_output->finalizeTimestep( d_simTime, d_delt,
 				  d_currentGridP, d_scheduler, 0 );
     }

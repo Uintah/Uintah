@@ -404,8 +404,8 @@ SimulationController::restartArchiveSetup( void )
       throw InternalError(message.str(), __FILE__, __LINE__);
     }
 
-    // Do these before calling archive->restartInitialize, because
-    // problemSetup() creates VarLabels the DA needs.
+    // Do this call before calling DataArchive::restartInitialize,
+    // because problemSetup() creates VarLabels the DataArchive needs.
     d_restart_ps =
       d_restart_archive->getTimestepDocForComponent( d_restartIndex );
   }
@@ -414,13 +414,46 @@ SimulationController::restartArchiveSetup( void )
 //______________________________________________________________________
 //
 void
+SimulationController::outputSetup( void )
+{
+  // Initalize the output archiver.
+  d_output = dynamic_cast<Output*>(getPort("output"));
+  if( !d_output ) {
+    throw InternalError("dynamic_cast of 'd_output' failed!",
+                        __FILE__, __LINE__);
+  }
+
+  d_output->problemSetup( d_ups, d_restart_ps, d_sharedState.get_rep() );
+
+  if( d_restarting ) {
+    Dir dir( d_fromDir );
+    d_output->restartSetup( dir, 0, d_restartTimestep, d_startSimTime,
+                            d_restartFromScratch, d_restartRemoveOldDir );
+  }
+}
+
+//______________________________________________________________________
+//
+void
 SimulationController::simulationInterfaceSetup( void )
 {
-
   d_sim = dynamic_cast<SimulationInterface*>( getPort( "sim" ) );
+
   if( !d_sim ) {
     throw InternalError( "No simulation component", __FILE__, __LINE__ );
   }
+
+  // Note: normally problemSetup would be called here but the
+  // simulation interface needs the grid which has not yet been
+  // created.
+
+  // Further the simulation interface may need to change the grid
+  // before it is setup.
+
+  // As such, get the simulation interface, create the grid, let the
+  // simulation interafce make its changes to the grid, setup the
+  // grid, then finally set up the simulation interface. The
+  // simulation interface call to problemSetup is done in miscSetup.
 }
 
 //______________________________________________________________________
@@ -446,16 +479,22 @@ SimulationController::gridSetup( void )
   else /* if( !d_restarting ) */ {
     d_currentGridP = scinew Grid();
 
-    // The call to preGridProblemSetup() allows simulation components
-    // to call grid->setExtraCells() before the grid problemSetup() so
-    // that if there are no extra cells defined in the ups file, all
-    // levels will use the grid extra cell value.
+    // The call to preGridProblemSetup() by the simulation interface
+    // allows for a call to grid->setExtraCells() to be made before
+    // the grid problemSetup() so that if there are no extra cells
+    // defined in the ups file, all levels will use the grid extra
+    // cell value.
 
     // For instance, Wasatch does not allow users to specify extra
     // cells through the input file. Instead, Wasatch wants to specify
-    // it internally. This call gives the option to do just that.
+    // it internally. This call gives the option to do just that
+    // though it does not follow normal paradigm of calling
+    // problemSetup immediately after a component or other object is
+    // created.
     d_sim->preGridProblemSetup( d_ups, d_currentGridP, d_sharedState );
 
+    // Now that the simulation interface has made its changes do the
+    // normal grid problemSetup()
     d_currentGridP->problemSetup( d_ups, d_myworld, d_doAMR );
   }
 
@@ -470,11 +509,26 @@ SimulationController::gridSetup( void )
     amrout << "Restart grid\n" << *d_currentGridP.get_rep() << "\n";
   }
 
-  // set the dimensionality of the problem.
+  // Set the dimensionality of the problem.
   IntVector low, high, size;
   d_currentGridP->getLevel(0)->findCellIndexRange(low, high);
-  size = high-low - d_currentGridP->getLevel(0)->getExtraCells()*IntVector(2,2,2);
+
+  size = high - low -
+    d_currentGridP->getLevel(0)->getExtraCells()*IntVector(2,2,2);
+  
   d_sharedState->setDimensionality(size[0] > 1, size[1] > 1, size[2] > 1);
+}
+
+//______________________________________________________________________
+//
+void
+SimulationController::outOfSyncSetup()
+{
+  // Complete the setup of the simulation interface and output that
+  // could not be completed until the grid was setup.
+  
+  // The simulation interface was initalized earlier because the
+  // grid needed it.
 
   // Pass the d_restart_ps to the component's problemSetup.  For
   // restarting, pull the <MaterialProperties> from the d_restart_ps.
@@ -482,6 +536,14 @@ SimulationController::gridSetup( void )
   // from the d_ups instead.  This step needs to be done before
   // DataArchive::restartInitialize.
   d_sim->problemSetup(d_ups, d_restart_ps, d_currentGridP, d_sharedState);
+
+  // The output was initalized earlier because the simulation
+  // interface needed it. 
+  
+  // This step is done after the d_sim->problemSetup call to get
+  // defaults set by the simulation interface into the input.xml,
+  // which the output writes along with index.xml
+  d_output->initializeOutput(d_ups);
 }
 
 //______________________________________________________________________
@@ -582,41 +644,16 @@ SimulationController::timeStateSetup()
 //______________________________________________________________________
 //
 void
-SimulationController::outputSetup( void )
-{
-  // Initalize the output archiver.
-  d_output = dynamic_cast<Output*>(getPort("output"));
-  if( !d_output ) {
-    throw InternalError("dynamic_cast of 'd_output' failed!",
-                        __FILE__, __LINE__);
-  }
-
-  // This step is done after the sim->problemSetup to get defaults
-  // into the input.xml, which it writes along with index.xml
-  d_output->problemSetup( d_ups, d_restart_ps, d_sharedState.get_rep() );
-
-  d_output->initializeOutput(d_ups);
-
-  if( d_restarting ) {
-    Dir dir( d_fromDir );
-    d_output->restartSetup( dir, 0, d_restartTimestep, d_startSimTime,
-                            d_restartFromScratch, d_restartRemoveOldDir );
-  }
-}
-
-//______________________________________________________________________
-//
-void
 SimulationController::miscSetup()
 {
-  // Finalize the shared state/materials
-  d_sharedState->finalizeMaterials();
-
-  // Finial miscellaneous initializations
+  // Miscellaneous initializations.
   ProblemSpecP amr_ps = d_ups->findBlock("AMR");
   if( amr_ps ) {
     amr_ps->get( "doMultiTaskgraphing", d_doMultiTaskgraphing );
   }
+
+  // Finalize the shared state/materials
+  d_sharedState->finalizeMaterials();
 
 #ifdef HAVE_VISIT
   if( d_sharedState->getVisIt() ) {
