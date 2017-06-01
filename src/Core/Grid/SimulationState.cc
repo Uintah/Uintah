@@ -127,6 +127,7 @@ SimulationState::SimulationState(ProblemSpecP &ps)
   d_usingLocalFileSystems     = false;
 
   d_switchState               = false;
+  d_haveModifiedVars          = false;
   
   d_simulationTime            = 0;
 
@@ -183,7 +184,6 @@ SimulationState::SimulationState(ProblemSpecP &ps)
 
 #ifdef HAVE_VISIT
   d_doVisIt = false;
-  d_haveModifiedVars = false;
 #endif
 }
 //__________________________________
