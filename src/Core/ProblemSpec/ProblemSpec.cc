@@ -1712,13 +1712,13 @@ ProblemSpec::getTypeDescription()
 ProblemSpecP
 ProblemSpec::createDocument( const string & name ) 
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::createDocument()");
-  xmlDocPtr doc = xmlNewDoc(BAD_CAST "1.0");
-  xmlNodePtr node = xmlNewDocRawNode(doc, 0, BAD_CAST name.c_str(), 0);
+  MALLOC_TRACE_TAG_SCOPE( "ProblemSpec::createDocument()" );
+  xmlDocPtr doc = xmlNewDoc( BAD_CAST "1.0" );
+  xmlNodePtr node = xmlNewDocRawNode( doc, 0, BAD_CAST name.c_str(), 0 );
 
-  xmlDocSetRootElement(doc, node);
+  xmlDocSetRootElement( doc, node );
 
-  return scinew ProblemSpec(node, true );
+  return scinew ProblemSpec( node, true );
 }
 
 string

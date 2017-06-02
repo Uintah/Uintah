@@ -1377,17 +1377,19 @@ main(int argc, char** argv)
     DataArchive* da2 = scinew DataArchive(d_filebase2);
 
     vector<string> vars;
+    vector<int> num_matls;
     vector<const Uintah::TypeDescription*> types;
     vector< pair<string, const Uintah::TypeDescription*> > vartypes1;
 
     vector<string> vars2;
+    vector<int> num_matls2;
     vector<const Uintah::TypeDescription*> types2;
     vector< pair<string, const Uintah::TypeDescription*> > vartypes2;
 
-    da1->queryVariables(vars, types);
+    da1->queryVariables( vars, num_matls, types );
     ASSERTEQ(vars.size(), types.size());
 
-    da2->queryVariables(vars2, types2);
+    da2->queryVariables( vars2, num_matls2, types2 );
     ASSERTEQ(vars2.size(), types2.size());
 
     if (vars.size() != vars2.size() && ignoreVar.size() == 0) {

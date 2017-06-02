@@ -131,9 +131,10 @@ void UdaReducer::problemSetup(const ProblemSpecP& prob_spec,
 
   //__________________________________
   //  define the varLabels that will be saved
-  vector<string> varNames;
+  vector<string>                   varNames;
+  vector<int>                      numMatls;
   vector< const TypeDescription *> typeDescriptions;
-  d_dataArchive->queryVariables( varNames, typeDescriptions );
+  d_dataArchive->queryVariables( varNames, numMatls, typeDescriptions );
   
   proc0cout << "\nLabels discovered in the original uda\n";
   for (unsigned int i = 0; i < varNames.size(); i++) {

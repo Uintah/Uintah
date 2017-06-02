@@ -213,7 +213,7 @@ gridstats( DataArchive* da,
 
 
 int
-main(int argc, char** argv)
+main( int argc, char *argv[] )
 {
   Uintah::Parallel::initializeManager(argc, argv);
 
@@ -224,7 +224,7 @@ main(int argc, char** argv)
 
   CommandLineFlags clf;
 
-  int mat = -1; //not part of clf
+  int material_of_interest = -1; // Not part of clf.  -1 means all materials.
   int cellx = -1, celly = -1, cellz = -1;
   char axis = 'n';
   int ortho1 = -1;
@@ -395,7 +395,7 @@ main(int argc, char** argv)
       }
       clf.matl = strtoul(argv[++i],(char**)nullptr,10);
       clf.do_material = true;
-      mat = clf.matl;
+      material_of_interest = clf.matl;
 
     } else if (s == "-verbose") {
       clf.do_verbose = true;
@@ -446,13 +446,14 @@ main(int argc, char** argv)
 
   try {
     DataArchive* da = scinew DataArchive( clf.filebase );
+
     //__________________________________
     //  LIST TIMESTEPS
     if(clf.do_timesteps){
       vector<int> index;
       vector<double> times;
-      da->queryTimesteps(index, times);
-      ASSERTEQ(index.size(), times.size());
+      da->queryTimesteps( index, times );
+      ASSERTEQ( index.size(), times.size() );
       cout << "There are " << index.size() << " timesteps:\n";
       
       // Please don't change this.  We need 16
@@ -460,8 +461,9 @@ main(int argc, char** argv)
       cout.setf(ios::scientific,ios::floatfield);
       cout.precision(16);
       
-      for(int i=0;i<(int)index.size();i++)
+      for( int i = 0; i < (int)index.size(); i++ ) {
 	cout << index[i] << ": " << times[i] << "\n";
+      }
     }
     //__________________________________
 
@@ -474,10 +476,11 @@ main(int argc, char** argv)
     //  LIST VARIABLES
     if(clf.do_listvars){
       vector<string> vars;
+      vector<int> num_matls;
       vector<const Uintah::TypeDescription*> types;
-      da->queryVariables(vars, types);
+      da->queryVariables( vars, num_matls, types );
       cout << "There are " << vars.size() << " variables:\n";
-      for(int i=0;i<(int)vars.size();i++){
+      for( int i = 0; i < (int)vars.size(); i++ ){
 	cout << vars[i] << ": " << types[i]->getName() << "\n";
       }
     }
@@ -503,13 +506,13 @@ main(int argc, char** argv)
 	abort();
       }
       printParticleVariable( da, clf.particleVariable,
-                             clf.time_step_lower, clf.time_step_upper, mat );
+                             clf.time_step_lower, clf.time_step_upper, material_of_interest );
     }
 
     //______________________________________________________________________
     //              V A R S U M M A R Y   O P T I O N
     if(clf.do_varsummary){
-      varsummary( da, clf, mat );
+      varsummary( da, clf, material_of_interest );
     }
 
     if( clf.do_pressure ){
@@ -565,8 +568,9 @@ main(int argc, char** argv)
     //	       DO CELL STRESSES	
     if (clf.do_cell_stresses){
       vector<string> vars;
+      vector<int> num_matls;
       vector<const Uintah::TypeDescription*> types;
-      da->queryVariables(vars, types);
+      da->queryVariables( vars, num_matls, types );
       ASSERTEQ(vars.size(), types.size());
       
       cout << "There are " << vars.size() << " variables:\n";
@@ -612,24 +616,24 @@ main(int argc, char** argv)
 	for(int v=0;v<(int)vars.size();v++){
 	  std::string var = vars[v];
 	  
-	  // only dumps out data if it is variable g.stressFS
+	  // Only dumps out data if it is variable g.stressFS
 	  if (var == "g.stressFS"){
 	    const Uintah::TypeDescription* td = types[v];
 	    const Uintah::TypeDescription* subtype = td->getSubType();
 	    cout << "\tVariable: " << var << ", type " << td->getName() << "\n";
 	    for(int l=0;l<grid->numLevels();l++){
 	      LevelP level = grid->getLevel(l);
-	      for(Level::const_patch_iterator iter = level->patchesBegin();
-		  iter != level->patchesEnd(); iter++){
+	      for( Level::const_patch_iterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++ ){
 		const Patch* patch = *iter;
 		cout << "\t\tPatch: " << patch->getID() << "\n";
-                ConsecutiveRangeSet matls =
-		  da->queryMaterials(var, patch, t);
-	        // loop over materials
-	        for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
-		    matlIter != matls.end(); matlIter++){
+                ConsecutiveRangeSet matls = da->queryMaterials( var, patch, t );
+
+	        // Loop over materials:
+	        for( ConsecutiveRangeSet::iterator matlIter = matls.begin(); matlIter != matls.end(); matlIter++ ){
 		  int matl = *matlIter;
-		  if (mat != -1 && matl != mat) continue;
+		  if( material_of_interest != -1 && matl != material_of_interest ) {
+                    continue;
+                  }
  
 		  // dumps header and variable info to file
 		  ostringstream fnum, pnum, matnum; 
@@ -713,8 +717,9 @@ printParticleVariable( DataArchive* da,
 {
   // Check if the particle variable is available
   vector<string> vars;
+  vector<int> num_matls;
   vector<const Uintah::TypeDescription*> types;
-  da->queryVariables(vars, types);
+  da->queryVariables( vars, num_matls, types );
   ASSERTEQ(vars.size(), types.size());
   bool variableFound = false;
   for(unsigned int v=0;v<vars.size();v++){

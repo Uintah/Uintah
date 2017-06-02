@@ -43,107 +43,110 @@ using namespace std;
 void
 Uintah::jacquie( DataArchive * da, CommandLineFlags & clf )
 {
-	vector<string> vars;
-	vector<const Uintah::TypeDescription*> types;
-	da->queryVariables(vars, types);
-	ASSERTEQ(vars.size(), types.size());
-	cout << "There are " << vars.size() << " variables:\n";
-	for(int i=0;i<(int)vars.size();i++)
-		cout << vars[i] << ": " << types[i]->getName() << endl;
-	
-	vector<int> index;
-	vector<int> counts;
-	vector<double> total_pr;
-	
-	
-	vector<double> times;
-	da->queryTimesteps(index, times);
-	ASSERTEQ(index.size(), times.size());
-	cout << "There are " << index.size() << " timesteps:\n";
-	for( int i = 0; i < (int)index.size(); i++ ) {
-		cout << index[i] << ": " << times[i] << endl;
-	}
-	
-	findTimestep_loopLimits( clf.tslow_set, clf.tsup_set, times, clf.time_step_lower, clf.time_step_upper);
-	
-	ostringstream fnum;
-	string filename("AverageBurnRate.dat");
-	ofstream outfile(filename.c_str());
-	double burnRate= 0;
-	double avePress= 0;
-	double total_press = 0;
-	double total_burned_mass = 0.0;
-	double SA = 0.001*0.001;
-	int count;
-	double minVol_frac = 0.9;  // the min volume fraction at any time
-	
-	
-	for(unsigned long t=clf.time_step_lower;t<=clf.time_step_upper;t+=clf.time_step_inc){
-		double time = times[t];
-		cout << "time = " << time << endl;
-		GridP grid = da->queryGrid(t);
-		count=0;
-		total_press = 0;
-		//double VolumeFraction = 0.001;  // the max pressure during the timestep
-		LevelP level = grid->getLevel(grid->numLevels()-1);
-		cout << "Level: " << grid->numLevels() - 1 <<  endl;
-		for(Level::const_patch_iterator iter = level->patchesBegin();
-			iter != level->patchesEnd(); iter++){
-			const Patch* patch = *iter;
-			int matl = clf.matl; // material number
-			
-			CCVariable<double> press_CC;
-			CCVariable<double> vol_frac_CC;
-			
-			// get all the pressures from the patch
-			da->query(press_CC, "press_CC",        0, patch, t);
-			da->query(vol_frac_CC, "vol_frac_CC", matl, patch, t);
-			for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
-				IntVector c = *iter;  // get the coordinates of the cell
-				
-				if(vol_frac_CC[c] > minVol_frac){
-					total_press += press_CC[c];
-					count +=1;
-					
-				} //if
-			} // cells
-		} // patches
-		counts.push_back(count);
-		total_pr.push_back(total_press);
-	}  // timesteps
-	
-	int p=0;
-	
-	for(unsigned long t=clf.time_step_lower+1;t<=clf.time_step_upper;t+=clf.time_step_inc){
-		double time = times[t];
-		double timeold = times[t-1];
-		cout << "time = " << time << endl;
-		GridP grid = da->queryGrid(t);
-		total_burned_mass=0;
-		LevelP level = grid->getLevel(grid->numLevels()-1);
-		cout << "Level: " << grid->numLevels() - 1 <<  endl;
-		for(Level::const_patch_iterator iter = level->patchesBegin();
-			iter != level->patchesEnd(); iter++){
-			const Patch* patch = *iter;
-			int matl = clf.matl; // material number
-			
-			CCVariable<double> modelMass_src;
-			// get all the modelMass from the patch
-			da->query(modelMass_src, "modelMass_src",        matl, patch, t);
-			
-			for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
-				IntVector c = *iter;  // get the coordinates of the cell
-				total_burned_mass+= modelMass_src[c]; 
-			} // for cells
-		}  // for patch
-		
-		
-		double density = 1832;
-		burnRate = total_burned_mass/((time-timeold)*density*SA);
-		avePress = total_pr[p]/counts[p];
-		p++;
-		
-		outfile.precision(15);
-		outfile << time << " " << avePress << " " << burnRate << " " <<total_press << " " << count << endl; 
-    }//timestep
+  vector<string> vars;
+  vector<int> num_matls;
+  vector<const Uintah::TypeDescription*> types;
+
+  da->queryVariables( vars, num_matls, types );
+  ASSERTEQ(vars.size(), types.size());
+
+  cout << "There are " << vars.size() << " variables:\n";
+  for(int i=0;i<(int)vars.size();i++) {
+    cout << vars[i] << ": " << types[i]->getName() << endl;
+  }
+        
+  vector<int> index;
+  vector<int> counts;
+  vector<double> total_pr;
+        
+  vector<double> times;
+  da->queryTimesteps(index, times);
+  ASSERTEQ(index.size(), times.size());
+  cout << "There are " << index.size() << " timesteps:\n";
+  for( int i = 0; i < (int)index.size(); i++ ) {
+    cout << index[i] << ": " << times[i] << endl;
+  }
+        
+  findTimestep_loopLimits( clf.tslow_set, clf.tsup_set, times, clf.time_step_lower, clf.time_step_upper);
+        
+  ostringstream fnum;
+  string filename("AverageBurnRate.dat");
+  ofstream outfile(filename.c_str());
+  double burnRate= 0;
+  double avePress= 0;
+  double total_press = 0;
+  double total_burned_mass = 0.0;
+  double SA = 0.001*0.001;
+  int count;
+  double minVol_frac = 0.9;  // the min volume fraction at any time
+        
+        
+  for(unsigned long t=clf.time_step_lower;t<=clf.time_step_upper;t+=clf.time_step_inc){
+    double time = times[t];
+    cout << "time = " << time << endl;
+    GridP grid = da->queryGrid(t);
+    count=0;
+    total_press = 0;
+    //double VolumeFraction = 0.001;  // the max pressure during the timestep
+    LevelP level = grid->getLevel(grid->numLevels()-1);
+    cout << "Level: " << grid->numLevels() - 1 <<  endl;
+    for(Level::const_patch_iterator iter = level->patchesBegin();
+        iter != level->patchesEnd(); iter++){
+      const Patch* patch = *iter;
+      int matl = clf.matl; // material number
+                        
+      CCVariable<double> press_CC;
+      CCVariable<double> vol_frac_CC;
+                        
+      // get all the pressures from the patch
+      da->query(press_CC, "press_CC",        0, patch, t);
+      da->query(vol_frac_CC, "vol_frac_CC", matl, patch, t);
+      for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
+        IntVector c = *iter;  // get the coordinates of the cell
+                                
+        if(vol_frac_CC[c] > minVol_frac){
+          total_press += press_CC[c];
+          count +=1;
+                                        
+        } //if
+      } // cells
+    } // patches
+    counts.push_back(count);
+    total_pr.push_back(total_press);
+  }  // timesteps
+        
+  int p=0;
+        
+  for(unsigned long t=clf.time_step_lower+1;t<=clf.time_step_upper;t+=clf.time_step_inc){
+    double time = times[t];
+    double timeold = times[t-1];
+    cout << "time = " << time << endl;
+    GridP grid = da->queryGrid(t);
+    total_burned_mass=0;
+    LevelP level = grid->getLevel(grid->numLevels()-1);
+    cout << "Level: " << grid->numLevels() - 1 <<  endl;
+    for(Level::const_patch_iterator iter = level->patchesBegin();
+        iter != level->patchesEnd(); iter++){
+      const Patch* patch = *iter;
+      int matl = clf.matl; // material number
+                        
+      CCVariable<double> modelMass_src;
+      // get all the modelMass from the patch
+      da->query(modelMass_src, "modelMass_src",        matl, patch, t);
+                        
+      for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
+        IntVector c = *iter;  // get the coordinates of the cell
+        total_burned_mass+= modelMass_src[c]; 
+      } // for cells
+    }  // for patch
+                
+                
+    double density = 1832;
+    burnRate = total_burned_mass/((time-timeold)*density*SA);
+    avePress = total_pr[p]/counts[p];
+    p++;
+                
+    outfile.precision(15);
+    outfile << time << " " << avePress << " " << burnRate << " " <<total_press << " " << count << endl; 
+  }//timestep
 } // end jim2()

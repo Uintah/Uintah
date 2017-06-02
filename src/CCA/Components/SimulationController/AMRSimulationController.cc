@@ -587,8 +587,9 @@ AMRSimulationController::run()
     // For PIDX only save timestep.xml when checkpointing.  Normal
     // time step dumps using PIDX do not need to write the xml
     // information.      
-    if( !d_output->savingAsPIDX() ||
-	(d_output->savingAsPIDX() && pidx_checkpointing) )
+// qwerty... what happens if we call writeto_xml_files always?
+//    if( !d_output->savingAsPIDX() ||
+//	(d_output->savingAsPIDX() && pidx_checkpointing) )
 #endif    
     {
       // If PIDX is not being used write timestep.xml for both

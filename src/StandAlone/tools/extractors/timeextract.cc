@@ -256,9 +256,10 @@ main(int argc, char** argv)
     }
     
     vector<string> vars;
+    vector<int> num_matls;
     vector<const Uintah::TypeDescription*> types;
 
-    archive->queryVariables(vars, types);
+    archive->queryVariables( vars, num_matls, types );
     ASSERTEQ(vars.size(), types.size());
     if (verbose) cout << "There are " << vars.size() << " variables:\n";
     bool var_found = false;

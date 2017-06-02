@@ -425,7 +425,7 @@ findMinMax( DataArchive         * da,
 
   if( !iter.done() ) {
 
-    da->query(value, var, matl, patch, timestep);
+    da->query( value, var, matl, patch, timestep );
 
     if( !clf.be_brief ) {
       cout << "\t\t\t\t" << td->getName() << " over " << iter.begin() << " (inclusive) to " 
@@ -513,20 +513,26 @@ findMinMaxPV( DataArchive      * da,
   }
 }
 
+//
+// material_of_interest: -1 means all materials
+//
 void
-Uintah::varsummary( DataArchive* da, CommandLineFlags & clf, int mat )
+Uintah::varsummary( DataArchive* da, CommandLineFlags & clf, int material_of_interest )
 {
-  cout.setf(ios::scientific,ios::floatfield);
-  cout.precision(16);
+  cout.setf( ios::scientific, ios::floatfield );
+  cout.precision( 16 );
  
   vector<string> vars;
+  vector<int> num_matls;
   vector<const Uintah::TypeDescription*> types;
-  da->queryVariables(vars, types);
+
+  da->queryVariables( vars, num_matls, types );
   ASSERTEQ(vars.size(), types.size());
 
   cout << "There are " << vars.size() << " variables:\n";
-  for(int i=0;i<(int)vars.size();i++)
-    cout << "  " << vars[i] << ": " << types[i]->getName() << endl;
+  for(int i=0;i<(int)vars.size();i++) {
+    cout << "  " << vars[i] << ": " << types[i]->getName() << "\n";
+  }
   cout << "\n";
 
   vector<int> index;
@@ -536,8 +542,8 @@ Uintah::varsummary( DataArchive* da, CommandLineFlags & clf, int mat )
 
   cout << "There are " << index.size() << " timesteps:\n";
 
-  for(int i=0;i<(int)index.size();i++) {
-    cout << "  " << index[i] << ": " << times[i] << endl;
+  for( int i = 0; i < (int)index.size(); i++ ) {
+    cout << "  " << index[i] << ": " << times[i] << "\n";
   }
 
   cout << "\n";
@@ -548,37 +554,46 @@ Uintah::varsummary( DataArchive* da, CommandLineFlags & clf, int mat )
     double time = times[t];
 
     cout << "----------------------------------------------------------------------\n";
-    cout << "Time = " << time << endl;
+    cout << "Time = " << time << "\n";
     cout << "\n";
-    GridP grid = da->queryGrid(t);
-    for(int v=0;v<(int)vars.size();v++) {
+    GridP grid = da->queryGrid( t );
+
+    // Variable Loop:
+    for( int v = 0; v < (int)vars.size(); v++ ) {
       string var = vars[v];
       const Uintah::TypeDescription* td = types[v];
       const Uintah::TypeDescription* subtype = td->getSubType();
       if( !clf.be_brief ) {
-        cout << "\tVariable: " << var << ", type " << td->getName() << endl;
+        cout << "\tVariable: " << var << ", type " << td->getName() << "\n";
       }
-      for(int l=0;l<grid->numLevels();l++){
+
+      // Level Loop:
+      for( int l = 0; l < grid->numLevels(); l++ ){
+
         LevelP level = grid->getLevel(l);
         if( !clf.be_brief ) {
-          cout << "\t    Level: " << level->getIndex() << ", id " << level->getID() << endl;
+          cout << "\t    Level: " << level->getIndex() << ", id " << level->getID() << "\n";
         }
-        for(Level::const_patch_iterator iter = level->patchesBegin();
-            iter != level->patchesEnd(); iter++){
+
+        // Patch Loop:
+        for( Level::const_patch_iterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++ ){
           const Patch* patch = *iter;
           if( !clf.be_brief ) {
-            cout << "\t\tPatch: " << patch->getID() << endl;
+            cout << "\t\tPatch: " << patch->getID() << "\n";
           }
-          ConsecutiveRangeSet matls = da->queryMaterials(var, patch, t);
-          // loop over materials
-          for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
-              matlIter != matls.end(); matlIter++){
+          
+          ConsecutiveRangeSet matls = da->queryMaterials( var, patch, t );
+          
+          // Loop over materials:
+          for( ConsecutiveRangeSet::iterator matlIter = matls.begin(); matlIter != matls.end(); matlIter++ ) {
             int matl = *matlIter;
-            if (mat != -1 && matl != mat) continue;
-            if( !clf.be_brief ) {
-              cout << "\t\t\tMaterial: " << matl << endl;
+            if( material_of_interest != -1 && matl != material_of_interest ) {
+              continue;
             }
-            switch(td->getType()){
+            if( !clf.be_brief ) {
+              cout << "\t\t\tMaterial: " << matl << "\n";
+            }
+            switch( td->getType() ){
               //__________________________________
               //   P A R T I C L E   V A R I A B L E
             case Uintah::TypeDescription::ParticleVariable:

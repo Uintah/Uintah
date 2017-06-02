@@ -294,6 +294,8 @@ OnDemandDataWarehouse::put(       Variable* var,
                                   int       matlIndex,
                             const Patch*    patch )
 {
+  proc0cout << "generic put() called for variable " << label->getName() << " on patch: " << (patch ? patch->getID() : -1) << "\n";
+
   MALLOC_TRACE_TAG_SCOPE( "OnDemandDataWarehouse::put(variable):" + label->getName() );
   union {
       ReductionVariableBase* reduction;
@@ -346,7 +348,14 @@ OnDemandDataWarehouse::get(       ReductionVariableBase& var,
                                   int                    matlIndex /*= -1*/ )
 {
   checkGetAccess( label, matlIndex, 0 );
+
+  proc0cout << "here\n";
+  proc0cout << "1) calling exists with: " << label << "\n";
+  proc0cout << "2) calling exists with: " << matlIndex << "\n";
+  proc0cout << "3) calling exists with: " << level << "\n";
+
   if( !d_levelDB.exists( label, matlIndex, level ) ) {
+    proc0cout << "get failed in dw: " << this << ", level: " << level << "\n";
     SCI_THROW( UnknownVariable(label->getName(), getID(), level, matlIndex, "on reduction", __FILE__, __LINE__) );
   }
 
@@ -1049,17 +1058,30 @@ OnDemandDataWarehouse::put( const ReductionVariableBase& var,
                             const Level*                 level,
                                   int                    matlIndex /* = -1 */ )
 {
+  proc0cout << "put called for reduction variable " << label->getName() << " on level: " << (level ? level->getID() : -1) << " (dw: " << this << " - " << getID() << ")\n";
+  proc0cout << "   matl: " << matlIndex << "\n";
+
   MALLOC_TRACE_TAG_SCOPE( "OnDemandDataWarehouse::put(Reduction):" + label->getName() );
   ASSERT( !d_finalized );
-  checkPutAccess(label, matlIndex, 0,
-                 false /* it actually may be replaced, but it doesn't need
-                          to explicitly modify with multiple reduces in the
-                          task graph */);
+  checkPutAccess( label, matlIndex, 0,
+                  false /* it actually may be replaced, but it doesn't need
+                           to explicitly modify with multiple reduces in the
+                           task graph */);
 
-  // Put it in the database
+  // Put it in the database:
+
+  
   bool init = (d_scheduler->isCopyDataTimestep()) || !(d_levelDB.exists( label, matlIndex, level ));
+
+  proc0cout << "init is: " << init << "\n";
+  var.print( std::cout ); proc0cout << "\n";
+  proc0cout << "d_levelDB is " << &d_levelDB << "\n";
+
   d_levelDB.putReduce( label, matlIndex, level, var.clone(), init );
 
+  // Debugging:
+  proc0cout << "CALLING EXISTS WITH: " << label << ", " << matlIndex << ", " << (level ? level->getID() : -1) << "\n";
+  proc0cout << "exists: " << d_levelDB.exists( label, matlIndex, level ) << "\n";
 }
 
 //______________________________________________________________________
@@ -1555,8 +1577,7 @@ OnDemandDataWarehouse::get(       constParticleVariableBase& constVar,
 
   if( !d_varDB.exists( label, matlIndex, patch ) ) {
     print();
-    SCI_THROW(
-        UnknownVariable(label->getName(), getID(), patch, matlIndex, "", __FILE__, __LINE__) );
+    SCI_THROW( UnknownVariable(label->getName(), getID(), patch, matlIndex, "", __FILE__, __LINE__) );
   }
   constVar = *dynamic_cast<ParticleVariableBase*>( d_varDB.get( label, matlIndex, patch ) );
 }
@@ -3113,8 +3134,8 @@ inline void
 OnDemandDataWarehouse::checkGetAccess( const VarLabel*        label,
                                              int              matlIndex,
                                        const Patch*           patch,
-                                             Ghost::GhostType gtype,
-                                             int              numGhostCells )
+                                             Ghost::GhostType gtype /* = Ghost::None */,
+                                             int              numGhostCells /* = 0 */ )
 {
 #if 0
 #if SCI_ASSERTION_LEVEL >= 1
