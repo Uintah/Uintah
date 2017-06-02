@@ -492,7 +492,7 @@ findMinMaxPV( DataArchive      * da,
 
   const Uintah::TypeDescription * td = value.getTypeDescription();
 
-  da->query(value, var, matl, patch, timestep);
+  da->query( value, var, matl, patch, timestep );
   ParticleSubset* pset = value.getParticleSubset();
   if( !clf.be_brief ) {
     cout << "\t\t\t\t" << td->getName() << " over " << pset->numParticles() << " particles\n";
