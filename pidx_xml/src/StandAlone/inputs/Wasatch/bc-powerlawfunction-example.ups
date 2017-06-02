@@ -1,0 +1,95 @@
+<Uintah_specification>
+
+  <Meta>
+    <title>PowerLaw Boundary Condition Example </title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+
+  <Wasatch>
+
+    <Density method="CONSTANT">
+      <Constant value="1.0" name="density"/>
+    </Density>
+  
+    <!-- Set the initial condition for non-staggered scalar -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi-dirichlet-dirichlet-a"/>
+      <Constant>0.0</Constant>
+    </BasicExpression>
+    
+    <BCExpression type="SVOL">
+      <TaskList>initialization advance_solution</TaskList>
+      <NameTag name="powerlaw-inlet"/>
+      <PowerLawFunction x0="0.125" PhiCenter="1" HalfHeight="0.0625" n="10.0">
+         <NameTag name="YSVOL"/>
+       </PowerLawFunction>
+    </BCExpression>
+    
+    <ForceOnGraph tasklist="initialization advance_solution">
+      <NameTag name="YSVOL"/>
+    </ForceOnGraph>
+
+    <!-- Build a cell-centered scalar transport equation -->
+    <TransportEquation equation="generic">
+      <SolutionVariable>phi-dirichlet-dirichlet-a</SolutionVariable>
+      <DiffusiveFlux direction="X" coefficient="0.1"/>
+      <DiffusiveFlux direction="Y" coefficient="0.1"/>
+    </TransportEquation>
+    </Wasatch>
+
+
+  <Time>
+    <maxTime>5</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.00001</delt_min>
+    <delt_max>0.00001</delt_max>
+    <max_Timesteps> 10 </max_Timesteps>    
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+
+  <DataArchiver>
+    <filebase>powerlaw-bc-example.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle="2" interval="0.00001"/>
+    <compression>gzip</compression>
+    <save label="phi-dirichlet-dirichlet-a"/>
+    <save label="phi-dirichlet-dirichlet-a_rhs"/>    
+  </DataArchiver> 
+
+  <Grid>
+      <BoundaryConditions>
+      
+      <DefaultMaterial>all</DefaultMaterial>
+      <Face rectangle="x-" lower="0 0.0625 -1" upper="0 0.1875 1" name="blagui">
+        <BCType label="phi-dirichlet-dirichlet-a" var="Dirichlet" value="powerlaw-inlet"/>
+      </Face>
+      <Face side="x-" name="blagui">
+        <BCType label="phi-dirichlet-dirichlet-a" var="Dirichlet" value="0.0"/>
+      </Face>
+      <Face side="x+" name="paspas">
+        <BCType label="phi-dirichlet-dirichlet-a" var="Neumann" value="0.0"/>
+      </Face>
+      <Face side="y-" name="blagui">
+        <BCType label="phi-dirichlet-dirichlet-a" var="Dirichlet" value="0.1"/>
+      </Face>
+      <Face side="y+" name="paspas">
+        <BCType label="phi-dirichlet-dirichlet-a" var="Dirichlet" value="0.1"/>
+      </Face>
+      </BoundaryConditions>
+
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[0.5,0.25,0.01]</upper>
+        <resolution>[80,80,2]</resolution>
+        <patches>[3,3,1]</patches>
+      </Box>
+      <periodic>[0,0,1]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

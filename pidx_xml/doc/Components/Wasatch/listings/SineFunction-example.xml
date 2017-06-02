@@ -1,0 +1,7 @@
+<BasicExpression type="SVOL">
+	<TaskList>initialization</TaskList>
+	<NameTag name="f" state="STATE_NONE" />
+	<SineFunction amplitude="2.0" frequency="10.0" offset="3.0">
+		 <NameTag name="XSVOL" state="STATE_NONE" />
+	 </SineFunction>
+</BasicExpression>

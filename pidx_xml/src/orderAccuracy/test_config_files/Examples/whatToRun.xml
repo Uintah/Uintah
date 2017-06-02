@@ -1,0 +1,88 @@
+<config>
+<postProcessCmd_path></postProcessCmd_path>
+
+<!-- You need this link for the restart uda -->
+<symbolicLinks>/home/todd/builds/Developing/092513SCIRun/src/StandAlone/inputs</symbolicLinks>
+
+<!-- Ray convergence test using Burns & Christon benchmark -->
+
+<test>
+  <name>DoubleRMCRT_OA_Ray_1L_LHC</name>
+  <ups>RMCRT_bm1_1L.ups</ups>
+  <tst>ray.tst</tst>
+</test>
+<!--
+<test>
+  <name>GPU_RMCRT_OA_Ray_1L_LHC</name>
+  <ups>RMCRT_bm1_1L.ups</ups>
+  <tst>rayGPU.tst</tst>
+</test>
+-->
+<!-- Ray convergence test using Burns & Christon benchmark and Data Onion
+<test>
+  <name>RMCRT_OA_Ray_DO</name>
+  <ups>RMCRT_bm1_DO.ups</ups>
+  <tst>ray_bm1_DO.tst</tst>
+</test> 
+-->
+
+<!-- Patch layout test using Burns & Christon benchmark and Data Onion
+<test>
+  <name>DO_patchLayout.GPU</name>
+  <ups>RMCRT_bm1_DO.ups</ups>
+  <tst>DO_patchLayout_noCompare.tst</tst>
+</test> 
+-->
+<!-- Patch layout test using Burns & Christon benchmark and Data Onion
+<test>
+  <name>RMCRT_DO_finePatches</name>
+  <ups>RMCRT_bm1_DO.ups</ups>
+  <tst>DO_patchLayout.tst</tst>
+</test> 
+-->
+
+<!-- Grid convergence test using Burns & Christon benchmark
+<test>
+  <name>DoubleRMCRT_OA_dx_cpu</name>
+  <ups>RMCRT_bm1_1L.ups</ups>
+  <tst>dx.tst</tst>
+</test>
+-->
+
+<!-- Error versus refinement ratio using Burns & Christon benchmark 
+<test>
+  <name>RMCRT_refineRatio</name>
+  <ups>RMCRT_ML.ups</ups>
+  <tst>refineRatio.tst</tst>
+</test>
+-->
+
+<!-- Error versus patch configuration using Burns & Christon benchmark
+<test>
+  <name>RMCRT_patchConfig</name>
+  <ups>RMCRT_bm1_1L.ups</ups>
+  <tst>multiPatches.tst</tst>
+</test>
+-->
+<!-- Boundary flux comparison with CPU code using Burns & Christon benchmark
+<test>
+  <name>RMCRT_boundFlux</name>
+  <ups>RMCRT_isoScat.ups</ups>
+  <tst>RMCRT_boundFlux.tst</tst>
+</test>
+-->
+<!-- Boundary flux comparison with CPU code using Burns & Christon benchmark
+<test>
+  <name>RMCRT_patchConfig</name>
+  <ups>RMCRT_isoScat.ups</ups>
+  <tst>multiPatches.tst</tst>
+</test>
+-->
+<!-- divQ comparison with CPU code, using the RMCRT_udaInit input file
+<test>
+  <name>RMCRT_divQ_cpu_gpu</name>
+  <ups>RMCRT_udaInit.ups</ups>
+  <tst>RMCRT_divQ_cpu_gpu.tst</tst>
+</test>
+-->
+</config>

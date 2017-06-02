@@ -1,0 +1,22 @@
+#!/bin/bash
+#______________________________________________________________________
+# This script is called prior to the configure command and contains
+# commands to modify the src code.
+#______________________________________________________________________
+
+cd "$BUILDROOT"/"src"
+
+#__________________________________
+#  Fix the random number generator for the GPU:RMCRT
+here=CCA/Components/Models/Radiation/RMCRT/RayGPUKernel.cu
+sed -i s/"\/\/#define FIXED_RANDOM_NUM"/"#define FIXED_RANDOM_NUM"/g $here
+
+
+#__________________________________
+echo "" >> $HTMLLOG
+echo "" >> $HTMLLOG
+echo "==================================" >> $HTMLLOG
+echo "" >> $HTMLLOG
+echo "Running modifySrc script" >> $HTMLLOG
+
+exit 0
