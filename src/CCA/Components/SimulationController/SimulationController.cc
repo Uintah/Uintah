@@ -424,12 +424,6 @@ SimulationController::outputSetup( void )
   }
 
   d_output->problemSetup( d_ups, d_restart_ps, d_sharedState.get_rep() );
-
-  if( d_restarting ) {
-    Dir dir( d_fromDir );
-    d_output->restartSetup( dir, 0, d_restartTimestep, d_startSimTime,
-                            d_restartFromScratch, d_restartRemoveOldDir );
-  }
 }
 
 //______________________________________________________________________
@@ -544,6 +538,14 @@ SimulationController::outOfSyncSetup()
   // defaults set by the simulation interface into the input.xml,
   // which the output writes along with index.xml
   d_output->initializeOutput(d_ups);
+
+  // This step is done after the output is initalized so that global
+  // output vars are copied to the restart uda.
+  if( d_restarting ) {
+    Dir dir( d_fromDir );
+    d_output->restartSetup( dir, 0, d_restartTimestep, d_startSimTime,
+                            d_restartFromScratch, d_restartRemoveOldDir );
+  }
 }
 
 //______________________________________________________________________
