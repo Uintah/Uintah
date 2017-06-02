@@ -1376,15 +1376,10 @@ main(int argc, char** argv)
     DataArchive* da1 = scinew DataArchive(d_filebase1);
     DataArchive* da2 = scinew DataArchive(d_filebase2);
 
-    vector<string> vars;
-    vector<int> num_matls;
-    vector<const Uintah::TypeDescription*> types;
-    vector< pair<string, const Uintah::TypeDescription*> > vartypes1;
-
-    vector<string> vars2;
-    vector<int> num_matls2;
-    vector<const Uintah::TypeDescription*> types2;
-    vector< pair<string, const Uintah::TypeDescription*> > vartypes2;
+    vector<string>                                         vars,      vars2;
+    vector<int>                                            num_matls, num_matls2;
+    vector<const Uintah::TypeDescription*>                 types,     types2;
+    vector< pair<string, const Uintah::TypeDescription*> > vartypes1, vartypes2;
 
     da1->queryVariables( vars, num_matls, types );
     ASSERTEQ(vars.size(), types.size());
@@ -1554,6 +1549,7 @@ main(int argc, char** argv)
           bool first = true;
           Level::const_patch_iterator iter;
 
+#if 0 
           //__________________________________
           //  bulletproofing does the variable exist in both DAs on this timestep?
           //  This problem mainly occurs if <outputInitTimestep> has been specified.
@@ -1573,11 +1569,12 @@ main(int argc, char** argv)
           }
           if( existsDA1 != existsDA2 ) {
             ostringstream warn;
-            warn << "    The variable ("<< var << ") was not found on timestep (" << tstep  <<  ") in both udas. \n"
+            warn << "    The variable ("<< var << ") was not found on timestep (" << tstep  <<  ") in both udas. ("
+                 << existsDA1 << ", " << existsDA2 << ") \n"
                  << "    If this occurs on timestep 0 then ("<< var<< ") was not computed in the initialization task.\n";
             abort_uncomparable(warn);
           }
-
+#endif
           //__________________________________
           //  bulletproof are material sets consistent over DA 1
           for(iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) {

@@ -834,9 +834,20 @@ DataArchive::query(       Variable     & var,
     if( td->getType() == TypeDescription::CCVariable ) {
       type = "CCVars";
     }
-    // FIXME... add in all types, or change TypeDescription.h to have this functionality
-    else {
+    else if( td->getType() == TypeDescription::SFCXVariable ) {
+      type = "SFCXVars";
+    }
+    else if( td->getType() == TypeDescription::SFCYVariable ) {
+      type = "SFCYVars";
+    }
+    else if( td->getType() == TypeDescription::SFCZVariable ) {
+      type = "SFCZVars";
+    }
+    else if( td->getType() == TypeDescription::NCVariable ) {
       type = "NCVars";
+    }
+    else {
+      type = "NOT_IMPLEMENTED";
     }
     string idxFilename = levelPath.str() + type + ".idx";
     
@@ -868,13 +879,15 @@ DataArchive::query(       Variable     & var,
 
     int varIndex;
 
-    if( dfi ) {
-      varIndex = dfi->start;
-    }
-    else {
-      varIndex = 0;
-    }
-    ret = PIDX_set_current_variable_index( idxFile, varIndex );
+    //    if( dfi ) {
+    //      varIndex = dfi->start;
+    //    }
+    //    else {
+    //      varIndex = 0;
+    //    }
+    // ret = PIDX_set_current_variable_index( idxFile, varIndex );
+
+    ret = PIDX_set_current_variable_by_name( idxFile, name.c_str() );
     pidx.checkReturnCode( ret, "DataArchive::query() - PIDX_set_current_variable_index failure", __FILE__, __LINE__ );
 
     //__________________________________
@@ -905,7 +918,7 @@ DataArchive::query(       Variable     & var,
     memset( dataPIDX, 0, arraySize );
 
     // debugging
-    /*    if (dbg.active() ){*/
+    if (dbg.active() ){
       proc0cout << "Query:  filename: " << idxFilename << "\n"
                 << "    " << name
                 << " timestep: " << timestep
@@ -919,7 +932,7 @@ DataArchive::query(       Variable     & var,
                 << " values_per_sample: " << varDesc->vps
                 << " bits_per_sample: "<< bits_per_sample
                 << " arraySize " << arraySize << "\n";
-      /*    }*/
+    }
 
     ret = PIDX_variable_read_data_layout(varDesc, patchOffset, patchSize, dataPIDX, PIDX_row_major);
     pidx.checkReturnCode(ret, "DataArchive::query() - PIDX_variable_read_data_layout failure", __FILE__, __LINE__);
@@ -943,6 +956,12 @@ DataArchive::query(       Variable     & var,
                            dataPIDX,
                            arraySize );
     }
+
+    // DEBUG prints:
+    //    for( int pos = 0; pos < arraySize; pos++ ) {
+    //      printf("%d", dataPIDX[ pos ] );
+    //    }
+
     //__________________________________
     // now move the dataPIDX buffer into the array3 variable
     var.readPIDX( dataPIDX, arraySize, timedata.d_swapBytes );
@@ -1972,18 +1991,18 @@ DataArchive::queryNumMaterials(const Patch* patch, int index)
 //______________________________________________________________________
 //    Does this variable exist on this patch at this timestep
 bool
-DataArchive::exists( const string& varname,
-                     const Patch* patch,
-                     const int timeStep )
+DataArchive::exists( const string & varname,
+                     const Patch  * patch,
+                     const int      timeStep )
 {
   d_lock.lock();
 
-  TimeData& timedata = getTimeData(timeStep);
+  TimeData& timedata = getTimeData( timeStep );
   timedata.parsePatch( patch );
 
   int levelIndex = patch->getLevel()->getIndex();
 
-  for (unsigned i = 0; i < timedata.d_matlInfo[levelIndex].size(); i++) {
+  for( unsigned i = 0; i < timedata.d_matlInfo[levelIndex].size(); i++ ) {
     // i-1, since the matlInfo is adjusted to allow -1 as entries
     VarnameMatlPatch vmp( varname, i-1, patch->getRealPatch()->getID() );
     DataFileInfo dummy;
