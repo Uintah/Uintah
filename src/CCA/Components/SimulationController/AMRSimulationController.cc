@@ -162,22 +162,21 @@ AMRSimulationController::run()
   // Start the wall timer for the initialization timestep
   walltimers.TimeStep.reset( true );
 
-    
   // Setup the restart archive first. 
   restartArchiveSetup();
   // Setup the output
   outputSetup();
+  // Setup the scheduler.
+  schedulerSetup();
   // Setup the sim interface using the restart archive and under the
   // hood the output.
   simulationInterfaceSetup();
   // Setup the grid using the restart archive and sim interface.
   gridSetup();
-  // Complete the setup of the output and sim interface.
+  // Complete the setup of the output and scheduler.
   outOfSyncSetup();
   // Setup the regridder using the grid.
   regridderSetup();
-  // Setup the scheduler using the grid.
-  schedulerSetup();
   // Setup the load balancer using the scheduler and grid.
   loadBalancerSetup();
   // Setup the time state using the restart archive, grid, scheduler, and

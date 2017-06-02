@@ -193,11 +193,11 @@ protected:
     
   void restartArchiveSetup();
   void outputSetup();
+  void schedulerSetup();
   void simulationInterfaceSetup();
   void gridSetup();
   void outOfSyncSetup();
   void regridderSetup();
-  void schedulerSetup();
   void loadBalancerSetup();
   void timeStateSetup();
   void finialSetup();

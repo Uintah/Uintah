@@ -429,6 +429,17 @@ SimulationController::outputSetup( void )
 //______________________________________________________________________
 //
 void
+SimulationController::schedulerSetup( void )
+{
+
+  // Initalize the scheduler
+  d_scheduler = dynamic_cast<Scheduler*>(getPort("scheduler"));
+  d_scheduler->problemSetup(d_ups, d_sharedState);  
+}
+
+//______________________________________________________________________
+//
+void
 SimulationController::simulationInterfaceSetup( void )
 {
   d_sim = dynamic_cast<SimulationInterface*>( getPort( "sim" ) );
@@ -518,11 +529,12 @@ SimulationController::gridSetup( void )
 void
 SimulationController::outOfSyncSetup()
 {
-  // Complete the setup of the simulation interface and output that
+  // Complete the setup of the simulation interface and scheduler that
   // could not be completed until the grid was setup.
   
-  // The simulation interface was initalized earlier because the
-  // grid needed it.
+  // The simulation interface was initalized earlier because the it
+  // was needed to possibly set the grid's extra cells before the
+  // grid's ProblemSetup was called (it can not be done aferwards).
 
   // Pass the d_restart_ps to the component's problemSetup.  For
   // restarting, pull the <MaterialProperties> from the d_restart_ps.
@@ -530,6 +542,15 @@ SimulationController::outOfSyncSetup()
   // from the d_ups instead.  This step needs to be done before
   // DataArchive::restartInitialize.
   d_sim->problemSetup(d_ups, d_restart_ps, d_currentGridP, d_sharedState);
+
+  // The scheduler was initalized earlier because the simulation
+  // interface(?) needed it.
+
+  // Complete the setup of the scheduler.
+  d_scheduler->initialize( 1, 1 );
+  d_scheduler->setInitTimestep( true );
+  d_scheduler->setRestartInitTimestep( d_restarting );
+  d_scheduler->advanceDataWarehouse( d_currentGridP, true );
 }
 
 //______________________________________________________________________
@@ -545,21 +566,6 @@ SimulationController::regridderSetup( void )
   if( d_regridder ) {
     d_regridder->problemSetup( d_ups, d_currentGridP, d_sharedState );
   }
-}
-
-//______________________________________________________________________
-//
-void
-SimulationController::schedulerSetup( void )
-{
-  // Initalize the scheduler
-  d_scheduler = dynamic_cast<Scheduler*>(getPort("scheduler"));
-  d_scheduler->problemSetup(d_ups, d_sharedState);
-
-  d_scheduler->initialize( 1, 1 );
-  d_scheduler->setInitTimestep( true );
-  d_scheduler->setRestartInitTimestep( d_restarting );
-  d_scheduler->advanceDataWarehouse( d_currentGridP, true );
 }
 
 //______________________________________________________________________
@@ -642,7 +648,7 @@ SimulationController::finialSetup()
 
   // This step is done after the output is initalized so that global
   // reduction ouput vars are copied to the new uda. Further, it must
-  // be call after timeStateSetup() is call so that checkpoints are
+  // be called after timeStateSetup() is call so that checkpoints are
   // copied to the new uda as well.
   if( d_restarting ) {
     Dir dir( d_fromDir );
