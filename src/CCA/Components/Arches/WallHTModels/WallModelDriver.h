@@ -54,6 +54,7 @@ namespace Uintah{
       struct HTVariables {
 
         double time;
+        double relax; // relaxation coefficient for updating surface temperature
         int em_model_type;
         double delta_t;
         CCVariable<double> T;
@@ -87,6 +88,7 @@ namespace Uintah{
       };
 
     private:
+      double _relax; // this is the global relaxation coefficient for any wallht type.
       std::string _dep_vel_name;
       bool do_coal_region;
       int _calc_freq;                    ///< Wall heat transfer model calculation frequency
@@ -405,28 +407,28 @@ namespace Uintah{
                 yscale = 8.97627710e-2; 
                 ycenter = 0.927990005; 
                 fresnel={0.966128001, -1.14864873e-06, -0.164711924, -0.00571174902};
-	      } else if (ash_type == "illinois_no6"){
-		a_sv = -1.71194151e4;
-		b_sv = -1.02161804;
-		c_sv = 6.05690163;
-		a_agg = 3.32945977e-3;
-		b_agg = 8.57489019;
-		c_agg = 3.31450986e-1;
-		dp_eff_max=0.67474660;
-		dp_eff_min=0.33333333;
-		dpmax = 0.00300000;
-		coeff_num = {0.12518178, 0.06352969, 1.16997318, 0.48859009, 0.64075598, -0.01524800};
-		coeff_den = {1.00000000, 0.34069977, 0.71303684, -0.03263652, 0.28825013, -0.00615558};
-		xscale = {7.50000000e2, 1.4625000e-4};
-		xcenter = {1.05000000e3, 1.5375000e-3};
-		yscale = 1.22356296e-1;
-		ycenter = 8.20284975e-1;
-		fresnel={9.58768721e-1, -1.80604902e-6, -1.55523143e-1, -5.46986472e-3};
-	      }else {
+	            } else if (ash_type == "illinois_no6"){
+		            a_sv = -1.71194151e4;
+		            b_sv = -1.02161804;
+		            c_sv = 6.05690163;
+		            a_agg = 3.32945977e-3;
+		            b_agg = 8.57489019;
+		            c_agg = 3.31450986e-1;
+		            dp_eff_max=0.67474660;
+		            dp_eff_min=0.33333333;
+		            dpmax = 0.00300000;
+		            coeff_num = {0.12518178, 0.06352969, 1.16997318, 0.48859009, 0.64075598, -0.01524800};
+		            coeff_den = {1.00000000, 0.34069977, 0.71303684, -0.03263652, 0.28825013, -0.00615558};
+		            xscale = {7.50000000e2, 1.4625000e-4};
+		            xcenter = {1.05000000e3, 1.5375000e-3};
+		            yscale = 1.22356296e-1;
+		            ycenter = 8.20284975e-1;
+		            fresnel={9.58768721e-1, -1.80604902e-6, -1.55523143e-1, -5.46986472e-3};
+	            } else {
                 throw InvalidValue("Error, coal_name wasn't recognized in dynamic ash emissivity data-base. ", __FILE__, __LINE__);
               }
 
-          }
+            }
             double a_sv;
             double b_sv;
             double c_sv;
@@ -506,7 +508,6 @@ namespace Uintah{
           const double _sigma_constant;      ///< Stefan Boltzman constant [W/(m^2 K^4)]
           double _T_max;     ///< Maximum allowed wall temperature
           double _T_min;     ///< Minimum allowed wall temperature
-          double _relax;     ///< A relaxation coefficient to help stability (eg, wall temperature changes too fast)...but not necessarily with accuracy
 
       };
 
@@ -539,7 +540,6 @@ namespace Uintah{
               double dy;
               double emissivity;
               double T_inner;
-              double relax;     ///< A relaxation coefficient to help stability (eg, wall temperature changes too fast)...but not necessarily with accuracy
               double max_TW;     ///< maximum wall temperature
               double min_TW;     ///< minimum wall temperature
               std::vector<GeometryPieceP> geometry;
@@ -614,7 +614,6 @@ namespace Uintah{
               double dy_dep_en; // enamel deposit thickness
               double emissivity;
               double T_inner;
-              double relax;     ///< A relaxation coefficient to help stability (eg, wall temperature changes too fast)...but not necessarily with accuracy
               double max_TW;     ///< maximum wall temperature
               double min_TW;     ///< minimum wall temperature
               std::vector<GeometryPieceP> geometry;

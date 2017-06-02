@@ -118,6 +118,9 @@ WallModelDriver::problemSetup( const ProblemSpecP& input_db )
 
 
   do_coal_region = false;
+  
+  db->getWithDefault("relaxation_coef", _relax, 1.0);
+
 
   for ( ProblemSpecP db_model = db->findBlock( "model" ); db_model != nullptr; db_model = db_model->findNextBlock( "model" ) ){
 
@@ -265,6 +268,7 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
 
     const Patch* patch = patches->get(p);
     HTVariables vars;
+    vars.relax = _relax;
     vars.time = _shared_state->getElapsedSimTime();
     delt_vartype DT;
     old_dw->get(DT, _shared_state->get_delt_label());
@@ -519,7 +523,6 @@ WallModelDriver::SimpleHT::problemSetup( const ProblemSpecP& input_db ){
   db->require("tube_side_T", _T_inner);
   db->getWithDefault( "T_wall_min", _T_min, 373 );
   db->getWithDefault( "T_wall_max", _T_max, 3000);
-  db->getWithDefault( "relaxation_coef", _relax, 1.0);
 
 }
 
@@ -575,7 +578,7 @@ WallModelDriver::SimpleHT::computeHT( const Patch* patch, HTVariables& vars, CCV
         T_wall = T_wall > _T_max ? _T_max : T_wall;
         T_wall = T_wall < _T_min ? _T_min : T_wall;
 
-        T[adj] = ( 1.0 - _relax ) * vars.T_old[adj] + ( _relax ) * T_wall;
+        T[adj] = ( 1.0 - vars.relax ) * vars.T_old[adj] + ( vars.relax ) * T_wall;
 
       }
     }
@@ -647,7 +650,6 @@ WallModelDriver::RegionHT::problemSetup( const ProblemSpecP& input_db ){
     r_db->getWithDefault("wall_emissivity", info.emissivity, 1.0);
     r_db->require("tube_side_T", info.T_inner);
     //r_db->getWithDefault("max_TW", info.max_TW, 3500.0); //may need to revisit this later for cases when the wall tried to give energy back
-    r_db->getWithDefault("relaxation_coef", info.relax, 1.0);
     _regions.push_back( info );
 
   }
@@ -803,11 +805,11 @@ WallModelDriver::RegionHT::computeHT( const Patch* patch, HTVariables& vars, CCV
               // q_radiation - 1 * sigma Tw' ^ 4 = emissivity * ( q_radiation - sigma Tw ^ 4 )
               // q_radiation - sigma Tw' ^ 4 = net_q
 
-              vars.T_real[c] = (1 - wi.relax) * vars.T_real_old[c] + wi.relax * TW_new;
+              vars.T_real[c] = (1 - vars.relax) * vars.T_real_old[c] + vars.relax * TW_new;
 
               TW = pow( (rad_q-net_q) / _sigma_constant, 0.25);
 
-              T[c] = ( 1 - wi.relax ) * vars.T_old[c] + wi.relax * TW;
+              T[c] = ( 1 - vars.relax ) * vars.T_old[c] + vars.relax * TW;
 
             }
           }
@@ -938,7 +940,6 @@ WallModelDriver::CoalRegionHT::problemSetup( const ProblemSpecP& input_db ){
     r_db->getWithDefault("enamel_deposit_thickness", info.dy_dep_en,0.0);
     r_db->getWithDefault("wall_emissivity", info.emissivity, 1.0);
     r_db->require("tube_side_T", info.T_inner);
-    r_db->getWithDefault("relaxation_coef", info.relax, 1.0);
     _regions.push_back( info );
 
   }
@@ -1086,12 +1087,12 @@ WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars,
                 dy_dep_en = (rad_q >= rad_q_en) ? dy_dep_en_max : dy_dep_en;
               }
 
-              vars.deposit_thickness[c] = (1-wi.relax) * vars.deposit_thickness_old[c] + wi.relax * vars.deposit_thickness[c];  // here we time average the deposit thickness so that it doesn't vary when we switch regimes.
+              vars.deposit_thickness[c] = (1-vars.relax) * vars.deposit_thickness_old[c] + vars.relax * vars.deposit_thickness[c];  // here we time average the deposit thickness so that it doesn't vary when we switch regimes.
               dy_dep_sb = vars.deposit_thickness[c];
 
               T_old =  vars.T_real_old[c];
               newton_solve( wi, TW_new, k_sb, k_en, dy_dep_sb, dy_dep_en, T_old, rad_q, R_wall, Emiss );
-              vars.T_real[c] = (1 - wi.relax) * vars.T_real_old[c] + wi.relax * TW_new; // this is the real wall temperature, vars.T_real_old is the old solution for "temperature".
+              vars.T_real[c] = (1 - vars.relax) * vars.T_real_old[c] + vars.relax * TW_new; // this is the real wall temperature, vars.T_real_old is the old solution for "temperature".
               // update the emissivity model with the new wall temperature
               m_em_model->model(Emiss,wi.emissivity,vars.T_real[c],dp_arrival, tau_sint);
               vars.emissivity[c]=Emiss;
@@ -1121,7 +1122,7 @@ WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars,
               // q_radiation - sigma Tw' ^ 4 = net_q
               // Tw' = ((q_radiation - net_q)/sigma)^0.25
               TW_new = std::pow( (rad_q-net_q) / _sigma_constant, 0.25); // correct TW_new for radiation model
-              T[c] = ( 1 - wi.relax ) * vars.T_old[c] + wi.relax * TW_new; // this is the radiation wall temperature, var.T_old[c] is the old solution for radiation "temperature".
+              T[c] = ( 1 - vars.relax ) * vars.T_old[c] + vars.relax * TW_new; // this is the radiation wall temperature, var.T_old[c] is the old solution for radiation "temperature".
             }
           }
         }

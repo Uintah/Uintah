@@ -18,14 +18,39 @@ DepositionVelocity::problemSetup( ProblemSpecP& db ){
 
   const ProblemSpecP db_root = db->getRootNode();
 
+  double p_void0;
   _cellType_name="cellType";
   _ratedepx_name="RateDepositionX";
   _ratedepy_name="RateDepositionY";
   _ratedepz_name="RateDepositionZ";
-  _rhoP_name  = ParticleTools::parse_for_role_to_label(db,"density");
-  db->getWithDefault("relaxation_coef",_relaxation_coe,0.05);
-
-  db->getWithDefault("ash_density",_user_specified_rho,-1.0);
+  if ( db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("BoundaryConditions")->findBlock("WallHT") ){
+    ProblemSpecP wallht_db = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("BoundaryConditions")->findBlock("WallHT");
+    wallht_db->getWithDefault("relaxation_coef",_relaxation_coe,1.0);
+    bool error_flag = false;
+    std::string ht_model_type; 
+    for ( ProblemSpecP db_wall_model = wallht_db->findBlock( "model" ); db_wall_model != nullptr; db_wall_model = db_wall_model->findNextBlock( "model" ) ){ 
+      db_wall_model->getAttribute("type",ht_model_type);
+      if (ht_model_type == "region_ht" || ht_model_type == "simple_ht" )
+        error_flag = true; 
+      if (ht_model_type == "coal_region_ht")
+      db_wall_model->getWithDefault( "sb_deposit_porosity",p_void0,0.6); // note here we are using the sb layer to estimate the wall density no the enamel layer. 
+    }
+    if (error_flag)
+      throw InvalidValue("Error: DepositionVelocity model requires WallHT model of type coal_region_ht.", __FILE__, __LINE__);
+  } else {
+    throw InvalidValue("Error: DepositionVelocity model requires WallHT model for relaxation coefficient.", __FILE__, __LINE__);
+  }
+ 
+  double rho_ash_bulk;
+  if ( db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")){ 
+    ProblemSpecP db_part_properties =  db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties");
+    db_part_properties->getWithDefault( "rho_ash_bulk",rho_ash_bulk,2300.0);
+  } else {
+    throw InvalidValue("Error: DepositionVelocity model requires ParticleProperties to be specified.", __FILE__, __LINE__);
+  }
+  
+  _user_specified_rho = rho_ash_bulk * p_void0; 
+  
   _d.push_back(IntVector(1,0,0)); // cell center located +x
   _d.push_back(IntVector(-1,0,0)); // cell center located -x
   _d.push_back(IntVector(0,1,0)); // cell center located +y
@@ -141,13 +166,11 @@ DepositionVelocity::register_timestep_eval( std::vector<ArchesFieldContainer::Va
     const std::string RateDepositionX = get_env_name(i, _ratedepx_name);
     const std::string RateDepositionY = get_env_name(i, _ratedepy_name);
     const std::string RateDepositionZ = get_env_name(i, _ratedepz_name);
-    const std::string rho_name = get_env_name(i, _rhoP_name);
     const std::string diameter_name = get_env_name( i, _diameter_base_name );
 
     register_variable( RateDepositionX, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::LATEST , variable_registry );
     register_variable( RateDepositionY, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::LATEST , variable_registry );
     register_variable( RateDepositionZ, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::LATEST , variable_registry );
-    register_variable( rho_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::LATEST, variable_registry );
     register_variable( diameter_name , ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::LATEST , variable_registry );
   }
 
@@ -202,15 +225,12 @@ DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     const std::string RateDepositionY = get_env_name(i, _ratedepy_name);
     const std::string RateDepositionZ = get_env_name(i, _ratedepz_name);
     const std::string diameter_name  = get_env_name( i, _diameter_base_name );
-    const std::string rho_name = get_env_name(i, _rhoP_name);
     constSFCXVariable<double>* vdep_x = tsk_info->get_const_uintah_field<constSFCXVariable<double> >(RateDepositionX);
     constSFCXVariable<double>& dep_x = *vdep_x;
     constSFCYVariable<double>* vdep_y = tsk_info->get_const_uintah_field<constSFCYVariable<double> >(RateDepositionY);
     constSFCYVariable<double>& dep_y = *vdep_y;
     constSFCZVariable<double>* vdep_z = tsk_info->get_const_uintah_field<constSFCZVariable<double> >(RateDepositionZ);
     constSFCZVariable<double>& dep_z = *vdep_z;
-    constCCVariable<double>* vrhop = tsk_info->get_const_uintah_field<constCCVariable<double> >(rho_name);
-    constCCVariable<double>& rhop = *vrhop;
     constCCVariable<double>& dp = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( diameter_name ));
 
     for (CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++){
@@ -244,26 +264,18 @@ DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
           for ( int pp = 0; pp < total_flux_ind; pp++ ){
             if (container_flux_ind[pp]==0) {
               flux = std::abs(dep_x[c+_fd[container_flux_ind[pp]]]);
-              rhoi = rhop[c+_d[container_flux_ind[pp]]];
             } else if (container_flux_ind[pp]==1) {
               flux = std::abs(dep_x[c+_fd[container_flux_ind[pp]]]);
-              rhoi = rhop[c+_d[container_flux_ind[pp]]];
             } else if (container_flux_ind[pp]==2) {
               flux = std::abs(dep_y[c+_fd[container_flux_ind[pp]]]);
-              rhoi = rhop[c+_d[container_flux_ind[pp]]];
             } else if (container_flux_ind[pp]==3) {
               flux = std::abs(dep_y[c+_fd[container_flux_ind[pp]]]);
-              rhoi = rhop[c+_d[container_flux_ind[pp]]];
             } else if (container_flux_ind[pp]==4) {
               flux = std::abs(dep_z[c+_fd[container_flux_ind[pp]]]);
-              rhoi = rhop[c+_d[container_flux_ind[pp]]];
             } else {
               flux = std::abs(dep_z[c+_fd[container_flux_ind[pp]]]);
-              rhoi = rhop[c+_d[container_flux_ind[pp]]];
             }
-            if (_user_specified_rho > 0) {
-              rhoi = _user_specified_rho;
-            }
+            rhoi = _user_specified_rho;
             // volumetric flow rate for particle i:
             d_velocity += (flux/rhoi) * area_face[container_flux_ind[pp]];
             // The total cell surface area exposed to radiation:

@@ -1312,6 +1312,7 @@
         <particle_thermal_conductivity>0.5</particle_thermal_conductivity>
         <particle_weights>[0.387137, 0.566254, 0.046609]</particle_weights>
         <density>1300.0</density>
+        <rho_ash_bulk>2000.0</rho_ash_bulk>
         <temperature>300.0</temperature>
         <ash_softening_temperature>1500.0</ash_softening_temperature>     
         <ash_hemispherical_temperature>900</ash_hemispherical_temperature> 
@@ -1383,8 +1384,6 @@
           <SiO>0.38900000000000001</SiO>
         </model>
         <model label="dep_velocity" type="deposition_velocity">
-          <ash_density>1000</ash_density>
-          <relaxation_coef>0.05</relaxation_coef>
         </model>
         <model label="number_density" type="total_number_density"/>
         <model label="length" type="constant">
@@ -1782,8 +1781,10 @@
           </intrusion>
         </intrusions>
         <WallHT>
+          <relaxation_coef>0.8</relaxation_coef>
           <model type="coal_region_ht">
             <deposit_velocity_name>dep_velocity</deposit_velocity_name>
+            <sb_deposit_porosity>0.5</sb_deposit_porosity>
             <coal_region>
               <tscale_dep>14400.0</tscale_dep>
               <k>0.3</k>
@@ -1792,7 +1793,6 @@
               <erosion_thickness>0.1</erosion_thickness>
               <wall_emissivity>0.8</wall_emissivity>
               <tube_side_T>300</tube_side_T>
-              <relaxation_coef>0.8</relaxation_coef>
               <geom_object>
                 <box>
                   <min>[-200, -200, -200]</min>

@@ -72,7 +72,6 @@ private:
       std::string _ratedepx_name;
       std::string _ratedepy_name;
       std::string _ratedepz_name;
-      std::string _rhoP_name;
       double _user_specified_rho;
       double _relaxation_coe;
       std::string _diameter_base_name;

@@ -1877,13 +1877,13 @@
           </intrusion>
         </intrusions>
         <WallHT>
+          <relaxation_coef>0.1</relaxation_coef>
           <model type="region_ht">
             <region>
               <k>1.3</k>
               <wall_thickness>0.006</wall_thickness>
               <wall_emissivity>1.0</wall_emissivity>
               <tube_side_T>800</tube_side_T>
-              <relaxation_coef>0.1</relaxation_coef>
               <geom_object>
                 <union>
                   <box label="glass1-1">
@@ -1910,7 +1910,6 @@
               <wall_thickness>0.076</wall_thickness>
               <wall_emissivity>0.8</wall_emissivity>
               <tube_side_T>355</tube_side_T>
-              <relaxation_coef>0.08</relaxation_coef>
               <geom_object>
                 <union>
                   <difference>

@@ -960,6 +960,11 @@
         </TurbulentInlet>
 
       <WallHT                           spec="OPTIONAL NO_DATA">
+        <relaxation_coef               spec="OPTIONAL DOUBLE 'positive'"/> <!-- relaxation to help with wildy varying wall temperatures
+                                                                                   because we have assumed (with this model) that the wall comes to
+                                                                                   instant equilibrium with the gas heat flux. Range 0 < relax < 1. Default = 1 no relaxation.
+                                                                                   for wall with large thermal resistance, recommend relaxation_coef=0.1-0.8,
+                                                                                   for small thermal resisitance, recommend relaxation_coef=1.0 -->
         <temperature_label              spec="OPTIONAL STRING"/> <!-- tabluated name for temperature.  Default: temperature -->
         <model                          spec="MULTIPLE NO_DATA"
                                         attribute1="type REQUIRED STRING 'simple_ht, region_ht, coal_region_ht'">
@@ -973,10 +978,7 @@
           <tube_side_T                  spec="REQUIRED DOUBLE 'positive'" need_applies_to="type simple_ht"/> <!-- temperature of the fluid on the tube side (constant), [K] -->
           <T_wall_min                   spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type simple_ht"/> <!-- minimum allowed wall temperature [K]. Default = 373 -->
           <T_wall_max                   spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type simple_ht"/> <!-- maximum allowed wall temperature [K]. Default = 373 -->
-          <relaxation_coef              spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type simple_ht"/> <!-- relaxation to help with wildy varying wall temperatures
-                                                                                                                  because we have assumed (with this model) that the wall comes to
-                                                                                                                  instant equilibrium with the gas heat flux. Range 0 < relax < 1. Default = 1 (no relaxation).  -->
-
+          
           <!-- region ht
                 Like simple_ht model but only applies the model in the geometry region as specified by the geom_object.
                 May specify several different regions, each with a unique set of properties.
@@ -990,12 +992,6 @@
             <wall_thickness             spec="REQUIRED DOUBLE"/>  <!-- thickness of the wall in meters, [meters] -->
             <wall_emissivity            spec="OPTIONAL DOUBLE 'positive'"/>  <!-- emissivity of the wall with default of 1.0 -->
             <tube_side_T                spec="REQUIRED DOUBLE"/>  <!-- temperature of the fluid on the tube side (constant), [K] -->
-            <relaxation_coef              spec="OPTIONAL DOUBLE 'positive'"/> <!-- relaxation to help with wildy varying wall temperatures
-                                                                                   because we have assumed (with this model) that the wall comes to
-                                                                                   instant equilibrium with the gas heat flux. Range 0 < relax < 1. Default = 1 no relaxation.
-                                                                                   for wall with large thermal resistance, recommend relaxation_coef=0.1-0.8,
-                                                                                   for small thermal resisitance, recommend relaxation_coef=1.0 -->
-
             <geom_object/>
           </region>
           <deposit_velocity_name           spec="REQUIRED STRING" need_applies_to="type coal_region_ht"/>
@@ -1017,12 +1013,6 @@
             <enamel_deposit_thickness      spec="OPTIONAL DOUBLE"/>  <!-- thickness of permanent wall deposit, [meters] -->
             <wall_emissivity               spec="OPTIONAL DOUBLE 'positive'"/>  <!-- emissivity of the wall with default of 1.0 -->
             <tube_side_T                   spec="REQUIRED DOUBLE"/>  <!-- temperature of the fluid on the tube side (constant), [K] -->
-            <relaxation_coef               spec="OPTIONAL DOUBLE 'positive'"/> <!-- relaxation to help with wildy varying wall temperatures
-                                                                                   because we have assumed (with this model) that the wall comes to
-                                                                                   instant equilibrium with the gas heat flux. Range 0 < relax < 1. Default = 1 no relaxation.
-                                                                                   for wall with large thermal resistance, recommend relaxation_coef=0.1-0.8,
-                                                                                   for small thermal resisitance, recommend relaxation_coef=1.0 -->
-
             <geom_object/>
           </coal_region>
 
@@ -1386,11 +1376,6 @@
                                         need_applies_to="type rate_deposition"/>       <!-- AlO mass fraction-->
             <SiO                        spec="OPTIONAL DOUBLE 'positive'"
                                         need_applies_to="type rate_deposition"/>       <!-- SiO mass fraction-->
-            <!-- deposition model -->
-            <ash_density                spec="OPTIONAL DOUBLE"
-                                        need_applies_to="type deposition_velocity"/>       <!-- at burnout ash density is rho_0*ash_mass_fraction, if you want to use another constant density specify here. -->
-            <relaxation_coef            spec="REQUIRED DOUBLE 'positive'"
-                                        need_applies_to="type deposition_velocity"/>       <!-- relaxation coefficient for deposition_velocity calculation -->
             <!-- Simple rate expression -->
             <A                          spec="REQUIRED DOUBLE 'positive'"
                                         need_applies_to="type simple_rate"/>       <!-- Pre-exponential factor -->

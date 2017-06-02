@@ -150,13 +150,13 @@
       </Properties>
       <BoundaryConditions>
         <!--<WallHT>-->
+        <!--<relaxation_coef>.1</relaxation_coef>-->
         <!--<region>-->
         <!--<k>.1</k>-->
         <!--<wall_thickness>.1</wall_thickness>-->
         <!--<tube_side_T>400</tube_side_T>-->
         <!--<max_TW>1200</max_TW>-->
         <!--<min_TW>298</min_TW>-->
-        <!--<relaxation_coef>.1</relaxation_coef>-->
         <!--<geom_object>-->
         <!--<box>-->
         <!--<min>[1.5,-1,1]</min>-->

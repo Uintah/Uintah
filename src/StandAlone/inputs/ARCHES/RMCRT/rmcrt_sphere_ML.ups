@@ -187,13 +187,13 @@
         </intrusions>
         <!--To turn on dynamic wall temperature, uncomment WallHT 
         <WallHT>
+          <relaxation_coef>0.1</relaxation_coef>
           <model type="region_ht">
             <region>
               <k>1.0</k>
               <wall_thickness>0.01</wall_thickness>
               <wall_emissivity>1.0</wall_emissivity>
               <tube_side_T>80</tube_side_T>
-              <relaxation_coef>0.1</relaxation_coef>
               <geom_object>
                   <box label="glass3-2">
                     <min>[0.25, 0.25 ,  0.25]</min>
