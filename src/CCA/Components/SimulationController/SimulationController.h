@@ -196,9 +196,9 @@ protected:
   void schedulerSetup();
   void simulationInterfaceSetup();
   void gridSetup();
-  void outOfSyncSetup();
   void regridderSetup();
   void loadBalancerSetup();
+  void outOfSyncSetup();
   void timeStateSetup();
   void finialSetup();
 

@@ -173,12 +173,12 @@ AMRSimulationController::run()
   simulationInterfaceSetup();
   // Setup the grid using the restart archive and sim interface.
   gridSetup();
-  // Complete the setup of the output and scheduler.
-  outOfSyncSetup();
   // Setup the regridder using the grid.
   regridderSetup();
   // Setup the load balancer using the scheduler and grid.
   loadBalancerSetup();
+  // Complete the setup of the output and scheduler.
+  outOfSyncSetup();
   // Setup the time state using the restart archive, grid, scheduler, and
   // load balnacer.
   timeStateSetup();

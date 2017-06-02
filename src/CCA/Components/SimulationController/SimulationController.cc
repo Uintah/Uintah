@@ -416,14 +416,19 @@ SimulationController::restartArchiveSetup( void )
 void
 SimulationController::outputSetup( void )
 {
-  // Initalize the output archiver.
+  // Set up the output archiver now as it may be needed by simulation
+  // interface.
   d_output = dynamic_cast<Output*>(getPort("output"));
+
   if( !d_output ) {
     throw InternalError("dynamic_cast of 'd_output' failed!",
                         __FILE__, __LINE__);
   }
 
   d_output->problemSetup( d_ups, d_restart_ps, d_sharedState.get_rep() );
+
+  // Note: there are other downstream calls to d_output to complete
+  // the setup. See finialSetup().
 }
 
 //______________________________________________________________________
@@ -432,9 +437,19 @@ void
 SimulationController::schedulerSetup( void )
 {
 
-  // Initalize the scheduler
+  // Set up the scheduler now as it will be needed by simulation
+  // interface.
   d_scheduler = dynamic_cast<Scheduler*>(getPort("scheduler"));
+
+  if( !d_scheduler ) {
+    throw InternalError("dynamic_cast of 'd_scheduler' failed!",
+                        __FILE__, __LINE__);
+  }
+
   d_scheduler->problemSetup(d_ups, d_sharedState);  
+
+  // Note: there are other downstream calls to d_scheduler to complete
+  // the setup. See outOfSyncSetup().
 }
 
 //______________________________________________________________________
@@ -442,23 +457,24 @@ SimulationController::schedulerSetup( void )
 void
 SimulationController::simulationInterfaceSetup( void )
 {
+  // Set up the simulation interface.
   d_sim = dynamic_cast<SimulationInterface*>( getPort( "sim" ) );
 
   if( !d_sim ) {
-    throw InternalError( "No simulation component", __FILE__, __LINE__ );
+    throw InternalError("dynamic_cast of 'd_sim' failed!",
+                        __FILE__, __LINE__);
   }
 
-  // Note: normally problemSetup would be called here but the
-  // simulation interface needs the grid which has not yet been
-  // created.
+  // Note: normally problemSetup would be called here but the the grid
+  // is needed but it has not yet been created.
 
   // Further the simulation interface may need to change the grid
   // before it is setup.
 
   // As such, get the simulation interface, create the grid, let the
   // simulation interafce make its changes to the grid, setup the
-  // grid, then finally set up the simulation interface. The
-  // simulation interface call to problemSetup is done in miscSetup.
+  // grid, then set up the simulation interface. The simulation
+  // interface call to problemSetup is done in outOfSyncSetup().
 }
 
 //______________________________________________________________________
@@ -466,6 +482,7 @@ SimulationController::simulationInterfaceSetup( void )
 void
 SimulationController::gridSetup( void )
 {
+  // Set up the grid.
   if( d_restarting ) {
     // tsaad & bisaac: At this point, and during a restart, there not
     // legitimate load balancer. This means that the grid obtained
@@ -527,40 +544,13 @@ SimulationController::gridSetup( void )
 //______________________________________________________________________
 //
 void
-SimulationController::outOfSyncSetup()
-{
-  // Complete the setup of the simulation interface and scheduler that
-  // could not be completed until the grid was setup.
-  
-  // The simulation interface was initalized earlier because the it
-  // was needed to possibly set the grid's extra cells before the
-  // grid's ProblemSetup was called (it can not be done aferwards).
-
-  // Pass the d_restart_ps to the component's problemSetup.  For
-  // restarting, pull the <MaterialProperties> from the d_restart_ps.
-  // If the properties are not available, then pull the properties
-  // from the d_ups instead.  This step needs to be done before
-  // DataArchive::restartInitialize.
-  d_sim->problemSetup(d_ups, d_restart_ps, d_currentGridP, d_sharedState);
-
-  // The scheduler was initalized earlier because the simulation
-  // interface(?) needed it.
-
-  // Complete the setup of the scheduler.
-  d_scheduler->initialize( 1, 1 );
-  d_scheduler->setInitTimestep( true );
-  d_scheduler->setRestartInitTimestep( d_restarting );
-  d_scheduler->advanceDataWarehouse( d_currentGridP, true );
-}
-
-//______________________________________________________________________
-//
-void
 SimulationController::regridderSetup( void )
 {
-  // Initalize the regridder with the initial information about grid.
-  // Do this step before initalizing the sim so that Switcher (being
-  // a sim) can reset the state of the regridder.
+  // Set up the regridder.
+
+  // Do this step before fully setting up the simulation interface so
+  // that Switcher (being a simulation interface) can reset the state
+  // of the regridder. See outOfSyncSetup().
   d_regridder = dynamic_cast<Regridder*>( getPort("regridder") );
 
   if( d_regridder ) {
@@ -573,13 +563,48 @@ SimulationController::regridderSetup( void )
 void
 SimulationController::loadBalancerSetup( void )
 {
-  // Initialize load balancer.  Do the initialization here because the
-  // dimensionality in the shared state is known, and that
-  // initialization time is needed. In addition, do this step after
-  // regridding as the minimum patch size that the regridder will
-  // create will be known.
+  // Set up the load balancer.
+
+  // Do the set up after the dimensionality in the shared state is
+  // known. See gridSetup().
+  // (and that initialization time is needed????).
+  // In addition, do this step after regridding as the minimum patch
+  // size that the regridder will create will be known.
   d_lb = d_scheduler->getLoadBalancer();
   d_lb->problemSetup( d_ups, d_currentGridP, d_sharedState );
+}
+
+//______________________________________________________________________
+//
+void
+SimulationController::outOfSyncSetup()
+{
+  // Complete the setup of the simulation interface and scheduler that
+  // could not be completed until the grid was setup.
+  
+  // The simulation interface was initalized earlier because the it
+  // was needed to possibly set the grid's extra cells before the
+  // grid's ProblemSetup was called (it can not be done aferwards).
+
+  // Do this step after setting up the regridder so that Switcher
+  // (being a simulation interface) can reset the state of the
+  // regridder.
+
+  // Pass the d_restart_ps to the component's problemSetup.  For
+  // restarting, pull the <MaterialProperties> from the d_restart_ps.
+  // If the properties are not available, then pull the properties
+  // from the d_ups instead.  This step needs to be done before
+  // DataArchive::restartInitialize.
+  d_sim->problemSetup(d_ups, d_restart_ps, d_currentGridP, d_sharedState);
+
+  // The scheduler was initalized earlier because the simulation
+  // interface needed it.
+
+  // Complete the setup of the scheduler.
+  d_scheduler->initialize( 1, 1 );
+  d_scheduler->setInitTimestep( true );
+  d_scheduler->setRestartInitTimestep( d_restarting );
+  d_scheduler->advanceDataWarehouse( d_currentGridP, true );
 }
 
 //______________________________________________________________________
@@ -638,6 +663,9 @@ SimulationController::timeStateSetup()
 void
 SimulationController::finialSetup()
 {
+  // Finalize the shared state/materials
+  d_sharedState->finalizeMaterials();
+
   // The output was initalized earlier because the simulation
   // interface needed it. 
   
@@ -661,9 +689,6 @@ SimulationController::finialSetup()
   if( amr_ps ) {
     amr_ps->get( "doMultiTaskgraphing", d_doMultiTaskgraphing );
   }
-
-  // Finalize the shared state/materials
-  d_sharedState->finalizeMaterials();
 
 #ifdef HAVE_VISIT
   if( d_sharedState->getVisIt() ) {
