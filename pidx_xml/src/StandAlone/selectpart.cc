@@ -181,8 +181,9 @@ void printParticleID(DataArchive* da, int mat,
 
   // Check if the particle variable p.particleId and p.x are available
   vector<string> vars;
+  vector<int> num_matls;
   vector<const Uintah::TypeDescription*> types;
-  da->queryVariables(vars, types);
+  da->queryVariables( vars, num_matls, types );
   ASSERTEQ(vars.size(), types.size());
   bool variableFound = false;
   for(unsigned int v=0;v<vars.size();v++){

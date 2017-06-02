@@ -238,8 +238,9 @@ TimeStepInfo* getTimeStepInfo(DataArchive *archive,
 
   // Get the variable information
   std::vector<std::string> vars;
+  std::vector<int> num_matls;
   std::vector<const Uintah::TypeDescription*> types;
-  archive->queryVariables(vars, types);
+  archive->queryVariables( vars, num_matls, types );
   stepInfo->varInfo.resize(vars.size());
 
   for (unsigned int i=0; i<vars.size(); i++) {
@@ -443,8 +444,9 @@ GridDataRaw* getGridData(DataArchive *archive,
 
   // figure out what the type of the variable we're querying is
   std::vector<std::string> vars;
+  std::vector<int> num_matls;
   std::vector<const Uintah::TypeDescription*> types;
-  archive->queryVariables(vars, types);
+  archive->queryVariables( vars, num_matls, types );
 
   const Uintah::TypeDescription* maintype = nullptr;
   const Uintah::TypeDescription* subtype = nullptr;
@@ -501,8 +503,9 @@ bool variableExists(DataArchive *archive,
 {
   // figure out what the type of the variable we're querying is
   std::vector<std::string> vars;
+  std::vector<int> num_matls;
   std::vector<const Uintah::TypeDescription*> types;
-  archive->queryVariables(vars, types);
+  archive->queryVariables( vars, num_matls, types );
 
   const Uintah::TypeDescription* maintype = nullptr;
   const Uintah::TypeDescription* subtype = nullptr;
@@ -605,8 +608,9 @@ ParticleDataRaw* getParticleData(DataArchive *archive,
 
   // figure out what the type of the variable we're querying is
   std::vector<std::string> vars;
+  std::vector<int> num_matls;
   std::vector<const Uintah::TypeDescription*> types;
-  archive->queryVariables(vars, types);
+  archive->queryVariables( vars, num_matls, types );
 
   const Uintah::TypeDescription* maintype = nullptr;
   const Uintah::TypeDescription* subtype = nullptr;

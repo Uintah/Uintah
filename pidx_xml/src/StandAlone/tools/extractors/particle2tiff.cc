@@ -1155,9 +1155,10 @@ main( int argc, char** argv )
     DataArchive* archive = scinew DataArchive(input_uda_name);
     
     vector<string> vars;
+    vector<int> num_matls;
     vector<const Uintah::TypeDescription*> types;
 
-    archive->queryVariables(vars, types);
+    archive->queryVariables( vars, num_matls, types );
     ASSERTEQ(vars.size(), types.size());
 
     bool var_found = false;

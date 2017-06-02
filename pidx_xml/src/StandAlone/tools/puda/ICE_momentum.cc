@@ -148,9 +148,10 @@ Uintah::ICE_momentum( DataArchive * da, CommandLineFlags & clf )
         //  bulletproofing
         // do the required variables exist?
         vector<string> vars;
+        vector<int> num_matls;
         vector<const Uintah::TypeDescription*> types;
 
-        da->queryVariables(vars, types);
+        da->queryVariables( vars, num_matls, types );
         int vars_found = 0;
 
         for (unsigned int i = 0; i < vars.size(); i++) {

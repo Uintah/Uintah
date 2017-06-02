@@ -129,17 +129,6 @@ public:
                           DataWarehouse        * dw,
                           LoadBalancerPort     * lb ); 
 
-  static void queryEndiannessAndBits( ProblemSpecP doc, std::string & endianness, int & numBits );
-
-  // Note, this function rewinds 'fp', and thus starts at the top of the file.
-  static void queryEndiannessAndBits( FILE* fp,  std::string & endianness, int & numBits );
-
-  // Sets d_particlePositionName if found. Note, rewinds 'xml_fp', thus starting at the top of the file.
-  void queryParticlePositionName( FILE * xml_fp ); 
-
-  // Sets d_outputFileFormat
-  void queryOutputFormat( FILE * xml_fp );
-
   // GROUP:  Information Access
   //////////
   // However, we need a means of determining the names of existing
@@ -147,9 +136,12 @@ public:
   // Get a list of scalar or vector variable names and  
   // a list of corresponding data types
   void queryVariables( std::vector<std::string>              & names,
-                       std::vector<const TypeDescription *>  &  );
+                       std::vector<int>                      & num_matls,
+                       std::vector<const TypeDescription *>  & types );
+
   void queryGlobals(   std::vector<std::string>              & names,
                        std::vector<const TypeDescription *>  &  );
+
   void queryTimesteps( std::vector<int>                      & index,
                        std::vector<double>                   & times );
 
@@ -302,6 +294,19 @@ protected:
 
 private:
 
+  // Sets d_particlePositionName if found. Note, rewinds 'xml_fp', thus starting at the top of the file.
+  void queryAndSetParticlePositionName( FILE * xml_fp ); 
+
+  // Sets d_fileFormat
+  void queryAndSetFileFormat( FILE * xml_fp );
+
+  static void queryEndiannessAndBits( ProblemSpecP doc, std::string & endianness, int & numBits );
+
+  // Note, this function rewinds 'fp', and thus starts at the top of the file.
+  static void queryEndiannessAndBits( FILE* fp,  std::string & endianness, int & numBits );
+
+  ////////////////
+
   std::map<std::string, VarLabel*> d_createdVarLabels;
 
   // What we need to store on a per-variable basis, everything else can be retrieved from a higher level.
@@ -396,10 +401,10 @@ private:
       
   //__________________________________
   //  PIDX related
-  enum outputFormat { UDA, PIDX };
-  outputFormat d_outputFileFormat; 
+  enum FileFormatType { UDA, PIDX, NOT_SPECIFIED };
+  FileFormatType d_fileFormat; 
       
-  enum { BLANK, REDUCTION_VAR, PATCH_VAR };
+  enum VarType { BLANK, REDUCTION_VAR, PATCH_VAR };
  
   bool isPIDXEnabled(){
 #if HAVE_PIDX
@@ -413,6 +418,7 @@ private:
   //
   void queryVariables( FILE                                * fp,
                        std::vector<std::string>            & names,
+                       std::vector<int>                    & num_matls,
                        std::vector<const TypeDescription*> & types,
                        bool                                  globals = false );
 
@@ -499,13 +505,15 @@ private:
     queryTimesteps( index, times ); // build timesteps if not already done
 
     // figure out what kind of variable we're looking for
-    std::vector<std::string> type_names;
+    std::vector<std::string>            type_names;
+    std::vector<int>                    num_matls;
     std::vector<const TypeDescription*> type_descriptions;
 
     // README FIXME qwerty ... who calls this?  We are now opening and reading a file
     // every time queryVariables() is called, so if this happens a lot, we might need to rethink it...
 
-    queryVariables( type_names, type_descriptions );
+    queryVariables( type_names, num_matls, type_descriptions );
+
     const TypeDescription* type = nullptr;
     std::vector<std::string>::iterator name_iter = type_names.begin();
     std::vector<const TypeDescription*>::iterator type_iter = type_descriptions.begin();
@@ -570,9 +578,10 @@ private:
     queryTimesteps(index, times); // build timesteps if not already done
 
     // figure out what kind of variable we're looking for
-    std::vector<std::string> type_names;
+    std::vector<std::string>            type_names;
+    std::vector<int>                    num_matls;
     std::vector<const TypeDescription*> type_descriptions;
-    queryVariables(type_names, type_descriptions);
+    queryVariables( type_names, num_matls, type_descriptions );
     const TypeDescription* type = nullptr;
     std::vector<std::string>::iterator name_iter = type_names.begin();
     std::vector<const TypeDescription*>::iterator type_iter = type_descriptions.begin();

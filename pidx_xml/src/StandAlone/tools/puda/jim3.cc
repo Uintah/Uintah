@@ -47,8 +47,9 @@ void
 Uintah::jim3( DataArchive * da, CommandLineFlags & clf )
 {
   vector<string> vars;
+  vector<int> num_matls;
   vector<const Uintah::TypeDescription*> types;
-  da->queryVariables(vars, types);
+  da->queryVariables( vars, num_matls, types );
   ASSERTEQ(vars.size(), types.size());
   cout << "There are " << vars.size() << " variables:\n";
   for(int i=0;i<(int)vars.size();i++)
