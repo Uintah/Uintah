@@ -183,8 +183,8 @@ AMRSimulationController::run()
   // Setup the time state using the restart archive, grid, scheduler, and
   // load balnacer.
   timeStateSetup();
-  // Setup the misc bits.
-  miscSetup();
+  // Setup the finial bits.
+  finialSetup();
 
   // Once the grid is set up pass it on to the GPU.
 #ifdef HAVE_CUDA

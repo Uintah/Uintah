@@ -200,7 +200,7 @@ protected:
   void schedulerSetup();
   void loadBalancerSetup();
   void timeStateSetup();
-  void miscSetup();
+  void finialSetup();
 
   // Get the next delta T
   void getNextDeltaT( void );

@@ -530,22 +530,6 @@ SimulationController::outOfSyncSetup()
   // from the d_ups instead.  This step needs to be done before
   // DataArchive::restartInitialize.
   d_sim->problemSetup(d_ups, d_restart_ps, d_currentGridP, d_sharedState);
-
-  // The output was initalized earlier because the simulation
-  // interface needed it. 
-  
-  // This step is done after the d_sim->problemSetup call to get
-  // defaults set by the simulation interface into the input.xml,
-  // which the output writes along with index.xml
-  d_output->initializeOutput(d_ups);
-
-  // This step is done after the output is initalized so that global
-  // output vars are copied to the restart uda.
-  if( d_restarting ) {
-    Dir dir( d_fromDir );
-    d_output->restartSetup( dir, 0, d_restartTimestep, d_startSimTime,
-                            d_restartFromScratch, d_restartRemoveOldDir );
-  }
 }
 
 //______________________________________________________________________
@@ -646,8 +630,26 @@ SimulationController::timeStateSetup()
 //______________________________________________________________________
 //
 void
-SimulationController::miscSetup()
+SimulationController::finialSetup()
 {
+  // The output was initalized earlier because the simulation
+  // interface needed it. 
+  
+  // This step is done after the call to d_sim->problemSetup to get
+  // the defaults set by the simulation interface into the input.xml,
+  // which the output writes along with index.xml
+  d_output->initializeOutput(d_ups);
+
+  // This step is done after the output is initalized so that global
+  // reduction ouput vars are copied to the new uda. Further, it must
+  // be call after timeStateSetup() is call so that checkpoints are
+  // copied to the new uda as well.
+  if( d_restarting ) {
+    Dir dir( d_fromDir );
+    d_output->restartSetup( dir, 0, d_restartTimestep, d_startSimTime,
+                            d_restartFromScratch, d_restartRemoveOldDir );
+  }
+
   // Miscellaneous initializations.
   ProblemSpecP amr_ps = d_ups->findBlock("AMR");
   if( amr_ps ) {
