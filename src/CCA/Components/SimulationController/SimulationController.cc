@@ -347,6 +347,7 @@ SimulationController::maybeLast( void )
 void
 SimulationController::restartArchiveSetup( void )
 {
+  // Set up the restart archive now as it is need by the output.
   if( d_restarting ) {
     // Create the DataArchive here, and store it, as it is used a few
     // times. The grid needs to be read before the ProblemSetup, and
@@ -416,7 +417,7 @@ SimulationController::restartArchiveSetup( void )
 void
 SimulationController::outputSetup( void )
 {
-  // Set up the output archiver now as it may be needed by simulation
+  // Set up the output now as it may be needed by simulation
   // interface.
   d_output = dynamic_cast<Output*>(getPort("output"));
 
@@ -457,7 +458,8 @@ SimulationController::schedulerSetup( void )
 void
 SimulationController::simulationInterfaceSetup( void )
 {
-  // Set up the simulation interface.
+  // Set up the simulation interface as it may change the inital grid
+  // setup.
   d_sim = dynamic_cast<SimulationInterface*>( getPort( "sim" ) );
 
   if( !d_sim ) {
@@ -525,12 +527,6 @@ SimulationController::gridSetup( void )
 			__FILE__, __LINE__);
   }
    
-  // Print out meta data
-  if ( d_myworld->myrank() == 0 ) {
-    d_currentGridP->printStatistics();
-    amrout << "Restart grid\n" << *d_currentGridP.get_rep() << "\n";
-  }
-
   // Set the dimensionality of the problem.
   IntVector low, high, size;
   d_currentGridP->getLevel(0)->findCellIndexRange(low, high);
@@ -539,6 +535,12 @@ SimulationController::gridSetup( void )
     d_currentGridP->getLevel(0)->getExtraCells()*IntVector(2,2,2);
   
   d_sharedState->setDimensionality(size[0] > 1, size[1] > 1, size[2] > 1);
+
+  // Print out meta data
+  if ( d_myworld->myrank() == 0 ) {
+    d_currentGridP->printStatistics();
+    amrout << "Restart grid\n" << *d_currentGridP.get_rep() << "\n";
+  }
 }
 
 //______________________________________________________________________
@@ -612,6 +614,8 @@ SimulationController::outOfSyncSetup()
 void
 SimulationController::timeStateSetup()
 {
+  // Set up the time state.
+
   // Restarting so initialize time state using the archive data.
   if( d_restarting ) {
     simdbg << "Restarting... loading data\n";
