@@ -208,43 +208,53 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& db )
         //check if it uses a density guess (which it should)
         //if it isn't set properly, then do it automagically for the user
         if ( !eqn.getDensityGuessBool() && !ignoreDensityCheck ){
-          proc0cout << " Warning: For equation named " << var_name << endl
-            << "     Density guess must be used for this equation because it determines properties." << endl
-            << "     Automatically setting density guess = true. " << endl;
+          proc0cout << "\n WARNING: For equation named " << var_name << endl
+            << "          Density guess must be used for this equation because it determines properties." << endl
+            << "          Automatically setting density guess = true. \n";
           eqn.setDensityGuessBool( true );
         }
+
       } else {
 
         PropertyModelFactory& propFactory = PropertyModelFactory::self();
         PropertyModelFactory::PropMap& all_prop_models = propFactory.retrieve_all_property_models();
+        bool matched_heatloss = false;
+
         for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin();
               iprop != all_prop_models.end(); iprop++){
 
           PropertyModelBase* prop_model = iprop->second;
           const std::string prop_name = prop_model->retrieve_property_name();
+
           if ( var_name == prop_name ){
 
             std::string prop_type = prop_model->getPropType();
             if ( prop_type == "heat_loss" ){
 
+              matched_heatloss = true;
+
               HeatLoss* hl_model = dynamic_cast<HeatLoss*>(prop_model);
               std::string enthalpy_name = hl_model->get_enthalpy_name();
               EqnBase& enthalpy_eqn = eqn_factory.retrieve_scalar_eqn( enthalpy_name );
-              proc0cout << "\n  NOTICE: For variable: " << var_name <<  endl;
-              proc0cout << "          Density guess must be used for the enthalpy equation because it determines properties." << endl;
-              proc0cout << "          Automatically setting density guess = true (same as stage=0) for you. \n" << endl;
               enthalpy_eqn.setDensityGuessBool(true);
 
-            } else {
-              proc0cout << "\n WARNING: An independent variable for the table wasn\'t found in the  " << std::endl;
-              proc0cout << "          In the transported variables or as a heat_loss model. Arches " << std::endl;
-              proc0cout << "          will assume that this is intentional and not try to force a  " << std::endl;
-              proc0cout << "          specific algorithmic ordering for this variable: " << var_name << "\n" <<  std::endl;
             }
-
           }
-
         }
+
+        if  ( matched_heatloss ){
+          proc0cout << "\n NOTICE: For table variable: " << var_name <<  endl;
+          proc0cout << "         Density guess must be used for the enthalpy equation because it determines properties." << endl;
+          proc0cout << "         Automatically setting/ensuring density guess = true (same as stage=0). \n" << endl;
+        } else {
+          proc0cout << "\n WARNING: An independent variable, " << var_name << ", wasn\'t found  " << std::endl;
+          proc0cout << "          as a transported variable or as a heat_loss model. Arches " << std::endl;
+          proc0cout << "          will assume that this is intentional and not force a  " << std::endl;
+          proc0cout << "          specific algorithmic ordering for this variable. Sometimes the " <<  std::endl;
+          proc0cout << "          model itself will force the correct ordering, which may or " <<  std::endl;
+          proc0cout << "          may not be the case here.  \n" <<  std::endl;
+        }
+
       }
     }
   }
