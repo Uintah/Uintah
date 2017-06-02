@@ -243,9 +243,9 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& db )
         }
 
         if  ( matched_heatloss ){
-          proc0cout << "\n NOTICE: For table variable: " << var_name <<  endl;
-          proc0cout << "         Density guess must be used for the enthalpy equation because it determines properties." << endl;
-          proc0cout << "         Automatically setting/ensuring density guess = true (same as stage=0). \n" << endl;
+          proc0cout << "\n WARNING: For table variable: " << var_name <<  endl;
+          proc0cout << "          Density guess must be used for the enthalpy equation because it determines properties." << endl;
+          proc0cout << "          Automatically setting/ensuring density guess = true (same as stage=0). \n" << endl;
         } else {
           proc0cout << "\n WARNING: An independent variable, " << var_name << ", wasn\'t found  " << std::endl;
           proc0cout << "          as a transported variable or as a heat_loss model. Arches " << std::endl;
