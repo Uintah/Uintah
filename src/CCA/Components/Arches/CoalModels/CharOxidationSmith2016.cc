@@ -1040,8 +1040,9 @@ CharOxidationSmith2016::computeModel( const ProcessorGroup * pc,
         PO2surf_(i,j,k) = 0.0; // multiple oxidizers, so we are leaving this empty.
       } // else statement
     }); //end cell loop
-  // delete scinew DenseMatrix
-  delete dfdrh;
+    // delete scinew DenseMatrix
+    delete dfdrh;
+    delete invf;
   } //end patch loop
 }
 
