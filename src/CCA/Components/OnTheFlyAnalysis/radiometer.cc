@@ -39,7 +39,7 @@
 using namespace Uintah;
 using namespace std;
 
-#define USE_RADIOMETER
+//#define USE_RADIOMETER   // Circular dependency on OSX.  Disable so we can compile on bigmac
 /*______________________________________________________________________
           TO DO
       - Clean up the hardwiring in the problem setup
