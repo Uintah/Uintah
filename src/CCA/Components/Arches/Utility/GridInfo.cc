@@ -53,7 +53,7 @@ GridInfo::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   const Level* lvl = patch->getLevel();
   IntVector min; IntVector max;
   lvl->getGrid()->getLevel(0)->findCellIndexRange(min,max);
-  Box domainBox = lvl->getBox(min+IntVector(1,1,1), max-IntVector(1,1,1));
+  Box domainBox = lvl->getBox(min, max);
   const double lowx = domainBox.lower().x();
   const double lowy = domainBox.lower().y();
   const double lowz = domainBox.lower().z();
