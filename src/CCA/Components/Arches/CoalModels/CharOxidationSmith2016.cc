@@ -763,6 +763,8 @@ CharOxidationSmith2016::computeModel( const ProcessorGroup * pc,
     double sum_x_D;
     double sum_x;
     double delta;
+    double oxi_lim;
+    double rh_l_i;
     std::vector<double> effectivenessF(_NUM_reactions);
     std::vector<double> M_T(_NUM_reactions);
     std::vector<double> phi_l(_NUM_reactions);
@@ -962,11 +964,16 @@ CharOxidationSmith2016::computeModel( const ProcessorGroup * pc,
         h_rxn = 0.0; // this is to compute the reaction rate averaged heat of reaction. It is needed so we don't need to clip any additional rates.
         h_rxn_factor = 0.0; // this is to compute a multiplicative factor to correct for fp.
         surface_rate_factor = 0.0; // this is to compute a multiplicative factor to correct for external vs interal rxn.
+        oxi_lim = 0.0; // max rate due to reactions
+        rh_l_i = 0.0;
         for (int l=0; l<_NUM_reactions; l++) {
           reaction_rate_l[l](i,j,k)=rh_l_new[l];// [kg/m^2/s] this is for the intial guess during the next time-step
-          char_mass_rate += -rh_l_new[l]*p_area*x_org*(1-p_void);// [kg/s/#]  negative sign because we are computing the destruction rate for the particles.
-          d_mass += rh_l_new[l];
-          co_s[l] = rh_l_new[l]/(phi_l[l]*_Mh*k_r[l]*(1 + effectivenessF[l]*p_diam*p_rho*_Sg0*Sj/(6.*(1-p_void)))); //oxidizer concentration at particle surface [kmoles/m^3]
+          // check to see if reaction rate is oxidizer limited.
+          oxi_lim = (oxid_mass_frac[l] * gas_rho * surfaceAreaFraction) / (dt * w);// [kg/s/#] // here the surfaceAreaFraction parameter is allowing us to only consume the oxidizer multiplied by the weighted area fraction for the current particle.
+          rh_l_i = std::min(rh_l_new[l]*p_area*x_org*(1-p_void), oxi_lim);// [kg/s/#] 
+          char_mass_rate += -rh_l_i;// [kg/s/#]  negative sign because we are computing the destruction rate for the particles.
+          d_mass += rh_l_i;
+          co_s[l] = rh_l_i/(phi_l[l]*_Mh*k_r[l]*(1 + effectivenessF[l]*p_diam*p_rho*_Sg0*Sj/(6.*(1-p_void)))); //oxidizer concentration at particle surface [kmoles/m^3]
           r_h_ex[l] = phi_l[l]*_Mh*k_r[l]*co_s[l]; // [kg/m^2/s]
           r_h_in[l] = r_h_ex[l]*effectivenessF[l]*p_diam*p_rho*_Sg0*Sj/(6.*(1-p_void)); // [kg/m^2/s]
           h_rxn_factor += r_h_ex[l]*_ksi + r_h_in[l];
@@ -978,11 +985,6 @@ CharOxidationSmith2016::computeModel( const ProcessorGroup * pc,
         surface_rate_factor /= (d_mass + 1e-50); 
         h_rxn /= (d_mass2 + 1e-50); // [J/mole]
         // rate clipping for char_mass_rate
-        // check to see if reaction rate is oxidizer limited.
-        for (int l=0; l<_NUM_reactions; l++) {
-          char_mass_rate = std::max( char_mass_rate, - (oxid_mass_frac[l] * gas_rho * surfaceAreaFraction) / (dt * w) );// [kg/s/#] // here the surfaceAreaFraction parameter is allowing us to only consume the oxidizer multiplied by the weighted area fraction for the current particle.
-        }
-        // check to see if reaction rate is fuel limited.
         if ( add_rawcoal_birth && add_char_birth ){
           char_mass_rate = std::max( char_mass_rate, - ((rc+ch)/(dt) + (RHS + RHS_v)/(vol*w) + r_devol/w + char_birth(i,j,k)/w + rawcoal_birth(i,j,k)/w )); // [kg/s/#] 
         } else {
@@ -1007,35 +1009,6 @@ CharOxidationSmith2016::computeModel( const ProcessorGroup * pc,
         }
         Size_rate = (x_org < 1e-8) ? 0.0 : w/_weight_scaling_constant * 2.*x_org * surface_rate_factor * char_mass_rate / _rho_org_bulk / p_area / x_org / (1-p_void) / _length_scaling_constant; // [m/s] 
         particle_Size_rate(i,j,k) = std::max(max_Size_rate, Size_rate); // [m/s] -- these source terms are negative. 
-	      //if (i==0 && j==8 && k==5 && d_quadNode==0) {	  
-	      //  std::cout << "updated_weight "<< updated_weight << std::endl;
-	      //  std::cout << "w "<< w << std::endl;
-	      //  std::cout << "max_Size_rate "<< max_Size_rate << std::endl;
-	      //  std::cout << "Size_rate "<< Size_rate << std::endl;
-	      //  std::cout << "_mass_ash "<< _mass_ash << std::endl;
-	      //  std::cout << "time_scale_size "<< p_diam / particle_Size_rate(i,j,k) << std::endl;
-	      //  std::cout << "p_Void_CharOxi "<< p_void << std::endl;
-	      //  std::cout << "char_mass_rate "<< char_mass_rate << std::endl;
-	      //  std::cout << "surface_rate_factor "<< surface_rate_factor << std::endl;
-	      //  std::cout << "rho_org_bulk "<< _rho_org_bulk << std::endl;
-	      //  std::cout << "h_rxn_factor" << h_rxn_factor << std::endl;
-	      //  std::cout << "Sj " << Sj << std::endl;
-	      //  std::cout << "raw_mass: " << rc << std::endl;
-	      //  std::cout << "char_mass: " << ch << std::endl;
-	      //  std::cout << "org_frac: " << x_org << std::endl;
-	      //  std::cout << "p_diam: " << p_diam << std::endl;
-	      //  std::cout << "p_diam_min: " << min_p_diam << std::endl;
-	      //  std::cout << "p_rho: " << p_rho << std::endl;
-	      //  std::cout << "p_T: " << p_T << std::endl;
-	      //  std::cout << "gas_T: " << gas_T << std::endl;
-	      //  std::cout << "rho_org_bulk: " << _rho_org_bulk << std::endl;
-	      //  std::cout << "rp: " << rp << std::endl;
-	      //  std::cout << "_species_names: " << _species_names[0] << " " << _species_names[1] << " " << _species_names[2] << " " << _species_names[3] << std::endl;
-	      //  std::cout << "species_mass_frac: " << species_mass_frac[0] << " " << species_mass_frac[1] << " " << species_mass_frac[2] << " " << species_mass_frac[3] << std::endl;
-        //  std::cout << "rh_l_new: " << rh_l_new[0] << " " << rh_l_new[1] << " " << rh_l_new[2] << std::endl;
-        //  std::cout << "r_h_ex: " << r_h_ex[0] << " " << r_h_ex[1] << " " << r_h_ex[2] << std::endl;
-        //  std::cout << "r_h_in: " << r_h_in[0] << " " << r_h_in[1] << " " << r_h_in[2] << std::endl;
-	      //}
         surface_rate(i,j,k) = char_mass_rate/p_area;  // in [kg/(s # m^2)]
         PO2surf_(i,j,k) = 0.0; // multiple oxidizers, so we are leaving this empty.
       } // else statement
