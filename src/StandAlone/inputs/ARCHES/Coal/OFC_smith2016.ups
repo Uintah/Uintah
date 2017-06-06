@@ -10,7 +10,7 @@
     <max_Timesteps>10</max_Timesteps>
     <initTime>0.0</initTime>
     <delt_min>1e-9</delt_min>
-    <delt_max>1e-4</delt_max>
+    <delt_max>4e-4</delt_max>
     <timestep_multiplier>0.3</timestep_multiplier>
   </Time>
   <DataArchiver>
@@ -1181,26 +1181,24 @@
   </PhysicalConstants>
   <CFD>
     <ARCHES>
-      <PropertyModels>
-        <model label="abskg" type="radiation_properties">
-          <initialization type="constant">
-            <constant>0.0</constant>
-          </initialization>
+      <PropertyModelsV2>
+        <model type="gasRadProperties"  label="gas_abskg" >
           <calculator type="hottel_sarofim">
             <opl>0.2647</opl>
-            <abskg label="gas_abskg"/>
-            <particles type="constantCIF">
-              <abskp label="abskp"/>
-              <radiateAtGasTemp>false</radiateAtGasTemp>
-              <model_type>planck</model_type>
-              <part_temp_label>temperature_coal</part_temp_label>
-              <part_size_label>length</part_size_label>
-              <complex_ir_real>2.0</complex_ir_real>
-              <complex_ir_imag>-0.6</complex_ir_imag>
-              <const_asymmFact>1</const_asymmFact>
-            </particles>
           </calculator>
         </model>
+        <model type="partRadProperties" label="abskp" >
+          <subModel>constantCIF</subModel>
+          <part_temp_label>temperature_coal</part_temp_label>
+          <part_size_label>length</part_size_label>
+          <radiateAtGasTemp>false</radiateAtGasTemp>
+          <model_type>planck</model_type>
+          <complex_ir_real>2.0</complex_ir_real>
+          <complex_ir_imag>-0.6</complex_ir_imag>
+          <const_asymmFact>1</const_asymmFact>
+        </model>
+      </PropertyModelsV2>
+      <PropertyModels>
         <model label="heat_loss" type="heat_loss">
           <initialization type="constant">
             <constant>0.764</constant>
@@ -1266,8 +1264,8 @@
           <reaction>
             <oxidizer_name>O2</oxidizer_name>
             <oxidizer_MW>32.0</oxidizer_MW>
-            <pre_exponential_factor>334.21</pre_exponential_factor>
-            <activation_energy>9256.</activation_energy>
+            <pre_exponential_factor>90.405</pre_exponential_factor>
+            <activation_energy>22305.0</activation_energy>
             <stoich_coeff_ratio>1.0</stoich_coeff_ratio>
             <heat_of_reaction_constant>1.0</heat_of_reaction_constant>
             <use_co2co>true</use_co2co>
@@ -1275,8 +1273,8 @@
           <reaction>
             <oxidizer_name>H2O</oxidizer_name>
             <oxidizer_MW>18.0</oxidizer_MW>
-            <pre_exponential_factor>8343.1</pre_exponential_factor>
-            <activation_energy>97694.</activation_energy>
+            <pre_exponential_factor>7614.3</pre_exponential_factor>
+            <activation_energy>59315.0</activation_energy>
             <stoich_coeff_ratio>1.0</stoich_coeff_ratio>
             <heat_of_reaction_constant>131.3e3</heat_of_reaction_constant>
             <use_co2co>false</use_co2co>
@@ -1284,14 +1282,17 @@
           <reaction>
             <oxidizer_name>CO2</oxidizer_name>
             <oxidizer_MW>44.0</oxidizer_MW>
-            <pre_exponential_factor>2387.1</pre_exponential_factor>
-            <activation_energy>48699.</activation_energy>
+            <pre_exponential_factor>3000.0</pre_exponential_factor>
+            <activation_energy>70099.0</activation_energy>
             <stoich_coeff_ratio>1.0</stoich_coeff_ratio>
             <heat_of_reaction_constant>172459</heat_of_reaction_constant>
             <use_co2co>false</use_co2co>
           </reaction>
         </SmithChar2016>
-        <ksi>0.51394</ksi>
+        <ksi>0.97266</ksi>
+        <LinearSwelling>
+          <Fsw>1.05</Fsw>
+        </LinearSwelling>      
       </ParticleProperties>
       <EulerianParticles>
         <ParticleVariables>
@@ -1310,16 +1311,10 @@
       </EulerianParticles>
       <ParticleModels>
         <model label="rho_coal" type="coal_density">
-          <const_size>true</const_size>
+          <model_type>dynamic_dqmom</model_type> 
         </model>
-        <model label="temperature_coal" type="coal_temperature">
-          <const_size>true</const_size>
-        </model>
+        <model label="temperature_coal" type="coal_temperature"/>
         <model label="number_density" type="total_number_density"/>
-        <model label="length" type="constant">
-          <grid dependent_type="CC" independent_type="CC"/>
-          <constant>[1.5e-05,5.0e-05,1.5e-04]</constant>
-        </model>
       </ParticleModels>
       <TimeIntegrator>
         <ExplicitIntegrator order="first"/>
@@ -1408,7 +1403,7 @@
           </src>
           <src label="divQ" type="do_radiation">
             <calc_frequency>3</calc_frequency>
-            <abskg label="abskg"/>
+            <abskt label="abskg"/>
             <DORadiationModel type="linearSolve">
               <ordinates>2</ordinates>
               <LinearSolver type="hypre">
@@ -1464,6 +1459,10 @@
         <VelModel type="Dragforce">
         </VelModel>
         <Models>
+          <model label="swelling" type="LinearSwelling"> 
+          </model>
+          <model label="shrinkage" type="ShrinkageRate">
+          </model>          
           <model label="xdragforce" type="Drag">
             <direction>x</direction>
           </model>
@@ -1480,6 +1479,10 @@
           </model>
           <model label="char" type="CharOxidationSmith2016">
           </model>
+          <model label="length_os_src" type="SimpleBirth">
+            <abscissa label="length" />
+            <small_weight>1e-15</small_weight>
+          </model>          
           <model label="RCmass_os_src" type="SimpleBirth">
             <abscissa label="RCmass"/>
             <small_weight>1e-15</small_weight>
@@ -1528,6 +1531,23 @@
           <conv_scheme>upwind</conv_scheme>
           <molecular_diffusivity>0</molecular_diffusivity>
         </Weights>
+        <Ic label="length">
+          <doDiff>false</doDiff>
+          <doConv>true</doConv>
+          <model label="length_os_src" />
+          <model label="swelling" />
+          <model label="shrinkage" />
+          <initialization type="env_constant">
+            <env_constant qn="0" value="1.5e-05"> </env_constant>
+            <env_constant qn="1" value="6e-05" />
+            <env_constant qn="2" value="0.0002"> </env_constant>
+          </initialization>
+          <nominal_values>[1.5e-05,6e-05,0.0002]</nominal_values>
+          <scaling_const>[1.5e-05,6e-05,0.0002]</scaling_const>
+          <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+          <conv_scheme>upwind</conv_scheme>
+          <molecular_diffusivity>0</molecular_diffusivity>
+        </Ic>        
         <Ic label="RCmass">
           <doDiff>false</doDiff>
           <doConv>true</doConv>
