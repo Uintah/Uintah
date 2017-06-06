@@ -1270,7 +1270,7 @@ ExplicitSolver::sched_initializeVariables( const LevelP& level,
                                            SchedulerP& sched )
 {
 
-  Task* tsk = scinew Task( "ExplicitSolver", this, &ExplicitSolver::initializeVariables);
+  Task* tsk = scinew Task( "ExplicitSolver::initializeVariables", this, &ExplicitSolver::initializeVariables);
 
   tsk->computes(d_lab->d_cellInfoLabel);
   tsk->computes(d_lab->d_uVelocitySPBCLabel);

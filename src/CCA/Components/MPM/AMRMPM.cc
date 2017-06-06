@@ -539,7 +539,7 @@ void AMRMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
 
   sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
 
-  if (level->getIndex() == 0 ) schedulePrintParticleCount(level, sched); 
+  if (level->getIndex() == 0 ) schedulePrintParticleCount(level, sched);
 
   if (flags->d_useLoadCurves && !flags->d_doScalarDiffusion) {
     // Schedule the initialization of pressure BCs per particle

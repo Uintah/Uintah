@@ -497,6 +497,7 @@ AMRSimulationController::run()
         d_delt = new_init_delt;
       }
 
+      d_scheduler->setRestartInitTimestep( false );
       recompile( totalFine );
     }
     else {
@@ -814,11 +815,18 @@ AMRSimulationController::executeTimestep( int totalFine )
     }
     // }
 
-    if (d_scheduler->getNumTaskGraphs() == 1) {
-      d_scheduler->execute(0, d_lastRecompileTimestep == d_sharedState->getCurrentTopLevelTimeStep() ? 0 : 1);
+    // TODO: Let's document this well - APH, 10/06/16
+    // From Brad P 5/22/2017 - This appears to have some hard coding to support
+    // RMCRT radiation calculation frequency timesteps.  It tells the scheduler
+    // which task graph it should be operating on that timestep.  
+    // I assume this may need a bit more generalizing?  
+    if (d_do_multi_taskgraphing) {
+      subCycleExecute(0, totalFine, 0, true);
     }
     else {
-      subCycleExecute(0, totalFine, 0, true);
+      int curr_timestep = d_sharedState->getCurrentTopLevelTimeStep();
+      int tg_num = ( (curr_timestep % d_rad_calc_frequency != 0) && (curr_timestep != 1) ) ? 0 : 1;
+      d_scheduler->execute( (d_scheduler->getNumTaskGraphs() == 1) ? 0 : tg_num, (d_last_recompile_timestep == curr_timestep) ? 0 : 1);
     }
 
     //__________________________________
@@ -1041,7 +1049,7 @@ AMRSimulationController::recompile( int totalFine )
 
   proc0cout << "Compiling taskgraph...\n";
 
-  d_lastRecompileTimestep = d_sharedState->getCurrentTopLevelTimeStep();
+  d_last_recompile_timestep = d_sharedState->getCurrentTopLevelTimeStep();
 
   d_scheduler->initialize( 1, totalFine );
   d_scheduler->fillDataWarehouses( d_currentGridP );
@@ -1053,7 +1061,7 @@ AMRSimulationController::recompile( int totalFine )
   d_scheduler->mapDataWarehouse( Task::CoarseOldDW, 0 );
   d_scheduler->mapDataWarehouse( Task::CoarseNewDW, totalFine );
   
-  if( d_doMultiTaskgraphing ) {
+  if( d_do_multi_taskgraphing ) {
     for (int i = 0; i < d_currentGridP->numLevels(); i++) {
       // taskgraphs 0-numlevels-1
       if( i > 0 ) {
@@ -1269,7 +1277,7 @@ AMRSimulationController::subCycleExecute( int startDW,
     d_scheduler->get_dw(curDW+newDWStride)->unfinalize();
 
     // iteration only matters if it's zero or greater than 0
-    int iteration = curDW + (d_lastRecompileTimestep == d_sharedState->getCurrentTopLevelTimeStep() ? 0 : 1);
+    int iteration = curDW + (d_last_recompile_timestep == d_sharedState->getCurrentTopLevelTimeStep() ? 0 : 1);
     
     if (dbg.active()) {
       dbg << d_myworld->myrank() << "   Executing TG on level " << levelNum << " with old DW " << curDW << "="

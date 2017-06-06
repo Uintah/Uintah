@@ -98,7 +98,7 @@ DESCRIPTION
 class CompTable;
 class SchedulerCommon;
 
-// this is so we can keep tasks independent of taskgraph
+// This is so we can keep tasks independent of the task graph
 struct GraphSortInfo {
 
     GraphSortInfo()
@@ -203,6 +203,7 @@ class TaskGraph {
 		     , SimulationStateP& state
 		     , const ProcessorGroup    * proc_group
              ,       Scheduler::tgType   tg_type
+             ,       int                 index
              );
 
     ~TaskGraph();
@@ -233,6 +234,7 @@ class TaskGraph {
                                       ,       DetailedTasks * first
                                       , const GridP         & grid
                                       , const GridP         & oldGrid
+                                      , const bool            hasDistalReqs = false
                                       );
 
     inline DetailedTasks* getDetailedTasks()
@@ -245,7 +247,12 @@ class TaskGraph {
       return m_type;
     }
 
-    /// This will go through the detailed tasks and creates the
+    inline int getIndex()
+    {
+      return m_index;
+    }
+
+    /// This will go through the detailed tasks and create the
     /// dependencies needed to communicate data across separate
     /// processors.  Calls the private createDetailedDependencies
     /// for each task as a helper.
@@ -344,7 +351,7 @@ class TaskGraph {
     /// what addDependencyEdges does for setupTaskConnections.  This will
     /// set up the data dependencies that need to be communicated between
     /// processors.
-    void createDetailedDependencies( DetailedTask     * task
+    void createDetailedDependencies( DetailedTask     * dtask
                                    , Task::Dependency * req
                                    , CompTable        & ct
                                    , bool               modifies
@@ -393,10 +400,29 @@ class TaskGraph {
     // how many task phases this taskgraph has been through
     int m_num_task_phases{0};
 
+    int m_index{-1};
+
     std::vector<Task*>        m_tasks;
     std::vector<Task::Edge*>  m_edges;
 
     DetailedReductionTasksMap m_reduction_tasks;
+
+    struct LabelLevel {
+      LabelLevel(const std::string& key, const int level) : key(key), level(level) {}
+      std::string key;
+      int level;
+      bool operator<(const LabelLevel& rhs) const {
+        if (this->level < rhs.level) {
+          return true;
+        } else if ((this->level == rhs.level) && (this->key < rhs.key)) {
+          return true;
+        }
+        return false;
+      }
+    };
+    std::map<LabelLevel, int> max_ghost_for_varlabelmap;
+
+
 }; // class TaskGraph
 
 }  // namespace Uintah

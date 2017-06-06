@@ -45,7 +45,7 @@
 #include <mutex>
 #include <sstream>
 #include <string>
-
+#include <atomic>
 
 using namespace Uintah;
 
@@ -617,7 +617,9 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask     * from
 #endif
 
   //make keys for MPI messages
-  if (fromPatch) varKeyDB.insert(req->m_var,matl,fromPatch);
+  if (fromPatch) {
+    varKeyDB.insert(req->m_var,matl,fromPatch);
+  }
 
   //get dependency batch
   DependencyBatch* batch = from->getComputes();
@@ -845,7 +847,7 @@ DetailedTasks::internalDependenciesSatisfied( DetailedTask * dtask )
   std::lock_guard<std::mutex> internal_ready_guard(g_internal_ready_mutex);
 
   readyTasks_.push(dtask);
-
+  atomic_readyTasks_size.fetch_add(1, std::memory_order_relaxed);
   DOUT(internaldbg, *dtask << " satisfied.  Now " << readyTasks_.size() << " ready.");
 }
 
@@ -854,13 +856,17 @@ DetailedTasks::internalDependenciesSatisfied( DetailedTask * dtask )
 DetailedTask*
 DetailedTasks::getNextInternalReadyTask()
 {
-  std::lock_guard<std::mutex> internal_ready_guard(g_internal_ready_mutex);
+
 
   DetailedTask* nextTask = nullptr;
+  if (atomic_readyTasks_size.load(std::memory_order_relaxed) > 0) {
+    std::lock_guard<std::mutex> internal_ready_guard(g_internal_ready_mutex);
+    if (!readyTasks_.empty()) {
 
-  if (!readyTasks_.empty()) {
-    nextTask = readyTasks_.front();
-    readyTasks_.pop();
+      nextTask = readyTasks_.front();
+      atomic_readyTasks_size.fetch_sub(1, std::memory_order_relaxed);
+      readyTasks_.pop();
+    }
   }
 
   return nextTask;
@@ -871,9 +877,9 @@ DetailedTasks::getNextInternalReadyTask()
 int
 DetailedTasks::numInternalReadyTasks()
 {
-  std::lock_guard<std::mutex> internal_ready_guard(g_internal_ready_mutex);
-
-  return readyTasks_.size();
+  //std::lock_guard<std::mutex> internal_ready_guard(g_internal_ready_mutex);
+  //return readyTasks_.size();
+  return atomic_readyTasks_size.load(std::memory_order_relaxed);
 }
 
 //_____________________________________________________________________________
@@ -881,13 +887,16 @@ DetailedTasks::numInternalReadyTasks()
 DetailedTask*
 DetailedTasks::getNextExternalReadyTask()
 {
-  std::lock_guard<std::mutex> external_ready_guard(g_external_ready_mutex);
+
 
   DetailedTask* nextTask = nullptr;
-
-  if (!mpiCompletedTasks_.empty()) {
-    nextTask = mpiCompletedTasks_.top();
-    mpiCompletedTasks_.pop();
+  if (atomic_mpiCompletedTasks_size.load(std::memory_order_relaxed) > 0) {
+    std::lock_guard<std::mutex> external_ready_guard(g_external_ready_mutex);
+    if (!mpiCompletedTasks_.empty()) {
+      nextTask = mpiCompletedTasks_.top();
+      atomic_mpiCompletedTasks_size.fetch_sub(1, std::memory_order_relaxed);
+      mpiCompletedTasks_.pop();
+    }
   }
 
   return nextTask;
@@ -898,9 +907,9 @@ DetailedTasks::getNextExternalReadyTask()
 int
 DetailedTasks::numExternalReadyTasks()
 {
-  std::lock_guard<std::mutex> external_ready_guard(g_external_ready_mutex);
-
-  return mpiCompletedTasks_.size();
+  //std::lock_guard<std::mutex> external_ready_guard(g_external_ready_mutex);
+  //return mpiCompletedTasks_.size();
+  return atomic_mpiCompletedTasks_size.load(std::memory_order_relaxed);
 }
 
 //_____________________________________________________________________________
@@ -909,6 +918,7 @@ void
 DetailedTasks::initTimestep()
 {
   readyTasks_ = initiallyReadyTasks_;
+  atomic_readyTasks_size.store(initiallyReadyTasks_.size(), std::memory_order_relaxed);
   incrementDependencyGeneration();
   initializeBatches();
 }
@@ -1094,111 +1104,135 @@ DetailedTaskPriorityComparison::operator()( DetailedTask *& ltask
 //_____________________________________________________________________________
 //
 bool
-DetailedTasks::getNextVerifyDataTransferCompletionTaskIfAble( DetailedTask *& dtask )
+DetailedTasks::getDeviceValidateRequiresCopiesTask(DetailedTask *& dtask)
 {
   //This function should ONLY be called within runTasks() part 1.
   //This is all done as one atomic unit as we're seeing if we should get an item and then we get it.
   bool retVal = false;
   dtask = nullptr;
-  {
-    device_transfer_complete_queue_monitor transfer_queue_lock{ Uintah::CrowdMonitor<device_transfer_complete_queue_tag>::WRITER };
-    if (!verifyDataTransferCompletionTasks_.empty()) {
-      dtask = verifyDataTransferCompletionTasks_.front();
-      if (!dtask) {
-        SCI_THROW(InternalError("DetailedTasks::getNextVerifyDataTransferCompletionIfAble() - The task in this queue was a nullptr.  This shouldn't ever happen.", __FILE__, __LINE__));
-      }
-      if (dtask->checkAllCudaStreamsDoneForThisTask()) {
-        verifyDataTransferCompletionTasks_.pop();
-        retVal = true;
-      }
-    }
-    if (!retVal) {
-      dtask = nullptr;
-    }
+
+  auto ready_request = [](DetailedTask *& dtask)->bool { return dtask->checkAllCudaStreamsDoneForThisTask(); };
+  TaskPool::iterator device_validateRequiresCopies_pool_iter = device_validateRequiresCopies_pool.find_any(ready_request);
+
+  if (device_validateRequiresCopies_pool_iter) {
+    dtask = *device_validateRequiresCopies_pool_iter;
+    device_validateRequiresCopies_pool.erase(device_validateRequiresCopies_pool_iter);
+    //printf("device_validateRequiresCopies_pool - Erased %s size of pool %lu\n", dtask->getName().c_str(), device_validateRequiresCopies_pool.size());
+    retVal = true;
   }
+
+  return retVal;
+}
+
+//_____________________________________________________________________________
+//
+bool
+DetailedTasks::getDevicePerformGhostCopiesTask(DetailedTask *& dtask)
+{
+  //This function should ONLY be called within runTasks() part 1.
+  //This is all done as one atomic unit as we're seeing if we should get an item and then we get it.
+  bool retVal = false;
+  dtask = nullptr;
+
+  auto ready_request = [](DetailedTask *& dtask)->bool { return dtask->checkAllCudaStreamsDoneForThisTask(); };
+  TaskPool::iterator device_performGhostCopies_pool_iter = device_performGhostCopies_pool.find_any(ready_request);
+
+  if (device_performGhostCopies_pool_iter) {
+    dtask = *device_performGhostCopies_pool_iter;
+    device_performGhostCopies_pool.erase(device_performGhostCopies_pool_iter);
+    //printf("device_performGhostCopies_pool - Erased %s size of pool %lu\n", dtask->getName().c_str(), device_performGhostCopies_pool.size());
+    retVal = true;
+  }
+
+  return retVal;
+}
+
+//_____________________________________________________________________________
+//
+bool
+DetailedTasks::getDeviceValidateGhostCopiesTask(DetailedTask *& dtask)
+{
+  //This function should ONLY be called within runTasks() part 1.
+  //This is all done as one atomic unit as we're seeing if we should get an item and then we get it.
+  bool retVal = false;
+  dtask = nullptr;
+
+  auto ready_request = [](DetailedTask *& dtask)->bool { return dtask->checkAllCudaStreamsDoneForThisTask(); };
+  TaskPool::iterator device_validateGhostCopies_pool_iter = device_validateGhostCopies_pool.find_any(ready_request);
+
+  if (device_validateGhostCopies_pool_iter) {
+    dtask = *device_validateGhostCopies_pool_iter;
+    device_validateGhostCopies_pool.erase(device_validateGhostCopies_pool_iter);
+    //printf("device_validateGhostCopies_pool - Erased %s size of pool %lu\n", dtask->getName().c_str(), device_validateGhostCopies_pool.size());
+    retVal = true;
+  }
+
+  return retVal;
+}
+
+
+//______________________________________________________________________
+//
+bool
+DetailedTasks::getDeviceCheckIfExecutableTask(DetailedTask *& dtask)
+{
+  //This function should ONLY be called within runTasks() part 1.
+  //This is all done as one atomic unit as we're seeing if we should get an item and then we get it.
+  bool retVal = false;
+  dtask = nullptr;
+
+  auto ready_request = [](DetailedTask *& dtask)->bool { return dtask->checkAllCudaStreamsDoneForThisTask(); };
+  TaskPool::iterator device_checkIfExecutable_pool_iter = device_checkIfExecutable_pool.find_any(ready_request);
+  if (device_checkIfExecutable_pool_iter) {
+    dtask = *device_checkIfExecutable_pool_iter;
+    device_checkIfExecutable_pool.erase(device_checkIfExecutable_pool_iter);
+    //printf("device_checkIfExecutable_pool - Erased %s size of pool %lu\n", dtask->getName().c_str(), device_checkIfExecutable_pool.size());
+    retVal = true;
+  }
+
   return retVal;
 }
 
 //______________________________________________________________________
 //
 bool
-DetailedTasks::getNextFinalizeDevicePreparationTaskIfAble( DetailedTask *& dtask )
+DetailedTasks::getDeviceReadyToExecuteTask(DetailedTask *& dtask)
 {
   //This function should ONLY be called within runTasks() part 1.
   //This is all done as one atomic unit as we're seeing if we should get an item and then we get it.
   bool retVal = false;
   dtask = nullptr;
-  {
-    device_finalize_prep_queue_monitor device_finalize_queue_lock{ Uintah::CrowdMonitor<device_finalize_prep_queue_tag>::WRITER };
-    if (!finalizeDevicePreparationTasks_.empty()) {
-      dtask = finalizeDevicePreparationTasks_.front();
-      if (!dtask) {
-        SCI_THROW(InternalError("DetailedTasks::getNextFinalizeDevicePreparationTaskIfAble() - The task in this queue was a nullptr.  This shouldn't ever happen.", __FILE__, __LINE__));
-      }
-      if (dtask->checkAllCudaStreamsDoneForThisTask()) {
-        finalizeDevicePreparationTasks_.pop();
-        retVal = true;
-      }
-    }
-    if (!retVal) {
-      dtask = nullptr;
-    }
+
+  auto ready_request = [](DetailedTask *& dtask)->bool { return dtask->checkAllCudaStreamsDoneForThisTask(); };
+  TaskPool::iterator device_readyToExecute_pool_iter = device_readyToExecute_pool.find_any(ready_request);
+  if (device_readyToExecute_pool_iter) {
+    dtask = *device_readyToExecute_pool_iter;
+    device_readyToExecute_pool.erase(device_readyToExecute_pool_iter);
+    //printf("device_readyToExecute_pool - Erased %s size of pool %lu\n", dtask->getName().c_str(), device_readyToExecute_pool.size());
+    retVal = true;
   }
+
   return retVal;
 }
 
-//_____________________________________________________________________________
-//
-bool
-DetailedTasks::getNextInitiallyReadyDeviceTaskIfAble( DetailedTask *& dtask )
-{
-  //This function should ONLY be called within runTasks() part 1.
-  //This is all done as one atomic unit as we're seeing if we should get an item and then we get it.
-  bool retVal = false;
-  dtask = nullptr;
-  {
-    device_ready_queue_monitor device_ready_queue_lock{ Uintah::CrowdMonitor<device_ready_queue_tag>::WRITER };
-    if (!initiallyReadyDeviceTasks_.empty()) {
-      dtask = initiallyReadyDeviceTasks_.front();
-      if (!dtask) {
-        SCI_THROW(InternalError("DetailedTasks::getNextInitiallyReadyDeviceTaskIfAble() - The task in this queue was a nullptr.  This shouldn't ever happen.", __FILE__, __LINE__));
-      }
-      if (dtask->checkAllCudaStreamsDoneForThisTask()) {
-        initiallyReadyDeviceTasks_.pop();
-        retVal = true;
-      }
-    }
-    if (!retVal) {
-      dtask = nullptr;
-    }
-  }
-  return retVal;
-}
 
-//_____________________________________________________________________________
+//______________________________________________________________________
 //
 bool
-DetailedTasks::getNextCompletionPendingDeviceTaskIfAble( DetailedTask *& dtask )
+DetailedTasks::getDeviceExecutionPendingTask(DetailedTask *& dtask)
 {
   //This function should ONLY be called within runTasks() part 1.
   //This is all done as one atomic unit as we're seeing if we should get an item and then we get it.
   bool retVal = false;
   dtask = nullptr;
-  {
-    device_completed_queue_monitor device_completed_queue_lock{ Uintah::CrowdMonitor<device_completed_queue_tag>::WRITER };
-    if (!completionPendingDeviceTasks_.empty()) {
-      dtask = completionPendingDeviceTasks_.front();
-      if (!dtask) {
-        SCI_THROW(InternalError("DetailedTasks::getNextCompletionPendingDeviceTaskIfAble() - The task in this queue was a nullptr.  This shouldn't ever happen.", __FILE__, __LINE__));
-      }
-      if (dtask->checkAllCudaStreamsDoneForThisTask()) {
-        completionPendingDeviceTasks_.pop();
-        retVal = true;
-      }
-    }
-    if (!retVal) {
-      dtask = nullptr;
-    }
+
+  auto ready_request = [](DetailedTask *& dtask)->bool { return dtask->checkAllCudaStreamsDoneForThisTask(); };
+  TaskPool::iterator device_executionPending_pool_iter = device_executionPending_pool.find_any(ready_request);
+  if (device_executionPending_pool_iter) {
+    dtask = *device_executionPending_pool_iter;
+    device_executionPending_pool.erase(device_executionPending_pool_iter);
+    //printf("device_executionPending_pool - Erased %s size of pool %lu\n", dtask->getName().c_str(), device_executionPending_pool.size());
+    retVal = true;
   }
 
   return retVal;
@@ -1207,27 +1241,21 @@ DetailedTasks::getNextCompletionPendingDeviceTaskIfAble( DetailedTask *& dtask )
 //_____________________________________________________________________________
 //
 bool
-DetailedTasks::getNextFinalizeHostPreparationTaskIfAble( DetailedTask *& dtask )
+DetailedTasks::getHostValidateRequiresCopiesTask(DetailedTask *& dtask)
 {
   //This function should ONLY be called within runTasks() part 1.
   //This is all done as one atomic unit as we're seeing if we should get an item and then we get it.
   bool retVal = false;
   dtask = nullptr;
-  {
-    host_finalize_prep_queue_monitor host_finalize_queue_lock{ Uintah::CrowdMonitor<host_finalize_prep_queue_tag>::WRITER };
-    if (!finalizeHostPreparationTasks_.empty()) {
-      dtask = finalizeHostPreparationTasks_.front();
-      if (!dtask) {
-        SCI_THROW(InternalError("DetailedTasks::getNextFinalizeHostPreparationTaskIfAble() - The task in this queue was a nullptr.  This shouldn't ever happen.", __FILE__, __LINE__));
-      }
-      if (dtask->checkAllCudaStreamsDoneForThisTask()) {
-        finalizeHostPreparationTasks_.pop();
-        retVal = true;
-      }
-    }
-    if (!retVal) {
-      dtask = nullptr;
-    }
+
+  auto ready_request = [](DetailedTask *& dtask)->bool { return dtask->checkAllCudaStreamsDoneForThisTask(); };
+  TaskPool::iterator host_validateRequiresCopies_pool_iter = host_validateRequiresCopies_pool.find_any(ready_request);
+
+  if (host_validateRequiresCopies_pool_iter) {
+    dtask = *host_validateRequiresCopies_pool_iter;
+    host_validateRequiresCopies_pool.erase(host_validateRequiresCopies_pool_iter);
+    //printf("host_validateRequiresCopies_pool - Erased %s size of pool %lu\n", dtask->getName().c_str(), host_validateRequiresCopies_pool.size());
+    retVal = true;
   }
 
   return retVal;
@@ -1236,94 +1264,111 @@ DetailedTasks::getNextFinalizeHostPreparationTaskIfAble( DetailedTask *& dtask )
 //_____________________________________________________________________________
 //
 bool
-DetailedTasks::getNextInitiallyReadyHostTaskIfAble( DetailedTask *& dtask )
+DetailedTasks::getHostCheckIfExecutableTask(DetailedTask *& dtask)
 {
   //This function should ONLY be called within runTasks() part 1.
   //This is all done as one atomic unit as we're seeing if we should get an item and then we get it.
   bool retVal = false;
   dtask = nullptr;
-  {
-    host_ready_queue_monitor host_ready_queue_lock{ Uintah::CrowdMonitor<host_ready_queue_tag>::WRITER };
-    if (!initiallyReadyHostTasks_.empty()) {
-      dtask = initiallyReadyHostTasks_.front();
-      if (!dtask) {
-        SCI_THROW(InternalError("DetailedTasks::getNextInitiallyReadyHostTaskIfAble() - The task in this queue was a nullptr.  This shouldn't ever happen.", __FILE__, __LINE__));
-      }
-      if (dtask->checkAllCudaStreamsDoneForThisTask()) {
-        initiallyReadyHostTasks_.pop();
-        retVal = true;
-      }
-    }
-    if (!retVal) {
-      dtask = nullptr;
-    }
+
+  auto ready_request = [](DetailedTask *& dtask)->bool { return dtask->checkAllCudaStreamsDoneForThisTask(); };
+  TaskPool::iterator host_checkIfExecutable_pool_iter = host_checkIfExecutable_pool.find_any(ready_request);
+  if (host_checkIfExecutable_pool_iter) {
+    dtask = *host_checkIfExecutable_pool_iter;
+    host_checkIfExecutable_pool.erase(host_checkIfExecutable_pool_iter);
+    //printf("host_checkIfExecutable_pool - Erased %s size of pool %lu\n", dtask->getName().c_str(), host_checkIfExecutable_pool.size());
+    retVal = true;
   }
+
+  return retVal;
+}
+
+//______________________________________________________________________
+//
+bool
+DetailedTasks::getHostReadyToExecuteTask(DetailedTask *& dtask)
+{
+  //This function should ONLY be called within runTasks() part 1.
+  //This is all done as one atomic unit as we're seeing if we should get an item and then we get it.
+  bool retVal = false;
+  dtask = nullptr;
+
+  auto ready_request = [](DetailedTask *& dtask)->bool { return dtask->checkAllCudaStreamsDoneForThisTask(); };
+  TaskPool::iterator host_readyToExecute_pool_iter = host_readyToExecute_pool.find_any(ready_request);
+  if (host_readyToExecute_pool_iter) {
+    dtask = *host_readyToExecute_pool_iter;
+    host_readyToExecute_pool.erase(host_readyToExecute_pool_iter);
+    //printf("host_readyToExecute_pool - Erased %s size of pool %lu\n", dtask->getName().c_str(), host_readyToExecute_pool.size());
+    retVal = true;
+  }
+
   return retVal;
 }
 
 //_____________________________________________________________________________
 //
-void DetailedTasks::addVerifyDataTransferCompletion( DetailedTask * dtask )
+void DetailedTasks::addDeviceValidateRequiresCopies(DetailedTask * dtask)
 {
-  {
-    device_transfer_complete_queue_monitor transfer_queue_lock{ Uintah::CrowdMonitor<device_transfer_complete_queue_tag>::WRITER };
-    verifyDataTransferCompletionTasks_.push(dtask);
-  }
+  device_validateRequiresCopies_pool.insert(dtask);
 }
 
 //_____________________________________________________________________________
 //
-void DetailedTasks::addFinalizeDevicePreparation( DetailedTask * dtask )
+void DetailedTasks::addDevicePerformGhostCopies(DetailedTask * dtask)
 {
-  {
-    device_finalize_prep_queue_monitor device_finalize_queue_lock{ Uintah::CrowdMonitor<device_finalize_prep_queue_tag>::WRITER };
-    if (!dtask) {
-      SCI_THROW(InternalError("DetailedTasks::addFinalizeDevicePreparation() - Cannot add a nullptr to the queue.", __FILE__, __LINE__));
-    }
-    finalizeDevicePreparationTasks_.push(dtask);
-  }
+  device_performGhostCopies_pool.insert(dtask);
+}
+
+//_____________________________________________________________________________
+//
+void DetailedTasks::addDeviceValidateGhostCopies(DetailedTask * dtask)
+{
+  device_validateGhostCopies_pool.insert(dtask);
+}
+
+//_____________________________________________________________________________
+//
+void DetailedTasks::addDeviceCheckIfExecutable(DetailedTask * dtask)
+{
+  device_checkIfExecutable_pool.insert(dtask);
 }
 
 //_____________________________________________________________________________
 //
 void
-DetailedTasks::addInitiallyReadyDeviceTask( DetailedTask * dtask )
+DetailedTasks::addDeviceReadyToExecute( DetailedTask * dtask )
 {
-  {
-    device_ready_queue_monitor device_ready_queue_lock{ Uintah::CrowdMonitor<device_ready_queue_tag>::WRITER };
-    initiallyReadyDeviceTasks_.push(dtask);
-  }
+  device_readyToExecute_pool.insert(dtask);
 }
 
 //_____________________________________________________________________________
 //
 void
-DetailedTasks::addCompletionPendingDeviceTask( DetailedTask * dtask )
+DetailedTasks::addDeviceExecutionPending( DetailedTask * dtask )
 {
-  {
-    device_completed_queue_monitor device_completed_queue_lock{ Uintah::CrowdMonitor<device_completed_queue_tag>::WRITER };
-    completionPendingDeviceTasks_.push(dtask);
-  }
+  device_executionPending_pool.insert(dtask);
 }
 
 //_____________________________________________________________________________
 //
-void DetailedTasks::addFinalizeHostPreparation( DetailedTask * dtask )
+void DetailedTasks::addHostValidateRequiresCopies(DetailedTask * dtask)
 {
-  {
-    host_finalize_prep_queue_monitor host_finalize_queue_lock{ Uintah::CrowdMonitor<host_finalize_prep_queue_tag>::WRITER };
-    finalizeHostPreparationTasks_.push(dtask);
-  }
+  host_validateRequiresCopies_pool.insert(dtask);
 }
 
 //_____________________________________________________________________________
 //
-void DetailedTasks::addInitiallyReadyHostTask( DetailedTask * dtask )
+void DetailedTasks::addHostCheckIfExecutable(DetailedTask * dtask)
 {
-  {
-    host_ready_queue_monitor host_ready_queue_lock{ Uintah::CrowdMonitor<host_ready_queue_tag>::WRITER };
-    initiallyReadyHostTasks_.push(dtask);
-  }
+  host_checkIfExecutable_pool.insert(dtask);
+}
+
+//_____________________________________________________________________________
+//
+void
+DetailedTasks::addHostReadyToExecute( DetailedTask * dtask )
+{
+  host_readyToExecute_pool.insert(dtask);
 }
 
 //_____________________________________________________________________________

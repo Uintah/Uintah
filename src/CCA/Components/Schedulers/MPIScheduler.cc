@@ -58,6 +58,10 @@
 // Pack data into a buffer before sending -- testing to see if this
 // works better and avoids certain problems possible when you allow
 // tasks to modify data that may have a pending send.
+// Note, we have found considerable memory savings by commented USE_PACKING out...
+// however, on some machines this will cause a crash, but on Titan production
+// runs it had no problems.  
+// Brad P. 5/10/2017
 #define USE_PACKING
 
 using namespace Uintah;
@@ -798,7 +802,8 @@ MPIScheduler::execute( int tgnum     /* = 0 */
 
   mpi_info_.reset( 0 );
 
-  DOUT(g_dbg, me << " Executing " << dts->numTasks() << " tasks (" << ntasks << " local)");
+  DOUT(g_dbg, "Rank-" << me << ", MPI Scheduler executing taskgraph: " << tgnum << ", timestep: " << m_shared_state->getCurrentTopLevelTimeStep()
+                          << " with " << dts->numTasks() << " tasks (" << ntasks << " local)");
 
   if( m_reloc_new_pos_label && m_dws[m_dwmap[Task::OldDW]] != nullptr ) {
     m_dws[m_dwmap[Task::OldDW]]->exchangeParticleQuantities(dts, getLoadBalancer(), m_reloc_new_pos_label, iteration);

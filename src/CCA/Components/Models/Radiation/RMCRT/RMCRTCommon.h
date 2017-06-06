@@ -22,19 +22,21 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef RMCRTCOMMON_H
-#define RMCRTCOMMON_H
+#ifndef CCA_COMPONENTS_MODELS_RADIATION_RMCRT_RMCRTCOMMON_H
+#define CCA_COMPONENTS_MODELS_RADIATION_RMCRT_RMCRTCOMMON_H
 
 #include <CCA/Ports/Scheduler.h>
+
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Math/Expon.h>
 #include <Core/Disclosure/TypeDescription.h>
+
 #include <sci_defs/uintah_defs.h>
 
-#include <iostream>
 #include <cmath>
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -87,11 +89,11 @@ namespace Uintah{
 
       //__________________________________
       /** @brief Schedule compute of blackbody intensity */ 
-      void sched_sigmaT4( const LevelP& level, 
+      void sched_sigmaT4( const LevelP& level,
                           SchedulerP& sched,
                           Task::WhichDW temp_dw,
-                          const int radCalc_freq,
                           const bool includeEC = true );
+
       //__________________________________
       //
       template< class T>
@@ -101,7 +103,6 @@ namespace Uintah{
                     DataWarehouse* old_dw,
                     DataWarehouse* new_dw,
                     Task::WhichDW which_temp_dw,
-                    const int radCalc_freq,
                     const bool includeEC );
       
       //__________________________________
@@ -144,37 +145,54 @@ namespace Uintah{
 
       //______________________________________________________________________
       //    Carry Foward tasks
-      // transfer a variable from old_dw -> new_dw for convience */   
+      // transfer a variable from old_dw -> new_dw for convenience */
+      
+      void sched_CarryForward_FineLevelLabels ( const LevelP& level,
+                                                SchedulerP& sched );
+                                          
+      void carryForward_FineLevelLabels ( DetailedTask* dtask,
+                                          Task::CallBackEvent event,
+                                          const ProcessorGroup*,
+                                          const PatchSubset* patches,
+                                          const MaterialSubset* matls,
+                                          DataWarehouse* old_dw,
+                                          DataWarehouse* new_dw,
+                                          void* old_TaskGpuDW,
+                                          void* new_TaskGpuDW,
+                                          void* stream,
+                                          int deviceID );
+       
       void sched_CarryForward_Var ( const LevelP& level,
                                     SchedulerP& scheduler,
-                                    const VarLabel* variable );
+                                    const VarLabel* variable,
+                                    const int tg_num  = -1 );
 
-      bool doCarryForward( const int radCalc_freq );
+      void carryForward_Var( DetailedTask* dtask,
+                             Task::CallBackEvent event,
+                             const ProcessorGroup*,
+                             const PatchSubset*,
+                             const MaterialSubset*,
+                             DataWarehouse*,
+                             DataWarehouse*,
+                             void* old_TaskGpuDW,
+                             void* new_TaskGpuDW,
+                             void* stream,
+                             int deviceID,
+                             const VarLabel* variable );
 
-      void carryForward_Var ( const ProcessorGroup*,
-                              const PatchSubset* ,
-                              const MaterialSubset*,
-                              DataWarehouse*,
-                              DataWarehouse*,
-                              const VarLabel* variable);
       //__________________________________
-      // If neede convert abskg double -> float
+      // If needed convert abskg double -> float
       void sched_DoubleToFloat( const LevelP& level,
                                 SchedulerP& sched,
-                                Task::WhichDW myDW,
-                                const int radCalc_freq );
+                                Task::WhichDW myDW );
 
       void DoubleToFloat( const ProcessorGroup*,
                           const PatchSubset* patches,
                           const MaterialSubset* matls,
                           DataWarehouse* old_dw,
                           DataWarehouse* new_dw,
-                          Task::WhichDW which_dw,
-                          const int radCalc_freq );
+                          Task::WhichDW which_dw );
 
-
-      void doRecompileTaskgraph( const int radCalc_freq );
-      
       bool isDbgCell( IntVector me);
                             
       //______________________________________________________________________
@@ -184,15 +202,21 @@ namespace Uintah{
       //           -x      +x       -y       +y     -z     +z
       enum FACE {EAST=0, WEST=1, NORTH=2, SOUTH=3, TOP=4, BOT=5, nFACES=6};     
       
-      double d_sigma_over_pi;                       // Stefan Boltzmann divided by pi (W* m-2* K-4)
-      int d_flowCell;                               // HARDWIRED 
-      Ghost::GhostType d_gn;
-      Ghost::GhostType d_gac;
+      enum GRAPH_TYPE {
+          TG_CARRY_FORWARD = 0              // carry forward task graph
+        , TG_RMCRT         = 1              // rmcrt taskgraph
+        , NUM_GRAPHS
+      };
+      
+      double d_sigma_over_pi{0.0};                  // Stefan Boltzmann divided by pi (W* m-2* K-4)
+      int d_flowCell{-1};                               // HARDWIRED
+      Ghost::GhostType d_gn{Ghost::None};
+      Ghost::GhostType d_gac{Ghost::AroundCells};
 
       SimulationStateP d_sharedState;
       TypeDescription::Type d_FLT_DBL;              // Is algorithm based on doubles or floats
       
-      static std::vector<IntVector> d_dbgCells;     // cells that we're interogating when DEBUG is on
+      static std::vector<IntVector> d_dbgCells;     // cells that we're interrogating when DEBUG is on
       
       // This will create only 1 instance for both Ray() and radiometer() classes to use
       static double d_threshold;
@@ -204,9 +228,9 @@ namespace Uintah{
       static bool d_allowReflect;                   // specify as false when doing DOM comparisons 
            
       // These are initialized once in registerVarLabels().
-      static int d_matl;      
-      static MaterialSet* d_matlSet;
-      static std::string d_abskgBC_tag;             // Needed by BC, manages the varLabel name change when using floats
+      static int           d_matl;
+      static MaterialSet * d_matlSet;
+      static std::string   d_abskgBC_tag;             // Needed by BC, manages the varLabel name change when using floats
       
       // Varlabels local to RMCRT
       static const VarLabel* d_sigmaT4Label;
@@ -217,7 +241,7 @@ namespace Uintah{
       
       // VarLabels passed to RMCRT by the component
       static const VarLabel* d_compTempLabel;       //  temperature
-      static const VarLabel* d_compAbskgLabel;      //  Absorption Coefficitne
+      static const VarLabel* d_compAbskgLabel;      //  Absorption Coefficient
       static const VarLabel* d_cellTypeLabel;       //  cell type marker
       
       fastApproxExponent d_fastExp;
@@ -227,4 +251,4 @@ namespace Uintah{
 
 } // namespace Uintah
 
-#endif
+#endif // CCA_COMPONENTS_MODELS_RADIATION_RMCRT_RMCRTCOMMON_H

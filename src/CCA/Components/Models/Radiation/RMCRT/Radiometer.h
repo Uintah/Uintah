@@ -60,19 +60,16 @@ namespace Uintah{
                              SchedulerP& sched,
                              Task::WhichDW abskg_dw,
                              Task::WhichDW sigma_dw,
-                             Task::WhichDW celltype_dw,
-                             const int radCalc_freq );
+                             Task::WhichDW celltype_dw );
 
       void sched_initializeRadVars( const LevelP& level,
-                                    SchedulerP& sched,
-                                    const int radCalc_freq );
+                                    SchedulerP& sched );
       template < class T >
       void initializeRadVars( const ProcessorGroup*,
                               const PatchSubset* patches,
-                              const MaterialSubset* ,
+                              const MaterialSubset* matls,
                               DataWarehouse* old_dw,
-                              DataWarehouse* new_dw,
-                              const int radCalc_freq );
+                              DataWarehouse* new_dw );
 
       //__________________________________
       //  FUNCTIONS
@@ -124,7 +121,6 @@ namespace Uintah{
                        Task::WhichDW which_abskg_dw,
                        Task::WhichDW whichd_sigmaT4_dw,
                        Task::WhichDW which_celltype_dw,
-                       const int radCalc_freq,
                        const bool hadRadiometers );
 
       //__________________________________

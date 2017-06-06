@@ -176,6 +176,13 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
   }
 
   DetailedTasks* dts = tg->getDetailedTasks();
+
+  if(!dts) {
+    if (d_myworld->myrank() == 0) {
+      DOUT(true, "DynamicMPIScheduler skipping execute, no tasks");
+    }
+    return;
+  }
   
   int ntasks = dts->numLocalTasks();
   dts->initializeScrubs(m_dws, m_dwmap);

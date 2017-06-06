@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef RAY_H
-#define RAY_H
+#ifndef CCA_COMPONENTS_MODELS_RADIATION_RMCRT_RAY_H
+#define CCA_COMPONENTS_MODELS_RADIATION_RMCRT_RAY_H
 
 #include <CCA/Components/Models/Radiation/RMCRT/RMCRTCommon.h>
 #include <CCA/Components/Models/Radiation/RMCRT/Radiometer.h>
@@ -57,7 +57,7 @@
  * @author Isaac Hunsaker
  * @date July 8, 2011
  *
- * @brief This file traces N (usually 1000+) rays per cell until the intensity reaches a predetermined threshold
+ * @brief This file traces N rays per cell until the intensity reaches a predetermined threshold
  *
  *
  */
@@ -75,7 +75,7 @@ namespace Uintah{
 
       //__________________________________
       //  public variables
-      bool d_solveBoundaryFlux;              //
+      bool d_solveBoundaryFlux{false};
 
       enum modifiesComputes{ modifiesVar,
                              computesVar};
@@ -94,8 +94,7 @@ namespace Uintah{
                            Task::WhichDW abskg_dw,
                            Task::WhichDW sigma_dw,
                            Task::WhichDW celltype_dw,
-                           bool modifies_divQ,
-                           const int radCalc_freq );
+                           bool modifies_divQ );
 
       /** @brief Algorithm for RMCRT using multilevel dataOnion approach*/
       void sched_rayTrace_dataOnion( const LevelP& level,
@@ -103,8 +102,7 @@ namespace Uintah{
                                      Task::WhichDW abskg_dw,
                                      Task::WhichDW sigma_dw,
                                      Task::WhichDW celltype_dw,
-                                     bool modifies_divQ,
-                                     const int radCalc_freq );
+                                     bool modifies_divQ );
 
 
       /** @brief Schedule filtering of q and divQ */
@@ -125,7 +123,6 @@ namespace Uintah{
       void  sched_setBoundaryConditions( const LevelP& level,
                                          SchedulerP& sched,
                                          Task::WhichDW temp_dw,
-                                         const int radCalc_freq,
                                          const bool backoutTemp = false);
 
       void BC_bulletproofing( const ProblemSpecP& rmcrtps );
@@ -139,20 +136,18 @@ namespace Uintah{
 
       //__________________________________
       //  Multilevel tasks
-      void sched_Refine_Q(SchedulerP& sched,
-                          const PatchSet* patches,
-                          const MaterialSet* matls,
-                          const int radCalc_freq);
+      void sched_Refine_Q( SchedulerP& sched,
+                           const PatchSet* patches,
+                           const MaterialSet* matls );
 
       void sched_CoarsenAll( const LevelP& coarseLevel,
                              SchedulerP& sched,
                              const bool modifies_abskg,
-                             const bool modifiesd_sigmaT4,
-                             const int radCalc_freq );
+                             const bool modifiesd_sigmaT4 );
 
       void sched_computeCellType ( const LevelP& coarseLevel,
                                    SchedulerP& sched,
-                                   const Ray::modifiesComputes which);
+                                   const Ray::modifiesComputes which );
 
       void sched_ROI_Extents ( const LevelP& level,
                                SchedulerP& scheduler );
@@ -163,29 +158,33 @@ namespace Uintah{
 
     //__________________________________
     //  public variables
-    bool d_coarsenExtraCells;               // instead of setting BC on the coarse level, coarsen fine level extra cells
+    bool d_coarsenExtraCells{false};               // instead of setting BC on the coarse level, coarsen fine level extra cells
 
     //______________________________________________________________________
     private:
-      double d_sigmaT4_thld;                // threshold values for determining the extents of ROI
-      double d_abskg_thld;
-      int    d_nDivQRays;                   // number of rays per cell used to compute divQ
-      int    d_nFluxRays;                   // number of rays per cell used to compute radiative flux
-      int    d_orderOfInterpolation;        // Order of interpolation for interior fine patch
-      IntVector d_haloCells;                // Number of cells a ray will traverse after it exceeds a fine patch boundary before
-                                            // it moves to a coarser level
-      double  d_haloLength;                 // Physical length a ray will traverse after it exceeds a fine patch boundary before
-                                            // it moves to a coarser level. 
 
-      bool d_solveDivQ;                     // switch for enabling computation of divQ
-      bool d_CCRays;
-      bool d_onOff_SetBCs;                  // switch for setting boundary conditions
-      
-      
-      bool d_isDbgOn;
-      bool d_applyFilter;                   // Allow for filtering of boundFlux and divQ results
-      int  d_rayDirSampleAlgo;              // Ray sampling algorithm
-      enum rayDirSampleAlgorithm{ NAIVE,            // random sampled ray direction
+      double d_sigmaT4_thld{DBL_MAX};             // threshold values for determining the extents of ROI
+      double d_abskg_thld{DBL_MAX};
+      int    d_nDivQRays{10};                     // number of rays per cell used to compute divQ
+      int    d_nFluxRays{1};                      // number of rays per cell used to compute radiative flux
+      int    d_orderOfInterpolation{-9};          // Order of interpolation for interior fine patch
+      IntVector d_haloCells{IntVector(-9,-9,-9)}; // Number of cells a ray will traverse after it exceeds a fine patch boundary before
+                                                  // it moves to a coarser level
+      double  d_haloLength{-9};                   // Physical length a ray will traverse after it exceeds a fine patch boundary before
+                                                  // it moves to a coarser level. 
+
+      std::vector <double>  _maxLengthFlux;
+      std::vector <double>  _maxLength;
+      std::vector< int >    _maxCells;
+
+      bool d_solveDivQ{true};                     // switch for enabling computation of divQ
+      bool d_CCRays{false};
+      bool d_onOff_SetBCs{true};                  // switch for setting boundary conditions
+      bool d_isDbgOn{false};
+      bool d_applyFilter{false};                  // Allow for filtering of boundFlux and divQ results
+      int  d_rayDirSampleAlgo{NAIVE};             // Ray sampling algorithm
+
+      enum rayDirSampleAlgorithm{ NAIVE,          // random sampled ray direction
                                   LATIN_HYPER_CUBE
                                 };
 
@@ -201,15 +200,16 @@ namespace Uintah{
                       entireDomain          // The ROI is the entire computatonal Domain
                     };
 
-      int d_cellTypeCoarsenLogic;           // how to coarsen a cell type
+      int d_cellTypeCoarsenLogic{ROUNDUP};           // how to coarsen a cell type
+
       enum cellTypeCoarsenLogic{ ROUNDUP, ROUNDDOWN};
 
-      ROI_algo  d_ROI_algo;
+      ROI_algo  d_ROI_algo{entireDomain};
       Point d_ROI_minPt;
       Point d_ROI_maxPt;
 
       // Radiometer parameters
-      Radiometer* d_radiometer;
+      Radiometer* d_radiometer{nullptr};
 
       // Boundary flux constant variables  (consider using array container when C++ 11 is used)
       std::map <int,IntVector> d_dirIndexOrder;
@@ -235,8 +235,7 @@ namespace Uintah{
                      bool modifies_divQ,
                      Task::WhichDW which_abskg_dw,
                      Task::WhichDW whichd_sigmaT4_dw,
-                     Task::WhichDW which_celltype_dw,
-                     const int radCalc_freq );
+                     Task::WhichDW which_celltype_dw );
 
       //__________________________________
       template<class T>
@@ -252,10 +251,10 @@ namespace Uintah{
                         void* stream,
                         int deviceID,
                         bool modifies_divQ,
+                        SimulationStateP   sharedState,
                         Task::WhichDW which_abskg_dw,
                         Task::WhichDW whichd_sigmaT4_dw,
-                        Task::WhichDW which_celltype_dw,
-                        const int radCalc_freq );
+                        Task::WhichDW which_celltype_dw);
 
       //__________________________________
       template<class T>
@@ -267,8 +266,7 @@ namespace Uintah{
                                bool modifies_divQ,
                                Task::WhichDW which_abskg_dw,
                                Task::WhichDW whichd_sigmaT4_dw,
-                               Task::WhichDW which_celltype_dw,
-                               const int radCalc_freq );
+                               Task::WhichDW which_celltype_dw );
 
       //__________________________________
       template<class T>
@@ -284,10 +282,10 @@ namespace Uintah{
                                  void* stream,
                                  int deviceID,
                                  bool modifies_divQ,
+                                 SimulationStateP   sharedState,
                                  Task::WhichDW which_abskg_dw,
                                  Task::WhichDW whichd_sigmaT4_dw,
-                                 Task::WhichDW which_celltype_dw,
-                                 const int radCalc_freq );
+                                 Task::WhichDW which_celltype_dw );
       //__________________________________
       template<class T>
       void updateSumI_ML ( Vector& ray_direction,
@@ -307,6 +305,7 @@ namespace Uintah{
                            unsigned long int& size,
                            double& sumI,
                            MTRand& mTwister);
+
      //__________________________________
      void computeExtents( LevelP level_0,
                           const Level* fineLevel,
@@ -371,10 +370,12 @@ namespace Uintah{
                                         const int bin_i = 0,
                                         const int bin_j = 0);
 
+
       /** @brief Determine if a flow cell is adjacent to a wall, and therefore has a boundary */
       bool has_a_boundary(const IntVector &c,
                           constCCVariable<int> &celltype,
                           std::vector<int> &boundaryFaces);
+
       //______________________________________________________________________
       //   Boundary Conditions
       template< class T >
@@ -384,29 +385,27 @@ namespace Uintah{
                                   DataWarehouse*,
                                   DataWarehouse* new_dw,
                                   Task::WhichDW temp_dw,
-                                  const int radCalc_freq,
                                   const bool backoutTemp );
 
-    int numFaceCells(const Patch* patch,
-                     const Patch::FaceIteratorType type,
-                     const Patch::FaceType face);
+      //__________________________________
+      int numFaceCells( const Patch* patch,
+                        const Patch::FaceIteratorType type,
+                        const Patch::FaceType face );
 
     //_____________________________________________________________________
     //    Multiple Level tasks
-    void refine_Q(const ProcessorGroup*,
-                  const PatchSubset* patches,
-                  const MaterialSubset* matls,
-                  DataWarehouse*,
-                  DataWarehouse* new_dw,
-                  const int radCalc_freq);
+    void refine_Q( const ProcessorGroup*,
+                   const PatchSubset* patches,
+                   const MaterialSubset* matls,
+                   DataWarehouse*,
+                   DataWarehouse* new_dw );
 
     // coarsen a single variable
     void sched_Coarsen_Q( const LevelP& coarseLevel,
                           SchedulerP& scheduler,
                           Task::WhichDW this_dw,
                           const bool modifies,
-                          const VarLabel* variable,
-                          const int radCalc_freq);
+                          const VarLabel* variable );
 
     template< class T >
     void coarsen_Q ( const ProcessorGroup*,
@@ -416,8 +415,7 @@ namespace Uintah{
                      DataWarehouse* new_dw,
                      const VarLabel* variable,
                      const bool modifies,
-                     Task::WhichDW this_dw,
-                     const int radCalc_freq);
+                     Task::WhichDW this_dw );
 
     void computeCellType( const ProcessorGroup*,
                           const PatchSubset* patches,
@@ -431,7 +429,7 @@ namespace Uintah{
                        const PatchSubset* patches,
                        const MaterialSubset* matls,
                        DataWarehouse*,
-                       DataWarehouse* new_dw);
+                       DataWarehouse* new_dw );
 
     //______________________________________________________________________
     //  Helpers

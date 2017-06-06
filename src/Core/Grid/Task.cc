@@ -112,8 +112,9 @@ Task::initialize()
   m_phase        = -1;
   m_comm         = -1;
 
-  m_max_ghost_cells  = 0;
-  m_max_level_offset = 0;
+  //The 0th level has a max ghost cell of zero.  Other levels are left uninitialized.
+  m_max_ghost_cells[0] = 0;
+  m_max_level_offset   = 0;
 }
 
 //______________________________________________________________________
@@ -122,8 +123,9 @@ Task::initialize()
 void
 Task::setSets( const PatchSet* ps, const MaterialSet* ms )
 {
-  ASSERT( m_patch_set == nullptr );
-  ASSERT( m_matl_set  == nullptr );
+  // TODO: change these, they don't make sense when this task is added to more then one "Normal" task-graph
+//  ASSERT(m_patch_set == nullptr);
+//  ASSERT(m_matl_set  == nullptr);
 
   m_patch_set = ps;
   if ( m_patch_set ) {
@@ -211,10 +213,6 @@ void Task::requires(       WhichDW             dw
   Dependency* dep = scinew Dependency(Requires, this, dw, var, oldTG, patches, matls, patches_dom,
                                       matls_dom, gtype, numGhostCells, level_offset);
 
-  if (numGhostCells > m_max_ghost_cells) {
-    m_max_ghost_cells = numGhostCells;
-  }
-
   if (level_offset > m_max_level_offset) {
     m_max_level_offset = level_offset;
   }
@@ -249,7 +247,10 @@ void Task::requires(       WhichDW              dw
                    ,       bool                 oldTG
                    )
 {
-  int offset = (patches_dom == CoarseLevel || patches_dom == FineLevel) ? 1 : 0;
+  int offset = 0;
+  if (patches_dom == CoarseLevel || patches_dom == FineLevel) {
+    offset = 1;
+  }
   requires(dw, var, patches, patches_dom, offset, matls, matls_dom, gtype, numGhostCells, oldTG);
 }
 
@@ -798,7 +799,6 @@ Task::Dependency::Dependency(       DepType              deptype
 
     : m_dep_type(deptype)
     , m_task(task)
-    , m_whichdw(whichdw)
     , m_var(var)
     , m_look_in_old_tg(oldTG)
     , m_patches(patches)
@@ -806,6 +806,7 @@ Task::Dependency::Dependency(       DepType              deptype
     , m_patches_dom(patches_dom)
     , m_matls_dom(matls_dom)
     , m_gtype(gtype)
+    , m_whichdw(whichdw)
     , m_num_ghost_cells(numGhostCells)
     , m_level_offset(level_offset)
 {
@@ -836,12 +837,13 @@ Task::Dependency::Dependency(       DepType              deptype
 
     : m_dep_type(deptype)
     , m_task(task)
-    , m_whichdw(whichdw)
     , m_var(var)
     , m_look_in_old_tg(oldTG)
-    , m_reduction_level(reductionLevel)
     , m_matls(matls)
+    , m_reduction_level(reductionLevel)
     , m_matls_dom(matls_dom)
+    , m_gtype(Ghost::None)
+    , m_whichdw(whichdw)
 {
   if (var) {
     var->addReference();

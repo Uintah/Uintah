@@ -209,25 +209,26 @@ protected:
   void getMemoryStats( bool create = false );
   void getPAPIStats  ( );
   
-  ProblemSpecP         d_ups;
-  ProblemSpecP         d_grid_ps;         // Problem Spec for the Grid
-  ProblemSpecP         d_restart_ps;      // Problem Spec for restarting
-  SimulationStateP     d_sharedState;
-  SchedulerP           d_scheduler;
-  LoadBalancerPort*    d_lb;
-  Output*              d_output;
-  SimulationTime*      d_timeinfo;
-  SimulationInterface* d_sim;
-  Regridder*           d_regridder;
-  DataArchive*         d_restart_archive; // Only used when restarting: Data from UDA we are restarting from.
+  ProblemSpecP         d_ups{nullptr};
+  ProblemSpecP         d_grid_ps{nullptr};       // Problem Spec for the Grid
+  ProblemSpecP         d_restart_ps{nullptr};    // Problem Spec for restarting
+  SimulationStateP     d_sharedState{nullptr};
+  SchedulerP           d_scheduler{nullptr};
+  LoadBalancerPort*    d_lb{nullptr};
+  Output*              d_output{nullptr};
+  SimulationTime*      d_timeinfo{nullptr};
+  SimulationInterface* d_sim{nullptr};
+  Regridder*           d_regridder{nullptr};
+  DataArchive*         d_restart_archive{nullptr};     // Only used when restarting: Data from UDA we are restarting from.
 
   GridP                d_currentGridP;
 
-  bool d_doAMR;
-  bool d_doMultiTaskgraphing;
+  bool d_doAMR{false};
+  bool d_do_multi_taskgraphing{false};
+  int  d_rad_calc_frequency{1};
 
   double d_delt;
-  double d_prev_delt;
+  double d_prev_delt{0.0};
   
   double d_simTime;               // current sim time
   double d_startSimTime;          // starting sim time
@@ -235,22 +236,22 @@ protected:
   WallTimers walltimers;
 
   /* For restarting */
-  bool        d_restarting;
+  bool        d_restarting{false};
   std::string d_fromDir;
-  int         d_restartTimestep;
-  int         d_restartIndex;
-  int         d_lastRecompileTimestep;
-  bool        d_reduceUda;
+  int         d_restartTimestep{0};
+  int         d_restartIndex{0};
+  int         d_last_recompile_timestep{0};
+  bool        d_reduceUda{false};;
       
   // If d_restartFromScratch is true then don't copy or move any of
   // the old timesteps or dat files from the old directory.  Run as
   // as if it were running from scratch but with initial conditions
   // given by the restart checkpoint.
-  bool d_restartFromScratch;
+  bool d_restartFromScratch{false};
 
   // If !d_restartFromScratch, then this indicates whether to move
   // or copy the old timesteps.
-  bool d_restartRemoveOldDir;
+  bool d_restartRemoveOldDir{false};
 
 #ifdef USE_PAPI_COUNTERS
   int         d_eventSet;            // PAPI event set
@@ -277,6 +278,13 @@ protected:
 #ifdef HAVE_VISIT
   bool CheckInSitu( visit_simulation_data *visitSimData, bool first );
 #endif     
+private:
+
+  // eliminate copy, assignment and move
+  SimulationController( const SimulationController & )            = delete;
+  SimulationController& operator=( const SimulationController & ) = delete;
+  SimulationController( SimulationController && )                 = delete;
+  SimulationController& operator=( SimulationController && )      = delete;
 
 // Percent time in overhead samples
   double overheadValues[OVERHEAD_WINDOW];
@@ -289,10 +297,9 @@ protected:
   // bool needRecompile( double t, double delt, const LevelP& level,
   //                     SimulationInterface* cfd, Output* output,
   //                     LoadBalancerPort* lb ) = 0;
-  // SimulationController(const SimulationController&) = 0;
-  // SimulationController& operator=(const SimulationController&) = 0;
+
 };
 
 } // End namespace Uintah
 
-#endif
+#endif // CCA_COMPONENTS_SIMULATIONCONTROLLER_SIMULATIONCONTROLLER_H
