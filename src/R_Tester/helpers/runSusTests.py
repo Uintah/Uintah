@@ -451,13 +451,8 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     print( "Test Timer: %s" % strftime("%H:%M:%S",gmtime(test_timer)) )
 
     # If the test passed put an svn revision stamp in the goldstandard
-    # user root is running the cronjob
-    user = getoutput("whoami");
-
-    if rc > 0:
-      print( "Failed %i user %s" %(failcode,user) )
-
-    if failcode == 0 and (user == "csafe-tester" or user == "root"):
+    # Only do this if the nightly RT cronjob is running
+    if failcode == 0 and getenv('AUTO_UPDATE_SVN_STAMP') == "yes":
       print( "Updating the svn revision file %s" %svn_revision )
       svn_file = "%s/%s/%s/svn_revision" % (gold_standard,ALGO,testname)
       system( "echo 'This test last passed with Revision: %s'> %s" %(svn_revision, svn_file))

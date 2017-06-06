@@ -14,6 +14,7 @@ OS=`uname -s`
 PARALLELISM=0
 REPLY_TO="uintah-developer@gforge.sci.utah.edu"
 AUTO_UPDATE_PERF_GS="yes"                           # Automatically update performance GS if they improve
+AUTO_UPDATE_SVN_STAMP="yes"                         # Automatically update the svn revision number when a test passes
 
 SEND_MAIL_TO=""
 USE_DEFAULT_BUILD="yes"
