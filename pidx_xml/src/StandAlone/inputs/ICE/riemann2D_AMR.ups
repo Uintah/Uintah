@@ -24,7 +24,8 @@
 <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
 <!--____________________________________________________________________-->
 <Time>
-  <maxTime>            0.30      </maxTime>
+  <maxTime>            0.30        </maxTime>
+  <max_Timesteps>      5           </max_Timesteps>
   <initTime>           0.0         </initTime>
   <delt_min>           0.0         </delt_min>
   <delt_max>           1.0         </delt_max>
@@ -129,7 +130,7 @@
 <!--____________________________________________________________________-->
 <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
 <!--____________________________________________________________________-->
-<DataArchiver>
+<DataArchiver type="PIDX">
   <filebase>riemann2D_AMR.uda</filebase>
   <outputTimestepInterval>1</outputTimestepInterval>
   <save label="delP_Dilatate"/>

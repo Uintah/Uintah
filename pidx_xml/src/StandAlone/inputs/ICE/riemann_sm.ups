@@ -92,7 +92,7 @@
     <!--____________________________________________________________________-->
     <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
     <!--____________________________________________________________________-->
-    <DataArchiver>
+    <DataArchiver type="PIDX">
       <filebase>shockTube.uda</filebase>
       <outputInterval> 0.0005 </outputInterval>
       <save label="delP_Dilatate"/>

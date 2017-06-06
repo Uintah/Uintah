@@ -179,15 +179,18 @@ PIDXOutputContext::computeBoxSize( const PatchSubset* patches,
   IntVector nCells = level->nCellsPatch_max();
   int nPatchCells  = nCells.x() * nCells.y() * nCells.z();
 
+  IntVector box( 64, 64, 64 );    // default value
+
+ #if 0
+
   const int cubed16  = 16*16*16;
   const int cubed32  = 32*32*32;
   const int cubed64  = 64*64*64;
   const int cubed128 = 128*128*128;
   const int cubed256 = 256*256*256;
   
-  //__________________________________
+ //__________________________________
   // logic for adjusting the box
-  IntVector box( 64, 64, 64 );    // default value
   if (nPatchCells <=  cubed16) {
     
   } else if (nPatchCells >  cubed16  && nPatchCells <= cubed32) {
@@ -205,13 +208,19 @@ PIDXOutputContext::computeBoxSize( const PatchSubset* patches,
   if ( flags.d_outputPatchSize != IntVector( -9, -9, -9 ) ) {
     box = flags.d_outputPatchSize;
   }
+#endif
   
   if ( flags.d_debugOutput ) {
     cout << Parallel::getMPIRank() << " PIDX outputPatchSize: Level: "<< level->getIndex() << " box: " << box  
          << " Patchsize: " << nCells << " nPatchCells: " << nPatchCells  << "\n";
   }
   //PIDX_set_point( newBox, box.x(), box.y(), box.z());
-  PIDX_set_point( newBox, 64, 64, 64 );
+  //  PIDX_set_point( newBox, 64, 64, 64 );
+  box = IntVector( (int)pow(2, (int)ceil(log(nCells.x())/log(2))) * 2,
+                   (int)pow(2, (int)ceil(log(nCells.y())/log(2))) * 2,
+                   (int)pow(2, (int)ceil(log(nCells.z())/log(2))) * 2 );
+  PIDX_set_point( newBox, box.x(), box.y(), box.z() );
+
 }
 
 

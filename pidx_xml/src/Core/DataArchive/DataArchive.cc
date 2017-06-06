@@ -491,6 +491,10 @@ DataArchive::queryLifetime( double& /*min*/, double& /*max*/,
 }
 //______________________________________________________________________
 //
+
+// PIDX hack: fix me... how to store this info correctly?
+Uintah::HashTable<string, ConsecutiveRangeSet> var_materials;
+
 void
 DataArchive::queryVariables( vector<string>                         & names,
                              vector<int>                            & num_matls,
@@ -509,6 +513,21 @@ DataArchive::queryVariables( vector<string>                         & names,
   }
 
   queryVariables( d_indexFile, names, num_matls, types );
+
+  // PIDX hack:
+  if( var_materials.size() == 0 ) {
+    
+    for( unsigned int i = 0; i < num_matls.size(); i++ ) {
+
+      ConsecutiveRangeSet set;
+      for( int j = 0; j < num_matls[ i ]; j++ ) {
+        set.addInOrder( j );
+      }
+      var_materials.insert( names[ i ], set );
+    }
+  }
+  // end PIDX hack.
+  
 
   d_lock.unlock();
 
@@ -887,7 +906,13 @@ DataArchive::query(       Variable     & var,
     //    }
     // ret = PIDX_set_current_variable_index( idxFile, varIndex );
 
-    ret = PIDX_set_current_variable_by_name( idxFile, name.c_str() );
+    std::ostringstream mstr;
+    mstr << "_m" << matlIndex; // Add _m# to name of variable.
+    string full_name = name + mstr.str();
+
+    ret = PIDX_set_current_variable_by_name( idxFile, full_name.c_str() );
+    proc0cout << "ret is " << ret << ", was looking for" << name << "\n";
+    
     pidx.checkReturnCode( ret, "DataArchive::query() - PIDX_set_current_variable_index failure", __FILE__, __LINE__ );
 
     //__________________________________
@@ -1928,8 +1953,8 @@ DataArchive::queryMaterials( const string & varname,
   ConsecutiveRangeSet matls;
 
   if( d_fileFormat == PIDX ) {
-      matls.addInOrder( 0 );
-      return matls;
+    var_materials.lookup( varname, matls );
+    return matls;
   }
 
   Timers::Simple timer;
@@ -1942,7 +1967,7 @@ DataArchive::queryMaterials( const string & varname,
 
   for (unsigned i = 0; i < timedata.d_matlInfo[patch->getLevel()->getIndex()].size(); i++) {
     // i-1, since the matlInfo is adjusted to allow -1 as entries
-    VarnameMatlPatch vmp(varname, i-1, patch->getRealPatch()->getID());
+    VarnameMatlPatch vmp( varname, i-1, patch->getRealPatch()->getID() );
     DataFileInfo dummy;
 
     if( std::find( timedata.d_datafileInfoIndex.begin(), timedata.d_datafileInfoIndex.end(), vmp ) != timedata.d_datafileInfoIndex.end() ) {
