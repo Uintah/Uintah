@@ -8,13 +8,14 @@
 # define environmental variables and export them
 HTMLLOG=""
 LOCAL_OR_NIGHTLY_TEST="local"
-WHICH_TESTS=${WHICH_TESTS:="LOCALTESTS"}  #default value is local tests, it can be set by the buildbot
+WHICH_TESTS=${WHICH_TESTS:="LOCALTESTS"}  # default value is local tests, it can be set by the buildbot
 OS=`uname -s`
 PARALLELISM=8
 WEBLOG=""
 BUILD_DIR=/dev/null
+AUTO_UPDATE_PERF_GS="no"                  # Variable for automatically update performance GS if they improve
 
-export BUILD_DIR  HTMLLOG WEBLOG LOCAL_OR_NIGHTLY_TEST WHICH_TESTS OS
+export BUILD_DIR  HTMLLOG WEBLOG LOCAL_OR_NIGHTLY_TEST WHICH_TESTS OS AUTO_UPDATE_PERF_GS
 
 #__________________________________
 unset SHELL
@@ -41,12 +42,12 @@ fi
 
 cd "${BUILD_DIR}"
 
-TEST_DATA="${BUILD_DIR}/TestData"
+TEST_DATA_DIR="${BUILD_DIR}/TestData"
 
 #  If the user has set the GOLD_STANDARDS environmental variable
 #  then override
 if [ "$GOLD_STANDARDS" != "" ]; then
-  TEST_DATA="$GOLD_STANDARDS"
+  TEST_DATA_DIR="$GOLD_STANDARDS"
 fi 
 
 #__________________________________
@@ -78,7 +79,7 @@ fi
 # The gold standard path must be updated every time local_rt is run
 # The user can set the environmenal variable and over ride the default path.
 /bin/rm -f goldStandard
-ln -sf "${TEST_DATA}" goldStandard
+ln -sf "${TEST_DATA_DIR}" goldStandard
 
 
 # if the user has set the path to the checkpoints directory create a symbolic link
@@ -91,9 +92,9 @@ fi
 
 #__________________________________
 # bulletproofing
-if [ ! -d "$TEST_DATA" ]; then
+if [ ! -d "$TEST_DATA_DIR" ]; then
   echo "__________________________________"
-  echo "ERROR: gold standards directory doesn't exist: $TEST_DATA."
+  echo "ERROR: gold standards directory doesn't exist: $TEST_DATA_DIR."
   echo "Run the command:"
   echo "    make gold_standards"
   echo " to generate them.  Now exiting"
@@ -214,7 +215,7 @@ fi
 echo ""
 echo ""
 date
-echo "Gold Standards: $TEST_DATA"
+echo "Gold Standards: $TEST_DATA_DIR"
 
 let retval=0;
 let c=0;
@@ -235,7 +236,7 @@ for componentTest in $selectedCompTests; do
   echo "setenv LOCAL_OR_NIGHTLY_TEST $LOCAL_OR_NIGHTLY_TEST" >> "$doTestScript"
   echo "setenv WHICH_TESTS ${WHICH_TESTS[c]}"                >> "$doTestScript"
   echo "setenv SCI_MALLOC_ENABLED $SCI_MALLOC_ENABLED"       >> "$doTestScript"
-
+  
   BUILD_TYPE="opt"
   if [ "$IS_DEBUG_BUILD" = 'yes' ]; then
       BUILD_TYPE="dbg"

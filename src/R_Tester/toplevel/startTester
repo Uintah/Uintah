@@ -1,4 +1,5 @@
 #!/bin/bash
+#______________________________________________________________________
 
 # to differentiate among the build names & even directories
 COMPILE="yes"
@@ -8,15 +9,14 @@ DO_DBG="1"
 DO_OPT="1"
 LOCAL_OR_NIGHTLY_TEST="nightly"
 WHICH_TESTS="NIGHTLYTESTS"
-MONTHLYBACKUP="no"
-NOTESTS="0"
+BUILDONLY="0"
 OS=`uname -s`
 PARALLELISM=0
 REPLY_TO="uintah-developer@gforge.sci.utah.edu"
+AUTO_UPDATE_PERF_GS="yes"                           # Automatically update performance GS if they improve
 
 SEND_MAIL_TO=""
 USE_DEFAULT_BUILD="yes"
-USE_DEFAULT_TEST_DATA="yes"
 USE_PREVTREE="no"
 USE_TREE="new"
 VERBOSE="no"
@@ -35,7 +35,7 @@ MACHINE=`hostname`
 if [ "$MACHINE" == "uintah-build" ]; then
   COMMON_GROUP="users"
   BUILD_DIR=/home/rt/"$OS"
-  TEST_DATA=/home/rt/"$OS"/TestData
+  TEST_DATA_DIR=/home/rt/"$OS"/TestData
   TEMP_DIR=/home/rt/"$OS"
   SCRIPT_DIR=/home/rt/scripts
   CHECKPOINTS=/home/rt/CheckPoints
@@ -56,7 +56,7 @@ if test "$MACHINE" = "albion" ; then
   REPLY_TO="t.harman@utah.edu"
   COMMON_GROUP="uintah"
   BUILD_DIR=/home/${LOGNAME}/"$OS"                      # The user can be rt or arl-rt
-  TEST_DATA=/home/${LOGNAME}/"$OS"/TestData
+  TEST_DATA_DIR=/home/${LOGNAME}/"$OS"/TestData
   TEMP_DIR=/home/${LOGNAME}/"$OS"
   SCRIPT_DIR=/home/${LOGNAME}/scripts
   CHECKPOINTS=/home/${LOGNAME}/CheckPoints
@@ -80,7 +80,7 @@ if test "$MACHINE" = "cyrus.mech.utah.edu" ; then
   REPLY_TO="t.harman@utah.edu"
   COMMON_GROUP="users"
   BUILD_DIR=/raid/home/rt/"$OS"
-  TEST_DATA=/raid/home/rt/"$OS"/TestData
+  TEST_DATA_DIR=/raid/home/rt/"$OS"/TestData
   TEMP_DIR=/raid/home/rt/"$OS"
   SCRIPT_DIR=/raid/home/rt/scripts
   CHECKPOINTS=/raid/home/rt/CheckPoints
@@ -147,9 +147,8 @@ while [ "$#" -gt 0 ]; do
     -test_data)
         if [ "$#" -gt 1 ]; then
             shift
-            TEST_DATA="$1"
+            TEST_DATA_DIR="$1"
         fi
-        USE_DEFAULT_TEST_DATA="no"
         ;;
     -j)
         if [ "$#" -gt 1 ]; then
@@ -158,7 +157,7 @@ while [ "$#" -gt 0 ]; do
         fi
         ;;
     -build_only)
-        NOTESTS="1"
+        BUILDONLY="1"
         ;;
     -dbg_only)
         DO_DBG="1"
@@ -167,9 +166,6 @@ while [ "$#" -gt 0 ]; do
     -opt_only)
         DO_DBG="0"
         DO_OPT="1"
-        ;;
-    -monthlybackup)
-        MONTHLYBACKUP="1"
         ;;
     -no_compile)
         COMPILE="no"
@@ -210,7 +206,7 @@ fi
 
 
 PATH=:"$MPIRUN_PATH":"$PATH":"$SCRIPT_DIR":.
-export PATH NOTESTS COMPILE LOCAL_OR_NIGHTLY_TEST WHICH_TESTS COMMON_GROUP CHECKPOINTS
+export PATH BUILDONLY COMPILE LOCAL_OR_NIGHTLY_TEST WHICH_TESTS COMMON_GROUP CHECKPOINTS AUTO_UPDATE_PERF_GS
 
 # set number of processors to use when building
 if [ $PARALLELISM -eq 0 ]; then
@@ -226,7 +222,7 @@ if [ -d /usr/var/tmp ]; then
   export TMPDIR
 fi
 
-export BUILD_DIR BUILDROOT TEST_DATA PARALLELISM MAKE_PARALLELISM SEND_MAIL_TO  REPLY_TO
+export BUILD_DIR BUILDROOT TEST_DATA_DIR PARALLELISM MAKE_PARALLELISM SEND_MAIL_TO  REPLY_TO
 
 if [ $VERBOSE = "yes" ]; then
   echo "TIME STAMP: Regression Tester Starting at:"
