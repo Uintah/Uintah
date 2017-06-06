@@ -853,22 +853,23 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
 	      d_mass = 0.0;
 	      h_rxn = 0.0; // this is the reaction rate weighted heat of reaction. It is needed so we can used the clipped value when computed the heat of reaction rate.
                      // h_rxn = sum(hrxn_l * rxn_l)/sum(rxn_l)
+        double oxi_lim = 0.0; // max rate due to reactions
+        double rh_l_i = 0.0;
         for (int l=0; l<_NUM_reactions; l++) {
-          reaction_rate_l[l](i,j,k)=rh_l_new[l];// [kg/m^3/s] this is for the intial guess during the next time-step
-          char_mass_rate+= -rh_l_new[l]/w;// [kg/s/#]  negative sign because we are computing the destruction rate for the particles.
-	        d_mass += rh_l_new[l];
-	        h_rxn += hrxn_l[l] * rh_l_new[l];
+          reaction_rate_l[l](i,j,k)=rh_l_new[l];// [kg/m^3/s] this is for the intial guess during the next time-step (that is why it is before the initial clipping).
+          // check to see if the reaction rate is oxidizer limited.
+          oxi_lim = (oxid_mass_frac[l] * gas_rho * surfaceAreaFraction) / dt;// [kg/s/#] // here the surfaceAreaFraction parameter is allowing us to only consume the oxidizer multiplied by the weighted area fraction for the current particle.
+          rh_l_i = std::min(rh_l_new[l], oxi_lim);
+          char_mass_rate += -rh_l_i/w;// [kg/s/#]  negative sign because we are computing the destruction rate for the particles.
+	        d_mass += rh_l_i;
+	        h_rxn += hrxn_l[l] * rh_l_i;
         }
 	      h_rxn /= (d_mass + 1e-50); // [J/mole]
-        // check to see if reaction rate is oxidizer limited.
-        for (int l=0; l<_NUM_reactions; l++) {
-          char_mass_rate = std::max( char_mass_rate, - (oxid_mass_frac[l] * gas_rho * surfaceAreaFraction) / (dt * w) );// [kg/s/#] // here the surfaceAreaFraction parameter is allowing us to only consume the oxidizer multiplied by the weighted area fraction for the current particle.
-        }
+        
         // check to see if reaction rate is fuel limited.
         if ( add_rawcoal_birth && add_char_birth ){
           char_mass_rate = std::max( char_mass_rate, - ((rc+ch)/(dt) + (RHS + RHS_v)/(vol*w) + r_devol/w + char_birth(i,j,k)/w + rawcoal_birth(i,j,k)/w )); // [kg/s/#] 
         } else {
-        
           char_mass_rate = std::max( char_mass_rate, - ((rc+ch)/(dt) + (RHS + RHS_v)/(vol*w) + r_devol/w )); // [kg/s/#] 
         }
         char_mass_rate = std::min( 0.0, char_mass_rate); // [kg/s/#] make sure we aren't creating char.
