@@ -751,7 +751,7 @@ DataArchive::query(       Variable     & var,
     var.allocate( patch, varinfo.boundaryLayer );
   }
 
-  proc0cout << "query: " << name << " on patch: " << patchid << ", var index (dfi start): " << (dfi ? dfi->start : -123321) << "\n";
+  // proc0cout << "query: " << name << " on patch: " << patchid << ", var index (dfi start): " << (dfi ? dfi->start : -123321) << "\n";
 
   //__________________________________
   // open data file Standard Uda Format
@@ -911,7 +911,7 @@ DataArchive::query(       Variable     & var,
     string full_name = name + mstr.str();
 
     ret = PIDX_set_current_variable_by_name( idxFile, full_name.c_str() );
-    proc0cout << "ret is " << ret << ", was looking for" << name << "\n";
+    // proc0cout << "ret is " << ret << ", was looking for" << name << "\n";
     
     pidx.checkReturnCode( ret, "DataArchive::query() - PIDX_set_current_variable_index failure", __FILE__, __LINE__ );
 
@@ -921,7 +921,7 @@ DataArchive::query(       Variable     & var,
     ret = PIDX_get_current_variable( idxFile, &varDesc );
     pidx.checkReturnCode( ret, "DataArchive::query() - PIDX_get_current_variable failure", __FILE__, __LINE__ );
 
-    proc0cout << "Read in PIDX variable: " << varDesc->var_name << ", looking for UDA var: " << name << "\n"; // DEBUG PRINTOUT
+    // proc0cout << "Read in PIDX variable: " << varDesc->var_name << ", looking for UDA var: " << name << "\n"; // DEBUG PRINTOUT
 
 #if 0
     if( my_var_name != varDesc->var_name ) {
@@ -1158,7 +1158,7 @@ DataArchive::findPatchAndIndex( const GridP            grid,
 //______________________________________________________________________
 //
 void
-DataArchive::restartInitialize( const int                index,
+DataArchive::restartInitialize( const int                timestep_index,
                                 const GridP            & grid,
                                       DataWarehouse    * dw,
                                       LoadBalancerPort * lb,
@@ -1194,17 +1194,17 @@ DataArchive::restartInitialize( const int                index,
     varMap[names[i]] = vl;
   }
 
-  TimeData& timedata = getTimeData( index );
+  TimeData& timedata = getTimeData( timestep_index );
 
-  *pTime = times[ index ];
+  *pTime = times[ timestep_index ];
 
   if( lb ) {
-    lb->restartInitialize( this, index, timedata.d_ts_path_and_filename, grid );
+    lb->restartInitialize( this, timestep_index, timedata.d_ts_path_and_filename, grid );
   }
 
   // Set here instead of the SimCont because we need the DW ID to be set
   // before saving particle subsets
-  dw->setID( ts_indices[index] );
+  dw->setID( ts_indices[ timestep_index ] );
 
   if( d_fileFormat == UDA ) {
   
@@ -1254,7 +1254,7 @@ DataArchive::restartInitialize( const int                index,
 
         Variable * var = label->typeDescription()->createInstance();
 
-        query( *var, key.name_, matl, patch, index, &data );
+        query( *var, key.name_, matl, patch, timestep_index, &data );
 
         ParticleVariableBase* particles;
         if ((particles = dynamic_cast<ParticleVariableBase*>(var))) {
@@ -1294,13 +1294,13 @@ DataArchive::restartInitialize( const int                index,
                 // Non-reduction:
                 DataFileInfo data;
                 data.start = var_index;
-                query( *var, varMapIter->first, matl, patch, index, &data );
+                query( *var, varMapIter->first, matl, patch, timestep_index, &data );
                 dw->put( var, label, matl, patch ); // fixme, clean up duplicate usage - (ie, fix handling of matl)
               }
               else { // Handle reduction variable:
                 // Hard-coded to 0 as only reduction (global) variables are stored in d_datafileInfoValue when using PIDX.
                 DataFileInfo & data = timedata.d_datafileInfoValue[ 0 ];
-                query( *var, varMapIter->first, -1, nullptr, var_index, &data );
+                query( *var, varMapIter->first, -1, nullptr, timestep_index, &data );
                 proc0cout << "patch info: " << patch->getLevel() << "\n";
                 dw->put( var, label, -1, nullptr );
               }
@@ -1535,8 +1535,8 @@ DataArchive::TimeData::init()
   FILE * ts_file   = fopen( d_ts_path_and_filename.c_str(), "r" );
 
   if( ts_file == nullptr ) {
-    // FIXME: add more info to exception.
-    throw ProblemSetupException( "Failed to open timestep file.", __FILE__, __LINE__ );
+    string error_msg = string( "Failed to open timestep file: '" ) + d_ts_path_and_filename + "'";
+    throw ProblemSetupException( error_msg, __FILE__, __LINE__ );
   }
 
   // Handle endianness and number of bits
