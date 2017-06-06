@@ -349,10 +349,12 @@ OnDemandDataWarehouse::get(       ReductionVariableBase& var,
 {
   checkGetAccess( label, matlIndex, 0 );
 
+#if 0
   proc0cout << "here\n";
   proc0cout << "1) calling exists with: " << label << "\n";
   proc0cout << "2) calling exists with: " << matlIndex << "\n";
   proc0cout << "3) calling exists with: " << level << "\n";
+#endif
 
   if( !d_levelDB.exists( label, matlIndex, level ) ) {
     proc0cout << "get failed in dw: " << this << ", level: " << level << "\n";
@@ -1073,15 +1075,17 @@ OnDemandDataWarehouse::put( const ReductionVariableBase& var,
   
   bool init = (d_scheduler->isCopyDataTimestep()) || !(d_levelDB.exists( label, matlIndex, level ));
 
-  proc0cout << "init is: " << init << "\n";
-  var.print( std::cout ); proc0cout << "\n";
-  proc0cout << "d_levelDB is " << &d_levelDB << "\n";
+  // proc0cout << "init is: " << init << "\n";
+  // var.print( std::cout ); proc0cout << "\n";
+  // proc0cout << "d_levelDB is " << &d_levelDB << "\n";
 
   d_levelDB.putReduce( label, matlIndex, level, var.clone(), init );
 
   // Debugging:
+#if 0
   proc0cout << "CALLING EXISTS WITH: " << label << ", " << matlIndex << ", " << (level ? level->getID() : -1) << "\n";
   proc0cout << "exists: " << d_levelDB.exists( label, matlIndex, level ) << "\n";
+#endif
 }
 
 //______________________________________________________________________

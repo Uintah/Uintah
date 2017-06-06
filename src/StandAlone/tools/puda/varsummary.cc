@@ -527,7 +527,7 @@ Uintah::varsummary( DataArchive* da, CommandLineFlags & clf, int material_of_int
   vector<const Uintah::TypeDescription*> types;
 
   da->queryVariables( vars, num_matls, types );
-  ASSERTEQ(vars.size(), types.size());
+  ASSERTEQ( vars.size(), types.size() );
 
   cout << "There are " << vars.size() << " variables:\n";
   for(int i=0;i<(int)vars.size();i++) {

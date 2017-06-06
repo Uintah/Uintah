@@ -2999,17 +2999,17 @@ DataArchiver::saveLabels_PIDX( std::vector< SaveItem >     & saveLabels,
 
     //__________________________________
     //  materials loop
-    for(int m=0;m<var_matls->size();m++){
+    for( int m = 0; m < var_matls->size(); m++ ){
       int matlIndex = var_matls->get(m);
       string var_mat_name;
 
-      if (var_matls->size() == 1) {
-        var_mat_name = label->getName();
-      } else {
-        std::ostringstream s;
-        s << m;
-        var_mat_name = label->getName() + "_m" + s.str();
-      }
+      //      if (var_matls->size() == 1) {
+      //        var_mat_name = label->getName();
+      //      } else {
+      std::ostringstream s;
+      s << m;
+      var_mat_name = label->getName() + "_m" + s.str();
+      //      }
     
       rc = PIDX_variable_create((char*) var_mat_name.c_str(),
 				varSubType_size * 8, data_type,
