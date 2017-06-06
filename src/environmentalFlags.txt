@@ -38,10 +38,10 @@ BCR_dbg           SCI_DEBUG     print out some information regarding the BC setu
 Task and Task graph Debugging Information:
 __________________________________
 TaskDBG                    SCI_DEBUG     output the name of each task as it begins executing and when it's completed 
-TaskLevel                  SCI_DEBUG     output the task name and beginning patch on each level after the            
-                                         task has completed.                                                         
-TaskGraph                  SCI_DEBUG     prints out computes and requires for every task                             
+TaskLevel                  SCI_DEBUG     output the task name and beginning patch on each level after the task has completed.                                                         
+TaskGraph                  SCI_DEBUG     prints out task name, computes and requires for every task                             
 TaskGraphDetailed          SCI_DEBUG     prints out internal details of computes and requires for every task 
+TaskGraphPhase             SCI_DEBUG     prints out the task phase assigned to each task by the task graph
 Scrubbing                  SCI_DEBUG     prints debugging information for scrubbing vars.  You can "watch" one variable by setting: 
                                          DetailedTask.cc:  dbgScrubVar = "Var";
 
