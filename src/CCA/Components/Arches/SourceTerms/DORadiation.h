@@ -104,8 +104,9 @@ void doSweepAdvanced(  const ProcessorGroup* pc,
                          DataWarehouse* old_dw, 
                          DataWarehouse* new_dw ,
                          const int ix, int intensity_iter );
-// computes fluxes
-void sweeping3( const ProcessorGroup* pc, 
+
+// computes fluxes and divQ and volQ, by integrating intensities over the solid angle
+void computeFluxDivQ( const ProcessorGroup* pc, 
                          const PatchSubset* patches, 
                          const MaterialSubset* matls, 
                          DataWarehouse* old_dw, 
@@ -119,7 +120,7 @@ void sweepOnePatch( const ProcessorGroup* pc,
                          DataWarehouse* new_dw );
 
 // initialize and set boundary conditions for intensities
-void sweeping5( const ProcessorGroup* pc, 
+void setIntensityBC( const ProcessorGroup* pc, 
                          const PatchSubset* patches, 
                          const MaterialSubset* matls, 
                          DataWarehouse* old_dw, 
@@ -182,9 +183,19 @@ private:
   int _nstage;
 
   bool _multiBox; 
-  std::vector<double> _xPatch_boundary; //> all patch boundaries (approximate), needed for spatial parallel functionality for sweeps
+  std::vector<double> _xPatch_boundary; /// all patch boundaries (approximate), needed for spatial parallel functionality for sweeps, 
   std::vector<double> _yPatch_boundary;
   std::vector<double> _zPatch_boundary;
+  const MaterialSubset* _matlDS;
+  std::vector< std::vector < std::vector < bool > > > _doesPatchExist;
+  std::vector<const PatchSubset*> _RelevantPatchesXpYpZp;   /// Some redundancy here, since XpYpZp = XmYmZm [ end : start ]
+  std::vector<const PatchSubset*> _RelevantPatchesXpYpZm;   /// only need four sets...
+  std::vector<const PatchSubset*> _RelevantPatchesXpYmZp;  
+  std::vector<const PatchSubset*> _RelevantPatchesXpYmZm;  
+  std::vector<const PatchSubset*> _RelevantPatchesXmYpZp;  
+  std::vector<const PatchSubset*> _RelevantPatchesXmYpZm;  
+  std::vector<const PatchSubset*> _RelevantPatchesXmYmZp;  
+  std::vector<const PatchSubset*> _RelevantPatchesXmYmZm;  
 
   IntVector _patchIntVector;
   int _radiation_calc_freq; 

@@ -1658,6 +1658,9 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
       // but not both.  So it will yell at you for the detailed task's patches not intersecting with the 
       // computes or modifies... (maybe there's a better way) - bryan
     }
+    else if ( dtask->d_matls &&  req->m_matls && dtask->d_patches &&  req->m_patches &&   patches.get_rep()->size()==0  ) {
+       //Fields were required on a subset of the domain with ghosts.   This should be legal.
+    }
     else {
       std::ostringstream desc;
       desc << "TaskGraph::createDetailedDependencies, task dependency not supported without patches and materials"
