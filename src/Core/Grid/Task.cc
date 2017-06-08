@@ -125,18 +125,24 @@ Task::initialize()
 void
 Task::setSets( const PatchSet* ps, const MaterialSet* ms )
 {
-  // TODO: change these, they don't make sense when this task is added to more then one "Normal" task-graph
-//  ASSERT(m_patch_set == nullptr);
-//  ASSERT(m_matl_set  == nullptr);
-
-  m_patch_set = ps;
-  if ( m_patch_set ) {
-    m_patch_set->addReference();
+  // NOTE: the outer [patch/matl]Set checks are related to temporal scheduling, e.g. more then 1 regular task graph
+  //
+  // This is called from TaskGraph::addTask() in which a single task may be added to >1 Normal
+  // task graph. In this case, first time here, m_path/matl_set will be nullptr and subsequent visits
+  // will be the same pointer as ps and ms respectively. Without these checks, the refCount gets
+  // artificially inflated and ComputeSubsets (Patch/Matl)) are not deleted - mem leak. APH, 06/08/17
+  if (m_patch_set == nullptr) {
+    m_patch_set = ps;
+    if (m_patch_set) {
+      m_patch_set->addReference();
+    }
   }
 
-  m_matl_set = ms;
-  if ( m_matl_set ) {
-    m_matl_set->addReference();
+  if (m_matl_set == nullptr) {
+    m_matl_set = ms;
+    if (m_matl_set) {
+      m_matl_set->addReference();
+    }
   }
 }
 

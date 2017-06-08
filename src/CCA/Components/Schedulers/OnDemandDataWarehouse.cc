@@ -87,6 +87,7 @@ struct psetDB_tag{};
 struct addsetDB_tag{};
 struct delsetDB_tag{};
 struct data_location_tag{};
+struct task_access_tag{};
 
 using  varDB_monitor = Uintah::CrowdMonitor<varDB_tag>;
 using  levelDB_monitor = Uintah::CrowdMonitor<levelDB_tag>;
@@ -94,6 +95,7 @@ using  psetDB_monitor = Uintah::CrowdMonitor<psetDB_tag>;
 using  addsetDB_monitor = Uintah::CrowdMonitor<addsetDB_tag>;
 using  delsetDB_monitor = Uintah::CrowdMonitor<delsetDB_tag>;
 using  data_location_monitor = Uintah::CrowdMonitor<data_location_tag>;
+using  task_access_monitor = Uintah::CrowdMonitor<task_access_tag>;
 
 }
 
@@ -3634,35 +3636,32 @@ OnDemandDataWarehouse::getOtherDataWarehouse( Task::WhichDW dw )
 //______________________________________________________________________
 //
 void
-OnDemandDataWarehouse::checkTasksAccesses( const PatchSubset* /*patches*/,
-                                           const MaterialSubset* /*matls*/ )
+OnDemandDataWarehouse::checkTasksAccesses( const PatchSubset* patches,
+                                           const MaterialSubset* matls )
 {
 #if 0
+
 #if SCI_ASSERTION_LEVEL >= 1
 
-  d_lock.readLock();
+  task_access_monitor access_lock{ task_access_monitor::READER };
 
   RunningTaskInfo* currentTaskInfo = getCurrentTaskInfo();
-  ASSERT(currentTaskInfo != 0);
+  ASSERT(currentTaskInfo != nullptr);
   const Task* currentTask = currentTaskInfo->d_task;
-  ASSERT(currentTask != 0);
+  ASSERT(currentTask != nullptr);
 
   if (isFinalized()) {
-    checkAccesses(currentTaskInfo, currentTask->getRequires(), GetAccess,
-        patches, matls);
+    checkAccesses(currentTaskInfo, currentTask->getRequires(), GetAccess, patches, matls);
   }
   else {
-    checkAccesses(currentTaskInfo, currentTask->getRequires(), GetAccess,
-        patches, matls);
-    checkAccesses(currentTaskInfo, currentTask->getComputes(), PutAccess,
-        patches, matls);
-    checkAccesses(currentTaskInfo, currentTask->getModifies(), ModifyAccess,
-        patches, matls);
+    checkAccesses(currentTaskInfo, currentTask->getRequires(), GetAccess   , patches, matls);
+    checkAccesses(currentTaskInfo, currentTask->getComputes(), PutAccess   , patches, matls);
+    checkAccesses(currentTaskInfo, currentTask->getModifies(), ModifyAccess, patches, matls);
   }
 
-  d_lock.readUnlock();
 
 #endif
+
 #endif
 }
 
@@ -3675,7 +3674,7 @@ OnDemandDataWarehouse::checkAccesses(       RunningTaskInfo*  currentTaskInfo,
                                       const PatchSubset*      domainPatches,
                                       const MaterialSubset*   domainMatls )
 {
-  ASSERT(currentTaskInfo != 0);
+  ASSERT(currentTaskInfo != nullptr);
   const Task* currentTask = currentTaskInfo->d_task;
   if (currentTask->isReductionTask()) {
     return;  // no need to check reduction tasks.

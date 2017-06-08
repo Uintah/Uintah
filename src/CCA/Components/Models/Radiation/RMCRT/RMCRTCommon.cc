@@ -151,14 +151,14 @@ RMCRTCommon::registerVarLabels(int   matlIndex,
   // If using RMCRT:DBL
   const Uintah::TypeDescription* td = d_compAbskgLabel->typeDescription();
   const Uintah::TypeDescription::Type subtype = td->getSubType()->getType();
-  if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type && subtype == TypeDescription::double_type ){
+  if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type && subtype == TypeDescription::double_type ) {
     d_abskgLabel = d_compAbskgLabel;
   }
 
   //__________________________________
   //  define the materialSet
   // The constructor can be called twice, so only create matlSet once.
-  if (d_matlSet == 0) {
+  if (d_matlSet == nullptr) {
     d_matlSet = scinew MaterialSet();
     std::vector<int> m;
     m.push_back(matlIndex);

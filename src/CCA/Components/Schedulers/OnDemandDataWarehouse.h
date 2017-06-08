@@ -518,8 +518,8 @@ class OnDemandDataWarehouse : public DataWarehouse {
 
     // does a final check to see if gets/puts/etc. consistent with
     // requires/computes/modifies for the current task.
-    void checkTasksAccesses(const PatchSubset* patches,
-                            const MaterialSubset* matls);
+    void checkTasksAccesses(const PatchSubset    * patches,
+                            const MaterialSubset * matls);
 
     ScrubMode getScrubMode() const { return d_scrubMode; }
 
