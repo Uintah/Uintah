@@ -48,6 +48,7 @@
 
 #include <iostream>
 #include <map>
+#include <memory>
 #include <set>
 
 using namespace Uintah;
@@ -111,19 +112,14 @@ TaskGraph::initialize()
     delete m_detailed_tasks;
   }
 
-  // On multi-task graphs this seg faults.  Keeping this commented out while fixing - APH 06/06/17
-  //for (std::vector<Task*>::iterator iter = m_tasks.begin(); iter != m_tasks.end(); iter++) {
-  //  delete *iter;
-  //}
-
   for (auto iter = m_edges.begin(); iter != m_edges.end(); ++iter) {
     delete *iter;
   }
 
   m_tasks.clear();
-  m_num_task_phases = 0;
-
   m_edges.clear();
+
+  m_num_task_phases   = 0;
   m_current_iteration = 0;
 }
 
@@ -191,10 +187,9 @@ TaskGraph::overlaps( const Task::Dependency * comp
 void
 TaskGraph::setupTaskConnections( GraphSortInfoMap & sortinfo )
 {
-  std::vector<Task*>::iterator iter;
   // Initialize variables on the tasks
-  for (iter = m_tasks.begin(); iter != m_tasks.end(); iter++) {
-    sortinfo[*iter] = GraphSortInfo();
+  for (auto iter = m_tasks.begin(); iter != m_tasks.end(); ++iter) {
+    sortinfo[iter->get()] = GraphSortInfo();
   }
 
   if (m_edges.size() > 0) {
@@ -204,8 +199,8 @@ TaskGraph::setupTaskConnections( GraphSortInfoMap & sortinfo )
   // Look for all of the reduction variables - we must treat those special.  Create a fake task that performs the reduction
   // While we are at it, ensure that we aren't producing anything into an "old" data warehouse
   ReductionTasksMap reductionTasks;
-  for( iter=m_tasks.begin(); iter != m_tasks.end(); iter++ ) {
-    Task* task = *iter;
+  for (auto iter = m_tasks.begin(); iter != m_tasks.end(); ++iter) {
+    Task* task = iter->get();
     if (task->isReductionTask()) {
       continue; // already a reduction task so skip it
     }
@@ -284,14 +279,15 @@ TaskGraph::setupTaskConnections( GraphSortInfoMap & sortinfo )
   }
 
   // Add the new reduction tasks to the list of tasks
-  for(ReductionTasksMap::iterator it = reductionTasks.begin(); it != reductionTasks.end(); it++) {
-    addTask(it->second, nullptr, nullptr);
+  for(auto it = reductionTasks.begin(); it != reductionTasks.end(); ++it) {
+    std::shared_ptr<Task> reduction_task_sp(it->second);
+    addTask(reduction_task_sp, nullptr, nullptr);
   }
 
   // Gather the comps for the tasks into a map
   CompMap comps;
-  for (iter = m_tasks.begin(); iter != m_tasks.end(); iter++) {
-    Task* task = *iter;
+  for (auto iter = m_tasks.begin(); iter != m_tasks.end(); ++iter) {
+    Task* task = iter->get();
     if (detaileddbg.active()) {
       detaileddbg << m_proc_group->myrank() << " Gathering comps from task: " << *task << "\n";
     }
@@ -306,8 +302,8 @@ TaskGraph::setupTaskConnections( GraphSortInfoMap & sortinfo )
   // Connect the tasks where the requires/modifies match a comp.
   // Also, updates the comp map with each modify and doing this in task order
   // so future modifies/requires find the modified var.  Also do a type check
-  for (iter = m_tasks.begin(); iter != m_tasks.end(); iter++) {
-    Task* task = *iter;
+  for (auto iter = m_tasks.begin(); iter != m_tasks.end(); ++iter) {
+    Task* task = iter->get();
     if (detaileddbg.active()) {
       detaileddbg << m_proc_group->myrank() << "   Looking at dependencies for task: " << *task << "\n";
     }
@@ -327,15 +323,15 @@ TaskGraph::setupTaskConnections( GraphSortInfoMap & sortinfo )
   int nd_task = m_tasks.size();
   while (nd_task > 0) {
     nd_task = m_tasks.size();
-    for (iter = m_tasks.begin(); iter != m_tasks.end(); iter++) {
-      Task* task = *iter;
+    for (auto iter = m_tasks.begin(); iter != m_tasks.end(); ++iter) {
+      Task* task = iter->get();
       if (task->m_all_child_tasks.size() == 0) {
         if (task->m_child_tasks.size() == 0) {     // leaf task, add itself to the set
           task->m_all_child_tasks.insert(task);
           break;
         }
         std::set<Task*>::iterator it;
-        for (it = task->m_child_tasks.begin(); it != task->m_child_tasks.end(); it++) {
+        for (it = task->m_child_tasks.begin(); it != task->m_child_tasks.end(); ++it) {
           if ((*it)->m_all_child_tasks.size() > 0) {
             task->m_all_child_tasks.insert((*it)->m_all_child_tasks.begin(), (*it)->m_all_child_tasks.end());
             task->m_all_child_tasks.insert(*it);
@@ -578,14 +574,18 @@ void TaskGraph::processDependencies( Task               * task
 
 {
   for (; req != nullptr; req = req->m_next) {
+
     if (detaileddbg.active()) {
       detaileddbg << m_proc_group->myrank() << " processDependencies for req: " << *req << "\n";
     }
+
     if (req->m_whichdw == Task::NewDW) {
       Task::Edge* edge = req->m_comp_head;
+
       for (; edge != nullptr; edge = edge->m_comp_next) {
         Task* vtask = edge->m_comp->m_task;
         GraphSortInfo& gsi = sortinfo.find(vtask)->second;
+
         if (!gsi.m_sorted) {
           try {
             // this try-catch mechanism will serve to print out the entire TG cycle
@@ -593,7 +593,6 @@ void TaskGraph::processDependencies( Task               * task
               std::cout << m_proc_group->myrank() << " Cycle detected in task graph\n";
               SCI_THROW(InternalError("Cycle detected in task graph", __FILE__, __LINE__));
             }
-
             // recursively process the dependencies of the computing task
             processTask(vtask, sortedTasks, sortinfo);
           }
@@ -614,25 +613,25 @@ void TaskGraph::processDependencies( Task               * task
 void
 TaskGraph::nullSort( std::vector<Task*> & tasks )
 {
-  // No longer going to sort them... let the UnifiedScheduler (threaded) take care
-  // of calling the tasks when all dependencies are satisfied.
-  // Sorting the tasks causes problem because now tasks (actually task
-  // groups) run in different orders on different MPI processes.
+  // No longer going to sort them... let the UnifiedScheduler (threaded) take care of calling the tasks when all
+  // dependencies are satisfied. Sorting the tasks causes problem because now tasks (actually task groups) run in
+  // different orders on different MPI processes.
   int n = 0;
-  for (auto iter = m_tasks.begin(); iter != m_tasks.end(); iter++) {
+  for (auto task_iter = m_tasks.begin(); task_iter != m_tasks.end(); ++task_iter) {
     // For all reduction tasks filtering out the one that is not in ReductionTasksMap 
-    if ((*iter)->getType() == Task::Reduction) {
-      for (ReductionTasksMap::iterator it = m_scheduler->m_reduction_tasks.begin(); it != m_scheduler->m_reduction_tasks.end(); it++) {
-        if ((*iter) == it->second) {
-          (*iter)->setSortedOrder(n++);
-          tasks.push_back(*iter);
+    Task* task = task_iter->get();
+    if (task->getType() == Task::Reduction) {
+      for (auto reduction_task_iter = m_scheduler->m_reduction_tasks.begin(); reduction_task_iter != m_scheduler->m_reduction_tasks.end(); ++reduction_task_iter) {
+        if (task == reduction_task_iter->second) {
+          (*task_iter)->setSortedOrder(n++);
+          tasks.push_back(task);
           break;
         }
       }
     }
     else {
-      (*iter)->setSortedOrder(n++);
-      tasks.push_back(*iter);
+      task->setSortedOrder(n++);
+      tasks.push_back(task);
     }
   }
 }
@@ -646,15 +645,15 @@ TaskGraph::topologicalSort( std::vector<Task*> & sortedTasks )
 
   setupTaskConnections(sortinfo);
 
-  for( std::vector<Task*>::iterator iter = m_tasks.begin(); iter != m_tasks.end(); iter++ ) {
-    Task* task = *iter;
+  for (auto iter = m_tasks.begin(); iter != m_tasks.end(); ++iter) {
+    Task* task = iter->get();
     if (!sortinfo.find(task)->second.m_sorted) {
       processTask(task, sortedTasks, sortinfo);
     }
   }
 
   int n = 0;
-  for( std::vector<Task*>::iterator iter = sortedTasks.begin(); iter != sortedTasks.end(); iter++ ) {
+  for (auto iter = sortedTasks.begin(); iter != sortedTasks.end(); ++iter) {
     (*iter)->setSortedOrder(n++);
   }
 }
@@ -663,14 +662,14 @@ TaskGraph::topologicalSort( std::vector<Task*> & sortedTasks )
 //
 
 void
-TaskGraph::addTask(       Task        * task
-                  , const PatchSet    * patchset
-                  , const MaterialSet * matlset
+TaskGraph::addTask(       std::shared_ptr<Task>   task
+                  , const PatchSet              * patchset
+                  , const MaterialSet           * matlset
                   )
 {
   task->setSets( patchset, matlset );
   if ((patchset && patchset->totalsize() == 0) || (matlset && matlset->totalsize() == 0)) {
-    delete task;
+    task.reset();
     if (detaileddbg.active()) {
       detaileddbg << m_proc_group->myrank() << " Killing empty task: " << *task << "\n";
     }
@@ -1736,7 +1735,7 @@ TaskGraph::getNumTasks() const
 Task*
 TaskGraph::getTask( int idx )
 {
-  return m_tasks[idx];
+  return m_tasks[idx].get();
 }
 
 //______________________________________________________________________
@@ -1746,7 +1745,7 @@ TaskGraph::makeVarLabelMaterialMap( Scheduler::VarLabelMaterialMap * result )
 {
   size_t num_tasks = m_tasks.size();
   for (size_t i = 0; i < num_tasks; i++) {
-    Task* task = m_tasks[i];
+    Task* task = m_tasks[i].get();
     for (Task::Dependency* comp = task->getComputes(); comp != nullptr; comp = comp->m_next) {
       // assume all patches will compute the same labels on the same materials
       const VarLabel* label = comp->m_var;

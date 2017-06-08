@@ -62,6 +62,7 @@
 #include <iomanip>
 #include <sstream>
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -703,22 +704,25 @@ SchedulerCommon::addTask(       Task        * task
                                       << ",    # matls: "    << (matls ? matls->size() : 0)
                                       << ", task-graph: "    << ((tg_num < 0) ? (m_is_init_timestep ? "init-tg" : "all") : std::to_string(tg_num)));
 
-  // During initialization, use only one taskgraph
+  // use std::shared_ptr as task pointers may be added to all task graphs - automagic cleanup
+  std::shared_ptr<Task> task_sp(task);
+
+  // During initialization, use only one task graph
   if (m_is_init_timestep) {
-    m_task_graphs[m_task_graphs.size() - 1]->addTask(task, patches, matls);
+    m_task_graphs[m_task_graphs.size() - 1]->addTask(task_sp, patches, matls);
     m_num_tasks++;
   }
   else {
     // add it to all "Normal" task graphs (default value == -1)
     if (tg_num < 0) {
       for (int i = 0; i < m_num_task_graphs; ++i) {
-        m_task_graphs[i]->addTask(task, patches, matls);
+        m_task_graphs[i]->addTask(task_sp, patches, matls);
         m_num_tasks++;
       }
     }
     // otherwise, add this task to a specific task graph
     else {
-      m_task_graphs[tg_num]->addTask(task, patches, matls);
+      m_task_graphs[tg_num]->addTask(task_sp, patches, matls);
       m_num_tasks++;
     }
   }
@@ -730,10 +734,11 @@ SchedulerCommon::addTask(       Task        * task
   // we will create two neighborhoods with max extents for each as determined here.
   for (const Task::Dependency* dep = task->getRequires(); dep != nullptr; dep = dep->m_next) {
     if (dep->m_num_ghost_cells >= MAX_HALO_DEPTH) {
-      if (dep->m_num_ghost_cells >  this->m_max_distal_ghost_cells) {
+      if (dep->m_num_ghost_cells > this->m_max_distal_ghost_cells) {
         this->m_max_distal_ghost_cells = dep->m_num_ghost_cells;
       }
-    } else {
+    }
+    else {
       if (dep->m_num_ghost_cells > this->m_max_ghost_cells) {
         this->m_max_ghost_cells = dep->m_num_ghost_cells;
       }
@@ -758,7 +763,7 @@ SchedulerCommon::addTask(       Task        * task
   // for the treat-as-old vars, go through the computes and add them.
   // we can (probably) safely assume that we'll avoid duplicates, since if they were inserted 
   // in the above, they wouldn't need to be marked as such
-  for (const Task::Dependency* dep = task->getComputes(); dep != nullptr; dep = dep->m_next) {
+  for (auto dep = task->getComputes(); dep != nullptr; dep = dep->m_next) {
     m_computed_vars.insert(dep->m_var);
 
     if (m_treat_as_old_vars.find(dep->m_var->getName()) != m_treat_as_old_vars.end()) {
@@ -769,25 +774,26 @@ SchedulerCommon::addTask(       Task        * task
 
   //__________________________________
   // create reduction task if computes included one or more reduction vars
-  for (const Task::Dependency* dep = task->getComputes(); dep != nullptr; dep = dep->m_next) {
+  for (auto dep = task->getComputes(); dep != nullptr; dep = dep->m_next) {
 
     if (dep->m_var->typeDescription()->isReductionVariable()) {
       int levelidx = dep->m_reduction_level ? dep->m_reduction_level->getIndex() : -1;
       int dw = dep->mapDataWarehouse();
 
       if (dep->m_var->allowsMultipleComputes()) {
-        DOUT(g_schedulercommon_dbg, "Rank-" << d_myworld->myrank() << " Skipping Reduction task for multi compute variable: " << dep->m_var->getName()
-                                          << " on level " << levelidx << ", DW " << dw);
+        DOUT( g_schedulercommon_dbg, "Rank-" << d_myworld->myrank() << " Skipping Reduction task for multi compute variable: "
+                                             << dep->m_var->getName() << " on level " << levelidx << ", DW " << dw);
         continue;
       }
 
-      DOUT(g_schedulercommon_dbg, "Rank-" << d_myworld->myrank() << " Creating Reduction task for variable: " << dep->m_var->getName()
-                                        << " on level " << levelidx << ", DW " << dw);
+      DOUT( g_schedulercommon_dbg, "Rank-" << d_myworld->myrank() << " Creating Reduction task for variable: "
+                                           << dep->m_var->getName() << " on level " << levelidx << ", DW " << dw);
 
       std::ostringstream taskname;
       taskname << "Reduction: " << dep->m_var->getName() << ", level " << levelidx << ", dw " << dw;
 
       Task* reduction_task = scinew Task(taskname.str(), Task::Reduction);
+      std::shared_ptr<Task> reduction_task_sp(reduction_task);
 
       int dwmap[Task::TotalDWs];
 
@@ -806,10 +812,11 @@ SchedulerCommon::addTask(       Task        * task
           VarLabelMatl<Level> key(dep->m_var, maltIdx, dep->m_reduction_level);
           m_reduction_tasks[key] = reduction_task;
         }
-      } else {
+      }
+      else {
         for (int m = 0; m < task->getMaterialSet()->size(); m++) {
           reduction_task->modifies(dep->m_var, dep->m_reduction_level, task->getMaterialSet()->getSubset(m), Task::OutOfDomain);
-          for (int i = 0; i < task->getMaterialSet()->getSubset(m)->size(); i++) {
+          for (int i = 0; i < task->getMaterialSet()->getSubset(m)->size(); ++i) {
             int maltIdx = task->getMaterialSet()->getSubset(m)->get(i);
             VarLabelMatl<Level> key(dep->m_var, maltIdx, dep->m_reduction_level);
             m_reduction_tasks[key] = reduction_task;
@@ -819,20 +826,20 @@ SchedulerCommon::addTask(       Task        * task
 
       // During initialization, use only one taskgraph
       if (m_is_init_timestep) {
-        m_task_graphs[m_task_graphs.size() - 1]->addTask(reduction_task, nullptr, nullptr);
+        m_task_graphs[m_task_graphs.size() - 1]->addTask(reduction_task_sp, nullptr, nullptr);
         m_num_tasks++;
       }
       else {
         // add it to all "Normal" task graphs (default tg value == -1)
         if (tg_num < 0) {
           for (int i = 0; i < m_num_task_graphs; ++i) {
-            m_task_graphs[i]->addTask(reduction_task, nullptr, nullptr);
+            m_task_graphs[i]->addTask(reduction_task_sp, nullptr, nullptr);
             m_num_tasks++;
           }
         }
         // otherwise, add this task to a specific task graph
         else {
-          m_task_graphs[tg_num]->addTask(reduction_task, nullptr, nullptr);
+          m_task_graphs[tg_num]->addTask(reduction_task_sp, nullptr, nullptr);
           m_num_tasks++;
         }
       }
@@ -1184,21 +1191,18 @@ SchedulerCommon::compile()
 
       Timers::Simple tg_compile_timer;
 
+      // NOTE: this single call is where all the TG compile complexity arises
       const bool has_distal_reqs = ( (m_task_graphs[i]->getIndex() > 0) && (m_max_distal_ghost_cells != 0) );
       m_task_graphs[i]->createDetailedTasks( useInternalDeps(), first, grid, oldGrid, has_distal_reqs );
 
       // TODO: not going to use shared scrubTable when using multiple regular task graphs
       //   Commenting this out disables the entire "first" mechanism without modifying existing code.
       //   Will use this for now (PSAAP INCITE runs), but may want to turn back on later.
-      //   This may not even be necessary at all any more except with W-cycle, non-lockstep AMR - APH 10/06/16
-      //   We think this is likely to segfault and we're leaving it in to find and fix it
-      //   Brad P/Alan H 5/8/17
-      //   Running this a second time seems to create duplicate dependencies.  Disabling it again. 
-      //   Brad P 5/22/17
-      //DetailedTasks* dts = m_task_graphs[i]->createDetailedTasks( useInternalDeps(), first, grid, oldGrid, has_distal_reqs );
-      //if (!first) {
-      //  first = dts;
-      //}
+      //   This may not even be necessary at all any more except with W-cycle, non-lockstep AMR - APH 06/07/17
+//      DetailedTasks* dts = m_task_graphs[i]->createDetailedTasks( useInternalDeps(), first, grid, oldGrid, has_distal_reqs );
+//      if (!first) {
+//        first = dts;
+//      }
 
       double compile_time = tg_compile_timer().seconds();
       DOUT(g_task_graph_compile, "Rank-" << std::left << std::setw(5) << d_myworld->myrank() << " time to compile TG-" << std::setw(4) << (m_is_init_timestep ? "INIT" : std::to_string(m_task_graphs[i]->getIndex())) << ": " << compile_time << " (sec)");
@@ -1214,7 +1218,7 @@ SchedulerCommon::compile()
 
   m_locallyComputedPatchVarMap->reset();
 
-  // TODO: which of the two cases should we be using and why do both exist - APH 08/06/16
+  // TODO: which of the two cases should we be using and why do both exist - APH 06/07/17
 #if 1
   for (int i = 0; i < grid->numLevels(); i++) {
     const PatchSubset* patches = getLoadBalancer()->getPerProcessorPatchSet(grid->getLevel(i))->getSubset(d_myworld->myrank());
@@ -1225,15 +1229,15 @@ SchedulerCommon::compile()
   }
  
 #else
-  for (unsigned i = 0; i < m_task_graphs.size(); i++) {
+  for (size_t i = 0; i < m_task_graphs.size(); i++) {
     DetailedTasks* dts = m_task_graphs[i]->getDetailedTasks();
 
-    if (dts != 0) {
+    if (dts != nullptr) {
       // figure out the locally computed patches for each variable.
       for (int i = 0; i < dts->numLocalTasks(); i++) {
         const DetailedTask* dt = dts->localTask(i);
 
-        for(const Task::Dependency* comp = dt->getTask()->getComputes();comp != 0; comp = comp->m_next) {
+        for(const Task::Dependency* comp = dt->getTask()->getComputes();comp != nullptr; comp = comp->m_next) {
 
           if (comp->m_var->typeDescription()->getType() != TypeDescription::ReductionVariable) {
             constHandle<PatchSubset> patches = comp->getPatchesUnderDomain(dt->getPatches());

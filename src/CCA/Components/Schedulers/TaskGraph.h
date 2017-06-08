@@ -33,6 +33,7 @@
 
 #include <list>
 #include <map>
+#include <memory>
 #include <vector>
 
 namespace Uintah {
@@ -214,9 +215,9 @@ class TaskGraph {
     /// Adds a task to the task graph.  If the task is empty, it
     /// deletes it.  Also, as each task is added, it updates the list
     /// of vars that are required from the old DW
-    void addTask(       Task        * task
-                , const PatchSet    * patchset
-                , const MaterialSet * matlset
+    void addTask(       std::shared_ptr<Task>   task
+                , const PatchSet              * patchset
+                , const MaterialSet           * matlset
                 );
 
     /// sets up the task connections and puts them in a sorted order.
@@ -292,7 +293,7 @@ class TaskGraph {
       return m_num_task_phases;
     }
 
-    std::vector<Task*> & getTasks()
+    std::vector<std::shared_ptr<Task> > & getTasks()
     {
       return m_tasks;
     }
@@ -402,8 +403,8 @@ class TaskGraph {
 
     int m_index{-1};
 
-    std::vector<Task*>        m_tasks;
-    std::vector<Task::Edge*>  m_edges;
+    std::vector<std::shared_ptr<Task> > m_tasks;
+    std::vector<Task::Edge*>            m_edges;
 
     DetailedReductionTasksMap m_reduction_tasks;
 

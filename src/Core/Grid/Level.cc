@@ -547,12 +547,11 @@ Level::positionToIndex( const Point & p ) const
 void Level::selectPatches( const IntVector  & low
                          , const IntVector  & high
                          ,       selectType & neighbors
-                         ,       bool         withExtraCells
-                         ,       bool         cache /* =false */
+                         ,       bool         withExtraCells /* =false */
+                         ,       bool         cache_patches  /* =false */
                          ) const
 {
-
-  if (cache) {
+  if (cache_patches) {
     // look it up in the cache first
     patch_cache_mutex.lock();
     {
@@ -571,15 +570,15 @@ void Level::selectPatches( const IntVector  & low
     patch_cache_mutex.unlock();
   }
 
+
   m_bvh->query(low, high, neighbors, withExtraCells);
   std::sort(neighbors.begin(), neighbors.end(), Patch::Compare());
 
+
 #ifdef CHECK_SELECT
-  // Double-check the more advanced selection algorithms against the
-  // slow (exhaustive) one.
-  vector<const Patch*> tneighbors;
-  for(const_patch_iterator iter=m_virtual_and_real_patches.begin();
-      iter != m_virtual_and_real_patches.end(); iter++) {
+  // Double-check the more advanced selection algorithms against the slow (exhaustive) one.
+  std::vector<const Patch*> tneighbors;
+  for(const_patch_iterator iter=m_virtual_and_real_patches.begin(); iter != m_virtual_and_real_patches.end(); iter++) {
     const Patch* patch = *iter;
 
     IntVector l=Max(patch->getCellLowIndex(), low);
@@ -592,13 +591,14 @@ void Level::selectPatches( const IntVector  & low
 
   ASSERTEQ( neighbors.size(), tneighbors.size() );
 
-  sort(tneighbors.begin(), tneighbors.end(), Patch::Compare());
+  std::sort(tneighbors.begin(), tneighbors.end(), Patch::Compare());
   for( int i = 0; i < (int)neighbors.size(); i++ ) {
     ASSERT(neighbors[i] == tneighbors[i]);
   }
 #endif
 
-  if ( cache ) {
+
+  if (cache_patches) {
     patch_cache_mutex.lock();
     {
       // put it in the cache - start at orig_size in case there was something in

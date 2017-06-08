@@ -43,7 +43,9 @@ MaterialSubset* Task::globalMatlSubset = nullptr;
 //
 Task::~Task()
 {
-  delete m_action;
+  if (m_action) {
+    delete m_action;
+  }
 
   Dependency* dep = m_req_head;
   while (dep) {

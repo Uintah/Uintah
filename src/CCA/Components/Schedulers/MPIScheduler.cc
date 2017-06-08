@@ -58,11 +58,12 @@
 // Pack data into a buffer before sending -- testing to see if this
 // works better and avoids certain problems possible when you allow
 // tasks to modify data that may have a pending send.
-// Note, we have found considerable memory savings by commented USE_PACKING out...
-// however, on some machines this will cause a crash, but on Titan production
-// runs it had no problems.  
-// Brad P. 5/10/2017
+//
+// Note, we have found considerable memory savings and appreciable performance gains
+// by commenting USE_PACKING out... however, on some machines this will cause a crash,
+// but on Titan production runs it had no problems. Alan H./Brad P.,  05/10/2017
 #define USE_PACKING
+
 
 using namespace Uintah;
 
@@ -79,6 +80,7 @@ Dout g_time_out(       "MPIScheduler_TimingsOut", false );
 Dout g_task_level(     "TaskLevel"              , false );
 
 }
+
 
 // these are used externally, keep them visible outside this unit
 Dout g_task_order( "TaskOrder", false );
@@ -200,17 +202,17 @@ MPIScheduler::verifyChecksum()
   //  - make the checksum more sophisticated
   int checksum = 0;
   int numSpatialTasks = 0;
-  for (unsigned i = 0; i < m_task_graphs.size(); i++) {
+  size_t num_graphs = m_task_graphs.size();
+  for (size_t i = 0; i < num_graphs; ++i) {
     checksum += m_task_graphs[i]->getTasks().size();
 
     // This begins addressing the issue of making the global checksum more sophisticated:
     //   check if any tasks were spatially scheduled - TaskType::Spatial, meaning no computes, requires or modifies
     //     e.g. RMCRT radiometer task, which is not scheduled on all patches
     //          these Spatial tasks won't count toward the global checksum
-    std::vector<Task*> tasks = m_task_graphs[i]->getTasks();
-    std::vector<Task*>::const_iterator tasks_iter = tasks.begin();
-    for (; tasks_iter != tasks.end(); ++tasks_iter) {
-      Task* task = *tasks_iter;
+    std::vector<std::shared_ptr<Task> > tasks = m_task_graphs[i]->getTasks();
+    for (auto iter = tasks.begin(); iter != tasks.end(); ++iter) {
+      Task* task = iter->get();
       if (task->getType() == Task::Spatial) {
         numSpatialTasks++;
       }

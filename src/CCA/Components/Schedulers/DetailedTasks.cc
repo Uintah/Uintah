@@ -115,7 +115,7 @@ DetailedTasks::DetailedTasks(       SchedulerCommon * sc
   stask_->setMapping( dwmap );
 
   // Create a send old detailed task for every processor in my neighborhood.
-  for (std::set<int>::iterator iter = neighborhood_processors.begin(); iter != neighborhood_processors.end(); iter++) {
+  for (auto iter = neighborhood_processors.begin(); iter != neighborhood_processors.end(); ++iter) {
     DetailedTask* newtask = scinew DetailedTask( stask_, nullptr, nullptr, this );
     newtask->assignResource(*iter);
 
