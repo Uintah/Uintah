@@ -1845,7 +1845,9 @@ DORadiationModel::computeFluxDiv(const Patch* patch,
 
 
 
+  proc0cout << "//---------------------------------------------------------------------//\n";
   proc0cout << "Total Radiation Solve Time (Approximate): " << _timer().seconds() << " seconds for " << d_totalOrds<< " sweeps  \n";
+  proc0cout << "//---------------------------------------------------------------------//\n";
   return ;
 
 }

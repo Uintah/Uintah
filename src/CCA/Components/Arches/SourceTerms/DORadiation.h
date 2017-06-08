@@ -142,6 +142,14 @@ void initialize_copyMethod_intensities( const ProcessorGroup* pc,
                          DataWarehouse* old_dw, 
                          DataWarehouse* new_dw,
                          int ix);
+
+
+void TransferRadFieldsFromOldDW( const ProcessorGroup* pc, 
+                                 const PatchSubset* patches, 
+                                 const MaterialSubset* matls, 
+                                 DataWarehouse* old_dw, 
+                                 DataWarehouse* new_dw);
+
 //---End of Functiosn relevant to sweeps ----//
   class Builder
     : public SourceTermBase::Builder { 

@@ -93,6 +93,8 @@ Arches::~Arches()
     }
   }
   releasePort("solver");
+
+
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -102,6 +104,10 @@ Arches::problemSetup( const ProblemSpecP     & params,
                             GridP            & grid,
                             SimulationStateP & sharedState )
 {
+  Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
+  int number_of_taskgraphs=2;
+  sched->setNumTaskGraphs(number_of_taskgraphs);
+
 
   m_sharedState= sharedState;
   ArchesMaterial* mat= scinew ArchesMaterial();
