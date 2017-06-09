@@ -20,8 +20,6 @@ DORadiation::DORadiation( std::string src_name, ArchesLabel* labels, MPMArchesLa
                           vector<std::string> req_label_names, const ProcessorGroup* my_world, 
                           std::string type ) 
 : SourceTermBase( src_name, labels->d_sharedState, req_label_names, type ), 
-                            // only 1 material in arches               // Arches matl Index = 0
-  _matlDS(scinew const MaterialSubset(std::vector<int> (1,labels->d_sharedState->getArchesMaterial(0)->getDWIndex()))), 
   _labels( labels ),
   _MAlab(MAlab), 
   _my_world(my_world){
@@ -156,13 +154,11 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
   }
 
   if (_sweepMethod){
+    int numMaterials=1;
+    int materialNumberIndex=0;
+    _matlDS = scinew const MaterialSubset(std::vector<int> (numMaterials,_labels->d_sharedState->getArchesMaterial(materialNumberIndex)->getDWIndex()));
     _radIntSource = VarLabel::create("radIntSource", CCVariable<double>::getTypeDescription());
 
-    //if (_radiation_calc_freq>1){
-      //throw ProblemSetupException("Radiation sweeps does not currently support temporal scheduling. If you still want to use sweeps, set the calculation frequency to 1.  ",__FILE__, __LINE__);
-    //}
-
-     
     _patchIntVector =  IntVector(0,0,0);
     _xPatch_boundary=std::vector<double>(0);//3 1-D vectors since domains aren't square ( can 2D vectors be non-square?)
     _yPatch_boundary=std::vector<double>(0);
