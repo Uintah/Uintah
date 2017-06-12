@@ -844,11 +844,12 @@
     <small_messages       spec="OPTIONAL BOOLEAN" />
     <taskReadyQueueAlg    spec="OPTIONAL STRING 'MostChildren LeastChildren MostAllChildren LeastAllChildren MostL2Children LeastL2Children PatchOrder PatchOrderRandom MostMessages LeastMessages Random FCFS Stack'" />
     <VarTracker           spec="OPTIONAL NO_DATA">
-      <start_time         spec="REQUIRED DOUBLE" />
-      <end_time           spec="REQUIRED DOUBLE" />
+      <start_time         spec="REQUIRED DOUBLE"  />
+      <end_time           spec="REQUIRED DOUBLE"  />
       <level              spec="OPTIONAL INTEGER" />
-      <start_index        spec="REQUIRED VECTOR" />
-      <end_index          spec="REQUIRED VECTOR" />
+      <start_index        spec="REQUIRED VECTOR"  />
+      <end_index          spec="REQUIRED VECTOR"  />
+      <patchid            spec="OPTIONAL INTEGER" />
       <var                spec="MULTIPLE NO_DATA"
                             attribute1="label REQUIRED STRING"
                             attribute2="dw    REQUIRED STRING 'NewDW OldDW CoarseNewDW CoarseOldDW ParentOldDW ParentNewDW'" />
