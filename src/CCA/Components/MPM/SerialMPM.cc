@@ -4783,12 +4783,15 @@ void SerialMPM::scheduleComputeNormals(SchedulerP   & sched,
   t->requires(Task::OldDW, lb->pMassLabel,               gp, ngc_p);
   t->requires(Task::OldDW, lb->pVolumeLabel,             gp, ngc_p);
   t->requires(Task::OldDW, lb->pSizeLabel,               gp, ngc_p);
+  t->requires(Task::OldDW, lb->pStressLabel,             gp, ngc_p);
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel, gp, ngc_p);
   t->requires(Task::NewDW, lb->gMassLabel,             Ghost::AroundNodes, 1);
   t->requires(Task::NewDW, lb->gVolumeLabel,           Ghost::None);
   t->requires(Task::OldDW, lb->NC_CCweightLabel,z_matl,Ghost::None);
 
   t->computes(lb->gSurfNormLabel);
+  t->computes(lb->gStressLabel);
+  t->computes(lb->gNormTractionLabel);
   t->computes(lb->gPositionLabel);
 
   sched->addTask(t, patches, matls);
@@ -4802,8 +4805,8 @@ void SerialMPM::scheduleComputeNormals(SchedulerP   & sched,
 void SerialMPM::computeNormals(const ProcessorGroup *,
                                const PatchSubset    * patches,
                                const MaterialSubset * ,
-                                     DataWarehouse        * old_dw,
-                                     DataWarehouse        * new_dw)
+                                     DataWarehouse  * old_dw,
+                                     DataWarehouse  * new_dw)
 {
   Ghost::GhostType  gan   = Ghost::AroundNodes;
   Ghost::GhostType  gnone = Ghost::None;
@@ -4813,6 +4816,8 @@ void SerialMPM::computeNormals(const ProcessorGroup *,
   StaticArray<NCVariable<Point> >        gposition(numMPMMatls);
   StaticArray<NCVariable<Vector> >       gvelocity(numMPMMatls);
   StaticArray<NCVariable<Vector> >       gsurfnorm(numMPMMatls);
+  StaticArray<NCVariable<double> >       gnormtraction(numMPMMatls);
+  StaticArray<NCVariable<Matrix3> >      gstress(numMPMMatls);
 
   for (int p = 0; p<patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -4836,25 +4841,31 @@ void SerialMPM::computeNormals(const ProcessorGroup *,
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
       new_dw->get(gmass[m],                lb->gMassLabel,     dwi,patch,gan,1);
-      new_dw->allocateAndPut(gsurfnorm[m], lb->gSurfNormLabel, dwi,patch);
-      new_dw->allocateAndPut(gposition[m], lb->gPositionLabel, dwi,patch);
+
+      new_dw->allocateAndPut(gsurfnorm[m],    lb->gSurfNormLabel,    dwi,patch);
+      new_dw->allocateAndPut(gposition[m],    lb->gPositionLabel,    dwi,patch);
+      new_dw->allocateAndPut(gstress[m],      lb->gStressLabel,      dwi,patch);
+      new_dw->allocateAndPut(gnormtraction[m],lb->gNormTractionLabel,dwi,patch);
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
                                                        gan, NGP, lb->pXLabel);
 
       constParticleVariable<Point> px;
       constParticleVariable<double> pmass, pvolume;
-      constParticleVariable<Matrix3> psize;
+      constParticleVariable<Matrix3> psize, pstress;
       constParticleVariable<Matrix3> deformationGradient;
 
       old_dw->get(px,                  lb->pXLabel,                  pset);
       old_dw->get(pmass,               lb->pMassLabel,               pset);
       old_dw->get(pvolume,             lb->pVolumeLabel,             pset);
       old_dw->get(psize,               lb->pSizeLabel,               pset);
+      old_dw->get(pstress,             lb->pStressLabel,             pset);
       old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
 
       gsurfnorm[m].initialize(Vector(0.0,0.0,0.0));
       gposition[m].initialize(Point(0.0,0.0,0.0));
+      gnormtraction[m].initialize(0.0);
+      gstress[m].initialize(Matrix3(0.0));
 
       int NN = flags->d_8or27;
       if(flags->d_axisymmetric){
@@ -4869,6 +4880,7 @@ void SerialMPM::computeNormals(const ProcessorGroup *,
               Vector G(d_S[k].x(),d_S[k].y(),0.0);
               gsurfnorm[m][ni[k]] += rho * G;
               gposition[m][ni[k]] += px[idx].asVector()*pmass[idx] * S[k];
+              gstress[m][ni[k]]   += pstress[idx] * S[k];
             }
           }
         }
@@ -4884,11 +4896,13 @@ void SerialMPM::computeNormals(const ProcessorGroup *,
                           d_S[k].z()*oodx[2]);
               gsurfnorm[m][ni[k]] += pmass[idx] * grad;
               gposition[m][ni[k]] += px[idx].asVector()*pmass[idx] * S[k];
+              gstress[m][ni[k]]   += pstress[idx] * S[k];
             }
           }
         }
       } // axisymmetric conditional
     }   // matl loop
+
     // Make normal vectors colinear by setting all norms to be
     // in the opposite direction of the norm with the largest magnitude
     if(flags->d_computeColinearNormals){
@@ -4927,6 +4941,8 @@ void SerialMPM::computeNormals(const ProcessorGroup *,
          if(length>1.0e-15){
             gsurfnorm[m][c] = gsurfnorm[m][c]/length;
          }
+         Vector norm = gsurfnorm[m][c];
+         gnormtraction[m][c]= Dot((norm*gstress[m][c]),norm);
          gposition[m][c] /= gmass[m][c];
       }
     }  // loop over matls
