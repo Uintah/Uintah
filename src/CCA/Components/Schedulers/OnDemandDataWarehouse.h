@@ -708,10 +708,7 @@ class OnDemandDataWarehouse : public DataWarehouse {
 
     inline RunningTaskInfo* getCurrentTaskInfo();
 
-    //    std::map<Thread*, std::list<RunningTaskInfo> > d_runningTasks;
-    //    std::list<RunningTaskInfo> d_runningTasks[MAX_THREADS];
-    std::mutex m_running_tasks_lock;
-    std::map<std::thread::id, std::list<RunningTaskInfo> > d_runningTasks;
+    std::map<std::thread::id, std::list<RunningTaskInfo> > d_runningTasks; // a list of running tasks for each std::thread::id
 
     ScrubMode d_scrubMode;
 

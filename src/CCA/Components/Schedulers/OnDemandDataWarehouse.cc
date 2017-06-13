@@ -118,6 +118,8 @@ DebugStream warn(       "OnDemandDataWarehouse_warn", true  );
 DebugStream particles(  "DWParticles",                false );
 DebugStream particles2( "DWParticles2",               false );
 
+std::mutex g_running_tasks_lock{};
+
 }
 
 extern Dout g_mpi_dbg;
@@ -3551,17 +3553,18 @@ void
 OnDemandDataWarehouse::pushRunningTask( const Task* task,
                                               std::vector<OnDemandDataWarehouseP>* dws )
 {
-  ASSERT( task );
+  std::lock_guard<std::mutex> push_lock(g_running_tasks_lock);
 
-  m_running_tasks_lock.lock();
+  ASSERT(task);
+
   std::map<std::thread::id, std::list<RunningTaskInfo> >::iterator iter = d_runningTasks.find(std::this_thread::get_id());
   if (iter == d_runningTasks.end()) {
     std::list<RunningTaskInfo> list;
     d_runningTasks.insert(std::make_pair(std::this_thread::get_id(), list));
   }
 
-  d_runningTasks.find(std::this_thread::get_id())->second.push_back( RunningTaskInfo( task, dws ) );
-  m_running_tasks_lock.unlock();
+  // add the RunningTaskInfo to the tread-specific list of running tasks
+  d_runningTasks.find(std::this_thread::get_id())->second.push_back(RunningTaskInfo(task, dws));
 }
 
 //______________________________________________________________________
@@ -3569,9 +3572,9 @@ OnDemandDataWarehouse::pushRunningTask( const Task* task,
 void
 OnDemandDataWarehouse::popRunningTask()
 {
-  m_running_tasks_lock.lock();
+  std::lock_guard<std::mutex> pop_lock(g_running_tasks_lock);
+
   d_runningTasks.find(std::this_thread::get_id())->second.pop_back();
-  m_running_tasks_lock.unlock();
 }
 
 //______________________________________________________________________
@@ -3579,8 +3582,10 @@ OnDemandDataWarehouse::popRunningTask()
 inline std::list<OnDemandDataWarehouse::RunningTaskInfo>*
 OnDemandDataWarehouse::getRunningTasksInfo()
 {
+  std::lock_guard<std::mutex> get_running_task_lock(g_running_tasks_lock);
+
   if (d_runningTasks.find(std::this_thread::get_id())->second.empty()) {
-    return 0;
+    return nullptr;
   } else {
     return &(d_runningTasks.find(std::this_thread::get_id())->second);
   }
@@ -3591,6 +3596,8 @@ OnDemandDataWarehouse::getRunningTasksInfo()
 inline bool
 OnDemandDataWarehouse::hasRunningTask()
 {
+  std::lock_guard<std::mutex> has_running_task_lock(g_running_tasks_lock);
+
   if (d_runningTasks.find(std::this_thread::get_id())->second.empty()) {
     return false;
   } else {
@@ -3603,8 +3610,10 @@ OnDemandDataWarehouse::hasRunningTask()
 inline OnDemandDataWarehouse::RunningTaskInfo*
 OnDemandDataWarehouse::getCurrentTaskInfo()
 {
+  std::lock_guard<std::mutex> get_current_task_lock(g_running_tasks_lock);
+
   if( d_runningTasks.find(std::this_thread::get_id())->second.empty() ) {
-    return 0;
+    return nullptr;
   }
   else {
     return &d_runningTasks.find(std::this_thread::get_id())->second.back();
@@ -3682,12 +3691,12 @@ OnDemandDataWarehouse::checkAccesses(       RunningTaskInfo*  currentTaskInfo,
 
   VarAccessMap& currentTaskAccesses = currentTaskInfo->d_accesses;
 
-  Handle<PatchSubset> default_patches = scinew PatchSubset();
+  Handle<PatchSubset> default_patches  = scinew PatchSubset();
   Handle<MaterialSubset> default_matls = scinew MaterialSubset();
   default_patches->add(0);
   default_matls->add(-1);
 
-  for (; dep != 0; dep = dep->m_next) {
+  for (; dep != nullptr; dep = dep->m_next) {
 #if 0
     if ((isFinalized() && dep->dw == Task::NewDW) || (!isFinalized() && dep->dw == Task::OldDW)) {
       continue;
@@ -3722,8 +3731,7 @@ OnDemandDataWarehouse::checkAccesses(       RunningTaskInfo*  currentTaskInfo,
         const Patch* patch = patches->get(p);
 
         VarLabelMatl<Patch> key(label, matl, patch);
-        std::map<VarLabelMatl<Patch>, AccessInfo>::iterator find_iter;
-        find_iter = currentTaskAccesses.find(key);
+        auto find_iter = currentTaskAccesses.find(key);
         if (find_iter == currentTaskAccesses.end() || (*find_iter).second.accessType != accessType) {
           if ((*find_iter).second.accessType == ModifyAccess && accessType == GetAccess) {  // If you require with ghost cells
             continue;                    // and modify, it can get into this
@@ -3766,12 +3774,10 @@ OnDemandDataWarehouse::checkAccesses(       RunningTaskInfo*  currentTaskInfo,
             has = "task modifies";
             needs = "datawarehouse modify";
           }
-          //WAIT_FOR_DEBUGGER();
           SCI_THROW(DependencyException(currentTask, label, matl, patch, has, needs, __FILE__, __LINE__));
         }
-        else if (((*find_iter).second.lowOffset != lowOffset || (*find_iter).second.highOffset != highOffset)
-            && accessType != ModifyAccess /* Can == ModifyAccess when you require with
-             ghost cells and modify */) {
+        // Can == ModifyAccess when you require with ghost cells and modify
+        else if (((*find_iter).second.lowOffset != lowOffset || (*find_iter).second.highOffset != highOffset) && accessType != ModifyAccess ) {
           // Makes request for ghost cells that are never gotten.
           AccessInfo accessInfo = (*find_iter).second;
           ASSERT(accessType == GetAccess);
@@ -3815,6 +3821,7 @@ OnDemandDataWarehouse::timestepAborted()
 {
   return d_aborted;
 }
+
 //__________________________________
 //
 bool
