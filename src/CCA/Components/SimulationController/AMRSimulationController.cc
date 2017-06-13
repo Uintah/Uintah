@@ -155,38 +155,47 @@ AMRSimulationController::run()
   }
 #endif
 
+
   // ____________________________________________________________________
-  // Begin the zero time step. Which is either initialization or
-  // restart.
+  // Begin the zero time step. Which is either initialization or restart.
   
   // Start the wall timer for the initialization timestep
   walltimers.TimeStep.reset( true );
 
-  // The order of the setup is important. See the individual component
-  // setup calls for more details.
   
+  //--------------------------------------------------------------------------------------------------
+  // The order of the setup is important. See the individual component  setup calls for more details.
+  //--------------------------------------------------------------------------------------------------
+
   // Setup the restart archive first as the output needs it.
   restartArchiveSetup();
+
   // Setup the output as the simulation interface needs it.
   outputSetup();
+
   // Setup the scheduler as the simulation interface needs it.
   schedulerSetup();
-  // Setup the simulation interface using the restart archive and
-  // under the hood the output and scheduler.
+
+  // Setup the simulation interface using the restart archive and under the hood the output and scheduler.
   simulationInterfaceSetup();
+
   // Setup the grid using the restart archive and sim interface.
   gridSetup();
+
   // Setup the regridder using the grid.
   regridderSetup();
+
   // Setup the load balancer using the scheduler and grid.
   loadBalancerSetup();
+
   // Complete the setup of the simulation interface and scheduler.
   outOfSyncSetup();
-  // Setup the time state using the restart archive, grid, scheduler,
-  // and load balnacer.
+
+  // Setup the time state using the restart archive, grid, scheduler, and load balancer.
   timeStateSetup();
-  // Setup the finial bits including the output.
-  finialSetup();
+
+  // Setup the final bits including the output.
+  finalSetup();
 
   // Once the grid is set up pass it on to the GPU.
 #ifdef HAVE_CUDA
@@ -350,8 +359,7 @@ AMRSimulationController::run()
                     << pidx_requested_nth_rank << std::endl;
 
           d_lb->setNthRank( pidx_requested_nth_rank );
-          d_lb->possiblyDynamicallyReallocate( d_currentGridP,
-					       LoadBalancerPort::regrid );
+          d_lb->possiblyDynamicallyReallocate( d_currentGridP, LoadBalancerPort::regrid );
           d_output->setSaveAsUDA();
           pidx_need_to_recompile = true;
         }
@@ -374,69 +382,56 @@ AMRSimulationController::run()
 #endif
 
     // Regridding
-    if( d_regridder ) {
-      int regrid = 0;
-
+    if (d_regridder) {
       // If not the first time step or restarting check for regridding
-      if( ( !first || d_restarting ) &&
-	  d_regridder->needsToReGrid( d_currentGridP ) )
-      {
+      if ((!first || d_restarting) && d_regridder->needsToReGrid(d_currentGridP)) {
         proc0cout << " Need to regrid." << std::endl;
-        regrid = 1;
       }
-      else if( d_regridder->doRegridOnce() && d_regridder->isAdaptive() )
-      {
+      // Single-level regridder case
+      else if (d_regridder->doRegridOnce() && d_regridder->isAdaptive()) {
         proc0cout << " Regridding once." << std::endl;
-        regrid = 2;
+        d_scheduler->setRestartInitTimestep( false );
+        d_regridder->setAdaptivity( false );
       }
-
-      if( regrid ) {
-        doRegridding( false );
-	
-        if( regrid == 2 ) {
-          d_regridder->setAdaptivity( false );
-        }
-      }
+      doRegridding( false );
     }
 
-    // Compute number of dataWarehouses - multiplies by the time
-    // refinement ratio for each level.
+    // Compute number of dataWarehouses - multiplies by the time refinement ratio for each level.
     int totalFine = 1;
 
     if (!d_sharedState->isLockstepAMR()) {
-      for(int i=1; i<d_currentGridP->numLevels(); ++i) {
+      for (int i = 1; i < d_currentGridP->numLevels(); ++i) {
         totalFine *= d_currentGridP->getLevel(i)->getRefinementRatioMaxDim();
       }
     }
      
-    if( dbg_dwmem.active() ) {
-      // Remember, this isn't logged if DISABLE_SCI_MALLOC is set
-      // (So usually in optimized mode this will not be run.)
+    if (dbg_dwmem.active()) {
+      // Remember, this isn't logged if DISABLE_SCI_MALLOC is set (so usually in optimized mode this will not be run.)
       d_scheduler->logMemoryUse();
       ostringstream fn;
-      fn << "alloc." << setw( 5 ) << setfill( '0' ) << d_myworld->myrank() << ".out";
+      fn << "alloc." << setw(5) << setfill('0') << d_myworld->myrank() << ".out";
       string filename(fn.str());
+
 #ifndef DISABLE_SCI_MALLOC
       DumpAllocator(DefaultAllocator(), filename.c_str());
 #endif
+
     }
-     
-    if( dbg_barrier.active() ) {
-      barrierTimer.reset( true );
-      Uintah::MPI::Barrier( d_myworld->getComm() );
+
+    if (dbg_barrier.active()) {
+      barrierTimer.reset( true);
+      Uintah::MPI::Barrier(d_myworld->getComm());
       barrier_times[2] += barrierTimer().seconds();
     }
 
-    // This step is a hack but it is the only way to get a new grid
-    // from UdaReducer and needs to be done before
-    // advanceDataWarehouse is called.
-    if ( d_reduceUda ) {
-      d_currentGridP = static_cast<UdaReducer*>( d_sim )->getGrid();
+    // This step is a hack but it is the only way to get a new grid from UdaReducer and
+    // needs to be done before advanceDataWarehouse is called.
+    if (d_reduceUda) {
+      d_currentGridP = static_cast<UdaReducer*>(d_sim)->getGrid();
     }
 
-    // After one step (either timestep or initialization) and
-    // correction the delta finalize the old timestep, eg. finalize
-    // and advance the Datawarehouse
+    // After one step (either timestep or initialization) and correction the delta finalize the
+    // old timestep, e.g. finalize and advance the Datawarehouse
     d_scheduler->advanceDataWarehouse( d_currentGridP );
 
 #ifndef DISABLE_SCI_MALLOC
@@ -460,10 +455,10 @@ AMRSimulationController::run()
     if( nr || first ) {
 
       // Recompile taskgraph, re-assign BCs, reset recompile flag.      
-      if( nr ) {
-        d_currentGridP->assignBCS( d_grid_ps, d_lb );
+      if (nr) {
+        d_currentGridP->assignBCS(d_grid_ps, d_lb);
         d_currentGridP->performConsistencyCheck();
-        d_sharedState->setRecompileTaskGraph( false );
+        d_sharedState->setRecompileTaskGraph( false);
       }
 
 #ifdef HAVE_PIDX

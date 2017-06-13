@@ -112,14 +112,12 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
   d_material = scinew SimpleMaterial();
   d_sharedState->registerSimpleMaterial( d_material );
 
-
-  //manually manipulate the scheduling of copy data for the shootRay task
-  Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
-
   // TG-0 = carry forward tasks
   // TG-1 = normal RMCRT computations
+  Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
   sched->setNumTaskGraphs(RMCRTCommon::NUM_GRAPHS);
 
+  // manually manipulate the scheduling of copy data for the shootRay task
   sched->overrideVariableBehavior("color",false, false, true, false, false);
 
   //__________________________________

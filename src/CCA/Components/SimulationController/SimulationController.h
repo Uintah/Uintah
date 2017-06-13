@@ -200,7 +200,7 @@ protected:
   void loadBalancerSetup();
   void outOfSyncSetup();
   void timeStateSetup();
-  void finialSetup();
+  void finalSetup();
 
   // Get the next delta T
   void getNextDeltaT( void );

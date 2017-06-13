@@ -106,6 +106,10 @@ Arches::problemSetup( const ProblemSpecP     & params,
 {
   Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
 
+  // 1 TG for radiation timesteps, 1 TG for other timesteps
+  int num_task_graphs = 2;
+  sched->setNumTaskGraphs(num_task_graphs);
+
   m_sharedState= sharedState;
   ArchesMaterial* mat= scinew ArchesMaterial();
   sharedState->registerArchesMaterial(mat);

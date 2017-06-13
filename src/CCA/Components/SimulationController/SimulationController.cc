@@ -584,9 +584,9 @@ SimulationController::outOfSyncSetup()
   // Complete the setup of the simulation interface and scheduler that
   // could not be completed until the grid was setup.
   
-  // The simulation interface was initalized earlier because the it
+  // The simulation interface was initialized earlier because the it
   // was needed to possibly set the grid's extra cells before the
-  // grid's ProblemSetup was called (it can not be done aferwards).
+  // grid's ProblemSetup was called (it can not be done afterwards).
 
   // Do this step after setting up the regridder so that Switcher
   // (being a simulation interface) can reset the state of the
@@ -665,7 +665,7 @@ SimulationController::timeStateSetup()
 //______________________________________________________________________
 //
 void
-SimulationController::finialSetup()
+SimulationController::finalSetup()
 {
   // Finalize the shared state/materials
   d_sharedState->finalizeMaterials();
