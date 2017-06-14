@@ -694,47 +694,6 @@ SimulationController::finalSetup()
     amr_ps->get( "doMultiTaskgraphing", d_do_multi_taskgraphing );
   }
 
-  //---------------------------------------------------------------------------------------------------
-  // This code is related to temporal scheduling support (multiple, primary task graphs,
-  // not W-Cycle w/ doMultiTaskgraphing). Here we pick up the radiation calculation frequency,
-  // which is used by Arches, Wasatch and the RMCRT_Test components.
-  //---------------------------------------------------------------------------------------------------
-  // TODO: We should figure out a cleaner, more standardized  way to do this. APH - 06/02/17
-  //---------------------------------------------------------------------------------------------------
-  ProblemSpecP bm_ps = d_ups->get("calc_frequency", d_rad_calc_frequency);
-  // Otherwise find ARCHES radiation calculation frequency and explicitly set num task graphs here
-  if (!bm_ps) {
-    ProblemSpecP root_ps = d_ups->getRootNode();
-    ProblemSpecP cfd_ps = root_ps->findBlock("CFD");
-    if (cfd_ps) {
-      ProblemSpecP arches_ps = cfd_ps->findBlock("ARCHES");
-      if (arches_ps) {
-        ProblemSpecP transport_eqns_ps = arches_ps->findBlock("TransportEqns");
-        if (transport_eqns_ps) {
-          ProblemSpecP sources_ps = transport_eqns_ps->findBlock("Sources");
-          if (sources_ps) {
-            ProblemSpecP rad_src_ps = sources_ps->findBlock("src");
-            if (rad_src_ps) {
-              // find the "divQ" src block for the radiation calculation frequency
-              std::string src_name = "";
-              std::string radiation_type = "";
-              rad_src_ps->getAttribute("label", src_name);
-              while (src_name != "divQ" && rad_src_ps->findNextBlock("src")) {
-                rad_src_ps = rad_src_ps->findNextBlock("src");
-                rad_src_ps->getAttribute("label", src_name);
-              }
-              rad_src_ps->getAttribute("type", radiation_type);
-              if (radiation_type == "rmcrt_radiation") {
-                d_scheduler->setNumTaskGraphs(2);
-              }
-              rad_src_ps->getWithDefault("calc_frequency", d_rad_calc_frequency, 1);
-            }
-          }
-        }
-      }
-    }
-  }
-
 #ifdef HAVE_VISIT
   if( d_sharedState->getVisIt() ) {
     d_sharedState->d_debugStreams.push_back( &dbg );

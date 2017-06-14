@@ -228,7 +228,7 @@ AMRSimulationController::run()
   getNextDeltaT();
   
   // Report all of the stats before doing any possible in-situ work
-  // as that affects the lap timer for the time steps.
+  // as that effects the lap timer for the time steps.
   ReportStats( first );
 
   // If compiled with VisIt check the in-situ status for work.
@@ -239,12 +239,12 @@ AMRSimulationController::run()
 
   // Reset the runtime performance stats
   d_sharedState->resetStats();
+
   // Reset memory use tracking variable
   d_scheduler->resetMaxMemValue();
 
   // ____________________________________________________________________
-  // End the zero time step. Which is either initialization or
-  // restart.
+  // End the zero time step. Which is either initialization or restart.
   
 #ifndef DISABLE_SCI_MALLOC
   AllocatorSetDefaultTagLineNumber( d_sharedState->getCurrentTopLevelTimeStep() );
@@ -391,8 +391,8 @@ AMRSimulationController::run()
       // Covers single-level regridder case (w/ restarts)
       else if (d_regridder->doRegridOnce() && d_regridder->isAdaptive()) {
         proc0cout << " Regridding once." << std::endl;
-        doRegridding( false );
         d_scheduler->setRestartInitTimestep( false );
+        doRegridding( false );
         d_regridder->setAdaptivity( false );
       }
     }
@@ -556,7 +556,8 @@ AMRSimulationController::run()
     }
 
     // Execute the current timestep, restarting if necessary
-    executeTimestep( totalFine );
+    int tg_index = d_sim->computeTaskGraphIndex();
+    executeTimestep( totalFine, tg_index );
       
     // Update the profiler weights
     d_lb->finalizeContributions(d_currentGridP);
@@ -775,7 +776,7 @@ AMRSimulationController::doInitialTimestep()
 //______________________________________________________________________
 //
 void
-AMRSimulationController::executeTimestep( int totalFine )
+AMRSimulationController::executeTimestep( int totalFine, int tg_index )
 {
   MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::executeTimestep()");
 
@@ -787,6 +788,7 @@ AMRSimulationController::executeTimestep( int totalFine )
     bool restartable = d_sim->restartableTimesteps();
     d_scheduler->setRestartable(restartable);
 
+    // TODO: figure what this if clause attempted to accomplish and clean up -APH, 06/14/17
     // if (Uintah::Parallel::getMaxThreads() < 1) { 
 
     // Standard data warehouse scrubbing.
@@ -811,18 +813,15 @@ AMRSimulationController::executeTimestep( int totalFine )
     }
     // }
 
-    // TODO: Let's document this well - APH, 10/06/16
-    // From Brad P 5/22/2017 - This appears to have some hard coding to support
-    // RMCRT radiation calculation frequency timesteps.  It tells the scheduler
-    // which task graph it should be operating on that timestep.  
-    // I assume this may need a bit more generalizing?  
     if (d_do_multi_taskgraphing) {
       subCycleExecute(0, totalFine, 0, true);
     }
+    // TG index set by component that requested temporal scheduling (multiple primary task graphs)
+    //   this is passed to scheduler->execute(), default index is 0
     else {
       int curr_timestep = d_sharedState->getCurrentTopLevelTimeStep();
-      int tg_num = ( (curr_timestep % d_rad_calc_frequency != 0) && (curr_timestep != 1) ) ? 0 : 1;
-      d_scheduler->execute( (d_scheduler->getNumTaskGraphs() == 1) ? 0 : tg_num, (d_last_recompile_timestep == curr_timestep) ? 0 : 1);
+      int iteration     = (d_last_recompile_timestep == curr_timestep) ? 0 : 1;
+      d_scheduler->execute( tg_index, iteration);
     }
 
     //__________________________________

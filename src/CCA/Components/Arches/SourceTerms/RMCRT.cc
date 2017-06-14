@@ -374,7 +374,7 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
 
     const LevelP& fineLevel = grid->getLevel(_archesLevelIndex);
     // Task::WhichDW temp_dw = Task::NewDW;         -- Todd swqp this after merge
-    Task::WhichDW temp_dw = Task::OldDW;
+    Task::WhichDW temp_dw  = Task::OldDW;
     Task::WhichDW abskg_dw = Task::NewDW;
 
     // modify Radiative properties on the finest level
@@ -682,8 +682,7 @@ RMCRT_Radiation::computeSource( const ProcessorGroup* ,
                             DataWarehouse* old_dw,
                             DataWarehouse* new_dw,
                             int timeSubStep ){
-  // see sched_computeSource & CCA/Components/Models/Radiation/RMCRT/Ray.cc
-  // for the actual tasks
+  // see sched_computeSource & CCA/Components/Models/Radiation/RMCRT/Ray.cc  for the actual tasks
   throw InternalError("Stub Task: RMCRT_Radiation::computeSource you should never land here ", __FILE__, __LINE__);
 }
 

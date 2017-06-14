@@ -110,13 +110,37 @@ Arches::problemSetup( const ProblemSpecP     & params,
   int num_task_graphs = 2;
   sched->setNumTaskGraphs(num_task_graphs);
 
+  ProblemSpecP arches_ps = params->findBlock("CFD")->findBlock("ARCHES");
+  if (arches_ps) {
+    ProblemSpecP transport_ps = arches_ps->findBlock("TransportEqns");
+    if (transport_ps) {
+      ProblemSpecP sources_ps = transport_ps->findBlock("Sources");
+      if (sources_ps) {
+        ProblemSpecP rad_src_ps = sources_ps->findBlock("src");
+        if (rad_src_ps) {
+          // find the "divQ" src block for the radiation calculation frequency
+          std::string src_name = "";
+          std::string radiation_type = "";
+          rad_src_ps->getAttribute("label", src_name);
+          while (src_name != "divQ" && rad_src_ps->findNextBlock("src")) {
+            rad_src_ps = rad_src_ps->findNextBlock("src");
+            rad_src_ps->getAttribute("label", src_name);
+          }
+          if (rad_src_ps) {
+            rad_src_ps->getWithDefault("calc_frequency", m_rad_calc_frequency, 1);
+          }
+        }
+      }
+    }
+  }
+
   m_sharedState= sharedState;
   ArchesMaterial* mat= scinew ArchesMaterial();
   sharedState->registerArchesMaterial(mat);
   ProblemSpecP db = params->findBlock("CFD")->findBlock("ARCHES");
   m_arches_spec = db;
 
-  // Check for lagrangian particles
+  // Check for Lagrangian particles
   m_do_lagrangian_particles = m_arches_spec->findBlock("LagrangianParticles");
   if ( m_do_lagrangian_particles ) {
     m_particlesHelper->problem_setup(params,m_arches_spec->findBlock("LagrangianParticles"), sharedState);
@@ -304,8 +328,7 @@ Arches::scheduleTimeAdvance( const LevelP& level,
   //  on the fly analysis
   if(m_analysis_modules.size() != 0) {
     vector<AnalysisModule*>::iterator iter;
-    for( iter  = m_analysis_modules.begin();
-         iter != m_analysis_modules.end(); iter++) {
+    for( iter = m_analysis_modules.begin(); iter != m_analysis_modules.end(); iter++) {
       AnalysisModule* am = *iter;
       am->scheduleDoAnalysis( sched, level);
     }
@@ -329,8 +352,17 @@ bool Arches::needRecompile(double time, double dt,
     m_recompile_taskgraph = false;
     return temp;
   }
-  else
+  else {
     return m_recompile_taskgraph;
+  }
+}
+
+int Arches::computeTaskGraphIndex()
+{
+  // setup the task graph for execution on the next timestep
+  int time_step = m_sharedState->getCurrentTopLevelTimeStep();
+  int task_graph_index = ((time_step % m_rad_calc_frequency == 0)  || (time_step == 1) ? 1 : 0);
+  return task_graph_index;
 }
 
 //--------------------------------------------------------------------------------------------------

@@ -131,7 +131,7 @@ private: // class Task
                           , const MaterialSubset * m_matls
                           ,       DataWarehouse  * fromDW
                           ,       DataWarehouse  * toDW
-                          ,       Args...       args
+                          ,       Args...          args
                           )
           , Args... args
           )

@@ -123,6 +123,7 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
   //__________________________________
   // Read in component specific variables
   ProblemSpecP me = prob_spec;
+  me->getWithDefault( "calc_frequency",  d_radCalc_freq, 1 );
   me->require(        "Temperature",     d_initColor);
   me->require(        "abskg",           d_initAbskg);
   me->getWithDefault( "benchmark" ,      d_benchmark,  0 );
@@ -331,6 +332,7 @@ void RMCRT_Test::scheduleRestartInitialize(const LevelP& level,
                                      SchedulerP& sched)
 {
 }
+
 //______________________________________________________________________
 //
 //______________________________________________________________________
@@ -338,13 +340,13 @@ void RMCRT_Test::scheduleComputeStableTimestep ( const LevelP& level, SchedulerP
 {
   printSchedule(level,dbg,"RMCRT_Test::scheduleComputeStableTimestep");
 
-  Task* task = scinew Task( "RMCRT_Test::computeStableTimestep", this,
-                            &RMCRT_Test::computeStableTimestep );
+  Task* task = scinew Task( "RMCRT_Test::computeStableTimestep", this, &RMCRT_Test::computeStableTimestep );
 
   task->computes( d_sharedState->get_delt_label(),level.get_rep() );
 
   scheduler->addTask( task, level->eachPatch(), d_sharedState->allMaterials() );
 }
+
 //______________________________________________________________________
 //
 //______________________________________________________________________
@@ -410,8 +412,7 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
     }
 
     //__________________________________
-    //  compute the extents of the rmcrt region of interest
-    //  on the finest level
+    //  compute the extents of the rmcrt region of interest on the finest level
     d_RMCRT->sched_ROI_Extents( fineLevel, sched );
 
     Task::WhichDW sigmaT4_dw  = Task::NewDW;
@@ -545,17 +546,20 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
 void RMCRT_Test::scheduleInitialErrorEstimate ( const LevelP& level, SchedulerP& scheduler )
 {
 }
+
 //______________________________________________________________________
 // STUB
 void RMCRT_Test::scheduleCoarsen ( const LevelP& coarseLevel, SchedulerP& scheduler )
 {
 }
+
 //______________________________________________________________________
 // STUB
 void RMCRT_Test::scheduleRefine ( const PatchSet* patches,
                                   SchedulerP& scheduler )
 {
 }
+
 //______________________________________________________________________
 // STUB
 void RMCRT_Test::scheduleRefineInterface ( const LevelP&,
@@ -563,6 +567,20 @@ void RMCRT_Test::scheduleRefineInterface ( const LevelP&,
                                            bool,
                                            bool)
 {
+}
+
+//______________________________________________________________________
+//
+//______________________________________________________________________
+int RMCRT_Test::computeTaskGraphIndex()
+{
+  // setup the correct task graph for execution
+  int time_step = d_sharedState->getCurrentTopLevelTimeStep();
+
+  // also do radiation solve on timestep 1
+  int task_graph_index = ((time_step % d_radCalc_freq == 0) || (time_step == 1) ? Uintah::RMCRTCommon::TG_RMCRT : Uintah::RMCRTCommon::TG_CARRY_FORWARD);
+
+  return task_graph_index;
 }
 
 //______________________________________________________________________
@@ -838,8 +856,8 @@ void RMCRT_Test::initializeWithUda (const ProcessorGroup*,
   //__________________________________
   //  Load abskg & temperature from old uda into new data warehouse
   proc0cout << "Extracting data from " << d_old_uda->udaName
-          << " at time " << times[timeIndex]
-          << " and initializing RMCRT variables " << endl;
+            << " at time " << times[timeIndex]
+            << " and initializing RMCRT variables " << endl;
 
   // loop over the UDA patches
   for(int p=0;p<patches->size();p++){
@@ -869,7 +887,7 @@ void RMCRT_Test::initializeWithUda (const ProcessorGroup*,
         abskg[c] = uda_abskg[c];
       }
     //            F L O A T
-    }else if( subType->getType() == Uintah::TypeDescription::float_type ) {
+    } else if( subType->getType() == Uintah::TypeDescription::float_type ) {
       CCVariable<float> uda_temp;
       CCVariable<float> uda_abskg;
 

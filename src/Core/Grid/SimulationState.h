@@ -252,7 +252,7 @@ public:
   void setRecompileTaskGraph(bool ans) { d_recompileTaskGraph = ans; }    
 
   double getOverheadAvg() const { return d_overheadAvg; }   
-  void setOverheadAvg(double val) { d_overheadAvg = val; }    
+  void   setOverheadAvg(double val) { d_overheadAvg = val; }
 
   bool getUseLocalFileSystems() const { return d_usingLocalFileSystems; }   
   void setUseLocalFileSystems(bool ans) { d_usingLocalFileSystems = ans; }    
@@ -264,9 +264,9 @@ public:
   bool haveModifiedVars() { return d_haveModifiedVars; }
 
   SimulationTime * getSimulationTime() const { return d_simulationTime; }   
-  void setSimulationTime(SimulationTime * simTime) { d_simulationTime = simTime; }
+  void             setSimulationTime(SimulationTime * simTime) { d_simulationTime = simTime; }
 
-  int getNumDims() const { return d_numDims; }
+  int  getNumDims() const { return d_numDims; }
   int* getActiveDims() { return d_activeDims; }
   void setDimensionality(bool x, bool y, bool z);
 

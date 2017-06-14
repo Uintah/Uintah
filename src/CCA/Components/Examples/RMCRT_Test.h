@@ -71,7 +71,9 @@ WARNING
 ****************************************/
 
   class RMCRT_Test: public UintahParallelComponent, public SimulationInterface {
+
   public:
+
     RMCRT_Test ( const ProcessorGroup* myworld );
     virtual ~RMCRT_Test ( void );
 
@@ -87,7 +89,10 @@ WARNING
     virtual void scheduleCoarsen               ( const LevelP& level, SchedulerP& scheduler );
     virtual void scheduleRefine                ( const PatchSet* patches, SchedulerP& scheduler );
     virtual void scheduleRefineInterface       ( const LevelP& level, SchedulerP& scheduler, bool needCoarseOld, bool needCoarseNew);
+
+    virtual int computeTaskGraphIndex();
   
+
   private:
     void initialize ( const ProcessorGroup*,
                       const PatchSubset* patches, 
@@ -152,6 +157,7 @@ WARNING
     double   d_initColor{-9.0};
     double   d_initAbskg{-9.0};
     
+    int      d_radCalc_freq{1};
     int      d_matl;
     int      d_wall_cell; 
     int      d_flow_cell;

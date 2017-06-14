@@ -591,10 +591,9 @@ namespace WasatchCore{
     // Added for temporal scheduling support when using RMCRT - APH 05/30/17
     //---------------------------------------------------------------------------------------------------------------------------
     if (tree->computes_field(TagNames::self().radiationsource)) {
-      // Need a cleaner way to do this, but for now, this allows temporal scheduling within Wasatch for RMCRT
-      // We put the radiation tasks in TG-1, otherwise multiple-computes, etc
-      //   TG-0 = carry forward and non-radiation timestep tasks
-      //   TG-1 = normal RMCRT computations
+      // For RMCRT there will be 2 task graphs - put the radiation tasks in TG-1, otherwise tasks go into TG-0, or both TGs
+      //   TG-0 == carry forward and/or non-radiation timesteps
+      //   TG-1 == RMCRT radiation timestep
       scheduler_->addTask(task, patches_, materials_, Uintah::RMCRTCommon::TG_RMCRT);
     }
     //---------------------------------------------------------------------------------------------------------------------------

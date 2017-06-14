@@ -100,8 +100,7 @@ namespace WasatchCore {
                                           const Uintah::MaterialSet* const materials )
   {
     // hack in a task to apply boundary condition on the pressure after the pressure solve
-    Uintah::Task* task = scinew Uintah::Task( "RadiationSource: setup bndflux", this,
-                                             &RadiationSource::setup_bndflux );
+    Uintah::Task* task = scinew Uintah::Task( "RadiationSource: setup bndflux", this, &RadiationSource::setup_bndflux );
     
     task->computes(Uintah::VarLabel::find("RMCRTboundFlux"));
     sched->addTask(task, level->eachPatch(), materials, Uintah::RMCRTCommon::TG_RMCRT);

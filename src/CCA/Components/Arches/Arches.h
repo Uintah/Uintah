@@ -106,6 +106,8 @@ public:
   virtual bool needRecompile(double time, double dt,
                              const GridP& grid);
 
+  virtual int computeTaskGraphIndex();
+
   void setMPMArchesLabel(const MPMArchesLabel* MAlb){
     m_MAlab = MAlb;
   }
@@ -170,6 +172,7 @@ private:
   bool m_do_AMR;
   bool m_do_lagrangian_particles;
   bool m_recompile_taskgraph;
+  int  m_rad_calc_frequency;
 
   int m_arches_level_index;
 

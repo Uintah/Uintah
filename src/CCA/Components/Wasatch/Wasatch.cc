@@ -771,21 +771,23 @@ namespace WasatchCore{
       //---------------------------------------------------------------------------------------------------------------------------
       // Added for temporal scheduling support when using RMCRT - APH 05/24/17
       //---------------------------------------------------------------------------------------------------------------------------
-      // Need a cleaner way to do this, but for now, this allows temporal scheduling within Wasatch for RMCRT
-      // For RMCRT there will be 2 task graphs - we put the radiation tasks in TG-1, otherwise tasks go into TG-0 or both
-      //   TG-0 = carry forward and non-radiation timestep tasks
-      //   TG-1 = normal RMCRT computations
+      // For RMCRT there will be 2 task graphs - put the radiation tasks in TG-1, otherwise tasks go into TG-0, or both TGs
+      //   TG-0 == carry forward and/or non-radiation timesteps
+      //   TG-1 == RMCRT radiation timestep
       Uintah::Scheduler* sched = dynamic_cast<Uintah::Scheduler*>(getPort("scheduler"));
       sched->setNumTaskGraphs(2);
+      Uintah::ProblemSpecP radFreqSpec = uintahSpec;
+      radFreqSpec->getWithDefault( "calc_frequency",  radCalcFrequency_, 1 );
       //---------------------------------------------------------------------------------------------------------------------------
 
       doRadiation_ = true;
-      cellType_ = scinew CellType();
-      rmcrt_ = scinew Uintah::Ray( Uintah::TypeDescription::double_type );
 
-      Uintah::ProblemSpecP radSpec = uintahSpec->findBlock("RMCRT");
-      Uintah::ProblemSpecP radPropsSpec=wasatchSpec_->findBlock("RadProps");
-      Uintah::ProblemSpecP RMCRTBenchSpec=wasatchSpec_->findBlock("RMCRTBench");
+      cellType_ = scinew CellType();
+      rmcrt_    = scinew Uintah::Ray( Uintah::TypeDescription::double_type );
+
+      Uintah::ProblemSpecP radSpec        = uintahSpec->findBlock("RMCRT");
+      Uintah::ProblemSpecP radPropsSpec   = wasatchSpec_->findBlock("RadProps");
+      Uintah::ProblemSpecP RMCRTBenchSpec = wasatchSpec_->findBlock("RMCRTBench");
 
       Expr::Tag absorptionCoefTag;
       Expr::Tag temperatureTag;
@@ -1863,6 +1865,24 @@ namespace WasatchCore{
                                    bool, bool )
  {
    // do nothing for now
+ }
+
+ int
+ Wasatch::computeTaskGraphIndex()
+ {
+   // component specifies task graph index  for next timestep. SimController passes this to scheduler for execution
+   if (doRadiation_) {
+
+     // setup the correct task graph for execution
+     int time_step = sharedState_->getCurrentTopLevelTimeStep();
+
+     // also do radiation solve on timestep 1
+     int task_graph_index = ((time_step % radCalcFrequency_ == 0) || (time_step == 1) ? Uintah::RMCRTCommon::TG_RMCRT : Uintah::RMCRTCommon::TG_CARRY_FORWARD);
+
+     return task_graph_index;
+   }
+
+   return 0;
  }
 //------------------------------------------------------------------
 
