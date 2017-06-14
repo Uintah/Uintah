@@ -386,14 +386,15 @@ AMRSimulationController::run()
       // If not the first time step or restarting check for regridding
       if ((!first || d_restarting) && d_regridder->needsToReGrid(d_currentGridP)) {
         proc0cout << " Need to regrid." << std::endl;
+        doRegridding( false );
       }
-      // Single-level regridder case
+      // Covers single-level regridder case (w/ restarts)
       else if (d_regridder->doRegridOnce() && d_regridder->isAdaptive()) {
         proc0cout << " Regridding once." << std::endl;
+        doRegridding( false );
         d_scheduler->setRestartInitTimestep( false );
         d_regridder->setAdaptivity( false );
       }
-      doRegridding( false );
     }
 
     // Compute number of dataWarehouses - multiplies by the time refinement ratio for each level.
