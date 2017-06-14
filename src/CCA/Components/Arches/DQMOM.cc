@@ -752,15 +752,17 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 
       } else if( m_simplest == true ){
 
-	tmp_timer.reset( true );
-	tmp_timer.stop();
+	// tmp_timer.reset( true );
+	// Something to time - currently nothing constructed
+	// tmp_timer.stop();
 
-	total_AXBConstructionTime += timer().seconds();
+	// total_AXBConstructionTime += timer().seconds();
 
-	tmp_timer.reset( true );
-	tmp_timer.stop();
+	// tmp_timer.reset( true );
+	// Something to time - currently nothing solved
+	// tmp_timer.stop();
 
-	total_SolveTime +=  timer().seconds();
+	// total_SolveTime += timer().seconds();
 
 	int z=0; // equation loop counter
 	int z2=0; // equation loop counter
