@@ -116,6 +116,20 @@ namespace Uintah{
           return _field_container->get_const_uintah_particle_field( name );
         }
 
+        /** @brief Return a modifiable temporary field address **/
+        template <typename T>
+        inline T& get_temp_uintah_field_add( const std::string name, const int nGhosts=0, bool returnNullPointer=false ){
+          T* emptyPointer=NULL;
+          return returnNullPointer ? *emptyPointer :
+                                     *(_field_container->get_temporary_field<T>(name, nGhosts));
+        }
+
+        /** @brief Return a modifiable temporary field pointer **/
+        template <typename T>
+        inline T* get_temp_uintah_field( const std::string name, const int nGhosts=0, bool returnNullPointer=false ){
+          return _field_container->get_temporary_field<T>(name, nGhosts);
+        }
+
         /** @brief Get the current patch ID **/
         inline int get_patch_id(){ return _patch->getID(); }
 

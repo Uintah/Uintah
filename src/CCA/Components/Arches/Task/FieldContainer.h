@@ -66,8 +66,12 @@ namespace Uintah{
       struct FieldContainer{
 
         public:
-          void set_field( GridVariableBase* field ){ _field = field; }
-          void set_label( const VarLabel* label ){ _label = label; }
+
+          void set_field( GridVariableBase* field ){_field = field;}
+          void set_label( const VarLabel* label ){
+            _label = label;
+            _type = label->typeDescription();
+          }
 
           template <class T>
           inline
@@ -77,10 +81,15 @@ namespace Uintah{
 
           const VarLabel* get_label(){ return _label; }
 
+          const Uintah::TypeDescription* get_type(){ return _type; }
+
+          void delete_field(){ delete _field; }
+
         private:
           const VarLabel* _label;
           GridVariableBase* _field;
           int _n_ghosts;
+          const Uintah::TypeDescription* _type;
 
       };
 
@@ -103,10 +112,13 @@ namespace Uintah{
 
           const VarLabel* get_label(){ return _label; }
 
+          void delete_field(){ delete _field; }
+
         private:
           constVariableBase<GridVariableBase>* _field;
           const VarLabel* _label;
           int _n_ghosts;
+          const Uintah::TypeDescription* _type;
 
       };
 
@@ -283,7 +295,7 @@ namespace Uintah{
 
       }
 
-      /** @brief Get a const uintah variable **/
+      /** @brief Get a modifiable uintah variable **/
       template <typename T>
       inline T* get_field( const std::string name ){
 
@@ -309,6 +321,26 @@ namespace Uintah{
 
         return field;
 
+      }
+
+      /** @brief Get a temporary uintah variable **/
+      template <typename T>
+      inline T* get_temporary_field( const std::string name, const int nGhosts ){
+
+        T* field = scinew T;
+
+        if ( nGhosts > 0 ){
+          _new_dw->allocateTemporary( *field, _patch, Ghost::AroundCells, nGhosts );
+        } else {
+          _new_dw->allocateTemporary( *field, _patch, Ghost::None, 0 );
+        }
+
+        FieldContainer icontain;
+        icontain.set_field( field );
+        //icontain.set_label( NULL );
+        this->add_variable( name, icontain );
+
+        return field;
       }
 
       // @brief Get a particle field spatialOps representation of the Uintah field.
@@ -452,58 +484,14 @@ namespace Uintah{
         for ( FieldContainerMap::iterator iter = _nonconst_var_map.begin();
               iter != _nonconst_var_map.end(); iter++ ){
 
-          const VarLabel* lab = iter->second.get_label();
-          const Uintah::TypeDescription* type = lab->typeDescription();
-
-          if ( type == CCVariable<int>::getTypeDescription() ){
-            delete iter->second.get_field<CCVariable<int> >();
-          } else if ( type == CCVariable<double>::getTypeDescription() ){
-            delete iter->second.get_field<CCVariable<double> >();
-          } else if ( type == CCVariable<Vector>::getTypeDescription() ){
-            delete iter->second.get_field<CCVariable<Vector> >();
-          } else if ( type == CCVariable<Stencil7>::getTypeDescription() ){
-            delete iter->second.get_field<CCVariable<Stencil7> >();
-          } else if ( type == SFCXVariable<double>::getTypeDescription() ){
-            delete iter->second.get_field<SFCXVariable<double> >();
-          } else if ( type == SFCYVariable<double>::getTypeDescription() ){
-            delete iter->second.get_field<SFCYVariable<double> >();
-          } else if ( type == SFCZVariable<double>::getTypeDescription() ){
-            delete iter->second.get_field<SFCZVariable<double> >();
-          } else {
-            std::stringstream msg;
-            msg << "Error: Trying to delete a variable" <<
-            " with unsupported type." << std::endl;
-            throw InvalidValue(msg.str(),__FILE__,__LINE__);
-          }
+          iter->second.delete_field();
 
         }
 
         for ( ConstFieldContainerMap::iterator iter = _const_var_map.begin();
               iter != _const_var_map.end(); iter++ ){
 
-          const VarLabel* lab = iter->second.get_label();
-          const Uintah::TypeDescription* type = lab->typeDescription();
-
-          if ( type == CCVariable<int>::getTypeDescription() ){
-            delete iter->second.get_field<constCCVariable<int> >();
-          } else if ( type == CCVariable<double>::getTypeDescription() ){
-            delete iter->second.get_field<constCCVariable<double> >();
-          } else if ( type == CCVariable<Vector>::getTypeDescription() ){
-            delete iter->second.get_field<constCCVariable<Vector> >();
-          } else if ( type == CCVariable<Stencil7>::getTypeDescription() ){
-            delete iter->second.get_field<constCCVariable<Stencil7> >();
-          } else if ( type == SFCXVariable<double>::getTypeDescription() ){
-            delete iter->second.get_field<constSFCXVariable<double> >();
-          } else if ( type == SFCYVariable<double>::getTypeDescription() ){
-            delete iter->second.get_field<constSFCYVariable<double> >();
-          } else if ( type == SFCZVariable<double>::getTypeDescription() ){
-            delete iter->second.get_field<constSFCZVariable<double> >();
-          } else {
-            std::stringstream msg;
-            msg << "Error: Trying to delete a variable" <<
-            " with unsupported type." << std::endl;
-            throw InvalidValue(msg.str(), __FILE__, __LINE__);
-          }
+          iter->second.delete_field();
 
         }
 
