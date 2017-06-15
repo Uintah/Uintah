@@ -104,35 +104,7 @@ Arches::problemSetup( const ProblemSpecP     & params,
                             GridP            & grid,
                             SimulationStateP & sharedState )
 {
-  Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
 
-  // 1 TG for radiation timesteps, 1 TG for other timesteps
-  int num_task_graphs = 2;
-  sched->setNumTaskGraphs(num_task_graphs);
-
-  ProblemSpecP arches_ps = params->findBlock("CFD")->findBlock("ARCHES");
-  if (arches_ps) {
-    ProblemSpecP transport_ps = arches_ps->findBlock("TransportEqns");
-    if (transport_ps) {
-      ProblemSpecP sources_ps = transport_ps->findBlock("Sources");
-      if (sources_ps) {
-        ProblemSpecP rad_src_ps = sources_ps->findBlock("src");
-        if (rad_src_ps) {
-          // find the "divQ" src block for the radiation calculation frequency
-          std::string src_name = "";
-          std::string radiation_type = "";
-          rad_src_ps->getAttribute("label", src_name);
-          while (src_name != "divQ" && rad_src_ps->findNextBlock("src")) {
-            rad_src_ps = rad_src_ps->findNextBlock("src");
-            rad_src_ps->getAttribute("label", src_name);
-          }
-          if (rad_src_ps) {
-            rad_src_ps->getWithDefault("calc_frequency", m_rad_calc_frequency, 1);
-          }
-        }
-      }
-    }
-  }
 
   m_sharedState= sharedState;
   ArchesMaterial* mat= scinew ArchesMaterial();
@@ -197,6 +169,10 @@ Arches::problemSetup( const ProblemSpecP     & params,
 
   m_nlSolver->problemSetup( db, m_sharedState, grid );
 
+  // tell the infrastructure how many tasksgraphs are needed.
+  Scheduler* sched = dynamic_cast<Scheduler*>(UintahParallelComponent::getPort("scheduler"));
+  int num_task_graphs=m_nlSolver->taskGraphsRequested();
+  sched->setNumTaskGraphs(num_task_graphs);
 
   //__________________________________
   // On the Fly Analysis. The belongs at bottom
@@ -361,8 +337,7 @@ int Arches::computeTaskGraphIndex()
 {
   // setup the task graph for execution on the next timestep
   int time_step = m_sharedState->getCurrentTopLevelTimeStep();
-  int task_graph_index = ((time_step % m_rad_calc_frequency == 0)  || (time_step == 1) ? 1 : 0);
-  return task_graph_index;
+  return m_nlSolver->getTaskGraphIndex( time_step );
 }
 
 //--------------------------------------------------------------------------------------------------

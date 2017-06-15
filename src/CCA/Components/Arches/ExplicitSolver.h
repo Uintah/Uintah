@@ -402,6 +402,18 @@ public:
                                 SchedulerP& sched,
                                 const bool doing_restart );
 
+  int getTaskGraphIndex(const int time_step ) {
+    if (d_num_taskgraphs==1){  
+      return 0;
+    }else{
+      return ((time_step % d_rad_calc_frequency == 0));
+    }
+  }
+
+  int taskGraphsRequested() {
+  return d_num_taskgraphs;
+  }
+
   void registerModels( ProblemSpecP& db );
   void registerTransportEqns( ProblemSpecP& db );
   void registerPropertyModels( ProblemSpecP& db );
@@ -503,6 +515,8 @@ public:
   const VarLabel* d_rho_label;
   const VarLabel* d_celltype_label;
   int d_archesLevelIndex;
+  int d_rad_calc_frequency{1};
+  int d_num_taskgraphs{1};
 
   std::map<int,WBCHelper*> m_bcHelper;
 

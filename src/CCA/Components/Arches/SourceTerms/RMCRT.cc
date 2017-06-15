@@ -373,6 +373,7 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
   if (_whichAlgo == dataOnion) {
 
     const LevelP& fineLevel = grid->getLevel(_archesLevelIndex);
+
     // Task::WhichDW temp_dw = Task::NewDW;         -- Todd swqp this after merge
     Task::WhichDW temp_dw  = Task::OldDW;
     Task::WhichDW abskg_dw = Task::NewDW;
@@ -434,6 +435,7 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
     // carry forward if it's time
     for (int l = 0; l < maxLevels; l++) {
       const LevelP& level = grid->getLevel(l);
+
       _RMCRT->sched_CarryForward_FineLevelLabels ( level, sched );
       
       // coarse levels
@@ -550,8 +552,16 @@ RMCRT_Radiation::sched_initialize( const LevelP& level,
     if( L_ID == _archesLevelIndex ){
       tsk->computes(_src_label);
       tsk->computes(VarLabel::find("radiationVolq"));
+      tsk->computes(VarLabel::find("RMCRTboundFlux"));
+      tsk->computes(_RMCRT->d_sigmaT4Label);
     } else {
       tsk->computes( _absktLabel );
+      if (_whichAlgo == coarseLevel) {
+        tsk->computes(_src_label);
+        tsk->computes(VarLabel::find("RMCRTboundFlux"));
+        tsk->computes(VarLabel::find("radiationVolq"));
+        tsk->computes(_RMCRT->d_sigmaT4Label);
+      }
     }
     sched->addTask( tsk, myLevel->eachPatch(), _sharedState->allArchesMaterials() );
   }
@@ -596,11 +606,43 @@ RMCRT_Radiation::initialize( const ProcessorGroup*,
       CCVariable<double> radVolq;
       new_dw->allocateAndPut(radVolq, VarLabel::find("radiationVolq"), _matl, patch);
       radVolq.initialize(0.0);  // needed for coal
+      
+      CCVariable<double> sigmaT4;
+      new_dw->allocateAndPut(sigmaT4, _RMCRT->d_sigmaT4Label, _matl, patch);
+      sigmaT4.initialize(0.0);  
+
+      CCVariable<Stencil7> RMCRTboundFlux ;
+      new_dw->allocateAndPut(RMCRTboundFlux, VarLabel::find("RMCRTboundFlux"),_matl,patch);
+      Uintah::BlockRange range(patch->getExtraCellLowIndex(),patch->getExtraCellHighIndex());
+      Uintah::parallel_for( range,[&](int i, int j, int k){ 
+                RMCRTboundFlux(i,j,k).initialize(0.0);
+              });
+
     }
     else {
       CCVariable<double> abskg;
       new_dw->allocateAndPut( abskg, _absktLabel, _matl, patch );
       abskg.initialize(0.0);
+      if (_whichAlgo == coarseLevel){
+        CCVariable<double> src;
+        new_dw->allocateAndPut(src, _src_label, _matl, patch);
+        src.initialize(0.0);
+
+        CCVariable<double> radVolq;
+        new_dw->allocateAndPut(radVolq, VarLabel::find("radiationVolq"), _matl, patch);
+        radVolq.initialize(0.0);  // needed for coal
+
+        CCVariable<double> sigmaT4;
+        new_dw->allocateAndPut(sigmaT4, _RMCRT->d_sigmaT4Label, _matl, patch);
+        sigmaT4.initialize(0.0);  
+
+        CCVariable<Stencil7> RMCRTboundFlux ;
+        new_dw->allocateAndPut(RMCRTboundFlux, VarLabel::find("RMCRTboundFlux"),_matl,patch);
+        Uintah::BlockRange range(patch->getExtraCellLowIndex(),patch->getExtraCellHighIndex());
+        Uintah::parallel_for( range,[&](int i, int j, int k){ 
+                  RMCRTboundFlux(i,j,k).initialize(0.0);
+                });
+      }
     }
   }
 }

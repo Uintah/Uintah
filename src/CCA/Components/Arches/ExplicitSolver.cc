@@ -251,6 +251,28 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
                               GridP& grid )
 {
 
+
+  // check to see what radiation calc frequency is (default is 1)
+  ProblemSpecP transport_ps = params->findBlock("TransportEqns");
+  if (transport_ps) {
+    ProblemSpecP sources_ps = transport_ps->findBlock("Sources");
+    if (sources_ps) {
+      ProblemSpecP rad_src_ps = sources_ps->findBlock("src");
+      // find the "divQ" src block for the radiation calculation frequency
+      while ( rad_src_ps !=nullptr) {
+        std::string src_name = "";
+        rad_src_ps->getAttribute("label", src_name);
+        if (src_name == "divQ" ){
+          rad_src_ps->getWithDefault("calc_frequency", d_rad_calc_frequency, 1);
+          d_num_taskgraphs=2;
+          break;
+        }
+        rad_src_ps = rad_src_ps->findNextBlock("src");
+      }
+    }
+  }
+
+
   ProblemSpecP db_es = params->findBlock("ExplicitSolver");
   ProblemSpecP db = params;
 
