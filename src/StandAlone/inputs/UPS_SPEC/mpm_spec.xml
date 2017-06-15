@@ -4,7 +4,6 @@
   <Uintah_specification> 
     <MPM                                  spec="OPTIONAL NO_DATA" >
       <artificial_damping_coeff           spec="OPTIONAL DOUBLE 'positive'"/>
-      <PICalpha                           spec="OPTIONAL DOUBLE 'positive'"/>
       <artificial_viscosity               spec="OPTIONAL BOOLEAN" />
       <artificial_viscosity_heating       spec="OPTIONAL BOOLEAN" />
       <artificial_viscosity_coeff1        spec="OPTIONAL DOUBLE" />
@@ -16,17 +15,15 @@
       <CanAddMPMMaterial                  spec="OPTIONAL BOOLEAN" />
       <create_new_particles               spec="OPTIONAL BOOLEAN" />  <!-- default is false -->
       <do_contact_friction_heating        spec="OPTIONAL BOOLEAN" />
+      <computeColinearNormals             spec="OPTIONAL BOOLEAN" />
       <do_grid_reset                      spec="OPTIONAL BOOLEAN" />
       <UseGradientEnhancedVelocityProjection spec="OPTIONAL BOOLEAN" />
       <DoExplicitHeatConduction           spec="OPTIONAL BOOLEAN" />
       <DeleteGeometryObjects              spec="OPTIONAL BOOLEAN" />
-
       <DoPressureStabilization            spec="OPTIONAL BOOLEAN" />
       <DoDefGradAveraging                 spec="OPTIONAL BOOLEAN" /> 
       <DoThermalExpansion                 spec="OPTIONAL BOOLEAN" />  <!-- FIXME: default is? -->
       <computeNodalHeatFlux               spec="OPTIONAL BOOLEAN" />
-      <erosion                            spec="OPTIONAL NO_DATA"
-                                            attribute1="algorithm REQUIRED STRING 'none, AllowNoTension, ZeroStress,  AllowNoShear, BrittleDamage'" />
       <delete_rogue_particles               spec="OPTIONAL BOOLEAN" />
       <ForceBC_force_increment_factor     spec="OPTIONAL DOUBLE" />  <!-- default is 0. -->
       <manual_new_material                spec="OPTIONAL BOOLEAN" />  <!-- default is false -->
@@ -80,6 +77,7 @@
       <auto_cycle_use_minmax              spec="OPTIONAL BOOLEAN" />
       <auto_cycle_max                     spec="OPTIONAL DOUBLE" />
       <auto_cycle_min                     spec="OPTIONAL DOUBLE" />
+      <with_gauss_solver                  spec="OPTIONAL BOOLEAN" />
     </MPM>
     <PhysicalBC                   spec="OPTIONAL NO_DATA" >
       <MPM                        spec="REQUIRED NO_DATA" >
@@ -160,11 +158,52 @@
         <master_material                 spec="OPTIONAL INTEGER" />
         <normal_only                     spec="OPTIONAL BOOLEAN" />
       </contact>
+      
       <material                          spec="MULTIPLE NO_DATA"
                                            attribute1="name OPTIONAL STRING" >
         <density                         spec="REQUIRED DOUBLE" />
 
         <include href="constitutive_models.xml" />
+        <!--__________________________________-->
+        <!-- Damage models -->
+        <damage_model                  spec="OPTIONAL NO_DATA"
+                                         attribute1="type REQUIRED STRING 'Brittle,Threshold, hancock_mackenzie, johnson_cook, none'" >
+
+               <!-- Threshold     -->      
+          <failure_mean         spec="REQUIRED DOUBLE 'positive'"     need_applies_to="type Threshold"/>
+          <failure_std          spec="OPTIONAL DOUBLE 'positive'"     need_applies_to="type Threshold"/>
+          <failure_distrib      spec="REQUIRED STRING 'constant, weibull, gauss'" 
+                                                                      need_applies_to="type Threshold"/>
+          <failure_criteria     spec="REQUIRED STRING 'MaximumPrincipalStress MaximumPrincipalStrain MohrColoumb'" 
+                                                                      need_applies_to="type Threshold"/> 
+          <friction_angle       spec="OPTIONAL DOUBLE"                need_applies_to="type Threshold"/> 
+          <tensile_cutoff_fraction_of_cohesion spec="OPTIONAL DOUBLE '0,1e999'"         
+                                                                      need_applies_to="type Threshold"/> 
+
+               <!-- Brittle       -->
+          <brittle_damage_initial_threshold  spec="OPTIONAL DOUBLE"     need_applies_to="type Brittle"/>
+          <brittle_damage_fracture_energy    spec="OPTIONAL DOUBLE"     need_applies_to="type Brittle"/>
+          <brittle_damage_constant_D         spec="OPTIONAL DOUBLE"     need_applies_to="type Brittle"/>
+          <brittle_damage_max_damage_increment  spec="OPTIONAL DOUBLE"  need_applies_to="type Brittle"/>
+          <brittle_damage_allowRecovery      spec="OPTIONAL BOOLEAN"    need_applies_to="type Brittle"/>
+          <brittle_damage_recoveryCoeff      spec="OPTIONAL DOUBLE"     need_applies_to="type Brittle"/>
+          <brittle_damage_printDamage        spec="OPTIONAL BOOLEAN"    need_applies_to="type Brittle"/>
+
+          <D1                          spec="OPTIONAL DOUBLE"           need_applies_to="type johnson_cook"/>
+          <D2                          spec="OPTIONAL DOUBLE"           need_applies_to="type johnson_cook"/>
+          <D3                          spec="OPTIONAL DOUBLE"           need_applies_to="type johnson_cook"/>
+          <D4                          spec="OPTIONAL DOUBLE"           need_applies_to="type johnson_cook"/>
+          <D5                          spec="OPTIONAL DOUBLE"           need_applies_to="type johnson_cook"/>
+          <critical_scalar_damage        spec="OPTIONAL DOUBLE"         need_applies_to="type johnson_cook hancock_mackenzie"/>
+          <initial_mean_scalar_damage    spec="OPTIONAL DOUBLE"         need_applies_to="type johnson_cook hancock_mackenzie"/>
+          <initial_std_scalar_damage     spec="OPTIONAL DOUBLE"         need_applies_to="type johnson_cook hancock_mackenzie"/>
+          <initial_scalar_damage_distrib spec="OPTIONAL STRING 'constant, gauss'"
+                                                                        need_applies_to="type johnson_cook hancock_mackenzie"/>
+        </damage_model>
+
+
+        <erosion                         spec="OPTIONAL NO_DATA"
+                                            attribute1="algorithm REQUIRED STRING 'none, AllowNoTension, ZeroStress,  AllowNoShear'" />
 
         <specific_heat                   spec="REQUIRED DOUBLE 'positive'" /> 
         <thermal_conductivity            spec="REQUIRED DOUBLE 'positive'" />
