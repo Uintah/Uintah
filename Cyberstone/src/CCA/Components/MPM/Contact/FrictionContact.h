@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2017 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -84,7 +84,6 @@ WARNING
          // Nodal volume fraction that must occur before contact is applied
          double d_vol_const;
          double d_sepFac;
-         bool d_compColinearNorms;
          int NGP;
          int NGN;
 

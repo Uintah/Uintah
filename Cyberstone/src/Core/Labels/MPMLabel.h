@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2017 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -130,6 +130,20 @@ namespace Uintah {
       const VarLabel* pAvgConcLabel;
       const VarLabel* pESPotential;
       const VarLabel* pESGradPotential;
+      const VarLabel* pPosChargeLabel;
+      const VarLabel* pPosChargeLabel_preReloc;
+      const VarLabel* pNegChargeLabel;
+      const VarLabel* pNegChargeLabel_preReloc;
+      const VarLabel* pPermittivityLabel;
+      const VarLabel* pPermittivityLabel_preReloc;
+      const VarLabel* pPosChargeGradLabel;
+      const VarLabel* pPosChargeGradLabel_preReloc;
+      const VarLabel* pNegChargeGradLabel;
+      const VarLabel* pNegChargeGradLabel_preReloc;
+      const VarLabel* pPosChargeFluxLabel;
+      const VarLabel* pPosChargeFluxLabel_preReloc;
+      const VarLabel* pNegChargeFluxLabel;
+      const VarLabel* pNegChargeFluxLabel_preReloc;
       
       const VarLabel* gLambdaDotLabel;
       const VarLabel* gColorLabel;
@@ -177,6 +191,15 @@ namespace Uintah {
       const VarLabel* massBurnFractionLabel; //for burn modeling
       const VarLabel* frictionalWorkLabel;
       const VarLabel* gNumNearParticlesLabel;
+
+      const VarLabel* gPosChargeLabel;
+      const VarLabel* gPosChargeStarLabel;
+      const VarLabel* gPosChargeNoBCLabel;
+      const VarLabel* gNegChargeLabel;
+      const VarLabel* gNegChargeStarLabel;
+      const VarLabel* gNegChargeNoBCLabel;
+      const VarLabel* gPosChargeRateLabel;
+      const VarLabel* gNegChargeRateLabel;
       
       const VarLabel* AccArchesNCLabel; //for interaction with Arches, Fluid Mechanics
       const VarLabel* heaTranSolid_NCLabel; //for interaction with Arches, Heat Transfer

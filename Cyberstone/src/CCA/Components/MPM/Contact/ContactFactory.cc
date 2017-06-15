@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2017 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -40,13 +40,12 @@ using namespace Uintah;
 
 Contact* ContactFactory::create(const ProcessorGroup* myworld,
                                 const ProblemSpecP& ps, SimulationStateP &ss,
-                                MPMLabel* lb, MPMFlags* flag)
+                                MPMLabel* lb, MPMFlags* flag, bool &needNormals)
 {
 
    ProblemSpecP mpm_ps = 
      ps->findBlockWithOutAttribute("MaterialProperties")->findBlock("MPM");
-   
-   
+
    if(!mpm_ps){
     string warn = "ERROR: Missing either <MaterialProperties> or <MPM> block from input file";
     throw ProblemSetupException(warn, __FILE__, __LINE__);
@@ -54,43 +53,45 @@ Contact* ContactFactory::create(const ProcessorGroup* myworld,
    
    CompositeContact * contact_list = scinew CompositeContact(myworld, lb, flag);
    
-   for (ProblemSpecP child = mpm_ps->findBlock("contact"); child != 0;
-        child = child->findNextBlock("contact")) {
+   needNormals=false;
+
+   for( ProblemSpecP child = mpm_ps->findBlock( "contact" ); child != nullptr; child = child->findNextBlock( "contact" ) ) {
      
      std::string con_type;
      child->getWithDefault("type",con_type, "null");
      
-      if (con_type == "null")
-        contact_list->add(scinew NullContact(myworld,ss,lb,flag));
-      
-      else if (con_type == "single_velocity")
-        contact_list->add(scinew SingleVelContact(myworld,child,ss,lb,flag));
-      
-      else if (con_type == "nodal_svf")
-        contact_list->add(scinew NodalSVFContact(myworld,child,ss,lb,flag));
-      
-      else if (con_type == "friction")
-        contact_list->add(scinew FrictionContact(myworld,child,ss,lb,flag));
-      
-      else if (con_type == "approach")
-        contact_list->add(scinew ApproachContact(myworld,child,ss,lb,flag));
-      
-      else if (con_type == "specified_velocity" || con_type == "specified"
-               || con_type == "rigid"  )
-        contact_list->add(scinew SpecifiedBodyContact(myworld,child,ss,lb,
-                                                      flag));
-      
-      else {
-        cerr << "Unknown Contact Type R (" << con_type << ")" << std::endl;;
-        throw ProblemSetupException(" E R R O R----->MPM:Unknown Contact type", __FILE__, __LINE__);
-      }
+     if (con_type == "null") {
+       contact_list->add(scinew NullContact(myworld,ss,lb,flag));
+     }
+     else if (con_type == "single_velocity") {
+       contact_list->add(scinew SingleVelContact(myworld,child,ss,lb,flag));
+     }
+     else if (con_type == "nodal_svf") {
+       contact_list->add(scinew NodalSVFContact(myworld,child,ss,lb,flag));
+     }
+     else if (con_type == "friction") {
+       contact_list->add(scinew FrictionContact(myworld,child,ss,lb,flag));
+       needNormals=true;
+     }
+     else if (con_type == "approach") {
+       contact_list->add(scinew ApproachContact(myworld,child,ss,lb,flag));
+       needNormals=true;
+     }
+     else if (con_type == "specified_velocity" || con_type == "specified" || con_type == "rigid"  ) {
+       contact_list->add( scinew SpecifiedBodyContact( myworld, child, ss, lb, flag ) );
+       needNormals=true;
+     }
+     else {
+       cerr << "Unknown Contact Type R (" << con_type << ")" << std::endl;;
+       throw ProblemSetupException(" E R R O R----->MPM:Unknown Contact type", __FILE__, __LINE__);
+     }
    }
-   
+
    // 
-   if(contact_list->size()==0) {
-     proc0cout << "no contact - using null" << endl;
+   if( contact_list->size() == 0 ) {
+     proc0cout << "no contact - using null\n";
      contact_list->add(scinew NullContact(myworld,ss,lb,flag));
    }
-   
+
    return contact_list;
 }
