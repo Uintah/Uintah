@@ -1025,6 +1025,9 @@
         <initial_dt                     spec="OPTIONAL DOUBLE 'positive'"/>  <!-- Sets the initial timestep of the simulation.  Note that this value will
                                                                                   be superceded if the CFL condition determines a smaller timestep as determined
                                                                                   from the BC's and initial condition.  -->
+
+        <solver                         spec="OPTIONAL STRING 'ssprk, sandbox'"/> <!-- solution scheme during timestepping. Default = ssprk -->
+
       </KokkosSolver>
 
       <ExplicitSolver                   spec="OPTIONAL NO_DATA" >

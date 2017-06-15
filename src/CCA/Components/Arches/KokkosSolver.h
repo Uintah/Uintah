@@ -29,6 +29,7 @@
 
 #include <CCA/Components/Arches/NonlinearSolver.h>
 #include <CCA/Ports/SolverInterface.h>
+#include <Core/Exceptions/InvalidValue.h>
 
 namespace Uintah{
 
@@ -82,6 +83,12 @@ namespace Uintah{
   int nonlinearSolve( const LevelP& level,
                       SchedulerP& sched );
 
+  /** @brief Solve the system with an SSP-RK method, Gottlieb et al, 2001, SIAM Review **/
+  void SSPRKSolve( const LevelP& level, SchedulerP& sched );
+
+  /** @brief A Sandbox solver **/
+  void SandBox( const LevelP& level, SchedulerP& sched );
+
   /** @brief Schedule compute of a stable timestep **/
   void computeTimestep(const LevelP& level, SchedulerP& sched);
 
@@ -107,6 +114,21 @@ namespace Uintah{
 
   private:
 
+    /** @brief Determines/schedules the work performed for the timestep **/
+    enum NONLINEARSOLVER {SSPRK, SANDBOX};
+
+    /** @brief Map a string value to the enum for the solver type **/
+    void setSolver( std::string solver_string ){
+      if ( solver_string == "ssprk" ){
+        m_nonlinear_solver =  SSPRK;
+      } else if ( solver_string == "sandbox" ){
+        m_nonlinear_solver = SANDBOX;
+      } else {
+        throw InvalidValue("Error: For the KokkosSolver, the solver type is not recognized.",
+        __FILE__, __LINE__);
+      }
+    }
+
     void setupBCs( const LevelP& level, SchedulerP& sched, const MaterialSet* matls );
 
     SimulationStateP& m_sharedState;
@@ -115,7 +137,9 @@ namespace Uintah{
 
     std::map<int,WBCHelper*> m_bcHelper;
 
-    int _rk_order;
+    int m_rk_order;
+
+    NONLINEARSOLVER m_nonlinear_solver;
 
     // Store these labels to compute a stable dt
     const VarLabel* m_uLabel;
@@ -127,7 +151,7 @@ namespace Uintah{
     double m_dt_init;
 
     SolverInterface* m_hypreSolver;
-    TableLookup* m_table_lookup; 
+    TableLookup* m_table_lookup;
 
 };
 }

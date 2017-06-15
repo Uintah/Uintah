@@ -101,8 +101,8 @@ KokkosSolver::problemSetup( const ProblemSpecP& input_db,
   ProblemSpecP db_ks = db->findBlock("KokkosSolver");
   ProblemSpecP db_root = db->getRootNode();
 
-  db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("TimeIntegrator")->getAttribute("order", _rk_order);
-  proc0cout << " Time integrator: RK of order " << _rk_order << "\n \n";
+  db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("TimeIntegrator")->getAttribute("order", m_rk_order);
+  proc0cout << " Time integrator: RK of order " << m_rk_order << "\n \n";
 
   commonProblemSetup( db_ks );
 
@@ -157,6 +157,10 @@ KokkosSolver::problemSetup( const ProblemSpecP& input_db,
   m_table_lookup = scinew TableLookup( m_sharedState );
   m_table_lookup->problemSetup( db );
   m_table_lookup->addLookupSpecies();
+
+  std::string solver;
+  db_ks->getWithDefault("solver", solver, "ssprk");
+  setSolver( solver );
 
   proc0cout << std::endl;
 
@@ -364,55 +368,95 @@ KokkosSolver::initialize( const LevelP& level, SchedulerP& sched, const bool doi
 //--------------------------------------------------------------------------------------------------
 int
 KokkosSolver::nonlinearSolve( const LevelP& level,
-                                     SchedulerP& sched )
+                              SchedulerP& sched )
 {
+  const bool pack_tasks = true;
+  //const bool dont_pack_tasks = false;
+
+  const MaterialSet* matls = m_sharedState->allArchesMaterials();
+
+  BFM::iterator i_util_fac = m_task_factory_map.find("utility_factory");
+  BFM::iterator i_transport = m_task_factory_map.find("transport_factory");
+  BFM::iterator i_prop_fac = m_task_factory_map.find("property_models_factory");
+  BFM::iterator i_bc_fac = m_task_factory_map.find("boundary_condition_factory");
+  BFM::iterator i_table_fac = m_task_factory_map.find("table_factory");
+  TaskFactoryBase::TaskMap all_bc_tasks = i_bc_fac->second->retrieve_all_tasks();
+
+  // ----------------- Timestep Initialize ---------------------------------------------------------
+
+  i_util_fac->second->schedule_task( "grid_info", TaskInterface::TIMESTEP_INITIALIZE, level, sched,
+    matls );
+
+  i_util_fac->second->schedule_task( "vol_fraction_calc", TaskInterface::TIMESTEP_INITIALIZE, level,
+    sched, matls );
+
+  i_transport->second->schedule_task_group( "all_tasks", TaskInterface::TIMESTEP_INITIALIZE,
+    pack_tasks, level, sched, matls );
+
+  i_prop_fac->second->schedule_task_group( "all_tasks", TaskInterface::TIMESTEP_INITIALIZE,
+    pack_tasks, level, sched, matls );
+
+  i_bc_fac->second->schedule_task_group( "all_tasks", TaskInterface::TIMESTEP_INITIALIZE,
+    pack_tasks, level, sched, matls );
+
+  m_task_factory_map["table_factory"]->schedule_task_group( "all_tasks",
+    TaskInterface::TIMESTEP_INITIALIZE, pack_tasks, level, sched, matls );
+
+  // --------------- Actual Solve ------------------------------------------------------------------
+
+  if ( m_nonlinear_solver == SANDBOX ){
+
+    SandBox( level, sched );
+
+  } else {
+
+    SSPRKSolve( level, sched );
+
+  }
+
+  return 0;
+
+}
+
+//--------------------------------------------------------------------------------------------------
+void
+KokkosSolver::setupBCs( const LevelP& level, SchedulerP& sched, const MaterialSet* matls ){
+  //boundary condition helper
+  m_bcHelper.insert(std::make_pair(level->getID(), scinew WBCHelper( level, sched, matls, m_arches_spec )));
+
+  //computes the area for each inlet through the use of a reduction variables
+  m_bcHelper[level->getID()]->sched_computeBCAreaHelper( sched, level, matls );
+
+  //copies the reduction area variable information on area to a double in the BndCond spec
+  m_bcHelper[level->getID()]->sched_bindBCAreaHelper( sched, level, matls );
+
+  proc0cout << "\n Setting BCHelper for all Factories: " << std::endl;
+  for ( BFM::iterator i = m_task_factory_map.begin(); i != m_task_factory_map.end(); i++ ) {
+    i->second->set_bcHelper( m_bcHelper[level->getID()]);
+  }
+
+}
+
+//--------------------------------------------------------------------------------------------------
+void
+KokkosSolver::SSPRKSolve( const LevelP& level, SchedulerP& sched ){
 
   const bool pack_tasks = true;
   //const bool dont_pack_tasks = false;
 
   const MaterialSet* matls = m_sharedState->allArchesMaterials();
+
   BFM::iterator i_util_fac = m_task_factory_map.find("utility_factory");
-
-  // carry forward the grid x,y,z
-  //TaskInterface* tsk = i_util_fac->second->retrieve_task("grid_info");
-  //tsk->schedule_timestep_init( level, sched, matls );
-  m_task_factory_map["utility_factory"]->schedule_task( "grid_info", TaskInterface::TIMESTEP_INITIALIZE, level, sched, matls );
-
-  // carry forward volume fraction
-  //tsk = i_util_fac->second->retrieve_task("vol_fraction_calc");
-  //tsk->schedule_timestep_init( level, sched, matls );
-  m_task_factory_map["utility_factory"]->schedule_task( "vol_fraction_calc", TaskInterface::TIMESTEP_INITIALIZE, level, sched, matls );
-
   BFM::iterator i_transport = m_task_factory_map.find("transport_factory");
-  //TaskFactoryBase::TaskMap all_trans_tasks = i_transport->second->retrieve_all_tasks();
-  //for ( TaskFactoryBase::TaskMap::iterator i = all_trans_tasks.begin(); i != all_trans_tasks.end(); i++){
-    //i->second->schedule_timestep_init(level, sched, matls);
-  //}
-  m_task_factory_map["transport_factory"]->schedule_task_group( "all_tasks", TaskInterface::TIMESTEP_INITIALIZE, pack_tasks, level, sched, matls );
-
   BFM::iterator i_prop_fac = m_task_factory_map.find("property_models_factory");
-  //TaskFactoryBase::TaskMap all_prop_tasks = i_prop_fac->second->retrieve_all_tasks();
-  //for ( TaskFactoryBase::TaskMap::iterator i = all_prop_tasks.begin(); i != all_prop_tasks.end(); i++) {
-    //i->second->schedule_timestep_init(level, sched, matls);
-  //}
-  m_task_factory_map["property_models_factory"]->schedule_task_group( "all_tasks", TaskInterface::TIMESTEP_INITIALIZE, pack_tasks, level, sched, matls );
-
   BFM::iterator i_bc_fac = m_task_factory_map.find("boundary_condition_factory");
-  TaskFactoryBase::TaskMap all_bc_tasks = i_bc_fac->second->retrieve_all_tasks();
-  //for ( TaskFactoryBase::TaskMap::iterator i = all_bc_tasks.begin(); i != all_bc_tasks.end(); i++) {
-    //i->second->schedule_timestep_init(level, sched, matls);
-  //}
-  m_task_factory_map["boundary_condition_factory"]->schedule_task_group( "all_tasks", TaskInterface::TIMESTEP_INITIALIZE, pack_tasks, level, sched, matls );
-
   BFM::iterator i_table_fac = m_task_factory_map.find("table_factory");
+  TaskFactoryBase::TaskMap all_bc_tasks = i_bc_fac->second->retrieve_all_tasks();
   TaskFactoryBase::TaskMap all_table_tasks = i_table_fac->second->retrieve_all_tasks();
-  //for ( TaskFactoryBase::TaskMap::iterator i = all_table_tasks.begin(); i != all_table_tasks.end(); i++) {
-    //i->second->schedule_timestep_init(level, sched, matls);
-  //}
-  m_task_factory_map["table_factory"]->schedule_task_group( "all_tasks", TaskInterface::TIMESTEP_INITIALIZE, pack_tasks, level, sched, matls );
 
-  //RK loop
-  for ( int time_substep = 0; time_substep < _rk_order; time_substep++ ){
+  // ----------------- SSP RK LOOP -----------------------------------------------------------------
+
+  for ( int time_substep = 0; time_substep < m_rk_order; time_substep++ ){
 
     //Compute U from rhoU
     if ( i_prop_fac->second->has_task( "u_from_rho_u" )){
@@ -518,26 +562,55 @@ KokkosSolver::nonlinearSolve( const LevelP& level,
     }
   } // RK Integrator
 
-
-  return 0;
-
 }
 
 //--------------------------------------------------------------------------------------------------
 void
-KokkosSolver::setupBCs( const LevelP& level, SchedulerP& sched, const MaterialSet* matls ){
-  //boundary condition helper
-  m_bcHelper.insert(std::make_pair(level->getID(), scinew WBCHelper( level, sched, matls, m_arches_spec )));
+KokkosSolver::SandBox( const LevelP& level, SchedulerP& sched ){
 
-  //computes the area for each inlet through the use of a reduction variables
-  m_bcHelper[level->getID()]->sched_computeBCAreaHelper( sched, level, matls );
+  const bool pack_tasks = true;
+  //const bool dont_pack_tasks = false;
 
-  //copies the reduction area variable information on area to a double in the BndCond spec
-  m_bcHelper[level->getID()]->sched_bindBCAreaHelper( sched, level, matls );
+  const int time_substep = 0;
 
-  proc0cout << "\n Setting BCHelper for all Factories: " << std::endl;
-  for ( BFM::iterator i = m_task_factory_map.begin(); i != m_task_factory_map.end(); i++ ) {
-    i->second->set_bcHelper( m_bcHelper[level->getID()]);
+  const MaterialSet* matls = m_sharedState->allArchesMaterials();
+
+  BFM::iterator i_util_fac = m_task_factory_map.find("utility_factory");
+  BFM::iterator i_transport = m_task_factory_map.find("transport_factory");
+  BFM::iterator i_prop_fac = m_task_factory_map.find("property_models_factory");
+  BFM::iterator i_bc_fac = m_task_factory_map.find("boundary_condition_factory");
+  BFM::iterator i_table_fac = m_task_factory_map.find("table_factory");
+  TaskFactoryBase::TaskMap all_bc_tasks = i_bc_fac->second->retrieve_all_tasks();
+  TaskFactoryBase::TaskMap all_table_tasks = i_table_fac->second->retrieve_all_tasks();
+
+  // ----------------- Time Integration ------------------------------------------------------------
+  //(pre-update properties tasks)
+  SVec prop_preupdate_tasks = i_prop_fac->second->retrieve_task_subset("pre_update_property_models");
+  for (auto i = prop_preupdate_tasks.begin(); i != prop_preupdate_tasks.end(); i++){
+    TaskInterface* tsk = i_prop_fac->second->retrieve_task(*i);
+    tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep);
+  }
+
+  // first compute the psi functions for the limiters:
+  SVec scalar_psi_builders = i_transport->second->retrieve_task_subset("scalar_psi_builders");
+  for ( SVec::iterator i = scalar_psi_builders.begin(); i != scalar_psi_builders.end(); i++){
+    TaskInterface* tsk = i_transport->second->retrieve_task(*i);
+    tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep);
+  }
+
+  // now construct the RHS:
+  SVec scalar_rhs_builders = i_transport->second->retrieve_task_subset("scalar_rhs_builders");
+  for ( SVec::iterator i = scalar_rhs_builders.begin(); i != scalar_rhs_builders.end(); i++){
+    TaskInterface* tsk = i_transport->second->retrieve_task(*i);
+    tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep);
+    tsk->schedule_task(level, sched, matls, TaskInterface::BC_TASK, time_substep);
+  }
+
+  // now update them:
+  SVec scalar_fe_up = i_transport->second->retrieve_task_subset("scalar_fe_update");
+  for ( SVec::iterator i = scalar_fe_up.begin(); i != scalar_fe_up.end(); i++){
+    TaskInterface* tsk = i_transport->second->retrieve_task(*i);
+    tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep);
   }
 
 }
