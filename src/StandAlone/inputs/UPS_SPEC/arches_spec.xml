@@ -1026,7 +1026,7 @@
                                                                                   be superceded if the CFL condition determines a smaller timestep as determined
                                                                                   from the BC's and initial condition.  -->
 
-        <solver                         spec="OPTIONAL STRING 'ssprk, sandbox'"/> <!-- solution scheme during timestepping. Default = ssprk -->
+        <integrator                     spec="OPTIONAL STRING 'ssprk, sandbox'"/> <!-- solution scheme during timestepping. Default = ssprk -->
 
       </KokkosSolver>
 

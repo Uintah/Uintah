@@ -158,9 +158,9 @@ KokkosSolver::problemSetup( const ProblemSpecP& input_db,
   m_table_lookup->problemSetup( db );
   m_table_lookup->addLookupSpecies();
 
-  std::string solver;
-  db_ks->getWithDefault("solver", solver, "ssprk");
-  setSolver( solver );
+  std::string integrator;
+  db_ks->getWithDefault("integrator", integrator, "ssprk");
+  setSolver( integrator );
 
   proc0cout << std::endl;
 
