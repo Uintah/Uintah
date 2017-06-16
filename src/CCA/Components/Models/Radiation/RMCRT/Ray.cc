@@ -296,6 +296,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
     } else if ( type == "RMCRT_coarseLevel" ) {
       isMultilevel = true;
       algorithm    = coarseLevel;
+      d_ROI_algo   = entireDomain;
       alg_ps->require( "orderOfInterpolation", d_orderOfInterpolation );
       alg_ps->get( "coarsenExtraCells" , d_coarsenExtraCells );
     }
@@ -1124,7 +1125,7 @@ Ray::rayTrace( const ProcessorGroup* pg,
   constCCVariable<int>  celltype;
 
   if ( d_ROI_algo == entireDomain ){
-    abskg_dw->getLevel(   abskg   ,       d_abskgLabel ,   d_matl , level );
+    abskg_dw->getLevel(   abskg ,         d_abskgLabel ,   d_matl , level );
     sigmaT4_dw->getLevel( sigmaT4OverPi , d_sigmaT4Label,  d_matl , level );
     celltype_dw->getLevel( celltype ,     d_cellTypeLabel, d_matl , level );
   }
@@ -1202,8 +1203,7 @@ Ray::rayTrace( const ProcessorGroup* pg,
                 << " ( abskg[c]: " << abskg[c] << ", sigmaT4OverPi[c]: " << sigmaT4OverPi[c] << ", celltype[c]: " << celltype[c] << ")\n";
 
             cout << warn.str() << endl;
-            //throw InternalError( warn.str(), __FILE__, __LINE__ );
-
+            throw InternalError( warn.str(), __FILE__, __LINE__ );
           }
         }
       }
