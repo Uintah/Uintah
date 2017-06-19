@@ -3255,7 +3255,6 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
   if (cout_doing.active())
     cout_doing << "Current Time (applyExternalLoads) = " << time << endl;
 
-
   // Calculate the force vector at each particle for each pressure bc
   std::vector<double> forcePerPart;
   std::vector<PressureBC*> pbcP;
@@ -3267,6 +3266,14 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
         PressureBC* pbc =
           dynamic_cast<PressureBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
         pbcP.push_back(pbc);
+
+        if(isProc0_macro){
+          double curLoad = pbc->getLoadCurve()->getLoad(time);
+          string udaDir = dataArchiver->getOutputLocation();
+          string filename=udaDir+"/TimePressure.dat";
+          std::ofstream TP(filename.c_str(),ios::app);
+          TP << time << " " << curLoad << endl;
+        }
 
         // Calculate the force per particle at current time
         forcePerPart.push_back(pbc->forcePerParticle(time));
