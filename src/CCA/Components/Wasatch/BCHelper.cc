@@ -367,8 +367,8 @@ namespace WasatchCore {
     const int ng = get_n_ghost<SVolField>();
     SpatialOps::IntVec bcMinus, bcPlus;
     WasatchCore::get_bc_logicals( patch, bcMinus, bcPlus );
-    SpatialOps::BoundaryCellInfo bcInfo = SpatialOps::BoundaryCellInfo::build<SVolField>(bcPlus);
-    SpatialOps::GhostData gd(ng);
+    const SpatialOps::BoundaryCellInfo bcInfo = SpatialOps::BoundaryCellInfo::build<SVolField>(bcMinus,bcPlus);
+    const SpatialOps::GhostData gd(ng);
     const SpatialOps::MemoryWindow window = WasatchCore::get_memory_window_for_masks<SVolField>( patch );
     
     // pack the interior-cells spatial mask
@@ -384,21 +384,21 @@ namespace WasatchCore {
 #   endif
     
     const SpatialOps::MemoryWindow xwindow = WasatchCore::get_memory_window_for_masks<XVolField>( patch );
-    SpatialOps::BoundaryCellInfo xBCInfo = SpatialOps::BoundaryCellInfo::build<XVolField>(bcPlus);
+    const SpatialOps::BoundaryCellInfo xBCInfo = SpatialOps::BoundaryCellInfo::build<XVolField>(bcMinus,bcPlus);
     myBndIters.xvolExtraCellSpatialMask = new SpatialOps::SpatialMask<XVolField>(xwindow, xBCInfo, gd, neboExtraBndSOIter);
 #   ifdef HAVE_CUDA
     myBndIters.xvolExtraCellSpatialMask->add_consumer(GPU_INDEX);
 #   endif
     
     const SpatialOps::MemoryWindow ywindow = WasatchCore::get_memory_window_for_masks<YVolField>( patch );
-    SpatialOps::BoundaryCellInfo yBCInfo = SpatialOps::BoundaryCellInfo::build<YVolField>(bcPlus);
+    const SpatialOps::BoundaryCellInfo yBCInfo = SpatialOps::BoundaryCellInfo::build<YVolField>(bcMinus,bcPlus);
     myBndIters.yvolExtraCellSpatialMask = new SpatialOps::SpatialMask<YVolField>(ywindow, yBCInfo, gd, neboExtraBndSOIter);
 #   ifdef HAVE_CUDA
     myBndIters.yvolExtraCellSpatialMask->add_consumer(GPU_INDEX);
 #   endif
     
     const SpatialOps::MemoryWindow zwindow = WasatchCore::get_memory_window_for_masks<ZVolField>( patch );
-    SpatialOps::BoundaryCellInfo zBCInfo = SpatialOps::BoundaryCellInfo::build<ZVolField>(bcPlus);
+    const SpatialOps::BoundaryCellInfo zBCInfo = SpatialOps::BoundaryCellInfo::build<ZVolField>(bcMinus,bcPlus);
     myBndIters.zvolExtraCellSpatialMask = new SpatialOps::SpatialMask<ZVolField>(zwindow, zBCInfo, gd, neboExtraBndSOIter);
 #   ifdef HAVE_CUDA
     myBndIters.zvolExtraCellSpatialMask->add_consumer(GPU_INDEX);

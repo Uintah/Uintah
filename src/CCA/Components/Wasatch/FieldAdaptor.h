@@ -352,7 +352,7 @@ namespace WasatchCore{
     
     // In certain cases, when the number of ghosts is different from the number of extra cells,
     // one must change the ghostData to reflect this discrepancy. The general rule is that, at physical boundaries,
-    // the number of extra cells superseeds the number of ghost cells. At processor boundaries, then number
+    // the number of extra cells supersedes the number of ghost cells. At processor boundaries, then number
     // of ghost cells takes over.
     const Uintah::IntVector extraCells = ainfo.patch->getExtraCells(); // get the extra cells associated with this patch
     SpatialOps::GhostData newGData = ghostData; // copy ghost data
@@ -371,7 +371,7 @@ namespace WasatchCore{
       assert( uintahDeviceVar != nullptr );
       fieldValues_ = uintahDeviceVar;
       field = new FieldT( so::MemoryWindow( size, offset, extent ),
-                          so::BoundaryCellInfo::build<FieldT>(bcPlus),
+                          so::BoundaryCellInfo::build<FieldT>(bcMinus,bcPlus),
                           newGData,
                           fieldValues_,
                           so::ExternalStorage,
@@ -380,7 +380,7 @@ namespace WasatchCore{
     else{ // heterogeneous task
       fieldValues_ = const_cast<typename FieldT::value_type*>( uintahVar.getPointer() );
       field = new FieldT( so::MemoryWindow( size, offset, extent ),
-                          so::BoundaryCellInfo::build<FieldT>(bcPlus),
+                          so::BoundaryCellInfo::build<FieldT>(bcMinus,bcPlus),
                           newGData,
                           fieldValues_,
                           so::ExternalStorage,
@@ -479,9 +479,10 @@ namespace WasatchCore{
   {
     namespace so = SpatialOps;
     typedef so::SingleValueField FieldT;
+    const so::IntVec noBC(false,false,false);    // bc doesn't matter for single value fields
     return so::SpatFldPtr<FieldT>(
         new FieldT( so::MemoryWindow( so::IntVec(1,1,1), so::IntVec(0,0,0), so::IntVec(1,1,1) ),
-                    so::BoundaryCellInfo::build<FieldT>(false,false,false),    // bc doesn't matter for single value fields
+                    so::BoundaryCellInfo::build<FieldT>(noBC,noBC),
                     ghostData,
                     &uintahVar.get(),
                     so::ExternalStorage,
@@ -502,9 +503,10 @@ namespace WasatchCore{
   {
     namespace so = SpatialOps;
     typedef so::SingleValueField FieldT;
+    const so::IntVec noBC(false,false,false);    // bc doesn't matter for single value fields
     return so::SpatFldPtr<FieldT>(
         new FieldT( so::MemoryWindow( so::IntVec(1,1,1), so::IntVec(0,0,0), so::IntVec(1,1,1) ),
-                    so::BoundaryCellInfo::build<FieldT>(false,false,false),    // bc doesn't matter for single value fields
+                    so::BoundaryCellInfo::build<FieldT>(noBC,noBC),
                     ghostData,
                     (double*)( uintahVar.getBasePointer() ),  // jcs this is a bit sketchy because of the type casting.  It will only work for reductions on doubles
                     so::ExternalStorage,
