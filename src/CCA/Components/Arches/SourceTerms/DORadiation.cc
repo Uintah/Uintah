@@ -440,31 +440,30 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
   tsk->requires(Task::OldDW, _labels->d_cellTypeLabel, gac, 1 ); 
   tsk->requires(Task::NewDW, _labels->d_cellInfoLabel, gn);
 
-  int Rad_TG=-1;
+  int Rad_TG=1;
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials(),Rad_TG); 
 
 
 ////---------------------carry forward task-------------------------------//
-//
-//  std::string taskNoCom = "DORadiation::TransferRadFieldsFromOldDW";
-//  Task* tsk_noRad = scinew Task(taskNoCom, this, &DORadiation::TransferRadFieldsFromOldDW);
-//
-//    tsk_noRad->requires(Task::OldDW, _src_label,gn,0);
-//    tsk_noRad->computes( _src_label);
-//
-//   // fluxes and intensities
-//    for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); 
-//        iter != _extra_local_labels.end(); iter++){
-//      tsk_noRad->requires( Task::OldDW, *iter, gn, 0 ); 
-//      tsk_noRad->computes( *iter ); 
-//      if (_DO_model->needIntensitiesBool()==false){ // this is always true for scattering
-//        break; // need 1 intensity, for a feature that is never used  =(
-//      }
-//    }
-//
-//    int no_Rad_TG=0;
-//    sched->addTask(tsk_noRad, level->eachPatch(), _shared_state->allArchesMaterials(),no_Rad_TG); 
-//
+
+  if (timeSubStep == 0) { 
+    std::string taskNoCom = "DORadiation::TransferRadFieldsFromOldDW";
+    Task* tsk_noRad = scinew Task(taskNoCom, this, &DORadiation::TransferRadFieldsFromOldDW);
+
+    tsk_noRad->requires(Task::OldDW, _src_label,gn,0);
+    tsk_noRad->computes( _src_label);
+
+    // fluxes and intensities and radvolq
+    for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); 
+        iter != _extra_local_labels.end(); iter++){
+      tsk_noRad->requires( Task::OldDW, *iter, gn, 0 ); 
+      tsk_noRad->computes( *iter ); 
+    }
+
+    int no_Rad_TG=0;
+    sched->addTask(tsk_noRad, level->eachPatch(), _shared_state->allArchesMaterials(),no_Rad_TG); 
+  }
+
 ////----------------------------------------------------------------------//
 
 }
@@ -484,39 +483,14 @@ DORadiation::computeSource( const ProcessorGroup* pc,
 
     int timestep = _labels->d_sharedState->getCurrentTopLevelTimeStep(); 
     bool do_radiation = false; 
-if ( timestep%_radiation_calc_freq == 0 ) { 
     if ( _all_rk ) { 
       do_radiation = true; 
     } else if ( timeSubStep == 0 && !_all_rk ) { 
       do_radiation = true; 
     } 
-}
 
     bool old_DW_isMissingIntensities=0;
     if(_checkForMissingIntensities){  // should only be true for first time step of a restart
-      if (do_radiation==false){
-        if ( timeSubStep == 0 ) { 
-          for(unsigned int ix=0; ix< _IntensityLabels.size() ;ix++){
-            for (int p=0; p < patches->size(); p++){
-              const Patch* patch = patches->get(p);
-              int archIndex = 0;
-              int matlIndex = _labels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();  // have to do it this way because overloaded exists(arg) doesn't seem to work!!
-              if (!old_dw->exists(_IntensityLabels[ix],matlIndex,patch)){
-                proc0cout << "WARNING:  Intensities from previous solve are missing!   Using zeros. \n"; 
-                CCVariable< double> temp;
-                new_dw->allocateAndPut(temp  , _IntensityLabels[ix]  , matlIndex , patch );
-                temp.initialize(0.0);
-                old_DW_isMissingIntensities=true;
-              }
-              else{
-                new_dw->transferFrom(old_dw,_IntensityLabels[ix],  patches, matls);
-                break;
-              }
-            }
-          }
-        }
-      }
-      else{  
         if(_DO_model->needIntensitiesBool()==false ){
           for(unsigned int ix=0; ix< _IntensityLabels.size() ;ix++){
             for (int p=0; p < patches->size(); p++){
@@ -551,17 +525,9 @@ if ( timestep%_radiation_calc_freq == 0 ) {
             }
           }
         }
-      }
-    } else{
-      if (do_radiation==false){
+    }else{
+      if(_DO_model->needIntensitiesBool()==false ){  // we do this for a feature that is never used  (solve using previous direction)
         if ( timeSubStep == 0 ) { 
-          for(unsigned int ix=0; ix< _IntensityLabels.size() ;ix++){
-            new_dw->transferFrom(old_dw,_IntensityLabels[ix],  patches, matls);
-          }
-        }
-      }
-      else{  
-        if(_DO_model->needIntensitiesBool()==false ){
           for(unsigned int ix=0;  ix< _IntensityLabels.size();ix++){ 
             new_dw->transferFrom(old_dw,_IntensityLabels[ix],  patches, matls);
           }
@@ -670,7 +636,6 @@ DORadiation::sched_initialize( const LevelP& level, SchedulerP& sched )
 
   for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); 
        iter != _extra_local_labels.end(); iter++){
-
     tsk->computes(*iter); 
   }
 
