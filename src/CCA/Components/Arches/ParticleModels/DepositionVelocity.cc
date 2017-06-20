@@ -114,22 +114,10 @@ DepositionVelocity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_i
 //
 void
 DepositionVelocity::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
-
-  register_variable( _task_name, ArchesFieldContainer::COMPUTES, variable_registry );
-  register_variable( _task_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW, variable_registry  );
-
 }
 
 void
 DepositionVelocity::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
-
-  CCVariable<double>& deposit_velocity = *(tsk_info->get_uintah_field<CCVariable<double> >(_task_name));
-  constCCVariable<double>& deposit_velocity_old = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(_task_name));
-
-  Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
-  Uintah::parallel_for( range, [&](int i, int j, int k){
-    deposit_velocity(i,j,k) = (1.0 - _relaxation_coe) * deposit_velocity_old(i,j,k);
-  });
 }
 
 //
@@ -141,7 +129,7 @@ void
 DepositionVelocity::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
 
   register_variable( _cellType_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW , variable_registry );
-  register_variable( _task_name, ArchesFieldContainer::MODIFIES, variable_registry );
+  register_variable( _task_name, ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable( _task_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW, variable_registry  );
   register_variable( "d_vol_ave_num", ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable( "d_vol_ave_den", ArchesFieldContainer::COMPUTES, variable_registry );
