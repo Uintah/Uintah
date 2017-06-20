@@ -87,7 +87,7 @@ TotNumDensity::register_timestep_eval( std::vector<ArchesFieldContainer::Variabl
 
   for ( int ienv = 0; ienv < _Nenv; ienv++ ){
     const std::string weight_name  = ParticleTools::append_env( "w", ienv);
-    register_variable( weight_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry );
+    register_variable( weight_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry );
   }
 
 }

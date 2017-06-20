@@ -27,30 +27,30 @@ DepositionVelocity::problemSetup( ProblemSpecP& db ){
     ProblemSpecP wallht_db = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("BoundaryConditions")->findBlock("WallHT");
     wallht_db->getWithDefault("relaxation_coef",_relaxation_coe,1.0);
     bool error_flag = false;
-    std::string ht_model_type; 
-    for ( ProblemSpecP db_wall_model = wallht_db->findBlock( "model" ); db_wall_model != nullptr; db_wall_model = db_wall_model->findNextBlock( "model" ) ){ 
+    std::string ht_model_type;
+    for ( ProblemSpecP db_wall_model = wallht_db->findBlock( "model" ); db_wall_model != nullptr; db_wall_model = db_wall_model->findNextBlock( "model" ) ){
       db_wall_model->getAttribute("type",ht_model_type);
       if (ht_model_type == "region_ht" || ht_model_type == "simple_ht" )
-        error_flag = true; 
+        error_flag = true;
       if (ht_model_type == "coal_region_ht")
-      db_wall_model->getWithDefault( "sb_deposit_porosity",p_void0,0.6); // note here we are using the sb layer to estimate the wall density no the enamel layer. 
+      db_wall_model->getWithDefault( "sb_deposit_porosity",p_void0,0.6); // note here we are using the sb layer to estimate the wall density no the enamel layer.
     }
     if (error_flag)
       throw InvalidValue("Error: DepositionVelocity model requires WallHT model of type coal_region_ht.", __FILE__, __LINE__);
   } else {
     throw InvalidValue("Error: DepositionVelocity model requires WallHT model for relaxation coefficient.", __FILE__, __LINE__);
   }
- 
+
   double rho_ash_bulk;
-  if ( db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")){ 
+  if ( db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")){
     ProblemSpecP db_part_properties =  db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties");
     db_part_properties->getWithDefault( "rho_ash_bulk",rho_ash_bulk,2300.0);
   } else {
     throw InvalidValue("Error: DepositionVelocity model requires ParticleProperties to be specified.", __FILE__, __LINE__);
   }
-  
-  _user_specified_rho = rho_ash_bulk * p_void0; 
-  
+
+  _user_specified_rho = rho_ash_bulk * p_void0;
+
   _d.push_back(IntVector(1,0,0)); // cell center located +x
   _d.push_back(IntVector(-1,0,0)); // cell center located -x
   _d.push_back(IntVector(0,1,0)); // cell center located +y
@@ -93,10 +93,10 @@ DepositionVelocity::register_initialize( std::vector<ArchesFieldContainer::Varia
 void
 DepositionVelocity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  CCVariable<double>& deposit_velocity = *(tsk_info->get_uintah_field<CCVariable<double> >(_task_name));
-  CCVariable<double>& d_vol_ave_num = *(tsk_info->get_uintah_field<CCVariable<double> >("d_vol_ave_num"));
-  CCVariable<double>& d_vol_ave_den = *(tsk_info->get_uintah_field<CCVariable<double> >("d_vol_ave_den"));
-  CCVariable<double>& d_vol_ave = *(tsk_info->get_uintah_field<CCVariable<double> >("d_vol_ave"));
+  CCVariable<double>& deposit_velocity = tsk_info->get_uintah_field_add<CCVariable<double> >(_task_name);
+  CCVariable<double>& d_vol_ave_num = tsk_info->get_uintah_field_add<CCVariable<double> >("d_vol_ave_num");
+  CCVariable<double>& d_vol_ave_den = tsk_info->get_uintah_field_add<CCVariable<double> >("d_vol_ave_den");
+  CCVariable<double>& d_vol_ave = tsk_info->get_uintah_field_add<CCVariable<double> >("d_vol_ave");
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
   Uintah::parallel_for( range, [&](int i, int j, int k){
     deposit_velocity(i,j,k)=0.0;
@@ -107,26 +107,11 @@ DepositionVelocity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_i
 
 }
 
-//
-//------------------------------------------------
-//------------- TIMESTEP INIT --------------------
-//------------------------------------------------
-//
+//--------------------------------------------------------------------------------------------------
 void
-DepositionVelocity::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
-}
-
-void
-DepositionVelocity::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
-}
-
-//
-//------------------------------------------------
-//------------- TIMESTEP WORK --------------------
-//------------------------------------------------
-//
-void
-DepositionVelocity::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
+DepositionVelocity::register_timestep_eval(
+  std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
+  const int time_substep ){
 
   register_variable( _cellType_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW , variable_registry );
   register_variable( _task_name, ArchesFieldContainer::COMPUTES, variable_registry );
@@ -173,7 +158,7 @@ DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   double d_diam_num = 0.0;
   double d_diam_den = 0.0;
   double particle_area = 0.0;
-  
+
   //double vel_i_ave = 0.0;
   IntVector lowPindex = patch->getCellLowIndex();
   IntVector highPindex = patch->getCellHighIndex();
@@ -181,8 +166,7 @@ DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   lowPindex -= IntVector(1,1,1);
   highPindex += IntVector(1,1,1);
 
-  CCVariable<double>* vdeposit_velocity = tsk_info->get_uintah_field<CCVariable<double> >(_task_name);
-  CCVariable<double>& deposit_velocity = *vdeposit_velocity;
+  CCVariable<double>& deposit_velocity = tsk_info->get_uintah_field_add<CCVariable<double> >(_task_name);
   constCCVariable<double>& deposit_velocity_old = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(_task_name));
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
   Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -237,7 +221,7 @@ DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
         }
         if ( total_flux_ind>0 )
         {
-	        particle_area = _pi*dp[c]*dp[c]; 
+	        particle_area = _pi*dp[c]*dp[c];
           total_area_face = 0;
           d_velocity = 0;
           d_diam_num = 0;
@@ -271,7 +255,7 @@ DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
           deposit_velocity[c] += _relaxation_coe * d_velocity; // add the contribution for the deposition
           // overall we are trying to achieve:  v_hat = (1-alpha)*v_hat_old + alpha*v_new. We initialize v_hat to v_hat_old*(1-alpha) in timestep_init (first term).
           // we handle the second term using the summation alpha*v_new = alpha * (v1 + v2 + v3):
-          // v_hat += alpha*v1 + alpha*v2 + alpha*v3 
+          // v_hat += alpha*v1 + alpha*v2 + alpha*v3
         }// if there is a deposition flux
       } // wall or intrusion cell-type
     } // cell loop
