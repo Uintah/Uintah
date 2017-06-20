@@ -58,7 +58,7 @@ namespace Uintah{
 
     void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry );
 
-    void register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep );
+    void register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){}
 
     void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){};
 
@@ -68,7 +68,7 @@ namespace Uintah{
 
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
   private:
 
@@ -132,7 +132,7 @@ namespace Uintah{
     for ( int ei = 0; ei < _N; ei++ ){
 
       const std::string name = get_name(ei, _base_var_name);
-      T& model_value = *(tsk_info->get_uintah_field<T>(name));
+      T& model_value = tsk_info->get_uintah_field_add<T>(name);
 
       Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
       Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -159,7 +159,7 @@ namespace Uintah{
     for ( int ei = 0; ei < _N; ei++ ){
 
       const std::string name = get_name(ei, _base_var_name);
-      T& model_value = *(tsk_info->get_uintah_field<T>(name));
+      T& model_value = tsk_info->get_uintah_field_add<T>(name);
 
       Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
       Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -167,15 +167,6 @@ namespace Uintah{
       });
     }
   }
-
-  //======TIME STEP EVALUATION:
-  template <typename T>
-  void Constant<T>::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
-
-  }
-
-  template <typename T>
-  void Constant<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
 }
 #endif
