@@ -1912,7 +1912,7 @@
                                                                           CharOxidationSmith,
                                                                           CharOxidationSmith2016,
                                                                           Deposition,
-                                                                          SimpleBirth'">
+                                                                          BirthDeath'">
 
             <ICVars                     spec="OPTIONAL NO_DATA"> <!-- block containing list of internal coordinates the DQMOM model depends on -->
               <variable                 spec="MULTIPLE NO_DATA"
@@ -1940,12 +1940,12 @@
                                         need_applies_to="type Drag,Thermophoresis"/>
             <!-- Simple Birth -->
             <small_weight               spec="REQUIRED DOUBLE"
-                                        need_applies_to="type SimpleBirth"/> <!-- The smallest weight value allowed -->
+                                        need_applies_to="type BirthDeath"/> <!-- The smallest weight value allowed -->
             <is_weight                  spec="OPTIONAL NO_DATA"
-                                        need_applies_to="type SimpleBirth,Deposition"/> <!-- Model birth term for the weight -->
+                                        need_applies_to="type BirthDeath,Deposition"/> <!-- Model birth term for the weight -->
             <abscissa                   spec="OPTIONAL NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        need_applies_to="type SimpleBirth,Deposition"/> <!-- If not a weight, then the root of the abscissa name -->
+                                        need_applies_to="type BirthDeath,Deposition"/> <!-- If not a weight, then the root of the abscissa name -->
 
 
           </model>

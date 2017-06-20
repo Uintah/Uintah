@@ -274,7 +274,7 @@ PropertyModelFactoryV2::add_task( ProblemSpecP& db )
 
         TaskInterface::TaskBuilder* tsk = scinew WallHFVariable::Builder( name, 0, _shared_state );
         register_task( name, tsk );
-        _pre_update_property_tasks.push_back( name );
+        _finalize_property_tasks.push_back( name );
 
       } else if ( type == "variable_stats" ){
 
