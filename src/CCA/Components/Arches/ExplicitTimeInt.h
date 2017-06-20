@@ -258,19 +258,23 @@ private:
 
       IntVector c = *iter;
 
-      if ( do_low_clip && phi[c] < ( low_clip + clip_tol ) ){
+      // Turning off clipping here. Clipping should be occuring upstream
+      // based on other clipping mechanisms.
+      // if ( do_low_clip && phi[c] < ( low_clip + clip_tol ) ){
+      //
+      //   phi[c] = low_clip * vol_fraction[c];
+      //
+      // } else if ( do_high_clip && phi[c] > ( high_clip + clip_tol ) ){
+      //
+      //   phi[c] = high_clip * vol_fraction[c];
+      //
+      // } else {
+      //
+      //   phi[c] = ssp_alpha[step] * old_phi[c] + ssp_beta[step] * phi[c];
+      //
+      // }
 
-        phi[c] = low_clip * vol_fraction[c];
-
-      } else if ( do_high_clip && phi[c] > ( high_clip + clip_tol ) ){
-
-        phi[c] = high_clip * vol_fraction[c];
-
-      } else {
-
-        phi[c] = ssp_alpha[step] * old_phi[c] + ssp_beta[step] * phi[c];
-
-      }
+      phi[c] = ssp_alpha[step] * old_phi[c] + ssp_beta[step] * phi[c];
 
     }
   }
@@ -298,23 +302,27 @@ private:
 
       IntVector c = *iter;
 
-      if (weight[c] == 0) {
-
-        phi[c] = 0.0;
-
-      } else if ( do_low_clip && phi[c]/weight[c] < ( low_clip + clip_tol ) ){
-
-        phi[c] = weight[c] * low_clip * vol_fraction[c];
-
-      } else if ( do_high_clip && phi[c]/weight[c] > ( high_clip - clip_tol ) ){
-
-        phi[c] = high_clip*weight[c] * vol_fraction[c];
-
-      } else {
-
-        phi[c] = ssp_alpha[step] * old_phi[c] + ssp_beta[step] * phi[c];
-
-      }
+      // Turning off clipping here. Clipping should be occuring upstream
+      // based on other clipping mechanisms.
+      // if (weight[c] == 0) {
+      //
+      //   phi[c] = 0.0;
+      //
+      // } else if ( do_low_clip && phi[c]/weight[c] < ( low_clip + clip_tol ) ){
+      //
+      //   phi[c] = weight[c] * low_clip * vol_fraction[c];
+      //
+      // } else if ( do_high_clip && phi[c]/weight[c] > ( high_clip - clip_tol ) ){
+      //
+      //   phi[c] = high_clip*weight[c] * vol_fraction[c];
+      //
+      // //} else {
+      //
+      //   phi[c] = ssp_alpha[step] * old_phi[c] + ssp_beta[step] * phi[c];
+      //
+      //}
+      
+      phi[c] = ssp_alpha[step] * old_phi[c] + ssp_beta[step] * phi[c];
 
     }
   }
