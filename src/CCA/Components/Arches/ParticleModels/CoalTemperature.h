@@ -86,6 +86,7 @@ private:
     double _RdMW;
     double _MW_avg;
     double _ash_mf;
+    std::vector<double> _time_factor;
 
     std::vector<double> _init_ash;
     std::vector<double> _init_rawcoal;

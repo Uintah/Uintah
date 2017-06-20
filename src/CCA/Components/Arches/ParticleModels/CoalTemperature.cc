@@ -11,6 +11,25 @@ CoalTemperature::problemSetup( ProblemSpecP& db ){
   const ProblemSpecP db_root = db->getRootNode();
   db->getWithDefault("const_size",_const_size,true);
 
+  // Make this model aware of the RK stepping so that dT/dt is computed correctly at the end of
+  // each stage. Ideally, this would be done in some central location, which is in the works.
+  std::string order;
+  db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("TimeIntegrator")->findBlock("ExplicitIntegrator")->getAttribute("order", order);
+
+  if ( order == "first" ){
+    _time_factor.resize(1);
+    _time_factor[0] = 1.;
+  } else if ( order == "second" ){
+    _time_factor.resize(2);
+    _time_factor[0] = 1.;
+    _time_factor[1] = 1.;
+  } else {
+    _time_factor.resize(3);
+    _time_factor[0] = 1.;
+    _time_factor[1] = 0.5;
+    _time_factor[2] = 1.;
+  }
+
   if ( db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties") ){
 
     ProblemSpecP db_coal_props = db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties");
@@ -195,22 +214,22 @@ CoalTemperature::register_timestep_eval( std::vector<ArchesFieldContainer::Varia
     const std::string enthalpy_name = get_env_name( i, _enthalpy_base_name );
     const std::string rc_name   = get_env_name( i, _rawcoal_base_name );
 
-    register_variable( char_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry );
     register_variable( temperature_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
-    register_variable( enthalpy_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry );
-    register_variable( rc_name  , ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry );
-    register_variable( temperature_name , ArchesFieldContainer::MODIFIES, variable_registry );
+    register_variable( char_name, ArchesFieldContainer        ::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry );
+    register_variable( enthalpy_name, ArchesFieldContainer    ::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry );
+    register_variable( rc_name , ArchesFieldContainer         ::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry );
+    register_variable( temperature_name, ArchesFieldContainer::MODIFIES, variable_registry );
     register_variable( dTdt_name , ArchesFieldContainer::COMPUTES, variable_registry );
 
     if ( !_const_size ) {
       const std::string diameter_name   = get_env_name( i, _diameter_base_name );
-      register_variable( diameter_name, ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::LATEST , variable_registry );
+      register_variable( diameter_name, ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::NEWDW, variable_registry );
     }
 
   }
   const std::string gas_temperature_name   = _gas_temperature_name;
-  register_variable( gas_temperature_name   , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::LATEST , variable_registry );
-  register_variable( _vol_fraction_name, ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::LATEST, variable_registry );
+  register_variable( gas_temperature_name , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::LATEST , variable_registry );
+  register_variable( _vol_fraction_name, ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::OLDDW, variable_registry );
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -221,6 +240,8 @@ CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   constCCVariable<double>& gas_temperature = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(gas_temperature_name));
   constCCVariable<double>& vol_frac        = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(_vol_fraction_name));
 
+  const double dt = tsk_info->get_dt() * _time_factor[tsk_info->get_time_substep()];
+
   for ( int ix = 0; ix < _Nenv; ix++ ){
 
     const std::string temperature_name = get_env_name( ix, _task_name );
@@ -228,8 +249,6 @@ CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     const std::string char_name        = get_env_name( ix, _char_base_name );
     const std::string enthalpy_name    = get_env_name( ix, _enthalpy_base_name );
     const std::string rc_name          = get_env_name( ix, _rawcoal_base_name );
-    const double dt                    = tsk_info->get_dt();
-
 
     CCVariable<double>& temperature         = *(tsk_info->get_uintah_field<CCVariable<double> >(temperature_name));
     CCVariable<double>& dTdt                = *(tsk_info->get_uintah_field<CCVariable<double> >(dTdt_name));
