@@ -120,9 +120,6 @@ DepositionVelocity::register_timestep_init( std::vector<ArchesFieldContainer::Va
   register_variable( "d_vol_ave_den", ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable( "d_vol_ave", ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable( _task_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW, variable_registry  );
-  register_variable( "d_vol_ave_num", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW, variable_registry  );
-  register_variable( "d_vol_ave_den", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW, variable_registry  );
-  register_variable( "d_vol_ave", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW, variable_registry  );
 
 }
 
@@ -134,10 +131,6 @@ DepositionVelocity::timestep_init( const Patch* patch, ArchesTaskInfoManager* ts
   CCVariable<double>& d_vol_ave_den = *(tsk_info->get_uintah_field<CCVariable<double> >("d_vol_ave_den"));
   CCVariable<double>& d_vol_ave = *(tsk_info->get_uintah_field<CCVariable<double> >("d_vol_ave"));
   constCCVariable<double>& deposit_velocity_old = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(_task_name));
-  constCCVariable<double>& d_vol_ave_num_old = *(tsk_info->get_const_uintah_field<constCCVariable<double> >("d_vol_ave_num"));
-  constCCVariable<double>& d_vol_ave_den_old = *(tsk_info->get_const_uintah_field<constCCVariable<double> >("d_vol_ave_den"));
-  constCCVariable<double>& d_vol_ave_old = *(tsk_info->get_const_uintah_field<constCCVariable<double> >("d_vol_ave"));
-
 
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
   Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -168,10 +161,10 @@ DepositionVelocity::register_timestep_eval( std::vector<ArchesFieldContainer::Va
     const std::string RateDepositionZ = get_env_name(i, _ratedepz_name);
     const std::string diameter_name = get_env_name( i, _diameter_base_name );
 
-    register_variable( RateDepositionX, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::LATEST , variable_registry );
-    register_variable( RateDepositionY, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::LATEST , variable_registry );
-    register_variable( RateDepositionZ, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::LATEST , variable_registry );
-    register_variable( diameter_name , ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::LATEST , variable_registry );
+    register_variable( RateDepositionX, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW , variable_registry );
+    register_variable( RateDepositionY, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW , variable_registry );
+    register_variable( RateDepositionZ, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW , variable_registry );
+    register_variable( diameter_name , ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW , variable_registry );
   }
 
 }
@@ -210,12 +203,16 @@ DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>* vdeposit_velocity = tsk_info->get_uintah_field<CCVariable<double> >(_task_name);
   CCVariable<double>& deposit_velocity = *vdeposit_velocity;
+  deposit_velocity.initialize(0.0);
   CCVariable<double>* vd_vol_ave_num = tsk_info->get_uintah_field<CCVariable<double> >("d_vol_ave_num");
   CCVariable<double>& d_vol_ave_num = *vd_vol_ave_num;
+  d_vol_ave_num.initialize(0.0);
   CCVariable<double>* vd_vol_ave_den = tsk_info->get_uintah_field<CCVariable<double> >("d_vol_ave_den");
   CCVariable<double>& d_vol_ave_den = *vd_vol_ave_den;
+  d_vol_ave_den.initialize(0.0);
   CCVariable<double>* vd_vol_ave = tsk_info->get_uintah_field<CCVariable<double> >("d_vol_ave");
   CCVariable<double>& d_vol_ave = *vd_vol_ave;
+  d_vol_ave.initialize(0.0);
   constCCVariable<int>* vcelltype = tsk_info->get_const_uintah_field<constCCVariable<int> >(_cellType_name);
   constCCVariable<int>& celltype = *vcelltype;
 
@@ -291,8 +288,6 @@ DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
           // overall we are trying to achieve:  v_hat = (1-alpha)*v_hat_old + alpha*v_new. We initialize v_hat to v_hat_old*(1-alpha) in timestep_init (first term).
           // we handle the second term using the summation alpha*v_new = alpha * (v1 + v2 + v3):
           // v_hat += alpha*v1 + alpha*v2 + alpha*v3 
-	  
-
         }// if there is a deposition flux
       } // wall or intrusion cell-type
     } // cell loop
