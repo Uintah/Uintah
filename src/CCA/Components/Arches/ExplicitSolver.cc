@@ -1797,13 +1797,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
         d_dqmomSolver->sched_calculateMoments( level, sched, curr_level );
       }
 
-      //final clipping
-      std::vector<std::string> clipping_tasks = i_particle_models->second->retrieve_task_subset("post_update_coal");
-      for ( std::vector<std::string>::iterator itsk = clipping_tasks.begin(); itsk != clipping_tasks.end(); itsk++ ){
-        TaskInterface* tsk = i_particle_models->second->retrieve_task(*itsk);
-        tsk->schedule_task( level, sched, matls, TaskInterface::STANDARD_TASK, curr_level );
-      }
-
     }
 
     if ( d_doCQMOM ) {
@@ -1899,8 +1892,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       }
     }
 
-    //ParticleModels evaluated after the RK averaging. 
-    //All particle transport should draw from the "latest" DW (old for rk = 0, new for rk > 0) 
+    //ParticleModels evaluated after the RK averaging.
+    //All particle transport should draw from the "latest" DW (old for rk = 0, new for rk > 0)
     std::vector<std::string> post_update_part_tasks
       = i_particle_models->second->retrieve_task_subset("post_update_particle_models");
     for ( std::vector<std::string>::iterator itsk = post_update_part_tasks.begin(); itsk != post_update_part_tasks.end(); itsk++ ){

@@ -23,10 +23,6 @@ namespace Uintah{
 
         return _coal_models;
 
-      } else if ( subset == "post_update_coal"){
-
-        return _post_update_coal_tasks;
-
       } else if ( subset == "post_update_particle_models"){
 
         return _post_update_particle_tasks;
@@ -45,9 +41,9 @@ namespace Uintah{
 
   private:
 
-    std::vector<std::string> _coal_models;                ///<Tasks associated with coal
-    std::vector<std::string> _post_update_coal_tasks;     ///<Tasks that execute at the end of the DQMOM update
-    std::vector<std::string> _post_update_particle_tasks;  ///<Tasks that execute at the start of an RK step
+    std::vector<std::string> _coal_models;                 ///< Tasks associated with coal
+    std::vector<std::string> _post_update_particle_tasks;  ///< Tasks that execute after the timeave
+                                                            //  of the particle transport variables
 
   };
 }

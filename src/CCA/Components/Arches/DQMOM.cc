@@ -422,7 +422,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
   timer.start();
 
   Timers::Simple tmp_timer;
-  
+
 #if !defined(VERIFY_LINEAR_SOLVER) && !defined(VERIFY_AB_CONSTRUCTION)
   double total_SolveTime = 0.0;
   double total_SVDTime = 0.0;
@@ -661,7 +661,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 	tmp_timer.stop();
 
         total_AXBConstructionTime += tmp_timer().seconds();
-	
+
 	tmp_timer.reset( true );
         Mult( (*XX), (*m_AAopt), (*BB) );
 	tmp_timer.stop();
@@ -766,7 +766,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 
 	int z=0; // equation loop counter
 	int z2=0; // equation loop counter
-	
+
 	// Weight equations:
 	for( vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin();
 	     iEqn != weightEqns.end(); ++iEqn ) {
@@ -1038,7 +1038,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           AAsvd->svd( *U, *S, *V );
 	  tmp_timer.stop();
           total_SolveTime += tmp_timer().seconds();
-	  
+
           conditionNumber_ = (S->a[0]/S->a[dimension-1]);
 
           for(int kk=0;kk<dimension;kk++){
@@ -1070,7 +1070,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
               ofstream oStream;
 
 	      tmp_timer.reset( true );
-	      
+
               // write U, S, and V matrices to file
               sizeofit = sprintf( filename, "U_%.2d.mat", currentTimeStep );
               oStream.open(filename);
@@ -1138,7 +1138,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 	    tmp_timer.stop();
 
             total_SVDTime += tmp_timer().seconds();
-	    
+
             conditionNumber_ = (S->a[0]/S->a[dimension-1]);
 
             delete AAsvd;
@@ -1301,7 +1301,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
             }
             oStream.close();
 
-	    tmp_timer.stop();	    
+	    tmp_timer.stop();
             total_FileWriteTime += tmp_timer().seconds();
           }
           b_writefile = false;
@@ -1938,6 +1938,9 @@ DQMOM::constructLinearSystem( DenseMatrix*   &AA,
 void
 DQMOM::sched_calculateMoments( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
+
+  std::cout << " WARNING: The calculateMoments feature is non-functional " << std::endl;
+  
   //string taskname = "DQMOM::calculateMoments";
   //Task* tsk = scinew Task(taskname, this, &DQMOM::calculateMoments);
 
