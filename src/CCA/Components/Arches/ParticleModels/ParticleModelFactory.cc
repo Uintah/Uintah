@@ -106,7 +106,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
               ExampleParticleModel<CCVariable<double> ,CCVariable<double> >::Builder(task_name, 0, model_name, N);
 
             register_task( task_name, tsk );
-            _pre_update_particle_tasks.push_back(task_name);
+            _post_update_particle_tasks.push_back(task_name);
 
           } else {
             throw InvalidValue("Error: Independent grid type not recognized.",__FILE__,__LINE__);
@@ -133,7 +133,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
             DragModel<constCCVariable<double>, CCVariable<double> >::Builder(task_name, 0, model_name, N);
 
             register_task( task_name, tsk );
-            _pre_update_particle_tasks.push_back(task_name);
+            _post_update_particle_tasks.push_back(task_name);
 
           } else {
             throw InvalidValue("Error: Independent grid type not recognized.",__FILE__,__LINE__);
@@ -159,7 +159,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
             BodyForce<CCVariable<double>, CCVariable<double> >::Builder(task_name, 0, model_name, N);
 
             register_task( task_name, tsk );
-            _pre_update_particle_tasks.push_back(task_name);
+            _post_update_particle_tasks.push_back(task_name);
 
           } else {
             throw InvalidValue("Error: Independent grid type not recognized.",__FILE__,__LINE__);
@@ -185,7 +185,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
           Constant<CCVariable<double> >::Builder(task_name, 0, model_name, N);
 
           register_task( task_name, tsk );
-          _pre_update_particle_tasks.push_back(task_name);
+          _post_update_particle_tasks.push_back(task_name);
 
           //else lagrangian particle type...need to add
         } else {
@@ -198,7 +198,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
         register_task( task_name, tsk );
 
         _coal_models.push_back(task_name);
-        _pre_update_particle_tasks.push_back(task_name);
+        _post_update_particle_tasks.push_back(task_name);
 
       } else if ( type == "coal_temperature" ) {
 
@@ -206,7 +206,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
         register_task( task_name, tsk );
 
         _coal_models.push_back(task_name);
-        _pre_update_particle_tasks.push_back(task_name);
+        _post_update_particle_tasks.push_back(task_name);
 
       } else if ( type == "deposition_velocity" ) {
 
@@ -214,7 +214,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
         register_task( task_name, tsk );
 
         _coal_models.push_back(task_name);
-        _pre_update_particle_tasks.push_back(task_name);
+        _post_update_particle_tasks.push_back(task_name);
 
       } else if ( type == "rate_deposition" ) {
 
@@ -222,14 +222,14 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
         register_task( task_name, tsk );
 
         _coal_models.push_back(task_name);
-        _pre_update_particle_tasks.push_back(task_name);
+        _post_update_particle_tasks.push_back(task_name);
       } else if ( type == "total_number_density" ) {
 
         TaskInterface::TaskBuilder* tsk = scinew TotNumDensity::Builder(task_name, 0);
         register_task( task_name, tsk );
 
         _active_tasks.push_back(task_name);
-        _pre_update_particle_tasks.push_back(task_name);
+        _post_update_particle_tasks.push_back(task_name);
 
       } else if  ( type == "fowy_devolatilization" ) {
 
@@ -247,7 +247,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
 
             register_task( task_name, tsk );
             _active_tasks.push_back(task_name);
-            _pre_update_particle_tasks.push_back(task_name);
+            _post_update_particle_tasks.push_back(task_name);
 
           } else {
             throw InvalidValue("Error: Independent grid type not recognized: "+independent_type,__FILE__,__LINE__);
@@ -272,7 +272,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
 
           register_task( task_name, tsk );
           _active_tasks.push_back(task_name);
-          _pre_update_particle_tasks.push_back(task_name);
+          _post_update_particle_tasks.push_back(task_name);
 
         } else {
           throw InvalidValue("Error: Dependent grid type not recognized.",__FILE__,__LINE__);
@@ -292,7 +292,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
 
           register_task( task_name, tsk );
           _active_tasks.push_back(task_name);
-          _pre_update_particle_tasks.push_back(task_name);
+          _post_update_particle_tasks.push_back(task_name);
 
         } else {
           throw InvalidValue("Error: Dependent grid type not recognized.",__FILE__,__LINE__);

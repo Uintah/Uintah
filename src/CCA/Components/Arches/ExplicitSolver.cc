@@ -1695,14 +1695,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, curr_level);
     }
 
-    //ParticleModels before any update has occured
-    std::vector<std::string> pre_update_part_tasks
-      = i_particle_models->second->retrieve_task_subset("pre_update_particle_models");
-    for ( std::vector<std::string>::iterator itsk = pre_update_part_tasks.begin(); itsk != pre_update_part_tasks.end(); itsk++ ){
-      TaskInterface* tsk = i_particle_models->second->retrieve_task(*itsk);
-      tsk->schedule_task( level, sched, matls, TaskInterface::STANDARD_TASK, curr_level );
-    }
-
     //Property Models before any update has occured
     std::vector<std::string> pre_update_prop_tasks
       = i_property_models->second->retrieve_task_subset("pre_update_property_models");
@@ -1906,6 +1898,16 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
         }
       }
     }
+
+    //ParticleModels evaluated after the RK averaging. 
+    //All particle transport should draw from the "latest" DW (old for rk = 0, new for rk > 0) 
+    std::vector<std::string> post_update_part_tasks
+      = i_particle_models->second->retrieve_task_subset("post_update_particle_models");
+    for ( std::vector<std::string>::iterator itsk = post_update_part_tasks.begin(); itsk != post_update_part_tasks.end(); itsk++ ){
+      TaskInterface* tsk = i_particle_models->second->retrieve_task(*itsk);
+      tsk->schedule_task( level, sched, matls, TaskInterface::STANDARD_TASK, curr_level );
+    }
+
 
     // STAGE 0
 

@@ -27,9 +27,9 @@ namespace Uintah{
 
         return _post_update_coal_tasks;
 
-      } else if ( subset == "pre_update_particle_models"){
+      } else if ( subset == "post_update_particle_models"){
 
-        return _pre_update_particle_tasks;
+        return _post_update_particle_tasks;
 
       } else if ( subset == _all_tasks_str ){
 
@@ -47,7 +47,7 @@ namespace Uintah{
 
     std::vector<std::string> _coal_models;                ///<Tasks associated with coal
     std::vector<std::string> _post_update_coal_tasks;     ///<Tasks that execute at the end of the DQMOM update
-    std::vector<std::string> _pre_update_particle_tasks;  ///<Tasks that execute at the start of an RK step
+    std::vector<std::string> _post_update_particle_tasks;  ///<Tasks that execute at the start of an RK step
 
   };
 }
