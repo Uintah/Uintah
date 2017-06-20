@@ -332,8 +332,7 @@ SimpleBirth::computeModel( const ProcessorGroup* pc,
 
   Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
   Uintah::parallel_for(range,  [&](int i, int j, int k) {
-                               model(i,j,k) = std::max(( _small_weight - w(i,j,k) ) / dt - w_rhs(i,j,k) / vol ,0.0); // scaled #/s/m^3 
-                               // note here w and w_rhs are already scaled.
+                               double dstrc_src = 0.0;
                                if ( _deposition ){   
                                  double mass_out = 0.0;
                                  double vol_p = (_pi/6.0)*pow(diam(i,j,k),3.0);
@@ -344,8 +343,11 @@ SimpleBirth::computeModel( const ProcessorGroup* pc,
                                  mass_out += abs(rate_Y(i,j+1,k))*area_y;
                                  mass_out += abs(rate_Z(i,j,k+1))*area_z;
                                  mass_out /= rhop(i,j,k)*vol_p*vol*_w_scale; // scaled #/s/m^3
-                                 model(i,j,k) += -mass_out; // here we add the destruction rate to the birth rate
+                                 dstrc_src = -mass_out; 
                                }
+                               // here we add the birth rate to the destruction rate
+                               model(i,j,k) = dstrc_src + std::max(( _small_weight - w(i,j,k) ) / dt - w_rhs(i,j,k) / vol - dstrc_src ,0.0); // scaled #/s/m^3 
+                               // note here w and w_rhs are already scaled.
                                model(i,j,k)*= _is_weight ? 1.0 : a(i,j,k)/_a_scale; // if weight 
                                model(i,j,k)*= vol_fraction(i,j,k);
                                });
