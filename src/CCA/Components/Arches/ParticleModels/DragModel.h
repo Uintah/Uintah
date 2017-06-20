@@ -133,7 +133,8 @@ namespace Uintah{
 
   template <typename IT, typename DT>
   void DragModel<IT, DT>::problemSetup( ProblemSpecP& db ){
-
+    proc0cout << "WARNING: ParticleModels DragModel needs to be made consistent with DQMOM models and use correct DW, use model at your own risk."
+      << "\n" << "\n" << "\n" << "\n" << "\n" << "\n" << "\n" << "\n" << "\n" << "\n"<< std::endl;
     _base_u_velocity_name = ParticleTools::parse_for_role_to_label(db, "uvel");
     _base_v_velocity_name = ParticleTools::parse_for_role_to_label(db, "vvel");
     _base_w_velocity_name = ParticleTools::parse_for_role_to_label(db, "wvel");

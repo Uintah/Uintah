@@ -148,6 +148,8 @@ namespace Uintah{
 
   template <typename T>
   void ShaddixOxidation<T>::problemSetup( ProblemSpecP& db ){
+    proc0cout << "WARNING: ParticleModels ShaddixOxidation needs to be made consistent with DQMOM models and use correct DW, use model at your own risk."
+      << "\n" << "\n" << "\n" << "\n" << "\n" << "\n" << "\n" << "\n" << "\n" << "\n"<< std::endl;
     //required particle properties
     _base_raw_coal_name = ParticleTools::parse_for_role_to_label(db, "raw_coal");
     _base_char_mass_name = ParticleTools::parse_for_role_to_label(db, "char");
