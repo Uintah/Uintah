@@ -78,11 +78,42 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
     N = 1;
   }
 
+  // This is a **HACK** to get the post_update_particle_models to execute in a set order.
+  // We need a more holistic (auto-ordering?) approach that fits within the task interface.
+  // Specifically,
+  // 1) Coal density
+  // 2) Total number density
+  // 3) Coal temperature
+  // 4) Rate deposition
+  // 5) Rate velocity
+  // 6) Everything else
+  // Note that 1-3 can be arbitrarily ordered, but just need to occur at the top.
+  int num_models = 0;
+  if ( db->findBlock("ParticleModels")){
+
+    ProblemSpecP db_pm = db->findBlock("ParticleModels");
+    for ( ProblemSpecP db_model = db_pm->findBlock("model"); db_model != nullptr;
+          db_model = db_model->findNextBlock("model") ){
+
+      num_models += 1;
+
+    }
+  }
+
+  std::vector<std::string> temp_model_list;
+  bool has_rate_dep = false;
+  bool has_rate_vel = false;
+  std::string rate_dep_name;
+  std::string rate_vel_name;
+
+  // hack continues below and is notated with "order hack" comments
+
   if ( db->findBlock("ParticleModels")){
 
     ProblemSpecP db_pm = db->findBlock("ParticleModels");
 
-    for (ProblemSpecP db_model = db_pm->findBlock("model"); db_model != nullptr; db_model = db_model->findNextBlock("model")){
+    for ( ProblemSpecP db_model = db_pm->findBlock("model"); db_model != nullptr;
+          db_model = db_model->findNextBlock("model") ){
 
       std::string model_name;
       std::string type;
@@ -117,6 +148,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
           throw InvalidValue("Error: Dependent grid type not recognized.",__FILE__,__LINE__);
         }
 
+        temp_model_list.insert(temp_model_list.end(), task_name); // order hack
 
       } else if  ( type == "drag" ) {
 
@@ -144,6 +176,8 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
           throw InvalidValue("Error: Dependent grid type not recognized.",__FILE__,__LINE__);
         }
 
+        temp_model_list.insert(temp_model_list.end(), task_name); // order hack
+
       } else if  ( type == "gravity" ) {
 
         std::string dependent_type;
@@ -170,6 +204,8 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
           throw InvalidValue("Error: Dependent grid type not recognized.",__FILE__,__LINE__);
         }
 
+        temp_model_list.insert(temp_model_list.end(), task_name); // order hack
+
       } else if  ( type == "constant" ) {
 
         std::string dependent_type;
@@ -192,6 +228,8 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
           throw InvalidValue("Error: Dependent grid type not recognized.",__FILE__,__LINE__);
         }
 
+        temp_model_list.insert(temp_model_list.end(), task_name); // order hack
+
       } else if ( type == "coal_density" ){
 
         TaskInterface::TaskBuilder* tsk = scinew CoalDensity::Builder(task_name,0,N);
@@ -199,6 +237,8 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
 
         _coal_models.push_back(task_name);
         _post_update_particle_tasks.push_back(task_name);
+
+        temp_model_list.insert(temp_model_list.begin(), task_name); //order hack
 
       } else if ( type == "coal_temperature" ) {
 
@@ -208,6 +248,8 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
         _coal_models.push_back(task_name);
         _post_update_particle_tasks.push_back(task_name);
 
+        temp_model_list.insert(temp_model_list.begin(), task_name); // order hack
+
       } else if ( type == "deposition_velocity" ) {
 
         TaskInterface::TaskBuilder* tsk = scinew DepositionVelocity::Builder(task_name,0,N,_shared_state);
@@ -216,6 +258,9 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
         _coal_models.push_back(task_name);
         _post_update_particle_tasks.push_back(task_name);
 
+        has_rate_vel = true; // order hack
+        rate_vel_name = task_name; // order hack
+
       } else if ( type == "rate_deposition" ) {
 
         TaskInterface::TaskBuilder* tsk = scinew RateDeposition::Builder(task_name,0,N);
@@ -223,6 +268,10 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
 
         _coal_models.push_back(task_name);
         _post_update_particle_tasks.push_back(task_name);
+
+        has_rate_dep = true; // order hack
+        rate_dep_name = task_name; // order hack
+
       } else if ( type == "total_number_density" ) {
 
         TaskInterface::TaskBuilder* tsk = scinew TotNumDensity::Builder(task_name, 0);
@@ -230,6 +279,8 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
 
         _active_tasks.push_back(task_name);
         _post_update_particle_tasks.push_back(task_name);
+
+        temp_model_list.insert(temp_model_list.begin(), task_name); // order hack
 
       } else if  ( type == "fowy_devolatilization" ) {
 
@@ -257,6 +308,8 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
           throw InvalidValue("Error: Dependent grid type not recognized.",__FILE__,__LINE__);
         }
 
+        temp_model_list.insert(temp_model_list.end(), task_name); // order hack
+
       } else if  ( type == "shaddix_oxidation" ) {
 
         std::string dependent_type;
@@ -278,6 +331,8 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
           throw InvalidValue("Error: Dependent grid type not recognized.",__FILE__,__LINE__);
         }
 
+        temp_model_list.insert(temp_model_list.end(), task_name); // order hack
+
       } else if  ( type == "shaddix_enthalpy" ) {
 
         std::string dependent_type;
@@ -298,6 +353,8 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
           throw InvalidValue("Error: Dependent grid type not recognized.",__FILE__,__LINE__);
         }
 
+        temp_model_list.insert(temp_model_list.end(), task_name); // order hack
+
       } else {
 
         throw InvalidValue("Error: Particle model not recognized.",__FILE__,__LINE__);
@@ -305,6 +362,18 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
       }
 
     }
+
+    //---- order hack ----
+    if ( has_rate_dep ){
+      temp_model_list.push_back(rate_dep_name);
+    }
+    if ( has_rate_vel ){
+      temp_model_list.push_back(rate_vel_name);
+    }
+
+    _post_update_particle_tasks = temp_model_list;
+    //---- end order hack ---
+
   }
 }
 
