@@ -341,26 +341,35 @@ BirthDeath::computeModel( const ProcessorGroup* pc,
       which_dw->get( a, _abscissa_label, matlIndex, patch, Ghost::None, 0 );
     }
 
-  Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
-  Uintah::parallel_for(range,  [&](int i, int j, int k) {
-                               double dstrc_src = 0.0;
-                               if ( _deposition ){
-                                 double mass_out = 0.0;
-                                 double vol_p = (_pi/6.0)*pow(diam(i,j,k),3.0);
-                                 mass_out += abs(rate_X(i,j,k))*area_x; // kg/s
-                                 mass_out += abs(rate_Y(i,j,k))*area_y;
-                                 mass_out += abs(rate_Z(i,j,k))*area_z;
-                                 mass_out += abs(rate_X(i+1,j,k))*area_x;
-                                 mass_out += abs(rate_Y(i,j+1,k))*area_y;
-                                 mass_out += abs(rate_Z(i,j,k+1))*area_z;
-                                 mass_out /= rhop(i,j,k)*vol_p*vol*_w_scale; // scaled #/s/m^3
-                                 dstrc_src = -mass_out;
-                               }
-                               // here we add the birth rate to the destruction rate
-                               model(i,j,k) = dstrc_src + std::max(( _small_weight - w(i,j,k) ) / dt - w_rhs(i,j,k) / vol - dstrc_src ,0.0); // scaled #/s/m^3
-                               // note here w and w_rhs are already scaled.
-                               model(i,j,k)*= _is_weight ? 1.0 : a(i,j,k)/_a_scale; // if weight
-                               model(i,j,k)*= vol_fraction(i,j,k);
-                               });
-  }
+    Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
+    Uintah::parallel_for(range,  [&](int i, int j, int k) {
+
+      double dstrc_src = 0.0;
+
+      if ( _deposition ){
+
+        double mass_out = 0.0;
+        double vol_p = (_pi/6.0)*pow(diam(i,j,k),3.0);
+
+        mass_out += abs(rate_X(i,j,k))*area_x; // kg/s
+        mass_out += abs(rate_Y(i,j,k))*area_y;
+        mass_out += abs(rate_Z(i,j,k))*area_z;
+        mass_out += abs(rate_X(i+1,j,k))*area_x;
+        mass_out += abs(rate_Y(i,j+1,k))*area_y;
+        mass_out += abs(rate_Z(i,j,k+1))*area_z;
+
+        dstrc_src /= -1.0*rhop(i,j,k)*vol_p*vol*_w_scale; // scaled #/s/m^3
+
+      }
+
+      // here we add the birth rate to the destruction rate
+      model(i,j,k) = dstrc_src + std::max(( _small_weight - w(i,j,k) ) / dt - w_rhs(i,j,k) / vol - dstrc_src ,0.0); // scaled #/s/m^3
+
+      // note here w and w_rhs are already scaled.
+      model(i,j,k)*= _is_weight ? 1.0 : a(i,j,k)/_a_scale; // if weight
+
+      model(i,j,k)*= vol_fraction(i,j,k);
+
+      });
+    }
 }

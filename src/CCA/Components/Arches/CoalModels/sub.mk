@@ -10,7 +10,7 @@ SRCDIR := CCA/Components/Arches/CoalModels
 # Do not put the .cc on the file name as the .cc or .cu will be added automatically
 # as needed.
 #
-CUDA_ENABLED_SRCS :=             
+CUDA_ENABLED_SRCS :=
 
 ifeq ($(HAVE_CUDA),yes)
    # CUDA enabled files, listed here (and with a rule at the end of
@@ -41,7 +41,6 @@ SRCS += \
         $(SRCDIR)/KobayashiSarofimDevol.cc    \
         $(SRCDIR)/MaximumTemperature.cc       \
         $(SRCDIR)/PartVel.cc                  \
-        $(SRCDIR)/ParticleConvection.cc       \
         $(SRCDIR)/RichardsFletcherDevol.cc    \
         $(SRCDIR)/BirthDeath.cc               \
         $(SRCDIR)/Thermophoresis.cc           \
@@ -49,7 +48,7 @@ SRCS += \
       	$(SRCDIR)/ShrinkageRate.cc            \
         $(SRCDIR)/YamamotoDevol.cc            \
         $(SRCDIR)/CoalModelFactory.cc         \
-        $(SRCDIR)/ModelBase.cc             
+        $(SRCDIR)/ModelBase.cc
 
 $(SRCDIR)/ShaddixHeatTransfer.$(OBJEXT): $(SRCDIR)/fortran/rqpart_fort.h
 $(SRCDIR)/EnthalpyShaddix.$(OBJEXT): $(SRCDIR)/fortran/rqpart_fort.h
