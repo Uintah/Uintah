@@ -186,7 +186,7 @@ DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   constCCVariable<double>& deposit_velocity_old = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(_task_name));
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
   Uintah::parallel_for( range, [&](int i, int j, int k){
-    deposit_velocity(i,j,k) = (1.0 - _relaxation_coe) * deposit_velocity_old(i,j,k);
+    deposit_velocity(i,j,k) = (1.0 - _relaxation_coe) * deposit_velocity_old(i,j,k); // we want (1-relax)*old + relax*new
   });
   CCVariable<double>* vd_vol_ave_num = tsk_info->get_uintah_field<CCVariable<double> >("d_vol_ave_num");
   CCVariable<double>& d_vol_ave_num = *vd_vol_ave_num;
