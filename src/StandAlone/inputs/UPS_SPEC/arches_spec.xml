@@ -1943,6 +1943,8 @@
                                         need_applies_to="type SimpleBirth"/> <!-- The smallest weight value allowed -->
             <is_weight                  spec="OPTIONAL NO_DATA"
                                         need_applies_to="type SimpleBirth,Deposition"/> <!-- Model birth term for the weight -->
+            <deposition                 spec="OPTIONAL NO_DATA"
+                                        need_applies_to="type SimpleBirth"/> <!-- combine deposition dstrc src with birth term -->
             <abscissa                   spec="OPTIONAL NO_DATA"
                                         attribute1="label REQUIRED STRING"
                                         need_applies_to="type SimpleBirth,Deposition"/> <!-- If not a weight, then the root of the abscissa name -->

@@ -80,15 +80,23 @@ public:
 private:
 
   bool _is_weight; 
+  bool _deposition; 
 
   std::string _abscissa_name; 
 
   const VarLabel* _abscissa_label; 
   const VarLabel* _w_label; 
   const VarLabel* _w_rhs_label;
+  const VarLabel* _rate_depX_varlabel;
+  const VarLabel* _rate_depY_varlabel;
+  const VarLabel* _rate_depZ_varlabel;
+  const VarLabel* _length_varlabel;
+  const VarLabel* _particle_density_varlabel;
 
   double _small_weight; 
   double _a_scale; 
+  double _w_scale; 
+  double _pi; 
 
 
 }; // end ConstSrcTerm

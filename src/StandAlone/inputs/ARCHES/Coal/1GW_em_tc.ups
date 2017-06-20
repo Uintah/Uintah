@@ -145,35 +145,12 @@
     <save label="max_T_os_src_qn0"/>
     <save label="max_T_os_src_qn1"/>
     <save label="max_T_os_src_qn2"/>
-    <save label="RCmass_dstrc_src_qn0"/>
-    <save label="RCmass_dstrc_src_qn1"/>
-    <save label="RCmass_dstrc_src_qn2"/>
-    <save label="Charmass_dstrc_src_qn0"/>
-    <save label="Charmass_dstrc_src_qn1"/>
-    <save label="Charmass_dstrc_src_qn2"/>
-    <save label="pE_dstrc_src_qn0"/>
-    <save label="pE_dstrc_src_qn1"/>
-    <save label="pE_dstrc_src_qn2"/>
-    <save label="ux_dstrc_src_qn0"/>
-    <save label="ux_dstrc_src_qn1"/>
-    <save label="ux_dstrc_src_qn2"/>
-    <save label="uy_dstrc_src_qn0"/>
-    <save label="uy_dstrc_src_qn1"/>
-    <save label="uy_dstrc_src_qn2"/>
-    <save label="uz_dstrc_src_qn0"/>
-    <save label="uz_dstrc_src_qn1"/>
-    <save label="uz_dstrc_src_qn2"/>
-    <save label="max_T_dstrc_src_qn0"/>
-    <save label="max_T_dstrc_src_qn1"/>
-    <save label="max_T_dstrc_src_qn2"/>
-    <save label="weight_dstrc_src_qn0"/>
-    <save label="weight_dstrc_src_qn1"/>
-    <save label="weight_dstrc_src_qn2"/>
     <save label="wall_HF"/>
     <save label="wall_HF_running_sum"/>
     <save label="wall_HF_power"/>
     <save label="wall_HF_power_running_sum"/>
     <save label="wall_HF_area"/>
+    <save label="temperature_running_sum"/>
     <save label="temperature" table_lookup="true"/>
     <save label="density" table_lookup="true"/>
     <save label="CO" table_lookup="true"/>
@@ -1276,7 +1253,6 @@
         <model label="wall_HF" type="wall_heatflux_variable">
           <frequency>1</frequency>
         </model>
-
         <model type="gasRadProperties"  label="gas_abskg" >
           <calculator type="hottel_sarofim">
             <opl>0.5632</opl>
@@ -1292,7 +1268,6 @@
           <complex_ir_imag>-0.6</complex_ir_imag>
           <const_asymmFact>1</const_asymmFact>
         </model>
-
       </PropertyModelsV2>
       <PropertyModels>
         <model label="heat_loss" type="heat_loss">
@@ -1548,65 +1523,48 @@
           <model label="RCmass_os_src" type="SimpleBirth">
             <abscissa label="RCmass"/>
             <small_weight>1e-17</small_weight>
+            <deposition/>
           </model>
           <model label="Charmass_os_src" type="SimpleBirth">
             <abscissa label="Charmass"/>
             <small_weight>1e-17</small_weight>
+            <deposition/>
           </model>
           <model label="pE_os_src" type="SimpleBirth">
             <abscissa label="pE"/>
             <small_weight>1e-17</small_weight>
+            <deposition/>
           </model>
           <model label="ux_os_src" type="SimpleBirth">
             <abscissa label="ux"/>
             <small_weight>1e-17</small_weight>
+            <deposition/>
           </model>
           <model label="uy_os_src" type="SimpleBirth">
             <abscissa label="uy"/>
             <small_weight>1e-17</small_weight>
+            <deposition/>
           </model>
           <model label="uz_os_src" type="SimpleBirth">
             <abscissa label="uz"/>
             <small_weight>1e-17</small_weight>
+            <deposition/>
           </model>
           <model label="max_T_os_src" type="SimpleBirth">
             <abscissa label="max_particle_temp"/>
             <small_weight>1e-17</small_weight>
+            <deposition/>
           </model>
           <model label="weight_os_src" type="SimpleBirth">
             <small_weight>1e-17</small_weight>
             <is_weight/>
-          </model>
-          <model label="RCmass_dstrc_src" type="Deposition">
-            <abscissa label="RCmass"/>
-          </model>
-          <model label="Charmass_dstrc_src" type="Deposition">
-            <abscissa label="Charmass"/>
-          </model>
-          <model label="pE_dstrc_src" type="Deposition">
-            <abscissa label="pE"/>
-          </model>
-          <model label="ux_dstrc_src" type="Deposition">
-            <abscissa label="ux"/>
-          </model>
-          <model label="uy_dstrc_src" type="Deposition">
-            <abscissa label="uy"/>
-          </model>
-          <model label="uz_dstrc_src" type="Deposition">
-            <abscissa label="uz"/>
-          </model>
-          <model label="max_T_dstrc_src" type="Deposition">
-            <abscissa label="max_particle_temp"/>
-          </model>
-          <model label="weight_dstrc_src" type="Deposition">
-            <is_weight/>
+            <deposition/>
           </model>
         </Models>
         <Weights>
           <doDiff>false</doDiff>
           <doConv>true</doConv>
           <model label="weight_os_src"/>
-          <model label="weight_dstrc_src"/>
           <initialization type="env_constant">
             <env_constant qn="0" value="5.68549425955e-05">
             </env_constant>
@@ -1629,7 +1587,6 @@
           <doDiff>false</doDiff>
           <doConv>true</doConv>
           <model label="RCmass_os_src"/>
-          <model label="RCmass_dstrc_src"/>
           <model label="devol"/>
           <initialization type="env_constant">
             <env_constant qn="0" value="2.12213447099e-12">
@@ -1650,7 +1607,6 @@
           <doConv>true</doConv>
           <model label="char"/>
           <model label="Charmass_os_src"/>
-          <model label="Charmass_dstrc_src"/>
           <initialization type="env_constant">
             <env_constant qn="0" value="0.0">
             </env_constant>
@@ -1670,7 +1626,6 @@
           <doConv>true</doConv>
           <model label="heat"/>
           <model label="pE_os_src"/>
-          <model label="pE_dstrc_src"/>
           <initialization type="env_constant">
             <env_constant qn="0" value="-4.76532817009e-06">
             </env_constant>
@@ -1691,7 +1646,6 @@
           <model label="xdragforce"/>
           <model label="xthermophoresis"/>
           <model label="ux_os_src"/>
-          <model label="ux_dstrc_src"/>
           <initialization type="env_constant">
             <env_constant qn="0" value="0.0">
             </env_constant>
@@ -1712,7 +1666,6 @@
           <model label="ydragforce"/>
           <model label="ythermophoresis"/>
           <model label="uy_os_src"/>
-          <model label="uy_dstrc_src"/>
           <initialization type="env_constant">
             <env_constant qn="0" value="0.0">
             </env_constant>
@@ -1733,7 +1686,6 @@
           <model label="zdragforce"/>
           <model label="zthermophoresis"/>
           <model label="uz_os_src"/>
-          <model label="uz_dstrc_src"/>
           <initialization type="env_constant">
             <env_constant qn="0" value="0.0">
             </env_constant>
@@ -1753,7 +1705,6 @@
           <doConv>true</doConv>
           <model label="max_T_rate"/>
           <model label="max_T_os_src"/>
-          <model label="max_T_dstrc_src"/>
           <initialization type="env_constant">
             <env_constant qn="0" value="300.0">
             </env_constant>
