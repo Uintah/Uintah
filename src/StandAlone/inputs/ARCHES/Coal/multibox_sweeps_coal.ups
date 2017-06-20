@@ -1855,35 +1855,35 @@
     </model>
           <model label="max_T_rate" type="MaximumTemperature">
           </model>
-    <model label="max_T_os_src" type="SimpleBirth">
+    <model label="max_T_os_src" type="BirthDeath">
             <abscissa label="max_particle_temp"/>
             <small_weight>1e-15</small_weight>
           </model>
-          <model label="RCmass_os_src" type="SimpleBirth">
+          <model label="RCmass_os_src" type="BirthDeath">
             <abscissa label="RCmass"/>
             <small_weight>1e-15</small_weight>
           </model>
-          <model label="Charmass_os_src" type="SimpleBirth">
+          <model label="Charmass_os_src" type="BirthDeath">
             <abscissa label="Charmass"/>
             <small_weight>1e-15</small_weight>
           </model>
-          <model label="pE_os_src" type="SimpleBirth">
+          <model label="pE_os_src" type="BirthDeath">
             <abscissa label="pE"/>
             <small_weight>1e-15</small_weight>
           </model>
-          <model label="ux_os_src" type="SimpleBirth">
+          <model label="ux_os_src" type="BirthDeath">
             <abscissa label="ux"/>
             <small_weight>1e-15</small_weight>
           </model>
-          <model label="uy_os_src" type="SimpleBirth">
+          <model label="uy_os_src" type="BirthDeath">
             <abscissa label="uy"/>
             <small_weight>1e-15</small_weight>
           </model>
-          <model label="uz_os_src" type="SimpleBirth">
+          <model label="uz_os_src" type="BirthDeath">
             <abscissa label="uz"/>
             <small_weight>1e-15</small_weight>
           </model>
-          <model label="weight_os_src" type="SimpleBirth">
+          <model label="weight_os_src" type="BirthDeath">
             <small_weight>1e-15</small_weight>
             <is_weight/>
           </model>
