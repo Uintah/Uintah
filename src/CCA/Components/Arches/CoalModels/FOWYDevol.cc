@@ -295,7 +295,7 @@ FOWYDevol::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeS
     tsk->modifies(_v_inf_label);
     which_dw = Task::NewDW;
   }
-  tsk->requires( Task::NewDW, _particle_temperature_varlabel, gn, 0 );
+  tsk->requires( which_dw, _particle_temperature_varlabel, gn, 0 );
   tsk->requires( which_dw, _rcmass_varlabel, gn, 0 );
   tsk->requires( which_dw, _char_varlabel, gn, 0 );
   tsk->requires( which_dw, _weight_varlabel, gn, 0 );
@@ -361,7 +361,7 @@ FOWYDevol::computeModel( const ProcessorGroup * pc,
     }
 
     constCCVariable<double> temperature;
-    new_dw->get( temperature , _particle_temperature_varlabel , matlIndex , patch , gn , 0 );
+    which_dw->get( temperature , _particle_temperature_varlabel , matlIndex , patch , gn , 0 );
     constCCVariable<double> rcmass;
     which_dw->get( rcmass    , _rcmass_varlabel , matlIndex , patch , gn , 0 );
     constCCVariable<double> charmass;

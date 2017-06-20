@@ -233,7 +233,7 @@ DragModel::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeS
     const VarLabel* label = VarLabel::find(name);
     tsk->requires( which_dw, label, gn, 0 );
   }
-  tsk->requires( Task::NewDW, _rhop_varlabel, gn, 0 );
+  tsk->requires( which_dw, _rhop_varlabel, gn, 0 );
   tsk->requires( which_dw, _length_varlabel, gn, 0 );
   tsk->requires( which_dw, _weight_varlabel, gn, 0 );
   tsk->requires( which_dw, _scaled_weight_varlabel, gn, 0 );
@@ -314,7 +314,7 @@ DragModel::computeModel( const ProcessorGroup* pc,
     constCCVariable<double> den;
     which_dw->get(den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0 );
     constCCVariable<double> rho_p;
-    new_dw->get( rho_p  , _rhop_varlabel   , matlIndex , patch , gn , 0 );
+    which_dw->get( rho_p  , _rhop_varlabel   , matlIndex , patch , gn , 0 );
     constCCVariable<double> l_p;
     which_dw->get( l_p    , _length_varlabel , matlIndex , patch , gn , 0 );
     constCCVariable<double> weight;

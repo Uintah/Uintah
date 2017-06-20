@@ -224,8 +224,8 @@ Thermophoresis::sched_computeModel( const LevelP& level, SchedulerP& sched, int 
     tsk->modifies(d_modelLabel);
     which_dw = Task::NewDW;
   }
-  tsk->requires( Task::NewDW, _particle_temperature_varlabel, gn, 0 );
-  tsk->requires( Task::NewDW, _particle_density_varlabel, gn, 0 );
+  tsk->requires( which_dw, _particle_temperature_varlabel, gn, 0 );
+  tsk->requires( which_dw, _particle_density_varlabel, gn, 0 );
   tsk->requires( Task::OldDW, _volFraction_varlabel, gac, 1 );
   tsk->requires( which_dw, _gas_temperature_varlabel, gac, 1 );
   tsk->requires( which_dw, _length_varlabel, gn, 0 );
@@ -281,9 +281,9 @@ Thermophoresis::computeModel( const ProcessorGroup * pc,
     constCCVariable<double> volFraction;
     old_dw->get( volFraction , _volFraction_varlabel , matlIndex , patch , gac , 1 );
     constCCVariable<double> pT;
-    new_dw->get( pT , _particle_temperature_varlabel , matlIndex , patch , gn , 0 );
+    which_dw->get( pT , _particle_temperature_varlabel , matlIndex , patch , gn , 0 );
     constCCVariable<double> particle_density;
-    new_dw->get( particle_density , _particle_density_varlabel , matlIndex , patch , gn , 0 );
+    which_dw->get( particle_density , _particle_density_varlabel , matlIndex , patch , gn , 0 );
     constCCVariable<double> diam;
     which_dw->get( diam    , _length_varlabel , matlIndex , patch , gn , 0 );
     constCCVariable<double> scaled_weight;

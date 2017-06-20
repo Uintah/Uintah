@@ -322,8 +322,8 @@ CharOxidationShaddix::sched_computeModel( const LevelP& level, SchedulerP& sched
     which_dw = Task::NewDW;
   }
 
-  tsk->requires( Task::NewDW, _particle_temperature_varlabel, gn, 0 );
-  tsk->requires( Task::NewDW, _number_density_varlabel, gn, 0 );
+  tsk->requires( which_dw, _particle_temperature_varlabel, gn, 0 );
+  tsk->requires( which_dw, _number_density_varlabel, gn, 0 );
   tsk->requires( which_dw, _rcmass_varlabel, gn, 0 );
   tsk->requires( which_dw, _char_varlabel, gn, 0 );
   tsk->requires( which_dw, _charmass_weighted_scaled_varlabel, gn, 0 );
@@ -414,7 +414,7 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
     constCCVariable<double> temperature;
     which_dw->get( temperature , _gas_temperature_varlabel , matlIndex , patch , gn , 0 );
     constCCVariable<double> particle_temperature;
-    new_dw->get( particle_temperature , _particle_temperature_varlabel , matlIndex , patch , gn , 0 );
+    which_dw->get( particle_temperature , _particle_temperature_varlabel , matlIndex , patch , gn , 0 );
     StaticArray< constCCVariable<double> > length(_nQn_part);
     StaticArray< constCCVariable<double> > weight(_nQn_part);
   for (int i=0; i<_nQn_part;i++ ){
@@ -434,7 +434,7 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
     constCCVariable<double> RC_RHS_source;
     new_dw->get( RC_RHS_source , _RC_RHS_source_varlabel , matlIndex , patch , gn , 0 );
     constCCVariable<double> number_density;
-    new_dw->get( number_density , _number_density_varlabel , matlIndex , patch , gn , 0 );
+    which_dw->get( number_density , _number_density_varlabel , matlIndex , patch , gn , 0 );
     constCCVariable<double> O2;
     which_dw->get( O2, _O2_varlabel, matlIndex, patch, gn, 0 );
     constCCVariable<double> CO2;

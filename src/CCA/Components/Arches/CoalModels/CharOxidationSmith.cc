@@ -492,8 +492,8 @@ CharOxidationSmith::sched_computeModel( const LevelP& level, SchedulerP& sched, 
   for (std::vector<const VarLabel*>::iterator iter = _reaction_rate_varlabels.begin(); iter != _reaction_rate_varlabels.end(); iter++) {
     tsk->requires( which_dw, *iter, gn, 0 );
   }
-  tsk->requires( Task::NewDW, _particle_temperature_varlabel, gn, 0 );
-  tsk->requires( Task::NewDW, _number_density_varlabel, gn, 0 );
+  tsk->requires( which_dw, _particle_temperature_varlabel, gn, 0 );
+  tsk->requires( which_dw, _number_density_varlabel, gn, 0 );
   tsk->requires( which_dw, _rcmass_varlabel, gn, 0 );
   tsk->requires( which_dw, _char_varlabel, gn, 0 );
 
@@ -604,7 +604,7 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
     constCCVariable<double> temperature;
     which_dw->get( temperature , _gas_temperature_varlabel , matlIndex , patch , gn , 0 );
     constCCVariable<double> particle_temperature;
-    new_dw->get( particle_temperature , _particle_temperature_varlabel , matlIndex , patch , gn , 0 );
+    which_dw->get( particle_temperature , _particle_temperature_varlabel , matlIndex , patch , gn , 0 );
     StaticArray< constCCVariable<double> > length(_nQn_part);
     StaticArray< constCCVariable<double> > weight(_nQn_part);
     for (int i=0; i<_nQn_part;i++ ){
@@ -620,7 +620,7 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
     constCCVariable<double> RC_RHS_source;
     new_dw->get( RC_RHS_source , _RC_RHS_source_varlabel , matlIndex , patch , gn , 0 );
     constCCVariable<double> number_density;
-    new_dw->get( number_density , _number_density_varlabel , matlIndex , patch , gn , 0 );
+    which_dw->get( number_density , _number_density_varlabel , matlIndex , patch , gn , 0 );
     StaticArray< constCCVariable<double> > species(_NUM_species);
     for (int l=0; l<_NUM_species; l++) {
       which_dw->get( species[l], _species_varlabels[l], matlIndex, patch, gn, 0 );
