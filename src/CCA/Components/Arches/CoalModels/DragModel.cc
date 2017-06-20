@@ -127,7 +127,7 @@ DragModel::problemSetup(const ProblemSpecP& params, int qn)
   _RHS_weight_varlabel = VarLabel::find(weight_RHS_name);
 
   //get the birth term if any:
-  const std::string birth_name = current_eqn.get_model_by_type( "SimpleBirth" );
+  const std::string birth_name = current_eqn.get_model_by_type( "BirthDeath" );
   std::string birth_qn_name = ParticleTools::append_qn_env(birth_name, d_quadNode);
   if ( birth_name != "NULLSTRING" ){
     _birth_label = VarLabel::find( birth_qn_name );

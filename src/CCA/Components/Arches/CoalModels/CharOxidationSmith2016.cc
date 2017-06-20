@@ -173,7 +173,7 @@ CharOxidationSmith2016::problemSetup(const ProblemSpecP& params, int qn)
   _RHS_source_varlabel = VarLabel::find(ic_RHS);
 
   //CHAR get the birth term if any:
-  const std::string char_birth_name = char_eqn.get_model_by_type( "SimpleBirth" );
+  const std::string char_birth_name = char_eqn.get_model_by_type( "BirthDeath" );
   std::string char_birth_qn_name = ParticleTools::append_qn_env(char_birth_name, d_quadNode);
   if ( char_birth_name != "NULLSTRING" ){
     _char_birth_label = VarLabel::find( char_birth_qn_name );
@@ -186,7 +186,7 @@ CharOxidationSmith2016::problemSetup(const ProblemSpecP& params, int qn)
   _RC_RHS_source_varlabel = VarLabel::find(RC_RHS);
 
   //RAW COAL get the birth term if any:
-  const std::string rawcoal_birth_name = rcmass_eqn.get_model_by_type( "SimpleBirth" );
+  const std::string rawcoal_birth_name = rcmass_eqn.get_model_by_type( "BirthDeath" );
   std::string rawcoal_birth_qn_name = ParticleTools::append_qn_env(rawcoal_birth_name, d_quadNode);
   if ( rawcoal_birth_name != "NULLSTRING" ){
     _rawcoal_birth_label = VarLabel::find( rawcoal_birth_qn_name );
@@ -212,7 +212,7 @@ CharOxidationSmith2016::problemSetup(const ProblemSpecP& params, int qn)
   _RHS_length_varlabel = VarLabel::find(length_RHS);
   EqnBase& temp_length_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(length_qn_name);
   DQMOMEqn& length_eqn = dynamic_cast<DQMOMEqn&>(temp_length_eqn);
-  const std::string length_birth_name = length_eqn.get_model_by_type( "SimpleBirth" );
+  const std::string length_birth_name = length_eqn.get_model_by_type( "BirthDeath" );
   std::string length_birth_qn_name = ParticleTools::append_qn_env(length_birth_name, d_quadNode);
   if ( length_birth_name != "NULLSTRING" ){
     _length_birth_varlabel = VarLabel::find( length_birth_qn_name );

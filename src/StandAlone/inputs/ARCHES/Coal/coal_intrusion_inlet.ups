@@ -760,19 +760,19 @@
           <model label="zdragforce" type="Drag">
             <direction>z</direction>
           </model>
-          <model label="ux_os_src" type="SimpleBirth">
+          <model label="ux_os_src" type="BirthDeath">
             <abscissa label="ux"/>
             <small_weight>1e-15</small_weight>
           </model>
-          <model label="uy_os_src" type="SimpleBirth">
+          <model label="uy_os_src" type="BirthDeath">
             <abscissa label="uy"/>
             <small_weight>1e-15</small_weight>
           </model>
-          <model label="uz_os_src" type="SimpleBirth">
+          <model label="uz_os_src" type="BirthDeath">
             <abscissa label="uz"/>
             <small_weight>1e-15</small_weight>
           </model>
-          <model label="weight_os_src" type="SimpleBirth">
+          <model label="weight_os_src" type="BirthDeath">
             <small_weight>1e-15</small_weight>
             <is_weight/>
           </model>

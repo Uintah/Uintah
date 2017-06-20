@@ -164,7 +164,7 @@ CharOxidationSmith::problemSetup(const ProblemSpecP& params, int qn)
   _RHS_source_varlabel = VarLabel::find(ic_RHS);
 
   //CHAR get the birth term if any:
-  const std::string char_birth_name = char_eqn.get_model_by_type( "SimpleBirth" );
+  const std::string char_birth_name = char_eqn.get_model_by_type( "BirthDeath" );
   std::string char_birth_qn_name = ParticleTools::append_qn_env(char_birth_name, d_quadNode);
   if ( char_birth_name != "NULLSTRING" ){
     _char_birth_label = VarLabel::find( char_birth_qn_name );
@@ -177,7 +177,7 @@ CharOxidationSmith::problemSetup(const ProblemSpecP& params, int qn)
   _RC_RHS_source_varlabel = VarLabel::find(RC_RHS);
 
   //RAW COAL get the birth term if any:
-  const std::string rawcoal_birth_name = rcmass_eqn.get_model_by_type( "SimpleBirth" );
+  const std::string rawcoal_birth_name = rcmass_eqn.get_model_by_type( "BirthDeath" );
   std::string rawcoal_birth_qn_name = ParticleTools::append_qn_env(rawcoal_birth_name, d_quadNode);
   if ( rawcoal_birth_name != "NULLSTRING" ){
     _rawcoal_birth_label = VarLabel::find( rawcoal_birth_qn_name );

@@ -103,7 +103,7 @@ FOWYDevol::problemSetup(const ProblemSpecP& params, int qn)
 
 
   //RAW COAL get the birth term if any:
-  const std::string rawcoal_birth_name = rcmass_eqn.get_model_by_type( "SimpleBirth" );
+  const std::string rawcoal_birth_name = rcmass_eqn.get_model_by_type( "BirthDeath" );
   std::string rawcoal_birth_qn_name = ParticleTools::append_qn_env(rawcoal_birth_name, d_quadNode);
   if ( rawcoal_birth_name != "NULLSTRING" ){
     _rawcoal_birth_label = VarLabel::find( rawcoal_birth_qn_name );
