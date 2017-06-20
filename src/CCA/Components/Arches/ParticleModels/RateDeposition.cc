@@ -376,16 +376,16 @@ RateDeposition::register_timestep_eval( std::vector<ArchesFieldContainer::Variab
       register_variable( RateDepositionY_name      , ArchesFieldContainer::MODIFIES , variable_registry );
       register_variable( RateDepositionZ_name      , ArchesFieldContainer::MODIFIES , variable_registry );
 
-      register_variable( MaxParticleTemperature_name   , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::LATEST , variable_registry );
-      register_variable( ParticleTemperature_name   , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::LATEST , variable_registry );
-      register_variable( weight_name   ,              ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::LATEST , variable_registry );
-      register_variable( rho_name   ,                 ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::LATEST , variable_registry );
-      register_variable( diameter_name   ,            ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::LATEST , variable_registry );
+      register_variable( MaxParticleTemperature_name   , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::NEWDW, variable_registry );
+      register_variable( ParticleTemperature_name   , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::NEWDW, variable_registry );
+      register_variable( weight_name   ,              ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::NEWDW, variable_registry );
+      register_variable( rho_name   ,                 ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::NEWDW, variable_registry );
+      register_variable( diameter_name   ,            ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::NEWDW, variable_registry );
 
 
-      register_variable( xvel_name   , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::LATEST , variable_registry );
-      register_variable( yvel_name   , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::LATEST , variable_registry );
-      register_variable( zvel_name   , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::LATEST , variable_registry );
+      register_variable( xvel_name   , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::NEWDW, variable_registry );
+      register_variable( yvel_name   , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::NEWDW, variable_registry );
+      register_variable( zvel_name   , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::NEWDW, variable_registry );
 
       register_variable(  ProbParticleX_name    ,  ArchesFieldContainer::MODIFIES,  variable_registry );
       register_variable(  ProbParticleY_name    ,  ArchesFieldContainer::MODIFIES,  variable_registry );
