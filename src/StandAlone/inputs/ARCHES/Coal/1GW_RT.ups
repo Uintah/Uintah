@@ -1520,42 +1520,34 @@
           <model label="RCmass_os_src" type="SimpleBirth">
             <abscissa label="RCmass"/>
             <small_weight>1e-17</small_weight>
-            <deposition/>
           </model>
           <model label="Charmass_os_src" type="SimpleBirth">
             <abscissa label="Charmass"/>
             <small_weight>1e-17</small_weight>
-            <deposition/>
           </model>
           <model label="pE_os_src" type="SimpleBirth">
             <abscissa label="pE"/>
             <small_weight>1e-17</small_weight>
-            <deposition/>
           </model>
           <model label="ux_os_src" type="SimpleBirth">
             <abscissa label="ux"/>
             <small_weight>1e-17</small_weight>
-            <deposition/>
           </model>
           <model label="uy_os_src" type="SimpleBirth">
             <abscissa label="uy"/>
             <small_weight>1e-17</small_weight>
-            <deposition/>
           </model>
           <model label="uz_os_src" type="SimpleBirth">
             <abscissa label="uz"/>
             <small_weight>1e-17</small_weight>
-            <deposition/>
           </model>
           <model label="max_T_os_src" type="SimpleBirth">
             <abscissa label="max_particle_temp"/>
             <small_weight>1e-17</small_weight>
-            <deposition/>
           </model>
           <model label="weight_os_src" type="SimpleBirth">
             <small_weight>1e-17</small_weight>
             <is_weight/>
-            <deposition/>
           </model>
         </Models>
         <Weights>
