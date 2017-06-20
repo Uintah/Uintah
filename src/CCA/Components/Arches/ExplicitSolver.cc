@@ -2186,6 +2186,11 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
   }
 
+  std::vector<std::string> wall_hf_tasks =
+    i_property_models->second->retrieve_tasks_by_type("wall_heatflux_variable");
+  i_property_models->second->schedule_task_group(
+    "wall_heatflux_tasks", wall_hf_tasks, TaskInterface::TIMESTEP_EVAL, false, level, sched, matls );
+
   //Variable stats stuff
   std::vector<std::string> stats_tasks = i_property_models->second->retrieve_task_subset("variable_stat_models");
   for ( std::vector<std::string>::iterator itsk = stats_tasks.begin(); itsk != stats_tasks.end(); itsk++ ){

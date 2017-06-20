@@ -160,6 +160,18 @@ namespace Uintah{
                               const int time_substep=0,
                               const bool reinitialize=false );
 
+    /** @brief Public interface for scheduling a set of tasks through the factory when the
+               group of tasks was determined upstream. **/
+    void schedule_task_group( const std::string task_group_name,
+                              std::vector<std::string> task_names,
+                              TaskInterface::TASK_TYPE type,
+                              const bool pack_tasks,
+                              const LevelP& level,
+                              SchedulerP& sched,
+                              const MaterialSet* matls,
+                              const int time_substep=0,
+                              const bool reinitialize=false );
+
     /** @brief Allow the factory to execute the boundary conditions for each task that it owns **/
     virtual void schedule_applyBCs( const LevelP& level,
                                     SchedulerP& sched,

@@ -58,7 +58,6 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
 
         TaskInterface::TaskBuilder* tsk = scinew WallHFVariable::Builder( name, 0, _shared_state );
         register_task( name, tsk );
-        _finalize_property_tasks.push_back( name );
 
       } else if ( type == "wall_thermal_resistance" ){
 
@@ -274,7 +273,6 @@ PropertyModelFactoryV2::add_task( ProblemSpecP& db )
 
         TaskInterface::TaskBuilder* tsk = scinew WallHFVariable::Builder( name, 0, _shared_state );
         register_task( name, tsk );
-        _finalize_property_tasks.push_back( name );
 
       } else if ( type == "variable_stats" ){
 
@@ -324,6 +322,7 @@ void PropertyModelFactoryV2::schedule_initialization( const LevelP& level,
                                                       bool doing_restart ){
 
   for ( auto i = m_task_init_order.begin(); i != m_task_init_order.end(); i++ ){
+
     TaskInterface* tsk = retrieve_task( *i );
     tsk->schedule_init( level, sched, matls, doing_restart );
   }
