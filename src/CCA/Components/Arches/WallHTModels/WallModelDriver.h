@@ -345,11 +345,13 @@ namespace Uintah{
               kg = 2.286e-11*T*T*T - 7.022e-8*T*T + 1.209e-4*T - 5.321e-3;
               
 	            double phi; // this is a zeroth order porosity model for the sootblow layer
-	            phi = (T > T_mid) ? 0.0 : sb_porosity;
+	            double porosity;
+              porosity = (layer_type == "enamel") ? en_porosity : sb_porosity;
+              phi = (T > T_mid) ? 0.0 : porosity;
               // third compute effective k for layer using hadley model
               a = (phi>=0.3) ? 1.5266*std::pow(1-phi,8.7381) : 0.7079*std::pow(1-phi,6.3051);
               kappa = ks/kg;
-              k_eff = (phi < 1e-8) ? 0.0 : kg*((1.0-a)*(phi*f0 + (1.0-phi*f0)*kappa)/(1.0-phi*(1.0-f0) + phi*(1.0-f0)*kappa) + a*(2.0*(1.0-phi)*kappa*kappa + (1.0+2.0*phi)*kappa)/((2.0+phi)*kappa + 1.0 - phi));
+              k_eff = kg*((1.0-a)*(phi*f0 + (1.0-phi*f0)*kappa)/(1.0-phi*(1.0-f0) + phi*(1.0-f0)*kappa) + a*(2.0*(1.0-phi)*kappa*kappa + (1.0+2.0*phi)*kappa)/((2.0+phi)*kappa + 1.0 - phi));
             }
             ~hadley_tc(){}
           };
