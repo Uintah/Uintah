@@ -43,7 +43,7 @@ SRCS += \
         $(SRCDIR)/PartVel.cc                  \
         $(SRCDIR)/ParticleConvection.cc       \
         $(SRCDIR)/RichardsFletcherDevol.cc    \
-        $(SRCDIR)/SimpleBirth.cc              \
+        $(SRCDIR)/BirthDeath.cc               \
         $(SRCDIR)/Thermophoresis.cc           \
         $(SRCDIR)/LinearSwelling.cc           \
       	$(SRCDIR)/ShrinkageRate.cc            \

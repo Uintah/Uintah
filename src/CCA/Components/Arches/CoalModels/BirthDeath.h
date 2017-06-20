@@ -1,5 +1,5 @@
-#ifndef Uintah_Component_Arches_SimpleBirth_h
-#define Uintah_Component_Arches_SimpleBirth_h
+#ifndef Uintah_Component_Arches_BirthDeath_h
+#define Uintah_Component_Arches_BirthDeath_h
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <CCA/Components/Arches/CoalModels/ModelBase.h>
@@ -16,61 +16,61 @@ namespace Uintah{
 
 //---------------------------------------------------------------------------
 // Builder
-class SimpleBirthBuilder: public ModelBuilder
+class BirthDeathBuilder: public ModelBuilder
 {
-public: 
-  SimpleBirthBuilder( const std::string          & modelName, 
+public:
+  BirthDeathBuilder( const std::string          & modelName,
                         const std::vector<std::string>  & reqICLabelNames,
                         const std::vector<std::string>  & reqScalarLabelNames,
                         ArchesLabel          * fieldLabels,
                         SimulationStateP           & sharedState,
                         int qn );
-  ~SimpleBirthBuilder(); 
+  ~BirthDeathBuilder();
 
-  ModelBase* build(); 
+  ModelBase* build();
 
 private:
 
-}; 
+};
 // End Builder
 //---------------------------------------------------------------------------
 
-class SimpleBirth: public ModelBase {
-public: 
+class BirthDeath: public ModelBase {
+public:
 
-  SimpleBirth( std::string modelName, 
-                 SimulationStateP& shared_state, 
+  BirthDeath( std::string modelName,
+                 SimulationStateP& shared_state,
                  ArchesLabel* fieldLabels,
                  std::vector<std::string> reqICLabelNames,
                  std::vector<std::string> reqScalarLabelNames,
                  int qn );
 
-  ~SimpleBirth();
+  ~BirthDeath();
 
-  /** @brief Interface for the inputfile and set constants */ 
+  /** @brief Interface for the inputfile and set constants */
   void problemSetup(const ProblemSpecP& db, int qn);
 
   /** @brief Schedule the initialization of special/local variables unique to model */
   void sched_initVars( const LevelP& level, SchedulerP& sched );
 
   /** @brief  Actually initialize special variables unique to model */
-  void initVars( const ProcessorGroup * pc, 
-                 const PatchSubset    * patches, 
-                 const MaterialSubset * matls, 
-                 DataWarehouse        * old_dw, 
+  void initVars( const ProcessorGroup * pc,
+                 const PatchSubset    * patches,
+                 const MaterialSubset * matls,
+                 DataWarehouse        * old_dw,
                  DataWarehouse        * new_dw );
 
-  /** @brief Schedule the calculation of the source term */ 
-  void sched_computeModel( const LevelP& level, 
-                           SchedulerP& sched, 
+  /** @brief Schedule the calculation of the source term */
+  void sched_computeModel( const LevelP& level,
+                           SchedulerP& sched,
                            int timeSubStep );
 
-  /** @brief Actually compute the source term */ 
-  void computeModel( const ProcessorGroup* pc, 
-                     const PatchSubset* patches, 
-                     const MaterialSubset* matls, 
-                     DataWarehouse* old_dw, 
-                     DataWarehouse* new_dw, 
+  /** @brief Actually compute the source term */
+  void computeModel( const ProcessorGroup* pc,
+                     const PatchSubset* patches,
+                     const MaterialSubset* matls,
+                     DataWarehouse* old_dw,
+                     DataWarehouse* new_dw,
                      const int timeSubStep );
 
   inline std::string getType() {
@@ -79,13 +79,13 @@ public:
 
 private:
 
-  bool _is_weight; 
-  bool _deposition; 
+  bool _is_weight;
+  bool _deposition;
 
-  std::string _abscissa_name; 
+  std::string _abscissa_name;
 
-  const VarLabel* _abscissa_label; 
-  const VarLabel* _w_label; 
+  const VarLabel* _abscissa_label;
+  const VarLabel* _w_label;
   const VarLabel* _w_rhs_label;
   const VarLabel* _rate_depX_varlabel;
   const VarLabel* _rate_depY_varlabel;
@@ -93,13 +93,12 @@ private:
   const VarLabel* _length_varlabel;
   const VarLabel* _particle_density_varlabel;
 
-  double _small_weight; 
-  double _a_scale; 
-  double _w_scale; 
-  double _pi; 
+  double _small_weight;
+  double _a_scale;
+  double _w_scale;
+  double _pi;
 
 
 }; // end ConstSrcTerm
 } // end namespace Uintah
 #endif
-
