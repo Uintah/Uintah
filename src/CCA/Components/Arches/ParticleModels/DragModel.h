@@ -254,22 +254,22 @@ namespace Uintah{
 
       //independent variables
       const std::string diameter_name = get_name( i, _base_diameter_name );
-      register_variable( diameter_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+      register_variable( diameter_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 
       const std::string density_name = get_name( i, _base_density_name );
-      register_variable( density_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+      register_variable( density_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 
       const std::string weight_name = get_name( i, "w" );
-      register_variable( weight_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+      register_variable( weight_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 
       const std::string u_velocity_name = get_name( i, _base_u_velocity_name );
-      register_variable( u_velocity_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+      register_variable( u_velocity_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 
       const std::string v_velocity_name = get_name( i, _base_v_velocity_name );
-      register_variable( v_velocity_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+      register_variable( v_velocity_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 
       const std::string w_velocity_name = get_name( i, _base_w_velocity_name );
-      register_variable( w_velocity_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+      register_variable( w_velocity_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
     }
 
     register_variable( _gas_u_velocity_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
