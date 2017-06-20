@@ -58,7 +58,8 @@ namespace Uintah{
                           const PatchSubset* patches,
                           const MaterialSubset*,
                           DataWarehouse* old_dw,
-                          DataWarehouse* new_dw);
+                          DataWarehouse* new_dw, 
+                          const int timeSubstep);
 
     /** @brief Schedule the initialization of the variables */
     void sched_initializeVariables( const LevelP& level, SchedulerP& sched );
