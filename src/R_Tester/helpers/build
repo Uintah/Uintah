@@ -31,14 +31,27 @@ if [ "$OS" = "Linux" ]; then
   #_________________
   #  machine specific variables
   if [ "$MACHINE" == "uintah-build" ]; then
+  
     COMMON="      --with-mpi=/usr/\\
-     --with-boost=/usr/  \\
+     --with-boost=/usr/ \\
      --enable-all-components \\
      --enable-wasatch_3p \\
      --enable-ray-scatter \\"
+    
+    if [ "$USER" == "gpu_rt" ]; then
+      COMMON="      --with-mpi=/usr/ \\
+      --with-cuda=/usr/lib/nvidia-cuda-toolkit \\
+      --with-boost=/usr/ \\
+      --enable-gencode=35 \\
+      --enable-ray-scatter \\
+      --enable-arches \\
+      --enable-ice \\
+      --enable-mpm \\
+      --enable-wasatch_3p='radprops,tabprops' \\"     
+    fi
 
-    ENV="     CC=gcc \\
-     CXX=g++ \\
+    ENV="     CC=mpicc \\
+     CXX=mpic++ \\
      F77=gfortran"
   fi
 
@@ -53,7 +66,7 @@ if [ "$OS" = "Linux" ]; then
       --enable-arches \\
       --enable-ice \\
       --enable-mpm \\
-      --enable-wasatch_3p \\"
+      --enable-wasatch_3p='radprops,tabprops' \\"
 
     DBG_CONFIGURE="    --enable-debug \\
       --enable-64bit \\

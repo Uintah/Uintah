@@ -35,11 +35,11 @@ MACHINE=`hostname`
 
 if [ "$MACHINE" == "uintah-build" ]; then
   COMMON_GROUP="users"
-  BUILD_DIR=/home/rt/"$OS"
-  TEST_DATA_DIR=/home/rt/"$OS"/TestData
-  TEMP_DIR=/home/rt/"$OS"
-  SCRIPT_DIR=/home/rt/scripts
-  CHECKPOINTS=/home/rt/CheckPoints
+  BUILD_DIR=/home/${USER}/"$OS"
+  TEST_DATA_DIR=/home/${USER}/"$OS"/TestData
+  TEMP_DIR=/home/${USER}/"$OS"
+  SCRIPT_DIR=/home/${USER}/scripts
+  CHECKPOINTS=/home/${USER}/CheckPoints         
   
   # Where the webpage will be, and init webpage
   # Note you need the following directory structure:
@@ -48,36 +48,18 @@ if [ "$MACHINE" == "uintah-build" ]; then
   #          Memory/
   #          simRunTime/
   
-  HTMLLOG=/home/rt/public_html/Uintah.html
-  WEBLOG=http://155.101.15.100/~rt/Uintah.html
-fi
-
-if test "$MACHINE" = "albion" ; then
-  DEFAULT_MAIL_TO="ahumphrey@sci.utah.edu,t.harman@utah.edu"
-  REPLY_TO="t.harman@utah.edu"
-  COMMON_GROUP="uintah"
-  BUILD_DIR=/home/${LOGNAME}/"$OS"                      # The user can be rt or arl-rt
-  TEST_DATA_DIR=/home/${LOGNAME}/"$OS"/TestData
-  TEMP_DIR=/home/${LOGNAME}/"$OS"
-  SCRIPT_DIR=/home/${LOGNAME}/scripts
-  CHECKPOINTS=/home/${LOGNAME}/CheckPoints
-  MPIRUN_PATH=/usr/local/openmpi/bin/
+  HTMLLOG=/home/${USER}/public_html/Uintah.html
+  WEBLOG=http://155.101.15.100/~${USER}/Uintah.html
   
-  if test "$LOGNAME" = "rt" ; then
-    export TEST_COMPONENTS="Examples"             # only run gpu tests
+  if [ "$USER" == "gpu_rt" ]; then
+    DEFAULT_MAIL_TO="ahumphrey@sci.utah.edu,t.harman@utah.edu,bradpeterson@gmail.com,jthornock@gmail.com,derkhar@gmail.com,bisaac2@gmail.com"
+    export TEST_COMPONENTS="Examples ICE ARCHES"
   fi
-  if test "$LOGNAME" = "arl-rt" ; then
-    SVN_trunk="https://gforge.sci.utah.edu/svn/uintah/branches/arl_dev/src"
-  fi  
   
-  
-  # Where the webpage will be, and init webpage.  (SEE above notes)
-  HTMLLOG=/home/${LOGNAME}/public_html/Uintah.html
-  WEBLOG=/home/${LOGNAME}/public_html/Uintah.html
 fi
 
 if test "$MACHINE" = "cyrus.mech.utah.edu" ; then
-  DEFAULT_MAIL_TO="ahumphrey@sci.utah.edu,t.harman@utah.edu"
+  DEFAULT_MAIL_TO="ahumphrey@sci.utah.edu,t.harman@utah.edu,bradpeterson@gmail.com,jthornock@gmail.com,derkhar@gmail.com,bisaac2@gmail.com"
   REPLY_TO="t.harman@utah.edu"
   COMMON_GROUP="users"
   BUILD_DIR=/raid/home/rt/"$OS"
@@ -86,11 +68,14 @@ if test "$MACHINE" = "cyrus.mech.utah.edu" ; then
   SCRIPT_DIR=/raid/home/rt/scripts
   CHECKPOINTS=/raid/home/rt/CheckPoints
   MPIRUN_PATH=/usr/installed/openmpi/bin/
-  export TEST_COMPONENTS="Examples"             # only run gpu tests
-  
+  export TEST_COMPONENTS="Examples ICE ARCHES"
+  #export TEST_COMPONENTS="Examples ICE MPM MPMICE"
+  #export TEST_COMPONENTS="ARCHES"    
+
+
   # Where the webpage will be, and init webpage.  (SEE above notes)
   HTMLLOG=/raid/home/rt/public_html/Uintah.html
-  WEBLOG=NONE
+  WEBLOG=http://cyrus.mech.utah.edu:8050/~rt/public_html/Uintah.html
 fi
 
 
@@ -104,7 +89,7 @@ if [ "$OS" != "Linux" ]; then
 fi
 
 export OS
-unset SHELL
+#unset SHELL
 umask 002
 
 show_help=0
