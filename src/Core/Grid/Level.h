@@ -159,7 +159,7 @@ public:
       
   int numPatches() const;
   long totalCells() const;
-  long getTotalSimulationCellsInRegion(const IntVector& lowIndex, const IntVector& highIndex) const;
+  long getTotalCellsInRegion(const IntVector& lowIndex, const IntVector& highIndex) const;
   IntVector nCellsPatch_max() const;
 
   void getSpatialRange( BBox & b ) const { b.extend(m_spatial_range); };
@@ -168,8 +168,8 @@ public:
   // methods to identify if this is non-cubic level
   void addBox_ups( const BBox &b );
   bool insideBoxes_ups( const IntVector& d ) const;
-  bool isNonCubic() const { return m_upsBoxes.isNonCubic; };
-  void setNonCubicFlag ( bool& test );
+  bool isNonCubic() const { return m_isNonCubicDomain; };
+  void setNonCubicFlag ( bool test );
   
   
   void findIndexRange(     IntVector & lowIndex, IntVector & highIndex ) const { findNodeIndexRange(lowIndex, highIndex); }
@@ -288,10 +288,10 @@ private:
   
   // let the component know that this is a non-cubic level
   struct upsBoxes{
-    std::vector<BBox> boxes;                              // boxes in a level pulled from ups file
-    bool isNonCubic{false};                               // is non cubic level                      
+    std::vector<BBox> boxes;                              // boxes in a level pulled from ups file                    
   };
   upsBoxes m_upsBoxes;
+  bool      m_isNonCubicDomain{false};                    // is level non cubic level
   
   bool      m_finalized{false};
   int       m_index;                                      // number of the level

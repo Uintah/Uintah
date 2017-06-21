@@ -2222,7 +2222,7 @@ OnDemandDataWarehouse::getLevel(       constGridVariableBase& constGridVar,
     }
   }
 
-  int totalCells = 0;
+  int nCellsCopied = 0;
 
   for (size_t i = 0; i < patches.size(); i++) {
     const Patch* patch = patches[i];
@@ -2271,28 +2271,30 @@ OnDemandDataWarehouse::getLevel(       constGridVariableBase& constGridVar,
       gridVar->copyPatch(tmpVar, lo, hi);
     }
     catch (InternalError& e) {
-      std::cout << " getLevel(" << label->getName() << "): copyPatch Bad range.\n" << " actual patch lo:" << lo << " hi:" << hi
-           << " variable range: " << tmpVar->getLow() << " " << tmpVar->getHigh() << std::endl;
+      std::cout << "OnDemandDataWarehouse::getLevel ERROR: failed copying patch data.\n " 
+                << " Level- " << level->getIndex()
+                << " patch "<< lo << " " << hi 
+                << " variable range: " << tmpVar->getLow() << " "<< tmpVar->getHigh() << std::endl;
       throw e;
     }
 
     delete tmpVar;
     IntVector diff(hi - lo);
-    totalCells += diff.x() * diff.y() * diff.z();
+    nCellsCopied += diff.x() * diff.y() * diff.z();
   }  // patches loop
 
   //bulletproofing
   long totalLevelCells = level->totalCells();
 
-  if (totalLevelCells != totalCells && missing_patches.size() > 0) {
+  if (totalLevelCells != nCellsCopied ) {
     std::cout << d_myworld->myrank() << "  Unknown Variable " << *label << ", matl " << matlIndex << ", L-" << level->getIndex()
-         << ", for patch(es): ";
+              << ", Patches on which the variable wasn't found: ";
 
     for (size_t i = 0; i < missing_patches.size(); i++) {
       std::cout << *missing_patches[i] << " ";
     }
-    std::cout << " copied cells: " << totalCells << " requested cells: " << totalLevelCells << std::endl;
-    throw InternalError("Missing patch variable in geLevel().  This method attempted to gather this variable into a larger region, but was unable to find the patch variable.", __FILE__, __LINE__);
+    std::cout << " copied cells: " << nCellsCopied << " requested cells: " << totalLevelCells << std::endl;
+    throw InternalError("Missing variable in getLevel().  Unable to find the patch variable over the requested region.", __FILE__, __LINE__);
 
   }
 
@@ -2300,7 +2302,7 @@ OnDemandDataWarehouse::getLevel(       constGridVariableBase& constGridVar,
   //  Diagnostics
   if (dbg.active()) {
     cerrLock.lock();
-    dbg << d_myworld->myrank() << "getLevel:  Variable " << *label << ", matl " << matlIndex << ", L-" << level->getIndex() << std::endl;
+    dbg << d_myworld->myrank() << " getLevel:  Variable " << *label << ", matl " << matlIndex << ", L-" << level->getIndex() << std::endl;
     cerrLock.unlock();
   }
 
@@ -2355,137 +2357,149 @@ OnDemandDataWarehouse::getRegionModifiable(       GridVariableBase& var,
                                   const VarLabel*         label,
                                         int               matlIndex,
                                   const Level*            level,
-                                  const IntVector&        low,
-                                  const IntVector&        high,
+                                  const IntVector&        reqLow,
+                                  const IntVector&        reqHigh,
                                         bool              useBoundaryCells)
 {
   MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::getRegionModifiable(Grid Variable):" + label->getName());
 
-    var.allocate(low, high);
-    Patch::VariableBasis basis = Patch::translateTypeToBasis(label->typeDescription()->getType(), false);
+  var.allocate(reqLow, reqHigh);
+  Patch::VariableBasis basis = Patch::translateTypeToBasis(label->typeDescription()->getType(), false);
 
-    IntVector adjustment = IntVector(1, 1, 1);
-    if (basis == Patch::XFaceBased) {
-      adjustment = IntVector(1, 0, 0);
-    }
-    else if (basis == Patch::YFaceBased) {
-      adjustment = IntVector(0, 1, 0);
-    }
-    else if (basis == Patch::ZFaceBased) {
-      adjustment = IntVector(0, 0, 1);
-    }
+  // Enlarge the requested region, sometimes we only want extra cells.
+  // slect patches has difficulties with that request.
+  IntVector adjustment = IntVector(1, 1, 1);
+  if (basis == Patch::XFaceBased) {
+    adjustment = IntVector(1, 0, 0);
+  }
+  else if (basis == Patch::YFaceBased) {
+    adjustment = IntVector(0, 1, 0);
+  }
+  else if (basis == Patch::ZFaceBased) {
+    adjustment = IntVector(0, 0, 1);
+  }
 
-    Patch::selectType patches;
+  IntVector tmpLow(  reqLow  - adjustment);
+  IntVector tmpHigh( reqHigh + adjustment);
 
-    // if in AMR and one node intersects from another patch and that patch is missing
-    // ignore the error instead of throwing an exception
-    // (should only be for node-based vars)
-    std::vector<const Patch*> missing_patches;
+  Patch::selectType patches;
+  level->selectPatches(tmpLow, tmpHigh, patches);
 
-    // make sure we grab all the patches, sometimes we might call only with an extra cell region, which
-    // selectPatches doesn't detect
-    IntVector tmpLow(low - adjustment);
-    IntVector tmpHigh(high + adjustment);
-    level->selectPatches(tmpLow, tmpHigh, patches);
+  // bulletproofing vars
+  int nCellsCopied = 0;                       // number of cells copied
+  std::vector<const Patch*> missing_patches;  // patches that do not contain the label
 
-    int totalCells = 0;
-    for (int i = 0; i < patches.size(); i++) {
-      const Patch* patch = patches[i];
+  for (int i = 0; i < patches.size(); i++) {
+    const Patch* patch = patches[i];
 
-      // After regridding selected patches may return stale patches so
-      // make sure the variable exists on the patch.
-      if( !exists( label, matlIndex, patch ) ) {
-	continue;
-      }
-
-      IntVector l, h;
-
-      // the caller should determine whether or not he wants extra cells.
-      // It will matter in AMR cases with corner-aligned patches
-      if (useBoundaryCells) {
-        l = Max(patch->getExtraLowIndex(basis, label->getBoundaryLayer()), low);
-        h = Min(patch->getExtraHighIndex(basis, label->getBoundaryLayer()), high);
-      }
-      else {
-        l = Max(patch->getLowIndex(basis), low);
-        h = Min(patch->getHighIndex(basis), high);
-      }
-
-      if (l.x() >= h.x() || l.y() >= h.y() || l.z() >= h.z()) {
-        continue;
-      }
-      std::vector<Variable*> varlist;
-      d_varDB.getlist(label, matlIndex, patch, varlist);
-      GridVariableBase* v = nullptr;
-
-      for (std::vector<Variable*>::iterator rit = varlist.begin();; ++rit) {
-        if (rit == varlist.end()) {
-          v = nullptr;
-          break;
-        }
-        v = dynamic_cast<GridVariableBase*>(*rit);
-        //verify that the variable is valid and matches the dependencies requirements.
-        if ((v != nullptr) && v->isValid() && Min(l, v->getLow()) == v->getLow() && Max(h, v->getHigh()) == v->getHigh()) {  //find a completed region
-          break;
-        }
-      }
-
-      // just like a "missing patch": got data on this patch, but it either corresponds to a different
-      // region or is incomplete"
-      if (v == nullptr) {
-        missing_patches.push_back(patch->getRealPatch());
-        continue;
-      }
-
-      GridVariableBase* tmpVar = var.cloneType();
-      tmpVar->copyPointer(*v);
-
-      if (patch->isVirtual()) {
-        // if patch is virtual, it is probably a boundary layer/extra cell that has been requested (from AMR)
-        // let Bryan know if this doesn't work.  We need to adjust the source but not the dest by the virtual offset
-        tmpVar->offset(patch->getVirtualOffset());
-      }
-      try {
-        var.copyPatch(tmpVar, l, h);
-      }
-      catch (InternalError& e) {
-        std::cout << " Bad range: " << low << " " << high << ", patch intersection: " << l << " " << h << " actual patch "
-             << patch->getLowIndex(basis) << " " << patch->getHighIndex(basis) << " var range: " << tmpVar->getLow() << " "
-             << tmpVar->getHigh() << std::endl;
-        throw e;
-      }
-      delete tmpVar;
-      IntVector diff(h - l);
-      totalCells += diff.x() * diff.y() * diff.z();
-    }  // patches loop
-
-
-    //Now do some bulletproofing
-    IntVector diff(high - low);
-
-    long requestedCells = level->getTotalSimulationCellsInRegion(low, high);
-
-    if (requestedCells > totalCells && missing_patches.size() > 0) {
-      std::cout << d_myworld->myrank() << "  Unknown Variable " << *label << ", matl " << matlIndex << ", L-" << level->getIndex()
-           << ", for patch(es): ";
-
-      for (size_t i = 0; i < missing_patches.size(); i++) {
-        std::cout << *missing_patches[i] << " ";
-      }
-
-      std::cout << std::endl << " Original region: " << low << " " << high << std::endl;
-      std::cout << " copied cells: " << totalCells << " requested cells: " << requestedCells << std::endl;
-      throw InternalError("Missing patch variable in getRegionModifiable().  This method attempted to gather this variable into a larger region, but was unable to find the patch variable.", __FILE__, __LINE__);
+    // After regridding selected patches may return stale patches so
+    // make sure the variable exists on the patch.
+    if( !exists( label, matlIndex, patch ) ) {
+     continue;
     }
 
-    if (dbg.active()) {
-      cerrLock.lock();
-      dbg << d_myworld->myrank() << "  Variable " << *label << ", matl " << matlIndex << ", L-" << level->getIndex()
-          << " For region: " << low << " " << high << "  has been gotten" << std::endl;
-      cerrLock.unlock();
+    //__________________________________
+    //  For this patch find the intersection of the requested region 
+    IntVector patchLo = patch->getLowIndex(basis);
+    IntVector patchHi = patch->getHighIndex(basis);
+    if (useBoundaryCells) {
+      patchLo = patch->getExtraLowIndex(  basis, label->getBoundaryLayer() );
+      patchHi = patch->getExtraHighIndex( basis, label->getBoundaryLayer() );
     }
 
-    ASSERT(requestedCells <= totalCells );
+    IntVector l = Max( patchLo, reqLow );
+    IntVector h = Min( patchHi, reqHigh );
+
+    if (l.x() >= h.x() || l.y() >= h.y() || l.z() >= h.z()) {
+      continue;
+    }
+
+    //__________________________________
+    //  search varDB for variable
+    std::vector<Variable*> varlist;
+    d_varDB.getlist(label, matlIndex, patch, varlist);
+    GridVariableBase* v = nullptr;
+    bool varFound = false;
+
+    for (std::vector<Variable*>::iterator rit = varlist.begin();; ++rit) {
+
+      // variable not found
+      if (rit == varlist.end()) {
+        v = nullptr;
+        break;
+      }
+
+      // Variable found in dataBase, does it cover the region?
+      v = dynamic_cast<GridVariableBase*>(*rit);
+
+      IntVector varLo = v->getLow();
+      IntVector varHi = v->getHigh();
+      bool doesCoverRegion = ( Min(l, varLo) == varLo && Max(h, varHi) == varHi );
+
+      if ( (v != nullptr) && v->isValid() && doesCoverRegion) {
+        varFound  = true;
+        break;
+      }
+    }
+
+    // Variable was not found on this patch.  Add patch to missing patches
+    if ( varFound == false ) {
+      missing_patches.push_back(patch->getRealPatch());
+      continue;
+    }
+
+    //__________________________________
+    // Copy data into the variable
+    GridVariableBase* tmpVar = var.cloneType();
+    tmpVar->copyPointer(*v);
+
+    if (patch->isVirtual()) {
+      // if patch is virtual, it is probably a boundary layer/extra cell that has been requested (from AMR)
+      // We need to adjust the source but not the dest by the virtual offset
+      tmpVar->offset(patch->getVirtualOffset());
+    }
+
+    try {
+      var.copyPatch(tmpVar, l, h);
+    }
+    catch (InternalError& e) {
+      std::cout << "OnDemandDataWarehouse::getRegionModifiable ERROR: failed copying patch data.\n " 
+                << " Level- " << level->getIndex()
+                << " region Requested: " << reqLow << " " << reqHigh << ", patch intersection: " << l << " " << h 
+                << " patch "<< patchLo << " " << patchHi 
+                << " variable range: " << tmpVar->getLow() << " "<< tmpVar->getHigh() << std::endl;
+      throw e;
+    }
+    delete tmpVar;
+
+    // keep track of the number of cells copied.
+    IntVector diff(h - l);
+    nCellsCopied += diff.x() * diff.y() * diff.z();
+  }  // patches loop
+
+  //__________________________________
+  //  BULLETPROOFING
+  long requestedCells = level->getTotalCellsInRegion(reqLow, reqHigh);
+
+  if( nCellsCopied == 0  || nCellsCopied != requestedCells ) {
+    std::cout << d_myworld->myrank() << "  Unknown Variable " << *label << ", matl " << matlIndex << ", L-" << level->getIndex()
+              << ", Patches on which the variable wasn't found: ";
+
+    for (size_t i = 0; i < missing_patches.size(); i++) {
+      std::cout << *missing_patches[i] << " ";
+    }
+
+    std::cout << std::endl << " Requested region: " << reqLow << " " << reqHigh << std::endl;
+    std::cout << " copied cells: " << nCellsCopied << " requested cells: " << requestedCells << std::endl;
+    throw InternalError("Missing variable in getRegionModifiable().  Unable to find the patch variable over the requested region.", __FILE__, __LINE__);
+  }
+
+  if (dbg.active()) {
+    cerrLock.lock();
+    dbg << d_myworld->myrank() << "  getRegionModifiable() Variable " << *label << ", matl " << matlIndex << ", L-" << level->getIndex()
+        << " For region: " << reqLow << " " << reqHigh << "  has been copied" << std::endl;
+    cerrLock.unlock();
+  }
 }
 
 //______________________________________________________________________

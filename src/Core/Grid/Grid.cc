@@ -37,6 +37,7 @@
 #include <Core/Math/UintahMiscMath.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Util/StringUtil.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/XMLUtils.h>
 
@@ -302,6 +303,7 @@ Grid::parseLevelFromFile( FILE * fp, vector<int> & procMapForLevel )
   int       numPatchesRead   = 0;
   int       totalCells       = -1;
 
+  bool      isNonCubic       = false;
   bool      done_with_level  = false;
 
   IntVector periodicBoundaries;
@@ -356,6 +358,7 @@ Grid::parseLevelFromFile( FILE * fp, vector<int> & procMapForLevel )
         level = this->addLevel( anchor, dcell, id );
 
         level->setExtraCells( extraCells );
+        level->setNonCubicFlag( isNonCubic );
 
         //  if( foundStretch ) {
         //    level->setStretched((Grid::Axis)0, faces[0]);
@@ -387,7 +390,15 @@ Grid::parseLevelFromFile( FILE * fp, vector<int> & procMapForLevel )
     }
     else {
       vector< string > pieces = UintahXML::splitXMLtag( line );
-      if( pieces[0] == "<numPatches>" ) {
+      if( pieces[0] == "<nonCubic>" ) {
+        string test = Uintah::string_toupper( pieces[1] ); 
+        if( test == "TRUE" ){
+          isNonCubic = true;
+        }else{
+          isNonCubic = false;
+        }
+      }
+      else if( pieces[0] == "<numPatches>" ) {
         numPatches = atoi( pieces[1].c_str() );
       }
       else if( pieces[0] == "<totalCells>" ) {
@@ -521,7 +532,7 @@ Grid::parseGridFromFile( FILE * fp, vector< vector<int> > & procMap )
 void
 Grid::readLevelsFromFileBinary( FILE * fp, vector< vector<int> > & procMap )
 {
-  int    numLevels, num_patches;
+  int    numLevels, num_patches, isNonCubic;
   long   num_cells;
   int    extra_cells[3], period[3];
   double anchor[3], cell_spacing[3];
@@ -530,7 +541,7 @@ Grid::readLevelsFromFileBinary( FILE * fp, vector< vector<int> > & procMap )
   fread( & numLevels,    sizeof(int),    1, fp );
 
   for( int lev = 0; lev < numLevels; lev++ ) {
-
+    fread( & isNonCubic,   sizeof(int),    1, fp );    // is the level non-cubic
     fread( & num_patches,  sizeof(int),    1, fp );    // Number of Patches -  100
     fread( & num_cells,    sizeof(long),   1, fp );    // Number of Cells   - 8000
     fread(   extra_cells,  sizeof(int),    3, fp );    // Extra Cell Info   - [1,1,1]
@@ -554,6 +565,8 @@ Grid::readLevelsFromFileBinary( FILE * fp, vector< vector<int> > & procMap )
 
     const IntVector extraCells( extra_cells[0], extra_cells[1], extra_cells[2] );
     level->setExtraCells( extraCells );
+    
+    level->setNonCubicFlag ( (bool) isNonCubic );
 
     for( int patch = 0; patch < num_patches; patch++ ) {
       int    p_id, rank, nnodes, total_cells;
@@ -770,9 +783,12 @@ Grid::printStatistics() const
   for( int i = 0; i < numLevels(); i++ ) {
     LevelP l = getLevel(i);
     cout << "Level " << i << ":\n";
-    if (l->getPeriodicBoundaries() != IntVector(0,0,0))
-      cout << "  Periodic boundaries:\t\t" << l->getPeriodicBoundaries()
-           << '\n';
+    if (l->getPeriodicBoundaries() != IntVector(0,0,0)){
+      cout << "  Periodic boundaries:\t\t" << l->getPeriodicBoundaries()<< '\n';
+    }
+    if( l->isNonCubic() ){
+      cout << "  isNonCubic:\t\t\t" << l->isNonCubic() << '\n';
+    }
     cout << "  Number of patches:\t\t" << l->numPatches() << '\n';
     totalPatches += l->numPatches();
     double ppc = double(l->totalCells())/double(l->numPatches());

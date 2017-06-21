@@ -389,26 +389,31 @@ Level::totalCells() const
 //______________________________________________________________________
 //
 long
-Level::getTotalSimulationCellsInRegion(const IntVector& lowIndex, const IntVector& highIndex) const {
+Level::getTotalCellsInRegion(const IntVector& lowIndex, const IntVector& highIndex) const {
 
   // Not all simulations are cubic.  Some simulations might be L shaped, or T shaped, or + shaped, etc.
   // It is not enough to simply do a high - low to figure out the amount of simulation cells.  We instead
   // need to go all patches and see if they exist in this range.  If so, add up their cells.
   // This process is similar to how d_totalCells is computed in Level::finalizeLevel().
-  
-  long cellsInRegion = 0; // Compute the number of cells in the level.
+
+  std::cout << " isNonCubicDomain " << m_isNonCubicDomain << " thread ID " << Parallel::getMainThreadID() << std::endl;
+  long cellsInRegion = 0;  
+  if (m_isNonCubicDomain == false ){
+    IntVector diff( highIndex - lowIndex);
+    cellsInRegion += diff.x() * diff.y() * diff.z(); 
+    return cellsInRegion;
+  }
 
   for( int i = 0; i < (int)m_real_patches.size(); i++ ) {
-    IntVector patchLow =  m_real_patches[i]->getExtraCellLowIndex();
+    IntVector patchLow  =  m_real_patches[i]->getExtraCellLowIndex();
     IntVector patchHigh =  m_real_patches[i]->getExtraCellHighIndex();
-    if (lowIndex.x() <= patchLow.x() &&
-        lowIndex.y() <= patchLow.y() &&
-        lowIndex.z() <= patchLow.z() &&
-        highIndex.x() >= patchHigh.x() &&
-        highIndex.y() >= patchHigh.y() &&
-        highIndex.z() >= patchHigh.z()){
-      //This simulation patch is inside the region.  Add up its cells.
-      cellsInRegion+=m_real_patches[i]->getNumExtraCells();
+   
+    if( doesIntersect(lowIndex, highIndex, patchLow, patchHigh) ){
+    
+      IntVector regionLo = Uintah::Max( lowIndex,  patchLow );
+      IntVector regionHi = Uintah::Min( highIndex, patchHigh );
+      IntVector diff( regionHi - regionLo );
+      cellsInRegion += diff.x() * diff.y() * diff.z();
     }
   }
 
@@ -641,9 +646,9 @@ bool Level::containsCell( const IntVector & idx ) const
 
 //______________________________________________________________________
 //
-void Level::setNonCubicFlag ( bool& test ) 
+void Level::setNonCubicFlag ( bool test ) 
 { 
-  m_upsBoxes.isNonCubic = test; 
+  m_isNonCubicDomain = test; 
 }
 //______________________________________________________________________
 //   Add the bounding box from the ups file
@@ -656,7 +661,7 @@ void Level::addBox_ups( const BBox &b )
   // is non-cubic.  This is obvious not always true.  -Todd
   
   if ( m_upsBoxes.boxes.size() > 1 ){
-    m_upsBoxes.isNonCubic = true;
+    m_isNonCubicDomain = true;
   }
 }
 
