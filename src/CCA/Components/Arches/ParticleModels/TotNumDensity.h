@@ -10,7 +10,7 @@ namespace Uintah{
 public:
 
     TotNumDensity( std::string task_name, int matl_index );
-    ~TotNumDensity();
+    ~TotNumDensity(){}
 
     void problemSetup( ProblemSpecP& db );
 
