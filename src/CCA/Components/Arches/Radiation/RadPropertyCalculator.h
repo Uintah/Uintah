@@ -12,6 +12,7 @@
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <vector>
+#include <CCA/Components/Arches/ChemMix/ChemHelper.h>
 
 #include <sci_defs/uintah_defs.h>
 
@@ -79,9 +80,25 @@ namespace Uintah {
             }
           }
 
+          void setPressure(){
+            ChemHelper& helper = ChemHelper::self();
+            // Example on getting the table constants
+            d_gasPressure=1.0; // in atm
+            ChemHelper::TableConstantsMapType the_table_constants = helper.get_table_constants();
+            if (the_table_constants !=nullptr){
+              auto press_iter = the_table_constants->find("Pressure");
+              if ( press_iter != the_table_constants->end() ){
+            d_gasPressure=press_iter->second/101325.; // in atm
+              }
+            }
+          }
+
+
+
         protected: 
 
           const VarLabel* _abskg_label;   // gas absorption coefficient
+          double d_gasPressure;       // gas pressure in atm
 
           std::string _abskg_name; 
 

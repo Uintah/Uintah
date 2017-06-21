@@ -134,6 +134,7 @@ void gasRadProperties::timestep_init( const Patch* patch, ArchesTaskInfoManager*
 void
 gasRadProperties::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
 
+  _calc->setPressure();
 
   register_variable( _abskg_name , Uintah::ArchesFieldContainer::COMPUTES, variable_registry, time_substep);
 
@@ -150,6 +151,8 @@ gasRadProperties::register_timestep_eval( std::vector<ArchesFieldContainer::Vari
     }
   register_variable(_temperature_name , ArchesFieldContainer::REQUIRES,0,ArchesFieldContainer::LATEST,variable_registry, time_substep );
   register_variable("volFraction" , ArchesFieldContainer::REQUIRES,0,ArchesFieldContainer::NEWDW,variable_registry, time_substep );
+
+
 
 }
 
