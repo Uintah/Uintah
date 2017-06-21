@@ -347,8 +347,6 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
   if ( _T_label == 0){
     throw InvalidValue("Error: For DO Radiation source term -- Could not find the radiation temperature label.", __FILE__, __LINE__);
   }
-  std::string taskname = "DORadiation::computeSource";
-  Task* tsk = scinew Task(taskname, this, &DORadiation::computeSource, timeSubStep);
 
   _abskg_label = VarLabel::find(_abskg_label_name); 
   if ( _abskg_label == 0){
@@ -376,6 +374,8 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
   if (_sweepMethod>0){
     sched_computeSourceSweep( level, sched, timeSubStep );
   }else{
+  std::string taskname = "DORadiation::computeSource";
+  Task* tsk = scinew Task(taskname, this, &DORadiation::computeSource, timeSubStep);
 
   _perproc_patches = level->eachPatch(); 
 
