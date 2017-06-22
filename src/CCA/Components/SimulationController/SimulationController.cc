@@ -449,6 +449,11 @@ SimulationController::schedulerSetup( void )
 
   d_scheduler->problemSetup(d_ups, d_sharedState);  
 
+  // Additional set up calls.
+  d_scheduler->setInitTimestep( true );
+  d_scheduler->setRestartInitTimestep( d_restarting );
+  d_scheduler->initialize( 1, 1 );
+
   // Note: there are other downstream calls to d_scheduler to complete
   // the setup. See outOfSyncSetup().
 }
@@ -467,8 +472,9 @@ SimulationController::simulationInterfaceSetup( void )
                         __FILE__, __LINE__);
   }
 
-  // Note: normally problemSetup would be called here but the the grid
-  // is needed but it has not yet been created.
+  // Note: normally problemSetup would be called here but the grid is
+  // needed and it has not yet been created. Further the simulation
+  // controller needs the regridder which obviously needs the grid.
 
   // Further the simulation interface may need to change the grid
   // before it is setup.
@@ -599,13 +605,10 @@ SimulationController::outOfSyncSetup()
   // DataArchive::restartInitialize.
   d_sim->problemSetup(d_ups, d_restart_ps, d_currentGridP, d_sharedState);
 
-  // The scheduler was initalized earlier because the simulation
-  // interface needed it.
+  // The scheduler was setup earlier because the simulation interface
+  // needed it.
 
   // Complete the setup of the scheduler.
-  d_scheduler->setInitTimestep( true );
-  d_scheduler->setRestartInitTimestep( d_restarting );
-  d_scheduler->initialize( 1, 1 );
   d_scheduler->advanceDataWarehouse( d_currentGridP, true );
 }
 
