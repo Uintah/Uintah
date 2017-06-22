@@ -2306,8 +2306,6 @@ OnDemandDataWarehouse::getLevel(       constGridVariableBase& constGridVar,
     cerrLock.unlock();
   }
 
-  ASSERT(totalLevelCells <= totalCells);
-
   constGridVar = *dynamic_cast<GridVariableBase*>(gridVar);
   delete gridVar;
 }
