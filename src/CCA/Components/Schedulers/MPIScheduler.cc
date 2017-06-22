@@ -166,7 +166,6 @@ MPIScheduler::problemSetup( const ProblemSpecP     & prob_spec
     m_shared_state->d_douts.push_back( &g_send_timings );
     m_shared_state->d_douts.push_back( &g_reductions );
     m_shared_state->d_douts.push_back( &g_time_out );
-    m_shared_state->d_douts.push_back( &g_task_begin_end );
     m_shared_state->d_douts.push_back( &g_task_order );
     m_shared_state->d_douts.push_back( &g_task_dbg );
     m_shared_state->d_douts.push_back( &g_mpi_dbg  );
