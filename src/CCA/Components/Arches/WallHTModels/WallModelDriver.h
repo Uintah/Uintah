@@ -345,9 +345,9 @@ namespace Uintah{
               kg = 2.286e-11*T*T*T - 7.022e-8*T*T + 1.209e-4*T - 5.321e-3;
               
 	            double phi; // this is a zeroth order porosity model for the sootblow layer
-	            double porosity;
-              porosity = (layer_type == "enamel") ? en_porosity : sb_porosity;
-              phi = (T > T_mid) ? 0.0 : porosity;
+              phi = (layer_type == "enamel") ? en_porosity :  // enamel layer porosity never changes.
+                    (T > T_mid) ? 0.0 :
+                    sb_porosity;
               // third compute effective k for layer using hadley model
               a = (phi>=0.3) ? 1.5266*std::pow(1-phi,8.7381) : 0.7079*std::pow(1-phi,6.3051);
               kappa = ks/kg;
