@@ -371,18 +371,25 @@ endif
 ifneq ($(IS_OSX),yes)
 	rm -f $(patsubst %,%/core, $(ALLOBJSUBDIRS))
 endif
-        # Remove any .cu or .h files that live on the binary side...
+       # Remove any .cu or .h files that live on the binary side...
 	@( find CCA/Components -name "*.cu" -exec rm -f {} \;)
 	@( find CCA/Components -name "*.h" -exec rm -f {} \;)
-        # Remove template instantiation files (old SGI compiler?)
+       #
+       # Remove template instantiation files (old SGI compiler?)
 	for fname in $(patsubst %,%/ii_files, $(ALLOBJSUBDIRS)); \
 	  do if test -d $$fname; then rm -rf $$fname; fi; done
-        # Remove emacs backup files.
+	#
 	rm -f $(patsubst %,%/*~, $(ALLOBJSUBDIRS))
-        # Remove all libraries and executables
+       #
+       # this catches anything that slipped through
+	@( find CCA/Components -name "*.o" -exec rm -f {} \;)
+	@( find CCA/Components -name "*.d" -exec rm -f {} \;)
+       #
+       # Remove all libraries and executables
 	rm -f $(CLEANLIBS)
 	rm -f $(CLEANPROGS)
-        # Remove misc stuff...
+       #
+       # Remove misc stuff...
 	rm -f y.output
 	rm -Rf $(LIBDIR)
 	-rm -f sciTAGS
