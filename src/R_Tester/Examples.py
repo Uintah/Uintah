@@ -19,14 +19,6 @@ system("cd %s ; ./RMCRT_doubleToFloat  RMCRT_bm1_1L.ups  RMCRT_FLT_bm1_1L.ups"  
 system("cd %s ; ./RMCRT_doubleToFloat  RMCRT_ML.ups      RMCRT_FLT_ML.ups"      % the_dir )
 system("cd %s ; ./RMCRT_doubleToFloat  RMCRT_bm1_DO.ups  RMCRT_FLT_bm1_DO.ups"  % the_dir )
 
-
-# convert CPU -> GPU tests
-system("cd %s ; ./RMCRT_gpuWorkAround  RMCRT_bm1_1L.ups       RMCRT_GPU_1L.ups"         % the_dir )
-system("cd %s ; ./RMCRT_gpuWorkAround  RMCRT_ML.ups           RMCRT_GPU_ML.ups"         % the_dir )
-system("cd %s ; ./RMCRT_gpuWorkAround  RMCRT_1L_reflect.ups   RMCRT_GPU_1L_reflect.ups" % the_dir )
-system("cd %s ; ./RMCRT_gpuWorkAround  RMCRT_bm1_DO.ups       RMCRT_GPU_bm1_DO.ups"     % the_dir )
-system("cd %s ; ./RMCRT_gpuWorkAround  RMCRT_+Domain.ups      RMCRT_GPU_+Domain.ups"    % the_dir )
-
 # Modify base files
 RMCRT_isoScat_LHC_ups = modUPS( the_dir, \
                                "RMCRT_isoScat.ups", \
@@ -69,9 +61,8 @@ RMCRT_DO_perf_GPU_ups = modUPS2( the_dir, \
 #       sus_options="string"    - Additional command line options for sus command
 #
 #  Notes:
-#  1) The "folder name" must be the same as input file without the extension.
-#  2) If the processors is > 1.0 then an mpirun command will be used
-#  3) Performance_tests are not run on a debug build.
+#  1) If the processors is > 1.0 then an mpirun command will be used
+#  2) Performance_tests are not run on a debug build.
 #______________________________________________________________________
 NIGHTLYTESTS = [   ("poisson1",         "poisson1.ups",                1, "ALL"),                      
                    ("RMCRT_test_1L",    "RMCRT_bm1_1L.ups",            1, "ALL", ["exactComparison"]), 
@@ -117,10 +108,10 @@ THREADEDTESTS = [  ("RMCRT_test_1L_thread",           "RMCRT_bm1_1L.ups",       
                  ]
 
 GPUTESTS      = [
-                   ("RMCRT_test_1L_GPU",     "RMCRT_GPU_1L.ups",          1.1, "Linux", ["gpu",  "exactComparison", "sus_options=-nthreads 4 -gpu"]),
-                   ("RMCRT_ML_GPU",          "RMCRT_GPU_ML.ups",          1.1, "Linux", ["gpu",  "exactComparison", "sus_options=-nthreads 4 -gpu"]),
-                   ("RMCRT_1L_reflect_GPU",  "RMCRT_GPU_1L_reflect.ups",  1.1, "Linux", ["gpu",  "exactComparison", "sus_options=-nthreads 4 -gpu"]),
-                   ("RMCRT_bm1_DO_GPU",      "RMCRT_GPU_bm1_DO.ups",      1.1, "Linux", ["gpu",  "exactComparison", "sus_options=-nthreads 4 -gpu"]),
+                   ("RMCRT_test_1L_GPU",     "RMCRT_bm1_1L.ups",          1.1, "Linux", ["gpu",  "exactComparison", "sus_options=-nthreads 4 -gpu"]),
+                   ("RMCRT_ML_GPU",          "RMCRT_ML.ups",              1.1, "Linux", ["gpu",  "exactComparison", "sus_options=-nthreads 4 -gpu"]),
+                   ("RMCRT_1L_reflect_GPU",  "RMCRT_1L_reflect.ups",      1.1, "Linux", ["gpu",  "exactComparison", "sus_options=-nthreads 4 -gpu"]),
+                   ("RMCRT_bm1_DO_GPU",      "RMCRT_bm1_DO.ups",          1.1, "Linux", ["gpu",  "exactComparison", "sus_options=-nthreads 4 -gpu"]),
                    ("RMCRT_1L_perf_GPU",      RMCRT_1L_perf_GPU_ups,      1.1, "Linux", ["gpu",  "do_performance_test", "sus_options=-nthreads 2 -gpu"]),
                    ("RMCRT_DO_perf_GPU",      RMCRT_DO_perf_GPU_ups,      1.1, "Linux", ["gpu",  "do_performance_test", "sus_options=-nthreads 2 -gpu"])
                ]
