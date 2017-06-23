@@ -396,7 +396,6 @@ Level::getTotalCellsInRegion(const IntVector& lowIndex, const IntVector& highInd
   // need to go all patches and see if they exist in this range.  If so, add up their cells.
   // This process is similar to how d_totalCells is computed in Level::finalizeLevel().
 
-  std::cout << " isNonCubicDomain " << m_isNonCubicDomain << " thread ID " << Parallel::getMainThreadID() << std::endl;
   long cellsInRegion = 0;  
   if (m_isNonCubicDomain == false ){
     IntVector diff( highIndex - lowIndex);
