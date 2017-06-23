@@ -1113,7 +1113,7 @@ Level::getBox( const IntVector & l, const IntVector & h ) const
 const PatchSet*
 Level::eachPatch() const
 {
-  ASSERT(m_each_patch != 0);
+  ASSERT(m_each_patch != nullptr);
   return m_each_patch;
 }
 
@@ -1122,7 +1122,7 @@ Level::eachPatch() const
 const PatchSet*
 Level::allPatches() const
 {
-  ASSERT(m_all_patches != 0);
+  ASSERT(m_all_patches != nullptr);
   return m_all_patches;
 }
 
@@ -1136,7 +1136,7 @@ Level::selectPatchForCellIndex( const IntVector & idx ) const
   selectPatches(idx - i, idx + i, pv, false, false);
 
   if (pv.size() == 0) {
-    return 0;
+    return nullptr;
   } else {
     selectType::iterator it;
 
@@ -1146,7 +1146,7 @@ Level::selectPatchForCellIndex( const IntVector & idx ) const
       }
     }
   }
-  return 0;
+  return nullptr;
 }
 
 //______________________________________________________________________
@@ -1160,7 +1160,7 @@ Level::selectPatchForNodeIndex( const IntVector & idx ) const
   selectPatches(idx - i, idx + i, pv, false, false);
 
   if (pv.size() == 0) {
-    return 0;
+    return nullptr;
   } else {
     selectType::iterator it;
     for (it = pv.begin(); it != pv.end(); it++) {
@@ -1169,7 +1169,7 @@ Level::selectPatchForNodeIndex( const IntVector & idx ) const
       }
     }
   }
-  return 0;
+  return nullptr;
 }
 
 //______________________________________________________________________

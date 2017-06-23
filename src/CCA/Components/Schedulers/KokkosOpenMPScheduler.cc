@@ -308,7 +308,7 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
     MPIScheduler::outputTimingStats("UnifiedScheduler");
   }
 
-  RuntimeStats::report(d_myworld->getComm(), m_shared_state->d_runTimeStats);
+  RuntimeStats::report(d_myworld->getComm());
 
 } // end execute()
 

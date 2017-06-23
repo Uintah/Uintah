@@ -791,12 +791,13 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
 
   // compute the net timings
   if ( m_shared_state != nullptr ) {
-    MPIScheduler::computeNetRunTimeStats(m_shared_state->d_runTimeStats);
 
     // Stats specific to this threaded scheduler - TaskRunner threads start at g_runners[1]
     for (int i = 1; i < m_num_threads; ++i) {
       m_shared_state->d_runTimeStats[SimulationState::TaskWaitThreadTime] += Impl::g_runners[i]->getWaitTime();
     }
+
+    MPIScheduler::computeNetRunTimeStats(m_shared_state->d_runTimeStats);
   }
 
   // only do on toplevel scheduler
@@ -804,7 +805,7 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
     MPIScheduler::outputTimingStats("UnifiedScheduler");
   }
 
-  RuntimeStats::report(d_myworld->getComm(), m_shared_state->d_runTimeStats);
+  RuntimeStats::report(d_myworld->getComm());
 
 } // end execute()
 
@@ -4825,7 +4826,7 @@ UnifiedScheduler::init_threads( UnifiedScheduler * sched, int num_threads )
 //------------------------------------------
 UnifiedSchedulerWorker::UnifiedSchedulerWorker( UnifiedScheduler * scheduler )
   : m_scheduler{ scheduler }
-  , m_rank{ scheduler->getProcessorGroup()->myrank() }
+  , m_rank{ scheduler->d_myworld->myrank() }
 {
 }
 

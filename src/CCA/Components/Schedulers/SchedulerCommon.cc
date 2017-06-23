@@ -732,7 +732,7 @@ SchedulerCommon::addTask(       Task        * task
   // It just gets a max ghost cell extent for anything less than MAX_HALO_DEPTH, and
   // another max ghost cell extent for anything >= MAX_HALO_DEPTH.  The idea is that later
   // we will create two neighborhoods with max extents for each as determined here.
-  for (const Task::Dependency* dep = task->getRequires(); dep != nullptr; dep = dep->m_next) {
+  for (auto dep = task->getRequires(); dep != nullptr; dep = dep->m_next) {
     if (dep->m_num_ghost_cells >= MAX_HALO_DEPTH) {
       if (dep->m_num_ghost_cells > this->m_max_distal_ghost_cells) {
         this->m_max_distal_ghost_cells = dep->m_num_ghost_cells;
@@ -753,7 +753,7 @@ SchedulerCommon::addTask(       Task        * task
   // need for checkpointing, switching, and the like.
   // In the case of treatAsOld Vars, we handle them because something external to the taskgraph
   // needs it that way (i.e., Regridding on a restart requires checkpointed refineFlags).
-  for (const Task::Dependency* dep = task->getRequires(); dep != 0; dep = dep->m_next) {
+  for (auto dep = task->getRequires(); dep != nullptr; dep = dep->m_next) {
     if (isOldDW(dep->mapDataWarehouse()) || m_treat_as_old_vars.find(dep->m_var->getName()) != m_treat_as_old_vars.end()) {
       m_init_requires.push_back(dep);
       m_init_required_vars.insert(dep->m_var);
@@ -1191,8 +1191,9 @@ SchedulerCommon::compile()
 
       Timers::Simple tg_compile_timer;
 
-      // NOTE: this single call is where all the TG compile complexity arises
       const bool has_distal_reqs = ( (m_task_graphs[i]->getIndex() > 0) && (m_max_distal_ghost_cells != 0) );
+
+      // NOTE: this single call is where all the TG compilation complexity arises
       m_task_graphs[i]->createDetailedTasks( useInternalDeps(), first, grid, oldGrid, has_distal_reqs );
 
       // TODO: not going to use shared scrubTable when using multiple regular task graphs
@@ -1566,13 +1567,14 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP & grid, SimulationInterface 
 
   this->compile();
 
-  m_shared_state->d_runTimeStats[SimulationState::RegriddingCompilationTime] +=
-    timer().seconds();
+  m_shared_state->d_runTimeStats[SimulationState::RegriddingCompilationTime] += timer().seconds();
 
   // save these and restore them, since the next execute will append the scheduler's, and we don't want to.
-  double executeTime    = m_shared_state->d_runTimeStats[SimulationState::TaskExecTime];
-  double globalCommTime = m_shared_state->d_runTimeStats[SimulationState::TaskGlobalCommTime];
-  double localCommTime  = m_shared_state->d_runTimeStats[SimulationState::TaskLocalCommTime];
+  double exec_time   = m_shared_state->d_runTimeStats[SimulationState::TaskExecTime];
+  double local_time  = m_shared_state->d_runTimeStats[SimulationState::TaskLocalCommTime];
+  double wait_time   = m_shared_state->d_runTimeStats[SimulationState::TaskWaitCommTime];
+  double reduce_time = m_shared_state->d_runTimeStats[SimulationState::TaskReduceCommTime];
+  double thread_time = m_shared_state->d_runTimeStats[SimulationState::TaskWaitThreadTime];
 
   timer.reset( true );
   this->execute();
@@ -1617,11 +1619,15 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP & grid, SimulationInterface 
 
   newDataWarehouse->refinalize();
 
-  m_shared_state->d_runTimeStats[SimulationState::RegriddingCopyDataTime] +=
-    timer().seconds();
-  m_shared_state->d_runTimeStats[SimulationState::TaskExecTime] = executeTime;
-  m_shared_state->d_runTimeStats[SimulationState::TaskGlobalCommTime] = globalCommTime;
-  m_shared_state->d_runTimeStats[SimulationState::TaskLocalCommTime] = localCommTime;
+  m_shared_state->d_runTimeStats[SimulationState::RegriddingCopyDataTime] += timer().seconds();
+
+  // restore values from before the regrid and data copy
+  m_shared_state->d_runTimeStats[SimulationState::TaskExecTime]       = exec_time;
+  m_shared_state->d_runTimeStats[SimulationState::TaskLocalCommTime]  = local_time;
+  m_shared_state->d_runTimeStats[SimulationState::TaskWaitCommTime]   = wait_time;
+  m_shared_state->d_runTimeStats[SimulationState::TaskReduceCommTime] = reduce_time;
+  m_shared_state->d_runTimeStats[SimulationState::TaskWaitThreadTime] = thread_time;
+
   m_shared_state->setCopyDataTimestep(false);
 }
 

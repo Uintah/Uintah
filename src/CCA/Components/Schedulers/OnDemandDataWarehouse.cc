@@ -625,7 +625,7 @@ OnDemandDataWarehouse::sendMPI(       DependencyBatch       * batch,
       ASSERTRANGE( dest, 0, d_myworld->size() );
 
       ParticleSubset* sendset = 0;
-      // first check to see if the receiving proc alrady has the (old) data
+      // first check to see if the receiving proc already has the (old) data
       // if data is relocating (of a regrid or re-load-balance), then the other
       // proc may already have it (since in most cases particle data comes from the old dw)
       // if lb is non-null, that means the particle data is on the old dw
@@ -946,8 +946,6 @@ OnDemandDataWarehouse::reduceMPI( const VarLabel       * label,
                                   const MaterialSubset * inmatls,
                                   const int              nComm )
 {
-  RuntimeStats::CollectiveTimer mpi_collective_timer;
-
   const MaterialSubset* matls;
   if( !inmatls ) {
     MaterialSubset* tmpmatls = scinew MaterialSubset();
@@ -2313,15 +2311,14 @@ OnDemandDataWarehouse::getLevel(       constGridVariableBase& constGridVar,
 //______________________________________________________________________
 //This putLevel is meant for the Unified Scheduler only.
 void
-OnDemandDataWarehouse::putLevelDB( GridVariableBase* gridVar,
-                            const VarLabel*              label,
-                            const Level*                 level,
-                                  int                    matlIndex /* = -1 */ )
+OnDemandDataWarehouse::putLevelDB(       GridVariableBase* gridVar,
+                                   const VarLabel*         label,
+                                   const Level*            level,
+                                         int               matlIndex /* = -1 */ )
 {
-  //MALLOC_TRACE_TAG_SCOPE( "OnDemandDataWarehouse::put():" + label->getName() );
-
   // Put it in the level database
   bool init = (d_scheduler->isCopyDataTimestep()) || !(d_levelDB.exists( label, matlIndex, level ));
+
   //GridVariableBase* v = dynamic_cast<GridVariableBase*>( &constGridVar )->clone();
   d_levelDB.put( label, matlIndex, level, gridVar, init, true );
 }

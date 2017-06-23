@@ -31,7 +31,6 @@
 #include <CCA/Ports/DataWarehouseP.h>
 
 #include <Core/Parallel/CommunicationList.hpp>
-#include <Core/Util/DOUT.hpp>
 #include <Core/Util/InfoMapper.h>
 #include <Core/Util/Timers/Timers.hpp>
 
@@ -41,14 +40,6 @@
 #include <vector>
 
 namespace Uintah {
-
-namespace {
-
-Dout mpi_stats("MPIMsgStats", false);
-
-}
-
-class Task;
 
 /**************************************
 
@@ -99,52 +90,25 @@ class MPIScheduler : public SchedulerCommon {
 
     virtual void runReductionTask( DetailedTask* dtask );
 
-    // get the processor group this scheduler is executing with (only valid during execute())
-    const ProcessorGroup* getProcessorGroup() { return d_myworld; }
-
     void compile() {
       m_num_messages   = 0;
       m_message_volume = 0;
       SchedulerCommon::compile();
     }
 
-    void printMPIStats() {
-      if (mpi_stats) {
-        unsigned int total_messages;
-        double total_volume;
-
-        unsigned int max_messages;
-        double max_volume;
-
-        // do SUM and MAX reduction for numMessages and messageVolume
-        Uintah::MPI::Reduce(&m_num_messages  , &total_messages, 1, MPI_UNSIGNED, MPI_SUM, 0, d_myworld->getComm());
-        Uintah::MPI::Reduce(&m_message_volume, &total_volume  , 1, MPI_DOUBLE  , MPI_SUM, 0, d_myworld->getComm());
-        Uintah::MPI::Reduce(&m_num_messages  , &max_messages  , 1, MPI_UNSIGNED, MPI_MAX, 0, d_myworld->getComm());
-        Uintah::MPI::Reduce(&m_message_volume, &max_volume    , 1, MPI_DOUBLE  , MPI_MAX, 0, d_myworld->getComm());
-
-        if( d_myworld->myrank() == 0 ) {
-          DOUT(true, "MPIMsgStats: Num Send Messages   (avg): " << total_messages/(static_cast<double>(d_myworld->size())) << "    (max):" << max_messages);
-          DOUT(true, "MPIMsgStats: Send Message Volume (avg): " << total_volume/(static_cast<double>(d_myworld->size()))   << "    (max):" << max_volume);
-        }
-      }
-    }
-
-    void computeNetRunTimeStats(InfoMapper< SimulationState::RunTimeStat, double >& runTimeStats);
-
     // Performs the reduction task. (In threaded, Unified scheduler, a single worker thread will execute this.)
     virtual void initiateReduction( DetailedTask* dtask );
 
-    // timing statistics to test the MPI functionality
+            void computeNetRunTimeStats(InfoMapper< SimulationState::RunTimeStat, double >& runTimeStats);
+
+    // timing statistics for Uintah infrastructure overhead
     enum TimingStat {
-        TotalReduce = 0
-      , TotalSend
+        TotalSend = 0
       , TotalRecv
+      , TotalTest
+      , TotalWait
+      , TotalReduce
       , TotalTask
-      , TotalReduceMPI
-      , TotalSendMPI
-      , TotalRecvMPI
-      , TotalTestMPI
-      , TotalWaitMPI
       , MAX_TIMING_STATS
     };
     

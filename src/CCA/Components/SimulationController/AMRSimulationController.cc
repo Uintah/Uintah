@@ -1343,7 +1343,7 @@ AMRSimulationController::scheduleComputeStableTimestep()
   MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::scheduleComputeStableTimestep()");
 
   for (int i = 0; i < d_currentGridP->numLevels(); i++) {
-    d_sim->scheduleComputeStableTimestep(d_currentGridP->getLevel(i),  d_scheduler);
+    d_sim->scheduleComputeStableTimestep(d_currentGridP->getLevel(i), d_scheduler);
   }
 
   Task* task = scinew Task("reduceSysVar", this, &AMRSimulationController::reduceSysVar);
@@ -1356,14 +1356,14 @@ AMRSimulationController::scheduleComputeStableTimestep()
     task->requires(Task::NewDW, d_sharedState->get_delt_label(), d_currentGridP->getLevel(i).get_rep());
   }
 
-  if (d_sharedState->updateOutputInterval()){
+  if (d_sharedState->updateOutputInterval()) {
     task->requires(Task::NewDW, d_sharedState->get_outputInterval_label());
   }
-  
-  if (d_sharedState->updateCheckpointInterval()){
+
+  if (d_sharedState->updateCheckpointInterval()) {
     task->requires(Task::NewDW, d_sharedState->get_checkpointInterval_label());
   }
-  
+
   //coarsen delt computes the global delt variable
   task->computes(d_sharedState->get_delt_label());
   task->setType(Task::OncePerProc);
@@ -1382,7 +1382,7 @@ AMRSimulationController::reduceSysVar( const ProcessorGroup *
                                      )
 {
   MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::reduceSysVar()");
- 
+
   // the goal of this task is to line up the delt across all levels.
   // If the coarse one already exists (the one without an associated
   // level), then we must not be doing AMR
@@ -1408,42 +1408,37 @@ AMRSimulationController::reduceSysVar( const ProcessorGroup *
       }
     }
   }
-  
+
   if (d_myworld->size() > 1) {
-    new_dw->reduceMPI(d_sharedState->get_delt_label(), 0, 0, -1 ) ;
+    new_dw->reduceMPI(d_sharedState->get_delt_label(), 0, 0, -1);
   }
-  
+
   // reduce output interval and checkpoint interval if no value
   // computed on that MPI rank, benign value will be set when the
   // reduction result is also benign value, this value will be ignored
   // that means no MPI rank want to change the interval
-  if (d_sharedState->updateOutputInterval())
-  {
-    if (patches->size() != 0 &&
-	!new_dw->exists(d_sharedState->get_outputInterval_label(), -1, patch))
-    {
+  if (d_sharedState->updateOutputInterval()) {
+    if (patches->size() != 0 && !new_dw->exists(d_sharedState->get_outputInterval_label(), -1, patch)) {
       min_vartype inv;
       inv.setBenignValue();
       new_dw->put(inv, d_sharedState->get_outputInterval_label());
     }
 
     if (d_myworld->size() > 1) {
-      new_dw->reduceMPI(d_sharedState->get_outputInterval_label(), 0, 0, -1 ) ;
+      new_dw->reduceMPI(d_sharedState->get_outputInterval_label(), 0, 0, -1);
     }
   }
 
-  if (d_sharedState->updateCheckpointInterval())
-  {
-    if (patches->size() != 0 &&
-	!new_dw->exists(d_sharedState->get_checkpointInterval_label(), -1, patch)) {
+  if (d_sharedState->updateCheckpointInterval()) {
+    if (patches->size() != 0 && !new_dw->exists(d_sharedState->get_checkpointInterval_label(), -1, patch)) {
       min_vartype inv;
       inv.setBenignValue();
       new_dw->put(inv, d_sharedState->get_checkpointInterval_label());
     }
-    
+
     if (d_myworld->size() > 1) {
-      new_dw->reduceMPI(d_sharedState->get_checkpointInterval_label(), 0, 0, -1 ) ;
+      new_dw->reduceMPI(d_sharedState->get_checkpointInterval_label(), 0, 0, -1);
     }
   }
 
-} // end reduceSysVar()
+}  // end reduceSysVar()

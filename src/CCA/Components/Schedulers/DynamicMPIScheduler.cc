@@ -407,6 +407,6 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
     outputTimingStats( "DynamicMPIScheduler" );
   }
 
-  RuntimeStats::report(d_myworld->getComm(), m_shared_state->d_runTimeStats);
+  RuntimeStats::report(d_myworld->getComm());
 }
 

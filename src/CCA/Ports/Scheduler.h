@@ -80,8 +80,6 @@ class Scheduler : public UintahParallelPort {
 
     virtual ~Scheduler();
    
-    virtual void printMPIStats() {};
-
     // Only called by the SimulationController, and only once, and only
     // if the simulation has been "restarted".
     virtual void setGeneration( int id ) = 0;
