@@ -168,6 +168,9 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
     return;
   }
 
+  // track total scheduler execution time across timesteps
+  m_exec_timer.reset(true);
+
   RuntimeStats::initialize_timestep(m_task_graphs);
 
   ASSERTRANGE(tgnum, 0, static_cast<int>(m_task_graphs.size()));
@@ -184,7 +187,7 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
   m_detailed_tasks = tg->getDetailedTasks();
 
   if (m_detailed_tasks == 0) {
-    proc0cout << "UnifiedScheduler skipping execute, no tasks\n";
+    proc0cout << "KokkosOpenMPScheduler skipping execute, no tasks\n";
     return;
   }
 
@@ -305,10 +308,13 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
 
   // only do on toplevel scheduler
   if (m_parent_scheduler == nullptr) {
-    MPIScheduler::outputTimingStats("UnifiedScheduler");
+    MPIScheduler::outputTimingStats("KokkosOpenMPScheduler");
   }
 
   RuntimeStats::report(d_myworld->getComm());
+
+  // track total scheduler execution time across timesteps
+  m_exec_timer.stop();
 
 } // end execute()
 

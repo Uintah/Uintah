@@ -113,9 +113,6 @@ MPIScheduler::MPIScheduler( const ProcessorGroup * myworld
       sprintf(filename, "timingStats.max");
       m_max_stats.open(filename);
     }
-
-    // track total scheduler execution time across timesteps - this location covers all schedulers
-    m_timer.start();
   }
 
   std::string timeStr("seconds");
@@ -738,6 +735,9 @@ MPIScheduler::execute( int tgnum     /* = 0 */
                      , int iteration /* = 0 */
                      )
 {
+  // track total scheduler execution time across timesteps
+  m_exec_timer.reset(true);
+
   RuntimeStats::initialize_timestep(m_task_graphs);
 
   ASSERTRANGE( tgnum, 0, static_cast<int>(m_task_graphs.size()) );
@@ -874,6 +874,8 @@ MPIScheduler::execute( int tgnum     /* = 0 */
   }
 
   RuntimeStats::report(d_myworld->getComm());
+
+  m_exec_timer.stop();
 }
 
 //______________________________________________________________________
@@ -890,8 +892,6 @@ MPIScheduler::emitTime( const char* label, double dt )
 void
 MPIScheduler::outputTimingStats( const char* label )
 {
-  m_timer.stop();
-
   int      my_rank      = d_myworld->myrank();
   int      my_comm_size = d_myworld->size();
   MPI_Comm my_comm      = d_myworld->getComm();
@@ -942,6 +942,8 @@ MPIScheduler::outputTimingStats( const char* label )
       }
     }
 
+    m_labels.clear();
+    m_times.clear();
     emitTime("NumPatches"  , myPatches->size());
     emitTime("NumCells"    , numCells);
     emitTime("NumParticles", numParticles);
@@ -954,7 +956,7 @@ MPIScheduler::outputTimingStats( const char* label )
     emitTime("Total task time"  , mpi_info_[TotalTask]);
     emitTime("Total comm time"  , mpi_info_[TotalSend] + mpi_info_[TotalRecv] + mpi_info_[TotalTest] + mpi_info_[TotalWait] + mpi_info_[TotalReduce]);
 
-    double  totalexec = m_timer().seconds();
+    double  totalexec = m_exec_timer().seconds();
     emitTime("Other execution time", totalexec - mpi_info_[TotalSend] - mpi_info_[TotalRecv] - mpi_info_[TotalTest] - mpi_info_[TotalWait] - mpi_info_[TotalReduce]);
 
     std::vector<double> d_totaltimes(m_times.size());

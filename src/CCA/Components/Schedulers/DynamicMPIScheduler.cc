@@ -163,6 +163,9 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
     return;
   }
 
+  // track total scheduler execution time across timesteps
+  m_exec_timer.reset(true);
+
   RuntimeStats::initialize_timestep(m_task_graphs);
 
   ASSERTRANGE(tgnum, 0, static_cast<int>(m_task_graphs.size()));
@@ -408,5 +411,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
   }
 
   RuntimeStats::report(d_myworld->getComm());
+
+  m_exec_timer.stop();
 }
 

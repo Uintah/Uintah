@@ -143,7 +143,7 @@ class MPIScheduler : public SchedulerCommon {
     unsigned int                m_num_messages{0};
     double                      m_message_volume{0.0};
 
-    Timers::Simple              m_timer;
+    Timers::Simple              m_exec_timer;
   
   private:
 

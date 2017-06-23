@@ -890,14 +890,14 @@ SimulationController::ReportStats( bool header /* = false */ )
     double overhead = 0;
     double weight = 0;
 
-    int t = min(d_nSamples, OVERHEAD_WINDOW);
+    int sample_size = min(d_nSamples, OVERHEAD_WINDOW);
 
-    // Calcualte total weight by incrementing through the overhead
+    // Calculate total weight by incrementing through the overhead
     // sample array backwards and multiplying samples by the weights
-    for (int i = 0; i < t; ++i) {
+    for (int i = 0; i < sample_size; ++i) {
       unsigned int index = (overheadIndex - i + OVERHEAD_WINDOW) % OVERHEAD_WINDOW;
       overhead += overheadValues[index] * overheadWeights[i];
-      weight += overheadWeights[i];
+      weight   += overheadWeights[i];
     }
 
     // Increment the overhead index
