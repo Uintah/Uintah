@@ -38,7 +38,7 @@ if [ "$OS" = "Linux" ]; then
      --enable-wasatch_3p \\
      --enable-ray-scatter \\"
 
-    if [ "$USER" == "gpu_rt" ]; then
+    if [ "$LOGNAME" == "gpu_rt" ]; then
       COMMON="      --with-mpi=built-in \\
       --with-cuda=/usr/lib/nvidia-cuda-toolkit \\
       --with-boost=/usr/ \\

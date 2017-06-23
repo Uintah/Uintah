@@ -35,11 +35,11 @@ MACHINE=`hostname`
 
 if [ "$MACHINE" == "uintah-build" ]; then
   COMMON_GROUP="users"
-  BUILD_DIR=/home/${USER}/"$OS"
-  TEST_DATA_DIR=/home/${USER}/"$OS"/TestData
-  TEMP_DIR=/home/${USER}/"$OS"
-  SCRIPT_DIR=/home/${USER}/scripts
-  CHECKPOINTS=/home/${USER}/CheckPoints         
+  BUILD_DIR=/home/${LOGNAME}/"$OS"
+  TEST_DATA_DIR=/home/${LOGNAME}/"$OS"/TestData
+  TEMP_DIR=/home/${LOGNAME}/"$OS"
+  SCRIPT_DIR=/home/${LOGNAME}/scripts
+  CHECKPOINTS=/home/${LOGNAME}/CheckPoints         
   
   # Where the webpage will be, and init webpage
   # Note you need the following directory structure:
@@ -48,10 +48,10 @@ if [ "$MACHINE" == "uintah-build" ]; then
   #          Memory/
   #          simRunTime/
   
-  HTMLLOG=/home/${USER}/public_html/Uintah.html
-  WEBLOG=http://155.101.15.100/~${USER}/Uintah.html
+  HTMLLOG=/home/${LOGNAME}/public_html/Uintah.html
+  WEBLOG=http://155.101.15.100/~${LOGNAME}/Uintah.html
   
-  if [ "$USER" == "gpu_rt" ]; then
+  if [ "$LOGNAME" == "gpu_rt" ]; then
     DEFAULT_MAIL_TO="ahumphrey@sci.utah.edu,t.harman@utah.edu,bradpeterson@gmail.com,jthornock@gmail.com,derkhar@gmail.com,bisaac2@gmail.com"
     export TEST_COMPONENTS="Examples ICE ARCHES"
   fi
@@ -325,6 +325,7 @@ else
       date
   fi
 fi
+
 
 #__________________________________
 # create html web page

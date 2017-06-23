@@ -115,9 +115,9 @@ chmod -R g+w "$TEST_DATA_DIR" > /dev/null 2>&1
 # 
 if [ "$VERBOSE" = "no" -a "$SEND_MAIL_TO" != "" ]; then
   if [ $failed = "0" ]; then
-    subject="SUCCESS: Regression tests on ${USER}:`hostname`"
+    subject="SUCCESS: Regression tests on ${LOGNAME}:`hostname`"
   else
-    subject="FAILURE:  Regression tests on ${USER}:`hostname`***"
+    subject="FAILURE:  Regression tests on ${LOGNAME}:`hostname`***"
   fi
 
   cat > "$BUILDROOT"/mail.msg <<EOF
