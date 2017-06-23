@@ -195,8 +195,8 @@ MPIScheduler::verifyChecksum()
   //  - make the checksum more sophisticated
   int checksum = 0;
   int numSpatialTasks = 0;
-  size_t num_graphs = m_task_graphs.size();
-  for (size_t i = 0; i < num_graphs; ++i) {
+  auto num_graphs = m_task_graphs.size();
+  for (auto i = 0; i < num_graphs; ++i) {
     checksum += m_task_graphs[i]->getTasks().size();
 
     // This begins addressing the issue of making the global checksum more sophisticated:
@@ -275,7 +275,7 @@ MPIScheduler::runTask( DetailedTask * dtask
     printTrackedVars(dtask, SchedulerCommon::PRINT_BEFORE_EXEC);
   }
   std::vector<DataWarehouseP> plain_old_dws(m_dws.size());
-  for (size_t i = 0; i < m_dws.size(); i++) {
+  for (auto i = 0; i < m_dws.size(); i++) {
     plain_old_dws[i] = m_dws[i].get_rep();
   }
 
@@ -322,7 +322,8 @@ MPIScheduler::runTask( DetailedTask * dtask
 
   // Add subscheduler timings to the parent scheduler and reset subscheduler timings
   if (m_parent_scheduler) {
-    for (size_t i = 0; i < mpi_info_.size(); ++i) {
+    auto num_elems = mpi_info_.size();
+    for (auto i = 0; i < num_elems; ++i) {
       MPIScheduler::TimingStat e = (MPIScheduler::TimingStat)i;
       m_parent_scheduler->mpi_info_[e] += mpi_info_[e];
     }
@@ -914,8 +915,9 @@ MPIScheduler::outputTimingStats( const char* label )
            << m_shared_state->getCurrentTopLevelTimeStep()
            << ")" << std::endl;
 
-      for (auto iter = exectimes.begin(); iter != exectimes.end(); iter++) {
-        fout << std::fixed << "Rank-" << my_rank << ": TaskExecTime(s): " << iter->second << " Task:" << iter->first << std::endl;
+      for (auto iter = exectimes.begin(); iter != exectimes.end(); ++iter) {
+        fout << std::fixed<< "Rank-" << my_rank << ": TaskExecTime(s): " << iter->second
+             << " Task:" << iter->first << std::endl;
       }
       fout.close();
       exectimes.clear();
@@ -929,7 +931,7 @@ MPIScheduler::outputTimingStats( const char* label )
     OnDemandDataWarehouseP dw = m_dws[m_dws.size() - 1];
     const GridP grid(const_cast<Grid*>(dw->getGrid()));
     const PatchSubset* myPatches = getLoadBalancer()->getPerProcessorPatchSet(grid)->getSubset(my_rank);
-    for (int p = 0; p < myPatches->size(); p++) {
+    for (auto p = 0; p < myPatches->size(); p++) {
       const Patch* patch = myPatches->get(p);
       IntVector range = patch->getExtraCellHighIndex() - patch->getExtraCellLowIndex();
       numCells += range.x() * range.y() * range.z();
@@ -944,6 +946,9 @@ MPIScheduler::outputTimingStats( const char* label )
 
     m_labels.clear();
     m_times.clear();
+
+    double  totalexec = m_exec_timer().seconds();
+
     emitTime("NumPatches"  , myPatches->size());
     emitTime("NumCells"    , numCells);
     emitTime("NumParticles", numParticles);
@@ -956,8 +961,8 @@ MPIScheduler::outputTimingStats( const char* label )
     emitTime("Total task time"  , mpi_info_[TotalTask]);
     emitTime("Total comm time"  , mpi_info_[TotalSend] + mpi_info_[TotalRecv] + mpi_info_[TotalTest] + mpi_info_[TotalWait] + mpi_info_[TotalReduce]);
 
-    double  totalexec = m_exec_timer().seconds();
-    emitTime("Other execution time", totalexec - mpi_info_[TotalSend] - mpi_info_[TotalRecv] - mpi_info_[TotalTest] - mpi_info_[TotalWait] - mpi_info_[TotalReduce]);
+    emitTime("Total execution time"   , totalexec );
+    emitTime("Non-comm execution time", totalexec - mpi_info_[TotalSend] - mpi_info_[TotalRecv] - mpi_info_[TotalTest] - mpi_info_[TotalWait] - mpi_info_[TotalReduce]);
 
     std::vector<double> d_totaltimes(m_times.size());
     std::vector<double> d_maxtimes(m_times.size());
@@ -971,7 +976,7 @@ MPIScheduler::outputTimingStats( const char* label )
     Uintah::MPI::Reduce(&m_times[0], &d_maxtimes[0]  , static_cast<int>(m_times.size()), MPI_DOUBLE, MPI_MAX, 0, comm);
 
     double total = 0, avgTotal = 0, maxTotal = 0;
-    for (int i = 0; i < (int)d_totaltimes.size(); i++) {
+    for (auto i = 0; i < (int)d_totaltimes.size(); i++) {
       d_avgtimes[i] = d_totaltimes[i] / my_comm_size;
       if (strcmp(m_labels[i], "Total task time") == 0) {
         avgTask = d_avgtimes[i];
@@ -990,7 +995,7 @@ MPIScheduler::outputTimingStats( const char* label )
         continue;
       }
 
-      total += m_times[i];
+      total    += m_times[i];
       avgTotal += d_avgtimes[i];
       maxTotal += d_maxtimes[i];
     }
@@ -1007,7 +1012,7 @@ MPIScheduler::outputTimingStats( const char* label )
       data.push_back(&d_maxtimes);
     }
 
-    for (unsigned file = 0; file < files.size(); file++) {
+    for (auto file = 0; file < files.size(); file++) {
       std::ofstream& out = *files[file];
       out << "Timestep " << m_shared_state->getCurrentTopLevelTimeStep() << std::endl;
       for (size_t i = 0; i < (*data[file]).size(); i++) {
@@ -1030,12 +1035,12 @@ MPIScheduler::outputTimingStats( const char* label )
     if (my_rank == 0) {
       std::ostringstream message;
       message << "\n";
-      message << "  avg exec: " << std::setw(10) <<  avgTask << ",   max exec: " << std::setw(10) << maxTask << "    load imbalance (exec)%:        " << std::setw(6) << (1 - avgTask / maxTask) * 100 << "\n";
-      message << "  avg comm: " << std::setw(10) << avgComm  << ",   max comm: " << std::setw(10) << maxComm << "    load imbalance (comm)%:        " << std::setw(6) << (1 - avgComm / maxComm) * 100 << "\n";
-      message << "  avg  vol: " << std::setw(10) << avgCell  << ",   max  vol: " << std::setw(10) << maxCell << "    load imbalance (theoretical)%: " << std::setw(6) << (1 - avgCell / maxCell) * 100 << "\n";
+      message << "  avg exec: " << std::setw(10) << avgTask << ",   max exec: " << std::setw(10) << maxTask << "    load imbalance (exec)%:        " << std::setw(6) << (1 - avgTask / maxTask) * 100 << "\n";
+      message << "  avg comm: " << std::setw(10) << avgComm << ",   max comm: " << std::setw(10) << maxComm << "    load imbalance (comm)%:        " << std::setw(6) << (1 - avgComm / maxComm) * 100 << "\n";
+      message << "  avg  vol: " << std::setw(10) << avgCell << ",   max  vol: " << std::setw(10) << maxCell << "    load imbalance (theoretical)%: " << std::setw(6) << (1 - avgCell / maxCell) * 100 << "\n";
       DOUT(g_time_out, message.str());
     }
-  }
+  } // end g_time_out
 
   // for MPISendStats
   if (g_send_stats) {
@@ -1044,17 +1049,18 @@ MPIScheduler::outputTimingStats( const char* label )
     double       total_volume;
     double       max_volume;
 
-    // do SUM and MAX reduction for numMessages and messageVolume
+    // do SUM and MAX reduction for m_num_messages and m_message_volume
     Uintah::MPI::Reduce(&m_num_messages  , &total_messages, 1, MPI_UNSIGNED, MPI_SUM, 0, my_comm);
     Uintah::MPI::Reduce(&m_message_volume, &total_volume  , 1, MPI_DOUBLE  , MPI_SUM, 0, my_comm);
     Uintah::MPI::Reduce(&m_num_messages  , &max_messages  , 1, MPI_UNSIGNED, MPI_MAX, 0, my_comm);
     Uintah::MPI::Reduce(&m_message_volume, &max_volume    , 1, MPI_DOUBLE  , MPI_MAX, 0, my_comm);
 
     if (my_rank) {
-      DOUT(true, "MPISendStats: Num Send Messages   (avg): " << total_messages/(static_cast<double>(my_comm_size)) << "    (max):" << max_messages);
-      DOUT(true, "MPISendStats: Send Message Volume (avg): " << total_volume/(static_cast<double>(my_comm_size))   << "    (max):" << max_volume);
+      DOUT(true, "MPISendStats: Num Send Messages   (avg): " << total_messages / (static_cast<double>(my_comm_size)) << "    (max):" << max_messages);
+      DOUT(true, "MPISendStats: Send Message Volume (avg): " << total_volume   / (static_cast<double>(my_comm_size))   << "    (max):" << max_volume);
     }
   }
+
 }
 
 //______________________________________________________________________
