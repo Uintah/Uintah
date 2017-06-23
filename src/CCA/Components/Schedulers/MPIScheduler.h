@@ -26,7 +26,7 @@
 #define CCA_COMPONENTS_SCHEDULERS_MPISCHEDULER_H
 
 #include <CCA/Components/Schedulers/SchedulerCommon.h>
-#include <CCA/Components/Schedulers/DetailedTasks.h>
+#include <CCA/Components/Schedulers/DetailedTask.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
 #include <CCA/Ports/DataWarehouseP.h>
 
@@ -35,8 +35,6 @@
 #include <Core/Util/Timers/Timers.hpp>
 
 #include <fstream>
-#include <map>
-#include <mutex>
 #include <vector>
 
 namespace Uintah {

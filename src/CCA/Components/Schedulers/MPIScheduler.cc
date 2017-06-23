@@ -264,7 +264,7 @@ MPIScheduler::initiateReduction( DetailedTask* dtask )
   runReductionTask(dtask);
   timer.stop();
 
-  mpi_info_[TotalReduce   ] += timer().seconds();
+  mpi_info_[TotalReduce] += timer().seconds();
 }
 
 //______________________________________________________________________
@@ -278,7 +278,7 @@ MPIScheduler::runTask( DetailedTask * dtask
     printTrackedVars(dtask, SchedulerCommon::PRINT_BEFORE_EXEC);
   }
   std::vector<DataWarehouseP> plain_old_dws(m_dws.size());
-  for (int i = 0; i < (int)m_dws.size(); i++) {
+  for (size_t i = 0; i < m_dws.size(); i++) {
     plain_old_dws[i] = m_dws[i].get_rep();
   }
 
@@ -890,6 +890,8 @@ MPIScheduler::emitTime( const char* label, double dt )
 void
 MPIScheduler::outputTimingStats( const char* label )
 {
+  m_timer.stop();
+
   int      my_rank      = d_myworld->myrank();
   int      my_comm_size = d_myworld->size();
   MPI_Comm my_comm      = d_myworld->getComm();
@@ -920,7 +922,7 @@ MPIScheduler::outputTimingStats( const char* label )
     }
   }
 
-  // for MPITimings
+  // for file-based MPI timings
   if (g_time_out) {
     // add number of cells, patches, and particles
     int numCells = 0, numParticles = 0;
@@ -940,9 +942,21 @@ MPIScheduler::outputTimingStats( const char* label )
       }
     }
 
-    emitTime("NumPatches", myPatches->size());
-    emitTime("NumCells", numCells);
+    emitTime("NumPatches"  , myPatches->size());
+    emitTime("NumCells"    , numCells);
     emitTime("NumParticles", numParticles);
+
+    emitTime("Total send time"  , mpi_info_[TotalSend]);
+    emitTime("Total recv time"  , mpi_info_[TotalRecv]);
+    emitTime("Total test time"  , mpi_info_[TotalTest]);
+    emitTime("Total wait time"  , mpi_info_[TotalWait]);
+    emitTime("Total reduce time", mpi_info_[TotalReduce]);
+    emitTime("Total task time"  , mpi_info_[TotalTask]);
+    emitTime("Total comm time"  , mpi_info_[TotalSend] + mpi_info_[TotalRecv] + mpi_info_[TotalTest] + mpi_info_[TotalWait] + mpi_info_[TotalReduce]);
+
+    double  totalexec = m_timer().seconds();
+    emitTime("Other execution time", totalexec - mpi_info_[TotalSend] - mpi_info_[TotalRecv] - mpi_info_[TotalTest] - mpi_info_[TotalWait] - mpi_info_[TotalReduce]);
+
     std::vector<double> d_totaltimes(m_times.size());
     std::vector<double> d_maxtimes(m_times.size());
     std::vector<double> d_avgtimes(m_times.size());
@@ -994,7 +1008,7 @@ MPIScheduler::outputTimingStats( const char* label )
     for (unsigned file = 0; file < files.size(); file++) {
       std::ofstream& out = *files[file];
       out << "Timestep " << m_shared_state->getCurrentTopLevelTimeStep() << std::endl;
-      for (int i = 0; i < (int)(*data[file]).size(); i++) {
+      for (size_t i = 0; i < (*data[file]).size(); i++) {
         out << label << ": " << m_labels[i] << ": ";
         int len = static_cast<int>(strlen(m_labels[i]) + strlen("MPIScheduler: ") + strlen(": "));
         for (int j = len; j < 55; j++)
@@ -1019,19 +1033,6 @@ MPIScheduler::outputTimingStats( const char* label )
       message << "  avg  vol: " << std::setw(10) << avgCell  << ",   max  vol: " << std::setw(10) << maxCell << "    load imbalance (theoretical)%: " << std::setw(6) << (1 - avgCell / maxCell) * 100 << "\n";
       DOUT(g_time_out, message.str());
     }
-
-    emitTime("Total send time  ", mpi_info_[TotalSend]);
-    emitTime("Total recv time  ", mpi_info_[TotalRecv]);
-    emitTime("Total test time  ", mpi_info_[TotalTest]);
-    emitTime("Total wait time  ", mpi_info_[TotalWait]);
-    emitTime("Total reduce time", mpi_info_[TotalReduce]);
-    emitTime("Total task time  ", mpi_info_[TotalTask]);
-    emitTime("Total comm time  ", mpi_info_[TotalSend] + mpi_info_[TotalRecv] + mpi_info_[TotalTest] + mpi_info_[TotalWait] + mpi_info_[TotalReduce]);
-
-    m_timer.stop();
-    double totalexec = m_timer().seconds();
-
-    emitTime("Other execution time", totalexec - mpi_info_[TotalSend] - mpi_info_[TotalRecv] - mpi_info_[TotalTest] - mpi_info_[TotalWait] - mpi_info_[TotalReduce]);
   }
 
   // for MPISendStats
@@ -1060,6 +1061,7 @@ void MPIScheduler::computeNetRunTimeStats(InfoMapper< SimulationState::RunTimeSt
 {
   // don't count output time
   runTimeStats[SimulationState::TaskExecTime      ] += mpi_info_[TotalTask] - runTimeStats[SimulationState::TotalIOTime];
+
   runTimeStats[SimulationState::TaskLocalCommTime ] += mpi_info_[TotalRecv] + mpi_info_[TotalSend];
   runTimeStats[SimulationState::TaskWaitCommTime  ] += mpi_info_[TotalWait];
   runTimeStats[SimulationState::TaskReduceCommTime] += mpi_info_[TotalReduce];

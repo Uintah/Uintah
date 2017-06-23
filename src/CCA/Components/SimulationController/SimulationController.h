@@ -286,17 +286,12 @@ private:
   SimulationController( SimulationController && )                 = delete;
   SimulationController& operator=( SimulationController && )      = delete;
 
-// Percent time in overhead samples
+  // Percent time in overhead samples
   double overheadValues[OVERHEAD_WINDOW];
   double overheadWeights[OVERHEAD_WINDOW];
   int    overheadIndex; // Next sample for writing
 
   int    d_nSamples;
-
-  // void problemSetup( const ProblemSpecP&, GridP& ) = 0;
-  // bool needRecompile( double t, double delt, const LevelP& level,
-  //                     SimulationInterface* cfd, Output* output,
-  //                     LoadBalancerPort* lb ) = 0;
 
 };
 
