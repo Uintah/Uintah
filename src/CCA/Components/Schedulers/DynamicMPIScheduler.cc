@@ -400,6 +400,8 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
 
   finalizeTimestep();
   
+  m_exec_timer.stop();
+
   // compute the net timings
   if (m_shared_state != nullptr) {
     computeNetRunTimeStats(m_shared_state->d_runTimeStats);
@@ -412,6 +414,5 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
 
   RuntimeStats::report(d_myworld->getComm());
 
-  m_exec_timer.stop();
-}
+} // end execute()
 

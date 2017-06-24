@@ -2819,7 +2819,7 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
   else /* if (type == CHECKPOINT_REDUCTION) */ {
     d_sharedState->d_runTimeStats[SimulationState::CheckpointReductionIOTime] +=
       myTime;
-    d_sharedState->d_runTimeStats[SimulationState::CheckpointReductionIORate] +=
+    d_sharedState->d_runTimeStats[SimulationState::CheckpointReducIORate] +=
       (double) totalBytes / (byteToMB * myTime);
   }
     

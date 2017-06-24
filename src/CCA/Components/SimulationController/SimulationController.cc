@@ -943,7 +943,7 @@ SimulationController::ReportStats( bool header /* = false */ )
 //          << "delT="       << setw(12) << d_prev_delt
             << "Next delT="  << setw(12) << d_delt
 
-            << "Wall Time = " << setw(10) << walltimers.GetWallTime()
+            << "Wall Time=" << setw(10) << walltimers.GetWallTime()
             // << "All Time steps= " << setw(12) << walltimers.TimeStep().seconds()
             // << "Current Time Step= " << setw(12) << timeStep.seconds()
             << "EMA="        << setw(12) << walltimers.ExpMovingAverage().seconds()
@@ -964,14 +964,14 @@ SimulationController::ReportStats( bool header /* = false */ )
               << ProcessInfo::toHumanUnits((unsigned long) avg_memused)
               << " (avg) " << setw(10)
               << ProcessInfo::toHumanUnits(max_memused)
-              << " (max on rank:" << setw(6) << max_memused_rank << ")";
+              << " (max on rank: " << setw(6) << max_memused_rank << ")";
 
-      if(avg_highwater)
+      if (avg_highwater)
         message << "    Highwater Memory Used=" << setw(10)
                 << ProcessInfo::toHumanUnits((unsigned long)avg_highwater)
                 << " (avg) " << setw(10)
                 << ProcessInfo::toHumanUnits(max_highwater)
-                << " (max on rank:" << setw(6) << max_highwater_rank << ")";
+                << " (max on rank: " << setw(6) << max_highwater_rank << ")";
     }
 
     dbg << message.str() << "\n";

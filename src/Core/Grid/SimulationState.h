@@ -303,7 +303,7 @@ public:
     OutputIORate,
     ReductionIORate,
     CheckpointIORate,
-    CheckpointReductionIORate,
+    CheckpointReducIORate,
 
     SCIMemoryUsed,
     SCIMemoryMaxUsed,

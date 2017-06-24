@@ -164,7 +164,7 @@ SimulationState::SimulationState(ProblemSpecP &ps)
   d_runTimeStats.insert( OutputIORate,       std::string("OutputIORate"),     "MBytes/sec", 0 );
   d_runTimeStats.insert( ReductionIORate,    std::string("ReductionIORate"),  "MBytes/sec", 0 );
   d_runTimeStats.insert( CheckpointIORate,   std::string("CheckpointIORate"), "MBytes/sec", 0 );
-  d_runTimeStats.insert( CheckpointReductionIORate, std::string("CheckpointReductionIORate"), "MBytes/sec", 0 );
+  d_runTimeStats.insert( CheckpointReducIORate, std::string("CheckpointReducIORate"), "MBytes/sec", 0 );
 
   d_runTimeStats.insert( SCIMemoryUsed,      std::string("SCIMemoryUsed"),      bytesStr, 0 );
   d_runTimeStats.insert( SCIMemoryMaxUsed,   std::string("SCIMemoryMaxUsed"),   bytesStr, 0 );
@@ -178,6 +178,7 @@ SimulationState::SimulationState(ProblemSpecP &ps)
   d_runTimeStats.insert( L2Misses,    std::string("L2Misses"), "misses", 0 );
   d_runTimeStats.insert( L3Misses,    std::string("L3Misses"), "misses", 0 );
 #endif
+
   d_runTimeStats.validate( MAX_TIMING_STATS );
 
   resetStats();

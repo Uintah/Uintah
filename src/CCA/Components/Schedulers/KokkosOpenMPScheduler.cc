@@ -301,6 +301,8 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
 
   finalizeTimestep();
 
+  m_exec_timer.stop();
+
   // compute the net timings
   if ( m_shared_state != nullptr ) {
     MPIScheduler::computeNetRunTimeStats(m_shared_state->d_runTimeStats);
@@ -312,9 +314,6 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
   }
 
   RuntimeStats::report(d_myworld->getComm());
-
-  // track total scheduler execution time across timesteps
-  m_exec_timer.stop();
 
 } // end execute()
 

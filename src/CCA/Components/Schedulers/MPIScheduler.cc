@@ -74,7 +74,6 @@ std::mutex g_lb_mutex{};                // load balancer lock
 std::mutex g_recv_mutex{};
 
 Dout g_dbg(          "MPIScheduler_DBG"       , false );
-Dout g_send_timings( "SendTiming"             , false );
 Dout g_send_stats(   "MPISendStats"           , false );
 Dout g_reductions(   "ReductionTasks"         , false );
 Dout g_time_out(     "MPIScheduler_TimingsOut", false );
@@ -157,9 +156,10 @@ MPIScheduler::problemSetup( const ProblemSpecP     & prob_spec
   // modify.
   if( m_shared_state->getVisIt() && !initialized ) {
     m_shared_state->d_douts.push_back( &g_dbg );
-    m_shared_state->d_douts.push_back( &g_send_timings );
+    m_shared_state->d_douts.push_back( &g_send_stats );
     m_shared_state->d_douts.push_back( &g_reductions );
     m_shared_state->d_douts.push_back( &g_time_out );
+    m_shared_state->d_douts.push_back( &g_task_level );
     m_shared_state->d_douts.push_back( &g_task_order );
     m_shared_state->d_douts.push_back( &g_task_dbg );
     m_shared_state->d_douts.push_back( &g_mpi_dbg  );
@@ -766,11 +766,6 @@ MPIScheduler::execute( int tgnum     /* = 0 */
     dts->localTask(i)->resetDependencyCounts();
   }
 
-  if (g_time_out) {
-    m_labels.clear();
-    m_times.clear();
-  }
-
   int me = d_myworld->myrank();
 
   // This only happens if "-emit_taskgraphs" is passed to sus
@@ -864,6 +859,8 @@ MPIScheduler::execute( int tgnum     /* = 0 */
 
   finalizeTimestep();
 
+  m_exec_timer.stop();
+
   // compute the net timings
   if (m_shared_state != nullptr) {
     computeNetRunTimeStats(m_shared_state->d_runTimeStats);
@@ -876,8 +873,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */
 
   RuntimeStats::report(d_myworld->getComm());
 
-  m_exec_timer.stop();
-}
+} // end execute()
 
 //______________________________________________________________________
 //
@@ -1012,7 +1008,7 @@ MPIScheduler::outputTimingStats( const char* label )
       data.push_back(&d_maxtimes);
     }
 
-    for (auto file = 0; file < files.size(); file++) {
+    for (auto file = 0; file < files.size(); ++file) {
       std::ofstream& out = *files[file];
       out << "Timestep " << m_shared_state->getCurrentTopLevelTimeStep() << std::endl;
       for (size_t i = 0; i < (*data[file]).size(); i++) {
@@ -1035,9 +1031,9 @@ MPIScheduler::outputTimingStats( const char* label )
     if (my_rank == 0) {
       std::ostringstream message;
       message << "\n";
-      message << "  avg exec: " << std::setw(10) << avgTask << ",   max exec: " << std::setw(10) << maxTask << "    load imbalance (exec)%:        " << std::setw(6) << (1 - avgTask / maxTask) * 100 << "\n";
-      message << "  avg comm: " << std::setw(10) << avgComm << ",   max comm: " << std::setw(10) << maxComm << "    load imbalance (comm)%:        " << std::setw(6) << (1 - avgComm / maxComm) * 100 << "\n";
-      message << "  avg  vol: " << std::setw(10) << avgCell << ",   max  vol: " << std::setw(10) << maxCell << "    load imbalance (theoretical)%: " << std::setw(6) << (1 - avgCell / maxCell) * 100 << "\n";
+      message << "  avg exec: " << std::setw(12) << avgTask << ",   max exec: " << std::setw(12) << maxTask << "    load imbalance (exec)%:        " << std::setw(6) << (1 - avgTask / maxTask) * 100 << "\n";
+      message << "  avg comm: " << std::setw(12) << avgComm << ",   max comm: " << std::setw(12) << maxComm << "    load imbalance (comm)%:        " << std::setw(6) << (1 - avgComm / maxComm) * 100 << "\n";
+      message << "  avg  vol: " << std::setw(12) << avgCell << ",   max  vol: " << std::setw(12) << maxCell << "    load imbalance (theoretical)%: " << std::setw(6) << (1 - avgCell / maxCell) * 100 << "\n";
       DOUT(g_time_out, message.str());
     }
   } // end g_time_out
@@ -1055,9 +1051,11 @@ MPIScheduler::outputTimingStats( const char* label )
     Uintah::MPI::Reduce(&m_num_messages  , &max_messages  , 1, MPI_UNSIGNED, MPI_MAX, 0, my_comm);
     Uintah::MPI::Reduce(&m_message_volume, &max_volume    , 1, MPI_DOUBLE  , MPI_MAX, 0, my_comm);
 
-    if (my_rank) {
-      DOUT(true, "MPISendStats: Num Send Messages   (avg): " << total_messages / (static_cast<double>(my_comm_size)) << "    (max):" << max_messages);
-      DOUT(true, "MPISendStats: Send Message Volume (avg): " << total_volume   / (static_cast<double>(my_comm_size))   << "    (max):" << max_volume);
+    if (my_rank == 0) {
+      std::ostringstream message;
+      message << "MPISendStats: Num Send Messages   (avg): " << std::setw(12) << total_messages / (static_cast<double>(my_comm_size)) << "    (max):" << std::setw(12) << max_messages << "\n";
+      message << "MPISendStats: Send Message Volume (avg): " << std::setw(12) << total_volume   / (static_cast<double>(my_comm_size)) << "    (max):" << std::setw(12) << max_volume   << "\n";
+      DOUT(g_send_stats, message.str());
     }
   }
 
