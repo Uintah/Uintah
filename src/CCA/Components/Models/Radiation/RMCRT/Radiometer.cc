@@ -300,13 +300,16 @@ Radiometer::initializeRadVars( const ProcessorGroup*,
 void
 Radiometer::sched_radiometer( const LevelP& level,
                               SchedulerP& sched,
-                              Task::WhichDW abskg_dw,
+                              Task::WhichDW notUsed,
                               Task::WhichDW sigma_dw,
                               Task::WhichDW celltype_dw )
 {
   vector<const Patch*> myPatches = getPatchSet( sched, level );
   bool hasRadiometers = false;
   int nGhostCells = 0;           // This should be 0 for patches without radiometers
+
+  int L = level->getIndex();
+  Task::WhichDW abskg_dw = d_abskg_dw[L];
   
   //__________________________________
   //  If this processor owns any patches with radiometers
@@ -347,13 +350,16 @@ Radiometer::sched_radiometer( const LevelP& level,
 void
 Radiometer::sched_radiometer( const LevelP& level,
                               SchedulerP& sched,
-                              Task::WhichDW abskg_dw,
+                              Task::WhichDW notUsed,
                               Task::WhichDW sigma_dw,
                               Task::WhichDW celltype_dw )
 {
   // find patches that contain radiometers
   vector<const Patch*> myPatches = getPatchSet( sched, level );
   bool hasRadiometers = false;
+  
+  int L = level->getIndex();
+  Task::WhichDW abskg_dw = d_abskg_dw[L];  
   
   //__________________________________
   //  If this processor owns any patches with radiometers

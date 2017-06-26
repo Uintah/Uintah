@@ -51,9 +51,8 @@
 
 /*______________________________________________________________________
   TO DO
-  create a vector (isComputedVarLabels) that contains boundryFlux, VRFlux, radiationVolq
-  and use it for scheduling.  Add logic to what is actually in that vector.
-
+Separate Kokkos code into a separate file
+  
 Critical:
   - Fix getRegion() for L-shaped domains.
 
@@ -61,14 +60,12 @@ Critical:
 Optimizations:
   - Spatial scheduling, used by radiometer.  Only need to execute & communicate
     variables on a subset of patches.
-  - Temporal scheduling:  To reduce task graph recompilations create two task graphs
-    that can be swapped while runninng.  This is in incite_dev.  Needs to be pushed to trunk
+
   - Create a LevelDB.  Push an pull the communicated variables
   - DO: Reconstruct the fine level using interpolation and coarse level values
   - Investigate why floats are slow.
   - Temperatures af ints?
   - 2L flux coarsening on the boundaries
-  -
 ______________________________________________________________________*/
 
 
@@ -453,13 +450,16 @@ Ray::BC_bulletproofing( const ProblemSpecP& rmcrtps )
 void
 Ray::sched_rayTrace( const LevelP& level,
                      SchedulerP& sched,
-                     Task::WhichDW abskg_dw,
+                     Task::WhichDW notUsed,
                      Task::WhichDW sigma_dw,
                      Task::WhichDW celltype_dw,
                      bool modifies_divQ )
 {
   string taskname = "Ray::rayTrace";
   Task *tsk = nullptr;
+  
+  int L = level->getIndex();
+  Task::WhichDW abskg_dw = d_abskg_dw[L];
 
   if (Parallel::usingDevice()) {          // G P U
 
@@ -484,46 +484,37 @@ Ray::sched_rayTrace( const LevelP& level,
   Ghost::GhostType  gac  = Ghost::AroundCells;
   int n_ghostCells = SHRT_MAX;
 
-/*`==========TESTING==========*/
-    //__________________________________
-    // logic for determining number of ghostCells/d_halo
-    if( d_ROI_algo == boundedRayLength ){
 
-      Vector Dx     = level->dCell();
-      Vector nCells = Vector( d_maxRayLength )/Dx;
-      double length = nCells.length();
-      n_ghostCells  = std::ceil( length );
+  //__________________________________
+  // logic for determining number of ghostCells/d_halo
+  if( d_ROI_algo == boundedRayLength ){
 
-      // ghost cell can't exceed number of cells on a level
-      IntVector lo, hi;
-      level->findCellIndexRange(lo,hi);
-      IntVector diff = hi-lo;
-      int nCellsLevel = Max( diff.x(), diff.y(), diff.z() );
+    Vector Dx     = level->dCell();
+    Vector nCells = Vector( d_maxRayLength )/Dx;
+    double length = nCells.length();
+    n_ghostCells  = std::ceil( length );
 
-      if (n_ghostCells > SHRT_MAX || n_ghostCells > nCellsLevel ) {
-        proc0cout << "\n  WARNING  RMCRT:sched_rayTrace Clamping the number of ghostCells to SHRT_MAX, (n_ghostCells: " << n_ghostCells
-                  << ") max cells in any direction on a Levels: " << nCellsLevel << "\n\n";
-        n_ghostCells = SHRT_MAX;
-        d_ROI_algo = entireDomain;
-      }
-      d_haloCells = IntVector(n_ghostCells, n_ghostCells, n_ghostCells);
+    // ghost cell can't exceed number of cells on a level
+    IntVector lo, hi;
+    level->findCellIndexRange(lo,hi);
+    IntVector diff = hi-lo;
+    int nCellsLevel = Max( diff.x(), diff.y(), diff.z() );
+
+    if (n_ghostCells > SHRT_MAX || n_ghostCells > nCellsLevel ) {
+      proc0cout << "\n  WARNING  RMCRT:sched_rayTrace Clamping the number of ghostCells to SHRT_MAX, (n_ghostCells: " << n_ghostCells
+                << ") max cells in any direction on a Levels: " << nCellsLevel << "\n\n";
+      n_ghostCells = SHRT_MAX;
+      d_ROI_algo = entireDomain;
     }
-
-/*===========TESTING==========`*/
-
-    dbg << "    sched_rayTrace: number of ghost cells for all-to-all variables: (" << n_ghostCells << ")\n";
-
-    tsk->requires( abskg_dw ,    d_abskgLabel  ,   gac, n_ghostCells );
-    tsk->requires( sigma_dw ,    d_sigmaT4Label,   gac, n_ghostCells );
-    tsk->requires( celltype_dw , d_cellTypeLabel , gac, n_ghostCells );
-  
-  // TODO This is a temporary fix until we can generalize GPU/CPU carry forward functionality.
-  if ( !(Uintah::Parallel::usingDevice()) ) {
-    // needed for carry Forward
-    tsk->requires( Task::OldDW, d_divQLabel,          d_gn, 0 );
-    tsk->requires( Task::OldDW, d_boundFluxLabel,     d_gn, 0 );
-    tsk->requires( Task::OldDW, d_radiationVolqLabel, d_gn, 0 );
+    d_haloCells = IntVector(n_ghostCells, n_ghostCells, n_ghostCells);
   }
+
+  dbg << "    sched_rayTrace: number of ghost cells for all-to-all variables: (" << n_ghostCells << ")\n";
+
+  tsk->requires( abskg_dw ,    d_abskgLabel  ,   gac, n_ghostCells );
+  tsk->requires( sigma_dw ,    d_sigmaT4Label,   gac, n_ghostCells );
+  tsk->requires( celltype_dw , d_cellTypeLabel , gac, n_ghostCells );
+  
 
   if( modifies_divQ ) {
     tsk->modifies( d_divQLabel );
@@ -1232,13 +1223,13 @@ Ray::rayTrace( const ProcessorGroup* pg,
       for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
         IntVector origin = *iter;
 
-          if (celltype[origin] != d_flowCell) {
-              continue;
-          }
-
+        if (celltype[origin] != d_flowCell) {
+          continue;
+        }
+ 
         // A given flow cell may have 0,1,2,3,4,5, or 6 faces that are adjacent to a wall.
         // boundaryFaces is the vector that contains the list of which faces are adjacent to a wall
-          vector<int> boundaryFaces;
+        vector<int> boundaryFaces;
         boundaryFaces.clear();
 
         // determine if origin has one or more boundary faces, and if so, populate boundaryFaces vector
@@ -1431,7 +1422,7 @@ Ray::rayTrace( const ProcessorGroup* pg,
 void
 Ray::sched_rayTrace_dataOnion( const LevelP& level,
                                SchedulerP& sched,
-                               Task::WhichDW abskg_dw,
+                               Task::WhichDW notUsed,
                                Task::WhichDW sigma_dw,
                                Task::WhichDW celltype_dw,
                                bool modifies_divQ )
@@ -1447,21 +1438,23 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
   Task* tsk = nullptr;
   string taskname = "";
 
+  Task::WhichDW NotUsed = Task::None;
+  
   if (Parallel::usingDevice()) {          // G P U
     taskname = "Ray::rayTraceDataOnionGPU";
 
     if (RMCRTCommon::d_FLT_DBL == TypeDescription::double_type) {
-      tsk = scinew Task(taskname, this, &Ray::rayTraceDataOnionGPU<double>, modifies_divQ, d_sharedState, abskg_dw, sigma_dw, celltype_dw);
+      tsk = scinew Task(taskname, this, &Ray::rayTraceDataOnionGPU<double>, modifies_divQ, d_sharedState, NotUsed, sigma_dw, celltype_dw);
     } else {
-      tsk = scinew Task(taskname, this, &Ray::rayTraceDataOnionGPU<float>, modifies_divQ, d_sharedState, abskg_dw, sigma_dw, celltype_dw);
+      tsk = scinew Task(taskname, this, &Ray::rayTraceDataOnionGPU<float>, modifies_divQ, d_sharedState, NotUsed, sigma_dw, celltype_dw);
     }
     tsk->usesDevice(true);
   } else {                                // CPU
     taskname = "Ray::rayTrace_dataOnion";
     if (RMCRTCommon::d_FLT_DBL == TypeDescription::double_type) {
-      tsk = scinew Task(taskname, this, &Ray::rayTrace_dataOnion<double>, modifies_divQ, abskg_dw, sigma_dw, celltype_dw);
+      tsk = scinew Task(taskname, this, &Ray::rayTrace_dataOnion<double>, modifies_divQ, NotUsed, sigma_dw, celltype_dw);
     } else {
-      tsk = scinew Task(taskname, this, &Ray::rayTrace_dataOnion<float>, modifies_divQ, abskg_dw, sigma_dw, celltype_dw);
+      tsk = scinew Task(taskname, this, &Ray::rayTrace_dataOnion<float>, modifies_divQ, NotUsed, sigma_dw, celltype_dw);
     }
   }
 
@@ -1469,7 +1462,8 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
 
   Task::MaterialDomainSpec  ND  = Task::NormalDomain;
   Ghost::GhostType         gac  = Ghost::AroundCells;
-
+  Task::WhichDW            abskg_dw = d_abskg_dw[L_indx];
+  
   // finest level:
   if ( d_ROI_algo == patch_based ) {          // patch_based we know the number of ghostCells
     //__________________________________
@@ -1515,7 +1509,8 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
   // declare requires for all coarser levels
   for (int l = 0; l < maxLevels; ++l) {
     int offset = maxLevels - l;
-    tsk->requires( abskg_dw,    d_abskgLabel,    nullptr, Task::CoarseLevel, offset, nullptr, ND, gac, SHRT_MAX );
+    Task::WhichDW abskg_dw_CL = d_abskg_dw[l];
+    tsk->requires( abskg_dw_CL, d_abskgLabel,    nullptr, Task::CoarseLevel, offset, nullptr, ND, gac, SHRT_MAX );
     tsk->requires( sigma_dw,    d_sigmaT4Label,  nullptr, Task::CoarseLevel, offset, nullptr, ND, gac, SHRT_MAX );
     tsk->requires( celltype_dw, d_cellTypeLabel, nullptr, Task::CoarseLevel, offset, nullptr, ND, gac, SHRT_MAX );
 
@@ -1560,7 +1555,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
                          DataWarehouse* old_dw,
                          DataWarehouse* new_dw,
                          bool modifies_divQ,
-                         Task::WhichDW which_abskg_dw,
+                         Task::WhichDW notUsed,
                          Task::WhichDW which_sigmaT4_dw,
                          Task::WhichDW which_celltype_dw )
 {
@@ -1592,8 +1587,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
   StaticArray< constCCVariable<int> >cellType(maxLevels);
   constCCVariable< T > abskg_fine;
   constCCVariable< T > sigmaT4OverPi_fine;
-
-  DataWarehouse* abskg_dw    = new_dw->getOtherDataWarehouse(which_abskg_dw);
+ 
   DataWarehouse* sigmaT4_dw  = new_dw->getOtherDataWarehouse(which_sigmaT4_dw);
   DataWarehouse* celltype_dw = new_dw->getOtherDataWarehouse(which_celltype_dw);
 
@@ -1603,7 +1597,8 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
     LevelP level = new_dw->getGrid()->getLevel(L);
 
     if (level->hasFinerLevel() ) {                               // coarse level data
-
+      DataWarehouse* abskg_dw = get_abskg_dw(L, new_dw);
+      
       abskg_dw->getLevel(   abskg[L]   ,       d_abskgLabel ,   d_matl , level.get_rep() );
       sigmaT4_dw->getLevel( sigmaT4OverPi[L] , d_sigmaT4Label,  d_matl , level.get_rep() );
       celltype_dw->getLevel( cellType[L] ,     d_cellTypeLabel, d_matl , level.get_rep() );
@@ -1623,7 +1618,8 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
   if ( d_ROI_algo == fixed || d_ROI_algo == dynamic ) {
 
     int L = maxLevels - 1;
-
+    DataWarehouse* abskg_dw = get_abskg_dw(L, new_dw);
+    
     const Patch* notUsed = 0;
     computeExtents(level_0, fineLevel, notUsed, maxLevels, new_dw,
                    fineLevel_ROI_Lo, fineLevel_ROI_Hi, regionLo,  regionHi);
@@ -1661,6 +1657,8 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
                      regionLo,  regionHi);
 
       int L = maxLevels - 1;
+      DataWarehouse* abskg_dw = get_abskg_dw(L, new_dw);
+      
       dbg << " getting fine level data across L-" << L << endl;
 
       abskg_dw->getRegion(   abskg[L]   ,       d_abskgLabel ,  d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
@@ -2340,7 +2338,7 @@ void Ray::setBC(CCVariable< T >& Q_CC,
   if( dbg_BC.active() ){
     const Level* level = patch->getLevel();
     dbg_BC << "setBC \t"<< desc <<" "
-           << " mat_id = " << mat_id <<  ", Patch: "<< patch->getID() << " L-" <<level->getID()<< endl;
+           << " mat_id = " << mat_id <<  ", Patch: "<< patch->getID() << " L-" <<level->getIndex()<< endl;
   }
 
   // Iterate over the faces encompassing the domain
@@ -2636,15 +2634,20 @@ void Ray::sched_CoarsenAll( const LevelP& coarseLevel,
 {
   if(coarseLevel->hasFinerLevel()){
     printSchedule(coarseLevel,dbg,"Ray::sched_CoarsenAll");
-    sched_Coarsen_Q(coarseLevel, sched, Task::NewDW, modifies_abskg,     d_abskgLabel );
-    sched_Coarsen_Q(coarseLevel, sched, Task::NewDW, modifies_sigmaT4,  d_sigmaT4Label );
+    
+    int L = coarseLevel->getIndex();
+    Task::WhichDW fineLevel_abskg_dw = d_abskg_dw[L+1];
+    cout << " sched_CoarsenAll DW: " << fineLevel_abskg_dw << endl;
+    
+    sched_Coarsen_Q(coarseLevel, sched, fineLevel_abskg_dw, modifies_abskg,     d_abskgLabel );
+    sched_Coarsen_Q(coarseLevel, sched, Task::NewDW,        modifies_sigmaT4,  d_sigmaT4Label );
   }
 }
 
 //______________________________________________________________________
 void Ray::sched_Coarsen_Q ( const LevelP& coarseLevel,
                             SchedulerP& sched,
-                            Task::WhichDW this_dw,
+                            Task::WhichDW fineLevel_Q_dw,
                             const bool modifies,
                             const VarLabel* variable )
 {
@@ -2657,21 +2660,21 @@ void Ray::sched_Coarsen_Q ( const LevelP& coarseLevel,
   Task* tsk = nullptr;
   switch( subtype ) {
     case TypeDescription::double_type:
-      tsk = scinew Task( taskname, this, &Ray::coarsen_Q< double >, variable, modifies, this_dw );
+      tsk = scinew Task( taskname, this, &Ray::coarsen_Q< double >, variable, modifies, fineLevel_Q_dw );
       break;
     case TypeDescription::float_type:
-      tsk = scinew Task( taskname, this, &Ray::coarsen_Q< float >, variable, modifies, this_dw );
+      tsk = scinew Task( taskname, this, &Ray::coarsen_Q< float >, variable, modifies, fineLevel_Q_dw );
       break;
     default:
       throw InternalError("Ray::sched_Coarsen_Q: (CCVariable) invalid data type", __FILE__, __LINE__);
   }
 
   if(modifies){
-    tsk->requires(this_dw, variable, 0, Task::FineLevel, 0, Task::NormalDomain, d_gn, 0);
-    tsk->modifies(variable);
+    tsk->requires( fineLevel_Q_dw, variable, 0, Task::FineLevel, 0, Task::NormalDomain, d_gn, 0 );
+    tsk->modifies( variable);
   }else{
-    tsk->requires(this_dw, variable, 0, Task::FineLevel, 0, Task::NormalDomain, d_gn, 0);
-    tsk->computes(variable);
+    tsk->requires( fineLevel_Q_dw, variable, 0, Task::FineLevel, 0, Task::NormalDomain, d_gn, 0 );
+    tsk->computes( variable );
   }
 
   sched->addTask( tsk, coarseLevel->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT );
@@ -2691,6 +2694,7 @@ void Ray::coarsen_Q ( const ProcessorGroup*,
 {
   const Level* coarseLevel = getLevel(patches);
   const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
+  DataWarehouse* dw = new_dw->getOtherDataWarehouse( which_dw );
 
   //__________________________________
   //
@@ -2718,7 +2722,7 @@ void Ray::coarsen_Q ( const ProcessorGroup*,
 
       // coarsen the coarse patch interior cells
       fineToCoarseOperator(Q_coarse,   computesAve,
-                           variable,   matl, new_dw,
+                           variable,   matl, dw,
                            coarsePatch, coarseLevel, fineLevel);
 
       //__________________________________

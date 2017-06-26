@@ -354,6 +354,7 @@
         <Eqn label="mixture_fraction" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
+          <stage value="0"/>
           <conv_scheme>super_bee</conv_scheme>
           <initialization type="constant">
             <constant>0.0</constant>
@@ -367,6 +368,7 @@
         <Eqn label="enthalpy_rmcrt" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
+          <stage value="0"/>
           <conv_scheme>super_bee</conv_scheme>
           <initialization type="tabulated">
             <depend_varname>adiabaticenthalpy</depend_varname>
@@ -379,6 +381,7 @@
         <Eqn label="enthalpy_do" type = "CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
+          <stage value="0"/>
           <conv_scheme>super_bee</conv_scheme>
           <initialization type="tabulated">
             <depend_varname>adiabaticenthalpy</depend_varname>

@@ -367,23 +367,30 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
       _RMCRT->sched_CarryForward_Var(level, sched, _labels->d_cellTypeLabel);
     }
   }
-
+  
+  Task::WhichDW notUsed = Task::None;
   //______________________________________________________________________
   //   D A T A   O N I O N   A P P R O A C H
   if (_whichAlgo == dataOnion) {
-
+ 
+    Task::WhichDW temp_dw       = Task::OldDW;
+    Task::WhichDW sigmaT4_dw    = Task::NewDW;
+    Task::WhichDW celltype_dw   = Task::NewDW;
+    const bool backoutTemp      = true;
+    const bool modifies_abskg   = false;
+    const bool modifies_sigmaT4 = false;
+    
     const LevelP& fineLevel = grid->getLevel(_archesLevelIndex);
 
-    // Task::WhichDW temp_dw = Task::NewDW;         -- Todd swqp this after merge
-    Task::WhichDW temp_dw  = Task::OldDW;
-    Task::WhichDW abskg_dw = Task::NewDW;
-
+    // define per level which abskg dw
+    _RMCRT->set_abskg_dw_perLevel( fineLevel, Task::OldDW );
+    
     // modify Radiative properties on the finest level
     // convert abskg:dbl -> abskg:flt if needed
-    _RMCRT->sched_DoubleToFloat(fineLevel, sched, abskg_dw);
+    _RMCRT->sched_DoubleToFloat( fineLevel, sched, notUsed );
 
     // compute sigmaT4 on the finest level
-    _RMCRT->sched_sigmaT4(fineLevel, sched, temp_dw, includeExtraCells);
+    _RMCRT->sched_sigmaT4( fineLevel, sched, temp_dw, includeExtraCells );
     
     // carry forward if it's time
     _RMCRT->sched_CarryForward_FineLevelLabels ( fineLevel, sched );
@@ -397,14 +404,9 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
 
     // coarsen data to the coarser levels.
     // do it in reverse order
-    Task::WhichDW notUsed = Task::OldDW;
-    const bool backoutTemp = true;
-
     for (int l = maxLevels - 2; l >= 0; l--) {
       const LevelP& level = grid->getLevel(l);
-      const bool modifies_abskg   = false;
-      const bool modifies_sigmaT4 = false;
-
+      
       _RMCRT->sched_CoarsenAll( level, sched, modifies_abskg, modifies_sigmaT4 );
 
       if( _RMCRT->d_coarsenExtraCells == false ) {
@@ -414,16 +416,12 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
 
     //__________________________________
     //  compute the extents of the RMCRT region of interest on the finest level
-    _RMCRT->sched_ROI_Extents(fineLevel, sched);
+    _RMCRT->sched_ROI_Extents( fineLevel, sched );
 
-    Task::WhichDW sigmaT4_dw  = Task::NewDW;
-    Task::WhichDW celltype_dw = Task::NewDW;
-
-    bool modifies_divQ = false;
-    _RMCRT->sched_rayTrace_dataOnion(fineLevel, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ);
+    _RMCRT->sched_rayTrace_dataOnion( fineLevel, sched, notUsed, sigmaT4_dw, celltype_dw, modifies_divQ );
 
     // convert boundaryFlux<Stencil7> -> 6 doubles
-    sched_stencilToDBLs(fineLevel, sched);
+    sched_stencilToDBLs( fineLevel, sched );
   }
 
   //______________________________________________________________________
@@ -432,6 +430,13 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
   //  and the results are interpolated to the fine (arches) level
   if (_whichAlgo == coarseLevel) {
 
+    Task::WhichDW temp_dw       = Task::OldDW;
+    Task::WhichDW sigmaT4_dw    = Task::NewDW;
+    Task::WhichDW celltype_dw   = Task::NewDW;
+    const bool modifies_abskg   = false;
+    const bool modifies_sigmaT4 = false;
+    const bool backoutTemp      = true;    
+    
     // carry forward if it's time
     for (int l = 0; l < maxLevels; l++) {
       const LevelP& level = grid->getLevel(l);
@@ -445,33 +450,26 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
     }
 
     const LevelP& fineLevel = grid->getLevel(_archesLevelIndex);
-    // Task::WhichDW temp_dw = Task::NewDW;         -- Todd swqp this after merge
-    Task::WhichDW temp_dw  = Task::OldDW;
-    Task::WhichDW abskg_dw = Task::NewDW;
+
+    _RMCRT->set_abskg_dw_perLevel ( fineLevel, Task::OldDW );
 
     // convert abskg:dbl -> abskg:flt if needed
-    _RMCRT->sched_DoubleToFloat(fineLevel, sched, abskg_dw);
+    _RMCRT->sched_DoubleToFloat( fineLevel, sched, notUsed );
 
     // compute sigmaT4 on the finest level
-    _RMCRT->sched_sigmaT4(fineLevel, sched, temp_dw, includeExtraCells);
+    _RMCRT->sched_sigmaT4( fineLevel, sched, temp_dw, includeExtraCells );
 
     for (int l = 0; l < maxLevels; l++) {
       const LevelP& level = grid->getLevel(l);
-      const bool modifies_abskg   = false;
-      const bool modifies_sigmaT4 = false;
-      const bool backoutTemp      = true;
-
-      _RMCRT->sched_CoarsenAll(level, sched, modifies_abskg, modifies_sigmaT4);
+      
+      _RMCRT->sched_CoarsenAll( level, sched, modifies_abskg, modifies_sigmaT4 );
 
       if (level->hasFinerLevel()) {
-        Task::WhichDW sigmaT4_dw  = Task::NewDW;
-        Task::WhichDW celltype_dw = Task::NewDW;
-
         if( _RMCRT->d_coarsenExtraCells == false ) {
-          sched_setBoundaryConditions( level, sched, temp_dw, backoutTemp);
+          sched_setBoundaryConditions( level, sched, temp_dw, backoutTemp );
         }
         
-        _RMCRT->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ );
+        _RMCRT->sched_rayTrace( level, sched, notUsed, sigmaT4_dw, celltype_dw, modifies_divQ );
       }
     }
 
@@ -479,11 +477,11 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
     for (int l = 0; l < maxLevels; l++) {
       const LevelP& level = grid->getLevel(l);
       const PatchSet* patches = level->eachPatch();
-      _RMCRT->sched_Refine_Q(sched, patches, _sharedState->allArchesMaterials());
+      _RMCRT->sched_Refine_Q( sched, patches, _sharedState->allArchesMaterials() );
     }
 
     // convert boundaryFlux<Stencil7> -> 6 doubles
-    sched_stencilToDBLs(fineLevel, sched);
+    sched_stencilToDBLs( fineLevel, sched );
   }
 
   //______________________________________________________________________
@@ -491,30 +489,27 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
   //  RMCRT is performed on the same level as CFD
   if (_whichAlgo == singleLevel) {
 
-    const LevelP& level = grid->getLevel(_archesLevelIndex);
-
-    // carry forward if it's time
-    _RMCRT->sched_CarryForward_FineLevelLabels(level, sched);
-
-    // Task::WhichDW temp_dw = Task::NewDW;         -- Todd swqp this after merge
-    Task::WhichDW temp_dw = Task::OldDW;
-    Task::WhichDW abskg_dw = Task::NewDW;
-
-    includeExtraCells = true;
-
-    // convert abskg:dbl -> abskg:flt if needed
-    _RMCRT->sched_DoubleToFloat(level, sched, abskg_dw);
-
-    // compute sigmaT4 on the CFD level
-    _RMCRT->sched_sigmaT4(level, sched, temp_dw, includeExtraCells);
-
-    Task::WhichDW sigmaT4_dw = Task::NewDW;
+    Task::WhichDW temp_dw     = Task::OldDW;
+    Task::WhichDW sigmaT4_dw  = Task::NewDW;
     Task::WhichDW celltype_dw = Task::NewDW;
 
-    _RMCRT->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ);
+    const LevelP& level = grid->getLevel(_archesLevelIndex);
+    
+    _RMCRT->set_abskg_dw_perLevel( level, Task::OldDW );
+    
+    // carry forward if it's time
+    _RMCRT->sched_CarryForward_FineLevelLabels( level, sched );
+
+    // convert abskg:dbl -> abskg:flt if needed
+    _RMCRT->sched_DoubleToFloat( level, sched, notUsed );
+
+    // compute sigmaT4 on the CFD level
+    _RMCRT->sched_sigmaT4( level, sched, temp_dw, includeExtraCells );
+
+    _RMCRT->sched_rayTrace( level, sched, notUsed, sigmaT4_dw, celltype_dw, modifies_divQ );
 
     // convert boundaryFlux<Stencil7> -> 6 doubles
-    sched_stencilToDBLs(level, sched);
+    sched_stencilToDBLs( level, sched );
   }
 }
 
@@ -875,7 +870,7 @@ RMCRT_Radiation::sched_stencilToDBLs( const LevelP& level,
                                       SchedulerP& sched )
 {
 
-  if( level->getID() != _archesLevelIndex){
+  if( level->getIndex() != _archesLevelIndex){
     throw InternalError("RMCRT_Radiation::sched_stencilToDBLs.  You cannot schedule this task on a non-arches level", __FILE__, __LINE__);
   }
 
@@ -904,7 +899,7 @@ void
 RMCRT_Radiation::sched_fluxInit( const LevelP& level,
                                       SchedulerP& sched )
 {
-  if( level->getID() != _archesLevelIndex){
+  if( level->getIndex() != _archesLevelIndex){
     throw InternalError("RMCRT_Radiation::sched_stencilToDBLs.  You cannot schedule this task on a non-arches level", __FILE__, __LINE__);
   }
 
@@ -1001,7 +996,7 @@ RMCRT_Radiation::sched_DBLsToStencil( const LevelP& level,
                                       SchedulerP& sched )
 {
 
-  if( level->getID() != _archesLevelIndex) {
+  if( level->getIndex() != _archesLevelIndex) {
     throw InternalError("RMCRT_Radiation::sched_stencilToDBLs.  You cannot schedule this task on a non-arches level", __FILE__, __LINE__);
   }
 

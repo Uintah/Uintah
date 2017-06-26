@@ -62,6 +62,7 @@ bool        RMCRTCommon::d_isSeedRandom;
 bool        RMCRTCommon::d_allowReflect;
 int         RMCRTCommon::d_matl;
 std::string RMCRTCommon::d_abskgBC_tag;
+std::map<int,Task::WhichDW>    RMCRTCommon::d_abskg_dw;
 
 
 std::vector<IntVector> RMCRTCommon::d_dbgCells;
@@ -176,11 +177,14 @@ RMCRTCommon::registerVarLabels(int   matlIndex,
 void
 RMCRTCommon::sched_DoubleToFloat( const LevelP& level,
                                   SchedulerP& sched,
-                                  Task::WhichDW myDW )
+                                  Task::WhichDW notUsed )
 {
   const Uintah::TypeDescription* td = d_compAbskgLabel->typeDescription();
   const Uintah::TypeDescription::Type subtype = td->getSubType()->getType();
 
+  int L = level->getIndex();
+  Task::WhichDW myDW = d_abskg_dw[L];
+  
   // only run task if a conversion is needed.
   Task* tsk = nullptr;
   if ( RMCRTCommon::d_FLT_DBL == TypeDescription::float_type &&  subtype == TypeDescription::double_type ){
@@ -841,11 +845,6 @@ RMCRTCommon::carryForward_Var ( DetailedTask* dtask,
 bool
 RMCRTCommon::isDbgCell( const IntVector me)
 {
-
-  if(me == IntVector(0,0,0) ){
-    return true;
-  }
-
   for( unsigned int i = 0; i<d_dbgCells.size(); i++) {
     if( me == d_dbgCells[i]) {
       return true;
@@ -894,6 +893,41 @@ RMCRTCommon::randVector( std::vector <int> &int_array,
     printf("\n");
   }
 }
+
+//______________________________________________________________________
+//  For multi-level RMCRT algorithms the absorption coefficient can 
+//  be required from either the old_dw or new_dw.  On the coarse level
+//  abskg  _always_ resides in the newDW.  
+//______________________________________________________________________
+void
+RMCRTCommon::set_abskg_dw_perLevel ( const LevelP& fineLevel, 
+                                     Task::WhichDW fineLevel_abskg_dw )
+{
+  int maxLevels = fineLevel->getGrid()->numLevels();
+  printSchedule(fineLevel, dbg, "RMCRTCommon::set_abskg_dws");
+  
+  for(int L = 0; L<maxLevels; L++) {
+  
+    if ( L == fineLevel->getIndex() ) {
+      d_abskg_dw[L] = fineLevel_abskg_dw;
+    } else {
+      d_abskg_dw[L] = Task::NewDW;
+    }
+  }
+}
+
+//______________________________________________________________________
+//  return the dw associated with this level
+//______________________________________________________________________
+DataWarehouse*
+RMCRTCommon::get_abskg_dw ( const int L,
+                            DataWarehouse* new_dw)
+{
+  Task::WhichDW  dw = d_abskg_dw[L];
+  DataWarehouse* abskg_dw = new_dw->getOtherDataWarehouse( dw );
+  return abskg_dw;
+}
+
 
 //______________________________________________________________________
 //

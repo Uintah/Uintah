@@ -50,8 +50,6 @@
 
 //__________________________________
 //  To Do
-//  -  Need to implement transferFrom so use can use calc_frequency > 1
-//  - Temporal scheduling
 //  - Investigate using multiple GPUs per node.
 //  - Implement fixed and dynamic ROI.
 //  - dynamic block size?
