@@ -1432,15 +1432,15 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
               }
               level->addPatch(startcell, endcell, inStartCell, inEndCell,this);
               
-              boxLo_cell = Uintah::Min( boxLo_cell, startcell );
-              boxHi_cell = Uintah::Max( boxHi_cell, endcell );
+              boxLo_cell = Uintah::Min( boxLo_cell, inStartCell );
+              boxHi_cell = Uintah::Max( boxHi_cell, inEndCell );
             }
           }
         } // end for(int i=0;i<patches.x();i++){
 
-        // Keep a list of the boxes specified in the ups files
+        // Keep a vector of the boxes specified in the ups files
         // Needed by RMCRT + getRegion when the domain is non_cubic
-        // Below includes the extraCells
+        // Below excludes the extraCells
         Point boxLo_pt = level->getNodePosition( boxLo_cell );
         Point boxHi_pt = level->getNodePosition( boxHi_cell );
                 
