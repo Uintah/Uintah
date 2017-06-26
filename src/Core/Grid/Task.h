@@ -268,7 +268,8 @@ private: // class Task
 public: // class Task
 
   enum WhichDW {
-     OldDW       = 0
+     None        = -1
+  ,  OldDW       = 0
   ,  NewDW       = 1
   ,  CoarseOldDW = 2
   ,  CoarseNewDW = 3
