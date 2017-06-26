@@ -1071,30 +1071,31 @@ void
 DORadiationModel::computeScatteringIntensities(int direction, constCCVariable<double> &scatkt, StaticArray < TYPE > &Intensities, CCVariable<double> &scatIntensitySource,constCCVariable<double> &asymmetryFactor , const Patch* patch){
 
 
+  direction -=1;   // change from fortran vector to c++ vector
   Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
-
 
   scatIntensitySource.initialize(0.0); //reinitialize to zero for sum
 
-  direction -=1;   // change from fortran vector to c++ vector
-  Uintah::parallel_for( range,[&](int i, int j, int k){  // should invert this loop, and remove if-statement
+  int  binSize=8; //optimization parameter since this integral is a bit nasty ~10 appears to be ideal
+  int nsets=std::ceil(d_totalOrds/binSize);
+  for (int iset=0; iset <nsets; iset++){
+    Uintah::parallel_for( range,[&](int i, int j, int k){  // should invert this loop, and remove if-statement
+         for (int ii=iset*binSize; ii < std::min((iset+1)*binSize,d_totalOrds) ; ii++) {
+           double phaseFunction = (1.0 + asymmetryFactor(i,j,k)*cosineTheta[direction][ii])*solidAngleWeight[ii];
+           scatIntensitySource(i,j,k)  +=phaseFunction*Intensities[ii](i,j,k); 
+         }
+        });
+  }
 
-    if (scatkt(i,j,k) < 1e-6) // intended to increase speed!
-     return;   // exit lambda, not function
-
-    for (int iO=0; iO < d_totalOrds ; iO++) {
-      double phaseFunction = (1.0 + asymmetryFactor(i,j,k)*cosineTheta[direction][iO])*solidAngleWeight[iO];
-      scatIntensitySource(i,j,k)  +=phaseFunction*Intensities[iO](i,j,k); 
-    }
-  });
-
+  // can't use optimization on out-intensities, because only one is available in this function
   Uintah::parallel_for( range,[&](int i, int j, int k){ 
-    scatIntensitySource(i,j,k) *= scatkt(i,j,k)  ;
-  });
+      scatIntensitySource(i,j,k) *=scatkt(i,j,k);
+      });
 
 
   return;
 }
+
 
 //-----------------------------------------------------------------//
 // This function computes the boundary conditiosn for the intensities
@@ -1152,8 +1153,6 @@ DORadiationModel::intensitysolveSweep( const Patch* patch,
                                        DataWarehouse* old_dw,
                                        int cdirecn, int phase){ 
 
-
-
   int direcn = cdirecn+1;
   IntVector idxLo = patch->getFortranCellLowIndex();
   IntVector idxHi = patch->getFortranCellHighIndex();
@@ -1161,7 +1160,7 @@ DORadiationModel::intensitysolveSweep( const Patch* patch,
   CCVariable <double > intensity;
   new_dw->allocateAndPut(intensity,_patchIntensityLabels[phase][cdirecn] , matlIndex, patch);   // change to computes when making it its own task
   //intensity.initialize(0.0);
-  new_dw->getModifiable(intensity,_patchIntensityLabels[phase][cdirecn] , matlIndex, patch);   // change to computes when making it its own task
+  //new_dw->getModifiable(intensity,_patchIntensityLabels[phase][cdirecn] , matlIndex, patch);   // change to computes when making it its own task
   constCCVariable <double > ghost_intensity;
   new_dw->get( ghost_intensity, _patchIntensityLabels[phase-1][cdirecn], matlIndex, patch, _gv[(int) _plusX[cdirecn]][(int) _plusY[cdirecn]][(int) _plusZ[cdirecn]],1 );  
 
@@ -1413,10 +1412,6 @@ DORadiationModel::intensitysolveSweepOptimized( const Patch* patch,
                                        DataWarehouse* new_dw, 
                                        DataWarehouse* old_dw,
                                        const int cdirecn){ 
-
-
-
-
 
   const int direcn = cdirecn+1;  
   const IntVector idxLo = patch->getFortranCellLowIndex();

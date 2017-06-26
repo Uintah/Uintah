@@ -779,7 +779,6 @@ DORadiation::doSweepAdvanced( const ProcessorGroup* pc,
 
     if ((intensity_iter%(_nDir/8))== (ixx-(xPatchAdjusted+yPatchAdjusted+zPatchAdjusted))){
     _DO_model->intensitysolveSweepOptimized(patch,matlIndex, new_dw,old_dw, intensity_iter ); 
-  //}
     }
   }
 }
