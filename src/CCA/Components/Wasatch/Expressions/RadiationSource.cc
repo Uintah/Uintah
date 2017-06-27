@@ -161,17 +161,18 @@ namespace WasatchCore {
     const bool modifiesDivQ = true;
 
     const LevelP& fineLevel = grid->getLevel(0);
-    Uintah::Task::WhichDW tempDW  = Task::NewDW;
-    Uintah::Task::WhichDW abskgDW = Task::NewDW;
-
+    const Task::WhichDW tempDW     = Task::NewDW;
+    const Task::WhichDW sigmaT4DW  = Task::NewDW;
+    const Task::WhichDW celltypeDW = Task::NewDW;
+    const Task::WhichDW notUsed    = Task::None;
+    rmcrt_->set_abskg_dw_perLevel( fineLevel, Task::NewDW );
+    
     // if needed convert absorptionLabel: double -> float
-    rmcrt_->sched_DoubleToFloat( fineLevel, sched, abskgDW );
+    rmcrt_->sched_DoubleToFloat( fineLevel, sched, notUsed );
     rmcrt_->sched_sigmaT4( fineLevel,  sched, tempDW );
     rmcrt_->sched_setBoundaryConditions( level, sched, tempDW, false );
 
-    const Task::WhichDW sigmaT4DW  = Task::NewDW;
-    const Task::WhichDW celltypeDW = Task::NewDW;
-    rmcrt_->sched_rayTrace( level, sched, abskgDW, sigmaT4DW, celltypeDW, modifiesDivQ );
+    rmcrt_->sched_rayTrace( level, sched, notUsed, sigmaT4DW, celltypeDW, modifiesDivQ );
   }
   
   
