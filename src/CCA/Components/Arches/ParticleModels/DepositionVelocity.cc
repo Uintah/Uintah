@@ -26,14 +26,14 @@ DepositionVelocity::problemSetup( ProblemSpecP& db ){
   if ( db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("BoundaryConditions")->findBlock("WallHT") ){
     ProblemSpecP wallht_db = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("BoundaryConditions")->findBlock("WallHT");
     wallht_db->getWithDefault("relaxation_coef",_relaxation_coe,1.0);
-    bool error_flag = false;
+    bool error_flag = true;
     std::string ht_model_type;
     for ( ProblemSpecP db_wall_model = wallht_db->findBlock( "model" ); db_wall_model != nullptr; db_wall_model = db_wall_model->findNextBlock( "model" ) ){
       db_wall_model->getAttribute("type",ht_model_type);
-      if (ht_model_type == "region_ht" || ht_model_type == "simple_ht" )
-        error_flag = true;
-      if (ht_model_type == "coal_region_ht")
-      db_wall_model->getWithDefault( "sb_deposit_porosity",p_void0,0.6); // note here we are using the sb layer to estimate the wall density no the enamel layer.
+      if (ht_model_type == "coal_region_ht"){
+        db_wall_model->getWithDefault( "sb_deposit_porosity",p_void0,0.6); // note here we are using the sb layer to estimate the wall density no the enamel layer.
+        error_flag = false;
+      }
     }
     if (error_flag)
       throw InvalidValue("Error: DepositionVelocity model requires WallHT model of type coal_region_ht.", __FILE__, __LINE__);
