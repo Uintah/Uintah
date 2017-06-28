@@ -86,7 +86,7 @@
                                                                           gasRadProperties,
                                                                           partRadProperties,
                                                                           CO, wall_thermal_resistance'">
-
+              <absorption_modifier        spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type partRadProperties gasRadProperties"/> <!-- multiplicative modifier on gas or particle absorption coefficients, does not affect scattering coefficients -->
               <subModel                   spec="REQUIRED STRING  'constantCIF, basic, Coal'"   need_applies_to="type partRadProperties" />
               <part_temp_label            spec="REQUIRED STRING"  need_applies_to="type partRadProperties" />    <!--base label used for particle temp in DQMOM-->
               <part_size_label            spec="REQUIRED STRING"  need_applies_to="type partRadProperties" />    <!--base label used for particle size in DQMOM-->

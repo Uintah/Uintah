@@ -114,6 +114,7 @@ namespace Uintah{
 
     private: 
       
+      double _absorption_modifier;
       RadPropertyCalculator::PropertyCalculatorBase* _calc; 
       const VarLabel* _temperature_label; 
       std::string _temperature_name;

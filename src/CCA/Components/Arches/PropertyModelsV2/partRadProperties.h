@@ -161,6 +161,7 @@ namespace Uintah{
           int _ncomp;
           
 
+          double _absorption_modifier;
           double  _charAsymm;
           double  _rawCoalAsymm;
           double  _ashAsymm;

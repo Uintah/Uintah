@@ -38,6 +38,7 @@ void partRadProperties::problemSetup(  Uintah::ProblemSpecP& db )
 {
 
   ProblemSpecP db_calc = db->findBlock("calculator"); 
+  db->getWithDefault("absorption_modifier",_absorption_modifier,1.0);
 
     _scatteringOn = false;
     _isCoal = false;
@@ -329,13 +330,13 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     if(_particle_calculator_type == "basic"){
       double geomFactor=M_PI/4.0*_Qabs; 
       Uintah::parallel_for( range,  [&](int i, int j, int k) {
-        double particle_absorption=geomFactor*weightQuad[ix](i,j,k)*sizeQuad[ix](i,j,k)*sizeQuad[ix](i,j,k);
+        double particle_absorption=geomFactor*weightQuad[ix](i,j,k)*sizeQuad[ix](i,j,k)*sizeQuad[ix](i,j,k)*_absorption_modifier;
         abskpQuad(i,j,k)= (vol_fraction(i,j,k) > 1e-16) ? particle_absorption : 0.0;
         abskp(i,j,k)+= abskpQuad(i,j,k);
       });
     }else if(_particle_calculator_type == "constantCIF" &&  _p_planck_abskp ){
         Uintah::parallel_for( range,  [&](int i, int j, int k) {
-          double particle_absorption=_part_radprops->planck_abs_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k))*weightQuad[ix](i,j,k);
+          double particle_absorption=_part_radprops->planck_abs_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k))*weightQuad[ix](i,j,k)*_absorption_modifier;
           abskpQuad(i,j,k)= (vol_fraction(i,j,k) > 1e-16) ? particle_absorption : 0.0;
           abskp(i,j,k)+= abskpQuad(i,j,k);
         });
@@ -348,7 +349,7 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
       }
     }else if(_particle_calculator_type == "constantCIF" &&  _p_ros_abskp ){
         Uintah::parallel_for( range,  [&](int i, int j, int k) {
-          double particle_absorption=_part_radprops->ross_abs_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k))*weightQuad[ix](i,j,k);
+          double particle_absorption=_part_radprops->ross_abs_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k))*weightQuad[ix](i,j,k)*_absorption_modifier;
           abskpQuad(i,j,k)= (vol_fraction(i,j,k) > 1e-16) ? particle_absorption : 0.0;
           abskp(i,j,k)+= abskpQuad(i,j,k);
         });
@@ -362,6 +363,8 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     } // End calc_type if
   } // End For
 
+
+
   if(_particle_calculator_type == "coal" &&  _p_planck_abskp ){
       for (int ix=0; ix<_nQn_part; ix++){
         CCVariable<double>& abskpQuad = tsk_info->get_uintah_field_add           <CCVariable<double> >(_abskp_name_vector[ix]);  // ConstCC and CC behave differently 
@@ -369,7 +372,7 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
         Uintah::parallel_for( range,  [&](int i, int j, int k) {
             double total_mass = RC_mass[ix](i,j,k)+Char_mass[ix](i,j,k)+_ash_mass_v[ix];
             double complexReal =  (Char_mass[ix](i,j,k)*_charReal+RC_mass[ix](i,j,k)*_rawCoalReal+_ash_mass_v[ix]*_ashReal)/total_mass;
-            double particle_absorption=_3Dpart_radprops->planck_abs_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k),complexReal)*weightQuad[ix](i,j,k);
+            double particle_absorption=_3Dpart_radprops->planck_abs_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k),complexReal)*weightQuad[ix](i,j,k)*_absorption_modifier;
             abskpQuad(i,j,k)= (vol_fraction(i,j,k) > 1e-16) ? particle_absorption : 0.0;
             abskp(i,j,k)+= abskpQuad(i,j,k); 
          });
@@ -396,7 +399,7 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
         Uintah::parallel_for( range,  [&](int i, int j, int k) {
             double total_mass = RC_mass[ix](i,j,k)+Char_mass[ix](i,j,k)+_ash_mass_v[ix];
             double complexReal =  (Char_mass[ix](i,j,k)*_charReal+RC_mass[ix](i,j,k)*_rawCoalReal+_ash_mass_v[ix]*_ashReal)/total_mass;
-            double particle_absorption=_3Dpart_radprops->ross_abs_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k),complexReal)*weightQuad[ix](i,j,k);
+            double particle_absorption=_3Dpart_radprops->ross_abs_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k),complexReal)*weightQuad[ix](i,j,k)*_absorption_modifier;
             abskpQuad(i,j,k)= (vol_fraction(i,j,k) > 1e-16) ? particle_absorption : 0.0;
             abskp(i,j,k)+= abskpQuad(i,j,k); 
          });
