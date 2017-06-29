@@ -48,7 +48,7 @@ Scrubbing                  SCI_DEBUG     prints debugging information for scrubb
 Scheduler Debugging Information:
 __________________________________
 MPIScheduler_DBG           SCI_DEBUG     Prints general debugging information for the MPIScheduler
-MPIScheduler_TimingsOut    SCI_DEBUG     Outputs fine-grained MPI communication timings to files: timingStats.avg, timingStats.max
+MPIScheduler_TimingsOut    SCI_DEBUG     Outputs fine-grained MPI communication timings to files: timingstats.avg, timingstats.max
 MPIStats                   SCI_DEBUG     Prints comprehensive, fine-grained MPI summary to stdout 
 WaitTimes                  SCI_DEBUG     Prints detailed summary of task wait times to stdout 
 
