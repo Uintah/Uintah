@@ -2382,6 +2382,7 @@ OnDemandDataWarehouse::getRegionModifiable(       GridVariableBase& var,
 
   // bulletproofing vars
   int nCellsCopied = 0;                       // number of cells copied
+  bool foundInDB   = false;                   // found variable in DB
   std::vector<const Patch*> missing_patches;  // patches that do not contain the label
 
   for (int i = 0; i < patches.size(); i++) {
@@ -2389,7 +2390,8 @@ OnDemandDataWarehouse::getRegionModifiable(       GridVariableBase& var,
 
     // After regridding selected patches may return stale patches so
     // make sure the variable exists on the patch.
-    if( !exists( label, matlIndex, patch ) ) {
+    foundInDB = exists( label, matlIndex, patch );
+    if( !foundInDB ) {
      continue;
     }
 
@@ -2478,14 +2480,19 @@ OnDemandDataWarehouse::getRegionModifiable(       GridVariableBase& var,
 
   if( nCellsCopied == 0  || nCellsCopied != requestedCells ) {
     std::cout << d_myworld->myrank() << "  Unknown Variable " << *label << ", matl " << matlIndex << ", L-" << level->getIndex()
-              << ", Patches on which the variable wasn't found: ";
+              << ", DW " << getID() << ", Variable exists in DB: " << foundInDB << "\n";
+    
+    if (missing_patches.size() > 0) {
+      std::cout << ", Patches on which the variable wasn't found: \n"; 
 
-    for (size_t i = 0; i < missing_patches.size(); i++) {
-      std::cout << *missing_patches[i] << " ";
+      for (size_t i = 0; i < missing_patches.size(); i++) {
+        std::cout << *missing_patches[i] << " ";
+      }
     }
 
-    std::cout << std::endl << " Requested region: " << reqLow << " " << reqHigh << std::endl;
-    std::cout << " copied cells: " << nCellsCopied << " requested cells: " << requestedCells << std::endl;
+    std::cout << "\n Requested region: " << reqLow << " " << reqHigh << "\n";
+    std::cout << " copied cells: " << nCellsCopied << " requested cells: " << requestedCells << "\n\n";
+
     throw InternalError("Missing variable in getRegionModifiable().  Unable to find the patch variable over the requested region.", __FILE__, __LINE__);
   }
 
