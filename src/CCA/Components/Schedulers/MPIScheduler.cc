@@ -107,9 +107,9 @@ MPIScheduler::MPIScheduler( const ProcessorGroup * myworld
   if (g_time_out) {
     char filename[64];
     if (d_myworld->myrank() == 0) {
-      sprintf(filename, "timingStats.avg");
+      sprintf(filename, "timingstats.avg");
       m_avg_stats.open(filename);
-      sprintf(filename, "timingStats.max");
+      sprintf(filename, "timingstats.max");
       m_max_stats.open(filename);
     }
   }
@@ -195,8 +195,8 @@ MPIScheduler::verifyChecksum()
   //  - make the checksum more sophisticated
   int checksum = 0;
   int numSpatialTasks = 0;
-  auto num_graphs = m_task_graphs.size();
-  for (auto i = 0; i < num_graphs; ++i) {
+  size_t num_graphs = m_task_graphs.size();
+  for (size_t i = 0; i < num_graphs; ++i) {
     checksum += m_task_graphs[i]->getTasks().size();
 
     // This begins addressing the issue of making the global checksum more sophisticated:
@@ -275,7 +275,8 @@ MPIScheduler::runTask( DetailedTask * dtask
     printTrackedVars(dtask, SchedulerCommon::PRINT_BEFORE_EXEC);
   }
   std::vector<DataWarehouseP> plain_old_dws(m_dws.size());
-  for (auto i = 0; i < m_dws.size(); i++) {
+  size_t num_dws = m_dws.size();
+  for (size_t i = 0; i < num_dws; i++) {
     plain_old_dws[i] = m_dws[i].get_rep();
   }
 
@@ -322,8 +323,8 @@ MPIScheduler::runTask( DetailedTask * dtask
 
   // Add subscheduler timings to the parent scheduler and reset subscheduler timings
   if (m_parent_scheduler) {
-    auto num_elems = mpi_info_.size();
-    for (auto i = 0; i < num_elems; ++i) {
+    size_t num_elems = mpi_info_.size();
+    for (size_t i = 0; i < num_elems; ++i) {
       MPIScheduler::TimingStat e = (MPIScheduler::TimingStat)i;
       m_parent_scheduler->mpi_info_[e] += mpi_info_[e];
     }
@@ -766,14 +767,14 @@ MPIScheduler::execute( int tgnum     /* = 0 */
     dts->localTask(i)->resetDependencyCounts();
   }
 
-  int me = d_myworld->myrank();
+  int my_rank = d_myworld->myrank();
 
   // This only happens if "-emit_taskgraphs" is passed to sus
-  makeTaskGraphDoc( dts, me );
+  makeTaskGraphDoc( dts, my_rank );
 
   mpi_info_.reset( 0 );
 
-  DOUT(g_dbg, "Rank-" << me << ", MPI Scheduler executing taskgraph: " << tgnum << ", timestep: " << m_shared_state->getCurrentTopLevelTimeStep()
+  DOUT(g_dbg, "Rank-" << my_rank << ", MPI Scheduler executing taskgraph: " << tgnum << ", timestep: " << m_shared_state->getCurrentTopLevelTimeStep()
                             << " with " << dts->numTasks() << " tasks (" << ntasks << " local)");
 
   if( m_reloc_new_pos_label && m_dws[m_dwmap[Task::OldDW]] != nullptr ) {
@@ -796,7 +797,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */
     DOUT(g_task_order, "Rank-" << d_myworld->myrank() << " Running task static order: "
                                << dtask->getStaticOrder() << " , scheduled order: " << numTasksDone);
 
-    DOUT(g_task_dbg, "Rank-" << me << " Initiating task:  " << *dtask);
+    DOUT(g_task_dbg, "Rank-" << my_rank << " Initiating task:  " << *dtask);
 
     if ( dtask->getTask()->getType() == Task::Reduction ) {
       if (!abort) {
@@ -912,8 +913,7 @@ MPIScheduler::outputTimingStats( const char* label )
            << ")" << std::endl;
 
       for (auto iter = exectimes.begin(); iter != exectimes.end(); ++iter) {
-        fout << std::fixed<< "Rank-" << my_rank << ": TaskExecTime(s): " << iter->second
-             << " Task:" << iter->first << std::endl;
+        fout << std::fixed<< "Rank-" << my_rank << ": TaskExecTime(s): " << iter->second << " Task:" << iter->first << std::endl;
       }
       fout.close();
       exectimes.clear();
@@ -922,6 +922,10 @@ MPIScheduler::outputTimingStats( const char* label )
 
   // for file-based MPI timings
   if (g_time_out) {
+
+    m_labels.clear();
+    m_times.clear();
+
     // add number of cells, patches, and particles
     int numCells = 0, numParticles = 0;
     OnDemandDataWarehouseP dw = m_dws[m_dws.size() - 1];
@@ -939,9 +943,6 @@ MPIScheduler::outputTimingStats( const char* label )
         }
       }
     }
-
-    m_labels.clear();
-    m_times.clear();
 
     double  totalexec = m_exec_timer().seconds();
 
@@ -971,7 +972,9 @@ MPIScheduler::outputTimingStats( const char* label )
     Uintah::MPI::Reduce(&m_times[0], &d_totaltimes[0], static_cast<int>(m_times.size()), MPI_DOUBLE, MPI_SUM, 0, comm);
     Uintah::MPI::Reduce(&m_times[0], &d_maxtimes[0]  , static_cast<int>(m_times.size()), MPI_DOUBLE, MPI_MAX, 0, comm);
 
-    double total = 0, avgTotal = 0, maxTotal = 0;
+    double total    = 0;
+    double avgTotal = 0;
+    double maxTotal = 0;
     for (auto i = 0; i < (int)d_totaltimes.size(); i++) {
       d_avgtimes[i] = d_totaltimes[i] / my_comm_size;
       if (strcmp(m_labels[i], "Total task time") == 0) {
@@ -1008,7 +1011,7 @@ MPIScheduler::outputTimingStats( const char* label )
       data.push_back(&d_maxtimes);
     }
 
-    for (auto file = 0; file < files.size(); ++file) {
+    for (size_t file = 0; file < files.size(); ++file) {
       std::ofstream& out = *files[file];
       out << "Timestep " << m_shared_state->getCurrentTopLevelTimeStep() << std::endl;
       for (size_t i = 0; i < (*data[file]).size(); i++) {
@@ -1067,7 +1070,6 @@ void MPIScheduler::computeNetRunTimeStats(InfoMapper< SimulationState::RunTimeSt
 {
   // don't count output time
   runTimeStats[SimulationState::TaskExecTime      ] += mpi_info_[TotalTask] - runTimeStats[SimulationState::TotalIOTime];
-
   runTimeStats[SimulationState::TaskLocalCommTime ] += mpi_info_[TotalRecv] + mpi_info_[TotalSend];
   runTimeStats[SimulationState::TaskWaitCommTime  ] += mpi_info_[TotalWait];
   runTimeStats[SimulationState::TaskReduceCommTime] += mpi_info_[TotalReduce];
