@@ -38,7 +38,7 @@
 #include <include/sci_defs/uintah_testdefs.h.in>
 
 
-//#define USE_SPATIAL_SCHEDULING
+#define USE_SPATIAL_SCHEDULING
 
 //______________________________________________________________________
 //
@@ -148,13 +148,13 @@ Radiometer::problemSetup( const ProblemSpecP& prob_spec,
   }
 
 #ifndef RAY_SCATTER
-  proc0cout<< "sigmaScat: " << d_sigmaScat << endl;
+  proc0cout<< "sigmaScat: " << d_sigmaScat << std::endl;
   if(d_sigmaScat>0){
-    ostringstream warn;
-    warn << "ERROR:  In order to run a scattering case, you must use the following in your configure line..." << endl;
-    warn << "--enable-ray-scatter" << endl;
-    warn << "If you wish to run a scattering case, please modify your configure line and re-configure and re-compile." << endl;
-    warn << "If you wish to run a non-scattering case, please remove the line containing <sigmaScat> from your input file." << endl;
+    std:: ostringstream warn;
+    warn << "ERROR:  In order to run a scattering case, you must use the following in your configure line..." << std::endl;
+    warn << "--enable-ray-scatter" << std::endl;
+    warn << "If you wish to run a scattering case, please modify your configure line and re-configure and re-compile." << std::endl;
+    warn << "If you wish to run a non-scattering case, please remove the line containing <sigmaScat> from your input file." << std::endl;
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
 #endif
