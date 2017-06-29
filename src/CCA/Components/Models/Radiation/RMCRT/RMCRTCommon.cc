@@ -259,22 +259,6 @@ RMCRTCommon::sched_sigmaT4( const LevelP& level,
 
   printSchedule(level,dbg,"RMCRTCommon::sched_sigmaT4");
 
-  //__________________________________
-  // Be careful if you modify this.  This additional logic
-  // is needed when restarting from an uda that
-  // was previously run without RMCRT.  It's further
-  // complicated when the calc_frequency >1  If you change
-  // it then test by restarting from an uda that was
-  // previously run with Arches + DO with calc_frequency > 1.
-  bool old_dwExists = false;
-  if( sched->get_dw(0) ){
-    old_dwExists = true;
-  }
-
-  if(old_dwExists){
-    tsk->requires( Task::OldDW, d_sigmaT4Label, d_gn, 0 );
-  }
-
   tsk->requires( temp_dw, d_compTempLabel,    d_gn, 0 );
   tsk->computes(d_sigmaT4Label);
 
