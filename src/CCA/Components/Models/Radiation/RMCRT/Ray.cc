@@ -2636,9 +2636,7 @@ void Ray::sched_CoarsenAll( const LevelP& coarseLevel,
     printSchedule(coarseLevel,dbg,"Ray::sched_CoarsenAll");
     
     int L = coarseLevel->getIndex();
-    Task::WhichDW fineLevel_abskg_dw = d_abskg_dw[L+1];
-    cout << " sched_CoarsenAll DW: " << fineLevel_abskg_dw << endl;
-    
+    Task::WhichDW fineLevel_abskg_dw = d_abskg_dw[L+1];    
     sched_Coarsen_Q(coarseLevel, sched, fineLevel_abskg_dw, modifies_abskg,     d_abskgLabel );
     sched_Coarsen_Q(coarseLevel, sched, Task::NewDW,        modifies_sigmaT4,  d_sigmaT4Label );
   }
