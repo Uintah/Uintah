@@ -151,7 +151,7 @@ DetailedTasks::assignMessageTags( int me )
   // maps from, to (process) pairs to indices for each batch of that pair
   std::map<std::pair<int, int>, int> perPairBatchIndices;
 
-  for (int i = 0; i < (int)batches_.size(); i++) {
+  for (size_t i = 0; i < batches_.size(); i++) {
     DependencyBatch* batch = batches_[i];
 
     int from = batch->m_from_task->getAssignedResourceIndex();
@@ -169,12 +169,12 @@ DetailedTasks::assignMessageTags( int me )
     }
   }
 
-  if (dbg) {
-    std::map<std::pair<int, int>, int>::iterator iter;
-    for (iter = perPairBatchIndices.begin(); iter != perPairBatchIndices.end(); iter++) {
+  if (messagedbg) {
+    for (auto iter = perPairBatchIndices.begin(); iter != perPairBatchIndices.end(); ++iter) {
       int from = iter->first.first;
-      int to = iter->first.second;
-      int num = iter->second;
+      int to   = iter->first.second;
+      int num  = iter->second;
+
       DOUT(true, num << " messages from rank-" << from << " to rank-" << to);;
     }
   }
@@ -561,12 +561,12 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask     * from
 
   if (dbg) {
     std::ostringstream message;
-    message << d_myworld->myrank() << "          " << *to << " depends on " << *from << "\n";
+    message << "Rank-" << d_myworld->myrank() << "  " << *to << " depends on " << *from << "\n";
       if (comp) {
-        message << d_myworld->myrank() << "            From comp " << *comp;
+        message << "Rank-" << d_myworld->myrank() << "  From comp " << *comp;
       }
       else {
-        message << d_myworld->myrank() << "            From OldDW ";
+        message << "Rank-" << d_myworld->myrank() << "  From OldDW ";
       }
       message << " to req " << *req;
       DOUT(true, message.str());
@@ -677,7 +677,7 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask     * from
     // debugging output
     if (dbg) {
       std::ostringstream message;
-      message << d_myworld->myrank() << "            EXTENDED from " << new_dep->m_low << " " << new_dep->m_high << " to "
+      message << "Rank-" << d_myworld->myrank() << "            EXTENDED from " << new_dep->m_low << " " << new_dep->m_high << " to "
               << Min(new_dep->m_low, matching_dep->m_low) << " " << Max(new_dep->m_high, matching_dep->m_high) << "\n";
       message << *req->m_var << '\n';
       message << *new_dep->m_req->m_var << '\n';
@@ -694,10 +694,10 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask     * from
     new_dep->m_low = Min(new_dep->m_low, matching_dep->m_low);
     new_dep->m_high = Max(new_dep->m_high, matching_dep->m_high);
 
-    // TODO APH - figure this out and clean up (09/09/16)
+//    // TODO APH - figure this out and clean up (09/09/16)
 //     //if the same dependency already exists then short circuit out of this function.
-//    if (matching_dep->low == new_dep->low && matching_dep->high == new_dep->high) {
-//      matching_dep->toTasks.splice(matching_dep->toTasks.begin(), new_dep->toTasks);
+//    if (matching_dep->m_low == new_dep->m_low && matching_dep->m_high == new_dep->m_high) {
+//      matching_dep->m_to_tasks.splice(matching_dep->m_to_tasks.begin(), new_dep->m_to_tasks);
 //      delete new_dep;
 //      return;
 //    }
@@ -813,7 +813,7 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask     * from
 
   if (dbg) {
     std::ostringstream message;
-    message << d_myworld->myrank() << "            ADDED " << low << " " << high << ", fromPatch = ";
+    message << "Rank-" << d_myworld->myrank() << "            ADDED " << low << " " << high << ", fromPatch = ";
     if (fromPatch) {
       message << fromPatch->getID() << '\n';
     }

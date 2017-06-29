@@ -43,8 +43,11 @@
 //______________________________________________________________________
 //
 using namespace Uintah;
-using namespace std;
-static DebugStream dbg("RAY", false);
+
+namespace {
+
+  DebugStream dbg("RAY", false);
+}
 
 //______________________________________________________________________
 // Class: Constructor.
@@ -54,12 +57,11 @@ Radiometer::Radiometer(const TypeDescription::Type FLT_DBL ) : RMCRTCommon( FLT_
 {
   if ( FLT_DBL == TypeDescription::double_type ){
     d_VRFluxLabel = VarLabel::create( "VRFlux", CCVariable<double>::getTypeDescription() );
-    proc0cout << "__________________________________ USING DOUBLE VERSION OF RADIOMETER" << endl;
+    proc0cout << "__________________________________ USING DOUBLE VERSION OF RADIOMETER" << std::endl;
   } else {
     d_VRFluxLabel = VarLabel::create( "VRFlux", CCVariable<float>::getTypeDescription() );
-    proc0cout << "__________________________________ USING FLOAT VERSION OF RADIOMETER" << endl;
+    proc0cout << "__________________________________ USING FLOAT VERSION OF RADIOMETER" << std::endl;
   }
-
 }
 
 //______________________________________________________________________
@@ -99,9 +101,9 @@ Radiometer::problemSetup( const ProblemSpecP& prob_spec,
   } else {
                    // bulletproofing.
     for( ProblemSpecP n = rad_ps->getFirstChild(); n != nullptr; n=n->getNextSibling() ){
-      string me = n->getNodeName();
+      std::string me = n->getNodeName();
       if( ( me == "sigmaScat"  ||  me == "Threshold" || me == "randomSeed" ||  me == "StefanBoltzmann" || me == "allowReflect" ) && me !="text" ){
-        ostringstream warn;
+        std::ostringstream warn;
         warn << "\n ERROR:Radiometer::problemSetup: You've specified the variable (" << me << ")"
              << " which will be ignored.  You should set the variable outside <Radiometer> section. \n";
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
@@ -123,25 +125,25 @@ Radiometer::problemSetup( const ProblemSpecP& prob_spec,
 
   if(start.x() < min.x() || start.y() < min.y() || start.z() < min.z() ||
      end.x() > max.x()   || end.y() > max.y()   || end.z() > max.z() ) {
-    ostringstream warn;
+    std::ostringstream warn;
     warn << "\n ERROR:Radiometer::problemSetup: the radiometer that you've specified " << start
-         << " " << end << " begins or ends outside of the computational domain. \n" << endl;
+         << " " << end << " begins or ends outside of the computational domain. \n" << std::endl;
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
 
   if( start.x() > end.x() || start.y() > end.y() || start.z() > end.z() ) {
-    ostringstream warn;
+    std::ostringstream warn;
     warn << "\n ERROR:Radiometer::problemSetup: the radiometerthat you've specified " << start
-         << " " << end << " the starting point is > than the ending point \n" << endl;
+         << " " << end << " the starting point is > than the ending point \n" << std::endl;
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
 
   // you need at least one cell that's a radiometer
   if( start.x() == end.x() || start.y() == end.y() || start.z() == end.z() ){
-    ostringstream warn;
+    std::ostringstream warn;
     warn << "\n ERROR:Radiometer::problemSetup: The specified radiometer has the same "
          << "starting and ending points.  All of the directions must differ by one cell\n "
-         << "                                start: " << start << " end: " << end << endl;
+         << "                                start: " << start << " end: " << end << std::endl;
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
 
@@ -159,23 +161,23 @@ Radiometer::problemSetup( const ProblemSpecP& prob_spec,
 
 #ifdef RAY_SCATTER
   if(d_sigmaScat<1e-99){
-    proc0cout << "WARNING:  You are running a non-scattering case, yet you have the following in your configure line..." << endl;
-    proc0cout << "--enable-ray-scatter" << endl;
-    proc0cout << "As such, this task will run slower than is necessary." << endl;
-    proc0cout << "If you wish to run a scattering case, please specify a positive value greater than 1e-99 for the scattering coefficient." << endl;
-    proc0cout << "If you wish to run a non-scattering case, please remove --enable-ray-scatter from your configure line and re-configure and re-compile" << endl;
+    proc0cout << "WARNING:  You are running a non-scattering case, yet you have the following in your configure line..." << std::endl;
+    proc0cout << "--enable-ray-scatter" << std::endl;
+    proc0cout << "As such, this task will run slower than is necessary." << std::endl;
+    proc0cout << "If you wish to run a scattering case, please specify a positive value greater than 1e-99 for the scattering coefficient." << std::endl;
+    proc0cout << "If you wish to run a non-scattering case, please remove --enable-ray-scatter from your configure line and re-configure and re-compile" << std::endl;
   }
-  proc0cout<< endl << "RAY_SCATTER IS DEFINED" << endl;
+  proc0cout<< std::endl << "RAY_SCATTER IS DEFINED" << std::endl;
 #endif
 
   if ( d_viewAng > 360 ){
-    ostringstream warn;
-    warn << "ERROR:  VRViewAngle ("<< d_viewAng <<") exceeds the maximum acceptable value of 360 degrees." << endl;
+    std::ostringstream warn;
+    warn << "ERROR:  VRViewAngle ("<< d_viewAng <<") exceeds the maximum acceptable value of 360 degrees." << std::endl;
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
 
   if ( d_nRadRays < int(15 + pow(5.4, d_viewAng/40) ) ){
-    proc0cout << "RMCRT: WARNING Number of radiometer rays:  ("<< d_nRadRays <<") is less than the recommended number of ("<< int(15 + pow(5.4, d_viewAng/40) ) <<"). Errors will exceed 1%. " << endl;
+    proc0cout << "RMCRT: WARNING Number of radiometer rays:  ("<< d_nRadRays <<") is less than the recommended number of ("<< int(15 + pow(5.4, d_viewAng/40) ) <<"). Errors will exceed 1%. " << std::endl;
   }
 
   // orient[0,1,2] represent the user specified vector normal of the radiometer.
@@ -304,9 +306,8 @@ Radiometer::sched_radiometer( const LevelP& level,
                               Task::WhichDW sigma_dw,
                               Task::WhichDW celltype_dw )
 {
-  vector<const Patch*> myPatches = getPatchSet( sched, level );
+  std::vector<const Patch*> myPatches = getPatchSet( sched, level );
   bool hasRadiometers = false;
-  int nGhostCells = 0;           // This should be 0 for patches without radiometers
 
   int L = level->getIndex();
   Task::WhichDW abskg_dw = d_abskg_dw[L];
@@ -315,7 +316,6 @@ Radiometer::sched_radiometer( const LevelP& level,
   //  If this processor owns any patches with radiometers
   if( myPatches.size() !=  0 ){
     hasRadiometers = true;
-    nGhostCells = SHRT_MAX; 
   }
   
   std::string taskname = "Radiometer::radiometer";
@@ -355,9 +355,9 @@ Radiometer::sched_radiometer( const LevelP& level,
                               Task::WhichDW celltype_dw )
 {
   // find patches that contain radiometers
-  vector<const Patch*> myPatches = getPatchSet( sched, level );
+  std::vector<const Patch*> myPatches = getPatchSet( sched, level );
   bool hasRadiometers = false;
-  
+
   int L = level->getIndex();
   Task::WhichDW abskg_dw = d_abskg_dw[L];  
   
@@ -382,7 +382,7 @@ Radiometer::sched_radiometer( const LevelP& level,
     //__________________________________
     // Require an infinite number of ghost cells so you can access the entire domain.
     //
-    dbg << "    sched_radiometer: adding requires for all-to-all variables " << endl;
+    dbg << "    sched_radiometer: adding requires for all-to-all variables " << std::endl;
     Ghost::GhostType  gac  = Ghost::AroundCells;
     tsk->requires( abskg_dw ,    d_abskgLabel  ,   gac, SHRT_MAX);
     tsk->requires( sigma_dw ,    d_sigmaT4Label,   gac, SHRT_MAX);
@@ -400,7 +400,7 @@ Radiometer::sched_radiometer( const LevelP& level,
 
     sched->addTask( tsk, radiometerPatchSet, d_matlSet, RMCRTCommon::TG_RMCRT );
 
-    if( radiometerPatchSet && radiometerPatchSet->removeReference() ){ 
+    if( radiometerPatchSet && radiometerPatchSet->removeReference() ){
       delete radiometerPatchSet;
     }
   }  // hasRadiometers
@@ -438,11 +438,11 @@ Radiometer::radiometer( const ProcessorGroup* pg,
 
   constCCVariable< T > sigmaT4OverPi;
   constCCVariable< T > abskg;
-  constCCVariable<int>    celltype;
+  constCCVariable<int> celltype;
 
-  abskg_dw->getLevel(   abskg   ,       d_abskgLabel ,   d_matl , level );
-  sigmaT4_dw->getLevel( sigmaT4OverPi , d_sigmaT4Label,  d_matl , level );
-  celltype_dw->getLevel( celltype ,     d_cellTypeLabel, d_matl , level );
+  abskg_dw->getLevel(    abskg        , d_abskgLabel   , d_matl, level );
+  sigmaT4_dw->getLevel(  sigmaT4OverPi, d_sigmaT4Label , d_matl, level );
+  celltype_dw->getLevel( celltype     , d_cellTypeLabel, d_matl, level );
 
   //__________________________________
   // patch loop
@@ -599,7 +599,7 @@ Radiometer::getPatchSet( SchedulerP& sched,
   //__________________________________
   //
   //  that contain radiometers and that this processor owns
-  vector< const Patch* > myPatches;
+  std::vector< const Patch* > myPatches;
   LoadBalancerPort * lb          = sched->getLoadBalancer();
   const PatchSet   * procPatches = lb->getPerProcessorPatchSet( level );
 

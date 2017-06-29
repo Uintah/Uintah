@@ -91,12 +91,12 @@ DependencyBatch::received( const ProcessorGroup * pg )
     m_received = true;
 
     // set all the toVars to valid, meaning the MPI has been completed
-    for (std::vector<Variable*>::iterator iter = m_to_vars.begin(); iter != m_to_vars.end(); iter++) {
+    for (auto iter = m_to_vars.begin(); iter != m_to_vars.end(); ++iter) {
       (*iter)->setValid();
     }
 
     // prepare for placement into the external ready queue
-    for (std::list<DetailedTask*>::iterator iter = m_to_tasks.begin(); iter != m_to_tasks.end(); iter++) {
+    for (auto iter = m_to_tasks.begin(); iter != m_to_tasks.end(); ++iter) {
       // if the count is 0, the task will add itself to the external ready queue
       (*iter)->decrementExternalDepCount();
       (*iter)->checkExternalDepCount();
