@@ -38,7 +38,7 @@
 #include <include/sci_defs/uintah_testdefs.h.in>
 
 
-#define USE_SPATIAL_SCHEDULING
+//#define USE_SPATIAL_SCHEDULING
 
 //______________________________________________________________________
 //
