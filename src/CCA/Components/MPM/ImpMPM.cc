@@ -1983,8 +1983,7 @@ void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
           ParticleSubset::iterator iter = pset->begin();
           for(;iter != pset->end(); iter++){
             particleIndex idx = *iter;
-            pExternalForce_new[idx] = pExternalForce[idx]
-              *flags->d_forceIncrementFactor;
+            pExternalForce_new[idx] = pExternalForce[idx];
           }
         }
         
@@ -2018,8 +2017,7 @@ void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
         ParticleSubset::iterator iter = pset->begin();
         for(;iter != pset->end(); iter++){
           particleIndex idx = *iter;
-          pExternalForce_new[idx] = pExternalForce[idx]
-            *flags->d_forceIncrementFactor;
+          pExternalForce_new[idx] = pExternalForce[idx];
           pExternalHeatFlux_new[idx] = pExternalHeatFlux[idx];
         }
       }

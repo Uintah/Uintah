@@ -728,8 +728,6 @@ void SerialMPM::scheduleApplyExternalLoads(SchedulerP& sched,
   Task* t=scinew Task("MPM::applyExternalLoads",
                     this, &SerialMPM::applyExternalLoads);
 
-  t->computes(             lb->pExtForceLabel_preReloc);
-
   if (!flags->d_mms_type.empty()) {
     //MMS problems need displacements
     t->requires(Task::OldDW, lb->pDispLabel,            Ghost::None);
@@ -737,7 +735,7 @@ void SerialMPM::scheduleApplyExternalLoads(SchedulerP& sched,
 
   if (flags->d_useLoadCurves || flags->d_useCBDI) {
     t->requires(Task::OldDW,    lb->pXLabel,                  Ghost::None);
-    t->requires(Task::OldDW,    lb->pExternalForceLabel,      Ghost::None);
+    //t->requires(Task::OldDW,    lb->pExternalForceLabel,      Ghost::None);
     t->requires(Task::OldDW,    lb->pLoadCurveIDLabel,        Ghost::None);
     t->computes(                lb->pLoadCurveIDLabel_preReloc);
     if (flags->d_useCBDI) {
@@ -750,6 +748,7 @@ void SerialMPM::scheduleApplyExternalLoads(SchedulerP& sched,
     }
   }
 //  t->computes(Task::OldDW, lb->pExternalHeatRateLabel_preReloc);
+  t->computes(             lb->pExtForceLabel_preReloc);
 
   sched->addTask(t, patches, matls);
 }
@@ -3150,8 +3149,6 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
       new_dw->allocateAndPut(pExternalForce_new,
                              lb->pExtForceLabel_preReloc,  pset);
       if (flags->d_useCBDI) {
-        old_dw->get(psize,               lb->pSizeLabel,               pset);
-        old_dw->get(pDeformationMeasure, lb->pDeformationMeasureLabel, pset);
       }
 
       // pExternalForce is either:
@@ -3182,12 +3179,14 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
         if(do_PressureBCs){
           // Get the external force data and allocate new space for
           // external force on particle corners
-          constParticleVariable<Vector> pExternalForce;
-          old_dw->get(pExternalForce, lb->pExternalForceLabel, pset);
+          //constParticleVariable<Vector> pExternalForce;
+          //old_dw->get(pExternalForce, lb->pExternalForceLabel, pset);
 
           ParticleVariable<Point> pExternalForceCorner1, pExternalForceCorner2,
                                   pExternalForceCorner3, pExternalForceCorner4;
           if (flags->d_useCBDI) {
+            old_dw->get(psize,               lb->pSizeLabel,              pset);
+            old_dw->get(pDeformationMeasure, lb->pDeformationMeasureLabel,pset);
             new_dw->allocateAndPut(pExternalForceCorner1,
                                   lb->pExternalForceCorner1Label, pset);
             new_dw->allocateAndPut(pExternalForceCorner2,
@@ -3204,7 +3203,8 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
             particleIndex idx = *iter;
             int loadCurveID = pLoadCurveID[idx]-1;
             if (loadCurveID < 0) {
-              pExternalForce_new[idx] = pExternalForce[idx];
+              //pExternalForce_new[idx] = pExternalForce[idx];
+              pExternalForce_new[idx] = Vector(0.,0.,0.);
             } else {
               PressureBC* pbc = pbcP[loadCurveID];
               double force = forcePerPart[loadCurveID];
@@ -3219,7 +3219,7 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
                                     pExternalForceCorner4[idx],
                                     dxCell);
               } else {
-               pExternalForce_new[idx] = pbc->getForceVector(px[idx],force,time);
+               pExternalForce_new[idx] =pbc->getForceVector(px[idx],force,time);
               }
             }
           }
