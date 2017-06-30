@@ -58,7 +58,7 @@
     <checkpoint cycle="2" interval="0.01"/>
     <compression>gzip</compression> -->
   </DataArchiver>
-  <Grid>
+  <Grid doAMR="true">
     <Level>
       <Box label="coarse">
         <lower>[0,0,0]</lower>
@@ -377,7 +377,7 @@
             <weight>1 </weight>
           </src>
         </Eqn>
-        <!-- enthalpy using DO 
+        <!-- enthalpy using DO
         <Eqn label="enthalpy_do" type = "CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
@@ -387,11 +387,11 @@
             <depend_varname>adiabaticenthalpy</depend_varname>
           </initialization>
           <src label="divQ_do" >
-            <weight>1</weight> 
-          </src>        
+            <weight>1</weight>
+          </src>
         </Eqn> -->
         <Sources>
-          <!--       DO radiation   
+          <!--       DO radiation
           <src label="divQ_do" type="do_radiation">
             <calc_frequency>    10      </calc_frequency>
             <abskg label="gas_abskg"/>
@@ -406,8 +406,8 @@
           </src>  -->
           <!--       RMCRT radiation   -->
           <src label="divQ_rmcrt" type="rmcrt_radiation">
-            <calc_frequency>    1       </calc_frequency>
-            <abskg label="gas_abskg"/>
+            <calc_frequency>    2       </calc_frequency>
+            <abskt label="gas_abskg"/>
             <RMCRT>
               <randomSeed>        false      </randomSeed>
               <nDivQRays>         5         </nDivQRays>
@@ -425,15 +425,6 @@
       </TransportEqns>
       <!--______________________________________________________________________ -->
       <PropertyModels>
-        <model type="radiation_properties" label="gas_abskg">
-          <initialization type="constant">
-            <constant>1.0</constant>
-          </initialization>
-          <calculator type="hottel_sarofim">
-            <abskg label="abskg"/>
-            <opl>3.0</opl>
-          </calculator>
-        </model>
         <model type="heat_loss" label="heat_loss">
           <initialization type="constant">
             <constant>0.0</constant>
@@ -455,6 +446,15 @@
           <constant>0.0</constant>
         </model>
       </PropertyModels>
+
+      <PropertyModelsV2>
+        <model type="gasRadProperties"  label="abskg" >
+          <calculator type="hottel_sarofim">
+            <opl>3.0</opl>
+          </calculator>
+        </model>
+      </PropertyModelsV2>
+
       <!--__________________________________-->
       <Turbulence model="compdynamicprocedure"/>
       <Properties>
