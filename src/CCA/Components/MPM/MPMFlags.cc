@@ -69,7 +69,6 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_refineParticles               =  false;
   d_XPIC2                         =  false;
   d_artificialDampCoeff           =  0.0;
-  d_forceIncrementFactor          =  1.0;
   d_interpolator                  =  scinew LinearInterpolator();
   d_do_contact_friction           =  false;
   d_computeNormals                =  false;
@@ -217,7 +216,6 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
   }
 
-  mpm_flag_ps->get("ForceBC_force_increment_factor",    d_forceIncrementFactor);
   mpm_flag_ps->get("DoImplicitHeatConduction",          d_doImplicitHeatConduction);
   mpm_flag_ps->get("DoTransientImplicitHeatConduction", d_doTransientImplicitHeatConduction);
   mpm_flag_ps->get("DoExplicitHeatConduction",          d_doExplicitHeatConduction);
@@ -388,7 +386,6 @@ else{
     dbg << " Use Load Curves             = " << d_useLoadCurves << endl;
     dbg << " Use CBDI boundary condition = " << d_useCBDI << endl;
     dbg << " Use Cohesive Zones          = " << d_useCohesiveZones << endl;
-    dbg << " ForceBC increment factor    = " << d_forceIncrementFactor<< endl;
     dbg << " Contact Friction Heating    = " << d_addFrictionWork << endl;
     dbg << " Extra Solver flushes        = " << d_extraSolverFlushes << endl;
     dbg << "---------------------------------------------------------\n";
@@ -418,7 +415,6 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("use_load_curves",                    d_useLoadCurves);
   ps->appendElement("use_CBDI_boundary_condition",        d_useCBDI);
   ps->appendElement("exactDeformation",                   d_exactDeformation);
-  ps->appendElement("ForceBC_force_increment_factor",     d_forceIncrementFactor);
   ps->appendElement("DoImplicitHeatConduction",           d_doImplicitHeatConduction);
   ps->appendElement("DoTransientImplicitHeatConduction",  d_doTransientImplicitHeatConduction);
   ps->appendElement("DoExplicitHeatConduction",           d_doExplicitHeatConduction);
@@ -446,7 +442,7 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   }
 
   ps->appendElement("do_contact_friction_heating", d_do_contact_friction);
-  ps->appendElement("computeNormals", d_computeNormals);
+  ps->appendElement("computeNormals",   d_computeNormals);
   ps->appendElement("computeColinearNormals", d_computeColinearNormals);
   ps->appendElement("delete_rogue_particles",d_deleteRogueParticles);
   ps->appendElement("extra_solver_flushes", d_extraSolverFlushes);

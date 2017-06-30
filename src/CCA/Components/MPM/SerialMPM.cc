@@ -724,18 +724,9 @@ void SerialMPM::scheduleApplyExternalLoads(SchedulerP& sched,
     return;
 
   printSchedule(patches,cout_doing,"MPM::scheduleApplyExternalLoads");
- /*
-  * applyExternalLoads
-  *   in(p.externalForce, p.externalheatrate)
-  *   out(p.externalForceNew, p.externalheatrateNew) */
+
   Task* t=scinew Task("MPM::applyExternalLoads",
                     this, &SerialMPM::applyExternalLoads);
-
-  t->requires(Task::OldDW, lb->pXLabel,                 Ghost::None);
-  t->requires(Task::OldDW, lb->pSizeLabel,              Ghost::None);
-  t->requires(Task::OldDW, lb->pMassLabel,              Ghost::None);
-  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,Ghost::None);
-  t->requires(Task::OldDW, lb->pExternalForceLabel,     Ghost::None);
 
   t->computes(             lb->pExtForceLabel_preReloc);
 
@@ -743,10 +734,15 @@ void SerialMPM::scheduleApplyExternalLoads(SchedulerP& sched,
     //MMS problems need displacements
     t->requires(Task::OldDW, lb->pDispLabel,            Ghost::None);
   }
+
   if (flags->d_useLoadCurves || flags->d_useCBDI) {
-    t->requires(Task::OldDW, lb->pLoadCurveIDLabel,     Ghost::None);
-    t->computes(             lb->pLoadCurveIDLabel_preReloc);
+    t->requires(Task::OldDW,    lb->pXLabel,                  Ghost::None);
+    t->requires(Task::OldDW,    lb->pExternalForceLabel,      Ghost::None);
+    t->requires(Task::OldDW,    lb->pLoadCurveIDLabel,        Ghost::None);
+    t->computes(                lb->pLoadCurveIDLabel_preReloc);
     if (flags->d_useCBDI) {
+       t->requires(Task::OldDW, lb->pSizeLabel,               Ghost::None);
+       t->requires(Task::OldDW, lb->pDeformationMeasureLabel, Ghost::None);
        t->computes(             lb->pExternalForceCorner1Label);
        t->computes(             lb->pExternalForceCorner2Label);
        t->computes(             lb->pExternalForceCorner3Label);
@@ -3138,9 +3134,6 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,"Doing applyExternalLoads");
 
-    // Place for user defined loading scenarios to be defined,
-    // otherwise pExternalForce is just carried forward.
-
     int numMPMMatls=d_sharedState->getNumMPMMatls();
 
     for(int m = 0; m < numMPMMatls; m++){
@@ -3152,14 +3145,21 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
       constParticleVariable<Point>   px;
       constParticleVariable<Matrix3> psize;
       constParticleVariable<Matrix3> pDeformationMeasure;
-      ParticleVariable<Vector> pExternalForce_new;
-
+      ParticleVariable<Vector>       pExternalForce_new;
       old_dw->get(px,    lb->pXLabel,    pset);
-      old_dw->get(psize, lb->pSizeLabel, pset);
-      old_dw->get(pDeformationMeasure, lb->pDeformationMeasureLabel, pset);
       new_dw->allocateAndPut(pExternalForce_new,
                              lb->pExtForceLabel_preReloc,  pset);
+      if (flags->d_useCBDI) {
+        old_dw->get(psize,               lb->pSizeLabel,               pset);
+        old_dw->get(pDeformationMeasure, lb->pDeformationMeasureLabel, pset);
+      }
 
+      // pExternalForce is either:
+      //  set using load curves
+      //  set using an MMS formulation
+      //  set to zero
+
+      string mms_type = flags->d_mms_type;
       if (flags->d_useLoadCurves) {
         bool do_PressureBCs=false;
         for (int ii = 0;
@@ -3181,7 +3181,7 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
         pLoadCurveID_new.copyData(pLoadCurveID);
         if(do_PressureBCs){
           // Get the external force data and allocate new space for
-          // external force
+          // external force on particle corners
           constParticleVariable<Vector> pExternalForce;
           old_dw->get(pExternalForce, lb->pExternalForceLabel, pset);
 
@@ -3223,31 +3223,18 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
               }
             }
           }
-        } else {
-           for(ParticleSubset::iterator iter = pset->begin();
-               iter != pset->end(); iter++){
-             pExternalForce_new[*iter] = 0.;
-           }
         }
+      } else if(!mms_type.empty()) {
+        // MMS
+        MMS MMSObject;
+        MMSObject.computeExternalForceForMMS(old_dw,new_dw,time,pset,
+                                            lb,flags,pExternalForce_new);
       } else {
-// MMS
-        string mms_type = flags->d_mms_type;
-         if(!mms_type.empty()) {
-           MMS MMSObject;
-           MMSObject.computeExternalForceForMMS(old_dw,new_dw,time,pset,
-                                                lb,flags,pExternalForce_new);
-         } else {
-          // Get the external force data and allocate new space for
-          // external force and copy the data
-          constParticleVariable<Vector> pExternalForce;
-          old_dw->get(pExternalForce, lb->pExternalForceLabel, pset);
-
-          for(ParticleSubset::iterator iter = pset->begin();
-                                                                     iter != pset->end(); iter++){
-            particleIndex idx = *iter;
-            pExternalForce_new[idx] = pExternalForce[idx]
-                                                                        * flags->d_forceIncrementFactor;
-          }
+        // Set to zero
+        for(ParticleSubset::iterator iter = pset->begin();
+                                     iter != pset->end(); iter++){
+          particleIndex idx = *iter;
+          pExternalForce_new[idx] = Vector(0.,0.,0.);
         }
       }
     } // matl loop
