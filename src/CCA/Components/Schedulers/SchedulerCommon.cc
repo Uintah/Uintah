@@ -398,7 +398,7 @@ SchedulerCommon::problemSetup( const ProblemSpecP & prob_spec, SimulationStateP 
   // Running with VisIt so add in the variables that the user can
   // modify.
   if( m_shared_state->getVisIt() && !initialized ) {
-     m_shared_state->d_douts.push_back( &schedulercommon_dbg  );
+     m_shared_state->d_douts.push_back( &g_schedulercommon_dbg  );
 
     initialized = true;
   }
