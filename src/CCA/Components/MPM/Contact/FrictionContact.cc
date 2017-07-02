@@ -161,9 +161,7 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
           cell_vol =  r*dx.x()*dx.y();
         }
 
-        // Only apply contact if the node is nearly "full".
-        // There are two options:
-
+        // Only apply contact if the node is full relative to a constraint
         if((totalNodalVol/cell_vol) > d_vol_const){
           double scale_factor=1.0;  // Currently not used, should test again.
 
@@ -355,9 +353,7 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
           cell_vol =  r*dx.x()*dx.y();
         }
 
-        // Only apply contact if the node is nearly "full".  There are
-        // two options:
-
+        // Only apply contact if the node is full relative to a constraint
         if((totalNodalVol/cell_vol) > d_vol_const){
           double scale_factor=1.0;
 
@@ -519,11 +515,6 @@ void FrictionContact::addComputesAndRequiresInterpolated(SchedulerP & sched,
   
   const MaterialSubset* mss = ms->getUnion();
   t->requires(Task::OldDW, lb->delTLabel);
-  t->requires(Task::OldDW, lb->pXLabel,                  gp, ngc_p);
-  t->requires(Task::OldDW, lb->pVolumeLabel,             gp, ngc_p);
-  t->requires(Task::OldDW, lb->pStressLabel,             gp, ngc_p);
-  t->requires(Task::OldDW, lb->pSizeLabel,               gp, ngc_p);
-  t->requires(Task::OldDW, lb->pDeformationMeasureLabel, gp, ngc_p);
   t->requires(Task::NewDW, lb->gMassLabel,               Ghost::None);
   t->requires(Task::NewDW, lb->gVolumeLabel,             Ghost::None);
   t->requires(Task::NewDW, lb->gSurfNormLabel,           Ghost::None);
