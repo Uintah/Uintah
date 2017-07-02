@@ -651,7 +651,9 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
                                                           cz_matls_sub,
                                                           all_matls);
   }
-  scheduleComputeContactArea(             sched, patches, matls);
+  if(d_bndy_traction_faces.size()>0) {
+    scheduleComputeContactArea(           sched, patches, matls);
+  }
   scheduleComputeInternalForce(           sched, patches, matls);
 
   scheduleComputeAndIntegrateAcceleration(sched, patches, matls);
@@ -763,13 +765,6 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
 
   printSchedule(patches,cout_doing,"MPM::scheduleInterpolateParticlesToGrid");
 
-  /* interpolateParticlesToGrid
-   *   in(P.MASS, P.VELOCITY, P.NAT_X)
-   *   operation(interpolate the P.MASS and P.VEL to the grid
-   *             using P.NAT_X and some shape function evaluations)
-   *   out(G.MASS, G.VELOCITY) */
-
-
   Task* t = scinew Task("MPM::interpolateParticlesToGrid",
                         this,&SerialMPM::interpolateParticlesToGrid);
   Ghost::GhostType  gan = Ghost::AroundNodes;
@@ -794,7 +789,6 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
     t->requires(Task::OldDW,  lb->pLoadCurveIDLabel,gan,NGP);
   }
 
-  t->computes(lb->gMassLabel);
   t->computes(lb->gMassLabel,        d_sharedState->getAllInOneMatl(),
               Task::OutOfDomain);
   t->computes(lb->gTemperatureLabel, d_sharedState->getAllInOneMatl(),
@@ -803,6 +797,7 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
               Task::OutOfDomain);
   t->computes(lb->gVelocityLabel,    d_sharedState->getAllInOneMatl(),
               Task::OutOfDomain);
+  t->computes(lb->gMassLabel);
   t->computes(lb->gSp_volLabel);
   t->computes(lb->gVolumeLabel);
 //  t->computes(lb->gColorLabel);
@@ -1010,7 +1005,6 @@ void SerialMPM::scheduleComputeContactArea(SchedulerP& sched,
     return;
 
   /** computeContactArea */
-  if(d_bndy_traction_faces.size()>0) {
 
     printSchedule(patches,cout_doing,"MPM::scheduleComputeContactArea");
     Task* t = scinew Task("MPM::computeContactArea",
@@ -1024,7 +1018,6 @@ void SerialMPM::scheduleComputeContactArea(SchedulerP& sched,
       t->computes(lb->BndyContactCellAreaLabel[iface]);
     }
     sched->addTask(t, patches, matls);
-  }
 }
 
 void SerialMPM::scheduleComputeInternalForce(SchedulerP& sched,
