@@ -116,12 +116,6 @@ void SingleVelContact::exMomInterpolated(const ProcessorGroup*,
         }
       }
     }
-
-    for(int m=0;m<matls->size();m++){
-      int dwi = matls->get(m);
-      MPMBoundCond bc;
-      bc.setBoundaryCondition(patch, dwi, "Symmetric",gvelocity[m],interp_type);
-    }
   }
 }
 
