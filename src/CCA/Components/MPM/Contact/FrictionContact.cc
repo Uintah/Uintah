@@ -161,13 +161,11 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
           cell_vol =  r*dx.x()*dx.y();
         }
 
-        // Only apply contact if the node is nearly "full".  There are
-        // two options:
+        // Only apply contact if the node is nearly "full".
+        // There are two options:
 
-        // 1. This option uses particle counting
-//        if((totalNodalVol/cell_vol)*(64./totalNearParticles) > d_vol_const){
         if((totalNodalVol/cell_vol) > d_vol_const){
-          double scale_factor=1.0;
+          double scale_factor=1.0;  // Currently not used, should test again.
 
           // 2. This option uses only cell volumes.  The idea is that a cell 
           //    is full if (totalNodalVol/cell_vol >= 1.0), and the contraint 
@@ -213,11 +211,10 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
 //              double sepscal= Dot(sepvec,normal);
               double sepscal= sepvec.length();
               if(sepscal < sepDis){
-              double normalDeltaVel=Dot(deltaVelocity,normal);
-              Vector Dv(0.,0.,0.);
-              double Tn = gnormtraction[n][c];
-              if((Tn < -1.e-12) || 
-                 (normalDeltaVel> 0.0)){
+               double normalDeltaVel=Dot(deltaVelocity,normal);
+               Vector Dv(0.,0.,0.);
+               double Tn = gnormtraction[n][c];
+               if((Tn < -1.e-12) || (normalDeltaVel> 0.0)){
 
                 // Simplify algorithm in case where approach velocity
                 // is in direction of surface normal (no slip).
@@ -248,16 +245,10 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
                   // conventional definition.  However, here it is calculated
                   // as positive (Work=-force*distance).
                   if(compare(frictionCoefficient,d_mu)){
-                    if (flag->d_fracture)
-                      frictionWork[n][c] += mass*frictionCoefficient
-                        * (normalDeltaVel*normalDeltaVel) *
-                        (tangentDeltaVelocity/fabs(normalDeltaVel)-
-                         frictionCoefficient);
-                    else
-                      frictionWork[n][c] = mass*frictionCoefficient
-                        * (normalDeltaVel*normalDeltaVel) *
-                        (tangentDeltaVelocity/fabs(normalDeltaVel)-
-                         frictionCoefficient);
+                    frictionWork[n][c] = mass*frictionCoefficient *
+                                       (normalDeltaVel*normalDeltaVel) *
+                                      (tangentDeltaVelocity/fabs(normalDeltaVel)
+                                       - frictionCoefficient);
                   }
                 }
 
