@@ -64,16 +64,15 @@ namespace Uintah{
         //====================================================================================
         /** @brief Return a CONST UINTAH field **/
         template <typename T>
-        inline T* get_const_uintah_field( const std::string name , bool returnNullPointer=false ){
+        inline T* get_const_uintah_field( const std::string name ){
           T* emptyPointer=NULL;
-          return returnNullPointer ? emptyPointer  :  _field_container->get_const_field<T>(name);
+          return _field_container->get_const_field<T>(name);
         }
 
         /** @brief Return a CONST UINTAH field **/
         template <typename T>
-        inline T& get_const_uintah_field_add( const std::string name, bool returnNullPointer=false ){
-          T* emptyPointer=NULL;
-          return returnNullPointer ? *emptyPointer : *(_field_container->get_const_field<T>(name));
+        inline T& get_const_uintah_field_add( const std::string name ){
+          return *(_field_container->get_const_field<T>(name));
         }
 
         /** @brief Return a CONST UINTAH field specifying the DW **/
@@ -92,16 +91,14 @@ namespace Uintah{
 
         /** @brief Return a UINTAH field **/
         template <typename T>
-        inline T* get_uintah_field( const std::string name , bool returnNullPointer=false ){
-          T* emptyPointer=NULL;
-          return returnNullPointer ? emptyPointer  :  _field_container->get_field<T>(name);
+        inline T* get_uintah_field( const std::string name ){
+          return _field_container->get_field<T>(name);
         }
 
         /** @brief Return a UINTAH field **/
         template <typename T>
-        inline T& get_uintah_field_add( const std::string name, bool returnNullPointer=false ){
-          T* emptyPointer=NULL;
-          return returnNullPointer ? *emptyPointer  : *(_field_container->get_field<T>(name)) ;
+        inline T& get_uintah_field_add( const std::string name ){
+          return *(_field_container->get_field<T>(name)) ;
         }
 
         /** @brief Return a UINTAH particle field **/
@@ -118,15 +115,13 @@ namespace Uintah{
 
         /** @brief Return a modifiable temporary field address **/
         template <typename T>
-        inline T& get_temp_uintah_field_add( const std::string name, const int nGhosts=0, bool returnNullPointer=false ){
-          T* emptyPointer=NULL;
-          return returnNullPointer ? *emptyPointer :
-                                     *(_field_container->get_temporary_field<T>(name, nGhosts));
+        inline T& get_temp_uintah_field_add( const std::string name, const int nGhosts=0 ){
+          return *(_field_container->get_temporary_field<T>(name, nGhosts));
         }
 
         /** @brief Return a modifiable temporary field pointer **/
         template <typename T>
-        inline T* get_temp_uintah_field( const std::string name, const int nGhosts=0, bool returnNullPointer=false ){
+        inline T* get_temp_uintah_field( const std::string name, const int nGhosts=0 ){
           return _field_container->get_temporary_field<T>(name, nGhosts);
         }
 
