@@ -165,13 +165,12 @@ DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   //Pad for ghosts
   lowPindex -= IntVector(1,1,1);
   highPindex += IntVector(1,1,1);
+  
+  Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
 
   CCVariable<double>& deposit_velocity = tsk_info->get_uintah_field_add<CCVariable<double> >(_task_name);
+  deposit_velocity.initialize(0.0);
   constCCVariable<double>& deposit_velocity_old = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(_task_name));
-  Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
-  Uintah::parallel_for( range, [&](int i, int j, int k){
-    deposit_velocity(i,j,k) = (1.0 - _relaxation_coe) * deposit_velocity_old(i,j,k); // we want (1-relax)*old + relax*new
-  });
   CCVariable<double>* vd_vol_ave_num = tsk_info->get_uintah_field<CCVariable<double> >("d_vol_ave_num");
   CCVariable<double>& d_vol_ave_num = *vd_vol_ave_num;
   d_vol_ave_num.initialize(0.0);
@@ -252,7 +251,7 @@ DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
           d_velocity /= total_area_face; // area weighted incoming velocity to the cell for particle i.
           d_vol_ave_num[c] += d_diam_num;
 	        d_vol_ave_den[c] += d_diam_den;
-          deposit_velocity[c] += _relaxation_coe * d_velocity; // add the contribution for the deposition
+          deposit_velocity[c] += d_velocity; // add the contribution for the deposition
           // overall we are trying to achieve:  v_hat = (1-alpha)*v_hat_old + alpha*v_new. We initialize v_hat to v_hat_old*(1-alpha) in timestep_init (first term).
           // we handle the second term using the summation alpha*v_new = alpha * (v1 + v2 + v3):
           // v_hat += alpha*v1 + alpha*v2 + alpha*v3
@@ -260,8 +259,8 @@ DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
       } // wall or intrusion cell-type
     } // cell loop
   } // environment loop
-  for (CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++){
-    IntVector c = *iter;
-    d_vol_ave[c]=std::min(std::max(d_vol_ave_num[c]/(d_vol_ave_den[c]+1.0e-100),1e-8),0.1); // this is the volume-averaged arriving particle size [m]
-  }
+  Uintah::parallel_for( range, [&](int i, int j, int k){
+    deposit_velocity(i,j,k) = (1.0 - _relaxation_coe) * deposit_velocity_old(i,j,k) + _relaxation_coe * deposit_velocity(i,j,k); // time-average the deposition rate.
+    d_vol_ave(i,j,k)=std::min(std::max(d_vol_ave_num(i,j,k)/(d_vol_ave_den(i,j,k)+1.0e-100),1e-8),0.1); // this is the volume-averaged arriving particle size [m]
+  });
 }
