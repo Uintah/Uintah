@@ -119,6 +119,7 @@ DepositionVelocity::register_timestep_eval(
   register_variable( "d_vol_ave_num", ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable( "d_vol_ave_den", ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable( "d_vol_ave", ArchesFieldContainer::COMPUTES, variable_registry );
+  register_variable( "d_vol_ave", ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
 
   for ( int i = 0; i < _Nenv; i++ ){
     const std::string RateDepositionX = get_env_name(i, _ratedepx_name);
@@ -180,6 +181,7 @@ DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   CCVariable<double>* vd_vol_ave = tsk_info->get_uintah_field<CCVariable<double> >("d_vol_ave");
   CCVariable<double>& d_vol_ave = *vd_vol_ave;
   d_vol_ave.initialize(0.0);
+  constCCVariable<double>& d_vol_ave_old = *(tsk_info->get_const_uintah_field<constCCVariable<double> >("d_vol_ave"));
   constCCVariable<int>* vcelltype = tsk_info->get_const_uintah_field<constCCVariable<int> >(_cellType_name);
   constCCVariable<int>& celltype = *vcelltype;
 
@@ -261,6 +263,7 @@ DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   } // environment loop
   Uintah::parallel_for( range, [&](int i, int j, int k){
     deposit_velocity(i,j,k) = (1.0 - _relaxation_coe) * deposit_velocity_old(i,j,k) + _relaxation_coe * deposit_velocity(i,j,k); // time-average the deposition rate.
-    d_vol_ave(i,j,k)=std::min(std::max(d_vol_ave_num(i,j,k)/(d_vol_ave_den(i,j,k)+1.0e-100),1e-8),0.1); // this is the volume-averaged arriving particle size [m]
+    d_vol_ave(i,j,k)= (1.0 - _relaxation_coe) * d_vol_ave_old(i,j,k) + 
+      _relaxation_coe * std::min(std::max(d_vol_ave_num(i,j,k)/(d_vol_ave_den(i,j,k)+1.0e-100),1e-8),0.1); // this is the time-averaged volume-averaged arriving particle size [m]
   });
 }
