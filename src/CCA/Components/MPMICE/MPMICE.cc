@@ -606,6 +606,7 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
   d_mpm->scheduleExMomIntegrated(             sched, mpm_patches, mpm_matls);
   d_mpm->scheduleSetGridBoundaryConditions(   sched, mpm_patches, mpm_matls);
   d_mpm->scheduleInterpolateToParticlesAndUpdate(sched, mpm_patches, mpm_matls);
+  d_mpm->scheduleComputeParticleGradients(       sched, mpm_patches, mpm_matls);
   d_mpm->scheduleComputeStressTensor(         sched, mpm_patches, mpm_matls);
   d_mpm->scheduleFinalParticleUpdate(         sched, mpm_patches, mpm_matls);
   if( d_mpm->flags->d_computeScaleFactor ){
