@@ -917,7 +917,6 @@ void ImpMPM::scheduleApplyExternalLoads(SchedulerP& sched,
   Task* t=scinew Task("IMPM::applyExternalLoads",
                     this, &ImpMPM::applyExternalLoads);
                                                                                 
-  t->requires(Task::OldDW, lb->pExternalForceLabel,    Ghost::None);
   t->requires(Task::OldDW, lb->pExternalHeatFluxLabel,    Ghost::None);
   t->requires(Task::OldDW, lb->pXLabel,                Ghost::None);
   t->computes(             lb->pExtForceLabel_preReloc);
@@ -1917,7 +1916,7 @@ void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
     printTask(patches, patch,cout_doing,"Doing applyExternalLoads");
     
     // Place for user defined loading scenarios to be defined,
-    // otherwise pExternalForce is just carried forward.
+    // otherwise pExternalForce is just set to zero
     
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     
@@ -1930,9 +1929,7 @@ void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
       constParticleVariable<Point>  px;
       old_dw->get(px, lb->pXLabel, pset);
 
-      constParticleVariable<Vector> pExternalForce;
       ParticleVariable<Vector> pExternalForce_new;
-      old_dw->get(pExternalForce, lb->pExternalForceLabel, pset);
       new_dw->allocateAndPut(pExternalForce_new,
                              lb->pExtForceLabel_preReloc,  pset);
       
@@ -1970,7 +1967,7 @@ void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
             particleIndex idx = *iter;
             int loadCurveID = pLoadCurveID[idx]-1;
             if (loadCurveID < 0) {
-              pExternalForce_new[idx] = pExternalForce[idx];
+              pExternalForce_new[idx] = Vector(0.,0.,0.);
             } else {
               PressureBC* pbc = pbcP[loadCurveID];
               double force = forceMagPerPart[loadCurveID];
@@ -1978,15 +1975,7 @@ void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
             }
           }
         } //end d0_PressureBCs
-        
-        else {
-          ParticleSubset::iterator iter = pset->begin();
-          for(;iter != pset->end(); iter++){
-            particleIndex idx = *iter;
-            pExternalForce_new[idx] = pExternalForce[idx];
-          }
-        }
-        
+
         if (!heatFluxMagPerPart.empty()) {
           
           //double mag = heatFluxMagPerPart[0];
@@ -2005,7 +1994,6 @@ void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
           }
         }
 
-        
         // Recycle the loadCurveIDs
         ParticleVariable<int> pLoadCurveID_new;
         new_dw->allocateAndPut(pLoadCurveID_new, 
@@ -2017,7 +2005,7 @@ void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
         ParticleSubset::iterator iter = pset->begin();
         for(;iter != pset->end(); iter++){
           particleIndex idx = *iter;
-          pExternalForce_new[idx] = pExternalForce[idx];
+          pExternalForce_new[idx] = Vector(0.,0.,0.);
           pExternalHeatFlux_new[idx] = pExternalHeatFlux[idx];
         }
       }
