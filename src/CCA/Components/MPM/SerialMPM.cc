@@ -1027,19 +1027,10 @@ void SerialMPM::scheduleComputeInternalForce(SchedulerP& sched,
                            getLevel(patches)->getGrid()->numLevels()))
     return;
 
-  /*
-   * computeInternalForce
-   *   in(P.CONMOD, P.NAT_X, P.VOLUME)
-   *   operation(evaluate the divergence of the stress (stored in
-   *   P.CONMOD) using P.NAT_X and the gradients of the
-   *   shape functions)
-   * out(G.F_INTERNAL) */
-
   printSchedule(patches,cout_doing,"MPM::scheduleComputeInternalForce");
 
   Task* t = scinew Task("MPM::computeInternalForce",
                         this, &SerialMPM::computeInternalForce);
-
 
   Ghost::GhostType  gan   = Ghost::AroundNodes;
   Ghost::GhostType  gnone = Ghost::None;
@@ -2856,7 +2847,7 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
           acc  = (internalforce[c] + externalforce[c])/mass[c];
           acc -= damp_coef*velocity[c];
         }
-        acceleration[c] = acc +  gravity;
+        acceleration[c]  = acc +  gravity;
         velocity_star[c] = velocity[c] + acceleration[c] * delT;
       }
     }    // matls
