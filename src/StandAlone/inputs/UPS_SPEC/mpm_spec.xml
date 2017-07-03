@@ -31,7 +31,7 @@
       <iters_before_timestep_restart      spec="OPTIONAL INTEGER" />
       <boundary_traction_faces            spec="OPTIONAL STRING" />
       <interpolateParticleTempToGridEveryStep spec="OPTIONAL BOOLEAN" />  <!-- default is false -->
-      <time_integrator                    spec="OPTIONAL STRING 'explicit, fracture, implicit'" /> <!-- FIXME: is 'fracture' valid? -->
+      <time_integrator                    spec="OPTIONAL STRING 'explicit, fracture, implicit'" />
       <interpolator                       spec="OPTIONAL STRING 'linear, gimp, cpdi, fast_cpdi, cpti, 3rdorderBS, 4thorderBS'" /> <!-- Default is linear -->
       <!-- controls maximum linear dimension of particle in cell units befor particle -->
       <!-- resizing and possible numerical fracture, default is 1.5-->
@@ -53,7 +53,6 @@
       <InsertParticles                    spec="OPTIONAL BOOLEAN" /> 
       <InsertParticlesFile                spec="OPTIONAL STRING" /> 
       <withColor                          spec="OPTIONAL BOOLEAN" />
-      <CellBasedSmoothing                 spec="OPTIONAL BOOLEAN" />
     
       <!-- FIXME:  THE FOLLOW APPLY ONLY TO THE IMPLICIT MPM CODE -->
       <dynamic                            spec="OPTIONAL BOOLEAN" />
@@ -65,11 +64,6 @@
       <DoTransientImplicitHeatConduction  spec="OPTIONAL BOOLEAN" />  <!-- default value is true -->
       <delT_decrease_factor               spec="OPTIONAL DOUBLE" />
       <delT_increase_factor               spec="OPTIONAL DOUBLE" />
-      <!-- FIXME:  THE FOLLOW APPLY ONLY TO THE Fracture MPM CODE -->
-      <dadx                               spec="OPTIONAL DOUBLE" />
-      <smooth_crack_front                 spec="OPTIONAL BOOLEAN" />  <!-- FIXME: default is? -->
-      <calculate_fracture_parameters      spec="OPTIONAL BOOLEAN" />  <!-- FIXME: default is? -->
-      <do_crack_propagation               spec="OPTIONAL BOOLEAN" />
       <RunMMSProblem                           spec="OPTIONAL STRING 'AxisAligned, GeneralizedVortex , ExpandingRing, AxisAligned3L'" /> <!-- MMS runtime option -->
       <do_scalar_diffusion                spec="OPTIONAL BOOLEAN" />
       <do_auto_cycle_bc                   spec="OPTIONAL BOOLEAN" />
