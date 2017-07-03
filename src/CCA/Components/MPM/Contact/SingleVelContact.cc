@@ -60,6 +60,8 @@ SingleVelContact::SingleVelContact(const ProcessorGroup* myworld,
   d_sharedState = d_sS;
   lb = Mlb;
   flag = MFlag;
+  d_oneOrTwoStep = 2;
+  ps->get("OneOrTwoStep",     d_oneOrTwoStep);
 }
 
 SingleVelContact::~SingleVelContact()
@@ -79,10 +81,11 @@ void SingleVelContact::exMomInterpolated(const ProcessorGroup*,
                                          DataWarehouse*,
                                          DataWarehouse* new_dw)
 {
-  string interp_type = flag->d_interpolator_type;
-  int numMatls = d_sharedState->getNumMPMMatls();
-  ASSERTEQ(numMatls, matls->size());
-  for(int p=0;p<patches->size();p++){
+  if(d_oneOrTwoStep==2){
+   string interp_type = flag->d_interpolator_type;
+   int numMatls = d_sharedState->getNumMPMMatls();
+   ASSERTEQ(numMatls, matls->size());
+   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     Vector centerOfMassVelocity(0.0,0.0,0.0);
 
@@ -117,6 +120,7 @@ void SingleVelContact::exMomInterpolated(const ProcessorGroup*,
       }
     }
   }
+ }
 }
 
 void SingleVelContact::exMomIntegrated(const ProcessorGroup*,

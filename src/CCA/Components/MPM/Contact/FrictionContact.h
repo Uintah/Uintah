@@ -120,7 +120,5 @@ WARNING
                                              const MaterialSet* matls);
       };
 } // End namespace Uintah
-      
 
 #endif /* __FRICTION_H__ */
-

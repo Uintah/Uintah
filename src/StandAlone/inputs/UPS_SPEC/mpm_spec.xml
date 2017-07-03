@@ -146,6 +146,7 @@
         <mu                              spec="OPTIONAL DOUBLE 'positive'" /> <!-- ONLY USED FOR FRICTION OR APPROACH -->
         <volume_constraint               spec="OPTIONAL DOUBLE 'positive'" />
         <separation_factor               spec="OPTIONAL DOUBLE 'positive'" />
+        <OneOrTwoStep                    spec="OPTIONAL INTEGER 'positive'" />
         <colinear_norms                  spec="OPTIONAL BOOLEAN"/>
         <materials                       spec="OPTIONAL MULTIPLE_INTEGERS" />
         <stop_time                       spec="OPTIONAL DOUBLE" /> <!-- Time at which to make the velocity of the rigid body have the value of velocity_after_stop -->

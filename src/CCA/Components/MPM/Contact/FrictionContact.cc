@@ -57,10 +57,12 @@ FrictionContact::FrictionContact(const ProcessorGroup* myworld,
   // Constructor
   d_vol_const=0.;
   d_sepFac=9.9e99;  // Default to large number to provide no constraint
-  
+  d_oneOrTwoStep = 2;
+
   ps->require("mu",d_mu);
   ps->get("volume_constraint",d_vol_const);
   ps->get("separation_factor",d_sepFac);
+  ps->get("OneOrTwoStep",     d_oneOrTwoStep);
 
   d_sharedState = d_sS;
 
@@ -85,6 +87,7 @@ void FrictionContact::outputProblemSpec(ProblemSpecP& ps)
   contact_ps->appendElement("mu",                d_mu);
   contact_ps->appendElement("volume_constraint", d_vol_const);
   contact_ps->appendElement("separation_factor", d_sepFac);
+  contact_ps->appendElement("OneOrTwoStep",      d_oneOrTwoStep);
   d_matls.outputProblemSpec(contact_ps);
 }
 
@@ -94,21 +97,23 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
                                         DataWarehouse* old_dw,
                                         DataWarehouse* new_dw)
 {
-  Ghost::GhostType  gnone = Ghost::None;
+  if(d_oneOrTwoStep==2){
 
-  int numMatls = d_sharedState->getNumMPMMatls();
-  ASSERTEQ(numMatls, matls->size());
+   int numMatls = d_sharedState->getNumMPMMatls();
+   ASSERTEQ(numMatls, matls->size());
 
-  // Need access to all velocity fields at once
-  StaticArray<constNCVariable<double> >  gmass(numMatls);
-  StaticArray<constNCVariable<double> >  gvolume(numMatls);
-  StaticArray<constNCVariable<Point> >   gposition(numMatls);
-  StaticArray<constNCVariable<Vector> >  gsurfnorm(numMatls);
-  StaticArray<constNCVariable<double> >  gnormtraction(numMatls);
-  StaticArray<NCVariable<Vector> >       gvelocity(numMatls);
-  StaticArray<NCVariable<double> >       frictionWork(numMatls);
+   // Need access to all velocity fields at once
+   StaticArray<constNCVariable<double> >  gmass(numMatls);
+   StaticArray<constNCVariable<double> >  gvolume(numMatls);
+   StaticArray<constNCVariable<Point> >   gposition(numMatls);
+   StaticArray<constNCVariable<Vector> >  gsurfnorm(numMatls);
+   StaticArray<constNCVariable<double> >  gnormtraction(numMatls);
+   StaticArray<NCVariable<Vector> >       gvelocity(numMatls);
+   StaticArray<NCVariable<double> >       frictionWork(numMatls);
 
-  for(int p=0;p<patches->size();p++){
+   Ghost::GhostType  gnone = Ghost::None;
+
+   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     Vector dx = patch->dCell();
     double cell_vol = dx.x()*dx.y()*dx.z();
@@ -132,7 +137,6 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
       new_dw->getModifiable(frictionWork[m],lb->frictionalWorkLabel, dwi,patch);
     }  // loop over matls
 
-#if 1
     double sepDis=d_sepFac*cbrt(cell_vol);
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
       IntVector c = *iter;
@@ -271,10 +275,8 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
         }        // if (volume constraint)
       }          // if(!compare(centerOfMassMass,0.0))
     }            // NodeIterator
-#endif
-
   }  // patches
-  
+ }   // if d_oneOrTwoStep
 }
 
 void FrictionContact::exMomIntegrated(const ProcessorGroup*,
