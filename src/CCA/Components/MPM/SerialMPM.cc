@@ -3401,7 +3401,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           }
 
           // Update particle vel and pos using Nairn's XPIC(2) method
-          pxnew[idx]    = px[idx]    + vel*delT
+          pxnew[idx] = px[idx]    + vel*delT
                      - 0.5*(acc*delT + (pvelocity[idx] - 2.0*pvelSSPlus[idx])
                                                        + velSSPSSP)*delT;
           pvelnew[idx]  = 2.0*pvelSSPlus[idx] - velSSPSSP   + acc*delT;
@@ -3433,7 +3433,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           int NN = interpolator->findCellAndWeights(px[idx], ni, S,
                                                     psize[idx], pFOld[idx]);
           Vector vel(0.0,0.0,0.0);
-          Vector velSSPSSP(0.0,0.0,0.0);
           Vector acc(0.0,0.0,0.0);
           double fricTempRate = 0.0;
           double tempRate = 0.0;
@@ -3678,9 +3677,10 @@ void SerialMPM::finalParticleUpdate(const ProcessorGroup*,
         pTempNew[idx] += pdTdt[idx]*delT;
 
         // Delete particles whose mass is too small (due to combustion),
-        // whose pLocalized flag has been set to -999 or who have a negative temperature
+        // whose pLocalized flag has been set to -999 or who have 
+        // a negative temperature
         if ((pmassNew[idx] <= flags->d_min_part_mass) || pTempNew[idx] < 0. ||
-             (pLocalized[idx]==-999)){
+            (pLocalized[idx]==-999)){
           delset->addParticle(idx);
         }
 
