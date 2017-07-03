@@ -737,7 +737,6 @@ void SerialMPM::scheduleApplyExternalLoads(SchedulerP& sched,
 
   if (flags->d_useLoadCurves || flags->d_useCBDI) {
     t->requires(Task::OldDW,    lb->pXLabel,                  Ghost::None);
-    //t->requires(Task::OldDW,    lb->pExternalForceLabel,      Ghost::None);
     t->requires(Task::OldDW,    lb->pLoadCurveIDLabel,        Ghost::None);
     t->computes(                lb->pLoadCurveIDLabel_preReloc);
     if (flags->d_useCBDI) {
@@ -3141,8 +3140,6 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
       old_dw->get(px,    lb->pXLabel,    pset);
       new_dw->allocateAndPut(pExternalForce_new,
                              lb->pExtForceLabel_preReloc,  pset);
-      if (flags->d_useCBDI) {
-      }
 
       // pExternalForce is either:
       //  set using load curves
@@ -3215,6 +3212,13 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
                pExternalForce_new[idx] =pbc->getForceVector(px[idx],force,time);
               }
             }
+          }
+        } else {  // using load curves, but not pressure BCs
+          // Set to zero
+          for(ParticleSubset::iterator iter = pset->begin();
+                                       iter != pset->end(); iter++){
+            particleIndex idx = *iter;
+            pExternalForce_new[idx] = Vector(0.,0.,0.);
           }
         }
       } else if(!mms_type.empty()) {
