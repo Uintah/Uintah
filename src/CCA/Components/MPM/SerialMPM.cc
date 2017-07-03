@@ -659,7 +659,9 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   scheduleComputeAndIntegrateAcceleration(sched, patches, matls);
   scheduleExMomIntegrated(                sched, patches, matls);
   scheduleSetGridBoundaryConditions(      sched, patches, matls);
-  scheduleSetPrescribedMotion(            sched, patches, matls);
+  if (flags->d_prescribeDeformation){
+    scheduleSetPrescribedMotion(          sched, patches, matls);
+  }
   if(flags->d_XPIC2){
     scheduleComputeSSPlusVp(              sched, patches, matls);
     scheduleComputeSPlusSSPlusVp(         sched, patches, matls);
@@ -1193,13 +1195,6 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
                            getLevel(patches)->getGrid()->numLevels()))
     return;
 
-  /*
-   * interpolateToParticlesAndUpdate
-   *   in(G.ACCELERATION, G.VELOCITY_STAR, P.NAT_X)
-   *   operation(interpolate acceleration and v* to particles and
-   *   integrate these to get new particle velocity and position)
-   * out(P.VELOCITY, P.X, P.NAT_X) */
-
   printSchedule(patches,cout_doing,"MPM::scheduleInterpolateToParticlesAndUpdate");
 
   Task* t=scinew Task("MPM::interpolateToParticlesAndUpdate",
@@ -1479,26 +1474,26 @@ SerialMPM::scheduleSetPrescribedMotion(       SchedulerP  & sched,
                                         const PatchSet    * patches,
                                         const MaterialSet * matls )
 {
-  if ( !flags->doMPMOnLevel( getLevel(patches)->getIndex(), getLevel(patches)->getGrid()->numLevels() ) ) {
+  if ( !flags->doMPMOnLevel( getLevel(patches)->getIndex(), 
+        getLevel(patches)->getGrid()->numLevels() ) ) {
     return;
   }
 
-  if (flags->d_prescribeDeformation){
-    printSchedule(patches,cout_doing,"MPM::scheduleSetPrescribedMotion");
+  printSchedule(patches,cout_doing,"MPM::scheduleSetPrescribedMotion");
 
-    Task * t = scinew Task( "MPM::setPrescribedMotion", this, &SerialMPM::setPrescribedMotion );
+  Task * t = scinew Task( "MPM::setPrescribedMotion", this,
+                           &SerialMPM::setPrescribedMotion );
 
-    const MaterialSubset* mss = matls->getUnion();
-    t->modifies(             lb->gAccelerationLabel,     mss);
-    t->modifies(             lb->gVelocityStarLabel,     mss);
-    t->requires(Task::OldDW, d_sharedState->get_delt_label() );
-    if(!flags->d_doGridReset){
-      t->requires(Task::OldDW, lb->gDisplacementLabel,    Ghost::None);
-      t->modifies(lb->gDisplacementLabel, mss);
-    }
+  const MaterialSubset* mss = matls->getUnion();
+  t->modifies(             lb->gAccelerationLabel,     mss);
+  t->modifies(             lb->gVelocityStarLabel,     mss);
+  t->requires(Task::OldDW, d_sharedState->get_delt_label() );
+  if(!flags->d_doGridReset){
+    t->requires(Task::OldDW, lb->gDisplacementLabel,    Ghost::None);
+    t->modifies(lb->gDisplacementLabel, mss);
+  }
 
-    sched->addTask(t, patches, matls);
-   }
+  sched->addTask(t, patches, matls);
 }
 
 void
