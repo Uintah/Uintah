@@ -91,14 +91,28 @@ namespace Uintah{
 
         /** @brief Return a UINTAH field **/
         template <typename T>
-        inline T* get_uintah_field( const std::string name ){
-          return _field_container->get_field<T>(name);
+        inline T* get_uintah_field( const std::string name, const bool temporary_variable=false,
+                                    const int nGhosts=0 ){
+
+          if ( !temporary_variable ){
+            return _field_container->get_field<T>(name);
+          } else {
+            return _field_container->get_temporary_field<T>(name, nGhosts);
+          }
+
         }
 
         /** @brief Return a UINTAH field **/
         template <typename T>
-        inline T& get_uintah_field_add( const std::string name ){
-          return *(_field_container->get_field<T>(name)) ;
+        inline T& get_uintah_field_add( const std::string name, const bool temporary_variable=false,
+                                        const int nGhosts=0 ){
+
+          if ( !temporary_variable ){
+            return *(_field_container->get_field<T>(name));
+          } else {
+            return *(_field_container->get_temporary_field<T>(name, nGhosts));
+          }
+
         }
 
         /** @brief Return a UINTAH particle field **/
@@ -111,18 +125,6 @@ namespace Uintah{
         std::tuple<constParticleVariable<double>*, ParticleSubset*>
           get_const_uintah_particle_field( const std::string name ){
           return _field_container->get_const_uintah_particle_field( name );
-        }
-
-        /** @brief Return a modifiable temporary field address **/
-        template <typename T>
-        inline T& get_temp_uintah_field_add( const std::string name, const int nGhosts=0 ){
-          return *(_field_container->get_temporary_field<T>(name, nGhosts));
-        }
-
-        /** @brief Return a modifiable temporary field pointer **/
-        template <typename T>
-        inline T* get_temp_uintah_field( const std::string name, const int nGhosts=0 ){
-          return _field_container->get_temporary_field<T>(name, nGhosts);
         }
 
         /** @brief Get the current patch ID **/
