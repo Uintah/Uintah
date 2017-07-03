@@ -57,10 +57,12 @@ FrictionContact::FrictionContact(const ProcessorGroup* myworld,
   // Constructor
   d_vol_const=0.;
   d_sepFac=9.9e99;  // Default to large number to provide no constraint
-  
+  d_oneOrTwoStep = 2;
+
   ps->require("mu",d_mu);
   ps->get("volume_constraint",d_vol_const);
   ps->get("separation_factor",d_sepFac);
+  ps->get("OneOrTwoStep",     d_oneOrTwoStep);
 
   d_sharedState = d_sS;
 
@@ -85,6 +87,7 @@ void FrictionContact::outputProblemSpec(ProblemSpecP& ps)
   contact_ps->appendElement("mu",                d_mu);
   contact_ps->appendElement("volume_constraint", d_vol_const);
   contact_ps->appendElement("separation_factor", d_sepFac);
+  contact_ps->appendElement("OneOrTwoStep",      d_oneOrTwoStep);
   d_matls.outputProblemSpec(contact_ps);
 }
 
@@ -94,21 +97,23 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
                                         DataWarehouse* old_dw,
                                         DataWarehouse* new_dw)
 {
-  Ghost::GhostType  gnone = Ghost::None;
+  if(d_oneOrTwoStep==2){
 
-  int numMatls = d_sharedState->getNumMPMMatls();
-  ASSERTEQ(numMatls, matls->size());
+   int numMatls = d_sharedState->getNumMPMMatls();
+   ASSERTEQ(numMatls, matls->size());
 
-  // Need access to all velocity fields at once
-  StaticArray<constNCVariable<double> >  gmass(numMatls);
-  StaticArray<constNCVariable<double> >  gvolume(numMatls);
-  StaticArray<constNCVariable<Point> >   gposition(numMatls);
-  StaticArray<constNCVariable<Vector> >  gsurfnorm(numMatls);
-  StaticArray<constNCVariable<double> >  gnormtraction(numMatls);
-  StaticArray<NCVariable<Vector> >       gvelocity(numMatls);
-  StaticArray<NCVariable<double> >       frictionWork(numMatls);
+   // Need access to all velocity fields at once
+   StaticArray<constNCVariable<double> >  gmass(numMatls);
+   StaticArray<constNCVariable<double> >  gvolume(numMatls);
+   StaticArray<constNCVariable<Point> >   gposition(numMatls);
+   StaticArray<constNCVariable<Vector> >  gsurfnorm(numMatls);
+   StaticArray<constNCVariable<double> >  gnormtraction(numMatls);
+   StaticArray<NCVariable<Vector> >       gvelocity(numMatls);
+   StaticArray<NCVariable<double> >       frictionWork(numMatls);
 
-  for(int p=0;p<patches->size();p++){
+   Ghost::GhostType  gnone = Ghost::None;
+
+   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     Vector dx = patch->dCell();
     double cell_vol = dx.x()*dx.y()*dx.z();
@@ -132,7 +137,6 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
       new_dw->getModifiable(frictionWork[m],lb->frictionalWorkLabel, dwi,patch);
     }  // loop over matls
 
-#if 1
     double sepDis=d_sepFac*cbrt(cell_vol);
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
       IntVector c = *iter;
@@ -161,13 +165,9 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
           cell_vol =  r*dx.x()*dx.y();
         }
 
-        // Only apply contact if the node is nearly "full".  There are
-        // two options:
-
-        // 1. This option uses particle counting
-//        if((totalNodalVol/cell_vol)*(64./totalNearParticles) > d_vol_const){
+        // Only apply contact if the node is full relative to a constraint
         if((totalNodalVol/cell_vol) > d_vol_const){
-          double scale_factor=1.0;
+          double scale_factor=1.0;  // Currently not used, should test again.
 
           // 2. This option uses only cell volumes.  The idea is that a cell 
           //    is full if (totalNodalVol/cell_vol >= 1.0), and the contraint 
@@ -213,11 +213,10 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
 //              double sepscal= Dot(sepvec,normal);
               double sepscal= sepvec.length();
               if(sepscal < sepDis){
-              double normalDeltaVel=Dot(deltaVelocity,normal);
-              Vector Dv(0.,0.,0.);
-              double Tn = gnormtraction[n][c];
-              if((Tn < -1.e-12) || 
-                 (normalDeltaVel> 0.0)){
+               double normalDeltaVel=Dot(deltaVelocity,normal);
+               Vector Dv(0.,0.,0.);
+               double Tn = gnormtraction[n][c];
+               if((Tn < -1.e-12) || (normalDeltaVel> 0.0)){
 
                 // Simplify algorithm in case where approach velocity
                 // is in direction of surface normal (no slip).
@@ -248,16 +247,10 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
                   // conventional definition.  However, here it is calculated
                   // as positive (Work=-force*distance).
                   if(compare(frictionCoefficient,d_mu)){
-                    if (flag->d_fracture)
-                      frictionWork[n][c] += mass*frictionCoefficient
-                        * (normalDeltaVel*normalDeltaVel) *
-                        (tangentDeltaVelocity/fabs(normalDeltaVel)-
-                         frictionCoefficient);
-                    else
-                      frictionWork[n][c] = mass*frictionCoefficient
-                        * (normalDeltaVel*normalDeltaVel) *
-                        (tangentDeltaVelocity/fabs(normalDeltaVel)-
-                         frictionCoefficient);
+                    frictionWork[n][c] = mass*frictionCoefficient *
+                                       (normalDeltaVel*normalDeltaVel) *
+                                      (tangentDeltaVelocity/fabs(normalDeltaVel)
+                                       - frictionCoefficient);
                   }
                 }
 
@@ -282,10 +275,8 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
         }        // if (volume constraint)
       }          // if(!compare(centerOfMassMass,0.0))
     }            // NodeIterator
-#endif
-
   }  // patches
-  
+ }   // if d_oneOrTwoStep
 }
 
 void FrictionContact::exMomIntegrated(const ProcessorGroup*,
@@ -364,9 +355,7 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
           cell_vol =  r*dx.x()*dx.y();
         }
 
-        // Only apply contact if the node is nearly "full".  There are
-        // two options:
-
+        // Only apply contact if the node is full relative to a constraint
         if((totalNodalVol/cell_vol) > d_vol_const){
           double scale_factor=1.0;
 
@@ -528,11 +517,6 @@ void FrictionContact::addComputesAndRequiresInterpolated(SchedulerP & sched,
   
   const MaterialSubset* mss = ms->getUnion();
   t->requires(Task::OldDW, lb->delTLabel);
-  t->requires(Task::OldDW, lb->pXLabel,                  gp, ngc_p);
-  t->requires(Task::OldDW, lb->pVolumeLabel,             gp, ngc_p);
-  t->requires(Task::OldDW, lb->pStressLabel,             gp, ngc_p);
-  t->requires(Task::OldDW, lb->pSizeLabel,               gp, ngc_p);
-  t->requires(Task::OldDW, lb->pDeformationMeasureLabel, gp, ngc_p);
   t->requires(Task::NewDW, lb->gMassLabel,               Ghost::None);
   t->requires(Task::NewDW, lb->gVolumeLabel,             Ghost::None);
   t->requires(Task::NewDW, lb->gSurfNormLabel,           Ghost::None);

@@ -118,7 +118,5 @@ WARNING
                                              const MaterialSet* matls);
       };
 } // End namespace Uintah
-      
 
 #endif /* __SINGLE_VEL_H__ */
-
