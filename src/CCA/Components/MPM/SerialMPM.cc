@@ -674,6 +674,7 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
     scheduleIntegrateTemperatureRate(     sched, patches, matls);
   }
   scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
+  scheduleComputeParticleGradients(       sched, patches, matls);
   scheduleComputeStressTensor(            sched, patches, matls);
   scheduleFinalParticleUpdate(            sched, patches, matls);
   scheduleInsertParticles(                    sched, patches, matls);
@@ -1207,9 +1208,6 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::NewDW, lb->gAccelerationLabel,              gac,NGN);
   t->requires(Task::NewDW, lb->gVelocityStarLabel,              gac,NGN);
   t->requires(Task::NewDW, lb->gTemperatureRateLabel,           gac,NGN);
-  if (flags->d_doExplicitHeatConduction){
-    t->requires(Task::NewDW, lb->gTemperatureStarLabel,         gac,NGN);
-  }
   t->requires(Task::NewDW, lb->frictionalWorkLabel,             gac,NGN);
   if(flags->d_XPIC2){
     t->requires(Task::NewDW, lb->gVelSPSSPLabel,                gac,NGN);
@@ -1224,7 +1222,6 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pSizeLabel,                      gnone);
   t->requires(Task::OldDW, lb->pVolumeLabel,                    gnone);
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel,        gnone);
-  t->requires(Task::OldDW, lb->pLocalizedMPMLabel,              gnone);
 
   if(flags->d_with_ice){
     t->requires(Task::NewDW, lb->dTdt_NCLabel,         gac,NGN);
@@ -1238,11 +1235,7 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->computes(lb->pTemperatureLabel_preReloc);
   t->computes(lb->pTempPreviousLabel_preReloc); // for thermal stress
   t->computes(lb->pMassLabel_preReloc);
-  t->computes(lb->pVolumeLabel_preReloc);
   t->computes(lb->pSizeLabel_preReloc);
-  t->computes(lb->pVelGradLabel_preReloc);
-  t->computes(lb->pDeformationMeasureLabel_preReloc);
-  t->computes(lb->pTemperatureGradientLabel_preReloc);
 
   //__________________________________
   //  reduction variables
@@ -1260,9 +1253,6 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   }
   if(flags->d_reductionVars->mass){
     t->computes(lb->TotalMassLabel);
-  }
-  if(flags->d_reductionVars->volDeformed){
-    t->computes(lb->TotalVolumeDeformedLabel);
   }
 
   // debugging scalar
@@ -1288,6 +1278,48 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   // The task will have a reference to z_matl
   if (z_matl->removeReference())
     delete z_matl; // shouln't happen, but...
+}
+
+void SerialMPM::scheduleComputeParticleGradients(SchedulerP& sched,
+                                                 const PatchSet* patches,
+                                                 const MaterialSet* matls)
+
+{
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+                           getLevel(patches)->getGrid()->numLevels()))
+    return;
+
+  printSchedule(patches,cout_doing,"MPM::scheduleComputeParticleGradients");
+
+  Task* t=scinew Task("MPM::computeParticleGradients",
+                      this, &SerialMPM::computeParticleGradients);
+
+  t->requires(Task::OldDW, d_sharedState->get_delt_label() );
+
+  Ghost::GhostType gac   = Ghost::AroundCells;
+  Ghost::GhostType gnone = Ghost::None;
+  t->requires(Task::NewDW, lb->gVelocityStarLabel,              gac,NGN);
+  if (flags->d_doExplicitHeatConduction){
+    t->requires(Task::NewDW, lb->gTemperatureStarLabel,         gac,NGN);
+  }
+  t->requires(Task::OldDW, lb->pXLabel,                         gnone);
+  t->requires(Task::OldDW, lb->pMassLabel,                      gnone);
+  t->requires(Task::NewDW, lb->pMassLabel_preReloc,             gnone);
+  t->requires(Task::OldDW, lb->pSizeLabel,                      gnone);
+  t->requires(Task::OldDW, lb->pVolumeLabel,                    gnone);
+  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,        gnone);
+  t->requires(Task::OldDW, lb->pLocalizedMPMLabel,              gnone);
+
+  t->computes(lb->pVolumeLabel_preReloc);
+  t->computes(lb->pVelGradLabel_preReloc);
+  t->computes(lb->pDeformationMeasureLabel_preReloc);
+  t->computes(lb->pTemperatureGradientLabel_preReloc);
+
+  if(flags->d_reductionVars->volDeformed){
+    t->computes(lb->TotalVolumeDeformedLabel);
+  }
+
+  sched->addTask(t, patches, matls);
 }
 
 void SerialMPM::scheduleFinalParticleUpdate(SchedulerP& sched,
@@ -3238,9 +3270,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
-    vector<Vector> d_S(interpolator->size());
-    Vector dx = patch->dCell();
-    double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
 
     // Performs the interpolation from the cell vertices of the grid
     // acceleration and velocity to the particles to update their
@@ -3249,7 +3278,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     // DON'T MOVE THESE!!!
     double thermal_energy = 0.0;
     double totalmass = 0;
-    double partvoldef = 0.;
     Vector CMX(0.0,0.0,0.0);
     Vector totalMom(0.0,0.0,0.0);
     double ke=0;
@@ -3270,27 +3298,22 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       int dwi = mpm_matl->getDWIndex();
       // Get the arrays of particle values to be changed
       constParticleVariable<Point> px;
-      ParticleVariable<Point> pxnew;
-      constParticleVariable<Vector> pvelocity,pvelSSPlus;
-      constParticleVariable<Matrix3> psize;
-      ParticleVariable<Vector> pvelnew;
-      ParticleVariable<Matrix3> psizeNew;
-      constParticleVariable<double> pmass,pVolumeOld, pTemperature;
-      ParticleVariable<double> pmassNew,pvolume,pTempNew;
+      constParticleVariable<Vector> pvelocity, pvelSSPlus, pdisp;
+      constParticleVariable<Matrix3> psize, pFOld;
+      constParticleVariable<double> pmass, pVolumeOld, pTemperature;
       constParticleVariable<long64> pids;
+      ParticleVariable<Point> pxnew;
+      ParticleVariable<Vector> pvelnew, pdispnew;
+      ParticleVariable<Matrix3> psizeNew;
+      ParticleVariable<double> pmassNew,pTempNew;
       ParticleVariable<long64> pids_new;
-      constParticleVariable<Vector> pdisp;
-      ParticleVariable<Vector> pdispnew,pTempGrad;
-      constParticleVariable<Matrix3> pFOld;
-      ParticleVariable<Matrix3> pFNew,pVelGrad;
-      constParticleVariable<int> pLocalized;
 
       // for thermal stress analysis
       ParticleVariable<double> pTempPreNew;
 
       // Get the arrays of grid data on which the new part. values depend
       constNCVariable<Vector> gvelocity_star, gacceleration, gvelSPSSP;
-      constNCVariable<double> gTemperatureRate, gTempStar;
+      constNCVariable<double> gTemperatureRate;
       constNCVariable<double> dTdt, massBurnFrac, frictionTempRate;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
@@ -3302,21 +3325,14 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       old_dw->get(pTemperature, lb->pTemperatureLabel,               pset);
       old_dw->get(pFOld,        lb->pDeformationMeasureLabel,        pset);
       old_dw->get(pVolumeOld,   lb->pVolumeLabel,                    pset);
-      old_dw->get(pLocalized,   lb->pLocalizedMPMLabel,              pset);
       if(flags->d_XPIC2){
         new_dw->get(pvelSSPlus, lb->pVelocitySSPlusLabel,            pset);
       }
 
-      new_dw->allocateAndPut(pvelnew,    lb->pVelocityLabel_preReloc,     pset);
       new_dw->allocateAndPut(pxnew,      lb->pXLabel_preReloc,            pset);
+      new_dw->allocateAndPut(pvelnew,    lb->pVelocityLabel_preReloc,     pset);
       new_dw->allocateAndPut(pdispnew,   lb->pDispLabel_preReloc,         pset);
       new_dw->allocateAndPut(pmassNew,   lb->pMassLabel_preReloc,         pset);
-      new_dw->allocateAndPut(pvolume,    lb->pVolumeLabel_preReloc,       pset);
-      new_dw->allocateAndPut(pVelGrad,   lb->pVelGradLabel_preReloc,      pset);
-      new_dw->allocateAndPut(pTempGrad,  lb->pTemperatureGradientLabel_preReloc,
-                                                                          pset);
-      new_dw->allocateAndPut(pFNew,      lb->pDeformationMeasureLabel_preReloc,
-                                                                          pset);
       new_dw->allocateAndPut(pTempPreNew,lb->pTempPreviousLabel_preReloc, pset);
       new_dw->allocateAndPut(pTempNew,   lb->pTemperatureLabel_preReloc,  pset);
 
@@ -3326,7 +3342,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->allocateAndPut(pids_new, lb->pParticleIDLabel_preReloc, pset);
       new_dw->allocateAndPut(psizeNew, lb->pSizeLabel_preReloc,       pset);
       pids_new.copyData(pids);
-//      psizeNew.copyData(psize);
 
       //Carry forward color particle (debugging label)
       if (flags->d_with_color) {
@@ -3351,9 +3366,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       }
       new_dw->get(gacceleration,   lb->gAccelerationLabel,   dwi,patch,gac,NGP);
       new_dw->get(gTemperatureRate,lb->gTemperatureRateLabel,dwi,patch,gac,NGP);
-      if (flags->d_doExplicitHeatConduction){
-        new_dw->get(gTempStar,     lb->gTemperatureStarLabel,dwi,patch,gac,NGP);
-      }
       new_dw->get(frictionTempRate,lb->frictionalWorkLabel,  dwi,patch,gac,NGP);
       if(flags->d_with_ice){
         new_dw->get(dTdt,          lb->dTdt_NCLabel,         dwi,patch,gac,NGP);
@@ -3466,6 +3478,110 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           totalMom   += pvelnew[idx]*pmass[idx];
           totalmass  += pmass[idx];
         }
+      } // use XPIC(2) or not
+
+      // scale back huge particle velocities.
+      // Default for d_max_vel is 3.e105, hence the conditional
+      if(flags->d_max_vel < 1.e105){
+       for(ParticleSubset::iterator iter  = pset->begin();
+                                    iter != pset->end(); iter++){
+        particleIndex idx = *iter;
+        if(pvelnew[idx].length() > flags->d_max_vel){
+          if(pvelnew[idx].length() >= pvelocity[idx].length()){
+            pvelnew[idx]=(pvelnew[idx]/pvelnew[idx].length())
+                             *(flags->d_max_vel*.9);
+            cout << endl <<"Warning: particle " <<pids[idx]
+                 <<" hit speed ceiling #1. Modifying particle vel. accordingly."
+                 << endl;
+          } // if
+        } // if
+       }// for particles
+      } // max velocity flag
+    }  // loop over materials
+
+    // DON'T MOVE THESE!!!
+    //__________________________________
+    //  reduction variables
+    if(flags->d_reductionVars->mass){
+      new_dw->put(sum_vartype(totalmass),      lb->TotalMassLabel);
+    }
+    if(flags->d_reductionVars->momentum){
+      new_dw->put(sumvec_vartype(totalMom),    lb->TotalMomentumLabel);
+    }
+    if(flags->d_reductionVars->KE){
+      new_dw->put(sum_vartype(ke),             lb->KineticEnergyLabel);
+    }
+    if(flags->d_reductionVars->thermalEnergy){
+      new_dw->put(sum_vartype(thermal_energy), lb->ThermalEnergyLabel);
+    }
+    if(flags->d_reductionVars->centerOfMass){
+      new_dw->put(sumvec_vartype(CMX),         lb->CenterOfMassPositionLabel);
+    }
+    delete interpolator;
+  }
+}
+
+void SerialMPM::computeParticleGradients(const ProcessorGroup*,
+                                         const PatchSubset* patches,
+                                         const MaterialSubset* ,
+                                         DataWarehouse* old_dw,
+                                         DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    printTask(patches, patch,cout_doing,
+              "Doing computeParticleGradients");
+
+    ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
+    vector<IntVector> ni(interpolator->size());
+    vector<double> S(interpolator->size());
+    vector<Vector> d_S(interpolator->size());
+    Vector dx = patch->dCell();
+    double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
+
+    delt_vartype delT;
+    old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
+    double partvoldef = 0.;
+
+    int numMPMMatls=d_sharedState->getNumMPMMatls();
+    for(int m = 0; m < numMPMMatls; m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
+      Ghost::GhostType  gac = Ghost::AroundCells;
+      // Get the arrays of particle values to be changed
+      constParticleVariable<Point> px;
+      constParticleVariable<Matrix3> psize;
+      constParticleVariable<double> pVolumeOld,pmass,pmassNew;
+      constParticleVariable<int> pLocalized;
+      constParticleVariable<Matrix3> pFOld;
+      ParticleVariable<double> pvolume,pTempNew;
+      ParticleVariable<Matrix3> pFNew,pVelGrad;
+      ParticleVariable<Vector> pTempGrad;
+
+      // Get the arrays of grid data on which the new part. values depend
+      constNCVariable<Vector>  gvelocity_star;
+      constNCVariable<double>  gTempStar;
+
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+
+      old_dw->get(px,           lb->pXLabel,                         pset);
+      old_dw->get(psize,        lb->pSizeLabel,                      pset);
+      old_dw->get(pmass,        lb->pMassLabel,                      pset);
+      new_dw->get(pmassNew,     lb->pMassLabel_preReloc,             pset);
+      old_dw->get(pFOld,        lb->pDeformationMeasureLabel,        pset);
+      old_dw->get(pVolumeOld,   lb->pVolumeLabel,                    pset);
+      old_dw->get(pLocalized,   lb->pLocalizedMPMLabel,              pset);
+
+      new_dw->allocateAndPut(pvolume,    lb->pVolumeLabel_preReloc,       pset);
+      new_dw->allocateAndPut(pVelGrad,   lb->pVelGradLabel_preReloc,      pset);
+      new_dw->allocateAndPut(pTempGrad,  lb->pTemperatureGradientLabel_preReloc,
+                                                                          pset);
+      new_dw->allocateAndPut(pFNew,      lb->pDeformationMeasureLabel_preReloc,
+                                                                          pset);
+
+      new_dw->get(gvelocity_star,  lb->gVelocityStarLabel,   dwi,patch,gac,NGP);
+      if (flags->d_doExplicitHeatConduction){
+        new_dw->get(gTempStar,     lb->gTemperatureStarLabel,dwi,patch,gac,NGP);
       }
 
       // Compute velocity gradient and deformation gradient on every particle
@@ -3590,47 +3706,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       ErosionModel* em = mpm_matl->getErosionModel();
       em->updateVariables_Erosion( pset, pLocalized, pFOld, pFNew, pVelGrad );
 
-
-      // scale back huge particle velocities.
-      // Default for d_max_vel is 3.e105, hence the conditional
-      if(flags->d_max_vel < 1.e105){
-       for(ParticleSubset::iterator iter  = pset->begin();
-                                    iter != pset->end(); iter++){
-        particleIndex idx = *iter;
-        if(pvelnew[idx].length() > flags->d_max_vel){
-          if(pvelnew[idx].length() >= pvelocity[idx].length()){
-            pvelnew[idx]=(pvelnew[idx]/pvelnew[idx].length())
-                             *(flags->d_max_vel*.9);
-            cout << endl <<"Warning: particle " <<pids[idx]
-                 <<" hit speed ceiling #1. Modifying particle vel. accordingly."
-                 << endl;
-            //pvelnew[idx]=pvelocity[idx];
-          }
-        }
-      }// for particles
-     } // max velocity flag
     }  // for materials
 
-    // DON'T MOVE THESE!!!
-    //__________________________________
-    //  reduction variables
-    if(flags->d_reductionVars->mass){
-      new_dw->put(sum_vartype(totalmass),      lb->TotalMassLabel);
-    }
     if(flags->d_reductionVars->volDeformed){
       new_dw->put(sum_vartype(partvoldef),     lb->TotalVolumeDeformedLabel);
-    }
-    if(flags->d_reductionVars->momentum){
-      new_dw->put(sumvec_vartype(totalMom),    lb->TotalMomentumLabel);
-    }
-    if(flags->d_reductionVars->KE){
-      new_dw->put(sum_vartype(ke),             lb->KineticEnergyLabel);
-    }
-    if(flags->d_reductionVars->thermalEnergy){
-      new_dw->put(sum_vartype(thermal_energy), lb->ThermalEnergyLabel);
-    }
-    if(flags->d_reductionVars->centerOfMass){
-      new_dw->put(sumvec_vartype(CMX),         lb->CenterOfMassPositionLabel);
     }
 
     delete interpolator;
