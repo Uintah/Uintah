@@ -31,7 +31,7 @@
       <iters_before_timestep_restart      spec="OPTIONAL INTEGER" />
       <boundary_traction_faces            spec="OPTIONAL STRING" />
       <interpolateParticleTempToGridEveryStep spec="OPTIONAL BOOLEAN" />  <!-- default is false -->
-      <time_integrator                    spec="OPTIONAL STRING 'explicit, fracture, implicit'" />
+      <time_integrator                    spec="OPTIONAL STRING 'explicit, implicit'" />
       <interpolator                       spec="OPTIONAL STRING 'linear, gimp, cpdi, fast_cpdi, cpti, 3rdorderBS, 4thorderBS'" /> <!-- Default is linear -->
       <!-- controls maximum linear dimension of particle in cell units befor particle -->
       <!-- resizing and possible numerical fracture, default is 1.5-->
@@ -207,26 +207,6 @@
         <melt_temp                       spec="OPTIONAL DOUBLE" /> <!--295.0 -->
         <room_temp                       spec="OPTIONAL DOUBLE" /> <!--294.0 -->
 
-        <fracture                        spec="OPTIONAL NO_DATA"
-                                           attribute1="type REQUIRED STRING 'normal'">
-          <constraint                      spec="OPTIONAL DOUBLE" />
-        </fracture>
-
-        <crack                           spec="OPTIONAL NO_DATA" >
-          <type                          spec="REQUIRED STRING 'friction'" />
-          <mu                            spec="REQUIRED DOUBLE" />   <!-- FIXME: what is this for? -->
-          <crack_segments                spec="REQUIRED NO_DATA" >
-            <quad                        spec="REQUIRED NO_DATA" >
-              <p1                        spec="REQUIRED VECTOR" />
-              <p2                        spec="REQUIRED VECTOR" />
-              <p3                        spec="REQUIRED VECTOR" />
-              <p4                        spec="REQUIRED VECTOR" />
-              <resolution_p1_p2          spec="REQUIRED INTEGER" /> <!-- FIXME: really integer? -->
-              <resolution_p2_p3          spec="REQUIRED INTEGER" /> <!-- FIXME: really integer? -->
-              <crack_front_sides         spec="REQUIRED STRING 'NYNN'" />
-            </quad>
-          </crack_segments>
-        </crack>
         <include href="diffusion_models.xml" />
         <do_conc_reduction               spec="OPTIONAL BOOLEAN" />
       </material>
