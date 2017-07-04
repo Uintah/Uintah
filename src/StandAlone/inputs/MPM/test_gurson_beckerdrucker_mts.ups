@@ -107,7 +107,7 @@
           <initial_mean_scalar_damage>    0.0001 </initial_mean_scalar_damage>
           <initial_std_scalar_damage>     0.01   </initial_std_scalar_damage>
           <critical_scalar_damage>        0.7    </critical_scalar_damage>
-          <initial_scalar_damage_distrib> gauss  </initial_scalar_damage_distrib>
+          <initial_scalar_damage_distrib> constant  </initial_scalar_damage_distrib>
         </damage_model>
 
         <geom_object>
