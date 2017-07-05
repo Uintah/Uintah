@@ -56,6 +56,8 @@ namespace Uintah{
 
 public:
 
+    typedef Uintah::ArchesFieldContainer AFC;
+
     ComputePsi<T>( std::string task_name, int matl_index );
     ~ComputePsi<T>();
 
@@ -94,7 +96,7 @@ public:
 
 protected:
 
-    typedef std::vector<ArchesFieldContainer::VariableInformation> AVarInfo;
+    typedef std::vector<AFC::VariableInformation> AVarInfo;
 
     void register_initialize( AVarInfo& variable_registry );
 
@@ -133,7 +135,9 @@ private:
   };
 
   //------------------------------------------------------------------------------------------------
-  //Function definitions:
+  //                              Member Function Definitions
+  //------------------------------------------------------------------------------------------------
+
   template <typename T>
   ComputePsi<T>::ComputePsi( std::string task_name, int matl_index ) :
   TaskInterface( task_name, matl_index ){
@@ -150,7 +154,8 @@ private:
     using namespace ArchesCore;
 
     _eqn_names.clear();
-    for (ProblemSpecP eqn_db = db->findBlock("eqn"); eqn_db != nullptr; eqn_db = eqn_db->findNextBlock("eqn")){
+    for ( ProblemSpecP eqn_db = db->findBlock("eqn");
+          eqn_db != nullptr; eqn_db = eqn_db->findNextBlock("eqn")){
 
       std::string limiter;
       std::string scalar_name;
@@ -207,15 +212,17 @@ private:
 
   }
 
+  //------------------------------------------------------------------------------------------------
   template <typename T>
   void ComputePsi<T>::register_initialize( AVarInfo& variable_registry ){
     for ( SV::iterator i = _eqn_names.begin(); i != _eqn_names.end(); i++){
-      register_variable( *i+"_x_psi", ArchesFieldContainer::COMPUTES, variable_registry );
-      register_variable( *i+"_y_psi", ArchesFieldContainer::COMPUTES, variable_registry );
-      register_variable( *i+"_z_psi", ArchesFieldContainer::COMPUTES, variable_registry );
+      register_variable( *i+"_x_psi", AFC::COMPUTES, variable_registry );
+      register_variable( *i+"_y_psi", AFC::COMPUTES, variable_registry );
+      register_variable( *i+"_z_psi", AFC::COMPUTES, variable_registry );
     }
   }
 
+  //------------------------------------------------------------------------------------------------
   template <typename T>
   void ComputePsi<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
@@ -232,24 +239,27 @@ private:
     }
   }
 
-
+  //------------------------------------------------------------------------------------------------
   template <typename T>
   void ComputePsi<T>::register_timestep_eval(
-    std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
-    const int time_substep ){
+    std::vector<AFC::VariableInformation>& variable_registry,
+    const int time_substep )
+  {
 
     for ( auto i = _eqn_names.begin(); i != _eqn_names.end(); i++){
-      register_variable( *i+"_x_psi", ArchesFieldContainer::COMPUTES, variable_registry, time_substep );
-      register_variable( *i+"_y_psi", ArchesFieldContainer::COMPUTES, variable_registry, time_substep );
-      register_variable( *i+"_z_psi", ArchesFieldContainer::COMPUTES, variable_registry, time_substep );
-      register_variable( *i, ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+      register_variable( *i+"_x_psi", AFC::COMPUTES, variable_registry, time_substep );
+      register_variable( *i+"_y_psi", AFC::COMPUTES, variable_registry, time_substep );
+      register_variable( *i+"_z_psi", AFC::COMPUTES, variable_registry, time_substep );
+      register_variable( *i, AFC::REQUIRES, 2, AFC::LATEST, variable_registry, time_substep );
     }
-    register_variable( m_eps_name, ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
-    register_variable( m_u_vel_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
-    register_variable( m_v_vel_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
-    register_variable( m_w_vel_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+    register_variable( m_eps_name,   AFC::REQUIRES, 2, AFC::NEWDW, variable_registry, time_substep);
+    register_variable( m_u_vel_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep);
+    register_variable( m_v_vel_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep);
+    register_variable( m_w_vel_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep);
+
   }
 
+  //------------------------------------------------------------------------------------------------
   template <typename T>
   void ComputePsi<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 

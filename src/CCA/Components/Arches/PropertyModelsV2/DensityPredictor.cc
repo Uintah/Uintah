@@ -122,7 +122,7 @@ DensityPredictor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   constSFCZVariable<double>& w = *(tsk_info->get_const_uintah_field<constSFCZVariable<double> >( "wVelocitySPBC" ));
 
   //---work---
-  double dt = tsk_info->get_dt();
+  const double dt = tsk_info->get_dt();
 
   if ( m_use_exact_guess ){
 

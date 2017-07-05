@@ -37,6 +37,8 @@ namespace Uintah{
 
 public:
 
+    typedef ArchesFieldContainer AFC;
+
     enum TASK_TYPE { STANDARD_TASK, BC_TASK, INITIALIZE, TIMESTEP_INITIALIZE, TIMESTEP_EVAL, BC,
                      RESTART_INITIALIZE };
 
@@ -65,21 +67,21 @@ public:
     virtual void create_local_labels() = 0;
 
     /** @brief Initialization method **/
-    virtual void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ) = 0;
+    virtual void register_initialize( std::vector<AFC::VariableInformation>& variable_registry) = 0;
 
     /** @brief Schedules work done at the top of a timestep (which might be nothing) **/
-    virtual void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& ) = 0;
+    virtual void register_timestep_init( std::vector<AFC::VariableInformation>& ) = 0;
 
     /** @brief Registers all variables with pertinent information for the
      *         uintah dw interface **/
-    virtual void register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
+    virtual void register_timestep_eval( std::vector<AFC::VariableInformation>& variable_registry,
                                          const int time_substep ) = 0;
 
     /** @brief Register all variables needed to compute boundary conditions **/
-    virtual void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ) = 0;
+    virtual void register_compute_bcs( std::vector<AFC::VariableInformation>& variable_registry, const int time_substep ) = 0;
 
     /** @brief Register initialization work to be accomplished only on restart **/
-    virtual void register_restart_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){}
+    virtual void register_restart_initialize( std::vector<AFC::VariableInformation>& variable_registry ){}
 
     /** @brief Add this task to the Uintah task scheduler **/
     void schedule_task( const LevelP& level,
@@ -95,7 +97,7 @@ public:
                   const MaterialSubset* matls,
                   DataWarehouse* old_dw,
                   DataWarehouse* new_dw,
-                  std::vector<ArchesFieldContainer::VariableInformation> variable_registry,
+                  std::vector<AFC::VariableInformation> variable_registry,
                   int time_substep );
 
     /** @brief Add this task to the Uintah task scheduler **/
@@ -112,7 +114,7 @@ public:
                   const MaterialSubset* matls,
                   DataWarehouse* old_dw,
                   DataWarehouse* new_dw,
-                  std::vector<ArchesFieldContainer::VariableInformation> variable_registry );
+                  std::vector<AFC::VariableInformation> variable_registry );
 
     /** @brief The actual task interface function that references the
      *         derived class implementation **/
@@ -121,7 +123,7 @@ public:
                           const MaterialSubset* matls,
                           DataWarehouse* old_dw,
                           DataWarehouse* new_dw,
-                          std::vector<ArchesFieldContainer::VariableInformation> variable_registry );
+                          std::vector<AFC::VariableInformation> variable_registry );
 
     /** @brief Add this task to the Uintah task scheduler **/
     void schedule_timestep_init( const LevelP& level,
@@ -135,7 +137,7 @@ public:
                            const MaterialSubset* matls,
                            DataWarehouse* old_dw,
                            DataWarehouse* new_dw,
-                           std::vector<ArchesFieldContainer::VariableInformation> variable_registry );
+                           std::vector<AFC::VariableInformation> variable_registry );
 
     /** @brief The actual task interface function that references the
      *         derived class implementation **/
@@ -144,7 +146,7 @@ public:
                  const MaterialSubset* matls,
                  DataWarehouse* old_dw,
                  DataWarehouse* new_dw,
-                 std::vector<ArchesFieldContainer::VariableInformation> variable_registry,
+                 std::vector<AFC::VariableInformation> variable_registry,
                  int time_substep );
 
     /** @brief Builder class containing instructions on how to build the task **/

@@ -21,8 +21,9 @@ namespace Uintah{
     /** @brief A container to hold a small amount of other information to
      *         pass into the task exe. **/
     struct SchedToTaskInfo{
-      int time_substep;
-      double dt;
+      int time_substep{99};
+      double dt{0.};
+      bool packed_tasks{false};
     };
 
     /** @brief A class for managing the retrieval of uintah/so fields during task exe **/
@@ -43,10 +44,14 @@ namespace Uintah{
         };
 
         /** @brief return the time substep **/
-        inline int get_time_substep(){ return _tsk_info.time_substep; };
+        inline const int get_time_substep(){ return _tsk_info.time_substep; };
 
         /** @brief return the dt **/
-        inline double get_dt(){ return _tsk_info.dt; };
+        inline const double get_dt(){ return _tsk_info.dt; };
+
+        /** @brief Return a bool to indicate if this Arches Task is a subset of a larger, single
+                   Uintah task. **/
+        inline const bool packed_tasks(){ return _tsk_info.packed_tasks; }
 
         /** @brief return the variable registry **/
         inline std::vector<ArchesFieldContainer::VariableInformation>& get_variable_reg(){ return _var_reg; }

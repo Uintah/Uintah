@@ -259,7 +259,7 @@ CO::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     Step 5: update y to time t+1
   */
 
-  double dt = tsk_info->get_dt();
+  const double dt = tsk_info->get_dt();
   constCCVariable<double>* ym_new          = tsk_info->get_const_uintah_field<constCCVariable<double> >( _CO_table_name, ArchesFieldContainer::NEWDW );
   constCCVariable<double>* rho_new         = tsk_info->get_const_uintah_field<constCCVariable<double> >( _rho_table_name, ArchesFieldContainer::NEWDW );
   constCCVariable<double>* y_old           = tsk_info->get_const_uintah_field<constCCVariable<double> >( _CO_model_name, ArchesFieldContainer::OLDDW );

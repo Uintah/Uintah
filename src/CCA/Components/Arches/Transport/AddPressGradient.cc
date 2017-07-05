@@ -37,7 +37,7 @@ void AddPressGradient::register_eval( std::vector<AFC::VariableInformation>& var
 
 void AddPressGradient::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  double dt = tsk_info->get_dt();
+  const double dt = tsk_info->get_dt();
   Vector DX = patch->dCell();
   SFCXVariable<double>& xmom = tsk_info->get_uintah_field_add<SFCXVariable<double> >( m_xmom );
   SFCYVariable<double>& ymom = tsk_info->get_uintah_field_add<SFCYVariable<double> >( m_ymom );

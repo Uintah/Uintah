@@ -4,12 +4,14 @@
 
 using namespace Uintah;
 
+//--------------------------------------------------------------------------------------------------
 TaskFactoryBase::TaskFactoryBase()
 {
   _matl_index = 0; //Arches material
   _all_tasks_str = "all_tasks";
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskFactoryBase::~TaskFactoryBase()
 {
   for (BuildMap::iterator i = _builders.begin(); i != _builders.end(); i++ ){
@@ -20,6 +22,7 @@ TaskFactoryBase::~TaskFactoryBase()
   }
 }
 
+//--------------------------------------------------------------------------------------------------
 void
 TaskFactoryBase::register_task(std::string task_name,
                                TaskInterface::TaskBuilder* builder ){
@@ -36,11 +39,13 @@ TaskFactoryBase::register_task(std::string task_name,
 
   } else {
 
-    throw InvalidValue("Error: Attemping to load a duplicate builder: "+task_name,__FILE__,__LINE__);
+    throw InvalidValue( "Error: Attemping to load a duplicate builder: "+task_name,
+                        __FILE__, __LINE__ );
 
   }
 }
 
+//--------------------------------------------------------------------------------------------------
 void
 TaskFactoryBase::register_atomic_task(std::string task_name,
                                       AtomicTaskInterface::AtomicTaskBuilder* builder ){
@@ -56,11 +61,13 @@ TaskFactoryBase::register_atomic_task(std::string task_name,
 
   } else {
 
-    throw InvalidValue("Error: Attemping to load a duplicate atomic builder: "+task_name,__FILE__,__LINE__);
+    throw InvalidValue( "Error: Attemping to load a duplicate atomic builder: "+task_name,
+                        __FILE__, __LINE__ );
 
   }
 }
 
+//--------------------------------------------------------------------------------------------------
 TaskInterface*
 TaskFactoryBase::retrieve_task( const std::string task_name ){
 
@@ -95,6 +102,7 @@ TaskFactoryBase::retrieve_task( const std::string task_name ){
   }
 }
 
+//--------------------------------------------------------------------------------------------------
 AtomicTaskInterface*
 TaskFactoryBase::retrieve_atomic_task( const std::string task_name ){
 
@@ -129,6 +137,7 @@ TaskFactoryBase::retrieve_atomic_task( const std::string task_name ){
   }
 }
 
+//--------------------------------------------------------------------------------------------------
 void TaskFactoryBase::schedule_task( const std::string task_name,
                                      TaskInterface::TASK_TYPE type,
                                      const LevelP& level,
@@ -137,15 +146,19 @@ void TaskFactoryBase::schedule_task( const std::string task_name,
                                      const int time_substep,
                                      const bool reinitialize ){
 
-  std::vector<TaskInterface*> task_list_dummy(1); //only putting one task in here but still need to pass it as vector
+  // Only putting one task in here but still need to pass it as vector due to the
+  // task_group scheduling feature
+  std::vector<TaskInterface*> task_list_dummy(1);
 
   TaskInterface* tsk  = retrieve_task( task_name );
   task_list_dummy[0] = tsk;
 
-  factory_schedule_task( level, sched, matls, type, task_list_dummy, tsk->get_task_name(), time_substep, reinitialize );
+  factory_schedule_task( level, sched, matls, type, task_list_dummy,
+                         tsk->get_task_name(), time_substep, reinitialize, false );
 
 }
 
+//--------------------------------------------------------------------------------------------------
 void TaskFactoryBase::schedule_task_group( const std::string task_group_name,
                                            std::vector<std::string> task_names,
                                            TaskInterface::TASK_TYPE type,
@@ -164,7 +177,8 @@ void TaskFactoryBase::schedule_task_group( const std::string task_group_name,
       task_list_dummy[i] = retrieve_task( task_names[i] );
     }
 
-    factory_schedule_task( level, sched, matls, type, task_list_dummy, task_group_name, time_substep, reinitialize );
+    factory_schedule_task( level, sched, matls, type, task_list_dummy, task_group_name,
+                           time_substep, reinitialize, pack_tasks );
 
   } else {
 
@@ -172,12 +186,14 @@ void TaskFactoryBase::schedule_task_group( const std::string task_group_name,
     for (unsigned int i = 0; i < task_names.size(); i++ ){
 
       task_list_dummy[0] = retrieve_task( task_names[i] );
-      factory_schedule_task( level, sched, matls, type, task_list_dummy, task_group_name, time_substep, reinitialize );
+      factory_schedule_task( level, sched, matls, type, task_list_dummy, task_group_name,
+                             time_substep, reinitialize, pack_tasks );
 
     }
   }
 }
 
+//--------------------------------------------------------------------------------------------------
 void TaskFactoryBase::schedule_task_group( const std::string task_group_name,
                                            TaskInterface::TASK_TYPE type,
                                            const bool pack_tasks,
@@ -197,7 +213,8 @@ void TaskFactoryBase::schedule_task_group( const std::string task_group_name,
       task_list_dummy[i] = retrieve_task( task_names[i] );
     }
 
-    factory_schedule_task( level, sched, matls, type, task_list_dummy, task_group_name, time_substep, reinitialize );
+    factory_schedule_task( level, sched, matls, type, task_list_dummy, task_group_name,
+                           time_substep, reinitialize, pack_tasks );
 
   } else {
 
@@ -205,13 +222,14 @@ void TaskFactoryBase::schedule_task_group( const std::string task_group_name,
     for (unsigned int i = 0; i < task_names.size(); i++ ){
 
       task_list_dummy[0] = retrieve_task( task_names[i] );
-      factory_schedule_task( level, sched, matls, type, task_list_dummy, task_group_name, time_substep, reinitialize );
+      factory_schedule_task( level, sched, matls, type, task_list_dummy, task_group_name,
+                             time_substep, reinitialize, pack_tasks );
 
     }
   }
 }
 
-
+//--------------------------------------------------------------------------------------------------
 void TaskFactoryBase::factory_schedule_task( const LevelP& level,
                                              SchedulerP& sched,
                                              const MaterialSet* matls,
@@ -219,7 +237,8 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
                                              std::vector<TaskInterface*> arches_tasks,
                                              const std::string task_group_name,
                                              int time_substep,
-                                             const bool reinitialize ){
+                                             const bool reinitialize,
+                                             const bool pack_tasks ){
 
   ArchesFieldContainer::VariableRegistry variable_registry;
 
@@ -255,8 +274,9 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
     }
   }
 
-  Task* tsk = scinew Task( _factory_name+"::"+task_group_name, this, &TaskFactoryBase::do_task, variable_registry,
-                           arches_tasks, type, time_substep );
+  Task* tsk = scinew Task( _factory_name+"::"+task_group_name, this,
+                           &TaskFactoryBase::do_task, variable_registry,
+                           arches_tasks, type, time_substep, pack_tasks );
 
   int counter = 0;
   for ( auto pivar = variable_registry.begin(); pivar != variable_registry.end(); pivar++ ){
@@ -285,11 +305,15 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
       tsk->modifies( ivar.label );
       break;
     case ArchesFieldContainer::REQUIRES:
-      cout_archestaskdebug << "      requiring: " << ivar.name << " with ghosts: " << ivar.nGhost << std::endl;
+      cout_archestaskdebug << "      requiring: " << ivar.name <<
+                              " with ghosts: " << ivar.nGhost << std::endl;
       tsk->requires( ivar.uintah_task_dw, ivar.label, ivar.ghost_type, ivar.nGhost );
       break;
     default:
-      throw InvalidValue("Arches Task Error: Cannot schedule task becuase of incomplete variable dependency. ", __FILE__, __LINE__);
+      std::stringstream msg;
+      msg << "Arches Task Error: Cannot schedule task because "
+          << "of incomplete variable dependency. \n";
+      throw InvalidValue(msg.str(), __FILE__, __LINE__);
       break;
 
     }
@@ -307,21 +331,24 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
 
 }
 
+//--------------------------------------------------------------------------------------------------
 void TaskFactoryBase::do_task ( const ProcessorGroup* pc,
                                 const PatchSubset* patches,
                                 const MaterialSubset* matls,
                                 DataWarehouse* old_dw,
                                 DataWarehouse* new_dw,
-                                std::vector<ArchesFieldContainer::VariableInformation>  variable_registry,
+                                std::vector<ArchesFieldContainer::VariableInformation> variable_registry,
                                 std::vector<TaskInterface*> arches_tasks,
                                 TaskInterface::TASK_TYPE type,
-                                int time_substep ){
+                                int time_substep,
+                                const bool packed_tasks ){
 
   for (int p = 0; p < patches->size(); p++) {
 
     const Patch* patch = patches->get(p);
 
-    ArchesFieldContainer* field_container = scinew ArchesFieldContainer(patch, _matl_index, variable_registry, old_dw, new_dw);
+    ArchesFieldContainer* field_container = scinew ArchesFieldContainer(patch, _matl_index,
+                                            variable_registry, old_dw, new_dw);
 
     SchedToTaskInfo info;
 
@@ -332,8 +359,10 @@ void TaskFactoryBase::do_task ( const ProcessorGroup* pc,
       info.dt = DT;
       info.time_substep = time_substep;
     }
+    info.packed_tasks = packed_tasks;
 
-    ArchesTaskInfoManager* tsk_info_mngr = scinew ArchesTaskInfoManager( variable_registry, patch, info );
+    ArchesTaskInfoManager* tsk_info_mngr = scinew ArchesTaskInfoManager( variable_registry,
+                                                                         patch, info );
 
     tsk_info_mngr->set_field_container( field_container );
 

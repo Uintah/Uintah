@@ -188,7 +188,8 @@ namespace Uintah{
                                 std::vector<TaskInterface*> arches_task,
                                 const std::string task_group_name,
                                 int time_substep,
-                                const bool reinitialize );
+                                const bool reinitialize,
+                                const bool pack_tasks );
 
     /** @brief Task callback **/
     void do_task ( const ProcessorGroup* pc,
@@ -199,7 +200,8 @@ namespace Uintah{
                    std::vector<ArchesFieldContainer::VariableInformation>  variable_registry,
                    std::vector<TaskInterface*> arches_task,
                    TaskInterface::TASK_TYPE type,
-                   int time_substep );
+                   int time_substep,
+                   const bool pack_tasks );
 
   protected:
 
