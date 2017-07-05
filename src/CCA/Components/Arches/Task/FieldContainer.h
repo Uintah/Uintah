@@ -329,8 +329,15 @@ namespace Uintah{
 
         T* field = scinew T;
 
+        Ghost::GhostType ghost_type;
+        if ( field->getTypeDescription() == CCVariable<double>::getTypeDescription() ){
+          ghost_type = Ghost::AroundCells;
+        } else {
+          ghost_type = Ghost::AroundFaces;
+        }
+
         if ( nGhosts > 0 ){
-          _new_dw->allocateTemporary( *field, _patch, Ghost::AroundCells, nGhosts );
+          _new_dw->allocateTemporary( *field, _patch, ghost_type, nGhosts );
         } else {
           _new_dw->allocateTemporary( *field, _patch, Ghost::None, 0 );
         }

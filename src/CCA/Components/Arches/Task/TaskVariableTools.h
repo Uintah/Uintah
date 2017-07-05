@@ -96,10 +96,10 @@ namespace Uintah{
 
         /** @brief Return a UINTAH field **/
         template <typename T>
-        inline T* get_uintah_field( const std::string name, const bool temporary_variable=false,
-                                    const int nGhosts=0 ){
+        inline T* get_uintah_field( const std::string name, const int nGhosts=-1 ){
 
-          if ( !temporary_variable ){
+          // Only temporary variables are allowed ghost cells. 
+          if ( nGhosts < 0 ){
             return _field_container->get_field<T>(name);
           } else {
             return _field_container->get_temporary_field<T>(name, nGhosts);
@@ -109,10 +109,11 @@ namespace Uintah{
 
         /** @brief Return a UINTAH field **/
         template <typename T>
-        inline T& get_uintah_field_add( const std::string name, const bool temporary_variable=false,
-                                        const int nGhosts=0 ){
+        inline T& get_uintah_field_add( const std::string name,
+                                        const int nGhosts=-1 ){
 
-          if ( !temporary_variable ){
+          // Only temporary variables are allowed ghost cells.
+          if ( nGhosts < 0 ){
             return *(_field_container->get_field<T>(name));
           } else {
             return *(_field_container->get_temporary_field<T>(name, nGhosts));
