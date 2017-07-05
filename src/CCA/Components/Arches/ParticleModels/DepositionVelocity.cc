@@ -82,7 +82,7 @@ DepositionVelocity::create_local_labels(){
 //
 
 void
-DepositionVelocity::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
+DepositionVelocity::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){
 
   register_variable( _task_name, ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable( "d_vol_ave_num", ArchesFieldContainer::COMPUTES, variable_registry );

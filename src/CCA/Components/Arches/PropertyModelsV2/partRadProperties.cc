@@ -212,7 +212,7 @@ partRadProperties::create_local_labels(){
 
 
 void
-partRadProperties::register_initialize( VIVec& variable_registry ){
+partRadProperties::register_initialize( VIVec& variable_registry , const bool pack_tasks){
   register_variable( _abskp_name , Uintah::ArchesFieldContainer::COMPUTES, variable_registry);
   for (int i=0; i< _nQn_part ; i++){
     register_variable( _abskp_name_vector[i] , Uintah::ArchesFieldContainer::COMPUTES, variable_registry);

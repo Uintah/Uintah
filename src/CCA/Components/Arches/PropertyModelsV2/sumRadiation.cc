@@ -19,12 +19,12 @@ sumRadiation::problemSetup( ProblemSpecP& db ){
 
     if ( type == "gasRadProperties" ){
       std::string fieldName;
-      db_model->getAttribute("label",fieldName); 
+      db_model->getAttribute("label",fieldName);
       _gas_part_name.push_back(fieldName);
       foundGas=true;
     } else if ( type == "partRadProperties" ) {
       std::string fieldName;
-      db_model->getAttribute("label",fieldName); 
+      db_model->getAttribute("label",fieldName);
       _gas_part_name.push_back(fieldName);
       //foundPart=true;
     }
@@ -49,7 +49,7 @@ sumRadiation::problemSetup( ProblemSpecP& db ){
           //--------Now check if scattering is on for DO----//
           if(radiation_model == "do_radiation"){
             bool scatteringOn=false;
-                           
+
             db_src->findBlock("DORadiationModel")->getWithDefault("ScatteringOn",scatteringOn,false) ;
             if (scatteringOn){
               _gas_part_name.push_back("scatkt");
@@ -80,7 +80,7 @@ sumRadiation::create_local_labels(){
 
 //--------------------------------------------------------------------------------------------------
 void
-sumRadiation::register_initialize( VIVec& variable_registry ){
+sumRadiation::register_initialize( VIVec& variable_registry , const bool pack_tasks){
 
   register_variable( m_abskt_name, ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable("volFraction" , ArchesFieldContainer::REQUIRES,0,ArchesFieldContainer::NEWDW,variable_registry);
@@ -97,7 +97,7 @@ sumRadiation::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& abskt = *(tsk_info->get_uintah_field<CCVariable<double> >(m_abskt_name));
   constCCVariable<double>&  volFrac = tsk_info->get_const_uintah_field_add<constCCVariable<double> >("volFraction");
-  
+
   abskt.initialize(1.0);
   for (unsigned int i=0; i<_gas_part_name.size(); i++){
     constCCVariable<double>&  abskf = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(_gas_part_name[i]);
@@ -124,7 +124,7 @@ void sumRadiation::restart_initialize( const Patch* patch, ArchesTaskInfoManager
 
 //--------------------------------------------------------------------------------------------------
 void sumRadiation::register_timestep_init( VIVec& variable_registry ){
-  //register_initialize( variable_registry );
+  //register_initialize( variable_registry , const bool pack_tasks);
 }
 
 void sumRadiation::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
@@ -133,7 +133,7 @@ void sumRadiation::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk
 
 
 void sumRadiation::register_timestep_eval( VIVec& variable_registry, const int time_substep ){
-  register_initialize( variable_registry );
+  register_initialize( variable_registry , false);
 }
 
 void

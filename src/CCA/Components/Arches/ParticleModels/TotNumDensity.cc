@@ -38,13 +38,14 @@ TotNumDensity::create_local_labels(){
 //--------------------------------------------------------------------------------------------------
 void
 TotNumDensity::register_initialize( 
-  std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
+  std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
+  const bool pack_tasks ){
 
   register_variable( _task_name, ArchesFieldContainer::COMPUTES, variable_registry );
 
   for ( int ienv = 0; ienv < _Nenv; ienv++ ){
     const std::string weight_name  = ParticleTools::append_env( "w", ienv);
-    register_variable( 
+    register_variable(
       weight_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry );
   }
 
@@ -55,13 +56,13 @@ void
 TotNumDensity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& num_den = *(tsk_info->get_uintah_field<CCVariable<double> >( _task_name ));
-  num_den.initialize(0.0); 
+  num_den.initialize(0.0);
 
   for ( int ienv = 0; ienv < _Nenv; ienv++ ){
 
 
     const std::string weight_name = ParticleTools::append_env( "w", ienv);
-    constCCVariable<double>& weight = 
+    constCCVariable<double>& weight =
       tsk_info->get_const_uintah_field_add<constCCVariable<double> >( weight_name );
 
     Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
@@ -75,15 +76,15 @@ TotNumDensity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info )
 
 //--------------------------------------------------------------------------------------------------
 void
-TotNumDensity::register_timestep_eval( 
-  std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, 
+TotNumDensity::register_timestep_eval(
+  std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
   const int time_substep ){
 
   register_variable( _task_name, ArchesFieldContainer::COMPUTES, variable_registry );
 
   for ( int ienv = 0; ienv < _Nenv; ienv++ ){
     const std::string weight_name  = ParticleTools::append_env( "w", ienv);
-    register_variable( weight_name, ArchesFieldContainer::REQUIRES, 0, 
+    register_variable( weight_name, ArchesFieldContainer::REQUIRES, 0,
                        ArchesFieldContainer::NEWDW, variable_registry );
   }
 
@@ -94,13 +95,13 @@ void
 TotNumDensity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& num_den = *(tsk_info->get_uintah_field<CCVariable<double> >( _task_name ));
-  num_den.initialize(0.0); 
+  num_den.initialize(0.0);
 
   for ( int ienv = 0; ienv < _Nenv; ienv++ ){
 
 
     const std::string weight_name = ParticleTools::append_env( "w", ienv);
-    constCCVariable<double>& weight = 
+    constCCVariable<double>& weight =
       tsk_info->get_const_uintah_field_add<constCCVariable<double> >( weight_name );
 
     Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );

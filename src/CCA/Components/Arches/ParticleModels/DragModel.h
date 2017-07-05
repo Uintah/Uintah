@@ -68,7 +68,7 @@ namespace Uintah{
 
   protected:
 
-    void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry );
+    void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks);
 
     void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry );
 
@@ -180,7 +180,7 @@ namespace Uintah{
 
   //------------------------------------------------------------------------------------------------
   template <typename IT, typename DT>
-  void DragModel<IT, DT>::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
+  void DragModel<IT, DT>::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){
 
     for ( int i = 0; i < _N; i++ ){
       const std::string name = get_name(i, _base_var_name);

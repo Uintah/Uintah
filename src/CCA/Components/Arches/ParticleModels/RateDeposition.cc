@@ -110,7 +110,7 @@ RateDeposition::create_local_labels(){
 //------------------------------------------------
 //
 void
-RateDeposition::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
+RateDeposition::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){
 
   //FUNCITON CALL     STRING NAME(VL)     TYPE       DEPENDENCY    GHOST DW     VR
   for ( int i=0; i< _Nenv;i++){

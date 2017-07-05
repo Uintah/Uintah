@@ -20,7 +20,7 @@ GridInfo::create_local_labels(){
 
 //--------------------------------------------------------------------------------------------------
 void
-GridInfo::register_initialize( std::vector<AFC::VariableInformation>& variable_registry ){
+GridInfo::register_initialize( std::vector<AFC::VariableInformation>& variable_registry , const bool packed_tasks){
 
   register_variable( "gridX", AFC::COMPUTES, variable_registry );
   register_variable( "gridY", AFC::COMPUTES, variable_registry );

@@ -35,7 +35,7 @@ BurnsChriston::create_local_labels(){
 
 //--------------------------------------------------------------------------------------------------
 void
-BurnsChriston::register_initialize( VIVec& variable_registry ){
+BurnsChriston::register_initialize( VIVec& variable_registry , const bool pack_tasks){
 
     register_variable( m_abskg_name, ArchesFieldContainer::COMPUTES, variable_registry );
     register_variable( "temperature", ArchesFieldContainer::COMPUTES, variable_registry );

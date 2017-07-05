@@ -35,7 +35,7 @@ cloudBenchmark::create_local_labels(){
 
 //--------------------------------------------------------------------------------------------------
 void
-cloudBenchmark::register_initialize( VIVec& variable_registry ){
+cloudBenchmark::register_initialize( VIVec& variable_registry , const bool pack_tasks){
 
   register_variable( m_abskg_name, ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable( "temperature", ArchesFieldContainer::COMPUTES, variable_registry );
@@ -91,7 +91,7 @@ cloudBenchmark::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info 
 
 //--------------------------------------------------------------------------------------------------
 void cloudBenchmark::register_restart_initialize( VIVec& variable_registry ){
-  register_initialize(variable_registry);
+  register_initialize(variable_registry, false);
 }
 
 void cloudBenchmark::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){

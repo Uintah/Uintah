@@ -54,7 +54,7 @@ namespace Uintah{
 
   protected:
 
-    void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry );
+    void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks);
 
     void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry );
 
@@ -116,7 +116,7 @@ namespace Uintah{
 
   //======INITIALIZATION:
   template <typename T>
-  void Constant<T>::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
+  void Constant<T>::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){
 
     for ( int ei = 0; ei < _N; ei++ ){
 

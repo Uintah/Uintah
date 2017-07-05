@@ -67,7 +67,8 @@ public:
     virtual void create_local_labels() = 0;
 
     /** @brief Initialization method **/
-    virtual void register_initialize( std::vector<AFC::VariableInformation>& variable_registry) = 0;
+    virtual void register_initialize( std::vector<AFC::VariableInformation>& variable_registry,
+                                      const bool pack_tasks ) = 0;
 
     /** @brief Schedules work done at the top of a timestep (which might be nothing) **/
     virtual void register_timestep_init( std::vector<AFC::VariableInformation>& ) = 0;

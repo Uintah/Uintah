@@ -50,7 +50,7 @@ WallHFVariable::create_local_labels(){
 //
 
 void
-WallHFVariable::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
+WallHFVariable::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool pack_tasks){
 
   register_variable( _flux_x, ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable( _flux_y, ArchesFieldContainer::COMPUTES, variable_registry );

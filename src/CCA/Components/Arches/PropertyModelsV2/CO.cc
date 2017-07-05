@@ -84,7 +84,7 @@ CO::create_local_labels(){
 //
 
 void
-CO::register_initialize( VIVec& variable_registry ){
+CO::register_initialize( VIVec& variable_registry , const bool pack_tasks){
 
   register_variable( _CO_model_name, ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable( _defect_name, ArchesFieldContainer::COMPUTES, variable_registry );

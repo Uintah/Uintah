@@ -17,7 +17,7 @@ namespace Uintah{
 
     void problemSetup( ProblemSpecP& db ){};
 
-    void register_initialize( ArchesVIVector& variable_registry );
+    void register_initialize( ArchesVIVector& variable_registry , const bool packed_tasks);
 
     void register_timestep_init( ArchesVIVector& variable_registry );
 

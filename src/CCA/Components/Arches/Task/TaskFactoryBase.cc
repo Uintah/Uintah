@@ -251,7 +251,7 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
     switch( type ){
 
       case (TaskInterface::INITIALIZE):
-        (*i_task)->register_initialize( variable_registry );
+        (*i_task)->register_initialize( variable_registry, pack_tasks );
         time_substep = 0;
         break;
       case (TaskInterface::RESTART_INITIALIZE):

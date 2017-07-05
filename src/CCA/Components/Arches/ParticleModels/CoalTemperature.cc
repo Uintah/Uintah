@@ -119,7 +119,7 @@ CoalTemperature::create_local_labels(){
 
 //--------------------------------------------------------------------------------------------------
 void
-CoalTemperature::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
+CoalTemperature::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){
 
   for ( int i = 0; i < _Nenv; i++ ){
 

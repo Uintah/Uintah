@@ -40,7 +40,7 @@ public:
 
 protected:
 
-    void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry );
+    void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks);
 
     void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){}
 
@@ -122,7 +122,7 @@ private:
   }
 
   template <typename T, typename CT>
-  void WaveFormInit<T, CT>::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
+  void WaveFormInit<T, CT>::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){
 
     register_variable( _ind_var_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW,  variable_registry );
     register_variable( _var_name,     ArchesFieldContainer::MODIFIES, variable_registry );

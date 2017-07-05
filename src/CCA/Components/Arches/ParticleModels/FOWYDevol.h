@@ -63,7 +63,7 @@ namespace Uintah{
 
   protected:
 
-    void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry );
+    void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks);
 
     void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry );
 
@@ -198,7 +198,7 @@ namespace Uintah{
 
   //======INITIALIZATION:
   template <typename T>
-  void FOWYDevol<T>::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
+  void FOWYDevol<T>::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){
 
     for ( int i = 0; i < _Nenv; i++ ){
       const std::string name = get_name(i, _base_var_name);

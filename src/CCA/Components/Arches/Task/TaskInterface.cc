@@ -95,10 +95,12 @@ void TaskInterface::schedule_init( const LevelP& level,
 
   VariableRegistry variable_registry;
 
+  const bool packed_tasks = false;
+
   if ( is_restart ) {
     register_restart_initialize( variable_registry );
   } else {
-    register_initialize( variable_registry );
+    register_initialize( variable_registry, packed_tasks );
   }
 
   Task* tsk;

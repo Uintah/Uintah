@@ -98,7 +98,7 @@ protected:
 
     typedef std::vector<AFC::VariableInformation> AVarInfo;
 
-    void register_initialize( AVarInfo& variable_registry );
+    void register_initialize( AVarInfo& variable_registry , const bool pack_tasks);
 
     void register_timestep_init( AVarInfo& variable_registry ){}
 
@@ -214,7 +214,7 @@ private:
 
   //------------------------------------------------------------------------------------------------
   template <typename T>
-  void ComputePsi<T>::register_initialize( AVarInfo& variable_registry ){
+  void ComputePsi<T>::register_initialize( AVarInfo& variable_registry , const bool pack_tasks){
     for ( SV::iterator i = _eqn_names.begin(); i != _eqn_names.end(); i++){
       register_variable( *i+"_x_psi", AFC::COMPUTES, variable_registry );
       register_variable( *i+"_y_psi", AFC::COMPUTES, variable_registry );

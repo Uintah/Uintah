@@ -102,7 +102,7 @@ gasRadProperties::create_local_labels(){
 
 
 void
-gasRadProperties::register_initialize( VIVec& variable_registry ){
+gasRadProperties::register_initialize( VIVec& variable_registry , const bool pack_tasks){
   register_variable( _abskg_name, Uintah::ArchesFieldContainer::COMPUTES, variable_registry );
 }
 

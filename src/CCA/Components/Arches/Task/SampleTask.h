@@ -14,7 +14,7 @@ public:
 
     void problemSetup( ProblemSpecP& db );
 
-    void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry );
+    void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const bool packed_tasks );
 
     void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry );
 
@@ -28,7 +28,7 @@ public:
 
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ); 
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
     void create_local_labels(){
 

@@ -24,7 +24,7 @@ public:
       register_new_variable<T>( _task_name );
     }
 
-    void register_initialize( VIVec& variable_registry );
+    void register_initialize( VIVec& variable_registry , const bool pack_tasks);
 
     void register_timestep_init( VIVec& variable_registry );
 
@@ -133,7 +133,7 @@ private:
 
   //------------------------------------------------------------------------------------------------
   template <typename T>
-  void ConstantProperty<T>::register_initialize( AVarInfo& variable_registry ){
+  void ConstantProperty<T>::register_initialize( AVarInfo& variable_registry , const bool pack_tasks){
     register_variable( _task_name, ArchesFieldContainer::COMPUTES, variable_registry );
   }
 
