@@ -659,6 +659,7 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
         cerr << "F_inc = " << pDefGradInc       << endl;
         cerr << "F_new = " << pDefGrad_new[idx] << endl;
         cerr << "J = "     << J                 << endl;
+        cerr << "J_old = " << pDefGrad[idx].Determinant() << endl;
         constParticleVariable<long64> pParticleID;
         old_dw->get(pParticleID, lb->pParticleIDLabel, pset);
         cerr << "ParticleID = " << pParticleID[idx] << endl;

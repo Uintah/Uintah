@@ -3516,7 +3516,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->allocateAndPut(pids_new, lb->pParticleIDLabel_preReloc, pset);
       new_dw->allocateAndPut(psizeNew, lb->pSizeLabel_preReloc,       pset);
       pids_new.copyData(pids);
-//      psizeNew.copyData(psize);
 
       //Carry forward color particle (debugging label)
       if (flags->d_with_color) {
@@ -3715,6 +3714,15 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           Matrix3 Amat = tensorL*delT;
           Matrix3 Finc = Amat.Exponential(abs(flags->d_min_subcycles_for_F));
           pFNew[idx] = Finc*pFOld[idx];
+        }
+
+        int imax=0, jmax=0;
+        if(pFNew[idx].MaxAbsElemComp(imax, jmax)>10){
+          cerr << "Resetting F for particle " << pids[idx] 
+               << " with F = " << pFNew[idx] << endl;
+          cerr << "imax, jmax = " << imax << ", " << jmax << endl;
+          pFNew[idx].set(imax,jmax,0.9*pFNew[idx](imax,jmax));
+          cerr << "F is now " << pFNew[idx] << endl;
         }
 
         double J   =pFNew[idx].Determinant();
