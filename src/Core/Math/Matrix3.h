@@ -151,6 +151,9 @@ namespace Uintah {
     //Maximum element absolute value
     inline double MaxAbsElem() const;
   
+    //Maximum element absolute value
+    inline double MaxAbsElemComp(int& imax, int& jmax) const;
+  
     //Identity
     inline void Identity();
 
@@ -417,6 +420,23 @@ namespace Uintah {
         for(int j=0;j<3;j++){
           absval = fabs(mat3[i][j]);
           if (absval > max) max = absval;
+        }
+      }
+      return max;
+    }
+
+  inline double Matrix3::MaxAbsElemComp(int& imax, int& jmax) const
+    {
+      double max = 0;
+      double absval;
+      for (int i = 0; i< 3; i++) {
+        for(int j=0;j<3;j++){
+          absval = fabs(mat3[i][j]);
+          if (absval > max){
+            max = absval;
+            imax = i;
+            jmax = j;
+          }
         }
       }
       return max;
