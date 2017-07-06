@@ -320,7 +320,7 @@ void
 KokkosSolver::initialize( const LevelP& level, SchedulerP& sched, const bool doing_restart )
 {
   const MaterialSet* matls = m_sharedState->allArchesMaterials();
-  bool is_restart = false;
+  //bool is_restart = false;
   const bool pack_tasks = true;
   const bool dont_pack_tasks = false;
 
@@ -441,7 +441,7 @@ KokkosSolver::setupBCs( const LevelP& level, SchedulerP& sched, const MaterialSe
 void
 KokkosSolver::SSPRKSolve( const LevelP& level, SchedulerP& sched ){
 
-  const bool pack_tasks = true;
+  //const bool pack_tasks = true;
   //const bool dont_pack_tasks = false;
 
   const MaterialSet* matls = m_sharedState->allArchesMaterials();
@@ -568,7 +568,7 @@ KokkosSolver::SSPRKSolve( const LevelP& level, SchedulerP& sched ){
 void
 KokkosSolver::SandBox( const LevelP& level, SchedulerP& sched ){
 
-  const bool pack_tasks = true;
+  //const bool pack_tasks = true;
   //const bool dont_pack_tasks = false;
 
   const int time_substep = 0;

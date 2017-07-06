@@ -63,7 +63,7 @@
 // #include <CCA/Components/Arches/Radiation/fortran/rdomsrc_fort.h>
 // #include <CCA/Components/Arches/Radiation/fortran/rdomsrcscattering_fort.h>
 // #include <CCA/Components/Arches/Radiation/fortran/rdomflux_fort.h>
-#include <CCA/Components/Arches/Radiation/fortran/rdomvolq_fort.h>
+// #include <CCA/Components/Arches/Radiation/fortran/rdomvolq_fort.h>
 #include <CCA/Components/Arches/Radiation/LegendreChebyshevQuad.h>
 
 
