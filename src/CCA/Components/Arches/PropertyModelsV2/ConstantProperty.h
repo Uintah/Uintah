@@ -28,7 +28,7 @@ public:
 
     void register_timestep_init( VIVec& variable_registry );
 
-    void register_restart_initialize( VIVec& variable_registry ){};
+    void register_restart_initialize( VIVec& variable_registry );
 
     void register_timestep_eval( VIVec& variable_registry, const int time_substep ){};
 
@@ -38,7 +38,7 @@ public:
 
     void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    void restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
+    void restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
@@ -184,6 +184,58 @@ private:
 
   }
 
+  //------------------------------------------------------------------------------------------------
+  template <typename T>
+  void ConstantProperty<T>::register_restart_initialize( AVarInfo& variable_registry ){
+    register_variable( _task_name, ArchesFieldContainer::COMPUTES, variable_registry );
+  }
+
+  //------------------------------------------------------------------------------------------------
+  template <typename T>
+  void ConstantProperty<T>::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+
+    T& property = tsk_info->get_uintah_field_add<T>( _task_name );
+    property.initialize(0.0);
+
+    if ( m_has_regions ){
+
+      for ( auto region_iter = m_region_info.begin(); region_iter != m_region_info.end();
+            region_iter++){
+
+        Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+        Uintah::parallel_for( range, [&](int i, int j, int k){
+
+          //not worried about efficiency since this is only at startup:
+          Point p = patch->cellPosition(IntVector(i,j,k));
+
+
+          for ( auto geom_iter = region_iter->geometry.begin();
+                geom_iter != region_iter->geometry.end(); geom_iter++ ){
+
+            GeometryPieceP geom = *geom_iter;
+
+            if ( !region_iter->inverted ){
+              if ( geom->inside(p) ){
+                property(i,j,k) = region_iter->constant;
+              }
+            } else {
+              if ( !geom->inside(p) ){
+                property(i,j,k) = region_iter->constant;
+              }
+            }
+          }
+
+        });
+
+      }
+
+    } else {
+
+      property.initialize(m_constant);
+
+    }
+
+  }
 
   //------------------------------------------------------------------------------------------------
   template <typename T>

@@ -222,7 +222,7 @@ void TaskFactoryBase::schedule_task_group( const std::string task_group_name,
     for (unsigned int i = 0; i < task_names.size(); i++ ){
 
       task_list_dummy[0] = retrieve_task( task_names[i] );
-      factory_schedule_task( level, sched, matls, type, task_list_dummy, task_group_name,
+      factory_schedule_task( level, sched, matls, type, task_list_dummy, task_names[i],
                              time_substep, reinitialize, pack_tasks );
 
     }

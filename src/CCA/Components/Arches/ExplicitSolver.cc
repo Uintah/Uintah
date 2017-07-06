@@ -1349,9 +1349,12 @@ ExplicitSolver::sched_restartInitialize( const LevelP& level, SchedulerP& sched 
 
   typedef std::map<std::string, std::shared_ptr<TaskFactoryBase> > BFM;
   BFM::iterator i_property_models_fac = _task_factory_map.find("property_models_factory");
-  i_property_models_fac->second->schedule_task_group( "all_tasks",
-                                                      TaskInterface::RESTART_INITIALIZE, false,
-                                                      level, sched, matls );
+  TaskFactoryBase::TaskMap all_prop_tasks = i_property_models_fac->second->retrieve_all_tasks();
+  for ( TaskFactoryBase::TaskMap::iterator i = all_prop_tasks.begin(); i != all_prop_tasks.end(); i++) {
+
+    i->second->schedule_init( level, sched, matls, doingRestart ); 
+   
+  }
 
   setupBoundaryConditions( level, sched, doingRestart );
 
