@@ -1541,11 +1541,14 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
                   }
                   if (prevReqTask->d_task == dtask->d_task) {
                     if (!dtask->d_task->getHasSubScheduler()) {
+                    
+#if SCI_ASSERTION_LEVEL>0                             // remove this #if after spatial scheduling works in the Arches sweeps radiation code. 07/06/17 
                       std::ostringstream message;
                       message << " WARNING - task (" << dtask->getName()
                               << ") requires with Ghost cells *and* modifies and may not be correct" << std::endl;
-                      static ProgressiveWarning warn(message.str(), 1);
+                      static ProgressiveWarning warn(message.str(), 10);
                       warn.invoke();
+#endif
                       if (detaileddbg.active()) {
                         std::cout << m_proc_group->myrank() << " Task that requires with ghost cells and modifies\n";
                         std::cout << m_proc_group->myrank() << " RGM: var: " << *req->m_var << " compute: " << *creator << " mod "
