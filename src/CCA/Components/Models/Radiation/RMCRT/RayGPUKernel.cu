@@ -365,10 +365,13 @@ __constant__ levelParams d_levels[d_MAXLEVELS];
 
 template< class T>
 __global__
-#if DEBUG > 0
-__launch_bounds__(512, 1) //for 128 registers, too many to fit into an SM!  But needed in debug mode
+__global__
+#if NDEBUG  //Uinth has a DNDEBUG compiler defined flag in normal trunk builds.  Debug builds have no compiler flags we can capture.
+__launch_bounds__(640, 1) // For 96 registers with 320 threads.  Allows two kernels to fit within an SM.
+                          // Seems to be the performance sweet spot in release mode.
 #else
-__launch_bounds__(640, 1) //for 96 registers, just right to fit in with 320 threads
+__launch_bounds__(512, 1) // For 128 registers with 320 threads.  Can't fit two kernels per SM. But needed for
+                          // debug mode as debug mode requires more registers.
 #endif
 void rayTraceDataOnionKernel( dim3 dimGrid,
                               dim3 dimBlock,
