@@ -52,8 +52,6 @@ void VariableStats::problemSetup( ProblemSpecP& db ){
 
   for ( ProblemSpecP var_db = db->findBlock("flux_variable"); var_db != nullptr; var_db = var_db->findNextBlock("flux_variable") ){
 
-    bool table_lookup = false;
-
     do_fluxes = true;
 
     std::string phi_name;

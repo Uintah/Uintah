@@ -70,7 +70,6 @@ namespace Uintah{
         /** @brief Return a CONST UINTAH field **/
         template <typename T>
         inline T* get_const_uintah_field( const std::string name ){
-          T* emptyPointer=NULL;
           return _field_container->get_const_field<T>(name);
         }
 
@@ -98,7 +97,7 @@ namespace Uintah{
         template <typename T>
         inline T* get_uintah_field( const std::string name, const int nGhosts=-1 ){
 
-          // Only temporary variables are allowed ghost cells. 
+          // Only temporary variables are allowed ghost cells.
           if ( nGhosts < 0 ){
             return _field_container->get_field<T>(name);
           } else {

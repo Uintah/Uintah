@@ -72,9 +72,6 @@ SampleTask::register_timestep_eval( std::vector<ArchesFieldContainer::VariableIn
   register_variable( "a_sample_field", ArchesFieldContainer::COMPUTES,       0, ArchesFieldContainer::NEWDW,  variable_registry, time_substep );
   register_variable( "a_result_field", ArchesFieldContainer::COMPUTES,       0, ArchesFieldContainer::NEWDW,  variable_registry, time_substep );
   register_variable( "density",           ArchesFieldContainer::REQUIRES,       1, ArchesFieldContainer::LATEST, variable_registry, time_substep );
-  register_variable( "uVelocitySPBC",     ArchesFieldContainer::REQUIRES,       1, ArchesFieldContainer::LATEST, variable_registry, time_substep );
-  register_variable( "vVelocitySPBC",     ArchesFieldContainer::REQUIRES,       2, ArchesFieldContainer::LATEST, variable_registry, time_substep );
-  register_variable( "wVelocitySPBC",     ArchesFieldContainer::REQUIRES,       2, ArchesFieldContainer::LATEST, variable_registry, time_substep );
 
 }
 
@@ -85,13 +82,10 @@ SampleTask::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   CCVariable<double>& field   = *(tsk_info->get_uintah_field<CCVariable<double> >( "a_sample_field" ));
   CCVariable<double>& result  = *(tsk_info->get_uintah_field<CCVariable<double> >( "a_result_field" ));
   CCVariable<double>& density = *(tsk_info->get_uintah_field<CCVariable<double> >( "density" ));
-  constSFCXVariable<double>& u = *(tsk_info->get_const_uintah_field<constSFCXVariable<double> >("uVelocitySPBC" ));
-  constSFCXVariable<double>& v = *(tsk_info->get_const_uintah_field<constSFCXVariable<double> >("vVelocitySPBC" ));
-  constSFCXVariable<double>& w = *(tsk_info->get_const_uintah_field<constSFCXVariable<double> >("wVelocitySPBC" ));
 
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
   Uintah::parallel_for( range, [&](int i, int j, int k){
     field(i,j,k) = _value * ( density(i,j,k));
-    result(i,j,k)= field(i,j,k)*field(i,j,k);
+    result(i,j,k) = field(i,j,k)*field(i,j,k);
   });
 }

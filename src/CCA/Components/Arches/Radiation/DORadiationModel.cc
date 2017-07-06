@@ -56,13 +56,13 @@
 
 #include <CCA/Components/Arches/Radiation/fortran/rordr_fort.h>
 #include <CCA/Components/Arches/Radiation/fortran/radarray_fort.h>
-#include <CCA/Components/Arches/Radiation/fortran/radcoef_fort.h>
-#include <CCA/Components/Arches/Radiation/fortran/radwsgg_fort.h>
-#include <CCA/Components/Arches/Radiation/fortran/radcal_fort.h>
-#include <CCA/Components/Arches/Radiation/fortran/rdomsolve_fort.h>
-#include <CCA/Components/Arches/Radiation/fortran/rdomsrc_fort.h>
-#include <CCA/Components/Arches/Radiation/fortran/rdomsrcscattering_fort.h>
-#include <CCA/Components/Arches/Radiation/fortran/rdomflux_fort.h>
+// #include <CCA/Components/Arches/Radiation/fortran/radcoef_fort.h>
+// #include <CCA/Components/Arches/Radiation/fortran/radwsgg_fort.h>
+// #include <CCA/Components/Arches/Radiation/fortran/radcal_fort.h>
+// #include <CCA/Components/Arches/Radiation/fortran/rdomsolve_fort.h>
+// #include <CCA/Components/Arches/Radiation/fortran/rdomsrc_fort.h>
+// #include <CCA/Components/Arches/Radiation/fortran/rdomsrcscattering_fort.h>
+// #include <CCA/Components/Arches/Radiation/fortran/rdomflux_fort.h>
 #include <CCA/Components/Arches/Radiation/fortran/rdomvolq_fort.h>
 #include <CCA/Components/Arches/Radiation/LegendreChebyshevQuad.h>
 
@@ -146,8 +146,8 @@ DORadiationModel::problemSetup( ProblemSpecP& params )
   _radiateAtGasTemp=true; // this flag is arbitrary for no particles
 
   // Does this system have particles??? Check for particle property models
-   
-  _nQn_part =0; 
+
+  _nQn_part =0;
   ProblemSpecP db_propV2 = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("PropertyModelsV2");
   if  (db_propV2){
     for ( ProblemSpecP db_model = db_propV2->findBlock("model"); db_model != nullptr;
@@ -201,7 +201,7 @@ DORadiationModel::problemSetup( ProblemSpecP& params )
   else {
     throw ProblemSetupException("Error: <DORadiation> node not found.", __FILE__, __LINE__);
   }
-  
+
   //WARNING: Hack -- Hard-coded for now.
   d_lambda      = 1;
 
@@ -303,14 +303,14 @@ DORadiationModel::computeOrdinatesOPL(){
     fort_rordr(d_sn, oxi, omu, oeta, wt);
   }
 
-   double sumx=0;  double sumy=0;  double sumz=0; 
+   double sumx=0;  double sumy=0;  double sumz=0;
   for (int i=0; i< d_totalOrds/8; i++){
    sumx+=omu[i+1]*wt[i+1];
    sumy+=oeta[i+1]*wt[i+1];
    sumz+=oxi[i+1]*wt[i+1];
   }
 
-  d_xfluxAdjust=M_PI/sumx/4.0;  // sumx, sumy, sumz should equal pi/4 because: Int->0:pi/2 cos(theta) dOmega = pi, 
+  d_xfluxAdjust=M_PI/sumx/4.0;  // sumx, sumy, sumz should equal pi/4 because: Int->0:pi/2 cos(theta) dOmega = pi,
   d_yfluxAdjust=M_PI/sumy/4.0;
   d_zfluxAdjust=M_PI/sumz/4.0;
 
@@ -342,7 +342,7 @@ DORadiationModel::computeOrdinatesOPL(){
     cosineTheta    = vector<vector< double > > (d_totalOrds,vector<double>(d_totalOrds,0.0));
     solidAngleWeight = vector< double >  (d_totalOrds,0.0);
     for (int i=0; i<d_totalOrds ; i++){
-        solidAngleWeight[i]=  wt[i+1]/(4.0 * M_PI);  
+        solidAngleWeight[i]=  wt[i+1]/(4.0 * M_PI);
       for (int j=0; j<d_totalOrds ; j++){
         cosineTheta[i][j]=oxi[j+1]*oxi[i+1]+oeta[j+1]*oeta[i+1]+omu[j+1]*omu[i+1];
       }
@@ -994,8 +994,8 @@ return _scatteringOn;
 void
 DORadiationModel::setLabels(const VarLabel* abskg_label,
                             const VarLabel* abskt_label,
-                            const VarLabel* T_label, 
-                            const VarLabel* cellTypeLabel, 
+                            const VarLabel* T_label,
+                            const VarLabel* cellTypeLabel,
                             const VarLabel* radIntSource,
                             const VarLabel*  fluxE,
                             const VarLabel*  fluxW,
@@ -1082,13 +1082,13 @@ DORadiationModel::computeScatteringIntensities(int direction, constCCVariable<do
     Uintah::parallel_for( range,[&](int i, int j, int k){  // should invert this loop, and remove if-statement
          for (int ii=iset*binSize; ii < std::min((iset+1)*binSize,d_totalOrds) ; ii++) {
            double phaseFunction = (1.0 + asymmetryFactor(i,j,k)*cosineTheta[direction][ii])*solidAngleWeight[ii];
-           scatIntensitySource(i,j,k)  +=phaseFunction*Intensities[ii](i,j,k); 
+           scatIntensitySource(i,j,k)  +=phaseFunction*Intensities[ii](i,j,k);
          }
         });
   }
 
   // can't use optimization on out-intensities, because only one is available in this function
-  Uintah::parallel_for( range,[&](int i, int j, int k){ 
+  Uintah::parallel_for( range,[&](int i, int j, int k){
       scatIntensitySource(i,j,k) *=scatkt(i,j,k);
       });
 
@@ -1114,7 +1114,7 @@ DORadiationModel::computeIntensitySource( const Patch* patch, StaticArray <const
     if( _radiateAtGasTemp ){
       for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
         b_sourceArray[*iter]+=(_sigma/M_PI)*abskp[qn][*iter]*std::pow(gTemp[*iter],4.0);
-      //Uintah::parallel_for( range,[&](int i, int j, int k){ 
+      //Uintah::parallel_for( range,[&](int i, int j, int k){
               //double T2 =gTemp(i,j,k)*gTemp(i,j,k);
               //b_sourceArray(i,j,k)+=(_sigma/M_PI)*abskp[qn](i,j,k)*T2*T2;
       //});
@@ -1122,7 +1122,7 @@ DORadiationModel::computeIntensitySource( const Patch* patch, StaticArray <const
     }else{
       for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
         b_sourceArray[*iter]+=((_sigma/M_PI)*abskp[qn][*iter])*std::pow(pTemp[qn][*iter],4.0);
-      //Uintah::parallel_for( range,[&](int i, int j, int k){ 
+      //Uintah::parallel_for( range,[&](int i, int j, int k){
               //double T2 =pTemp[qn](i,j,k)*pTemp[qn](i,j,k);
               //b_sourceArray(i,j,k)+=((_sigma/M_PI)*abskp[qn](i,j,k))*T2*T2;
 //});
@@ -1132,7 +1132,7 @@ DORadiationModel::computeIntensitySource( const Patch* patch, StaticArray <const
 
   for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       b_sourceArray[*iter]+=(_sigma/M_PI)*abskg[*iter]*std::pow(gTemp[*iter],4.0);
-      //Uintah::parallel_for( range,[&](int i, int j, int k){ 
+      //Uintah::parallel_for( range,[&](int i, int j, int k){
       //double T2 =gTemp(i,j,k)*gTemp(i,j,k);
       //b_sourceArray(i,j,k)+=(_sigma/M_PI)*abskg(i,j,k)*T2*T2;
   //});
@@ -1149,9 +1149,9 @@ DORadiationModel::computeIntensitySource( const Patch* patch, StaticArray <const
 void
 DORadiationModel::intensitysolveSweep( const Patch* patch,
                                        int matlIndex,
-                                       DataWarehouse* new_dw, 
+                                       DataWarehouse* new_dw,
                                        DataWarehouse* old_dw,
-                                       int cdirecn, int phase){ 
+                                       int cdirecn, int phase){
 
   int direcn = cdirecn+1;
   IntVector idxLo = patch->getFortranCellLowIndex();
@@ -1162,7 +1162,7 @@ DORadiationModel::intensitysolveSweep( const Patch* patch,
   //intensity.initialize(0.0);
   //new_dw->getModifiable(intensity,_patchIntensityLabels[phase][cdirecn] , matlIndex, patch);   // change to computes when making it its own task
   constCCVariable <double > ghost_intensity;
-  new_dw->get( ghost_intensity, _patchIntensityLabels[phase-1][cdirecn], matlIndex, patch, _gv[(int) _plusX[cdirecn]][(int) _plusY[cdirecn]][(int) _plusZ[cdirecn]],1 );  
+  new_dw->get( ghost_intensity, _patchIntensityLabels[phase-1][cdirecn], matlIndex, patch, _gv[(int) _plusX[cdirecn]][(int) _plusY[cdirecn]][(int) _plusZ[cdirecn]],1 );
 
 
   constCCVariable <double > emissSrc;
@@ -1188,7 +1188,7 @@ DORadiationModel::intensitysolveSweep( const Patch* patch,
 
 
 
-  Vector Dx = patch->dCell(); 
+  Vector Dx = patch->dCell();
   const double vol = Dx.x()* Dx.y()* Dx.z();  // const for optimization
   const double  areaew = Dx.y()*Dx.z();
   const double  areans = Dx.x()*Dx.z();
@@ -1280,7 +1280,7 @@ DORadiationModel::intensitysolveSweep( const Patch* patch,
   czm[1]=c[1];
   cym[1]=c[1]-yiter[cdirecn];
   cxm[1]=c[1];
-  for (int k = (_plusZ[cdirecn] ? idxLo.z()+ziter[cdirecn] : idxHi.z()+ziter[cdirecn]);  (_plusZ[cdirecn] ? (k<=idxHi.z()) : (k>=idxLo.z())) ; k=k+ziter[cdirecn]){  
+  for (int k = (_plusZ[cdirecn] ? idxLo.z()+ziter[cdirecn] : idxHi.z()+ziter[cdirecn]);  (_plusZ[cdirecn] ? (k<=idxHi.z()) : (k>=idxLo.z())) ; k=k+ziter[cdirecn]){
     c[2]=k;
     czm[2]=k-ziter[cdirecn];
     cym[2]=k;
@@ -1326,7 +1326,7 @@ DORadiationModel::intensitysolveSweep( const Patch* patch,
   czm[1]=c[1];
   cym[1]=c[1]-yiter[cdirecn];
   cxm[1]=c[1];
-  for (int k = (_plusZ[cdirecn] ? idxLo.z()+ziter[cdirecn] : idxHi.z()+ziter[cdirecn]);  (_plusZ[cdirecn] ? (k<=idxHi.z()) : (k>=idxLo.z())) ; k=k+ziter[cdirecn]){  
+  for (int k = (_plusZ[cdirecn] ? idxLo.z()+ziter[cdirecn] : idxHi.z()+ziter[cdirecn]);  (_plusZ[cdirecn] ? (k<=idxHi.z()) : (k>=idxLo.z())) ; k=k+ziter[cdirecn]){
     c[2]=k;
     czm[2]=k-ziter[cdirecn];
     cym[2]=k;
@@ -1348,7 +1348,7 @@ DORadiationModel::intensitysolveSweep( const Patch* patch,
   czm[0]=c[0];
   cym[0]=c[0];
   cxm[0]=c[0]-xiter[cdirecn];
-  for (int k = (_plusZ[cdirecn] ? idxLo.z()+ziter[cdirecn] : idxHi.z()+ziter[cdirecn]);  (_plusZ[cdirecn] ? (k<=idxHi.z()) : (k>=idxLo.z())) ; k=k+ziter[cdirecn]){  
+  for (int k = (_plusZ[cdirecn] ? idxLo.z()+ziter[cdirecn] : idxHi.z()+ziter[cdirecn]);  (_plusZ[cdirecn] ? (k<=idxHi.z()) : (k>=idxLo.z())) ; k=k+ziter[cdirecn]){
     c[2]=k;
     czm[2]=k-ziter[cdirecn];
     cym[2]=k;
@@ -1371,7 +1371,7 @@ DORadiationModel::intensitysolveSweep( const Patch* patch,
   //  Set interior cells (no ghost cells and three normal cells)
   //--------------------------------------------------------//
 
-  for (int k = (_plusZ[cdirecn] ? idxLo.z()+ziter[cdirecn] : idxHi.z()+ziter[cdirecn]);  (_plusZ[cdirecn] ? (k<=idxHi.z()) : (k>=idxLo.z())) ; k=k+ziter[cdirecn]){  
+  for (int k = (_plusZ[cdirecn] ? idxLo.z()+ziter[cdirecn] : idxHi.z()+ziter[cdirecn]);  (_plusZ[cdirecn] ? (k<=idxHi.z()) : (k>=idxLo.z())) ; k=k+ziter[cdirecn]){
     c[2]=k;
     czm[2]=k-ziter[cdirecn];
     cym[2]=k;
@@ -1389,12 +1389,12 @@ DORadiationModel::intensitysolveSweep( const Patch* patch,
         if (cellType[c] !=ffield){ // if intrusions
           intensity[c] = emissSrc[c] ;
         } else{ // else flow cell
-          //intensity[c] = ((emissSrc[c] + scatSource[c])*vol + intensity[czm]*abs(oxi[direcn])*areatb  +  
-          intensity[c] = (emissSrc[c] + intensity[czm]*abs(oxi[direcn])*areatb  +  
+          //intensity[c] = ((emissSrc[c] + scatSource[c])*vol + intensity[czm]*abs(oxi[direcn])*areatb  +
+          intensity[c] = (emissSrc[c] + intensity[czm]*abs(oxi[direcn])*areatb  +
               intensity[cym]*abs(oeta[direcn])*areans  +  intensity[cxm]*abs(omu[direcn])*areaew)/(denom + abskt[c]*vol );
         } // end if
       } // end i loop
-    } // end j loop   
+    } // end j loop
   } // end k loop
   // --------------------------------------------------//
 
@@ -1409,11 +1409,11 @@ DORadiationModel::intensitysolveSweep( const Patch* patch,
 void
 DORadiationModel::intensitysolveSweepOptimized( const Patch* patch,
                                        const int matlIndex,
-                                       DataWarehouse* new_dw, 
+                                       DataWarehouse* new_dw,
                                        DataWarehouse* old_dw,
-                                       const int cdirecn){ 
+                                       const int cdirecn){
 
-  const int direcn = cdirecn+1;  
+  const int direcn = cdirecn+1;
   const IntVector idxLo = patch->getFortranCellLowIndex();
   const IntVector idxHi = patch->getFortranCellHighIndex();
 
@@ -1437,7 +1437,7 @@ DORadiationModel::intensitysolveSweepOptimized( const Patch* patch,
   new_dw->getModifiable(intensity,_IntensityLabels[cdirecn] , matlIndex, patch);   // change to computes when making it its own task
 
   constCCVariable <double > ghost_intensity;
-  new_dw->get( ghost_intensity, _IntensityLabels[cdirecn], matlIndex, patch, _gv[(int) _plusX[cdirecn]][(int) _plusY[cdirecn]][(int) _plusZ[cdirecn]],1 );  
+  new_dw->get( ghost_intensity, _IntensityLabels[cdirecn], matlIndex, patch, _gv[(int) _plusX[cdirecn]][(int) _plusY[cdirecn]][(int) _plusZ[cdirecn]],1 );
 
   constCCVariable <double > emissSrc;
   if(_scatteringOn){
@@ -1448,14 +1448,14 @@ DORadiationModel::intensitysolveSweepOptimized( const Patch* patch,
 
   constCCVariable<int> cellType;
   old_dw->get(cellType,_cellTypeLabel, matlIndex , patch,Ghost::None, 0  );
-  constCCVariable<double> abskt;  
+  constCCVariable<double> abskt;
   old_dw->get(abskt,_abskt_label, matlIndex , patch,Ghost::None, 0  );
 
 
-  Vector Dx = patch->dCell(); 
+  Vector Dx = patch->dCell();
   double  areaew = Dx.y()*Dx.z();
   double  areans = Dx.x()*Dx.z();
-  double  areatb = Dx.x()*Dx.y(); 
+  double  areatb = Dx.x()*Dx.y();
 
   const double vol = Dx.x()* Dx.y()* Dx.z();  // const to increase speed?
   const double  abs_oxi= std::abs(oxi[direcn])*areatb;
@@ -1464,7 +1464,7 @@ DORadiationModel::intensitysolveSweepOptimized( const Patch* patch,
   const double  denom = abs(omu[direcn])*areaew+abs(oeta[direcn])*areans+abs(oxi[direcn])*areatb; // denomintor for Intensity in current cell
 
 
-    
+
   ///--------------------------------------------------//
   ///------------perform sweep on one patch -----------//
   ///--------------------------------------------------//
@@ -1518,7 +1518,7 @@ DORadiationModel::intensitysolveSweepOptimized( const Patch* patch,
   im=i-xiter[cdirecn];
   j= _plusY[cdirecn] ? idxLo.y() : idxHi.y();
   jm=j-yiter[cdirecn];
-  for ( k = (_plusZ[cdirecn] ? idxLo.z()+ziter[cdirecn] : idxHi.z()+ziter[cdirecn]);  (_plusZ[cdirecn] ? (k<=idxHi.z()) : (k>=idxLo.z())) ; k=k+ziter[cdirecn]){  
+  for ( k = (_plusZ[cdirecn] ? idxLo.z()+ziter[cdirecn] : idxHi.z()+ziter[cdirecn]);  (_plusZ[cdirecn] ? (k<=idxHi.z()) : (k>=idxLo.z())) ; k=k+ziter[cdirecn]){
     km=k-ziter[cdirecn];
     if (cellType(i,j,k) !=ffield){ // if intrusions
       intensity(i,j,k) = emissSrc(i,j,k) ;
@@ -1551,7 +1551,7 @@ DORadiationModel::intensitysolveSweepOptimized( const Patch* patch,
   ////--------------------set y----------------------//
   j= _plusY[cdirecn] ? idxLo.y() : idxHi.y();
   jm=j-yiter[cdirecn];
-  for ( k = (_plusZ[cdirecn] ? idxLo.z()+ziter[cdirecn] : idxHi.z()+ziter[cdirecn]);  (_plusZ[cdirecn] ? (k<=idxHi.z()) : (k>=idxLo.z())) ; k=k+ziter[cdirecn]){  
+  for ( k = (_plusZ[cdirecn] ? idxLo.z()+ziter[cdirecn] : idxHi.z()+ziter[cdirecn]);  (_plusZ[cdirecn] ? (k<=idxHi.z()) : (k>=idxLo.z())) ; k=k+ziter[cdirecn]){
     km=k-ziter[cdirecn];
     for ( i = (_plusX[cdirecn] ? idxLo.x()+xiter[cdirecn] : idxHi.x()+xiter[cdirecn]);  (_plusX[cdirecn] ? (i<=idxHi.x()) : (i>=idxLo.x())) ; i=i+xiter[cdirecn]){
       im=i-xiter[cdirecn];
@@ -1565,7 +1565,7 @@ DORadiationModel::intensitysolveSweepOptimized( const Patch* patch,
   ////--------------------set x----------------------//
   i= _plusX[cdirecn] ? idxLo.x() : idxHi.x();
   im=i-xiter[cdirecn];
-  for ( k = (_plusZ[cdirecn] ? idxLo.z()+ziter[cdirecn] : idxHi.z()+ziter[cdirecn]);  (_plusZ[cdirecn] ? (k<=idxHi.z()) : (k>=idxLo.z())) ; k=k+ziter[cdirecn]){  
+  for ( k = (_plusZ[cdirecn] ? idxLo.z()+ziter[cdirecn] : idxHi.z()+ziter[cdirecn]);  (_plusZ[cdirecn] ? (k<=idxHi.z()) : (k>=idxLo.z())) ; k=k+ziter[cdirecn]){
     km=k-ziter[cdirecn];
     for (j = (_plusY[cdirecn] ? idxLo.y()+yiter[cdirecn] : idxHi.y()+yiter[cdirecn]);  (_plusY[cdirecn] ? (j<=idxHi.y()) : (j>=idxLo.y())) ; j=j+yiter[cdirecn]){
       jm=j-yiter[cdirecn];
@@ -1583,7 +1583,7 @@ DORadiationModel::intensitysolveSweepOptimized( const Patch* patch,
   //  Set interior cells (no ghost cells and three normal cells)
   //--------------------------------------------------------//
 
-  for ( k = (_plusZ[cdirecn] ? idxLo.z()+ziter[cdirecn] : idxHi.z()+ziter[cdirecn]);  (_plusZ[cdirecn] ? (k<=idxHi.z()) : (k>=idxLo.z())) ; k=k+ziter[cdirecn]){  
+  for ( k = (_plusZ[cdirecn] ? idxLo.z()+ziter[cdirecn] : idxHi.z()+ziter[cdirecn]);  (_plusZ[cdirecn] ? (k<=idxHi.z()) : (k>=idxLo.z())) ; k=k+ziter[cdirecn]){
     km=k-ziter[cdirecn];
     for ( j = (_plusY[cdirecn] ? idxLo.y()+yiter[cdirecn] : idxHi.y()+yiter[cdirecn]);  (_plusY[cdirecn] ? (j<=idxHi.y()) : (j>=idxLo.y())) ; j=j+yiter[cdirecn]){
       jm=j-yiter[cdirecn];
@@ -1595,7 +1595,7 @@ DORadiationModel::intensitysolveSweepOptimized( const Patch* patch,
           intensity(i,j,k) = (emissSrc(i,j,k) + intensity(i,j,km)*abs_oxi  +  intensity(i,jm,k)*abs_oeta  +  intensity(im,j,k)*abs_omu)/(denom + abskt(i,j,k)*vol );
         } // end if
       } // end i loop
-    } // end j loop   
+    } // end j loop
   } // end k loop
   // --------------------------------------------------//
 
@@ -1606,9 +1606,9 @@ DORadiationModel::intensitysolveSweepOptimized( const Patch* patch,
 void
 DORadiationModel::intensitysolveSweepOrigProto( const Patch* patch,
                                                 int matlIndex,
-                                                DataWarehouse* new_dw, 
+                                                DataWarehouse* new_dw,
                                                 DataWarehouse* old_dw,
-                                                int cdirecn){ 
+                                                int cdirecn){
 
 
   int direcn = cdirecn+1; // fortran direcn is 1 plus c++ iterator (cdirecn)
@@ -1634,11 +1634,11 @@ DORadiationModel::intensitysolveSweepOrigProto( const Patch* patch,
 
   constCCVariable<int> cellType;
   old_dw->get(cellType,_cellTypeLabel, matlIndex , patch,Ghost::None, 0  );
-  constCCVariable<double> abskt;  
+  constCCVariable<double> abskt;
   old_dw->get(abskt,_abskt_label, matlIndex , patch,Ghost::None, 0  );
 
 
-  Vector Dx = patch->dCell(); 
+  Vector Dx = patch->dCell();
   const double vol = Dx.x()* Dx.y()* Dx.z();//   const for speed optimizations from compiler
   const double  areaew = Dx.y()*Dx.z();
   const double  areans = Dx.x()*Dx.z();
@@ -1650,7 +1650,7 @@ DORadiationModel::intensitysolveSweepOrigProto( const Patch* patch,
   IntVector cxm(0,0,0);//  current cell, minus 1 in x
   IntVector c(0,0,0); // current cell
 
-  for (int k = (_plusZ[cdirecn] ? idxLo.z() : idxHi.z());  (_plusZ[cdirecn] ? (k<=idxHi.z()) : (k>=idxLo.z())); k=k+ziter[cdirecn]){  
+  for (int k = (_plusZ[cdirecn] ? idxLo.z() : idxHi.z());  (_plusZ[cdirecn] ? (k<=idxHi.z()) : (k>=idxLo.z())); k=k+ziter[cdirecn]){
     c[2]=k;
     czm[2]=k-ziter[cdirecn];
     cym[2]=k;
@@ -1671,7 +1671,7 @@ DORadiationModel::intensitysolveSweepOrigProto( const Patch* patch,
           intensity[c] = (emissSrc[c] + intensity[czm]*abs(oxi[direcn])*areatb  +  intensity[cym]*abs(oeta[direcn])*areans  +  intensity[cxm]*abs(omu[direcn])*areaew)/(denom + abskt[c]*vol );
         }  //end if
       } // end i loop
-    } // end j loop   
+    } // end j loop
   } // end k loop
   // --------------------------------------------------//
 
@@ -1682,14 +1682,14 @@ DORadiationModel::intensitysolveSweepOrigProto( const Patch* patch,
 
 //-----------------------------------------------------------------//
 // This function computes the source for radiation transport.  It
-// requires abskg, abskp, radiation temperature, Intensities from the 
+// requires abskg, abskp, radiation temperature, Intensities from the
 // previous solve, particle temperature, asymmetry factor,
 // and scatkt (last two only needed when including scattering)
 //-----------------------------------------------------------------//
 void
 DORadiationModel::getDOSource(const Patch* patch,
-                              int matlIndex,  
-                              DataWarehouse* new_dw, 
+                              int matlIndex,
+                              DataWarehouse* new_dw,
                               DataWarehouse* old_dw){
 
 
@@ -1702,7 +1702,7 @@ DORadiationModel::getDOSource(const Patch* patch,
       old_dw->get(abskt,_abskt_label, matlIndex , patch,Ghost::None, 0  );
       constCCVariable<double> abskg;
       old_dw->get(abskg,_abskg_label, matlIndex , patch,Ghost::None, 0  );
-      constCCVariable<double> radTemp ; 
+      constCCVariable<double> radTemp ;
       new_dw->get(radTemp,_T_label, matlIndex , patch,Ghost::None, 0  );
 
   constCCVariable<int> cellType;
@@ -1711,7 +1711,7 @@ DORadiationModel::getDOSource(const Patch* patch,
   StaticArray< constCCVariable<double> > abskp(_nQn_part);
   StaticArray< constCCVariable<double> > partTemp(_nQn_part);
   for (int ix=0;  ix< _nQn_part; ix++){
-    old_dw->get(abskp[ix],_abskp_label_vector[ix], matlIndex , patch,Ghost::None, 0  ); 
+    old_dw->get(abskp[ix],_abskp_label_vector[ix], matlIndex , patch,Ghost::None, 0  );
     old_dw->get(partTemp[ix],_temperature_label_vector[ix], matlIndex , patch,Ghost::None, 0  );
   }
 
@@ -1723,7 +1723,7 @@ DORadiationModel::getDOSource(const Patch* patch,
    double volume = Dx.x()* Dx.y()* Dx.z();
   if(_scatteringOn){
     constCCVariable<double> scatkt;   //total scattering coefficient
-    constCCVariable<double> asymmetryParam;  
+    constCCVariable<double> asymmetryParam;
     StaticArray< constCCVariable<double> > IntensitiesOld( d_totalOrds);
 
     old_dw->get(asymmetryParam,_asymmetryLabel, matlIndex , patch,Ghost::None, 0);
@@ -1733,12 +1733,12 @@ DORadiationModel::getDOSource(const Patch* patch,
       old_dw->get(IntensitiesOld[ix],_IntensityLabels[ix], matlIndex , patch,Ghost::None, 0  );
     }
     for( int ix=0;  ix<d_totalOrds ;ix++){
-      CCVariable<double> scatIntensitySource;  
+      CCVariable<double> scatIntensitySource;
       new_dw->allocateAndPut(scatIntensitySource,_emiss_plus_scat_source_label[ix], matlIndex, patch);
 
       computeScatteringIntensities(ix+1,scatkt, IntensitiesOld,scatIntensitySource,asymmetryParam, patch); // function expects fortran indices
     Uintah::BlockRange range(patch->getExtraCellLowIndex(),patch->getExtraCellHighIndex());
-    Uintah::parallel_for( range,[&](int i, int j, int k){ 
+    Uintah::parallel_for( range,[&](int i, int j, int k){
         if(cellType(i,j,k)==ffield){
           scatIntensitySource(i,j,k)+=emissSrc(i,j,k);
           scatIntensitySource(i,j,k)*=volume;
@@ -1746,11 +1746,11 @@ DORadiationModel::getDOSource(const Patch* patch,
           scatIntensitySource(i,j,k)=(_sigma/M_PI)*std::pow(radTemp(i,j,k),4.0)*abskt(i,j,k);
         }
         });
-              
+
     }
   }else{
     Uintah::BlockRange range(patch->getExtraCellLowIndex(),patch->getExtraCellHighIndex());
-    Uintah::parallel_for( range,[&](int i, int j, int k) { 
+    Uintah::parallel_for( range,[&](int i, int j, int k) {
         if(cellType(i,j,k)==ffield){
           emissSrc(i,j,k)*=volume;
         }else{
@@ -1772,8 +1772,8 @@ return ;
 //-----------------------------------------------------------------//
 void
 DORadiationModel::computeFluxDiv(const Patch* patch,
-                                 int matlIndex,  
-                                 DataWarehouse* new_dw, 
+                                 int matlIndex,
+                                 DataWarehouse* new_dw,
                                  DataWarehouse* old_dw){
 
   Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
@@ -1787,14 +1787,14 @@ DORadiationModel::computeFluxDiv(const Patch* patch,
   CCVariable <double > volQ;
   CCVariable <double > divQ;
 
-  new_dw->allocateAndPut( divQ, _divQ, matlIndex, patch );  
-  new_dw->allocateAndPut( volQ, _volQ, matlIndex, patch );  
-  new_dw->allocateAndPut( fluxE, _fluxE, matlIndex, patch );  
-  new_dw->allocateAndPut( fluxW, _fluxW, matlIndex, patch ); 
-  new_dw->allocateAndPut( fluxN, _fluxN, matlIndex, patch );  
-  new_dw->allocateAndPut( fluxS, _fluxS, matlIndex, patch );  
-  new_dw->allocateAndPut( fluxT, _fluxT, matlIndex, patch );  
-  new_dw->allocateAndPut( fluxB, _fluxB, matlIndex, patch );  
+  new_dw->allocateAndPut( divQ, _divQ, matlIndex, patch );
+  new_dw->allocateAndPut( volQ, _volQ, matlIndex, patch );
+  new_dw->allocateAndPut( fluxE, _fluxE, matlIndex, patch );
+  new_dw->allocateAndPut( fluxW, _fluxW, matlIndex, patch );
+  new_dw->allocateAndPut( fluxN, _fluxN, matlIndex, patch );
+  new_dw->allocateAndPut( fluxS, _fluxS, matlIndex, patch );
+  new_dw->allocateAndPut( fluxT, _fluxT, matlIndex, patch );
+  new_dw->allocateAndPut( fluxB, _fluxB, matlIndex, patch );
 
   divQ.initialize(0.0);
   volQ.initialize(0.0);
@@ -1806,8 +1806,8 @@ DORadiationModel::computeFluxDiv(const Patch* patch,
   fluxB.initialize(0.0);
 
   constCCVariable <double > emissSrc;
-  constCCVariable<double> abskt ; 
-  new_dw->get(emissSrc, _radIntSource, matlIndex, patch, Ghost::None,0 ); 
+  constCCVariable<double> abskt ;
+  new_dw->get(emissSrc, _radIntSource, matlIndex, patch, Ghost::None,0 );
   old_dw->get(abskt,_abskt_label, matlIndex , patch,Ghost::None, 0  );      // should be WHICH DW !!!!!! BUG
 
   IntVector idxLo = patch->getFortranCellLowIndex();
@@ -1851,7 +1851,7 @@ DORadiationModel::computeFluxDiv(const Patch* patch,
 
 void
 DORadiationModel::setIntensityBC(const Patch* patch,
-                                 int matlIndex,  
+                                 int matlIndex,
                                  CCVariable<double>& intensity,
                                  constCCVariable<double>& radTemp,
                                  constCCVariable<int>& cellType){
@@ -1860,7 +1860,7 @@ DORadiationModel::setIntensityBC(const Patch* patch,
     //-------------- Compute Intensity on boundarys------------//
     // loop over computational domain faces
     vector<Patch::FaceType> bf;
-    patch->getBoundaryFaces(bf); 
+    patch->getBoundaryFaces(bf);
 
     for( vector<Patch::FaceType>::const_iterator iter = bf.begin(); iter != bf.end(); ++iter ){
       Patch::FaceType face = *iter;
@@ -1884,7 +1884,7 @@ DORadiationModel::setIntensityBC(const Patch* patch,
       ////--------------------set z----------------------//
       //for (int k = 0;  k<2 ; k++){
       //c[2]= k ? idxHi.z()+1 : idxLo.z()-1;
-       ////if (cellType[IntVector(idxLo.x()+1,idxLo.y()+1, c.z()] == 
+       ////if (cellType[IntVector(idxLo.x()+1,idxLo.y()+1, c.z()] ==
       //for (int j = idxLo.y() ;  j<=idxHi.y(); j++){
       //c[1]=j;
       //for (int i = idxLo.x() ;  i<=idxHi.x(); i++){
@@ -1894,7 +1894,7 @@ DORadiationModel::setIntensityBC(const Patch* patch,
       //}
       //}
       //////--------------------set y----------------------//
-      //for (int k = idxLo.z();  k<=idxHi.z() ; k++){  
+      //for (int k = idxLo.z();  k<=idxHi.z() ; k++){
       //c[2]=k;
       //for (int j = 0;  j<2 ; j++){
       //c[1]= j ? idxHi.y()+1 : idxLo.y()-1;
@@ -1905,7 +1905,7 @@ DORadiationModel::setIntensityBC(const Patch* patch,
       //}
       //}
       //////--------------------set x----------------------//
-      //for (int k = idxLo.z();  k<=idxHi.z() ; k++){  
+      //for (int k = idxLo.z();  k<=idxHi.z() ; k++){
       //c[2]=k;
       //for (int j = idxLo.y();  j<=idxHi.y() ; j++){
       //c[1]=j;
@@ -1922,8 +1922,8 @@ DORadiationModel::setIntensityBC(const Patch* patch,
 
 void
 DORadiationModel::setIntensityBC2Orig(const Patch* patch,
-                                 int matlIndex,  
-                                       DataWarehouse* new_dw, 
+                                 int matlIndex,
+                                       DataWarehouse* new_dw,
                                        DataWarehouse* old_dw, int ix){
 
 
@@ -1932,7 +1932,7 @@ DORadiationModel::setIntensityBC2Orig(const Patch* patch,
   new_dw->getModifiable(intensity,_IntensityLabels[ix] , matlIndex, patch);   // change to computes when making it its own task
 
   constCCVariable<double> radTemp;
-  new_dw->get(radTemp,_T_label, matlIndex , patch,Ghost::None, 0  ); 
+  new_dw->get(radTemp,_T_label, matlIndex , patch,Ghost::None, 0  );
   constCCVariable<int> cellType;
   old_dw->get(cellType,_cellTypeLabel, matlIndex , patch,Ghost::None, 0  );
 
@@ -1944,8 +1944,8 @@ DORadiationModel::setIntensityBC2Orig(const Patch* patch,
 
 void
 DORadiationModel::setIntensityBC2(const Patch* patch,
-                                 int matlIndex,  
-                                       DataWarehouse* new_dw, 
+                                 int matlIndex,
+                                       DataWarehouse* new_dw,
                                        DataWarehouse* old_dw, int ix, int phase){
 
 
@@ -1970,7 +1970,7 @@ DORadiationModel::setExtraSweepingLabels(int nphase){
   const TypeDescription* CC_double = CCVariable<double>::getTypeDescription();
   _nphase=nphase;
   for( int ixx=0;  ixx<_nphase;ixx++){
-    _patchIntensityLabels.push_back(std::vector< const VarLabel*> (0) ); 
+    _patchIntensityLabels.push_back(std::vector< const VarLabel*> (0) );
     for( int ix=0;  ix<d_totalOrds ;ix++){
       ostringstream my_stringstream_object;
       my_stringstream_object << "Intensity" << setfill('0') << setw(4)<<  ix << ixx ;
@@ -1978,4 +1978,3 @@ DORadiationModel::setExtraSweepingLabels(int nphase){
     }
   }
 }
-

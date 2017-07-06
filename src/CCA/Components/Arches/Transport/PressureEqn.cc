@@ -104,7 +104,7 @@ PressureEqn::initialize( const Patch* patch, ATIM* tsk_info ){
   CCVariable<double>& b = tsk_info->get_uintah_field_add<CCVariable<double> >("b_press");
   CCVariable<double>& x = tsk_info->get_uintah_field_add<CCVariable<double> >(m_pressure_name);
   CCVariable<double>& guess = tsk_info->get_uintah_field_add<CCVariable<double> >("guess_press");
-  constCCVariable<double>& eps = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_eps_name);
+  //constCCVariable<double>& eps = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_eps_name);
   constSFCXVariable<double>& xmom = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >("x-mom");
   constSFCYVariable<double>& ymom = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >("y-mom");
   constSFCZVariable<double>& zmom = tsk_info->get_const_uintah_field_add<constSFCZVariable<double> >("z-mom");
