@@ -363,47 +363,47 @@ Radiometer::sched_radiometer( const LevelP& level,
   
   //__________________________________
   //  If this processor owns any patches with radiometers
-  if( myPatches.size() !=  0 ){
+  if ( myPatches.size() !=  0 ) {
     hasRadiometers = true;
+  }
 
-    std::string taskname = "Radiometer::radiometer";
-    Task *tsk;
+  std::string taskname = "Radiometer::radiometer";
+  Task *tsk;
 
-    if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
-      tsk = scinew Task( taskname, this, &Radiometer::radiometer< double >, abskg_dw, sigma_dw, celltype_dw, hasRadiometers );
-    } else {
-      tsk = scinew Task( taskname, this, &Radiometer::radiometer< float >, abskg_dw, sigma_dw, celltype_dw, hasRadiometers );
-    }
+  if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ) {
+    tsk = scinew Task( taskname, this, &Radiometer::radiometer< double >, abskg_dw, sigma_dw, celltype_dw, hasRadiometers );
+  } else {
+    tsk = scinew Task( taskname, this, &Radiometer::radiometer< float >, abskg_dw, sigma_dw, celltype_dw, hasRadiometers );
+  }
 
-    tsk->setType(Task::Spatial);
+  tsk->setType(Task::Spatial);
 
-    printSchedule( level,dbg,"Radiometer::sched_radiometer" );
+  printSchedule( level,dbg,"Radiometer::sched_radiometer" );
 
-    //__________________________________
-    // Require an infinite number of ghost cells so you can access the entire domain.
-    //
-    dbg << "    sched_radiometer: adding requires for all-to-all variables " << std::endl;
-    Ghost::GhostType  gac  = Ghost::AroundCells;
-    tsk->requires( abskg_dw ,    d_abskgLabel  ,   gac, SHRT_MAX);
-    tsk->requires( sigma_dw ,    d_sigmaT4Label,   gac, SHRT_MAX);
-    tsk->requires( celltype_dw , d_cellTypeLabel , gac, SHRT_MAX);
+  //__________________________________
+  // Require an infinite number of ghost cells so you can access the entire domain.
+  //
+  dbg << "    sched_radiometer: adding requires for all-to-all variables " << std::endl;
+  Ghost::GhostType  gac  = Ghost::AroundCells;
+  tsk->requires( abskg_dw ,    d_abskgLabel  ,   gac, SHRT_MAX);
+  tsk->requires( sigma_dw ,    d_sigmaT4Label,   gac, SHRT_MAX);
+  tsk->requires( celltype_dw , d_cellTypeLabel , gac, SHRT_MAX);
 
-    tsk->modifies( d_VRFluxLabel );
+  tsk->modifies( d_VRFluxLabel );
 
-    // only schedule on the patches that contain radiometers
-    // Spatial task scheduling
-    PatchSet* radiometerPatchSet;
-    radiometerPatchSet = scinew PatchSet();
-    radiometerPatchSet->addReference();
+  // only schedule on the patches that contain radiometers
+  // Spatial task scheduling
+  PatchSet* radiometerPatchSet;
+  radiometerPatchSet = scinew PatchSet();
+  radiometerPatchSet->addReference();
 
-    radiometerPatchSet->addAll( myPatches );
+  radiometerPatchSet->addAll( myPatches );
 
-    sched->addTask( tsk, radiometerPatchSet, d_matlSet, RMCRTCommon::TG_RMCRT );
+  sched->addTask( tsk, radiometerPatchSet, d_matlSet, RMCRTCommon::TG_RMCRT );
 
-    if( radiometerPatchSet && radiometerPatchSet->removeReference() ){
-      delete radiometerPatchSet;
-    }
-  }  // hasRadiometers
+  if ( radiometerPatchSet && radiometerPatchSet->removeReference() ) {
+    delete radiometerPatchSet;
+  }
 }
 #endif
 //______________________________________________________________________
@@ -590,7 +590,7 @@ Radiometer::rayDirection_VR( MTRand& mTwister,
 }
 
 //______________________________________________________________________
-//  Return the patchSet that contains radiometers a process owns
+//  Return the patchSet that contains radiometers
 //______________________________________________________________________
 std::vector< const Patch* >
 Radiometer::getPatchSet( SchedulerP& sched,
@@ -617,17 +617,14 @@ Radiometer::getPatchSet( SchedulerP& sched,
       IntVector VR_posHi  = level->getCellIndex( d_VRLocationsMax );
 
       if ( doesIntersect( VR_posLo, VR_posHi, lo, hi ) ){
-        // add to patchSet if proc owns this patch
-        int proc = lb->getPatchwiseProcessorAssignment(patch);
-        if( proc ==  Uintah::Parallel::getMPIRank() ) {
-          myPatches.push_back( patch );
-        }
+        myPatches.push_back( patch );
       }
     }
   }
   
   return myPatches;
 }
+
 //______________________________________________________________________
 // Explicit template instantiations:
 
