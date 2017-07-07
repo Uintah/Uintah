@@ -243,7 +243,7 @@ partRadProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_in
   }
 }
 
-void partRadProperties::register_restart_initialize( VIVec& variable_registry ){
+void partRadProperties::register_restart_initialize( VIVec& variable_registry , const bool packed_tasks){
 
 }
 
@@ -251,7 +251,7 @@ void partRadProperties::restart_initialize( const Patch* patch, ArchesTaskInfoMa
 
 }
 
-void partRadProperties::register_timestep_init( VIVec& variable_registry ){
+void partRadProperties::register_timestep_init( VIVec& variable_registry , const bool packed_tasks){
 
 }
 
@@ -261,7 +261,7 @@ void partRadProperties::timestep_init( const Patch* patch, ArchesTaskInfoManager
 }
 
 void
-partRadProperties::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
+partRadProperties::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){
 
 
 

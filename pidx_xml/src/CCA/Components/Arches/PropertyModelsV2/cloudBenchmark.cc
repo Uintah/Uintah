@@ -90,7 +90,7 @@ cloudBenchmark::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info 
 }
 
 //--------------------------------------------------------------------------------------------------
-void cloudBenchmark::register_restart_initialize( VIVec& variable_registry ){
+void cloudBenchmark::register_restart_initialize( VIVec& variable_registry , const bool packed_tasks){
   register_initialize(variable_registry, false);
 }
 
@@ -99,7 +99,7 @@ void cloudBenchmark::restart_initialize( const Patch* patch, ArchesTaskInfoManag
 }
 
 //--------------------------------------------------------------------------------------------------
-void cloudBenchmark::register_timestep_init( VIVec& variable_registry ){
+void cloudBenchmark::register_timestep_init( VIVec& variable_registry , const bool packed_tasks){
 
   register_variable( m_abskg_name, ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable( m_abskg_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );

@@ -52,13 +52,13 @@ public:
 
     void register_initialize( ArchesVIVector& variable_registry , const bool pack_tasks);
 
-    void register_timestep_init( ArchesVIVector& variable_registry );
+    void register_timestep_init( ArchesVIVector& variable_registry , const bool packed_tasks);
 
     void register_timestep_eval( ArchesVIVector& variable_registry,
-                                 const int time_substep );
+                                 const int time_substep , const bool packed_tasks);
 
     void register_compute_bcs( ArchesVIVector& variable_registry,
-                               const int time_substep );
+                               const int time_substep , const bool packed_tasks);
 
     void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
@@ -317,7 +317,7 @@ private:
 
   //------------------------------------------------------------------------------------------------
   template <typename T> void
-  KScalarRHS<T>::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
+  KScalarRHS<T>::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){
     const int istart = 0;
     const int iend = _eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
@@ -348,7 +348,7 @@ private:
 
   //------------------------------------------------------------------------------------------------
   template <typename T> void
-  KScalarRHS<T>::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
+  KScalarRHS<T>::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){
 
     const int istart = 0;
     const int iend = _eqn_names.size();
@@ -488,7 +488,7 @@ private:
   }
 
   template <typename T> void
-  KScalarRHS<T>::register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
+  KScalarRHS<T>::register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){
 
     for ( auto i = _eqn_names.begin(); i != _eqn_names.end(); i++ ){
       register_variable( *i, ArchesFieldContainer::MODIFIES, variable_registry );

@@ -45,18 +45,16 @@
 #include <cfloat>
 #include <climits>
 #include <iomanip>
-#include <mutex>
 #include <sstream>
 
 using namespace Uintah;
 
 namespace {
 
-Dout g_lb_dbg(                "LoadBalancer"    , false );
-Dout g_neighborhood_dbg(      "Neighborhood"    , false );
-Dout g_neighborhood_size_dbg( "NeighborhoodSize", false);
-
-std::mutex g_pidx_mutex{};
+Dout g_lb_dbg(                "LoadBalancer"     , false );
+Dout g_neighborhood_dbg(      "Neighborhood"     , false );
+Dout g_neighborhood_size_dbg( "NeighborhoodSize" , false );
+Dout g_patch_assignment(      "LBPatchAssignment", false );
 
 }
 
@@ -87,68 +85,70 @@ LoadBalancerCommon::assignResources( DetailedTasks & graph )
 {
   int nTasks = graph.numTasks();
 
-  DOUT(g_lb_dbg, d_myworld->myrank() << " Assigning Tasks to Resources! (" << nTasks << " tasks)");
+  DOUT(g_lb_dbg, "Rank-" << d_myworld->myrank() << " Assigning Tasks to Resources! (" << nTasks << " tasks)");
 
-  for(int i=0;i<nTasks;i++){
+  for (int i = 0; i < nTasks; i++) {
     DetailedTask* task = graph.getTask(i);
 
     const PatchSubset* patches = task->getPatches();
-    if(patches && patches->size() > 0 && task->getTask()->getType() != Task::OncePerProc){
+    if (patches && patches->size() > 0 && task->getTask()->getType() != Task::OncePerProc) {
       const Patch* patch = patches->get(0);
 
       int idx = getPatchwiseProcessorAssignment(patch);
       ASSERTRANGE(idx, 0, d_myworld->size());
 
       if (task->getTask()->getType() == Task::Output) {
-        task->assignResource( getOutputRank( patch ) );
+        task->assignResource(getOutputRank(patch));
       }
       else {
         task->assignResource(idx);
       }
 
-      DOUT(g_lb_dbg, d_myworld->myrank() << " Task " << *(task->getTask()) << " put on resource " << idx);
+      DOUT(g_lb_dbg, "Rank-" << d_myworld->myrank() << " Task " << *(task->getTask()) << " put on resource " << idx);
 
 #if SCI_ASSERTION_LEVEL > 0
       std::ostringstream ostr;
       ostr << patch->getID() << ':' << idx;
 
-      for(int i=1;i<patches->size();i++){
+      for (int i = 1; i < patches->size(); i++) {
         const Patch* p = patches->get(i);
-        int pidx = getPatchwiseProcessorAssignment(p);
-        ostr << ' ' << p->getID() << ';' << pidx;
-        ASSERTRANGE(pidx, 0, d_myworld->size());
-        
-        if (pidx != idx && task->getTask()->getType() != Task::Output) {
-          {
-            std::lock_guard<std::mutex> lock(g_pidx_mutex);
-            std::cerr << d_myworld->myrank() << " WARNING: inconsistent task (" << task->getTask()->getName()
-                      << ") assignment (" << pidx << ", " << idx << ") in LoadBalancerCommon" << std::endl;;
-          }
+        int rank = getPatchwiseProcessorAssignment(p);
+        ostr << ' ' << p->getID() << ';' << rank;
+        ASSERTRANGE(rank, 0, d_myworld->size());
+
+        if (rank != idx && task->getTask()->getType() != Task::Output) {
+          DOUT( true, "Rank-" << d_myworld->myrank() << " WARNING: inconsistent task (" << task->getTask()->getName()
+                              << ") assignment (" << rank << ", " << idx << ") in LoadBalancerCommon");
         }
       }
 #endif
-    } else {
-      if( Parallel::usingMPI() && task->getTask()->isReductionTask() ){
-        task->assignResource( d_myworld->myrank() );
+    }
+    else {
+      if (task->getTask()->isReductionTask()) {
+        task->assignResource(d_myworld->myrank());
 
-        DOUT(g_lb_dbg, d_myworld->myrank() << "  Resource (for no patch task) " << *task->getTask() << " is : " << d_myworld->myrank());
+        DOUT(g_lb_dbg,
+             d_myworld->myrank() << "  Resource (for no patch task) " << *task->getTask() << " is : " << d_myworld->myrank());
 
-      } else if( task->getTask()->getType() == Task::InitialSend){
+      }
+      else if (task->getTask()->getType() == Task::InitialSend) {
         // Already assigned, do nothing
         ASSERT(task->getAssignedResourceIndex() != -1);
-      } else if( task->getTask()->getType() == Task::OncePerProc) {
-      
+      }
+      else if (task->getTask()->getType() == Task::OncePerProc) {
+
         // patch-less task, not execute-once, set to run on all procs
         // once per patch subset (empty or not)
         // at least one example is the multi-level (impAMRICE) pressureSolve
-        for(std::set<int>::iterator p=m_neighborhood_processors.begin(); p != m_neighborhood_processors.end(); p++) {
-          int i=(*p);
+        for (std::set<int>::iterator p = m_neighborhood_processors.begin(); p != m_neighborhood_processors.end(); p++) {
+          int i = (*p);
           if (patches == task->getTask()->getPatchSet()->getSubset(i)) {
             task->assignResource(i);
             DOUT(g_lb_dbg, d_myworld->myrank() << " OncePerProc Task " << *(task->getTask()) << " put on resource " << i);
           }
         }
-      } else {
+      }
+      else {
         task->assignResource(0);
         DOUT(g_lb_dbg, d_myworld->myrank() << " Unknown-type Task " << *(task->getTask()) << " put on resource " << 0);
       }
@@ -182,7 +182,7 @@ LoadBalancerCommon::getOldProcessorAssignment( const Patch * patch )
   // On an initial-regrid-timestep, this will get called from createNeighborhood
   // and can have a patch with a higher index than we have.
   if ( static_cast<int>(patch->getRealPatch()->getID()) < m_old_assignment_base_patch ||
-      patch->getRealPatch()->getID() >= m_old_assignment_base_patch + static_cast<int>(m_old_assignment.size()) ) {
+       patch->getRealPatch()->getID() >= m_old_assignment_base_patch + static_cast<int>(m_old_assignment.size()) ) {
     return -9999;
   }
   
@@ -464,8 +464,7 @@ LoadBalancerCommon::createPerProcessorPatchSet( const LevelP & level )
 
 //______________________________________________________________________
 //
-// Creates a PatchSet containing PatchSubsets for each processor for an
-// entire grid.
+// Creates a PatchSet containing PatchSubsets for each processor for an entire grid.
 const PatchSet*
 LoadBalancerCommon::createPerProcessorPatchSet( const GridP & grid )
 {
@@ -484,6 +483,19 @@ LoadBalancerCommon::createPerProcessorPatchSet( const GridP & grid )
     }
   }
   patches->sortSubsets();
+
+  // DEBUG: report per-proc patch assignment
+  if (g_patch_assignment) {
+    const PatchSubset* my_patches = patches->getSubset(d_myworld->myrank());
+    std::ostringstream mesg;
+    mesg << "Rank-" << d_myworld->myrank() << " assigned patches: {";
+    for (auto p = 0; p < my_patches->size(); p++) {
+      mesg << (( p == 0 || p == my_patches->size()) ? " " : ", ") << my_patches->get(p)->getID();
+    }
+    mesg << " }";
+    DOUT(true, mesg.str());
+  }
+
   return patches;
 }
 
@@ -716,8 +728,8 @@ LoadBalancerCommon::createNeighborhoods( const GridP & grid
 
 #if 0
   std::ostringstream message;
-  message << "Rank: " << my_rank << " neighborhood contains procs: ";
-  for (std::set<int>::iterator iter = m_neighborhood_processors.begin(); iter != m_neighborhood_processors.end(); iter++) {
+  message << "Rank-" << my_rank << " Neighborhood contains procs: ";
+  for (auto iter = m_neighborhood_processors.begin(); iter != m_neighborhood_processors.end(); ++iter) {
     message << *iter << " ";
   }
   DOUT(true, message.str());
@@ -725,10 +737,9 @@ LoadBalancerCommon::createNeighborhoods( const GridP & grid
 
   if (g_neighborhood_dbg) {
     std::ostringstream message;
-    for (std::set<const Patch*>::iterator iter = m_neighbors.begin(); iter != m_neighbors.end(); iter++) {
-      message << "Rank-" << my_rank
-              << "  Neighborhood contains patch: " << (*iter)->getID() << " from proc "
-              << getPatchwiseProcessorAssignment(*iter) << std::endl;
+    message << "Rank-" << my_rank << " Neighborhood contains: ";
+    for (auto iter = m_neighbors.begin(); iter != m_neighbors.end(); ++iter) {
+       message << "patch: " << (*iter)->getID() << " from proc " << getPatchwiseProcessorAssignment(*iter) << "\n";
     }
     DOUT(true, message.str());
   }

@@ -129,7 +129,7 @@ InitLagrangianParticleVelocity::initialize( const Patch* patch, ArchesTaskInfoMa
 //------------------------------------------------
 //
 void
-InitLagrangianParticleVelocity::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
+InitLagrangianParticleVelocity::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){
 }
 
 void
@@ -144,7 +144,7 @@ InitLagrangianParticleVelocity::timestep_init( const Patch* patch, ArchesTaskInf
 
 //Register all variables both local and those needed from elsewhere that are required for this task.
 void
-InitLagrangianParticleVelocity::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
+InitLagrangianParticleVelocity::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){
 }
 
 //This is the work for the task.  First, get the variables. Second, do the work!

@@ -755,7 +755,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */
   DetailedTasks* dts = tg->getDetailedTasks();
 
   if (dts == nullptr) {
-    DOUTP0(true, "MPIScheduler skipping execute, no tasks");
+    proc0cout << "MPIScheduler skipping execute, no tasks" << std::endl;
     return;
   }
 
@@ -775,7 +775,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */
   mpi_info_.reset( 0 );
 
   DOUT(g_dbg, "Rank-" << my_rank << ", MPI Scheduler executing taskgraph: " << tgnum << ", timestep: " << m_shared_state->getCurrentTopLevelTimeStep()
-                            << " with " << dts->numTasks() << " tasks (" << ntasks << " local)");
+                      << " with " << dts->numTasks() << " tasks (" << ntasks << " local)");
 
   if( m_reloc_new_pos_label && m_dws[m_dwmap[Task::OldDW]] != nullptr ) {
     m_dws[m_dwmap[Task::OldDW]]->exchangeParticleQuantities(dts, getLoadBalancer(), m_reloc_new_pos_label, iteration);

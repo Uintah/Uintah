@@ -37,9 +37,6 @@
 
 #include <include/sci_defs/uintah_testdefs.h.in>
 
-
-//#define USE_SPATIAL_SCHEDULING
-
 //______________________________________________________________________
 //
 using namespace Uintah;
@@ -254,7 +251,7 @@ Radiometer::sched_initializeRadVars( const LevelP& level,
     tsk= scinew Task( taskname, this, &Radiometer::initializeRadVars< float > );
   }
   
-  printSchedule(level,dbg,taskname);
+  printSchedule(level, dbg, taskname);
   tsk->requires(Task::OldDW, d_VRFluxLabel, d_gn, 0);
   tsk->computes( d_VRFluxLabel );
 
@@ -283,7 +280,7 @@ Radiometer::initializeRadVars( const ProcessorGroup*,
   for (int p=0; p < patches->size(); p++){
 
     const Patch* patch = patches->get(p);
-    printTask(patches,patch,dbg,"Doing Radiometer::initializeVars");
+    printTask(patches, patch, dbg,"Doing Radiometer::initializeVars");
 
     CCVariable< T > VRFlux;
     new_dw->allocateAndPut( VRFlux, d_VRFluxLabel, d_matl, patch );
@@ -291,58 +288,6 @@ Radiometer::initializeRadVars( const ProcessorGroup*,
   }
 }
 
-#ifndef USE_SPATIAL_SCHEDULING
-//______________________________________________________________________
-// Method: Schedule the virtual radiometer.  Only use temporal scheduling 
-//  This is a HACK until spatial scheduling working.  Each patch is 
-//  performing all-to-all communication even if they don't have
-//  radiometers.
-//______________________________________________________________________
-//  Duct tape until spatial scheduling is working
-void
-Radiometer::sched_radiometer( const LevelP& level,
-                              SchedulerP& sched,
-                              Task::WhichDW notUsed,
-                              Task::WhichDW sigma_dw,
-                              Task::WhichDW celltype_dw )
-{
-  std::vector<const Patch*> myPatches = getPatchSet( sched, level );
-  bool hasRadiometers = false;
-
-  int L = level->getIndex();
-  Task::WhichDW abskg_dw = d_abskg_dw[L];
-  
-  //__________________________________
-  //  If this processor owns any patches with radiometers
-  if( myPatches.size() !=  0 ){
-    hasRadiometers = true;
-  }
-  
-  std::string taskname = "Radiometer::radiometer";
-  Task *tsk;
-
-  if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
-    tsk = scinew Task( taskname, this, &Radiometer::radiometer< double >, abskg_dw, sigma_dw, celltype_dw, hasRadiometers );
-  } else {
-    tsk = scinew Task( taskname, this, &Radiometer::radiometer< float >, abskg_dw, sigma_dw, celltype_dw, hasRadiometers );
-  }
-
-  printSchedule( level,dbg,"Radiometer::sched_radiometer" );
-
-  //__________________________________
-  // Require an infinite number of ghost cells so you can access the entire domain.
-  //
-  Ghost::GhostType  gac  = Ghost::AroundCells;
-  tsk->requires( abskg_dw ,    d_abskgLabel  ,   gac, SHRT_MAX);    // Do not change this from SHRT_MAX -> nGhostCells
-  tsk->requires( sigma_dw ,    d_sigmaT4Label,   gac, SHRT_MAX);    // It will hang on the first timestep on 2 cores with RMCRT_radiometer.ups
-  tsk->requires( celltype_dw , d_cellTypeLabel , gac, SHRT_MAX);    // This needs further investigation.  -Todd
-
-  tsk->modifies( d_VRFluxLabel );
-
-  sched->addTask( tsk, level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT );
-}
-
-#else
 //______________________________________________________________________
 // Method: Schedule the virtual radiometer.  This task has both 
 // temporal and spatial scheduling.
@@ -355,57 +300,54 @@ Radiometer::sched_radiometer( const LevelP& level,
                               Task::WhichDW celltype_dw )
 {
   // find patches that contain radiometers
-  std::vector<const Patch*> myPatches = getPatchSet( sched, level );
-  bool hasRadiometers = false;
+  std::vector<const Patch*> radiometer_patches;
+  getPatchSet(sched, level, radiometer_patches);
 
   int L = level->getIndex();
-  Task::WhichDW abskg_dw = d_abskg_dw[L];  
-  
-  //__________________________________
-  //  If this processor owns any patches with radiometers
-  if ( myPatches.size() !=  0 ) {
-    hasRadiometers = true;
-  }
+  Task::WhichDW abskg_dw = d_abskg_dw[L];
 
-  std::string taskname = "Radiometer::radiometer";
-  Task *tsk;
+  // Until we have the ability to schedule a task like: level->eachPatchSpatial(),
+  //   we'll schedule spatial tasks on singleton PatchSets
+  for (size_t i = 0; i < radiometer_patches.size(); ++i) {
+    std::string taskname = "Radiometer::radiometer";
+    Task *tsk;
 
-  if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ) {
-    tsk = scinew Task( taskname, this, &Radiometer::radiometer< double >, abskg_dw, sigma_dw, celltype_dw, hasRadiometers );
-  } else {
-    tsk = scinew Task( taskname, this, &Radiometer::radiometer< float >, abskg_dw, sigma_dw, celltype_dw, hasRadiometers );
-  }
+    if (RMCRTCommon::d_FLT_DBL == TypeDescription::double_type) {
+      tsk = scinew Task(taskname, this, &Radiometer::radiometer<double>, abskg_dw, sigma_dw, celltype_dw);
+    }
+    else {
+      tsk = scinew Task(taskname, this, &Radiometer::radiometer<float>, abskg_dw, sigma_dw, celltype_dw);
+    }
 
-  tsk->setType(Task::Spatial);
+    tsk->setType(Task::Spatial);
 
-  printSchedule( level,dbg,"Radiometer::sched_radiometer" );
+    printSchedule(level, dbg, "Radiometer::sched_radiometer");
 
-  //__________________________________
-  // Require an infinite number of ghost cells so you can access the entire domain.
-  //
-  dbg << "    sched_radiometer: adding requires for all-to-all variables " << std::endl;
-  Ghost::GhostType  gac  = Ghost::AroundCells;
-  tsk->requires( abskg_dw ,    d_abskgLabel  ,   gac, SHRT_MAX);
-  tsk->requires( sigma_dw ,    d_sigmaT4Label,   gac, SHRT_MAX);
-  tsk->requires( celltype_dw , d_cellTypeLabel , gac, SHRT_MAX);
+    //__________________________________
+    // Require an infinite number of ghost cells so you can access the entire domain.
+    if (dbg.active()) {
+      dbg << "    sched_radiometer: adding requires for all-to-all variables " << std::endl;
+    }
 
-  tsk->modifies( d_VRFluxLabel );
+    Ghost::GhostType gac = Ghost::AroundCells;
+    tsk->requires(abskg_dw, d_abskgLabel, gac, SHRT_MAX);
+    tsk->requires(sigma_dw, d_sigmaT4Label, gac, SHRT_MAX);
+    tsk->requires(celltype_dw, d_cellTypeLabel, gac, SHRT_MAX);
 
-  // only schedule on the patches that contain radiometers
-  // Spatial task scheduling
-  PatchSet* radiometerPatchSet;
-  radiometerPatchSet = scinew PatchSet();
-  radiometerPatchSet->addReference();
+    tsk->modifies(d_VRFluxLabel);
 
-  radiometerPatchSet->addAll( myPatches );
+    // only schedule on the patches that contain radiometers Spatial task scheduling
+    PatchSet* radiometerPatchSet = scinew PatchSet();
+    radiometerPatchSet->addReference();
+    radiometerPatchSet->add(radiometer_patches[i]);
+    sched->addTask(tsk, radiometerPatchSet, d_matlSet, RMCRTCommon::TG_RMCRT);
 
-  sched->addTask( tsk, radiometerPatchSet, d_matlSet, RMCRTCommon::TG_RMCRT );
-
-  if ( radiometerPatchSet && radiometerPatchSet->removeReference() ) {
-    delete radiometerPatchSet;
+    if (radiometerPatchSet && radiometerPatchSet->removeReference()) {
+      delete radiometerPatchSet;
+    }
   }
 }
-#endif
+
 //______________________________________________________________________
 // Method: The actual work of the ray tracer
 //______________________________________________________________________
@@ -418,14 +360,8 @@ Radiometer::radiometer( const ProcessorGroup* pg,
                         DataWarehouse* new_dw,
                         Task::WhichDW which_abskg_dw,
                         Task::WhichDW whichd_sigmaT4_dw,
-                        Task::WhichDW which_celltype_dw,
-                        const bool hasRadiometers )
+                        Task::WhichDW which_celltype_dw )
 {
-  // return if there are no radiometers in this patch subset
-  if ( hasRadiometers == false ) {
-    return;
-  }
-
   const Level* level = getLevel(patches);
 
   //__________________________________
@@ -592,14 +528,13 @@ Radiometer::rayDirection_VR( MTRand& mTwister,
 //______________________________________________________________________
 //  Return the patchSet that contains radiometers
 //______________________________________________________________________
-std::vector< const Patch* >
+void
 Radiometer::getPatchSet( SchedulerP& sched,
-                        const LevelP& level )
+                        const LevelP& level,
+                        std::vector<const Patch*>& radiometer_patches )
 {
   //__________________________________
-  //
-  //  that contain radiometers and that this processor owns
-  std::vector< const Patch* > myPatches;
+  // find patches that contain radiometers
   LoadBalancerPort * lb          = sched->getLoadBalancer();
   const PatchSet   * procPatches = lb->getPerProcessorPatchSet( level );
 
@@ -607,22 +542,17 @@ Radiometer::getPatchSet( SchedulerP& sched,
    const PatchSubset* patches = procPatches->getSubset(m);
 
     for (int p=0; p < patches->size(); p++){
-
       const Patch* patch = patches->get(p);
-
       IntVector lo = patch->getCellLowIndex();
       IntVector hi = patch->getCellHighIndex();
-
       IntVector VR_posLo  = level->getCellIndex( d_VRLocationsMin );
       IntVector VR_posHi  = level->getCellIndex( d_VRLocationsMax );
 
       if ( doesIntersect( VR_posLo, VR_posHi, lo, hi ) ){
-        myPatches.push_back( patch );
+        radiometer_patches.push_back( patch );
       }
     }
   }
-  
-  return myPatches;
 }
 
 //______________________________________________________________________

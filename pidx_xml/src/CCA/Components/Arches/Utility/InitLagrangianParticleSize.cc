@@ -87,7 +87,7 @@ InitLagrangianParticleSize::initialize( const Patch* patch, ArchesTaskInfoManage
 //------------------------------------------------
 //
 void
-InitLagrangianParticleSize::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
+InitLagrangianParticleSize::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){
 }
 
 void
@@ -102,7 +102,7 @@ InitLagrangianParticleSize::timestep_init( const Patch* patch, ArchesTaskInfoMan
 
 //Register all variables both local and those needed from elsewhere that are required for this task.
 void
-InitLagrangianParticleSize::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
+InitLagrangianParticleSize::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){
 }
 
 //This is the work for the task.  First, get the variables. Second, do the work!

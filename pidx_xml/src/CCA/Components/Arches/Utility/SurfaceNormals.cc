@@ -113,7 +113,7 @@ SurfaceNormals::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info 
 
 //--------------------------------------------------------------------------------------------------
 void
-SurfaceNormals::register_timestep_init( VIVec& variable_registry ){
+SurfaceNormals::register_timestep_init( VIVec& variable_registry, const bool packed_tasks){
 
   register_variable( "surf_out_normX" , ArchesFieldContainer::REQUIRES , 0,
                       ArchesFieldContainer::OLDDW, variable_registry );

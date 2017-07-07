@@ -36,40 +36,11 @@ UpdateParticleSize::problemSetup( ProblemSpecP& db ){
 
 }
 
-//
-//------------------------------------------------
-//-------------- INITIALIZATION ------------------
-//------------------------------------------------
-//
-void
-UpdateParticleSize::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){}
-
-void
-UpdateParticleSize::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
-
-//
-//------------------------------------------------
-//------------- TIMESTEP INIT --------------------
-//------------------------------------------------
-//
-void
-UpdateParticleSize::register_timestep_init(
-  std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
-}
-
-void
-UpdateParticleSize::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
-
-//
-//------------------------------------------------
-//------------- TIMESTEP WORK --------------------
-//------------------------------------------------
-//
-
+//--------------------------------------------------------------------------------------------------
 void
 UpdateParticleSize::register_timestep_eval(
   std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
-  const int time_substep ){
+  const int time_substep, const bool packed_tasks ){
 
   register_variable( _size_name, ArchesFieldContainer::COMPUTES, variable_registry );
 

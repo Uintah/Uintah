@@ -52,8 +52,6 @@ void VariableStats::problemSetup( ProblemSpecP& db ){
 
   for ( ProblemSpecP var_db = db->findBlock("flux_variable"); var_db != nullptr; var_db = var_db->findNextBlock("flux_variable") ){
 
-    bool table_lookup = false;
-
     do_fluxes = true;
 
     std::string phi_name;
@@ -331,7 +329,7 @@ void VariableStats::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_i
 }
 
 //--------------------------------------------------------------------------------------------------
-void VariableStats::register_restart_initialize( VIVec& variable_registry ){
+void VariableStats::register_restart_initialize( VIVec& variable_registry , const bool packed_tasks){
 
   typedef std::vector<std::string> StrVec;
 
@@ -356,7 +354,7 @@ void VariableStats::restart_initialize( const Patch* patch, ArchesTaskInfoManage
 }
 
 //--------------------------------------------------------------------------------------------------
-void VariableStats::register_timestep_init( VIVec& variable_registry ){
+void VariableStats::register_timestep_init( VIVec& variable_registry , const bool packed_tasks){
 
   std::vector<std::string>::iterator i = _ave_sum_names.begin();
   for (;i!=_ave_sum_names.end();i++){
@@ -497,7 +495,7 @@ void VariableStats::timestep_init( const Patch* patch, ArchesTaskInfoManager* ts
 }
 
 //--------------------------------------------------------------------------------------------------
-void VariableStats::register_timestep_eval( VIVec& variable_registry, const int time_substep ){
+void VariableStats::register_timestep_eval( VIVec& variable_registry, const int time_substep , const bool packed_tasks){
 
   std::vector<std::string>::iterator i = _ave_sum_names.begin();
   for (;i!=_ave_sum_names.end();i++){

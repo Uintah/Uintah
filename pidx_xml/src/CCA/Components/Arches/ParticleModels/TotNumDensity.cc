@@ -37,7 +37,7 @@ TotNumDensity::create_local_labels(){
 
 //--------------------------------------------------------------------------------------------------
 void
-TotNumDensity::register_initialize( 
+TotNumDensity::register_initialize(
   std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
   const bool pack_tasks ){
 
@@ -78,7 +78,7 @@ TotNumDensity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info )
 void
 TotNumDensity::register_timestep_eval(
   std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
-  const int time_substep ){
+  const int time_substep, const bool packed_tasks ){
 
   register_variable( _task_name, ArchesFieldContainer::COMPUTES, variable_registry );
 

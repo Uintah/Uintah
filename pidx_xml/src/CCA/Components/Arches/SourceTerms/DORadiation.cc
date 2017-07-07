@@ -14,50 +14,50 @@
 #include <iomanip>
 
 using namespace std;
-using namespace Uintah; 
+using namespace Uintah;
 
 DORadiation::DORadiation( std::string src_name, ArchesLabel* labels, MPMArchesLabel* MAlab,
-                          vector<std::string> req_label_names, const ProcessorGroup* my_world, 
-                          std::string type ) 
-: SourceTermBase( src_name, labels->d_sharedState, req_label_names, type ), 
+                          vector<std::string> req_label_names, const ProcessorGroup* my_world,
+                          std::string type )
+: SourceTermBase( src_name, labels->d_sharedState, req_label_names, type ),
   _labels( labels ),
-  _MAlab(MAlab), 
+  _MAlab(MAlab),
   _my_world(my_world){
 
-  // NOTE: This boundary condition here is bogus.  Passing it for 
-  // now until the boundary condition reference can be stripped out of 
-  // the radiation model. 
-  
+  // NOTE: This boundary condition here is bogus.  Passing it for
+  // now until the boundary condition reference can be stripped out of
+  // the radiation model.
+
   const TypeDescription* CC_double = CCVariable<double>::getTypeDescription();
 
-  _src_label = VarLabel::create( src_name, CC_double ); 
+  _src_label = VarLabel::create( src_name, CC_double );
 
-  // Add any other local variables here. 
+  // Add any other local variables here.
   _radiationFluxELabel = VarLabel::create("radiationFluxE",  CC_double);
-  _extra_local_labels.push_back(_radiationFluxELabel); 
+  _extra_local_labels.push_back(_radiationFluxELabel);
 
   _radiationFluxWLabel = VarLabel::create("radiationFluxW",  CC_double);
-  _extra_local_labels.push_back(_radiationFluxWLabel); 
+  _extra_local_labels.push_back(_radiationFluxWLabel);
 
   _radiationFluxNLabel = VarLabel::create("radiationFluxN",  CC_double);
-  _extra_local_labels.push_back(_radiationFluxNLabel); 
+  _extra_local_labels.push_back(_radiationFluxNLabel);
 
   _radiationFluxSLabel = VarLabel::create("radiationFluxS",  CC_double);
-  _extra_local_labels.push_back(_radiationFluxSLabel); 
+  _extra_local_labels.push_back(_radiationFluxSLabel);
 
   _radiationFluxTLabel = VarLabel::create("radiationFluxT",  CC_double);
-  _extra_local_labels.push_back(_radiationFluxTLabel); 
+  _extra_local_labels.push_back(_radiationFluxTLabel);
 
   _radiationFluxBLabel = VarLabel::create("radiationFluxB",  CC_double);
-  _extra_local_labels.push_back(_radiationFluxBLabel); 
+  _extra_local_labels.push_back(_radiationFluxBLabel);
 
   _radiationVolqLabel = VarLabel::create("radiationVolq",  CC_double);
-  _extra_local_labels.push_back(_radiationVolqLabel); 
+  _extra_local_labels.push_back(_radiationVolqLabel);
 
-  //Declare the source type: 
+  //Declare the source type:
   _source_grid_type = CC_SRC; // or FX_SRC, or FY_SRC, or FZ_SRC, or CCVECTOR_SRC
 
-  _DO_model = 0; 
+  _DO_model = 0;
 
 
 
@@ -65,40 +65,40 @@ DORadiation::DORadiation( std::string src_name, ArchesLabel* labels, MPMArchesLa
 
 DORadiation::~DORadiation()
 {
-  
-  // source label is destroyed in the base class 
 
-  for (vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); 
-       iter != _extra_local_labels.end(); iter++) { 
+  // source label is destroyed in the base class
 
-    VarLabel::destroy( *iter ); 
+  for (vector<const VarLabel*>::iterator iter = _extra_local_labels.begin();
+       iter != _extra_local_labels.end(); iter++) {
+
+    VarLabel::destroy( *iter );
 
   }
 
  if (_sweepMethod)
    VarLabel::destroy(_radIntSource);
 
-  delete _DO_model; 
+  delete _DO_model;
 
 }
 //---------------------------------------------------------------------------
 // Method: Problem Setup
 //---------------------------------------------------------------------------
-void 
+void
 DORadiation::problemSetup(const ProblemSpecP& inputdb)
 {
 
-  ProblemSpecP db = inputdb; 
+  ProblemSpecP db = inputdb;
 
-  db->getWithDefault( "calc_frequency",   _radiation_calc_freq, 3 ); 
-  db->getWithDefault( "checkForMissingIntensities", _checkForMissingIntensities  , false ); 
-  db->getWithDefault( "calc_on_all_RKsteps", _all_rk, false ); 
+  db->getWithDefault( "calc_frequency",   _radiation_calc_freq, 3 );
+  db->getWithDefault( "checkForMissingIntensities", _checkForMissingIntensities  , false );
+  db->getWithDefault( "calc_on_all_RKsteps", _all_rk, false );
   if (db->findBlock("abskt")!= nullptr ){
-    db->findBlock("abskt")->getAttribute("label",_abskt_label_name); 
+    db->findBlock("abskt")->getAttribute("label",_abskt_label_name);
   }else{
     throw InvalidValue("Error: Couldn't find label for total absorption coefficient in src DORadiation.    \n", __FILE__, __LINE__);
   }
-  _T_label_name = "radiation_temperature"; 
+  _T_label_name = "radiation_temperature";
 
   std::string modelName;
   bool found_label = false;
@@ -121,7 +121,7 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
   }
 
     std::string solverType;
-    db->findBlock("DORadiationModel")->getAttribute("type", solverType ); 
+    db->findBlock("DORadiationModel")->getAttribute("type", solverType );
    if (solverType=="sweepNoCommunication"){
      _sweepMethod=enum_sweepNoCommunication;
    }else if(solverType=="sweepSerial"){
@@ -140,14 +140,14 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
   proc0cout << "   -> abskg label:               " << _abskg_label_name << endl;
   proc0cout << "   -> abskt label:               " << _abskt_label_name << endl;
   proc0cout << " --- end DO Radiation Summary ------ " << endl;
-  _DO_model = scinew DORadiationModel( _labels, _MAlab, _my_world, _sweepMethod); 
-  _DO_model->problemSetup( db ); 
+  _DO_model = scinew DORadiationModel( _labels, _MAlab, _my_world, _sweepMethod);
+  _DO_model->problemSetup( db );
 
   for( int ix=0;  ix< _DO_model->getIntOrdinates();ix++){
     ostringstream my_stringstream_object;
     my_stringstream_object << "Intensity" << setfill('0') << setw(4)<<  ix ;
     _IntensityLabels.push_back(  VarLabel::find(my_stringstream_object.str()));
-    _extra_local_labels.push_back(_IntensityLabels[ix]); 
+    _extra_local_labels.push_back(_IntensityLabels[ix]);
     if(_DO_model->needIntensitiesBool()==false){
      break;  // create labels for all intensities, otherwise only create 1 label
     }
@@ -168,7 +168,7 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
     std::vector<Vector> boxDimensionsLo(0);
     std::vector<Box> boxDimensions(0);
     double pTol=1e-10;// absolute_tolerance_for reduncant patch boundaries, avoided relative because of zeros
-    _multiBox=false; 
+    _multiBox=false;
     for ( ProblemSpecP db_box = db_level->findBlock("Box"); db_box != nullptr; db_box = db_box->findNextBlock("Box")){
       if (db_box->findNextBlock("Box") != nullptr){
         _multiBox=true;
@@ -247,9 +247,9 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
    // for optimization of multi-box problems (not needed)
     if(_multiBox){
       bool firstTimeThrough=true;// Need to construct full patch domain using Booleans, because infrastructure crashes if you look for patches that aren't there.
-      for (int idir=0; idir<2; idir++){ 
-        for (int jdir=0; jdir<2; jdir++){ 
-          for (int kdir=0; kdir<2; kdir++){ 
+      for (int idir=0; idir<2; idir++){
+        for (int jdir=0; jdir<2; jdir++){
+          for (int kdir=0; kdir<2; kdir++){
             // basic concept  i + j + k  must alwasy equal iphase, and be within the bounds of the super-imposed box
             bool foundIntersection=false;
             for (int iphase=0; iphase <_nphase; iphase++ ){
@@ -257,12 +257,12 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
                 _directional_phase_adjustment[idir][jdir][kdir]=iphase;
               }
               for (int j=std::max(0,std::min(iphase-_patchIntVector[0]-_patchIntVector[2],_patchIntVector[1]-1));  j< std::min(iphase+1,_patchIntVector[1]);  j++ ){
-                for (int k=std::max(0,std::min(iphase-j-_patchIntVector[0],_patchIntVector[2]-1));  k< std::min(iphase-j+1,_patchIntVector[2]);  k++ ){ 
+                for (int k=std::max(0,std::min(iphase-j-_patchIntVector[0],_patchIntVector[2]-1));  k< std::min(iphase-j+1,_patchIntVector[2]);  k++ ){
                   if (iphase-j-k < _patchIntVector[0] ){
 
 
                     // adjust for non- x+ y+ z+ directions
-                    int iAdj =iphase-j-k;  
+                    int iAdj =iphase-j-k;
                     int jAdj =j;
                     int kAdj =k;
                     if(idir==1){
@@ -280,16 +280,16 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
                       if( boxDimensions[ibox].contains(Point((_xPatch_boundary[iAdj]+_xPatch_boundary[iAdj + (idir==0 ? 1 : -1)])/2.0,(_yPatch_boundary[jAdj]+_yPatch_boundary[jAdj + (jdir==0 ? 1 : -1)])/2.0,(_zPatch_boundary[kAdj] + _zPatch_boundary[kAdj + (kdir==0 ? 1 : -1)])/2.0)) ){
 
                         _doesPatchExist[iAdj+(idir==0 ? 0 : -1)][jAdj+(jdir==0 ? 0 : -1)][kAdj+(kdir==0 ? 0 : -1)]=true ;
-                        
+
                         foundIntersection=true;
                         if (firstTimeThrough==false){ // no need to populate boolean matrix
                           break;
                         }
                       } //check for intersection
-                    } // loop over all uintah boxes 
+                    } // loop over all uintah boxes
                   } // check on i (is it in domain?)
                 } // k
-                if(foundIntersection==true && firstTimeThrough==false){ break;} 
+                if(foundIntersection==true && firstTimeThrough==false){ break;}
               } // j
               if(foundIntersection==true && firstTimeThrough==false){ break;}
             } // iphase
@@ -302,13 +302,13 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
   if (solverType=="sweepSerialCopy"){
     _DO_model->setExtraSweepingLabels(_nphase);
     for( int ixx=0;  ixx<_nphase;ixx++){
-      _patchIntensityLabels.push_back(std::vector< const VarLabel*> (0) ); 
+      _patchIntensityLabels.push_back(std::vector< const VarLabel*> (0) );
         _sweepMethod=enum_sweepSerialCopy;
         for( int ix=0;  ix< _DO_model->getIntOrdinates();ix++){
           ostringstream my_stringstream_object;
           my_stringstream_object << "Intensity" << setfill('0') << setw(4)<<  ix << ixx ;
           _patchIntensityLabels[ixx].push_back(  VarLabel::find(my_stringstream_object.str()));
-          _extra_local_labels.push_back(_patchIntensityLabels[ixx][ix]); 
+          _extra_local_labels.push_back(_patchIntensityLabels[ixx][ix]);
         }
       }
     }
@@ -323,49 +323,49 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
 
 
 
-   _RelevantPatchesXpYpZp=std::vector<const PatchSubset*> (0);   
-   _RelevantPatchesXpYpZm=std::vector<const PatchSubset*> (0);   
-   _RelevantPatchesXpYmZp=std::vector<const PatchSubset*> (0);  
-   _RelevantPatchesXpYmZm=std::vector<const PatchSubset*> (0);  
-   _RelevantPatchesXmYpZp=std::vector<const PatchSubset*> (0);  
-   _RelevantPatchesXmYpZm=std::vector<const PatchSubset*> (0);  
-   _RelevantPatchesXmYmZp=std::vector<const PatchSubset*> (0);  
-   _RelevantPatchesXmYmZm=std::vector<const PatchSubset*> (0);  
+   _RelevantPatchesXpYpZp=std::vector<const PatchSubset*> (0);
+   _RelevantPatchesXpYpZm=std::vector<const PatchSubset*> (0);
+   _RelevantPatchesXpYmZp=std::vector<const PatchSubset*> (0);
+   _RelevantPatchesXpYmZm=std::vector<const PatchSubset*> (0);
+   _RelevantPatchesXmYpZp=std::vector<const PatchSubset*> (0);
+   _RelevantPatchesXmYpZm=std::vector<const PatchSubset*> (0);
+   _RelevantPatchesXmYmZp=std::vector<const PatchSubset*> (0);
+   _RelevantPatchesXmYmZm=std::vector<const PatchSubset*> (0);
 
   }
 
 }
 //---------------------------------------------------------------------------
-// Method: Schedule the calculation of the source term 
+// Method: Schedule the calculation of the source term
 //---------------------------------------------------------------------------
-void 
+void
 DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
 
 
-  _T_label = VarLabel::find(_T_label_name); 
+  _T_label = VarLabel::find(_T_label_name);
   if ( _T_label == 0){
     throw InvalidValue("Error: For DO Radiation source term -- Could not find the radiation temperature label.", __FILE__, __LINE__);
   }
 
-  _abskg_label = VarLabel::find(_abskg_label_name); 
+  _abskg_label = VarLabel::find(_abskg_label_name);
   if ( _abskg_label == 0){
     throw InvalidValue("Error: For DO Radiation source term -- Could not find the abskg label.", __FILE__, __LINE__);
   }
-  _abskt_label = VarLabel::find(_abskt_label_name); 
+  _abskt_label = VarLabel::find(_abskt_label_name);
   if ( _abskt_label == 0){
     throw InvalidValue("Error: For DO Radiation source term -- Could not find the abskt label:"+_abskt_label_name, __FILE__, __LINE__);
   }
 
   if (_DO_model->ScatteringOnBool()){
     _scatktLabel =  VarLabel::find("scatkt");
-    _asymmetryLabel= VarLabel::find("asymmetryParam"); 
-    if ( _scatktLabel == 0 ){ 
+    _asymmetryLabel= VarLabel::find("asymmetryParam");
+    if ( _scatktLabel == 0 ){
       throw ProblemSetupException("Error: scatkt label not found! This label should be created in the Radiation property calculator!",__FILE__, __LINE__);
-    } 
-    if (_asymmetryLabel == 0 ){ 
+    }
+    if (_asymmetryLabel == 0 ){
       throw ProblemSetupException("Error: asymmetry label not found! This label should be created in the Radiation property calculator!",__FILE__, __LINE__);
-    } 
+    }
   }
 
   if (_DO_model->get_nQn_part() >0 && _abskt_label_name == _abskg_label_name){
@@ -377,18 +377,18 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
   std::string taskname = "DORadiation::computeSource";
   Task* tsk = scinew Task(taskname, this, &DORadiation::computeSource, timeSubStep);
 
-  _perproc_patches = level->eachPatch(); 
+  _perproc_patches = level->eachPatch();
 
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gn = Ghost::None;
 
-  
-  if (timeSubStep == 0) { 
+
+  if (timeSubStep == 0) {
 
     tsk->computes(_src_label);
-    tsk->requires( Task::NewDW, _T_label, gac, 1 ); 
-    tsk->requires( Task::OldDW, _abskt_label, gac, 1 ); 
-    tsk->requires( Task::OldDW, _abskg_label, gn, 0 ); 
+    tsk->requires( Task::NewDW, _T_label, gac, 1 );
+    tsk->requires( Task::OldDW, _abskt_label, gac, 1 );
+    tsk->requires( Task::OldDW, _abskg_label, gn, 0 );
 
 
     tsk->requires( Task::OldDW, _src_label, gn, 0 ); // shoudl be removed, for temporal scheduling
@@ -397,56 +397,56 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
 
 
     for (int i=0 ; i< _DO_model->get_nQn_part(); i++){
-      tsk->requires( Task::OldDW,_DO_model->getAbskpLabels()[i], gn, 0 );  
-      tsk->requires( Task::OldDW,_DO_model->getPartTempLabels()[i], gn, 0 ); 
+      tsk->requires( Task::OldDW,_DO_model->getAbskpLabels()[i], gn, 0 );
+      tsk->requires( Task::OldDW,_DO_model->getPartTempLabels()[i], gn, 0 );
     }
 
     if (_DO_model->ScatteringOnBool()){
-      tsk->requires( Task::OldDW, _scatktLabel, gn, 0 ); 
-      tsk->requires( Task::OldDW,_asymmetryLabel, gn, 0 ); 
+      tsk->requires( Task::OldDW, _scatktLabel, gn, 0 );
+      tsk->requires( Task::OldDW,_asymmetryLabel, gn, 0 );
     }
 
-    for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); 
+    for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin();
         iter != _extra_local_labels.end(); iter++){
 
-      tsk->computes( *iter ); 
+      tsk->computes( *iter );
       //if (*(*iter)=="radiationVolq"){
         //continue;
       //}
-      tsk->requires( Task::OldDW, *iter, gn, 0 ); 
+      tsk->requires( Task::OldDW, *iter, gn, 0 );
 
     }
 
   } else {
 
-    tsk->modifies(_src_label); 
-    tsk->requires( Task::NewDW, _T_label, gac, 1 ); 
-    tsk->requires( Task::OldDW, _abskt_label, gac, 1 ); 
-    tsk->requires( Task::OldDW, _abskg_label, gn, 0 ); 
+    tsk->modifies(_src_label);
+    tsk->requires( Task::NewDW, _T_label, gac, 1 );
+    tsk->requires( Task::OldDW, _abskt_label, gac, 1 );
+    tsk->requires( Task::OldDW, _abskg_label, gn, 0 );
 
     for (int i=0 ; i< _DO_model->get_nQn_part(); i++){
-      tsk->requires( Task::NewDW,_DO_model->getAbskpLabels()[i], gn, 0 ); 
-      tsk->requires( Task::NewDW,_DO_model->getPartTempLabels()[i], gn, 0 ); 
+      tsk->requires( Task::NewDW,_DO_model->getAbskpLabels()[i], gn, 0 );
+      tsk->requires( Task::NewDW,_DO_model->getPartTempLabels()[i], gn, 0 );
     }
 
-    for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); 
+    for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin();
          iter != _extra_local_labels.end(); iter++){
 
-      tsk->modifies( *iter ); 
+      tsk->modifies( *iter );
 
     }
   }
 
-  tsk->requires(Task::OldDW, _labels->d_cellTypeLabel, gac, 1 ); 
+  tsk->requires(Task::OldDW, _labels->d_cellTypeLabel, gac, 1 );
   tsk->requires(Task::NewDW, _labels->d_cellInfoLabel, gn);
 
   int Rad_TG=1;
-  sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials(),Rad_TG); 
+  sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials(),Rad_TG);
 
 
 ////---------------------carry forward task-------------------------------//
 
-  if (timeSubStep == 0) { 
+  if (timeSubStep == 0) {
     std::string taskNoCom = "DORadiation::TransferRadFieldsFromOldDW";
     Task* tsk_noRad = scinew Task(taskNoCom, this, &DORadiation::TransferRadFieldsFromOldDW);
 
@@ -454,14 +454,14 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
     tsk_noRad->computes( _src_label);
 
     // fluxes and intensities and radvolq
-    for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); 
+    for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin();
         iter != _extra_local_labels.end(); iter++){
-      tsk_noRad->requires( Task::OldDW, *iter, gn, 0 ); 
-      tsk_noRad->computes( *iter ); 
+      tsk_noRad->requires( Task::OldDW, *iter, gn, 0 );
+      tsk_noRad->computes( *iter );
     }
 
     int no_Rad_TG=0;
-    sched->addTask(tsk_noRad, level->eachPatch(), _shared_state->allArchesMaterials(),no_Rad_TG); 
+    sched->addTask(tsk_noRad, level->eachPatch(), _shared_state->allArchesMaterials(),no_Rad_TG);
   }
 
 ////----------------------------------------------------------------------//
@@ -469,25 +469,25 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
 }
 }
 //---------------------------------------------------------------------------
-// Method: Actually compute the source term 
+// Method: Actually compute the source term
 //---------------------------------------------------------------------------
 void
-DORadiation::computeSource( const ProcessorGroup* pc, 
-                   const PatchSubset* patches, 
-                   const MaterialSubset* matls, 
-                   DataWarehouse* old_dw, 
-                   DataWarehouse* new_dw, 
+DORadiation::computeSource( const ProcessorGroup* pc,
+                   const PatchSubset* patches,
+                   const MaterialSubset* matls,
+                   DataWarehouse* old_dw,
+                   DataWarehouse* new_dw,
                    int timeSubStep )
 {
   _DO_model->d_linearSolver->matrixCreate( _perproc_patches, patches );
 
-    int timestep = _labels->d_sharedState->getCurrentTopLevelTimeStep(); 
-    bool do_radiation = false; 
-    if ( _all_rk ) { 
-      do_radiation = true; 
-    } else if ( timeSubStep == 0 && !_all_rk ) { 
-      do_radiation = true; 
-    } 
+    //int timestep = _labels->d_sharedState->getCurrentTopLevelTimeStep(); 
+    bool do_radiation = false;
+    if ( _all_rk ) {
+      do_radiation = true;
+    } else if ( timeSubStep == 0 && !_all_rk ) {
+      do_radiation = true;
+    }
 
     bool old_DW_isMissingIntensities=0;
     if(_checkForMissingIntensities){  // should only be true for first time step of a restart
@@ -498,7 +498,7 @@ DORadiation::computeSource( const ProcessorGroup* pc,
               int archIndex = 0;
               int matlIndex = _labels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();  // have to do it this way because overloaded exists(arg) doesn't seem to work!!
               if (!old_dw->exists(_IntensityLabels[ix],matlIndex,patch)){
-                proc0cout << "WARNING:  Intensity" << *_IntensityLabels[ix] << "from previous solve are missing!   Using zeros. \n"; 
+                proc0cout << "WARNING:  Intensity" << *_IntensityLabels[ix] << "from previous solve are missing!   Using zeros. \n";
                 CCVariable< double> temp;
                 new_dw->allocateAndPut(temp  , _IntensityLabels[ix]  , matlIndex , patch );
                 temp.initialize(0.0);
@@ -518,7 +518,7 @@ DORadiation::computeSource( const ProcessorGroup* pc,
               int archIndex = 0;
               int matlIndex = _labels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();  // have to do it this way because overloaded exists(arg) doesn't seem to work!!
               if (!old_dw->exists(_IntensityLabels[ix],matlIndex,patch)){
-                proc0cout << "WARNING:  Intensity" << *_IntensityLabels[ix] << "from previous solve are missing!   Using zeros. \n"; 
+                proc0cout << "WARNING:  Intensity" << *_IntensityLabels[ix] << "from previous solve are missing!   Using zeros. \n";
                 old_DW_isMissingIntensities=true;
                 break;
               }
@@ -527,8 +527,8 @@ DORadiation::computeSource( const ProcessorGroup* pc,
         }
     }else{
       if(_DO_model->needIntensitiesBool()==false ){  // we do this for a feature that is never used  (solve using previous direction)
-        if ( timeSubStep == 0 ) { 
-          for(unsigned int ix=0;  ix< _IntensityLabels.size();ix++){ 
+        if ( timeSubStep == 0 ) {
+          for(unsigned int ix=0;  ix< _IntensityLabels.size();ix++){
             new_dw->transferFrom(old_dw,_IntensityLabels[ix],  patches, matls);
           }
         }
@@ -541,22 +541,22 @@ DORadiation::computeSource( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _labels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = _labels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
     PerPatch<CellInformationP> cellInfoP;
     new_dw->get(cellInfoP, _labels->d_cellInfoLabel, matlIndex, patch);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
-    CCVariable<double> divQ; 
+    CCVariable<double> divQ;
 
 
-    ArchesVariables radiation_vars; 
+    ArchesVariables radiation_vars;
     ArchesConstVariables const_radiation_vars;
 
     Ghost::GhostType  gac = Ghost::AroundCells;
-    Ghost::GhostType  gn = Ghost::None; 
+    Ghost::GhostType  gn = Ghost::None;
 
-    if ( timeSubStep == 0 ) { 
+    if ( timeSubStep == 0 ) {
 
       new_dw->get( const_radiation_vars.temperature, _T_label, matlIndex , patch , gac , 1 );
 
@@ -567,12 +567,12 @@ DORadiation::computeSource( const ProcessorGroup* pc,
       new_dw->allocateAndPut( radiation_vars.qfluxt , _radiationFluxTLabel                , matlIndex , patch );
       new_dw->allocateAndPut( radiation_vars.qfluxb , _radiationFluxBLabel                , matlIndex , patch );
       new_dw->allocateAndPut( radiation_vars.volq   , _radiationVolqLabel                 , matlIndex , patch );
-      new_dw->allocateAndPut( divQ, _src_label, matlIndex, patch ); 
+      new_dw->allocateAndPut( divQ, _src_label, matlIndex, patch );
 
-      radiation_vars.ESRCG.allocate( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );  
+      radiation_vars.ESRCG.allocate( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
 
       // copy old solution into new
-      old_dw->copyOut( divQ, _src_label, matlIndex, patch, gn, 0 ); 
+      old_dw->copyOut( divQ, _src_label, matlIndex, patch, gn, 0 );
       old_dw->copyOut( radiation_vars.qfluxe , _radiationFluxELabel                , matlIndex , patch , gn , 0 );
       old_dw->copyOut( radiation_vars.qfluxw , _radiationFluxWLabel                , matlIndex , patch , gn , 0 );
       old_dw->copyOut( radiation_vars.qfluxn , _radiationFluxNLabel                , matlIndex , patch , gn , 0 );
@@ -583,11 +583,11 @@ DORadiation::computeSource( const ProcessorGroup* pc,
       old_dw->get( const_radiation_vars.ABSKG  , _abskg_label , matlIndex , patch , gn , 0 );
       old_dw->get( const_radiation_vars.ABSKT  , _abskt_label , matlIndex , patch , gac , 1 );
 
-    } else { 
+    } else {
 
       new_dw->get( const_radiation_vars.temperature, _T_label, matlIndex , patch , gac , 1 );
 
-      radiation_vars.ESRCG.allocate( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );  
+      radiation_vars.ESRCG.allocate( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
 
       new_dw->getModifiable( radiation_vars.qfluxe , _radiationFluxELabel , matlIndex , patch );
       new_dw->getModifiable( radiation_vars.qfluxw , _radiationFluxWLabel , matlIndex , patch );
@@ -596,15 +596,15 @@ DORadiation::computeSource( const ProcessorGroup* pc,
       new_dw->getModifiable( radiation_vars.qfluxt , _radiationFluxTLabel , matlIndex , patch );
       new_dw->getModifiable( radiation_vars.qfluxb , _radiationFluxBLabel , matlIndex , patch );
       new_dw->getModifiable( radiation_vars.volq   , _radiationVolqLabel  , matlIndex , patch );
-      new_dw->getModifiable( divQ, _src_label, matlIndex, patch ); 
+      new_dw->getModifiable( divQ, _src_label, matlIndex, patch );
 
-      old_dw->get( const_radiation_vars.ABSKG  , _abskg_label, matlIndex , patch, gn, 0 ); // wrong DW 
+      old_dw->get( const_radiation_vars.ABSKG  , _abskg_label, matlIndex , patch, gn, 0 ); // wrong DW
       old_dw->get( const_radiation_vars.ABSKT  , _abskt_label , matlIndex , patch , gac , 1 );
-    } 
+    }
 
-    old_dw->get( const_radiation_vars.cellType , _labels->d_cellTypeLabel, matlIndex, patch, gac, 1 ); 
+    old_dw->get( const_radiation_vars.cellType , _labels->d_cellTypeLabel, matlIndex, patch, gac, 1 );
 
-    if ( do_radiation ){ 
+    if ( do_radiation ){
 
       if ( timeSubStep == 0 ) {
 
@@ -616,7 +616,7 @@ DORadiation::computeSource( const ProcessorGroup* pc,
         }
 
         //Note: The final divQ is initialized (to zero) and set after the solve in the intensity solve itself.
-        _DO_model->intensitysolve( pc, patch, cellinfo, &radiation_vars, &const_radiation_vars, divQ, BoundaryCondition::WALL, matlIndex, new_dw, old_dw, old_DW_isMissingIntensities ); 
+        _DO_model->intensitysolve( pc, patch, cellinfo, &radiation_vars, &const_radiation_vars, divQ, BoundaryCondition::WALL, matlIndex, new_dw, old_dw, old_DW_isMissingIntensities );
 
       }
     }
@@ -629,24 +629,24 @@ DORadiation::computeSource( const ProcessorGroup* pc,
 void
 DORadiation::sched_initialize( const LevelP& level, SchedulerP& sched )
 {
-  string taskname = "DORadiation::initialize"; 
+  string taskname = "DORadiation::initialize";
   Task* tsk = scinew Task(taskname, this, &DORadiation::initialize);
 
   tsk->computes(_src_label);
 
-  for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); 
+  for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin();
        iter != _extra_local_labels.end(); iter++){
-    tsk->computes(*iter); 
+    tsk->computes(*iter);
   }
 
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
 
 }
-void 
-DORadiation::initialize( const ProcessorGroup* pc, 
-                         const PatchSubset* patches, 
-                         const MaterialSubset* matls, 
-                         DataWarehouse* old_dw, 
+void
+DORadiation::initialize( const ProcessorGroup* pc,
+                         const PatchSubset* patches,
+                         const MaterialSubset* matls,
+                         DataWarehouse* old_dw,
                          DataWarehouse* new_dw )
 {
   //patch loop
@@ -654,19 +654,19 @@ DORadiation::initialize( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex();
 
     CCVariable<double> src;
 
-    new_dw->allocateAndPut( src, _src_label, matlIndex, patch ); 
+    new_dw->allocateAndPut( src, _src_label, matlIndex, patch );
 
-    src.initialize(0.0); 
+    src.initialize(0.0);
 
-    for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); 
+    for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin();
          iter != _extra_local_labels.end(); iter++){
 
-      CCVariable<double> temp_var; 
-      new_dw->allocateAndPut(temp_var, *iter, matlIndex, patch ); 
+      CCVariable<double> temp_var;
+      new_dw->allocateAndPut(temp_var, *iter, matlIndex, patch );
       temp_var.initialize(0.0);
     }
   }
@@ -674,25 +674,25 @@ DORadiation::initialize( const ProcessorGroup* pc,
 
 
 void
-DORadiation::init_all_intensities( const ProcessorGroup* pc, 
-                         const PatchSubset* patches, 
-                         const MaterialSubset* matls, 
-                         DataWarehouse* old_dw, 
+DORadiation::init_all_intensities( const ProcessorGroup* pc,
+                         const PatchSubset* patches,
+                         const MaterialSubset* matls,
+                         DataWarehouse* old_dw,
                          DataWarehouse* new_dw )
 {
 
   for (int p=0; p < patches->size(); p++){
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _labels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-    _DO_model->getDOSource(patch, matlIndex, new_dw, old_dw); 
+    int matlIndex = _labels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    _DO_model->getDOSource(patch, matlIndex, new_dw, old_dw);
   }
 }
 void
-DORadiation::doSweepCopy( const ProcessorGroup* pc, 
-                         const PatchSubset* patches, 
-                         const MaterialSubset* matls, 
-                         DataWarehouse* old_dw, 
+DORadiation::doSweepCopy( const ProcessorGroup* pc,
+                         const PatchSubset* patches,
+                         const MaterialSubset* matls,
+                         DataWarehouse* old_dw,
                          DataWarehouse* new_dw ,
                          int ixs               )
 {
@@ -701,38 +701,38 @@ DORadiation::doSweepCopy( const ProcessorGroup* pc,
   for (int p=0; p < patches->size(); p++){
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _labels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-      _DO_model->intensitysolveSweep(patch,matlIndex, new_dw,old_dw,  ix,ixx); 
+    int matlIndex = _labels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+      _DO_model->intensitysolveSweep(patch,matlIndex, new_dw,old_dw,  ix,ixx);
   }
 }
 
 void
-DORadiation::doSweepOrig( const ProcessorGroup* pc, 
-                         const PatchSubset* patches, 
-                         const MaterialSubset* matls, 
-                         DataWarehouse* old_dw, 
+DORadiation::doSweepOrig( const ProcessorGroup* pc,
+                         const PatchSubset* patches,
+                         const MaterialSubset* matls,
+                         DataWarehouse* old_dw,
                          DataWarehouse* new_dw ,
                          int ix               )
 {
   for (int p=0; p < patches->size(); p++){
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _labels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-      _DO_model->intensitysolveSweepOptimized(patch,matlIndex, new_dw,old_dw,  ix); 
+    int matlIndex = _labels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+      _DO_model->intensitysolveSweepOptimized(patch,matlIndex, new_dw,old_dw,  ix);
   }
 }
 
 void
-DORadiation::doSweepAdvanced( const ProcessorGroup* pc, 
-                         const PatchSubset* patches, 
-                         const MaterialSubset* matls, 
-                         DataWarehouse* old_dw, 
+DORadiation::doSweepAdvanced( const ProcessorGroup* pc,
+                         const PatchSubset* patches,
+                         const MaterialSubset* matls,
+                         DataWarehouse* old_dw,
                          DataWarehouse* new_dw ,
                         const int ixx_orig       , int intensity_iter        )
 {
 
   int archIndex = 0;
-  int matlIndex = _labels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+  int matlIndex = _labels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
   for (int p=0; p < patches->size(); p++){
   int ixx=ixx_orig;
     const Patch* patch = patches->get(p);
@@ -741,8 +741,8 @@ DORadiation::doSweepAdvanced( const ProcessorGroup* pc,
       int yPatch=0;
       int zPatch=0;
       if(_multiBox){
-        Vector patchLo= patch->getBox().lower().toVector();  
-        Vector PatchHi= patch->getBox().upper().toVector();  
+        Vector patchLo= patch->getBox().lower().toVector();
+        Vector PatchHi= patch->getBox().upper().toVector();
         Vector patchMid=(patchLo+PatchHi)/2.0;
 
         xPatch=getSweepPatchIndex(patchMid[0],_xPatch_boundary);
@@ -775,30 +775,30 @@ DORadiation::doSweepAdvanced( const ProcessorGroup* pc,
 
   ixx+=  _directional_phase_adjustment[1-_DO_model->xDir(intensity_iter)][1-_DO_model->yDir(intensity_iter)][1-_DO_model->zDir(intensity_iter)];// L-shaped domain adjustment
 
-       
+
 
     if ((intensity_iter%(_nDir/8))== (ixx-(xPatchAdjusted+yPatchAdjusted+zPatchAdjusted))){
-    _DO_model->intensitysolveSweepOptimized(patch,matlIndex, new_dw,old_dw, intensity_iter ); 
+    _DO_model->intensitysolveSweepOptimized(patch,matlIndex, new_dw,old_dw, intensity_iter );
     }
   }
 }
 
 void
-DORadiation::computeFluxDivQ( const ProcessorGroup* pc, 
-                         const PatchSubset* patches, 
-                         const MaterialSubset* matls, 
-                         DataWarehouse* old_dw, 
+DORadiation::computeFluxDivQ( const ProcessorGroup* pc,
+                         const PatchSubset* patches,
+                         const MaterialSubset* matls,
+                         DataWarehouse* old_dw,
                          DataWarehouse* new_dw )
 {
   for (int p=0; p < patches->size(); p++){
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _labels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-    _DO_model->computeFluxDiv( patch, matlIndex, new_dw, old_dw); 
+    int matlIndex = _labels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    _DO_model->computeFluxDiv( patch, matlIndex, new_dw, old_dw);
   }
 }
 
-void 
+void
 DORadiation::sched_computeSourceSweep( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
  if (timeSubStep==0){
@@ -820,7 +820,7 @@ DORadiation::sched_computeSourceSweep( const LevelP& level, SchedulerP& sched, i
       _DO_model->setLabels(_abskg_label, _abskt_label, _T_label,_labels->d_cellTypeLabel ,_radIntSource,
                            _radiationFluxELabel,_radiationFluxWLabel,_radiationFluxNLabel,
                            _radiationFluxSLabel,_radiationFluxTLabel,_radiationFluxBLabel,
-                           _radiationVolqLabel, _src_label); 
+                           _radiationVolqLabel, _src_label);
 
 
 
@@ -853,25 +853,25 @@ DORadiation::sched_computeSourceSweep( const LevelP& level, SchedulerP& sched, i
     tsk_noRadiation->computes( _src_label);
 
     if (_DO_model->ScatteringOnBool()){
-      for (int j=0; j< _nDir; j++){ 
+      for (int j=0; j< _nDir; j++){
         tsk_noRadiation->requires( Task::OldDW,_IntensityLabels[j], gn, 0 );
-        tsk_noRadiation->computes( _IntensityLabels[j]);   
+        tsk_noRadiation->computes( _IntensityLabels[j]);
       }
     }
 
-    sched->addTask(tsk_noRadiation, level->eachPatch(), _shared_state->allArchesMaterials(),no_Rad_TG); 
+    sched->addTask(tsk_noRadiation, level->eachPatch(), _shared_state->allArchesMaterials(),no_Rad_TG);
 //-----------------------------------------------------------------------------------------------------//
 
 //  Total number of tasks = N_sweepingPhases*N_ordinates
 if (_sweepMethod==enum_sweepSerialCopy){ // This flavor of sweeps save a new label for each phase -> intensity[ordinate][phase][i,j,k]
 //-----------------------------------------------------------------//
 // This function computes the source for radiation transport.  It
-// requires abskg, abskp, radiation temperature, Intensities from the 
+// requires abskg, abskp, radiation temperature, Intensities from the
 // previous solve, particle temperature, assymmetry factor,
 // and scatkt (last two only needed when including scattering)
 //-----------------------------------------------------------------//
 //void
-   
+
 
   std::string taskname1 = "DORadiation::init_all_intensities";
   Task* tsk1 = scinew Task(taskname1, this, &DORadiation::init_all_intensities);
@@ -880,22 +880,22 @@ if (_sweepMethod==enum_sweepSerialCopy){ // This flavor of sweeps save a new lab
   tsk1->requires( Task::OldDW,_labels->d_cellTypeLabel, gn, 0 );
   tsk1->requires( Task::NewDW,_T_label, gn, 0 );
       for (int i=0 ; i< _DO_model->get_nQn_part(); i++){
-        tsk1->requires( Task::OldDW,_DO_model->getAbskpLabels()[i], gn, 0 );  
-        tsk1->requires( Task::OldDW,_DO_model->getPartTempLabels()[i], gn, 0 ); 
+        tsk1->requires( Task::OldDW,_DO_model->getAbskpLabels()[i], gn, 0 );
+        tsk1->requires( Task::OldDW,_DO_model->getPartTempLabels()[i], gn, 0 );
       }
 
       if (_DO_model->ScatteringOnBool()){
-        for (int j=0; j< _nDir; j++){ 
+        for (int j=0; j< _nDir; j++){
           tsk1->requires( Task::OldDW,_IntensityLabels[j], gn, 0 );
-          tsk1->computes( _emiss_plus_scat_source_label[j]);   
+          tsk1->computes( _emiss_plus_scat_source_label[j]);
         }
-        tsk1->requires( Task::OldDW, _scatktLabel, gn, 0 ); 
-        tsk1->requires( Task::OldDW,_asymmetryLabel, gn, 0 ); 
+        tsk1->requires( Task::OldDW, _scatktLabel, gn, 0 );
+        tsk1->requires( Task::OldDW,_asymmetryLabel, gn, 0 );
       }
 
   tsk1->computes(_radIntSource);
 
-  sched->addTask(tsk1, level->eachPatch(), _shared_state->allArchesMaterials(),Radiation_TG); 
+  sched->addTask(tsk1, level->eachPatch(), _shared_state->allArchesMaterials(),Radiation_TG);
 
   for( int iphase=0;  iphase< 1;iphase++){
     for( int ix=0;  ix< _DO_model->getIntOrdinates();ix++){
@@ -906,7 +906,7 @@ if (_sweepMethod==enum_sweepSerialCopy){ // This flavor of sweeps save a new lab
       tskcp->requires( Task::NewDW,_T_label, gn, 0 );
       tskcp->computes( _patchIntensityLabels[iphase][ix]);
 
-      sched->addTask(tskcp, level->eachPatch(), _shared_state->allArchesMaterials(),Radiation_TG); 
+      sched->addTask(tskcp, level->eachPatch(), _shared_state->allArchesMaterials(),Radiation_TG);
     }
   }
 
@@ -929,12 +929,12 @@ if (_sweepMethod==enum_sweepSerialCopy){ // This flavor of sweeps save a new lab
     tsk2->requires( Task::NewDW,_patchIntensityLabels[iphase-1][ix], gv[_DO_model->xDir(ix)][_DO_model->yDir(ix)][_DO_model->zDir(ix)], 1 );
 
     if (_DO_model->ScatteringOnBool()){
-      tsk2->requires( Task::NewDW, _emiss_plus_scat_source_label[intensity_iter],gn,0);  
+      tsk2->requires( Task::NewDW, _emiss_plus_scat_source_label[intensity_iter],gn,0);
     }else{
       tsk2->requires( Task::NewDW, _radIntSource, gn, 0 );
     }
 
-    sched->addTask(tsk2, level->eachPatch(), _shared_state->allArchesMaterials(),Radiation_TG); 
+    sched->addTask(tsk2, level->eachPatch(), _shared_state->allArchesMaterials(),Radiation_TG);
   }
 }
 
@@ -946,7 +946,7 @@ if (_sweepMethod==enum_sweepSerialCopy){ // This flavor of sweeps save a new lab
       tskc->requires( Task::NewDW,_patchIntensityLabels[_nphase-1][ix], gn, 0 );
       tskc->computes(_IntensityLabels[ix]);
 
-      sched->addTask(tskc, level->eachPatch(), _shared_state->allArchesMaterials(),Radiation_TG); 
+      sched->addTask(tskc, level->eachPatch(), _shared_state->allArchesMaterials(),Radiation_TG);
     }
 
 //-----------------------------------------------------------------//
@@ -973,11 +973,11 @@ if (_sweepMethod==enum_sweepSerialCopy){ // This flavor of sweeps save a new lab
     tsk3->computes(_radiationVolqLabel);
     tsk3->computes( _src_label);
 
-    sched->addTask(tsk3, level->eachPatch(), _shared_state->allArchesMaterials(),Radiation_TG); 
+    sched->addTask(tsk3, level->eachPatch(), _shared_state->allArchesMaterials(),Radiation_TG);
 
  // advanced sweeping algorithm uses spatial parallisms to improve efficiency
 //  Total number of tasks = N_sweepingPhases+N_ordinates-1
-}else if(_sweepMethod==enum_sweepSpatiallyParallel){  // try to avoid redundant sweeps 
+}else if(_sweepMethod==enum_sweepSpatiallyParallel){  // try to avoid redundant sweeps
 
 //---------create patch subsets for each spatial task -----------------------//
 //
@@ -988,19 +988,19 @@ if (_sweepMethod==enum_sweepSerialCopy){ // This flavor of sweeps save a new lab
       const Uintah::PatchSet* const allPatches = sched->getLoadBalancer()->getPerProcessorPatchSet(level);
       std::vector<const Patch*> localPatches = allPatches->getSubset(Uintah::Parallel::getMPIRank())->getVector();
 
-      for (int idir=0; idir<2; idir++){ 
-        for (int jdir=0; jdir<2; jdir++){ 
-          for (int kdir=0; kdir<2; kdir++){ 
+      for (int idir=0; idir<2; idir++){
+        for (int jdir=0; jdir<2; jdir++){
+          for (int kdir=0; kdir<2; kdir++){
             // basic concept  i + j + k  must alwasy equal iphase, and be within the bounds of the super-imposed box
             for (int iphase=_directional_phase_adjustment[idir][jdir][kdir]; iphase <_nphase-_directional_phase_adjustment[1-idir][1-jdir][1-kdir]; iphase++ ){
               std::vector<const  Patch* >  RelevantPatches(0);
               for (int j=std::max(0,std::min(iphase-_patchIntVector[0]-_patchIntVector[2],_patchIntVector[1]-1));  j< std::min(iphase+1,_patchIntVector[1]);  j++ ){
-                for (int k=std::max(0,std::min(iphase-j-_patchIntVector[0],_patchIntVector[2]-1));  k< std::min(iphase-j+1,_patchIntVector[2]);  k++ ){ 
+                for (int k=std::max(0,std::min(iphase-j-_patchIntVector[0],_patchIntVector[2]-1));  k< std::min(iphase-j+1,_patchIntVector[2]);  k++ ){
                   if (iphase-j-k < _patchIntVector[0] ){
 
 
                     // adjust for non- x+ y+ z+ directions
-                    int iAdj =iphase-j-k;  
+                    int iAdj =iphase-j-k;
                     int jAdj =j;
                     int kAdj =k;
                     if(idir==1){
@@ -1031,21 +1031,21 @@ if (_sweepMethod==enum_sweepSerialCopy){ // This flavor of sweeps save a new lab
             PatchSubset* sweepingPatches= scinew PatchSubset(RelevantPatches);
             sweepingPatches->sort();
              if (idir==0 && jdir==0 && kdir==0)
-            _RelevantPatchesXpYpZp.push_back(sweepingPatches);   
+            _RelevantPatchesXpYpZp.push_back(sweepingPatches);
              if (idir==0 && jdir==0 && kdir==1)
-            _RelevantPatchesXpYpZm.push_back(sweepingPatches);   
+            _RelevantPatchesXpYpZm.push_back(sweepingPatches);
              if (idir==0 && jdir==1 && kdir==0)
-            _RelevantPatchesXpYmZp.push_back(sweepingPatches);  
+            _RelevantPatchesXpYmZp.push_back(sweepingPatches);
              if (idir==0 && jdir==1 && kdir==1)
-            _RelevantPatchesXpYmZm.push_back(sweepingPatches);  
+            _RelevantPatchesXpYmZm.push_back(sweepingPatches);
              if (idir==1 && jdir==0 && kdir==0)
-            _RelevantPatchesXmYpZp.push_back(sweepingPatches);  
+            _RelevantPatchesXmYpZp.push_back(sweepingPatches);
              if (idir==1 && jdir==0 && kdir==1)
             _RelevantPatchesXmYpZm.push_back(sweepingPatches);
              if (idir==1 && jdir==1 && kdir==0)
-            _RelevantPatchesXmYmZp.push_back(sweepingPatches);  
+            _RelevantPatchesXmYmZp.push_back(sweepingPatches);
              if (idir==1 && jdir==1 && kdir==1)
-            _RelevantPatchesXmYmZm.push_back(sweepingPatches);  
+            _RelevantPatchesXmYmZm.push_back(sweepingPatches);
             } // iphase
           } // z+ z- dir
         } // y+ y- dir
@@ -1068,17 +1068,17 @@ if (_sweepMethod==enum_sweepSerialCopy){ // This flavor of sweeps save a new lab
       tsk1->requires( Task::OldDW,_labels->d_cellTypeLabel, gn, 0 );
       tsk1->requires( Task::NewDW,_T_label, gn, 0 );
       for (int i=0 ; i< _DO_model->get_nQn_part(); i++){
-        tsk1->requires( Task::OldDW,_DO_model->getAbskpLabels()[i], gn, 0 );  
-        tsk1->requires( Task::OldDW,_DO_model->getPartTempLabels()[i], gn, 0 ); 
+        tsk1->requires( Task::OldDW,_DO_model->getAbskpLabels()[i], gn, 0 );
+        tsk1->requires( Task::OldDW,_DO_model->getPartTempLabels()[i], gn, 0 );
       }
 
       if (_DO_model->ScatteringOnBool()){
-        for (int j=0; j< _nDir; j++){ 
+        for (int j=0; j< _nDir; j++){
           tsk1->requires( Task::OldDW,_IntensityLabels[j], gn, 0 );
-          tsk1->computes( _emiss_plus_scat_source_label[j]);   
+          tsk1->computes( _emiss_plus_scat_source_label[j]);
         }
-        tsk1->requires( Task::OldDW, _scatktLabel, gn, 0 ); 
-        tsk1->requires( Task::OldDW,_asymmetryLabel, gn, 0 ); 
+        tsk1->requires( Task::OldDW, _scatktLabel, gn, 0 );
+        tsk1->requires( Task::OldDW,_asymmetryLabel, gn, 0 );
       }
 
       tsk1->computes(_radIntSource);
@@ -1086,7 +1086,7 @@ if (_sweepMethod==enum_sweepSerialCopy){ // This flavor of sweeps save a new lab
   //--------------------------------------------------------------------//
   //    Scedule set BCs task.  Sets the intensity fields in the walls.  //
   //--------------------------------------------------------------------//
-      sched->addTask(tsk1, level->eachPatch(), _shared_state->allArchesMaterials(),Radiation_TG); 
+      sched->addTask(tsk1, level->eachPatch(), _shared_state->allArchesMaterials(),Radiation_TG);
 
       for( int ix=0;  ix< _DO_model->getIntOrdinates();ix++){
         std::stringstream tasknamec;
@@ -1096,7 +1096,7 @@ if (_sweepMethod==enum_sweepSerialCopy){ // This flavor of sweeps save a new lab
         tskc->requires( Task::NewDW,_T_label, gn, 0 );
         tskc->computes( _IntensityLabels[ix]);
 
-        sched->addTask(tskc, level->eachPatch(), _shared_state->allArchesMaterials(),Radiation_TG); 
+        sched->addTask(tskc, level->eachPatch(), _shared_state->allArchesMaterials(),Radiation_TG);
       }
 
 
@@ -1104,8 +1104,8 @@ if (_sweepMethod==enum_sweepSerialCopy){ // This flavor of sweeps save a new lab
 
 
   //--------------------------------------------------------------------//
-  // These Tasks computes the intensities, on a per patch basis. The pseudo 
-  // spatial scheduling acheieved could use features from the infrastructure 
+  // These Tasks computes the intensities, on a per patch basis. The pseudo
+  // spatial scheduling acheieved could use features from the infrastructure
   // to be improved. The spatial tasks were developed by looking at single direction,
   // then re-used for the other directions by re-mapping the processor IDs.
   // These tasks are the bottle-neck in the radiation solve (sweeping method).
@@ -1117,25 +1117,25 @@ if (_sweepMethod==enum_sweepSerialCopy){ // This flavor of sweeps save a new lab
             int pAdjm = _directional_phase_adjustment[1-_DO_model->xDir(first_intensity)][1-_DO_model->yDir(first_intensity)][1-_DO_model->zDir(first_intensity)];// L-shaped domain adjustment, assumes that ordiantes are stored in octants (8 bins), with similiar directional properties in each bin
             int pAdjp = _directional_phase_adjustment[_DO_model->xDir(first_intensity)][_DO_model->yDir(first_intensity)][_DO_model->zDir(first_intensity)];// L-shaped domain adjustment, assumes that ordiantes are stored in octants (8 bins), with similiar directional properties in each bin
            for( int int_x=std::max(0,istage-_nphase+pAdjm+1);  int_x<std::min(_nDir/nOctants,istage+1); int_x++){ // loop over per-octant-intensities (intensity_within_octant_x)
-             if(istage-int_x>_nphase-pAdjp-pAdjm-1){ // Terminte sweep early for multi-box problems  
-               continue;  
+             if(istage-int_x>_nphase-pAdjp-pAdjm-1){ // Terminte sweep early for multi-box problems
+               continue;
              }
                  // combine stages into single task?
             int intensity_iter=int_x+idir*_nDir/nOctants;
             std::stringstream taskname2;
-            //                    base name         
+            //                    base name
             taskname2 << "DORadiation::doSweepAdvanced_" <<istage<< "_"<<intensity_iter;
             Task* tsk2 = scinew Task(taskname2.str(), this, &DORadiation::doSweepAdvanced, istage,intensity_iter);
             tsk2->requires( Task::OldDW,_labels->d_cellTypeLabel, gn, 0 );
             tsk2->requires( Task::OldDW,_abskt_label, gn, 0 );
 
           if (_DO_model->ScatteringOnBool()){
-            tsk2->requires( Task::NewDW, _emiss_plus_scat_source_label[intensity_iter],gn,0);   
+            tsk2->requires( Task::NewDW, _emiss_plus_scat_source_label[intensity_iter],gn,0);
           }else{
             tsk2->requires( Task::NewDW, _radIntSource, gn, 0 );
           }
 
-            tsk2->modifies( _IntensityLabels[intensity_iter]);   
+            tsk2->modifies( _IntensityLabels[intensity_iter]);
 
             // -------------- Turn on and off communication depending on phase and intensity using equation:  iStage = iPhase + intensity_within_octant_x ------------------------//
             if (_DO_model->xDir(first_intensity) ==1 && _DO_model->yDir(first_intensity)==1 && _DO_model->zDir(first_intensity)==1)
@@ -1155,7 +1155,7 @@ if (_sweepMethod==enum_sweepSerialCopy){ // This flavor of sweeps save a new lab
             if (_DO_model->xDir(first_intensity) ==0 && _DO_model->yDir(first_intensity)==0 && _DO_model->zDir(first_intensity)==0)
             tsk2->requires( Task::NewDW, _IntensityLabels[intensity_iter] ,_RelevantPatchesXmYmZm[istage-int_x], Uintah::Task::PatchDomainSpec::ThisLevel, _matlDS, Uintah::Task::MaterialDomainSpec::NormalDomain, gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, false);
 
-            sched->addTask(tsk2, level->eachPatch(), _shared_state->allArchesMaterials(),Radiation_TG); 
+            sched->addTask(tsk2, level->eachPatch(), _shared_state->allArchesMaterials(),Radiation_TG);
           }
         }
       }
@@ -1184,7 +1184,7 @@ if (_sweepMethod==enum_sweepSerialCopy){ // This flavor of sweeps save a new lab
       tsk3->computes(_radiationVolqLabel);
       tsk3->computes( _src_label);
 
-      sched->addTask(tsk3, level->eachPatch(), _shared_state->allArchesMaterials(),Radiation_TG); 
+      sched->addTask(tsk3, level->eachPatch(), _shared_state->allArchesMaterials(),Radiation_TG);
 
 
 
@@ -1202,23 +1202,23 @@ if (_sweepMethod==enum_sweepSerialCopy){ // This flavor of sweeps save a new lab
       tsk1->requires( Task::OldDW,_labels->d_cellTypeLabel, gn, 0 );
       tsk1->requires( Task::NewDW,_T_label, gn, 0 );
       for (int i=0 ; i< _DO_model->get_nQn_part(); i++){
-        tsk1->requires( Task::OldDW,_DO_model->getAbskpLabels()[i], gn, 0 );  
-        tsk1->requires( Task::OldDW,_DO_model->getPartTempLabels()[i], gn, 0 ); 
+        tsk1->requires( Task::OldDW,_DO_model->getAbskpLabels()[i], gn, 0 );
+        tsk1->requires( Task::OldDW,_DO_model->getPartTempLabels()[i], gn, 0 );
       }
 
 
       if (_DO_model->ScatteringOnBool()){
-        for (int j=0; j< _nDir; j++){ 
+        for (int j=0; j< _nDir; j++){
           tsk1->requires( Task::OldDW,_IntensityLabels[j], gn, 0 );
           tsk1->computes( _emiss_plus_scat_source_label[j]);
         }
-        tsk1->requires( Task::OldDW, _scatktLabel, gn, 0 ); 
-        tsk1->requires( Task::OldDW,_asymmetryLabel, gn, 0 ); 
+        tsk1->requires( Task::OldDW, _scatktLabel, gn, 0 );
+        tsk1->requires( Task::OldDW,_asymmetryLabel, gn, 0 );
       }
 
       tsk1->computes(_radIntSource);
 
-      sched->addTask(tsk1, level->eachPatch(), _shared_state->allArchesMaterials(),Radiation_TG); 
+      sched->addTask(tsk1, level->eachPatch(), _shared_state->allArchesMaterials(),Radiation_TG);
 
       for( int ix=0;  ix< _DO_model->getIntOrdinates();ix++){
         std::stringstream tasknamec;
@@ -1228,7 +1228,7 @@ if (_sweepMethod==enum_sweepSerialCopy){ // This flavor of sweeps save a new lab
         tskc->requires( Task::NewDW,_T_label, gn, 0 );
         tskc->computes( _IntensityLabels[ix]);
 
-        sched->addTask(tskc, level->eachPatch(), _shared_state->allArchesMaterials(),Radiation_TG); 
+        sched->addTask(tskc, level->eachPatch(), _shared_state->allArchesMaterials(),Radiation_TG);
       }
 
 
@@ -1245,7 +1245,7 @@ if (_sweepMethod==enum_sweepSerialCopy){ // This flavor of sweeps save a new lab
           tsk2->requires( Task::OldDW,_labels->d_cellTypeLabel, gn, 0 );
           tsk2->requires( Task::OldDW,_abskt_label, gn, 0 );
           if (_DO_model->ScatteringOnBool()){
-            tsk2->requires( Task::NewDW, _emiss_plus_scat_source_label[ix],gn,0);  
+            tsk2->requires( Task::NewDW, _emiss_plus_scat_source_label[ix],gn,0);
           }else{
             tsk2->requires( Task::NewDW, _radIntSource, gn, 0 );
           }
@@ -1254,7 +1254,7 @@ if (_sweepMethod==enum_sweepSerialCopy){ // This flavor of sweeps save a new lab
           tsk2->modifies( _IntensityLabels[ix]);
           tsk2->requires( Task::NewDW,_IntensityLabels[ix], gv[_DO_model->xDir(ix)][_DO_model->yDir(ix)][_DO_model->zDir(ix)], 1 );
 
-          sched->addTask(tsk2, level->eachPatch(), _shared_state->allArchesMaterials(),Radiation_TG); 
+          sched->addTask(tsk2, level->eachPatch(), _shared_state->allArchesMaterials(),Radiation_TG);
         }
       }
 
@@ -1283,7 +1283,7 @@ if (_sweepMethod==enum_sweepSerialCopy){ // This flavor of sweeps save a new lab
       tsk3->computes(_radiationVolqLabel);
       tsk3->computes( _src_label);
 
-      sched->addTask(tsk3, level->eachPatch(), _shared_state->allArchesMaterials(),Radiation_TG); 
+      sched->addTask(tsk3, level->eachPatch(), _shared_state->allArchesMaterials(),Radiation_TG);
 
 // original sweep method the first proto-type, and is very fast
 // Does not schedule patch-patch communication, may be useful for idealized benchmarks or single patch problems
@@ -1295,18 +1295,18 @@ if (_sweepMethod==enum_sweepSerialCopy){ // This flavor of sweeps save a new lab
   tsk4->requires( Task::OldDW,_abskg_label, gn, 0 );
   tsk4->requires( Task::NewDW,_T_label, gn, 0 );
       for (int i=0 ; i< _DO_model->get_nQn_part(); i++){
-        tsk4->requires( Task::OldDW,_DO_model->getAbskpLabels()[i], gn, 0 );  
-        tsk4->requires( Task::OldDW,_DO_model->getPartTempLabels()[i], gn, 0 ); 
+        tsk4->requires( Task::OldDW,_DO_model->getAbskpLabels()[i], gn, 0 );
+        tsk4->requires( Task::OldDW,_DO_model->getPartTempLabels()[i], gn, 0 );
       }
 
     tsk4->computes(_radIntSource);
     if (_DO_model->ScatteringOnBool()){
-      for (int j=0; j< _nDir; j++){ 
+      for (int j=0; j< _nDir; j++){
         tsk4->requires( Task::OldDW,_IntensityLabels[j], gn, 0 );
-        tsk4->computes( _emiss_plus_scat_source_label[j]);   
+        tsk4->computes( _emiss_plus_scat_source_label[j]);
       }
-      tsk4->requires( Task::OldDW, _scatktLabel, gn, 0 ); 
-      tsk4->requires( Task::OldDW,_asymmetryLabel, gn, 0 ); 
+      tsk4->requires( Task::OldDW, _scatktLabel, gn, 0 );
+      tsk4->requires( Task::OldDW,_asymmetryLabel, gn, 0 );
     }
 
     tsk4->requires( Task::OldDW,_labels->d_cellTypeLabel, gn, 0 );
@@ -1325,49 +1325,49 @@ if (_sweepMethod==enum_sweepSerialCopy){ // This flavor of sweeps save a new lab
     tsk4->computes(_radiationVolqLabel);
     tsk4->computes( _src_label);
 
-    sched->addTask(tsk4, level->eachPatch(), _shared_state->allArchesMaterials(),Radiation_TG); 
+    sched->addTask(tsk4, level->eachPatch(), _shared_state->allArchesMaterials(),Radiation_TG);
 }
-} 
+}
 }
 
 
 
 
 void
-DORadiation::sweepOnePatch( const ProcessorGroup* pc, 
-                         const PatchSubset* patches, 
-                         const MaterialSubset* matls, 
-                         DataWarehouse* old_dw, 
+DORadiation::sweepOnePatch( const ProcessorGroup* pc,
+                         const PatchSubset* patches,
+                         const MaterialSubset* matls,
+                         DataWarehouse* old_dw,
                          DataWarehouse* new_dw )
 {
   for (int p=0; p < patches->size(); p++){
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _labels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-    _DO_model->getDOSource(patch, matlIndex, new_dw, old_dw); 
+    int matlIndex = _labels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    _DO_model->getDOSource(patch, matlIndex, new_dw, old_dw);
 
     for( int ix=0;  ix< _DO_model->getIntOrdinates();ix++){
-      _DO_model->intensitysolveSweepOrigProto(patch,matlIndex, new_dw,old_dw,  ix );  
+      _DO_model->intensitysolveSweepOrigProto(patch,matlIndex, new_dw,old_dw,  ix );
     }
 
-    _DO_model->computeFluxDiv( patch, matlIndex, new_dw, old_dw); 
+    _DO_model->computeFluxDiv( patch, matlIndex, new_dw, old_dw);
   }
 }
 
 void
-DORadiation::setIntensityBC( const ProcessorGroup* pc, 
-                         const PatchSubset* patches, 
-                         const MaterialSubset* matls, 
-                         DataWarehouse* old_dw, 
+DORadiation::setIntensityBC( const ProcessorGroup* pc,
+                         const PatchSubset* patches,
+                         const MaterialSubset* matls,
+                         DataWarehouse* old_dw,
                          DataWarehouse* new_dw,
                          int ix )
 {
   for (int p=0; p < patches->size(); p++){
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _labels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = _labels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
   CCVariable <double > intensity;
-  new_dw->allocateAndPut(intensity,_IntensityLabels[ix] , matlIndex, patch);   
+  new_dw->allocateAndPut(intensity,_IntensityLabels[ix] , matlIndex, patch);
   intensity.initialize(0.0);
   _DO_model->setIntensityBC2Orig( patch, matlIndex, new_dw, old_dw, ix);
 
@@ -1376,29 +1376,29 @@ DORadiation::setIntensityBC( const ProcessorGroup* pc,
 
 
 void
-DORadiation::reduce_phase_intensity_to_final( const ProcessorGroup* pc, 
-                         const PatchSubset* patches, 
-                         const MaterialSubset* matls, 
-                         DataWarehouse* old_dw, 
+DORadiation::reduce_phase_intensity_to_final( const ProcessorGroup* pc,
+                         const PatchSubset* patches,
+                         const MaterialSubset* matls,
+                         DataWarehouse* old_dw,
                          DataWarehouse* new_dw,
                          int ix )
 {
   for (int p=0; p < patches->size(); p++){
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _labels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = _labels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
   CCVariable <double > intensity;
-  new_dw->allocateAndPut(intensity,_IntensityLabels[ix] , matlIndex, patch);  
+  new_dw->allocateAndPut(intensity,_IntensityLabels[ix] , matlIndex, patch);
   intensity.initialize(0.0);
   new_dw->copyOut( intensity   ,_patchIntensityLabels[_nphase-1][ix]  , matlIndex , patch ,Ghost::None  , 0 );
   }
 }
 
 void
-DORadiation::initialize_copyMethod_intensities( const ProcessorGroup* pc, 
-                         const PatchSubset* patches, 
-                         const MaterialSubset* matls, 
-                         DataWarehouse* old_dw, 
+DORadiation::initialize_copyMethod_intensities( const ProcessorGroup* pc,
+                         const PatchSubset* patches,
+                         const MaterialSubset* matls,
+                         DataWarehouse* old_dw,
                          DataWarehouse* new_dw,
                          int ixs)
 {
@@ -1407,7 +1407,7 @@ DORadiation::initialize_copyMethod_intensities( const ProcessorGroup* pc,
   for (int p=0; p < patches->size(); p++){
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _labels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = _labels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
     CCVariable <double > intensity;
     new_dw->allocateAndPut(intensity,_patchIntensityLabels[ixx][ix] , matlIndex, patch);   // change to computes when making it its own task
     intensity.initialize(0.0);
@@ -1433,10 +1433,10 @@ DORadiation::getSweepPatchIndex( double patchMid, std::vector<double>& indep_var
 
 
 void
-DORadiation::TransferRadFieldsFromOldDW( const ProcessorGroup* pc, 
-                         const PatchSubset* patches, 
-                         const MaterialSubset* matls, 
-                         DataWarehouse* old_dw, 
+DORadiation::TransferRadFieldsFromOldDW( const ProcessorGroup* pc,
+                         const PatchSubset* patches,
+                         const MaterialSubset* matls,
+                         DataWarehouse* old_dw,
                          DataWarehouse* new_dw)
 {
 
@@ -1461,4 +1461,3 @@ DORadiation::TransferRadFieldsFromOldDW( const ProcessorGroup* pc,
      new_dw->transferFrom(old_dw, _src_label,patches,matls);
 
 }
-

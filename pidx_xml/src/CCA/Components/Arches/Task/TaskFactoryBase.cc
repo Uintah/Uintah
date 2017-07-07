@@ -226,7 +226,7 @@ void TaskFactoryBase::schedule_task_group( const std::string task_group_name,
     for (unsigned int i = 0; i < task_names.size(); i++ ){
 
       task_list_dummy[0] = retrieve_task( task_names[i] );
-      factory_schedule_task( level, sched, matls, type, task_list_dummy, task_group_name,
+      factory_schedule_task( level, sched, matls, type, task_list_dummy, task_names[i],
                              time_substep, reinitialize, pack_tasks );
 
     }
@@ -259,17 +259,17 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
         time_substep = 0;
         break;
       case (TaskInterface::RESTART_INITIALIZE):
-        (*i_task)->register_restart_initialize( variable_registry );
+        (*i_task)->register_restart_initialize( variable_registry , pack_tasks);
         time_substep = 0;
       case (TaskInterface::TIMESTEP_INITIALIZE):
-        (*i_task)->register_timestep_init( variable_registry );
+        (*i_task)->register_timestep_init( variable_registry, pack_tasks );
         time_substep = 0;
         break;
       case (TaskInterface::TIMESTEP_EVAL):
-        (*i_task)->register_timestep_eval( variable_registry, time_substep );
+        (*i_task)->register_timestep_eval( variable_registry, time_substep, pack_tasks);
         break;
       case (TaskInterface::BC):
-        (*i_task)->register_compute_bcs( variable_registry, time_substep );
+        (*i_task)->register_compute_bcs( variable_registry, time_substep , pack_tasks);
         break;
       default:
         throw InvalidValue("Error: TASK_TYPE not recognized.",__FILE__,__LINE__);
