@@ -104,7 +104,7 @@ PressureEqn::initialize( const Patch* patch, ATIM* tsk_info ){
   CCVariable<double>& b = tsk_info->get_uintah_field_add<CCVariable<double> >("b_press");
   CCVariable<double>& x = tsk_info->get_uintah_field_add<CCVariable<double> >(m_pressure_name);
   CCVariable<double>& guess = tsk_info->get_uintah_field_add<CCVariable<double> >("guess_press");
-  constCCVariable<double>& eps = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_eps_name);
+  //constCCVariable<double>& eps = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_eps_name);
   constSFCXVariable<double>& xmom = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >("x-mom");
   constSFCYVariable<double>& ymom = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >("y-mom");
   constSFCZVariable<double>& zmom = tsk_info->get_const_uintah_field_add<constSFCZVariable<double> >("z-mom");
@@ -157,7 +157,8 @@ PressureEqn::initialize( const Patch* patch, ATIM* tsk_info ){
 //--------------------------------------------------------------------------------------------------
 void
 PressureEqn::register_timestep_init(
-  std::vector<AFC::VariableInformation>& variable_registry ){
+  std::vector<AFC::VariableInformation>& variable_registry,
+  const bool packed_tasks ){
 
   register_variable( "A_press", AFC::COMPUTES, variable_registry );
   register_variable( "A_press", AFC::REQUIRES, 0, AFC::OLDDW, variable_registry );
@@ -189,7 +190,7 @@ PressureEqn::timestep_init( const Patch* patch, ATIM* tsk_info ){
 void
 PressureEqn::register_timestep_eval(
   std::vector<AFC::VariableInformation>& variable_registry,
-  const int time_substep ){
+  const int time_substep, const bool packed_tasks ){
 
   register_variable( "b_press", AFC::MODIFIES, variable_registry );
   register_variable( m_eps_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry );
@@ -238,7 +239,8 @@ PressureEqn::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 //--------------------------------------------------------------------------------------------------
 void
 PressureEqn::register_compute_bcs(
-  std::vector<AFC::VariableInformation>& variable_registry, const int time_substep ){
+  std::vector<AFC::VariableInformation>& variable_registry, const int time_substep,
+  const bool packed_tasks ){
 
   register_variable( "b_press", AFC::MODIFIES, variable_registry );
   register_variable( "A_press", AFC::MODIFIES, variable_registry );

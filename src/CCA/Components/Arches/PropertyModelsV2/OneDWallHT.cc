@@ -71,7 +71,7 @@ OneDWallHT::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 //--------------------------------------------------------------------------------------------------
 void
 OneDWallHT::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>&
-                                          variable_registry ){
+                                    variable_registry, const bool packed_tasks ){
 
   register_variable( "Twall", ArchesFieldContainer::COMPUTES, variable_registry );
 
@@ -89,7 +89,8 @@ OneDWallHT::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info )
 //--------------------------------------------------------------------------------------------------
 void
 OneDWallHT::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>&
-                                          variable_registry, const int time_substep ){
+                                    variable_registry, const int time_substep,
+                                    const bool packed_tasks ){
 
   register_variable( "Twall",                ArchesFieldContainer::MODIFIES ,  variable_registry, time_substep );
   register_variable( _incident_hf_label,     ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::LATEST , variable_registry , time_substep );

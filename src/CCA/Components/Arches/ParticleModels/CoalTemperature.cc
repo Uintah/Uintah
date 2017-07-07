@@ -169,7 +169,7 @@ CoalTemperature::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info
 
 //--------------------------------------------------------------------------------------------------
 void
-CoalTemperature::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
+CoalTemperature::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){
 
   for ( int i = 0; i < _Nenv; i++ ){
 
@@ -204,7 +204,7 @@ CoalTemperature::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_i
 
 //--------------------------------------------------------------------------------------------------
 void
-CoalTemperature::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
+CoalTemperature::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){
 
   for ( int i = 0; i < _Nenv; i++ ){
 

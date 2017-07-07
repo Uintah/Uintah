@@ -19,13 +19,13 @@ namespace Uintah{
 
     void register_initialize( ArchesVIVector& variable_registry , const bool packed_tasks);
 
-    void register_timestep_init( ArchesVIVector& variable_registry );
+    void register_timestep_init( ArchesVIVector& variable_registry , const bool packed_tasks);
 
     void register_timestep_eval( ArchesVIVector& variable_registry,
-                                 const int time_substep ){};
+                                 const int time_substep, const bool packed_tasks ){};
 
     void register_compute_bcs( ArchesVIVector& variable_registry,
-                               const int time_substep ){};
+                               const int time_substep, const bool packed_tasks ){};
 
     void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){};
 
