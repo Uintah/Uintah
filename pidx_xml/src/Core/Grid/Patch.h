@@ -1315,7 +1315,7 @@ namespace Uintah {
      * Returns the patches on the finer level that overlap
      * this patch
      **/
-    void inline getFineLevelPatches(selectType& finePatches) const { getOtherLevelPatches(1, finePatches); }
+    void inline getFineLevelPatches(selectType& finePatches, int levelOffset = 1) const { getOtherLevelPatches(levelOffset, finePatches); }
     
     /**
      * Returns the patches on the coarser level that overlap

@@ -93,6 +93,8 @@ Arches::~Arches()
     }
   }
   releasePort("solver");
+
+
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -103,13 +105,14 @@ Arches::problemSetup( const ProblemSpecP     & params,
                             SimulationStateP & sharedState )
 {
 
+
   m_sharedState= sharedState;
   ArchesMaterial* mat= scinew ArchesMaterial();
   sharedState->registerArchesMaterial(mat);
   ProblemSpecP db = params->findBlock("CFD")->findBlock("ARCHES");
   m_arches_spec = db;
 
-  // Check for lagrangian particles
+  // Check for Lagrangian particles
   m_do_lagrangian_particles = m_arches_spec->findBlock("LagrangianParticles");
   if ( m_do_lagrangian_particles ) {
     m_particlesHelper->problem_setup(params,m_arches_spec->findBlock("LagrangianParticles"), sharedState);
@@ -166,6 +169,10 @@ Arches::problemSetup( const ProblemSpecP     & params,
 
   m_nlSolver->problemSetup( db, m_sharedState, grid );
 
+  // tell the infrastructure how many tasksgraphs are needed.
+  Scheduler* sched = dynamic_cast<Scheduler*>(UintahParallelComponent::getPort("scheduler"));
+  int num_task_graphs=m_nlSolver->taskGraphsRequested();
+  sched->setNumTaskGraphs(num_task_graphs);
 
   //__________________________________
   // On the Fly Analysis. The belongs at bottom
@@ -274,8 +281,9 @@ Arches::scheduleTimeAdvance( const LevelP& level,
                              SchedulerP& sched)
 {
   // Only schedule
-  if(level->getIndex() != m_arches_level_index)
+  if(level->getIndex() != m_arches_level_index) {
     return;
+  }
 
   printSchedule(level,dbg, "Arches::scheduleTimeAdvance");
 
@@ -285,7 +293,7 @@ Arches::scheduleTimeAdvance( const LevelP& level,
     m_sharedState->setRegridTimestep(false);
   }
 
-  if (m_doing_restart  ) {
+  if ( m_doing_restart ) {
     if(m_recompile_taskgraph) {
       m_nlSolver->sched_restartInitializeTimeAdvance(level,sched);
   }}
@@ -296,8 +304,7 @@ Arches::scheduleTimeAdvance( const LevelP& level,
   //  on the fly analysis
   if(m_analysis_modules.size() != 0) {
     vector<AnalysisModule*>::iterator iter;
-    for( iter  = m_analysis_modules.begin();
-         iter != m_analysis_modules.end(); iter++) {
+    for( iter = m_analysis_modules.begin(); iter != m_analysis_modules.end(); iter++) {
       AnalysisModule* am = *iter;
       am->scheduleDoAnalysis( sched, level);
     }
@@ -321,8 +328,16 @@ bool Arches::needRecompile(double time, double dt,
     m_recompile_taskgraph = false;
     return temp;
   }
-  else
+  else {
     return m_recompile_taskgraph;
+  }
+}
+
+int Arches::computeTaskGraphIndex()
+{
+  // setup the task graph for execution on the next timestep
+  int time_step = m_sharedState->getCurrentTopLevelTimeStep();
+  return m_nlSolver->getTaskGraphIndex( time_step );
 }
 
 //--------------------------------------------------------------------------------------------------

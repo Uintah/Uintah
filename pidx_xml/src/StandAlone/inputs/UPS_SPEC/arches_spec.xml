@@ -86,7 +86,7 @@
                                                                           gasRadProperties,
                                                                           partRadProperties,
                                                                           CO, wall_thermal_resistance'">
-
+              <absorption_modifier        spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type partRadProperties gasRadProperties"/> <!-- multiplicative modifier on gas or particle absorption coefficients, does not affect scattering coefficients -->
               <subModel                   spec="REQUIRED STRING  'constantCIF, basic, Coal'"   need_applies_to="type partRadProperties" />
               <part_temp_label            spec="REQUIRED STRING"  need_applies_to="type partRadProperties" />    <!--base label used for particle temp in DQMOM-->
               <part_size_label            spec="REQUIRED STRING"  need_applies_to="type partRadProperties" />    <!--base label used for particle size in DQMOM-->
@@ -1025,6 +1025,9 @@
         <initial_dt                     spec="OPTIONAL DOUBLE 'positive'"/>  <!-- Sets the initial timestep of the simulation.  Note that this value will
                                                                                   be superceded if the CFL condition determines a smaller timestep as determined
                                                                                   from the BC's and initial condition.  -->
+
+        <integrator                     spec="OPTIONAL STRING 'ssprk, sandbox'"/> <!-- solution scheme during timestepping. Default = ssprk -->
+
       </KokkosSolver>
 
       <ExplicitSolver                   spec="OPTIONAL NO_DATA" >
@@ -1909,7 +1912,7 @@
                                                                           CharOxidationSmith,
                                                                           CharOxidationSmith2016,
                                                                           Deposition,
-                                                                          SimpleBirth'">
+                                                                          BirthDeath'">
 
             <ICVars                     spec="OPTIONAL NO_DATA"> <!-- block containing list of internal coordinates the DQMOM model depends on -->
               <variable                 spec="MULTIPLE NO_DATA"
@@ -1937,12 +1940,12 @@
                                         need_applies_to="type Drag,Thermophoresis"/>
             <!-- Simple Birth -->
             <small_weight               spec="REQUIRED DOUBLE"
-                                        need_applies_to="type SimpleBirth"/> <!-- The smallest weight value allowed -->
+                                        need_applies_to="type BirthDeath"/> <!-- The smallest weight value allowed -->
             <is_weight                  spec="OPTIONAL NO_DATA"
-                                        need_applies_to="type SimpleBirth,Deposition"/> <!-- Model birth term for the weight -->
+                                        need_applies_to="type BirthDeath,Deposition"/> <!-- Model birth term for the weight -->
             <abscissa                   spec="OPTIONAL NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        need_applies_to="type SimpleBirth,Deposition"/> <!-- If not a weight, then the root of the abscissa name -->
+                                        need_applies_to="type BirthDeath,Deposition"/> <!-- If not a weight, then the root of the abscissa name -->
 
 
           </model>

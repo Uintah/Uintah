@@ -60,7 +60,7 @@ namespace Uintah {
                             const bool,
                             const VarLabel* varLabel,
                             const int indx,
-                            DataWarehouse* new_dw,
+                            DataWarehouse* dw,
                             const Patch* coarsePatch,
                             const Level* coarseLevel,
                             const Level* fineLevel);

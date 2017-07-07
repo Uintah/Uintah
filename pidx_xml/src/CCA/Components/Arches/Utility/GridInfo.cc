@@ -20,7 +20,7 @@ GridInfo::create_local_labels(){
 
 //--------------------------------------------------------------------------------------------------
 void
-GridInfo::register_initialize( std::vector<AFC::VariableInformation>& variable_registry ){
+GridInfo::register_initialize( std::vector<AFC::VariableInformation>& variable_registry , const bool packed_tasks){
 
   register_variable( "gridX", AFC::COMPUTES, variable_registry );
   register_variable( "gridY", AFC::COMPUTES, variable_registry );
@@ -53,7 +53,8 @@ GridInfo::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   const Level* lvl = patch->getLevel();
   IntVector min; IntVector max;
   lvl->getGrid()->getLevel(0)->findCellIndexRange(min,max);
-  Box domainBox = lvl->getBox(min+IntVector(1,1,1), max-IntVector(1,1,1));
+  IntVector period_bc = IntVector(1,1,1) - lvl->getPeriodicBoundaries();
+  Box domainBox = lvl->getBox(min+period_bc, max-period_bc);
   const double lowx = domainBox.lower().x();
   const double lowy = domainBox.lower().y();
   const double lowz = domainBox.lower().z();

@@ -106,6 +106,8 @@ public:
   virtual bool needRecompile(double time, double dt,
                              const GridP& grid);
 
+  virtual int computeTaskGraphIndex();
+
   void setMPMArchesLabel(const MPMArchesLabel* MAlb){
     m_MAlab = MAlb;
   }

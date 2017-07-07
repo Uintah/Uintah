@@ -252,7 +252,7 @@ public:
   void setRecompileTaskGraph(bool ans) { d_recompileTaskGraph = ans; }    
 
   double getOverheadAvg() const { return d_overheadAvg; }   
-  void setOverheadAvg(double val) { d_overheadAvg = val; }    
+  void   setOverheadAvg(double val) { d_overheadAvg = val; }
 
   bool getUseLocalFileSystems() const { return d_usingLocalFileSystems; }   
   void setUseLocalFileSystems(bool ans) { d_usingLocalFileSystems = ans; }    
@@ -264,9 +264,9 @@ public:
   bool haveModifiedVars() { return d_haveModifiedVars; }
 
   SimulationTime * getSimulationTime() const { return d_simulationTime; }   
-  void setSimulationTime(SimulationTime * simTime) { d_simulationTime = simTime; }
+  void             setSimulationTime(SimulationTime * simTime) { d_simulationTime = simTime; }
 
-  int getNumDims() const { return d_numDims; }
+  int  getNumDims() const { return d_numDims; }
   int* getActiveDims() { return d_activeDims; }
   void setDimensionality(bool x, bool y, bool z);
 
@@ -281,16 +281,16 @@ public:
   // timing statistics to test load balance
   enum RunTimeStat
   {
-    CompilationTime = 0,       // These five enumerators
-    RegriddingTime,            // are use in
-    RegriddingCompilationTime, // SimulationController::printSimulationStats
-    RegriddingCopyDataTime,    // to determine the overhead time.
+    CompilationTime = 0,       // These five enumerators are used in
+    RegriddingTime,            // SimulationController::printSimulationStats to determine the overhead time.
+    RegriddingCompilationTime,
+    RegriddingCopyDataTime,
     LoadBalancerTime,
     
-    TaskExecTime,              // These five enumerators
-    TaskLocalCommTime,         // are use in
-    TaskGlobalCommTime,        // SimulationController::printSimulationStats
-    TaskWaitCommTime,          // to determine the total time. 
+    TaskExecTime,              // These five enumerators are used in
+    TaskLocalCommTime,         // SimulationController::printSimulationStats to determine the overhead time.
+    TaskWaitCommTime,
+    TaskReduceCommTime,
     TaskWaitThreadTime,
 
     XMLIOTime,
@@ -303,7 +303,7 @@ public:
     OutputIORate,
     ReductionIORate,
     CheckpointIORate,
-    CheckpointReductionIORate,
+    CheckpointReducIORate,
 
     SCIMemoryUsed,
     SCIMemoryMaxUsed,

@@ -66,7 +66,7 @@ namespace Uintah{
 
   protected:
 
-    void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry );
+    void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks);
 
     void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){}
 
@@ -147,6 +147,8 @@ namespace Uintah{
 //--------------------------------------------------------------------------------------------------
   template <typename T>
   void ShaddixEnthalpy<T>::problemSetup( ProblemSpecP& db ){
+    proc0cout << "WARNING: ParticleModels ShaddixEnthalpy needs to be made consistent with DQMOM models and use correct DW, use model at your own risk."
+      << "\n" << "\n" << "\n" << "\n" << "\n" << "\n" << "\n" << "\n" << "\n" << "\n"<< std::endl;
     //required particle properties
     _base_raw_coal_name = ParticleTools::parse_for_role_to_label(db, "raw_coal");
     _base_char_mass_name = ParticleTools::parse_for_role_to_label(db, "char");
@@ -285,7 +287,7 @@ namespace Uintah{
 
 //--------------------------------------------------------------------------------------------------
   template <typename T>
-  void ShaddixEnthalpy<T>::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
+  void ShaddixEnthalpy<T>::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){
 
     for ( int i = 0; i < _Nenv; i++ ){
       const std::string name = get_name(i, _base_var_name);
@@ -366,25 +368,25 @@ namespace Uintah{
       const std::string v_velocity_name = get_name( i, _base_v_velocity_name );
       const std::string w_velocity_name = get_name( i, _base_w_velocity_name );
 
-      register_variable( weight_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
-      register_variable( raw_coal_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
-      register_variable( char_mass_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
-      register_variable( particle_temp_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
-      register_variable( particle_size_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
-      register_variable( char_oxi_temp_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
-      register_variable( surf_rate_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
-      register_variable( char_gas_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
-      register_variable( devol_gas_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
-      register_variable( u_velocity_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
-      register_variable( v_velocity_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
-      register_variable( w_velocity_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+      register_variable( weight_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+      register_variable( raw_coal_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+      register_variable( char_mass_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+      register_variable( particle_temp_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+      register_variable( particle_size_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+      register_variable( char_oxi_temp_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+      register_variable( surf_rate_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+      register_variable( char_gas_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+      register_variable( devol_gas_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+      register_variable( u_velocity_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+      register_variable( v_velocity_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+      register_variable( w_velocity_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 
       if ( d_radiation ) {
         const std::string abskp_name = get_name( i, _base_abskp_name );
         register_variable( abskp_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
       }
     }
-    register_variable( _gas_var_name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+    register_variable( _gas_var_name, ArchesFieldContainer::COMPUTES, variable_registry, time_substep );
 
     //required gas indep vars
     register_variable( _gas_temp_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );

@@ -202,7 +202,7 @@ void
 CQMOMSourceWrapper::sched_buildSourceTerm( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   string taskname = "CQMOMSourceWrapper::buildSourceTerm";
-  Task* tsk = scinew Task(taskname, this, &CQMOMSourceWrapper::buildSourceTerm);
+  Task* tsk = scinew Task(taskname, this, &CQMOMSourceWrapper::buildSourceTerm, timeSubStep);
 
   //----NEW----
   for ( int i = 0; i < nMoments*nSources; i++ ) {
@@ -231,9 +231,15 @@ CQMOMSourceWrapper::sched_buildSourceTerm( const LevelP& level, SchedulerP& sche
   }
 
   //loop over all the d\phi/dt sources
+  Task::WhichDW which_dw; 
+  if ( timeSubStep == 0 ){ 
+    which_dw = Task::OldDW; 
+  } else { 
+    which_dw = Task::NewDW; 
+  }
   for ( int i = 0; i < _N * nSources; i++ ) {
     const VarLabel* tempLabel = d_nodeSources[i];
-    tsk->requires( Task::NewDW, tempLabel, Ghost::None, 0 );
+    tsk->requires( which_dw, tempLabel, Ghost::None, 0 );
   }
   
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
@@ -246,7 +252,8 @@ CQMOMSourceWrapper::buildSourceTerm( const ProcessorGroup* pc,
                                      const PatchSubset* patches,
                                      const MaterialSubset* matls,
                                      DataWarehouse* old_dw,
-                                     DataWarehouse* new_dw )
+                                     DataWarehouse* new_dw, 
+                                     const int timeSubStep )
 {
   //patch loop
   for (int p=0; p < patches->size(); p++) {
@@ -298,9 +305,15 @@ CQMOMSourceWrapper::buildSourceTerm( const ProcessorGroup* pc,
       j++;
     }
     
+    DataWarehouse* which_dw;
+    if ( timeSubStep == 0 ){
+      which_dw = old_dw;
+    } else {
+      which_dw = new_dw;
+    }
     for ( int i = 0; i < _N * nSources; i++ ) {
       const VarLabel* tempLabel = d_nodeSources[i];
-      new_dw->get( nodeSource[i], tempLabel, matlIndex, patch, gn, 0);
+      which_dw->get( nodeSource[i], tempLabel, matlIndex, patch, gn, 0);
     }
 
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){

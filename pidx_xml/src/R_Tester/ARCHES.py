@@ -108,6 +108,7 @@ NIGHTLYTESTS = [
    ("cloudBM48LS"                       , "cloudBM48LS.ups"                                         , 8 , "All"  , ["exactComparison", "no_restart"]) ,
    ("cloudBM80GLC"                      , "cloudBM80GLC.ups"                                        , 8 , "All"  , ["exactComparison", "no_restart"]) ,
    ("cloudBM80LS"                       , "cloudBM80LS.ups"                                         , 8 , "All"  , ["exactComparison", "no_restart"]) ,
+   ("multibox_sweeps_coal"              , "Coal/multibox_sweeps_coal.ups"                           , 46, "All"  , ["exactComparison"]),
 #__________________________________
 # Kokkos tests
    ("kokkos-x-scalar"                   , "kokkos_solver_tests/kokkos-x-scalar.ups"                , 1.1 , "All" , ["exactComparison"]), 
@@ -123,6 +124,7 @@ NIGHTLYTESTS = [
    ("OFC4"                              , "Coal/OFC4.ups"                                           , 3   , "All"  , ["exactComparison"      ,"do_performance_test",  "no_cuda"   ]) ,
    ("OFC4c"                             , "Coal/OFC4.ups"                                           , 3   , "All"  , ["exactComparison"      , "no_cuda"]) ,
    ("OFC4_smith"                        , "Coal/OFC4_smith.ups"                                     , 3   , "All"  , ["exactComparison"      , "no_cuda"]) ,
+   ("OFC_smith2016"                     , "Coal/OFC_smith2016.ups"                                  , 3   , "All"  , ["exactComparison"      , "no_cuda"]) ,
    ("OFC4_hybrid"                       , "Coal/OFC4_hybrid.ups"                                    , 3   , "All"  , ["exactComparison"      , "no_cuda"]) ,  
 #__________________________________
 
@@ -213,6 +215,7 @@ LOCALTESTS = [
    ("1GW_em_tc"                         , "Coal/1GW_em_tc.ups"                                      , 2   , "All"  , ["exactComparison"     , "no_cuda"]) , 
 #   ("coal_channel_Yamamoto"             , "Coal/coal_channel_Yamamoto.ups"                          , 1.1 , "All" , ["exactComparison"     , "no_restart"]) , 
    ("OFC4_smith"                        , "Coal/OFC4_smith.ups"                                     , 3   , "All"  , ["exactComparison"   ,  "no_cuda"]) , 
+   ("OFC_smith2016"                     , "Coal/OFC_smith2016.ups"                                  , 3   , "All"  , ["exactComparison"      , "no_cuda"]) ,
    ("OFC4_hybrid"                       , "Coal/OFC4_hybrid.ups"                                    , 3   , "All"  , ["exactComparison"   ,  "no_cuda"]) , 
 #__________________________________
    
@@ -252,6 +255,7 @@ COALTESTS = [
    ("1GW_em_tc"                         , "Coal/1GW_em_tc.ups"                                      , 2   , "All"  , ["exactComparison"     , "no_cuda"]) , 
 #   ("coal_channel_Yamamoto"             , "Coal/coal_channel_Yamamoto.ups"                          , 1.1 , "All" , ["exactComparison"     , "no_restart"]) , 
    ("OFC4_smith"                        , "Coal/OFC4_smith.ups"                                     , 3   , "All"  , ["exactComparison"   ,  "no_cuda"]) , 
+   ("OFC_smith2016"                     , "Coal/OFC_smith2016.ups"                                  , 3   , "All"  , ["exactComparison"      , "no_cuda"]) ,
    ("OFC4_hybrid"                       , "Coal/OFC4_hybrid.ups"                                    , 3   , "All"  , ["exactComparison"   ,  "no_cuda"]) ,
    ("OFC4_initial_hotwall"              , "Coal/OFC4_initial_hotwall.ups"                           , 3   , "All"  , ["exactComparison"   ,  "no_cuda"]) , 
 ]

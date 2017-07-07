@@ -77,10 +77,15 @@ class RadiationSource
 
   DECLARE_FIELDS(SVolField, divQ_, absCoef_, temperature_, cellType_)
   
-  const Uintah::VarLabel *temperatureLabel_, *absorptionLabel_, *celltypeLabel_, *divqLabel_, *VRFluxLabel_,
-  *boundFluxLabel_, *radiationVolqLabel_;
+  const Uintah::VarLabel *temperatureLabel_   {nullptr};
+  const Uintah::VarLabel *absorptionLabel_    {nullptr};
+  const Uintah::VarLabel *celltypeLabel_      {nullptr};
+  const Uintah::VarLabel *divqLabel_          {nullptr};
+  const Uintah::VarLabel *boundFluxLabel_     {nullptr};
+  const Uintah::VarLabel *radiationVolqLabel_ {nullptr};
+
+  Uintah::Ray* rmcrt_ {nullptr};
   
-  Uintah::Ray* rmcrt_;
   void schedule_setup_bndflux( const Uintah::LevelP& level,
                               Uintah::SchedulerP sched,
                               const Uintah::MaterialSet* const materials );

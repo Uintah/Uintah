@@ -85,6 +85,10 @@ public:
 
   virtual void sched_restartInitializeTimeAdvance( const LevelP& level, SchedulerP& sched ) = 0;
 
+  virtual int getTaskGraphIndex(const int timeStep ) = 0;
+
+  virtual int taskGraphsRequested() = 0;
+
   class NLSolverBuilder {
 
     public:

@@ -50,7 +50,7 @@ public:
 
     void problemSetup( ProblemSpecP& db );
 
-    void register_initialize( ArchesVIVector& variable_registry );
+    void register_initialize( ArchesVIVector& variable_registry , const bool pack_tasks);
 
     void register_timestep_init( ArchesVIVector& variable_registry );
 
@@ -271,7 +271,8 @@ private:
 
   template <typename T> void
   KScalarRHS<T>::register_initialize(
-    std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
+    std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
+    const bool packed_tasks ){
 
     const int istart = 0;
     const int iend = _eqn_names.size();

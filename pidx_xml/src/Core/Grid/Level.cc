@@ -389,26 +389,30 @@ Level::totalCells() const
 //______________________________________________________________________
 //
 long
-Level::getTotalSimulationCellsInRegion(const IntVector& lowIndex, const IntVector& highIndex) const {
+Level::getTotalCellsInRegion(const IntVector& lowIndex, const IntVector& highIndex) const {
 
   // Not all simulations are cubic.  Some simulations might be L shaped, or T shaped, or + shaped, etc.
   // It is not enough to simply do a high - low to figure out the amount of simulation cells.  We instead
   // need to go all patches and see if they exist in this range.  If so, add up their cells.
   // This process is similar to how d_totalCells is computed in Level::finalizeLevel().
-  
-  long cellsInRegion = 0; // Compute the number of cells in the level.
+
+  long cellsInRegion = 0;  
+  if (m_isNonCubicDomain == false ){
+    IntVector diff( highIndex - lowIndex);
+    cellsInRegion += diff.x() * diff.y() * diff.z(); 
+    return cellsInRegion;
+  }
 
   for( int i = 0; i < (int)m_real_patches.size(); i++ ) {
-    IntVector patchLow =  m_real_patches[i]->getExtraCellLowIndex();
+    IntVector patchLow  =  m_real_patches[i]->getExtraCellLowIndex();
     IntVector patchHigh =  m_real_patches[i]->getExtraCellHighIndex();
-    if (lowIndex.x() <= patchLow.x() &&
-        lowIndex.y() <= patchLow.y() &&
-        lowIndex.z() <= patchLow.z() &&
-        highIndex.x() >= patchHigh.x() &&
-        highIndex.y() >= patchHigh.y() &&
-        highIndex.z() >= patchHigh.z()){
-      //This simulation patch is inside the region.  Add up its cells.
-      cellsInRegion+=m_real_patches[i]->getNumExtraCells();
+   
+    if( doesIntersect(lowIndex, highIndex, patchLow, patchHigh) ){
+    
+      IntVector regionLo = Uintah::Max( lowIndex,  patchLow );
+      IntVector regionHi = Uintah::Min( highIndex, patchHigh );
+      IntVector diff( regionHi - regionLo );
+      cellsInRegion += diff.x() * diff.y() * diff.z();
     }
   }
 
@@ -547,12 +551,11 @@ Level::positionToIndex( const Point & p ) const
 void Level::selectPatches( const IntVector  & low
                          , const IntVector  & high
                          ,       selectType & neighbors
-                         ,       bool         withExtraCells
-                         ,       bool         cache /* =false */
+                         ,       bool         withExtraCells /* =false */
+                         ,       bool         cache_patches  /* =false */
                          ) const
 {
-
-  if (cache) {
+  if (cache_patches) {
     // look it up in the cache first
     patch_cache_mutex.lock();
     {
@@ -571,15 +574,15 @@ void Level::selectPatches( const IntVector  & low
     patch_cache_mutex.unlock();
   }
 
+
   m_bvh->query(low, high, neighbors, withExtraCells);
   std::sort(neighbors.begin(), neighbors.end(), Patch::Compare());
 
+
 #ifdef CHECK_SELECT
-  // Double-check the more advanced selection algorithms against the
-  // slow (exhaustive) one.
-  vector<const Patch*> tneighbors;
-  for(const_patch_iterator iter=m_virtual_and_real_patches.begin();
-      iter != m_virtual_and_real_patches.end(); iter++) {
+  // Double-check the more advanced selection algorithms against the slow (exhaustive) one.
+  std::vector<const Patch*> tneighbors;
+  for(const_patch_iterator iter=m_virtual_and_real_patches.begin(); iter != m_virtual_and_real_patches.end(); iter++) {
     const Patch* patch = *iter;
 
     IntVector l=Max(patch->getCellLowIndex(), low);
@@ -592,13 +595,14 @@ void Level::selectPatches( const IntVector  & low
 
   ASSERTEQ( neighbors.size(), tneighbors.size() );
 
-  sort(tneighbors.begin(), tneighbors.end(), Patch::Compare());
+  std::sort(tneighbors.begin(), tneighbors.end(), Patch::Compare());
   for( int i = 0; i < (int)neighbors.size(); i++ ) {
     ASSERT(neighbors[i] == tneighbors[i]);
   }
 #endif
 
-  if ( cache ) {
+
+  if (cache_patches) {
     patch_cache_mutex.lock();
     {
       // put it in the cache - start at orig_size in case there was something in
@@ -641,9 +645,9 @@ bool Level::containsCell( const IntVector & idx ) const
 
 //______________________________________________________________________
 //
-void Level::setNonCubicFlag ( bool& test ) 
+void Level::setNonCubicFlag ( bool test ) 
 { 
-  m_upsBoxes.isNonCubic = test; 
+  m_isNonCubicDomain = test; 
 }
 //______________________________________________________________________
 //   Add the bounding box from the ups file
@@ -656,7 +660,7 @@ void Level::addBox_ups( const BBox &b )
   // is non-cubic.  This is obvious not always true.  -Todd
   
   if ( m_upsBoxes.boxes.size() > 1 ){
-    m_upsBoxes.isNonCubic = true;
+    m_isNonCubicDomain = true;
   }
 }
 
@@ -1108,7 +1112,7 @@ Level::getBox( const IntVector & l, const IntVector & h ) const
 const PatchSet*
 Level::eachPatch() const
 {
-  ASSERT(m_each_patch != 0);
+  ASSERT(m_each_patch != nullptr);
   return m_each_patch;
 }
 
@@ -1117,7 +1121,7 @@ Level::eachPatch() const
 const PatchSet*
 Level::allPatches() const
 {
-  ASSERT(m_all_patches != 0);
+  ASSERT(m_all_patches != nullptr);
   return m_all_patches;
 }
 
@@ -1131,7 +1135,7 @@ Level::selectPatchForCellIndex( const IntVector & idx ) const
   selectPatches(idx - i, idx + i, pv, false, false);
 
   if (pv.size() == 0) {
-    return 0;
+    return nullptr;
   } else {
     selectType::iterator it;
 
@@ -1141,7 +1145,7 @@ Level::selectPatchForCellIndex( const IntVector & idx ) const
       }
     }
   }
-  return 0;
+  return nullptr;
 }
 
 //______________________________________________________________________
@@ -1155,7 +1159,7 @@ Level::selectPatchForNodeIndex( const IntVector & idx ) const
   selectPatches(idx - i, idx + i, pv, false, false);
 
   if (pv.size() == 0) {
-    return 0;
+    return nullptr;
   } else {
     selectType::iterator it;
     for (it = pv.begin(); it != pv.end(); it++) {
@@ -1164,7 +1168,7 @@ Level::selectPatchForNodeIndex( const IntVector & idx ) const
       }
     }
   }
-  return 0;
+  return nullptr;
 }
 
 //______________________________________________________________________

@@ -949,7 +949,7 @@ WallModelDriver::CoalRegionHT::problemSetup( const ProblemSpecP& input_db ){
 void
 WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars, CCVariable<double>& T ){
 
-  double TW_new, T_old, net_q, rad_q, total_area_face, R_wall, R_en, Emiss, dp_arrival, tau_sint;
+  double TW_new, T_old, net_q, rad_q, total_area_face, R_wall, R_en, R_sb, Emiss, dp_arrival, tau_sint;
   double T_en, T_metal, Tsb, Ten, dy_dep_sb, dy_dep_en, k_en, k_sb, k_en_old, k_sb_old;
   const std::string enamel_name = "enamel"; 
   const std::string sb_name = "sb";
@@ -1044,7 +1044,7 @@ WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars,
               }
 
               rad_q /= total_area_face; // representative radiative flux to the cell.
-
+              
               // We are using the old emissivity, and thermal conductivities for the calculation of the deposition regime
               // and the new temperature. We then update the emissivity and thermal conductivies using the new temperature.                   
               // This effectivly time-lags the emissivity and thermal conductivies by one radiation-solve. We chose to do this                
@@ -1053,7 +1053,6 @@ WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars,
               k_sb=vars.thermal_cond_sb_old[c];
               Emiss=vars.emissivity_old[c]; 
               TW_new =  vars.T_real_old[c];
-                                            
                                             
               dp_arrival=vars.d_vol_ave[c];
               tau_sint=min(dp_arrival/max(vars.ave_deposit_velocity[c],1e-50),1e10); // [s]
@@ -1064,44 +1063,43 @@ WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars,
               // here we computed quantaties to find which deposition regime we are in.
               R_wall = wi.dy / wi.k;
               R_en = wi.dy_dep_en/k_en;
-              double qnet_max = rad_q - _sigma_constant * std::pow( wi.T_slag, 4.0 );
-              qnet_max *= Emiss;
-              qnet_max = qnet_max > 1e-8 ? qnet_max : 1e-8; // to avoid div by zero we min is 1e-8
-              double dy_dep_sb_max = k_sb * ( (wi.T_slag-wi.T_inner)/qnet_max - R_wall - R_en);
-              double dy_dep_en_max = k_en * ( (wi.T_slag-wi.T_inner)/qnet_max - R_wall);
-              double rad_q_max = (wi.T_slag-wi.T_inner)/(R_wall*Emiss) + _sigma_constant*std::pow(wi.T_slag,4.0);
-              double rad_q_en = (wi.T_slag-wi.T_inner)/((R_wall + R_en)*Emiss) + _sigma_constant*std::pow(wi.T_slag,4.0);
+              R_sb = vars.deposit_thickness[c] / k_sb;
+              T_old =  vars.T_real_old[c];
+              double rad_q_max = (wi.T_slag-wi.T_inner)/((R_en+R_wall)*Emiss) + _sigma_constant*std::pow(wi.T_slag,4.0);
+              double rad_q_melt = (wi.T_slag-wi.T_inner)/((R_en+R_sb+R_wall)*Emiss) + _sigma_constant*std::pow(wi.T_slag,4.0);
 
-              if (vars.deposit_thickness[c] < dy_dep_sb_max) {
-                // Regime 1
+              if (rad_q < rad_q_melt){
+                // regime 1
                 // the resulting temperature will be less than T_slag.
-                // deposit_thickness doesn't need to be modified.
-              } else if (rad_q >= rad_q_max) {
-                // Regime 3
-                // the resulting temperature will be higher than Tslag.
-                vars.deposit_thickness[c] = 0.0;
-                dy_dep_en = 0.0;
+                // deposit_thickness doesn't need to be modified (but we will time-average before newton_solve.
+                vars.deposit_thickness[c] = (1-vars.relax) * vars.deposit_thickness_old[c] + vars.relax * vars.deposit_thickness[c];  // here we time average the deposit thickness so that it doesn't vary when we switch regimes.
+                dy_dep_sb = vars.deposit_thickness[c];
+                newton_solve( wi, TW_new, k_sb, k_en, dy_dep_sb, dy_dep_en, T_old, rad_q, R_wall, Emiss );
               } else {
-                // Regime 2
-                vars.deposit_thickness[c] = (rad_q >= rad_q_en) ? 0.0 : dy_dep_sb_max;
-                dy_dep_en = (rad_q >= rad_q_en) ? dy_dep_en_max : dy_dep_en;
+                // regime 2 and 3 T = T_slag (no newton solve required.)
+                TW_new = wi.T_slag;
+                // if rad_q <= rad_q_max 
+                // regime 2 where deposit_thickness is estimated from energy balance.
+                // if rad_q > rad_q_max
+                // regime 3 where deposit_thickness is 0.0 - energy balance should include heat of fusion to close.
+                double qnet_max = rad_q - _sigma_constant * std::pow( wi.T_slag, 4.0 );
+                qnet_max *= Emiss;
+                qnet_max = qnet_max > 1e-8 ? qnet_max : 1e-8; // to avoid div by zero we set min at 1e-8
+                double dy_dep_sb_max = k_sb * ( (wi.T_slag-wi.T_inner)/qnet_max - R_wall - R_en);
+                vars.deposit_thickness[c] = rad_q <= rad_q_max ? dy_dep_sb_max : 0.0; 
+                vars.deposit_thickness[c] = (1-vars.relax) * vars.deposit_thickness_old[c] + vars.relax * vars.deposit_thickness[c];  // here we time average the deposit thickness so that it doesn't vary when we switch regimes.
+                dy_dep_sb = vars.deposit_thickness[c];
               }
 
-              vars.deposit_thickness[c] = (1-vars.relax) * vars.deposit_thickness_old[c] + vars.relax * vars.deposit_thickness[c];  // here we time average the deposit thickness so that it doesn't vary when we switch regimes.
-              dy_dep_sb = vars.deposit_thickness[c];
-
-              T_old =  vars.T_real_old[c];
-              newton_solve( wi, TW_new, k_sb, k_en, dy_dep_sb, dy_dep_en, T_old, rad_q, R_wall, Emiss );
               vars.T_real[c] = (1 - vars.relax) * vars.T_real_old[c] + vars.relax * TW_new; // this is the real wall temperature, vars.T_real_old is the old solution for "temperature".
-              // update the emissivity model with the new wall temperature
+              // update the net heat flux, emissivity, and thermal conductivies with the new time-averaged wall temperature
               m_em_model->model(Emiss,wi.emissivity,vars.T_real[c],dp_arrival, tau_sint);
               vars.emissivity[c]=Emiss;
-              // update the thermal conductivies with the new wall temperature
               net_q = rad_q - _sigma_constant * std::pow( vars.T_real[c], 4.0 );
               net_q = net_q > 0 ? net_q : 0; 
               net_q *= Emiss;
               double residual = 0.0;
-              for ( int iterT=0; iterT < 100; iterT++) {
+              for ( int iterT=0; iterT < 100; iterT++) { // iterate tc until we reach a consistent solution.
                 k_sb_old = k_sb; 
                 k_en_old = k_en; 
                 T_en = vars.T_real[c] - net_q * dy_dep_sb / k_sb; // Temperature at the surface between enamel and sb layer. 

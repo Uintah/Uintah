@@ -84,7 +84,7 @@
 #define CHECKPOINT_REDUCTION 2
 
 #define XML_TEXTWRITER 1
-#undef XML_TEXTWRITER
+#undef  XML_TEXTWRITER
 
 using namespace Uintah;
 using namespace std;
@@ -1026,7 +1026,7 @@ DataArchiver::sched_allOutputTasks(       double       delt,
   if( (d_outputInterval  > 0.0 || d_outputTimestepInterval  > 0) &&
       (delt != 0.0 || d_outputInitTimestep)) {
     
-    Task* t = scinew Task( "DataArchiver::outputReductionVars",
+    Task* task = scinew Task( "DataArchiver::outputReductionVars",
 			   this, &DataArchiver::outputReductionVars );
     
     for( int i=0; i<(int)d_saveReductionLabels.size(); ++i) {
@@ -1034,10 +1034,10 @@ DataArchiver::sched_allOutputTasks(       double       delt,
       const VarLabel* var = saveItem.label;
       
       const MaterialSubset* matls = saveItem.getMaterialSubset(0);
-      t->requires( Task::NewDW, var, matls, true );
+      task->requires( Task::NewDW, var, matls, true );
     }
     
-    sched->addTask(t, 0, 0);
+    sched->addTask(task, nullptr, nullptr);
     
     dbg << "  scheduled output tasks (reduction variables)\n";
 
@@ -1054,7 +1054,7 @@ DataArchiver::sched_allOutputTasks(       double       delt,
 	d_checkpointWalltimeInterval > 0 ) ) {
     
     // output checkpoint timestep
-    Task* t = scinew Task( "DataArchiver::outputVariables (CheckpointReduction)",
+    Task* task = scinew Task( "DataArchiver::outputVariables (CheckpointReduction)",
 			   this, &DataArchiver::outputVariables, CHECKPOINT_REDUCTION );
     
     for( int i = 0; i < (int) d_checkpointReductionLabels.size(); i++ ) {
@@ -1062,9 +1062,9 @@ DataArchiver::sched_allOutputTasks(       double       delt,
       const VarLabel* var = saveItem.label;
       const MaterialSubset* matls = saveItem.getMaterialSubset(0);
       
-      t->requires(Task::NewDW, var, matls, true);
+      task->requires(Task::NewDW, var, matls, true);
     }
-    sched->addTask(t, 0, 0);
+    sched->addTask(task, nullptr, nullptr);
     
     dbg << "  scheduled output tasks (checkpoint variables)\n";
     
@@ -1773,7 +1773,7 @@ DataArchiver::writeGridBinary( const bool hasGlobals, const string & grid_path, 
     LevelP level = grid->getLevel( lev );
 
     int    num_patches = level->numPatches();
-
+    int    nonCubic    = level->isNonCubic();
     long   num_cells   = level->totalCells();
     IntVector eciv = level->getExtraCells();
     int  * extra_cells = eciv.get_pointer();
@@ -1792,7 +1792,8 @@ DataArchiver::writeGridBinary( const bool hasGlobals, const string & grid_path, 
     cell_spacing[0] = cell_spacing_vec.x();
     cell_spacing[1] = cell_spacing_vec.y();
     cell_spacing[2] = cell_spacing_vec.z();
-
+    
+    fwrite( &nonCubic,    sizeof(int),    1, fp );  // is the level non-cubic
     fwrite( &num_patches, sizeof(int),    1, fp );  // Number of Patches -  100
     fwrite( &num_cells,   sizeof(long),   1, fp );  // Number of Cells   - 8000
     fwrite( extra_cells,  sizeof(int),    3, fp );  // Extra Cell Info - [1,1,1]
@@ -1911,9 +1912,9 @@ DataArchiver::writeGridOriginal( const bool hasGlobals, const GridP & grid, Prob
     if (level->getPeriodicBoundaries() != IntVector(0,0,0)) {
       levelElem->appendElement("periodic", level->getPeriodicBoundaries());
     }
-
-    levelElem->appendElement("numPatches", level->numPatches());
-    levelElem->appendElement("totalCells", level->totalCells());
+    levelElem->appendElement("nonCubic",    level->isNonCubic() );
+    levelElem->appendElement("numPatches",  level->numPatches());
+    levelElem->appendElement("totalCells",  level->totalCells());
 
     if (level->getExtraCells() != IntVector(0,0,0)) {
       levelElem->appendElement("extraCells", level->getExtraCells());
@@ -2048,7 +2049,9 @@ DataArchiver::writeGridTextWriter( const bool hasGlobals, const string & grid_pa
                                        level->getPeriodicBoundaries().z()
                                      );
     }
+    xmlTextWriterWriteFormatElement( writer_grid, BAD_CAST "nonCubic",    "%d", level->isNonCubic() );
     xmlTextWriterWriteFormatElement( writer_grid, BAD_CAST "numPatches",  "%d", level->numPatches() );
+    xmlTextWriterWriteFormatElement( writer_grid, BAD_CAST "totalCells", "%ld", level->totalCells() );
     xmlTextWriterWriteFormatElement( writer_grid, BAD_CAST "totalCells", "%ld", level->totalCells() );
 
     if (level->getExtraCells() != IntVector(0,0,0)) {
@@ -2824,7 +2827,7 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
   else /* if (type == CHECKPOINT_REDUCTION) */ {
     d_sharedState->d_runTimeStats[SimulationState::CheckpointReductionIOTime] +=
       myTime;
-    d_sharedState->d_runTimeStats[SimulationState::CheckpointReductionIORate] +=
+    d_sharedState->d_runTimeStats[SimulationState::CheckpointReducIORate] +=
       (double) totalBytes / (byteToMB * myTime);
   }
     
@@ -3472,33 +3475,37 @@ DataArchiver::initCheckpoints(SchedulerP& sched)
    dep_vector::const_iterator iter;
    for (iter = initreqs.begin(); iter != initreqs.end(); ++iter) {
      const Task::Dependency* dep = *iter;
+
+     // define the patchset
+     const PatchSubset* patchSubset = (dep->m_patches != 0)? dep->m_patches : dep->m_task->getPatchSet()->getUnion();
      
+     // adjust the patchSubset if the dependency requires coarse or fine level patches
+     constHandle<PatchSubset> patches;     
+     if ( dep->m_patches_dom == Task::CoarseLevel || dep->m_patches_dom == Task::FineLevel ){
+       patches = dep->getPatchesUnderDomain( patchSubset );
+       patchSubset = patches.get_rep();
+     }
+   
+     // Define the Levels
      ConsecutiveRangeSet levels;
-     const PatchSubset* patchSubset = (dep->m_patches != 0)?
-       dep->m_patches : dep->m_task->getPatchSet()->getUnion();
-     
      for(int i=0;i<patchSubset->size();i++) {
-       const Patch* patch = patchSubset->get(i);
+       const Patch* patch = patchSubset->get(i); 
        levels.addInOrder(patch->getLevel()->getIndex());
      }
 
-     ConsecutiveRangeSet matls;
-     const MaterialSubset* matSubset = (dep->m_matls != 0) ?
-       dep->m_matls : dep->m_task->getMaterialSet()->getUnion();
+     //  MaterialSubset:
+     const MaterialSubset* matSubset = (dep->m_matls != 0) ? dep->m_matls : dep->m_task->getMaterialSet()->getUnion();
      
      // The matSubset is assumed to be in ascending order or
      // addInOrder will throw an exception.
-     matls.addInOrder(matSubset->getVector().begin(),
-                      matSubset->getVector().end());
+     ConsecutiveRangeSet matls;
+     matls.addInOrder(matSubset->getVector().begin(), matSubset->getVector().end());
 
-     for(ConsecutiveRangeSet::iterator crs_iter = levels.begin();
-	 crs_iter != levels.end(); ++crs_iter) {
-       ConsecutiveRangeSet& unionedVarMatls =
-	 label_map[dep->m_var->getName()][*crs_iter];
+     for(ConsecutiveRangeSet::iterator crs_iter = levels.begin(); crs_iter != levels.end(); ++crs_iter) {
+       ConsecutiveRangeSet& unionedVarMatls = label_map[dep->m_var->getName()][*crs_iter];
        unionedVarMatls = unionedVarMatls.unioned(matls);
      }
-     
-     //cout << "  Adding checkpoint var " << *dep->var << " levels " << levels << " matls " << matls << "\n";
+     //cout << "  Adding checkpoint var " << dep->m_var->getName() << " levels " << levels << " matls " << matls << "\n";
    }
          
    d_checkpointLabels.reserve(label_map.size());
@@ -3509,20 +3516,16 @@ DataArchiver::initCheckpoints(SchedulerP& sched)
      VarLabel* var = VarLabel::find(lt_iter->first);
      
      if (var == nullptr) {
-       throw ProblemSetupException(lt_iter->first +
-				   " variable not found to checkpoint.",
-				   __FILE__, __LINE__);
+       throw ProblemSetupException(lt_iter->first + " variable not found to checkpoint.",__FILE__, __LINE__);
      }
      
      saveItem.label = var;
      saveItem.matlSet.clear();
      
      map<int, ConsecutiveRangeSet>::iterator map_iter;
-     for (map_iter = lt_iter->second.begin();
-	  map_iter != lt_iter->second.end(); ++map_iter) {
+     for (map_iter = lt_iter->second.begin(); map_iter != lt_iter->second.end(); ++map_iter) {
        
-       saveItem.setMaterials(map_iter->first,
-			     map_iter->second, d_prevMatls, d_prevMatlSet);
+       saveItem.setMaterials(map_iter->first, map_iter->second, d_prevMatls, d_prevMatlSet);
 
        if (string(var->getName()) == "delT") {
          hasDelT = true;
@@ -3547,8 +3550,7 @@ DataArchiver::initCheckpoints(SchedulerP& sched)
    if (!hasDelT) {
      VarLabel* var = VarLabel::find("delT");
      if (var == nullptr) {
-       throw ProblemSetupException("delT variable not found to checkpoint.",
-				   __FILE__, __LINE__);
+       throw ProblemSetupException("delT variable not found to checkpoint.",__FILE__, __LINE__);
      }
      
      saveItem.label = var;

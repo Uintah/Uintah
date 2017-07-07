@@ -46,7 +46,7 @@ typedef Uintah::gpuPoint     GPUPoint;
 //______________________________________________________________________
 //
 const int d_MAXLEVELS = 5;               // FIX ME!
-
+const int d_flowCell = -1;               // HARDWIRED!
 //__________________________________
 //  returns gpuVector * scalar
 inline HOST_DEVICE GPUVector operator*(const GPUVector & a, double b)
@@ -488,17 +488,27 @@ struct RMCRT_flags {
     bool allowReflect;
     bool solveBoundaryFlux;
     bool CCRays;
-    bool usingFloats;           // if the communicated vars (sigmaT4 & abskg) are floats
+    bool usingFloats;               // if the communicated vars (sigmaT4 & abskg) are floats
 
-    double sigma;               // StefanBoltzmann constant
-    double sigmaScat;           // scattering coefficient
+    double sigma;                   // StefanBoltzmann constant
+    double sigmaScat;               // scattering coefficient
     double threshold;
 
-    int nDivQRays;            // number of rays per cell used to compute divQ
-    int nFluxRays;            // number of boundary flux rays
-    int nRaySteps;            // number of ray steps taken
-    int whichROI_algo;        // which Region of Interest algorithm
-    int rayDirSampleAlgo;     // which ray direction sampling algorithm (Monte-Carlo or Latin-Hyper_Cube)
+    int nDivQRays;                  // number of rays per cell used to compute divQ
+    int nFluxRays;                  // number of boundary flux rays
+    int nRaySteps;                  // number of ray steps taken
+    int whichROI_algo;              // which Region of Interest algorithm
+    int rayDirSampleAlgo;           // which ray direction sampling algorithm (Monte-Carlo or Latin-Hyper_Cube)
+    unsigned int startCell {0};
+    unsigned int endCell {0};
+};
+
+//__________________________________
+//Struct for easy modification of the number of kernels and/or blocks
+struct kernelParams {
+    unsigned char numKernels {0};
+    unsigned char curKernel {0};
+    unsigned int  numCellsPerThread {0};
 };
 
 //__________________________________
@@ -578,8 +588,8 @@ __device__ void rayDirection_cellFaceDevice(curandState* randNumStates,
 //
 __device__ void rayDirectionHyperCube_cellFaceDevice(curandState* randNumStates,
                                                      const GPUIntVector& origin,
-                                                     const GPUIntVector& indexOrder,
-                                                     const GPUIntVector& signOrder,
+                                                     const int3& indexOrder,
+                                                     const int3& signOrder,
                                                      const int iRay,
                                                      GPUVector& dirVector,
                                                      double& cosTheta,
@@ -668,6 +678,13 @@ template< class T>
 
 //______________________________________________________________________
 //
+__device__ void setupRandNumsSeedAndSequences(curandState* randNumStates,
+                                              int numStates,
+                                              unsigned long long patchID,
+                                              unsigned long long curTimestep);
+
+//______________________________________________________________________
+//
 __device__ double randDblExcDevice(curandState* randNumStates);
 
 
@@ -702,7 +719,7 @@ __host__ void launchRayTraceKernel( DetailedTask* dtask,
                                     patchParams patch,
                                     cudaStream_t* stream,
                                     RMCRT_flags RT_flags,
-                                    varLabelNames* labelNames,
+                                    int curTimestep,
                                     GPUDataWarehouse* abskg_gdw,
                                     GPUDataWarehouse* sigmaT4_gdw,
                                     GPUDataWarehouse* celltype_gdw,
@@ -712,27 +729,11 @@ __host__ void launchRayTraceKernel( DetailedTask* dtask,
 //______________________________________________________________________
 //
 template< class T >
-__global__ void rayTraceKernel( dim3 dimGrid,
-                                dim3 dimBlock,
-                                const int matlIndex,
-                                levelParams level,
-                                patchParams patch,
-                                curandState* randNumStates,
-                                RMCRT_flags RT_flags,
-                                varLabelNames* labelNames,
-                                GPUDataWarehouse* abskg_gdw,
-                                GPUDataWarehouse* sigmaT4_gdw,
-                                GPUDataWarehouse* celltype_gdw,
-                                GPUDataWarehouse* old_gdw,
-                                GPUDataWarehouse* new_gdw );
-
-//______________________________________________________________________
-//
-template< class T >
 __host__ void launchRayTraceDataOnionKernel( DetailedTask* dtask,
                                              dim3 dimGrid,
                                              dim3 dimBlock,
                                              int matlIndex,
+                                             kernelParams kp,
                                              patchParams patchP,
                                              gridParams gridP,
                                              levelParams* levelP,
@@ -740,31 +741,12 @@ __host__ void launchRayTraceDataOnionKernel( DetailedTask* dtask,
                                              GPUIntVector fineLevel_ROI_Hi,
                                              cudaStream_t* stream,
                                              RMCRT_flags RT_flags,
+                                             int curTimestep,
                                              GPUDataWarehouse* abskg_gdw,
                                              GPUDataWarehouse* sigmaT4_gdw,
                                              GPUDataWarehouse* celltype_gdw,
                                              GPUDataWarehouse* old_gdw,
                                              GPUDataWarehouse* new_gdw );
-
-//______________________________________________________________________
-//
-template< class T >
-__global__ void rayTraceDataOnionKernel( dim3 dimGrid,
-                                         dim3 dimBlock,
-                                         int matl,
-                                         patchParams finePatch,
-                                         gridParams gridP,
-                                         GPUIntVector fineLevel_ROI_Lo,
-                                         GPUIntVector fineLevel_ROI_Hi,
-                                         int3* regionLo,
-                                         int3* regionHi,
-                                         curandState* randNumStates,
-                                         RMCRT_flags RT_flags,
-                                         GPUDataWarehouse* abskg_gdw,
-                                         GPUDataWarehouse* sigmaT4_gdw,
-                                         GPUDataWarehouse* celltype_gdw,
-                                         GPUDataWarehouse* old_gdw,
-                                         GPUDataWarehouse* new_gdw );
 
 } // end namespace Uintah
 

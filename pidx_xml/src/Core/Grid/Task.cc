@@ -43,7 +43,9 @@ MaterialSubset* Task::globalMatlSubset = nullptr;
 //
 Task::~Task()
 {
-  delete m_action;
+  if (m_action) {
+    delete m_action;
+  }
 
   Dependency* dep = m_req_head;
   while (dep) {
@@ -112,8 +114,9 @@ Task::initialize()
   m_phase        = -1;
   m_comm         = -1;
 
-  m_max_ghost_cells  = 0;
-  m_max_level_offset = 0;
+  //The 0th level has a max ghost cell of zero.  Other levels are left uninitialized.
+  m_max_ghost_cells[0] = 0;
+  m_max_level_offset   = 0;
 }
 
 //______________________________________________________________________
@@ -122,17 +125,24 @@ Task::initialize()
 void
 Task::setSets( const PatchSet* ps, const MaterialSet* ms )
 {
-  ASSERT( m_patch_set == nullptr );
-  ASSERT( m_matl_set  == nullptr );
-
-  m_patch_set = ps;
-  if ( m_patch_set ) {
-    m_patch_set->addReference();
+  // NOTE: the outer [patch/matl]Set checks are related to temporal scheduling, e.g. more then 1 regular task graph
+  //
+  // This is called from TaskGraph::addTask() in which a single task may be added to >1 Normal
+  // task graph. In this case, first time here, m_path/matl_set will be nullptr and subsequent visits
+  // will be the same pointer as ps and ms respectively. Without these checks, the refCount gets
+  // artificially inflated and ComputeSubsets (Patch/Matl)) are not deleted - mem leak. APH, 06/08/17
+  if (m_patch_set == nullptr) {
+    m_patch_set = ps;
+    if (m_patch_set) {
+      m_patch_set->addReference();
+    }
   }
 
-  m_matl_set = ms;
-  if ( m_matl_set ) {
-    m_matl_set->addReference();
+  if (m_matl_set == nullptr) {
+    m_matl_set = ms;
+    if (m_matl_set) {
+      m_matl_set->addReference();
+    }
   }
 }
 
@@ -211,10 +221,6 @@ void Task::requires(       WhichDW             dw
   Dependency* dep = scinew Dependency(Requires, this, dw, var, oldTG, patches, matls, patches_dom,
                                       matls_dom, gtype, numGhostCells, level_offset);
 
-  if (numGhostCells > m_max_ghost_cells) {
-    m_max_ghost_cells = numGhostCells;
-  }
-
   if (level_offset > m_max_level_offset) {
     m_max_level_offset = level_offset;
   }
@@ -249,7 +255,10 @@ void Task::requires(       WhichDW              dw
                    ,       bool                 oldTG
                    )
 {
-  int offset = (patches_dom == CoarseLevel || patches_dom == FineLevel) ? 1 : 0;
+  int offset = 0;
+  if (patches_dom == CoarseLevel || patches_dom == FineLevel) {
+    offset = 1;
+  }
   requires(dw, var, patches, patches_dom, offset, matls, matls_dom, gtype, numGhostCells, oldTG);
 }
 
@@ -798,7 +807,6 @@ Task::Dependency::Dependency(       DepType              deptype
 
     : m_dep_type(deptype)
     , m_task(task)
-    , m_whichdw(whichdw)
     , m_var(var)
     , m_look_in_old_tg(oldTG)
     , m_patches(patches)
@@ -806,6 +814,7 @@ Task::Dependency::Dependency(       DepType              deptype
     , m_patches_dom(patches_dom)
     , m_matls_dom(matls_dom)
     , m_gtype(gtype)
+    , m_whichdw(whichdw)
     , m_num_ghost_cells(numGhostCells)
     , m_level_offset(level_offset)
 {
@@ -836,12 +845,13 @@ Task::Dependency::Dependency(       DepType              deptype
 
     : m_dep_type(deptype)
     , m_task(task)
-    , m_whichdw(whichdw)
     , m_var(var)
     , m_look_in_old_tg(oldTG)
-    , m_reduction_level(reductionLevel)
     , m_matls(matls)
+    , m_reduction_level(reductionLevel)
     , m_matls_dom(matls_dom)
+    , m_gtype(Ghost::None)
+    , m_whichdw(whichdw)
 {
   if (var) {
     var->addReference();
@@ -975,7 +985,7 @@ Task::display( std::ostream & out ) const
 
   out << " (" << d_tasktype << ")";
 
-  if (d_tasktype == Task::Normal && m_patch_set != nullptr) {
+  if ( (d_tasktype == Task::Normal || d_tasktype == Task::Output ) && m_patch_set != nullptr) {
     out << ", Level " << getLevel(m_patch_set)->getIndex();
   }
 

@@ -80,8 +80,6 @@ class Scheduler : public UintahParallelPort {
 
     virtual ~Scheduler();
    
-    virtual void printMPIStats() {};
-
     // Only called by the SimulationController, and only once, and only
     // if the simulation has been "restarted".
     virtual void setGeneration( int id ) = 0;
@@ -116,13 +114,15 @@ class Scheduler : public UintahParallelPort {
        
     enum tgType { NormalTaskGraph, IntermediateTaskGraph };
 
-    virtual void addTaskGraph( tgType type ) = 0;
+    virtual void addTaskGraph( tgType type, int index = -1 ) = 0;
 
     virtual int getNumTaskGraphs() = 0;
 
+    virtual void setNumTaskGraphs( const int num_task_graphs = 1) = 0;
+    
     virtual bool useSmallMessages() = 0;
     
-    virtual void addTask( Task* t, const PatchSet*, const MaterialSet* ) = 0;
+    virtual void addTask( Task* t, const PatchSet*, const MaterialSet*, const int tgnum = -1 ) = 0;
     
     virtual const std::vector<const Task::Dependency*>&         getInitialRequires() const = 0;
 
@@ -225,6 +225,8 @@ class Scheduler : public UintahParallelPort {
     virtual VarLabelMaterialMap* makeVarLabelMaterialMap() = 0;
 
     virtual int getMaxGhost() = 0;
+
+    virtual int getMaxDistalGhost() = 0;
 
     virtual int getMaxLevelOffset() = 0;
 

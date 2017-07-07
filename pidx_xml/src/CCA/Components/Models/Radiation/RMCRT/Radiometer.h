@@ -60,19 +60,16 @@ namespace Uintah{
                              SchedulerP& sched,
                              Task::WhichDW abskg_dw,
                              Task::WhichDW sigma_dw,
-                             Task::WhichDW celltype_dw,
-                             const int radCalc_freq );
+                             Task::WhichDW celltype_dw );
 
       void sched_initializeRadVars( const LevelP& level,
-                                    SchedulerP& sched,
-                                    const int radCalc_freq );
+                                    SchedulerP& sched );
       template < class T >
       void initializeRadVars( const ProcessorGroup*,
                               const PatchSubset* patches,
-                              const MaterialSubset* ,
+                              const MaterialSubset* matls,
                               DataWarehouse* old_dw,
-                              DataWarehouse* new_dw,
-                              const int radCalc_freq );
+                              DataWarehouse* new_dw );
 
       //__________________________________
       //  FUNCTIONS
@@ -97,10 +94,10 @@ namespace Uintah{
     private:
 
       // Virtual Radiometer parameters
-      int  d_nRadRays;                     // number of rays per radiometer used to compute radiative flux
-      double d_viewAng;
-      Point d_VRLocationsMin;
-      Point d_VRLocationsMax;
+      int    d_nRadRays{1000};                     // number of rays per radiometer used to compute radiative flux
+      double d_viewAng{180.0};
+      Point  d_VRLocationsMin;
+      Point  d_VRLocationsMax;
 
       struct VR_variables{
         double thetaRot;
@@ -110,8 +107,9 @@ namespace Uintah{
         double range;
         double sldAngl;
       };
+
       VR_variables d_VR;
-      const VarLabel* d_VRFluxLabel;      // computed radiometer flux
+      const VarLabel* d_VRFluxLabel{nullptr};      // computed radiometer flux
 
       //__________________________________
       //
@@ -124,7 +122,6 @@ namespace Uintah{
                        Task::WhichDW which_abskg_dw,
                        Task::WhichDW whichd_sigmaT4_dw,
                        Task::WhichDW which_celltype_dw,
-                       const int radCalc_freq,
                        const bool hadRadiometers );
 
       //__________________________________

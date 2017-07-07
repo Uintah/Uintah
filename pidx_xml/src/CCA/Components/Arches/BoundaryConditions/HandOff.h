@@ -17,7 +17,7 @@ public:
 
     void problemSetup( ProblemSpecP& db );
 
-    void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry );
+    void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const bool packed_tasks );
 
     void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry );
 
@@ -118,7 +118,8 @@ private:
   //--------------------------------------------------------------------------------------------------
   template <typename T>
   void HandOff<T>::register_initialize(
-    std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
+    std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
+    const bool packed_tasks ){
 
     register_variable( _task_name, ArchesFieldContainer::COMPUTES, variable_registry );
 

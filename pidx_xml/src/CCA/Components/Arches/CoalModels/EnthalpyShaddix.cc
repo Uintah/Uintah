@@ -371,7 +371,7 @@ EnthalpyShaddix::sched_computeModel( const LevelP& level, SchedulerP& sched, int
   // require particle phase variables
   tsk->requires( which_dw, _rcmass_varlabel, gn, 0 );
   tsk->requires( which_dw, _char_varlabel, gn, 0 );
-  tsk->requires( Task::NewDW, _particle_temperature_varlabel, gn, 0 );
+  tsk->requires( which_dw, _particle_temperature_varlabel, gn, 0 );
   tsk->requires( which_dw, _length_varlabel, gn, 0 );
   tsk->requires( which_dw, _weight_varlabel, gn, 0 );
   tsk->requires( Task::NewDW, _surfacerate_varlabel, Ghost::None, 0 );
@@ -445,7 +445,7 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
       if (_radiateAtGasTemp){
         which_dw->get( rad_particle_temperature, _gas_temperature_varlabel, matlIndex, patch, gn, 0 );
       }else{
-        new_dw->get( rad_particle_temperature, _particle_temperature_varlabel, matlIndex, patch, gn, 0 );
+        which_dw->get( rad_particle_temperature, _particle_temperature_varlabel, matlIndex, patch, gn, 0 );
       }
     }
     constCCVariable<Vector> gasVel;
@@ -467,7 +467,7 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
     constCCVariable<double> char_mass;
     which_dw->get( char_mass, _char_varlabel, matlIndex, patch, gn, 0 );
     constCCVariable<double> particle_temperature;
-    new_dw->get( particle_temperature, _particle_temperature_varlabel, matlIndex, patch, gn, 0 );
+    which_dw->get( particle_temperature, _particle_temperature_varlabel, matlIndex, patch, gn, 0 );
 
     constCCVariable<double> charoxi_temp_source;
     new_dw->get( charoxi_temp_source, _charoxiTemp_varlabel, matlIndex, patch, gn, 0 );

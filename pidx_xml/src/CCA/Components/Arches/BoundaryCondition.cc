@@ -70,15 +70,11 @@
 #include <Core/IO/UintahZlibUtil.h>
 
 #include <iostream>
-#include <mutex>
 #include <sstream>
 #include <stdlib.h>
 
 using namespace std;
 using namespace Uintah;
-
-// Used to sync std::cout when output by multiple threads
-extern std::mutex coutLock;
 
 #include <CCA/Components/Arches/fortran/mmbcvelocity_fort.h>
 #include <CCA/Components/Arches/fortran/mm_computevel_fort.h>
@@ -2663,7 +2659,7 @@ BoundaryCondition::setupBCInletVelocities(const ProcessorGroup*,
       double area = 0.0;
 
       const BndMapT& my_map =(*m_bcHelper)[level->getID()]->get_boundary_information();
-      for (auto iter = my_map.begin(); iter != my_map.end(); iter++ ){
+      for (auto iter = my_map.begin(); iter != my_map.end(); iter++ ) {
         BndSpec a_spec = iter->second;
         if ( a_spec.name == bc_iter->second.faceName ){
           area = a_spec.area;

@@ -224,6 +224,7 @@
         <Eqn label="mixture_fraction" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
+          <stage value="0"/>
           <conv_scheme>upwind</conv_scheme>
           <determines_properties/>
           <initialization type="linear-x">
@@ -237,7 +238,7 @@
         <Eqn label="enthalpy" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
-          <stage value="1"/>
+          <stage value="0"/>
           <conv_scheme>upwind</conv_scheme>
           <determines_properties/>
           <initialization type="tabulated">

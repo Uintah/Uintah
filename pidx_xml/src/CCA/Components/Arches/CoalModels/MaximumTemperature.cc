@@ -159,7 +159,7 @@ MaximumTemperature::sched_computeModel( const LevelP& level, SchedulerP& sched, 
     tsk->modifies(d_modelLabel); 
     which_dw = Task::NewDW; 
   }
-  tsk->requires( Task::NewDW, _particle_temperature_varlabel, gn, 0 ); 
+  tsk->requires( which_dw, _particle_temperature_varlabel, gn, 0 ); 
   tsk->requires( which_dw, _max_pT_varlabel, gn, 0 ); 
   tsk->requires( which_dw, _weight_scaled_varlabel, gn, 0 ); 
   tsk->requires( which_dw, _max_pT_weighted_scaled_varlabel, gn, 0 ); 
@@ -208,7 +208,7 @@ MaximumTemperature::computeModel( const ProcessorGroup * pc,
     }
 
     constCCVariable<double> pT; 
-    new_dw->get( pT , _particle_temperature_varlabel , matlIndex , patch , gn , 0 );
+    which_dw->get( pT , _particle_temperature_varlabel , matlIndex , patch , gn , 0 );
     constCCVariable<double> max_pT; 
     which_dw->get( max_pT    , _max_pT_varlabel , matlIndex , patch , gn , 0 );
     constCCVariable<double> scaled_weight; 

@@ -32,7 +32,7 @@ UpdateParticlePosition::problemSetup( ProblemSpecP& db ){
 //
 
 void
-UpdateParticlePosition::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
+UpdateParticlePosition::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){
 
 }
 

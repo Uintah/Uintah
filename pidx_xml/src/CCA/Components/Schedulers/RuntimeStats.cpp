@@ -261,7 +261,7 @@ MPI_Op rank_sum_min_max_op;
 } // unnamed namespace
 
 
-void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
+void RuntimeStats::report( MPI_Comm comm )
 {
   if (!(mpi_stats || exec_times || wait_times || task_stats)) {
     return;
@@ -657,21 +657,6 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
 
     printf("\n");
   }
-
-  // update SimulationState (don't count the output time)
-  stats[SimulationState::TaskExecTime] +=
-    TripTimer< TaskExecTag >::max().seconds() - stats[SimulationState::TotalIOTime];
-
-  stats[SimulationState::TaskLocalCommTime] += 1.0e-9 *
-    (MPI::Impl::RecvTimer::total() + MPI::Impl::SendTimer::total());
-
-  stats[SimulationState::TaskWaitCommTime]  += 1.0e-9 *
-    (MPI::Impl::TestTimer::total() + MPI::Impl::WaitTimer::total());
-
-  stats[SimulationState::TaskGlobalCommTime] += 1.0e-9 *
-    ( MPI::Impl::AlltoallTimer::total() + MPI::Impl::BcastTimer::total() +
-      MPI::Impl::GatherTimer::total()   + MPI::Impl::ReduceTimer::total() +
-      MPI::Impl::ScanTimer::total()     + MPI::Impl::ScatterTimer::total() );
 
   // clear the registered report values
   g_report_values.clear();

@@ -75,7 +75,7 @@
 #include <CCA/Components/Arches/CoalModels/KobayashiSarofimDevol.h>
 #include <CCA/Components/Arches/CoalModels/RichardsFletcherDevol.h>
 #include <CCA/Components/Arches/CoalModels/FOWYDevol.h>
-#include <CCA/Components/Arches/CoalModels/SimpleBirth.h>
+#include <CCA/Components/Arches/CoalModels/BirthDeath.h>
 #include <CCA/Components/Arches/CoalModels/YamamotoDevol.h>
 #include <CCA/Components/Arches/CoalModels/HeatTransfer.h>
 #include <CCA/Components/Arches/CoalModels/EnthalpyShaddix.h>
@@ -250,6 +250,28 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
                               SimulationStateP & state,
                               GridP& grid )
 {
+
+
+  // check to see what radiation calc frequency is (default is 1)
+  ProblemSpecP transport_ps = params->findBlock("TransportEqns");
+  if (transport_ps) {
+    ProblemSpecP sources_ps = transport_ps->findBlock("Sources");
+    if (sources_ps) {
+      ProblemSpecP rad_src_ps = sources_ps->findBlock("src");
+      // find the "divQ" src block for the radiation calculation frequency
+      while ( rad_src_ps !=nullptr) {
+        std::string src_type = "";
+        rad_src_ps->getAttribute("type", src_type);
+        if (src_type == "do_radiation" || src_type == "rmcrt_radiation" ){
+          rad_src_ps->require("calc_frequency", d_rad_calc_frequency);
+          d_num_taskgraphs=2;
+          break;
+        }
+        rad_src_ps = rad_src_ps->findNextBlock("src");
+      }
+    }
+  }
+
 
   ProblemSpecP db_es = params->findBlock("ExplicitSolver");
   ProblemSpecP db = params;
@@ -1270,7 +1292,7 @@ ExplicitSolver::sched_initializeVariables( const LevelP& level,
                                            SchedulerP& sched )
 {
 
-  Task* tsk = scinew Task( "ExplicitSolver", this, &ExplicitSolver::initializeVariables);
+  Task* tsk = scinew Task( "ExplicitSolver::initializeVariables", this, &ExplicitSolver::initializeVariables);
 
   tsk->computes(d_lab->d_cellInfoLabel);
   tsk->computes(d_lab->d_uVelocitySPBCLabel);
@@ -1327,11 +1349,9 @@ ExplicitSolver::sched_restartInitialize( const LevelP& level, SchedulerP& sched 
 
   typedef std::map<std::string, std::shared_ptr<TaskFactoryBase> > BFM;
   BFM::iterator i_property_models_fac = _task_factory_map.find("property_models_factory");
-  TaskFactoryBase::TaskMap all_tasks = i_property_models_fac->second->retrieve_all_tasks();
-
-  for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++) {
-    i->second->schedule_init(level, sched, matls, doingRestart );
-  }
+  i_property_models_fac->second->schedule_task_group( "all_tasks",
+                                                      TaskInterface::RESTART_INITIALIZE, false,
+                                                      level, sched, matls );
 
   setupBoundaryConditions( level, sched, doingRestart );
 
@@ -1673,14 +1693,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, curr_level);
     }
 
-    //ParticleModels before any update has occured
-    std::vector<std::string> pre_update_part_tasks
-      = i_particle_models->second->retrieve_task_subset("pre_update_particle_models");
-    for ( std::vector<std::string>::iterator itsk = pre_update_part_tasks.begin(); itsk != pre_update_part_tasks.end(); itsk++ ){
-      TaskInterface* tsk = i_particle_models->second->retrieve_task(*itsk);
-      tsk->schedule_task( level, sched, matls, TaskInterface::STANDARD_TASK, curr_level );
-    }
-
     //Property Models before any update has occured
     std::vector<std::string> pre_update_prop_tasks
       = i_property_models->second->retrieve_task_subset("pre_update_property_models");
@@ -1783,13 +1795,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
         d_dqmomSolver->sched_calculateMoments( level, sched, curr_level );
       }
 
-      //final clipping
-      std::vector<std::string> clipping_tasks = i_particle_models->second->retrieve_task_subset("post_update_coal");
-      for ( std::vector<std::string>::iterator itsk = clipping_tasks.begin(); itsk != clipping_tasks.end(); itsk++ ){
-        TaskInterface* tsk = i_particle_models->second->retrieve_task(*itsk);
-        tsk->schedule_task( level, sched, matls, TaskInterface::STANDARD_TASK, curr_level );
-      }
-
     }
 
     if ( d_doCQMOM ) {
@@ -1884,6 +1889,16 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
         }
       }
     }
+
+    //ParticleModels evaluated after the RK averaging.
+    //All particle transport should draw from the "latest" DW (old for rk = 0, new for rk > 0)
+    std::vector<std::string> post_update_part_tasks
+      = i_particle_models->second->retrieve_task_subset("post_update_particle_models");
+    for ( std::vector<std::string>::iterator itsk = post_update_part_tasks.begin(); itsk != post_update_part_tasks.end(); itsk++ ){
+      TaskInterface* tsk = i_particle_models->second->retrieve_task(*itsk);
+      tsk->schedule_task( level, sched, matls, TaskInterface::STANDARD_TASK, curr_level );
+    }
+
 
     // STAGE 0
 
@@ -2168,6 +2183,11 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     tsk->schedule_task( level, sched, matls, TaskInterface::STANDARD_TASK, 1 );
 
   }
+
+  std::vector<std::string> wall_hf_tasks =
+    i_property_models->second->retrieve_tasks_by_type("wall_heatflux_variable");
+  i_property_models->second->schedule_task_group(
+    "wall_heatflux_tasks", wall_hf_tasks, TaskInterface::TIMESTEP_EVAL, false, level, sched, matls );
 
   //Variable stats stuff
   std::vector<std::string> stats_tasks = i_property_models->second->retrieve_task_subset("variable_stat_models");
@@ -4261,8 +4281,8 @@ void ExplicitSolver::registerModels(ProblemSpecP& db)
         } else if ( model_type == "Drag" ) {
           ModelBuilder* modelBuilder = scinew DragModelBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
-        } else if ( model_type == "SimpleBirth" ) {
-          ModelBuilder* modelBuilder = scinew SimpleBirthBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+        } else if ( model_type == "BirthDeath" ) {
+          ModelBuilder* modelBuilder = scinew BirthDeathBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "Deposition" ) {
           ModelBuilder* modelBuilder = scinew DepositionBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);

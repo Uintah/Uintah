@@ -128,11 +128,11 @@
         <!-- particle models -->
         <VelModel type="Dragforce"/>
         <Models>
-          <model label="weight_birth" type="SimpleBirth">
+          <model label="weight_birth" type="BirthDeath">
             <is_weight/>
             <small_weight>0.1</small_weight>
           </model>
-          <model label="length_birth" type="SimpleBirth">
+          <model label="length_birth" type="BirthDeath">
             <abscissa label="length"/>
             <small_weight>0.1</small_weight>
           </model>

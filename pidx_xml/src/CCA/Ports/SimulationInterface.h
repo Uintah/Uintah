@@ -140,8 +140,17 @@ WARNING
 
      //////////
      // ask the component if it needs to be recompiled
-     virtual bool needRecompile(double /*time*/, double /*dt*/,
-                                const GridP& /*grid*/) {return false;}
+     virtual bool needRecompile( double /*time*/,
+                                 double /*dt*/,
+                                 const GridP& /*grid*/)
+     { return false; }
+
+     //////////
+     // ask the component which primary task graph it wishes to execute this timestep,
+     // this will be an index into the scheduler's vector of task-graphs.
+     virtual int computeTaskGraphIndex()
+     { return 0; }
+
 
      virtual void scheduleSwitchTest(const LevelP& /*level*/, SchedulerP& /*sched*/)
        {};

@@ -52,7 +52,7 @@ OneDWallHT::create_local_labels(){
 //--------------------------------------------------------------------------------------------------
 void
 OneDWallHT::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>&
-                                       variable_registry ){
+                                 variable_registry, const bool packed_tasks ){
 
   register_variable( "Twall", ArchesFieldContainer::COMPUTES, variable_registry );
 
@@ -130,9 +130,9 @@ OneDWallHT::newton_solve( double& Twall, const double& Tsh, const double& rad_q,
   double f1       = 0.0;
   double T_max    = pow( rad_q/_sigma_constant, 0.25); // if k = 0.0;
   double Twall_guess, Twall_tmp, Twall_old;
-  
+
   //required variables
-  
+
   // new solve
   Twall_guess = Twall;
   Twall_old = Twall_guess-delta;

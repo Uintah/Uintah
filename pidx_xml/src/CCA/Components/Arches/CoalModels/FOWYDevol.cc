@@ -103,7 +103,7 @@ FOWYDevol::problemSetup(const ProblemSpecP& params, int qn)
 
 
   //RAW COAL get the birth term if any:
-  const std::string rawcoal_birth_name = rcmass_eqn.get_model_by_type( "SimpleBirth" );
+  const std::string rawcoal_birth_name = rcmass_eqn.get_model_by_type( "BirthDeath" );
   std::string rawcoal_birth_qn_name = ParticleTools::append_qn_env(rawcoal_birth_name, d_quadNode);
   if ( rawcoal_birth_name != "NULLSTRING" ){
     _rawcoal_birth_label = VarLabel::find( rawcoal_birth_qn_name );
@@ -295,7 +295,7 @@ FOWYDevol::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeS
     tsk->modifies(_v_inf_label);
     which_dw = Task::NewDW;
   }
-  tsk->requires( Task::NewDW, _particle_temperature_varlabel, gn, 0 );
+  tsk->requires( which_dw, _particle_temperature_varlabel, gn, 0 );
   tsk->requires( which_dw, _rcmass_varlabel, gn, 0 );
   tsk->requires( which_dw, _char_varlabel, gn, 0 );
   tsk->requires( which_dw, _weight_varlabel, gn, 0 );
@@ -361,7 +361,7 @@ FOWYDevol::computeModel( const ProcessorGroup * pc,
     }
 
     constCCVariable<double> temperature;
-    new_dw->get( temperature , _particle_temperature_varlabel , matlIndex , patch , gn , 0 );
+    which_dw->get( temperature , _particle_temperature_varlabel , matlIndex , patch , gn , 0 );
     constCCVariable<double> rcmass;
     which_dw->get( rcmass    , _rcmass_varlabel , matlIndex , patch , gn , 0 );
     constCCVariable<double> charmass;

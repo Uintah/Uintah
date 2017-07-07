@@ -47,7 +47,7 @@ namespace Uintah{
 
     void problemSetup( ProblemSpecP& db );
 
-    void register_initialize( VIVec& variable_registry );
+    void register_initialize( VIVec& variable_registry , const bool pack_tasks);
 
     void register_timestep_init( VIVec& variable_registry );
 
@@ -161,6 +161,7 @@ namespace Uintah{
           int _ncomp;
           
 
+          double _absorption_modifier;
           double  _charAsymm;
           double  _rawCoalAsymm;
           double  _ashAsymm;

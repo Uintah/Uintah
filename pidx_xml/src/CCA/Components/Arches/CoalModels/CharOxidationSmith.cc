@@ -164,7 +164,7 @@ CharOxidationSmith::problemSetup(const ProblemSpecP& params, int qn)
   _RHS_source_varlabel = VarLabel::find(ic_RHS);
 
   //CHAR get the birth term if any:
-  const std::string char_birth_name = char_eqn.get_model_by_type( "SimpleBirth" );
+  const std::string char_birth_name = char_eqn.get_model_by_type( "BirthDeath" );
   std::string char_birth_qn_name = ParticleTools::append_qn_env(char_birth_name, d_quadNode);
   if ( char_birth_name != "NULLSTRING" ){
     _char_birth_label = VarLabel::find( char_birth_qn_name );
@@ -177,7 +177,7 @@ CharOxidationSmith::problemSetup(const ProblemSpecP& params, int qn)
   _RC_RHS_source_varlabel = VarLabel::find(RC_RHS);
 
   //RAW COAL get the birth term if any:
-  const std::string rawcoal_birth_name = rcmass_eqn.get_model_by_type( "SimpleBirth" );
+  const std::string rawcoal_birth_name = rcmass_eqn.get_model_by_type( "BirthDeath" );
   std::string rawcoal_birth_qn_name = ParticleTools::append_qn_env(rawcoal_birth_name, d_quadNode);
   if ( rawcoal_birth_name != "NULLSTRING" ){
     _rawcoal_birth_label = VarLabel::find( rawcoal_birth_qn_name );
@@ -492,8 +492,8 @@ CharOxidationSmith::sched_computeModel( const LevelP& level, SchedulerP& sched, 
   for (std::vector<const VarLabel*>::iterator iter = _reaction_rate_varlabels.begin(); iter != _reaction_rate_varlabels.end(); iter++) {
     tsk->requires( which_dw, *iter, gn, 0 );
   }
-  tsk->requires( Task::NewDW, _particle_temperature_varlabel, gn, 0 );
-  tsk->requires( Task::NewDW, _number_density_varlabel, gn, 0 );
+  tsk->requires( which_dw, _particle_temperature_varlabel, gn, 0 );
+  tsk->requires( which_dw, _number_density_varlabel, gn, 0 );
   tsk->requires( which_dw, _rcmass_varlabel, gn, 0 );
   tsk->requires( which_dw, _char_varlabel, gn, 0 );
 
@@ -604,7 +604,7 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
     constCCVariable<double> temperature;
     which_dw->get( temperature , _gas_temperature_varlabel , matlIndex , patch , gn , 0 );
     constCCVariable<double> particle_temperature;
-    new_dw->get( particle_temperature , _particle_temperature_varlabel , matlIndex , patch , gn , 0 );
+    which_dw->get( particle_temperature , _particle_temperature_varlabel , matlIndex , patch , gn , 0 );
     StaticArray< constCCVariable<double> > length(_nQn_part);
     StaticArray< constCCVariable<double> > weight(_nQn_part);
     for (int i=0; i<_nQn_part;i++ ){
@@ -620,7 +620,7 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
     constCCVariable<double> RC_RHS_source;
     new_dw->get( RC_RHS_source , _RC_RHS_source_varlabel , matlIndex , patch , gn , 0 );
     constCCVariable<double> number_density;
-    new_dw->get( number_density , _number_density_varlabel , matlIndex , patch , gn , 0 );
+    which_dw->get( number_density , _number_density_varlabel , matlIndex , patch , gn , 0 );
     StaticArray< constCCVariable<double> > species(_NUM_species);
     for (int l=0; l<_NUM_species; l++) {
       which_dw->get( species[l], _species_varlabels[l], matlIndex, patch, gn, 0 );
@@ -853,22 +853,23 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
 	      d_mass = 0.0;
 	      h_rxn = 0.0; // this is the reaction rate weighted heat of reaction. It is needed so we can used the clipped value when computed the heat of reaction rate.
                      // h_rxn = sum(hrxn_l * rxn_l)/sum(rxn_l)
+        double oxi_lim = 0.0; // max rate due to reactions
+        double rh_l_i = 0.0;
         for (int l=0; l<_NUM_reactions; l++) {
-          reaction_rate_l[l](i,j,k)=rh_l_new[l];// [kg/m^3/s] this is for the intial guess during the next time-step
-          char_mass_rate+= -rh_l_new[l]/w;// [kg/s/#]  negative sign because we are computing the destruction rate for the particles.
-	        d_mass += rh_l_new[l];
-	        h_rxn += hrxn_l[l] * rh_l_new[l];
+          reaction_rate_l[l](i,j,k)=rh_l_new[l];// [kg/m^3/s] this is for the intial guess during the next time-step (that is why it is before the initial clipping).
+          // check to see if the reaction rate is oxidizer limited.
+          oxi_lim = (oxid_mass_frac[l] * gas_rho * surfaceAreaFraction) / dt;// [kg/s/#] // here the surfaceAreaFraction parameter is allowing us to only consume the oxidizer multiplied by the weighted area fraction for the current particle.
+          rh_l_i = std::min(rh_l_new[l], oxi_lim);
+          char_mass_rate += -rh_l_i/w;// [kg/s/#]  negative sign because we are computing the destruction rate for the particles.
+	        d_mass += rh_l_i;
+	        h_rxn += hrxn_l[l] * rh_l_i;
         }
 	      h_rxn /= (d_mass + 1e-50); // [J/mole]
-        // check to see if reaction rate is oxidizer limited.
-        for (int l=0; l<_NUM_reactions; l++) {
-          char_mass_rate = std::max( char_mass_rate, - (oxid_mass_frac[l] * gas_rho * surfaceAreaFraction) / (dt * w) );// [kg/s/#] // here the surfaceAreaFraction parameter is allowing us to only consume the oxidizer multiplied by the weighted area fraction for the current particle.
-        }
+        
         // check to see if reaction rate is fuel limited.
         if ( add_rawcoal_birth && add_char_birth ){
           char_mass_rate = std::max( char_mass_rate, - ((rc+ch)/(dt) + (RHS + RHS_v)/(vol*w) + r_devol/w + char_birth(i,j,k)/w + rawcoal_birth(i,j,k)/w )); // [kg/s/#] 
         } else {
-        
           char_mass_rate = std::max( char_mass_rate, - ((rc+ch)/(dt) + (RHS + RHS_v)/(vol*w) + r_devol/w )); // [kg/s/#] 
         }
         char_mass_rate = std::min( 0.0, char_mass_rate); // [kg/s/#] make sure we aren't creating char.

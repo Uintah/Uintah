@@ -83,7 +83,6 @@ namespace Uintah {
     double      d_artificialDampCoeff;
     double      d_artificialViscCoeff1;                        // Artificial viscosity coefficient 1
     double      d_artificialViscCoeff2;                        // Artificial viscosity coefficient 2
-    double      d_forceIncrementFactor;
     bool        d_do_contact_friction;
     double      d_addFrictionWork;                             // 1 == add , 0 == do not add
 

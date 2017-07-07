@@ -391,7 +391,7 @@ RadPropertyCalculator::GauthamWSGG::compute_abskg( const Patch* patch,
       for (int i=0; i<4; i++){
         emissivity += a[i]*(1.0 - exp( -_K[ii][i] * (totalAttenGas) *  d_opl));
       }
-      abskg[c] = 1.0/ d_opl * -log(1.0-emissivity);
+      abskg[c] = 1.0/ d_opl * -log(1.0-emissivity)*d_gasPressure;
 
     } else{
       abskg[c] = 1.0; // emissivity of wall = 1;
@@ -474,7 +474,7 @@ RadPropertyCalculator::HottelSarofim::compute_abskg( const Patch* patch,
 
   fort_hottel(idxLo, idxHi, mixT,
               species[0], species[1], VolFractionBC,
-              d_opl, species[2], abskg);
+              d_opl, species[2], abskg,d_gasPressure);
 
 }
 
@@ -611,7 +611,7 @@ RadPropertyCalculator::RadPropsInterface::compute_abskg( const Patch* patch, con
 
       _gg_radprops->mixture_coeffs(effCff, mol_frac, mixT[c], RadProps::EFF_ABS_COEFF);
 
-      abskg[c] = effCff*100.0; // from cm^-1 to m^-1 //need to generalize this to the other coefficients
+      abskg[c] = effCff*100.0*d_gasPressure; // from cm^-1 to m^-1 //need to generalize this to the other coefficients
 
 
     } else { 
