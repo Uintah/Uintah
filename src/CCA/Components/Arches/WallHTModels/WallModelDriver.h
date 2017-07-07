@@ -202,8 +202,10 @@ namespace Uintah{
           model_int = 1;
         } else if ( model_type=="dynamic"){
           model_int = 2;
+        } else if ( model_type=="pokluda"){
+          model_int = 3;
         } else {
-          throw InvalidValue("Error: emissivity_model_type must be either constant or dynamic.", __FILE__, __LINE__);
+          throw InvalidValue("Error: emissivity_model_type must be either constant, dynamic, or pokluda.", __FILE__, __LINE__);
         }
           return model_int;
       }
@@ -484,6 +486,75 @@ namespace Uintah{
               e=std::min(ef,e);
             }
             ~dynamic_e(){}
+          };
+          
+          struct pokluda_e : EmissivityBase {
+            pokluda_e(ProblemSpecP db_model){
+              std::string ash_type;
+              db_model->getWithDefault( "coal_name", ash_type, "generic_coal");
+	            T_mid = ParticleTools::getAshPorosityTemperature(db_model); 
+              if (ash_type == "indonesian"){
+                a_sv = -1.49989457e+04;
+                b_sv = -1.03085223e+00;
+                c_sv = 5.37022699e+00;
+                coeff_num = {0.02440762, -0.36029018, 1.18387414, 0.52497189, 0.56917877, -0.09176230};
+                coeff_den = {1.00000000, 0.37215113, 0.54596386, -0.01022441, 0.27975327, -0.04638308};
+                xscale = {7.50000000e+02, 1.46250000e-04};
+                xcenter = {1.05000000e+03, 1.53750000e-04};
+                yscale = 1.38003250e-01;
+                ycenter = 7.46244152e-01;
+                pokluda={1.25909498e+00, 1.00031376e-05, -2.58931875e-01, -9.49645841e-01};
+                fresnel={9.67067924e-01, -1.08655426e-06, -1.60974035e-01, -5.52763546e-03};
+	            } else {
+                throw InvalidValue("Error, coal_name wasn't recognized in pokluda ash emissivity data-base. ", __FILE__, __LINE__);
+              }
+            }
+            double T_mid;
+            double a_sv;
+            double b_sv;
+            double c_sv;
+            std::vector<double> coeff_num;
+            std::vector<double> coeff_den;
+            std::vector<double> xscale; 
+            std::vector<double> xcenter; 
+            double yscale; 
+            double ycenter; 
+            std::vector<double> fresnel;
+            std::vector<double> pokluda;
+            void model(double &e, const double &C, double &T, double &Dp, double &tau) {
+              
+              // surface tension and viscosity model:
+              // power law fit: log10(st/visc) = a*T^b+c
+              double log10SurfT_div_Visc = a_sv*std::pow(T,b_sv)+c_sv; // [=] log10(m-s)
+              double SurfT_div_Visc = std::pow(10,log10SurfT_div_Visc); // [=] m-s
+              
+              // non-dimensional time-scale
+              double x_time =  SurfT_div_Visc*tau/(Dp/2.0);// [=] -
+
+              // pokluda model for sintering
+              // 2nd order exponential fit: d_eff = a*exp(b*X)+c*exp(d*X);
+              double d_eff = (x_time>=100.0) ? (pokluda[0]*std::exp(pokluda[1]*100.0) + pokluda[2]*std::exp(pokluda[3]*100.0))*Dp :
+                                               (pokluda[0]*std::exp(pokluda[1]*x_time) + pokluda[2]*std::exp(pokluda[3]*x_time))*Dp;
+          
+              // mie emissivity as a function of temperature and effective particle size
+              // rational quardratice fit: y = (a1+a2*x1+a3*x2+a4*x1^2+a5*x1*x2+a6*x2^2)/(b1+b2*x1+b3*x2+b4*x1^2+b5*x1*x2+b6*x2^2) 
+              double T_sc = (T-xcenter[0])/xscale[0];
+              double d_eff_sc = (d_eff-xcenter[1])/xscale[1];
+              double xv[6]={1, T_sc, d_eff_sc, std::pow(T_sc,2), T_sc*d_eff_sc, std::pow(d_eff_sc,2.0)};
+              double num=0;
+              double den=0;
+              for ( int I=0; I < 6; I++ ) {
+                num+=coeff_num[I]*xv[I];
+                den+=coeff_den[I]*xv[I];
+              }
+              e = num/den;
+              e = e*yscale + ycenter;
+              // finally set emissivity to fresnel emissivity (slagging limit) if mie-theory emissivity is too high.
+              // 2nd order exponential fit: ef = a*exp(b*T)+c*exp(d*T);
+              double ef=fresnel[0]*std::exp(fresnel[1]*T) + fresnel[2]*std::exp(fresnel[3]*T); 
+              e=(T>=T_mid) ? ef : std::min(ef,e); 
+            }
+            ~pokluda_e(){}
           };
       };
 

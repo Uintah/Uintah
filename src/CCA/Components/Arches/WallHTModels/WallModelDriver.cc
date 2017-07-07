@@ -904,6 +904,8 @@ WallModelDriver::CoalRegionHT::problemSetup( const ProblemSpecP& input_db ){
     m_em_model = scinew constant_e();
   } else if (emissivity_model_type == 2){
     m_em_model = scinew dynamic_e(db);
+  } else if (emissivity_model_type == 3){
+    m_em_model = scinew pokluda_e(db);
   } else {
     throw InvalidValue("ERROR: WallModelDriver: No emissivity model selected.",__FILE__,__LINE__);
   }
