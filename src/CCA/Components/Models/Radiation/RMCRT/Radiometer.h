@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef RADIOMETER_H
-#define RADIOMETER_H
+#ifndef CCA_COMPONENTS_MODELS_RADIATION_RMCRT_RADIOMETER_H
+#define CCA_COMPONENTS_MODELS_RADIATION_RMCRT_RADIOMETER_H
 
 #include <CCA/Components/Models/Radiation/RMCRT/RMCRTCommon.h>
 
@@ -83,8 +83,9 @@ namespace Uintah{
                             constCCVariable<int> celltype,
                             const bool modifiesFlux );
 
-      std::vector<const Patch*> getPatchSet( SchedulerP& sched,
-                                             const LevelP& level );
+      void getPatchSet( SchedulerP& sched,
+                                             const LevelP& level,
+                                             std::vector<const Patch*>& radiometer_patches );
       
 
       const VarLabel* getRadiometerLabel() const {
@@ -121,8 +122,7 @@ namespace Uintah{
                        DataWarehouse* new_dw,
                        Task::WhichDW which_abskg_dw,
                        Task::WhichDW whichd_sigmaT4_dw,
-                       Task::WhichDW which_celltype_dw,
-                       const bool hadRadiometers );
+                       Task::WhichDW which_celltype_dw );
 
       //__________________________________
       //
@@ -137,4 +137,4 @@ namespace Uintah{
 
 } // namespace Uintah
 
-#endif
+#endif // CCA_COMPONENTS_MODELS_RADIATION_RMCRT_RADIOMETER_H

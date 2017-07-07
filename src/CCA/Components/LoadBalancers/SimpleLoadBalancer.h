@@ -26,16 +26,14 @@
 #define CCA_COMPONENTS_LOADBALANCERS_SIMPLELOADBALANCER_H
 
 #include <CCA/Components/LoadBalancers/LoadBalancerCommon.h>
-#include <Core/Parallel/UintahParallelComponent.h>
 
 namespace Uintah {
 
 /**************************************
 
  CLASS
- SimpleLoadBalancer
+   SimpleLoadBalancer
 
- Short Description...
 
  GENERAL INFORMATION
 
@@ -49,14 +47,14 @@ namespace Uintah {
 
 
  KEYWORDS
- SimpleLoadBalancer
+   SimpleLoadBalancer
 
  DESCRIPTION
- Long description...
-
- WARNING
 
  ****************************************/
+
+class Patch;
+class ProcessorGroup;
 
 class SimpleLoadBalancer : public LoadBalancerCommon {
 
@@ -64,7 +62,7 @@ public:
 
   SimpleLoadBalancer(const ProcessorGroup* myworld);
 
-  ~SimpleLoadBalancer();
+  virtual ~SimpleLoadBalancer() {};
 
   virtual int getPatchwiseProcessorAssignment(const Patch * patch);
 
