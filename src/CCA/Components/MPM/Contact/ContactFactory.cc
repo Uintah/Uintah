@@ -45,8 +45,7 @@ Contact* ContactFactory::create(const ProcessorGroup* myworld,
 
    ProblemSpecP mpm_ps = 
      ps->findBlockWithOutAttribute("MaterialProperties")->findBlock("MPM");
-   
-   
+
    if(!mpm_ps){
     string warn = "ERROR: Missing either <MaterialProperties> or <MPM> block from input file";
     throw ProblemSetupException(warn, __FILE__, __LINE__);

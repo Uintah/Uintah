@@ -75,10 +75,12 @@ void TaskInterface::schedule_task( const LevelP& level,
   //other variables:
   tsk->requires(Task::OldDW, VarLabel::find("delT"));
 
-  if ( counter > 0 )
+  if ( counter > 0 ) {
     sched->addTask( tsk, level->eachPatch(), matls );
-  else
+  }
+  else {
     delete tsk;
+  }
 
 }
 
@@ -93,10 +95,12 @@ void TaskInterface::schedule_init( const LevelP& level,
 
   VariableRegistry variable_registry;
 
+  const bool packed_tasks = false;
+
   if ( is_restart ) {
     register_restart_initialize( variable_registry );
   } else {
-    register_initialize( variable_registry );
+    register_initialize( variable_registry, packed_tasks );
   }
 
   Task* tsk;
@@ -132,7 +136,7 @@ void TaskInterface::schedule_init( const LevelP& level,
       tsk->requires( ivar.uintah_task_dw, ivar.label, ivar.ghost_type, ivar.nGhost );
       break;
     default:
-      throw InvalidValue("Arches Task Error: Cannot schedule task becuase of incomplete variable dependency: "+_task_name, __FILE__, __LINE__);
+      throw InvalidValue("Arches Task Error: Cannot schedule task because of incomplete variable dependency: "+_task_name, __FILE__, __LINE__);
       break;
 
     }

@@ -68,7 +68,8 @@ public:
 protected:
 
     void register_initialize(
-      std::vector<ArchesFieldContainer::VariableInformation>& variable_registry );
+      std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
+      const bool packed_tasks );
 
     void register_timestep_init(
       std::vector<ArchesFieldContainer::VariableInformation>& variable_registry );
@@ -287,7 +288,8 @@ private:
   // Initialize ------------------------------------------------------------------------------------
   template <typename T>
   void TaskAlgebra<T>::register_initialize(
-    std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
+    std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
+    const bool packed_tasks ){
 
     for ( auto iter = all_operations.begin(); iter != all_operations.end(); iter++ ){
       if ( iter->second.create_new_variable ){

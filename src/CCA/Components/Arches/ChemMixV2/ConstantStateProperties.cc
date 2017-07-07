@@ -41,7 +41,7 @@ void ConstantStateProperties::create_local_labels(){
 }
 
 //--------------------------------------------------------------------------------------------------
-void ConstantStateProperties::register_initialize( VIVec& variable_registry ){
+void ConstantStateProperties::register_initialize( VIVec& variable_registry , const bool packed_tasks){
 
   for ( auto i = m_name_to_value.begin(); i != m_name_to_value.end(); i++ ){
     register_variable( i->first, ArchesFieldContainer::COMPUTES, variable_registry );

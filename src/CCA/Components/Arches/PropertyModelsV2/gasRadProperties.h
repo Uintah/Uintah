@@ -44,7 +44,7 @@ namespace Uintah{
 
     void problemSetup( ProblemSpecP& db );
 
-    void register_initialize( VIVec& variable_registry );
+    void register_initialize( VIVec& variable_registry , const bool pack_tasks);
 
     void register_timestep_init( VIVec& variable_registry );
 
@@ -114,6 +114,7 @@ namespace Uintah{
 
     private: 
       
+      double _absorption_modifier;
       RadPropertyCalculator::PropertyCalculatorBase* _calc; 
       const VarLabel* _temperature_label; 
       std::string _temperature_name;

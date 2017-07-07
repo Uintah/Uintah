@@ -475,10 +475,15 @@ void MomentumSolver::solveVelHat(const LevelP& level,
 
   // Schedule additional sources for evaluation
   SourceTermFactory& factory = SourceTermFactory::self();
-  for (vector<std::string>::iterator iter = d_new_sources.begin();
-      iter != d_new_sources.end(); iter++){
-    SourceTermBase& src = factory.retrieve_source_term( *iter );
-    src.sched_computeSource( level, sched, timeSubStep );
+  for ( vector<std::string>::iterator iter = d_new_sources.begin();
+        iter != d_new_sources.end(); iter++ ){
+
+    if ( factory.source_term_exists( *iter ) ){
+
+      SourceTermBase& src = factory.retrieve_source_term( *iter );
+      src.sched_computeSource( level, sched, timeSubStep );
+
+    }
   }
 
   sched_buildLinearMatrixVelHat(sched, patches, matls,
@@ -587,13 +592,15 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
   tsk->modifies(d_lab->d_conv_scheme_z_Label);
 
   // Adding new sources from factory:
-  for (vector<std::string>::iterator iter = d_new_sources.begin();
-      iter != d_new_sources.end(); iter++){
+  for ( vector<std::string>::iterator iter = d_new_sources.begin();
+        iter != d_new_sources.end(); iter++ ){
 
     tsk->requires(Task::NewDW, VarLabel::find( *iter ), gac, 1);
+
   }
 
   sched->addTask(tsk, patches, matls);
+
 }
 
 

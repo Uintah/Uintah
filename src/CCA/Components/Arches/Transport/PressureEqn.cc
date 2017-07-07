@@ -77,7 +77,8 @@ PressureEqn::setup_solver( ProblemSpecP& db ){
 //--------------------------------------------------------------------------------------------------
 void
 PressureEqn::register_initialize(
-  std::vector<AFC::VariableInformation>& variable_registry ){
+  std::vector<AFC::VariableInformation>& variable_registry,
+  const bool pack_tasks ){
 
   register_variable( "A_press", AFC::COMPUTES, variable_registry );
   register_variable( "b_press", AFC::COMPUTES, variable_registry );

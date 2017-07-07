@@ -50,7 +50,7 @@ DensityPredictor::create_local_labels(){
 //--------------------------------------------------------------------------------------------------
 void
 DensityPredictor::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>&
-                                       variable_registry ){
+                                       variable_registry, const bool packed_tasks ){
 
   register_variable( "new_densityGuess", ArchesFieldContainer::COMPUTES, variable_registry );
 
@@ -122,7 +122,7 @@ DensityPredictor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   constSFCZVariable<double>& w = *(tsk_info->get_const_uintah_field<constSFCZVariable<double> >( "wVelocitySPBC" ));
 
   //---work---
-  double dt = tsk_info->get_dt();
+  const double dt = tsk_info->get_dt();
 
   if ( m_use_exact_guess ){
 

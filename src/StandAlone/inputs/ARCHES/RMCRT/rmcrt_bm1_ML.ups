@@ -201,6 +201,7 @@
         <Eqn label="mixture_f" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
+          <stage value="0"/>
           <conv_scheme>super_bee</conv_scheme>
           <initialization type="constant">
             <constant>0.00</constant>
@@ -213,6 +214,7 @@
         <Eqn label="enthalpy" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
+          <stage value="0"/>
           <conv_scheme>super_bee</conv_scheme>
           <initialization type="constant">
             <constant>0.0</constant>

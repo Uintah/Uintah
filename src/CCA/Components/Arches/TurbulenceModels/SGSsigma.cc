@@ -58,7 +58,8 @@ SGSsigma::create_local_labels(){
 //--------------------------------------------------------------------------------------------------
 void
 SGSsigma::register_initialize(
-  std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
+  std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
+  const bool packed_tasks ){
 
   register_variable( m_sigOper, ArchesFieldContainer::COMPUTES, variable_registry );
 

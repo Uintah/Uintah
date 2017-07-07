@@ -163,6 +163,9 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
     return;
   }
 
+  // track total scheduler execution time across timesteps
+  m_exec_timer.reset(true);
+
   RuntimeStats::initialize_timestep(m_task_graphs);
 
   ASSERTRANGE(tgnum, 0, static_cast<int>(m_task_graphs.size()));
@@ -176,6 +179,13 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
   }
 
   DetailedTasks* dts = tg->getDetailedTasks();
+
+  if(!dts) {
+    if (d_myworld->myrank() == 0) {
+      DOUT(true, "DynamicMPIScheduler skipping execute, no tasks");
+    }
+    return;
+  }
   
   int ntasks = dts->numLocalTasks();
   dts->initializeScrubs(m_dws, m_dwmap);
@@ -390,6 +400,8 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
 
   finalizeTimestep();
   
+  m_exec_timer.stop();
+
   // compute the net timings
   if (m_shared_state != nullptr) {
     computeNetRunTimeStats(m_shared_state->d_runTimeStats);
@@ -400,6 +412,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
     outputTimingStats( "DynamicMPIScheduler" );
   }
 
-  RuntimeStats::report(d_myworld->getComm(), m_shared_state->d_runTimeStats);
-}
+  RuntimeStats::report(d_myworld->getComm());
+
+} // end execute()
 

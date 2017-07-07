@@ -76,8 +76,8 @@ RMCRT_Test::RMCRT_Test ( const ProcessorGroup* myworld ): UintahParallelComponen
   d_flow_cell = -1;   //<----HARD CODED FLOW CELL
   d_pDir      = -9;   // used for initializing benchmark problems 
 
-  d_RMCRT = 0;
-  d_old_uda = 0;
+  d_RMCRT   = nullptr;
+  d_old_uda = nullptr;
 }
 //______________________________________________________________________
 //
@@ -112,9 +112,12 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
   d_material = scinew SimpleMaterial();
   d_sharedState->registerSimpleMaterial( d_material );
 
-
-  //manually manipulate the scheduling of copy data for the shootRay task
+  // TG-0 = carry forward tasks
+  // TG-1 = normal RMCRT computations
   Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
+  sched->setNumTaskGraphs(RMCRTCommon::NUM_GRAPHS);
+
+  // manually manipulate the scheduling of copy data for the shootRay task
   sched->overrideVariableBehavior("color",false, false, true, false, false);
 
   //__________________________________
@@ -331,6 +334,7 @@ void RMCRT_Test::scheduleRestartInitialize(const LevelP& level,
                                      SchedulerP& sched)
 {
 }
+
 //______________________________________________________________________
 //
 //______________________________________________________________________
@@ -338,13 +342,13 @@ void RMCRT_Test::scheduleComputeStableTimestep ( const LevelP& level, SchedulerP
 {
   printSchedule(level,dbg,"RMCRT_Test::scheduleComputeStableTimestep");
 
-  Task* task = scinew Task( "RMCRT_Test::computeStableTimestep", this,
-                            &RMCRT_Test::computeStableTimestep );
+  Task* task = scinew Task( "RMCRT_Test::computeStableTimestep", this, &RMCRT_Test::computeStableTimestep );
 
   task->computes( d_sharedState->get_delt_label(),level.get_rep() );
 
   scheduler->addTask( task, level->eachPatch(), d_sharedState->allMaterials() );
 }
+
 //______________________________________________________________________
 //
 //______________________________________________________________________
@@ -362,49 +366,63 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
   // move fields to the new_dw to mimic what a component would compute
   // The variables temperature, cellType, and abskg are computed on the finest level
   const LevelP& finestLevel = grid->getLevel( maxLevels -1 );
-  sched_initProperties( finestLevel, sched, d_radCalc_freq );
+  sched_initProperties( finestLevel, sched );
 
   Radiometer* radiometer = d_RMCRT->getRadiometer();
+  bool includeExtraCells = true;  // domain for sigmaT4 computation
 
+  Task::WhichDW notUsed = Task::None;
   //______________________________________________________________________
   //   D A T A   O N I O N   A P P R O A C H
   if( d_whichAlgo == dataOnion ){
+  
+    Task::WhichDW temp_dw       = Task::NewDW;
+    Task::WhichDW sigmaT4_dw    = Task::NewDW;
+    Task::WhichDW celltype_dw   = Task::NewDW;  
+    const bool backoutTemp      = true;    
+    const bool modifies_abskg   = false;
+    const bool modifies_sigmaT4 = false;
+    const bool modifies_divQ    = false;
+        
     const LevelP& fineLevel = grid->getLevel(maxLevels-1);
-    Task::WhichDW temp_dw  = Task::NewDW;
-    Task::WhichDW abskg_dw = Task::NewDW;
+    
+    // define per level which abskg dw
+    d_RMCRT->set_abskg_dw_perLevel (fineLevel, Task::NewDW);
     
     // convert abskg:dbl -> abskg:flt if needed
-    d_RMCRT->sched_DoubleToFloat( fineLevel,sched, abskg_dw, d_radCalc_freq );
+    d_RMCRT->sched_DoubleToFloat( fineLevel,sched, notUsed );
 
-    d_RMCRT->sched_sigmaT4( fineLevel,  sched, temp_dw, d_radCalc_freq, false );
+    d_RMCRT->sched_sigmaT4( fineLevel,  sched, temp_dw, includeExtraCells );
 
-    d_RMCRT->sched_setBoundaryConditions( fineLevel, sched, temp_dw, d_radCalc_freq );
+    d_RMCRT->sched_setBoundaryConditions( fineLevel, sched, temp_dw );
 
-    // coarsen data to the coarser levels.
-    // do it in reverse order
-    Task::WhichDW notUsed = Task::OldDW;
-    const bool backoutTemp = true;
+    // carry forward if it's time
+    d_RMCRT->sched_CarryForward_FineLevelLabels( fineLevel, sched );
+    
+    // coarse level variables
+    for (int l = 0; l < maxLevels-1; ++l) {
+      const LevelP& level = grid->getLevel(l);
+      d_RMCRT->sched_CarryForward_Var ( level,  sched, d_RMCRT->d_abskgLabel,   RMCRTCommon::TG_CARRY_FORWARD );
+      d_RMCRT->sched_CarryForward_Var ( level,  sched, d_RMCRT->d_sigmaT4Label, RMCRTCommon::TG_CARRY_FORWARD );
+    }
 
+    // coarsen data to the coarser levels. Do it in reverse order,
+    // start scheduling at finest_level-1 (maxLevels - 2)
     for (int l = maxLevels - 2; l >= 0; l--) {
       const LevelP& level = grid->getLevel(l);
-      const bool modifies_abskg   = false;
-      const bool modifies_sigmaT4 = false;
-      d_RMCRT->sched_CoarsenAll (level, sched, modifies_abskg, modifies_sigmaT4, d_radCalc_freq );
+
+      d_RMCRT->sched_CoarsenAll (level, sched, modifies_abskg, modifies_sigmaT4 );
       
       if( d_RMCRT->d_coarsenExtraCells == false ) {
-        d_RMCRT->sched_setBoundaryConditions( level, sched, notUsed, d_radCalc_freq, backoutTemp );
+        d_RMCRT->sched_setBoundaryConditions( level, sched, notUsed, backoutTemp );
       }
     }
 
     //__________________________________
-    //  compute the extents of the rmcrt region of interest
-    //  on the finest level
+    //  compute the extents of the rmcrt region of interest on the finest level
     d_RMCRT->sched_ROI_Extents( fineLevel, sched );
 
-    Task::WhichDW sigmaT4_dw  = Task::NewDW;
-    Task::WhichDW celltype_dw = Task::NewDW;
-    const bool modifies_divQ = false;
-    d_RMCRT->sched_rayTrace_dataOnion(fineLevel, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ, d_radCalc_freq);
+    d_RMCRT->sched_rayTrace_dataOnion(fineLevel, sched, notUsed, sigmaT4_dw, celltype_dw, modifies_divQ);
 
   }
 
@@ -413,37 +431,51 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
   //  If the RMCRT is performed on only the coarse level
   // and the results are interpolated to the fine level
   if( d_whichAlgo == coarseLevel ){
+  
+      Task::WhichDW temp_dw       = Task::NewDW;
+      Task::WhichDW sigmaT4_dw    = Task::NewDW;
+      Task::WhichDW celltype_dw   = Task::NewDW;
+      const bool modifies_divQ    = false;
+      const bool backoutTemp      = true;
+      const bool modifies_abskg   = false;
+      const bool modifies_sigmaT4 = false;  
+  
+    // carry forward if it's time
+    for ( int l = 0; l < maxLevels; l++ ) {
+      const LevelP& level = grid->getLevel(l);
+      d_RMCRT->sched_CarryForward_FineLevelLabels ( level, sched );
+     
+            // coarse level only
+      if( level->hasFinerLevel() ){
+        d_RMCRT->sched_CarryForward_Var ( level, sched, d_RMCRT->d_abskgLabel, RMCRTCommon::TG_CARRY_FORWARD );
+      }
+    }
+  
     const LevelP& fineLevel = grid->getLevel(maxLevels-1);
-    Task::WhichDW temp_dw  = Task::NewDW;
-    Task::WhichDW abskg_dw = Task::NewDW;
+
+    d_RMCRT->set_abskg_dw_perLevel ( fineLevel, Task::NewDW );
     
     // convert abskg:dbl -> abskg:flt if needed
-    d_RMCRT->sched_DoubleToFloat( fineLevel,sched, abskg_dw, d_radCalc_freq );
+    d_RMCRT->sched_DoubleToFloat( fineLevel, sched, notUsed );
 
-    d_RMCRT->sched_sigmaT4( fineLevel,  sched, temp_dw, d_radCalc_freq, false );
+    d_RMCRT->sched_sigmaT4( fineLevel,  sched, temp_dw, includeExtraCells );
 
     for (int l = 0; l < maxLevels; l++) {
       const LevelP& level = grid->getLevel(l);
-      const bool modifies_abskg   = false;
-      const bool modifies_sigmaT4 = false;
 
-      d_RMCRT->sched_CoarsenAll (level, sched, modifies_abskg, modifies_sigmaT4, d_radCalc_freq);
+      d_RMCRT->sched_CoarsenAll( level, sched, modifies_abskg, modifies_sigmaT4 );
 
       if( level->hasFinerLevel() ){
-        Task::WhichDW sigmaT4_dw  = Task::NewDW;
-        Task::WhichDW celltype_dw = Task::NewDW;
-        const bool modifies_divQ  = false;
-        const bool backoutTemp    = true;
-
+      
         if( d_RMCRT->d_coarsenExtraCells == false ) {
-          d_RMCRT->sched_setBoundaryConditions( level, sched, temp_dw, d_radCalc_freq, backoutTemp );
+          d_RMCRT->sched_setBoundaryConditions( level, sched, temp_dw, backoutTemp );
         }
    
         if (radiometer ){
-          radiometer->sched_initializeRadVars( level, sched, d_radCalc_freq );
+          radiometer->sched_initializeRadVars( level, sched );
         }
 
-        d_RMCRT->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ, d_radCalc_freq );
+        d_RMCRT->sched_rayTrace( level, sched, notUsed, sigmaT4_dw, celltype_dw, modifies_divQ );
       }
     }
 
@@ -452,58 +484,64 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
     for (int l = 1; l < maxLevels; l++) {
       const LevelP& level = grid->getLevel(l);
       const PatchSet* patches = level->eachPatch();
-      d_RMCRT->sched_Refine_Q (sched,  patches, matls, d_radCalc_freq);
+      d_RMCRT->sched_Refine_Q (sched,  patches, matls);
     }
   }
   
   //______________________________________________________________________
   //   1 - L E V E L   A P P R O A C H
   //  RMCRT is performed on one level
-  if( d_whichAlgo == singleLevel ){
-    Task::WhichDW temp_dw  = Task::NewDW;
-    Task::WhichDW abskg_dw = Task::NewDW;
-
-    // convert abskg:dbl -> abskg:flt if needed
-    d_RMCRT->sched_DoubleToFloat( level,sched, abskg_dw, d_radCalc_freq );
-
-    d_RMCRT->sched_sigmaT4( level,  sched, temp_dw, d_radCalc_freq, false );
-                                                                   
-    Task::WhichDW sigmaT4_dw  = Task::NewDW;                                                                       
+  if( d_whichAlgo == singleLevel ) {
+  
+    Task::WhichDW temp_dw     = Task::NewDW;
+    Task::WhichDW sigmaT4_dw  = Task::NewDW;
     Task::WhichDW celltype_dw = Task::NewDW;
     const bool modifies_divQ  = false;
-    const bool backoutTemp    = true;                                                                   
-    
-    d_RMCRT->sched_setBoundaryConditions( level, sched, temp_dw, d_radCalc_freq, backoutTemp );
-    
+    const bool backoutTemp    = true;
+
+    d_RMCRT->set_abskg_dw_perLevel( level, Task::NewDW );
+
+    // carry forward if it's time
+    d_RMCRT->sched_CarryForward_FineLevelLabels( level, sched );
+
+    // convert abskg:dbl -> abskg:flt if needed
+    d_RMCRT->sched_DoubleToFloat( level, sched, notUsed );
+
+    d_RMCRT->sched_sigmaT4( level, sched, temp_dw, includeExtraCells );
+
+    d_RMCRT->sched_setBoundaryConditions( level, sched, temp_dw, backoutTemp );
+
     if (radiometer ){
-      radiometer->sched_initializeRadVars( level, sched, d_radCalc_freq );
+      radiometer->sched_initializeRadVars( level, sched );
     }
-    
-    d_RMCRT->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ, d_radCalc_freq ); 
+
+    d_RMCRT->sched_rayTrace( level, sched, notUsed, sigmaT4_dw, celltype_dw, modifies_divQ );
   }
   
   //______________________________________________________________________
   //   R A D I O M E T E R  
   //  No other calculations 
-  if( d_whichAlgo == radiometerOnly ){
-    
+  if (d_whichAlgo == radiometerOnly) {
+
     Task::WhichDW temp_dw     = Task::NewDW;
-    Task::WhichDW abskg_dw    = Task::NewDW;
     Task::WhichDW sigmaT4_dw  = Task::NewDW;
     Task::WhichDW celltype_dw = Task::NewDW;
-    const bool includeEC      = true;
     const bool backoutTemp    = true;
-    
-    // convert abskg:dbl -> abskg:flt if needed
-    d_RMCRT->sched_DoubleToFloat( level, sched, abskg_dw, d_radCalc_freq );
-    
-    radiometer->sched_sigmaT4( level, sched, temp_dw, d_radCalc_freq, includeEC );
-    
-    d_RMCRT->sched_setBoundaryConditions( level, sched, temp_dw, d_radCalc_freq, backoutTemp );
-    
-    radiometer->sched_initializeRadVars( level, sched, d_radCalc_freq );
 
-    radiometer->sched_radiometer( level, sched, abskg_dw, sigmaT4_dw, celltype_dw, d_radCalc_freq );
+    d_RMCRT->set_abskg_dw_perLevel ( level, Task::NewDW );
+    
+    d_RMCRT->sched_CarryForward_Var ( level, sched, d_RMCRT->d_sigmaT4Label, RMCRTCommon::TG_CARRY_FORWARD ); 
+
+    // convert abskg:dbl -> abskg:flt if needed
+    d_RMCRT->sched_DoubleToFloat( level, sched, notUsed );
+
+    d_RMCRT->sched_sigmaT4( level, sched, temp_dw, includeExtraCells );
+
+    d_RMCRT->sched_setBoundaryConditions( level, sched, temp_dw, backoutTemp );
+
+    radiometer->sched_initializeRadVars( level, sched );
+
+    radiometer->sched_radiometer( level, sched, notUsed, sigmaT4_dw, celltype_dw );
 
   }
 }
@@ -514,17 +552,20 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
 void RMCRT_Test::scheduleInitialErrorEstimate ( const LevelP& level, SchedulerP& scheduler )
 {
 }
+
 //______________________________________________________________________
 // STUB
 void RMCRT_Test::scheduleCoarsen ( const LevelP& coarseLevel, SchedulerP& scheduler )
 {
 }
+
 //______________________________________________________________________
 // STUB
 void RMCRT_Test::scheduleRefine ( const PatchSet* patches,
                                   SchedulerP& scheduler )
 {
 }
+
 //______________________________________________________________________
 // STUB
 void RMCRT_Test::scheduleRefineInterface ( const LevelP&,
@@ -532,6 +573,20 @@ void RMCRT_Test::scheduleRefineInterface ( const LevelP&,
                                            bool,
                                            bool)
 {
+}
+
+//______________________________________________________________________
+//
+//______________________________________________________________________
+int RMCRT_Test::computeTaskGraphIndex()
+{
+  // setup the correct task graph for execution
+  int time_step = d_sharedState->getCurrentTopLevelTimeStep();
+
+  // also do radiation solve on timestep 1
+  int task_graph_index = ((time_step % d_radCalc_freq == 0) || (time_step == 1) ? Uintah::RMCRTCommon::TG_RMCRT : Uintah::RMCRTCommon::TG_CARRY_FORWARD);
+
+  return task_graph_index;
 }
 
 //______________________________________________________________________
@@ -808,8 +863,8 @@ void RMCRT_Test::initializeWithUda (const ProcessorGroup*,
   //__________________________________
   //  Load abskg & temperature from old uda into new data warehouse
   proc0cout << "Extracting data from " << d_old_uda->udaName
-          << " at time " << times[timeIndex]
-          << " and initializing RMCRT variables " << endl;
+            << " at time " << times[timeIndex]
+            << " and initializing RMCRT variables " << endl;
 
   // loop over the UDA patches
   for(int p=0;p<patches->size();p++){
@@ -839,7 +894,7 @@ void RMCRT_Test::initializeWithUda (const ProcessorGroup*,
         abskg[c] = uda_abskg[c];
       }
     //            F L O A T
-    }else if( subType->getType() == Uintah::TypeDescription::float_type ) {
+    } else if( subType->getType() == Uintah::TypeDescription::float_type ) {
       CCVariable<float> uda_temp;
       CCVariable<float> uda_abskg;
 
@@ -862,21 +917,19 @@ void RMCRT_Test::initializeWithUda (const ProcessorGroup*,
 //
 //______________________________________________________________________
 void RMCRT_Test::sched_initProperties( const LevelP& finestLevel,
-                                        SchedulerP& sched,
-                                        const int radCalc_freq )
+                                        SchedulerP& sched )
 {
-  // Move the labels forward.    They were computed in initialize()
+  // Move the labels forward. They were computed in initialize()
   //  This mimics what the component will handoff to RMCRT.
   d_RMCRT->sched_CarryForward_Var( finestLevel, sched, d_compAbskgLabel );
   d_RMCRT->sched_CarryForward_Var( finestLevel, sched, d_colorLabel );
-  
+
   int maxLevels = finestLevel->getGrid()->numLevels();
   GridP grid = finestLevel->getGrid();
   for (int l = maxLevels - 1; l >= 0; l--) {
     const LevelP& level = grid->getLevel(l);
-    d_RMCRT->sched_CarryForward_Var( level, sched, d_cellTypeLabel );
+    d_RMCRT->sched_CarryForward_Var(level, sched, d_cellTypeLabel);
   }
-  
 }
 
 //______________________________________________________________________

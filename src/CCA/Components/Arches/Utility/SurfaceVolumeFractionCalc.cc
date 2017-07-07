@@ -28,7 +28,7 @@ SurfaceVolumeFractionCalc::create_local_labels(){
 
 //--------------------------------------------------------------------------------------------------
 void
-SurfaceVolumeFractionCalc::register_initialize( ArchesVIVector& variable_registry ){
+SurfaceVolumeFractionCalc::register_initialize( ArchesVIVector& variable_registry , const bool packed_tasks){
 
   for ( auto i = m_var_names.begin(); i != m_var_names.end(); i++ ){
     register_variable( *i, ArchesFieldContainer::COMPUTES, variable_registry, _task_name );

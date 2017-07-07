@@ -54,7 +54,7 @@ InitLagrangianParticleVelocity::create_local_labels(){
 //
 
 void
-InitLagrangianParticleVelocity::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
+InitLagrangianParticleVelocity::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){
 
   register_variable( _pu_label  , ArchesFieldContainer::COMPUTES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
   register_variable( _pv_label  , ArchesFieldContainer::COMPUTES , 0 , ArchesFieldContainer::NEWDW , variable_registry );

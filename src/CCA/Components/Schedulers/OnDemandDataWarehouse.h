@@ -324,6 +324,14 @@ class OnDemandDataWarehouse : public DataWarehouse {
                           int matlIndex,
                           const Level* level);
 
+    //meant for the UnifiedScheduler only.  Puts a contiguous level in the *level* database
+    //so that it doesn't need to constantly make new deep copies each time the full level
+    //is requested.
+    void putLevelDB( GridVariableBase* gridVar,
+                           const VarLabel* label,
+                           const Level* level,
+                           int matlIndex = -1 );
+
     virtual void getRegion(constGridVariableBase&,
                            const VarLabel*,
                            int matlIndex,
@@ -371,16 +379,31 @@ class OnDemandDataWarehouse : public DataWarehouse {
     // For related datawarehouses
     virtual DataWarehouse* getOtherDataWarehouse(Task::WhichDW);
 
-    //! Copy a var from the parameter DW to this one.  If newPatches
-    //! is not null, then it associates the copy of the variable with
-    //! newPatches, and otherwise it uses patches (the same it finds
-    //! the variable with.
+    virtual void transferFrom(DataWarehouse*, const VarLabel*,
+            const PatchSubset*, const MaterialSubset*);
+
     virtual void transferFrom(DataWarehouse*,
                               const VarLabel*,
                               const PatchSubset* patches,
                               const MaterialSubset*,
-                              bool replace = false,
-                              const PatchSubset* newPatches = 0);
+                              bool replace);
+
+    virtual void transferFrom(DataWarehouse*,
+                              const VarLabel*,
+                              const PatchSubset* patches,
+                              const MaterialSubset*,
+                              bool replace,
+                              const PatchSubset* newPatches);
+
+
+    virtual void transferFrom(DataWarehouse*,
+                              const VarLabel*,
+                              const PatchSubset* patches,
+                              const MaterialSubset*,
+                              void * dtask,
+                              bool replace,
+                              const PatchSubset* newPatches);
+
 
     virtual bool isFinalized() const;
 
@@ -472,8 +495,16 @@ class OnDemandDataWarehouse : public DataWarehouse {
      IntVector high;
 
    };
+   void getNeighborPatches(const VarLabel* label, const Patch* patch, Ghost::GhostType gtype,
+                                  int numGhostCells, std::vector<const Patch *>& adjacentNeighbors);
+
+   void getSizesForVar(const VarLabel* label, int matlIndex, const Patch* patch,
+                                         IntVector& low, IntVector& high, IntVector& dataLow,
+                                         IntVector& siz, IntVector& strides);
+
    void getValidNeighbors(const VarLabel* label, int matlIndex, const Patch* patch,
-           Ghost::GhostType gtype, int numGhostCells, std::vector<ValidNeighbors>& validNeighbors);
+           Ghost::GhostType gtype, int numGhostCells, std::vector<ValidNeighbors>& validNeighbors,
+           bool ignoreMissingNeighbors = false);
 
    void logMemoryUse(std::ostream& out,
                       unsigned long& total,
@@ -487,8 +518,8 @@ class OnDemandDataWarehouse : public DataWarehouse {
 
     // does a final check to see if gets/puts/etc. consistent with
     // requires/computes/modifies for the current task.
-    void checkTasksAccesses(const PatchSubset* patches,
-                            const MaterialSubset* matls);
+    void checkTasksAccesses(const PatchSubset    * patches,
+                            const MaterialSubset * matls);
 
     ScrubMode getScrubMode() const { return d_scrubMode; }
 
@@ -677,10 +708,7 @@ class OnDemandDataWarehouse : public DataWarehouse {
 
     inline RunningTaskInfo* getCurrentTaskInfo();
 
-    //    std::map<Thread*, std::list<RunningTaskInfo> > d_runningTasks;
-    //    std::list<RunningTaskInfo> d_runningTasks[MAX_THREADS];
-    std::mutex m_running_tasks_lock;
-    std::map<std::thread::id, std::list<RunningTaskInfo> > d_runningTasks;
+    std::map<std::thread::id, std::list<RunningTaskInfo> > d_runningTasks; // a list of running tasks for each std::thread::id
 
     ScrubMode d_scrubMode;
 

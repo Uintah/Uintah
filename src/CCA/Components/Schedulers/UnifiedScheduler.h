@@ -30,6 +30,7 @@
 #ifdef HAVE_CUDA
   #include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
   #include <CCA/Components/Schedulers/GPUGridVariableGhosts.h>
+  #include <CCA/Components/Schedulers/GPUMemoryPool.h>
 #endif
 
 #include <sci_defs/cuda_defs.h>
@@ -146,6 +147,8 @@ class UnifiedScheduler : public MPIScheduler  {
 
     using DeviceVarDest = GpuUtilities::DeviceVarDestination;
 
+    void assignStatusFlagsToPrepareACpuTask( DetailedTask * dtask );
+
     void assignDevicesAndStreams( DetailedTask* dtask );
 
     void assignDevicesAndStreamsFromGhostVars( DetailedTask* dtask );
@@ -175,6 +178,15 @@ class UnifiedScheduler : public MPIScheduler  {
     void copyAllExtGpuDependenciesToHost( DetailedTask * dtask );
 
     void initiateH2DCopies( DetailedTask * dtask );
+
+    void turnIntoASuperPatch(GPUDataWarehouse* const       gpudw, 
+                             const Level* const            level, 
+                             const IntVector&              low,
+                             const IntVector&              high,
+                             const VarLabel* const         label, 
+                             const Patch * const           patch, 
+                             const int                     matlIndx, 
+                             const int                     levelID ); 
 
     void prepareDeviceVars( DetailedTask * dtask );
 
@@ -247,9 +259,6 @@ class UnifiedScheduler : public MPIScheduler  {
     int  m_num_devices;
     int  m_current_device;
 
-    // thread shared data, needs lock protection when accessed
-    static std::map <unsigned int, std::queue<cudaStream_t*> > * s_idle_streams;
-
     std::vector< std::string > m_material_names;
 
     struct labelPatchMatlDependency {
@@ -294,7 +303,7 @@ class UnifiedScheduler : public MPIScheduler  {
 #endif
 };
 
-  
+
 class UnifiedSchedulerWorker {
 
 public:

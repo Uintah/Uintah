@@ -1,4 +1,5 @@
 #!/bin/bash
+#______________________________________________________________________
 
 # to differentiate among the build names & even directories
 COMPILE="yes"
@@ -8,15 +9,15 @@ DO_DBG="1"
 DO_OPT="1"
 LOCAL_OR_NIGHTLY_TEST="nightly"
 WHICH_TESTS="NIGHTLYTESTS"
-MONTHLYBACKUP="no"
-NOTESTS="0"
+BUILDONLY="0"
 OS=`uname -s`
 PARALLELISM=0
 REPLY_TO="uintah-developer@gforge.sci.utah.edu"
+AUTO_UPDATE_PERF_GS="yes"                           # Automatically update performance GS if they improve
+AUTO_UPDATE_SVN_STAMP="yes"                         # Automatically update the svn revision number when a test passes
 
 SEND_MAIL_TO=""
 USE_DEFAULT_BUILD="yes"
-USE_DEFAULT_TEST_DATA="yes"
 USE_PREVTREE="no"
 USE_TREE="new"
 VERBOSE="no"
@@ -34,11 +35,11 @@ MACHINE=`hostname`
 
 if [ "$MACHINE" == "uintah-build" ]; then
   COMMON_GROUP="users"
-  BUILD_DIR=/home/rt/"$OS"
-  TEST_DATA=/home/rt/"$OS"/TestData
-  TEMP_DIR=/home/rt/"$OS"
-  SCRIPT_DIR=/home/rt/scripts
-  CHECKPOINTS=/home/rt/CheckPoints
+  BUILD_DIR=/home/${LOGNAME}/"$OS"
+  TEST_DATA_DIR=/home/${LOGNAME}/"$OS"/TestData
+  TEMP_DIR=/home/${LOGNAME}/"$OS"
+  SCRIPT_DIR=/home/${LOGNAME}/scripts
+  CHECKPOINTS=/home/${LOGNAME}/CheckPoints         
   
   # Where the webpage will be, and init webpage
   # Note you need the following directory structure:
@@ -47,49 +48,34 @@ if [ "$MACHINE" == "uintah-build" ]; then
   #          Memory/
   #          simRunTime/
   
-  HTMLLOG=/home/rt/public_html/Uintah.html
-  WEBLOG=http://155.101.15.100/~rt/Uintah.html
-fi
-
-if test "$MACHINE" = "albion" ; then
-  DEFAULT_MAIL_TO="ahumphrey@sci.utah.edu,t.harman@utah.edu"
-  REPLY_TO="t.harman@utah.edu"
-  COMMON_GROUP="uintah"
-  BUILD_DIR=/home/${LOGNAME}/"$OS"                      # The user can be rt or arl-rt
-  TEST_DATA=/home/${LOGNAME}/"$OS"/TestData
-  TEMP_DIR=/home/${LOGNAME}/"$OS"
-  SCRIPT_DIR=/home/${LOGNAME}/scripts
-  CHECKPOINTS=/home/${LOGNAME}/CheckPoints
-  MPIRUN_PATH=/usr/local/openmpi/bin/
-  
-  if test "$LOGNAME" = "rt" ; then
-    export TEST_COMPONENTS="Examples"             # only run gpu tests
-  fi
-  if test "$LOGNAME" = "arl-rt" ; then
-    SVN_trunk="https://gforge.sci.utah.edu/svn/uintah/branches/arl_dev/src"
-  fi  
-  
-  
-  # Where the webpage will be, and init webpage.  (SEE above notes)
   HTMLLOG=/home/${LOGNAME}/public_html/Uintah.html
-  WEBLOG=/home/${LOGNAME}/public_html/Uintah.html
+  WEBLOG=http://155.101.15.100/~${LOGNAME}/Uintah.html
+  
+  if [ "$LOGNAME" == "gpu_rt" ]; then
+    DEFAULT_MAIL_TO="ahumphrey@sci.utah.edu,t.harman@utah.edu,bradpeterson@gmail.com,jthornock@gmail.com,derkhar@gmail.com,bisaac2@gmail.com"
+    export TEST_COMPONENTS="Examples ICE ARCHES"
+  fi
+  
 fi
 
 if test "$MACHINE" = "cyrus.mech.utah.edu" ; then
-  DEFAULT_MAIL_TO="ahumphrey@sci.utah.edu,t.harman@utah.edu"
+  DEFAULT_MAIL_TO="ahumphrey@sci.utah.edu,t.harman@utah.edu,bradpeterson@gmail.com,jthornock@gmail.com,derkhar@gmail.com,bisaac2@gmail.com"
   REPLY_TO="t.harman@utah.edu"
   COMMON_GROUP="users"
   BUILD_DIR=/raid/home/rt/"$OS"
-  TEST_DATA=/raid/home/rt/"$OS"/TestData
+  TEST_DATA_DIR=/raid/home/rt/"$OS"/TestData
   TEMP_DIR=/raid/home/rt/"$OS"
   SCRIPT_DIR=/raid/home/rt/scripts
   CHECKPOINTS=/raid/home/rt/CheckPoints
   MPIRUN_PATH=/usr/installed/openmpi/bin/
-  export TEST_COMPONENTS="Examples"             # only run gpu tests
-  
+  export TEST_COMPONENTS="Examples ICE ARCHES"
+  #export TEST_COMPONENTS="Examples ICE MPM MPMICE"
+  #export TEST_COMPONENTS="ARCHES"    
+
+
   # Where the webpage will be, and init webpage.  (SEE above notes)
   HTMLLOG=/raid/home/rt/public_html/Uintah.html
-  WEBLOG=NONE
+  WEBLOG=http://cyrus.mech.utah.edu:8050/~rt/public_html/Uintah.html
 fi
 
 
@@ -103,7 +89,7 @@ if [ "$OS" != "Linux" ]; then
 fi
 
 export OS
-unset SHELL
+#unset SHELL
 umask 002
 
 show_help=0
@@ -147,9 +133,8 @@ while [ "$#" -gt 0 ]; do
     -test_data)
         if [ "$#" -gt 1 ]; then
             shift
-            TEST_DATA="$1"
+            TEST_DATA_DIR="$1"
         fi
-        USE_DEFAULT_TEST_DATA="no"
         ;;
     -j)
         if [ "$#" -gt 1 ]; then
@@ -158,7 +143,7 @@ while [ "$#" -gt 0 ]; do
         fi
         ;;
     -build_only)
-        NOTESTS="1"
+        BUILDONLY="1"
         ;;
     -dbg_only)
         DO_DBG="1"
@@ -167,9 +152,6 @@ while [ "$#" -gt 0 ]; do
     -opt_only)
         DO_DBG="0"
         DO_OPT="1"
-        ;;
-    -monthlybackup)
-        MONTHLYBACKUP="1"
         ;;
     -no_compile)
         COMPILE="no"
@@ -210,7 +192,7 @@ fi
 
 
 PATH=:"$MPIRUN_PATH":"$PATH":"$SCRIPT_DIR":.
-export PATH NOTESTS COMPILE LOCAL_OR_NIGHTLY_TEST WHICH_TESTS COMMON_GROUP CHECKPOINTS
+export PATH BUILDONLY COMPILE LOCAL_OR_NIGHTLY_TEST WHICH_TESTS COMMON_GROUP CHECKPOINTS AUTO_UPDATE_PERF_GS AUTO_UPDATE_SVN_STAMP
 
 # set number of processors to use when building
 if [ $PARALLELISM -eq 0 ]; then
@@ -226,7 +208,7 @@ if [ -d /usr/var/tmp ]; then
   export TMPDIR
 fi
 
-export BUILD_DIR BUILDROOT TEST_DATA PARALLELISM MAKE_PARALLELISM SEND_MAIL_TO  REPLY_TO
+export BUILD_DIR BUILDROOT TEST_DATA_DIR PARALLELISM MAKE_PARALLELISM SEND_MAIL_TO  REPLY_TO
 
 if [ $VERBOSE = "yes" ]; then
   echo "TIME STAMP: Regression Tester Starting at:"
@@ -343,6 +325,7 @@ else
       date
   fi
 fi
+
 
 #__________________________________
 # create html web page

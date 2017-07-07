@@ -31,7 +31,7 @@ BoundaryInfo::create_local_labels(){
 typedef std::vector<ArchesFieldContainer::VariableInformation> VarInfoVecT;
 
 void
-BoundaryInfo::register_initialize( VarInfoVecT& variable_registry ){
+BoundaryInfo::register_initialize( VarInfoVecT& variable_registry , const bool packed_tasks){
 
   //FUNCITON CALL     STRING NAME(VL)     TYPE       DEPENDENCY    GHOST DW     VR
   register_variable( "area_fraction_x" , ArchesFieldContainer::COMPUTES , variable_registry );

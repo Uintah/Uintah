@@ -324,7 +324,7 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest )
   }
 
   // now do interior
-  destExtent = wdest.extent() - unitNormal_*3 - dest.boundary_info().has_bc()*unitNormal_;
+  destExtent = wdest.extent() - unitNormal_*3 - dest.boundary_info().has_bc(PLUS_SIDE)*unitNormal_;
   const IntVec destBaseOffset = wdest.offset() + unitNormal_*2;
   const MemoryWindow wd( wdest.glob_dim(), destBaseOffset, destExtent );
 

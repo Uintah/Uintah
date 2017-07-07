@@ -39,7 +39,7 @@ std::ostream& operator<<(       std::ostream & arg_out
   if (dep.isNonDataDependency()) {
     out << " non-data dependency";
   } else {
-    out << " on patch " << dep.m_from_patch->getID();
+    out << " from patch " << dep.m_from_patch->getID();
   }
 
   out << ", matl " << dep.m_matl << ", low=" << dep.m_low << ", high=" << dep.m_high;

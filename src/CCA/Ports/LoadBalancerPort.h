@@ -113,19 +113,22 @@ public:
   //! Creates the Load Balancer's Neighborhood.
   //! This is a vector of patches that represent any patch that this load
   //! balancer will potentially have to receive data from.
-  virtual void createNeighborhood( const GridP & grid, const GridP & oldGrid ) = 0;
+  virtual void createNeighborhoods( const GridP & grid, const GridP & oldGrid, const bool hasDistalReqs = false ) = 0;
 
   //! Asks the Load Balancer if it is dynamic.
   virtual bool isDynamic() { return false; }
 
-  //! returns all processors in this processors neighborhood
+  //! returns all processors in this processors local neighborhood
   virtual const std::set<int>& getNeighborhoodProcessors() = 0;
 
+  //! returns all processors in this processors global neighborhood
+  virtual const std::set<int>& getDistalNeighborhoodProcessors() = 0;
+
   //! Asks if a patch in the patch subset is in the neighborhood.
-  virtual bool inNeighborhood( const PatchSubset* ) = 0;
+  virtual bool inNeighborhood( const PatchSubset* pss, const bool hasDistalReqs = false ) = 0;
 
   //! Asks the load balancer if patch is in the neighborhood.
-  virtual bool inNeighborhood( const Patch* ) = 0;
+  virtual bool inNeighborhood( const Patch * patch, const bool hasDistalReqs = false ) = 0;
 
   //! Returns the patchset of all patches that have work done on this processor.
   virtual const PatchSet* getPerProcessorPatchSet( const LevelP & level )       = 0;

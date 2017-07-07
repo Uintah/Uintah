@@ -18,7 +18,7 @@ public:
 
     void create_local_labels();
 
-    void register_initialize( VIVec& variable_registry );
+    void register_initialize( VIVec& variable_registry , const bool packed_tasks);
 
     void register_timestep_init( VIVec& variable_registry );
 

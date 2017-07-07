@@ -142,17 +142,17 @@ SimulationState::SimulationState(ProblemSpecP &ps)
   std::string timeStr("seconds");
   std::string bytesStr("MBytes");
     
-  d_runTimeStats.insert( CompilationTime,    std::string("Compilation"),      timeStr, 0 );
-  d_runTimeStats.insert( RegriddingTime,     std::string("Regridding"),       timeStr, 0 );
+  d_runTimeStats.insert( CompilationTime,           std::string("Compilation"),           timeStr, 0 );
+  d_runTimeStats.insert( RegriddingTime,            std::string("Regridding"),            timeStr, 0 );
   d_runTimeStats.insert( RegriddingCompilationTime, std::string("RegriddingCompilation"), timeStr, 0 );
   d_runTimeStats.insert( RegriddingCopyDataTime,    std::string("RegriddingCopyData"),    timeStr, 0 );
-  d_runTimeStats.insert( LoadBalancerTime,   std::string("LoadBalancer"),     timeStr, 0 );
+  d_runTimeStats.insert( LoadBalancerTime,          std::string("LoadBalancer"),          timeStr, 0 );
 
-  d_runTimeStats.insert( TaskExecTime,       std::string("TaskExec"),         timeStr, 0 );
-  d_runTimeStats.insert( TaskLocalCommTime,  std::string("TaskLocalComm"),    timeStr, 0 );
-  d_runTimeStats.insert( TaskGlobalCommTime, std::string("TaskGlobalComm"),   timeStr, 0 );
-  d_runTimeStats.insert( TaskWaitCommTime,   std::string("TaskWaitComm"),     timeStr, 0 );
-  d_runTimeStats.insert( TaskWaitThreadTime, std::string("TaskWaitThread"),   timeStr, 0 );
+  d_runTimeStats.insert( TaskExecTime,       std::string("TaskExec"),           timeStr, 0 );
+  d_runTimeStats.insert( TaskLocalCommTime,  std::string("TaskLocalComm"),      timeStr, 0 );
+  d_runTimeStats.insert( TaskWaitCommTime,   std::string("TaskWaitCommTime"),   timeStr, 0 );
+  d_runTimeStats.insert( TaskReduceCommTime, std::string("TaskReduceCommTime"), timeStr, 0 );
+  d_runTimeStats.insert( TaskWaitThreadTime, std::string("TaskWaitThread"),     timeStr, 0 );
 
   d_runTimeStats.insert( XMLIOTime,          std::string("XMLIO"),            timeStr, 0 );
   d_runTimeStats.insert( OutputIOTime,       std::string("OutputIO"),         timeStr, 0 );
@@ -164,7 +164,7 @@ SimulationState::SimulationState(ProblemSpecP &ps)
   d_runTimeStats.insert( OutputIORate,       std::string("OutputIORate"),     "MBytes/sec", 0 );
   d_runTimeStats.insert( ReductionIORate,    std::string("ReductionIORate"),  "MBytes/sec", 0 );
   d_runTimeStats.insert( CheckpointIORate,   std::string("CheckpointIORate"), "MBytes/sec", 0 );
-  d_runTimeStats.insert( CheckpointReductionIORate, std::string("CheckpointReductionIORate"), "MBytes/sec", 0 );
+  d_runTimeStats.insert( CheckpointReducIORate, std::string("CheckpointReducIORate"), "MBytes/sec", 0 );
 
   d_runTimeStats.insert( SCIMemoryUsed,      std::string("SCIMemoryUsed"),      bytesStr, 0 );
   d_runTimeStats.insert( SCIMemoryMaxUsed,   std::string("SCIMemoryMaxUsed"),   bytesStr, 0 );
@@ -178,6 +178,7 @@ SimulationState::SimulationState(ProblemSpecP &ps)
   d_runTimeStats.insert( L2Misses,    std::string("L2Misses"), "misses", 0 );
   d_runTimeStats.insert( L3Misses,    std::string("L3Misses"), "misses", 0 );
 #endif
+
   d_runTimeStats.validate( MAX_TIMING_STATS );
 
   resetStats();

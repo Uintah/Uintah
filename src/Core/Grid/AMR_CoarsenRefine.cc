@@ -132,7 +132,7 @@ void fineToCoarseOperator(CCVariable<T>& q_CC,
                           const bool computesAve,
                           const VarLabel* varLabel,
                           const int indx,
-                          DataWarehouse* new_dw,
+                          DataWarehouse* dw,
                           const Patch* coarsePatch,
                           const Level* coarseLevel,
                           const Level* fineLevel)
@@ -151,8 +151,8 @@ void fineToCoarseOperator(CCVariable<T>& q_CC,
     }
     
     constCCVariable<T> fine_q_CC;
-    new_dw->getRegion(fine_q_CC,  varLabel, indx, fineLevel, fl, fh, false);
-
+    dw->getRegion(fine_q_CC,  varLabel, indx, fineLevel, fl, fh, false);
+    
     cout_dbg << " fineToCoarseOperator: finePatch "<< fl << " " << fh 
              << " coarsePatch "<< cl << " " << ch << endl;
              

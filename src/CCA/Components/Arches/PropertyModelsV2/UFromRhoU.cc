@@ -38,7 +38,7 @@ void UFromRhoU::create_local_labels(){
 }
 
 //--------------------------------------------------------------------------------------------------
-void UFromRhoU::register_initialize( AVarInfo& variable_registry ){
+void UFromRhoU::register_initialize( AVarInfo& variable_registry , const bool pack_tasks){
 
   typedef ArchesFieldContainer AFC;
 

@@ -2,10 +2,10 @@
 
 # should have the environmental variables:
 # PATH, OS, PARALLELISM, TMPDIR, BUILD_DIR, VERBOSE,
-# BUILDROOT, TEST_DATA,HTMLLOG,WEBLOG, SEND_MAIL_TO, REPLY_TO  DO_OPT DO_DBG all set
+# BUILDROOT, TEST_DATA_DIR,HTMLLOG,WEBLOG, SEND_MAIL_TO, REPLY_TO  DO_OPT DO_DBG all set
 
 PATH="$BUILDROOT"/src/R_Tester/helpers:"$PATH":/usr/sbin
-export PATH OS MAKE_PARALLELISM PARALLELISM TMPDIR BUILD_DIR BUILDROOT TEST_DATA COMMON_GROUP
+export PATH OS MAKE_PARALLELISM PARALLELISM TMPDIR BUILD_DIR BUILDROOT TEST_DATA_DIR COMMON_GROUP
 
 if [ ! -d "$BUILDROOT"/dbg ]; then
   mkdir "$BUILDROOT"/dbg
@@ -109,15 +109,15 @@ echo "</pre></body></html>" >> "$HTMLLOG"
 echo "" >> "$BUILDROOT"/log
 
 #chmod -R g+w "$BUILDROOT"
-chmod -R g+w "$TEST_DATA" > /dev/null 2>&1
+chmod -R g+w "$TEST_DATA_DIR" > /dev/null 2>&1
 
 #__________________________________
 # 
 if [ "$VERBOSE" = "no" -a "$SEND_MAIL_TO" != "" ]; then
   if [ $failed = "0" ]; then
-    subject="SUCCESS: Regression tests on `hostname`"
+    subject="SUCCESS: Regression tests on ${LOGNAME}:`hostname`"
   else
-    subject="FAILURE:  Regression tests on `hostname`***"
+    subject="FAILURE:  Regression tests on ${LOGNAME}:`hostname`***"
   fi
 
   cat > "$BUILDROOT"/mail.msg <<EOF

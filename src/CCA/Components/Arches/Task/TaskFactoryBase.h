@@ -5,13 +5,10 @@
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 #include <CCA/Components/Arches/Task/AtomicTaskInterface.h>
 #include <CCA/Components/Arches/WBCHelper.h>
-#include <Core/Util/DebugStream.h>
 #include <string>
 #include <iomanip>
 
 namespace Uintah{
-
-  static DebugStream cout_archestaskdebug("ArchesTaskDBG",false);
 
   class ArchesParticlesHelper;
   class ArchesFieldContainer;
@@ -160,6 +157,18 @@ namespace Uintah{
                               const int time_substep=0,
                               const bool reinitialize=false );
 
+    /** @brief Public interface for scheduling a set of tasks through the factory when the
+               group of tasks was determined upstream. **/
+    void schedule_task_group( const std::string task_group_name,
+                              std::vector<std::string> task_names,
+                              TaskInterface::TASK_TYPE type,
+                              const bool pack_tasks,
+                              const LevelP& level,
+                              SchedulerP& sched,
+                              const MaterialSet* matls,
+                              const int time_substep=0,
+                              const bool reinitialize=false );
+
     /** @brief Allow the factory to execute the boundary conditions for each task that it owns **/
     virtual void schedule_applyBCs( const LevelP& level,
                                     SchedulerP& sched,
@@ -176,7 +185,8 @@ namespace Uintah{
                                 std::vector<TaskInterface*> arches_task,
                                 const std::string task_group_name,
                                 int time_substep,
-                                const bool reinitialize );
+                                const bool reinitialize,
+                                const bool pack_tasks );
 
     /** @brief Task callback **/
     void do_task ( const ProcessorGroup* pc,
@@ -187,7 +197,8 @@ namespace Uintah{
                    std::vector<ArchesFieldContainer::VariableInformation>  variable_registry,
                    std::vector<TaskInterface*> arches_task,
                    TaskInterface::TASK_TYPE type,
-                   int time_substep );
+                   int time_substep,
+                   const bool pack_tasks );
 
   protected:
 

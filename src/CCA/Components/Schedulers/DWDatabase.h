@@ -40,6 +40,7 @@
 
 #include <sci_hash_map.h>
 
+#include <mutex>
 #include <ostream>
 #include <sstream>
 #include <string>
@@ -69,6 +70,11 @@
 
 
 ****************************************/
+namespace {
+
+std::mutex g_keyDB_mutex{};
+
+}
 
 namespace Uintah {
 
@@ -519,11 +525,15 @@ DWDatabase<DomainType>::put( const VarLabel   * label
 
   ASSERT(matlIndex >= -1);
 
-  if (init) {
-    m_keyDB->insert(label, matlIndex, dom);
-    this->doReserve(m_keyDB);
+  int idx = -1;
+  {
+    std::lock_guard<std::mutex> reserve_lock(g_keyDB_mutex);
+    if (init) {
+      m_keyDB->insert(label, matlIndex, dom);
+      this->doReserve(m_keyDB);
+    }
+    idx = m_keyDB->lookup(label, matlIndex, dom);
   }
-  int idx = m_keyDB->lookup(label, matlIndex, dom);
 
   if (idx == -1) {
     SCI_THROW(UnknownVariable(label->getName(), -1, dom, matlIndex, "check task computes", __FILE__, __LINE__));
@@ -556,11 +566,15 @@ DWDatabase<DomainType>::putReduce( const VarLabel              * label
 {
   ASSERT(matlIndex >= -1);
 
-  if (init) {
-    m_keyDB->insert(label, matlIndex, dom);
-    this->doReserve(m_keyDB);
+  int idx = -1;
+  {
+    std::lock_guard<std::mutex> reserve_lock(g_keyDB_mutex);
+    if (init) {
+      m_keyDB->insert(label, matlIndex, dom);
+      this->doReserve(m_keyDB);
+    }
+    idx = m_keyDB->lookup(label, matlIndex, dom);
   }
-  int idx = m_keyDB->lookup(label, matlIndex, dom);
 
   if (idx == -1) {
     SCI_THROW(UnknownVariable(label->getName(), -1, dom, matlIndex, "check task computes", __FILE__, __LINE__));
@@ -596,11 +610,16 @@ DWDatabase<DomainType>::putForeign( const VarLabel   * label
 {
   ASSERT(matlIndex >= -1);
 
-  if (init) {
-    m_keyDB->insert(label, matlIndex, dom);
-    this->doReserve(m_keyDB);
+  int idx = -1;
+
+  {
+    std::lock_guard<std::mutex> reserve_lock(g_keyDB_mutex);
+    if (init) {
+      m_keyDB->insert(label, matlIndex, dom);
+      this->doReserve(m_keyDB);
+    }
+    idx = m_keyDB->lookup(label, matlIndex, dom);
   }
-  int idx = m_keyDB->lookup(label, matlIndex, dom);
 
   DataItem* newdi = new DataItem();
   newdi->m_var = var;

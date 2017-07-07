@@ -7,9 +7,10 @@
   <SimulationComponent type="wasatch"/>
   
   <!--__________________________________ -->
+  <calc_frequency>      5          </calc_frequency>
   <RMCRT>
-    <randomSeed>         false     </randomSeed>
-    <nDivQRays>          3          </nDivQRays>
+    <randomSeed>        false      </randomSeed>
+    <nDivQRays>         3          </nDivQRays>
     <Threshold>         0.05       </Threshold>
     <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
     <solveBoundaryFlux> false      </solveBoundaryFlux>
@@ -45,7 +46,6 @@
     <save label="RadiationSource"/>            
     <save label="CellType"/>
     <save label="radiationVolq"/>                
-    <save label="VRFlux"/>    
     <save label="sigmaT4"/>
   </DataArchiver>
 

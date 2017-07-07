@@ -38,13 +38,22 @@
 #include <Core/Grid/Variables/PSPatchMatlGhostRange.h>
 #include <Core/Grid/Variables/ScrubItem.h>
 
+#include <Core/Lockfree/Lockfree_Pool.hpp>
+
+
+#ifdef HAVE_CUDA
+  #include <CCA/Components/Schedulers/GPUGridVariableGhosts.h>
+  #include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
+#endif
+
 #include <sci_defs/cuda_defs.h>
 
 #include <map>
 #include <queue>
 #include <set>
 #include <vector>
-
+#include <atomic>
+#include <list>
 
 namespace Uintah {
 
@@ -226,29 +235,41 @@ public:
 
 #ifdef HAVE_CUDA
 
-  void addVerifyDataTransferCompletion( DetailedTask * dtask );
+  void addDeviceValidateRequiresCopies( DetailedTask * dtask );
 
-  void addFinalizeDevicePreparation( DetailedTask * dtask );
+  void addDevicePerformGhostCopies( DetailedTask * dtask );
 
-  void addInitiallyReadyDeviceTask( DetailedTask * dtask );
+  void addDeviceValidateGhostCopies( DetailedTask * dtask );
 
-  void addCompletionPendingDeviceTask( DetailedTask * dtask );
+  void addDeviceCheckIfExecutable( DetailedTask * dtask );
 
-  void addFinalizeHostPreparation( DetailedTask * dtask );
+  void addDeviceReadyToExecute( DetailedTask * dtask );
 
-  void addInitiallyReadyHostTask( DetailedTask * dtask );
+  void addDeviceExecutionPending( DetailedTask * dtask );
 
-  bool getNextVerifyDataTransferCompletionTaskIfAble( DetailedTask *& dtask );
+  void addHostValidateRequiresCopies( DetailedTask * dtask );
 
-  bool getNextFinalizeDevicePreparationTaskIfAble( DetailedTask *& dtask );
+  void addHostCheckIfExecutable( DetailedTask * dtask );
 
-  bool getNextInitiallyReadyDeviceTaskIfAble( DetailedTask *& dtask );
+  void addHostReadyToExecute( DetailedTask * dtask );
 
-  bool getNextCompletionPendingDeviceTaskIfAble( DetailedTask *& dtask );
+  bool getDeviceValidateRequiresCopiesTask( DetailedTask *& dtask );
 
-  bool getNextFinalizeHostPreparationTaskIfAble( DetailedTask *& dtask );
+  bool getDevicePerformGhostCopiesTask( DetailedTask *& dtask );
 
-  bool getNextInitiallyReadyHostTaskIfAble( DetailedTask *& dtask );
+  bool getDeviceValidateGhostCopiesTask( DetailedTask *& dtask );
+
+  bool getDeviceCheckIfExecutableTask( DetailedTask *& dtask );
+
+  bool getDeviceReadyToExecuteTask( DetailedTask *& dtask );
+
+  bool getDeviceExecutionPendingTask( DetailedTask *& dtask );
+
+  bool getHostValidateRequiresCopiesTask( DetailedTask *& dtask );
+
+  bool getHostCheckIfExecutableTask( DetailedTask *& dtask );
+
+  bool getHostReadyToExecuteTask( DetailedTask *& dtask );
 
   void createInternalDependencyBatch(       DetailedTask     * from
                                     ,       Task::Dependency * comp
@@ -351,8 +372,10 @@ private:
   using TaskPQueue = std::priority_queue<DetailedTask*, std::vector<DetailedTask*>, DetailedTaskPriorityComparison>;
 
   TaskQueue  readyTasks_;
+  std::atomic<int> atomic_readyTasks_size {0};
   TaskQueue  initiallyReadyTasks_;
   TaskPQueue mpiCompletedTasks_;
+  std::atomic<int> atomic_mpiCompletedTasks_size {0};
 
   // This "generation" number is to keep track of which InternalDependency
   // links have been satisfied in the current timestep and avoids the
@@ -370,14 +393,25 @@ private:
   DetailedTasks(DetailedTasks &&)                 = delete;
   DetailedTasks& operator=(DetailedTasks &&)      = delete;
 
+  using TaskPool = Lockfree::Pool< DetailedTask *
+                                          , uint64_t
+                                          , 1
+                                          , std::allocator
+                                          >;
 
 #ifdef HAVE_CUDA
-  TaskQueue  verifyDataTransferCompletionTasks_;   // Some or all ghost cells still need to be processed before a task is ready.
-  TaskQueue  initiallyReadyDeviceTasks_;           // initially ready, h2d copies pending
-  TaskQueue  finalizeDevicePreparationTasks_;      // h2d copies completed, need to mark gpu data as valid and copy gpu ghost cell data internally on device
-  TaskQueue  completionPendingDeviceTasks_;        // execution and d2h copies pending
-  TaskQueue  finalizeHostPreparationTasks_;        // d2h copies completed, need to mark cpu data as valid
-  TaskQueue  initiallyReadyHostTasks_;             // initially ready cpu task, d2h copies pending
+
+  TaskPool             device_validateRequiresCopies_pool{};
+  TaskPool             device_performGhostCopies_pool{};
+  TaskPool             device_validateGhostCopies_pool{};
+  TaskPool             device_checkIfExecutable_pool{};
+  TaskPool             device_readyToExecute_pool{};
+  TaskPool             device_executionPending_pool{};
+
+  TaskPool             host_validateRequiresCopies_pool{};
+  TaskPool             host_checkIfExecutable_pool{};
+  TaskPool             host_readyToExecute_pool{};
+
 #endif
 
 };

@@ -120,15 +120,17 @@ public:
   /// Creates the Load Balancer's Neighborhood.  This is a vector of patches 
   /// that represent any patch that this load balancer will potentially have to 
   /// receive data from.
-  virtual void createNeighborhood( const GridP& grid, const GridP& oldGrid );
+  virtual void createNeighborhoods( const GridP& grid, const GridP& oldGrid,  const bool hasDistalReqs = false);
 
-  const std::set<int>& getNeighborhoodProcessors() { return m_neighborhood_processors; }
+  virtual const std::set<int>& getNeighborhoodProcessors() { return m_neighborhood_processors; }
+
+  virtual const std::set<int>& getDistalNeighborhoodProcessors() { return m_distal_neighborhood_processors; }
 
   /// Asks the load balancer if a patch in the patch subset is in the neighborhood.
-  virtual bool inNeighborhood( const PatchSubset* );
+  virtual bool inNeighborhood( const PatchSubset * pss, const bool hasDistalReqs = false );
 
   /// Asks the load balancer if patch is in the neighborhood.
-  virtual bool inNeighborhood( const Patch* );
+  virtual bool inNeighborhood( const Patch * patch, const bool hasDistalReqs = false );
 
   /// Reads the problem spec file for the LoadBalancer section, and looks 
   /// for entries such as outputNthProc, dynamicAlgorithm, and interval.
@@ -201,31 +203,34 @@ protected:
   virtual const PatchSet* createPerProcessorPatchSet( const GridP  & grid  );
   virtual const PatchSet* createOutputPatchSet(       const LevelP & level );
 
-  double m_last_lb_time;
-  double m_lb_interval;
-  bool   m_check_after_restart;
+  double m_last_lb_time{0.0};
+  double m_lb_interval{0.0};
+  bool   m_check_after_restart{false};
 
   // The assignment vectors are stored 0-n.  This stores the start patch number so we can
   // detect if something has gone wrong when we go to look up what proc a patch is on.
-  int m_assignment_base_patch;
-  int m_old_assignment_base_patch;
+  int m_assignment_base_patch{-1};
+  int m_old_assignment_base_patch{-1};
 
   std::vector<int> m_processor_assignment; ///< stores which proc each patch is on
   std::vector<int> m_old_assignment;       ///< stores which proc each patch used to be on
   std::vector<int> m_temp_assignment;      ///< temp storage for checking to reallocate
 
   SFC <double> m_sfc;
-  bool         m_do_space_curve;
+  bool         m_do_space_curve{false};
 
   SimulationStateP          m_shared_state;            ///< to keep track of timesteps
-  Scheduler               * m_scheduler;               ///< store the scheduler to not have to keep passing it in
+  Scheduler               * m_scheduler {nullptr};     ///< store the scheduler to not have to keep passing it in
   std::set<const Patch*>    m_neighbors;               ///< the neighborhood.  See createNeighborhood
   std::set<int>             m_neighborhood_processors; ///< a list of processors that are in this processors neighborhood
   
+  std::set<const Patch*>    m_distal_neighbors;               ///< the wide-area, or global neighborhood.  See createNeighborhood
+  std::set<int>             m_distal_neighborhood_processors; ///< a list of wider-area processors that are in this processors neighborhood
+
   //! output on every nth processor.  This variable needs to be shared 
   //! with the DataArchiver as well, but we keep it here because the lb
   //! needs it to assign the processor resource.
-  int m_output_Nth_proc;
+  int m_output_Nth_proc{1};
 
   std::vector< Handle<const PatchSet> > m_level_perproc_patchsets;
   Handle< const PatchSet >              m_grid_perproc_patchsets;
@@ -240,6 +245,11 @@ private:
   LoadBalancerCommon( LoadBalancerCommon && )                 = delete;
   LoadBalancerCommon& operator=( LoadBalancerCommon && )      = delete;
 
+  void addPatchesAndProcsToNeighborhood( const Level * const level,
+                                         const IntVector& low,
+                                         const IntVector& high,
+                                         std::set<const Patch*>& neighbors,
+                                         std::set<int>& processors);
 };
 
 } // namespace Uintah

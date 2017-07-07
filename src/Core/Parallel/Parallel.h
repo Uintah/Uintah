@@ -41,7 +41,8 @@
 #define proc0cout if( isProc0_macro ) std::cout
 #define proc0cerr if( isProc0_macro ) std::cerr
 
-#define MAX_THREADS 64
+#define MAX_THREADS     64
+#define MAX_HALO_DEPTH  5
 
 namespace Uintah {
 

@@ -175,7 +175,6 @@ printTaskLevels( const ProcessorGroup * d_myworld
 {
   if (out) {
     if (dtask->getPatches()) {
-//      if (dtask->getTask()->getType() != Task::OncePerProc) {
         const PatchSubset* taskPatches = dtask->getPatches();
         const Level* level = getLevel(taskPatches);
         const Patch* firstPatch = level->getPatch(0);
@@ -189,7 +188,6 @@ printTaskLevels( const ProcessorGroup * d_myworld
           message << "\t L-" << level->getIndex();
           DOUT(true, message.str());
         }
-//      }
     }
   }
 }

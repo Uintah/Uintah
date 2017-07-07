@@ -27,7 +27,6 @@
 
 #include <Core/Grid/SimulationState.h>
 #include <Core/Util/DOUT.hpp>
-#include <Core/Util/InfoMapper.h>
 #include <Core/Util/Timers/Timers.hpp>
 
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
@@ -71,7 +70,7 @@ public:
 
   // NOT THREAD SAFE -- should only be called from the master thread
   // by the parent scheduler
-  static void report( MPI_Comm comm, InfoStats & info_stats );
+  static void report( MPI_Comm comm );
 
   struct TaskExecTag {};       // Total Task Exec
   struct TaskWaitTag {};       // Total Task Wait

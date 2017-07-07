@@ -42,7 +42,7 @@ UpdateParticleSize::problemSetup( ProblemSpecP& db ){
 //------------------------------------------------
 //
 void
-UpdateParticleSize::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){}
+UpdateParticleSize::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){}
 
 void
 UpdateParticleSize::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}

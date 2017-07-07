@@ -219,13 +219,23 @@ public:
 
   bool operator==( DeviceGridVariableInfo& rhs )
   {
-    return (m_sizeVector == rhs.m_sizeVector && m_sizeOfDataType == rhs.m_sizeOfDataType && m_varMemSize == rhs.m_varMemSize
-            && m_offset == rhs.m_offset && m_matlIndx == rhs.m_matlIndx && m_levelIndx == rhs.m_levelIndx
-            && m_patchPointer == rhs.m_patchPointer && m_gtype == rhs.m_gtype && m_numGhostCells == rhs.m_numGhostCells
-            && m_whichGPU == rhs.m_whichGPU && m_dest == rhs.m_dest && m_staging == rhs.m_staging);
+    return (m_sizeVector == rhs.m_sizeVector
+           && m_sizeOfDataType == rhs.m_sizeOfDataType
+           && m_varMemSize == rhs.m_varMemSize
+           && m_offset == rhs.m_offset
+           && m_matlIndx == rhs.m_matlIndx
+           && m_levelIndx == rhs.m_levelIndx
+           && m_patchPointer == rhs.m_patchPointer
+           && m_gtype == rhs.m_gtype
+           && m_numGhostCells == rhs.m_numGhostCells
+           && m_whichGPU == rhs.m_whichGPU
+           && m_dest == rhs.m_dest
+           && m_staging == rhs.m_staging);
   }
 
-  Variable               * m_var;
+
+  Variable               * m_var              {nullptr}; //Holds onto the var in case it needs to query more information
+  GridVariableBase       * m_tempVarToReclaim {nullptr}; //Holds onto the result of an OnDemandDW getGridVar() call until an async device-to-host copy completes
   DeviceVarDest            m_dest;
   bool                     m_staging;
   IntVector                m_sizeVector;

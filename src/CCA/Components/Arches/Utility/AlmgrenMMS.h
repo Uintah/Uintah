@@ -40,7 +40,7 @@ protected:
 
     typedef ArchesFieldContainer AFC;
 
-    void register_initialize( std::vector<AFC::VariableInformation>& variable_registry );
+    void register_initialize( std::vector<AFC::VariableInformation>& variable_registry , const bool packed_tasks);
 
     void register_timestep_init( std::vector<AFC::VariableInformation>& variable_registry ){}
 
@@ -106,7 +106,8 @@ private:
   //------------------------------------------------------------------------------------------------
   template <typename T>
   void AlmgrenMMS<T>::register_initialize(
-    std::vector<AFC::VariableInformation>& variable_registry ){
+    std::vector<AFC::VariableInformation>& variable_registry,
+    const bool packed_tasks ){
 
     register_variable( m_var_name,     AFC::MODIFIES, variable_registry );
     register_variable( m_x_name, AFC::REQUIRES, 0, AFC::NEWDW, variable_registry, _task_name );

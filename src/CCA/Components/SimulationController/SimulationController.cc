@@ -103,7 +103,7 @@ SimulationController::SimulationController( const ProcessorGroup * myworld,
   
   d_restarting             = false;
   d_reduceUda              = false;
-  d_doMultiTaskgraphing    = false;
+  d_do_multi_taskgraphing  = false;
   d_restart_archive        = nullptr;
   d_sim                    = 0;
 
@@ -449,6 +449,11 @@ SimulationController::schedulerSetup( void )
 
   d_scheduler->problemSetup(d_ups, d_sharedState);  
 
+  // Additional set up calls.
+  d_scheduler->setInitTimestep( true );
+  d_scheduler->setRestartInitTimestep( d_restarting );
+  d_scheduler->initialize( 1, 1 );
+
   // Note: there are other downstream calls to d_scheduler to complete
   // the setup. See outOfSyncSetup().
 }
@@ -467,8 +472,9 @@ SimulationController::simulationInterfaceSetup( void )
                         __FILE__, __LINE__);
   }
 
-  // Note: normally problemSetup would be called here but the the grid
-  // is needed but it has not yet been created.
+  // Note: normally problemSetup would be called here but the grid is
+  // needed and it has not yet been created. Further the simulation
+  // controller needs the regridder which obviously needs the grid.
 
   // Further the simulation interface may need to change the grid
   // before it is setup.
@@ -584,9 +590,9 @@ SimulationController::outOfSyncSetup()
   // Complete the setup of the simulation interface and scheduler that
   // could not be completed until the grid was setup.
   
-  // The simulation interface was initalized earlier because the it
+  // The simulation interface was initialized earlier because the it
   // was needed to possibly set the grid's extra cells before the
-  // grid's ProblemSetup was called (it can not be done aferwards).
+  // grid's ProblemSetup was called (it can not be done afterwards).
 
   // Do this step after setting up the regridder so that Switcher
   // (being a simulation interface) can reset the state of the
@@ -599,13 +605,10 @@ SimulationController::outOfSyncSetup()
   // DataArchive::restartInitialize.
   d_sim->problemSetup(d_ups, d_restart_ps, d_currentGridP, d_sharedState);
 
-  // The scheduler was initalized earlier because the simulation
-  // interface needed it.
+  // The scheduler was setup earlier because the simulation interface
+  // needed it.
 
   // Complete the setup of the scheduler.
-  d_scheduler->initialize( 1, 1 );
-  d_scheduler->setInitTimestep( true );
-  d_scheduler->setRestartInitTimestep( d_restarting );
   d_scheduler->advanceDataWarehouse( d_currentGridP, true );
 }
 
@@ -665,7 +668,7 @@ SimulationController::timeStateSetup()
 //______________________________________________________________________
 //
 void
-SimulationController::finialSetup()
+SimulationController::finalSetup()
 {
   // Finalize the shared state/materials
   d_sharedState->finalizeMaterials();
@@ -691,7 +694,7 @@ SimulationController::finialSetup()
   // Miscellaneous initializations.
   ProblemSpecP amr_ps = d_ups->findBlock("AMR");
   if( amr_ps ) {
-    amr_ps->get( "doMultiTaskgraphing", d_doMultiTaskgraphing );
+    amr_ps->get( "doMultiTaskgraphing", d_do_multi_taskgraphing );
   }
 
 #ifdef HAVE_VISIT
@@ -707,7 +710,6 @@ SimulationController::finialSetup()
 
 //______________________________________________________________________
 //
-
 void
 SimulationController::getNextDeltaT( void )
 {
@@ -811,7 +813,7 @@ SimulationController::getNextDeltaT( void )
 void
 SimulationController::ReportStats( bool header /* = false */ )
 {
-  // Get and reduce the performace run time stats
+  // Get and reduce the performance runtime stats
   getMemoryStats();
   getPAPIStats();
 
@@ -823,17 +825,13 @@ SimulationController::ReportStats( bool header /* = false */ )
                                      d_regridder->useDynamicDilation(),
                                      d_myworld );
 
-  // Reduce the mpi run time stats.
-  MPIScheduler * mpiScheduler =
-    dynamic_cast<MPIScheduler*>( d_scheduler.get_rep() );
+  // Reduce the MPI runtime stats.
+  MPIScheduler * mpiScheduler = dynamic_cast<MPIScheduler*>( d_scheduler.get_rep() );
   
   if( mpiScheduler )
     mpiScheduler->mpi_info_.reduce( d_regridder &&
                                     d_regridder->useDynamicDilation(),
                                     d_myworld );
-
-  // Print MPI statistics
-  d_scheduler->printMPIStats();
   
   // Print the stats for this time step
   if( d_myworld->myrank() == 0 && header ) {
@@ -848,45 +846,37 @@ SimulationController::ReportStats( bool header /* = false */ )
     cout.flush();
   }
   
-  ReductionInfoMapper< SimulationState::RunTimeStat, double > &runTimeStats =
-    d_sharedState->d_runTimeStats;
+  ReductionInfoMapper< SimulationState::RunTimeStat, double > &runTimeStats = d_sharedState->d_runTimeStats;
 
-  ReductionInfoMapper< unsigned int, double > &otherStats =
-    d_sharedState->d_otherStats;
+  ReductionInfoMapper< unsigned int, double > &otherStats = d_sharedState->d_otherStats;
 
   // With the sum reduces, use double, since with memory it is possible that
   // it will overflow
-  double        avg_memused =
-    runTimeStats.getAverage( SimulationState::SCIMemoryUsed );
-  unsigned long max_memused =
-    runTimeStats.getMaximum( SimulationState::SCIMemoryUsed );
-  int           max_memused_rank =
-    runTimeStats.getRank( SimulationState::SCIMemoryUsed );
+  double        avg_memused      = runTimeStats.getAverage( SimulationState::SCIMemoryUsed );
+  unsigned long max_memused      = runTimeStats.getMaximum( SimulationState::SCIMemoryUsed );
+  int           max_memused_rank = runTimeStats.getRank( SimulationState::SCIMemoryUsed );
 
-  double        avg_highwater =
-    runTimeStats.getAverage( SimulationState::SCIMemoryHighwater );
-  unsigned long max_highwater =
-    runTimeStats.getMaximum( SimulationState::SCIMemoryHighwater );
-  int           max_highwater_rank =
-    runTimeStats.getRank( SimulationState::SCIMemoryHighwater );
+  double        avg_highwater      = runTimeStats.getAverage( SimulationState::SCIMemoryHighwater );
+  unsigned long max_highwater      = runTimeStats.getMaximum( SimulationState::SCIMemoryHighwater );
+  int           max_highwater_rank = runTimeStats.getRank( SimulationState::SCIMemoryHighwater );
     
   // Sum up the average time for overhead related components. These
   // same values are used in SimulationState::getOverheadTime.
   double overhead_time =
-    (runTimeStats.getAverage(SimulationState::CompilationTime) +
-     runTimeStats.getAverage(SimulationState::RegriddingTime) +
+    (runTimeStats.getAverage(SimulationState::CompilationTime)           +
+     runTimeStats.getAverage(SimulationState::RegriddingTime)            +
      runTimeStats.getAverage(SimulationState::RegriddingCompilationTime) +
-     runTimeStats.getAverage(SimulationState::RegriddingCopyDataTime) +
+     runTimeStats.getAverage(SimulationState::RegriddingCopyDataTime)    +
      runTimeStats.getAverage(SimulationState::LoadBalancerTime));
 
   // Sum up the average times for simulation components. These
   // same values are used in SimulationState::getTotalTime.
   double total_time =
     (overhead_time +
-     runTimeStats.getAverage(SimulationState::TaskExecTime) +
-     runTimeStats.getAverage(SimulationState::TaskLocalCommTime) +
-     runTimeStats.getAverage(SimulationState::TaskGlobalCommTime) +
+     runTimeStats.getAverage(SimulationState::TaskExecTime)       +
+     runTimeStats.getAverage(SimulationState::TaskLocalCommTime)  +
      runTimeStats.getAverage(SimulationState::TaskWaitCommTime) +
+     runTimeStats.getAverage(SimulationState::TaskReduceCommTime)   +
      runTimeStats.getAverage(SimulationState::TaskWaitThreadTime));
   
     // Calculate percentage of time spent in overhead.
@@ -894,59 +884,48 @@ SimulationController::ReportStats( bool header /* = false */ )
   
   // Set the overhead percentage. Ignore the first sample as that is
   // for initalization.
-  if( d_nSamples )
-  {
+  if (d_nSamples) {
     overheadValues[overheadIndex] = percent_overhead;
 
     double overhead = 0;
     double weight = 0;
 
-    int t = min(d_nSamples, OVERHEAD_WINDOW);
-    
-    // Calcualte total weight by incrementing through the overhead
+    int sample_size = min(d_nSamples, OVERHEAD_WINDOW);
+
+    // Calculate total weight by incrementing through the overhead
     // sample array backwards and multiplying samples by the weights
-    for( int i=0; i<t; ++i )
-    {
-      unsigned int index = (overheadIndex-i+OVERHEAD_WINDOW) % OVERHEAD_WINDOW;
+    for (int i = 0; i < sample_size; ++i) {
+      unsigned int index = (overheadIndex - i + OVERHEAD_WINDOW) % OVERHEAD_WINDOW;
       overhead += overheadValues[index] * overheadWeights[i];
-      weight += overheadWeights[i];
+      weight   += overheadWeights[i];
     }
 
     // Increment the overhead index
-    overheadIndex = (overheadIndex+1) % OVERHEAD_WINDOW;
+    overheadIndex = (overheadIndex + 1) % OVERHEAD_WINDOW;
 
-    d_sharedState->setOverheadAvg( overhead / weight );
+    d_sharedState->setOverheadAvg(overhead / weight);
   } 
 
   // Output timestep statistics...
-  if (istats.active())
-  {
+  if (istats.active()) {
     istats << "Run time performance stats" << std::endl;
 
-    for (unsigned int i=0; i<runTimeStats.size(); i++)
-    {
-      SimulationState::RunTimeStat e = (SimulationState::RunTimeStat) i;
-      
-      if (runTimeStats[e] > 0)
-      {
-        istats << "rank: " << d_myworld->myrank() << " "
-               << left << setw(19) << runTimeStats.getName(e)
-               << " [" << runTimeStats.getUnits(e) << "]: "
-               << runTimeStats[e] << "\n";
+    for (unsigned int i = 0; i < runTimeStats.size(); i++) {
+      SimulationState::RunTimeStat e = (SimulationState::RunTimeStat)i;
+
+      if (runTimeStats[e] > 0) {
+        istats << "rank: " << d_myworld->myrank() << " " << left << setw(19) << runTimeStats.getName(e) << " ["
+               << runTimeStats.getUnits(e) << "]: " << runTimeStats[e] << "\n";
       }
     }
 
-    if( otherStats.size() )
+    if (otherStats.size())
       istats << "Other performance stats" << std::endl;
-      
-    for (unsigned int i=0; i<otherStats.size(); i++)
-    {
-      if (otherStats[i] > 0)
-      {
-        istats << "rank: " << d_myworld->myrank() << " "
-               << left << setw(19) << otherStats.getName(i)
-               << " [" << otherStats.getUnits(i) << "]: "
-               << otherStats[i] << "\n";
+
+    for (unsigned int i = 0; i < otherStats.size(); i++) {
+      if (otherStats[i] > 0) {
+        istats << "rank: " << d_myworld->myrank() << " " << left << setw(19) << otherStats.getName(i) << " ["
+               << otherStats.getUnits(i) << "]: " << otherStats[i] << "\n";
       }
     }
   } 
@@ -964,7 +943,7 @@ SimulationController::ReportStats( bool header /* = false */ )
 //          << "delT="       << setw(12) << d_prev_delt
             << "Next delT="  << setw(12) << d_delt
 
-            << "Wall Time = " << setw(10) << walltimers.GetWallTime()
+            << "Wall Time=" << setw(10) << walltimers.GetWallTime()
             // << "All Time steps= " << setw(12) << walltimers.TimeStep().seconds()
             // << "Current Time Step= " << setw(12) << timeStep.seconds()
             << "EMA="        << setw(12) << walltimers.ExpMovingAverage().seconds()
@@ -985,21 +964,21 @@ SimulationController::ReportStats( bool header /* = false */ )
               << ProcessInfo::toHumanUnits((unsigned long) avg_memused)
               << " (avg) " << setw(10)
               << ProcessInfo::toHumanUnits(max_memused)
-              << " (max on rank:" << setw(6) << max_memused_rank << ")";
+              << " (max on rank: " << setw(6) << max_memused_rank << ")";
 
-      if(avg_highwater)
+      if (avg_highwater)
         message << "    Highwater Memory Used=" << setw(10)
                 << ProcessInfo::toHumanUnits((unsigned long)avg_highwater)
                 << " (avg) " << setw(10)
                 << ProcessInfo::toHumanUnits(max_highwater)
-                << " (max on rank:" << setw(6) << max_highwater_rank << ")";
+                << " (max on rank: " << setw(6) << max_highwater_rank << ")";
     }
 
     dbg << message.str() << "\n";
     dbg.flush();
     cout.flush();
 
-    // Ignore the first sample as that is for initalization.
+    // Ignore the first sample as that is for initialization.
     if (stats.active() && d_nSamples) {
 
       stats << "Run time performance stats" << std::endl;
@@ -1047,19 +1026,18 @@ SimulationController::ReportStats( bool header /* = false */ )
         {
           stats << "  " << left
                 << setw(21) << otherStats.getName(i)
-                << "[" << setw(10) << otherStats.getUnits(i) << "]"
+                << "["   << setw(10) << otherStats.getUnits(i) << "]"
                 << " : " << setw(12) << otherStats.getAverage(i)
                 << " : " << setw(12) << otherStats.getMaximum(i)
                 << " : " << setw(10) << otherStats.getRank(i)
                 << " : " << setw(10)
-                << 100.0 * (1.0 - (otherStats.getAverage(i) /
-                                   otherStats.getMaximum(i)))
+                << 100.0 * (1.0 - (otherStats.getAverage(i) / otherStats.getMaximum(i)))
                 << "\n";
         }
       }
     }
   
-    // Ignore the first sample as that is for initalization.
+    // Ignore the first sample as that is for initialization.
     if (dbgTime.active() && d_nSamples ) {
       double realSecondsNow =
         timeStep.seconds() / d_delt;

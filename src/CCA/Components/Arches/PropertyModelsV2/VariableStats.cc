@@ -194,7 +194,7 @@ void VariableStats::create_local_labels(){
 }
 
 //--------------------------------------------------------------------------------------------------
-void VariableStats::register_initialize( VIVec& variable_registry ){
+void VariableStats::register_initialize( VIVec& variable_registry , const bool pack_tasks){
 
   std::vector<std::string>::iterator i = _ave_sum_names.begin();
   for (;i!=_ave_sum_names.end();i++){

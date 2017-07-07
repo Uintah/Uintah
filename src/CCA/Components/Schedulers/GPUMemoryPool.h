@@ -27,10 +27,14 @@
 #define CCA_COMPONENTS_SCHEDULERS_GPUMEMORYPOOL_H
 
 #include <sci_defs/cuda_defs.h>
-
+#include <CCA/Components/Schedulers/DetailedTasks.h>
+#include <CCA/Components/Schedulers/UnifiedScheduler.h> //For myRankThread()
 #include <map>
+#include <queue>
 
 namespace Uintah {
+
+class GPUStreamPool;
 
 class GPUMemoryPool;
 
@@ -94,12 +98,29 @@ public:
 
   static bool freeCudaSpaceFromPool(unsigned int device_id, void* addr);
 
+  static void reclaimCudaStreamsIntoPool( DetailedTask * dtask );
+
+  static void freeCudaStreamsFromPool();
+
+  static cudaStream_t* getCudaStreamFromPool( int device );
+
 private:
 
   //For a given device and address, holds the timestep
   static std::multimap<gpuMemoryPoolDevicePtrItem, gpuMemoryPoolDevicePtrValue> *gpuMemoryPoolInUse;
 
   static std::multimap<gpuMemoryPoolDeviceSizeItem, gpuMemoryPoolDeviceSizeValue> *gpuMemoryPoolUnused;
+
+  // thread shared data, needs lock protection when accessed
+
+  //Operations within the same stream are ordered (FIFO) and cannot overlap.
+  //Operations in different streams are unordered and can overlap
+  //For this reason we let each task own a stream, as we want one task to be able to run
+  //if it is ready to do work even if another task is not yet ready.  It also enables us
+  //to easily determine when a computed variable is "valid" because when that task's stream
+  //completes, then we can infer the variable is ready to go.  More about how a task claims a
+  //stream can be found in DetailedTasks.cc
+  static std::map <unsigned int, std::queue<cudaStream_t*> > * s_idle_streams;
 
 };
 

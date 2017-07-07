@@ -37,7 +37,7 @@ SampleTask::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info )
 //
 
 void
-SampleTask::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
+SampleTask::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const bool packed_tasks ){
 
   //FUNCITON CALL     STRING NAME(VL)     TYPE       DEPENDENCY    GHOST DW     VR
   register_variable( "a_sample_field", ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW,  variable_registry );

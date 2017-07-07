@@ -43,8 +43,11 @@
 //______________________________________________________________________
 //
 using namespace Uintah;
-using namespace std;
-static DebugStream dbg("RAY", false);
+
+namespace {
+
+  DebugStream dbg("RAY", false);
+}
 
 //______________________________________________________________________
 // Class: Constructor.
@@ -54,12 +57,11 @@ Radiometer::Radiometer(const TypeDescription::Type FLT_DBL ) : RMCRTCommon( FLT_
 {
   if ( FLT_DBL == TypeDescription::double_type ){
     d_VRFluxLabel = VarLabel::create( "VRFlux", CCVariable<double>::getTypeDescription() );
-    proc0cout << "__________________________________ USING DOUBLE VERSION OF RADIOMETER" << endl;
+    proc0cout << "__________________________________ USING DOUBLE VERSION OF RADIOMETER" << std::endl;
   } else {
     d_VRFluxLabel = VarLabel::create( "VRFlux", CCVariable<float>::getTypeDescription() );
-    proc0cout << "__________________________________ USING FLOAT VERSION OF RADIOMETER" << endl;
+    proc0cout << "__________________________________ USING FLOAT VERSION OF RADIOMETER" << std::endl;
   }
-
 }
 
 //______________________________________________________________________
@@ -99,9 +101,9 @@ Radiometer::problemSetup( const ProblemSpecP& prob_spec,
   } else {
                    // bulletproofing.
     for( ProblemSpecP n = rad_ps->getFirstChild(); n != nullptr; n=n->getNextSibling() ){
-      string me = n->getNodeName();
+      std::string me = n->getNodeName();
       if( ( me == "sigmaScat"  ||  me == "Threshold" || me == "randomSeed" ||  me == "StefanBoltzmann" || me == "allowReflect" ) && me !="text" ){
-        ostringstream warn;
+        std::ostringstream warn;
         warn << "\n ERROR:Radiometer::problemSetup: You've specified the variable (" << me << ")"
              << " which will be ignored.  You should set the variable outside <Radiometer> section. \n";
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
@@ -123,59 +125,59 @@ Radiometer::problemSetup( const ProblemSpecP& prob_spec,
 
   if(start.x() < min.x() || start.y() < min.y() || start.z() < min.z() ||
      end.x() > max.x()   || end.y() > max.y()   || end.z() > max.z() ) {
-    ostringstream warn;
+    std::ostringstream warn;
     warn << "\n ERROR:Radiometer::problemSetup: the radiometer that you've specified " << start
-         << " " << end << " begins or ends outside of the computational domain. \n" << endl;
+         << " " << end << " begins or ends outside of the computational domain. \n" << std::endl;
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
 
   if( start.x() > end.x() || start.y() > end.y() || start.z() > end.z() ) {
-    ostringstream warn;
+    std::ostringstream warn;
     warn << "\n ERROR:Radiometer::problemSetup: the radiometerthat you've specified " << start
-         << " " << end << " the starting point is > than the ending point \n" << endl;
+         << " " << end << " the starting point is > than the ending point \n" << std::endl;
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
 
   // you need at least one cell that's a radiometer
   if( start.x() == end.x() || start.y() == end.y() || start.z() == end.z() ){
-    ostringstream warn;
+    std::ostringstream warn;
     warn << "\n ERROR:Radiometer::problemSetup: The specified radiometer has the same "
          << "starting and ending points.  All of the directions must differ by one cell\n "
-         << "                                start: " << start << " end: " << end << endl;
+         << "                                start: " << start << " end: " << end << std::endl;
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
 
 #ifndef RAY_SCATTER
-  proc0cout<< "sigmaScat: " << d_sigmaScat << endl;
+  proc0cout<< "sigmaScat: " << d_sigmaScat << std::endl;
   if(d_sigmaScat>0){
-    ostringstream warn;
-    warn << "ERROR:  In order to run a scattering case, you must use the following in your configure line..." << endl;
-    warn << "--enable-ray-scatter" << endl;
-    warn << "If you wish to run a scattering case, please modify your configure line and re-configure and re-compile." << endl;
-    warn << "If you wish to run a non-scattering case, please remove the line containing <sigmaScat> from your input file." << endl;
+    std:: ostringstream warn;
+    warn << "ERROR:  In order to run a scattering case, you must use the following in your configure line..." << std::endl;
+    warn << "--enable-ray-scatter" << std::endl;
+    warn << "If you wish to run a scattering case, please modify your configure line and re-configure and re-compile." << std::endl;
+    warn << "If you wish to run a non-scattering case, please remove the line containing <sigmaScat> from your input file." << std::endl;
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
 #endif
 
 #ifdef RAY_SCATTER
   if(d_sigmaScat<1e-99){
-    proc0cout << "WARNING:  You are running a non-scattering case, yet you have the following in your configure line..." << endl;
-    proc0cout << "--enable-ray-scatter" << endl;
-    proc0cout << "As such, this task will run slower than is necessary." << endl;
-    proc0cout << "If you wish to run a scattering case, please specify a positive value greater than 1e-99 for the scattering coefficient." << endl;
-    proc0cout << "If you wish to run a non-scattering case, please remove --enable-ray-scatter from your configure line and re-configure and re-compile" << endl;
+    proc0cout << "WARNING:  You are running a non-scattering case, yet you have the following in your configure line..." << std::endl;
+    proc0cout << "--enable-ray-scatter" << std::endl;
+    proc0cout << "As such, this task will run slower than is necessary." << std::endl;
+    proc0cout << "If you wish to run a scattering case, please specify a positive value greater than 1e-99 for the scattering coefficient." << std::endl;
+    proc0cout << "If you wish to run a non-scattering case, please remove --enable-ray-scatter from your configure line and re-configure and re-compile" << std::endl;
   }
-  proc0cout<< endl << "RAY_SCATTER IS DEFINED" << endl;
+  proc0cout<< std::endl << "RAY_SCATTER IS DEFINED" << std::endl;
 #endif
 
   if ( d_viewAng > 360 ){
-    ostringstream warn;
-    warn << "ERROR:  VRViewAngle ("<< d_viewAng <<") exceeds the maximum acceptable value of 360 degrees." << endl;
+    std::ostringstream warn;
+    warn << "ERROR:  VRViewAngle ("<< d_viewAng <<") exceeds the maximum acceptable value of 360 degrees." << std::endl;
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
 
   if ( d_nRadRays < int(15 + pow(5.4, d_viewAng/40) ) ){
-    proc0cout << "RMCRT: WARNING Number of radiometer rays:  ("<< d_nRadRays <<") is less than the recommended number of ("<< int(15 + pow(5.4, d_viewAng/40) ) <<"). Errors will exceed 1%. " << endl;
+    proc0cout << "RMCRT: WARNING Number of radiometer rays:  ("<< d_nRadRays <<") is less than the recommended number of ("<< int(15 + pow(5.4, d_viewAng/40) ) <<"). Errors will exceed 1%. " << std::endl;
   }
 
   // orient[0,1,2] represent the user specified vector normal of the radiometer.
@@ -240,24 +242,27 @@ Radiometer::problemSetup( const ProblemSpecP& prob_spec,
 //______________________________________________________________________
 void
 Radiometer::sched_initializeRadVars( const LevelP& level,
-                                     SchedulerP& sched,
-                                     const int radCalc_freq )
+                                     SchedulerP& sched )
 {
 
   std::string taskname = "Radiometer::initializeRadVars";
 
   Task* tsk = nullptr;
   if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
-    tsk= scinew Task( taskname, this, &Radiometer::initializeRadVars< double >, radCalc_freq );
+    tsk= scinew Task( taskname, this, &Radiometer::initializeRadVars< double > );
   }else{
-    tsk= scinew Task( taskname, this, &Radiometer::initializeRadVars< float >, radCalc_freq );
+    tsk= scinew Task( taskname, this, &Radiometer::initializeRadVars< float > );
   }
   
   printSchedule(level,dbg,taskname);
   tsk->requires(Task::OldDW, d_VRFluxLabel, d_gn, 0);
   tsk->computes( d_VRFluxLabel );
 
-  sched->addTask( tsk, level->eachPatch(), d_matlSet );
+  sched->addTask( tsk, level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT );
+
+  // Carry Forward d_VRFluxlabel if you're not computing it
+  sched_CarryForward_Var(level, sched, d_VRFluxLabel  , RMCRTCommon::TG_CARRY_FORWARD);
+
 }
 
 //______________________________________________________________________
@@ -271,21 +276,8 @@ Radiometer::initializeRadVars( const ProcessorGroup*,
                                const PatchSubset* patches,
                                const MaterialSubset* matls,
                                DataWarehouse* old_dw,
-                               DataWarehouse* new_dw,
-                               const int radCalc_freq )
+                               DataWarehouse* new_dw )
 {
-  // Recompile taskgraph on calc timesteps
-  // This controls the temporal task scheduling
-  doRecompileTaskgraph( radCalc_freq );  // this must be at the top of the taskrecomp
-
-  if ( doCarryForward( radCalc_freq) ) {
-    printTask(patches,patches->get(0), dbg,"Doing Radiometer::initializeVars (carryForward)");
-    bool replaceVar = true;
-    new_dw->transferFrom( old_dw, d_VRFluxLabel,    patches, matls, replaceVar );
-
-    return;
-  }
-
   //__________________________________
   //  Initialize the flux.
   for (int p=0; p < patches->size(); p++){
@@ -310,35 +302,29 @@ Radiometer::initializeRadVars( const ProcessorGroup*,
 void
 Radiometer::sched_radiometer( const LevelP& level,
                               SchedulerP& sched,
-                              Task::WhichDW abskg_dw,
+                              Task::WhichDW notUsed,
                               Task::WhichDW sigma_dw,
-                              Task::WhichDW celltype_dw,
-                              const int radCalc_freq )
+                              Task::WhichDW celltype_dw )
 {
-  // return if it's a carryforward timestep
-  // Temporal task scheduling
-  if ( doCarryForward( radCalc_freq) ) {
-    return;
-  }
-  
-  vector<const Patch*> myPatches = getPatchSet( sched, level );
+  std::vector<const Patch*> myPatches = getPatchSet( sched, level );
   bool hasRadiometers = false;
-  int nGhostCells = 0;           // This should be 0 for patches without radiometers
+
+  int L = level->getIndex();
+  Task::WhichDW abskg_dw = d_abskg_dw[L];
   
   //__________________________________
   //  If this processor owns any patches with radiometers
   if( myPatches.size() !=  0 ){
     hasRadiometers = true;
-    nGhostCells = SHRT_MAX; 
   }
   
   std::string taskname = "Radiometer::radiometer";
   Task *tsk;
 
   if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
-    tsk = scinew Task( taskname, this, &Radiometer::radiometer< double >, abskg_dw, sigma_dw, celltype_dw, radCalc_freq, hasRadiometers );
+    tsk = scinew Task( taskname, this, &Radiometer::radiometer< double >, abskg_dw, sigma_dw, celltype_dw, hasRadiometers );
   } else {
-    tsk = scinew Task( taskname, this, &Radiometer::radiometer< float >, abskg_dw, sigma_dw, celltype_dw, radCalc_freq, hasRadiometers );
+    tsk = scinew Task( taskname, this, &Radiometer::radiometer< float >, abskg_dw, sigma_dw, celltype_dw, hasRadiometers );
   }
 
   printSchedule( level,dbg,"Radiometer::sched_radiometer" );
@@ -346,11 +332,6 @@ Radiometer::sched_radiometer( const LevelP& level,
   //__________________________________
   // Require an infinite number of ghost cells so you can access the entire domain.
   //
-  // THIS IS VERY EXPENSIVE.  THIS EXPENSE IS INCURRED ON NON-CALCULATION TIMESTEPS,
-  // ONLY REQUIRE THESE VARIABLES ON A CALCULATION TIMESTEPS.
-  //
-  // The taskgraph must be recompiled to detect a change in the conditional.
-  // The taskgraph recompilation is activated from RMCRTCommon:doRecompileTaskgraph()
   Ghost::GhostType  gac  = Ghost::AroundCells;
   tsk->requires( abskg_dw ,    d_abskgLabel  ,   gac, SHRT_MAX);    // Do not change this from SHRT_MAX -> nGhostCells
   tsk->requires( sigma_dw ,    d_sigmaT4Label,   gac, SHRT_MAX);    // It will hang on the first timestep on 2 cores with RMCRT_radiometer.ups
@@ -358,7 +339,7 @@ Radiometer::sched_radiometer( const LevelP& level,
 
   tsk->modifies( d_VRFluxLabel );
 
-  sched->addTask( tsk, level->eachPatch(), d_matlSet );
+  sched->addTask( tsk, level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT );
 }
 
 #else
@@ -369,70 +350,60 @@ Radiometer::sched_radiometer( const LevelP& level,
 void
 Radiometer::sched_radiometer( const LevelP& level,
                               SchedulerP& sched,
-                              Task::WhichDW abskg_dw,
+                              Task::WhichDW notUsed,
                               Task::WhichDW sigma_dw,
-                              Task::WhichDW celltype_dw,
-                              const int radCalc_freq )
+                              Task::WhichDW celltype_dw )
 {
-
-  // return if it's a carryforward timestep
-  // Temporal task scheduling
-  if ( doCarryForward( radCalc_freq) ) {
-    return;
-  }
-
   // find patches that contain radiometers
-  vector<const Patch*> myPatches = getPatchSet( sched, level );
+  std::vector<const Patch*> myPatches = getPatchSet( sched, level );
   bool hasRadiometers = false;
+
+  int L = level->getIndex();
+  Task::WhichDW abskg_dw = d_abskg_dw[L];  
   
   //__________________________________
   //  If this processor owns any patches with radiometers
-  if( myPatches.size() !=  0 ){
+  if ( myPatches.size() !=  0 ) {
     hasRadiometers = true;
+  }
 
-    std::string taskname = "Radiometer::radiometer";
-    Task *tsk;
+  std::string taskname = "Radiometer::radiometer";
+  Task *tsk;
 
-    if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
-      tsk = scinew Task( taskname, this, &Radiometer::radiometer< double >, abskg_dw, sigma_dw, celltype_dw, radCalc_freq, hasRadiometers );
-    } else {
-      tsk = scinew Task( taskname, this, &Radiometer::radiometer< float >, abskg_dw, sigma_dw, celltype_dw, radCalc_freq, hasRadiometers );
-    }
+  if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ) {
+    tsk = scinew Task( taskname, this, &Radiometer::radiometer< double >, abskg_dw, sigma_dw, celltype_dw, hasRadiometers );
+  } else {
+    tsk = scinew Task( taskname, this, &Radiometer::radiometer< float >, abskg_dw, sigma_dw, celltype_dw, hasRadiometers );
+  }
 
-    tsk->setType(Task::Spatial);
+  tsk->setType(Task::Spatial);
 
-    printSchedule( level,dbg,"Radiometer::sched_radiometer" );
+  printSchedule( level,dbg,"Radiometer::sched_radiometer" );
 
-    //__________________________________
-    // Require an infinite number of ghost cells so you can access the entire domain.
-    //
-    // THIS IS VERY EXPENSIVE.  THIS EXPENSE IS INCURRED ON NON-CALCULATION TIMESTEPS,
-    // ONLY REQUIRE THESE VARIABLES ON A CALCULATION TIMESTEPS.
-    //
-    // The taskgraph must be recompiled to detect a change in the conditional.
-    // The taskgraph recompilation is activated from RMCRTCommon:doRecompileTaskgraph()
-    dbg << "    sched_radiometer: adding requires for all-to-all variables " << endl;
-    Ghost::GhostType  gac  = Ghost::AroundCells;
-    tsk->requires( abskg_dw ,    d_abskgLabel  ,   gac, SHRT_MAX);
-    tsk->requires( sigma_dw ,    d_sigmaT4Label,   gac, SHRT_MAX);
-    tsk->requires( celltype_dw , d_cellTypeLabel , gac, SHRT_MAX);
+  //__________________________________
+  // Require an infinite number of ghost cells so you can access the entire domain.
+  //
+  dbg << "    sched_radiometer: adding requires for all-to-all variables " << std::endl;
+  Ghost::GhostType  gac  = Ghost::AroundCells;
+  tsk->requires( abskg_dw ,    d_abskgLabel  ,   gac, SHRT_MAX);
+  tsk->requires( sigma_dw ,    d_sigmaT4Label,   gac, SHRT_MAX);
+  tsk->requires( celltype_dw , d_cellTypeLabel , gac, SHRT_MAX);
 
-    tsk->modifies( d_VRFluxLabel );
+  tsk->modifies( d_VRFluxLabel );
 
-    // only schedule on the patches that contain radiometers
-    // Spatial task scheduling
-    PatchSet* radiometerPatchSet;
-    radiometerPatchSet = scinew PatchSet();
-    radiometerPatchSet->addReference();
+  // only schedule on the patches that contain radiometers
+  // Spatial task scheduling
+  PatchSet* radiometerPatchSet;
+  radiometerPatchSet = scinew PatchSet();
+  radiometerPatchSet->addReference();
 
-    radiometerPatchSet->addAll( myPatches );
+  radiometerPatchSet->addAll( myPatches );
 
-    sched->addTask( tsk, radiometerPatchSet, d_matlSet );
+  sched->addTask( tsk, radiometerPatchSet, d_matlSet, RMCRTCommon::TG_RMCRT );
 
-    if( radiometerPatchSet && radiometerPatchSet->removeReference() ){ 
-      delete radiometerPatchSet;
-    }
-  }  // hasRadiometers
+  if ( radiometerPatchSet && radiometerPatchSet->removeReference() ) {
+    delete radiometerPatchSet;
+  }
 }
 #endif
 //______________________________________________________________________
@@ -448,12 +419,10 @@ Radiometer::radiometer( const ProcessorGroup* pg,
                         Task::WhichDW which_abskg_dw,
                         Task::WhichDW whichd_sigmaT4_dw,
                         Task::WhichDW which_celltype_dw,
-                        const int radCalc_freq,
                         const bool hasRadiometers )
 {
-  // return if it's a carryforward timestep or there are no
-  // radiometers.
-  if ( doCarryForward( radCalc_freq) || hasRadiometers == false) {
+  // return if there are no radiometers in this patch subset
+  if ( hasRadiometers == false ) {
     return;
   }
 
@@ -469,11 +438,11 @@ Radiometer::radiometer( const ProcessorGroup* pg,
 
   constCCVariable< T > sigmaT4OverPi;
   constCCVariable< T > abskg;
-  constCCVariable<int>    celltype;
+  constCCVariable<int> celltype;
 
-  abskg_dw->getLevel(   abskg   ,       d_abskgLabel ,   d_matl , level );
-  sigmaT4_dw->getLevel( sigmaT4OverPi , d_sigmaT4Label,  d_matl , level );
-  celltype_dw->getLevel( celltype ,     d_cellTypeLabel, d_matl , level );
+  abskg_dw->getLevel(    abskg        , d_abskgLabel   , d_matl, level );
+  sigmaT4_dw->getLevel(  sigmaT4OverPi, d_sigmaT4Label , d_matl, level );
+  celltype_dw->getLevel( celltype     , d_cellTypeLabel, d_matl, level );
 
   //__________________________________
   // patch loop
@@ -621,7 +590,7 @@ Radiometer::rayDirection_VR( MTRand& mTwister,
 }
 
 //______________________________________________________________________
-//  Return the patchSet that contains radiometers a process owns
+//  Return the patchSet that contains radiometers
 //______________________________________________________________________
 std::vector< const Patch* >
 Radiometer::getPatchSet( SchedulerP& sched,
@@ -630,7 +599,7 @@ Radiometer::getPatchSet( SchedulerP& sched,
   //__________________________________
   //
   //  that contain radiometers and that this processor owns
-  vector< const Patch* > myPatches;
+  std::vector< const Patch* > myPatches;
   LoadBalancerPort * lb          = sched->getLoadBalancer();
   const PatchSet   * procPatches = lb->getPerProcessorPatchSet( level );
 
@@ -648,17 +617,14 @@ Radiometer::getPatchSet( SchedulerP& sched,
       IntVector VR_posHi  = level->getCellIndex( d_VRLocationsMax );
 
       if ( doesIntersect( VR_posLo, VR_posHi, lo, hi ) ){
-        // add to patchSet if proc owns this patch
-        int proc = lb->getPatchwiseProcessorAssignment(patch);
-        if( proc ==  Uintah::Parallel::getMPIRank() ) {
-          myPatches.push_back( patch );
-        }
+        myPatches.push_back( patch );
       }
     }
   }
   
   return myPatches;
 }
+
 //______________________________________________________________________
 // Explicit template instantiations:
 

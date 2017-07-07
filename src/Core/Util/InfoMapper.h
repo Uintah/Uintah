@@ -1,6 +1,3 @@
-#ifndef CORE_UTIL_INFOMAPPER_H
-#define CORE_UTIL_INFOMAPPER_H
-
 /*
  * The MIT License
  *
@@ -25,6 +22,9 @@
  * IN THE SOFTWARE.
  */
 
+#ifndef CORE_UTIL_INFOMAPPER_H
+#define CORE_UTIL_INFOMAPPER_H
+
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Parallel/UintahMPI.h>
@@ -45,7 +45,7 @@ struct double_int
 };
 
 
-template<class E, class T> class InfoMapper
+template<class E, class T>class InfoMapper
 {
 public:
   InfoMapper()
@@ -76,8 +76,9 @@ public:
 
   virtual void reset( const T val )
   {
-    for( unsigned int i=0; i<d_values.size(); ++i )
+    for( unsigned int i=0; i<d_values.size(); ++i ) {
       d_values[(E) i] = val;
+    }
   };
 
   virtual void validKey( const E key ) const
@@ -86,7 +87,6 @@ public:
     {
       std::stringstream msg;
       msg << "Requesting an undefined key (" << key << ") ";
-
       throw Uintah::InternalError( msg.str(), __FUNCTION__, __LINE__);
     }
   };
@@ -100,10 +100,10 @@ public:
   {
     for( unsigned int i=0; i<d_names.size(); ++i )
     {
-      if( name == d_names[(E) i] )
-	return true;
+      if( name == d_names[(E) i] ) {
+        return true;
+      }
     }
-
     return false;
   };
 
@@ -113,18 +113,16 @@ public:
     {
       std::stringstream msg;
       msg << "The count does not match. Expected "
-	  << (unsigned int) lastKey << " values. But added "
-	  << d_values.size() << " values.";
-
+	        << (unsigned int) lastKey << " values. But added "
+	        << d_values.size() << " values.";
       throw Uintah::InternalError(msg.str(), __FILE__, __LINE__);
     }
   };
 
   virtual void insert( const E key, const std::string name,
-		       const std::string units, const T value )
+		                   const std::string units, const T value )
   {
-    if( !exists( key ) && !exists( name ) &&
-	(unsigned int) key == d_keys.size() )
+    if( !exists( key ) && !exists( name ) && (unsigned int) key == d_keys.size() )
     {
       d_keys[key] = (unsigned int) key;
       d_values.push_back( value );
@@ -135,8 +133,7 @@ public:
     {
       std::stringstream msg;
       msg << "Adding a key (" << key << ") with name, "
-	  << name << " that already exists.";
-
+	        << name << " that already exists.";
       throw Uintah::InternalError( msg.str(), __FUNCTION__, __LINE__);
     }
   };
@@ -204,8 +201,9 @@ public:
   {
     for( unsigned int i=0; i<d_names.size(); ++i )
     {
-      if( name == d_names[(E) i] )
-	return (E) i;
+      if( name == d_names[(E) i] ) {
+        return (E) i;
+      }
     }
 
     return (E) d_values.size();
@@ -213,9 +211,9 @@ public:
 
 protected:
   std::map< E, unsigned int > d_keys;
-  std::vector< T > d_values;
-  std::vector< std::string > d_names;
-  std::vector< std::string > d_units;
+  std::vector< T >            d_values;
+  std::vector< std::string >  d_names;
+  std::vector< std::string >  d_units;
 };
 
 
@@ -288,8 +286,7 @@ public:
       for (size_t i=0; i<nStats; ++i)
       {
         toReduce[i] = InfoMapper<E, T>::d_values[i];
-        toReduceMax[i] =
-	  double_int( InfoMapper<E, T>::d_values[i], myWorld->myrank() );
+        toReduceMax[i] = double_int( InfoMapper<E, T>::d_values[i], myWorld->myrank() );
       }
 
       if( allReduce )
@@ -317,13 +314,13 @@ public:
       for (size_t i=0; i<nStats; ++i)
       {
         d_average[i] = InfoMapper<E, T>::d_values[i];
-	  d_maximum[i] = double_int(InfoMapper<E, T>::d_values[i], 0);
+        d_maximum[i] = double_int(InfoMapper<E, T>::d_values[i], 0);
       }
     }
   };
 
 protected:
-  std::vector< double > d_average;
+  std::vector< double >     d_average;
   std::vector< double_int > d_maximum;
 };
 

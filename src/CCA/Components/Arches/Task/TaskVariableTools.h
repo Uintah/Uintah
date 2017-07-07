@@ -21,8 +21,9 @@ namespace Uintah{
     /** @brief A container to hold a small amount of other information to
      *         pass into the task exe. **/
     struct SchedToTaskInfo{
-      int time_substep;
-      double dt;
+      int time_substep{99};
+      double dt{0.};
+      bool packed_tasks{false};
     };
 
     /** @brief A class for managing the retrieval of uintah/so fields during task exe **/
@@ -43,10 +44,14 @@ namespace Uintah{
         };
 
         /** @brief return the time substep **/
-        inline int get_time_substep(){ return _tsk_info.time_substep; };
+        inline const int get_time_substep(){ return _tsk_info.time_substep; };
 
         /** @brief return the dt **/
-        inline double get_dt(){ return _tsk_info.dt; };
+        inline const double get_dt(){ return _tsk_info.dt; };
+
+        /** @brief Return a bool to indicate if this Arches Task is a subset of a larger, single
+                   Uintah task. **/
+        inline const bool packed_tasks(){ return _tsk_info.packed_tasks; }
 
         /** @brief return the variable registry **/
         inline std::vector<ArchesFieldContainer::VariableInformation>& get_variable_reg(){ return _var_reg; }
@@ -64,16 +69,15 @@ namespace Uintah{
         //====================================================================================
         /** @brief Return a CONST UINTAH field **/
         template <typename T>
-        inline T* get_const_uintah_field( const std::string name , bool returnNullPointer=false ){
-          T* emptyPointer=NULL;
-          return returnNullPointer ? emptyPointer  :  _field_container->get_const_field<T>(name);
+        inline T* get_const_uintah_field( const std::string name ){
+          // T * emptyPointer = nullptr;
+          return _field_container->get_const_field<T>(name);
         }
 
         /** @brief Return a CONST UINTAH field **/
         template <typename T>
-        inline T& get_const_uintah_field_add( const std::string name, bool returnNullPointer=false ){
-          T* emptyPointer=NULL;
-          return returnNullPointer ? *emptyPointer : *(_field_container->get_const_field<T>(name));
+        inline T& get_const_uintah_field_add( const std::string name ){
+          return *(_field_container->get_const_field<T>(name));
         }
 
         /** @brief Return a CONST UINTAH field specifying the DW **/
@@ -92,16 +96,29 @@ namespace Uintah{
 
         /** @brief Return a UINTAH field **/
         template <typename T>
-        inline T* get_uintah_field( const std::string name , bool returnNullPointer=false ){
-          T* emptyPointer=NULL;
-          return returnNullPointer ? emptyPointer  :  _field_container->get_field<T>(name);
+        inline T* get_uintah_field( const std::string name, const int nGhosts=-1 ){
+
+          // Only temporary variables are allowed ghost cells. 
+          if ( nGhosts < 0 ){
+            return _field_container->get_field<T>(name);
+          } else {
+            return _field_container->get_temporary_field<T>(name, nGhosts);
+          }
+
         }
 
         /** @brief Return a UINTAH field **/
         template <typename T>
-        inline T& get_uintah_field_add( const std::string name, bool returnNullPointer=false ){
-          T* emptyPointer=NULL;
-          return returnNullPointer ? *emptyPointer  : *(_field_container->get_field<T>(name)) ;
+        inline T& get_uintah_field_add( const std::string name,
+                                        const int nGhosts=-1 ){
+
+          // Only temporary variables are allowed ghost cells.
+          if ( nGhosts < 0 ){
+            return *(_field_container->get_field<T>(name));
+          } else {
+            return *(_field_container->get_temporary_field<T>(name, nGhosts));
+          }
+
         }
 
         /** @brief Return a UINTAH particle field **/

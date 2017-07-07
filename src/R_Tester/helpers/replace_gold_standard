@@ -30,16 +30,6 @@ do_checkpoint="false"
 unalias -a         # unalias any commands
 
 #__________________________________
-# Machine specific variables
-MACHINE=`hostname`
-if [ "$MACHINE" == "rt" ]; then
-  COMMON_GROUP="uintah"
-fi
-if [ "$MACHINE" == "blaze" ]; then
-  COMMON_GROUP="csafe"
-fi
-
-#__________________________________
 # usage
 printUsage(){
   echo "replace_gold_standard  [options] <new goldStandard uda> < gold Standard Dir> <test name>"
@@ -125,13 +115,15 @@ if [ "printUsage" = "true" ]; then
   printHelp
 fi
 
-shift $(($OPTIND - 1))
+shift $(($OPTIND - 1))       # OPTIND is the number of options in getopts
 
-# The shifts and eval set is to preserve white spaces in the comment variable 
+# The shifts and set is to preserve white spaces in the comment variable 
 gold_standard_dir="$1"; shift;
 replacement_dir="$1";   shift;
 testname="$1";          shift;
-eval set -- "$@"
+
+# set is to preserve white spaces and punctuation in the comment variable 
+set -- "${@}"
 comment="$@"
 
 # Info for a log file, to keep track of who replaced gold standards

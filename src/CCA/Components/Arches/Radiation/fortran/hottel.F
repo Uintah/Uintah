@@ -213,10 +213,10 @@ C-----------------------------------------------------------------------
 
 C     I commented out this last part for now until we have 
 C     Scattering capabilities implemented in RMCRT.  ILH
-
                   FV = SFV(I,J,K)
-       ABSKG(I,J,K) = ABSKG(I,J,K) + MIN( 25.0d0,((4.0d0/OPL) 
-     1                 * DLOG(1.0d0 + 350.0d0*FV*TG(I,J,K)*OPL)) )
+C                     pressure in atm
+       ABSKG(I,J,K) = PRESSURE*ABSKG(I,J,K) + MIN( 25.0d0,((4.0d0/OPL) 
+     1                 * DLOG(1.0d0 + 350.0d0*FV*TG(I,J,K)*OPL)) ) 
 
 
 c     Anisotropic scattering properties for the interior nodes

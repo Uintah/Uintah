@@ -102,7 +102,7 @@ LinearSwelling::problemSetup(const ProblemSpecP& params, int qn)
   m_RHS_source_varlabel = VarLabel::find(lengthqn_RHS);
   m_weighted_length_label = VarLabel::find(lengthqn_name);
   //get the birth term if any:
-  const std::string birth_name = length_eqn.get_model_by_type( "SimpleBirth" );
+  const std::string birth_name = length_eqn.get_model_by_type( "BirthDeath" );
   std::string birth_qn_name = ParticleTools::append_qn_env(birth_name, d_quadNode);
   if ( birth_name != "NULLSTRING" ){
     m_birth_label = VarLabel::find( birth_qn_name );

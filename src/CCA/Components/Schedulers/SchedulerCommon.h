@@ -117,13 +117,19 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     void compile();
 
     /// For more complicated models
-    virtual void addTaskGraph(tgType type);
+    virtual void addTaskGraph( tgType type, int index /* == -1 */ );
 
     virtual int getNumTaskGraphs() { return m_task_graphs.size(); }
+
+    virtual void setNumTaskGraphs( const int num_task_graphs ) {
+      ASSERT( num_task_graphs  >= 1 );
+      m_num_task_graphs = num_task_graphs;
+    }
 
     virtual void addTask(       Task        * task
                         , const PatchSet    * patches
                         , const MaterialSet * matls
+                        , const int           tg_num = -1
                         );
 
     virtual bool useSmallMessages() { return m_use_small_messages; }
@@ -247,6 +253,8 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
 
     int getMaxGhost() { return m_max_ghost_cells; }
 
+    int getMaxDistalGhost() { return m_max_distal_ghost_cells; }
+
     int getMaxLevelOffset() { return m_max_level_offset; }
 
     bool isCopyDataTimestep() { return m_shared_state->isCopyDataTimestep() || m_is_init_timestep; }
@@ -350,6 +358,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     // or a larger one (more communication time)
     bool m_use_small_messages{true};
     bool m_emit_task_graph{false};
+    int  m_num_task_graphs{1};
     int  m_num_tasks{0};
     int  m_num_old_dws{0};
 
@@ -370,8 +379,11 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     // Maximum memory used as sampled across a given timestep.
     unsigned long               m_max_mem_used{0};
 
-    // max ghost cells of all tasks - will be used for loadbalancer to create neighborhood
+    // max ghost cells of standard tasks - will be used for loadbalancer to create neighborhood
     int m_max_ghost_cells{0};
+
+    // max ghost cells for tasks with distal requirements (e.g. RMCRT) - will be used for loadbalancer to create neighborhood
+    int m_max_distal_ghost_cells{0};
 
     // max level offset of all tasks - will be used for loadbalancer to create neighborhood
     int m_max_level_offset{0};

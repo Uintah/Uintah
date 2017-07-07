@@ -131,7 +131,7 @@ private: // class Task
                           , const MaterialSubset * m_matls
                           ,       DataWarehouse  * fromDW
                           ,       DataWarehouse  * toDW
-                          ,       Args...       args
+                          ,       Args...          args
                           )
           , Args... args
           )
@@ -268,7 +268,8 @@ private: // class Task
 public: // class Task
 
   enum WhichDW {
-     OldDW       = 0
+     None        = -1
+  ,  OldDW       = 0
   ,  NewDW       = 1
   ,  CoarseOldDW = 2
   ,  CoarseNewDW = 3
@@ -626,10 +627,10 @@ public: // class Task
 
   inline const MaterialSet * getMaterialSet() const { return m_matl_set; }
 
-  int m_phase{-1};                    // synchronized phase id, for dynamic task scheduling
-  int m_comm{-1};                     // task communicator id, for threaded task scheduling
-  int m_max_ghost_cells{0};          // max ghost cells of this task
-  int m_max_level_offset{0};         // max level offset of this task
+  int m_phase{-1};                        // synchronized phase id, for dynamic task scheduling
+  int m_comm{-1};                         // task communicator id, for threaded task scheduling
+  std::map<int,int> m_max_ghost_cells;    // max ghost cells of this task
+  int m_max_level_offset{0};              // max level offset of this task
 
   std::set<Task*> m_child_tasks;
   std::set<Task*> m_all_child_tasks;
@@ -643,15 +644,19 @@ public: // class Task
   struct Edge;
 
   struct Dependency {
+
       Dependency           * m_next{nullptr};
       DepType                m_dep_type;
       Task                 * m_task{nullptr};
-      WhichDW                m_whichdw;  // Used only by Requires
       const VarLabel       * m_var{nullptr};
       bool                   m_look_in_old_tg;
-      const Level          * m_reduction_level{nullptr};
       const PatchSubset    * m_patches{nullptr};
       const MaterialSubset * m_matls{nullptr};
+      const Level          * m_reduction_level{nullptr};
+      PatchDomainSpec        m_patches_dom{ThisLevel};
+      MaterialDomainSpec     m_matls_dom;
+      Ghost::GhostType       m_gtype{Ghost::None};
+      WhichDW                m_whichdw;  // Used only by requires
 
       // Used in compiling the task graph.
       Edge                 * m_req_head{nullptr};
@@ -659,9 +664,8 @@ public: // class Task
       Edge                 * m_comp_head{nullptr};
       Edge                 * m_comp_tail{nullptr};
 
-      PatchDomainSpec        m_patches_dom{ThisLevel};
-      MaterialDomainSpec     m_matls_dom;
-      Ghost::GhostType       m_gtype{Ghost::None};
+
+
 
       // in the multi-TG construct, this will signify that the required
       // m_var will be constructed by the old TG

@@ -116,7 +116,6 @@ DetailedTask::doit( const ProcessorGroup                      * pg
 {
   m_wait_timer.stop();
   m_exec_timer.start();
-
   if ( internaldbg ) {
     std::ostringstream message;
     message << "DetailedTask " << this << " begin doit()\n";
@@ -420,6 +419,7 @@ DetailedTask::checkExternalDepCount()
 
     if (externallyReady_.load(std::memory_order_seq_cst) == false) {
       d_taskGroup->mpiCompletedTasks_.push(this);
+      d_taskGroup->atomic_mpiCompletedTasks_size.fetch_add(1);
       externallyReady_.store(true, std::memory_order_seq_cst);
     }
   }
@@ -453,7 +453,7 @@ DetailedTask::addInternalDependency(       DetailedTask * prerequisiteTask
       prerequisiteTask->internalDependents[this] = &internalDependencies.back();
       numPendingInternalDependencies = internalDependencies.size();
 
-      DOUT(internaldbg, "Rank-" << Parallel::getMPIRank() << " Adding dependency between " << *this << " and " << *prerequisiteTask);
+      DOUT(internaldbg, "Rank-" << Parallel::getMPIRank() << " Adding dependency between " << *this << " and " << *prerequisiteTask << " for var " << var->getName() << " source dep count: " << numPendingInternalDependencies << " pre-req dep count " << prerequisiteTask->internalDependents.size());
     }
     else {
       foundIt->second->addVarLabel(var);
@@ -732,10 +732,10 @@ DetailedTask::checkCudaStreamDoneForThisTask( unsigned int device_id ) const
 
   // sets the CUDA context, for the call to cudaEventQuery()
   cudaError_t retVal;
-  if (device_id != 0) {
-    printf("Error, DetailedTask::checkCudaStreamDoneForThisTask is %u\n", device_id);
-    exit(-1);
-  }
+  //if (device_id != 0) {
+  //  printf("Error, DetailedTask::checkCudaStreamDoneForThisTask is %u\n", device_id);
+  //  exit(-1);
+  //}
   OnDemandDataWarehouse::uintahSetCudaDevice(device_id);
   std::map<unsigned int, cudaStream_t*>::const_iterator it= d_cudaStreams.find(device_id);
   if (it == d_cudaStreams.end()) {
@@ -781,7 +781,10 @@ DetailedTask::checkCudaStreamDoneForThisTask( unsigned int device_id ) const
 bool
 DetailedTask::checkAllCudaStreamsDoneForThisTask() const
 {
-  // sets the CUDA context, for the call to cudaEventQuery()
+  //A task can have multiple streams (such as an output task pulling from multiple GPUs).
+  //Check all streams to see if they are done.  If any one stream isn't done, return false.  If
+  //nothing returned false, then they all must be good to go.
+
   bool retVal = false;
 
   for (std::map<unsigned int ,cudaStream_t*>::const_iterator it=d_cudaStreams.begin(); it!=d_cudaStreams.end(); ++it){
@@ -883,7 +886,9 @@ DetailedTask::deleteTemporaryTaskVars() {
 
   // clean out the host list
   while (!taskHostMemoryPoolItems.empty()) {
-    taskHostMemoryPoolItems.front();
+    cudaHostUnregister(taskHostMemoryPoolItems.front());
+    //TODO: Deletes a void*, and that doesn't call any object destructors
+    delete[] taskHostMemoryPoolItems.front();
     taskHostMemoryPoolItems.pop();
   }
 

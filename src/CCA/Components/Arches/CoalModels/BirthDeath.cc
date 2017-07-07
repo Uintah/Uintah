@@ -1,4 +1,4 @@
-#include <CCA/Components/Arches/CoalModels/SimpleBirth.h>
+#include <CCA/Components/Arches/CoalModels/BirthDeath.h>
 #include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
@@ -20,7 +20,7 @@ using namespace Uintah;
 //---------------------------------------------------------------------------
 // Builder:
 
-SimpleBirthBuilder::SimpleBirthBuilder( const std::string         & modelName,
+BirthDeathBuilder::BirthDeathBuilder( const std::string         & modelName,
                                         const vector<std::string> & reqICLabelNames,
                                         const vector<std::string> & reqScalarLabelNames,
                                         ArchesLabel         * fieldLabels,
@@ -29,16 +29,16 @@ SimpleBirthBuilder::SimpleBirthBuilder( const std::string         & modelName,
   ModelBuilder( modelName, reqICLabelNames, reqScalarLabelNames, fieldLabels, sharedState, qn )
 {}
 
-SimpleBirthBuilder::~SimpleBirthBuilder(){}
+BirthDeathBuilder::~BirthDeathBuilder(){}
 
-ModelBase* SimpleBirthBuilder::build(){
-  return scinew SimpleBirth( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
+ModelBase* BirthDeathBuilder::build(){
+  return scinew BirthDeath( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
 }
 
 // End Builder
 //---------------------------------------------------------------------------
 
-SimpleBirth::SimpleBirth( std::string           modelName,
+BirthDeath::BirthDeath( std::string           modelName,
                           SimulationStateP    & sharedState,
                           ArchesLabel   * fieldLabels,
                           vector<std::string>   icLabelNames,
@@ -54,10 +54,11 @@ SimpleBirth::SimpleBirth( std::string           modelName,
   d_gasLabel = VarLabel::create( gasSourceName, CCVariable<double>::getTypeDescription() );
 
   _is_weight = false;
+  _deposition = false;
 
 }
 
-SimpleBirth::~SimpleBirth()
+BirthDeath::~BirthDeath()
 {}
 
 
@@ -66,7 +67,7 @@ SimpleBirth::~SimpleBirth()
 // Method: Problem Setup
 //---------------------------------------------------------------------------
 void
-SimpleBirth::problemSetup(const ProblemSpecP& inputdb, int qn)
+BirthDeath::problemSetup(const ProblemSpecP& inputdb, int qn)
 {
 
   ProblemSpecP db = inputdb;
@@ -75,13 +76,27 @@ SimpleBirth::problemSetup(const ProblemSpecP& inputdb, int qn)
     _is_weight = true;
   }
 
+  ProblemSpecP db_partmodels =
+    db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleModels");
+  for( ProblemSpecP db_model =
+    db_partmodels->findBlock("model"); db_model != nullptr;
+    db_model = db_model->findNextBlock("model") ) {
+
+    std::string model_type;
+    db_model->getAttribute("type", model_type);
+    if ( model_type == "rate_deposition" ){
+      _deposition = true;
+    }
+  }
+
   DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self();
   if ( !_is_weight ){
 
     if ( db->findBlock("abscissa") ){
       db->findBlock("abscissa")->getAttribute( "label", _abscissa_name );
     } else {
-      throw ProblemSetupException("Error: Must specify an abscissa label for this model.",__FILE__,__LINE__);
+      throw ProblemSetupException(
+        "Error: Must specify an abscissa label for this model.",__FILE__,__LINE__);
     }
 
     std::string a_name = ParticleTools::append_qn_env( _abscissa_name, d_quadNode );
@@ -92,13 +107,14 @@ SimpleBirth::problemSetup(const ProblemSpecP& inputdb, int qn)
 
   std::string w_name = ParticleTools::append_qn_env( "w", d_quadNode );
   EqnBase& temp_eqn = dqmomFactory.retrieve_scalar_eqn(w_name);
+  _w_scale = temp_eqn.getScalingConstant(d_quadNode);
   DQMOMEqn& eqn = dynamic_cast<DQMOMEqn&>(temp_eqn);
   double weight_clip = eqn.getSmallClip();
 
   db->require("small_weight",_small_weight);
 
   if ( weight_clip > _small_weight ){
-    throw InvalidValue("Error: The low clip limit for the weight must be smaller than the small_weight limit for the SimpleBirth model.", __FILE__, __LINE__);
+    throw InvalidValue("Error: The low clip limit for the weight must be smaller than the small_weight limit for the BirthDeath model.", __FILE__, __LINE__);
   }
 
   _w_label = VarLabel::find(w_name);
@@ -113,16 +129,55 @@ SimpleBirth::problemSetup(const ProblemSpecP& inputdb, int qn)
     throw InvalidValue("Error:Weight RHS not found: "+w_rhs_name, __FILE__, __LINE__);
   }
 
+  if ( _deposition ){
+    // check to see if rate_deposition model is active
+    bool missing_rate_depostion = true;
+    const ProblemSpecP params_root = db->getRootNode();
+    ProblemSpecP db_PM = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleModels");
+    for( ProblemSpecP db_var = db_PM->findBlock("model"); db_var != nullptr; db_var = db_var->findNextBlock("model") ) {
+      std::string type;
+      std::string role_found;
+      db_var->getAttribute("type", type);
+      if ( type == "rate_deposition" ){
+        missing_rate_depostion = false;
+      }
+    }
+    if ( missing_rate_depostion ){
+      throw InvalidValue("Error: BirthDeath deposition requires a rate_deposition model in ParticleModels.", __FILE__, __LINE__);
+    }
+    // create rate_deposition model base names
+    std::string rate_dep_base_nameX = "RateDepositionX";
+    std::string rate_dep_base_nameY = "RateDepositionY";
+    std::string rate_dep_base_nameZ = "RateDepositionZ";
+    std::string rate_dep_X = ParticleTools::append_env( rate_dep_base_nameX, d_quadNode );
+    std::string rate_dep_Y = ParticleTools::append_env( rate_dep_base_nameY, d_quadNode );
+    std::string rate_dep_Z = ParticleTools::append_env( rate_dep_base_nameZ, d_quadNode );
+    _rate_depX_varlabel = VarLabel::find(rate_dep_X);
+    _rate_depY_varlabel = VarLabel::find(rate_dep_Y);
+    _rate_depZ_varlabel = VarLabel::find(rate_dep_Z);
+
+    // Need a size IC:
+    std::string length_root = ParticleTools::parse_for_role_to_label(db, "size");
+    std::string length_name = ParticleTools::append_env( length_root, d_quadNode );
+    _length_varlabel = VarLabel::find(length_name);
+
+    // Need a density
+    std::string density_root = ParticleTools::parse_for_role_to_label(db, "density");
+    std::string density_name = ParticleTools::append_env( density_root, d_quadNode );
+    _particle_density_varlabel = VarLabel::find(density_name);
+
+  }
+  _pi = acos(-1.0);
 }
 
 //---------------------------------------------------------------------------
 // Method: Schedule the initialization of special variables unique to model
 //---------------------------------------------------------------------------
 void
-SimpleBirth::sched_initVars( const LevelP& level, SchedulerP& sched )
+BirthDeath::sched_initVars( const LevelP& level, SchedulerP& sched )
 {
-  string taskname = "SimpleBirth::initVars";
-  Task* tsk = scinew Task(taskname, this, &SimpleBirth::initVars);
+  string taskname = "BirthDeath::initVars";
+  Task* tsk = scinew Task(taskname, this, &BirthDeath::initVars);
 
   tsk->computes(d_modelLabel);
   tsk->computes(d_gasLabel);
@@ -134,7 +189,7 @@ SimpleBirth::sched_initVars( const LevelP& level, SchedulerP& sched )
 // Method: Initialize special variables unique to the model
 //-------------------------------------------------------------------------
 void
-SimpleBirth::initVars( const ProcessorGroup * pc,
+BirthDeath::initVars( const ProcessorGroup * pc,
                             const PatchSubset    * patches,
                             const MaterialSubset * matls,
                             DataWarehouse        * old_dw,
@@ -162,10 +217,12 @@ SimpleBirth::initVars( const ProcessorGroup * pc,
 // Method: Schedule the calculation of the model
 //---------------------------------------------------------------------------
 void
-SimpleBirth::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeSubStep )
+BirthDeath::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
-  std::string taskname = "SimpleBirth::computeModel";
-  Task* tsk = scinew Task(taskname, this, &SimpleBirth::computeModel, timeSubStep );
+  std::string taskname = "BirthDeath::computeModel";
+  Task* tsk = scinew Task(taskname, this, &BirthDeath::computeModel, timeSubStep );
+  Ghost::GhostType gn = Ghost::None;
+  Ghost::GhostType  gaf = Ghost::AroundFaces;
 
   if ( !_is_weight ){
     std::string abscissa_name = ParticleTools::append_env( _abscissa_name, d_quadNode );
@@ -178,12 +235,26 @@ SimpleBirth::sched_computeModel( const LevelP& level, SchedulerP& sched, int tim
     tsk->computes(d_modelLabel);
     tsk->computes(d_gasLabel);
     tsk->requires(Task::OldDW, _w_label, Ghost::None, 0);
+    if ( _deposition ){
+      tsk->requires(Task::OldDW, _rate_depX_varlabel, gaf, 1);
+      tsk->requires(Task::OldDW, _rate_depY_varlabel, gaf, 1);
+      tsk->requires(Task::OldDW, _rate_depZ_varlabel, gaf, 1);
+      tsk->requires(Task::OldDW, _length_varlabel, gn, 0 );
+      tsk->requires(Task::OldDW, _particle_density_varlabel, gn, 0 );
+    }
     if ( !_is_weight )
       tsk->requires(Task::OldDW, _abscissa_label, Ghost::None, 0);
   } else {
     tsk->modifies(d_modelLabel);
     tsk->modifies(d_gasLabel);
     tsk->requires(Task::NewDW, _w_label, Ghost::None, 0);
+    if ( _deposition ){
+      tsk->requires(Task::NewDW, _rate_depX_varlabel, gaf, 1);
+      tsk->requires(Task::NewDW, _rate_depY_varlabel, gaf, 1);
+      tsk->requires(Task::NewDW, _rate_depZ_varlabel, gaf, 1);
+      tsk->requires(Task::NewDW, _length_varlabel, gn, 0 );
+      tsk->requires(Task::NewDW, _particle_density_varlabel, gn, 0 );
+    }
     if ( !_is_weight )
       tsk->requires(Task::NewDW, _abscissa_label, Ghost::None, 0);
   }
@@ -201,7 +272,7 @@ SimpleBirth::sched_computeModel( const LevelP& level, SchedulerP& sched, int tim
 // Method: Actually compute the source term
 //---------------------------------------------------------------------------
 void
-SimpleBirth::computeModel( const ProcessorGroup* pc,
+BirthDeath::computeModel( const ProcessorGroup* pc,
                    const PatchSubset* patches,
                    const MaterialSubset* matls,
                    DataWarehouse* old_dw,
@@ -210,6 +281,8 @@ SimpleBirth::computeModel( const ProcessorGroup* pc,
 {
   //patch loop
   for (int p=0; p < patches->size(); p++){
+    Ghost::GhostType  gn  = Ghost::None;
+    Ghost::GhostType  gaf = Ghost::AroundFaces;
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
@@ -217,6 +290,9 @@ SimpleBirth::computeModel( const ProcessorGroup* pc,
 
     Vector DX = patch->dCell();
     double vol = DX.x()*DX.y()*DX.z();
+    double area_x = DX.y()*DX.z();
+    double area_y = DX.x()*DX.z();
+    double area_z = DX.x()*DX.y();
 
     delt_vartype DT;
     old_dw->get(DT, d_fieldLabels->d_sharedState->get_delt_label());
@@ -236,6 +312,7 @@ SimpleBirth::computeModel( const ProcessorGroup* pc,
       new_dw->getModifiable( model, d_modelLabel, matlIndex, patch );
       new_dw->getModifiable( gas_source, d_gasLabel, matlIndex, patch );
       gas_source.initialize(0.0);
+      model.initialize(0.0);
       which_dw = new_dw;
     }
 
@@ -243,19 +320,56 @@ SimpleBirth::computeModel( const ProcessorGroup* pc,
     constCCVariable<double> w_rhs;
     constCCVariable<double> a;
     constCCVariable<double> vol_fraction;
+    constCCVariable<double> diam;
+    constCCVariable<double> rhop;
+    constSFCXVariable<double> rate_X;
+    constSFCYVariable<double> rate_Y;
+    constSFCZVariable<double> rate_Z;
 
     which_dw->get( w, _w_label, matlIndex, patch, Ghost::None, 0 );
     new_dw->get( w_rhs, _w_rhs_label, matlIndex, patch, Ghost::None, 0 );
     old_dw->get( vol_fraction, VarLabel::find("volFraction"), matlIndex, patch, Ghost::None, 0 );
+
+    if ( _deposition ){
+      which_dw->get( diam, _length_varlabel, matlIndex, patch, gn, 0 );
+      which_dw->get( rhop, _particle_density_varlabel, matlIndex, patch, gn, 0 );
+      which_dw->get( rate_X, _rate_depX_varlabel, matlIndex, patch, gaf, 1 );
+      which_dw->get( rate_Y, _rate_depY_varlabel, matlIndex, patch, gaf, 1 );
+      which_dw->get( rate_Z, _rate_depZ_varlabel, matlIndex, patch, gaf, 1 );
+    }
     if ( !_is_weight ){
       which_dw->get( a, _abscissa_label, matlIndex, patch, Ghost::None, 0 );
     }
 
-  Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
-  Uintah::parallel_for(range,  [&](int i, int j, int k) {
-                               model(i,j,k) = std::max(( _small_weight - w(i,j,k) ) / dt - w_rhs(i,j,k) / vol ,0.0);
-                               model(i,j,k)*= vol_fraction(i,j,k);
-                               model(i,j,k)*= _is_weight ? 1.0 : a(i,j,k)/_a_scale;
-                               });
-  }
+    Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
+    Uintah::parallel_for(range,  [&](int i, int j, int k) {
+
+      double dstrc_src = 0.0;
+
+      if ( _deposition ){
+
+        double mass_out = 0.0;
+        double vol_p = (_pi/6.0)*pow(diam(i,j,k),3.0);
+
+        mass_out += abs(rate_X(i,j,k))*area_x; // kg/s
+        mass_out += abs(rate_Y(i,j,k))*area_y;
+        mass_out += abs(rate_Z(i,j,k))*area_z;
+        mass_out += abs(rate_X(i+1,j,k))*area_x;
+        mass_out += abs(rate_Y(i,j+1,k))*area_y;
+        mass_out += abs(rate_Z(i,j,k+1))*area_z;
+
+        dstrc_src /= -1.0*rhop(i,j,k)*vol_p*vol*_w_scale; // scaled #/s/m^3
+
+      }
+
+      // here we add the birth rate to the destruction rate
+      model(i,j,k) = dstrc_src + std::max(( _small_weight - w(i,j,k) ) / dt - w_rhs(i,j,k) / vol - dstrc_src ,0.0); // scaled #/s/m^3
+
+      // note here w and w_rhs are already scaled.
+      model(i,j,k)*= _is_weight ? 1.0 : a(i,j,k)/_a_scale; // if weight
+
+      model(i,j,k)*= vol_fraction(i,j,k);
+
+      });
+    }
 }

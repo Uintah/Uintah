@@ -262,11 +262,11 @@ void P_Alpha::computeStressTensor(const PatchSubset* patches,
                                   lb->pDeformationMeasureLabel_preReloc,  pset);
     new_dw->allocateAndPut(bElBar_new,  bElBarLabel_preReloc,      pset);
 
+    double cv = matl->getSpecificHeat();
     double rho_orig = matl->getInitialDensity();
     double Ps = d_initialData.Ps;
     double Pe = d_initialData.Pe;
-    // Compute alpha0 from material density and rhoS - Jim 9/8/2011
-    // double alpha0 = d_initialData.alpha0;
+    // Compute alpha0 from material density and rhoS
     double alpha0 = d_initialData.rhoS/rho_orig;
     double K0 = d_initialData.K0;
     double Ks = d_initialData.Ks;
@@ -274,7 +274,7 @@ void P_Alpha::computeStressTensor(const PatchSubset* patches,
     double shear = d_initialData.shear;
     double rhoS = d_initialData.rhoS;
 
-    double cv = matl->getSpecificHeat();
+    // Density and alpha at which model stops being elastic
     double rhoP     = rho_orig/(1.-Pe/K0);
     double alphaP   = rhoS/rhoP;
 

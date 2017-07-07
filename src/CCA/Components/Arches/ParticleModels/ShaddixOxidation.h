@@ -59,7 +59,7 @@ namespace Uintah{
 
   protected:
 
-    void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry );
+    void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks);
 
     void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){}
 
@@ -148,6 +148,8 @@ namespace Uintah{
 
   template <typename T>
   void ShaddixOxidation<T>::problemSetup( ProblemSpecP& db ){
+    proc0cout << "WARNING: ParticleModels ShaddixOxidation needs to be made consistent with DQMOM models and use correct DW, use model at your own risk."
+      << "\n" << "\n" << "\n" << "\n" << "\n" << "\n" << "\n" << "\n" << "\n" << "\n"<< std::endl;
     //required particle properties
     _base_raw_coal_name = ParticleTools::parse_for_role_to_label(db, "raw_coal");
     _base_char_mass_name = ParticleTools::parse_for_role_to_label(db, "char");
@@ -233,7 +235,7 @@ namespace Uintah{
 
   //======INITIALIZATION:
   template <typename T>
-  void ShaddixOxidation<T>::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
+  void ShaddixOxidation<T>::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){
 
     for ( int i = 0; i < _Nenv; i++ ){
       const std::string name = get_name(i, _base_var_name);
@@ -311,16 +313,16 @@ namespace Uintah{
       const std::string particle_size_name = get_name( i, _base_particle_size_name );
       const std::string particle_char_prod_name = get_name( i, _base_particle_char_prod_name );
 
-      register_variable( weight_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
-      register_variable( raw_coal_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
-      register_variable( char_mass_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
-      register_variable( particle_temp_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
-      register_variable( particle_size_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
-      register_variable( particle_char_prod_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+      register_variable( weight_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+      register_variable( raw_coal_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+      register_variable( char_mass_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+      register_variable( particle_temp_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+      register_variable( particle_size_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+      register_variable( particle_char_prod_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 
       if (_base_birth_name != "none" ) {
         const std::string birth_name = get_name( i, _base_birth_name );
-        register_variable( birth_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+        register_variable( birth_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
       }
     }
     register_variable( _gas_var_name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );

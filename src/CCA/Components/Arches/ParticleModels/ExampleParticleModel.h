@@ -42,7 +42,7 @@ public:
 
 protected:
 
-    void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry );
+    void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks);
 
     void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry );
 
@@ -120,7 +120,7 @@ private:
 
   //======INITIALIZATION:
   template <typename IT, typename DT>
-  void ExampleParticleModel<IT, DT>::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
+  void ExampleParticleModel<IT, DT>::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){
 
     for ( int i = 0; i < _N; i++ ){
 
@@ -168,8 +168,8 @@ private:
 
     }
 
-    register_variable( _temperature_var_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
-    register_variable( _conc_var_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+    register_variable( _temperature_var_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+    register_variable( _conc_var_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 
   }
 

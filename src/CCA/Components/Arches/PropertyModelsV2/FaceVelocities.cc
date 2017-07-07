@@ -52,7 +52,7 @@ void FaceVelocities::create_local_labels(){
 }
 
 //--------------------------------------------------------------------------------------------------
-void FaceVelocities::register_initialize( AVarInfo& variable_registry ){
+void FaceVelocities::register_initialize( AVarInfo& variable_registry , const bool pack_tasks){
   for (auto iter = m_vel_names.begin(); iter != m_vel_names.end(); iter++ ){
     register_variable( *iter, ArchesFieldContainer::COMPUTES, variable_registry, _task_name );
   }

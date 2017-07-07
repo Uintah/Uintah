@@ -587,8 +587,20 @@ namespace WasatchCore{
 
     add_fields_to_task( *task, *tree, *fml_, pss, mss, newDWFields, rkStage );
 
+    //---------------------------------------------------------------------------------------------------------------------------
+    // Added for temporal scheduling support when using RMCRT - APH 05/30/17
+    //---------------------------------------------------------------------------------------------------------------------------
+    if (tree->computes_field(TagNames::self().radiationsource)) {
+      // For RMCRT there will be 2 task graphs - put the radiation tasks in TG-1, otherwise tasks go into TG-0, or both TGs
+      //   TG-0 == carry forward and/or non-radiation timesteps
+      //   TG-1 == RMCRT radiation timestep
+      scheduler_->addTask(task, patches_, materials_, Uintah::RMCRTCommon::TG_RMCRT);
+    }
+    //---------------------------------------------------------------------------------------------------------------------------
     // jcs eachPatch vs. allPatches (gang schedule vs. independent...)
-    scheduler_->addTask( task, patches_, materials_ );
+    else {
+      scheduler_->addTask(task, patches_, materials_);
+    }
 
     if( hasPressureExpression_ && Wasatch::flow_treatment() != WasatchCore::COMPRESSIBLE && Wasatch::need_pressure_solve() ){
       Pressure& pexpr = dynamic_cast<Pressure&>( factory.retrieve_expression( TagNames::self().pressure, patchID, true ) );

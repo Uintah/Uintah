@@ -35,7 +35,6 @@ ImpMPMFlags::ImpMPMFlags(const ProcessorGroup* myworld) : MPMFlags(myworld)
 
   d_conv_crit_disp   = 1.e-10;
   d_conv_crit_energy = 4.e-10;
-  d_forceIncrementFactor = 1.0;
   d_integrator = Implicit;
   d_dynamic = true;
 

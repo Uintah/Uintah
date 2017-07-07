@@ -286,6 +286,8 @@ namespace WasatchCore{
                                          Uintah::SchedulerP& /*scheduler*/,
                                          bool, bool);
 
+    virtual int computeTaskGraphIndex();
+
     const EquationAdaptors& equation_adaptors() const{ return adaptors_; }
     GraphCategories& graph_categories(){ return graphCategories_; }
     Expr::ExpressionFactory* solution_factory(){ return (graphCategories_[ADVANCE_SOLUTION])->exprFactory; }
@@ -323,9 +325,10 @@ namespace WasatchCore{
     bool buildTimeIntegrator_;   ///< used for Wasatch-Arches coupling
     bool buildWasatchMaterial_;  ///< used for Wasatch-Arches coupling
     bool isRestarting_;
-    int nRKStages_;
+    int  nRKStages_;
     bool isPeriodic_;
     bool doRadiation_;
+    int  radCalcFrequency_;
     bool doParticles_;
     unsigned long totalDualTimeIterations_;
     

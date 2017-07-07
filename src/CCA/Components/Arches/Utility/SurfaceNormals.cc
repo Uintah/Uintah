@@ -44,7 +44,7 @@ SurfaceNormals::create_local_labels(){
 
 //--------------------------------------------------------------------------------------------------
 void
-SurfaceNormals::register_initialize( VIVec& variable_registry ){
+SurfaceNormals::register_initialize( VIVec& variable_registry , const bool packed_tasks){
 
   register_variable( "surf_out_normX" , ArchesFieldContainer::COMPUTES , variable_registry );
   register_variable( "surf_out_normY" , ArchesFieldContainer::COMPUTES , variable_registry );

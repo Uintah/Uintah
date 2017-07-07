@@ -38,6 +38,7 @@ void gasRadProperties::problemSetup(  Uintah::ProblemSpecP& db )
   db->getAttribute("label",_abskg_name);
 
   std::string calculator_type; 
+  db->getWithDefault("absorption_modifier",_absorption_modifier,1.0);
   ProblemSpecP db_calc = db->findBlock("calculator"); 
   if ( db_calc != nullptr){ 
     db_calc->getAttribute("type",calculator_type); 
@@ -101,7 +102,7 @@ gasRadProperties::create_local_labels(){
 
 
 void
-gasRadProperties::register_initialize( VIVec& variable_registry ){
+gasRadProperties::register_initialize( VIVec& variable_registry , const bool pack_tasks){
   register_variable( _abskg_name, Uintah::ArchesFieldContainer::COMPUTES, variable_registry );
 }
 
@@ -134,6 +135,7 @@ void gasRadProperties::timestep_init( const Patch* patch, ArchesTaskInfoManager*
 void
 gasRadProperties::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
 
+  _calc->setPressure();
 
   register_variable( _abskg_name , Uintah::ArchesFieldContainer::COMPUTES, variable_registry, time_substep);
 
@@ -151,26 +153,34 @@ gasRadProperties::register_timestep_eval( std::vector<ArchesFieldContainer::Vari
   register_variable(_temperature_name , ArchesFieldContainer::REQUIRES,0,ArchesFieldContainer::LATEST,variable_registry, time_substep );
   register_variable("volFraction" , ArchesFieldContainer::REQUIRES,0,ArchesFieldContainer::NEWDW,variable_registry, time_substep );
 
+
+
 }
 
 
 void
 gasRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-    CCVariable<double>& abskg = *(tsk_info->get_uintah_field<CCVariable<double> >(_abskg_name));
-    abskg.initialize(0.0); 
+  Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
+  CCVariable<double>& abskg = *(tsk_info->get_uintah_field<CCVariable<double> >(_abskg_name));
+  abskg.initialize(0.0); 
 
-    constCCVariable<double>& temperature = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(_temperature_name));
-    constCCVariable<double>& vol_fraction = *(tsk_info->get_const_uintah_field<constCCVariable<double> >("volFraction"));
+  constCCVariable<double>& temperature = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(_temperature_name));
+  constCCVariable<double>& vol_fraction = *(tsk_info->get_const_uintah_field<constCCVariable<double> >("volFraction"));
 
-    std::vector<std::string> part_sp = _calc->get_sp(); 
-    std::vector<constCCVariable<double>  > species(0); 
-    for ( std::vector<std::string>::iterator iter = part_sp.begin(); iter != part_sp.end(); iter++){
+  std::vector<std::string> part_sp = _calc->get_sp(); 
+  std::vector<constCCVariable<double>  > species(0); 
+  for ( std::vector<std::string>::iterator iter = part_sp.begin(); iter != part_sp.end(); iter++){
     species.push_back(*(tsk_info->get_const_uintah_field<constCCVariable<double> >(*iter)));
-    }
+  }
 
-    _calc->compute_abskg( patch, vol_fraction, species, temperature, abskg ); 
+  _calc->compute_abskg( patch, vol_fraction, species, temperature, abskg ); 
 
+  if (_absorption_modifier  > 1.00001 || _absorption_modifier  < 0.99999){ // if the modifier is 1.0, skip this loop
+    Uintah::parallel_for( range,  [&](int i, int j, int k){
+                 abskg(i,j,k)*=_absorption_modifier ;
+               });
+  }
 }
 
 
