@@ -121,7 +121,6 @@ enum class ThreadState : int
 };
 
 UnifiedSchedulerWorker * g_runners[MAX_THREADS]        = {};
-std::thread              g_threads[MAX_THREADS]        = {};
 volatile ThreadState     g_thread_states[MAX_THREADS]  = {};
 int                      g_cpu_affinities[MAX_THREADS] = {};
 int                      g_num_threads                 = 0;
@@ -222,10 +221,10 @@ void init_threads( UnifiedScheduler * sched, int num_threads )
     g_runners[i] = new UnifiedSchedulerWorker(sched);
   }
 
-  // spawn worker threads
-  // TaskRunner threads start at [1]
+  // spawn "nthreads-1"  worker threads - main thread also executes tasks
+  // detach at creation and let them run and terminate on their own, e.g. no join
   for (int i = 1; i < g_num_threads; ++i) {
-    g_threads[i] = (std::thread(thread_driver, i));
+    std::thread(thread_driver, i).detach();
   }
 
   thread_fence();
@@ -290,11 +289,7 @@ UnifiedScheduler::UnifiedScheduler( const ProcessorGroup   * myworld
 //
 UnifiedScheduler::~UnifiedScheduler()
 {
-  for (int i = 1; i < Impl::g_num_threads; ++i) {
-    if (Impl::g_threads[i].joinable()) {
-      Impl::g_threads[i].detach();
-    }
-  }
+  // nothing to do currently
 }
 
 
