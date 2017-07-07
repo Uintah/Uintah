@@ -70,9 +70,9 @@ namespace Uintah{
 
     void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks);
 
-    void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry );
+    void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks);
 
-    void register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep );
+    void register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks);
 
     void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){};
 
@@ -211,7 +211,7 @@ namespace Uintah{
 
   //------------------------------------------------------------------------------------------------
   template <typename IT, typename DT>
-  void DragModel<IT, DT>::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
+  void DragModel<IT, DT>::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){
 
     for ( int i = 0; i < _N; i++ ){
       const std::string name = get_name(i, _base_var_name);
@@ -242,7 +242,7 @@ namespace Uintah{
 
   //======TIME STEP EVALUATION:
   template <typename IT, typename DT>
-  void DragModel<IT, DT>::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
+  void DragModel<IT, DT>::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){
 
     for ( int i = 0; i < _N; i++ ){
       //dependent variables(s) or model values

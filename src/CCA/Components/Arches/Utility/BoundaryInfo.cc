@@ -49,7 +49,7 @@ BoundaryInfo::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 //------------------------------------------------
 //
 void
-BoundaryInfo::register_timestep_init( VarInfoVecT& variable_registry ){
+BoundaryInfo::register_timestep_init( VarInfoVecT& variable_registry , const bool packed_tasks){
 
   register_variable( "area_fraction_x", ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable( "area_fraction_y", ArchesFieldContainer::COMPUTES, variable_registry );
@@ -71,7 +71,7 @@ BoundaryInfo::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info
 
 void
 BoundaryInfo::register_timestep_eval( VarInfoVecT& variable_registry,
-                                      const int time_substep ){
+                                      const int time_substep, const bool packed_tasks ){
 
 }
 

@@ -56,9 +56,9 @@ namespace Uintah{
 
     void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks);
 
-    void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry );
+    void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks);
 
-    void register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){}
+    void register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){}
 
     void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){};
 
@@ -143,7 +143,7 @@ namespace Uintah{
 
   //======TIME STEP INITIALIZATION:
   template <typename T>
-  void Constant<T>::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
+  void Constant<T>::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){
     for ( int ei = 0; ei < _N; ei++ ){
 
       //dependent variables(s) or model values

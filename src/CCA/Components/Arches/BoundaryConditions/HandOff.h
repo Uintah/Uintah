@@ -19,9 +19,9 @@ public:
 
     void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const bool packed_tasks );
 
-    void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry );
+    void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const bool packed_tasks );
 
-    void register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){};
+    void register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){};
 
     void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep );
 
@@ -107,7 +107,7 @@ private:
 
   }
 
-  //--------------------------------------------------------------------------------------------------
+  //------------------------------------------------------------------------------------------------
   template <typename T>
   void HandOff<T>::create_local_labels(){
 
@@ -115,7 +115,7 @@ private:
 
   }
 
-  //--------------------------------------------------------------------------------------------------
+  //------------------------------------------------------------------------------------------------
   template <typename T>
   void HandOff<T>::register_initialize(
     std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
@@ -125,7 +125,7 @@ private:
 
   }
 
-  //--------------------------------------------------------------------------------------------------
+  //------------------------------------------------------------------------------------------------
   template <typename T>
   void HandOff<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
@@ -134,7 +134,8 @@ private:
 
     ArchesCore::VariableHelper<T> helper;
 
-    Point xyz(m_boundary_info.relative_xyz[0], m_boundary_info.relative_xyz[1], m_boundary_info.relative_xyz[2]);
+    Point xyz(m_boundary_info.relative_xyz[0], m_boundary_info.relative_xyz[1],
+              m_boundary_info.relative_xyz[2]);
     m_boundary_info.relative_ijk = patch->getLevel()->getCellIndex(xyz);
 
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
@@ -202,17 +203,19 @@ private:
     }
   }
 
-  //--------------------------------------------------------------------------------------------------
+  //------------------------------------------------------------------------------------------------
   template <typename T>
   void HandOff<T>::register_timestep_init(
-    std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
+    std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
+    const bool packed_tasks ){
 
     register_variable( _task_name, ArchesFieldContainer::COMPUTES, variable_registry );
-    register_variable( _task_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
+    register_variable( _task_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW,
+                       variable_registry );
 
   }
 
-  //--------------------------------------------------------------------------------------------------
+  //------------------------------------------------------------------------------------------------
   template <typename T>
   void HandOff<T>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
@@ -323,8 +326,10 @@ private:
 
     gzFile file = gzopen( file_name.c_str(), "r" );
     if ( file == nullptr ) {
-      proc0cout << "Error opening file: " << file_name << " for boundary conditions. Errno: " << errno << std::endl;
-      throw ProblemSetupException("Unable to open the given input file: " + file_name, __FILE__, __LINE__);
+      proc0cout << "Error opening file: " << file_name <<
+        " for boundary conditions. Errno: " << errno << std::endl;
+      throw ProblemSetupException("Unable to open the given input file: " + file_name,
+        __FILE__, __LINE__);
     }
 
     struct_result.name = getString( file );

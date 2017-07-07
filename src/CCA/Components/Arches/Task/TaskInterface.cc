@@ -35,8 +35,10 @@ void TaskInterface::schedule_task( const LevelP& level,
 
   Task* tsk;
 
+  const bool packed_tasks = false; 
+
   if ( task_type == STANDARD_TASK ){
-    register_timestep_eval( variable_registry, time_substep );
+    register_timestep_eval( variable_registry, time_substep , packed_tasks);
     tsk = scinew Task( _task_name, this, &TaskInterface::do_task, variable_registry, time_substep );
   } else if ( task_type == BC_TASK ) {
     register_compute_bcs( variable_registry, time_substep );
@@ -158,7 +160,9 @@ void TaskInterface::schedule_timestep_init( const LevelP& level,
 
   VariableRegistry variable_registry;
 
-  register_timestep_init( variable_registry );
+  const bool packed_tasks = false;
+
+  register_timestep_init( variable_registry, packed_tasks );
 
   Task* tsk = scinew Task( _task_name+"_timestep_initialize", this, &TaskInterface::do_timestep_init, variable_registry );
 

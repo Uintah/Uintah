@@ -258,11 +258,11 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
         (*i_task)->register_restart_initialize( variable_registry );
         time_substep = 0;
       case (TaskInterface::TIMESTEP_INITIALIZE):
-        (*i_task)->register_timestep_init( variable_registry );
+        (*i_task)->register_timestep_init( variable_registry, pack_tasks );
         time_substep = 0;
         break;
       case (TaskInterface::TIMESTEP_EVAL):
-        (*i_task)->register_timestep_eval( variable_registry, time_substep );
+        (*i_task)->register_timestep_eval( variable_registry, time_substep, pack_tasks);
         break;
       case (TaskInterface::BC):
         (*i_task)->register_compute_bcs( variable_registry, time_substep );

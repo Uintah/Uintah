@@ -128,7 +128,7 @@ WallHFVariable::restart_initialize( const Patch* patch, ArchesTaskInfoManager* t
 //
 
 void
-WallHFVariable::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
+WallHFVariable::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){
 
   register_variable( _flux_x, ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable( _flux_y, ArchesFieldContainer::COMPUTES, variable_registry );

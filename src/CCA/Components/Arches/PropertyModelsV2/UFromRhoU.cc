@@ -173,7 +173,7 @@ void UFromRhoU::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info 
 }
 
 //--------------------------------------------------------------------------------------------------
-void UFromRhoU::register_timestep_eval( VIVec& variable_registry, const int time_substep ){
+void UFromRhoU::register_timestep_eval( VIVec& variable_registry, const int time_substep , const bool packed_tasks){
 
   typedef ArchesFieldContainer AFC;
 

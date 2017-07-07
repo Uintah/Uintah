@@ -157,7 +157,8 @@ PressureEqn::initialize( const Patch* patch, ATIM* tsk_info ){
 //--------------------------------------------------------------------------------------------------
 void
 PressureEqn::register_timestep_init(
-  std::vector<AFC::VariableInformation>& variable_registry ){
+  std::vector<AFC::VariableInformation>& variable_registry,
+  const bool packed_tasks ){
 
   register_variable( "A_press", AFC::COMPUTES, variable_registry );
   register_variable( "A_press", AFC::REQUIRES, 0, AFC::OLDDW, variable_registry );
@@ -189,7 +190,7 @@ PressureEqn::timestep_init( const Patch* patch, ATIM* tsk_info ){
 void
 PressureEqn::register_timestep_eval(
   std::vector<AFC::VariableInformation>& variable_registry,
-  const int time_substep ){
+  const int time_substep, const bool packed_tasks ){
 
   register_variable( "b_press", AFC::MODIFIES, variable_registry );
   register_variable( m_eps_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry );

@@ -68,7 +68,7 @@ void ColdFlowProperties::initialize( const Patch* patch, ArchesTaskInfoManager* 
 }
 
 //--------------------------------------------------------------------------------------------------
-void ColdFlowProperties::register_timestep_init( VIVec& variable_registry ){
+void ColdFlowProperties::register_timestep_init( VIVec& variable_registry , const bool packed_tasks){
 
   for ( auto i = m_name_to_value.begin(); i != m_name_to_value.end(); i++ ){
     register_variable( i->first, ArchesFieldContainer::COMPUTES, variable_registry );
@@ -108,7 +108,7 @@ void ColdFlowProperties::restart_initialize( const Patch* patch, ArchesTaskInfoM
 
 }
 
-void ColdFlowProperties::register_timestep_eval( VIVec& variable_registry, const int time_substep ){
+void ColdFlowProperties::register_timestep_eval( VIVec& variable_registry, const int time_substep , const bool packed_tasks){
 
   for ( auto i = m_name_to_value.begin(); i != m_name_to_value.end(); i++ ){
     register_variable( i->first, ArchesFieldContainer::MODIFIES, variable_registry );

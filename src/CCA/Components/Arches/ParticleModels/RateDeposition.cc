@@ -224,7 +224,7 @@ RateDeposition::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info 
 //------------------------------------------------
 //
 void
-RateDeposition::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
+RateDeposition::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){
   for ( int i=0; i< _Nenv;i++){
     const std::string ProbParticleX_name = get_env_name(i, _ProbParticleX_base_name);
     const std::string ProbParticleY_name = get_env_name(i, _ProbParticleY_base_name);
@@ -343,7 +343,7 @@ RateDeposition::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_in
 //
 
 void
-RateDeposition::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
+RateDeposition::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){
 
    for(int e= 0; e< _Nenv; e++){
       const std::string MaxParticleTemperature_name = ParticleTools::append_env(_MaxParticleTemperature_base_name ,e);

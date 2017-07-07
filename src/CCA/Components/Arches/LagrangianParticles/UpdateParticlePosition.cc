@@ -46,7 +46,7 @@ UpdateParticlePosition::initialize( const Patch* patch, ArchesTaskInfoManager* t
 //------------------------------------------------
 //
 void
-UpdateParticlePosition::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
+UpdateParticlePosition::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){
 }
 
 void
@@ -59,7 +59,7 @@ UpdateParticlePosition::timestep_init( const Patch* patch, ArchesTaskInfoManager
 //
 
 void
-UpdateParticlePosition::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
+UpdateParticlePosition::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){
 
   register_variable( _px_name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW,  variable_registry );
   register_variable( _py_name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW,  variable_registry );

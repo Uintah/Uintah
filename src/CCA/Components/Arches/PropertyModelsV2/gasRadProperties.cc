@@ -123,7 +123,7 @@ void gasRadProperties::restart_initialize( const Patch* patch, ArchesTaskInfoMan
 
 }
 
-void gasRadProperties::register_timestep_init( VIVec& variable_registry ){
+void gasRadProperties::register_timestep_init( VIVec& variable_registry , const bool packed_tasks){
 
 }
 
@@ -133,7 +133,7 @@ void gasRadProperties::timestep_init( const Patch* patch, ArchesTaskInfoManager*
 }
 
 void
-gasRadProperties::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
+gasRadProperties::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){
 
   _calc->setPressure();
 

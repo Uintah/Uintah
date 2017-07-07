@@ -26,11 +26,11 @@ public:
 
     void register_initialize( VIVec& variable_registry , const bool pack_tasks);
 
-    void register_timestep_init( VIVec& variable_registry );
+    void register_timestep_init( VIVec& variable_registry , const bool packed_tasks);
 
     void register_restart_initialize( VIVec& variable_registry );
 
-    void register_timestep_eval( VIVec& variable_registry, const int time_substep ){};
+    void register_timestep_eval( VIVec& variable_registry, const int time_substep , const bool packed_tasks){};
 
     void register_compute_bcs( VIVec& variable_registry, const int time_substep ){}
 
@@ -239,7 +239,7 @@ private:
 
   //------------------------------------------------------------------------------------------------
   template <typename T>
-  void ConstantProperty<T>::register_timestep_init( AVarInfo& variable_registry ){
+  void ConstantProperty<T>::register_timestep_init( AVarInfo& variable_registry , const bool packed_tasks){
     register_variable( _task_name, ArchesFieldContainer::COMPUTES, variable_registry );
     register_variable( _task_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW,
                       variable_registry );

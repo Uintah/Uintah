@@ -56,7 +56,7 @@ SurfaceVolumeFractionCalc::initialize( const Patch* patch, ArchesTaskInfoManager
 
 //--------------------------------------------------------------------------------------------------
 void
-SurfaceVolumeFractionCalc::register_timestep_init( ArchesVIVector& variable_registry ){
+SurfaceVolumeFractionCalc::register_timestep_init( ArchesVIVector& variable_registry , const bool packed_tasks){
 
   for ( auto i = m_var_names.begin(); i != m_var_names.end(); i++ ){
     register_variable( *i, ArchesFieldContainer::COMPUTES, variable_registry, _task_name );

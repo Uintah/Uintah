@@ -123,7 +123,7 @@ void sumRadiation::restart_initialize( const Patch* patch, ArchesTaskInfoManager
 }
 
 //--------------------------------------------------------------------------------------------------
-void sumRadiation::register_timestep_init( VIVec& variable_registry ){
+void sumRadiation::register_timestep_init( VIVec& variable_registry , const bool packed_tasks){
   //register_initialize( variable_registry , const bool pack_tasks);
 }
 
@@ -132,7 +132,7 @@ void sumRadiation::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk
 }
 
 
-void sumRadiation::register_timestep_eval( VIVec& variable_registry, const int time_substep ){
+void sumRadiation::register_timestep_eval( VIVec& variable_registry, const int time_substep , const bool packed_tasks){
   register_initialize( variable_registry , false);
 }
 

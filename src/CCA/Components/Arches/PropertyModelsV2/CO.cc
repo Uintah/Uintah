@@ -132,7 +132,7 @@ void CO::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info
 }
 
 //--------------------------------------------------------------------------------------------------
-void CO::register_timestep_init( VIVec& variable_registry ){
+void CO::register_timestep_init( VIVec& variable_registry , const bool packed_tasks){
 
   register_variable( _CO_model_name , ArchesFieldContainer::COMPUTES, variable_registry);
   register_variable( _CO_model_name , ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
@@ -173,7 +173,7 @@ void CO::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 //
 
 void
-CO::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
+CO::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){
 
   // computed variables
   register_variable( _CO_model_name, ArchesFieldContainer::MODIFIES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );

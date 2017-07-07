@@ -354,7 +354,7 @@ void VariableStats::restart_initialize( const Patch* patch, ArchesTaskInfoManage
 }
 
 //--------------------------------------------------------------------------------------------------
-void VariableStats::register_timestep_init( VIVec& variable_registry ){
+void VariableStats::register_timestep_init( VIVec& variable_registry , const bool packed_tasks){
 
   std::vector<std::string>::iterator i = _ave_sum_names.begin();
   for (;i!=_ave_sum_names.end();i++){
@@ -495,7 +495,7 @@ void VariableStats::timestep_init( const Patch* patch, ArchesTaskInfoManager* ts
 }
 
 //--------------------------------------------------------------------------------------------------
-void VariableStats::register_timestep_eval( VIVec& variable_registry, const int time_substep ){
+void VariableStats::register_timestep_eval( VIVec& variable_registry, const int time_substep , const bool packed_tasks){
 
   std::vector<std::string>::iterator i = _ave_sum_names.begin();
   for (;i!=_ave_sum_names.end();i++){

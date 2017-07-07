@@ -24,11 +24,11 @@ public:
 
     void register_initialize( VIVec& variable_registry , const bool pack_tasks);
 
-    void register_timestep_init( VIVec& variable_registry );
+    void register_timestep_init( VIVec& variable_registry , const bool packed_tasks);
 
     void register_restart_initialize( VIVec& variable_registry );
 
-    void register_timestep_eval( VIVec& variable_registry, const int time_substep ){}
+    void register_timestep_eval( VIVec& variable_registry, const int time_substep , const bool packed_tasks){}
 
     void register_compute_bcs( VIVec& variable_registry, const int time_substep ){}
 
