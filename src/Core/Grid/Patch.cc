@@ -1187,63 +1187,72 @@ IntVector Patch::getSFCZFORTHighIndex__Old() const
    return h;
 }
 
-/**
- * For AMR.  When there are weird patch configurations, sometimes patches can overlap.
- * Find the intersection betwen the patch and the desired dependency, and then remove the intersection.
+//______________________________________________________________________
+/*
+ * Needed for AMR inside corner patch configurations where patches can overlap.
+ * Find the intersection between the patches and remove the intersecting extra cells.
  * If the overlap IS the intersection, set the low to be equal to the high.
  */
-void Patch::cullIntersection(VariableBasis basis, IntVector bl, const Patch* neighbor,
-                             IntVector& region_low, IntVector& region_high) const
+void Patch::cullIntersection(VariableBasis basis, 
+                             IntVector bl, 
+                             const Patch* neighbor,
+                             IntVector& region_low, 
+                             IntVector& region_high) const
 {
-  // on certain AMR grid configurations, with extra cells, patches can overlap
-  // such that the extra cell of one patch overlaps a normal cell of another
-  // in such conditions, we shall exclude that extra cell from MPI communication
-  // Also disclude overlapping extra cells just to be safe
+  /*
+   On inside corner patch configurations, with extra cells, patches can overlap and the
+   extra cells of one patch overlap the normal cell of another patch.  This method removes the
+   overlapping extra cells.
 
-  // follow this heuristic - if one dimension of neighbor overlaps "this" with 2 cells
-  //   then prune it back to its interior cells
-  //   if two or more, throw it out entirely.  If there are 2+ different, the patches share only a line or point
-  //   and the patch's boundary conditions are basically as though there were no patch there
+   If a dimension of a neighbor's patch overlaps this patch by extra cells then prune it back
+   to its interior cells. If two or more cells overlap throw it out entirely.  If there are 2+
+   different, the patches share only a line or point and the patch's boundary conditions are
+   basically as though there were no patch there
+   */
 
   // use the cell-based interior to compare patch positions, but use the basis-specific one when culling the intersection
-  IntVector p_int_low(getLowIndex(Patch::CellBased)), p_int_high(getHighIndex(Patch::CellBased));
-  IntVector n_int_low(neighbor->getLowIndex(Patch::CellBased)), n_int_high(neighbor->getHighIndex(Patch::CellBased));
+  IntVector p_int_low(  getLowIndex(Patch::CellBased) );
+  IntVector p_int_high( getHighIndex(Patch::CellBased) );
+  IntVector n_int_low(  neighbor->getLowIndex(Patch::CellBased) );
+  IntVector n_int_high( neighbor->getHighIndex(Patch::CellBased) );
 
   // actual patch intersection
-  IntVector diff = Abs(Max(getExtraLowIndex(Patch::CellBased, bl), neighbor->getExtraLowIndex(Patch::CellBased, bl)) -
-                       Min(getExtraHighIndex(Patch::CellBased, bl), neighbor->getExtraHighIndex(Patch::CellBased, bl)));
+  IntVector overlapCells = Abs( Max( getExtraLowIndex(Patch::CellBased, bl), neighbor->getExtraLowIndex(Patch::CellBased, bl) ) -
+                                Min( getExtraHighIndex(Patch::CellBased, bl), neighbor->getExtraHighIndex(Patch::CellBased, bl) ) );
 
-  // go through each dimension, and determine where the neighor patch is relative to this
-  // if it is above or below, clamp it to the interior of the neighbor patch
-  // based on the current grid constraints, it is reasonable to assume that the patches
-  // line up at least in corners.
-  int bad_diffs = 0;
+  // Go through each dimension and determine if there is overlap.
+  // Clamp it to the interior of the neighbor patch based.  It is
+  // assumed that the patches line up at least in corners.
+  int counter = 0;
+  
   for (int dim = 0; dim < 3; dim++) {
-    //if the length of the side is not equal to zero,
-    //is equal to 2 times the number of extra cells,
-    //and the patches are adjacent on this dimension
-      //then increment the bad_diffs counter
-    if (diff[dim]!=0 && diff[dim] == 2*getExtraCells()[dim] 
-        && (p_int_low[dim]==n_int_high[dim] || n_int_low[dim]==p_int_high[dim]) ) 
-      bad_diffs++;
+    // If the number of overlapping cells is a) not equal to zero, b) is equal to 2 
+    // extra cells, and c) the patches are adjacent on this dimension then increment the
+    // counter counter
 
-    // depending on the region, cull away the portion of the region that in 'this'
+    if ( overlapCells[dim] != 0 && overlapCells[dim] == 2*getExtraCells()[dim] && ( p_int_low[dim] == n_int_high[dim] || n_int_low[dim] == p_int_high[dim] ) ) {
+      counter++;
+    }
+
+    // take the intersection
     if (n_int_high[dim] == p_int_low[dim]) {
-      region_high[dim] = Min(region_high[dim], neighbor->getHighIndex(basis)[dim]);
+      region_high[dim] = Min( region_high[dim], neighbor->getHighIndex(basis)[dim] );
     }
     else if (n_int_low[dim] == p_int_high[dim]) {
-      region_low[dim] = Max(region_low[dim], neighbor->getLowIndex(basis)[dim]);
+      region_low[dim] = Max( region_low[dim], neighbor->getLowIndex(basis)[dim] );
     }
   }
   
-  // prune it back if heuristic met or if already empty
-    //if bad_diffs is >=2 then we have a bad corner/edge that needs to be pruned
+  // if counter is >=2 then we have a bad corner/edge 
   IntVector region_diff = region_high - region_low;
-  if (bad_diffs >= 2 || region_diff.x() * region_diff.y() * region_diff.z() == 0)
+  int nRegionCells = region_diff.x() * region_diff.y() * region_diff.z();
+  if (counter >= 2 || nRegionCells == 0){
     region_low = region_high;  // caller will check for this case
+  }
 
 }
-
+//______________________________________________________________________
+//
 void Patch::getGhostOffsets(VariableBasis basis, Ghost::GhostType gtype,
                             int numGhostCells,
                             IntVector& lowOffset, IntVector& highOffset)
