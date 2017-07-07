@@ -104,7 +104,7 @@ protected:
 
     void register_timestep_eval( AVarInfo& variable_registry, const int time_substep , const bool packed_tasks);
 
-    void register_compute_bcs( AVarInfo& variable_registry, const int time_substep ){};
+    void register_compute_bcs( AVarInfo& variable_registry, const int time_substep , const bool packed_tasks){};
 
     void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 

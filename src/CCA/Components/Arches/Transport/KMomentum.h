@@ -58,7 +58,7 @@ public:
                                  const int time_substep , const bool packed_tasks);
 
     void register_compute_bcs( ArchesVIVector& variable_registry,
-                               const int time_substep );
+                               const int time_substep , const bool packed_tasks);
 
     void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
@@ -552,7 +552,7 @@ private:
 
 //--------------------------------------------------------------------------------------------------
   template <typename T> void
-  KMomentum<T>::register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
+  KMomentum<T>::register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){
 
     for ( auto i = m_eqn_names.begin(); i != m_eqn_names.end(); i++ ){
       register_variable( *i, ArchesFieldContainer::MODIFIES, variable_registry );

@@ -239,7 +239,8 @@ PressureEqn::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 //--------------------------------------------------------------------------------------------------
 void
 PressureEqn::register_compute_bcs(
-  std::vector<AFC::VariableInformation>& variable_registry, const int time_substep ){
+  std::vector<AFC::VariableInformation>& variable_registry, const int time_substep,
+  const bool packed_tasks ){
 
   register_variable( "b_press", AFC::MODIFIES, variable_registry );
   register_variable( "A_press", AFC::MODIFIES, variable_registry );

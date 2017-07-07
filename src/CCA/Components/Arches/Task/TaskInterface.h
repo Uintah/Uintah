@@ -81,7 +81,7 @@ public:
 
     /** @brief Register all variables needed to compute boundary conditions **/
     virtual void register_compute_bcs( std::vector<AFC::VariableInformation>& variable_registry,
-                                       const int time_substep ) = 0;
+                                       const int time_substep, const bool packed_tasks ) = 0;
 
     /** @brief Register initialization work to be accomplished only on restart **/
     virtual void register_restart_initialize(

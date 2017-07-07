@@ -82,7 +82,7 @@ protected:
 
     void register_compute_bcs(
       std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
-      const int time_substep ){};
+      const int time_substep, const bool packed_tasks ){};
 
     void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 

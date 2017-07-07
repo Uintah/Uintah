@@ -143,7 +143,7 @@ void ColdFlowProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_in
   }
 }
 
-void ColdFlowProperties::register_compute_bcs( VIVec& variable_registry, const int time_substep ){
+void ColdFlowProperties::register_compute_bcs( VIVec& variable_registry, const int time_substep , const bool packed_tasks){
 
   for ( auto i = m_name_to_value.begin(); i != m_name_to_value.end(); i++ ){
     register_variable( i->first, ArchesFieldContainer::MODIFIES, variable_registry );

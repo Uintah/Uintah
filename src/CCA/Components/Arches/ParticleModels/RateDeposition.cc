@@ -604,7 +604,7 @@ RateDeposition::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 //
 
 void
-RateDeposition::register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){}
+RateDeposition::register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){}
 
 void
 RateDeposition::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}

@@ -35,13 +35,13 @@ void TaskInterface::schedule_task( const LevelP& level,
 
   Task* tsk;
 
-  const bool packed_tasks = false; 
+  const bool packed_tasks = false;
 
   if ( task_type == STANDARD_TASK ){
     register_timestep_eval( variable_registry, time_substep , packed_tasks);
     tsk = scinew Task( _task_name, this, &TaskInterface::do_task, variable_registry, time_substep );
   } else if ( task_type == BC_TASK ) {
-    register_compute_bcs( variable_registry, time_substep );
+    register_compute_bcs( variable_registry, time_substep , packed_tasks);
     tsk = scinew Task( _task_name+"_bc_task", this, &TaskInterface::do_bcs, variable_registry, time_substep );
   } else
     throw InvalidValue("Error: Task type not recognized.",__FILE__,__LINE__);

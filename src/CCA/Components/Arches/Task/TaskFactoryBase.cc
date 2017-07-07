@@ -265,7 +265,7 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
         (*i_task)->register_timestep_eval( variable_registry, time_substep, pack_tasks);
         break;
       case (TaskInterface::BC):
-        (*i_task)->register_compute_bcs( variable_registry, time_substep );
+        (*i_task)->register_compute_bcs( variable_registry, time_substep , pack_tasks);
         break;
       default:
         throw InvalidValue("Error: TASK_TYPE not recognized.",__FILE__,__LINE__);
