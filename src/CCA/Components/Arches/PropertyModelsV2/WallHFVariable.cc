@@ -84,7 +84,7 @@ WallHFVariable::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info 
 }
 
 void
-WallHFVariable::register_restart_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
+WallHFVariable::register_restart_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){
 
   if ( _new_variables ) {
 

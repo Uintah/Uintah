@@ -114,7 +114,7 @@ sumRadiation::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 }
 
 //--------------------------------------------------------------------------------------------------
-void sumRadiation::register_restart_initialize( VIVec& variable_registry ){
+void sumRadiation::register_restart_initialize( VIVec& variable_registry , const bool packed_tasks){
   //register_initialize(variable_registry);
 }
 

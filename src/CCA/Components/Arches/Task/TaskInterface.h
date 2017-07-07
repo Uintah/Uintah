@@ -85,7 +85,7 @@ public:
 
     /** @brief Register initialization work to be accomplished only on restart **/
     virtual void register_restart_initialize(
-      std::vector<AFC::VariableInformation>& variable_registry ){}
+      std::vector<AFC::VariableInformation>& variable_registry, const bool packed_tasks ){}
 
     /** @brief Add this task to the Uintah task scheduler **/
     void schedule_task( const LevelP& level,

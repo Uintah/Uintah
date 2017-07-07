@@ -122,7 +122,7 @@ CO::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 }
 
 //--------------------------------------------------------------------------------------------------
-void CO::register_restart_initialize( VIVec& variable_registry ){
+void CO::register_restart_initialize( VIVec& variable_registry , const bool packed_tasks){
 
 }
 

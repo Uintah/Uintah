@@ -82,7 +82,7 @@ void ConstantStateProperties::timestep_init( const Patch* patch, ArchesTaskInfoM
 }
 
 //--------------------------------------------------------------------------------------------------
-void ConstantStateProperties::register_restart_initialize( VIVec& variable_registry ){
+void ConstantStateProperties::register_restart_initialize( VIVec& variable_registry , const bool packed_tasks){
 
   for ( auto i = m_name_to_value.begin(); i != m_name_to_value.end(); i++ ){
     register_variable( i->first, ArchesFieldContainer::COMPUTES, variable_registry );

@@ -243,7 +243,7 @@ partRadProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_in
   }
 }
 
-void partRadProperties::register_restart_initialize( VIVec& variable_registry ){
+void partRadProperties::register_restart_initialize( VIVec& variable_registry , const bool packed_tasks){
 
 }
 

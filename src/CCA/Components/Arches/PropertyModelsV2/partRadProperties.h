@@ -51,7 +51,7 @@ namespace Uintah{
 
     void register_timestep_init( VIVec& variable_registry , const bool packed_tasks);
 
-    void register_restart_initialize( VIVec& variable_registry );
+    void register_restart_initialize( VIVec& variable_registry , const bool packed_tasks);
 
     void register_timestep_eval( VIVec& variable_registry, const int time_substep , const bool packed_tasks);
 

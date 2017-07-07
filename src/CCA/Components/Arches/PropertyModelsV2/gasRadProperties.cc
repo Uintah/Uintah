@@ -115,7 +115,7 @@ gasRadProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_inf
 
 }
 
-void gasRadProperties::register_restart_initialize( VIVec& variable_registry ){
+void gasRadProperties::register_restart_initialize( VIVec& variable_registry , const bool packed_tasks){
 
 }
 

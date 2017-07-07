@@ -90,7 +90,7 @@ cloudBenchmark::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info 
 }
 
 //--------------------------------------------------------------------------------------------------
-void cloudBenchmark::register_restart_initialize( VIVec& variable_registry ){
+void cloudBenchmark::register_restart_initialize( VIVec& variable_registry , const bool packed_tasks){
   register_initialize(variable_registry, false);
 }
 

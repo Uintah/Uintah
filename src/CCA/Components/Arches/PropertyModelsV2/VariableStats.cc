@@ -329,7 +329,7 @@ void VariableStats::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_i
 }
 
 //--------------------------------------------------------------------------------------------------
-void VariableStats::register_restart_initialize( VIVec& variable_registry ){
+void VariableStats::register_restart_initialize( VIVec& variable_registry , const bool packed_tasks){
 
   typedef std::vector<std::string> StrVec;
 

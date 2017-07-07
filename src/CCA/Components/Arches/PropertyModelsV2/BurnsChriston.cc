@@ -93,7 +93,7 @@ BurnsChriston::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info )
 }
 
 //--------------------------------------------------------------------------------------------------
-void BurnsChriston::register_restart_initialize( VIVec& variable_registry ){
+void BurnsChriston::register_restart_initialize( VIVec& variable_registry , const bool packed_tasks){
 
   register_variable( m_abskg_name, ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable( "temperature", ArchesFieldContainer::COMPUTES, variable_registry );
