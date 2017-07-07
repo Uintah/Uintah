@@ -88,7 +88,8 @@ Arches::~Arches()
   delete m_particlesHelper;
 
   if( m_analysis_modules.size() != 0 ) {
-    for( std::vector<AnalysisModule*>::iterator iter  = m_analysis_modules.begin(); iter != m_analysis_modules.end(); iter++) {
+    for( std::vector<AnalysisModule*>::iterator iter  = m_analysis_modules.begin();
+         iter != m_analysis_modules.end(); iter++) {
       delete *iter;
     }
   }
@@ -115,7 +116,8 @@ Arches::problemSetup( const ProblemSpecP     & params,
   // Check for Lagrangian particles
   m_do_lagrangian_particles = m_arches_spec->findBlock("LagrangianParticles");
   if ( m_do_lagrangian_particles ) {
-    m_particlesHelper->problem_setup(params,m_arches_spec->findBlock("LagrangianParticles"), sharedState);
+    m_particlesHelper->problem_setup( params,m_arches_spec->findBlock("LagrangianParticles"),
+                                      sharedState);
   }
 
   //  Multi-level related
@@ -124,7 +126,8 @@ Arches::problemSetup( const ProblemSpecP     & params,
 
   // setup names for all the boundary condition faces that do NOT have a name or that have duplicate names
   if( db->getRootNode()->findBlock("Grid") ) {
-    Uintah::ProblemSpecP bcProbSpec = db->getRootNode()->findBlock("Grid")->findBlock("BoundaryConditions");
+    Uintah::ProblemSpecP bcProbSpec =
+      db->getRootNode()->findBlock("Grid")->findBlock("BoundaryConditions");
     assign_unique_boundary_names( bcProbSpec );
   }
 
@@ -357,7 +360,9 @@ void Arches::assign_unique_boundary_names( Uintah::ProblemSpecP bcProbSpec )
   int i=0;
   std::string strFaceID;
   std::set<std::string> faceNameSet;
-  for( Uintah::ProblemSpecP faceSpec = bcProbSpec->findBlock("Face"); faceSpec != nullptr; faceSpec=faceSpec->findNextBlock("Face"), ++i ) {
+  for( Uintah::ProblemSpecP faceSpec =
+    bcProbSpec->findBlock("Face"); faceSpec != nullptr;
+    faceSpec=faceSpec->findNextBlock("Face"), ++i ) {
 
     std::string faceName = "none";
     faceSpec->getAttribute("name",faceName);
@@ -373,7 +378,7 @@ void Arches::assign_unique_boundary_names( Uintah::ProblemSpecP bcProbSpec )
         bool fndInc = false;
         int j = 1;
         while( !fndInc ) {
-          if( faceNameSet.find( faceName + "_" + Arches::number_to_string(j) ) != faceNameSet.end() )
+          if( faceNameSet.find( faceName + "_" + Arches::number_to_string(j) ) != faceNameSet.end())
             j++;
           else
             fndInc = true;
@@ -381,7 +386,8 @@ void Arches::assign_unique_boundary_names( Uintah::ProblemSpecP bcProbSpec )
         // rename this face
         std::cout << "WARNING: I found a duplicate face label " << faceName;
         faceName = faceName + "_" + Arches::number_to_string(j);
-        std::cout << " in your Boundary condition specification. I will rename it to " << faceName << std::endl;
+        std::cout << " in your Boundary condition specification. I will rename it to "
+          << faceName << std::endl;
         faceSpec->replaceAttributeValue("name", faceName);
       }
     }
