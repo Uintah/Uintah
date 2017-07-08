@@ -369,9 +369,6 @@ __global__
 #if NDEBUG  //Uinth has a DNDEBUG compiler defined flag in normal trunk builds.  Debug builds have no compiler flags we can capture.
 __launch_bounds__(640, 1) // For 96 registers with 320 threads.  Allows two kernels to fit within an SM.
                           // Seems to be the performance sweet spot in release mode.
-#else
-__launch_bounds__(512, 1) // For 128 registers with 320 threads.  Can't fit two kernels per SM. But needed for
-                          // debug mode as debug mode requires more registers.
 #endif
 void rayTraceDataOnionKernel( dim3 dimGrid,
                               dim3 dimBlock,
