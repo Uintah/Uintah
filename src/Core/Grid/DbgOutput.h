@@ -34,50 +34,68 @@
 
 namespace Uintah {
 
-void printSchedule( const PatchSet     * patches
-                  ,       DebugStream  & dbg
-                  , const std::string  & where
+void printSchedule( const PatchSet    * patches
+                  ,       DebugStream & dbg
+                  , const std::string & where
                   );
 
-void printSchedule( const LevelP       & level
-                  ,       DebugStream  & dbg
-                  , const std::string  & where
+void printSchedule( const LevelP      & level
+                  ,       DebugStream & dbg
+                  , const std::string & where
                   );
 
-void printTask( const PatchSubset         * patches
-              , const Patch               * patch
-              ,       DebugStream         & dbg
-              , const std::string         & where
+void printTask( const PatchSubset * patches
+              , const Patch       * patch
+              ,       DebugStream & dbg
+              , const std::string & where
               );
-                
-void printTask( const PatchSubset   * patches
-              ,       DebugStream   & dbg
-              ,  const std::string  & where
+
+void printTask( const PatchSubset * patches
+              ,       DebugStream & dbg
+              , const std::string & where
               );
 
 void printTask( const Patch       * patch
               ,       DebugStream & dbg
               , const std::string & where
               );
-                
+
 void printTask(       DebugStream & dbg
               , const std::string & where
               );
 
-/**
-* Output the task name and the level it's executing on and each of the patches
-*/
+
+
+// --------------------------------------------------------------------
+// Dout versions of the above (moving away from DebugStream)
+// --------------------------------------------------------------------
+
+// Output the task name and the level it's executing on and each of the patches
 void printTask( Dout         & out
               , DetailedTask * dtask
               );
 
-/**
-*  Output the task name and the level it's executing on only first patch of that level
-*/
+void printTask( const Patch       * patch
+              ,       Dout        & dbg
+              , const std::string & where
+              );
+
+void printTask( const PatchSubset * patches
+              , const Patch       * patch
+              ,       Dout        & dbg
+              , const std::string & where
+              );
+
+// Output the task name and the level it's executing on only first patch of that level
 void printTaskLevels( const ProcessorGroup * d_myworld
                     ,       Dout           & out
                     ,       DetailedTask   * dtask
                     );
+
+void printSchedule( const LevelP      & level
+                  ,       Dout        & dbg
+                  , const std::string & where
+                  );
 
 } // End namespace Uintah
 
