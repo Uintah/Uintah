@@ -549,10 +549,9 @@ Radiometer::getPatchSet( SchedulerP& sched,
       }
     }
   }
-  ps->createEmptySubsets(radiometer_patches.size());
-  for (size_t i = 0; i < ps->size(); ++i) {
-    PatchSubset* subset = ps->getSubset(i);
-    subset->add(radiometer_patches[i]);
+  size_t num_patches = radiometer_patches.size();
+  for (size_t i = 0; i < num_patches; ++i) {
+    ps->add(radiometer_patches[i]);
   }
 }
 
