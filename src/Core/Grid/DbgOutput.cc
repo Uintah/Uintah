@@ -233,6 +233,23 @@ printTaskLevels( const ProcessorGroup * d_myworld
     }
   }
 }
+//______________________________________________________________________
+//
+void
+printSchedule( const PatchSet    * patches
+             ,       Dout        & dbg
+             , const std::string & where
+             )
+{
+  if (dbg){
+    std::ostringstream mesg;
+    mesg << Uintah::Parallel::getMPIRank() << " ";
+    mesg << std::left;
+    mesg.width(50);
+    mesg << where << "L-" << getLevel(patches)->getIndex() << std::endl;
+    DOUT(true, mesg.str());
+  }  
+}
 
 //______________________________________________________________________
 //

@@ -32,6 +32,7 @@
 #include <Core/Grid/AMR_CoarsenRefine.h>
 #include <Core/Grid/BoundaryConditions/BCUtils.h>
 #include <Core/Grid/DbgOutput.h>
+#include <Core/Util/DOUT.hpp>
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Math/MersenneTwister.h>
 #include <Core/Util/Timers/Timers.hpp>
@@ -78,9 +79,9 @@ using std::endl;
 using std::vector;
 using std::string;
 
-static Uintah::DebugStream dbg("RAY",       false);
-static Uintah::DebugStream dbg2("RAY_DEBUG",false);
-static Uintah::DebugStream dbg_BC("RAY_BC", false);
+Dout dbg("RAY",       false);
+Dout dbg2("RAY_DEBUG",false);
+Dout dbg_BC("RAY_BC", false);
 
 //---------------------------------------------------------------------------
 // Class: Constructor.
@@ -509,7 +510,7 @@ Ray::sched_rayTrace( const LevelP& level,
     d_haloCells = IntVector(n_ghostCells, n_ghostCells, n_ghostCells);
   }
 
-  dbg << "    sched_rayTrace: number of ghost cells for all-to-all variables: (" << n_ghostCells << ")\n";
+  DOUT(dbg, "    sched_rayTrace: number of ghost cells for all-to-all variables: (" << n_ghostCells << ")" );
 
   tsk->requires( abskg_dw ,    d_abskgLabel  ,   gac, n_ghostCells );
   tsk->requires( sigma_dw ,    d_sigmaT4Label,   gac, n_ghostCells );
@@ -1164,7 +1165,7 @@ Ray::rayTrace( const ProcessorGroup* pg,
 
       patch->computeVariableExtentsWithBoundaryCheck(CCVariable<double>::getTypeDescription()->getType(), IntVector(0,0,0),
                                                      Ghost::AroundCells, d_haloCells.x(), ROI_Lo, ROI_Hi);
-      dbg << "  ROI: " << ROI_Lo << " "<< ROI_Hi << endl;
+      DOUT(dbg, "  ROI: " << ROI_Lo << " "<< ROI_Hi );
       abskg_dw->getRegion(   abskg,          d_abskgLabel ,   d_matl, level, ROI_Lo, ROI_Hi );
       sigmaT4_dw->getRegion( sigmaT4OverPi,  d_sigmaT4Label,  d_matl, level, ROI_Lo, ROI_Hi );
       celltype_dw->getRegion( celltype,      d_cellTypeLabel, d_matl, level, ROI_Lo, ROI_Hi );
@@ -1602,7 +1603,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
       abskg_dw->getLevel(   abskg[L]   ,       d_abskgLabel ,   d_matl , level.get_rep() );
       sigmaT4_dw->getLevel( sigmaT4OverPi[L] , d_sigmaT4Label,  d_matl , level.get_rep() );
       celltype_dw->getLevel( cellType[L] ,     d_cellTypeLabel, d_matl , level.get_rep() );
-      dbg << " getting coarse level data L-" << L << endl;
+      DOUT( dbg, " getting coarse level data L-" << L );
     }
     Vector dx = level->dCell();
     Dx[L] = dx;
@@ -1624,7 +1625,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
     computeExtents(level_0, fineLevel, notUsed, maxLevels, new_dw,
                    fineLevel_ROI_Lo, fineLevel_ROI_Hi, regionLo,  regionHi);
 
-    dbg << " getting fine level data across L-" << L << " " << fineLevel_ROI_Lo << " " << fineLevel_ROI_Hi << endl;
+    DOUT( dbg, " getting fine level data across L-" << L << " " << fineLevel_ROI_Lo << " " << fineLevel_ROI_Hi );
     abskg_dw->getRegion(   abskg[L]   ,       d_abskgLabel ,   d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
     sigmaT4_dw->getRegion( sigmaT4OverPi[L] , d_sigmaT4Label,  d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
     celltype_dw->getRegion( cellType[L] ,     d_cellTypeLabel, d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
@@ -1659,7 +1660,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
       int L = maxLevels - 1;
       DataWarehouse* abskg_dw = get_abskg_dw(L, new_dw);
       
-      dbg << " getting fine level data across L-" << L << endl;
+      DOUT( dbg, " getting fine level data across L-" << L );
 
       abskg_dw->getRegion(   abskg[L]   ,       d_abskgLabel ,  d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
       sigmaT4_dw->getRegion( sigmaT4OverPi[L] , d_sigmaT4Label, d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
@@ -1926,7 +1927,7 @@ Ray::computeExtents(LevelP level_0,
 
     fineLevel_ROI_Lo = patchLo - d_haloCells;
     fineLevel_ROI_Hi = patchHi + d_haloCells;
-    dbg << "  L-"<< fineLevel->getIndex() <<"  patch: ("<<patch->getID() <<") " << patchLo << " " << patchHi <<  " d_haloCells" << d_haloCells << endl;
+    DOUT( dbg, "  L-"<< fineLevel->getIndex() <<"  patch: ("<<patch->getID() <<") " << patchLo << " " << patchHi <<  " d_haloCells" << d_haloCells );
 
   }
 
@@ -1936,7 +1937,7 @@ Ray::computeExtents(LevelP level_0,
 
   fineLevel_ROI_Lo = Max(fineLevel_ROI_Lo, levelLo);
   fineLevel_ROI_Hi = Min(fineLevel_ROI_Hi, levelHi);
-  dbg << "  fineLevel_ROI: " << fineLevel_ROI_Lo << " "<< fineLevel_ROI_Hi << endl;
+  DOUT (dbg, "  fineLevel_ROI: " << fineLevel_ROI_Lo << " "<< fineLevel_ROI_Hi );
 
   //__________________________________
   // Determine the extents of the regions below the fineLevel
@@ -2337,8 +2338,8 @@ void Ray::setBC(CCVariable< T >& Q_CC,
 
   if( dbg_BC.active() ){
     const Level* level = patch->getLevel();
-    dbg_BC << "setBC \t"<< desc <<" "
-           << " mat_id = " << mat_id <<  ", Patch: "<< patch->getID() << " L-" <<level->getIndex()<< endl;
+    DOUT( dbg_BC, "setBC \t"<< desc <<" "
+           << " mat_id = " << mat_id <<  ", Patch: "<< patch->getID() << " L-" <<level->getIndex() );
   }
 
   // Iterate over the faces encompassing the domain
@@ -2387,17 +2388,17 @@ void Ray::setBC(CCVariable< T >& Q_CC,
         //  debugging
         if( dbg_BC.active() ) {
           bound_ptr.reset();
-          dbg_BC <<"Face: "<< patch->getFaceName(face) <<" numCellsTouched " << nCells
+          DOUT( dbg_BC, "Face: "<< patch->getFaceName(face) <<" numCellsTouched " << nCells
              <<"\t child " << child  <<" NumChildren "<<numChildren
              <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
-             <<"\t bound limits = "<< bound_ptr << endl;
+             <<"\t bound limits = "<< bound_ptr );
         }
       }  // if iterator found
     }  // child loop
 
     if( dbg_BC.active() ){
-      dbg_BC << "    "<< patch->getFaceName(face) << " \t " << bc_kind << " numChildren: " << numChildren
-             << " nCellsTouched: " << nCells << endl;
+      DOUT( dbg_BC, "    "<< patch->getFaceName(face) << " \t " << bc_kind << " numChildren: " << numChildren
+             << " nCellsTouched: " << nCells );
     }
     //__________________________________
     //  bulletproofing
@@ -2497,9 +2498,9 @@ void Ray::refine_Q( const ProcessorGroup*,
     getCoarseLevelRange(finePatch, coarseLevel, cl, ch, fl, fh, bl,
                         nghostCells, returnExclusiveRange);
 
-    dbg <<" refineQ: "
-        <<" finePatch  "<< finePatch->getID() << " fl " << fl << " fh " << fh
-        <<" coarseRegion " << cl << " " << ch << endl;
+    DOUT( dbg, " refineQ: "
+              <<" finePatch  "<< finePatch->getID() << " fl " << fl << " fh " << fh
+              <<" coarseRegion " << cl << " " << ch );
 
     //__________________________________DivQ
     constCCVariable<double> divQ_coarse;

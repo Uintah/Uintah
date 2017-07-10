@@ -29,7 +29,7 @@
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Math/MersenneTwister.h>
-
+#include <Core/Util/DOUT.hpp>
 #include <fstream>
 
 #define DEBUG -9             // 1: divQ, 2: boundFlux, 3: scattering
@@ -45,7 +45,7 @@
 //
 using namespace Uintah;
 
-static DebugStream dbg("RAY", false);
+static Dout dbg("RAY", false);
 
 //______________________________________________________________________
 // Static variable declarations

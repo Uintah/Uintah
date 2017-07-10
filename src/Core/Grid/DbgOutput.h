@@ -97,6 +97,11 @@ void printSchedule( const LevelP      & level
                   , const std::string & where
                   );
 
+void printSchedule( const PatchSet    * patches
+                  ,       Dout        & dbg
+                  , const std::string & where
+                  );
+
 } // End namespace Uintah
 
 #endif
