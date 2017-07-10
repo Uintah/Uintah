@@ -74,11 +74,10 @@ namespace {
 Dout g_dbg(         "Unified_DBG"        , false);
 Dout g_queuelength( "Unified_QueueLength", false);
 
-std::mutex g_scheduler_mutex{};        // main scheduler lock for multi-threaded task selection
-std::mutex g_scheduler_internal_mutex{};        // main scheduler lock for multi-threaded task selection
-std::mutex g_mark_task_consumed_mutex{};    // allow only one task at a time to enter the task consumed section
-std::mutex g_lb_mutex{};                // load balancer lock
-std::mutex g_GridVarSuperPatch_mutex{}; // An ugly hack to get superpatches for host levels to work.
+std::mutex g_scheduler_mutex{};           // main scheduler lock for multi-threaded task selection
+std::mutex g_mark_task_consumed_mutex{};  // allow only one task at a time to enter the task consumed section
+std::mutex g_lb_mutex{};                  // load balancer lock
+std::mutex g_GridVarSuperPatch_mutex{};   // An ugly hack to get superpatches for host levels to work.
 
 } // namespace
 
@@ -819,7 +818,8 @@ UnifiedScheduler::markTaskConsumed( int          & numTasksDone
                                   , DetailedTask * dtask
                                   )
 {
-  g_mark_task_consumed_mutex.lock();
+  std::lock_guard<std::mutex> task_consumed_guard(g_mark_task_consumed_mutex);
+
   // Update the count of tasks consumed by the scheduler.
   numTasksDone++;
 
@@ -836,8 +836,6 @@ UnifiedScheduler::markTaskConsumed( int          & numTasksDone
     DOUT(g_task_dbg, myRankThread() << " switched to task phase " << currphase
                                     << ", total phase " << currphase << " tasks = " << m_phase_tasks[currphase]);
   }
-  g_mark_task_consumed_mutex.unlock();
-
 }
 
 //______________________________________________________________________
