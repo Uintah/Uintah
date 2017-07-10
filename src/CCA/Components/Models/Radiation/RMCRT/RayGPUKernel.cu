@@ -41,8 +41,8 @@
 #include "math_functions.h"               // needed for max()
 #undef __CUDA_INTERNAL_COMPILATION__
 
-#define DEBUG -9                   // 1: divQ, 2: boundFlux, 3: scattering
-//#define FIXED_RANDOM_NUM          // also edit in src/Core/Math/MersenneTwister.h to compare with Ray:CPU
+#define DEBUG -9                  // 1: divQ, 2: boundFlux, 3: scattering
+//#define FIXED_RANDOM_NUM        // also edit in src/Core/Math/MersenneTwister.h to compare with Ray:CPU
 
 #define FIXED_RAY_DIR -9          // Sets ray direction.  1: (0.7071,0.7071, 0), 2: (0.7071, 0, 0.7071), 3: (0, 0.7071, 0.7071)
                                   //                      4: (0.7071, 0.7071, 7071), 5: (1,0,0)  6: (0, 1, 0),   7: (0,0,1)
@@ -80,7 +80,7 @@ __global__ void rayTraceKernel( dim3 dimGrid,
                                 patchParams patch,
                                 curandState* randNumStates,
                                 RMCRT_flags RT_flags,
-                                int curTimestep,
+                                int curTimeStep,
                                 GPUDataWarehouse* abskg_gdw,
                                 GPUDataWarehouse* sigmaT4_gdw,
                                 GPUDataWarehouse* cellType_gdw,
@@ -177,7 +177,7 @@ __global__ void rayTraceKernel( dim3 dimGrid,
   setupRandNumsSeedAndSequences(randNumStates,
                                (dimGrid.x * dimGrid.y * dimGrid.z * dimBlock.x * dimBlock.y * dimBlock.z),
                                patch.ID,
-                               curTimestep);
+                               curTimeStep);
 
   if( RT_flags.solveBoundaryFlux ){
 
@@ -295,7 +295,7 @@ __global__ void rayTraceKernel( dim3 dimGrid,
   setupRandNumsSeedAndSequences(randNumStates,
                                (dimGrid.x * dimGrid.y * dimGrid.z * dimBlock.x * dimBlock.y * dimBlock.z),
                                patch.ID,
-                               curTimestep);
+                               curTimeStep);
 
   if( RT_flags.solveDivQ ){
     const int nDivQRays = RT_flags.nDivQRays;               // for readability
@@ -373,7 +373,6 @@ __launch_bounds__(640, 1) // For 96 registers with 320 threads.  Allows two kern
 void rayTraceDataOnionKernel( dim3 dimGrid,
                               dim3 dimBlock,
                               int matl,
-                              kernelParams kp,
                               patchParams finePatch,
                               gridParams gridP,
                               GPUIntVector fineLevel_ROI_Lo,
@@ -382,7 +381,7 @@ void rayTraceDataOnionKernel( dim3 dimGrid,
                               int3* regionHi,
                               curandState* randNumStates,
                               RMCRT_flags RT_flags,
-                              int curTimestep,
+                              int curTimeStep,
                               GPUDataWarehouse* abskg_gdw,
                               GPUDataWarehouse* sigmaT4_gdw,
                               GPUDataWarehouse* cellType_gdw,
@@ -391,11 +390,6 @@ void rayTraceDataOnionKernel( dim3 dimGrid,
 {
 
   
-  const unsigned int numCellsPerThread = kp.numCellsPerThread; //Only useful if you want to try and split up a kernel into two kernels
-                                                               //Currently this is a very large number
-
-  // calculate the thread indices
-
 #if 0
   if (tidX == 1 && tidY == 1) {
     printf("\nGPU levelParams\n");
@@ -412,6 +406,13 @@ void rayTraceDataOnionKernel( dim3 dimGrid,
   int maxLevels = gridP.maxLevels;
   int fineL = maxLevels - 1;
   levelParams fineLevel = d_levels[fineL];
+  
+  //compute startCell and endCell relative to the block
+  int startCell = RT_flags.startCell + ((RT_flags.endCell - RT_flags.startCell) / gridDim.x) * blockIdx.x;
+  int endCell = RT_flags.startCell + ((RT_flags.endCell - RT_flags.startCell) / gridDim.x) * (blockIdx.x + 1);
+  RT_flags.startCell = startCell;
+  RT_flags.endCell = endCell;
+
   //__________________________________
   //
   const GPUGridVariable<T>    abskg[d_MAXLEVELS];
@@ -474,7 +475,7 @@ void rayTraceDataOnionKernel( dim3 dimGrid,
     int3 finePatchSize = make_int3(finePatch.hi.x - finePatch.lo.x,
                                   finePatch.hi.y - finePatch.lo.y,
                                   finePatch.hi.z - finePatch.lo.z);
-    unsigned short threadID = threadIdx.x + (blockIdx.x * blockDim.x * numCellsPerThread) + RT_flags.startCell;
+    unsigned short threadID = threadIdx.x + RT_flags.startCell;
     GPUIntVector c = make_int3((threadID % finePatchSize.x) + finePatch.lo.x,
                                ((threadID % (finePatchSize.x * finePatchSize.y)) / (finePatchSize.x)) + finePatch.lo.y,
                                (threadID / (finePatchSize.x * finePatchSize.y)) + finePatch.lo.z);
@@ -502,22 +503,21 @@ void rayTraceDataOnionKernel( dim3 dimGrid,
   const int nFluxRays = RT_flags.nFluxRays;               // for readability
 
   // This rand_i array is only needed for LATIN_HYPER_CUBE scheme
-  const int size = 500;
-  int rand_i[ size ];      //Give it a buffer room of 500.  But we should only use nFluxRays items in it.
-                           //Hopefully this 500 will always be greater than nFluxRays.
-                           //TODO, a 4D array is probably better here (x,y,z, ray#), saves
-                           //on memory (no unused buffer) and computation time (don't need to compute
-                           //the rays twice)
-  if (nFluxRays > size || RT_flags.nDivQRays > size) {
+  //const int size = 500;
+  int rand_i[ d_MAX_RAYS ];      //Give it a buffer room for many rays.
+                                 //Hopefully this 500 will always be greater than the number of rays.
+                                 //TODO, a 4D array is probably better here (x,y,z, ray#), saves
+                                 //on memory (no unused buffer) 
+  if (nFluxRays > d_MAX_RAYS || RT_flags.nDivQRays > d_MAX_RAYS) {
     printf("\n\n\nERROR!  rayTraceKernel() - Cannot have more rays than the rand_i array size.  Flux rays: %d, divQ rays: %d, size of the array is.%d\n\n\n",
-        nFluxRays, RT_flags.nFluxRays, size);
+        nFluxRays, RT_flags.nFluxRays, d_MAX_RAYS);
     //We have to return, otherwise the upcoming math in rayDirectionHyperCube_cellFaceDevice will generate nan values.
     return;
   }
   setupRandNumsSeedAndSequences(randNumStates,
                                (dimGrid.x * dimGrid.y * dimGrid.z * dimBlock.x * dimBlock.y * dimBlock.z),
                                finePatch.ID,
-                               curTimestep);
+                               curTimeStep);
 
   //______________________________________________________________________
   //           R A D I O M E T E R
@@ -556,7 +556,7 @@ void rayTraceDataOnionKernel( dim3 dimGrid,
     int3 finePatchSize = make_int3(finePatch.hi.x - finePatch.lo.x,
                                   finePatch.hi.y - finePatch.lo.y,
                                   finePatch.hi.z - finePatch.lo.z);
-    unsigned short threadID = threadIdx.x + (blockIdx.x * blockDim.x * numCellsPerThread) + RT_flags.startCell;
+    unsigned short threadID = threadIdx.x + RT_flags.startCell;
     GPUIntVector origin = make_int3((threadID % finePatchSize.x) + finePatch.lo.x,
                                ((threadID % (finePatchSize.x * finePatchSize.y)) / (finePatchSize.x)) + finePatch.lo.y,
                                (threadID / (finePatchSize.x * finePatchSize.y)) + finePatch.lo.z);
@@ -657,7 +657,7 @@ void rayTraceDataOnionKernel( dim3 dimGrid,
     int3 finePatchSize = make_int3(finePatch.hi.x - finePatch.lo.x,
                                   finePatch.hi.y - finePatch.lo.y,
                                   finePatch.hi.z - finePatch.lo.z);
-    unsigned short threadID = threadIdx.x + (blockIdx.x * blockDim.x * numCellsPerThread) + RT_flags.startCell;
+    unsigned short threadID = threadIdx.x + RT_flags.startCell;
     GPUIntVector origin = make_int3((threadID % finePatchSize.x) + finePatch.lo.x,
                                ((threadID % (finePatchSize.x * finePatchSize.y)) / (finePatchSize.x)) + finePatch.lo.y,
                                (threadID / (finePatchSize.x * finePatchSize.y)) + finePatch.lo.z);
@@ -1621,30 +1621,43 @@ __device__ int randIntDevice(curandState* globalState,
 __device__ void setupRandNumsSeedAndSequences(curandState* randNumStates,
                                               int numStates,
                                               unsigned long long patchID,
-                                              unsigned long long curTimestep)
+                                              unsigned long long curTimeStep)
 {
-  //generate a sequence argument for curand_init().  It is the way CUDA documentation mentions
-  //to generate statistically pseudorandom numbers.  "Sequences generated with different seeds
-  //usually do not have statistically correlated values, but some choices of seeds may give
-  //statistically correlated sequences. Sequences generated with the same seed and different
-  //sequence numbers will not have statistically correlated values." from here:
-  //http://docs.nvidia.com/cuda/curand/device-api-overview.html#axzz4SPy8xMuj
+  // Generate random numbers using curand_init().  
 
-  //First start by getting a unique threadID.
+  // Format is curand_init(seed, sequence, offset, state);
+
+  // Note, it seems a very large sequence really slows things down (bits in the high order region)
+  // I measured kernels taking an additional 300 milliseconds due to it!  So the sequence is kept
+  // small, using lower order bits only, and intead the seed is given a number with bits in both the
+  // high order and low order regions.
+  
+  // Unfortunately this isn't perfect.  "Sequences generated with different seeds
+  // usually do not have statistically correlated values, but some choices of seeds may give
+  // statistically correlated sequences. Sequences generated with the same seed and different
+  // sequence numbers will not have statistically correlated values." from here:
+  // http://docs.nvidia.com/cuda/curand/device-api-overview.html#axzz4SPy8xMuj
+
+  // For RMCRT we will take the tradeoff of possibly having statistically correlated values over 
+  // the 300 millisecond hit.
+  
+  // Generate what should be a unique seed.  To get a unique number the code below computes a tID
+  // which is a combination of a patchID, threadID, and the current timestep. 
+  // This uses the left 20 bits from the patchID, the next 20 bits from the curTimeStep
+  // and the last 24 bits from the indexId.  Combined that should be unique.
+  
+  //Standard CUDA way of computing a threadID
   int blockId = blockIdx.x + blockIdx.y * gridDim.x + gridDim.x * gridDim.y * blockIdx.z;
   int threadId = blockId * blockDim.x * blockDim.y * blockDim.z
       + threadIdx.z * blockDim.y * blockDim.x + threadIdx.y * blockDim.x + threadIdx.x;
+  
+  unsigned long long tID = (((patchID & 0xFFFFF) << 44) | ((curTimeStep& 0xFFFFF) << 24) |  (threadId & 0xFFFFFF)); 
 
-  //It's important that the second argument of curand_init, the sequence argument, be unique.  To get a unique
-  //number the code below computes a tID which is a combination of a patchID, threadID, and the current timestep. 
-  //To help generate a unique number, use the left 20 bits from the patchID, the next 20 bits from the curTimestep
-  //and the last 24 bits from the indexId.
-  //TODO: Frustratingly, a larger tID *really* slows down the kernel, it seems to take an additional 300 milliseconds!  
-  //That is no good.  For now I'll use just the threadId.  It will generate the same "random" numbers for every patch
-  //and every timestep.  
-  unsigned long long tID = (((patchID & 0xFFFFF) << 44) | ((curTimestep& 0xFFFFF) << 24) |  (threadId & 0xFFFFFF)); 
-  //curand_init(1234, tID, 0, &randNumStates[threadId]);
   curand_init(tID, threadId, 0, &randNumStates[threadId]);
+
+  //If you want to take the 300 millisecond hit, use this line below instead.
+  //curand_init(1234, tID, 0, &randNumStates[threadId]);
+
 }
 
 //______________________________________________________________________
@@ -1763,7 +1776,7 @@ __host__ void launchRayTraceKernel(DetailedTask* dtask,
                                    patchParams patch,
                                    cudaStream_t* stream,
                                    RMCRT_flags RT_flags,
-                                   int curTimestep,
+                                   int curTimeStep,
                                    GPUDataWarehouse* abskg_gdw,
                                    GPUDataWarehouse* sigmaT4_gdw,
                                    GPUDataWarehouse* cellType_gdw,
@@ -1802,7 +1815,7 @@ __host__ void launchRayTraceKernel(DetailedTask* dtask,
                                                             patch,
                                                             randNumStates,
                                                             RT_flags,
-                                                            curTimestep,
+                                                            curTimeStep,
                                                             abskg_gdw,
                                                             sigmaT4_gdw,
                                                             cellType_gdw,
@@ -1822,7 +1835,6 @@ __host__ void launchRayTraceDataOnionKernel( DetailedTask* dtask,
                                              dim3 dimGrid,
                                              dim3 dimBlock,
                                              int matlIndex,
-                                             kernelParams kp,
                                              patchParams patch,
                                              gridParams gridP,
                                              levelParams* levelP,
@@ -1830,7 +1842,7 @@ __host__ void launchRayTraceDataOnionKernel( DetailedTask* dtask,
                                              GPUIntVector fineLevel_ROI_Hi,
                                              cudaStream_t* stream,
                                              RMCRT_flags RT_flags,
-                                             int curTimestep,
+                                             int curTimeStep,
                                              GPUDataWarehouse* abskg_gdw,
                                              GPUDataWarehouse* sigmaT4_gdw,
                                              GPUDataWarehouse* cellType_gdw,
@@ -1884,7 +1896,6 @@ __host__ void launchRayTraceDataOnionKernel( DetailedTask* dtask,
   rayTraceDataOnionKernel< T ><<< dimGrid, dimBlock, 0, *stream >>>( dimGrid,
                                                                      dimBlock,
                                                                      matlIndex,
-                                                                     kp,
                                                                      patch,
                                                                      gridP,
                                                                      fineLevel_ROI_Lo,
@@ -1893,7 +1904,7 @@ __host__ void launchRayTraceDataOnionKernel( DetailedTask* dtask,
                                                                      dev_regionHi,
                                                                      randNumStates,
                                                                      RT_flags,
-                                                                     curTimestep,
+                                                                     curTimeStep,
                                                                      abskg_gdw,
                                                                      sigmaT4_gdw,
                                                                      cellType_gdw,
@@ -1920,7 +1931,7 @@ __host__ void launchRayTraceKernel<double>( DetailedTask* dtask,
                                             patchParams patch,
                                             cudaStream_t* stream,
                                             RMCRT_flags RT_flags,
-                                            int curTimestep,
+                                            int curTimeStep,
                                             GPUDataWarehouse* abskg_gdw,
                                             GPUDataWarehouse* sigmaT4_gdw,
                                             GPUDataWarehouse* cellType_gdw,
@@ -1938,7 +1949,7 @@ __host__ void launchRayTraceKernel<float>( DetailedTask* dtask,
                                            patchParams patch,
                                            cudaStream_t* stream,
                                            RMCRT_flags RT_flags,
-                                           int curTimestep,
+                                           int curTimeStep,
                                            GPUDataWarehouse* abskg_gdw,
                                            GPUDataWarehouse* sigmaT4_gdw,
                                            GPUDataWarehouse* celltype_gdw,
@@ -1952,7 +1963,6 @@ __host__ void launchRayTraceDataOnionKernel<double>( DetailedTask* dtask,
                                                      dim3 dimGrid,
                                                      dim3 dimBlock,
                                                      int matlIndex,
-                                                     kernelParams kp,
                                                      patchParams patch,
                                                      gridParams gridP,
                                                      levelParams*  levelP,
@@ -1960,7 +1970,7 @@ __host__ void launchRayTraceDataOnionKernel<double>( DetailedTask* dtask,
                                                      GPUIntVector fineLevel_ROI_Hi,
                                                      cudaStream_t* stream,
                                                      RMCRT_flags RT_flags,
-                                                     int curTimestep,
+                                                     int curTimeStep,
                                                      GPUDataWarehouse* abskg_gdw,
                                                      GPUDataWarehouse* sigmaT4_gdw,
                                                      GPUDataWarehouse* cellType_gdw,
@@ -1974,7 +1984,6 @@ __host__ void launchRayTraceDataOnionKernel<float>( DetailedTask* dtask,
                                                     dim3 dimGrid,
                                                     dim3 dimBlock,
                                                     int matlIndex,
-                                                    kernelParams kp,
                                                     patchParams patch,
                                                     gridParams gridP,
                                                     levelParams* levelP,
@@ -1982,7 +1991,7 @@ __host__ void launchRayTraceDataOnionKernel<float>( DetailedTask* dtask,
                                                     GPUIntVector fineLevel_ROI_Hi,
                                                     cudaStream_t* stream,
                                                     RMCRT_flags RT_flags,
-                                                    int curTimestep,
+                                                    int curTimeStep,
                                                     GPUDataWarehouse* abskg_gdw,
                                                     GPUDataWarehouse* sigmaT4_gdw,
                                                     GPUDataWarehouse* cellType_gdw,

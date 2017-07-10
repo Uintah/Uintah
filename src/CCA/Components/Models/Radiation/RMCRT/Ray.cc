@@ -1449,7 +1449,8 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
     } else {
       tsk = scinew Task(taskname, this, &Ray::rayTraceDataOnionGPU<float>, modifies_divQ, d_sharedState, NotUsed, sigma_dw, celltype_dw);
     }
-    tsk->usesDevice(true);
+    //Allow it to use up to 4 GPU streams per patch.
+    tsk->usesDevice(true, 4);
   } else {                                // CPU
     taskname = "Ray::rayTrace_dataOnion";
     if (RMCRTCommon::d_FLT_DBL == TypeDescription::double_type) {

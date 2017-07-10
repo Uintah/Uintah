@@ -190,9 +190,10 @@ Task::usesThreads(bool state)
 //______________________________________________________________________
 //
 void
-Task::usesDevice(bool state)
+Task::usesDevice(bool state, int maxStreamsPerTask /* = 1 */ )
 {
   m_uses_device = state;
+  m_max_streams_per_task = maxStreamsPerTask;
 }
 
 //______________________________________________________________________

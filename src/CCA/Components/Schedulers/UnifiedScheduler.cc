@@ -2869,6 +2869,7 @@ UnifiedScheduler::prepareTaskVarsIntoTaskDW( DetailedTask * dtask )
                 }
                 cerrLock.unlock();
               }
+              printf("ERROR - No task data warehouse found for device %d for task %s\n", it->second.m_whichGPU, dtask->getTask()->getName().c_str());
               SCI_THROW(InternalError("No task data warehouse found\n", __FILE__, __LINE__));
             }
           }
@@ -4195,32 +4196,22 @@ UnifiedScheduler::assignDevicesAndStreams( DetailedTask * dtask )
     const Patch* patch = dtask->getPatches()->get(i);
     int index = GpuUtilities::getGpuIndexForPatch(patch);
     if (index >= 0) {
-      //An ugly hack.  RMCRT can launch multiple kernels per task.  We want to give them multiple streams too...
-      if (dtask->getTask()->getName() == "Ray::rayTraceDataOnionGPU") {
-        printf("Assigning RMCRT GPU 3 additional CUDA streams\n");
-        for (int extra = 1; extra < 4; extra++){
-          if (dtask->getCudaStreamForThisTask(extra) == nullptr) {
-            //dtask->assignDevice(extra);
-            cudaStream_t* stream = GPUMemoryPool::getCudaStreamFromPool(extra);
-            dtask->setCudaStreamForThisTask(extra, stream);
-          }
-        }
-      }
-      // See if this task doesn't yet have a stream for this GPU device.
-      if (dtask->getCudaStreamForThisTask(index) == nullptr) {
-        dtask->assignDevice(index);
-        cudaStream_t* stream = GPUMemoryPool::getCudaStreamFromPool(index);
-        if (gpu_stats.active()) {
-          cerrLock.lock();
-          {
-            gpu_stats << myRankThread() << " Assigning for task " << dtask->getName() << " at " << std::hex << dtask
+      for (int i = 0; i < dtask->getTask()->maxStreamsPerTask(); i++) {
+        if (dtask->getCudaStreamForThisTask(i) == nullptr) {
+          dtask->assignDevice(0); 
+          cudaStream_t* stream = GPUMemoryPool::getCudaStreamFromPool(i);
+          dtask->setCudaStreamForThisTask(i, stream);
+          if (gpu_stats.active()) {
+            cerrLock.lock();
+            {
+              gpu_stats << myRankThread() << " Assigning for task " << dtask->getName() << " at " << std::hex << dtask
                     << " stream " << stream << std::dec
                     << " for device " << index
                     << std::endl;
+            }
+            cerrLock.unlock();
           }
-          cerrLock.unlock();
         }
-        dtask->setCudaStreamForThisTask(index, stream);
       }
     
     } else {
@@ -4235,6 +4226,47 @@ UnifiedScheduler::assignDevicesAndStreams( DetailedTask * dtask )
 }
 
 
+/*
+  void
+  UnifiedScheduler::assignDevicesAndStreams( DetailedTask * dtask )
+  {
+
+    // Figure out which device this patch was assigned to.
+    // If a task has multiple patches, then assign all.  Most tasks should
+    // only end up on one device.  Only tasks like data archiver's output variables
+    // work on multiple patches which can be on multiple devices.
+    std::map<const Patch *, int>::iterator it;
+    for (int i = 0; i < dtask->getPatches()->size(); i++) {
+      const Patch* patch = dtask->getPatches()->get(i);
+      int index = GpuUtilities::getGpuIndexForPatch(patch);
+      if (index >= 0) {
+        // See if this task doesn't yet have a stream for this GPU device.
+        if (dtask->getCudaStreamForThisTask(index) == nullptr) {
+          dtask->assignDevice(index);
+          cudaStream_t* stream = GPUMemoryPool::getCudaStreamFromPool(index);
+          if (gpu_stats.active()) {
+            cerrLock.lock();
+            {
+              gpu_stats << myRankThread() << " Assigning for task " << dtask->getName() << " at " << std::hex << dtask
+              << " stream " << stream << std::dec
+              << " for device " << index
+              << std::endl;
+            }
+            cerrLock.unlock();
+          }
+          dtask->setCudaStreamForThisTask(index, stream);
+        }
+      } else {
+        cerrLock.lock();
+        {
+          std::cerr << "ERROR: Could not find the assigned GPU for this patch." << std::endl;
+        }
+        cerrLock.unlock();
+        exit(-1);
+      }
+    }
+  }
+*/
 //______________________________________________________________________
 //
 void

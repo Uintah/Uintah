@@ -251,7 +251,7 @@ namespace Uintah{
                         void* stream,
                         int deviceID,
                         bool modifies_divQ,
-                        SimulationStateP   sharedState,
+                        SimulationStateP sharedState,
                         Task::WhichDW which_abskg_dw,
                         Task::WhichDW whichd_sigmaT4_dw,
                         Task::WhichDW which_celltype_dw);
@@ -282,7 +282,7 @@ namespace Uintah{
                                  void* stream,
                                  int deviceID,
                                  bool modifies_divQ,
-                                 SimulationStateP   sharedState,
+                                 SimulationStateP sharedState,
                                  Task::WhichDW which_abskg_dw,
                                  Task::WhichDW whichd_sigmaT4_dw,
                                  Task::WhichDW which_celltype_dw );
