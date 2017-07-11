@@ -1067,28 +1067,23 @@ WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars,
               R_en = wi.dy_dep_en/k_en;
               R_sb = vars.deposit_thickness[c] / k_sb;
               T_old =  vars.T_real_old[c];
-              double rad_q_max = (wi.T_slag-wi.T_inner)/((R_en+R_wall)*Emiss) + _sigma_constant*std::pow(wi.T_slag,4.0);
+              double rad_q_max = (wi.T_slag-wi.T_inner)/((R_en+R_wall)*Emiss) + _sigma_constant*std::pow(wi.T_slag,4.0);//assume sb layer resistance is neglible in regime 3.
               double rad_q_melt = (wi.T_slag-wi.T_inner)/((R_en+R_sb+R_wall)*Emiss) + _sigma_constant*std::pow(wi.T_slag,4.0);
 
-              if (rad_q < rad_q_melt){
-                // regime 1
-                // the resulting temperature will be less than T_slag.
-                // deposit_thickness doesn't need to be modified (but we will time-average before newton_solve.
+              if (rad_q < rad_q_melt || rad_q > rad_q_max){
+                // regime 1 or regime 3 (newton solve required)
+                vars.deposit_thickness[c] = ( rad_q > rad_q_max) ? 0.0 : vars.deposit_thickness[c]; 
                 vars.deposit_thickness[c] = (1-vars.relax) * vars.deposit_thickness_old[c] + vars.relax * vars.deposit_thickness[c];  // here we time average the deposit thickness so that it doesn't vary when we switch regimes.
                 dy_dep_sb = vars.deposit_thickness[c];
                 newton_solve( wi, TW_new, k_sb, k_en, dy_dep_sb, dy_dep_en, T_old, rad_q, R_wall, Emiss );
               } else {
-                // regime 2 and 3 T = T_slag (no newton solve required.)
+                // regime 2  T = T_slag (no newton solve required.)
                 TW_new = wi.T_slag;
-                // if rad_q <= rad_q_max 
-                // regime 2 where deposit_thickness is estimated from energy balance.
-                // if rad_q > rad_q_max
-                // regime 3 where deposit_thickness is 0.0 - energy balance should include heat of fusion to close.
-                double qnet_max = rad_q - _sigma_constant * std::pow( wi.T_slag, 4.0 );
-                qnet_max *= Emiss;
-                qnet_max = qnet_max > 1e-8 ? qnet_max : 1e-8; // to avoid div by zero we set min at 1e-8
-                double dy_dep_sb_max = k_sb * ( (wi.T_slag-wi.T_inner)/qnet_max - R_wall - R_en);
-                vars.deposit_thickness[c] = rad_q <= rad_q_max ? dy_dep_sb_max : 0.0; 
+                double qnet = rad_q - _sigma_constant * std::pow( wi.T_slag, 4.0 );
+                qnet *= Emiss;
+                qnet = qnet > 1e-8 ? qnet : 1e-8; // to avoid div by zero we set min at 1e-8
+                dy_dep_sb = k_sb * ( (wi.T_slag-wi.T_inner)/qnet - R_wall - R_en);
+                vars.deposit_thickness[c] = dy_dep_sb; 
                 vars.deposit_thickness[c] = (1-vars.relax) * vars.deposit_thickness_old[c] + vars.relax * vars.deposit_thickness[c];  // here we time average the deposit thickness so that it doesn't vary when we switch regimes.
                 dy_dep_sb = vars.deposit_thickness[c];
               }
