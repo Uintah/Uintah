@@ -36,8 +36,14 @@ SRCDIR := CCA/Components/Wasatch/Expressions/BoundaryConditions
 # Do not put the .cc on the file name as the .cc or .cu will be added automatically
 # as needed.
 #
-CUDA_ENABLED_SRCS =       \
-     BoundaryConditions
+CUDA_ENABLED_SRCS =              \
+     BoundaryConditionsConstant  \
+     BoundaryConditionsCopier    \
+     BoundaryConditionsLinear    \
+     BoundaryConditionsOneSided  \
+     BoundaryConditionsParabolic \
+     BoundaryConditionsPowerLaw  \
+     BoundaryConditionsPrimvar 
 
 ifeq ($(HAVE_CUDA),yes)
 
@@ -63,7 +69,7 @@ endif
 SRCS	+=                             \
 	$(SRCDIR)/OpenBC.cc   \
 	$(SRCDIR)/OutflowBC.cc  \
-  $(SRCDIR)/ParticleWallBC.cc  \
+	$(SRCDIR)/ParticleWallBC.cc  \
 	$(SRCDIR)/VardenMMSBCs.cc  
 ########################################################################
 #

@@ -510,15 +510,15 @@ namespace WasatchCore{
           BndCondSpec momRHSBCSpec = {this->rhs_tag().name(),"none" ,0.0,DIRICHLET,DOUBLE_TYPE};
           bcHelper.add_boundary_condition(bndName, momRHSBCSpec);
 
-        }
           break;
+        }
         case VELOCITY: // we will use this as the hard inflow
         {
           // set zero momentum RHS at inlets
           BndCondSpec momRHSBCSpec = {this->rhs_tag().name(),"none" ,0.0,DIRICHLET,DOUBLE_TYPE};
           bcHelper.add_boundary_condition(bndName, momRHSBCSpec);
-        }
           break;
+        }
         case OUTFLOW:  // we will use OUTFLOW/OPEN as NONREFLECTING
         case OPEN:
         {          
@@ -544,11 +544,11 @@ namespace WasatchCore{
                 builder1 = new builderT( convModTag, thisVelTag_, mom_tag(this->solnVarName_));
                 
                 pModTag = Expr::Tag(this->solnVarName_ + "_rhs_mod_plus_side_" + bndName, Expr::STATE_NONE);
-                typedef typename BCOneSidedGradP<FieldT,OpT>::Builder pbuilderT;
+                typedef typename WasatchCore::BCOneSidedGradP<FieldT,OpT>::Builder pbuilderT;
                 builder2 = new pbuilderT( pModTag, this->pressureTag_ );
               }
-            }
               break;
+            }
             case Uintah::Patch::xminus:
             case Uintah::Patch::yminus:
             case Uintah::Patch::zminus:
@@ -557,15 +557,15 @@ namespace WasatchCore{
                 typedef typename SpatialOps::OneSidedOpTypeBuilder<SpatialOps::Gradient,SpatialOps::OneSidedStencil3<UnitTripletT>,FieldT>::type OpT;
                 
                 convModTag = Expr::Tag(this->solnVarName_ + "_partial_rhs_mod_minus_side_" + bndName, Expr::STATE_NONE);
-                typedef typename BCOneSidedConvFluxDiv<FieldT,OpT>::Builder builderT;
+                typedef typename WasatchCore::BCOneSidedConvFluxDiv<FieldT,OpT>::Builder builderT;
                 builder1 = new builderT( convModTag, thisVelTag_, mom_tag(this->solnVarName_) );
                 
                 pModTag = Expr::Tag(this->solnVarName_ + "_rhs_mod_minus_side_" + bndName, Expr::STATE_NONE);
-                typedef typename BCOneSidedGradP<FieldT,OpT>::Builder pbuilderT;
+                typedef typename WasatchCore::BCOneSidedGradP<FieldT,OpT>::Builder pbuilderT;
                 builder2 = new pbuilderT( pModTag, this->pressureTag_ );
               }
-            }
               break;
+            }
             default:
               break;
           }
@@ -601,8 +601,8 @@ namespace WasatchCore{
               typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::GradientX, SVolField, SVolField >::type NeumannT;
               typedef typename SpatialOps::NeboBoundaryConditionBuilder<DirichletT> DiriOpT;
               typedef typename SpatialOps::NeboBoundaryConditionBuilder<NeumannT> NeumOpT;
-              typedef typename ConstantBCNew<FieldT,DiriOpT>::Builder constBCDirichletT;
-              typedef typename ConstantBCNew<FieldT,NeumOpT>::Builder constBCNeumannT;
+              typedef typename WasatchCore::ConstantBCNew<FieldT,DiriOpT>::Builder constBCDirichletT;
+              typedef typename WasatchCore::ConstantBCNew<FieldT,NeumOpT>::Builder constBCNeumannT;
               
               // for normal fluxes
               typedef typename NormalDirTypeSelector<MomDirT>::NormalDirT FluxT;
@@ -616,8 +616,8 @@ namespace WasatchCore{
               if (!advSlnFactory.have_entry(normalStrainModTag)) advSlnFactory.register_expression( new constBCNeumannFluxT( normalStrainModTag, 0.0 ) );
               if (!advSlnFactory.have_entry(momModTag)) advSlnFactory.register_expression( new constBCNeumannT( momModTag, 0.0 ) );
               if (!advSlnFactory.have_entry(pModTag2)) advSlnFactory.register_expression( new constBCNeumannT( pModTag2, 0.0 ) );
-            }
               break;
+            }
 
             case Uintah::Patch::yplus:
             case Uintah::Patch::yminus:
@@ -632,14 +632,14 @@ namespace WasatchCore{
               typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::GradientY, SVolField, SVolField >::type NeumannT;
               typedef typename SpatialOps::NeboBoundaryConditionBuilder<DirichletT> DiriOpT;
               typedef typename SpatialOps::NeboBoundaryConditionBuilder<NeumannT> NeumOpT;
-              typedef typename ConstantBCNew<FieldT,DiriOpT>::Builder constBCDirichletT;
-              typedef typename ConstantBCNew<FieldT,NeumOpT>::Builder constBCNeumannT;
+              typedef typename WasatchCore::ConstantBCNew<FieldT,DiriOpT>::Builder constBCDirichletT;
+              typedef typename WasatchCore::ConstantBCNew<FieldT,NeumOpT>::Builder constBCNeumannT;
               
               // for normal fluxes
               typedef typename NormalDirTypeSelector<MomDirT>::NormalDirT FluxT;
               typedef typename SpatialOps::OperatorTypeBuilder<Divergence,  FluxT, SpatialOps::SVolField >::type NeumannFluxT;
               typedef typename SpatialOps::NeboBoundaryConditionBuilder<NeumannFluxT> NeumFluxOpT;
-              typedef typename ConstantBCNew<FluxT, NeumFluxOpT>::Builder constBCNeumannFluxT;
+              typedef typename WasatchCore::ConstantBCNew<FluxT, NeumFluxOpT>::Builder constBCNeumannFluxT;
               
               if (!initFactory.have_entry(momModTag)) initFactory.register_expression( new constBCNeumannT( momModTag, 0.0 ) );
               
@@ -647,8 +647,8 @@ namespace WasatchCore{
               if (!advSlnFactory.have_entry(normalStrainModTag)) advSlnFactory.register_expression( new constBCNeumannFluxT( normalStrainModTag, 0.0 ) );
               if (!advSlnFactory.have_entry(momModTag)) advSlnFactory.register_expression( new constBCNeumannT( momModTag, 0.0 ) );
               if (!advSlnFactory.have_entry(pModTag2)) advSlnFactory.register_expression( new constBCNeumannT( pModTag2, 0.0 ) );
-            }
               break;
+            }
 
             case Uintah::Patch::zplus:
             case Uintah::Patch::zminus:
@@ -663,14 +663,14 @@ namespace WasatchCore{
               typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::GradientZ, SVolField, SVolField >::type NeumannT;
               typedef typename SpatialOps::NeboBoundaryConditionBuilder<DirichletT> DiriOpT;
               typedef typename SpatialOps::NeboBoundaryConditionBuilder<NeumannT> NeumOpT;
-              typedef typename ConstantBCNew<FieldT,DiriOpT>::Builder constBCDirichletT;
-              typedef typename ConstantBCNew<FieldT,NeumOpT>::Builder constBCNeumannT;
+              typedef typename WasatchCore::ConstantBCNew<FieldT,DiriOpT>::Builder constBCDirichletT;
+              typedef typename WasatchCore::ConstantBCNew<FieldT,NeumOpT>::Builder constBCNeumannT;
               
               // for normal fluxes
               typedef typename NormalDirTypeSelector<MomDirT>::NormalDirT FluxT;
               typedef typename SpatialOps::OperatorTypeBuilder<Divergence,  FluxT, SpatialOps::SVolField >::type NeumannFluxT;
               typedef typename SpatialOps::NeboBoundaryConditionBuilder<NeumannFluxT> NeumFluxOpT;
-              typedef typename ConstantBCNew<FluxT, NeumFluxOpT>::Builder constBCNeumannFluxT;
+              typedef typename WasatchCore::ConstantBCNew<FluxT, NeumFluxOpT>::Builder constBCNeumannFluxT;
               
               if (!initFactory.have_entry(momModTag)) initFactory.register_expression( new constBCNeumannT( momModTag, 0.0 ) );
               
@@ -678,8 +678,8 @@ namespace WasatchCore{
               if (!advSlnFactory.have_entry(normalStrainModTag)) advSlnFactory.register_expression( new constBCNeumannFluxT( normalStrainModTag, 0.0 ) );
               if (!advSlnFactory.have_entry(momModTag)) advSlnFactory.register_expression( new constBCNeumannT( momModTag, 0.0 ) );
               if (!advSlnFactory.have_entry(pModTag2)) advSlnFactory.register_expression( new constBCNeumannT( pModTag2, 0.0 ) );
-            }
               break;
+            }
 
             default:
               break;
@@ -704,19 +704,16 @@ namespace WasatchCore{
 //          BndCondSpec rhsZeroSpec = {this->rhs_tag().name(), "none", 0.0, DIRICHLET, FUNCTOR_TYPE};
 //          bcHelper.add_boundary_condition(bndName, rhsZeroSpec);
 
+          break;
         }
-          break;
         case USER:
-        {}
-          break;
         default:
         {
           std::ostringstream msg;
           msg << "ERROR: VELOCITY, OPEN, and OUTFLOW boundary conditions are not currently supported for compressible flows in Wasatch. " << bndName
-          << std::endl;
+              << std::endl;
           throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
         }
-           break;
       } // SWITCH BOUNDARY TYPE
     } // BOUNDARY LOOP
   }
@@ -753,8 +750,7 @@ namespace WasatchCore{
   
   //----------------------------------------------------------------------------
 
-  template<typename MomDirT>
-  NSCBC::TransportVal NSCBCMomentum(){}
+  template<typename MomDirT> NSCBC::TransportVal NSCBCMomentum();
   
   template<> NSCBC::TransportVal NSCBCMomentum<SpatialOps::XDIR>(){return NSCBC::MOMENTUM_X;}
   template<> NSCBC::TransportVal NSCBCMomentum<SpatialOps::YDIR>(){return NSCBC::MOMENTUM_Y;}

@@ -31,7 +31,7 @@
 
 template< typename FieldT >
 class OpenBC
-: public BoundaryConditionBase<FieldT>
+: public WasatchCore::BoundaryConditionBase<FieldT>
 {
   OpenBC( const Expr::Tag& momTag )
   {

@@ -22,44 +22,43 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef OutflowBC_Expr_h
-#define OutflowBC_Expr_h
+/*
+ *  NOTE: we have split the implementations into several files to reduce the size
+ *        of object files when compiling with nvcc, since we were crashing the
+ *        linker in some cases.
+ */
 
-#include <expression/Expression.h>
-#include "BoundaryConditionBase.h"
-#include <CCA/Components/Wasatch/TagNames.h>
+#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditions.h>
+#include <spatialops/structured/SpatialMask.h>
 
-template< typename FieldT >
-class OutflowBC
-: public WasatchCore::BoundaryConditionBase<FieldT>
-{
-  OutflowBC( const Expr::Tag& momTag )
+namespace WasatchCore{
+
+
+  // ###################################################################
+
+  template< typename FieldT >
+  void
+  LinearBC<FieldT>::
+  evaluate()
   {
-    this->set_gpu_runnable(false);
-    u_  = this->template create_field_request<FieldT>(momTag);
-    dt_ = this->template create_field_request<SpatialOps::SingleValueField>(WasatchCore::TagNames::self().dt);
+    using namespace SpatialOps;
+    if( this->spatialMask_ ){
+      FieldT& lhs =  this->value();
+      const FieldT& x = x_->field_ref();
+      APPLY_COMPLEX_BC(lhs, a_ * x + b_);
+    }
   }
-public:
-  class Builder : public Expr::ExpressionBuilder
-  {
-  public:
-    Builder( const Expr::Tag& resultTag,
-             const Expr::Tag& momTag )
-    : ExpressionBuilder(resultTag),
-      momTag_ (momTag)
-    {}
-    Expr::ExpressionBase* build() const{ return new OutflowBC(momTag_); }
-  private:
-    const Expr::Tag momTag_;
-  };
-  
-  ~OutflowBC(){}
 
-  void evaluate();
-  
-private:
-  DECLARE_FIELD(FieldT, u_)
-  DECLARE_FIELD(SpatialOps::SingleValueField, dt_)
-};
+  // ###################################################################
+  // EXPLICIT INSTANTIATION
+#include <CCA/Components/Wasatch/FieldTypes.h>
 
-#endif // OutflowBC_Expr_h
+#define INSTANTIATE_BC_PROFILES(VOLT)   \
+    template class LinearBC<VOLT>;
+
+  INSTANTIATE_BC_PROFILES(SVolField)
+  INSTANTIATE_BC_PROFILES(XVolField)
+  INSTANTIATE_BC_PROFILES(YVolField)
+  INSTANTIATE_BC_PROFILES(ZVolField)
+
+} // namespace WasatchCore
