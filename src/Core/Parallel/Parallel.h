@@ -117,8 +117,7 @@ class Parallel {
       static void setUsingDevice( bool state );
 
       //////////
-      // Returns the number of threads that a processing element is
-      // allowed to use to compute its tasks.  
+      // Returns the number of threads that a processing element is allowed to use to compute its tasks.
       static int getNumThreads();
 
       //////////

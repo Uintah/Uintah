@@ -132,7 +132,7 @@ Radiometer::problemSetup( const ProblemSpecP& prob_spec,
 
   if( start.x() > end.x() || start.y() > end.y() || start.z() > end.z() ) {
     std::ostringstream warn;
-    warn << "\n ERROR:Radiometer::problemSetup: the radiometerthat you've specified " << start
+    warn << "\n ERROR:Radiometer::problemSetup: the radiometer that you've specified " << start
          << " " << end << " the starting point is > than the ending point \n" << std::endl;
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
@@ -254,6 +254,7 @@ Radiometer::sched_initializeRadVars( const LevelP& level,
   }
   
   printSchedule(level, dbg, taskname);
+
   tsk->requires(Task::OldDW, d_VRFluxLabel, d_gn, 0);
   tsk->computes( d_VRFluxLabel );
 
@@ -282,6 +283,7 @@ Radiometer::initializeRadVars( const ProcessorGroup*,
   for (int p=0; p < patches->size(); p++){
 
     const Patch* patch = patches->get(p);
+
     printTask(patches, patch, dbg,"Doing Radiometer::initializeVars");
 
     CCVariable< T > VRFlux;
@@ -380,7 +382,7 @@ Radiometer::radiometer( const ProcessorGroup* pg,
   for (int p=0; p < patches->size(); p++){
 
     const Patch* patch = patches->get(p);
-    printTask(patches,patch,dbg,"Doing Radiometer::radiometer");
+    printTask(patches, patch, dbg, "Doing Radiometer::radiometer");
 
     bool modifiesFlux= true;
     radiometerFlux < T > ( patch, level, new_dw, mTwister, sigmaT4OverPi, abskg, celltype, modifiesFlux );
@@ -402,10 +404,7 @@ Radiometer::radiometerFlux( const Patch* patch,
                             constCCVariable<int> celltype,
                             const bool modifiesFlux )
 {
-
-  if ( dbg.active() ){
-    printTask(patch, dbg,"Doing Radiometer::radiometerFlux");
-  }
+  printTask(patch, dbg,"Doing Radiometer::radiometerFlux");
 
   CCVariable< T > VRFlux;
   if( modifiesFlux ){

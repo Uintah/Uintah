@@ -59,7 +59,7 @@ using namespace Uintah;
 
 static DebugStream dbg("ARCHES", false);
 
-// Used to sync std::cout when output by multiple threads
+// Used to sync std::cout when output by multiple ranks
 extern std::mutex coutLock;
 
 //--------------------------------------------------------------------------------------------------

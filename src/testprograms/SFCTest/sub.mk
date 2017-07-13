@@ -36,7 +36,8 @@ PROGRAM := $(SRCDIR)/sfctest
 SRCS := $(SRCDIR)/sfctest.cc
 
 PSELIBS := CCA/Ports       \
-           Core/Parallel
+           Core/Parallel   \
+           Core/Exceptions
 
 LIBS := $(M_LIBRARY) $(MPI_LIBRARY)
 

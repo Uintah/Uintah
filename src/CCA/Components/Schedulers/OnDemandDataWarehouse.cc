@@ -101,7 +101,7 @@ using  task_access_monitor = Uintah::CrowdMonitor<task_access_tag>;
 
 using namespace Uintah;
 
-// Debug: Used to sync cerr/cout so it is readable when output by multiple threads
+// Debug: Used to sync cerr/cout so it is readable when output by multiple ranks
 extern std::mutex cerrLock;
 
 #ifdef HAVE_CUDA
