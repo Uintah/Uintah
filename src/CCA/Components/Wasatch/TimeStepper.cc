@@ -242,7 +242,6 @@ namespace WasatchCore{
     Expr::ExpressionFactory& solnFactory = *solnGraphHelper_->exprFactory;
     solnFactory                       .register_expression( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_N      )), true );
     solnFactory                       .register_expression( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_DYNAMIC)), true );
-    solnFactory                       .register_expression( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_NONE   )), true );
     postProcGraphHelper_->exprFactory->register_expression( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_NP1    )), true );
   }
 
@@ -253,7 +252,6 @@ namespace WasatchCore{
   TimeStepper::add_equations( const Expr::TagList& solnVarTags,
                               const Expr::TagList& rhsTags )
   {
-
     if( rhsTags.size() != solnVarTags.size() ){
       std::ostringstream msg;
       msg << "ERROR: Size of SolnVarTags is inconsistent with size of rhsTags" << std::endl
