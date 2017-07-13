@@ -42,7 +42,7 @@ printSchedule( const PatchSet    * patches
     dbg << std::left;
     dbg.width(50);
     dbg << where << "L-" << getLevel(patches)->getIndex() << std::endl;
-  }  
+  }
 }
 
 //______________________________________________________________________
@@ -77,7 +77,7 @@ printTask( const PatchSubset * patches
     dbg << where << "  \tL-"
         << getLevel(patches)->getIndex()
         << " patch " << patch->getGridIndex()<< std::endl;
-  }  
+  }
 }
 
 //______________________________________________________________________
@@ -95,7 +95,7 @@ printTask( const PatchSubset * patches
     dbg << where << "  \tL-"
         << getLevel(patches)->getIndex()
         << " patches " << *patches << std::endl;
-  }  
+  }
 }
 
 //______________________________________________________________________
@@ -113,7 +113,7 @@ printTask( const Patch       * patch
     dbg << where << " \tL-"
         << patch->getLevel()->getIndex()
         << " patch " << patch->getGridIndex()<< std::endl;
-  }  
+  }
 }
 
 //______________________________________________________________________
@@ -128,7 +128,7 @@ printTask(       DebugStream & dbg
     dbg << std::left;
     dbg.width(50);
     dbg << where << " \tAll Patches" << std::endl;
-  }  
+  }
 }
 
 
@@ -161,7 +161,7 @@ printTask( Dout         & out
         msg << "\t  L-" << level->getIndex();
       }
     }
-    DOUT(true, msg.str());
+    printf("%s\n", msg.str().c_str());
   }
 }
 
@@ -181,7 +181,7 @@ printTask( const Patch       * patch
     msg << where << " \tL-"
         << patch->getLevel()->getIndex()
         << " patch " << patch->getGridIndex();
-    DOUT(true, msg.str());
+    printf("%s\n", msg.str().c_str());
   }
 }
 
@@ -198,11 +198,11 @@ printTask( const PatchSubset * patches
     std::ostringstream msg;
     msg << Uintah::Parallel::getMPIRank() << " ";
     msg << std::left;
-    msg.width(10);
+    msg.width(50);
     msg << where << "  \tL-"
         << getLevel(patches)->getIndex()
         << " patch " << patch->getGridIndex();
-    DOUT(true, msg.str());
+    printf("%s\n", msg.str().c_str());
   }
 }
 
@@ -228,7 +228,7 @@ printTaskLevels( const ProcessorGroup * d_myworld
         msg << dtask->getTask()->getName();
         msg << "\t Patch-" << firstPatch->getGridIndex();
         msg << "\t L-" << level->getIndex();
-        DOUT(true, msg.str());
+        printf("%s\n", msg.str().c_str());
       }
     }
   }
@@ -246,9 +246,9 @@ printSchedule( const PatchSet    * patches
     mesg << Uintah::Parallel::getMPIRank() << " ";
     mesg << std::left;
     mesg.width(50);
-    mesg << where << "L-" << getLevel(patches)->getIndex() << std::endl;
-    DOUT(true, mesg.str());
-  }  
+    mesg << where << " L-" << getLevel(patches)->getIndex() << std::endl;
+    printf("%s\n", mesg.str().c_str());
+  }
 }
 
 //______________________________________________________________________
@@ -263,9 +263,9 @@ printSchedule( const LevelP      & level
     std::ostringstream mesg;
     mesg << Uintah::Parallel::getMPIRank() << " ";
     mesg << std::left;
-    mesg.width(10);
-    mesg << where << "L-" << level->getIndex();
-    DOUT(true, mesg.str());
+    mesg.width(50);
+    mesg << where << " L-" << level->getIndex();
+    printf("%s\n", mesg.str().c_str());
   }
 }
 
