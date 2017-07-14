@@ -188,35 +188,30 @@ RateDeposition::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info 
     SFCXVariable<double>& RateDepositionX   =  *(tsk_info->get_uintah_field<SFCXVariable<double> >( RateDepositionX_name) );
     SFCYVariable<double>& RateDepositionY   =  *(tsk_info->get_uintah_field<SFCYVariable<double> >( RateDepositionY_name) );
     SFCZVariable<double>& RateDepositionZ   =  *(tsk_info->get_uintah_field<SFCZVariable<double> >( RateDepositionZ_name) );
+    
+    RateDepositionX.initialize(0.0);
+    RateDepositionY.initialize(0.0);
+    RateDepositionZ.initialize(0.0);
 
-  Uintah::BlockRange range( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
-  Uintah::parallel_for( range, [&](int i, int j, int k){
-    RateDepositionX(i,j,k) = 0.0;
-    RateDepositionY(i,j,k) = 0.0;
-    RateDepositionZ(i,j,k) = 0.0;
+    ProbParticleX.initialize(0.0);
+    ProbParticleY.initialize(0.0);
+    ProbParticleZ.initialize(0.0);
 
-    ProbParticleX(i,j,k)   = 0.0;
-    ProbParticleY(i,j,k)   = 0.0;
-    ProbParticleZ(i,j,k)   = 0.0;
+    ProbDepositionX.initialize( 0.0);
+    ProbDepositionY.initialize( 0.0);
+    ProbDepositionZ.initialize( 0.0);
 
-    ProbDepositionX(i,j,k) = 0.0;
-    ProbDepositionY(i,j,k) = 0.0;
-    ProbDepositionZ(i,j,k) = 0.0;
+    FluxPx.initialize(0.0) ;
+    FluxPy.initialize(0.0) ;
+    FluxPz.initialize(0.0) ;
 
-    FluxPx(i,j,k)  = 0.0;
-    FluxPy(i,j,k)  = 0.0;
-    FluxPz(i,j,k) = 0.0;
-      });
    }
-    SFCXVariable<double>& ProbSurfaceX =  *(tsk_info->get_uintah_field<SFCXVariable<double> >(_ProbSurfaceX_name) );
-    SFCYVariable<double>& ProbSurfaceY =  *(tsk_info->get_uintah_field<SFCYVariable<double> >(_ProbSurfaceY_name) );
-    SFCZVariable<double>& ProbSurfaceZ =  *(tsk_info->get_uintah_field<SFCZVariable<double> >(_ProbSurfaceZ_name) );
-    Uintah::BlockRange range( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
-    Uintah::parallel_for( range, [&](int i, int j, int k){
-      ProbSurfaceX(i,j,k) = 0.0;
-      ProbSurfaceY(i,j,k) = 0.0;
-      ProbSurfaceZ(i,j,k) = 0.0;
-      });
+  SFCXVariable<double>& ProbSurfaceX =  *(tsk_info->get_uintah_field<SFCXVariable<double> >(_ProbSurfaceX_name) );
+  SFCYVariable<double>& ProbSurfaceY =  *(tsk_info->get_uintah_field<SFCYVariable<double> >(_ProbSurfaceY_name) );
+  SFCZVariable<double>& ProbSurfaceZ =  *(tsk_info->get_uintah_field<SFCZVariable<double> >(_ProbSurfaceZ_name) );
+      ProbSurfaceX.initialize(0.0) ;
+      ProbSurfaceY.initialize(0.0) ;
+      ProbSurfaceZ.initialize(0.0) ;
 }
 //
 //------------------------------------------------
@@ -300,38 +295,31 @@ RateDeposition::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_in
     SFCXVariable<double>& RateDepositionX   =  *(tsk_info->get_uintah_field<SFCXVariable<double> >( RateDepositionX_name)  );
     SFCYVariable<double>& RateDepositionY   =  *(tsk_info->get_uintah_field<SFCYVariable<double> >( RateDepositionY_name) );
     SFCZVariable<double>& RateDepositionZ   =  *(tsk_info->get_uintah_field<SFCZVariable<double> >( RateDepositionZ_name) );
+    RateDepositionX.initialize(0.0);
+    RateDepositionY.initialize(0.0);
+    RateDepositionZ.initialize(0.0);
 
-    Uintah::BlockRange range( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
-    Uintah::parallel_for( range, [&](int i, int j, int k){
-       RateDepositionX(i,j,k) = 0.0;
-       RateDepositionY(i,j,k) = 0.0;
-       RateDepositionZ(i,j,k) = 0.0;
+    ProbParticleX.initialize(0.0);
+    ProbParticleY.initialize(0.0);
+    ProbParticleZ.initialize(0.0);
 
-       ProbParticleX(i,j,k)   = 0.0;
-       ProbParticleY(i,j,k)   = 0.0;
-       ProbParticleZ(i,j,k)   = 0.0;
+    ProbDepositionX.initialize( 0.0);
+    ProbDepositionY.initialize( 0.0);
+    ProbDepositionZ.initialize( 0.0);
 
-       ProbDepositionX(i,j,k) = 0.0;
-       ProbDepositionY(i,j,k) = 0.0;
-       ProbDepositionZ(i,j,k) = 0.0;
-
-       FluxPx(i,j,k)  = 0.0;
-       FluxPy(i,j,k)  = 0.0;
-       FluxPz(i,j,k) = 0.0;
-      });
+    FluxPx.initialize(0.0) ;
+    FluxPy.initialize(0.0) ;
+    FluxPz.initialize(0.0) ;
 
   }
 
   SFCXVariable<double>& ProbSurfaceX =  *(tsk_info->get_uintah_field<SFCXVariable<double> >(_ProbSurfaceX_name) );
   SFCYVariable<double>& ProbSurfaceY =  *(tsk_info->get_uintah_field<SFCYVariable<double> >(_ProbSurfaceY_name) );
   SFCZVariable<double>& ProbSurfaceZ =  *(tsk_info->get_uintah_field<SFCZVariable<double> >(_ProbSurfaceZ_name) );
+      ProbSurfaceX.initialize(0.0) ;
+      ProbSurfaceY.initialize(0.0) ;
+      ProbSurfaceZ.initialize(0.0) ;
 
-   Uintah::BlockRange range( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
-   Uintah::parallel_for( range, [&](int i, int j, int k){
-      ProbSurfaceX(i,j,k) = 0.0;
-      ProbSurfaceY(i,j,k) = 0.0;
-      ProbSurfaceZ(i,j,k) = 0.0;
-      });
 
 }
 
@@ -453,24 +441,25 @@ RateDeposition::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
       double Prob_near=0.0;
 
      const double T_temp   = WallTemperature(i,j,k);
-     const double MaxT_temp= WallTemperature(i,j,k);
+     //const double MaxT_temp= WallTemperature(i,j,k);
+     const double MaxT_temp= 2000.0;
 
    // X direction
      {   Prob_self= compute_prob_stick( areaX_temp, T_temp,MaxT_temp);
-         Prob_near= compute_prob_stick( areaX_temp, WallTemperature(i-1,j,k),WallTemperature(i-1,j,k));
+         Prob_near= compute_prob_stick( areaX_temp, WallTemperature(i-1,j,k),MaxT_temp);
 
         ProbSurfaceX(i,j,k) =    Norm_out_X(i,j,k)>0 ? Prob_near: Prob_self;
      }
 
     // Y direction
     {   Prob_self= compute_prob_stick( areaY_temp, T_temp,MaxT_temp);
-        Prob_near= compute_prob_stick( areaY_temp, WallTemperature(i,j-1,k),WallTemperature(i,j-1,k));
+        Prob_near= compute_prob_stick( areaY_temp, WallTemperature(i,j-1,k),MaxT_temp);
 
         ProbSurfaceY(i,j,k) =    Norm_out_Y(i,j,k)>0 ? Prob_near: Prob_self;
      }
    // Z direction
      {  Prob_self= compute_prob_stick( areaZ_temp, T_temp,MaxT_temp);
-        Prob_near= compute_prob_stick( areaZ_temp, WallTemperature(i,j,k-1),WallTemperature(i,j,k-1));
+        Prob_near= compute_prob_stick( areaZ_temp, WallTemperature(i,j,k-1),MaxT_temp);
 
         ProbSurfaceZ(i,j,k) =    Norm_out_Z(i,j,k)>0 ? Prob_near: Prob_self;
      }
@@ -555,7 +544,7 @@ RateDeposition::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
      {   Prob_self= compute_prob_stick( areaX_temp, T_temp,MaxT_temp);
          Prob_near= compute_prob_stick( areaX_temp, ParticleTemperature(i-1,j,k), MaxParticleTemperature(i-1,j,k));
          ProbParticleX(i,j,k) =    Norm_in_X(i,j,k)>0 ? Prob_near: Prob_self;
-         ProbDepositionX(i,j,k)= std::min(1.0, 0.5*(ProbParticleX(i,j,k)+(ProbParticleX(i,j,k)*ProbParticleX(i,j,k) +4*(1-ProbParticleX(i,j,k))*ProbSurfaceX(i,j,k))));
+         ProbDepositionX(i,j,k)= std::min(1.0, 0.5*(ProbParticleX(i,j,k)+sqrt(ProbParticleX(i,j,k)*ProbParticleX(i,j,k) +4*(1-ProbParticleX(i,j,k))*ProbSurfaceX(i,j,k))));
 
          flux_self=rho_temp*u_temp*weight_temp*_pi_div_six*pow(dia_temp,3);
          flux_near=rho(i-1,j,k)*xvel(i-1,j,k)*weight(i-1,j,k)*_pi_div_six*pow(diameter(i-1,j,k),3);
@@ -568,7 +557,7 @@ RateDeposition::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
      {   Prob_self= compute_prob_stick( areaY_temp, T_temp,MaxT_temp);
          Prob_near= compute_prob_stick( areaY_temp, ParticleTemperature(i,j-1,k), MaxParticleTemperature(i,j-1,k));
          ProbParticleY(i,j,k) =    Norm_in_Y(i,j,k)>0 ? Prob_near: Prob_self;
-         ProbDepositionY(i,j,k)= std::min(1.0, 0.5*(ProbParticleY(i,j,k)+(ProbParticleY(i,j,k)*ProbParticleY(i,j,k) +4*(1-ProbParticleY(i,j,k))*ProbSurfaceY(i,j,k))));
+         ProbDepositionY(i,j,k)= std::min(1.0, 0.5*(ProbParticleY(i,j,k)+sqrt(ProbParticleY(i,j,k)*ProbParticleY(i,j,k) +4*(1-ProbParticleY(i,j,k))*ProbSurfaceY(i,j,k))));
 
          flux_self=rho_temp*v_temp*weight_temp*_pi_div_six*pow(dia_temp,3);
          flux_near=rho(i,j-1,k)*yvel(i,j-1,k)*weight(i,j-1,k)*_pi_div_six*pow(diameter(i,j-1,k),3);
@@ -581,7 +570,7 @@ RateDeposition::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
      {   Prob_self= compute_prob_stick( areaZ_temp, T_temp,MaxT_temp);
          Prob_near= compute_prob_stick( areaZ_temp, ParticleTemperature(i,j,k-1), MaxParticleTemperature(i,j,k-1));
          ProbParticleZ(i,j,k) =    Norm_in_Z(i,j,k)>0 ? Prob_near: Prob_self;
-         ProbDepositionZ(i,j,k)= std::min(1.0, 0.5*(ProbParticleZ(i,j,k)+(ProbParticleZ(i,j,k)*ProbParticleZ(i,j,k) +4*(1-ProbParticleZ(i,j,k))*ProbSurfaceZ(i,j,k))));
+         ProbDepositionZ(i,j,k)= std::min(1.0, 0.5*(ProbParticleZ(i,j,k)+sqrt(ProbParticleZ(i,j,k)*ProbParticleZ(i,j,k) +4*(1-ProbParticleZ(i,j,k))*ProbSurfaceZ(i,j,k))));
 
          flux_self=rho_temp*w_temp*weight_temp*_pi_div_six*pow(dia_temp,3);
          flux_near=rho(i,j,k-1)*zvel(i,j,k-1)*weight(i,j,k-1)*_pi_div_six*pow(diameter(i,j,k-1),3);
