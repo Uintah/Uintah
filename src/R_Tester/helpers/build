@@ -169,18 +169,19 @@ cd "${BUILDROOT}/${mode}/build"
 
 $MAKE -k -j$MAKE_PARALLELISM >> ../make.log 2>&1
 
-
+#  strike one try again
 retval=$?
 if [ $retval != "0" ]; then
   # try it again -- it may not go all the way the first time
-  echo "Failed first compile, try again"
+  echo "Failed first compile, try again..."
   $MAKE -k -j$MAKE_PARALLELISM >> ../make2.log 2>&1
   retval=$?
 fi
 
+#  strike two try again
 if [ $retval != "0" ]; then
   # try it again -- it may not go all the way the first time
-  echo "Failed second compile, try again \(storing make errors\)"
+  echo "Failed second compile, try again..."
   $MAKE -k -j$MAKE_PARALLELISM > ../make3.log 2>&1
   retval=$?
 fi
@@ -198,7 +199,7 @@ if [ $retval != "0" ]; then
     echo ""
 
     # Add compilation errors to webpage
-    cat ../make_results.log >> "$HTMLLOG"
+    cat ../make3.log >> "$HTMLLOG"
 
   else
     #sus didn't compile
