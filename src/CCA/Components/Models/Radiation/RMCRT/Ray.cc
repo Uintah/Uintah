@@ -1970,7 +1970,7 @@ Ray::computeExtents(LevelP level_0,
   }
 
   // debugging
-  if(dbg2.active()){
+  if (dbg2.active()) {
     for(int L = 0; L<maxLevels; L++){
       //dbg2 << "L-"<< L << " regionLo " << regionLo[L] << " regionHi " << regionHi[L] << endl;
     }

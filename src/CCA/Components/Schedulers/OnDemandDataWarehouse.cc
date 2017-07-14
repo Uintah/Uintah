@@ -2362,7 +2362,7 @@ OnDemandDataWarehouse::getRegionModifiable(       GridVariableBase& var,
   Patch::VariableBasis basis = Patch::translateTypeToBasis(label->typeDescription()->getType(), false);
 
   // Enlarge the requested region, sometimes we only want extra cells.
-  // slect patches has difficulties with that request.
+  // select patches has difficulties with that request.
   IntVector adjustment = IntVector(1, 1, 1);
   if (basis == Patch::XFaceBased) {
     adjustment = IntVector(1, 0, 0);
@@ -2396,7 +2396,7 @@ OnDemandDataWarehouse::getRegionModifiable(       GridVariableBase& var,
     }
 
     //__________________________________
-    //  For this patch find the intersection of the requested region 
+    //  For this patch find the intersection of the requested region
     IntVector patchLo = patch->getLowIndex(basis);
     IntVector patchHi = patch->getHighIndex(basis);
     if (useBoundaryCells) {
@@ -2460,10 +2460,10 @@ OnDemandDataWarehouse::getRegionModifiable(       GridVariableBase& var,
       var.copyPatch(tmpVar, l, h);
     }
     catch (InternalError& e) {
-      std::cout << "OnDemandDataWarehouse::getRegionModifiable ERROR: failed copying patch data.\n " 
+      std::cout << "OnDemandDataWarehouse::getRegionModifiable ERROR: failed copying patch data.\n "
                 << " Level- " << level->getIndex()
-                << " region Requested: " << reqLow << " " << reqHigh << ", patch intersection: " << l << " " << h 
-                << " patch "<< patchLo << " " << patchHi 
+                << " region Requested: " << reqLow << " " << reqHigh << ", patch intersection: " << l << " " << h
+                << " patch "<< patchLo << " " << patchHi
                 << " variable range: " << tmpVar->getLow() << " "<< tmpVar->getHigh() << std::endl;
       throw e;
     }

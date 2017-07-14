@@ -1,6 +1,3 @@
-#ifndef UINTAH_CORE_UTIL_DOUT_HPP
-#define UINTAH_CORE_UTIL_DOUT_HPP
-
 /*
  * The MIT License
  *
@@ -25,12 +22,15 @@
  * IN THE SOFTWARE.
  */
 
-#include <cstdio>
-#include <cstring>
-#include <cstdlib>
+#ifndef UINTAH_CORE_UTIL_DOUT_HPP
+#define UINTAH_CORE_UTIL_DOUT_HPP
 
-#include <string>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+
 #include <sstream>
+#include <string>
 
 #include <Core/Parallel/UintahMPI.h>
 
@@ -86,7 +86,7 @@ public:
 
   Dout( std::string const & name, bool default_active )
     : m_active{ is_active(name, default_active) }
-    , m_name{ name }
+    , m_name{ name + (m_active ? ":+" : ":-") }
   {}
 
   explicit operator bool() const { return m_active; }
@@ -98,15 +98,17 @@ public:
     return a.m_name < b.m_name;
   }
 
+  // Note these two methods were added at the request of developers.
+  //   active() is effectively the same as operator bool() - APH, 07/14/17
   bool active() const { return m_active; }
   void setActive( bool active ) { m_active = active; }
 
 private:
 
-  static bool is_active( std::string const & arg_name,  bool default_active )
+  static bool is_active( std::string const& arg_name,  bool default_active )
   {
     const char * sci_debug = std::getenv("SCI_DEBUG");
-    const std::string tmp =  arg_name + ":";
+    const std::string tmp = "," + arg_name + ":";
     const char * name = tmp.c_str();
     size_t n = tmp.size();
 
@@ -116,16 +118,14 @@ private:
 
     const char * sub =  strstr(sci_debug, name);
     if ( !sub ) {
-      sub = strstr( sci_debug, name);
+      sub = strstr( sci_debug, name+1);
       --n;
-
       // name not found
       if ( !sub || sub != sci_debug ) {
         return default_active;
       }
     }
-    bool test = (sub[n] == '+');
-    return test;
+    return sub[n] == '+';
   }
 
 
