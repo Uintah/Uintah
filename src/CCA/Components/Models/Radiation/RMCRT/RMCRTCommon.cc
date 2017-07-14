@@ -45,7 +45,8 @@
 //
 using namespace Uintah;
 
-static Dout dbg("RAY", false);
+// this is used externally (e.g. Radiamoter.cc), keep them visible outside this unit
+Dout g_ray_dbg("RAY", false);
 
 //______________________________________________________________________
 // Static variable declarations
@@ -193,7 +194,7 @@ RMCRTCommon::sched_DoubleToFloat( const LevelP& level,
     return;
   }
 
-  printSchedule(level, dbg, "RMCRTCommon::DoubleToFloat");
+  printSchedule(level, g_ray_dbg, "RMCRTCommon::DoubleToFloat");
 
   tsk->requires( myDW,       d_compAbskgLabel, d_gn, 0 );
   tsk->requires( Task::OldDW, d_abskgLabel,    d_gn, 0 );  // for carryforward
@@ -213,9 +214,10 @@ RMCRTCommon::DoubleToFloat( const ProcessorGroup*,
                             Task::WhichDW which_dw )
 {
   //__________________________________
-  for (int p=0; p < patches->size(); p++){
+  for (int p=0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
-    printTask(patches,patch,dbg,"Doing RMCRTCommon::DoubleToFloat");
+
+    printTask(patches, patch, g_ray_dbg, "Doing RMCRTCommon::DoubleToFloat");
 
     constCCVariable<double> abskg_D;
     CCVariable< float > abskg_F;
@@ -229,11 +231,10 @@ RMCRTCommon::DoubleToFloat( const ProcessorGroup*,
       abskg_F[c] = (float)abskg_D[c];
       
       // bulletproofing
-      if(std::isinf( abskg_F[c] ) || std::isnan( abskg_F[c] ) ){
+      if (std::isinf( abskg_F[c] ) || std::isnan( abskg_F[c] ) ) {
         std::ostringstream warn;
         warn<< "RMCRTCommon::DoubleToFloat A non-physical abskg detected (" << abskg_F[c] << ") at cell: " << c << "\n";
         throw InternalError( warn.str(), __FILE__, __LINE__ );
-        
       } 
     }
   }
@@ -257,7 +258,7 @@ RMCRTCommon::sched_sigmaT4( const LevelP& level,
     tsk = scinew Task( taskname, this, &RMCRTCommon::sigmaT4<float>, temp_dw, includeEC );
   }
 
-  printSchedule(level,dbg,"RMCRTCommon::sched_sigmaT4");
+  printSchedule(level, g_ray_dbg, "RMCRTCommon::sched_sigmaT4");
 
   tsk->requires( temp_dw, d_compTempLabel,    d_gn, 0 );
   tsk->computes(d_sigmaT4Label);
@@ -282,7 +283,8 @@ RMCRTCommon::sigmaT4( const ProcessorGroup*,
   for (int p=0; p < patches->size(); p++){
 
     const Patch* patch = patches->get(p);
-    printTask(patches,patch,dbg,"Doing RMCRTCommon::sigmaT4");
+
+    printTask(patches, patch, g_ray_dbg, "Doing RMCRTCommon::sigmaT4");
 
     double sigma_over_pi = d_sigma/M_PI;
 
@@ -744,7 +746,7 @@ RMCRTCommon::sched_CarryForward_FineLevelLabels ( const LevelP& level,
 {
 
   std::string taskname = "RMCRTCommon::sched_CarryForward_FineLevelLabels";
-  printSchedule( level, dbg, taskname );
+  printSchedule( level, g_ray_dbg, taskname );
 
   Task* tsk = scinew Task( taskname, this, &RMCRTCommon::carryForward_FineLevelLabels );
 
@@ -776,7 +778,7 @@ RMCRTCommon::carryForward_FineLevelLabels(DetailedTask* dtask,
                                     void* stream,
                                     int deviceID)
 {
-  printTask( patches, patches->get(0), dbg, "Doing RMCRTCommon::carryForward_FineLevelLabels" );
+  printTask( patches, patches->get(0), g_ray_dbg, "Doing RMCRTCommon::carryForward_FineLevelLabels" );
 
   bool replaceVar = true;
   new_dw->transferFrom(old_dw, d_divQLabel,          patches, matls, dtask, replaceVar, nullptr );
@@ -795,7 +797,7 @@ RMCRTCommon::sched_CarryForward_Var ( const LevelP& level,
                                       const int tg_num /* == -1 */)
 {
   std::string taskname = "        carryForward_Var: " + variable->getName();
-  printSchedule(level, dbg, taskname);
+  printSchedule(level, g_ray_dbg, taskname);
 
   Task* task = scinew Task( taskname, this, &RMCRTCommon::carryForward_Var, variable );
 
@@ -888,7 +890,7 @@ RMCRTCommon::set_abskg_dw_perLevel ( const LevelP& fineLevel,
                                      Task::WhichDW fineLevel_abskg_dw )
 {
   int maxLevels = fineLevel->getGrid()->numLevels();
-  printSchedule(fineLevel, dbg, "RMCRTCommon::set_abskg_dws");
+  printSchedule(fineLevel, g_ray_dbg, "RMCRTCommon::set_abskg_dws");
   
   for(int L = 0; L<maxLevels; L++) {
   

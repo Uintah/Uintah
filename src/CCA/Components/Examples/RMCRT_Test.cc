@@ -52,7 +52,10 @@
 
 using namespace std;
 
-static Uintah::DebugStream dbg("RMCRT_Test", false);
+namespace {
+
+  Uintah::Dout g_rmcrt_test_dbg("RMCRT_Test", false);
+}
 
 
 namespace Uintah
@@ -96,7 +99,7 @@ RMCRT_Test::~RMCRT_Test ( void )
     delete d_old_uda;
   }
 
-  dbg << UintahParallelComponent::d_myworld->myrank() << " Doing: RMCRT destructor " << endl;
+  DOUT(g_rmcrt_test_dbg, UintahParallelComponent::d_myworld->myrank() << " Doing: RMCRT destructor ");
 
 }
 
@@ -318,7 +321,8 @@ void RMCRT_Test::scheduleInitialize ( const LevelP& level,
                         &RMCRT_Test::initializeWithUda );
   }
 
-  printSchedule(level,dbg,"RMCRT_Test::scheduleInitialize");
+  printSchedule(level, g_rmcrt_test_dbg, "RMCRT_Test::scheduleInitialize");
+
   task->computes( d_colorLabel );
   task->computes( d_compAbskgLabel );
   task->computes( d_cellTypeLabel );
@@ -338,7 +342,7 @@ void RMCRT_Test::scheduleRestartInitialize(const LevelP& level,
 //______________________________________________________________________
 void RMCRT_Test::scheduleComputeStableTimestep ( const LevelP& level, SchedulerP& scheduler )
 {
-  printSchedule(level,dbg,"RMCRT_Test::scheduleComputeStableTimestep");
+  printSchedule(level, g_rmcrt_test_dbg, "RMCRT_Test::scheduleComputeStableTimestep");
 
   Task* task = scinew Task( "RMCRT_Test::computeStableTimestep", this, &RMCRT_Test::computeStableTimestep );
 
@@ -601,7 +605,8 @@ void RMCRT_Test::initialize (const ProcessorGroup*,
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    printTask(patches, patch,dbg,"Doing initialize");
+
+    printTask(patches, patch, g_rmcrt_test_dbg, "Doing initialize");
 
     Box patch_box = patch->getBox();
 
@@ -866,7 +871,8 @@ void RMCRT_Test::initializeWithUda (const ProcessorGroup*,
   // loop over the UDA patches
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    printTask(patches, patch,dbg,"Doing initializeWithUda");
+
+    printTask(patches, patch, g_rmcrt_test_dbg, "Doing initializeWithUda");
 
     CCVariable<double> color;
     CCVariable<double> abskg;

@@ -1227,8 +1227,7 @@ void Patch::cullIntersection(VariableBasis basis,
   
   for (int dim = 0; dim < 3; dim++) {
     // If the number of overlapping cells is a) not equal to zero, b) is equal to 2 
-    // extra cells, and c) the patches are adjacent on this dimension then increment the
-    // counter counter
+    // extra cells, and c) the patches are adjacent on this dimension then increment counter.
 
     if ( overlapCells[dim] != 0 && overlapCells[dim] == 2*getExtraCells()[dim] && ( p_int_low[dim] == n_int_high[dim] || n_int_low[dim] == p_int_high[dim] ) ) {
       counter++;

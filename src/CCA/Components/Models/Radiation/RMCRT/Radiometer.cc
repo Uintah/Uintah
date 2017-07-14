@@ -43,10 +43,7 @@
 //
 using namespace Uintah;
 
-namespace {
-
-  Dout dbg("RAY", false);
-}
+extern Dout g_ray_dbg;
 
 //______________________________________________________________________
 // Class: Constructor.
@@ -253,7 +250,7 @@ Radiometer::sched_initializeRadVars( const LevelP& level,
     tsk= scinew Task( taskname, this, &Radiometer::initializeRadVars< float > );
   }
   
-  printSchedule(level, dbg, taskname);
+  printSchedule(level, g_ray_dbg, taskname);
 
   tsk->requires(Task::OldDW, d_VRFluxLabel, d_gn, 0);
   tsk->computes( d_VRFluxLabel );
@@ -284,7 +281,7 @@ Radiometer::initializeRadVars( const ProcessorGroup*,
 
     const Patch* patch = patches->get(p);
 
-    printTask(patches, patch, dbg,"Doing Radiometer::initializeVars");
+    printTask(patches, patch, g_ray_dbg, "Doing Radiometer::initializeVars");
 
     CCVariable< T > VRFlux;
     new_dw->allocateAndPut( VRFlux, d_VRFluxLabel, d_matl, patch );
@@ -325,11 +322,11 @@ Radiometer::sched_radiometer( const LevelP& level,
 
   tsk->setType(Task::Spatial);
 
-  printSchedule(level, dbg, "Radiometer::sched_radiometer");
+  printSchedule(level, g_ray_dbg, "Radiometer::sched_radiometer");
 
   //__________________________________
   // Require an infinite number of ghost cells so you can access the entire domain.
-  DOUT(dbg, "    sched_radiometer: adding requires for all-to-all variables ");
+  DOUT(g_ray_dbg, "    sched_radiometer: adding requires for all-to-all variables ");
 
   Ghost::GhostType gac = Ghost::AroundCells;
   tsk->requires(abskg_dw, d_abskgLabel, gac, SHRT_MAX);
@@ -382,7 +379,7 @@ Radiometer::radiometer( const ProcessorGroup* pg,
   for (int p=0; p < patches->size(); p++){
 
     const Patch* patch = patches->get(p);
-    printTask(patches, patch, dbg, "Doing Radiometer::radiometer");
+    printTask(patches, patch, g_ray_dbg, "Doing Radiometer::radiometer");
 
     bool modifiesFlux= true;
     radiometerFlux < T > ( patch, level, new_dw, mTwister, sigmaT4OverPi, abskg, celltype, modifiesFlux );
@@ -404,7 +401,7 @@ Radiometer::radiometerFlux( const Patch* patch,
                             constCCVariable<int> celltype,
                             const bool modifiesFlux )
 {
-  printTask(patch, dbg,"Doing Radiometer::radiometerFlux");
+  printTask(patch, g_ray_dbg, "Doing Radiometer::radiometerFlux");
 
   CCVariable< T > VRFlux;
   if( modifiesFlux ){

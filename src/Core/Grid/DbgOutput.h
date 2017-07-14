@@ -66,9 +66,18 @@ void printTask(       DebugStream & dbg
 
 
 
-// --------------------------------------------------------------------
-// Dout versions of the above (moving away from DebugStream)
-// --------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------
+// APH - 07/14/17
+// ------------------------------------------------------------------------------------------------
+// Dout (class) versions of the above (moving away from DebugStream)
+//
+// Dout is an extremely lightweight way to provide the same functionality as DebugStream,
+// but in a fully lock-free way for both multiple threads and MPI ranks. DOut also does not
+// inherit from from the standard library (std::ostream specifically) as DebugStream does.
+// The DOUT variadic macro is then used, which is printf-based. By the POSIX standard, printf
+// must "behave" like it acquired a lock. The Dout class also defines an explicit bool() operator
+// for checking state, e.g. active or inactive.
+// ------------------------------------------------------------------------------------------------
 
 // Output the task name and the level it's executing on and each of the patches
 void printTask( Dout         & out
@@ -76,13 +85,13 @@ void printTask( Dout         & out
               );
 
 void printTask( const Patch       * patch
-              ,       Dout        & dbg
+              ,       Dout        & out
               , const std::string & where
               );
 
 void printTask( const PatchSubset * patches
               , const Patch       * patch
-              ,       Dout        & dbg
+              ,       Dout        & out
               , const std::string & where
               );
 
@@ -93,12 +102,12 @@ void printTaskLevels( const ProcessorGroup * d_myworld
                     );
 
 void printSchedule( const LevelP      & level
-                  ,       Dout        & dbg
+                  ,       Dout        & out
                   , const std::string & where
                   );
 
 void printSchedule( const PatchSet    * patches
-                  ,       Dout        & dbg
+                  ,       Dout        & out
                   , const std::string & where
                   );
 

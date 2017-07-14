@@ -133,6 +133,19 @@ printTask(       DebugStream & dbg
 
 
 
+// ------------------------------------------------------------------------------------------------
+// APH - 07/14/17
+// ------------------------------------------------------------------------------------------------
+// Dout (class) versions of the above (moving away from DebugStream)
+//
+// Dout is an extremely lightweight way to provide the same functionality as DebugStream,
+// but in a fully lock-free way for both multiple threads and MPI ranks. DOut also does not
+// inherit from from the standard library (std::ostream specifically) as DebugStream does.
+// The DOUT variadic macro is then used, which is printf-based. By the POSIX standard, printf
+// must "behave" like it acquired a lock. The Dout class also defines an explicit bool() operator
+// for checking state, e.g. active or inactive.
+// ------------------------------------------------------------------------------------------------
+
 //______________________________________________________________________
 // Output the task name and the level it's executing on and each of the patches
 void
@@ -162,6 +175,7 @@ printTask( Dout         & out
       }
     }
     printf("%s\n", msg.str().c_str());
+//    DOUT(out, msg.str());
   }
 }
 
@@ -169,11 +183,11 @@ printTask( Dout         & out
 // Dout version (moving away from DebugStream)
 void
 printTask( const Patch       * patch
-         ,       Dout        & dbg
+         ,       Dout        & out
          , const std::string & where
          )
 {
-  if (dbg){
+  if (out){
     std::ostringstream msg;
     msg << Uintah::Parallel::getMPIRank()  << " ";
     msg << std::left;
@@ -182,6 +196,7 @@ printTask( const Patch       * patch
         << patch->getLevel()->getIndex()
         << " patch " << patch->getGridIndex();
     printf("%s\n", msg.str().c_str());
+//    DOUT(out, msg.str());
   }
 }
 
@@ -190,11 +205,11 @@ printTask( const Patch       * patch
 void
 printTask( const PatchSubset * patches
          , const Patch       * patch
-         ,       Dout        & dbg
+         ,       Dout        & out
          , const std::string & where
          )
 {
-  if (dbg) {
+  if (out) {
     std::ostringstream msg;
     msg << Uintah::Parallel::getMPIRank() << " ";
     msg << std::left;
@@ -203,9 +218,9 @@ printTask( const PatchSubset * patches
         << getLevel(patches)->getIndex()
         << " patch " << patch->getGridIndex();
     printf("%s\n", msg.str().c_str());
+//    DOUT(out, msg.str());
   }
 }
-
 
 //______________________________________________________________________
 //  Output the task name and the level it's executing on only first patch of that level
@@ -229,25 +244,28 @@ printTaskLevels( const ProcessorGroup * d_myworld
         msg << "\t Patch-" << firstPatch->getGridIndex();
         msg << "\t L-" << level->getIndex();
         printf("%s\n", msg.str().c_str());
+//        DOUT(out, msg.str());
       }
     }
   }
 }
+
 //______________________________________________________________________
 //
 void
 printSchedule( const PatchSet    * patches
-             ,       Dout        & dbg
+             ,       Dout        & out
              , const std::string & where
              )
 {
-  if (dbg){
-    std::ostringstream mesg;
-    mesg << Uintah::Parallel::getMPIRank() << " ";
-    mesg << std::left;
-    mesg.width(50);
-    mesg << where << " L-" << getLevel(patches)->getIndex() << std::endl;
-    printf("%s\n", mesg.str().c_str());
+  if (out){
+    std::ostringstream msg;
+    msg << Uintah::Parallel::getMPIRank() << " ";
+    msg << std::left;
+    msg.width(50);
+    msg << where << " L-" << getLevel(patches)->getIndex();
+    printf("%s\n", msg.str().c_str());
+//    DOUT(out, msg.str());
   }
 }
 
@@ -255,17 +273,18 @@ printSchedule( const PatchSet    * patches
 //
 void
 printSchedule( const LevelP      & level
-             ,       Dout        & dbg
+             ,       Dout        & out
              , const std::string & where
              )
 {
-  if (dbg){
-    std::ostringstream mesg;
-    mesg << Uintah::Parallel::getMPIRank() << " ";
-    mesg << std::left;
-    mesg.width(50);
-    mesg << where << " L-" << level->getIndex();
-    printf("%s\n", mesg.str().c_str());
+  if (out){
+    std::ostringstream msg;
+    msg << Uintah::Parallel::getMPIRank() << " ";
+    msg << std::left;
+    msg.width(50);
+    msg << where << " L-" << level->getIndex();
+    printf("%s\n", msg.str().c_str());
+//    DOUT(out, msg.str());
   }
 }
 
