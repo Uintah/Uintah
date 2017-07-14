@@ -565,6 +565,8 @@ namespace Uintah{
               // 2nd order exponential fit: ef = a*exp(b*T)+c*exp(d*T);
               double ef=fresnel[0]*std::exp(fresnel[1]*T) + fresnel[2]*std::exp(fresnel[3]*T); 
               e=(T>=T_mid) ? ef : std::min(ef,e); 
+              e=(Dp<=1e-8) ? C : e; // If the particle size is 1e-8 then there is no flux (F<=0) of particles to the
+              // wall and the emissivity is set to the wall emissivity. 
             }
             ~pokluda_e(){}
           };
