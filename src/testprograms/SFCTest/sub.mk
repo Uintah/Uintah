@@ -40,8 +40,6 @@ endif
 
 PSELIBS := $(GPU_EXTRA_LINK) $(PSELIBS)
 
-LIBS := $(MPI_LIBRARY) 
-
 ifeq ($(IS_STATIC_BUILD),yes)
   LIBS := $(CORE_STATIC_LIBS)   \
           $(BOOST_LIBRARY)      \
