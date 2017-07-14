@@ -106,7 +106,7 @@ private:
   static bool is_active( std::string const & arg_name,  bool default_active )
   {
     const char * sci_debug = std::getenv("SCI_DEBUG");
-    const std::string tmp = "," + arg_name + ":";
+    const std::string tmp =  arg_name + ":";
     const char * name = tmp.c_str();
     size_t n = tmp.size();
 
@@ -116,7 +116,7 @@ private:
 
     const char * sub =  strstr(sci_debug, name);
     if ( !sub ) {
-      sub = strstr( sci_debug, name+1);
+      sub = strstr( sci_debug, name);
       --n;
 
       // name not found
@@ -124,7 +124,8 @@ private:
         return default_active;
       }
     }
-    return sub[n] == '+';
+    bool test = (sub[n] == '+');
+    return test;
   }
 
 
