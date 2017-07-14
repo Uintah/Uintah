@@ -29,17 +29,37 @@
 
 SRCDIR := testprograms/SFCTest
 
-LIBS := $(MPI_LIBRARY) 
-
 PROGRAM := $(SRCDIR)/sfctest
-
 SRCS := $(SRCDIR)/sfctest.cc
 
-PSELIBS := CCA/Ports       \
-           Core/Parallel   \
-           Core/Exceptions
+ifeq ($(IS_STATIC_BUILD),yes)
+  PSELIBS := $(ALL_STATIC_PSE_LIBS)
+else # Non-static build
+  PSELIBS := $(ALL_PSE_LIBS)
+endif
 
-LIBS := $(M_LIBRARY) $(MPI_LIBRARY)
+PSELIBS := $(GPU_EXTRA_LINK) $(PSELIBS)
+
+LIBS := $(MPI_LIBRARY) 
+
+ifeq ($(IS_STATIC_BUILD),yes)
+  LIBS := $(CORE_STATIC_LIBS)   \
+          $(BOOST_LIBRARY)      \
+          $(EXPRLIB_LIBRARY)    \
+          $(SPATIALOPS_LIBRARY) \
+          $(TABPROPS_LIBRARY)   \
+          $(RADPROPS_LIBRARY)   \
+          $(PAPI_LIBRARY)       \
+          $(M_LIBRARY)
+
+else
+  LIBS := $(LAPACK_LIBRARY) \
+          $(BLAS_LIBRARY)   \
+          $(THREAD_LIBRARY) \
+	        $(MPI_LIBRARY)    \
+	        $(XML2_LIBRARY)   \
+	        $(CUDA_LIBRARY)
+endif
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
