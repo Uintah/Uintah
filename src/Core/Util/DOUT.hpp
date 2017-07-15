@@ -35,38 +35,38 @@
 #include <Core/Parallel/UintahMPI.h>
 
 
-#define DOUT( cond, ... )             \
-  if (cond) {                         \
-    std::ostringstream msg;           \
-    msg << __VA_ARGS__;               \
-    printf("%s\n",msg.str().c_str()); \
+#define DOUT( cond, ... )                  \
+  if (cond) {                              \
+    std::ostringstream dout_msg;           \
+    dout_msg << __VA_ARGS__;               \
+    printf("%s\n",dout_msg.str().c_str()); \
   }
 
-#define POUT( ... )                   \
-  {                                   \
-    std::ostringstream msg;           \
-    msg << __FILE__ << ":";           \
-    msg << __LINE__ << " : ";         \
-    msg << __VA_ARGS__;               \
-    printf("%s\n",msg.str().c_str()); \
+#define POUT( ... )                        \
+  {                                        \
+    std::ostringstream dout_msg;           \
+    dout_msg << __FILE__ << ":";           \
+    dout_msg << __LINE__ << " : ";         \
+    dout_msg << __VA_ARGS__;               \
+    printf("%s\n",dout_msg.str().c_str()); \
   }
 
-#define TOUT()                            \
-  printf("TOUT:  %d  %d  %s:%d\n"         \
-      , MPI::Impl::prank( MPI_COMM_WORLD )\
-      , MPI::Impl::tid()                  \
-      , __FILE__                          \
-      , __LINE__                          \
+#define TOUT()                             \
+  printf("TOUT:  %d  %d  %s:%d\n"          \
+      , MPI::Impl::prank( MPI_COMM_WORLD ) \
+      , MPI::Impl::tid()                   \
+      , __FILE__                           \
+      , __LINE__                           \
       )
 
 
 #define DOUTP0( cond, ... )                                 \
   if ( MPI::Impl::prank( MPI_COMM_WORLD ) == 0 && cond) {   \
-    std::ostringstream msg;                                 \
-    msg << __FILE__ << ":";                                 \
-    msg << __LINE__ << " : ";                               \
-    msg << __VA_ARGS__;                                     \
-    printf("%s\n",msg.str().c_str());                       \
+    std::ostringstream dout_msg;                            \
+    dout_msg << __FILE__ << ":";                            \
+    dout_msg << __LINE__ << " : ";                          \
+    dout_msg << __VA_ARGS__;                                \
+    printf("%s\n",dout_msg.str().c_str());                  \
   }
 
 

@@ -26,6 +26,7 @@
 
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Parallel/Parallel.h>
+#include <Core/Util/DOUT.hpp>
 
 namespace Uintah {
 
@@ -174,8 +175,7 @@ printTask( Dout         & out
         msg << "\t  L-" << level->getIndex();
       }
     }
-    printf("%s\n", msg.str().c_str());
-//    DOUT(out, msg.str());
+    DOUT(out, msg.str());
   }
 }
 
@@ -187,7 +187,7 @@ printTask( const Patch       * patch
          , const std::string & where
          )
 {
-  if (out){
+  if (out) {
     std::ostringstream msg;
     msg << Uintah::Parallel::getMPIRank()  << " ";
     msg << std::left;
@@ -195,8 +195,7 @@ printTask( const Patch       * patch
     msg << where << " \tL-"
         << patch->getLevel()->getIndex()
         << " patch " << patch->getGridIndex();
-    printf("%s\n", msg.str().c_str());
-//    DOUT(out, msg.str());
+    DOUT(out, msg.str());
   }
 }
 
@@ -217,8 +216,7 @@ printTask( const PatchSubset * patches
     msg << where << "  \tL-"
         << getLevel(patches)->getIndex()
         << " patch " << patch->getGridIndex();
-    printf("%s\n", msg.str().c_str());
-//    DOUT(out, msg.str());
+    DOUT(out, msg.str());
   }
 }
 
@@ -243,8 +241,7 @@ printTaskLevels( const ProcessorGroup * d_myworld
         msg << dtask->getTask()->getName();
         msg << "\t Patch-" << firstPatch->getGridIndex();
         msg << "\t L-" << level->getIndex();
-        printf("%s\n", msg.str().c_str());
-//        DOUT(out, msg.str());
+        DOUT(out, msg.str());
       }
     }
   }
@@ -258,14 +255,13 @@ printSchedule( const PatchSet    * patches
              , const std::string & where
              )
 {
-  if (out){
+  if (out) {
     std::ostringstream msg;
     msg << Uintah::Parallel::getMPIRank() << " ";
     msg << std::left;
     msg.width(50);
     msg << where << " L-" << getLevel(patches)->getIndex();
-    printf("%s\n", msg.str().c_str());
-//    DOUT(out, msg.str());
+    DOUT(out, msg.str());
   }
 }
 
@@ -277,14 +273,13 @@ printSchedule( const LevelP      & level
              , const std::string & where
              )
 {
-  if (out){
+  if (out) {
     std::ostringstream msg;
     msg << Uintah::Parallel::getMPIRank() << " ";
     msg << std::left;
     msg.width(50);
     msg << where << " L-" << level->getIndex();
-    printf("%s\n", msg.str().c_str());
-//    DOUT(out, msg.str());
+    DOUT(out, msg.str());
   }
 }
 
