@@ -38,13 +38,24 @@ using namespace std;
 void
 Uintah::geocosm( DataArchive * da, CommandLineFlags & clf )
 {
+  bool have_volume = false;
   vector<string> vars;
   vector<const Uintah::TypeDescription*> types;
   da->queryVariables(vars, types);
   ASSERTEQ(vars.size(), types.size());
   cout << "#There are " << vars.size() << " variables:\n";
-  for(int i=0;i<(int)vars.size();i++)
+  for(int i=0;i<(int)vars.size();i++){
     cout << vars[i] << ": " << types[i]->getName() << endl;
+    if(vars[i]=="p.volume"){
+       have_volume=true;
+    }
+  }
+
+    
+
+//  if(clf.do_PTvar){
+//    cout << "Good morning" << endl;
+//  }
       
   vector<int> index;
   vector<double> times;
@@ -83,13 +94,16 @@ Uintah::geocosm( DataArchive * da, CommandLineFlags & clf )
         ParticleVariable<long64> pID;
         ParticleVariable<Point>  pos;
         ParticleVariable<Vector> vel;
-        ParticleVariable<double> plas, col;
+        ParticleVariable<double> plas, col, volume;
         ParticleVariable<Matrix3> stress;
         da->query(pos,    "p.x",              matl, patch, t);
         da->query(pID,    "p.particleID",     matl, patch, t);
         da->query(col,    "p.color",          matl, patch, t);
         da->query(plas,   "p.plasticStrain",  matl, patch, t);
         da->query(stress, "p.stress",         matl, patch, t);
+        if(have_volume){
+         da->query(volume, "p.volume",        matl, patch, t);
+        }
         ParticleSubset* pset = pos.getParticleSubset();
         if(pset->numParticles() > 0){
           ParticleSubset::iterator iter = pset->begin();
@@ -102,13 +116,24 @@ Uintah::geocosm( DataArchive * da, CommandLineFlags & clf )
                             +      6.0*(sig(0,1)*sig(0,1) + sig(1,2)*sig(1,2) +
                                         sig(2,0)*sig(2,0))));
 
-            partfile << pos[*iter].x() << " " << pos[*iter].y() << " " 
-                     << pos[*iter].z() << " " << pID[*iter] << " " 
-                     << col[*iter]         << " " << sig(0,0) << " " 
-                     << sig(1,1) << " " << sig(2,2) << " " 
-                     << sig(1,2) << " " << sig(0,2) << " "
-                     << sig(0,1) << " " << pressure << " " 
-                     << eqStress << " " << plas[*iter] << endl;
+            if(have_volume){
+              partfile << pos[*iter].x() << " " << pos[*iter].y() << " " 
+                       << pos[*iter].z() << " " << pID[*iter] << " " 
+                       << col[*iter]         << " " << sig(0,0) << " " 
+                       << sig(1,1) << " " << sig(2,2) << " " 
+                       << sig(1,2) << " " << sig(0,2) << " "
+                       << sig(0,1) << " " << pressure << " " 
+                       << eqStress << " " << plas[*iter] << " " 
+                       << volume[*iter]   << endl;
+            } else {
+              partfile << pos[*iter].x() << " " << pos[*iter].y() << " " 
+                       << pos[*iter].z() << " " << pID[*iter] << " " 
+                       << col[*iter]         << " " << sig(0,0) << " " 
+                       << sig(1,1) << " " << sig(2,2) << " " 
+                       << sig(1,2) << " " << sig(0,2) << " "
+                       << sig(0,1) << " " << pressure << " " 
+                       << eqStress << " " << plas[*iter] << endl;
+            }
           } // for
         }  //if
       }  // for patches
