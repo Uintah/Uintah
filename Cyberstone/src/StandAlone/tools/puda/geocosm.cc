@@ -82,7 +82,11 @@ Uintah::geocosm( DataArchive * da, CommandLineFlags & clf )
     filename = partroot + "." + fnum.str() + "." + mnum.str();
     ofstream partfile(filename.c_str());
 
-    partfile << "# x y z pID color sigxx, sigyy sigzz sigyz sigxz sigxy pressure equiv_stress plasStrain" << endl;
+    if(have_volume){
+      partfile << "# x y z pID color sigxx, sigyy sigzz sigyz sigxz sigxy pressure equiv_stress plasStrain volume" << endl;
+    }else{
+      partfile << "# x y z pID color sigxx, sigyy sigzz sigyz sigxz sigxy pressure equiv_stress plasStrain" << endl;
+    }
 
     for(int l=0;l<grid->numLevels();l++){
       LevelP level = grid->getLevel(l);
