@@ -95,20 +95,47 @@
         </BCType>
       </Face>
       <Face side = "z-">
-        <BCType id = "all"   label = "Symmetric" var = "symmetry">
+        <BCType id = "0" var = "Neumann" label = "Pressure">
+                           <value> 0.0   </value>
         </BCType>
-      </Face>                  
-      <Face side = "z+">
-        <BCType id = "all"   label = "Symmetric" var = "symmetry">
+        <BCType id = "all" var = "Neumann" label = "Velocity">
+                           <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Temperature">
+                           <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Density">
+                           <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
+                           <value> 0.0  </value>
         </BCType>
       </Face>
+      <Face side = "z+">
+        <BCType id = "0" var = "Neumann" label = "Pressure">
+                           <value> 0.0   </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Velocity">
+                           <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Temperature">
+                           <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Density">
+                           <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
+                           <value> 0.0  </value>
+        </BCType>
+      </Face>
+      
     </BoundaryConditions>
     <Level>
       <Box label = " Level 0">
         <lower>        [0.0,0.0,0.0]    </lower>
-        <upper>        [5.0,5.0,0.25]   </upper>
+        <upper>        [5.0,5.0,5]   </upper>
         <extraCells>   [1,1,1]    </extraCells>
-        <patches>      [1,1,1]    </patches>
+        <patches>      [2,2,2]    </patches>
       </Box>
       <spacing>        [0.25,0.25,0.25]  </spacing>
     </Level>
@@ -161,10 +188,10 @@
     </MPM>
     <Regridder type="Tiled">
       <max_levels>2</max_levels>
-      <cell_refinement_ratio>    [[2,2,1]]         </cell_refinement_ratio>
-      <min_patch_size>           [[8,8,1]]         </min_patch_size>
-      <cell_stability_dilation>   [2,2,0]          </cell_stability_dilation>   
-      <min_boundary_cells>       [1,1,0]           </min_boundary_cells>
+      <cell_refinement_ratio>    [[2,2,2]]         </cell_refinement_ratio>
+      <min_patch_size>           [[8,8,8]]         </min_patch_size>
+      <cell_stability_dilation>   [2,2,2]          </cell_stability_dilation>   
+      <min_boundary_cells>       [1,1,1]           </min_boundary_cells>
       
       <!-- RT: Needed so the restart grid is identical to the original grid-->        
       <max_timestep_interval>       0              </max_timestep_interval>
@@ -202,12 +229,12 @@
         <thermal_conductivity>  400.0           </thermal_conductivity>
         <specific_heat>         716.0           </specific_heat>
         <geom_object>
-          <box label = "gpmpm">
-            <min>           [2.5,2.5,0.0]   </min>
-            <max>           [3.5,3.5,0.25]  </max>
+          <box label = "block">
+            <min>           [2.5,2.5,2.5]   </min>
+            <max>           [3.5,3.5,3.5]  </max>
           </box>
           <res>               [1,1,1]         </res>
-          <velocity>          [10.0,0.0,0.0]  </velocity>
+          <velocity>          [10.0,10.0,10.0]  </velocity>
           <temperature>       300             </temperature>
         </geom_object>
       </material>
@@ -226,14 +253,14 @@
         <gamma>                      1.4             </gamma>           
         <geom_object>
           <difference>
-            <box label = "gpice">
+            <box label = "wholeDomain">
               <min>           [-1.0,-1.0,-1.0]    </min>
-              <max>           [10.0,10.0, 4.0]    </max>
+              <max>           [10.0,10.0, 10.0]    </max>
             </box>
-            <box label = "gpmpm" />
+            <box label = "block" />
           </difference>
           <res>                      [1,1,1]        </res>
-          <velocity>           [10.0,0.0,0.0]       </velocity>
+          <velocity>           [10.0,10.0,10.0]       </velocity>
           <temperature>        300.0                </temperature>
           <density>            1.1792946927374306   </density>
           <pressure>           101325.0             </pressure>
