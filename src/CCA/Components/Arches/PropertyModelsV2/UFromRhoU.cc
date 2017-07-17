@@ -68,7 +68,7 @@ void UFromRhoU::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info 
   IntVector cell_lo = patch->getCellLowIndex();
   IntVector cell_hi = patch->getCellHighIndex();
 
-  GET_FX_BUFFERED_PATCH_RANGE(0,1);
+  GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE(0,1);
   Uintah::BlockRange x_range( low_fx_patch_range, high_fx_patch_range );
   Uintah::parallel_for( x_range, [&](int i, int j, int k){
 
@@ -102,7 +102,7 @@ void UFromRhoU::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info 
     });
   }
 
-  GET_FY_BUFFERED_PATCH_RANGE(0,1);
+  GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE(0,1);
   Uintah::BlockRange y_range( low_fy_patch_range, high_fy_patch_range );
   Uintah::parallel_for( y_range, [&](int i, int j, int k){
 
@@ -136,7 +136,7 @@ void UFromRhoU::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info 
     });
   }
 
-  GET_FZ_BUFFERED_PATCH_RANGE(0,1);
+  GET_EXTRACELL_FZ_BUFFERED_PATCH_RANGE(0,1);
   Uintah::BlockRange z_range( low_fz_patch_range, high_fz_patch_range );
   Uintah::parallel_for( z_range, [&](int i, int j, int k){
 
@@ -203,7 +203,7 @@ void UFromRhoU::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   IntVector cell_lo = patch->getCellLowIndex();
   IntVector cell_hi = patch->getCellHighIndex();
 
-  GET_FX_BUFFERED_PATCH_RANGE(0,1);
+  GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE(0,1);
   Uintah::BlockRange x_range( low_fx_patch_range, high_fx_patch_range );
   Uintah::parallel_for( x_range, [&](int i, int j, int k){
 
@@ -237,7 +237,7 @@ void UFromRhoU::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     });
   }
 
-  GET_FY_BUFFERED_PATCH_RANGE(0,1);
+  GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE(0,1);
   Uintah::BlockRange y_range( low_fy_patch_range, high_fy_patch_range );
   Uintah::parallel_for( y_range, [&](int i, int j, int k){
 
@@ -271,7 +271,7 @@ void UFromRhoU::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     });
   }
 
-  GET_FZ_BUFFERED_PATCH_RANGE(0,1);
+  GET_EXTRACELL_FZ_BUFFERED_PATCH_RANGE(0,1);
   Uintah::BlockRange z_range( low_fz_patch_range, high_fz_patch_range );
   Uintah::parallel_for( z_range, [&](int i, int j, int k){
 

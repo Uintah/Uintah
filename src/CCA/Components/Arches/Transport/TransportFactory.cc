@@ -107,9 +107,14 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
     KFEUpdate<SFCXVariable<double> >::Builder* x_update_tsk =
     scinew KFEUpdate<SFCXVariable<double> >::Builder( update_task_name, 0 );
     register_task( update_task_name, x_update_tsk );
+
     _momentum_builders.push_back(mom_task_name);
     _momentum_compute_psi.push_back(compute_psi_name);
     _momentum_update.push_back(update_task_name);
+
+    _momentum_solve.push_back( compute_psi_name );
+    _momentum_solve.push_back( mom_task_name );
+    _momentum_solve.push_back( update_task_name );
 
     // Y-mom
     compute_psi_name = "y-mom-psi";
@@ -123,9 +128,14 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
     TaskInterface::TaskBuilder* y_update_tsk =
     scinew KFEUpdate<SFCYVariable<double> >::Builder( update_task_name, 0 );
     register_task( update_task_name, y_update_tsk );
+
     _momentum_builders.push_back(mom_task_name);
     _momentum_compute_psi.push_back(compute_psi_name);
     _momentum_update.push_back(update_task_name);
+
+    _momentum_solve.push_back( compute_psi_name );
+    _momentum_solve.push_back( mom_task_name );
+    _momentum_solve.push_back( update_task_name );
 
     // Z-mom
     compute_psi_name = "z-mom-psi";
@@ -139,9 +149,14 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
     TaskInterface::TaskBuilder* z_update_tsk =
     scinew KFEUpdate<SFCZVariable<double> >::Builder( update_task_name, 0 );
     register_task( update_task_name, z_update_tsk );
+
     _momentum_builders.push_back(mom_task_name);
     _momentum_compute_psi.push_back(compute_psi_name);
     _momentum_update.push_back(update_task_name);
+
+    _momentum_solve.push_back( compute_psi_name );
+    _momentum_solve.push_back( mom_task_name );
+    _momentum_solve.push_back( update_task_name );
 
     //Pressure eqn
     TaskInterface::TaskBuilder* press_tsk = scinew PressureEqn::Builder("build_pressure_system", 0, _shared_state);
@@ -155,7 +170,6 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
     //pressure Gradient
     AtomicTaskInterface::AtomicTaskBuilder* gradP_tsk = scinew AddPressGradient::Builder("pressure_correction", 0);
     register_atomic_task( "pressure_correction", gradP_tsk);
-
 
   }
 }

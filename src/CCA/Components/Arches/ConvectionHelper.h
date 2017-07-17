@@ -100,17 +100,22 @@ namespace Uintah {
   /**
       @struct ComputeConvectiveFlux
       @brief Compute a convective flux given psi (flux limiter) with this functor.
+             The template arguments arrise from the potential use of temporary (non-const)
+             variables. Typically, one would use T=Array3<double> and CT=const Array3<double>
+             when not using temporary variables. However, since temporary variables can ONLY
+             be non-const, one should use CT=Array3<double> in that case. 
   **/
+  template <typename T, typename CT>
   struct ComputeConvectiveFlux{
 
-    ComputeConvectiveFlux( const Array3<double>& i_phi,
-                           const Array3<double>& i_u, const Array3<double>& i_v,
-                           const Array3<double>& i_w,
-                           const Array3<double>& i_psi_x, const Array3<double>& i_psi_y,
-                           const Array3<double>& i_psi_z,
-                           Array3<double>& i_flux_x, Array3<double>& i_flux_y,
-                           Array3<double>& i_flux_z,
-                           const Array3<double>& i_eps ) :
+    ComputeConvectiveFlux( CT& i_phi,
+                           CT& i_u, CT& i_v,
+                           CT& i_w,
+                           CT& i_psi_x, CT& i_psi_y,
+                           CT& i_psi_z,
+                           T& i_flux_x, T& i_flux_y,
+                           T& i_flux_z,
+                           CT& i_eps ) :
       phi(i_phi), u(i_u), v(i_v), w(i_w), psi_x(i_psi_x), psi_y(i_psi_y), psi_z(i_psi_z),
       flux_x(i_flux_x), flux_y(i_flux_y), flux_z(i_flux_z), eps(i_eps)
       {}

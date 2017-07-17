@@ -431,7 +431,7 @@ private:
         CFYT& y_psi = *(tsk_info->get_const_uintah_field<CFYT>(_eqn_names[ieqn]+"_y_psi"));
         CFZT& z_psi = *(tsk_info->get_const_uintah_field<CFZT>(_eqn_names[ieqn]+"_z_psi"));
 
-        Uintah::ComputeConvectiveFlux get_flux( phi, u, v, w, x_psi, y_psi, z_psi,
+        Uintah::ComputeConvectiveFlux<Array3<double>, const Array3<double> > get_flux( phi, u, v, w, x_psi, y_psi, z_psi,
                                                 x_flux, y_flux, z_flux, eps );
         Uintah::parallel_for( range_cl_to_ech, get_flux );
 
@@ -443,7 +443,7 @@ private:
         CT& D = *(tsk_info->get_const_uintah_field<CT>(m_D_name));
 
         //NOTE: No diffusion allowed on boundaries.
-        GET_BUFFERED_PATCH_RANGE(1,-1);
+        GET_EXTRACELL_BUFFERED_PATCH_RANGE(1,-1);
 
         Uintah::BlockRange range_diff(low_patch_range, high_patch_range);
 

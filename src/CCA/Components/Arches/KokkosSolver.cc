@@ -502,27 +502,7 @@ KokkosSolver::SSPRKSolve( const LevelP& level, SchedulerP& sched ){
     }
 
     // ** MOMENTUM **
-    // first compute the psi functions for the limiters:
-    SVec momentum_psi_builders = i_transport->second->retrieve_task_subset("momentum_psi_builders");
-    for ( SVec::iterator i = momentum_psi_builders.begin(); i != momentum_psi_builders.end(); i++){
-      TaskInterface* tsk = i_transport->second->retrieve_task(*i);
-      tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep);
-    }
-
-    // now construct RHS:
-    SVec mom_rhs_builders = i_transport->second->retrieve_task_subset("mom_rhs_builders");
-    for ( SVec::iterator i = mom_rhs_builders.begin(); i != mom_rhs_builders.end(); i++){
-      TaskInterface* tsk = i_transport->second->retrieve_task(*i);
-      tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep);
-    }
-
-    // now update them:
-    // At this stage we have the hatted (uncorrected) velocities
-    SVec mom_fe_up = i_transport->second->retrieve_task_subset("mom_fe_update");
-    for ( SVec::iterator i = mom_fe_up.begin(); i != mom_fe_up.end(); i++){
-      TaskInterface* tsk = i_transport->second->retrieve_task(*i);
-      tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep);
-    }
+    i_transport->second->schedule_task_group( "momentum_solve", TaskInterface::TIMESTEP_EVAL, false, level, sched, matls, time_substep );
 
     // ** PRESSURE PROJECTION **
     if ( i_transport->second->has_task("build_pressure_system")){
@@ -543,11 +523,9 @@ KokkosSolver::SSPRKSolve( const LevelP& level, SchedulerP& sched ){
       gradP_tsk->schedule_task(level, sched, matls, AtomicTaskInterface::ATOMIC_STANDARD_TASK, time_substep);
 
       // now apply boundary conditions for all scalar for the next timestep
+      i_transport->second->schedule_task_group( "momentum_solve", TaskInterface::BC, false, level, sched, matls, time_substep );
+
       for ( SVec::iterator i = scalar_rhs_builders.begin(); i != scalar_rhs_builders.end(); i++){
-        TaskInterface* tsk = i_transport->second->retrieve_task(*i);
-        tsk->schedule_task(level, sched, matls, TaskInterface::BC_TASK, time_substep);
-      }
-      for ( SVec::iterator i = mom_rhs_builders.begin(); i != mom_rhs_builders.end(); i++){
         TaskInterface* tsk = i_transport->second->retrieve_task(*i);
         tsk->schedule_task(level, sched, matls, TaskInterface::BC_TASK, time_substep);
       }

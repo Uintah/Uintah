@@ -35,6 +35,7 @@
 /** @class GridTools
     @author J. Thornock
     @date Dec, 2015
+    @file
 
     @brief Provides some basic, commonly used/shared functionality for differencing
     grid variables.
@@ -103,7 +104,42 @@ namespace Uintah{ namespace ArchesCore{
 #define STAGGERED_INDEX(dir) \
   const int ioff = dir == 0 ? 1 : 0;
 
-#define GET_BUFFERED_PATCH_RANGE(buffer_low, buffer_high) \
+/** @brief Get a low and high index for the patch with the option of adding
+           a buffer to the range. Note that the buffer will adjust for the
+           presence of domain edges for the patch, in that if the buffer is
+           greater than 1, it will be reasigned to 1 so as not to go beyond
+           the extra cell. buffer_low and buffer_high in this case are
+           Uintah::IntVectors.
+*/
+#define GET_BUFFERED_PATCH_RANGE(buffer_low, buffer_high, low_patch_range, high_patch_range) \
+  if ( buffer_low[0] < 0 ){ \
+    buffer_low[0] = ( patch->getBCType(Patch::xminus) != Patch::Neighbor) ? -1 : 0; \
+  } \
+  if ( buffer_low[1] > 0 ){ \
+    buffer_low[1] = ( patch->getBCType(Patch::yminus) != Patch::Neighbor) ? -1 : 0; \
+  } \
+  if ( buffer_low[2] > 0 ){ \
+    buffer_low[2] = ( patch->getBCType(Patch::zminus) != Patch::Neighbor) ? -1 : 0; \
+  } \
+  if ( buffer_high[0] > 0 ){ \
+    buffer_high[0] = ( patch->getBCType(Patch::xplus) != Patch::Neighbor) ? 1 : 0; \
+  } \
+  if ( buffer_high[1] > 0 ){ \
+    buffer_high[1] = ( patch->getBCType(Patch::yplus) != Patch::Neighbor) ? 1 : 0; \
+  } \
+  if ( buffer_high[2] > 0 ){ \
+    buffer_high[2] = ( patch->getBCType(Patch::zplus) != Patch::Neighbor) ? 1 : 0; \
+  } \
+  low_patch_range = patch->getCellLowIndex()+buffer_low;      \
+  high_patch_range = patch->getCellHighIndex()+buffer_high;
+
+/** @brief Get a low and high index for the patch where the buffer is added ONLY in the
+           case that the domain edge appears on that side of the patch.
+           a buffer to the range. Note that the buffer will adjust for the
+           presence of domain edges for the patch. buffer_low and buffer_high in this case
+           are std::int.
+*/
+#define GET_EXTRACELL_BUFFERED_PATCH_RANGE(buffer_low, buffer_high) \
   Uintah::IntVector low_x_adjust = Uintah::IntVector(0,0,0); Uintah::IntVector high_x_adjust = Uintah::IntVector(0,0,0);  \
   Uintah::IntVector low_y_adjust = Uintah::IntVector(0,0,0); Uintah::IntVector high_y_adjust = Uintah::IntVector(0,0,0);  \
   Uintah::IntVector low_z_adjust = Uintah::IntVector(0,0,0); Uintah::IntVector high_z_adjust = Uintah::IntVector(0,0,0);  \
@@ -116,7 +152,13 @@ namespace Uintah{ namespace ArchesCore{
   Uintah::IntVector low_patch_range = patch->getCellLowIndex()+low_x_adjust+low_y_adjust+low_z_adjust;      \
   Uintah::IntVector high_patch_range = patch->getCellHighIndex()+high_x_adjust+high_y_adjust+high_z_adjust;
 
-#define GET_FX_BUFFERED_PATCH_RANGE(buffer_low, buffer_high) \
+/** @brief Get a low and high index for the patch where the buffer is added ONLY in the
+           case that the domain edge appears on that side of the patch AND only applied to the
+           X-direction. Note that the buffer will adjust for the
+           presence of domain edges for the patch.  buffer_low and buffer_high in this case
+           are std::int.
+*/
+#define GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE(buffer_low, buffer_high) \
     Uintah::IntVector low_fx_patch_range = patch->getCellLowIndex(); \
     Uintah::IntVector high_fx_patch_range = patch->getCellHighIndex(); \
     if ( patch->getBCType(Patch::xminus) != Patch::Neighbor ){ \
@@ -126,7 +168,13 @@ namespace Uintah{ namespace ArchesCore{
       high_fx_patch_range += Uintah::IntVector(buffer_high,0,0);\
     }
 
-#define GET_FY_BUFFERED_PATCH_RANGE(buffer_low, buffer_high) \
+/** @brief Get a low and high index for the patch where the buffer is added ONLY in the
+           case that the domain edge appears on that side of the patch AND only applied to the
+           y-direction. Note that the buffer will adjust for the
+           presence of domain edges for the patch.  buffer_low and buffer_high in this case
+           are std::int.
+*/
+#define GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE(buffer_low, buffer_high) \
     Uintah::IntVector low_fy_patch_range = patch->getCellLowIndex(); \
     Uintah::IntVector high_fy_patch_range = patch->getCellHighIndex(); \
     if ( patch->getBCType(Patch::yminus) != Patch::Neighbor ){ \
@@ -136,7 +184,13 @@ namespace Uintah{ namespace ArchesCore{
       high_fy_patch_range += Uintah::IntVector(0,buffer_high,0); \
     }
 
-#define GET_FZ_BUFFERED_PATCH_RANGE(buffer_low, buffer_high) \
+/** @brief Get a low and high index for the patch where the buffer is added ONLY in the
+           case that the domain edge appears on that side of the patch AND only applied to the
+           z-direction. Note that the buffer will adjust for the
+           presence of domain edges for the patch. buffer_low and buffer_high in this case
+           are std::int.
+*/
+#define GET_EXTRACELL_FZ_BUFFERED_PATCH_RANGE(buffer_low, buffer_high) \
     Uintah::IntVector low_fz_patch_range = patch->getCellLowIndex(); \
     Uintah::IntVector high_fz_patch_range = patch->getCellHighIndex(); \
     if ( patch->getBCType(Patch::zminus) != Patch::Neighbor ){ \
