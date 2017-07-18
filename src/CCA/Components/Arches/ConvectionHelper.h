@@ -103,19 +103,19 @@ namespace Uintah {
              The template arguments arrise from the potential use of temporary (non-const)
              variables. Typically, one would use T=Array3<double> and CT=const Array3<double>
              when not using temporary variables. However, since temporary variables can ONLY
-             be non-const, one should use CT=Array3<double> in that case. 
+             be non-const, one should use CT=Array3<double> in that case.
   **/
-  template <typename T, typename CT>
+  template <typename PSI_T>
   struct ComputeConvectiveFlux{
 
-    ComputeConvectiveFlux( CT& i_phi,
-                           CT& i_u, CT& i_v,
-                           CT& i_w,
-                           CT& i_psi_x, CT& i_psi_y,
-                           CT& i_psi_z,
-                           T& i_flux_x, T& i_flux_y,
-                           T& i_flux_z,
-                           CT& i_eps ) :
+    ComputeConvectiveFlux( const Array3<double>& i_phi,
+                           const Array3<double>& i_u, const Array3<double>& i_v,
+                           const Array3<double>& i_w,
+                           PSI_T& i_psi_x, PSI_T& i_psi_y,
+                           PSI_T& i_psi_z,
+                           Array3<double>& i_flux_x, Array3<double>& i_flux_y,
+                           Array3<double>& i_flux_z,
+                           const Array3<double>& i_eps ) :
       phi(i_phi), u(i_u), v(i_v), w(i_w), psi_x(i_psi_x), psi_y(i_psi_y), psi_z(i_psi_z),
       flux_x(i_flux_x), flux_y(i_flux_y), flux_z(i_flux_z), eps(i_eps)
       {}
@@ -155,9 +155,9 @@ namespace Uintah {
     const Array3<double>& u;
     const Array3<double>& v;
     const Array3<double>& w;
-    const Array3<double>& psi_x;
-    const Array3<double>& psi_y;
-    const Array3<double>& psi_z;
+    PSI_T& psi_x;
+    PSI_T& psi_y;
+    PSI_T& psi_z;
     Array3<double>& flux_x;
     Array3<double>& flux_y;
     Array3<double>& flux_z;

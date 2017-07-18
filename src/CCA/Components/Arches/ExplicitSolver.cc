@@ -1352,8 +1352,8 @@ ExplicitSolver::sched_restartInitialize( const LevelP& level, SchedulerP& sched 
   TaskFactoryBase::TaskMap all_prop_tasks = i_property_models_fac->second->retrieve_all_tasks();
   for ( TaskFactoryBase::TaskMap::iterator i = all_prop_tasks.begin(); i != all_prop_tasks.end(); i++) {
 
-    i->second->schedule_init( level, sched, matls, doingRestart ); 
-   
+    i->second->schedule_init( level, sched, matls, doingRestart );
+
   }
 
   setupBoundaryConditions( level, sched, doingRestart );
@@ -1706,7 +1706,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     //FE update
     SVec scalar_fe_up = i_transport->second->retrieve_task_subset("scalar_fe_update");
-    SVec mom_fe_up = i_transport->second->retrieve_task_subset("mom_fe_update");
+    SVec mom_fe_up = i_transport->second->retrieve_task_subset("momentum_fe_update");
 
     for ( SVec::iterator i = scalar_fe_up.begin(); i != scalar_fe_up.end(); i++){
       TaskInterface* tsk = i_transport->second->retrieve_task(*i);

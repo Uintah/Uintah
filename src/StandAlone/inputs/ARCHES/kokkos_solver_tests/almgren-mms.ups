@@ -110,6 +110,7 @@
         <force_area_calc/>
       </BoundaryConditions>
       <KokkosSolver>
+        <!--<global_pack_tasks/>-->
       </KokkosSolver>
     </ARCHES>
   </CFD>

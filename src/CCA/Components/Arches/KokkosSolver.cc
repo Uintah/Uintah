@@ -502,7 +502,11 @@ KokkosSolver::SSPRKSolve( const LevelP& level, SchedulerP& sched ){
     }
 
     // ** MOMENTUM **
-    i_transport->second->schedule_task_group( "momentum_solve", TaskInterface::TIMESTEP_EVAL, false, level, sched, matls, time_substep );
+    i_transport->second->schedule_task_group( "momentum_construction", TaskInterface::TIMESTEP_EVAL,
+      m_global_pack_tasks, level, sched, matls, time_substep );
+
+    i_transport->second->schedule_task_group( "momentum_fe_update", TaskInterface::TIMESTEP_EVAL,
+      m_global_pack_tasks, level, sched, matls, time_substep );
 
     // ** PRESSURE PROJECTION **
     if ( i_transport->second->has_task("build_pressure_system")){
@@ -523,7 +527,7 @@ KokkosSolver::SSPRKSolve( const LevelP& level, SchedulerP& sched ){
       gradP_tsk->schedule_task(level, sched, matls, AtomicTaskInterface::ATOMIC_STANDARD_TASK, time_substep);
 
       // now apply boundary conditions for all scalar for the next timestep
-      i_transport->second->schedule_task_group( "momentum_solve", TaskInterface::BC, false, level, sched, matls, time_substep );
+      i_transport->second->schedule_task_group( "momentum_construction", TaskInterface::BC, false, level, sched, matls, time_substep );
 
       for ( SVec::iterator i = scalar_rhs_builders.begin(); i != scalar_rhs_builders.end(); i++){
         TaskInterface* tsk = i_transport->second->retrieve_task(*i);

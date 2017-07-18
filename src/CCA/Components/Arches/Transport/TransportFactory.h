@@ -27,11 +27,11 @@ namespace Uintah{
         return _scalar_ssp;
       } else if ( subset == "mom_rhs_builders"){
         return _momentum_builders;
-      } else if ( subset == "mom_fe_update" ){
+      } else if ( subset == "momentum_fe_update" ){
         return _momentum_update;
       } else if ( subset == "mom_ssp"){
         return _momentum_spp;
-      } else if ( subset == "momentum_solve" ){
+      } else if ( subset == "momentum_construction" ){
         return _momentum_solve;
       } else if ( subset == "scalar_psi_builders" ){
         return _scalar_compute_psi;
@@ -42,7 +42,8 @@ namespace Uintah{
       } else if ( subset == _all_tasks_str ){
         return _active_tasks;
       } else {
-        throw InvalidValue("Error: Task subset not recognized for TransportFactory.",__FILE__,__LINE__);
+        throw InvalidValue("Error: Task subset not recognized for TransportFactory: "+subset,
+          __FILE__,__LINE__);
       }
 
     }

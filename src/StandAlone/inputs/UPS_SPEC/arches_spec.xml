@@ -1028,6 +1028,9 @@
 
         <integrator                     spec="OPTIONAL STRING 'ssprk, sandbox'"/> <!-- solution scheme during timestepping. Default = ssprk -->
 
+        <global_pack_tasks              spec="OPTIONAL NO_DATA"/> <!-- An experimental flag. Will pack together "certain" tasks to maximize work on a 
+                                                                       patch for a Uintah tasks and minimize communication -->
+
       </KokkosSolver>
 
       <ExplicitSolver                   spec="OPTIONAL NO_DATA" >
