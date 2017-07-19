@@ -102,6 +102,9 @@ public:
   // Destructor
   virtual ~DataArchive();
 
+  // Returns true if this DataArchive is using the PIDX format.
+  bool isPIDXFormat() const { return d_fileFormat == PIDX; }
+
   // Processor Information for Visualization
   int queryPatchwiseProcessor( const Patch* patch, const int index );
 
@@ -171,20 +174,21 @@ public:
   // Queries a variable for a material, patch, and index in time.
   // Optionally pass in DataFileInfo if you're iterating over
   // entries in the hash table (like restartInitialize does).
-  void query(       Variable     & var,
+  // Returns false if the variable is not found.
+  bool query(       Variable     & var,
               const std::string  & name,
               const int            matlIndex, 
               const Patch        * patch,
               const int            timeIndex,
-                    DataFileInfo * dfi = 0 );
+                    DataFileInfo * dfi = nullptr );
 
-  void query(       Variable         & var,
+  bool query(       Variable         & var,
               const std::string      & name,
               const int                matlIndex, 
               const Patch            * patch,
               const int                timeIndex,
-              const Ghost::GhostType   ghost_type,
-              const int                ngc );
+              const Ghost::GhostType   ghostType,
+              const int                numGhostCells );
 
 public:
   void queryRegion(       Variable    & var,
@@ -413,7 +417,7 @@ private:
     return false;
 #endif
   };
-      
+
   //______________________________________________________________________
   //
   void queryVariables( FILE                                * fp,
