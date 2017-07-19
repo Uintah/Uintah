@@ -130,7 +130,7 @@ AC_CONFIG_AUX_DIR(build_scripts)
 if test -f Makefile.in; then
    AC_MSG_WARN(DO NOT CONFIGURE IN THE SRC DIRECTORY:)
    AC_MSG_WARN(___ Try creating a dir such as: ../archBITSdebug)
-   AC_MSG_WARN(___ eg: ../sgi32opt or ../linux32debug)
+   AC_MSG_WARN(___ eg: ../sgi32opt or ../linux64dbg)
    AC_MSG_WARN(___ cd to that dir and then type: ../src/configure)
    rm -f config.log config.cache confdefs.h conftest.out
    AC_MSG_ERROR(Tried to configure in src directory.)
@@ -4518,6 +4518,13 @@ else
         _sci_lib="$with_hypre/lib"
         _sci_inc="$with_hypre/include"
         _sci_optional=specific
+
+	# Try to avoid accidentally allowing system libraries to shadow the specific libraries the user has requested. 
+        if test "$USING_GCC" = "yes" -o "$USING_ICC" = "yes"; then
+           ESCHEW_SYS_LIBS=-nodefaultlibs
+        else
+           ESCHEW_SYS_LIBS=
+        fi
      fi
 
      # # We used to also check for HYPRE_blas, but hypre 1.9 doesn't have it,
@@ -4533,7 +4540,7 @@ else
             SCI_TRY_LINK(HYPRE,HYPRE libraries and headers - 1,HYPRE.h,$_sci_inc,
                         HYPRE HYPRE_utilities HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_parcsr_ls HYPRE_krylov HYPRE_parcsr_mv,
                         $_sci_lib,
-                        $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
+                        $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG $ESCHEW_SYS_LIBS,
                         ,
                         optional)
 

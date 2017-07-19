@@ -2933,8 +2933,8 @@ if test -f Makefile.in; then
 $as_echo "$as_me: WARNING: DO NOT CONFIGURE IN THE SRC DIRECTORY:" >&2;}
    { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: ___ Try creating a dir such as: ../archBITSdebug" >&5
 $as_echo "$as_me: WARNING: ___ Try creating a dir such as: ../archBITSdebug" >&2;}
-   { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: ___ eg: ../sgi32opt or ../linux32debug" >&5
-$as_echo "$as_me: WARNING: ___ eg: ../sgi32opt or ../linux32debug" >&2;}
+   { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: ___ eg: ../sgi32opt or ../linux64dbg" >&5
+$as_echo "$as_me: WARNING: ___ eg: ../sgi32opt or ../linux64dbg" >&2;}
    { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: ___ cd to that dir and then type: ../src/configure" >&5
 $as_echo "$as_me: WARNING: ___ cd to that dir and then type: ../src/configure" >&2;}
    rm -f config.log config.cache confdefs.h conftest.out
@@ -3195,6 +3195,9 @@ $as_echo "$as_me: WARNING: the files are $the_files " >&2;}
         elif test ! -d "$with_atlas"; then
           # Verify that a valid directory is listed...
           as_fn_error $? "The parameter \"$with_atlas\" provided to --with-atlas is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        else
+	  # Is a directory... remove trailing / (if any)
+          with_atlas=${with_atlas%/}
         fi
       fi
     fi
@@ -3256,6 +3259,9 @@ $as_echo "$as_me: WARNING: the files are $the_files " >&2;}
         elif test ! -d "$with_math"; then
           # Verify that a valid directory is listed...
           as_fn_error $? "The parameter \"$with_math\" provided to --with-math is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        else
+	  # Is a directory... remove trailing / (if any)
+          with_math=${with_math%/}
         fi
       fi
     fi
@@ -3318,6 +3324,9 @@ $as_echo "$as_me: WARNING: the files are $the_files " >&2;}
         elif test ! -d "$with_mkl"; then
           # Verify that a valid directory is listed...
           as_fn_error $? "The parameter \"$with_mkl\" provided to --with-mkl is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        else
+	  # Is a directory... remove trailing / (if any)
+          with_mkl=${with_mkl%/}
         fi
       fi
     fi
@@ -3380,6 +3389,9 @@ $as_echo "$as_me: WARNING: the files are $the_files " >&2;}
         elif test ! -d "$with_essl"; then
           # Verify that a valid directory is listed...
           as_fn_error $? "The parameter \"$with_essl\" provided to --with-essl is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        else
+	  # Is a directory... remove trailing / (if any)
+          with_essl=${with_essl%/}
         fi
       fi
     fi
@@ -3442,6 +3454,9 @@ $as_echo "$as_me: WARNING: the files are $the_files " >&2;}
         elif test ! -d "$with_acml"; then
           # Verify that a valid directory is listed...
           as_fn_error $? "The parameter \"$with_acml\" provided to --with-acml is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        else
+	  # Is a directory... remove trailing / (if any)
+          with_acml=${with_acml%/}
         fi
       fi
     fi
@@ -3504,6 +3519,9 @@ $as_echo "$as_me: WARNING: the files are $the_files " >&2;}
         elif test ! -d "$with_blas"; then
           # Verify that a valid directory is listed...
           as_fn_error $? "The parameter \"$with_blas\" provided to --with-blas is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        else
+	  # Is a directory... remove trailing / (if any)
+          with_blas=${with_blas%/}
         fi
       fi
     fi
@@ -3566,6 +3584,9 @@ $as_echo "$as_me: WARNING: the files are $the_files " >&2;}
         elif test ! -d "$with_lapack"; then
           # Verify that a valid directory is listed...
           as_fn_error $? "The parameter \"$with_lapack\" provided to --with-lapack is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        else
+	  # Is a directory... remove trailing / (if any)
+          with_lapack=${with_lapack%/}
         fi
       fi
     fi
@@ -3628,6 +3649,9 @@ $as_echo "$as_me: WARNING: the files are $the_files " >&2;}
         elif test ! -d "$with_fortran"; then
           # Verify that a valid directory is listed...
           as_fn_error $? "The parameter \"$with_fortran\" provided to --with-fortran is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        else
+	  # Is a directory... remove trailing / (if any)
+          with_fortran=${with_fortran%/}
         fi
       fi
     fi
@@ -3690,6 +3714,9 @@ $as_echo "$as_me: WARNING: the files are $the_files " >&2;}
         elif test ! -d "$with_ofed"; then
           # Verify that a valid directory is listed...
           as_fn_error $? "The parameter \"$with_ofed\" provided to --with-ofed is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        else
+	  # Is a directory... remove trailing / (if any)
+          with_ofed=${with_ofed%/}
         fi
       fi
     fi
@@ -3752,6 +3779,9 @@ $as_echo "$as_me: WARNING: the files are $the_files " >&2;}
         elif test ! -d "$with_mx"; then
           # Verify that a valid directory is listed...
           as_fn_error $? "The parameter \"$with_mx\" provided to --with-mx is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        else
+	  # Is a directory... remove trailing / (if any)
+          with_mx=${with_mx%/}
         fi
       fi
     fi
@@ -3814,6 +3844,9 @@ $as_echo "$as_me: WARNING: the files are $the_files " >&2;}
         elif test ! -d "$with_pokitt"; then
           # Verify that a valid directory is listed...
           as_fn_error $? "The parameter \"$with_pokitt\" provided to --with-pokitt is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        else
+	  # Is a directory... remove trailing / (if any)
+          with_pokitt=${with_pokitt%/}
         fi
       fi
     fi
@@ -3875,6 +3908,9 @@ $as_echo "$as_me: WARNING: the files are $the_files " >&2;}
         elif test ! -d "$with_mpi"; then
           # Verify that a valid directory is listed...
           as_fn_error $? "The parameter \"$with_mpi\" provided to --with-mpi is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        else
+	  # Is a directory... remove trailing / (if any)
+          with_mpi=${with_mpi%/}
         fi
       fi
     fi
@@ -3937,6 +3973,9 @@ $as_echo "$as_me: WARNING: the files are $the_files " >&2;}
         elif test ! -d "$with_mpi_lib"; then
           # Verify that a valid directory is listed...
           as_fn_error $? "The parameter \"$with_mpi_lib\" provided to --with-mpi_lib is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        else
+	  # Is a directory... remove trailing / (if any)
+          with_mpi_lib=${with_mpi_lib%/}
         fi
       fi
     fi
@@ -3999,6 +4038,9 @@ $as_echo "$as_me: WARNING: the files are $the_files " >&2;}
         elif test ! -d "$with_mpi_include"; then
           # Verify that a valid directory is listed...
           as_fn_error $? "The parameter \"$with_mpi_include\" provided to --with-mpi_include is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        else
+	  # Is a directory... remove trailing / (if any)
+          with_mpi_include=${with_mpi_include%/}
         fi
       fi
     fi
@@ -4060,6 +4102,9 @@ $as_echo "$as_me: WARNING: the files are $the_files " >&2;}
         elif test ! -d "$with_mpi_extra_libs"; then
           # Verify that a valid directory is listed...
           as_fn_error $? "The parameter \"$with_mpi_extra_libs\" provided to --with-mpi_extra_libs is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        else
+	  # Is a directory... remove trailing / (if any)
+          with_mpi_extra_libs=${with_mpi_extra_libs%/}
         fi
       fi
     fi
@@ -4123,6 +4168,9 @@ $as_echo "$as_me: WARNING: the files are $the_files " >&2;}
         elif test ! -d "$with_cuda"; then
           # Verify that a valid directory is listed...
           as_fn_error $? "The parameter \"$with_cuda\" provided to --with-cuda is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        else
+	  # Is a directory... remove trailing / (if any)
+          with_cuda=${with_cuda%/}
         fi
       fi
     fi
@@ -4185,6 +4233,9 @@ $as_echo "$as_me: WARNING: the files are $the_files " >&2;}
         elif test ! -d "$with_hypre"; then
           # Verify that a valid directory is listed...
           as_fn_error $? "The parameter \"$with_hypre\" provided to --with-hypre is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        else
+	  # Is a directory... remove trailing / (if any)
+          with_hypre=${with_hypre%/}
         fi
       fi
     fi
@@ -4247,6 +4298,9 @@ $as_echo "$as_me: WARNING: the files are $the_files " >&2;}
         elif test ! -d "$with_petsc"; then
           # Verify that a valid directory is listed...
           as_fn_error $? "The parameter \"$with_petsc\" provided to --with-petsc is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        else
+	  # Is a directory... remove trailing / (if any)
+          with_petsc=${with_petsc%/}
         fi
       fi
     fi
@@ -4309,6 +4363,9 @@ $as_echo "$as_me: WARNING: the files are $the_files " >&2;}
         elif test ! -d "$with_boost"; then
           # Verify that a valid directory is listed...
           as_fn_error $? "The parameter \"$with_boost\" provided to --with-boost is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        else
+	  # Is a directory... remove trailing / (if any)
+          with_boost=${with_boost%/}
         fi
       fi
     fi
@@ -4371,6 +4428,9 @@ $as_echo "$as_me: WARNING: the files are $the_files " >&2;}
         elif test ! -d "$with_boost_library"; then
           # Verify that a valid directory is listed...
           as_fn_error $? "The parameter \"$with_boost_library\" provided to --with-boost_library is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        else
+	  # Is a directory... remove trailing / (if any)
+          with_boost_library=${with_boost_library%/}
         fi
       fi
     fi
@@ -4433,6 +4493,9 @@ $as_echo "$as_me: WARNING: the files are $the_files " >&2;}
         elif test ! -d "$with_boost_include"; then
           # Verify that a valid directory is listed...
           as_fn_error $? "The parameter \"$with_boost_include\" provided to --with-boost_include is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        else
+	  # Is a directory... remove trailing / (if any)
+          with_boost_include=${with_boost_include%/}
         fi
       fi
     fi
@@ -4494,6 +4557,9 @@ $as_echo "$as_me: WARNING: the files are $the_files " >&2;}
         elif test ! -d "$with_spatialops"; then
           # Verify that a valid directory is listed...
           as_fn_error $? "The parameter \"$with_spatialops\" provided to --with-spatialops is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        else
+	  # Is a directory... remove trailing / (if any)
+          with_spatialops=${with_spatialops%/}
         fi
       fi
     fi
@@ -4555,6 +4621,9 @@ $as_echo "$as_me: WARNING: the files are $the_files " >&2;}
         elif test ! -d "$with_exprlib"; then
           # Verify that a valid directory is listed...
           as_fn_error $? "The parameter \"$with_exprlib\" provided to --with-exprlib is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        else
+	  # Is a directory... remove trailing / (if any)
+          with_exprlib=${with_exprlib%/}
         fi
       fi
     fi
@@ -4616,6 +4685,9 @@ $as_echo "$as_me: WARNING: the files are $the_files " >&2;}
         elif test ! -d "$with_tabprops"; then
           # Verify that a valid directory is listed...
           as_fn_error $? "The parameter \"$with_tabprops\" provided to --with-tabprops is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        else
+	  # Is a directory... remove trailing / (if any)
+          with_tabprops=${with_tabprops%/}
         fi
       fi
     fi
@@ -4677,6 +4749,9 @@ $as_echo "$as_me: WARNING: the files are $the_files " >&2;}
         elif test ! -d "$with_radprops"; then
           # Verify that a valid directory is listed...
           as_fn_error $? "The parameter \"$with_radprops\" provided to --with-radprops is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        else
+	  # Is a directory... remove trailing / (if any)
+          with_radprops=${with_radprops%/}
         fi
       fi
     fi
@@ -4738,6 +4813,9 @@ $as_echo "$as_me: WARNING: the files are $the_files " >&2;}
         elif test ! -d "$with_nscbc"; then
           # Verify that a valid directory is listed...
           as_fn_error $? "The parameter \"$with_nscbc\" provided to --with-nscbc is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        else
+	  # Is a directory... remove trailing / (if any)
+          with_nscbc=${with_nscbc%/}
         fi
       fi
     fi
@@ -4801,6 +4879,9 @@ $as_echo "$as_me: WARNING: the files are $the_files " >&2;}
         elif test ! -d "$with_wasatch3p"; then
           # Verify that a valid directory is listed...
           as_fn_error $? "The parameter \"$with_wasatch3p\" provided to --with-wasatch3p is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        else
+	  # Is a directory... remove trailing / (if any)
+          with_wasatch3p=${with_wasatch3p%/}
         fi
       fi
     fi
@@ -4863,6 +4944,9 @@ $as_echo "$as_me: WARNING: the files are $the_files " >&2;}
         elif test ! -d "$with_zoltan"; then
           # Verify that a valid directory is listed...
           as_fn_error $? "The parameter \"$with_zoltan\" provided to --with-zoltan is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        else
+	  # Is a directory... remove trailing / (if any)
+          with_zoltan=${with_zoltan%/}
         fi
       fi
     fi
@@ -4924,6 +5008,9 @@ $as_echo "$as_me: WARNING: the files are $the_files " >&2;}
         elif test ! -d "$with_papi"; then
           # Verify that a valid directory is listed...
           as_fn_error $? "The parameter \"$with_papi\" provided to --with-papi is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        else
+	  # Is a directory... remove trailing / (if any)
+          with_papi=${with_papi%/}
         fi
       fi
     fi
@@ -4985,6 +5072,9 @@ $as_echo "$as_me: WARNING: the files are $the_files " >&2;}
         elif test ! -d "$with_gperftools"; then
           # Verify that a valid directory is listed...
           as_fn_error $? "The parameter \"$with_gperftools\" provided to --with-gperftools is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        else
+	  # Is a directory... remove trailing / (if any)
+          with_gperftools=${with_gperftools%/}
         fi
       fi
     fi
@@ -5046,6 +5136,9 @@ $as_echo "$as_me: WARNING: the files are $the_files " >&2;}
         elif test ! -d "$with_ipm"; then
           # Verify that a valid directory is listed...
           as_fn_error $? "The parameter \"$with_ipm\" provided to --with-ipm is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        else
+	  # Is a directory... remove trailing / (if any)
+          with_ipm=${with_ipm%/}
         fi
       fi
     fi
@@ -5108,6 +5201,9 @@ $as_echo "$as_me: WARNING: the files are $the_files " >&2;}
         elif test ! -d "$with_magma"; then
           # Verify that a valid directory is listed...
           as_fn_error $? "The parameter \"$with_magma\" provided to --with-magma is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        else
+	  # Is a directory... remove trailing / (if any)
+          with_magma=${with_magma%/}
         fi
       fi
     fi
@@ -5170,6 +5266,9 @@ $as_echo "$as_me: WARNING: the files are $the_files " >&2;}
         elif test ! -d "$with_zlib"; then
           # Verify that a valid directory is listed...
           as_fn_error $? "The parameter \"$with_zlib\" provided to --with-zlib is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        else
+	  # Is a directory... remove trailing / (if any)
+          with_zlib=${with_zlib%/}
         fi
       fi
     fi
@@ -5232,6 +5331,9 @@ $as_echo "$as_me: WARNING: the files are $the_files " >&2;}
         elif test ! -d "$with_jpeg"; then
           # Verify that a valid directory is listed...
           as_fn_error $? "The parameter \"$with_jpeg\" provided to --with-jpeg is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        else
+	  # Is a directory... remove trailing / (if any)
+          with_jpeg=${with_jpeg%/}
         fi
       fi
     fi
@@ -5294,6 +5396,9 @@ $as_echo "$as_me: WARNING: the files are $the_files " >&2;}
         elif test ! -d "$with_tiff"; then
           # Verify that a valid directory is listed...
           as_fn_error $? "The parameter \"$with_tiff\" provided to --with-tiff is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        else
+	  # Is a directory... remove trailing / (if any)
+          with_tiff=${with_tiff%/}
         fi
       fi
     fi
@@ -5356,6 +5461,9 @@ $as_echo "$as_me: WARNING: the files are $the_files " >&2;}
         elif test ! -d "$with_xalan"; then
           # Verify that a valid directory is listed...
           as_fn_error $? "The parameter \"$with_xalan\" provided to --with-xalan is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        else
+	  # Is a directory... remove trailing / (if any)
+          with_xalan=${with_xalan%/}
         fi
       fi
     fi
@@ -5418,6 +5526,9 @@ $as_echo "$as_me: WARNING: the files are $the_files " >&2;}
         elif test ! -d "$with_libxml2"; then
           # Verify that a valid directory is listed...
           as_fn_error $? "The parameter \"$with_libxml2\" provided to --with-libxml2 is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        else
+	  # Is a directory... remove trailing / (if any)
+          with_libxml2=${with_libxml2%/}
         fi
       fi
     fi
@@ -5480,6 +5591,9 @@ $as_echo "$as_me: WARNING: the files are $the_files " >&2;}
         elif test ! -d "$with_visit"; then
           # Verify that a valid directory is listed...
           as_fn_error $? "The parameter \"$with_visit\" provided to --with-visit is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        else
+	  # Is a directory... remove trailing / (if any)
+          with_visit=${with_visit%/}
         fi
       fi
     fi
@@ -5541,6 +5655,9 @@ $as_echo "$as_me: WARNING: the files are $the_files " >&2;}
         elif test ! -d "$with_visus"; then
           # Verify that a valid directory is listed...
           as_fn_error $? "The parameter \"$with_visus\" provided to --with-visus is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        else
+	  # Is a directory... remove trailing / (if any)
+          with_visus=${with_visus%/}
         fi
       fi
     fi
@@ -5602,6 +5719,9 @@ $as_echo "$as_me: WARNING: the files are $the_files " >&2;}
         elif test ! -d "$with_pidx"; then
           # Verify that a valid directory is listed...
           as_fn_error $? "The parameter \"$with_pidx\" provided to --with-pidx is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        else
+	  # Is a directory... remove trailing / (if any)
+          with_pidx=${with_pidx%/}
         fi
       fi
     fi
@@ -5663,6 +5783,9 @@ $as_echo "$as_me: WARNING: the files are $the_files " >&2;}
         elif test ! -d "$with_MallocTrace"; then
           # Verify that a valid directory is listed...
           as_fn_error $? "The parameter \"$with_MallocTrace\" provided to --with-MallocTrace is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        else
+	  # Is a directory... remove trailing / (if any)
+          with_MallocTrace=${with_MallocTrace%/}
         fi
       fi
     fi
@@ -7846,8 +7969,8 @@ if test "$output_avg_walltime" != "no"; then
 fi
 
 if test "$USING_ICC" = yes; then
-  # Turn off the spamming of vectorizing code remark...
-  extra_cflags="${extra_cflags} -diag-disable remark"
+  # Turn off the spamming of vectorizing code remark (which comes with icc 2017+)...
+  extra_cflags="${extra_cflags} -diag-disable=remark"
 fi
 
 LARGESOS=$largesos
@@ -12316,7 +12439,7 @@ for inc in $_sci_inc; do
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
-     as_fn_error $? "Please do not specify /usr/include as the location for VISIT include files." "$LINENO" 5
+     as_fn_error $? "Please do not specify /usr as the location for VISIT files." "$LINENO" 5
   fi
 
   # Make sure it doesn't have any thing but -I
@@ -14116,7 +14239,7 @@ for inc in $sci_thirdparty_include; do
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
-     as_fn_error $? "Please do not specify /usr/include as the location for DL include files." "$LINENO" 5
+     as_fn_error $? "Please do not specify /usr as the location for DL files." "$LINENO" 5
   fi
 
   # Make sure it doesn't have any thing but -I
@@ -17148,7 +17271,7 @@ for inc in $includes; do
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
-     as_fn_error $? "Please do not specify /usr/include as the location for XML2 include files." "$LINENO" 5
+     as_fn_error $? "Please do not specify /usr as the location for XML2 files." "$LINENO" 5
   fi
 
   # Make sure it doesn't have any thing but -I
@@ -17686,7 +17809,7 @@ for inc in $_sci_inc; do
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
-     as_fn_error $? "Please do not specify /usr/include as the location for Z include files." "$LINENO" 5
+     as_fn_error $? "Please do not specify /usr as the location for Z files." "$LINENO" 5
   fi
 
   # Make sure it doesn't have any thing but -I
@@ -18159,7 +18282,7 @@ for inc in $_sci_inc; do
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
-     as_fn_error $? "Please do not specify /usr/include as the location for JPEG include files." "$LINENO" 5
+     as_fn_error $? "Please do not specify /usr as the location for JPEG files." "$LINENO" 5
   fi
 
   # Make sure it doesn't have any thing but -I
@@ -18617,7 +18740,7 @@ for inc in $_sci_inc; do
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
-     as_fn_error $? "Please do not specify /usr/include as the location for TIFF include files." "$LINENO" 5
+     as_fn_error $? "Please do not specify /usr as the location for TIFF files." "$LINENO" 5
   fi
 
   # Make sure it doesn't have any thing but -I
@@ -21989,7 +22112,7 @@ for inc in $_sci_inc; do
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
-     as_fn_error $? "Please do not specify /usr/include as the location for F include files." "$LINENO" 5
+     as_fn_error $? "Please do not specify /usr as the location for F files." "$LINENO" 5
   fi
 
   # Make sure it doesn't have any thing but -I
@@ -22434,7 +22557,7 @@ for inc in $_sci_inc; do
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
-     as_fn_error $? "Please do not specify /usr/include as the location for F include files." "$LINENO" 5
+     as_fn_error $? "Please do not specify /usr as the location for F files." "$LINENO" 5
   fi
 
   # Make sure it doesn't have any thing but -I
@@ -22884,7 +23007,7 @@ for inc in $_sci_inc; do
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
-     as_fn_error $? "Please do not specify /usr/include as the location for F include files." "$LINENO" 5
+     as_fn_error $? "Please do not specify /usr as the location for F files." "$LINENO" 5
   fi
 
   # Make sure it doesn't have any thing but -I
@@ -23331,7 +23454,7 @@ for inc in $_sci_inc; do
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
-     as_fn_error $? "Please do not specify /usr/include as the location for F include files." "$LINENO" 5
+     as_fn_error $? "Please do not specify /usr as the location for F files." "$LINENO" 5
   fi
 
   # Make sure it doesn't have any thing but -I
@@ -24650,7 +24773,7 @@ for inc in $_sci_inc; do
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
-     as_fn_error $? "Please do not specify /usr/include as the location for BLAS include files." "$LINENO" 5
+     as_fn_error $? "Please do not specify /usr as the location for BLAS files." "$LINENO" 5
   fi
 
   # Make sure it doesn't have any thing but -I
@@ -25153,7 +25276,7 @@ for inc in $_sci_inc; do
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
-     as_fn_error $? "Please do not specify /usr/include as the location for BLAS include files." "$LINENO" 5
+     as_fn_error $? "Please do not specify /usr as the location for BLAS files." "$LINENO" 5
   fi
 
   # Make sure it doesn't have any thing but -I
@@ -25658,7 +25781,7 @@ for inc in $_sci_inc; do
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
-     as_fn_error $? "Please do not specify /usr/include as the location for BLAS include files." "$LINENO" 5
+     as_fn_error $? "Please do not specify /usr as the location for BLAS files." "$LINENO" 5
   fi
 
   # Make sure it doesn't have any thing but -I
@@ -26145,7 +26268,7 @@ for inc in $_sci_inc; do
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
-     as_fn_error $? "Please do not specify /usr/include as the location for BLAS include files." "$LINENO" 5
+     as_fn_error $? "Please do not specify /usr as the location for BLAS files." "$LINENO" 5
   fi
 
   # Make sure it doesn't have any thing but -I
@@ -26632,7 +26755,7 @@ for inc in $_sci_inc; do
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
-     as_fn_error $? "Please do not specify /usr/include as the location for BLAS include files." "$LINENO" 5
+     as_fn_error $? "Please do not specify /usr as the location for BLAS files." "$LINENO" 5
   fi
 
   # Make sure it doesn't have any thing but -I
@@ -27089,7 +27212,7 @@ for inc in $_sci_inc; do
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
-     as_fn_error $? "Please do not specify /usr/include as the location for BLAS include files." "$LINENO" 5
+     as_fn_error $? "Please do not specify /usr as the location for BLAS files." "$LINENO" 5
   fi
 
   # Make sure it doesn't have any thing but -I
@@ -27955,7 +28078,7 @@ for inc in $_sci_inc; do
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
-     as_fn_error $? "Please do not specify /usr/include as the location for BLAS include files." "$LINENO" 5
+     as_fn_error $? "Please do not specify /usr as the location for BLAS files." "$LINENO" 5
   fi
 
   # Make sure it doesn't have any thing but -I
@@ -28408,7 +28531,7 @@ for inc in $_sci_inc; do
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
-     as_fn_error $? "Please do not specify /usr/include as the location for BLAS include files." "$LINENO" 5
+     as_fn_error $? "Please do not specify /usr as the location for BLAS files." "$LINENO" 5
   fi
 
   # Make sure it doesn't have any thing but -I
@@ -28860,7 +28983,7 @@ for inc in $_sci_inc; do
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
-     as_fn_error $? "Please do not specify /usr/include as the location for BLAS include files." "$LINENO" 5
+     as_fn_error $? "Please do not specify /usr as the location for BLAS files." "$LINENO" 5
   fi
 
   # Make sure it doesn't have any thing but -I
@@ -32851,7 +32974,7 @@ for inc in $_sci_inc; do
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
-     as_fn_error $? "Please do not specify /usr/include as the location for MPI include files." "$LINENO" 5
+     as_fn_error $? "Please do not specify /usr as the location for MPI files." "$LINENO" 5
   fi
 
   # Make sure it doesn't have any thing but -I
@@ -33333,7 +33456,7 @@ for inc in $_sci_inc; do
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
-     as_fn_error $? "Please do not specify /usr/include as the location for MPI include files." "$LINENO" 5
+     as_fn_error $? "Please do not specify /usr as the location for MPI files." "$LINENO" 5
   fi
 
   # Make sure it doesn't have any thing but -I
@@ -33951,7 +34074,7 @@ for inc in $_sci_inc; do
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
-     as_fn_error $? "Please do not specify /usr/include as the location for PETSC include files." "$LINENO" 5
+     as_fn_error $? "Please do not specify /usr as the location for PETSC files." "$LINENO" 5
   fi
 
   # Make sure it doesn't have any thing but -I
@@ -34409,7 +34532,7 @@ for inc in $_sci_inc; do
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
-     as_fn_error $? "Please do not specify /usr/include as the location for PETSC include files." "$LINENO" 5
+     as_fn_error $? "Please do not specify /usr as the location for PETSC files." "$LINENO" 5
   fi
 
   # Make sure it doesn't have any thing but -I
@@ -34996,7 +35119,7 @@ for inc in $_sci_inc; do
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
-     as_fn_error $? "Please do not specify /usr/include as the location for PAPI include files." "$LINENO" 5
+     as_fn_error $? "Please do not specify /usr as the location for PAPI files." "$LINENO" 5
   fi
 
   # Make sure it doesn't have any thing but -I
@@ -35530,7 +35653,7 @@ for inc in $_sci_inc; do
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
-     as_fn_error $? "Please do not specify /usr/include as the location for GPERFTOOLS include files." "$LINENO" 5
+     as_fn_error $? "Please do not specify /usr as the location for GPERFTOOLS files." "$LINENO" 5
   fi
 
   # Make sure it doesn't have any thing but -I
@@ -37036,7 +37159,7 @@ for inc in $_magma_inc $_cuda_inc; do
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
-     as_fn_error $? "Please do not specify /usr/include as the location for MAGMA include files." "$LINENO" 5
+     as_fn_error $? "Please do not specify /usr as the location for MAGMA files." "$LINENO" 5
   fi
 
   # Make sure it doesn't have any thing but -I
@@ -37570,7 +37693,7 @@ for inc in $_sci_inc; do
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
-     as_fn_error $? "Please do not specify /usr/include as the location for VISUS include files." "$LINENO" 5
+     as_fn_error $? "Please do not specify /usr as the location for VISUS files." "$LINENO" 5
   fi
 
   # Make sure it doesn't have any thing but -I
@@ -38053,7 +38176,7 @@ for inc in $_sci_inc $INC_MPI_H; do
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
-     as_fn_error $? "Please do not specify /usr/include as the location for PIDX include files." "$LINENO" 5
+     as_fn_error $? "Please do not specify /usr as the location for PIDX files." "$LINENO" 5
   fi
 
   # Make sure it doesn't have any thing but -I
@@ -38560,7 +38683,7 @@ for inc in $_sci_inc $INC_MPI_H; do
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
-     as_fn_error $? "Please do not specify /usr/include as the location for PIDX include files." "$LINENO" 5
+     as_fn_error $? "Please do not specify /usr as the location for PIDX files." "$LINENO" 5
   fi
 
   # Make sure it doesn't have any thing but -I
@@ -39081,7 +39204,7 @@ for inc in $BOOST_INCLUDE_DIR; do
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
-     as_fn_error $? "Please do not specify /usr/include as the location for BOOST include files." "$LINENO" 5
+     as_fn_error $? "Please do not specify /usr as the location for BOOST files." "$LINENO" 5
   fi
 
   # Make sure it doesn't have any thing but -I
@@ -39534,7 +39657,7 @@ for inc in $BOOST_INCLUDE_DIR; do
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
-     as_fn_error $? "Please do not specify /usr/include as the location for BOOST include files." "$LINENO" 5
+     as_fn_error $? "Please do not specify /usr as the location for BOOST files." "$LINENO" 5
   fi
 
   # Make sure it doesn't have any thing but -I
@@ -40000,7 +40123,7 @@ for inc in $BOOST_INCLUDE_DIR; do
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
-     as_fn_error $? "Please do not specify /usr/include as the location for BOOST_FS_V3 include files." "$LINENO" 5
+     as_fn_error $? "Please do not specify /usr as the location for BOOST_FS_V3 files." "$LINENO" 5
   fi
 
   # Make sure it doesn't have any thing but -I
@@ -40910,6 +41033,13 @@ $as_echo "$as_me: WARNING: Relying on a built-in version of Hypre" >&2;}
         _sci_lib="$with_hypre/lib"
         _sci_inc="$with_hypre/include"
         _sci_optional=specific
+
+	# Try to avoid accidentally allowing system libraries to shadow the specific libraries the user has requested.
+        if test "$USING_GCC" = "yes" -o "$USING_ICC" = "yes"; then
+           ESCHEW_SYS_LIBS=-nodefaultlibs
+        else
+           ESCHEW_SYS_LIBS=
+        fi
      fi
 
      # # We used to also check for HYPRE_blas, but hypre 1.9 doesn't have it,
@@ -40966,7 +41096,7 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 ## arg 4 : $_sci_inc
 ## arg 5 : HYPRE HYPRE_utilities HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_parcsr_ls HYPRE_krylov HYPRE_parcsr_mv
 ## arg 6 : $_sci_lib
-## arg 7 : $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG
+## arg 7 : $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG $ESCHEW_SYS_LIBS
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
 ## arg 9 : optional
 ##
@@ -41008,7 +41138,7 @@ for inc in $_sci_inc; do
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
-     as_fn_error $? "Please do not specify /usr/include as the location for HYPRE include files." "$LINENO" 5
+     as_fn_error $? "Please do not specify /usr as the location for HYPRE files." "$LINENO" 5
   fi
 
   # Make sure it doesn't have any thing but -I
@@ -41190,7 +41320,7 @@ else
   LDFLAGS="$_sci_lib_path $LDFLAGS"
 fi
 
-LIBS="$_sci_libs $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG $LIBS"
+LIBS="$_sci_libs $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG $ESCHEW_SYS_LIBS $LIBS"
 
 # Build up a list of the #include <file> lines for use in compilation:
 __extern_c="no"
@@ -41454,7 +41584,7 @@ for inc in $_sci_inc; do
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
-     as_fn_error $? "Please do not specify /usr/include as the location for HYPRE include files." "$LINENO" 5
+     as_fn_error $? "Please do not specify /usr as the location for HYPRE files." "$LINENO" 5
   fi
 
   # Make sure it doesn't have any thing but -I
