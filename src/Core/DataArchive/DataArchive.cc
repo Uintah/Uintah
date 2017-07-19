@@ -630,13 +630,14 @@ DataArchive::queryVariables( FILE                                   * fp,
 }
 //______________________________________________________________________
 //
-void
+
+bool
 DataArchive::query(       Variable     & var,
                     const string       & name,
                     const int            matlIndex,
                     const Patch        * patch,
                     const int            timeIndex,
-                          DataFileInfo * dfi /* = 0 */ )
+                          DataFileInfo * dfi /* = nullptr */ )
 {
   Timers::Simple timer;
   timer.start();
@@ -913,7 +914,10 @@ DataArchive::query(       Variable     & var,
     ret = PIDX_set_current_variable_by_name( idxFile, full_name.c_str() );
     // proc0cout << "ret is " << ret << ", was looking for" << name << "\n";
     
-    pidx.checkReturnCode( ret, "DataArchive::query() - PIDX_set_current_variable_index failure", __FILE__, __LINE__ );
+    if( ret != PIDX_success ) {
+      // pidx.checkReturnCode( ret, "DataArchive::query() - PIDX_set_current_variable_index failure", __FILE__, __LINE__ );
+      return false;
+    }
 
     //__________________________________
     // read IDX file for variable desc
@@ -995,25 +999,28 @@ DataArchive::query(       Variable     & var,
   #endif
 
 #if !defined( DISABLE_SCI_MALLOC )
-  AllocatorSetDefaultTag(tag);
+  AllocatorSetDefaultTag( tag );
 #endif
 
-  dbg << "DataArchive::query() completed in " << timer().seconds()
-      << " seconds\n";
+  dbg << "DataArchive::query() completed in " << timer().seconds() << " seconds\n";
+
+  return true;
 }
+
 //______________________________________________________________________
 //
-void
+
+bool
 DataArchive::query(       Variable       & var,
                     const string         & name,
                     const int              matlIndex,
                     const Patch          * patch,
                     const int              timeIndex,
-                    const Ghost::GhostType gt,
-                    const int              ngc )
+                    const Ghost::GhostType ghostType,
+                    const int              numGhostCells )
 {
-  if( ngc == 0 ) {
-    query( var, name, matlIndex, patch, timeIndex, 0 );
+  if( numGhostCells == 0 ) {
+    return query( var, name, matlIndex, patch, timeIndex, nullptr );
   }
   else {
     d_lock.lock();
@@ -1024,7 +1031,7 @@ DataArchive::query(       Variable       & var,
       VarData& varinfo = td.d_varInfo[name];
       const TypeDescription* type = TypeDescription::lookupType(varinfo.type);
       IntVector low, high;
-      patch->computeVariableExtents(type->getType(), varinfo.boundaryLayer, gt, ngc, low, high);
+      patch->computeVariableExtents(type->getType(), varinfo.boundaryLayer, ghostType, numGhostCells, low, high);
       queryRegion(var, name, matlIndex, patch->getLevel(), timeIndex, low, high);
     }
     else {
@@ -1035,6 +1042,7 @@ DataArchive::query(       Variable       & var,
            << ", time index " << timeIndex << "\n";
       throw InternalError( "DataArchive::query:Variable not found", __FILE__, __LINE__ );
     }
+    return true;
   }
 }
 //______________________________________________________________________

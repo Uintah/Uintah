@@ -130,7 +130,7 @@ DataArchiver::~DataArchiver()
 //
 void
 DataArchiver::problemSetup( const ProblemSpecP    & params,
-			    const ProblemSpecP    & restart_prob_spec,
+                            const ProblemSpecP    & restart_prob_spec,
                                   SimulationState * state )
 {
   dbg << "Doing ProblemSetup \t\t\t\tDataArchiver\n";
@@ -153,23 +153,23 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
 
       if( haveModifiedVars )
       {
-	std::stringstream tmpstr;
-	tmpstr << "DataArchiver found previously modified variables that "
-	       << "have not been merged into the checkpoint restart "
-	       << "input.xml file from the from index.xml file. " << std::endl
-	       << "The modified variables can be found in the "
-	       << "index.xml file under the 'InSitu' block." << std::endl
-	       << "Once merged, change the variable 'haveModifiedVars' in "
-	       << "the 'InSitu' block in the checkpoint restart timestep.xml "
-	       << "file to 'false'";
-	
-	throw ProblemSetupException( tmpstr.str() ,__FILE__, __LINE__);
+        std::stringstream tmpstr;
+        tmpstr << "DataArchiver found previously modified variables that "
+               << "have not been merged into the checkpoint restart "
+               << "input.xml file from the from index.xml file. " << std::endl
+               << "The modified variables can be found in the "
+               << "index.xml file under the 'InSitu' block." << std::endl
+               << "Once merged, change the variable 'haveModifiedVars' in "
+               << "the 'InSitu' block in the checkpoint restart timestep.xml "
+               << "file to 'false'";
+        
+        throw ProblemSetupException( tmpstr.str() ,__FILE__, __LINE__);
       }
       else
       {
-	proc0cout << "DataArchiver found previously modified vars. "
-		  << "Assuming the checkpoint restart input.xml file "
-		  << "has been updated." << std::endl;
+        proc0cout << "DataArchiver found previously modified vars. "
+                  << "Assuming the checkpoint restart input.xml file "
+                  << "has been updated." << std::endl;
       }
     }
   }
@@ -288,7 +288,7 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
     
     // if levels aren't specified, all valid materials will be saved
     if (saveItem.levels.size() == 0) {
-      saveItem.levels = ConsecutiveRangeSet(ALL_LEVELS, ALL_LEVELS);
+      saveItem.levels = ConsecutiveRangeSet( ALL_LEVELS, ALL_LEVELS );
     }
     
     //__________________________________
@@ -368,7 +368,7 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
 
     // Verify that an interval was specified:
     if( interval == "" && timestepInterval == "" &&
-	walltimeInterval == "" && walltimeIntervalHours == "" ) {
+        walltimeInterval == "" && walltimeIntervalHours == "" ) {
       throw ProblemSetupException( "ERROR: \n  <checkpoint> must specify either interval, timestepInterval, walltimeInterval",
                                    __FILE__, __LINE__ );
     }
@@ -401,15 +401,15 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
   // 
   if ( d_checkpointInterval > 0 ) {
     proc0cout << "Checkpointing:" << std::setw(16) << " Every "
-	      << d_checkpointInterval << " physical seconds.\n";
+              << d_checkpointInterval << " physical seconds.\n";
   }
   if ( d_checkpointTimestepInterval > 0 ) {
     proc0cout << "Checkpointing:" << std::setw(16)<< " Every "
-	      << d_checkpointTimestepInterval << " timesteps.\n";
+              << d_checkpointTimestepInterval << " timesteps.\n";
   }
   if ( d_checkpointWalltimeInterval > 0 ) {
     proc0cout << "Checkpointing:" << std::setw(16)<< " Every "
-	      << d_checkpointWalltimeInterval << " wall clock seconds,"
+              << d_checkpointWalltimeInterval << " wall clock seconds,"
               << " starting after " << d_checkpointWalltimeStart << " seconds.\n";
   }
   
@@ -695,7 +695,7 @@ DataArchiver::reduceUdaSetup( Dir & fromDir )
 //
 void
 DataArchiver::copySection( Dir& fromDir, Dir& toDir,
-			   const string & filename, const string & section )
+                           const string & filename, const string & section )
 {
   // copy chunk labeled section between index.xml files
   string iname = fromDir.getName() + "/" +filename;
@@ -748,17 +748,18 @@ DataArchiver::addRestartStamp(ProblemSpecP indexDoc, Dir& fromDir,
 
 //______________________________________________________________________
 //
+
 void
 DataArchiver::copyTimesteps( Dir & fromDir,
                              Dir & toDir,
                              int   startTimestep,
                              int   maxTimestep,
                              bool  removeOld,
-                             bool  areCheckpoints /* =false */ )
+                             bool  areCheckpoints /* = false */ )
 {
-   string old_iname = fromDir.getName()+"/index.xml";
+   string old_iname = fromDir.getName() + "/index.xml";
    ProblemSpecP oldIndexDoc = loadDocument(old_iname);
-   string iname = toDir.getName()+"/index.xml";
+   string iname = toDir.getName() + "/index.xml";
    ProblemSpecP indexDoc = loadDocument(iname);
 
    ProblemSpecP oldTimesteps = oldIndexDoc->findBlock( "timesteps" );
@@ -773,7 +774,7 @@ DataArchiver::copyTimesteps( Dir & fromDir,
      addRestartStamp(indexDoc, fromDir, maxTimestep);
    }
 
-   // create timesteps element if necessary
+   // Create timesteps element if necessary
    ProblemSpecP timesteps = indexDoc->findBlock( "timesteps" );
    if( timesteps == nullptr ) {
       timesteps = indexDoc->appendChild( "timesteps" );
@@ -792,7 +793,7 @@ DataArchiver::copyTimesteps( Dir & fromDir,
          string hrefNode = attributes["href"];
          if (hrefNode == "")
             throw InternalError("timestep href attribute not found",
-				__FILE__, __LINE__);
+                                __FILE__, __LINE__);
 
          string::size_type href_pos = hrefNode.find_first_of("/");
 
@@ -814,9 +815,9 @@ DataArchiver::copyTimesteps( Dir & fromDir,
          ostringstream timestep_str;
          timestep_str << timestep;
          ProblemSpecP newTS =
-	   timesteps->appendElement("timestep", timestep_str.str().c_str());
+           timesteps->appendElement("timestep", timestep_str.str().c_str());
 
-	 map<string,string>::iterator iter;
+         map<string,string>::iterator iter;
          for ( iter = attributes.begin(); iter != attributes.end(); ++iter) {
            newTS->setAttribute((*iter).first, (*iter).second);
          }
@@ -858,7 +859,7 @@ DataArchiver::copyDatFiles(Dir& fromDir, Dir& toDir, int startTimestep,
 
          if (hrefNode == "") {
             throw InternalError("global variable href attribute not found",
-				__FILE__, __LINE__);
+                                __FILE__, __LINE__);
          }
          const char* href = hrefNode.c_str();
 
@@ -867,7 +868,7 @@ DataArchiver::copyDatFiles(Dir& fromDir, Dir& toDir, int startTimestep,
            throw InternalError("DataArchiver::copyDatFiles(): The file \"" + \
                                (fromDir.getName()+"/"+href) + \
                                "\" could not be opened for reading!",
-			       __FILE__, __LINE__);
+                               __FILE__, __LINE__);
          }
 
          ofstream copyDatFile((toDir.getName()+"/"+href).c_str(), ios::app);
@@ -875,7 +876,7 @@ DataArchiver::copyDatFiles(Dir& fromDir, Dir& toDir, int startTimestep,
            throw InternalError("DataArchiver::copyDatFiles(): The file \"" + \
                                (toDir.getName()+"/"+href) + \
                                "\" could not be opened for writing!",
-			       __FILE__, __LINE__);
+                               __FILE__, __LINE__);
          }
 
          // copy up to maxTimestep lines of the old dat file to the copy
@@ -985,8 +986,8 @@ DataArchiver::finalizeTimestep( double        time,
     
       // Can't do checkpoints on init timestep....
       if( d_checkpointInterval > 0.0 ||
-	  d_checkpointTimestepInterval > 0 ||
-	  d_checkpointWalltimeInterval > 0 ) {
+          d_checkpointTimestepInterval > 0 ||
+          d_checkpointWalltimeInterval > 0 ) {
 
         initCheckpoints( sched );
       }
@@ -1026,8 +1027,7 @@ DataArchiver::sched_allOutputTasks(       double       delt,
   if( (d_outputInterval  > 0.0 || d_outputTimestepInterval  > 0) &&
       (delt != 0.0 || d_outputInitTimestep)) {
     
-    Task* task = scinew Task( "DataArchiver::outputReductionVars",
-			   this, &DataArchiver::outputReductionVars );
+    Task* task = scinew Task( "DataArchiver::outputReductionVars", this, &DataArchiver::outputReductionVars );
     
     for( int i=0; i<(int)d_saveReductionLabels.size(); ++i) {
       SaveItem& saveItem = d_saveReductionLabels[i];
@@ -1050,12 +1050,12 @@ DataArchiver::sched_allOutputTasks(       double       delt,
   //  Schedule Checkpoint (reduction variables)
   if (delt != 0.0 && d_checkpointCycle > 0 &&
       ( d_checkpointInterval > 0 ||
-	d_checkpointTimestepInterval > 0 ||
-	d_checkpointWalltimeInterval > 0 ) ) {
+        d_checkpointTimestepInterval > 0 ||
+        d_checkpointWalltimeInterval > 0 ) ) {
     
-    // output checkpoint timestep
+    // Output checkpoint timestep
     Task* task = scinew Task( "DataArchiver::outputVariables (CheckpointReduction)",
-			   this, &DataArchiver::outputVariables, CHECKPOINT_REDUCTION );
+                              this, &DataArchiver::outputVariables, CHECKPOINT_REDUCTION );
     
     for( int i = 0; i < (int) d_checkpointReductionLabels.size(); i++ ) {
       SaveItem& saveItem = d_checkpointReductionLabels[i];
@@ -1104,7 +1104,7 @@ DataArchiver::beginOutputTimestep( double time,
     // Output based on the simulation time.
     ( ((d_outputInterval > 0.0 && (delt != 0.0 || d_outputInitTimestep)) &&
        (time + delt >= d_nextOutputTime) ) ||
-			
+
       // Output based on the timestep interval.
       ((d_outputTimestepInterval > 0 && (delt != 0.0 || d_outputInitTimestep)) &&
        (timestep >= d_nextOutputTimestep)) ||
@@ -1137,7 +1137,7 @@ DataArchiver::beginOutputTimestep( double time,
     Uintah::MPI::Bcast( &walltime, 1, MPI_INT, 0, d_myworld->getComm() );
 
     if( walltime >= d_nextCheckpointWalltime )
-      d_isCheckpointTimestep = true;	
+      d_isCheckpointTimestep = true;
   }
   
   // Create the output checkpoint directories
@@ -1289,25 +1289,25 @@ DataArchiver::findNext_OutputCheckPointTimestep( double time, bool restart )
     // Output based on the time step.
     else if( d_outputTimestepInterval > 0 ) {
       d_nextOutputTimestep =
-	(timestep/d_outputTimestepInterval) * d_outputTimestepInterval + 1;
+        (timestep/d_outputTimestepInterval) * d_outputTimestepInterval + 1;
 
       while( d_nextOutputTimestep <= timestep ) {
-	d_nextOutputTimestep += d_outputTimestepInterval;
+        d_nextOutputTimestep += d_outputTimestepInterval;
       }
     }
    
     // Checkpoint based on the simulaiton time.
     if( d_checkpointInterval > 0.0 ) {
       d_nextCheckpointTime =
-	ceil(time / d_checkpointInterval) * d_checkpointInterval;
+        ceil(time / d_checkpointInterval) * d_checkpointInterval;
     }
     // Checkpoint based on the time step.
     else if( d_checkpointTimestepInterval > 0 ) {
       d_nextCheckpointTimestep =
-	(timestep / d_checkpointTimestepInterval) *
-	d_checkpointTimestepInterval + 1;
+        (timestep / d_checkpointTimestepInterval) *
+        d_checkpointTimestepInterval + 1;
       while( d_nextCheckpointTimestep <= timestep ) {
-	d_nextCheckpointTimestep += d_checkpointTimestepInterval;
+        d_nextCheckpointTimestep += d_checkpointTimestepInterval;
       }
     }
     // Checkpoint based on the wall time.
@@ -1344,16 +1344,16 @@ DataArchiver::findNext_OutputCheckPointTimestep( double time, bool restart )
     if( d_outputInterval > 0.0 ) {
       if( time >= d_nextOutputTime ) {
         d_nextOutputTime +=
-	  floor( (time - d_nextOutputTime) / d_outputInterval ) *
-	  d_outputInterval + d_outputInterval;
+          floor( (time - d_nextOutputTime) / d_outputInterval ) *
+          d_outputInterval + d_outputInterval;
       }
     }
     // Output based on the time step.
     else if( d_outputTimestepInterval > 0 ) {
       if( timestep >= d_nextOutputTimestep )  {
         d_nextOutputTimestep +=
-	  ( (timestep-d_nextOutputTimestep) / d_outputTimestepInterval ) *
-	  d_outputTimestepInterval + d_outputTimestepInterval;
+          ( (timestep-d_nextOutputTimestep) / d_outputTimestepInterval ) *
+          d_outputTimestepInterval + d_outputTimestepInterval;
       }
     }
   }
@@ -1363,17 +1363,17 @@ DataArchiver::findNext_OutputCheckPointTimestep( double time, bool restart )
     if( d_checkpointInterval > 0.0 ) {
       if( time >= d_nextCheckpointTime ) {
         d_nextCheckpointTime +=
-	  floor( (time - d_nextCheckpointTime) / d_checkpointInterval ) *
-	  d_checkpointInterval + d_checkpointInterval;
+          floor( (time - d_nextCheckpointTime) / d_checkpointInterval ) *
+          d_checkpointInterval + d_checkpointInterval;
       }
     }
     // Checkpoint based on the time step.
     else if( d_checkpointTimestepInterval > 0 ) {
       if( timestep >= d_nextCheckpointTimestep ) {
         d_nextCheckpointTimestep +=
-	  ( (timestep - d_nextCheckpointTimestep) /
-	    d_checkpointTimestepInterval ) *
-	  d_checkpointTimestepInterval + d_checkpointTimestepInterval;
+          ( (timestep - d_nextCheckpointTimestep) /
+            d_checkpointTimestepInterval ) *
+          d_checkpointTimestepInterval + d_checkpointTimestepInterval;
       }
     }
 
@@ -1387,9 +1387,9 @@ DataArchiver::findNext_OutputCheckPointTimestep( double time, bool restart )
 
       if( walltime >= d_nextCheckpointWalltime ) {
         d_nextCheckpointWalltime +=
-	  floor( (walltime - d_nextCheckpointWalltime) /
-		 d_checkpointWalltimeInterval ) *
-	  d_checkpointWalltimeInterval + d_checkpointWalltimeInterval;
+          floor( (walltime - d_nextCheckpointWalltime) /
+                 d_checkpointWalltimeInterval ) *
+          d_checkpointWalltimeInterval + d_checkpointWalltimeInterval;
       }
     }
   }  
@@ -1406,7 +1406,7 @@ DataArchiver::findNext_OutputCheckPointTimestep( double time, bool restart )
 
 
 //______________________________________________________________________
-//  UPDATE the xml files: index.xml, timestep.xml.
+//  Update the xml files: index.xml, timestep.xml.
 
 void
 DataArchiver::writeto_xml_files( double delt, const GridP& grid )
@@ -1667,8 +1667,8 @@ DataArchiver::writeto_xml_files( double delt, const GridP& grid )
 
 void
 DataArchiver::writeto_xml_files( std::map< std::string,
-				 std::pair<std::string,
-				 std::string> > &modifiedVars )
+                                 std::pair<std::string,
+                                 std::string> > &modifiedVars )
 {
 #ifdef HAVE_VISIT  
   if( isProc0_macro && d_sharedState->getVisIt() && modifiedVars.size() )
@@ -1685,13 +1685,13 @@ DataArchiver::writeto_xml_files( std::map< std::string,
     ProblemSpecP indexDoc = loadDocument(iname);
     
     string inSituSection("InSitu");
-	  
+          
     ProblemSpecP iss = indexDoc->findBlock(inSituSection);
-	  
+          
     if(iss.get_rep() == nullptr) {
       iss = indexDoc->appendChild(inSituSection.c_str());
     }
-	  
+          
     std::stringstream timestep;
     timestep << d_sharedState->getCurrentTopLevelTimeStep()+1;
       
@@ -1699,10 +1699,10 @@ DataArchiver::writeto_xml_files( std::map< std::string,
     std::map<std::string,std::pair<std::string, std::string> >::iterator iter;
     for (iter = modifiedVars.begin(); iter != modifiedVars.end(); ++iter) {
       proc0cout << "Visit libsim - For time step " << timestep.str() << " "
-		<< "the variable "         << iter->first << " "
-		<< "will be changed from " << iter->second.first << " "
-		<< "to "                   << iter->second.second << ". "
-		<< std::endl;
+                << "the variable "         << iter->first << " "
+                << "will be changed from " << iter->second.first << " "
+                << "to "                   << iter->second.second << ". "
+                << std::endl;
 
       ProblemSpecP newElem = iss->appendChild("modifiedVariable");
 
@@ -2223,14 +2223,12 @@ DataArchiver::scheduleOutputTimestep(       vector<SaveItem> & saveLabels,
     }
     
     Task* t = scinew Task( taskName, this, &DataArchiver::outputVariables,
-			   isThisCheckpoint ? CHECKPOINT : OUTPUT );
+                           isThisCheckpoint ? CHECKPOINT : OUTPUT );
     
     //__________________________________
     //
-    vector< SaveItem >::iterator saveIter;
-    for( saveIter = saveLabels.begin();
-	 saveIter != saveLabels.end(); ++saveIter ) {
-      const MaterialSubset* matls = saveIter->getMaterialSubset(level.get_rep());
+    for( vector< SaveItem >::iterator saveIter = saveLabels.begin(); saveIter != saveLabels.end(); ++saveIter ) {
+      const MaterialSubset* matls = saveIter->getMaterialSubset( level.get_rep() );
       
       if ( matls != nullptr ) {
         t->requires( Task::NewDW, (*saveIter).label, matls, Task::OutOfDomain, Ghost::None, 0, true );
@@ -2332,11 +2330,11 @@ DataArchiver::indexAddGlobals()
 
     vector< SaveItem >::iterator saveIter;
     for (saveIter = d_saveReductionLabels.begin();
-	 saveIter != d_saveReductionLabels.end(); ++saveIter) {
+         saveIter != d_saveReductionLabels.end(); ++saveIter) {
       SaveItem& saveItem = *saveIter;
       const VarLabel* var = saveItem.label;
       // FIX - multi-level query
-      const MaterialSubset* matls = saveItem.getMaterialSet(ALL_LEVELS)->getUnion();
+      const MaterialSubset* matls = saveItem.getMaterialSet( ALL_LEVELS )->getUnion();
       for (int m = 0; m < matls->size(); m++) {
         int matlIndex = matls->get(m);
         ostringstream href;
@@ -2389,7 +2387,7 @@ DataArchiver::outputReductionVars( const ProcessorGroup *,
     const VarLabel* var = saveItem.label;
     // FIX, see above
     const MaterialSubset* matls =
-      saveItem.getMaterialSet(ALL_LEVELS)->getUnion();
+      saveItem.getMaterialSet( ALL_LEVELS )->getUnion();
     
     for (int m = 0; m < matls->size(); m++) {
       int matlIndex = matls->get(m);
@@ -2408,9 +2406,9 @@ DataArchiver::outputReductionVars( const ProcessorGroup *,
 #endif
       if (!out) {
         throw ErrnoException("DataArchiver::outputReduction(): The file \"" +
-			     filename.str() +
-			     "\" could not be opened for writing!",
-			     errno, __FILE__, __LINE__);
+                             filename.str() +
+                             "\" could not be opened for writing!",
+                             errno, __FILE__, __LINE__);
       }
       
       out << std::setprecision(17) << time + delt << "\t";
@@ -2469,8 +2467,8 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
 #endif
 
   vector< SaveItem >& saveLabels =
-	 (type == OUTPUT ? d_saveLabels :
-	  type == CHECKPOINT ? d_checkpointLabels : d_checkpointReductionLabels);
+         (type == OUTPUT ? d_saveLabels :
+          type == CHECKPOINT ? d_checkpointLabels : d_checkpointReductionLabels);
 
   //__________________________________
   // debugging output
@@ -2560,7 +2558,7 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
   // Not only lock to prevent multiple threads from writing over the same
   // file, but also lock because xerces (DOM..) has thread-safety issues.
 
-  if (d_outputFileFormat == UDA || type == CHECKPOINT_REDUCTION) {  
+  if( d_outputFileFormat == UDA || type == CHECKPOINT_REDUCTION ) {  
     d_outputLock.lock(); 
     {  
 #if 0
@@ -2613,7 +2611,7 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
           ostringstream msg;
           
           msg << "DataArchiver::output(): Failed to open file '"
-	      << dataFilename << "' (after 50 tries).";
+              << dataFilename << "' (after 50 tries).";
           throw ErrnoException( msg.str(), errno, __FILE__, __LINE__ );
         }
 
@@ -2623,8 +2621,8 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
       
       if( tries > 1 ) {
         proc0cout << "WARNING: There was a glitch in trying to open the "
-		  << "checkpoint file: " << dataFilename << ". "
-		  << "It took " << tries << " tries to successfully open it.";
+                  << "checkpoint file: " << dataFilename << ". "
+                  << "It took " << tries << " tries to successfully open it.";
       }
 
       //__________________________________
@@ -2661,7 +2659,7 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
             patch = 0;
             patchID = -1;
           }
-	  else { /* if (type == OUTPUT || type == CHECKPOINT) */
+          else { /* if (type == OUTPUT || type == CHECKPOINT) */
             patch = patches->get( p );
             patchID = patch->getID();
           }
@@ -2689,9 +2687,9 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
             
             if(ls == -1) {
               cerr << "lseek error - file: " << filename
-		   << ", errno=" << errno << '\n';
+                   << ", errno=" << errno << '\n';
               throw ErrnoException("DataArchiver::output (lseek call)",
-				   errno, __FILE__, __LINE__);
+                                   errno, __FILE__, __LINE__);
             }
 #endif
             // Pad appropriately
@@ -2702,9 +2700,9 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
               int err = (int)write(fd, zero, pad);
               if (err != pad) {
                 cerr << "Error writing to file: " << filename
-		     << ", errno=" << errno << '\n';
+                     << ", errno=" << errno << '\n';
                 SCI_THROW(ErrnoException("DataArchiver::output (write call)",
-					 errno, __FILE__, __LINE__));
+                                         errno, __FILE__, __LINE__));
               }
               cur+=pad;
               delete[] zero;
@@ -2725,9 +2723,9 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
             
             if(s == -1) {
               cerr << "fstat error - file: " << filename
-		   << ", errno=" << errno << '\n';
+                   << ", errno=" << errno << '\n';
               throw ErrnoException("DataArchiver::output (stat call)",
-				   errno, __FILE__, __LINE__);
+                                   errno, __FILE__, __LINE__);
             }
             ASSERTEQ(oc.cur, st.st_size);
 #endif
@@ -2808,8 +2806,8 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
   }
 #endif
 
-  double myTime = timer().seconds();
-  double byteToMB = 1024*1024;
+  double myTime   = timer().seconds();
+  double byteToMB = 1024 * 1024;
 
   if (type == OUTPUT) {
     d_sharedState->d_runTimeStats[SimulationState::OutputIOTime] +=
@@ -2909,7 +2907,8 @@ DataArchiver::saveLabels_PIDX( std::vector< SaveItem >     & saveLabels,
 
   //__________________________________
   // allocate memory for pidx variable descriptor array
-  rc = PIDX_set_variable_count(pidx.file, actual_number_of_variables);
+  cout << "Actual_number_of_variables is " << actual_number_of_variables << "\n";
+  rc = PIDX_set_variable_count( pidx.file, actual_number_of_variables );
   pidx.checkReturnCode( rc, "DataArchiver::saveLabels_PIDX -PIDX_set_variable_count failure",__FILE__, __LINE__);
   
   size_t pidxVarSize = sizeof (PIDX_variable*);
@@ -3014,17 +3013,19 @@ DataArchiver::saveLabels_PIDX( std::vector< SaveItem >     & saveLabels,
       var_mat_name = label->getName() + "_m" + s.str();
       //      }
     
+      cout << "here: " << var_mat_name.c_str() << ", " << (varSubType_size * 8) << ", " << data_type << "\n";
+
       rc = PIDX_variable_create((char*) var_mat_name.c_str(),
-				varSubType_size * 8, data_type,
-				&(pidx.varDesc[vc][m]));
+                                varSubType_size * 8, data_type,
+                                &(pidx.varDesc[vc][m]));
       
       pidx.checkReturnCode( rc,
-			    "DataArchiver::saveLabels_PIDX - PIDX_variable_create failure",
-			    __FILE__, __LINE__);
+                            "DataArchiver::saveLabels_PIDX - PIDX_variable_create failure",
+                            __FILE__, __LINE__);
       
 
       patch_buffer[vcm] =
-	(unsigned char**) malloc(sizeof(unsigned char*) * patches->size());
+        (unsigned char**) malloc(sizeof(unsigned char*) * patches->size());
 
       //__________________________________
       //  patch Loop
@@ -3041,19 +3042,19 @@ DataArchiver::saveLabels_PIDX( std::vector< SaveItem >     & saveLabels,
           PIDXOutputContext::patchExtents patchExts;
           
           pidx.setPatchExtents( "DataArchiver::saveLabels_PIDX",
-				patch, level, label->getBoundaryLayer(),
+                                patch, level, label->getBoundaryLayer(),
                                 td, patchExts, patchOffset, patchSize );
                               
           //__________________________________
           // debugging
           if( dbgPIDX.active() && isProc0_macro ) {
             proc0cout << rank <<" taskType: " << type << "  PIDX:  "
-		      << setw(15) << label->getName() << "  " << td->getName() 
+                      << setw(15) << label->getName() << "  " << td->getName() 
                       << " Patch: " << patch->getID()
-		      << " L-" << level->getIndex() 
+                      << " L-" << level->getIndex() 
                       << ",  sample_per_variable: " << sample_per_variable
-		      << " varSubType_size: " << varSubType_size
-		      << " dataType: " << data_type << "\n";
+                      << " varSubType_size: " << varSubType_size
+                      << " dataType: " << data_type << "\n";
             patchExts.print(cout); 
           }
                     
@@ -3085,17 +3086,17 @@ DataArchiver::saveLabels_PIDX( std::vector< SaveItem >     & saveLabels,
           }         
          
           rc = PIDX_variable_write_data_layout(pidx.varDesc[vc][m],
-					       patchOffset, patchSize,
-					       patch_buffer[vcm][p],
-					       PIDX_row_major);
-	  
+                                               patchOffset, patchSize,
+                                               patch_buffer[vcm][p],
+                                               PIDX_row_major);
+          
           pidx.checkReturnCode( rc,
-				"DataArchiver::saveLabels_PIDX - PIDX_variable_write_data_layout failure",
-				__FILE__, __LINE__);
+                                "DataArchiver::saveLabels_PIDX - PIDX_variable_write_data_layout failure",
+                                __FILE__, __LINE__);
           
           totalBytesSaved += arraySize;
           
-          //__________________________________	  
+          //__________________________________    
           //  populate the xml dom This layout allows us to highjack
           //  all of the existing data structures in DataArchive
           ProblemSpecP var_ps = doc->appendChild("Variable");
@@ -3115,8 +3116,8 @@ DataArchiver::saveLabels_PIDX( std::vector< SaveItem >     & saveLabels,
 
       rc = PIDX_append_and_write_variable(pidx.file, pidx.varDesc[vc][m]);
       pidx.checkReturnCode( rc,
-			    "DataArchiver::saveLabels_PIDX - PIDX_append_and_write_variable failure",
-			    __FILE__, __LINE__);
+                            "DataArchiver::saveLabels_PIDX - PIDX_append_and_write_variable failure",
+                            __FILE__, __LINE__);
       
       vcm++;
     }  //  Materials
@@ -3126,8 +3127,8 @@ DataArchiver::saveLabels_PIDX( std::vector< SaveItem >     & saveLabels,
 
   rc = PIDX_close(pidx.file);
   pidx.checkReturnCode( rc,
-			"DataArchiver::saveLabels_PIDX - PIDX_close failure",
-			__FILE__, __LINE__);
+                        "DataArchiver::saveLabels_PIDX - PIDX_close failure",
+                        __FILE__, __LINE__);
   
   //__________________________________
   // free buffers
@@ -3297,10 +3298,10 @@ DataArchiver::makeVersionedDir()
     }
     else if( errno != EEXIST )  {
       cerr << "makeVersionedDir: Error making directory: " << name.str()
-	   << "\n";
+           << "\n";
       throw ErrnoException("DataArchiver.cc: mkdir failed for some "
                            "reason besides dir already exists", errno,
-			   __FILE__, __LINE__);
+                           __FILE__, __LINE__);
     }
   }
 
@@ -3320,16 +3321,16 @@ DataArchiver::makeVersionedDir()
         int code = rmdir( dirName.c_str() );
         if (code != 0)
           throw ErrnoException("DataArchiver.cc: rmdir failed", errno,
-			       __FILE__, __LINE__);
+                               __FILE__, __LINE__);
       }
     }
     else {
       if( errno != EEXIST ) {
         cerr << "makeVersionedDir: Error making directory: " << name.str()
-	     << "\n";
+             << "\n";
         throw ErrnoException("DataArchiver.cc: mkdir failed for some "
                              "reason besides dir already exists", errno,
-			     __FILE__, __LINE__);
+                             __FILE__, __LINE__);
       }
       dirMin = dirNum + 1;
     }
@@ -3385,19 +3386,20 @@ DataArchiver::initSaveLabels(SchedulerP& sched, bool initTimestep)
   Scheduler::VarLabelMaterialMap* pLabelMatlMap;
   pLabelMatlMap = sched->makeVarLabelMaterialMap();
 
-  // iterate through each of the saveLabelNames we created in problemSetup
-  list<SaveNameItem>::iterator iter;
-  for (iter = d_saveLabelNames.begin();
-       iter != d_saveLabelNames.end(); ++iter) {
-    VarLabel* var = VarLabel::find((*iter).labelName);
+  // Iterate through each of the saveLabelNames we created in problemSetup
+  
+  for( list<SaveNameItem>::iterator iter = d_saveLabelNames.begin(); iter != d_saveLabelNames.end(); ++iter ) {
+
+    VarLabel* var = VarLabel::find( (*iter).labelName );
     
     //   see if that variable has been created, set the compression
     //   mode make sure that the scheduler shows that that it has been
     //   scheduled to be computed.  Then save it to saveItems.
     if (var == nullptr) {
-      if (initTimestep) {
+      if ( initTimestep ) {
         continue;
-      } else {
+      }
+      else {
         throw ProblemSetupException((*iter).labelName +" variable not found to save.", __FILE__, __LINE__);
       }
     }
@@ -3406,42 +3408,42 @@ DataArchiver::initSaveLabels(SchedulerP& sched, bool initTimestep)
       var->setCompressionMode((*iter).compressionMode);
     }
       
-    Scheduler::VarLabelMaterialMap::iterator found =
-      pLabelMatlMap->find(var->getName());
+    Scheduler::VarLabelMaterialMap::iterator found = pLabelMatlMap->find( var->getName() );
 
     if (found == pLabelMatlMap->end()) {
       if (initTimestep) {
         // ignore this on the init timestep, cuz lots of vars aren't
         // computed on the init timestep
         dbg << "    Ignoring var " << iter->labelName
-	    << " on initialization timestep\n";
+            << " on initialization timestep\n";
         continue;
-      } else {
+      }
+      else {
         throw ProblemSetupException((*iter).labelName +
-				    " variable not computed for saving.",
-				    __FILE__, __LINE__);
+                                    " variable not computed for saving.",
+                                    __FILE__, __LINE__);
       }
     }
     saveItem.label = var;
     saveItem.matlSet.clear();
     
-    for (ConsecutiveRangeSet::iterator crs_iter = (*iter).levels.begin();
-	 crs_iter != (*iter).levels.end(); ++crs_iter) {
+    for ( ConsecutiveRangeSet::iterator crs_iter = (*iter).levels.begin(); crs_iter != (*iter).levels.end(); ++crs_iter ) {
 
-      ConsecutiveRangeSet matlsToSave = (ConsecutiveRangeSet((*found).second)).intersected((*iter).matls);
-      saveItem.setMaterials(*crs_iter, matlsToSave, d_prevMatls, d_prevMatlSet);
+      ConsecutiveRangeSet matlsToSave = ( ConsecutiveRangeSet( (*found).second ) ).intersected( ( *iter ).matls );
+      saveItem.setMaterials( *crs_iter, matlsToSave, d_prevMatls, d_prevMatlSet );
 
       if (((*iter).matls != ConsecutiveRangeSet::all) && ((*iter).matls != matlsToSave)) {
         throw ProblemSetupException((*iter).labelName +
-				    " variable not computed for all materials specified to save.",
-				    __FILE__, __LINE__);
+                                    " variable not computed for all materials specified to save.",
+                                    __FILE__, __LINE__);
       }
     }
     
-    if (saveItem.label->typeDescription()->isReductionVariable()) {
-      d_saveReductionLabels.push_back(saveItem);
-    } else {
-      d_saveLabels.push_back(saveItem);
+    if ( saveItem.label->typeDescription()->isReductionVariable() ) {
+      d_saveReductionLabels.push_back( saveItem );
+    }
+    else {
+      d_saveLabels.push_back( saveItem );
     }
   }
   
@@ -3573,21 +3575,20 @@ DataArchiver::SaveItem::setMaterials(int level,
   // reuse material sets when the same set of materials is used for
   // different SaveItems in a row -- easier than finding all reusable
   // material set, but effective in many common cases.
-  if( (prevMatlSet != nullptr) && (matls == prevMatls) ) {
-    matlSet[level] = prevMatlSet;
+  if( ( prevMatlSet != nullptr ) && ( matls == prevMatls ) ) {
+    matlSet[ level ] = prevMatlSet;
   }
   else {
-    MaterialSetP& m = matlSet[level];
+    MaterialSetP& m = matlSet[ level ];
     m = scinew MaterialSet();
     vector<int> matlVec;
     matlVec.reserve(matls.size());
 
-    for (ConsecutiveRangeSet::iterator crs_iter = matls.begin();
-	 crs_iter != matls.end(); ++crs_iter) {
-      matlVec.push_back(*crs_iter);
+    for ( ConsecutiveRangeSet::iterator crs_iter = matls.begin(); crs_iter != matls.end(); ++crs_iter ) {
+      matlVec.push_back( *crs_iter );
     }
 
-    m->addAll(matlVec);
+    m->addAll( matlVec );
     prevMatlSet = m;
     prevMatls = matls;
   }
@@ -3596,14 +3597,14 @@ DataArchiver::SaveItem::setMaterials(int level,
 //______________________________________________________________________
 //  Find the materials to output on this level for this saveItem
 const MaterialSubset*
-DataArchiver::SaveItem::getMaterialSubset(const Level* level)
+DataArchiver::SaveItem::getMaterialSubset( const Level* level )
 {
   // search done by absolute level, or relative to end of levels (-1
   // finest, -2 second finest,...)
   map<int, MaterialSetP>::iterator iter = matlSet.end();
   const MaterialSubset* var_matls = nullptr;
   
-  if (level) {
+  if ( level ) {
     int L_index = level->getIndex();
     int maxLevels = level->getGrid()->numLevels();
     
@@ -3614,7 +3615,7 @@ DataArchiver::SaveItem::getMaterialSubset(const Level* level)
     }
     
     if (iter == matlSet.end()) {
-      iter = matlSet.find(ALL_LEVELS);
+      iter = matlSet.find( ALL_LEVELS );
     }
     
     if (iter != matlSet.end()) {
@@ -3953,7 +3954,7 @@ DataArchiver::checkpointTimestep( double time,
     const PatchSet* patches = lb->getOutputPerProcessorPatchSet(level);
 
     outputVariables( nullptr, patches->getSubset(proc),
-		     nullptr, nullptr, newDW, CHECKPOINT );
+                     nullptr, nullptr, newDW, CHECKPOINT );
   }
 
   // Restore the vars so to return to the normal output schedule.
@@ -3975,20 +3976,20 @@ DataArchiver::saveSVNinfo()
   
   if( !validFile( svn_diff_file ) ) {
     cout << "\n"
-	 << "WARNING: 'svn diff' file '" << svn_diff_file
-	 << "' does not appear to exist!\n"
-	 << "\n";
+         << "WARNING: 'svn diff' file '" << svn_diff_file
+         << "' does not appear to exist!\n"
+         << "\n";
   } 
   else {
     string svn_diff_out = d_dir.getName() + "/svn_diff.txt";
     string svn_diff_on = string( sci_getenv("SCIRUN_OBJDIR") ) + "/.do_svn_diff";
     if( !validFile( svn_diff_on ) ) {
       cout << "\n"
-	   << "WARNING: Adding 'svn diff' file to UDA, "
-	   << "but AUTO DIFF TEXT CREATION is OFF!\n"
-	   << "         svn_diff.txt may be out of date!  "
-	   << "Saving as 'possible_svn_diff.txt'.\n"
-	   << "\n";
+           << "WARNING: Adding 'svn diff' file to UDA, "
+           << "but AUTO DIFF TEXT CREATION is OFF!\n"
+           << "         svn_diff.txt may be out of date!  "
+           << "Saving as 'possible_svn_diff.txt'.\n"
+           << "\n";
       
       svn_diff_out = d_dir.getName() + "/possible_svn_diff.txt";
     }
@@ -4020,13 +4021,13 @@ DataArchiver::setupSharedFileSystem()
 
     ostringstream test_filename_stream;
     test_filename_stream << "sus_filesystem_test-" << hostname
-			 << "-" << getpid();
+                         << "-" << getpid();
 
     // Create the test file...
     FILE * tmpout = fopen( test_filename_stream.str().c_str(), "w" );
     if( !tmpout ) {
       throw ErrnoException("fopen failed for " + test_filename_stream.str(),
-			   errno, __FILE__, __LINE__ );
+                           errno, __FILE__, __LINE__ );
     }
     fprintf( tmpout, "\n" ); // Test writing to file...
     if( fflush( tmpout ) != 0 ) {
@@ -4052,7 +4053,7 @@ DataArchiver::setupSharedFileSystem()
     // Broadcast test filename length, and then broadcast the actual name.
     Uintah::MPI::Bcast( &outlen, 1, MPI_INT, 0, d_myworld->getComm() );
     Uintah::MPI::Bcast( const_cast<char*>(outbuf), outlen, MPI_CHAR, 0,
-			d_myworld->getComm() );
+                        d_myworld->getComm() );
     fs_test_file_name = test_filename_stream.str();
   } 
   else {
@@ -4077,7 +4078,7 @@ DataArchiver::setupSharedFileSystem()
 
     if( ( s != 0 ) || !S_ISREG( st.st_mode ) ) {
       cerr << "Stat'ing of file: " << fs_test_file_name
-	   << " failed with errno = " << errno << "\n";
+           << " failed with errno = " << errno << "\n";
       throw ErrnoException( "stat", errno, __FILE__, __LINE__ );
     }
   }
@@ -4102,7 +4103,7 @@ DataArchiver::setupSharedFileSystem()
 
     Uintah::MPI::Bcast( &outlen, 1, MPI_INT, 0, d_myworld->getComm() );
     Uintah::MPI::Bcast( const_cast<char*>(outbuf), outlen, MPI_CHAR, 0,
-			d_myworld->getComm() );
+                        d_myworld->getComm() );
   }
   else {
 
@@ -4119,7 +4120,7 @@ DataArchiver::setupSharedFileSystem()
 
   if( d_myworld->myrank() == 0 ) {
     cerr << "Verified shared file system in " << timer().seconds()
-	 << " seconds.\n";
+         << " seconds.\n";
   }
 
 } // end setupSharedFileSystem()
@@ -4197,7 +4198,7 @@ DataArchiver::setupLocalFileSystems()
   FILE* tmpout = fopen(fname.c_str(), "w");
   if(!tmpout) {
     throw ErrnoException("fopen failed for " + fname, errno,
-			 __FILE__, __LINE__);
+                         __FILE__, __LINE__);
   }
   fprintf(tmpout, "\n");
   if(fflush(tmpout) != 0) {
@@ -4266,7 +4267,7 @@ if(!d_writeMeta) {
     if (!in) {
       throw InternalError("DataArchiver::initializeOutput(): The file \"" +
                           name.str() +
-			  "\" not found on second pass for filesystem discovery!",
+                          "\" not found on second pass for filesystem discovery!",
                           __FILE__, __LINE__);
     }
     string dirname;
@@ -4282,7 +4283,7 @@ if(!d_writeMeta) {
                 d_myworld->getComm());
   if( d_myworld->myrank() == 0 ) {
     cerr << "Discovered " << nunique << " unique filesystems in "
-	 << timer().seconds() << " seconds\n";
+         << timer().seconds() << " seconds\n";
   }
   // Remove the tmp files...
   int s = unlink(myname.str().c_str());
