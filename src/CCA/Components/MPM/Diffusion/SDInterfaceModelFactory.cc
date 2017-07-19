@@ -21,15 +21,16 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-#include <CCA/Components/MPM/ReactionDiffusion/SDInterfaceModelFactory.h>
-#include <CCA/Components/MPM/ReactionDiffusion/DiffusionInterfaces/SDInterfaceModel.h>
-#include <CCA/Components/MPM/ReactionDiffusion/DiffusionInterfaces/CommonIFConcDiff.h>
+#include <CCA/Components/MPM/Diffusion/SDInterfaceModelFactory.h>
+
 #include <CCA/Components/MPM/MPMFlags.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Malloc/Allocator.h>
 
 #include <string>
+#include <CCA/Components/MPM/Diffusion/DiffusionInterfaces/CommonIFConcDiff.h>
+#include <CCA/Components/MPM/Diffusion/DiffusionInterfaces/SDInterfaceModel.h>
 
 using namespace std;
 using namespace Uintah;

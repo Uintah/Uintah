@@ -22,28 +22,37 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/MPM/ReactionDiffusion/ConductivityModels/ConductivityEquation.h>
+#ifndef UINTAH_CCA_COMPONENTS_MPMFVM_FIXEDEQUATION_H
+#define UINTAH_CCA_COMPONENTS_MPMFVM_FIXEDEQUATION_H
 
-#include <iostream>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <CCA/Components/MPM/Diffusion/ConductivityModels/ConductivityEquation.h>
 
-using namespace Uintah;
+namespace Uintah{
+/*************************************************
+ *
+ * CLASS
+ *   FixedEquation
+ *
+ *   This class returns a fixed conductivity value.
+ *
+ *
+ *************************************************/
 
-ConductivityEquation::ConductivityEquation(ProblemSpecP& ps)
-{
 
+  class FixedEquation : public ConductivityEquation {
+    public:
+      FixedEquation(ProblemSpecP& ps);
+
+      virtual ~FixedEquation();
+
+      virtual double computeConductivity(double conductivity);
+
+      virtual void outputProblemSpec(ProblemSpecP& ps);
+
+    private:
+      double d_conductivity;
+
+  };
 }
-
-ConductivityEquation::~ConductivityEquation()
-{
-
-}
-
-double ConductivityEquation::computeConductivity(double concentration)
-{
-  return concentration;
-}
-
-void ConductivityEquation::outputProblemSpec(ProblemSpecP& ps)
-{
-
-}
+#endif // End of UINTAH_CCA_COMPONENTS_MPMFVM_FIXEDEQUATION_H

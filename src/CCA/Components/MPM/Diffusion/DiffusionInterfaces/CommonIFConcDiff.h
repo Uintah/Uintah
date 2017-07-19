@@ -25,7 +25,7 @@
 #ifndef __COMMONIFCONCDIFF_H__
 #define __COMMONIFCONCDIFF_H__
 
-#include <CCA/Components/MPM/ReactionDiffusion/DiffusionInterfaces/SDInterfaceModel.h>
+#include <CCA/Components/MPM/Diffusion/DiffusionInterfaces/SDInterfaceModel.h>
 
 namespace Uintah {
 

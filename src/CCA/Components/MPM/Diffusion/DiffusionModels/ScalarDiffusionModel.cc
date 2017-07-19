@@ -22,9 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/MPM/ReactionDiffusion/ConductivityModels/BinaryEquation.h>
-#include <CCA/Components/MPM/ReactionDiffusion/ConductivityModels/FixedEquation.h>
-#include <CCA/Components/MPM/ReactionDiffusion/DiffusionModels/ScalarDiffusionModel.h>
+#include <CCA/Components/MPM/Diffusion/DiffusionModels/ScalarDiffusionModel.h>
+
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MPM/MPMFlags.h>
 #include <Core/Labels/MPMLabel.h>
@@ -36,6 +35,8 @@
 #include <Core/Util/DebugStream.h>
 
 #include <iostream>
+#include <CCA/Components/MPM/Diffusion/ConductivityModels/BinaryEquation.h>
+#include <CCA/Components/MPM/Diffusion/ConductivityModels/FixedEquation.h>
 
 using namespace Uintah;
 

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2014 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,13 +22,20 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_RD_JGSCALARDIFFUSION_H
-#define UINTAH_RD_JGSCALARDIFFUSION_H
+#ifndef UINTAH_RD_NONLINEARDIFF2_H
+#define UINTAH_RD_NONLINEARDIFF2_H
 
-#include <CCA/Components/MPM/ReactionDiffusion/DiffusionModels/ScalarDiffusionModel.h>
+/*
+ * This Non-Linear Diffusivity model ....
+ */
+
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
+
+#include <vector>
+#include <string>
+#include <CCA/Components/MPM/Diffusion/DiffusionModels/ScalarDiffusionModel.h>
 
 namespace Uintah {
 
@@ -39,26 +46,22 @@ namespace Uintah {
   class DataWarehouse;
   class ProcessorGroup;
 
-  
-  class JGConcentrationDiffusion : public ScalarDiffusionModel {
+  class NonLinearDiff2 : public ScalarDiffusionModel {
   public:
     
-     JGConcentrationDiffusion(ProblemSpecP      & ps,
-                              SimulationStateP  & sS,
-                              MPMFlags          * Mflag,
-                              std::string         diff_type
-                             );
-
-    ~JGConcentrationDiffusion();
+    NonLinearDiff2(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag,
+                        std::string diff_type);
+    ~NonLinearDiff2();
 
     virtual void addInitialComputesAndRequires(      Task         * task,
                                                const MPMMaterial  * matl,
-                                               const PatchSet     * patch
-                                              ) const;
+                                               const PatchSet     * patches
+                                              ) const ;
 
-    virtual void addParticleState(std::vector<const VarLabel*>&   from,
-                                  std::vector<const VarLabel*>&   to
+    virtual void addParticleState(std::vector<const VarLabel*>& from,
+                                  std::vector<const VarLabel*>& to
                                  ) const;
+
 
     virtual void computeFlux(const Patch          * patch,
                              const MPMMaterial    * matl,
@@ -76,32 +79,48 @@ namespace Uintah {
                                      const PatchSet     * patch
                                     ) const;
 
-    virtual void addSplitParticlesComputesAndRequires(
-                                                            Task  *task,
+    virtual void scheduleComputeDivergence(       Task         * task,
+                                            const MPMMaterial  * matl,
+                                            const PatchSet     * patch
+                                          ) const;
+
+    virtual void computeDivergence(
+                                    const Patch          * patch,
+                                    const MPMMaterial    * matl,
+                                          DataWarehouse  * old_dw,
+                                          DataWarehouse  * new_dw
+                                   );
+
+    virtual void addSplitParticlesComputesAndRequires(      Task        * task,
                                                       const MPMMaterial * matl,
                                                       const PatchSet    * patches
                                                      ) const;
 
-    virtual void splitSDMSpecificParticleData(
-                                              const Patch                 * patch,
-                                              const int                     dwi,
-                                              const int                     nDims,
+    virtual void splitSDMSpecificParticleData(const Patch                 * patch,
+                                              const int dwi,
+                                              const int nDims,
                                                     ParticleVariable<int> & prefOld,
                                                     ParticleVariable<int> & pref,
-                                              const unsigned int            oldNumPart,
+                                              const unsigned int            oldNumPar,
                                               const int                     numNewPartNeeded,
                                                     DataWarehouse         * old_dw,
                                                     DataWarehouse         * new_dw
                                              );
 
-    virtual void outputProblemSpec(ProblemSpecP & ps,
-                                   bool           output_rdm_tag
-                                  ) const;
+
+    virtual void outputProblemSpec(
+                                   ProblemSpecP & ps,
+                                   bool           output_rdm_tag = true
+                                   ) const ;
 
   private:
-    JGConcentrationDiffusion(const JGConcentrationDiffusion&);
-    JGConcentrationDiffusion& operator=(const JGConcentrationDiffusion&);
+    double d_boltz_const;
+    double d_unit_charge;
+    double d_operating_temp;
+    double d_alpha;
+
+    NonLinearDiff2(const NonLinearDiff2&);
+    NonLinearDiff2& operator=(const NonLinearDiff2&);
   };
-  
 } // end namespace Uintah
 #endif

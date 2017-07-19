@@ -22,37 +22,32 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_CCA_COMPONENTS_MPMFVM_FIXEDEQUATION_H
-#define UINTAH_CCA_COMPONENTS_MPMFVM_FIXEDEQUATION_H
+#include <CCA/Components/MPM/Diffusion/ConductivityModels/FixedEquation.h>
 
-#include <CCA/Components/MPM/ReactionDiffusion/ConductivityModels/ConductivityEquation.h>
-#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <iostream>
 
-namespace Uintah{
-/*************************************************
- *
- * CLASS
- *   FixedEquation
- *
- *   This class returns a fixed conductivity value.
- *
- *
- *************************************************/
+using namespace Uintah;
 
-
-  class FixedEquation : public ConductivityEquation {
-    public:
-      FixedEquation(ProblemSpecP& ps);
-
-      virtual ~FixedEquation();
-
-      virtual double computeConductivity(double conductivity);
-
-      virtual void outputProblemSpec(ProblemSpecP& ps);
-
-    private:
-      double d_conductivity;
-
-  };
+FixedEquation::FixedEquation(ProblemSpecP& ps) :
+  ConductivityEquation(ps)
+{
+  ps->require("conductivity", d_conductivity);
 }
-#endif // End of UINTAH_CCA_COMPONENTS_MPMFVM_FIXEDEQUATION_H
+
+FixedEquation::~FixedEquation()
+{
+
+}
+
+double FixedEquation::computeConductivity(double concentration)
+{
+  return d_conductivity;
+}
+
+void FixedEquation::outputProblemSpec(ProblemSpecP& ps)
+{
+  ProblemSpecP eq_ps;
+  eq_ps = ps->appendChild("conductivity_equation");
+  eq_ps->setAttribute("type", "fixed");
+  eq_ps->appendElement("conductivity", d_conductivity);
+}

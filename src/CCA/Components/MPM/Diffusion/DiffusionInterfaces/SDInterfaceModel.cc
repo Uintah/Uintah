@@ -22,9 +22,10 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/MPM/ReactionDiffusion/DiffusionInterfaces/SDInterfaceModel.h>
-#include <CCA/Components/MPM/ReactionDiffusion/DiffusionModels/ScalarDiffusionModel.h>
+#include <CCA/Components/MPM/Diffusion/DiffusionInterfaces/SDInterfaceModel.h>
+
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Components/MPM/Diffusion/DiffusionModels/ScalarDiffusionModel.h>
 
 using namespace Uintah;
 

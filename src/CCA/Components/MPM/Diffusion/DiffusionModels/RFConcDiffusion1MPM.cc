@@ -22,7 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/MPM/ReactionDiffusion/DiffusionModels/RFConcDiffusion1MPM.h>
+#include <CCA/Components/MPM/Diffusion/DiffusionModels/RFConcDiffusion1MPM.h>
+
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/Labels/MPMLabel.h>
 #include <Core/Grid/Task.h>

@@ -22,7 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/MPM/ReactionDiffusion/DiffusionModels/NonLinearDiff1.h>
+#include <CCA/Components/MPM/Diffusion/DiffusionModels/NonLinearDiff1.h>
+
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MPM/MPMBoundCond.h>
 #include <CCA/Components/MPM/MPMFlags.h>

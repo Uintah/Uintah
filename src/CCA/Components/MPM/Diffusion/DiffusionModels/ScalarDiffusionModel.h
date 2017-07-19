@@ -22,24 +22,20 @@
  * IN THE SOFTWARE.
  */
 
-/*
- * ConstantRate.h
- * A simple ScalarDiffusionModel that applies a user specified concentration rate
- * to each particle. Used for testing concentration dependent constitutive models.
- *
- */
+#ifndef UINTAH_RF_SCALARDIFFUSIONMODEL_H
+#define UINTAH_RF_SCALARDIFFUSIONMODEL_H
 
-#ifndef UINTAH_CONSTANTRATE_H
-#define UINTAH_CONSTANTRATE_H
-
-#include <CCA/Components/MPM/ReactionDiffusion/DiffusionModels/ScalarDiffusionModel.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/LevelP.h>
+#include <Core/Grid/Variables/VarLabel.h>
+#include <Core/Grid/Variables/ParticleVariable.h>
 
-#include <vector>
 #include <string>
 
+#include <CCA/Components/MPM/Diffusion/ConductivityModels/ConductivityEquation.h>
 namespace Uintah {
 
   class Task;
@@ -49,50 +45,64 @@ namespace Uintah {
   class DataWarehouse;
   class ProcessorGroup;
 
-  
-  class ConstantRate : public ScalarDiffusionModel
-  {
+  enum FluxDirection{
+    fd_in,
+    fd_out,
+    fd_transition
+  };
+
+  class ScalarDiffusionModel {
   public:
     
-             ConstantRate(
-                          ProblemSpecP      & ps,
-                          SimulationStateP  & sS,
-                          MPMFlags          * Mflag,
-                          std::string         diff_type
-                         );
-    virtual ~ConstantRate();
+              ScalarDiffusionModel(ProblemSpecP     & ps,
+                                   SimulationStateP & sS,
+                                   MPMFlags         * Mflag,
+                                   std::string        diff_type);
+    virtual  ~ScalarDiffusionModel();
 
-    // Interface requirements
+    // Functions which are constant for all diffusion models.
+    std::string getDiffusionType() const;
+
+    virtual double getMaxConcentration() const;
+
+    virtual void setIncludeHydroStress(bool value);
+
+    virtual void initializeTimeStep(const Patch         * patch,
+                                    const MPMMaterial   * matl,
+                                          DataWarehouse * new_dw
+                                   );
+
+    // Functions required to be implemented  for the individual model.
     virtual void addInitialComputesAndRequires(      Task         * task,
                                                const MPMMaterial  * matl,
                                                const PatchSet     * patches
-                                              ) const ;
+                                              ) const = 0;
 
     virtual void addParticleState(std::vector<const VarLabel*>& from,
                                   std::vector<const VarLabel*>& to
-                                 ) const;
+                                 ) const = 0;
 
 
     virtual void computeFlux(const Patch          * patch,
                              const MPMMaterial    * matl,
                                    DataWarehouse  * old_dw,
                                    DataWarehouse  * new_dw
-                            );
+                            ) = 0;
 
     virtual void initializeSDMData(const Patch          * patch,
                                    const MPMMaterial    * matl,
                                          DataWarehouse  * new_dw
-                                  );
+                                  ) = 0;
 
     virtual void scheduleComputeFlux(      Task         * task,
                                      const MPMMaterial  * matl,
-                                     const PatchSet     * patch
-                                    ) const;
+		                                 const PatchSet     * patch
+		                                ) const = 0;
 
     virtual void addSplitParticlesComputesAndRequires(      Task        * task,
                                                       const MPMMaterial * matl,
                                                       const PatchSet    * patches
-                                                     ) const;
+                                                     ) const = 0;
 
     virtual void splitSDMSpecificParticleData(const Patch                 * patch,
                                               const int dwi,
@@ -103,45 +113,66 @@ namespace Uintah {
                                               const int                     numNewPartNeeded,
                                                     DataWarehouse         * old_dw,
                                                     DataWarehouse         * new_dw
-                                             );
+                                             ) = 0;
 
-    // Overridden functions
+    virtual void outputProblemSpec(
+                                   ProblemSpecP & ps,
+                                   bool         output_rdm_tag = true
+                                  ) const = 0;
+
+
+    // Functions which have a default implementation, but may need to be
+    //   overrideen.
+
     virtual void scheduleComputeDivergence(      Task         * task,
                                            const MPMMaterial  * matl,
                                            const PatchSet     * patch
                                           ) const;
 
-    virtual void computeDivergence(
-                                   const Patch          * patch,
+    virtual void computeDivergence(const Patch          * patch,
                                    const MPMMaterial    * matl,
                                          DataWarehouse  * old_dw,
                                          DataWarehouse  * new_dw
                                   );
 
-    virtual void scheduleComputeDivergence_CFI(
-                                                     Task         * task,
+    virtual void scheduleComputeDivergence_CFI(      Task         * task,
                                                const MPMMaterial  * matl,
                                                const PatchSet     * patch
                                               ) const;
 
-    virtual void computeDivergence_CFI(
-                                       const PatchSubset    * finePatches,
+    virtual void computeDivergence_CFI(const PatchSubset    * finePatches,
                                        const MPMMaterial    * matl,
                                              DataWarehouse  * old_dw,
                                              DataWarehouse  * new_dw
                                       );
 
-    virtual void outputProblemSpec(
-                                   ProblemSpecP & ps,
-                                   bool           output_rdm_tag = true
-                                  ) const;
+    virtual double computeStableTimeStep(double Dif,
+                                         Vector dx
+                                        ) const;
 
-  private:
-    double d_constant_rate;
-    ConstantRate(const ConstantRate&);
-    ConstantRate& operator=(const ConstantRate&);
+    virtual double computeDiffusivityTerm(double concentration,
+                                          double pressure
+                                         );
+
+    virtual ConductivityEquation* getConductivityEquation();
+
+  protected:
+    MPMLabel* d_lb;
+    MPMFlags* d_Mflag;
+    SimulationStateP d_sharedState;
+    ConductivityEquation* d_conductivity_equation;
+
+    int NGP, NGN;
+    std::string diffusion_type;
+    bool include_hydrostress;
+
+    ScalarDiffusionModel(const ScalarDiffusionModel&);
+    ScalarDiffusionModel& operator=(const ScalarDiffusionModel&);
     
+    double diffusivity;
+    double max_concentration;
 
+    MaterialSubset* d_one_matl;         // matlsubset for zone of influence
   };
   
 } // end namespace Uintah

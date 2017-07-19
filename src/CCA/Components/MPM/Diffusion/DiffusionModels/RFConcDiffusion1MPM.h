@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2017 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,37 +22,13 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_RD_NONLINEARDIFF1_H
-#define UINTAH_RD_NONLINEARDIFF1_H
+#ifndef UINTAH_RD_RFCONCDIFFUSION1MPM_H
+#define UINTAH_RD_RFCONCDIFFUSION1MPM_H
 
-/*
- * This Non-Linear Diffusivity model contains two different models for
- * computing the diffusion coefficient. The first uses only concentration
- * as the input variable and is based on the following papers:
- *
- * Two-Phase Electrochemical Lithiation in Amorphous Silicon
- * Jiang Wei Wang, Yu He, Feifei Fan, Xiao Hua Liu, Shuman Xia, Yang Liu,
- * C. Thomas Harris, Hong Li, Jian Yu Huang, Scott X. Mao, and Ting Zhu
- * Nano Letters 2013 13 (2), 709-715
- *
- * Size-Dependent Fracture of Silicon Nanoparticles During Lithiation
- * Xiao Hua Liu, Li Zhong, Shan Huang, Scott X. Mao, Ting Zhu, and Jian Yu Huang
- * ACS Nano 2012 6 (2), 1522-1531
- *
- * Also note the supplementary information associated with each paper
- * for more details.
- *
- * The second model uses both concentration and pressure as inputs for the 
- * calculation of the diffusion coefficient.
- */
-
-#include <CCA/Components/MPM/ReactionDiffusion/DiffusionModels/ScalarDiffusionModel.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
-
-#include <vector>
-#include <string>
+#include <CCA/Components/MPM/Diffusion/DiffusionModels/ScalarDiffusionModel.h>
 
 namespace Uintah {
 
@@ -63,18 +39,19 @@ namespace Uintah {
   class DataWarehouse;
   class ProcessorGroup;
 
-  class NonLinearDiff1 : public ScalarDiffusionModel {
+  
+  class RFConcDiffusion1MPM : public ScalarDiffusionModel {
   public:
     
-     NonLinearDiff1(
-                    ProblemSpecP      & ps,
-                    SimulationStateP  & sS,
-                    MPMFlags          * Mflag,
-                    std::string         diff_type
-                   );
-    ~NonLinearDiff1();
+     RFConcDiffusion1MPM(
+                         ProblemSpecP     & ps,
+                         SimulationStateP & sS,
+                         MPMFlags         * Mflag,
+                         std::string        diff_type
+                        );
+    ~RFConcDiffusion1MPM();
 
-    // Interface requirements
+    // Interface reqquirements
     virtual void addInitialComputesAndRequires(      Task         * task,
                                                const MPMMaterial  * matl,
                                                const PatchSet     * patches
@@ -116,31 +93,18 @@ namespace Uintah {
                                                     DataWarehouse         * old_dw,
                                                     DataWarehouse         * new_dw
                                              );
-    virtual void outputProblemSpec(
-                                   ProblemSpecP & ps,
-                                   bool           output_rdm_tag = true
-                                  ) const ;
 
-    // Overridden functions
+    // Overloaded from base class
+    virtual void outputProblemSpec(
+                                   ProblemSpecP   & ps,
+                                   bool             output_rdm_tag = true
+                                  ) const;
 
   private:
-    double d_tuning1;
-    double d_tuning2;
-    double d_tuning3;
-    double d_tuning4;
-    double d_tuning5;
-    bool d_use_pressure;
-    bool d_use_diff_curve;
-    FluxDirection d_flux_direction;
-    double d_time_point1;
-    double d_time_point2;
-    int d_diff_curve_index;
+    double init_potential;
 
-    std::vector<double> d_time_points;
-    std::vector<FluxDirection> d_fd_directions;
-
-    NonLinearDiff1(const NonLinearDiff1&);
-    NonLinearDiff1& operator=(const NonLinearDiff1&);
+    RFConcDiffusion1MPM(const RFConcDiffusion1MPM&);
+    RFConcDiffusion1MPM& operator=(const RFConcDiffusion1MPM&);
   };
 } // end namespace Uintah
 #endif

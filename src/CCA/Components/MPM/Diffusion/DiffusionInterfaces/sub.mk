@@ -27,7 +27,7 @@
 # 
 # Makefile fragment for this subdirectory 
 
-SRCDIR   := CCA/Components/MPM/ReactionDiffusion/DiffusionInterfaces
+SRCDIR   := CCA/Components/MPM/Diffusion/DiffusionInterfaces
 
 SRCS     += \
 	$(SRCDIR)/CommonIFConcDiff.cc \

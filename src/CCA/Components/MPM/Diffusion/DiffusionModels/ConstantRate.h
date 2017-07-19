@@ -22,13 +22,23 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_RD_RFCONCDIFFUSION1MPM_H
-#define UINTAH_RD_RFCONCDIFFUSION1MPM_H
+/*
+ * ConstantRate.h
+ * A simple ScalarDiffusionModel that applies a user specified concentration rate
+ * to each particle. Used for testing concentration dependent constitutive models.
+ *
+ */
 
-#include <CCA/Components/MPM/ReactionDiffusion/DiffusionModels/ScalarDiffusionModel.h>
+#ifndef UINTAH_CONSTANTRATE_H
+#define UINTAH_CONSTANTRATE_H
+
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
+
+#include <vector>
+#include <string>
+#include <CCA/Components/MPM/Diffusion/DiffusionModels/ScalarDiffusionModel.h>
 
 namespace Uintah {
 
@@ -40,18 +50,19 @@ namespace Uintah {
   class ProcessorGroup;
 
   
-  class RFConcDiffusion1MPM : public ScalarDiffusionModel {
+  class ConstantRate : public ScalarDiffusionModel
+  {
   public:
     
-     RFConcDiffusion1MPM(
-                         ProblemSpecP     & ps,
-                         SimulationStateP & sS,
-                         MPMFlags         * Mflag,
-                         std::string        diff_type
-                        );
-    ~RFConcDiffusion1MPM();
+             ConstantRate(
+                          ProblemSpecP      & ps,
+                          SimulationStateP  & sS,
+                          MPMFlags          * Mflag,
+                          std::string         diff_type
+                         );
+    virtual ~ConstantRate();
 
-    // Interface reqquirements
+    // Interface requirements
     virtual void addInitialComputesAndRequires(      Task         * task,
                                                const MPMMaterial  * matl,
                                                const PatchSet     * patches
@@ -94,17 +105,44 @@ namespace Uintah {
                                                     DataWarehouse         * new_dw
                                              );
 
-    // Overloaded from base class
+    // Overridden functions
+    virtual void scheduleComputeDivergence(      Task         * task,
+                                           const MPMMaterial  * matl,
+                                           const PatchSet     * patch
+                                          ) const;
+
+    virtual void computeDivergence(
+                                   const Patch          * patch,
+                                   const MPMMaterial    * matl,
+                                         DataWarehouse  * old_dw,
+                                         DataWarehouse  * new_dw
+                                  );
+
+    virtual void scheduleComputeDivergence_CFI(
+                                                     Task         * task,
+                                               const MPMMaterial  * matl,
+                                               const PatchSet     * patch
+                                              ) const;
+
+    virtual void computeDivergence_CFI(
+                                       const PatchSubset    * finePatches,
+                                       const MPMMaterial    * matl,
+                                             DataWarehouse  * old_dw,
+                                             DataWarehouse  * new_dw
+                                      );
+
     virtual void outputProblemSpec(
-                                   ProblemSpecP   & ps,
-                                   bool             output_rdm_tag = true
+                                   ProblemSpecP & ps,
+                                   bool           output_rdm_tag = true
                                   ) const;
 
   private:
-    double init_potential;
+    double d_constant_rate;
+    ConstantRate(const ConstantRate&);
+    ConstantRate& operator=(const ConstantRate&);
+    
 
-    RFConcDiffusion1MPM(const RFConcDiffusion1MPM&);
-    RFConcDiffusion1MPM& operator=(const RFConcDiffusion1MPM&);
   };
+  
 } // end namespace Uintah
 #endif

@@ -22,32 +22,28 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/MPM/ReactionDiffusion/ConductivityModels/FixedEquation.h>
+#include <CCA/Components/MPM/Diffusion/ConductivityModels/ConductivityEquation.h>
 
 #include <iostream>
 
 using namespace Uintah;
 
-FixedEquation::FixedEquation(ProblemSpecP& ps) :
-  ConductivityEquation(ps)
-{
-  ps->require("conductivity", d_conductivity);
-}
-
-FixedEquation::~FixedEquation()
+ConductivityEquation::ConductivityEquation(ProblemSpecP& ps)
 {
 
 }
 
-double FixedEquation::computeConductivity(double concentration)
+ConductivityEquation::~ConductivityEquation()
 {
-  return d_conductivity;
+
 }
 
-void FixedEquation::outputProblemSpec(ProblemSpecP& ps)
+double ConductivityEquation::computeConductivity(double concentration)
 {
-  ProblemSpecP eq_ps;
-  eq_ps = ps->appendChild("conductivity_equation");
-  eq_ps->setAttribute("type", "fixed");
-  eq_ps->appendElement("conductivity", d_conductivity);
+  return concentration;
+}
+
+void ConductivityEquation::outputProblemSpec(ProblemSpecP& ps)
+{
+
 }

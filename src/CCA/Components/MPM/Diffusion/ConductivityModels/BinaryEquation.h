@@ -25,8 +25,8 @@
 #ifndef UINTAH_CCA_COMPONENTS_MPM_REACTIONDIFFUSION_BINARYEQUATION_H
 #define UINTAH_CCA_COMPONENTS_MPM_REACTIONDIFFUSION_BINARYEQUATION_H
 
-#include <CCA/Components/MPM/ReactionDiffusion/ConductivityModels/ConductivityEquation.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
+#include <CCA/Components/MPM/Diffusion/ConductivityModels/ConductivityEquation.h>
 
 namespace Uintah
 {

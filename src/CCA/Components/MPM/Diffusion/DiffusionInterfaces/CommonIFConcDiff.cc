@@ -22,7 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/MPM/ReactionDiffusion/DiffusionInterfaces/CommonIFConcDiff.h>
+#include <CCA/Components/MPM/Diffusion/DiffusionInterfaces/CommonIFConcDiff.h>
+
 #include <Core/Containers/StaticArray.h>
 #include <Core/Grid/Task.h>
 

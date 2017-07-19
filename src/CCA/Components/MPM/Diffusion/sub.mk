@@ -27,7 +27,7 @@
 # 
 # Makefile fragment for this subdirectory 
 
-SRCDIR   := CCA/Components/MPM/ReactionDiffusion
+SRCDIR   := CCA/Components/MPM/Diffusion
 
 SRCS     += \
 	$(SRCDIR)/ScalarDiffusionModelFactory.cc \

@@ -27,9 +27,13 @@
 # 
 # Makefile fragment for this subdirectory 
 
-SRCDIR   := CCA/Components/MPM/ReactionDiffusion/ConductivityModels
+SRCDIR   := CCA/Components/MPM/Diffusion/DiffusionModels
 
 SRCS     += \
-	$(SRCDIR)/BinaryEquation.cc \
-	$(SRCDIR)/ConductivityEquation.cc	\
-	$(SRCDIR)/FixedEquation.cc
+	$(SRCDIR)/ConstantRate.cc \
+	$(SRCDIR)/JGConcentrationDiffusion.cc \
+	$(SRCDIR)/NonLinearDiff1.cc \
+	$(SRCDIR)/NonLinearDiff2.cc \
+	$(SRCDIR)/RFConcDiffusion1MPM.cc \
+	$(SRCDIR)/ScalarDiffusionModel.cc
+	
