@@ -64,8 +64,8 @@ RMCRT_DO_perf_GPU_ups = modUPS2( the_dir, \
 #  1) If the processors is > 1.0 then an mpirun command will be used
 #  2) Performance_tests are not run on a debug build.
 #______________________________________________________________________
-NIGHTLYTESTS = [   ("poisson1",         "poisson1.ups",                1, "ALL"),                      
-                   ("RMCRT_test_1L",    "RMCRT_bm1_1L.ups",            1, "ALL", ["exactComparison"]), 
+NIGHTLYTESTS = [   ("poisson1",         "poisson1.ups",                1, "ALL"),
+                   ("RMCRT_test_1L",    "RMCRT_bm1_1L.ups",            1, "ALL", ["exactComparison"]),
                    ("RMCRT_1L_bounded",  "RMCRT_bm1_1L_bounded.ups",   8, "ALL", ["exactComparison"]),
                    ("RMCRT_bm1_DO",     "RMCRT_bm1_DO.ups",            1, "ALL", ["exactComparison"]),
                    ("RMCRT_ML",         "RMCRT_ML.ups",                8, "ALL", ["exactComparison"]),
@@ -103,8 +103,9 @@ THREADEDTESTS = [  ("RMCRT_test_1L_thread",           "RMCRT_bm1_1L.ups",       
                    ("RMCRT_ML_thread",                "RMCRT_ML.ups",              1.1, "ALL", ["exactComparison", "sus_options=-nthreads 4"]),
                    ("RMCRT_ML_thread_2proc",          "RMCRT_ML.ups",              2,   "ALL", ["exactComparison", "sus_options=-nthreads 4"]),
                    ("RMCRT_+Domain_thread_2proc",     "RMCRT_+Domain.ups",         2,   "ALL", ["exactComparison", "sus_options=-nthreads 4"]),
-                   ("RMCRT_+Domain_ML_thread_2proc",  "RMCRT_+Domain_ML.ups",      2,   "ALL", ["exactComparison", "sus_options=-nthreads 4"])
-                   
+                   ("RMCRT_+Domain_ML_thread_2proc",  "RMCRT_+Domain_ML.ups",      2,   "ALL", ["exactComparison", "sus_options=-nthreads 4"]),
+                   ("RMCRT_+Domain_DO_thread_2proc",  "RMCRT_+Domain_DO.ups",      2,   "ALL", ["exactComparison", "sus_options=-nthreads 4"])
+
                  ]
 
 GPUTESTS      = [
@@ -115,9 +116,10 @@ GPUTESTS      = [
                    ("RMCRT_1L_perf_GPU",      RMCRT_1L_perf_GPU_ups,      1.1, "Linux", ["gpu",  "do_performance_test", "sus_options=-nthreads 2 -gpu"]),
                    ("RMCRT_DO_perf_GPU",      RMCRT_DO_perf_GPU_ups,      1.1, "Linux", ["gpu",  "do_performance_test", "sus_options=-nthreads 2 -gpu"])
                ]
-               
-DOMAINTESTS   =[   ("RMCRT_+Domain",         "RMCRT_+Domain.ups",        8, "ALL", ["exactComparison"]),              
-                   ("RMCRT_+Domain_ML",      "RMCRT_+Domain_ML.ups",     8, "ALL", ["exactComparison"])               
+
+DOMAINTESTS   =[   ("RMCRT_+Domain",         "RMCRT_+Domain.ups",        8, "ALL", ["exactComparison"]),
+                   ("RMCRT_+Domain_ML",      "RMCRT_+Domain_ML.ups",     8, "ALL", ["exactComparison"]),
+                   ("RMCRT_+Domain_DO",      "RMCRT_+Domain_DO.ups",     8, "ALL", ["exactComparison"])
               ]
 
 DEBUGTESTS   =[]
@@ -131,7 +133,7 @@ DEBUGTESTS   =[]
 # returns the list
 def getTestList(me) :
   if me == "LOCALTESTS":
-    TESTS = LOCALTESTS + DOMAINTESTS + THREADEDTESTS + FLOATTESTS 
+    TESTS = LOCALTESTS + DOMAINTESTS + THREADEDTESTS + FLOATTESTS
   elif me == "FLOATTESTS":
     TESTS = FLOATTESTS
   elif me == "GPUTESTS":

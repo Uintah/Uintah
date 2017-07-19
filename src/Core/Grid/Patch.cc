@@ -1399,12 +1399,10 @@ void Patch::computeVariableExtentsWithBoundaryCheck(Uintah::TypeDescription::Typ
                                                     int numGhostCells,
                                                     IntVector& low, 
                                                     IntVector& high) const
-{ 
- 
-  // Note that 5  is semi-arbitrary and may need to be adjusted.
+{
   // This ignores virtual patches because we don't want to "clamp" this
   // extents of periodic boundary conditions to the level's extents.
-  if ( getLevel()->isNonCubic() && numGhostCells >= 5 && !isVirtual()) {
+  if ( getLevel()->isNonCubic() && numGhostCells >= 1 && !isVirtual()) {
 
     bool basisMustExist = (gtype != Ghost::None);
     VariableBasis vbasis = translateTypeToBasis(basis, basisMustExist); 
@@ -1431,7 +1429,7 @@ void Patch::computeVariableExtentsWithBoundaryCheck(Uintah::TypeDescription::Typ
   } else {
     //Do it the usual way 
     computeVariableExtents( basis, boundaryLayer, gtype, numGhostCells, low, high);
-  }  
+  } 
 }
 
 //______________________________________________________________________

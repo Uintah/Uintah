@@ -1324,13 +1324,16 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
 
         IntVector low = IntVector(-9, -9, -9);
         IntVector high = IntVector(-9, -9, -9);
+        
         Patch::VariableBasis basis = Patch::translateTypeToBasis(req->m_var->typeDescription()->getType(), false);
+        
         if (uses_SHRT_MAX) {
           patch->getLevel()->computeVariableExtents(req->m_var->typeDescription()->getType(), low, high);
         }
         else {
           patch->computeVariableExtentsWithBoundaryCheck(req->m_var->typeDescription()->getType(), req->m_var->getBoundaryLayer(),
                                                          req->m_gtype, req->m_num_ghost_cells, low, high);
+                                                         
         }
 
         if (req->m_patches_dom == Task::CoarseLevel || req->m_patches_dom == Task::FineLevel) {
@@ -1341,6 +1344,7 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
             // don't coarsen the extra cells
             low = patch->getExtraLowIndex(basis, req->m_var->getBoundaryLayer());
             high = patch->getExtraHighIndex(basis, req->m_var->getBoundaryLayer());
+            
             //low = patch->getLowIndex(basis);
             //high = patch->getHighIndex(basis);
           }
@@ -1378,22 +1382,26 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
           DOUT(
               neighbor_location,
               "    In detailed task: " << dtask->getName() << " checking if " << *req << " is in neighborhood on level: " << trueLevel);
+              
           const bool search_distal_reqs = (dtask->getTask()->m_max_ghost_cells.at(trueLevel) >= MAX_HALO_DEPTH);
           if (!m_load_balancer->inNeighborhood(neighbor->getRealPatch(), search_distal_reqs)) {
             DOUT(neighbor_location, "    No");
             continue;
           }
           DOUT(neighbor_location, "    Yes");
+          
           static Patch::selectType fromNeighbors;
           fromNeighbors.resize(0);
 
           IntVector l = Max(neighbor->getExtraLowIndex(basis, req->m_var->getBoundaryLayer()), low);
           IntVector h = Min(neighbor->getExtraHighIndex(basis, req->m_var->getBoundaryLayer()), high);
+          
           if (neighbor->isVirtual()) {
             l -= neighbor->getVirtualOffset();
             h -= neighbor->getVirtualOffset();
             neighbor = neighbor->getRealPatch();
           }
+          
           if (req->m_patches_dom == Task::OtherGridDomain) {
             // this is when we are copying data between two grids (currently between timesteps)
             // the grid assigned to the old dw should be the old grid.
@@ -1405,7 +1413,9 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
           else {
             fromNeighbors.push_back(neighbor);
           }
-
+          
+          //__________________________________
+          //
           for (int j = 0; j < fromNeighbors.size(); j++) {
             const Patch* fromNeighbor = fromNeighbors[j];
 
@@ -1433,14 +1443,20 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
               ASSERT(Max(fromNeighbor->getExtraLowIndex(basis, req->m_var->getBoundaryLayer()), l) == l);
               ASSERT(Min(fromNeighbor->getExtraHighIndex(basis, req->m_var->getBoundaryLayer()), h) == h);
             }
+
+#if 0        
+            // This intersection returned the wrong values of from_l and from_h at the inside corner
+            // of the L-shaped domain, RMCRT_+_domain_DO.ups. Consider removing it  --Todd 07/19/17      
             if (patch->getLevel()->getIndex() > 0 && patch != fromNeighbor && req->m_patches_dom == Task::ThisLevel) {
               // cull annoying overlapping AMR patch dependencies
+              
               patch->cullIntersection(basis, req->m_var->getBoundaryLayer(), fromNeighbor, from_l, from_h);
+
               if (from_l == from_h) {
                 continue;
               }
             }
-
+#endif
             for (int m = 0; m < matls->size(); m++) {
               int matl = matls->get(m);
 

@@ -358,7 +358,8 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   #endif
 #endif
   proc0cout << "__________________________________ " << endl;
-
+  //______________________________________________________________________
+  //
 #ifdef HAVE_VISIT
   static bool initialized = false;
 
@@ -1477,10 +1478,10 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
       int n_Cells   = RoundUp( length );
       d_haloCells   = IntVector( n_Cells, n_Cells, n_Cells );
     }
-    if (d_haloCells < IntVector(0,0,0) ){
+    if (d_haloCells < IntVector(2,2,2) ){
       std::ostringstream warn;
       warn << "RMCRT:DataOnion ERROR: ";
-      warn << "The number of halo cells is negative or has not been specified ("<< d_haloCells << ")";
+      warn << "The number of halo cells must be > (1,1,1) ("<< d_haloCells << ")";
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
 
@@ -1604,7 +1605,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
       abskg_dw->getLevel(   abskg[L]   ,       d_abskgLabel ,   d_matl , level.get_rep() );
       sigmaT4_dw->getLevel( sigmaT4OverPi[L] , d_sigmaT4Label,  d_matl , level.get_rep() );
       celltype_dw->getLevel( cellType[L] ,     d_cellTypeLabel, d_matl , level.get_rep() );
-      DOUT( dbg, " getting coarse level data L-" << L );
+      DOUT( dbg, "    RT DataOnion: getting coarse level data L-" << L );
     }
     Vector dx = level->dCell();
     Dx[L] = dx;
@@ -1626,7 +1627,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
     computeExtents(level_0, fineLevel, notUsed, maxLevels, new_dw,
                    fineLevel_ROI_Lo, fineLevel_ROI_Hi, regionLo,  regionHi);
 
-    DOUT( dbg, " getting fine level data across L-" << L << " " << fineLevel_ROI_Lo << " " << fineLevel_ROI_Hi );
+    DOUT( dbg, "    RT DataOnion:  getting fine level data across L-" << L << " " << fineLevel_ROI_Lo << " " << fineLevel_ROI_Hi );
     abskg_dw->getRegion(   abskg[L]   ,       d_abskgLabel ,   d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
     sigmaT4_dw->getRegion( sigmaT4OverPi[L] , d_sigmaT4Label,  d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
     celltype_dw->getRegion( cellType[L] ,     d_cellTypeLabel, d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
@@ -1661,7 +1662,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
       int L = maxLevels - 1;
       DataWarehouse* abskg_dw = get_abskg_dw(L, new_dw);
       
-      DOUT( dbg, " getting fine level data across L-" << L );
+      DOUT( dbg, "    RT DataOnion: getting fine level data across L-" << L );
 
       abskg_dw->getRegion(   abskg[L]   ,       d_abskgLabel ,  d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
       sigmaT4_dw->getRegion( sigmaT4OverPi[L] , d_sigmaT4Label, d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
@@ -1921,14 +1922,12 @@ Ray::computeExtents(LevelP level_0,
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
   } else if ( d_ROI_algo == patch_based ){
-    //TODO: This section of code grabs both the extra cells and then appends on the ghost cells past that
-    //This approach doesn't work in L-shaped domains.  Double check this section.  Brad P. 10/15/2016
-    IntVector patchLo = patch->getExtraCellLowIndex();
-    IntVector patchHi = patch->getExtraCellHighIndex();
+    IntVector patchLo = patch->getCellLowIndex();
+    IntVector patchHi = patch->getCellHighIndex();
 
     fineLevel_ROI_Lo = patchLo - d_haloCells;
     fineLevel_ROI_Hi = patchHi + d_haloCells;
-    DOUT( dbg, "  L-"<< fineLevel->getIndex() <<"  patch: ("<<patch->getID() <<") " << patchLo << " " << patchHi <<  " d_haloCells" << d_haloCells );
+    DOUT( dbg, "    computeExtents: L-"<< fineLevel->getIndex() <<"  patch: ("<<patch->getID() <<") " << patchLo << " " << patchHi <<  " d_haloCells" << d_haloCells );
 
   }
 
@@ -1938,7 +1937,7 @@ Ray::computeExtents(LevelP level_0,
 
   fineLevel_ROI_Lo = Max(fineLevel_ROI_Lo, levelLo);
   fineLevel_ROI_Hi = Min(fineLevel_ROI_Hi, levelHi);
-  DOUT (dbg, "  fineLevel_ROI: " << fineLevel_ROI_Lo << " "<< fineLevel_ROI_Hi );
+  DOUT (dbg, "    computeExtents: fineLevel_ROI: " << fineLevel_ROI_Lo << " "<< fineLevel_ROI_Hi );
 
   //__________________________________
   // Determine the extents of the regions below the fineLevel
