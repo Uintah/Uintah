@@ -29,31 +29,24 @@ from helpers.runSusTests import runSusTests
 #  3) Performance_tests are not run on a debug build.
 #______________________________________________________________________
 
-NIGHTLYTESTS = [   ("massX",                 "massX.ups",                 1,  "Linux", ["exactComparison"]),    \
-                   ("guni2dRT",              "guni2dRT.ups",              4,  "Linux", ["exactComparison"]),    \
-                   ("SteadyBurn_2dRT",       "SteadyBurn_2dRT.ups",       4,  "Linux", ["exactComparison"]),    \
-                   ("TBurner_2dRT",          "TBurner_2dRT.ups",          4,  "Linux", ["exactComparison"]),    \
-                   ("TRWnoz",                "TRWnoz.ups",                4,  "Linux", ["exactComparison"]),    \
-                   ("advect_2L_MI",          "advect_2L_MI.ups",          8,  "Linux", ["exactComparison"]),    \
-                   ("BurnRate",              "BurnRate.ups",              1.1,"Linux", ["startFromCheckpoint"]), \
-                   ("DDT",                   "DDT.ups",                   1,  "Linux", ["exactComparison","no_dbg"]),    \
-                   ("InductionTime",         "InductionTime.ups",         1  ,"Linux", ["exactComparison","no_dbg"]),    \
-                   ("InductionPropagation",  "InductionPropagation.ups",  1  ,"Linux", ["exactComparison","no_dbg"])
+NIGHTLYTESTS = [   
+                  ("BurnRate",              "BurnRate.ups",              1.1,"Linux", ["startFromCheckpoint"]),
     	       ]
 
 #
 #                   ("explode2D_amr",         "explode2D_amr.ups",         8,  "Linux", ["startFromCheckpoint","no_dbg"]),\
 
 
-LOCALTESTS = [   ("massX",                 "massX.ups",                 1,  "Linux", ["exactComparison"]),   \
-                 ("guni2dRT",              "guni2dRT.ups",              4,  "Linux", ["exactComparison"]),   \
-                 ("SteadyBurn_2dRT",       "SteadyBurn_2dRT.ups",       4,  "Linux", ["exactComparison"]),   \
-                 ("TBurner_2dRT",          "TBurner_2dRT.ups",          4,  "Linux", ["exactComparison"]),   \
-                 ("TRWnoz",                "TRWnoz.ups",                1,  "Linux", ["exactComparison"]),   \
-                 ("advect_2L_MI",          "advect_2L_MI.ups",          8,  "Linux", ["exactComparison"]),   \
-                 ("DDT",                   "DDT.ups",                   1,  "Linux", ["exactComparison","no_dbg"]),    \
-                 ("InductionTime",         "InductionTime.ups",         1  ,"Linux", ["exactComparison","no_dbg"]),   \
-                 ("InductionPropagation",  "InductionPropagation.ups",  1  ,"Linux", ["exactComparison","no_dbg"])
+LOCALTESTS = [   ("massX",                 "massX.ups",                 1,  "Linux", ["exactComparison"]),    \
+                 ("guni2dRT",              "guni2dRT.ups",              4,  "Linux", ["exactComparison"]),    \           
+                 ("SteadyBurn_2dRT",       "SteadyBurn_2dRT.ups",       4,  "Linux", ["exactComparison"]),    \           
+                 ("TBurner_2dRT",          "TBurner_2dRT.ups",          4,  "Linux", ["exactComparison"]),    \           
+                 ("TRWnoz",                "TRWnoz.ups",                4,  "Linux", ["exactComparison"]),    \           
+                 ("advect_2L_MI",          "advect_2L_MI.ups",          8,  "Linux", ["exactComparison"]),    \           
+           #     ("advect_+_amr",          "advect_+_amr.ups",          8,  "Linux", ["exactComparison"]),    \           
+                 ("DDT",                   "DDT.ups",                   1,  "Linux", ["exactComparison","no_dbg"]),    \  
+                 ("InductionTime",         "InductionTime.ups",         1  ,"Linux", ["exactComparison","no_dbg"]),    \  
+                 ("InductionPropagation",  "InductionPropagation.ups",  1  ,"Linux", ["exactComparison","no_dbg"])        
     	       ]
 DEBUGTESTS =[]
 #__________________________________
@@ -69,7 +62,7 @@ def getTestList(me) :
   elif me == "DEBUGTESTS":
     TESTS = DEBUGTESTS
   elif me == "NIGHTLYTESTS":
-    TESTS = NIGHTLYTESTS
+    TESTS = LOCALTESTS + NIGHTLYTESTS 
   else:
     print "\nERROR:MPMICE.py  getTestList:  The test list (%s) does not exist!\n\n" % me
     exit(1)
