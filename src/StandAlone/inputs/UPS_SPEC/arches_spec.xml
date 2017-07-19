@@ -382,6 +382,8 @@
                                         need_applies_to="type empirical_soot, fv_soot"/> <!-- default of "temperature" -->
           <absorption_label             spec="OPTIONAL STRING"
                                         need_applies_to="type empirical_soot, fv_soot"/> <!-- default of "absorpIN" -->
+          <total_absorption_label             spec="OPTIONAL STRING"
+                                        need_applies_to="type empirical_soot, fv_soot"/> <!-- default of "absorpIN" -->
           <mixture_fraction_label       spec="OPTIONAL STRING"
                                         need_applies_to="type empirical_soot, scalsim_variance"/> <!-- default of "mixture_fraction" -->
 
