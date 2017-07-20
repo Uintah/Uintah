@@ -1391,6 +1391,7 @@ ExtraCells not drawn             Region of interest +----------*----+
 This will return the low and high cell index of the region of interest in non-cubic computational domains.
 Note the low and high point encompasses the void region show above.  This just
 adds a clamp so the low and high indices don't exceed the level's extents.
+This is almost identical to the patch::computeExtents
                
 //______________________________________________________________________*/
 void Patch::computeVariableExtentsWithBoundaryCheck(Uintah::TypeDescription::Type basis,
@@ -1402,28 +1403,39 @@ void Patch::computeVariableExtentsWithBoundaryCheck(Uintah::TypeDescription::Typ
 {
   // This ignores virtual patches because we don't want to "clamp" this
   // extents of periodic boundary conditions to the level's extents.
-  if ( getLevel()->isNonCubic() && numGhostCells >= 1 && !isVirtual()) {
+ 
+  if ( getLevel()->isNonCubic() && numGhostCells >=1 && !isVirtual()) {
 
     bool basisMustExist = (gtype != Ghost::None);
     VariableBasis vbasis = translateTypeToBasis(basis, basisMustExist); 
 
-    low  = getLowIndex(vbasis);
-    high = getHighIndex(vbasis);
-
+    low  = getExtraLowIndex(vbasis, boundaryLayer);
+    high = getExtraHighIndex(vbasis, boundaryLayer);
+ 
+    //__________________________________
+    // adjust the variable extents to include ghost cells EVEN when there are 
+    // no neighboring patches.  This will extend outside the domain's extents,
+    // which is OK. This is the key difference between computeExtents.
     IntVector ghostLowOffset, ghostHighOffset;    
     getGhostOffsets(basis, gtype, numGhostCells, ghostLowOffset, ghostHighOffset);
 
-    IntVector ghostLow  = low - ghostLowOffset;
+    IntVector ghostLow  = low  - ghostLowOffset;
     IntVector ghostHigh = high + ghostHighOffset;
                                          
+    //__________________________________
     // get extents over entire level including extra cells
-    IntVector levelLow, levelHigh;
+    
     //TODO: getLevel()->computeVariableExtents doesn't return extra cells for
     //NCVariables, so this receives back incorrect levelLow and levelHigh. (My guess is
     //that Level.cc's computeVariableExtents shouldn't be ignoring extra cells as 
     //it currently does).  Brad P. - 10/13/16
+    IntVector levelLow, levelHigh;
+    
     this->getLevel()->computeVariableExtents(basis, levelLow, levelHigh);
     
+    
+    //__________________________________
+    //  Clamp the a valid extent
     low  = Uintah::Max( ghostLow, levelLow);
     high = Uintah::Min( ghostHigh, levelHigh);
   } else {
