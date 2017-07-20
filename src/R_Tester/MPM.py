@@ -49,7 +49,6 @@ NIGHTLYTESTS = [
                   ("test_cyl_pene_no_ero_axi_sym",                "test_cyl_pene_no_ero_axi_sym.ups",                4,  "Linux", ["exactComparison"] ),
                   ("test_gurson_beckerdrucker_mts",       "test_gurson_beckerdrucker_mts.ups",       1,  "Linux", ["exactComparison"] ),
                   ("test_hypoviscoelastic_radial_return", "test_hypoviscoelastic_rad_ret.ups",       1,  "Linux", ["exactComparison"] ),
-                  ("Charpy",                              "Charpy.ups",                              8,  "Linux", ["exactComparison"] ),
                     ("NanoPillar", "ARL/NanoPillar2D_FBC_Sym.ups",                                   1,  "Linux", ["no_dbg","exactComparison"] ),
                   #("AreniscaTest_01_UniaxialStrainRotate",                  "./Arenisca/AreniscaTest_01_UniaxialStrainRotate.ups",                  1,  "Linux", ["exactComparison"] ),
                   #("AreniscaTest_02_VertexTreatment",                       "./Arenisca/AreniscaTest_02_VertexTreatment.ups",                       1,  "Linux", ["exactComparison"] ),
@@ -129,9 +128,11 @@ DAMAGETESTS = [   ("const_test_brittle_damage", "const_test_brittle_damage.ups",
                   ("halfSpaceUCNH_EP_JWLMPM",   "ONR-MURI/halfSpaceUCNH_EP_JWLMPM.ups", 16, "Linux", ["exactComparison"] ),
               ]
                   
+THREADEDTESTS = [ ("Charpy",    "Charpy.ups",    2,  "Linux", ["exactComparison", "sus_options=-nthreads 4"] ),
+                ]
 
 # Tests that are run during local regression testing
-NIGHTLYTESTS = NIGHTLYTESTS + AMRTESTS
+NIGHTLYTESTS = NIGHTLYTESTS + AMRTESTS + THREADEDTESTS
 
 LOCALTESTS = NIGHTLYTESTS
 DEBUGTESTS =[("Charpy",                "Charpy.ups",                  8,  "Linux", ["exactComparison"] ),
