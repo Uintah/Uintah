@@ -19,12 +19,15 @@
     <outputInitTimestep/>
     <save label="emissivity"/>
     <save label="thermal_cond_en"/>
-    <save label="thermal_cond_sb"/>
+    <save label="thermal_cond_sb_s"/>
+    <save label="thermal_cond_sb_l"/>
     <save label="rho_coal_0"/>
     <save label="rho_coal_1"/>
     <save label="rho_coal_2"/>
     <save label="dep_velocity"/>
     <save label="deposit_thickness"/>
+    <save label="deposit_thickness_sb_s"/>
+    <save label="deposit_thickness_sb_l"/>
     <save label="ProbParticleX_0"/>
     <save label="ProbParticleX_1"/>
     <save label="ProbParticleX_2"/>

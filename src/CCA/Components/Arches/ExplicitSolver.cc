@@ -1328,12 +1328,18 @@ ExplicitSolver::sched_initializeVariables( const LevelP& level,
 
   if ( VarLabel::find("deposit_thickness"))
     tsk->computes(VarLabel::find("deposit_thickness"));
+  if ( VarLabel::find("deposit_thickness_sb_s"))
+    tsk->computes(VarLabel::find("deposit_thickness_sb_s"));
+  if ( VarLabel::find("deposit_thickness_sb_l"))
+    tsk->computes(VarLabel::find("deposit_thickness_sb_l"));
   if ( VarLabel::find("emissivity"))
     tsk->computes(VarLabel::find("emissivity"));
   if ( VarLabel::find("thermal_cond_en"))
     tsk->computes(VarLabel::find("thermal_cond_en"));
-  if ( VarLabel::find("thermal_cond_sb"))
-    tsk->computes(VarLabel::find("thermal_cond_sb"));
+  if ( VarLabel::find("thermal_cond_sb_s"))
+    tsk->computes(VarLabel::find("thermal_cond_sb_s"));
+  if ( VarLabel::find("thermal_cond_sb_l"))
+    tsk->computes(VarLabel::find("thermal_cond_sb_l"));
 
 sched->addTask(tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials());
 
@@ -1514,12 +1520,18 @@ ExplicitSolver::initializeVariables(const ProcessorGroup* ,
 
     if ( VarLabel::find("deposit_thickness"))
       allocateAndInitializeToC( VarLabel::find("deposit_thickness"), new_dw, indx, patch, 0.0 );
+    if ( VarLabel::find("deposit_thickness_sb_s"))
+      allocateAndInitializeToC( VarLabel::find("deposit_thickness_sb_s"), new_dw, indx, patch, 0.0 );
+    if ( VarLabel::find("deposit_thickness_sb_l"))
+      allocateAndInitializeToC( VarLabel::find("deposit_thickness_sb_l"), new_dw, indx, patch, 0.0 );
     if ( VarLabel::find("emissivity"))
       allocateAndInitializeToC( VarLabel::find("emissivity"), new_dw, indx, patch, 1.0 );
     if ( VarLabel::find("thermal_cond_en"))
       allocateAndInitializeToC( VarLabel::find("thermal_cond_en"), new_dw, indx, patch, 1.0 );
-    if ( VarLabel::find("thermal_cond_sb"))
-      allocateAndInitializeToC( VarLabel::find("thermal_cond_sb"), new_dw, indx, patch, 1.0 );
+    if ( VarLabel::find("thermal_cond_sb_s"))
+      allocateAndInitializeToC( VarLabel::find("thermal_cond_sb_s"), new_dw, indx, patch, 1.0 );
+    if ( VarLabel::find("thermal_cond_sb_l"))
+      allocateAndInitializeToC( VarLabel::find("thermal_cond_sb_l"), new_dw, indx, patch, 1.0 );
 
     if ( d_MAlab ){
       allocateAndInitializeToC( d_lab->d_pressPlusHydroLabel, new_dw, indx, patch, 0.0 );

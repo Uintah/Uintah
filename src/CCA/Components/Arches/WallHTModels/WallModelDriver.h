@@ -61,9 +61,12 @@ namespace Uintah{
         CCVariable<double> T_copy;
         CCVariable<double> T_real;
         CCVariable<double> deposit_thickness;
+        CCVariable<double> deposit_thickness_sb_s;
+        CCVariable<double> deposit_thickness_sb_l;
         CCVariable<double> emissivity;
         CCVariable<double> thermal_cond_en;
-        CCVariable<double> thermal_cond_sb;
+        CCVariable<double> thermal_cond_sb_s;
+        CCVariable<double> thermal_cond_sb_l;
         CCVariable<double> deposit_velocity;
         constCCVariable<double> deposit_velocity_old;
         constCCVariable<double> ave_deposit_velocity;
@@ -78,9 +81,12 @@ namespace Uintah{
         constCCVariable<double> incident_hf_t;
         constCCVariable<double> incident_hf_b;
         constCCVariable<double> deposit_thickness_old;
+        constCCVariable<double> deposit_thickness_sb_s_old;
+        constCCVariable<double> deposit_thickness_sb_l_old;
         constCCVariable<double> emissivity_old;
         constCCVariable<double> thermal_cond_en_old;
-        constCCVariable<double> thermal_cond_sb_old;
+        constCCVariable<double> thermal_cond_sb_s_old;
+        constCCVariable<double> thermal_cond_sb_l_old;
         CCVariable<Stencil7> total_hf;
         constCCVariable<Vector > cc_vel;
         WallModelDriver::RAD_MODEL_TYPE model_type;
@@ -114,10 +120,13 @@ namespace Uintah{
       const VarLabel* _ave_dep_vel_label;
       const VarLabel* _deposit_velocity_label;
       const VarLabel* _deposit_thickness_label;
+      const VarLabel* _deposit_thickness_sb_s_label;
+      const VarLabel* _deposit_thickness_sb_l_label;
       const VarLabel* _d_vol_ave_label;
       const VarLabel* _emissivity_label;
       const VarLabel* _thermal_cond_en_label;
-      const VarLabel* _thermal_cond_sb_label;
+      const VarLabel* _thermal_cond_sb_s_label;
+      const VarLabel* _thermal_cond_sb_l_label;
 
       void doWallHT( const ProcessorGroup* my_world,
                      const PatchSubset* patches,
@@ -290,7 +299,8 @@ namespace Uintah{
               db_model->getWithDefault( "sb_ash_composition", sb_ash_comp, default_comp);
               db_model->getWithDefault( "enamel_deposit_porosity", en_porosity, 0.6);
               db_model->getWithDefault( "sb_deposit_porosity", sb_porosity, 0.6);
-	            T_mid = ParticleTools::getAshPorosityTemperature(db_model); 
+	            //T_mid = ParticleTools::getAshPorosityTemperature(db_model); 
+	            T_fluid = ParticleTools::getAshFluidTemperature(db_model); 
               if (en_ash_comp.size() != 8 || sb_ash_comp.size() != 8){
                 throw InvalidValue("Error ash_compositions (enamel_ash_composition and sb_ash_composition) must have 8 entries: sio2, al2o3, cao, fe2o3, na2o, bao, tio2, mgo. ", __FILE__, __LINE__);
               }
@@ -327,7 +337,7 @@ namespace Uintah{
             double f0;
             double en_porosity;
             double sb_porosity;
-	          double T_mid;
+	          double T_fluid;
             double poly_data[6][5];
             void model(double &k_eff, const double &C, const double &T, const std::string layer_type) {
               ash_comp_tc = (layer_type == "enamel") ? en_ash_comp_tc : sb_ash_comp_tc;
@@ -348,8 +358,8 @@ namespace Uintah{
               
 	            double phi; // this is a zeroth order porosity model for the sootblow layer
               phi = (layer_type == "enamel") ? en_porosity :  // enamel layer porosity never changes.
-                    (T > T_mid) ? 0.0 :
-                    sb_porosity;
+                                               (T > T_fluid) ? 0.0 : // if this is the sb layer get porosity based on T.
+                                                               sb_porosity;
               // third compute effective k for layer using hadley model
               a = (phi>=0.3) ? 1.5266*std::pow(1-phi,8.7381) : 0.7079*std::pow(1-phi,6.3051);
               kappa = ks/kg;
@@ -492,7 +502,7 @@ namespace Uintah{
             pokluda_e(ProblemSpecP db_model){
               std::string ash_type;
               db_model->getWithDefault( "coal_name", ash_type, "generic_coal");
-	            T_mid = ParticleTools::getAshPorosityTemperature(db_model); 
+	            T_fluid = ParticleTools::getAshFluidTemperature(db_model); 
               if (ash_type == "indonesian"){
                 a_sv = -1.49989457e+04;
                 b_sv = -1.03085223e+00;
@@ -521,7 +531,7 @@ namespace Uintah{
                 throw InvalidValue("Error, coal_name wasn't recognized in pokluda ash emissivity data-base. ", __FILE__, __LINE__);
               }
             }
-            double T_mid;
+            double T_fluid;
             double a_sv;
             double b_sv;
             double c_sv;
@@ -564,8 +574,9 @@ namespace Uintah{
               // finally set emissivity to fresnel emissivity (slagging limit) if mie-theory emissivity is too high.
               // 2nd order exponential fit: ef = a*exp(b*T)+c*exp(d*T);
               double ef=fresnel[0]*std::exp(fresnel[1]*T) + fresnel[2]*std::exp(fresnel[3]*T); 
-              e=(T>=T_mid) ? ef : std::min(ef,e); 
-              e=(Dp<=1e-8) ? C : e; // If the particle size is 1e-8 then there is no flux (F<=0) of particles to the
+              e = (T>=T_fluid) ? ef :  // slagging is set to fresnel emissivity.
+                    (Dp<=1e-8) ? C : // if not slagging than use wall emissivity if flux is small.
+                    std::min(ef,e);  // if flux is positive you predicted emissivity.
               // wall and the emissivity is set to the wall emissivity. 
             }
             ~pokluda_e(){}
@@ -703,10 +714,13 @@ namespace Uintah{
               double T_inner;
               double max_TW;     ///< maximum wall temperature
               double min_TW;     ///< minimum wall temperature
+              double deposit_density; 
+              std::vector<double> x_ash; 
               std::vector<GeometryPieceP> geometry;
           };
 
-          inline void newton_solve(WallInfo& wi, double &TW_new, double &k_sb, double &k_en, double &dy_dep_sb, double &dy_dep_en, double &T_old, double &rad_q, double &R_wall, double &Emiss );
+          inline void newton_solve(double &TW_new, double &T_shell, double &T_old, double &R_tot, double &rad_q, double &Emiss );
+          inline void urbain_viscosity(double &visc, double &T, std::vector<double> &x_ash);
 
           std::vector<WallInfo> _regions;
 

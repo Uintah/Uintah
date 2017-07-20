@@ -72,9 +72,12 @@ WallModelDriver::~WallModelDriver()
   VarLabel::destroy( _True_T_Label );
   if (do_coal_region){
     VarLabel::destroy( _deposit_thickness_label );
+    VarLabel::destroy( _deposit_thickness_sb_s_label );
+    VarLabel::destroy( _deposit_thickness_sb_l_label );
     VarLabel::destroy( _emissivity_label );
     VarLabel::destroy( _thermal_cond_en_label );
-    VarLabel::destroy( _thermal_cond_sb_label );
+    VarLabel::destroy( _thermal_cond_sb_s_label );
+    VarLabel::destroy( _thermal_cond_sb_l_label );
   }
 }
 
@@ -165,9 +168,12 @@ WallModelDriver::problemSetup( const ProblemSpecP& input_db )
   if (do_coal_region){
     const TypeDescription* CC_double = CCVariable<double>::getTypeDescription();
     _deposit_thickness_label = VarLabel::create( "deposit_thickness", CC_double );
+    _deposit_thickness_sb_s_label = VarLabel::create( "deposit_thickness_sb_s", CC_double );
+    _deposit_thickness_sb_l_label = VarLabel::create( "deposit_thickness_sb_l", CC_double );
     _emissivity_label = VarLabel::create( "emissivity", CC_double );
     _thermal_cond_en_label = VarLabel::create( "thermal_cond_en", CC_double );
-    _thermal_cond_sb_label = VarLabel::create( "thermal_cond_sb", CC_double );
+    _thermal_cond_sb_s_label = VarLabel::create( "thermal_cond_sb_l", CC_double );
+    _thermal_cond_sb_l_label = VarLabel::create( "thermal_cond_sb_s", CC_double );
   }
 
 }
@@ -215,13 +221,19 @@ WallModelDriver::sched_doWallHT( const LevelP& level, SchedulerP& sched, const i
     task->requires( Task::OldDW, VarLabel::find("temperature"), Ghost::None, 0 );
     if (do_coal_region){
       task->computes( _deposit_thickness_label );
+      task->computes( _deposit_thickness_sb_s_label );
+      task->computes( _deposit_thickness_sb_l_label );
       task->computes( _emissivity_label );
       task->computes( _thermal_cond_en_label );
-      task->computes( _thermal_cond_sb_label );
+      task->computes( _thermal_cond_sb_s_label );
+      task->computes( _thermal_cond_sb_l_label );
       task->requires( Task::OldDW, _deposit_thickness_label, Ghost::None, 0 );
+      task->requires( Task::OldDW, _deposit_thickness_sb_s_label, Ghost::None, 0 );
+      task->requires( Task::OldDW, _deposit_thickness_sb_l_label, Ghost::None, 0 );
       task->requires( Task::OldDW, _emissivity_label, Ghost::None, 0 );
       task->requires( Task::OldDW, _thermal_cond_en_label, Ghost::None, 0 );
-      task->requires( Task::OldDW, _thermal_cond_sb_label, Ghost::None, 0 );
+      task->requires( Task::OldDW, _thermal_cond_sb_s_label, Ghost::None, 0 );
+      task->requires( Task::OldDW, _thermal_cond_sb_l_label, Ghost::None, 0 );
       task->requires( Task::OldDW, _ave_dep_vel_label, Ghost::None, 0 );
       task->requires( Task::OldDW, _d_vol_ave_label, Ghost::None, 0 );
     }
@@ -305,25 +317,37 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
         old_dw->get( vars.ave_deposit_velocity , _ave_dep_vel_label, _matl_index, patch, Ghost::None, 0 ); // from particle model
         old_dw->get( vars.d_vol_ave , _d_vol_ave_label, _matl_index, patch, Ghost::None, 0 ); // from particle model
         old_dw->get( vars.deposit_thickness_old , _deposit_thickness_label, _matl_index, patch, Ghost::None, 0 );
+        old_dw->get( vars.deposit_thickness_sb_s_old , _deposit_thickness_sb_s_label, _matl_index, patch, Ghost::None, 0 );
+        old_dw->get( vars.deposit_thickness_sb_l_old , _deposit_thickness_sb_l_label, _matl_index, patch, Ghost::None, 0 );
         old_dw->get( vars.emissivity_old , _emissivity_label, _matl_index, patch, Ghost::None, 0 );
         old_dw->get( vars.thermal_cond_en_old , _thermal_cond_en_label, _matl_index, patch, Ghost::None, 0 );
-        old_dw->get( vars.thermal_cond_sb_old , _thermal_cond_sb_label, _matl_index, patch, Ghost::None, 0 );
+        old_dw->get( vars.thermal_cond_sb_s_old , _thermal_cond_sb_s_label, _matl_index, patch, Ghost::None, 0 );
+        old_dw->get( vars.thermal_cond_sb_l_old , _thermal_cond_sb_l_label, _matl_index, patch, Ghost::None, 0 );
         new_dw->allocateAndPut( vars.deposit_thickness, _deposit_thickness_label , _matl_index, patch ); // this isn't getModifiable because it hasn't been computed in DepositionVelocity yet.
+        new_dw->allocateAndPut( vars.deposit_thickness_sb_s, _deposit_thickness_sb_s_label , _matl_index, patch ); // this isn't getModifiable because it hasn't been computed in DepositionVelocity yet.
+        new_dw->allocateAndPut( vars.deposit_thickness_sb_l, _deposit_thickness_sb_l_label , _matl_index, patch ); // this isn't getModifiable because it hasn't been computed in DepositionVelocity yet.
         new_dw->allocateAndPut( vars.emissivity, _emissivity_label , _matl_index, patch ); // this isn't getModifiable because it hasn't been computed in DepositionVelocity yet.
         new_dw->allocateAndPut( vars.thermal_cond_en, _thermal_cond_en_label , _matl_index, patch ); // this isn't getModifiable because it hasn't been computed in DepositionVelocity yet.
-        new_dw->allocateAndPut( vars.thermal_cond_sb, _thermal_cond_sb_label , _matl_index, patch ); // this isn't getModifiable because it hasn't been computed in DepositionVelocity yet.
+        new_dw->allocateAndPut( vars.thermal_cond_sb_s, _thermal_cond_sb_s_label , _matl_index, patch ); // this isn't getModifiable because it hasn't been computed in DepositionVelocity yet.
+        new_dw->allocateAndPut( vars.thermal_cond_sb_l, _thermal_cond_sb_l_label , _matl_index, patch ); // this isn't getModifiable because it hasn't been computed in DepositionVelocity yet.
         CellIterator c = patch->getExtraCellIterator();
         for (; !c.done(); c++ ){
           if ( vars.celltype[*c] > 7 && vars.celltype[*c] < 11 ){
             vars.deposit_thickness[*c] = vars.deposit_thickness_old[*c];
+            vars.deposit_thickness_sb_s[*c] = vars.deposit_thickness_sb_s_old[*c];
+            vars.deposit_thickness_sb_l[*c] = vars.deposit_thickness_sb_l_old[*c];
             vars.emissivity[*c] = vars.emissivity_old[*c];
             vars.thermal_cond_en[*c] = vars.thermal_cond_en_old[*c];
-            vars.thermal_cond_sb[*c] = vars.thermal_cond_sb_old[*c];
+            vars.thermal_cond_sb_s[*c] = vars.thermal_cond_sb_s_old[*c];
+            vars.thermal_cond_sb_l[*c] = vars.thermal_cond_sb_l_old[*c];
           } else {
             vars.deposit_thickness[*c] = 0.0;
+            vars.deposit_thickness_sb_s[*c] = 0.0;
+            vars.deposit_thickness_sb_l[*c] = 0.0;
             vars.emissivity[*c] = 0.0;
             vars.thermal_cond_en[*c] = 0.0;
-            vars.thermal_cond_sb[*c] = 0.0;
+            vars.thermal_cond_sb_s[*c] = 0.0;
+            vars.thermal_cond_sb_l[*c] = 0.0;
           }
         }
       }
@@ -390,33 +414,51 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
 
       if (do_coal_region){
         CCVariable<double> deposit_thickness;
+        CCVariable<double> deposit_thickness_sb_s;
+        CCVariable<double> deposit_thickness_sb_l;
         CCVariable<double> emissivity;
         CCVariable<double> thermal_cond_en;
-        CCVariable<double> thermal_cond_sb;
+        CCVariable<double> thermal_cond_sb_s;
+        CCVariable<double> thermal_cond_sb_l;
         constCCVariable<double> deposit_thickness_old;
+        constCCVariable<double> deposit_thickness_sb_s_old;
+        constCCVariable<double> deposit_thickness_sb_l_old;
         constCCVariable<double> emissivity_old;
         constCCVariable<double> thermal_cond_en_old;
-        constCCVariable<double> thermal_cond_sb_old;
+        constCCVariable<double> thermal_cond_sb_s_old;
+        constCCVariable<double> thermal_cond_sb_l_old;
         old_dw->get( deposit_thickness_old , _deposit_thickness_label, _matl_index, patch, Ghost::None, 0 );
+        old_dw->get( deposit_thickness_sb_s_old , _deposit_thickness_sb_s_label, _matl_index, patch, Ghost::None, 0 );
+        old_dw->get( deposit_thickness_sb_l_old , _deposit_thickness_sb_l_label, _matl_index, patch, Ghost::None, 0 );
         old_dw->get( emissivity_old , _emissivity_label, _matl_index, patch, Ghost::None, 0 );
         old_dw->get( thermal_cond_en_old , _thermal_cond_en_label, _matl_index, patch, Ghost::None, 0 );
-        old_dw->get( thermal_cond_sb_old , _thermal_cond_sb_label, _matl_index, patch, Ghost::None, 0 );
+        old_dw->get( thermal_cond_sb_s_old , _thermal_cond_sb_s_label, _matl_index, patch, Ghost::None, 0 );
+        old_dw->get( thermal_cond_sb_l_old , _thermal_cond_sb_l_label, _matl_index, patch, Ghost::None, 0 );
         new_dw->allocateAndPut( deposit_thickness, _deposit_thickness_label, _matl_index , patch );
+        new_dw->allocateAndPut( deposit_thickness_sb_s, _deposit_thickness_sb_s_label, _matl_index , patch );
+        new_dw->allocateAndPut( deposit_thickness_sb_l, _deposit_thickness_sb_l_label, _matl_index , patch );
         new_dw->allocateAndPut( emissivity, _emissivity_label, _matl_index , patch );
         new_dw->allocateAndPut( thermal_cond_en, _thermal_cond_en_label, _matl_index , patch );
-        new_dw->allocateAndPut( thermal_cond_sb, _thermal_cond_sb_label, _matl_index , patch );
+        new_dw->allocateAndPut( thermal_cond_sb_s, _thermal_cond_sb_s_label, _matl_index , patch );
+        new_dw->allocateAndPut( thermal_cond_sb_l, _thermal_cond_sb_l_label, _matl_index , patch );
         CellIterator c = patch->getExtraCellIterator();
         for (; !c.done(); c++ ){
           if ( cell_type[*c] > 7 && cell_type[*c] < 11 ){
             deposit_thickness[*c] = deposit_thickness_old[*c];
+            deposit_thickness_sb_s[*c] = deposit_thickness_sb_s_old[*c];
+            deposit_thickness_sb_l[*c] = deposit_thickness_sb_l_old[*c];
             emissivity[*c] = emissivity_old[*c];
             thermal_cond_en[*c] = thermal_cond_en_old[*c];
-            thermal_cond_sb[*c] = thermal_cond_sb_old[*c];
+            thermal_cond_sb_s[*c] = thermal_cond_sb_s_old[*c];
+            thermal_cond_sb_l[*c] = thermal_cond_sb_l_old[*c];
           } else {
             deposit_thickness[*c] = 0.0;
+            deposit_thickness_sb_s[*c] = 0.0;
+            deposit_thickness_sb_l[*c] = 0.0;
             emissivity[*c] = 0.0;
             thermal_cond_en[*c] = 0.0;
-            thermal_cond_sb[*c] = 0.0;
+            thermal_cond_sb_s[*c] = 0.0;
+            thermal_cond_sb_l[*c] = 0.0;
           }
         }
       }
@@ -918,6 +960,37 @@ WallModelDriver::CoalRegionHT::problemSetup( const ProblemSpecP& input_db ){
   } else {
     throw InvalidValue("ERROR: WallModelDriver: No thermal conductivity model selected.",__FILE__,__LINE__);
   }
+  
+  std::vector<double> default_comp = {39.36,25.49, 7.89,  10.12, 2.46, 0.0, 1.09, 4.10};
+  std::vector<double> y_ash;
+  db->getWithDefault( "sb_ash_composition", y_ash, default_comp);
+  double sum_y_ash = 0.0;
+  std::for_each(y_ash.begin(), y_ash.end(), [&] (double n) { sum_y_ash += n;});
+  for(std::vector<int>::size_type i = 0; i != y_ash.size(); i++) {
+    y_ash[i]=y_ash[i]/sum_y_ash;
+  } 
+  //                      0      1       2        3       4        5       6      7
+  //                      sio2,  al2o3,  cao,     fe2o3,  na2o,    bao,    tio2,  mgo.  
+  std::vector<double> MW={60.08, 101.96, 56.0774, 159.69, 61.9789, 153.33, 79.866,40.3044};
+  std::vector<double> x_ash;
+  double sum_x_ash = 0.0;
+  for(std::vector<int>::size_type i = 0; i != y_ash.size(); i++) {
+       sum_x_ash += y_ash[i]*MW[i];
+  } 
+  for(std::vector<int>::size_type i = 0; i != y_ash.size(); i++) {
+       x_ash.push_back( y_ash[i]*MW[i] / sum_x_ash );
+  } 
+
+  double rho_ash_bulk;
+  if ( db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")){
+    ProblemSpecP db_part_properties =  db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties");
+    db_part_properties->getWithDefault( "rho_ash_bulk",rho_ash_bulk,2300.0);
+  } else {
+    throw InvalidValue("Error: WallHT type coal_region requires ParticleProperties rho_ash_bulk to be specified.", __FILE__, __LINE__);
+  }
+  double p_void0;
+  db->getWithDefault( "sb_deposit_porosity",p_void0,0.6); // note here we are using the sb layer to estimate the wall density no the enamel layer.
+  double deposit_density = rho_ash_bulk * p_void0;  
 
   for ( ProblemSpecP r_db = db->findBlock("coal_region"); r_db != nullptr; r_db = r_db->findNextBlock("coal_region") ) {
 
@@ -942,6 +1015,8 @@ WallModelDriver::CoalRegionHT::problemSetup( const ProblemSpecP& input_db ){
     r_db->getWithDefault("enamel_deposit_thickness", info.dy_dep_en,0.0);
     r_db->getWithDefault("wall_emissivity", info.emissivity, 1.0);
     r_db->require("tube_side_T", info.T_inner);
+    info.deposit_density = deposit_density; 
+    info.x_ash = x_ash; 
     _regions.push_back( info );
 
   }
@@ -951,10 +1026,11 @@ WallModelDriver::CoalRegionHT::problemSetup( const ProblemSpecP& input_db ){
 void
 WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars, CCVariable<double>& T ){
 
-  double TW_new, T_old, net_q, rad_q, total_area_face, R_wall, R_en, R_sb, Emiss, dp_arrival, tau_sint;
-  double T_en, T_metal, Tsb, Ten, dy_dep_sb, dy_dep_en, k_en, k_sb, k_en_old, k_sb_old;
+  double residual, TW_new, T_old, net_q, rad_q, total_area_face, average_area_face, R_wall, R_en, R_sb, R_tot, Emiss, dp_arrival, tau_sint;
+  double T_i, T_en, T_metal, T_sb_l, T_sb_s, dy_dep_sb_s, dy_dep_sb_l, dy_dep_sb_l_old, dy_dep_en, k_en, k_sb_s, k_sb_l, k_en_old, k_sb_s_old, k_sb_l_old;
   const std::string enamel_name = "enamel"; 
   const std::string sb_name = "sb";
+  const std::string sb_l_name = "sb_liquid";
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
   Vector Dx = patch->dCell(); // cell spacing
@@ -1046,72 +1122,114 @@ WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars,
               }
 
               rad_q /= total_area_face; // representative radiative flux to the cell.
+              average_area_face = total_area_face/total_flux_ind;
               
               // We are using the old emissivity, and thermal conductivities for the calculation of the deposition regime
               // and the new temperature. We then update the emissivity and thermal conductivies using the new temperature.                   
               // This effectivly time-lags the emissivity and thermal conductivies by one radiation-solve. We chose to do this                
               // because we didn't want to make the temperature solve more expensive.                                
               k_en=vars.thermal_cond_en_old[c];
-              k_sb=vars.thermal_cond_sb_old[c];
+              k_sb_s=vars.thermal_cond_sb_s_old[c];
+              k_sb_l=vars.thermal_cond_sb_l_old[c];
               Emiss=vars.emissivity_old[c]; 
               TW_new =  vars.T_real_old[c];
+              T_old =  vars.T_real_old[c];
                                             
               dp_arrival=vars.d_vol_ave[c];
               tau_sint=min(dp_arrival/max(vars.ave_deposit_velocity[c],1e-50),1e10); // [s]
-              vars.deposit_thickness[c] = vars.ave_deposit_velocity[c] * wi.t_sb;
-              vars.deposit_thickness[c] = min(vars.deposit_thickness[c],wi.dy_erosion);// Here is our crude erosion model. If the deposit wants to grow above a certain size it will erode.
+              dy_dep_sb_s = std::min(vars.ave_deposit_velocity[c]*wi.t_sb, wi.dy_erosion);// This includes our crude erosion model. If the deposit wants to grow above a certain size it will erode. 
 
-              dy_dep_en = wi.dy_dep_en;
               // here we computed quantaties to find which deposition regime we are in.
+              dy_dep_en = wi.dy_dep_en;
               R_wall = wi.dy / wi.k;
-              R_en = wi.dy_dep_en/k_en;
-              R_sb = vars.deposit_thickness[c] / k_sb;
-              T_old =  vars.T_real_old[c];
-              double rad_q_max = (wi.T_slag-wi.T_inner)/((R_en+R_wall)*Emiss) + _sigma_constant*std::pow(wi.T_slag,4.0);//assume sb layer resistance is neglible in regime 3.
+              R_en = dy_dep_en/k_en;
+              R_sb = dy_dep_sb_s / k_sb_s;
+              double visc = 0; // Pa-s
+              urbain_viscosity(visc, wi.T_slag, wi.x_ash);
+              double kin_visc = visc/wi.deposit_density;
+              double a_p = 0.8434; //
+              double b_p = 1./3.; //
+              double cell_width = std::pow(average_area_face,0.5); // m
+              double mdot = vars.ave_deposit_velocity[c] * wi.deposit_density * average_area_face; // liquid mass flow rate kg/s
+              double dsb_l_max = a_p*std::pow(kin_visc*kin_visc/9.8,1./3.)*std::pow(4.*(mdot/cell_width)/visc,b_p);
               double rad_q_melt = (wi.T_slag-wi.T_inner)/((R_en+R_sb+R_wall)*Emiss) + _sigma_constant*std::pow(wi.T_slag,4.0);
+              double qnet_max =  (wi.T_slag-wi.T_inner)/(R_wall+R_en);
+              double Ts_max =  qnet_max*(dsb_l_max/k_sb_l)+wi.T_slag;
+              double rad_q_max = qnet_max/Emiss+_sigma_constant*std::pow( Ts_max,4.0);
 
-              if (rad_q < rad_q_melt || rad_q > rad_q_max){
-                // regime 1 or regime 3 (newton solve required)
-                vars.deposit_thickness[c] = ( rad_q > rad_q_max) ? 0.0 : vars.deposit_thickness[c]; 
-                vars.deposit_thickness[c] = (1-vars.relax) * vars.deposit_thickness_old[c] + vars.relax * vars.deposit_thickness[c];  // here we time average the deposit thickness so that it doesn't vary when we switch regimes.
-                dy_dep_sb = vars.deposit_thickness[c];
-                newton_solve( wi, TW_new, k_sb, k_en, dy_dep_sb, dy_dep_en, T_old, rad_q, R_wall, Emiss );
-              } else {
-                // regime 2  T = T_slag (no newton solve required.)
-                TW_new = wi.T_slag;
-                double qnet = rad_q - _sigma_constant * std::pow( wi.T_slag, 4.0 );
+              if (rad_q < rad_q_melt){
+                // regime 1 
+                // dy_dep_sb_s = vars.ave_deposit_velocity[c] * wi.t_sb; // this has already been computed above 
+                dy_dep_sb_l = 0.0;
+                R_tot = R_wall + R_en + dy_dep_sb_s/k_sb_s;
+                newton_solve( TW_new, wi.T_inner, T_old, R_tot, rad_q, Emiss );
+              } else if (rad_q>=rad_q_melt && rad_q<=rad_q_max){
+                // regime 2 
+                dy_dep_sb_l = (dsb_l_max/(rad_q_max-rad_q_melt))*(rad_q-rad_q_melt);
+                R_tot = dy_dep_sb_l/k_sb_l;
+                newton_solve( TW_new, wi.T_slag, T_old, R_tot, rad_q, Emiss );
+                // now we can solve for the solid layer thickness given the new surface temperature. 
+                double qnet = rad_q - _sigma_constant * std::pow( TW_new, 4.0 );
                 qnet *= Emiss;
                 qnet = qnet > 1e-8 ? qnet : 1e-8; // to avoid div by zero we set min at 1e-8
-                dy_dep_sb = k_sb * ( (wi.T_slag-wi.T_inner)/qnet - R_wall - R_en);
-                vars.deposit_thickness[c] = dy_dep_sb; 
-                vars.deposit_thickness[c] = (1-vars.relax) * vars.deposit_thickness_old[c] + vars.relax * vars.deposit_thickness[c];  // here we time average the deposit thickness so that it doesn't vary when we switch regimes.
-                dy_dep_sb = vars.deposit_thickness[c];
+                dy_dep_sb_s = k_sb_s*((TW_new-wi.T_inner)/qnet - R_wall - R_en - dy_dep_sb_l/k_sb_l);
+              } else { // rad_q > rad_q_max
+                // regime 3 
+                dy_dep_sb_s = 0.0;
+                dy_dep_sb_l = dsb_l_max;
+                residual = 0.0;
+                for ( int iterT=0; iterT < 100; iterT++) { // iterate tc until we reach a consistent solution.
+                  dy_dep_sb_l_old = dy_dep_sb_l;  
+                  double qnet = rad_q - _sigma_constant * std::pow( TW_new, 4.0 );
+                  qnet *= Emiss;
+                  qnet = qnet > 1e-8 ? qnet : 1e-8; // to avoid div by zero we set min at 1e-8
+                  R_tot = R_wall + R_en + dy_dep_sb_l/k_sb_l;
+                  newton_solve( TW_new, wi.T_inner, T_old, R_tot, rad_q, Emiss );
+                  T_i = TW_new - qnet * dy_dep_sb_l / k_sb_l;// this is the interface temperature between the liquid and the enamel. 
+                  urbain_viscosity(visc, T_i, wi.x_ash);
+                  kin_visc = visc/wi.deposit_density;
+                  dy_dep_sb_l = a_p*std::pow(kin_visc*kin_visc/9.8,1./3.)*std::pow(4.*(mdot/cell_width)/visc,b_p);
+                  residual = std::abs(dy_dep_sb_l_old - dy_dep_sb_l)/(dy_dep_sb_l+1e-100); 
+                  if (residual < 1e-4){
+                    break;
+                  }
+                }
               }
+              vars.deposit_thickness_sb_l[c] = (1-vars.relax) * vars.deposit_thickness_sb_l_old[c] + vars.relax * dy_dep_sb_l;
+              vars.deposit_thickness_sb_s[c] = (1-vars.relax) * vars.deposit_thickness_sb_s_old[c] + vars.relax * dy_dep_sb_s;
+              dy_dep_sb_s = vars.deposit_thickness_sb_s[c];
+              dy_dep_sb_l = vars.deposit_thickness_sb_l[c];
+              vars.deposit_thickness[c] = dy_dep_sb_s + dy_dep_sb_l + dy_dep_en; // this is the total deposit thickness on the wall.
 
               vars.T_real[c] = (1 - vars.relax) * vars.T_real_old[c] + vars.relax * TW_new; // this is the real wall temperature, vars.T_real_old is the old solution for "temperature".
-              // update the net heat flux, emissivity, and thermal conductivies with the new time-averaged wall temperature
+              // update the net heat flux, emissivity, and thermal conductivies with the new time-averaged wall temperature and thickness
               m_em_model->model(Emiss,wi.emissivity,vars.T_real[c],dp_arrival, tau_sint);
               vars.emissivity[c]=Emiss;
               net_q = rad_q - _sigma_constant * std::pow( vars.T_real[c], 4.0 );
               net_q = net_q > 0 ? net_q : 0; 
               net_q *= Emiss;
-              double residual = 0.0;
+              residual = 0.0;
               for ( int iterT=0; iterT < 100; iterT++) { // iterate tc until we reach a consistent solution.
-                k_sb_old = k_sb; 
+                k_sb_s_old = k_sb_s; 
+                k_sb_l_old = k_sb_l; 
                 k_en_old = k_en; 
-                T_en = vars.T_real[c] - net_q * dy_dep_sb / k_sb; // Temperature at the surface between enamel and sb layer. 
-                T_metal = T_en - net_q * dy_dep_en / k_en; // Temperature at the surface between enamel and metal/refractory. 
-                Tsb = std::max(wi.T_inner,(vars.T_real[c] + T_en)/2.0);//Temperature at the center of the sb layer. std::max is needed because of the negative temperatures during initialization.
-                Ten = std::max(wi.T_inner,(T_en + T_metal)/2.0);//Temperature at the center of the enamel layer. std::max is needed because of the negative temperatures during initialization.
-                m_tc_model->model(k_en,wi.k_dep_en,Ten,enamel_name);//enamel layer
-                m_tc_model->model(k_sb,wi.k_dep_sb,Tsb,sb_name);//sb layer
-                residual = std::abs(k_sb - k_sb_old)/(k_sb_old+1e-100) + std::abs(k_en - k_en_old)/(k_en_old+1e-100); 
+                T_sb_s = vars.T_real[c] - net_q * dy_dep_sb_l / k_sb_l; // Temperature between the liquid and solid sb layer. 
+                T_en = T_sb_s - net_q * dy_dep_sb_s / k_sb_s; // Temperature between the solid sb and enamel layer. 
+                T_metal = T_en - net_q * dy_dep_en / k_en; // Temperature between the enamel and sb layer. 
+                T_sb_l = std::max(wi.T_inner,(vars.T_real[c] + T_sb_s)/2.0);//Temperature at the center of liquid sb layer. std::max is needed because of the negative temperatures during initialization. 
+                T_sb_s = std::max(wi.T_inner,(T_sb_s + T_en)/2.0);//Temperature at the center of the solid sb layer. std::max is needed because of the negative temperatures during initialization.
+                T_en = std::max(wi.T_inner,(T_en + T_metal)/2.0);//Temperature at the center of the enamel layer. std::max is needed because of the negative temperatures during initialization.
+                m_tc_model->model(k_en,wi.k_dep_en,T_en,enamel_name);//enamel layer
+                m_tc_model->model(k_sb_s,wi.k_dep_sb,T_sb_s,sb_name);//solid sb layer
+                m_tc_model->model(k_sb_l,wi.k_dep_sb,T_sb_l,sb_l_name);//liquid sb layer
+                residual = std::abs(k_sb_s - k_sb_s_old)/(k_sb_s_old+1e-100) + std::abs(k_sb_l - k_sb_l_old)/(k_sb_l_old+1e-100) + std::abs(k_en - k_en_old)/(k_en_old+1e-100); 
                 if (residual < 1e-4){
                   break;
                 }
               }
               vars.thermal_cond_en[c]=k_en;
-              vars.thermal_cond_sb[c]=k_sb;
+              vars.thermal_cond_sb_s[c]=k_sb_s;
+              vars.thermal_cond_sb_l[c]=k_sb_l;
               // now to make consistent with assumed emissivity of 1 in radiation model:
               // q_radiation - 1 * sigma Tw' ^ 4 = emissivity * ( q_radiation - sigma Tw ^ 4 )
               // q_radiation - sigma Tw' ^ 4 = net_q
@@ -1176,7 +1294,7 @@ WallModelDriver::CoalRegionHT::copySolution( const Patch* patch, CCVariable<doub
 }
 //----------------------------------
 void
-WallModelDriver::CoalRegionHT::newton_solve(WallInfo& wi, double &TW_new, double &k_sb, double &k_en, double &dy_dep_sb, double &dy_dep_en, double &T_old, double &rad_q, double &R_wall, double &Emiss )
+WallModelDriver::CoalRegionHT::newton_solve(double &TW_new, double &T_shell, double &T_old, double &R_tot, double &rad_q, double &Emiss )
 {
   // solver constants
   double d_tol    = 1e-15;
@@ -1185,27 +1303,24 @@ WallModelDriver::CoalRegionHT::newton_solve(WallInfo& wi, double &TW_new, double
   double f0       = 0.0;
   double f1       = 0.0;
   double T_max    = pow( rad_q/_sigma_constant, 0.25); // if k = 0.0;
-  double net_q, TW_guess, TW_tmp, TW_old, R_sb, R_en, R_tot;
-  R_sb = dy_dep_sb / k_sb;
-  R_en = dy_dep_en / k_en;
-  R_tot = R_wall + R_sb + R_en; // total thermal resistance
+  double net_q, TW_guess, TW_tmp, TW_old;
   // new solve
   TW_guess = T_old;
   TW_old = TW_guess-delta;
   net_q = rad_q - _sigma_constant * pow( TW_old, 4 );
   net_q = net_q > 0 ? net_q : 0;
   net_q *= Emiss;
-  f0 = - TW_old + wi.T_inner + net_q * R_tot;
+  f0 = - TW_old + T_shell + net_q * R_tot;
   TW_new = TW_guess+delta;
   net_q = rad_q - _sigma_constant * pow( TW_new, 4 );
   net_q *= Emiss;
   net_q = net_q>0 ? net_q : 0;
-  f1 = - TW_new + wi.T_inner + net_q * R_tot;
+  f1 = - TW_new + T_shell + net_q * R_tot;
   for ( int iterT=0; iterT < NIter; iterT++) {
     TW_tmp = TW_old;
     TW_old = TW_new;
     TW_new = TW_tmp - ( TW_new - TW_tmp )/( f1 - f0 ) * f0;
-    TW_new = max( wi.T_inner , min( T_max, TW_new ) );
+    TW_new = max( T_shell , min( T_max, TW_new ) );
     if (std::abs(TW_new-TW_old) < d_tol){
       net_q =  rad_q - _sigma_constant * pow( TW_new, 4 );
       net_q =  net_q > 0 ? net_q : 0;
@@ -1216,6 +1331,37 @@ WallModelDriver::CoalRegionHT::newton_solve(WallInfo& wi, double &TW_new, double
     net_q =  rad_q - _sigma_constant * pow( TW_new, 4 );
     net_q =  net_q>0 ? net_q : 0;
     net_q *= Emiss;
-    f1    = - TW_new + wi.T_inner + net_q * R_tot;
+    f1    = - TW_new + T_shell + net_q * R_tot;
   }
 }
+void WallModelDriver::CoalRegionHT::urbain_viscosity(double &visc, double &T, std::vector<double> &x_ash)
+{  // Urbain model 1981
+  //0      1       2        3       4        5       6      7
+  //sio2,  al2o3,  cao,     fe2o3,  na2o,    bao,    tio2,  mgo.  
+  const double N = x_ash[0];
+  const double al2o3=x_ash[1];
+
+  // compute modifier
+  const double cao=x_ash[2];
+  const double mgo=x_ash[7];
+  const double na2o=x_ash[4];
+  const double k2o=0.0;
+  const double feo=0.0;
+  const double mno=0.0;
+  const double nio=0.0;
+  const double tio2=x_ash[6];
+  const double zro2=0.0;
+  
+  const double M=1*(cao+mgo+na2o+k2o+feo+mno+nio)+2*(tio2+zro2);
+  const double alpha=M/(M+al2o3);
+  const double B0=13.8+39.9355*alpha-44.049*alpha*alpha;
+  const double B1=30.481-117.1505*alpha+129.9978*alpha*alpha;
+  const double B2=-40.9429+234.0486*alpha-300.04*alpha*alpha;
+  const double B3=60.7619-153.9276*alpha+211.1616*alpha*alpha;
+  
+  const double B=B0+B1*N+B2*N*N+B3*N*N*N;
+  const double A=std::exp(-(0.2693*B+11.6725));
+  visc=0.1*A*T*std::exp((B*1000)/T);
+
+
+};
