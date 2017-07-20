@@ -117,7 +117,7 @@
 
   <DataArchiver>
     <filebase>wasatch_test.uda</filebase>
-    <outputTimestepInterval>2</outputTimestepInterval>
+    <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
     <!-- <checkpoint cycle="2" interval="3.0"/> -->
     <compression>gzip</compression>

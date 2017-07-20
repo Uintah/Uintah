@@ -309,13 +309,13 @@ SCALARTRANSPORTTESTS=[
 ]
 
 GPUTESTS=[
+  ("BasicScalarTransportEquation", "BasicScalarTransportEquation.ups", 1, "All", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),
   ("gpu-tabprops"         , "TabPropsInterface.ups",   1, "All", ["gpu", "abs_tolerance=1e-7", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),
   ("gpu-radprops"         , "RadPropsInterface.ups",   1, "All", ["gpu", "abs_tolerance=1e-7", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),
   ("bc-test-svol-gpu-x"   , bc_gpu_x_ups,            1, "All", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),  
   ("bc-test-svol-gpu-y"   , bc_gpu_y_ups,            1, "All", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),  
   ("bc-test-svol-gpu-z"   , bc_gpu_z_ups,            1, "All", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),      
   ("bc-test-svol-gpu-xyz" , bc_gpu_xyz_ups,          1, "All", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "])
-#  ("BasicScalarTransportEquation", "BasicScalarTransportEquation.ups", 1, "All", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),
 #  ("scalability-test"     , "scalability-test.ups",  1, "All", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),  
 #  ("gpu-compressible-1d"  , gpu_compressible_1d_ups, 1, "All", ["gpu", "abs_tolerance=1e-7", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "])
 #  ("gpu-compressible-2d"  , gpu_compressible_2d_ups, 1, "All", ["gpu", "abs_tolerance=1e-7", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "])
