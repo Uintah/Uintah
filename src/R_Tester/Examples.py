@@ -61,6 +61,7 @@ RMCRT_DO_perf_GPU_ups = modUPS2( the_dir, \
 #       sus_options="string"    - Additional command line options for sus command
 #
 #  Notes:
+#  1) The "folder name" must be the same as uda without the extension.
 #  1) If the processors is > 1.0 then an mpirun command will be used
 #  2) Performance_tests are not run on a debug build.
 #______________________________________________________________________
@@ -121,13 +122,17 @@ DOMAINTESTS   =[   ("RMCRT_+Domain",         "RMCRT_+Domain.ups",        8, "ALL
                    ("RMCRT_+Domain_ML",      "RMCRT_+Domain_ML.ups",     8, "ALL", ["exactComparison"]),
                    ("RMCRT_+Domain_DO",      "RMCRT_+Domain_DO.ups",     8, "ALL", ["exactComparison"])
               ]
-
+              
+POISSON3TESTS = [ #("poisson3_2L",         "poisson3_2L.ups",             2, "All", ["exactComparison"] ),       
+                  #("poisson3_3L",         "poisson3_3L.ups",             2, "All", ["exactComparison"] ),       
+                  ("poisson3_+Domain_1L", "poisson3_+Domain_1L.ups",     2, "All", ["exactComparison"] )        
+                ]
 DEBUGTESTS   =[]
 
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
-#LIST: LOCALTESTS FLOATTESTS GPUTESTS DEBUGTESTS NIGHTLYTESTS THREADEDTESTS DOMAINTESTS
+#LIST: LOCALTESTS FLOATTESTS GPUTESTS DEBUGTESTS NIGHTLYTESTS THREADEDTESTS DOMAINTESTS Poisson3_Tests
 #__________________________________
 
 # returns the list
@@ -146,6 +151,8 @@ def getTestList(me) :
     TESTS = NIGHTLYTESTS + DOMAINTESTS + THREADEDTESTS + FLOATTESTS + GPUTESTS
   elif me == "THREADEDTESTS":
     TESTS = THREADEDTESTS
+  elif me == "Poisson3_Tests":
+    TESTS = POISSON3TESTS
   else:
     print "\nERROR:Examples.py  getTestList:  The test list (%s) does not exist!\n\n" % me
     exit(1)
