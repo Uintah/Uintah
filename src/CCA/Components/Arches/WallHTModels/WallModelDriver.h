@@ -500,6 +500,40 @@ namespace Uintah{
           
           struct pokluda_e : EmissivityBase {
             pokluda_e(ProblemSpecP db_model){
+              //BEN
+              ProblemSpecP db_root = db_model->getRootNode();
+              int Nenv = ParticleTools::get_num_env( db_root, ParticleTools::DQMOM );
+              min_p_diam = 1e16;
+              double min_p = min_p_diam;
+              double rho_ash_bulk;
+              double p_void0;
+              double v_hiT;
+              for(int i = 0; i != Nenv; i++) {
+                  ProblemSpecP db_part_properties = db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties");
+                  if (db_part_properties->findBlock("FOWYDevol")) {
+                    ProblemSpecP db_BT = db_part_properties->findBlock("FOWYDevol");
+                    db_BT->require("v_hiT", v_hiT); //
+                  } else {
+                    throw ProblemSetupException("Error: CharOxidationSmith2016 requires FOWY v_hiT.", __FILE__, __LINE__);
+                  }
+                  db_part_properties->getWithDefault( "rho_ash_bulk",rho_ash_bulk,2300.0);
+                  db_part_properties->getWithDefault( "void_fraction",p_void0,0.3);
+                  double init_particle_density = ParticleTools::getInletParticleDensity( db_root );
+                  double ash_mass_frac = ParticleTools::getAshMassFraction( db_root );
+                  double initial_diameter = ParticleTools::getInletParticleSize( db_root, i );
+                  double p_volume = M_PI/6.*initial_diameter*initial_diameter*initial_diameter; // particle volme [m^3]
+                  double mass_ash = p_volume*init_particle_density*ash_mass_frac;
+                  double initial_rc = (M_PI/6.0)*initial_diameter*initial_diameter*initial_diameter*init_particle_density*(1.-ash_mass_frac); 
+                  double rho_org_bulk = initial_rc / (p_volume*(1-p_void0) - mass_ash/rho_ash_bulk) ; // bulk density of char [kg/m^3] 
+                  double p_voidmin = 1. - (1/p_volume)*(initial_rc*(1.-v_hiT)/rho_org_bulk + mass_ash/rho_ash_bulk); // bulk density of char [kg/m^3] 
+                  min_p = std::pow( mass_ash * 6 / rho_ash_bulk / (1- p_voidmin) / M_PI ,1./3.);
+                  min_p_diam = (min_p < min_p_diam) ? min_p : min_p_diam; 
+                  std::cout << "min_p_diam "<< min_p_diam << std::endl;
+              } 
+	            if (min_p_diam == 1e16) {
+                throw InvalidValue("Error, WallHT pokluda emissivity requires Particle Properties void fraction and rho ash or inlet particle size.", __FILE__, __LINE__);
+              }
+              //BEN
               std::string ash_type;
               db_model->getWithDefault( "coal_name", ash_type, "generic_coal");
 	            T_fluid = ParticleTools::getAshFluidTemperature(db_model); 
@@ -535,6 +569,7 @@ namespace Uintah{
             double a_sv;
             double b_sv;
             double c_sv;
+            double min_p_diam;
             std::vector<double> coeff_num;
             std::vector<double> coeff_den;
             std::vector<double> xscale; 
@@ -575,9 +610,8 @@ namespace Uintah{
               // 2nd order exponential fit: ef = a*exp(b*T)+c*exp(d*T);
               double ef=fresnel[0]*std::exp(fresnel[1]*T) + fresnel[2]*std::exp(fresnel[3]*T); 
               e = (T>=T_fluid) ? ef :  // slagging is set to fresnel emissivity.
-                    (Dp<=1e-8) ? C : // if not slagging than use wall emissivity if flux is small.
+                    (Dp<=min_p_diam) ? C : // if not slagging than use wall emissivity if flux is small.
                     std::min(ef,e);  // if flux is positive you predicted emissivity.
-              // wall and the emissivity is set to the wall emissivity. 
             }
             ~pokluda_e(){}
           };
