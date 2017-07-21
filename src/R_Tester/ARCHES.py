@@ -51,11 +51,6 @@ NIGHTLYTESTS = [
    ("methane_fire"                      , "methane_fire.ups"                                        , 1.1 , "All"   , ["exactComparison"])   , 
    ("methane_fire_8patch"               , "methane_fire_8patch.ups"                                 , 8   , "All"   , ["exactComparison"])   , 
    ("methane_fire_8patch_petscrad"      , "methane_fire_8patch_petscrad.ups"                        , 8   , "All"   , ["exactComparison"     , "no_cuda" ])   ,    #11/1/6 gpu machine doesn't have petsc 
-   ("rmcrt_bm1_1L"                      , "RMCRT/rmcrt_bm1_1L.ups"                                  , 1.1 , "Linux" , ["exactComparison"])   , 
-   ("rmcrt_bm1_1L_bounded"               , "RMCRT/rmcrt_bm1_1L_bounded.ups"                         , 8   , "ALL"   , ["exactComparison"])   ,
-   ("rmcrt_bm1_DO"                      , "RMCRT/rmcrt_bm1_DO.ups"                                  , 8   , "Linux" , ["exactComparison"])   , 
-   ("rmcrt_bm1_ML"                      , "RMCRT/rmcrt_bm1_ML.ups"                                  , 1.1 , "Linux" , ["exactComparison"])   , 
-   ("methane_rmcrt"                     , "RMCRT/methane_rmcrt.ups"                                 , 8   , "Linux" , ["exactComparison"     , "no_restart"]) , 
    ("dqmom_test_1"                      , "DQMOM_regression/dqmom_test_1.ups"                       , 1.1 , "Linux" , ["exactComparison"])   , 
    ("dqmom_test_2"                      , "DQMOM_regression/dqmom_test_2.ups"                       , 1.1 , "Linux" , ["exactComparison"])   , 
    ("dqmom_test_3"                      , "DQMOM_regression/dqmom_test_3.ups"                       , 1.1 , "Linux" , ["exactComparison"])   , 
@@ -127,12 +122,6 @@ NIGHTLYTESTS = [
    ("OFC_smith2016"                     , "Coal/OFC_smith2016.ups"                                  , 3   , "All"  , ["exactComparison"      , "no_cuda"]) ,
    ("OFC4_hybrid"                       , "Coal/OFC4_hybrid.ups"                                    , 3   , "All"  , ["exactComparison"      , "no_cuda"]) ,  
 #__________________________________
-
-
-# multi-threaded NIGHTLY tests
-   ("rmcrt_bm1_1L_thread"               , "RMCRT/rmcrt_bm1_1L.ups"                                  , 1.1 , "Linux"  , ["no_restart", "exactComparison", "sus_options=-nthreads 4"]),
-   ("rmcrt_bm1_ML_thread"               , "RMCRT/rmcrt_bm1_ML.ups"                                  , 1.1 , "Linux"  , ["no_restart", "exactComparison", "sus_options=-nthreads 4"]),
-   ("rmcrt_bm1_DO_thread"               , "RMCRT/rmcrt_bm1_DO.ups"                                  , 1.1 , "Linux"  , ["no_restart", "exactComparison", "sus_options=-nthreads 8"]),
    
    # The regrid test should be last.  It needs a checkpoint.  If you move it up the stack and run local_RT NIGHTLYTESTS then not all tests will run
    ("regridTestArches"                  , "regridTestArches"                                        , 8   , "Linux"  , ["startFromCheckpoint" , "no_restart"])
@@ -148,11 +137,6 @@ LOCALTESTS = [
    ("methane_fire"                      , "methane_fire.ups"                                        , 1.1 , "All"  , ["exactComparison"]) , 
    ("methane_fire_8patch"               , "methane_fire_8patch.ups"                                 , 8   , "All"  , ["exactComparison"]) , 
    ("methane_fire_8patch_petscrad"      , "methane_fire_8patch_petscrad.ups"                        , 8   , "All"  , ["exactComparison"]) , 
-   ("rmcrt_bm1_1L"                      , "RMCRT/rmcrt_bm1_1L.ups"                                  , 1.1 , "All"  , ["exactComparison"]) , 
-   ("rmcrt_bm1_1L_bounded"               , "RMCRT/rmcrt_bm1_1L_bounded.ups"                         , 8   , "ALL"  , ["exactComparison"]) ,
-   ("rmcrt_bm1_DO"                      , "RMCRT/rmcrt_bm1_DO.ups"                                  , 8   , "ALL"  , ["exactComparison"]) , 
-   ("rmcrt_bm1_ML"                      , "RMCRT/rmcrt_bm1_ML.ups"                                  , 1.1 , "ALL"  , ["exactComparison"]) , 
-   ("methane_rmcrt"                     , "RMCRT/methane_rmcrt.ups"                                 , 8   , "All"  , ["exactComparison"   , "no_restart"]) , 
    ("dqmom_test_1"                      , "DQMOM_regression/dqmom_test_1.ups"                       , 1.1 , "All"  , ["exactComparison"]) , 
    ("dqmom_test_2"                      , "DQMOM_regression/dqmom_test_2.ups"                       , 1.1 , "All"  , ["exactComparison"]) , 
    ("dqmom_test_3"                      , "DQMOM_regression/dqmom_test_3.ups"                       , 1.1 , "All"  , ["exactComparison"]) , 
@@ -217,12 +201,6 @@ LOCALTESTS = [
    ("OFC4_smith"                        , "Coal/OFC4_smith.ups"                                     , 3   , "All"  , ["exactComparison"   ,  "no_cuda"]) , 
    ("OFC_smith2016"                     , "Coal/OFC_smith2016.ups"                                  , 3   , "All"  , ["exactComparison"      , "no_cuda"]) ,
    ("OFC4_hybrid"                       , "Coal/OFC4_hybrid.ups"                                    , 3   , "All"  , ["exactComparison"   ,  "no_cuda"]) , 
-#__________________________________
-   
-# multi-threaded LOCAL tests
-   ("rmcrt_bm1_1L_thread"                , "RMCRT/rmcrt_bm1_1L.ups"               , 1.1 , "Linux"    , ["no_restart", "exactComparison", "sus_options=-nthreads 4"]),
-   ("rmcrt_bm1_ML_thread"                , "RMCRT/rmcrt_bm1_ML.ups"               , 1.1 , "Linux"    , ["no_restart", "exactComparison", "sus_options=-nthreads 4"]),
-   ("rmcrt_bm1_DO_thread"                , "RMCRT/rmcrt_bm1_DO.ups"               , 1.1 , "Linux"    , ["no_restart", "exactComparison", "sus_options=-nthreads 8"]),   
 ]
 
 DEBUG = [
@@ -261,16 +239,22 @@ COALTESTS = [
 ]
 
 RMCRTTESTS = [
-   ("rmcrt_bm1_1L"                , "RMCRT/rmcrt_bm1_1L.ups"                      , 1.1 , "ALL"  , ["exactComparison"]) ,
-   ("rmcrt_bm1_1L_bounded"         , "RMCRT/rmcrt_bm1_1L_bounded.ups"             , 8   , "ALL"  , ["exactComparison"]) ,
-   ("rmcrt_bm1_ML"                , "RMCRT/rmcrt_bm1_ML.ups"                      , 1.1 , "ALL"  , ["exactComparison"]) , 
-   ("rmcrt_bm1_DO"                , "RMCRT/rmcrt_bm1_DO.ups"                      , 1.1 , "ALL"  , ["exactComparison"]) ,
-   ("methane_rmcrt"               , "RMCRT/methane_rmcrt.ups"                     , 8   , "ALL"  , ["exactComparison"     , "no_restart"]) ,
+   ("rmcrt_bm1_1L"                      , "RMCRT/rmcrt_bm1_1L.ups"                , 1.1 , "ALL"  , ["exactComparison"]) ,                                                 
+   ("rmcrt_bm1_1L_bounded"              , "RMCRT/rmcrt_bm1_1L_bounded.ups"        , 8   , "ALL"  , ["exactComparison"]) ,                                                 
+   ("rmcrt_bm1_ML"                      , "RMCRT/rmcrt_bm1_ML.ups"                , 1.1 , "ALL"  , ["exactComparison"]) ,                                                 
+   ("rmcrt_bm1_DO"                      , "RMCRT/rmcrt_bm1_DO.ups"                , 1.1 , "ALL"  , ["exactComparison"]) ,                                                 
+   ("methane_rmcrt"                     , "RMCRT/methane_rmcrt.ups"               , 8   , "ALL"  , ["exactComparison"   , "no_restart"]) ,                              
+   ("multibox_rmcrt_coal_1L"            , "RMCRT/multibox_rmcrt_coal_1L.ups"      , 8   , "ALL"  , ["exactComparison"]) ,                                                 
+   ("multibox_rmcrt_coal_2L"            , "RMCRT/multibox_rmcrt_coal_2L.ups"      , 8   , "ALL"  , ["exactComparison"]) ,                                                 
+   ("multibox_rmcrt_coal_DO"            , "RMCRT/multibox_rmcrt_coal_DO.ups"      , 8   , "ALL"  , ["exactComparison"]) ,                                                 
 
 # multi-threaded RMCRT tests
-   ("rmcrt_bm1_1L_thread"                , "RMCRT/rmcrt_bm1_1L.ups"               , 1.1 , "ALL"    , ["no_restart", "exactComparison", "sus_options=-nthreads 4"]),
-   ("rmcrt_bm1_ML_thread"                , "RMCRT/rmcrt_bm1_ML.ups"               , 1.1 , "ALL"    , ["no_restart", "exactComparison", "sus_options=-nthreads 4"]),
-   ("rmcrt_bm1_DO_thread"                , "RMCRT/rmcrt_bm1_DO.ups"               , 1.1 , "ALL"    , ["no_restart", "exactComparison", "sus_options=-nthreads 8"]),
+   ("rmcrt_bm1_1L_thread"               , "RMCRT/rmcrt_bm1_1L.ups"                , 1.1 , "ALL"  , ["no_restart", "exactComparison", "sus_options=-nthreads 4"]) ,         
+   ("rmcrt_bm1_ML_thread"               , "RMCRT/rmcrt_bm1_ML.ups"                , 1.1 , "ALL"  , ["no_restart", "exactComparison", "sus_options=-nthreads 4"]) ,         
+   ("rmcrt_bm1_DO_thread"               , "RMCRT/rmcrt_bm1_DO.ups"                , 1.1 , "ALL"  , ["no_restart", "exactComparison", "sus_options=-nthreads 8"]) ,   
+   ("multibox_rmcrt_coal_1L_threaded"   , "RMCRT/multibox_rmcrt_coal_1L.ups"      , 2   , "ALL"  , ["exactComparison", "sus_options=-nthreads 8"]) ,                           
+   ("multibox_rmcrt_coal_2L_threaded"   , "RMCRT/multibox_rmcrt_coal_2L.ups"      , 2   , "ALL"  , ["exactComparison", "sus_options=-nthreads 8"]) ,                           
+   ("multibox_rmcrt_coal_DO_threaded"   , "RMCRT/multibox_rmcrt_coal_DO.ups"      , 2   , "ALL"  , ["exactComparison", "sus_options=-nthreads 8"]) ,                           
 ]
 
 KOKKOSTESTS = [
@@ -348,14 +332,14 @@ NORMCRT = [
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
-#LIST: LOCALTESTS KOKKOSTESTS RMCRTTESTS NEWTESTS SCALARTESTS DQMOMTESTS NIGHTLYTESTS CQMOMTESTS NORMCRT DEBUG COALTESTS
+#LIST: COALTESTS CQMOMTESTS DEBUG DQMOMTESTS LOCALTESTS KOKKOSTESTS NIGHTLYTESTS  NORMCRT SCALARTESTS RMCRTTESTS    
 #__________________________________
 
   
 # returns the list  
 def getTestList(me) :
   if me == "LOCALTESTS":
-    TESTS = LOCALTESTS
+    TESTS = LOCALTESTS + RMCRTTESTS
   elif me == "KOKKOSTESTS": 
     TESTS = KOKKOSTESTS
   elif me == "RMCRTTESTS":
@@ -367,7 +351,7 @@ def getTestList(me) :
   elif me == "DQMOMTESTS":
     TESTS = DQMOMTESTS
   elif me == "NIGHTLYTESTS":
-    TESTS = NIGHTLYTESTS
+    TESTS = NIGHTLYTESTS + RMCRTTESTS
   elif me == "CQMOMTESTS":
     TESTS = CQMOMTESTS
   elif me == "NORMCRT":

@@ -47,21 +47,15 @@
 #include <iostream>
 
 // TURN ON debug flag in src/Core/Math/MersenneTwister.h to compare with Ray:CPU
-#define DEBUG -9     // 1: divQ, 2: boundFlux, 3: scattering
+#define DEBUG -9      // 1: divQ, 2: boundFlux, 3: scattering
 #define CUDA_PRINTF   // increase the printf buffer
 
 /*______________________________________________________________________
   TO DO
 Separate Kokkos code into a separate file
-  
-Critical:
-  - Fix getRegion() for L-shaped domains.
 
 
 Optimizations:
-  - Spatial scheduling, used by radiometer.  Only need to execute & communicate
-    variables on a subset of patches.
-
   - Create a LevelDB.  Push an pull the communicated variables
   - DO: Reconstruct the fine level using interpolation and coarse level values
   - Investigate why floats are slow.
@@ -79,9 +73,8 @@ using std::endl;
 using std::vector;
 using std::string;
 
-Dout dbg("RAY",       false);
-Dout dbg2("RAY_DEBUG",false);
-Dout dbg_BC("RAY_BC", false);
+extern Dout g_ray_dbg;
+Dout dbg_BC_ray("RAY_BC", false);
 
 //---------------------------------------------------------------------------
 // Class: Constructor.
@@ -105,8 +98,6 @@ Ray::Ray( const TypeDescription::Type FLT_DBL ) : RMCRTCommon( FLT_DBL)
   }
 
   d_PPTimerLabel = VarLabel::create( "Ray_PPTimer", PerPatch<double>::getTypeDescription() );
-
-  d_isDbgOn       = dbg2.active();
   d_dbgCells.push_back( IntVector(0,0,0));
 
 
@@ -391,9 +382,8 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
     var.modified   = false;
     d_sharedState->d_UPSVars.push_back( var );
     
-    d_sharedState->d_debugStreams.push_back( &dbg  );
-    d_sharedState->d_debugStreams.push_back( &dbg2 );
-    d_sharedState->d_debugStreams.push_back( &dbg_BC );
+    d_sharedState->d_debugStreams.push_back( &g_ray_dbg );
+    d_sharedState->d_debugStreams.push_back( &dbg_BC_ray );
 
     initialized = true;
   }
@@ -479,7 +469,7 @@ Ray::sched_rayTrace( const LevelP& level,
     }
   }
 
-  printSchedule(level,dbg,"Ray::sched_rayTrace");
+  printSchedule(level,g_ray_dbg,"Ray::sched_rayTrace");
 
   //__________________________________
   // Require an infinite number of ghost cells so you can access the entire domain.
@@ -511,7 +501,7 @@ Ray::sched_rayTrace( const LevelP& level,
     d_haloCells = IntVector(n_ghostCells, n_ghostCells, n_ghostCells);
   }
 
-  DOUT(dbg, "    sched_rayTrace: number of ghost cells for all-to-all variables: (" << n_ghostCells << ")" );
+  DOUT(g_ray_dbg, "    sched_rayTrace: number of ghost cells for all-to-all variables: (" << n_ghostCells << ")" );
 
   tsk->requires( abskg_dw ,    d_abskgLabel  ,   gac, n_ghostCells );
   tsk->requires( sigma_dw ,    d_sigmaT4Label,   gac, n_ghostCells );
@@ -1130,7 +1120,7 @@ Ray::rayTrace( const ProcessorGroup* pg,
   for (int p=0; p < patches->size(); p++){
 
     const Patch* patch = patches->get(p);
-    printTask(patches,patch,dbg,"Doing Ray::rayTrace");
+    printTask(patches,patch,g_ray_dbg,"Doing Ray::rayTrace");
     
     
 //    if ( d_isSeedRandom == false ){     Disable until the code compares with nightly GS -Todd
@@ -1166,7 +1156,7 @@ Ray::rayTrace( const ProcessorGroup* pg,
 
       patch->computeVariableExtentsWithBoundaryCheck(CCVariable<double>::getTypeDescription()->getType(), IntVector(0,0,0),
                                                      Ghost::AroundCells, d_haloCells.x(), ROI_Lo, ROI_Hi);
-      DOUT(dbg, "  ROI: " << ROI_Lo << " "<< ROI_Hi );
+      DOUT(g_ray_dbg, "  ROI: " << ROI_Lo << " "<< ROI_Hi );
       abskg_dw->getRegion(   abskg,          d_abskgLabel ,   d_matl, level, ROI_Lo, ROI_Hi );
       sigmaT4_dw->getRegion( sigmaT4OverPi,  d_sigmaT4Label,  d_matl, level, ROI_Lo, ROI_Hi );
       celltype_dw->getRegion( celltype,      d_cellTypeLabel, d_matl, level, ROI_Lo, ROI_Hi );
@@ -1461,7 +1451,7 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
     }
   }
 
-  printSchedule(level, dbg, taskname);
+  printSchedule(level, g_ray_dbg, taskname);
 
   Task::MaterialDomainSpec  ND  = Task::NormalDomain;
   Ghost::GhostType         gac  = Ghost::AroundCells;
@@ -1605,7 +1595,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
       abskg_dw->getLevel(   abskg[L]   ,       d_abskgLabel ,   d_matl , level.get_rep() );
       sigmaT4_dw->getLevel( sigmaT4OverPi[L] , d_sigmaT4Label,  d_matl , level.get_rep() );
       celltype_dw->getLevel( cellType[L] ,     d_cellTypeLabel, d_matl , level.get_rep() );
-      DOUT( dbg, "    RT DataOnion: getting coarse level data L-" << L );
+      DOUT( g_ray_dbg, "    RT DataOnion: getting coarse level data L-" << L );
     }
     Vector dx = level->dCell();
     Dx[L] = dx;
@@ -1627,7 +1617,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
     computeExtents(level_0, fineLevel, notUsed, maxLevels, new_dw,
                    fineLevel_ROI_Lo, fineLevel_ROI_Hi, regionLo,  regionHi);
 
-    DOUT( dbg, "    RT DataOnion:  getting fine level data across L-" << L << " " << fineLevel_ROI_Lo << " " << fineLevel_ROI_Hi );
+    DOUT( g_ray_dbg, "    RT DataOnion:  getting fine level data across L-" << L << " " << fineLevel_ROI_Lo << " " << fineLevel_ROI_Hi );
     abskg_dw->getRegion(   abskg[L]   ,       d_abskgLabel ,   d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
     sigmaT4_dw->getRegion( sigmaT4OverPi[L] , d_sigmaT4Label,  d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
     celltype_dw->getRegion( cellType[L] ,     d_cellTypeLabel, d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
@@ -1647,7 +1637,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
   for (int p = 0; p < finePatches->size(); p++) {
 
     const Patch* finePatch = finePatches->get(p);
-    printTask(finePatches, finePatch,dbg,"Doing Ray::rayTrace_dataOnion");
+    printTask(finePatches, finePatch,g_ray_dbg,"Doing Ray::rayTrace_dataOnion");
     if ( d_isSeedRandom == false ){
       mTwister.seed(finePatch->getID());
     }
@@ -1662,7 +1652,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
       int L = maxLevels - 1;
       DataWarehouse* abskg_dw = get_abskg_dw(L, new_dw);
       
-      DOUT( dbg, "    RT DataOnion: getting fine level data across L-" << L );
+      DOUT( g_ray_dbg, "    RT DataOnion: getting fine level data across L-" << L );
 
       abskg_dw->getRegion(   abskg[L]   ,       d_abskgLabel ,  d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
       sigmaT4_dw->getRegion( sigmaT4OverPi[L] , d_sigmaT4Label, d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
@@ -1806,19 +1796,6 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
         if (d_rayDirSampleAlgo == LATIN_HYPER_CUBE){
           randVector(rand_i, mTwister, origin);
         }
-/*`==========TESTING==========*/
-#if 0
-      if( isDbgCell(origin) && d_isDbgOn ){
-        dbg2.setActive(true);
-      }else{
-        dbg2.setActive(false);
-      }
-
-//      if( origin != d_dbgCell ){
-//        return;
-//     }
-#endif
-/*===========TESTING==========`*/
 
         double sumI = 0;
 
@@ -1927,7 +1904,7 @@ Ray::computeExtents(LevelP level_0,
 
     fineLevel_ROI_Lo = patchLo - d_haloCells;
     fineLevel_ROI_Hi = patchHi + d_haloCells;
-    DOUT( dbg, "    computeExtents: L-"<< fineLevel->getIndex() <<"  patch: ("<<patch->getID() <<") " << patchLo << " " << patchHi <<  " d_haloCells" << d_haloCells );
+    DOUT( g_ray_dbg, "    computeExtents: L-"<< fineLevel->getIndex() <<"  patch: ("<<patch->getID() <<") " << patchLo << " " << patchHi <<  " d_haloCells" << d_haloCells );
 
   }
 
@@ -1937,7 +1914,7 @@ Ray::computeExtents(LevelP level_0,
 
   fineLevel_ROI_Lo = Max(fineLevel_ROI_Lo, levelLo);
   fineLevel_ROI_Hi = Min(fineLevel_ROI_Hi, levelHi);
-  DOUT (dbg, "    computeExtents: fineLevel_ROI: " << fineLevel_ROI_Lo << " "<< fineLevel_ROI_Hi );
+  DOUT (g_ray_dbg, "    computeExtents: fineLevel_ROI: " << fineLevel_ROI_Lo << " "<< fineLevel_ROI_Hi );
 
   //__________________________________
   // Determine the extents of the regions below the fineLevel
@@ -1965,13 +1942,6 @@ Ray::computeExtents(LevelP level_0,
 
       regionLo[L] = Max(regionLo[L], levelLo);
       regionHi[L] = Min(regionHi[L], levelHi);
-    }
-  }
-
-  // debugging
-  if (dbg2.active()) {
-    for(int L = 0; L<maxLevels; L++){
-      //dbg2 << "L-"<< L << " regionLo " << regionLo[L] << " regionHi " << regionHi[L] << endl;
     }
   }
 }
@@ -2225,7 +2195,7 @@ Ray::sched_setBoundaryConditions( const LevelP& level,
     tsk= scinew Task( taskname, this, &Ray::setBoundaryConditions< float >, temp_dw, backoutTemp );
   }
 
-  printSchedule(level,dbg,taskname);
+  printSchedule(level,g_ray_dbg,taskname);
 
   if(!backoutTemp){
     tsk->requires( temp_dw, d_compTempLabel, Ghost::None, 0 );
@@ -2259,7 +2229,7 @@ void Ray::setBoundaryConditions( const ProcessorGroup*,
 
     if( bf.size() > 0){
 
-      printTask(patches,patch,dbg,"Doing Ray::setBoundaryConditions");
+      printTask(patches,patch,g_ray_dbg,"Doing Ray::setBoundaryConditions");
 
       double sigma_over_pi = d_sigma/M_PI;
 
@@ -2336,9 +2306,9 @@ void Ray::setBC(CCVariable< T >& Q_CC,
     return;
   }
 
-  if( dbg_BC.active() ){
+  if( dbg_BC_ray.active() ){
     const Level* level = patch->getLevel();
-    DOUT( dbg_BC, "setBC \t"<< desc <<" "
+    DOUT( dbg_BC_ray, "setBC \t"<< desc <<" "
            << " mat_id = " << mat_id <<  ", Patch: "<< patch->getID() << " L-" <<level->getIndex() );
   }
 
@@ -2386,9 +2356,9 @@ void Ray::setBC(CCVariable< T >& Q_CC,
 
         //__________________________________
         //  debugging
-        if( dbg_BC.active() ) {
+        if( dbg_BC_ray.active() ) {
           bound_ptr.reset();
-          DOUT( dbg_BC, "Face: "<< patch->getFaceName(face) <<" numCellsTouched " << nCells
+          DOUT( dbg_BC_ray, "Face: "<< patch->getFaceName(face) <<" numCellsTouched " << nCells
              <<"\t child " << child  <<" NumChildren "<<numChildren
              <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
              <<"\t bound limits = "<< bound_ptr );
@@ -2396,8 +2366,8 @@ void Ray::setBC(CCVariable< T >& Q_CC,
       }  // if iterator found
     }  // child loop
 
-    if( dbg_BC.active() ){
-      DOUT( dbg_BC, "    "<< patch->getFaceName(face) << " \t " << bc_kind << " numChildren: " << numChildren
+    if( dbg_BC_ray.active() ){
+      DOUT( dbg_BC_ray, "    "<< patch->getFaceName(face) << " \t " << bc_kind << " numChildren: " << numChildren
              << " nCellsTouched: " << nCells );
     }
     //__________________________________
@@ -2427,7 +2397,7 @@ void Ray::sched_Refine_Q( SchedulerP& sched,
   int L_indx = fineLevel->getIndex();
 
   if(L_indx > 0 ){
-     printSchedule(patches,dbg,"Ray::scheduleRefine_Q (divQ)");
+     printSchedule(patches,g_ray_dbg,"Ray::scheduleRefine_Q (divQ)");
 
     Task* task = scinew Task("Ray::refine_Q",this, &Ray::refine_Q);
 
@@ -2466,7 +2436,7 @@ void Ray::refine_Q( const ProcessorGroup*,
   //
   for(int p=0;p<patches->size();p++){
     const Patch* finePatch = patches->get(p);
-    printTask(patches, finePatch,dbg,"Doing refineQ");
+    printTask(patches, finePatch,g_ray_dbg,"Doing refineQ");
 
     Level::selectType coarsePatches;
     finePatch->getCoarseLevelPatches(coarsePatches);
@@ -2498,7 +2468,7 @@ void Ray::refine_Q( const ProcessorGroup*,
     getCoarseLevelRange(finePatch, coarseLevel, cl, ch, fl, fh, bl,
                         nghostCells, returnExclusiveRange);
 
-    DOUT( dbg, " refineQ: "
+    DOUT( g_ray_dbg, " refineQ: "
               <<" finePatch  "<< finePatch->getID() << " fl " << fl << " fh " << fh
               <<" coarseRegion " << cl << " " << ch );
 
@@ -2539,7 +2509,7 @@ void Ray::sched_ROI_Extents ( const LevelP& level,
     return;
   }
 
-  printSchedule(level,dbg,"Ray::ROI_Extents");
+  printSchedule(level,g_ray_dbg,"Ray::ROI_Extents");
 
   Task* tsk = nullptr;
   if( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
@@ -2574,7 +2544,7 @@ void Ray::ROI_Extents ( const ProcessorGroup*,
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    printTask(patches, patch,dbg,"Doing ROI_Extents");
+    printTask(patches, patch,g_ray_dbg,"Doing ROI_Extents");
 
     //__________________________________
     constCCVariable< T > abskg;
@@ -2634,7 +2604,7 @@ void Ray::sched_CoarsenAll( const LevelP& coarseLevel,
                             const bool modifies_sigmaT4)
 {
   if(coarseLevel->hasFinerLevel()){
-    printSchedule(coarseLevel,dbg,"Ray::sched_CoarsenAll");
+    printSchedule(coarseLevel,g_ray_dbg,"Ray::sched_CoarsenAll");
     
     int L = coarseLevel->getIndex();
     Task::WhichDW fineLevel_abskg_dw = d_abskg_dw[L+1];    
@@ -2651,7 +2621,7 @@ void Ray::sched_Coarsen_Q ( const LevelP& coarseLevel,
                             const VarLabel* variable )
 {
   string taskname = "        Coarsen_Q_" + variable->getName();
-  printSchedule(coarseLevel,dbg,taskname);
+  printSchedule(coarseLevel,g_ray_dbg,taskname);
 
   const Uintah::TypeDescription* td = variable->typeDescription();
   const Uintah::TypeDescription::Type subtype = td->getSubType()->getType();
@@ -2700,7 +2670,7 @@ void Ray::coarsen_Q ( const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* coarsePatch = patches->get(p);
 
-    printTask(patches, coarsePatch,dbg,"Doing coarsen: " + variable->getName());
+    printTask(patches, coarsePatch,g_ray_dbg,"Doing coarsen: " + variable->getName());
 
     // Find the overlapping regions...
     Level::selectType finePatches;
@@ -2869,7 +2839,7 @@ void Ray::computeCellType( const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* coarsePatch = patches->get(p);
 
-    printTask(patches, coarsePatch,dbg,"Doing computeCellType: " + d_cellTypeLabel->getName());
+    printTask(patches, coarsePatch,g_ray_dbg,"Doing computeCellType: " + d_cellTypeLabel->getName());
 
     // Find the overlapping regions...
     Level::selectType finePatches;
@@ -3200,7 +3170,7 @@ Ray::sched_filter( const LevelP& level,
   string taskname = "Ray::filter";
   Task* tsk= scinew Task( taskname, this, &Ray::filter, which_divQ_dw, includeEC, modifies_divQFilt );
 
-  printSchedule(level,dbg,taskname);
+  printSchedule(level,g_ray_dbg,taskname);
 
   tsk->requires( which_divQ_dw, d_divQLabel,      d_gn, 0 );
   tsk->requires( which_divQ_dw, d_boundFluxLabel, d_gn, 0 );
@@ -3225,7 +3195,7 @@ Ray::filter( const ProcessorGroup*,
   for (int p=0; p < patches->size(); p++){
 
     const Patch* patch = patches->get(p);
-    printTask(patches,patch,dbg,"Doing Ray::filt");
+    printTask(patches,patch,g_ray_dbg,"Doing Ray::filt");
 
     constCCVariable<double> divQ;
     CCVariable<double>      divQFilt;
