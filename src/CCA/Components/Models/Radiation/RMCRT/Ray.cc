@@ -334,12 +334,12 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
     string abskgName = d_compAbskgLabel->getName();
     if ( rmcrt_ps->isLabelSaved( abskgName ) ){
       std::ostringstream warn;
-      warn << "  RMCRT:ERROR: You're saving a variable ("<< abskgName << ") that doesn't exist on all levels."<< endl;
+      warn << "  RMCRT:WARNING: You're saving a variable ("<< abskgName << ") that doesn't exist on all levels."<< endl;
       warn << "  Use either: " << endl;
       warn << "    <save label = 'abskgRMCRT' />             (FLOAT version of abskg, local to RMCRT)" << endl;
       warn << "             or " << endl;
       warn << "    <save label = 'abskg'  levels = -1 />     ( only saved on the finest level )" << endl;
-      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+      //throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
   }
   d_sigma_over_pi = d_sigma/M_PI;

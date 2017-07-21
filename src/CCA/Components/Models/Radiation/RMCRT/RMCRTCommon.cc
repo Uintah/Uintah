@@ -197,7 +197,6 @@ RMCRTCommon::sched_DoubleToFloat( const LevelP& level,
   printSchedule(level, g_ray_dbg, "RMCRTCommon::DoubleToFloat");
 
   tsk->requires( myDW,       d_compAbskgLabel, d_gn, 0 );
-  tsk->requires( Task::OldDW, d_abskgLabel,    d_gn, 0 );  // for carryforward
   tsk->computes(d_abskgLabel);
 
   sched->addTask( tsk, level->eachPatch(), d_matlSet);

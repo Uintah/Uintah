@@ -31,12 +31,13 @@
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Grid/Variables/VarLabel.h>
+#include <Core/Util/DOUT.hpp>
 #include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
 
 
 using namespace Uintah;
 
-static DebugStream dbg("RMCRT", false);
+Dout dbg("RMCRT", false);
 
 /*______________________________________________________________________
           TO DO:
@@ -239,7 +240,9 @@ RMCRT_Radiation::problemSetup( const ProblemSpecP& inputdb )
 //  so the reaction models can create the  VarLabel
 //______________________________________________________________________
 void
-RMCRT_Radiation::extraSetup( GridP& grid, BoundaryCondition* bc, TableLookup* table_lookup )
+RMCRT_Radiation::extraSetup( GridP& grid, 
+                             BoundaryCondition* bc, 
+                             TableLookup* table_lookup )
 {
 
   _boundaryCondition = bc;
@@ -345,7 +348,7 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
 
   int maxLevels = grid->numLevels();
 
-  dbg << " ---------------timeSubStep: " << timeSubStep << std::endl;
+  DOUT( dbg ," ---------------timeSubStep: " << timeSubStep );
   printSchedule(level, dbg, "RMCRT_Radiation::sched_computeSource");
 
   // common flags
@@ -553,7 +556,7 @@ RMCRT_Radiation::sched_initialize( const LevelP& level,
 
     // coarse levels
     if ( L_index != _archesLevelIndex) {
-      tsk->computes( _absktLabel );
+      tsk->computes( _RMCRT->d_abskgLabel );  // abskt or abskgRMCRT
       
       // divQ computed on all levels
       if (_whichAlgo == coarseLevel) {
@@ -622,10 +625,11 @@ RMCRT_Radiation::initialize( const ProcessorGroup*,
       new_dw->allocateAndPut( src, _src_label, _matl, patch );
       src.initialize(0.0);
     }
+    
     //__________________________________
     //  Coarse levels
     if ( L_index != _archesLevelIndex) {
-      new_dw->allocateAndPut( abskg, _absktLabel, _matl, patch );
+      new_dw->allocateAndPut( abskg, _RMCRT->d_abskgLabel, _matl, patch );  // could be abskt or abskgRMCRT
       abskg.initialize(0.0);
 
       // divQ computed on all levels
