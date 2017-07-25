@@ -1571,7 +1571,7 @@ main(int argc, char** argv)
           }
           if( existsDA1 != existsDA2 ) {
             ostringstream warn;
-            warn << "    The variable ("<< var << ") was not found on timestep (" << index[tstep]  <<  ") in both udas. \n"
+            warn << "    The variable ("<< var << ") was not found on timestep (" << index[tstep]  <<  "), Level-" << level->getIndex() << ", in both udas. \n"
                  << "    If this occurs on timestep 0 then ("<< var<< ") was not computed in the initialization task.\n";
             abort_uncomparable(warn);
           }
