@@ -156,7 +156,7 @@ gridstats( DataArchive* da,
 {
   vector<int> index;
   vector<double> times;
-  da->queryTimesteps(index, times);
+  da->queryTimesteps( index, times );
   ASSERTEQ(index.size(), times.size());
       
   findTimestep_loopLimits(tslow_set, tsup_set,times, time_step_lower, time_step_upper);
@@ -165,7 +165,7 @@ gridstats( DataArchive* da,
     double time = times[t];
     cout << "__________________________________\n";
     cout << "Timestep " << t << ": " << time << "\n";
-    GridP grid = da->queryGrid(t);
+    GridP grid = da->queryGrid( t );
     grid->performConsistencyCheck();
     grid->printStatistics();
 
@@ -489,7 +489,7 @@ main( int argc, char *argv[] )
     if (clf.do_partvar && !clf.do_POL) {
       vector<int> index;
       vector<double> times;
-      da->queryTimesteps(index, times);
+      da->queryTimesteps( index, times );
       ASSERTEQ(index.size(), times.size());
       if( !clf.tslow_set ) {
 	clf.time_step_lower =0;
@@ -576,7 +576,7 @@ main( int argc, char *argv[] )
       cout << "There are " << vars.size() << " variables:\n";
       vector<int> index;
       vector<double> times;
-      da->queryTimesteps(index, times);
+      da->queryTimesteps( index, times );
       ASSERTEQ(index.size(), times.size());
       
       cout << "There are " << index.size() << " timesteps:\n";
@@ -612,9 +612,9 @@ main( int argc, char *argv[] )
 	
 	double time = times[t];
 	cout << "time = " << time << "\n";
-	GridP grid = da->queryGrid(t);
+	GridP grid = da->queryGrid( t );
 	for(int v=0;v<(int)vars.size();v++){
-	  std::string var = vars[v];
+	  std::string var = vars[ v ];
 	  
 	  // Only dumps out data if it is variable g.stressFS
 	  if (var == "g.stressFS"){
@@ -655,7 +655,7 @@ main( int argc, char *argv[] )
 		    switch(subtype->getType()){
 		    case Uintah::TypeDescription::Matrix3:{
 		      NCVariable<Matrix3> value;
-		      da->query(value, var, matl, patch, t);
+		      da->query( value, var, matl, patch, t );
 		      cout << "\t\t\t\t" << td->getName() << " over " << value.getLowIndex()
 			   << " to " << value.getHighIndex() << "\n";
 		      IntVector dx(value.getHighIndex()-value.getLowIndex());
@@ -781,12 +781,12 @@ printParticleVariable( DataArchive* da,
 		case Uintah::TypeDescription::double_type:
 		  {
 		    ParticleVariable<double> value;
-		    da->query(value, var, matl, patch, t);
+		    da->query( value, var, matl, patch, t) ;
 		    ParticleVariable<long64> pid;
                     if( useParticleID ) {
                       try {
                         // If particleID wasn't saved, just move on...
-                        da->query(pid, "p.particleID", matl, patch, t);
+                        da->query( pid, "p.particleID", matl, patch, t );
                       } catch( Exception & e ) {
                         useParticleID = false;
                       }
@@ -807,13 +807,14 @@ printParticleVariable( DataArchive* da,
 		case Uintah::TypeDescription::float_type:
 		  {
 		    ParticleVariable<float> value;
-		    da->query(value, var, matl, patch, t);
+		    da->query( value, var, matl, patch, t );
                     ParticleVariable<long64> pid;
                     if( useParticleID ) {
                       try {
                         // If particleID wasn't saved, just move on...
-                        da->query(pid, "p.particleID", matl, patch, t);
-                      } catch( Exception & e ) {
+                        da->query( pid, "p.particleID", matl, patch, t );
+                      }
+                      catch( Exception & e ) {
                         useParticleID = false;
                       }
                     }
@@ -833,14 +834,15 @@ printParticleVariable( DataArchive* da,
 		case Uintah::TypeDescription::int_type:
 		  {
 		    ParticleVariable<int> value;
-		    da->query(value, var, matl, patch, t);
+		    da->query( value, var, matl, patch, t );
 		    ParticleSubset* pset = value.getParticleSubset();
                     ParticleVariable<long64> pid;
                     if( useParticleID ) {
                       try {
                         // If particleID wasn't saved, just move on...
-                        da->query(pid, "p.particleID", matl, patch, t);
-                      } catch( Exception & e ) {
+                        da->query( pid, "p.particleID", matl, patch, t );
+                      }
+                      catch( Exception & e ) {
                         useParticleID = false;
                       }
                     }
@@ -849,9 +851,9 @@ printParticleVariable( DataArchive* da,
 		      for(;iter != pset->end(); iter++){
                         cout << time << " " << patchIndex << " " << matl;
                         if( useParticleID ) {
-                          cout << " " << pid[*iter];
+                          cout << " " << pid[ *iter ];
                         }
-                        cout << " " << value[*iter] << "\n";
+                        cout << " " << value[ *iter ] << "\n";
 		      }
 		    }
 		  }
@@ -859,14 +861,15 @@ printParticleVariable( DataArchive* da,
 		case Uintah::TypeDescription::Point:
 		  {
 		    ParticleVariable<Point> value;
-		    da->query(value, var, matl, patch, t);
+		    da->query( value, var, matl, patch, t );
 		    ParticleSubset* pset = value.getParticleSubset();
                     ParticleVariable<long64> pid;
                     if( useParticleID ) {
                       try {
                         // If particleID wasn't saved, just move on...
-                        da->query(pid, "p.particleID", matl, patch, t);
-                      } catch( Exception & e ) {
+                        da->query( pid, "p.particleID", matl, patch, t );
+                      }
+                      catch( Exception & e ) {
                         useParticleID = false;
                       }
                     }
@@ -887,13 +890,14 @@ printParticleVariable( DataArchive* da,
 		case Uintah::TypeDescription::Vector:
 		  {
 		    ParticleVariable<Vector> value;
-		    da->query(value, var, matl, patch, t);
+		    da->query( value, var, matl, patch, t );
                     ParticleVariable<long64> pid;
                     if( useParticleID ) {
                       try {
                         // If particleID wasn't saved, just move on...
-                        da->query(pid, "p.particleID", matl, patch, t);
-                      } catch( Exception & e ) {
+                        da->query( pid, "p.particleID", matl, patch, t );
+                      }
+                      catch( Exception & e ) {
                         useParticleID = false;
                       }
                     }
@@ -915,13 +919,14 @@ printParticleVariable( DataArchive* da,
 		case Uintah::TypeDescription::Matrix3:
 		  {
 		    ParticleVariable<Matrix3> value;
-		    da->query(value, var, matl, patch, t);
+		    da->query( value, var, matl, patch, t );
                     ParticleVariable<long64> pid;
                     if( useParticleID ) {
                       try {
                         // If particleID wasn't saved, just move on...
-                        da->query(pid, "p.particleID", matl, patch, t);
-                      } catch( Exception & e ) {
+                        da->query( pid, "p.particleID", matl, patch, t );
+                      }
+                      catch( Exception & e ) {
                         useParticleID = false;
                       }
                     }
@@ -946,12 +951,12 @@ printParticleVariable( DataArchive* da,
 		case Uintah::TypeDescription::long64_type:
 		  {
 		    ParticleVariable<long64> value;
-		    da->query(value, var, matl, patch, t);
+		    da->query( value, var, matl, patch, t );
 		    ParticleSubset* pset = value.getParticleSubset();
-		    if(pset->numParticles() > 0){
+		    if( pset->numParticles() > 0 ){
 		      ParticleSubset::iterator iter = pset->begin();
 		      for(;iter != pset->end(); iter++){
-                        cout << time << " " << patchIndex << " " << matl ;
+                        cout << time << " " << patchIndex << " " << matl;
 			cout << " " << value[*iter] << "\n";
 		      }
 		    }

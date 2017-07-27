@@ -2227,6 +2227,7 @@ DataArchiver::scheduleOutputTimestep(       vector<SaveItem> & saveLabels,
     
     //__________________________________
     //
+
     for( vector< SaveItem >::iterator saveIter = saveLabels.begin(); saveIter != saveLabels.end(); ++saveIter ) {
       const MaterialSubset* matls = saveIter->getMaterialSubset( level.get_rep() );
       
@@ -2257,7 +2258,7 @@ DataArchiver::createPIDXCommunicator(       vector<SaveItem> & saveLabels,
   d_pidxComms.clear();
 
   // Create new MPI Comms
-  d_pidxComms.reserve( grid->numLevels() );
+  d_pidxComms.resize( grid->numLevels() );
   
   for( int i = 0; i < grid->numLevels(); i++ ) {
 
@@ -2274,8 +2275,8 @@ DataArchiver::createPIDXCommunicator(       vector<SaveItem> & saveLabels,
    */
     
     int color = 0;
-    const PatchSubset*  patchsubset = patches->getSubset(proc);
-    if (patchsubset->empty() == true) {
+    const PatchSubset*  patchsubset = patches->getSubset( proc );
+    if( patchsubset->empty() == true ) {
       color = 0;
       //cout << "Empty rank: " << proc << "\n";
     }
@@ -2447,10 +2448,15 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
 
   dbg << "  outputVariables task begin\n";
 
+  ///////////////////
+  // Dav debug stuff:
+  int levelid = type != CHECKPOINT_REDUCTION ? getLevel( patches )->getIndex() : -1;
+  cout << " outputVariables task begin on level: " << levelid << "\n";
+  ////////////////////
+
 #if SCI_ASSERTION_LEVEL >= 2
   // double-check to make sure only called once per level
-  int levelid =
-    type != CHECKPOINT_REDUCTION ? getLevel(patches)->getIndex() : -1;
+  //  int levelid = type != CHECKPOINT_REDUCTION ? getLevel( patches )->getIndex() : -1;      put back in when finished debugging
   
   if (type == OUTPUT) {
     ASSERT(d_outputCalled[levelid] == false);
@@ -2466,21 +2472,33 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
   }
 #endif
 
-  vector< SaveItem >& saveLabels =
-         (type == OUTPUT ? d_saveLabels :
-          type == CHECKPOINT ? d_checkpointLabels : d_checkpointReductionLabels);
+  const vector< SaveItem >& saveLabels = ( type == OUTPUT ? d_saveLabels :
+                                                            type == CHECKPOINT ? d_checkpointLabels :
+                                                                                 d_checkpointReductionLabels);
+  /////////////////////////////
+  /// More dav debug stuff:
+  if (type == CHECKPOINT_REDUCTION) {
+    dbg << "    saving checkpiont reduction\n";
+  }
+  else if (type == CHECKPOINT) {
+    cout << "   saving checkpoint\n";
+  }
+  else {
+    cout << "   saving normal timestep. \n";
+  }
+  /////////////////////////////
 
   //__________________________________
   // debugging output
   // this task should be called once per variable (per patch/matl subset).
   if (dbg.active()) {
-    if (type == CHECKPOINT_REDUCTION) {
+    if ( type == CHECKPOINT_REDUCTION ) {
       dbg << "    reduction";
     }
     else /* if (type == OUTPUT || type == CHECKPOINT) */ {
-      if (type == CHECKPOINT)
+      if ( type == CHECKPOINT ) {
         dbg << "    checkpoint ";
-        
+      }
       dbg << "    patches: ";
       for(int p=0;p<patches->size();p++) {
         if(p != 0)
@@ -2542,7 +2560,7 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
     dataFilebase = pname.str() + ".data";
     dataFilename = ldir.getName() + "/" + dataFilebase;
   }
-  else /* if (type == CHECKPOINT_REDUCTION) */ {
+  else { // type == CHECKPOINT_REDUCTION
     xmlFilename =  tdir.getName() + "/global.xml";
     dataFilebase = "global.data";
     dataFilename = tdir.getName() + "/" + dataFilebase;
@@ -2626,14 +2644,14 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
       }
 
       //__________________________________
-      // loop over variables
-      vector< SaveItem >::iterator saveIter;
-      for(saveIter = saveLabels.begin(); saveIter != saveLabels.end(); ++saveIter) {
+      // Loop over variables to save:
+
+      for( vector< SaveItem >::const_iterator saveIter = saveLabels.begin(); saveIter != saveLabels.end(); ++saveIter ) {
 
         const VarLabel       * var       = saveIter->label;
-        const MaterialSubset * var_matls = saveIter->getMaterialSubset(level);
+        const MaterialSubset * var_matls = saveIter->getMaterialSubset( level );
         
-        if( var_matls == 0 ) {
+        if( var_matls == nullptr ) {
           continue;
         }
         
@@ -2644,7 +2662,7 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
           if( m != 0 ) {
             dbg << ", ";
           }
-          dbg << var_matls->get(m);
+          dbg << var_matls->get( m );
         }
         dbg <<"\n";
         
@@ -2666,9 +2684,9 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
           
           //__________________________________
           // write info for this variable to current index file
-          for(int m=0;m<var_matls->size();m++) {
+          for( int m = 0; m < var_matls->size(); m++ ) {
             
-            int matlIndex = var_matls->get(m);
+            int matlIndex = var_matls->get( m );
             
             // Variables may not exist when we get here due to
             // something whacky with weird AMR stuff...
@@ -2777,17 +2795,19 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
     vector<TypeDescription::Type> GridVarTypes =
       pidx.getSupportedVariableTypes();
     
-    //bulletproofing
+    // Bulletproofing
     isVarTypeSupported( saveLabels, GridVarTypes );
     
-    // loop over the grid variable types.
-    vector<TypeDescription::Type>::iterator iter;
-    for(iter = GridVarTypes.begin(); iter!= GridVarTypes.end(); ++iter) {
-      TypeDescription::Type TD = *iter;
+    // Loop over the grid variable types.
+    for( vector<TypeDescription::Type>::iterator iter = GridVarTypes.begin(); iter != GridVarTypes.end(); ++iter ) {
+
+      const TypeDescription::Type & TD = *iter;
       
-      // find all variables of this type
+      cout << "Time to save PIDX variables of type: " << TypeDescription::toString( TD ) << "\n";
+
+      // Find all of the variables of this type only.
       vector<SaveItem> saveTheseLabels;
-      saveTheseLabels = findAllVariableTypes( saveLabels, TD );
+      saveTheseLabels = findAllVariablesWithType( saveLabels, TD );
       
       if( saveTheseLabels.size() > 0 ) {
         string dirName = pidx.getDirectoryName( TD );
@@ -2810,23 +2830,17 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
   double byteToMB = 1024 * 1024;
 
   if (type == OUTPUT) {
-    d_sharedState->d_runTimeStats[SimulationState::OutputIOTime] +=
-      myTime;
-    d_sharedState->d_runTimeStats[SimulationState::OutputIORate] +=
-      (double) totalBytes / (byteToMB * myTime);
+    d_sharedState->d_runTimeStats[SimulationState::OutputIOTime] += myTime;
+    d_sharedState->d_runTimeStats[SimulationState::OutputIORate] += (double) totalBytes / (byteToMB * myTime);
   }
   else if (type == CHECKPOINT ) {
-    d_sharedState->d_runTimeStats[SimulationState::CheckpointIOTime] +=
-      myTime;
-    d_sharedState->d_runTimeStats[SimulationState::CheckpointIORate] +=
-      (double) totalBytes / (byteToMB * myTime);
+    d_sharedState->d_runTimeStats[SimulationState::CheckpointIOTime] += myTime;
+    d_sharedState->d_runTimeStats[SimulationState::CheckpointIORate] += (double) totalBytes / (byteToMB * myTime);
   }
     
   else /* if (type == CHECKPOINT_REDUCTION) */ {
-    d_sharedState->d_runTimeStats[SimulationState::CheckpointReductionIOTime] +=
-      myTime;
-    d_sharedState->d_runTimeStats[SimulationState::CheckpointReducIORate] +=
-      (double) totalBytes / (byteToMB * myTime);
+    d_sharedState->d_runTimeStats[SimulationState::CheckpointReductionIOTime] += myTime;
+    d_sharedState->d_runTimeStats[SimulationState::CheckpointReducIORate] += (double) totalBytes / (byteToMB * myTime);
   }
     
   d_sharedState->d_runTimeStats[SimulationState::TotalIOTime ] += myTime;
@@ -2850,11 +2864,11 @@ DataArchiver::saveLabels_PIDX( std::vector< SaveItem >     & saveLabels,
 {
   size_t totalBytesSaved = 0;
 #if HAVE_PIDX
-  int levelid = getLevel(patches)->getIndex(); 
-  const Level* level = getLevel(patches);
+  const Level * level   = getLevel( patches );
+  const int     levelid = level->getIndex(); 
 
-  int nSaveItems =  saveLabels.size();
-  vector<int> nSaveItemMatls (nSaveItems);
+  int         nSaveItems =  saveLabels.size();
+  vector<int> nSaveItemMatls( nSaveItems );
 
   int rank = pg->myrank();
   int rc = -9;               // PIDX return code
@@ -2868,17 +2882,29 @@ DataArchiver::saveLabels_PIDX( std::vector< SaveItem >     & saveLabels,
   int actual_number_of_variables = 0;
   
   vector< SaveItem >::iterator saveIter;
-  for (saveIter = saveLabels.begin(); saveIter != saveLabels.end(); ++saveIter) {
-    const MaterialSubset* var_matls = saveIter->getMaterialSubset(level);
+
+  cout << "parsing save labels (# save items: " << nSaveItems << ") on level " << levelid << " for timestep: " << d_sharedState->getCurrentTopLevelTimeStep() << "\n"; // DEBUG
+
+  for( saveIter = saveLabels.begin(); saveIter != saveLabels.end(); ++saveIter ) {
+    const MaterialSubset* var_matls = saveIter->getMaterialSubset( level );
+
+    cout << "   Looking at: " << saveIter->label->getName() << "\n"; // DEBUG
 
     if (var_matls == nullptr) {
+      cout << "      bailing out\n"; // DEBUG
       continue;
     }
+    cout << "      # matls: " << var_matls->size() << "\n"; // DEBUG
 
-    nSaveItemMatls[count] = var_matls->size();
+    nSaveItemMatls[ count ] = var_matls->size();
 
     ++count;
     actual_number_of_variables += var_matls->size();
+  }
+
+  if( actual_number_of_variables == 0 ) {
+    // Don't actually have any variables of the specified type on this level.
+    return totalBytesSaved;
   }
 
   // must use this format or else file won't be written
@@ -2897,7 +2923,7 @@ DataArchiver::saveLabels_PIDX( std::vector< SaveItem >     & saveLabels,
   // define the level extents for this variable type
   IntVector lo;
   IntVector hi;
-  level->computeVariableExtents(TD,lo, hi);
+  level->computeVariableExtents( TD,lo, hi );
   
   PIDX_point level_size;
   pidx.setLevelExtents( "DataArchiver::saveLabels_PIDX",  lo, hi, level_size );
@@ -2994,8 +3020,7 @@ DataArchiver::saveLabels_PIDX( std::vector< SaveItem >     & saveLabels,
         break;
       default:
         ostringstream warn;
-        warn << "DataArchiver::saveLabels_PIDX:: ("<< label->getName() << " " 
-             << td->getName() << " ) has not been implemented\n";
+        warn << "DataArchiver::saveLabels_PIDX:: ("<< label->getName() << " " << td->getName() << " ) has not been implemented\n";
         throw InternalError(warn.str(), __FILE__, __LINE__); 
     }
 
@@ -3085,6 +3110,14 @@ DataArchiver::saveLabels_PIDX( std::vector< SaveItem >     & saveLabels,
                                    arraySize );
           }         
          
+          patchOffset[0] = patchOffset[0] - lo.x() - 1;
+          patchOffset[1] = patchOffset[1] - lo.y() - 1;
+          patchOffset[2] = patchOffset[2] - lo.z() - 1;
+
+          cout << Uintah::Parallel::getMPIRank() << ": level: " << level->getIndex() << ", patchoffset: " << patchOffset[0] << ", " << patchOffset[1] << ", " << patchOffset[2]
+               << ", patchsize: " << patchSize[0] << ", " << patchSize[1] << ", " << patchSize[2] << ", patch #: " << patch->getID()
+               << "level size: " << level_size[0] << " - " << level_size[1] << " - " << level_size[2] << "\n";
+
           rc = PIDX_variable_write_data_layout(pidx.varDesc[vc][m],
                                                patchOffset, patchSize,
                                                patch_buffer[vcm][p],
@@ -3164,18 +3197,22 @@ return totalBytesSaved;
 //______________________________________________________________________
 //  Return a vector of saveItems with a common typeDescription
 std::vector<DataArchiver::SaveItem> 
-DataArchiver::findAllVariableTypes( std::vector< SaveItem >& saveLabels,
-                                    const TypeDescription::Type TD )
+DataArchiver::findAllVariablesWithType( const std::vector< SaveItem > & saveLabels,
+                                        const TypeDescription::Type     type )
 {
-  std::vector< SaveItem > myItems;
-  myItems.empty();
+  cout << "findAllVariablesWithType: " << type << "\n";
 
-  vector< SaveItem >::iterator saveIter;  
-  for (saveIter = saveLabels.begin(); saveIter != saveLabels.end(); ++saveIter) {
+  std::vector< SaveItem > myItems;
+  // myItems.empty();
+
+  for( vector< SaveItem >::const_iterator saveIter = saveLabels.begin(); saveIter != saveLabels.end(); ++saveIter) {
     const VarLabel* label = saveIter->label;
+
+    cout << "  inspecting: " << *label << " with type: " << label->typeDescription()->getName() << "\n";
     TypeDescription::Type myType = label->typeDescription()->getType();
     
-    if( myType == TD){
+    if( myType == type ){
+      cout << "     adding it\n";
       myItems.push_back( *saveIter );
     }
   }
@@ -3186,19 +3223,18 @@ DataArchiver::findAllVariableTypes( std::vector< SaveItem >& saveLabels,
 //______________________________________________________________________
 //  throw exception if saveItems type description is NOT supported 
 void 
-DataArchiver::isVarTypeSupported( std::vector< SaveItem >& saveLabels,
-                                  std::vector<TypeDescription::Type> pidxVarTypes )
+DataArchiver::isVarTypeSupported( const std::vector< SaveItem >            & saveLabels,
+                                  const std::vector<TypeDescription::Type> & pidxVarTypes )
 { 
-  vector< SaveItem >::iterator saveIter;  
-  for (saveIter = saveLabels.begin(); saveIter != saveLabels.end(); ++saveIter) {
+  for( vector< SaveItem >::const_iterator saveIter = saveLabels.begin(); saveIter != saveLabels.end(); ++saveIter ) {
     const VarLabel* label = saveIter->label;
     const TypeDescription* myType = label->typeDescription();
     
     bool found = false;
-    vector<TypeDescription::Type>::iterator td_iter;
-    for (td_iter = pidxVarTypes.begin(); td_iter!= pidxVarTypes.end(); ++td_iter) {
-      TypeDescription::Type TD = *td_iter;
-      if( myType->getType() == TD ){
+    
+    for( vector<TypeDescription::Type>::const_iterator td_iter = pidxVarTypes.begin(); td_iter!= pidxVarTypes.end(); ++td_iter ) {
+      TypeDescription::Type type = *td_iter;
+      if( myType->getType() == type ){
         found = true;
         continue;
       }
@@ -3220,6 +3256,9 @@ void
 DataArchiver::createPIDX_dirs( std::vector< SaveItem >& saveLabels,
                                Dir& levelDir )
 {
+  cout << "Skipping createPIDX_dirs\n";
+  return;
+
 #if HAVE_PIDX
 
   if( d_outputFileFormat == UDA ) {
@@ -3232,15 +3271,15 @@ DataArchiver::createPIDX_dirs( std::vector< SaveItem >& saveLabels,
   // loop over the grid variable types.
   vector<TypeDescription::Type>::iterator iter;
   for(iter = GridVarTypes.begin(); iter!= GridVarTypes.end(); ++iter) {
-    TypeDescription::Type TD = *iter;
+    TypeDescription::Type type = *iter;
 
     // find all variables of this type
     vector<SaveItem> saveTheseLabels;
-    saveTheseLabels = findAllVariableTypes( saveLabels, TD );
+    saveTheseLabels = findAllVariablesWithType( saveLabels, type );
 
     // create the sub directories
     if( saveTheseLabels.size() > 0 ) {
-      string dirName = pidx.getDirectoryName(TD);
+      string dirName = pidx.getDirectoryName( type );
       Dir myDir = levelDir.createSubdirPlus( dirName );
     }
   }
@@ -3370,7 +3409,7 @@ DataArchiver::makeVersionedDir()
 //______________________________________________________________________
 //  Determine which labels will be saved.
 void
-DataArchiver::initSaveLabels(SchedulerP& sched, bool initTimestep)
+DataArchiver::initSaveLabels( SchedulerP & sched, bool initTimestep )
 {
   dbg << "  initSaveLabels()\n";
 
@@ -3387,7 +3426,7 @@ DataArchiver::initSaveLabels(SchedulerP& sched, bool initTimestep)
   pLabelMatlMap = sched->makeVarLabelMaterialMap();
 
   // Iterate through each of the saveLabelNames we created in problemSetup
-  
+
   for( list<SaveNameItem>::iterator iter = d_saveLabelNames.begin(); iter != d_saveLabelNames.end(); ++iter ) {
 
     VarLabel* var = VarLabel::find( (*iter).labelName );
@@ -3455,7 +3494,7 @@ DataArchiver::initSaveLabels(SchedulerP& sched, bool initTimestep)
 //______________________________________________________________________
 //
 void
-DataArchiver::initCheckpoints(SchedulerP& sched)
+DataArchiver::initCheckpoints( const SchedulerP & sched )
 {
    dbg << "  initCheckpoints()\n";
    typedef vector<const Task::Dependency*> dep_vector;
@@ -3490,46 +3529,44 @@ DataArchiver::initCheckpoints(SchedulerP& sched)
    
      // Define the Levels
      ConsecutiveRangeSet levels;
-     for(int i=0;i<patchSubset->size();i++) {
-       const Patch* patch = patchSubset->get(i); 
-       levels.addInOrder(patch->getLevel()->getIndex());
+     for( int i = 0; i < patchSubset->size(); i++ ) {
+       const Patch* patch = patchSubset->get( i );
+       levels.addInOrder( patch->getLevel()->getIndex() );
      }
 
      //  MaterialSubset:
      const MaterialSubset* matSubset = (dep->m_matls != 0) ? dep->m_matls : dep->m_task->getMaterialSet()->getUnion();
      
-     // The matSubset is assumed to be in ascending order or
-     // addInOrder will throw an exception.
+     // The matSubset is assumed to be in ascending order or addInOrder will throw an exception.
      ConsecutiveRangeSet matls;
-     matls.addInOrder(matSubset->getVector().begin(), matSubset->getVector().end());
+     matls.addInOrder( matSubset->getVector().begin(), matSubset->getVector().end() );
 
-     for(ConsecutiveRangeSet::iterator crs_iter = levels.begin(); crs_iter != levels.end(); ++crs_iter) {
-       ConsecutiveRangeSet& unionedVarMatls = label_map[dep->m_var->getName()][*crs_iter];
+     for( ConsecutiveRangeSet::iterator crs_iter = levels.begin(); crs_iter != levels.end(); ++crs_iter ) {
+       ConsecutiveRangeSet& unionedVarMatls = label_map[ dep->m_var->getName() ][ *crs_iter ];
        unionedVarMatls = unionedVarMatls.unioned(matls);
      }
-     //cout << "  Adding checkpoint var " << dep->m_var->getName() << " levels " << levels << " matls " << matls << "\n";
+     cout << "  Adding checkpoint var " << dep->m_var->getName() << " on levels " << levels << " for matls " << matls << "\n";
    }
          
-   d_checkpointLabels.reserve(label_map.size());
+   d_checkpointLabels.reserve( label_map.size() );
    bool hasDelT = false;
 
-   label_type::iterator lt_iter;
-   for (lt_iter = label_map.begin(); lt_iter != label_map.end(); lt_iter++) {
-     VarLabel* var = VarLabel::find(lt_iter->first);
+   for( label_type::iterator lt_iter = label_map.begin(); lt_iter != label_map.end(); lt_iter++ ) {
+     VarLabel* var = VarLabel::find( lt_iter->first );
      
      if (var == nullptr) {
-       throw ProblemSetupException(lt_iter->first + " variable not found to checkpoint.",__FILE__, __LINE__);
+       throw ProblemSetupException( lt_iter->first + " variable not found to checkpoint.",__FILE__, __LINE__ );
      }
      
      saveItem.label = var;
      saveItem.matlSet.clear();
      
-     map<int, ConsecutiveRangeSet>::iterator map_iter;
-     for (map_iter = lt_iter->second.begin(); map_iter != lt_iter->second.end(); ++map_iter) {
+     for( map<int, ConsecutiveRangeSet>::iterator map_iter = lt_iter->second.begin(); map_iter != lt_iter->second.end(); ++map_iter ) {
        
-       saveItem.setMaterials(map_iter->first, map_iter->second, d_prevMatls, d_prevMatlSet);
+       // qwerty
+       saveItem.setMaterials( map_iter->first, map_iter->second, d_prevMatls, d_prevMatlSet );
 
-       if (string(var->getName()) == "delT") {
+       if( string(var->getName()) == "delT" ) {
          hasDelT = true;
        }
      }
@@ -3541,36 +3578,39 @@ DataArchiver::initCheckpoints(SchedulerP& sched)
      
      if( !skipVar ) {
        if ( saveItem.label->typeDescription()->isReductionVariable() ) {
-         d_checkpointReductionLabels.push_back(saveItem);
-       } else {
-         d_checkpointLabels.push_back(saveItem);
+         d_checkpointReductionLabels.push_back( saveItem );
+       }
+       else {
+         d_checkpointLabels.push_back( saveItem );
        }
      }
-   }
+   } // end for lt_iter
 
 
-   if (!hasDelT) {
-     VarLabel* var = VarLabel::find("delT");
+   if ( !hasDelT ) {
+     VarLabel* var = VarLabel::find( "delT" );
      if (var == nullptr) {
        throw ProblemSetupException("delT variable not found to checkpoint.",__FILE__, __LINE__);
      }
      
      saveItem.label = var;
      saveItem.matlSet.clear();
-     ConsecutiveRangeSet globalMatl("-1");
-     saveItem.setMaterials(-1,globalMatl, d_prevMatls, d_prevMatlSet);
-     ASSERT(saveItem.label->typeDescription()->isReductionVariable());
-     d_checkpointReductionLabels.push_back(saveItem);
+     ConsecutiveRangeSet globalMatl( "-1" );
+     saveItem.setMaterials( -1, globalMatl, d_prevMatls, d_prevMatlSet );
+
+     ASSERT( saveItem.label->typeDescription()->isReductionVariable() );
+
+     d_checkpointReductionLabels.push_back( saveItem );
    }     
 }
 
 //______________________________________________________________________
 //
 void
-DataArchiver::SaveItem::setMaterials(int level, 
-                                     const ConsecutiveRangeSet& matls,
-                                     ConsecutiveRangeSet& prevMatls,
-                                     MaterialSetP& prevMatlSet)
+DataArchiver::SaveItem::setMaterials( const int                   level, 
+                                      const ConsecutiveRangeSet & matls,
+                                            ConsecutiveRangeSet & prevMatls,
+                                            MaterialSetP        & prevMatlSet )
 {
   // reuse material sets when the same set of materials is used for
   // different SaveItems in a row -- easier than finding all reusable
@@ -3597,11 +3637,11 @@ DataArchiver::SaveItem::setMaterials(int level,
 //______________________________________________________________________
 //  Find the materials to output on this level for this saveItem
 const MaterialSubset*
-DataArchiver::SaveItem::getMaterialSubset( const Level* level )
+DataArchiver::SaveItem::getMaterialSubset( const Level* level ) const
 {
   // search done by absolute level, or relative to end of levels (-1
   // finest, -2 second finest,...)
-  map<int, MaterialSetP>::iterator iter = matlSet.end();
+  map<int, MaterialSetP>::const_iterator iter = matlSet.end();
   const MaterialSubset* var_matls = nullptr;
   
   if ( level ) {
@@ -3622,10 +3662,10 @@ DataArchiver::SaveItem::getMaterialSubset( const Level* level )
       var_matls = iter->second.get_rep()->getUnion();
     }
   }
-  else { // reductions variables that are level independent
-    map<int, MaterialSetP>::iterator iter;
-    for (iter = matlSet.begin(); iter != matlSet.end(); ++iter) {
-      var_matls = getMaterialSet(iter->first)->getUnion();
+  else { // Reductions variables that are level independent:
+    
+    for( map<int, MaterialSetP>::const_iterator iter = matlSet.begin(); iter != matlSet.end(); ++iter ) {
+      var_matls = getMaterialSet( iter->first )->getUnion();
       break;
     }
   }

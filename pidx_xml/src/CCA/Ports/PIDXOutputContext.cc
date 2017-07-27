@@ -313,13 +313,12 @@ PIDXOutputContext::setPatchExtents( const string          & desc,
                                     const TypeDescription * TD,
                                           patchExtents    & pExtents,
                                           PIDX_point      & patchOffset,
-                                          PIDX_point      & patchSize )
+                                          PIDX_point      & patchSize ) const
 {
-
-   // compute the extents of this variable (CCVariable, SFC(*)Variable...etc)
+   // Compute the extents of this variable (CCVariable, SFC(*)Variable...etc).
    IntVector hi_EC;
    IntVector lo_EC;
-   patch->computeVariableExtents(TD->getType(), boundaryLayer, Ghost::None, 0, lo_EC, hi_EC);
+   patch->computeVariableExtents( TD->getType(), boundaryLayer, Ghost::None, 0, lo_EC, hi_EC );
 
    IntVector nCells_EC    = hi_EC - lo_EC;
    int totalCells_EC      = nCells_EC.x() * nCells_EC.y() * nCells_EC.z();
@@ -364,7 +363,7 @@ void
 PIDXOutputContext::checkReturnCode( const int      rc,
                                     const string   warn,
                                     const char   * file, 
-                                    const int      line)
+                                    const int      line )
 {
   if ( rc != PIDX_success ) {
     throw InternalError( warn, file, line );

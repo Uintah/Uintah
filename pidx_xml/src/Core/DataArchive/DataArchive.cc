@@ -631,6 +631,259 @@ DataArchive::queryVariables( FILE                                   * fp,
 //______________________________________________________________________
 //
 
+// Notes: You must free() the returned "dataPIDX" when you are done with it.
+
+bool
+DataArchive::setupQueryPIDX(       PIDX_access     & access,
+                                   PIDX_file       & idxFile,
+                                   PIDX_variable   & varDesc,
+                             const LevelP          & level,
+                             const TypeDescription * type,
+                             const string          & name,
+                             const int               matlIndex,
+                             const int               timeIndex )
+{
+  TimeData & timedata = getTimeData( timeIndex );
+
+  //__________________________________
+  //  Creating access
+  PIDX_create_access( &access );
+    
+  if( Parallel::usingMPI() ) {
+    if( d_pidxComms.size() == 0 ) {
+      cout << "No pidx comms, using main comm on this: " << this << "\n";
+      // this is a hack because createPIDXCommunicator() was not called in the case of running under (at least) compare_uda...
+      // need to figure out the right way to do this.
+      MPI_Comm comm = Parallel::getRootProcessorGroup()->getComm();
+      PIDX_set_mpi_access( access, comm );
+    }
+    else {
+      cout << Uintah::Parallel::getMPIRank() << ": setting up pidx comm\n";
+      PIDX_set_mpi_access( access, d_pidxComms[ level->getIndex() ] );
+      cout << Uintah::Parallel::getMPIRank() << ": done setting up pidx comm\n";
+    }
+  }
+  //__________________________________
+  //  Open idx file
+  ostringstream levelPath;
+  levelPath << timedata.d_ts_directory << "l" << level->getIndex() << "/";  // uda/timestep/level/
+
+  string typeStr;
+  if( type->getType() == TypeDescription::CCVariable ) {
+    typeStr = "CCVars";
+  }
+  else if( type->getType() == TypeDescription::SFCXVariable ) {
+    typeStr = "SFCXVars";
+  }
+  else if( type->getType() == TypeDescription::SFCYVariable ) {
+    typeStr = "SFCYVars";
+  }
+  else if( type->getType() == TypeDescription::SFCZVariable ) {
+    typeStr = "SFCZVars";
+  }
+  else if( type->getType() == TypeDescription::NCVariable ) {
+    typeStr = "NCVars";
+  }
+  else {
+    typeStr = "NOT_IMPLEMENTED";
+  }
+  string idxFilename = levelPath.str() + typeStr + ".idx";
+    
+  PIDX_point global_size;
+
+  cout << Uintah::Parallel::getMPIRank() << ": open pidx file: " << idxFilename << ", looking for var: " << name << "\n";
+
+  int ret = PIDX_file_open( idxFilename.c_str(), PIDX_MODE_RDONLY, access, global_size, &idxFile );
+  //PIDXOutputContext::checkReturnCode( ret,"DataArchive::query() - PIDX_file_open failure", __FILE__, __LINE__ );
+  if( ret != PIDX_success ) {
+    // Is this a good idea?  Or are we potentially masking true problems.
+    cout <<  Uintah::Parallel::getMPIRank() << ": pidx file not found so ending pidx portion of QUERY() ON PROC\n";
+    return false;
+  }
+
+  //__________________________________
+  //  Extra Calls that _MAY_ be needed
+  //PIDX_point global_size;
+  //ret = PIDX_get_dims(idxFile, global_size);          // returns the levelSize  Is this needed?
+  //PIDXOutputContext::checkReturnCode( ret,"DataArchive::query() - PIDX_get_dims failure", __FILE__, __LINE__);
+
+  cout << Uintah::Parallel::getMPIRank() << ": pidx get var count\n";
+
+  int variable_count = 0;             ///< Number of fields in PIDX file
+  ret = PIDX_get_variable_count( idxFile, &variable_count );
+  PIDXOutputContext::checkReturnCode( ret,"DataArchive::query() - PIDX_get_variable_count failure", __FILE__, __LINE__);
+
+  cout << Uintah::Parallel::getMPIRank() << ": pidx var count is " << variable_count << "\n";
+
+  //int me;
+  //PIDX_get_current_time_step(idxFile, &me);
+  //cout << " PIDX file has currentl timestep: " << me << endl;
+
+  //__________________________________
+  //  set locations in PIDX file for querying variable
+  cout << Uintah::Parallel::getMPIRank() << ": pidx set time\n";
+  int timestep = d_ts_indices[timeIndex];
+  ret = PIDX_set_current_time_step( idxFile, timestep );
+  PIDXOutputContext::checkReturnCode( ret, "DataArchive::query() - PIDX_set_current_time_step failure", __FILE__, __LINE__ );
+
+  std::ostringstream mstr;
+  mstr << "_m" << matlIndex; // Add _m# to name of variable.
+  string full_name = name + mstr.str();
+
+  cout << Uintah::Parallel::getMPIRank() << ": setting var: " << full_name << "\n";
+  ret = PIDX_set_current_variable_by_name( idxFile, full_name.c_str() );
+  // proc0cout << "ret is " << ret << ", was looking for" << name << "\n";
+    
+  if( ret != PIDX_success ) {
+    // PIDXOutputContext::checkReturnCode( ret, "DataArchive::query() - PIDX_set_current_variable_index failure", __FILE__, __LINE__ );
+    cout << Uintah::Parallel::getMPIRank() << ": variable not found so ending pidx portion of QUERY()\n";
+    return false;
+  }
+
+  //__________________________________
+  // read IDX file for variable desc
+  cout << Uintah::Parallel::getMPIRank() << ": pidx get current var\n";
+
+  ret = PIDX_get_current_variable( idxFile, &varDesc );
+  PIDXOutputContext::checkReturnCode( ret, "DataArchive::query() - PIDX_get_current_variable failure", __FILE__, __LINE__ );
+
+  // proc0cout << "Read in PIDX variable: " << varDesc->var_name << ", looking for UDA var: " << name << "\n"; // DEBUG PRINTOUT
+
+#if 0
+  if( my_var_name != varDesc->var_name ) {
+    throw( "Failed sanity check, pidx var name is different from what I thought it should be..." );
+  }
+#endif
+  return true;
+
+} // end setupQueryPIDX()
+
+bool
+DataArchive::queryPIDX(       BufferAndSizeTuple * data,
+                        const PIDX_variable   & varDesc,
+                        const TypeDescription * type,
+                        const string          & name,
+                        const int               matlIndex,
+                        const Patch           * patch,
+                        const int               timeIndex )
+{
+  cout << Uintah::Parallel::getMPIRank()
+       << ": pidx query called for VARIABLE: " << name 
+       << ", material index " << matlIndex 
+       << ", Level " << (patch ? patch->getLevel()->getIndex() : -1)
+       << ", patch " << (patch ? patch->getID() : -1)
+       << ", time index " << timeIndex << "\n";
+
+  if( d_fileFormat != PIDX ){
+    throw InternalError( "queryPIDX() called on non-PIDX data archive", __FILE__, __LINE__ );
+  }
+
+  //__________________________________
+  //  bulletproofing
+  if( isPIDXEnabled() == false ){
+    ostringstream error;
+    error << "\nERROR DataArchive::queryPIDX()\n"
+          << "The uda you are trying to open was written using the PIDX file format.\n"
+          << "However, you did not configure Uintah to support PIDX.\n"
+          << "You must re-configure and compile with PIDX enabled.";
+    throw InternalError( error.str() , __FILE__, __LINE__ );
+  }
+
+  // TimeData    & timedata = getTimeData( timeIndex );
+  // const Patch * real_patch = patch->getRealPatch();
+  // int           patchid = real_patch->getID();
+
+  //__________________________________
+  //  open PIDX
+  //  TO DO:
+  //    - do we need  calls to PIDX_get_variable_count() PIDX_get_dims()??
+
+  if ( !patch ) {
+    // bullet proofing
+    throw InternalError( "Error: queryPIDX() requires a non-null patch.", __FILE__, __LINE__ );
+  }
+  cout << Uintah::Parallel::getMPIRank() << ": starting pidx portion of query()\n";
+
+  PIDXOutputContext pidx;
+  const Level* level = patch->getLevel();
+
+  //__________________________________
+  // define the level extents for this variable type
+  IntVector lo;
+  IntVector hi;
+  level->findCellIndexRange(lo,hi);
+  PIDX_point level_size;
+  pidx.setLevelExtents( "DataArchive::query()", lo, hi, level_size );
+
+  //__________________________________
+  // define patch extents
+  PIDX_point patchOffset;
+  PIDX_point patchSize;
+  PIDXOutputContext::patchExtents patchExts;
+
+  const IntVector boundary_layer( 0, 0, 0 );
+  pidx.setPatchExtents( "DataArchive::query()", patch, level, boundary_layer, type, patchExts, patchOffset, patchSize );
+
+  if (dbg.active() && isProc0_macro ){
+    patchExts.print( cout );
+  }
+
+  //__________________________________
+  // Allocate memory and read in data from PIDX file  Need to use patch_buffer !!!
+
+  int values_per_sample = varDesc->vps;
+  int bits_per_sample = 0;
+  int ret = PIDX_default_bits_per_datatype( varDesc->type_name, &bits_per_sample );
+  PIDXOutputContext::checkReturnCode( ret, "DataArchive::query() - PIDX_default_bits_per_datatype failure", __FILE__, __LINE__ );
+
+  size_t arraySize = ( bits_per_sample / 8 ) * patchExts.totalCells_EC * values_per_sample;
+  data->buffer = (unsigned char*)malloc( arraySize );
+  data->size = arraySize;
+  memset( data->buffer, 0, arraySize );
+
+  // debugging
+    //  if (dbg.active()||true ){
+    //    cout << Uintah::Parallel::getMPIRank() << ": Query:  file: " << idxFilename
+    //         << "    " << name
+    //         << " ts: " << timestep
+    //         << " mi: " <<  matlIndex
+    //         << " pID: "   << patchid
+    //         << " lev: "     << level->getIndex() << " ------ " // << "\n"
+    //         << "    " << varDesc->var_name
+    //         << " type_name: " << varDesc->type_name
+    //         << " varIndex: " << varIndex
+    //         << " vals_/_samp: " << varDesc->vps
+    //         << " bits_/_samp: "<< bits_per_sample
+    //         << " arrySz " << arraySize << "\n";
+    //  }
+
+  patchOffset[0] = patchOffset[0] - lo.x() - 1;
+  patchOffset[1] = patchOffset[1] - lo.y() - 1;
+  patchOffset[2] = patchOffset[2] - lo.z() - 1;
+
+  cout << Uintah::Parallel::getMPIRank() << ": level: " << level->getIndex() << ", patchoffset: " << patchOffset[0] << ", " << patchOffset[1] << ", " << patchOffset[2]
+       << ", patchsize: " << patchSize[0] << ", " << patchSize[1] << ", " << patchSize[2] << "\n";
+
+  ret = PIDX_variable_read_data_layout( varDesc, patchOffset, patchSize, data->buffer, PIDX_row_major );
+  PIDXOutputContext::checkReturnCode( ret, "DataArchive::query() - PIDX_variable_read_data_layout failure", __FILE__, __LINE__ );
+
+  //__________________________________
+  // debugging
+  if( dbg.active() ){
+    pidx.printBufferWrap( "DataArchive::query    AFTER  close",
+                          type->getSubType()->getType(),
+                          varDesc->vps,
+                          patchExts.lo_EC, patchExts.hi_EC,
+                          data->buffer,
+                          arraySize );
+  }
+
+  cout << Uintah::Parallel::getMPIRank() << ": ENDING pidx portion of query()\n";
+
+  return true;
+
+} // end queryPIDX()
+
 bool
 DataArchive::query(       Variable     & var,
                     const string       & name,
@@ -652,12 +905,10 @@ DataArchive::query(       Variable     & var,
 
   ASSERT( timedata.d_initialized );
 
-  if( d_fileFormat != PIDX ) {
-    // Make sure info for this patch gets parsed from p*****.xml.
-    d_lock.lock();
-    timedata.parsePatch( patch );
-    d_lock.unlock();
-  }
+  // Make sure info for this patch gets parsed from p*****.xml.
+  d_lock.lock();
+  timedata.parsePatch( patch );
+  d_lock.unlock();
 
   VarData & varinfo = timedata.d_varInfo[ name ];
   string    data_filename;
@@ -665,6 +916,11 @@ DataArchive::query(       Variable     & var,
   VarType   varType = BLANK;
 
   if ( patch ) {
+
+    if( d_fileFormat == PIDX ) {
+      throw InternalError("DataArchive::query(): Called normal UDA query() on PIDX UDA...", __FILE__, __LINE__);
+    }
+
     varType = PATCH_VAR;
     // we need to use the real_patch (in case of periodic boundaries) to get the data, but we need the
     // passed in patch to allocate the patch to the proper virtual region... (see var.allocate below)
@@ -673,9 +929,8 @@ DataArchive::query(       Variable     & var,
     int patchIndex          = real_patch->getLevelIndex();
 
     PatchData& patchinfo = timedata.d_patchInfo[levelIndex][patchIndex];
-    if( d_fileFormat != PIDX ) {
-      ASSERT( patchinfo.parsed ); // qwerty this is failing for PIDX...
-    }
+    ASSERT( patchinfo.parsed ); // qwerty this is failing for PIDX...
+
     patchid = real_patch->getID();
 
     ostringstream ostr;
@@ -693,7 +948,7 @@ DataArchive::query(       Variable     & var,
   // On a call from restartInitialize, we already have the information from the dfi,
   // otherwise get it from the hash table info.
   DataFileInfo datafileinfo;
-  if( d_fileFormat != PIDX && !dfi ) {
+  if( !dfi ) {
     // If this is a virtual patch, grab the real patch, but only do that here - in the next query, we want
     // the data to be returned in the virtual coordinate space.
 
@@ -713,9 +968,7 @@ DataArchive::query(       Variable     & var,
   }
 
   const TypeDescription* td = var.virtualGetTypeDescription();
-  if( d_fileFormat != PIDX ) {
-    ASSERT(td->getName() == varinfo.type);
-  }
+  ASSERT( td->getName() == varinfo.type );
 
   //__________________________________
   // Allocate memory for grid or particle variables
@@ -791,213 +1044,6 @@ DataArchive::query(       Variable     & var,
     }
   }
 
-  //__________________________________
-  //  bulletproofing
-  if( isPIDXEnabled() == false && d_fileFormat == PIDX ){
-    ostringstream error;
-    error << "\nERROR DataArchive::query()\n"
-          << "The uda you are trying to open was written using the PIDX file format.\n"
-          << "You must configure and compile with PIDX enabled.";
-    throw InternalError( error.str() , __FILE__, __LINE__ );
-  }
-
-
-  #if HAVE_PIDX
-  //__________________________________
-  //   open PIDX
-  //  TO DO:
-  //    - do we need  calls to PIDX_get_variable_count() PIDX_get_dims()??
-
-  if( d_fileFormat == PIDX && varType == PATCH_VAR ) {
-
-    PIDXOutputContext pidx;
-    const Level* level = patch->getLevel();
-
-    //__________________________________
-    // define the level extents for this variable type
-    IntVector lo;
-    IntVector hi;
-    level->findCellIndexRange(lo,hi);
-    PIDX_point level_size;
-    pidx.setLevelExtents( "DataArchive::query()", lo, hi, level_size );
-
-    //__________________________________
-    // define patch extents
-    PIDX_point patchOffset;
-    PIDX_point patchSize;
-    PIDXOutputContext::patchExtents patchExts;
-
-    pidx.setPatchExtents( "DataArchive::query()", patch, level, varinfo.boundaryLayer, td, patchExts, patchOffset, patchSize );
-
-    if (dbg.active() && isProc0_macro ){
-      patchExts.print(cout);
-    }
-    //__________________________________
-    //  Creating access
-    PIDX_access access;
-    PIDX_create_access( &access );
-    
-    if( Parallel::usingMPI() ) {
-      MPI_Comm comm = Parallel::getRootProcessorGroup()->getComm();
-      PIDX_set_mpi_access( access, comm );
-    }
-    //__________________________________
-    //  Open idx file
-    ostringstream levelPath;
-    levelPath << timedata.d_ts_directory << "l" << level->getIndex() << "/";  // uda/timestep/level/
-
-
-    //    string idxFilename = (levelPath.str() + varinfo.filename );               // be careful, the patch.datafilename != varinfo.filename
-    //                                                                              // varinfo.filename == <CCVars.idx, SFC*Vars.idx....>
-
-    string type;
-    if( td->getType() == TypeDescription::CCVariable ) {
-      type = "CCVars";
-    }
-    else if( td->getType() == TypeDescription::SFCXVariable ) {
-      type = "SFCXVars";
-    }
-    else if( td->getType() == TypeDescription::SFCYVariable ) {
-      type = "SFCYVars";
-    }
-    else if( td->getType() == TypeDescription::SFCZVariable ) {
-      type = "SFCZVars";
-    }
-    else if( td->getType() == TypeDescription::NCVariable ) {
-      type = "NCVars";
-    }
-    else {
-      type = "NOT_IMPLEMENTED";
-    }
-    string idxFilename = levelPath.str() + type + ".idx";
-    
-    PIDX_file  idxFile;      // IDX file descriptor
-    PIDX_point global_size;
-
-    int ret = PIDX_file_open( idxFilename.c_str(), PIDX_MODE_RDONLY, access, global_size, &idxFile );
-    pidx.checkReturnCode( ret,"DataArchive::query() - PIDX_file_open failure", __FILE__, __LINE__ );
-
-    //__________________________________
-    //  Extra Calls that _MAY_ be needed
-    //PIDX_point global_size;
-    //ret = PIDX_get_dims(idxFile, global_size);          // returns the levelSize  Is this needed?
-    //pidx.checkReturnCode( ret,"DataArchive::query() - PIDX_get_dims failure", __FILE__, __LINE__);
-
-    int variable_count = 0;             ///< Number of fields in PIDX file
-    ret = PIDX_get_variable_count( idxFile, &variable_count );
-    pidx.checkReturnCode( ret,"DataArchive::query() - PIDX_get_variable_count failure", __FILE__, __LINE__);
-
-    //int me;
-    //PIDX_get_current_time_step(idxFile, &me);
-    //cout << " PIDX file has currentl timestep: " << me << endl;
-
-    //__________________________________
-    //  set locations in PIDX file for querying variable
-    int timestep = d_ts_indices[timeIndex];
-    ret = PIDX_set_current_time_step( idxFile, timestep );
-    pidx.checkReturnCode( ret, "DataArchive::query() - PIDX_set_current_time_step failure", __FILE__, __LINE__ );
-
-    int varIndex;
-
-    //    if( dfi ) {
-    //      varIndex = dfi->start;
-    //    }
-    //    else {
-    //      varIndex = 0;
-    //    }
-    // ret = PIDX_set_current_variable_index( idxFile, varIndex );
-
-    std::ostringstream mstr;
-    mstr << "_m" << matlIndex; // Add _m# to name of variable.
-    string full_name = name + mstr.str();
-
-    ret = PIDX_set_current_variable_by_name( idxFile, full_name.c_str() );
-    // proc0cout << "ret is " << ret << ", was looking for" << name << "\n";
-    
-    if( ret != PIDX_success ) {
-      // pidx.checkReturnCode( ret, "DataArchive::query() - PIDX_set_current_variable_index failure", __FILE__, __LINE__ );
-      return false;
-    }
-
-    //__________________________________
-    // read IDX file for variable desc
-    PIDX_variable varDesc;
-    ret = PIDX_get_current_variable( idxFile, &varDesc );
-    pidx.checkReturnCode( ret, "DataArchive::query() - PIDX_get_current_variable failure", __FILE__, __LINE__ );
-
-    // proc0cout << "Read in PIDX variable: " << varDesc->var_name << ", looking for UDA var: " << name << "\n"; // DEBUG PRINTOUT
-
-#if 0
-    if( my_var_name != varDesc->var_name ) {
-      throw( "Failed sanity check, pidx var name is different from what I thought it should be..." );
-    }
-#endif
-
-    int values_per_sample = varDesc->vps;
-
-    int bits_per_sample = 0;
-    ret = PIDX_default_bits_per_datatype( varDesc->type_name, &bits_per_sample );
-    pidx.checkReturnCode( ret, "DataArchive::query() - PIDX_default_bits_per_datatype failure", __FILE__, __LINE__ );
-
-    //__________________________________
-    // Allocate memory and read in data from PIDX file  Need to use patch_buffer !!!
-    unsigned char *dataPIDX;
-    size_t arraySize = (bits_per_sample/8) * patchExts.totalCells_EC  * values_per_sample;
-    dataPIDX = (unsigned char*)malloc( arraySize );
-    memset( dataPIDX, 0, arraySize );
-
-    // debugging
-    if (dbg.active() ){
-      proc0cout << "Query:  filename: " << idxFilename << "\n"
-                << "    " << name
-                << " timestep: " << timestep
-                << " matlIndex: " <<  matlIndex
-                << " patchID: "   << patchid
-                << " level: "     << level->getIndex() << "\n";
-      proc0cout << "PIDX query: \n"
-                << "    " << varDesc->var_name
-                << " type_name: " << varDesc->type_name
-                << " varIndex: " << varIndex
-                << " values_per_sample: " << varDesc->vps
-                << " bits_per_sample: "<< bits_per_sample
-                << " arraySize " << arraySize << "\n";
-    }
-
-    ret = PIDX_variable_read_data_layout(varDesc, patchOffset, patchSize, dataPIDX, PIDX_row_major);
-    pidx.checkReturnCode(ret, "DataArchive::query() - PIDX_variable_read_data_layout failure", __FILE__, __LINE__);
-
-    //__________________________________
-    // close idx file and access
-    ret = PIDX_close( idxFile );
-    pidx.checkReturnCode(ret, "DataArchive::query() - PIDX_close failure", __FILE__, __LINE__);
-
-    ret = PIDX_close_access( access );
-    pidx.checkReturnCode(ret, "DataArchive::query() - PIDX_close_access failure", __FILE__, __LINE__);
-
-
-    //__________________________________
-    // debugging
-    if (dbg.active() ){
-      pidx.printBufferWrap("DataArchive::query    AFTER  close",
-                           td->getSubType()->getType(),
-                           varDesc->vps,
-                           patchExts.lo_EC, patchExts.hi_EC,
-                           dataPIDX,
-                           arraySize );
-    }
-
-    // DEBUG prints:
-    //    for( int pos = 0; pos < arraySize; pos++ ) {
-    //      printf("%d", dataPIDX[ pos ] );
-    //    }
-
-    //__________________________________
-    // now move the dataPIDX buffer into the array3 variable
-    var.readPIDX( dataPIDX, arraySize, timedata.d_swapBytes );
-    free( dataPIDX );
-  }
-  #endif
-
 #if !defined( DISABLE_SCI_MALLOC )
   AllocatorSetDefaultTag( tag );
 #endif
@@ -1005,7 +1051,8 @@ DataArchive::query(       Variable     & var,
   dbg << "DataArchive::query() completed in " << timer().seconds() << " seconds\n";
 
   return true;
-}
+
+} // end query();
 
 //______________________________________________________________________
 //
@@ -1165,6 +1212,48 @@ DataArchive::findPatchAndIndex( const GridP            grid,
 }
 //______________________________________________________________________
 //
+#if HAVE_PIDX
+void
+DataArchive::createPIDXCommunicator( const GridP & grid, LoadBalancerPort * lb )
+{
+  int rank = Uintah::Parallel::getMPIRank();
+  cout << rank << ": entering createPIDXCommunicator() for this: " << this << "\n";
+
+  lb->possiblyDynamicallyReallocate( grid, LoadBalancerPort::RESTART_LB );
+
+  // Resize the comms back to 0...
+  d_pidxComms.clear();
+
+  // Create new MPI Comms
+  d_pidxComms.resize( grid->numLevels() );
+  
+  cout << rank << ": number of levels: " << grid->numLevels() << "\n";
+
+  for( int lev = 0; lev < grid->numLevels(); lev++ ) {
+
+    const LevelP& level = grid->getLevel( lev );
+    const PatchSet* patches = lb->getOutputPerProcessorPatchSet( level );
+    
+    int color = 0;
+    const PatchSubset*  patchsubset = patches->getSubset( rank );
+
+    color = !patchsubset->empty();
+    cout << rank << ": createPIDXCommunicator() color is: " << color << "\n";
+
+    MPI_Comm comm = Parallel::getRootProcessorGroup()->getComm();
+    MPI_Comm_split( comm, color, rank, &( d_pidxComms[ lev ] ) );
+
+    // Debug:
+    if ( color == 1 ) {
+      int nsize;
+      MPI_Comm_size( d_pidxComms[ lev ], &nsize );
+      cout << rank << ": NewComm Size = " <<  nsize << " on level: " << lev << "\n";
+    }
+  }
+  cout << rank << ": leaving createPIDXCommunicator() with " << d_pidxComms.size() << " pidx comms\n";
+}
+#endif
+
 void
 DataArchive::restartInitialize( const int                timestep_index,
                                 const GridP            & grid,
@@ -1280,52 +1369,128 @@ DataArchive::restartInitialize( const int                timestep_index,
   }
   else { // Reading PIDX UDA
 
+    cout << "Here\n";
+    createPIDXCommunicator( grid, lb );
+
     map<string, VarLabel*>::iterator varMapIter;
-    int var_index = 0;
 
-    for( varMapIter = varMap.begin(); varMapIter != varMap.end(); ++varMapIter ) {
+    // qwerty1
 
-      VarLabel * label = varMapIter->second;
-      proc0cout << "READING in var: " << *label << "\n";
+    // LEVEL LOOP
+    
+    for( int lev_num = 0; lev_num < grid->numLevels(); lev_num++ ) {
+
+      cout << Uintah::Parallel::getMPIRank() << ":    on level: " << lev_num << "\n";
+
+      LevelP level = grid->getLevel( lev_num );
+
+      // VARIABLE LOOP
       
-      for( int lev_num = 0; lev_num < grid->numLevels(); lev_num++ ) {
-        LevelP level = grid->getLevel( lev_num );
-        for( int p = 0; p < level->numPatches(); p++ ) {
-          const Patch* patch = level->getPatch( p );
+      map< VarnameMatlPatch, BufferAndSizeTuple* > dataBufferMap;
 
-          if( lb->getPatchwiseProcessorAssignment( patch ) == d_processor ) {
+      for( varMapIter = varMap.begin(); varMapIter != varMap.end(); ++varMapIter ) {
 
-            Variable * var = label->typeDescription()->createInstance();
-            for( int matl = 0; matl < 1; matl++ ) { // fixme change "1" to correct value
+        VarLabel * label = varMapIter->second;
 
-              if( !label->typeDescription()->isReductionVariable() ) {
-                // Non-reduction:
-                DataFileInfo data;
-                data.start = var_index;
-                query( *var, varMapIter->first, matl, patch, timestep_index, &data );
-                dw->put( var, label, matl, patch ); // fixme, clean up duplicate usage - (ie, fix handling of matl)
+        cout << Uintah::Parallel::getMPIRank() << ": READING in var: " << *label << "\n";
+      
+        // MATERIAL LOOP
+
+        for( int matl = 0; matl < 1; matl++ ) { // fixme change "1" to correct value
+
+          cout << Uintah::Parallel::getMPIRank() << ":      looking for matl: " << matl << "\n";
+
+          // PATCH LOOP
+
+          const TypeDescription * type     = label->typeDescription();
+          const string            var_name = varMapIter->first;
+
+          PIDX_file     idxFile;
+          PIDX_variable varDesc;
+          PIDX_access   access;
+
+          bool result = setupQueryPIDX( access, idxFile, varDesc, level, type, var_name, matl, timestep_index );
+
+          if( !result ) {
+            // Did not find this var/material... skipping...
+            cout << Uintah::Parallel::getMPIRank() << ":         not found, skipping....\n";
+            continue;
+          }
+
+          for( int patch_index = 0; patch_index < level->numPatches(); patch_index++ ) {
+            const Patch* patch = level->getPatch( patch_index );
+
+            if( lb->getPatchwiseProcessorAssignment( patch ) == d_processor ) {
+
+              if( !label->typeDescription()->isReductionVariable() ) { // Non-reduction variables:
+                bool found;
+                BufferAndSizeTuple * data = new BufferAndSizeTuple();
+                found = queryPIDX( data, varDesc, type, var_name, matl, patch, timestep_index );
+                if( !found ) {
+                  proc0cout << "Warning: " << *label << " not found... skipping.\n";
+                  // delete var;
+                  continue;
+                }
+
+                VarnameMatlPatch vmp( label->getName(), matl, patch->getID() );
+                dataBufferMap[ vmp ] = data;
+                
+                proc0cout << "about to put var in dw for patch: " << patch->getID() << "\n";
               }
               else { // Handle reduction variable:
+                Variable * red_var = label->typeDescription()->createInstance();
                 // Hard-coded to 0 as only reduction (global) variables are stored in d_datafileInfoValue when using PIDX.
                 DataFileInfo & data = timedata.d_datafileInfoValue[ 0 ];
-                query( *var, varMapIter->first, -1, nullptr, timestep_index, &data );
+                bool found;
+                found = query( *red_var, varMapIter->first, -1, nullptr, timestep_index, &data );
+                if( !found ) {
+                  cout << "Warning: " << *label << " (reduction var) not found... skipping.\n";
+                  delete red_var;
+                  continue;
+                }
                 proc0cout << "patch info: " << patch->getLevel() << "\n";
-                dw->put( var, label, -1, nullptr );
+                dw->put( red_var, label, -1, nullptr );
+                delete red_var;
               }
-              delete var; // Should have been cloned when it was put
-            }
-          } // if this is my patch
-        } // for p
-        if( !label->typeDescription()->isReductionVariable() ) {
-          // FIXME... this should be cleaned up
-          var_index++;
-        }
-      } // for lev_num
+            } // end if this is my patch
+          } // end for patch
 
-    } // end for varMapIter
-  
-  
-  } // end PIDX UDA read
+
+          // Close idx file and access.
+          int ret = PIDX_close( idxFile );
+          PIDXOutputContext::checkReturnCode( ret, "DataArchive::query() - PIDX_close failure", __FILE__, __LINE__ );
+
+          ret = PIDX_close_access( access );
+          PIDXOutputContext::checkReturnCode( ret, "DataArchive::query() - PIDX_close_access failure", __FILE__, __LINE__ );
+
+          // Iterate over buffer map and put data into actual variables...
+          for( map<VarnameMatlPatch,BufferAndSizeTuple*>::iterator iter = dataBufferMap.begin(); iter != dataBufferMap.end(); ++iter ) {
+
+            BufferAndSizeTuple     * data = iter->second;
+            const VarnameMatlPatch & vmp  = iter->first;
+
+            // I am assuming that this "getPatchByID" call isn't very expensive... need to verify...
+            const Patch            * patch       = grid->getPatchByID( vmp.patchid_, 0 );
+
+            Variable * var = label->typeDescription()->createInstance();
+
+            //__________________________________
+            // Now move the dataPIDX buffer into the array3 variable
+            var->readPIDX( data->buffer, data->size, timedata.d_swapBytes );
+            free( data->buffer );
+            free( data );
+
+            dw->put( var, label, matl, patch ); // fixme, clean up duplicate usage - (ie, fix handling of matl)
+            proc0cout << "done with put\n";
+          } // end for dataBufferMap iteration
+
+        } // end for matl 
+
+      } // end for varMapIter
+
+    } // end for lev_num
+   
+  } // end else Reading PIDX UDA
 
 } // end restartInitialize()
 

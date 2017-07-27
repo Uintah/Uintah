@@ -696,7 +696,7 @@ ParticleLoadBalancer::needRecompile(double /*time*/, double /*delt*/,
 //    dbg << d_myworld->myrank() << " DLB::NeedRecompile: check=" << do_check << " ts: " << timestep << " " << d_lbTimestepInterval << " t " << time << " " << d_lbInterval << " last: " << d_lastLbTimestep << " " << d_lastLbTime << endl;
 
   // if it determines we need to re-load-balance, recompile
-  if (do_check && possiblyDynamicallyReallocate(grid, LoadBalancerPort::check)) {
+  if (do_check && possiblyDynamicallyReallocate(grid, LoadBalancerPort::CHECK_LB)) {
     doing << d_myworld->myrank() << " PLB - scheduling recompile " <<endl;
     return true;
   }
@@ -784,8 +784,8 @@ bool ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int 
 
   // don't do on a restart unless procs changed between runs.  For restarts, this is 
   // called mainly to update the perProc Patch sets (at the bottom)
-  if (state != LoadBalancerPort::restart) {
-    if (state != LoadBalancerPort::check) {
+  if (state != LoadBalancerPort::RESTART_LB) {
+    if (state != LoadBalancerPort::CHECK_LB) {
       force = true;
       if (d_lbTimestepInterval != 0) {
         d_lastLbTimestep = m_shared_state->getCurrentTopLevelTimeStep();
@@ -815,13 +815,13 @@ bool ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int 
       dynamicAllocate=true;
     }
 
-    if (dynamicAllocate || state != LoadBalancerPort::check) {
+    if (dynamicAllocate || state != LoadBalancerPort::CHECK_LB) {
       //d_oldAssignment = d_processorAssignment;
       changed = true;
       m_processor_assignment = m_temp_assignment;
       m_assignment_base_patch = (*grid->getLevel(0)->patchesBegin())->getID();
 
-      if (state == init) {
+      if( state == LoadBalancerPort::INIT_LB ) {
         // set it up so the old and new are in same place
         m_old_assignment = m_processor_assignment;
         m_old_assignment_base_patch = m_assignment_base_patch;
@@ -850,9 +850,9 @@ bool ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int 
   m_temp_assignment.resize(0);
   
   // logic to setting flag
-  int flag = LoadBalancerPort::check;
-  if ( changed || state == LoadBalancerPort::restart){
-    flag = LoadBalancerPort::regrid;
+  int flag = LoadBalancerPort::CHECK_LB;
+  if ( changed || state == LoadBalancerPort::RESTART_LB){
+    flag = LoadBalancerPort::REGRID_LB;
   }
   
   // this must be called here (it creates the new per-proc patch sets)

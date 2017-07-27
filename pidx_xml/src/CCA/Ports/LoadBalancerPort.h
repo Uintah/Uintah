@@ -152,10 +152,10 @@ public:
 
   // state variables
   enum {
-      check = 0
-    , init
-    , regrid
-    , restart
+      CHECK_LB = 0
+    , INIT_LB
+    , REGRID_LB
+    , RESTART_LB
   };
 
   //////////////////////////////////////////////////

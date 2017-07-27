@@ -267,7 +267,7 @@ AMRSimulationController::run()
                   << "until a checkpoint is reached." << std::endl;
         d_lb->setNthRank( 1 );
         d_lb->possiblyDynamicallyReallocate( d_currentGridP,
-					     LoadBalancerPort::regrid );
+					     LoadBalancerPort::REGRID_LB );
         d_output->setSaveAsPIDX();
       }
     }
@@ -359,7 +359,7 @@ AMRSimulationController::run()
                     << pidx_requested_nth_rank << std::endl;
 
           d_lb->setNthRank( pidx_requested_nth_rank );
-          d_lb->possiblyDynamicallyReallocate( d_currentGridP, LoadBalancerPort::regrid );
+          d_lb->possiblyDynamicallyReallocate( d_currentGridP, LoadBalancerPort::REGRID_LB );
           d_output->setSaveAsUDA();
           pidx_need_to_recompile = true;
         }
@@ -470,7 +470,7 @@ AMRSimulationController::run()
 		    << "setting nth output to 1\n";
 	  d_lb->setNthRank( 1 );
 	  d_lb->possiblyDynamicallyReallocate( d_currentGridP,
-					       LoadBalancerPort::regrid );
+					       LoadBalancerPort::REGRID_LB );
 	  d_output->setSaveAsPIDX();
 	  pidx_restore_nth_rank = false;
 	}
@@ -660,7 +660,7 @@ AMRSimulationController::doInitialTimestep()
   if( d_restarting ) {
 
     // for dynamic lb's, set up restart patch config
-    d_lb->possiblyDynamicallyReallocate( d_currentGridP, LoadBalancerPort::restart );
+    d_lb->possiblyDynamicallyReallocate( d_currentGridP, LoadBalancerPort::RESTART_LB );
 
     // tsaad & bisaac: At this point, during a restart, a grid does
     // NOT have knowledge of the boundary conditions.  (See other
@@ -705,7 +705,7 @@ AMRSimulationController::doInitialTimestep()
   else /* if( !d_restarting ) */ {
     // for dynamic lb's, set up initial patch config
     d_lb->possiblyDynamicallyReallocate( d_currentGridP,
-                                         LoadBalancerPort::init );
+                                         LoadBalancerPort::INIT_LB );
     
     d_currentGridP->assignBCS( d_grid_ps, d_lb );
     d_currentGridP->performConsistencyCheck();
@@ -920,7 +920,7 @@ AMRSimulationController::doRegridding( bool initialTimestep )
   
   d_sharedState->setRegridTimestep(false);
 
-  int lbstate = initialTimestep ? LoadBalancerPort::init : LoadBalancerPort::regrid;
+  int lbstate = initialTimestep ? LoadBalancerPort::INIT_LB : LoadBalancerPort::REGRID_LB;
 
   if (d_currentGridP != oldGrid) {
     d_sharedState->setRegridTimestep(true);

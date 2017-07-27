@@ -44,6 +44,10 @@
 #include <Core/Util/Handle.h>
 #include <Core/Util/Timers/Timers.hpp>
 
+#if HAVE_PIDX
+#  include <PIDX.h>
+#endif
+
 #include <list>
 #include <mutex>
 #include <string>
@@ -85,6 +89,12 @@ class LoadBalancerPort;
 
 ****************************************/
 
+// For PIDX usage:
+struct BufferAndSizeTuple {
+  unsigned char * buffer;
+  size_t          size;
+};
+  
 //! Container to hold UCF data when read in from disk.
 class DataArchive {
 
@@ -171,10 +181,27 @@ public:
 
   int queryNumMaterials( const Patch* patch, int index );
 
+  bool setupQueryPIDX(       PIDX_access     & access,
+                             PIDX_file       & idxFile,
+                             PIDX_variable   & varDesc,
+                       const LevelP          & level,
+                       const TypeDescription * type,
+                       const std::string     & name,
+                       const int               matlIndex,
+                       const int               timeIndex );
+
   // Queries a variable for a material, patch, and index in time.
   // Optionally pass in DataFileInfo if you're iterating over
   // entries in the hash table (like restartInitialize does).
   // Returns false if the variable is not found.
+  bool queryPIDX(       BufferAndSizeTuple * data,
+                  const PIDX_variable      & varDesc,
+                  const TypeDescription    * type ,
+                  const std::string        & name,
+                  const int                  matlIndex, 
+                  const Patch              * patch,
+                  const int                  timeIndex );
+
   bool query(       Variable     & var,
               const std::string  & name,
               const int            matlIndex, 
@@ -417,6 +444,10 @@ private:
     return false;
 #endif
   };
+
+  void createPIDXCommunicator( const GridP & grid, LoadBalancerPort * lb );
+  std::vector<MPI_Comm> d_pidxComms; // Array of MPI Communicators for PIDX usage...
+
 
   //______________________________________________________________________
   //
