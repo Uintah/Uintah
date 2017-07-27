@@ -318,6 +318,7 @@ OnDemandDataWarehouse::put(       Variable* var,
   else {
     SCI_THROW( InternalError("Unknown Variable type", __FILE__, __LINE__) );
   }
+  proc0cout << "end put()\n";
 }
 
 //
@@ -2561,23 +2562,23 @@ OnDemandDataWarehouse::emit(       OutputContext& oc,
       case TypeDescription::SFCYVariable :
       case TypeDescription::SFCZVariable :
         //get list
-      {
-        std::vector<Variable*> varlist;
-        d_varDB.getlist(label, matlIndex, patch, varlist);
-
-        GridVariableBase* v = nullptr;
-        for (std::vector<Variable*>::iterator rit = varlist.begin();; ++rit) {
-          if (rit == varlist.end()) {
-            v = nullptr;
-            break;
+        {
+          std::vector<Variable*> varlist;
+          d_varDB.getlist(label, matlIndex, patch, varlist);
+          
+          GridVariableBase* v = nullptr;
+          for (std::vector<Variable*>::iterator rit = varlist.begin();; ++rit) {
+            if (rit == varlist.end()) {
+              v = nullptr;
+              break;
+            }
+            v = dynamic_cast<GridVariableBase*>(*rit);
+            //verify that the variable is valid and matches the dependencies requirements.
+            if (v && v->isValid() && Min(l, v->getLow()) == v->getLow() && Max(h, v->getHigh()) == v->getHigh())  //find a completed region
+              break;
           }
-          v = dynamic_cast<GridVariableBase*>(*rit);
-          //verify that the variable is valid and matches the dependencies requirements.
-          if (v && v->isValid() && Min(l, v->getLow()) == v->getLow() && Max(h, v->getHigh()) == v->getHigh())  //find a completed region
-            break;
+          var = v;
         }
-        var = v;
-      }
         break;
       case TypeDescription::ParticleVariable :
         var = d_varDB.get(label, matlIndex, patch);
@@ -2598,7 +2599,7 @@ OnDemandDataWarehouse::emit(       OutputContext& oc,
     SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex, "on emit", __FILE__, __LINE__));
   }
   size_t bytes;
-  bytes = var->emit(oc, l, h, label->getCompressionMode());
+  bytes = var->emit( oc, l, h, label->getCompressionMode() );
   return bytes;
 }
 

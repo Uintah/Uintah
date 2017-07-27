@@ -182,12 +182,12 @@ class PIDXOutputContext {
                           const TypeDescription * TD,
                                 patchExtents    & pExtents,
                                 PIDX_point      & patchOffset,
-                                PIDX_point      & nPatchCells );
+                                PIDX_point      & nPatchCells ) const;
 
-    void checkReturnCode( const int           rc,
-                          const std::string   warn,
-                          const char        * file, 
-                          const int           line );
+    static void checkReturnCode( const int           rc,
+                                 const std::string   warn,
+                                 const char        * file, 
+                                 const int           line );
                           
     void hardWireBufferValues(unsigned char* patchBuffer, 
                               const patchExtents patchExts,

@@ -426,7 +426,7 @@ LoadBalancerCommon::restartInitialize(       DataArchive  * archive
 bool
 LoadBalancerCommon::possiblyDynamicallyReallocate( const GridP & grid, int state )
 {
-  if (state != check) {
+  if( state != LoadBalancerPort::CHECK_LB ) {
     // Have it create a new patch set, and have the DLB version call this.
     // This is a good place to do it, as it is automatically called when the
     // grid changes.

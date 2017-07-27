@@ -236,14 +236,14 @@ class DataWarehouse;
        class SaveItem {
          public:
          
-           void setMaterials(      int                   level, 
-                             const ConsecutiveRangeSet & matls,
-                                   ConsecutiveRangeSet & prevMatls,
-                                   MaterialSetP        & prevMatlSet );
+           void setMaterials( const int                   level, 
+                              const ConsecutiveRangeSet & matls,
+                                    ConsecutiveRangeSet & prevMatls,
+                                    MaterialSetP        & prevMatlSet );
 
-           MaterialSet* getMaterialSet( int level ) { return matlSet[level].get_rep(); }
+           const MaterialSet* getMaterialSet( int level ) const { return matlSet.at( level ).get_rep(); }
            
-           const MaterialSubset* getMaterialSubset( const Level * level );
+           const MaterialSubset* getMaterialSubset( const Level * level ) const;
            
            const VarLabel* label;
            std::map<int, MaterialSetP> matlSet;
@@ -268,14 +268,14 @@ class DataWarehouse;
                            const std::string         & dirName,     // CCVars, SFC*Vars
                            ProblemSpecP              & doc );
                            
-       //! returns a vector of SaveItems with a common type description
+       //! Searches through "saveLabels" and returns all the SaveItems that are of the same "type".
        std::vector<DataArchiver::SaveItem> 
-          findAllVariableTypes( std::vector< SaveItem >& saveLabels,
-                                 const TypeDescription::Type TD );
+          findAllVariablesWithType( const std::vector< SaveItem > & saveLabels,
+                                    const TypeDescription::Type     type );
       
        //! bulletproofing so user can't save unsupported var type
-       void isVarTypeSupported( std::vector< SaveItem >& saveLabels,
-                                std::vector<TypeDescription::Type> pidxVarTypes );
+       void isVarTypeSupported( const std::vector< SaveItem >              & saveLabels,
+                                const std::vector< TypeDescription::Type > & pidxVarTypes );
            
        void createPIDX_dirs( std::vector< SaveItem >& saveLabels,
                              Dir& levelDir );
@@ -299,8 +299,8 @@ class DataWarehouse;
        //! creates the uda directory with a trailing version suffix
        void makeVersionedDir();
 
-       void initSaveLabels(  SchedulerP& sched, bool initTimestep );
-       void initCheckpoints( SchedulerP& sched );
+       void initSaveLabels(  SchedulerP & sched, bool initTimestep );
+       void initCheckpoints( const SchedulerP & sched );
 
        //! helper for beginOutputTimestep - creates and writes
        //! the necessary directories and xml files to begin the 

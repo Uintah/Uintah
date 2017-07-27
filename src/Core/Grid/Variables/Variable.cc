@@ -228,20 +228,20 @@ Variable::emitPIDX( PIDXOutputContext& pc,
 //______________________________________________________________________
 //
 void
-Variable::readPIDX( unsigned char* pidx_buffer,
-                    const size_t& pidx_bufferSize,
-                    bool swapBytes )
+Variable::readPIDX( const unsigned char * pidx_buffer,
+                    const size_t        & pidx_bufferSize,
+                    const bool            swapBytes )
 {
   // I don't know if there's a better way to create a istringstream directly from unsigned char*  -Todd
   
   // create a string from pidx_buffer      
-  std::string strBuffer(pidx_buffer, pidx_buffer + pidx_bufferSize);
+  std::string strBuffer( pidx_buffer, pidx_buffer + pidx_bufferSize );
 
   // create a istringstream from the string 
-  istringstream instream(strBuffer);
+  istringstream instream( strBuffer );
   
   // push the istringstream into an Array3 variable
-  readNormal(instream, swapBytes);
+  readNormal( instream, swapBytes );
 
 } // end readPIDX()
 

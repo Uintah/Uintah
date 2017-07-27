@@ -425,7 +425,11 @@ findMinMax( DataArchive         * da,
 
   if( !iter.done() ) {
 
-    da->query( value, var, matl, patch, timestep );
+    bool found = da->query( value, var, matl, patch, timestep );
+    if( !found ) {
+      cout << "\t\t\t\tVar not found...\n";
+      return;
+    }
 
     if( !clf.be_brief ) {
       cout << "\t\t\t\t" << td->getName() << " over " << iter.begin() << " (inclusive) to " 

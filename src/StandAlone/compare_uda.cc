@@ -449,7 +449,7 @@ void MaterialParticleVarData::createPatchMap()
     if (particleID == 0) {
       ostringstream warn;
       warn << "    p.particleID must be a ParticleVariable<long64>\n";
-      abort_uncomparable(warn);
+      abort_uncomparable( warn );
     }
 
     for (int i = 0; i < count; i++) {
@@ -480,7 +480,7 @@ void MaterialParticleData::compare(MaterialParticleData& data2,
                              abs_tolerance, rel_tolerance)){
     ostringstream warn;
     warn << "    ParticleIDs do not match\n";
-    abort_uncomparable(warn);
+    abort_uncomparable( warn );
   }
 
   map<string, MaterialParticleVarData>::iterator varIter  = vars_.begin();
@@ -529,11 +529,11 @@ void MaterialParticleData::sort()
     if (pIDs == 0) {
       ostringstream warn;
       warn << "    p.particleID must be a ParticleVariable<long64>\n";
-      abort_uncomparable(warn);
+      abort_uncomparable( warn );
     }
 
-    long64* pID = (long64*)pIDs->getBasePointer();
-    ParticleSubset* subset = pIDs->getParticleSubset();
+    long64         * pID    = (long64*)pIDs->getBasePointer();
+    ParticleSubset * subset = pIDs->getParticleSubset();
 
     for (ParticleSubset::iterator iter = subset->begin();
          iter != subset->end(); iter++) {
@@ -668,7 +668,7 @@ MaterialParticleVarData::compare( MaterialParticleVarData & data2,
     
     warn << "    " << d_filebase1 << " has " << pset1->numParticles() << " particles.\n";
     warn << "    " << d_filebase2 << " has " << pset2->numParticles() << " particles.\n";
-    abort_uncomparable(warn);
+    abort_uncomparable( warn );
   }
 
   // Assumes that the particleVariables are in corresponding order --
@@ -756,35 +756,35 @@ replaceChar( const string & s, char old, char newch )
   return result;
 }
 
-
 //__________________________________
-void addParticleData(MaterialParticleDataMap& matlParticleDataMap,
-                     DataArchive* da,
-                     vector<string> vars,
-                     vector<const Uintah::TypeDescription*> types,
-                     LevelP level,
-                     int timestep)
+
+void
+addParticleData( MaterialParticleDataMap                & matlParticleDataMap,
+                 DataArchive                            * da,
+                 vector<string>                           var_names,
+                 vector<const Uintah::TypeDescription*>   types,
+                 LevelP                                   level,
+                 int                                      timestep )
 {
   Level::const_patch_iterator iter;
   for(iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) {
     const Patch* patch = *iter;
 
-    for(int v=0;v<(int)vars.size();v++){
-      std::string var = vars[v];
+    for( int vni = 0; vni < (int)var_names.size(); vni++ ){
+      std::string var_name = var_names[ vni ];
 
-      const Uintah::TypeDescription* td = types[v];
-      const Uintah::TypeDescription* subtype = td->getSubType();
+      const Uintah::TypeDescription * td      = types[ vni ];
+      const Uintah::TypeDescription * subtype = td->getSubType();
 
       if (td->getType() == Uintah::TypeDescription::ParticleVariable) {
-        ConsecutiveRangeSet matls = da->queryMaterials(var, patch, timestep);
+        ConsecutiveRangeSet matls = da->queryMaterials( var_name, patch, timestep );
 
-        for (ConsecutiveRangeSet::iterator matlIter = matls.begin();
-             matlIter != matls.end(); matlIter++){
+        for( ConsecutiveRangeSet::iterator matlIter = matls.begin(); matlIter != matls.end(); matlIter++){
 
           int matl = *matlIter;
           // Add a new MaterialPatchData for each matl for this next patch.
-          MaterialParticleData& data = matlParticleDataMap[matl];
-          data.setMatl(matl);
+          MaterialParticleData & data = matlParticleDataMap[ matl ];
+          data.setMatl( matl );
           ParticleVariableBase* pvb = nullptr;
           switch(subtype->getType()){
           case Uintah::TypeDescription::double_type:
@@ -809,12 +809,18 @@ void addParticleData(MaterialParticleDataMap& matlParticleDataMap,
             pvb = scinew ParticleVariable<Matrix3>();
             break;
           default:
-            cerr << "addParticleData: ParticleVariable of unsupported type: "
-                 << subtype->getName() << '\n';
+            cerr << "addParticleData: ParticleVariable of unsupported type: " << subtype->getName() << '\n';
             Parallel::exitAll(-1);
           }
-          da->query(*pvb, var, matl, patch, timestep);
-          data[var].add(pvb, patch); // will add one for each patch
+
+          // Debug testing
+          //DataWarehouse dw;
+          //Variable myvar;
+          //dw.get( myvar, 
+          // end debug testing
+
+          da->query( *pvb, var_name, matl, patch, timestep );
+          data[ var_name ].add( pvb, patch ); // will add one for each patch
         }
       }
     }
@@ -822,11 +828,12 @@ void addParticleData(MaterialParticleDataMap& matlParticleDataMap,
 }
 
 //__________________________________
+
 template <class T>
 void
 compareParticles( DataArchive  * da1,
                   DataArchive  * da2,
-                  const string & var,
+                  const string & var_name,
                   int            matl,
                   const Patch  * patch1,
                   const Patch  * patch2,
@@ -835,34 +842,34 @@ compareParticles( DataArchive  * da1,
                   double         abs_tolerance,
                   double         rel_tolerance )
 {
-  ParticleVariable<T> value1;
-  ParticleVariable<T> value2;
-  da1->query(value1, var, matl, patch1, timestep);
-  da2->query(value2, var, matl, patch2, timestep);
+  ParticleVariable<T> var1;
+  ParticleVariable<T> var2;
+  da1->query( var1, var_name, matl, patch1, timestep );
+  da2->query( var2, var_name, matl, patch2, timestep );
 
-  ParticleSubset* pset1 = value1.getParticleSubset();
-  ParticleSubset* pset2 = value2.getParticleSubset();
+  ParticleSubset* pset1 = var1.getParticleSubset();
+  ParticleSubset* pset2 = var2.getParticleSubset();
 
   if (pset1->numParticles() != pset2->numParticles()) {
     ostringstream warn;
     warn << "Inconsistent number of particles.\n";
-    displayProblemLocation(warn, var, matl, patch1, time);
+    displayProblemLocation( warn, var_name, matl, patch1, time );
     warn << "    " << d_filebase1 << " has " << pset1->numParticles() << " particles.\n";
     warn << "    " << d_filebase2 << " has " << pset2->numParticles() << " particles.\n";
-    abort_uncomparable(warn);
+    abort_uncomparable( warn );
   }
 
   ParticleSubset::iterator iter1 = pset1->begin();
   ParticleSubset::iterator iter2 = pset2->begin();
 
   for ( ; iter1 != pset1->end() && iter2 != pset2->end(); iter1++, iter2++) {
-    if (!compare(value1[*iter1], value2[*iter2], abs_tolerance, rel_tolerance)) {
+    if (!compare( var1[*iter1], var2[*iter2], abs_tolerance, rel_tolerance)) {
       cerr << "\nValues differ too much.\n";
-      displayProblemLocation(cerr, var, matl, patch1, time);
+      displayProblemLocation( cerr, var_name, matl, patch1, time );
       cerr << d_filebase1 << ":\n";
-      print(cerr, value1[*iter1]);
+      print( cerr, var1[ *iter1 ] );
       cerr << endl << d_filebase2 << ":\n";
-      print(cerr, value2[*iter2]);
+      print( cerr, var2[ *iter2 ] );
       cerr << endl;
       tolerance_failure();
       if( d_concise ) {
@@ -872,7 +879,7 @@ compareParticles( DataArchive  * da1,
   }
 
   // this should be true if both sets are the same size
-  ASSERT(iter1 == pset1->end() && iter2 == pset2->end());
+  ASSERT( iter1 == pset1->end() && iter2 == pset2->end() );
 }
 
 /*
@@ -1336,11 +1343,11 @@ main(int argc, char** argv)
       ostringstream warn;
       warn << "    " << d_filebase1 << " has " << vars.size() << " variables\n";
       warn << "    " << d_filebase2 << " has " << vars2.size() << " variables\n";
-      abort_uncomparable(warn);
+      abort_uncomparable( warn );
     }
 
-    vartypes1.resize(vars.size());
-    vartypes2.resize(vars2.size());
+    vartypes1.resize( vars.size() );
+    vartypes2.resize( vars2.size() );
     int count = 0;
     //__________________________________
     //  eliminate the variable to be ignored
@@ -1474,7 +1481,9 @@ main(int argc, char** argv)
       bool hasParticleIDs  = false;
       bool hasParticleData = false;
 
-      for(int v=0;v<(int)vars.size();v++){
+#if 0 
+      // Bullet proofing checks for each variable:
+      for( int v = 0; v < (int)vars.size();v++ ){
         std::string var = vars[v];
 
         if (var == "p.particleID"){
@@ -1494,7 +1503,6 @@ main(int argc, char** argv)
           bool first = true;
           Level::const_patch_iterator iter;
 
-#if 0 
           //__________________________________
           //  bulletproofing does the variable exist in both DAs on this timestep?
           //  This problem mainly occurs if <outputInitTimestep> has been specified.
@@ -1519,7 +1527,7 @@ main(int argc, char** argv)
                  << "    If this occurs on timestep 0 then ("<< var<< ") was not computed in the initialization task.\n";
             abort_uncomparable(warn);
           }
-#endif
+
           //__________________________________
           //  bulletproof are material sets consistent over DA 1
           for(iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) {
@@ -1540,11 +1548,11 @@ main(int argc, char** argv)
             first = false;
           }
 
-          ASSERT(!first); /* More serious problems would show up if this
-                             assertion would fail */
+          ASSERT( !first ); /* More serious problems would show up if this assertion would fail */
+
           //__________________________________
           //  bulletproof are material sets consistent between DA1 & DA2
-          for(iter = level2->patchesBegin(); iter != level2->patchesEnd(); iter++) {
+          for( Level::const_patch_iterator iter = level2->patchesBegin(); iter != level2->patchesEnd(); iter++ ) {
             const Patch* patch = *iter;
 
             ConsecutiveRangeSet matls2 = da2->queryMaterials( var, patch, tstep );
@@ -1566,6 +1574,7 @@ main(int argc, char** argv)
           }
         }
       }
+#endif
 
       //______________________________________________________________________
       // COMPARE PARTICLE VARIABLES
