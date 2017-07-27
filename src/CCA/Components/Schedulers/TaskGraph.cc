@@ -1447,7 +1447,7 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
 #if 0        
             // This intersection returned the wrong values of from_l and from_h at the inside corner
             // of the L-shaped domain, RMCRT_+_domain_DO.ups. Consider removing it  --Todd 07/19/17      
-            if (patch->getLevel()->getIndex() > 0 && patch != fromNeighbor && req->m_patches_dom == Task::ThisLevel) {
+            if ( req->m_patches_dom == Task::ThisLevel) {
               // cull annoying overlapping AMR patch dependencies
               
               patch->cullIntersection(basis, req->m_var->getBoundaryLayer(), fromNeighbor, from_l, from_h);

@@ -1449,17 +1449,14 @@ OnDemandDataWarehouse::getParticleSubset(       int       matlIndex,
         newLow -= cellOffset;
         newHigh -= cellOffset;
       }
-      ParticleSubset* pset;
 
-      if( relPatch->getLevel() == level && relPatch != neighbor ) {
-        relPatch->cullIntersection( Patch::CellBased, IntVector( 0, 0, 0 ), realNeighbor, newLow,
-                                    newHigh );
-        if( newLow == newHigh ) {
-          continue;
-        }
+      relPatch->cullIntersection( Patch::CellBased, IntVector( 0, 0, 0 ), realNeighbor, newLow, newHigh );
+      if( newLow == newHigh ) {
+        continue;
       }
 
       //get the particle subset for this patch
+      ParticleSubset* pset;
       pset = getParticleSubset( matlIndex, neighbor, newLow, newHigh, pos_var );
 
       //add subset to our current list
@@ -2866,11 +2863,11 @@ void OnDemandDataWarehouse::getNeighborPatches(const VarLabel* label,
   for( int i = 0; i < neighbors.size(); i++ ) {
     const Patch* neighbor = neighbors[i];
     if( neighbor && (neighbor != patch) ) {
-      IntVector low = Max( neighbor->getExtraLowIndex( basis, label->getBoundaryLayer() ), lowIndex );
+      IntVector low  = Max( neighbor->getExtraLowIndex( basis, label->getBoundaryLayer() ), lowIndex );
       IntVector high = Min( neighbor->getExtraHighIndex( basis, label->getBoundaryLayer() ), highIndex );
-      if( patch->getLevel()->getIndex() > 0 && patch != neighbor ) {
-        patch->cullIntersection( basis, label->getBoundaryLayer(), neighbor, low, high );
-      }
+      
+      patch->cullIntersection( basis, label->getBoundaryLayer(), neighbor, low, high );
+      
       if( low == high ) {
         continue;
       }
@@ -2974,16 +2971,15 @@ void OnDemandDataWarehouse::getValidNeighbors(const VarLabel* label,
   for( int i = 0; i < neighbors.size(); i++ ) {
     const Patch* neighbor = neighbors[i];
     if( neighbor && (neighbor != patch) ) {
-      IntVector low = Max( neighbor->getExtraLowIndex( basis, label->getBoundaryLayer() ),
-                           lowIndex );
-      IntVector high = Min( neighbor->getExtraHighIndex( basis, label->getBoundaryLayer() ),
-                            highIndex );
-      if( patch->getLevel()->getIndex() > 0 && patch != neighbor ) {
-        patch->cullIntersection( basis, label->getBoundaryLayer(), neighbor, low, high );
-      }
+      IntVector low  = Max( neighbor->getExtraLowIndex( basis, label->getBoundaryLayer() ), lowIndex );
+      IntVector high = Min( neighbor->getExtraHighIndex( basis, label->getBoundaryLayer() ),highIndex );
+      
+      patch->cullIntersection( basis, label->getBoundaryLayer(), neighbor, low, high );
+      
       if( low == high ) {
         continue;
       }
+      
       if (d_varDB.exists( label, matlIndex, neighbor )) {
         std::vector<Variable*> varlist;
         //Go through the main var plus any foreign fars for this label/material/patch

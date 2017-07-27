@@ -1210,6 +1210,9 @@ void Patch::cullIntersection(VariableBasis basis,
    basically as though there were no patch there
    */
 
+  if( neighbor == this ){
+    return;
+  }
   // use the cell-based interior to compare patch positions, but use the basis-specific one when culling the intersection
   IntVector p_int_low(  getLowIndex(Patch::CellBased) );
   IntVector p_int_high( getHighIndex(Patch::CellBased) );

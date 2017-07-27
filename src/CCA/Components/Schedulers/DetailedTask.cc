@@ -219,15 +219,18 @@ DetailedTask::scrub( std::vector<OnDemandDataWarehouseP> & dws )
           for (int i = 0; i < neighbors.size(); i++) {
             const Patch* neighbor = neighbors[i];
 
-            if (patch->getLevel()->getIndex() > 0 && patch != neighbor && req->m_patches_dom == Task::ThisLevel) {
+            if ( req->m_patches_dom == Task::ThisLevel ) {
               // don't scrub on AMR overlapping patches...
-              IntVector l = low, h = high;
-              l = Max(neighbor->getExtraLowIndex(basis, req->m_var->getBoundaryLayer()), low);
-              h = Min(neighbor->getExtraHighIndex(basis, req->m_var->getBoundaryLayer()), high);
+              IntVector l = Max(neighbor->getExtraLowIndex(basis, req->m_var->getBoundaryLayer()), low);
+              IntVector h = Min(neighbor->getExtraHighIndex(basis, req->m_var->getBoundaryLayer()), high);
+              
               patch->cullIntersection(basis, req->m_var->getBoundaryLayer(), neighbor->getRealPatch(), l, h);
-              if (l == h)
+              
+              if (l == h){
                 continue;
+              }
             }
+            
             if (req->m_patches_dom == Task::FineLevel) {
               // don't count if it only overlaps extra cells
               IntVector l = patch->getExtraLowIndex(basis, IntVector(0, 0, 0)), h = patch->getExtraHighIndex(basis,
