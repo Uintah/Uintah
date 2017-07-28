@@ -30,7 +30,10 @@ hotBlob_AMR_3L_ups = modUPS( the_dir,                       \
 
 #______________________________________________________________________
 #  Test syntax: ( "folder name", "input file", # processors, "OS",["flags1","flag2"])
-#  flags: 
+#
+#  OS:  Linux, Darwin, or ALL
+#
+#  flags:
 #       gpu:                    - run test if machine is gpu enabled
 #       no_uda_comparison:      - skip the uda comparisons
 #       no_memoryTest:          - skip all memory checks
@@ -47,50 +50,51 @@ hotBlob_AMR_3L_ups = modUPS( the_dir,                       \
 #       startFromCheckpoint     - start test from checkpoint. (/home/csafe-tester/CheckPoints/..../testname.uda.000)
 #       sus_options="string"    - Additional command line options for sus command
 #
-#  Notes: 
+#  Notes:
 #  1) The "folder name" must be the same as input file without the extension.
 #  2) If the processors is > 1.0 then an mpirun command will be used
 #  3) Performance_tests are not run on a debug build.
 #______________________________________________________________________
 
-NIGHTLYTESTS = [   ("advect",             "advect.ups",              1, "Linux", ["exactComparison"]),    \
-                   ("riemann_1L",         riemann_1L_ups,            1, "Linux", ["exactComparison"]),    \
-                   ("riemann_AMR_3L",      riemann_AMR_3L_ups,       8, "Linux", ["exactComparison"]),    \
-                   ("CouettePoiseuille",  "CouettePoiseuille.ups", 1.1, "Linux", ["exactComparison"]),    \
-                   ("hotBlob2mat",        "hotBlob2mat.ups",         1, "Linux", ["exactComparison"]),    \
-                   ("hotBlob2mat_sym",    "hotBlob2mat_sym.ups",     1, "Linux", ["exactComparison"]),    \
-                   ("impHotBlob",         "impHotBlob.ups",          1, "Linux", ["exactComparison"]),    \
-                   ("hotBlob2mat8patch",  "hotBlob2mat8patch.ups",   8, "Linux", ["exactComparison"]),    \
-                   ("advect2matAMR",      "advect2matAMR.ups",       1, "Linux", ["exactComparison"]),    \
-                   ("hotBlob_AMR",        "hotBlob_AMR.ups",         4, "Linux", ["exactComparison"]),    \
-                   ("hotBlob_AMR_3L",      hotBlob_AMR_3L_ups,       4, "Linux", ["exactComparison"]),    \
-                   ("impAdvectAMR",       "impAdvectAMR.ups",      1.1, "Linux", ["exactComparison"]),    \
+NIGHTLYTESTS = [   ("advect",             "advect.ups",              1, "Linux", ["exactComparison"]),
+                   ("riemann_1L",         riemann_1L_ups,            1, "Linux", ["exactComparison"]),
+                   ("CouettePoiseuille",  "CouettePoiseuille.ups", 1.1, "Linux", ["exactComparison"]),
+                   ("hotBlob2mat",        "hotBlob2mat.ups",         1, "Linux", ["exactComparison"]),
+                   ("hotBlob2mat_sym",    "hotBlob2mat_sym.ups",     1, "Linux", ["exactComparison"]),
+                   ("impHotBlob",         "impHotBlob.ups",          1, "Linux", ["exactComparison"]),
+                   ("hotBlob2mat8patch",  "hotBlob2mat8patch.ups",   8, "Linux", ["exactComparison"]),
                    ("waterAirOscillator", "waterAirOscillator.ups",  4, "Linux", ["exactComparison"])
               ]
 
+AMRTESTS =    [
+                  ("riemann_AMR_3L",      riemann_AMR_3L_ups,       8, "Linux", ["exactComparison"]),
+                  ("advect2matAMR",      "advect2matAMR.ups",       1, "Linux", ["exactComparison"]),
+                  ("hotBlob_AMR",        "hotBlob_AMR.ups",         4, "Linux", ["exactComparison"]),
+                  ("hotBlob_AMR_3L",      hotBlob_AMR_3L_ups,       4, "Linux", ["exactComparison"]),
+                  ("impAdvectAMR",       "impAdvectAMR.ups",      1.1, "Linux", ["exactComparison"]),
+              ]
 
-# Tests that are run during local regression testing
-LOCALTESTS = NIGHTLYTESTS
-
-ICETESTS = [   ("advect",           "advect.ups",           1, "ALL", ["exactComparison"]),    \
-               ("riemann_sm",       "riemann_sm.ups",       1, "All", ["exactComparison"])       
-             ]
+DEBUGGING =   [   ("advect",           "advect.ups",           1, "ALL", ["exactComparison"]),
+                  ("riemann_sm",       "riemann_sm.ups",       1, "All", ["exactComparison"])
+              ]
 #__________________________________
 
 
 #__________________________________
 # The following line is parsed by the local RT script
 # and allows the user to select the different subsets
-#LIST: LOCALTESTS ICETESTS NIGHTLYTESTS
+#LIST:  AMRTESTS DEBUGGING LOCALTESTS NIGHTLYTESTS
 #__________________________________
-# returns the list  
+# returns the list
 def getTestList(me) :
-  if me == "LOCALTESTS":
-    TESTS = LOCALTESTS
-  elif me == "ICETESTS":
-    TESTS = ICETESTS
+  if me == "AMRTESTS":
+    TESTS = AMRTESTS
+  elif me == "DEBUGGING":
+    TESTS = DEBUGGING
+  elif me == "LOCALTESTS":
+    TESTS = NIGHTLYTESTS + AMRTESTS
   elif me == "NIGHTLYTESTS":
-    TESTS = NIGHTLYTESTS
+    TESTS = NIGHTLYTESTS + AMRTESTS
   else:
     print "\nERROR:ICE.py  getTestList:  The test list (%s) does not exist!\n\n" % me
     exit(1)
@@ -102,10 +106,10 @@ if __name__ == "__main__":
   TESTS = getTestList( environ['WHICH_TESTS'] )
 
   result = runSusTests(argv, TESTS, "ICE")
-  
+
   # cleanup modified files
   command = "/bin/rm -rf %s/tmp > /dev/null 2>&1 " % (the_dir)
   system( command )
-  
+
   exit( result )
 

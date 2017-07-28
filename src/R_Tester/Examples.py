@@ -43,6 +43,9 @@ RMCRT_DO_perf_GPU_ups = modUPS2( the_dir, \
 
 #______________________________________________________________________
 #  Test syntax: ( "folder name", "input file", # processors, "OS",["flags1","flag2"])
+#
+#  OS:  Linux, Darwin, or ALL
+#
 #  flags:
 #       gpu:                    - run test if machine is gpu enabled
 #       no_uda_comparison:      - skip the uda comparisons
