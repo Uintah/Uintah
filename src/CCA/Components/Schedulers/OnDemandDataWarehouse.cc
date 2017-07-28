@@ -1450,11 +1450,14 @@ OnDemandDataWarehouse::getParticleSubset(       int       matlIndex,
         newHigh -= cellOffset;
       }
 
-      relPatch->cullIntersection( Patch::CellBased, IntVector( 0, 0, 0 ), realNeighbor, newLow, newHigh );
-      if( newLow == newHigh ) {
-        continue;
-      }
+      if (relPatch != neighbor){
+        relPatch->cullIntersection( Patch::CellBased, IntVector( 0, 0, 0 ), realNeighbor, newLow, newHigh );
 
+        if( newLow == newHigh ) {
+          continue;
+        }
+      }
+      
       //get the particle subset for this patch
       ParticleSubset* pset;
       pset = getParticleSubset( matlIndex, neighbor, newLow, newHigh, pos_var );
