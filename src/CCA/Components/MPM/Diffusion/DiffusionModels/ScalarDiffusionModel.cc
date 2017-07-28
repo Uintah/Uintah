@@ -141,9 +141,9 @@ void ScalarDiffusionModel::scheduleComputeDivergence(      Task         * task,
   task->requires(Task::OldDW, d_lb->pVolumeLabel,              gan, NGP);
   task->requires(Task::OldDW, d_lb->pDeformationMeasureLabel,  gan, NGP);
 
-  task->requires(Task::NewDW, d_lb->pFluxLabel_preReloc,       gan, NGP);
+  task->requires(Task::NewDW, d_lb->diffusion->pFlux_preReloc,       gan, NGP);
 
-  task->computes(d_lb->gConcentrationRateLabel, matlset);
+  task->computes(d_lb->diffusion->gConcentrationRate, matlset);
 }
 
 void ScalarDiffusionModel::computeDivergence(
@@ -183,9 +183,9 @@ void ScalarDiffusionModel::computeDivergence(
   old_dw->get(pMass,               d_lb->pMassLabel,               pset);
   old_dw->get(psize,               d_lb->pSizeLabel,               pset);
   old_dw->get(deformationGradient, d_lb->pDeformationMeasureLabel, pset);
-  new_dw->get(pFlux,               d_lb->pFluxLabel_preReloc,      pset);
+  new_dw->get(pFlux,               d_lb->diffusion->pFlux_preReloc,      pset);
 
-  new_dw->allocateAndPut(gConcRate,  d_lb->gConcentrationRateLabel,dwi,patch);
+  new_dw->allocateAndPut(gConcRate,  d_lb->diffusion->gConcentrationRate,dwi,patch);
 
   gConcRate.initialize(0.0);
 
@@ -242,9 +242,9 @@ void ScalarDiffusionModel::scheduleComputeDivergence_CFI(      Task         * t,
     t->requires(Task::OldDW, d_lb->pSizeLabel,    allPatches, Task::CoarseLevel,allMatls, ND, gac, npc);
     t->requires(Task::OldDW, d_lb->pMassLabel,    allPatches, Task::CoarseLevel,allMatls, ND, gac, npc);
     t->requires(Task::OldDW, d_lb->pDeformationMeasureLabel, allPatches, Task::CoarseLevel,allMatls, ND, gac, npc);
-    t->requires(Task::NewDW, d_lb->pFluxLabel_preReloc,      allPatches, Task::CoarseLevel,allMatls, ND, gac, npc);
+    t->requires(Task::NewDW, d_lb->diffusion->pFlux_preReloc,      allPatches, Task::CoarseLevel,allMatls, ND, gac, npc);
 
-    t->modifies(d_lb->gConcentrationRateLabel, matlset);
+    t->modifies(d_lb->diffusion->gConcentrationRate, matlset);
 }
 
 void ScalarDiffusionModel::computeDivergence_CFI(const PatchSubset    * finePatches,
@@ -310,7 +310,7 @@ void ScalarDiffusionModel::computeDivergence_CFI(const PatchSubset    * finePatc
       new_dw->get(zoi_fine, d_lb->gZOILabel, 0, finePatch, Ghost::None, 0 );
 
       NCVariable<double> gConcRate;
-      new_dw->getModifiable(gConcRate, d_lb->gConcentrationRateLabel,
+      new_dw->getModifiable(gConcRate, d_lb->diffusion->gConcentrationRate,
                                                      dwi, finePatch);
 
       // loop over the coarse patches under the fine patches.
@@ -334,7 +334,7 @@ void ScalarDiffusionModel::computeDivergence_CFI(const PatchSubset    * finePatc
         // coarse level data
         old_dw->get(px_coarse,      d_lb->pXLabel,              pset_coarse);
         old_dw->get(pmass_coarse,   d_lb->pMassLabel,           pset_coarse);
-        new_dw->get(pflux_coarse,   d_lb->pFluxLabel_preReloc,  pset_coarse);
+        new_dw->get(pflux_coarse,   d_lb->diffusion->pFlux_preReloc,  pset_coarse);
 
         for (ParticleSubset::iterator iter = pset_coarse->begin();
                                       iter != pset_coarse->end();  iter++)

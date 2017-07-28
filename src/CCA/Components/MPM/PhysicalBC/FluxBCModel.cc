@@ -135,6 +135,7 @@ void FluxBCModel::initializeScalarFluxBC(const ProcessorGroup*, const PatchSubse
 void FluxBCModel::scheduleApplyExternalScalarFlux(SchedulerP& sched, const PatchSet* patches,
                                                   const MaterialSet* matls)
 {
+  Ghost::GhostType  gnone = Ghost::None;
   if (!d_mpm_flags->doMPMOnLevel(getLevel(patches)->getIndex(),
                            getLevel(patches)->getGrid()->numLevels()))
     return;
@@ -147,16 +148,17 @@ void FluxBCModel::scheduleApplyExternalScalarFlux(SchedulerP& sched, const Patch
   t->requires(Task::OldDW, d_mpm_lb->pXLabel,                 Ghost::None);
   t->requires(Task::OldDW, d_mpm_lb->pSizeLabel,              Ghost::None);
   if(d_mpm_flags->d_doScalarDiffusion){
+    // JBH -- Fixme -- Todo -- Move to diffusion sublabel?
     t->requires(Task::OldDW, d_mpm_lb->pAreaLabel,            Ghost::None);
   }
   t->requires(Task::OldDW, d_mpm_lb->pVolumeLabel,            Ghost::None);
   t->requires(Task::OldDW, d_mpm_lb->pDeformationMeasureLabel,Ghost::None);
 #if defined USE_FLUX_RESTRICTION
   if(d_mpm_flags->d_doScalarDiffusion){
-    t->requires(Task::OldDW, d_mpm_lb->pConcentrationLabel,     Ghost::None);
+    t->requires(Task::OldDW, d_mpm_lb->diffusion->pConcentration,     gnone);
   }
 #endif
-  t->computes(             d_mpm_lb->pExternalScalarFluxLabel_preReloc);
+  t->computes(             d_mpm_lb->diffusion->pExternalScalarFlux_preReloc);
   if (d_mpm_flags->d_useLoadCurves) {
     t->requires(Task::OldDW, d_mpm_lb->pLoadCurveIDLabel,     Ghost::None);
   }
@@ -217,18 +219,19 @@ void FluxBCModel::applyExternalScalarFlux(const ProcessorGroup* , const PatchSub
 
       old_dw->get(px,    d_mpm_lb->pXLabel,    pset);
       if(d_mpm_flags->d_doScalarDiffusion){
+        // JBH -- Fixme -- todo -- move to MPMDiffusion sublabel?
         old_dw->get(parea, d_mpm_lb->pAreaLabel, pset);
       }
       old_dw->get(pvol,  d_mpm_lb->pVolumeLabel, pset);
       old_dw->get(psize, d_mpm_lb->pSizeLabel, pset);
       old_dw->get(pDeformationMeasure, d_mpm_lb->pDeformationMeasureLabel, pset);
       new_dw->allocateAndPut(pExternalScalarFlux,
-                                       d_mpm_lb->pExternalScalarFluxLabel_preReloc,  pset);
+                                       d_mpm_lb->diffusion->pExternalScalarFlux_preReloc,  pset);
 
 #if defined USE_FLUX_RESTRICTION
       constParticleVariable<double> pConcentration;
       if(d_mpm_flags->d_doScalarDiffusion){
-        old_dw->get(pConcentration, d_mpm_lb->pConcentrationLabel, pset);
+        old_dw->get(pConcentration, d_mpm_lb->diffusion->pConcentration, pset);
       }
 #endif
 

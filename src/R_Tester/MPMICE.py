@@ -46,7 +46,16 @@ LOCALTESTS = [   ("massX",                 "massX.ups",                 1,  "Lin
            #     ("advect_+_amr",          "advect_+_amr.ups",          8,  "Linux", ["exactComparison"]),    \
                  ("DDT",                   "DDT.ups",                   1,  "Linux", ["exactComparison","no_dbg"]),    \
                  ("InductionTime",         "InductionTime.ups",         1  ,"Linux", ["exactComparison","no_dbg"]),    \
-                 ("InductionPropagation",  "InductionPropagation.ups",  1  ,"Linux", ["exactComparison","no_dbg"])
+                 ("InductionPropagation",  "InductionPropagation.ups",  1  ,"Linux", ["exactComparison","no_dbg"]),    \
+                 ("massX",                 "massX.ups",                 1,  "Darwin", ["exactComparison"]),   \
+                 ("guni2dRT",              "guni2dRT.ups",              4,  "Darwin", ["exactComparison"]),   \
+                 ("SteadyBurn_2dRT",       "SteadyBurn_2dRT.ups",       4,  "Darwin", ["exactComparison"]),   \
+                 ("TBurner_2dRT",          "TBurner_2dRT.ups",          4,  "Darwin", ["exactComparison"]),   \
+                 ("TRWnoz",                "TRWnoz.ups",                1,  "Darwin", ["exactComparison"]),   \
+                 ("advect_2L_MI",          "advect_2L_MI.ups",          8,  "Darwin", ["exactComparison"]),   \
+                 ("DDT",                   "DDT.ups",                   1,  "Darwin", ["exactComparison","no_dbg"]),    \
+                 ("InductionTime",         "InductionTime.ups",         1  ,"Darwin", ["exactComparison","no_dbg"]),   \
+                 ("InductionPropagation",  "InductionPropagation.ups",  1  ,"Darwin", ["exactComparison","no_dbg"])
     	       ]
 DEBUGTESTS =[]
 #__________________________________

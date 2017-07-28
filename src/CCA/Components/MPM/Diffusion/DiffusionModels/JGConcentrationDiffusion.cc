@@ -55,7 +55,7 @@ void JGConcentrationDiffusion::addInitialComputesAndRequires(      Task         
                                                             ) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->computes(d_lb->pFluxLabel,        matlset);
+  task->computes(d_lb->diffusion->pFlux,        matlset);
 }
 
 void JGConcentrationDiffusion::addParticleState(
@@ -63,9 +63,9 @@ void JGConcentrationDiffusion::addParticleState(
                                                 std::vector<const VarLabel*>& to
                                                ) const
 {
-  from.push_back(d_lb->pFluxLabel);
+  from.push_back(d_lb->diffusion->pFlux);
 
-  to.push_back(d_lb->pFluxLabel_preReloc);
+  to.push_back(d_lb->diffusion->pFlux_preReloc);
 }
 
 void JGConcentrationDiffusion::computeFlux(
@@ -87,8 +87,8 @@ void JGConcentrationDiffusion::computeFlux(
 
   ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
-  old_dw->get(pConcGradient,     d_lb->pConcGradientLabel,  pset);
-  new_dw->allocateAndPut(pFlux,  d_lb->pFluxLabel_preReloc, pset);
+  old_dw->get(pConcGradient,     d_lb->diffusion->pGradConcentration,  pset);
+  new_dw->allocateAndPut(pFlux,  d_lb->diffusion->pFlux_preReloc, pset);
 
   double timestep = 1.0e99;
   for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++)
@@ -111,7 +111,7 @@ void JGConcentrationDiffusion::initializeSDMData(const Patch          * patch,
   ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
   ParticleVariable<Vector>  pFlux;
 
-  new_dw->allocateAndPut(pFlux, d_lb->pFluxLabel, pset);
+  new_dw->allocateAndPut(pFlux, d_lb->diffusion->pFlux, pset);
   for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++)
   {
     pFlux[*iter] = Vector(0,0,0);
@@ -126,9 +126,9 @@ void JGConcentrationDiffusion::scheduleComputeFlux(      Task         * task,
   const MaterialSubset* matlset = matl->thisMaterial();
   Ghost::GhostType        gnone = Ghost::None;
 
-  task->requires(Task::OldDW, d_lb->pConcGradientLabel, matlset, gnone);
+  task->requires(Task::OldDW, d_lb->diffusion->pGradConcentration, matlset, gnone);
 
-  task->computes(d_lb->pFluxLabel_preReloc, matlset);
+  task->computes(d_lb->diffusion->pFlux_preReloc, matlset);
   task->computes(d_sharedState->get_delt_label(),getLevel(patch));
 }
 

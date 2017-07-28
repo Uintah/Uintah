@@ -51,7 +51,7 @@ void CommonIFConcDiff::addComputesAndRequiresInterpolated(SchedulerP & sched,
   const MaterialSubset* mss = matls->getUnion();
   task->requires( Task::NewDW, d_mpm_lb->gMassLabel, Ghost::AroundNodes, 1);
 
-  task->modifies(d_mpm_lb->gConcentrationLabel, mss);
+  task->modifies(d_mpm_lb->diffusion->gConcentration, mss);
 
   sched->addTask(task, patches, matls);
 }
@@ -75,7 +75,7 @@ void CommonIFConcDiff::sdInterfaceInterpolated(const ProcessorGroup *,
       int dwi = matls->get(m);
       new_dw->get(gmass[m], d_mpm_lb->gMassLabel, dwi, patch,
                   Ghost::AroundNodes, 1);
-      new_dw->getModifiable(gconcentration[m], d_mpm_lb->gConcentrationLabel,
+      new_dw->getModifiable(gconcentration[m], d_mpm_lb->diffusion->gConcentration,
                             dwi, patch);
     }
 
@@ -113,7 +113,7 @@ void CommonIFConcDiff::addComputesAndRequiresDivergence(SchedulerP & sched,
   const MaterialSubset* mss = matls->getUnion();
   task->requires( Task::NewDW, d_mpm_lb->gMassLabel, Ghost::None);
 
-  task->modifies(d_mpm_lb->gConcentrationRateLabel, mss);
+  task->modifies(d_mpm_lb->diffusion->gConcentrationRate, mss);
 
   sched->addTask(task, patches, matls);
 }
@@ -133,7 +133,7 @@ void CommonIFConcDiff::sdInterfaceDivergence(const ProcessorGroup*,
       for(int m = 0; m < num_matls; m++){
         int dwi = matls->get(m);
         new_dw->get(gmass[m], d_mpm_lb->gMassLabel, dwi, patch, Ghost::None, 0);
-        new_dw->getModifiable(gconc_rate[m], d_mpm_lb->gConcentrationRateLabel, dwi, patch);
+        new_dw->getModifiable(gconc_rate[m], d_mpm_lb->diffusion->gConcentrationRate, dwi, patch);
       }
 
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){

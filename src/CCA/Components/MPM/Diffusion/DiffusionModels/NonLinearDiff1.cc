@@ -111,10 +111,10 @@ void NonLinearDiff1::addInitialComputesAndRequires(
                                                   ) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->computes(d_lb->pDiffusivityLabel, matlset);
+  task->computes(d_lb->diffusion->pDiffusivity, matlset);
   task->computes(d_lb->pPressureLabel_t1, matlset);
   task->computes(d_lb->pConcInterpLabel,  matlset);
-  task->computes(d_lb->pFluxLabel,        matlset);
+  task->computes(d_lb->diffusion->pFlux,        matlset);
 }
 
 void NonLinearDiff1::addParticleState(
@@ -122,15 +122,15 @@ void NonLinearDiff1::addParticleState(
                                       std::vector<const VarLabel*>& to
                                      ) const
 {
-  from.push_back(d_lb->pDiffusivityLabel);
+  from.push_back(d_lb->diffusion->pDiffusivity);
   from.push_back(d_lb->pPressureLabel_t1);
   from.push_back(d_lb->pConcInterpLabel);
-  from.push_back(d_lb->pFluxLabel);
+  from.push_back(d_lb->diffusion->pFlux);
 
-  to.push_back(d_lb->pDiffusivityLabel_preReloc);
+  to.push_back(d_lb->diffusion->pDiffusivity_preReloc);
   to.push_back(d_lb->pPressureLabel_t1_preReloc);
   to.push_back(d_lb->pConcInterpLabel_preReloc);
-  to.push_back(d_lb->pFluxLabel_preReloc);
+  to.push_back(d_lb->diffusion->pFlux_preReloc);
 }
 
 void NonLinearDiff1::computeFlux(
@@ -171,19 +171,21 @@ void NonLinearDiff1::computeFlux(
   ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
   old_dw->get(px,             d_lb->pXLabel,                  pset);
-  old_dw->get(pConcGrad,      d_lb->pConcGradientLabel,       pset);
-  old_dw->get(pConcentration, d_lb->pConcentrationLabel,      pset);
+  old_dw->get(pConcGrad,      d_lb->diffusion->pGradConcentration,       pset);
+  old_dw->get(pConcentration, d_lb->diffusion->pConcentration,      pset);
   old_dw->get(pStress,        d_lb->pStressLabel,             pset);
   old_dw->get(pFOld,          d_lb->pDeformationMeasureLabel, pset);
-  old_dw->get(pDiffusivity_old, d_lb->pDiffusivityLabel,      pset);
+  old_dw->get(pDiffusivity_old, d_lb->diffusion->pDiffusivity,      pset);
 
   new_dw->get(psize,          d_lb->pSizeLabel_preReloc,      pset);
 
-  new_dw->get(gConcentration, d_lb->gConcentrationLabel,     dwi, patch, gac, NGN);
-  new_dw->get(gHydroStress,   d_lb->gHydrostaticStressLabel, dwi, patch, gac, NGN);
+  new_dw->get(gConcentration, d_lb->diffusion->gConcentration,     dwi, patch, gac, NGN);
+  new_dw->get(gHydroStress,   d_lb->diffusion->gHydrostaticStress, dwi, patch, gac, NGN);
 
-  new_dw->allocateAndPut(pFlux,        d_lb->pFluxLabel_preReloc,        pset);
-  new_dw->allocateAndPut(pDiffusivity, d_lb->pDiffusivityLabel_preReloc, pset);
+  new_dw->allocateAndPut(pFlux,        d_lb->diffusion->pFlux_preReloc,        pset);
+  new_dw->allocateAndPut(pDiffusivity, d_lb->diffusion->pDiffusivity_preReloc, pset);
+
+  // JBH -- FIXME -- TODO -- Add these to MPMDiffusion sublabel or to diffusion model specific sublabel?
   new_dw->allocateAndPut(pPressure1,   d_lb->pPressureLabel_t1_preReloc, pset);
   new_dw->allocateAndPut(pConcInterp,  d_lb->pConcInterpLabel_preReloc,  pset);
 
@@ -288,10 +290,10 @@ void NonLinearDiff1::initializeSDMData(const Patch* patch, const MPMMaterial* ma
   ParticleVariable<double>  pConcInterp;
   ParticleVariable<Vector>  pFlux;
 
-  new_dw->allocateAndPut(pDiffusivity, d_lb->pDiffusivityLabel, pset);
+  new_dw->allocateAndPut(pDiffusivity, d_lb->diffusion->pDiffusivity, pset);
   new_dw->allocateAndPut(pPressure,    d_lb->pPressureLabel_t1,    pset);
   new_dw->allocateAndPut(pConcInterp,  d_lb->pConcInterpLabel,  pset);
-  new_dw->allocateAndPut(pFlux,        d_lb->pFluxLabel,        pset);
+  new_dw->allocateAndPut(pFlux,        d_lb->diffusion->pFlux,        pset);
 
   for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++)
   {
@@ -308,21 +310,22 @@ void NonLinearDiff1::scheduleComputeFlux(Task* task, const MPMMaterial* matl,
   const MaterialSubset* matlset = matl->thisMaterial();
   Ghost::GhostType gnone = Ghost::None;
   Ghost::GhostType gac   = Ghost::AroundCells;
-  task->requires(Task::OldDW, d_lb->pXLabel,                  matlset, gnone);
-  task->requires(Task::OldDW, d_lb->pConcGradientLabel,       matlset, gnone);
-  task->requires(Task::OldDW, d_lb->pConcentrationLabel,      matlset, gnone);
-  task->requires(Task::OldDW, d_lb->pStressLabel,             matlset, gnone);
-  task->requires(Task::OldDW, d_lb->pDeformationMeasureLabel, matlset, gnone);
-  task->requires(Task::OldDW, d_lb->pDiffusivityLabel,        matlset, gnone);
+  task->requires(Task::OldDW, d_lb->pXLabel,                        matlset, gnone);
+  task->requires(Task::OldDW, d_lb->diffusion->pGradConcentration,  matlset, gnone);
+  task->requires(Task::OldDW, d_lb->diffusion->pConcentration,      matlset, gnone);
+  task->requires(Task::OldDW, d_lb->pStressLabel,                   matlset, gnone);
+  task->requires(Task::OldDW, d_lb->pDeformationMeasureLabel,       matlset, gnone);
+  task->requires(Task::OldDW, d_lb->diffusion->pDiffusivity,        matlset, gnone);
 
-  task->requires(Task::NewDW, d_lb->pSizeLabel_preReloc,      matlset, gnone);
-  task->requires(Task::NewDW, d_lb->gConcentrationLabel,      matlset, gac, NGN);
-  task->requires(Task::NewDW, d_lb->gHydrostaticStressLabel,  matlset, gac, NGN);
+  task->requires(Task::NewDW, d_lb->pSizeLabel_preReloc,            matlset, gnone);
+  task->requires(Task::NewDW, d_lb->diffusion->gConcentration,      matlset, gac, NGN);
+  task->requires(Task::NewDW, d_lb->diffusion->gHydrostaticStress,  matlset, gac, NGN);
 
   task->computes(d_sharedState->get_delt_label(),getLevel(patch));
 
-  task->computes(d_lb->pFluxLabel_preReloc,        matlset);
-  task->computes(d_lb->pDiffusivityLabel_preReloc, matlset);
+  task->computes(d_lb->diffusion->pFlux_preReloc,        matlset);
+  task->computes(d_lb->diffusion->pDiffusivity_preReloc, matlset);
+  // JBH -- FIXME -- TODO -- Add to MPMDiffusion sublabel or to diffusion model specific labels?
   task->computes(d_lb->pPressureLabel_t1_preReloc, matlset);
   task->computes(d_lb->pConcInterpLabel_preReloc,  matlset);
 }
@@ -334,10 +337,10 @@ void NonLinearDiff1::addSplitParticlesComputesAndRequires(
                                                          ) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->modifies(d_lb->pDiffusivityLabel_preReloc, matlset);
+  task->modifies(d_lb->diffusion->pDiffusivity_preReloc, matlset);
   task->modifies(d_lb->pPressureLabel_t1_preReloc, matlset);
   task->modifies(d_lb->pConcInterpLabel_preReloc,  matlset);
-  task->modifies(d_lb->pFluxLabel_preReloc,        matlset);
+  task->modifies(d_lb->diffusion->pFlux_preReloc,        matlset);
 }
 
 void NonLinearDiff1::splitSDMSpecificParticleData(
@@ -357,10 +360,10 @@ void NonLinearDiff1::splitSDMSpecificParticleData(
 	ParticleVariable<double>  pDiffusivity, pPressure, pConcInterp;
 	ParticleVariable<Vector>  pFlux;
 
-  new_dw->getModifiable(pDiffusivity, d_lb->pDiffusivityLabel_preReloc,  pset);
+  new_dw->getModifiable(pDiffusivity, d_lb->diffusion->pDiffusivity_preReloc,  pset);
   new_dw->getModifiable(pPressure,    d_lb->pPressureLabel_t1_preReloc,  pset);
   new_dw->getModifiable(pConcInterp,  d_lb->pConcInterpLabel_preReloc,   pset);
-  new_dw->getModifiable(pFlux,        d_lb->pFluxLabel_preReloc,         pset);
+  new_dw->getModifiable(pFlux,        d_lb->diffusion->pFlux_preReloc,         pset);
 
   ParticleVariable<double>  pDiffusivityTmp, pPressureTmp, pConcInterpTmp;
   ParticleVariable<Vector>  pFluxTmp;
@@ -404,10 +407,10 @@ void NonLinearDiff1::splitSDMSpecificParticleData(
 	    }
 	  }
 
-	  new_dw->put(pDiffusivityTmp, d_lb->pDiffusivityLabel_preReloc, true);
+	  new_dw->put(pDiffusivityTmp, d_lb->diffusion->pDiffusivity_preReloc, true);
 	  new_dw->put(pPressureTmp,    d_lb->pPressureLabel_t1_preReloc, true);
 	  new_dw->put(pConcInterpTmp,  d_lb->pConcInterpLabel_preReloc,  true);
-	  new_dw->put(pFluxTmp,        d_lb->pFluxLabel_preReloc,        true);
+	  new_dw->put(pFluxTmp,        d_lb->diffusion->pFlux_preReloc,        true);
 }
 
 void NonLinearDiff1::outputProblemSpec(

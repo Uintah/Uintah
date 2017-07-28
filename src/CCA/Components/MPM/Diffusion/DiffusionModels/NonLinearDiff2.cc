@@ -62,7 +62,7 @@ void NonLinearDiff2::addInitialComputesAndRequires(
                                                   ) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->computes(d_lb->pDiffusivityLabel,   matlset);
+  task->computes(d_lb->diffusion->pDiffusivity,   matlset);
   task->computes(d_lb->pPosChargeFluxLabel, matlset);
   task->computes(d_lb->pNegChargeFluxLabel, matlset);
 }
@@ -79,7 +79,7 @@ void NonLinearDiff2::initializeSDMData(
   ParticleVariable<Vector>  pPosFlux;
   ParticleVariable<Vector>  pNegFlux;
 
-  new_dw->allocateAndPut(pDiffusivity, d_lb->pDiffusivityLabel,   pset);
+  new_dw->allocateAndPut(pDiffusivity, d_lb->diffusion->pDiffusivity,   pset);
   new_dw->allocateAndPut(pPosFlux,     d_lb->pPosChargeFluxLabel, pset);
   new_dw->allocateAndPut(pNegFlux,     d_lb->pNegChargeFluxLabel, pset);
 
@@ -96,11 +96,11 @@ void NonLinearDiff2::addParticleState(
                                       std::vector<const VarLabel*>& to
                                      ) const
 {
-  from.push_back(d_lb->pDiffusivityLabel);
+  from.push_back(d_lb->diffusion->pDiffusivity);
   from.push_back(d_lb->pPosChargeFluxLabel);
   from.push_back(d_lb->pNegChargeFluxLabel);
 
-  to.push_back(d_lb->pDiffusivityLabel_preReloc);
+  to.push_back(d_lb->diffusion->pDiffusivity_preReloc);
   to.push_back(d_lb->pPosChargeFluxLabel_preReloc);
   to.push_back(d_lb->pNegChargeFluxLabel_preReloc);
 }
@@ -124,7 +124,7 @@ void NonLinearDiff2::scheduleComputeFlux(
 
   task->computes(d_lb->pPosChargeFluxLabel_preReloc, matlset);
   task->computes(d_lb->pNegChargeFluxLabel_preReloc, matlset);
-  task->computes(d_lb->pDiffusivityLabel_preReloc,   matlset);
+  task->computes(d_lb->diffusion->pDiffusivity_preReloc,   matlset);
 }
 
 void NonLinearDiff2::computeFlux(
@@ -160,7 +160,7 @@ void NonLinearDiff2::computeFlux(
 
   new_dw->allocateAndPut(pPosFlux,     d_lb->pPosChargeFluxLabel_preReloc, pset);
   new_dw->allocateAndPut(pNegFlux,     d_lb->pNegChargeFluxLabel_preReloc, pset);
-  new_dw->allocateAndPut(pDiffusivity, d_lb->pDiffusivityLabel_preReloc,   pset);
+  new_dw->allocateAndPut(pDiffusivity, d_lb->diffusion->pDiffusivity_preReloc,   pset);
 
   double D = diffusivity;
   double timestep = 1.0e99;
@@ -201,7 +201,7 @@ void NonLinearDiff2::scheduleComputeDivergence(       Task         * task,
   task->computes(d_lb->gPosChargeRateLabel, matlset);
   task->computes(d_lb->gNegChargeRateLabel, matlset);
 
-  task->computes(d_lb->gConcentrationRateLabel, matlset);
+  task->computes(d_lb->diffusion->gConcentrationRate, matlset);
 }
 
 void NonLinearDiff2::computeDivergence(
@@ -250,7 +250,7 @@ void NonLinearDiff2::computeDivergence(
 
   new_dw->allocateAndPut(gPosChargeRate, d_lb->gPosChargeRateLabel,    dwi,patch);
   new_dw->allocateAndPut(gNegChargeRate, d_lb->gNegChargeRateLabel,    dwi,patch);
-  new_dw->allocateAndPut(gConcRate,      d_lb->gConcentrationRateLabel,dwi,patch);
+  new_dw->allocateAndPut(gConcRate,      d_lb->diffusion->gConcentrationRate,dwi,patch);
 
   gConcRate.initialize(0.0);
   gPosChargeRate.initialize(0.0);
@@ -294,8 +294,8 @@ void NonLinearDiff2::addSplitParticlesComputesAndRequires(
                                                          ) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->modifies(d_lb->pDiffusivityLabel_preReloc, matlset);
-  task->modifies(d_lb->pFluxLabel_preReloc,        matlset);
+  task->modifies(d_lb->diffusion->pDiffusivity_preReloc, matlset);
+  task->modifies(d_lb->diffusion->pFlux_preReloc,        matlset);
 }
 
 void NonLinearDiff2::splitSDMSpecificParticleData(
@@ -315,8 +315,8 @@ void NonLinearDiff2::splitSDMSpecificParticleData(
   ParticleVariable<double>  pDiffusivity;
   ParticleVariable<Vector>  pFlux;
 
-  new_dw->getModifiable(pDiffusivity, d_lb->pDiffusivityLabel_preReloc,  pset);
-  new_dw->getModifiable(pFlux,        d_lb->pFluxLabel_preReloc,         pset);
+  new_dw->getModifiable(pDiffusivity, d_lb->diffusion->pDiffusivity_preReloc,  pset);
+  new_dw->getModifiable(pFlux,        d_lb->diffusion->pFlux_preReloc,         pset);
 
   ParticleVariable<double>  pDiffusivityTmp, pPressureTmp, pConcInterpTmp;
   ParticleVariable<Vector>  pFluxTmp;
@@ -351,8 +351,8 @@ void NonLinearDiff2::splitSDMSpecificParticleData(
       }
     }
 
-    new_dw->put(pDiffusivityTmp, d_lb->pDiffusivityLabel_preReloc, true);
-    new_dw->put(pFluxTmp,        d_lb->pFluxLabel_preReloc,        true);
+    new_dw->put(pDiffusivityTmp, d_lb->diffusion->pDiffusivity_preReloc, true);
+    new_dw->put(pFluxTmp,        d_lb->diffusion->pFlux_preReloc,        true);
 }
 
 void NonLinearDiff2::outputProblemSpec(

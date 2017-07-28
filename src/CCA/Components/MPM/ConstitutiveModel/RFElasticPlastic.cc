@@ -430,8 +430,8 @@ RFElasticPlastic::addComputesAndRequires(Task* task,
 
   //********** Concentration Component****************************
   if(flag->d_doScalarDiffusion){
-    task->requires(Task::OldDW, lb->pConcPreviousLabel, matlset, gnone); 
-    task->requires(Task::OldDW, lb->pConcentrationLabel, matlset, gnone); 
+    task->requires(Task::OldDW, lb->diffusion->pConcPrevious, matlset, gnone);
+    task->requires(Task::OldDW, lb->diffusion->pConcentration, matlset, gnone);
   }
   //********** Concentration Component****************************
 
@@ -537,8 +537,8 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
     //********** Concentration Component****************************
     if(flag->d_doScalarDiffusion){
-      old_dw->get(pConcentration, lb->pConcentrationLabel, pset);
-      old_dw->get(pConc_prenew,   lb->pConcPreviousLabel,  pset);
+      old_dw->get(pConcentration, lb->diffusion->pConcentration, pset);
+      old_dw->get(pConc_prenew,   lb->diffusion->pConcPrevious,  pset);
     }
     //********** Concentration Component****************************
 

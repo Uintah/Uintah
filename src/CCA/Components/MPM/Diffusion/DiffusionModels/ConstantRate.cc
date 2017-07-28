@@ -65,7 +65,7 @@ void ConstantRate::addInitialComputesAndRequires(      Task         * task,
                                                 ) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->computes(d_lb->pFluxLabel, matlset);
+  task->computes(d_lb->diffusion->pFlux, matlset);
 }
 
 void ConstantRate::addParticleState(
@@ -73,8 +73,8 @@ void ConstantRate::addParticleState(
                                     std::vector<const VarLabel*>& to
                                    ) const
 {
-  from.push_back(d_lb->pFluxLabel);
-  to.push_back(d_lb->pFluxLabel_preReloc);
+  from.push_back(d_lb->diffusion->pFlux);
+  to.push_back(d_lb->diffusion->pFlux_preReloc);
 }
 
 void ConstantRate::computeFlux(
@@ -99,7 +99,7 @@ void ConstantRate::computeFlux(
 
   ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
-  new_dw->allocateAndPut(pFlux,        d_lb->pFluxLabel_preReloc,        pset);
+  new_dw->allocateAndPut(pFlux, d_lb->diffusion->pFlux_preReloc, pset);
 
   for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++)
   {
@@ -118,7 +118,7 @@ void ConstantRate::initializeSDMData(
   ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
   ParticleVariable<Vector>  pFlux;
 
-  new_dw->allocateAndPut(pFlux, d_lb->pFluxLabel, pset);
+  new_dw->allocateAndPut(pFlux, d_lb->diffusion->pFlux, pset);
 
   for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++)
   {
@@ -134,7 +134,7 @@ void ConstantRate::scheduleComputeFlux(
 {
   const MaterialSubset* matlset = matl->thisMaterial();
 
-  task->computes(d_lb->pFluxLabel_preReloc, matlset);
+  task->computes(d_lb->diffusion->pFlux_preReloc, matlset);
 }
 
 void ConstantRate::addSplitParticlesComputesAndRequires(
@@ -170,7 +170,7 @@ void ConstantRate::scheduleComputeDivergence(
   const MaterialSubset* matlset = matl->thisMaterial();
   task->requires(Task::NewDW, d_lb->gMassLabel, Ghost::None);
 
-  task->computes(d_lb->gConcentrationRateLabel, matlset);
+  task->computes(d_lb->diffusion->gConcentrationRate, matlset);
 }
 
 void ConstantRate::computeDivergence(
@@ -191,7 +191,7 @@ void ConstantRate::computeDivergence(
   NCVariable<double> gConcRate;
 
   new_dw->get(gMass, d_lb->gMassLabel, dwi, patch, gn, 0);
-  new_dw->allocateAndPut(gConcRate,  d_lb->gConcentrationRateLabel,dwi,patch);
+  new_dw->allocateAndPut(gConcRate,  d_lb->diffusion->gConcentrationRate,dwi,patch);
 
   for(NodeIterator iter=patch->getExtraNodeIterator(); !iter.done(); iter++)
   {
