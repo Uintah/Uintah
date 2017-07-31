@@ -86,7 +86,7 @@ public:
 
   Dout( std::string const & name, bool default_active )
     : m_active{ is_active(name, default_active) }
-    , m_name{ name + (m_active ? ":+" : ":-") }
+    , m_name{ name }
   {}
 
   explicit operator bool() const { return m_active; }
@@ -105,7 +105,7 @@ public:
 
 private:
 
-  static bool is_active( std::string const& arg_name,  bool default_active )
+  static bool is_active( std::string const& arg_name, bool default_active )
   {
     const char * sci_debug = std::getenv("SCI_DEBUG");
     const std::string tmp = "," + arg_name + ":";
