@@ -429,6 +429,36 @@ visit_handle visit_SimGetMetaData(void *cbdata)
           //      VisIt_VariableMetaData_setHasDataExtents(vmd, false);
           VisIt_VariableMetaData_setTreatAsASCII(vmd, false);
           VisIt_SimulationMetaData_addVariable(md, vmd);
+	}
+	  
+        if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
+        {
+          VisIt_VariableMetaData_setName(vmd, "patch/level");
+          VisIt_VariableMetaData_setMeshName(vmd, mesh_for_procid.c_str());
+          VisIt_VariableMetaData_setCentering(vmd, VISIT_VARCENTERING_ZONE);
+          VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
+          VisIt_VariableMetaData_setNumComponents(vmd, 1);
+          VisIt_VariableMetaData_setUnits(vmd, "");
+
+          // ARS - FIXME
+          //      VisIt_VariableMetaData_setHasDataExtents(vmd, false);
+          VisIt_VariableMetaData_setTreatAsASCII(vmd, false);
+          VisIt_SimulationMetaData_addVariable(md, vmd);
+	}
+
+        if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
+        {
+          VisIt_VariableMetaData_setName(vmd, "patch/domain");
+          VisIt_VariableMetaData_setMeshName(vmd, mesh_for_procid.c_str());
+          VisIt_VariableMetaData_setCentering(vmd, VISIT_VARCENTERING_ZONE);
+          VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
+          VisIt_VariableMetaData_setNumComponents(vmd, 1);
+          VisIt_VariableMetaData_setUnits(vmd, "");
+
+          // ARS - FIXME
+          //      VisIt_VariableMetaData_setHasDataExtents(vmd, false);
+          VisIt_VariableMetaData_setTreatAsASCII(vmd, false);
+          VisIt_SimulationMetaData_addVariable(md, vmd);
         }
       }
 
@@ -1369,7 +1399,10 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       
     GridDataRaw *gd = nullptr;
 
-    if( std::string(varname) == "patch/id" || varName == "processor" )
+    if( std::string(varname) == "patch/id" ||
+	std::string(varname) == "patch/level" ||
+	std::string(varname) == "patch/domain" ||
+	varName == "processor" )
     {
       // Strip off the "processor/*/" prefix
       varName = std::string(varname);
@@ -1378,10 +1411,20 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
 
       double val;
 
-      // Processor Id
+      // Patch local id
       if( strcmp(varname, "patch/id") == 0 )
       {
           val = local_patch;
+      }
+      // Patch local level
+      else if( strcmp(varname, "patch/level") == 0 )
+      {
+          val = level;
+      }
+      // Patch domain (globabl patch id).
+      else if( strcmp(varname, "patch/domain") == 0 )
+      {
+          val = domain;
       }
       // Processor Id
       else if( strcmp(varname, "processor/id") == 0 )
