@@ -527,7 +527,6 @@ namespace Uintah{
                   double p_voidmin = 1. - (1/p_volume)*(initial_rc*(1.-v_hiT)/rho_org_bulk + mass_ash/rho_ash_bulk); // bulk density of char [kg/m^3] 
                   min_p = std::pow( mass_ash * 6 / rho_ash_bulk / (1- p_voidmin) / M_PI ,1./3.);
                   min_p_diam = (min_p < min_p_diam) ? min_p : min_p_diam; 
-                  std::cout << "min_p_diam "<< min_p_diam << std::endl;
               } 
 	            if (min_p_diam == 1e16) {
                 throw InvalidValue("Error, WallHT pokluda emissivity requires Particle Properties void fraction and rho ash or inlet particle size.", __FILE__, __LINE__);
