@@ -500,7 +500,6 @@ namespace Uintah{
           
           struct pokluda_e : EmissivityBase {
             pokluda_e(ProblemSpecP db_model){
-              //BEN
               ProblemSpecP db_root = db_model->getRootNode();
               int Nenv = ParticleTools::get_num_env( db_root, ParticleTools::DQMOM );
               min_p_diam = 1e16;
@@ -533,42 +532,97 @@ namespace Uintah{
 	            if (min_p_diam == 1e16) {
                 throw InvalidValue("Error, WallHT pokluda emissivity requires Particle Properties void fraction and rho ash or inlet particle size.", __FILE__, __LINE__);
               }
-              //BEN
               std::string ash_type;
               db_model->getWithDefault( "coal_name", ash_type, "generic_coal");
+              db_model->getWithDefault( "coordination_number", CN, 2);
 	            T_fluid = ParticleTools::getAshFluidTemperature(db_model); 
               if (ash_type == "indonesian"){
-                a_sv = -1.49989457e+04;
-                b_sv = -1.03085223e+00;
-                c_sv = 5.37022699e+00;
-                coeff_num = {0.02440762, -0.36029018, 1.18387414, 0.52497189, 0.56917877, -0.09176230};
-                coeff_den = {1.00000000, 0.37215113, 0.54596386, -0.01022441, 0.27975327, -0.04638308};
-                xscale = {7.50000000e+02, 1.46250000e-04};
-                xcenter = {1.05000000e+03, 1.53750000e-04};
-                yscale = 1.38003250e-01;
-                ycenter = 7.46244152e-01;
+                a_sv = -1.47871222e+04;
+                b_sv = -1.02820241e+00;
+                c_sv = 5.42161355e+00;
+                a_xr = 2.59027058e-01;
+                b_xr = 2.07779744e+00;
+                c_xr = 1.00036000e+00;
+                coeff_num = {0.05524317, -0.34726897, 1.38639835, 0.38609096, 0.75315579, 0.12592464};
+                coeff_den = {1.00000000, 0.40634839, 0.72008722, 0.04182158, 0.30286951, 0.15399492};
+                xscale = {6.50000000e+02, 1.47500000e-04};
+                xcenter = {9.50000000e+02, 1.52500000e-04};
+                yscale = 1.39925847e-01;
+                ycenter = 7.51584220e-01;
                 pokluda={1.25909498e+00, 1.00031376e-05, -2.58931875e-01, -9.49645841e-01};
-                fresnel={9.67067924e-01, -1.08655426e-06, -1.60974035e-01, -5.52763546e-03};
+                fresnel={9.67088442e-01, -1.10250309e-06, -1.60617521e-01, -5.52026136e-03};
               } else if (ash_type == "german_lignite"){
-                a_sv = -1.28090893e+04;
-                b_sv = -1.03814198e+00;
-                c_sv = 4.74111584e+00;
-                coeff_num = {0.02319756, -0.47738360, 1.11727328, 0.46476300, 0.53876843, -0.15436236};
-                coeff_den = {1.00000000, 0.41972484, 0.51087576, 0.00403430, 0.29572219, -0.05365067};
-                xscale = {7.50000000e+02, 1.46250000e-04};
-                xcenter = {1.05000000e+03, 1.53750000e-04};
-                yscale = 1.44351330e-01;
-                ycenter = 7.16366782e-01;
+                a_sv = -1.25814748e+04;
+                b_sv = -1.03480466e+00;
+                c_sv = 4.79358672e+00;
+                a_xr = 2.59027058e-01;
+                b_xr = 2.07779744e+00;
+                c_xr = 1.00036000e+00;
+                coeff_num = {-0.19748923, -0.81370772, 0.96837919, 0.93623968, 0.32258380, -0.42526438};
+                coeff_den = {1.00000000, 0.01012817, 0.16863730, -0.02276330, 0.00977648, -0.24310889};
+                xscale = {6.50000000e+02, 1.47500000e-04};
+                xcenter = {9.50000000e+02, 1.52500000e-04};
+                yscale = 1.43440734e-01;
+                ycenter = 7.24374513e-01;
                 pokluda={1.25909498e+00, 1.00031376e-05, -2.58931875e-01, -9.49645841e-01};
-                fresnel={9.66129126e-01, -1.14913384e-06, -1.64606795e-01, -5.71014041e-03};
+                fresnel={9.66143598e-01, -1.16070664e-06, -1.64373764e-01, -5.70513057e-03};
+              } else if (ash_type == "sufco"){
+                a_sv = -1.33958768e+04;
+                b_sv = -1.02934672e+00;
+                c_sv = 5.07798702e+00;
+                a_xr = 2.59027058e-01;
+                b_xr = 2.07779744e+00;
+                c_xr = 1.00036000e+00;
+                coeff_num = {0.02216238, -0.87550219, 1.27350751, 0.03491962, 0.10608581, 0.48838827};
+                coeff_den = {1.00000000, 0.54029083, 0.92142994, 0.09869234, 0.36935055, 0.23640155};
+                xscale = {6.50000000e+02, 1.47500000e-04};
+                xcenter = {9.50000000e+02, 1.52500000e-04};
+                yscale = 1.53758659e-01;
+                ycenter = 6.83145516e-01;
+                pokluda={1.25909498e+00, 1.00031376e-05, -2.58931875e-01, -9.49645841e-01};
+                fresnel={9.63652299e-01, -1.77564557e-06, -1.67503707e-01, -5.48407743e-03};
+              } else if (ash_type == "black_thunder"){
+                a_sv = -1.18467478e+04;
+                b_sv = -1.03834999e+00;
+                c_sv = 4.63029656e+00;
+                a_xr = 2.59027058e-01;
+                b_xr = 2.07779744e+00;
+                c_xr = 1.00036000e+00;
+                coeff_num = {-0.25727860, -0.91104953, 0.88695805, 0.92690861, 0.23159290, -0.33016112};
+                coeff_den = {1.00000000, 0.00872138, 0.15822618, -0.03010546, 0.00841043, -0.22825951};
+                xscale = {6.50000000e+02, 1.47500000e-04};
+                xcenter = {9.50000000e+02, 1.52500000e-04};
+                yscale = 1.53882421e-01;
+                ycenter = 6.80899256e-01;
+                pokluda={1.25909498e+00, 1.00031376e-05, -2.58931875e-01, -9.49645841e-01};
+                fresnel={9.64255948e-01, -2.39444175e-06, -1.65069322e-01, -6.48251264e-03};
+              } else if (ash_type == "illinois_no6"){
+                a_sv = -1.69592145e+04;
+                b_sv = -1.01988243e+00;
+                c_sv = 6.09586030e+00;
+                a_xr = 2.59027058e-01;
+                b_xr = 2.07779744e+00;
+                c_xr = 1.00036000e+00;
+                coeff_num = {0.26147879, 0.07574193, 1.58488791, 0.34750650, 0.69905412, 0.40417610};
+                coeff_den = {1.00000000, 0.34371645, 1.01996881, 0.01383321, 0.30314403, 0.28072600};
+                xscale = {6.50000000e+02, 1.47500000e-04};
+                xcenter = {9.50000000e+02, 1.52500000e-04};
+                yscale = 1.23454211e-01;
+                ycenter = 8.20505168e-01;
+                pokluda={1.25909498e+00, 1.00031376e-05, -2.58931875e-01, -9.49645841e-01};
+                fresnel={9.58982069e-01, -1.97895907e-06, -1.52952711e-01, -5.40747096e-03};
 	            } else {
                 throw InvalidValue("Error, coal_name wasn't recognized in pokluda ash emissivity data-base. ", __FILE__, __LINE__);
               }
             }
+            int CN; // coordination number
             double T_fluid;
             double a_sv;
             double b_sv;
             double c_sv;
+            double a_xr;
+            double b_xr;
+            double c_xr;
             double min_p_diam;
             std::vector<double> coeff_num;
             std::vector<double> coeff_den;
@@ -590,9 +644,11 @@ namespace Uintah{
 
               // pokluda model for sintering
               // 2nd order exponential fit: d_eff = a*exp(b*X)+c*exp(d*X);
-              double d_eff = (x_time>=100.0) ? (pokluda[0]*std::exp(pokluda[1]*100.0) + pokluda[2]*std::exp(pokluda[3]*100.0))*Dp :
-                                               (pokluda[0]*std::exp(pokluda[1]*x_time) + pokluda[2]*std::exp(pokluda[3]*x_time))*Dp;
-          
+              double d_eff = (x_time>=100.0) ? (pokluda[0]*std::exp(pokluda[1]*100.0) + pokluda[2]*std::exp(pokluda[3]*100.0)) :
+                                               (pokluda[0]*std::exp(pokluda[1]*x_time) + pokluda[2]*std::exp(pokluda[3]*x_time));
+              double x_r = std::pow(std::max(d_eff - c_xr,0.0)/a_xr, 1.0/b_xr);
+              d_eff = d_eff*Dp + (std::pow(CN,1./3.) - std::pow(2,1./3.))*x_r*Dp;// linear scale d_eff with respect to x_r 
+              // as a function of the coordination number. 
               // mie emissivity as a function of temperature and effective particle size
               // rational quardratice fit: y = (a1+a2*x1+a3*x2+a4*x1^2+a5*x1*x2+a6*x2^2)/(b1+b2*x1+b3*x2+b4*x1^2+b5*x1*x2+b6*x2^2) 
               double T_sc = (T-xcenter[0])/xscale[0];
