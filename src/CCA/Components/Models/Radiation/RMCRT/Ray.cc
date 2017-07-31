@@ -382,8 +382,8 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
     var.modified   = false;
     d_sharedState->d_UPSVars.push_back( var );
     
-    d_sharedState->d_debugStreams.push_back( &g_ray_dbg );
-    d_sharedState->d_debugStreams.push_back( &dbg_BC_ray );
+    d_sharedState->d_douts.push_back( &g_ray_dbg );
+    d_sharedState->d_douts.push_back( &dbg_BC_ray );
 
     initialized = true;
   }
