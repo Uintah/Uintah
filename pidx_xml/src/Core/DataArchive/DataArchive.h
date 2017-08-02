@@ -91,8 +91,9 @@ class LoadBalancerPort;
 
 // For PIDX usage:
 struct BufferAndSizeTuple {
+  BufferAndSizeTuple() { buffer = nullptr; size = -1; }
   unsigned char * buffer;
-  size_t          size;
+  long            size; // not unsigned so I can set to -1 for sanity checking.
 };
   
 //! Container to hold UCF data when read in from disk.
