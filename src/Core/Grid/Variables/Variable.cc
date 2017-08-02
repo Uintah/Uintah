@@ -227,6 +227,7 @@ Variable::emitPIDX( PIDXOutputContext& pc,
 
 //______________________________________________________________________
 //
+
 void
 Variable::readPIDX( const unsigned char * pidx_buffer,
                     const size_t        & pidx_bufferSize,
@@ -234,18 +235,18 @@ Variable::readPIDX( const unsigned char * pidx_buffer,
 {
   // I don't know if there's a better way to create a istringstream directly from unsigned char*  -Todd
   
-  // create a string from pidx_buffer      
+  // Create a string from pidx_buffer:
   std::string strBuffer( pidx_buffer, pidx_buffer + pidx_bufferSize );
 
-  // create a istringstream from the string 
+  // Create an istringstream from the string:
   istringstream instream( strBuffer );
   
-  // push the istringstream into an Array3 variable
+  // Push the istringstream into an Array3 variable:
   readNormal( instream, swapBytes );
 
 } // end readPIDX()
-
 #endif
+
 //______________________________________________________________________
 //
 string*
@@ -375,12 +376,13 @@ Variable::read( InputContext& ic, long end, bool swapBytes, int nByteMode,
 
     //__________________________________
     //   rle and uncompressed
-    istringstream instream(*uncompressedData);
+    istringstream instream( *uncompressedData );
 
-    if (use_rle) {
-      readRLE(instream, swapBytes, nByteMode);
-    } else {
-      readNormal(instream, swapBytes);
+    if ( use_rle ) {
+      readRLE( instream, swapBytes, nByteMode );
+    }
+    else {
+      readNormal( instream, swapBytes );
     }
     ASSERT(instream.fail() == 0);
 
