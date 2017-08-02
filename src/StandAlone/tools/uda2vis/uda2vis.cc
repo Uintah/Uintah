@@ -318,6 +318,9 @@ TimeStepInfo* getTimeStepInfo(DataArchive *archive,
                             &patch->getSFCZHighIndex()[0], "SFCZ_Mesh");
       }
 
+      // Get the patch id
+      patchInfo.setPatchId(patch->getID());
+      
       // Get the processor id
       patchInfo.setProcId(archive->queryPatchwiseProcessor(patch, timestep));
     }
@@ -806,6 +809,9 @@ TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
                             &patch->getSFCZHighIndex()[0], "SFCZ_Mesh");
       }
 
+      // Get the patch id
+      patchInfo.setPatchId(patch->getID());
+      
       // Get the processor id
       patchInfo.setProcId( lb->getPatchwiseProcessorAssignment(patch) );
     }
