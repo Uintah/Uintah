@@ -259,7 +259,7 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
     try {
       saveItem.matls = ConsecutiveRangeSet(attributes["material"]);
     }
-    catch (ConsecutiveRangeSetException) {
+    catch (ConsecutiveRangeSetException&) {
       throw ProblemSetupException("'" + attributes["material"] + "'" +
              " cannot be parsed as a set of material" +
              " indices for saving '" + saveItem.labelName + "'",
@@ -280,7 +280,7 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
       //   I.e., -3--1 would be the top three levels.
       saveItem.levels = ConsecutiveRangeSet(attributes["levels"]);
     }
-    catch (ConsecutiveRangeSetException) {
+    catch (ConsecutiveRangeSetException&) {
       throw ProblemSetupException("'" + attributes["levels"] + "'" +
              " cannot be parsed as a set of levels" +
              " for saving '" + saveItem.labelName + "'",

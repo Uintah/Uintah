@@ -2484,7 +2484,7 @@ OnDemandDataWarehouse::getRegionModifiable(       GridVariableBase& var,
               << ", DW " << getID() << ", Variable exists in DB: " << foundInDB << "\n"
               << "   Requested region: " << reqLow << " " << reqHigh << "\n"
               << "   # copied cells: " << nCellsCopied << " # requested cells: " << requestedCells 
-              << " diff: " << abs(requestedCells - nCellsCopied) );
+              << " diff: " << std::abs(requestedCells - nCellsCopied) );  // nCellsCopied implicitly converted to long
     
     if (missing_patches.size() > 0) {
       DOUT(true, "  Patches on which the variable wasn't found:"); 

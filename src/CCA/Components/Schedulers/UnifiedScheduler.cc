@@ -65,7 +65,7 @@ extern Dout g_task_dbg;
 extern Dout g_task_order;
 extern Dout g_exec_out;
 
-extern std::map<std::string, double> exectimes;
+extern std::map<std::string, double> g_exec_times;
 
 //______________________________________________________________________
 //
@@ -77,7 +77,6 @@ Dout g_queuelength( "Unified_QueueLength", false);
 std::mutex g_scheduler_mutex{};           // main scheduler lock for multi-threaded task selection
 std::mutex g_mark_task_consumed_mutex{};  // allow only one task at a time to enter the task consumed section
 std::mutex g_lb_mutex{};                  // load balancer lock
-std::mutex g_GridVarSuperPatch_mutex{};   // An ugly hack to get superpatches for host levels to work.
 
 } // namespace
 
@@ -90,7 +89,7 @@ std::mutex g_GridVarSuperPatch_mutex{};   // An ugly hack to get superpatches fo
 
   namespace {
 
-  std::mutex idle_streams_mutex{};
+  std::mutex g_GridVarSuperPatch_mutex{};   // An ugly hack to get superpatches for host levels to work.
 
   }
 
@@ -124,7 +123,7 @@ volatile ThreadState     g_thread_states[MAX_THREADS]  = {};
 int                      g_cpu_affinities[MAX_THREADS] = {};
 int                      g_num_threads                 = 0;
 
-volatile int g_run_tasks{0};
+std::atomic<int> g_run_tasks{0};
 
 
 //______________________________________________________________________
@@ -564,7 +563,7 @@ UnifiedScheduler::runTask( DetailedTask*         dtask
     {
       double total_task_time = dtask->task_exec_time();
       if (g_exec_out) {
-        exectimes[dtask->getTask()->getName()] += total_task_time;
+        g_exec_times[dtask->getTask()->getName()] += total_task_time;
       }
       // if I do not have a sub scheduler
       if (!dtask->getTask()->getHasSubScheduler()) {
@@ -707,7 +706,7 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
   // activate TaskRunners
   //------------------------------------------------------------------------------------------------
   if (!m_shared_state->isCopyDataTimestep()) {
-    Impl::g_run_tasks = 1;
+    Impl::g_run_tasks.store(1, std::memory_order_relaxed);
     for (int i = 1; i < Impl::g_num_threads; ++i) {
       Impl::g_thread_states[i] = Impl::ThreadState::Active;
     }
@@ -723,7 +722,7 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
   // deactivate TaskRunners
   //------------------------------------------------------------------------------------------------
   if (!m_shared_state->isCopyDataTimestep()) {
-    Impl::g_run_tasks = 0;
+    Impl::g_run_tasks.store(0, std::memory_order_relaxed);
 
     Impl::thread_fence();
 
@@ -4866,7 +4865,7 @@ UnifiedSchedulerWorker::UnifiedSchedulerWorker( UnifiedScheduler * scheduler )
 void
 UnifiedSchedulerWorker::run()
 {
-  while( Impl::g_run_tasks ) {
+  while( Impl::g_run_tasks.load(std::memory_order_relaxed) == 1 ) {
     try {
       resetWaitTime();
       m_scheduler->runTasks(Impl::t_tid);

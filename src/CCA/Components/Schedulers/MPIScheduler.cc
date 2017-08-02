@@ -72,6 +72,9 @@ namespace {
 
 std::mutex g_lb_mutex{};                // load balancer lock
 std::mutex g_recv_mutex{};
+std::mutex g_wait_time_mutex{};
+std::mutex g_send_time_mutex{};
+std::mutex g_msg_vol_mutex{};
 
 Dout g_dbg(          "MPIScheduler_DBG"       , false );
 Dout g_send_stats(   "MPISendStats"           , false );
@@ -88,7 +91,7 @@ Dout g_task_dbg(   "TaskDBG"  , false );
 Dout g_mpi_dbg(    "MPIDBG"   , false );
 Dout g_exec_out(   "ExecTimes", false );
 
-std::map<std::string, double> exectimes;
+std::map<std::string, double> g_exec_times;
 
 //______________________________________________________________________
 //
@@ -294,7 +297,7 @@ MPIScheduler::runTask( DetailedTask * dtask
   {
     double total_task_time = dtask->task_exec_time();
     if (g_exec_out) {
-      exectimes[dtask->getTask()->getName()] += total_task_time;
+      g_exec_times[dtask->getTask()->getName()] += total_task_time;
     }
     // if I do not have a sub scheduler
     if (!dtask->getTask()->getHasSubScheduler()) {
@@ -432,7 +435,7 @@ MPIScheduler::postMPISends( DetailedTask * dtask
     // Post the send
     if (mpibuff.count() > 0) {
       ASSERT(batch->m_message_tag > 0);
-      void* buf;
+      void* buf = nullptr;
       int count;
       MPI_Datatype datatype;
 
@@ -443,7 +446,7 @@ MPIScheduler::postMPISends( DetailedTask * dtask
       mpibuff.get_type(buf, count, datatype);
 #endif
       if (!buf) {
-        printf("postMPISends() - ERROR, the send MPI buffer is null\n");
+        printf("postMPISends() - ERROR, the send MPI buffer is nullptr\n");
         SCI_THROW( InternalError("The send MPI buffer is null", __FILE__, __LINE__) );
       }
       DOUT(g_mpi_dbg, "Rank-" << my_rank << " Posting send for message number " << batch->m_message_tag
@@ -453,7 +456,11 @@ MPIScheduler::postMPISends( DetailedTask * dtask
       int typeSize;
 
       Uintah::MPI::Type_size(datatype, &typeSize);
-      m_message_volume += count * typeSize;
+
+      {
+        std::lock_guard<std::mutex> msg_vol_lock(g_msg_vol_mutex);
+        m_message_volume += count * typeSize;
+      }
 
       //---------------------------------------------------------------------------
       // New way of managing single MPI requests - avoids MPI_Waitsome & MPI_Donesome - APH 07/20/16
@@ -467,7 +474,11 @@ MPIScheduler::postMPISends( DetailedTask * dtask
   }  // end for (DependencyBatch* batch = task->getComputes())
 
   send_timer.stop();
-  mpi_info_[TotalSend] += send_timer().seconds();
+
+  {
+    std::lock_guard<std::mutex> send_time_lock(g_send_time_mutex);
+    mpi_info_[TotalSend] += send_timer().seconds();
+  }
 
 }  // end postMPISends();
 
@@ -725,7 +736,11 @@ void MPIScheduler::processMPIRecvs( int test_type )
 
   }  // end switch
   process_recv_timer.stop();
-  mpi_info_[TotalWait] += process_recv_timer().seconds();
+
+  {
+    std::lock_guard<std::mutex> wait_time_lock(g_wait_time_mutex);
+    mpi_info_[TotalWait] += process_recv_timer().seconds();
+  }
 
 }  // end processMPIRecvs()
 
@@ -912,11 +927,11 @@ MPIScheduler::outputTimingStats( const char* label )
            << m_shared_state->getCurrentTopLevelTimeStep()
            << ")" << std::endl;
 
-      for (auto iter = exectimes.begin(); iter != exectimes.end(); ++iter) {
+      for (auto iter = g_exec_times.begin(); iter != g_exec_times.end(); ++iter) {
         fout << std::fixed<< "Rank-" << my_rank << ": TaskExecTime(s): " << iter->second << " Task:" << iter->first << std::endl;
       }
       fout.close();
-      exectimes.clear();
+      g_exec_times.clear();
     }
   }
 
