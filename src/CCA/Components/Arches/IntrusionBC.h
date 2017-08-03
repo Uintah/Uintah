@@ -949,7 +949,7 @@ namespace Uintah{
         std::map<std::string, scalarInletBase*> scalar_map;
 
         // ignore missing bc spec
-        bool ignore_missing_bc;                            /// Don't throw an error when a bc spec is found. 
+        bool ignore_missing_bc;                            /// Don't throw an error when a bc spec is found.
 
       };
 
@@ -1149,7 +1149,7 @@ namespace Uintah{
           }
 
           BCIterator::iterator iMAP3 = intrusion.bc_cell_iterator.find( p );
-          if ( iMAP2 == intrusion.bc_cell_iterator.end() ) {
+          if ( iMAP3 == intrusion.bc_cell_iterator.end() ) {
 
             //this is a new patch that hasn't been added yet
             std::vector<IntVector> cell_indices;
