@@ -3116,7 +3116,7 @@ DataArchiver::saveLabels_PIDX( std::vector< SaveItem >     & saveLabels,
 
           cout << Uintah::Parallel::getMPIRank() << ": level: " << level->getIndex() << ", patchoffset: " << patchOffset[0] << ", " << patchOffset[1] << ", " << patchOffset[2]
                << ", patchsize: " << patchSize[0] << ", " << patchSize[1] << ", " << patchSize[2] << ", patch #: " << patch->getID()
-               << "level size: " << level_size[0] << " - " << level_size[1] << " - " << level_size[2] << "\n";
+               << ", level size: " << level_size[0] << " - " << level_size[1] << " - " << level_size[2] << "\n";
 
           rc = PIDX_variable_write_data_layout(pidx.varDesc[vc][m],
                                                patchOffset, patchSize,
