@@ -861,7 +861,7 @@ DataArchive::queryPIDX(       BufferAndSizeTuple * data,
     //         << " arrySz " << arraySize << "\n";
     //  }
 
-  patchOffset[0] = patchOffset[0] - lo.x() - 1;
+  patchOffset[0] = patchOffset[0] - lo.x() - 1; // FIXME... is the -1 right?  how to get the extra cell info? Do we need use the -1?
   patchOffset[1] = patchOffset[1] - lo.y() - 1;
   patchOffset[2] = patchOffset[2] - lo.z() - 1;
 
@@ -1277,6 +1277,8 @@ DataArchive::restartInitialize( const int                timestep_index,
 
   map<string, VarLabel*> varMap;
 
+  map<string, int> varNameToNumMatlsMap; // FIXEME: has to be a better way to do this... 
+
   for (unsigned i = 0; i < names.size(); i++) {
     VarLabel * vl = VarLabel::find( names[i] );
     if( vl == nullptr ) {
@@ -1292,7 +1294,8 @@ DataArchive::restartInitialize( const int                timestep_index,
       // order to avoid a memory leak.
       d_createdVarLabels[names[i]] = vl;
     }
-    varMap[names[i]] = vl;
+    varMap[ names[i] ] = vl;
+    varNameToNumMatlsMap[ names[i] ] = num_matls[ i ];
   }
 
   TimeData& timedata = getTimeData( timestep_index );
@@ -1376,10 +1379,7 @@ DataArchive::restartInitialize( const int                timestep_index,
     cout << "Here\n";
     createPIDXCommunicator( grid, lb );
 
-    map<string, VarLabel*>::iterator varMapIter;
-
-    // qwerty1
-
+    
     // LEVEL LOOP
     
     for( int lev_num = 0; lev_num < grid->numLevels(); lev_num++ ) {
@@ -1390,22 +1390,28 @@ DataArchive::restartInitialize( const int                timestep_index,
 
       // VARIABLE LOOP
       
-      for( varMapIter = varMap.begin(); varMapIter != varMap.end(); ++varMapIter ) {
+      for( map<string, VarLabel*>::iterator varMapIter = varMap.begin(); varMapIter != varMap.end(); ++varMapIter ) {
 
-        VarLabel * label = varMapIter->second;
+        const VarLabel        * label    = varMapIter->second;
+        const TypeDescription * type     = label->typeDescription();
+        const string            var_name = varMapIter->first;
+        int                     number_of_materials;
 
-        cout << Uintah::Parallel::getMPIRank() << ": READING in var: " << *label << "\n";
-      
+        if( type->isReductionVariable() ) {
+          number_of_materials = 1;
+        }
+        else {
+          number_of_materials = varNameToNumMatlsMap[ var_name ];
+        }
+
+        cout << Uintah::Parallel::getMPIRank() << ": READING in var: " << *label << " with number of matls: " << number_of_materials << "\n";
         // MATERIAL LOOP
 
-        for( int matl = 0; matl < 1; matl++ ) { // FIXME CHANGE "1" TO CORRECT VALUE!!!!!!!!!!!!!!!!
+        for( int matl = 0; matl < number_of_materials; matl++ ) { // FIXME CHANGE "1" TO CORRECT VALUE!!!!!!!!!!!!!!!!
 
           cout << Uintah::Parallel::getMPIRank() << ":      looking for matl: " << matl << "\n";
 
           map< VarnameMatlPatch, BufferAndSizeTuple* > dataBufferMap;
-
-          const TypeDescription * type     = label->typeDescription();
-          const string            var_name = varMapIter->first;
 
           PIDX_file     idxFile;
           PIDX_variable varDesc;
