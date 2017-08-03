@@ -3,7 +3,7 @@
   <!--Please use a consistent set of units, (mks, cgs,...)-->
 
   <Meta>
-    <title>Advection test for a MPM and ICE material</title>
+    <title>advect hollow sphere</title>
   </Meta>
 
   <SimulationComponent type="mpmice" />
@@ -18,7 +18,7 @@
     <delt_max>           1.0         </delt_max>
     <delt_init>          1.0e-4      </delt_init>
     <timestep_multiplier>0.8         </timestep_multiplier>
-    <max_Timesteps>       285        </max_Timesteps>
+    <max_Timesteps>       300        </max_Timesteps>
   </Time>
   
   <!--____________________________________________________________________-->
@@ -132,8 +132,8 @@
     </BoundaryConditions>
     <Level>
       <Box label = " Level 0">
-        <lower>        [-0.2,-0.2,-0.2]</lower>
-        <upper>        [1.4,1.4,1.4]   </upper>
+        <lower>        [-0.8,-0.8,-0.8]</lower>
+        <upper>        [1.0,1.0,1.0]   </upper>
         <extraCells>   [1,1,1]         </extraCells>
         <patches>      [2,2,2]         </patches>
       </Box>
@@ -146,9 +146,9 @@
   <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
   <!--____________________________________________________________________-->
   <DataArchiver>
-    <filebase>Advect_+_amr.uda</filebase>
+    <filebase>Advect_hollowSphere.uda</filebase>
     <outputInitTimestep/>
-    <outputTimestepInterval>25</outputTimestepInterval>
+    <outputTimestepInterval>5</outputTimestepInterval>
     <save label = "mom_L_ME_CC"/>
     <save label = "vel_CC"/>
     <save label = "press_CC"/>
@@ -164,14 +164,14 @@
     <!--
         <checkpoint cycle = "2" timestepInterval = "100"/>
     -->
-    <checkpoint cycle = "2" timestepInterval = "25"/>
+    <checkpoint cycle = "2" timestepInterval = "30"/>
   </DataArchiver>
 
   <!--____________________________________________________________________-->
   <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
   <!--____________________________________________________________________-->
   <CFD>
-    <cfl>0.4</cfl>
+    <cfl>0.5</cfl>
     <ICE>
       <advection type = "FirstOrder"/>
     </ICE>        
@@ -232,46 +232,20 @@
         </constitutive_model>
         <thermal_conductivity>  400.0           </thermal_conductivity>
         <specific_heat>         716.0           </specific_heat>
-        <geom_object>
-          <union label = "cross">
-          
-            <box label = "Left_Horizontal_Leg">
-               <min>        [ 0.0, 0.45, 0.45]    </min>
-               <max>        [ 0.45, 0.55, 0.55]   </max>
-            </box>
-            
-            <box label = "Right_horizontal_Leg">
-               <min>        [ 0.55, 0.45, 0.45]   </min>
-               <max>        [ 1.0, 0.55, 0.55]    </max>
-            </box>
-            <box label = "center">
-               <min>        [ 0.45, 0.45, 0.45]   </min>
-               <max>        [ 0.55, 0.55, 0.55]   </max>
-            </box>        
-
-            <box label = "min_vertical_Leg">
-               <min>        [ 0.45, 0.0, 0.45]    </min>
-               <max>        [ 0.55, 0.45, 0.55]   </max>
-            </box>
-
-            <box label = "max_vertical_Leg">
-               <min>        [ 0.45, 0.55, 0.45]   </min>
-               <max>        [ 0.55, 1.0, 0.55]    </max>
-            </box>
-
-            <box label = "back_Leg">
-               <min>        [ 0.45, 0.45, 0.0]    </min>
-               <max>        [ 0.55, 0.55, 0.45]   </max>
-            </box>
-
-            <box label = "Front_Leg">
-               <min>        [ 0.45, 0.45, 0.55]   </min>
-               <max>        [ 0.55, 0.55, 1.0]    </max>
-            </box>
-          </union>
-          <res>               [1,1,1]         </res>
+          <geom_object>
+            <difference>
+              <sphere label = "outsidesphere">
+                <origin>[0.0,0.0,0.0  ]</origin>
+                <radius>0.6 </radius>
+              </sphere>
+              <sphere label = "insidesphere">
+                <origin>[0.0,0.0,0.0  ]</origin>
+                <radius>0.5 </radius>
+              </sphere>
+            </difference>
+          <res>               [2,2,2  ]         </res>
           <velocity>          [10.0,10.0,10.0]  </velocity>
-          <temperature>       300             </temperature>
+          <temperature>       300               </temperature>
         </geom_object>
       </material>
 
@@ -293,18 +267,13 @@
               <min>           [-1.0,-1.0,-1.0]    </min>
               <max>           [10.0,10.0, 10.0]    </max>
             </box>
-            <union>
-              <box label = "Left_Horizontal_Leg"/>
-              <box label = "Right_horizontal_Leg"/>
-              <box label = "center"/>
-              <box label = "min_vertical_Leg"/>
-              <box label = "max_vertical_Leg"/>
-              <box label = "back_Leg"/>
-              <box label = "Front_Leg"/>
-            </union> 
+            <difference>
+              <sphere label = "outsidesphere"/>
+              <sphere label = "insidesphere"/>
+            </difference> 
           </difference>
-          <res>                      [1,1,1]        </res>
-          <velocity>           [10.0,10.0,10.0]       </velocity>
+          <res>                      [2,2,2]        </res>
+          <velocity>           [10.0,10.0,10.0]     </velocity>
           <temperature>        300.0                </temperature>
           <density>            1.1792946927374306   </density>
           <pressure>           101325.0             </pressure>

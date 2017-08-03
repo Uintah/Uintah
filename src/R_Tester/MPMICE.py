@@ -38,7 +38,7 @@ NIGHTLYTESTS = [
 
 AMRTESTS   = [
                   ("advect_2L_MI",          "advect_2L_MI.ups",          8,  "ALL", ["exactComparison"]),
-            #     ("advect_+_amr",          "advect_+_amr.ups",          8,  "ALL", ["exactComparison"]),
+                  ("advect_+_amr",          "advect_+_amr.ups",          8,  "ALL", ["exactComparison"]),
              ]
 
 LOCALTESTS = [   ("massX",                 "massX.ups",                 1,  "ALL", ["exactComparison"]),
