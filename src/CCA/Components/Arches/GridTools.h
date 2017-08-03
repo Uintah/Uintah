@@ -74,11 +74,11 @@ namespace Uintah{ namespace ArchesCore{
   (void)jp; (void)jpp; (void)jm; (void)jmm; \
   (void)kp; (void)kpp; (void)km; (void)kmm;
 
-#define C_    i,   j,   k
-#define CP_   ip,  jp,  kp
-#define CPP_  ipp, jpp, kpp
-#define CM_   im,  jm,  km
-#define CMM_  imm, jmm, kmm
+#define IJK_    i,   j,   k
+#define IJK_P_   ip,  jp,  kp
+#define IJK_PP_  ipp, jpp, kpp
+#define IJK_M_   im,  jm,  km
+#define IJK_MM_  imm, jmm, kmm
 
 //Staggered rotation
 #define CE_ i+ioff, j+joff, k+koff
