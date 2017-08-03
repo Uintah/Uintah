@@ -269,6 +269,17 @@ public:
 
   friend std::ostream& operator<<( std::ostream& out, const Level& level );
 
+  //__________________________________
+  //  overlapping patches:  Used to keep track of patches that overlap in non-cubic levels
+  struct overlap{
+    std::pair <int,int> patchIDs{-9,-9};        // overlapping patch IDs
+    IntVector lowIndex{ IntVector(-9,-9,-9)};   // low/high index of overlap
+    IntVector highIndex{IntVector(-9,-9,-9)};
+  };
+  // for a set of patches and region return the min/max number of overlapping cells
+  std::pair<int,int> getOverlapCellsInRegion( const selectType & patches,
+                                              const IntVector  & regionLow, 
+                                              const IntVector  & regionHigh) const;
 
 private:
 
@@ -326,10 +337,16 @@ private:
     }
   };
 
+  
   using select_cache =  std::map<std::pair<IntVector, IntVector>, std::vector<const Patch*>, IntVectorCompare>;
   mutable select_cache m_select_cache; // we like const Levels in most places :)
 
   PatchBVH * m_bvh{nullptr};
+
+  // overlapping patches   
+  std::map< std::pair<int, int>, overlap > m_overLapPatches;
+  void setOverlappingPatches();
+  
 };
 
 const Level  * getLevel(  const PatchSubset * subset );

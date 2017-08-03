@@ -59,6 +59,8 @@ std::mutex           patch_cache_mutex{};
 
 DebugStream bcout{   "BCTypes", false };
 DebugStream rgtimes{ "RGTimes", false };
+using std::map;
+using std::pair;
 
 }
 
@@ -680,6 +682,119 @@ bool Level::insideBoxes_ups( const IntVector& c ) const
 }
 
 //______________________________________________________________________
+//  Loop through all patches on the level and if they overlap with each other then store that info.
+//  You need this information when a level has a patch distribution with inside corners
+void Level::setOverlappingPatches()
+{ 
+
+//  if ( m_isNonCubicDomain == false ){     //The NonCubicDomain variable is not set properly for all problems.  Need to fix.  Todd
+ //   return 0;
+//  }
+
+  for (unsigned i = 0; i < m_real_patches.size(); i++) {
+    for (unsigned j = 0; j < m_real_patches.size(); j++) {
+
+      const Patch* patch         = m_real_patches[i];
+      const Patch* neighborPatch = m_real_patches[j];
+      
+      if ( patch != neighborPatch){
+        
+        Box b1 = patch->getExtraBox();
+        Box b2 = neighborPatch->getExtraBox();
+
+        //  Are the patches overlapping?
+        if ( b1.overlaps(b2) ) {
+        
+          IntVector low   = patch->getExtraCellLowIndex();
+          IntVector high  = patch->getExtraCellHighIndex();
+          IntVector nLow  = neighborPatch->getExtraCellLowIndex();
+          IntVector nHigh = neighborPatch->getExtraCellHighIndex();
+          
+          // find intersection of the patches
+          IntVector intersectLow  = Max( low,  nLow );
+          IntVector intersectHigh = Min( high, nHigh );
+          
+          // create overlap
+          overlap newOverLap;
+          std::pair<int,int> patchIds  = std::make_pair( patch->getID(), neighborPatch->getID() );
+          newOverLap.patchIDs  = patchIds;
+          newOverLap.lowIndex  = intersectLow;
+          newOverLap.highIndex = intersectHigh;
+
+          // only add unique values to the map.
+          auto result = m_overLapPatches.find( patchIds );
+          if ( result == m_overLapPatches.end() ) {
+            m_overLapPatches[patchIds] = newOverLap;
+          }
+        }
+      }
+    }
+  }
+
+  // debugging 
+#if 0
+  for (auto itr=m_overLapPatches.begin(); itr!=m_overLapPatches.end(); ++itr) {
+    pair<int,int> patchIDs = itr->first;
+    overlap me = itr->second;
+    std::cout <<  " overlapping patches, Level: " << getIndex() << " patches: ("  << patchIDs.first << ", " << patchIDs.second <<"), low: " << me.lowIndex << " high: " << me.highIndex << std:: endl;
+  }
+#endif
+}
+
+//______________________________________________________________________
+//  This method returns the min/max number of overlapping patch cells that are within a specified
+//  region.  Patches will overlap when the domain is non-cubic
+pair<int,int>
+Level::getOverlapCellsInRegion( const selectType & patches,
+                                const IntVector  & regionLow, 
+                                const IntVector  & regionHigh) const
+{
+  // cubic domains never have overlapping patches  The NonCubicDomain variable is not set properly for all problems.  Need to fix, which I'm sitting on  Todd
+//  if ( m_isNonCubicDomain == false ){
+//    return 0;
+//  }
+
+  int minOverlapCells   = INT_MAX;
+  int totalOverlapCells = 0;
+  
+  // loop over patches in this region
+  for (int i = 0; i < (int) patches.size(); i++) {
+    for (int j = i+1; j < (int) patches.size(); j++) {    //  the i+1 prevents examining the transposed key pairs, i.e. 8,9 and 9,8
+
+      int Id         = patches[i]->getID();
+      int neighborId = patches[j]->getID();
+      pair<int,int> patchIds = std::make_pair( Id, neighborId );
+
+      auto result = m_overLapPatches.find( patchIds );
+      overlap ol  = result->second;
+
+      // does the overlapping patches intersect with the region extents?
+      if ( doesIntersect( ol.lowIndex, ol.highIndex, regionLow, regionHigh ) ){
+        IntVector intrsctLow   = Uintah::Max( ol.lowIndex,  regionLow );
+        IntVector intrsctHigh  = Uintah::Min( ol.highIndex, regionHigh );
+
+        IntVector diff    = IntVector ( intrsctHigh - intrsctLow );
+        int nOverlapCells = std::abs( diff.x() * diff.y() * diff.z() );
+       
+        minOverlapCells    = std::min( minOverlapCells, nOverlapCells );
+        totalOverlapCells += nOverlapCells;
+        
+#if 0   // debugging
+        std::cout << "  getOverlapCellsInRegion  patches: " << ol.patchIDs.first << ", " << ol.patchIDs.second
+                  << "\n   region:      " << regionLow   << ",              " << regionHigh        
+                  << "\n   ol.low:      " << ol.lowIndex << " ol.high:      " << ol.highIndex  << " nCells: " << ol.nCells
+                  << "\n   intrsct.low: " << ol.lowIndex << " intrsct.high: " << ol.highIndex 
+                  << " overlapCells: " << nOverlapCells  << " minOverlapCells: " << minOverlapCells << " totalOverlapCells: " << totalOverlapCells << std::endl;
+#endif
+      }
+    }
+  }
+  pair<int,int> overLapCells_minMax = std::make_pair(minOverlapCells,totalOverlapCells);
+  return overLapCells_minMax; 
+}
+
+
+//______________________________________________________________________
 //
 void
 Level::finalizeLevel()
@@ -736,6 +851,11 @@ Level::finalizeLevel()
     m_spatial_range.extend(r->getExtraBox().lower());
     m_spatial_range.extend(r->getExtraBox().upper());
   }
+  
+  // Loop through all patches and find the patches that overlap.  Needed
+  // when patches layouts have inside corners.
+  setOverlappingPatches();
+  
 }
 
 //______________________________________________________________________
@@ -838,6 +958,11 @@ Level::finalizeLevel( bool periodicX, bool periodicY, bool periodicZ )
     m_spatial_range.extend(r->getExtraBox().lower());
     m_spatial_range.extend(r->getExtraBox().upper());
   }
+  
+  
+  // Loop through all patches and find the patches that overlap.  Needed
+  // when patch layouts have inside corners.
+  setOverlappingPatches();
 }
 
 //______________________________________________________________________

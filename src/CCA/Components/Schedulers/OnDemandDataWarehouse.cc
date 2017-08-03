@@ -2475,17 +2475,35 @@ OnDemandDataWarehouse::getRegionModifiable(       GridVariableBase& var,
   }  // patches loop
 
   //__________________________________
-  //  BULLETPROOFING
+  //  BULLETPROOFING  Verify that the correct number of cells were copied
+  //
+  // compute the number of cells in the region
   long requestedCells = level->getTotalCellsInRegion(reqLow, reqHigh);
-
-  if( nCellsCopied == 0  || nCellsCopied != requestedCells ) {
+  
+  // In non-cubic levels there may be overlapping patches that need to be accounted for.
+  std::pair<int, int> overLapCells_range = std::make_pair( 0,0 );
+  
+  if ( level->isNonCubic() || true ){             //__________________________________TODO: isNonCubic() doesn't work for all domains. --Todd
+    overLapCells_range = level->getOverlapCellsInRegion( patches, reqLow, reqHigh);
+  }
+  
+  //  The number of cells copied = requested cells  OR is within the range of possible overlapping cells
+  // In domains with multiple overlapping patches (inside corners in 3D) the number of cells copied can fall
+  // within a range
+  bool cond1 = ( nCellsCopied != requestedCells );
+  bool cond2 = ( nCellsCopied < requestedCells + overLapCells_range.first );
+  bool cond3 = ( nCellsCopied > requestedCells + overLapCells_range.second );
+    
+  if ( nCellsCopied == 0  || ( cond1 && cond2 && cond3 ) ) {
     
     DOUT(true,  d_myworld->myrank() << "  Unknown Variable " << *label << ", matl " << matlIndex << ", L-" << level->getIndex()
               << ", DW " << getID() << ", Variable exists in DB: " << foundInDB << "\n"
-              << "   Requested region: " << reqLow << " " << reqHigh << "\n"
-              << "   # copied cells: " << nCellsCopied << " # requested cells: " << requestedCells 
-              << " diff: " << std::abs(requestedCells - nCellsCopied) );  // nCellsCopied implicitly converted to long
-    
+              << "   Requested region: " << reqLow << " " << reqHigh 
+              << ", Physical Units: " << level->getCellPosition(reqLow) << ", " << level->getCellPosition(reqHigh) << "\n" 
+              << "   #copied cells: " << nCellsCopied << ", #requested cells: " << requestedCells 
+              << ",  #overlapping Cells min:" << overLapCells_range.first << " max: " << overLapCells_range.second
+              << "\n cond1: " << cond1 << " cond2: " << cond2 << " cond3 " << cond3 );
+
     if (missing_patches.size() > 0) {
       DOUT(true, "  Patches on which the variable wasn't found:"); 
 
