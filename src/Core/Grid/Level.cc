@@ -48,6 +48,7 @@
 #include <cmath>
 #include <iostream>
 #include <map>
+#include <climits>
 
 using namespace Uintah;
 
