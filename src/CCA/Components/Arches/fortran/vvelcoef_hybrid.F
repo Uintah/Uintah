@@ -134,12 +134,12 @@ C-----------------------------------------------------------------------
                VISB = PT25*(VIS(I,J,K-1)+VIS(I,J-1,K-1)+
      +                VIS(I,J,K)+VIS(I,J-1,K))
 
-               DE = VISE*AREAEW/DX
-               DW = VISW*AREAEW/DX
-               DN = VISN*AREANS/DY
-               DS = VISS*AREANS/DY
-               DT = VIST*AREATB/DZ
-               DB = VISB*AREATB/DZ
+               DE = VISE*AREAEW/DX*EPSE
+               DW = VISW*AREAEW/DX*EPSW
+               DN = VISN*AREANS/DY*EPSN
+               DS = VISS*AREANS/DY*EPSS
+               DT = VIST*AREATB/DZ*EPST
+               DB = VISB*AREATB/DZ*EPSB
 
 C-----------------------------------------------------------------------
 C     CONVECTION DIFFERENCING SCHEME SELECTION
