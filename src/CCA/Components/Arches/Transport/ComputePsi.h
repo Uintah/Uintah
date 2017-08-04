@@ -45,7 +45,7 @@
     int buffer = 0; \
     if ( tsk_info->packed_tasks() ) buffer = 1; \
     lbuffer[0] = ( patch->getBCType(Patch::xminus) != Patch::Neighbor ) ? 1 : 0; \
-    hbuffer[0] = ( patch->getBCType(Patch::xplus) != Patch::Neighbor ) ? -1 : buffer; \
+    hbuffer[0] = ( patch->getBCType(Patch::xplus) != Patch::Neighbor ) ? m_boundary_int : buffer; \
     low_patch_range = patch->getCellLowIndex() + lbuffer; \
     high_patch_range = patch->getCellHighIndex() + hbuffer; \
     Uintah::BlockRange x_range(low_patch_range, high_patch_range); \
@@ -141,6 +141,8 @@ private:
     std::string m_w_vel_name;
     std::string m_eps_name;
 
+    int m_boundary_int{0};
+
     typedef std::vector<std::string> SV;
     typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
     typedef typename ArchesCore::VariableHelper<T>::XFaceType XFaceT;
@@ -157,7 +159,13 @@ private:
   //------------------------------------------------------------------------------------------------
   template <typename T>
   ComputePsi<T>::ComputePsi( std::string task_name, int matl_index ) :
-  TaskInterface( task_name, matl_index ){}
+  TaskInterface( task_name, matl_index ){
+
+    ArchesCore::VariableHelper<T>* helper = scinew ArchesCore::VariableHelper<T>;
+    if ( helper->dir != ArchesCore::NODIR ) m_boundary_int = 1;
+    delete helper; 
+
+  }
 
   //------------------------------------------------------------------------------------------------
   template <typename T>

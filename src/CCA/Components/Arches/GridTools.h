@@ -44,7 +44,7 @@
 
 namespace Uintah{ namespace ArchesCore{
 
-  enum DIR {XDIR, YDIR, ZDIR, NODIR};
+  enum DIR {NODIR, XDIR, YDIR, ZDIR};
 
 #define STENCIL3_1D( dir ) \
   const int ip  = dir == 0 ? i+1 : i; \

@@ -529,19 +529,22 @@ KokkosSolver::SSPRKSolve( const LevelP& level, SchedulerP& sched ){
       // now apply boundary conditions for all scalar for the next timestep
       i_transport->second->schedule_task_group( "momentum_construction", TaskInterface::BC, false, level, sched, matls, time_substep );
 
-      for ( SVec::iterator i = scalar_rhs_builders.begin(); i != scalar_rhs_builders.end(); i++){
-        TaskInterface* tsk = i_transport->second->retrieve_task(*i);
-        tsk->schedule_task(level, sched, matls, TaskInterface::BC_TASK, time_substep);
-      }
-      for ( auto i = all_bc_tasks.begin(); i != all_bc_tasks.end(); i++) {
-        i->second->schedule_task(level, sched, matls, TaskInterface::BC_TASK, time_substep);
-      }
-
       //for sanity sake, recompute the velocities from momentum:
       // Note - This will be recomputed when the timestep restarts so there is some redundancy here.
       i_prop_fac->second->retrieve_task("u_from_rho_u")->schedule_task( level, sched, matls, TaskInterface::STANDARD_TASK, 1);
 
     }
+
+    // Scalar BCs
+    for ( SVec::iterator i = scalar_rhs_builders.begin(); i != scalar_rhs_builders.end(); i++){
+      TaskInterface* tsk = i_transport->second->retrieve_task(*i);
+      tsk->schedule_task(level, sched, matls, TaskInterface::BC_TASK, time_substep);
+    }
+    // Everything else
+    for ( auto i = all_bc_tasks.begin(); i != all_bc_tasks.end(); i++) {
+      i->second->schedule_task(level, sched, matls, TaskInterface::BC_TASK, time_substep);
+    }
+
   } // RK Integrator
 
 }
