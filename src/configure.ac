@@ -4093,50 +4093,13 @@ AC_LANG([C++])
 AC_MSG_CHECKING(for location of hash_map)
 DEF_HASHMAP=None
 
-if test "$HAVE_BOOST" = "yes"; then
-  DEF_HASHMAP=USE_BOOST_HASHMAP
-fi
-
 if test "$DEF_HASHMAP" = "None"; then
   AC_TRY_COMPILE([#include <unordered_map>
                  std::unordered_map<int, int> xx;], ,
 		 [DEF_HASHMAP=HAVE_C11_HASHMAP])
 fi
 
-if test "$DEF_HASHMAP" = "None"; then
-  DEF_HASHMAP=None
-  AC_TRY_COMPILE([#include <hash_map>
-                 std::hash_map<int, int> xx;], ,
-                 [DEF_HASHMAP=HAVE_STD_HASHMAP])
-fi
 
-if test "$DEF_HASHMAP" = "None"; then
-  AC_TRY_COMPILE([#include <ext/hash_map>
-                 std::hash_map<int, int> xx;], ,
-		 [DEF_HASHMAP=HAVE_EXT_HASHMAP])
-fi
-
-############################################################
-#
-# Only make the following check if CUDA is NOT being used.  (When CUDA
-# is used we can't use TR1... it causes compilation errors when using
-# the nvcc compiler.)
-#
-if test "$with_cuda" = NOT_SET; then
-  if test "$DEF_HASHMAP" = "None" && test "$IS_OSX" != "yes"; then
-    # gcc-4.3 has depricated <ext/hash_map> so check for <backward/hash_map> first
-    AC_TRY_COMPILE([#include <tr1/unordered_map>
-                   std::tr1::unordered_map<int, int> xx;], ,
-                   [DEF_HASHMAP=HAVE_TR1_HASHMAP])
-  fi
-fi
-############################################################
-
-if test "$DEF_HASHMAP" = "None"; then
-  AC_TRY_COMPILE([#include <ext/hash_map>
-                 __gnu_cxx::hash_map<int, int> xx;], ,
-                 [DEF_HASHMAP=HAVE_GNU_HASHMAP])
-fi
 if test "$DEF_HASHMAP" = "None"; then
   DEF_HASHMAP=
   AC_MSG_RESULT(not found)
