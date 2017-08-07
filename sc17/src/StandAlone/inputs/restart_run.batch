@@ -1,2 +1,0 @@
-qsub -M EMAIL_ADDRESS --env OMP_WAIT_POLICY=PASSIVE:OMP_NUM_THREADS=2 -A Project_ID -t 24:00:00 -n 16384 --mode c16 --proccount 259792 -O case3.restart ./sus -do_not_validate -mpi -restart case3.pidx.001 
-
