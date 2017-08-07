@@ -239,8 +239,6 @@ private:
       CFYT& y_flux = *(tsk_info->get_const_uintah_field<CFYT>(*i+"_y_flux"));
       CFZT& z_flux = *(tsk_info->get_const_uintah_field<CFZT>(*i+"_z_flux"));
 
-      std::cout << " working on eqn: " << *i << std::endl;
-
       Vector Dx = patch->dCell();
       double ax = Dx.y() * Dx.z();
       double ay = Dx.z() * Dx.x();
@@ -275,7 +273,7 @@ private:
           Uintah::BlockRange range(low_fz_patch_range, high_fz_patch_range);
           Uintah::parallel_for( range, fe_update );
         } else {
-          Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex()); 
+          Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex());
           Uintah::parallel_for( range, fe_update );
         }
 

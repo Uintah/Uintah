@@ -36,37 +36,6 @@
 #  include <spatialops/util/TimeLogger.h>
 #endif
 
-#define GET_PSI(my_limiter_struct) \
-    GetPsi get_psi_x( phi, psi_x, u, eps, 0 ); \
-    GetPsi get_psi_y( phi, psi_y, v, eps, 1 ); \
-    GetPsi get_psi_z( phi, psi_z, w, eps, 2 ); \
-    IntVector low_patch_range(0,0,0), high_patch_range(0,0,0); \
-    IntVector lbuffer(0,0,0), hbuffer(1,0,0); \
-    int buffer = 0; \
-    if ( tsk_info->packed_tasks() ) buffer = 1; \
-    lbuffer[0] = ( patch->getBCType(Patch::xminus) != Patch::Neighbor ) ? 1 : 0; \
-    hbuffer[0] = ( patch->getBCType(Patch::xplus) != Patch::Neighbor ) ? m_boundary_int : buffer; \
-    low_patch_range = patch->getCellLowIndex() + lbuffer; \
-    high_patch_range = patch->getCellHighIndex() + hbuffer; \
-    Uintah::BlockRange x_range(low_patch_range, high_patch_range); \
-    lbuffer[0] =  0; hbuffer[0] = 0; \
-    Uintah::parallel_for(x_range, get_psi_x, my_limiter_struct); \
-    low_patch_range = IntVector(0,0,0); high_patch_range = IntVector(0,0,0); \
-    lbuffer[1] = ( patch->getBCType(Patch::yminus) != Patch::Neighbor ) ? 1 : 0; \
-    hbuffer[1] = ( patch->getBCType(Patch::yplus) != Patch::Neighbor ) ? -1 : buffer; \
-    low_patch_range = patch->getCellLowIndex() + lbuffer; \
-    high_patch_range = patch->getCellHighIndex() + hbuffer; \
-    Uintah::BlockRange y_range(low_patch_range, high_patch_range); \
-    lbuffer[1] =  0; hbuffer[1] = 0; \
-    Uintah::parallel_for(y_range, get_psi_y, my_limiter_struct); \
-    low_patch_range = IntVector(0,0,0); high_patch_range = IntVector(0,0,0); \
-    lbuffer[2] = ( patch->getBCType(Patch::zminus) != Patch::Neighbor ) ? 1 : 0; \
-    hbuffer[2] = ( patch->getBCType(Patch::zplus) != Patch::Neighbor ) ? -1 : buffer; \
-    low_patch_range = patch->getCellLowIndex() + lbuffer; \
-    high_patch_range = patch->getCellHighIndex() + hbuffer; \
-    Uintah::BlockRange z_range(low_patch_range, high_patch_range); \
-    Uintah::parallel_for(z_range, get_psi_z, my_limiter_struct);
-
 namespace Uintah{
 
   template <typename T>
@@ -142,6 +111,7 @@ private:
     std::string m_eps_name;
 
     int m_boundary_int{0};
+    int m_dir{0};
 
     typedef std::vector<std::string> SV;
     typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
@@ -151,6 +121,57 @@ private:
     typedef typename ArchesCore::VariableHelper<T>::ConstXFaceType ConstXFaceT;
     typedef typename ArchesCore::VariableHelper<T>::ConstYFaceType ConstYFaceT;
     typedef typename ArchesCore::VariableHelper<T>::ConstZFaceType ConstZFaceT;
+
+    template<typename CPhiT, typename PsiT, typename VelT>
+    struct PsiHelper{
+
+      void computePsi( CPhiT& phi, PsiT& psi, VelT& vel, CPhiT& eps,
+                       Patch::FaceType PLow, Patch::FaceType PHigh,
+                       const int boundary_buffer, const int dir, LIMITER lim_type,
+                       const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+
+        int buffer = 0;
+        if ( tsk_info->packed_tasks() ) buffer = 1;
+
+        GetPsi get_psi( phi, psi, vel, eps, dir );
+
+        IntVector low_patch_range(0,0,0), high_patch_range(0,0,0);
+        IntVector lbuffer(0,0,0), hbuffer(0,0,0);
+
+        low_patch_range = IntVector(0,0,0); high_patch_range = IntVector(0,0,0);
+
+        lbuffer[dir] = ( patch->getBCType(PLow) != Patch::Neighbor ) ? 1 : 0;
+        hbuffer[dir] = ( patch->getBCType(PHigh) != Patch::Neighbor ) ?
+                        boundary_buffer :
+                        buffer;
+
+        low_patch_range = patch->getCellLowIndex() + lbuffer;
+        high_patch_range = patch->getCellHighIndex() + hbuffer;
+
+        Uintah::BlockRange range(low_patch_range, high_patch_range);
+
+        if ( lim_type == UPWIND ){
+          UpwindStruct up;
+          Uintah::parallel_for(range, get_psi, up);
+        } else if ( lim_type == CENTRAL ){
+          CentralStruct central;
+          Uintah::parallel_for(range, get_psi, central);
+        } else if ( lim_type == SUPERBEE ){
+          SuperBeeStruct superbee;
+          Uintah::parallel_for(range, get_psi, superbee);
+        } else if ( lim_type == ROE ){
+          RoeStruct roe;
+          Uintah::parallel_for(range, get_psi, roe);
+        } else if ( lim_type == VANLEER ){
+          VanLeerStruct vl;
+          Uintah::parallel_for(range, get_psi, vl);
+        } else {
+
+        }
+
+      }
+
+    };
 
   };
 
@@ -163,7 +184,8 @@ private:
 
     ArchesCore::VariableHelper<T>* helper = scinew ArchesCore::VariableHelper<T>;
     if ( helper->dir != ArchesCore::NODIR ) m_boundary_int = 1;
-    delete helper; 
+    m_dir = helper->dir;
+    delete helper;
 
   }
 
@@ -323,22 +345,22 @@ private:
       timer.start("ComputePsi");
 #endif
 
-      if ( my_limiter == UPWIND ){
-        UpwindStruct up;
-        GET_PSI(up);
-      } else if ( my_limiter == CENTRAL ){
-        CentralStruct central;
-        GET_PSI(central);
-      } else if ( my_limiter == SUPERBEE ){
-        SuperBeeStruct sb;
-        GET_PSI(sb);
-      } else if ( my_limiter == ROE ){
-        RoeStruct roe;
-        GET_PSI(roe);
-      } else if ( my_limiter == VANLEER ){
-        VanLeerStruct vl;
-        GET_PSI(vl);
-      }
+      PsiHelper<CT, XFaceT, ConstXFaceT> x_psi_helper;
+      PsiHelper<CT, YFaceT, ConstYFaceT> y_psi_helper;
+      PsiHelper<CT, ZFaceT, ConstZFaceT> z_psi_helper;
+
+      int boundary_int = 0;
+      if ( m_boundary_int > 0 && m_dir == 1 ) boundary_int = 1;
+      x_psi_helper.computePsi( phi, psi_x, u, eps, Patch::xminus, Patch::xplus,
+                               boundary_int, 0, my_limiter, patch, tsk_info );
+      boundary_int = 0;
+      if ( m_boundary_int > 0 && m_dir == 2 ) boundary_int = 1;
+      y_psi_helper.computePsi( phi, psi_y, v, eps, Patch::yminus, Patch::yplus,
+                               boundary_int, 1, my_limiter, patch, tsk_info );
+      boundary_int = 0;
+      if ( m_boundary_int > 0 && m_dir == 3 ) boundary_int = 1;
+      z_psi_helper.computePsi( phi, psi_z, w, eps, Patch::zminus, Patch::zplus,
+                               boundary_int, 2, my_limiter, patch, tsk_info );
 
 #ifdef DO_TIMINGS
       timer.stop("ComputePsi");
