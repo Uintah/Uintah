@@ -121,6 +121,7 @@ NIGHTLYTESTS = [
    ("OFC4_smith"                        , "Coal/OFC4_smith.ups"                                     , 3   , "All"  , ["exactComparison"      , "no_cuda"]) ,
    ("OFC_smith2016"                     , "Coal/OFC_smith2016.ups"                                  , 3   , "All"  , ["exactComparison"      , "no_cuda"]) ,
    ("OFC4_hybrid"                       , "Coal/OFC4_hybrid.ups"                                    , 3   , "All"  , ["exactComparison"      , "no_cuda"]) ,  
+   ("Coal_Nox"                          , "Coal/Coal_Nox.ups"                                       , 8   , "All"  , ["exactComparison"      , "no_cuda"]) ,  
 #__________________________________
    
    # The regrid test should be last.  It needs a checkpoint.  If you move it up the stack and run local_RT NIGHTLYTESTS then not all tests will run
@@ -201,6 +202,7 @@ LOCALTESTS = [
    ("OFC4_smith"                        , "Coal/OFC4_smith.ups"                                     , 3   , "All"  , ["exactComparison"   ,  "no_cuda"]) , 
    ("OFC_smith2016"                     , "Coal/OFC_smith2016.ups"                                  , 3   , "All"  , ["exactComparison"      , "no_cuda"]) ,
    ("OFC4_hybrid"                       , "Coal/OFC4_hybrid.ups"                                    , 3   , "All"  , ["exactComparison"   ,  "no_cuda"]) , 
+   ("Coal_Nox"                          , "Coal/Coal_Nox.ups"                                       , 8   , "All"  , ["exactComparison"      , "no_cuda"]) ,  
 ]
 
 DEBUG = [
@@ -235,6 +237,7 @@ COALTESTS = [
    ("OFC4_smith"                        , "Coal/OFC4_smith.ups"                                     , 3   , "All"  , ["exactComparison"   ,  "no_cuda"]) , 
    ("OFC_smith2016"                     , "Coal/OFC_smith2016.ups"                                  , 3   , "All"  , ["exactComparison"      , "no_cuda"]) ,
    ("OFC4_hybrid"                       , "Coal/OFC4_hybrid.ups"                                    , 3   , "All"  , ["exactComparison"   ,  "no_cuda"]) ,
+   ("Coal_Nox"                          , "Coal/Coal_Nox.ups"                                       , 8   , "All"  , ["exactComparison"      , "no_cuda"]) ,  
    ("OFC4_initial_hotwall"              , "Coal/OFC4_initial_hotwall.ups"                           , 3   , "All"  , ["exactComparison"   ,  "no_cuda"]) , 
 ]
 
