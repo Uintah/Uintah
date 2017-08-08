@@ -22,6 +22,9 @@
     <save label="NO_zz"/>
     <save label="HCN_zz"/>
     <save label="NH3_zz"/>
+    <save label="NO_zz_src"/>
+    <save label="HCN_zz_src"/>
+    <save label="NH3_zz_src"/>
     <save label="conv_scheme_x"/>
     <save label="conv_scheme_y"/>
     <save label="conv_scheme_z"/>
@@ -1846,7 +1849,7 @@
             <high>1.0</high>
             <tol>1e-10</tol>
           </Clipping>
-          <src label="NO_zz_2">
+          <src label="NO_zz_src">
             <weight>1</weight>
           </src>
           <scaling_const>1</scaling_const>
@@ -1866,7 +1869,7 @@
             <high>1.0</high>
             <tol>1e-10</tol>
           </Clipping>
-          <src label="HCN_zz_2">
+          <src label="HCN_zz_src">
             <weight>1</weight>
           </src>
           <scaling_const>1</scaling_const>
@@ -1886,7 +1889,7 @@
             <high>1.0</high>
             <tol>1e-10</tol>
           </Clipping>
-          <src label="NH3_zz_2">
+          <src label="NH3_zz_src">
             <weight>1</weight>
           </src>
           <scaling_const>1</scaling_const>
@@ -1939,9 +1942,9 @@
             <NSgamma1>0.1</NSgamma1>
             <NSgamma2>0.1</NSgamma2>
             <NSgamma3>0.1</NSgamma3>
-            <NO_src label="NO_zz_2"/>
-            <HCN_src label="HCN_zz_2"/>
-            <NH3_src label="NH3_zz_2"/>
+            <NO_src label="NO_zz_src"/>
+            <HCN_src label="HCN_zz_src"/>
+            <NH3_src label="NH3_zz_src"/>
             <o2_label>O2</o2_label>
             <n2_label>N2</n2_label>
             <co_label>CO</co_label>
