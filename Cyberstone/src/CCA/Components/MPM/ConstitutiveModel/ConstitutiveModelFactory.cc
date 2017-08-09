@@ -51,6 +51,7 @@
 #include <CCA/Components/MPM/ConstitutiveModel/MurnaghanMPM.h>
 #include <CCA/Components/MPM/ConstitutiveModel/IdealGasMP.h>
 #include <CCA/Components/MPM/ConstitutiveModel/P_Alpha.h>
+#include <CCA/Components/MPM/ConstitutiveModel/ClayCurveFit.h>
 #include <CCA/Components/MPM/ConstitutiveModel/SoilFoam.h>
 #include <CCA/Components/MPM/ConstitutiveModel/Water.h>
 #include <CCA/Components/MPM/ConstitutiveModel/TH_Water.h>
@@ -180,6 +181,9 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
   }
   else if (cm_type ==  "p_alpha"){
     return(scinew P_Alpha(child,flags));
+  }
+  else if (cm_type ==  "clay_curve_fit"){
+    return(scinew ClayCurveFit(child,flags));
   }
   else if (cm_type ==  "water"){
     computes_pLocalizedMPM = true;
