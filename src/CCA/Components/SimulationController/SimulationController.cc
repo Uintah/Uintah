@@ -143,10 +143,10 @@ SimulationController::SimulationController( const ProcessorGroup * myworld,
    * PAPI_L2_TCM - level 2 total cache misses
    * PAPI_L3_TCM - level 3 total cache misses
    */
-  d_papiEvents.insert(pair<int, PapiEvent>(PAPI_TOT_INS , PapiEvent("PAPI_TOT_INS ", "FLOPS")));
-//  d_papiEvents.insert(pair<int, PapiEvent>(PAPI_DP_OPS_idx, PapiEvent("PAPI_DP_OPS_idx", "VFLOPS")));
-//  d_papiEvents.insert(pair<int, PapiEvent>(PAPI_L2_TCM_idx, PapiEvent("PAPI_L2_TCM_idx", "L2CacheMisses")));
-//  d_papiEvents.insert(pair<int, PapiEvent>(PAPI_L3_TCM_idx, PapiEvent("PAPI_L3_TCM_idx", "L3CacheMisses")));
+  d_papiEvents.insert(pair<int, PapiEvent>(PAPI_FP_OPS, PapiEvent("PAPI_FP_OPS", "FLOPS")));
+  d_papiEvents.insert(pair<int, PapiEvent>(PAPI_DP_OPS, PapiEvent("PAPI_DP_OPS", "VFLOPS")));
+  d_papiEvents.insert(pair<int, PapiEvent>(PAPI_L2_TCM, PapiEvent("PAPI_L2_TCM", "L2CacheMisses")));
+  d_papiEvents.insert(pair<int, PapiEvent>(PAPI_L3_TCM, PapiEvent("PAPI_L3_TCM", "L3CacheMisses")));
 
   // For meaningful error reporting - PAPI Version: 5.1.0 has 25 error return codes:
   d_papiErrorCodes.insert(pair<int, string>( 0,  "No error"));

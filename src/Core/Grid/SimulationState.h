@@ -314,11 +314,10 @@ public:
     MemoryResident,
     
 #ifdef USE_PAPI_COUNTERS
-    TotalFlops,                // Total FLOPS
-    TotalVFlops,              // Total FLOPS optimized to count
-                               // scaled double precision vector operations
-    L2Misses,                  // Total L2 cache misses
-    L3Misses,                  // Total L3 cache misses
+    TotalFlops,                // Floating point operations executed
+    TotalVFlops,               // Floating point operations executed; optimized to count scaled DP vector ops
+    L2Misses,                  // L2 cache misses
+    L3Misses,                  // L3 cache misses
 #endif
     MAX_TIMING_STATS
   };
