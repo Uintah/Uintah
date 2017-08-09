@@ -31,6 +31,7 @@
                                                                              program_burn,
                                                                              jwlpp_mpm, 
                                                                              p_alpha, 
+                                                                             clay_curve_fit, 
                                                                              nonlocal_drucker_prager,
                                                                              Arenisca, 
                                                                              Arenisca3, 
@@ -54,6 +55,8 @@
     <vo                            spec="OPTIONAL DOUBLE" />
     <L                             spec="OPTIONAL DOUBLE" />
     <Beta                          spec="OPTIONAL DOUBLE" />
+    <beta                          spec="OPTIONAL DOUBLE" />
+    <minimum_porosity              spec="OPTIONAL DOUBLE" />
     <bulk_modulus                  spec="OPTIONAL DOUBLE" />
     <bulkPrime                     spec="OPTIONAL DOUBLE" />
     <C                             spec="OPTIONAL DOUBLE" />
