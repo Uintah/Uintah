@@ -25,8 +25,6 @@
 #ifndef UINTAH_HOMEBREW_SIMULATIONCONTROLLER_H
 #define UINTAH_HOMEBREW_SIMULATIONCONTROLLER_H
 
-#include <sci_defs/papi_defs.h> // for PAPI performance counters
-
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/SimulationState.h>
@@ -41,6 +39,7 @@
 #include <CCA/Ports/SchedulerP.h>
 
 #include <sci_defs/visit_defs.h>
+#include <sci_defs/papi_defs.h> // for PAPI performance counters
 
 #ifdef HAVE_VISIT
 #  include <VisIt/libsim/visit_libsim.h>
@@ -258,10 +257,10 @@ protected:
   long long * d_eventValues;         // PAPI event set values
 
   struct PapiEvent {
-    int         eventValueIndex;
-    std::string name;
-    std::string simStatName;
-    bool        isSupported;
+    int           eventValueIndex;
+    std::string   name;
+    std::string   simStatName;
+    bool          isSupported;
 
     PapiEvent( const std::string& _name, const std::string& _simStatName )
       : name(_name), simStatName(_simStatName)

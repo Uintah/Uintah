@@ -23,7 +23,6 @@
  */
 
 #include <sci_defs/malloc_defs.h>
-#include <sci_defs/papi_defs.h> // for PAPI performance counters
 
 #include <CCA/Components/SimulationController/SimulationController.h>
 
@@ -144,10 +143,10 @@ SimulationController::SimulationController( const ProcessorGroup * myworld,
    * PAPI_L2_TCM - level 2 total cache misses
    * PAPI_L3_TCM - level 3 total cache misses
    */
-  d_papiEvents.insert(pair<int, PapiEvent>(PAPI_FP_OPS, PapiEvent("PAPI_FP_OPS", "FLOPS")));
-  d_papiEvents.insert(pair<int, PapiEvent>(PAPI_DP_OPS, PapiEvent("PAPI_DP_OPS", "VFLOPS")));
-  d_papiEvents.insert(pair<int, PapiEvent>(PAPI_L2_TCM, PapiEvent("PAPI_L2_TCM", "L2CacheMisses")));
-  d_papiEvents.insert(pair<int, PapiEvent>(PAPI_L3_TCM, PapiEvent("PAPI_L3_TCM", "L3CacheMisses")));
+  d_papiEvents.insert(pair<int, PapiEvent>(PAPI_TOT_INS , PapiEvent("PAPI_TOT_INS ", "FLOPS")));
+//  d_papiEvents.insert(pair<int, PapiEvent>(PAPI_DP_OPS_idx, PapiEvent("PAPI_DP_OPS_idx", "VFLOPS")));
+//  d_papiEvents.insert(pair<int, PapiEvent>(PAPI_L2_TCM_idx, PapiEvent("PAPI_L2_TCM_idx", "L2CacheMisses")));
+//  d_papiEvents.insert(pair<int, PapiEvent>(PAPI_L3_TCM_idx, PapiEvent("PAPI_L3_TCM_idx", "L3CacheMisses")));
 
   // For meaningful error reporting - PAPI Version: 5.1.0 has 25 error return codes:
   d_papiErrorCodes.insert(pair<int, string>( 0,  "No error"));
@@ -187,6 +186,7 @@ SimulationController::SimulationController( const ProcessorGroup * myworld,
               << "       Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")\n";
     throw PapiInitializationError("PAPI library initialization error occurred. Check that your PAPI library can be initialized correctly.", __FILE__, __LINE__);
   }
+
   retp = PAPI_thread_init(pthread_self);
   if (retp != PAPI_OK) {
     if (d_myworld->myrank() == 0) {
@@ -198,10 +198,10 @@ SimulationController::SimulationController( const ProcessorGroup * myworld,
     }
   }
 
-  // query all the events to find that are supported, flag those that
-  // are unsupported
-  for (map<int, PapiEvent>::iterator iter=d_papiEvents.begin(); iter!=d_papiEvents.end(); iter++) {
+  // query all the events to find that are supported, flag those that are unsupported
+  for (map<int, PapiEvent>::iterator iter = d_papiEvents.begin(); iter != d_papiEvents.end(); ++iter) {
     retp = PAPI_query_event(iter->first);
+    std::cout << "EVENT: " << iter->first;
     if (retp != PAPI_OK) {
       proc0cout << "WARNNING: Cannot query PAPI event: " << iter->second.name << "!\n"
                 << "          Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")\n"
@@ -1183,14 +1183,10 @@ SimulationController::getPAPIStats( )
     throw PapiInitializationError("PAPI read error. Unable to read hardware event set values.", __FILE__, __LINE__);
   }
   else {
-    d_sharedState->d_runTimeStats[ SimulationState::TotalFlops ] =
-      (double) d_eventValues[d_papiEvents.find(PAPI_FP_OPS)->second.eventValueIndex];
-    d_sharedState->d_runTimeStats[ SimulationState::TotalVFlops ] =
-      (double) d_eventValues[d_papiEvents.find(PAPI_DP_OPS)->second.eventValueIndex];
-    d_sharedState->d_runTimeStats[ SimulationState::L2Misses ] =
-      (double) d_eventValues[d_papiEvents.find(PAPI_L2_TCM)->second.eventValueIndex];
-    d_sharedState->d_runTimeStats[ SimulationState::L3Misses ] =
-      (double) d_eventValues[d_papiEvents.find(PAPI_L3_TCM)->second.eventValueIndex];
+    d_sharedState->d_runTimeStats[ SimulationState::TotalFlops ]  = (double) d_eventValues[d_papiEvents.find(PAPI_FP_OPS)->second.eventValueIndex];
+    d_sharedState->d_runTimeStats[ SimulationState::TotalVFlops ] = (double) d_eventValues[d_papiEvents.find(PAPI_DP_OPS)->second.eventValueIndex];
+    d_sharedState->d_runTimeStats[ SimulationState::L2Misses ]    = (double) d_eventValues[d_papiEvents.find(PAPI_L2_TCM)->second.eventValueIndex];
+    d_sharedState->d_runTimeStats[ SimulationState::L3Misses ]    = (double) d_eventValues[d_papiEvents.find(PAPI_L3_TCM)->second.eventValueIndex];
   }
 
   // zero the values in the hardware counter event set array

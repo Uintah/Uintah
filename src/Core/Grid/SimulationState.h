@@ -38,6 +38,7 @@
 #include <Core/Util/Timers/Timers.hpp>
 
 #include <sci_defs/visit_defs.h>
+#include <sci_defs/papi_defs.h> // for PAPI performance counters
 
 #include <map>
 #include <vector>
@@ -314,7 +315,7 @@ public:
     
 #ifdef USE_PAPI_COUNTERS
     TotalFlops,                // Total FLOPS
-    TottalVFlops,              // Total FLOPS optimized to count 
+    TotalVFlops,              // Total FLOPS optimized to count
                                // scaled double precision vector operations
     L2Misses,                  // Total L2 cache misses
     L3Misses,                  // Total L3 cache misses
