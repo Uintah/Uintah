@@ -59,6 +59,7 @@ SRCS   += \
         $(SRCDIR)/JWLppMPM.cc                   \
         $(SRCDIR)/UCNH.cc                       \
         $(SRCDIR)/P_Alpha.cc                    \
+        $(SRCDIR)/ClayCurveFit.cc               \
         $(SRCDIR)/SoilFoam.cc                   \
         $(SRCDIR)/NonLocalDruckerPrager.cc      \
         $(SRCDIR)/Arenisca.cc                   \
