@@ -22,10 +22,17 @@
  * IN THE SOFTWARE.
  */
 
-#include <sci_defs/malloc_defs.h>
-#include <sci_defs/gperftools_defs.h>
-
 #include <CCA/Components/SimulationController/AMRSimulationController.h>
+
+#include <CCA/Components/ReduceUda/UdaReducer.h>
+#include <CCA/Components/Regridder/PerPatchVars.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <CCA/Ports/LoadBalancerPort.h>
+#include <CCA/Ports/Output.h>
+#include <CCA/Ports/ProblemSpecInterface.h>
+#include <CCA/Ports/Regridder.h>
+#include <CCA/Ports/Scheduler.h>
+#include <CCA/Ports/SimulationInterface.h>
 
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Geometry/IntVector.h>
@@ -49,25 +56,17 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
-#include <CCA/Components/ReduceUda/UdaReducer.h>
-#include <CCA/Components/Regridder/PerPatchVars.h>
-
-#include <CCA/Ports/DataWarehouse.h>
-#include <CCA/Ports/LoadBalancerPort.h>
-#include <CCA/Ports/Output.h>
-#include <CCA/Ports/ProblemSpecInterface.h>
-#include <CCA/Ports/Regridder.h>
-#include <CCA/Ports/Scheduler.h>
-#include <CCA/Ports/SimulationInterface.h>
 
 #ifdef HAVE_CUDA
 #  include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
 #endif
 
+#include <sci_defs/malloc_defs.h>
+#include <sci_defs/gperftools_defs.h>
+
 #include <iostream>
 #include <iomanip>
 
-using namespace std;
 using namespace Uintah;
 
        DebugStream amrout(      "AMR"                    , false); // Note: also used externally in SimulationController.cc.
@@ -130,7 +129,7 @@ AMRSimulationController::run()
     visit_InitLibSim( &visitSimData );
   }
 #endif
-    
+
 #ifdef USE_GPERFTOOLS
   if (gprofile.active()){
     char gprofname[512];
@@ -150,7 +149,7 @@ AMRSimulationController::run()
       sprintf(gheapchkname, "heapchk-rank%d", d_myworld->myrank());
       heap_checker= new HeapLeakChecker(gheapchkname);
     } else {
-      cout<< "HEAPCHECKER: Cannot start with heapprofiler" <<endl;
+      std::cout<< "HEAPCHECKER: Cannot start with heapprofiler" << std::endl;
     }
   }
 #endif
@@ -266,8 +265,7 @@ AMRSimulationController::run()
                   << "  - However, setting output to every processor "
                   << "until a checkpoint is reached." << std::endl;
         d_lb->setNthRank( 1 );
-        d_lb->possiblyDynamicallyReallocate( d_currentGridP,
-					     LoadBalancerPort::regrid );
+        d_lb->possiblyDynamicallyReallocate( d_currentGridP, LoadBalancerPort::regrid );
         d_output->setSaveAsPIDX();
       }
     }
@@ -310,8 +308,8 @@ AMRSimulationController::run()
      
     MALLOC_TRACE_TAG_SCOPE( "AMRSimulationController::run()::control loop" );
 
-    if( dbg_barrier.active() ) {
-      for(int i=0; i<5; ++i) {
+    if (dbg_barrier.active()) {
+      for (int i = 0; i < 5; ++i) {
         barrier_times[i] = 0;
       }
     }
@@ -409,9 +407,9 @@ AMRSimulationController::run()
     if (dbg_dwmem.active()) {
       // Remember, this isn't logged if DISABLE_SCI_MALLOC is set (so usually in optimized mode this will not be run.)
       d_scheduler->logMemoryUse();
-      ostringstream fn;
-      fn << "alloc." << setw(5) << setfill('0') << d_myworld->myrank() << ".out";
-      string filename(fn.str());
+      std::ostringstream fn;
+      fn << "alloc." << std::setw(5) << std::setfill('0') << d_myworld->myrank() << ".out";
+      std::string filename(fn.str());
 
 #ifndef DISABLE_SCI_MALLOC
       DumpAllocator(DefaultAllocator(), filename.c_str());
@@ -572,12 +570,12 @@ AMRSimulationController::run()
       Uintah::MPI::Reduce( barrier_times, avg, 5, MPI_DOUBLE, MPI_SUM, 0, d_myworld->getComm() );
 
       if( d_myworld->myrank() == 0 ) {
-        cout << "Barrier Times: ";
+        std::cout << "Barrier Times: ";
         for( int i = 0; i < 5; ++i ) {
           avg[i] /= d_myworld->size();
-          cout << avg[i] << " ";
+          std::cout << avg[i] << " ";
         }
-        cout << "\n";
+        std::cout << "\n";
       }
     }
 
@@ -838,7 +836,7 @@ AMRSimulationController::executeTimestep( int totalFine, int tg_index )
 
       // bulletproofing
       if (new_delt < d_timeinfo->delt_min || new_delt <= 0) {
-        ostringstream warn;
+        std::ostringstream warn;
         warn << "The new delT (" << new_delt << ") is either less than "
 	     << "delT_min (" << d_timeinfo->delt_min << ") or equal to 0";
         throw InternalError(warn.str(), __FILE__, __LINE__);
@@ -939,13 +937,13 @@ AMRSimulationController::doRegridding( bool initialTimestep )
     //  output regridding stats
     if (d_myworld->myrank() == 0) {
 
-      cout << "  REGRIDDING:";
+      std::cout << "  REGRIDDING:";
 
       //amrout << "---------- OLD GRID ----------" << endl << *(oldGrid.get_rep());
       for (int i = 0; i < d_currentGridP->numLevels(); i++) {
-        cout << " Level " << i << " has " << d_currentGridP->getLevel(i)->numPatches() << " patches...";
+        std::cout << " Level " << i << " has " << d_currentGridP->getLevel(i)->numPatches() << " patches...";
       }
-      cout << "\n";
+      std::cout << "\n";
 
       if (amrout.active()) {
         amrout << "---------- NEW GRID ----------\n" << "Grid has " << d_currentGridP->numLevels() << " level(s)\n";

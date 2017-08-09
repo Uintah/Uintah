@@ -253,25 +253,26 @@ protected:
   bool d_restartRemoveOldDir{false};
 
 #ifdef USE_PAPI_COUNTERS
-  int         d_eventSet;            // PAPI event set
-  long long * d_eventValues;         // PAPI event set values
+  int         m_papi_event_set;            // PAPI event set
+  long long * m_papi_event_values;         // PAPI event set values
 
   struct PapiEvent {
-    int           eventValueIndex;
-    std::string   name;
-    std::string   simStatName;
-    bool          isSupported;
+    int           m_event_value_idx;
+    std::string   m_name;
+    std::string   m_sim_stat_name;
+    bool          m_is_supported;
 
-    PapiEvent( const std::string& _name, const std::string& _simStatName )
-      : name(_name), simStatName(_simStatName)
+    PapiEvent( const std::string& name, const std::string& sim_stat_name )
+      : m_name(name)
+      , m_sim_stat_name(sim_stat_name)
     {
-      eventValueIndex = 0;
-      isSupported = false;
+      m_event_value_idx = 0;
+      m_is_supported = false;
     }
   };
 
-  std::map<int, PapiEvent>   d_papiEvents;
-  std::map<int, std::string> d_papiErrorCodes;
+  std::map<int, PapiEvent>   m_papi_events;
+  std::map<int, std::string> m_papi_error_codes;
 #endif
 
 #ifdef HAVE_VISIT
