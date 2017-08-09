@@ -202,7 +202,7 @@ SimulationController::SimulationController( const ProcessorGroup * myworld,
   // query all PAPI events - find which are supported, flag those that are unsupported
   for (std::map<int, PapiEvent>::iterator iter = m_papi_events.begin(); iter != m_papi_events.end(); ++iter) {
     retval = PAPI_query_event(iter->first);
-    std::cout << "EVENT: " << iter->first;
+    std::cout << "EVENT: " << iter->first << "\n";
     if (retval != PAPI_OK) {
       proc0cout << "WARNNING: Cannot query PAPI event: " << iter->second.m_name << "!\n"
                 << "          Error code = " << retval << " (" << m_papi_error_codes.find(retval)->second << ")\n"

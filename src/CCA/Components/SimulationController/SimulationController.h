@@ -257,18 +257,16 @@ protected:
   long long * m_papi_event_values;         // PAPI event set values
 
   struct PapiEvent {
-    int           m_event_value_idx;
-    std::string   m_name;
-    std::string   m_sim_stat_name;
-    bool          m_is_supported;
+    bool          m_is_supported{false};
+    int           m_event_value_idx{0};
+    std::string   m_name{""};
+    std::string   m_sim_stat_name{""};
 
-    PapiEvent( const std::string& name, const std::string& sim_stat_name )
+    PapiEvent( const std::string & name
+             , const std::string & sim_stat_name )
       : m_name(name)
       , m_sim_stat_name(sim_stat_name)
-    {
-      m_event_value_idx = 0;
-      m_is_supported = false;
-    }
+    { }
   };
 
   std::map<int, PapiEvent>   m_papi_events;
