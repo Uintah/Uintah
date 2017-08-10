@@ -141,20 +141,20 @@ SimulationController::SimulationController( const ProcessorGroup * myworld,
    */
 
   // PAPI_FP_OPS - floating point operations executed
-  m_papi_events.insert(pair<int, PapiEvent>(PAPI_FP_OPS, PapiEvent("PAPI_FP_OPS", "FLOPS")));
+  m_papi_events.insert(pair<int, PapiEvent>(PAPI_FP_OPS, PapiEvent("PAPI_FP_OPS", SimulationState::TotalFlops)));
 
   // PAPI_DP_OPS - floating point operations executed; optimized to count scaled double precision vector operations
-  m_papi_events.insert(pair<int, PapiEvent>(PAPI_DP_OPS, PapiEvent("PAPI_DP_OPS", "VFLOPS")));
+  m_papi_events.insert(pair<int, PapiEvent>(PAPI_DP_OPS, PapiEvent("PAPI_DP_OPS", SimulationState::TotalVFlops)));
 
   // PAPI_L2_TCM - level 2 total cache misses
-  m_papi_events.insert(pair<int, PapiEvent>(PAPI_L2_TCM, PapiEvent("PAPI_L2_TCM", "L2CacheMisses")));
+  m_papi_events.insert(pair<int, PapiEvent>(PAPI_L2_TCM, PapiEvent("PAPI_L2_TCM", SimulationState::L2Misses)));
 
   // PAPI_L3_TCM - level 3 total cache misses
-  m_papi_events.insert(pair<int, PapiEvent>(PAPI_L3_TCM, PapiEvent("PAPI_L3_TCM", "L3CacheMisses")));
+  m_papi_events.insert(pair<int, PapiEvent>(PAPI_L3_TCM, PapiEvent("PAPI_L3_TCM", SimulationState::L3Misses)));
 
   m_papi_event_values = scinew long long[m_papi_events.size()];
   m_papi_event_set    = PAPI_NULL;
-  int retval = -1;
+  int retval          = PAPI_NULL;
 
   // initialize the PAPI library
   retval = PAPI_library_init(PAPI_VER_CURRENT);
@@ -1157,10 +1157,14 @@ SimulationController::getPAPIStats( )
     throw PapiInitializationError("PAPI read error. Unable to read hardware event set values.", __FILE__, __LINE__);
   }
   else {
-    d_sharedState->d_runTimeStats[ SimulationState::TotalFlops ]  = (double) m_papi_event_values[m_papi_events.find(PAPI_FP_OPS)->second.m_event_value_idx];
-    d_sharedState->d_runTimeStats[ SimulationState::TotalVFlops ] = (double) m_papi_event_values[m_papi_events.find(PAPI_DP_OPS)->second.m_event_value_idx];
-    d_sharedState->d_runTimeStats[ SimulationState::L2Misses ]    = (double) m_papi_event_values[m_papi_events.find(PAPI_L2_TCM)->second.m_event_value_idx];
-    d_sharedState->d_runTimeStats[ SimulationState::L3Misses ]    = (double) m_papi_event_values[m_papi_events.find(PAPI_L3_TCM)->second.m_event_value_idx];
+
+    // query all PAPI events - find which are supported, flag those that are unsupported
+    for (std::map<int, PapiEvent>::iterator iter = m_papi_events.begin(); iter != m_papi_events.end(); ++iter) {
+      if (iter->second.m_is_supported) {
+        d_sharedState->d_runTimeStats[ iter->second.m_sim_stat_name ]
+                                       = static_cast<double>(m_papi_event_values[m_papi_events.find(iter->first)->second.m_event_value_idx]);
+      }
+    }
   }
 
   // zero the values in the hardware counter event set array
@@ -1171,9 +1175,7 @@ SimulationController::getPAPIStats( )
               << "          Error code = " << retval << " ("
               << PAPI_strerror(retval) << ")\n";
 
-    throw PapiInitializationError( "PAPI reset error on hardware event set. "
-                                   "Unable to reset event set values.",
-                                   __FILE__, __LINE__ );
+    throw PapiInitializationError( "PAPI reset error on hardware event set, unable to reset event set values.", __FILE__, __LINE__ );
   }
 #endif
 }
