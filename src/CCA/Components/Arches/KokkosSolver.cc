@@ -522,11 +522,16 @@ KokkosSolver::SSPRKSolve( const LevelP& level, SchedulerP& sched ){
       press_tsk->schedule_task(level, sched, matls, TaskInterface::BC_TASK, time_substep );
       // Solve it - calling out to hypre external lib
       press_tsk->solve(level, sched, time_substep);
+      // Apply boundary conditions on the pressure field. The BCs are initially applied on the
+      // linear system, however, the resulting pressure field also needs BCs so that the correction
+      // to the velocities is done correctly.
+      AtomicTaskInterface* press_bc_tsk = i_transport->second->retrieve_atomic_task("pressure_bcs");
+      press_bc_tsk->schedule_task(level, sched, matls, AtomicTaskInterface::ATOMIC_STANDARD_TASK, time_substep); 
       // Correct velocities
       AtomicTaskInterface* gradP_tsk = i_transport->second->retrieve_atomic_task("pressure_correction");
       gradP_tsk->schedule_task(level, sched, matls, AtomicTaskInterface::ATOMIC_STANDARD_TASK, time_substep);
 
-      // now apply boundary conditions for all scalar for the next timestep
+      // apply boundary conditions
       i_transport->second->schedule_task_group( "momentum_construction", TaskInterface::BC, false, level, sched, matls, time_substep );
 
       //for sanity sake, recompute the velocities from momentum:

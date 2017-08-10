@@ -20,7 +20,7 @@
 * @author Jeremy Thornock
 * @date   2016
 *
-* @brief An atomic task (schedule + call back only)
+* @brief An atomic task (schedule + call back only). 
 *
 **/
 

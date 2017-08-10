@@ -6,6 +6,7 @@
 #include <CCA/Components/Arches/Transport/PressureEqn.h>
 #include <CCA/Components/Arches/Transport/VelRhoHatBC.h>
 #include <CCA/Components/Arches/Transport/AddPressGradient.h>
+#include <CCA/Components/Arches/Transport/PressureBC.h>
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 #include <CCA/Components/Arches/Task/AtomicTaskInterface.h>
 
@@ -164,6 +165,10 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
     AtomicTaskInterface::AtomicTaskBuilder* velrhohatbc_tsk = scinew VelRhoHatBC::Builder("vel_rho_hat_bc", 0);
     register_atomic_task( "vel_rho_hat_bc", velrhohatbc_tsk);
 
+    //pressure bcs
+    AtomicTaskInterface::AtomicTaskBuilder* press_bc_tsk = scinew PressureBC::Builder("pressure_bcs", 0);
+    register_atomic_task( "pressure_bcs", press_bc_tsk );
+
     //pressure Gradient
     AtomicTaskInterface::AtomicTaskBuilder* gradP_tsk = scinew AddPressGradient::Builder("pressure_correction", 0);
     register_atomic_task( "pressure_correction", gradP_tsk);
@@ -273,6 +278,12 @@ TransportFactory::build_all_tasks( ProblemSpecP& db )
     print_task_setup_info("pressure_correction", "correction for vels");
     gradP_tsk->problemSetup(db_mom);
     gradP_tsk->create_local_labels();
+
+    AtomicTaskInterface* press_bc_tsk = retrieve_atomic_task("pressure_bcs");
+    print_task_setup_info("pressure_bcs", "apply bcs to the solution of the linear pressure system");
+    press_bc_tsk->problemSetup(db_mom);
+    press_bc_tsk->create_local_labels();
+
 
   }
 }
