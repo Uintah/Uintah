@@ -152,7 +152,7 @@ SimulationController::SimulationController( const ProcessorGroup * myworld,
   // PAPI_L3_TCM - level 3 total cache misses
   m_papi_events.insert(pair<int, PapiEvent>(PAPI_L3_TCM, PapiEvent("PAPI_L3_TCM", SimulationState::L3Misses)));
 
-  // Total translation lookaside buffer misses
+  // PAPI_TLB_TL - Total translation lookaside buffer misses
   m_papi_events.insert(pair<int, PapiEvent>(PAPI_TLB_TL, PapiEvent("PAPI_TLB_TL", SimulationState::TLBMisses)));
 
   m_papi_event_values = scinew long long[m_papi_events.size()];
@@ -220,9 +220,16 @@ SimulationController::SimulationController( const ProcessorGroup * myworld,
   // Start counting PAPI events
   retval = PAPI_start(m_papi_event_set);
   if (retval != PAPI_OK) {
-    proc0cout << "WARNNING: Cannot start PAPI event set!\n"
-              << "          Error code = " << retval << " (" << PAPI_strerror(retval) << ")" << std::endl;
-    throw PapiInitializationError("PAPI event set start error. Unable to start hardware counter event set.", __FILE__, __LINE__);
+    proc0cout << "   ERROR: Cannot start PAPI event set!\n"
+              << "          Error code = " << retval << " (" << PAPI_strerror(retval)
+              << ")" << std::endl;
+
+    // PAPI_ENOCMP mean component index isn't set - means no events supported on this platform,
+    // otherwise something potentially unreasonable happened, either way we should not continue
+    std::string error_message = "PAPI event set start error.";
+    std::string specific_message = error_message + ((retval == PAPI_ENOCMP) ? "  None of the PAPI events tracked by Uintah are available on this platform. " : "")
+                                                 + "Please recompile without PAPI enabled.";
+    throw PapiInitializationError(specific_message, __FILE__, __LINE__);
   }
 #endif
 } // end SimulationController constructor
@@ -1155,7 +1162,7 @@ SimulationController::getPAPIStats( )
   int retval = PAPI_read(m_papi_event_set, m_papi_event_values);
 
   if (retval != PAPI_OK) {
-    proc0cout << "Error: Cannot read PAPI event set!\n"
+    proc0cout << "   Error: Cannot read PAPI event set!\n"
               << "       Error code = " << retval << " (" << PAPI_strerror(retval) << ")\n";
     throw PapiInitializationError("PAPI read error. Unable to read hardware event set values.", __FILE__, __LINE__);
   }
