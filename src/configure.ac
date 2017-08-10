@@ -1129,8 +1129,6 @@ fi
 ##  DO NOT "hardcode" ANY libraries (i.e. no -l or -L or -I allowed).
 ##
 
-TEMPLATE_TAG=
-TEMPLATE_BOX="<>"
 case $host in
      *-darwin*)
         # New Mac Clang comiler does not support the -faltivec flag...
@@ -2050,9 +2048,6 @@ AC_SUBST(MAKE_PARALLELISM)
 AC_SUBST(NEED_SONAME)
 AC_SUBST(PERL)
 AC_SUBST(REPOSITORY_FLAGS)
-AC_SUBST(TEMPLATE_TAG)
-AC_SUBST(TEMPLATE_BOX)
-sci_defs_files="$sci_defs_files include/sci_defs/template_testdefs.h"
 
 ##  set the default language after the build tools are found
 AC_LANG([C])

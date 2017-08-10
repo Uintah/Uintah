@@ -38,7 +38,6 @@
 #define SCI_Containers_Array2_h 1
 
 #include <Core/Util/Assert.h>
-#include <sci_defs/template_defs.h>
 
 namespace Uintah {
 

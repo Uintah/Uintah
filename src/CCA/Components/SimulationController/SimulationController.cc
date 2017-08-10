@@ -224,7 +224,7 @@ SimulationController::SimulationController( const ProcessorGroup * myworld,
               << "          Error code = " << retval << " (" << PAPI_strerror(retval)
               << ")" << std::endl;
 
-    // PAPI_ENOCMP mean component index isn't set - means no events supported on this platform,
+    // PAPI_ENOCMP means component index isn't set because no tracked events supported on this platform,
     // otherwise something potentially unreasonable happened, either way we should not continue
     std::string error_message = "PAPI event set start error.";
     std::string specific_message = error_message + ((retval == PAPI_ENOCMP) ? "  None of the PAPI events tracked by Uintah are available on this platform. " : "")
