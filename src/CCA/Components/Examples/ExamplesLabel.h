@@ -41,6 +41,7 @@ namespace Uintah {
     const VarLabel* zvelocity;
     const VarLabel* density;
     const VarLabel* temperature;
+    const VarLabel* temperature_nc;
     const VarLabel* pressure;
     const VarLabel* ccvelocity;
 
