@@ -152,6 +152,9 @@ SimulationController::SimulationController( const ProcessorGroup * myworld,
   // PAPI_L3_TCM - level 3 total cache misses
   m_papi_events.insert(pair<int, PapiEvent>(PAPI_L3_TCM, PapiEvent("PAPI_L3_TCM", SimulationState::L3Misses)));
 
+  // Total translation lookaside buffer misses
+  m_papi_events.insert(pair<int, PapiEvent>(PAPI_TLB_TL, PapiEvent("PAPI_TLB_TL", SimulationState::TLBMisses)));
+
   m_papi_event_values = scinew long long[m_papi_events.size()];
   m_papi_event_set    = PAPI_NULL;
   int retval          = PAPI_NULL;
@@ -1157,7 +1160,6 @@ SimulationController::getPAPIStats( )
     throw PapiInitializationError("PAPI read error. Unable to read hardware event set values.", __FILE__, __LINE__);
   }
   else {
-
     // query all PAPI events - find which are supported, flag those that are unsupported
     for (std::map<int, PapiEvent>::iterator iter = m_papi_events.begin(); iter != m_papi_events.end(); ++iter) {
       if (iter->second.m_is_supported) {
@@ -1169,12 +1171,10 @@ SimulationController::getPAPIStats( )
 
   // zero the values in the hardware counter event set array
   retval = PAPI_reset(m_papi_event_set);
-
   if (retval != PAPI_OK) {
     proc0cout << "WARNNING: Cannot reset PAPI event set!\n"
               << "          Error code = " << retval << " ("
               << PAPI_strerror(retval) << ")\n";
-
     throw PapiInitializationError( "PAPI reset error on hardware event set, unable to reset event set values.", __FILE__, __LINE__ );
   }
 #endif

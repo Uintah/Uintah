@@ -173,10 +173,11 @@ SimulationState::SimulationState(ProblemSpecP &ps)
   d_runTimeStats.insert( MemoryResident,     std::string("MemoryResident"),     bytesStr, 0 );
 
 #ifdef USE_PAPI_COUNTERS
-  d_runTimeStats.insert( TotalFlops,  std::string("TotalFlops") , "FLOPS"   , 0 );
-  d_runTimeStats.insert( TotalVFlops, std::string("TotalVFlops"), "VFLOPS"  , 0 );
-  d_runTimeStats.insert( L2Misses,    std::string("L2Misses")   , "L2Misses", 0 );
-  d_runTimeStats.insert( L3Misses,    std::string("L3Misses")   , "L3Misses", 0 );
+  d_runTimeStats.insert( TotalFlops,  std::string("TotalFlops") , "FLOPS" , 0 );
+  d_runTimeStats.insert( TotalVFlops, std::string("TotalVFlops"), "FLOPS" , 0 );
+  d_runTimeStats.insert( L2Misses,    std::string("L2Misses")   , "misses", 0 );
+  d_runTimeStats.insert( L3Misses,    std::string("L3Misses")   , "misses", 0 );
+  d_runTimeStats.insert( TLBMisses,   std::string("TLBMisses")  , "misses", 0 );
 #endif
 
   d_runTimeStats.validate( MAX_TIMING_STATS );

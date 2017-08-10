@@ -320,6 +320,7 @@ public:
     , TotalVFlops           // Floating point operations executed; optimized to count scaled DP vector ops
     , L2Misses              // L2 cache misses
     , L3Misses              // L3 cache misses
+    , TLBMisses             // Total translation lookaside buffer misses
 #endif
 
      , MAX_TIMING_STATS
