@@ -162,11 +162,11 @@ SCI_ARG_VAR(NVCC_LDFLAGS, CUDA linker flags)
 ## checked in:
 ##
 ## To avoid allowing invalid arguments to configure, we have to manually
-## hack "configure" after it has been 'autoconf'd, and add the line
-## enable_option_checking=fatal.  There apparently is no way to do
-## this through autoconf macros... sigh.  Manually find this text in
-## configure, MOVE IT TO THE TOP OF THE FILE (just after the MIT
-## license), and uncomment the following line:
+## hack the 'configure' script after it has been 'autoconf'd, and add the
+## line "enable_option_checking=fatal".  There apparently is no way to do
+## this through autoconf macros... sigh.  Manually find this entire text
+## block (comment and all) in configure, MOVE IT ALL TO THE TOP OF THE FILE
+## (just after the MIT license), and uncomment the following line:
 ##
 # enable_option_checking=fatal
 
