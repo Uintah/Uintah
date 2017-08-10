@@ -138,42 +138,19 @@ SimulationController::SimulationController( const ProcessorGroup * myworld,
    *       time sharing the existing counters. This comes at some loss
    *       in precision.
    *
-   * PAPI_FP_OPS - floating point operations executed
-   * PAPI_DP_OPS - floating point operations executed; optimized to count scaled double precision vector operations
-   * PAPI_L2_TCM - level 2 total cache misses
-   * PAPI_L3_TCM - level 3 total cache misses
    */
-  m_papi_events.insert(pair<int, PapiEvent>(PAPI_FP_OPS, PapiEvent("PAPI_FP_OPS", "FLOPS")));
-  m_papi_events.insert(pair<int, PapiEvent>(PAPI_DP_OPS, PapiEvent("PAPI_DP_OPS", "VFLOPS")));
-  m_papi_events.insert(pair<int, PapiEvent>(PAPI_L2_TCM, PapiEvent("PAPI_L2_TCM", "L2CacheMisses")));
-  m_papi_events.insert(pair<int, PapiEvent>(PAPI_L3_TCM, PapiEvent("PAPI_L3_TCM", "L3CacheMisses")));
 
-  // For meaningful error reporting - PAPI Version: 5.1.0 has 25 error return codes:
-  m_papi_error_codes.insert(pair<int, string>( 0,  "No error"));
-  m_papi_error_codes.insert(pair<int, string>(-1,  "Invalid argument"));
-  m_papi_error_codes.insert(pair<int, string>(-2,  "Insufficient memory"));
-  m_papi_error_codes.insert(pair<int, string>(-3,  "A System/C library call failed"));
-  m_papi_error_codes.insert(pair<int, string>(-4,  "Not supported by substrate"));
-  m_papi_error_codes.insert(pair<int, string>(-5,  "Access to the counters was lost or interrupted"));
-  m_papi_error_codes.insert(pair<int, string>(-6,  "Internal error, please send mail to the developers"));
-  m_papi_error_codes.insert(pair<int, string>(-7,  "Hardware event does not exist"));
-  m_papi_error_codes.insert(pair<int, string>(-8,  "Hardware event exists, but cannot be counted due to counter resource limitations"));
-  m_papi_error_codes.insert(pair<int, string>(-9,  "EventSet is currently not running"));
-  m_papi_error_codes.insert(pair<int, string>(-10, "EventSet is currently counting"));
-  m_papi_error_codes.insert(pair<int, string>(-11, "No such EventSet available"));
-  m_papi_error_codes.insert(pair<int, string>(-12, "Event in argument is not a valid preset"));
-  m_papi_error_codes.insert(pair<int, string>(-13, "Hardware does not support performance counters"));
-  m_papi_error_codes.insert(pair<int, string>(-14, "Unknown error code"));
-  m_papi_error_codes.insert(pair<int, string>(-15, "Permission level does not permit operation"));
-  m_papi_error_codes.insert(pair<int, string>(-16, "PAPI hasn't been initialized yet"));
-  m_papi_error_codes.insert(pair<int, string>(-17, "Component index isn't set"));
-  m_papi_error_codes.insert(pair<int, string>(-18, "Not supported"));
-  m_papi_error_codes.insert(pair<int, string>(-19, "Not implemented"));
-  m_papi_error_codes.insert(pair<int, string>(-20, "Buffer size exceeded"));
-  m_papi_error_codes.insert(pair<int, string>(-21, "EventSet domain is not supported for the operation"));
-  m_papi_error_codes.insert(pair<int, string>(-22, "Invalid or missing event attributes"));
-  m_papi_error_codes.insert(pair<int, string>(-23, "Too many events or attributes"));
-  m_papi_error_codes.insert(pair<int, string>(-24, "Bad combination of features"));
+  // PAPI_FP_OPS - floating point operations executed
+  m_papi_events.insert(pair<int, PapiEvent>(PAPI_FP_OPS, PapiEvent("PAPI_FP_OPS", "FLOPS")));
+
+  // PAPI_DP_OPS - floating point operations executed; optimized to count scaled double precision vector operations
+  m_papi_events.insert(pair<int, PapiEvent>(PAPI_DP_OPS, PapiEvent("PAPI_DP_OPS", "VFLOPS")));
+
+  // PAPI_L2_TCM - level 2 total cache misses
+  m_papi_events.insert(pair<int, PapiEvent>(PAPI_L2_TCM, PapiEvent("PAPI_L2_TCM", "L2CacheMisses")));
+
+  // PAPI_L3_TCM - level 3 total cache misses
+  m_papi_events.insert(pair<int, PapiEvent>(PAPI_L3_TCM, PapiEvent("PAPI_L3_TCM", "L3CacheMisses")));
 
   m_papi_event_values = scinew long long[m_papi_events.size()];
   m_papi_event_set    = PAPI_NULL;
@@ -183,17 +160,15 @@ SimulationController::SimulationController( const ProcessorGroup * myworld,
   retval = PAPI_library_init(PAPI_VER_CURRENT);
   if (retval != PAPI_VER_CURRENT) {
     proc0cout << "Error: Cannot initialize PAPI library!\n"
-              << "       Error code = " << retval << " (" << m_papi_error_codes.find(retval)->second << ")\n";
+              << "       Error code = " << retval << " (" << PAPI_strerror(retval) << ")\n";
     throw PapiInitializationError("PAPI library initialization error occurred. Check that your PAPI library can be initialized correctly.", __FILE__, __LINE__);
   }
 
   // initialize thread support in the PAPI library
   retval = PAPI_thread_init(pthread_self);
   if (retval != PAPI_OK) {
-    if (d_myworld->myrank() == 0) {
-      std::cout << "Error: Cannot initialize PAPI thread support!\n"
-           << "       Error code = " << retval << " (" << m_papi_error_codes.find(retval)->second << ")\n";
-    }
+    proc0cout << "Error: Cannot initialize PAPI thread support!\n"
+              << "       Error code = " << retval << " (" << PAPI_strerror(retval) << ")\n";
     if (Parallel::getNumThreads() > 1) {
       throw PapiInitializationError("PAPI Pthread initialization error occurred. Check that your PAPI build supports Pthreads.", __FILE__, __LINE__);
     }
@@ -202,12 +177,12 @@ SimulationController::SimulationController( const ProcessorGroup * myworld,
   // query all PAPI events - find which are supported, flag those that are unsupported
   for (std::map<int, PapiEvent>::iterator iter = m_papi_events.begin(); iter != m_papi_events.end(); ++iter) {
     retval = PAPI_query_event(iter->first);
-    std::cout << "EVENT: " << iter->first << "\n";
     if (retval != PAPI_OK) {
       proc0cout << "WARNNING: Cannot query PAPI event: " << iter->second.m_name << "!\n"
-                << "          Error code = " << retval << " (" << m_papi_error_codes.find(retval)->second << ")\n"
-                << "          No stats will be printed for " << iter->second.m_sim_stat_name << "\n";
-    } else {
+                << "          Error code = " << retval << " (" << PAPI_strerror(retval)<< ")\n"
+                << "          No stats will be printed for " << iter->second.m_sim_stat_name << std::endl;
+    }
+    else {
       iter->second.m_is_supported = true;
     }
   }
@@ -216,37 +191,34 @@ SimulationController::SimulationController( const ProcessorGroup * myworld,
   retval = PAPI_create_eventset(&m_papi_event_set);
   if (retval != PAPI_OK) {
     proc0cout << "Error: Cannot create PAPI event set!\n"
-              << "       Error code = " << retval << " (" << m_papi_error_codes.find(retval)->second << ")\n";
+              << "       Error code = " << retval << " (" << PAPI_strerror(retval)<< ")\n";
     throw PapiInitializationError("PAPI event set creation error. Unable to create hardware counter event set.", __FILE__, __LINE__);
   }
 
-  /* Iterate through PAPI events that are supported, flag those that
-   *   cannot be added.  There are situations where an event may be
-   *   queried but not added to an event set, this is the purpose of
-   *   this block of code.
-   */
+  // Iterate through supported PAPI events, flag those that cannot be added.
+  //   There are situations where an event may be queried but not added to an event set.
   int index = 0;
-  for (map<int, PapiEvent>::iterator iter = m_papi_events.begin(); iter != m_papi_events.end(); iter++) {
+  for (std::map<int, PapiEvent>::iterator iter = m_papi_events.begin(); iter != m_papi_events.end(); ++iter) {
     if (iter->second.m_is_supported) {
       retval = PAPI_add_event(m_papi_event_set, iter->first);
       if (retval != PAPI_OK) { // this means the event queried OK but could not be added
-        if (d_myworld->myrank() == 0) {
-          cout << "WARNNING: Cannot add PAPI event: " << iter->second.m_name << "!\n"
-               << "          Error code = " << retval << " (" << m_papi_error_codes.find(retval)->second << ")\n"
-               << "          No stats will be printed for " << iter->second.m_sim_stat_name << "\n";
-        }
+        proc0cout << "WARNNING: Cannot add PAPI event: " << iter->second.m_name << "!\n"
+                  << "          Error code = " << retval << " (" << PAPI_strerror(retval) << ")\n"
+                  << "          No stats will be printed for " << iter->second.m_sim_stat_name << std::endl;
         iter->second.m_is_supported = false;
-      } else {
+      }
+      else {
         iter->second.m_event_value_idx = index;
         index++;
       }
     }
   }
 
+  // Start counting PAPI events
   retval = PAPI_start(m_papi_event_set);
   if (retval != PAPI_OK) {
     proc0cout << "WARNNING: Cannot start PAPI event set!\n"
-              << "          Error code = " << retval << " (" << m_papi_error_codes.find(retval)->second << ")\n";
+              << "          Error code = " << retval << " (" << PAPI_strerror(retval) << ")" << std::endl;
     throw PapiInitializationError("PAPI event set start error. Unable to start hardware counter event set.", __FILE__, __LINE__);
   }
 #endif
@@ -1177,11 +1149,11 @@ void
 SimulationController::getPAPIStats( )
 {
 #ifdef USE_PAPI_COUNTERS
-  int retp = PAPI_read(m_papi_event_set, m_papi_event_values);
+  int retval = PAPI_read(m_papi_event_set, m_papi_event_values);
 
-  if (retp != PAPI_OK) {
+  if (retval != PAPI_OK) {
     proc0cout << "Error: Cannot read PAPI event set!\n"
-              << "       Error code = " << retp << " (" << m_papi_error_codes.find(retp)->second << ")\n";
+              << "       Error code = " << retval << " (" << PAPI_strerror(retval) << ")\n";
     throw PapiInitializationError("PAPI read error. Unable to read hardware event set values.", __FILE__, __LINE__);
   }
   else {
@@ -1192,12 +1164,12 @@ SimulationController::getPAPIStats( )
   }
 
   // zero the values in the hardware counter event set array
-  retp = PAPI_reset(m_papi_event_set);
+  retval = PAPI_reset(m_papi_event_set);
 
-  if (retp != PAPI_OK) {
+  if (retval != PAPI_OK) {
     proc0cout << "WARNNING: Cannot reset PAPI event set!\n"
-              << "          Error code = " << retp << " ("
-              << m_papi_error_codes.find(retp)->second << ")\n";
+              << "          Error code = " << retval << " ("
+              << PAPI_strerror(retval) << ")\n";
 
     throw PapiInitializationError( "PAPI reset error on hardware event set. "
                                    "Unable to reset event set values.",

@@ -270,7 +270,6 @@ protected:
   };
 
   std::map<int, PapiEvent>   m_papi_events;
-  std::map<int, std::string> m_papi_error_codes;
 #endif
 
 #ifdef HAVE_VISIT
