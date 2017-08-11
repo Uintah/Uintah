@@ -37,6 +37,7 @@
 #include <Core/Math/UintahMiscMath.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Util/DOUT.hpp>
 #include <Core/Util/StringUtil.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/XMLUtils.h>
@@ -49,6 +50,7 @@
 using namespace std;
 using namespace Uintah;
 
+Dout g_dbg("GRID", false);
 
 struct StretchSpec {
   string shape;
@@ -794,6 +796,25 @@ Grid::printStatistics() const
     double ppc = double(l->totalCells())/double(l->numPatches());
     cout << "  Total number of cells:\t" << l->totalCells() << " (" << ppc << " avg. per patch)\n";
     totalCells += l->totalCells();
+
+    //__________________________________
+    //  debugging
+    if( g_dbg.active() ){
+      Level::const_patch_iterator iter;
+      printf("  patches: \n");
+      for(iter = l->patchesBegin(); iter != l->patchesEnd(); iter++) {
+        const Patch* patch = *iter;
+        ostringstream msg;
+        
+        msg << "   Patch: " << patch->getID();
+        msg << " Interior Cells " << patch->getCellLowIndex() << " " << patch->getCellHighIndex();
+        msg.width(15);
+        msg << " \tExtra Cells " << patch->getExtraCellLowIndex() << " " << patch->getExtraCellHighIndex(); 
+        printf( "%s\n", msg.str().c_str() );
+        //DOUT( true,  msg.str() );
+      }
+    }
+    
   }
   cout << "Total patches in grid:\t\t" << totalPatches << '\n';
   double ppc = double(totalCells)/double(totalPatches);

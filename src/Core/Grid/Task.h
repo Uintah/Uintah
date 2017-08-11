@@ -361,9 +361,9 @@ public: // class Task
          void usesThreads(bool state);
   inline bool usesThreads() const { return m_uses_threads; }
 
-         void usesDevice(bool state);
+         void usesDevice(bool state, int maxStreamsPerTask = 1);
   inline bool usesDevice() const { return m_uses_device; }
-
+  inline int  maxStreamsPerTask() const { return  m_max_streams_per_task; }
 
   enum MaterialDomainSpec {
       NormalDomain  // <- Normal/default setting
@@ -850,6 +850,7 @@ protected: // class Task
   bool m_uses_mpi{false};
   bool m_uses_threads{false};
   bool m_uses_device{false};
+  int  m_max_streams_per_task{1};
   bool m_subpatch_capable{false};
   bool m_has_subscheduler{false};
 

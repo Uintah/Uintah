@@ -38,6 +38,7 @@
 #include <CCA/Components/Wasatch/Expressions/MMS/Functions.h>
 #include <CCA/Components/Wasatch/WasatchBCHelper.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditions.h>
+#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditionsOneSided.h>
 #ifdef HAVE_POKITT
 #include <pokitt/thermo/InternalEnergy.h>
 #include <pokitt/thermo/Temperature.h>

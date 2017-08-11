@@ -27,13 +27,13 @@
 
 #include <StandAlone/tools/puda/util.h>
 
+#include <Core/Containers/ConsecutiveRangeSet.h>
 #include <Core/DataArchive/DataArchive.h>
 #include <Core/Disclosure/TypeDescription.h>
-#include <Core/Grid/Variables/GridIterator.h>
 #include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/GridIterator.h>
 #include <Core/Grid/Variables/NodeIterator.h>
-
-#include <Core/Containers/ConsecutiveRangeSet.h>
+#include <Core/Parallel/Parallel.h>
 
 #include <sci_defs/bits_defs.h>
 #include <sci_defs/osx_defs.h>  // For OSX_SNOW_LEOPARD_OR_LATER
@@ -411,21 +411,58 @@ getIterator( const Uintah::TypeDescription * td, const Patch * patch, bool use_e
 template <class Tvar, class Ttype>
 void
 findMinMax( DataArchive         * da,
-            const string        & var,
+            const string        & var_name,
             int                   matl,
             const Patch         * patch,
             int                   timestep,
             CommandLineFlags    & clf )
 {
-  Tvar value;
+  Tvar var;
 
-  const Uintah::TypeDescription * td = value.getTypeDescription();
+  const Uintah::TypeDescription * td = var.getTypeDescription();
 
   GridIterator iter = getIterator( td, patch, clf.use_extra_cells );
 
   if( !iter.done() ) {
 
-    bool found = da->query( value, var, matl, patch, timestep );
+    bool found = false;
+    if( da->isPIDXFormat() ) {
+
+      const LevelP & level = patch->getLevelP();
+
+      PIDX_file     idxFile;
+      PIDX_variable varDesc;
+      PIDX_access   access;
+
+      PIDX_create_access( &access );
+      PIDX_set_mpi_access( access, Parallel::getRootProcessorGroup()->getComm() );
+
+      cout << Uintah::Parallel::getMPIRank() << ": call setupQueryPIDX()\n";
+      bool result = da->setupQueryPIDX( access, idxFile, varDesc, level, td, var_name, matl, timestep );
+
+      if( !result ) {
+        // Did not find this var/material... skipping...
+        cout << Uintah::Parallel::getMPIRank() << ":         not found, skipping....\n";
+        return;
+      }
+
+      BufferAndSizeTuple * data = new BufferAndSizeTuple();
+
+      found = da->queryPIDX( data, varDesc, td, var_name, matl, patch, timestep );
+
+      //Variable * var = label->typeDescription()->createInstance();
+      const IntVector bl( 0, 0, 0 );
+      var.allocate( patch, bl );
+      bool swap_bytes = false; // FIX ME this should not be hard coded!
+      var.readPIDX( data->buffer, data->size, swap_bytes );
+
+      free( data->buffer );
+      free( data );
+    }
+    else {
+      found = da->query( var, var_name, matl, patch, timestep );
+    }
+
     if( !found ) {
       cout << "\t\t\t\tVar not found...\n";
       return;
@@ -443,7 +480,7 @@ findMinMax( DataArchive         * da,
     int maxCnt = 1;
 
     // Set initial values:
-    max = value[*iter];
+    max = var[*iter];
     min = max;
     c_max = *iter;
     c_min = c_max;
@@ -452,7 +489,7 @@ findMinMax( DataArchive         * da,
     
     for( ; !iter.done(); iter++ ) {
 
-      Ttype val = value[*iter];
+      Ttype val = var[*iter];
 
       if (val == min) { minCnt++; }
       if (val == max) { maxCnt++; }
@@ -474,7 +511,7 @@ findMinMax( DataArchive         * da,
       max = Max(max, val);
     }
 
-    printMinMax<Ttype>( clf, var, matl, patch, td->getSubType(), &min, &max, &c_min, &c_max, minCnt, maxCnt );
+    printMinMax<Ttype>( clf, var_name, matl, patch, td->getSubType(), &min, &max, &c_min, &c_max, minCnt, maxCnt );
 
   } // end if( dx dy dz )
 

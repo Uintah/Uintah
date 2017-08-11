@@ -150,7 +150,7 @@ private:
         } else {
           Uintah::parallel_for(range, [&](int i, int j, int k){
             STENCIL3_1D(dir);
-            dep_field(C_) = _A * sin( _two_pi * _f1 * weight * (ind_field(C_)+ind_field(CM_) ) ) + _offset;
+            dep_field(IJK_) = _A * sin( _two_pi * _f1 * weight * (ind_field(IJK_)+ind_field(IJK_M_) ) ) + _offset;
           });
         }
 
@@ -165,8 +165,8 @@ private:
         } else {
           Uintah::parallel_for(range, [&](int i, int j, int k){
             STENCIL3_1D(dir);
-            dep_field(C_) = sin( _two_pi * _f1 * weight * (ind_field(C_)+ind_field(CM_)) )+ _offset;
-            dep_field(C_) = (dep_field(C_) <= 0.0) ? _min_sq : _max_sq ;
+            dep_field(IJK_) = sin( _two_pi * _f1 * weight * (ind_field(IJK_)+ind_field(IJK_M_)) )+ _offset;
+            dep_field(IJK_) = (dep_field(IJK_) <= 0.0) ? _min_sq : _max_sq ;
           });
         }
 

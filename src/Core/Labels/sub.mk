@@ -35,6 +35,7 @@ SRCDIR   := Core/Labels
 SRCS     += \
 	$(SRCDIR)/ICELabel.cc \
 	$(SRCDIR)/MPMLabel.cc \
+	$(SRCDIR)/MPMDiffusionLabel.cc \
 	$(SRCDIR)/MPMICELabel.cc 
 
 PSELIBS := \

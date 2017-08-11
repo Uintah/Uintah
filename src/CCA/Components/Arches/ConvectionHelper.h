@@ -100,14 +100,19 @@ namespace Uintah {
   /**
       @struct ComputeConvectiveFlux
       @brief Compute a convective flux given psi (flux limiter) with this functor.
+             The template arguments arrise from the potential use of temporary (non-const)
+             variables. Typically, one would use T=Array3<double> and CT=const Array3<double>
+             when not using temporary variables. However, since temporary variables can ONLY
+             be non-const, one should use CT=Array3<double> in that case.
   **/
+  template <typename PSI_T>
   struct ComputeConvectiveFlux{
 
     ComputeConvectiveFlux( const Array3<double>& i_phi,
                            const Array3<double>& i_u, const Array3<double>& i_v,
                            const Array3<double>& i_w,
-                           const Array3<double>& i_psi_x, const Array3<double>& i_psi_y,
-                           const Array3<double>& i_psi_z,
+                           PSI_T& i_psi_x, PSI_T& i_psi_y,
+                           PSI_T& i_psi_z,
                            Array3<double>& i_flux_x, Array3<double>& i_flux_y,
                            Array3<double>& i_flux_z,
                            const Array3<double>& i_eps ) :
@@ -121,26 +126,26 @@ namespace Uintah {
       //X-dir
       {
         STENCIL3_1D(0);
-        const double Sup = u(C_) > 0 ? phi(CM_) : phi(C_);
-        const double Sdn = u(C_) > 0 ? phi(C_) : phi(CM_);
-        const double afc = ( eps(C_) + eps(CM_) ) / 2. < 0.51 ? 0.0 : 1.0;
-        flux_x(C_) = afc * u(C_) * ( Sup + 0.5 * psi_x(C_) * ( Sdn - Sup )) ;
+        const double Sup = u(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
+        const double Sdn = u(IJK_) > 0 ? phi(IJK_) : phi(IJK_M_);
+        const double afc = ( eps(IJK_) + eps(IJK_M_) ) / 2. < 0.51 ? 0.0 : 1.0;
+        flux_x(IJK_) = afc * u(IJK_) * ( Sup + 0.5 * psi_x(IJK_) * ( Sdn - Sup )) ;
       }
       //Y-dir
       {
         STENCIL3_1D(1);
-        const double Sup = v(C_) > 0 ? phi(CM_) : phi(C_);
-        const double Sdn = v(C_) > 0 ? phi(C_) : phi(CM_);
-        const double afc = ( eps(C_) + eps(CM_) ) / 2. < 0.51 ? 0.0 : 1.0;
-        flux_y(C_) = afc * v(C_) * ( Sup + 0.5 * psi_y(C_) * ( Sdn - Sup )) ;
+        const double Sup = v(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
+        const double Sdn = v(IJK_) > 0 ? phi(IJK_) : phi(IJK_M_);
+        const double afc = ( eps(IJK_) + eps(IJK_M_) ) / 2. < 0.51 ? 0.0 : 1.0;
+        flux_y(IJK_) = afc * v(IJK_) * ( Sup + 0.5 * psi_y(IJK_) * ( Sdn - Sup )) ;
       }
       //Z-dir
       {
         STENCIL3_1D(2);
-        const double Sup = w(C_) > 0 ? phi(CM_) : phi(C_);
-        const double Sdn = w(C_) > 0 ? phi(C_) : phi(CM_);
-        const double afc = ( eps(C_) + eps(CM_) ) / 2. < 0.51 ? 0.0 : 1.0;
-        flux_z(C_) = afc * w(C_) * ( Sup + 0.5 * psi_z(C_) * ( Sdn - Sup )) ;
+        const double Sup = w(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
+        const double Sdn = w(IJK_) > 0 ? phi(IJK_) : phi(IJK_M_);
+        const double afc = ( eps(IJK_) + eps(IJK_M_) ) / 2. < 0.51 ? 0.0 : 1.0;
+        flux_z(IJK_) = afc * w(IJK_) * ( Sup + 0.5 * psi_z(IJK_) * ( Sdn - Sup )) ;
       }
     }
 
@@ -150,9 +155,9 @@ namespace Uintah {
     const Array3<double>& u;
     const Array3<double>& v;
     const Array3<double>& w;
-    const Array3<double>& psi_x;
-    const Array3<double>& psi_y;
-    const Array3<double>& psi_z;
+    PSI_T& psi_x;
+    PSI_T& psi_y;
+    PSI_T& psi_z;
     Array3<double>& flux_x;
     Array3<double>& flux_y;
     Array3<double>& flux_z;
@@ -199,14 +204,14 @@ namespace Uintah {
       double r;
 
       STENCIL5_1D(dir);
-      r = u(C_) > 0 ?
-        ( phi(CM_) - phi(CMM_) ) / ( phi(C_) - phi(CM_) + tiny ) :
-        ( phi(C_) - phi(CP_) ) / ( phi(CM_) - phi(C_) + tiny );
+      r = u(IJK_) > 0 ?
+        ( phi(IJK_M_) - phi(IJK_MM_) ) / ( phi(IJK_) - phi(IJK_M_) + tiny ) :
+        ( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny );
       r = std::abs(r);
       SUPERBEEMACRO(r);
-      const double afc  = (( eps(C_) + eps(CM_) )/2.) < 0.51 ? 0. : 1.;
-      const double afcm = (( eps(CM_) + eps(CMM_) )/2.) < 0.51 ? 0. : 1.;
-      psi(C_) = my_psi * afc * afcm;
+      const double afc  = (( eps(IJK_) + eps(IJK_M_) )/2.) < 0.51 ? 0. : 1.;
+      const double afcm = (( eps(IJK_M_) + eps(IJK_MM_) )/2.) < 0.51 ? 0. : 1.;
+      psi(IJK_) = my_psi * afc * afcm;
 
     }
 
@@ -225,14 +230,14 @@ namespace Uintah {
       double r;
 
       STENCIL5_1D(dir);
-      r = u(C_) > 0 ?
-        ( phi(CM_) - phi(CMM_) ) / ( phi(C_) - phi(CM_) + tiny ) :
-        ( phi(C_) - phi(CP_) ) / ( phi(CM_) - phi(C_) + tiny );
+      r = u(IJK_) > 0 ?
+        ( phi(IJK_M_) - phi(IJK_MM_) ) / ( phi(IJK_) - phi(IJK_M_) + tiny ) :
+        ( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny );
       r = std::abs(r);
       ROEMACRO(r);
-      const double afc  = (( eps(C_) + eps(CM_) )/2.) < 0.51 ? 0. : 1.;
-      const double afcm = (( eps(CM_) + eps(CMM_) )/2.) < 0.51 ? 0. : 1.;
-      psi(C_) = my_psi * afc * afcm;
+      const double afc  = (( eps(IJK_) + eps(IJK_M_) )/2.) < 0.51 ? 0. : 1.;
+      const double afcm = (( eps(IJK_M_) + eps(IJK_MM_) )/2.) < 0.51 ? 0. : 1.;
+      psi(IJK_) = my_psi * afc * afcm;
 
     }
 
@@ -251,14 +256,14 @@ namespace Uintah {
       double r;
 
       STENCIL5_1D(dir);
-      r = u(C_) > 0 ?
-        ( phi(CM_) - phi(CMM_) ) / ( phi(C_) - phi(CM_) + tiny ) :
-        ( phi(C_) - phi(CP_) ) / ( phi(CM_) - phi(C_) + tiny );
+      r = u(IJK_) > 0 ?
+        ( phi(IJK_M_) - phi(IJK_MM_) ) / ( phi(IJK_) - phi(IJK_M_) + tiny ) :
+        ( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny );
       r = std::abs(r);
       VANLEERMACRO(r);
-      const double afc  = (( eps(C_) + eps(CM_) )/2.) < 0.51 ? 0. : 1.;
-      const double afcm = (( eps(CM_) + eps(CMM_) )/2.) < 0.51 ? 0. : 1.;
-      psi(C_) = my_psi * afc * afcm;
+      const double afc  = (( eps(IJK_) + eps(IJK_M_) )/2.) < 0.51 ? 0. : 1.;
+      const double afcm = (( eps(IJK_M_) + eps(IJK_MM_) )/2.) < 0.51 ? 0. : 1.;
+      psi(IJK_) = my_psi * afc * afcm;
 
     }
 
@@ -273,7 +278,7 @@ namespace Uintah {
     void
     operator()(const UpwindStruct& op, int i, int j, int k) const {
 
-      psi(C_) = 0.;
+      psi(IJK_) = 0.;
 
     }
 
@@ -288,7 +293,7 @@ namespace Uintah {
     void
     operator()(const CentralStruct& op, int i, int j, int k) const {
 
-      psi(C_) = 1.;
+      psi(IJK_) = 1.;
 
     }
 
@@ -349,12 +354,12 @@ namespace Uintah {
     void
     operator()(int i, int j, int k) const{
 
-      rhs(i,j,k) += 0.25 * ( ( u(CE_) + u(C_) ) * ( phi(CE_) + phi(C_) ) -
-                     ( u(C_) + u(CW_) ) * ( phi(C_) + phi(CW_) ) +
-                     ( v(CNW_) + v(CNE_) ) * ( phi(CN_) + phi(C_) ) -
-                     ( v(CSW_) + v(CSE_) ) * ( phi(CS_) + phi(C_) ) +
-                     ( w(CTW_) + w(CTE_) ) * ( phi(CT_) + phi(C_) ) -
-                     ( w(CBW_) + w(CBE_) ) * ( phi(CB_) + phi(C_) )
+      rhs(i,j,k) += 0.25 * ( ( u(CE_) + u(IJK_) ) * ( phi(CE_) + phi(IJK_) ) -
+                     ( u(IJK_) + u(CW_) ) * ( phi(IJK_) + phi(CW_) ) +
+                     ( v(CNW_) + v(CNE_) ) * ( phi(CN_) + phi(IJK_) ) -
+                     ( v(CSW_) + v(CSE_) ) * ( phi(CS_) + phi(IJK_) ) +
+                     ( w(CTW_) + w(CTE_) ) * ( phi(CT_) + phi(IJK_) ) -
+                     ( w(CBW_) + w(CBE_) ) * ( phi(CB_) + phi(IJK_) )
                     );
 
     }

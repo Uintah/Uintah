@@ -101,7 +101,7 @@ using  task_access_monitor = Uintah::CrowdMonitor<task_access_tag>;
 
 using namespace Uintah;
 
-// Debug: Used to sync cerr/cout so it is readable when output by multiple threads
+// Debug: Used to sync cerr/cout so it is readable when output by multiple ranks
 extern std::mutex cerrLock;
 
 #ifdef HAVE_CUDA
@@ -1476,17 +1476,17 @@ OnDemandDataWarehouse::getParticleSubset(       int       matlIndex,
         newLow -= cellOffset;
         newHigh -= cellOffset;
       }
-      ParticleSubset* pset;
 
-      if( relPatch->getLevel() == level && relPatch != neighbor ) {
-        relPatch->cullIntersection( Patch::CellBased, IntVector( 0, 0, 0 ), realNeighbor, newLow,
-                                    newHigh );
+      if (relPatch != neighbor){
+        relPatch->cullIntersection( Patch::CellBased, IntVector( 0, 0, 0 ), realNeighbor, newLow, newHigh );
+
         if( newLow == newHigh ) {
           continue;
         }
       }
-
+      
       //get the particle subset for this patch
+      ParticleSubset* pset;
       pset = getParticleSubset( matlIndex, neighbor, newLow, newHigh, pos_var );
 
       //add subset to our current list
@@ -2388,7 +2388,7 @@ OnDemandDataWarehouse::getRegionModifiable(       GridVariableBase& var,
   Patch::VariableBasis basis = Patch::translateTypeToBasis(label->typeDescription()->getType(), false);
 
   // Enlarge the requested region, sometimes we only want extra cells.
-  // slect patches has difficulties with that request.
+  // select patches has difficulties with that request.
   IntVector adjustment = IntVector(1, 1, 1);
   if (basis == Patch::XFaceBased) {
     adjustment = IntVector(1, 0, 0);
@@ -2422,7 +2422,7 @@ OnDemandDataWarehouse::getRegionModifiable(       GridVariableBase& var,
     }
 
     //__________________________________
-    //  For this patch find the intersection of the requested region 
+    //  For this patch find the intersection of the requested region
     IntVector patchLo = patch->getLowIndex(basis);
     IntVector patchHi = patch->getHighIndex(basis);
     if (useBoundaryCells) {
@@ -2486,10 +2486,10 @@ OnDemandDataWarehouse::getRegionModifiable(       GridVariableBase& var,
       var.copyPatch(tmpVar, l, h);
     }
     catch (InternalError& e) {
-      std::cout << "OnDemandDataWarehouse::getRegionModifiable ERROR: failed copying patch data.\n " 
+      std::cout << "OnDemandDataWarehouse::getRegionModifiable ERROR: failed copying patch data.\n "
                 << " Level- " << level->getIndex()
-                << " region Requested: " << reqLow << " " << reqHigh << ", patch intersection: " << l << " " << h 
-                << " patch "<< patchLo << " " << patchHi 
+                << " region Requested: " << reqLow << " " << reqHigh << ", patch intersection: " << l << " " << h
+                << " patch "<< patchLo << " " << patchHi
                 << " variable range: " << tmpVar->getLow() << " "<< tmpVar->getHigh() << std::endl;
       throw e;
     }
@@ -2501,17 +2501,35 @@ OnDemandDataWarehouse::getRegionModifiable(       GridVariableBase& var,
   }  // patches loop
 
   //__________________________________
-  //  BULLETPROOFING
+  //  BULLETPROOFING  Verify that the correct number of cells were copied
+  //
+  // compute the number of cells in the region
   long requestedCells = level->getTotalCellsInRegion(reqLow, reqHigh);
-
-  if( nCellsCopied == 0  || nCellsCopied != requestedCells ) {
+  
+  // In non-cubic levels there may be overlapping patches that need to be accounted for.
+  std::pair<int, int> overLapCells_range = std::make_pair( 0,0 );
+  
+  if ( level->isNonCubic() || true ){             //__________________________________TODO: isNonCubic() doesn't work for all domains. --Todd
+    overLapCells_range = level->getOverlapCellsInRegion( patches, reqLow, reqHigh);
+  }
+  
+  //  The number of cells copied = requested cells  OR is within the range of possible overlapping cells
+  // In domains with multiple overlapping patches (inside corners in 3D) the number of cells copied can fall
+  // within a range
+  bool cond1 = ( nCellsCopied != requestedCells );
+  bool cond2 = ( nCellsCopied < requestedCells + overLapCells_range.first );
+  bool cond3 = ( nCellsCopied > requestedCells + overLapCells_range.second );
+    
+  if ( nCellsCopied == 0  || ( cond1 && cond2 && cond3 ) ) {
     
     DOUT(true,  d_myworld->myrank() << "  Unknown Variable " << *label << ", matl " << matlIndex << ", L-" << level->getIndex()
               << ", DW " << getID() << ", Variable exists in DB: " << foundInDB << "\n"
-              << "   Requested region: " << reqLow << " " << reqHigh << "\n"
-              << "   # copied cells: " << nCellsCopied << " # requested cells: " << requestedCells 
-              << " diff: " << abs(requestedCells - nCellsCopied) );
-    
+              << "   Requested region: " << reqLow << " " << reqHigh 
+              << ", Physical Units: " << level->getCellPosition(reqLow) << ", " << level->getCellPosition(reqHigh) << "\n" 
+              << "   #copied cells: " << nCellsCopied << ", #requested cells: " << requestedCells 
+              << ",  #overlapping Cells min:" << overLapCells_range.first << " max: " << overLapCells_range.second
+              << "\n cond1: " << cond1 << " cond2: " << cond2 << " cond3 " << cond3 );
+
     if (missing_patches.size() > 0) {
       DOUT(true, "  Patches on which the variable wasn't found:"); 
 
@@ -2892,11 +2910,11 @@ void OnDemandDataWarehouse::getNeighborPatches(const VarLabel* label,
   for( int i = 0; i < neighbors.size(); i++ ) {
     const Patch* neighbor = neighbors[i];
     if( neighbor && (neighbor != patch) ) {
-      IntVector low = Max( neighbor->getExtraLowIndex( basis, label->getBoundaryLayer() ), lowIndex );
+      IntVector low  = Max( neighbor->getExtraLowIndex( basis, label->getBoundaryLayer() ), lowIndex );
       IntVector high = Min( neighbor->getExtraHighIndex( basis, label->getBoundaryLayer() ), highIndex );
-      if( patch->getLevel()->getIndex() > 0 && patch != neighbor ) {
-        patch->cullIntersection( basis, label->getBoundaryLayer(), neighbor, low, high );
-      }
+      
+      patch->cullIntersection( basis, label->getBoundaryLayer(), neighbor, low, high );
+      
       if( low == high ) {
         continue;
       }
@@ -3000,16 +3018,15 @@ void OnDemandDataWarehouse::getValidNeighbors(const VarLabel* label,
   for( int i = 0; i < neighbors.size(); i++ ) {
     const Patch* neighbor = neighbors[i];
     if( neighbor && (neighbor != patch) ) {
-      IntVector low = Max( neighbor->getExtraLowIndex( basis, label->getBoundaryLayer() ),
-                           lowIndex );
-      IntVector high = Min( neighbor->getExtraHighIndex( basis, label->getBoundaryLayer() ),
-                            highIndex );
-      if( patch->getLevel()->getIndex() > 0 && patch != neighbor ) {
-        patch->cullIntersection( basis, label->getBoundaryLayer(), neighbor, low, high );
-      }
+      IntVector low  = Max( neighbor->getExtraLowIndex( basis, label->getBoundaryLayer() ), lowIndex );
+      IntVector high = Min( neighbor->getExtraHighIndex( basis, label->getBoundaryLayer() ),highIndex );
+      
+      patch->cullIntersection( basis, label->getBoundaryLayer(), neighbor, low, high );
+      
       if( low == high ) {
         continue;
       }
+      
       if (d_varDB.exists( label, matlIndex, neighbor )) {
         std::vector<Variable*> varlist;
         //Go through the main var plus any foreign fars for this label/material/patch

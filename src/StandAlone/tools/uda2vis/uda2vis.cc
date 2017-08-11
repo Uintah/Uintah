@@ -319,6 +319,9 @@ TimeStepInfo* getTimeStepInfo(DataArchive *archive,
                             &patch->getSFCZHighIndex()[0], "SFCZ_Mesh");
       }
 
+      // Get the patch id
+      patchInfo.setPatchId(patch->getID());
+      
       // Get the processor id
       patchInfo.setProcId(archive->queryPatchwiseProcessor(patch, timestep));
     }
@@ -810,6 +813,9 @@ TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
                             &patch->getSFCZHighIndex()[0], "SFCZ_Mesh");
       }
 
+      // Get the patch id
+      patchInfo.setPatchId(patch->getID());
+      
       // Get the processor id
       patchInfo.setProcId( lb->getPatchwiseProcessorAssignment(patch) );
     }
@@ -1162,13 +1168,13 @@ GridDataRaw* getPatchDataMainType(SchedulerP schedulerP,
   {
   case Uintah::TypeDescription::double_type:
     return readPatchData<VAR, double>(schedulerP, patch, level, varLabel,
-                                     material, low, high);
+                                      material, low, high);
   case Uintah::TypeDescription::float_type:
     return readPatchData<VAR, float>(schedulerP, patch, level, varLabel,
-                                    material, low, high);
+                                     material, low, high);
   case Uintah::TypeDescription::int_type:
     return readPatchData<VAR, int>(schedulerP, patch, level, varLabel,
-                                  material, low, high);
+                                   material, low, high);
   case Uintah::TypeDescription::Vector:
   case Uintah::TypeDescription::Stencil7:
   case Uintah::TypeDescription::Stencil4:
@@ -1206,9 +1212,9 @@ GridDataRaw* getGridData(SchedulerP schedulerP,
   const Patch *patch = level->getPatch(patch_i);
 
   // get the variable information
-  const VarLabel *varLabel;
+  const VarLabel* varLabel                = nullptr;
   const Uintah::TypeDescription* maintype = nullptr;
-  const Uintah::TypeDescription* subtype = nullptr;
+  const Uintah::TypeDescription* subtype  = nullptr;
 
   std::set<const VarLabel*, VarLabel::Compare> varLabels;
   std::set<const VarLabel*, VarLabel::Compare>::iterator varIter;
@@ -1266,8 +1272,8 @@ GridDataRaw* getGridData(SchedulerP schedulerP,
                                                   low, high, subtype);
   case Uintah::TypeDescription::PerPatch:
     return getPatchDataMainType<PerPatch>(schedulerP, patch, level,
-					  varLabel, material,
-					  low, high, subtype);
+					                                varLabel, material,
+					                                low, high, subtype);
   default:
     std::cerr << "Uintah/VisIt Libsim Error: unknown type: "
               << maintype->getName() << " for variable: "
@@ -1421,9 +1427,9 @@ ParticleDataRaw* getParticleData(SchedulerP schedulerP,
   const Patch *patch = level->getPatch(patch_i);
 
   // get the variable information
-  const VarLabel *varLabel;
+  const VarLabel* varLabel                = nullptr;
   const Uintah::TypeDescription* maintype = nullptr;
-  const Uintah::TypeDescription* subtype = nullptr;
+  const Uintah::TypeDescription* subtype  = nullptr;
 
   std::set<const VarLabel*, VarLabel::Compare> varLabels;
   std::set<const VarLabel*, VarLabel::Compare>::iterator varIter;

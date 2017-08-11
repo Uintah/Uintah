@@ -31,7 +31,7 @@
 
 template< typename FieldT >
 class OutflowBC
-: public BoundaryConditionBase<FieldT>
+: public WasatchCore::BoundaryConditionBase<FieldT>
 {
   OutflowBC( const Expr::Tag& momTag )
   {

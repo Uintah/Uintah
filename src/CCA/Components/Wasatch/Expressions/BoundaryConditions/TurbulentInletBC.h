@@ -33,7 +33,7 @@
 
 template< typename FieldT >
 class TurbulentInletBC
-: public BoundaryConditionBase<FieldT>
+: public WasatchCore::BoundaryConditionBase<FieldT>
 {
   typedef typename SpatialOps::SingleValueField TimeField;
   TurbulentInletBC( const std::string inputFileName,

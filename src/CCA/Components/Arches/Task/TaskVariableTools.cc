@@ -220,8 +220,11 @@ namespace Uintah {
                           ArchesFieldContainer::WHICH_DW dw,
                           std::vector<ArchesFieldContainer::VariableInformation>& var_reg,
                           const int time_substep,
-                          std::string task_name ){
-    register_variable_work( name, dep, nGhost, dw, var_reg, time_substep, task_name );
+                          std::string task_name,
+                          const bool temporary_variable ){
+    if ( !temporary_variable ){
+      register_variable_work( name, dep, nGhost, dw, var_reg, time_substep, task_name );
+    }
   }
 
   void register_variable( std::string name,
@@ -229,27 +232,36 @@ namespace Uintah {
                           int nGhost,
                           ArchesFieldContainer::WHICH_DW dw,
                           std::vector<ArchesFieldContainer::VariableInformation>& var_reg,
-                          std::string task_name){
-    register_variable_work( name, dep, nGhost, dw, var_reg, 0, task_name );
+                          std::string task_name,
+                          const bool temporary_variable ){
+    if ( !temporary_variable ){
+      register_variable_work( name, dep, nGhost, dw, var_reg, 0, task_name );
+    }
   }
 
   void register_variable( std::string name,
                           ArchesFieldContainer::VAR_DEPEND dep,
                           std::vector<ArchesFieldContainer::VariableInformation>& var_reg,
-                          std::string task_name ){
+                          std::string task_name,
+                          const bool temporary_variable ){
     ArchesFieldContainer::WHICH_DW dw = ArchesFieldContainer::NEWDW;
     int nGhost = 0;
-    register_variable_work( name, dep, nGhost, dw, var_reg, 0, task_name );
-
+    if ( !temporary_variable ){
+      register_variable_work( name, dep, nGhost, dw, var_reg, 0, task_name );
+    }
   }
 
   void register_variable( std::string name,
                           ArchesFieldContainer::VAR_DEPEND dep,
                           std::vector<ArchesFieldContainer::VariableInformation>& var_reg,
                           const int timesubstep,
-                          std::string task_name){
+                          std::string task_name,
+                          const bool temporary_variable ){
+
     ArchesFieldContainer::WHICH_DW dw = ArchesFieldContainer::NEWDW;
     int nGhost = 0;
-    register_variable_work( name, dep, nGhost, dw, var_reg, timesubstep, task_name );
+    if ( !temporary_variable ){
+      register_variable_work( name, dep, nGhost, dw, var_reg, timesubstep, task_name );
+    }
   }
 } // namespace Uintah

@@ -25,6 +25,7 @@
 #include <CCA/Components/Examples/AMRWave.h>
 #include <CCA/Components/Examples/Benchmark.h>
 #include <CCA/Components/Examples/Burger.h>
+#include <CCA/Components/Examples/Heat.hpp>
 #include <CCA/Components/Examples/DOSweep.h>
 #include <CCA/Components/Examples/RMCRT_Test.h>
 #include <CCA/Components/Examples/ParticleTest1.h>
@@ -34,6 +35,7 @@
 #include <CCA/Components/Examples/Poisson4.h>
 #include <CCA/Components/Examples/RegridderTest.h>
 #include <CCA/Components/Examples/SolverTest1.h>
+#include <CCA/Components/Examples/SolverTest2.h>
 #include <CCA/Components/Examples/Wave.h>
 #include <CCA/Components/ICE/AMRICE.h>
 #include <CCA/Components/ICE/ICE.h>
@@ -263,7 +265,13 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
   } 
   if (sim_comp == "solvertest" || sim_comp == "SOLVERTEST") {
     return scinew SolverTest1(world);
-  } 
+  }
+  if (sim_comp == "solvertest2" || sim_comp == "SOLVERTEST2") {
+    return scinew SolverTest2(world);
+  }
+  if (sim_comp == "heat" || sim_comp == "heat") {
+      return scinew Heat(world);
+    }
   if (sim_comp == "switcher" || sim_comp == "SWITCHER") {
     return scinew Switcher(world, ps, doAMR, uda);
   } 

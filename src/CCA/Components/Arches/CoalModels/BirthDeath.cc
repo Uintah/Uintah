@@ -130,21 +130,6 @@ BirthDeath::problemSetup(const ProblemSpecP& inputdb, int qn)
   }
 
   if ( _deposition ){
-    // check to see if rate_deposition model is active
-    bool missing_rate_depostion = true;
-    const ProblemSpecP params_root = db->getRootNode();
-    ProblemSpecP db_PM = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleModels");
-    for( ProblemSpecP db_var = db_PM->findBlock("model"); db_var != nullptr; db_var = db_var->findNextBlock("model") ) {
-      std::string type;
-      std::string role_found;
-      db_var->getAttribute("type", type);
-      if ( type == "rate_deposition" ){
-        missing_rate_depostion = false;
-      }
-    }
-    if ( missing_rate_depostion ){
-      throw InvalidValue("Error: BirthDeath deposition requires a rate_deposition model in ParticleModels.", __FILE__, __LINE__);
-    }
     // create rate_deposition model base names
     std::string rate_dep_base_nameX = "RateDepositionX";
     std::string rate_dep_base_nameY = "RateDepositionY";
@@ -348,15 +333,14 @@ BirthDeath::computeModel( const ProcessorGroup* pc,
 
       if ( _deposition ){
 
-        double mass_out = 0.0;
         double vol_p = (_pi/6.0)*pow(diam(i,j,k),3.0);
 
-        mass_out += abs(rate_X(i,j,k))*area_x; // kg/s
-        mass_out += abs(rate_Y(i,j,k))*area_y;
-        mass_out += abs(rate_Z(i,j,k))*area_z;
-        mass_out += abs(rate_X(i+1,j,k))*area_x;
-        mass_out += abs(rate_Y(i,j+1,k))*area_y;
-        mass_out += abs(rate_Z(i,j,k+1))*area_z;
+        dstrc_src += abs(rate_X(i,j,k))*area_x; // kg/s
+        dstrc_src += abs(rate_Y(i,j,k))*area_y;
+        dstrc_src += abs(rate_Z(i,j,k))*area_z;
+        dstrc_src += abs(rate_X(i+1,j,k))*area_x;
+        dstrc_src += abs(rate_Y(i,j+1,k))*area_y;
+        dstrc_src += abs(rate_Z(i,j,k+1))*area_z;
 
         dstrc_src /= -1.0*rhop(i,j,k)*vol_p*vol*_w_scale; // scaled #/s/m^3
 

@@ -59,6 +59,8 @@ ExamplesLabel::ExamplesLabel()
   temperature = VarLabel::create("temperature",
                                  CCVariable<double>::getTypeDescription(),
                                  IntVector(1,1,1));
+  temperature_nc = VarLabel::create("temperature_nc",
+                                    NCVariable<double>::getTypeDescription());
   xvelocity_matrix = VarLabel::create("xvelocity_matrix",
                                       SFCXVariable<Stencil7>::getTypeDescription());
   xvelocity_rhs = VarLabel::create("xvelocity_rhs",
@@ -145,6 +147,7 @@ ExamplesLabel::~ExamplesLabel()
   VarLabel::destroy(zvelocity);
   VarLabel::destroy(density);
   VarLabel::destroy(temperature);
+  VarLabel::destroy(temperature_nc);
   VarLabel::destroy(xvelocity_matrix);
   VarLabel::destroy(xvelocity_rhs);
   VarLabel::destroy(yvelocity_matrix);

@@ -111,7 +111,7 @@ public:
   const std::vector<T>& getVector() const { return items; }
 
   bool equals(const ComputeSubset<T>* s2) const {
-    // Check that the sets are equvalent
+    // Check that the sets are equivalent
     if(items.size() != s2->items.size()) {
       return false;
     }

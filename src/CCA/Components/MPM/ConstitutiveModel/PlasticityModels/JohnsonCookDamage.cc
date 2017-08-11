@@ -255,7 +255,7 @@ JohnsonCookDamage::computeSomething( ParticleSubset    * pset,
     if (pDamage[idx] < d_initialData.Dc){
       pDamage[idx] = 0.0;
     }
-  #if 1
+  #if 0
   if( epdot != 0 && Tstar != 0){
   std::cout.precision(16);
   std::cout << "epdot: " << epdot 

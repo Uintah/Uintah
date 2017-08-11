@@ -38,6 +38,7 @@
 #include <Core/Util/Timers/Timers.hpp>
 
 #include <sci_defs/visit_defs.h>
+#include <sci_defs/papi_defs.h> // for PAPI performance counters
 
 #include <map>
 #include <vector>
@@ -281,46 +282,53 @@ public:
   // timing statistics to test load balance
   enum RunTimeStat
   {
-    CompilationTime = 0,       // These five enumerators are used in
-    RegriddingTime,            // SimulationController::printSimulationStats to determine the overhead time.
-    RegriddingCompilationTime,
-    RegriddingCopyDataTime,
-    LoadBalancerTime,
+    // These five enumerators are used in SimulationController::printSimulationStats to determine the overhead time.
+      CompilationTime = 0
+    , RegriddingTime
+    , RegriddingCompilationTime
+    , RegriddingCopyDataTime
+    , LoadBalancerTime
     
-    TaskExecTime,              // These five enumerators are used in
-    TaskLocalCommTime,         // SimulationController::printSimulationStats to determine the overhead time.
-    TaskWaitCommTime,
-    TaskReduceCommTime,
-    TaskWaitThreadTime,
+    // These five enumerators are used in SimulationController::printSimulationStats to determine task and comm overhead.
+    , TaskExecTime
+    , TaskLocalCommTime
+    , TaskWaitCommTime
+    , TaskReduceCommTime
+    , TaskWaitThreadTime
 
-    XMLIOTime,
-    OutputIOTime,
-    ReductionIOTime,
-    CheckpointIOTime,
-    CheckpointReductionIOTime,
-    TotalIOTime,
+    , XMLIOTime
+    , OutputIOTime
+    , ReductionIOTime
+    , CheckpointIOTime
+    , CheckpointReductionIOTime
+    , TotalIOTime
 
-    OutputIORate,
-    ReductionIORate,
-    CheckpointIORate,
-    CheckpointReducIORate,
+    , OutputIORate
+    , ReductionIORate
+    , CheckpointIORate
+    , CheckpointReducIORate
 
-    SCIMemoryUsed,
-    SCIMemoryMaxUsed,
-    SCIMemoryHighwater,
+    , SCIMemoryUsed
+    , SCIMemoryMaxUsed
+    , SCIMemoryHighwater
 
-    MemoryUsed,
-    MemoryResident,
+    , MemoryUsed
+    , MemoryResident
     
 #ifdef USE_PAPI_COUNTERS
-    TotalFlops,                // Total FLOPS
-    TottalVFlops,              // Total FLOPS optimized to count 
-                               // scaled double precision vector operations
-    L2Misses,                  // Total L2 cache misses
-    L3Misses,                  // Total L3 cache misses
+    , TotalFlops            // Floating point operations executed
+    , TotalVFlops           // Floating point operations executed; optimized to count scaled DP vector ops
+    , L2Misses              // L2 cache misses
+    , L3Misses              // L3 cache misses
+    , TLBMisses             // Total translation lookaside buffer misses
 #endif
-    MAX_TIMING_STATS
+
+     , MAX_TIMING_STATS
   };
+
+//#ifdef USE_PAPI_COUNTERS
+//  ReductionInfoMapper< RunTimeStat, int > d_runTimeStats;
+//#endif
 
   ReductionInfoMapper< RunTimeStat, double > d_runTimeStats;
 

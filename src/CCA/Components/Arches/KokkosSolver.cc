@@ -502,27 +502,11 @@ KokkosSolver::SSPRKSolve( const LevelP& level, SchedulerP& sched ){
     }
 
     // ** MOMENTUM **
-    // first compute the psi functions for the limiters:
-    SVec momentum_psi_builders = i_transport->second->retrieve_task_subset("momentum_psi_builders");
-    for ( SVec::iterator i = momentum_psi_builders.begin(); i != momentum_psi_builders.end(); i++){
-      TaskInterface* tsk = i_transport->second->retrieve_task(*i);
-      tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep);
-    }
+    i_transport->second->schedule_task_group( "momentum_construction", TaskInterface::TIMESTEP_EVAL,
+      m_global_pack_tasks, level, sched, matls, time_substep );
 
-    // now construct RHS:
-    SVec mom_rhs_builders = i_transport->second->retrieve_task_subset("mom_rhs_builders");
-    for ( SVec::iterator i = mom_rhs_builders.begin(); i != mom_rhs_builders.end(); i++){
-      TaskInterface* tsk = i_transport->second->retrieve_task(*i);
-      tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep);
-    }
-
-    // now update them:
-    // At this stage we have the hatted (uncorrected) velocities
-    SVec mom_fe_up = i_transport->second->retrieve_task_subset("mom_fe_update");
-    for ( SVec::iterator i = mom_fe_up.begin(); i != mom_fe_up.end(); i++){
-      TaskInterface* tsk = i_transport->second->retrieve_task(*i);
-      tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep);
-    }
+    i_transport->second->schedule_task_group( "momentum_fe_update", TaskInterface::TIMESTEP_EVAL,
+      m_global_pack_tasks, level, sched, matls, time_substep );
 
     // ** PRESSURE PROJECTION **
     if ( i_transport->second->has_task("build_pressure_system")){
@@ -538,28 +522,34 @@ KokkosSolver::SSPRKSolve( const LevelP& level, SchedulerP& sched ){
       press_tsk->schedule_task(level, sched, matls, TaskInterface::BC_TASK, time_substep );
       // Solve it - calling out to hypre external lib
       press_tsk->solve(level, sched, time_substep);
+      // Apply boundary conditions on the pressure field. The BCs are initially applied on the
+      // linear system, however, the resulting pressure field also needs BCs so that the correction
+      // to the velocities is done correctly.
+      AtomicTaskInterface* press_bc_tsk = i_transport->second->retrieve_atomic_task("pressure_bcs");
+      press_bc_tsk->schedule_task(level, sched, matls, AtomicTaskInterface::ATOMIC_STANDARD_TASK, time_substep); 
       // Correct velocities
       AtomicTaskInterface* gradP_tsk = i_transport->second->retrieve_atomic_task("pressure_correction");
       gradP_tsk->schedule_task(level, sched, matls, AtomicTaskInterface::ATOMIC_STANDARD_TASK, time_substep);
 
-      // now apply boundary conditions for all scalar for the next timestep
-      for ( SVec::iterator i = scalar_rhs_builders.begin(); i != scalar_rhs_builders.end(); i++){
-        TaskInterface* tsk = i_transport->second->retrieve_task(*i);
-        tsk->schedule_task(level, sched, matls, TaskInterface::BC_TASK, time_substep);
-      }
-      for ( SVec::iterator i = mom_rhs_builders.begin(); i != mom_rhs_builders.end(); i++){
-        TaskInterface* tsk = i_transport->second->retrieve_task(*i);
-        tsk->schedule_task(level, sched, matls, TaskInterface::BC_TASK, time_substep);
-      }
-      for ( auto i = all_bc_tasks.begin(); i != all_bc_tasks.end(); i++) {
-        i->second->schedule_task(level, sched, matls, TaskInterface::BC_TASK, time_substep);
-      }
+      // apply boundary conditions
+      i_transport->second->schedule_task_group( "momentum_construction", TaskInterface::BC, false, level, sched, matls, time_substep );
 
       //for sanity sake, recompute the velocities from momentum:
       // Note - This will be recomputed when the timestep restarts so there is some redundancy here.
       i_prop_fac->second->retrieve_task("u_from_rho_u")->schedule_task( level, sched, matls, TaskInterface::STANDARD_TASK, 1);
 
     }
+
+    // Scalar BCs
+    for ( SVec::iterator i = scalar_rhs_builders.begin(); i != scalar_rhs_builders.end(); i++){
+      TaskInterface* tsk = i_transport->second->retrieve_task(*i);
+      tsk->schedule_task(level, sched, matls, TaskInterface::BC_TASK, time_substep);
+    }
+    // Everything else
+    for ( auto i = all_bc_tasks.begin(); i != all_bc_tasks.end(); i++) {
+      i->second->schedule_task(level, sched, matls, TaskInterface::BC_TASK, time_substep);
+    }
+
   } // RK Integrator
 
 }

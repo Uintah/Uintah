@@ -192,7 +192,7 @@ private:
   int64_t                    m_offset   {0};
   int64_t                    m_excluded {0};
   std::unique_ptr<Simple*[]> m_excludes {};
-  bool                       m_running  {false};
+  std::atomic<bool>          m_running  {false};
 };
 
 

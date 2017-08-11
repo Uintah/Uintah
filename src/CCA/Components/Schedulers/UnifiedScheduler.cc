@@ -65,7 +65,7 @@ extern Dout g_task_dbg;
 extern Dout g_task_order;
 extern Dout g_exec_out;
 
-extern std::map<std::string, double> exectimes;
+extern std::map<std::string, double> g_exec_times;
 
 //______________________________________________________________________
 //
@@ -74,11 +74,9 @@ namespace {
 Dout g_dbg(         "Unified_DBG"        , false);
 Dout g_queuelength( "Unified_QueueLength", false);
 
-std::mutex g_scheduler_mutex{};        // main scheduler lock for multi-threaded task selection
-std::mutex g_scheduler_internal_mutex{};        // main scheduler lock for multi-threaded task selection
-std::mutex g_mark_task_consumed_mutex{};    // allow only one task at a time to enter the task consumed section
-std::mutex g_lb_mutex{};                // load balancer lock
-std::mutex g_GridVarSuperPatch_mutex{}; // An ugly hack to get superpatches for host levels to work.
+std::mutex g_scheduler_mutex{};           // main scheduler lock for multi-threaded task selection
+std::mutex g_mark_task_consumed_mutex{};  // allow only one task at a time to enter the task consumed section
+std::mutex g_lb_mutex{};                  // load balancer lock
 
 } // namespace
 
@@ -91,7 +89,7 @@ std::mutex g_GridVarSuperPatch_mutex{}; // An ugly hack to get superpatches for 
 
   namespace {
 
-  std::mutex idle_streams_mutex{};
+  std::mutex g_GridVarSuperPatch_mutex{};   // An ugly hack to get superpatches for host levels to work.
 
   }
 
@@ -121,12 +119,11 @@ enum class ThreadState : int
 };
 
 UnifiedSchedulerWorker * g_runners[MAX_THREADS]        = {};
-std::thread              g_threads[MAX_THREADS]        = {};
 volatile ThreadState     g_thread_states[MAX_THREADS]  = {};
 int                      g_cpu_affinities[MAX_THREADS] = {};
 int                      g_num_threads                 = 0;
 
-volatile int g_run_tasks{0};
+std::atomic<int> g_run_tasks{0};
 
 
 //______________________________________________________________________
@@ -222,10 +219,10 @@ void init_threads( UnifiedScheduler * sched, int num_threads )
     g_runners[i] = new UnifiedSchedulerWorker(sched);
   }
 
-  // spawn worker threads
-  // TaskRunner threads start at [1]
+  // spawn "nthreads-1"  worker threads - main thread also executes tasks
+  // detach at creation and let them run and terminate on their own, e.g. no join
   for (int i = 1; i < g_num_threads; ++i) {
-    g_threads[i] = (std::thread(thread_driver, i));
+    std::thread(thread_driver, i).detach();
   }
 
   thread_fence();
@@ -290,11 +287,7 @@ UnifiedScheduler::UnifiedScheduler( const ProcessorGroup   * myworld
 //
 UnifiedScheduler::~UnifiedScheduler()
 {
-  for (int i = 1; i < Impl::g_num_threads; ++i) {
-    if (Impl::g_threads[i].joinable()) {
-      Impl::g_threads[i].detach();
-    }
-  }
+  // nothing to do currently
 }
 
 
@@ -570,7 +563,7 @@ UnifiedScheduler::runTask( DetailedTask*         dtask
     {
       double total_task_time = dtask->task_exec_time();
       if (g_exec_out) {
-        exectimes[dtask->getTask()->getName()] += total_task_time;
+        g_exec_times[dtask->getTask()->getName()] += total_task_time;
       }
       // if I do not have a sub scheduler
       if (!dtask->getTask()->getHasSubScheduler()) {
@@ -713,7 +706,7 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
   // activate TaskRunners
   //------------------------------------------------------------------------------------------------
   if (!m_shared_state->isCopyDataTimestep()) {
-    Impl::g_run_tasks = 1;
+    Impl::g_run_tasks.store(1, std::memory_order_relaxed);
     for (int i = 1; i < Impl::g_num_threads; ++i) {
       Impl::g_thread_states[i] = Impl::ThreadState::Active;
     }
@@ -729,7 +722,7 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
   // deactivate TaskRunners
   //------------------------------------------------------------------------------------------------
   if (!m_shared_state->isCopyDataTimestep()) {
-    Impl::g_run_tasks = 0;
+    Impl::g_run_tasks.store(0, std::memory_order_relaxed);
 
     Impl::thread_fence();
 
@@ -824,7 +817,8 @@ UnifiedScheduler::markTaskConsumed( int          & numTasksDone
                                   , DetailedTask * dtask
                                   )
 {
-  g_mark_task_consumed_mutex.lock();
+  std::lock_guard<std::mutex> task_consumed_guard(g_mark_task_consumed_mutex);
+
   // Update the count of tasks consumed by the scheduler.
   numTasksDone++;
 
@@ -841,8 +835,6 @@ UnifiedScheduler::markTaskConsumed( int          & numTasksDone
     DOUT(g_task_dbg, myRankThread() << " switched to task phase " << currphase
                                     << ", total phase " << currphase << " tasks = " << m_phase_tasks[currphase]);
   }
-  g_mark_task_consumed_mutex.unlock();
-
 }
 
 //______________________________________________________________________
@@ -2876,6 +2868,7 @@ UnifiedScheduler::prepareTaskVarsIntoTaskDW( DetailedTask * dtask )
                 }
                 cerrLock.unlock();
               }
+              printf("ERROR - No task data warehouse found for device %d for task %s\n", it->second.m_whichGPU, dtask->getTask()->getName().c_str());
               SCI_THROW(InternalError("No task data warehouse found\n", __FILE__, __LINE__));
             }
           }
@@ -4202,32 +4195,22 @@ UnifiedScheduler::assignDevicesAndStreams( DetailedTask * dtask )
     const Patch* patch = dtask->getPatches()->get(i);
     int index = GpuUtilities::getGpuIndexForPatch(patch);
     if (index >= 0) {
-      //An ugly hack.  RMCRT can launch multiple kernels per task.  We want to give them multiple streams too...
-      if (dtask->getTask()->getName() == "Ray::rayTraceDataOnionGPU") {
-        printf("Assigning RMCRT GPU 3 additional CUDA streams\n");
-        for (int extra = 1; extra < 4; extra++){
-          if (dtask->getCudaStreamForThisTask(extra) == nullptr) {
-            //dtask->assignDevice(extra);
-            cudaStream_t* stream = GPUMemoryPool::getCudaStreamFromPool(extra);
-            dtask->setCudaStreamForThisTask(extra, stream);
-          }
-        }
-      }
-      // See if this task doesn't yet have a stream for this GPU device.
-      if (dtask->getCudaStreamForThisTask(index) == nullptr) {
-        dtask->assignDevice(index);
-        cudaStream_t* stream = GPUMemoryPool::getCudaStreamFromPool(index);
-        if (gpu_stats.active()) {
-          cerrLock.lock();
-          {
-            gpu_stats << myRankThread() << " Assigning for task " << dtask->getName() << " at " << std::hex << dtask
+      for (int i = 0; i < dtask->getTask()->maxStreamsPerTask(); i++) {
+        if (dtask->getCudaStreamForThisTask(i) == nullptr) {
+          dtask->assignDevice(0); 
+          cudaStream_t* stream = GPUMemoryPool::getCudaStreamFromPool(i);
+          dtask->setCudaStreamForThisTask(i, stream);
+          if (gpu_stats.active()) {
+            cerrLock.lock();
+            {
+              gpu_stats << myRankThread() << " Assigning for task " << dtask->getName() << " at " << std::hex << dtask
                     << " stream " << stream << std::dec
                     << " for device " << index
                     << std::endl;
+            }
+            cerrLock.unlock();
           }
-          cerrLock.unlock();
         }
-        dtask->setCudaStreamForThisTask(index, stream);
       }
     
     } else {
@@ -4242,6 +4225,47 @@ UnifiedScheduler::assignDevicesAndStreams( DetailedTask * dtask )
 }
 
 
+/*
+  void
+  UnifiedScheduler::assignDevicesAndStreams( DetailedTask * dtask )
+  {
+
+    // Figure out which device this patch was assigned to.
+    // If a task has multiple patches, then assign all.  Most tasks should
+    // only end up on one device.  Only tasks like data archiver's output variables
+    // work on multiple patches which can be on multiple devices.
+    std::map<const Patch *, int>::iterator it;
+    for (int i = 0; i < dtask->getPatches()->size(); i++) {
+      const Patch* patch = dtask->getPatches()->get(i);
+      int index = GpuUtilities::getGpuIndexForPatch(patch);
+      if (index >= 0) {
+        // See if this task doesn't yet have a stream for this GPU device.
+        if (dtask->getCudaStreamForThisTask(index) == nullptr) {
+          dtask->assignDevice(index);
+          cudaStream_t* stream = GPUMemoryPool::getCudaStreamFromPool(index);
+          if (gpu_stats.active()) {
+            cerrLock.lock();
+            {
+              gpu_stats << myRankThread() << " Assigning for task " << dtask->getName() << " at " << std::hex << dtask
+              << " stream " << stream << std::dec
+              << " for device " << index
+              << std::endl;
+            }
+            cerrLock.unlock();
+          }
+          dtask->setCudaStreamForThisTask(index, stream);
+        }
+      } else {
+        cerrLock.lock();
+        {
+          std::cerr << "ERROR: Could not find the assigned GPU for this patch." << std::endl;
+        }
+        cerrLock.unlock();
+        exit(-1);
+      }
+    }
+  }
+*/
 //______________________________________________________________________
 //
 void
@@ -4841,7 +4865,7 @@ UnifiedSchedulerWorker::UnifiedSchedulerWorker( UnifiedScheduler * scheduler )
 void
 UnifiedSchedulerWorker::run()
 {
-  while( Impl::g_run_tasks ) {
+  while( Impl::g_run_tasks.load(std::memory_order_relaxed) == 1 ) {
     try {
       resetWaitTime();
       m_scheduler->runTasks(Impl::t_tid);

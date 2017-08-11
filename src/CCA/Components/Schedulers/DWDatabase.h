@@ -73,6 +73,7 @@
 namespace {
 
 std::mutex g_keyDB_mutex{};
+std::mutex g_mvars_mutex{};
 
 }
 
@@ -292,6 +293,7 @@ template<class DomainType>
 void
 DWDatabase<DomainType>::cleanForeign()
 {
+  std::lock_guard<std::mutex> exists_lock(g_mvars_mutex);
   for (auto iter = m_vars.begin(); iter != m_vars.end(); ++iter) {
     if (*iter && (*iter)->m_var->isForeign()) {
       delete (*iter);
@@ -429,6 +431,8 @@ KeyDatabase<DomainType>::lookup( const VarLabel   * label
                                , const DomainType * dom
                                )
 {
+  std::lock_guard<std::mutex> lookup_lock(g_keyDB_mutex);
+
   VarLabelMatl<DomainType> v(label, matlIndex, getRealDomain(dom));
   typename keyDBtype::const_iterator const_iter = m_keys.find(v);
   if (const_iter == m_keys.end()) {
@@ -500,14 +504,20 @@ DWDatabase<DomainType>::exists( const VarLabel   * label
                               , const DomainType * dom
                               ) const
 {
+  // lookup is lock_guard protected
   int idx = m_keyDB->lookup(label, matlIndex, dom);
-  if (idx == -1) {
-    return false;
+
+  {
+    std::lock_guard<std::mutex> exists_lock(g_mvars_mutex);
+    if (idx == -1) {
+      return false;
+    }
+    if (m_vars[idx] == nullptr) {
+      return false;
+    }
+    return true;
   }
-  if (m_vars[idx] == nullptr) {
-    return false;
-  }
-  return true;
+
 }
 
 //______________________________________________________________________
@@ -527,13 +537,14 @@ DWDatabase<DomainType>::put( const VarLabel   * label
 
   int idx = -1;
   {
-    std::lock_guard<std::mutex> reserve_lock(g_keyDB_mutex);
+    std::lock_guard<std::mutex> put_lock(g_keyDB_mutex);
     if (init) {
       m_keyDB->insert(label, matlIndex, dom);
       this->doReserve(m_keyDB);
     }
-    idx = m_keyDB->lookup(label, matlIndex, dom);
   }
+  // lookup is lock_guard protected
+  idx = m_keyDB->lookup(label, matlIndex, dom);
 
   if (idx == -1) {
     SCI_THROW(UnknownVariable(label->getName(), -1, dom, matlIndex, "check task computes", __FILE__, __LINE__));
@@ -568,13 +579,14 @@ DWDatabase<DomainType>::putReduce( const VarLabel              * label
 
   int idx = -1;
   {
-    std::lock_guard<std::mutex> reserve_lock(g_keyDB_mutex);
+    std::lock_guard<std::mutex> put_reduce_lock(g_keyDB_mutex);
     if (init) {
       m_keyDB->insert(label, matlIndex, dom);
       this->doReserve(m_keyDB);
     }
-    idx = m_keyDB->lookup(label, matlIndex, dom);
   }
+  // lookup is lock_guard protected
+  idx = m_keyDB->lookup(label, matlIndex, dom);
 
   if (idx == -1) {
     SCI_THROW(UnknownVariable(label->getName(), -1, dom, matlIndex, "check task computes", __FILE__, __LINE__));
@@ -611,15 +623,15 @@ DWDatabase<DomainType>::putForeign( const VarLabel   * label
   ASSERT(matlIndex >= -1);
 
   int idx = -1;
-
   {
-    std::lock_guard<std::mutex> reserve_lock(g_keyDB_mutex);
+    std::lock_guard<std::mutex> put_foreign_lock(g_keyDB_mutex);
     if (init) {
       m_keyDB->insert(label, matlIndex, dom);
       this->doReserve(m_keyDB);
     }
-    idx = m_keyDB->lookup(label, matlIndex, dom);
   }
+  // lookup is lock_guard protected
+  idx = m_keyDB->lookup(label, matlIndex, dom);
 
   DataItem* newdi = new DataItem();
   newdi->m_var = var;

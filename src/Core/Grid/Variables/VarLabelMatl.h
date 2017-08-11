@@ -30,7 +30,6 @@
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Level.h>
 
-#include <sci_hash_map.h>
 
 namespace Uintah {
 
@@ -96,18 +95,6 @@ template<class DomainType> struct VarLabelMatl {
     return ((label_->equals(other.label_)) && (matlIndex_ == other.matlIndex_) && (domain_ == other.domain_));
   }
 
-#if USE_BOOST_HASHMAP
-  friend std::size_t hash_value( const VarLabelMatl<DomainType> & vl )
-  {
-    std::size_t seed = 0;
-    boost::hash_combine( seed, vl.label_ );
-    boost::hash_combine( seed, vl.domain_ );
-    boost::hash_combine( seed, vl.matlIndex_ );
-
-    return seed;
-  }
-#endif
- 
   const VarLabel* label_;
   int matlIndex_;
   const DomainType* domain_;    

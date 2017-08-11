@@ -144,10 +144,12 @@ PressureEqn::initialize( const Patch* patch, ATIM* tsk_info ){
     A.p = A.e + A.w + A.n + A.s + A.t + A.b;
     A.p *= -1;
 
+    const double dt = tsk_info->get_dt();
+
     // b
-    b[c] = area_EW * ( xmom[E] - xmom[c] ) +
-           area_NS * ( ymom[N] - ymom[c] ) +
-           area_TB * ( zmom[T] - zmom[c] );
+    b[c] = ( area_EW * ( xmom[E] - xmom[c] ) +
+             area_NS * ( ymom[N] - ymom[c] ) +
+             area_TB * ( zmom[T] - zmom[c] ) ) / dt;
 
     b[c] *= -1.;
 
@@ -229,9 +231,7 @@ PressureEqn::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
              area_NS * ( ymom[N] - ymom[c] ) +
              area_TB * ( zmom[T] - zmom[c] ) ) / dt ;
 
-    b[c] *= eps[c];
-
-    b[c] *= -1.;
+    b[c] *= -eps[c];
 
   }
 }
@@ -244,6 +244,7 @@ PressureEqn::register_compute_bcs(
 
   register_variable( "b_press", AFC::MODIFIES, variable_registry );
   register_variable( "A_press", AFC::MODIFIES, variable_registry );
+  register_variable( m_eps_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry );
 
 }
 
@@ -253,6 +254,8 @@ PressureEqn::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   //This only applies BCs to A. Boundary conditions to the RHS are handled upstream in RhoUHatBC
   CCVariable<Stencil7>& A = tsk_info->get_uintah_field_add<CCVariable<Stencil7> >("A_press");
+  CCVariable<double>& b = tsk_info->get_uintah_field_add<CCVariable<double> >("b_press");
+  constCCVariable<double>& eps = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_eps_name);
 
   const BndMapT& bc_info = m_bcHelper->get_boundary_information();
   for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
@@ -270,8 +273,8 @@ PressureEqn::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
       // P = 0
       sign = -1.0;
     } else {
-      // Applies to Inlets
-      // Neumann
+      // Applies to Inlets, walls where
+      // P satisfies a Neumann condition
       // dP/dX = 0
       sign = 1.0;
     }
@@ -285,6 +288,7 @@ PressureEqn::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     }
   }
+
 }
 
 void

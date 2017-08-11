@@ -102,7 +102,7 @@ private:
     std::vector<double> _beta;
     std::vector<double> _time_factor;
 
-    int m_dir;
+    ArchesCore::DIR m_dir;
 
   };
 
@@ -260,21 +260,20 @@ private:
 
         };
 
-        if ( m_dir == 0 ){
-          GET_FX_BUFFERED_PATCH_RANGE(1,0);
+        if ( m_dir == ArchesCore::XDIR ){
+          GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE(1,0);
           Uintah::BlockRange range(low_fx_patch_range, high_fx_patch_range);
           Uintah::parallel_for( range, fe_update );
-        } else if ( m_dir == 1 ){
-          GET_FY_BUFFERED_PATCH_RANGE(1,0);
+        } else if ( m_dir == ArchesCore::YDIR ){
+          GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE(1,0);
           Uintah::BlockRange range(low_fy_patch_range, high_fy_patch_range);
           Uintah::parallel_for( range, fe_update );
-        } else if ( m_dir == 2 ){
-          GET_FZ_BUFFERED_PATCH_RANGE(1,0);
+        } else if ( m_dir == ArchesCore::ZDIR ){
+          GET_EXTRACELL_FZ_BUFFERED_PATCH_RANGE(1,0);
           Uintah::BlockRange range(low_fz_patch_range, high_fz_patch_range);
           Uintah::parallel_for( range, fe_update );
         } else {
-          GET_BUFFERED_PATCH_RANGE(0,0);
-          Uintah::BlockRange range(low_patch_range, high_patch_range);
+          Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex());
           Uintah::parallel_for( range, fe_update );
         }
 
@@ -292,21 +291,20 @@ private:
 
         };
 
-        if ( m_dir == 0 ){
-          GET_FX_BUFFERED_PATCH_RANGE(1,-1);
+        if ( m_dir == ArchesCore::XDIR ){
+          GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE(1,0);
           Uintah::BlockRange range(low_fx_patch_range, high_fx_patch_range);
           Uintah::parallel_for( range, fe_update );
-        } else if ( m_dir == 1 ){
-          GET_FY_BUFFERED_PATCH_RANGE(1,-1);
+        } else if ( m_dir == ArchesCore::YDIR ){
+          GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE(1,0);
           Uintah::BlockRange range(low_fy_patch_range, high_fy_patch_range);
           Uintah::parallel_for( range, fe_update );
-        } else if ( m_dir == 2 ){
-          GET_FZ_BUFFERED_PATCH_RANGE(1,-1);
+        } else if ( m_dir == ArchesCore::ZDIR ){
+          GET_EXTRACELL_FZ_BUFFERED_PATCH_RANGE(1,0);
           Uintah::BlockRange range(low_fz_patch_range, high_fz_patch_range);
           Uintah::parallel_for( range, fe_update );
         } else {
-          GET_BUFFERED_PATCH_RANGE(0,0);
-          Uintah::BlockRange range(low_patch_range, high_patch_range);
+          Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex());
           Uintah::parallel_for( range, fe_update );
         }
       }

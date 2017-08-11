@@ -133,6 +133,7 @@ void AutoCycleFluxBC::initializeScalarFluxBC(const ProcessorGroup*, const PatchS
 void AutoCycleFluxBC::scheduleApplyExternalScalarFlux(SchedulerP& sched, const PatchSet* patches,
                                                   const MaterialSet* matls)
 {
+  Ghost::GhostType gnone = Ghost::None;
   if (!d_mpm_flags->doMPMOnLevel(getLevel(patches)->getIndex(),
                            getLevel(patches)->getGrid()->numLevels()))
     return;
@@ -145,25 +146,27 @@ void AutoCycleFluxBC::scheduleApplyExternalScalarFlux(SchedulerP& sched, const P
   t->requires(Task::OldDW, d_mpm_lb->pXLabel,                 Ghost::None);
   t->requires(Task::OldDW, d_mpm_lb->pSizeLabel,              Ghost::None);
   if(d_mpm_flags->d_doScalarDiffusion){
+    // JBH -- Fixme -- TODO -- Fold into diffusion sublabel?
     t->requires(Task::OldDW, d_mpm_lb->pAreaLabel,            Ghost::None);
   }
   t->requires(Task::OldDW, d_mpm_lb->pVolumeLabel,            Ghost::None);
   t->requires(Task::OldDW, d_mpm_lb->pDeformationMeasureLabel,Ghost::None);
   if(d_mpm_flags->d_autoCycleUseMinMax){
-    t->requires(Task::OldDW, d_mpm_lb->MaxConcLabel,          Ghost::None);
-    t->requires(Task::OldDW, d_mpm_lb->MinConcLabel,          Ghost::None);
+    t->requires(Task::OldDW, d_mpm_lb->diffusion->rMaxConcentration,    gnone);
+    t->requires(Task::OldDW, d_mpm_lb->diffusion->rMinConcentration,    gnone);
   }else{
-    t->requires(Task::OldDW, d_mpm_lb->TotalConcLabel,        Ghost::None);
+    t->requires(Task::OldDW, d_mpm_lb->diffusion->rTotalConcentration,  gnone);
+    // JBH -- FIXME -- TODO  Fold into diffusion sublabel?
     t->requires(Task::OldDW, d_mpm_lb->partCountLabel,        Ghost::None);
   }
 
 #if defined USE_FLUX_RESTRICTION
   if(d_mpm_flags->d_doScalarDiffusion){
-    t->requires(Task::OldDW, d_mpm_lb->pConcentrationLabel,     Ghost::None);
+    t->requires(Task::OldDW, d_mpm_lb->diffusion->pConcentration,       gnone);
   }
 #endif
 
-  t->computes(d_mpm_lb->pExternalScalarFluxLabel_preReloc);
+  t->computes(d_mpm_lb->diffusion->pExternalScalarFlux_preReloc);
 
   if (d_mpm_flags->d_useLoadCurves) {
     t->requires(Task::OldDW, d_mpm_lb->pLoadCurveIDLabel,     Ghost::None);
@@ -206,8 +209,8 @@ void AutoCycleFluxBC::applyExternalScalarFlux(const ProcessorGroup* , const Patc
   double avgconc;
 
   if(d_mpm_flags->d_autoCycleUseMinMax){
-    old_dw->get(maxconc, d_mpm_lb->MaxConcLabel);
-    old_dw->get(minconc, d_mpm_lb->MinConcLabel);
+    old_dw->get(maxconc, d_mpm_lb->diffusion->rMaxConcentration);
+    old_dw->get(minconc, d_mpm_lb->diffusion->rMinConcentration);
     if(d_flux_sign > 0){
       if(minconc > d_auto_cycle_max && minconc < 4e11){
         d_flux_sign = -1.0;
@@ -219,7 +222,7 @@ void AutoCycleFluxBC::applyExternalScalarFlux(const ProcessorGroup* , const Patc
     }
   }else{
     old_dw->get(totalparts, d_mpm_lb->partCountLabel);
-    old_dw->get(totalconc,  d_mpm_lb->TotalConcLabel);
+    old_dw->get(totalconc,  d_mpm_lb->diffusion->rTotalConcentration);
 
     avgconc = totalconc/(double)totalparts;
 
@@ -261,17 +264,19 @@ void AutoCycleFluxBC::applyExternalScalarFlux(const ProcessorGroup* , const Patc
 
       old_dw->get(px,    d_mpm_lb->pXLabel,    pset);
       if(d_mpm_flags->d_doScalarDiffusion){
+        // JBH -- Fixme -- TODO -- Fold into diffusion sublabel?
         old_dw->get(parea, d_mpm_lb->pAreaLabel, pset);
       }
       old_dw->get(pvol,  d_mpm_lb->pVolumeLabel, pset);
       old_dw->get(psize, d_mpm_lb->pSizeLabel, pset);
       old_dw->get(pDeformationMeasure, d_mpm_lb->pDeformationMeasureLabel, pset);
+      // JBH -- FIXME -- Why are we doing this if we're not doing scalar diffusion in the first place (see above fixme)
       new_dw->allocateAndPut(pExternalScalarFlux,
-                                       d_mpm_lb->pExternalScalarFluxLabel_preReloc,  pset);
+                                       d_mpm_lb->diffusion->pExternalScalarFlux_preReloc,  pset);
 #if defined USE_FLUX_RESTRICTION
       constParticleVariable<double> pConcentration;
       if(d_mpm_flags->d_doScalarDiffusion){
-        old_dw->get(pConcentration, d_mpm_lb->pConcentrationLabel, pset);
+        old_dw->get(pConcentration, d_mpm_lb->diffusion->pConcentration, pset);
       }
 #endif
 

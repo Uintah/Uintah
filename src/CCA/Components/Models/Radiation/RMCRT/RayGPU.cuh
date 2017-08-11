@@ -46,6 +46,7 @@ typedef Uintah::gpuPoint     GPUPoint;
 //______________________________________________________________________
 //
 const int d_MAXLEVELS = 5;               // FIX ME!
+const int d_MAX_RAYS = 500;
 const int d_flowCell = -1;               // HARDWIRED!
 //__________________________________
 //  returns gpuVector * scalar
@@ -504,14 +505,6 @@ struct RMCRT_flags {
 };
 
 //__________________________________
-//Struct for easy modification of the number of kernels and/or blocks
-struct kernelParams {
-    unsigned char numKernels {0};
-    unsigned char curKernel {0};
-    unsigned int  numCellsPerThread {0};
-};
-
-//__________________________________
 //  Struct for managing the boundary faces
 struct BoundaryFaces {
     __device__ BoundaryFaces()
@@ -733,7 +726,6 @@ __host__ void launchRayTraceDataOnionKernel( DetailedTask* dtask,
                                              dim3 dimGrid,
                                              dim3 dimBlock,
                                              int matlIndex,
-                                             kernelParams kp,
                                              patchParams patchP,
                                              gridParams gridP,
                                              levelParams* levelP,

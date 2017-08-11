@@ -23,6 +23,7 @@
  */
 
 #include <Core/Exceptions/PapiInitializationError.h>
+
 #include <iostream>
 #include <sstream>
 
@@ -30,12 +31,12 @@ namespace Uintah {
 
 
 PapiInitializationError::PapiInitializationError(const std::string& message, const char* file, int line)
-    : message_(message)
+    : m_message(message)
 {
   std::ostringstream s;
-  s << "An PapiInitializationError exception was thrown (" << message << ").\n"
+  s << "A PapiInitializationError exception was thrown \n(" << message << ").\n"
     << "Error occurred in file: " << file << " on line " << line << ".\n";
-  message_ = s.str();
+  m_message = s.str();
 
 #ifdef EXCEPTIONS_CRASH
   std::cout << message_ << "\n";
@@ -43,17 +44,12 @@ PapiInitializationError::PapiInitializationError(const std::string& message, con
 }
 
 PapiInitializationError::PapiInitializationError(const PapiInitializationError& copy)
-    : message_(copy.message_)
-{
-}
-
-PapiInitializationError::~PapiInitializationError()
-{
-}
+    : m_message(copy.m_message)
+{ }
 
 const char* PapiInitializationError::message() const
 {
-    return message_.c_str();
+    return m_message.c_str();
 }
 
 const char* PapiInitializationError::type() const

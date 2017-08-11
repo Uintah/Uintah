@@ -33,30 +33,42 @@
  *
  */
 
-#ifndef Core_Exceptions_PapiInitializationError_h
-#define Core_Exceptions_PapiInitializationError_h
+#ifndef CORE_EXCEPTIONS_PAPIINITIALIZATIONERROR_H
+#define CORE_EXCEPTIONS_PAPIINITIALIZATIONERROR_H
 
 #include <Core/Exceptions/Exception.h>
+
 #include <string>
 
 namespace Uintah {
-  class PapiInitializationError : public Exception {
 
-  public:
-	PapiInitializationError(const std::string&, const char* file, int line);
-	PapiInitializationError(const PapiInitializationError&);
-    virtual ~PapiInitializationError();
-    virtual const char* message() const;
-    virtual const char* type() const;
+class PapiInitializationError : public Exception {
 
-  protected:
+public:
 
-  private:
-    std::string message_;
-    PapiInitializationError& operator=(const PapiInitializationError&);
-  };
-} // End namespace Uintah
+  PapiInitializationError( const std::string & msg
+                         , const char        * file
+                         ,       int           line );
+
+  PapiInitializationError( const PapiInitializationError& );
+
+  virtual ~PapiInitializationError() {};
+
+  virtual const char* message() const;
+
+  virtual const char* type() const;
+
+
+private:
+
+  std::string m_message;
+
+  // eliminate copy, assignment and move
+  PapiInitializationError& operator=( const PapiInitializationError & ) = delete;
+  PapiInitializationError& operator=( PapiInitializationError && )      = delete;
+};
+
+}  // End namespace Uintah
 
 #endif
-
 

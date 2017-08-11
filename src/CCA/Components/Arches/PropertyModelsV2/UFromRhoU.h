@@ -65,11 +65,16 @@ private:
     std::string m_u_vel_name;
     std::string m_v_vel_name;
     std::string m_w_vel_name;
+    std::string m_u_vel_name_cc;
+    std::string m_v_vel_name_cc;
+    std::string m_w_vel_name_cc;
     std::string m_density_name;
     std::string m_xmom;
     std::string m_ymom;
     std::string m_zmom;
     std::string m_eps_name;
+
+    void compute_velocities( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
   };
 }

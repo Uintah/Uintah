@@ -30,24 +30,11 @@
 #include <CCA/Components/Arches/ConvectionHelper.h>
 #include <CCA/Components/Arches/Directives.h>
 #include <CCA/Components/Arches/UPSHelper.h>
+#include <Core/Util/Timers/Timers.hpp>
 
 #ifdef DO_TIMINGS
 #  include <spatialops/util/TimeLogger.h>
 #endif
-
-#define GET_PSI(my_limiter_struct) \
-    GetPsi get_psi_x( phi, psi_x, u, eps, 0 ); \
-    GetPsi get_psi_y( phi, psi_y, v, eps, 1 ); \
-    GetPsi get_psi_z( phi, psi_z, w, eps, 2 ); \
-    GET_FX_BUFFERED_PATCH_RANGE(1,0); \
-    Uintah::BlockRange x_range(low_fx_patch_range, high_fx_patch_range); \
-    Uintah::parallel_for(x_range, get_psi_x, my_limiter_struct); \
-    GET_FY_BUFFERED_PATCH_RANGE(1,0); \
-    Uintah::BlockRange y_range(low_fy_patch_range, high_fy_patch_range); \
-    Uintah::parallel_for(y_range, get_psi_y, my_limiter_struct); \
-    GET_FZ_BUFFERED_PATCH_RANGE(1,0); \
-    Uintah::BlockRange z_range(low_fz_patch_range, high_fz_patch_range); \
-    Uintah::parallel_for(z_range, get_psi_z, my_limiter_struct);
 
 namespace Uintah{
 
@@ -123,6 +110,9 @@ private:
     std::string m_w_vel_name;
     std::string m_eps_name;
 
+    int m_boundary_int{0};
+    int m_dir{0};
+
     typedef std::vector<std::string> SV;
     typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
     typedef typename ArchesCore::VariableHelper<T>::XFaceType XFaceT;
@@ -132,15 +122,71 @@ private:
     typedef typename ArchesCore::VariableHelper<T>::ConstYFaceType ConstYFaceT;
     typedef typename ArchesCore::VariableHelper<T>::ConstZFaceType ConstZFaceT;
 
+    template<typename CPhiT, typename PsiT, typename VelT>
+    struct PsiHelper{
+
+      void computePsi( CPhiT& phi, PsiT& psi, VelT& vel, CPhiT& eps,
+                       Patch::FaceType PLow, Patch::FaceType PHigh,
+                       const int boundary_buffer, const int dir, LIMITER lim_type,
+                       const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+
+        int buffer = 0;
+        if ( tsk_info->packed_tasks() ) buffer = 1;
+
+        GetPsi get_psi( phi, psi, vel, eps, dir );
+
+        IntVector low_patch_range(0,0,0), high_patch_range(0,0,0);
+        IntVector lbuffer(0,0,0), hbuffer(0,0,0);
+
+        low_patch_range = IntVector(0,0,0); high_patch_range = IntVector(0,0,0);
+
+        lbuffer[dir] = ( patch->getBCType(PLow) != Patch::Neighbor ) ? 1 : 0;
+        hbuffer[dir] = ( patch->getBCType(PHigh) != Patch::Neighbor ) ?
+                        boundary_buffer :
+                        buffer;
+
+        low_patch_range = patch->getCellLowIndex() + lbuffer;
+        high_patch_range = patch->getCellHighIndex() + hbuffer;
+
+        Uintah::BlockRange range(low_patch_range, high_patch_range);
+
+        if ( lim_type == UPWIND ){
+          UpwindStruct up;
+          Uintah::parallel_for(range, get_psi, up);
+        } else if ( lim_type == CENTRAL ){
+          CentralStruct central;
+          Uintah::parallel_for(range, get_psi, central);
+        } else if ( lim_type == SUPERBEE ){
+          SuperBeeStruct superbee;
+          Uintah::parallel_for(range, get_psi, superbee);
+        } else if ( lim_type == ROE ){
+          RoeStruct roe;
+          Uintah::parallel_for(range, get_psi, roe);
+        } else if ( lim_type == VANLEER ){
+          VanLeerStruct vl;
+          Uintah::parallel_for(range, get_psi, vl);
+        } else {
+
+        }
+
+      }
+
+    };
+
   };
 
   //------------------------------------------------------------------------------------------------
   //                              Member Function Definitions
   //------------------------------------------------------------------------------------------------
-
   template <typename T>
   ComputePsi<T>::ComputePsi( std::string task_name, int matl_index ) :
   TaskInterface( task_name, matl_index ){
+
+    ArchesCore::VariableHelper<T>* helper = scinew ArchesCore::VariableHelper<T>;
+    if ( helper->dir != ArchesCore::NODIR ) m_boundary_int = 1;
+    m_dir = helper->dir;
+    delete helper;
+
   }
 
   //------------------------------------------------------------------------------------------------
@@ -228,9 +274,9 @@ private:
 
     for ( SV::iterator i = _eqn_names.begin(); i != _eqn_names.end(); i++){
 
-      XFaceT& psi_x = *(tsk_info->get_uintah_field<XFaceT>(*i+"_x_psi"));
-      YFaceT& psi_y = *(tsk_info->get_uintah_field<YFaceT>(*i+"_y_psi"));
-      ZFaceT& psi_z = *(tsk_info->get_uintah_field<ZFaceT>(*i+"_z_psi"));
+      XFaceT& psi_x = tsk_info->get_uintah_field_add<XFaceT>(*i+"_x_psi");
+      YFaceT& psi_y = tsk_info->get_uintah_field_add<YFaceT>(*i+"_y_psi");
+      ZFaceT& psi_z = tsk_info->get_uintah_field_add<ZFaceT>(*i+"_z_psi");
 
       psi_x.initialize(0.0);
       psi_y.initialize(0.0);
@@ -247,15 +293,21 @@ private:
   {
 
     for ( auto i = _eqn_names.begin(); i != _eqn_names.end(); i++){
-      register_variable( *i+"_x_psi", AFC::COMPUTES, variable_registry, time_substep );
-      register_variable( *i+"_y_psi", AFC::COMPUTES, variable_registry, time_substep );
-      register_variable( *i+"_z_psi", AFC::COMPUTES, variable_registry, time_substep );
-      register_variable( *i, AFC::REQUIRES, 2, AFC::LATEST, variable_registry, time_substep );
+      register_variable( *i+"_x_psi", AFC::COMPUTES, variable_registry, time_substep, _task_name, packed_tasks );
+      register_variable( *i+"_y_psi", AFC::COMPUTES, variable_registry, time_substep, _task_name, packed_tasks );
+      register_variable( *i+"_z_psi", AFC::COMPUTES, variable_registry, time_substep, _task_name, packed_tasks );
+      register_variable( *i, AFC::REQUIRES, 2, AFC::LATEST, variable_registry, time_substep, _task_name );
     }
-    register_variable( m_eps_name,   AFC::REQUIRES, 2, AFC::NEWDW, variable_registry, time_substep);
-    register_variable( m_u_vel_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep);
-    register_variable( m_v_vel_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep);
-    register_variable( m_w_vel_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep);
+
+    int nGhosts = 1;
+    if ( packed_tasks ){
+      nGhosts = 2;
+    }
+
+    register_variable( m_eps_name,   AFC::REQUIRES, 2, AFC::NEWDW, variable_registry, time_substep, _task_name );
+    register_variable( m_u_vel_name, AFC::REQUIRES, nGhosts, AFC::NEWDW, variable_registry, time_substep, _task_name );
+    register_variable( m_v_vel_name, AFC::REQUIRES, nGhosts, AFC::NEWDW, variable_registry, time_substep, _task_name );
+    register_variable( m_w_vel_name, AFC::REQUIRES, nGhosts, AFC::NEWDW, variable_registry, time_substep, _task_name );
 
   }
 
@@ -269,16 +321,20 @@ private:
     ConstYFaceT& v = *(tsk_info->get_const_uintah_field<ConstYFaceT>(m_v_vel_name));
     ConstZFaceT& w = *(tsk_info->get_const_uintah_field<ConstZFaceT>(m_w_vel_name));
 
-
     for ( auto i = _eqn_names.begin(); i != _eqn_names.end(); i++){
 
       std::map<std::string, LIMITER>::iterator ilim = _name_to_limiter_map.find(*i);
       LIMITER my_limiter = ilim->second;
-
       CT& phi = *(tsk_info->get_const_uintah_field<CT>(*i));
-      XFaceT& psi_x = *(tsk_info->get_uintah_field<XFaceT>(*i+"_x_psi"));
-      YFaceT& psi_y = *(tsk_info->get_uintah_field<YFaceT>(*i+"_y_psi"));
-      ZFaceT& psi_z = *(tsk_info->get_uintah_field<ZFaceT>(*i+"_z_psi"));
+
+      int nGhosts = -1; //not using a temp field but rather the DW (ie, if nGhost < 0 then DW var)
+      if ( tsk_info->packed_tasks() ){
+        nGhosts = 1;
+      }
+
+      XFaceT& psi_x = tsk_info->get_uintah_field_add<XFaceT>(*i+"_x_psi", nGhosts);
+      YFaceT& psi_y = tsk_info->get_uintah_field_add<YFaceT>(*i+"_y_psi", nGhosts);
+      ZFaceT& psi_z = tsk_info->get_uintah_field_add<ZFaceT>(*i+"_z_psi", nGhosts);
 
       psi_x.initialize(1.0);
       psi_y.initialize(1.0);
@@ -288,22 +344,24 @@ private:
       SpatialOps::TimeLogger timer("kokkos_compute_psi.out."+*i);
       timer.start("ComputePsi");
 #endif
-      if ( my_limiter == UPWIND ){
-        UpwindStruct up;
-        GET_PSI(up);
-      } else if ( my_limiter == CENTRAL ){
-        CentralStruct central;
-        GET_PSI(central);
-      } else if ( my_limiter == SUPERBEE ){
-        SuperBeeStruct sb;
-        GET_PSI(sb);
-      } else if ( my_limiter == ROE ){
-        RoeStruct roe;
-        GET_PSI(roe);
-      } else if ( my_limiter == VANLEER ){
-        VanLeerStruct vl;
-        GET_PSI(vl);
-      }
+
+      PsiHelper<CT, XFaceT, ConstXFaceT> x_psi_helper;
+      PsiHelper<CT, YFaceT, ConstYFaceT> y_psi_helper;
+      PsiHelper<CT, ZFaceT, ConstZFaceT> z_psi_helper;
+
+      int boundary_int = 0;
+      if ( m_boundary_int > 0 && m_dir == 1 ) boundary_int = 1;
+      x_psi_helper.computePsi( phi, psi_x, u, eps, Patch::xminus, Patch::xplus,
+                               boundary_int, 0, my_limiter, patch, tsk_info );
+      boundary_int = 0;
+      if ( m_boundary_int > 0 && m_dir == 2 ) boundary_int = 1;
+      y_psi_helper.computePsi( phi, psi_y, v, eps, Patch::yminus, Patch::yplus,
+                               boundary_int, 1, my_limiter, patch, tsk_info );
+      boundary_int = 0;
+      if ( m_boundary_int > 0 && m_dir == 3 ) boundary_int = 1;
+      z_psi_helper.computePsi( phi, psi_z, w, eps, Patch::zminus, Patch::zplus,
+                               boundary_int, 2, my_limiter, patch, tsk_info );
+
 #ifdef DO_TIMINGS
       timer.stop("ComputePsi");
 #endif
