@@ -36,11 +36,12 @@
 #include <Core/Util/ProgressiveWarning.h>
 #include <Core/Util/DOUT.hpp>
 
-#include <sci_defs/cuda_defs.h>
 
 #ifdef HAVE_CUDA
   #include <Core/Parallel/CrowdMonitor.hpp>
 #endif
+
+#include <sci_defs/cuda_defs.h>
 
 #include <mutex>
 #include <sstream>
@@ -296,8 +297,9 @@ DetailedTasks::addScrubCount( const VarLabel * var
                             ,       int        dw
                             )
 {
-  if (patch->isVirtual())
+  if (patch->isVirtual()) {
     patch = patch->getRealPatch();
+  }
   ScrubItem key(var, matlindex, patch, dw);
   ScrubItem* result;
   result = (first ? first->scrubCountTable_ : scrubCountTable_).lookup(&key);
@@ -453,8 +455,8 @@ DetailedTasks::findMatchingDetailedDep(       DependencyBatch  * batch
   //search each dep
   for (; dep != nullptr; dep = dep->m_next) {
     //if deps are equivalent
-    if (fromPatch == dep->m_from_patch && matl == dep->m_matl
-        && (req == dep->m_req || (req->m_var->equals(dep->m_req->m_var) && req->mapDataWarehouse() == dep->m_req->mapDataWarehouse()))) {
+    if (fromPatch == dep->m_from_patch &&  matl == dep->m_matl &&
+        (req == dep->m_req || (req->m_var->equals(dep->m_req->m_var) && req->mapDataWarehouse() == dep->m_req->mapDataWarehouse()))) {
 
       // total range - the same var in each dep needs to have the same patchlow/high
       dep->m_patch_low = totalLow = Min(totalLow, dep->m_patch_low);
@@ -540,7 +542,7 @@ DetailedTasks::findMatchingDetailedDep(       DependencyBatch  * batch
  * this order is maintained.  Failure to maintain this order can cause messages to be combined 
  * inconsistently across different tasks causing various problems.  New dependencies are added
  * to the end of the list.  If a dependency was combined then the extended dependency is added
- * at the same location that i was first combined.  This is to ensure all future dependencies
+ * at the same location that it was first combined.  This is to ensure all future dependencies
  * combine with the same dependencies as the original.
  */
 void
@@ -586,19 +588,19 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask     * from
     addScrubCount(req->m_var, matl, fromPatch, req->m_whichdw);
   }
 
-  //if the dependency is on the same processor then add an internal dependency
+  // if the dependency is on the same processor then add an internal dependency
   if (fromresource == d_myworld->myrank() && fromresource == toresource) {
     to->addInternalDependency(from, req->m_var);
 
-    //In case of multiple GPUs per node, we don't return.  Multiple GPUs
-    //need internal dependencies to communicate data.
+    // In case of multiple GPUs per node, we don't return.  Multiple GPUs
+    // need internal dependencies to communicate data.
     if ( ! Uintah::Parallel::usingDevice()) {
       return;
     }
 
   }
 
-  //this should have been pruned out earlier
+  // this should have been pruned out earlier
   ASSERT(!req->m_var->typeDescription()->isReductionVariable())
   // Do not check external deps on SoleVariable
   if (req->m_var->typeDescription()->getType() == TypeDescription::SoleVariable) {
@@ -616,7 +618,7 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask     * from
   }
 #endif
 
-  //make keys for MPI messages
+  // make keys for MPI messages
   if (fromPatch) {
     varKeyDB.insert(req->m_var,matl,fromPatch);
   }
@@ -631,7 +633,7 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask     * from
     }
   }
 
-  //if batch doesn't exist then create it
+  // if batch doesn't exist then create it
   if (!batch) {
     batch = scinew DependencyBatch(toresource, from, to);
     batches_.push_back(batch);
@@ -691,16 +693,15 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask     * from
     }
 
     // extend the dependency range
-    new_dep->m_low = Min(new_dep->m_low, matching_dep->m_low);
+    new_dep->m_low  = Min(new_dep->m_low,  matching_dep->m_low);
     new_dep->m_high = Max(new_dep->m_high, matching_dep->m_high);
 
-//    // TODO APH - figure this out and clean up (09/09/16)
-//     //if the same dependency already exists then short circuit out of this function.
-//    if (matching_dep->m_low == new_dep->m_low && matching_dep->m_high == new_dep->m_high) {
-//      matching_dep->m_to_tasks.splice(matching_dep->m_to_tasks.begin(), new_dep->m_to_tasks);
-//      delete new_dep;
-//      return;
-//    }
+    // if the same dependency already exists then short circuit out of this function.
+    if (matching_dep->m_low == new_dep->m_low && matching_dep->m_high == new_dep->m_high) {
+      matching_dep->m_to_tasks.splice(matching_dep->m_to_tasks.begin(), new_dep->m_to_tasks);
+      delete new_dep;
+      return;
+    }
 
     // copy matching dependencies toTasks to the new dependency
     new_dep->m_to_tasks.splice(new_dep->m_to_tasks.begin(), matching_dep->m_to_tasks);
@@ -722,7 +723,7 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask     * from
         //subtract one from the count
         iter->count_--;
 
-        //if the count is zero erase it from the sends list
+        // if the count is zero erase it from the sends list
         if (iter->count_ == 0) {
           particleSends_[toresource].erase(iter);
         }
@@ -730,9 +731,10 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask     * from
       else if (toresource == d_myworld->myrank()) {
         std::set<PSPatchMatlGhostRange>::iterator iter = particleRecvs_[fromresource].find(pmg);
         ASSERT(iter != particleRecvs_[fromresource].end());
-        //subtract one from the count
+        // subtract one from the count
         iter->count_--;
-        //if the count is zero erase it from the recvs list
+
+        // if the count is zero erase it from the recvs list
         if (iter->count_ == 0) {
           particleRecvs_[fromresource].erase(iter);
         }
@@ -762,7 +764,7 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask     * from
 
   // the total range of my dep and any deps later in the list with the same var/fromPatch/matl/dw
   // (to set the next one, which will be the head of the list, you only need to see the following one)
-  new_dep->m_patch_low = varRangeLow;
+  new_dep->m_patch_low  = varRangeLow;
   new_dep->m_patch_high = varRangeHigh;
 
   if (insert_dep == nullptr) {
@@ -788,7 +790,7 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask     * from
         particleSends_[toresource].insert(pmg);
       }
       else {
-        //increment count
+        // increment count
         iter->count_++;
       }
     }
