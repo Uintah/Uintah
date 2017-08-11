@@ -147,7 +147,7 @@ void Heat::timeAdvance(const ProcessorGroup* pg,
     Vector d = patch->getLevel()->dCell();
     double dx2 = d.x()*d.x();
     double dy2 = d.y()*d.y();
-    double dz2 = d.z()*d.z();
+    //double dz2 = d.z()*d.z();
 
     old_dw->get(temp_old, d_lb->temperature_nc, 0 , patch, Ghost::AroundNodes, 1);
     new_dw->allocateAndPut(temp_new, d_lb->temperature_nc, 0, patch);
@@ -183,27 +183,37 @@ void Heat::timeAdvance(const ProcessorGroup* pg,
       Patch::FaceType face = *itr;
       IntVector oneCell = patch->faceDirection(face);
       std::string bc_kind  = "NotSet";
+      std::string face_label = "NotSet";
       int nCells = 0;
       int numChildren = patch->getBCDataArray(face)->getNumberChildren(0);
+      Iterator bound_ptr;
 
-      if(face != Patch::zminus && face != Patch::zplus){
-        for (int child = 0;  child < numChildren; child++) {
-          double bc_value = -9;
-          Iterator bound_ptr;
-          bool foundIterator = getIteratorBCValueBCKind<double>( patch, face, child,
-                                  "Temp", 0, bc_value, bound_ptr,bc_kind);
+      for (int child = 0;  child < numChildren; child++) {
+        double bc_value = -9;
 
-          if(foundIterator){
-            if(bc_kind == "Dirichlet"){
-              for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-                temp_new[*bound_ptr] = bc_value;
-              }
-              nCells += bound_ptr.size();
+        getBCValue<double>(patch, face, child, "Temp", 0, bc_value);
+        getBCKind(patch, face, child, "Temp", 0, bc_kind, face_label);
+
+        if(face == Patch::zminus || face == Patch::zplus){
+          // This is currently a 2d node centered problem in the xy plane and thus
+          // by applying boundary conditions to the z faces computed solutions will
+          // be overwritten.
+        }else{
+          patch->getBCDataArray(face)->getNodeFaceIterator(0, bound_ptr, child);
+          if(bc_kind == "Dirichlet"){
+            std::cout << "Face:" << face << std::endl;
+            for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+              std::cout << *bound_ptr << std::endl;
+              temp_new[*bound_ptr] = bc_value;
             }
-          } // end foundIterator if statment
-        } // end child loop
-      }
+            nCells += bound_ptr.size();
+          }
+        }
+
+
+      } // end child loop
     } // end face loop
+    // End Boundary Condition Section
   } // end patch loop
 }
 

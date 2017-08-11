@@ -382,7 +382,8 @@
                                                 unifiedschedulertest,poissongpu1,poisson1,
                                                 poisson2, poisson3, poisson4, benchmark,
                                                 rigidmpmice,reduce_uda, rmpmice,smpm,
-                                                smpmice,switcher,wave,solvertest,
+                                                smpmice,switcher,wave,
+                                                solvertest, solvertest2,heat,
                                                 RMCRT_Test particletest'" >
                                   <!-- The 'type' above is used in CCA/Components/Parent/ComponentFactory.cc -->
         <carry_over                 spec="MULTIPLE NO_DATA"
@@ -990,7 +991,14 @@
     
   </DOSweep>
 
-  
+  <!-- Heat -->
+  <Heat                       spec="OPTIONAL NO_DATA" >
+    <delt                     spec="REQUIRED DOUBLE" />
+    <alpha                    spec="REQUIRED DOUBLE" />
+    <R0                       spec="REQUIRED DOUBLE" />
+    <gamma                    spec="REQUIRED DOUBLE" />
+  </Heat>
+
   <!-- Poisson        -->
   <Poisson                    spec="OPTIONAL NO_DATA" >
     <delt                     spec="REQUIRED DOUBLE" />
