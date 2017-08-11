@@ -362,7 +362,7 @@ private:
   // True for mixed scheduler which needs to keep track of internal dependencies.
   bool mustConsiderInternalDependencies_;
 
-  // In the future, we may want to prioritize tasks for the MixedScheduler
+  // In the future, we may want to prioritize tasks for the UnifiedScheduler
   // to run.  I implemented this using topological sort order as the priority
   // but that probably isn't a good way to do unless you make it a breadth
   // first topological order.

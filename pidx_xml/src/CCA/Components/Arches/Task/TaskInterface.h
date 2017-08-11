@@ -47,7 +47,7 @@ public:
     typedef std::tuple<constParticleVariable<double>*, ParticleSubset*> ConstParticleTuple;
 
     /** @brief Default constructor **/
-    TaskInterface( std::string take_name, int matl_index );
+    TaskInterface( std::string task_name, int matl_index );
 
     /** @brief Default destructor **/
     virtual ~TaskInterface();

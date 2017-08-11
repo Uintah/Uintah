@@ -32,19 +32,18 @@
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Math/MersenneTwister.h>
+#include <Core/Util/DOUT.hpp>
 
 #include <fstream>
 
 #include <include/sci_defs/uintah_testdefs.h.in>
 
+
 //______________________________________________________________________
 //
 using namespace Uintah;
 
-namespace {
-
-  DebugStream dbg("RAY", false);
-}
+extern Dout g_ray_dbg;
 
 //______________________________________________________________________
 // Class: Constructor.
@@ -130,7 +129,7 @@ Radiometer::problemSetup( const ProblemSpecP& prob_spec,
 
   if( start.x() > end.x() || start.y() > end.y() || start.z() > end.z() ) {
     std::ostringstream warn;
-    warn << "\n ERROR:Radiometer::problemSetup: the radiometerthat you've specified " << start
+    warn << "\n ERROR:Radiometer::problemSetup: the radiometer that you've specified " << start
          << " " << end << " the starting point is > than the ending point \n" << std::endl;
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
@@ -251,7 +250,8 @@ Radiometer::sched_initializeRadVars( const LevelP& level,
     tsk= scinew Task( taskname, this, &Radiometer::initializeRadVars< float > );
   }
   
-  printSchedule(level, dbg, taskname);
+  printSchedule(level, g_ray_dbg, taskname);
+
   tsk->requires(Task::OldDW, d_VRFluxLabel, d_gn, 0);
   tsk->computes( d_VRFluxLabel );
 
@@ -263,7 +263,7 @@ Radiometer::sched_initializeRadVars( const LevelP& level,
 }
 
 //______________________________________________________________________
-//  - Initialize the flux on all patches or move that variable foward
+//  - Initialize the flux on all patches or move that variable forward
 //    The flux is modified downstream.
 //  - Determine if the taskgraph should be recompiled
 //______________________________________________________________________
@@ -280,7 +280,8 @@ Radiometer::initializeRadVars( const ProcessorGroup*,
   for (int p=0; p < patches->size(); p++){
 
     const Patch* patch = patches->get(p);
-    printTask(patches, patch, dbg,"Doing Radiometer::initializeVars");
+
+    printTask(patches, patch, g_ray_dbg, "Doing Radiometer::initializeVars");
 
     CCVariable< T > VRFlux;
     new_dw->allocateAndPut( VRFlux, d_VRFluxLabel, d_matl, patch );
@@ -299,57 +300,50 @@ Radiometer::sched_radiometer( const LevelP& level,
                               Task::WhichDW sigma_dw,
                               Task::WhichDW celltype_dw )
 {
-  // find patches that contain radiometers
-  std::vector<const Patch*> radiometer_patches;
-  getPatchSet(sched, level, radiometer_patches);
-
   int L = level->getIndex();
   Task::WhichDW abskg_dw = d_abskg_dw[L];
 
-  // Until we have the ability to schedule a task like: level->eachPatchSpatial(),
-  //   we'll schedule spatial tasks on singleton PatchSets
-  for (size_t i = 0; i < radiometer_patches.size(); ++i) {
-    std::string taskname = "Radiometer::radiometer";
-    Task *tsk;
+  // only schedule on the patches that contain radiometers - Spatial task scheduling
+  //   we want a PatchSet like: { {19}, {22}, {25} } (singleton subsets like level->eachPatch())
+  //     NOT -> { {19,22,25} }, as one proc isn't guaranteed to own the entire, 3-element subset.
+  PatchSet* radiometerPatchSet = scinew PatchSet();
+  radiometerPatchSet->addReference();
+  getPatchSet(sched, level, radiometerPatchSet);
 
-    if (RMCRTCommon::d_FLT_DBL == TypeDescription::double_type) {
-      tsk = scinew Task(taskname, this, &Radiometer::radiometer<double>, abskg_dw, sigma_dw, celltype_dw);
-    }
-    else {
-      tsk = scinew Task(taskname, this, &Radiometer::radiometer<float>, abskg_dw, sigma_dw, celltype_dw);
-    }
+  std::string taskname = "Radiometer::radiometer";
+  Task *tsk;
 
-    tsk->setType(Task::Spatial);
+  if (RMCRTCommon::d_FLT_DBL == TypeDescription::double_type) {
+    tsk = scinew Task(taskname, this, &Radiometer::radiometer<double>, abskg_dw, sigma_dw, celltype_dw);
+  }
+  else {
+    tsk = scinew Task(taskname, this, &Radiometer::radiometer<float>, abskg_dw, sigma_dw, celltype_dw);
+  }
 
-    printSchedule(level, dbg, "Radiometer::sched_radiometer");
+  tsk->setType(Task::Spatial);
 
-    //__________________________________
-    // Require an infinite number of ghost cells so you can access the entire domain.
-    if (dbg.active()) {
-      dbg << "    sched_radiometer: adding requires for all-to-all variables " << std::endl;
-    }
+  printSchedule(level, g_ray_dbg, "Radiometer::sched_radiometer");
 
-    Ghost::GhostType gac = Ghost::AroundCells;
-    tsk->requires(abskg_dw, d_abskgLabel, gac, SHRT_MAX);
-    tsk->requires(sigma_dw, d_sigmaT4Label, gac, SHRT_MAX);
-    tsk->requires(celltype_dw, d_cellTypeLabel, gac, SHRT_MAX);
+  //__________________________________
+  // Require an infinite number of ghost cells so you can access the entire domain.
+  DOUT(g_ray_dbg, "    sched_radiometer: adding requires for all-to-all variables ");
 
-    tsk->modifies(d_VRFluxLabel);
+  Ghost::GhostType gac = Ghost::AroundCells;
+  tsk->requires(abskg_dw, d_abskgLabel, gac, SHRT_MAX);
+  tsk->requires(sigma_dw, d_sigmaT4Label, gac, SHRT_MAX);
+  tsk->requires(celltype_dw, d_cellTypeLabel, gac, SHRT_MAX);
 
-    // only schedule on the patches that contain radiometers Spatial task scheduling
-    PatchSet* radiometerPatchSet = scinew PatchSet();
-    radiometerPatchSet->addReference();
-    radiometerPatchSet->add(radiometer_patches[i]);
-    sched->addTask(tsk, radiometerPatchSet, d_matlSet, RMCRTCommon::TG_RMCRT);
+  tsk->modifies(d_VRFluxLabel);
 
-    if (radiometerPatchSet && radiometerPatchSet->removeReference()) {
-      delete radiometerPatchSet;
-    }
+  sched->addTask(tsk, radiometerPatchSet, d_matlSet, RMCRTCommon::TG_RMCRT);
+
+  if (radiometerPatchSet && radiometerPatchSet->removeReference()) {
+    delete radiometerPatchSet;
   }
 }
 
 //______________________________________________________________________
-// Method: The actual work of the ray tracer
+// Method: The actual work of the radiometer
 //______________________________________________________________________
 template < class T >
 void
@@ -385,7 +379,7 @@ Radiometer::radiometer( const ProcessorGroup* pg,
   for (int p=0; p < patches->size(); p++){
 
     const Patch* patch = patches->get(p);
-    printTask(patches,patch,dbg,"Doing Radiometer::radiometer");
+    printTask(patches, patch, g_ray_dbg, "Doing Radiometer::radiometer");
 
     bool modifiesFlux= true;
     radiometerFlux < T > ( patch, level, new_dw, mTwister, sigmaT4OverPi, abskg, celltype, modifiesFlux );
@@ -407,10 +401,7 @@ Radiometer::radiometerFlux( const Patch* patch,
                             constCCVariable<int> celltype,
                             const bool modifiesFlux )
 {
-
-  if ( dbg.active() ){
-    printTask(patch, dbg,"Doing Radiometer::radiometerFlux");
-  }
+  printTask(patch, g_ray_dbg, "Doing Radiometer::radiometerFlux");
 
   CCVariable< T > VRFlux;
   if( modifiesFlux ){
@@ -530,28 +521,33 @@ Radiometer::rayDirection_VR( MTRand& mTwister,
 //______________________________________________________________________
 void
 Radiometer::getPatchSet( SchedulerP& sched,
-                        const LevelP& level,
-                        std::vector<const Patch*>& radiometer_patches )
+                         const LevelP& level,
+                         PatchSet* ps )
 {
   //__________________________________
   // find patches that contain radiometers
-  LoadBalancerPort * lb          = sched->getLoadBalancer();
-  const PatchSet   * procPatches = lb->getPerProcessorPatchSet( level );
+  std::vector<const Patch*> radiometer_patches;
+  LoadBalancerPort * lb = sched->getLoadBalancer();
+  const PatchSet * procPatches = lb->getPerProcessorPatchSet(level);
 
-  for(int m=0; m<procPatches->size(); m++) {
-   const PatchSubset* patches = procPatches->getSubset(m);
+  for (int m = 0; m < procPatches->size(); m++) {
+    const PatchSubset* patches = procPatches->getSubset(m);
 
-    for (int p=0; p < patches->size(); p++){
+    for (int p = 0; p < patches->size(); p++) {
       const Patch* patch = patches->get(p);
       IntVector lo = patch->getCellLowIndex();
       IntVector hi = patch->getCellHighIndex();
-      IntVector VR_posLo  = level->getCellIndex( d_VRLocationsMin );
-      IntVector VR_posHi  = level->getCellIndex( d_VRLocationsMax );
+      IntVector VR_posLo = level->getCellIndex(d_VRLocationsMin);
+      IntVector VR_posHi = level->getCellIndex(d_VRLocationsMax);
 
-      if ( doesIntersect( VR_posLo, VR_posHi, lo, hi ) ){
-        radiometer_patches.push_back( patch );
+      if (doesIntersect(VR_posLo, VR_posHi, lo, hi)) {
+        radiometer_patches.push_back(patch);
       }
     }
+  }
+  size_t num_patches = radiometer_patches.size();
+  for (size_t i = 0; i < num_patches; ++i) {
+    ps->add(radiometer_patches[i]);
   }
 }
 

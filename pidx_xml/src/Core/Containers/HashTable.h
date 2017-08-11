@@ -38,8 +38,6 @@
 #ifndef SCI_Containers_HashTable_h
 #define SCI_Containers_HashTable_h 1
 
-#include <sci_defs/template_defs.h>
-
 #include <Core/Util/FancyAssert.h>
 #include <Core/Malloc/Allocator.h>
 

@@ -140,7 +140,7 @@ class MPIScheduler : public SchedulerCommon {
     std::ofstream               m_max_stats;
     std::ofstream               m_avg_stats;
 
-    unsigned int                m_num_messages{0};
+    std::atomic<unsigned int>   m_num_messages{0};
     double                      m_message_volume{0.0};
 
     Timers::Simple              m_exec_timer;

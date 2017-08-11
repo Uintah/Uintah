@@ -1,6 +1,3 @@
-#ifndef UINTAH_CORE_UTIL_DOUT_HPP
-#define UINTAH_CORE_UTIL_DOUT_HPP
-
 /*
  * The MIT License
  *
@@ -25,48 +22,51 @@
  * IN THE SOFTWARE.
  */
 
-#include <cstdio>
-#include <cstring>
-#include <cstdlib>
+#ifndef UINTAH_CORE_UTIL_DOUT_HPP
+#define UINTAH_CORE_UTIL_DOUT_HPP
 
-#include <string>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+
 #include <sstream>
+#include <string>
 
 #include <Core/Parallel/UintahMPI.h>
 
 
-#define DOUT( cond, ... )             \
-  if (cond) {                         \
-    std::ostringstream msg;           \
-    msg << __VA_ARGS__;               \
-    printf("%s\n",msg.str().c_str()); \
+#define DOUT( cond, ... )                  \
+  if (cond) {                              \
+    std::ostringstream dout_msg;           \
+    dout_msg << __VA_ARGS__;               \
+    printf("%s\n",dout_msg.str().c_str()); \
   }
 
-#define POUT( ... )                   \
-  {                                   \
-    std::ostringstream msg;           \
-    msg << __FILE__ << ":";           \
-    msg << __LINE__ << " : ";         \
-    msg << __VA_ARGS__;               \
-    printf("%s\n",msg.str().c_str()); \
+#define POUT( ... )                        \
+  {                                        \
+    std::ostringstream dout_msg;           \
+    dout_msg << __FILE__ << ":";           \
+    dout_msg << __LINE__ << " : ";         \
+    dout_msg << __VA_ARGS__;               \
+    printf("%s\n",dout_msg.str().c_str()); \
   }
 
-#define TOUT()                            \
-  printf("TOUT:  %d  %d  %s:%d\n"         \
-      , MPI::Impl::prank( MPI_COMM_WORLD )\
-      , MPI::Impl::tid()                  \
-      , __FILE__                          \
-      , __LINE__                          \
+#define TOUT()                             \
+  printf("TOUT:  %d  %d  %s:%d\n"          \
+      , MPI::Impl::prank( MPI_COMM_WORLD ) \
+      , MPI::Impl::tid()                   \
+      , __FILE__                           \
+      , __LINE__                           \
       )
 
 
 #define DOUTP0( cond, ... )                                 \
   if ( MPI::Impl::prank( MPI_COMM_WORLD ) == 0 && cond) {   \
-    std::ostringstream msg;                                 \
-    msg << __FILE__ << ":";                                 \
-    msg << __LINE__ << " : ";                               \
-    msg << __VA_ARGS__;                                     \
-    printf("%s\n",msg.str().c_str());                       \
+    std::ostringstream dout_msg;                            \
+    dout_msg << __FILE__ << ":";                            \
+    dout_msg << __LINE__ << " : ";                          \
+    dout_msg << __VA_ARGS__;                                \
+    printf("%s\n",dout_msg.str().c_str());                  \
   }
 
 
@@ -98,12 +98,14 @@ public:
     return a.m_name < b.m_name;
   }
 
+  // Note these two methods were added at the request of developers.
+  //   active() is effectively the same as operator bool() - APH, 07/14/17
   bool active() const { return m_active; }
   void setActive( bool active ) { m_active = active; }
 
 private:
 
-  static bool is_active( std::string const & arg_name,  bool default_active )
+  static bool is_active( std::string const& arg_name, bool default_active )
   {
     const char * sci_debug = std::getenv("SCI_DEBUG");
     const std::string tmp = "," + arg_name + ":";
@@ -118,7 +120,6 @@ private:
     if ( !sub ) {
       sub = strstr( sci_debug, name+1);
       --n;
-
       // name not found
       if ( !sub || sub != sci_debug ) {
         return default_active;

@@ -38,6 +38,7 @@ SUBDIRS := \
         $(SRCDIR)/IteratorTest            \
         $(SRCDIR)/RegionTest              \
         $(SRCDIR)/CubeRootTest            \
+        $(SRCDIR)/SFCTest                 \
         $(SRCDIR)/PatchBVH
 
 include $(SCIRUN_SCRIPTS)/recurse.mk

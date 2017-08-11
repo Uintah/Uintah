@@ -35,6 +35,7 @@
  *
  *
  */
+
 class MTRand;
 
 namespace Uintah{
@@ -44,6 +45,7 @@ namespace Uintah{
     public:
 
       Radiometer(const TypeDescription::Type FLT_DBL );         // This class can use sigmaT4 & abskg Float or Double;
+
       ~Radiometer();
 
       //__________________________________
@@ -64,6 +66,7 @@ namespace Uintah{
 
       void sched_initializeRadVars( const LevelP& level,
                                     SchedulerP& sched );
+
       template < class T >
       void initializeRadVars( const ProcessorGroup*,
                               const PatchSubset* patches,
@@ -74,21 +77,20 @@ namespace Uintah{
       //__________________________________
       //  FUNCTIONS
       template< class T >
-      void radiometerFlux(  const Patch* patch,
-                            const Level* level,
-                            DataWarehouse* new_dw,
-                            MTRand& mTwister,
-                            constCCVariable< T > sigmaT4OverPi,
-                            constCCVariable< T > abskg,
-                            constCCVariable<int> celltype,
-                            const bool modifiesFlux );
+      void radiometerFlux( const Patch* patch,
+                           const Level* level,
+                           DataWarehouse* new_dw,
+                           MTRand& mTwister,
+                           constCCVariable< T > sigmaT4OverPi,
+                           constCCVariable< T > abskg,
+                           constCCVariable<int> celltype,
+                           const bool modifiesFlux );
 
       void getPatchSet( SchedulerP& sched,
-                                             const LevelP& level,
-                                             std::vector<const Patch*>& radiometer_patches );
+                        const LevelP& level,
+                        PatchSet* ps);
       
-
-      const VarLabel* getRadiometerLabel() const {
+      inline const VarLabel* getRadiometerLabel() const {
         return d_VRFluxLabel;
       }
 
@@ -100,7 +102,7 @@ namespace Uintah{
       Point  d_VRLocationsMin;
       Point  d_VRLocationsMax;
 
-      struct VR_variables{
+      struct VR_variables {
         double thetaRot;
         double phiRot;
         double psiRot;

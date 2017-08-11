@@ -34,19 +34,20 @@
 
 #define DIM 2
 #define LOCS float
+
 int main(int argc, char** argv)
 {
-	Uintah::Parallel::determineIfRunningUnderMPI( argc, argv);	
-	Uintah::Parallel::initializeManager( argc, argv, "");
-	ProcessorGroup *d_myworld=Uintah::Parallel::getRootProcessorGroup();
+	Uintah::Parallel::initializeManager( argc, argv);
+	Uintah::ProcessorGroup *d_myworld = Uintah::Parallel::getRootProcessorGroup();
   MPI_Comm Comm=d_myworld->getComm();	
-	vector<LOCS> locs, locss;
-	vector<DistributedIndex> orders, orderss;
+	std::vector<LOCS> locs, locss;
+	std::vector<Uintah::DistributedIndex> orders, orderss;
 	
 	
 	int ref=3;
-	if(argc>=2)
+	if(argc>=2) {
 		ref=atoi(argv[1]);
+	}
 
 	int div=(int)pow((float)DIM,ref);
 	
@@ -57,7 +58,7 @@ int main(int argc, char** argv)
 	int rank=d_myworld->myrank();
 	LOCS xx,yy;
 
-  SFC<LOCS> mycurve(d_myworld);
+	Uintah::SFC<LOCS> mycurve(d_myworld);
   
 
 
@@ -123,7 +124,7 @@ int main(int argc, char** argv)
 	mycurve.SetOutputVector(&orders);
 	mycurve.SetLocations(&locs); 
   mycurve.SetMergeMode(1);
-  mycurve.SetCleanup(BATCHERS);
+  mycurve.SetCleanup(Uintah::BATCHERS);
   mycurve.SetMergeParameters(3000,500,2,.15);  //Should do this by profiling
 
   LOCS dim[3]={width,height,depth};
@@ -132,7 +133,7 @@ int main(int argc, char** argv)
   mycurve.SetCenter(center);
 
   if(rank==0)
-    cout << " Generating curve in parallel\n";
+    std::cout << " Generating curve in parallel\n";
 
   Uintah::MPI::Barrier(Comm);
   
@@ -142,7 +143,7 @@ int main(int argc, char** argv)
   mycurve.GenerateCurve();
   timer.stop();  
   
-  cout << rank << ": Time to generate curve:" << timer().seconds() << endl;
+  std::cout << rank << ": Time to generate curve:" << timer().seconds() << std::endl;
 
   Uintah::MPI::Barrier(Comm);
 
@@ -151,27 +152,29 @@ int main(int argc, char** argv)
   mycurve.SetOutputVector(&orderss);
   mycurve.SetLocations(&locss);
   
-  if(rank==0)
-    cout << " Generating curve in serial\n";
+  if(rank==0) {
+    std::cout << " Generating curve in serial\n";
+  }
+
   Uintah::MPI::Barrier(Comm);
 
   timer.reset( true );
   mycurve.GenerateCurve(true);
   timer.stop();  
   
-  cout << rank << ": Time to generate curve:" << timer().seconds() << endl;
+  std::cout << rank << ": Time to generate curve:" << timer().seconds() << std::endl;
 
   Uintah::MPI::Barrier(Comm);
 
   if(rank==0)
   {
-    cout << "Verifying curve\n";
+    std::cout << "Verifying curve\n";
 	  unsigned int pn=N/P;
     unsigned int j=0,r;
     unsigned int starti;
     for(unsigned int i=0;i<n;i++)
     {
-	    if(orders[i].p<rem)
+	    if(orders[i].p<(unsigned int)rem)
 	    {
 		    starti=orders[i].p*(pn+1);
 	    }
@@ -183,9 +186,8 @@ int main(int argc, char** argv)
       int index1=starti  + orders[i].i;
       int index2=orderss[j].i;
       if(index1!=index2)
-        cout << j << ": " << index1 << "!=" << index2 << "\n";
-
-      //cout << "index1:" << orders[i].p << ":" << orders[i].i << " index2:" << orderss[j].p << ":" << orderss[j].i << endl;
+        std::cout << j << ": " << index1 << "!=" << index2 << "\n";
+      // std::cout << "index1:" << orders[i].p << ":" << orders[i].i << " index2:" << orderss[j].p << ":" << orderss[j].i << std::endl;
       j++;
     }
 
@@ -198,10 +200,10 @@ int main(int argc, char** argv)
       else
         r=n;
 
-      Uintah::MPI::Recv(&orders[0],r*sizeof(DistributedIndex),MPI_BYTE,p,0,d_myworld->getComm(), &status);
+      Uintah::MPI::Recv(&orders[0],r*sizeof(Uintah::DistributedIndex),MPI_BYTE,p,0,d_myworld->getComm(), &status);
       for(unsigned int i=0;i<r;i++)
       {
-	      if(orders[i].p<rem)
+	      if(orders[i].p<(unsigned int)rem)
 	      {
 		      starti=orders[i].p*(pn+1);
   	    } 
@@ -213,15 +215,15 @@ int main(int argc, char** argv)
         int index1=starti  + orders[i].i;
         int index2=orderss[j].i;
         if(index1!=index2)
-          cout << j << ": " << index1 << "!=" << index2 <<  "\n";
-        //cout << "index1:" << orders[i].p << ":" << orders[i].i << " index2:" << orderss[j].p << ":" << orderss[j].i << endl;
+          std::cout << j << ": " << index1 << "!=" << index2 <<  "\n";
+        //std::cout << "index1:" << orders[i].p << ":" << orders[i].i << " index2:" << orderss[j].p << ":" << orderss[j].i << std::endl;
         j++;
       }
     }
   }
   else
   {
-    Uintah::MPI::Send(&orders[0],n*sizeof(DistributedIndex),MPI_BYTE,0,0,d_myworld->getComm());
+    Uintah::MPI::Send(&orders[0],n*sizeof(Uintah::DistributedIndex),MPI_BYTE,0,0,d_myworld->getComm());
   }
 
 	Uintah::Parallel::finalizeManager();

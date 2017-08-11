@@ -146,7 +146,19 @@ public:
   //setProcId
   void setProcId(const int new_proc_id)
   {
-    proc_id=new_proc_id;
+    proc_id = new_proc_id;
+  }
+
+  //getPatchId
+  int getPatchId() const
+  {
+    return patch_id;
+  }
+
+  //setPatchId
+  void setPatchId(const int new_patch_id)
+  {
+    patch_id = new_patch_id;
   }
 
   //setBounds
@@ -240,6 +252,7 @@ private:
   int sfcz_low[3];
   int sfcz_high[3];
 
+  int patch_id;
   int proc_id;
 };
 

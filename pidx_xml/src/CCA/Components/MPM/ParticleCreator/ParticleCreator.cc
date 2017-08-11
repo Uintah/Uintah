@@ -42,10 +42,10 @@
 #include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DamageModel.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/ErosionModel.h>
-#include <CCA/Components/MPM/ReactionDiffusion/DiffusionModels/ScalarDiffusionModel.h>
 #include <CCA/Components/MPM/MPMFlags.h>
 #include <CCA/Components/MPM/MMS/MMS.h>
 #include <iostream>
+#include <CCA/Components/MPM/Diffusion/DiffusionModels/ScalarDiffusionModel.h>
 
 /*  This code is a bit tough to follow.  Here's the basic order of operations.
 
@@ -546,13 +546,13 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
   }
   if(d_doScalarDiffusion){
      new_dw->allocateAndPut(pvars.pConcentration,
-                                          d_lb->pConcentrationLabel,  subset);
+                                          d_lb->diffusion->pConcentration,  subset);
      new_dw->allocateAndPut(pvars.pConcPrevious,
-                                          d_lb->pConcPreviousLabel,   subset);
+                                          d_lb->diffusion->pConcPrevious,   subset);
      new_dw->allocateAndPut(pvars.pConcGrad,
-                                          d_lb->pConcGradientLabel,   subset);
+                                          d_lb->diffusion->pGradConcentration,   subset);
      new_dw->allocateAndPut(pvars.pExternalScalarFlux,
-                                          d_lb->pExternalScalarFluxLabel, subset);
+                                          d_lb->diffusion->pExternalScalarFlux, subset);
   }
   if(d_withGaussSolver){
      new_dw->allocateAndPut(pvars.pPosCharge,
@@ -1000,17 +1000,17 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
   }
 
   if (d_doScalarDiffusion){
-    particle_state.push_back(d_lb->pConcentrationLabel);
-    particle_state_preReloc.push_back(d_lb->pConcentrationLabel_preReloc);
+    particle_state.push_back(d_lb->diffusion->pConcentration);
+    particle_state_preReloc.push_back(d_lb->diffusion->pConcentration_preReloc);
 
-    particle_state.push_back(d_lb->pConcPreviousLabel);
-    particle_state_preReloc.push_back(d_lb->pConcPreviousLabel_preReloc);
+    particle_state.push_back(d_lb->diffusion->pConcPrevious);
+    particle_state_preReloc.push_back(d_lb->diffusion->pConcPrevious_preReloc);
 
-    particle_state.push_back(d_lb->pConcGradientLabel);
-    particle_state_preReloc.push_back(d_lb->pConcGradientLabel_preReloc);
+    particle_state.push_back(d_lb->diffusion->pGradConcentration);
+    particle_state_preReloc.push_back(d_lb->diffusion->pGradConcentration_preReloc);
 
-    particle_state.push_back(d_lb->pExternalScalarFluxLabel);
-    particle_state_preReloc.push_back(d_lb->pExternalScalarFluxLabel_preReloc);
+    particle_state.push_back(d_lb->diffusion->pExternalScalarFlux);
+    particle_state_preReloc.push_back(d_lb->diffusion->pExternalScalarFlux_preReloc);
 
 
     matl->getScalarDiffusionModel()->addParticleState(particle_state,
@@ -1076,6 +1076,7 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
     particle_state_preReloc.push_back(d_lb->pLastLevelLabel_preReloc);
 
     if (d_flags->d_doScalarDiffusion) {
+      // JBH - TODO - FIXME -- FOld into diffusion sublabel?
       particle_state.push_back(d_lb->pAreaLabel);
       particle_state_preReloc.push_back(d_lb->pAreaLabel_preReloc);
     }

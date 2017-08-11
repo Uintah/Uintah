@@ -44,15 +44,41 @@ void AddPressGradient::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info
   SFCZVariable<double>& zmom = tsk_info->get_uintah_field_add<SFCZVariable<double> >( m_zmom );
   constCCVariable<double>& p = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_press);
 
-  Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
-
   // because the hypre solve required a positive diagonal
   // so we -1 * ( Ax = b ) requiring that we change the sign
   // back.
-  Uintah::parallel_for( range, [&](int i, int j, int k){
+
+  // boundary conditions on the pressure fields are applied
+  // post linear solve in the PressureBC.cc class.
+
+  IntVector shift(0,0,0);
+  if ( patch->getBCType(Patch::xplus) != Patch::Neighbor ) shift[0] = 1;
+
+  Uintah::BlockRange x_range( patch->getCellLowIndex(), patch->getCellHighIndex()+shift );
+
+  Uintah::parallel_for( x_range, [&](int i, int j, int k){
 
     xmom(i,j,k) += dt * ( p(i-1,j,k) - p(i,j,k) ) / DX.x();
+
+  });
+
+  shift[0] = 0;
+  if ( patch->getBCType(Patch::yplus) != Patch::Neighbor ) shift[1] = 1;
+
+  Uintah::BlockRange y_range( patch->getCellLowIndex(), patch->getCellHighIndex()+shift );
+
+  Uintah::parallel_for( y_range, [&](int i, int j, int k){
+
     ymom(i,j,k) += dt * ( p(i,j-1,k) - p(i,j,k) ) / DX.y();
+
+  });
+
+  shift[1] = 0;
+  if ( patch->getBCType(Patch::zplus) != Patch::Neighbor ) shift[2] = 1;
+
+  Uintah::BlockRange z_range( patch->getCellLowIndex(), patch->getCellHighIndex()+shift );
+  Uintah::parallel_for( z_range, [&](int i, int j, int k){
+
     zmom(i,j,k) += dt * ( p(i,j,k-1) - p(i,j,k) ) / DX.z();
 
   });

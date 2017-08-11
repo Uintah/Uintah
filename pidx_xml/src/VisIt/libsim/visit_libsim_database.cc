@@ -418,7 +418,37 @@ visit_handle visit_SimGetMetaData(void *cbdata)
           
         if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
         {
-          VisIt_VariableMetaData_setName(vmd, "patch/id");
+          VisIt_VariableMetaData_setName(vmd, "patch/local_id");
+          VisIt_VariableMetaData_setMeshName(vmd, mesh_for_procid.c_str());
+          VisIt_VariableMetaData_setCentering(vmd, VISIT_VARCENTERING_ZONE);
+          VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
+          VisIt_VariableMetaData_setNumComponents(vmd, 1);
+          VisIt_VariableMetaData_setUnits(vmd, "");
+
+          // ARS - FIXME
+          //      VisIt_VariableMetaData_setHasDataExtents(vmd, false);
+          VisIt_VariableMetaData_setTreatAsASCII(vmd, false);
+          VisIt_SimulationMetaData_addVariable(md, vmd);
+	}
+	  
+        if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
+        {
+          VisIt_VariableMetaData_setName(vmd, "patch/local_level");
+          VisIt_VariableMetaData_setMeshName(vmd, mesh_for_procid.c_str());
+          VisIt_VariableMetaData_setCentering(vmd, VISIT_VARCENTERING_ZONE);
+          VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
+          VisIt_VariableMetaData_setNumComponents(vmd, 1);
+          VisIt_VariableMetaData_setUnits(vmd, "");
+
+          // ARS - FIXME
+          //      VisIt_VariableMetaData_setHasDataExtents(vmd, false);
+          VisIt_VariableMetaData_setTreatAsASCII(vmd, false);
+          VisIt_SimulationMetaData_addVariable(md, vmd);
+	}
+
+        if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
+        {
+          VisIt_VariableMetaData_setName(vmd, "patch/global_id");
           VisIt_VariableMetaData_setMeshName(vmd, mesh_for_procid.c_str());
           VisIt_VariableMetaData_setCentering(vmd, VISIT_VARCENTERING_ZONE);
           VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
@@ -1369,7 +1399,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       
     GridDataRaw *gd = nullptr;
 
-    if( std::string(varname) == "patch/id" || varName == "processor" )
+    if( varName == "patch" || varName == "processor" )
     {
       // Strip off the "processor/*/" prefix
       varName = std::string(varname);
@@ -1378,10 +1408,20 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
 
       double val;
 
-      // Processor Id
-      if( strcmp(varname, "patch/id") == 0 )
+      // Patch local Id
+      if( strcmp(varname, "patch/local_id") == 0 )
       {
           val = local_patch;
+      }
+      // Patch local level
+      else if( strcmp(varname, "patch/local_level") == 0 )
+      {
+          val = level;
+      }
+      // Patch global Id
+      else if( strcmp(varname, "patch/global_id") == 0 )
+      {
+          val = patchInfo.getPatchId();
       }
       // Processor Id
       else if( strcmp(varname, "processor/id") == 0 )
@@ -1392,14 +1432,14 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       else if( strncmp( varname, "processor/runtime/", 18 ) == 0 &&
                simStateP->d_runTimeStats.exists(varName) )
       {
-        val = simStateP->d_runTimeStats.getValue( varName );
+          val = simStateP->d_runTimeStats.getValue( varName );
       }
 
       // MPI Scheduler Timing stats
       else if( strncmp( varname, "processor/mpi/", 14 ) == 0 &&
                mpiScheduler && mpiScheduler->mpi_info_.exists(varName) )
       {
-        val = mpiScheduler->mpi_info_.getValue( varName );
+          val = mpiScheduler->mpi_info_.getValue( varName );
       }
       else
         val = 0;

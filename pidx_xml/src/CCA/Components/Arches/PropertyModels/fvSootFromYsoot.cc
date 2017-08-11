@@ -36,8 +36,9 @@ void fvSootFromYsoot::problemSetup( const ProblemSpecP& inputdb )
 
   db->getWithDefault( "density_label" ,          _den_label_name,    "density"	  );
   db->getWithDefault( "Ysoot_label"   ,          _Ys_label_name ,    "Ysoot"	  );
-  db->getWithDefault( "absorption_label",        _absorp_label_name, "absorpIN"	  );
   db->getWithDefault( "temperature_label",	 _T_label_name,	     "temperature");
+  db->require( "absorption_label",        _absorp_label_name);
+  db->require( "total_absorption_label",        _total_absorp_label_name);
 
   db->getWithDefault( "soot_density", _rho_soot, 1950.0);
 }
@@ -55,15 +56,18 @@ void fvSootFromYsoot::sched_computeProp( const LevelP& level, SchedulerP& sched,
   _T_label	= VarLabel::find( _T_label_name);
   _Ys_label     = VarLabel::find( _Ys_label_name );
   _absorp_label = VarLabel::find( _absorp_label_name );
+  _total_absorp_label = VarLabel::find( _total_absorp_label_name );
 
-  if ( _den_label == 0 ){
+  if ( _den_label == nullptr ){
     throw InvalidValue("Error: Cannot find den label in the fv soot function with name: "+_den_label_name,__FILE__,__LINE__);
-  } else if ( _Ys_label == 0 ){
+  } else if ( _Ys_label == nullptr ){
     throw InvalidValue("Error: Cannot find Ys label in the fv soot function with name: "+_Ys_label_name,__FILE__,__LINE__);
-  } else if ( _absorp_label == 0 ){
-    throw InvalidValue("Error: Cannot fine absorp label in the fv soot function with name: "+_absorp_label_name,__FILE__,__LINE__);
-  } else if ( _T_label ==0 ){
-    throw InvalidValue("Error: Cannot fine temperature label in the fv soot function with name: "+_T_label_name,__FILE__,__LINE__);
+  } else if ( _absorp_label == nullptr ){
+    throw InvalidValue("Error: Cannot find absorp label in the fv soot function with name: "+_absorp_label_name,__FILE__,__LINE__);
+  } else if ( _total_absorp_label == nullptr ){
+    throw InvalidValue("Error: Cannot find total absorp label in the fv soot function with name: "+_total_absorp_label_name,__FILE__,__LINE__);
+  } else if ( _T_label == nullptr){
+    throw InvalidValue("Error: Cannot find temperature label in the fv soot function with name: "+_T_label_name,__FILE__,__LINE__);
   }
 
   if ( time_substep == 0 ) {
@@ -72,12 +76,15 @@ void fvSootFromYsoot::sched_computeProp( const LevelP& level, SchedulerP& sched,
     tsk->requires( Task::OldDW, _den_label,  gn, 0 );
     tsk->requires( Task::OldDW, _Ys_label,   gn, 0 );
     
+    tsk->modifies( _total_absorp_label );
+    tsk->modifies( _absorp_label );
   } else {
 
     tsk->requires( Task::NewDW, _T_label,    gn, 0 );
     tsk->requires( Task::NewDW, _den_label,  gn, 0 );
     tsk->requires( Task::NewDW, _Ys_label,   gn, 0 );
 
+    tsk->modifies( _total_absorp_label );
     tsk->modifies( _absorp_label );
 
   }
@@ -106,6 +113,7 @@ void fvSootFromYsoot::computeProp(const ProcessorGroup* pc,
 
     CCVariable<double> soot_vf;
     CCVariable<double> absorp_coef;
+    CCVariable<double> tot_absorp_coef;
     constCCVariable<double> temperature;
     constCCVariable<double> density;
     constCCVariable<double> Ysoot;
@@ -114,6 +122,7 @@ void fvSootFromYsoot::computeProp(const ProcessorGroup* pc,
     if ( time_substep != 0 ){
 
       new_dw->getModifiable( absorp_coef,    _absorp_label,   matlIndex, patch );
+      new_dw->getModifiable( tot_absorp_coef,    _total_absorp_label,   matlIndex, patch );
       new_dw->getModifiable( soot_vf,     _prop_label,   matlIndex, patch );
 
       new_dw->get( temperature,  _T_label,  matlIndex, patch, gn, 0 );
@@ -123,7 +132,8 @@ void fvSootFromYsoot::computeProp(const ProcessorGroup* pc,
     } else {
       
       new_dw->allocateAndPut( soot_vf,      _prop_label,     matlIndex, patch );
-      new_dw->getModifiable(  absorp_coef,  _absorp_label,   matlIndex, patch );
+      new_dw->getModifiable( absorp_coef,    _absorp_label,   matlIndex, patch );
+      new_dw->getModifiable( tot_absorp_coef,    _total_absorp_label,   matlIndex, patch );
 
       soot_vf.initialize(0.0);
 
@@ -134,14 +144,21 @@ void fvSootFromYsoot::computeProp(const ProcessorGroup* pc,
     }
 
     CellIterator iter = patch->getCellIterator();
-
     for (iter.begin(); !iter.done(); iter++){
 
       IntVector c = *iter;
-      soot_vf[c] = density[c] * Ysoot[c] / _rho_soot;
-
-      absorp_coef[c] += (4.0/_opl)*log( 1.0 + 350.0 * soot_vf[c] * temperature[c] * _opl);
     }
+
+    Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
+    Uintah::parallel_for(range,  [&](int i, int j, int k) {
+
+        soot_vf(i,j,k) = density(i,j,k) * Ysoot(i,j,k) / _rho_soot;
+        double soot_absorption_coeff=(4.0/_opl)*log( 1.0 + 350.0 * soot_vf(i,j,k) * temperature(i,j,k) * _opl);
+        absorp_coef(i,j,k) +=soot_absorption_coeff;
+        tot_absorp_coef(i,j,k) += soot_absorption_coeff;
+
+      });
+
   }
 }
 
@@ -155,6 +172,7 @@ void fvSootFromYsoot::sched_initialize( const LevelP& level, SchedulerP& sched )
   _den_label    = VarLabel::find( _den_label_name );
   _Ys_label     = VarLabel::find( _Ys_label_name );
   _absorp_label = VarLabel::find( _absorp_label_name );
+  _total_absorp_label = VarLabel::find( _total_absorp_label_name );
 
   if ( _den_label == 0 ){
     throw InvalidValue("Error: Cannot find den label in the fv soot function with name: "+_den_label_name,__FILE__,__LINE__);

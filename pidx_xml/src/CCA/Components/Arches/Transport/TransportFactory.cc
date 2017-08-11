@@ -6,6 +6,7 @@
 #include <CCA/Components/Arches/Transport/PressureEqn.h>
 #include <CCA/Components/Arches/Transport/VelRhoHatBC.h>
 #include <CCA/Components/Arches/Transport/AddPressGradient.h>
+#include <CCA/Components/Arches/Transport/PressureBC.h>
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 #include <CCA/Components/Arches/Task/AtomicTaskInterface.h>
 
@@ -107,9 +108,13 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
     KFEUpdate<SFCXVariable<double> >::Builder* x_update_tsk =
     scinew KFEUpdate<SFCXVariable<double> >::Builder( update_task_name, 0 );
     register_task( update_task_name, x_update_tsk );
+
     _momentum_builders.push_back(mom_task_name);
     _momentum_compute_psi.push_back(compute_psi_name);
     _momentum_update.push_back(update_task_name);
+
+    _momentum_solve.push_back( compute_psi_name );
+    _momentum_solve.push_back( mom_task_name );
 
     // Y-mom
     compute_psi_name = "y-mom-psi";
@@ -123,9 +128,13 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
     TaskInterface::TaskBuilder* y_update_tsk =
     scinew KFEUpdate<SFCYVariable<double> >::Builder( update_task_name, 0 );
     register_task( update_task_name, y_update_tsk );
+
     _momentum_builders.push_back(mom_task_name);
     _momentum_compute_psi.push_back(compute_psi_name);
     _momentum_update.push_back(update_task_name);
+
+    _momentum_solve.push_back( compute_psi_name );
+    _momentum_solve.push_back( mom_task_name );
 
     // Z-mom
     compute_psi_name = "z-mom-psi";
@@ -139,9 +148,13 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
     TaskInterface::TaskBuilder* z_update_tsk =
     scinew KFEUpdate<SFCZVariable<double> >::Builder( update_task_name, 0 );
     register_task( update_task_name, z_update_tsk );
+
     _momentum_builders.push_back(mom_task_name);
     _momentum_compute_psi.push_back(compute_psi_name);
     _momentum_update.push_back(update_task_name);
+
+    _momentum_solve.push_back( compute_psi_name );
+    _momentum_solve.push_back( mom_task_name );
 
     //Pressure eqn
     TaskInterface::TaskBuilder* press_tsk = scinew PressureEqn::Builder("build_pressure_system", 0, _shared_state);
@@ -152,10 +165,13 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
     AtomicTaskInterface::AtomicTaskBuilder* velrhohatbc_tsk = scinew VelRhoHatBC::Builder("vel_rho_hat_bc", 0);
     register_atomic_task( "vel_rho_hat_bc", velrhohatbc_tsk);
 
+    //pressure bcs
+    AtomicTaskInterface::AtomicTaskBuilder* press_bc_tsk = scinew PressureBC::Builder("pressure_bcs", 0);
+    register_atomic_task( "pressure_bcs", press_bc_tsk );
+
     //pressure Gradient
     AtomicTaskInterface::AtomicTaskBuilder* gradP_tsk = scinew AddPressGradient::Builder("pressure_correction", 0);
     register_atomic_task( "pressure_correction", gradP_tsk);
-
 
   }
 }
@@ -262,6 +278,12 @@ TransportFactory::build_all_tasks( ProblemSpecP& db )
     print_task_setup_info("pressure_correction", "correction for vels");
     gradP_tsk->problemSetup(db_mom);
     gradP_tsk->create_local_labels();
+
+    AtomicTaskInterface* press_bc_tsk = retrieve_atomic_task("pressure_bcs");
+    print_task_setup_info("pressure_bcs", "apply bcs to the solution of the linear pressure system");
+    press_bc_tsk->problemSetup(db_mom);
+    press_bc_tsk->create_local_labels();
+
 
   }
 }

@@ -26,6 +26,7 @@
 #define UINTAH_HOMEBREW_MPMLABEL_H
 
 
+#include <Core/Labels/MPMDiffusionLabel.h>
 #include <vector>
 
 namespace Uintah {
@@ -37,6 +38,9 @@ namespace Uintah {
 
       MPMLabel();
       ~MPMLabel();
+
+      // Label containing subclasses.
+      MPMDiffusionLabel* diffusion;
 
       const VarLabel* delTLabel;
       const VarLabel* doMechLabel;
@@ -50,10 +54,10 @@ namespace Uintah {
       const VarLabel* pPressureLabel;
       const VarLabel* pScratchVecLabel;
       const VarLabel* pScratchLabel;
-      const VarLabel* pExternalScalarFluxLabel;
-      const VarLabel* pExternalScalarFluxLabel_preReloc;
-      const VarLabel* pFluxLabel;
-      const VarLabel* pFluxLabel_preReloc;
+//      const VarLabel* pExternalScalarFluxLabel;
+//      const VarLabel* pExternalScalarFluxLabel_preReloc;
+//      const VarLabel* pFluxLabel;
+//      const VarLabel* pFluxLabel_preReloc;
       const VarLabel* pVolumeDeformedLabel;
       const VarLabel* TotalVolumeDeformedLabel;
       const VarLabel* pXXLabel;
@@ -110,24 +114,24 @@ namespace Uintah {
       const VarLabel* pLocalizedMPMLabel_preReloc;
       const VarLabel* pRefinedLabel;
       const VarLabel* pRefinedLabel_preReloc;
-      const VarLabel* pConcentrationLabel;
-      const VarLabel* pConcentrationLabel_preReloc;
-      const VarLabel* pConcPreviousLabel;
-      const VarLabel* pConcPreviousLabel_preReloc;
+//      const VarLabel* pConcentrationLabel;
+//      const VarLabel* pConcentrationLabel_preReloc;
+//      const VarLabel* pConcPreviousLabel;
+//      const VarLabel* pConcPreviousLabel_preReloc;
       const VarLabel* pFiberDirLabel;
       const VarLabel* pFiberDirLabel_preReloc;
       const VarLabel* pScaleFactorLabel;
       const VarLabel* pScaleFactorLabel_preReloc;
       const VarLabel* pTemperatureGradientLabel; //for heat conduction
       const VarLabel* pTemperatureGradientLabel_preReloc; //for heat conduction
-      const VarLabel* pConcGradientLabel; //for scalar diffusion
-      const VarLabel* pConcGradientLabel_preReloc; //for scalar diffusion
-      const VarLabel* pDiffusivityLabel; //for scalar diffusion
-      const VarLabel* pDiffusivityLabel_preReloc; //for scalar diffusion
-      const VarLabel* TotalConcLabel;
-      const VarLabel* MaxConcLabel;
-      const VarLabel* MinConcLabel;
-      const VarLabel* pAvgConcLabel;
+//      const VarLabel* pConcGradientLabel; //for scalar diffusion
+//      const VarLabel* pConcGradientLabel_preReloc; //for scalar diffusion
+//      const VarLabel* pDiffusivityLabel; //for scalar diffusion
+//      const VarLabel* pDiffusivityLabel_preReloc; //for scalar diffusion
+//      const VarLabel* TotalConcLabel;
+//      const VarLabel* MaxConcLabel;
+//      const VarLabel* MinConcLabel;
+//      const VarLabel* pAvgConcLabel;
       const VarLabel* pESPotential;
       const VarLabel* pESGradPotential;
       const VarLabel* pPosChargeLabel;
@@ -169,12 +173,12 @@ namespace Uintah {
       const VarLabel* gHeatFluxLabel;
       const VarLabel* gExternalHeatRateLabel;
       const VarLabel* gExternalHeatFluxLabel;
-      const VarLabel* gConcentrationLabel;
-      const VarLabel* gConcentrationNoBCLabel;
-      const VarLabel* gConcentrationRateLabel;
-      const VarLabel* gConcentrationStarLabel;
-      const VarLabel* gExternalScalarFluxLabel;
-      const VarLabel* gHydrostaticStressLabel;
+//      const VarLabel* gConcentrationLabel;
+//      const VarLabel* gConcentrationNoBCLabel;
+//      const VarLabel* gConcentrationRateLabel;
+//      const VarLabel* gConcentrationStarLabel;
+//      const VarLabel* gExternalScalarFluxLabel;
+//      const VarLabel* gHydrostaticStressLabel;
       const VarLabel* gThermalContactTemperatureRateLabel;
       const VarLabel* gNormTractionLabel;
       const VarLabel* gSurfNormLabel;

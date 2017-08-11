@@ -120,6 +120,8 @@ protected:
 
    ProblemSpecP m_arches_spec;
 
+   bool m_global_pack_tasks{false}; 
+
 private:
 
 }; // End class NonlinearSolver

@@ -11,8 +11,13 @@ if ( $status ) then
 endif
 #__________________________________
 # bulletproofing
-@ numFiles = `find . -maxdepth 1 -name "*-short.log" | wc -w`
-if ( $numFiles == 0 ) then
+@ nFailedTests = 0
+foreach X (*-short.log)
+  @ failed        = `grep -c failed $X`
+  @ nFailedTests +=  $failed
+end
+
+if ( $nFailedTests == 0 ) then
   echo "ERROR:Replace_all_GS: couldn't find any failed regression tests. Now exiting"
   exit
 endif

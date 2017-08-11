@@ -130,7 +130,7 @@ AC_CONFIG_AUX_DIR(build_scripts)
 if test -f Makefile.in; then
    AC_MSG_WARN(DO NOT CONFIGURE IN THE SRC DIRECTORY:)
    AC_MSG_WARN(___ Try creating a dir such as: ../archBITSdebug)
-   AC_MSG_WARN(___ eg: ../sgi32opt or ../linux32debug)
+   AC_MSG_WARN(___ eg: ../sgi32opt or ../linux64dbg)
    AC_MSG_WARN(___ cd to that dir and then type: ../src/configure)
    rm -f config.log config.cache confdefs.h conftest.out
    AC_MSG_ERROR(Tried to configure in src directory.)
@@ -162,11 +162,11 @@ SCI_ARG_VAR(NVCC_LDFLAGS, CUDA linker flags)
 ## checked in:
 ##
 ## To avoid allowing invalid arguments to configure, we have to manually
-## hack "configure" after it has been 'autoconf'd, and add the line
-## enable_option_checking=fatal.  There apparently is no way to do
-## this through autoconf macros... sigh.  Manually find this text in
-## configure, MOVE IT TO THE TOP OF THE FILE (just after the MIT
-## license), and uncomment the following line:
+## hack the 'configure' script after it has been 'autoconf'd, and add the
+## line "enable_option_checking=fatal".  There apparently is no way to do
+## this through autoconf macros... sigh.  Manually find this entire text
+## block (comment and all) in configure, MOVE IT ALL TO THE TOP OF THE FILE
+## (just after the MIT license), and uncomment the following line:
 ##
 # enable_option_checking=fatal
 
@@ -1129,8 +1129,6 @@ fi
 ##  DO NOT "hardcode" ANY libraries (i.e. no -l or -L or -I allowed).
 ##
 
-TEMPLATE_TAG=
-TEMPLATE_BOX="<>"
 case $host in
      *-darwin*)
         # New Mac Clang comiler does not support the -faltivec flag...
@@ -2050,9 +2048,6 @@ AC_SUBST(MAKE_PARALLELISM)
 AC_SUBST(NEED_SONAME)
 AC_SUBST(PERL)
 AC_SUBST(REPOSITORY_FLAGS)
-AC_SUBST(TEMPLATE_TAG)
-AC_SUBST(TEMPLATE_BOX)
-sci_defs_files="$sci_defs_files include/sci_defs/template_testdefs.h"
 
 ##  set the default language after the build tools are found
 AC_LANG([C])
@@ -4093,50 +4088,13 @@ AC_LANG([C++])
 AC_MSG_CHECKING(for location of hash_map)
 DEF_HASHMAP=None
 
-if test "$HAVE_BOOST" = "yes"; then
-  DEF_HASHMAP=USE_BOOST_HASHMAP
-fi
-
 if test "$DEF_HASHMAP" = "None"; then
   AC_TRY_COMPILE([#include <unordered_map>
                  std::unordered_map<int, int> xx;], ,
 		 [DEF_HASHMAP=HAVE_C11_HASHMAP])
 fi
 
-if test "$DEF_HASHMAP" = "None"; then
-  DEF_HASHMAP=None
-  AC_TRY_COMPILE([#include <hash_map>
-                 std::hash_map<int, int> xx;], ,
-                 [DEF_HASHMAP=HAVE_STD_HASHMAP])
-fi
 
-if test "$DEF_HASHMAP" = "None"; then
-  AC_TRY_COMPILE([#include <ext/hash_map>
-                 std::hash_map<int, int> xx;], ,
-		 [DEF_HASHMAP=HAVE_EXT_HASHMAP])
-fi
-
-############################################################
-#
-# Only make the following check if CUDA is NOT being used.  (When CUDA
-# is used we can't use TR1... it causes compilation errors when using
-# the nvcc compiler.)
-#
-if test "$with_cuda" = NOT_SET; then
-  if test "$DEF_HASHMAP" = "None" && test "$IS_OSX" != "yes"; then
-    # gcc-4.3 has depricated <ext/hash_map> so check for <backward/hash_map> first
-    AC_TRY_COMPILE([#include <tr1/unordered_map>
-                   std::tr1::unordered_map<int, int> xx;], ,
-                   [DEF_HASHMAP=HAVE_TR1_HASHMAP])
-  fi
-fi
-############################################################
-
-if test "$DEF_HASHMAP" = "None"; then
-  AC_TRY_COMPILE([#include <ext/hash_map>
-                 __gnu_cxx::hash_map<int, int> xx;], ,
-                 [DEF_HASHMAP=HAVE_GNU_HASHMAP])
-fi
 if test "$DEF_HASHMAP" = "None"; then
   DEF_HASHMAP=
   AC_MSG_RESULT(not found)
@@ -4518,6 +4476,13 @@ else
         _sci_lib="$with_hypre/lib"
         _sci_inc="$with_hypre/include"
         _sci_optional=specific
+
+	# Try to avoid accidentally allowing system libraries to shadow the specific libraries the user has requested. 
+        if test "$USING_GCC" = "yes" -o "$USING_ICC" = "yes"; then
+           ESCHEW_SYS_LIBS=-nodefaultlibs
+        else
+           ESCHEW_SYS_LIBS=
+        fi
      fi
 
      # # We used to also check for HYPRE_blas, but hypre 1.9 doesn't have it,
@@ -4533,7 +4498,7 @@ else
             SCI_TRY_LINK(HYPRE,HYPRE libraries and headers - 1,HYPRE.h,$_sci_inc,
                         HYPRE HYPRE_utilities HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_parcsr_ls HYPRE_krylov HYPRE_parcsr_mv,
                         $_sci_lib,
-                        $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
+                        $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG $ESCHEW_SYS_LIBS,
                         ,
                         optional)
 

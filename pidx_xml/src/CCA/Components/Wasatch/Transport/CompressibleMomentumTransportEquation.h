@@ -21,8 +21,8 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditionBase.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditions.h>
+#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditionsOneSided.h>
 
 #include <CCA/Components/Wasatch/TagNames.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -150,8 +150,8 @@ namespace WasatchCore{
                 typedef typename SpatialOps::OneSidedOpTypeBuilder<SpatialOps::Gradient,SpatialOps::OneSidedStencil3<typename UnitTripletT::Negate>,MyFieldT>::type OpT;
                 typedef typename BCOneSidedConvFluxDiv<MyFieldT,OpT>::Builder builderT;
                 builder1 = new builderT( rhsModTag, normalVelTag, this->densTag_ );
-              }
                 break;
+              }
               case Uintah::Patch::xminus:
               case Uintah::Patch::yminus:
               case Uintah::Patch::zminus:
@@ -160,8 +160,8 @@ namespace WasatchCore{
                 typedef typename SpatialOps::OneSidedOpTypeBuilder<SpatialOps::Gradient,SpatialOps::OneSidedStencil3<UnitTripletT>,MyFieldT>::type OpT;
                 typedef typename BCOneSidedConvFluxDiv<MyFieldT,OpT>::Builder builderT;
                 builder1 = new builderT( rhsModTag, normalVelTag, this->densTag_ );
-              }
                 break;
+              }
               default:
                 break;
             }
@@ -186,7 +186,6 @@ namespace WasatchCore{
                 typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::GradientX, SVolField, SVolField >::type NeumannT;
                 typedef typename SpatialOps::NeboBoundaryConditionBuilder<DirichletT> DiriOpT;
                 typedef typename SpatialOps::NeboBoundaryConditionBuilder<NeumannT> NeumOpT;
-                typedef typename ConstantBCNew<MyFieldT,DiriOpT>::Builder constBCDirichletT;
                 typedef typename ConstantBCNew<MyFieldT,NeumOpT>::Builder constBCNeumannT;
                 
                 // for normal fluxes
@@ -196,10 +195,10 @@ namespace WasatchCore{
                 typedef typename ConstantBCNew<FluxT, NeumFluxOpT>::Builder constBCNeumannFluxT;
                 
                 if (!advSlnFactory.have_entry(convModTag)) advSlnFactory.register_expression( new constBCNeumannFluxT( convModTag, 0.0 ) );
-                if (!initFactory.have_entry(rhoModTag)) initFactory.register_expression( new constBCNeumannT( rhoModTag, 0.0 ) );
-                if (!advSlnFactory.have_entry(rhoModTag)) advSlnFactory.register_expression( new constBCNeumannT( rhoModTag, 0.0 ) );
-              }
+                if (!initFactory  .have_entry(rhoModTag )) initFactory  .register_expression( new constBCNeumannT( rhoModTag, 0.0 ) );
+                if (!advSlnFactory.have_entry(rhoModTag )) advSlnFactory.register_expression( new constBCNeumannT( rhoModTag, 0.0 ) );
                 break;
+              }
               case Uintah::Patch::yminus:
               case Uintah::Patch::yplus:
               {
@@ -214,7 +213,6 @@ namespace WasatchCore{
                 typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::GradientY, SVolField, SVolField >::type NeumannT;
                 typedef typename SpatialOps::NeboBoundaryConditionBuilder<DirichletT> DiriOpT;
                 typedef typename SpatialOps::NeboBoundaryConditionBuilder<NeumannT> NeumOpT;
-                typedef typename ConstantBCNew<MyFieldT,DiriOpT>::Builder constBCDirichletT;
                 typedef typename ConstantBCNew<MyFieldT,NeumOpT>::Builder constBCNeumannT;
                 
                 // for normal fluxes
@@ -226,8 +224,8 @@ namespace WasatchCore{
                 if (!advSlnFactory.have_entry(convModTag)) advSlnFactory.register_expression( new constBCNeumannFluxT( convModTag, 0.0 ) );
                 if (!initFactory.have_entry(rhoModTag)) initFactory.register_expression( new constBCNeumannT( rhoModTag, 0.0 ) );
                 if (!advSlnFactory.have_entry(rhoModTag)) advSlnFactory.register_expression( new constBCNeumannT( rhoModTag, 0.0 ) );
-              }
                 break;
+              }
               case Uintah::Patch::zminus:
               case Uintah::Patch::zplus:
               {
@@ -242,7 +240,6 @@ namespace WasatchCore{
                 typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::GradientZ, SVolField, SVolField >::type NeumannT;
                 typedef typename SpatialOps::NeboBoundaryConditionBuilder<DirichletT> DiriOpT;
                 typedef typename SpatialOps::NeboBoundaryConditionBuilder<NeumannT> NeumOpT;
-                typedef typename ConstantBCNew<MyFieldT,DiriOpT>::Builder constBCDirichletT;
                 typedef typename ConstantBCNew<MyFieldT,NeumOpT>::Builder constBCNeumannT;
                 
                 // for normal fluxes
@@ -254,8 +251,8 @@ namespace WasatchCore{
                 if (!advSlnFactory.have_entry(convModTag)) advSlnFactory.register_expression( new constBCNeumannFluxT( convModTag, 0.0 ) );
                 if (!initFactory.have_entry(rhoModTag)) initFactory.register_expression( new constBCNeumannT( rhoModTag, 0.0 ) );
                 if (!advSlnFactory.have_entry(rhoModTag)) advSlnFactory.register_expression( new constBCNeumannT( rhoModTag, 0.0 ) );
-              }
                 break;
+              }
               default:
                 break;
             }
@@ -270,7 +267,6 @@ namespace WasatchCore{
             // set Neumann 0 on density
             BndCondSpec rhoBCSpec = {this->solnVarName_, rhoModTag.name(), 0.0, NEUMANN, FUNCTOR_TYPE};
             bcHelper.add_boundary_condition(bndName, rhoBCSpec);
-
             
             break;
           }
@@ -382,7 +378,7 @@ namespace WasatchCore{
    *
    */
   template <typename MomDirT>
-  class CompressibleMomentumTransportEquation : public WasatchCore::MomentumTransportEquationBase<SVolField>
+  class CompressibleMomentumTransportEquation : public MomentumTransportEquationBase<SVolField>
   {
     typedef SpatialOps::SVolField FieldT;
 

@@ -51,7 +51,7 @@ using namespace Uintah;
 static std::atomic<int32_t> ids{0};
 static std::mutex ids_init{};
 
-extern std::mutex coutLock; // Used to sync cout when output by multiple threads
+extern std::mutex coutLock; // Used to sync cout when output by multiple ranks
 
 Patch::Patch(const Level* level,
              const IntVector& lowIndex, const IntVector& highIndex,
@@ -1210,6 +1210,9 @@ void Patch::cullIntersection(VariableBasis basis,
    basically as though there were no patch there
    */
 
+  if( neighbor == this ){
+    return;
+  }
   // use the cell-based interior to compare patch positions, but use the basis-specific one when culling the intersection
   IntVector p_int_low(  getLowIndex(Patch::CellBased) );
   IntVector p_int_high( getHighIndex(Patch::CellBased) );
@@ -1227,8 +1230,7 @@ void Patch::cullIntersection(VariableBasis basis,
   
   for (int dim = 0; dim < 3; dim++) {
     // If the number of overlapping cells is a) not equal to zero, b) is equal to 2 
-    // extra cells, and c) the patches are adjacent on this dimension then increment the
-    // counter counter
+    // extra cells, and c) the patches are adjacent on this dimension then increment counter.
 
     if ( overlapCells[dim] != 0 && overlapCells[dim] == 2*getExtraCells()[dim] && ( p_int_low[dim] == n_int_high[dim] || n_int_low[dim] == p_int_high[dim] ) ) {
       counter++;
@@ -1392,6 +1394,7 @@ ExtraCells not drawn             Region of interest +----------*----+
 This will return the low and high cell index of the region of interest in non-cubic computational domains.
 Note the low and high point encompasses the void region show above.  This just
 adds a clamp so the low and high indices don't exceed the level's extents.
+This is almost identical to the patch::computeExtents
                
 //______________________________________________________________________*/
 void Patch::computeVariableExtentsWithBoundaryCheck(Uintah::TypeDescription::Type basis,
@@ -1400,39 +1403,48 @@ void Patch::computeVariableExtentsWithBoundaryCheck(Uintah::TypeDescription::Typ
                                                     int numGhostCells,
                                                     IntVector& low, 
                                                     IntVector& high) const
-{ 
- 
-  // Note that 5  is semi-arbitrary and may need to be adjusted.
+{
   // This ignores virtual patches because we don't want to "clamp" this
   // extents of periodic boundary conditions to the level's extents.
-  if ( getLevel()->isNonCubic() && numGhostCells >= 5 && !isVirtual()) {
+ 
+  if ( getLevel()->isNonCubic() && numGhostCells >=1 && !isVirtual()) {
 
     bool basisMustExist = (gtype != Ghost::None);
     VariableBasis vbasis = translateTypeToBasis(basis, basisMustExist); 
 
-    low  = getLowIndex(vbasis);
-    high = getHighIndex(vbasis);
-
+    low  = getExtraLowIndex(vbasis, boundaryLayer);
+    high = getExtraHighIndex(vbasis, boundaryLayer);
+ 
+    //__________________________________
+    // adjust the variable extents to include ghost cells EVEN when there are 
+    // no neighboring patches.  This will extend outside the domain's extents,
+    // which is OK. This is the key difference between computeExtents.
     IntVector ghostLowOffset, ghostHighOffset;    
     getGhostOffsets(basis, gtype, numGhostCells, ghostLowOffset, ghostHighOffset);
 
-    IntVector ghostLow  = low - ghostLowOffset;
+    IntVector ghostLow  = low  - ghostLowOffset;
     IntVector ghostHigh = high + ghostHighOffset;
                                          
+    //__________________________________
     // get extents over entire level including extra cells
-    IntVector levelLow, levelHigh;
+    
     //TODO: getLevel()->computeVariableExtents doesn't return extra cells for
     //NCVariables, so this receives back incorrect levelLow and levelHigh. (My guess is
     //that Level.cc's computeVariableExtents shouldn't be ignoring extra cells as 
     //it currently does).  Brad P. - 10/13/16
+    IntVector levelLow, levelHigh;
+    
     this->getLevel()->computeVariableExtents(basis, levelLow, levelHigh);
     
+    
+    //__________________________________
+    //  Clamp the a valid extent
     low  = Uintah::Max( ghostLow, levelLow);
     high = Uintah::Min( ghostHigh, levelHigh);
   } else {
     //Do it the usual way 
     computeVariableExtents( basis, boundaryLayer, gtype, numGhostCells, low, high);
-  }  
+  } 
 }
 
 //______________________________________________________________________

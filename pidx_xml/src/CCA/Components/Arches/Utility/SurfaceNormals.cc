@@ -62,9 +62,9 @@ SurfaceNormals::register_initialize( VIVec& variable_registry , const bool packe
 void
 SurfaceNormals::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  GET_FX_BUFFERED_PATCH_RANGE(0,1)
-  GET_FY_BUFFERED_PATCH_RANGE(0,1)
-  GET_FZ_BUFFERED_PATCH_RANGE(0,1)
+  GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE(0,1)
+  GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE(0,1)
+  GET_EXTRACELL_FZ_BUFFERED_PATCH_RANGE(0,1)
 
   constCCVariable<double>& vol_fraction = *(tsk_info->get_const_uintah_field<constCCVariable<double> >("volFraction"));
 

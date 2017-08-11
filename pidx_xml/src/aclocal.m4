@@ -387,7 +387,7 @@ for inc in $4; do
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
-     AC_MSG_ERROR(Please do not specify /usr/include as the location for $1 include files.)
+     AC_MSG_ERROR(Please do not specify /usr as the location for $1 files.)
   fi
 
   # Make sure it doesn't have any thing but -I
@@ -1290,6 +1290,9 @@ AC_DEFUN([SCI_ARG_WITH], [
         elif test ! -d "$with_$1"; then 
           # Verify that a valid directory is listed...
           AC_MSG_ERROR([The parameter "$with_$1" provided to --with-$1 is not a directory!  Please verify that the path is correct.])
+        else
+	  # Is a directory... remove trailing / (if any)
+          with_$1=${with_$1%/}
         fi
       fi
     fi

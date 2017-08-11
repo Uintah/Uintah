@@ -38,6 +38,7 @@ SRCS += \
         $(SRCDIR)/DOSweep.cc            \
         $(SRCDIR)/ExamplesLabel.cc     \
         $(SRCDIR)/Interpolator.cc      \
+        $(SRCDIR)/Heat.cpp             \
         $(SRCDIR)/ParticleTest1.cc     \
         $(SRCDIR)/Poisson1.cc          \
         $(SRCDIR)/Poisson2.cc          \
@@ -46,6 +47,7 @@ SRCS += \
         $(SRCDIR)/RegionDB.cc          \
         $(SRCDIR)/RegridderTest.cc     \
         $(SRCDIR)/SolverTest1.cc       \
+        $(SRCDIR)/SolverTest2.cc       \
         $(SRCDIR)/Wave.cc              
 
 ifeq ($(BUILD_MODELS_RADIATION),yes)

@@ -23,7 +23,6 @@
  */
 
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <CCA/Components/MPM/ReactionDiffusion/DiffusionModels/ScalarDiffusionModel.h>
 #include <CCA/Components/MPMFVM/ESConductivityModel.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Vector.h>
@@ -41,6 +40,7 @@
 
 #include <vector>
 #include <iostream>
+#include <CCA/Components/MPM/Diffusion/DiffusionModels/ScalarDiffusionModel.h>
 
 using namespace Uintah;
 
@@ -86,7 +86,7 @@ void ESConductivityModel::scheduleComputeConductivity(SchedulerP& sched,
 
   //task->requires(Task::NewDW, d_mpm_lb->gConcentrationLabel, Ghost::AroundCells, 1);
   //task->requires(Task::NewDW, d_mpm_lb->gMassLabel,          Ghost::AroundCells, 1);
-  task->requires(Task::OldDW, d_mpm_lb->pConcentrationLabel, d_gac, 1);
+  task->requires(Task::OldDW, d_mpm_lb->diffusion->pConcentration, d_gac, 1);
   task->requires(Task::OldDW, d_mpm_lb->pXLabel,             d_gac, 1);
 
   task->computes(d_fvm_lb->fcxConductivity, one_matl, Task::OutOfDomain);
@@ -153,7 +153,7 @@ void ESConductivityModel::computeConductivity(const ProcessorGroup* pg,
                                                        1, d_mpm_lb->pXLabel);
 
       old_dw->get(px,             d_mpm_lb->pXLabel,                  pset);
-      old_dw->get(pconcentration, d_mpm_lb->pConcentrationLabel,      pset);
+      old_dw->get(pconcentration, d_mpm_lb->diffusion->pConcentration,      pset);
 
       for (ParticleSubset::iterator iter  = pset->begin(); iter != pset->end(); iter++){
         particleIndex idx = *iter;

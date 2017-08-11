@@ -88,10 +88,12 @@ namespace Uintah{
      const VarLabel* _T_label;
      const VarLabel* _Ys_label; 
      const VarLabel* _absorp_label;  
+     const VarLabel* _total_absorp_label;  
 
      std::string _den_label_name;
      std::string _T_label_name; 
      std::string _Ys_label_name; 
+     std::string _total_absorp_label_name;
      std::string _absorp_label_name;
 
   }; // class fvSootFromYsoot

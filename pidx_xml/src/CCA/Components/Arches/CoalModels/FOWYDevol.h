@@ -7,9 +7,6 @@
 #include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
 #include <CCA/Components/Arches/ArchesVariables.h>
 #include <CCA/Components/Arches/Directives.h>
-
-
-
 #include <boost/math/special_functions/erf.hpp>
 
 //===========================================================================

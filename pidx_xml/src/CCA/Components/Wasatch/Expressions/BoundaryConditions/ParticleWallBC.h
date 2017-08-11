@@ -39,7 +39,7 @@
  *
  */
 class ParticleWallBC
-: public BoundaryConditionBase<ParticleField>
+: public WasatchCore::BoundaryConditionBase<ParticleField>
 {
 public:
   ParticleWallBC(const double restCoef,

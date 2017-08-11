@@ -26,6 +26,7 @@
 
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Parallel/Parallel.h>
+#include <Core/Util/DOUT.hpp>
 
 namespace Uintah {
 
@@ -41,9 +42,8 @@ printSchedule( const PatchSet    * patches
     dbg << Uintah::Parallel::getMPIRank() << " ";
     dbg << std::left;
     dbg.width(50);
-    dbg << where << "L-"
-        << getLevel(patches)->getIndex()<< std::endl;
-  }  
+    dbg << where << "L-" << getLevel(patches)->getIndex() << std::endl;
+  }
 }
 
 //______________________________________________________________________
@@ -58,9 +58,8 @@ printSchedule( const LevelP      & level
     dbg << Uintah::Parallel::getMPIRank() << " ";
     dbg << std::left;
     dbg.width(50);
-    dbg << where << "L-"
-        << level->getIndex()<< std::endl;
-  }  
+    dbg << where << "L-" << level->getIndex() << std::endl;
+  }
 }
 
 //______________________________________________________________________
@@ -79,7 +78,7 @@ printTask( const PatchSubset * patches
     dbg << where << "  \tL-"
         << getLevel(patches)->getIndex()
         << " patch " << patch->getGridIndex()<< std::endl;
-  }  
+  }
 }
 
 //______________________________________________________________________
@@ -97,7 +96,7 @@ printTask( const PatchSubset * patches
     dbg << where << "  \tL-"
         << getLevel(patches)->getIndex()
         << " patches " << *patches << std::endl;
-  }  
+  }
 }
 
 //______________________________________________________________________
@@ -115,7 +114,7 @@ printTask( const Patch       * patch
     dbg << where << " \tL-"
         << patch->getLevel()->getIndex()
         << " patch " << patch->getGridIndex()<< std::endl;
-  }  
+  }
 }
 
 //______________________________________________________________________
@@ -130,8 +129,23 @@ printTask(       DebugStream & dbg
     dbg << std::left;
     dbg.width(50);
     dbg << where << " \tAll Patches" << std::endl;
-  }  
+  }
 }
+
+
+
+// ------------------------------------------------------------------------------------------------
+// APH - 07/14/17
+// ------------------------------------------------------------------------------------------------
+// Dout (class) versions of the above (moving away from DebugStream)
+//
+// Dout is an extremely lightweight way to provide the same functionality as DebugStream,
+// but in a fully lock-free way for both multiple threads and MPI ranks. DOut also does not
+// inherit from from the standard library (std::ostream specifically) as DebugStream does.
+// The DOUT variadic macro is then used, which is printf-based. By the POSIX standard, printf
+// must "behave" like it acquired a lock. The Dout class also defines an explicit bool() operator
+// for checking state, e.g. active or inactive.
+// ------------------------------------------------------------------------------------------------
 
 //______________________________________________________________________
 // Output the task name and the level it's executing on and each of the patches
@@ -141,27 +155,68 @@ printTask( Dout         & out
          )
 {
   if (out) {
-    std::ostringstream message;
-    message << std::left;
-    message.width(70);
-    message << dtask->getTask()->getName();
+    std::ostringstream msg;
+    msg << std::left;
+    msg.width(70);
+    msg << dtask->getTask()->getName();
     if (dtask->getPatches()) {
 
-      message << " \t on patches ";
+      msg << " \t on patches ";
       const PatchSubset* patches = dtask->getPatches();
       for (int p = 0; p < patches->size(); p++) {
         if (p != 0) {
-          message << ", ";
+          msg << ", ";
         }
-        message << patches->get(p)->getID();
+        msg << patches->get(p)->getID();
       }
 
       if (dtask->getTask()->getType() != Task::OncePerProc) {
         const Level* level = getLevel(patches);
-        message << "\t  L-" << level->getIndex();
+        msg << "\t  L-" << level->getIndex();
       }
     }
-    DOUT(true, message.str());
+    DOUT(out, msg.str());
+  }
+}
+
+//______________________________________________________________________
+// Dout version (moving away from DebugStream)
+void
+printTask( const Patch       * patch
+         ,       Dout        & out
+         , const std::string & where
+         )
+{
+  if (out) {
+    std::ostringstream msg;
+    msg << Uintah::Parallel::getMPIRank()  << " ";
+    msg << std::left;
+    msg.width(50);
+    msg << where << " \tL-"
+        << patch->getLevel()->getIndex()
+        << " patch " << patch->getGridIndex();
+    DOUT(out, msg.str());
+  }
+}
+
+//______________________________________________________________________
+// Dout version (moving away from DebugStream)
+void
+printTask( const PatchSubset * patches
+         , const Patch       * patch
+         ,       Dout        & out
+         , const std::string & where
+         )
+{
+  if (out) {
+    std::ostringstream msg;
+    msg << Uintah::Parallel::getMPIRank() << " ";
+    msg << std::left;
+    msg.width(50);
+    msg << where << "  \tL-"
+        << getLevel(patches)->getIndex()
+        << " patch " << patch->getGridIndex();
+    DOUT(out, msg.str());
   }
 }
 
@@ -175,20 +230,56 @@ printTaskLevels( const ProcessorGroup * d_myworld
 {
   if (out) {
     if (dtask->getPatches()) {
-        const PatchSubset* taskPatches = dtask->getPatches();
-        const Level* level = getLevel(taskPatches);
-        const Patch* firstPatch = level->getPatch(0);
-        if (taskPatches->contains(firstPatch)) {
-          std::ostringstream message;
-          message << "Rank-" << d_myworld->myrank() << "   ";
-          message << std::left;
-          message.width(50);
-          message << dtask->getTask()->getName();
-          message << "\t Patch-" << firstPatch->getGridIndex();
-          message << "\t L-" << level->getIndex();
-          DOUT(true, message.str());
-        }
+      const PatchSubset* taskPatches = dtask->getPatches();
+      const Level* level = getLevel(taskPatches);
+      const Patch* firstPatch = level->getPatch(0);
+      if (taskPatches->contains(firstPatch)) {
+        std::ostringstream msg;
+        msg << "Rank-" << d_myworld->myrank() << "   ";
+        msg << std::left;
+        msg.width(10);
+        msg << dtask->getTask()->getName();
+        msg << "\t Patch-" << firstPatch->getGridIndex();
+        msg << "\t L-" << level->getIndex();
+        DOUT(out, msg.str());
+      }
     }
+  }
+}
+
+//______________________________________________________________________
+//
+void
+printSchedule( const PatchSet    * patches
+             ,       Dout        & out
+             , const std::string & where
+             )
+{
+  if (out) {
+    std::ostringstream msg;
+    msg << Uintah::Parallel::getMPIRank() << " ";
+    msg << std::left;
+    msg.width(50);
+    msg << where << " L-" << getLevel(patches)->getIndex();
+    DOUT(out, msg.str());
+  }
+}
+
+//______________________________________________________________________
+//
+void
+printSchedule( const LevelP      & level
+             ,       Dout        & out
+             , const std::string & where
+             )
+{
+  if (out) {
+    std::ostringstream msg;
+    msg << Uintah::Parallel::getMPIRank() << " ";
+    msg << std::left;
+    msg.width(50);
+    msg << where << " L-" << level->getIndex();
+    DOUT(out, msg.str());
   }
 }
 

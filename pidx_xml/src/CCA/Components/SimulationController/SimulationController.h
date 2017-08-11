@@ -25,8 +25,6 @@
 #ifndef UINTAH_HOMEBREW_SIMULATIONCONTROLLER_H
 #define UINTAH_HOMEBREW_SIMULATIONCONTROLLER_H
 
-#include <sci_defs/papi_defs.h> // for PAPI performance counters
-
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/SimulationState.h>
@@ -41,6 +39,7 @@
 #include <CCA/Ports/SchedulerP.h>
 
 #include <sci_defs/visit_defs.h>
+#include <sci_defs/papi_defs.h> // for PAPI performance counters
 
 #ifdef HAVE_VISIT
 #  include <VisIt/libsim/visit_libsim.h>
@@ -254,25 +253,23 @@ protected:
   bool d_restartRemoveOldDir{false};
 
 #ifdef USE_PAPI_COUNTERS
-  int         d_eventSet;            // PAPI event set
-  long long * d_eventValues;         // PAPI event set values
+  int         m_papi_event_set;            // PAPI event set
+  long long * m_papi_event_values;         // PAPI event set values
 
   struct PapiEvent {
-    int         eventValueIndex;
-    std::string name;
-    std::string simStatName;
-    bool        isSupported;
+    bool                           m_is_supported{false};
+    int                            m_event_value_idx{0};
+    std::string                    m_name{""};
+    SimulationState::RunTimeStat   m_sim_stat_name{};
 
-    PapiEvent( const std::string& _name, const std::string& _simStatName )
-      : name(_name), simStatName(_simStatName)
-    {
-      eventValueIndex = 0;
-      isSupported = false;
-    }
+    PapiEvent( const std::string                  & name
+             , const SimulationState::RunTimeStat & sim_stat_name )
+      : m_name(name)
+      , m_sim_stat_name(sim_stat_name)
+    { }
   };
 
-  std::map<int, PapiEvent>   d_papiEvents;
-  std::map<int, std::string> d_papiErrorCodes;
+  std::map<int, PapiEvent>   m_papi_events;
 #endif
 
 #ifdef HAVE_VISIT

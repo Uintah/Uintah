@@ -27,7 +27,6 @@
 
 #include <CCA/Components/FVM/FVMLabel.h>
 #include <CCA/Components/MPM/MPMFlags.h>
-#include <CCA/Components/MPM/ReactionDiffusion/ConductivityModels/ConductivityEquation.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Grid/Ghost.h>
@@ -36,6 +35,7 @@
 #include <Core/Labels/MPMLabel.h>
 
 #include <string>
+#include <CCA/Components/MPM/Diffusion/ConductivityModels/ConductivityEquation.h>
 
 namespace Uintah{
 /*************************************************

@@ -254,7 +254,7 @@ void Ray::rayTraceDataOnionGPU( DetailedTask* dtask,
                                void* stream,
                                int deviceID,
                                bool modifies_divQ,
-                               SimulationStateP   sharedState,
+                               SimulationStateP sharedState,
                                Task::WhichDW which_abskg_dw,
                                Task::WhichDW which_sigmaT4_dw,
                                Task::WhichDW which_celltype_dw)
@@ -270,6 +270,12 @@ void Ray::rayTraceDataOnionGPU( DetailedTask* dtask,
     if ( maxLevels > d_MAXLEVELS) {
       ostringstream warn;
       warn << "\nERROR:  RMCRT:GPU The maximum number of levels allowed ("<<d_MAXLEVELS<< ") has been exceeded." << endl;
+      warn << " To increase that value see /src/CCA/Components/Models/Radiation/RMCRT/RayGPU.cuh \n";
+      throw InternalError(warn.str(), __FILE__, __LINE__);
+    }
+    if (d_nDivQRays > d_MAX_RAYS || d_nFluxRays > d_MAX_RAYS) {
+      ostringstream warn;
+      warn << "\nERROR:  RMCRT:GPU The maximum number of rays allows (" << d_MAX_RAYS << ") has been exceeded." << endl;
       warn << " To increase that value see /src/CCA/Components/Models/Radiation/RMCRT/RayGPU.cuh \n";
       throw InternalError(warn.str(), __FILE__, __LINE__);
     }
@@ -402,22 +408,51 @@ void Ray::rayTraceDataOnionGPU( DetailedTask* dtask,
 
       patchP.ID = finePatch->getID();
 
-      //Careful profiling seems to show that this does best fitting around 96 registers per block
+#if NDEBUG
+      //Careful profiling seems to show that this does best fitting around 96 registers per block and
+      // 320 threads per kernel or block.    
       //To maximize the amount of threads we can push into a GPU SM, this is going to declare threads in a
       //1D layout, then the kernel can then map those threads to individual cells.  We will not be
       //trying to map threads to z-slices or some geometric approach, but rather simply threads->cells.
-      //Further, GPUs usually have awkward ratios of CPU cores to streaming multiprocessors (SMXs).
-      //Profiling indicates that splitting a kernel into at least 4 kernels tends to properly
-      //distribute work among all kernels.  This was tested on a K20C GPU with 13 SMXs and 32 CPU threads
-      //If the GPU has many more SMXs, such as 54, then you would want to split it up even further, perhaps
-      //as many as 16 kernels per patch.  
       const unsigned int numThreadsPerGPUBlock = 320;
-      kernelParams kp;
-      kp.numCellsPerThread = 99999999;
+#else
+      // Some debug build unable to have resources for 320 threads, but 256 threads works.
+      const unsigned int numThreadsPerGPUBlock = 256;
+#endif
 
       const unsigned int numCells = (hi.x() - lo.x()) * (hi.y() - lo.y()) * (hi.z() - lo.z());
+
+      //Another tuning parameter.  It is very useful for flexibility and big performance gains in production runs.
+      //This supports splitting up a single patch into multiple kernels and/or blocks.  
+      //Each RMCRT block or kernel runs 320 threads.  Think of either as being a computation chunk that
+      //can fill a GPU slot.  If a GPU has 14 SMs, then we can fit 2 kernels per SM, so we have 28 slots
+      //to fill.  We can fill it with 28 blocks, or 28 kernels, or a combo of 14 kernels with 2 blocks each, etc.
+      
+      //For production runs, testing indicates multiple kernels is the most efficient, with 4 to 8 
+      //kenrels per patch being optimal and only 1 block.   It is efficient because 1) smaller
+      //kernels better fill up a GPU in a timestep, and 2), it allows for more efficiently filling
+      //all SMs (such as when a GPU has 14 SMs or when a GPU has 64 SMs) 
+      //For example:
+      //Suppose a GPU SM fits 2 RMCRT kernels, the GPU has 14 SMs, and a node is assigned 16 patches.  
+      //This means:
+      //1) If 1 block 1 kernel is used, then you get full overlapping, but not all SMs are occupied.
+      //   further, profiling shows some kernels take longer than others, so one long kernel means
+      //   many SMs sit idle while one SM is computing.
+      //2) If 1 block 4 kernels are used, then 16*4 = 64 kernels do a nice job of filling the GPUs SMs.  
+      //   When one SM is done, it can pick up another ready to compute kernel.  
+      //3) If 4 blocks per kernel is used, results aren't so good.  Kernels can't complete until all
+      //   blocks are done.  Initally only only 7 kernels would run (7 kernels * 4 blocks per kernel = 28 slots
+      //   then another 7 kernels would run, then 2 kernels would run.
+      //   The block approach should be avoided, but if future GPUs have many SMXs but allow few overlapping kernels
+      //   then blocks are really our next best option.
+      //Final note, in order to split up a patch into multiple kernels and get nice overlapping, each kernel needs 
+      //to be launched with a different stream.  Otherwise if one single stream tried to do:
+      //  H2D copy -> kernel -> H2D copy -> kernel, etc., then the GPU is horrible at trying to find overlaps.  
+      //  (However, if all kernel launches occurred from only one CPU thread, then the GPU can find overlaps.)
+ 
       int numBlocks = 1;
-      int numKernels = 1;
+      //The number of streams defines how many kernels per patch we run
+      int numKernels = dtask->getTask()->maxStreamsPerTask();   
 
       dim3 dimBlock(numThreadsPerGPUBlock, 1, 1);
       dim3 dimGrid(numBlocks, 1, 1);
@@ -434,13 +469,12 @@ void Ray::rayTraceDataOnionGPU( DetailedTask* dtask,
                                          dimGrid,
                                          dimBlock,
                                          d_matl,
-                                         kp,
                                          patchP,
                                          gridP,
                                          levelP,
                                          fineLevel_ROI_Lo,
                                          fineLevel_ROI_Hi,
-                                         (cudaStream_t*)dtask->getCudaStreamForThisTask(0/*i*/),
+                                         (cudaStream_t*)dtask->getCudaStreamForThisTask(i),
                                          RT_flags,
                                          sharedState->getCurrentTopLevelTimeStep(),
                                          abskg_gdw,
@@ -471,7 +505,7 @@ void Ray::rayTraceGPU< float > ( DetailedTask* dtask,
                                  void* stream,
                                  int deviceID,
                                  bool,
-                                 SimulationStateP,
+                                 SimulationStateP sharedState,
                                  Task::WhichDW,
                                  Task::WhichDW,
                                  Task::WhichDW);
@@ -489,7 +523,7 @@ void Ray::rayTraceGPU< double > ( DetailedTask* dtask,
                                   void* stream,
                                   int deviceID,
                                   bool,
-                                  SimulationStateP,
+                                  SimulationStateP sharedState,
                                   Task::WhichDW,
                                   Task::WhichDW,
                                   Task::WhichDW);
@@ -507,7 +541,7 @@ void Ray::rayTraceDataOnionGPU< float > ( DetailedTask* dtask,
                                           void* stream,
                                           int deviceID,
                                           bool,
-                                          SimulationStateP,
+                                          SimulationStateP sharedState,
                                           Task::WhichDW,
                                           Task::WhichDW,
                                           Task::WhichDW);
@@ -525,7 +559,7 @@ void Ray::rayTraceDataOnionGPU< double > ( DetailedTask* dtask,
                                            void* stream,
                                            int deviceID,
                                            bool,
-                                           SimulationStateP,
+                                           SimulationStateP sharedState,
                                            Task::WhichDW,
                                            Task::WhichDW,
                                            Task::WhichDW);

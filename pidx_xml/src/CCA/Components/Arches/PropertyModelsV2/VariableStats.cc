@@ -637,7 +637,7 @@ void VariableStats::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
       if ( _flux_sum_info[iname].do_phi ){
 
         constCCVariable<double>& phi = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( _flux_sum_info[iname].phi ));
-        GET_FX_BUFFERED_PATCH_RANGE(0,1);
+        GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE(0,1);
         Uintah::BlockRange range(low_fx_patch_range, high_fx_patch_range);
         Uintah::parallel_for(range, [&](int i, int j, int k){
 
@@ -649,7 +649,7 @@ void VariableStats::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
 
       } else {
 
-        GET_FX_BUFFERED_PATCH_RANGE(0,1);
+        GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE(0,1);
         Uintah::BlockRange range(low_fx_patch_range, high_fx_patch_range);
         Uintah::parallel_for(range, [&](int i, int j, int k){
 
@@ -675,7 +675,7 @@ void VariableStats::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
       if ( _flux_sum_info[iname].do_phi ){
 
         constCCVariable<double>& phi = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( _flux_sum_info[iname].phi ));
-        GET_FY_BUFFERED_PATCH_RANGE(0,1);
+        GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE(0,1);
         Uintah::BlockRange range(low_fy_patch_range, high_fy_patch_range);
         Uintah::parallel_for(range, [&](int i, int j, int k){
 
@@ -687,7 +687,7 @@ void VariableStats::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
 
       } else {
 
-        GET_FY_BUFFERED_PATCH_RANGE(0,1);
+        GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE(0,1);
         Uintah::BlockRange range(low_fy_patch_range, high_fy_patch_range);
         Uintah::parallel_for(range, [&](int i, int j, int k){
 
@@ -712,7 +712,7 @@ void VariableStats::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
       if ( _flux_sum_info[iname].do_phi ){
 
         constCCVariable<double>& phi = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( _flux_sum_info[iname].phi ));
-        GET_FZ_BUFFERED_PATCH_RANGE(0,1);
+        GET_EXTRACELL_FZ_BUFFERED_PATCH_RANGE(0,1);
         Uintah::BlockRange range(low_fz_patch_range, high_fz_patch_range);
         Uintah::parallel_for(range, [&](int i, int j, int k){
 
@@ -724,7 +724,7 @@ void VariableStats::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
 
       } else {
 
-        GET_FZ_BUFFERED_PATCH_RANGE(0,1);
+        GET_EXTRACELL_FZ_BUFFERED_PATCH_RANGE(0,1);
         Uintah::BlockRange range(low_fz_patch_range, high_fz_patch_range);
         Uintah::parallel_for(range, [&](int i, int j, int k){
 

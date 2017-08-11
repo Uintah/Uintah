@@ -184,7 +184,8 @@ TypeDescription::getMPIType() const
       if (d_mpitype == MPI_Datatype(-1)) {
         if (d_mpitypemaker) {
           d_mpitype = (*d_mpitypemaker)();
-        } else {
+        }
+        else {
           throw InternalError( "MPI Datatype requested, but do not know how to make it", __FILE__, __LINE__ );
         }
       }

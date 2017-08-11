@@ -329,13 +329,13 @@ ProblemSpec::removeChild(ProblemSpecP child)
 //______________________________________________________________________
 //
 ProblemSpecP
-ProblemSpec::get(const string& name, double &value)
+ProblemSpec::get( const string & name, double & value )
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::get()");
+  MALLOC_TRACE_TAG_SCOPE( "ProblemSpec::get()" );
   ProblemSpecP ps;
 
   string stringValue;
-  ps = get(name, stringValue);
+  ps = get( name, stringValue );
   if( ps == nullptr ) {
     return ps;
   }
