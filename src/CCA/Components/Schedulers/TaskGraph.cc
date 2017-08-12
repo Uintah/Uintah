@@ -1022,7 +1022,7 @@ TaskGraph::createDetailedTasks(       bool            useInternalDeps
 
   m_load_balancer->assignResources(*m_detailed_tasks);
 
-  // srub counts are created via addScrubCount() call in this call ( via possiblyCreateDependency() )
+  // scrub counts are created via addScrubCount() thorugh this call ( via possiblyCreateDependency() )
   createDetailedDependencies();
 
   if (m_detailed_tasks->getExtraCommunication() > 0 && m_proc_group->myrank() == 0) {

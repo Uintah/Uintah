@@ -414,15 +414,15 @@ DetailedTask::checkExternalDepCount()
                           << externalDependencyCount_.load(std::memory_order_seq_cst)
                           << " internal deps: " << numPendingInternalDependencies);
 
-  if ((externalDependencyCount_.load(std::memory_order_seq_cst) == 0) && d_taskGroup->sc_->useInternalDeps() &&
+  if ((externalDependencyCount_.load(std::memory_order_seq_cst) == 0) && d_taskGroup->m_sched_common->useInternalDeps() &&
        initiated_.load(std::memory_order_seq_cst) && !d_task->usesMPI()) {
 
     DOUT(externaldbg, "Rank-" << Parallel::getMPIRank() << " Task " << this->getTask()->getName()
                             << " MPI requirements satisfied, placing into external ready queue");
 
     if (externallyReady_.load(std::memory_order_seq_cst) == false) {
-      d_taskGroup->mpiCompletedTasks_.push(this);
-      d_taskGroup->atomic_mpiCompletedTasks_size.fetch_add(1);
+      d_taskGroup->m_mpi_completed_tasks.push(this);
+      d_taskGroup->m_atomic_mpi_completed_tasks_size.fetch_add(1);
       externallyReady_.store(true, std::memory_order_seq_cst);
     }
   }

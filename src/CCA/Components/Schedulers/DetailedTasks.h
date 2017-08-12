@@ -121,17 +121,17 @@ public:
 
   void copyoutDWKeyDatabase( OnDemandDataWarehouseP dws )
   {
-    dws->copyKeyDB(varKeyDB, levelKeyDB);
+    dws->copyKeyDB(m_var_keyDB, m_level_keyDB);
   }
 
   int numTasks() const
   {
-    return (int)tasks_.size();
+    return (int)m_tasks.size();
   }
 
   DetailedTask* getTask( int i )
   {
-    return tasks_[i];
+    return m_tasks[i];
   }
 
   void assignMessageTags( int me );
@@ -163,12 +163,12 @@ public:
 
   int numLocalTasks() const
   {
-    return (int)localtasks_.size();
+    return static_cast<int>(m_local_tasks.size());
   }
 
   DetailedTask* localTask( int idx )
   {
-    return localtasks_[idx];
+    return m_local_tasks[idx];
   }
 
   void emitEdges( ProblemSpecP edgesElement, int rank );
@@ -185,17 +185,17 @@ public:
 
   bool mustConsiderInternalDependencies()
   {
-    return mustConsiderInternalDependencies_;
+    return m_must_consider_internal_deps;
   }
 
   unsigned long getCurrentDependencyGeneration()
   {
-    return currentDependencyGeneration_;
+    return m_current_dependency_generation;
   }
 
   const TaskGraph* getTaskGraph() const
   {
-    return taskgraph_;
+    return m_task_graph;
   }
 
   void setScrubCount( const Task::Dependency                    * req
@@ -206,7 +206,7 @@ public:
 
   int getExtraCommunication()
   {
-    return extraCommunication_;
+    return m_extra_comm;
   }
 
   friend std::ostream& operator<<( std::ostream & out, const Uintah::DetailedTask & dtask );
@@ -215,22 +215,22 @@ public:
 
   ParticleExchangeVar& getParticleSends()
   {
-    return particleSends_;
+    return m_particle_sends;
   }
 
   ParticleExchangeVar& getParticleRecvs()
   {
-    return particleRecvs_;
+    return m_particle_recvs;
   }
 
   void setTaskPriorityAlg( QueueAlg alg )
   {
-    taskPriorityAlg_ = alg;
+    m_task_priority_alg = alg;
   }
 
   QueueAlg getTaskPriorityAlg()
   {
-    return taskPriorityAlg_;
+    return m_task_priority_alg;
   }
 
 #ifdef HAVE_CUDA
@@ -305,14 +305,10 @@ protected:
 
   SchedulerCommon* getSchedulerCommon()
   {
-    return sc_;
+    return m_sched_common;
   }
 
 private:
-
-  std::map<int, int>  sendoldmap_;
-  ParticleExchangeVar particleSends_;
-  ParticleExchangeVar particleRecvs_;
 
   void initializeBatches();
 
@@ -344,48 +340,50 @@ private:
                     , int            & count
                     );
 
-  SchedulerCommon*      sc_;
-  const ProcessorGroup* d_myworld;
 
-  // store the first so we can share the scrubCountTable
-  DetailedTasks*             first { nullptr };
-  std::vector<DetailedTask*> tasks_;
-  KeyDatabase<Patch>         varKeyDB;
-  KeyDatabase<Level>         levelKeyDB;
+  SchedulerCommon               * m_sched_common { nullptr };
+  const ProcessorGroup          * m_proc_group;
+  DetailedTasks                 * m_first { nullptr }; // store the first so we can share the scrubCountTable
 
-  const TaskGraph               * taskgraph_ { nullptr };
-  Task                          * stask_ { nullptr };
-  std::vector<DetailedTask*>      localtasks_;
-  std::vector<DependencyBatch*>   batches_;
-  DetailedDep                   * initreq_ { nullptr };
+  KeyDatabase<Patch>              m_var_keyDB;
+  KeyDatabase<Level>              m_level_keyDB;
 
-  // True for mixed scheduler which needs to keep track of internal dependencies.
-  bool mustConsiderInternalDependencies_;
+  const TaskGraph               * m_task_graph { nullptr };
 
-  // In the future, we may want to prioritize tasks for the UnifiedScheduler
-  // to run.  I implemented this using topological sort order as the priority
-  // but that probably isn't a good way to do unless you make it a breadth
-  // first topological order.
-  QueueAlg taskPriorityAlg_ { QueueAlg::MostMessages };
+  Task                          * m_send_old_data { nullptr };
+  std::map<int, int>              m_send_old_map;
+  std::vector<DetailedTask*>      m_local_tasks;
+  std::vector<DetailedTask*>      m_tasks;
+
+  std::vector<DependencyBatch*>   m_dep_batches;
+  DetailedDep                   * m_init_req { nullptr };
+
+  ParticleExchangeVar             m_particle_sends;
+  ParticleExchangeVar             m_particle_recvs;
+
+  // true for any threaded scheduler which needs to keep track of internal dependencies.
+  bool m_must_consider_internal_deps;
+
+  QueueAlg m_task_priority_alg { QueueAlg::MostMessages };
 
   using TaskQueue  = std::queue<DetailedTask*>;
   using TaskPQueue = std::priority_queue<DetailedTask*, std::vector<DetailedTask*>, DetailedTaskPriorityComparison>;
 
-  TaskQueue  readyTasks_;
-  std::atomic<int> atomic_readyTasks_size {0};
-  TaskQueue  initiallyReadyTasks_;
-  TaskPQueue mpiCompletedTasks_;
-  std::atomic<int> atomic_mpiCompletedTasks_size {0};
+  TaskQueue  m_ready_tasks;
+  TaskQueue  m_initial_ready_tasks;
+  TaskPQueue m_mpi_completed_tasks;
+  std::atomic<int> atomic_readyTasks_size { 0 };
+  std::atomic<int> m_atomic_mpi_completed_tasks_size { 0 };
 
   // This "generation" number is to keep track of which InternalDependency
   // links have been satisfied in the current timestep and avoids the
   // need to traverse all InternalDependency links to reset values.
-  unsigned long currentDependencyGeneration_ { 1 };
+  unsigned long m_current_dependency_generation { 1 };
 
-  // for logging purposes - how much extra comm is going on
-  int extraCommunication_ { 0 };
+  // for logging purposes - how much extra communication is going on
+  int m_extra_comm { 0 };
 
-  ScrubCountTable scrubCountTable_;
+  ScrubCountTable m_scrub_count_table;
 
   // eliminate copy, assignment and move
   DetailedTasks(const DetailedTasks &)            = delete;
@@ -393,13 +391,14 @@ private:
   DetailedTasks(DetailedTasks &&)                 = delete;
   DetailedTasks& operator=(DetailedTasks &&)      = delete;
 
-  using TaskPool = Lockfree::Pool< DetailedTask *
-                                          , uint64_t
-                                          , 1
-                                          , std::allocator
-                                          >;
 
 #ifdef HAVE_CUDA
+
+  using TaskPool = Lockfree::Pool< DetailedTask *
+                                 , uint64_t
+                                 , 1
+                                 , std::allocator
+                                 >;
 
   TaskPool             device_validateRequiresCopies_pool{};
   TaskPool             device_performGhostCopies_pool{};
@@ -407,15 +406,13 @@ private:
   TaskPool             device_checkIfExecutable_pool{};
   TaskPool             device_readyToExecute_pool{};
   TaskPool             device_executionPending_pool{};
-
   TaskPool             host_validateRequiresCopies_pool{};
   TaskPool             host_checkIfExecutable_pool{};
   TaskPool             host_readyToExecute_pool{};
 
 #endif
 
-};
-// class DetailedTasks
+}; // class DetailedTasks
 
 }  // namespace Uintah
 
