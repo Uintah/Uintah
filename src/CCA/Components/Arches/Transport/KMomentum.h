@@ -202,7 +202,7 @@ private:
     std::vector<SourceInfo> eqn_srcs;
     if ( my_dir == ArchesCore::XDIR ){
 
-      for ( ProblemSpecP src_db = db->findBlock("src_x"); 
+      for ( ProblemSpecP src_db = db->findBlock("src_x");
             src_db != nullptr; src_db = src_db->findNextBlock("src_x") ){
 
         std::string src_label;
@@ -224,7 +224,7 @@ private:
 
     } else if ( my_dir == ArchesCore::YDIR ){
 
-      for ( ProblemSpecP src_db = db->findBlock("src_y"); 
+      for ( ProblemSpecP src_db = db->findBlock("src_y");
             src_db != nullptr; src_db = src_db->findNextBlock("src_y") ){
 
         std::string src_label;
@@ -246,7 +246,7 @@ private:
 
     } else if ( my_dir == ArchesCore::ZDIR ){
 
-      for ( ProblemSpecP src_db = db->findBlock("src_z"); 
+      for ( ProblemSpecP src_db = db->findBlock("src_z");
             src_db != nullptr; src_db = src_db->findNextBlock("src_z") ){
 
         std::string src_label;
@@ -415,22 +415,9 @@ private:
     }
 
     //globally common variables
-    if ( my_dir == ArchesCore::XDIR ){
-      register_variable( "ucell_xvel", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
-      register_variable( "ucell_yvel", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
-      register_variable( "ucell_zvel", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
-    } else if ( my_dir == ArchesCore::YDIR ){
-      register_variable( "vcell_xvel", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
-      register_variable( "vcell_yvel", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
-      register_variable( "vcell_zvel", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
-    } else {
-      register_variable( "wcell_xvel", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
-      register_variable( "wcell_yvel", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
-      register_variable( "wcell_zvel", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
-    }
-    register_variable( m_x_velocity_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::LATEST, variable_registry, time_substep );
-    register_variable( m_y_velocity_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::LATEST, variable_registry, time_substep );
-    register_variable( m_z_velocity_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::LATEST, variable_registry, time_substep );
+    register_variable( m_x_velocity_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+    register_variable( m_y_velocity_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+    register_variable( m_z_velocity_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::NEWDW, variable_registry, time_substep );
     register_variable( m_eps_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::OLDDW, variable_registry, time_substep );
     register_variable( m_mu_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::LATEST, variable_registry, time_substep );
     register_variable( m_rho_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::LATEST, variable_registry, time_substep );
@@ -479,11 +466,11 @@ private:
 
       if ( m_conv_scheme[ieqn] != NOCONV ){
 
-        if ( my_dir == ArchesCore::XDIR ){
+        CT& u_fx = tsk_info->get_const_uintah_field_add<CT>(m_x_velocity_name);
+        CT& v_fy = tsk_info->get_const_uintah_field_add<CT>(m_y_velocity_name);
+        CT& w_fz = tsk_info->get_const_uintah_field_add<CT>(m_z_velocity_name);
 
-          CT& u_fx = tsk_info->get_const_uintah_field_add<CT>("ucell_xvel");
-          CT& v_fy = tsk_info->get_const_uintah_field_add<CT>("ucell_yvel");
-          CT& w_fz = tsk_info->get_const_uintah_field_add<CT>("ucell_zvel");
+        if ( my_dir == ArchesCore::XDIR ){
 
           if ( tsk_info->packed_tasks() ){
 
@@ -517,10 +504,6 @@ private:
 
         } else if ( my_dir == ArchesCore::YDIR ){
 
-          CT& u_fx = tsk_info->get_const_uintah_field_add<CT>("vcell_xvel");
-          CT& v_fy = tsk_info->get_const_uintah_field_add<CT>("vcell_yvel");
-          CT& w_fz = tsk_info->get_const_uintah_field_add<CT>("vcell_zvel");
-
           if ( tsk_info->packed_tasks() ){
 
             FXT& x_psi = tsk_info->get_uintah_field_add<FXT>(m_eqn_names[ieqn]+"_x_psi");
@@ -552,10 +535,6 @@ private:
 
         } else {
 
-          CT& u_fx = tsk_info->get_const_uintah_field_add<CT>("wcell_xvel");
-          CT& v_fy = tsk_info->get_const_uintah_field_add<CT>("wcell_yvel");
-          CT& w_fz = tsk_info->get_const_uintah_field_add<CT>("wcell_zvel");
-
           if ( tsk_info->packed_tasks() ){
 
             FXT& x_psi = tsk_info->get_uintah_field_add<FXT>(m_eqn_names[ieqn]+"_x_psi");
@@ -583,9 +562,7 @@ private:
             Uintah::parallel_for( z_range, get_flux );
 
           }
-
         }
-
       }
 
       //Stress
