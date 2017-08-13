@@ -42,6 +42,7 @@
 #include <CCA/Components/Arches/ParticleModels/ParticleModelFactory.h>
 #include <CCA/Components/Arches/LagrangianParticles/LagrangianParticleFactory.h>
 #include <CCA/Components/Arches/PropertyModelsV2/PropertyModelFactoryV2.h>
+#include <CCA/Components/Arches/SourceTermsV2/SourceTermFactoryV2.h>
 #include <CCA/Components/Arches/BoundaryConditions/BoundaryConditionFactory.h>
 //#include <CCA/Components/Arches/Task/SampleFactory.h>
 //END NEW TASK INTERFACE STUFF
@@ -115,6 +116,7 @@ KokkosSolver::problemSetup( const ProblemSpecP& input_db,
   std::shared_ptr<BoundaryConditionFactory> BC(scinew BoundaryConditionFactory());
   std::shared_ptr<ChemMixFactory> TableModels(scinew ChemMixFactory());
   std::shared_ptr<TurbulenceModelFactory> TurbModelF(scinew TurbulenceModelFactory());
+  std::shared_ptr<SourceTermFactoryV2> SourceTermV2(scinew SourceTermFactoryV2());
 
   m_task_factory_map.clear();
   m_task_factory_map.insert(std::make_pair("utility_factory",UtilF));
@@ -126,6 +128,7 @@ KokkosSolver::problemSetup( const ProblemSpecP& input_db,
   m_task_factory_map.insert(std::make_pair("boundary_condition_factory", BC));
   m_task_factory_map.insert(std::make_pair("table_factory", TableModels));
   m_task_factory_map.insert(std::make_pair("turbulence_model_factory", TurbModelF));
+  m_task_factory_map.insert(std::make_pair("source_term_factory",SourceTermV2));
 
   typedef std::map<std::string, std::shared_ptr<TaskFactoryBase> > BFM;
   proc0cout << "\n Registering Tasks For: " << std::endl;
@@ -344,6 +347,13 @@ KokkosSolver::initialize( const LevelP& level, SchedulerP& sched, const bool doi
   //property factory
   m_task_factory_map["property_models_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
 
+  // turbulence model
+  m_task_factory_map["turbulence_model_factory"]->schedule_task_group( "momentum_closure", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
+
+  //source_term_kokkos_factory
+  m_task_factory_map["source_term_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
+
+
   // generic field initializer
   m_task_factory_map["initialize_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, pack_tasks, level, sched, matls );
 
@@ -378,6 +388,7 @@ KokkosSolver::nonlinearSolve( const LevelP& level,
   BFM::iterator i_util_fac = m_task_factory_map.find("utility_factory");
   BFM::iterator i_transport = m_task_factory_map.find("transport_factory");
   BFM::iterator i_prop_fac = m_task_factory_map.find("property_models_factory");
+  BFM::iterator i_source_fac = m_task_factory_map.find("source_term_factory");
   BFM::iterator i_bc_fac = m_task_factory_map.find("boundary_condition_factory");
   BFM::iterator i_table_fac = m_task_factory_map.find("table_factory");
   TaskFactoryBase::TaskMap all_bc_tasks = i_bc_fac->second->retrieve_all_tasks();
@@ -394,6 +405,9 @@ KokkosSolver::nonlinearSolve( const LevelP& level,
     pack_tasks, level, sched, matls );
 
   i_prop_fac->second->schedule_task_group( "all_tasks", TaskInterface::TIMESTEP_INITIALIZE,
+    pack_tasks, level, sched, matls );
+
+  i_source_fac->second->schedule_task_group( "all_tasks", TaskInterface::TIMESTEP_INITIALIZE,
     pack_tasks, level, sched, matls );
 
   i_bc_fac->second->schedule_task_group( "all_tasks", TaskInterface::TIMESTEP_INITIALIZE,
@@ -441,9 +455,6 @@ KokkosSolver::setupBCs( const LevelP& level, SchedulerP& sched, const MaterialSe
 void
 KokkosSolver::SSPRKSolve( const LevelP& level, SchedulerP& sched ){
 
-  //const bool pack_tasks = true;
-  //const bool dont_pack_tasks = false;
-
   const MaterialSet* matls = m_sharedState->allArchesMaterials();
 
   BFM::iterator i_util_fac = m_task_factory_map.find("utility_factory");
@@ -451,6 +462,7 @@ KokkosSolver::SSPRKSolve( const LevelP& level, SchedulerP& sched ){
   BFM::iterator i_prop_fac = m_task_factory_map.find("property_models_factory");
   BFM::iterator i_bc_fac = m_task_factory_map.find("boundary_condition_factory");
   BFM::iterator i_table_fac = m_task_factory_map.find("table_factory");
+  BFM::iterator i_source_fac = m_task_factory_map.find("source_term_factory");
   TaskFactoryBase::TaskMap all_bc_tasks = i_bc_fac->second->retrieve_all_tasks();
   TaskFactoryBase::TaskMap all_table_tasks = i_table_fac->second->retrieve_all_tasks();
 
@@ -464,12 +476,12 @@ KokkosSolver::SSPRKSolve( const LevelP& level, SchedulerP& sched ){
       tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep);
     }
 
-    //(pre-update properties tasks)
-    SVec prop_preupdate_tasks = i_prop_fac->second->retrieve_task_subset("pre_update_property_models");
-    for (auto i = prop_preupdate_tasks.begin(); i != prop_preupdate_tasks.end(); i++){
-      TaskInterface* tsk = i_prop_fac->second->retrieve_task(*i);
-      tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep);
-    }
+    // pre-update properties/source tasks)
+    i_prop_fac->second->schedule_task_group( "pre_update_property_models",
+      TaskInterface::TIMESTEP_EVAL, m_global_pack_tasks, level, sched, matls );
+
+    i_source_fac->second->schedule_task_group( "pre_update_source_tasks",
+      TaskInterface::TIMESTEP_EVAL, m_global_pack_tasks, level, sched, matls );
 
     // ** SCALARS **
     // PRE-PROJECTION
@@ -526,7 +538,7 @@ KokkosSolver::SSPRKSolve( const LevelP& level, SchedulerP& sched ){
       // linear system, however, the resulting pressure field also needs BCs so that the correction
       // to the velocities is done correctly.
       AtomicTaskInterface* press_bc_tsk = i_transport->second->retrieve_atomic_task("pressure_bcs");
-      press_bc_tsk->schedule_task(level, sched, matls, AtomicTaskInterface::ATOMIC_STANDARD_TASK, time_substep); 
+      press_bc_tsk->schedule_task(level, sched, matls, AtomicTaskInterface::ATOMIC_STANDARD_TASK, time_substep);
       // Correct velocities
       AtomicTaskInterface* gradP_tsk = i_transport->second->retrieve_atomic_task("pressure_correction");
       gradP_tsk->schedule_task(level, sched, matls, AtomicTaskInterface::ATOMIC_STANDARD_TASK, time_substep);
@@ -570,14 +582,22 @@ KokkosSolver::SandBox( const LevelP& level, SchedulerP& sched ){
   BFM::iterator i_prop_fac = m_task_factory_map.find("property_models_factory");
   BFM::iterator i_bc_fac = m_task_factory_map.find("boundary_condition_factory");
   BFM::iterator i_table_fac = m_task_factory_map.find("table_factory");
+  BFM::iterator i_source_fac = m_task_factory_map.find("source_term_factory");
   TaskFactoryBase::TaskMap all_bc_tasks = i_bc_fac->second->retrieve_all_tasks();
   TaskFactoryBase::TaskMap all_table_tasks = i_table_fac->second->retrieve_all_tasks();
 
   // ----------------- Time Integration ------------------------------------------------------------
-  //(pre-update properties tasks)
+  // (pre-update properties tasks)
   SVec prop_preupdate_tasks = i_prop_fac->second->retrieve_task_subset("pre_update_property_models");
   for (auto i = prop_preupdate_tasks.begin(); i != prop_preupdate_tasks.end(); i++){
     TaskInterface* tsk = i_prop_fac->second->retrieve_task(*i);
+    tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep);
+  }
+
+   // (pre-update source terms)
+  SVec pre_update_source = i_source_fac ->second->retrieve_task_subset("pre_update_source_task");
+  for (auto i = pre_update_source.begin(); i != pre_update_source.end(); i++){
+    TaskInterface* tsk = i_source_fac->second->retrieve_task(*i);
     tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep);
   }
 

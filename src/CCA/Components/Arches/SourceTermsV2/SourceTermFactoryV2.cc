@@ -9,17 +9,17 @@
 using namespace Uintah;
 
 //--------------------------------------------------------------------------------------------------
-SourceTermV2Factory::SourceTermV2Factory()
+SourceTermFactoryV2::SourceTermFactoryV2()
 {
-  _factory_name = "SourceTermV2Factory";
+  _factory_name = "SourceTermFactoryV2";
 }
 
-SourceTermV2Factory::~SourceTermV2Factory()
+SourceTermFactoryV2::~SourceTermFactoryV2()
 {}
 
 //--------------------------------------------------------------------------------------------------
 void
-SourceTermV2Factory::register_all_tasks( ProblemSpecP& db )
+SourceTermFactoryV2::register_all_tasks( ProblemSpecP& db )
 {
 
   /*
@@ -61,7 +61,7 @@ SourceTermV2Factory::register_all_tasks( ProblemSpecP& db )
         }
 
         register_task( name, tsk );
-        _pre_update_source_k_task.push_back( name );
+        _pre_update_source_tasks.push_back( name );
 
       } else if ( type == "MMS_mom_csmag" ) {
 
@@ -81,14 +81,15 @@ SourceTermV2Factory::register_all_tasks( ProblemSpecP& db )
         }
 
         register_task( name, tsk );
-        _pre_update_source_k_task.push_back( name );
+        _pre_update_source_tasks.push_back( name );
 
 
       } else if ( type == "MMS_scalar" ) {
 
         TaskInterface::TaskBuilder* tsk = scinew MMS_scalar::Builder( name, 0 , _shared_state );
         register_task( name, tsk );
-        _pre_update_source_k_task.push_back( name );
+        _pre_update_source_tasks.push_back( name );
+
       } else {
 
         throw InvalidValue("Error: Source term not recognized: "+type,__FILE__,__LINE__);
@@ -102,7 +103,7 @@ SourceTermV2Factory::register_all_tasks( ProblemSpecP& db )
 
 //--------------------------------------------------------------------------------------------------
 void
-SourceTermV2Factory::build_all_tasks( ProblemSpecP& db )
+SourceTermFactoryV2::build_all_tasks( ProblemSpecP& db )
 {
 
   if ( db->findBlock("src") ){
@@ -130,7 +131,7 @@ SourceTermV2Factory::build_all_tasks( ProblemSpecP& db )
 //--------------------------------------------------------------------------------------------------
 
 void
-SourceTermV2Factory::add_task( ProblemSpecP& db )
+SourceTermFactoryV2::add_task( ProblemSpecP& db )
 {
 
   if ( db->findBlock("src") ){
@@ -148,7 +149,7 @@ SourceTermV2Factory::add_task( ProblemSpecP& db )
 
         TaskInterface::TaskBuilder* tsk = scinew MMS_scalar::Builder( name, 0 , _shared_state );
         register_task( name, tsk );
-        _pre_update_source_k_task.push_back( name );
+        _pre_update_source_tasks.push_back( name );
 
       } else if ( type == "MMS_mom" ) {
 
@@ -167,7 +168,7 @@ SourceTermV2Factory::add_task( ProblemSpecP& db )
           tsk = scinew MMS_mom<SFCZVariable<double> >::Builder( name, 0, _shared_state );
         }
         register_task( name, tsk );
-        _pre_update_source_k_task.push_back( name );
+        _pre_update_source_tasks.push_back( name );
 
       } else if ( type == "MMS_mom_csmag" ) {
 
@@ -187,7 +188,7 @@ SourceTermV2Factory::add_task( ProblemSpecP& db )
         }
 
         register_task( name, tsk );
-        _pre_update_source_k_task.push_back( name );
+        _pre_update_source_tasks.push_back( name );
 
       } else {
 
@@ -208,7 +209,7 @@ SourceTermV2Factory::add_task( ProblemSpecP& db )
 }
 //--------------------------------------------------------------------------------------------------
 
-void SourceTermV2Factory::schedule_initialization( const LevelP& level,
+void SourceTermFactoryV2::schedule_initialization( const LevelP& level,
                                                  SchedulerP& sched,
                                                  const MaterialSet* matls,
                                                  bool doing_restart ){

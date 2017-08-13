@@ -1,17 +1,17 @@
-#ifndef UT_SourceTermV2Factory_h
-#define UT_SourceTermV2Factory_h
+#ifndef UT_SourceTermFactoryV2_h
+#define UT_SourceTermFactoryV2_h
 
 #include <CCA/Components/Arches/Task/TaskFactoryBase.h>
 #include <string>
 
 namespace Uintah{
 
-  class SourceTermV2Factory : public TaskFactoryBase {
+  class SourceTermFactoryV2 : public TaskFactoryBase {
 
   public:
 
-    SourceTermV2Factory( );
-    ~SourceTermV2Factory();
+    SourceTermFactoryV2( );
+    ~SourceTermFactoryV2();
 
     void register_all_tasks( ProblemSpecP& db );
 
@@ -19,15 +19,17 @@ namespace Uintah{
 
     std::vector<std::string> retrieve_task_subset( const std::string subset ) {
 
-      if ( subset == "pre_update_source_k_task" ){
-        return _pre_update_source_k_task;
-      }
-       else if ( subset == _all_tasks_str ){
+      if ( subset == "pre_update_source_tasks" ){
+
+        return _pre_update_source_tasks;
+
+      } else if ( subset == _all_tasks_str ){
+
         return _active_tasks;
 
       } else {
 
-        throw InvalidValue("Error: Accessing the base class implementation of retrieve_task_subset in SourceTermV2Factory, which means there is no specific implementation for this factory.",__FILE__,__LINE__);
+        throw InvalidValue("Error: Accessing the base class implementation of retrieve_task_subset in SourceTermFactoryV2, which means there is no specific implementation for this factory.",__FILE__,__LINE__);
 
       }
     }
@@ -39,11 +41,10 @@ namespace Uintah{
                                   const MaterialSet* matls,
                                   bool doing_restart );
 
-  protected:
-
   private:
-    std::vector<std::string> _pre_update_source_k_task;  ///<Tasks that execute at the start of an RK step
-//    std::vector<std::string> _task_order;                 ///<The order in which these tasks should execute
+
+    std::vector<std::string> _pre_update_source_tasks;  ///<Tasks that execute at the start of an RK step
+
   };
 }
 #endif
