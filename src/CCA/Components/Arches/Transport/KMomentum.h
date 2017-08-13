@@ -200,23 +200,70 @@ private:
     }
 
     std::vector<SourceInfo> eqn_srcs;
-    for ( ProblemSpecP src_db = db->findBlock("src"); src_db != nullptr; src_db = src_db->findNextBlock("src") ){
+    if ( my_dir == ArchesCore::XDIR ){
 
-      std::string src_label;
-      double weight = 1.0;
+      for ( ProblemSpecP src_db = db->findBlock("src_x"); 
+            src_db != nullptr; src_db = src_db->findNextBlock("src_x") ){
 
-      src_db->getAttribute("label",src_label);
+        std::string src_label;
+        double weight = 1.0;
 
-      if ( src_db->findBlock("weight")){
-        src_db->findBlock("weight")->getAttribute("value",weight);
+        src_db->getAttribute("label",src_label);
+
+        if ( src_db->findBlock("weight")){
+          src_db->findBlock("weight")->getAttribute("value",weight);
+        }
+
+        SourceInfo info;
+        info.name = src_label;
+        info.weight = weight;
+
+        eqn_srcs.push_back(info);
+
       }
 
-      SourceInfo info;
-      info.name = src_label;
-      info.weight = weight;
+    } else if ( my_dir == ArchesCore::YDIR ){
 
-      eqn_srcs.push_back(info);
+      for ( ProblemSpecP src_db = db->findBlock("src_y"); 
+            src_db != nullptr; src_db = src_db->findNextBlock("src_y") ){
 
+        std::string src_label;
+        double weight = 1.0;
+
+        src_db->getAttribute("label",src_label);
+
+        if ( src_db->findBlock("weight")){
+          src_db->findBlock("weight")->getAttribute("value",weight);
+        }
+
+        SourceInfo info;
+        info.name = src_label;
+        info.weight = weight;
+
+        eqn_srcs.push_back(info);
+
+      }
+
+    } else if ( my_dir == ArchesCore::ZDIR ){
+
+      for ( ProblemSpecP src_db = db->findBlock("src_z"); 
+            src_db != nullptr; src_db = src_db->findNextBlock("src_z") ){
+
+        std::string src_label;
+        double weight = 1.0;
+
+        src_db->getAttribute("label",src_label);
+
+        if ( src_db->findBlock("weight")){
+          src_db->findBlock("weight")->getAttribute("value",weight);
+        }
+
+        SourceInfo info;
+        info.name = src_label;
+        info.weight = weight;
+
+        eqn_srcs.push_back(info);
+      }
     }
 
     m_source_info.push_back(eqn_srcs);
