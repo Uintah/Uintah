@@ -106,6 +106,10 @@ private:
     std::string m_rho_name;
     std::string m_eps_name;
 
+    std::string m_sigmax_name; 
+    std::string m_sigmay_name; 
+    std::string m_sigmaz_name; 
+
     std::vector<std::string> m_eqn_names;
     std::vector<bool> m_do_clip;
     std::vector<double> m_low_clip;
@@ -281,6 +285,11 @@ private:
     m_x_velocity_name = var_map.uvel_name;
     m_y_velocity_name = var_map.vvel_name;
     m_z_velocity_name = var_map.wvel_name;
+
+    m_sigmax_name     = var_map.sigmax_name;
+    m_sigmay_name     = var_map.sigmay_name;
+    m_sigmaz_name     = var_map.sigmaz_name;
+
     m_mu_name = var_map.mu_name;
     m_rho_name = "density";
 
@@ -415,6 +424,12 @@ private:
     }
 
     //globally common variables
+    if ( !m_inviscid ){
+      register_variable( m_sigmax_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+      register_variable( m_sigmay_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+      register_variable( m_sigmaz_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+    }
+
     register_variable( m_x_velocity_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::NEWDW, variable_registry, time_substep );
     register_variable( m_y_velocity_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::NEWDW, variable_registry, time_substep );
     register_variable( m_z_velocity_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::NEWDW, variable_registry, time_substep );
@@ -573,49 +588,33 @@ private:
 
         ArchesCore::VariableHelper<T> var_help;
 
-        if ( var_help.dir == 0 ){
+        constCCVariable<double>& sigma1 = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_sigmax_name));
+        constCCVariable<double>& sigma2 = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_sigmay_name));
+        constCCVariable<double>& sigma3 = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_sigmaz_name));
 
+        auto stressTensor = [&] (int i, int j, int k){
+          double div_sigma1 = (sigma1(i+1,j,k) - sigma1(i,j,k))*areaEW + 
+                              (sigma2(i,j+1,k) - sigma2(i,j,k))*areaNS + 
+                              (sigma3(i,j,k+1) - sigma3(i,j,k))*areaTB;
+
+          rhs(i,j,k) += div_sigma1; 
+        };
+
+
+        if ( my_dir == ArchesCore::XDIR ){
           GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE(1, 0)
           Uintah::BlockRange range(low_fx_patch_range, high_fx_patch_range);
-
-          Uintah::parallel_for( range, [&](int i, int j, int k){
-
-            const double SE = (u(i+1,j,k) - u(i,j,k))/Dx.x();
-            const double SW = (u(i,j,k) - u(i-1,j,k))/Dx.x();
-            const double SN = 0.5 * (( u(i,j+1,k) - u(i,j,k) ) / Dx.y() + (v(i,j+1,k) - v(i-1,j+1,k))/Dx.x());
-            const double SS = 0.5 * (( u(i,j,k) - u(i,j-1,k) ) / Dx.y() + (v(i,j,k) - v(i-1,j,k))/Dx.x());
-            const double ST = 0.5 * (( u(i,j,k+1) - u(i,j,k) ) / Dx.z() + (w(i,j,k+1) - w(i-1,j,k+1))/Dx.x());
-            const double SB = 0.5 * (( u(i,j,k) - u(i,j,k-1) ) / Dx.z() + (w(i,j,k) - w(i-1,j,k))/Dx.x());
-
-            const double mu_E = mu(i,j,k);
-            const double mu_W = mu(i-1,j,k);
-            const double mu_N = 0.5 * ( 0.5 * (mu(i,j+1,k) + mu(i,j,k))   + 0.5 * (mu(i-1,j+1,k) + mu(i-1,j,k)) );
-            const double mu_S = 0.5 * ( 0.5 * (mu(i,j,k)   + mu(i,j-1,k)) + 0.5 * (mu(i-1,j,k)   + mu(i-1,j-1,k)) );
-            const double mu_T = 0.5 * ( 0.5 * (mu(i,j,k+1) + mu(i,j,k))   + 0.5 * (mu(i-1,j,k+1) + mu(i-1,j,k)) );
-            const double mu_B = 0.5 * ( 0.5 * (mu(i,j,k)   + mu(i,j,k-1)) + 0.5 * (mu(i-1,j,k)   + mu(i-1,j,k-1)) );
-
-            // add in once we have a rho
-            const double rho_E = rho(i,j,k);
-            const double rho_W = rho(i-1,j,k);
-            const double rho_N = 0.5 * ( 0.5 * (rho(i,j+1,k) + rho(i,j,k))   + 0.5 * (rho(i-1,j+1,k) + rho(i-1,j,k)) );
-            const double rho_S = 0.5 * ( 0.5 * (rho(i,j,k)   + rho(i,j-1,k)) + 0.5 * (rho(i-1,j,k)   + rho(i-1,j-1,k)) );
-            const double rho_T = 0.5 * ( 0.5 * (rho(i,j,k+1) + rho(i,j,k))   + 0.5 * (rho(i-1,j,k+1) + rho(i-1,j,k)) );
-            const double rho_B = 0.5 * ( 0.5 * (rho(i,j,k)   + rho(i,j,k-1)) + 0.5 * (rho(i-1,j,k)   + rho(i-1,j,k-1)) );
-
-            double div_tauij = areaEW * ( rho_E * mu_E * SE - rho_W * mu_W * SW ) +
-                               areaNS * ( rho_N * mu_N * SN - rho_S * mu_S * SS ) +
-                               areaTB * ( rho_T * mu_T * ST - rho_B * mu_B * SB );
-
-            rhs(i,j,k) += div_tauij;
-
-          });
-        } else if ( var_help.dir == 1 ){
+          Uintah::parallel_for( range, stressTensor );
+        } else if ( my_dir == ArchesCore::YDIR ){
           GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE(1, 0);
+          Uintah::BlockRange range(low_fy_patch_range, high_fy_patch_range);
+          Uintah::parallel_for( range, stressTensor );
         } else {
           GET_EXTRACELL_FZ_BUFFERED_PATCH_RANGE(1, 0);
+          Uintah::BlockRange range(low_fz_patch_range, high_fz_patch_range);
+          Uintah::parallel_for( range, stressTensor );
         }
-      }
-
+       }
       //Sources:
       typedef std::vector<SourceInfo> VS;
       for (typename VS::iterator isrc = m_source_info[ieqn].begin(); isrc != m_source_info[ieqn].end(); isrc++){
