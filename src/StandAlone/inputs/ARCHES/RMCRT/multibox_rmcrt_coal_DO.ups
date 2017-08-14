@@ -23,7 +23,7 @@
   <DataArchiver>
     <outputInitTimestep/>
     <filebase>multibox_RMCRT_coal_DO.uda</filebase>
-    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputTimestepInterval>2</outputTimestepInterval>
     <save label="residence_time"        levels="-1"/> 
     <save label="res_source"            levels="-1"/> 
     <save label="coal_gas_momentum"     levels="-1"/>
