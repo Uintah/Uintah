@@ -119,6 +119,7 @@ enum class ThreadState : int
 };
 
 UnifiedSchedulerWorker * g_runners[MAX_THREADS]        = {};
+std::thread              g_threads[MAX_THREADS]        = {};
 volatile ThreadState     g_thread_states[MAX_THREADS]  = {};
 int                      g_cpu_affinities[MAX_THREADS] = {};
 int                      g_num_threads                 = 0;
@@ -219,10 +220,10 @@ void init_threads( UnifiedScheduler * sched, int num_threads )
     g_runners[i] = new UnifiedSchedulerWorker(sched);
   }
 
-  // spawn "nthreads-1"  worker threads - main thread also executes tasks
-  // detach at creation and let them run and terminate on their own, e.g. no join
+  // spawn worker threads
+  // TaskRunner threads start at [1]
   for (int i = 1; i < g_num_threads; ++i) {
-    std::thread(thread_driver, i).detach();
+    g_threads[i] = (std::thread(thread_driver, i));
   }
 
   thread_fence();
@@ -287,7 +288,11 @@ UnifiedScheduler::UnifiedScheduler( const ProcessorGroup   * myworld
 //
 UnifiedScheduler::~UnifiedScheduler()
 {
-  // nothing to do currently
+  for (int i = 1; i < Impl::g_num_threads; ++i) {
+    if (Impl::g_threads[i].joinable()) {
+      Impl::g_threads[i].detach();
+    }
+  }
 }
 
 
@@ -331,24 +336,6 @@ UnifiedScheduler::problemSetup( const ProblemSpecP     & prob_spec
     }
     else if (taskQueueAlg == "Stack") {
       m_task_queue_alg = Stack;
-    }
-    else if (taskQueueAlg == "MostChildren") {
-      m_task_queue_alg = MostChildren;
-    }
-    else if (taskQueueAlg == "LeastChildren") {
-      m_task_queue_alg = LeastChildren;
-    }
-    else if (taskQueueAlg == "MostAllChildren") {
-      m_task_queue_alg = MostChildren;
-    }
-    else if (taskQueueAlg == "LeastAllChildren") {
-      m_task_queue_alg = LeastChildren;
-    }
-    else if (taskQueueAlg == "MostL2Children") {
-      m_task_queue_alg = MostL2Children;
-    }
-    else if (taskQueueAlg == "LeastL2Children") {
-      m_task_queue_alg = LeastL2Children;
     }
     else if (taskQueueAlg == "MostMessages") {
       m_task_queue_alg = MostMessages;

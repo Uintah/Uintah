@@ -632,16 +632,12 @@ public: // class Task
   std::map<int,int> m_max_ghost_cells;    // max ghost cells of this task
   int m_max_level_offset{0};              // max level offset of this task
 
-  std::set<Task*> m_child_tasks;
-  std::set<Task*> m_all_child_tasks;
-
   enum DepType {
       Modifies
     , Computes
     , Requires
   };
 
-  struct Edge;
 
   struct Dependency {
 
@@ -657,14 +653,6 @@ public: // class Task
       MaterialDomainSpec     m_matls_dom;
       Ghost::GhostType       m_gtype{Ghost::None};
       WhichDW                m_whichdw;  // Used only by requires
-
-      // Used in compiling the task graph.
-      Edge                 * m_req_head{nullptr};
-      Edge                 * m_req_tail{nullptr};
-      Edge                 * m_comp_head{nullptr};
-      Edge                 * m_comp_tail{nullptr};
-
-
 
 
       // in the multi-TG construct, this will signify that the required
@@ -700,10 +688,6 @@ public: // class Task
 
       ~Dependency();
 
-      inline void addComp( Edge * edge );
-
-      inline void addReq( Edge * edge );
-
       constHandle<PatchSubset>
       getPatchesUnderDomain( const PatchSubset * domainPatches ) const;
 
@@ -729,20 +713,6 @@ public: // class Task
                               );
   };  // end struct Dependency
 
-
-  struct Edge {
-
-     const Dependency * m_comp{nullptr};
-     Edge             * m_comp_next{nullptr};
-     const Dependency * m_req{nullptr};
-     Edge             * m_req_next{nullptr};
-
-     inline Edge( const Dependency * comp , const Dependency * req )
-       : m_comp(comp)
-       , m_req(req)
-     {}
-
-  }; // struct Edge
 
 
   const Dependency* getComputes() const { return m_comp_head; }
@@ -864,29 +834,6 @@ protected: // class Task
   friend std::ostream & operator <<(std::ostream & out, const Uintah::Task::Dependency & dep);
 
 }; // end class Task
-
-
-inline void Task::Dependency::addComp( Edge * edge )
-{
-  if (m_comp_tail) {
-    m_comp_tail->m_comp_next = edge;
-  }
-  else {
-    m_comp_head = edge;
-  }
-  m_comp_tail = edge;
-}
-
-inline void Task::Dependency::addReq( Edge * edge )
-{
-  if (m_req_tail) {
-    m_req_tail->m_req_next = edge;
-  }
-  else {
-    m_req_head = edge;
-  }
-  m_req_tail = edge;
-}
 
 }  // End namespace Uintah
 

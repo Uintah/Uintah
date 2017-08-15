@@ -620,13 +620,13 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask     * from
 
   // make keys for MPI messages
   if (fromPatch) {
-    m_var_keyDB.insert(req->m_var,matl,fromPatch);
+    m_var_keyDB.insert(req->m_var, matl, fromPatch);
   }
 
   //get dependency batch
   DependencyBatch* batch = from->getComputes();
 
-  //find dependency batch that is to the same processor as this dependency
+  // find dependency batch that is to the same processor as this dependency
   for (; batch != nullptr; batch = batch->m_comp_next) {
     if (batch->m_to_rank == toresource) {
       break;
@@ -1015,35 +1015,6 @@ DetailedTaskPriorityComparison::operator()( DetailedTask *& ltask
     return false;
   }
 
-  if (alg == MostChildren) {
-    return ltask->getTask()->m_child_tasks.size() < rtask->getTask()->m_child_tasks.size();
-  }
-  else if (alg == LeastChildren) {
-    return ltask->getTask()->m_child_tasks.size() > rtask->getTask()->m_child_tasks.size();
-  }
-  else if (alg == MostAllChildren) {
-    return ltask->getTask()->m_all_child_tasks.size() < rtask->getTask()->m_all_child_tasks.size();
-  }
-  else if (alg == LeastAllChildren) {
-    return ltask->getTask()->m_all_child_tasks.size() > rtask->getTask()->m_all_child_tasks.size();
-  }
-  else if (alg == MostL2Children || alg == LeastL2Children) {
-    int ll2 = 0;
-    int rl2 = 0;
-    std::set<Task*>::iterator it;
-    for (it = ltask->getTask()->m_child_tasks.begin(); it != ltask->getTask()->m_child_tasks.end(); it++) {
-      ll2 += (*it)->m_child_tasks.size();
-    }
-    for (it = rtask->getTask()->m_child_tasks.begin(); it != rtask->getTask()->m_child_tasks.end(); it++) {
-      rl2 += (*it)->m_child_tasks.size();
-    }
-    if (alg == MostL2Children) {
-      return ll2 < rl2;
-    }
-    else {
-      return ll2 > rl2;
-    }
-  }
   else if (alg == MostMessages || alg == LeastMessages) {
     int lmsg = 0;
     int rmsg = 0;

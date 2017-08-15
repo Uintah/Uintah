@@ -66,6 +66,7 @@
 
 #include <iostream>
 #include <iomanip>
+#include <ctime>
 
 using namespace Uintah;
 
@@ -742,13 +743,16 @@ AMRSimulationController::doInitialTimestep()
       d_output->finalizeTimestep( d_simTime, d_delt, d_currentGridP, d_scheduler, recompile );
       d_output->sched_allOutputTasks(        d_delt, d_currentGridP, d_scheduler, recompile );
       
-      taskGraphTimer.reset( true );
+//      taskGraphTimer.reset( true );
+      clock_t start = clock();
+      clock_t diff;
       d_scheduler->compile();
-      taskGraphTimer.stop();
+      diff = clock() - start;
+//      taskGraphTimer.stop();
 
-      d_sharedState->d_runTimeStats[ SimulationState::CompilationTime ] += taskGraphTimer().seconds();
+      d_sharedState->d_runTimeStats[ SimulationState::CompilationTime ] += (diff / CLOCKS_PER_SEC);
 
-      proc0cout << "Done with taskgraph compile (" << taskGraphTimer().seconds() << " seconds)\n";
+      proc0cout << "Done with taskgraph compile (" << (diff / CLOCKS_PER_SEC) << " seconds)\n";
 
       // No scrubbing for initial step
       d_scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNone);
@@ -1117,13 +1121,17 @@ AMRSimulationController::recompile( int totalFine )
   d_output->finalizeTimestep( d_simTime, d_delt, d_currentGridP, d_scheduler, true );
   d_output->sched_allOutputTasks(        d_delt, d_currentGridP, d_scheduler, true );
   
+  clock_t start = clock();
+  clock_t diff;
   d_scheduler->compile();
+  diff = clock() - start;
 
   taskGraphTimer.stop();
 
-  d_sharedState->d_runTimeStats[ SimulationState::CompilationTime ] += taskGraphTimer().seconds();
+  d_sharedState->d_runTimeStats[ SimulationState::CompilationTime ] += (diff / CLOCKS_PER_SEC);
 
-  proc0cout << "Done with taskgraph re-compile (" << taskGraphTimer().seconds() << " seconds)\n";
+  proc0cout << "Done with taskgraph re-compile (" << (diff / CLOCKS_PER_SEC) << " seconds)\n";
+  proc0cout << "Done with taskgraph re-compile (" << (diff / (CLOCKS_PER_SEC / 1000)) << " milliseconds)\n";
 } // end recompile()
 
 //______________________________________________________________________
