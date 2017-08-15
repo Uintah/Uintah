@@ -18,7 +18,7 @@
     <delt_max>           1.0         </delt_max>
     <delt_init>          1.0e-4      </delt_init>
     <timestep_multiplier>0.8         </timestep_multiplier>
-    <max_Timesteps>       300        </max_Timesteps>
+    <max_Timesteps>       200        </max_Timesteps>
   </Time>
   
   <!--____________________________________________________________________-->
@@ -133,7 +133,7 @@
     <Level>
       <Box label = " Level 0">
         <lower>        [-0.8,-0.8,-0.8]</lower>
-        <upper>        [1.0,1.0,1.0]   </upper>
+        <upper>        [1.2,1.2,1.2]   </upper>
         <extraCells>   [1,1,1]         </extraCells>
         <patches>      [2,2,2]         </patches>
       </Box>
@@ -148,30 +148,27 @@
   <DataArchiver>
     <filebase>Advect_hollowSphere.uda</filebase>
     <outputInitTimestep/>
-    <outputTimestepInterval>5</outputTimestepInterval>
+    <outputTimestepInterval>10</outputTimestepInterval>
     <save label = "mom_L_ME_CC"/>
     <save label = "vel_CC"/>
     <save label = "press_CC"/>
-    <save label = "press_equil_CC"/>
     <save label = "rho_CC"/>
     <save label = "vol_frac_CC"/>
     <save label = "temp_CC"/>
+    <save label = "g.mass"          levels = "-1"/>
     <save label = "p.particleID"    levels = "-1"/>
     <save label = "p.x"             levels = "-1"/>
     <save label = "p.volume"        levels = "-1"/>
     <save label = "p.velocity"      levels = "-1"/>
     <save label = "p.temperature"   levels = "-1"/>
-    <!--
-        <checkpoint cycle = "2" timestepInterval = "100"/>
-    -->
-    <checkpoint cycle = "2" timestepInterval = "30"/>
+    <checkpoint cycle = "1" timestepInterval = "30"/>
   </DataArchiver>
 
   <!--____________________________________________________________________-->
   <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
   <!--____________________________________________________________________-->
   <CFD>
-    <cfl>0.5</cfl>
+    <cfl>0.4</cfl>
     <ICE>
       <advection type = "FirstOrder"/>
     </ICE>        
