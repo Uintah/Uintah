@@ -693,27 +693,31 @@ void Level::setOverlappingPatches()
 //  }
 
   for (unsigned i = 0; i < m_real_patches.size(); i++) {
-    for (unsigned j = 0; j < m_real_patches.size(); j++) {
-
-      const Patch* patch         = m_real_patches[i];
-      const Patch* neighborPatch = m_real_patches[j];
+    const Patch* patch = m_real_patches[i];
+    Box b1 = patch->getExtraBox();
+    IntVector lowEC   = patch->getExtraCellLowIndex();
+    IntVector highEC  = patch->getExtraCellHighIndex();
+    
+    bool includeExtraCells  = true;
+    Patch::selectType neighborPatches;
+    selectPatches(lowEC, highEC, neighborPatches, includeExtraCells);
+    
+    for ( int j = 0; j < neighborPatches.size(); j++) {
+      const Patch* neighborPatch = neighborPatches[j];
       
       if ( patch != neighborPatch){
         
-        Box b1 = patch->getExtraBox();
         Box b2 = neighborPatch->getExtraBox();
 
         //  Are the patches overlapping?
         if ( b1.overlaps(b2) ) {
         
-          IntVector low   = patch->getExtraCellLowIndex();
-          IntVector high  = patch->getExtraCellHighIndex();
-          IntVector nLow  = neighborPatch->getExtraCellLowIndex();
-          IntVector nHigh = neighborPatch->getExtraCellHighIndex();
+          IntVector nLowEC  = neighborPatch->getExtraCellLowIndex();
+          IntVector nHighEC = neighborPatch->getExtraCellHighIndex();
           
           // find intersection of the patches
-          IntVector intersectLow  = Max( low,  nLow );
-          IntVector intersectHigh = Min( high, nHigh );
+          IntVector intersectLow  = Max( lowEC,  nLowEC );
+          IntVector intersectHigh = Min( highEC, nHighEC );
           
           // create overlap
           overlap newOverLap;
