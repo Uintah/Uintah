@@ -131,7 +131,7 @@ void visit_InitLibSim( visit_simulation_data *sim )
 
   sim->useExtraCells = true;
   sim->forceMeshReload = true;
-  sim->nodeCentered = false;
+  sim->mesh_for_patch_data = "";
 
   sim->timeRange = 0;
   sim->timeStart = 0;
