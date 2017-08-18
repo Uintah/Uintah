@@ -115,7 +115,7 @@
         </BCType>
       </Face>
     </BoundaryConditions>
-    <include href="32K_patches.xml"/>
+    <include href="inputs/UCF/32K_patches.xml"/>
     </Grid>    
     <!--____________________________________________________________________-->
     <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
@@ -130,7 +130,7 @@
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->
     <CFD>
-         <cfl>0.5</cfl>
+       <cfl>0.5</cfl>
        <ICE>
         <advection type = "FirstOrder" />
       </ICE>        
