@@ -60,6 +60,7 @@ void visit_SimGetCustomUIData(void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
+  // Clear the strip chart
   VisItUI_setValueS("STRIP_CHART_CLEAR_MENU", "NoOp", 0);
 
   // Set the custom UI time values.
@@ -231,7 +232,7 @@ visit_handle visit_SimGetMetaData(void *cbdata)
 //      int matsize         = stepInfo->varInfo[i].materials.size();
 
         std::string mesh_for_this_var;
-        VisIt_VarCentering cent = VISIT_VARCENTERING_ZONE;
+        VisIt_VarCentering cent;
 
         if (vartype.find("NC") != std::string::npos)
         {
