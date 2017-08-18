@@ -147,7 +147,6 @@
   <!--____________________________________________________________________-->
   <DataArchiver>
     <filebase>Advect_+_amr.uda</filebase>
-    <outputInitTimestep/>
     <outputTimestepInterval>25</outputTimestepInterval>
     <save label = "mom_L_ME_CC"/>
     <save label = "vel_CC"/>

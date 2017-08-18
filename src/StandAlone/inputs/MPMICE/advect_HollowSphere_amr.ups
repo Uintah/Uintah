@@ -147,7 +147,6 @@
   <!--____________________________________________________________________-->
   <DataArchiver>
     <filebase>Advect_hollowSphere.uda</filebase>
-    <outputInitTimestep/>
     <outputTimestepInterval>10</outputTimestepInterval>
     <save label = "mom_L_ME_CC"/>
     <save label = "vel_CC"/>

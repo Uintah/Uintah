@@ -21,7 +21,6 @@
     <timestep_multiplier>0.2</timestep_multiplier>
   </Time>
   <DataArchiver>
-    <outputInitTimestep/>
     <filebase>multibox_RMCRT_coal_2L.uda</filebase>
     <outputTimestepInterval>2</outputTimestepInterval>
     <save label="residence_time"        levels="-1"/> 
