@@ -38,8 +38,9 @@ NIGHTLYTESTS = [
 
 AMRTESTS   = [
                   ("advect_2L_MI",            "advect_2L_MI.ups",            8,  "ALL", ["exactComparison"]),
-                  ("advect_+_amr",            "advect_+_amr.ups",            8,  "ALL", ["exactComparison"]),
-                  ("advect_HollowSphere_amr", "advect_HollowSphere_amr.ups", 8,  "ALL", ["exactComparison", "no_dbg"])
+                  # these tests are non-deterministic
+                  ("advect_+_amr",            "advect_+_amr.ups",            8,  "ALL", []),
+                  ("advect_HollowSphere_amr", "advect_HollowSphere_amr.ups", 8,  "ALL", ["no_dbg"])
              ]
 
 LOCALTESTS = [   ("massX",                    "massX.ups",                 1,  "ALL", ["exactComparison"]),
