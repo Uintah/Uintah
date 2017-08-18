@@ -949,33 +949,6 @@ int GetGlobalDomainNumber(TimeStepInfo* stepInfo,
 
 
 // ****************************************************************************
-//  Method: getBounds
-//
-//  Purpose:
-//   Returns the bounds for the given patch of the specified mesh 
-//   based on periodicity and type.
-//
-//  Node centered data uses the same mesh as cell centered, 
-//  but face centered meshes need an extra value for one axis,
-//  unless they are periodic on that axis.
-//
-//  use patch_id=-1 to query all patches.
-//
-// ****************************************************************************
-void getBounds(int low[3], int high[3],
-               const std::string meshName,
-               const LevelInfo &levelInfo,
-               int patch_id)
-{
-  levelInfo.getBounds(low, high, meshName, patch_id);
-  
-  // debug5 << "getBounds(" << meshName << ",id=" << patch_id << ")=["
-  //     << low[0] << "," << low[1] << "," << low[2] << "] to ["
-  //     << high[0] << "," << high[1] << "," << high[2] << "]" << std::endl;
-}
-
-
-// ****************************************************************************
 //  Method: CheckNaNs
 //
 //  Purpose:
