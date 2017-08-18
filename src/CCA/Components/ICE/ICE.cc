@@ -609,6 +609,53 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
     d_sharedState->d_debugStreams.push_back( &cout_doing );
     d_sharedState->d_debugStreams.push_back( &ds_EqPress );
 
+#define IGNORE_LEVEL -2
+    
+    SimulationState::analysisVar aVar;
+    aVar.matl  = -1; // Ignore the material
+    aVar.level = IGNORE_LEVEL;
+    
+    if (d_conservationTest->mass )
+    {
+      aVar.name = lb->TotalMassLabel->getName();
+      aVar.labels.clear();
+      aVar.labels.push_back( lb->TotalMassLabel );      
+      d_sharedState->d_analysisVars.push_back(aVar);
+    }
+
+    if ( d_conservationTest->momentum ) {
+      aVar.name = lb->TotalMomentumLabel->getName();
+      aVar.labels.clear();
+      aVar.labels.push_back( lb->TotalMomentumLabel );
+      d_sharedState->d_analysisVars.push_back(aVar);
+    }
+
+    if (d_conservationTest->energy )
+    {
+      aVar.name = lb->TotalIntEngLabel->getName();
+      aVar.labels.clear();
+      aVar.labels.push_back( lb->TotalIntEngLabel );      
+      d_sharedState->d_analysisVars.push_back(aVar);
+
+      aVar.name = lb->KineticEnergyLabel->getName();
+      aVar.labels.clear();
+      aVar.labels.push_back( lb->KineticEnergyLabel );
+      d_sharedState->d_analysisVars.push_back(aVar);
+    }
+
+    if (d_conservationTest->exchange )
+    {
+      aVar.name = lb->mom_exch_errorLabel->getName();
+      aVar.labels.clear();
+      aVar.labels.push_back( lb->mom_exch_errorLabel );
+      d_sharedState->d_analysisVars.push_back(aVar);
+
+      aVar.name = lb->eng_exch_errorLabel->getName();
+      aVar.labels.clear();
+      aVar.labels.push_back( lb->eng_exch_errorLabel );
+      d_sharedState->d_analysisVars.push_back(aVar);
+    }
+    
     initialized = true;
   }
 #endif
