@@ -34,7 +34,7 @@ CommonIFConcDiff::CommonIFConcDiff(ProblemSpecP& ps, SimulationStateP& sS,
                                    MPMFlags* mpm_flags, MPMLabel* mpm_lb)
                  : SDInterfaceModel(ps, sS, mpm_flags, mpm_lb)
 {
-  ps->get("materials", d_materials_list);
+//  ps->get("materials", d_materials_list);
 }
 
 CommonIFConcDiff::~CommonIFConcDiff()
@@ -93,11 +93,17 @@ void CommonIFConcDiff::sdInterfaceInterpolated(const ProcessorGroup *,
 
       double g_conc = g_sum_concmass / g_sum_mass;
 
-      for(unsigned int m = 0; m < d_materials_list.size(); m++)
+
+//      for(unsigned int m = 0; m < d_materials_list.size(); m++)
+      for (int m = 0; m < num_matls; ++m)
       {
-        int mat_idx = d_materials_list[m];
-        if(mat_idx >= 0 && mat_idx < num_matls)
-          gconcentration[mat_idx][c] = g_conc;
+        if (d_materials_list.requested(m))
+        {
+          gconcentration[m][c] = g_conc;
+        }
+//        int mat_idx = d_materials_list[m];
+//        if(mat_idx >= 0 && mat_idx < num_matls)
+////          gconcentration[mat_idx][c] = g_conc;
       }
     }
   }
@@ -161,5 +167,5 @@ void CommonIFConcDiff::outputProblemSpec(ProblemSpecP& ps)
   ProblemSpecP sdim_ps = ps;
   sdim_ps = ps->appendChild("diffusion_interface");
   sdim_ps->appendElement("type","common");
-  sdim_ps->appendElement("materials", d_materials_list);
+  d_materials_list.outputProblemSpec(sdim_ps);
 }

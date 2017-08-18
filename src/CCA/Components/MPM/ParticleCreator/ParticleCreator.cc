@@ -399,13 +399,15 @@ ParticleCreator::createParticles(MPMMaterial* matl,
         if (checkForSurface(piece,*itr,dxpp)) {
           Vector areacomps;
           pvars.pLoadCurveID[pidx] = getLoadCurveID(*itr, dxpp,areacomps);
-          pvars.parea[pidx]=Vector(pvars.parea[pidx].x()*areacomps.x(),
-                                   pvars.parea[pidx].y()*areacomps.y(),
-                                   pvars.parea[pidx].z()*areacomps.z());
+          if (d_doScalarDiffusion) {
+            pvars.parea[pidx]=Vector(pvars.parea[pidx].x()*areacomps.x(),
+                                     pvars.parea[pidx].y()*areacomps.y(),
+                                     pvars.parea[pidx].z()*areacomps.z());
+          }
         } else {
           pvars.pLoadCurveID[pidx] = 0;
         }
-        if(pvars.pLoadCurveID[pidx]==0){
+        if(pvars.pLoadCurveID[pidx]==0 && d_doScalarDiffusion) {
           pvars.parea[pidx]=Vector(0.);
         }
       }
@@ -527,7 +529,6 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
   new_dw->allocateAndPut(pvars.ptemperature,  d_lb->pTemperatureLabel,  subset);
   new_dw->allocateAndPut(pvars.pparticleID,   d_lb->pParticleIDLabel,   subset);
   new_dw->allocateAndPut(pvars.psize,         d_lb->pSizeLabel,         subset);
-  new_dw->allocateAndPut(pvars.parea,         d_lb->pAreaLabel,         subset);
   new_dw->allocateAndPut(pvars.plocalized,    d_lb->pLocalizedMPMLabel, subset);
   new_dw->allocateAndPut(pvars.prefined,      d_lb->pRefinedLabel,      subset);
   new_dw->allocateAndPut(pvars.pfiberdir,     d_lb->pFiberDirLabel,     subset);
@@ -545,6 +546,8 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
      new_dw->allocateAndPut(pvars.pcolor,     d_lb->pColorLabel,        subset);
   }
   if(d_doScalarDiffusion){
+     new_dw->allocateAndPut(pvars.parea,  d_lb->diffusion->pArea,         subset);
+
      new_dw->allocateAndPut(pvars.pConcentration,
                                           d_lb->diffusion->pConcentration,  subset);
      new_dw->allocateAndPut(pvars.pConcPrevious,
@@ -749,8 +752,10 @@ ParticleCreator::initializeParticle(const Patch* patch,
     }
 
     pvars.psize[i]      = size;  // Normalized by grid spacing
-    pvars.parea[i]      = area;
-   
+
+    if (d_doScalarDiffusion) {
+      pvars.parea[i]      = area;
+    }
     pvars.pvelocity[i]  = (*obj)->getInitialData_Vector("velocity");
     if(d_flags->d_integrator_type=="explicit"){
       pvars.pvelGrad[i]  = Matrix3(0.0);
@@ -1012,6 +1017,8 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
     particle_state.push_back(d_lb->diffusion->pExternalScalarFlux);
     particle_state_preReloc.push_back(d_lb->diffusion->pExternalScalarFlux_preReloc);
 
+    particle_state.push_back(d_lb->diffusion->pArea);
+    particle_state_preReloc.push_back(d_lb->diffusion->pArea_preReloc);
 
     matl->getScalarDiffusionModel()->addParticleState(particle_state,
                                                       particle_state_preReloc);
@@ -1075,11 +1082,6 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
     particle_state.push_back(d_lb->pLastLevelLabel);
     particle_state_preReloc.push_back(d_lb->pLastLevelLabel_preReloc);
 
-    if (d_flags->d_doScalarDiffusion) {
-      // JBH - TODO - FIXME -- FOld into diffusion sublabel?
-      particle_state.push_back(d_lb->pAreaLabel);
-      particle_state_preReloc.push_back(d_lb->pAreaLabel_preReloc);
-    }
   }
 
   if (d_computeScaleFactor) {

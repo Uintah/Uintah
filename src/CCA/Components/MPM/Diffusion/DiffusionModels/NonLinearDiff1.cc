@@ -297,7 +297,7 @@ void NonLinearDiff1::initializeSDMData(const Patch* patch, const MPMMaterial* ma
 
   for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++)
   {
-    pDiffusivity[*iter] = diffusivity;
+    pDiffusivity[*iter] = d_D0;
     pPressure[*iter]    = 0.0;
     pConcInterp[*iter]  = 0.0;
     pFlux[*iter]        = Vector(0,0,0);
@@ -426,9 +426,8 @@ void NonLinearDiff1::outputProblemSpec(
     rdm_ps = ps->appendChild("diffusion_model");
     rdm_ps->setAttribute("type","non_linear1");
   }
+  ScalarDiffusionModel::baseOutputSDMProbSpec(rdm_ps);
 
-  rdm_ps->appendElement("diffusivity",diffusivity);
-  rdm_ps->appendElement("max_concentration",max_concentration);
   rdm_ps->appendElement("use_pressure", d_use_pressure);
   rdm_ps->appendElement("tuning1", d_tuning1);
   rdm_ps->appendElement("tuning2", d_tuning2);

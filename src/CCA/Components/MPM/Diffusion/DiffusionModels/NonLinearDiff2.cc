@@ -85,7 +85,7 @@ void NonLinearDiff2::initializeSDMData(
 
   for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++)
   {
-    pDiffusivity[*iter] = diffusivity;
+    pDiffusivity[*iter] = d_D0;
     pPosFlux[*iter]     = Vector(0,0,0);
     pNegFlux[*iter]     = Vector(0,0,0);
   }
@@ -162,7 +162,7 @@ void NonLinearDiff2::computeFlux(
   new_dw->allocateAndPut(pNegFlux,     d_lb->pNegChargeFluxLabel_preReloc, pset);
   new_dw->allocateAndPut(pDiffusivity, d_lb->diffusion->pDiffusivity_preReloc,   pset);
 
-  double D = diffusivity;
+  double D = d_D0;
   double timestep = 1.0e99;
   d_alpha = (D * d_unit_charge)/(d_boltz_const * d_operating_temp);
 
@@ -366,9 +366,7 @@ void NonLinearDiff2::outputProblemSpec(
     rdm_ps = ps->appendChild("diffusion_model");
     rdm_ps->setAttribute("type","non_linear2");
   }
-
-  rdm_ps->appendElement("diffusivity", diffusivity);
-  rdm_ps->appendElement("max_concentration",max_concentration);
+  ScalarDiffusionModel::baseOutputSDMProbSpec(rdm_ps);
   rdm_ps->appendElement("boltzmann_const", d_boltz_const);
   rdm_ps->appendElement("unit_charge", d_unit_charge);
   rdm_ps->appendElement("operating_temp", d_operating_temp);

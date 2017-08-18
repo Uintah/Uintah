@@ -475,7 +475,6 @@ void AMRMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
   t->computes(lb->pVelGradLabel);
   t->computes(lb->pTemperatureGradientLabel);
   t->computes(lb->pSizeLabel);
-  t->computes(lb->pAreaLabel);
   t->computes(lb->pRefinedLabel);
   t->computes(lb->pLastLevelLabel);
   t->computes(d_sharedState->get_delt_label(),level.get_rep());
@@ -506,6 +505,7 @@ void AMRMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
   }
 
   if (flags->d_doScalarDiffusion){
+    t->computes(lb->diffusion->pArea);
     t->computes(lb->diffusion->pConcentration);
     t->computes(lb->diffusion->pConcPrevious);
     t->computes(lb->diffusion->pGradConcentration);
@@ -1287,11 +1287,9 @@ void AMRMPM::scheduleComputeLAndF(SchedulerP& sched,
 
   if(flags->d_doScalarDiffusion){
     t->requires(Task::NewDW, lb->diffusion->gConcentrationStar,       d_gac,NGN);
-    // JBH -- FIXME -- TODO -- Add to MPMDiffusion sublabel?
-    t->requires(Task::OldDW, lb->pAreaLabel,                    d_gn);
+    t->requires(Task::OldDW, lb->diffusion->pArea,                    d_gn);
     t->computes(lb->diffusion->pGradConcentration_preReloc);
-    // JBH -- FIXME -- TODO -- Add to MPMDiffusion sublabel?
-    t->computes(lb->pAreaLabel_preReloc);
+    t->computes(lb->diffusion->pArea_preReloc);
   }
 
   if(flags->d_withGaussSolver){
@@ -1477,7 +1475,7 @@ void AMRMPM::scheduleAddParticles(SchedulerP& sched,
       t->modifies(lb->diffusion->pGradConcentration_preReloc);
       t->modifies(lb->diffusion->pExternalScalarFlux_preReloc);
       // JBH -- FIXME -- TODO -- Add to MPMDiffusion sublabel?
-      t->modifies(lb->pAreaLabel_preReloc);
+      t->modifies(lb->diffusion->pArea_preReloc);
       t->modifies(lb->diffusion->pDiffusivity_preReloc);
     }
     if (flags->d_useLoadCurves) {
@@ -1565,8 +1563,7 @@ void AMRMPM::scheduleRefine(const PatchSet* patches, SchedulerP& sched)
     t->computes(lb->diffusion->pConcentration);
     t->computes(lb->diffusion->pConcPrevious);
     t->computes(lb->diffusion->pGradConcentration);
-    // JBH -- Fixme -- todo -- Add to MPMDiffusion sublabel?
-    t->computes(lb->pAreaLabel);
+    t->computes(lb->diffusion->pArea);
   }
   t->computes(lb->pLastLevelLabel);
   t->computes(lb->pLocalizedMPMLabel);
@@ -3653,12 +3650,11 @@ void AMRMPM::computeLAndF(const ProcessorGroup*,
       new_dw->get(gvelocity_star,  lb->gVelocityStarLabel, dwi,patch,d_gac,NGP);
 
       if(flags->d_doScalarDiffusion){
-        // JBH -- Fixme -- Todo -- Add to MPMDiffusion sublabel?
-        old_dw->get(parea,        lb->pAreaLabel,                      pset);
+        old_dw->get(parea,        lb->diffusion->pArea,                      pset);
         new_dw->get(gConcStar,    lb->diffusion->gConcentrationStar, dwi,
                                                              patch, d_gac, NGP);
-        // JBH -- Fixme -- Todo -- Add to MPMDiffusion sublabel?
-        new_dw->allocateAndPut(pareanew,    lb->pAreaLabel_preReloc,      pset);
+
+        new_dw->allocateAndPut(pareanew,    lb->diffusion->pArea_preReloc,      pset);
         new_dw->allocateAndPut(pConcGradNew,lb->diffusion->pGradConcentration_preReloc,
                                                                           pset);
       }
@@ -4200,8 +4196,7 @@ void AMRMPM::addParticles(const ProcessorGroup*,
         new_dw->getModifiable(pconcpre, lb->diffusion->pConcPrevious_preReloc, pset);
         new_dw->getModifiable(pconcgrad,lb->diffusion->pGradConcentration_preReloc, pset);
         new_dw->getModifiable(pESF,     lb->diffusion->pExternalScalarFlux_preReloc, pset);
-        // JBH -- TODO -- FIXME -- Add to MPMDiffusion sublabel?
-        new_dw->getModifiable(pArea,    lb->pAreaLabel_preReloc,         pset);
+        new_dw->getModifiable(pArea,    lb->diffusion->pArea_preReloc,         pset);
         new_dw->getModifiable(pD,       lb->diffusion->pDiffusivity_preReloc,  pset);
       }
       if (flags->d_useLoadCurves) {
@@ -4665,8 +4660,7 @@ void AMRMPM::addParticles(const ProcessorGroup*,
         new_dw->put(pconcpretmp,  lb->diffusion->pConcPrevious_preReloc,   true);
         new_dw->put(pconcgradtmp, lb->diffusion->pGradConcentration_preReloc,   true);
         new_dw->put(pESFtmp,      lb->diffusion->pExternalScalarFlux_preReloc, true);
-        // JBH -- FIXME -- TODO -- Add to MPMDiffusion Sublabel?
-        new_dw->put(pareatmp,     lb->pAreaLabel_preReloc,           true);
+        new_dw->put(pareatmp,     lb->diffusion->pArea_preReloc,           true);
         new_dw->put(pDtmp,        lb->diffusion->pDiffusivity_preReloc,    true);
       }
       if (flags->d_useLoadCurves) {
@@ -4952,8 +4946,7 @@ void AMRMPM::refineGrid(const ProcessorGroup*,
           new_dw->allocateAndPut(pConc,        lb->diffusion->pConcentration, pset);
           new_dw->allocateAndPut(pConcPrev,    lb->diffusion->pConcPrevious,  pset);
           new_dw->allocateAndPut(pConcGrad,    lb->diffusion->pGradConcentration,  pset);
-          // JBH -- FIXME -- TODO -- Add to MPMDiffusion sublabel?
-          new_dw->allocateAndPut(parea,        lb->pAreaLabel,          pset);
+          new_dw->allocateAndPut(parea,        lb->diffusion->pArea,          pset);
         }
         new_dw->allocateAndPut(psize,          lb->pSizeLabel,          pset);
 

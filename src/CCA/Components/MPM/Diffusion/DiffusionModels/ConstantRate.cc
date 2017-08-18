@@ -229,8 +229,7 @@ void ConstantRate::outputProblemSpec(
     rdm_ps = ps->appendChild("diffusion_model");
     rdm_ps->setAttribute("type","constant_rate");
   }
-  rdm_ps->appendElement("diffusivity",diffusivity);
-  rdm_ps->appendElement("max_concentration",max_concentration);
+  ScalarDiffusionModel::baseOutputSDMProbSpec(rdm_ps);
   rdm_ps->appendElement("constant_rate", d_constant_rate);
 }
 

@@ -61,7 +61,6 @@ namespace Uintah {
 
   protected:
 
-    std::vector<int> d_materials_list;
     CommonIFConcDiff(const CommonIFConcDiff&);
     CommonIFConcDiff& operator=(const CommonIFConcDiff&);
     
