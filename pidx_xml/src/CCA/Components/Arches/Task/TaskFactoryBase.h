@@ -5,10 +5,13 @@
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 #include <CCA/Components/Arches/Task/AtomicTaskInterface.h>
 #include <CCA/Components/Arches/WBCHelper.h>
+#include <Core/Util/DebugStream.h>
 #include <string>
 #include <iomanip>
 
 namespace Uintah{
+
+  static DebugStream cout_archestaskdebug("ArchesTaskDBG",false);
 
   class ArchesParticlesHelper;
   class ArchesFieldContainer;

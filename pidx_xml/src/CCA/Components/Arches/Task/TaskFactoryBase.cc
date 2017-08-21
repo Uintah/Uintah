@@ -2,11 +2,7 @@
 #include <CCA/Components/Arches/ArchesParticlesHelper.h>
 #include <CCA/Components/Arches/Task/FieldContainer.h>
 
-#include <Core/Util/DebugStream.h>
-
 using namespace Uintah;
-
-static DebugStream cout_archestaskdebug( "ArchesTaskDBG", true );
 
 //--------------------------------------------------------------------------------------------------
 TaskFactoryBase::TaskFactoryBase()
