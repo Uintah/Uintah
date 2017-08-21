@@ -861,9 +861,12 @@ DataArchive::queryPIDX(       BufferAndSizeTuple * data,
     //         << " arrySz " << arraySize << "\n";
     //  }
 
-  patchOffset[0] = patchOffset[0] - lo.x() - 1; // FIXME... is the -1 right?  how to get the extra cell info? Do we need use the -1?
-  patchOffset[1] = patchOffset[1] - lo.y() - 1;
-  patchOffset[2] = patchOffset[2] - lo.z() - 1;
+
+  IntVector extra_cells = patch->getExtraCells();
+
+  patchOffset[0] = patchOffset[0] - lo.x() - extra_cells[0];
+  patchOffset[1] = patchOffset[1] - lo.y() - extra_cells[1];
+  patchOffset[2] = patchOffset[2] - lo.z() - extra_cells[2];
 
   cout << Uintah::Parallel::getMPIRank() << ": level: " << level->getIndex() << ", patchoffset: " << patchOffset[0] << ", " << patchOffset[1] << ", " << patchOffset[2]
        << ", patchsize: " << patchSize[0] << ", " << patchSize[1] << ", " << patchSize[2] << "\n";

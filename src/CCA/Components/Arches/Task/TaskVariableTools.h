@@ -70,7 +70,6 @@ namespace Uintah{
         /** @brief Return a CONST UINTAH field **/
         template <typename T>
         inline T* get_const_uintah_field( const std::string name ){
-          // T * emptyPointer = nullptr;
           return _field_container->get_const_field<T>(name);
         }
 

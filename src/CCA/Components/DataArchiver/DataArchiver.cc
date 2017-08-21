@@ -2862,6 +2862,8 @@ DataArchiver::saveLabels_PIDX( std::vector< SaveItem >     & saveLabels,
                                const std::string           & dirName,     // CCVars, SFC*Vars
                                ProblemSpecP                & doc )
 {
+  cout << Uintah::Parallel::getMPIRank() << ": " << std::this_thread::get_id() << ": calling saveLabels_PIDX()\n";
+
   size_t totalBytesSaved = 0;
 #if HAVE_PIDX
   const Level * level   = getLevel( patches );
@@ -2923,7 +2925,7 @@ DataArchiver::saveLabels_PIDX( std::vector< SaveItem >     & saveLabels,
   // define the level extents for this variable type
   IntVector lo;
   IntVector hi;
-  level->computeVariableExtents( TD,lo, hi );
+  level->computeVariableExtents( TD, lo, hi );
   
   PIDX_point level_size;
   pidx.setLevelExtents( "DataArchiver::saveLabels_PIDX",  lo, hi, level_size );
@@ -3109,14 +3111,19 @@ DataArchiver::saveLabels_PIDX( std::vector< SaveItem >     & saveLabels,
                                    patch_buffer[vcm][p],                          
                                    arraySize );
           }         
-         
-          patchOffset[0] = patchOffset[0] - lo.x() - 1;
-          patchOffset[1] = patchOffset[1] - lo.y() - 1;
-          patchOffset[2] = patchOffset[2] - lo.z() - 1;
+
+          IntVector extra_cells = patch->getExtraCells();
+
+          patchOffset[0] = patchOffset[0] - lo.x() - extra_cells[0];
+          patchOffset[1] = patchOffset[1] - lo.y() - extra_cells[1];
+          patchOffset[2] = patchOffset[2] - lo.z() - extra_cells[2];
 
           cout << Uintah::Parallel::getMPIRank() << ": level: " << level->getIndex() << ", patchoffset: " << patchOffset[0] << ", " << patchOffset[1] << ", " << patchOffset[2]
                << ", patchsize: " << patchSize[0] << ", " << patchSize[1] << ", " << patchSize[2] << ", patch #: " << patch->getID()
                << ", level size: " << level_size[0] << " - " << level_size[1] << " - " << level_size[2] << "\n";
+
+          cout << Uintah::Parallel::getMPIRank() << ": lo: " << lo.x() << ", " << lo.y() << ", " << lo.z() << ", extracells: "
+               << extra_cells[0] << ", " << extra_cells[1] << ", " << extra_cells[2] << "\n";
 
           rc = PIDX_variable_write_data_layout(pidx.varDesc[vc][m],
                                                patchOffset, patchSize,
