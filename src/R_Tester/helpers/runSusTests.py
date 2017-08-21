@@ -43,11 +43,15 @@ def nullCallback (test, susdir, inputsdir, compare_root, dbg_opt, max_parallelis
     pass
 #__________________________________    
 # function used for checking the input files
-def isValid_inputFile(inputxml):
+# Ignore tests that start from a pre-computed checkpoint
+def isValid_inputFile( inputxml, startFrom ):
   from xml.etree.ElementTree import ElementTree
+  
+  if startFrom == "checkpoint":
+    return True
+
   ET     = ElementTree()
   uintah = ET.parse(inputxml)
-  
   #  <outputInitTimestep/> is not allowed.  The index.xml != restart index.xml
   da     = uintah.find('DataArchiver')
   test   = da.find('outputInitTimestep')
@@ -425,7 +429,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     
     #________________________________
     # is the input file valid
-    if isValid_inputFile( inputxml ) == False:
+    if isValid_inputFile( inputxml, startFrom ) == False:
       print ("    Now skipping test %s " % testname)
       continue
         
