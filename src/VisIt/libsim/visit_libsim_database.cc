@@ -1563,15 +1563,18 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
 
       gd->data = new double[gd->num * gd->components];
 
+      // Strip off the "processor/runtime/" or "processor/mpi/" prefix
+      if( varName == "processor" )
+      {
+        varName = std::string(varname);
+        found = varName.find_last_of("/");
+        varName = varName.substr(found + 1);
+      }
+      
       // Simulation State Runtime stats
       if( strncmp( varname, "processor/runtime/", 18 ) == 0 &&
           simStateP->d_runTimeStats.exists(varName) )
       {
-        // Strip off the "processor/runtime/" prefix
-        varName = std::string(varname);
-        found = varName.find_last_of("/");
-        varName = varName.substr(found + 1);
-
         double val = simStateP->d_runTimeStats.getValue( varName );
 
         for (int i=0; i<gd->num*gd->components; ++i)
@@ -1582,11 +1585,6 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       else if( strncmp( varname, "processor/mpi/", 14 ) == 0 &&
                mpiScheduler && mpiScheduler->mpi_info_.exists(varName) )
       {
-        // Strip off the "processor/mpi/" prefix
-        varName = std::string(varname);
-        found = varName.find_last_of("/");
-        varName = varName.substr(found + 1);
-
         double val = mpiScheduler->mpi_info_.getValue( varName );
 
         for (int i=0; i<gd->num*gd->components; ++i)
@@ -1628,7 +1626,8 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
         }
       }
       // Patch bounds
-      else
+      else if( strncmp(varname, "patch/bounds/low",  16) == 0 ||
+               strncmp(varname, "patch/bounds/high", 17) == 0 )
       {
         // Get the bounds for this mesh as a variable (not for the grid).
         std::string meshname = std::string(varname);
@@ -1647,6 +1646,19 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
         for (int i=0; i<gd->num; i++)
           for (int c=0; c<3; c++)
             gd->data[i*gd->components+c] = value[c];
+      }
+      // This should never be reached.
+      else
+      {
+        std::stringstream msg;
+        msg << "Visit libsim - "
+            << "Uintah variable \"" << varname << "\"  "
+            << "could not be processed.";
+            
+        VisItUI_setValueS("SIMULATION_MESSAGE_WARNING", msg.str().c_str(), 1);
+
+        for (int i=0; i<gd->num*gd->components; ++i)
+          gd->data[i] = 0;
       }
     }
     // Patch data from the warehouse
