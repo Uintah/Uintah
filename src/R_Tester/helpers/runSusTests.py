@@ -42,22 +42,37 @@ def userFlags (test):
 def nullCallback (test, susdir, inputsdir, compare_root, dbg_opt, max_parallelism):
     pass
 #__________________________________    
-# function used for checking the input files
-# Ignore tests that start from a pre-computed checkpoint
-def isValid_inputFile( inputxml, startFrom ):
+# Function used for checking the input files
+# skip tests that contain 
+#    <outputInitTimestep/> AND  outputTimestepInterval > 1
+def isValid_inputFile( inputxml, startFrom, do_restart ):
   from xml.etree.ElementTree import ElementTree
   
-  if startFrom == "checkpoint":
+  # these options are OK
+  if startFrom == "checkpoint" or do_restart == 0:
     return True
 
+  # load index.xml into tree
   ET     = ElementTree()
   uintah = ET.parse(inputxml)
-  #  <outputInitTimestep/> is not allowed.  The index.xml != restart index.xml
-  da     = uintah.find('DataArchiver')
-  test   = da.find('outputInitTimestep')
   
-  if (test != None):
-    print '     isValid_inputFile %s'%inputxml
+  #  Note <outputInitTimestep/> + outputTimestepInterval > 1 the uda/index.xml != restartUda/index.xml
+  #             ( initTS )              ( intrvl )
+  da     = uintah.find( 'DataArchiver' ) 
+  
+  # find the timestepInterval
+  intrvl = da.find( 'outputTimestepInterval' )
+  
+  if intrvl is None:
+    intrvl = int(-9)
+  else:
+    intrvl = int( intrvl.text )
+  
+  # was outputInitTimestep set?
+  initTS = da.find( 'outputInitTimestep' )
+   
+  if ( initTS != None and intrvl > 1 ):
+    print '     isValid_inputFile %s'% inputxml
     print( "    *** ERROR: The xml file is not valid, (DataArchiver:outputInitTimestep) is not allowed in regression testing.")
     return False
   else:
@@ -429,7 +444,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     
     #________________________________
     # is the input file valid
-    if isValid_inputFile( inputxml, startFrom ) == False:
+    if isValid_inputFile( inputxml, startFrom, do_restart ) == False:
       print ("    Now skipping test %s " % testname)
       continue
         
