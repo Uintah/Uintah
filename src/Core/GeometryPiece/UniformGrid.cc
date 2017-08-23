@@ -246,10 +246,10 @@ void UniformGrid::countIntersections(const Point& pt, int& crossings)
   for (int i = start.x(); i < stop.x(); i++) {
     IntVector curr(i,test_pt_id.y(),test_pt_id.z());
     list<Tri> tris = d_grid[curr];
-    for (list<Tri>::iterator itr = tris.begin(); itr != tris.end();
-	 ++itr) {
+    for (list<Tri>::iterator itr = tris.begin(); itr != tris.end(); ++itr) {
       FloatPoint fhit;
       Point hit;
+
       if ((itr->plane()).Intersect(fpt,infinity,fhit)) {
         hit=Point(fhit.x(), fhit.y(), fhit.z());
 	FloatVector int_ray = fhit.asVector() - fpt.asVector();
