@@ -1398,6 +1398,16 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
           nf_ = 0;
         }
 
+        // bulletproofing: catch patches > resolution 
+        for (int d=0; d<3; d++) {
+          if ( patches[d] > resolution[d] ){
+            ostringstream desc;
+            desc << "   ERROR: The number of patches in direction (" << d << ") is greater than the number of cells."
+                 << " (patches: " << patches << ", cells: " << resolution << ")";
+            throw InvalidGrid(desc.str(),__FILE__,__LINE__);
+          }
+        }
+
         // If the value of the norm nf_ is too high, then user chose a 
         // bad number of processors, warn them.
         if( nf_ > 3 ) {
