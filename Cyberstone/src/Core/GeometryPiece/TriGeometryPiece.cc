@@ -204,9 +204,10 @@ TriGeometryPiece::readPoints(const string& file)
     min = Min(*itr,min);
     max = Max(*itr,max);
   }
+  float pi_2 = asin(1.0);
   FloatVector fudge(1.e-5,1.e-5,1.e-5);
-  min = min - fudge;
-  max = max + fudge;
+  min = min - pi_2*fudge;
+  max = max + pi_2*fudge;
   d_box =Box(Point(min.x(), min.y(), min.z()),Point(max.x(), max.y(), max.z()));
 }
 
