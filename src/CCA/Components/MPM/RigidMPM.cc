@@ -123,7 +123,7 @@ void RigidMPM::scheduleComputeInternalForce(SchedulerP& sched,
                            getLevel(patches)->getGrid()->numLevels()))
     return;
 
-  Task* t = scinew Task("MPM::computeInternalForce",
+  Task* t = scinew Task("RigidMPM::computeInternalForce",
                     this, &RigidMPM::computeInternalForce);
 
   // require pStress so it will be saved in a checkpoint, 
@@ -158,9 +158,9 @@ void RigidMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
                            getLevel(patches)->getGrid()->numLevels()))
     return;
 
-  printSchedule(patches,cout_doing,"MPM::scheduleComputeAndIntegrateAcceleration");
+  printSchedule(patches,cout_doing,"RigidMPM::scheduleComputeAndIntegrateAcceleration");
 
-  Task* t = scinew Task("MPM::computeAndIntegrateAcceleration",
+  Task* t = scinew Task("RigidMPM::computeAndIntegrateAcceleration",
                         this, &RigidMPM::computeAndIntegrateAcceleration);
 
   t->requires(Task::OldDW, d_sharedState->get_delt_label() );
@@ -217,7 +217,7 @@ void RigidMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
                            getLevel(patches)->getGrid()->numLevels()))
     return;
 
-  Task* t=scinew Task("MPM::interpolateToParticlesAndUpdate",
+  Task* t=scinew Task("RigidMPM::interpolateToParticlesAndUpdate",
                       this, &RigidMPM::interpolateToParticlesAndUpdate);
 
   t->requires(Task::OldDW, d_sharedState->get_delt_label() );
