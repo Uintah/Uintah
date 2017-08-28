@@ -328,6 +328,9 @@ namespace Uintah{ namespace ArchesCore{
     std::string vvel_name = "ucell_yvel";
     std::string wvel_name = "ucell_zvel";
     std::string mu_name;
+    std::string sigmax_name = "sigma11";
+    std::string sigmay_name = "sigma12";
+    std::string sigmaz_name = "sigma13";
   };
   template <>
   struct GridVarMap<SFCYVariable<double> >{
@@ -339,6 +342,9 @@ namespace Uintah{ namespace ArchesCore{
     std::string vvel_name = "vcell_yvel";
     std::string wvel_name = "vcell_zvel";
     std::string mu_name;
+    std::string sigmax_name = "sigma12";
+    std::string sigmay_name = "sigma22";
+    std::string sigmaz_name = "sigma23";
   };
   template <>
   struct GridVarMap<SFCZVariable<double> >{
@@ -350,6 +356,9 @@ namespace Uintah{ namespace ArchesCore{
     std::string vvel_name = "wcell_yvel";
     std::string wvel_name = "wcell_zvel";
     std::string mu_name;
+    std::string sigmax_name = "sigma13";
+    std::string sigmay_name = "sigma23";
+    std::string sigmaz_name = "sigma33";
   };
 
   /// @brief Returns a weight for interpolation

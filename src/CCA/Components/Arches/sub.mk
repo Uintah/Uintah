@@ -225,6 +225,7 @@ SUBDIRS := $(SRCDIR)/ChemMix             \
            $(SRCDIR)/Radiation           \
            $(SRCDIR)/Radiation/fortran   \
            $(SRCDIR)/SourceTerms         \
+           $(SRCDIR)/SourceTermsV2       \
            $(SRCDIR)/Task                \
            $(SRCDIR)/Transport           \
 					 $(SRCDIR)/TurbulenceModels    \

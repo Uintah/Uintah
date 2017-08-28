@@ -40,7 +40,8 @@
 #include <CCA/Ports/Output.h>
 
 #define ALL_LEVELS 99
-#define FINEST_LEVEL -1 
+#define FINEST_LEVEL -1
+#define IGNORE_LEVEL -2
 
 static Uintah::DebugStream visitdbg( "VisItLibSim", true );
 
@@ -271,153 +272,174 @@ void visit_SetAnalysisVars( visit_simulation_data *sim )
       for (int l=0; l<numLevels; ++l)
       {
 	// Get the correct level.
-	if( (analysisVar.level == ALL_LEVELS) ||
-	    (analysisVar.level == FINEST_LEVEL &&
-	     analysisVar.level == numLevels - 1) ||
+	if( (analysisVar.level == IGNORE_LEVEL && l == 0) ||
+	    (analysisVar.level == ALL_LEVELS) ||
+	    (analysisVar.level == FINEST_LEVEL && l == numLevels - 1) ||
 	    (analysisVar.level == l) )
 	{
           LevelP levelP = gridP->getLevel(l);
           Level *level = levelP.get_rep();
 
+	  std::stringstream stripChartName;
+	  stripChartName << "Analysis/" << analysisVar.name;
+
 	  // Set the variable name, material, and level.
           VisItUI_setTableValueS(table, row, 0, analysisVar.name.c_str(), 0);
-          VisItUI_setTableValueI(table, row, 1, analysisVar.matl, 0);
-	  VisItUI_setTableValueI(table, row, 2, l, 0);
 
+	  if( analysisVar.matl < 0 )
+	  {
+	    VisItUI_setTableValueS(table, row, 1, "NA", 0);
+	  }
+	  else
+	  {
+	    VisItUI_setTableValueI(table, row, 1, analysisVar.matl, 0);
+	    stripChartName << "/" << analysisVar.matl;
+	  }
+
+	  if( analysisVar.level < 0)
+	  {
+	    VisItUI_setTableValueS(table, row, 2, "NA", 0);
+	  }
+	  else
+	  {
+	    VisItUI_setTableValueI(table, row, 2, l, 0);
+	    stripChartName << "/l" << l;
+	  }
+	  
 	  // Loop through all of the variables.
 	  for( unsigned int j=0; j<analysisVar.labels.size(); ++j )
 	  {
 	    const VarLabel* label = analysisVar.labels[j];
-
+	    
 	    // Work on reduction variables only (for now).
 	    if( label->typeDescription()->isReductionVariable() )
 	    {
 	      // Get the reduction type.
-
-	      // ARS - FIXME the material is -1 which is a flag for
-	      // all materials but the variable was for a particular
-	      // materiai.
-	      ReductionVariableBase* var =
-		dw->getReductionVariable( label, -1, level );
-
-	      int sendcount;
-	      MPI_Datatype senddatatype = MPI_DATATYPE_NULL;
-	      MPI_Op sendop = MPI_OP_NULL;
-
-	      if( var )
-		var->getMPIInfo( sendcount, senddatatype, sendop );
-
-	      // Minimum values
-	      if( sendop == MPI_MIN )
+	      if( label->typeDescription() == min_vartype::getTypeDescription() )
 	      {
-		double varMin = 0;
-        
 		VisItUI_setTableValueS(table, row, 3+j*2, "Min", 0);
-
-		// Doubles
-	  	if( label->typeDescription()->getSubType()->getType() ==
-	  	    TypeDescription::double_type )
-	  	{
-	  	  min_vartype var_min;
-	  	  dw->get(var_min, label, level );
-	  	  varMin = var_min;
-            
-	  	  VisItUI_setTableValueD(table, row, 4+j*2, varMin, 0);
-	  	}
-		// Vectors
-	  	else if( label->typeDescription()->getSubType()->getType() ==
-                   TypeDescription::Vector )
-	  	{
-	  	  minvec_vartype var_min;		  
-	  	  dw->get(var_min, label, level );
-	  	  varMin = ((Vector) var_min).length();
-		  
-	  	  VisItUI_setTableValueV(table, row, 4+j*2,
-	  				 ((Vector) var_min).x(),
-	  				 ((Vector) var_min).y(),
-	  				 ((Vector) var_min).z(), 0);    
-	  	}
+		
+		min_vartype var_min;
+		if( analysisVar.level == IGNORE_LEVEL )
+		  dw->get( var_min, label );
 		else
-		  VisItUI_setTableValueS(table, row, 4+j*2, "NA", 0);		
+		  dw->get( var_min, label, level );
 
-	  	visit_SetStripChartValue( sim, "Analysis/"+
-					  analysisVar.name + "/Minimum", varMin );
+		double varMin = var_min;
+            
+		VisItUI_setTableValueD(table, row, 4+j*2, varMin, 0);
+
+	  	visit_SetStripChartValue( sim, stripChartName.str() +
+					  "/Minimum", varMin );
 	      }
-	      // Maximum values
-	      else if( sendop == MPI_MAX )
+	      else if( label->typeDescription() == max_vartype::getTypeDescription() )
 	      {
-		double varMax = 0;
-        
 		VisItUI_setTableValueS(table, row, 3+j*2, "Max", 0);
 		
-		// Doubles
-	  	if( label->typeDescription()->getSubType()->getType() ==
-	  	    TypeDescription::double_type )
-	  	{
-	  	  max_vartype var_max;
-	  	  dw->get(var_max, label, level );
-	  	  varMax = var_max;
-            
-	  	  VisItUI_setTableValueD(table, row, 4+j*2, varMax, 0);
-	  	}
-		// Vectors
-	  	else if( label->typeDescription()->getSubType()->getType() ==
-                   TypeDescription::Vector )
-	  	{
-	  	  maxvec_vartype var_max;
-	  	  dw->get(var_max, label, level );
-	  	  varMax = ((Vector) var_max).length();
-		  
-	  	  VisItUI_setTableValueV(table, row, 4+j*2,
-	  				 ((Vector) var_max).x(),
-	  				 ((Vector) var_max).y(),
-	  				 ((Vector) var_max).z(), 0);    
-	  	}
+		max_vartype var_max;
+		if( analysisVar.level == IGNORE_LEVEL )
+		  dw->get( var_max, label );
 		else
-		  VisItUI_setTableValueS(table, row, 4+j*2, "NA", 0);
+		  dw->get( var_max, label, level );
 
-	  	visit_SetStripChartValue( sim,  "Analysis/" +
-					  analysisVar.name + "/Maximum", varMax );
+		double varMax = var_max;
+		
+		VisItUI_setTableValueD(table, row, 4+j*2, varMax, 0);
+
+	  	visit_SetStripChartValue( sim, stripChartName.str() +
+					  "/Maximum",
+					  varMax );
 	      }
-	      // Sum values
-	      else if( sendop == MPI_SUM )
+	      
+	      else if( label->typeDescription() == minvec_vartype::getTypeDescription() )
 	      {
-		double varSum = 0;
-        
-		VisItUI_setTableValueS(table, row, 3+j*2, "Sum", 0);
-
-		// Doubles
-	  	if( label->typeDescription()->getSubType()->getType() ==
-	  	    TypeDescription::double_type )
-	  	{
-	  	  sum_vartype var_sum;
-	  	  dw->get(var_sum, label, level );
-	  	  varSum = var_sum;
-            
-	  	  VisItUI_setTableValueD(table, row, 4+j*2, varSum, 0);
-	  	}
-		// Vectors
-	  	else if( label->typeDescription()->getSubType()->getType() ==
-                   TypeDescription::Vector )
-	  	{
-	  	  sumvec_vartype var_sum;
-	  	  dw->get(var_sum, label, level );
-	  	  varSum = ((Vector) var_sum).length();
-		  
-	  	  VisItUI_setTableValueV(table, row, 4+j*2,
-	  				 ((Vector) var_sum).x(),
-	  				 ((Vector) var_sum).y(),
-	  				 ((Vector) var_sum).z(), 0);    
-	  	}
+		VisItUI_setTableValueS(table, row, 3+j*2, "Min", 0);
+		
+		minvec_vartype var_min;		  
+		if( analysisVar.level == IGNORE_LEVEL )
+		  dw->get( var_min, label );
 		else
-		  VisItUI_setTableValueS(table, row, 4+j*2, "NA", 0);
+		  dw->get( var_min, label, level );
 
-	  	visit_SetStripChartValue( sim,  "Analysis/" +
-					  analysisVar.name + "/Sum", varSum );
+		double varMin = ((Vector) var_min).length();
+		  
+		VisItUI_setTableValueV(table, row, 4+j*2,
+				       ((Vector) var_min).x(),
+				       ((Vector) var_min).y(),
+				       ((Vector) var_min).z(), 0);    
+	  	visit_SetStripChartValue( sim, stripChartName.str() +
+					  "/Minimum", varMin );
+	      }
+	      else if( label->typeDescription() == maxvec_vartype::getTypeDescription() )
+	      {
+		VisItUI_setTableValueS(table, row, 3+j*2, "Max", 0);
+		
+		maxvec_vartype var_max;
+		if( analysisVar.level < 0 )
+		  dw->get( var_max, label );
+		else
+		  dw->get( var_max, label, level );
+		
+		double varMax = ((Vector) var_max).length();
+		  
+		VisItUI_setTableValueV(table, row, 4+j*2,
+				       ((Vector) var_max).x(),
+				       ((Vector) var_max).y(),
+				       ((Vector) var_max).z(), 0);
+		
+	  	visit_SetStripChartValue( sim, stripChartName.str() +
+					  "/Maximum",
+					  varMax );
+	      }
+	      else if( label->typeDescription() == sum_vartype::getTypeDescription() )
+	      {
+		VisItUI_setTableValueS(table, row, 3+j*2, "Sum", 0);
+		
+		sum_vartype var_sum;
+		if( analysisVar.level == IGNORE_LEVEL )
+		  dw->get( var_sum, label );
+		else
+		  dw->get( var_sum, label, level );
+
+		double varSum = var_sum;
+		  
+		VisItUI_setTableValueD(table, row, 4+j*2, varSum, 0);
+		
+	  	visit_SetStripChartValue( sim, stripChartName.str() +
+					  "/Sum",
+					  varSum );
+	      }
+	      else if( label->typeDescription() == sumvec_vartype::getTypeDescription() )
+	      {
+		VisItUI_setTableValueS(table, row, 3+j*2, "Sum", 0);
+		
+		sumvec_vartype var_sum;
+		if( analysisVar.level == IGNORE_LEVEL )
+		  dw->get( var_sum, label );
+		else
+		  dw->get( var_sum, label, level );
+		
+		double varSum = ((Vector) var_sum).length();
+		  
+		VisItUI_setTableValueV(table, row, 4+j*2,
+				       ((Vector) var_sum).x(),
+				       ((Vector) var_sum).y(),
+				       ((Vector) var_sum).z(), 0);
+		
+	  	visit_SetStripChartValue( sim, stripChartName.str() +
+					  "/Sum",
+					  varSum );
 	      }
 	      else
 	      {
-		VisItUI_setTableValueS(table, row, 3+j*2, "TBD", 0);
+		std::stringstream msg;
+		msg << stripChartName.str() << "  "
+		    << label->getName() << "  "
+		    << label->typeDescription()->getName() << "  "
+		    << "unknown_vartype";
+		
+		VisItUI_setValueS("SIMULATION_MESSAGE_WARNING", msg.str().c_str(), 1);
+		VisItUI_setTableValueS(table, row, 3+j*2, "Unknown", 0);
 		VisItUI_setTableValueS(table, row, 4+j*2, "NA", 0);
 	      }
 	    }

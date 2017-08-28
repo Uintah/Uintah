@@ -25,25 +25,26 @@
 #ifndef UINTAH_RF_SCALARDIFFUSIONMODEL_H
 #define UINTAH_RF_SCALARDIFFUSIONMODEL_H
 
-#include <Core/Grid/Variables/ComputeSet.h>
-#include <Core/Grid/SimulationStateP.h>
-#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Ports/DataWarehouse.h>
+
 #include <Core/Grid/Level.h>
 #include <Core/Grid/LevelP.h>
+#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/Task.h>
+#include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
+#include <Core/Labels/MPMLabel.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
 #include <string>
-
 #include <CCA/Components/MPM/Diffusion/ConductivityModels/ConductivityEquation.h>
+
 namespace Uintah {
 
   class Task;
-  class MPMFlags;
-  class MPMLabel;
-  class MPMMaterial;
-  class DataWarehouse;
-  class ProcessorGroup;
 
   enum FluxDirection{
     fd_in,
@@ -64,6 +65,10 @@ namespace Uintah {
     std::string getDiffusionType() const;
 
     virtual double getMaxConcentration() const;
+
+    virtual double getMinConcentration() const;
+
+    virtual double getConcentrationTolerance() const;
 
     virtual void setIncludeHydroStress(bool value);
 
@@ -150,6 +155,21 @@ namespace Uintah {
                                          Vector dx
                                         ) const;
 
+    virtual bool usesChemicalPotential();
+
+    virtual void addChemPotentialComputesAndRequires(
+                                                           Task         * task,
+                                                     const MPMMaterial  * matl,
+                                                     const PatchSet     * patches
+                                                    ) const;
+
+    virtual void calculateChemicalPotential(
+                                            const PatchSubset   * patches,
+                                            const MPMMaterial   * matl,
+                                                  DataWarehouse * old_dw,
+                                                  DataWarehouse * new_dw
+                                           );
+
     virtual double computeDiffusivityTerm(double concentration,
                                           double pressure
                                          );
@@ -157,6 +177,18 @@ namespace Uintah {
     virtual ConductivityEquation* getConductivityEquation();
 
   protected:
+
+    void baseInitializeSDMData(
+                               const Patch          * patch,
+                               const MPMMaterial    * matl,
+                                     DataWarehouse  * new_dw
+                              );
+
+    void baseOutputSDMProbSpec(
+                               ProblemSpecP & ps,
+                               bool         output_rdm_tag = true
+                              ) const;
+
     MPMLabel* d_lb;
     MPMFlags* d_Mflag;
     SimulationStateP d_sharedState;
@@ -169,8 +201,14 @@ namespace Uintah {
     ScalarDiffusionModel(const ScalarDiffusionModel&);
     ScalarDiffusionModel& operator=(const ScalarDiffusionModel&);
     
-    double diffusivity;
-    double max_concentration;
+    double d_D0;
+    double d_MaxConcentration;
+    double d_MinConcentration;
+    double d_concTolerance;
+    double d_InitialConcentration;
+    double d_InverseMaxConcentration;
+
+    Matrix3 d_StrainFreeExpansion;
 
     MaterialSubset* d_one_matl;         // matlsubset for zone of influence
   };

@@ -1,12 +1,11 @@
 #!/usr/bin/env python
 
-from os import getenv,environ,unsetenv,rmdir,mkdir,path,system,chdir,stat,getcwd,pathsep,symlink,stat,access,getuid
-from os import W_OK
-from time import strftime,time,gmtime,asctime,localtime
-from sys import argv,exit,stdout
-from string import upper,rstrip,rsplit
-from modUPS import modUPS
-from commands import getoutput
+from os         import getenv,environ,unsetenv,rmdir,mkdir,path,system,chdir,stat,getcwd,pathsep,symlink,stat,access,getuid,W_OK
+from time       import strftime,time,gmtime,asctime,localtime
+from sys        import argv,exit,stdout
+from string     import upper,rstrip,rsplit
+from modUPS     import modUPS
+from commands   import getoutput
 from subprocess import PIPE, Popen
 import socket
 import resource
@@ -21,21 +20,65 @@ import re         # regular expressions
 
 def nameoftest (test):
     return test[0]
+    
 def input (test):
     return test[1]
+
 def num_processes (test):
     return test[2]
+
 def testOS(test):
     return upper(test[3])
+
 def inputs_root ():
     return argv[2]
+
 def date ():
     return asctime(localtime(time()))
+
 def userFlags (test):
     return test[-1]
+
 def nullCallback (test, susdir, inputsdir, compare_root, dbg_opt, max_parallelism):
     pass
+#__________________________________    
+# Function used for checking the input files
+# skip tests that contain 
+#    <outputInitTimestep/> AND  outputTimestepInterval > 1
+def isValid_inputFile( inputxml, startFrom, do_restart ):
+  from xml.etree.ElementTree import ElementTree
+  
+  # these options are OK
+  if startFrom == "checkpoint" or do_restart == 0:
+    return True
 
+  # load index.xml into tree
+  ET     = ElementTree()
+  uintah = ET.parse(inputxml)
+  
+  #  Note <outputInitTimestep/> + outputTimestepInterval > 1 the uda/index.xml != restartUda/index.xml
+  #             ( initTS )              ( intrvl )
+  da     = uintah.find( 'DataArchiver' ) 
+  
+  # find the timestepInterval
+  intrvl = da.find( 'outputTimestepInterval' )
+  
+  if intrvl is None:
+    intrvl = int(-9)
+  else:
+    intrvl = int( intrvl.text )
+  
+  # was outputInitTimestep set?
+  initTS = da.find( 'outputInitTimestep' )
+   
+  if ( initTS != None and intrvl > 1 ):
+    print '     isValid_inputFile %s'% inputxml
+    print( "    *** ERROR: The xml file is not valid, (DataArchiver:outputInitTimestep) is not allowed in regression testing.")
+    return False
+  else:
+    return True
+    
+#__________________________________   
 # Use this if you need to capture stdout and the command's return code.  It also prevents the output from becoming scrambled.
 def cmdline(command):
     process = Popen(
@@ -85,7 +128,6 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
 
   global startpath
   startpath       = getcwd()
-
   dbg_opt         = argv[4]
   max_parallelism = float(argv[5])
 
@@ -117,8 +159,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
   if len(argv) == 7:
     solotest = argv[6]
 
-
-  outputpath = startpath
+  outputpath    = startpath
   weboutputpath = startpath
   # If running Nightly RT, output logs in web dir
   # otherwise, save it in the build.  Also turn on plotting
@@ -221,6 +262,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
   for test in TESTS:
 
     testname = nameoftest(test)
+    inputxml = path.basename(input(test))
 
     if solotest != "" and testname != solotest:
       continue
@@ -253,7 +295,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     if len(test) == 5:
       flags = userFlags(test)
       print( "User Flags:" )
-
+      
       #  parse the user flags
       for i in range(len(flags)):
         print( i,flags[i] )
@@ -345,6 +387,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     # bulletproofing
     # Does gold standard exists?
     # If it doesn't then either throw an error (local RT) or generate it (Nightly RT).
+    
     try:
       chdir(compare_root)
       chdir(testname)
@@ -396,10 +439,15 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     # call the callback function before running each test
     list = callback(test, susdir, inputsdir, compare_root, dbg_opt, max_parallelism)
 
-    inputxml = path.basename(input(test))
     system("cp %s/%s %s > /dev/null 2>&1" % (inputsdir, input(test), inputxml))
     symlink(inputpath, "inputs")
-
+    
+    #________________________________
+    # is the input file valid
+    if isValid_inputFile( inputxml, startFrom, do_restart ) == False:
+      print ("    Now skipping test %s " % testname)
+      continue
+        
     #__________________________________
     # Run test and perform comparisons on the uda
     environ['WEBLOG'] = "%s/%s-results/%s" % (weboutputpath, ALGO, testname)
@@ -411,6 +459,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
       if path.exists("%s/%s-results/%s" % (outputpath, ALGO, testname)) != 1:
         mkdir("%s/%s-results/%s" % (outputpath, ALGO, testname))
       system("rsync -a --exclude '*uda*' *.* %s/%s-results/%s/ > /dev/null 2>&1" % (outputpath, ALGO, testname))
+      
     # Return Code (rc) of 2 means it failed comparison or memory test, so try to run restart
     if rc == 0 or rc == 2:
       # Prepare for restart test
@@ -459,6 +508,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     #__________________________________
     # end of test loop
 
+  #______________________________________________________________________
   # change the group on the results directory to a common group name
   chdir("..")
   try:
@@ -595,7 +645,7 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
   # set where to view the log files
   logpath = environ['WEBLOG']
 
-  # if doing performance tests, strip the output and checkpoints portions
+  # if running performance tests, strip the output and checkpoints portions
   if do_performance_test == 1:
 
     inputxml = modUPS("", inputxml,["<outputInterval>0</outputInterval>",
@@ -637,11 +687,8 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
     print( "Running test from checkpoint ---%s--- %s at %s" % (testname, mpimsg, strftime( "%I:%M:%S")) )
     susinput     = "-restart %s/CheckPoints/%s/%s/*.uda.000" %  (startpath,ALGO,testname)
     restart_text = " "
-  #________________________________
-
 
   if do_memory_test == 1:
-
     environ['MALLOC_STRICT'] = "set"
     env = "%s,%s" % (environ['SCI_DEBUG'], "VarLabel:+") # append to the existing SCI_DEBUG
     environ['SCI_DEBUG']      = env
@@ -673,8 +720,7 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
   # Check to see if an exception was thrown.  (Use "grep -v 'cout'" to avoid false positive
   # when source code line was that prints the exception is changed.)
   # Did sus run to completion.
-
-  exception   = system("grep -q 'Caught exception' sus.log.txt | grep -v cout");
+  exception = system("grep -q 'Caught exception' sus.log.txt | grep -v cout");
 
   try:
     file = open('sus.log.txt', 'r')
@@ -699,6 +745,7 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
 
   replace_msg = "%s\n\t\t\tor\n\t    %s/replace_all_GS\n" % (replace_msg,startpath)
 
+  #__________________________________
   return_code = 0
   if rc == 35072 or rc == 36608 :
     print( "\t*** Test %s exceeded maximum allowable run time" % (testname) )
@@ -833,6 +880,7 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
           print( "%s" % replace_msg )
       else:
           print( "\tMemory leak tests passed. (Note: no previous memory usage stats)." )
+
     #__________________________________
     # print error codes
     # if comparison, memory, performance tests fail, return here, so mem_leak tests can run

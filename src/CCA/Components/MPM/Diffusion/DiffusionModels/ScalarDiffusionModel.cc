@@ -33,6 +33,7 @@
 #include <Core/Grid/Level.h>
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Grid/Variables/NodeIterator.h>
 
 #include <iostream>
 #include <CCA/Components/MPM/Diffusion/ConductivityModels/BinaryEquation.h>
@@ -42,17 +43,25 @@ using namespace Uintah;
 
 static DebugStream cout_doing("AMRMPM", false);
 
-
-ScalarDiffusionModel::ScalarDiffusionModel(ProblemSpecP& ps, SimulationStateP& sS,
-                                           MPMFlags* Mflag, std::string diff_type)
+ScalarDiffusionModel::ScalarDiffusionModel(
+                                           ProblemSpecP     & ps,
+                                           SimulationStateP & sS,
+                                           MPMFlags         * Mflag,
+                                           std::string        diff_type
+                                          ) 
 {
   d_Mflag = Mflag;
   d_sharedState = sS;
 
   d_lb = scinew MPMLabel;
 
-  ps->require("diffusivity", diffusivity);
-  ps->require("max_concentration", max_concentration);
+  ps->require("diffusivity", d_D0);
+  ps->require("max_concentration", d_MaxConcentration);
+  ps->getWithDefault("min_concentration", d_MinConcentration, 0.0);
+  ps->getWithDefault("conc_tolerance", d_concTolerance, 1e-10);
+  ps->getWithDefault("initial_concentration", d_InitialConcentration, 0.0);
+
+  d_InverseMaxConcentration = 1.0/d_MaxConcentration;
 
   if(d_Mflag->d_8or27==8)
   {
@@ -107,7 +116,17 @@ std::string ScalarDiffusionModel::getDiffusionType() const
 
 double ScalarDiffusionModel::getMaxConcentration() const
 {
-  return max_concentration;
+  return d_MaxConcentration;
+}
+
+double ScalarDiffusionModel::getMinConcentration() const
+{
+  return d_MinConcentration;
+}
+
+double ScalarDiffusionModel::getConcentrationTolerance() const
+{
+  return d_concTolerance;
 }
 
 void ScalarDiffusionModel::setIncludeHydroStress(bool value){
@@ -122,7 +141,7 @@ void ScalarDiffusionModel::initializeTimeStep(
 {
   Vector dx = patch->dCell();
   double timestep = 1.0e99;
-  timestep = std::min(timestep, computeStableTimeStep(diffusivity, dx));
+  timestep = std::min(timestep, computeStableTimeStep(d_D0, dx));
 
   new_dw->put(delt_vartype(timestep), d_lb->delTLabel, patch->getLevel());
 }
@@ -141,7 +160,7 @@ void ScalarDiffusionModel::scheduleComputeDivergence(      Task         * task,
   task->requires(Task::OldDW, d_lb->pVolumeLabel,              gan, NGP);
   task->requires(Task::OldDW, d_lb->pDeformationMeasureLabel,  gan, NGP);
 
-  task->requires(Task::NewDW, d_lb->diffusion->pFlux_preReloc,       gan, NGP);
+  task->requires(Task::NewDW, d_lb->diffusion->pFlux_preReloc, gan, NGP);
 
   task->computes(d_lb->diffusion->gConcentrationRate, matlset);
 }
@@ -161,10 +180,7 @@ void ScalarDiffusionModel::computeDivergence(
   std::vector<Vector>     d_S(interpolator->size());
 
   Vector dx = patch->dCell();
-  double oodx[3];
-  oodx[0] = 1.0/dx.x();
-  oodx[1] = 1.0/dx.y();
-  oodx[2] = 1.0/dx.z();
+  Vector oodx(1.0/dx.x(),1.0/dx.y(),1.0/dx.z());
 
   constParticleVariable<Point>    px;
   constParticleVariable<double>   pvol;
@@ -206,8 +222,9 @@ void ScalarDiffusionModel::computeDivergence(
 
     for (int k = 0; k < NN; k++){
       node = ni[k];
-      if(patch->containsNode(node)){
-        Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],d_S[k].z()*oodx[2]);
+      if(patch->containsNode(node)) {
+        Vector div(d_S[k]*oodx);
+//        Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],d_S[k].z()*oodx[2]);
         Cdot_cond = Dot(div, J)*pMass[idx];
 //        Cdot_cond = Dot(div, J)/* *pMass[idx]*/;
         gConcRate[node] -= Cdot_cond;
@@ -379,14 +396,97 @@ double ScalarDiffusionModel::computeStableTimeStep(
   return timeStep.minComponent();
 }
 
+bool ScalarDiffusionModel::usesChemicalPotential()
+{
+  // Override if model uses chemical potential.
+  return false;
+}
+
+void ScalarDiffusionModel::addChemPotentialComputesAndRequires(
+                                                                     Task           * task,
+                                                               const MPMMaterial  * matl,
+                                                               const PatchSet     * patches
+                                                              ) const
+{
+ // Don't override if model doesn't use chemical potential.
+//  Ghost::GhostType        gnone   = Ghost::None;
+//  const MaterialSubset  * matlset = matl->thisMaterial();
+//
+//  task->requires(Task::OldDW, d_lb->pChemicalPotentialLabel, matlset, gnone);
+//  task->computes(d_lb->pChemicalPotentialLabel_preReloc, matlset);
+}
+
+void ScalarDiffusionModel::calculateChemicalPotential(
+                                                      const PatchSubset   * patches,
+                                                      const MPMMaterial   * matl,
+                                                            DataWarehouse * old_dw,
+                                                            DataWarehouse * new_dw
+                                                     )
+{
+  // Don't override if model doesn't use chemical potential.
+//  for (int patchIndex = 0; patchIndex < patches->size(); ++patchIndex)
+//  {
+//    const Patch* patch = patches->get(patchIndex);
+//    int dwi = matl->getDWIndex();
+//    ParticleSubset  * pset = old_dw->getParticleSubset(dwi, patch);
+//
+//    constParticleVariable<double> pChemicalPotential;
+//    old_dw->get(pChemicalPotential, d_lb->pChemicalPotentialLabel, pset);
+//    ParticleVariable<double> pChemicalPotential_new;
+//    new_dw->allocateAndPut(pChemicalPotential_new,
+//                           d_lb->pChemicalPotentialLabel_preReloc, pset);
+//
+//    int numParticles = pset->numParticles();
+//    for (int particleIndex = 0; particleIndex < numParticles; ++particleIndex)
+//    {
+//      pChemicalPotential_new[particleIndex] = pChemicalPotential[particleIndex];
+//    }
+//  }
+
+}
+
 double ScalarDiffusionModel::computeDiffusivityTerm(double concentration, double pressure)
 {
   // This is just a function stub to be tied into the multiscale
   // component. JH, AH, CG
 
-  return diffusivity;
+  return d_D0;
 }
 
 ConductivityEquation* ScalarDiffusionModel::getConductivityEquation(){
   return d_conductivity_equation;
+}
+
+void ScalarDiffusionModel::baseInitializeSDMData(
+                                                 const Patch         * patch,
+                                                 const MPMMaterial   * matl,
+                                                       DataWarehouse * NewDW
+                                                )
+{
+  ParticleVariable<double> pConcentration;
+
+
+  ParticleSubset* pset = NewDW->getParticleSubset(matl->getDWIndex(), patch);
+  NewDW->getModifiable(pConcentration, d_lb->diffusion->pConcentration, pset);
+
+  for (int pIndex = 0; pIndex < pset->numParticles(); ++pIndex)
+    {
+      pConcentration[pIndex] = d_InitialConcentration;
+    }
+
+}
+
+
+void ScalarDiffusionModel::baseOutputSDMProbSpec(
+                                                 ProblemSpecP & probSpec  ,
+                                                 bool           /* do_output */
+                                                ) const
+{
+  probSpec->appendElement("diffusivity",d_D0);
+  probSpec->appendElement("max_concentration",d_MaxConcentration);
+  probSpec->appendElement("min_concentration",d_MinConcentration);
+  probSpec->appendElement("conc_tolerance", d_concTolerance);
+  probSpec->appendElement("initial_concentration", d_InitialConcentration);
+
+  return;
 }

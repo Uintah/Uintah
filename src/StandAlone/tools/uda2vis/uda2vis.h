@@ -73,11 +73,6 @@ void GetLevelAndLocalPatchNumber(TimeStepInfo* stepInfo,
 int GetGlobalDomainNumber(TimeStepInfo* stepInfo,
 			  int level, int local_patch);
 
-void getBounds(int low[3], int high[3],
-	       const std::string meshName,
-	       const LevelInfo &levelInfo,
-	       int patch_id=-1);
-
 void CheckNaNs(double *data, const int num,
 	       const char* varname, const int level, const int patch);
 }

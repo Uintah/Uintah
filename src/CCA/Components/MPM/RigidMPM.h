@@ -108,7 +108,6 @@ public:
   void scheduleComputeAndIntegrateAcceleration(SchedulerP&, const PatchSet*,
                                                const MaterialSet*);
 
-
   // Insert Documentation Here:
   virtual void computeAndIntegrateAcceleration(const ProcessorGroup*,
                                                const PatchSubset* patches,
@@ -116,6 +115,15 @@ public:
                                                DataWarehouse* old_dw,
                                                DataWarehouse* new_dw);
 
+  virtual void scheduleComputeParticleGradients(SchedulerP&, 
+                                                const PatchSet*,
+                                                const MaterialSet*);
+
+  void computeParticleGradients(const ProcessorGroup*,
+                                const PatchSubset* patches,
+                                const MaterialSubset* matls,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw);
 
   void scheduleInterpolateToParticlesAndUpdate(SchedulerP&,
                                                        const PatchSet*,

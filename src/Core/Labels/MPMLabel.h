@@ -42,6 +42,10 @@ namespace Uintah {
       // Label containing subclasses.
       MPMDiffusionLabel* diffusion;
 
+      // Label to denote that all particles have been updated, and we're ready
+      //   for the final particle update.
+      const VarLabel* fAllParticlesUpdated;
+
       const VarLabel* delTLabel;
       const VarLabel* doMechLabel;
 
@@ -83,10 +87,10 @@ namespace Uintah {
       const VarLabel* pExternalForceCorner3Label;
       const VarLabel* pExternalForceCorner4Label;
       const VarLabel* pExtForceLabel_preReloc;
-      const VarLabel* pExtForceCorner1Label_preReloc;
-      const VarLabel* pExtForceCorner2Label_preReloc;
-      const VarLabel* pExtForceCorner3Label_preReloc;
-      const VarLabel* pExtForceCorner4Label_preReloc;
+//      const VarLabel* pExtForceCorner1Label_preReloc;
+//      const VarLabel* pExtForceCorner2Label_preReloc;
+//      const VarLabel* pExtForceCorner3Label_preReloc;
+//      const VarLabel* pExtForceCorner4Label_preReloc;
       const VarLabel* pXLabel;
       const VarLabel* pXLabel_preReloc;
       const VarLabel* pSurfLabel;
@@ -108,8 +112,8 @@ namespace Uintah {
       const VarLabel* pParticleIDLabel_preReloc;
       const VarLabel* pSizeLabel;
       const VarLabel* pSizeLabel_preReloc;
-      const VarLabel* pAreaLabel;
-      const VarLabel* pAreaLabel_preReloc;
+//      const VarLabel* pAreaLabel;
+//      const VarLabel* pAreaLabel_preReloc;
       const VarLabel* pLocalizedMPMLabel;
       const VarLabel* pLocalizedMPMLabel_preReloc;
       const VarLabel* pRefinedLabel;

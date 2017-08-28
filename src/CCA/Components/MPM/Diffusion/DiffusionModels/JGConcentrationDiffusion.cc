@@ -94,9 +94,9 @@ void JGConcentrationDiffusion::computeFlux(
   for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++)
   {
     particleIndex idx = *iter;
-    pFlux[idx] = diffusivity*pConcGradient[idx];
 
-    timestep = min(timestep, computeStableTimeStep(diffusivity, dx));
+    pFlux[idx] = d_D0*pConcGradient[idx];
+    timestep = min(timestep, computeStableTimeStep(d_D0, dx));
   } //End of Particle Loop
 
   new_dw->put(delt_vartype(timestep), d_lb->delTLabel, patch->getLevel());
@@ -167,9 +167,7 @@ void JGConcentrationDiffusion::outputProblemSpec(
     rdm_ps = ps->appendChild("diffusion_model");
     rdm_ps->setAttribute("type","jg");
   }
-
-  rdm_ps->appendElement("diffusivity",diffusivity);
-  rdm_ps->appendElement("max_concentration",max_concentration);
+  ScalarDiffusionModel::baseOutputSDMProbSpec(rdm_ps);
 
   if(d_conductivity_equation){
     d_conductivity_equation->outputProblemSpec(rdm_ps);

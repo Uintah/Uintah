@@ -92,7 +92,7 @@ void RFConcDiffusion1MPM::computeFlux(
                                                       iter++){
     particleIndex idx = *iter;
 
-    pFlux[idx] = diffusivity*pConcGrad[idx];
+    pFlux[idx] = d_D0*pConcGrad[idx];
   } //End of Particle Loop
 }
 
@@ -163,7 +163,5 @@ void RFConcDiffusion1MPM::outputProblemSpec(
     rdm_ps = ps->appendChild("diffusion_model");
     rdm_ps->setAttribute("type","rf1");
   }
-
-  rdm_ps->appendElement("diffusivity",diffusivity);
-  rdm_ps->appendElement("max_concentration",max_concentration);
+  ScalarDiffusionModel::baseOutputSDMProbSpec(rdm_ps);
 }

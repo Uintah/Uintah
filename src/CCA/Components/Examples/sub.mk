@@ -47,8 +47,11 @@ SRCS += \
         $(SRCDIR)/RegionDB.cc          \
         $(SRCDIR)/RegridderTest.cc     \
         $(SRCDIR)/SolverTest1.cc       \
-        $(SRCDIR)/SolverTest2.cc       \
         $(SRCDIR)/Wave.cc              
+
+ifeq ($(HAVE_HYPRE),yes)
+  SRCS += $(SRCDIR)/SolverTest2.cc     
+endif
 
 ifeq ($(BUILD_MODELS_RADIATION),yes)
   SRCS += $(SRCDIR)/RMCRT_Test.cc       

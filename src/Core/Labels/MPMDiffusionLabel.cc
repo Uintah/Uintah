@@ -63,7 +63,12 @@ MPMDiffusionLabel::MPMDiffusionLabel()
   pChemicalPotential = VarLabel::create("p.mu", ParticleVariable<double>::getTypeDescription());
   pChemicalPotential_preReloc = VarLabel::create("p.mu+", ParticleVariable<double>::getTypeDescription());
 
+  pArea = VarLabel::create( "p.area", ParticleVariable<Vector>::getTypeDescription());
+  pArea_preReloc = VarLabel::create( "p.area+", ParticleVariable<Vector>::getTypeDescription());
+
   pGradChemPotential = VarLabel::create("p.muGradient", ParticleVariable<Vector>::getTypeDescription());
+
+
 
   // Nodal variables involved in diffusion calculations
   gConcentration = VarLabel::create("g.concentration", NCVariable<double>::getTypeDescription());
@@ -100,6 +105,8 @@ MPMDiffusionLabel::~MPMDiffusionLabel()
   VarLabel::destroy(pConcPrevious_preReloc);
   VarLabel::destroy(pChemicalPotential);
   VarLabel::destroy(pChemicalPotential_preReloc);
+  VarLabel::destroy(pArea);
+  VarLabel::destroy(pArea_preReloc);
   VarLabel::destroy(pGradChemPotential);
 
   // Nodal vairables involved in diffusion calculations
