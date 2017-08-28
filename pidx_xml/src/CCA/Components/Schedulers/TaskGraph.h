@@ -56,10 +56,6 @@ CLASS
    Here is a function call tree for this phase:
    createDetailedTasks
      nullsort (formerly was topologicalSort)
-       setupTaskConnections
-         addDependencyEdges
-       processTask
-         processDependencies
      LoadBalancer::createNeighborhood (this stores the patches that border
                                        patches on the current processor)
 
@@ -98,18 +94,6 @@ DESCRIPTION
 
 class CompTable;
 class SchedulerCommon;
-
-// This is so we can keep tasks independent of the task graph
-struct GraphSortInfo {
-
-    GraphSortInfo()
-      : m_visited{false}
-      , m_sorted{false}
-    {}
-
-    bool m_visited;
-    bool m_sorted;
-};
 
 class CompTable {
 
@@ -220,17 +204,11 @@ class TaskGraph {
                 , const MaterialSet           * matlset
                 );
 
-    /// sets up the task connections and puts them in a sorted order.
-    /// Calls setupTaskConnections, which has the side effect of creating
-    /// reduction tasks for tasks that compute reduction variables.
-    /// calls processTask on each task to sort them.
-    void topologicalSort( std::vector<Task*>& tasks );
-
     /// Sorts the tasks, and makes DetailedTask's out of them,
     /// and loads them into a new DetailedTasks object. (There is one
     /// DetailedTask for each PatchSubset and MaterialSubset in a Task,
     /// where a Task may have many PatchSubsets and MaterialSubsets.).
-    /// Sorts using topologicalSort.
+    /// Sorts using nullSort.
     DetailedTasks* createDetailedTasks(       bool            useInternalDeps
                                       ,       DetailedTasks * first
                                       , const GridP         & grid
@@ -281,14 +259,13 @@ class TaskGraph {
     /// the same id number.
     void assignUniqueMessageTags();
 
-    /// sets the iteration of the current taskgraph in a multi-TG environment
-    /// starting with 0
+    /// sets the iteration of the current taskgraph in a multi-TG environment starting with 0
     void setIteration( int iter )
     {
       m_current_iteration = iter;
     }
 
-    int getNumTaskPhases()
+    inline int getNumTaskPhases()
     {
       return m_num_task_phases;
     }
@@ -312,34 +289,6 @@ class TaskGraph {
     TaskGraph( TaskGraph && )                 = delete;
     TaskGraph& operator=( TaskGraph && )      = delete;
 
-    // using aliases specific to TaskGraph
-    using CompMap                   = std::multimap<const VarLabel*, Task::Dependency*>;
-    using ReductionTasksMap         = std::map<VarLabelMatl<Level>, Task*>;
-    using GraphSortInfoMap          = std::map<Task*, GraphSortInfo>;
-    using DetailedReductionTasksMap = std::map<const VarLabel*, DetailedTask*, VarLabel::Compare>;
-
-    /// Helper function for processTasks, processing the dependencies
-    /// for the given task in the dependency list whose head is req.
-    /// Will call processTask (recursively, as this is a helper for
-    /// processTask) for each dependent task.
-    void processDependencies( Task               * task
-                            , Task::Dependency   * req
-                            , std::vector<Task*> & sortedTasks
-                            , GraphSortInfoMap   & sortinfo
-                            ) const;
-
-    /// Helper function for setupTaskConnections, adding dependency edges
-    /// for the given task for each of the require (or modify) depencies in
-    /// the list whose head is req.  If modifies is true then each found
-    /// compute will be replaced by its modifying dependency on the CompMap.
-    void addDependencyEdges( Task              * task
-                           , GraphSortInfoMap  & sortinfo
-                           , Task::Dependency  * req
-                           , CompMap           & comps
-                           , ReductionTasksMap & reductionTasks
-                           , bool                modifies
-                           );
-
     /// Used by (the public) createDetailedDependencies to store comps
     /// in a ComputeTable (See TaskGraph.cc).
     void remembercomps( DetailedTask     * task
@@ -347,11 +296,11 @@ class TaskGraph {
                       , CompTable        & ct
                       );
 
-    /// This is the "detailed" version of addDependencyEdges.  It does for
+    /// This is the "detailed" version of addDependencyEdges (removed).  It does for
     /// the public createDetailedDependencies member function essentially
-    /// what addDependencyEdges does for setupTaskConnections.  This will
-    /// set up the data dependencies that need to be communicated between
-    /// processors.
+    /// what addDependencyEdges (removed) did for setupTaskConnections.
+    /// This will set up the data dependencies that need to be communicated
+    /// between processors.
     void createDetailedDependencies( DetailedTask     * dtask
                                    , Task::Dependency * req
                                    , CompTable        & ct
@@ -371,24 +320,6 @@ class TaskGraph {
                             ,       int                iteration
                             );
 
-    bool overlaps( const Task::Dependency * comp
-                 , const Task::Dependency * req
-                 ) const;
-
-    /// Adds edges in the TaskGraph between requires/modifies and their
-    /// associated computes.  Uses addDependencyEdges as a helper
-    void setupTaskConnections( GraphSortInfoMap & sortinfo );
-
-    /// Called for each task, this "sorts" the taskgraph.
-    /// This sorts in topological order by calling processDependency
-    /// (which checks for cycles in the graph), which then recursively
-    /// calls processTask for each dependentTask.  After this process is
-    /// finished, then the task is added at the end of sortedTasks.
-    void processTask( Task               * task
-                    , std::vector<Task*> & sortedTasks
-                    , GraphSortInfoMap   & sortinfo
-                    ) const;
-
     SchedulerCommon      * m_scheduler;
     LoadBalancerPort     * m_load_balancer;
     const ProcessorGroup * m_proc_group;
@@ -404,9 +335,8 @@ class TaskGraph {
     int m_index{-1};
 
     std::vector<std::shared_ptr<Task> > m_tasks;
-    std::vector<Task::Edge*>            m_edges;
 
-    DetailedReductionTasksMap m_reduction_tasks;
+    std::map<const VarLabel*, DetailedTask*, VarLabel::Compare>  m_reduction_tasks;
 
     struct LabelLevel {
       LabelLevel(const std::string& key, const int level) : key(key), level(level) {}
@@ -421,8 +351,8 @@ class TaskGraph {
         return false;
       }
     };
-    std::map<LabelLevel, int> max_ghost_for_varlabelmap;
 
+    std::map<LabelLevel, int> max_ghost_for_varlabelmap;
 
 }; // class TaskGraph
 

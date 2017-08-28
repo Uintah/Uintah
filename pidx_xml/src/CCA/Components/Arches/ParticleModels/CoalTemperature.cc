@@ -273,9 +273,9 @@ CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
       double hint  = 0.0;
       double Ha    = 0.0;
       double Hc    = 0.0;
-      double H     = 0.0;
+      double H1    = 0.0;
       double f1    = 0.0;
-      double f2    = 0.0;
+      double H2    = 0.0;
       double dT    = 0.0;
 
       double pT       = temperature(i,j,k);
@@ -322,19 +322,18 @@ CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
             hint = -156.076 + 380/(-1 + exp(380 / pT)) + 3600/(-1 + exp(1800 / pT));
             Ha = -202849.0 + _Ha0 + pT * (593. + pT * 0.293);
             Hc = _Hc0 + hint * _RdMW;
-            H = Hc * (RC + CH) + Ha * initAsh;
-            f1 = pE - H;
+            H1 = Hc * (RC + CH) + Ha * initAsh;
+            f1 = pE - H1;
 
             // compute enthalpy given Tguess + delta
             pT = pT + delta;
             hint = -156.076 + 380/(-1 + exp(380 / pT)) + 3600/(-1 + exp(1800 / pT));
             Ha = -202849.0 + _Ha0 + pT * (593. + pT * 0.293);
             Hc = _Hc0 + hint * _RdMW;
-            H = Hc * (RC + CH) + Ha * initAsh;
-            f2 = pE - H;
+            H2 = Hc * (RC + CH) + Ha * initAsh;
 
             // correct temperature
-            dT = f1 * delta / (f2-f1) + delta;
+            dT = f1 * delta / (H1-H2) + delta;
             pT = pT - dT;    //to add an coefficient for steadness
 
             // check to see if tolernace has been met

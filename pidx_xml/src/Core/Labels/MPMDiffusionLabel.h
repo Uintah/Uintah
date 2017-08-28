@@ -63,6 +63,9 @@ namespace Uintah {
      const VarLabel* pChemicalPotential;
      const VarLabel* pChemicalPotential_preReloc;
 
+     const VarLabel* pArea;
+     const VarLabel* pArea_preReloc;
+
      const VarLabel* pGradChemPotential;
 
      // Grid variables involved in diffusion calculations

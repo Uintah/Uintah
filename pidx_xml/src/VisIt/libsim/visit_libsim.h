@@ -87,11 +87,11 @@ typedef struct
   double delt;
   double delt_next;
 
-  // UDA archieve variables.
+  // UDA archive variables.
   bool useExtraCells;
-  bool nodeCentered;
   bool forceMeshReload;
-
+  std::string mesh_for_patch_data;
+  
   int blocking;
 
   // Simulation control members
@@ -136,7 +136,7 @@ bool visit_CheckState(visit_simulation_data *sim);
 void visit_UpdateSimData( visit_simulation_data *sim, 
                           GridP currentGrid,
                           double time, double delt, double delt_next,
-			  bool first, bool last );
+                          bool first, bool last );
 
 void visit_Initialize( visit_simulation_data *sim );
   

@@ -31,31 +31,36 @@ using namespace Uintah;
 
 SDInterfaceModel::SDInterfaceModel(ProblemSpecP& ps, SimulationStateP& sS,
                                    MPMFlags* Mflag, MPMLabel* mpm_lb)
+                                  : d_materials_list(ps)
 {
   d_mpm_lb = mpm_lb;
   d_shared_state = sS;
+  d_mpm_flags = Mflag;
 }
 
 SDInterfaceModel::~SDInterfaceModel(){
 }
 
-void SDInterfaceModel::addComputesAndRequiresInterpolated(SchedulerP & sched,
-                                                   const PatchSet* patches,
-                                                   const MaterialSet* matls)
+void SDInterfaceModel::addComputesAndRequiresInterpolated(      SchedulerP  & sched   ,
+                                                          const PatchSet    * patches ,
+                                                          const MaterialSet * matls
+                                                         )
 {
 }
 
-void SDInterfaceModel::sdInterfaceInterpolated(const ProcessorGroup*,
-                                             const PatchSubset* patches,
-                                             const MaterialSubset* matls,
-                                             DataWarehouse* old_dw,
-                                             DataWarehouse* new_dw)
+void SDInterfaceModel::sdInterfaceInterpolated(
+                                               const ProcessorGroup *         ,
+                                               const PatchSubset    * patches ,
+                                               const MaterialSubset * matls   ,
+                                                     DataWarehouse  * old_dw  ,
+                                                     DataWarehouse  * new_dw
+                                              )
 {
 }
 
-void SDInterfaceModel::addComputesAndRequiresDivergence(SchedulerP & sched,
-                                                 const PatchSet* patches,
-                                                 const MaterialSet* matls)
+void SDInterfaceModel::addComputesAndRequiresDivergence(      SchedulerP  & sched   ,
+                                                        const PatchSet    * patches ,
+                                                        const MaterialSet * matls   )
 {
 }
 
@@ -64,6 +69,24 @@ void SDInterfaceModel::sdInterfaceDivergence(const ProcessorGroup*,
                                            const MaterialSubset* matls,
                                            DataWarehouse* old_dw,
                                            DataWarehouse* new_dw)
+{
+}
+
+void SDInterfaceModel::addComputesAndRequiresFlux(
+                                                        SchedulerP  & sched   ,
+                                                  const PatchSet    * patches ,
+                                                  const MaterialSet * matls
+                                                 )
+{
+}
+
+void SDInterfaceModel::sdInterfaceFlux(
+                                       const ProcessorGroup *         ,
+                                       const PatchSubset    * patches ,
+                                       const MaterialSubset * matls   ,
+                                             DataWarehouse  * oldDW   ,
+                                             DataWarehouse  * newDW
+                                      )
 {
 }
 

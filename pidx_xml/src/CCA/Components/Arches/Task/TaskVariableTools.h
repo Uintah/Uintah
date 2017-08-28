@@ -64,6 +64,18 @@ namespace Uintah{
 
         }
 
+         /** @brief Return the spp time factor: t_ssp = t + factor * dt **/
+        inline const double get_ssp_time_factor( const int rk_step ){
+
+        if ( rk_step == 0 ){
+           return 0.;
+        } else if ( rk_step == 1 ){
+           return 1.;
+        } else {
+           return 0.5;
+        }
+
+        }
         //====================================================================================
         // GRID VARIABLE ACCESS
         //====================================================================================

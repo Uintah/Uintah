@@ -596,8 +596,7 @@ class OnDemandDataWarehouse : public DataWarehouse {
 
     inline Task::WhichDW getWhichDW(RunningTaskInfo *info);
 
-    // These will throw an exception if access is not allowed for the
-    // curent task.
+    // These will throw an exception if access is not allowed for the current task.
     inline void checkGetAccess(const VarLabel* label,
                                int matlIndex,
                                const Patch* patch,
@@ -613,8 +612,7 @@ class OnDemandDataWarehouse : public DataWarehouse {
                                   int matlIndex,
                                   const Patch* patch);
 
-    // These will return false if access is not allowed for
-    // the current task.
+    // These will return false if access is not allowed for the current task.
     inline bool hasGetAccess(const Task* runningTask,
                              const VarLabel* label,
                              int matlIndex,

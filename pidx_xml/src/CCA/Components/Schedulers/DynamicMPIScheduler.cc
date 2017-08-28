@@ -89,24 +89,6 @@ DynamicMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec,
   else if (taskQueueAlg == "Stack") {
     m_task_queue_alg = Stack;
   }
-  else if (taskQueueAlg == "MostChildren") {
-    m_task_queue_alg = MostChildren;
-  }
-  else if (taskQueueAlg == "LeastChildren") {
-    m_task_queue_alg = LeastChildren;
-  }
-  else if (taskQueueAlg == "MostAllChildren") {
-    m_task_queue_alg = MostChildren;
-  }
-  else if (taskQueueAlg == "LeastAllChildren") {
-    m_task_queue_alg = LeastChildren;
-  }
-  else if (taskQueueAlg == "MostL2Children") {
-    m_task_queue_alg = MostL2Children;
-  }
-  else if (taskQueueAlg == "LeastL2Children") {
-    m_task_queue_alg = LeastL2Children;
-  }
   else if (taskQueueAlg == "MostMessages") {
     m_task_queue_alg = MostMessages;
   }

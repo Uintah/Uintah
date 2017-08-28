@@ -28,6 +28,7 @@
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/SchedulerP.h>
 #include <CCA/Components/MPM/MPMFlags.h>
+#include <CCA/Components/MPM/Contact/ContactMaterialSpec.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/SimulationState.h>
@@ -65,12 +66,28 @@ namespace Uintah {
                                        DataWarehouse* old_dw,
                                        DataWarehouse* new_dw);
 
+    virtual void addComputesAndRequiresFlux(
+                                                  SchedulerP  & sched   ,
+                                            const PatchSet    * patches ,
+                                            const MaterialSet * matls
+                                           );
+
+    virtual void sdInterfaceFlux(
+                                 const ProcessorGroup *         ,
+                                 const PatchSubset    * patches ,
+                                 const MaterialSubset * matls   ,
+                                       DataWarehouse  * oldDW   ,
+                                       DataWarehouse  * newDW
+                                );
+
     virtual void outputProblemSpec(ProblemSpecP& ps);
 
   protected:
 
     MPMLabel* d_mpm_lb;
     SimulationStateP d_shared_state;
+    ContactMaterialSpec d_materials_list;
+    MPMFlags* d_mpm_flags;
     SDInterfaceModel(const SDInterfaceModel&);
     SDInterfaceModel& operator=(const SDInterfaceModel&);
     

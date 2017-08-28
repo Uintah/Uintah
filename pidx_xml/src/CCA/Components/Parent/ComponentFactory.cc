@@ -266,9 +266,11 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
   if (sim_comp == "solvertest" || sim_comp == "SOLVERTEST") {
     return scinew SolverTest1(world);
   }
+#ifdef HAVE_HYPRE
   if (sim_comp == "solvertest2" || sim_comp == "SOLVERTEST2") {
     return scinew SolverTest2(world);
   }
+#endif
   if (sim_comp == "heat" || sim_comp == "heat") {
       return scinew Heat(world);
     }

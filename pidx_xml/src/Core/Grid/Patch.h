@@ -1242,7 +1242,7 @@ namespace Uintah {
     
     /**
      * Returns an IntVector with 0 or 1 depending on
-     * if there are neighboring patches on high low faces.
+     * if there are neighboring patches on high faces.
      */
     IntVector noNeighborsHigh() const;
     
@@ -1254,7 +1254,7 @@ namespace Uintah {
     
     /**
      * Returns an IntVector with 0 or 1 depending on
-     * if there are neighboring patches on high low faces.
+     * if there are neighboring patches on high faces.
      */
     IntVector neighborsHigh() const;
     

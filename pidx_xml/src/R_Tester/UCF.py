@@ -32,15 +32,8 @@ from helpers.modUPS import modUPS
 #  3) Performance_tests are not run on a debug build.
 #______________________________________________________________________
 
-UNUSED = [ ("dlb_mpm",        "mpmDLBTest.ups",     8, "NONE"), \
-           ("dlb_mpmice",     "mpmiceDLBTest.ups",  8, "NONE") 
-]
 
-NIGHTLYTESTS = [ ("ice_perf_test",          "icePerformanceTest.ups",             1, "Linux", ["do_performance_test"]),  \
-                 ("mpmice_perf_test",       "mpmicePerformanceTest.ups",          1, "Linux", ["do_performance_test"]), \
-                 ("LBwoRegrid",             "LBwoRegrid.ups",                     2, "Linux", ["exactComparison"]), \
-                 ("switchExample_impm_mpm", "Switcher/switchExample_impm_mpm.ups",1, "Linux", ["no_memoryTest"]), \
-                 ("switchExample3",         "Switcher/switchExample3.ups",        1, "Linux", ["no_restart","no_memoryTest"]), \
+NIGHTLYTESTS = [ ("ice_perf_32KPatches",  "icePerf_32KPatches.ups",            10, "Linux", ["do_performance_test"]),
                ]
 
 LOCALTESTS = [ ("switchExample_impm_mpm", "Switcher/switchExample_impm_mpm.ups",1, "Linux", ["no_memoryTest"]), \
@@ -63,7 +56,7 @@ def getTestList(me) :
   elif me == "DEBUGTESTS":
     TESTS = DEBUGTESTS
   elif me == "NIGHTLYTESTS":
-    TESTS = NIGHTLYTESTS
+    TESTS = LOCALTESTS + NIGHTLYTESTS
   else:
     print "\nERROR:UCF.py  getTestList:  The test list (%s) does not exist!\n\n" % me
     exit(1)

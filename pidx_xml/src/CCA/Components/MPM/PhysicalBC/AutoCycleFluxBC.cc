@@ -147,7 +147,7 @@ void AutoCycleFluxBC::scheduleApplyExternalScalarFlux(SchedulerP& sched, const P
   t->requires(Task::OldDW, d_mpm_lb->pSizeLabel,              Ghost::None);
   if(d_mpm_flags->d_doScalarDiffusion){
     // JBH -- Fixme -- TODO -- Fold into diffusion sublabel?
-    t->requires(Task::OldDW, d_mpm_lb->pAreaLabel,            Ghost::None);
+    t->requires(Task::OldDW, d_mpm_lb->diffusion->pArea,            Ghost::None);
   }
   t->requires(Task::OldDW, d_mpm_lb->pVolumeLabel,            Ghost::None);
   t->requires(Task::OldDW, d_mpm_lb->pDeformationMeasureLabel,Ghost::None);
@@ -265,7 +265,7 @@ void AutoCycleFluxBC::applyExternalScalarFlux(const ProcessorGroup* , const Patc
       old_dw->get(px,    d_mpm_lb->pXLabel,    pset);
       if(d_mpm_flags->d_doScalarDiffusion){
         // JBH -- Fixme -- TODO -- Fold into diffusion sublabel?
-        old_dw->get(parea, d_mpm_lb->pAreaLabel, pset);
+        old_dw->get(parea, d_mpm_lb->diffusion->pArea, pset);
       }
       old_dw->get(pvol,  d_mpm_lb->pVolumeLabel, pset);
       old_dw->get(psize, d_mpm_lb->pSizeLabel, pset);
