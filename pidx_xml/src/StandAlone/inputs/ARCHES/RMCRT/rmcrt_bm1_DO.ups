@@ -18,7 +18,7 @@
     <useLockStep> true </useLockStep>
   </AMR>
   <!--__________________________________-->
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>rmcrt_bm1_DO.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <save label="divQ" levels="-1"/>

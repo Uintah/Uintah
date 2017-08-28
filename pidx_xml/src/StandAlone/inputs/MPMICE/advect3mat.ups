@@ -147,7 +147,7 @@
     <!--____________________________________________________________________-->
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
-   <DataArchiver>
+   <DataArchiver type="PIDX">
       <filebase>advect3mat.uda</filebase>
       <outputTimestepInterval>0</outputTimestepInterval>
       <save label="vol_frac_CC"/>

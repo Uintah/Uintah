@@ -158,7 +158,7 @@
   </Time>
 
 
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>varden-2dmms-tabulated.uda</filebase>
     <outputTimestepInterval>10</outputTimestepInterval>
     <outputInitTimestep/>

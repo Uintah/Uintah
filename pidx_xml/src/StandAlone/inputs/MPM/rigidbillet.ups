@@ -18,7 +18,7 @@
        <delt_max>0.001</delt_max>
        <timestep_multiplier>0.8</timestep_multiplier>
    </Time>
-   <DataArchiver>
+   <DataArchiver type="PIDX">
         <filebase>rigidbillet.uda</filebase>
        <outputInterval>.01</outputInterval>
        <save label="KineticEnergy"/>

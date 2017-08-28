@@ -124,7 +124,7 @@
     <!--____________________________________________________________________-->
     <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
     <!--____________________________________________________________________-->
-   <DataArchiver>
+   <DataArchiver type="PIDX">
       <filebase>Couette-Poiseuille.uda</filebase>
       <!-- <outputInterval>1</outputInterval>  -->
       <outputTimestepInterval>10</outputTimestepInterval>       <!-- RT -->

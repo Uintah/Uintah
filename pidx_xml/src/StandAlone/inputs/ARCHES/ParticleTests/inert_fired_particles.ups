@@ -14,7 +14,7 @@
     <timestep_multiplier>0.4</timestep_multiplier>
     <max_Timesteps>100</max_Timesteps>
   </Time>
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>inert_fired_particles.uda</filebase>
     <outputInitTimestep/>
     <outputTimestepInterval>5</outputTimestepInterval>

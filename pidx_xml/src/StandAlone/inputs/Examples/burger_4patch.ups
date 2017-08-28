@@ -16,7 +16,7 @@
        <delt_max>1</delt_max>
        <timestep_multiplier>1</timestep_multiplier>
    </Time>
-   <DataArchiver>
+   <DataArchiver type="PIDX">
         <filebase>burger.uda</filebase>
        <outputInterval>1.e-2</outputInterval>
        <checkpoint cycle = "2" interval = "1"/>

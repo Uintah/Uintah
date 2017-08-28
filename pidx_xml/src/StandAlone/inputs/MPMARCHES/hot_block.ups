@@ -17,7 +17,7 @@
     <max_Timesteps>20</max_Timesteps>
   </Time>
 
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>hot_block.uda</filebase>
     <outputInitTimestep/>
     <outputTimestepInterval>1</outputTimestepInterval>

@@ -167,7 +167,7 @@
   </Time>
 
 
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>reduction-test.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>

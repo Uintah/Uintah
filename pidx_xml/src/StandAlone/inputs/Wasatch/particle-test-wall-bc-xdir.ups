@@ -151,7 +151,7 @@
     <max_Timesteps>500</max_Timesteps>
     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>particle-test-wall-bc-xdir.uda</filebase>
     <outputTimestepInterval>10</outputTimestepInterval>
     <outputInitTimestep/>

@@ -82,7 +82,7 @@
      <timestep_multiplier>0.2</timestep_multiplier>
    </Time>    
 
-   <DataArchiver>
+   <DataArchiver type="PIDX">
       <filebase>SmoothNanoPillar2D_FBC.uda</filebase>
       <outputInterval>2.e5</outputInterval>
 <!--

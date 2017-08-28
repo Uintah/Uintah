@@ -114,7 +114,7 @@
     <!--____________________________________________________________________-->
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
-   <DataArchiver>
+   <DataArchiver type="PIDX">
       <filebase>WaterAirOscillator.uda</filebase>
       <outputInterval>0.005</outputInterval>
       <save label="press_CC"/>

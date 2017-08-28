@@ -13,7 +13,7 @@
     <delt_max>0.00001</delt_max>
     <timestep_multiplier>0.4</timestep_multiplier>
   </Time>
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>Sphere_Aluminum-SAE30W_pbc_adjusted_long.uda</filebase>
     <outputInterval>0.01</outputInterval>
     <save label="KineticEnergy"/>

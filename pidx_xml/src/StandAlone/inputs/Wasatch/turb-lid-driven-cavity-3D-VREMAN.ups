@@ -106,7 +106,7 @@
   </Time>
 
 
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>turb-lid-driven-cavity-3D-Re1000_VREMAN.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>

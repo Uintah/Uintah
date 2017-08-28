@@ -147,7 +147,7 @@
   </Time>
 
 
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>compressible-bubble-2d-ASR.uda</filebase>
 <!--     <outputInterval>0.01</outputInterval> -->
     <outputTimestepInterval>1</outputTimestepInterval>

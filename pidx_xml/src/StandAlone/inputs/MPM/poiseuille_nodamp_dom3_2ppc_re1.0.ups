@@ -15,7 +15,7 @@
        <max_Timesteps>3000000</max_Timesteps>
        <timestep_multiplier>0.4</timestep_multiplier>
    </Time>
-   <DataArchiver>
+   <DataArchiver type="PIDX">
        <filebase>poiseuille_nodamping_domain3_2ppc_re1.0.uda</filebase>
        <outputInterval>5.0e-3</outputInterval>
        <save label="p.x"/>

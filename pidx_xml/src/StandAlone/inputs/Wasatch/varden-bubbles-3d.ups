@@ -143,7 +143,7 @@
   </Time>
 
 
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>varden-bubbles-3d.uda</filebase>
     <outputInterval>0.01</outputInterval>
 <!--     <outputTimestepInterval>10</outputTimestepInterval> -->

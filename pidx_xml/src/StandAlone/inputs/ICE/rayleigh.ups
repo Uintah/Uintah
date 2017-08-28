@@ -123,7 +123,7 @@
     <!--____________________________________________________________________-->
     <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
     <!--____________________________________________________________________-->
-   <DataArchiver>
+   <DataArchiver type="PIDX">
       <filebase>rayleigh.uda</filebase>
       <outputInterval>.1</outputInterval>
       <save label="press_equil_CC"/>

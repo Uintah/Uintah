@@ -19,7 +19,7 @@
   </Time>
 
   <!--__________________________________-->
-  <DataArchiver>
+  <DataArchiver type="PIDX">
      <filebase>AA_MMS_2L.uda</filebase>
     <outputInitTimestep/>
     <outputTimestepInterval>2</outputTimestepInterval>

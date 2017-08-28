@@ -160,7 +160,7 @@
   <!--____________________________________________________________________-->
   <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
   <!--____________________________________________________________________-->
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>advect2mat_AMR.uda</filebase>
     <outputTimestepInterval>0</outputTimestepInterval>
     <save label="press_equil_CC"/>

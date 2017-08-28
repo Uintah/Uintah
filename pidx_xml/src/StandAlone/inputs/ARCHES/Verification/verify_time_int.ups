@@ -18,7 +18,7 @@
     <max_Timesteps>2</max_Timesteps>
   </Time>
 
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>time_verification.uda</filebase>
     <outputInterval>0.01</outputInterval>
     <save label="totalKineticEnergy"/>

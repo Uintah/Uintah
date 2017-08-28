@@ -37,7 +37,7 @@
 
     </TransportEquation>
   </Wasatch>
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>RK-verification-sine-source.uda</filebase>
     <checkpoint cycle="2" interval="0.1"/>        
     <outputTimestepInterval>1</outputTimestepInterval>

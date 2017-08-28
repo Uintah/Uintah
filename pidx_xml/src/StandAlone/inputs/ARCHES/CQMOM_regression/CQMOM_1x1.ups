@@ -13,7 +13,7 @@
     <delt_max>        0.001        </delt_max>
     <timestep_multiplier> 0.7     </timestep_multiplier>
   </Time>
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <outputInitTimestep/>
     <filebase> CQMOM_1x1.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>

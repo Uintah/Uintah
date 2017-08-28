@@ -94,7 +94,7 @@
     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
 
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>wasatch_test.uda</filebase>
     <outputInitTimestep/>
     <outputTimestepInterval>10</outputTimestepInterval>

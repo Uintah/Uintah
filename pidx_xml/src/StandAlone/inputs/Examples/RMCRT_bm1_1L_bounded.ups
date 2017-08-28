@@ -105,7 +105,7 @@
     </Level>
   </Grid>
   <!--__________________________________-->
-  <DataArchiver>
+  <DataArchiver type="PIDX">
   <filebase>rmcrt_1L_maxLen.uda</filebase>
       <outputTimestepInterval>1</outputTimestepInterval>
       <save label = "color"   />

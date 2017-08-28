@@ -17,7 +17,7 @@
     <timestep_multiplier>0.3</timestep_multiplier>
   </Time>
 
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>jp8_tuna_can.uda</filebase>
     <outputInterval>0.2</outputInterval>
     <compression>gzip</compression>

@@ -275,7 +275,7 @@
     <!--____________________________________________________________________-->
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
-   <DataArchiver>
+   <DataArchiver type="PIDX">
       <filebase>JP8_2D_annulusAddProdMatl.uda</filebase>
       <outputInterval> 0.0005  </outputInterval>
       <!--

@@ -122,7 +122,7 @@
   <!--____________________________________________________________________-->
   <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
   <!--____________________________________________________________________-->
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>hollow_amr.uda</filebase>
     <outputInterval> .00001 </outputInterval>
     <!-- <outputTimestepInterval> 1 </outputTimestepInterval> -->

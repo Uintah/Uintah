@@ -35,7 +35,7 @@
        <timestep_multiplier>0.5</timestep_multiplier>
    </Time>
 
-   <DataArchiver>
+   <DataArchiver type="PIDX">
        <filebase>NairnTest.uda</filebase>
        <outputInterval>1.e-4</outputInterval>
        <save label = "TotalMomentum"/>

@@ -16,7 +16,7 @@
        <delt_max>5.e-8</delt_max>
        <timestep_multiplier>0.1</timestep_multiplier>
    </Time>
-   <DataArchiver>
+   <DataArchiver type="PIDX">
         <filebase>4disks_2d_mpm.uda</filebase>
        <outputInterval>5.e-7</outputInterval>
        <save label = "p.x"/>

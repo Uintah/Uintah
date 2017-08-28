@@ -63,7 +63,7 @@
   </Time>
 
 
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>dual-time-bc-example.uda</filebase>
 <!--     <outputInterval>0.1</outputInterval> -->
     <outputTimestepInterval>1</outputTimestepInterval>

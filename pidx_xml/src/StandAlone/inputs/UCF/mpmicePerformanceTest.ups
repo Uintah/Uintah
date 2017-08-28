@@ -146,7 +146,7 @@
     <!--____________________________________________________________________-->
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
-   <DataArchiver>
+   <DataArchiver type="PIDX">
       <filebase>performanceTest.uda</filebase>
       <outputTimestepInterval>0</outputTimestepInterval>
       <checkpoint cycle = "2" interval = "0.1"/>

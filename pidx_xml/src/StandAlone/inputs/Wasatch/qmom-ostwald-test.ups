@@ -97,7 +97,7 @@
     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
 
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>qmom-ostwald-test.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>

@@ -14,7 +14,7 @@
     <timestep_multiplier>0.4</timestep_multiplier>
     <max_Timesteps>25</max_Timesteps>
   </Time>
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>heptane_pipe.uda</filebase>
     <outputTimestepInterval>2</outputTimestepInterval>
     <save label="uVelocitySPBC"/>

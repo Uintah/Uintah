@@ -20,7 +20,7 @@
 
 
   <!--__________________________________-->
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>advect_2L_3D_edges.uda</filebase>
     <outputTimestepInterval>5</outputTimestepInterval>
     <save label = "KineticEnergy"/>

@@ -20,7 +20,7 @@
        <timestep_multiplier>0.8         </timestep_multiplier>
    </Time>    
 
-   <DataArchiver>
+   <DataArchiver type="PIDX">
       <filebase>erosion.uda</filebase>
       <outputTimestepInterval> 1 </outputTimestepInterval>
       <save label = "p.x"/>

@@ -209,7 +209,7 @@
     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
 
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>coal-cpd-cck-1D.uda</filebase>
     <outputTimestepInterval>2</outputTimestepInterval>
     <outputInitTimestep/>

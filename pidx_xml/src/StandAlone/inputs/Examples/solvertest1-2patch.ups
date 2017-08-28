@@ -16,7 +16,7 @@
        <delt_max>1</delt_max>
        <timestep_multiplier>1</timestep_multiplier>
    </Time>
-   <DataArchiver>
+   <DataArchiver type="PIDX">
         <filebase>solvertest_2patch.uda</filebase>
        <outputTimestepInterval>1</outputTimestepInterval>
        <save label = "pressure"/>

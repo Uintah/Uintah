@@ -16,7 +16,7 @@
        <delt_max>0.05</delt_max>
        <timestep_multiplier>0.2</timestep_multiplier>
    </Time>
-   <DataArchiver>
+   <DataArchiver type="PIDX">
         <filebase>bicrystal.uda</filebase>
        <outputInterval>.1</outputInterval>
         <save label = "p.x"/>

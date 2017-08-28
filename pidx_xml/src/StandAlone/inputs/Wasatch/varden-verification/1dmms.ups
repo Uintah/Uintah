@@ -166,7 +166,7 @@
   </Time>
 
 
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>mms1d1predictor.uda</filebase>
     <outputTimestepInterval>1000</outputTimestepInterval>
     <outputInitTimestep/>

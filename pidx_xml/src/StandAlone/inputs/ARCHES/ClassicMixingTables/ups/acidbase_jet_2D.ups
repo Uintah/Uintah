@@ -14,7 +14,7 @@
     <delt_max>0.01</delt_max>
     <timestep_multiplier>0.2</timestep_multiplier>
   </Time>
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase> acidbase_jet.uda </filebase>
     <outputTimestepInterval> 5 </outputTimestepInterval>
     <save label="pressurePS"/>

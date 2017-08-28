@@ -23,7 +23,7 @@
                                                 </boundary_traction_faces>
   </MPM>
   
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>foam.uda</filebase>
     <outputInterval>.05</outputInterval>
     <save label = "p.x"/>

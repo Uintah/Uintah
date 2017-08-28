@@ -14,7 +14,7 @@
     <timestep_multiplier>0.4</timestep_multiplier>
     <max_Timesteps>21</max_Timesteps>
   </Time>
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>channel_flow_z.uda</filebase>
     <outputInitTimestep/>
     <outputTimestepInterval>1</outputTimestepInterval>

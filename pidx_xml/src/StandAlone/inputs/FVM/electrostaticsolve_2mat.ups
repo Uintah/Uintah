@@ -17,7 +17,7 @@
      <timestep_multiplier>2</timestep_multiplier>    
    </Time>
    
-   <DataArchiver>
+   <DataArchiver type="PIDX">
      <filebase>electrostaticsolve_2mat.uda</filebase>                   
      <outputTimestepInterval>1</outputTimestepInterval>    
      <!--

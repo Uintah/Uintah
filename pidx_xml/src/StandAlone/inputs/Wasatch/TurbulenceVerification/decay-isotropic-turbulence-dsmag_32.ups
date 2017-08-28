@@ -127,7 +127,7 @@
   </Time>
 
 
-  <DataArchiver>
+  <DataArchiver type="PIDX">
  	 	 	 	 	 	 <save label="TotalKineticEnergy_uintah"/>
     <filebase>decay-isotropic-turbulence-dsmag-32.uda</filebase>
     <outputTimestepInterval>10</outputTimestepInterval>

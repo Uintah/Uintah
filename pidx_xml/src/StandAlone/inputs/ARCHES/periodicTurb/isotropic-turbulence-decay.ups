@@ -14,7 +14,7 @@
     <timestep_multiplier>0.25</timestep_multiplier>
   </Time>
   <!--__________________________________-->
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>isotropic-turbulence-decay.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>

@@ -19,7 +19,7 @@
   </Time>
 
 <!--__________________________________-->
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>T-channel.uda</filebase>
     <outputTimestepInterval>2</outputTimestepInterval> 
     <save label="totalKineticEnergy"/>

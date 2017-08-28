@@ -146,7 +146,7 @@
     <!--____________________________________________________________________-->
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
-   <DataArchiver>
+   <DataArchiver type="PIDX">
       <filebase>finitvel.uda</filebase>
       <outputInterval>.01</outputInterval>
       <save label="mom_L_ME_CC"/>

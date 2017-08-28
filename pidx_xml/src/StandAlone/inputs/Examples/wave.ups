@@ -17,7 +17,7 @@
        <delt_max>1</delt_max>
        <timestep_multiplier>.75</timestep_multiplier>
    </Time>
-   <DataArchiver>
+   <DataArchiver type="PIDX">
         <filebase>wave.uda</filebase>
        <outputTimestepInterval>10</outputTimestepInterval>
        <checkpoint cycle = "2" interval = "1"/>

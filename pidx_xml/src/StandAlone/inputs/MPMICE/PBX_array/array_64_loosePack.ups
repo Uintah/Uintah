@@ -96,7 +96,7 @@
     <!--____________________________________________________________________-->
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
-   <DataArchiver>
+   <DataArchiver type="PIDX">
       <filebase>2DArray64_loose.uda</filebase>
       <outputInterval> 0.00005 </outputInterval>
       <save label="press_CC"/>

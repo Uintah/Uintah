@@ -13,7 +13,7 @@
     <delt_max>        0.005        </delt_max>
     <timestep_multiplier> 0.7     </timestep_multiplier>
   </Time>
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <outputInitTimestep/>
     <filebase> angledWall3D.uda </filebase>
     <outputTimestepInterval> 1 </outputTimestepInterval>

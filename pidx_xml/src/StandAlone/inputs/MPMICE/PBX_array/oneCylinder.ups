@@ -95,7 +95,7 @@
     <!--____________________________________________________________________-->
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
-   <DataArchiver>
+   <DataArchiver type="PIDX">
       <filebase>2DCylinder.uda</filebase>
       <!--<outputInterval> 0.00005 </outputInterval> -->
       <outputTimestepInterval> 10 </outputTimestepInterval>

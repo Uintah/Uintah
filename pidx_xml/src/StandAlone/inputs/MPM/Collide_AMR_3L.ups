@@ -19,7 +19,7 @@
   </Time>
 
   <!--__________________________________-->
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>collide_AMR_3L_2D.uda</filebase>
     <outputTimestepInterval>25</outputTimestepInterval>
     <save label = "g.mass"/>

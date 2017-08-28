@@ -58,7 +58,7 @@ Index: ConstitutiveModel/HypoElastic.cc
        <delt_max>1.e-4</delt_max>
        <timestep_multiplier>0.2</timestep_multiplier>
    </Time>
-   <DataArchiver>
+   <DataArchiver type="PIDX">
         <filebase>gimpPaper.uda</filebase>
         <outputInterval>1.0</outputInterval>
         <save label = "p.x"/>

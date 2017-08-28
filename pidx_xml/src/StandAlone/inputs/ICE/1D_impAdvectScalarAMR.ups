@@ -142,7 +142,7 @@
     <!--____________________________________________________________________-->
     <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
     <!--____________________________________________________________________-->
-   <DataArchiver>
+   <DataArchiver type="PIDX">
       <filebase>impAdvectScalarAMR.uda</filebase>
       <!--<outputTimestepInterval>1</outputTimestepInterval> -->
       <outputInterval> 0.01 </outputInterval>

@@ -20,7 +20,7 @@
        <timestep_multiplier> 0.8    </timestep_multiplier>
    </Time>    
 
-   <DataArchiver>
+   <DataArchiver type="PIDX">
       <filebase>test_plane_shell_punch.uda</filebase>
       <outputTimestepInterval> 5 </outputTimestepInterval>
       <save label = "p.x"/>

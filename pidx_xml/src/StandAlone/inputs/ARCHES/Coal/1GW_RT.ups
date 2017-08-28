@@ -13,7 +13,7 @@
     <timestep_multiplier>0.4</timestep_multiplier>
     <max_Timesteps>10</max_Timesteps>
   </Time>
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>1GW_rate_dep.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>

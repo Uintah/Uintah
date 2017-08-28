@@ -20,7 +20,7 @@
        <timestep_multiplier>1.0</timestep_multiplier>
    </Time>
 
-   <DataArchiver>
+   <DataArchiver type="PIDX">
       <filebase>vesselslice25_512_881.uda</filebase>
       <outputInterval> 1.0 </outputInterval>
       <save label = "p.x"/>

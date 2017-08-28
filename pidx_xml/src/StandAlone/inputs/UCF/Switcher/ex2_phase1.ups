@@ -30,7 +30,7 @@
   <!--____________________________________________________________________-->
   <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
   <!--____________________________________________________________________-->
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>phase1.uda</filebase>                       <!-- ignored -->
     <outputTimestepInterval> 5 </outputTimestepInterval>
     <compression>gzip</compression>

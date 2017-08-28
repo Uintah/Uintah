@@ -21,7 +21,7 @@
     <timestep_multiplier>0.8</timestep_multiplier>
   </Time>
 
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>cylinderImpact_CNHP.uda</filebase>
     <outputInterval>20.0e-6</outputInterval>
     <save label = "KineticEnergy"/>

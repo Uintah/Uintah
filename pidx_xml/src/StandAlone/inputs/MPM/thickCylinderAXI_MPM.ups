@@ -22,7 +22,7 @@
        <timestep_multiplier>0.4         </timestep_multiplier>
    </Time>    
 
-   <DataArchiver>
+   <DataArchiver type="PIDX">
       <filebase>thickCylinderAXI.uda</filebase>
       <outputInterval> 1.0e-2 </outputInterval>
       <save label = "p.x"/>

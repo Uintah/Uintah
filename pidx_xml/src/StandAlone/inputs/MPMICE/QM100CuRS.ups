@@ -100,7 +100,7 @@
     <!--____________________________________________________________________-->
     <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
     <!--____________________________________________________________________-->
-   <DataArchiver>
+   <DataArchiver type="PIDX">
       <filebase>QM100Cu.uda</filebase>
       <outputInterval>5.00e-7</outputInterval>
       <save label="press_CC"/>

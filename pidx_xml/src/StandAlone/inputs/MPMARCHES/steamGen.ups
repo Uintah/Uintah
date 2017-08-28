@@ -17,7 +17,7 @@
     <max_Timesteps>25</max_Timesteps>
   </Time>
 
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>steamGen.uda</filebase>
     <outputInitTimestep/>
     <outputTimestepInterval>10</outputTimestepInterval>

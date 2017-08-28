@@ -21,7 +21,7 @@
      <timestep_multiplier> 0.1    </timestep_multiplier>
    </Time>
 
-   <DataArchiver>
+   <DataArchiver type="PIDX">
      <filebase>test_sphere_shell_compress.uda</filebase>
      <outputTimestepInterval> 5 </outputTimestepInterval>
      <save label = "KineticEnergy"/>

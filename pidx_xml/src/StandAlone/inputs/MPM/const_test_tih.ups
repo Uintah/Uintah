@@ -16,7 +16,7 @@
        <delt_max>2.e-3</delt_max>
        <timestep_multiplier>0.4</timestep_multiplier>
    </Time>
-   <DataArchiver>
+   <DataArchiver type="PIDX">
         <filebase>const_test_tih.uda</filebase>
        <outputInterval>0.1</outputInterval>
        <save label = "BndyForce_zminus"/>

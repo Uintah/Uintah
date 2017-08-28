@@ -24,6 +24,8 @@
 
 #include <CCA/Components/DataArchiver/DataArchiver.h>
 
+#include <mutex>
+
 #include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/LoadBalancerPort.h>
@@ -72,6 +74,8 @@
 
 #include <libxml/xmlwriter.h>
 
+
+static std::mutex pidx_mutex{};
 
 //TODO - BJW - if multilevel reduction doesn't work, fix all
 //       getMaterialSet(0)
@@ -2435,6 +2439,10 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
                                DataWarehouse        * new_dw,
                                int                    type )
 {
+  cout << d_myworld->myrank() << "just entered outputVariables\n";
+  std::lock_guard<std::mutex> pidx_guard( pidx_mutex );
+  cout << d_myworld->myrank() << "past lock for outputVariables\n";
+
   // IMPORTANT - this function should only be called once per
   //   processor per level per type (files will be opened and closed,
   //   and those operations are heavy on parallel file systems)
@@ -2862,7 +2870,9 @@ DataArchiver::saveLabels_PIDX( std::vector< SaveItem >     & saveLabels,
                                const std::string           & dirName,     // CCVars, SFC*Vars
                                ProblemSpecP                & doc )
 {
+
   cout << Uintah::Parallel::getMPIRank() << ": " << std::this_thread::get_id() << ": calling saveLabels_PIDX()\n";
+  
 
   size_t totalBytesSaved = 0;
 #if HAVE_PIDX

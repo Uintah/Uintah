@@ -14,7 +14,7 @@
     <delt_max>0.1</delt_max>
     <timestep_multiplier>0.2</timestep_multiplier>
   </Time>
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>channel_WD_CO.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <save label="cellType"/>

@@ -128,7 +128,7 @@
     <useLockStep> true </useLockStep>
   </AMR>    
   <!--__________________________________-->
-  <DataArchiver>
+  <DataArchiver type="PIDX">
   <filebase>RMCRT_DO_perf.uda</filebase>
       <outputTimestepInterval>0</outputTimestepInterval>
   </DataArchiver>

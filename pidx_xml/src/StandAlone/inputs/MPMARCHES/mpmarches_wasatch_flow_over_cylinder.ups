@@ -19,7 +19,7 @@
     <!--max_Timesteps>5</max_Timesteps-->
   </Time>
 
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>flow_over_cylinder.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <save label="uVelocitySPBC"/>

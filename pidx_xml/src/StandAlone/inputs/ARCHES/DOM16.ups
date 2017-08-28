@@ -19,7 +19,7 @@
     <timestep_multiplier>0.2</timestep_multiplier>
     <max_Timesteps>2</max_Timesteps>
   </Time>
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>DOM16.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <save label="radiationFluxE"/>

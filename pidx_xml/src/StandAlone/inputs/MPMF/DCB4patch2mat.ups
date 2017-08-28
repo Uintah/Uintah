@@ -16,7 +16,7 @@
        <delt_max>0.02</delt_max>
        <timestep_multiplier>0.8</timestep_multiplier>
    </Time>
-   <DataArchiver>
+   <DataArchiver type="PIDX">
         <filebase>DCB4patch2mat.uda</filebase>
        <outputInterval>.004</outputInterval>
         <save label = "p.x"/>

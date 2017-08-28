@@ -16,7 +16,7 @@
        <delt_max>2e-6</delt_max>
        <timestep_multiplier>0.8</timestep_multiplier>
    </Time>
-   <DataArchiver>
+   <DataArchiver type="PIDX">
         <filebase>DENCP.uda</filebase>
         <outputInterval>2e-6</outputInterval>-->
         <save label = "p.x"/>

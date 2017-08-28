@@ -21,7 +21,7 @@
      <timestep_multiplier> 0.1    </timestep_multiplier>
    </Time>
 
-   <DataArchiver>
+   <DataArchiver type="PIDX">
      <filebase>inflateSphereShell.uda</filebase>
      <outputInterval> 1.0e-4 </outputInterval>
      <save label = "KineticEnergy"/>

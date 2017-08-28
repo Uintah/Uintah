@@ -15,7 +15,7 @@
        <delt_max>1.e-7</delt_max>
        <timestep_multiplier>0.1</timestep_multiplier>
    </Time>
-   <DataArchiver>
+   <DataArchiver type="PIDX">
         <filebase>Charpy.uda</filebase>
        <outputInterval>1e-6</outputInterval>
        <save label = "p.x"/>

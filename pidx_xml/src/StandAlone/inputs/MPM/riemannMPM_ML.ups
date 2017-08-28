@@ -70,7 +70,7 @@
     <!--____________________________________________________________________-->
     <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
     <!--____________________________________________________________________-->
-   <DataArchiver>
+   <DataArchiver type="PIDX">
       <filebase>riemannMPM_2L.uda</filebase>
       <!--<outputInterval>.0001</outputInterval> -->
       <outputTimestepInterval> 10 </outputTimestepInterval>

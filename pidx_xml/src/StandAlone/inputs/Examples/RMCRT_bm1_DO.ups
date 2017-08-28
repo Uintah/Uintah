@@ -129,7 +129,7 @@
     <useLockStep> true </useLockStep>
   </AMR>    
   <!--__________________________________-->
-  <DataArchiver>
+  <DataArchiver type="PIDX">
   <filebase>RMCRT_bm1_DO.uda</filebase>
       <outputTimestepInterval>1</outputTimestepInterval>
       <save label = "sigmaT4"/>

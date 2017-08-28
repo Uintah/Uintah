@@ -171,7 +171,7 @@
     <!--____________________________________________________________________-->
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
-   <DataArchiver>
+   <DataArchiver type="PIDX">
       <filebase>cyl_crossFlow.uda</filebase>
       <outputInterval>0.1</outputInterval>
       <!--<outputTimestepInterval> 1 </outputTimestepInterval> -->

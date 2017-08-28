@@ -82,7 +82,7 @@
      <timestep_multiplier>0.2</timestep_multiplier>
    </Time>    
 
-   <DataArchiver>
+   <DataArchiver type="PIDX">
       <filebase>nanoPillar2D_FBC.uda</filebase>
 <!--
       <outputTimestepInterval>1</outputTimestepInterval>

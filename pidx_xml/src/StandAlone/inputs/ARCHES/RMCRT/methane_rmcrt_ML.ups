@@ -17,7 +17,7 @@
     <timestep_multiplier>0.35</timestep_multiplier>
     <max_Timesteps>5</max_Timesteps>
   </Time>
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>methane_1m.uda</filebase>
     <outputInterval>0.0</outputInterval>
     <save label="totalKineticEnergy"/>

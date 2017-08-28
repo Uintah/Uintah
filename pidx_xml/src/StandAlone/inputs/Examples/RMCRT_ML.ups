@@ -113,7 +113,7 @@
     <useLockStep> true </useLockStep>
   </AMR>    
   <!--__________________________________-->
-  <DataArchiver>
+  <DataArchiver type="PIDX">
   <filebase>RMCRT_ML.uda</filebase>
       <outputTimestepInterval>1</outputTimestepInterval>
       <save label = "color"   levels="-1"/>

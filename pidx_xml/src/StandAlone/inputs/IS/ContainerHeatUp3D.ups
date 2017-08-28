@@ -216,7 +216,7 @@
   <!--____________________________________________________________________-->
   <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
   <!--____________________________________________________________________-->
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>ContainerHeatUp3D.uda</filebase>
     <outputTimestepInterval>10</outputTimestepInterval>
     <compression>gzip</compression>

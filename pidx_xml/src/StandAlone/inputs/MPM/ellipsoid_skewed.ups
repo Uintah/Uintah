@@ -16,7 +16,7 @@
        <delt_max>0.001  </delt_max>
        <timestep_multiplier>0.6</timestep_multiplier>
    </Time>
-   <DataArchiver>
+   <DataArchiver type="PIDX">
        <filebase>ellipsoid_skewed.uda</filebase>
        <outputInterval>.01</outputInterval>
        <save label = "KineticEnergy"/>

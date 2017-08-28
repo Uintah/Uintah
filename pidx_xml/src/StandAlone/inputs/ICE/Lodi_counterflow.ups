@@ -165,7 +165,7 @@
     <!--____________________________________________________________________-->
     <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
     <!--____________________________________________________________________-->
-   <DataArchiver>
+   <DataArchiver type="PIDX">
       <filebase>counterflow_Lodi_.uda</filebase>
       <outputInterval>0.00001</outputInterval>
       <save label="vel_CC"/>

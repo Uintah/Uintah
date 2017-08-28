@@ -20,7 +20,7 @@
 
 
   <!--__________________________________-->
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>advect_2L_3D_slabs.uda</filebase>
     <!--<outputTimestepInterval>1</outputTimestepInterval> -->
     <outputInterval> 0.0002 </outputInterval>

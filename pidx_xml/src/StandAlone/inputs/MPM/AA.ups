@@ -23,7 +23,7 @@
         <DoExplicitHeatConduction>false</DoExplicitHeatConduction>
         <RunMMSProblem>AxisAligned</RunMMSProblem>
     </MPM>
-    <DataArchiver>
+    <DataArchiver type="PIDX">
         <filebase>AA_MMS.uda</filebase>
         <outputInterval>0.0005</outputInterval>
         <save label="p.x"></save>

@@ -107,7 +107,7 @@
     <!--____________________________________________________________________-->
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
-   <DataArchiver>
+   <DataArchiver type="PIDX">
       <filebase>M2wedge.2L.uda</filebase>
       <!--<outputInterval>0.000005</outputInterval>-->
       <outputTimestepInterval> 2 </outputTimestepInterval>

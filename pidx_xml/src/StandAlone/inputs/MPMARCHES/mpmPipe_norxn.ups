@@ -16,7 +16,7 @@
     <timestep_multiplier>0.35</timestep_multiplier>
   </Time>
 
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>nonreacting_pipe.uda</filebase>
     <outputInterval>0.1</outputInterval>
     <save label="p.particleID"/>

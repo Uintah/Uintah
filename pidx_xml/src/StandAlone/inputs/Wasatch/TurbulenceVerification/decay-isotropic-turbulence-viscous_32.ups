@@ -130,7 +130,7 @@
   </Time>
 
 
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>decay-isotropic-turbulence-viscous-32.uda</filebase>
     <outputTimestepInterval>10</outputTimestepInterval>
     <outputInitTimestep/>

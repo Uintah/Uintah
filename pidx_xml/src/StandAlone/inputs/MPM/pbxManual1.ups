@@ -16,7 +16,7 @@
        <delt_max>0.01</delt_max>
        <timestep_multiplier>0.8</timestep_multiplier>
    </Time>
-   <DataArchiver>
+   <DataArchiver type="PIDX">
         <filebase>pbxManual1.uda</filebase>
        <outputInterval>0.001</outputInterval>
        <save label = "p.x"/>

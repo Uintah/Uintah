@@ -138,7 +138,7 @@
   </Time>
 
 
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>varden-3d_lowres_jet-a_Imp-r5_16p.uda</filebase>
     <outputTimestepInterval>2</outputTimestepInterval>
     <outputInitTimestep/>

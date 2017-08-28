@@ -18,7 +18,7 @@
         <max_Timesteps>10</max_Timesteps>
     </Time>
     
-    <DataArchiver>
+    <DataArchiver type="PIDX">
         <filebase>intrusion_test.uda</filebase>
         <outputInitTimestep/>
         <outputTimestepInterval>1</outputTimestepInterval>

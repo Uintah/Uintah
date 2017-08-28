@@ -12,7 +12,7 @@
     <delt_max>0.01</delt_max>
     <timestep_multiplier>0.35</timestep_multiplier>
   </Time>
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>helium_HI_Base.uda</filebase>
     <outputInterval>0.01</outputInterval>
     <save label="totalKineticEnergy"/>

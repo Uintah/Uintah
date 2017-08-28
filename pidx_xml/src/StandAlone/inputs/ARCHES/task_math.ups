@@ -15,7 +15,7 @@
     <timestep_multiplier>0.1</timestep_multiplier>
     <max_Timesteps>3</max_Timesteps>
   </Time>
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>task_math.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>

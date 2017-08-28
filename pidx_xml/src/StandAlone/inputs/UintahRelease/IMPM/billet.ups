@@ -46,7 +46,7 @@
         </Level>
     </Grid>
 
-   <DataArchiver>
+   <DataArchiver type="PIDX">
         <filebase>billet.static.uda</filebase>
         <outputInterval>.01</outputInterval>
         <save label="p.x"/>

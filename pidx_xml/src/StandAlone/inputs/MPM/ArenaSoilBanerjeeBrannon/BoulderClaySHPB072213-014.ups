@@ -16,7 +16,7 @@
       <timestep_multiplier> 0.3 </timestep_multiplier>
   </Time>
 
-  <DataArchiver>
+  <DataArchiver type="PIDX">
       <filebase>BoulderClaySHPB072213-014.uda</filebase>
       <outputInterval>5.0e-5</outputInterval>
       <!-- <outputTimestepInterval>5</outputTimestepInterval> -->

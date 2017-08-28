@@ -16,7 +16,7 @@
     <timestep_multiplier>0.3</timestep_multiplier>
     <max_Timesteps>50</max_Timesteps>
   </Time>
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>almgren-mms.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
@@ -110,6 +110,7 @@
         <force_area_calc/>
       </BoundaryConditions>
       <KokkosSolver>
+        <!--<global_pack_tasks/>-->
       </KokkosSolver>
     </ARCHES>
   </CFD>

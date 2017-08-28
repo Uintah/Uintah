@@ -17,7 +17,7 @@
     <max_Timesteps>10</max_Timesteps>
   </Time>
 
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>driven_cavity_3d.uda</filebase>
     <outputInitTimestep/>
     <outputTimestepInterval>2</outputTimestepInterval>

@@ -25,7 +25,7 @@
     <!--____________________________________________________________________-->
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
-   <DataArchiver>
+   <DataArchiver type="PIDX">
       <filebase>halfSpaceAreniscaBB_EP_JWLMPM_GIMP.uda</filebase>
       <outputTimestepInterval> 30 </outputTimestepInterval>
       <save label = "g.mass"/>

@@ -138,7 +138,7 @@
     <!--____________________________________________________________________-->
     <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
     <!--____________________________________________________________________-->
-   <DataArchiver>
+   <DataArchiver type="PIDX">
       <filebase>riemann3D.uda</filebase>
       <outputInterval>0.0125</outputInterval>
       <save label="delP_Dilatate"/>

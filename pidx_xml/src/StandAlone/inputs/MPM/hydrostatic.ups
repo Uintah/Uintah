@@ -15,7 +15,7 @@
        <max_Timesteps>3000000</max_Timesteps>
        <timestep_multiplier>0.4</timestep_multiplier>
    </Time>
-   <DataArchiver>
+   <DataArchiver type="PIDX">
        <filebase>hydrostatic.uda</filebase>
        <outputInterval>1.0e-1</outputInterval>
        <save label="p.x"/>

@@ -133,7 +133,7 @@
     <!--____________________________________________________________________-->
     <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
     <!--____________________________________________________________________-->
-   <DataArchiver>
+   <DataArchiver type="PIDX">
       <filebase>JWLpp12mmRS.ML.uda</filebase>
 <!--
       <outputTimestepInterval>1</outputTimestepInterval>

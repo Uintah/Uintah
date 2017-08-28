@@ -20,7 +20,7 @@
 
 
   <!--__________________________________-->
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>advect_3L_2D.uda</filebase>
     <!--<outputInitTimestep/> -->
     <outputTimestepInterval>20</outputTimestepInterval>

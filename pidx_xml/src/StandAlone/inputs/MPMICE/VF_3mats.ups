@@ -20,7 +20,7 @@
     <!--____________________________________________________________________-->
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
-   <DataArchiver>
+   <DataArchiver type="PIDX">
        <filebase>VF3mat.uda</filebase>
        <outputInterval>.0001</outputInterval>
        <!--<outputDoubleAsFloat/>  scirun doesn't like this for some reason.-->

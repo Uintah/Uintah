@@ -15,7 +15,7 @@
      <max_Timesteps>   10     </max_Timesteps>
      <timestep_multiplier>0.4</timestep_multiplier>
   </Time>
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>amr_nano_pillar2.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <save label="p.x"/>

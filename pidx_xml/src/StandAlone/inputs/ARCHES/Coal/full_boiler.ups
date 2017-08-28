@@ -13,7 +13,7 @@
     <delt_max>2e-4</delt_max>
     <timestep_multiplier>0.35</timestep_multiplier>
   </Time>
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>AlstomFull.uda</filebase>
     <outputInitTimestep/>
     <outputTimestepInterval>100</outputTimestepInterval>

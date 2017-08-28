@@ -20,7 +20,7 @@
        <timestep_multiplier> 0.8    </timestep_multiplier>
    </Time>    
 
-   <DataArchiver>
+   <DataArchiver type="PIDX">
       <filebase>pinchedCylShell.uda</filebase>
       <outputInterval> 1.0e-4 </outputInterval>
       <save label = "p.x"/>

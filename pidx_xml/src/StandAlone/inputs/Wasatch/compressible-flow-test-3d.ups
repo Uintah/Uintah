@@ -155,7 +155,7 @@
   </Time>
 
 
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>compressible-flow-test-3d.uda</filebase>
     <outputTimestepInterval>8</outputTimestepInterval>
     <outputInitTimestep/>

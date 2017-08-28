@@ -43,7 +43,7 @@
 
     </TransportEquation>
   </Wasatch>
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>dual-time-exp-decay.uda</filebase>
     <checkpoint cycle="2" interval="0.1"/>    
     <outputTimestepInterval>1</outputTimestepInterval>

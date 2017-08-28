@@ -17,7 +17,7 @@
       <timestep_multiplier>0.1</timestep_multiplier>
   </Time>
 
-  <DataArchiver>
+  <DataArchiver type="PIDX">
       <filebase>AreniscaTest_09_FluidFilledPoreSpace.uda</filebase>
       <outputInterval>0.0001</outputInterval>
       <save label = "p.x"/>

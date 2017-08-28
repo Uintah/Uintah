@@ -16,7 +16,7 @@
        <delt_max>4e-6</delt_max>
        <timestep_multiplier>0.8</timestep_multiplier>
    </Time>
-   <DataArchiver>
+   <DataArchiver type="PIDX">
         <filebase>collinearDiscsCP.uda</filebase>
        <!--outputInterval>4e-6</outputInterval>-->
         <outputTimestepInterval>4</outputTimestepInterval>

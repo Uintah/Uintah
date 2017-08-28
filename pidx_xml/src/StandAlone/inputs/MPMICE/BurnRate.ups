@@ -71,7 +71,7 @@
     <!--____________________________________________________________________-->
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
-   <DataArchiver>
+   <DataArchiver type="PIDX">
       <filebase>BurnRate.uda</filebase>
     <outputInterval> 1e-6</outputInterval>
   <!-- <outputTimestepInterval> 1 </outputTimestepInterval>-->

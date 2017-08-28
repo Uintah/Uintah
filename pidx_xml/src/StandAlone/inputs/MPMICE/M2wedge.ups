@@ -105,7 +105,7 @@
     <!--____________________________________________________________________-->
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
-   <DataArchiver>
+   <DataArchiver type="PIDX">
       <filebase>Mach2_wedge.uda</filebase>
       <outputInterval>0.00001</outputInterval>
       <save label = "press_equil_CC"/>

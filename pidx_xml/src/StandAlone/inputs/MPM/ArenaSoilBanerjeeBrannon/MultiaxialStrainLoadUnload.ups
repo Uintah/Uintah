@@ -16,7 +16,7 @@
       <timestep_multiplier>0.3</timestep_multiplier>
   </Time>
 
-  <DataArchiver>
+  <DataArchiver type="PIDX">
       <filebase>MultiaxialStrainLoadUnload.uda</filebase>
       <outputInterval>0.04</outputInterval>
       <outputInitTimestep/>

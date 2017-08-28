@@ -19,7 +19,7 @@
        <timestep_multiplier>0.8</timestep_multiplier>
    </Time>
 
-   <DataArchiver>
+   <DataArchiver type="PIDX">
         <filebase>sidecrack.uda</filebase>
         <outputInterval>.02</outputInterval>
         <save label="KineticEnergy"/>
