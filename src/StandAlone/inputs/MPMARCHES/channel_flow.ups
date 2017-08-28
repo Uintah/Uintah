@@ -19,7 +19,7 @@
     <max_Timesteps>5</max_Timesteps>
   </Time>
 
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>new_channel_flow.uda</filebase>
     <outputInitTimestep/>
     <outputTimestepInterval>1</outputTimestepInterval>

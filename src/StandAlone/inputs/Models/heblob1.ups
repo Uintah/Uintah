@@ -135,7 +135,7 @@
     <!--____________________________________________________________________-->
     <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
     <!--____________________________________________________________________-->
-   <DataArchiver>
+   <DataArchiver type="PIDX">
       <filebase>HeliumBlob1.uda</filebase>
       <outputInterval>0.1</outputInterval> 
       <save label="vel_CC"/>

@@ -41,7 +41,7 @@
   <!--____________________________________________________________________-->
   <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
   <!--____________________________________________________________________-->
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>containerHeatup.uda</filebase> <!-- ignored by switcher -->
     <outputTimestepInterval>1</outputTimestepInterval>
     <save label = "p.x"/>

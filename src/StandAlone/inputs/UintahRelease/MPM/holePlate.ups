@@ -16,7 +16,7 @@
        <delt_max>0.01</delt_max>
        <timestep_multiplier>0.4</timestep_multiplier>
    </Time>
-   <DataArchiver>
+   <DataArchiver type="PIDX">
        <filebase>hole_plate.uda</filebase>
        <outputInterval>.1</outputInterval>
        <save label = "p.x"/>

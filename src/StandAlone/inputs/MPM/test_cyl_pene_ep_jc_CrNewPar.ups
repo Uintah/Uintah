@@ -23,7 +23,7 @@
     <timestep_multiplier>0.2</timestep_multiplier>
   </Time>
 
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>test_cyl_pene_ep_jc_ero.uda</filebase>
     <outputTimestepInterval>50</outputTimestepInterval>
     <save label = "p.x"/>

@@ -130,7 +130,7 @@
     <!--____________________________________________________________________-->
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
-   <DataArchiver>
+   <DataArchiver type="PIDX">
       <filebase>advect_mpmice.uda</filebase>
       <outputInterval>0.02</outputInterval>
       <save label="press_CC"/>

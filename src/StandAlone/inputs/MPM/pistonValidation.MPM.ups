@@ -83,7 +83,7 @@
     <!--____________________________________________________________________-->
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
-    <DataArchiver>
+    <DataArchiver type="PIDX">
       <filebase>PistonVal.MPM.uda</filebase>
       <outputInterval> 1.0e-4 </outputInterval>
       <save label = "p.x"/>

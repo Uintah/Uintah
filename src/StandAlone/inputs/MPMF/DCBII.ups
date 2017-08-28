@@ -16,7 +16,7 @@
        <delt_max>0.004</delt_max>
        <timestep_multiplier>0.8</timestep_multiplier>
    </Time>
-   <DataArchiver>
+   <DataArchiver type="PIDX">
         <filebase>DCBIII.uda</filebase>
        <outputInterval>.008</outputInterval>
         <computeJKInterval>2.e-4</computeJKInterval>

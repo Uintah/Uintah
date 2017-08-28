@@ -15,7 +15,7 @@
        <delt_max>2.e-3</delt_max>
        <timestep_multiplier>0.5</timestep_multiplier>
    </Time>
-   <DataArchiver>
+   <DataArchiver type="PIDX">
      <filebase>output_2D_compression_split_nonlocal_dx0.1.uda</filebase>
        <outputInterval>5.0e-5</outputInterval>
        <save label = "p.x"/>

@@ -85,7 +85,7 @@
     <!--____________________________________________________________________-->
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
-   <DataArchiver>
+   <DataArchiver type="PIDX">
       <filebase>InductionPropagation.uda</filebase>
       <outputInterval> 1e-7</outputInterval>
       <!--   <outputTimestepInterval> 10 </outputTimestepInterval> -->

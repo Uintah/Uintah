@@ -23,7 +23,7 @@
        <artificial_viscosity>true</artificial_viscosity>
     </MPM>
 
-    <DataArchiver>
+    <DataArchiver type="PIDX">
         <filebase>foam_crush.uda</filebase>
         <outputInterval>.01</outputInterval>
         <save label = "KineticEnergy"/>

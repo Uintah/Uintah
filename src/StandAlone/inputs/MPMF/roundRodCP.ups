@@ -16,7 +16,7 @@
        <delt_max>.5e-6</delt_max>
        <timestep_multiplier>0.8</timestep_multiplier>
    </Time>
-   <DataArchiver>
+   <DataArchiver type="PIDX">
         <filebase>roundRodCP.uda</filebase>
        <outputInterval>.5e-6</outputInterval>
         <save label = "p.x"/>

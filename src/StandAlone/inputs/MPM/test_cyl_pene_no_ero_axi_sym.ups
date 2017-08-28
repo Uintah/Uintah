@@ -24,7 +24,7 @@
     <timestep_multiplier>0.5</timestep_multiplier>
   </Time>
 
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>test_cyl_pene_no_ero.uda</filebase>
     <outputTimestepInterval>10</outputTimestepInterval>
     <!--

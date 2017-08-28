@@ -16,7 +16,7 @@
        <delt_max>1.e-6</delt_max>
        <timestep_multiplier>0.8</timestep_multiplier>
    </Time>
-   <DataArchiver>
+   <DataArchiver type="PIDX">
         <filebase>regressionFMPM.uda</filebase>
         <outputTimestepInterval>1</outputTimestepInterval>
         <save label = "p.x"/>

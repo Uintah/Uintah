@@ -43,7 +43,7 @@
   <!--____________________________________________________________________-->
   <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
   <!--____________________________________________________________________-->
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>JP8_fire.uda</filebase>
     <outputTimestepInterval> 1 </outputTimestepInterval>
     <save label="vol_frac_CC"/>

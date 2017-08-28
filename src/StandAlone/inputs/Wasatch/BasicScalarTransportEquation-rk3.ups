@@ -121,7 +121,7 @@
     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
 
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>basic-scalar-transport-rk3.uda</filebase>
     <outputTimestepInterval>2</outputTimestepInterval>
     <outputInitTimestep/>

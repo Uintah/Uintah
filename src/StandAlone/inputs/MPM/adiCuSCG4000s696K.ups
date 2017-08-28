@@ -16,7 +16,7 @@
     <delt_max>             1.e-5   </delt_max>
     <timestep_multiplier>  0.5     </timestep_multiplier>
   </Time>
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>adiCuSCG4000s696K.uda</filebase>
     <outputInterval>1.0e-6</outputInterval>
     <save label = "BndyForce_zminus"/>

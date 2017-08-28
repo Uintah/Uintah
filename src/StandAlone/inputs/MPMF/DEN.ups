@@ -16,7 +16,7 @@
        <delt_max>0.5e-6</delt_max>
        <timestep_multiplier>0.8</timestep_multiplier>
    </Time>
-   <DataArchiver>
+   <DataArchiver type="PIDX">
         <filebase>DEN.uda</filebase>
        <outputInterval>.5e-6</outputInterval>
        <save label = "KineticEnergy"/>

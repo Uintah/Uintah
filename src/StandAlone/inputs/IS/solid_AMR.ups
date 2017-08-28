@@ -121,7 +121,7 @@
   <!--____________________________________________________________________-->
   <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
   <!--____________________________________________________________________-->
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>solid_amr.uda</filebase>
     <outputInterval> 0.000025 </outputInterval>
     <save label="press_CC"/>

@@ -131,7 +131,7 @@
     <!--____________________________________________________________________-->
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
-   <DataArchiver>
+   <DataArchiver type="PIDX">
       <filebase>symdiw.uda</filebase>
       <outputInterval>0.005</outputInterval>
       <save label = "mom_L_ME_CC"/>

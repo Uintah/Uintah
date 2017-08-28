@@ -72,7 +72,7 @@
          </Box>
       </Level>
    </Grid>
-   <DataArchiver>
+   <DataArchiver type="PIDX">
       <filebase>pressBehindShock.uda</filebase>
       <outputInterval>0.02</outputInterval>
       <save label = "p.x"/>

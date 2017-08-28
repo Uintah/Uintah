@@ -115,7 +115,7 @@
   </Time>
 
 
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>taylor-flow-porous-channel.uda</filebase>
     <outputTimestepInterval>1000</outputTimestepInterval>
     <outputInitTimestep/>

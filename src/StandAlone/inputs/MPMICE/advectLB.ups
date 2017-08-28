@@ -146,7 +146,7 @@
     <!--____________________________________________________________________-->
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
-   <DataArchiver>
+   <DataArchiver type="PIDX">
       <filebase>advectLB.uda</filebase>
       <outputTimestepInterval>100</outputTimestepInterval>
       <save label="press_equil_CC"/>

@@ -17,7 +17,7 @@
         <timestep_multiplier>0.8</timestep_multiplier>
    </Time>
 
-   <DataArchiver>
+   <DataArchiver type="PIDX">
         <filebase>10grains.uda</filebase>
         <outputInterval>.01</outputInterval>
         <save label = "KineticEnergy"/>

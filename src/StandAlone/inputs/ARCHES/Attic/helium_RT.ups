@@ -15,7 +15,7 @@
     <timestep_multiplier>0.35     </timestep_multiplier>
   </Time>
 
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>helium_RT.uda</filebase>
     <outputTimestepInterval>5</outputTimestepInterval>
     <save label="totalKineticEnergy"/>

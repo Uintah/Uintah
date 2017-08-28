@@ -17,7 +17,7 @@
       <timestep_multiplier>0.3</timestep_multiplier>
   </Time>
 
-  <DataArchiver>
+  <DataArchiver type="PIDX">
       <filebase>verifAreniscaTest_05_HydrostaticCompressionFixedCap.uda</filebase>
       <outputInterval>0.001</outputInterval>
       <save label = "p.x"/>

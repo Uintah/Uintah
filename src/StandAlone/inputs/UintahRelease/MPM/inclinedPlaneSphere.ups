@@ -15,7 +15,7 @@
        <timestep_multiplier>0.4</timestep_multiplier>
    </Time>
 
-   <DataArchiver>
+   <DataArchiver type="PIDX">
         <filebase>incplane.uda</filebase>
         <outputInterval>.1</outputInterval>
        <save label = "KineticEnergy"/>

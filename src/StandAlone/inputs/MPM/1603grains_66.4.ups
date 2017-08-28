@@ -21,7 +21,7 @@
        <time_integrator>explicit</time_integrator>
     </MPM>
 
-    <DataArchiver>
+    <DataArchiver type="PIDX">
         <filebase>1603grains_66.4.uda</filebase>
         <outputInterval>.01</outputInterval>
         <save label="KineticEnergy"/>

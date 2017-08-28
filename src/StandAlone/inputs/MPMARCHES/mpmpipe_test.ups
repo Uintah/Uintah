@@ -17,7 +17,7 @@
     <max_Timesteps>   50          </max_Timesteps>
   </Time>
 
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>mpmpipe_test.uda</filebase>
     <outputTimestepInterval>5</outputTimestepInterval>
     <save label="totalKineticEnergy"/>

@@ -13,7 +13,7 @@
        <delt_max>0.001</delt_max>
        <timestep_multiplier>0.4</timestep_multiplier>
    </Time>
-   <DataArchiver>
+   <DataArchiver type="PIDX">
        <filebase> output_jet_penetration_axisymmetric_berea.sandstone.uda </filebase>
        <outputInterval>10.0e-6</outputInterval>
        <save label = "p.x"/>

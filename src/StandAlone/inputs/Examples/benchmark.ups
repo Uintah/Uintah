@@ -16,7 +16,7 @@
   </Time>
   
   <!--__________________________________-->
-  <DataArchiver>
+  <DataArchiver type="PIDX">
   <filebase>poisson.uda</filebase>
       <outputTimestepInterval>1</outputTimestepInterval>
       <save label = "phi"/>

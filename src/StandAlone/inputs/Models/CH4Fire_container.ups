@@ -271,7 +271,7 @@
     <!--____________________________________________________________________-->
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
-   <DataArchiver>
+   <DataArchiver type="PIDX">
       <filebase>CH4_2D_annulus.uda</filebase>
       <outputInterval> 0.0005  </outputInterval>
       <compression>gzip</compression>

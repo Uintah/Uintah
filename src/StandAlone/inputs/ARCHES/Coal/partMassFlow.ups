@@ -24,7 +24,7 @@
     <outputNthProc>         8 </outputNthProc>
     <timestepInterval>      1000 </timestepInterval>
   </LoadBalancer>
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>partMassFlow.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <save label="residence_time"/>

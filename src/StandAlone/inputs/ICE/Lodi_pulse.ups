@@ -167,7 +167,7 @@
     <!--____________________________________________________________________-->
     <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
     <!--____________________________________________________________________-->
-   <DataArchiver>
+   <DataArchiver type="PIDX">
       <filebase>pulse_Lodi_2d.uda</filebase>
       <outputTimestepInterval>1</outputTimestepInterval>
       <save label="vel_CC"/>

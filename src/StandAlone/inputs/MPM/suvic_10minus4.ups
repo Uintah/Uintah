@@ -16,7 +16,7 @@
        <delt_max>1e-5</delt_max>
        <timestep_multiplier>0.4</timestep_multiplier>
    </Time>
-   <DataArchiver>
+   <DataArchiver type="PIDX">
         <filebase>suvic_10minus4.ups.uda</filebase>
        <outputInterval>0.00005</outputInterval>
         <save label = "BndyForce_zminus"/>

@@ -99,7 +99,7 @@
     </Level>
   </Grid>
   <!--__________________________________-->
-  <DataArchiver>
+  <DataArchiver type="PIDX">
   <filebase>rmcrt_1L_performance.uda</filebase>
   <outputTimestepInterval>0</outputTimestepInterval>
   </DataArchiver>

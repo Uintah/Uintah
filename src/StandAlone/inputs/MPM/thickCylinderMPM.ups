@@ -20,7 +20,7 @@
        <timestep_multiplier>0.3         </timestep_multiplier>
    </Time>    
 
-   <DataArchiver>
+   <DataArchiver type="PIDX">
       <filebase>thickCylinderMPM.uda</filebase>
       <outputInterval> 1.0e-5 </outputInterval>
       <save label = "p.x"/>

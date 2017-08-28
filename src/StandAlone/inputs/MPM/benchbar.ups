@@ -19,7 +19,7 @@
        <timestep_multiplier>0.8</timestep_multiplier>
    </Time>
 
-   <DataArchiver>
+   <DataArchiver type="PIDX">
         <filebase>bend.uda</filebase>
         <outputInterval>0</outputInterval>
    </DataArchiver>

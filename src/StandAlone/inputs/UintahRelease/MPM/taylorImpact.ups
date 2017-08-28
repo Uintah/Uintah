@@ -22,7 +22,7 @@
     <timestep_multiplier>0.5</timestep_multiplier>
   </Time>
 
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>taylorImpact.uda</filebase>
     <outputInterval>10.0e-6</outputInterval>
     <!--

@@ -19,7 +19,7 @@
     <timestep_multiplier>0.4</timestep_multiplier>
   </Time>
 
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>test_corrug_plate.uda</filebase>
     <outputInterval>0.0004</outputInterval>
     <save label = "KineticEnergy"/>

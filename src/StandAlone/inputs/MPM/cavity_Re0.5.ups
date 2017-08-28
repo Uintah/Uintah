@@ -13,7 +13,7 @@
     <delt_max>0.0001</delt_max>
     <timestep_multiplier>0.4</timestep_multiplier>
   </Time>
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>cavity_Re0.5.uda</filebase>
     <outputInterval>0.005</outputInterval>
     <save label="p.x"/>

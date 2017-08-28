@@ -142,7 +142,7 @@
     <!--____________________________________________________________________-->
     <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
     <!--____________________________________________________________________-->
-   <DataArchiver>
+   <DataArchiver type="PIDX">
       <filebase>riemanJWLC.uda</filebase>
       <outputInterval>.0001</outputInterval>
       <save label="vel_CC"/>

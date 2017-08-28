@@ -16,7 +16,7 @@
     <delt_max>             1.0e-1  </delt_max>
     <timestep_multiplier>  1.0     </timestep_multiplier>
   </Time>
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>adiCuSCG01s296K.uda</filebase>
     <outputInterval>1.0e-1</outputInterval>
     <!--

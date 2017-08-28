@@ -17,7 +17,7 @@
         <max_delt_increase>  1.0 </max_delt_increase>
         <timestep_multiplier>0.5 </timestep_multiplier>
    </Time>
-   <DataArchiver>
+   <DataArchiver type="PIDX">
        <filebase>VocalFold-VF.uda</filebase>
        <outputInterval>.0001</outputInterval>
        <compression>gzip</compression> 

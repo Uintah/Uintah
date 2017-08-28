@@ -16,7 +16,7 @@
        <delt_max>0.5</delt_max>
        <timestep_multiplier>0.8</timestep_multiplier>
    </Time>
-   <DataArchiver>
+   <DataArchiver type="PIDX">
         <filebase>4disks_2d_45.uda</filebase>
        <outputInterval>.1</outputInterval>
        <save label = "KineticEnergy"/>

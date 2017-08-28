@@ -16,7 +16,7 @@
     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
   <!--__________________________________-->
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>csmag-32.uda</filebase>
     <outputTimestepInterval>2</outputTimestepInterval>
     <outputInitTimestep/>

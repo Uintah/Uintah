@@ -14,7 +14,7 @@
     <timestep_multiplier>0.4</timestep_multiplier>
     <max_Timesteps>10</max_Timesteps>
   </Time>
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>multi-patch-intrusion-test.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <save label="uVelocitySPBC"/>

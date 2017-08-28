@@ -74,7 +74,7 @@
     <!--____________________________________________________________________-->
     <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
     <!--____________________________________________________________________-->
-   <DataArchiver>
+   <DataArchiver type="PIDX">
       <filebase>LightTime1D.uda</filebase>
       <outputInterval>2.00e-7</outputInterval>
       <save label="delP_Dilatate"/>

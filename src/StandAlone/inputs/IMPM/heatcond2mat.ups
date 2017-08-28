@@ -19,7 +19,7 @@
        <timestep_multiplier>1.0</timestep_multiplier>
    </Time>
 
-   <DataArchiver>
+   <DataArchiver type="PIDX">
         <filebase>heatcond2mat.uda</filebase>
         <outputInterval>.1</outputInterval>
        <save label = "p.particleID"/>

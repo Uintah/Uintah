@@ -23,7 +23,7 @@
     <timestep_multiplier>0.8</timestep_multiplier>
   </Time>
 
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>test_cyl_pene_hypo_jc_ero.uda</filebase>
     <outputTimestepInterval>10</outputTimestepInterval>
     <save label = "KineticEnergy"/>

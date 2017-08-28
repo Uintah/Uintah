@@ -20,7 +20,7 @@
        <timestep_multiplier>0.5         </timestep_multiplier>
    </Time>    
 
-   <DataArchiver>
+   <DataArchiver type="PIDX">
       <filebase>pressSmoothCylCBDI.uda</filebase>
       <outputInterval> 1.0 </outputInterval>
       <save label="BndyTraction_xminus"></save>

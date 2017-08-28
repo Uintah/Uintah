@@ -16,7 +16,7 @@
        <delt_max>0.1</delt_max>
        <timestep_multiplier>0.5</timestep_multiplier>
    </Time>
-   <DataArchiver>
+   <DataArchiver type="PIDX">
      <filebase>uniaxial_strain_rr.uda</filebase>
      <outputInterval>.01</outputInterval>
      <save label="BndyTraction_zminus"/>

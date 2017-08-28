@@ -16,7 +16,7 @@
        <delt_max>0.001</delt_max>
        <timestep_multiplier>0.6</timestep_multiplier>
    </Time>
-   <DataArchiver>
+   <DataArchiver type="PIDX">
         <filebase>periodic_spheres3D.uda</filebase>
        <outputTimestepInterval>20</outputTimestepInterval>
        <save label = "p.particleID"/>

@@ -15,7 +15,7 @@
     <timestep_multiplier>0.5</timestep_multiplier>
     <max_Timesteps>25</max_Timesteps>
   </Time>
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>pcoal_drag.uda</filebase>
     <outputTimestepInterval>4</outputTimestepInterval>
     <save label="totalKineticEnergy"/>

@@ -22,7 +22,7 @@
     <timestep_multiplier>0.4</timestep_multiplier>
   </Time>
 
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>test_gurson_beckerdrucker_mts.uda</filebase>
     <outputTimestepInterval>5</outputTimestepInterval>
     <save label = "KineticEnergy"/>

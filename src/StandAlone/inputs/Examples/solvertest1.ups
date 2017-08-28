@@ -24,7 +24,7 @@
      <timestep_multiplier>1</timestep_multiplier>    
    </Time>
    
-   <DataArchiver>
+   <DataArchiver type="PIDX">
      <filebase>solvertest.uda</filebase>                   
      <outputTimestepInterval>1</outputTimestepInterval>    
      <save label = "pressure"/>                            

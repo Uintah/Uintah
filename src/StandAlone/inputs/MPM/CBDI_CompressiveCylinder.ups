@@ -33,7 +33,7 @@
        <use_load_curves>true</use_load_curves>
        <use_CBDI_boundary_condition>true</use_CBDI_boundary_condition>
     </MPM>
-    <DataArchiver>
+    <DataArchiver type="PIDX">
         <filebase>ComCyl.uda</filebase>
         <outputInterval>0.02</outputInterval>
        <save label = "p.x"/>

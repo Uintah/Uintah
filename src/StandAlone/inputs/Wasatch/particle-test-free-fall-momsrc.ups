@@ -222,7 +222,7 @@
   </Time>
 
 
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>particle-test-free-fall-momsrc.uda</filebase>
     <outputTimestepInterval>100</outputTimestepInterval>
     <outputInitTimestep/>

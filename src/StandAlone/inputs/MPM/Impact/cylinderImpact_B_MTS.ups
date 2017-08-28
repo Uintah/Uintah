@@ -19,7 +19,7 @@
        <delt_max>1.0e-6</delt_max>
        <timestep_multiplier>0.8</timestep_multiplier>
    </Time>
-   <DataArchiver>
+   <DataArchiver type="PIDX">
         <filebase>cylinderImpact_B_MTS.uda</filebase>
        <outputInterval>5.0e-7</outputInterval>
        <save label = "KineticEnergy"/>

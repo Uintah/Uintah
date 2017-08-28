@@ -27,7 +27,7 @@
     <max_Timesteps> 10 </max_Timesteps>
     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>interior-bc-test.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>

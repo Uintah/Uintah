@@ -16,7 +16,7 @@
        <timestep_multiplier>0.4</timestep_multiplier>
        <max_Timesteps>4</max_Timesteps>
    </Time>
-   <DataArchiver>
+   <DataArchiver type="PIDX">
         <filebase>const_test_hypo.uda</filebase>
        <outputInterval>.01</outputInterval>
         <save label = "BndyForce_zminus"/>

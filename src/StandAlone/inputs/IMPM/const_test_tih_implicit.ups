@@ -16,7 +16,7 @@
        <delt_max>1.e-2</delt_max>
        <timestep_multiplier>1.0</timestep_multiplier>
    </Time>
-   <DataArchiver>
+   <DataArchiver type="PIDX">
         <filebase>const_test_tih_impm_y_dir.uda</filebase>
        <outputInterval>0.01</outputInterval>
        <save label = "p.x"/>

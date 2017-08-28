@@ -19,7 +19,7 @@
   </Time>
 
 <!--__________________________________-->
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>T-channel.uda</filebase>
 <!--<outputInitTimestep/>
     <outputTimestepInterval>1</outputTimestepInterval> -->

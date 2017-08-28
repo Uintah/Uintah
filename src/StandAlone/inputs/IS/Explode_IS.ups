@@ -277,7 +277,7 @@
   <!--____________________________________________________________________-->
   <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
   <!--____________________________________________________________________-->
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>Explode_IS.uda</filebase>
     <outputInterval> 0.0000025 </outputInterval>
     <!--

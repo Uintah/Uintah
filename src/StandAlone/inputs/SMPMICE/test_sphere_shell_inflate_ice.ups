@@ -23,7 +23,7 @@
      <timestep_multiplier> 1.0     </timestep_multiplier>
    </Time>
 
-   <DataArchiver>
+   <DataArchiver type="PIDX">
      <filebase>test_sphere_shell_inflate_ice.uda</filebase>
      <outputInterval> 0.4e-4 </outputInterval>
      <save label = "KineticEnergy"/>

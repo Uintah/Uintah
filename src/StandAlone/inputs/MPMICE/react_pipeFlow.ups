@@ -145,7 +145,7 @@
     <!--____________________________________________________________________-->
     <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
     <!--____________________________________________________________________-->
-   <DataArchiver>
+   <DataArchiver type="PIDX">
       <filebase>MPMICE_React_Pipeflow.uda</filebase>
       <outputTimestepInterval>10</outputTimestepInterval>
       <save label="press_equil_CC"/>

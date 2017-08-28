@@ -69,7 +69,7 @@
     <!--____________________________________________________________________-->
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
-   <DataArchiver>
+   <DataArchiver type="PIDX">
       <filebase>symInduction.uda</filebase>
       <!-- <outputInterval> 1e-7</outputInterval>-->
       <outputTimestepInterval> 1 </outputTimestepInterval> 

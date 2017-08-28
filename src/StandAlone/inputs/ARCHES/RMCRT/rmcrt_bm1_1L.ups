@@ -14,7 +14,7 @@
     <max_Timesteps> 4       </max_Timesteps>
     <timestep_multiplier>0.4</timestep_multiplier>
   </Time>
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>rmcrt_bm1_1L.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <save label="divQ" levels="-1"/>

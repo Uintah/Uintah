@@ -17,7 +17,7 @@
     <max_Timesteps>50</max_Timesteps>
   </Time>
 
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>wall_ht_fixed.uda</filebase>
     <outputInitTimestep/>
     <outputTimestepInterval>2</outputTimestepInterval>

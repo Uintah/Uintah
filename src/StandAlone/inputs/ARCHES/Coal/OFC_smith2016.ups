@@ -13,7 +13,7 @@
     <delt_max>4e-4</delt_max>
     <timestep_multiplier>0.3</timestep_multiplier>
   </Time>
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>OFC4_smith2016.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <save label="residence_time"/>

@@ -15,7 +15,7 @@
     <timestep_multiplier>0.4</timestep_multiplier>
     <max_Timesteps>2</max_Timesteps>
   </Time>
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <!--cloud benchmark, 24 rays, level symmetric quadrature-->
     <filebase>cloudBM24LS.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>

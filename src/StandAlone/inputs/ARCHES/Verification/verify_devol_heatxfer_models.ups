@@ -18,7 +18,7 @@
     <timestep_multiplier>0.1</timestep_multiplier>
   </Time>
 
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>scalarMMS_new.uda</filebase>
     <outputInitTimestep/>
     <outputTimestepInterval>5</outputTimestepInterval>

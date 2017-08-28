@@ -13,7 +13,7 @@
     <timestep_multiplier>0.4</timestep_multiplier>
     <max_Timesteps>25</max_Timesteps>
   </Time>
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>coal_channel_hi_vel.uda</filebase>
     <outputTimestepInterval>5</outputTimestepInterval>
     <save label="residence_time"/>

@@ -17,7 +17,7 @@
     <timestep_multiplier>0.1</timestep_multiplier>
   </Time>
 
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>DQMOM_Verification_Construction_12x12.uda</filebase>
     <outputInitTimestep/>
 <!--outputInterval>0.01</outputInterval-->

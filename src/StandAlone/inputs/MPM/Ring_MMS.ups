@@ -23,7 +23,7 @@
         <DoExplicitHeatConduction>false</DoExplicitHeatConduction>
        <RunMMSProblem>ExpandingRing</RunMMSProblem>
     </MPM>
-    <DataArchiver>
+    <DataArchiver type="PIDX">
         <filebase>Ring_MMS.uda</filebase>
         <outputInterval>0.0002</outputInterval>
        <save label = "p.x"/>

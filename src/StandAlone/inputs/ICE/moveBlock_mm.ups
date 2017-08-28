@@ -144,7 +144,7 @@
     <!--____________________________________________________________________-->
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
-   <DataArchiver>
+   <DataArchiver type="PIDX">
       <filebase>movBlock_mm.uda</filebase>
       <outputInterval>.00</outputInterval>
       <save label="vel_CC"/>

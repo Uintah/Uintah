@@ -16,7 +16,7 @@
        <delt_max>1</delt_max>
        <timestep_multiplier>1</timestep_multiplier>
    </Time>
-   <DataArchiver>
+   <DataArchiver type="PIDX">
         <filebase>particletest1.uda</filebase>
        <outputInterval>1</outputInterval>
        <save label = "p.mass"/>

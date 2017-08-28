@@ -17,7 +17,7 @@
     <timestep_multiplier>  0.5     </timestep_multiplier>
 
   </Time>
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>adiCuJC4000s696K.uda</filebase>
     <outputInterval>1.0e-6</outputInterval>
     <save label = "BndyForce_zminus"/>

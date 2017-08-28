@@ -14,7 +14,7 @@
     <timestep_multiplier>0.4</timestep_multiplier>
     <max_Timesteps>70</max_Timesteps>
   </Time>
-  <DataArchiver>
+  <DataArchiver type="PIDX">
     <filebase>source_channel_varden.uda</filebase>
     <outputInitTimestep/>
     <outputTimestepInterval>10</outputTimestepInterval>

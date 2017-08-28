@@ -15,7 +15,7 @@
        <max_Timesteps>3000000</max_Timesteps>
        <timestep_multiplier>0.4</timestep_multiplier>
    </Time>
-   <DataArchiver>
+   <DataArchiver type="PIDX">
        <filebase>Drop.uda</filebase>
        <outputInterval>.001</outputInterval>
        <save label="p.x"/>

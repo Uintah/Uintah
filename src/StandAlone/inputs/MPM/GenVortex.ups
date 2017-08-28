@@ -23,7 +23,7 @@
        <DoExplicitHeatConduction>false</DoExplicitHeatConduction>
        <RunMMSProblem>GeneralizedVortex</RunMMSProblem>
     </MPM>
-    <DataArchiver>
+    <DataArchiver type="PIDX">
         <filebase>GenVortex.uda</filebase>
         <outputInterval>0.02</outputInterval>
        <save label = "p.x"/>

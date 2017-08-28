@@ -30,7 +30,7 @@
        <delt_max>0.005</delt_max>
        <timestep_multiplier>0.6</timestep_multiplier>
    </Time>
-   <DataArchiver>
+   <DataArchiver type="PIDX">
        <filebase>cpti_disks.uda</filebase>
        <outputInterval>0.005</outputInterval>
        <save label = "KineticEnergy"/>

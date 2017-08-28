@@ -19,7 +19,7 @@
        <timestep_multiplier>0.6</timestep_multiplier>
    </Time>
 
-   <DataArchiver>
+   <DataArchiver type="PIDX">
         <filebase>heatcond2mat.uda</filebase>
         <outputTimestepInterval>25</outputTimestepInterval>
        <save label = "KineticEnergy"/>

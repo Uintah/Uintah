@@ -15,7 +15,7 @@
    <timestep_multiplier>1</timestep_multiplier>
  </Time>
  
- <DataArchiver>
+ <DataArchiver type="PIDX">
    <filebase>  burger.uda </filebase>
    <outputTimestepInterval>   1  </outputTimestepInterval>
    <checkpoint cycle = "2" interval = "1"/>

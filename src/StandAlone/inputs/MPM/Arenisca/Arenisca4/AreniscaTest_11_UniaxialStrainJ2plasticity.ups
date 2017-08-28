@@ -18,7 +18,7 @@
        <timestep_multiplier>1</timestep_multiplier>
    </Time>
 
-   <DataArchiver>
+   <DataArchiver type="PIDX">
        <filebase> AreniscaTest_11_UniaxialStrainJ2plasticity.uda </filebase>
        <outputInterval>.01</outputInterval>
        <save label="p.x"/>

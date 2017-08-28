@@ -28,7 +28,7 @@
         <artificial_viscosity_coeff2>3.0</artificial_viscosity_coeff2>
         <boundary_traction_faces>[xminus,xplus,yminus,yplus,zminus]</boundary_traction_faces>
     </MPM>
-    <DataArchiver>
+    <DataArchiver type="PIDX">
         <filebase>twoblock-single-rigid.uda</filebase>
         <outputInterval>0.1</outputInterval>
         <save label="BndyForce_zminus"></save>

@@ -43,7 +43,7 @@
   <!--____________________________________________________________________-->
   <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
   <!--____________________________________________________________________-->
-  <DataArchiver>  
+  <DataArchiver type="PIDX">  
     <filebase>example2_imp_mpmice.uda</filebase>
     <outputInterval> 0.0 </outputInterval> <!-- (Explicitly) don't save any data... -->
   </DataArchiver>
