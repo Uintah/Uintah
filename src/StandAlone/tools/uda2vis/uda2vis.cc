@@ -773,7 +773,7 @@ TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
         varLabels = schedulerP->getInitialRequiredVars();
     else
         varLabels = schedulerP->getComputedVars();
-        
+
     for (varIter = varLabels.begin(); varIter != varLabels.end(); ++varIter )
     {      
       const VarLabel *varLabel = *varIter;
@@ -781,20 +781,20 @@ TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
       VariableInfo varInfo;
       varInfo.name = varLabel->getName();
       varInfo.type = varLabel->typeDescription()->getName();
-    
+
       // Loop through all of the materials for this variable
       Scheduler::VarLabelMaterialMap::iterator matMapIter =
         pLabelMatlMap->find( varInfo.name );
-    
+
       if( matMapIter != pLabelMatlMap->end() )
       {
         std::list< int > &materials = matMapIter->second;
         std::list< int >::iterator matIter;
-        
+
         for (matIter = materials.begin(); matIter != materials.end(); ++matIter)
         {
           const int material = *matIter;
-          
+
           // Check to make sure the variable exists on at least one patch
           // for at least one level.
           bool exists = false;
@@ -1118,6 +1118,11 @@ static GridDataRaw* readPatchData(SchedulerP schedulerP,
       for (int i=0; i<gd->num; ++i)
         copyComponents<T>(&gd->data[i*gd->components], p);
     }
+    else if (varLabel->getName().find("FileInfo") == 0)
+    {
+      for (int i=0; i<gd->num*gd->components; ++i)
+        gd->data[i] = 0;
+    }
     else
     {
       PerPatchBase* patchVar = dynamic_cast<PerPatchBase*>(&var);
@@ -1313,8 +1318,8 @@ GridDataRaw* getGridData(SchedulerP schedulerP,
                                                   low, high, subtype);
   case Uintah::TypeDescription::PerPatch:
     return getPatchDataMainType<PerPatch>(schedulerP, patch, level,
-                                                                        varLabel, material,
-                                                                        low, high, subtype);
+                                          varLabel, material,
+                                          low, high, subtype);
   default:
     std::cerr << "Uintah/VisIt Libsim Error: unknown type: "
               << maintype->getName() << " for variable: "
