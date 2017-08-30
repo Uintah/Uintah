@@ -20,10 +20,6 @@ void UFromRhoU::problemSetup( ProblemSpecP& db ){
   m_v_vel_name = parse_ups_for_role( VVELOCITY, db, "vVelocitySPBC" );
   m_w_vel_name = parse_ups_for_role( WVELOCITY, db, "wVelocitySPBC" );
 
-  m_u_vel_name_cc = m_u_vel_name + "_cc";
-  m_v_vel_name_cc = m_v_vel_name + "_cc";
-  m_w_vel_name_cc = m_w_vel_name + "_cc";
-
   m_density_name = "density";
   m_xmom = "x-mom";
   m_ymom = "y-mom";
@@ -38,9 +34,6 @@ void UFromRhoU::create_local_labels(){
   register_new_variable<SFCXVariable<double> >( m_u_vel_name );
   register_new_variable<SFCYVariable<double> >( m_v_vel_name );
   register_new_variable<SFCZVariable<double> >( m_w_vel_name );
-  register_new_variable<CCVariable<double> >( m_u_vel_name_cc);
-  register_new_variable<CCVariable<double> >( m_v_vel_name_cc);
-  register_new_variable<CCVariable<double> >( m_w_vel_name_cc);
 
 }
 
@@ -56,9 +49,6 @@ void UFromRhoU::register_initialize( AVarInfo& variable_registry , const bool pa
   register_variable( m_u_vel_name, AFC::COMPUTES, variable_registry, _task_name );
   register_variable( m_v_vel_name, AFC::COMPUTES, variable_registry, _task_name );
   register_variable( m_w_vel_name, AFC::COMPUTES, variable_registry, _task_name );
-  register_variable( m_u_vel_name_cc, AFC::COMPUTES, variable_registry, _task_name );
-  register_variable( m_v_vel_name_cc, AFC::COMPUTES, variable_registry, _task_name );
-  register_variable( m_w_vel_name_cc, AFC::COMPUTES, variable_registry, _task_name );
   register_variable( m_eps_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, _task_name );
 
 }
@@ -83,9 +73,6 @@ void UFromRhoU::register_timestep_eval( VIVec& variable_registry, const int time
   register_variable( m_u_vel_name, AFC::COMPUTES, variable_registry, _task_name );
   register_variable( m_v_vel_name, AFC::COMPUTES, variable_registry, _task_name );
   register_variable( m_w_vel_name, AFC::COMPUTES, variable_registry, _task_name );
-  register_variable( m_u_vel_name_cc, AFC::COMPUTES, variable_registry, _task_name );
-  register_variable( m_v_vel_name_cc, AFC::COMPUTES, variable_registry, _task_name );
-  register_variable( m_w_vel_name_cc, AFC::COMPUTES, variable_registry, _task_name );
 
 }
 
@@ -107,17 +94,10 @@ void UFromRhoU::compute_velocities( const Patch* patch, ArchesTaskInfoManager* t
   SFCXVariable<double>& u = tsk_info->get_uintah_field_add<SFCXVariable<double> >(m_u_vel_name);
   SFCYVariable<double>& v = tsk_info->get_uintah_field_add<SFCYVariable<double> >(m_v_vel_name);
   SFCZVariable<double>& w = tsk_info->get_uintah_field_add<SFCZVariable<double> >(m_w_vel_name);
-  CCVariable<double>& u_cc = tsk_info->get_uintah_field_add<CCVariable<double> >(m_u_vel_name_cc);
-  CCVariable<double>& v_cc = tsk_info->get_uintah_field_add<CCVariable<double> >(m_v_vel_name_cc);
-  CCVariable<double>& w_cc = tsk_info->get_uintah_field_add<CCVariable<double> >(m_w_vel_name_cc);
 
   u.initialize(0.0);
   v.initialize(0.0);
   w.initialize(0.0);
-
-  u_cc.initialize(0.0);
-  v_cc.initialize(0.0);
-  w_cc.initialize(0.0);
 
   IntVector cell_lo = patch->getCellLowIndex();
   IntVector cell_hi = patch->getCellHighIndex();
@@ -223,12 +203,5 @@ void UFromRhoU::compute_velocities( const Patch* patch, ArchesTaskInfoManager* t
       w(i,j,k) = w(i,j,k-1);
     });
   }
-
-  Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
-  Uintah::parallel_for( range, [&](int i, int j, int k){
-    u_cc(i,j,k) = (u(i,j,k) + u(i+1,j,k)) / 2.;
-    v_cc(i,j,k) = (v(i,j,k) + v(i+1,j,k)) / 2.;
-    w_cc(i,j,k) = (w(i,j,k) + w(i+1,j,k)) / 2.;
-  });
 
 }

@@ -28,7 +28,7 @@ Smagorinsky::problemSetup( ProblemSpecP& db ){
 
   Nghost_cells = 1;
 
-  db->findBlock("Smagorinsky_constant")->getAttribute("Cs",m_Cs);
+  db->getWithDefault("Cs", m_Cs, 1.3);
 
   if (db->findBlock("use_my_name_viscosity")){
     db->findBlock("use_my_name_viscosity")->getAttribute("label",m_t_vis_name);
@@ -38,12 +38,19 @@ Smagorinsky::problemSetup( ProblemSpecP& db ){
 
   const ProblemSpecP params_root = db->getRootNode();
   if (params_root->findBlock("PhysicalConstants")) {
-    params_root->findBlock("PhysicalConstants")->require("viscosity", m_molecular_visc);
+    params_root->findBlock("PhysicalConstants")->require("viscosity",
+                                                          m_molecular_visc);
     if( m_molecular_visc == 0 ) {
-      throw InvalidValue("ERROR: Constant Smagorinsky: problemSetup(): Zero viscosity specified in <PhysicalConstants> section of input file.",__FILE__,__LINE__);
+      std::stringstream msg;
+      msg << "ERROR: Constant WALE: problemSetup(): Zero viscosity specified \n"
+          << "       in <PhysicalConstants> section of input file." << std::endl;
+      throw InvalidValue(msg.str(),__FILE__,__LINE__);
     }
   } else {
-    throw InvalidValue("ERROR: Constant Smagorinsky: problemSetup(): Missing <PhysicalConstants> section in input file!",__FILE__,__LINE__);
+    std::stringstream msg;
+    msg << "ERROR: Constant WALE: problemSetup(): Missing <PhysicalConstants> \n"
+        << "       section in input file!" << std::endl;
+    throw InvalidValue(msg.str(),__FILE__,__LINE__);
   }
 
 }

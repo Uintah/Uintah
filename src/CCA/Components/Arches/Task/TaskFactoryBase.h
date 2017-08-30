@@ -48,7 +48,8 @@ namespace Uintah{
     virtual std::vector<std::string> retrieve_task_subset(const std::string subset) = 0;
 
     /** @brief Retrieve a task by name **/
-    TaskInterface* retrieve_task( const std::string task_name );
+    TaskInterface* retrieve_task( const std::string task_name,
+                                  const bool ignore_missing_task=false );
 
     /** @brief Retrieve an atomic task by name **/
     AtomicTaskInterface* retrieve_atomic_task( const std::string task_name );
@@ -141,14 +142,20 @@ namespace Uintah{
       throw InvalidValue("Error: Task factory specific initialization for this factory is not implemented", __FILE__, __LINE__);
     }
 
-    /** @brief Public interface for scheduling a single task through the factory **/
+    /** @brief Public interface for scheduling a single task through the factory
+
+        @param task_name The Task name
+        @param ignore_missing_task If TRUE and the task isn't found, then only provide a warning.
+
+    **/
     void schedule_task(  const std::string task_name,
                          TaskInterface::TASK_TYPE type,
                          const LevelP& level,
                          SchedulerP& sched,
                          const MaterialSet* matls,
                          const int time_substep=0,
-                         const bool reinitialize=false );
+                         const bool reinitialize=false,
+                         const bool ignore_missing_task=false);
 
     /** @brief Public interface for scheduling a set of tasks through the factory **/
     void schedule_task_group( const std::string group_name,

@@ -39,6 +39,7 @@ SRCS += \
         $(SRCDIR)/VariableStats.cc          \
         $(SRCDIR)/FaceVelocities.cc         \
         $(SRCDIR)/UFromRhoU.cc              \
+        $(SRCDIR)/CCVel.cc                  \
 	      $(SRCDIR)/BurnsChriston.cc          \
         $(SRCDIR)/WallHFVariable.cc
 

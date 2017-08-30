@@ -69,7 +69,7 @@ TaskFactoryBase::register_atomic_task(std::string task_name,
 
 //--------------------------------------------------------------------------------------------------
 TaskInterface*
-TaskFactoryBase::retrieve_task( const std::string task_name ){
+TaskFactoryBase::retrieve_task( const std::string task_name, const bool ignore_missing_task ){
 
   TaskMap::iterator itsk = _tasks.find(task_name);
 
@@ -96,7 +96,11 @@ TaskFactoryBase::retrieve_task( const std::string task_name ){
 
     } else {
 
-      throw InvalidValue("Error: Cannot find task named: "+task_name,__FILE__,__LINE__);
+      if ( ignore_missing_task ){
+        return NULL;
+      } else {
+        throw InvalidValue("Error: Cannot find task named: "+task_name,__FILE__,__LINE__);
+      }
 
     }
   }
@@ -144,17 +148,29 @@ void TaskFactoryBase::schedule_task( const std::string task_name,
                                      SchedulerP& sched,
                                      const MaterialSet* matls,
                                      const int time_substep,
-                                     const bool reinitialize ){
+                                     const bool reinitialize,
+                                     const bool ignore_missing_task ){
 
   // Only putting one task in here but still need to pass it as vector due to the
   // task_group scheduling feature
   std::vector<TaskInterface*> task_list_dummy(1);
 
-  TaskInterface* tsk  = retrieve_task( task_name );
-  task_list_dummy[0] = tsk;
+  TaskInterface* tsk  = retrieve_task( task_name, ignore_missing_task );
 
-  factory_schedule_task( level, sched, matls, type, task_list_dummy,
-                         tsk->get_task_name(), time_substep, reinitialize, false );
+  if ( tsk != NULL ){
+
+    task_list_dummy[0] = tsk;
+
+    factory_schedule_task( level, sched, matls, type, task_list_dummy,
+                           tsk->get_task_name(), time_substep, reinitialize, false );
+
+  } else {
+
+    proc0cout << "\n Warning: Attempted to schedule task: " << task_name << " but could not find it." << std::endl;
+    proc0cout << "          As a result, I will skip scheduling this task. This *may* or *may not* be by design." << std::endl;
+    proc0cout << "          Please consult a developer if you are concerned.\n" << std::endl;
+
+  }
 
 }
 

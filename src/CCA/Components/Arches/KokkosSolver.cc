@@ -330,11 +330,6 @@ KokkosSolver::initialize( const LevelP& level, SchedulerP& sched, const bool doi
   // Setup BCs
   setupBCs( level, sched, matls );
 
-  //EXAMPLES OF HOW ONE COULD SCHEDULE A TASK:
-  //1) m_task_factory_map["utility_factory"]->retrieve_task("grid_info")->schedule_init( level, sched, matls, is_restart );
-  //2) ArchesCore::find_and_schedule_task( "grid_info", TaskInterface::INITIALIZE, level, sched, matls, m_task_factory_map );
-  //3) m_task_factory_map["utility_factory"]->schedule_task( "grid_info", TaskInterface::INITIALIZE, level, sched, matls );
-
   // grid spacing etc...
   m_task_factory_map["utility_factory"]->schedule_task( "grid_info", TaskInterface::INITIALIZE, level, sched, matls );
 
@@ -368,9 +363,10 @@ KokkosSolver::initialize( const LevelP& level, SchedulerP& sched, const bool doi
   m_task_factory_map["boundary_condition_factory"]->schedule_task_group( "all_tasks", TaskInterface::BC, pack_tasks, level, sched, matls );
 
   //Recompute velocities from momentum:
-  if ( m_task_factory_map["transport_factory"]->has_task("build_pressure_system")){
-    m_task_factory_map["property_models_factory"]->schedule_task( "u_from_rho_u", TaskInterface::INITIALIZE, level, sched, matls, 0, true );
-  }
+  m_task_factory_map["property_models_factory"]->schedule_task( "u_from_rho_u",
+    TaskInterface::INITIALIZE, level, sched, matls, 0, true, true );
+  m_task_factory_map["property_models_factory"]->schedule_task( "compute_cc_velocities",
+    TaskInterface::INITIALIZE, level, sched, matls, 0, true, true );
 
 }
 
@@ -448,7 +444,7 @@ KokkosSolver::setupBCs( const LevelP& level, SchedulerP& sched, const MaterialSe
   //copies the reduction area variable information on area to a double in the BndCond spec
   m_bcHelper[level->getID()]->sched_bindBCAreaHelper( sched, level, matls );
 
-  proc0cout << "\n Setting BCHelper for all Factories: " << std::endl;
+  proc0cout << "\n Setting BCHelper for all Factories. \n" << std::endl;
   for ( BFM::iterator i = m_task_factory_map.begin(); i != m_task_factory_map.end(); i++ ) {
     i->second->set_bcHelper( m_bcHelper[level->getID()]);
   }
@@ -477,17 +473,17 @@ KokkosSolver::SSPRKSolve( const LevelP& level, SchedulerP& sched ){
   for ( int time_substep = 0; time_substep < m_rk_order; time_substep++ ){
 
     //Compute U from rhoU
-    if ( i_prop_fac->second->has_task( "u_from_rho_u" )){
-      TaskInterface* tsk = i_prop_fac->second->retrieve_task("u_from_rho_u");
-      tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep);
-    }
+    i_prop_fac->second->schedule_task( "u_from_rho_u", TaskInterface::TIMESTEP_EVAL,
+      level, sched, matls, 0, false, true );
+    i_prop_fac->second->schedule_task( "compute_cc_velocities", TaskInterface::TIMESTEP_EVAL,
+      level, sched, matls, 0, false, true );
 
     // pre-update properties/source tasks)
     i_prop_fac->second->schedule_task_group( "pre_update_property_models",
       TaskInterface::TIMESTEP_EVAL, m_global_pack_tasks, level, sched, matls );
 
     // compute momentum closure
-    i_turb_model_fac->second->schedule_task_group("momentum_closure", 
+    i_turb_model_fac->second->schedule_task_group("momentum_closure",
       TaskInterface::TIMESTEP_EVAL, m_global_pack_tasks, level, sched, matls );
 
     // ** SCALARS **
@@ -552,10 +548,6 @@ KokkosSolver::SSPRKSolve( const LevelP& level, SchedulerP& sched ){
 
       // apply boundary conditions
       i_transport->second->schedule_task_group( "momentum_construction", TaskInterface::BC, false, level, sched, matls, time_substep );
-
-      //for sanity sake, recompute the velocities from momentum:
-      // Note - This will be recomputed when the timestep restarts so there is some redundancy here.
-      i_prop_fac->second->retrieve_task("u_from_rho_u")->schedule_task( level, sched, matls, TaskInterface::STANDARD_TASK, 1);
 
     }
 

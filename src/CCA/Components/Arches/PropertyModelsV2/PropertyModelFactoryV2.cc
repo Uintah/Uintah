@@ -10,6 +10,7 @@
 #include <CCA/Components/Arches/PropertyModelsV2/FaceVelocities.h>
 #include <CCA/Components/Arches/PropertyModelsV2/VarInterpolation.h>
 #include <CCA/Components/Arches/PropertyModelsV2/UFromRhoU.h>
+#include <CCA/Components/Arches/PropertyModelsV2/CCVel.h>
 #include <CCA/Components/Arches/PropertyModelsV2/BurnsChriston.h>
 #include <CCA/Components/Arches/PropertyModelsV2/cloudBenchmark.h>
 #include <CCA/Components/Arches/PropertyModelsV2/sumRadiation.h>
@@ -104,7 +105,7 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
           } else if ( grid_type == "FZ" ){
             typedef typename ArchesCore::VariableHelper<SFCZVariable<double> >::Type T;
             typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
-            tsk = scinew VarInterpolation<CT, CCVariable<double> >::Builder(name, 0); 
+            tsk = scinew VarInterpolation<CT, CCVariable<double> >::Builder(name, 0);
           }
 
         } else {
@@ -245,6 +246,9 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
     TaskInterface::TaskBuilder* u_from_rho_u_tsk = scinew UFromRhoU::Builder( "u_from_rho_u", 0);
     register_task("u_from_rho_u", u_from_rho_u_tsk);
 
+    TaskInterface::TaskBuilder* cc_u = scinew CCVel::Builder("compute_cc_velocities", 0 );
+    register_task("compute_cc_velocities", cc_u );
+
   }
 
 }
@@ -300,6 +304,10 @@ if ( db->findBlock("PropertyModelsV2") != nullptr){
 
   if ( db->findBlock("KMomentum")){
     tsk = retrieve_task("u_from_rho_u");
+    tsk->problemSetup(db);
+    tsk->create_local_labels();
+
+    tsk = retrieve_task("compute_cc_velocities");
     tsk->problemSetup(db);
     tsk->create_local_labels();
   }
