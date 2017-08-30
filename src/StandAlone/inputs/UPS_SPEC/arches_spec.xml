@@ -1277,13 +1277,14 @@
                                         attribute2="variable_label   OPTIONAL STRING"
                                         attribute3="type  REQUIRED STRING 'wave,
                                                                            almgren_mms,
+                                                                           input_file,
                                                                            random_lagrangian_particles,
                                                                            lagrangian_particle_velocity,
                                                                            lagrangian_particle_size'">
 
           <variable                     spec="OPTIONAL NO_DATA"
                                         attribute1="type REQUIRED STRING 'CC,FX,FY,FZ'"
-                                        need_applies_to="type almgren_mms"/>
+                                        need_applies_to="type almgren_mms, input_file"/>
 
           <!-- 1D WAVE FORM -->
           <wave                         spec="OPTIONAL NO_DATA"
@@ -1324,6 +1325,23 @@
                                       attribute2="y REQUIRED STRING"
                                       need_applies_to="type almgren_mms"/> <!-- specify the the x and y varlabel names for
                                                                             the mms -->
+
+          <!-- Input file -->
+          <!-- One may initialize a variable from an input file. The format should be: 
+
+               i j k value 
+
+               In the case of vectors (3-elements), the format is 
+
+               i j k vec[0] vec[1] vec[2]
+
+               and requires the extra <vector> tag and index (i.e., which vector component). -->
+          <filename                   spec="REQUIRED STRING"
+                                      need_applies_to="type input_file"/> <!-- filename from which to read the data -->
+          <vector                     spec="OPTIONAL NO_DATA"
+                                      attribute1="index REQUIRED INTEGER '0,1,2'"
+                                      need_applies_to="type input_file"/> <!-- Use a single element of a vector to initialize the data.
+                                                                               This is only needed when the input file has vector data. -->
 
 
           <!-- LAGRANGIAN PARTICLE POSITION -->
