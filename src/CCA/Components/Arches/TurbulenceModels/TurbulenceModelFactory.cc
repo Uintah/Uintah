@@ -4,6 +4,7 @@
 //Specific models:
 #include <CCA/Components/Arches/TurbulenceModels/SGSsigma.h>
 #include <CCA/Components/Arches/TurbulenceModels/Smagorinsky.h>
+#include <CCA/Components/Arches/TurbulenceModels/WALE.h>
 
 using namespace Uintah;
 
@@ -51,10 +52,17 @@ TurbulenceModelFactory::register_all_tasks( ProblemSpecP& db )
         m_momentum_closure_tasks.push_back(name);
 
       } else if (type == "constant_smagorinsky"){
-        
+
         TaskInterface::TaskBuilder* tsk_builder = scinew Smagorinsky::Builder( name, 0 );
         register_task( name, tsk_builder );
         m_momentum_closure_tasks.push_back(name);
+        
+      } else if (type == "wale"){
+
+        TaskInterface::TaskBuilder* tsk_builder = scinew WALE::Builder( name, 0 );
+        register_task( name, tsk_builder );
+        m_momentum_closure_tasks.push_back(name);
+
       } else {
 
         throw InvalidValue(
