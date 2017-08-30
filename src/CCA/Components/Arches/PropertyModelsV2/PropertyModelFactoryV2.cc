@@ -8,6 +8,7 @@
 #include <CCA/Components/Arches/PropertyModelsV2/OneDWallHT.h>
 #include <CCA/Components/Arches/PropertyModelsV2/ConstantProperty.h>
 #include <CCA/Components/Arches/PropertyModelsV2/FaceVelocities.h>
+#include <CCA/Components/Arches/PropertyModelsV2/StressTensor.h>
 #include <CCA/Components/Arches/PropertyModelsV2/UFromRhoU.h>
 #include <CCA/Components/Arches/PropertyModelsV2/BurnsChriston.h>
 #include <CCA/Components/Arches/PropertyModelsV2/cloudBenchmark.h>
@@ -184,8 +185,14 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
   _pre_update_property_tasks.push_back(m_vel_name);
 
   if ( db->findBlock("KMomentum") ){
+
+    m_stress_tensor_name = "stress_tensor";
+    TaskInterface::TaskBuilder* sgm_tsk = scinew StressTensor::Builder( m_stress_tensor_name, 0 );
+    register_task(m_stress_tensor_name, sgm_tsk);
+
     TaskInterface::TaskBuilder* u_from_rho_u_tsk = scinew UFromRhoU::Builder( "u_from_rho_u", 0);
     register_task("u_from_rho_u", u_from_rho_u_tsk);
+
   }
 
 }
@@ -243,6 +250,10 @@ if ( db->findBlock("PropertyModelsV2") != nullptr){
     tsk = retrieve_task("u_from_rho_u");
     tsk->problemSetup(db);
     tsk->create_local_labels();
+
+    TaskInterface* sgm_tsk = retrieve_task(m_stress_tensor_name);
+    sgm_tsk->problemSetup(db);
+    sgm_tsk->create_local_labels();
   }
 
   for ( auto i = m_task_init_order.begin(); i != m_task_init_order.end(); i++ ){
