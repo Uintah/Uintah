@@ -21,28 +21,28 @@ endif
 # DEFAULTS:  Edit these
 set startTimestep = "3"
 set endTimestep   = "100"           # timestep to extract elapsed time from.
-set hypreLabel    = "pressurePS"    # compute the  average solve time for this label
+set hypreLabel    = "pressurePS"    # compute the average solve time for this label (ARCHES)
+set hypreLabel    = "imp_delP"      # compute the average solve time for this label (ICE) 
 #__________________________________
 
 set out = ($argv)
 
+# make work directory
 set here = .tmpFiles
-
 /bin/rm  -rf $here  >& /dev/null
 mkdir $here
 touch $here/data
 
-
-
+# process each file
 foreach X ( $out[*] )
-  grep -q "(timestep $endTimestep)" $X
+  grep -q "Timestep $endTimestep" $X
   
   # if the final timestep exists
   if ($status == 0 ) then
     echo $X > $here/file
+    
     grep "Patch layout:" $X | cut -d"(" -f2 > $here/patches
-
-    @ procs    = `grep "MPI processes" $X | awk '{print $2}'`
+    @ procs    = `grep "MPI processes" $X           | awk '{print $2}'`
     @ threads  = `grep "threads per MPI process" $X | awk '{print $2}'`
     @ nThreads = $procs * $threads
     
@@ -50,8 +50,8 @@ foreach X ( $out[*] )
     echo $threads  > $here/threadsPerMPI
     echo $nThreads > $here/nThreads 
 
-    grep "(timestep $startTimestep)" $X | awk -F "=" '{print $4}' | cut -d "," -f1 > $here/startTime
-    grep "(timestep $endTimestep)"   $X | awk -F "=" '{print $4}' | cut -d "(" -f1 > $here/endTime
+    grep "Timestep $startTimestep " $X | awk -F "=" '{print $4}' | tr -d "[:alpha:]" > $here/startTime
+    grep "Timestep $endTimestep "   $X | awk -F "=" '{print $4}' | tr -d "[:alpha:]" > $here/endTime
 
     paste -d " " $here/file $here/nMPI $here/threadsPerMPI $here/nThreads $here/startTime $here/endTime >> $here/data
 
@@ -90,7 +90,7 @@ if ( $#these != 0 ) then
     grep -q "TaskExec" $X
 
     if ($status == 0 ) then
-      grep -q "(timestep $endTimestep)" $X
+      grep -q "Timestep $endTimestep " $X
 
       # if the final timestep exists then process it
       if ($status == 0 ) then  
@@ -106,7 +106,7 @@ if ( $#these != 0 ) then
 
         # extract the output between the start and ending timesteps
         @ endingTimestep = $endTimestep + 1
-        sed -n /"timestep $startTimestep"/,/"timestep $endingTimestep"/p $X > $here/out.clean
+        sed -n /"Timestep $startTimestep "/,/"Timestep $endingTimestep "/p $X > $here/out.clean
 
         set me = $here/out.clean
         grep TaskExec $me      | cut -d: -f2 | awk 'BEGIN {sum=0}; {sum=sum+$1}; END {print sum/NR}' > $here/ave.taskExec
@@ -141,7 +141,7 @@ if ( $#these != 0 ) then
     grep -q $hypreLabel $X
 
     if ($status == 0 ) then
-      grep -q "(timestep $endTimestep)" $X
+      grep -q "Timestep $endTimestep " $X
 
       # if the final timestep exists then process it
       if ($status == 0 ) then  
@@ -157,10 +157,10 @@ if ( $#these != 0 ) then
 
         # extract the output between the start and ending timesteps
         @ endingTimestep = $endTimestep + 1
-        sed -n /"timestep $startTimestep"/,/"timestep $endingTimestep"/p $X > $here/out.clean
+        sed -n /"Timestep $startTimestep "/,/"Timestep $endingTimestep "/p $X > $here/out.clean
 
         set me = $here/out.clean
-        grep $hypreLabel $me      | tr -d "[:alpha:]" | awk 'BEGIN {sum=0}; {sum=sum+$2}; END {print sum/NR}' > $here/ave.SolveTime
+        grep $hypreLabel $me | tr -d "[:alpha:]-_(:,=)" | awk 'BEGIN {sum=0}; {sum=sum+$2}; END {print sum/NR}' > $here/ave.SolveTime
         paste -d " " $here/file $here/nMPI $here/threadsPerMPI $here/nThreads $here/ave.SolveTime >> $here/aveSolveTimes
       else
         echo "---------------------$X did not run to completion"
