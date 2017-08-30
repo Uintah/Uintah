@@ -13,7 +13,6 @@
     <timestep_multiplier> 0.7     </timestep_multiplier>
   </Time>
   <DataArchiver>
-    <outputInitTimestep/>
     <filebase> ChannelDigitalFilter.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <save label="totalKineticEnergy"/>

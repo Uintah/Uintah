@@ -16,7 +16,6 @@
   </Time>
   <DataArchiver>
     <filebase>zplus_scalar_test.uda</filebase>
-    <outputInitTimestep/>
     <outputTimestepInterval>5</outputTimestepInterval>
     <save label="uVelocitySPBC"/>
     <save label="vVelocitySPBC"/>
