@@ -15,6 +15,7 @@
 #include <CCA/Components/Arches/PropertyModelsV2/cloudBenchmark.h>
 #include <CCA/Components/Arches/PropertyModelsV2/sumRadiation.h>
 #include <CCA/Components/Arches/PropertyModelsV2/gasRadProperties.h>
+#include <CCA/Components/Arches/PropertyModelsV2/spectralProperties.h>
 #include <CCA/Components/Arches/PropertyModelsV2/partRadProperties.h>
 #include <CCA/Components/Arches/PropertyModelsV2/CO.h>
 #include <libxml/parser.h>
@@ -162,6 +163,13 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
         register_task( name, tsk );
         _pre_table_post_iv_update.push_back(name);
         //_finalize_property_tasks.push_back( name );
+
+        check_for_radiation=true;
+      } else if ( type == "spectralProperties" ){
+
+        TaskInterface::TaskBuilder* tsk = scinew spectralProperties::Builder( name, 0 );
+        register_task( name, tsk );
+        _pre_table_post_iv_update.push_back(name);
 
         check_for_radiation=true;
       } else if ( type == "partRadProperties" ){
