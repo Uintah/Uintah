@@ -353,7 +353,6 @@ KokkosSolver::initialize( const LevelP& level, SchedulerP& sched, const bool doi
   //source_term_kokkos_factory
   m_task_factory_map["source_term_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
 
-
   // generic field initializer
   m_task_factory_map["initialize_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, pack_tasks, level, sched, matls );
 

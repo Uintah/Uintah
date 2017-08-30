@@ -40,7 +40,6 @@ SRCS += \
         $(SRCDIR)/FaceVelocities.cc         \
         $(SRCDIR)/UFromRhoU.cc              \
 	      $(SRCDIR)/BurnsChriston.cc          \
-	      $(SRCDIR)/StressTensor.cc           \
         $(SRCDIR)/WallHFVariable.cc
 
 ########################################################################

@@ -34,7 +34,8 @@ SRCS += \
 			  $(SRCDIR)/PressureEqn.cc      \
 				$(SRCDIR)/VelRhoHatBC.cc      \
 				$(SRCDIR)/AddPressGradient.cc \
-				$(SRCDIR)/PressureBC.cc      \
+				$(SRCDIR)/PressureBC.cc       \
+				$(SRCDIR)/StressTensor.cc     \
         $(SRCDIR)/TransportFactory.cc 
 
 ########################################################################

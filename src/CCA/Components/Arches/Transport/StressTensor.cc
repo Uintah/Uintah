@@ -1,4 +1,4 @@
-#include <CCA/Components/Arches/PropertyModelsV2/StressTensor.h>
+#include <CCA/Components/Arches/Transport/StressTensor.h>
 #include <CCA/Components/Arches/GridTools.h>
 
 using namespace Uintah;

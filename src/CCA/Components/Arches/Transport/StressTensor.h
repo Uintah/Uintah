@@ -40,7 +40,7 @@ public:
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
     void VelocityDerivative_central(double&, double&, double&, const Array3<double>&, const Vector&, int, int, int);
-    //Build instructions for this (StressTensor) class.
+    //Build instructions for this class.
     class Builder : public TaskInterface::TaskBuilder {
 
       public:
