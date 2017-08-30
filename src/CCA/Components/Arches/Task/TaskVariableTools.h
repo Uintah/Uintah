@@ -105,6 +105,22 @@ namespace Uintah{
           return *(_field_container->get_const_field<T>(name, which_dw));
         }
 
+        /** @brief Return a UINTAH field allowing the user to manage
+                   the memory. **/
+        template <typename T>
+        inline void get_unmanaged_uintah_field( const std::string name,
+           T& field ){
+          _field_container->get_unmanaged_field<T>(name, field);
+        }
+
+        /** @brief Return a CONST UINTAH field allowing the user to manage
+                   the memory. **/
+        template <typename T>
+        inline void get_const_unmanaged_uintah_field( const std::string name,
+           T& field ){
+          _field_container->get_const_unmanaged_field<T>(name, field);
+        }
+
         /** @brief Return a UINTAH field **/
         template <typename T>
         inline T* get_uintah_field( const std::string name, const int nGhosts=-1 ){
