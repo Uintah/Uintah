@@ -164,8 +164,6 @@ void CO::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     rate(i,j,k) = 0.0;
   });
 
-  StaticArray<CCVariable<double> > test; 
-
 }
 
 
