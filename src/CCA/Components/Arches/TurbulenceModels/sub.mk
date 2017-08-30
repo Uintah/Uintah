@@ -28,6 +28,7 @@ endif
 
 SRCS += \
 				$(SRCDIR)/SGSsigma.cc \
+				$(SRCDIR)/Smagorinsky.cc \
 				$(SRCDIR)/TurbulenceModelFactory.cc
 
 ########################################################################

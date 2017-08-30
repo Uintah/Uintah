@@ -390,6 +390,8 @@ KokkosSolver::nonlinearSolve( const LevelP& level,
   BFM::iterator i_source_fac = m_task_factory_map.find("source_term_factory");
   BFM::iterator i_bc_fac = m_task_factory_map.find("boundary_condition_factory");
   BFM::iterator i_table_fac = m_task_factory_map.find("table_factory");
+  BFM::iterator i_turb_model_fac = m_task_factory_map.find("turbulence_model_factory");
+
   TaskFactoryBase::TaskMap all_bc_tasks = i_bc_fac->second->retrieve_all_tasks();
 
   // ----------------- Timestep Initialize ---------------------------------------------------------
@@ -407,6 +409,9 @@ KokkosSolver::nonlinearSolve( const LevelP& level,
     pack_tasks, level, sched, matls );
 
   i_source_fac->second->schedule_task_group( "all_tasks", TaskInterface::TIMESTEP_INITIALIZE,
+    pack_tasks, level, sched, matls );
+
+  i_turb_model_fac->second->schedule_task_group( "momentum_closure", TaskInterface::TIMESTEP_INITIALIZE,
     pack_tasks, level, sched, matls );
 
   i_bc_fac->second->schedule_task_group( "all_tasks", TaskInterface::TIMESTEP_INITIALIZE,
@@ -462,6 +467,8 @@ KokkosSolver::SSPRKSolve( const LevelP& level, SchedulerP& sched ){
   BFM::iterator i_bc_fac = m_task_factory_map.find("boundary_condition_factory");
   BFM::iterator i_table_fac = m_task_factory_map.find("table_factory");
   BFM::iterator i_source_fac = m_task_factory_map.find("source_term_factory");
+  BFM::iterator i_turb_model_fac = m_task_factory_map.find("turbulence_model_factory");
+
   TaskFactoryBase::TaskMap all_bc_tasks = i_bc_fac->second->retrieve_all_tasks();
   TaskFactoryBase::TaskMap all_table_tasks = i_table_fac->second->retrieve_all_tasks();
 
@@ -479,7 +486,8 @@ KokkosSolver::SSPRKSolve( const LevelP& level, SchedulerP& sched ){
     i_prop_fac->second->schedule_task_group( "pre_update_property_models",
       TaskInterface::TIMESTEP_EVAL, m_global_pack_tasks, level, sched, matls );
 
-    i_source_fac->second->schedule_task_group( "pre_update_source_tasks",
+    // compute momentum closure
+    i_turb_model_fac->second->schedule_task_group("momentum_closure", 
       TaskInterface::TIMESTEP_EVAL, m_global_pack_tasks, level, sched, matls );
 
     // ** SCALARS **
