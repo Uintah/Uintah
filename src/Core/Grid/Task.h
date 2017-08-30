@@ -33,6 +33,7 @@
 #include <Core/Parallel/Parallel.h>
 #include <CCA/Ports/DataWarehouseP.h>
 #include <Core/Util/constHandle.h>
+#include <Core/Util/DOUT.hpp>
 #include <Core/Util/TupleHelpers.hpp>
 
 #include <set>
@@ -760,6 +761,8 @@ public: // class Task
 
   //////////
   // Prints out all information about the task, including dependencies
+  void displayAll_DOUT( Uintah::Dout& dbg) const;
+  
   void displayAll( std::ostream & out ) const;
 
   int mapDataWarehouse( WhichDW dw ) const;

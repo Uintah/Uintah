@@ -165,6 +165,7 @@ TaskGraph::addTask(       std::shared_ptr<Task>   task
     m_tasks.push_back( task );
 
     DOUT(tgdbg, "Rank-" << m_proc_group->myrank() << " TG[" << m_index << "] adding task: " << task->getName());
+    task->displayAll_DOUT(tgdbg);
     
 #if 0
     // This snippet will find all the tasks that require a label
@@ -735,7 +736,7 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
       continue;
     }
 
-//    DOUT(detaileddbg, "Rank-" << m_proc_group->myrank() << "  req: " << *req);
+    DOUT(detaileddbg, "Rank-" << m_proc_group->myrank() << "  req: " << *req);
 
     constHandle<PatchSubset> patches = req->getPatchesUnderDomain(dtask->d_patches);
     if (req->m_var->typeDescription()->isReductionVariable() && m_scheduler->isNewDW(req->mapDataWarehouse())) {
