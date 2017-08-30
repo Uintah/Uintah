@@ -8,6 +8,7 @@
 #include <CCA/Components/Arches/PropertyModelsV2/OneDWallHT.h>
 #include <CCA/Components/Arches/PropertyModelsV2/ConstantProperty.h>
 #include <CCA/Components/Arches/PropertyModelsV2/FaceVelocities.h>
+#include <CCA/Components/Arches/PropertyModelsV2/VarInterpolation.h>
 #include <CCA/Components/Arches/PropertyModelsV2/UFromRhoU.h>
 #include <CCA/Components/Arches/PropertyModelsV2/BurnsChriston.h>
 #include <CCA/Components/Arches/PropertyModelsV2/cloudBenchmark.h>
@@ -58,6 +59,62 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
 
         TaskInterface::TaskBuilder* tsk = scinew WallHFVariable::Builder( name, 0, _shared_state );
         register_task( name, tsk );
+
+      } else if ( type == "Interpolation_var" ){
+
+        std::string grid_type="NA";
+        std::string grid_type2="NA";
+        db_model->findBlock("variable")->getAttribute("type", grid_type);
+        db_model->findBlock("new_variable")->getAttribute("type", grid_type2);
+
+        TaskInterface::TaskBuilder* tsk;
+
+        if ( grid_type == "CC" ){
+
+          typedef typename ArchesCore::VariableHelper<CCVariable<double> >::Type T;
+          typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
+
+          if (grid_type2 == "FX"){
+            typedef typename ArchesCore::VariableHelper<T>::XFaceType IT;
+            tsk = scinew VarInterpolation<CT, IT>::Builder(name, 0);
+          } else if (grid_type2 == "FY") {
+            typedef typename ArchesCore::VariableHelper<T>::YFaceType IT;
+            tsk = scinew VarInterpolation<CT, IT>::Builder(name, 0);
+          } else if (grid_type2 == "FZ") {
+            typedef typename ArchesCore::VariableHelper<T>::ZFaceType IT;
+            tsk = scinew VarInterpolation<CT, IT>::Builder(name, 0);
+          }
+
+        } else if ( grid_type == "FX" || grid_type == "FY" || grid_type == "FZ" ){
+
+          if ( grid_type2 != "CC" ){
+            std::stringstream msg;
+            msg << "Error: When using the variable_interpolator model, only F(X,Y,Z) -> CC allowed." << std::endl;
+            throw InvalidValue(msg.str(), __FILE__, __LINE__);
+          }
+
+          if ( grid_type == "FX" ){
+            typedef typename ArchesCore::VariableHelper<SFCXVariable<double> >::Type T;
+            typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
+            tsk = scinew VarInterpolation<CT, CCVariable<double> >::Builder(name, 0);
+          } else if ( grid_type == "FY" ){
+            typedef typename ArchesCore::VariableHelper<SFCYVariable<double> >::Type T;
+            typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
+            tsk = scinew VarInterpolation<CT, CCVariable<double> >::Builder(name, 0);
+          } else if ( grid_type == "FZ" ){
+            typedef typename ArchesCore::VariableHelper<SFCZVariable<double> >::Type T;
+            typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
+            tsk = scinew VarInterpolation<CT, CCVariable<double> >::Builder(name, 0); 
+          }
+
+        } else {
+
+          throw InvalidValue("Error: grid_type not recognized.",__FILE__,__LINE__);
+
+        }
+
+        register_task( name, tsk );
+        _pre_update_property_tasks.push_back( name );
 
       } else if ( type == "wall_thermal_resistance" ){
 
@@ -245,10 +302,6 @@ if ( db->findBlock("PropertyModelsV2") != nullptr){
     tsk = retrieve_task("u_from_rho_u");
     tsk->problemSetup(db);
     tsk->create_local_labels();
-
-    TaskInterface* sgm_tsk = retrieve_task(m_stress_tensor_name);
-    sgm_tsk->problemSetup(db);
-    sgm_tsk->create_local_labels();
   }
 
   for ( auto i = m_task_init_order.begin(); i != m_task_init_order.end(); i++ ){

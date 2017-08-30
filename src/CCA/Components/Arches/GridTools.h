@@ -44,7 +44,8 @@
 
 namespace Uintah{ namespace ArchesCore{
 
-  enum DIR {NODIR, XDIR, YDIR, ZDIR};
+  enum DIR { XDIR, YDIR, ZDIR, NODIR };
+  enum INTERPOLANT {SECONDCENTRAL, FOURTHCENTRAL};
 
 #define STENCIL3_1D( dir ) \
   const int ip  = dir == 0 ? i+1 : i; \
@@ -79,24 +80,6 @@ namespace Uintah{ namespace ArchesCore{
 #define IJK_PP_  ipp, jpp, kpp
 #define IJK_M_   im,  jm,  km
 #define IJK_MM_  imm, jmm, kmm
-
-//Staggered rotation
-#define CE_ i+ioff, j+joff, k+koff
-#define CW_ i-ioff, j-joff, k-koff
-#define CN_ i+koff, j+ioff, k+joff
-#define CS_ i-koff, j-ioff, k-joff
-#define CT_ i+joff, j+koff, k+ioff
-#define CB_ i-joff, j-koff, k-ioff
-#define CNE_ i+idt1,j+jdt1,k+kdt1
-#define CNW_ i+inw,j+jnw,k+knw
-#define CSE_ i-idt1,j-jdt1,k-kdt1
-#define CSW_ i-isw,j-jsw,k-ksw
-#define CTE_ i+idt2,j+jdt2,k+kdt2
-#define CTW_ i+itw,j+jtw,k+ktw
-#define CBE_ i-idt2,j-jdt2,k-kdt2
-#define CBW_ i-ibw,j-jbw,k-kbw
-#define C2E_ i+i2off, j+j2off, k+k2off
-#define C2W_ i-i2off, j-j2off, k-k2off
 
 #define PRINT_CURR_REFERENCE(i,j,k,string) \
   std::cout << "Location " << string << " = (" << i << "," << j << "," << k << ")" << std::endl;
@@ -221,10 +204,22 @@ namespace Uintah{ namespace ArchesCore{
     typedef Uintah::constSFCYVariable<double> ConstYFaceType;
     typedef Uintah::constSFCZVariable<double> ConstZFaceType;
     DIR dir;
-    const int ioff;
-    const int joff;
-    const int koff;
-    VariableHelper():dir(NODIR), ioff(0), joff(0), koff(0){}
+    int ioff, joff, koff;
+    VariableHelper():dir(NODIR), ioff(-1), joff(-1), koff(-1){}
+  };
+  template <>
+  struct VariableHelper<Uintah::constCCVariable<double> >{
+    typedef Uintah::constCCVariable<double> ConstType;
+    typedef Uintah::CCVariable<double> Type;
+    typedef Uintah::SFCXVariable<double> XFaceType;
+    typedef Uintah::SFCYVariable<double> YFaceType;
+    typedef Uintah::SFCZVariable<double> ZFaceType;
+    typedef Uintah::constSFCXVariable<double> ConstXFaceType;
+    typedef Uintah::constSFCYVariable<double> ConstYFaceType;
+    typedef Uintah::constSFCZVariable<double> ConstZFaceType;
+    DIR dir;
+    int ioff, joff, koff;
+    VariableHelper():dir(NODIR), ioff(-1), joff(-1), koff(-1){}
   };
 
   template <>
@@ -238,17 +233,22 @@ namespace Uintah{ namespace ArchesCore{
     typedef Uintah::constSFCXVariable<double> ConstYFaceType;
     typedef Uintah::constSFCXVariable<double> ConstZFaceType;
     DIR dir;
-    const int ioff;
-    const int joff;
-    const int koff;
-    const int idt1;
-    const int idt2;
-    const int jdt1;
-    const int jdt2;
-    const int kdt1;
-    const int kdt2;
-    VariableHelper():dir(XDIR), ioff(1), joff(0), koff(0),
-    idt1(koff), idt2(joff), jdt1(ioff), jdt2(koff), kdt1(joff), kdt2(ioff){}
+    int ioff, joff, koff;
+    VariableHelper():dir(XDIR), ioff(1), joff(0), koff(0){}
+  };
+  template <>
+  struct VariableHelper<Uintah::constSFCXVariable<double> >{
+    typedef Uintah::constSFCXVariable<double> ConstType;
+    typedef Uintah::SFCXVariable<double> Type;
+    typedef Uintah::SFCXVariable<double> XFaceType;
+    typedef Uintah::SFCXVariable<double> YFaceType;
+    typedef Uintah::SFCXVariable<double> ZFaceType;
+    typedef Uintah::constSFCXVariable<double> ConstXFaceType;
+    typedef Uintah::constSFCXVariable<double> ConstYFaceType;
+    typedef Uintah::constSFCXVariable<double> ConstZFaceType;
+    DIR dir;
+    int ioff, joff, koff;
+    VariableHelper():dir(XDIR), ioff(1), joff(0), koff(0){}
   };
 
   template <>
@@ -262,17 +262,22 @@ namespace Uintah{ namespace ArchesCore{
     typedef Uintah::constSFCYVariable<double> ConstYFaceType;
     typedef Uintah::constSFCYVariable<double> ConstZFaceType;
     DIR dir;
-    const int ioff;
-    const int joff;
-    const int koff;
-    const int idt1;
-    const int idt2;
-    const int jdt1;
-    const int jdt2;
-    const int kdt1;
-    const int kdt2;
-    VariableHelper():dir(YDIR), ioff(0), joff(1), koff(0),
-    idt1(koff), idt2(joff), jdt1(ioff), jdt2(koff), kdt1(joff), kdt2(ioff){}
+    int ioff, joff, koff;
+    VariableHelper():dir(YDIR), ioff(0), joff(1), koff(0){}
+  };
+  template <>
+  struct VariableHelper<Uintah::constSFCYVariable<double> >{
+    typedef Uintah::constSFCYVariable<double> ConstType;
+    typedef Uintah::SFCYVariable<double> Type;
+    typedef Uintah::SFCYVariable<double> XFaceType;
+    typedef Uintah::SFCYVariable<double> YFaceType;
+    typedef Uintah::SFCYVariable<double> ZFaceType;
+    typedef Uintah::constSFCYVariable<double> ConstXFaceType;
+    typedef Uintah::constSFCYVariable<double> ConstYFaceType;
+    typedef Uintah::constSFCYVariable<double> ConstZFaceType;
+    DIR dir;
+    int ioff, joff, koff;
+    VariableHelper():dir(YDIR), ioff(0), joff(1), koff(0){}
   };
 
   template <>
@@ -286,17 +291,22 @@ namespace Uintah{ namespace ArchesCore{
     typedef Uintah::constSFCZVariable<double> ConstYFaceType;
     typedef Uintah::constSFCZVariable<double> ConstZFaceType;
     DIR dir;
-    const int ioff;
-    const int joff;
-    const int koff;
-    const int idt1;
-    const int idt2;
-    const int jdt1;
-    const int jdt2;
-    const int kdt1;
-    const int kdt2;
-    VariableHelper():dir(ZDIR), ioff(0), joff(0), koff(1),
-    idt1(koff), idt2(joff), jdt1(ioff), jdt2(koff), kdt1(joff), kdt2(ioff){}
+    int ioff, joff, koff;
+    VariableHelper():dir(ZDIR), ioff(0), joff(0), koff(1){}
+  };
+  template <>
+  struct VariableHelper<Uintah::constSFCZVariable<double> >{
+    typedef Uintah::constSFCZVariable<double> ConstType;
+    typedef Uintah::SFCZVariable<double> Type;
+    typedef Uintah::SFCZVariable<double> XFaceType;
+    typedef Uintah::SFCZVariable<double> YFaceType;
+    typedef Uintah::SFCZVariable<double> ZFaceType;
+    typedef Uintah::constSFCZVariable<double> ConstXFaceType;
+    typedef Uintah::constSFCZVariable<double> ConstYFaceType;
+    typedef Uintah::constSFCZVariable<double> ConstZFaceType;
+    DIR dir;
+    int ioff, joff, koff;
+    VariableHelper():dir(ZDIR), ioff(0), joff(0), koff(1){}
   };
 
   /// @brief Map specific ARCHES variables based on type
@@ -387,6 +397,58 @@ namespace Uintah{ namespace ArchesCore{
     double get_central_weight(){ return 0.5; }
     int dir=2;
   };
+
+
+  //@brief Helper struct
+  struct SecondCentral{};
+  struct FourthCentral{};
+
+  /// @brief Functor for implementing various interpolation schemes.
+  struct OneDInterpolator{
+
+   OneDInterpolator( Array3<double>& i_u_interpolated, const Array3<double> &i_u, const int i_ioff,
+                     const int i_joff, const int i_koff ) :
+                     u_i(i_u_interpolated), u(i_u), ioff(i_ioff), joff(i_joff), koff(i_koff)
+    {}
+
+    void operator()(int i, int j, int k) const {
+      throw InvalidValue(
+        "Error: No implementation of this interpolation type",
+        __FILE__, __LINE__);
+    }
+
+    void operator()(const SecondCentral& op, int i, int j, int k) const {
+
+      u_i(i,j,k) = 0.5 * ( u(i,j,k) + u(i+ioff,j+joff,k+koff) );
+
+    }
+
+    void operator()(const FourthCentral& op, int i, int j, int k) const {
+
+      u_i(i,j,k) = (7./12.)*(u(i,j,k) + u(i-ioff,j-joff,k-koff))
+                 - (1./12.)*(u(i-2*ioff,j-2*joff,k-2*koff) + u(i+ioff,j+joff,k+koff)) ;
+
+    }
+
+  private:
+
+    Array3<double>& u_i;
+    const Array3<double>& u;
+    const int ioff, joff, koff;
+
+  };
+
+  static INTERPOLANT get_interpolant_from_string(const std::string value){
+
+    if ( value == "second_central" ){
+      return SECONDCENTRAL;
+    } else if ( value == "fourth_central" ){
+      return FOURTHCENTRAL;
+    } else {
+      throw InvalidValue("Error: interpolar type not recognized: "+value, __FILE__, __LINE__);
+    }
+
+  }
 
   class GridTools{
 
