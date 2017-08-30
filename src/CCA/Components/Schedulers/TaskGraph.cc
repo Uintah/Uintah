@@ -339,7 +339,7 @@ TaskGraph::createDetailedTasks(       bool            useInternalDeps
       DOUT(neighbor_location, "For varlabel " << kv.first.key << " on level: " << kv.first.level << " the max ghost cell is: " << kv.second);
     }
   }
-
+  
   // Now loop again, setting the task's max ghost cells to the max ghost cell for a given varLabel
   for (int i = 0; i < number_of_tasks; i++) {
     Task* task = sorted_tasks[i];
@@ -657,7 +657,7 @@ TaskGraph::remembercomps( DetailedTask     * task
         cached_comp_patches = comp->m_patches;
       }
       constHandle<MaterialSubset> matls = comp->getMaterialsUnderDomain( task->d_matls );
-      if (!patches->empty() && !matls->empty()) {
+      if (patches && !patches->empty() && matls && !matls->empty()) {
         ct.remembercomp( task, comp, patches.get_rep(), matls.get_rep(), m_proc_group );
       }
     }
