@@ -1062,9 +1062,21 @@
           <!-- hybrid = upwind when Re limit is met. ALWAYS upwinding tangential velocities on walls -->
           <!-- wall_upwind = upwinding tangential velocities on walls, central in all interior cells -->
           <!-- old_* = original schemes from CSAFE Arches -->
+          <!-- A word on Re_limit: The Re number is defined as Conv/Diff. When the local cell Re exceeds the limit, an upwind differencing 
+                                   is used instead of the central scheme. If your case is experiencing high convective forces
+                                   that are not being dissipated quickly enough, you may watch your solution go unstable due to 
+                                   growing KE in your domain. The Re_limit offers a way to introduce an additional (numerical) 
+                                   diffusive term into the momentum transport, which may keep the KE bounded. This non-physical 
+                                   term can be quite effective, but sacrifices some physical accuracy. For wall_upwind, we recommend 
+                                   starting with 2 (default). For the hybrid scheme, we recommend optimizing to find a value as high 
+                                   as possible so as not to dampen KE too much. A general rule of thumb would be to start with the 
+                                   most accurate scheme: central. If that gives you trouble and you have walls in your domain, switch to 
+                                   wall_upwind, which acts as a "wall model", providing additional damping (as turbulence would) at the 
+                                   wall. If the doesn't work, switch to hybrid and try to pick an Re limit as high as possible as to 
+                                   not damped your solution artifically. Of course, this procedure might just be covering up a larger 
+                                   problem with your case. Use at your own risk. -->
           <convection_scheme            spec="REQUIRED STRING 'central, upwind, wall_upwind, hybrid, old_central, old_upwind'"/>
-          <Re_limit                     spec="OPTIONAL DOUBLE 'positive'"/> <!-- for HYBRID: Upwind if Re > value, else central -->
-          <Re_limit_wall_upwind         spec="OPTIONAL DOUBLE 'positive'"/> <!-- for WALL_UPWIND: Upwind ON WALLS if Re > value, else central -->
+          <Re_limit                     spec="OPTIONAL DOUBLE 'positive'"/> <!-- for HYBRID and WALL_UPWIND: Upwind if Re > value, else central. Default is 2. -->
 
           <filter_divergence_constraint spec="OPTIONAL BOOLEAN" />
           <src                          spec="MULTIPLE NO_DATA"
