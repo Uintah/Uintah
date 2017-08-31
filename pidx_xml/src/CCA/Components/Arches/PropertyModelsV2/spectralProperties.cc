@@ -104,6 +104,16 @@ void spectralProperties::timestep_init( const Patch* patch, ArchesTaskInfoManage
 void
 spectralProperties::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){
 
+  ChemHelper& helper = ChemHelper::self();
+  ChemHelper::TableConstantsMapType the_table_constants = helper.get_table_constants();
+  if (the_table_constants !=nullptr){
+    auto press_iter = the_table_constants->find("Pressure");
+    if ( press_iter != the_table_constants->end() ){
+      if ( press_iter->second < 101325*0.95 || press_iter->second > 101325*1.05){ // in atm
+        throw ProblemSetupException("The pressure specified by the chemistry table does not match the pressure assumed by the spectral radaition property model specified (model assumes pressure = 1atm). ",__FILE__, __LINE__);
+      }
+    }
+  }
 
   for (int i=0; i< _nbands ; i++){
     register_variable( _abskg_name_vector[i] , Uintah::ArchesFieldContainer::COMPUTES, variable_registry, time_substep);
@@ -121,7 +131,7 @@ spectralProperties::register_timestep_eval( std::vector<ArchesFieldContainer::Va
       }
     }
   register_variable(_temperature_name , ArchesFieldContainer::REQUIRES,0,ArchesFieldContainer::LATEST,variable_registry, time_substep );
-  register_variable("volFraction" , ArchesFieldContainer::REQUIRES,0,ArchesFieldContainer::NEWDW,variable_registry, time_substep );
+  //register_variable("volFraction" , ArchesFieldContainer::REQUIRES,0,ArchesFieldContainer::NEWDW,variable_registry, time_substep );
 
 }
 
@@ -143,7 +153,7 @@ spectralProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   }
 
   constCCVariable<double>& temperature = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(_temperature_name));
-  constCCVariable<double>& vol_fraction = *(tsk_info->get_const_uintah_field<constCCVariable<double> >("volFraction"));
+  //constCCVariable<double>& vol_fraction = *(tsk_info->get_const_uintah_field<constCCVariable<double> >("volFraction"));
 
   std::vector<constCCVariable<double>  > species(0); 
   for ( std::vector<std::string>::iterator iter = _part_sp.begin(); iter != _part_sp.end(); iter++){
@@ -153,15 +163,14 @@ spectralProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   const int n_coeff=5;
   const int T_normalize=1200;  // 1200k per Bordbar et al. 2014
   Uintah::parallel_for( range,  [&](int i, int j, int k){
-              if (vol_fraction(i,j,k)> 0.5){
 
 
                  /// absorption coefficients and weights computed from Bordbar et al. 2014
-                 const double CO2= species[0](i,j,k) / species[2](i,j,k) /44.01; // species[2] is 1/MW_mixture
-                 const double H2O= species[1](i,j,k) / species[2](i,j,k) /18.02;
+                 const double CO2= species[0](i,j,k) / species[2](i,j,k) /44.01+1e-20; // species[2] is 1/MW_mixture
+                 const double H2O= species[1](i,j,k) / species[2](i,j,k) /18.02+1e-20; // add 1e-20 to prevent NaN for streams with neither CO2 or H2O.
                                  
                  const double m = std::max(std::min(H2O/CO2,4.0),0.01); // prevent extrapolation from data fit
-                 const double T_r = temperature(i,j,k)/T_normalize; 
+                 const double T_r = std::min(std::max(temperature(i,j,k),500.0),2400.0)/T_normalize; 
 
                  std::vector<std::vector<double> > b_vec(_nbands,std::vector<double>(n_coeff,0.0));
 
@@ -186,7 +195,6 @@ spectralProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
                    T_r_k*=T_r; 
                    m_k*=m; 
                  }
-              }
    });
 
    if (_absorption_modifier  > 1.00001 || _absorption_modifier  < 0.99999){ // if the modifier is 1.0, skip this loop

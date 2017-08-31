@@ -1,7 +1,6 @@
 #ifndef Uintah_Component_Arches_partRadProperties_h
 #define Uintah_Component_Arches_partRadProperties_h
 #include <Core/ProblemSpec/ProblemSpecP.h>
-#include <CCA/Components/Arches/PropertyModels/PropertyModelBase.h>
 #include <CCA/Components/Arches/Radiation/RadPropertyCalculator.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/SimulationState.h>
@@ -33,7 +32,6 @@ namespace Uintah{
 
   enum RadPropertiesModel { basic, constantPlanck, constantRossland};
 
-  class BoundaryCondition_new;
   class RadPropertyCalculator; 
 
   class partRadProperties : public TaskInterface{
@@ -118,7 +116,6 @@ namespace Uintah{
       std::vector< std::string > _abskp_name_vector;
       std::vector< std::string > _complexIndexReal_name;   // particle absorption coefficient
       std::string _abskp_name;
-      BoundaryCondition_new* _boundaryCond;
 
       int _nQn_part ;                                // number of quadrature nodes in DQMOM
       std::vector<std::string>  _temperature_name_v;          // DQMOM Temperature name
@@ -167,7 +164,6 @@ namespace Uintah{
           double  _ashAsymm;
 
 
-      //BoundaryCondition_new* _boundaryCond;
 
   }; // class partRadProperties
 }   // namespace Uintah
