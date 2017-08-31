@@ -5,13 +5,14 @@
 #include <CCA/Components/Arches/Utility/AlmgrenMMS.h>
 #include <CCA/Components/Arches/Utility/InitLagrangianParticleVelocity.h>
 #include <CCA/Components/Arches/Utility/InitLagrangianParticleSize.h>
+#include <CCA/Components/Arches/Utility/FileInit.h>
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 
 using namespace Uintah;
 
 InitializeFactory::InitializeFactory()
 {
-  _factory_name = "InitializeFactory"; 
+  _factory_name = "InitializeFactory";
 }
 
 InitializeFactory::~InitializeFactory()
@@ -97,16 +98,39 @@ InitializeFactory::register_all_tasks( ProblemSpecP& db )
 
       } else if ( type == "lagrangian_particle_velocity"){
 
-        TaskInterface::TaskBuilder* tsk = scinew InitLagrangianParticleVelocity::Builder( task_name, 0 );
+        TaskInterface::TaskBuilder* tsk
+          = scinew InitLagrangianParticleVelocity::Builder( task_name, 0 );
         register_task( task_name, tsk );
 
       } else if ( type == "lagrangian_particle_size"){
 
-        TaskInterface::TaskBuilder* tsk = scinew InitLagrangianParticleSize::Builder( task_name, 0 );
+        TaskInterface::TaskBuilder* tsk
+          = scinew InitLagrangianParticleSize::Builder( task_name, 0 );
+        register_task( task_name, tsk );
+
+      } else if ( type == "input_file" ){
+
+        std::string var_type;
+        db_task->findBlock("variable")->getAttribute("type", var_type);
+
+        TaskInterface::TaskBuilder* tsk;
+
+        if ( var_type == "CC" ){
+          tsk = scinew FileInit<CCVariable<double> >::Builder( task_name, 0, eqn_name );
+        } else if ( var_type == "FX" ){
+          tsk = scinew FileInit<SFCXVariable<double> >::Builder( task_name, 0, eqn_name );
+        } else if ( var_type == "FY" ){
+          tsk = scinew FileInit<SFCYVariable<double> >::Builder( task_name, 0, eqn_name );
+        } else {
+          tsk = scinew FileInit<SFCZVariable<double> >::Builder( task_name, 0, eqn_name );
+        }
+
         register_task( task_name, tsk );
 
       } else {
+
         throw InvalidValue("Error: Initialization function not recognized: "+type,__FILE__,__LINE__);
+
       }
     }
   }
@@ -129,6 +153,7 @@ InitializeFactory::build_all_tasks( ProblemSpecP& db )
       db_task->getAttribute("type", type );
 
       print_task_setup_info( task_name, type );
+
       TaskInterface* tsk = retrieve_task(task_name);
       tsk->problemSetup( db_task );
 

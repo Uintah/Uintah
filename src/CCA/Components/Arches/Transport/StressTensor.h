@@ -1,19 +1,19 @@
-#ifndef Uintah_Component_Arches_UFromRhoU_h
-#define Uintah_Component_Arches_UFromRhoU_h
+#ifndef Uintah_Component_Arches_StressTensor_h
+#define Uintah_Component_Arches_StressTensor_h
 
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 #include <CCA/Components/Arches/GridTools.h>
 
 namespace Uintah{
 
-  class UFromRhoU : public TaskInterface {
+  class StressTensor : public TaskInterface {
 
 public:
 
     typedef std::vector<ArchesFieldContainer::VariableInformation> VIVec;
 
-    UFromRhoU( std::string task_name, int matl_index );
-    ~UFromRhoU();
+    StressTensor( std::string task_name, int matl_index );
+    ~StressTensor();
 
     void problemSetup( ProblemSpecP& db );
 
@@ -39,7 +39,8 @@ public:
 
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    //Build instructions for this (UFromRhoU) class.
+    void VelocityDerivative_central(double&, double&, double&, const Array3<double>&, const Vector&, int, int, int);
+    //Build instructions for this class.
     class Builder : public TaskInterface::TaskBuilder {
 
       public:
@@ -48,8 +49,8 @@ public:
         : m_task_name(task_name), m_matl_index(matl_index){}
       ~Builder(){}
 
-      UFromRhoU* build()
-      { return scinew UFromRhoU( m_task_name, m_matl_index ); }
+      StressTensor* build()
+      { return scinew StressTensor( m_task_name, m_matl_index ); }
 
       private:
 
@@ -65,13 +66,15 @@ private:
     std::string m_u_vel_name;
     std::string m_v_vel_name;
     std::string m_w_vel_name;
-    std::string m_density_name;
-    std::string m_xmom;
-    std::string m_ymom;
-    std::string m_zmom;
-    std::string m_eps_name;
+    std::string diff_scheme;
+    std::string m_t_vis_name;
+    std::vector<std::string> m_sigma_t_names;
+    int Nghost_cells;
 
-    void compute_velocities( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+
+protected:
+
+
 
   };
 }

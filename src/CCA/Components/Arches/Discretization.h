@@ -99,7 +99,7 @@ public:
                               SFCXVariable<double>* conv_scheme_x,
                               SFCYVariable<double>* conv_scheme_y,
                               SFCZVariable<double>* conv_scheme_z,
-                              MOMCONV scheme, double re_limit, double re_limit_wall_upwind);
+                              MOMCONV scheme, double re_limit );
 
   template<class T>
   void compute_Ap(CellIterator iter,

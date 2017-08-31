@@ -32,6 +32,7 @@
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/StringUtil.h>
 
+
 #include <set>
 
 using namespace Uintah;
@@ -1180,6 +1181,17 @@ operator <<( std::ostream & out, const Task::TaskType & tt )
 
 } // end namespace Uintah
 
+//______________________________________________________________________
+//
+void
+Task::displayAll_DOUT( Uintah::Dout& dbg) const
+{
+  if( dbg.active() ){
+    std::ostringstream message;
+    displayAll( message );
+    DOUT( dbg, message.str() );
+  }
+}
 
 //______________________________________________________________________
 //

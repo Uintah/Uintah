@@ -2229,6 +2229,21 @@ DataArchiver::scheduleOutputTimestep(       vector<SaveItem> & saveLabels,
     Task* t = scinew Task( taskName, this, &DataArchiver::outputVariables,
                            isThisCheckpoint ? CHECKPOINT : OUTPUT );
     
+
+    ///// hacking: add in a dummy requirement to make the checkpoint task dependent on the IO task
+    //             so that they run in a deterministic order
+#if 1
+    if( isThisCheckpoint ) {
+      Ghost::GhostType  gn  = Ghost::None;
+      const VarLabel * tvl = VarLabel::create( "sync_io_vl", CCVariable<float>::getTypeDescription() );
+      t->requires( Task::NewDW, tvl, gn, 0 );
+    }
+    else {
+      const VarLabel * tvl = VarLabel::create( "sync_io_vl", CCVariable<float>::getTypeDescription() );
+      t->computes( tvl );
+    }
+#endif
+
     //__________________________________
     //
 
@@ -2439,9 +2454,9 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
                                DataWarehouse        * new_dw,
                                int                    type )
 {
-  cout << d_myworld->myrank() << "just entered outputVariables\n";
+  cout << d_myworld->myrank() << ": just entered outputVariables for thread " << std::this_thread::get_id() << "\n";
   std::lock_guard<std::mutex> pidx_guard( pidx_mutex );
-  cout << d_myworld->myrank() << "past lock for outputVariables\n";
+  cout << d_myworld->myrank() << ": past lock for outputVariables for thread: " << std::this_thread::get_id() << "\n";
 
   // IMPORTANT - this function should only be called once per
   //   processor per level per type (files will be opened and closed,
@@ -2854,6 +2869,7 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
   d_sharedState->d_runTimeStats[SimulationState::TotalIOTime ] += myTime;
 
   dbg << "  outputVariables task end\n";
+  cout << d_myworld->myrank() << ": leaving outputVariables for thread " << std::this_thread::get_id() << "\n";
 } // end outputVariables()
 
 //______________________________________________________________________
@@ -2989,52 +3005,41 @@ DataArchiver::saveLabels_PIDX( std::vector< SaveItem >     & saveLabels,
     const TypeDescription* subtype = td->getSubType();      
 
     // set values depending on the variable's subtype
-    char data_type[512];
-    int sample_per_variable = -9;
+    char   data_type[ 512 ];
+    int    sample_per_variable = 1;
     size_t varSubType_size = -9;
-    
+
+    string type_name = "float64";
+    int    the_size  = sizeof( double );
+
     switch( subtype->getType( )) {
 
-      case Uintah::TypeDescription::Stencil7:
-        sample_per_variable = 7;
-        varSubType_size = sample_per_variable * sizeof(double);
-        sprintf(data_type, "%d*float64", sample_per_variable); 
-        break;
-      case Uintah::TypeDescription::Stencil4:
-        sample_per_variable = 4;
-        varSubType_size = sample_per_variable * sizeof(double);
-        sprintf(data_type, "%d*float64", sample_per_variable); 
-        break;
-        
-      case Uintah::TypeDescription::Vector:
-        sample_per_variable = 3;
-        varSubType_size = sample_per_variable * sizeof(double);
-        sprintf(data_type, "%d*float64", sample_per_variable);
-        break;
-
-      case Uintah::TypeDescription::int_type:
-        sample_per_variable = 1;
-        varSubType_size = sample_per_variable * sizeof(int);
-        sprintf(data_type, "%d*int32", sample_per_variable);
-        break;
-        
-      case Uintah::TypeDescription::double_type:
-        sample_per_variable = 1;
-        
-        // take into account saving doubles as floats
-        if ( pidx.isOutputDoubleAsFloat() ){
-          varSubType_size = sample_per_variable * sizeof(float);
-          sprintf(data_type, "%d*float32", sample_per_variable);
-        } else {
-          varSubType_size = sample_per_variable * sizeof(double);
-          sprintf(data_type, "%d*float64", sample_per_variable);
+    case Uintah::TypeDescription::Stencil7 : sample_per_variable = 7; break;
+    case Uintah::TypeDescription::Stencil4 : sample_per_variable = 4; break;
+    case Uintah::TypeDescription::Vector   : sample_per_variable = 3; break;
+    case Uintah::TypeDescription::int_type :
+      the_size = sizeof( int );
+      type_name = "int32";
+      break;
+    case Uintah::TypeDescription::double_type :
+        if ( pidx.isOutputDoubleAsFloat() ){ // Take into account saving doubles as floats
+          the_size = sizeof( float );
+          type_name = "float32";
         }
         break;
-      default:
+    case Uintah::TypeDescription::float_type:
+      the_size = sizeof( float );
+      type_name = "float32";
+      break;
+
+    default:
         ostringstream warn;
         warn << "DataArchiver::saveLabels_PIDX:: ("<< label->getName() << " " << td->getName() << " ) has not been implemented\n";
         throw InternalError(warn.str(), __FILE__, __LINE__); 
     }
+
+    varSubType_size = sample_per_variable * the_size;
+    sprintf( data_type, "%d*%s", sample_per_variable, type_name.c_str() );
 
     //__________________________________
     //  materials loop

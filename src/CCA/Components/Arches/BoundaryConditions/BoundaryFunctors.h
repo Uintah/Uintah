@@ -92,7 +92,7 @@ namespace Uintah { namespace ArchesCore{
 
         const BndCondSpec* spec = bnd->find(var_name);
 
-        if ( vDir == IntVector(0,0,0) ){
+        if ( var_help.dir == ArchesCore::NODIR ){
 
           // CCVariable
           for ( bndIter.reset(); !bndIter.done(); bndIter++ ){

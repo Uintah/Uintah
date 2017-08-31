@@ -64,10 +64,11 @@
       <TurbulenceModels                 spec="OPTIONAL NO_DATA">
          <model                         spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        attribute2="type REQUIRED STRING 'sigma'">
+                                        attribute2="type REQUIRED STRING 'sigma, wale, constant_smagorinsky'">
 
            <Cs                          spec="OPTIONAL DOUBLE"
-                                        need_applies_to="type sigma"/> <!-- default is 1.35 -->
+                                        need_applies_to="type sigma, wale, constant_smagorinsky"/> <!-- default for sigma is 1.35 
+                                                                                                        default for wale is 0.5 -->
 
          </model>
       </TurbulenceModels>
@@ -1061,9 +1062,21 @@
           <!-- hybrid = upwind when Re limit is met. ALWAYS upwinding tangential velocities on walls -->
           <!-- wall_upwind = upwinding tangential velocities on walls, central in all interior cells -->
           <!-- old_* = original schemes from CSAFE Arches -->
+          <!-- A word on Re_limit: The Re number is defined as Conv/Diff. When the local cell Re exceeds the limit, an upwind differencing 
+                                   is used instead of the central scheme. If your case is experiencing high convective forces
+                                   that are not being dissipated quickly enough, you may watch your solution go unstable due to 
+                                   growing KE in your domain. The Re_limit offers a way to introduce an additional (numerical) 
+                                   diffusive term into the momentum transport, which may keep the KE bounded. This non-physical 
+                                   term can be quite effective, but sacrifices some physical accuracy. For wall_upwind, we recommend 
+                                   starting with 2 (default). For the hybrid scheme, we recommend optimizing to find a value as high 
+                                   as possible so as not to dampen KE too much. A general rule of thumb would be to start with the 
+                                   most accurate scheme: central. If that gives you trouble and you have walls in your domain, switch to 
+                                   wall_upwind, which acts as a "wall model", providing additional damping (as turbulence would) at the 
+                                   wall. If the doesn't work, switch to hybrid and try to pick an Re limit as high as possible as to 
+                                   not damped your solution artifically. Of course, this procedure might just be covering up a larger 
+                                   problem with your case. Use at your own risk. -->
           <convection_scheme            spec="REQUIRED STRING 'central, upwind, wall_upwind, hybrid, old_central, old_upwind'"/>
-          <Re_limit                     spec="OPTIONAL DOUBLE 'positive'"/> <!-- for HYBRID: Upwind if Re > value, else central -->
-          <Re_limit_wall_upwind         spec="OPTIONAL DOUBLE 'positive'"/> <!-- for WALL_UPWIND: Upwind ON WALLS if Re > value, else central -->
+          <Re_limit                     spec="OPTIONAL DOUBLE 'positive'"/> <!-- for HYBRID and WALL_UPWIND: Upwind if Re > value, else central. Default is 2. -->
 
           <filter_divergence_constraint spec="OPTIONAL BOOLEAN" />
           <src                          spec="MULTIPLE NO_DATA"
@@ -1277,13 +1290,14 @@
                                         attribute2="variable_label   OPTIONAL STRING"
                                         attribute3="type  REQUIRED STRING 'wave,
                                                                            almgren_mms,
+                                                                           input_file,
                                                                            random_lagrangian_particles,
                                                                            lagrangian_particle_velocity,
                                                                            lagrangian_particle_size'">
 
           <variable                     spec="OPTIONAL NO_DATA"
                                         attribute1="type REQUIRED STRING 'CC,FX,FY,FZ'"
-                                        need_applies_to="type almgren_mms"/>
+                                        need_applies_to="type almgren_mms, input_file"/>
 
           <!-- 1D WAVE FORM -->
           <wave                         spec="OPTIONAL NO_DATA"
@@ -1325,6 +1339,22 @@
                                       need_applies_to="type almgren_mms"/> <!-- specify the the x and y varlabel names for
                                                                             the mms -->
 
+          <!-- Input file -->
+          <!-- One may initialize a variable from an input file. The format should be: 
+
+               i j k value 
+
+               In the case of vectors (3-elements), the format is 
+
+               i j k vec[0] vec[1] vec[2]
+
+               and requires the extra <vector> tag and index (i.e., which vector component). -->
+          <filename                   spec="REQUIRED STRING"
+                                      need_applies_to="type input_file"/> <!-- filename from which to read the data -->
+          <vector                     spec="OPTIONAL NO_DATA"
+                                      attribute1="index REQUIRED INTEGER '0,2'"
+                                      need_applies_to="type input_file"/> <!-- Use a single element of a vector to initialize the data.
+                                                                               This is only needed when the input file has vector data. -->
 
           <!-- LAGRANGIAN PARTICLE POSITION -->
           <!-- nothing here yet -->

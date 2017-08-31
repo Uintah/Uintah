@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Uintah_DataArchive>
   <numberOfProcessors>12</numberOfProcessors>
+  <outputFormat>UDA</outputFormat>
   <Meta>
     <username>u0258978</username>
     <date>Fri Aug 30 11:55:33 2013</date>

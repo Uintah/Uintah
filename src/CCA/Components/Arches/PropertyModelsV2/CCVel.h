@@ -1,19 +1,19 @@
-#ifndef Uintah_Component_Arches_UFromRhoU_h
-#define Uintah_Component_Arches_UFromRhoU_h
+#ifndef Uintah_Component_Arches_CCVel_h
+#define Uintah_Component_Arches_CCVel_h
 
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 #include <CCA/Components/Arches/GridTools.h>
 
 namespace Uintah{
 
-  class UFromRhoU : public TaskInterface {
+  class CCVel : public TaskInterface {
 
 public:
 
     typedef std::vector<ArchesFieldContainer::VariableInformation> VIVec;
 
-    UFromRhoU( std::string task_name, int matl_index );
-    ~UFromRhoU();
+    CCVel( std::string task_name, int matl_index );
+    ~CCVel();
 
     void problemSetup( ProblemSpecP& db );
 
@@ -39,7 +39,7 @@ public:
 
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    //Build instructions for this (UFromRhoU) class.
+    //Build instructions for this (CCVel) class.
     class Builder : public TaskInterface::TaskBuilder {
 
       public:
@@ -48,8 +48,8 @@ public:
         : m_task_name(task_name), m_matl_index(matl_index){}
       ~Builder(){}
 
-      UFromRhoU* build()
-      { return scinew UFromRhoU( m_task_name, m_matl_index ); }
+      CCVel* build()
+      { return scinew CCVel( m_task_name, m_matl_index ); }
 
       private:
 
@@ -65,11 +65,9 @@ private:
     std::string m_u_vel_name;
     std::string m_v_vel_name;
     std::string m_w_vel_name;
-    std::string m_density_name;
-    std::string m_xmom;
-    std::string m_ymom;
-    std::string m_zmom;
-    std::string m_eps_name;
+    std::string m_u_vel_name_cc;
+    std::string m_v_vel_name_cc;
+    std::string m_w_vel_name_cc;
 
     void compute_velocities( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 

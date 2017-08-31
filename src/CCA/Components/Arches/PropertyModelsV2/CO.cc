@@ -163,6 +163,7 @@ void CO::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     CO_conv(i,j,k) = 0.0;
     rate(i,j,k) = 0.0;
   });
+
 }
 
 
