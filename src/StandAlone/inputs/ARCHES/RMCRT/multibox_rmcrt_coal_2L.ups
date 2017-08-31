@@ -2270,7 +2270,6 @@
           <src label="coal_gas_momentum"/>
           <src label="momentum_eta_source1"/>
           <src label="momentum_eta_source2"/>
-          <Re_limit>30000</Re_limit>
           <filter_divergence_constraint>false</filter_divergence_constraint>
         </MomentumSolver>
         
