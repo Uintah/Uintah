@@ -29,6 +29,7 @@ endif
 SRCS += \
         $(SRCDIR)/partRadProperties.cc      \
         $(SRCDIR)/gasRadProperties.cc       \
+        $(SRCDIR)/spectralProperties.cc     \
         $(SRCDIR)/cloudBenchmark.cc         \
         $(SRCDIR)/sumRadiation.cc           \
         $(SRCDIR)/CO.cc                     \
@@ -39,6 +40,7 @@ SRCS += \
         $(SRCDIR)/VariableStats.cc          \
         $(SRCDIR)/FaceVelocities.cc         \
         $(SRCDIR)/UFromRhoU.cc              \
+        $(SRCDIR)/CCVel.cc                  \
 	      $(SRCDIR)/BurnsChriston.cc          \
         $(SRCDIR)/WallHFVariable.cc
 

@@ -87,7 +87,7 @@
   </Grid>
   <!--__________________________________-->
   <DataArchiver type="PIDX">
-  <filebase>test.uda</filebase>
+      <filebase>test.uda</filebase>
       <outputTimestepInterval>1</outputTimestepInterval>
       <save label = "color"   />
       <save label = "divQ"    />

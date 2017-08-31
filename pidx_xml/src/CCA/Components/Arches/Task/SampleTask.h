@@ -34,6 +34,9 @@ public:
 
       register_new_variable<CCVariable<double> >("a_sample_field");
       register_new_variable<CCVariable<double> >("a_result_field");
+      register_new_variable<CCVariable<double> >("A");
+      register_new_variable<CCVariable<double> >("B");
+      register_new_variable<CCVariable<double> >("C"); 
 
     };
 

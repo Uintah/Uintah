@@ -16,7 +16,6 @@
   </Time>
   <DataArchiver type="PIDX">
     <filebase>zminus_scalar_test.uda</filebase>
-    <outputInitTimestep/>
     <outputTimestepInterval>5</outputTimestepInterval>
     <save label="uVelocitySPBC"/>
     <save label="vVelocitySPBC"/>

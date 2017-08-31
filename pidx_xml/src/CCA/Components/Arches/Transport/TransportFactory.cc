@@ -7,6 +7,7 @@
 #include <CCA/Components/Arches/Transport/VelRhoHatBC.h>
 #include <CCA/Components/Arches/Transport/AddPressGradient.h>
 #include <CCA/Components/Arches/Transport/PressureBC.h>
+#include <CCA/Components/Arches/Transport/StressTensor.h>
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 #include <CCA/Components/Arches/Task/AtomicTaskInterface.h>
 
@@ -95,6 +96,13 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
   }
 
   if ( db->findBlock("KMomentum") ){
+
+    // stress tensor
+    std::string stress_name = "stress_tensor";
+    TaskInterface::TaskBuilder* stress_tsk = scinew StressTensor::Builder( stress_name, 0 );
+    register_task(stress_name, stress_tsk);
+    _momentum_builders.push_back( stress_name ); 
+    _momentum_solve.push_back( stress_name ); 
 
     // X-mom
     std::string compute_psi_name = "x-mom-psi";
@@ -218,6 +226,11 @@ TransportFactory::build_all_tasks( ProblemSpecP& db )
   ProblemSpecP db_mom = db->findBlock("KMomentum");
 
   if ( db_mom != nullptr ){
+
+    TaskInterface* stress_tsk = retrieve_task("stress_tensor"); 
+    print_task_setup_info( "stress_tensor", "compute stress tensor"); 
+    stress_tsk->problemSetup( db_mom ); 
+    stress_tsk->create_local_labels(); 
 
     TaskInterface* tsk = retrieve_task( "x-mom" );
     print_task_setup_info( "x-mom-compute-rhs", "compute rhs");

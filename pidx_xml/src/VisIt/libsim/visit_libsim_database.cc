@@ -268,14 +268,14 @@ visit_handle visit_SimGetMetaData(void *cbdata)
         }
         else if (vartype.find("PerPatch") != std::string::npos)
         {
-          mesh_for_this_var = mesh_for_patch_data;
-
-          if( mesh_for_this_var == "NC_Mesh")
-            cent = VISIT_VARCENTERING_NODE;
-          else
-            cent = VISIT_VARCENTERING_ZONE;
-
-          isPerPatchVar = true;
+	  mesh_for_this_var = mesh_for_patch_data;
+	  
+	  if( mesh_for_this_var == "NC_Mesh")
+	    cent = VISIT_VARCENTERING_NODE;
+	  else
+	    cent = VISIT_VARCENTERING_ZONE;
+	  
+	  isPerPatchVar = true;
         }
         else if (vartype.find("ReductionVariable") != std::string::npos)
         {
@@ -854,7 +854,7 @@ void visit_CalculateDomainNesting(TimeStepInfo* stepInfo,
         int plow[3], phigh[3];
         patchInfo.getBounds(plow, phigh, meshname);
         
-        // For node based meshes add one if there is a neighbor.
+        // For node based meshes add one if there is a neighbor patch.
         if( meshname.find("NC_") == 0 )
         {
           int nlow[3], nhigh[3];
@@ -943,7 +943,7 @@ void visit_CalculateDomainNesting(TimeStepInfo* stepInfo,
           int child_low[3], child_high[3];
           childPatchInfo.getBounds(child_low, child_high, meshname);
           
-          // For node based meshes add one if there is a neighbor.
+          // For node based meshes add one if there is a neighbor patch.
           if( meshname.find("NC_") == 0 )
           {
             int nlow[3], nhigh[3];
@@ -961,7 +961,7 @@ void visit_CalculateDomainNesting(TimeStepInfo* stepInfo,
             int parent_low[3], parent_high[3];
             parentPatchInfo.getBounds(parent_low, parent_high, meshname);
             
-            // For node based meshes add one if there is a neighbor.
+            // For node based meshes add one if there is a neighbor patch.
             if( meshname.find("NC_") == 0 )
             {
               int nlow[3], nhigh[3];
@@ -1008,7 +1008,7 @@ void visit_CalculateDomainNesting(TimeStepInfo* stepInfo,
         int plow[3], phigh[3];
         patchInfo.getBounds(plow, phigh, meshname);
         
-        // For node based meshes add one if there is a neighbor.
+        // For node based meshes add one if there is a neighbor patch.
         if( meshname.find("NC_") == 0 )
         {
           int nlow[3], nhigh[3];
@@ -1164,8 +1164,9 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
     // } 
     
     // No need to delete as the flag is VISIT_OWNER_VISIT so VisIt
-    // owns the data (VISIT_OWNER_SIM - indicates the sim owns the
-    // data). However pd needs to be delted.
+    // owns the data (VISIT_OWNER_SIM - indicates the simulation owns
+    // the data). However pd needs to be delted.
+    
     // delete pd->data
     delete pd;
 
@@ -1265,7 +1266,7 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
     int plow[3], phigh[3];
     patchInfo.getBounds(plow, phigh, meshName);
 
-    // For node based meshes add one if there is a neighbor.
+    // For node based meshes add one if there is a neighbor patch.
     if( meshName.find("NC_") == 0 )
     {
       int nlow[3], nhigh[3];
@@ -1366,8 +1367,8 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
                                     1, dims[c], array);
 
         // No need to delete as the flag is VISIT_OWNER_VISIT so VisIt
-        // owns the data (VISIT_OWNER_SIM - indicates the sim owns the
-        // data).
+        // owns the data (VISIT_OWNER_SIM - indicates the simulation
+        // owns the data).
 
         // delete[] array;
       }
@@ -1413,7 +1414,8 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
 
   int timestate = sim->cycle;
 
-  bool isParticleVar = false;
+  bool isParticleVar  = false;
+  bool isInternalVar  = false;
 
   // Get the var name sans the material. If a patch or processor
   // variable then the var name will be either "patch" or "processor".
@@ -1425,23 +1427,43 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
   // Get the varType except for processor and patch based data which
   // does not come from the data warehouse but instead from internal
   // structures.
-  std::string varType;
+  std::string varType("");
 
   if( strncmp(varname, "patch/nodes", 11) == 0 )
   {
+    isInternalVar = true;
+
     varType = "NC_Mesh";
   }
   else if( varName == "processor" ||
       
-      strcmp(varname, "patch/id") == 0 ||
-      strcmp(varname, "patch/processor") == 0 ||
-      strncmp(varname, "patch/bounds/low",  16) == 0 ||
-      strncmp(varname, "patch/bounds/high", 17) == 0 )
+	   strcmp(varname, "patch/id") == 0 ||
+	   strcmp(varname, "patch/processor") == 0 ||
+
+	   strncmp(varname, "patch/bounds/low",  16) == 0 ||
+	   strncmp(varname, "patch/bounds/high", 17) == 0 )
   {
+    isInternalVar = true;
+
     varType = mesh_for_patch_data;
   }
   else
   {
+    // For PerPatch data remove the patch/ prefix and get the var
+    // name and the material.
+    if( varName == "patch" )
+    {
+      // Get the var name and material sans "patch/".
+      varName = std::string(varname);
+      found = varName.find("/");  
+      varName = varName.substr(found + 1);
+      
+      // Get the var name sans the material.
+      found = varName.find_last_of("/");
+      matl = varName.substr(found + 1);
+      varName = varName.substr(0, found);
+    }
+
     for (int k=0; k<(int)stepInfo->varInfo.size(); ++k)
     {
       if (stepInfo->varInfo[k].name == varName)
@@ -1459,6 +1481,18 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
     }
   }
 
+  if( varType.empty() )
+  {
+    std::stringstream msg;
+    msg << "Visit libsim - "
+	<< "Uintah variable \"" << varname << "\"  "
+	<< "has no type.";
+    
+    VisItUI_setValueS("SIMULATION_MESSAGE_ERROR", msg.str().c_str(), 1);
+
+    return varH;
+  }
+  
   int level, local_patch;
   GetLevelAndLocalPatchNumber(stepInfo, domain, level, local_patch);
 
@@ -1484,8 +1518,9 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       // rv->SetArray(pd->data, pd->num*pd->components, 0);
       
       // No need to delete as the flag is VISIT_OWNER_VISIT so VisIt
-      // owns the data (VISIT_OWNER_SIM - indicates the simowns the
-      // data). However, pd needs to be deleted.
+      // owns the data (VISIT_OWNER_SIM - indicates the simulation
+      // owns the data). However, pd needs to be deleted.
+      
       // delete pd->data
       delete pd;
     }
@@ -1497,21 +1532,16 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
     MPIScheduler *mpiScheduler = dynamic_cast<MPIScheduler*>
       (sim->simController->getSchedulerP().get_rep());
 
-    // const VarLabel *varLabel = simStateP->get_refinePatchFlag_label();
-    
-    // const Uintah::TypeDescription* maintype = varLabel->typeDescription();
-    // const Uintah::TypeDescription* subtype = varLabel->typeDescription()->getSubType();
-      
     LevelInfo &levelInfo = stepInfo->levelInfo[level];
     PatchInfo &patchInfo = levelInfo.patchInfo[local_patch];
 
     bool nodeCentered;
     
-    // The region we're going to ask uintah for (from qlow to qhigh-1)      
+    // The region we're going to ask uintah for (from plow to phigh-1)
     int plow[3], phigh[3];
     patchInfo.getBounds(plow, phigh, varType);
 
-    // For node based meshes add one if there is a neighbor.
+    // For node based meshes add one if there is a neighbor patch.
     if( varType.find("NC") != std::string::npos )
     {
       nodeCentered = true;
@@ -1524,19 +1554,14 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
     }
     else
     {  
-      nodeCentered = false;      
+      nodeCentered = false;
     }
 
     GridDataRaw *gd = nullptr;
 
     // The data for these variables does not come from the data
     // warehouse but instead from internal structures.
-    if( varName == "processor" ||
-
-        strcmp(varname, "patch/id") == 0 ||
-        strcmp(varname, "patch/processor") == 0 ||
-        strncmp(varname, "patch/bounds/low",  16) == 0 ||
-        strncmp(varname, "patch/bounds/high", 17) == 0 )
+    if( isInternalVar )
     {
       gd = new GridDataRaw;
 
@@ -1652,7 +1677,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       {
         std::stringstream msg;
         msg << "Visit libsim - "
-            << "Uintah variable \"" << varname << "\"  "
+            << "Uintah internal variable \"" << varname << "\"  "
             << "could not be processed.";
             
         VisItUI_setValueS("SIMULATION_MESSAGE_WARNING", msg.str().c_str(), 1);
@@ -1664,21 +1689,6 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
     // Patch data from the warehouse
     else
     {
-      // For PerPatch data remove the patch/ prefix and get the var
-      // name and the material.
-      if( varName == "patch" )
-      {
-        // Get the var name and material sans "patch/".
-        varName = std::string(varname);
-        found = varName.find("/");  
-        varName = varName.substr(found + 1);
-
-        // Get the var name sans the material.
-        found = varName.find("/");
-        matl = varName.substr(found + 1);
-        varName = varName.substr(0, found);
-      }
-      
       gd = getGridData(schedulerP, gridP, level, local_patch, varName,
                        atoi(matl.c_str()), plow, phigh);
 
@@ -1688,6 +1698,12 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       }
       else
       {
+        std::stringstream msg;
+        msg << "Visit libsim - "
+            << "Uintah variable \"" << varname << "\"  "
+            << "could not be processed.";
+            
+        VisItUI_setValueS("SIMULATION_MESSAGE_WARNING", msg.str().c_str(), 1);
         gd = new GridDataRaw;
 
         int numVars = stepInfo->varInfo.size();
@@ -1735,13 +1751,10 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       VisIt_VariableData_setDataD(varH, VISIT_OWNER_VISIT, gd->components,
                                   gd->num*gd->components, gd->data);
 
-      // vtkDoubleArray *rv = vtkDoubleArray::New();
-      // rv->SetNumberOfComponents(gd->components);
-      // rv->SetArray(gd->data, ncells*gd->components, 0);
-      
       // No need to delete as the flag is VISIT_OWNER_VISIT so VisIt
-      // owns the data (VISIT_OWNER_SIM - indicates the sim owns the
-      // data). However, gd needs to be deleted.
+      // owns the data (VISIT_OWNER_SIM - indicates the simulation
+      // owns the data). However, gd needs to be deleted.
+      
       // delete gd->data
       delete gd;
     }

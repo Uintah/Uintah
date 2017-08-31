@@ -165,6 +165,7 @@ TaskGraph::addTask(       std::shared_ptr<Task>   task
     m_tasks.push_back( task );
 
     DOUT(tgdbg, "Rank-" << m_proc_group->myrank() << " TG[" << m_index << "] adding task: " << task->getName());
+    task->displayAll_DOUT(tgdbg);
     
 #if 0
     // This snippet will find all the tasks that require a label
@@ -338,7 +339,7 @@ TaskGraph::createDetailedTasks(       bool            useInternalDeps
       DOUT(neighbor_location, "For varlabel " << kv.first.key << " on level: " << kv.first.level << " the max ghost cell is: " << kv.second);
     }
   }
-
+  
   // Now loop again, setting the task's max ghost cells to the max ghost cell for a given varLabel
   for (int i = 0; i < number_of_tasks; i++) {
     Task* task = sorted_tasks[i];
@@ -656,7 +657,7 @@ TaskGraph::remembercomps( DetailedTask     * task
         cached_comp_patches = comp->m_patches;
       }
       constHandle<MaterialSubset> matls = comp->getMaterialsUnderDomain( task->d_matls );
-      if (!patches->empty() && !matls->empty()) {
+      if (patches && !patches->empty() && matls && !matls->empty()) {
         ct.remembercomp( task, comp, patches.get_rep(), matls.get_rep(), m_proc_group );
       }
     }
@@ -735,7 +736,7 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
       continue;
     }
 
-//    DOUT(detaileddbg, "Rank-" << m_proc_group->myrank() << "  req: " << *req);
+    DOUT(detaileddbg, "Rank-" << m_proc_group->myrank() << "  req: " << *req);
 
     constHandle<PatchSubset> patches = req->getPatchesUnderDomain(dtask->d_patches);
     if (req->m_var->typeDescription()->isReductionVariable() && m_scheduler->isNewDW(req->mapDataWarehouse())) {

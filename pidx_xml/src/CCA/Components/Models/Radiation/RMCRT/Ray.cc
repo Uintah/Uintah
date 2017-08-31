@@ -1113,11 +1113,11 @@ Ray::rayTrace( const ProcessorGroup* pg,
     celltype_dw->getLevel( celltype ,     d_cellTypeLabel, d_matl , level );
   }
 
-  Timers::Simple timer;
-  timer.start();
-
   // patch loop
   for (int p=0; p < patches->size(); p++){
+
+    Timers::Simple timer;
+    timer.start();
 
     const Patch* patch = patches->get(p);
     printTask(patches,patch,g_ray_dbg,"Doing Ray::rayTrace");

@@ -121,8 +121,8 @@ DataArchive::DataArchive( const string & filebase,
 
   d_fileFormat = NOT_SPECIFIED;
   queryAndSetFileFormat( d_indexFile );
-
 }
+
 //______________________________________________________________________
 //
 DataArchive::~DataArchive()
@@ -171,7 +171,14 @@ DataArchive::queryAndSetFileFormat( FILE * doc )
   while( true ) {
 
     string line = UintahXML::getLine( doc );
-    if( line == "" ) {
+    if( line == "" ) { // ??? end of file???
+
+      // bulletproofing
+      if( d_fileFormat == NOT_SPECIFIED ) {
+        proc0cout << "Warning: Reading in an UDA that is missing the <outputFormat> tag... "
+                  << "defaulting to type old 'UDA'.\n";
+        d_fileFormat = UDA;
+      }
       return;
     }
     else if( line.compare( 0, 14, "<outputFormat>" ) == 0 ) {
