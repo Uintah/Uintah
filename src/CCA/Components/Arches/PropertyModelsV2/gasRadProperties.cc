@@ -10,7 +10,6 @@ using namespace Uintah;
 ////---------------------------------------------------------------------------
 gasRadProperties::gasRadProperties( std::string task_name, int matl_index ) : TaskInterface( task_name, matl_index)
 {
-  //_boundaryCond = scinew BoundaryCondition_new( matl_index );
 }
   
   
@@ -22,7 +21,6 @@ gasRadProperties::~gasRadProperties( )
 {
   // Destroying all local VarLabels stored in _extra_local_labels: 
 
-  //delete _boundaryCond;
   delete _calc; 
 }
 

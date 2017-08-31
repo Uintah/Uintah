@@ -38,8 +38,7 @@ SRCS += \
         $(SRCDIR)/PropertyModelBase.cc      \
         $(SRCDIR)/PropertyModelFactory.cc   \
         $(SRCDIR)/ScalarDissipation.cc      \
-        $(SRCDIR)/TabStripFactor.cc         \
-        $(SRCDIR)/fvSootFromYsoot.cc        
+        $(SRCDIR)/TabStripFactor.cc          
 
 ########################################################################
 #

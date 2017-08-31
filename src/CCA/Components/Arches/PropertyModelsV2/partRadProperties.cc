@@ -12,7 +12,6 @@ using namespace Uintah;
 ////---------------------------------------------------------------------------
 partRadProperties::partRadProperties( std::string task_name, int matl_index ) : TaskInterface( task_name, matl_index)
 {
-  //_boundaryCond = scinew BoundaryCondition_new( matl_index );
 }
 
 //---------------------------------------------------------------------------
@@ -27,7 +26,6 @@ if (_particle_calculator_type == "constantCIF"){
 if (_particle_calculator_type == "coal"){
   delete _3Dpart_radprops;
 }
-  //delete _boundaryCond;
 }
 
 

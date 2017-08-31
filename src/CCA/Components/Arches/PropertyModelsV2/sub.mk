@@ -30,6 +30,7 @@ SRCS += \
         $(SRCDIR)/partRadProperties.cc      \
         $(SRCDIR)/gasRadProperties.cc       \
         $(SRCDIR)/spectralProperties.cc     \
+        $(SRCDIR)/sootVolumeFrac.cc     \
         $(SRCDIR)/cloudBenchmark.cc         \
         $(SRCDIR)/sumRadiation.cc           \
         $(SRCDIR)/CO.cc                     \
