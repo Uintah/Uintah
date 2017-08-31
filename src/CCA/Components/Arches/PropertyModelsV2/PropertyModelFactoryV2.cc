@@ -17,6 +17,7 @@
 #include <CCA/Components/Arches/PropertyModelsV2/gasRadProperties.h>
 #include <CCA/Components/Arches/PropertyModelsV2/spectralProperties.h>
 #include <CCA/Components/Arches/PropertyModelsV2/partRadProperties.h>
+#include <CCA/Components/Arches/PropertyModelsV2/sootVolumeFrac.h>
 #include <CCA/Components/Arches/PropertyModelsV2/CO.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
@@ -156,6 +157,11 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
 
         TaskInterface::TaskBuilder* tsk = scinew cloudBenchmark::Builder( name, 0 );
         register_task( name, tsk );
+      } else if ( type == "sootVolumeFrac" ){
+
+        TaskInterface::TaskBuilder* tsk = scinew sootVolumeFrac::Builder( name, 0 );
+        register_task( name, tsk );
+        _pre_table_post_iv_update.push_back(name);
 
       } else if ( type == "gasRadProperties" ){
 

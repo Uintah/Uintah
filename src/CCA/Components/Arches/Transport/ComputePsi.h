@@ -350,15 +350,15 @@ private:
       PsiHelper<CT, ZFaceT, ConstZFaceT> z_psi_helper;
 
       int boundary_int = 0;
-      if ( m_boundary_int > 0 && m_dir == 1 ) boundary_int = 1;
+      if ( m_boundary_int > 0 && m_dir == 0 ) boundary_int = 1;
       x_psi_helper.computePsi( phi, psi_x, u, eps, Patch::xminus, Patch::xplus,
                                boundary_int, 0, my_limiter, patch, tsk_info );
       boundary_int = 0;
-      if ( m_boundary_int > 0 && m_dir == 2 ) boundary_int = 1;
+      if ( m_boundary_int > 0 && m_dir == 1 ) boundary_int = 1;
       y_psi_helper.computePsi( phi, psi_y, v, eps, Patch::yminus, Patch::yplus,
                                boundary_int, 1, my_limiter, patch, tsk_info );
       boundary_int = 0;
-      if ( m_boundary_int > 0 && m_dir == 3 ) boundary_int = 1;
+      if ( m_boundary_int > 0 && m_dir == 2 ) boundary_int = 1;
       z_psi_helper.computePsi( phi, psi_z, w, eps, Patch::zminus, Patch::zplus,
                                boundary_int, 2, my_limiter, patch, tsk_info );
 

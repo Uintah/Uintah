@@ -16,8 +16,8 @@
 // * @brief Computes Spectral properties of CO2 and H2O mixtures. This model is a 4 band model.
 // *        The algorithm is valid for temperature from 500k-2400k, with H2O/CO2 molar ratios ranging from .01-4.0,
 // *        and optical path lengths ranging from .01 to 60 meters at 1 atm.  
-// *        Exceding the bounds of these regions can result in negative absorption weights.  It is particularily bad in composition space,
-// *        which has been capped in this particular implimentation.  [i.e. max(min(X,4),.01)]
+// *        Exceding the bounds of these regions can result in negative absorption weights.  It is particularily bad in composition space.
+// *        In this implimentation the input range for composition and temperature is being limited.  [i.e. max(min(X,4),.01)]
 // *        Based on Combustion and Flame publication, Bordbar et al. 2014
 // *
 // * The input file interface for this property should like this in your UPS file: 

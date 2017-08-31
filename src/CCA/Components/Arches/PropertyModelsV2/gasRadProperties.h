@@ -1,7 +1,6 @@
 #ifndef Uintah_Component_Arches_gasRadProperties_h
 #define Uintah_Component_Arches_gasRadProperties_h
 #include <Core/ProblemSpec/ProblemSpecP.h>
-#include <CCA/Components/Arches/PropertyModels/PropertyModelBase.h>
 #include <CCA/Components/Arches/Radiation/RadPropertyCalculator.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/SimulationState.h>
@@ -28,7 +27,6 @@
 
 namespace Uintah{ 
 
-  class BoundaryCondition_new;
   class RadPropertyCalculator; 
 
   class gasRadProperties : public TaskInterface{
@@ -119,7 +117,6 @@ namespace Uintah{
       const VarLabel* _temperature_label; 
       std::string _temperature_name;
       std::string _abskg_name;
-      BoundaryCondition_new* _boundaryCond;
 
   }; // class gasRadProperties
 }   // namespace Uintah
