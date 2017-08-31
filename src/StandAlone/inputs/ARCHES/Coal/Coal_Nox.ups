@@ -2298,13 +2298,11 @@
           <do_only_last_projection>false</do_only_last_projection>
         </PressureSolver>
         <MomentumSolver>
-          <Re_limit>2.0</Re_limit>
           <convection_scheme>wall_upwind</convection_scheme>
           <src label="coal_gas_momentum"/>
           <src label="momentum_eta_source1"/>
           <src label="momentum_eta_source2"/>
           <filter_divergence_constraint>false</filter_divergence_constraint>
-          <Re_limit_wall_upwind>2</Re_limit_wall_upwind>
         </MomentumSolver>
         <turbModelCalcFreq>1</turbModelCalcFreq>
         <turbModelCalcForAllRKSteps>true</turbModelCalcForAllRKSteps>
