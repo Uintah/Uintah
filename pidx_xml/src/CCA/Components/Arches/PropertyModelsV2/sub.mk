@@ -27,23 +27,23 @@ endif
 # Normal source files:
 
 SRCS += \
-        $(SRCDIR)/partRadProperties.cc      \
-        $(SRCDIR)/gasRadProperties.cc       \
-        $(SRCDIR)/spectralProperties.cc     \
-        $(SRCDIR)/sootVolumeFrac.cc     \
-        $(SRCDIR)/cloudBenchmark.cc         \
-        $(SRCDIR)/sumRadiation.cc           \
+        $(SRCDIR)/BurnsChriston.cc          \
+        $(SRCDIR)/CCVel.cc                  \
         $(SRCDIR)/CO.cc                     \
         $(SRCDIR)/ConstantProperty.cc       \
-        $(SRCDIR)/OneDWallHT.cc             \
         $(SRCDIR)/DensityPredictor.cc       \
-        $(SRCDIR)/PropertyModelFactoryV2.cc \
-        $(SRCDIR)/VariableStats.cc          \
         $(SRCDIR)/FaceVelocities.cc         \
+        $(SRCDIR)/OneDWallHT.cc             \
+        $(SRCDIR)/PropertyModelFactoryV2.cc \
         $(SRCDIR)/UFromRhoU.cc              \
-        $(SRCDIR)/CCVel.cc                  \
-	      $(SRCDIR)/BurnsChriston.cc          \
-        $(SRCDIR)/WallHFVariable.cc
+        $(SRCDIR)/VariableStats.cc          \
+        $(SRCDIR)/WallHFVariable.cc         \
+        $(SRCDIR)/cloudBenchmark.cc         \
+        $(SRCDIR)/gasRadProperties.cc       \
+        $(SRCDIR)/partRadProperties.cc      \
+        $(SRCDIR)/sootVolumeFrac.cc         \
+        $(SRCDIR)/spectralProperties.cc     \
+        $(SRCDIR)/sumRadiation.cc           
 
 ########################################################################
 #
