@@ -383,7 +383,7 @@
                                                 poisson2, poisson3, poisson4, benchmark,
                                                 rigidmpmice,reduce_uda, rmpmice,smpm,
                                                 smpmice,switcher,wave,
-                                                solvertest, solvertest2,heat,
+                                                solvertest, solvertest2, heat,
                                                 RMCRT_Test particletest'" >
                                   <!-- The 'type' above is used in CCA/Components/Parent/ComponentFactory.cc -->
         <carry_over                 spec="MULTIPLE NO_DATA"
@@ -997,6 +997,7 @@
     <alpha                    spec="REQUIRED DOUBLE" />
     <R0                       spec="REQUIRED DOUBLE" />
     <gamma                    spec="REQUIRED DOUBLE" />
+    <refine_threshold         spec="OPTIONAL DOUBLE" />
   </Heat>
 
   <!-- Poisson        -->

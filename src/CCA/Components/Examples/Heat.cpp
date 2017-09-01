@@ -81,8 +81,6 @@ void Heat::initialize(const ProcessorGroup* pg,
                    0);
                    //patch->getBCType(Patch::zplus) == Patch::Neighbor ? 0:1);
     */
-    std::cout << "low index" << l << std::endl;
-    std::cout << "high index" << h << std::endl;
 
     for(NodeIterator iter(l,h); !iter.done(); iter++){
       IntVector n = *iter;
@@ -201,16 +199,12 @@ void Heat::timeAdvance(const ProcessorGroup* pg,
         }else{
           patch->getBCDataArray(face)->getNodeFaceIterator(0, bound_ptr, child);
           if(bc_kind == "Dirichlet"){
-            std::cout << "Face:" << face << std::endl;
             for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-              std::cout << *bound_ptr << std::endl;
               temp_new[*bound_ptr] = bc_value;
             }
             nCells += bound_ptr.size();
           }
         }
-
-
       } // end child loop
     } // end face loop
     // End Boundary Condition Section

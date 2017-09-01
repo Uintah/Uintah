@@ -31,6 +31,12 @@ namespace Uintah{
     virtual void scheduleTimeAdvance(const LevelP&     level,
                                            SchedulerP& sched);
 
+  protected:
+    SimulationStateP d_state;
+    ExamplesLabel* d_lb;
+    SimpleMaterial* d_mat;
+    double d_delt, d_alpha, d_r0, d_gamma;
+
   private:
     virtual void initialize(const ProcessorGroup* pg,
                             const PatchSubset*    patches,
@@ -50,10 +56,7 @@ namespace Uintah{
                                    DataWarehouse*  old_dw,
                                    DataWarehouse*  new_dw);
 
-    SimulationStateP d_state;
-    ExamplesLabel* d_lb;
-    SimpleMaterial* d_mat;
-    double d_delt, d_alpha, d_r0, d_gamma;
+
 
     Heat(const Heat&);
     Heat& operator=(const Heat&);

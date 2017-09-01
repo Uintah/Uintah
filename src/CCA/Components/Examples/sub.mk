@@ -32,10 +32,11 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR := CCA/Components/Examples
 
 SRCS += \
+        $(SRCDIR)/AMRHeat.cpp          \
         $(SRCDIR)/AMRWave.cc           \
         $(SRCDIR)/Benchmark.cc         \
         $(SRCDIR)/Burger.cc            \
-        $(SRCDIR)/DOSweep.cc            \
+        $(SRCDIR)/DOSweep.cc           \
         $(SRCDIR)/ExamplesLabel.cc     \
         $(SRCDIR)/Interpolator.cc      \
         $(SRCDIR)/Heat.cpp             \
