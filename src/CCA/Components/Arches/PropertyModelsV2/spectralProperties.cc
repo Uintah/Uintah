@@ -34,6 +34,7 @@ void spectralProperties::problemSetup(  Uintah::ProblemSpecP& db )
   _part_sp.push_back("mixture_molecular_weight"); 
 
   db->get("soot",_soot_name);
+    _LsootOn=true;
   if (_soot_name==""){
     _LsootOn=false;
   }else{
@@ -48,10 +49,10 @@ void spectralProperties::problemSetup(  Uintah::ProblemSpecP& db )
 
   std::string _abskg_name_base="abskg";
   std::string _weight_name_base="abswg";
-  _abskg_name_vector = std::vector<std::string>(4);
-  _abswg_name_vector = std::vector<std::string>(4);
+  _abskg_name_vector = std::vector<std::string>(_nbands+(_LsootOn ? 1:0) );// transparent band is no longer transparent assuming gray soot.
+  _abswg_name_vector = std::vector<std::string>(_nbands+(_LsootOn ? 1:0) );
 
-  for (int i=0; i< _nbands ; i++){
+  for (int i=0; i< _nbands+(_LsootOn ? 1:0)  ; i++){
     std::stringstream out1;
     out1 << _abskg_name_base << "_" << i;
     _abskg_name_vector[i] = out1.str();
@@ -67,7 +68,7 @@ void spectralProperties::problemSetup(  Uintah::ProblemSpecP& db )
 void
 spectralProperties::create_local_labels(){
 
-  for (int i=0; i< _nbands ; i++){
+  for (int i=0; i< _nbands + (_LsootOn ? 1:0) ; i++){ 
     register_new_variable<CCVariable<double> >(_abskg_name_vector[i]);
     register_new_variable<CCVariable<double> >(_abswg_name_vector[i]);
   }
@@ -77,7 +78,7 @@ spectralProperties::create_local_labels(){
 
 void
 spectralProperties::register_initialize( VIVec& variable_registry , const bool pack_tasks){
-  for (int i=0; i< _nbands ; i++){
+  for (int i=0; i< _nbands + (_LsootOn ? 1:0) ; i++){
     register_variable( _abskg_name_vector[i], Uintah::ArchesFieldContainer::COMPUTES, variable_registry );
     register_variable( _abswg_name_vector[i], Uintah::ArchesFieldContainer::COMPUTES, variable_registry );
   }
@@ -86,7 +87,7 @@ spectralProperties::register_initialize( VIVec& variable_registry , const bool p
 void
 spectralProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  for (int i=0; i< _nbands ; i++){
+  for (int i=0; i< _nbands + (_LsootOn ? 1:0) ; i++){
   CCVariable<double>& abskg     = tsk_info->get_uintah_field_add<CCVariable<double> >( _abskg_name_vector[i]);
   CCVariable<double>& abswg     = tsk_info->get_uintah_field_add<CCVariable<double> >( _abswg_name_vector[i]);
   abskg.initialize(0.0);
@@ -125,7 +126,7 @@ spectralProperties::register_timestep_eval( std::vector<ArchesFieldContainer::Va
     }
   }
 
-  for (int i=0; i< _nbands ; i++){
+  for (int i=0; i< _nbands + (_LsootOn ? 1:0) ; i++){
     register_variable( _abskg_name_vector[i] , Uintah::ArchesFieldContainer::COMPUTES, variable_registry, time_substep);
     register_variable( _abswg_name_vector[i] , Uintah::ArchesFieldContainer::COMPUTES, variable_registry, time_substep);
   }
@@ -154,9 +155,9 @@ spectralProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
 
-  StaticArray< CCVariable<double> > abskg(_nbands); 
-  StaticArray< CCVariable<double> > abswg(_nbands); 
-  for (int i=0; i< _nbands ; i++){
+  StaticArray< CCVariable<double> > abskg(_nbands + (_LsootOn ? 1:0)); 
+  StaticArray< CCVariable<double> > abswg(_nbands + (_LsootOn ? 1:0)); 
+  for (int i=0; i< _nbands + (_LsootOn ? 1:0) ; i++){
 
     tsk_info->get_unmanaged_uintah_field<CCVariable<double> >(_abskg_name_vector[i],abskg[i]);
     tsk_info->get_unmanaged_uintah_field<CCVariable<double> >(_abswg_name_vector[i],abswg[i]);
@@ -214,9 +215,14 @@ spectralProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
      constCCVariable<double>& soot_vf = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(_soot_name));
      Uintah::parallel_for( range,  [&](int i, int j, int k){
              double k_soot= 3.72*soot_vf(i,j,k)*_C_o*temperature(i,j,k)/_C_2; //m^-1
-             for (int ii=0; ii< _nbands ; ii++){
+             for (int ii=0; ii< _nbands+1 ; ii++){
                abskg[ii](i,j,k)+=k_soot; //grey approximation for soot and soot is in thermal equilibrium with gas;
             }
+             double weight_sum=0.0; 
+             for (int ii=0; ii< _nbands ; ii++){
+               weight_sum+=abswg[ii](i,j,k); //grey approximation for soot and soot is in thermal equilibrium with gas;
+            }
+              abswg[_nbands](i,j,k)=1.0-weight_sum; // not needed, as this can be inferred from the other 4 weights, keeping for simplicity in the radiation solver
      });
    }
 

@@ -93,8 +93,6 @@ sumRadiation::register_initialize( VIVec& variable_registry , const bool pack_ta
 void
 sumRadiation::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-
-
   CCVariable<double>& abskt = *(tsk_info->get_uintah_field<CCVariable<double> >(m_abskt_name));
   constCCVariable<double>&  volFrac = tsk_info->get_const_uintah_field_add<constCCVariable<double> >("volFraction");
 
