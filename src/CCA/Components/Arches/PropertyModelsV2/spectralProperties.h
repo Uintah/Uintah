@@ -124,10 +124,14 @@ const double wecel_d_coeff[4][5]
 
 
       const int _nbands{4};
+      const double _C_2{143.88};           ///2nd planck function optical constant (meters*Kelvin)
+      double _C_o;                         ///particle optical constant
       std::vector<std::string> _part_sp;
       double _absorption_modifier;
       const VarLabel* _temperature_label; 
       std::string _temperature_name;
+      std::string _soot_name;
+      bool _LsootOn;
       std::vector<std::string> _abskg_name_vector;
       std::vector<std::string> _abswg_name_vector;
 

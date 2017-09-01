@@ -33,13 +33,23 @@ void spectralProperties::problemSetup(  Uintah::ProblemSpecP& db )
   _part_sp.push_back("H2O");
   _part_sp.push_back("mixture_molecular_weight"); 
 
+  db->get("soot",_soot_name);
+  if (_soot_name==""){
+    _LsootOn=false;
+  }else{
+    double cn = 1.85; // real portion of soot absorption coefficient
+    double ck = 0.22; // imaginary, or absorptive portion of soot coefficient
+    _C_o=36.0*M_PI*cn*ck/(std::pow(cn*cn-ck*ck+2.0,2.)+4.*cn*cn*ck*ck);
+  }
+
+  
   db->getWithDefault("absorption_modifier",_absorption_modifier,1.0);
   _temperature_name = "temperature"; 
 
   std::string _abskg_name_base="abskg";
   std::string _weight_name_base="abswg";
-  _abskg_name_vector = std::vector<std::string> (4);
-  _abswg_name_vector = std::vector<std::string> (4);
+  _abskg_name_vector = std::vector<std::string>(4);
+  _abswg_name_vector = std::vector<std::string>(4);
 
   for (int i=0; i< _nbands ; i++){
     std::stringstream out1;
@@ -131,6 +141,9 @@ spectralProperties::register_timestep_eval( std::vector<ArchesFieldContainer::Va
       }
     }
   register_variable(_temperature_name , ArchesFieldContainer::REQUIRES,0,ArchesFieldContainer::LATEST,variable_registry, time_substep );
+  if (_LsootOn){
+    register_variable(_soot_name , ArchesFieldContainer::REQUIRES,0,ArchesFieldContainer::LATEST,variable_registry, time_substep );
+  }
   //register_variable("volFraction" , ArchesFieldContainer::REQUIRES,0,ArchesFieldContainer::NEWDW,variable_registry, time_substep );
 
 }
@@ -196,6 +209,17 @@ spectralProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
                    m_k*=m; 
                  }
    });
+
+   if (_LsootOn){
+     constCCVariable<double>& soot_vf = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(_soot_name));
+     Uintah::parallel_for( range,  [&](int i, int j, int k){
+             double k_soot= 3.72*soot_vf(i,j,k)*_C_o*temperature(i,j,k)/_C_2; //m^-1
+             for (int ii=0; ii< _nbands ; ii++){
+               abskg[ii](i,j,k)+=k_soot; //grey approximation for soot and soot is in thermal equilibrium with gas;
+            }
+     });
+   }
+
 
    if (_absorption_modifier  > 1.00001 || _absorption_modifier  < 0.99999){ // if the modifier is 1.0, skip this loop
       Uintah::parallel_for( range,  [&](int i, int j, int k){
