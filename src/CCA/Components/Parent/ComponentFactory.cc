@@ -113,8 +113,6 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
 
   string turned_off_options;
 
-  cout << "Do AMR: " << doAMR << endl;
-
 #ifndef NO_MPM
   if (sim_comp == "mpm" || sim_comp == "MPM") {
     return scinew SerialMPM(world);
