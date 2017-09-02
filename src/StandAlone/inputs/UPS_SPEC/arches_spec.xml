@@ -84,11 +84,18 @@
                                                                           constant_property,
                                                                           burns_christon,
                                                                           cloudBenchmark,
+                                                                          sootVolumeFrac,
                                                                           gasRadProperties,
                                                                           partRadProperties,
-                                                                          CO, wall_thermal_resistance'">
+                                                                          CO,
+                                                                          wall_thermal_resistance'">
+                                                                          <!--wall_thermal_resistance,-->
+                                                                          <!--sootVolumeFrac'">-->
               <absorption_modifier        spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type partRadProperties gasRadProperties"/> <!-- multiplicative modifier on gas or particle absorption coefficients, does not affect scattering coefficients -->
               <subModel                   spec="REQUIRED STRING  'constantCIF, basic, Coal'"   need_applies_to="type partRadProperties" />
+              <density_label              spec="REQUIRED STRING"  need_applies_to="type sootVolumeFrac" />    <!--density of the gas soot mixture-->
+              <Ysoot_label                spec="REQUIRED STRING"  need_applies_to="type sootVolumeFrac" />    <!--mass fraction of soot-->
+              <soot_density               spec="REQUIRED STRING"  need_applies_to="type sootVolumeFrac" />    <!--density (kg/m^3) of soot-->
               <part_temp_label            spec="REQUIRED STRING"  need_applies_to="type partRadProperties" />    <!--base label used for particle temp in DQMOM-->
               <part_size_label            spec="REQUIRED STRING"  need_applies_to="type partRadProperties" />    <!--base label used for particle size in DQMOM-->
               <model_type                 spec="OPTIONAL STRING 'planck, rossland'" need_applies_to="type partRadProperties"/> <!-- Type of absorption coefficient model-->
@@ -282,7 +289,6 @@
                                                                           extent_rxn, tab_strip_factor,
                                                                           particle_absorption_coefficient,
                                                                           empirical_soot,
-                                                                          fv_soot,
                                                                           algebraic_scalar_diss,
                                                                           scalsim_variance,
                                                                           heat_loss,
@@ -366,7 +372,7 @@
           <carbon_content_ox            spec="REQUIRED DOUBLE 'positive'"
                                         need_applies_to="type empirical_soot"/> <!-- carbon content, mass of carbon atoms/mass of oxidizer -->
           <opl                          spec="REQUIRED DOUBLE 'positive'"
-                                        need_applies_to="type empirical_soot, fv_soot"/> <!-- make sure that you use the same value as in the radiation properties if appropriate -->
+                                        need_applies_to="type empirical_soot"/> <!-- make sure that you use the same value as in the radiation properties if appropriate -->
           <C1                           spec="OPTIONAL DOUBLE 'positive'"
                                         need_applies_to="type empirical_soot"/> <!-- default of 0.1, valid values range between 0-0.2 (see Hottel & Sarofim, 1978) -->
           <E_cr                         spec="OPTIONAL DOUBLE 'positive'"
@@ -376,22 +382,17 @@
           <E_st                         spec="REQUIRED DOUBLE 'positive'"
                                         need_applies_to="type empirical_soot"/> <!-- Equivilence ratio at stoich -->
           <soot_density                 spec="OPTIONAL DOUBLE 'positive'"
-                                        need_applies_to="type empirical_soot, fv_soot"/> <!-- default of 1950.0 -->
+                                        need_applies_to="type empirical_soot"/> <!-- default of 1950.0 -->
           <density_label                spec="OPTIONAL STRING"
-                                        need_applies_to="type empirical_soot, scalsim_variance, fv_soot"/> <!-- default of "density" -->
+                                        need_applies_to="type empirical_soot, scalsim_variance"/> <!-- default of "density" -->
           <temperature_label            spec="OPTIONAL STRING"
-                                        need_applies_to="type empirical_soot, fv_soot"/> <!-- default of "temperature" -->
+                                        need_applies_to="type empirical_soot"/> <!-- default of "temperature" -->
           <absorption_label             spec="OPTIONAL STRING"
-                                        need_applies_to="type empirical_soot, fv_soot"/> <!-- default of "absorpIN" -->
+                                        need_applies_to="type empirical_soot"/> <!-- default of "absorpIN" -->
           <total_absorption_label             spec="OPTIONAL STRING"
-                                        need_applies_to="type empirical_soot, fv_soot"/> <!-- default of "absorpIN" -->
+                                        need_applies_to="type empirical_soot"/> <!-- default of "absorpIN" -->
           <mixture_fraction_label       spec="OPTIONAL STRING"
                                         need_applies_to="type empirical_soot, scalsim_variance"/> <!-- default of "mixture_fraction" -->
-
-          <!-- fv_soot -->
-          <Ysoot_label                  spec="OPTIONAL STRING"
-                                        need_applies_to="type fv_soot"/>
-
 
           <!-- Heat loss -->
           <enthalpy_label               spec="REQUIRED STRING"
