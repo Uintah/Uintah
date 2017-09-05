@@ -57,22 +57,31 @@ Uintah::contactStress( DataArchive * da, CommandLineFlags & clf )
     int maxMatl = clf.matl;
     int m_all = maxMatl+1;
 
+    string fileroot("contactsWGroup");
+
     for(int mthis= 0; mthis<=maxMatl; mthis++){
       ostringstream fnum;
       fnum << mthis;
-      string fileroot("contactsWGroup");
-      string filename = fileroot + fnum.str();
-      ofstream out(filename.c_str());
-      out.setf(ios::scientific,ios::floatfield);
-      out.precision(8);
+//      string filename = fileroot + fnum.str();
+//      ofstream out(filename.c_str());
+//      out.setf(ios::scientific,ios::floatfield);
+//      out.precision(8);
 
       cout << "mthis = " << mthis << endl;
       int mat2=-999;
       double val2, val3;
 
-      for(unsigned long t=clf.time_step_lower;t<=clf.time_step_upper;t+=clf.time_step_inc){
+      for(unsigned long t=clf.time_step_lower;t<=clf.time_step_upper;
+                                              t+=clf.time_step_inc){
         double time = times[t];
         cout << "Working on time = " << t << endl;
+
+        ostringstream tnum;
+        tnum << setw(3) << setfill('0') << t/clf.time_step_inc;
+        string filename = fileroot + fnum.str() + '.' + tnum.str();
+        ofstream out(filename.c_str());
+        out.setf(ios::scientific,ios::floatfield);
+        out.precision(8);
 
         out << "%outputting for time["<< t <<"] = " << time << endl;
         out << "material_1  material_2 nodePos_x nodePos_y nodePos_z nodeIdxI nodeIdxJ nodeIdxK mass_1 mass_2 pressure_1 pressure_2 pressure_N eqStress1 eqStress2 eqStressN color_1 color_2" << endl;
