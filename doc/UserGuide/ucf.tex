@@ -969,6 +969,40 @@ compute node. The above command line will launch 1 MPI process per node and crea
   \label{fig:UnifiedScheduler}
 \end{figure}
 
+\section{GPU Support} \label{Sec:GpuSupport}
+Uintah provides support for NVIDIA GPUs through simulation variable preparation and task execution.  The high-level goal is to maintain a strong layer of separation between the runtime and the application task developer using the same philosophy that exists for CPU tasks.  Uintah's runtime manages copying simulation variables in and out of GPU memory, ghost cell scattering and gathering, task execution, overlapping GPU kernels, and overlapping computation with communication.  This GPU engine has been demonstrated at scale using 16K GPUs \cite{SCI:Hum2016a} and in a heterogeneous production 1000 MWe coal boiler simulation on Titan using 7.5K GPUs in a mixture of $\sim$1400 GPU and CPU tasks per MPI rank.  GPU support is still under active development, and some features are likely to change, most notably the host-side GPU Data Warehouse, and support for GPUs with Kokkos.
+
+This user guide will describe the features of Uintah's GPU support through a simple Poisson example.  To begin, Uintah must be compiled with CUDA support which requires Uintah's configure step list the path to CUDA using  \texttt{--with-cuda=/path/to/cuda}.  Once configured and then compiled, Uintah can verify if a GPU is active by running \texttt{sus -gpucheck}.  
+
+A task is designated as a GPU enabled task within its declaration, generally alongside when its  \texttt{computes} and  \texttt{requires} are also declared.  This declaration is done like so:  
+
+\begin{Verbatim}[fontsize=\footnotesize]
+  task->usesDevice(true);
+\end{Verbatim} 
+
+An example of this is found in Uintah's UnifiedSchedulerTest.cc in the \\ \texttt{src/CCA/Components/Examples directory} in the  \texttt{scheduleTimeAdvance} method.  The task's callback function remains the same, a call to a CPU task.  Even though it is a GPU enabled task, a CPU task function must manually invoke a GPU kernel containing CUDA code, as seen in that UnifiedSchedulerTest.cc's \texttt{timeAdvanceUnified} method.  All GPU task code should still follow normal strategies for CUDA programming.
+
+Uintah's runtime maintains a Task Data Warehouse for GPU tasks to enable a task developer to access simulation variables within CUDA code.  A task's Task Data Warehouses contain only entries for all the simulation variables defined in that task's declaration.  It is strongly recommended (though not required) that these data warehouses are passed into the kernel. An example of this is seen in \texttt{timeAdvanceUnified}'s method.  A task developer can retrieve a simulation variable through a simple \texttt{get()} or \texttt{getModifiable()}API call, as seen in UnifiedSchedulerTest.cu's \\ \texttt{unifiedSchedulerTestKernel()}.  An example is given below:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+  const GPUGridVariable<double> phi;
+  GPUGridVariable<double> newphi;
+  old_gpudw->get(phi, "phi", patchID, 0, 0);
+  new_gpudw->getModifiable(newphi, "phi", patchID, 0); 
+\end{Verbatim} 
+
+From here individual cells in these grid variables variables can be accessed using an (i,j,k) syntax.    
+\begin{Verbatim}[fontsize=\footnotesize]
+      newphi(i,j,k) = (1. / 6)
+      * (phi(i-1, j, k) + phi(i+1, j, k)
+      +  phi(i, j-1, k) + phi(i, j+1, k)
+      +  phi(i, j, k-1) + phi(i, j, k+1));
+\end{Verbatim} 
+
+The underlying runtime logic ensures that if two different tasks share the same simulation variable on a patch, only one instance of that simulation variable will be created.  This sharing reduces total GPU memory usage.  A consequence of this logic that the GPU Data Warehouse has no allocateAndPut() API call.  Instead, the task scheduler allocates and frees all simulation variables before and after task execution.   
+
+This paragraph describes limitations of Uintah's GPU support.  Only the Unified Scheduler can be used, the other schedulers do not have any GPU runtime code.   Uintah's CPU tasks and associated data warehouses support five types of simulation variables, namely 1) grid, 2) per patch variables, 3) reduction, 4) sole, and 5) particle.  GPU tasks and associated data warehouses do not support sole and particle variables at this time.  Uintah supports one GPU per MPI rank.  There are no future plans to support multiple GPUs per MPI rank due to a combination of three reasons: 1) the lack of any target problem requiring this need, 2) the challenges and scope issues of multiple GPUs in an MPI rank require significant development time, and 3) Kokkos has no plans to support multiple GPUs per MPI rank.  If a target machine has multiple GPUs, consider using the environment variable \texttt{CUDA\_VISIBLE\_DEVICES} to enable one GPU.  Support for NVLink has not been enabled.  Any simulation declared as \texttt{modifies} is not currently supported, but will likely be in the near future.  
+
 %
 %__________________________________
 %\section{Adaptive Mesh Refinement}
