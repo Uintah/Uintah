@@ -106,9 +106,9 @@ private:
     std::string m_rho_name;
     std::string m_eps_name;
 
-    std::string m_sigmax_name; 
-    std::string m_sigmay_name; 
-    std::string m_sigmaz_name; 
+    std::string m_sigmax_name;
+    std::string m_sigmay_name;
+    std::string m_sigmaz_name;
 
     std::vector<std::string> m_eqn_names;
     std::vector<bool> m_do_clip;
@@ -493,7 +493,7 @@ private:
             FYT& y_psi = tsk_info->get_uintah_field_add<FYT>(m_eqn_names[ieqn]+"_y_psi");
             FZT& z_psi = tsk_info->get_uintah_field_add<FZT>(m_eqn_names[ieqn]+"_z_psi");
 
-            Uintah::ComputeConvectiveFlux<Array3<double> >
+            Uintah::ComputeConvectiveFlux<FXT, FYT, FZT >
              get_flux( phi, u_fx, v_fy, w_fz, x_psi, y_psi, z_psi,
                        x_flux, y_flux, z_flux, eps );
 
@@ -507,7 +507,7 @@ private:
             CFYT& y_psi = tsk_info->get_const_uintah_field_add<CFYT>(m_eqn_names[ieqn]+"_y_psi");
             CFZT& z_psi = tsk_info->get_const_uintah_field_add<CFZT>(m_eqn_names[ieqn]+"_z_psi");
 
-            Uintah::ComputeConvectiveFlux<const Array3<double> >
+            Uintah::ComputeConvectiveFlux<CFXT, CFYT, CFZT >
              get_flux( phi, u_fx, v_fy, w_fz, x_psi, y_psi, z_psi,
                        x_flux, y_flux, z_flux, eps );
 
@@ -525,7 +525,7 @@ private:
             FYT& y_psi = tsk_info->get_uintah_field_add<FYT>(m_eqn_names[ieqn]+"_y_psi");
             FZT& z_psi = tsk_info->get_uintah_field_add<FZT>(m_eqn_names[ieqn]+"_z_psi");
 
-            Uintah::ComputeConvectiveFlux<Array3<double> >
+            Uintah::ComputeConvectiveFlux<FXT, FYT, FZT >
               get_flux( phi, u_fx, v_fy, w_fz, x_psi, y_psi, z_psi, x_flux, y_flux, z_flux, eps );
 
             GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE( 1, 0 )
@@ -538,7 +538,7 @@ private:
             CFYT& y_psi = tsk_info->get_const_uintah_field_add<CFYT>(m_eqn_names[ieqn]+"_y_psi");
             CFZT& z_psi = tsk_info->get_const_uintah_field_add<CFZT>(m_eqn_names[ieqn]+"_z_psi");
 
-            Uintah::ComputeConvectiveFlux<const Array3<double> >
+            Uintah::ComputeConvectiveFlux<CFXT, CFYT, CFZT >
               get_flux( phi, u_fx, v_fy, w_fz, x_psi, y_psi, z_psi, x_flux, y_flux, z_flux, eps );
 
             GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE( 1, 0 )
@@ -556,7 +556,7 @@ private:
             FYT& y_psi = tsk_info->get_uintah_field_add<FYT>(m_eqn_names[ieqn]+"_y_psi");
             FZT& z_psi = tsk_info->get_uintah_field_add<FZT>(m_eqn_names[ieqn]+"_z_psi");
 
-            Uintah::ComputeConvectiveFlux<Array3<double> >
+            Uintah::ComputeConvectiveFlux<FXT, FYT, FZT >
               get_flux( phi, u_fx, v_fy, w_fz, x_psi, y_psi, z_psi, x_flux, y_flux, z_flux, eps );
 
             GET_EXTRACELL_FZ_BUFFERED_PATCH_RANGE( 1, 0 )
@@ -569,7 +569,7 @@ private:
             CFYT& y_psi = tsk_info->get_const_uintah_field_add<CFYT>(m_eqn_names[ieqn]+"_y_psi");
             CFZT& z_psi = tsk_info->get_const_uintah_field_add<CFZT>(m_eqn_names[ieqn]+"_z_psi");
 
-            Uintah::ComputeConvectiveFlux<const Array3<double> >
+            Uintah::ComputeConvectiveFlux<CFXT, CFYT, CFZT >
               get_flux( phi, u_fx, v_fy, w_fz, x_psi, y_psi, z_psi, x_flux, y_flux, z_flux, eps );
 
             GET_EXTRACELL_FZ_BUFFERED_PATCH_RANGE( 1, 0 )
@@ -593,11 +593,11 @@ private:
         constCCVariable<double>& sigma3 = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_sigmaz_name));
 
         auto stressTensor = [&] (int i, int j, int k){
-          double div_sigma1 = (sigma1(i+1,j,k) - sigma1(i,j,k))*areaEW + 
-                              (sigma2(i,j+1,k) - sigma2(i,j,k))*areaNS + 
+          double div_sigma1 = (sigma1(i+1,j,k) - sigma1(i,j,k))*areaEW +
+                              (sigma2(i,j+1,k) - sigma2(i,j,k))*areaNS +
                               (sigma3(i,j,k+1) - sigma3(i,j,k))*areaTB;
 
-          rhs(i,j,k) += div_sigma1; 
+          rhs(i,j,k) += div_sigma1;
         };
 
 

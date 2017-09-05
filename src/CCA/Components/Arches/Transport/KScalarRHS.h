@@ -38,13 +38,13 @@
 
 namespace Uintah{
 
-  template<typename T>
+  template<typename T, typename FluxXT, typename FluxYT, typename FluxZT>
   class KScalarRHS : public TaskInterface {
 
 public:
 
-    KScalarRHS<T>( std::string task_name, int matl_index );
-    ~KScalarRHS<T>();
+    KScalarRHS<T, FluxXT, FluxYT, FluxZT>( std::string task_name, int matl_index );
+    ~KScalarRHS<T, FluxXT, FluxYT, FluxZT>();
 
     typedef std::vector<ArchesFieldContainer::VariableInformation> ArchesVIVector;
 
@@ -80,7 +80,7 @@ public:
       ~Builder(){}
 
       KScalarRHS* build()
-      { return scinew KScalarRHS<T>( m_task_name, m_matl_index ); }
+      { return scinew KScalarRHS<T, FluxXT, FluxYT, FluxZT>( m_task_name, m_matl_index ); }
 
       private:
 
@@ -130,23 +130,23 @@ private:
   };
 
   //------------------------------------------------------------------------------------------------
-  template <typename T>
-  KScalarRHS<T>::KScalarRHS( std::string task_name, int matl_index ) :
+  template <typename T, typename FluxXT, typename FluxYT, typename FluxZT>
+  KScalarRHS<T, FluxXT, FluxYT, FluxZT>::KScalarRHS( std::string task_name, int matl_index ) :
   TaskInterface( task_name, matl_index ) {
 
     m_boundary_functors = scinew ArchesCore::BCFunctors<T>();
 
   }
 
-  template <typename T>
-  KScalarRHS<T>::~KScalarRHS(){
+  template <typename T, typename FluxXT, typename FluxYT, typename FluxZT>
+  KScalarRHS<T, FluxXT, FluxYT, FluxZT>::~KScalarRHS(){
 
     delete m_boundary_functors;
 
   }
 
-  template <typename T> void
-  KScalarRHS<T>::problemSetup( ProblemSpecP& input_db ){
+  template <typename T, typename FluxXT, typename FluxYT, typename FluxZT> void
+  KScalarRHS<T, FluxXT, FluxYT, FluxZT>::problemSetup( ProblemSpecP& input_db ){
 
   m_total_eqns = 0;
 
@@ -254,9 +254,9 @@ private:
 
   }
 
-  template <typename T>
+  template <typename T, typename FluxXT, typename FluxYT, typename FluxZT>
   void
-  KScalarRHS<T>::create_local_labels(){
+  KScalarRHS<T, FluxXT, FluxYT, FluxZT>::create_local_labels(){
 
     const int istart = 0;
     int iend = _eqn_names.size();
@@ -269,8 +269,8 @@ private:
     }
   }
 
-  template <typename T> void
-  KScalarRHS<T>::register_initialize(
+  template <typename T, typename FluxXT, typename FluxYT, typename FluxZT> void
+  KScalarRHS<T, FluxXT, FluxYT, FluxZT>::register_initialize(
     std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
     const bool packed_tasks ){
 
@@ -285,8 +285,8 @@ private:
     }
   }
 
-  template <typename T> void
-  KScalarRHS<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  template <typename T, typename FluxXT, typename FluxYT, typename FluxZT> void
+  KScalarRHS<T, FluxXT, FluxYT, FluxZT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     const int istart = 0;
     const int iend = _eqn_names.size();
@@ -316,8 +316,8 @@ private:
   }
 
   //------------------------------------------------------------------------------------------------
-  template <typename T> void
-  KScalarRHS<T>::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){
+  template <typename T, typename FluxXT, typename FluxYT, typename FluxZT> void
+  KScalarRHS<T, FluxXT, FluxYT, FluxZT>::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){
     const int istart = 0;
     const int iend = _eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
@@ -327,8 +327,8 @@ private:
     }
   }
 
-  template <typename T> void
-  KScalarRHS<T>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  template <typename T, typename FluxXT, typename FluxYT, typename FluxZT> void
+  KScalarRHS<T, FluxXT, FluxYT, FluxZT>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
     const int istart = 0;
@@ -347,8 +347,8 @@ private:
   }
 
   //------------------------------------------------------------------------------------------------
-  template <typename T> void
-  KScalarRHS<T>::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){
+  template <typename T, typename FluxXT, typename FluxYT, typename FluxZT> void
+  KScalarRHS<T, FluxXT, FluxYT, FluxZT>::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){
 
     const int istart = 0;
     const int iend = _eqn_names.size();
@@ -384,8 +384,8 @@ private:
   }
 
   //-------------------------------------------------------------------------------
-  template <typename T> void
-  KScalarRHS<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  template <typename T, typename FluxXT, typename FluxYT, typename FluxZT> void
+  KScalarRHS<T, FluxXT, FluxYT, FluxZT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     Vector Dx = patch->dCell();
     double ax = Dx.y() * Dx.z();
@@ -429,31 +429,24 @@ private:
 
       if ( m_conv_scheme[ieqn] != NOCONV ){
 
-        if ( tsk_info->packed_tasks() ){
+        FluxXT* x_psi_ptr;
+        FluxYT* y_psi_ptr;
+        FluxZT* z_psi_ptr;
 
-          FXT& x_psi = tsk_info->get_uintah_field_add<FXT>(_eqn_names[ieqn]+"_x_psi", 1);
-          FYT& y_psi = tsk_info->get_uintah_field_add<FYT>(_eqn_names[ieqn]+"_y_psi", 1);
-          FZT& z_psi = tsk_info->get_uintah_field_add<FZT>(_eqn_names[ieqn]+"_z_psi", 1);
+        FieldTool<FluxXT> x_field_tool(tsk_info);
+        x_psi_ptr = x_field_tool.get(_eqn_names[ieqn]+"_x_psi");
 
-          Uintah::ComputeConvectiveFlux<Array3<double> >
-            get_flux( phi, u, v, w, x_psi, y_psi, z_psi,
-                      x_flux, y_flux, z_flux, eps );
+        FieldTool<FluxYT> y_field_tool(tsk_info);
+        y_psi_ptr = y_field_tool.get(_eqn_names[ieqn]+"_y_psi");
 
-          Uintah::parallel_for( range_cl_to_ech, get_flux );
+        FieldTool<FluxZT> z_field_tool(tsk_info);
+        z_psi_ptr = z_field_tool.get(_eqn_names[ieqn]+"_z_psi");
 
-        } else {
+        Uintah::ComputeConvectiveFlux<FluxXT, FluxYT, FluxZT >
+          get_flux( phi, u, v, w, (*x_psi_ptr), (*y_psi_ptr), (*z_psi_ptr),
+                    x_flux, y_flux, z_flux, eps );
 
-          CFXT& x_psi = tsk_info->get_const_uintah_field_add<CFXT>(_eqn_names[ieqn]+"_x_psi");
-          CFYT& y_psi = tsk_info->get_const_uintah_field_add<CFYT>(_eqn_names[ieqn]+"_y_psi");
-          CFZT& z_psi = tsk_info->get_const_uintah_field_add<CFZT>(_eqn_names[ieqn]+"_z_psi");
-
-          Uintah::ComputeConvectiveFlux<const Array3<double> >
-            get_flux( phi, u, v, w, x_psi, y_psi, z_psi,
-                      x_flux, y_flux, z_flux, eps );
-
-          Uintah::parallel_for( range_cl_to_ech, get_flux );
-
-        }
+        Uintah::parallel_for( range_cl_to_ech, get_flux );
 
       }
 
@@ -507,8 +500,8 @@ private:
 
   }
 
-  template <typename T> void
-  KScalarRHS<T>::register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){
+  template <typename T, typename FluxXT, typename FluxYT, typename FluxZT> void
+  KScalarRHS<T, FluxXT, FluxYT, FluxZT>::register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){
 
     for ( auto i = _eqn_names.begin(); i != _eqn_names.end(); i++ ){
       register_variable( *i, ArchesFieldContainer::MODIFIES, variable_registry );
@@ -523,8 +516,8 @@ private:
 
   }
 
-  template <typename T> void
-  KScalarRHS<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  template <typename T, typename FluxXT, typename FluxYT, typename FluxZT> void
+  KScalarRHS<T, FluxXT, FluxYT, FluxZT>::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     m_boundary_functors->apply_bc( _eqn_names, m_bcHelper, tsk_info, patch );
 

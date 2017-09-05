@@ -105,14 +105,14 @@ namespace Uintah {
              when not using temporary variables. However, since temporary variables can ONLY
              be non-const, one should use CT=Array3<double> in that case.
   **/
-  template <typename PSI_T>
+  template <typename PSIX_T, typename PSIY_T, typename PSIZ_T>
   struct ComputeConvectiveFlux{
 
     ComputeConvectiveFlux( const Array3<double>& i_phi,
                            const Array3<double>& i_u, const Array3<double>& i_v,
                            const Array3<double>& i_w,
-                           PSI_T& i_psi_x, PSI_T& i_psi_y,
-                           PSI_T& i_psi_z,
+                           PSIX_T& i_psi_x, PSIY_T& i_psi_y,
+                           PSIZ_T& i_psi_z,
                            Array3<double>& i_flux_x, Array3<double>& i_flux_y,
                            Array3<double>& i_flux_z,
                            const Array3<double>& i_eps ) :
@@ -155,9 +155,9 @@ namespace Uintah {
     const Array3<double>& u;
     const Array3<double>& v;
     const Array3<double>& w;
-    PSI_T& psi_x;
-    PSI_T& psi_y;
-    PSI_T& psi_z;
+    PSIX_T& psi_x;
+    PSIY_T& psi_y;
+    PSIZ_T& psi_z;
     Array3<double>& flux_x;
     Array3<double>& flux_y;
     Array3<double>& flux_z;

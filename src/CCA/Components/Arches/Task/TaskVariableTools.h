@@ -64,6 +64,9 @@ namespace Uintah{
 
         }
 
+        /** @brief Get a reference to the field container **/
+        ArchesFieldContainer* getFieldContainer(){ return _field_container; };
+
          /** @brief Return the spp time factor: t_ssp = t + factor * dt **/
         inline const double get_ssp_time_factor( const int rk_step ){
 
@@ -103,6 +106,19 @@ namespace Uintah{
         inline T& get_const_uintah_field_add( const std::string name,
           ArchesFieldContainer::WHICH_DW which_dw ){
           return *(_field_container->get_const_field<T>(name, which_dw));
+        }
+
+        /** @brief This task provides some access to variables which may be either
+                   in the DW as const (ie, you are requiring them) or might be temp
+                   because it was computed upstream in a packed task and has no DW home **/
+        template <typename T>
+        inline T* get_const_or_temp_uintah_field( const std::string name, const bool is_temp,
+                                                  const int nGhosts=1 ){
+          if ( is_temp ){
+            return _field_container->get_temporary_field<T>(name, nGhosts);
+          } else {
+            return _field_container->get_const_field<T>(name);
+          }
         }
 
         /** @brief Return a UINTAH field allowing the user to manage
@@ -218,6 +234,114 @@ namespace Uintah{
                             const int timesubstep,
                             std::string task_name="(Arches task name not not communicated to this variable registration)",
                             const bool temporary_variable = false );
+
+    /** @brief Helper struct when resolving get_uintah_field and get_const_uintah_field
+               becomes tricky **/
+    template <typename T>
+    struct FieldTool{
+      FieldTool(ArchesTaskInfoManager* tsk_info){
+        throw InvalidValue("Error: I should not be in this constctor.",__FILE__,__LINE__);
+      }
+    T* get( const std::string name ){
+        throw InvalidValue("Error: I should not be called.",__FILE__,__LINE__);
+      }
+    };
+
+    template <>
+    struct FieldTool<constCCVariable<double> >{
+      FieldTool(ArchesTaskInfoManager* tsk_info):m_tsk_info(tsk_info){
+      }
+      constCCVariable<double>* get( const std::string name ){
+        ArchesFieldContainer* field_container = m_tsk_info->getFieldContainer();
+        return field_container->get_const_field<constCCVariable<double> >( name );
+      }
+    private:
+      ArchesTaskInfoManager* m_tsk_info;
+    };
+
+    template <>
+    struct FieldTool<CCVariable<double> >{
+      FieldTool(ArchesTaskInfoManager* tsk_info):m_tsk_info(tsk_info){
+      }
+      CCVariable<double>* get( const std::string name ){
+        ArchesFieldContainer* field_container = m_tsk_info->getFieldContainer();
+        return field_container->get_field<CCVariable<double> >( name );
+      }
+    private:
+      ArchesTaskInfoManager* m_tsk_info;
+    };
+
+    template <>
+    struct FieldTool<constSFCXVariable<double> >{
+      FieldTool(ArchesTaskInfoManager* tsk_info):m_tsk_info(tsk_info){
+      }
+      constSFCXVariable<double>* get( const std::string name ){
+        ArchesFieldContainer* field_container = m_tsk_info->getFieldContainer();
+        return field_container->get_const_field<constSFCXVariable<double> >( name );
+      }
+    private:
+      ArchesTaskInfoManager* m_tsk_info;
+    };
+
+    template <>
+    struct FieldTool<SFCXVariable<double> >{
+      FieldTool(ArchesTaskInfoManager* tsk_info):m_tsk_info(tsk_info){
+      }
+      SFCXVariable<double>* get( const std::string name ){
+        ArchesFieldContainer* field_container = m_tsk_info->getFieldContainer();
+        return field_container->get_field<SFCXVariable<double> >( name );
+      }
+    private:
+      ArchesTaskInfoManager* m_tsk_info;
+    };
+
+    template <>
+    struct FieldTool<constSFCYVariable<double> >{
+      FieldTool(ArchesTaskInfoManager* tsk_info):m_tsk_info(tsk_info){
+      }
+      constSFCYVariable<double>* get( const std::string name ){
+        ArchesFieldContainer* field_container = m_tsk_info->getFieldContainer();
+        return field_container->get_const_field<constSFCYVariable<double> >( name );
+      }
+    private:
+      ArchesTaskInfoManager* m_tsk_info;
+    };
+
+    template <>
+    struct FieldTool<SFCYVariable<double> >{
+      FieldTool(ArchesTaskInfoManager* tsk_info):m_tsk_info(tsk_info){
+      }
+      SFCYVariable<double>* get( const std::string name ){
+        ArchesFieldContainer* field_container = m_tsk_info->getFieldContainer();
+        return field_container->get_field<SFCYVariable<double> >( name );
+      }
+    private:
+      ArchesTaskInfoManager* m_tsk_info;
+    };
+
+    template <>
+    struct FieldTool<constSFCZVariable<double> >{
+      FieldTool(ArchesTaskInfoManager* tsk_info):m_tsk_info(tsk_info){
+      }
+      constSFCZVariable<double>* get( const std::string name ){
+        ArchesFieldContainer* field_container = m_tsk_info->getFieldContainer();
+        return field_container->get_const_field<constSFCZVariable<double> >( name );
+      }
+    private:
+      ArchesTaskInfoManager* m_tsk_info;
+    };
+
+    template <>
+    struct FieldTool<SFCZVariable<double> >{
+      FieldTool(ArchesTaskInfoManager* tsk_info):m_tsk_info(tsk_info){
+      }
+      SFCZVariable<double>* get( const std::string name ){
+        ArchesFieldContainer* field_container = m_tsk_info->getFieldContainer();
+        return field_container->get_field<SFCZVariable<double> >( name );
+      }
+    private:
+      ArchesTaskInfoManager* m_tsk_info;
+    };
 
 }
 

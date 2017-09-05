@@ -66,6 +66,8 @@ namespace Uintah{
     std::vector<std::string> _pressure_eqn;
     std::vector<std::string> _momentum_solve;
 
+    bool m_pack_transport_construction_tasks{false}; 
+
   };
 }
 #endif
