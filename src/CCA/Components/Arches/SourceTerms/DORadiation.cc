@@ -154,9 +154,7 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
   }
 
   if (_sweepMethod){
-    int numMaterials=1;
-    int materialNumberIndex=0;
-    _matlDS = scinew const MaterialSubset(std::vector<int> (numMaterials,_labels->d_sharedState->getArchesMaterial(materialNumberIndex)->getDWIndex()));
+
     _radIntSource = VarLabel::create("radIntSource", CCVariable<double>::getTypeDescription());
 
     _patchIntVector =  IntVector(0,0,0);
@@ -319,9 +317,6 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
         _emiss_plus_scat_source_label.push_back(  VarLabel::find(my_stringstream_object.str()));
       }
     }
-
-
-
 
    _RelevantPatchesXpYpZp=std::vector<const PatchSubset*> (0);
    _RelevantPatchesXpYpZm=std::vector<const PatchSubset*> (0);
@@ -1099,9 +1094,13 @@ if (_sweepMethod==enum_sweepSerialCopy){ // This flavor of sweeps save a new lab
         sched->addTask(tskc, level->eachPatch(), _shared_state->allArchesMaterials(),Radiation_TG);
       }
 
-
-
-
+    const MaterialSet* matlset = _labels->d_sharedState->allArchesMaterials();
+    const MaterialSubset* matlDS;
+    for ( auto i_matSubSet = (matlset->getVector()).begin();
+          i_matSubSet != (matlset->getVector()).end(); i_matSubSet++ ){
+        matlDS =  *i_matSubSet;
+      break;  
+    }
 
   //--------------------------------------------------------------------//
   // These Tasks computes the intensities, on a per patch basis. The pseudo
@@ -1139,21 +1138,21 @@ if (_sweepMethod==enum_sweepSerialCopy){ // This flavor of sweeps save a new lab
 
             // -------------- Turn on and off communication depending on phase and intensity using equation:  iStage = iPhase + intensity_within_octant_x ------------------------//
             if (_DO_model->xDir(first_intensity) ==1 && _DO_model->yDir(first_intensity)==1 && _DO_model->zDir(first_intensity)==1)
-            tsk2->requires( Task::NewDW, _IntensityLabels[intensity_iter] ,_RelevantPatchesXpYpZp[istage-int_x], Uintah::Task::PatchDomainSpec::ThisLevel, _matlDS, Uintah::Task::MaterialDomainSpec::NormalDomain, gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, false);
+            tsk2->requires( Task::NewDW, _IntensityLabels[intensity_iter] ,_RelevantPatchesXpYpZp[istage-int_x], Uintah::Task::PatchDomainSpec::ThisLevel, matlDS, Uintah::Task::MaterialDomainSpec::NormalDomain, gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, false);
             if (_DO_model->xDir(first_intensity) ==1 && _DO_model->yDir(first_intensity)==1 && _DO_model->zDir(first_intensity)==0)
-            tsk2->requires( Task::NewDW, _IntensityLabels[intensity_iter] ,_RelevantPatchesXpYpZm[istage-int_x], Uintah::Task::PatchDomainSpec::ThisLevel, _matlDS, Uintah::Task::MaterialDomainSpec::NormalDomain, gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, false);
+            tsk2->requires( Task::NewDW, _IntensityLabels[intensity_iter] ,_RelevantPatchesXpYpZm[istage-int_x], Uintah::Task::PatchDomainSpec::ThisLevel, matlDS, Uintah::Task::MaterialDomainSpec::NormalDomain, gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, false);
             if (_DO_model->xDir(first_intensity) ==1 && _DO_model->yDir(first_intensity)==0 && _DO_model->zDir(first_intensity)==1)
-            tsk2->requires( Task::NewDW, _IntensityLabels[intensity_iter] ,_RelevantPatchesXpYmZp[istage-int_x], Uintah::Task::PatchDomainSpec::ThisLevel, _matlDS, Uintah::Task::MaterialDomainSpec::NormalDomain, gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, false);
+            tsk2->requires( Task::NewDW, _IntensityLabels[intensity_iter] ,_RelevantPatchesXpYmZp[istage-int_x], Uintah::Task::PatchDomainSpec::ThisLevel, matlDS, Uintah::Task::MaterialDomainSpec::NormalDomain, gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, false);
             if (_DO_model->xDir(first_intensity) ==1 && _DO_model->yDir(first_intensity)==0 && _DO_model->zDir(first_intensity)==0)
-            tsk2->requires( Task::NewDW, _IntensityLabels[intensity_iter] ,_RelevantPatchesXpYmZm[istage-int_x], Uintah::Task::PatchDomainSpec::ThisLevel, _matlDS, Uintah::Task::MaterialDomainSpec::NormalDomain, gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, false);
+            tsk2->requires( Task::NewDW, _IntensityLabels[intensity_iter] ,_RelevantPatchesXpYmZm[istage-int_x], Uintah::Task::PatchDomainSpec::ThisLevel, matlDS, Uintah::Task::MaterialDomainSpec::NormalDomain, gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, false);
             if (_DO_model->xDir(first_intensity) ==0 && _DO_model->yDir(first_intensity)==1 && _DO_model->zDir(first_intensity)==1)
-            tsk2->requires( Task::NewDW, _IntensityLabels[intensity_iter] ,_RelevantPatchesXmYpZp[istage-int_x], Uintah::Task::PatchDomainSpec::ThisLevel, _matlDS, Uintah::Task::MaterialDomainSpec::NormalDomain, gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, false);
+            tsk2->requires( Task::NewDW, _IntensityLabels[intensity_iter] ,_RelevantPatchesXmYpZp[istage-int_x], Uintah::Task::PatchDomainSpec::ThisLevel, matlDS, Uintah::Task::MaterialDomainSpec::NormalDomain, gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, false);
             if (_DO_model->xDir(first_intensity) ==0 && _DO_model->yDir(first_intensity)==1 && _DO_model->zDir(first_intensity)==0)
-            tsk2->requires( Task::NewDW, _IntensityLabels[intensity_iter] ,_RelevantPatchesXmYpZm[istage-int_x], Uintah::Task::PatchDomainSpec::ThisLevel, _matlDS, Uintah::Task::MaterialDomainSpec::NormalDomain, gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, false);
+            tsk2->requires( Task::NewDW, _IntensityLabels[intensity_iter] ,_RelevantPatchesXmYpZm[istage-int_x], Uintah::Task::PatchDomainSpec::ThisLevel, matlDS, Uintah::Task::MaterialDomainSpec::NormalDomain, gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, false);
             if (_DO_model->xDir(first_intensity) ==0 && _DO_model->yDir(first_intensity)==0 && _DO_model->zDir(first_intensity)==1)
-            tsk2->requires( Task::NewDW, _IntensityLabels[intensity_iter] ,_RelevantPatchesXmYmZp[istage-int_x], Uintah::Task::PatchDomainSpec::ThisLevel, _matlDS, Uintah::Task::MaterialDomainSpec::NormalDomain, gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, false);
+            tsk2->requires( Task::NewDW, _IntensityLabels[intensity_iter] ,_RelevantPatchesXmYmZp[istage-int_x], Uintah::Task::PatchDomainSpec::ThisLevel, matlDS, Uintah::Task::MaterialDomainSpec::NormalDomain, gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, false);
             if (_DO_model->xDir(first_intensity) ==0 && _DO_model->yDir(first_intensity)==0 && _DO_model->zDir(first_intensity)==0)
-            tsk2->requires( Task::NewDW, _IntensityLabels[intensity_iter] ,_RelevantPatchesXmYmZm[istage-int_x], Uintah::Task::PatchDomainSpec::ThisLevel, _matlDS, Uintah::Task::MaterialDomainSpec::NormalDomain, gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, false);
+            tsk2->requires( Task::NewDW, _IntensityLabels[intensity_iter] ,_RelevantPatchesXmYmZm[istage-int_x], Uintah::Task::PatchDomainSpec::ThisLevel, matlDS, Uintah::Task::MaterialDomainSpec::NormalDomain, gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, false);
 
             sched->addTask(tsk2, level->eachPatch(), _shared_state->allArchesMaterials(),Radiation_TG);
           }
