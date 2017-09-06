@@ -474,47 +474,41 @@ KokkosSolver::SSPRKSolve( const LevelP& level, SchedulerP& sched ){
 
     //Compute U from rhoU
     i_prop_fac->second->schedule_task( "u_from_rho_u", TaskInterface::TIMESTEP_EVAL,
-      level, sched, matls, 0, false, true );
+      level, sched, matls, time_substep, false, true );
     i_prop_fac->second->schedule_task( "compute_cc_velocities", TaskInterface::TIMESTEP_EVAL,
-      level, sched, matls, 0, false, true );
+      level, sched, matls, time_substep, false, true );
 
     // pre-update properties/source tasks)
     i_prop_fac->second->schedule_task_group( "pre_update_property_models",
-      TaskInterface::TIMESTEP_EVAL, m_global_pack_tasks, level, sched, matls );
+      TaskInterface::TIMESTEP_EVAL, m_global_pack_tasks, level, sched, matls, time_substep );
 
     // compute momentum closure
     i_turb_model_fac->second->schedule_task_group("momentum_closure",
-      TaskInterface::TIMESTEP_EVAL, m_global_pack_tasks, level, sched, matls );
+      TaskInterface::TIMESTEP_EVAL, m_global_pack_tasks, level, sched, matls, time_substep );
 
     // ** SCALARS **
     // PRE-PROJECTION
     // first compute the psi functions for the limiters:
-    SVec scalar_psi_builders = i_transport->second->retrieve_task_subset("scalar_psi_builders");
-    for ( SVec::iterator i = scalar_psi_builders.begin(); i != scalar_psi_builders.end(); i++){
-      TaskInterface* tsk = i_transport->second->retrieve_task(*i);
-      tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep);
-    }
+    i_transport->second->schedule_task_group("scalar_psi_builders",
+      TaskInterface::TIMESTEP_EVAL, m_global_pack_tasks, level, sched, matls, time_substep );
 
     // now construct the RHS:
-    SVec scalar_rhs_builders = i_transport->second->retrieve_task_subset("scalar_rhs_builders");
-    for ( SVec::iterator i = scalar_rhs_builders.begin(); i != scalar_rhs_builders.end(); i++){
-      TaskInterface* tsk = i_transport->second->retrieve_task(*i);
-      tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep);
-      tsk->schedule_task(level, sched, matls, TaskInterface::BC_TASK, time_substep);
-    }
+    i_transport->second->schedule_task_group("scalar_rhs_builders",
+      TaskInterface::TIMESTEP_EVAL, m_global_pack_tasks, level, sched, matls, time_substep );
+
+    i_transport->second->schedule_task_group("scalar_rhs_builders",
+      TaskInterface::BC, m_global_pack_tasks, level, sched, matls, time_substep );
 
     // now update them:
-    SVec scalar_fe_up = i_transport->second->retrieve_task_subset("scalar_fe_update");
-    for ( SVec::iterator i = scalar_fe_up.begin(); i != scalar_fe_up.end(); i++){
-      TaskInterface* tsk = i_transport->second->retrieve_task(*i);
-      tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep);
-    }
+    i_transport->second->schedule_task_group("scalar_fe_update",
+      TaskInterface::TIMESTEP_EVAL, m_global_pack_tasks, level, sched, matls, time_substep );
 
     // ** TABLE LOOKUP **
-    for ( auto i = all_table_tasks.begin(); i != all_table_tasks.end(); i++) {
-      i->second->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep);
-      i->second->schedule_task(level, sched, matls, TaskInterface::BC_TASK, time_substep);
-    }
+    i_table_fac->second->schedule_task_group("all_tasks",
+      TaskInterface::TIMESTEP_EVAL, m_global_pack_tasks, level, sched, matls, time_substep );
+
+    i_table_fac->second->schedule_task_group("all_tasks",
+      TaskInterface::BC, m_global_pack_tasks, level, sched, matls, time_substep );
 
     // ** MOMENTUM **
     i_transport->second->schedule_task_group( "momentum_construction", TaskInterface::TIMESTEP_EVAL,
@@ -552,14 +546,11 @@ KokkosSolver::SSPRKSolve( const LevelP& level, SchedulerP& sched ){
     }
 
     // Scalar BCs
-    for ( SVec::iterator i = scalar_rhs_builders.begin(); i != scalar_rhs_builders.end(); i++){
-      TaskInterface* tsk = i_transport->second->retrieve_task(*i);
-      tsk->schedule_task(level, sched, matls, TaskInterface::BC_TASK, time_substep);
-    }
-    // Everything else
-    for ( auto i = all_bc_tasks.begin(); i != all_bc_tasks.end(); i++) {
-      i->second->schedule_task(level, sched, matls, TaskInterface::BC_TASK, time_substep);
-    }
+    i_transport->second->schedule_task_group("scalar_rhs_builders",
+      TaskInterface::BC, m_global_pack_tasks, level, sched, matls, time_substep );
+    // bc factory tasks
+    i_bc_fac->second->schedule_task_group("all_tasks",
+      TaskInterface::BC, m_global_pack_tasks, level, sched, matls, time_substep );
 
   } // RK Integrator
 

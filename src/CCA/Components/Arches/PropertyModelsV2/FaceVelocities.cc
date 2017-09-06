@@ -87,7 +87,7 @@ void FaceVelocities::initialize( const Patch*, ArchesTaskInfoManager* tsk_info )
 //--------------------------------------------------------------------------------------------------
 void FaceVelocities::register_timestep_eval( VIVec& variable_registry, const int time_substep , const bool packed_tasks){
   for (auto iter = m_vel_names.begin(); iter != m_vel_names.end(); iter++ ){
-    register_variable( *iter, ArchesFieldContainer::COMPUTES, variable_registry, _task_name );
+    register_variable( *iter, ArchesFieldContainer::COMPUTES, variable_registry, time_substep, _task_name );
   }
   register_variable( m_u_vel_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::LATEST, variable_registry, _task_name );
   register_variable( m_v_vel_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::LATEST, variable_registry, _task_name );

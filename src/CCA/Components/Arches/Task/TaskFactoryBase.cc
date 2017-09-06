@@ -8,7 +8,6 @@ using namespace Uintah;
 TaskFactoryBase::TaskFactoryBase()
 {
   _matl_index = 0; //Arches material
-  _all_tasks_str = "all_tasks";
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -258,7 +257,8 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
 
   ArchesFieldContainer::VariableRegistry variable_registry;
 
-  cout_archestaskdebug << " Scheduling task group with the following tasks: " << std::endl;
+  const std::string type_string = TaskInterface::get_task_type_string(type);
+  cout_archestaskdebug << " Scheduling the following task group with mode: "<< type_string << std::endl;
 
   for ( auto i_task = arches_tasks.begin(); i_task != arches_tasks.end(); i_task++ ){
 

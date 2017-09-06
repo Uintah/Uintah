@@ -324,6 +324,9 @@ private:
       register_variable( _eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry  );
       register_variable( _eqn_names[ieqn]+"_rhs", ArchesFieldContainer::COMPUTES , variable_registry  );
       register_variable( _eqn_names[ieqn], ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::OLDDW , variable_registry  );
+      register_variable( _eqn_names[ieqn]+"_x_flux", ArchesFieldContainer::COMPUTES, variable_registry, _task_name );
+      register_variable( _eqn_names[ieqn]+"_y_flux", ArchesFieldContainer::COMPUTES, variable_registry, _task_name );
+      register_variable( _eqn_names[ieqn]+"_z_flux", ArchesFieldContainer::COMPUTES, variable_registry, _task_name );
     }
   }
 
@@ -340,15 +343,24 @@ private:
       T& rhs = tsk_info->get_uintah_field_add<T>( _eqn_names[ieqn]+"_rhs" );
       CT& old_phi = tsk_info->get_const_uintah_field_add<CT>( _eqn_names[ieqn] );
 
+      FXT& x_flux = tsk_info->get_uintah_field_add<FXT>(_eqn_names[ieqn]+"_x_flux");
+      FYT& y_flux = tsk_info->get_uintah_field_add<FYT>(_eqn_names[ieqn]+"_y_flux");
+      FZT& z_flux = tsk_info->get_uintah_field_add<FZT>(_eqn_names[ieqn]+"_z_flux");
+
       phi.copyData(old_phi);
       rhs.initialize(0.0);
+      x_flux.initialize(0.0);
+      y_flux.initialize(0.0);
+      z_flux.initialize(0.0);
 
     } //equation loop
   }
 
   //------------------------------------------------------------------------------------------------
   template <typename T, typename FluxXT, typename FluxYT, typename FluxZT> void
-  KScalarRHS<T, FluxXT, FluxYT, FluxZT>::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){
+  KScalarRHS<T, FluxXT, FluxYT, FluxZT>::
+  register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
+                          const int time_substep , const bool packed_tasks ){
 
     const int istart = 0;
     const int iend = _eqn_names.size();
@@ -356,9 +368,9 @@ private:
 
       register_variable( _eqn_names[ieqn], ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name );
       register_variable( _eqn_names[ieqn]+"_rhs", ArchesFieldContainer::MODIFIES, variable_registry, time_substep, _task_name );
-      register_variable( _eqn_names[ieqn]+"_x_flux", ArchesFieldContainer::COMPUTES, variable_registry, time_substep, _task_name );
-      register_variable( _eqn_names[ieqn]+"_y_flux", ArchesFieldContainer::COMPUTES, variable_registry, time_substep, _task_name );
-      register_variable( _eqn_names[ieqn]+"_z_flux", ArchesFieldContainer::COMPUTES, variable_registry, time_substep, _task_name );
+      register_variable( _eqn_names[ieqn]+"_x_flux", ArchesFieldContainer::MODIFIES, variable_registry, time_substep, _task_name );
+      register_variable( _eqn_names[ieqn]+"_y_flux", ArchesFieldContainer::MODIFIES, variable_registry, time_substep, _task_name );
+      register_variable( _eqn_names[ieqn]+"_z_flux", ArchesFieldContainer::MODIFIES, variable_registry, time_substep, _task_name );
       if ( m_conv_scheme[ieqn] != NOCONV ){
         register_variable( _eqn_names[ieqn]+"_x_psi", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name, packed_tasks );
         register_variable( _eqn_names[ieqn]+"_y_psi", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name, packed_tasks );
@@ -416,16 +428,6 @@ private:
       FXT& x_flux = tsk_info->get_uintah_field_add<FXT>(_eqn_names[ieqn]+"_x_flux");
       FYT& y_flux = tsk_info->get_uintah_field_add<FYT>(_eqn_names[ieqn]+"_y_flux");
       FZT& z_flux = tsk_info->get_uintah_field_add<FZT>(_eqn_names[ieqn]+"_z_flux");
-
-      Uintah::BlockRange init_range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
-      Uintah::parallel_for( init_range, [&](int i, int j, int k){
-
-        rhs(i,j,k) = 0.;
-        x_flux(i,j,k) = 0.;
-        y_flux(i,j,k) = 0.;
-        z_flux(i,j,k) = 0.;
-
-      });
 
       if ( m_conv_scheme[ieqn] != NOCONV ){
 

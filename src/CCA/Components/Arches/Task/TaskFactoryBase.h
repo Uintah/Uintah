@@ -218,7 +218,7 @@ namespace Uintah{
     std::vector<std::string> _active_atomic_tasks; ///< Active atomic tasks
     TypeToTaskMap _type_to_tasks;                  ///< Collects all tasks of a common type
     SimulationStateP _shared_state;                ///< Uintah SharedState
-    std::string _all_tasks_str;                    ///< Common name across all factories indicating _active_tasks
+    std::string _all_tasks_str{"all_tasks"};                    ///< Common name across all factories indicating _active_tasks
     std::string _factory_name;                     ///< Name of the factory
     std::vector<std::string> m_task_init_order;    ///< Allows a factory to set an execution order for the tasks
 
