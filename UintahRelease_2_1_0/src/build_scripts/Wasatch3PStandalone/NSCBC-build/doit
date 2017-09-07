@@ -1,0 +1,28 @@
+#! /bin/bash
+
+THELIB=NSCBC
+
+source ../HelperBuildScripts/setupEnv.sh
+
+rm -rf CMakeCache.txt CMakeFiles *.cmake
+rm -rf ${INSTALL_HERE}/*
+
+cmake                                             \
+  -DCMAKE_INSTALL_PREFIX=${INSTALL_HERE}          \
+  -DCMAKE_C_COMPILER=$CC                          \
+  -DCMAKE_CXX_COMPILER=$CXX                       \
+  -DCMAKE_CXX_FLAGS="-fPIC"                       \
+  ../NSCBC
+
+if test $? == 0; then
+  echo ""
+  echo "Running Make..."
+  echo ""
+  make -j4
+  make install
+
+  echo ""
+  echo "ExprLib: Updating installation permissions for ${INSTALL_HERE}..."
+  chmod -R go+rX ${INSTALL_HERE}/..
+fi
+

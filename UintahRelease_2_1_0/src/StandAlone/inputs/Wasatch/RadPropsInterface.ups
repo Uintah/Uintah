@@ -1,0 +1,102 @@
+<Uintah_specification>
+
+  <Meta>
+    <title>Test TabProps interface for Wasatch</title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+
+  <Wasatch>
+
+    <Density method="CONSTANT">
+      <Constant value="1.0" name="density"/>
+    </Density>
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="mixture fraction"/>
+      <SineFunction amplitude="0.5" frequency="0.5" offset="0.5">
+        <NameTag name="XSVOL"/>    
+      </SineFunction>
+    </BasicExpression>
+
+    <!-- Set up a tabular property evaluation -->
+    <TabProps>
+      <FileNamePrefix>inputs/Wasatch/AdEquilCH4</FileNamePrefix>
+      <TaskList>advance_solution</TaskList>
+      <IndependentVariable>
+        <NameTag name="mixture fraction" state="STATE_DYNAMIC"/>
+        <NameInTable>MixtureFraction</NameInTable>
+      </IndependentVariable>
+      <ExtractVariable>
+        <NameInTable>Temperature</NameInTable>
+        <NameTag name="temperature"/>
+        <Type>SVOL</Type>
+      </ExtractVariable>
+      <ExtractVariable>
+        <NameInTable>CO2_molefrac</NameInTable>
+        <NameTag name="CO2"/>
+        <Type>SVOL</Type>
+      </ExtractVariable>
+      <ExtractVariable>
+        <NameInTable>H2O_molefrac</NameInTable>
+        <NameTag name="H2O"/>
+        <Type>SVOL</Type>
+      </ExtractVariable>
+    </TabProps>
+    
+    <RadProps>
+      <GreyGasAbsCoef>
+        <FileName>inputs/Wasatch/AbsCoefCH4.txt</FileName>
+        <NameTag name="AbsCoef"/>
+        <SpeciesMoleFraction name="CO2"><NameTag name="CO2"/></SpeciesMoleFraction>    
+        <SpeciesMoleFraction name="H2O"><NameTag name="H2O"/></SpeciesMoleFraction>
+        <Temperature><NameTag name="temperature"/></Temperature>    
+      </GreyGasAbsCoef>  
+    </RadProps>
+
+    <ForceOnGraph tasklist="advance_solution">
+      <NameTag name="AbsCoef"/>
+    </ForceOnGraph>
+
+
+    <!-- Build a scalar transport equation -->
+    <TransportEquation equation="generic">
+      <SolutionVariable>mixture fraction</SolutionVariable>
+      <DiffusiveFlux direction="X" coefficient="2.0"/>
+      <DiffusiveFlux direction="Y" coefficient="1.0"/>
+      <DiffusiveFlux direction="Z" coefficient="3.0"/>
+    </TransportEquation>
+    </Wasatch>
+
+  <Time>
+    <maxTime>2.0</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.001</delt_min>
+    <delt_max>2.0</delt_max>
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+  <DataArchiver>
+    <filebase>wasatch_test.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle="2" interval="0.01"/>
+    <compression>gzip</compression>
+    <save label="mixture fraction"/>
+    <save label="AbsCoef"/>
+  </DataArchiver>
+
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[1,1,1]</upper>
+        <resolution>[20,10,10]</resolution>
+        <patches>[1,1,1]</patches>
+      </Box>
+      <periodic>[1,1,1]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

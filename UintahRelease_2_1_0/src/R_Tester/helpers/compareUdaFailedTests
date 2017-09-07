@@ -1,0 +1,41 @@
+#!/bin/csh
+
+#______________________________________________________________________
+#  This script runs compare_uda on all failing tests for a component with user defined tolerances
+#  This is useful if something minor has changed and you want to test if
+#  the failing tests have excessive numerical fuzz
+#
+#   Assumptions:
+#      - the file <component>-results exists
+ 
+#______________________________________________________________________
+
+set component   = "ARCHES"
+set COMPAREUDA  = "susdir/compare_uda"
+set options     = "-abs_tolerance 1e-14 -rel_tolerance 1e-12"
+
+
+if ( ! -e "$component-short.log" ) then
+  echo "  The file $component-short.log was not found"
+  echo "  Now exitiing...."
+  exit
+
+endif
+
+/bin/rm .tmp
+grep -i  failed $component-short.log > .tmp
+set failedTests = `cut -f2 -d: .tmp | uniq` 
+
+
+foreach X ( $failedTests[*] )
+  set me = "*.uda"
+  set here = "$component-results/$X/$me"
+  set GS   = "goldStandard/$component/$X/$me"
+  echo "__________________________________$X"
+  echo "$COMPAREUDA $options $here $GS"
+  $COMPAREUDA $options $here $GS
+
+end
+
+/bin/rm .tmp
+exit

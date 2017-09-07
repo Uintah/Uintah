@@ -1,0 +1,181 @@
+#!/bin/csh -f
+#______________________________________________________________________
+#  This script parses the output file from sus and 
+#  generates a data file used for scaling plots
+#  It computes the mean time per timestep and the average 
+#  TaskWaitCommTime, TaskExec, TaskLocalComm
+#
+#  It also computes the mean time for a hypre solve 
+# 
+#  usage:
+#      extractScalingData  <sus_output.1, sus_output_2, sus_output_3 >
+#  
+#______________________________________________________________________
+
+if ( $#argv < 1 ) then
+  echo "    Usage:  extractScalingData  <sus_output.1, sus_output_2, sus_output_3 >"
+  exit
+endif
+
+#__________________________________
+# DEFAULTS:  Edit these
+set startTimestep = "3"
+set endTimestep   = "100"           # timestep to extract elapsed time from.
+set hypreLabel    = "pressurePS"    # compute the average solve time for this label (ARCHES)
+set hypreLabel    = "imp_delP"      # compute the average solve time for this label (ICE) 
+#__________________________________
+
+set out = ($argv)
+
+# make work directory
+set here = .tmpFiles
+/bin/rm  -rf $here  >& /dev/null
+mkdir $here
+touch $here/data
+
+# process each file
+foreach X ( $out[*] )
+  grep -q "Timestep $endTimestep" $X
+  
+  # if the final timestep exists
+  if ($status == 0 ) then
+    echo $X > $here/file
+    
+    grep "Patch layout:" $X | cut -d"(" -f2 > $here/patches
+    @ procs    = `grep "MPI processes" $X           | awk '{print $2}'`
+    @ threads  = `grep "threads per MPI process" $X | awk '{print $2}'`
+    @ nThreads = $procs * $threads
+    
+    echo $procs    > $here/nMPI
+    echo $threads  > $here/threadsPerMPI
+    echo $nThreads > $here/nThreads 
+
+    grep "Timestep $startTimestep " $X | awk -F "=" '{print $4}' | tr -d "[:alpha:]" > $here/startTime
+    grep "Timestep $endTimestep "   $X | awk -F "=" '{print $4}' | tr -d "[:alpha:]" > $here/endTime
+
+    paste -d " " $here/file $here/nMPI $here/threadsPerMPI $here/nThreads $here/startTime $here/endTime >> $here/data
+
+    echo "working on $X"
+  else
+    echo "---------------------$X did not run to completion"
+  endif
+  
+end
+#__________________________________
+# compute the average mean time per timestep
+
+@ n = $endTimestep - $startTimestep
+echo " computing average mean time per timestep for $n timesteps"
+echo "#file MPIprocs threadsPerMPI totalThreads startTime endTime aveMean">$here/data2  
+
+awk -vnSteps=$n '{print ($6-$5)/nSteps}' $here/data >> $here/aveMeanTime
+
+paste -d " " $here/data $here/aveMeanTime >> $here/data2
+sort -n -k2 $here/data2| column -t >scalingData
+
+more scalingData
+
+#______________________________________________________________________
+# Now extract: 
+#  TaskWaitCommTime:ave, TaskExec:ave, 
+# if the file contains it and compute the average
+#______________________________________________________________________
+set these = `grep --files-with-matches "TaskExec" $out`
+
+if ( $#these != 0 ) then
+
+  echo " Now computing the averages for the SCI_DEBUG: ComponenTimings variables, if they exist."
+  foreach X ( $out[*] )
+
+    grep -q "TaskExec" $X
+
+    if ($status == 0 ) then
+      grep -q "Timestep $endTimestep " $X
+
+      # if the final timestep exists then process it
+      if ($status == 0 ) then  
+        echo $X > $here/file
+
+        @ procs    = `grep "MPI processes" $X | awk '{print $2}'`
+        @ threads  = `grep "threads per MPI process" $X | awk '{print $2}'`
+        @ nThreads = $procs * $threads
+
+        echo $procs    > $here/nMPI
+        echo $threads  > $here/threadsPerMPI
+        echo $nThreads > $here/nThreads
+
+        # extract the output between the start and ending timesteps
+        @ endingTimestep = $endTimestep + 1
+        sed -n /"Timestep $startTimestep "/,/"Timestep $endingTimestep "/p $X > $here/out.clean
+
+        set me = $here/out.clean
+        grep TaskExec $me      | cut -d: -f2 | awk 'BEGIN {sum=0}; {sum=sum+$1}; END {print sum/NR}' > $here/ave.taskExec
+        grep TaskLocalComm $me | cut -d: -f2 | awk 'BEGIN {sum=0}; {sum=sum+$1}; END {print sum/NR}' > $here/ave.taskLocalComm
+        grep TaskWaitComm $me  | cut -d: -f2 | awk 'BEGIN {sum=0}; {sum=sum+$1}; END {print sum/NR}' > $here/ave.taskWaitComm
+        paste -d " " $here/file $here/nMPI $here/threadsPerMPI $here/nThreads $here/ave.taskExec $here/ave.taskLocalComm $here/ave.taskWaitComm >> $here/aveComponentTimes
+      else
+        echo "---------------------$X did not run to completion"
+      endif
+    endif   # 
+  end  # loop over files
+
+    #  header
+    echo "#file MPIprocs threadsPerMPI totalThreads aveTaskExec aveTaskLocalComm aveTaskWaitComm" > $here/aveComponentTimes2
+  sort -n -k2 $here/aveComponentTimes >>  $here/aveComponentTimes2
+  column -t $here/aveComponentTimes2 > aveComponentTimes
+
+  more aveComponentTimes
+endif
+
+#______________________________________________________________________
+# Now extract: hypre solver timings 
+# If the file contains it and compute the average
+#______________________________________________________________________
+set these = `grep --files-with-matches $hypreLabel $out`
+
+if ( $#these != 0 ) then
+
+  echo " Now computing the averages for the hypre solve for the label: $hypreLabel, if they exist."
+  foreach X ( $out[*] )
+
+    grep -q $hypreLabel $X
+
+    if ($status == 0 ) then
+      grep -q "Timestep $endTimestep " $X
+
+      # if the final timestep exists then process it
+      if ($status == 0 ) then  
+        echo $X > $here/file
+
+        @ procs    = `grep "MPI processes" $X | awk '{print $2}'`
+        @ threads  = `grep "threads per MPI process" $X | awk '{print $2}'`
+        @ nThreads = $procs * $threads
+
+        echo $procs    > $here/nMPI
+        echo $threads  > $here/threadsPerMPI
+        echo $nThreads > $here/nThreads
+
+        # extract the output between the start and ending timesteps
+        @ endingTimestep = $endTimestep + 1
+        sed -n /"Timestep $startTimestep "/,/"Timestep $endingTimestep "/p $X > $here/out.clean
+
+        set me = $here/out.clean
+        grep $hypreLabel $me | tr -d "[:alpha:]-_(:,=)" | awk 'BEGIN {sum=0}; {sum=sum+$2}; END {print sum/NR}' > $here/ave.SolveTime
+        paste -d " " $here/file $here/nMPI $here/threadsPerMPI $here/nThreads $here/ave.SolveTime >> $here/aveSolveTimes
+      else
+        echo "---------------------$X did not run to completion"
+      endif
+    endif   # 
+  end  # loop over files
+
+  #  header
+  echo "#file MPIprocs threadsPerMPI totalThreads aveHypreSolveTime" > $here/aveSolveTimes2
+  sort -n -k2 $here/aveSolveTimes >>  $here/aveSolveTimes2
+  column -t $here/aveSolveTimes2 > aveSolveTimes
+
+  more aveSolveTimes
+endif
+
+
+/bin/rm -rf $here
+exit

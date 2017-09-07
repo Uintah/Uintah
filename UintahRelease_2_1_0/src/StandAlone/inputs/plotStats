@@ -1,0 +1,169 @@
+#!/bin/csh -f
+#______________________________________________________________________
+#  This script parses sus output and plots it using gnuplot.
+#  Usage:
+#     plotStat <sus output file> < output postScript and pdf files (y/Y), default is no>
+#
+#  This requires gnuplot 3.8 or greater.
+#______________________________________________________________________
+
+
+set tmp = (`which gnuplot`)
+
+if ( $status ) then
+  echo " ERROR: Could not find gnuplot"
+  exit(0)
+endif
+
+if( $#argv == 0 ) then
+  echo "plotStat <sus output file> <dump postScript File (y/Y), default is no>"
+  exit(1)
+endif
+set out = $argv[1]
+if ( !(-e $out) ) then
+    echo "Couldn't find your file $out"
+  exit(1)
+endif
+
+set hardcopy = "n"
+if ( $#argv == 2 ) then
+  set hardcopy = $argv[2]
+endif
+
+unalias rm
+#__________________________________
+# Make a copy of the output file
+/usr/bin/rm -rf scraps
+mkdir scraps >&/dev/null
+cp $out scraps/tmp
+cd scraps
+
+grep Time= tmp |grep Mem >& rawData.clean
+
+#______________________________________________________________________
+# Parse the output file.  This is gross
+echo "Now extracting the data"
+
+
+grep "Wall Time" rawData.clean | cut -d"=" -f4 | awk '{print $1}' >& elapsedTime
+grep EMA  rawData.clean        | cut -d"=" -f5 | awk '{print $1}' >& meanTime
+grep Time rawData.clean        | cut -d"=" -f2 | awk '{print $1}' >& physicalTime
+grep delT rawData.clean        | cut -d"=" -f3 | awk '{print $1}' >& delT
+
+grep Memory rawData.clean      | cut -d"=" -f6 | awk '{print $1}'  > memAve
+grep Memory rawData.clean      | cut -d"=" -f6 | awk '{print $4}'  > memMax
+
+awk 'NR>1{print $1-p} {p=$1}' elapsedTime >& timePerTimestep
+echo "?" >> timePerTimestep
+
+
+paste -d "  " elapsedTime meanTime timePerTimestep physicalTime delT memAve memMax>& data
+sed  -i s/","//g data    # eliminate any ","
+
+@ procs     = `grep "MPI processes" tmp | awk '{print $2}'`
+@ threads   = `grep "threads per MPI process" tmp | awk '{print $2}'`
+set machine = `grep Machine    tmp | cut -d":" -f 2`
+set date    = `grep -m1 Date   tmp | cut -d" " -f2-8,10`
+set uda     = `grep "DataArchiver created" tmp | awk '{print $3}'`
+
+echo "Done extracting data"
+
+#______________________________________________________________________
+#  create the gnuplot script
+
+echo "" > gp
+
+#__________________________________
+# if making a hardcopy
+if( $hardcopy == "y" || $hardcopy == "Y" ) then
+echo "Generating the postscript file plotStats.ps"
+/bin/rm gp
+cat > gp << fin
+set terminal x11 1
+set terminal postscript color solid "Times-Roman" 12
+set output "plotStat.ps"
+fin
+else
+cat > gp << fin
+set terminal x11 font "fixed,bold,12" size 1024,768
+fin
+endif
+
+
+cat >> gp << fin
+
+#__________________________________
+# compute stats this version of gnuplot is > 3.8
+haveStats =0
+# does this version have the stats patch
+if ( strstrt(GPVAL_COMPILE_OPTIONS,"+STATS") ) print "Computing the statistics of the mean time per timestep"; haveStats = 1
+if(haveStats == 1) stats 'data' using 4 name "A";
+if(haveStats == 1) stats 'data' using 2 name "B";
+
+
+set multiplot
+set size 1.0,0.33 # for three plots
+set autoscale
+set grid xtics ytics
+
+
+#__________________________________ TOP
+set size   1.0, 0.33
+set origin 0.0, 0.66
+set title "$date, $machine, $procs MPI ranks, $threads Threads, uda: $uda"
+set xlabel "Elaspsed Time [s]" offset 0,+0.5
+set ylabel 'Delt'           textcolor lt 1
+set y2label 'Physical Time' textcolor lt 2
+set y2tics
+
+set y2range[A_mean - 2*A_stddev:A_mean + 2*A_stddev]
+
+plot 'data' using 1:5           t 'Delt' with lines,\
+     'data' using 1:4 axes x1y2 t 'Physical Time' with lines
+
+#__________________________________ Middle
+set origin 0.0,0.33
+set title ''
+set xlabel "Timestep" offset 0,+0.5
+set ylabel 'Mean Time/timestep' textcolor lt 1
+set y2label 'Time per timestep [sec]'     textcolor lt 2
+set y2tics
+set autoscale
+set yrange[0:B_mean + B_stddev]
+
+plot 'data' using 2           t 'meanTime/timestep' with lines, \
+     'data' using 3 axes x1y2 t 'time/timestep' with lines
+
+
+#__________________________________Bottom
+set origin 0.0,0.0
+set title ''
+set xlabel "Elapsed Time [s]" offset 0,+0.5
+set ylabel "Memory useage [MB]"
+unset y2label
+unset y2tics
+set autoscale
+
+plot 'data' using 1:6   t 'ave' with lines, \
+     'data' using 1:7   t 'max' with lines
+set nomultiplot
+pause -1 "Hit return to exit"
+fin
+
+
+#__________________________________
+# plot it up
+gnuplot gp
+
+
+if($hardcopy == "y" || $hardcopy == "Y") then
+  echo "converting PostScript files to PDF"
+  ps2pdf plotStat.ps
+  mv plotStat* ../.
+endif
+
+#__________________________________
+# clean up
+/bin/rm -rf scraps
+
+exit(0)

@@ -1,0 +1,59 @@
+#_____________________________________________________________________.
+#      pTarUda_driver
+#   09/03/15
+# This is a makefile that does parallel tar of the timesteps in a uda directory.
+# The orginal directories are not removed.
+#_____________________________________________________________________.
+
+SHELL = /bin/bash
+FILES      := $(shell cat $(PTAR_FILES))
+TAR_FILES  := $(wildcard *.tar)
+
+SRCS =   $(shell for i in $(FILES) ; do \
+              echo $$i ;\
+          done)
+
+DESTS := $(patsubst %,$(STAMP_DIR)/stamp/%,$(SRCS))
+
+all: $(STAMP_DIR)/stamp $(DESTS)
+	@echo "Blowing away the list of tarred directores"
+	rm -rf $(STAMP_DIR)
+
+$(STAMP_DIR)/stamp:
+	mkdir $@
+
+#__________________________________
+#   CHECKPOINTS
+#
+$(STAMP_DIR)/stamp/./checkpoints/% :
+	@mkdir -p $(STAMP_DIR)/stamp/checkpoints
+
+	@echo "Working on checkpoints/`basename $@`"
+	if test -a checkpoints/`basename $@`; then 				\
+	  if test ${createExtract} == "create"; then 				\
+	    ${TAR} checkpoints/`basename $@`.tar.gz checkpoints/`basename $@`;	\
+	  fi;									\
+	  if test ${createExtract} == "extract"; then 				\
+	    ${TAR} checkpoints/`basename $@`;					\
+	  fi;									\
+	fi
+	@echo "Finished ${createExtract} checkpoints/`basename $@`"
+	@touch $(STAMP_DIR)/stamp/checkpoints/`basename $@`
+
+
+#__________________________________
+#  ALL OTHER DIRS
+#
+$(STAMP_DIR)/stamp/% :
+	@echo "  Working on `basename $@`"
+	if test -a `basename $@`; then 			\
+	  if test ${createExtract} == "create"; then 	\
+	   ${TAR} `basename $@`.tar.gz `basename $@`;	\
+	  fi;						\
+          if test ${createExtract} == "extract"; then 	\
+	    ${TAR} `basename $@`;			\
+	  fi;						\
+        fi
+	@echo "Finished ${createExtract} `basename $@`"
+	@touch $(STAMP_DIR)/stamp/`basename $@`
+
