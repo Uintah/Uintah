@@ -7,8 +7,8 @@ COMPARE_ROOT=$4
 TMPDIR=$5
 HELPERPATH=$6
 
-COMPARISON_MALLOC_STATS="$COMPARE_ROOT/$TEST/$MALLOC_STATS"
-error=1
+GS="$COMPARE_ROOT/$TEST/"
+COMPARISON_MALLOC_STATS="$GS/$MALLOC_STATS"
 HERE=`pwd`
 
 #__________________________________
@@ -20,6 +20,46 @@ if [ $OS = "Darwin" ]; then
   STAT_CMD="stat -f %z"
 fi
 
+#______________________________________________________________________
+# This function merges the malloc_stats files.  There is a
+# separate file for each process id.
+function merge_malloc_stats_files()
+{  
+  here=`pwd`
+  malloc_dir=$1
+  cd $malloc_dir
+  
+  echo "__________________________________"
+  echo "merge_malloc_stats_files: ($malloc_dir)"
+  
+  # if malloc_stats exists then return
+  if [ -f $MALLOC_STATS ]; then
+    bytes=`$STAT_CMD $MALLOC_STATS 2>/dev/null`
+
+    if [ $bytes != "0" ]; then
+      echo "  $MALLOC_STATS exists nothing to merge."
+      return 0
+    fi
+  fi
+  
+  #__________________________________
+  cat $MALLOC_STATS.* > $MALLOC_STATS 
+  
+  bytes=`$STAT_CMD $MALLOC_STATS 2>/dev/null`
+  
+  if [ $bytes = "0" ]; then
+      echo "  ERROR, combining the malloc_stats files in the directory: $malloc_dir."
+      echo "  Not performing memory leak or memory highwater tests"
+      echo "  This occurs with the localRT on restarts, or if the gold standards haven't been created"
+      exit 5
+   fi
+   echo "  Successfully merged $malloc_dir/malloc_stats files.*."
+  cd $here
+  return 0
+}
+#______________________________________________________________________
+
+
 #__________________________________
 # bulletproofing
 if [ ! -f $MALLOC_STATS ] && [ ! -f $MALLOC_STATS.0 ]; then
@@ -29,40 +69,11 @@ if [ ! -f $MALLOC_STATS ] && [ ! -f $MALLOC_STATS.0 ]; then
   exit 5
 fi
 
-#__________________________________
-# The malloc stats data are stored in separate files for each process id. Merge them
-ls $MALLOC_STATS.* >/dev/null 2>&1
-retval=$?
+# merge the malloc_stat files in both the localRT and gold Standards directories
+# After running generating the localRT gold standards they need to be merged
+merge_malloc_stats_files $HERE 
 
-if [ $retval = "0" ]; then
-  cat $MALLOC_STATS.* > $MALLOC_STATS
-  echo "Merging malloc stats_files.* from the multiple processes."
-  if [ `$STAT_CMD $MALLOC_STATS` = "0" ]; then
-    echo "No malloc_stats information found.  Can't do memory leak test."
-    exit 5
-  fi
-fi
-
-#__________________________________
-#   If the gold standards merged malloc_stats file
-#   doesn't exist then merge the separate files
-GS="$COMPARE_ROOT/$TEST/"
-cd $GS
-if [ ! -f $MALLOC_STATS ] && [ -f $MALLOC_STATS.0 ]; then
-  cd $GS
-  ls $MALLOC_STATS.* >/dev/null 2>&1
-  retval=$?
-
-  if [ $retval = "0" ]; then
-    cat $MALLOC_STATS.* > $MALLOC_STATS
-    echo "Merging the gold standards malloc_stats.* files from the multiple processes."
-    if [ `$STAT_CMD $MALLOC_STATS` = "0" ]; then
-      echo "No gold standard malloc_stats information found.  Can't do memory leak test."
-      exit 5
-    fi
-  fi
-fi
-cd $HERE
+merge_malloc_stats_files $GS
 
 #__________________________________
 echo "Checking $TEST for scinew memory leaks"
@@ -79,10 +90,35 @@ fi
 
 echo "Memory leak test passed -- no scinew memory leaks found"
 
+#__________________________________
+#  run check the highwater memory usage
+echo "Performing highwater memory usage check"
+
 meminfo=`highwater_percent.pl $MALLOC_STATS $COMPARISON_MALLOC_STATS`
 percent=`echo $meminfo | cut -d " " -f 1`
 abs=`echo $meminfo | cut -d " " -f 2`
 testHighwater=`echo $meminfo | cut -d " " -f 3`
+
+
+#__________________________________
+if [ $percent -gt "10" -a $abs -gt "1000000" ]; then
+  echo "***Highwater memory usage test failed"
+  echo " -- memory usage increased by %$percent ($abs bytes)" > $TMPDIR/highwater_shortmessage.txt
+  exit 2
+
+elif [ $percent -gt "0" ]; then
+  echo " -- memory usage increased by %$percent ($abs bytes)" > $TMPDIR/highwater_shortmessage.txt
+  exit 0
+elif [ $percent -lt "0" ]; then
+  let percent_improvement=-$percent;
+  echo " -- memory usage improved by %$percent_improvement ($abs bytes)" > $TMPDIR/highwater_shortmessage.txt
+  exit 0
+else
+  echo "" > $TMPDIR/highwater_shortmessage.txt
+  echo "Highwater memory usage check passed!"
+  exit 0
+fi
+
 
 #__________________________________
 if [ $MAKEPLOTS -eq "1" ]; then
@@ -110,26 +146,4 @@ if [ $MAKEPLOTS -eq "1" ]; then
   gnuplot $HELPERPATH/plotMemUsage.gp
   
 fi
-#__________________________________
-echo "Performing highwater memory usage check"
-
-if [ $percent -gt "10" -a $abs -gt "1000000" ]; then
-  echo "***Highwater memory usage test failed"
-  echo " -- memory usage increased by %$percent ($abs bytes)" > $TMPDIR/highwater_shortmessage.txt
-  exit 2
-
-elif [ $percent -gt "0" ]; then
-  echo " -- memory usage increased by %$percent ($abs bytes)" > $TMPDIR/highwater_shortmessage.txt
-  exit 0
-elif [ $percent -lt "0" ]; then
-  let percent_improvement=-$percent;
-  echo " -- memory usage improved by %$percent_improvement ($abs bytes)" > $TMPDIR/highwater_shortmessage.txt
-  exit 0
-else
-  echo "" > $TMPDIR/highwater_shortmessage.txt
-  echo "Highwater memory usage check passed!"
-  exit 0
-
-fi
-
-exit $error
+exit 1

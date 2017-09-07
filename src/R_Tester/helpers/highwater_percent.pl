@@ -23,6 +23,12 @@ while ($compare_text =~ /highwater alloc:\s*(\w+)\s/) {
     $compare_text = $';
 }
 
+# bulletproofing
+if ($compare_highwater == 0 || $test_highwater == 0) {
+  print STDERR "    Memory high water test failed.  Error reading the files (" . $testfilename ." " . $comparefilename . " )."
+  exit 2 
+}
+
 print STDERR "New total memory highwater " . $test_highwater . "\n";
 print STDERR "Old total memory highwater " . $compare_highwater . "\n";
 

@@ -281,12 +281,14 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     do_performance = 0
     do_debug        = 1
     do_opt          = 1
-    do_gpu          = 0    # run test if gpu is supported
-    do_cuda         = 1    # test will run if this is a cuda build
-    abs_tolerance = 1e-9   # defaults used in compare_uda
-    rel_tolerance = 1e-6
+    do_gpu          = 0           # run test if gpu is supported
+    do_cuda         = 1           # test will run if this is a cuda build
+    abs_tolerance   = 1e-9        # defaults used in compare_uda
+    rel_tolerance   = 1e-6
     sus_options     = ""
-    startFrom = "inputFile"
+    startFrom       = "inputFile"
+    create_gs0      = "no"           #create the gold standard
+    
 
     environ['SCI_DEBUG'] = ''   # reset it for each test
 
@@ -401,6 +403,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
         print( "gold Standard being created for  (%s)" % testname )
         chdir(compare_root)
         mkdir(testname)
+        create_gs0 = "yes"
 
     if startFrom == "checkpoint":
       try:
@@ -451,7 +454,9 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     #__________________________________
     # Run test and perform comparisons on the uda
     environ['WEBLOG'] = "%s/%s-results/%s" % (weboutputpath, ALGO, testname)
-    rc = runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallelism, tests_to_do, tolerances, startFrom, varBucket)
+    create_gs = "%s-%s" % (create_gs0, startFrom)
+    
+    rc = runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallelism, tests_to_do, tolerances, startFrom, varBucket, create_gs)
     system("rm inputs")
 
     # copy results to web server
@@ -478,7 +483,9 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
         symlink(inputpath, "inputs")
         environ['WEBLOG'] = "%s/%s-results/%s/restart" % (weboutputpath, ALGO, testname)
         startFrom = "restart"
-        rc = runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallelism, tests_to_do, tolerances, startFrom, varBucket)
+        create_gs = "%s-%s" % (create_gs0, startFrom)
+        
+        rc = runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallelism, tests_to_do, tolerances, startFrom, varBucket, create_gs)
 
         if rc > 0:
           failcode = 1
@@ -557,7 +564,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
 # 3 ints stating whether to do comparison, memory, and performance tests
 # in that order
 
-def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallelism, tests_to_do, tolerances, startFrom, varBucket):
+def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallelism, tests_to_do, tolerances, startFrom, varBucket, create_gs):
   global startpath
   global helperspath
   global svn_revision
@@ -762,12 +769,13 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
 
     print( sus_log_msg )
     print( "" )
+    
     system("echo '  :%s: %s test did not run to completion' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
+    
     return_code = 1
     return return_code
   else:
     # Sus completed successfully - now run memory,compar_uda and performance tests
-
     # get the time from sus.log
     # /usr/bin/time outputs 3 lines, the one called 'real' is what we want
     # it is the third line from the bottom
@@ -798,8 +806,10 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
         print( "\tPerformance tests passed." )
         if short_message != "":
           print( "\t%s" % (short_message)     )
+      
       elif performance_RC == 5 * 256:
         print( "\t* Warning, no timestamp file created.  No performance test performed." )
+      
       elif performance_RC == 2*256:
         print( "\t*** Warning, test %s failed performance test." % (testname) )
         if short_message != "":
@@ -807,9 +817,47 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
 
         print( perf_msg )
         print( "%s" % replace_msg )
+      
       else:
         print( "\tPerformance tests passed. (Note: no previous performace stats)." )
 
+    #__________________________________
+    # Memory leak test
+    if do_memory_test == 1:
+
+      memory_RC = system("mem_leak_check %s %d %s %s %s %s> mem_leak_check.log.txt 2>&1" %
+                        (testname, do_plots, malloc_stats_file, compare_root, ".", helperspath))
+
+      try:
+        short_message_file = open("highwater_shortmessage.txt", 'r+', 500)
+        short_message = rstrip(short_message_file.readline(500))
+      except Exception:
+        short_message = ""
+
+      if memory_RC == 0:
+          print( "\tMemory leak tests passed." )
+          if short_message != "":
+            print( "\t%s" % (short_message) )
+            
+      elif memory_RC == 5 * 256:
+          print( "\t*** ERROR, no malloc_stats file.  No memory tests performed." )
+      
+      elif memory_RC == 256:
+          print( "\t*** ERROR, test %s failed memory leak test." % (testname) )
+          print( memory_msg )
+          # check that all VarLabels were deleted
+          rc = system("mem_leak_checkVarLabels sus.log.txt >> mem_leak_check.log.txt 2>&1")
+      
+      elif memory_RC == 2*256:
+          print( "\t*** ERROR, test %s failed memory highwater test." % (testname) )
+          if short_message != "":
+            print( "\t%s" % (short_message) )
+          print( memory_msg )
+          print( "%s" % replace_msg )
+      
+      else:
+          print( "\tMemory leak tests passed. (Note: no previous memory usage stats)." )
+          
     #__________________________________
     # uda comparison
     if do_uda_comparison_test == 1:
@@ -820,7 +868,10 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
 
       abs_tol= tolerances[0]
       rel_tol= tolerances[1]
-      compUda_RC = system("compare_sus_runs %s %s %s %s %s %s> compare_sus_runs.log.txt 2>&1" % (testname, getcwd(), compare_root, susdir,abs_tol, rel_tol))
+      
+      compUda_RC = system("compare_sus_runs %s %s %s %s %s %s %s > compare_sus_runs.log.txt 2>&1" % 
+                          (testname, getcwd(), compare_root, susdir,abs_tol, rel_tol, create_gs))
+      
       if compUda_RC != 0:
         if compUda_RC == 10 * 256:
           print( "\t*** Input file(s) differs from the goldstandard" )
@@ -849,37 +900,7 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
 
       else:
         print( "\tComparison tests passed." )
-    #__________________________________
-    # Memory leak test
-    if do_memory_test == 1:
 
-      memory_RC = system("mem_leak_check %s %d %s %s %s %s> mem_leak_check.log.txt 2>&1" %
-                        (testname, do_plots, malloc_stats_file, compare_root, ".", helperspath))
-      try:
-        short_message_file = open("highwater_shortmessage.txt", 'r+', 500)
-        short_message = rstrip(short_message_file.readline(500))
-      except Exception:
-        short_message = ""
-
-      if memory_RC == 0:
-          print( "\tMemory leak tests passed." )
-          if short_message != "":
-            print( "\t%s" % (short_message)     )
-      elif memory_RC == 5 * 256:
-          print( "\t* Warning, no malloc_stats file created.  No memory leak test performed." )
-      elif memory_RC == 256:
-          print( "\t*** Warning, test %s failed memory leak test." % (testname) )
-          print( memory_msg )
-          # check that all VarLabels were deleted
-          rc = system("mem_leak_checkVarLabels sus.log.txt >> mem_leak_check.log.txt 2>&1")
-      elif memory_RC == 2*256:
-          print( "\t*** Warning, test %s failed memory highwater test." % (testname) )
-          if short_message != "":
-            print( "\t%s" % (short_message) )
-          print( memory_msg )
-          print( "%s" % replace_msg )
-      else:
-          print( "\tMemory leak tests passed. (Note: no previous memory usage stats)." )
 
     #__________________________________
     # print error codes
@@ -892,7 +913,7 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
       system("echo '  :%s: \t%s test failed performance tests' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
       return_code = 2;
 
-    if memory_RC == 1*256 or memory_RC == 2*256:
+    if memory_RC == 1*256 or memory_RC == 2*256 or memory_RC == 5*256:
       system("echo '  :%s: \t%s test failed memory tests' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
       return_code = 2;
 
