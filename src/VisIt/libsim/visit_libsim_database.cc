@@ -220,7 +220,34 @@ visit_handle visit_SimGetMetaData(void *cbdata)
     //     << logical[2] << std::endl;
 
     int numVars = stepInfo->varInfo.size();
-        
+
+    // Do a hasty search for a node or cell mesh for the per patch data.
+    for (int i=0; i<numVars; ++i)
+    {
+      if (stepInfo->varInfo[i].type.find("ParticleVariable") == std::string::npos)
+      {
+        if (stepInfo->varInfo[i].type.find("NC") != std::string::npos)
+        {
+          // Use the NC_Mesh for node based data.
+          addNodeData = true;
+
+          // Use the NC Mesh if there is no CC_Mesh
+          if( addPatchData == false )
+          {
+            addPatchData = true;
+            mesh_for_patch_data.assign("NC_Mesh");
+          }
+        }
+        else if (stepInfo->varInfo[i].type.find("CC") != std::string::npos)
+        {
+          // Use the CC_Mesh for patch based data.
+          addPatchData = true;
+          mesh_for_patch_data.assign("CC_Mesh");
+        }
+      }
+    }
+
+    // Loop thorugh all vars and add them to the meta data.
     for (int i=0; i<numVars; ++i)
     {
       bool isPerPatchVar = false;
@@ -238,22 +265,11 @@ visit_handle visit_SimGetMetaData(void *cbdata)
         {
           mesh_for_this_var.assign("NC_Mesh");
           cent = VISIT_VARCENTERING_NODE;
-          // Use the NC_Mesh for node based data.
-          addNodeData = true;
-          // Use the NC Mesh if there is no CC_Mesh
-          if( addPatchData == false )
-          {
-            addPatchData = true;
-            mesh_for_patch_data = mesh_for_this_var;
-          }
         }
         else if (vartype.find("CC") != std::string::npos)
         {
           mesh_for_this_var.assign("CC_Mesh");
           cent = VISIT_VARCENTERING_ZONE;
-          // Use the CC_Mesh for patch based data.
-          addPatchData = true;
-          mesh_for_patch_data = mesh_for_this_var;
         }
         else if (vartype.find("SFC") != std::string::npos)
         { 
@@ -268,14 +284,17 @@ visit_handle visit_SimGetMetaData(void *cbdata)
         }
         else if (vartype.find("PerPatch") != std::string::npos)
         {
-	  mesh_for_this_var = mesh_for_patch_data;
-	  
-	  if( mesh_for_this_var == "NC_Mesh")
-	    cent = VISIT_VARCENTERING_NODE;
-	  else
-	    cent = VISIT_VARCENTERING_ZONE;
-	  
-	  isPerPatchVar = true;
+          if( mesh_for_patch_data.empty() )
+            continue;
+
+          mesh_for_this_var = mesh_for_patch_data;
+
+          if( mesh_for_this_var == "NC_Mesh")
+            cent = VISIT_VARCENTERING_NODE;
+          else
+            cent = VISIT_VARCENTERING_ZONE;
+
+          isPerPatchVar = true;
         }
         else if (vartype.find("ReductionVariable") != std::string::npos)
         {
@@ -451,78 +470,76 @@ visit_handle visit_SimGetMetaData(void *cbdata)
     // Add the patch data
     if (addPatchData)
     {
+      int cent = (mesh_for_patch_data == "CC_Mesh" ?
+                  VISIT_VARCENTERING_ZONE : VISIT_VARCENTERING_NODE);
+      
+      visit_handle vmd = VISIT_INVALID_HANDLE;
+      
+      if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
       {
-        int cent = (mesh_for_patch_data == "CC_Mesh" ?
-                    VISIT_VARCENTERING_ZONE : VISIT_VARCENTERING_NODE);
-
-        visit_handle vmd = VISIT_INVALID_HANDLE;
+        VisIt_VariableMetaData_setName(vmd, "patch/id");
+        VisIt_VariableMetaData_setMeshName(vmd, mesh_for_patch_data.c_str());
+        VisIt_VariableMetaData_setCentering(vmd, cent);
+        VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
+        VisIt_VariableMetaData_setNumComponents(vmd, 1);
+        VisIt_VariableMetaData_setUnits(vmd, "");
         
+        // ARS - FIXME
+        //      VisIt_VariableMetaData_setHasDataExtents(vmd, false);
+        VisIt_VariableMetaData_setTreatAsASCII(vmd, false);
+        VisIt_SimulationMetaData_addVariable(md, vmd);
+      }
+
+      if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
+      {
+        VisIt_VariableMetaData_setName(vmd, "patch/processor");
+        VisIt_VariableMetaData_setMeshName(vmd, mesh_for_patch_data.c_str());
+        VisIt_VariableMetaData_setCentering(vmd, cent);
+        VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
+        VisIt_VariableMetaData_setNumComponents(vmd, 1);
+        VisIt_VariableMetaData_setUnits(vmd, "");
+
+        // ARS - FIXME
+        //      VisIt_VariableMetaData_setHasDataExtents(vmd, false);
+        VisIt_VariableMetaData_setTreatAsASCII(vmd, false);
+        VisIt_SimulationMetaData_addVariable(md, vmd);
+      }
+
+      for (std::set<std::string>::iterator it=meshes_added.begin();
+           it!=meshes_added.end(); ++it)
+      {
         if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
         {
-          VisIt_VariableMetaData_setName(vmd, "patch/id");
+          std::string varname = "patch/bounds/low/" + *it;
+          
+          VisIt_VariableMetaData_setName(vmd, varname.c_str() );
           VisIt_VariableMetaData_setMeshName(vmd, mesh_for_patch_data.c_str());
-          VisIt_VariableMetaData_setCentering(vmd, cent);
-          VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
-          VisIt_VariableMetaData_setNumComponents(vmd, 1);
+          VisIt_VariableMetaData_setType(vmd, cent);
+          VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_VECTOR);
+          VisIt_VariableMetaData_setNumComponents(vmd, 3);
           VisIt_VariableMetaData_setUnits(vmd, "");
-
+          
           // ARS - FIXME
           //      VisIt_VariableMetaData_setHasDataExtents(vmd, false);
           VisIt_VariableMetaData_setTreatAsASCII(vmd, false);
           VisIt_SimulationMetaData_addVariable(md, vmd);
         }
-
+          
         if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
         {
-          VisIt_VariableMetaData_setName(vmd, "patch/processor");
+          std::string varname = "patch/bounds/high/" + *it;
+          
+          VisIt_VariableMetaData_setName(vmd, varname.c_str() );
           VisIt_VariableMetaData_setMeshName(vmd, mesh_for_patch_data.c_str());
           VisIt_VariableMetaData_setCentering(vmd, cent);
-          VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
-          VisIt_VariableMetaData_setNumComponents(vmd, 1);
+          VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_VECTOR);
+          VisIt_VariableMetaData_setNumComponents(vmd, 3);
           VisIt_VariableMetaData_setUnits(vmd, "");
-
+            
           // ARS - FIXME
           //      VisIt_VariableMetaData_setHasDataExtents(vmd, false);
           VisIt_VariableMetaData_setTreatAsASCII(vmd, false);
           VisIt_SimulationMetaData_addVariable(md, vmd);
-        }
-
-        for (std::set<std::string>::iterator it=meshes_added.begin();
-             it!=meshes_added.end(); ++it)
-        {
-          if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
-          {
-            std::string varname = "patch/bounds/low/" + *it;
-
-            VisIt_VariableMetaData_setName(vmd, varname.c_str() );
-            VisIt_VariableMetaData_setMeshName(vmd, mesh_for_patch_data.c_str());
-            VisIt_VariableMetaData_setType(vmd, cent);
-            VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_VECTOR);
-            VisIt_VariableMetaData_setNumComponents(vmd, 3);
-            VisIt_VariableMetaData_setUnits(vmd, "");
-            
-            // ARS - FIXME
-            //      VisIt_VariableMetaData_setHasDataExtents(vmd, false);
-            VisIt_VariableMetaData_setTreatAsASCII(vmd, false);
-            VisIt_SimulationMetaData_addVariable(md, vmd);
-          }
-          
-          if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
-          {
-            std::string varname = "patch/bounds/high/" + *it;
-          
-            VisIt_VariableMetaData_setName(vmd, varname.c_str() );
-            VisIt_VariableMetaData_setMeshName(vmd, mesh_for_patch_data.c_str());
-            VisIt_VariableMetaData_setCentering(vmd, cent);
-            VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_VECTOR);
-            VisIt_VariableMetaData_setNumComponents(vmd, 3);
-            VisIt_VariableMetaData_setUnits(vmd, "");
-            
-            // ARS - FIXME
-            //      VisIt_VariableMetaData_setHasDataExtents(vmd, false);
-            VisIt_VariableMetaData_setTreatAsASCII(vmd, false);
-            VisIt_SimulationMetaData_addVariable(md, vmd);
-          }
         }
       }
 
@@ -1437,11 +1454,11 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
   }
   else if( varName == "processor" ||
       
-	   strcmp(varname, "patch/id") == 0 ||
-	   strcmp(varname, "patch/processor") == 0 ||
+           strcmp(varname, "patch/id") == 0 ||
+           strcmp(varname, "patch/processor") == 0 ||
 
-	   strncmp(varname, "patch/bounds/low",  16) == 0 ||
-	   strncmp(varname, "patch/bounds/high", 17) == 0 )
+           strncmp(varname, "patch/bounds/low",  16) == 0 ||
+           strncmp(varname, "patch/bounds/high", 17) == 0 )
   {
     isInternalVar = true;
 
@@ -1485,8 +1502,8 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
   {
     std::stringstream msg;
     msg << "Visit libsim - "
-	<< "Uintah variable \"" << varname << "\"  "
-	<< "has no type.";
+        << "Uintah variable \"" << varname << "\"  "
+        << "has no type.";
     
     VisItUI_setValueS("SIMULATION_MESSAGE_ERROR", msg.str().c_str(), 1);
 
