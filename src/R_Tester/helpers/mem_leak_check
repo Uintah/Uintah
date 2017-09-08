@@ -28,16 +28,14 @@ function merge_malloc_stats_files()
   here=`pwd`
   malloc_dir=$1
   cd $malloc_dir
-  
-  echo "__________________________________"
-  echo "merge_malloc_stats_files: ($malloc_dir)"
+  echo "  Merging malloc_stats_files: ($malloc_dir)"
   
   # if malloc_stats exists then return
   if [ -f $MALLOC_STATS ]; then
     bytes=`$STAT_CMD $MALLOC_STATS 2>/dev/null`
 
     if [ $bytes != "0" ]; then
-      echo "  $MALLOC_STATS exists nothing to merge."
+      echo -e "    $MALLOC_STATS exists nothing to merge.\n"
       return 0
     fi
   fi
@@ -53,8 +51,7 @@ function merge_malloc_stats_files()
       echo "  This occurs with the localRT on restarts, or if the gold standards haven't been created"
       exit 5
    fi
-   echo "  Successfully merged $malloc_dir/malloc_stats files.*."
-  cd $here
+   echo -e "    Successfully merged malloc_stats files.*.\n"
   return 0
 }
 #______________________________________________________________________
@@ -74,25 +71,26 @@ fi
 merge_malloc_stats_files $HERE 
 
 merge_malloc_stats_files $GS
+cd $HERE
 
 #__________________________________
-echo "Checking $TEST for scinew memory leaks"
+echo -e "  Checking $TEST for scinew memory leaks"
 grep '\.' $MALLOC_STATS > $TMPDIR/scinew_malloc_stats
 retval=$?
 
 if [ $retval = "0" ]; then
-  echo "***Memory leaks found***"
-  echo "Here are the object allocated with scinew but not deleted."
+  echo "    ***Memory leaks found***"
+  echo "    Here are the object allocated with scinew but not deleted."
   echo
   cat $TMPDIR/scinew_malloc_stats
   exit 1
 fi
 
-echo "Memory leak test passed -- no scinew memory leaks found"
+echo -e "    Memory leak test passed -- no scinew memory leaks found\n"
 
 #__________________________________
 #  run check the highwater memory usage
-echo "Performing highwater memory usage check"
+echo -e "  Performing highwater memory usage check"
 
 meminfo=`highwater_percent.pl $MALLOC_STATS $COMPARISON_MALLOC_STATS`
 percent=`echo $meminfo | cut -d " " -f 1`
@@ -115,7 +113,7 @@ elif [ $percent -lt "0" ]; then
   exit 0
 else
   echo "" > $TMPDIR/highwater_shortmessage.txt
-  echo "Highwater memory usage check passed!"
+  echo "    Highwater memory usage check passed!"
   exit 0
 fi
 
