@@ -123,7 +123,7 @@ const double wecel_d_coeff[4][5]
 
 
 
-      const int _nbands{4};
+      const int _nbands{5};
       const double _C_2{143.88};           ///2nd planck function optical constant (meters*Kelvin)
       double _C_o;                         ///particle optical constant
       std::vector<std::string> _part_sp;

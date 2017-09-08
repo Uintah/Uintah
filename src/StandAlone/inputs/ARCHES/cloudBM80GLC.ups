@@ -33,7 +33,7 @@
     <save label="radiationFluxT"/>
     <save label="radiationFluxE"/>
     <save label="radiationFluxW"/>
-    <save label="Intensity0000"/>
+    <save label="Intensity0000_00"/>
     <checkpoint cycle="2" timestepInterval="1"/>
   </DataArchiver>
   <Grid>

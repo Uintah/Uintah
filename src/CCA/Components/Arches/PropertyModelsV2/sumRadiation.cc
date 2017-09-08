@@ -10,27 +10,37 @@ sumRadiation::problemSetup( ProblemSpecP& db ){
 
   ProblemSpecP db_prop = db;
 
-  bool foundGas=false;
   //bool foundPart=false;  // intended to be used in the future
-  for ( ProblemSpecP db_model = db->findBlock("model"); db_model != nullptr; db_model=db_model->findNextBlock("model") ){
+    int igasPhase=0;
+  for ( ProblemSpecP db_model = db_prop->findBlock("model"); db_model != nullptr; db_model=db_model->findNextBlock("model") ){
 
     std::string type;
     db_model->getAttribute("type", type);
-
     if ( type == "gasRadProperties" ){
+      igasPhase++;
       std::string fieldName;
       db_model->getAttribute("label",fieldName);
       _gas_part_name.push_back(fieldName);
-      foundGas=true;
     } else if ( type == "partRadProperties" ) {
       std::string fieldName;
       db_model->getAttribute("label",fieldName);
       _gas_part_name.push_back(fieldName);
       //foundPart=true;
+    } else if ( type == "spectralProperties" ){
+      igasPhase++;
+      std::string soot_name;
+      db_model->get("soot",soot_name);
+      if (soot_name==""){
+      }else{
+        _gas_part_name.push_back("abskg_4");  // abskg_4 is soot only
+      }
+    }
+    if (igasPhase > 1){
+      throw ProblemSetupException("Multiple gas phase radiation property models found! Arches doesn't know which one it should use.",__FILE__, __LINE__);
     }
   }
 
-  if (foundGas==false){
+  if (igasPhase<1){ // for tabulated gas properties
     ChemHelper& helper = ChemHelper::self();
     helper.add_lookup_species("abskg");
   }
@@ -96,16 +106,21 @@ sumRadiation::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   CCVariable<double>& abskt = *(tsk_info->get_uintah_field<CCVariable<double> >(m_abskt_name));
   constCCVariable<double>&  volFrac = tsk_info->get_const_uintah_field_add<constCCVariable<double> >("volFraction");
 
-  abskt.initialize(1.0);
+  abskt.initialize( 1.0);
+  Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex());
   for (unsigned int i=0; i<_gas_part_name.size(); i++){
     constCCVariable<double>&  abskf = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(_gas_part_name[i]);
 
   //Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
-  Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex());
   Uintah::parallel_for( range, [&](int i, int j, int k){
   abskt(i,j,k)=(volFrac(i,j,k) > 1e-16) ? abskt(i,j,k)+abskf(i,j,k)-1.0/ (double) _gas_part_name.size()  : 1.0;
   });
 
+  }
+  if (_gas_part_name.size()==0){
+  Uintah::parallel_for( range, [&](int i, int j, int k){
+  abskt(i,j,k)=(volFrac(i,j,k) > 1e-16) ? 0.0  : 1.0;
+  });
   }
 
 

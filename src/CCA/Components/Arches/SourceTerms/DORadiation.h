@@ -81,22 +81,6 @@ void init_all_intensities( const ProcessorGroup* pc,
                          DataWarehouse* old_dw, 
                          DataWarehouse* new_dw );
 
-// creates new redundant intensity fields to facilitate communication
-void doSweepCopy( const ProcessorGroup* pc, 
-                         const PatchSubset* patches, 
-                         const MaterialSubset* matls, 
-                         DataWarehouse* old_dw, 
-                         DataWarehouse* new_dw ,
-                         int ix );
-
-// chains requires->modifies tasks to facilitate communication.  No spatial scheduling 
-void doSweepOrig( const ProcessorGroup* pc, 
-                         const PatchSubset* patches, 
-                         const MaterialSubset* matls, 
-                         DataWarehouse* old_dw, 
-                         DataWarehouse* new_dw ,
-                         int ix );
-
 // chains requires->modifies tasks to facilitate communication.   spatial scheduling for task work, but not communication
 void doSweepAdvanced(  const ProcessorGroup* pc, 
                          const PatchSubset* patches, 
@@ -112,13 +96,6 @@ void computeFluxDivQ( const ProcessorGroup* pc,
                          DataWarehouse* old_dw, 
                          DataWarehouse* new_dw );
 
-// no communication sweep task.  Proof of concept, most simple, perfect scaling metric.
-void sweepOnePatch( const ProcessorGroup* pc, 
-                         const PatchSubset* patches, 
-                         const MaterialSubset* matls, 
-                         DataWarehouse* old_dw, 
-                         DataWarehouse* new_dw );
-
 // initialize and set boundary conditions for intensities
 void setIntensityBC( const ProcessorGroup* pc, 
                          const PatchSubset* patches, 
@@ -126,22 +103,6 @@ void setIntensityBC( const ProcessorGroup* pc,
                          DataWarehouse* old_dw, 
                          DataWarehouse* new_dw,
                          int ix );
-
-// for the SweepCopy method. Assigns redundant intensities to proper labels
-void reduce_phase_intensity_to_final( const ProcessorGroup* pc, 
-                         const PatchSubset* patches, 
-                         const MaterialSubset* matls, 
-                         DataWarehouse* old_dw, 
-                         DataWarehouse* new_dw,
-                         int ix );
-
-// for the SweepCopy method. Initializes  
-void initialize_copyMethod_intensities( const ProcessorGroup* pc, 
-                         const PatchSubset* patches, 
-                         const MaterialSubset* matls, 
-                         DataWarehouse* old_dw, 
-                         DataWarehouse* new_dw,
-                         int ix);
 
 
 void TransferRadFieldsFromOldDW( const ProcessorGroup* pc, 
@@ -185,7 +146,7 @@ void TransferRadFieldsFromOldDW( const ProcessorGroup* pc,
   int getSweepPatchIndex( double patchMid, std::vector<double>& indep_var );
 
 private:
-      enum DORadType { enum_linearSolve, enum_sweepNoCommunication, enum_sweepSerial, enum_sweepSpatiallyParallel, enum_sweepSerialCopy };
+      enum DORadType {enum_linearSolve, enum_sweepSpatiallyParallel};
   int _nDir;
   int _nphase;
   int _nstage;
@@ -217,6 +178,8 @@ private:
   std::string _T_label_name; 
   std::string _abskt_label_name; 
   std::string _abskg_label_name; 
+  //std::vector<std::string> _abskg_label_name{1}; 
+  int d_nbands{1};
 
   DORadiationModel* _DO_model; 
   ArchesLabel*    _labels; 
@@ -241,9 +204,12 @@ private:
   const VarLabel* _radiationFluxSLabel;
   const VarLabel* _radiationFluxTLabel;
   const VarLabel* _radiationFluxBLabel;
-  const VarLabel* _radIntSource;
   const VarLabel* _radiationVolqLabel;
   const PatchSet* _perproc_patches;
+
+      std::vector<const VarLabel*>  _radIntSource;
+      std::vector<std::string> _radIntSource_names;
+
   std::vector< const VarLabel*> _IntensityLabels;
   std::vector< const VarLabel*> _emiss_plus_scat_source_label; 
 
