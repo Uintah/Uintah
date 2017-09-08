@@ -241,7 +241,7 @@ void visit_SetAnalysisVars( visit_simulation_data *sim )
   // on-the-fly for the first time step causes a crash in both Uintah
   // and Visit. It is not clear where the crash occurs.
   
-  if( sim->cycle < 2 )
+  if( sim->first || sim->cycle < 2 )
     return;
   
   const char table[] = "AnalysisVariableTable";
