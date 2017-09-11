@@ -42,31 +42,40 @@ namespace Uintah {
   struct slip_globalVars{
     double alpha_momentum;        // momentum accommidation coeff
     double alpha_temperature;     // temperature accomidation coeff.
-  };    
+    std::string SlipModel;        // which slip model  Deissler, Karniadakis-Beskok'
+    bool        CreepFlow;        // include creep flow in the velocity calculation 
+  };
+
+
   //____________________________________________________________
   // This struct contains the additional variables required to compute
   // mean free path and the gradients
   struct slip_localVars{
-    constCCVariable<double> gamma;   
     constCCVariable<double> rho_CC;
     constCCVariable<Vector> vel_CC;
-    constCCVariable<double> press_CC;        
-    constCCVariable<double> Temp_CC;
+    constCCVariable<double> temp_CC;
+    constCCVariable<double> press_CC;
+    constCCVariable<double> gamma;
+    constCCVariable<double> specific_heat;
+    constCCVariable<double> thermalCond;
     constCCVariable<double> viscosity;
-    CCVariable<double> lamda;    // mean free path
-    double alpha_momentum;
-    double alpha_temperature; 
+    CCVariable<double> lamda;             //  mean free path
+    double alpha_momentum;                //  momentum accomodation coefficient
+    double alpha_temperature;             //  thermal accomodation coefficient
+    std::string SlipModel;                //  slip model
+    bool   CreepFlow;                     //  include creep flow, or not
   };
-  
+
   bool read_MicroSlip_BC_inputs(const ProblemSpecP&,
                                 slip_globalVars* gv);
-                                 
-  void addRequires_MicroSlip(Task* t, 
+
+  void addRequires_MicroSlip(Task* t,
                              const std::string& where,
                              ICELabel* lb,
                              const MaterialSubset* ice_matls,
                              slip_globalVars* sv);
-                      
+                             
+
   void preprocess_MicroSlip_BCs(DataWarehouse* old_dw,
                                 DataWarehouse* new_dw,
                                 ICELabel* lb,
@@ -77,11 +86,11 @@ namespace Uintah {
                                 bool& setSlipBcs,
                                 slip_localVars* lv,
                                 slip_globalVars* gv);
-                                  
+
   bool is_MicroSlip_face(const Patch* patch,
                          Patch::FaceType face,
                          SimulationStateP& sharedState);
-                  
+
   int set_MicroSlipVelocity_BC(const Patch* patch,
                               const Patch::FaceType face,
                               CCVariable<Vector>& vel_CC,
@@ -97,6 +106,6 @@ namespace Uintah {
                               Iterator& bound_ptr,
                               const std::string& bc_kind,
                               const double wall_temperature,
-                              slip_localVars* lv);                          
+                              slip_localVars* lv);
 } // End namespace Uintah
 #endif

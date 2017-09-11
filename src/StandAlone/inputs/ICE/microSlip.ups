@@ -31,8 +31,15 @@
     <BoundaryConditions>
     
       <microSlip>
-        <alpha_momentum>       1.0   </alpha_momentum>
-        <alpha_temperature>    1.0   </alpha_temperature>
+        <alpha_momentum>       1.0        </alpha_momentum>
+        <alpha_temperature>    1.0        </alpha_temperature>
+     <!--   
+        <SlipModel>         "Deissler"    </SlipModel>
+        <CreepFlow>         "true"        </CreepFlow>
+      -->  
+        <SlipModel> Karniadakis-Beskok  </SlipModel>
+        <CreepFlow>         false       </CreepFlow>
+        
       </microSlip>
     
       <Face side = "x-">
@@ -91,7 +98,7 @@
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0. </value>
         </BCType>
-        <BCType id = "0"   label = "Velocity"     var = "creep">
+        <BCType id = "0"   label = "Velocity"     var = "slip">
                               <value> [-10.,0.,0.] </value>
         </BCType>
         <BCType id = "0"   label = "Temperature"  var = "slip">

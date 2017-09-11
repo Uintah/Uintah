@@ -579,7 +579,7 @@
 
         <BCType             spec="MULTIPLE NO_DATA"
                               attribute1="id        OPTIONAL STRING '0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,all'"
-                              attribute2="var       REQUIRED STRING 'Neumann, Dirichlet, symmetry, LODI, computeFromDensity, Sine, creep, slip, Custom, 
+                              attribute2="var       REQUIRED STRING 'Neumann, Dirichlet, symmetry, LODI, computeFromDensity, Sine, slip, Custom, 
                                                                      VelocityInlet, StABL, PressureBC, WallBC, OutletBC, NOutletBC, VelocityFileInput, MassFlowInlet, PartMassFlowInlet,
                                                                      Swirl, FromFile, ForcedDirichlet, TurbulentInlet, Tabulated powerLawProfile logWindProfile'"
                               attribute3="label     REQUIRED STRING "
@@ -642,6 +642,8 @@
       <microSlip            spec="OPTIONAL NO_DATA">
         <alpha_momentum     spec="REQUIRED DOUBLE 'positive'"/>
         <alpha_temperature  spec="REQUIRED DOUBLE 'positive'"/>
+        <SlipModel          spec="REQUIRED STRING 'Deissler, Karniadakis-Beskok'" />
+        <CreepFlow          spec="REQUIRED BOOLEAN" />
       </microSlip>
 
       <inletVelocity        spec="OPTIONAL NO_DATA" attribute1="type REQUIRED STRING 'powerLawProfile, logWindProfile'">
