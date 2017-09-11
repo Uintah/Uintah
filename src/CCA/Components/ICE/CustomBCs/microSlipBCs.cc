@@ -61,6 +61,7 @@ bool read_MicroSlip_BC_inputs(const ProblemSpecP& prob_spec,
   bool usingSlip = false;
 
   for( ProblemSpecP face_ps = bc_ps->findBlock( "Face" ); face_ps != nullptr; face_ps = face_ps->findNextBlock( "Face" ) ) {
+
     map<string,string> face;
     face_ps->getAttributes(face);
     bool is_a_MicroSlip_face = false;
@@ -102,17 +103,17 @@ bool read_MicroSlip_BC_inputs(const ProblemSpecP& prob_spec,
  Function~  addRequires_MicroSlip--
  Purpose~   requires for all the tasks depends on which task you're in
  ______________________________________________________________________  */
-void addRequires_MicroSlip(Task* t,
-                           const string& where,
-                           ICELabel* lb,
-                           const MaterialSubset* ice_matls,
-                           slip_globalVars* var_basket)
+void addRequires_MicroSlip(Task         * t,
+                           const string & where,
+                           ICELabel     * lb,
+                           const MaterialSubset * ice_matls,
+                           slip_globalVars      * var_basket)
 {
   cout_doing<< "Doing addRequires_microSlip: \t\t" <<t->getName()
             << " " << where << endl;
 
   Ghost::GhostType  gn  = Ghost::None;
-#if 0  
+#if 0
   Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
   MaterialSubset* press_matl = scinew MaterialSubset();
   press_matl->add(0);
@@ -157,15 +158,23 @@ void addRequires_MicroSlip(Task* t,
  Function~ meanFreePath-
  Purpose~  compute the mean free path along an entire boundary face.
 ____________________________________________________________________*/
-void meanFreePath(DataWarehouse* new_dw,
-                  const Patch* patch,
-                  SimulationStateP& sharedState,
-                  slip_localVars* sv)
+void meanFreePath(DataWarehouse     * new_dw,
+                  const Patch       * patch,
+                  SimulationStateP  & sharedState,
+                  slip_localVars    * sv)
 {
   cout_doing << "meanFreePath" << endl;
 
-   new_dw->allocateTemporary(sv->lamda,patch);
-   sv->lamda.initialize(-9e99);
+  // for readability
+  CCVariable<double>&     lamda          = sv->lamda;
+  constCCVariable<double>& gamma         = sv->gamma;
+  constCCVariable<double>& specific_heat = sv->specific_heat;
+  constCCVariable<double>& viscosity     = sv->viscosity;
+  constCCVariable<double>& rho_CC        = sv->rho_CC;
+  constCCVariable<double>& temp_CC       = sv->temp_CC;
+  new_dw->allocateTemporary(sv->lamda,patch);
+
+  sv->lamda.initialize(-9e99);
 
   //__________________________________
   // Iterate over the faces encompassing the domain
@@ -175,47 +184,54 @@ void meanFreePath(DataWarehouse* new_dw,
   for( vector<Patch::FaceType>::const_iterator iter = bf.begin(); iter != bf.end(); ++iter ){
     Patch::FaceType face = *iter;
 
-    if (is_MicroSlip_face(patch,face, sharedState) ) {
-      // hit the cells in once cell from the face direction
-      IntVector offset = patch->faceDirection(face);
-      IntVector axes   = patch->getFaceAxes(face);
-      IntVector lo     = patch->getExtraCellLowIndex();
-      IntVector hi     = patch->getExtraCellHighIndex();
+    if ( is_MicroSlip_face(patch,face, sharedState) ) {
+
+      // hit the cells in one cell from the face direction
+      IntVector offset    = patch->faceDirection(face);
+      IntVector axes      = patch->getFaceAxes(face);
+      IntVector patchLoEC = patch->getExtraCellLowIndex();
+      IntVector patchHiEC = patch->getExtraCellHighIndex();
       Patch::FaceIteratorType PEC = Patch::ExtraPlusEdgeCells;
+
+      // Investigate using patch::InteriorFaceCells instead of ExtraPlusEdgeCells  -Todd
 
       for(CellIterator cIter=patch->getFaceIterator(face, PEC); !cIter.done(); cIter++) {
 
         IntVector c = *cIter - offset;
         IntVector b = c;
 
-        for(int i = 0; i < 3; i++) {
-          if(c[axes[i]] == lo[axes[i]]) {
-            b[axes[i]] += 1;                                 // Sultan:  double check this -Todd
+        //  find the interior
+        for(int i = 0; i < 3; i++) {            // Sultan:  double check what this is doing
+          int dir = axes[i];                    // this could use some software engineering....
+
+          if( c[dir] == patchLoEC[dir] ) {
+            b[dir] += 1;
           }
-          if(c[axes[i]] == (hi[axes[i]]-1)) {
-            b[axes[i]] -= 1;
+          if( c[dir] == (patchHiEC[dir]-1) ) {
+            b[dir] -= 1;
           }
         }
-        double R = sv->specific_heat[b]*(sv->gamma[b]-1);
-        sv->lamda[c] = sv->viscosity[b]/(sv->rho_CC[b] * sqrt( 2 * R * sv->temp_CC[b]/3.14159265359) );
+
+        double R = specific_heat[b] * (gamma[b]-1);
+        lamda[c] = viscosity[b]/(rho_CC[b] * sqrt( 2 * R * temp_CC[b]/M_PI) );
       }  // faceCelliterator
     }  // is microSlip face
   }  // loop over faces
 }
 /*______________________________________________________________________
  Function~  preprocess_MicroSlip_BCs--
- Purpose~   get data from dw
+ Purpose~   Retrieve variables from the dw
 ______________________________________________________________________ */
-void  preprocess_MicroSlip_BCs(DataWarehouse* old_dw,
-                               DataWarehouse* new_dw,
-                               ICELabel* lb,
-                               const Patch* patch,
-                               const string& where,
+void  preprocess_MicroSlip_BCs(DataWarehouse    * old_dw,
+                               DataWarehouse    * new_dw,
+                               ICELabel         * lb,
+                               const Patch      * patch,
+                               const string     & where,
                                const int /*indx*/,
-                               SimulationStateP& sharedState,
-                               bool& setMicroSlipBcs,
-                               slip_localVars* lv,
-                               slip_globalVars* gv)
+                               SimulationStateP & sharedState,
+                               bool             & setMicroSlipBcs,
+                               slip_localVars   * lv,
+                               slip_globalVars  * gv)
 {
 
   Ghost::GhostType  gn  = Ghost::None;
@@ -275,16 +291,16 @@ void  preprocess_MicroSlip_BCs(DataWarehouse* old_dw,
  Function~  is_MicroSlip_face--
  Purpose~   returns true if this face on this patch is using MicroSlip bcs
  ______________________________________________________________________  */
-bool is_MicroSlip_face(const Patch* patch,
-                       Patch::FaceType face,
-                       SimulationStateP& sharedState)
+bool is_MicroSlip_face(const Patch      * patch,
+                       Patch::FaceType    face,
+                       SimulationStateP & sharedState)
 {
   bool is_MicroSlip_face = false;
   int numMatls = sharedState->getNumICEMatls();
 
   for (int m = 0; m < numMatls; m++ ) {
     ICEMaterial* ice_matl = sharedState->getICEMaterial(m);
-    int indx= ice_matl->getDWIndex();
+    int indx              = ice_matl->getDWIndex();
     bool slip_temperature = patch->haveBC( face, indx, "slip", "Temperature");
     bool slip_velocity    = patch->haveBC( face, indx, "slip",  "Velocity");
     bool creep_velocity   = patch->haveBC( face, indx, "creep", "Velocity");
@@ -301,14 +317,14 @@ bool is_MicroSlip_face(const Patch* patch,
  Purpose~  Set velocity boundary conditions
  Reference:   Jennifer please fill this in.
 ___________________________________________________________________*/
-int set_MicroSlipVelocity_BC(const Patch* patch,
-                             const Patch::FaceType face,
-                             CCVariable<Vector>& vel_CC,
-                             const string& var_desc,
-                             Iterator& bound_ptr,
-                             const string& bc_kind,
-                             const Vector wall_vel,
-                             slip_localVars* lv)
+int set_MicroSlipVelocity_BC(const Patch          * patch,
+                             const Patch::FaceType  face,
+                             CCVariable<Vector>   & vel_CC,
+                             const string         & var_desc,
+                             Iterator             & bound_ptr,
+                             const string         & bc_kind,
+                             const Vector           wall_vel,
+                             slip_localVars       * lv)
 
 {
   int nCells = 0;
@@ -333,13 +349,17 @@ int set_MicroSlipVelocity_BC(const Patch* patch,
     double alpha_momentum = lv->alpha_momentum;
     std::string SlipModel = lv->SlipModel;
     bool        CreepFlow = lv->CreepFlow;
-    
-    IntVector offset = patch->faceDirection(face);
-    IntVector axes   = patch->getFaceAxes(face);
 
+    IntVector patchLoEC = patch->getExtraCellLowIndex();
+    IntVector patchHiEC = patch->getExtraCellHighIndex();
+    IntVector offset    = patch->faceDirection(face);
+    IntVector axes      = patch->getFaceAxes(face);
+
+    int pDir  = axes[0];                       // principal direction
     Vector DX = patch->dCell();
 
     cout_dbg << "____________________velocity";
+
     //__________________________________
     //   SLIP
     if(bc_kind == "slip") {
@@ -347,17 +367,17 @@ int set_MicroSlipVelocity_BC(const Patch* patch,
 
       for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
         IntVector c = *bound_ptr;
-        IntVector lo = patch->getExtraCellLowIndex();  // Aimie  double check this
-        IntVector hi = patch->getExtraCellHighIndex();
 
         IntVector b = c;
 
         for (int i = 0; i < 3; i++){
-          if (c[axes[i]] == lo[axes[i]]) {
-            b[axes[i]] += 1;
+          int dir = axes[i];
+
+          if (c[dir] == patchLoEC[dir]) {
+            b[dir] += 1;
           }
-          if (c[axes[i]] == (hi[axes[i]]-1)) {
-            b[axes[i]] -= 1;
+          if (c[dir] == (patchHiEC[dir]-1)) {
+            b[dir] -= 1;
           }
         }
 
@@ -370,57 +390,67 @@ int set_MicroSlipVelocity_BC(const Patch* patch,
         double velgrad2[3][3] = {{0,0,0},{0,0,0},{0,0,0}};
         double tempgrad[3]    = {0,0,0};
 
+        //__________________________________
+        // normal velocity gradients
         for(int j = 0;j < 3;j++){  //normal derivatives
-          velgrad1[axes[0]][j] = (-5*V1[j]+8*V2[j]-3*V3[j])/(2*DX[axes[0]]);
-          velgrad2[axes[0]][j] = (3*V1[j]-8*V2[j]+7*V3[j]-2*V4[j])/(DX[axes[0]]*DX[axes[0]]);
+          double dx = DX[pDir];       // dx in normal dir
+          velgrad1[pDir][j] = ( -5*V1[j] + 8*V2[j] - 3*V3[j])/(2*dx);
+          velgrad2[pDir][j] = (  3*V1[j] - 8*V2[j] + 7*V3[j] - 2*V4[j])/( dx * dx );
         }
 
-        for(int i=1;i<3;i++){  //transverse derivatives
-          if( (hi[axes[i]]-lo[axes[i]]) >4 ){
-            IntVector a=b;
-            
-            if( b[axes[i]] == (lo[axes[i]]+1) ) {
-              a[axes[i]] += 1;
+        //__________________________________
+        //transverse derivatives
+        for(int i=1;i<3;i++){
+          int dir = axes[i];
+          double dx = DX[dir];
+
+          if( (patchHiEC[dir] - patchLoEC[dir]) >4 ){
+            IntVector a = b;
+
+            if( b[dir] == (patchLoEC[dir] + 1) ) {
+              a[dir] += 1;
             }
-            if( b[axes[i]] == (hi[axes[i]]-2) ) {
-              a[axes[i]] -= 1;
+            if( b[dir] == (patchHiEC[dir] - 2) ) {
+              a[dir] -= 1;
             }
 
-            IntVector R = a; 
+            IntVector R = a;
             IntVector L = a;
-            R[axes[i]] += 1;
-            L[axes[i]] -= 1;
+            R[dir] += 1;
+            L[dir] -= 1;
 
-            tempgrad[axes[i]] = (temp_CC[R]-temp_CC[L])/(2*DX[axes[i]]);
+            tempgrad[dir] = ( temp_CC[R] - temp_CC[L] )/( 2*dx );
 
             for(int j = 0;j < 3;j++){
-              velgrad1[axes[i]][j] = (vel_CC[R][j]-vel_CC[L][j])/(2*DX[axes[i]]);
-              velgrad2[axes[i]][j] = (vel_CC[R][j]-2*vel_CC[a][j]+vel_CC[L][j])/(DX[axes[i]]*DX[axes[i]]);
+              velgrad1[dir][j] = ( vel_CC[R][j] -  vel_CC[L][j])/( 2*dx );
+              velgrad2[dir][j] = ( vel_CC[R][j] - 2*vel_CC[a][j] + vel_CC[L][j] )/( dx * dx );
             }
           }  // hi - lo > 4 loop
         }  // i loop
 
+        //__________________________________
+        //  update the velocity
         double Bv1 = lamda[b] * (2 - alpha_momentum)/alpha_momentum;
         vel_CC[c] = wall_vel;
-        
-        for(int i = 1; i < 3; i++){
 
-          vel_CC[c][axes[i]] += Bv1 * (velgrad1[ axes[0] ][ axes[i] ] + velgrad1[ axes[i] ][ axes[0] ]);
+        for(int i = 1; i < 3; i++){
+          int dir = axes[i];
+          vel_CC[c][dir] += Bv1 * ( velgrad1[pDir][dir] + velgrad1[dir][pDir] );
 
           // add creep contribution
           if( CreepFlow ){
-            vel_CC[c][axes[i]] += 0.75 * viscosity[b] * tempgrad[axes[i]]/( rho_CC[b] * temp_CC[b] );
+            vel_CC[c][dir] += 0.75 * viscosity[b] * tempgrad[dir]/( rho_CC[b] * temp_CC[b] );
           }
 
           if(SlipModel == "Deissler"){
-            double Bv2 = (9.0/8.0)*lamda[b]*lamda[b];
-            vel_CC[c][axes[i]] -= Bv2*velgrad2[axes[0]][axes[i]];
-            vel_CC[c][axes[i]] -= 0.5*Bv2*(velgrad2[axes[1]][axes[i]]+velgrad2[axes[2]][axes[i]]);
+            double Bv2 = (9.0/8.0) * lamda[b] * lamda[b];
+            vel_CC[c][dir] -= Bv2 * velgrad2[pDir][dir];
+            vel_CC[c][dir] -= 0.5 * Bv2 * ( velgrad2[axes[1]][dir] + velgrad2[axes[2]][dir] );
           }
 
           if(SlipModel == "Karniadakis-Beskok"){
             double Bv2 = -0.5 * Bv1 * lamda[b];
-            vel_CC[c][axes[i]] -= Bv2*velgrad2[axes[0]][axes[i]];
+            vel_CC[c][dir] -= Bv2 * velgrad2[pDir][dir];
           }
         }
       }
@@ -434,13 +464,13 @@ int set_MicroSlipVelocity_BC(const Patch* patch,
  Function~ set_MicroSlipTemperature_BC--
  Purpose~  Compute temperature in boundary cells on faces
 ___________________________________________________________________*/
-int  set_MicroSlipTemperature_BC(const Patch* patch,
-                                 const Patch::FaceType face,
-                                 CCVariable<double>& temp_CC,
-                                 Iterator& bound_ptr,
-                                 const string& bc_kind,
-                                 const double wall_temp,
-                                 slip_localVars* lv)
+int  set_MicroSlipTemperature_BC(const Patch            * patch,
+                                 const Patch::FaceType    face,
+                                 CCVariable<double>     & temp_CC,
+                                 Iterator               & bound_ptr,
+                                 const string           & bc_kind,
+                                 const double             wall_temp,
+                                 slip_localVars         * lv)
 {
   int nCells = 0;
   if (bc_kind == "slip") {
@@ -461,25 +491,37 @@ int  set_MicroSlipTemperature_BC(const Patch* patch,
     double alpha_temperature = lv->alpha_temperature;
     string SlipModel         = lv->SlipModel;
 
-    IntVector axes   = patch->getFaceAxes(face);
-    IntVector offset = patch->faceDirection(face);
+    IntVector axes      = patch->getFaceAxes(face);
+    IntVector offset    = patch->faceDirection(face);
+    IntVector patchLoEC = patch->getExtraCellLowIndex();        // Aimie double check this -Todd
+    IntVector patchHiEC = patch->getExtraCellHighIndex();
+
     Vector DX = patch->dCell(); //axes[0], normal direction
+    int pDir  = axes[0];
 
     cout_dbg << "\n____________________Temp"<< endl;
 
+    //__________________________________
+    //
     for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-      IntVector c = *bound_ptr;
+      IntVector c  = *bound_ptr;
       IntVector in = c - offset;
-      IntVector lo = patch->getExtraCellLowIndex();        // Aimie double check this -Todd
-      IntVector hi = patch->getExtraCellHighIndex();
+
       IntVector b = c;
 
+      //__________________________________
+      // compute the gradients
+      double tempgrad1[3] = {0,0,0};                // consider using a Uintah::Vector.
+      double tempgrad2[3] = {0,0,0};
+
       for (int i = 0; i < 3; i++){
-        if (c[axes[i]] == lo[axes[i]]) {
-          b[axes[i]] += 1;
+        int dir = axes[i];
+
+        if (c[dir] == patchLoEC[dir]) {
+          b[dir] += 1;
         }
-        if (c[axes[i]] == (hi[axes[i]]-1)) {
-          b[axes[i]] -= 1;
+        if (c[dir] == (patchHiEC[dir]-1)) {
+          b[dir] -= 1;
         }
       }
 
@@ -488,43 +530,47 @@ int  set_MicroSlipTemperature_BC(const Patch* patch,
       double T3 = temp_CC[b-offset-offset];
       double T4 = temp_CC[b-offset-offset-offset];
 
-      double tempgrad1[3] = {0,0,0};
-      double tempgrad2[3] = {0,0,0};
+      tempgrad1[pDir] = ( -5*T1 + 8*T2 - 3*T3 )/( 2*DX[pDir] ); //normal derivatives
+      tempgrad2[pDir] = (  3*T1 - 8*T2 + 7*T3 - 2*T4 )/( DX[pDir]*DX[pDir] );
 
-      tempgrad1[axes[0]] = (-5*T1 + 8*T2 - 3*T3)/( 2*DX[axes[0]] ); //normal derivatives
-      tempgrad2[axes[0]] = ( 3*T1 - 8*T2 + 7*T3 - 2*T4)/( DX[axes[0]]*DX[axes[0]] );
+      //__________________________________
+      // compute the transverse gradients
+      for(int i = 1; i < 3; i++){
+        int dir   = axes[i];
+        double dx = DX[dir];
 
-      for(int i = 1; i < 3; i++){  //transverse derivatives
-        if( (hi[axes[i]] - lo[axes[i]] ) > 4){
+        if( (patchHiEC[dir] - patchLoEC[dir] ) > 4){
           IntVector a = b;
-          if( b[axes[i]] == (lo[axes[i]]+1) ) {
-            a[axes[i]] += 1;
+
+          if( b[dir] == (patchLoEC[dir]+1) ) {
+            a[dir] += 1;
           }
-          if( b[axes[i]] == (hi[axes[i]]-2) ) {
-            a[axes[i]] -= 1;
+          if( b[dir] == (patchHiEC[dir]-2) ) {
+            a[dir] -= 1;
           }
+
           IntVector R = a;
           IntVector L = a;
 
-          R[axes[i]] += 1;
-          L[axes[i]] -= 1;
+          R[dir] += 1;
+          L[dir] -= 1;
 
-          tempgrad1[axes[i]] = ( temp_CC[R] - temp_CC[L] )/( 2*DX[axes[i]] );
-          tempgrad2[axes[i]] = ( temp_CC[R] - 2*temp_CC[a] + temp_CC[L])/( DX[axes[i]]*DX[axes[i]] );
+          tempgrad1[dir] = ( temp_CC[R] - temp_CC[L] )/( 2*dx );
+          tempgrad2[dir] = ( temp_CC[R] - 2*temp_CC[a] + temp_CC[L] )/( dx*dx );
         }
       }
-      double Bt1 = lamda[b]*(2-alpha_temperature)/alpha_temperature;
-      Bt1        = Bt1 * 2*thermalCond[b]/( (gamma[b]+1) * specific_heat[b] * viscosity[b]);
+      double Bt1 = lamda[b] * ( 2 - alpha_temperature)/alpha_temperature;
+      Bt1        = Bt1 * 2 * thermalCond[b]/( (gamma[b] + 1) * specific_heat[b] * viscosity[b]);
 
-      temp_CC[c] = wall_temp+Bt1*tempgrad1[axes[0]];
+      temp_CC[c] = wall_temp + Bt1 * tempgrad1[pDir];
 
       if(SlipModel == "Deissler"){
-        double Bt2 = lamda[b]*lamda[b]*(9.0/128.0)*(177.0*gamma[b]-145.0)/(gamma[b]+1.0);
-        temp_CC[c] -= Bt2*(tempgrad2[axes[0]]+0.5*(tempgrad2[axes[1]]+tempgrad2[axes[2]]));
+        double Bt2 = lamda[b] * lamda[b] * (9.0/128.0) * (177.0 * gamma[b] - 145.0)/(gamma[b] + 1.0);
+        temp_CC[c] -= Bt2 * ( tempgrad2[pDir] + 0.5*( tempgrad2[axes[1]] + tempgrad2[axes[2]] ) );
       }
       if(SlipModel == "Karniadakis-Beskok"){
-        double Bt2 = -(Bt1/2)*lamda[b];
-        temp_CC[c] -= Bt2*tempgrad2[axes[0]];
+        double Bt2 = -(Bt1/2) * lamda[b];
+        temp_CC[c] -= Bt2 * tempgrad2[pDir];
       }
     }
     nCells = bound_ptr.size();

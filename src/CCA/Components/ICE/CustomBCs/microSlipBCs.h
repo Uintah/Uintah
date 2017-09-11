@@ -43,7 +43,7 @@ namespace Uintah {
     double alpha_momentum;        // momentum accommidation coeff
     double alpha_temperature;     // temperature accomidation coeff.
     std::string SlipModel;        // which slip model  Deissler, Karniadakis-Beskok'
-    bool        CreepFlow;        // include creep flow in the velocity calculation 
+    bool        CreepFlow;        // include creep flow in the velocity calculation
   };
 
 
@@ -69,43 +69,43 @@ namespace Uintah {
   bool read_MicroSlip_BC_inputs(const ProblemSpecP&,
                                 slip_globalVars* gv);
 
-  void addRequires_MicroSlip(Task* t,
-                             const std::string& where,
-                             ICELabel* lb,
-                             const MaterialSubset* ice_matls,
-                             slip_globalVars* sv);
-                             
+  void addRequires_MicroSlip(Task                 * t,
+                             const std::string    & where,
+                             ICELabel             * lb,
+                             const MaterialSubset * ice_matls,
+                             slip_globalVars      * sv);
 
-  void preprocess_MicroSlip_BCs(DataWarehouse* old_dw,
-                                DataWarehouse* new_dw,
-                                ICELabel* lb,
-                                const Patch* patch,
-                                const std::string& where,
-                                const int indx,
-                                SimulationStateP& sharedState,
-                                bool& setSlipBcs,
-                                slip_localVars* lv,
-                                slip_globalVars* gv);
 
-  bool is_MicroSlip_face(const Patch* patch,
-                         Patch::FaceType face,
-                         SimulationStateP& sharedState);
+  void preprocess_MicroSlip_BCs(DataWarehouse     * old_dw,
+                                DataWarehouse     * new_dw,
+                                ICELabel          * lb,
+                                const Patch       * patch,
+                                const std::string & where,
+                                const int           indx,
+                                SimulationStateP  & sharedState,
+                                bool              & setSlipBcs,
+                                slip_localVars    * lv,
+                                slip_globalVars   * gv);
 
-  int set_MicroSlipVelocity_BC(const Patch* patch,
-                              const Patch::FaceType face,
-                              CCVariable<Vector>& vel_CC,
-                              const std::string& var_desc,
-                              Iterator& bound_ptr,
-                              const std::string& bc_kind,
-                              const Vector wall_velocity,
-                              slip_localVars* lv);
+  bool is_MicroSlip_face(const Patch      * patch,
+                         Patch::FaceType    face,
+                         SimulationStateP & sharedState);
 
-  int  set_MicroSlipTemperature_BC(const Patch* patch,
-                              const Patch::FaceType face,
-                              CCVariable<double>& temp_CC,
-                              Iterator& bound_ptr,
-                              const std::string& bc_kind,
-                              const double wall_temperature,
-                              slip_localVars* lv);
+  int set_MicroSlipVelocity_BC(const Patch          * patch,
+                              const Patch::FaceType   face,
+                              CCVariable<Vector>    & vel_CC,
+                              const std::string     & var_desc,
+                              Iterator              & bound_ptr,
+                              const std::string     & bc_kind,
+                              const Vector            wall_velocity,
+                              slip_localVars        * lv);
+
+  int  set_MicroSlipTemperature_BC(const Patch          * patch,
+                                   const Patch::FaceType   face,
+                                   CCVariable<double>    & temp_CC,
+                                   Iterator              & bound_ptr,
+                                   const std::string     & bc_kind,
+                                   const double            wall_temperature,
+                                   slip_localVars        * lv);
 } // End namespace Uintah
 #endif
