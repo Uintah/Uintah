@@ -5,20 +5,17 @@
   </Meta>
   <SimulationComponent type="arches"/>
   <Solver type="hypre"/>
-  <Scheduler type="DynamicMPI">
-    <small_messages>true</small_messages>
-  </Scheduler>
   <Time>
     <maxTime>10</maxTime>
-    <max_Timesteps>1000</max_Timesteps>
+    <max_Timesteps>6</max_Timesteps>
     <initTime>0.0</initTime>
     <delt_min>1e-9</delt_min>
     <delt_max>1e-3</delt_max>
     <timestep_multiplier>0.3</timestep_multiplier>
   </Time>
   <DataArchiver>
-    <filebase>case4_OFC.uda</filebase>
-    <outputInterval>0.1</outputInterval>
+    <filebase>BrownSoot_spectral.uda</filebase>
+    <outputTimestepInterval>2</outputTimestepInterval>
     <save label="residence_time"/>
     <save label="res_source"/>
     <save label="coal_gas_momentum"/>
@@ -42,8 +39,7 @@
     <save label="radiationFluxW"/>
     <save label="divQ"/>
     <save label="abskp"/>
-    <save label="abskg"/>
-    <save label="gas_abskg"/>
+    <save label="abskt"/>
     <save label="enthalpy"/>
     <save label="length_0"/>
     <save label="length_1"/>
@@ -121,18 +117,6 @@
     <save label="Charmass_os_src_qn0"/>
     <save label="Charmass_os_src_qn1"/>
     <save label="Charmass_os_src_qn2"/>
-    <save label="pE_os_src_qn0"/>
-    <save label="pE_os_src_qn1"/>
-    <save label="pE_os_src_qn2"/>
-    <save label="ux_os_src_qn0"/>
-    <save label="ux_os_src_qn1"/>
-    <save label="ux_os_src_qn2"/>
-    <save label="uy_os_src_qn0"/>
-    <save label="uy_os_src_qn1"/>
-    <save label="uy_os_src_qn2"/>
-    <save label="uz_os_src_qn0"/>
-    <save label="uz_os_src_qn1"/>
-    <save label="uz_os_src_qn2"/>
     <save label="weight_os_src_qn0"/>
     <save label="weight_os_src_qn1"/>
     <save label="Tar"/>
@@ -153,7 +137,8 @@
     <save label="adiabaticenthalpy" table_lookup="true"/>
     <save label="N2" table_lookup="true"/>
     <save label="mixture_molecular_weight" table_lookup="true"/>
-    <checkpoint cycle="2" walltimeInterval="1600" walltimeStart="0"/>
+    <!--<checkpoint cycle="2" walltimeInterval="1600" walltimeStart="0"/>-->
+    <checkpoint cycle="2" interval="0.0029"/>
     <outputDoubleAsFloat/>
     <compression>gzip</compression>
   </DataArchiver>
@@ -193,7 +178,7 @@
         <BCType id="all" label="residence_time" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="abskg" var="ForcedDirichlet">
+        <BCType id="all" label="abskt" var="ForcedDirichlet">
           <value>1.0</value>
         </BCType>
         <BCType id="all" label="ux_qn0" var="Dirichlet">
@@ -312,7 +297,7 @@
         <BCType id="all" label="residence_time" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="abskg" var="ForcedDirichlet">
+        <BCType id="all" label="abskt" var="ForcedDirichlet">
           <value>1.0</value>
         </BCType>
         <BCType id="all" label="ux_qn0" var="Dirichlet">
@@ -431,7 +416,7 @@
         <BCType id="all" label="residence_time" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="abskg" var="ForcedDirichlet">
+        <BCType id="all" label="abskt" var="ForcedDirichlet">
           <value>1.0</value>
         </BCType>
         <BCType id="all" label="ux_qn0" var="Dirichlet">
@@ -550,7 +535,7 @@
         <BCType id="all" label="residence_time" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="abskg" var="ForcedDirichlet">
+        <BCType id="all" label="abskt" var="ForcedDirichlet">
           <value>1.0</value>
         </BCType>
         <BCType id="all" label="ux_qn0" var="Dirichlet">
@@ -669,7 +654,7 @@
         <BCType id="all" label="residence_time" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="abskg" var="ForcedDirichlet">
+        <BCType id="all" label="abskt" var="ForcedDirichlet">
           <value>1.0</value>
         </BCType>
         <BCType id="all" label="ux_qn0" var="Dirichlet">
@@ -788,7 +773,7 @@
         <BCType id="all" label="residence_time" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="abskg" var="ForcedDirichlet">
+        <BCType id="all" label="abskt" var="ForcedDirichlet">
           <value>1.0</value>
         </BCType>
         <BCType id="all" label="ux_qn0" var="Dirichlet">
@@ -907,7 +892,7 @@
         <BCType id="all" label="residence_time" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="abskg" var="ForcedDirichlet">
+        <BCType id="all" label="abskt" var="ForcedDirichlet">
           <value>1.0</value>
         </BCType>
         <BCType id="all" label="ux_qn0" var="Dirichlet">
@@ -1026,7 +1011,7 @@
         <BCType id="all" label="residence_time" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="abskg" var="ForcedDirichlet">
+        <BCType id="all" label="abskt" var="ForcedDirichlet">
           <value>1.0</value>
         </BCType>
         <BCType id="all" label="ux_qn0" var="Dirichlet">
@@ -1145,7 +1130,7 @@
         <BCType id="all" label="residence_time" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="abskg" var="ForcedDirichlet">
+        <BCType id="all" label="abskt" var="ForcedDirichlet">
           <value>1.0</value>
         </BCType>
         <BCType id="all" label="ux_qn0" var="Dirichlet">
@@ -1264,7 +1249,7 @@
         <BCType id="all" label="residence_time" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="abskg" var="ForcedDirichlet">
+        <BCType id="all" label="abskt" var="ForcedDirichlet">
           <value>1.0</value>
         </BCType>
         <BCType id="all" label="ux_qn0" var="Dirichlet">
@@ -1383,7 +1368,7 @@
         <BCType id="all" label="residence_time" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="abskg" var="ForcedDirichlet">
+        <BCType id="all" label="abskt" var="ForcedDirichlet">
           <value>1.0</value>
         </BCType>
         <BCType id="all" label="ux_qn0" var="Dirichlet">
@@ -1502,7 +1487,7 @@
         <BCType id="all" label="residence_time" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="abskg" var="ForcedDirichlet">
+        <BCType id="all" label="abskt" var="ForcedDirichlet">
           <value>1.0</value>
         </BCType>
         <BCType id="all" label="ux_qn0" var="Neumann">
@@ -1592,9 +1577,9 @@
       <Box label="upper">
         <lower>[0.0,0,0]</lower>
         <upper>[1.7,0.6,0.6]</upper>
-        <resolution>[35,35,35]</resolution>
+        <resolution>[30,30,30]</resolution>
         <extraCells>[1,1,1]</extraCells>
-        <patches>[1,1,1]</patches>
+        <patches>[2,2,2]</patches>
       </Box>
     </Level>
   </Grid>
@@ -1606,32 +1591,6 @@
   <CFD>
     <ARCHES>
       <PropertyModels>
-        <model label="soot" type="cc_constant">
-          <initialization type="constant">
-            <constant>0.0</constant>
-          </initialization>
-          <constant>0.0</constant>
-        </model>
-        <model label="abskg" type="radiation_properties">
-          <initialization type="constant">
-            <constant>0.0</constant>
-          </initialization>
-          <calculator type="hottel_sarofim">
-            <opl>0.2647</opl>
-            <abskg label="gas_abskg"/>
-            <soot label="soot"/>
-            <particles type="constantCIF">
-              <abskp label="abskp"/>
-              <radiateAtGasTemp>false</radiateAtGasTemp>
-              <model_type>planck</model_type>
-              <part_temp_label>temperature_coal</part_temp_label>
-              <part_size_label>length</part_size_label>
-              <complex_ir_real>2.0</complex_ir_real>
-              <complex_ir_imag>-0.6</complex_ir_imag>
-              <const_asymmFact>1</const_asymmFact>
-            </particles>
-          </calculator>
-        </model>
         <model label="heat_loss" type="heat_loss">
           <initialization type="constant">
             <constant>0.764</constant>
@@ -1641,17 +1600,35 @@
           <adiabatic_enthalpy_label>adiabaticenthalpy</adiabatic_enthalpy_label>
           <use_Ha_lookup>false</use_Ha_lookup>
         </model>
-        <model label="Radsoot" type="fv_soot">
-          <initialization type="constant">
-            <constant>0.0</constant>
-          </initialization>
-          <opl>3.0</opl>
-          <density_label>density</density_label>
-          <Ysoot_label>Ysoot</Ysoot_label>
-          <temperature_label>temperature</temperature_label>
-          <absorption_label>abskg</absorption_label>
-        </model>
+
       </PropertyModels>
+
+      <PropertyModelsV2>
+
+        <model type="sootVolumeFrac" label="soot">
+          <Ysoot_label>Ysoot</Ysoot_label>
+          <density_label>density</density_label>
+          <soot_density>1900</soot_density>
+        </model>
+
+        <model label="abskg_spec" type="spectralProperties">
+            <sootVolumeFrac>soot</sootVolumeFrac>
+        </model>
+
+        <model type="partRadProperties" label="abskp" >
+           <subModel>constantCIF</subModel>
+           <part_temp_label>temperature_coal</part_temp_label>
+           <part_size_label>length</part_size_label>
+           <radiateAtGasTemp>false</radiateAtGasTemp>
+           <model_type>planck</model_type>
+           <complex_ir_real>2.0</complex_ir_real>
+           <complex_ir_imag>-0.6</complex_ir_imag>
+           <const_asymmFact>1</const_asymmFact>
+        </model>
+
+      </PropertyModelsV2>
+
+
       <ParticleProperties type="coal">
         <diameter_distribution>[15e-6,50e-6,150e-6]</diameter_distribution>
         <!-- [m] -->
@@ -1862,10 +1839,10 @@
             </multiply_by_variable>
           </src>
           <src label="divQ" type="do_radiation">
-            <calc_frequency>20</calc_frequency>
-            <abskg label="abskg"/>
-            <DORadiationModel type="linearSolve">
-              <ordinates>8</ordinates>
+            <calc_frequency>2</calc_frequency>
+            <abskt label="abskt"/>
+            <DORadiationModel type="sweepSpatiallyParallel">
+              <ordinates>6</ordinates>
               <LinearSolver type="hypre">
                 <res_tol>1.0e-8</res_tol>
                 <ksptype>pfmg</ksptype>

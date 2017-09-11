@@ -91,7 +91,7 @@
                                                                           spectralProperties,
                                                                           wall_thermal_resistance'">
 
-              <absorption_modifier        spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type partRadProperties gasRadProperties"/> <!-- multiplicative modifier on gas or particle absorption coefficients, does not affect scattering coefficients -->
+              <absorption_modifier        spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type partRadProperties gasRadProperties spectralProperties"/> <!-- multiplicative modifier on gas or particle absorption coefficients, does not affect scattering coefficients -->
               <subModel                   spec="REQUIRED STRING  'constantCIF, basic, Coal'"   need_applies_to="type partRadProperties" />
 
 

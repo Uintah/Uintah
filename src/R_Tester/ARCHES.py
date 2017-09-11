@@ -121,6 +121,7 @@ NIGHTLYTESTS = [
    ("OFC4_smith"                        , "Coal/OFC4_smith.ups"                                     , 3   , "All"  , ["exactComparison"      , "no_cuda"]) ,
    ("OFC_smith2016"                     , "Coal/OFC_smith2016.ups"                                  , 3   , "All"  , ["exactComparison"      , "no_cuda"]) ,
    ("OFC4_hybrid"                       , "Coal/OFC4_hybrid.ups"                                    , 3   , "All"  , ["exactComparison"      , "no_cuda"]) ,  
+   ("BrownSoot_spectral"                , "Coal/BrownSoot_spectral.ups"                             , 8   , "All" ,  ["exactComparison"      , "no_cuda"]) ,
    ("Coal_Nox"                          , "Coal/Coal_Nox.ups"                                       , 8   , "All"  , ["exactComparison"      , "no_cuda"]) ,  
 #__________________________________
    
@@ -194,7 +195,9 @@ LOCALTESTS = [
 #__________________________________
 # THESE TESTS FAIL TO RUN TO COMPLETION ON A CUDA ENABLED BUILD, "corrupted double-linked list: 0x00000000024b8120 ***"
    ("coal_RadPropsPlanck"               , "Coal/coal_RadPropsPlanck.ups"                            , 1.1 , "All" , ["exactComparison"    ,  "no_cuda"]) ,
-   ("OFC4"                              , "Coal/OFC4.ups"                                           , 3   , "All"  , ["exactComparison"   ,  "no_cuda"]) ,
+   ("OFC4"                              , "Coal/OFC4.ups"                                           , 3   , "All" , ["exactComparison"   ,  "no_cuda"]) ,
+   ("BrownSoot_spectral"                , "Coal/BrownSoot_spectral.ups"                             , 8   , "All" , ["exactComparison"   ,  "no_cuda"]) ,
+
    ("coal_channel_hi_vel"               , "Coal/coal_channel_hi_vel.ups"                            , 1.1 , "All"  , ["exactComparison"   ,  "no_cuda"]) , 
    ("1GW_RT"                            , "Coal/1GW_RT.ups"                                         , 2   , "All" , ["exactComparison"    ,  "no_cuda"]) , 
    ("1GW_em_tc"                         , "Coal/1GW_em_tc.ups"                                      , 2   , "All"  , ["exactComparison"     , "no_cuda"]) , 
