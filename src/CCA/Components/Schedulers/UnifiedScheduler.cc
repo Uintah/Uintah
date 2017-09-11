@@ -548,6 +548,9 @@ UnifiedScheduler::runTask( DetailedTask*         dtask
 
     g_lb_mutex.lock();
     {
+      // Do the global and local per task monitoring
+      sumTaskMonitoringValues( dtask );
+
       double total_task_time = dtask->task_exec_time();
       if (g_exec_out) {
         g_exec_times[dtask->getTask()->getName()] += total_task_time;
@@ -556,14 +559,14 @@ UnifiedScheduler::runTask( DetailedTask*         dtask
       if (!dtask->getTask()->getHasSubScheduler()) {
         //add my task time to the total time
         mpi_info_[TotalTask] += total_task_time;
-        if (!m_shared_state->isCopyDataTimestep() && dtask->getTask()->getType() != Task::Output) {
+        if (!m_shared_state->isCopyDataTimestep() &&
+	    dtask->getTask()->getType() != Task::Output) {
           //add contribution for patchlist
           getLoadBalancer()->addContribution(dtask, total_task_time);
         }
       }
     }
     g_lb_mutex.unlock();
-
 
     //---------------------------------------------------------------------------
     // New way of managing single MPI requests - avoids MPI_Waitsome & MPI_Donesome - APH 07/20/16

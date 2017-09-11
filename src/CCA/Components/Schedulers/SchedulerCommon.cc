@@ -39,6 +39,7 @@
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/LocallyComputedPatchVarMap.h>
+#include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/NCVariable.h>
@@ -121,14 +122,27 @@ SchedulerCommon::~SchedulerCommon()
   if (m_locallyComputedPatchVarMap) {
     delete m_locallyComputedPatchVarMap;
   }
+
+  // Task monitoring variables.
+  if( m_monitoring )
+  {
+    // Loop through the global (0) and local (1) tasks
+    for (unsigned int i = 0; i < 2; ++i)
+    {
+      for( const auto &it : m_monitoring_tasks[i] )
+        VarLabel::destroy( it.second );
+      
+      m_monitoring_values[i].clear();
+    }
+  }
 }
 
 //______________________________________________________________________
 //
 void
 SchedulerCommon::checkMemoryUse( unsigned long & memUsed,
-				 unsigned long & highwater,
-				 unsigned long & maxMemUsed )
+                                 unsigned long & highwater,
+                                 unsigned long & maxMemUsed )
 {
   highwater = 0; 
   memUsed   = 0;
@@ -377,9 +391,67 @@ SchedulerCommon::problemSetup( const ProblemSpecP & prob_spec, SimulationStateP 
         std::cout << "<VarTracker> not specified in .ups file... no variable tracking will take place.\n";
       }
     }
+
+    // Task monitoring variables.
+    ProblemSpecP taskMonitoring = params->findBlock("TaskMonitoring");
+    if (taskMonitoring)
+    {
+      // Record the task runtime attributes on a per cell basis rather
+      // than a per patch basis. Default is per patch.
+      taskMonitoring->getWithDefault("per_cell", m_monitoring_per_cell, false);
+
+      // Maps for the global tasks to be monitored.
+      for (ProblemSpecP attr = taskMonitoring->findBlock("attribute");
+           attr != nullptr; attr = attr->findNextBlock("attribute"))
+      {
+        std::string attribute = attr->getNodeValue();
+
+        // Set the variable name AllTasks/ plus the attribute name and
+        // store in a map for easy lookup by the attribute name.
+        m_monitoring_tasks[0][attribute] =
+          VarLabel::create( "AllTasks/" + attribute,
+                            PerPatch<double>::getTypeDescription() );
+
+        if (d_myworld->myrank() == 0)
+          std::cout << "--  Monitoring attribute " << attribute << " "
+                    << "for all tasks" << std::endl;
+      }
+
+      // Maps for the specific tasks to be monitored.
+      for (ProblemSpecP task = taskMonitoring->findBlock("task");
+           task != nullptr; task = task->findNextBlock("task"))
+      {
+        // Get the task and attribute to be monitored.
+        std::map<std::string, std::string> attributes;
+        task->getAttributes(attributes);
+        std::string taskName  = attributes["name"];
+        std::string attribute = attributes["attribute"];
+
+        // Strip off the colons and replace with a forward slash so
+        // the tasks are divided by component.
+        std::string varName = taskName;
+        std::size_t found = varName.find("::");
+        varName.replace(found, 2 ,"/");
+        
+        // Set the variable name to the task name plus the attribute
+        // name and store in a map for easy lookup by the task and
+        // attribute name.
+        m_monitoring_tasks[1][taskName + "::" + attribute] =
+          VarLabel::create( varName + "/" + attribute,
+                            PerPatch<double>::getTypeDescription() );
+
+        if (d_myworld->myrank() == 0)
+          std::cout << "--  Monitoring attribute " << attribute << " "
+                    << "for task: " << taskName << std::endl;
+      }
+    }
+
+    m_monitoring = (m_monitoring_tasks[0].size() ||
+                    m_monitoring_tasks[1].size() );
   }
 
-  // If small_messages not specified in UPS Scheduler block, still report what's used
+  // If small_messages not specified in UPS Scheduler block, still
+  // report what's used
   if (m_use_small_messages) {
     proc0cout << "   Using small, individual MPI messages (no message combining)\n";
   }
@@ -392,8 +464,6 @@ SchedulerCommon::problemSetup( const ProblemSpecP & prob_spec, SimulationStateP 
   
 #ifdef HAVE_VISIT
   static bool initialized = false;
-
-  std::cerr << __FILE__ << "  " << m_shared_state->getVisIt() << std::endl;
 
   // Running with VisIt so add in the variables that the user can
   // modify.
@@ -1176,7 +1246,7 @@ SchedulerCommon::compile()
   if (m_dws[0]) {
     oldGrid = const_cast<Grid*>(get_dw(0)->getGrid());
   }
-
+  
   if (m_num_tasks > 0) {
 
     DOUT(g_schedulercommon_dbg, "Rank-" << d_myworld->myrank() << " SchedulerCommon starting compile");
@@ -1228,7 +1298,7 @@ SchedulerCommon::compile()
       m_locallyComputedPatchVarMap->addComputedPatchSet(patches);
     }
   }
- 
+
 #else
   for (size_t i = 0; i < m_task_graphs.size(); i++) {
     DetailedTasks* dts = m_task_graphs[i]->getDetailedTasks();
@@ -1412,6 +1482,7 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP & grid, SimulationInterface 
 
   for (int L = 0; L < grid->numLevels(); L++) {
     LevelP newLevel = grid->getLevel(L);
+
     if (L > 0) {
 
       if (L >= oldGrid->numLevels()) {
@@ -1428,9 +1499,10 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP & grid, SimulationInterface 
         std::vector<int> myPatchIDs;
         LevelP oldLevel = oldDataWarehouse->getGrid()->getLevel(L);
 
-        // Go through the patches, and find if there are patches that weren't entirely 
-        // covered by patches on the old grid, and interpolate them.  
-        // then after, copy the data, and if necessary, overwrite interpolated data
+        // Go through the patches, and find if there are patches that
+        // weren't entirely covered by patches on the old grid, and
+        // interpolate them.  then after, copy the data, and if
+        // necessary, overwrite interpolated data
         const PatchSubset *ps = getLoadBalancer()->getPerProcessorPatchSet(newLevel)->getSubset(d_myworld->myrank());
 
         // for each patch I own
@@ -1532,6 +1604,9 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP & grid, SimulationInterface 
         dataTasks.back()->computes(var, matls);
       }
       addTask(dataTasks.back(), copyPatchSets[L].get_rep(), m_shared_state->allMaterials());
+
+      // Monitoring tasks must be scheduled last!!
+      scheduleTaskMonitoring( copyPatchSets[L].get_rep() );      
     }
 
     //__________________________________
@@ -1548,6 +1623,9 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP & grid, SimulationInterface 
         dataTasks.back()->modifies(var, matls);
       }
       addTask(dataTasks.back(), refinePatchSets[L].get_rep(), m_shared_state->allMaterials());
+
+      // Monitoring tasks must be scheduled last!!
+      scheduleTaskMonitoring( refinePatchSets[L].get_rep());      
     }
 
     //__________________________________
@@ -1923,7 +2001,6 @@ SchedulerCommon::scheduleParticleRelocation( const LevelP       & coarsestLevelw
 
 //______________________________________________________________________
 //
-
 void
 SchedulerCommon::overrideVariableBehavior( const std::string & var
                                          ,       bool          treatAsOld
@@ -1944,19 +2021,232 @@ SchedulerCommon::overrideVariableBehavior( const std::string & var
     m_no_scrub_vars.insert(var);
   }
 
-  // ignore copying this variable between AMR levels
-  if (notCopyData) {
-    m_no_copy_data_vars.insert(var);
-  }
-
   // set variable not to scrub (normally when needed between a normal taskgraph
   // and the regridding phase)
   if (noScrub) {
     m_no_scrub_vars.insert(var);
   }
 
+  // ignore copying this variable between AMR levels
+  if (notCopyData) {
+    m_no_copy_data_vars.insert(var);
+  }
+
   // do not checkpoint this variable.
   if (noCheckpoint) {
     m_no_checkpoint_vars.insert(var);
+  }
+}
+
+//______________________________________________________________________
+//
+void
+SchedulerCommon::clearTaskMonitoring()
+{
+  // Loop through the global (0) and local (1) tasks
+  for (unsigned int i = 0; i < 2; ++i)
+    m_monitoring_values[i].clear();
+}
+
+//______________________________________________________________________
+// Schedule the recording of the task monitoring attribute
+// values. This task should be the last task so that the writing is
+// done after all task have been executed.
+void
+SchedulerCommon::scheduleTaskMonitoring( const LevelP& level )
+{
+  if( !m_monitoring )
+    return;
+  
+  // Create and schedule a task that will record each of the
+  // tasking monitoring attributes.
+  Task* t = scinew Task("SchedulerCommon::recordTaskMonitoring",
+                        this, &SchedulerCommon::recordTaskMonitoring);
+
+  Ghost::GhostType gn = Ghost::None;
+
+  for (unsigned i = 0; i < 2; ++i)
+  {
+    for( const auto &it : m_monitoring_tasks[i] )
+    {
+      t->computes( it.second );
+      
+      overrideVariableBehavior(it.second->getName(),
+                               false, false, true, true, true);
+      // treatAsOld copyData noScrub notCopyData noCheckpoint
+    }
+  }
+
+  addTask(t, level->eachPatch(), m_shared_state->allMaterials());
+}
+
+//______________________________________________________________________
+// Schedule the recording of the task monitoring attribute
+// values. This task should be the last task so that the writing is
+// done after all task have been executed.
+void
+SchedulerCommon::scheduleTaskMonitoring( const PatchSet* patches )
+{
+  if( !m_monitoring )
+    return;
+
+  // Create and schedule a task that will record each of the
+  // tasking monitoring attributes.
+  Task* t = scinew Task("SchedulerCommon::recordTaskMonitoring",
+                        this, &SchedulerCommon::recordTaskMonitoring);
+
+  Ghost::GhostType gn = Ghost::None;
+
+  for (unsigned i = 0; i < 2; ++i)
+  {
+    for( const auto &it : m_monitoring_tasks[i] )
+    {
+      t->computes( it.second );
+      
+      overrideVariableBehavior(it.second->getName(),
+                               false, false, true, true, true);
+      // treatAsOld copyData noScrub notCopyData noCheckpoint
+    }
+  }
+  
+  addTask(t, patches, m_shared_state->allMaterials());
+}
+
+//______________________________________________________________________
+// Record the global task monitoring attribute values into the data
+// warehouse.
+void SchedulerCommon::recordTaskMonitoring(const ProcessorGroup*,  
+                                           const PatchSubset* patches,
+                                           const MaterialSubset* /*matls*/,
+                                           DataWarehouse* old_dw,
+                                           DataWarehouse* new_dw)
+{
+  // For all of the patches record the tasking monitoring attribute
+  // value.
+  const Level* level = getLevel(patches);
+
+  for(int p=0; p<patches->size(); p++)
+  {
+    const Patch* patch = patches->get(p);
+
+    // Loop through the global (0) and local (1) tasks
+    for (unsigned int i = 0; i < 2; ++i)
+    {
+      for( const auto &it : m_monitoring_tasks[i] )
+      {
+        PerPatch< double > value =
+          m_monitoring_values[i][it.first][patch->getID()];
+
+        new_dw->put( value, it.second, 0, patch);
+      }
+    }
+  }
+}
+
+//______________________________________________________________________
+// Sum the task monitoring attribute values
+void
+SchedulerCommon::sumTaskMonitoringValues(DetailedTask * dtask)
+{
+  if( !m_monitoring )
+    return;
+
+  const PatchSubset *patches = dtask->getPatches();
+          
+  if( patches && patches->size() )
+  {
+    // Compute the cost on a per cell basis so the measured value can
+    // be distributed proportionally by cells
+    double num_cells = 0;
+      
+    for(int p=0; p<patches->size(); p++)
+    {
+      const Patch* patch = patches->get(p);
+      num_cells += patch->getNumExtraCells();
+    }
+
+    double weight;
+
+    // Compute the value on a per cell basis.
+    if( m_monitoring_per_cell )
+      weight = num_cells;
+    // Compute the value on a per patch basis.
+    else
+      weight = 1;
+    
+    // Loop through the global (0) and local (1) tasks
+    for (unsigned int i = 0; i < 2; ++i)
+    {
+      for( const auto &it : m_monitoring_tasks[i] )
+      {
+        // Strip off the attribute name from the task name.
+        std::string taskName = it.first;
+        size_t found = taskName.find_last_of("::");
+        // std::string attribute = taskName.substr(found + 1);
+        taskName = taskName.substr(0, found-1);
+
+        // Is this task being monitored ?
+        if( (i == 0) || // Global monitoring yes, otherwise check.
+            (i == 1 && taskName == dtask->getTask()->getName()) )
+        {
+          bool loadBalancerCost = false;
+          double value;
+
+          // Currently the montioring is limited to the LoadBalancer
+          // cost, task exec time, and task wait time.
+          if( it.first.find( "LoadBalancerCost" ) != std::string::npos )
+          {
+            // The same code is in runTask of the specific scheduler
+            // (MPIScheduler and UnifiedScheduler) to use the task
+            // execution time which is then weighted by the number of
+            // cells in CostModelForecaster::addContribution
+            if (!dtask->getTask()->getHasSubScheduler() &&
+                !m_shared_state->isCopyDataTimestep() &&
+                dtask->getTask()->getType() != Task::Output) {
+              value = dtask->task_exec_time() / num_cells;
+
+              loadBalancerCost = true;
+            }
+            else
+              value = 0;
+          }
+          else if( it.first.find( "ExecTime" ) != std::string::npos )
+            value = dtask->task_exec_time() / weight;
+          else if( it.first.find( "WaitTime" ) != std::string::npos )
+            value = dtask->task_wait_time() / weight;
+          else
+            value = 0;
+          
+          if( value != 0.0 )
+          {
+            // Loop through patches and add the contribution.
+            for(int p=0; p<patches->size(); ++p)
+            {
+              const Patch* patch = patches->get(p);
+              
+              if( m_monitoring_per_cell || loadBalancerCost )
+                m_monitoring_values[i][it.first][patch->getID()] +=
+                  patch->getNumExtraCells() * value;
+              else
+                m_monitoring_values[i][it.first][patch->getID()] +=
+                  value;
+
+              // A cheat ... the only time this task will come here is
+              // after the value has been written (and the task is
+              // completed) so the value can be overwritten. This
+              // allows the monitoring to be monitored.
+              if( dtask->getTask()->getName() ==
+                  "SchedulerCommon::recordTaskMonitoring" )
+              {
+                PerPatch< double > value =
+                  m_monitoring_values[i][it.first][patch->getID()];
+
+                this->getLastDW()->put( value, it.second, 0, patch);
+              }
+            }
+          }
+        }
+      }
+    }
   }
 }

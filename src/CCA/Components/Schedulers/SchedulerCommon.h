@@ -34,6 +34,7 @@
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/Parallel/UintahParallelComponent.h>
+#include <Core/Util/Timers/Timers.hpp>
 
 #include <iosfwd>
 #include <map>
@@ -93,8 +94,8 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     virtual void doEmitTaskGraphDocs();
 
     virtual void checkMemoryUse( unsigned long & memUsed,
-				 unsigned long & highwater,
-				 unsigned long & maxMemUsed );
+                                 unsigned long & highwater,
+                                 unsigned long & maxMemUsed );
 
     // sbrk memory start location (for memory tracking)
     virtual void   setStartAddr( char * start ) { start_addr = start; }
@@ -232,6 +233,20 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
 
     virtual void scheduleAndDoDataCopy( const GridP & grid, SimulationInterface * sim );
 
+    // Clear the recorded task monitoring attribute values.
+    virtual void clearTaskMonitoring();
+
+    // Schedule the recording of the task monitoring attribute values.
+    virtual void scheduleTaskMonitoring( const LevelP& level );
+    virtual void scheduleTaskMonitoring( const PatchSet* patches );
+
+    // Record the task monitoring attribute values.
+    virtual void recordTaskMonitoring(const ProcessorGroup*,  
+                                      const PatchSubset* patches,
+                                      const MaterialSubset* /*matls*/,
+                                      DataWarehouse* old_dw,
+                                      DataWarehouse* new_dw);
+  
     //! override default behavior of copying, scrubbing, and such
     virtual void overrideVariableBehavior( const std::string & var
                                          ,       bool          treatAsOld
@@ -321,6 +336,17 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     std::vector<std::string>   m_tracking_vars;
     std::vector<std::string>   m_tracking_tasks;
     std::vector<Task::WhichDW> m_tracking_dws;
+
+    // Optional task monitoring.
+    bool m_monitoring;          // Monitoring on/off.
+    bool m_monitoring_per_cell; // Record the task runtime attributes on a per
+                                // cell basis rather than a per patch basis.
+    // Maps for the global or local tasks to be monitored.
+    std::map<std::string, const VarLabel *>       m_monitoring_tasks[2];
+    std::map<std::string, std::map<int, double> > m_monitoring_values[2];
+
+    // Method for summing up the task contributions.
+    void sumTaskMonitoringValues(DetailedTask * dtask);
 
     // so we can manually copy vars between AMR levels
     std::set<std::string> m_copy_data_vars;

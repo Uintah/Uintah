@@ -342,8 +342,8 @@ SimulationController::restartArchiveSetup( void )
     Dir checkpointRestartDir = restartFromDir.getSubdir( "checkpoints" );
 
     d_restart_archive = scinew DataArchive( checkpointRestartDir.getName(),
-					    d_myworld->myrank(),
-					    d_myworld->size() );
+                                            d_myworld->myrank(),
+                                            d_myworld->size() );
 
     vector<int>    indices;
     vector<double> times;
@@ -437,6 +437,7 @@ SimulationController::schedulerSetup( void )
   d_scheduler->setInitTimestep( true );
   d_scheduler->setRestartInitTimestep( d_restarting );
   d_scheduler->initialize( 1, 1 );
+  d_scheduler->clearTaskMonitoring();
 
   // Note: there are other downstream calls to d_scheduler to complete
   // the setup. See outOfSyncSetup().
@@ -514,7 +515,7 @@ SimulationController::gridSetup( void )
 
   if( d_currentGridP->numLevels() == 0 ) {
     throw InternalError("No problem (no levels in grid) specified.",
-			__FILE__, __LINE__);
+                        __FILE__, __LINE__);
   }
    
   // Set the dimensionality of the problem.
@@ -608,10 +609,10 @@ SimulationController::timeStateSetup()
     simdbg << "Restarting... loading data\n";
     
     d_restart_archive->restartInitialize( d_restartIndex,
-					  d_currentGridP,
-					  d_scheduler->get_dw(1),
-					  d_lb,
-					  &d_startSimTime );
+                                          d_currentGridP,
+                                          d_scheduler->get_dw(1),
+                                          d_lb,
+                                          &d_startSimTime );
       
     // Set the delt to the value from the last simulation.  If in the
     // last sim delt was clamped based on the values of prevDelt, then
@@ -1205,7 +1206,7 @@ SimulationController::CheckInSitu( visit_simulation_data * visitSimData,
     walltimers.TimeStep.stop();
 
     walltimers.InSitu.start();
-  
+
     // Update all of the simulation grid and time dependent variables.
     visit_UpdateSimData( visitSimData, d_currentGridP,
                          d_simTime, d_prev_delt, d_delt,

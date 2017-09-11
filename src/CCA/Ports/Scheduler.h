@@ -192,6 +192,9 @@ class Scheduler : public UintahParallelPort {
     //! Schedule copying data to new grid after regridding
     virtual void scheduleAndDoDataCopy( const GridP & grid, SimulationInterface * sim ) = 0;
 
+    virtual void clearTaskMonitoring() = 0;
+    virtual void scheduleTaskMonitoring( const LevelP& level ) = 0;
+    virtual void scheduleTaskMonitoring( const PatchSet* patches ) = 0;
 
     virtual void overrideVariableBehavior( const std::string & var
                                          ,       bool          treatAsOld
