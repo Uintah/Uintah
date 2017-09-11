@@ -90,14 +90,14 @@ SampleTask::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   // Note that there are 'const' versions of these access calls to tsk_info as well. Just use a
   // tsk_info->get_const_*
   // By reference
-  CCVariable<double>& A_ref = tsk_info->get_uintah_field_add<CCVariable<double> >("A");
+  //CCVariable<double>& A_ref = tsk_info->get_uintah_field_add<CCVariable<double> >("A");
   // Pointer
-  CCVariable<double>* A_ptr = tsk_info->get_uintah_field<CCVariable<double> >("A");
+  //CCVariable<double>* A_ptr = tsk_info->get_uintah_field<CCVariable<double> >("A");
   // Traditional Uintah Style
   // But, in this case you lose some of the convenient feature of the Arches Task Interface
   // which may or may not be important to you.
-  CCVariable<double> A_trad;
-  tsk_info->get_unmanaged_uintah_field<CCVariable<double> >("A", A_trad);
+  //CCVariable<double> A_trad;
+  //tsk_info->get_unmanaged_uintah_field<CCVariable<double> >("A", A_trad);
 
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
   Uintah::parallel_for( range, [&](int i, int j, int k){

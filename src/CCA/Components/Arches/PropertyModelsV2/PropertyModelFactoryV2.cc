@@ -70,7 +70,7 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
         db_model->findBlock("variable")->getAttribute("type", grid_type);
         db_model->findBlock("new_variable")->getAttribute("type", grid_type2);
 
-        TaskInterface::TaskBuilder* tsk;
+        TaskInterface::TaskBuilder* tsk = NULL;
 
         if ( grid_type == "CC" ){
 
