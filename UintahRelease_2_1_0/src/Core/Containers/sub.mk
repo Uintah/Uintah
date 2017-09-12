@@ -37,7 +37,7 @@ SRCS     += $(SRCDIR)/ConsecutiveRangeSet.cc \
 
 PSELIBS := Core/Exceptions
 
-LIBS :=
+LIBS := $(Z_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

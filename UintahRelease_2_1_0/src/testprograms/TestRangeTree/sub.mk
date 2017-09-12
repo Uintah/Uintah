@@ -38,6 +38,6 @@ PSELIBS := \
 	Core/Containers \
 	testprograms/TestSuite
 
-LIBS := $(M_LIBRARY)
+LIBS := $(M_LIBRARY) $(Z_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
