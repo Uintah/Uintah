@@ -49,7 +49,7 @@ SRCS   += \
           $(SRCDIR)/UintahPetscError.cc        \
           $(SRCDIR)/VariableNotFoundInGrid.cc  
 
-PSELIBS := 
+PSELIBS := $(Z_LIBRARY)
 LIBS := $(DL_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
