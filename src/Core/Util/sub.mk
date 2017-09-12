@@ -53,6 +53,6 @@ endif
 
 PSELIBS := Core/Containers Core/Exceptions Core/Malloc
 
-LIBS := $(DL_LIBRARY) $(THREAD_LIBRARY) $(SOCKET_LIBRARY) $(CUDA_LIBRARY)
+LIBS := $(DL_LIBRARY) $(Z_LIBRARY) $(THREAD_LIBRARY) $(SOCKET_LIBRARY) $(CUDA_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

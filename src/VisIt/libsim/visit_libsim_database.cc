@@ -130,7 +130,7 @@ visit_handle visit_SimGetMetaData(void *cbdata)
     return VISIT_INVALID_HANDLE;
   }
 
-  int timestate = sim->cycle;
+  // int timestate = sim->cycle;
   
   bool &useExtraCells = sim->useExtraCells;
   // bool &forceMeshReload = sim->forceMeshReload;
@@ -807,7 +807,7 @@ void visit_CalculateDomainNesting(TimeStepInfo* stepInfo,
 {
   static std::vector< int * > cp_ptrs;
   
-  for (int p=0; p<cp_ptrs.size() ; ++p)
+  for (unsigned int p=0; p<cp_ptrs.size() ; ++p)
     delete[] cp_ptrs[p];
       
   cp_ptrs.clear();
@@ -1412,7 +1412,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
   std::string &mesh_for_patch_data = sim->mesh_for_patch_data;
   TimeStepInfo* &stepInfo = sim->stepInfo;
 
-  int timestate = sim->cycle;
+  // int timestate = sim->cycle;
 
   bool isParticleVar  = false;
   bool isInternalVar  = false;
@@ -1665,9 +1665,9 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
         
         if (strncmp(varname, "patch/bounds/low", 16) == 0 )
           value = &plow[0];
-        else if( strncmp(varname, "patch/bounds/high", 17) == 0)
+        else // if( strncmp(varname, "patch/bounds/high", 17) == 0)
           value = &phigh[0];
-        
+
         for (int i=0; i<gd->num; i++)
           for (int c=0; c<3; c++)
             gd->data[i*gd->components+c] = value[c];

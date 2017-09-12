@@ -34,6 +34,6 @@ SRCDIR := testprograms/TestSuite
 SRCS := $(SRCDIR)/Test.cc $(SRCDIR)/Suite.cc $(SRCDIR)/SuiteTree.cc
 
 PSELIBS := Core/Exceptions
-LIBS :=
+LIBS := $(Z_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
