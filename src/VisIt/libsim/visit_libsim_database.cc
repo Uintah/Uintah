@@ -1682,9 +1682,9 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
         
         if (strncmp(varname, "patch/bounds/low", 16) == 0 )
           value = &plow[0];
-        else if( strncmp(varname, "patch/bounds/high", 17) == 0)
+        else // if( strncmp(varname, "patch/bounds/high", 17) == 0)
           value = &phigh[0];
-        
+
         for (int i=0; i<gd->num; i++)
           for (int c=0; c<3; c++)
             gd->data[i*gd->components+c] = value[c];
