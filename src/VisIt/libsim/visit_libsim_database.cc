@@ -130,7 +130,7 @@ visit_handle visit_SimGetMetaData(void *cbdata)
     return VISIT_INVALID_HANDLE;
   }
 
-  int timestate = sim->cycle;
+  // int timestate = sim->cycle;
   
   bool &useExtraCells = sim->useExtraCells;
   // bool &forceMeshReload = sim->forceMeshReload;
@@ -824,7 +824,7 @@ void visit_CalculateDomainNesting(TimeStepInfo* stepInfo,
 {
   static std::vector< int * > cp_ptrs;
   
-  for (int p=0; p<cp_ptrs.size() ; ++p)
+  for (unsigned int p=0; p<cp_ptrs.size() ; ++p)
     delete[] cp_ptrs[p];
       
   cp_ptrs.clear();
@@ -1429,7 +1429,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
   std::string &mesh_for_patch_data = sim->mesh_for_patch_data;
   TimeStepInfo* &stepInfo = sim->stepInfo;
 
-  int timestate = sim->cycle;
+  // int timestate = sim->cycle;
 
   bool isParticleVar  = false;
   bool isInternalVar  = false;
