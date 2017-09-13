@@ -851,8 +851,6 @@ MAKE_ARCHIVES
 STATIC_BUILD_DEF
 ac_ct_F77
 NO_FORTRAN
-DEF_PHASEFIELD
-DEF_HEAT
 DEF_WASATCH
 DEF_MODELS_RADIATION
 DEF_NO_FORTRAN
@@ -860,8 +858,6 @@ DEF_MPM
 DEF_ICE
 DEF_FVM
 DEF_ARCHES
-BUILD_PHASEFIELD
-BUILD_HEAT
 BUILD_WASATCH
 BUILD_MPM
 BUILD_MODELS_RADIATION
@@ -969,8 +965,6 @@ with_mpi_include
 with_mpi_extra_libs
 with_cuda
 with_hypre
-with_hypre_lib
-with_hypre_include
 with_petsc
 with_boost
 with_boost_library
@@ -1019,8 +1013,6 @@ enable_fvm
 enable_ice
 enable_mpm
 enable_wasatch
-enable_heat
-enable_phasefield
 enable_all_components
 '
       ac_precious_vars='build_alias
@@ -1691,8 +1683,6 @@ Optional Features:
 --enable-ice            Turn on the Ice component.
 --enable-mpm            Turn on the Mpm component.
 --enable-wasatch        Turn on the Wasatch component.
---enable-heat           Turn on the Heat component.
---enable-phasefield     Turn on the PhaseField component.
 --enable-all-components Turn on the all components.
 
 Optional Packages:
@@ -1723,9 +1713,6 @@ Optional Packages:
 --with-cuda=DIR         Use the CUDA installation in DIR
 --with-hypre=DIR        Use the hypre installation in DIR. Set to 'built-in'
                           if explicit linking of hypre is NOT required.
---with-hypre-lib=DIR    Use the hypre libraries installed in DIR
---with-hypre-include=DIR
-                          Use the hypre include files installed in DIR
 --with-petsc=DIR        Use the petsc installation in DIR (or set to
                           'built-in').
 --with-boost=DIR        Use the Boost library in DIR/lib
@@ -4255,136 +4242,6 @@ $as_echo "$as_me: WARNING: the files are $the_files " >&2;}
 
 
 
-# Check whether --with-hypre_lib was given.
-if test "${with_hypre_lib+set}" = set; then :
-  withval=$with_hypre_lib; with_hypre_lib="$withval"
-   sci_required_hypre=yes
-else
-  with_hypre_lib=NOT_SET
-fi
-
-  sci_arg_with_list="$sci_arg_with_list --with-hypre_lib --without-hypre_lib"
-  if test "$with_hypre_lib" != NOT_SET; then
-
-    # Check that params 5 and 6 have valid values
-    if test "DIR" != "DIR" -a "DIR" != "FILE" -a "DIR" != "FILES" ; then
-      as_fn_error FILE "Internal Uintah configure error for '--with-hypre_lib': invalid value of 'DIR' used for 5th parameter - should be DIR" "$LINENO" 5
-    fi
-    if test "WITHOUT-IS-NOT-VALID" != "WITHOUT-IS-VALID" -a "WITHOUT-IS-NOT-VALID" != "WITHOUT-IS-NOT-VALID" ; then
-      as_fn_error $? "Internal Uintah configure error for '--with-hypre_lib': invalid value of 'WITHOUT-IS-NOT-VALID' used for 6th parameter - should be WITHOUT-IS-NOT-VALID.  Please report." "$LINENO" 5
-    fi
-
-    # Verify --without is valid
-    if test "$with_hypre_lib" = "no" ; then
-      if test "WITHOUT-IS-NOT-VALID" != "WITHOUT-IS-VALID"; then
-        as_fn_error $? "'--without-hypre_lib' is not supported!" "$LINENO" 5
-      fi
-    fi
-
-    # Verify tha a DIR or FILE was provided.
-    if test "$with_hypre_lib" = "yes" ; then
-      if test "DIR" = "FILE" ; then
-        as_fn_error $? "When using '--with-hypre_lib' you must specify the appropriate file." "$LINENO" 5
-      else
-        as_fn_error $? "When using '--with-hypre_lib' you must specify the appropriate directory." "$LINENO" 5
-      fi
-    fi
-    if test "$with_hypre_lib" != "built-in" -a "$with_hypre_lib" != NOT_SET -a "$with_hypre_lib" != "no"; then
-      if test "DIR" = "FILE"; then
-        # Verify that it is a regular file (or a symbolic link).
-        if test ! -f "$with_hypre_lib" ; then
-          as_fn_error $? "The parameter \"$with_hypre_lib\" provided to --with-hypre_lib is not a file!  Please verify that the path and file are correct." "$LINENO" 5
-        fi
-      else
-        if test "DIR" = "FILES"; then
-          # Verify that valid files are listed...
-          the_files=$(echo $with_hypre_lib | tr "," "\n")
-          { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: the files are $the_files " >&5
-$as_echo "$as_me: WARNING: the files are $the_files " >&2;}
-          for the_file in $the_files; do
-            if test ! -f "$the_file"; then
-              as_fn_error $? "The parameter \"$the_file\" provided to --with-hypre_lib is not a file!  Please verify that the path and file are correct." "$LINENO" 5
-            fi
-          done
-        elif test ! -d "$with_hypre_lib"; then
-          # Verify that a valid directory is listed...
-          as_fn_error $? "The parameter \"$with_hypre_lib\" provided to --with-hypre_lib is not a directory!  Please verify that the path is correct." "$LINENO" 5
-        else
-	  # Is a directory... remove trailing / (if any)
-          with_hypre_lib=${with_hypre_lib%/}
-        fi
-      fi
-    fi
-  fi
-
-
-
-
-# Check whether --with-hypre_include was given.
-if test "${with_hypre_include+set}" = set; then :
-  withval=$with_hypre_include; with_hypre_include="$withval"
-   sci_required_hypre=yes
-else
-  with_hypre_include=NOT_SET
-fi
-
-  sci_arg_with_list="$sci_arg_with_list --with-hypre_include --without-hypre_include"
-  if test "$with_hypre_include" != NOT_SET; then
-
-    # Check that params 5 and 6 have valid values
-    if test "DIR" != "DIR" -a "DIR" != "FILE" -a "DIR" != "FILES" ; then
-      as_fn_error FILE "Internal Uintah configure error for '--with-hypre_include': invalid value of 'DIR' used for 5th parameter - should be DIR" "$LINENO" 5
-    fi
-    if test "WITHOUT-IS-NOT-VALID" != "WITHOUT-IS-VALID" -a "WITHOUT-IS-NOT-VALID" != "WITHOUT-IS-NOT-VALID" ; then
-      as_fn_error $? "Internal Uintah configure error for '--with-hypre_include': invalid value of 'WITHOUT-IS-NOT-VALID' used for 6th parameter - should be WITHOUT-IS-NOT-VALID.  Please report." "$LINENO" 5
-    fi
-
-    # Verify --without is valid
-    if test "$with_hypre_include" = "no" ; then
-      if test "WITHOUT-IS-NOT-VALID" != "WITHOUT-IS-VALID"; then
-        as_fn_error $? "'--without-hypre_include' is not supported!" "$LINENO" 5
-      fi
-    fi
-
-    # Verify tha a DIR or FILE was provided.
-    if test "$with_hypre_include" = "yes" ; then
-      if test "DIR" = "FILE" ; then
-        as_fn_error $? "When using '--with-hypre_include' you must specify the appropriate file." "$LINENO" 5
-      else
-        as_fn_error $? "When using '--with-hypre_include' you must specify the appropriate directory." "$LINENO" 5
-      fi
-    fi
-    if test "$with_hypre_include" != "built-in" -a "$with_hypre_include" != NOT_SET -a "$with_hypre_include" != "no"; then
-      if test "DIR" = "FILE"; then
-        # Verify that it is a regular file (or a symbolic link).
-        if test ! -f "$with_hypre_include" ; then
-          as_fn_error $? "The parameter \"$with_hypre_include\" provided to --with-hypre_include is not a file!  Please verify that the path and file are correct." "$LINENO" 5
-        fi
-      else
-        if test "DIR" = "FILES"; then
-          # Verify that valid files are listed...
-          the_files=$(echo $with_hypre_include | tr "," "\n")
-          { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: the files are $the_files " >&5
-$as_echo "$as_me: WARNING: the files are $the_files " >&2;}
-          for the_file in $the_files; do
-            if test ! -f "$the_file"; then
-              as_fn_error $? "The parameter \"$the_file\" provided to --with-hypre_include is not a file!  Please verify that the path and file are correct." "$LINENO" 5
-            fi
-          done
-        elif test ! -d "$with_hypre_include"; then
-          # Verify that a valid directory is listed...
-          as_fn_error $? "The parameter \"$with_hypre_include\" provided to --with-hypre_include is not a directory!  Please verify that the path is correct." "$LINENO" 5
-        else
-	  # Is a directory... remove trailing / (if any)
-          with_hypre_include=${with_hypre_include%/}
-        fi
-      fi
-    fi
-  fi
-
-
-
-
 # Check whether --with-petsc was given.
 if test "${with_petsc+set}" = set; then :
   withval=$with_petsc; with_petsc="$withval"
@@ -6207,30 +6064,6 @@ fi
 
 
 
-  # Check whether --enable-heat was given.
-if test "${enable_heat+set}" = set; then :
-  enableval=$enable_heat; BUILD_HEAT="yes"
-else
-  BUILD_HEAT="no"
-   DEF_HEAT="#define NO_HEAT"
-fi
-
-  sci_arg_enable_list="$sci_arg_enable_list --enable-heat --disable-heat"
-
-
-
-  # Check whether --enable-phasefield was given.
-if test "${enable_phasefield+set}" = set; then :
-  enableval=$enable_phasefield; BUILD_PHASEFIELD="yes"
-else
-  BUILD_PHASEFIELD="no"
-   DEF_PHASEFIELD="#define NO_PHASEFIELD"
-fi
-
-  sci_arg_enable_list="$sci_arg_enable_list --enable-phasefield --disable-phasefield"
-
-
-
   # Check whether --enable-all_components was given.
 if test "${enable_all_components+set}" = set; then :
   enableval=$enable_all_components; use_all_components="yes"
@@ -6239,15 +6072,11 @@ if test "${enable_all_components+set}" = set; then :
    BUILD_ICE="yes"
    BUILD_MPM="yes"
    BUILD_WASATCH="yes"
-   BUILD_HEAT="yes"
-   BUILD_PHASEFIELD="yes"
    DEF_ARCHES=
    DEF_FVM=
    DEF_ICE=
    DEF_MPM=
    DEF_WASATCH=
-   DEF_HEAT=
-   DEF_PHASEFIELD=
 
 else
   use_all_components="no"
@@ -6269,18 +6098,14 @@ if test "$use_all_components" = "yes" -a          \
            "$enable_ice"              = "yes" -o  \
            "$enable_models_radiation" = "yes" -o  \
            "$enable_mpm"              = "yes" -o  \
-           "$enable_wasatch"          = "yes" -o  \
-           "$enable_heat"             = "yes" -o  \
-           "$enable_phasefield"       = "yes" \); then
+           "$enable_wasatch"          = "yes" \); then
    as_fn_error $? "Please do not use both --enable-all-components and --enable-<specific-component> " "$LINENO" 5
 fi
-if test "$BUILD_ARCHES"     != "yes"           -a   \
-        "$BUILD_FVM"        != "yes"           -a   \
-        "$BUILD_ICE"        != "yes"           -a   \
-        "$BUILD_MPM"        != "yes"           -a   \
-        "$BUILD_WASATCH"    != "yes"           -a   \
-        "$BUILD_HEAT"       != "yes"           -a   \
-        "$BUILD_PHASEFIELD" != "yes" ; then
+if test "$BUILD_ARCHES"  != "yes"              -a   \
+        "$BUILD_FVM"     != "yes"              -a   \
+        "$BUILD_ICE"     != "yes"              -a   \
+        "$BUILD_MPM"     != "yes"              -a   \
+        "$BUILD_WASATCH" != "yes"; then
   add_important_warning "-------------------------------------------------------------------------"
   msg="!!! NO COMPONENTS WERE SPECIFIED! ONLY UTILITY PROGRAMS WILL BE BUILT !!!"
   add_important_warning "$msg"
@@ -8356,10 +8181,6 @@ if test "$with_fortran" = "no"; then
 fi
 
 # NO_FORTRAN is used in configVars.mk[.in] and DEF_NO_FORTRAN is used in uintah_testdefs.h.in
-
-
-
-
 
 
 
@@ -41087,7 +40908,7 @@ if test "$BUILD_ARCHES" = "yes"; then
 fi
 
 if test "$BUILD_WASATCH" = "yes" -o "$BUILD_ARCHES" = "yes"; then
-  if test "$with_hypre" = NOT_SET -a "$with_hypre_include" = NOT_SET; then
+  if test "$with_hypre" = NOT_SET; then
     { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING:  Requiring Hypre due to Arches or Wasatch... " >&5
 $as_echo "$as_me: WARNING:  Requiring Hypre due to Arches or Wasatch... " >&2;}
     with_hypre=yes
@@ -41111,23 +40932,11 @@ else
      { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Relying on a built-in version of Hypre" >&5
 $as_echo "$as_me: WARNING: Relying on a built-in version of Hypre" >&2;}
   else
-     if test "$with_hypre" != NOT_SET ; then
-       if test "$with_hypre_include" != NOT_SET -o "$with_hypre_lib" != NOT_SET ; then
-         as_fn_error $? "You cannot use --with-hypre and --with-hypre-include/--with-hypre-library. " "$LINENO" 5
-       elif test "$with_hypre" != "yes"; then
-         _sci_lib="$with_hypre/lib"
-         _sci_inc="$with_hypre/include"
-         _sci_optional=specific
-       fi
-     elif test "$with_hypre_lib" != NOT_SET -o "$with_hypre_include" != NOT_SET; then
-       if test "$with_hypre_lib" = NOT_SET -o "$with_hypre_include" = NOT_SET; then
-         as_fn_error $? "You must specify both --with-hypre-include and --with-hypre-library. " "$LINENO" 5
-       else
-         _sci_lib="$with_hypre_lib"
-         _sci_inc="$with_hypre_include"
-         with_hypre="yes"
-         _sci_optional=specific
-       fi
+
+     if test "$with_hypre" != NOT_SET -a "$with_hypre" != "yes"; then
+        _sci_lib="$with_hypre/lib"
+        _sci_inc="$with_hypre/include"
+        _sci_optional=specific
 
 	# Try to avoid accidentally allowing system libraries to shadow the specific libraries the user has requested.
         if test "$USING_GCC" = "yes" -o "$USING_ICC" = "yes"; then
