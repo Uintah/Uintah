@@ -84,6 +84,17 @@
 #include <CCA/Components/MPMFVM/ESMPM2.h>
 #endif
 
+#ifndef NO_HEAT
+#  include <CCA/Components/Heat/CCHeat2D.h>
+#  include <CCA/Components/Heat/NCHeat2D.h>
+#  include <CCA/Components/Heat/CCHeat3D.h>
+#  include <CCA/Components/Heat/NCHeat3D.h>
+#  include <CCA/Components/Heat/AMRCCHeat2D.h>
+#  include <CCA/Components/Heat/AMRNCHeat2D.h>
+#  include <CCA/Components/Heat/AMRCCHeat3D.h>
+#  include <CCA/Components/Heat/AMRNCHeat3D.h>
+#endif
+
 #include <iosfwd>
 #include <string>
 
@@ -284,6 +295,38 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
   if (sim_comp == "reduce_uda") {
     return scinew UdaReducer(world, uda);
   } 
+#ifndef NO_HEAT
+  if ( sim_comp == "fdheat" || sim_comp == "FDHEAT" ) {
+    bool doNC;
+    int verbosity;
+    int dimension;
+    ps->findBlock ( "FDHeat" )->getWithDefault ( "node_centered", doNC, false );
+    ps->findBlock ( "FDHeat" )->getWithDefault ( "verbosity", verbosity, 0 );
+    ps->findBlock ( "FDHeat" )->getWithDefault ( "dimension", dimension, 2 );
+    if ( doAMR ) {
+      if ( doNC ) {
+        if ( dimension > 2 ) {
+          return scinew AMRNCHeat3D ( world, verbosity );
+        } else {
+          return scinew AMRNCHeat2D ( world, verbosity );
+      } } else { // CC
+        if ( dimension > 2 ) {
+          return scinew AMRCCHeat3D ( world, verbosity );
+        } else {
+          return scinew AMRCCHeat2D ( world, verbosity );
+      } } } else { // noAMR
+      if ( doNC ) {
+        if ( dimension > 2 ) {
+          return scinew NCHeat3D ( world, verbosity );
+        } else {
+          return scinew NCHeat2D ( world, verbosity );
+      } } else { // CC
+        if ( dimension > 2 ) {
+          return scinew CCHeat3D ( world, verbosity );
+        } else {
+          return scinew CCHeat2D ( world, verbosity );
+  } } } }
+#endif
   throw ProblemSetupException("Unknown simulationComponent ('" + sim_comp + "'). Must specify -arches, -ice, -mpm, "
                               "-impm, -mpmice, -mpmarches, -burger, -wave, -poisson1, -poisson2, -poisson3 or -benchmark.\n"
                               "Note: the following components were turned off at configure time: " + turned_off_options + "\n"

@@ -62,6 +62,10 @@ ifeq ($(BUILD_FVM),yes)
   endif
 endif
 
+ifeq ($(BUILD_HEAT),yes)
+  HEAT := $(SRCDIR)/Heat
+endif
+
 SUBDIRS := \
         $(MPM)                         \
         $(ICE)                         \
@@ -71,6 +75,7 @@ SUBDIRS := \
         $(WASATCH)                     \
         $(FVM)                         \
         $(MPMFVM)                      \
+        $(HEAT)                        \
         $(SRCDIR)/DataArchiver         \
         $(SRCDIR)/Examples             \
         $(SRCDIR)/LoadBalancers        \

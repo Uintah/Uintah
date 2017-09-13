@@ -1,6 +1,3 @@
-#ifndef UINTAH_DEFS_H
-#define UINTAH_DEFS_H
-
 /*
  * The MIT License
  *
@@ -25,35 +22,35 @@
  * IN THE SOFTWARE.
  */
 
-@DEF_ZOLTAN@
+#ifndef Packages_Uintah_CCA_Components_Heat_TimeScheme_h
+#define Packages_Uintah_CCA_Components_Heat_TimeScheme_h
 
-@DEF_TABPROPS@
-@DEF_RADPROPS@
+namespace Uintah
+{
 
-@DEF_ARCHES@
-@DEF_FVM@
-@DEF_ICE@
-@DEF_MPM@
-@DEF_MODELS_RADIATION@
+enum TimeScheme : unsigned
+{
+    Unknown       = 0x00000000,
 
-@DEF_WASATCH@
+    Explicit      = 0x01000000,
+    ForwardEuler  = 0x01000001,
 
-@DEF_HEAT@
+    Implicit      = 0x02000000,
+    BackwardEuler = 0x02000001,
+    CrankNicolson = 0x02000002
 
-@DEF_NO_FORTRAN@
-@DEF_FORTRAN_UNDERSCORE@
+}; // enum TimeScheme
 
-@DEF_RAY_SCATTER@
+inline TimeScheme from_str ( const std::string & value );
 
-@DEF_CXX11@
+} // namespace Uintah
 
-#if !defined( FIX_NAME )
-#  if defined( FORTRAN_UNDERSCORE_END )
-     // This ## magic (apparently) concatenates the _ to the 'fun' varaible.
-#    define FIX_NAME(fun) fun ## _
-#  else // NONE
-#    define FIX_NAME(fun) fun
-#  endif
-#endif
+inline Uintah::TimeScheme Uintah::from_str ( const std::string & value )
+{
+    if ( value == "forward_euler" ) return TimeScheme::ForwardEuler;
+    if ( value == "backward_euler" ) return TimeScheme::BackwardEuler;
+    if ( value == "crank_nicolson" ) return TimeScheme::CrankNicolson;
+    return TimeScheme::Unknown;
+}
 
-#endif // UINTAH_DEFS_H
+#endif // Packages_Uintah_CCA_Components_Heat_TimeScheme_h

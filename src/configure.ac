@@ -768,6 +768,13 @@ SCI_ARG_ENABLE(wasatch,
   [BUILD_WASATCH="no"
    DEF_WASATCH=["#define NO_WASATCH"]])
 
+SCI_ARG_ENABLE(heat,
+  AC_HELP_STRING(--enable-heat,
+                 Turn on the Heat component.),
+  [BUILD_HEAT="yes"],
+  [BUILD_HEAT="no"
+   DEF_HEAT=["#define NO_HEAT"]])
+   
 SCI_ARG_ENABLE(all_components,
   AC_HELP_STRING(--enable-all-components,
                  Turn on the all components.),
@@ -777,11 +784,13 @@ SCI_ARG_ENABLE(all_components,
    BUILD_ICE="yes"
    BUILD_MPM="yes"
    BUILD_WASATCH="yes"
+   BUILD_HEAT="yes"
    DEF_ARCHES=
    DEF_FVM=
    DEF_ICE=
    DEF_MPM=
    DEF_WASATCH=
+   DEF_HEAT=
   ],
   [use_all_components="no"])
 
@@ -798,14 +807,16 @@ if test "$use_all_components" = "yes" -a          \
            "$enable_ice"              = "yes" -o  \
            "$enable_models_radiation" = "yes" -o  \
            "$enable_mpm"              = "yes" -o  \
-           "$enable_wasatch"          = "yes" \); then
+           "$enable_wasatch"          = "yes" -o  \
+           "$enable_heat"             = "yes" \); then
    AC_MSG_ERROR( Please do not use both --enable-all-components and --enable-<specific-component> )
 fi
 if test "$BUILD_ARCHES"  != "yes"              -a   \
         "$BUILD_FVM"     != "yes"              -a   \
         "$BUILD_ICE"     != "yes"              -a   \
         "$BUILD_MPM"     != "yes"              -a   \
-        "$BUILD_WASATCH" != "yes"; then
+        "$BUILD_WASATCH" != "yes"              -a   \
+        "$BUILD_HEAT"    != "yes" ; then
   add_important_warning "-------------------------------------------------------------------------"
   msg="!!! NO COMPONENTS WERE SPECIFIED! ONLY UTILITY PROGRAMS WILL BE BUILT !!!"
   add_important_warning "$msg"
@@ -1342,6 +1353,7 @@ AC_SUBST(BUILD_ICE)
 AC_SUBST(BUILD_MODELS_RADIATION)
 AC_SUBST(BUILD_MPM)
 AC_SUBST(BUILD_WASATCH)
+AC_SUBST(BUILD_HEAT)
 
 AC_SUBST(DEF_ARCHES)
 AC_SUBST(DEF_FVM)
@@ -1350,6 +1362,7 @@ AC_SUBST(DEF_MPM)
 AC_SUBST(DEF_NO_FORTRAN)
 AC_SUBST(DEF_MODELS_RADIATION)
 AC_SUBST(DEF_WASATCH)
+AC_SUBST(DEF_HEAT)
 AC_SUBST(NO_FORTRAN)
 
 if test "$BUILD_ARCHES" = "no" -a "$with_fortran" = "no"; then

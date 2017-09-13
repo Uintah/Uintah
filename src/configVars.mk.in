@@ -238,6 +238,7 @@ BUILD_FVM=@BUILD_FVM@
 BUILD_MODELS_RADIATION=@BUILD_MODELS_RADIATION@
 BUILD_MPM=@BUILD_MPM@
 BUILD_WASATCH=@BUILD_WASATCH@
+BUILD_HEAT=@BUILD_HEAT@
 
 ################################################################
 # Variables and suffix rules for module transformation:

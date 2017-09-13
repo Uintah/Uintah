@@ -1,0 +1,574 @@
+/*
+ * The MIT License
+ *
+ * Copyright (c) 1997-2017 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+
+#include <CCA/Components/Heat/NCHeat2D.h>
+
+#include <CCA/Components/Heat/blockrange_io.h>
+
+#ifdef CUSTOM_OUT
+#   include <iomanip>
+#   include <sstream>
+#   include <Core/OS/Dir.h>
+#   include <CCA/Components/Heat/vtkfile.hpp>
+#   include <CCA/Components/Heat/pvtkfile.hpp>
+#endif
+
+using namespace Uintah;
+
+NCHeat2D::NCHeat2D ( ProcessorGroup const * myworld, int verbosity )
+    : UintahParallelComponent ( myworld )
+    , dbg_out1 ( "NCHeat2D", verbosity > 0 )
+    , dbg_out2 ( "NCHeat2D", verbosity > 1 )
+    , dbg_out3 ( "NCHeat2D", verbosity > 2 )
+    , dbg_out4 ( "NCHeat2D", verbosity > 3 )
+//  , solver ( nullptr )
+//  , solver_parameters ( nullptr )
+{
+    u_label = VarLabel::create ( "u", Variable::getTypeDescription() );
+//  matrix_label = VarLabel::create ( "A", Matrix::getTypeDescription() );
+//  rhs_label = VarLabel::create ( "b", Variable::getTypeDescription() );
+// #ifdef DBG_MATRIX
+//  Ap_label = VarLabel::create ( "Ap", Variable::getTypeDescription() );
+//  Aw_label = VarLabel::create ( "Aw", Variable::getTypeDescription() );
+//  Ae_label = VarLabel::create ( "Ae", Variable::getTypeDescription() );
+//  An_label = VarLabel::create ( "An", Variable::getTypeDescription() );
+//  As_label = VarLabel::create ( "As", Variable::getTypeDescription() );
+//  At_label = VarLabel::create ( "At", Variable::getTypeDescription() );
+//  Ab_label = VarLabel::create ( "Ab", Variable::getTypeDescription() );
+// #endif
+}
+
+NCHeat2D::~NCHeat2D()
+{
+    VarLabel::destroy ( u_label );
+//  VarLabel::destroy ( matrix_label );
+//  VarLabel::destroy ( rhs_label );
+// #ifdef DBG_MATRIX
+//  VarLabel::destroy ( Ap_label );
+//  VarLabel::destroy ( Aw_label );
+//  VarLabel::destroy ( Ae_label );
+//  VarLabel::destroy ( An_label );
+//  VarLabel::destroy ( As_label );
+//  VarLabel::destroy ( At_label );
+//  VarLabel::destroy ( Ab_label );
+// #endif
+#ifdef CUSTOM_OUT
+    for ( auto pair : out_visit )
+    {
+        delete pair.second;
+    }
+#endif
+}
+
+void NCHeat2D::problemSetup ( ProblemSpecP const & params, ProblemSpecP const & /*restart_prob_spec*/, GridP & /*grid*/, SimulationStateP & simulation_state )
+{
+    state = simulation_state;
+    state->setIsLockstepAMR ( true );
+    state->registerSimpleMaterial ( scinew SimpleMaterial() );
+
+    ProblemSpecP heat = params->findBlock ( "FDHeat" );
+    std::string scheme;
+    heat->require ( "delt", delt );
+    heat->require ( "alpha", alpha );
+    heat->require ( "R0", r0 );
+    heat->getWithDefault ( "gamma", gamma, 1. );
+    heat->getWithDefault ( "scheme", scheme, "forward_euler" );
+    time_scheme = from_str ( scheme );
+    if ( time_scheme & TimeScheme::Implicit )
+    {
+//      ProblemSpecP solv = params->findBlock ( "Solver" );
+//      solver = dynamic_cast<SolverInterface *> ( getPort ( "solver" ) );
+//      if ( !solver ) throw InternalError ( "NCHeat2D:couldn't get solver port", __FILE__, __LINE__ );
+//      solver_parameters = solver->readParameters ( solv, "u" , state );
+//      solver_parameters->setSolveOnExtraCells ( false );
+        throw InternalError ( "\n ERROR: implicit solver not implemented for node centered variables", __FILE__, __LINE__ );
+    }
+
+#ifdef CUSTOM_OUT
+    dataArchiver = dynamic_cast<Output *> ( getPort ( "output" ) );
+#endif
+}
+
+void NCHeat2D::scheduleInitialize ( LevelP const & level, SchedulerP & sched )
+{
+    Task * task = scinew Task ( "NCHeat2D::task_initialize", this, &NCHeat2D::task_initialize );
+    task->computes ( u_label );
+    sched->addTask ( task, level->eachPatch(), state->allMaterials() );
+}
+
+void NCHeat2D::scheduleComputeStableTimestep ( LevelP const & level, SchedulerP & sched )
+{
+    Task * task = scinew Task ( "NCHeat2D::task_compute_stable_timestep", this, &NCHeat2D::task_compute_stable_timestep );
+    task->computes ( state->get_delt_label(), level.get_rep() );
+    sched->addTask ( task, level->eachPatch(), state->allMaterials() );
+}
+
+void NCHeat2D::scheduleTimeAdvance ( LevelP const & level, SchedulerP & sched )
+{
+    switch ( time_scheme )
+    {
+    case TimeScheme::ForwardEuler:
+        scheduleTimeAdvance_forward_euler ( level, sched );
+        break;
+    case TimeScheme::BackwardEuler:
+//      scheduleTimeAdvance_backward_euler_assemble ( level, sched );
+//      scheduleTimeAdvance_backward_euler_solve ( level, sched );
+        throw InternalError ( "\n ERROR: BackwardEuler time scheme not implemented for node centered variables\n", __FILE__, __LINE__ );
+        break;
+    default:
+        break;
+    }
+
+#ifdef CUSTOM_OUT
+    scheduleTimeAdvance_save ( level, sched );
+#endif
+}
+
+void NCHeat2D::scheduleTimeAdvance_forward_euler ( LevelP const & level, SchedulerP & sched )
+{
+    Task * task = scinew Task ( "NCHeat2D::task_farward_euler_time_advance", this, &NCHeat2D::task_farward_euler_time_advance );
+    task->requires ( Task::OldDW, u_label, Ghost::AroundNodes, 1 );
+    task->computes ( u_label );
+    sched->addTask ( task, level->eachPatch(), state->allMaterials() );
+}
+
+// void NCHeat2D::scheduleTimeAdvance_backward_euler_assemble ( LevelP const & level, SchedulerP & sched )
+// {
+//  Task * task = scinew Task ( "NCHeat2D::task_backward_euler_assemble", this, &NCHeat2D::task_backward_euler_assemble );
+//  task->requires ( Task::OldDW, u_label, Ghost::AroundNodes, 1 );
+//  task->computes ( matrix_label );
+//  task->computes ( rhs_label );
+// #ifdef DBG_MATRIX
+//  task->computes ( Ap_label );
+//  task->computes ( Aw_label );
+//  task->computes ( Ae_label );
+//  task->computes ( An_label );
+//  task->computes ( As_label );
+//  task->computes ( At_label );
+//  task->computes ( Ab_label );
+// #endif
+//  sched->addTask ( task, level->allPatches(), state->allMaterials() );
+// }
+
+// void NCHeat2D::scheduleTimeAdvance_backward_euler_solve ( LevelP const & level, SchedulerP & sched )
+// {
+//  solver->scheduleSolve ( level, sched, state->allMaterials(),
+//                          matrix_label, Task::NewDW, // A
+//                          u_label, false,            // x
+//                          rhs_label, Task::NewDW,    // b
+//                          u_label, Task::OldDW,      // guess
+//                          solver_parameters );
+// }
+
+#ifdef CUSTOM_OUT
+void NCHeat2D::scheduleTimeAdvance_save ( LevelP const & level, SchedulerP & sched )
+{
+    Task * task = scinew Task ( "NCHeat2D::task_save", this, &NCHeat2D::task_save );
+    task_save->requires ( Task::NewDW, u_label, Ghost::AroundNodes, 1 );
+    sched->addTask ( task_save, level->eachPatch(), state->allMaterials() );
+}
+#endif
+
+void NCHeat2D::task_initialize ( ProcessorGroup const * /*myworld*/, PatchSubset const * patches, MaterialSubset const * /*matls*/, DataWarehouse * /*dw_old*/, DataWarehouse * dw_new )
+{
+    dbg_out1 << "==== NCHeat2D::task_initialize ====" << std::endl;
+
+    for ( int p = 0; p < patches->size(); ++p )
+    {
+        const Patch * patch = patches->get ( p );
+        dbg_out2 << "== Patch: " << *patch << std::endl;
+
+        Variable u;
+        dw_new->allocateAndPut ( u, u_label, 0, patch );
+        dbg_out4 << "u \t range " << u.getLowIndex() << u.getHighIndex() << std::endl;
+
+        BlockRange range ( get_range ( patch ) );
+        dbg_out3 << "= Iterating over range " << range << std::endl;
+        parallel_for ( range, [patch, &u, this] ( int i, int j, int k )->void { initialize ( i, j, k, patch, get_view ( u ) ); } );
+    }
+
+    dbg_out2 << std::endl;
+}
+
+void NCHeat2D::task_compute_stable_timestep ( ProcessorGroup const * /*myworld*/, PatchSubset const * patches, MaterialSubset const * /*matls*/, DataWarehouse * /*dw_old*/, DataWarehouse * dw_new )
+{
+    dbg_out1 << "==== NCHeat2D::task_compute_stable_timestep ====" << std::endl;
+    dw_new->put ( delt_vartype ( delt ), state->get_delt_label(), getLevel ( patches ) );
+    dbg_out2 << std::endl;
+}
+
+void NCHeat2D::task_farward_euler_time_advance ( ProcessorGroup const * /*myworld*/, PatchSubset const * patches, MaterialSubset const * /*matls*/, DataWarehouse * dw_old, DataWarehouse * dw_new )
+{
+    dbg_out1 << "==== NCHeat2D::task_farward_euler_time_advance ====" << std::endl;
+
+    for ( int p = 0; p < patches->size(); ++p )
+    {
+        const Patch * patch = patches->get ( p );
+        dbg_out2 << "== Patch: " << *patch << std::endl;
+
+        ConstVariable u_old;
+        dw_old->get ( u_old, u_label, 0, patch, Ghost::AroundNodes, 1 );
+        dbg_out4 << "u_old \t range " << u_old.getLowIndex() << u_old.getHighIndex() << std::endl;
+
+        Variable u_new;
+        dw_new->allocateAndPut ( u_new, u_label, 0, patch );
+        dbg_out4 << "u_new \t range " << u_new.getLowIndex() << u_new.getHighIndex() << std::endl;
+
+        u_new.copyPatch ( u_old, u_new.getLowIndex(), u_new.getHighIndex() );
+        BlockRange range ( get_inner_range ( patch ) );
+
+        dbg_out3 << "= Iterating over inner range " << range << std::endl;
+        Uintah::parallel_for ( range, [patch, &u_old, &u_new, this] ( int i, int j, int k )->void { forward_euler_time_advance ( i, j, k, patch, get_view ( u_old ), get_view ( u_new ) ); } );
+
+        std::string bc_kind[4];
+        double bc_value[4];
+        for ( auto face = start_face; face <= end_face; face = Patch::nextFace ( face ) )
+            if ( patch->getBCType ( face ) != Patch::Neighbor )
+            {
+                get_bc ( patch, face, 0, "u", 0, range, bc_kind[face], bc_value[face] ); // I don't need to know bc_kind for faces > face
+                dbg_out3 << "= Iterating over " << face << " face range " << range << " BC " << bc_kind[face] << " " << bc_value[face] << std::endl;
+                parallel_for ( range, [face, bc_value, bc_kind, patch, &u_old, &u_new, this] ( int i, int j, int k )->void { forward_euler_time_advance ( i, j, k, patch, get_view ( u_old ), get_view ( u_new ), face, bc_kind, bc_value ); } );
+            }
+    }
+
+    dbg_out2 << std::endl;
+}
+
+// void Uintah::NCHeat2D::task_backward_euler_assemble ( const Uintah::ProcessorGroup * myworld, const PatchSubset * patches, const MaterialSubset * matls, Uintah::DataWarehouse * dw_old, Uintah::DataWarehouse * dw_new )
+// {
+//  dbg_out1 << "==== NCHeat2D::task_backward_euler_assemble ====" << std::endl;
+//
+//  for ( int p = 0; p < patches->size(); ++p )
+//  {
+//      const Patch * patch = patches->get ( p );
+//      dbg_out2 << "== Patch: " << *patch << std::endl;
+//
+//      ConstVariable u;
+//      dw_old->get ( u, u_label, 0, patch, Ghost::AroundNodes, 1 );
+//      dbg_out4 << "u\t range " << u.getLowIndex() << u.getHighIndex() << std::endl;
+//
+//      Matrix A;
+//      dw_new->allocateAndPut ( A, matrix_label, 0, patch );
+//      dbg_out4 << "A \t range " << A.getLowIndex() << A.getHighIndex() << std::endl;
+//
+// #ifdef DBG_MATRIX
+//      Variable Ap;
+//      dw_new->allocateAndPut ( Ap, Ap_label, 0, patch );
+//      dbg_out4 << "Ap \t range " << Ap.getLowIndex() << Ap.getHighIndex() << std::endl;
+//
+//      Variable Aw;
+//      dw_new->allocateAndPut ( Aw, Aw_label, 0, patch );
+//      dbg_out4 << "Aw \t range " << Aw.getLowIndex() << Aw.getHighIndex() << std::endl;
+//
+//      Variable Ae;
+//      dw_new->allocateAndPut ( Ae, Ae_label, 0, patch );
+//      dbg_out4 << "Ae \t range " << Ae.getLowIndex() << Ae.getHighIndex() << std::endl;
+//
+//      Variable An;
+//      dw_new->allocateAndPut ( An, An_label, 0, patch );
+//      dbg_out4 << "An \t range " << An.getLowIndex() << An.getHighIndex() << std::endl;
+//
+//      Variable As;
+//      dw_new->allocateAndPut ( As, As_label, 0, patch );
+//      dbg_out4 << "As \t range " << As.getLowIndex() << As.getHighIndex() << std::endl;
+//
+//      Variable At;
+//      dw_new->allocateAndPut ( At, At_label, 0, patch );
+//      dbg_out4 << "At \t range " << At.getLowIndex() << At.getHighIndex() << std::endl;
+//
+//      Variable Ab;
+//      dw_new->allocateAndPut ( Ab, Ab_label, 0, patch );
+//      dbg_out4 << "Ab \t range " << Ab.getLowIndex() << Ab.getHighIndex() << std::endl;
+// #endif
+//
+//      Variable b;
+//      dw_new->allocateAndPut ( b, rhs_label, 0, patch );
+//      dbg_out4 << "b\t range " << b.getLowIndex() << b.getHighIndex() << std::endl;
+//
+//      BlockRange range ( get_range ( patch ) );
+//      dbg_out3 << "= Iterating over range " << range << std::endl;
+//      Uintah::parallel_for ( range, [patch, &u, REF_A, &b, this] ( int i, int j, int k )->void { backward_euler_assemble ( i, j, k, patch, get_view ( u ), GET_VIEW_A, get_view ( b ) ); } );
+//
+//      std::string bc_kind[4];
+//      double bc_value[4];
+//      for ( auto face = start_face; face <= end_face; face = Patch::nextFace ( face ) )
+//          if ( patch->getBCType ( face ) != Patch::Neighbor )
+//          {
+//              get_bc ( patch, face, 0, "u", 0, range, bc_kind[face], bc_value[face] ); // I don't need to know bc_kind for faces > face
+//              dbg_out3 << "= Iterating over " << face << " face range " << range << " - BC " << bc_kind[face] << " " << bc_value[face] << std::endl;
+//              parallel_for ( range, [face, bc_value, bc_kind, patch, &u, REF_A, &b, this] ( int i, int j, int k )->void { backward_euler_assemble ( i, j, k, patch, get_view ( u ), GET_VIEW_A, get_view ( b ), face, bc_kind, bc_value ); } );
+//          }
+//  }
+//
+//  dbg_out2 << std::endl;
+// }
+
+#ifdef CUSTOM_OUT
+void NCHeat2D::task_save ( ProcessorGroup const * /*myworld*/, PatchSubset const * patches, MaterialSubset const * /*matls*/, DataWarehouse * /*dw_old*/, DataWarehouse * dw_new )
+{
+    if ( dataArchiver->isOutputTimestep() )
+    {
+        const Level * level = getLevel ( patches );
+        const int & levelID = level->getIndex();
+        std::string out_path, time_path, level_path, patch_path;
+        std::stringstream time_ss, level_ss;
+        out_path = dataArchiver->getOutputLocation();
+        const int & timestep = state->getCurrentTopLevelTimeStep();
+        time_ss << "t" << std::setw ( 5 ) << std::setfill ( '0' ) << timestep;
+        level_ss << "l" << levelID;
+        time_path = time_ss.str();
+        level_path = level_ss.str();
+        MKDIR ( std::string ( out_path + "/" + time_path ).c_str(), 0777 );
+        MKDIR ( std::string ( out_path + "/" + time_path + "/" + level_path ).c_str(), 0777 );
+
+        // WARNING only for one process/thread
+
+        PVtkFile * out_pvtk = new PVtkFile ( out_path +  "/" + time_path + "/" + level_path, time_path, timestep * delt );
+        for ( int pIndex = 0; pIndex < patches->size(); pIndex++ )
+        {
+            const Patch * patch = patches->get ( pIndex );
+            IntVector l = get_low ( patch );
+            IntVector h = get_high ( patch ) + IntVector (
+                              patch->getBCType ( Patch::xplus ) == Patch::Neighbor ? 1 : 0,
+                              patch->getBCType ( Patch::yplus ) == Patch::Neighbor ? 1 : 0,
+                              0
+                          );
+            Point p0 = get_position ( patch, l );
+            ConstVariable u;
+            dw_new->getRegion ( u, u_label, 0, level, l, h );
+
+            VtkFile * out_vtk = new VtkFile ( out_path + "/" + time_path + "/" + level_path, patch->getID() );
+            out_vtk->set_grid ( patch->getLevel()->dCell().x(), patch->getLevel()->dCell().y(), patch->getLevel()->dCell().z(), h.x() - l.x(), h.y() - l.y(), h.z() - l.z(), p0.x(), p0.y(), p0.z() );
+            out_vtk->add_node_data ( u_label->getName() + "/" + std::to_string ( levelID ), u, l, h );
+            out_vtk->save();
+            out_pvtk->add ( out_vtk->file_name() );
+            delete out_vtk;
+        } // end for pIndex
+        out_pvtk->save();
+
+        if ( out_visit.find ( levelID ) == out_visit.end() )
+        {
+            out_visit.emplace ( levelID, new VisitFile ( dataArchiver->getOutputLocation(), "level" + std::to_string ( levelID ), false ) );
+        }
+        out_visit[levelID]->add ( time_path + "/" + level_path + "/" + out_pvtk->file_name() );
+        delete out_pvtk;
+    }
+}
+#endif
+
+void NCHeat2D::initialize ( int i, int j, int k, Patch const * patch, VariableView u )
+{
+    IntVector n ( i, j, k );
+    Point p = get_position ( patch, n );
+    double r2 = p.x() * p.x() + p.y() * p.y();
+    double tmp = r2 - r0 * r0;
+    u[n] = - tanh ( gamma * tmp );
+}
+
+void NCHeat2D::forward_euler_time_advance ( int i, int j, int k, Patch const * patch, ConstVariableView u_old, VariableView u_new )
+{
+    double delta_u = delt * alpha * laplacian ( i, j, k, patch, u_old );
+    u_new ( i, j, k ) = u_old ( i, j, k ) + delta_u;
+}
+
+void NCHeat2D::forward_euler_time_advance ( int i, int j, int k, Patch const * patch, ConstVariableView u_old, VariableView u_new, Patch::FaceType face, const std::string bc_kind[4], const double bc_value[4] )
+{
+    const double d ( face / 2 );
+    const double h ( patch->getLevel()->dCell() [d] );
+
+    const double dx ( patch->getLevel()->dCell().x() );
+//  const double dy ( patch->getLevel()->dCell().y() );
+
+    const IntVector nl = get_low ( patch );
+    const IntVector nh = get_high ( patch ) - IntVector ( 1, 1, 1 );
+
+    const IntVector n0 ( i, j, k );
+    const IntVector nm = n0 - patch->faceDirection ( face );
+//  const IntVector np = n0 + patch->faceDirection ( face );
+
+    const IntVector nw ( i - 1, j, k );
+    const IntVector ne ( i + 1, j, k );
+//  const IntVector ns ( i, j - 1, k );
+//  const IntVector nn ( i, j + 1, k );
+
+    if ( bc_kind[face] == "Dirichlet" )
+    {
+        u_new[n0] = bc_value[face];
+        if ( is_internal ( patch, nm, d, bc_kind ) ) // check if a dirichlet bc has already been imposed on nm
+        {
+            u_new[nm] += ( delt * alpha * ( bc_value[face] - u_old[n0] ) ) / ( h * h );
+        }
+        return;
+    }
+    if ( bc_kind[face] == "Neumann" )
+    {
+        double delta_u = delt * alpha;
+        const double sgn ( patch->faceDirection ( face ) [d] );
+        double uxx = 0.;
+        double uyy = 0.;
+
+        switch ( face )
+        {
+        case Patch::xminus:
+        case Patch::xplus:
+            if ( j == nl.y() && patch->getBCType ( Patch::yminus ) != Patch::Neighbor )
+            {
+                return;    // handled by yminus
+            }
+            if ( j == nh.y() && patch->getBCType ( Patch::yplus ) != Patch::Neighbor )
+            {
+                return;    // handled by yplus
+            }
+            uxx = sgn * 2. * ( u_old[n0] - u_old[nm] + bc_value[face] * h ) / ( h * h );
+            uyy = dyy ( i, j, k, patch, u_old );
+            delta_u *= uxx + uyy;
+            break;
+        case Patch::yminus:
+        case Patch::yplus:
+            if ( i == nl.x() && patch->getBCType ( Patch::xminus ) != Patch::Neighbor )
+            {
+                if ( bc_kind[Patch::xminus] == "Dirichlet" )
+                {
+                    return;
+                }
+                if ( bc_kind[Patch::xminus] == "Neumann" )
+                {
+                    uxx = 2. * ( u_old[ne] - u_old[n0] - bc_value[Patch::xminus] * dx ) / ( dx * dx );
+                }
+            }
+            else if ( i == nh.x() && patch->getBCType ( Patch::xplus ) != Patch::Neighbor )
+            {
+                if ( bc_kind[Patch::xplus] == "Dirichlet" )
+                {
+                    return;
+                }
+                if ( bc_kind[Patch::xplus] == "Neumann" )
+                {
+                    uxx = 2. * ( u_old[n0] - u_old[nw] + bc_value[Patch::xplus] * dx ) / ( dx * dx );
+                }
+            }
+            else
+            {
+                uxx = dxx ( i, j, k, patch, u_old );
+            }
+            uyy = sgn * 2. * ( u_old[n0] - u_old[nm] + bc_value[face] * h ) / ( h * h );
+            delta_u *=  uxx + uyy;
+            break;
+        default:
+            delta_u = 0.;
+        }
+        u_new[n0] = u_old[n0] + delta_u;
+        return;
+    }
+}
+
+// void NCHeat2D::backward_euler_assemble ( int i, int j, int k, Patch const * patch, ConstVariableView u, MATRIX_VIEW_A, VariableView b )
+// {
+//  Vector const d ( patch->getLevel()->dCell() );
+//  IntVector n ( i, j, k );
+//  double a = - alpha * delt;
+//  double ax = a / ( d.x() * d.x() );
+//  double ay = a / ( d.y() * d.y() );
+//  A[n].p = 1. - 2. * (ax + ay);
+//  A[n].e = A[n].w = ax;
+//  A[n].n = A[n].s = ay;
+//  A[n].t = A[n].b = 0.;
+//  b[n] = u[n];
+// #ifdef DBG_MATRIX
+//  Ap[n] = A[n].p;
+//  Aw[n] = A[n].w;
+//  Ae[n] = A[n].e;
+//  As[n] = A[n].s;
+//  An[n] = A[n].n;
+//  At[n] = A[n].t;
+//  Ab[n] = A[n].b;
+// #endif
+// }
+
+// void NCHeat2D::backward_euler_assemble ( int i, int j, int k, Patch const * patch, ConstVariableView u, MATRIX_VIEW_A, VariableView b, Patch::FaceType face, const std::string bc_kind[4], const double bc_value[4] )
+// {
+//  switch ( patch->getBCType ( face ) )
+//  {
+//  case Patch::None:
+//  {
+//      const double d ( face / 2 );
+//      const double h ( patch->getLevel()->dCell() [d] );
+//      IntVector n0 ( i, j, k );
+//      IntVector n1 = n0 - patch->faceDirection ( face );
+//      double a = ( alpha * delt ) / ( h * h );
+//      {
+//          if ( bc_kind[face] == "Dirichlet" )
+//          {
+//              b[n0] = bc_value[face];
+//              if ( is_internal ( patch, n1, d, bc_kind ) ) // check if a dirichlet bc has already been imposed on n1
+//                  b[n1] += a * bc_value[face];
+//              A[n0].p = 1;
+//              A[n0].e = A[n0].w = 0.;
+//              A[n0].n = A[n0].s = 0.;
+//              A[n0].t = A[n0].b = 0.;
+//              A[n1][face] = 0.;
+// #ifdef DBG_MATRIX
+//              Ap[n0] = A[n0].p;
+//              Aw[n0] = A[n0].w;
+//              Ae[n0] = A[n0].e;
+//              As[n0] = A[n0].s;
+//              An[n0] = A[n0].n;
+//              At[n0] = A[n0].t;
+//              Ab[n0] = A[n0].b;
+//
+//              Ap[n1] = A[n1].p;
+//              Aw[n1] = A[n1].w;
+//              Ae[n1] = A[n1].e;
+//              As[n1] = A[n1].s;
+//              An[n1] = A[n1].n;
+//              At[n1] = A[n1].t;
+//              Ab[n1] = A[n1].b;
+// #endif
+//              return;
+//          }
+//          if ( bc_kind[face] == "Neumann" )
+//          {
+//              if ( !is_internal ( patch, n0, d, bc_kind ) ) // check if a dirichlet bc has already been imposed on n0
+//                  return;
+//              const double sgn ( patch->faceDirection ( face ) [d] );
+//              A[n0].p -= a;
+//              A[n0][face] = 0.;
+// #ifdef DBG_MATRIX
+//              Ap[n0] = A[n0].p;
+//              Aw[n0] = A[n0].w;
+//              Ae[n0] = A[n0].e;
+//              As[n0] = A[n0].s;
+//              An[n0] = A[n0].n;
+//              At[n0] = A[n0].t;
+//              Ab[n0] = A[n0].b;
+// #endif
+//              b[n0] -= a * sgn * h * bc_value[face];
+//              return;
+//          }
+//      }
+//  }
+//  default:
+//      return;
+//  }
+// }

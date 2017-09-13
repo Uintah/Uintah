@@ -1,6 +1,3 @@
-#ifndef UINTAH_DEFS_H
-#define UINTAH_DEFS_H
-
 /*
  * The MIT License
  *
@@ -25,35 +22,21 @@
  * IN THE SOFTWARE.
  */
 
-@DEF_ZOLTAN@
+#ifndef Packages_Uintah_CCA_Components_Heat_blockrange_io_h
+#define Packages_Uintah_CCA_Components_Heat_blockrange_io_h
 
-@DEF_TABPROPS@
-@DEF_RADPROPS@
 
-@DEF_ARCHES@
-@DEF_FVM@
-@DEF_ICE@
-@DEF_MPM@
-@DEF_MODELS_RADIATION@
+#include <ostream>
+#include <Core/Grid/Variables/BlockRange.hpp>
 
-@DEF_WASATCH@
+namespace Uintah
+{
+    
+inline std::ostream& operator << ( std::ostream& stream, const BlockRange& range )
+{
+    return stream << "(" << range.begin ( 0 ) << "," <<  range.begin ( 1 ) <<"," <<  range.begin ( 2 ) <<") - (" << range.end ( 0 ) <<"," << range.end ( 1 ) <<"," << range.end ( 2 ) << ")";
+}
 
-@DEF_HEAT@
+}
 
-@DEF_NO_FORTRAN@
-@DEF_FORTRAN_UNDERSCORE@
-
-@DEF_RAY_SCATTER@
-
-@DEF_CXX11@
-
-#if !defined( FIX_NAME )
-#  if defined( FORTRAN_UNDERSCORE_END )
-     // This ## magic (apparently) concatenates the _ to the 'fun' varaible.
-#    define FIX_NAME(fun) fun ## _
-#  else // NONE
-#    define FIX_NAME(fun) fun
-#  endif
-#endif
-
-#endif // UINTAH_DEFS_H
+#endif // Packages_Uintah_CCA_Components_Heat_blockrange_io_h
