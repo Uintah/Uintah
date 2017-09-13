@@ -851,6 +851,7 @@ MAKE_ARCHIVES
 STATIC_BUILD_DEF
 ac_ct_F77
 NO_FORTRAN
+DEF_PHASEFIELD
 DEF_HEAT
 DEF_WASATCH
 DEF_MODELS_RADIATION
@@ -859,6 +860,7 @@ DEF_MPM
 DEF_ICE
 DEF_FVM
 DEF_ARCHES
+BUILD_PHASEFIELD
 BUILD_HEAT
 BUILD_WASATCH
 BUILD_MPM
@@ -1018,6 +1020,7 @@ enable_ice
 enable_mpm
 enable_wasatch
 enable_heat
+enable_phasefield
 enable_all_components
 '
       ac_precious_vars='build_alias
@@ -1689,6 +1692,7 @@ Optional Features:
 --enable-mpm            Turn on the Mpm component.
 --enable-wasatch        Turn on the Wasatch component.
 --enable-heat           Turn on the Heat component.
+--enable-phasefield     Turn on the PhaseField component.
 --enable-all-components Turn on the all components.
 
 Optional Packages:
@@ -6215,6 +6219,18 @@ fi
 
 
 
+  # Check whether --enable-phasefield was given.
+if test "${enable_phasefield+set}" = set; then :
+  enableval=$enable_phasefield; BUILD_PHASEFIELD="yes"
+else
+  BUILD_PHASEFIELD="no"
+   DEF_PHASEFIELD="#define NO_PHASEFIELD"
+fi
+
+  sci_arg_enable_list="$sci_arg_enable_list --enable-phasefield --disable-phasefield"
+
+
+
   # Check whether --enable-all_components was given.
 if test "${enable_all_components+set}" = set; then :
   enableval=$enable_all_components; use_all_components="yes"
@@ -6224,12 +6240,14 @@ if test "${enable_all_components+set}" = set; then :
    BUILD_MPM="yes"
    BUILD_WASATCH="yes"
    BUILD_HEAT="yes"
+   BUILD_PHASEFIELD="yes"
    DEF_ARCHES=
    DEF_FVM=
    DEF_ICE=
    DEF_MPM=
    DEF_WASATCH=
    DEF_HEAT=
+   DEF_PHASEFIELD=
 
 else
   use_all_components="no"
@@ -6252,15 +6270,17 @@ if test "$use_all_components" = "yes" -a          \
            "$enable_models_radiation" = "yes" -o  \
            "$enable_mpm"              = "yes" -o  \
            "$enable_wasatch"          = "yes" -o  \
-           "$enable_heat"             = "yes" \); then
+           "$enable_heat"             = "yes" -o  \
+           "$enable_phasefield"       = "yes" \); then
    as_fn_error $? "Please do not use both --enable-all-components and --enable-<specific-component> " "$LINENO" 5
 fi
-if test "$BUILD_ARCHES"  != "yes"              -a   \
-        "$BUILD_FVM"     != "yes"              -a   \
-        "$BUILD_ICE"     != "yes"              -a   \
-        "$BUILD_MPM"     != "yes"              -a   \
-        "$BUILD_WASATCH" != "yes"              -a   \
-        "$BUILD_HEAT"    != "yes" ; then
+if test "$BUILD_ARCHES"     != "yes"           -a   \
+        "$BUILD_FVM"        != "yes"           -a   \
+        "$BUILD_ICE"        != "yes"           -a   \
+        "$BUILD_MPM"        != "yes"           -a   \
+        "$BUILD_WASATCH"    != "yes"           -a   \
+        "$BUILD_HEAT"       != "yes"           -a   \
+        "$BUILD_PHASEFIELD" != "yes" ; then
   add_important_warning "-------------------------------------------------------------------------"
   msg="!!! NO COMPONENTS WERE SPECIFIED! ONLY UTILITY PROGRAMS WILL BE BUILT !!!"
   add_important_warning "$msg"
@@ -8336,6 +8356,8 @@ if test "$with_fortran" = "no"; then
 fi
 
 # NO_FORTRAN is used in configVars.mk[.in] and DEF_NO_FORTRAN is used in uintah_testdefs.h.in
+
+
 
 
 

@@ -66,6 +66,10 @@ ifeq ($(BUILD_HEAT),yes)
   HEAT := $(SRCDIR)/Heat
 endif
 
+ifeq ($(BUILD_PHASEFIELD),yes)
+  PHASEFIELD := $(SRCDIR)/PhaseField
+endif
+
 SUBDIRS := \
         $(MPM)                         \
         $(ICE)                         \
@@ -76,6 +80,7 @@ SUBDIRS := \
         $(FVM)                         \
         $(MPMFVM)                      \
         $(HEAT)                        \
+        $(PHASEFIELD)                  \
         $(SRCDIR)/DataArchiver         \
         $(SRCDIR)/Examples             \
         $(SRCDIR)/LoadBalancers        \

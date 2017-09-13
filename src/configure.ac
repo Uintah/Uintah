@@ -774,7 +774,14 @@ SCI_ARG_ENABLE(heat,
   [BUILD_HEAT="yes"],
   [BUILD_HEAT="no"
    DEF_HEAT=["#define NO_HEAT"]])
-   
+
+SCI_ARG_ENABLE(phasefield,
+  AC_HELP_STRING(--enable-phasefield,
+                 Turn on the PhaseField component.),
+  [BUILD_PHASEFIELD="yes"],
+  [BUILD_PHASEFIELD="no"
+   DEF_PHASEFIELD=["#define NO_PHASEFIELD"]])
+
 SCI_ARG_ENABLE(all_components,
   AC_HELP_STRING(--enable-all-components,
                  Turn on the all components.),
@@ -785,12 +792,14 @@ SCI_ARG_ENABLE(all_components,
    BUILD_MPM="yes"
    BUILD_WASATCH="yes"
    BUILD_HEAT="yes"
+   BUILD_PHASEFIELD="yes"
    DEF_ARCHES=
    DEF_FVM=
    DEF_ICE=
    DEF_MPM=
    DEF_WASATCH=
    DEF_HEAT=
+   DEF_PHASEFIELD=
   ],
   [use_all_components="no"])
 
@@ -808,15 +817,17 @@ if test "$use_all_components" = "yes" -a          \
            "$enable_models_radiation" = "yes" -o  \
            "$enable_mpm"              = "yes" -o  \
            "$enable_wasatch"          = "yes" -o  \
-           "$enable_heat"             = "yes" \); then
+           "$enable_heat"             = "yes" -o  \
+           "$enable_phasefield"       = "yes" \); then
    AC_MSG_ERROR( Please do not use both --enable-all-components and --enable-<specific-component> )
 fi
-if test "$BUILD_ARCHES"  != "yes"              -a   \
-        "$BUILD_FVM"     != "yes"              -a   \
-        "$BUILD_ICE"     != "yes"              -a   \
-        "$BUILD_MPM"     != "yes"              -a   \
-        "$BUILD_WASATCH" != "yes"              -a   \
-        "$BUILD_HEAT"    != "yes" ; then
+if test "$BUILD_ARCHES"     != "yes"           -a   \
+        "$BUILD_FVM"        != "yes"           -a   \
+        "$BUILD_ICE"        != "yes"           -a   \
+        "$BUILD_MPM"        != "yes"           -a   \
+        "$BUILD_WASATCH"    != "yes"           -a   \
+        "$BUILD_HEAT"       != "yes"           -a   \
+        "$BUILD_PHASEFIELD" != "yes" ; then
   add_important_warning "-------------------------------------------------------------------------"
   msg="!!! NO COMPONENTS WERE SPECIFIED! ONLY UTILITY PROGRAMS WILL BE BUILT !!!"
   add_important_warning "$msg"
@@ -1354,6 +1365,7 @@ AC_SUBST(BUILD_MODELS_RADIATION)
 AC_SUBST(BUILD_MPM)
 AC_SUBST(BUILD_WASATCH)
 AC_SUBST(BUILD_HEAT)
+AC_SUBST(BUILD_PHASEFIELD)
 
 AC_SUBST(DEF_ARCHES)
 AC_SUBST(DEF_FVM)
@@ -1363,6 +1375,7 @@ AC_SUBST(DEF_NO_FORTRAN)
 AC_SUBST(DEF_MODELS_RADIATION)
 AC_SUBST(DEF_WASATCH)
 AC_SUBST(DEF_HEAT)
+AC_SUBST(DEF_PHASEFIELD)
 AC_SUBST(NO_FORTRAN)
 
 if test "$BUILD_ARCHES" = "no" -a "$with_fortran" = "no"; then
