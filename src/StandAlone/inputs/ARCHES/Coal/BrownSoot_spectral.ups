@@ -4,7 +4,7 @@
     <title>OFC_Utah_SUFCO</title>
   </Meta>
 <!--This test covers spectral radiation properties, the spectral radiation solver, as well as-->
-<!--the broonsoot model-->
+<!--the brown soot model-->
   <SimulationComponent type="arches"/>
   <Solver type="hypre"/>
   <Time>

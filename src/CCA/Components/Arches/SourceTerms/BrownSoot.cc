@@ -24,6 +24,10 @@ BrownSoot::BrownSoot( std::string src_name, ArchesLabel* field_labels,
 
 BrownSoot::~BrownSoot()
 {
+      VarLabel::destroy(m_tar_src_label      );
+      VarLabel::destroy(m_nd_src_label       );
+      VarLabel::destroy(m_soot_mass_src_label);
+      VarLabel::destroy(m_balance_src_label  );
 }
 //---------------------------------------------------------------------------
 // Method: Problem Setup

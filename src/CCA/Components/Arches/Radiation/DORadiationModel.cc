@@ -103,6 +103,9 @@ DORadiationModel::~DORadiationModel()
     delete d_perproc_patches;
   }
 
+  for (unsigned int i=0; i<_emiss_plus_scat_source_label.size(); i++){
+    VarLabel::destroy(_emiss_plus_scat_source_label[i]);
+  }
 }
 
 //****************************************************************************
@@ -350,6 +353,7 @@ DORadiationModel::problemSetup( ProblemSpecP& params )
     }
   }
 
+  _emiss_plus_scat_source_label = std::vector<const VarLabel*> (0);
   if (_scatteringOn && _sweepMethod){
     for (int iband=0; iband<d_nbands; iband++){
       for( int ix=0;  ix< d_totalOrds;ix++){
