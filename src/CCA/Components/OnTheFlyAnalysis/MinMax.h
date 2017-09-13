@@ -150,6 +150,7 @@ GENERAL INFORMATION
      
     std::vector<varProperties> d_analyzeVars;
     
+    SchedulerP       d_scheduler{nullptr};
     SimulationStateP d_sharedState;
     Output* d_dataArchiver;
     ProblemSpecP d_prob_spec;

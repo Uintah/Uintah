@@ -365,7 +365,8 @@ void MinMax::scheduleDoAnalysis(SchedulerP& sched,
 {
   printSchedule(level,cout_doing,"MinMax::scheduleDoAnalysis");
    
-   
+  d_scheduler = sched;
+  
   // Tell the scheduler to not copy this variable to a new AMR grid and 
   // do not checkpoint it.
   sched->overrideVariableBehavior("FileInfo_minMax", false, false, false, true, true); 
@@ -465,11 +466,13 @@ void MinMax::computeMinMax(const ProcessorGroup* pg,
     lastWriteTime = writeTime;
   }
 
-  // delt_vartype delt_var;
-  // old_dw->get( delt_var, d_sharedState->get_delt_label() );
-  // double now = d_sharedState->getElapsedSimTime() + delt_var;
+  // Get the delta t from the warehouse so time includes the current
+  // time step.
+  delt_vartype delt_var;
+  d_scheduler->get_dw(0)->get( delt_var, d_sharedState->get_delt_label() );
+  double now = d_sharedState->getElapsedSimTime() + delt_var;
 
-  double now = d_sharedState->getElapsedSimTime();
+  // double now = d_sharedState->getElapsedSimTime();
 
   if(now < d_startTime || now > d_stopTime){
     return;
@@ -600,11 +603,13 @@ void MinMax::doAnalysis(const ProcessorGroup* pg,
     lastWriteTime = writeTime;
   }
 
-  // delt_vartype delt_var;
-  // old_dw->get( delt_var, d_sharedState->get_delt_label() );
-  // double now = d_sharedState->getElapsedSimTime() + delt_var;
+  // Get the delta t from the warehouse so time includes the current
+  // time step.
+  delt_vartype delt_var;
+  d_scheduler->get_dw(0)->get( delt_var, d_sharedState->get_delt_label() );
+  double now = d_sharedState->getElapsedSimTime() + delt_var;
 
-  double now = d_sharedState->getElapsedSimTime();
+  // double now = d_sharedState->getElapsedSimTime();
 
   if(now < d_startTime || now > d_stopTime){
     new_dw->put(max_vartype(lastWriteTime), d_lb->lastCompTimeLabel);
@@ -706,6 +711,7 @@ void MinMax::doAnalysis(const ProcessorGroup* pg,
         const VarLabel* meMin = d_analyzeVars[i].reductionMinLabel;
         const VarLabel* meMax = d_analyzeVars[i].reductionMaxLabel;
         
+        int indx = d_analyzeVars[i].matl;
         
         const TypeDescription* td = label->typeDescription();
         const TypeDescription* subtype = td->getSubType();
@@ -716,8 +722,8 @@ void MinMax::doAnalysis(const ProcessorGroup* pg,
             max_vartype maxQ;
             min_vartype minQ;
             
-            new_dw->get( maxQ, meMax, level);
-            new_dw->get( minQ, meMin, level); 
+            new_dw->get( maxQ, meMax, level, indx);
+            new_dw->get( minQ, meMin, level, indx);
         
             fprintf( fp, "%16.15E     %16.15E    %16.15E\n",now, (double)minQ, (double)maxQ );
            break;
@@ -726,8 +732,8 @@ void MinMax::doAnalysis(const ProcessorGroup* pg,
             maxvec_vartype maxQ;
             minvec_vartype minQ;
             
-            new_dw->get( maxQ, meMax, level);
-            new_dw->get( minQ, meMin, level); 
+            new_dw->get( maxQ, meMax, level, indx);
+            new_dw->get( minQ, meMin, level, indx);
             Vector maxQ_V = maxQ;
             Vector minQ_V = minQ;
             
@@ -810,8 +816,8 @@ void MinMax::findMinMax( DataWarehouse*  new_dw,
   const VarLabel* meMin = VarLabel::find( VLmin );
   const VarLabel* meMax = VarLabel::find( VLmax );
 
-  new_dw->put( ReductionVariable<Ttype, Reductions::Max<Ttype> >(maxQ), meMax, level );
-  new_dw->put( ReductionVariable<Ttype, Reductions::Min<Ttype> >(minQ), meMin, level );
+  new_dw->put( ReductionVariable<Ttype, Reductions::Max<Ttype> >(maxQ), meMax, level, indx );
+  new_dw->put( ReductionVariable<Ttype, Reductions::Min<Ttype> >(minQ), meMin, level, indx );
 }
 
 //______________________________________________________________________
