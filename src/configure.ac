@@ -390,6 +390,24 @@ SCI_ARG_WITH(hypre,
   DIR,
   WITHOUT-IS-VALID)
   
+SCI_ARG_WITH(hypre_lib,
+  AC_HELP_STRING(--with-hypre-lib=DIR,
+                 Use the hypre libraries installed in DIR),
+  [with_hypre_lib="$withval"
+   sci_required_hypre=yes],
+  [with_hypre_lib=NOT_SET],
+  DIR,
+  WITHOUT-IS-NOT-VALID)
+
+SCI_ARG_WITH(hypre_include,
+  AC_HELP_STRING(--with-hypre-include=DIR,
+                 Use the hypre include files installed in DIR),
+  [with_hypre_include="$withval"
+   sci_required_hypre=yes],
+  [with_hypre_include=NOT_SET],
+  DIR,
+  WITHOUT-IS-NOT-VALID)
+
 SCI_ARG_WITH(petsc,
   AC_HELP_STRING(--with-petsc=DIR,
                  Use the petsc installation in DIR (or set to 'built-in'). ),
@@ -4450,7 +4468,7 @@ if test "$BUILD_ARCHES" = "yes"; then
 fi
 
 if test "$BUILD_WASATCH" = "yes" -o "$BUILD_ARCHES" = "yes"; then
-  if test "$with_hypre" = NOT_SET; then
+  if test "$with_hypre" = NOT_SET -a "$with_hypre_include" = NOT_SET; then
     AC_MSG_WARN( [ Requiring Hypre due to Arches or Wasatch...] )
     with_hypre=yes
   fi
@@ -4471,11 +4489,23 @@ else
      DEF_HYPRE="#define HAVE_HYPRE 1"
      AC_MSG_WARN(Relying on a built-in version of Hypre)
   else
-
-     if test "$with_hypre" != NOT_SET -a "$with_hypre" != "yes"; then
-        _sci_lib="$with_hypre/lib"
-        _sci_inc="$with_hypre/include"
-        _sci_optional=specific
+     if test "$with_hypre" != NOT_SET ; then
+       if test "$with_hypre_include" != NOT_SET -o "$with_hypre_lib" != NOT_SET ; then
+         AC_MSG_ERROR( You cannot use --with-hypre and --with-hypre-include/--with-hypre-library. )
+       elif test "$with_hypre" != "yes"; then
+         _sci_lib="$with_hypre/lib"
+         _sci_inc="$with_hypre/include"
+         _sci_optional=specific
+       fi
+     elif test "$with_hypre_lib" != NOT_SET -o "$with_hypre_include" != NOT_SET; then
+       if test "$with_hypre_lib" = NOT_SET -o "$with_hypre_include" = NOT_SET; then
+         AC_MSG_ERROR( You must specify both --with-hypre-include and --with-hypre-library. )
+       else
+         _sci_lib="$with_hypre_lib"
+         _sci_inc="$with_hypre_include"
+         with_hypre="yes"
+         _sci_optional=specific
+       fi
 
 	# Try to avoid accidentally allowing system libraries to shadow the specific libraries the user has requested. 
         if test "$USING_GCC" = "yes" -o "$USING_ICC" = "yes"; then
