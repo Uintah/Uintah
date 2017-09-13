@@ -466,13 +466,16 @@ void MinMax::computeMinMax(const ProcessorGroup* pg,
     lastWriteTime = writeTime;
   }
 
+  double now = d_sharedState->getElapsedSimTime();
+
   // Get the delta t from the warehouse so time includes the current
   // time step.
   delt_vartype delt_var;
-  d_scheduler->get_dw(0)->get( delt_var, d_sharedState->get_delt_label() );
-  double now = d_sharedState->getElapsedSimTime() + delt_var;
-
-  // double now = d_sharedState->getElapsedSimTime();
+  if( d_scheduler->get_dw(0)->exists( d_sharedState->get_delt_label() ) )
+  {
+    d_scheduler->get_dw(0)->get( delt_var, d_sharedState->get_delt_label() );
+    now += delt_var;
+  }
 
   if(now < d_startTime || now > d_stopTime){
     return;
@@ -603,13 +606,16 @@ void MinMax::doAnalysis(const ProcessorGroup* pg,
     lastWriteTime = writeTime;
   }
 
+  double now = d_sharedState->getElapsedSimTime();
+
   // Get the delta t from the warehouse so time includes the current
   // time step.
   delt_vartype delt_var;
-  d_scheduler->get_dw(0)->get( delt_var, d_sharedState->get_delt_label() );
-  double now = d_sharedState->getElapsedSimTime() + delt_var;
-
-  // double now = d_sharedState->getElapsedSimTime();
+  if( d_scheduler->get_dw(0)->exists( d_sharedState->get_delt_label() ) )
+  {
+    d_scheduler->get_dw(0)->get( delt_var, d_sharedState->get_delt_label() );
+    now += delt_var;
+  }
 
   if(now < d_startTime || now > d_stopTime){
     new_dw->put(max_vartype(lastWriteTime), d_lb->lastCompTimeLabel);
