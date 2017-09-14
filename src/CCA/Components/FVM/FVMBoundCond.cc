@@ -505,6 +505,93 @@ void FVMBoundCond::setESPotentialBC(const Patch* patch, int dwi,
       c += zoffset;
     }
   }
+  if(yminus_bd && zminus_bd){
+    IntVector c(min.x(), min.y(), min.z());
+    for(int i = min.x()+1; i < max.x(); i++){
+      es_potential[c] =  es_potential[c + yoffset  + zoffset]
+                      - (es_potential[c + yoffset2 + zoffset]
+                      -  es_potential[c + zoffset]
+                      +  es_potential[c + yoffset  + zoffset2]
+                      -  es_potential[c + yoffset])/2;
+      c += xoffset;
+    }
+  }
+  if(yminus_bd && zplus_bd){
+    IntVector c(min.x(), min.y(), max.z()-1);
+    for(int i = min.x()+1; i < max.x(); i++){
+      es_potential[c] =  es_potential[c + yoffset  - zoffset]                       + (es_potential[c - zoffset]
+                      -  es_potential[c + yoffset2 - zoffset]
+                      +  es_potential[c + yoffset]
+                      -  es_potential[c + yoffset  - zoffset2])/2;
+      c += xoffset;
+    }
+  }
+  if(yplus_bd && zplus_bd){
+    IntVector c(min.x(), max.y()-1, max.z()-1);
+    for(int i = min.x()+1; i < max.x(); i++){
+      es_potential[c] = es_potential[c - yoffset - zoffset]
+                      + (es_potential[c - zoffset]
+                      -  es_potential[c - yoffset2 - zoffset]
+                      +  es_potential[c - yoffset]
+                      -  es_potential[c - yoffset - zoffset2])/2;
+      c += xoffset;
+    }
+  }
+  if(yplus_bd && zminus_bd){
+    IntVector c(min.x(), max.y()-1, min.z());
+    for(int i = min.x()+1; i < max.x(); i++){
+      es_potential[c] = es_potential[c - yoffset + zoffset]
+                      + (es_potential[c + zoffset]
+                      -  es_potential[c - yoffset2 + zoffset]
+                      -  es_potential[c - yoffset + zoffset2]
+                      +  es_potential[c - yoffset])/2;
+      c += xoffset;
+    }
+  }
+  if(zminus_bd && xminus_bd){
+    IntVector c(min.x(), min.y(), min.z());
+    for(int i = min.y()+1; i < max.y(); i++){
+      es_potential[c] =  es_potential[c + zoffset  + xoffset]
+                      - (es_potential[c + zoffset2 + xoffset]
+                      -  es_potential[c + xoffset]
+                      +  es_potential[c + zoffset  + xoffset2]
+                      -  es_potential[c + zoffset])/2;
+      c += yoffset;
+    }
+  }
+  if(zminus_bd && xplus_bd){
+    IntVector c(max.x()-1, min.y(), min.z());
+    for(int i = min.y()+1; i < max.y(); i++){
+      es_potential[c] =  es_potential[c + zoffset  - xoffset]
+                      + (es_potential[c - xoffset]
+                      -  es_potential[c + zoffset2 - xoffset]
+                      +  es_potential[c + zoffset]
+                      -  es_potential[c + zoffset  - xoffset2])/2;
+      c += yoffset;
+    }
+  }
+  if(zplus_bd && xplus_bd){
+    IntVector c(max.x()-1, min.y(), max.z()-1);
+    for(int i = min.y()+1; i < max.y(); i++){
+      es_potential[c] = es_potential[c - zoffset - xoffset]
+                      + (es_potential[c - xoffset]
+                      -  es_potential[c - zoffset2 - xoffset]
+                      +  es_potential[c - zoffset]
+                      -  es_potential[c - zoffset - xoffset2])/2;
+      c += yoffset;
+    }
+  }
+  if(zplus_bd && xminus_bd){
+    IntVector c(min.x(), min.y(), max.z()-1);
+    for(int i = min.y()+1; i < max.y(); i++){
+      es_potential[c] = es_potential[c - zoffset + xoffset]
+                      + (es_potential[c + xoffset]
+                      -  es_potential[c - zoffset2 + xoffset]
+                      -  es_potential[c - zoffset + xoffset2]
+                      +  es_potential[c - zoffset])/2;
+      c += yoffset;
+    }
+  }
 }
 
 void FVMBoundCond::setESPotentialBC(const Patch* patch, int dwi,
