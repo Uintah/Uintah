@@ -104,6 +104,14 @@ ifeq ($(BUILD_WASATCH),yes)
   WASATCH_LIB        = CCA/Components/Wasatch
 endif
 
+ifeq ($(BUILD_HEAT),yes)
+  HEAT_LIB           = CCA/Components/Heat
+endif
+
+ifeq ($(BUILD_PHASEFIELD),yes)
+  PHASEFIELD_LIB     = CCA/Components/PhaseField
+endif
+
 ALL_PSE_CORE_LIBS =        \
         Core/Containers    \
         Core/DataArchive   \
@@ -142,7 +150,9 @@ ALL_PSE_LIBS =                              \
         $(ICE_LIB)                          \
         $(MPMICE_LIB)                       \
         $(MPMFVM_LIB)                       \
-        $(WASATCH_LIB)                      
+        $(WASATCH_LIB)                      \
+        $(HEAT_LIB)                         \
+        $(PHASEFIELD_LIB)                   \
 
   # WARNING: THESE LIBRARIES ARE LISTED IN A SPECIFIC ORDER TO SATISFY
   #          THE NEEDS OF STATIC LINKING.  DO NOT ALPHABETIZE THEM!
@@ -165,6 +175,8 @@ ALL_STATIC_PSE_LIBS =                   \
     $(MPMICE_LIB)                       \
     $(MPMFVM_LIB)                       \
     $(WASATCH_LIB)                      \
+    $(HEAT_LIB)                         \
+    $(PHASEFIELD_LIB)                   \
                                         \
     CCA/Components/Schedulers           \
     CCA/Components/OnTheFlyAnalysis     \

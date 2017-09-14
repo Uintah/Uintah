@@ -61,6 +61,8 @@ PSELIBS := \
         $(COMPONENTS)/Solvers              \
         $(COMPONENTS)/SwitchingCriteria    \
         $(WASATCH)                         \
+        $(HEAT)                            \
+        $(PHASEFIELD)                      \
         $(MORE_LIBS)
 
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(BOOST_LIBRARY)

@@ -369,10 +369,12 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
                              _stencilSize, DoingFineToCoarse);
     }
     // Looking up
+#ifndef SKIP_COARSE_TO_FINE_CONNECTIONS // DEBUG THIS
     if (level < numLevels-1) {
       hpatch.makeConnections(_HA, _A_dw, _A_label,
                              _stencilSize, DoingCoarseToFine);
     }
+#endif
   } 
   HYPRE_SStructMatrixAssemble(_HA);
   _exists[SStructA] = SStructAssembled;

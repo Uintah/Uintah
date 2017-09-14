@@ -390,6 +390,24 @@ SCI_ARG_WITH(hypre,
   DIR,
   WITHOUT-IS-VALID)
   
+SCI_ARG_WITH(hypre_lib,
+  AC_HELP_STRING(--with-hypre-lib=DIR,
+                 Use the hypre libraries installed in DIR),
+  [with_hypre_lib="$withval"
+   sci_required_hypre=yes],
+  [with_hypre_lib=NOT_SET],
+  DIR,
+  WITHOUT-IS-NOT-VALID)
+
+SCI_ARG_WITH(hypre_include,
+  AC_HELP_STRING(--with-hypre-include=DIR,
+                 Use the hypre include files installed in DIR),
+  [with_hypre_include="$withval"
+   sci_required_hypre=yes],
+  [with_hypre_include=NOT_SET],
+  DIR,
+  WITHOUT-IS-NOT-VALID)
+
 SCI_ARG_WITH(petsc,
   AC_HELP_STRING(--with-petsc=DIR,
                  Use the petsc installation in DIR (or set to 'built-in'). ),
@@ -750,6 +768,20 @@ SCI_ARG_ENABLE(wasatch,
   [BUILD_WASATCH="no"
    DEF_WASATCH=["#define NO_WASATCH"]])
 
+SCI_ARG_ENABLE(heat,
+  AC_HELP_STRING(--enable-heat,
+                 Turn on the Heat component.),
+  [BUILD_HEAT="yes"],
+  [BUILD_HEAT="no"
+   DEF_HEAT=["#define NO_HEAT"]])
+
+SCI_ARG_ENABLE(phasefield,
+  AC_HELP_STRING(--enable-phasefield,
+                 Turn on the PhaseField component.),
+  [BUILD_PHASEFIELD="yes"],
+  [BUILD_PHASEFIELD="no"
+   DEF_PHASEFIELD=["#define NO_PHASEFIELD"]])
+
 SCI_ARG_ENABLE(all_components,
   AC_HELP_STRING(--enable-all-components,
                  Turn on the all components.),
@@ -759,11 +791,15 @@ SCI_ARG_ENABLE(all_components,
    BUILD_ICE="yes"
    BUILD_MPM="yes"
    BUILD_WASATCH="yes"
+   BUILD_HEAT="yes"
+   BUILD_PHASEFIELD="yes"
    DEF_ARCHES=
    DEF_FVM=
    DEF_ICE=
    DEF_MPM=
    DEF_WASATCH=
+   DEF_HEAT=
+   DEF_PHASEFIELD=
   ],
   [use_all_components="no"])
 
@@ -780,14 +816,18 @@ if test "$use_all_components" = "yes" -a          \
            "$enable_ice"              = "yes" -o  \
            "$enable_models_radiation" = "yes" -o  \
            "$enable_mpm"              = "yes" -o  \
-           "$enable_wasatch"          = "yes" \); then
+           "$enable_wasatch"          = "yes" -o  \
+           "$enable_heat"             = "yes" -o  \
+           "$enable_phasefield"       = "yes" \); then
    AC_MSG_ERROR( Please do not use both --enable-all-components and --enable-<specific-component> )
 fi
-if test "$BUILD_ARCHES"  != "yes"              -a   \
-        "$BUILD_FVM"     != "yes"              -a   \
-        "$BUILD_ICE"     != "yes"              -a   \
-        "$BUILD_MPM"     != "yes"              -a   \
-        "$BUILD_WASATCH" != "yes"; then
+if test "$BUILD_ARCHES"     != "yes"           -a   \
+        "$BUILD_FVM"        != "yes"           -a   \
+        "$BUILD_ICE"        != "yes"           -a   \
+        "$BUILD_MPM"        != "yes"           -a   \
+        "$BUILD_WASATCH"    != "yes"           -a   \
+        "$BUILD_HEAT"       != "yes"           -a   \
+        "$BUILD_PHASEFIELD" != "yes" ; then
   add_important_warning "-------------------------------------------------------------------------"
   msg="!!! NO COMPONENTS WERE SPECIFIED! ONLY UTILITY PROGRAMS WILL BE BUILT !!!"
   add_important_warning "$msg"
@@ -1324,6 +1364,8 @@ AC_SUBST(BUILD_ICE)
 AC_SUBST(BUILD_MODELS_RADIATION)
 AC_SUBST(BUILD_MPM)
 AC_SUBST(BUILD_WASATCH)
+AC_SUBST(BUILD_HEAT)
+AC_SUBST(BUILD_PHASEFIELD)
 
 AC_SUBST(DEF_ARCHES)
 AC_SUBST(DEF_FVM)
@@ -1332,6 +1374,8 @@ AC_SUBST(DEF_MPM)
 AC_SUBST(DEF_NO_FORTRAN)
 AC_SUBST(DEF_MODELS_RADIATION)
 AC_SUBST(DEF_WASATCH)
+AC_SUBST(DEF_HEAT)
+AC_SUBST(DEF_PHASEFIELD)
 AC_SUBST(NO_FORTRAN)
 
 if test "$BUILD_ARCHES" = "no" -a "$with_fortran" = "no"; then
@@ -4450,7 +4494,7 @@ if test "$BUILD_ARCHES" = "yes"; then
 fi
 
 if test "$BUILD_WASATCH" = "yes" -o "$BUILD_ARCHES" = "yes"; then
-  if test "$with_hypre" = NOT_SET; then
+  if test "$with_hypre" = NOT_SET -a "$with_hypre_include" = NOT_SET; then
     AC_MSG_WARN( [ Requiring Hypre due to Arches or Wasatch...] )
     with_hypre=yes
   fi
@@ -4471,11 +4515,23 @@ else
      DEF_HYPRE="#define HAVE_HYPRE 1"
      AC_MSG_WARN(Relying on a built-in version of Hypre)
   else
-
-     if test "$with_hypre" != NOT_SET -a "$with_hypre" != "yes"; then
-        _sci_lib="$with_hypre/lib"
-        _sci_inc="$with_hypre/include"
-        _sci_optional=specific
+     if test "$with_hypre" != NOT_SET ; then
+       if test "$with_hypre_include" != NOT_SET -o "$with_hypre_lib" != NOT_SET ; then
+         AC_MSG_ERROR( You cannot use --with-hypre and --with-hypre-include/--with-hypre-library. )
+       elif test "$with_hypre" != "yes"; then
+         _sci_lib="$with_hypre/lib"
+         _sci_inc="$with_hypre/include"
+         _sci_optional=specific
+       fi
+     elif test "$with_hypre_lib" != NOT_SET -o "$with_hypre_include" != NOT_SET; then
+       if test "$with_hypre_lib" = NOT_SET -o "$with_hypre_include" = NOT_SET; then
+         AC_MSG_ERROR( You must specify both --with-hypre-include and --with-hypre-library. )
+       else
+         _sci_lib="$with_hypre_lib"
+         _sci_inc="$with_hypre_include"
+         with_hypre="yes"
+         _sci_optional=specific
+       fi
 
 	# Try to avoid accidentally allowing system libraries to shadow the specific libraries the user has requested. 
         if test "$USING_GCC" = "yes" -o "$USING_ICC" = "yes"; then
