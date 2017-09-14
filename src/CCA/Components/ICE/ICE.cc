@@ -566,6 +566,15 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
     d_analysisModules = AnalysisModuleFactory::create(prob_spec, sharedState, dataArchiver);
 
     if( d_analysisModules.size() != 0 ) {
+
+      if(d_doAMR && !d_sharedState->isLockstepAMR()){
+	ostringstream msg;
+	msg << "\n ERROR: You must set: <useLockStep> true </useLockStep> \n"
+	    << " inside of the <AMR> section to do analysis. The analysis \n"
+	    << " component gives the wrong answers when the W-cycle is used. \n"; 
+	throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
+      }
+      
       vector<AnalysisModule*>::iterator iter;
       for( iter  = d_analysisModules.begin(); iter != d_analysisModules.end(); iter++) {
         AnalysisModule* am = *iter;
