@@ -401,8 +401,8 @@ void MinMax::scheduleDoAnalysis(SchedulerP& sched,
 
       t0->requires( Task::NewDW, label, matSubSet, gn, 0 );
      
-      t0->computes( d_analyzeVars[i].reductionMinLabel, level.get_rep() );
-      t0->computes( d_analyzeVars[i].reductionMaxLabel, level.get_rep() );
+      t0->computes( d_analyzeVars[i].reductionMinLabel, level.get_rep(), matSubSet );
+      t0->computes( d_analyzeVars[i].reductionMaxLabel, level.get_rep(), matSubSet );
 
       if(matSubSet && matSubSet->removeReference()){
         delete matSubSet;
@@ -412,9 +412,8 @@ void MinMax::scheduleDoAnalysis(SchedulerP& sched,
   
   sched->addTask( t0, level->eachPatch(), d_matl_set );
  
- 
   //__________________________________
-  //  Write min/max to a  file
+  //  Write min/max to a file
   // Only write data on patch 0 on each level
 
   Task* t1 = scinew Task( "MinMax::doAnalysis", 
@@ -428,8 +427,12 @@ void MinMax::scheduleDoAnalysis(SchedulerP& sched,
   
     int myLevel = d_analyzeVars[i].level;
     if ( isRightLevel( myLevel, L_indx, level) ){
-      t1->requires( Task::NewDW, d_analyzeVars[i].reductionMinLabel, level.get_rep() );
-      t1->requires( Task::NewDW, d_analyzeVars[i].reductionMaxLabel, level.get_rep() );
+      MaterialSubset* matSubSet = scinew MaterialSubset();
+      matSubSet->add( d_analyzeVars[i].matl );
+      matSubSet->addReference();
+
+      t1->requires( Task::NewDW, d_analyzeVars[i].reductionMinLabel, level.get_rep(), matSubSet );
+      t1->requires( Task::NewDW, d_analyzeVars[i].reductionMaxLabel, level.get_rep(), matSubSet );
     }
   }
     
@@ -470,9 +473,10 @@ void MinMax::computeMinMax(const ProcessorGroup* pg,
 
   // Get the delta t from the warehouse so time includes the current
   // time step.
+  DataWarehouse * dw = d_scheduler->get_dw(0);
+  
   delt_vartype delt_var;
-  if( d_scheduler->get_dw(0)->exists( d_sharedState->get_delt_label() ) )
-  {
+  if( dw->exists( d_sharedState->get_delt_label() ) ) {
     d_scheduler->get_dw(0)->get( delt_var, d_sharedState->get_delt_label() );
     now += delt_var;
   }
@@ -610,9 +614,10 @@ void MinMax::doAnalysis(const ProcessorGroup* pg,
 
   // Get the delta t from the warehouse so time includes the current
   // time step.
+  DataWarehouse * dw = d_scheduler->get_dw(0);
+  
   delt_vartype delt_var;
-  if( d_scheduler->get_dw(0)->exists( d_sharedState->get_delt_label() ) )
-  {
+  if( dw->exists( d_sharedState->get_delt_label() ) ) {
     d_scheduler->get_dw(0)->get( delt_var, d_sharedState->get_delt_label() );
     now += delt_var;
   }
@@ -643,7 +648,7 @@ void MinMax::doAnalysis(const ProcessorGroup* pg,
     if( fileInfo.get().get_rep() ){
       myFiles = fileInfo.get().get_rep()->files;
     }    
-    
+
     int proc = lb->getPatchwiseProcessorAssignment(patch);
     //__________________________________
     // write data if this processor owns this patch
@@ -721,7 +726,7 @@ void MinMax::doAnalysis(const ProcessorGroup* pg,
         
         const TypeDescription* td = label->typeDescription();
         const TypeDescription* subtype = td->getSubType();
-                
+
         switch(subtype->getType()) {
 
           case TypeDescription::double_type:{
@@ -730,7 +735,7 @@ void MinMax::doAnalysis(const ProcessorGroup* pg,
             
             new_dw->get( maxQ, meMax, level, indx);
             new_dw->get( minQ, meMin, level, indx);
-        
+
             fprintf( fp, "%16.15E     %16.15E    %16.15E\n",now, (double)minQ, (double)maxQ );
            break;
           }
@@ -740,6 +745,7 @@ void MinMax::doAnalysis(const ProcessorGroup* pg,
             
             new_dw->get( maxQ, meMax, level, indx);
             new_dw->get( minQ, meMin, level, indx);
+
             Vector maxQ_V = maxQ;
             Vector minQ_V = minQ;
             
