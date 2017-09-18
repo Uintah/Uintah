@@ -39,6 +39,7 @@ c     Local Variables :
 c*********************************************************************
       integer ISTV, JSTV, KSTV, IENDV, JENDV, KENDV
       integer i, j, k
+      integer flag
 
       double precision AREANS, AREAEW, AREATB, VOL
       double precision CE, CW, CN, CS, CT, CB
@@ -49,7 +50,7 @@ c*********************************************************************
       double precision VISE, VISW, VISN, VISS, VIST, VISB
       double precision DE, DW, DN, DS, DT, DB
       double precision TEW, TNS, TTB
-      double precision REE, REW, REN, RES, RET, REB
+      double precision COEFE, COEFW, COEFN, COEFS, COEFT, COEFB
       double precision AEC, AWC, ANC, ASC, ATC, ABC
       double precision Relimit_m1
       double precision DUDYE, DUDYW
@@ -77,10 +78,13 @@ c*********************************************************************
       AREATB = dx*dy
       VOL = dx*dy*dz
 
+      Relimit_m1 = Relimit**(-1.0)
+
       DO 220 K = KSTV,KENDV
          DO 210 J = JSTV,JENDV
             DO 200 I = ISTV,IENDV
 
+              flag = 0
               EPSP = eps(I,J,K)*eps(I,J-1,K)
 
             IF ( EPSP .gt. small ) THEN 
@@ -91,6 +95,7 @@ c*********************************************************************
               EPSS = eps(I,J-2,K)
               EPST = eps(I,J,K+1)*eps(I,J-1,K+1)
               EPSB = eps(I,J,K-1)*eps(I,J-1,K-1)
+
 C-----------------------------------------------------------------------
 C     CALCULATE CONVECTION COEFFICIENTS
 C-----------------------------------------------------------------------
@@ -120,6 +125,15 @@ C-----------------------------------------------------------------------
                CTSAV(I,J,K) = CT
                CBSAV(I,J,K) = CB
 
+               GUP = 0.25*(GE+GSE+GW+GSW)
+               CPE = GUP*VOL/DX
+               CPW = GUP*VOL/DX
+               CPN = GP*VOL/DY
+               CPS = GP*VOL/DY
+               GWP = 0.25*(GT+GST+GB+GSB)
+               CPT = GWP*VOL/DZ
+               CPB = GWP*VOL/DZ
+
 C-----------------------------------------------------------------------
 C     CALCULATE DIFFUSION COEFFICIENTS
 C-----------------------------------------------------------------------
@@ -134,97 +148,89 @@ C-----------------------------------------------------------------------
                VISB = PT25*(VIS(I,J,K-1)+VIS(I,J-1,K-1)+
      +                VIS(I,J,K)+VIS(I,J-1,K))
 
-               DE = VISE*AREAEW/DX*EPSE
-               DW = VISW*AREAEW/DX*EPSW
-               DN = VISN*AREANS/DY*EPSN
-               DS = VISS*AREANS/DY*EPSS
-               DT = VIST*AREATB/DZ*EPST
-               DB = VISB*AREATB/DZ*EPSB
+               DE = VISE*AREAEW/dx*EPSE
+               DW = VISW*AREAEW/dx*EPSW
+               DN = VISN*AREANS/dy*EPSN
+               DS = VISS*AREANS/dy*EPSS
+               DT = VIST*AREATB/dz*EPST
+               DB = VISB*AREATB/dz*EPSB
+
 
 C-----------------------------------------------------------------------
 C     CONVECTION DIFFERENCING SCHEME SELECTION
 C-----------------------------------------------------------------------
 
-               REE = ABS(CE)/DE
-               REW = ABS(CW)/DW
-               REN = ABS(CN)/DN
-               RES = ABS(CS)/DS
-               RET = ABS(CT)/DT
-               REB = ABS(CB)/DB
-               CVSY(I,J,K) = 0.0d0
-
-C If the current cell borders a wall (EPS < 1) then we are going to
-C upwind. 
                IF ( EPSE .lt. PT5 ) THEN 
-                 REE = Relimit + 1
-                 REW = Relimit + 1
-                 REN = Relimit + 1
-                 RES = Relimit + 1
-                 RET = Relimit + 1
-                 REB = Relimit + 1
+                 flag = 1 
                ENDIF 
                IF ( EPSW .lt. PT5 ) THEN 
-                 REE = Relimit + 1
-                 REW = Relimit + 1
-                 REN = Relimit + 1
-                 RES = Relimit + 1
-                 RET = Relimit + 1
-                 REB = Relimit + 1
+                 flag = 1 
                ENDIF 
                IF ( EPST .lt. PT5 ) THEN 
-                 REE = Relimit + 1
-                 REW = Relimit + 1
-                 REN = Relimit + 1
-                 RES = Relimit + 1
-                 RET = Relimit + 1
-                 REB = Relimit + 1
+                 flag = 1 
                ENDIF 
                IF ( EPSB .lt. PT5 ) THEN 
-                 REE = Relimit + 1
-                 REW = Relimit + 1
-                 REN = Relimit + 1
-                 RES = Relimit + 1
-                 RET = Relimit + 1
-                 REB = Relimit + 1
+                 flag = 1 
                ENDIF 
+               CVSY(I,J,K) = 0.0d0
+               if ( flag .eq. 1 ) then
+                 COEFE = DE - ABS(CE)/2.0D0
+                 COEFW = DW - ABS(CW)/2.0D0
+                 COEFN = DN - ABS(CN)/2.0D0
+                 COEFS = DS - ABS(CS)/2.0D0
+                 COEFT = DT - ABS(CT)/2.0D0
+                 COEFB = DB - ABS(CB)/2.0D0
+                 TEW = 1.0D0
+                 TNS = 1.0D0
+                 TTB = 1.0D0
+                 IF (COEFE.LT.0.0D0 .OR. COEFW.LT.0.0D0) TEW = 0.0D0
+                 IF (COEFN.LT.0.0D0 .OR. COEFS.LT.0.0D0) TNS = 0.0D0
+                 IF (COEFT.LT.0.0D0 .OR. COEFB.LT.0.0D0) TTB = 0.0D0
+                 IF (TEW.EQ.1.0D0) CVSY(I,J,K) = CVSY(I,J,K)+1.0d0/3.0d0
+                 IF (TNS.EQ.1.0D0) CVSY(I,J,K) = CVSY(I,J,K)+1.0d0/3.0d0
+                 IF (TTB.EQ.1.0D0) CVSY(I,J,K) = CVSY(I,J,K)+1.0d0/3.0d0
+                 AEC = -PT5*CE*TEW + dMAX1(0.0D0,-CPE)*(1.0D0-TEW)
+                 AWC = PT5*CW*TEW + dMAX1(0.0D0,CPW)*(1.0D0-TEW)
+                 ANC = -PT5*CN*TNS + dMAX1(0.0D0,-CPN)*(1.0D0-TNS)
+                 ASC = PT5*CS*TNS + dMAX1(0.0D0,CPS)*(1.0D0-TNS)
+                 ATC = -PT5*CT*TTB + dMAX1(0.0D0,-CPT)*(1.0D0-TTB)
+                 ABC = PT5*CB*TTB + dMAX1(0.0D0,CPB)*(1.0D0-TTB)
+                 AE(I,J,K) = AEC + DE
+                 AW(I,J,K) = AWC + DW
+                 AN(I,J,K) = ANC + DN
+                 AS(I,J,K) = ASC + DS
+                 AT(I,J,K) = ATC + DT
+                 AB(I,J,K) = ABC + DB
+               else
+                 COEFE = DE - ABS(CE)/Relimit
+                 COEFW = DW - ABS(CW)/Relimit
+                 COEFN = DN - ABS(CN)/Relimit
+                 COEFS = DS - ABS(CS)/Relimit
+                 COEFT = DT - ABS(CT)/Relimit
+                 COEFB = DB - ABS(CB)/Relimit
+                 TEW = 1.0D0
+                 TNS = 1.0D0
+                 TTB = 1.0D0
+                 IF (COEFE.LT.0.0D0 .OR. COEFW.LT.0.0D0) TEW = 0.0D0
+                 IF (COEFN.LT.0.0D0 .OR. COEFS.LT.0.0D0) TNS = 0.0D0
+                 IF (COEFT.LT.0.0D0 .OR. COEFB.LT.0.0D0) TTB = 0.0D0
+                 IF (TEW.EQ.1.0D0) CVSY(I,J,K) = CVSY(I,J,K)+1.0d0/3.0d0
+                 IF (TNS.EQ.1.0D0) CVSY(I,J,K) = CVSY(I,J,K)+1.0d0/3.0d0
+                 IF (TTB.EQ.1.0D0) CVSY(I,J,K) = CVSY(I,J,K)+1.0d0/3.0d0
+                 AEC = -PT5*CE*TEW + dMAX1(0.0D0,-CPE)*(1.0D0-TEW)
+                 AWC = PT5*CW*TEW + dMAX1(0.0D0,CPW)*(1.0D0-TEW)
+                 ANC = -PT5*CN*TNS + dMAX1(0.0D0,-CPN)*(1.0D0-TNS)
+                 ASC = PT5*CS*TNS + dMAX1(0.0D0,CPS)*(1.0D0-TNS)
+                 ATC = -PT5*CT*TTB + dMAX1(0.0D0,-CPT)*(1.0D0-TTB)
+                 ABC = PT5*CB*TTB + dMAX1(0.0D0,CPB)*(1.0D0-TTB)
+                 AE(I,J,K) = AEC + DE
+                 AW(I,J,K) = AWC + DW
+                 AN(I,J,K) = ANC + DN
+                 AS(I,J,K) = ASC + DS
+                 AT(I,J,K) = ATC + DT
+                 AB(I,J,K) = ABC + DB
+               endif
 
-C If Re < Re_min we central difference, otherwise upwind.
-               IF (REE.LT.Relimit) then
-                 CVSY(I,J,K) = CVSY(I,J,K) + 1.0d0/6.0d0
-                 AE(I,J,K) = DE - PT5*CE
-               else
-                 AE(I,J,K) = dMAX1(0.0D0,-CE)
-               endif
-               IF (REW.LT.Relimit) then
-                 CVSY(I,J,K) = CVSY(I,J,K) + 1.0d0/6.0d0
-                 AW(I,J,K) = DW + PT5*CW
-               else
-                 AW(I,J,K) = dMAX1(0.0D0,CW)
-               endif
-               IF (REN.LT.Relimit) then
-                 CVSY(I,J,K) = CVSY(I,J,K) + 1.0d0/6.0d0
-                 AN(I,J,K) = DN - PT5*CN
-               else
-                 AN(I,J,K) = dMAX1(0.0D0,-CN)
-               endif
-               IF (RES.LT.Relimit) then
-                 CVSY(I,J,K) = CVSY(I,J,K) + 1.0d0/6.0d0
-                 AS(I,J,K) = DS + PT5*CS
-               else
-                 AS(I,J,K) = dMAX1(0.0D0,CS)
-               endif
-               IF (RET.LT.Relimit) then
-                 CVSY(I,J,K) = CVSY(I,J,K) + 1.0d0/6.0d0
-                 AT(I,J,K) = DT - PT5*CT
-               else
-                 AT(I,J,K) = dMAX1(0.0D0,-CT)
-               endif
-               IF (REB.LT.Relimit) then
-                 CVSY(I,J,K) = CVSY(I,J,K) + 1.0d0/6.0d0
-                 AB(I,J,K) = DB + PT5*CB
-               else
-                 AB(I,J,K) = dMAX1(0.0D0,CB)
-               endif
 C-----------------------------------------------------------------------
 C     Compute the velocity source
 C-----------------------------------------------------------------------
@@ -263,7 +269,7 @@ C-----------------------------------------------------------------------
                 AT(I,J,K) = 0.0D0
                 AB(I,J,K) = 0.0D0
                 SU(I,J,K) = 0.0D0
-                CVSY(I,J,K) = 0.0D0 
+                CVSY(I,J,K) = 0.0d0
 
               endif 
 

@@ -38,6 +38,7 @@ c     Local Variables :
 c*********************************************************************
       integer ISTW, JSTW, KSTW, IENDW, JENDW, KENDW
       integer i, j, k
+      integer flag 
 
       double precision AREANS, AREAEW, AREATB, VOL
       double precision GE, GEB, GW, GWB, GN, GNB, GS, GSB, GT, GPB, GB
@@ -45,7 +46,6 @@ c*********************************************************************
       double precision GUP, CPE, CPW, GVP, CPN, CPS, CPT, CPB
       double precision VISE, VISW, VISN, VISS, VIST, VISB
       double precision DE, DW, DN, DS, DT, DB
-      double precision REE, REW, REN, RES, RET, REB
       double precision COEFE, COEFW, COEFN, COEFS, COEFT, COEFB
       double precision TEW, TNS, TTB
       double precision AEC, AWC, ANC, ASC, ATC, ABC
@@ -66,20 +66,23 @@ c*********************************************************************
       JENDW = idxHiW(2)
       KENDW = idxHiW(3)
 
-      PT5 = 0.5D0
-      PT25 = 0.25D0
-      small = 1.0D-10
+      Relimit_m1 = Relimit**(-1.0)
 
       AREANS = dx*dz
       AREAEW = dy*dz
       AREATB = dx*dy
       VOL = dx*dy*dz
 
+      PT5 = 0.5D0
+      PT25 = 0.25D0
+      small = 1.0D-10
+
 
       DO 220 K = KSTW,KENDW
          DO 210 J = JSTW,JENDW
             DO 200 I = ISTW,IENDW   
 
+              flag = 0
               EPSP = eps(I,J,K)*eps(I,J,K-1)
 
               IF ( EPSP .gt. SMALL ) THEN 
@@ -150,89 +153,80 @@ C-----------------------------------------------------------------------
                DT = VIST*AREATB/DZ*EPST
                DB = VISB*AREATB/DZ*EPSB
 
-C-----------------------------------------------------------------------
-C     CONVECTION DIFFERENCING SCHEME SELECTION
-C-----------------------------------------------------------------------
 
-               REE = ABS(CE)/DE
-               REW = ABS(CW)/DW
-               REN = ABS(CN)/DN
-               RES = ABS(CS)/DS
-               RET = ABS(CT)/DT
-               REB = ABS(CB)/DB
-               CVSZ(I,J,K) = 0.0d0
+C----------------------------------------------------------------------
+C      PROVISIONS FOR VARIOUS CONVECTION DIFFERENCING SCHEMES
+C----------------------------------------------------------------------
 
-C If the current cell borders a wall (EPS < 1) then we are going to
-C upwind. 
                IF ( EPSE .lt. PT5 ) THEN 
-                REE = Relimit + 1
-                REW = Relimit + 1
-                REN = Relimit + 1
-                RES = Relimit + 1
-                RET = Relimit + 1
-                REB = Relimit + 1
+                flag = 1
                ENDIF 
                IF ( EPSW .lt. PT5 ) THEN 
-                REE = Relimit + 1
-                REW = Relimit + 1
-                REN = Relimit + 1
-                RES = Relimit + 1
-                RET = Relimit + 1
-                REB = Relimit + 1
+                flag = 1
                ENDIF 
                IF ( EPSN .lt. PT5 ) THEN 
-                REE = Relimit + 1
-                REW = Relimit + 1
-                REN = Relimit + 1
-                RES = Relimit + 1
-                RET = Relimit + 1
-                REB = Relimit + 1
+                flag = 1
                ENDIF 
                IF ( EPSS .lt. PT5 ) THEN 
-                REE = Relimit + 1
-                REW = Relimit + 1
-                REN = Relimit + 1
-                RES = Relimit + 1
-                RET = Relimit + 1
-                REB = Relimit + 1
+                flag = 1
                ENDIF 
-
-C If Re < Re_min we central difference, otherwise upwind.
-               IF (REE.LT.Relimit) then
-                 CVSZ(I,J,K) = CVSZ(I,J,K) + 1.0d0/6.0d0
-                 AE(I,J,K) = DE - PT5*CE
+               CVSZ(I,J,K) = 0.0d0
+               if ( flag .eq. 1 ) then 
+                 COEFE = DE - ABS(CE)/2.0D0
+                 COEFW = DW - ABS(CW)/2.0D0
+                 COEFN = DN - ABS(CN)/2.0D0
+                 COEFS = DS - ABS(CS)/2.0D0
+                 COEFT = DT - ABS(CT)/2.0D0
+                 COEFB = DB - ABS(CB)/2.0D0
+                 TEW = 1.0D0
+                 TNS = 1.0D0
+                 TTB = 1.0D0
+                 IF (COEFE.LT.0.0D0 .OR. COEFW.LT.0.0D0) TEW = 0.0D0
+                 IF (COEFN.LT.0.0D0 .OR. COEFS.LT.0.0D0) TNS = 0.0D0
+                 IF (COEFT.LT.0.0D0 .OR. COEFB.LT.0.0D0) TTB = 0.0D0
+                 IF (TEW.EQ.1.0D0) CVSZ(I,J,K) = CVSZ(I,J,K)+1.0d0/3.0d0
+                 IF (TNS.EQ.1.0D0) CVSZ(I,J,K) = CVSZ(I,J,K)+1.0d0/3.0d0
+                 IF (TTB.EQ.1.0D0) CVSZ(I,J,K) = CVSZ(I,J,K)+1.0d0/3.0d0
+                 AEC = -PT5*CE*TEW + dMAX1(0.0D0,-CPE)*(1.0D0-TEW)
+                 AWC = PT5*CW*TEW + dMAX1(0.0D0,CPW)*(1.0D0-TEW)
+                 ANC = -PT5*CN*TNS + dMAX1(0.0D0,-CPN)*(1.0D0-TNS)
+                 ASC = PT5*CS*TNS + dMAX1(0.0D0,CPS)*(1.0D0-TNS)
+                 ATC = -PT5*CT*TTB + dMAX1(0.0D0,-CPT)*(1.0D0-TTB)
+                 ABC = PT5*CB*TTB + dMAX1(0.0D0,CPB)*(1.0D0-TTB)
+                 AE(I,J,K) = AEC + DE
+                 AW(I,J,K) = AWC + DW
+                 AN(I,J,K) = ANC + DN
+                 AS(I,J,K) = ASC + DS
+                 AT(I,J,K) = ATC + DT
+                 AB(I,J,K) = ABC + DB
                else
-                 AE(I,J,K) = dMAX1(0.0D0,-CE)
-               endif
-               IF (REW.LT.Relimit) then
-                 CVSZ(I,J,K) = CVSZ(I,J,K) + 1.0d0/6.0d0
-                 AW(I,J,K) = DW + PT5*CW
-               else
-                 AW(I,J,K) = dMAX1(0.0D0,CW)
-               endif
-               IF (REN.LT.Relimit) then
-                 CVSZ(I,J,K) = CVSZ(I,J,K) + 1.0d0/6.0d0
-                 AN(I,J,K) = DN - PT5*CN
-               else
-                 AN(I,J,K) = dMAX1(0.0D0,-CN)
-               endif
-               IF (RES.LT.Relimit) then
-                 CVSZ(I,J,K) = CVSZ(I,J,K) + 1.0d0/6.0d0
-                 AS(I,J,K) = DS + PT5*CS
-               else
-                 AS(I,J,K) = dMAX1(0.0D0,CS)
-               endif
-               IF (RET.LT.Relimit) then
-                 CVSZ(I,J,K) = CVSZ(I,J,K) + 1.0d0/6.0d0
-                 AT(I,J,K) = DT - PT5*CT
-               else
-                 AT(I,J,K) = dMAX1(0.0D0,-CT)
-               endif
-               IF (REB.LT.Relimit) then
-                 CVSZ(I,J,K) = CVSZ(I,J,K) + 1.0d0/6.0d0
-                 AB(I,J,K) = DB + PT5*CB
-               else
-                 AB(I,J,K) = dMAX1(0.0D0,CB)
+                 COEFE = DE - ABS(CE)/Relimit
+                 COEFW = DW - ABS(CW)/Relimit
+                 COEFN = DN - ABS(CN)/Relimit
+                 COEFS = DS - ABS(CS)/Relimit
+                 COEFT = DT - ABS(CT)/Relimit
+                 COEFB = DB - ABS(CB)/Relimit
+                 TEW = 1.0D0
+                 TNS = 1.0D0
+                 TTB = 1.0D0
+                 IF (COEFE.LT.0.0D0 .OR. COEFW.LT.0.0D0) TEW = 0.0D0
+                 IF (COEFN.LT.0.0D0 .OR. COEFS.LT.0.0D0) TNS = 0.0D0
+                 IF (COEFT.LT.0.0D0 .OR. COEFB.LT.0.0D0) TTB = 0.0D0
+                 IF (TEW.EQ.1.0D0) CVSZ(I,J,K) = CVSZ(I,J,K)+1.0d0/3.0d0
+                 IF (TNS.EQ.1.0D0) CVSZ(I,J,K) = CVSZ(I,J,K)+1.0d0/3.0d0
+                 IF (TTB.EQ.1.0D0) CVSZ(I,J,K) = CVSZ(I,J,K)+1.0d0/3.0d0
+                 AEC = -PT5*CE*TEW + dMAX1(0.0D0,-CPE)*(1.0D0-TEW)
+                 AWC = PT5*CW*TEW + dMAX1(0.0D0,CPW)*(1.0D0-TEW)
+                 ANC = -PT5*CN*TNS + dMAX1(0.0D0,-CPN)*(1.0D0-TNS)
+                 ASC = PT5*CS*TNS + dMAX1(0.0D0,CPS)*(1.0D0-TNS)
+                 ATC = -PT5*CT*TTB + dMAX1(0.0D0,-CPT)*(1.0D0-TTB)
+                 ABC = PT5*CB*TTB + dMAX1(0.0D0,CPB)*(1.0D0-TTB)
+                 AE(I,J,K) = AEC + DE
+                 AW(I,J,K) = AWC + DW
+                 AN(I,J,K) = ANC + DN
+                 AS(I,J,K) = ASC + DS
+                 AT(I,J,K) = ATC + DT
+                 AB(I,J,K) = ABC + DB
                endif
 
 C----------------------------------------------------------------------
@@ -273,7 +267,7 @@ C----------------------------------------------------------------------
                 AT(I,J,K) = 0.0D0
                 AB(I,J,K) = 0.0D0
                 SU(I,J,K) = 0.0D0
-                CVSZ(I,J,K) = 0.0D0 
+                CVSZ(I,J,K) = 0.0d0
 
               endif 
 
