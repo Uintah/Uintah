@@ -294,6 +294,7 @@ void
 DWDatabase<DomainType>::cleanForeign()
 {
   std::lock_guard<std::mutex> exists_lock(g_mvars_mutex);
+
   for (auto iter = m_vars.begin(); iter != m_vars.end(); ++iter) {
     if (*iter && (*iter)->m_var->isForeign()) {
       delete (*iter);
@@ -535,7 +536,6 @@ DWDatabase<DomainType>::put( const VarLabel   * label
 
   ASSERT(matlIndex >= -1);
 
-  int idx = -1;
   {
     std::lock_guard<std::mutex> put_lock(g_keyDB_mutex);
     if (init) {
@@ -543,12 +543,13 @@ DWDatabase<DomainType>::put( const VarLabel   * label
       this->doReserve(m_keyDB);
     }
   }
-  // lookup is lock_guard protected
-  idx = m_keyDB->lookup(label, matlIndex, dom);
 
+  // lookup is lock_guard protected
+  int idx = m_keyDB->lookup(label, matlIndex, dom);
   if (idx == -1) {
     SCI_THROW(UnknownVariable(label->getName(), -1, dom, matlIndex, "check task computes", __FILE__, __LINE__));
   }
+
   if (m_vars[idx]) {
     if (m_vars[idx]->m_next) {
       SCI_THROW(InternalError("More than one vars on this label", __FILE__, __LINE__));
@@ -577,7 +578,6 @@ DWDatabase<DomainType>::putReduce( const VarLabel              * label
 {
   ASSERT(matlIndex >= -1);
 
-  int idx = -1;
   {
     std::lock_guard<std::mutex> put_reduce_lock(g_keyDB_mutex);
     if (init) {
@@ -585,12 +585,13 @@ DWDatabase<DomainType>::putReduce( const VarLabel              * label
       this->doReserve(m_keyDB);
     }
   }
-  // lookup is lock_guard protected
-  idx = m_keyDB->lookup(label, matlIndex, dom);
 
+  // lookup is lock_guard protected
+  int idx = m_keyDB->lookup(label, matlIndex, dom);
   if (idx == -1) {
     SCI_THROW(UnknownVariable(label->getName(), -1, dom, matlIndex, "check task computes", __FILE__, __LINE__));
   }
+
   DataItem* newdi = new DataItem();
   newdi->m_var = var;
   do {
@@ -622,7 +623,6 @@ DWDatabase<DomainType>::putForeign( const VarLabel   * label
 {
   ASSERT(matlIndex >= -1);
 
-  int idx = -1;
   {
     std::lock_guard<std::mutex> put_foreign_lock(g_keyDB_mutex);
     if (init) {
@@ -630,14 +630,15 @@ DWDatabase<DomainType>::putForeign( const VarLabel   * label
       this->doReserve(m_keyDB);
     }
   }
-  // lookup is lock_guard protected
-  idx = m_keyDB->lookup(label, matlIndex, dom);
 
-  DataItem* newdi = new DataItem();
-  newdi->m_var = var;
+  // lookup is lock_guard protected
+  int idx = m_keyDB->lookup(label, matlIndex, dom);
   if (idx == -1) {
     SCI_THROW(UnknownVariable(label->getName(), -1, dom, matlIndex, "check task computes", __FILE__, __LINE__));
   }
+
+  DataItem* newdi = new DataItem();
+  newdi->m_var = var;
   do {
     newdi->m_next = m_vars[idx];
   }
@@ -701,15 +702,11 @@ DWDatabase<DomainType>::getlist( const VarLabel               * label
                                ,       std::vector<Variable*> & varlist
                                ) const
 {
+  // this function is allowed to return an empty list
+
   for (DataItem* dataItem = getDataItem(label, matlIndex, dom); dataItem != nullptr; dataItem = dataItem->m_next) {
     varlist.push_back(dataItem->m_var);
   }
-
-  // TODO do we need this - APH 03/01/17
-  // this function is allowed to return an empty list
-//  if (varlist.size() == 0) {
-//    SCI_THROW(UnknownVariable(label->getName(), -99, dom, matlIndex, "DWDatabase::getlist", __FILE__, __LINE__));
-//  }
 }
 
 //______________________________________________________________________
