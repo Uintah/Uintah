@@ -366,6 +366,13 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
 
   private:
 
+    // helper method for primary addTask()
+    void addTask(       std::shared_ptr<Task>
+                , const PatchSet    * patches
+                , const MaterialSet * matls
+                , const int           tg_num
+                );
+
     // eliminate copy, assignment and move
     SchedulerCommon( const SchedulerCommon & )            = delete;
     SchedulerCommon& operator=( const SchedulerCommon & ) = delete;

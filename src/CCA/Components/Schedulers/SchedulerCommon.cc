@@ -777,25 +777,8 @@ SchedulerCommon::addTask(       Task        * task
   // use std::shared_ptr as task pointers may be added to all task graphs - automagic cleanup
   std::shared_ptr<Task> task_sp(task);
 
-  // During initialization, use only one task graph
-  if (m_is_init_timestep) {
-    m_task_graphs[m_task_graphs.size() - 1]->addTask(task_sp, patches, matls);
-    m_num_tasks++;
-  }
-  else {
-    // add it to all "Normal" task graphs (default value == -1)
-    if (tg_num < 0) {
-      for (int i = 0; i < m_num_task_graphs; ++i) {
-        m_task_graphs[i]->addTask(task_sp, patches, matls);
-        m_num_tasks++;
-      }
-    }
-    // otherwise, add this task to a specific task graph
-    else {
-      m_task_graphs[tg_num]->addTask(task_sp, patches, matls);
-      m_num_tasks++;
-    }
-  }
+  // default case for normal tasks
+  addTask(task_sp, patches, matls, tg_num);
 
   // separate out the standard from the distal ghost cell requirements - for loadbalancer
   // This isn't anything fancy, and could be expanded/modified down the road.
@@ -875,11 +858,12 @@ SchedulerCommon::addTask(       Task        * task
       dwmap[Task::NewDW] = dw;
       reduction_task->setMapping(dwmap);
 
+      int matlIdx = -1;
       if (dep->m_matls != nullptr) {
         reduction_task->modifies(dep->m_var, dep->m_reduction_level, dep->m_matls, Task::OutOfDomain);
         for (int i = 0; i < dep->m_matls->size(); i++) {
-          int maltIdx = dep->m_matls->get(i);
-          VarLabelMatl<Level> key(dep->m_var, maltIdx, dep->m_reduction_level);
+          matlIdx = dep->m_matls->get(i);
+          VarLabelMatl<Level> key(dep->m_var, matlIdx, dep->m_reduction_level);
           m_reduction_tasks[key] = reduction_task;
         }
       }
@@ -887,32 +871,45 @@ SchedulerCommon::addTask(       Task        * task
         for (int m = 0; m < task->getMaterialSet()->size(); m++) {
           reduction_task->modifies(dep->m_var, dep->m_reduction_level, task->getMaterialSet()->getSubset(m), Task::OutOfDomain);
           for (int i = 0; i < task->getMaterialSet()->getSubset(m)->size(); ++i) {
-            int maltIdx = task->getMaterialSet()->getSubset(m)->get(i);
-            VarLabelMatl<Level> key(dep->m_var, maltIdx, dep->m_reduction_level);
+            matlIdx = task->getMaterialSet()->getSubset(m)->get(i);
+            VarLabelMatl<Level> key(dep->m_var, matlIdx, dep->m_reduction_level);
             m_reduction_tasks[key] = reduction_task;
           }
         }
       }
 
-      // During initialization, use only one taskgraph
-      if (m_is_init_timestep) {
-        m_task_graphs[m_task_graphs.size() - 1]->addTask(reduction_task_sp, nullptr, nullptr);
+      // add reduction task to ALL task graphs
+      addTask(reduction_task_sp, nullptr, nullptr, -1);
+
+    }
+  }
+}
+
+//______________________________________________________________________
+//
+void SchedulerCommon::addTask(       std::shared_ptr<Task>   task
+                             , const PatchSet              * patches
+                             , const MaterialSet           * matls
+                             , const int                     tg_num
+                             )
+{
+  // During initialization, use only one task graph
+  if (m_is_init_timestep) {
+    m_task_graphs[m_task_graphs.size() - 1]->addTask(task, patches, matls);
+    m_num_tasks++;
+  }
+  else {
+    // add it to all "Normal" task graphs (default value == -1)
+    if (tg_num < 0) {
+      for (int i = 0; i < m_num_task_graphs; ++i) {
+        m_task_graphs[i]->addTask(task, patches, matls);
         m_num_tasks++;
       }
-      else {
-        // add it to all "Normal" task graphs (default tg value == -1)
-        if (tg_num < 0) {
-          for (int i = 0; i < m_num_task_graphs; ++i) {
-            m_task_graphs[i]->addTask(reduction_task_sp, nullptr, nullptr);
-            m_num_tasks++;
-          }
-        }
-        // otherwise, add this task to a specific task graph
-        else {
-          m_task_graphs[tg_num]->addTask(reduction_task_sp, nullptr, nullptr);
-          m_num_tasks++;
-        }
-      }
+    }
+    // otherwise, add this task to a specific task graph
+    else {
+      m_task_graphs[tg_num]->addTask(task, patches, matls);
+      m_num_tasks++;
     }
   }
 }
