@@ -749,7 +749,6 @@ void AMRMPM::scheduleTimeAdvance(const LevelP & level,
 //
 void AMRMPM::scheduleFinalizeTimestep( const LevelP& level, SchedulerP& sched)
 {
-
   const PatchSet* patches = level->eachPatch();
 
   if (level->getIndex() == 0) {
@@ -760,6 +759,14 @@ void AMRMPM::scheduleFinalizeTimestep( const LevelP& level, SchedulerP& sched)
                                       d_sharedState->d_particleState,
                                       lb->pParticleIDLabel, matls);
   }
+}
+
+//______________________________________________________________________
+//
+void AMRMPM::scheduleAnalysis( const LevelP& level, SchedulerP& sched)
+{
+  const PatchSet* patches = level->eachPatch();
+
   scheduleCountParticles(patches,sched);
 }
 

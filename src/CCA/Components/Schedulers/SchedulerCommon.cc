@@ -846,10 +846,9 @@ SchedulerCommon::addTask(       Task        * task
       taskname << "Reduction: " << dep->m_var->getName() << ", level " << levelidx << ", dw " << dw;
 
       Task* reduction_task = scinew Task(taskname.str(), Task::Reduction);
-      std::shared_ptr<Task> reduction_task_sp(reduction_task);
-
+      
       int dwmap[Task::TotalDWs];
-
+      
       for (int i = 0; i < Task::TotalDWs; i++) {
         dwmap[i] = Task::InvalidDW;
       }
@@ -863,23 +862,30 @@ SchedulerCommon::addTask(       Task        * task
         reduction_task->modifies(dep->m_var, dep->m_reduction_level, dep->m_matls, Task::OutOfDomain);
         for (int i = 0; i < dep->m_matls->size(); i++) {
           matlIdx = dep->m_matls->get(i);
-          VarLabelMatl<Level> key(dep->m_var, matlIdx, dep->m_reduction_level);
-          m_reduction_tasks[key] = reduction_task;
-        }
+	  const DataWarehouse* const_dw = get_dw(dw);
+          VarLabelMatl<Level,DataWarehouse> key(dep->m_var, matlIdx, dep->m_reduction_level, const_dw);
+	  if( m_reduction_tasks.find(key) == m_reduction_tasks.end() )
+	    m_reduction_tasks[key] = reduction_task;
+	}
       }
       else {
         for (int m = 0; m < task->getMaterialSet()->size(); m++) {
           reduction_task->modifies(dep->m_var, dep->m_reduction_level, task->getMaterialSet()->getSubset(m), Task::OutOfDomain);
           for (int i = 0; i < task->getMaterialSet()->getSubset(m)->size(); ++i) {
             matlIdx = task->getMaterialSet()->getSubset(m)->get(i);
-            VarLabelMatl<Level> key(dep->m_var, matlIdx, dep->m_reduction_level);
-            m_reduction_tasks[key] = reduction_task;
+	    const DataWarehouse* const_dw = get_dw(dw);
+	    VarLabelMatl<Level,DataWarehouse> key(dep->m_var, matlIdx, dep->m_reduction_level, const_dw);
+	    if( m_reduction_tasks.find(key) == m_reduction_tasks.end() )
+	      m_reduction_tasks[key] = reduction_task;
           }
         }
       }
 
-      addTask(reduction_task_sp, nullptr, nullptr, tg_num);
+      // use std::shared_ptr as task pointers may be added to all task graphs - automagic cleanup
+      std::shared_ptr<Task> reduction_task_sp(reduction_task);
 
+      // add reduction task to the task graphs
+      addTask(reduction_task_sp, nullptr, task->getMaterialSet(), tg_num);
     }
   }
 }

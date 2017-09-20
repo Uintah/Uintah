@@ -567,14 +567,6 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
 
     if( d_analysisModules.size() != 0 ) {
 
-      if(d_doAMR && !d_sharedState->isLockstepAMR()){
-	ostringstream msg;
-	msg << "\n ERROR: You must set: <useLockStep> true </useLockStep> \n"
-	    << " inside of the <AMR> section to do analysis. The analysis \n"
-	    << " component gives the wrong answers when the W-cycle is used. \n"; 
-	throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
-      }
-      
       vector<AnalysisModule*>::iterator iter;
       for( iter  = d_analysisModules.begin(); iter != d_analysisModules.end(); iter++) {
         AnalysisModule* am = *iter;
@@ -1061,10 +1053,26 @@ ICE::scheduleFinalizeTimestep( const LevelP& level, SchedulerP& sched)
   const MaterialSubset* ice_matls_sub = ice_matls->getUnion();
 
 
-  scheduleConservedtoPrimitive_Vars(      sched, patches, ice_matls_sub,
-                                                          all_matls,
-                                                          "finalizeTimestep");
-                                                          
+  scheduleConservedtoPrimitive_Vars( sched, patches, ice_matls_sub,
+				     all_matls, "finalizeTimestep");
+
+  cout_doing << "---------------------------------------------------------"<<endl;
+}
+
+/* _____________________________________________________________________
+ Function~  ICE::scheduleAnalysis--
+  This is called after ALL other tasks have completed.
+_____________________________________________________________________*/
+void
+ICE::scheduleAnalysis( const LevelP& level, SchedulerP& sched)
+{
+  cout_doing << "----------------------------"<<endl;  
+  cout_doing << d_myworld->myrank() << " ICE::scheduleAnalysis\t\t\t\t\tL-" <<level->getIndex()<< endl;
+  const PatchSet* patches = level->eachPatch();
+  const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
+  const MaterialSet* all_matls = d_sharedState->allMaterials();  
+  const MaterialSubset* ice_matls_sub = ice_matls->getUnion();
+
   //__________________________________
   //  on the fly analysis
   if(d_analysisModules.size() != 0){
@@ -1076,8 +1084,7 @@ ICE::scheduleFinalizeTimestep( const LevelP& level, SchedulerP& sched)
     }
   }                                                          
                                                           
-  scheduleTestConservation(               sched, patches, ice_matls_sub,
-                                                          all_matls);
+  scheduleTestConservation( sched, patches, ice_matls_sub, all_matls);
                                                           
   cout_doing << "---------------------------------------------------------"<<endl;
 }

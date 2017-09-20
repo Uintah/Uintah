@@ -517,7 +517,14 @@ TaskGraph::createDetailedTasks(       bool            useInternalDeps
       createDetailedTask(task, nullptr, nullptr);
     }
     else if (!ps) {
-      SCI_THROW(InternalError("Task has MaterialSet, but no PatchSet", __FILE__, __LINE__));
+      if (task->getType() == Task::Reduction) {
+	for (int m = 0; m < ms->size(); m++) {
+	  const MaterialSubset* mss = ms->getSubset(m);
+	  createDetailedTask(task, nullptr, mss);
+	}
+      }
+      else
+	SCI_THROW(InternalError("Task has MaterialSet, but no PatchSet", __FILE__, __LINE__));
     }
     else {
       SCI_THROW(InternalError("Task has PatchSet, but no MaterialSet", __FILE__, __LINE__));

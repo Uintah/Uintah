@@ -103,6 +103,9 @@ public:
   virtual void scheduleTimeAdvance( const LevelP& level,
                                     SchedulerP&);
 
+  virtual void scheduleAnalysis( const LevelP& level,
+				 SchedulerP&);
+
   virtual bool needRecompile(double time, double dt,
                              const GridP& grid);
 

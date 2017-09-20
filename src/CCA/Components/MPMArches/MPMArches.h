@@ -131,6 +131,10 @@ public:
   virtual void scheduleTimeAdvance( const LevelP& level, 
 				    SchedulerP&);
 
+  //////////
+  virtual void scheduleAnalysis( const LevelP& level, 
+				 SchedulerP&);
+
   // Copy cut cell information from time step to next time step
   void scheduleCopyCutCells(SchedulerP& sched,
 			    const PatchSet* patches,

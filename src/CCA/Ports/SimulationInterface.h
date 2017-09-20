@@ -111,8 +111,11 @@ WARNING
      // Insert Documentation Here:
      virtual void scheduleTimeAdvance(const LevelP& level, SchedulerP&);
 
-     // this is for wrapping up a timestep when it can't be done in scheduleTimeAdvance.
+     // this is for wrapping up a timestep when it can't be done in
+     // scheduleTimeAdvance.
      virtual void scheduleFinalizeTimestep(const LevelP& level, SchedulerP&) {}
+     virtual void scheduleAnalysis(const LevelP& level, SchedulerP&) {}
+     
      virtual void scheduleRefine( const PatchSet* patches, SchedulerP& scheduler );
      virtual void scheduleRefineInterface( const LevelP     & fineLevel, 
                                                  SchedulerP & scheduler,

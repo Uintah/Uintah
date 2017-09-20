@@ -149,6 +149,7 @@ namespace Uintah {
 
       virtual void scheduleFinalizeTimestep(const LevelP& level, SchedulerP&);
 
+      virtual void scheduleAnalysis(const LevelP& level, SchedulerP&);
 
       void scheduleComputePressure(SchedulerP&,
                                    const PatchSet*,

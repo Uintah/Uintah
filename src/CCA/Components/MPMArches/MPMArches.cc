@@ -1077,8 +1077,7 @@ void MPMArches::scheduleComputeStableTimestep(const LevelP& level,
 //______________________________________________________________________
 //
 
-  void
-MPMArches::scheduleTimeAdvance( const LevelP & level,
+void MPMArches::scheduleTimeAdvance( const LevelP & level,
     SchedulerP   & sched)
 {
   const PatchSet* patches = level->eachPatch();
@@ -1172,7 +1171,14 @@ MPMArches::scheduleTimeAdvance( const LevelP & level,
                                     d_sharedState->d_particleState,
                                     Mlb->pParticleIDLabel,
                                     mpm_matls);
+}
 
+//______________________________________________________________________
+//
+
+void MPMArches::scheduleAnalysis( const LevelP & level,
+				  SchedulerP   & sched)
+{
   //__________________________________
   //  on the fly analysis
   if(d_analysisModules.size() != 0){

@@ -1120,11 +1120,13 @@ AMRSimulationController::recompile( int totalFine )
   }
   else /* if ( !d_doMultiTaskgraphing ) */ {
     subCycleCompile( 0, totalFine, 0, 0 );
+
     d_scheduler->clearMappings();
     d_scheduler->mapDataWarehouse( Task::OldDW, 0 );
     d_scheduler->mapDataWarehouse( Task::NewDW, totalFine );
   }
 
+  // If regridding schedule error estimates
   for( int i = d_currentGridP->numLevels() - 1; i >= 0; i-- ) {
     dbg << d_myworld->myrank() << "   final TG " << i << "\n";
 
@@ -1138,8 +1140,15 @@ AMRSimulationController::recompile( int totalFine )
     }
   }
 
+  // After all tasks are done schedule the on-the-fly and other analysis.
+  for (int i = 0; i < d_currentGridP->numLevels(); i++) {
+    d_sim->scheduleAnalysis(d_currentGridP->getLevel(i), d_scheduler);
+  }
+
+  // Compute the next time step.
   scheduleComputeStableTimestep();
 
+  // Output tasks
   d_output->finalizeTimestep( d_simTime, d_delt, d_currentGridP, d_scheduler, true );
   d_output->sched_allOutputTasks(        d_delt, d_currentGridP, d_scheduler, true );
 
@@ -1196,7 +1205,7 @@ AMRSimulationController::subCycleCompile( int startDW,
   d_scheduler->mapDataWarehouse(Task::NewDW, startDW+dwStride);
   d_scheduler->mapDataWarehouse(Task::CoarseOldDW, coarseStartDW);
   d_scheduler->mapDataWarehouse(Task::CoarseNewDW, coarseStartDW+coarseDWStride);
-  
+
   d_sim->scheduleTimeAdvance(fineLevel, d_scheduler);
 
   if (d_doAMR) {
@@ -1224,6 +1233,7 @@ AMRSimulationController::subCycleCompile( int startDW,
   d_scheduler->mapDataWarehouse(Task::CoarseOldDW, coarseStartDW);
   d_scheduler->mapDataWarehouse(Task::CoarseNewDW, coarseStartDW+coarseDWStride);
   d_sim->scheduleFinalizeTimestep(fineLevel, d_scheduler);
+
   // do refineInterface after the freshest data we can get; after the
   // finer level's coarsen completes do all the levels at this point
   // in time as well, so all the coarsens go in order, and then the

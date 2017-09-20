@@ -274,27 +274,6 @@ void visit_SetAnalysisVars( visit_simulation_data *sim )
             (analysisVar.level == FINEST_LEVEL && l == numLevels - 1) ||
             (analysisVar.level == l) )
         {
-          // When doing AMR with the W cycle there will be multiple
-          // data warehouses. Most of the data warehouses are temporary.
-          if (sim->simController->doAMR() && !simStateP->isLockstepAMR()) {
-              
-            // Compute the total number of dataWarehouses.
-            int dw_index = 1;
-
-            // Get the data warehouse - multiplies by refinement ratio
-            // for each level.
-            for (unsigned int i=1; i<numLevels; ++i)
-              dw_index *= gridP->getLevel(i)->getRefinementRatioMaxDim();
-
-            // The course level will be on the last dw. So work
-            // backwards.  Removing based on the refinement ratio for
-            // each level.
-            for (unsigned int i=1; i<=l; ++i)
-              dw_index /= gridP->getLevel(i)->getRefinementRatioMaxDim();
-
-            dw = sim->simController->getSchedulerP()->get_dw(dw_index);
-          }
-
           LevelP levelP = gridP->getLevel(l);
           Level *level = levelP.get_rep();
 
@@ -346,7 +325,7 @@ void visit_SetAnalysisVars( visit_simulation_data *sim )
                   dw->get( var_min, label );
                 else
                   dw->get( var_min, label, level, analysisVar.matl );
-
+		
                 double varMin = var_min;
 
                 VisItUI_setTableValueD(table, row, 4+j*2, varMin, 0);
@@ -357,7 +336,7 @@ void visit_SetAnalysisVars( visit_simulation_data *sim )
               else if( label->typeDescription() == max_vartype::getTypeDescription() )
               {
                 VisItUI_setTableValueS(table, row, 3+j*2, "Max", 0);
-                
+
                 max_vartype var_max;
                 if( analysisVar.level == IGNORE_LEVEL )
                   dw->get( var_max, label );
@@ -365,7 +344,7 @@ void visit_SetAnalysisVars( visit_simulation_data *sim )
                   dw->get( var_max, label, level, analysisVar.matl );
 
                 double varMax = var_max;
-                
+
                 VisItUI_setTableValueD(table, row, 4+j*2, varMax, 0);
 
                 visit_SetStripChartValue( sim, stripChartName.str() +
@@ -376,16 +355,16 @@ void visit_SetAnalysisVars( visit_simulation_data *sim )
               else if( label->typeDescription() == minvec_vartype::getTypeDescription() )
               {
                 VisItUI_setTableValueS(table, row, 3+j*2, "Min", 0);
-                
+
                 minvec_vartype var_min;
 
                 if( analysisVar.level == IGNORE_LEVEL )
                   dw->get( var_min, label );
                 else
                   dw->get( var_min, label, level, analysisVar.matl );
-                  
+
                 double varMin = ((Vector) var_min).length();
-                  
+
                 VisItUI_setTableValueV(table, row, 4+j*2,
                                        ((Vector) var_min).x(),
                                        ((Vector) var_min).y(),
@@ -397,20 +376,20 @@ void visit_SetAnalysisVars( visit_simulation_data *sim )
               else if( label->typeDescription() == maxvec_vartype::getTypeDescription() )
               {
                 VisItUI_setTableValueS(table, row, 3+j*2, "Max", 0);
-                
+
                 maxvec_vartype var_max;
                 if( analysisVar.level < 0 )
                   dw->get( var_max, label );
                 else
                   dw->get( var_max, label, level, analysisVar.matl );
-                  
+
                 double varMax = ((Vector) var_max).length();
-                  
+
                 VisItUI_setTableValueV(table, row, 4+j*2,
                                        ((Vector) var_max).x(),
                                        ((Vector) var_max).y(),
                                        ((Vector) var_max).z(), 0);
-                
+
                 visit_SetStripChartValue( sim, stripChartName.str() +
                                           "/Maximum",
                                           varMax );
@@ -418,7 +397,7 @@ void visit_SetAnalysisVars( visit_simulation_data *sim )
               else if( label->typeDescription() == sum_vartype::getTypeDescription() )
               {
                 VisItUI_setTableValueS(table, row, 3+j*2, "Sum", 0);
-                
+
                 sum_vartype var_sum;
                 if( analysisVar.level == IGNORE_LEVEL )
                   dw->get( var_sum, label );
@@ -426,9 +405,9 @@ void visit_SetAnalysisVars( visit_simulation_data *sim )
                   dw->get( var_sum, label, level, analysisVar.matl );
 
                 double varSum = var_sum;
-                  
+
                 VisItUI_setTableValueD(table, row, 4+j*2, varSum, 0);
-                
+
                 visit_SetStripChartValue( sim, stripChartName.str() +
                                           "/Sum",
                                           varSum );
@@ -436,20 +415,20 @@ void visit_SetAnalysisVars( visit_simulation_data *sim )
               else if( label->typeDescription() == sumvec_vartype::getTypeDescription() )
               {
                 VisItUI_setTableValueS(table, row, 3+j*2, "Sum", 0);
-                
+
                 sumvec_vartype var_sum;
                 if( analysisVar.level == IGNORE_LEVEL )
                   dw->get( var_sum, label );
                 else
                   dw->get( var_sum, label, level, analysisVar.matl );
-                  
+
                 double varSum = ((Vector) var_sum).length();
-                  
+
                 VisItUI_setTableValueV(table, row, 4+j*2,
                                        ((Vector) var_sum).x(),
                                        ((Vector) var_sum).y(),
                                        ((Vector) var_sum).z(), 0);
-                
+
                 visit_SetStripChartValue( sim, stripChartName.str() +
                                           "/Sum",
                                           varSum );
@@ -461,14 +440,14 @@ void visit_SetAnalysisVars( visit_simulation_data *sim )
                     << label->getName() << "  "
                     << label->typeDescription()->getName() << "  "
                     << "unknown_vartype";
-                
+
                 VisItUI_setValueS("SIMULATION_MESSAGE_WARNING", msg.str().c_str(), 1);
                 VisItUI_setTableValueS(table, row, 3+j*2, "Unknown", 0);
                 VisItUI_setTableValueS(table, row, 4+j*2, "NA", 0);
               }
             }
           }
-          
+
           ++row;
         }
       }

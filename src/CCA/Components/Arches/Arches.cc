@@ -299,9 +299,27 @@ Arches::scheduleTimeAdvance( const LevelP& level,
   if ( m_doing_restart ) {
     if(m_recompile_taskgraph) {
       m_nlSolver->sched_restartInitializeTimeAdvance(level,sched);
-  }}
+    }
+  }
 
   m_nlSolver->nonlinearSolve(level, sched);
+
+  if (m_doing_restart) {
+    m_doing_restart = false;
+  }
+}
+
+//--------------------------------------------------------------------------------------------------
+void
+Arches::scheduleAnalysis( const LevelP& level,
+			  SchedulerP& sched)
+{
+  // Only schedule
+  if(level->getIndex() != m_arches_level_index) {
+    return;
+  }
+
+  printSchedule(level,dbg, "Arches::scheduleAnalysis");
 
   //__________________________________
   //  on the fly analysis
@@ -311,11 +329,6 @@ Arches::scheduleTimeAdvance( const LevelP& level,
       AnalysisModule* am = *iter;
       am->scheduleDoAnalysis( sched, level);
     }
-  }
-
-  if (m_doing_restart) {
-    m_doing_restart = false;
-
   }
 }
 
