@@ -1,8 +1,0 @@
-<?xml version='1.0' encoding='ISO-8859-1' ?>
-<!-- HY100 Steel -->
-<Uintah_Include>
-  <damage_model type="hancock_mackenzie">
-    <D0>0.0001</D0>
-    <Dc>0.7</Dc>
-  </damage_model>
-</Uintah_Include>
