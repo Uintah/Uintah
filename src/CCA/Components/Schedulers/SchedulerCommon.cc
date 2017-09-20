@@ -878,8 +878,7 @@ SchedulerCommon::addTask(       Task        * task
         }
       }
 
-      // add reduction task to ALL task graphs
-      addTask(reduction_task_sp, nullptr, nullptr, -1);
+      addTask(reduction_task_sp, nullptr, nullptr, tg_num);
 
     }
   }
