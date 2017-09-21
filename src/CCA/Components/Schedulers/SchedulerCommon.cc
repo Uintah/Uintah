@@ -862,21 +862,39 @@ SchedulerCommon::addTask(       Task        * task
         reduction_task->modifies(dep->m_var, dep->m_reduction_level, dep->m_matls, Task::OutOfDomain);
         for (int i = 0; i < dep->m_matls->size(); i++) {
           matlIdx = dep->m_matls->get(i);
-	  const DataWarehouse* const_dw = get_dw(dw);
+          const DataWarehouse* const_dw = get_dw(dw);
           VarLabelMatl<Level,DataWarehouse> key(dep->m_var, matlIdx, dep->m_reduction_level, const_dw);
-	  if( m_reduction_tasks.find(key) == m_reduction_tasks.end() )
-	    m_reduction_tasks[key] = reduction_task;
-	}
+
+	  // For reduction variables there may be multiple computes
+	  // each of which will create reduction task. The last
+	  // reduction task should be kept. This is because the tasks
+	  // do not get sorted.
+          if( m_reduction_tasks.find(key) == m_reduction_tasks.end() )
+          {
+            DOUT( g_schedulercommon_dbg, "Rank-" << d_myworld->myrank() << " Excluding previous reduction task for variable: " << dep->m_var->getName() << " on level " << levelidx << ", DW " << dw << " dep->m_reduction_level " << dep->m_reduction_level << " material index " << matlIdx );
+          }
+          m_reduction_tasks[key] = reduction_task;
+
+        }
       }
       else {
         for (int m = 0; m < task->getMaterialSet()->size(); m++) {
           reduction_task->modifies(dep->m_var, dep->m_reduction_level, task->getMaterialSet()->getSubset(m), Task::OutOfDomain);
           for (int i = 0; i < task->getMaterialSet()->getSubset(m)->size(); ++i) {
             matlIdx = task->getMaterialSet()->getSubset(m)->get(i);
-	    const DataWarehouse* const_dw = get_dw(dw);
-	    VarLabelMatl<Level,DataWarehouse> key(dep->m_var, matlIdx, dep->m_reduction_level, const_dw);
-	    if( m_reduction_tasks.find(key) == m_reduction_tasks.end() )
-	      m_reduction_tasks[key] = reduction_task;
+            const DataWarehouse* const_dw = get_dw(dw);
+            VarLabelMatl<Level,DataWarehouse> key(dep->m_var, matlIdx, dep->m_reduction_level, const_dw);
+
+	    // For reduction variables there may be multiple computes
+	    // each of which will create reduction task. The last
+	    // reduction task should be kept. This is because the
+	    // tasks do not get sorted.
+            if( m_reduction_tasks.find(key) == m_reduction_tasks.end() )
+            {
+              DOUT( g_schedulercommon_dbg, "Rank-" << d_myworld->myrank() << " Excluding previous reduction task for variable: " << dep->m_var->getName() << " on level " << levelidx << ", DW " << dw << " dep->m_reduction_level " << dep->m_reduction_level << " material index " << matlIdx );
+            }
+
+            m_reduction_tasks[key] = reduction_task;
           }
         }
       }
