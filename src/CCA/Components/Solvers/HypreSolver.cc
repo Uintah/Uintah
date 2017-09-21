@@ -835,7 +835,7 @@ namespace Uintah {
         printTask( patches, patches->get(0), cout_doing, "HypreSolver:solve: testConvergence" );
         //__________________________________
         // Test for convergence
-        if(final_res_norm > params->tolerance || finite(final_res_norm) == 0){
+        if(final_res_norm > params->tolerance || std::isfinite(final_res_norm) == 0){
           if( params->getRestartTimestepOnFailure() ){
             if(pg->myrank() == 0)
               cout << "HypreSolver not converged in " << num_iterations 
