@@ -122,8 +122,10 @@ private:
   double _Ta;
   double _A;
   double _sigma;
-  double _C1;
-  double _C2;
+  double _Tbp_graphite;
+  double _T_hardened_bond;
+  double _T_mu;
+  double _T_sigma;
 
   double rhop;
   double total_rc;

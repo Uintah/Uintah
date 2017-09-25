@@ -558,10 +558,10 @@
             <Tig                          spec="REQUIRED DOUBLE" />
             <A                            spec="REQUIRED DOUBLE" />
             <Ta                           spec="REQUIRED DOUBLE" />
-            <b                            spec="REQUIRED DOUBLE" />
-            <c                            spec="REQUIRED DOUBLE" />
-            <d                            spec="REQUIRED DOUBLE" />
-            <e                            spec="REQUIRED DOUBLE" />
+            <Tbp_graphite                 spec="REQUIRED DOUBLE" />
+            <T_mu                         spec="REQUIRED DOUBLE" />
+            <T_sigma                      spec="REQUIRED DOUBLE" />
+            <T_hardened_bond              spec="REQUIRED DOUBLE" />
             <sigma                        spec="REQUIRED DOUBLE" />
           </FOWYDevol>
 

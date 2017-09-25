@@ -1669,10 +1669,10 @@
           <Tig>590</Tig>
           <A>19724227.36</A>
           <Ta>1.113e4</Ta>
-          <b>14.258</b>
-          <c>-10.5698</c>
-          <d>3.1935</d>
-          <e>-1.23</e>
+          <Tbp_graphite>3e3</Tbp_graphite>
+          <T_mu>1100.0</T_mu>
+          <T_sigma>250.0</T_sigma>
+          <T_hardened_bond>1800.0</T_hardened_bond>
           <sigma>8.258e2</sigma>
         </FOWYDevol>
         <SmithChar>

@@ -5,7 +5,6 @@
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/Directives.h>
-
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/SimulationState.h>
@@ -13,10 +12,9 @@
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Parallel/Parallel.h>
+#include <CCA/Components/Arches/Utility/InverseErrorFunction.h>
 
 #include <sci_defs/visit_defs.h>
-
-#include <boost/math/special_functions/erf.hpp>
 
 //===========================================================================
 
@@ -134,13 +132,10 @@ FOWYDevol::problemSetup(const ProblemSpecP& params, int qn)
     db_BT->require("Ta", _Ta);
     db_BT->require("A", _A);
     db_BT->require("v_hiT", _v_hiT); // this is a
-    double b, c, d, e;
-    db_BT->require("b", b);
-    db_BT->require("c", c);
-    db_BT->require("d", d);
-    db_BT->require("e", e);
-    _C1= b + c*_v_hiT;
-    _C2= d + e*_v_hiT;
+    db_BT->require("Tbp_graphite", _Tbp_graphite); // 
+    db_BT->require("T_mu", _T_mu); // 
+    db_BT->require("T_sigma", _T_sigma); // 
+    db_BT->require("T_hardened_bond", _T_hardened_bond); // 
     db_BT->require("sigma", _sigma)  ;
 
   } else {
@@ -385,7 +380,6 @@ FOWYDevol::computeModel( const ProcessorGroup * pc,
     }
 
 
-
     Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
 
     Uintah::parallel_for( range, [&] (int i, int j, int k) {
@@ -414,8 +408,9 @@ FOWYDevol::computeModel( const ProcessorGroup * pc,
          // m_vol = m_init - m_residual_solid + m_char
    
          double m_vol = rcmass_init - (rcmassph+charmassph);
-   
-         double v_inf_local = 0.5*_v_hiT*(1.0 - tanh(_C1*(_Tig-temperatureph)/temperatureph + _C2));
+         double v_inf_local = 0.5*_v_hiT*(1.0 + std::erf( (temperatureph - _T_mu) / (std::sqrt(2.0) * _T_sigma)));
+         v_inf_local += (temperatureph > _T_hardened_bond) ? (temperatureph - _T_hardened_bond)/_Tbp_graphite : 0.0; // linear contribution
+         // above hardened bond temperature.
          v_inf(i,j,k) = v_inf_local; 
          double f_drive = std::max((rcmass_init*v_inf_local - m_vol) , 0.0);
          double zFact =std::min(std::max(f_drive/rcmass_init/_v_hiT,2.5e-5 ),1.0-2.5e-5  );
@@ -430,9 +425,8 @@ FOWYDevol::computeModel( const ProcessorGroup * pc,
                + (  (RHS_sourceph+char_RHS_source(i,j,k)) /vol ) / weightph
                * _rc_scaling_constant*_weight_scaling_constant , 0.0 );
          }
-   
-         Z = sqrt(2.0) * boost::math::erf_inv(1.0-2.0*zFact );
-   
+         Z = std::sqrt(2.0) * erfinv(1.0-2.0*zFact );
+         
          double rate = std::min(_A*exp(-(_Ta + Z *_sigma)/temperatureph)*f_drive , rateMax);
          devol_rate(i,j,k) = -rate*weightph/(_rc_scaling_constant*_weight_scaling_constant); //rate of consumption of raw coal mass
          gas_devol_rate(i,j,k) = rate*weightph; // rate of creation of coal off gas

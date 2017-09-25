@@ -1611,14 +1611,14 @@
 
      <!--high pressure fit-->
      <FOWYDevol>
-       <v_hiT>0.5427   </v_hiT>
-       <Tig>  520       </Tig>  
-       <A>    2.355e7  </A>    
-       <Ta>   1.133e4 </Ta>   
-       <b>    12.3937  </b>    
-       <c>   -8.87596 </c>    
-       <d>    2.25563  </d>    
-       <e>   -0.48052  </e>    
+       <v_hiT>0.5427</v_hiT>
+       <Tig>520</Tig>  
+       <A>2.355e7</A>    
+       <Ta>1.133e4</Ta>   
+       <Tbp_graphite>3e3</Tbp_graphite>    
+       <T_mu>1100.0</T_mu>    
+       <T_sigma>250.0</T_sigma>    
+       <T_hardened_bond>1800.0</T_hardened_bond>    
        <sigma>1.189e3  </sigma>
      </FOWYDevol>
 
