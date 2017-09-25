@@ -140,8 +140,7 @@ decayIsotropicTurbulenceDSmag64_ups = modUPS( turbulenceDir, \
 #
 #  Notes:
 #  1) The "folder name" must be the same as input file without the extension.
-#  2) If the processors is > 1.0 then an mpirun command will be used
-#  3) Performance_tests are not run on a debug build.
+#  2) Performance_tests are not run on a debug build.
 #______________________________________________________________________
 
 DEBUGTESTS = [
@@ -339,7 +338,7 @@ PARTICLETESTS=[
 	("particle-test-free-fall-two-way-coupling-ydir", "particle-test-free-fall-two-way-coupling-ydir.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),	
 	("particle-test-free-fall-two-way-coupling-zdir", "particle-test-free-fall-two-way-coupling-zdir.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),
 	("particle-test-geom-shape-icse", "particle-test-geom-shape-icse.ups",  1,  "All",   ["exactComparison","no_restart","no_memoryTest","no_dbg"] ),
-	("particle-test-geom-shape-flow-mickey-mouse", "particle-test-geom-shape-flow-mickey-mouse.ups",   1.1,  "All",   ["exactComparison","no_restart","no_memoryTest","no_dbg"] ),
+	("particle-test-geom-shape-flow-mickey-mouse", "particle-test-geom-shape-flow-mickey-mouse.ups",   1,  "All",   ["exactComparison","no_restart","no_memoryTest","no_dbg"] ),
 	("particle-test-free-fall-xdir", "particle-test-free-fall-xdir.ups",   1,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),
 	("particle-test-free-fall-ydir", "particle-test-free-fall-ydir.ups",   1,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),
 	("particle-test-free-fall-zdir", "particle-test-free-fall-zdir.ups",   1,  "All",   ["exactComparison","no_restart","no_memoryTest"] )

@@ -667,14 +667,8 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
   SVN_OPTIONS = "-svnStat -svnDiff"
   #SVN_OPTIONS = "" # When debugging, if you don't want to spend time waiting for SVN, uncomment this line.
 
-  # set the command for sus, based on # of processors
-  # the /usr/bin/time is to tell how long it took
-  if np == 1:
-    command = "/usr/bin/time -p %s/sus %s %s" % (susdir, sus_options, SVN_OPTIONS)
-    mpimsg = ""
-  else:
-    command = "/usr/bin/time -p %s %s %s/sus %s %s -mpi" % (MPIHEAD, int(np), susdir, sus_options, SVN_OPTIONS)
-    mpimsg = " (mpi %s proc)" % (int(np))
+  command = "/usr/bin/time -p %s %s %s/sus %s %s " % (MPIHEAD, int(np), susdir, sus_options, SVN_OPTIONS)
+  mpimsg = " (mpi %s proc)" % (int(np))
 
   time0 =time()  #timer
 

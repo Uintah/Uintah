@@ -387,14 +387,10 @@ def generateGS() :
             if rc == 0:
               MPIHEAD="%s -genvlist MALLOC_STATS" % MPIRUN    
       
-      
-            if np > 1.0 :
-                np = int( np )
-                my_mpirun = "%s -np %s  " % (MPIHEAD, np)
+            np = int( np )
+            my_mpirun = "%s -np %s  " % (MPIHEAD, np)
 
-                command = my_mpirun + sus + " -mpi " + SVN_FLAGS + " " + sus_options + " " + inputs + "/" + component + "/" + input( test )  + " > sus_log.txt 2>&1 " 
-            else :
-                command = sus + SVN_FLAGS + " " + sus_options + " " + inputs + "/" + component + "/" + input( test )  + " >  sus_log.txt 2>&1" 
+            command = my_mpirun + sus + " " + SVN_FLAGS + " " + sus_options + " " + inputs + "/" + component + "/" + input( test )  + " > sus_log.txt 2>&1 " 
 
             print( "Running command: " + command )
 

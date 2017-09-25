@@ -28,8 +28,7 @@ from helpers.runSusTests import runSusTests
 #
 #  Notes: 
 #  1) The "folder name" must be the same as input file without the extension.
-#  2) If the processors is > 1.0 then an mpirun command will be used
-#  3) Performance_tests are not run on a debug build.
+#  2) Performance_tests are not run on a debug build.
 #______________________________________________________________________
 
 UNUSED = [ ("4disks2matsv", "4disks_2d.2matsv.ups", 4, "Linux"), \
@@ -37,21 +36,21 @@ UNUSED = [ ("4disks2matsv", "4disks_2d.2matsv.ups", 4, "Linux"), \
 
 NIGHTLYTESTS = [  ("4disks_2d.1mat",   "4disks_2d.1mat.ups", 1,   "None", ["exactComparison"]), \
 	           ("billet.static",    "billet.static.ups",  2,   "ALL", ["exactComparison"]), \
-	           ("adiCuJC01s296K",   "adiCuJC01s296K.ups", 1.1, "ALL", ["exactComparison"]), \
-	           ("adiCuMTS01s296K",  "adiCuMTS01s296K.ups",1.1, "ALL", ["exactComparison"]), \
-	           ("adiCuPTW01s296K",  "adiCuPTW01s296K.ups",1.1, "ALL", ["exactComparison"]), \
-	           ("adiCuSCG01s296K",  "adiCuSCG01s296K.ups",1.1, "ALL", ["exactComparison"]), \
-	           ("adiCuZA01s296K",   "adiCuZA01s296K.ups", 1.1, "ALL", ["exactComparison"])
+	           ("adiCuJC01s296K",   "adiCuJC01s296K.ups", 1,   "ALL", ["exactComparison"]), \
+	           ("adiCuMTS01s296K",  "adiCuMTS01s296K.ups",1,   "ALL", ["exactComparison"]), \
+	           ("adiCuPTW01s296K",  "adiCuPTW01s296K.ups",1,   "ALL", ["exactComparison"]), \
+	           ("adiCuSCG01s296K",  "adiCuSCG01s296K.ups",1,   "ALL", ["exactComparison"]), \
+	           ("adiCuZA01s296K",   "adiCuZA01s296K.ups", 1,   "ALL", ["exactComparison"])
     	         ]
                 
 # Tests that are run during local regression testing       
 LOCALTESTS = [    ("4disks_2d.1mat",   "4disks_2d.1mat.ups", 1,   "None"), \
 	           ("billet.static",    "billet.static.ups",  2,   "ALL"), \
-	           ("adiCuJC01s296K",   "adiCuJC01s296K.ups", 1.1, "ALL"), \
-	           ("adiCuMTS01s296K",  "adiCuMTS01s296K.ups",1.1, "ALL"), \
-	           ("adiCuPTW01s296K",  "adiCuPTW01s296K.ups",1.1, "ALL"), \
-	           ("adiCuSCG01s296K",  "adiCuSCG01s296K.ups",1.1, "ALL"), \
-	           ("adiCuZA01s296K",   "adiCuZA01s296K.ups", 1.1, "ALL")
+	           ("adiCuJC01s296K",   "adiCuJC01s296K.ups", 1,   "ALL"), \
+	           ("adiCuMTS01s296K",  "adiCuMTS01s296K.ups",1,   "ALL"), \
+	           ("adiCuPTW01s296K",  "adiCuPTW01s296K.ups",1,   "ALL"), \
+	           ("adiCuSCG01s296K",  "adiCuSCG01s296K.ups",1,   "ALL"), \
+	           ("adiCuZA01s296K",   "adiCuZA01s296K.ups", 1,   "ALL")
     	       ]       
 DEBUGTESTS =[]
 #__________________________________

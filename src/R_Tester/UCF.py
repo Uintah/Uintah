@@ -28,8 +28,7 @@ from helpers.modUPS import modUPS
 #
 #  Notes: 
 #  1) The "folder name" must be the same as input file without the extension.
-#  2) If the processors is > 1.0 then an mpirun command will be used
-#  3) Performance_tests are not run on a debug build.
+#  2) Performance_tests are not run on a debug build.
 #______________________________________________________________________
 
 
