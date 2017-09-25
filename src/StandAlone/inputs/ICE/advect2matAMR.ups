@@ -188,7 +188,6 @@
         <min_patch_size>           [[10,10,1]] </min_patch_size>
         <patches_per_level_per_proc> 8         </patches_per_level_per_proc>
       </Regridder>
-      <useLockStep>       true  </useLockStep>
     </AMR>
 
 
