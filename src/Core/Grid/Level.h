@@ -231,8 +231,9 @@ public:
   Box getBox( const IntVector &, const IntVector & ) const;
 
   static const int MAX_PATCH_SELECT = 32;
-  using selectType = FixedVector<const Patch*, MAX_PATCH_SELECT>;
-      
+  //  using selectType = FixedVector<const Patch*, MAX_PATCH_SELECT>;
+  using selectType = std::vector<const Patch*>;
+
 
   void selectPatches( const IntVector  &
                     , const IntVector  &
