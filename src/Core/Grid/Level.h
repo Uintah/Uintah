@@ -44,7 +44,6 @@
 #include <Core/Geometry/BBox.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/IntVector.h>
-#include <Core/Grid/fixedvector.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 #include <vector>
