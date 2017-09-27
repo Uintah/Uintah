@@ -2,7 +2,7 @@
 #define ParticleResponseTime_Expr_h
 
 #include <expression/Expression.h>
-#include <spatialops/particles/ParticleOperatorsImplementation.h>
+#include <spatialops/particles/ParticleOperators.h>
 
 //==================================================================
 

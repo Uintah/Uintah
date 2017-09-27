@@ -3,7 +3,7 @@
 
 #include <expression/Expression.h>
 #include <spatialops/structured/SpatialFieldStore.h>
-#include <spatialops/particles/ParticleOperatorsImplementation.h>
+#include <spatialops/particles/ParticleOperators.h>
 #include <spatialops/OperatorDatabase.h>
 
   /**

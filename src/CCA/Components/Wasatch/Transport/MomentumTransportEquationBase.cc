@@ -472,7 +472,7 @@ namespace WasatchCore{
                                       const Expr::Tag& momTag,
                                       const Expr::Tag& volFracTag,
                                       Expr::ExpressionFactory& factory,
-                                      Expr::Tag& normalConvFluxTag)
+                                      Expr::Tag& normalConvFluxTag )
   {
     set_convflux_tags( doMom, cfTags, momTag );
     const Expr::Tag& cfxt = cfTags[0];
@@ -518,15 +518,15 @@ namespace WasatchCore{
   
   template<>
   Expr::ExpressionID
-  register_momentum_convective_fluxes<SVolField>(const Direction momComponent,
-                                                 const bool* const doMom,
-                                      const Expr::TagList& velTags,
-                                      Expr::TagList& cfTags,
-                                      ConvInterpMethods convInterpMethod,
-                                      const Expr::Tag& momTag,
-                                      const Expr::Tag& volFracTag,
-                                      Expr::ExpressionFactory& factory,
-                                      Expr::Tag& normalConvFluxTag)
+  register_momentum_convective_fluxes<SVolField>( const Direction momComponent,
+                                                  const bool* const doMom,
+                                                  const Expr::TagList& velTags,
+                                                  Expr::TagList& cfTags,
+                                                  ConvInterpMethods convInterpMethod,
+                                                  const Expr::Tag& momTag,
+                                                  const Expr::Tag& volFracTag,
+                                                  Expr::ExpressionFactory& factory,
+                                                  Expr::Tag& normalConvFluxTag )
   {
     set_convflux_tags( doMom, cfTags, momTag );
     const Expr::Tag& cfxt = cfTags[0];
@@ -772,36 +772,34 @@ namespace WasatchCore{
   template class MomentumTransportEquationBase< YVolField >;
   template class MomentumTransportEquationBase< ZVolField >;
   
-#define REGISTER_STRAIN(VOL)\
-  template Expr::ExpressionID \
-  register_strain_tensor<VOL>( const Direction momComponent, \
-                               const bool* const doMom,\
-                               const bool isViscous,\
-                               const Expr::TagList& velTags,\
-                               Expr::TagList& strainTags,\
-                               const Expr::Tag& dilTag,\
+#define REGISTER_STRAIN(VOL)                                    \
+  template Expr::ExpressionID                                   \
+  register_strain_tensor<VOL>( const Direction momComponent,    \
+                               const bool* const doMom,         \
+                               const bool isViscous,            \
+                               const Expr::TagList& velTags,    \
+                               Expr::TagList& strainTags,       \
+                               const Expr::Tag& dilTag,         \
                                Expr::ExpressionFactory& factory, Expr::Tag& normalStrainTag );
   
-  REGISTER_STRAIN(SVolField);
-  REGISTER_STRAIN(XVolField);
-  REGISTER_STRAIN(YVolField);
-  REGISTER_STRAIN(ZVolField);
+  REGISTER_STRAIN( XVolField )
+  REGISTER_STRAIN( YVolField )
+  REGISTER_STRAIN( ZVolField )
 
-#define REGISTER_CONVECTIVE_FLUXES(VOL) \
-  template Expr::ExpressionID \
-  register_momentum_convective_fluxes<VOL> ( const Direction momComponent,\
-                                             const bool* const doMom,\
-                                             const Expr::TagList& velTags,\
-                                             Expr::TagList& cfTags,\
+#define REGISTER_CONVECTIVE_FLUXES(VOL)                                         \
+  template Expr::ExpressionID                                                   \
+  register_momentum_convective_fluxes<VOL> ( const Direction momComponent,      \
+                                             const bool* const doMom,           \
+                                             const Expr::TagList& velTags,      \
+                                             Expr::TagList& cfTags,             \
                                              ConvInterpMethods convInterpMethod,\
-                                             const Expr::Tag& momTag,\
-                                             const Expr::Tag& volFracTag,\
+                                             const Expr::Tag& momTag,           \
+                                             const Expr::Tag& volFracTag,       \
                                              Expr::ExpressionFactory& factory, Expr::Tag& normalConvFluxTag );
   
-  REGISTER_CONVECTIVE_FLUXES(SVolField);
-  REGISTER_CONVECTIVE_FLUXES(XVolField);
-  REGISTER_CONVECTIVE_FLUXES(YVolField);
-  REGISTER_CONVECTIVE_FLUXES(ZVolField);
+  REGISTER_CONVECTIVE_FLUXES( XVolField )
+  REGISTER_CONVECTIVE_FLUXES( YVolField )
+  REGISTER_CONVECTIVE_FLUXES( ZVolField )
 
   //==================================================================
 

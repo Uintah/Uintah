@@ -4,7 +4,7 @@
 #include <expression/Expression.h>
 
 #include <spatialops/particles/ParticleFieldTypes.h>
-#include <spatialops/particles/ParticleOperatorsImplementation.h>
+#include <spatialops/particles/ParticleOperators.h>
 #include <spatialops/OperatorDatabase.h>
 
 #include<cmath>
