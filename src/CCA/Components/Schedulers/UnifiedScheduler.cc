@@ -118,10 +118,11 @@ enum class ThreadState : int
   , Exit
 };
 
-UnifiedSchedulerWorker * g_runners[MAX_THREADS]        = {};
-volatile ThreadState     g_thread_states[MAX_THREADS]  = {};
-int                      g_cpu_affinities[MAX_THREADS] = {};
-int                      g_num_threads                 = 0;
+UnifiedSchedulerWorker   * g_runners[MAX_THREADS]        = {};
+std::vector<std::thread>   g_threads                       {};
+volatile ThreadState       g_thread_states[MAX_THREADS]  = {};
+int                        g_cpu_affinities[MAX_THREADS] = {};
+int                        g_num_threads                 = 0;
 
 std::atomic<int> g_run_tasks{0};
 
@@ -222,7 +223,13 @@ void init_threads( UnifiedScheduler * sched, int num_threads )
   // spawn worker threads
   // TaskRunner threads start at [1]
   for (int i = 1; i < g_num_threads; ++i) {
-    std::thread(thread_driver, i).detach();
+    Impl::g_threads.push_back(std::thread(thread_driver, i));
+  }
+
+  for (auto& t : Impl::g_threads) {
+    if (t.joinable()) {
+      t.detach();
+    }
   }
 
   thread_fence();
