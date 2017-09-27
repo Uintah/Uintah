@@ -39,18 +39,17 @@
 #include <Core/Grid/BoundaryConditions/BCGeomBase.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BoundCondBase.h>
-#include <CCA/Components/Wasatch/Expressions/Pressure.h>
-#include <CCA/Components/Wasatch/Expressions/NullExpression.h>
 
 //-- SpatialOps includes --//
 #include <spatialops/OperatorDatabase.h>
 
 //-- Wasatch Includes --//
 #include <CCA/Components/Wasatch/FieldTypes.h>
+#include <CCA/Components/Wasatch/FieldAdaptor.h>
 #include <CCA/Components/Wasatch/ParseTools.h>
 #include <CCA/Components/Wasatch/ParticlesHelper.h>
+#include <CCA/Components/Wasatch/Expressions/Pressure.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditions.h>
-#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditionBase.h>
 
 
 /**

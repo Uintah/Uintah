@@ -29,6 +29,8 @@
 
 #include <spatialops/structured/FVStaggered.h>
 
+#include <CCA/Components/Wasatch/FieldTypes.h>
+
 
 /**
  *  \class 	MomRHSPart
