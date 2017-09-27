@@ -696,12 +696,13 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask     * from
     new_dep->m_low  = Min(new_dep->m_low,  matching_dep->m_low);
     new_dep->m_high = Max(new_dep->m_high, matching_dep->m_high);
 
-    // if the same dependency already exists then short circuit out of this function.
-    if (matching_dep->m_low == new_dep->m_low && matching_dep->m_high == new_dep->m_high) {
-      matching_dep->m_to_tasks.splice(matching_dep->m_to_tasks.begin(), new_dep->m_to_tasks);
-      delete new_dep;
-      return;
-    }
+    // TODO This has broken OutputNthProc - figure this out ASAP and fix, APH 09/27/17
+//    // if the same dependency already exists then short circuit out of this function.
+//    if (matching_dep->m_low == new_dep->m_low && matching_dep->m_high == new_dep->m_high) {
+//      matching_dep->m_to_tasks.splice(matching_dep->m_to_tasks.begin(), new_dep->m_to_tasks);
+//      delete new_dep;
+//      return;
+//    }
 
     // copy matching dependencies toTasks to the new dependency
     new_dep->m_to_tasks.splice(new_dep->m_to_tasks.begin(), matching_dep->m_to_tasks);
