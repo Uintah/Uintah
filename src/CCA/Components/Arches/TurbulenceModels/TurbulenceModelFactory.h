@@ -21,6 +21,8 @@ namespace Uintah{
 
       if ( subset == "momentum_closure" ){
         return m_momentum_closure_tasks;
+      } else if ( subset == "all_tasks" ){
+        return _active_tasks;
       } else {
         throw InvalidValue("Error: Accessing the base class implementation of retrieve_task_subset in TurbulenceModelFactory, which means there is no specific implementation for this factory.",__FILE__,__LINE__);
       }

@@ -112,11 +112,11 @@ KokkosSolver::problemSetup( const ProblemSpecP& input_db,
   std::shared_ptr<InitializeFactory> InitF(scinew InitializeFactory());
   std::shared_ptr<ParticleModelFactory> PartModF(scinew ParticleModelFactory());
   std::shared_ptr<LagrangianParticleFactory> LagF(scinew LagrangianParticleFactory());
-  std::shared_ptr<PropertyModelFactoryV2> PropModels(scinew PropertyModelFactoryV2());
-  std::shared_ptr<BoundaryConditionFactory> BC(scinew BoundaryConditionFactory());
-  std::shared_ptr<ChemMixFactory> TableModels(scinew ChemMixFactory());
+  std::shared_ptr<PropertyModelFactoryV2> PropModelsF(scinew PropertyModelFactoryV2());
+  std::shared_ptr<BoundaryConditionFactory> BCF(scinew BoundaryConditionFactory());
+  std::shared_ptr<ChemMixFactory> TableModelsF(scinew ChemMixFactory());
   std::shared_ptr<TurbulenceModelFactory> TurbModelF(scinew TurbulenceModelFactory());
-  std::shared_ptr<SourceTermFactoryV2> SourceTermV2(scinew SourceTermFactoryV2());
+  std::shared_ptr<SourceTermFactoryV2> SourceTermV2F(scinew SourceTermFactoryV2());
 
   m_task_factory_map.clear();
   m_task_factory_map.insert(std::make_pair("utility_factory",UtilF));
@@ -124,11 +124,11 @@ KokkosSolver::problemSetup( const ProblemSpecP& input_db,
   m_task_factory_map.insert(std::make_pair("initialize_factory",InitF));
   m_task_factory_map.insert(std::make_pair("particle_model_factory",PartModF));
   m_task_factory_map.insert(std::make_pair("lagrangian_factory",LagF));
-  m_task_factory_map.insert(std::make_pair("property_models_factory", PropModels));
-  m_task_factory_map.insert(std::make_pair("boundary_condition_factory", BC));
-  m_task_factory_map.insert(std::make_pair("table_factory", TableModels));
+  m_task_factory_map.insert(std::make_pair("property_models_factory", PropModelsF));
+  m_task_factory_map.insert(std::make_pair("boundary_condition_factory", BCF));
+  m_task_factory_map.insert(std::make_pair("table_factory", TableModelsF));
   m_task_factory_map.insert(std::make_pair("turbulence_model_factory", TurbModelF));
-  m_task_factory_map.insert(std::make_pair("source_term_factory",SourceTermV2));
+  m_task_factory_map.insert(std::make_pair("source_term_factory",SourceTermV2F));
 
   typedef std::map<std::string, std::shared_ptr<TaskFactoryBase> > BFM;
   proc0cout << "\n Registering Tasks For: " << std::endl;
