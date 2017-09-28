@@ -119,7 +119,7 @@
 
     </MaterialProperties>
        
-    <Grid>
+    <Grid doAMR="true">
        <BoundaryConditions>
           <Face side = "x-">
                   <BCType id = "all" var = "Dirichlet" label = "Velocity">

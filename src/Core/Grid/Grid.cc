@@ -305,7 +305,6 @@ Grid::parseLevelFromFile( FILE * fp, vector<int> & procMapForLevel )
   int       numPatchesRead   = 0;
   int       totalCells       = -1;
 
-  bool      isNonCubic       = false;
   bool      done_with_level  = false;
 
   IntVector periodicBoundaries;
@@ -360,7 +359,6 @@ Grid::parseLevelFromFile( FILE * fp, vector<int> & procMapForLevel )
         level = this->addLevel( anchor, dcell, id );
 
         level->setExtraCells( extraCells );
-        level->setNonCubicFlag( isNonCubic );
 
         //  if( foundStretch ) {
         //    level->setStretched((Grid::Axis)0, faces[0]);
@@ -392,14 +390,13 @@ Grid::parseLevelFromFile( FILE * fp, vector<int> & procMapForLevel )
     }
     else {
       vector< string > pieces = UintahXML::splitXMLtag( line );
+      
+/*`==========TESTING==========*/
       if( pieces[0] == "<nonCubic>" ) {
-        string test = Uintah::string_toupper( pieces[1] ); 
-        if( test == "TRUE" ){
-          isNonCubic = true;
-        }else{
-          isNonCubic = false;
-        }
-      }
+        // This conditional is not necessary and is here for backwards compatibility.  
+        //  Remove it after 03/2018  -Todd
+      } 
+/*===========TESTING==========`*/
       else if( pieces[0] == "<numPatches>" ) {
         numPatches = atoi( pieces[1].c_str() );
       }
@@ -534,7 +531,7 @@ Grid::parseGridFromFile( FILE * fp, vector< vector<int> > & procMap )
 void
 Grid::readLevelsFromFileBinary( FILE * fp, vector< vector<int> > & procMap )
 {
-  int    numLevels, num_patches, isNonCubic;
+  int    numLevels, num_patches;
   long   num_cells;
   int    extra_cells[3], period[3];
   double anchor[3], cell_spacing[3];
@@ -543,7 +540,6 @@ Grid::readLevelsFromFileBinary( FILE * fp, vector< vector<int> > & procMap )
   fread( & numLevels,    sizeof(int),    1, fp );
 
   for( int lev = 0; lev < numLevels; lev++ ) {
-    fread( & isNonCubic,   sizeof(int),    1, fp );    // is the level non-cubic
     fread( & num_patches,  sizeof(int),    1, fp );    // Number of Patches -  100
     fread( & num_cells,    sizeof(long),   1, fp );    // Number of Cells   - 8000
     fread(   extra_cells,  sizeof(int),    3, fp );    // Extra Cell Info   - [1,1,1]
@@ -567,8 +563,6 @@ Grid::readLevelsFromFileBinary( FILE * fp, vector< vector<int> > & procMap )
 
     const IntVector extraCells( extra_cells[0], extra_cells[1], extra_cells[2] );
     level->setExtraCells( extraCells );
-    
-    level->setNonCubicFlag ( (bool) isNonCubic );
 
     for( int patch = 0; patch < num_patches; patch++ ) {
       int    p_id, rank, nnodes, total_cells;
@@ -1232,10 +1226,6 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
       //
       IntVector anchorCell(level->getCellIndex(    levelAnchor   + Vector(1.e-14,1.e-14,1.e-14)) );
       IntVector highPointCell(level->getCellIndex(levelHighPoint + Vector(1.e-14,1.e-14,1.e-14)) );
-
-      bool nonCubic = false;
-      grid_ps->get( "nonCubic_domain", nonCubic );
-      level->setNonCubicFlag( nonCubic );
         
       //______________________________________________________________________
       // second pass - set up patches and cells
@@ -1468,16 +1458,6 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
             }
           }
         } // end for(int i=0;i<patches.x();i++){
-
-        // Keep a vector of the boxes specified in the ups files
-        // Needed by RMCRT + getRegion when the domain is non_cubic
-        // Below excludes the extraCells
-        Point boxLo_pt = level->getNodePosition( boxLo_cell );
-        Point boxHi_pt = level->getNodePosition( boxHi_cell );
-                
-        BBox box( boxLo_pt, boxHi_pt );
-        level->addBox_ups(box);
-        
       } // end for(ProblemSpecP box_ps = level_ps->findBlock("Box");
 
       if (pg->size() > 1 && (level->numPatches() < pg->size()) && !do_amr) {

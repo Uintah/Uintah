@@ -1164,8 +1164,9 @@ Ray::rayTrace( const ProcessorGroup* pg,
 
     //__________________________________
     //  BULLETPROOFING
-    if ( level->isNonCubic() ){
-
+//    if ( level->isNonCubic() ){
+    if( false) {
+      
       IntVector l = abskg.getLowIndex();
       IntVector h = abskg.getHighIndex();
 
@@ -1173,21 +1174,18 @@ Ray::rayTrace( const ProcessorGroup* pg,
       for(CellIterator iter = iterLim; !iter.done();iter++) {
         IntVector c = *iter;
 
-        if (level->insideBoxes_ups(c)) {
+        if ( std::isinf( abskg[c] )         || std::isnan( abskg[c] )  ||
+             std::isinf( sigmaT4OverPi[c] ) || std::isnan( sigmaT4OverPi[c] ) ||
+             std::isinf( celltype[c] )      || std::isnan( celltype[c] ) ){
+          std::ostringstream warn;
+          warn<< "ERROR:Ray::rayTrace   abskg or sigmaT4 or cellType is non-physical \n"
+              << "     c:   " << c << " location: " << level->getCellPosition(c) << "\n"
+              << "     ROI: " << ROI_Lo << " "<< ROI_Hi << "\n"
+              << "          " << *patch << "\n"
+              << " ( abskg[c]: " << abskg[c] << ", sigmaT4OverPi[c]: " << sigmaT4OverPi[c] << ", celltype[c]: " << celltype[c] << ")\n";
 
-          if ( std::isinf( abskg[c] )         || std::isnan( abskg[c] )  ||
-               std::isinf( sigmaT4OverPi[c] ) || std::isnan( sigmaT4OverPi[c] ) ||
-               std::isinf( celltype[c] )      || std::isnan( celltype[c] ) ){
-            std::ostringstream warn;
-            warn<< "ERROR:Ray::rayTrace   abskg or sigmaT4 or cellType is non-physical \n"
-                << "     c:   " << c << " location: " << level->getCellPosition(c) << "\n"
-                << "     ROI: " << ROI_Lo << " "<< ROI_Hi << "\n"
-                << "          " << *patch << "\n"
-                << " ( abskg[c]: " << abskg[c] << ", sigmaT4OverPi[c]: " << sigmaT4OverPi[c] << ", celltype[c]: " << celltype[c] << ")\n";
-
-            cout << warn.str() << endl;
-            throw InternalError( warn.str(), __FILE__, __LINE__ );
-          }
+          cout << warn.str() << endl;
+          throw InternalError( warn.str(), __FILE__, __LINE__ );
         }
       }
     }

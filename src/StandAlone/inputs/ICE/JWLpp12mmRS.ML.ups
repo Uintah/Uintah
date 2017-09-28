@@ -26,7 +26,7 @@
     <!--____________________________________________________________________-->
     <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
-    <Grid>
+    <Grid doAMR="true">
     <BoundaryConditions>
       <Face side = "x-">
         <BCType id = "all"   label = "Pressure"     var = "Neumann">

@@ -1765,7 +1765,6 @@ DataArchiver::writeGridBinary( const bool hasGlobals, const string & grid_path, 
     LevelP level = grid->getLevel( lev );
 
     int    num_patches = level->numPatches();
-    int    nonCubic    = level->isNonCubic();
     long   num_cells   = level->totalCells();
     IntVector eciv = level->getExtraCells();
     int  * extra_cells = eciv.get_pointer();
@@ -1784,8 +1783,7 @@ DataArchiver::writeGridBinary( const bool hasGlobals, const string & grid_path, 
     cell_spacing[0] = cell_spacing_vec.x();
     cell_spacing[1] = cell_spacing_vec.y();
     cell_spacing[2] = cell_spacing_vec.z();
-    
-    fwrite( &nonCubic,    sizeof(int),    1, fp );  // is the level non-cubic
+
     fwrite( &num_patches, sizeof(int),    1, fp );  // Number of Patches -  100
     fwrite( &num_cells,   sizeof(long),   1, fp );  // Number of Cells   - 8000
     fwrite( extra_cells,  sizeof(int),    3, fp );  // Extra Cell Info - [1,1,1]
@@ -1904,7 +1902,6 @@ DataArchiver::writeGridOriginal( const bool hasGlobals, const GridP & grid, Prob
     if (level->getPeriodicBoundaries() != IntVector(0,0,0)) {
       levelElem->appendElement("periodic", level->getPeriodicBoundaries());
     }
-    levelElem->appendElement("nonCubic",    level->isNonCubic() );
     levelElem->appendElement("numPatches",  level->numPatches());
     levelElem->appendElement("totalCells",  level->totalCells());
 
@@ -2041,7 +2038,7 @@ DataArchiver::writeGridTextWriter( const bool hasGlobals, const string & grid_pa
                                        level->getPeriodicBoundaries().z()
                                      );
     }
-    xmlTextWriterWriteFormatElement( writer_grid, BAD_CAST "nonCubic",    "%d", level->isNonCubic() );
+
     xmlTextWriterWriteFormatElement( writer_grid, BAD_CAST "numPatches",  "%d", level->numPatches() );
     xmlTextWriterWriteFormatElement( writer_grid, BAD_CAST "totalCells", "%ld", level->totalCells() );
     xmlTextWriterWriteFormatElement( writer_grid, BAD_CAST "totalCells", "%ld", level->totalCells() );

@@ -358,6 +358,7 @@ void Level::computeVariableExtents( const TypeDescription::Type TD
 
   switch (TD) {
     case TypeDescription::CCVariable :
+    case TypeDescription::ParticleVariable :
       lo = CCLo;
       hi = CCHi;
       break;
@@ -374,10 +375,11 @@ void Level::computeVariableExtents( const TypeDescription::Type TD
       hi = CCHi + IntVector(0, 0, 1);
       break;
     case TypeDescription::NCVariable :
-      findInteriorCellIndexRange(lo, hi);
+      findNodeIndexRange(lo, hi);
       break;
     default :
-      throw InternalError("  ERROR: Level::computeVariableExtents type description not supported", __FILE__, __LINE__);
+      std::string me = TypeDescription::toString( TD );
+      throw InternalError("  ERROR: Level::computeVariableExtents type description (" + me + ") not supported", __FILE__, __LINE__);
   }
 }
 
@@ -399,19 +401,19 @@ Level::getTotalCellsInRegion(const IntVector& lowIndex, const IntVector& highInd
   // need to go all patches and see if they exist in this range.  If so, add up their cells.
   // This process is similar to how d_totalCells is computed in Level::finalizeLevel().
 
-  long cellsInRegion = 0;  
+  long cellsInRegion = 0;
   if (m_isNonCubicDomain == false ){
     IntVector diff( highIndex - lowIndex);
-    cellsInRegion += diff.x() * diff.y() * diff.z(); 
+    cellsInRegion += diff.x() * diff.y() * diff.z();
     return cellsInRegion;
   }
 
   for( int i = 0; i < (int)m_real_patches.size(); i++ ) {
     IntVector patchLow  =  m_real_patches[i]->getExtraCellLowIndex();
     IntVector patchHigh =  m_real_patches[i]->getExtraCellHighIndex();
-   
+
     if( doesIntersect(lowIndex, highIndex, patchLow, patchHigh) ){
-    
+
       IntVector regionLo = Uintah::Max( lowIndex,  patchLow );
       IntVector regionHi = Uintah::Min( highIndex, patchHigh );
       IntVector diff( regionHi - regionLo );
@@ -646,40 +648,46 @@ bool Level::containsCell( const IntVector & idx ) const
   return patch != 0;
 }
 
-//______________________________________________________________________
-//
-void Level::setNonCubicFlag ( bool test ) 
-{ 
-  m_isNonCubicDomain = test; 
-}
-//______________________________________________________________________
-//   Add the bounding box from the ups file
-void Level::addBox_ups( const BBox &b )
+/*______________________________________________________________________
+  This method determines if a level is nonCubic or if there are any missing patches.
+  Algorithm:
+     1) The total volume of the patches must equal the volume of the level.
+     The volume of the level is defined by the bounding box.
+______________________________________________________________________*/
+void
+Level::setIsNonCubicLevel()
 {
+  double patchesVol = 0.0;
   
-  m_upsBoxes.boxes.push_back( b );
+  // loop over all patches and sum the patch's volume
+  for (int p = 0; p < (int)m_real_patches.size(); p++) {
+    const Patch* patch = m_real_patches[p];
+
+    Box box = patch->getBox();
+    Vector sides( (box.upper().x() - box.lower().x() ),
+                  (box.upper().y() - box.lower().y() ),
+                  (box.upper().z() - box.lower().z() ) );
+
+    double volume = sides.x() * sides.y() * sides.z();
+
+    patchesVol += volume;
+  }
+
+  // compute the level's volume from the bounding box
+  Point loPt = m_int_spatial_range.min();
+  Point hiPt = m_int_spatial_range.max();
+
+  Vector levelSides( ( hiPt.x() - loPt.x() ),
+                     ( hiPt.y() - loPt.y() ),
+                     ( hiPt.z() - loPt.z() ) );
+
+  double levelVol = levelSides.x() * levelSides.y() * levelSides.z();
+
   
-  // We are assuming that if the user has more than one box in a level the level
-  // is non-cubic.  This is obvious not always true.  -Todd
-  
-  if ( m_upsBoxes.boxes.size() > 1 ){
+  m_isNonCubicDomain = false;
+  if ( std::fabs( patchesVol - levelVol ) > 5 * DBL_EPSILON ) {
     m_isNonCubicDomain = true;
   }
-}
-
-//______________________________________________________________________
-//  is the cell inside of boxes specifid in ups file?
-bool Level::insideBoxes_ups( const IntVector& c ) const
-{  
-  const Point p = getCellPosition( c );
-  for( unsigned i = 0; i < m_upsBoxes.boxes.size(); i++ ) {
-    BBox box = m_upsBoxes.boxes[i];
-    
-    if( box.inside(p) ){
-      return true;
-    } 
-  }
-  return false;
 }
 
 //______________________________________________________________________
@@ -857,6 +865,9 @@ Level::finalizeLevel()
     m_spatial_range.extend(r->getExtraBox().upper());
   }
   
+  // determine if this level is cubic
+  setIsNonCubicLevel();
+  
   // Loop through all patches and find the patches that overlap.  Needed
   // when patches layouts have inside corners.
   setOverlappingPatches();
@@ -964,7 +975,9 @@ Level::finalizeLevel( bool periodicX, bool periodicY, bool periodicZ )
     m_spatial_range.extend(r->getExtraBox().upper());
   }
   
-  
+  // determine if this level is cubic
+  setIsNonCubicLevel();
+    
   // Loop through all patches and find the patches that overlap.  Needed
   // when patch layouts have inside corners.
   setOverlappingPatches();
@@ -991,7 +1004,7 @@ Level::setBCTypes()
 
   rtimes[0] += timer().seconds();
   timer.reset( true );
-  
+
   patch_iterator iter;
 
   ProcessorGroup *myworld = nullptr;
@@ -1387,7 +1400,7 @@ Level::mapCellToFiner( const IntVector & idx ) const
 //Provides the (x-,y-,z-) corner of a fine cell given a coarser coordinate
 //If any of the coordinates are negative, assume the fine cell coordiantes
 //went too far into the negative and adjust forward by 1
-//This adjusting approach means that for L-shaped domains the results are 
+//This adjusting approach means that for L-shaped domains the results are
 //not always consistent with what is expected.
 //(Note: Does this adjustment mean this only works in a 2:1 refinement ratio
 //and only on cubic domains? -- Brad P)
@@ -1419,9 +1432,9 @@ Level::mapCellToFinest( const IntVector & idx ) const
 
 //______________________________________________________________________
 //Provides the x-,y-,z- corner of a fine cell given a coarser coordinate.
-//This does not attempt to adjust the cell in the + direction if it goes 
-//negative. It is left up to the caller of this method to determine if 
-//those coordinates are too far past any level boundary.    
+//This does not attempt to adjust the cell in the + direction if it goes
+//negative. It is left up to the caller of this method to determine if
+//those coordinates are too far past any level boundary.
 IntVector
 Level::mapCellToFinestNoAdjustments( const IntVector & idx ) const
 {

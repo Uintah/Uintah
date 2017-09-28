@@ -144,7 +144,6 @@
       </Box>
       <spacing>        [0.1,0.1,0.1]   </spacing>
     </Level>
-    <nonCubic_domain>  true            </nonCubic_domain>
   </Grid>
   
   <!--____________________________________________________________________-->
