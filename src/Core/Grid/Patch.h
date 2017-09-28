@@ -29,7 +29,6 @@
 #include <Core/Grid/Ghost.h>
 #include <Core/Grid/Level.h>
 #include <Core/Disclosure/TypeDescription.h>
-//#include <Core/Grid/fixedvector.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/NodeIterator.h>
 #include <Core/Grid/Variables/Iterator.h>
