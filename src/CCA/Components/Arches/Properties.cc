@@ -94,6 +94,10 @@ Properties::problemSetup(const ProblemSpecP& params)
 
   ProblemSpecP db = params->findBlock("Properties");
 
+  if ( db == nullptr ){
+    throw ProblemSetupException("Error: Please specify a <Properties> section in <Arches>.", __FILE__, __LINE__); 
+  }
+
   db->getWithDefault("filter_drhodt",          d_filter_drhodt,          false);
   db->getWithDefault("first_order_drhodt",     d_first_order_drhodt,     true);
   db->getWithDefault("inverse_density_average",d_inverse_density_average,false);

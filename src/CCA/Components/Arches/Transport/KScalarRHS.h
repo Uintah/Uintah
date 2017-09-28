@@ -424,6 +424,8 @@ private:
       CT& phi     = tsk_info->get_const_uintah_field_add<CT>(_eqn_names[ieqn]);
       T& rhs      = tsk_info->get_uintah_field_add<T>(_eqn_names[ieqn]+"_rhs");
 
+      rhs.initialize(0.0);
+
       //Convection:
       FXT& x_flux = tsk_info->get_uintah_field_add<FXT>(_eqn_names[ieqn]+"_x_flux");
       FYT& y_flux = tsk_info->get_uintah_field_add<FYT>(_eqn_names[ieqn]+"_y_flux");
