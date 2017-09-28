@@ -5495,6 +5495,9 @@
           <!--src label="eta_source3"/-->
         </PressureSolver>
         <MomentumSolver>
+          <wall_closure type="constant_coefficient">
+            <wall_csmag>0.4</wall_csmag>
+          </wall_closure>
           <convection_scheme>central</convection_scheme>
           <src label="coal_gas_momentum">
           </src>

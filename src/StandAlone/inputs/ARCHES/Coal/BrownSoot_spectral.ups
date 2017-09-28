@@ -3,8 +3,8 @@
   <Meta>
     <title>OFC_Utah_SUFCO</title>
   </Meta>
-<!--This test covers spectral radiation properties, the spectral radiation solver, as well as-->
-<!--the brown soot model-->
+  <!--This test covers spectral radiation properties, the spectral radiation solver, as well as-->
+  <!--the brown soot model-->
   <SimulationComponent type="arches"/>
   <Solver type="hypre"/>
   <Time>
@@ -1602,37 +1602,30 @@
           <adiabatic_enthalpy_label>adiabaticenthalpy</adiabatic_enthalpy_label>
           <use_Ha_lookup>false</use_Ha_lookup>
         </model>
-
       </PropertyModels>
-
       <PropertyModelsV2>
-       <!--compute soot volume fraction from soot mass fraction -->
+        <!--compute soot volume fraction from soot mass fraction -->
         <model type="sootVolumeFrac" label="soot">
           <Ysoot_label>Ysoot</Ysoot_label>
           <density_label>density</density_label>
           <soot_density>1900</soot_density>
         </model>
-
-      <!--compute spectral absorption coefficients, soot volume fraction adds grey contributions-->
+        <!--compute spectral absorption coefficients, soot volume fraction adds grey contributions-->
         <model label="abskg_spec" type="spectralProperties">
-            <sootVolumeFrac>soot</sootVolumeFrac>
+          <sootVolumeFrac>soot</sootVolumeFrac>
         </model>
-
-      <!--compute particle absorption coefficients, which are assumed to be grey-->
-        <model type="partRadProperties" label="abskp" >
-           <subModel>constantCIF</subModel>
-           <part_temp_label>temperature_coal</part_temp_label>
-           <part_size_label>length</part_size_label>
-           <radiateAtGasTemp>false</radiateAtGasTemp>
-           <model_type>planck</model_type>
-           <complex_ir_real>2.0</complex_ir_real>
-           <complex_ir_imag>-0.6</complex_ir_imag>
-           <const_asymmFact>1</const_asymmFact>
+        <!--compute particle absorption coefficients, which are assumed to be grey-->
+        <model type="partRadProperties" label="abskp">
+          <subModel>constantCIF</subModel>
+          <part_temp_label>temperature_coal</part_temp_label>
+          <part_size_label>length</part_size_label>
+          <radiateAtGasTemp>false</radiateAtGasTemp>
+          <model_type>planck</model_type>
+          <complex_ir_real>2.0</complex_ir_real>
+          <complex_ir_imag>-0.6</complex_ir_imag>
+          <const_asymmFact>1</const_asymmFact>
         </model>
-
       </PropertyModelsV2>
-
-
       <ParticleProperties type="coal">
         <diameter_distribution>[15e-6,50e-6,150e-6]</diameter_distribution>
         <!-- [m] -->
@@ -2102,7 +2095,6 @@
         <save_moments>false</save_moments>
       </DQMOM>
       <BoundaryConditions>
-        <wall_csmag>0.0</wall_csmag>
         <intrusions>
           <intrusion label="pipe_wall">
             <constant_temperature T="1250.0"/>
@@ -2302,6 +2294,9 @@
           <do_only_last_projection>false</do_only_last_projection>
         </PressureSolver>
         <MomentumSolver>
+          <wall_closure type="constant_coefficient">
+            <wall_csmag>0.4</wall_csmag>
+          </wall_closure>
           <convection_scheme>wall_upwind</convection_scheme>
           <src label="coal_gas_momentum"/>
           <Re_limit>2</Re_limit>

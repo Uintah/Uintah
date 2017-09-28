@@ -142,6 +142,8 @@
           </Parameters>
         </PressureSolver>
         <MomentumSolver>
+          <wall_closure type="molecular">
+          </wall_closure>
           <convection_scheme>central</convection_scheme>
         </MomentumSolver>
       </ExplicitSolver>

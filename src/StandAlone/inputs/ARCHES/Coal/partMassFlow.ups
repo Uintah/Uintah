@@ -1102,14 +1102,13 @@
           <constant>0.0</constant>
         </model>
       </PropertyModels>
-
       <PropertyModelsV2>
-        <model type="gasRadProperties"  label="gas_abskg" >
+        <model type="gasRadProperties" label="gas_abskg">
           <calculator type="hottel_sarofim">
             <opl>0.432</opl>
           </calculator>
         </model>
-        <model type="partRadProperties" label="Julien_abskp" >
+        <model type="partRadProperties" label="Julien_abskp">
           <subModel>basic</subModel>
           <Qabs>0.8</Qabs>
           <part_temp_label>temperature_coal</part_temp_label>
@@ -1117,7 +1116,6 @@
           <radiateAtGasTemp>true</radiateAtGasTemp>
         </model>
       </PropertyModelsV2>
-
       <!--<include href="inputs/ARCHES/Coal/CoalDB/example_coal.xml" section="ParticleProperties" />-->
       <ParticleProperties type="coal">
         <diameter_distribution>[15e-6,50e-6,150e-6]</diameter_distribution>
@@ -1534,7 +1532,6 @@
         <save_moments>false</save_moments>
       </DQMOM>
       <BoundaryConditions>
-        <wall_csmag>0.0</wall_csmag>
       </BoundaryConditions>
       <ExplicitSolver>
         <initial_dt>1</initial_dt>
@@ -1564,6 +1561,9 @@
           <do_only_last_projection>false</do_only_last_projection>
         </PressureSolver>
         <MomentumSolver>
+          <wall_closure type="constant_coefficient">
+            <wall_csmag>0.4</wall_csmag>
+          </wall_closure>
           <convection_scheme>wall_upwind</convection_scheme>
           <src label="coal_gas_momentum"/>
           <Re_limit>2</Re_limit>

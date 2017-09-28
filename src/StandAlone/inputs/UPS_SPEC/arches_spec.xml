@@ -959,9 +959,6 @@
          </intrusion>
         </intrusions>
 
-        <wall_slip                      spec="OPTIONAL NO_DATA"/> <!-- Use a slip wall BC -->
-        <wall_csmag                     spec="OPTIONAL DOUBLE 'positive'"/> <!-- Constant coefficient for the wall closure model.  default = 0.17. Set to zero for laminar conditions. -->
-
         <TurbulentInlet                 spec="OPTIONAL NO_DATA" >
           <cell_low                     spec="REQUIRED INTEGER"/>
           <cell_high                    spec="REQUIRED INTEGER"/>
@@ -1124,6 +1121,23 @@
            <vf                          spec="OPTIONAL DOUBLE" need_applies_to="type shunn_moin"/>
 
           </initialization>
+
+          <!-- WALL CLOSURE -->
+          <!-- Current wall models include: 
+               none: Slip wall conditions
+               molecular: Uses only the molecular viscosity
+               constant_coefficient: Uses a constant coefficient smagorinsky model. Use ISI at the standoff index.  
+               dynamic: Use the dynamic viscosity at the standoff index
+          -->
+          <wall_closure                 spec="OPTIONAL NO_DATA" 
+                                        attribute1="type REQUIRED STRING 'none, molecular, constant_coefficient, dynamic'">
+
+            <wall_csmag                 spec="REQUIRED DOUBLE" need_applies_to="type constant_coefficient"/> <!-- Constant coefficient for this model. Coefficient might be 
+                                                                                                                  flow dependent but typically ranges from .1-.4 -->
+            <standoff_index             spec="OPTIONAL INTEGER" need_applies_to="type constant_coefficient, dynamic"/> <!-- Indicates the distance (in cell #) from the wall from which 
+                                                                                                                        turbulence info will be used. Default = 1 -->
+
+          </wall_closure>
         </MomentumSolver>
 
         <PressureSolver                 spec="REQUIRED NO_DATA" >

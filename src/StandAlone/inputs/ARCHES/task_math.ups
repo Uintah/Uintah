@@ -235,6 +235,8 @@
           </Parameters>
         </PressureSolver>
         <MomentumSolver>
+          <wall_closure type="molecular">
+          </wall_closure>
           <convection_scheme>central</convection_scheme>
           <initialization type="constant">
             <const_u>1.00</const_u>

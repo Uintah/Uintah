@@ -446,15 +446,13 @@
           <constant>0.0</constant>
         </model>
       </PropertyModels>
-
       <PropertyModelsV2>
-        <model type="gasRadProperties"  label="abskg" >
+        <model type="gasRadProperties" label="abskg">
           <calculator type="hottel_sarofim">
             <opl>3.0</opl>
           </calculator>
         </model>
       </PropertyModelsV2>
-
       <!--__________________________________-->
       <Turbulence model="compdynamicprocedure"/>
       <Properties>
@@ -481,6 +479,9 @@
           </Parameters>
         </PressureSolver>
         <MomentumSolver>
+          <wall_closure type="constant_coefficient">
+            <wall_csmag>0.4</wall_csmag>
+          </wall_closure>
           <convection_scheme>central</convection_scheme>
         </MomentumSolver>
       </ExplicitSolver>

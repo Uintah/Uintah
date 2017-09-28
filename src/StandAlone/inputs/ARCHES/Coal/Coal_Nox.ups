@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='ISO-8859-1'?>
 <Uintah_specification>
   <Meta>
     <title>Drop Tube Furnace</title>
@@ -2243,7 +2243,6 @@
       </DQMOM>
       <BoundaryConditions>
         <force_area_calc> </force_area_calc>
-        <wall_csmag>0.0</wall_csmag>
         <intrusions>
           <intrusion label="Furnace_Wall">
             <constant_temperature T="1673"/>
@@ -2295,6 +2294,9 @@
           <do_only_last_projection>false</do_only_last_projection>
         </PressureSolver>
         <MomentumSolver>
+          <wall_closure type="constant_coefficient">
+            <wall_csmag>0.4</wall_csmag>
+          </wall_closure>
           <convection_scheme>wall_upwind</convection_scheme>
           <src label="coal_gas_momentum"/>
           <src label="momentum_eta_source1"/>

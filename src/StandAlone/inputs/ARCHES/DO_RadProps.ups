@@ -257,9 +257,8 @@
           </src>
         </Sources>
       </TransportEqns>
-
-   <PropertyModelsV2>
-        <model type="gasRadProperties"  label="gas_abskg" >
+      <PropertyModelsV2>
+        <model type="gasRadProperties" label="gas_abskg">
           <calculator type="radprops">
             <opl>1.0</opl>
             <grey_gas>
@@ -267,8 +266,7 @@
             </grey_gas>
           </calculator>
         </model>
-   </PropertyModelsV2>
-
+      </PropertyModelsV2>
       <PropertyModels>
         <model type="heat_loss" label="heat_loss">
           <initialization type="constant">
@@ -320,6 +318,9 @@
           </Parameters>
         </PressureSolver>
         <MomentumSolver>
+          <wall_closure type="constant_coefficient">
+            <wall_csmag>0.4</wall_csmag>
+          </wall_closure>
           <convection_scheme>central</convection_scheme>
         </MomentumSolver>
       </ExplicitSolver>

@@ -294,15 +294,13 @@
           <!-- Warning: not a good default value -->
         </model>
       </PropertyModels>
-
       <PropertyModelsV2>
-        <model type="gasRadProperties"  label="abskg" >
+        <model type="gasRadProperties" label="abskg">
           <calculator type="hottel_sarofim">
             <opl>3.0</opl>
           </calculator>
         </model>
       </PropertyModelsV2>
-
       <Properties>
         <table label="a_user_generated_label" type="classic">
           <reference_state f="0.0" hl="0.0" var="0.0"/>
@@ -326,6 +324,9 @@
           </Parameters>
         </PressureSolver>
         <MomentumSolver>
+          <wall_closure type="constant_coefficient">
+            <wall_csmag>0.4</wall_csmag>
+          </wall_closure>
           <convection_scheme>upwind</convection_scheme>
         </MomentumSolver>
       </ExplicitSolver>

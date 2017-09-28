@@ -228,6 +228,26 @@ MomentumSolver::problemSetup(const ProblemSpecP& params,
 
   d_rhsSolver = scinew RHSSolver();
   d_mixedModel=d_turbModel->getMixedModel();
+
+  d_wall_closure = "molecular";
+  d_wall_const_smag_C = 0.;
+  ProblemSpecP db_wall = db->findBlock("wall_closure");
+  if ( db_wall != nullptr ){
+    db_wall->getAttribute("type", d_wall_closure );
+
+    if ( d_wall_closure == "constant_coefficient" ){
+      db_wall->getWithDefault( "wall_csmag", d_wall_const_smag_C, 0.17 );
+    }
+
+    if ( d_wall_closure == "constant_coefficient" ||
+         d_wall_closure == "dynamic" ){
+
+      db_wall->getWithDefault("standoff_index", d_standoff_index, 1);
+
+    }
+  }
+
+
 #ifdef HAVE_VISIT
   static bool initialized = false;
 
@@ -461,7 +481,7 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 //****************************************************************************
 void MomentumSolver::solveVelHat(const LevelP& level,
                                  SchedulerP& sched,
-                                 const TimeIntegratorLabel* timelabels)
+                                 const TimeIntegratorLabel* timelabels, const int curr_level )
 {
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
@@ -489,11 +509,9 @@ void MomentumSolver::solveVelHat(const LevelP& level,
   }
 
   sched_buildLinearMatrixVelHat(sched, patches, matls,
-                                timelabels);
+                                timelabels, curr_level);
 
 }
-
-
 
 // ****************************************************************************
 // Schedule build of linear matrix
@@ -502,13 +520,14 @@ void
 MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
                                               const PatchSet* patches,
                                               const MaterialSet* matls,
-                                              const TimeIntegratorLabel* timelabels)
+                                              const TimeIntegratorLabel* timelabels,
+                                              const int curr_level )
 {
   string taskname =  "MomentumSolver::BuildCoeffVelHat" +
                      timelabels->integrator_step_name;
   Task* tsk = scinew Task(taskname,
                           this, &MomentumSolver::buildLinearMatrixVelHat,
-                          timelabels);
+                          timelabels, curr_level);
 
 
   Task::WhichDW parent_old_dw;
@@ -519,6 +538,14 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
   }
 
   tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
+
+  Task::WhichDW which_dw;
+
+  if ( curr_level == 0 ){
+    which_dw = Task::OldDW;
+  } else {
+    which_dw = Task::NewDW;
+  }
 
   // Requires
   // from old_dw for time integration
@@ -532,6 +559,10 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, gac, 2);
   tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
   tsk->requires(Task::NewDW, d_lab->d_volFractionLabel, gac, 2);
+
+  if ( d_wall_closure == "constant_coefficient"){
+    d_boundaryCondition->sched_wallStressConstSmag( which_dw, tsk );
+  }
 
   if (timelabels->multiple_steps){
     tsk->requires(Task::NewDW, d_lab->d_densityTempLabel,gac, 2);
@@ -605,8 +636,6 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
 
 }
 
-
-
 struct sumNonlinearSources{
        sumNonlinearSources(double _vol,
                            SFCXVariable<double> &_uNonlinearSrc,
@@ -642,7 +671,8 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
                                         const MaterialSubset* /*matls*/,
                                         DataWarehouse* old_dw,
                                         DataWarehouse* new_dw,
-                                        const TimeIntegratorLabel* timelabels)
+                                        const TimeIntegratorLabel* timelabels,
+                                        const int curr_level )
 {
   DataWarehouse* parent_old_dw;
   if (timelabels->recursion){
@@ -651,6 +681,12 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     parent_old_dw = old_dw;
   }
 
+  DataWarehouse* which_dw;
+  if ( curr_level == 0  ){
+    which_dw = old_dw;
+  } else {
+    which_dw = new_dw;
+  }
   delt_vartype delT;
   parent_old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
   double delta_t = delT;
@@ -797,8 +833,56 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     // take of the wall shear stress
     // This adds the contribution to the nonLinearSrc of each
     // direction depending on the boundary conditions.
-    if ( !d_MAlab ){
-      d_boundaryCondition->wallStress( patch, &velocityVars, &constVelocityVars, volFraction );
+    // if ( !d_MAlab ){
+    //   d_boundaryCondition->wallStress( patch, &velocityVars, &constVelocityVars, volFraction, IsImag );
+    // }
+
+    if ( d_wall_closure == "constant_coefficient" ){
+
+      d_boundaryCondition->wallStressConstSmag(
+                                                patch,
+                                                which_dw,
+                                                d_wall_const_smag_C,
+                                                d_standoff_index,
+                                                constVelocityVars.uVelocity,
+                                                constVelocityVars.vVelocity,
+                                                constVelocityVars.wVelocity,
+                                                velocityVars.uVelNonlinearSrc,
+                                                velocityVars.vVelNonlinearSrc,
+                                                velocityVars.wVelNonlinearSrc,
+                                                constVelocityVars.density,
+                                                volFraction
+                                              );
+
+    } else if ( d_wall_closure == "dynamic" ){
+
+      d_boundaryCondition->wallStressDynSmag(
+                                                patch,
+                                                d_standoff_index,
+                                                constVelocityVars.viscosity,
+                                                constVelocityVars.uVelocity,
+                                                constVelocityVars.vVelocity,
+                                                constVelocityVars.wVelocity,
+                                                velocityVars.uVelNonlinearSrc,
+                                                velocityVars.vVelNonlinearSrc,
+                                                velocityVars.wVelNonlinearSrc,
+                                                constVelocityVars.density,
+                                                volFraction
+                                              );
+
+    } else if ( d_wall_closure == "molecular" ){
+
+      d_boundaryCondition->wallStressMolecular(
+                                                patch,
+                                                constVelocityVars.uVelocity,
+                                                constVelocityVars.vVelocity,
+                                                constVelocityVars.wVelocity,
+                                                velocityVars.uVelNonlinearSrc,
+                                                velocityVars.vVelNonlinearSrc,
+                                                velocityVars.wVelNonlinearSrc,
+                                                volFraction
+                                              );
+
     }
 
     //__________________________________

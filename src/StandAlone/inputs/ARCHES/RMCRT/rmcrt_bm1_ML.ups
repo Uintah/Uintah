@@ -241,7 +241,7 @@
         </Sources>
       </TransportEqns>
       <PropertyModelsV2>
-        <model type="gasRadProperties"  label="gas_abskg" >
+        <model type="gasRadProperties" label="gas_abskg">
           <calculator type="burns_christon">
           </calculator>
         </model>

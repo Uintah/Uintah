@@ -1391,12 +1391,12 @@
   <CFD>
     <ARCHES>
       <PropertyModelsV2>
-        <model type="gasRadProperties"  label="gas_abskg" >
+        <model type="gasRadProperties" label="gas_abskg">
           <calculator type="hottel_sarofim">
             <opl>0.2647</opl>
           </calculator>
         </model>
-        <model type="partRadProperties" label="abskp" >
+        <model type="partRadProperties" label="abskp">
           <subModel>constantCIF</subModel>
           <part_temp_label>temperature_coal</part_temp_label>
           <part_size_label>length</part_size_label>
@@ -1489,8 +1489,8 @@
             <pre_exponential_factor>47.5</pre_exponential_factor>
             <activation_energy>21869.02486</activation_energy>
             <stoich_coeff_ratio>1.0</stoich_coeff_ratio>
-	    <heat_of_reaction_constant>1.0</heat_of_reaction_constant>
-	    <use_co2co>true</use_co2co>
+            <heat_of_reaction_constant>1.0</heat_of_reaction_constant>
+            <use_co2co>true</use_co2co>
           </reaction>
           <reaction>
             <oxidizer_name>CO2</oxidizer_name>
@@ -1498,8 +1498,8 @@
             <pre_exponential_factor>660</pre_exponential_factor>
             <activation_energy>49832.69598</activation_energy>
             <stoich_coeff_ratio>1.0</stoich_coeff_ratio>
-	    <heat_of_reaction_constant>172459</heat_of_reaction_constant>
-	    <use_co2co>false</use_co2co>
+            <heat_of_reaction_constant>172459</heat_of_reaction_constant>
+            <use_co2co>false</use_co2co>
           </reaction>
         </SmithChar>
       </ParticleProperties>
@@ -1850,7 +1850,6 @@
         <save_moments>false</save_moments>
       </DQMOM>
       <BoundaryConditions>
-        <wall_csmag>0.0</wall_csmag>
         <intrusions>
           <intrusion label="FurnaceWall">
             <constant_temperature T="1250.0"/>
@@ -2008,6 +2007,9 @@
           <do_only_last_projection>false</do_only_last_projection>
         </PressureSolver>
         <MomentumSolver>
+          <wall_closure type="constant_coefficient">
+            <wall_csmag>0.4</wall_csmag>
+          </wall_closure>
           <convection_scheme>wall_upwind</convection_scheme>
           <src label="coal_gas_momentum"/>
           <Re_limit>2</Re_limit>

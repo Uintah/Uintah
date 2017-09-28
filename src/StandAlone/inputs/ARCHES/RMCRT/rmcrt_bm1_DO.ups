@@ -241,7 +241,7 @@
         </Sources>
       </TransportEqns>
       <PropertyModelsV2>
-        <model type="gasRadProperties"  label="gas_abskg" >
+        <model type="gasRadProperties" label="gas_abskg">
           <calculator type="burns_christon">
           </calculator>
         </model>
@@ -263,6 +263,9 @@
           </Parameters>
         </PressureSolver>
         <MomentumSolver>
+          <wall_closure type="constant_coefficient">
+            <wall_csmag>0.4</wall_csmag>
+          </wall_closure>
           <convection_scheme>central</convection_scheme>
         </MomentumSolver>
       </ExplicitSolver>

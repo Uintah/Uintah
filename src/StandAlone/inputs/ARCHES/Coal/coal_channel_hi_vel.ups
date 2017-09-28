@@ -852,12 +852,12 @@
   <CFD>
     <ARCHES>
       <PropertyModelsV2>
-        <model type="gasRadProperties"  label="gas_abskg" >
+        <model type="gasRadProperties" label="gas_abskg">
           <calculator type="hottel_sarofim">
             <opl>0.2647</opl>
           </calculator>
         </model>
-        <model type="partRadProperties" label="abskp" >
+        <model type="partRadProperties" label="abskp">
           <subModel>constantCIF</subModel>
           <part_temp_label>temperature_coal</part_temp_label>
           <part_size_label>length</part_size_label>
@@ -868,7 +868,6 @@
           <const_asymmFact>1</const_asymmFact>
         </model>
       </PropertyModelsV2>
-
       <PropertyModels>
         <model label="heat_loss" type="heat_loss">
           <initialization type="constant">
@@ -1315,7 +1314,6 @@
         <save_moments>false</save_moments>
       </DQMOM>
       <BoundaryConditions>
-        <wall_csmag>0</wall_csmag>
       </BoundaryConditions>
       <ExplicitSolver>
         <initial_dt>1</initial_dt>
@@ -1346,6 +1344,9 @@
           <do_only_last_projection>false</do_only_last_projection>
         </PressureSolver>
         <MomentumSolver>
+          <wall_closure type="constant_coefficient">
+            <wall_csmag>0.4</wall_csmag>
+          </wall_closure>
           <convection_scheme>wall_upwind</convection_scheme>
           <src label="coal_gas_momentum"/>
           <Re_limit>2</Re_limit>

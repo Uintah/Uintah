@@ -32,6 +32,7 @@
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Grid/LevelP.h>
+#include <Core/Grid/Task.h>
 
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
@@ -326,10 +327,45 @@ void setIntrusionDensity( const ProcessorGroup*,
                           DataWarehouse*,
                           DataWarehouse* new_dw);
 
-void wallStress( const Patch* patch,
-                 ArchesVariables* vars,
-                 ArchesConstVariables* const_vars,
-                 constCCVariable<double>& volFraction );
+// wall closure models:
+void
+sched_wallStressConstSmag( Task::WhichDW dw, Task* tsk );
+
+void
+wallStressConstSmag( const Patch* p,
+                     DataWarehouse* dw,
+                     const double wall_C_smag,
+                     const int standoff,
+                     constSFCXVariable<double>& uvel,
+                     constSFCYVariable<double>& vvel,
+                     constSFCZVariable<double>& wvel,
+                     SFCXVariable<double>& Su,
+                     SFCYVariable<double>& Sv,
+                     SFCZVariable<double>& Sw,
+                     constCCVariable<double>& rho,
+                     constCCVariable<double>& eps );
+void
+wallStressMolecular( const Patch* p,
+                     constSFCXVariable<double>& uvel,
+                     constSFCYVariable<double>& vvel,
+                     constSFCZVariable<double>& wvel,
+                     SFCXVariable<double>& Su,
+                     SFCYVariable<double>& Sv,
+                     SFCZVariable<double>& Sw,
+                     constCCVariable<double>& eps );
+
+void
+wallStressDynSmag( const Patch* p,
+                   const int standoff,
+                   constCCVariable<double>& mu_t,
+                   constSFCXVariable<double>& uvel,
+                   constSFCYVariable<double>& vvel,
+                   constSFCZVariable<double>& wvel,
+                   SFCXVariable<double>& Su,
+                   SFCYVariable<double>& Sv,
+                   SFCZVariable<double>& Sw,
+                   constCCVariable<double>& rho,
+                   constCCVariable<double>& eps );
 
 /** @brief Set the address for the BC helper created in the non-linear solver **/
 void setBCHelper( std::map<int,WBCHelper*>* helper ){m_bcHelper = helper;}
@@ -838,7 +874,7 @@ bool _using_new_intrusion;
 PhysicalConstants* d_physicalConsts;
 // used to get properties of different streams
 Properties* d_props;
-TableLookup* d_table_lookup; 
+TableLookup* d_table_lookup;
 // mass flow
 double d_uvwout;
 double d_overallMB;

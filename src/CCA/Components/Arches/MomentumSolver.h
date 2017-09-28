@@ -101,7 +101,7 @@ public:
                  TurbulenceModel* turb_model,
                  BoundaryCondition* bndry_cond,
                  PhysicalConstants* physConst,
-                 std::map<std::string, std::shared_ptr<TaskFactoryBase> >* task_factory_map               
+                 std::map<std::string, std::shared_ptr<TaskFactoryBase> >* task_factory_map
                  );
 
   // GROUP: Destructors:
@@ -135,14 +135,16 @@ public:
 
   void solveVelHat(const LevelP& level,
                    SchedulerP&,
-                   const TimeIntegratorLabel* timelabels );
+                   const TimeIntegratorLabel* timelabels,
+                   const int curr_level );
 
   ///////////////////////////////////////////////////////////////////////
   // Schedule the build of the linearized eqn
   void sched_buildLinearMatrixVelHat(SchedulerP&,
                                      const PatchSet* patches,
                                      const MaterialSet* matls,
-                                     const TimeIntegratorLabel* timelabels );
+                                     const TimeIntegratorLabel* timelabels,
+                                     const int curr_level );
 
   void sched_averageRKHatVelocities(SchedulerP& sched,
                                     const PatchSet* patches,
@@ -197,7 +199,8 @@ private:
                                const MaterialSubset* matls,
                                DataWarehouse*,
                                DataWarehouse*,
-                               const TimeIntegratorLabel* timelabels );
+                               const TimeIntegratorLabel* timelabels,
+                               const int curr_level );
 
   void averageRKHatVelocities(const ProcessorGroup*,
                               const PatchSubset* patches,
@@ -252,6 +255,10 @@ private:
   const VarLabel* _w_mom;
 
   std::map<std::string, std::shared_ptr<TaskFactoryBase> >* _task_factory_map;
+
+  std::string d_wall_closure;
+  double d_wall_const_smag_C;
+  int d_standoff_index; 
 
   //--------------------- for initialization -----------
   class VelocityInitBase {

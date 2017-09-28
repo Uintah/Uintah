@@ -1256,12 +1256,12 @@
         <model label="wall_HF" type="wall_heatflux_variable">
           <frequency>1</frequency>
         </model>
-        <model type="gasRadProperties"  label="gas_abskg" >
+        <model type="gasRadProperties" label="gas_abskg">
           <calculator type="hottel_sarofim">
             <opl>0.5632</opl>
           </calculator>
         </model>
-        <model type="partRadProperties" label="abskp" >
+        <model type="partRadProperties" label="abskp">
           <subModel>constantCIF</subModel>
           <part_temp_label>temperature_coal</part_temp_label>
           <part_size_label>length</part_size_label>
@@ -1296,8 +1296,8 @@
         <density>1300.0</density>
         <rho_ash_bulk>2000.0</rho_ash_bulk>
         <temperature>300.0</temperature>
-        <ash_softening_temperature>1500.0</ash_softening_temperature>     
-        <ash_hemispherical_temperature>900</ash_hemispherical_temperature> 
+        <ash_softening_temperature>1500.0</ash_softening_temperature>
+        <ash_hemispherical_temperature>900</ash_hemispherical_temperature>
         <ash_fluid_temperature>1400.0</ash_fluid_temperature>
         <ultimate_analysis>
           <C>0.5934 </C>
@@ -1718,7 +1718,6 @@
         <save_moments>false</save_moments>
       </DQMOM>
       <BoundaryConditions>
-        <wall_csmag>0.04</wall_csmag>
         <intrusions>
           <intrusion label="nose">
             <constant_temperature T="1200.0"/>
@@ -1793,6 +1792,9 @@
           <do_only_last_projection>false</do_only_last_projection>
         </PressureSolver>
         <MomentumSolver>
+          <wall_closure type="constant_coefficient">
+            <wall_csmag>0.4</wall_csmag>
+          </wall_closure>
           <convection_scheme>wall_upwind</convection_scheme>
           <src label="coal_gas_momentum"/>
           <Re_limit>2</Re_limit>

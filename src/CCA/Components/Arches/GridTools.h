@@ -438,7 +438,7 @@ namespace Uintah{ namespace ArchesCore{
 
   };
 
-  INTERPOLANT get_interpolant_from_string(const std::string value); 
+  INTERPOLANT get_interpolant_from_string(const std::string value);
 
   class GridTools{
 

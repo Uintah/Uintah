@@ -1,27 +1,24 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
+<?xml version='1.0' encoding='ISO-8859-1'?>
 <!-- DOCTYPE Uintah_specification SYSTEM "input.dtd" -->
 <!-- @version: -->
 <Uintah_specification>
   <Meta>
     <title>T-channel</title>
   </Meta>
-
   <SimulationComponent type="arches"/>
-
   <Solver type="hypre"/>
   <Time>
     <maxTime>25</maxTime>
     <initTime>0.0</initTime>
     <delt_min>1e-4</delt_min>
     <delt_max>1e-4</delt_max>
-    <max_Timesteps> 25 </max_Timesteps> 
+    <max_Timesteps> 25 </max_Timesteps>
     <timestep_multiplier>0.1</timestep_multiplier>
   </Time>
-
-<!--__________________________________-->
+  <!--__________________________________-->
   <DataArchiver>
     <filebase>T-channel.uda</filebase>
-    <outputTimestepInterval>2</outputTimestepInterval> 
+    <outputTimestepInterval>2</outputTimestepInterval>
     <save label="totalKineticEnergy"/>
     <save label="pressurePS"/>
     <save label="f"/>
@@ -34,9 +31,8 @@
     <checkpoint cycle="2" interval="5e-4"/>
     <compression>gzip</compression>
   </DataArchiver>
-
-<!--__________________________________-->
-<!--   You must run this with 16 proc -->
+  <!--__________________________________-->
+  <!--   You must run this with 16 proc -->
   <Grid>
     <Level>
       <Box label="horizontalLeg">
@@ -63,7 +59,7 @@
           <value>1.0</value>
         </BCType>
       </Face>
-      <Face rectangle="x-" lower = "1 -1. -.5" upper="1 -.5 0.5" name="x- face wall 1">
+      <Face rectangle="x-" lower="1 -1. -.5" upper="1 -.5 0.5" name="x- face wall 1">
         <BCType id="all" label="Wall x- 1" var="WallBC">
           <value>0.0</value>
         </BCType>
@@ -71,7 +67,7 @@
           <value>0.0</value>
         </BCType>
       </Face>
-      <Face rectangle="x-" lower = "1 .5 -.5" upper="1 1. 0.5" name="x- face wall 2">
+      <Face rectangle="x-" lower="1 .5 -.5" upper="1 1. 0.5" name="x- face wall 2">
         <BCType id="all" label="Wall x- 2" var="WallBC">
           <value>0.0</value>
         </BCType>
@@ -103,7 +99,7 @@
           <value>0.0</value>
         </BCType>
       </Face>
-      <Face rectangle="y-" lower = "0 -.5 -.5" upper="1 -.5 0.5" name="y- face wall">
+      <Face rectangle="y-" lower="0 -.5 -.5" upper="1 -.5 0.5" name="y- face wall">
         <BCType id="all" label="Wall y- wall" var="WallBC">
           <value>0.0</value>
         </BCType>
@@ -111,7 +107,7 @@
           <value>0.0</value>
         </BCType>
       </Face>
-      <Face rectangle="y+" lower = "0 .5 -.5" upper="1 .5 0.5" name="y+ face wall">
+      <Face rectangle="y+" lower="0 .5 -.5" upper="1 .5 0.5" name="y+ face wall">
         <BCType id="all" label="Wall y+ wall" var="WallBC">
           <value>0.0</value>
         </BCType>
@@ -137,22 +133,18 @@
       </Face>
     </BoundaryConditions>
   </Grid>
-
-<!--__________________________________-->
+  <!--__________________________________-->
   <PhysicalConstants>
     <gravity>[0,0,0]</gravity>
     <reference_point>[0,0,0]</reference_point>
     <viscosity>1e-5</viscosity>
   </PhysicalConstants>
-
-<!--__________________________________-->
+  <!--__________________________________-->
   <CFD>
     <ARCHES>
-
       <TimeIntegrator>
         <ExplicitIntegrator order="first"/>
       </TimeIntegrator>
-
       <TransportEqns>
         <Eqn label="f" type="CCscalar">
           <determines_properties/>
@@ -168,9 +160,7 @@
           </Clipping>
         </Eqn>
       </TransportEqns>
-
       <Turbulence model="compdynamicprocedure"/>
-
       <Properties>
         <table label="a_user_generated_label" type="coldflow">
           <reference_density value="1.18"/>
@@ -179,10 +169,8 @@
           <mixture_fraction label="f"/>
         </table>
       </Properties>
-
       <BoundaryConditions>
       </BoundaryConditions>
-
       <ExplicitSolver>
         <initial_dt>1.0</initial_dt>
         <PressureSolver>
@@ -193,14 +181,13 @@
             <maxiterations> 75    </maxiterations>
           </Parameters>
         </PressureSolver>
-
         <MomentumSolver>
+          <wall_closure type="constant_coefficient">
+            <wall_csmag>0.4</wall_csmag>
+          </wall_closure>
           <convection_scheme>central</convection_scheme>
         </MomentumSolver>
-
       </ExplicitSolver>
     </ARCHES>
-
   </CFD>
-
 </Uintah_specification>

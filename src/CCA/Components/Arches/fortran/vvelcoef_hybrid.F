@@ -39,20 +39,17 @@ c     Local Variables :
 c*********************************************************************
       integer ISTV, JSTV, KSTV, IENDV, JENDV, KENDV
       integer i, j, k
-      integer flag
 
       double precision AREANS, AREAEW, AREATB, VOL
       double precision CE, CW, CN, CS, CT, CB
       double precision GE, GP, GW, GN, GSE, GS, GSW, GT, GST, GSB, GB
       double precision GSP, GNP, GUP
       double precision GWP
-      double precision CPE, CPW, GVP, CPN, CPS, CPT, CPB
       double precision VISE, VISW, VISN, VISS, VIST, VISB
       double precision DE, DW, DN, DS, DT, DB
-      double precision TEW, TNS, TTB
+      double precision TE, TW, TN, TS, TT, TB
       double precision COEFE, COEFW, COEFN, COEFS, COEFT, COEFB
       double precision AEC, AWC, ANC, ASC, ATC, ABC
-      double precision Relimit_m1
       double precision DUDYE, DUDYW
       double precision DVDYN, DVDYS
       double precision DWDYB, DWDYT
@@ -78,13 +75,11 @@ c*********************************************************************
       AREATB = dx*dy
       VOL = dx*dy*dz
 
-      Relimit_m1 = Relimit**(-1.0)
 
       DO 220 K = KSTV,KENDV
          DO 210 J = JSTV,JENDV
             DO 200 I = ISTV,IENDV
 
-              flag = 0
               EPSP = eps(I,J,K)*eps(I,J-1,K)
 
             IF ( EPSP .gt. small ) THEN 
@@ -125,15 +120,6 @@ C-----------------------------------------------------------------------
                CTSAV(I,J,K) = CT
                CBSAV(I,J,K) = CB
 
-               GUP = 0.25*(GE+GSE+GW+GSW)
-               CPE = GUP*VOL/DX
-               CPW = GUP*VOL/DX
-               CPN = GP*VOL/DY
-               CPS = GP*VOL/DY
-               GWP = 0.25*(GT+GST+GB+GSB)
-               CPT = GWP*VOL/DZ
-               CPB = GWP*VOL/DZ
-
 C-----------------------------------------------------------------------
 C     CALCULATE DIFFUSION COEFFICIENTS
 C-----------------------------------------------------------------------
@@ -159,77 +145,42 @@ C-----------------------------------------------------------------------
 C-----------------------------------------------------------------------
 C     CONVECTION DIFFERENCING SCHEME SELECTION
 C-----------------------------------------------------------------------
-
-               IF ( EPSE .lt. PT5 ) THEN 
-                 flag = 1 
-               ENDIF 
-               IF ( EPSW .lt. PT5 ) THEN 
-                 flag = 1 
-               ENDIF 
-               IF ( EPST .lt. PT5 ) THEN 
-                 flag = 1 
-               ENDIF 
-               IF ( EPSB .lt. PT5 ) THEN 
-                 flag = 1 
-               ENDIF 
-               CVSY(I,J,K) = 0.0d0
-               if ( flag .eq. 1 ) then
-                 COEFE = DE - ABS(CE)/2.0D0
-                 COEFW = DW - ABS(CW)/2.0D0
-                 COEFN = DN - ABS(CN)/2.0D0
-                 COEFS = DS - ABS(CS)/2.0D0
-                 COEFT = DT - ABS(CT)/2.0D0
-                 COEFB = DB - ABS(CB)/2.0D0
-                 TEW = 1.0D0
-                 TNS = 1.0D0
-                 TTB = 1.0D0
-                 IF (COEFE.LT.0.0D0 .OR. COEFW.LT.0.0D0) TEW = 0.0D0
-                 IF (COEFN.LT.0.0D0 .OR. COEFS.LT.0.0D0) TNS = 0.0D0
-                 IF (COEFT.LT.0.0D0 .OR. COEFB.LT.0.0D0) TTB = 0.0D0
-                 IF (TEW.EQ.1.0D0) CVSY(I,J,K) = CVSY(I,J,K)+1.0d0/3.0d0
-                 IF (TNS.EQ.1.0D0) CVSY(I,J,K) = CVSY(I,J,K)+1.0d0/3.0d0
-                 IF (TTB.EQ.1.0D0) CVSY(I,J,K) = CVSY(I,J,K)+1.0d0/3.0d0
-                 AEC = -PT5*CE*TEW + dMAX1(0.0D0,-CPE)*(1.0D0-TEW)
-                 AWC = PT5*CW*TEW + dMAX1(0.0D0,CPW)*(1.0D0-TEW)
-                 ANC = -PT5*CN*TNS + dMAX1(0.0D0,-CPN)*(1.0D0-TNS)
-                 ASC = PT5*CS*TNS + dMAX1(0.0D0,CPS)*(1.0D0-TNS)
-                 ATC = -PT5*CT*TTB + dMAX1(0.0D0,-CPT)*(1.0D0-TTB)
-                 ABC = PT5*CB*TTB + dMAX1(0.0D0,CPB)*(1.0D0-TTB)
-                 AE(I,J,K) = AEC + DE
-                 AW(I,J,K) = AWC + DW
-                 AN(I,J,K) = ANC + DN
-                 AS(I,J,K) = ASC + DS
-                 AT(I,J,K) = ATC + DT
-                 AB(I,J,K) = ABC + DB
-               else
-                 COEFE = DE - ABS(CE)/Relimit
-                 COEFW = DW - ABS(CW)/Relimit
-                 COEFN = DN - ABS(CN)/Relimit
-                 COEFS = DS - ABS(CS)/Relimit
-                 COEFT = DT - ABS(CT)/Relimit
-                 COEFB = DB - ABS(CB)/Relimit
-                 TEW = 1.0D0
-                 TNS = 1.0D0
-                 TTB = 1.0D0
-                 IF (COEFE.LT.0.0D0 .OR. COEFW.LT.0.0D0) TEW = 0.0D0
-                 IF (COEFN.LT.0.0D0 .OR. COEFS.LT.0.0D0) TNS = 0.0D0
-                 IF (COEFT.LT.0.0D0 .OR. COEFB.LT.0.0D0) TTB = 0.0D0
-                 IF (TEW.EQ.1.0D0) CVSY(I,J,K) = CVSY(I,J,K)+1.0d0/3.0d0
-                 IF (TNS.EQ.1.0D0) CVSY(I,J,K) = CVSY(I,J,K)+1.0d0/3.0d0
-                 IF (TTB.EQ.1.0D0) CVSY(I,J,K) = CVSY(I,J,K)+1.0d0/3.0d0
-                 AEC = -PT5*CE*TEW + dMAX1(0.0D0,-CPE)*(1.0D0-TEW)
-                 AWC = PT5*CW*TEW + dMAX1(0.0D0,CPW)*(1.0D0-TEW)
-                 ANC = -PT5*CN*TNS + dMAX1(0.0D0,-CPN)*(1.0D0-TNS)
-                 ASC = PT5*CS*TNS + dMAX1(0.0D0,CPS)*(1.0D0-TNS)
-                 ATC = -PT5*CT*TTB + dMAX1(0.0D0,-CPT)*(1.0D0-TTB)
-                 ABC = PT5*CB*TTB + dMAX1(0.0D0,CPB)*(1.0D0-TTB)
-                 AE(I,J,K) = AEC + DE
-                 AW(I,J,K) = AWC + DW
-                 AN(I,J,K) = ANC + DN
-                 AS(I,J,K) = ASC + DS
-                 AT(I,J,K) = ATC + DT
-                 AB(I,J,K) = ABC + DB
-               endif
+               COEFE = DE - ABS(CE)/Relimit
+               COEFW = DW - ABS(CW)/Relimit
+               COEFN = DN - ABS(CN)/Relimit
+               COEFS = DS - ABS(CS)/Relimit
+               COEFT = DT - ABS(CT)/Relimit
+               COEFB = DB - ABS(CB)/Relimit
+               TE = 1.0D0
+               TW = 1.0D0
+               TN = 1.0D0
+               TS = 1.0D0
+               TT = 1.0D0
+               TB = 1.0D0
+               IF (COEFE.LT.0.0D0) TE = 0.0D0
+               IF (COEFW.LT.0.0D0) TW = 0.0D0
+               IF (COEFN.LT.0.0D0) TN = 0.0D0
+               IF (COEFS.LT.0.0D0) TS = 0.0D0
+               IF (COEFT.LT.0.0D0) TT = 0.0D0
+               IF (COEFB.LT.0.0D0) TB = 0.0D0
+               IF (TE.EQ.1.0D0) CVSY(I,J,K) = CVSY(I,J,K)+1.0d0/6.0d0
+               IF (TW.EQ.1.0D0) CVSY(I,J,K) = CVSY(I,J,K)+1.0d0/6.0d0
+               IF (TN.EQ.1.0D0) CVSY(I,J,K) = CVSY(I,J,K)+1.0d0/6.0d0
+               IF (TS.EQ.1.0D0) CVSY(I,J,K) = CVSY(I,J,K)+1.0d0/6.0d0
+               IF (TT.EQ.1.0D0) CVSY(I,J,K) = CVSY(I,J,K)+1.0d0/6.0d0
+               IF (TB.EQ.1.0D0) CVSY(I,J,K) = CVSY(I,J,K)+1.0d0/6.0d0
+               AEC = -PT5*CE*TE + dMAX1(0.0D0,-CE)*(1.0D0-TE)
+               AWC = PT5*CW*TW + dMAX1(0.0D0,CW)*(1.0D0-TW)
+               ANC = -PT5*CN*TN + dMAX1(0.0D0,-CN)*(1.0D0-TN)
+               ASC = PT5*CS*TS + dMAX1(0.0D0,CS)*(1.0D0-TS)
+               ATC = -PT5*CT*TT + dMAX1(0.0D0,-CT)*(1.0D0-TT)
+               ABC = PT5*CB*TB + dMAX1(0.0D0,CB)*(1.0D0-TB)
+               AE(I,J,K) = AEC + DE
+               AW(I,J,K) = AWC + DW
+               AN(I,J,K) = ANC + DN
+               AS(I,J,K) = ASC + DS
+               AT(I,J,K) = ATC + DT
+               AB(I,J,K) = ABC + DB
 
 C-----------------------------------------------------------------------
 C     Compute the velocity source
