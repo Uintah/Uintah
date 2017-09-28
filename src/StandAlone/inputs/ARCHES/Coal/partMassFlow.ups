@@ -18,7 +18,7 @@
     <delt_min>1e-16</delt_min>
     <delt_max>1e-2</delt_max>
     <timestep_multiplier>0.4</timestep_multiplier>
-    <max_Timesteps>5</max_Timesteps>
+    <max_Timesteps>50</max_Timesteps>
   </Time>
   <LoadBalancer type="SimpleLoadBalancer">
     <outputNthProc>         8 </outputNthProc>
@@ -26,7 +26,7 @@
   </LoadBalancer>
   <DataArchiver>
     <filebase>partMassFlow.uda</filebase>
-    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputTimestepInterval>5</outputTimestepInterval>
     <save label="residence_time"/>
     <save label="res_source"/>
     <save label="coal_gas_momentum"/>
