@@ -26,7 +26,7 @@
  */
 
 #include <Core/Containers/ConsecutiveRangeSet.h>
-#include <Core/Containers/HashTable.h>
+//#include <Core/Containers/HashTable.h>
 #include <Core/Exceptions/VariableNotFoundInGrid.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/GridP.h>
@@ -328,8 +328,8 @@ private:
     std::string datafilename;
   };
 
-  typedef Uintah::HashTable<VarnameMatlPatch, DataFileInfo> VarHashMap;
-  typedef Uintah::HashTableIter<VarnameMatlPatch, DataFileInfo> VarHashMapIterator;
+  //  typedef Uintah::HashTable<VarnameMatlPatch, DataFileInfo> VarHashMap;
+  //  typedef Uintah::HashTableIter<VarnameMatlPatch, DataFileInfo> VarHashMapIterator;
 
   //! Top of DataArchive structure for storing hash maps of variable data
   //! - containing data for each time step.
