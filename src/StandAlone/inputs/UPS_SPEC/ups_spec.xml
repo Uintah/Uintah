@@ -845,6 +845,13 @@
                             attribute1="type OPTIONAL STRING 'MPI DynamicMPI Unified KokkosOpenMP'">
     <small_messages       spec="OPTIONAL BOOLEAN" />
     <taskReadyQueueAlg    spec="OPTIONAL STRING 'MostChildren LeastChildren MostAllChildren LeastAllChildren MostL2Children LeastL2Children PatchOrder PatchOrderRandom MostMessages LeastMessages Random FCFS Stack'" />
+    <TaskMonitoring       spec="OPTIONAL NO_DATA">
+      <per_cell           spec="OPTIONAL BOOLEAN" />
+      <attribute          spec="MULTIPLE STRING 'LoadBalancerCost ExecTime WaitTime'" />
+      <task               spec="MULTIPLE NO_DATA"
+                          attribute1="name REQUIRED STRING"
+                          attribute2="attribute REQUIRED STRING 'ExecTime WaitTime'" />
+    </TaskMonitoring>
     <VarTracker           spec="OPTIONAL NO_DATA">
       <start_time         spec="REQUIRED DOUBLE"  />
       <end_time           spec="REQUIRED DOUBLE"  />
