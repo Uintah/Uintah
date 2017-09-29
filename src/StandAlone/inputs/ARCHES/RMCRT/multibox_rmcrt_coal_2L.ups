@@ -2105,7 +2105,6 @@
         <save_moments>false</save_moments>
       </DQMOM>
       <BoundaryConditions>
-        <wall_csmag>0.0</wall_csmag>
         <intrusions>
           <intrusion label="FurnaceWall">
             <constant_temperature T="1500.0"/>
