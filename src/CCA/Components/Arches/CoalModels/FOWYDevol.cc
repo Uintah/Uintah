@@ -410,6 +410,7 @@ FOWYDevol::computeModel( const ProcessorGroup * pc,
          double m_vol = rcmass_init - (rcmassph+charmassph);
          double v_inf_local = 0.5*_v_hiT*(1.0 + std::erf( (temperatureph - _T_mu) / (std::sqrt(2.0) * _T_sigma)));
          v_inf_local += (temperatureph > _T_hardened_bond) ? (temperatureph - _T_hardened_bond)/_Tbp_graphite : 0.0; // linear contribution
+         v_inf_local = std::min(1.0,v_inf_local);
          // above hardened bond temperature.
          v_inf(i,j,k) = v_inf_local; 
          double f_drive = std::max((rcmass_init*v_inf_local - m_vol) , 0.0);
