@@ -353,6 +353,12 @@ wallStressMolecular( const Patch* p,
                      SFCYVariable<double>& Sv,
                      SFCZVariable<double>& Sw,
                      constCCVariable<double>& eps );
+void wallStressLog( const Patch* patch,
+                    ArchesVariables* vars,
+                    ArchesConstVariables* const_vars,
+                    constCCVariable<double>& volFraction );
+
+inline void   newton_solver( const double&  , const double& , const double& , const double& ,double& );
 
 void
 wallStressDynSmag( const Patch* p,

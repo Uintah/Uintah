@@ -1130,7 +1130,7 @@
                dynamic: Use the dynamic viscosity at the standoff index
           -->
           <wall_closure                 spec="OPTIONAL NO_DATA" 
-                                        attribute1="type REQUIRED STRING 'none, molecular, constant_coefficient, dynamic'">
+                                        attribute1="type REQUIRED STRING 'none, molecular, constant_coefficient, dynamic,log'">
 
             <wall_csmag                 spec="REQUIRED DOUBLE" need_applies_to="type constant_coefficient"/> <!-- Constant coefficient for this model. Coefficient might be 
                                                                                                                   flow dependent but typically ranges from .1-.4 -->

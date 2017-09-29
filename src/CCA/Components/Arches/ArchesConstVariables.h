@@ -74,10 +74,14 @@ namespace Uintah {
       constCCVariable<double> denRefArray;
       constCCVariable<double> pressure;
       constCCVariable<double> viscosity;
+      constCCVariable<double> turbViscosity;
       constCCVariable<double> scalar;
       constCCVariable<double> diffusivity;
       StencilMatrix<constCCVariable<double> > scalarDiffusionCoeff; //7 pt stl
       constCCVariable<double> scalarDiffNonlinearSrc;
+      constCCVariable<double> CCUVelocity;
+      constCCVariable<double> CCVVelocity;
+      constCCVariable<double> CCWVelocity;
       
       constSFCXVariable<double> uVelocity;
       constSFCYVariable<double> vVelocity;

@@ -591,6 +591,11 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gaf, 2);
   tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gaf, 2);
   tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 2);
+  tsk->requires(Task::OldDW, d_lab->d_pressurePSLabel, gac, 1); 
+  tsk->requires(Task::OldDW, d_lab->d_turbViscosLabel, gac, 1); 
+  tsk->requires(Task::OldDW, d_lab->d_CCUVelocityLabel, gac, 1); 
+  tsk->requires(Task::OldDW, d_lab->d_CCVVelocityLabel, gac, 1); 
+  tsk->requires(Task::OldDW, d_lab->d_CCWVelocityLabel, gac, 1); 
 
 //#ifdef divergenceconstraint
 
@@ -736,6 +741,11 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     new_dw->get(constVelocityVars.uVelocity,   d_lab->d_uVelocitySPBCLabel, indx, patch, gaf, 2);
     new_dw->get(constVelocityVars.vVelocity,   d_lab->d_vVelocitySPBCLabel, indx, patch, gaf, 2);
     new_dw->get(constVelocityVars.wVelocity,   d_lab->d_wVelocitySPBCLabel, indx, patch, gaf, 2);
+    old_dw->get(constVelocityVars.pressure,       d_lab->d_pressurePSLabel,    indx, patch, gac, 1); 
+    old_dw->get(constVelocityVars.turbViscosity,  d_lab->d_turbViscosLabel,    indx, patch, gac, 1); 
+    old_dw->get(constVelocityVars.CCUVelocity,    d_lab->d_CCUVelocityLabel,   indx, patch, gac, 1); 
+    old_dw->get(constVelocityVars.CCVVelocity,    d_lab->d_CCVVelocityLabel,   indx, patch, gac, 1); 
+    old_dw->get(constVelocityVars.CCWVelocity,    d_lab->d_CCWVelocityLabel,   indx, patch, gac, 1); 
 
 
     constCCVariable<double> old_divergence;
@@ -883,6 +893,14 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
                                                 volFraction
                                               );
 
+    } else if ( d_wall_closure == "log" ){
+
+      d_boundaryCondition->wallStressLog(
+                                                patch,
+                                                &velocityVars, 
+                                                &constVelocityVars,
+                                                volFraction
+                                              );
     }
 
     //__________________________________
