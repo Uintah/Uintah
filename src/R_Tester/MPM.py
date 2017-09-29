@@ -32,39 +32,39 @@ from helpers.runSusTests import runSusTests
 #______________________________________________________________________
 
 NIGHTLYTESTS = [
-                  #----------  Linux Tests ---------  #
+                  #----------  All Tests ---------  #
                   ("disks_complex",                       "disks_complex.ups",                       4,  "ALL", ["exactComparison"] ),
                   ("heatcond2mat",                        "heatcond2mat.ups",                        1,  "ALL", ["exactComparison"] ),
                   ("inclined_plane_sphere",               "inclined_plane_sphere.ups",               1,  "ALL", ["exactComparison"] ),
                   ("foam_crush",                          "foam_crush.ups",                          4,  "ALL", ["exactComparison"] ),
                   ("periodic_disks",                      "periodic_disks.ups",                      1,  "ALL", [] ),
-#                  ("periodic_spheres3D",                  "periodic_spheres3D.ups",                  8,  "Linux", ["no_dbg","exactComparison"] ),
+#                  ("periodic_spheres3D",                  "periodic_spheres3D.ups",                  8,  "All", ["no_dbg","exactComparison"] ),
                   ("const_test_hypo",                     "const_test_hypo.ups",                     1,  "ALL", ["exactComparison"] ),
                   ("const_test_cmr",                      "const_test_cmr.ups",                      1,  "ALL", ["exactComparison"] ),
                   ("const_test_nhp",                      "const_test_nhp.ups",                      1,  "ALL", ["exactComparison"] ),
                   ("const_test_vs",                       "const_test_vs.ups",                       1,  "ALL", ["exactComparison"] ),
                   ("adiCuJC4000s696K",                    "adiCuJC4000s696K.ups",                    1,  "ALL", ["exactComparison"] ),
-#                  ("adiCuMTS4000s696K",                   "adiCuMTS4000s696K.ups",                   1,  "Linux", ["exactComparison"] ),
-#                  ("adiCuPTW4000s696K",                   "adiCuPTW4000s696K.ups",                   1,  "Linux", ["exactComparison"] ),
-#                  ("adiCuSCG4000s696K",                   "adiCuSCG4000s696K.ups",                   1,  "Linux", ["exactComparison"] ),
-#                  ("adiCuZA4000s696K",                    "adiCuZA4000s696K.ups",                    1,  "Linux", ["exactComparison"] ),
+#                  ("adiCuMTS4000s696K",                   "adiCuMTS4000s696K.ups",                   1,  "All", ["exactComparison"] ),
+#                  ("adiCuPTW4000s696K",                   "adiCuPTW4000s696K.ups",                   1,  "All", ["exactComparison"] ),
+#                  ("adiCuSCG4000s696K",                   "adiCuSCG4000s696K.ups",                   1,  "All", ["exactComparison"] ),
+#                  ("adiCuZA4000s696K",                    "adiCuZA4000s696K.ups",                    1,  "All", ["exactComparison"] ),
                   ("test_cyl_pene_no_ero_axi_sym",                "test_cyl_pene_no_ero_axi_sym.ups",                4,  "ALL", ["exactComparison"] ),
                   ("test_gurson_beckerdrucker_mts",       "test_gurson_beckerdrucker_mts.ups",       1,  "ALL", ["exactComparison"] ),
                   ("test_hypoviscoelastic_radial_return", "test_hypoviscoelastic_rad_ret.ups",       1,  "ALL", ["exactComparison"] ),
                     ("NanoPillar", "ARL/NanoPillar2D_FBC_Sym.ups",                                   1,  "ALL", ["no_dbg","exactComparison"] ),
-                  #("AreniscaTest_01_UniaxialStrainRotate",                  "./Arenisca/AreniscaTest_01_UniaxialStrainRotate.ups",                  1,  "Linux", ["exactComparison"] ),
-                  #("AreniscaTest_02_VertexTreatment",                       "./Arenisca/AreniscaTest_02_VertexTreatment.ups",                       1,  "Linux", ["exactComparison"] ),
-                  #("AreniscaTest_03a_UniaxialStrain_NoHardening",           "./Arenisca/AreniscaTest_03a_UniaxialStrain_NoHardening.ups",           1,  "Linux", ["exactComparison"] ),
-                  #("AreniscaTest_03b_UniaxialStrain_wIsotropicHardening",   "./Arenisca/AreniscaTest_03b_UniaxialStrain_wIsotropicHardening.ups",   1,  "Linux", ["exactComparison"] ),
-                  #("AreniscaTest_03c_UniaxialStrain_wKinematicHardening",   "./Arenisca/AreniscaTest_03c_UniaxialStrain_wKinematicHardening.ups",   1,  "Linux", ["exactComparison"] ),
-                  #("AreniscaTest_04_CurvedYieldSurface",                    "./Arenisca/AreniscaTest_04_CurvedYieldSurface.ups",                    1,  "Linux", ["exactComparison"] ),
-                  #("AreniscaTest_05_HydrostaticCompressionFixedCap",        "./Arenisca/AreniscaTest_05_HydrostaticCompressionFixedCap.ups",        1,  "Linux", ["exactComparison"] ),
-                  #("AreniscaTest_06_UniaxialStrainCapEvolution",            "./Arenisca/AreniscaTest_06_UniaxialStrainCapEvolution.ups",            1,  "Linux", ["exactComparison"] ),
-                  #("AreniscaTest_07_HydrostaticCompressionCapEvolution",    "./Arenisca/AreniscaTest_07_HydrostaticCompressionCapEvolution.ups",    1,  "Linux", ["exactComparison"] ),
-                  #("AreniscaTest_08_LoadingUnloading",                      "./Arenisca/AreniscaTest_08_LoadingUnloading.ups",                      1,  "Linux", ["exactComparison"] ),
-                  #("AreniscaTest_09_FluidFilledPoreSpace",                  "./Arenisca/AreniscaTest_09_FluidFilledPoreSpace.ups",                  1,  "Linux", ["exactComparison"] ),
-                  #("AreniscaTest_10_PureIsochoricStrainRates",              "./Arenisca/AreniscaTest_10_PureIsochoricStrainRates.ups",              1,  "Linux", ["exactComparison"] ),
-                  #("AreniscaTest_11_UniaxialStrainJ2plasticity",            "./Arenisca/AreniscaTest_11_UniaxialStrainJ2plasticity.ups",            1,  "Linux", ["exactComparison"] ),
+                  #("AreniscaTest_01_UniaxialStrainRotate",                  "./Arenisca/AreniscaTest_01_UniaxialStrainRotate.ups",                  1,  "All", ["exactComparison"] ),
+                  #("AreniscaTest_02_VertexTreatment",                       "./Arenisca/AreniscaTest_02_VertexTreatment.ups",                       1,  "All", ["exactComparison"] ),
+                  #("AreniscaTest_03a_UniaxialStrain_NoHardening",           "./Arenisca/AreniscaTest_03a_UniaxialStrain_NoHardening.ups",           1,  "All", ["exactComparison"] ),
+                  #("AreniscaTest_03b_UniaxialStrain_wIsotropicHardening",   "./Arenisca/AreniscaTest_03b_UniaxialStrain_wIsotropicHardening.ups",   1,  "All", ["exactComparison"] ),
+                  #("AreniscaTest_03c_UniaxialStrain_wKinematicHardening",   "./Arenisca/AreniscaTest_03c_UniaxialStrain_wKinematicHardening.ups",   1,  "All", ["exactComparison"] ),
+                  #("AreniscaTest_04_CurvedYieldSurface",                    "./Arenisca/AreniscaTest_04_CurvedYieldSurface.ups",                    1,  "All", ["exactComparison"] ),
+                  #("AreniscaTest_05_HydrostaticCompressionFixedCap",        "./Arenisca/AreniscaTest_05_HydrostaticCompressionFixedCap.ups",        1,  "All", ["exactComparison"] ),
+                  #("AreniscaTest_06_UniaxialStrainCapEvolution",            "./Arenisca/AreniscaTest_06_UniaxialStrainCapEvolution.ups",            1,  "All", ["exactComparison"] ),
+                  #("AreniscaTest_07_HydrostaticCompressionCapEvolution",    "./Arenisca/AreniscaTest_07_HydrostaticCompressionCapEvolution.ups",    1,  "All", ["exactComparison"] ),
+                  #("AreniscaTest_08_LoadingUnloading",                      "./Arenisca/AreniscaTest_08_LoadingUnloading.ups",                      1,  "All", ["exactComparison"] ),
+                  #("AreniscaTest_09_FluidFilledPoreSpace",                  "./Arenisca/AreniscaTest_09_FluidFilledPoreSpace.ups",                  1,  "All", ["exactComparison"] ),
+                  #("AreniscaTest_10_PureIsochoricStrainRates",              "./Arenisca/AreniscaTest_10_PureIsochoricStrainRates.ups",              1,  "All", ["exactComparison"] ),
+                  #("AreniscaTest_11_UniaxialStrainJ2plasticity",            "./Arenisca/AreniscaTest_11_UniaxialStrainJ2plasticity.ups",            1,  "All", ["exactComparison"] ),
 
             ]
 
@@ -74,33 +74,33 @@ AMRTESTS = [
                   ("advect_2L_3D_slabs",                  "advect_2L_3D_slabs.ups",     3,  "ALL", [ "no_restart","no_dbg"] ),
                   ("advect_2L_3D_edges",                  "advect_2L_3D_edges.ups",     1,  "ALL", ["exactComparison", "no_restart"] ),
                   ("riemannMPM_ML",                       "riemannMPM_ML.ups",          1,  "ALL", ["exactComparison"] ),
-#                  ("Collide_AMR_3L",                      "Collide_AMR_3L.ups",         1,  "Linux", ["exactComparison"] ),
+#                  ("Collide_AMR_3L",                      "Collide_AMR_3L.ups",         1,  "All", ["exactComparison"] ),
             ]
 
 ARENATESTS = [
                   ("HydrostaticCompressionSaturated",
                    "ArenaSoilBanerjeeBrannon/HydrostaticCompressionSaturated.ups",           
                    1, 
-                   "Linux", 
+                   "All", 
                    ["exactComparison"] ),
                   ("MultiaxialStrainLoadUnload",
                    "ArenaSoilBanerjeeBrannon/MultiaxialStrainLoadUnload.ups",           
                    1, 
-                   "Linux", 
+                   "All", 
                    ["exactComparison"] ),
                   ("BoulderClaySHPB072213-014",
                    "ArenaSoilBanerjeeBrannon/BoulderClaySHPB072213-014.ups",           
                    1, 
-                   "Linux", 
+                   "All", 
                    ["exactComparison"] ),
             ]
             
               #__________________________________
               # Tests that exercise the damage models
-DAMAGETESTS = [   ("const_test_brittle_damage", "const_test_brittle_damage.ups",        1,  "Linux", ["exactComparison"] ),
-                  ("PressSmoothCylCBDI",        "PressSmoothCylCBDI.ups",               16, "Linux", ["exactComparison"] ),
-                  ("disks_complex",             "disks_complex.ups",                    4,  "Linux", ["exactComparison"] ),
-                  ("halfSpaceUCNH_EP_JWLMPM",   "ONR-MURI/halfSpaceUCNH_EP_JWLMPM.ups", 16, "Linux", ["exactComparison"] ),
+DAMAGETESTS = [   ("const_test_brittle_damage", "const_test_brittle_damage.ups",        1,  "All", ["exactComparison"] ),
+                  ("PressSmoothCylCBDI",        "PressSmoothCylCBDI.ups",               16, "All", ["exactComparison"] ),
+                  ("disks_complex",             "disks_complex.ups",                    4,  "All", ["exactComparison"] ),
+                  ("halfSpaceUCNH_EP_JWLMPM",   "ONR-MURI/halfSpaceUCNH_EP_JWLMPM.ups", 16, "All", ["exactComparison"] ),
               ]
                   
 THREADEDTESTS = [ ("Charpy",    "Charpy.ups",    2,  "ALL", ["exactComparison", "sus_options=-nthreads 4"] ),
@@ -110,8 +110,8 @@ THREADEDTESTS = [ ("Charpy",    "Charpy.ups",    2,  "ALL", ["exactComparison", 
 NIGHTLYTESTS = NIGHTLYTESTS + AMRTESTS + THREADEDTESTS
 
 LOCALTESTS = NIGHTLYTESTS
-DEBUGTESTS =[("Charpy",                "Charpy.ups",                  8,  "Linux", ["exactComparison"] ),
-             ("test_cyl_pene_no_ero",  "test_cyl_pene_no_ero.ups",    4,  "Linux", ["exactComparison"] ),
+DEBUGTESTS =[("Charpy",                "Charpy.ups",                  8,  "All", ["exactComparison"] ),
+             ("test_cyl_pene_no_ero",  "test_cyl_pene_no_ero.ups",    4,  "All", ["exactComparison"] ),
             ]
 
 #__________________________________

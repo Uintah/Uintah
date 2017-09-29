@@ -85,7 +85,7 @@ NIGHTLYTESTS = [   ("poisson1",         "poisson1.ups",                1, "ALL")
 # Tests that are run during local regression testing
 LOCALTESTS   = [   ("RMCRT_test_1L",    "RMCRT_bm1_1L.ups",            1, "ALL", ["exactComparison"]),
                    ("RMCRT_1L_bounded",  "RMCRT_bm1_1L_bounded.ups",   8, "ALL", ["exactComparison"]),
-                   ("RMCRT_bm1_DO",     "RMCRT_bm1_DO.ups",            1 , "ALL",["exactComparison"]),
+                   ("RMCRT_bm1_DO",     "RMCRT_bm1_DO.ups",            1, "ALL", ["exactComparison"]),
                    ("RMCRT_ML",         "RMCRT_ML.ups",                8, "ALL", ["exactComparison"]),
                    ("RMCRT_VR",         "RMCRT_VR.ups",                1, "ALL", ["exactComparison"]),
                    ("RMCRT_radiometer", "RMCRT_radiometer.ups",        8, "ALL", ["exactComparison"]),

@@ -253,6 +253,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
   ran_any_tests  = 0
   failcode       = 0
   solotest_found = 0
+  nTestsFinished = 0
   comp_time0 = time()
 
   # clean up any old log files
@@ -537,7 +538,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
 
   # no tests ran
   if ran_any_tests == 0:
-    print( "Didn't run any tests!" )
+    print( "\nERROR: Zero regression tests ran to completion.  Hint: is the OS you're using appropriate for the component's tests?\n" )
     exit(3)
 
   #__________________________________

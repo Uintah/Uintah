@@ -32,14 +32,14 @@ from helpers.modUPS import modUPS
 #______________________________________________________________________
 
 
-NIGHTLYTESTS = [ ("ice_perf_32KPatches",  "icePerf_32KPatches.ups",            10, "Linux", ["do_performance_test"]),
+NIGHTLYTESTS = [ ("ice_perf_32KPatches",  "icePerf_32KPatches.ups",            10, "All", ["do_performance_test"]),
                ]
 
-LOCALTESTS = [ ("switchExample_impm_mpm", "Switcher/switchExample_impm_mpm.ups",1, "Linux", ["no_memoryTest"]), \
-               ("switchExample3",         "Switcher/switchExample3.ups",        1, "Linux", ["no_restart","no_memoryTest"]), \
-               ("ice_perf_test",          "icePerformanceTest.ups",             1, "Linux", ["do_performance_test"]),  \
-               ("mpmice_perf_test",       "mpmicePerformanceTest.ups",          1, "Linux", ["do_performance_test"]), \
-               ("LBwoRegrid",             "LBwoRegrid.ups",                     2, "Linux", ["exactComparison"])
+LOCALTESTS = [ ("switchExample_impm_mpm", "Switcher/switchExample_impm_mpm.ups",1, "All", ["no_memoryTest"]), \
+               ("switchExample3",         "Switcher/switchExample3.ups",        1, "All", ["no_restart","no_memoryTest"]), \
+               ("ice_perf_test",          "icePerformanceTest.ups",             1, "All", ["do_performance_test"]),  \
+               ("mpmice_perf_test",       "mpmicePerformanceTest.ups",          1, "All", ["do_performance_test"]), \
+               ("LBwoRegrid",             "LBwoRegrid.ups",                     2, "All", ["exactComparison"])
              ]
 DEBUGTESTS =[]
 #__________________________________

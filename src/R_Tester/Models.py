@@ -31,12 +31,12 @@ from helpers.runSusTests import runSusTests
 #  2) Performance_tests are not run on a debug build.
 #______________________________________________________________________
 
-NIGHTLYTESTS = [   ("HePlume",       "HePlume.ups",       4, "Linux",  ["exactComparison"])
+NIGHTLYTESTS = [   ("HePlume",       "HePlume.ups",       4, "All",  ["exactComparison"])
     	        ]
                
                
 # Tests that are run during local regression testing               
-LOCALTESTS   = [   ("HePlume",       "HePlume.ups",       4, "Linux",  ["exactComparison"])
+LOCALTESTS   = [   ("HePlume",       "HePlume.ups",       4, "All",  ["exactComparison"])
     	        ]
                
 DEBUGTESTS   =[]
