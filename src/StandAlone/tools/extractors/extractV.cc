@@ -36,7 +36,7 @@
 #include <Core/Grid/Box.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
-#include <Core/Grid/Variables/ShareAssignParticleVariable.h>
+//#include <Core/Grid/Variables/ShareAssignParticleVariable.h>
 #include <Core/Math/Matrix3.h>
 
 #include <Core/Containers/ConsecutiveRangeSet.h>

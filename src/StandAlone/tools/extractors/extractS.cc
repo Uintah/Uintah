@@ -35,7 +35,7 @@
 #include <Core/Grid/Level.h>
 #include <Core/Math/Matrix3.h>
 #include <Core/DataArchive/DataArchive.h>
-#include <Core/Grid/Variables/ShareAssignParticleVariable.h>
+//#include <Core/Grid/Variables/ShareAssignParticleVariable.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Grid/Box.h>

@@ -45,7 +45,7 @@
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/NodeIterator.h>
 #include <Core/Grid/Variables/CellIterator.h>
-#include <Core/Grid/Variables/ShareAssignParticleVariable.h>
+//#include <Core/Grid/Variables/ShareAssignParticleVariable.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>

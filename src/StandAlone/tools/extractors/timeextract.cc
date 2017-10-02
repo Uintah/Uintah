@@ -47,7 +47,7 @@
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
-#include <Core/Grid/Variables/ShareAssignParticleVariable.h>
+//#include <Core/Grid/Variables/ShareAssignParticleVariable.h>
 #include <Core/Math/Matrix3.h>
 #include <Core/Math/MinMax.h>
 #include <Core/OS/Dir.h>

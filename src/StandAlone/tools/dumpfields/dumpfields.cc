@@ -46,7 +46,7 @@
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Math/Matrix3.h>
 #include <Core/DataArchive/DataArchive.h>
-#include <Core/Grid/Variables/ShareAssignParticleVariable.h>
+//#include <Core/Grid/Variables/ShareAssignParticleVariable.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Util/Endian.h>
