@@ -39,6 +39,7 @@ void
 Uintah::geocosm( DataArchive * da, CommandLineFlags & clf )
 {
   bool have_volume = false;
+  bool have_plastic_strain = false;
   vector<string> vars;
   vector<const Uintah::TypeDescription*> types;
   da->queryVariables(vars, types);
@@ -49,23 +50,17 @@ Uintah::geocosm( DataArchive * da, CommandLineFlags & clf )
     if(vars[i]=="p.volume"){
        have_volume=true;
     }
+    if(vars[i]=="p.plasticStrain"){
+       have_plastic_strain=true;
+    }
   }
 
-    
-
-//  if(clf.do_PTvar){
-//    cout << "Good morning" << endl;
-//  }
-      
   vector<int> index;
   vector<double> times;
   da->queryTimesteps(index, times);
   ASSERTEQ(index.size(), times.size());
   cout << "#There are " << index.size() << " timesteps:\n";
-//  for( int i = 0; i < (int)index.size(); i++ ) {
-//    cout << index[i] << ": " << times[i] << endl;
-//  }
-      
+
   findTimestep_loopLimits( clf.tslow_set, clf.tsup_set, times, clf.time_step_lower, clf.time_step_upper);
       
   for(unsigned long t=clf.time_step_lower;t<=clf.time_step_upper;t+=clf.time_step_inc){
@@ -82,10 +77,12 @@ Uintah::geocosm( DataArchive * da, CommandLineFlags & clf )
     filename = partroot + "." + fnum.str() + "." + mnum.str();
     ofstream partfile(filename.c_str());
 
-    if(have_volume){
+    if(have_volume && have_plastic_strain){
       partfile << "# x y z pID color sigxx, sigyy sigzz sigyz sigxz sigxy pressure equiv_stress plasStrain volume" << endl;
-    }else{
+    }else if(!have_volume && have_plastic_strain){
       partfile << "# x y z pID color sigxx, sigyy sigzz sigyz sigxz sigxy pressure equiv_stress plasStrain" << endl;
+    }else if(have_volume && !have_plastic_strain){
+      partfile << "# x y z pID color sigxx, sigyy sigzz sigyz sigxz sigxy pressure equiv_stress volume" << endl;
     }
 
     for(int l=0;l<grid->numLevels();l++){
@@ -103,7 +100,7 @@ Uintah::geocosm( DataArchive * da, CommandLineFlags & clf )
         da->query(pos,    "p.x",              matl, patch, t);
         da->query(pID,    "p.particleID",     matl, patch, t);
         da->query(col,    "p.color",          matl, patch, t);
-        da->query(plas,   "p.plasticStrain",  matl, patch, t);
+        int havePS = da->query(plas,   "p.plasticStrain",  matl, patch, t);
         da->query(stress, "p.stress",         matl, patch, t);
         if(have_volume){
          da->query(volume, "p.volume",        matl, patch, t);
@@ -120,24 +117,21 @@ Uintah::geocosm( DataArchive * da, CommandLineFlags & clf )
                             +      6.0*(sig(0,1)*sig(0,1) + sig(1,2)*sig(1,2) +
                                         sig(2,0)*sig(2,0))));
 
-            if(have_volume){
-              partfile << pos[*iter].x() << " " << pos[*iter].y() << " " 
-                       << pos[*iter].z() << " " << pID[*iter] << " " 
-                       << col[*iter]         << " " << sig(0,0) << " " 
-                       << sig(1,1) << " " << sig(2,2) << " " 
-                       << sig(1,2) << " " << sig(0,2) << " "
-                       << sig(0,1) << " " << pressure << " " 
-                       << eqStress << " " << plas[*iter] << " " 
-                       << volume[*iter]   << endl;
-            } else {
-              partfile << pos[*iter].x() << " " << pos[*iter].y() << " " 
-                       << pos[*iter].z() << " " << pID[*iter] << " " 
-                       << col[*iter]         << " " << sig(0,0) << " " 
-                       << sig(1,1) << " " << sig(2,2) << " " 
-                       << sig(1,2) << " " << sig(0,2) << " "
-                       << sig(0,1) << " " << pressure << " " 
-                       << eqStress << " " << plas[*iter] << endl;
+            partfile << pos[*iter].x() << " " << pos[*iter].y() << " " 
+                     << pos[*iter].z() << " " << pID[*iter] << " " 
+                     << col[*iter]         << " " << sig(0,0) << " " 
+                     << sig(1,1) << " " << sig(2,2) << " " 
+                     << sig(1,2) << " " << sig(0,2) << " "
+                     << sig(0,1) << " " << pressure << " " << eqStress << " ";
+            if(havePS==1){
+              partfile <<  plas[*iter] << " ";
+            }else{
+              partfile <<  0.0 << " ";
             }
+            if(have_volume){
+              partfile <<  volume[*iter];
+            }
+            partfile << endl;
           } // for
         }  //if
       }  // for patches
