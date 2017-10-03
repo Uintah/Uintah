@@ -100,7 +100,7 @@ Uintah::geocosm( DataArchive * da, CommandLineFlags & clf )
         da->query(pos,    "p.x",              matl, patch, t);
         da->query(pID,    "p.particleID",     matl, patch, t);
         da->query(col,    "p.color",          matl, patch, t);
-        int havePS = da->query(plas,   "p.plasticStrain",  matl, patch, t);
+        bool havePS = da->query(plas,   "p.plasticStrain",  matl, patch, t);
         da->query(stress, "p.stress",         matl, patch, t);
         if(have_volume){
          da->query(volume, "p.volume",        matl, patch, t);
@@ -123,7 +123,7 @@ Uintah::geocosm( DataArchive * da, CommandLineFlags & clf )
                      << sig(1,1) << " " << sig(2,2) << " " 
                      << sig(1,2) << " " << sig(0,2) << " "
                      << sig(0,1) << " " << pressure << " " << eqStress << " ";
-            if(havePS==1){
+            if(havePS){
               partfile <<  plas[*iter] << " ";
             }else{
               partfile <<  0.0 << " ";

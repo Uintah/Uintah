@@ -585,7 +585,7 @@ DataArchive::queryVariables( FILE                                   * fp,
 }
 //______________________________________________________________________
 //
-int
+bool
 DataArchive::query(       Variable     & var,
                     const string       & name,
                     const int            matlIndex,
@@ -651,7 +651,7 @@ DataArchive::query(       Variable     & var,
            << ", patch " << patch->getID() 
            << ", time index " << timeIndex << "\n";
 //      throw InternalError( "DataArchive::query:Variable not found", __FILE__, __LINE__ );
-      return 0;
+      return false;
     }
     dfi = &datafileinfo;
   }
@@ -885,7 +885,7 @@ DataArchive::query(       Variable     & var,
 #endif
   dbg << "DataArchive::query() completed in " << Time::currentSeconds()-tstart << " seconds\n";
 
-  return 1;
+  return true;
 }
 //______________________________________________________________________
 //
