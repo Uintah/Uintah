@@ -85,29 +85,13 @@ SimulationController::SimulationController( const ProcessorGroup * myworld,
 {
   //initialize the overhead percentage
   overheadIndex = 0;
-  
   for( int i = 0; i < OVERHEAD_WINDOW; ++i ) {
     double x = (double) i / (double) (OVERHEAD_WINDOW/2);
     overheadValues[i]  = 0;
     overheadWeights[i] = 8.0 - x*x*x;
   }
 
-  d_nSamples               = 0;
-
-  d_delt                   = 0;
-  d_prev_delt              = 0;
-
-  d_simTime                = 0;
-  d_startSimTime           = 0;
-  
-  d_restarting             = false;
-  d_reduceUda              = false;
-  d_do_multi_taskgraphing  = false;
-  d_restart_archive        = nullptr;
-  d_sim                    = 0;
-
-  d_grid_ps                = d_ups->findBlock( "Grid" );
-  d_restart_ps             = 0;
+  d_grid_ps = d_ups->findBlock( "Grid" );
   
   d_timeinfo    = scinew SimulationTime( d_ups );
   d_sharedState = scinew SimulationState( d_ups );
@@ -232,11 +216,11 @@ SimulationController::SimulationController( const ProcessorGroup * myworld,
     throw PapiInitializationError(specific_message, __FILE__, __LINE__);
   }
 #endif
+
 } // end SimulationController constructor
 
 //______________________________________________________________________
 //
-
 SimulationController::~SimulationController()
 {
   delete d_restart_archive;
@@ -249,7 +233,6 @@ SimulationController::~SimulationController()
   
 //______________________________________________________________________
 //
-
 void
 SimulationController::setReduceUdaFlags( const string & fromDir )
 {
@@ -284,14 +267,14 @@ SimulationController::isLast( void )
   // sends it to all other ranks.
   Uintah::MPI::Bcast( &walltime, 1, MPI_DOUBLE, 0, d_myworld->getComm() );
 
-  return ( ( d_simTime >= d_timeinfo->maxTime ) ||
+  return ( ( d_simTime >= d_timeinfo->m_max_time ) ||
 
-           ( d_timeinfo->maxTimestep > 0 &&
+           ( d_timeinfo->m_max_timestep > 0 &&
              d_sharedState->getCurrentTopLevelTimeStep() >=
-             d_timeinfo->maxTimestep ) ||
+             d_timeinfo->m_max_timestep ) ||
 
-           ( d_timeinfo->max_wall_time > 0 &&
-             walltime >= d_timeinfo->max_wall_time ) );
+           ( d_timeinfo->m_max_wall_time > 0 &&
+             walltime >= d_timeinfo->m_max_wall_time ) );
 }
 
 //______________________________________________________________________
@@ -317,13 +300,13 @@ SimulationController::maybeLast( void )
   // sends it to all other ranks.
   Uintah::MPI::Bcast( &walltime, 1, MPI_DOUBLE, 0, d_myworld->getComm() );
 
-  return ( (d_simTime+d_delt >= d_timeinfo->maxTime) ||
+  return ( (d_simTime+d_delt >= d_timeinfo->m_max_time) ||
 
            (d_sharedState->getCurrentTopLevelTimeStep() + 1 >=
-             d_timeinfo->maxTimestep) ||
+             d_timeinfo->m_max_timestep) ||
 
-           (d_timeinfo->max_wall_time > 0 &&
-            walltime >= d_timeinfo->max_wall_time) );
+           (d_timeinfo->m_max_wall_time > 0 &&
+            walltime >= d_timeinfo->m_max_wall_time) );
 }
 
 //______________________________________________________________________
@@ -628,8 +611,8 @@ SimulationController::timeStateSetup()
     d_scheduler->setGeneration( d_restartTimestep + 1);
       
     // Check to see if the user has set a restart delt
-    if (d_timeinfo->override_restart_delt != 0) {
-      double delt = d_timeinfo->override_restart_delt;
+    if (d_timeinfo->m_override_restart_delt != 0) {
+      double delt = d_timeinfo->m_override_restart_delt;
       proc0cout << "Overriding restart delt with " << delt << "\n";
       d_scheduler->get_dw(1)->override( delt_vartype(delt),
                                         d_sharedState->get_delt_label() );
@@ -708,56 +691,56 @@ SimulationController::getNextDeltaT( void )
   d_delt = delt_var;
 
   // Adjust the delt
-  d_delt *= d_timeinfo->delt_factor;
+  d_delt *= d_timeinfo->m_delt_factor;
       
   // Check to see if the new delt is below the delt_min
-  if( d_delt < d_timeinfo->delt_min ) {
+  if( d_delt < d_timeinfo->m_delt_min ) {
     proc0cout << "WARNING: raising delt from " << d_delt;
     
-    d_delt = d_timeinfo->delt_min;
+    d_delt = d_timeinfo->m_delt_min;
     
     proc0cout << " to minimum: " << d_delt << '\n';
   }
 
   // Check to see if the new delt was increased too much over the
   // previous delt
-  double delt_tmp = (1.0+d_timeinfo->max_delt_increase) * d_prev_delt;
+  double delt_tmp = (1.0+d_timeinfo->m_max_delt_increase) * d_prev_delt;
   
   if( d_prev_delt > 0.0 &&
-      d_timeinfo->max_delt_increase > 0 &&
+      d_timeinfo->m_max_delt_increase > 0 &&
       d_delt > delt_tmp ) {
     proc0cout << "WARNING (a): lowering delt from " << d_delt;
     
     d_delt = delt_tmp;
     
     proc0cout << " to maxmimum: " << d_delt
-              << " (maximum increase of " << d_timeinfo->max_delt_increase
+              << " (maximum increase of " << d_timeinfo->m_max_delt_increase
               << ")\n";
   }
 
   // Check to see if the new delt exceeds the max_initial_delt
-  if( d_simTime <= d_timeinfo->initial_delt_range &&
-      d_timeinfo->max_initial_delt > 0 &&
-      d_delt > d_timeinfo->max_initial_delt ) {
+  if( d_simTime <= d_timeinfo->m_initial_delt_range &&
+      d_timeinfo->m_max_initial_delt > 0 &&
+      d_delt > d_timeinfo->m_max_initial_delt ) {
     proc0cout << "WARNING (b): lowering delt from " << d_delt ;
 
-    d_delt = d_timeinfo->max_initial_delt;
+    d_delt = d_timeinfo->m_max_initial_delt;
 
     proc0cout<< " to maximum: " << d_delt
              << " (for initial timesteps)\n";
   }
 
   // Check to see if the new delt exceeds the delt_max
-  if( d_delt > d_timeinfo->delt_max ) {
+  if( d_delt > d_timeinfo->m_delt_max ) {
     proc0cout << "WARNING (c): lowering delt from " << d_delt;
 
-    d_delt = d_timeinfo->delt_max;
+    d_delt = d_timeinfo->m_delt_max;
     
     proc0cout << " to maximum: " << d_delt << '\n';
   }
 
   // Clamp delt to match the requested output and/or checkpoint times
-  if( d_timeinfo->clamp_time_to_output ) {
+  if( d_timeinfo->m_clamp_time_to_output ) {
 
     // Clamp to the output time
     double nextOutput = d_output->getNextOutputTime();
@@ -783,9 +766,9 @@ SimulationController::getNextDeltaT( void )
   }
   
   // Clamp delt to the max end time,
-  if (d_timeinfo->end_at_max_time &&
-      d_simTime + d_delt > d_timeinfo->maxTime) {
-    d_delt = d_timeinfo->maxTime - d_simTime;
+  if (d_timeinfo->m_end_at_max_time &&
+      d_simTime + d_delt > d_timeinfo->m_max_time) {
+    d_delt = d_timeinfo->m_max_time - d_simTime;
   }
 
   // Write the new delt to the data warehouse

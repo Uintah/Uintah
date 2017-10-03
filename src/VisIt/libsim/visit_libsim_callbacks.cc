@@ -515,7 +515,7 @@ void visit_MaxTimeStepCallback(char *val, void *cbdata)
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
   SimulationTime* simTime = sim->simController->getSimulationTime();
 
-  int oldValue = sim->simController->getSimulationTime()->maxTimestep;
+  int oldValue = sim->simController->getSimulationTime()->m_max_timestep;
   int newValue = atoi(val);
   
   if( newValue <= sim->cycle )
@@ -526,11 +526,11 @@ void visit_MaxTimeStepCallback(char *val, void *cbdata)
 	<< "Resetting the value.";
     VisItUI_setValueS("SIMULATION_MESSAGE_BOX", msg.str().c_str(), 1);
 
-    VisItUI_setValueI("MaxTimeStep", simTime->maxTimestep, 1);
+    VisItUI_setValueI("MaxTimeStep", simTime->m_max_timestep, 1);
   }
   else
   {  
-    sim->simController->getSimulationTime()->maxTimestep = newValue;
+    sim->simController->getSimulationTime()->m_max_timestep = newValue;
     
     visit_VarModifiedMessage( sim, "MaxTimeStep", oldValue, newValue);
   }
@@ -546,7 +546,7 @@ void visit_MaxTimeCallback(char *val, void *cbdata)
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
   SimulationTime* simTime = sim->simController->getSimulationTime();
 
-  float oldValue = sim->simController->getSimulationTime()->maxTime;
+  float oldValue = sim->simController->getSimulationTime()->m_max_time;
   float newValue = atof(val);
 
   if( newValue <= sim->time )
@@ -557,11 +557,11 @@ void visit_MaxTimeCallback(char *val, void *cbdata)
 	<< "Resetting the value.";
     VisItUI_setValueS("SIMULATION_MESSAGE_BOX", msg.str().c_str(), 1);
 
-    VisItUI_setValueD("MaxTime", simTime->maxTime, 1);
+    VisItUI_setValueD("MaxTime", simTime->m_max_time, 1);
   }
   else
   {  
-    sim->simController->getSimulationTime()->maxTime = newValue;
+    sim->simController->getSimulationTime()->m_max_time = newValue;
 
     visit_VarModifiedMessage( sim, "MaxTime", oldValue, newValue);
   }
@@ -577,7 +577,7 @@ void visit_EndOnMaxTimeCallback(int val, void *cbdata)
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
   SimulationTime* simTime = sim->simController->getSimulationTime();
 
-  simTime->end_at_max_time = val;
+  simTime->m_end_at_max_time = val;
 }
 
 
@@ -600,8 +600,8 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
   {
   case 1:
     {
-      double minValue = sim->simController->getSimulationTime()->delt_min;
-      double maxValue = sim->simController->getSimulationTime()->delt_max;
+      double minValue = sim->simController->getSimulationTime()->m_delt_min;
+      double maxValue = sim->simController->getSimulationTime()->m_delt_max;
       oldValue = sim->delt_next;
       
       if( newValue < minValue || maxValue < newValue )
@@ -623,7 +623,7 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
     {
       double minValue = 1.0e-4;
       double maxValue = 1.0e+4;
-      oldValue = sim->simController->getSimulationTime()->delt_factor;
+      oldValue = sim->simController->getSimulationTime()->m_delt_factor;
       
       if( newValue < minValue || maxValue < newValue )
       {
@@ -636,7 +636,7 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
 	return;
       }
 
-      sim->simController->getSimulationTime()->delt_factor = newValue;
+      sim->simController->getSimulationTime()->m_delt_factor = newValue;
       visit_VarModifiedMessage( sim, "DeltaTFactor", oldValue, newValue );
     }
     break;
@@ -644,7 +644,7 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
     {
       double minValue = 0;
       double maxValue = 1.e99;
-      oldValue = sim->simController->getSimulationTime()->max_delt_increase;
+      oldValue = sim->simController->getSimulationTime()->m_max_delt_increase;
       
       if( newValue < minValue || maxValue < newValue )
       {
@@ -657,15 +657,15 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
 	return;
       }
 
-      sim->simController->getSimulationTime()->max_delt_increase = newValue;
+      sim->simController->getSimulationTime()->m_max_delt_increase = newValue;
       visit_VarModifiedMessage( sim, "MaxDeltaIncrease", oldValue, newValue );
     }
     break;
   case 4:
     {
       double minValue = 0;
-      double maxValue = sim->simController->getSimulationTime()->delt_max;
-      oldValue = sim->simController->getSimulationTime()->delt_min;
+      double maxValue = sim->simController->getSimulationTime()->m_delt_max;
+      oldValue = sim->simController->getSimulationTime()->m_delt_min;
       
       if( newValue < minValue || maxValue < newValue )
       {
@@ -678,15 +678,15 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
 	return;
       }
 
-      sim->simController->getSimulationTime()->delt_min = newValue;
+      sim->simController->getSimulationTime()->m_delt_min = newValue;
       visit_VarModifiedMessage( sim, "DeltaTMin", oldValue, newValue );
     }
     break;
   case 5:
     {
-      double minValue = sim->simController->getSimulationTime()->delt_min;
+      double minValue = sim->simController->getSimulationTime()->m_delt_min;
       double maxValue = 1.0e9;
-      oldValue = sim->simController->getSimulationTime()->delt_max;
+      oldValue = sim->simController->getSimulationTime()->m_delt_max;
       
       if( newValue < minValue || maxValue < newValue )
       {
@@ -699,7 +699,7 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
 	return;
       }
 
-      sim->simController->getSimulationTime()->delt_max = newValue;
+      sim->simController->getSimulationTime()->m_delt_max = newValue;
       visit_VarModifiedMessage( sim, "DeltaTMax", oldValue, newValue );
     }
     break;
@@ -707,7 +707,7 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
     {
       double minValue = 1.0e-99;
       double maxValue = DBL_MAX;
-      oldValue = sim->simController->getSimulationTime()->max_initial_delt;
+      oldValue = sim->simController->getSimulationTime()->m_max_initial_delt;
       
       if( newValue < minValue || maxValue < newValue )
       {
@@ -720,7 +720,7 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
 	return;
       }
 
-      sim->simController->getSimulationTime()->max_initial_delt = newValue;
+      sim->simController->getSimulationTime()->m_max_initial_delt = newValue;
       visit_VarModifiedMessage( sim, "MaxInitialDelta", oldValue, newValue );
     }
     break;
@@ -728,7 +728,7 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
     {
       double minValue = 0;
       double maxValue = 1.0e99;
-      oldValue = sim->simController->getSimulationTime()->initial_delt_range;
+      oldValue = sim->simController->getSimulationTime()->m_initial_delt_range;
       
       if( newValue < minValue || maxValue < newValue )
       {
@@ -741,7 +741,7 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
 	return;
       }
 
-      sim->simController->getSimulationTime()->initial_delt_range = newValue;
+      sim->simController->getSimulationTime()->m_initial_delt_range = newValue;
       visit_VarModifiedMessage( sim, "InitialDeltaRange", oldValue, newValue );
     }
     break;
@@ -749,7 +749,7 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
     {
       double minValue = 0;
       double maxValue = 1.0e99;
-      oldValue = sim->simController->getSimulationTime()->override_restart_delt;
+      oldValue = sim->simController->getSimulationTime()->m_override_restart_delt;
       
       if( newValue < minValue || maxValue < newValue )
       {
@@ -762,7 +762,7 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
 	return;
       }
 
-      sim->simController->getSimulationTime()->override_restart_delt = newValue;
+      sim->simController->getSimulationTime()->m_override_restart_delt = newValue;
       visit_VarModifiedMessage( sim, "OverrideRestartDelta", oldValue, newValue );
     }
     break;
@@ -784,8 +784,8 @@ void visit_WallTimesVariableCallback(char *val, void *cbdata)
 
   if( row == 5 )
   {
-    oldValue = sim->simController->getSimulationTime()->max_wall_time;
-    sim->simController->getSimulationTime()->max_wall_time = newValue;
+    oldValue = sim->simController->getSimulationTime()->m_max_wall_time;
+    sim->simController->getSimulationTime()->m_max_wall_time = newValue;
     visit_VarModifiedMessage( sim, "MaxWallTime", oldValue, newValue );
   }
 }
@@ -968,7 +968,7 @@ void visit_ClampTimestepsToOutputCallback(int val, void *cbdata)
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
   SimulationTime* simTime = sim->simController->getSimulationTime();
 
-  simTime->clamp_time_to_output = val;
+  simTime->m_clamp_time_to_output = val;
 }
 
 

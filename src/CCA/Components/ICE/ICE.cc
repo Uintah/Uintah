@@ -483,7 +483,7 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
   //__________________________________
   // WARNINGS
   SimulationTime timeinfo(prob_spec); 
-  if ( d_impICE &&  timeinfo.max_delt_increase  > 10 && d_myworld->myrank() == 0){
+  if ( d_impICE &&  timeinfo.m_max_delt_increase  > 10 && d_myworld->myrank() == 0){
     cout <<"\n \n W A R N I N G: " << endl;
     cout << " When running implicit ICE you should specify "<<endl;
     cout <<" \t \t <max_delt_increase>    2.0ish  "<<endl;

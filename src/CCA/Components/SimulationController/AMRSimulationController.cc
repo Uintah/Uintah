@@ -206,17 +206,17 @@ AMRSimulationController::run()
 #endif
 
   //  reduceUda - needs to be done after the time info is read but
-  //  before the inital time step.
+  //  before the initial time step.
   if( d_reduceUda ) {
     Dir fromDir( d_fromDir );
     d_output->reduceUdaSetup( fromDir );
-    d_timeinfo->delt_factor = 1;
-    d_timeinfo->delt_min    = 0;
-    d_timeinfo->delt_max    = 1e99;
-    d_timeinfo->initTime    = static_cast<UdaReducer*>(d_sim)->getInitialTime();
-    d_timeinfo->maxTime     = static_cast<UdaReducer*>(d_sim)->getMaxTime();
-    d_timeinfo->max_delt_increase = 1e99;
-    d_timeinfo->max_initial_delt  = 1e99;
+    d_timeinfo->m_delt_factor = 1;
+    d_timeinfo->m_delt_min    = 0;
+    d_timeinfo->m_delt_max    = 1e99;
+    d_timeinfo->m_init_time    = static_cast<UdaReducer*>(d_sim)->getInitialTime();
+    d_timeinfo->m_max_time     = static_cast<UdaReducer*>(d_sim)->getMaxTime();
+    d_timeinfo->m_max_delt_increase = 1e99;
+    d_timeinfo->m_max_initial_delt  = 1e99;
   }
 
   // Setup, compile, and run the taskgraph for the initialization timestep
@@ -454,7 +454,7 @@ AMRSimulationController::run()
     // the value specified in the input file.  To detect the switch of
     // components, compare the old_init_delt before the
     // needRecompile() to the new_init_delt after the needRecompile().
-    double old_init_delt = d_timeinfo->max_initial_delt;
+    double old_init_delt = d_timeinfo->m_max_initial_delt;
     double new_init_delt = 0.;
 
     bool nr = needRecompile();
@@ -496,7 +496,7 @@ AMRSimulationController::run()
       }
 #endif
       
-      new_init_delt = d_timeinfo->max_initial_delt;
+      new_init_delt = d_timeinfo->m_max_initial_delt;
        
       if( new_init_delt != old_init_delt ) {
         // Writes to the DW in the next section below.
@@ -614,6 +614,7 @@ AMRSimulationController::run()
 
     // Update the time and get the next output checkpoint time step.
     d_simTime += d_delt;
+    d_timeinfo->m_curr_sim_time = d_simTime;
 
     // Get the next delta T
     getNextDeltaT();
@@ -680,6 +681,7 @@ AMRSimulationController::doInitialTimestep()
     d_currentGridP->performConsistencyCheck();
 
     d_simTime = d_startSimTime;
+    d_sharedState->setSimulationTime(d_timeinfo);
 
     d_sim->restartInitialize();
 
@@ -724,7 +726,7 @@ AMRSimulationController::doInitialTimestep()
     d_currentGridP->assignBCS( d_grid_ps, d_lb );
     d_currentGridP->performConsistencyCheck();
 
-    d_simTime = d_timeinfo->initTime;
+    d_simTime = d_timeinfo->m_init_time;
 
     bool needNewLevel = false;
 
@@ -734,7 +736,7 @@ AMRSimulationController::doInitialTimestep()
         d_scheduler->advanceDataWarehouse( d_currentGridP, true );
       }
 
-      proc0cout << "Compiling initialization taskgraph...\n";
+      proc0cout << "\nCompiling initialization taskgraph...\n";
 
       // Initialize the CFD and/or MPM data
       for( int i = d_currentGridP->numLevels() - 1; i >= 0; i-- ) {
@@ -764,16 +766,15 @@ AMRSimulationController::doInitialTimestep()
         d_scheduler->scheduleTaskMonitoring(d_currentGridP->getLevel(i));
       }
       
-//      taskGraphTimer.reset( true );
-      clock_t start = clock();
-      clock_t diff;
+      taskGraphTimer.reset( true );
       d_scheduler->compile();
-      diff = clock() - start;
-//      taskGraphTimer.stop();
+      taskGraphTimer.stop();
 
-      d_sharedState->d_runTimeStats[ SimulationState::CompilationTime ] += (diff / CLOCKS_PER_SEC);
+      double tg_time = taskGraphTimer().seconds();
 
-      proc0cout << "Done with taskgraph compile (" << (diff / CLOCKS_PER_SEC) << " seconds)\n";
+      d_sharedState->d_runTimeStats[ SimulationState::CompilationTime ] += tg_time;
+
+      proc0cout << "Done with taskgraph compile (" << tg_time << " seconds)\n\n";
 
       // No scrubbing for initial step
       d_scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNone);
@@ -803,8 +804,7 @@ AMRSimulationController::executeTimestep( int totalFine, int tg_index )
 {
   MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::executeTimestep()");
 
-  // If the timestep needs to be restarted, this loop will execute
-  // multiple times.
+  // If the timestep needs to be restarted, this loop will execute multiple times.
   bool success = true;
 
   do {
@@ -860,10 +860,10 @@ AMRSimulationController::executeTimestep( int totalFine, int tg_index )
                 << std::endl;
 
       // bulletproofing
-      if (new_delt < d_timeinfo->delt_min || new_delt <= 0) {
+      if (new_delt < d_timeinfo->m_delt_min || new_delt <= 0) {
         std::ostringstream warn;
         warn << "The new delT (" << new_delt << ") is either less than "
-             << "delT_min (" << d_timeinfo->delt_min << ") or equal to 0";
+             << "delT_min (" << d_timeinfo->m_delt_min << ") or equal to 0";
         throw InternalError(warn.str(), __FILE__, __LINE__);
       }
 
