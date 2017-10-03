@@ -22,6 +22,36 @@
  * IN THE SOFTWARE.
  */
 
+////////////////////////////////////////////////////////////////////////////
+
+// USING THE puda -geocosm OPTION
+
+// This code exists to extract the contact pairs at each node, and to output
+// the material pair, node position and indices, mass of each material in the
+// pair, pressure of each material in the pair (plus the "all in one" pressure)
+// equivalent stress for each material in the pair (plus the "all in one"
+// equivalent stress), as well as the color for each material in the pair,
+// to identify which specific grain is in contact.
+
+// Usage looks like the following, assuming that one is already inside of
+// the uda from which data is to be extracted:
+
+// > /path/to/puda -contactStress -matl M -timesteplow TL -timestephigh TH .
+
+// where TL and TH are the low and high output timesteps to be analyzed, and
+// M is the maximum material number with which contacts will be sought.
+
+// Output from this will be a series of files of the format contactsWGroupN.YYY
+// where N is the material number with which other materials will contact,
+// and YYY is the timestep number.
+
+// A header at the top of each file describes the output columns:
+
+// %outputting for time[1] = 1.00025460e+00
+// material_1  material_2 nodePos_x nodePos_y nodePos_z nodeIdxI nodeIdxJ nodeIdxK mass_1 mass_2 pressure_1 pressure_2 pressure_N eqStress1 eqStress2 eqStressN color_1 color_2
+
+////////////////////////////////////////////////////////////////////////////
+
 #include <StandAlone/tools/puda/contactStress.h>
 #include <StandAlone/tools/puda/util.h>
 #include <Core/DataArchive/DataArchive.h>
