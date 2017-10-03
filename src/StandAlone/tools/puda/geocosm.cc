@@ -33,6 +33,28 @@
 using namespace Uintah;
 using namespace std;
 
+// USING THE puda -geocosm OPTION
+
+// This code exists to extract select data from all particles,
+// write it out in a series of text files that, named, e.g. p.001.007,
+// where, in that example, 001 refers to output step 1, and 007 refers to
+// data for material (aka, "group") 7.
+
+// To invoke:
+
+// > /path/to/puda/puda -geocosm -matl M -timesteplow TL -timestephigh TH MyUda.000
+
+// This will extract data for all materials up to and including M-1 (materials
+// are numbered from 0), starting at timestep TL up to timestep TH, from 
+// MyUda.000
+// You may find it easier to cd into MyUda.000, and then run the command as:
+
+// > /path/to/puda/puda -geocosm -matl M -timesteplow TL -timestephigh TH .
+
+// where the "." at the end indicates that the current directory will be worked
+// on.  This leaves all of the output files inside the uda directory from 
+// which they were extracted.
+
 ////////////////////////////////////////////////////////////////////////
 
 void

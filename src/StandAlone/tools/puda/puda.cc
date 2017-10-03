@@ -107,7 +107,7 @@ usage( const std::string& badarg, const std::string& progname )
   cerr << "  -brief               (Makes varsummary print out a subset of information.)\n";
   cerr << "  -jim1\n";
   cerr << "  -jim2\n";
-  cerr << "  -geocosm\n";
+  cerr << "  -geocosm             (See geocosm.cc for details on using this option.)\n";
   cerr << "  -geocosmtets\n";
   cerr << "  -todd1               ( 1st Law of thermo. control volume analysis) \n";
   cerr << "  -ICE_momentum        ( momentum control volume analysis) \n";
