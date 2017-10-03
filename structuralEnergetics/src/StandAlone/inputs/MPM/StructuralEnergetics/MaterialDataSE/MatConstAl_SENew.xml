@@ -1,9 +1,0 @@
-<?xml version='1.0' encoding='ISO-8859-1' ?>
-<!-- Aluminum for Structural Energetics -->
-<Uintah_Include>
-  <density>2780.0</density>
-  <thermal_conductivity>220.0E-6</thermal_conductivity>
-  <specific_heat>0.920E-3</specific_heat>
-  <room_temp>300.0</room_temp>
-  <melt_temp>933.0</melt_temp>
-</Uintah_Include>

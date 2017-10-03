@@ -1,8 +1,0 @@
-<?xml version='1.0' encoding='ISO-8859-1' ?>
-<!-- 6061 T6 Aluminum Alloy -->
-<Uintah_Include>
-  <flow_model type="isotropic_hardening">
-    <K>0.0</K>
-    <sigma_Y>324.0e30</sigma_Y>
-  </flow_model>
-</Uintah_Include>

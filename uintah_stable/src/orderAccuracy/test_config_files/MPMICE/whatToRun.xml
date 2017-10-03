@@ -1,8 +1,0 @@
-<config>
-<compareUtil_path>orderAccuracy/comparisonUtils</compareUtil_path>
-<test>
-  <name>Rayleigh</name>
-  <ups>rayleigh.ups</ups>
-  <tst>rayleigh_dy.tst</tst>
-</test>
-</config>

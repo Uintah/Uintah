@@ -1,1 +1,0 @@
-0 0 * * * /home/csafe/csafe-tester/scripts/tcsh_run "qsub /home/csafe/csafe-tester/scripts/Regress.pbs"

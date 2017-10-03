@@ -1,6 +1,0 @@
-
-class x {
-      void y(in int);
-      void y(in int);
-};
-

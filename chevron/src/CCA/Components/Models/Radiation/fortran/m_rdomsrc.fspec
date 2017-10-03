@@ -1,5 +1,0 @@
-void m_rdomsrc(IntVector idxlo, IntVector idxhi, 
-           CCVariable<double> abskg,
-	   CCVariable<double> esrcg,
-           CCVariable<double> volq,
-           CCVariable<double> src);

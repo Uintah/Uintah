@@ -1,8 +1,0 @@
-
-class x extends CIA.Throwable {
-      void y(in int);
-};
-
-class y extends x {
-      void y(in int) throws x;
-};

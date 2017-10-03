@@ -1,2 +1,0 @@
-5 1 * * *       cd $HOME/DoxygenCheckout/SCIRun/src/ && scripts/doxygen/run_doxygen.sh
-30 1 * * *      $HOME/scripts/startTester -j 8 -sendmail

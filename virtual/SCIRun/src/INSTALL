@@ -1,5 +1,0 @@
-cd ../thirdparty.src
-./install.sh ../thirdparty.bin
-cd ../bin
-cmake ../src
-make

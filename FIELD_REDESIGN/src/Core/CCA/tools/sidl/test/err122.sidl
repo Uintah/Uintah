@@ -1,6 +1,0 @@
-
-package x {
-	class z {
-		void y(in x);
-	};
-};

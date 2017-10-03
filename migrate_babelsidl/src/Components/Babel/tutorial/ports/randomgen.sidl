@@ -1,8 +1,0 @@
-package randomgen version 1.0 {
-
-  interface RandomGeneratorPort extends gov.cca.Port
-  {
-    double getRandomNumber();
-  }
-
-}
