@@ -1157,17 +1157,13 @@ AMRSimulationController::recompile( int totalFine )
     d_scheduler->scheduleTaskMonitoring(d_currentGridP->getLevel(i));
   }
   
-  clock_t start = clock();
-  clock_t diff;
   d_scheduler->compile();
-  diff = clock() - start;
 
   taskGraphTimer.stop();
 
-  d_sharedState->d_runTimeStats[ SimulationState::CompilationTime ] += (diff / CLOCKS_PER_SEC);
+  d_sharedState->d_runTimeStats[ SimulationState::CompilationTime ] += taskGraphTimer().seconds();
 
-  proc0cout << "Done with taskgraph re-compile (" << (diff / CLOCKS_PER_SEC) << " seconds)\n";
-  proc0cout << "Done with taskgraph re-compile (" << (diff / (CLOCKS_PER_SEC / 1000)) << " milliseconds)\n";
+  proc0cout << "Done with taskgraph re-compile (" << taskGraphTimer().seconds() << " seconds)\n";
 } // end recompile()
 
 //______________________________________________________________________
