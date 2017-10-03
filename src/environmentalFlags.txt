@@ -1,0 +1,135 @@
+This file contains a partial list of the environmental variables that a user can set.
+
+Set these like this:
+ -> tcsh: setenv SCI_DEBUG ExecTimes:+
+ -> bash: export SCI_DEBUG=ExecTimes:+
+To set multiple flags, use quotation marks and separate flags by a comma:
+(no spaces after commas)
+ -> bash: export SCI_DEBUG="ExecTimes:+,TaskGraph:+,WASATCH_FIELDS:+"
+ -> tcsh: setenv SCI_DEBUG  ExecTimes:+,TaskGraph:+,WASATCH_FIELDS:+
+
+Name                     type               Description
+______________________________________________________________________
+
+ExecTimes                SCI_DEBUG     Outputs the time for execution on each task
+                                       NOTE: Reported values are:
+                                                1) Represented in seconds
+                                                2) Cumulative over 10 timesteps
+                                               3a) Cumulative over nthreads when using the UnifiedScheduler
+                                               3b) Cumulative over nthreads-1 when using the ThreadedMPIScheduler
+                                       To view the top 10 tasks use:
+                                       sort -t: -k 2 -k 3 -g -r exectimes.?.? | head
+                                       To get a summary of all exectimes files run the script src/scripts/execsummary
+                                       NOTE: This only works with MPI and you must run your input file for more than 10 timesteps
+
+ReductionTasks            SCI_DEBUG     outputs a message on processor 0 whenever a reduction task occurs.
+RELOCATE_DBG              SCI_DEBUG     prints out debugging information in the code that finds the neighboring
+                                        patches inside of particle relocation task.
+WaitForDebugger           SCI_DEBUG     when an exception is thrown halt the program and print out
+                                        the pid so you can attach a debugger to it.
+OnDemandDataWarehouse     SCI_DEBUG     outputs when a variable is retrieved or put into the data warehouse.
+VarLabel                                List when a VarLabel is created and deleted
+ComponentTimings          SCI_DEBUG     output overall mpi and cpu times
+BCR_dbg                   SCI_DEBUG     print out some information regarding the BC setup
+
+Grid related Information:
+__________________________________
+GRID                      SCI_DEBUG     prints out each patch's index space
+AMR                       SCI_DEBUG     prints out the patch layout
+AMR_CoarsenRefine         SCI_DEBUG     prints out debugging information for coarsening and refining operations
+
+Task and Taskgraph Debugging Information:
+__________________________________
+TaskDBG                    SCI_DEBUG     output the name of each task as it begins executing and when it's completed
+TaskLevel                  SCI_DEBUG     output the task name and beginning patch on each level after the task has completed.
+TaskGraph                  SCI_DEBUG     prints out task name, computes and requires for every task
+TaskGraphDetailed          SCI_DEBUG     prints out internal details of computes and requires for every task
+TaskGraphPhase             SCI_DEBUG     prints out the task phase assigned to each task by the task graph
+Scrubbing                  SCI_DEBUG     prints debugging information for scrubbing vars.  You can "watch" one variable by setting:
+                                         DetailedTask.cc:  dbgScrubVar = "Var";
+
+Scheduler Debugging Information:
+__________________________________
+MPIScheduler_DBG           SCI_DEBUG     Prints general debugging information for the MPIScheduler
+MPIScheduler_TimingsOut    SCI_DEBUG     Outputs fine-grained MPI communication timings to files: timingstats.avg, timingstats.max
+MPIStats                   SCI_DEBUG     Prints comprehensive, fine-grained MPI summary to stdout
+WaitTimes                  SCI_DEBUG     Prints detailed summary of task wait times to stdout
+
+
+DynamicMPIScheduler Related:
+__________________________________
+DynamicMPI_DBG             SCI_DEBUG     Prints general debugging information
+DynamicMPI_QueueLength     SCI_DEBUG     Prints the average task queue length
+
+
+
+UnifiedScheduler Related:
+__________________________________
+Unified_DBG                SCI_DEBUG     Prints general debugging information
+Unified_QueueLength        SCI_DEBUG     Prints the average task queue length
+
+
+GPU Related:
+__________________________________
+GPUStats          SCI_DEBUG     Reports detailed GPU statistics from within the UnififedScheudler on "host-->device"
+                                and "device-->host" data movement.
+GPUDataWarehouse  SCI_DEBUG     Reports detailed statistics from within the GPUDW on GPUDataWarehouse activity.
+
+
+ICE:
+__________________________________
+ICE_DOING_COUT    SCI_DEBUG     Outputs the name of each task as it's being scheduled and executed.
+ICE_BC_CC         SCI_DEBUG     output boundary condition debugging information for Cell-centered variables.
+ICE_BC_FC         SCI_DEBUG     output boundary condition debugging information for
+                                Face-centered variables.
+DBG_EqPress       SCI_DEBUG     Output debugging information about the iteration
+                                process in computeEquilibration if an exception is thrown.
+
+
+ARCHES:
+__________________________________
+ARCHES_PRESS_SOLVE SCI_DEBUG    Outputs the name of each task in the pressure solveras it's being
+                                scheduled and executed.
+ARCHES_TASK_VARS   SCI_DEBUG    Print the variable with associated registration requirement attributes (ArchesTaskInterface).
+
+ARCHES_BC          SCI_DEBUG    Print out more information about how the code is interpretting and setting up the BCs. 
+
+
+MPM:
+__________________________________
+MPM               SCI_DEBUG     Outputs the name of each task as it's being
+                                scheduled and executed.
+
+
+MPMICE:
+__________________________________
+MPMICE_DOING_COUT SCI_DEBUG     Outputs the name of each task as it's being
+                                scheduled and executed.
+DBG_EqPress       SCI_DEBUG     Output debugging information if computeEquilibration throws
+                                an exception.
+
+
+WASATCH:
+__________________________________
+WASATCH_TASKS       SCI_DEBUG   Outputs Wasatch task diagnostics. See TaskInterface.cc
+WASATCH_FIELDS      SCI_DEBUG   Outputs information on Wasatch registered fields. See TaskInterface.cc
+WASATCH_REDUCTIONS  SCI_DEBUG   Information about Wasatch's reduction tasks and related expressions. See ReductionBase.cc
+WASATCH_QMOM_DBG    SCI_DEBUG   Outputs full matrices that are constructed during the product difference algorithm, and warning for moment reduction
+
+RMCRT:
+__________________________________
+RAY                 SCI_DEBUG   Outputs the name of each task as it's being scheduled and executed.
+
+
+
+Regression testing:
+__________________________________
+GOLD_STANDARDS        N/A       Path to the gold standards, this overrides the default path.
+RT_CHECKPOINTS        N/A       Path to the checkpoints directory that are needed for tests that restart from checkpoints.
+MALLOC_STATS          N/A       file that is used for sci malloc output
+MALLOC_STRICT         N/A       "set" will enable the sci malloc tests on all.
+
+
+
+
+

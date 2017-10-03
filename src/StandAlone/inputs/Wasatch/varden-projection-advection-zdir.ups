@@ -1,0 +1,191 @@
+<Uintah_specification>
+
+  <Meta>
+    <title>Pressure Projection Test with a 1D Convective Case in z-direction</title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+   <Solver type="hypre"/>
+  <Wasatch>
+    <TimeIntegrator> FE </TimeIntegrator>    
+
+    <Density method="LOWMACH">
+      <NameTag name="density"/>
+    </Density>
+    
+    <!-- Set the initial condition expression for mixture fraction -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="f"/>
+      <GaussianFunction amplitude="1.0" deviation="1.0" mean="0.0" baseline="0.0">
+        <NameTag name="ZSVOL"/>
+      </GaussianFunction> 
+    </BasicExpression>
+    
+    <!-- Set up a tabular property evaluation to extract density for initialization-->
+    <TabProps>
+      <FileNamePrefix>inputs/Wasatch/NonReacting_PP_MMS</FileNamePrefix>
+      <TaskList>initialization</TaskList>
+      
+      <IndependentVariable>
+        <NameTag name="f"/>
+        <NameInTable>MixtureFraction</NameInTable>
+      </IndependentVariable>
+      
+      <ExtractVariable>
+        <NameInTable>Density</NameInTable>
+        <NameTag name="density"/>
+      </ExtractVariable>
+
+    </TabProps>
+    
+    <!-- Set up a tabular property evaluation to extract density within the advance_solution-->
+    <TabProps>
+      <FileNamePrefix>inputs/Wasatch/NonReacting_PP_MMS</FileNamePrefix>
+      <TaskList>advance_solution</TaskList>
+      
+      <IndependentVariable>
+        <NameTag name="f"/>
+        <NameInTable>MixtureFraction</NameInTable>
+      </IndependentVariable>
+      
+      <ExtractDensity>
+        <NameTag name="density"/>
+        <ModelBasedOnMixtureFraction>
+          <DensityWeightedMixtureFraction>
+            <NameTag name="rhof" state="STATE_DYNAMIC"/>
+          </DensityWeightedMixtureFraction>       
+          <MixtureFraction>
+            <NameTag name="f"/>
+          </MixtureFraction>          
+        </ModelBasedOnMixtureFraction>
+      </ExtractDensity>
+      
+    </TabProps>  
+    
+    <!-- Set the initial condition expression for z-velocity -->
+    <BasicExpression type="ZVOL">
+       <TaskList>initialization</TaskList>
+       <NameTag name="w"/>
+       <Constant>1.0</Constant>
+    </BasicExpression>
+    
+        
+    <!-- Build a scalar transport equation for mixture fraction -->
+    <TransportEquation equation="mixturefraction">
+
+      <SolutionVariable>rhof</SolutionVariable>
+      <PrimitiveVariable>f</PrimitiveVariable>
+      
+      <ConvectiveFlux direction="Z" method="UPWIND">
+        <AdvectiveVelocity>
+            <NameTag name="w"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+
+    </TransportEquation>   
+    
+    <ForceOnGraph tasklist="advance_solution">
+        <NameTag name="f"/>
+    </ForceOnGraph>
+    
+    <FieldClipping tasklist="advance_solution">
+      <FieldExpression type="SVOL" min="0.0" max="1.0">
+        <NameTag name="f"/>        
+      </FieldExpression>                    
+    </FieldClipping>
+      
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="viscosity"/>
+      <Constant>0.0</Constant>
+    </BasicExpression>
+        
+    <!-- Momentum transport equations -->
+    <MomentumEquations>
+      <Z-Velocity>w</Z-Velocity>
+      <Z-Momentum>z-mom</Z-Momentum>
+         
+      <Viscosity>
+        <NameTag name="viscosity"/>
+      </Viscosity>
+      
+      <Pressure>
+        <Use3DLaplacian>false</Use3DLaplacian>
+        <Parameters>
+          <!-- Hypre options -->
+          <solver>         cg      </solver>
+          <preconditioner> pfmg    </preconditioner>
+          <tolerance>      1e-12  </tolerance>
+          <maxiterations>  1000   </maxiterations>
+          <relax_type>     2       </relax_type>
+        </Parameters>
+      </Pressure>
+    </MomentumEquations>
+
+  </Wasatch>
+
+
+  <Time>
+    <maxTime>5.0</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.001</delt_min>
+    <delt_max>0.001</delt_max>
+    <max_Timesteps> 100 </max_Timesteps>
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+
+  <DataArchiver>
+    <filebase>varden-projection-advection-zdir.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle="2" interval="0.001"/>
+    <save label="density"/>
+    <save label="z-mom"/>
+    <save label="z-mom_rhs_partial"/>
+    <save label="w"/>    
+    <save label="f"/>
+    <save label="rhof"/>
+    <save label="pressure"/>
+    <save label="pressure_src"/>
+  </DataArchiver> 
+
+  <Grid>
+
+      <BoundaryConditions>
+      <DefaultMaterial>all</DefaultMaterial>
+      <!-- BOUNDARY CONDITIONS FOR MOMENTUM -->
+
+      <Face side="z-">
+        <BCType label="pressure" var="Dirichlet" value="0.0"/>
+        <BCType label="z-mom" var="Neumann" value="0.0"/>
+        <BCType label="w" var="Neumann" value="0.0"/>
+        <BCType label="rhof" var="Neumann" value="0.0"/>
+        <BCType label="f" var="Neumann" value="0.0"/>
+        <BCType label="density" var="Neumann" value="0.0"/>
+        <BCType label="z-mom_rhs_partial" var="Dirichlet" value="0.0"/>
+      </Face>
+      <Face side="z+">
+        <BCType label="pressure" var="Dirichlet" value="0.0"/>
+        <BCType label="z-mom" var="Neumann" value="0.0"/>
+        <BCType label="w" var="Neumann" value="0.0"/>
+        <BCType label="rhof" var="Neumann" value="0.0"/>
+        <BCType label="f" var="Neumann" value="0.0"/>
+        <BCType label="density" var="Neumann" value="0.0"/>
+        <BCType label="z-mom_rhs_partial" var="Dirichlet" value="0.0"/>
+      </Face>
+      </BoundaryConditions>  
+
+      <Level>
+      <Box label="1">
+        <lower>[0,0,-15]</lower>
+        <upper>[1,1,15]</upper>
+        <resolution>[1,1,256]</resolution>
+        <patches>[1,1,9]</patches>
+      </Box>
+      <periodic>[1,1,0]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

@@ -1,0 +1,1156 @@
+%!PS-Adobe-2.0 EPSF-2.0
+%%BoundingBox: 136 372 462 741
+%%Title: /usr/people/harman/Csafe/Uintah_cfd_doc/Singlematerial/Version_2/figures_v2/cell.eps
+%%CreationDate: 1:13 PM May  4, 1999
+%%Pages: 1
+%%EndComments
+%%BeginProlog
+%%BeginResource ShowcaseResource
+1 setlinejoin
+/M  { moveto } bind def /S { show  } bind def
+/R { rmoveto } bind def /L { lineto } bind def
+/B { newpath 0 0 M 0 1 L 1 1 L 1 0 L closepath } bind def
+/CS { closepath stroke } bind def
+/S {
+    /fixwidth exch def
+    dup length /nchars exch def
+    dup stringwidth pop
+    fixwidth exch sub nchars div
+    exch 0 exch ashow
+} def
+/bwproc {
+	rgbproc
+	dup length 3 idiv string 0 3 0
+	5 -1 roll {
+	add 2 1 roll 1 sub dup 0 eq
+	{ pop 3 idiv 3 -1 roll dup 4 -1 roll dup
+	  3 1 roll 5 -1 roll put 1 add 3 0 }
+	{ 2 1 roll } ifelse
+	} forall
+	pop pop pop
+} def
+systemdict /colorimage known not {
+	/colorimage {
+		pop
+		pop
+		/rgbproc exch def
+		{ bwproc } image
+	} def
+} if
+1 1 scale
+0 setlinewidth
+/drawtri {
+/y3 exch def
+/x3 exch def
+/y2 exch def
+/x2 exch def
+/y1 exch def
+/x1 exch def
+0 setgray
+newpath
+x1 y1 moveto
+x2 y2 lineto
+x3 y3 lineto
+closepath
+stroke
+} bind def
+/filltri {
+/y3 exch def
+/x3 exch def
+/y2 exch def
+/x2 exch def
+/y1 exch def
+/x1 exch def
+newpath
+x1 y1 moveto
+x2 y2 lineto
+x3 y3 lineto
+closepath
+fill
+} bind def
+/cliptri {
+/y3 exch def
+/x3 exch def
+/y2 exch def
+/x2 exch def
+/y1 exch def
+/x1 exch def
+0 setgray
+newpath
+x1 y1 moveto
+x2 y2 lineto
+x3 y3 lineto
+closepath
+clip
+} bind def
+/imgscanrgb {
+gsave
+translate
+/scandy exch def
+/scandx exch def
+/istr scandx 3 mul string def
+scandx scandy scale
+scandx scandy 8
+[scandx 0 0 scandy neg 0 scandy]
+{currentfile istr readhexstring pop}
+false 3
+colorimage
+grestore
+} bind def
+/imgscanbw {
+gsave
+translate
+/scandy exch def
+/scandx exch def
+/istr scandx string def
+scandx scandy scale
+scandx scandy 8
+[scandx 0 0 scandy neg 0 scandy]
+{currentfile istr readhexstring pop}
+image
+grestore
+} bind def
+/showcaseisoencoding [
+/.notdef /.notdef /.notdef /.notdef
+/.notdef /.notdef /.notdef /.notdef
+/.notdef /.notdef /.notdef /.notdef
+/.notdef /.notdef /.notdef /.notdef
+/.notdef /.notdef /.notdef /.notdef
+/.notdef /.notdef /.notdef /.notdef
+/.notdef /.notdef /.notdef /.notdef
+/.notdef /.notdef /.notdef /.notdef
+/space /exclam /quotedbl /numbersign
+/dollar /percent /ampersand /quoteright
+/parenleft /parenright /asterisk /plus
+/comma /minus /period /slash
+/zero /one /two /three /four /five /six /seven
+/eight /nine /colon /semicolon
+/less /equal /greater /question
+/at /A /B /C /D /E /F /G
+/H /I /J /K /L /M /N /O
+/P /Q /R /S /T /U /V /W
+/X /Y /Z /bracketleft
+/backslash /bracketright /asciicircum /underscore
+/quoteleft /a /b /c /d /e /f /g
+/h /i /j /k /l /m /n /o
+/p /q /r /s /t /u /v /w
+/x /y /z /braceleft
+/bar /braceright /asciitilde /guilsinglright
+/fraction /florin /quotesingle /quotedblleft
+/guilsinglleft /fi /fl /endash
+/dagger /daggerdbl /bullet /quotesinglbase
+/quotedblbase /quotedblright /ellipsis /trademark
+/dotlessi /grave /acute /circumflex
+/tilde /macron /breve /dotaccent
+/dieresis /perthousand /ring /cedilla
+/Ydieresis /hungarumlaut /ogonek /caron
+/emdash /exclamdown /cent /sterling
+/currency /yen /brokenbar /section
+/dieresis /copyright /ordfeminine /guillemotleft
+/logicalnot /hyphen /registered /macron
+/degree /plusminus /twosuperior /threesuperior
+/acute /mu /paragraph /periodcentered
+/cedilla /onesuperior /ordmasculine /guillemotright
+/onequarter /onehalf /threequarters /questiondown
+/Agrave /Aacute /Acircumflex /Atilde
+/Adieresis /Aring /AE /Ccedilla
+/Egrave /Eacute /Ecircumflex /Edieresis
+/Igrave /Iacute /Icircumflex /Idieresis
+/Eth /Ntilde /Ograve /Oacute
+/Ocircumflex /Otilde /Odieresis /multiply
+/Oslash /Ugrave /Uacute /Ucircumflex
+/Udieresis /Yacute /Thorn /germandbls
+/agrave /aacute /acircumflex /atilde
+/adieresis /aring /ae /ccedilla
+/egrave /eacute /ecircumflex /edieresis
+/igrave /iacute /icircumflex /idieresis
+/eth /ntilde /ograve /oacute
+/ocircumflex /otilde /odieresis /divide
+/oslash /ugrave /uacute /ucircumflex
+/udieresis /yacute /thorn /ydieresis ] def
+/showcasedingbatencoding [
+/.notdef /.notdef /.notdef /.notdef
+/.notdef /.notdef /.notdef /.notdef
+/.notdef /.notdef /.notdef /.notdef
+/.notdef /.notdef /.notdef /.notdef
+/.notdef /.notdef /.notdef /.notdef
+/.notdef /.notdef /.notdef /.notdef
+/.notdef /.notdef /.notdef /.notdef
+/.notdef /.notdef /.notdef /.notdef
+/.notdef /a1 /a2 /a202 /a3 /a4 /a5 /a119 /a118 /a117
+/a11 /a12 /a13 /a14 /a15 /a16 /a105 /a17 /a18 /a19
+/a20 /a21 /a22 /a23 /a24 /a25 /a26 /a27 /a28 /a6 /a7
+/a8 /a9 /a10 /a29
+/a30 /a31 /a32 /a33 /a34 /a35 /a36 /a37 /a38 /a39
+/a40 /a41 /a42 /a43 /a44 /a45 /a46 /a47 /a48 /a49
+/a50 /a51 /a52 /a53 /a54 /a55 /a56 /a57 /a58 /a59
+/a60 /a61 /a62 /a63 /a64 /a65 /a66 /a67 /a68 /a69
+/a70 /a71 /a72 /a73 /a74 /a203 /a75 /a204 /a76 /a77 /a78
+/a79 /a81 /a82 /a83 /a84 /a97 /a98 /a99 /a100 /.notdef
+/a205 /a85 /a206 /a86 /a87 /a88 /a89 /a90 /a91 /a92 /a93
+/a94 /a95 /a96
+/.notdef /.notdef /.notdef /.notdef /.notdef /.notdef
+/.notdef /.notdef /.notdef /.notdef /.notdef /.notdef
+/.notdef /.notdef /.notdef /.notdef /.notdef /.notdef
+/.notdef /a101 /a102 /a103 /a104 /a106 /a107 /a108
+/a112 /a111 /a110 /a109
+/a120 /a121 /a122 /a123 /a124 /a125 /a126 /a127 /a128 /a129
+/a130 /a131 /a132 /a133 /a134 /a135 /a136 /a137 /a138 /a139
+/a140 /a141 /a142 /a143 /a144 /a145 /a146 /a147 /a148 /a149
+/a150 /a151 /a152 /a153 /a154 /a155 /a156 /a157 /a158 /a159
+/a160 /a161 /a163 /a164 /a196 /a165 /a192 /a166 /a167 /a168
+/a169 /a170 /a171 /a172 /a173 /a162 /a174 /a175 /a176 /a177
+/a178 /a179 /a193 /a180 /a199 /a181 /a200 /a182 /.notdef
+/a201 /a183 /a184 /a197 /a185 /a194 /a198 /a186 /a195 /a187
+/a188 /a189 /a190 /a191 /.notdef
+] def
+/Helvetica-Bold findfont
+dup length dict begin
+  {1 index /FID ne {def} {pop pop} ifelse} forall
+  /Encoding showcaseisoencoding def
+  currentdict
+end
+/Helvetica-Bold-SHOWISO exch definefont pop
+/newfont 10 dict def
+newfont begin
+
+ /FontType 3 def
+ /FontMatrix [1 0 0 1 0 0] def
+ /FontBBox [0 0 1 1] def
+ /Encoding 256 array def
+ 0 1 255 {Encoding exch /.notdef put} for
+
+ /CharProcs 1 dict def
+ CharProcs begin
+ /.notdef {} def
+
+end
+
+ /BuildChar {
+  1 0
+  0 0 1 1
+  setcachedevice
+  exch begin
+  Encoding exch get
+  CharProcs exch get
+  end
+  exec
+ } def
+end
+/PatternFont newfont definefont pop
+
+%%EndResource
+%%EndProlog
+%%BeginSetup
+%%EndSetup
+%%Page: label 1
+gsave
+/saveit save def
+gsave
+gsave
+gsave
+136.811 372.34 translate
+325.206 317.639 scale
+/ai {
+/ny exch def
+/nx exch def
+/y exch def
+/x exch def
+gsave
+x y translate
+nx  ny 0.050000 add scale
+nx ny 8
+[nx 0 0 ny neg 0 ny]
+/istr nx string def
+{currentfile istr readhexstring pop}
+image
+grestore
+} bind def
+gsave
+0.00307692 0.00315408 scale
+185 73 1 1 ai
+71
+187 75 2 1 ai
+7171
+189 76 1 1 ai
+71
+190 77 1 1 ai
+71
+191 78 1 1 ai
+71
+238 115 1 1 ai
+71
+236 114 2 1 ai
+7171
+235 113 1 1 ai
+71
+233 111 1 1 ai
+71
+231 110 2 1 ai
+7171
+229 108 1 1 ai
+71
+111 123 2 1 ai
+7171
+113 121 2 1 ai
+7171
+192 79 2 1 ai
+7171
+225 105 1 1 ai
+71
+116 119 2 1 ai
+7171
+223 103 1 1 ai
+71
+118 118 1 1 ai
+71
+221 102 2 1 ai
+7171
+219 100 1 1 ai
+71
+122 115 2 1 ai
+7171
+216 98 1 1 ai
+71
+125 113 2 1 ai
+7171
+214 96 1 1 ai
+71
+127 112 1 1 ai
+71
+212 95 2 1 ai
+7171
+210 93 1 1 ai
+71
+131 109 2 1 ai
+7171
+133 108 1 1 ai
+71
+206 90 1 1 ai
+71
+134 107 2 1 ai
+7171
+204 88 1 1 ai
+71
+136 106 1 1 ai
+71
+202 87 2 1 ai
+7171
+201 86 1 1 ai
+71
+140 103 2 1 ai
+7171
+199 84 1 1 ai
+71
+110 139 2 1 ai
+7171
+142 102 1 1 ai
+71
+194 80 1 1 ai
+71
+197 83 2 1 ai
+7171
+143 101 2 1 ai
+7171
+194 140 1 1 ai
+71
+145 100 1 1 ai
+71
+193 132 1 8 ai
+7171717171717171
+191 116 1 8 ai
+7171717171717171
+194 141 3 1 ai
+717171
+149 97 2 1 ai
+7171
+189 100 1 8 ai
+7171717171717171
+151 96 1 1 ai
+71
+187 84 1 8 ai
+7171717171717171
+185 75 1 1 ai
+71
+154 94 1 1 ai
+71
+184 74 3 1 ai
+717171
+182 75 2 1 ai
+7171
+195 81 1 1 ai
+71
+158 91 2 1 ai
+7171
+160 90 1 1 ai
+71
+178 78 1 1 ai
+71
+176 79 2 1 ai
+7171
+163 88 1 1 ai
+71
+172 82 1 1 ai
+71
+167 85 2 1 ai
+7171
+170 83 2 1 ai
+7171
+169 84 1 1 ai
+71
+196 82 1 1 ai
+71
+170 154 2 1 ai
+7171
+195 148 1 8 ai
+7171717171717171
+193 142 2 1 ai
+7171
+191 143 2 1 ai
+7171
+200 85 1 1 ai
+71
+189 144 2 1 ai
+7171
+201 138 1 1 ai
+71
+187 145 2 1 ai
+7171
+185 146 2 1 ai
+7171
+205 89 1 1 ai
+71
+206 135 2 1 ai
+7171
+181 76 1 1 ai
+71
+208 134 2 1 ai
+7171
+179 77 2 1 ai
+7171
+210 133 2 1 ai
+7171
+212 132 2 1 ai
+7171
+175 80 1 1 ai
+71
+173 81 2 1 ai
+7171
+215 97 1 1 ai
+71
+171 172 1 1 ai
+71
+217 99 2 1 ai
+7171
+169 155 1 5 ai
+7171717171
+219 128 2 1 ai
+7171
+167 154 2 1 ai
+7171
+171 173 2 1 ai
+7171
+220 101 1 1 ai
+71
+165 153 2 1 ai
+7171
+163 152 2 1 ai
+7171
+224 104 1 1 ai
+71
+161 89 2 1 ai
+7171
+226 106 2 1 ai
+7171
+227 124 2 1 ai
+7171
+157 92 1 1 ai
+71
+229 123 2 1 ai
+7171
+155 93 2 1 ai
+7171
+231 122 2 1 ai
+7171
+153 146 1 1 ai
+71
+233 121 2 1 ai
+7171
+151 145 2 1 ai
+7171
+234 112 1 1 ai
+71
+149 144 2 1 ai
+7171
+172 153 2 1 ai
+7171
+236 119 2 1 ai
+7171
+147 143 2 1 ai
+7171
+238 118 2 1 ai
+7171
+145 142 2 1 ai
+7171
+240 117 1 1 ai
+71
+143 141 2 1 ai
+7171
+241 118 1 5 ai
+7171717171
+243 127 1 5 ai
+7171717171
+139 104 1 1 ai
+71
+245 137 1 4 ai
+71717171
+137 105 2 1 ai
+7171
+246 141 1 5 ai
+7171717171
+248 151 1 5 ai
+7171717171
+133 135 1 1 ai
+71
+250 160 1 5 ai
+7171717171
+130 110 1 1 ai
+71
+252 170 1 4 ai
+71717171
+128 111 2 1 ai
+7171
+253 174 1 5 ai
+7171717171
+255 184 1 5 ai
+7171717171
+124 114 1 1 ai
+71
+173 172 2 1 ai
+7171
+256 189 1 4 ai
+71717171
+122 129 1 1 ai
+71
+254 179 1 5 ai
+7171717171
+120 128 2 1 ai
+7171
+251 165 1 5 ai
+7171717171
+118 127 2 1 ai
+7171
+248 191 2 1 ai
+7171
+116 126 2 1 ai
+7171
+246 190 2 1 ai
+7171
+114 125 2 1 ai
+7171
+243 188 2 1 ai
+7171
+112 122 1 1 ai
+71
+241 187 2 1 ai
+7171
+110 140 1 63 ai
+7171717171717171717171717171717171717171717171717171717171717171717171
+71717171717171717171717171717171717171717171717171717171
+238 185 2 1 ai
+7171
+110 203 2 1 ai
+7171
+235 120 1 1 ai
+71
+113 124 1 1 ai
+71
+233 182 1 1 ai
+71
+116 200 2 1 ai
+7171
+230 109 1 1 ai
+71
+118 199 2 1 ai
+7171
+228 107 1 1 ai
+71
+121 116 1 1 ai
+71
+174 152 2 1 ai
+7171
+225 125 2 1 ai
+7171
+124 196 2 1 ai
+7171
+223 126 2 1 ai
+7171
+126 195 2 1 ai
+7171
+220 175 2 1 ai
+7171
+129 133 2 1 ai
+7171
+217 173 2 1 ai
+7171
+215 172 2 1 ai
+7171
+135 191 2 1 ai
+7171
+212 170 1 1 ai
+71
+137 190 2 1 ai
+7171
+210 169 2 1 ai
+7171
+140 139 2 1 ai
+7171
+207 91 2 1 ai
+7171
+143 187 2 1 ai
+7171
+204 136 2 1 ai
+7171
+145 186 2 1 ai
+7171
+202 137 2 1 ai
+7171
+148 98 1 1 ai
+71
+199 139 2 1 ai
+7171
+151 183 2 1 ai
+7171
+197 140 2 1 ai
+7171
+154 147 2 1 ai
+7171
+175 171 2 1 ai
+7171
+194 143 1 5 ai
+7171717171
+156 148 2 1 ai
+7171
+191 163 2 1 ai
+7171
+159 179 2 1 ai
+7171
+189 164 2 1 ai
+7171
+162 151 1 1 ai
+71
+186 76 1 8 ai
+7171717171717171
+164 87 2 1 ai
+7171
+184 147 1 1 ai
+71
+167 175 2 1 ai
+7171
+181 168 2 1 ai
+7171
+170 160 1 12 ai
+717171717171717171717171
+178 150 2 1 ai
+7171
+173 196 1 12 ai
+717171717171717171717171
+175 220 1 7 ai
+71717171717171
+110 204 3 1 ai
+717171
+111 124 1 15 ai
+717171717171717171717171717171
+112 202 2 1 ai
+7171
+113 205 3 1 ai
+717171
+114 201 2 1 ai
+7171
+115 120 1 1 ai
+71
+116 206 2 1 ai
+7171
+118 207 3 1 ai
+717171
+119 117 2 1 ai
+7171
+120 198 2 1 ai
+7171
+121 208 3 1 ai
+717171
+122 197 2 1 ai
+7171
+123 130 2 1 ai
+7171
+124 209 2 1 ai
+7171
+125 131 2 1 ai
+7171
+126 210 3 1 ai
+717171
+127 132 2 1 ai
+7171
+128 194 2 1 ai
+7171
+129 211 3 1 ai
+717171
+130 193 3 1 ai
+717171
+131 134 2 1 ai
+7171
+132 212 3 1 ai
+717171
+133 192 2 1 ai
+7171
+134 136 2 1 ai
+7171
+135 213 2 1 ai
+7171
+136 137 2 1 ai
+7171
+137 214 3 1 ai
+717171
+138 138 2 1 ai
+7171
+139 189 2 1 ai
+7171
+140 215 3 1 ai
+717171
+141 188 2 1 ai
+7171
+142 140 1 1 ai
+71
+143 216 2 1 ai
+7171
+145 217 3 1 ai
+717171
+146 99 2 1 ai
+7171
+147 185 2 1 ai
+7171
+148 218 3 1 ai
+717171
+149 184 2 1 ai
+7171
+151 219 3 1 ai
+717171
+152 95 2 1 ai
+7171
+153 182 2 1 ai
+7171
+154 220 2 1 ai
+7171
+155 181 2 1 ai
+7171
+156 221 3 1 ai
+717171
+157 180 2 1 ai
+7171
+158 149 2 1 ai
+7171
+159 222 3 1 ai
+717171
+160 150 2 1 ai
+7171
+161 178 2 1 ai
+7171
+162 223 2 1 ai
+7171
+163 177 2 1 ai
+7171
+164 224 3 1 ai
+717171
+165 176 2 1 ai
+7171
+166 86 1 1 ai
+71
+167 225 3 1 ai
+717171
+169 174 3 1 ai
+717171
+170 226 3 1 ai
+717171
+171 175 1 9 ai
+717171717171717171
+172 184 1 12 ai
+717171717171717171717171
+173 227 5 1 ai
+7171717171
+174 208 1 12 ai
+717171717171717171717171
+175 228 1 1 ai
+71
+176 151 2 1 ai
+7171
+177 170 2 1 ai
+7171
+178 226 3 1 ai
+717171
+179 169 2 1 ai
+7171
+180 149 2 1 ai
+7171
+181 225 3 1 ai
+717171
+182 148 2 1 ai
+7171
+183 167 2 1 ai
+7171
+184 224 2 1 ai
+7171
+185 166 2 1 ai
+7171
+186 223 3 1 ai
+717171
+187 165 2 1 ai
+7171
+188 92 1 8 ai
+7171717171717171
+189 222 2 1 ai
+7171
+190 108 1 8 ai
+7171717171717171
+191 221 3 1 ai
+717171
+192 124 1 8 ai
+7171717171717171
+193 162 2 1 ai
+7171
+194 220 3 1 ai
+717171
+195 161 3 1 ai
+717171
+196 156 1 5 ai
+7171717171
+197 219 2 1 ai
+7171
+198 162 2 1 ai
+7171
+199 218 3 1 ai
+717171
+200 163 1 1 ai
+71
+201 164 2 1 ai
+7171
+202 217 2 1 ai
+7171
+203 165 2 1 ai
+7171
+204 216 3 1 ai
+717171
+205 166 1 1 ai
+71
+206 167 2 1 ai
+7171
+207 215 3 1 ai
+717171
+208 168 2 1 ai
+7171
+209 92 1 1 ai
+71
+210 214 2 1 ai
+7171
+211 94 1 1 ai
+71
+212 213 3 1 ai
+717171
+213 171 2 1 ai
+7171
+214 131 2 1 ai
+7171
+215 212 2 1 ai
+7171
+216 130 2 1 ai
+7171
+217 211 3 1 ai
+717171
+218 129 1 1 ai
+71
+219 174 1 1 ai
+71
+220 210 3 1 ai
+717171
+221 127 2 1 ai
+7171
+222 176 2 1 ai
+7171
+223 209 2 1 ai
+7171
+224 177 2 1 ai
+7171
+225 208 3 1 ai
+717171
+226 178 1 1 ai
+71
+227 179 2 1 ai
+7171
+228 207 2 1 ai
+7171
+229 180 2 1 ai
+7171
+230 206 3 1 ai
+717171
+231 181 2 1 ai
+7171
+233 205 2 1 ai
+7171
+234 183 2 1 ai
+7171
+235 204 3 1 ai
+717171
+236 184 2 1 ai
+7171
+238 203 3 1 ai
+717171
+239 116 1 1 ai
+71
+240 186 1 1 ai
+71
+241 202 2 1 ai
+7171
+242 123 1 4 ai
+71717171
+243 201 3 1 ai
+717171
+244 132 1 5 ai
+7171717171
+245 189 1 1 ai
+71
+246 200 2 1 ai
+7171
+247 146 1 5 ai
+7171717171
+248 199 3 1 ai
+717171
+249 156 1 4 ai
+71717171
+250 192 2 1 ai
+7171
+251 198 3 1 ai
+717171
+252 193 1 1 ai
+71
+253 194 2 1 ai
+7171
+254 197 2 1 ai
+7171
+255 195 3 1 ai
+717171
+256 196 2 1 ai
+7171
+257 193 1 2 ai
+7171
+grestore
+grestore
+grestore
+gsave
+gsave
+matrix currentmatrix
+[0.650412 0 0 0.635277 281.025 512.004] concat
+newpath
+0 0 M 0 14 L 6.662 14 L 6.662 0 L
+closepath setmatrix
+0 0 0 setrgbcolor
+grestore
+newpath
+279.887 510.892 M 279.887 522.467 L 286.496 522.467 L 286.496 510.892 L
+closepath clip newpath
+0 0 0 setrgbcolor
+matrix currentmatrix
+[0.650412 0 0 0.635277 281.025 512.004] concat
+/Helvetica-Bold-SHOWISO findfont 14 scalefont setfont
+0 0 0 setrgbcolor
+0 2.47059 M (f) 4.662 S
+setmatrix
+grestore
+gsave
+gsave
+matrix currentmatrix
+[0.650412 0 0 0.635277 336.606 540.879] concat
+newpath
+0 0 M 0 14 L 18.338 14 L 18.338 0 L
+closepath setmatrix
+0 0 0 setrgbcolor
+grestore
+newpath
+335.468 539.767 M 335.468 551.342 L 349.671 551.342 L 349.671 539.767 L
+closepath clip newpath
+0 0 0 setrgbcolor
+matrix currentmatrix
+[0.650412 0 0 0.635277 336.606 540.879] concat
+/Helvetica-Bold-SHOWISO findfont 14 scalefont setfont
+0 0 0 setrgbcolor
+0 2.47059 M (bk) 16.338 S
+setmatrix
+grestore
+gsave
+matrix currentmatrix
+[123.578 0 0 -92.4039 246.628 725.646] concat
+B
+setmatrix
+0 0 0 setrgbcolor
+0.500000 setlinewidth
+gsave stroke grestore
+grestore
+gsave
+gsave
+matrix currentmatrix
+[0.707777 0 0 0.635277 299.527 621.848] concat
+newpath
+0 0 M 0 14 L 10.554 14 L 10.554 0 L
+closepath setmatrix
+0 0 0 setrgbcolor
+grestore
+newpath
+298.288 620.736 M 298.288 632.311 L 308.235 632.311 L 308.235 620.736 L
+closepath clip newpath
+0 0 0 setrgbcolor
+matrix currentmatrix
+[0.707777 0 0 0.635277 299.527 621.848] concat
+/Helvetica-Bold-SHOWISO findfont 14 scalefont setfont
+0 0 0 setrgbcolor
+0 2.47059 M (b) 8.554 S
+setmatrix
+grestore
+gsave
+gsave
+matrix currentmatrix
+[0.650412 0 0 0.635277 217.087 680.754] concat
+newpath
+0 0 M 0 14 L 9.784 14 L 9.784 0 L
+closepath setmatrix
+0 0 0 setrgbcolor
+grestore
+newpath
+215.949 679.642 M 215.949 691.217 L 224.589 691.217 L 224.589 679.642 L
+closepath clip newpath
+0 0 0 setrgbcolor
+matrix currentmatrix
+[0.650412 0 0 0.635277 217.087 680.754] concat
+/Helvetica-Bold-SHOWISO findfont 14 scalefont setfont
+0 0 0 setrgbcolor
+0 2.47059 M ( l) 7.784 S
+setmatrix
+grestore
+gsave
+gsave
+matrix currentmatrix
+[0.650412 0 0 0.635277 299.031 731.152] concat
+newpath
+0 0 M 0 14 L 6.662 14 L 6.662 0 L
+closepath setmatrix
+0 0 0 setrgbcolor
+grestore
+newpath
+297.73 729.882 M 297.73 741.616 L 304.665 741.616 L 304.665 729.882 L
+closepath clip newpath
+0 0 0 setrgbcolor
+matrix currentmatrix
+[0.650412 0 0 0.635277 299.031 731.152] concat
+/Helvetica-Bold-SHOWISO findfont 14 scalefont setfont
+0 0 0 setrgbcolor
+0 2.47059 M (t) 4.662 S
+setmatrix
+grestore
+gsave
+gsave
+matrix currentmatrix
+[0.75262 0 0 0.635277 376.08 678.426] concat
+newpath
+0 0 M 0 14 L 7.446 14 L 7.446 0 L
+closepath setmatrix
+0 0 0 setrgbcolor
+grestore
+newpath
+374.575 677.155 M 374.575 688.889 L 383.19 688.889 L 383.19 677.155 L
+closepath clip newpath
+0 0 0 setrgbcolor
+matrix currentmatrix
+[0.75262 0 0 0.635277 376.08 678.426] concat
+/Helvetica-Bold-SHOWISO findfont 14 scalefont setfont
+0 0 0 setrgbcolor
+0 2.47059 M (r) 5.446 S
+setmatrix
+grestore
+gsave
+gsave
+matrix currentmatrix
+[0.650412 0 0 0.635277 454.768 685.504] concat
+newpath
+0 0 M 0 14 L 9.784 14 L 9.784 0 L
+closepath setmatrix
+0 0 0 setrgbcolor
+grestore
+newpath
+453.468 684.233 M 453.468 695.967 L 462.433 695.967 L 462.433 684.233 L
+closepath clip newpath
+0 0 0 setrgbcolor
+matrix currentmatrix
+[0.650412 0 0 0.635277 454.768 685.504] concat
+/Helvetica-Bold-SHOWISO findfont 14 scalefont setfont
+0 0 0 setrgbcolor
+0 2.47059 M (a) 7.784 S
+setmatrix
+grestore
+gsave
+gsave
+matrix currentmatrix
+[0.650412 0 0 0.635277 454.768 535.859] concat
+newpath
+0 0 M 0 14 L 10.554 14 L 10.554 0 L
+closepath setmatrix
+0 0 0 setrgbcolor
+grestore
+newpath
+453.467 534.589 M 453.467 546.323 L 462.933 546.323 L 462.933 534.589 L
+closepath clip newpath
+0 0 0 setrgbcolor
+matrix currentmatrix
+[0.650412 0 0 0.635277 454.768 535.859] concat
+/Helvetica-Bold-SHOWISO findfont 14 scalefont setfont
+0 0 0 setrgbcolor
+0 2.47059 M (b) 8.554 S
+setmatrix
+grestore
+gsave
+1.000000 setlinewidth
+matrix currentmatrix
+[40.6351 0 0 40.6351 309.412 681.176] concat
+0 0 0 setrgbcolor
+newpath
+0 0 1 231.45 90 arc
+setmatrix stroke
+grestore
+gsave
+0 setlinejoin
+283.278 650.043 translate
+141.434 rotate
+1.1 1.1 scale
+newpath 0 0 M -10 -3 L -10 3 L closepath fill
+grestore
+gsave
+gsave
+matrix currentmatrix
+[1 0 0 1 291 677.531] concat
+newpath
+0 0 M 0 14 L 33.136 14 L 33.136 0 L
+closepath setmatrix
+0 0 0 setrgbcolor
+grestore
+newpath
+289 675.531 M 289 694.002 L 326.136 694.002 L 326.136 675.531 L
+closepath clip newpath
+0 0 0 setrgbcolor
+matrix currentmatrix
+[1 0 0 1 291 677.531] concat
+/Helvetica-Bold-SHOWISO findfont 14 scalefont setfont
+0 0 0 setrgbcolor
+0 2.47059 M (i, j, k) 31.136 S
+setmatrix
+grestore
+grestore
+showpage
+saveit restore
+grestore
+%%EOF

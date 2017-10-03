@@ -1,0 +1,85 @@
+#!/bin/bash
+
+#______________________________________________________________________
+#  This script performs bulletproofing checks and calls
+#  the perl script compare_dat_files which does the actual comparison.
+# 
+#   exit return values:
+#     -1:   no dat files to compare
+#      0:   The dat files are withn allowable errors
+#      1:   - Error occured and dats cannot be compared
+#           - Comparison failed
+#______________________________________________________________________
+
+
+test_uda=$1
+compare_uda=$2
+abs_tol=$3  # Absolute tolerance
+rel_tol=$4  # Relative tolerance
+
+if [ ! -d "$test_uda" ]; then
+  echo "$test_uda doesn't exist"
+  exit 1
+fi  
+if [ ! -d "$compare_uda" ]; then
+  echo "$compare_uda doesn't exist"
+  exit 1
+fi
+
+#__________________________________
+# do both uda have dat files?
+ls -1 $test_uda/*.dat >/dev/null 2>&1
+retval=$?
+echo
+if [ $retval != "0" ]; then
+  # $test_uda has no dat files
+  ls -1 $compare_uda/*.dat >/dev/null 2>&1
+  retval=$?
+  echo
+  if [ $retval != "0" ]; then
+    # $compare_uda has no dat files either
+    echo "No dat files to compare"
+    exit -1
+  else
+    # $compare_uda does have at least one dat file so
+    # there is no excuse for $test_uda for not having any.
+    echo "The new uda directory has no dat files, but the old one does"
+    exit 1
+  fi
+fi
+
+
+#__________________________________
+# perform comparison
+WD=`pwd`
+cd $test_uda
+dats=`ls -1 *.dat`
+testdat=`ls -1 *.dat | head -n 1`
+cd $WD
+
+#echo "compare_dat_files.pl $abs_tol $rel_tol $test_uda/ $compare_uda/ $dats"
+
+compare_dat_files.pl $abs_tol $rel_tol $test_uda/ $compare_uda/ $dats
+
+retval=$?
+
+newcount="0"
+oldcount="0"
+
+#__________________________________
+if [ $retval = "0" ]; then
+  newcount=`grep -c '\0' $test_uda/$testdat`
+  oldcount=`grep -c '\0' $compare_uda/$testdat`
+
+  if [ $newcount != $oldcount ]; then
+      cat <<EOF
+There is a discrepancy in the line count of the dat files.
+There are $newcount lines in the new $testdat and
+          $oldcount lines in the old $testdat.
+This could simply be a result of a change to the timestep size.
+EOF
+  fi
+fi
+
+exit $retval
+

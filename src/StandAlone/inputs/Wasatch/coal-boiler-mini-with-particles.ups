@@ -1,0 +1,1101 @@
+<Uintah_specification>
+
+  <Meta>
+    <title> Flow past various objects in the xy plane </title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+   <Solver type="hypre"/>
+  <Wasatch>
+
+
+  <TimeIntegrator>FE</TimeIntegrator>
+    <Density method="CONSTANT">
+      <Constant value="1.0" name="density"/>
+    </Density>
+
+    <Turbulence model="SMAGORINSKY">
+      <EddyViscosityCoefficient>0.7</EddyViscosityCoefficient>
+    	<TurbulentSchmidt>1.0</TurbulentSchmidt>
+    </Turbulence>
+
+    <!-- Set the initial condition for cell centered scalar -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi-scalar"/>
+      <Constant>0.0</Constant>
+    </BasicExpression>
+    
+	<EmbeddedGeometry>
+
+    <!-- z-, y- -->
+	  <Intrusion>
+		<geom_object>
+		  <difference>
+			<union>
+			  <parallelepiped label="wbblock_ym">
+				<p1>[0.200,0.150,0.000]</p1>
+				<p2>[0.600,0.150,0.000]</p2>
+				<p3>[0.200,0.000,0.000]</p3>
+				<p4>[0.200,0.000,0.174]</p4>
+			  </parallelepiped>
+			  <parallelepiped label="sofablock_ym">
+				<p1>[0.700,0.150,0.000]</p1>
+				<p2>[0.900,0.150,0.000]</p2>
+				<p3>[0.700,0.000,0.000]</p3>
+				<p4>[0.700,0.000,0.174]</p4>
+			  </parallelepiped>
+			</union>
+			<union>
+			  <parallelepiped label="coalburner-1_burner_ym">
+				<p1>[0.300,0.117,0.053]</p1>
+				<p2>[0.350,0.117,0.053]</p2>
+				<p3>[0.300,0.067,0.112]</p3>
+				<p4>[0.300,0.000,-0.047]</p4>
+			  </parallelepiped>
+			  <parallelepiped label="secondary-1_burner_ym">
+				<p1>[0.450,0.113,0.058]</p1>
+				<p2>[0.490,0.113,0.058]</p2>
+				<p3>[0.450,0.071,0.106]</p3>
+				<p4>[0.450,0.000,-0.039]</p4>
+			  </parallelepiped>
+			  <parallelepiped label="secondary-2_burner_ym">
+				<p1>[0.280,0.117,0.053]</p1>
+				<p2>[0.290,0.117,0.053]</p2>
+				<p3>[0.280,0.067,0.112]</p3>
+				<p4>[0.280,0.000,-0.047]</p4>
+			  </parallelepiped>
+			  <parallelepiped label="secondary-3_burner_ym">
+				<p1>[0.360,0.117,0.053]</p1>
+				<p2>[0.370,0.117,0.053]</p2>
+				<p3>[0.360,0.067,0.112]</p3>
+				<p4>[0.360,0.000,-0.047]</p4>
+			  </parallelepiped>
+			  <parallelepiped label="sofa-1_burner_ym">
+				<p1>[0.800,0.126,0.044]</p1>
+				<p2>[0.860,0.126,0.044]</p2>
+				<p3>[0.800,0.057,0.124]</p3>
+				<p4>[0.800,0.000,-0.065]</p4>
+			  </parallelepiped>
+			</union>
+		  </difference>
+		</geom_object>
+	  </Intrusion>
+
+		<!-- y+, z+ -->
+	  <Intrusion>
+
+		<geom_object>
+		  <difference>
+			<union>
+			  <parallelepiped label="wbblock_yp">
+				<p1>[0.200,0.690,1.000]</p1>
+				<p2>[0.600,0.690,1.000]</p2>
+				<p3>[0.200,0.840,1.000]</p3>
+				<p4>[0.200,0.840,0.826]</p4>
+			  </parallelepiped>
+			  <parallelepiped label="sofablock_yp">
+				<p1>[0.700,0.690,1.000]</p1>
+				<p2>[0.900,0.690,1.000]</p2>
+				<p3>[0.700,0.840,1.000]</p3>
+				<p4>[0.700,0.840,0.826]</p4>
+			  </parallelepiped>
+			</union>
+			<union>
+			  <parallelepiped label="coalburner-1_burner_yp">
+				<p1>[0.300,0.723,0.947]</p1>
+				<p2>[0.350,0.723,0.947]</p2>
+				<p3>[0.300,0.773,0.888]</p3>
+				<p4>[0.300,0.840,1.047]</p4>
+			  </parallelepiped>
+			  <parallelepiped label="secondary-1_burner_yp">
+				<p1>[0.450,0.727,0.942]</p1>
+				<p2>[0.490,0.727,0.942]</p2>
+				<p3>[0.450,0.769,0.894]</p3>
+				<p4>[0.450,0.840,1.039]</p4>
+			  </parallelepiped>
+			  <parallelepiped label="secondary-2_burner_yp">
+				<p1>[0.280,0.723,0.947]</p1>
+				<p2>[0.290,0.723,0.947]</p2>
+				<p3>[0.280,0.773,0.888]</p3>
+				<p4>[0.280,0.840,1.047]</p4>
+			  </parallelepiped>
+			  <parallelepiped label="secondary-3_burner_yp">
+				<p1>[0.360,0.723,0.947]</p1>
+				<p2>[0.370,0.723,0.947]</p2>
+				<p3>[0.360,0.773,0.888]</p3>
+				<p4>[0.360,0.840,1.047]</p4>
+			  </parallelepiped>
+			  <parallelepiped label="sofa-1_burner_yp">
+				<p1>[0.800,0.714,0.956]</p1>
+				<p2>[0.860,0.714,0.956]</p2>
+				<p3>[0.800,0.783,0.876]</p3>
+				<p4>[0.800,0.840,1.065]</p4>
+			  </parallelepiped>
+			</union>
+		  </difference>
+		</geom_object>
+	  </Intrusion>
+
+		<!-- y+, z- -->
+	  <Intrusion>
+		<geom_object>
+		  <difference>
+			<union>
+			  <parallelepiped label="wbblock_zm">
+				<p1>[0.200,0.652,0.000]</p1>
+				<p2>[0.600,0.652,0.000]</p2>
+				<p3>[0.200,0.840,0.000]</p3>
+				<p4>[0.200,0.840,0.133]</p4>
+			  </parallelepiped>
+			  <parallelepiped label="sofablock_zm">
+				<p1>[0.700,0.652,0.000]</p1>
+				<p2>[0.900,0.652,0.000]</p2>
+				<p3>[0.700,0.840,0.000]</p3>
+				<p4>[0.700,0.840,0.133]</p4>
+			  </parallelepiped>
+			</union>
+			<union>
+			  <parallelepiped label="coalburner-1_burner_zm">
+				<p1>[0.300,0.798,0.115]</p1>
+				<p2>[0.350,0.798,0.115]</p2>
+				<p3>[0.300,0.735,0.070]</p3>
+				<p4>[0.300,0.879,0.000]</p4>
+			  </parallelepiped>
+			  <parallelepiped label="secondary-1_burner_zm">
+				<p1>[0.450,0.793,0.111]</p1>
+				<p2>[0.490,0.793,0.111]</p2>
+				<p3>[0.450,0.742,0.075]</p3>
+				<p4>[0.450,0.872,0.000]</p4>
+			  </parallelepiped>
+			  <parallelepiped label="secondary-2_burner_zm">
+				<p1>[0.280,0.798,0.115]</p1>
+				<p2>[0.290,0.798,0.115]</p2>
+				<p3>[0.280,0.735,0.070]</p3>
+				<p4>[0.280,0.879,0.000]</p4>
+			  </parallelepiped>
+			  <parallelepiped label="secondary-3_burner_zm">
+				<p1>[0.360,0.798,0.115]</p1>
+				<p2>[0.370,0.798,0.115]</p2>
+				<p3>[0.360,0.735,0.070]</p3>
+				<p4>[0.360,0.879,0.000]</p4>
+			  </parallelepiped>
+			  <parallelepiped label="sofa-1_burner_zm">
+				<p1>[0.800,0.807,0.121]</p1>
+				<p2>[0.860,0.807,0.121]</p2>
+				<p3>[0.800,0.722,0.061]</p3>
+				<p4>[0.800,0.893,0.000]</p4>
+			  </parallelepiped>
+			</union>
+		  </difference>
+		</geom_object>
+	  </Intrusion>
+
+		<!-- z+, y- -->
+	  <Intrusion>
+		<geom_object>
+		  <difference>
+			<union>
+			  <parallelepiped label="wbblock_zp">
+				<p1>[0.200,0.188,1.000]</p1>
+				<p2>[0.600,0.188,1.000]</p2>
+				<p3>[0.200,0.000,1.000]</p3>
+				<p4>[0.200,0.000,0.867]</p4>
+			  </parallelepiped>
+			  <parallelepiped label="sofablock_zp">
+				<p1>[0.700,0.188,1.000]</p1>
+				<p2>[0.900,0.188,1.000]</p2>
+				<p3>[0.700,0.000,1.000]</p3>
+				<p4>[0.700,0.000,0.867]</p4>
+			  </parallelepiped>
+			</union>
+			<union>
+			  <parallelepiped label="coalburner-1_burner_zp">
+				<p1>[0.300,0.042,0.885]</p1>
+				<p2>[0.350,0.042,0.885]</p2>
+				<p3>[0.300,0.105,0.930]</p3>
+				<p4>[0.300,-0.039,1.000]</p4>
+			  </parallelepiped>
+			  <parallelepiped label="secondary-1_burner_zp">
+				<p1>[0.450,0.047,0.889]</p1>
+				<p2>[0.490,0.047,0.889]</p2>
+				<p3>[0.450,0.098,0.925]</p3>
+				<p4>[0.450,-0.032,1.000]</p4>
+			  </parallelepiped>
+			  <parallelepiped label="secondary-2_burner_zp">
+				<p1>[0.280,0.042,0.885]</p1>
+				<p2>[0.290,0.042,0.885]</p2>
+				<p3>[0.280,0.105,0.930]</p3>
+				<p4>[0.280,-0.039,1.000]</p4>
+			  </parallelepiped>
+			  <parallelepiped label="secondary-3_burner_zp">
+				<p1>[0.360,0.042,0.885]</p1>
+				<p2>[0.370,0.042,0.885]</p2>
+				<p3>[0.360,0.105,0.930]</p3>
+				<p4>[0.360,-0.039,1.000]</p4>
+			  </parallelepiped>
+			  <parallelepiped label="sofa-1_burner_zp">
+				<p1>[0.800,0.033,0.879]</p1>
+				<p2>[0.860,0.033,0.879]</p2>
+				<p3>[0.800,0.118,0.939]</p3>
+				<p4>[0.800,-0.053,1.000]</p4>
+			  </parallelepiped>
+			</union>
+		  </difference>
+		</geom_object>
+	  </Intrusion>
+
+	</EmbeddedGeometry>
+
+
+    <!-- Build a cell-centered scalar transport equation -->
+    <TransportEquation equation="generic">
+      <SolutionVariable>phi-scalar</SolutionVariable>
+      <ConvectiveFlux direction="X" method="UPWIND">
+        <AdvectiveVelocity>
+          <NameTag name="u"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+      <ConvectiveFlux direction="Y" method="UPWIND">
+        <AdvectiveVelocity>
+          <NameTag name="v"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+      <ConvectiveFlux direction="Z" method="UPWIND">
+        <AdvectiveVelocity>
+          <NameTag name="w"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+      <DiffusiveFlux direction="X" coefficient="0.0001"/>
+      <DiffusiveFlux direction="Y" coefficient="0.0001"/>
+      <DiffusiveFlux direction="Z" coefficient="0.0001"/>
+    </TransportEquation>
+    <!-- Set the initial condition expression for x-momentum -->
+    <BasicExpression type="XVOL">
+       <TaskList>initialization</TaskList>
+       <NameTag name="u"/>
+       <Constant>0.0</Constant>
+    </BasicExpression>
+
+    <BasicExpression type="YVOL">
+       <TaskList>initialization</TaskList>
+       <NameTag name="v"/>
+       <Constant>0.0</Constant>
+    </BasicExpression>
+
+    <BasicExpression type="ZVOL">
+       <TaskList>initialization</TaskList>
+       <NameTag name="w"/>
+       <Constant>0.0</Constant>
+    </BasicExpression>
+               
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="viscosity"/>
+      <Constant>0.000030</Constant>
+    </BasicExpression>
+
+
+    <!-- Momentum transport equations -->
+    <MomentumEquations>
+ 	
+      <X-Velocity>u</X-Velocity>
+      <X-Momentum>x-mom</X-Momentum>
+      <Y-Velocity>v</Y-Velocity>
+      <Y-Momentum>y-mom</Y-Momentum>
+      <Z-Velocity>w</Z-Velocity>
+      <Z-Momentum>z-mom</Z-Momentum>      
+      <Viscosity>
+        <NameTag name="viscosity"/>
+      </Viscosity>
+      
+      <Pressure>
+        <Parameters>
+            <solver>         cg      </solver>
+            <preconditioner> pfmg    </preconditioner>
+            <tolerance>      1e-11  </tolerance>
+            <maxiterations>  400    </maxiterations>
+           </Parameters>
+      </Pressure>
+  </MomentumEquations>
+
+
+
+
+    <ParticleTransportEquations>
+      <ParticlesPerCell>0</ParticlesPerCell>
+      <ParticleDensity name="p.rho"/>
+      <ParticleMass name="p.m" state="STATE_DYNAMIC">
+        <SourceTerm name="nothing"/>
+      </ParticleMass>
+      <ParticleSize name="p.size" state="STATE_DYNAMIC">
+        <SourceTerm name="nothing"/>
+      </ParticleSize>
+      <ParticlePosition x="p.xw" y="p.yw" z="p.zw">
+        <Velocity>
+          <XVel name="p.u" state="STATE_DYNAMIC"/>
+          <YVel name="p.v" state="STATE_DYNAMIC"/>
+          <ZVel name="p.w" state="STATE_DYNAMIC"/>
+        </Velocity>
+      </ParticlePosition>
+      <ParticleMomentum x="p.u" y="p.v" z="p.w">
+        <DisableTwoWayCoupling/>
+<!--         <Gravity direction="Z"/> -->
+        <GasProperties>
+          <GasViscosity name="viscosity"/>
+          <GasDensity name="density"/>
+          <GasVelocity>
+            <XVel name="u"/>
+            <YVel name="v"/>
+            <ZVel name="w"/>
+          </GasVelocity>
+        </GasProperties>
+      </ParticleMomentum>
+    </ParticleTransportEquations>
+    <BasicExpression type="PARTICLE">
+      <TaskList>initialization</TaskList>
+      <NameTag name="p.size"/>
+      <RandomField low="0.01" high="0.02" seed="11"/>
+    </BasicExpression>
+    <BasicExpression type="PARTICLE">
+      <TaskList>initialization</TaskList>
+      <NameTag name="p.rho"/>
+      <Constant>1000</Constant>
+    </BasicExpression>
+    <BasicExpression type="PARTICLE">
+      <TaskList>initialization</TaskList>
+      <NameTag name="p.zw"/>
+      <Constant>0.0</Constant>
+    </BasicExpression>
+    <BasicExpression type="PARTICLE">
+      <TaskList>initialization</TaskList>
+      <NameTag name="p.yw"/>
+      <Constant>0.0</Constant>
+    </BasicExpression>
+    <BasicExpression type="PARTICLE">
+      <TaskList>initialization</TaskList>
+      <NameTag name="p.xw"/>
+      <Constant>0.0</Constant>
+    </BasicExpression>
+    <BasicExpression type="PARTICLE">
+      <TaskList>initialization</TaskList>
+      <NameTag name="p.u"/>
+      <RandomField low="-3" high="3" seed="12"/>      
+    </BasicExpression>
+    <BasicExpression type="PARTICLE">
+      <TaskList>initialization</TaskList>
+      <NameTag name="p.v"/>
+      	<RandomField low="-3" high="3" seed="45"/>      
+    </BasicExpression>
+    <BasicExpression type="PARTICLE">
+      <TaskList>initialization</TaskList>
+      <NameTag name="p.w"/>
+      <RandomField low="-3" high="3" seed="56"/>            
+    </BasicExpression>
+
+
+  </Wasatch>
+
+
+  <Time>
+    <maxTime>1000</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>1e-8</delt_min>
+    <delt_max>1e-5</delt_max>
+<!--     <max_Timesteps>2</max_Timesteps> -->
+    <timestep_multiplier>0.2</timestep_multiplier>
+  </Time>
+
+
+  <DataArchiver>
+    <filebase>coal-boiler-mini_no_intrusions---.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle="2" interval="1e-5"/>
+		<save label="svolFraction"/>    
+		<save label="p.x"/>    
+		<save label="p.size"/>    
+		<save label="p.particleID"/>    		
+		<save label="xvolFraction"/>    
+		<save label="yvolFraction"/>            
+		<save label="zvolFraction"/>            		
+    <save label="x-mom"/> 
+    <save label="TurbulentViscosity"/>
+    <save label="viscosity"/>
+    <save label="phi-scalar"/>   
+    <save label="y-mom"/> 
+    <save label="z-mom"/>           		
+    <save label="u"/>
+    <save label="v"/>    
+    <save label="w"/>     
+    <save label="pressure"/>
+<!--     <save label="dilatation"/> -->
+  </DataArchiver> 
+
+  <Grid>
+    <BoundaryConditions>
+      <DefaultMaterial>all</DefaultMaterial>
+      <Face side="x-" name="x- face" type="Wall">
+      	<ParticleBC><Wall walltype="Elastic"/></ParticleBC>      
+        <BCType label="phi-scalar" var="Dirichlet" value="0.0"/>
+      </Face>
+
+      <Face side="x+" name="x+ face" type="Wall">
+        <ParticleBC><Wall walltype="Elastic"/></ParticleBC>      
+        <BCType label="phi-scalar" var="Dirichlet" value="0.0"/>
+			</Face>
+
+      <Face side="y-" name="y- face" type="Wall">
+        <ParticleBC><Wall walltype="Elastic"/></ParticleBC>            
+        <BCType label="phi-scalar" var="Dirichlet" value="0.0"/>
+			</Face>
+
+      <Face side="y+" name="y+ face" type="Wall">
+        <ParticleBC><Wall walltype="Elastic"/></ParticleBC>      
+        <BCType label="phi-scalar" var="Dirichlet" value="0.0"/>
+      </Face>
+
+      <Face side="z-" name="z- face" type="Wall">
+        <ParticleBC><Wall walltype="Elastic"/></ParticleBC>      
+        <BCType label="phi-scalar" var="Dirichlet" value="0.0"/>
+      </Face>
+
+      <Face side="z+" name="z+ face" type="Wall">
+        <ParticleBC><Wall walltype="Elastic"/></ParticleBC>      
+        <BCType label="phi-scalar" var="Dirichlet" value="0.0"/>
+      </Face>
+
+      <Face rectangle="y-" lower="0.3000 0.0000 0.0000" upper="0.3500 0.0000 0.0500" name="b1" type="Velocity">
+				<ParticleBC>
+      		<Inlet>
+      			<ParticlesPerSecond>2e5</ParticlesPerSecond>
+        	</Inlet>
+      	</ParticleBC>
+      	<BCType label="p.size" var="Dirichlet" value="8e-5"/>        
+        <BCType label="p.u" var="Dirichlet" value="0.0"/>                
+        <BCType label="p.v" var="Dirichlet" value="1.1"/>                        
+        <BCType label="p.w" var="Dirichlet" value="1.0"/>
+        <BCType label="p.m" var="Dirichlet" value="0.000005"/>                                                                
+      
+        <BCType label="v" var="Dirichlet" value="11.7230"/>
+        <BCType label="w" var="Dirichlet" value="10.0833"/>
+        <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
+      </Face>
+      <Face rectangle="z-" lower="0.3000 0.0000 0.0000" upper="0.3500 0.0500 0.0000" name="b2" type="Velocity">
+				<ParticleBC>
+      		<Inlet>
+      			<ParticlesPerSecond>2e5</ParticlesPerSecond>
+        	</Inlet>
+      	</ParticleBC>
+      	<BCType label="p.size" var="Dirichlet" value="8e-5"/>        
+        <BCType label="p.u" var="Dirichlet" value="0.0"/>                
+        <BCType label="p.v" var="Dirichlet" value="1.1"/>                        
+        <BCType label="p.w" var="Dirichlet" value="1.0"/>
+        <BCType label="p.m" var="Dirichlet" value="0.000005"/>                                                                
+      
+        <BCType label="v" var="Dirichlet" value="11.7230"/>
+        <BCType label="w" var="Dirichlet" value="10.0833"/>
+        <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
+      </Face>
+      <Face rectangle="y+" lower="0.3000 0.8400 0.9500" upper="0.3500 0.8400 1.0000" name="b3" type="Velocity">
+      	<ParticleBC>
+      		<Inlet>
+      			<ParticlesPerSecond>2e5</ParticlesPerSecond>
+        	</Inlet>
+      	</ParticleBC>
+      	<BCType label="p.size" var="Dirichlet" value="8e-5"/>        
+        <BCType label="p.u" var="Dirichlet" value="0.0"/>                
+        <BCType label="p.v" var="Dirichlet" value="-1.1"/>                        
+        <BCType label="p.w" var="Dirichlet" value="-1.0"/>
+        <BCType label="p.m" var="Dirichlet" value="0.000005"/>                                                                
+      
+        <BCType label="v" var="Dirichlet" value="-11.7230"/>
+        <BCType label="w" var="Dirichlet" value="-10.0833"/>
+        <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
+      </Face>
+      <Face rectangle="z+" lower="0.3000 0.7900 1.0000" upper="0.3500 0.8400 1.0000" name="b4" type="Velocity">
+      	<ParticleBC>
+      		<Inlet>
+      			<ParticlesPerSecond>2e5</ParticlesPerSecond>
+        	</Inlet>
+      	</ParticleBC>
+      	<BCType label="p.size" var="Dirichlet" value="8e-5"/>        
+        <BCType label="p.u" var="Dirichlet" value="0.0"/>                
+        <BCType label="p.v" var="Dirichlet" value="-1.1"/>                        
+        <BCType label="p.w" var="Dirichlet" value="-1.0"/>
+        <BCType label="p.m" var="Dirichlet" value="0.000005"/>                                                                
+      
+        <BCType label="v" var="Dirichlet" value="-11.7230"/>
+        <BCType label="w" var="Dirichlet" value="-10.0833"/>
+        <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
+      </Face>
+      <Face rectangle="z-" lower="0.3000 0.7900 0.0000" upper="0.3500 0.8400 0.0000" name="b5" type="Velocity">
+      	<ParticleBC>
+      		<Inlet>
+      			<ParticlesPerSecond>2e5</ParticlesPerSecond>
+        	</Inlet>
+      	</ParticleBC>
+      	<BCType label="p.size" var="Dirichlet" value="8e-5"/>        
+        <BCType label="p.u" var="Dirichlet" value="0.0"/>                
+        <BCType label="p.v" var="Dirichlet" value="-0.9"/>                        
+        <BCType label="p.w" var="Dirichlet" value="1.2"/>
+        <BCType label="p.m" var="Dirichlet" value="0.000005"/>                                                                
+      
+        <BCType label="v" var="Dirichlet" value="-9.0394"/>
+        <BCType label="w" var="Dirichlet" value="12.7668"/>
+        <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
+      </Face>
+      <Face rectangle="y+" lower="0.3000 0.8400 0.0000" upper="0.3500 0.8400 0.0500" name="b6" type="Velocity">
+      	<ParticleBC>
+      		<Inlet>
+      			<ParticlesPerSecond>2e5</ParticlesPerSecond>
+        	</Inlet>
+      	</ParticleBC>
+      	<BCType label="p.size" var="Dirichlet" value="8e-5"/>        
+        <BCType label="p.u" var="Dirichlet" value="0.0"/>                
+        <BCType label="p.v" var="Dirichlet" value="-0.9"/>                        
+        <BCType label="p.w" var="Dirichlet" value="1.2"/>
+        <BCType label="p.m" var="Dirichlet" value="0.000005"/>                                                                
+      
+        <BCType label="v" var="Dirichlet" value="-9.0394"/>
+        <BCType label="w" var="Dirichlet" value="12.7668"/>
+        <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
+      </Face>
+      <Face rectangle="z+" lower="0.3000 0.0000 1.0000" upper="0.3500 0.0500 1.0000" name="b7" type="Velocity">
+      	<ParticleBC>
+      		<Inlet>
+      			<ParticlesPerSecond>2e5</ParticlesPerSecond>
+        	</Inlet>
+      	</ParticleBC>
+      	<BCType label="p.size" var="Dirichlet" value="8e-5"/>        
+        <BCType label="p.u" var="Dirichlet" value="0.0"/>                
+        <BCType label="p.v" var="Dirichlet" value="0.9"/>                        
+        <BCType label="p.w" var="Dirichlet" value="-1.2"/>
+        <BCType label="p.m" var="Dirichlet" value="0.000005"/>                                                                
+      
+        <BCType label="v" var="Dirichlet" value="9.0394"/>
+        <BCType label="w" var="Dirichlet" value="-12.7668"/>
+        <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
+      </Face>
+      <Face rectangle="y-" lower="0.3000 0.0000 0.9500" upper="0.3500 0.0000 1.0000" name="b8" type="Velocity">
+      	<ParticleBC>
+      		<Inlet>
+      			<ParticlesPerSecond>2e5</ParticlesPerSecond>
+        	</Inlet>
+      	</ParticleBC>
+      	<BCType label="p.size" var="Dirichlet" value="8e-5"/>        
+        <BCType label="p.u" var="Dirichlet" value="0.0"/>                
+        <BCType label="p.v" var="Dirichlet" value="0.9"/>                        
+        <BCType label="p.w" var="Dirichlet" value="-1.2"/>
+        <BCType label="p.m" var="Dirichlet" value="0.000005"/>                                                                
+      
+        <BCType label="v" var="Dirichlet" value="9.0394"/>
+        <BCType label="w" var="Dirichlet" value="-12.7668"/>
+        <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
+      </Face>
+      <Face rectangle="y-" lower="0.4500 0.0000 0.0000" upper="0.4900 0.0000 0.0400" name="b9" type="Velocity">
+      	<ParticleBC>
+      		<Inlet>
+      			<ParticlesPerSecond>2e5</ParticlesPerSecond>
+        	</Inlet>
+      	</ParticleBC>
+      	<BCType label="p.size" var="Dirichlet" value="8e-5"/>        
+        <BCType label="p.u" var="Dirichlet" value="0.0"/>                
+        <BCType label="p.v" var="Dirichlet" value="1.6"/>                        
+        <BCType label="p.w" var="Dirichlet" value="1.4"/>
+        <BCType label="p.m" var="Dirichlet" value="0.000005"/>                                                                
+      
+        <BCType label="v" var="Dirichlet" value="16.7831"/>
+        <BCType label="w" var="Dirichlet" value="14.4357"/>
+        <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
+      </Face>
+      <Face rectangle="z-" lower="0.4500 0.0000 0.0000" upper="0.4900 0.0400 0.0000" name="b10" type="Velocity">
+      	<ParticleBC>
+      		<Inlet>
+      			<ParticlesPerSecond>2e5</ParticlesPerSecond>
+        	</Inlet>
+      	</ParticleBC>
+      	<BCType label="p.size" var="Dirichlet" value="8e-5"/>        
+        <BCType label="p.u" var="Dirichlet" value="0.0"/>                
+        <BCType label="p.v" var="Dirichlet" value="1.6"/>                        
+        <BCType label="p.w" var="Dirichlet" value="1.4"/>
+        <BCType label="p.m" var="Dirichlet" value="0.000005"/>                                                                
+      
+        <BCType label="v" var="Dirichlet" value="16.7831"/>
+        <BCType label="w" var="Dirichlet" value="14.4357"/>
+        <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
+      </Face>
+      <Face rectangle="y+" lower="0.4500 0.8400 0.9600" upper="0.4900 0.8400 1.0000" name="b11" type="Velocity">
+      	<ParticleBC>
+      		<Inlet>
+      			<ParticlesPerSecond>2e5</ParticlesPerSecond>
+        	</Inlet>
+      	</ParticleBC>
+      	<BCType label="p.size" var="Dirichlet" value="8e-5"/>        
+        <BCType label="p.u" var="Dirichlet" value="0.0"/>                
+        <BCType label="p.v" var="Dirichlet" value="-1.6"/>                        
+        <BCType label="p.w" var="Dirichlet" value="-1.4"/>
+        <BCType label="p.m" var="Dirichlet" value="0.000005"/>                                                                
+      
+        <BCType label="v" var="Dirichlet" value="-16.7831"/>
+        <BCType label="w" var="Dirichlet" value="-14.4357"/>
+        <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
+      </Face>
+      <Face rectangle="z+" lower="0.4500 0.8000 1.0000" upper="0.4900 0.8400 1.0000" name="b12" type="Velocity">
+      	<ParticleBC>
+      		<Inlet>
+      			<ParticlesPerSecond>2e5</ParticlesPerSecond>
+        	</Inlet>
+      	</ParticleBC>
+      	<BCType label="p.size" var="Dirichlet" value="8e-5"/>        
+        <BCType label="p.u" var="Dirichlet" value="0.0"/>                
+        <BCType label="p.v" var="Dirichlet" value="-1.6"/>                        
+        <BCType label="p.w" var="Dirichlet" value="-1.4"/>
+        <BCType label="p.m" var="Dirichlet" value="0.000005"/>                                                                
+      
+        <BCType label="v" var="Dirichlet" value="-16.7831"/>
+        <BCType label="w" var="Dirichlet" value="-14.4357"/>
+        <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
+      </Face>
+      <Face rectangle="z-" lower="0.4500 0.8000 0.0000" upper="0.4900 0.8400 0.0000" name="b13" type="Velocity">
+      	<ParticleBC>
+      		<Inlet>
+      			<ParticlesPerSecond>2e5</ParticlesPerSecond>
+        	</Inlet>
+      	</ParticleBC>
+      	<BCType label="p.size" var="Dirichlet" value="8e-5"/>        
+        <BCType label="p.u" var="Dirichlet" value="0.0"/>                
+        <BCType label="p.v" var="Dirichlet" value="-1.2"/>                        
+        <BCType label="p.w" var="Dirichlet" value="1.8"/>
+        <BCType label="p.m" var="Dirichlet" value="0.000005"/>                                                                
+      
+        <BCType label="v" var="Dirichlet" value="-12.9412"/>
+        <BCType label="w" var="Dirichlet" value="18.2776"/>
+        <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
+      </Face>
+      <Face rectangle="y+" lower="0.4500 0.8400 0.0000" upper="0.4900 0.8400 0.0400" name="b14" type="Velocity">
+      	<ParticleBC>
+      		<Inlet>
+      			<ParticlesPerSecond>2e5</ParticlesPerSecond>
+        	</Inlet>
+      	</ParticleBC>
+      	<BCType label="p.size" var="Dirichlet" value="8e-5"/>        
+        <BCType label="p.u" var="Dirichlet" value="0.0"/>                
+        <BCType label="p.v" var="Dirichlet" value="-1.2"/>                        
+        <BCType label="p.w" var="Dirichlet" value="1.8"/>
+        <BCType label="p.m" var="Dirichlet" value="0.000005"/>                                                                
+      
+        <BCType label="v" var="Dirichlet" value="-12.9412"/>
+        <BCType label="w" var="Dirichlet" value="18.2776"/>
+        <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
+      </Face>
+      <Face rectangle="z+" lower="0.4500 0.0000 1.0000" upper="0.4900 0.0400 1.0000" name="b15" type="Velocity">
+      	<ParticleBC>
+      		<Inlet>
+      			<ParticlesPerSecond>2e5</ParticlesPerSecond>
+        	</Inlet>
+      	</ParticleBC>
+      	<BCType label="p.size" var="Dirichlet" value="8e-5"/>        
+        <BCType label="p.u" var="Dirichlet" value="0.0"/>                
+        <BCType label="p.v" var="Dirichlet" value="1.2"/>                        
+        <BCType label="p.w" var="Dirichlet" value="-1.8"/>
+        <BCType label="p.m" var="Dirichlet" value="0.000005"/>                                                                
+      
+        <BCType label="v" var="Dirichlet" value="12.9412"/>
+        <BCType label="w" var="Dirichlet" value="-18.2776"/>
+        <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
+      </Face>
+      <Face rectangle="y-" lower="0.4500 0.0000 0.9600" upper="0.4900 0.0000 1.0000" name="b16" type="Velocity">
+      	<ParticleBC>
+      		<Inlet>
+      			<ParticlesPerSecond>2e5</ParticlesPerSecond>
+        	</Inlet>
+      	</ParticleBC>
+      	<BCType label="p.size" var="Dirichlet" value="8e-5"/>        
+        <BCType label="p.u" var="Dirichlet" value="0.0"/>                
+        <BCType label="p.v" var="Dirichlet" value="1.2"/>                        
+        <BCType label="p.w" var="Dirichlet" value="-1.8"/>
+        <BCType label="p.m" var="Dirichlet" value="0.000005"/>                                                                
+      
+        <BCType label="v" var="Dirichlet" value="12.9412"/>
+        <BCType label="w" var="Dirichlet" value="-18.2776"/>
+        <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
+      </Face>
+      <Face rectangle="y-" lower="0.2800 0.0000 0.0000" upper="0.2900 0.0000 0.0500" name="b17" type="Velocity">
+      	<ParticleBC>
+      		<Inlet>
+      			<ParticlesPerSecond>2e5</ParticlesPerSecond>
+        	</Inlet>
+      	</ParticleBC>
+      	<BCType label="p.size" var="Dirichlet" value="8e-5"/>        
+        <BCType label="p.u" var="Dirichlet" value="0.0"/>                
+        <BCType label="p.v" var="Dirichlet" value="2.0"/>                        
+        <BCType label="p.w" var="Dirichlet" value="1.7"/>
+        <BCType label="p.m" var="Dirichlet" value="0.000005"/>                                                                
+      
+        <BCType label="v" var="Dirichlet" value="20.2471"/>
+        <BCType label="w" var="Dirichlet" value="17.4152"/>
+        <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
+      </Face>
+      <Face rectangle="z-" lower="0.2800 0.0000 0.0000" upper="0.2900 0.0500 0.0000" name="b18" type="Velocity">
+        <BCType label="v" var="Dirichlet" value="20.2471"/>
+        <BCType label="w" var="Dirichlet" value="17.4152"/>
+        <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
+      </Face>
+      <Face rectangle="y+" lower="0.2800 0.8400 0.9500" upper="0.2900 0.8400 1.0000" name="b19" type="Velocity">
+      	<ParticleBC>
+      		<Inlet>
+      			<ParticlesPerSecond>2e5</ParticlesPerSecond>
+        	</Inlet>
+      	</ParticleBC>
+      	<BCType label="p.size" var="Dirichlet" value="8e-5"/>        
+        <BCType label="p.u" var="Dirichlet" value="0.0"/>                
+        <BCType label="p.v" var="Dirichlet" value="-2.0"/>                        
+        <BCType label="p.w" var="Dirichlet" value="-1.7"/>
+        <BCType label="p.m" var="Dirichlet" value="0.000005"/>                                                                
+      
+        <BCType label="v" var="Dirichlet" value="-20.2471"/>
+        <BCType label="w" var="Dirichlet" value="-17.4152"/>
+        <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
+      </Face>
+      <Face rectangle="z+" lower="0.2800 0.7900 1.0000" upper="0.2900 0.8400 1.0000" name="b20" type="Velocity">
+      	<ParticleBC>
+      		<Inlet>
+      			<ParticlesPerSecond>2e5</ParticlesPerSecond>
+        	</Inlet>
+      	</ParticleBC>
+      	<BCType label="p.size" var="Dirichlet" value="8e-5"/>        
+        <BCType label="p.u" var="Dirichlet" value="0.0"/>                
+        <BCType label="p.v" var="Dirichlet" value="-2.0"/>                        
+        <BCType label="p.w" var="Dirichlet" value="-1.7"/>
+        <BCType label="p.m" var="Dirichlet" value="0.000005"/>                                                                
+      
+        <BCType label="v" var="Dirichlet" value="-20.2471"/>
+        <BCType label="w" var="Dirichlet" value="-17.4152"/>
+        <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
+      </Face>
+      <Face rectangle="z-" lower="0.2800 0.7900 0.0000" upper="0.2900 0.8400 0.0000" name="b21" type="Velocity">
+      	<ParticleBC>
+      		<Inlet>
+      			<ParticlesPerSecond>2e5</ParticlesPerSecond>
+        	</Inlet>
+      	</ParticleBC>
+      	<BCType label="p.size" var="Dirichlet" value="8e-5"/>        
+        <BCType label="p.u" var="Dirichlet" value="0.0"/>                
+        <BCType label="p.v" var="Dirichlet" value="-1.5"/>                        
+        <BCType label="p.w" var="Dirichlet" value="2.2"/>
+        <BCType label="p.m" var="Dirichlet" value="0.000005"/>                                                                
+      
+        <BCType label="v" var="Dirichlet" value="-15.6123"/>
+        <BCType label="w" var="Dirichlet" value="22.0500"/>
+        <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
+      </Face>
+      <Face rectangle="y+" lower="0.2800 0.8400 0.0000" upper="0.2900 0.8400 0.0500" name="b22" type="Velocity">
+      	<ParticleBC>
+      		<Inlet>
+      			<ParticlesPerSecond>2e5</ParticlesPerSecond>
+        	</Inlet>
+      	</ParticleBC>
+      	<BCType label="p.size" var="Dirichlet" value="8e-5"/>        
+        <BCType label="p.u" var="Dirichlet" value="0.0"/>                
+        <BCType label="p.v" var="Dirichlet" value="-1.5"/>                        
+        <BCType label="p.w" var="Dirichlet" value="-2.2"/>
+        <BCType label="p.m" var="Dirichlet" value="0.000005"/>                                                                
+      
+        <BCType label="v" var="Dirichlet" value="-15.6123"/>
+        <BCType label="w" var="Dirichlet" value="22.0500"/>
+        <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
+      </Face>
+      <Face rectangle="z+" lower="0.2800 0.0000 1.0000" upper="0.2900 0.0500 1.0000" name="b23" type="Velocity">
+      	<ParticleBC>
+      		<Inlet>
+      			<ParticlesPerSecond>2e5</ParticlesPerSecond>
+        	</Inlet>
+      	</ParticleBC>
+      	<BCType label="p.size" var="Dirichlet" value="8e-5"/>        
+        <BCType label="p.u" var="Dirichlet" value="0.0"/>                
+        <BCType label="p.v" var="Dirichlet" value="1.5"/>                        
+        <BCType label="p.w" var="Dirichlet" value="-2.2"/>
+        <BCType label="p.m" var="Dirichlet" value="0.000005"/>                                                                
+      
+        <BCType label="v" var="Dirichlet" value="15.6123"/>
+        <BCType label="w" var="Dirichlet" value="-22.0500"/>
+        <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
+      </Face>
+      <Face rectangle="y-" lower="0.2800 0.0000 0.9500" upper="0.2900 0.0000 1.0000" name="b24" type="Velocity">
+      	<ParticleBC>
+      		<Inlet>
+      			<ParticlesPerSecond>2e5</ParticlesPerSecond>
+        	</Inlet>
+      	</ParticleBC>
+      	<BCType label="p.size" var="Dirichlet" value="8e-5"/>        
+        <BCType label="p.u" var="Dirichlet" value="0.0"/>                
+        <BCType label="p.v" var="Dirichlet" value="1.5"/>                        
+        <BCType label="p.w" var="Dirichlet" value="-2.2"/>
+        <BCType label="p.m" var="Dirichlet" value="0.000005"/>                                                                
+      
+        <BCType label="v" var="Dirichlet" value="15.6123"/>
+        <BCType label="w" var="Dirichlet" value="-22.0500"/>
+        <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
+      </Face>
+      <Face rectangle="y-" lower="0.3600 0.0000 0.0000" upper="0.3700 0.0000 0.0500" name="b25" type="Velocity">
+      	<ParticleBC>
+      		<Inlet>
+      			<ParticlesPerSecond>2e5</ParticlesPerSecond>
+        	</Inlet>
+      	</ParticleBC>
+      	<BCType label="p.size" var="Dirichlet" value="8e-5"/>        
+        <BCType label="p.u" var="Dirichlet" value="0.0"/>                
+        <BCType label="p.v" var="Dirichlet" value="2.0"/>                        
+        <BCType label="p.w" var="Dirichlet" value="1.7"/>
+        <BCType label="p.m" var="Dirichlet" value="0.000005"/>                                                                
+      
+        <BCType label="v" var="Dirichlet" value="20.2471"/>
+        <BCType label="w" var="Dirichlet" value="17.4152"/>
+        <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
+      </Face>
+      <Face rectangle="z-" lower="0.3600 0.0000 0.0000" upper="0.3700 0.0500 0.0000" name="b26" type="Velocity">
+        <BCType label="v" var="Dirichlet" value="20.2471"/>
+        <BCType label="w" var="Dirichlet" value="17.4152"/>
+        <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
+      </Face>
+      <Face rectangle="y+" lower="0.3600 0.8400 0.9500" upper="0.3700 0.8400 1.0000" name="b27" type="Velocity">
+      	<ParticleBC>
+      		<Inlet>
+      			<ParticlesPerSecond>2e5</ParticlesPerSecond>
+        	</Inlet>
+      	</ParticleBC>
+      	<BCType label="p.size" var="Dirichlet" value="8e-5"/>        
+        <BCType label="p.u" var="Dirichlet" value="0.0"/>                
+        <BCType label="p.v" var="Dirichlet" value="-2.0"/>                        
+        <BCType label="p.w" var="Dirichlet" value="-1.7"/>
+        <BCType label="p.m" var="Dirichlet" value="0.000005"/>                                                                
+      
+        <BCType label="v" var="Dirichlet" value="-20.2471"/>
+        <BCType label="w" var="Dirichlet" value="-17.4152"/>
+        <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
+      </Face>
+      <Face rectangle="z+" lower="0.3600 0.7900 1.0000" upper="0.3700 0.8400 1.0000" name="b28" type="Velocity">
+      	<ParticleBC>
+      		<Inlet>
+      			<ParticlesPerSecond>2e5</ParticlesPerSecond>
+        	</Inlet>
+      	</ParticleBC>
+      	<BCType label="p.size" var="Dirichlet" value="8e-5"/>        
+        <BCType label="p.u" var="Dirichlet" value="0.0"/>                
+        <BCType label="p.v" var="Dirichlet" value="-2.0"/>                        
+        <BCType label="p.w" var="Dirichlet" value="-1.7"/>
+        <BCType label="p.m" var="Dirichlet" value="0.000005"/>                                                                
+      
+        <BCType label="v" var="Dirichlet" value="-20.2471"/>
+        <BCType label="w" var="Dirichlet" value="-17.4152"/>
+        <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
+      </Face>
+      <Face rectangle="z-" lower="0.3600 0.7900 0.0000" upper="0.3700 0.8400 0.0000" name="b29" type="Velocity">
+      	<ParticleBC>
+      		<Inlet>
+      			<ParticlesPerSecond>2e5</ParticlesPerSecond>
+        	</Inlet>
+      	</ParticleBC>
+      	<BCType label="p.size" var="Dirichlet" value="8e-5"/>        
+        <BCType label="p.u" var="Dirichlet" value="0.0"/>                
+        <BCType label="p.v" var="Dirichlet" value="-1.5"/>                        
+        <BCType label="p.w" var="Dirichlet" value="2.2"/>
+        <BCType label="p.m" var="Dirichlet" value="0.000005"/>                                                                
+      
+        <BCType label="v" var="Dirichlet" value="-15.6123"/>
+        <BCType label="w" var="Dirichlet" value="22.0500"/>
+        <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
+      </Face>
+      <Face rectangle="y+" lower="0.3600 0.8400 0.0000" upper="0.3700 0.8400 0.0500" name="b30" type="Velocity">
+      	<ParticleBC>
+      		<Inlet>
+      			<ParticlesPerSecond>2e5</ParticlesPerSecond>
+        	</Inlet>
+      	</ParticleBC>
+      	<BCType label="p.size" var="Dirichlet" value="8e-5"/>        
+        <BCType label="p.u" var="Dirichlet" value="0.0"/>                
+        <BCType label="p.v" var="Dirichlet" value="-1.5"/>                        
+        <BCType label="p.w" var="Dirichlet" value="2.2"/>
+        <BCType label="p.m" var="Dirichlet" value="0.000005"/>                                                                
+      
+        <BCType label="v" var="Dirichlet" value="-15.6123"/>
+        <BCType label="w" var="Dirichlet" value="22.0500"/>
+        <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
+      </Face>
+      <Face rectangle="z+" lower="0.3600 0.0000 1.0000" upper="0.3700 0.0500 1.0000" name="b31" type="Velocity">
+      	<ParticleBC>
+      		<Inlet>
+      			<ParticlesPerSecond>2e5</ParticlesPerSecond>
+        	</Inlet>
+      	</ParticleBC>
+      	<BCType label="p.size" var="Dirichlet" value="8e-5"/>        
+        <BCType label="p.u" var="Dirichlet" value="0.0"/>                
+        <BCType label="p.v" var="Dirichlet" value="1.5"/>                        
+        <BCType label="p.w" var="Dirichlet" value="-2.2"/>
+        <BCType label="p.m" var="Dirichlet" value="0.000005"/>                                                                
+      
+        <BCType label="v" var="Dirichlet" value="15.6123"/>
+        <BCType label="w" var="Dirichlet" value="-22.0500"/>
+        <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
+      </Face>
+      <Face rectangle="y-" lower="0.3600 0.0000 0.9500" upper="0.3700 0.0000 1.0000" name="b32" type="Velocity">
+      	<ParticleBC>
+      		<Inlet>
+      			<ParticlesPerSecond>2e5</ParticlesPerSecond>
+        	</Inlet>
+      	</ParticleBC>
+      	<BCType label="p.size" var="Dirichlet" value="8e-5"/>        
+        <BCType label="p.u" var="Dirichlet" value="0.0"/>                
+        <BCType label="p.v" var="Dirichlet" value="1.5"/>                        
+        <BCType label="p.w" var="Dirichlet" value="-2.2"/>
+        <BCType label="p.m" var="Dirichlet" value="0.000005"/>                                                                
+      
+        <BCType label="v" var="Dirichlet" value="15.6123"/>
+        <BCType label="w" var="Dirichlet" value="-22.0500"/>
+        <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
+      </Face>
+      <Face rectangle="y-" lower="0.8000 0.0000 0.0000" upper="0.8600 0.0000 0.0700" name="b33" type="Velocity">
+      	<ParticleBC>
+      		<Inlet>
+      			<ParticlesPerSecond>2e5</ParticlesPerSecond>
+        	</Inlet>
+      	</ParticleBC>
+      	<BCType label="p.size" var="Dirichlet" value="8e-5"/>        
+        <BCType label="p.u" var="Dirichlet" value="0.0"/>                
+        <BCType label="p.v" var="Dirichlet" value="0.6"/>                        
+        <BCType label="p.w" var="Dirichlet" value="0.5"/>
+        <BCType label="p.m" var="Dirichlet" value="0.000005"/>                                                                
+      
+        <BCType label="v" var="Dirichlet" value="6.0916"/>
+        <BCType label="w" var="Dirichlet" value="5.2396"/>
+        <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
+      </Face>
+      <Face rectangle="z-" lower="0.8000 0.0000 0.0000" upper="0.8600 0.0700 0.0000" name="b34" type="Velocity">
+      	<ParticleBC>
+      		<Inlet>
+      			<ParticlesPerSecond>2e5</ParticlesPerSecond>
+        	</Inlet>
+      	</ParticleBC>
+      	<BCType label="p.size" var="Dirichlet" value="8e-5"/>        
+        <BCType label="p.u" var="Dirichlet" value="0.0"/>                
+        <BCType label="p.v" var="Dirichlet" value="0.6"/>                        
+        <BCType label="p.w" var="Dirichlet" value="0.5"/>
+        <BCType label="p.m" var="Dirichlet" value="0.000005"/>                                                                
+      
+        <BCType label="v" var="Dirichlet" value="6.0916"/>
+        <BCType label="w" var="Dirichlet" value="5.2396"/>
+        <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
+      </Face>
+      <Face rectangle="y+" lower="0.8000 0.8400 0.9300" upper="0.8600 0.8400 1.0000" name="b35" type="Velocity">
+      	<ParticleBC>
+      		<Inlet>
+      			<ParticlesPerSecond>2e5</ParticlesPerSecond>
+        	</Inlet>
+      	</ParticleBC>
+      	<BCType label="p.size" var="Dirichlet" value="8e-5"/>        
+        <BCType label="p.u" var="Dirichlet" value="0.0"/>                
+        <BCType label="p.v" var="Dirichlet" value="-0.6"/>                        
+        <BCType label="p.w" var="Dirichlet" value="-0.5"/>
+        <BCType label="p.m" var="Dirichlet" value="0.000005"/>                                                                
+      
+        <BCType label="v" var="Dirichlet" value="-6.0916"/>
+        <BCType label="w" var="Dirichlet" value="-5.2396"/>
+        <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
+      </Face>
+      <Face rectangle="z+" lower="0.8000 0.7700 1.0000" upper="0.8600 0.8400 1.0000" name="b36" type="Velocity">
+      	<ParticleBC>
+      		<Inlet>
+      			<ParticlesPerSecond>2e5</ParticlesPerSecond>
+        	</Inlet>
+      	</ParticleBC>
+      	<BCType label="p.size" var="Dirichlet" value="8e-5"/>        
+        <BCType label="p.u" var="Dirichlet" value="0.0"/>                
+        <BCType label="p.v" var="Dirichlet" value="-0.6"/>                        
+        <BCType label="p.w" var="Dirichlet" value="-0.5"/>
+        <BCType label="p.m" var="Dirichlet" value="0.000005"/>                                                                
+      
+        <BCType label="v" var="Dirichlet" value="-6.0916"/>
+        <BCType label="w" var="Dirichlet" value="-5.2396"/>
+        <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
+      </Face>
+      <Face rectangle="z-" lower="0.8000 0.7700 0.0000" upper="0.8600 0.8400 0.0000" name="b37" type="Velocity">
+      	<ParticleBC>
+      		<Inlet>
+      			<ParticlesPerSecond>2e5</ParticlesPerSecond>
+        	</Inlet>
+      	</ParticleBC>
+      	<BCType label="p.size" var="Dirichlet" value="8e-5"/>        
+        <BCType label="p.u" var="Dirichlet" value="0.0"/>                
+        <BCType label="p.v" var="Dirichlet" value="-0.4"/>                        
+        <BCType label="p.w" var="Dirichlet" value="0.6"/>
+        <BCType label="p.m" var="Dirichlet" value="0.000005"/>                                                                
+      
+        <BCType label="v" var="Dirichlet" value="-4.6972"/>
+        <BCType label="w" var="Dirichlet" value="6.6340"/>
+        <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
+      </Face>
+      <Face rectangle="y+" lower="0.8000 0.8400 0.0000" upper="0.8600 0.8400 0.0700" name="b38" type="Velocity">
+      	<ParticleBC>
+      		<Inlet>
+      			<ParticlesPerSecond>2e5</ParticlesPerSecond>
+        	</Inlet>
+      	</ParticleBC>
+      	<BCType label="p.size" var="Dirichlet" value="8e-5"/>        
+        <BCType label="p.u" var="Dirichlet" value="0.0"/>                
+        <BCType label="p.v" var="Dirichlet" value="-0.4"/>                        
+        <BCType label="p.w" var="Dirichlet" value="0.6"/>
+        <BCType label="p.m" var="Dirichlet" value="0.000005"/>                                                                
+      
+        <BCType label="v" var="Dirichlet" value="-4.6972"/>
+        <BCType label="w" var="Dirichlet" value="6.6340"/>
+        <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
+      </Face>
+      <Face rectangle="z+" lower="0.8000 0.0000 1.0000" upper="0.8600 0.0700 1.0000" name="b39" type="Velocity">
+      	<ParticleBC>
+      		<Inlet>
+      			<ParticlesPerSecond>2e5</ParticlesPerSecond>
+        	</Inlet>
+      	</ParticleBC>
+      	<BCType label="p.size" var="Dirichlet" value="8e-5"/>        
+        <BCType label="p.u" var="Dirichlet" value="0.0"/>                
+        <BCType label="p.v" var="Dirichlet" value="0.4"/>                        
+        <BCType label="p.w" var="Dirichlet" value="-0.6"/>
+        <BCType label="p.m" var="Dirichlet" value="0.000005"/>                                                                
+      
+        <BCType label="v" var="Dirichlet" value="4.6972"/>
+        <BCType label="w" var="Dirichlet" value="-6.6340"/>
+        <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
+      </Face>
+      <Face rectangle="y-" lower="0.8000 0.0000 0.9300" upper="0.8600 0.0000 1.0000" name="b40" type="Velocity">
+      	<ParticleBC>
+      		<Inlet>
+      			<ParticlesPerSecond>2e5</ParticlesPerSecond>
+        	</Inlet>
+      	</ParticleBC>
+      	<BCType label="p.size" var="Dirichlet" value="8e-5"/>        
+        <BCType label="p.u" var="Dirichlet" value="0.0"/>                
+        <BCType label="p.v" var="Dirichlet" value="0.4"/>                        
+        <BCType label="p.w" var="Dirichlet" value="-0.6"/>
+        <BCType label="p.m" var="Dirichlet" value="0.000005"/>                                                                
+
+        <BCType label="v" var="Dirichlet" value="4.6972"/>
+        <BCType label="w" var="Dirichlet" value="-6.6340"/>
+        <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
+      </Face>        
+      <Face rectangle="y+" lower="1.6000 0.8400 0.0000" upper="2.0000 0.8400 1.0000" name="b41" type="Outflow">
+        <BCType label="phi-scalar" var="Neumann" value="0.0"/>
+			</Face>
+    </BoundaryConditions>
+      <Level>
+      <Box label="upper">
+        <lower>[0.0,0.0,0.0]</lower>
+        <upper>[2.0,0.84,1.0]</upper>
+        <resolution>[100,42,50]</resolution>
+        <patches>[1,1,1]</patches>
+      </Box>
+      <periodic>[0,0,0]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

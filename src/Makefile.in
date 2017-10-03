@@ -1,0 +1,528 @@
+#  The MIT License
+#
+#  Copyright (c) 1997-2017 The University of Utah
+# 
+#  Permission is hereby granted, free of charge, to any person obtaining a copy
+#  of this software and associated documentation files (the "Software"), to
+#  deal in the Software without restriction, including without limitation the
+#  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+#  sell copies of the Software, and to permit persons to whom the Software is
+#  furnished to do so, subject to the following conditions:
+# 
+#  The above copyright notice and this permission notice shall be included in
+#  all copies or substantial portions of the Software.
+# 
+#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+#  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+#  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+#  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+#  IN THE SOFTWARE.
+
+# If you change this file, you must re-run configure before the changes
+# will be effective
+# This makefile was inspired by:
+# http://www.canb.auug.org.au/~millerp/rmch/recu-make-cons-harm.html
+
+# Default target
+default: all
+
+# Directory variables
+SRCTOP  := @top_srcdir@
+SRCDIR  := @srcdir@
+OBJTOP  := .
+OBJTOP_ABS    := $(shell cd $(OBJTOP) ; pwd)
+SRCTOP_ABS    := $(shell cd $(SRCTOP) ; pwd)
+SCIRUN_SCRIPTS = $(SRCTOP_ABS)/build_scripts
+
+OS_NAME = $(shell uname)
+
+include configVars.mk
+
+# Rules for autoconf
+#${SRCTOP}/configure: ${SRCTOP}/configure.in
+#	cd ${SRCTOP} && autoconf
+
+config.status: ${SRCTOP}/configure
+	@if test -n "`find ${SRCTOP}/configure.in -newer config.cache`"; then echo "removing config.cache and confdefs.h as they may be out of date"; /bin/rm -f config.cache confdefs.h; fi
+	./config.status --recheck
+
+Makefile: ${SRCTOP}/Makefile.in ${OBJTOP}/config.status
+	@( Here="`pwd`" ; cd ${OBJTOP} ; Top="`pwd`" ; CONFIG_FILES=`echo $${Here} | sed -e "s%^"$${Top}"/%%" -e "s%^"$${Top}"%.%"`/Makefile CONFIG_HEADERS="" ./config.status ) 1>&2
+
+configVars.mk: ${SRCTOP}/configVars.mk.in ${OBJTOP}/config.status
+	@( Here="`pwd`" ; cd ${OBJTOP} ; Top="`pwd`" ; CONFIG_FILES=`echo $${Here} | sed -e "s%^"$${Top}"/%%" -e "s%^"$${Top}"%.%"`/configVars.mk CONFIG_HEADERS="" ./config.status )
+
+ifeq ($(HAVE_CUDA),yes)
+  GPU_EXTRA_LINK := gpu_extra_link
+  ALLTARGETS := $(ALLTARGETS) lib/lib$(GPU_EXTRA_LINK).$(SO_OR_A_FILE)
+
+  # Function to create a make rule to copy the original .cc file from the .../src/ tree
+  # to the .../binary/ tree and rename it with a .cu extension.
+  #
+  define make-cuda-target
+    $(OBJTOP_ABS)/$(SRCDIR)/$1.cu : $(SRCTOP_ABS)/$(SRCDIR)/$1.cc
+	cp $$< $$@
+  endef
+
+endif
+
+# The following variables are used by the Fake* scripts... please
+# do not modify...
+#
+COMPONENTS      = CCA/Components
+CA              = CCA/Components/Arches
+ifeq ($(BUILD_ARCHES),yes)
+  ARCHES_SUB_LIBS = $(CA)/fortran 
+  ifeq ($(BUILD_MPM),yes)
+    MPMARCHES_LIB    = $(COMPONENTS)/MPMArches
+  endif
+  ARCHES_LIBS        = $(COMPONENTS)/Arches
+endif
+
+ifeq ($(BUILD_FVM),yes)
+  FVM_LIB            = CCA/Components/FVM
+  ifeq ($(BUILD_MPM),yes)
+    MPMFVM_LIB       = CCA/Components/MPMFVM
+  endif
+endif
+
+ifeq ($(BUILD_MPM),yes)
+  MPM_LIB            = CCA/Components/MPM
+  ifeq ($(BUILD_ICE),yes)
+    MPMICE_LIB       = CCA/Components/MPMICE
+  endif
+endif
+
+ifeq ($(BUILD_ICE),yes)
+  ICE_LIB            = CCA/Components/ICE
+endif
+
+# Cover both cases when Wasatch lib should be built.
+ifeq ($(BUILD_WASATCH),yes)
+  WASATCH_LIB        = CCA/Components/Wasatch
+endif
+
+ifeq ($(BUILD_HEAT),yes)
+  HEAT_LIB           = CCA/Components/Heat
+endif
+
+ifeq ($(BUILD_PHASEFIELD),yes)
+  PHASEFIELD_LIB     = CCA/Components/PhaseField
+endif
+
+ALL_PSE_CORE_LIBS =        \
+        Core/Containers    \
+        Core/DataArchive   \
+        Core/Disclosure    \
+        Core/Exceptions    \
+        Core/Geometry      \
+        Core/GeometryPiece \
+        Core/Grid          \
+        Core/Labels        \
+        Core/Malloc        \
+        Core/Math          \
+        Core/OS            \
+        Core/Parallel      \
+        Core/ProblemSpec   \
+        Core/Util          
+
+ALL_PSE_LIBS =                              \
+        $(ALL_PSE_CORE_LIBS)                \
+        CCA/Ports                           \
+        CCA/Components/DataArchiver         \
+        CCA/Components/Examples             \
+        CCA/Components/LoadBalancers        \
+        CCA/Components/Models               \
+        CCA/Components/Parent               \
+        CCA/Components/ProblemSpecification \
+        CCA/Components/Regridder            \
+        CCA/Components/SimulationController \
+        CCA/Components/Schedulers           \
+        CCA/Components/Solvers              \
+                                            \
+        $(ARCHES_LIBS)                      \
+        $(ARCHES_SUB_LIBS)                  \
+        $(MPMARCHES_LIB)                    \
+        $(FVM_LIB)                          \
+        $(MPM_LIB)                          \
+        $(ICE_LIB)                          \
+        $(MPMICE_LIB)                       \
+        $(MPMFVM_LIB)                       \
+        $(WASATCH_LIB)                      \
+        $(HEAT_LIB)                         \
+        $(PHASEFIELD_LIB)                   \
+
+  # WARNING: THESE LIBRARIES ARE LISTED IN A SPECIFIC ORDER TO SATISFY
+  #          THE NEEDS OF STATIC LINKING.  DO NOT ALPHABETIZE THEM!
+ALL_STATIC_PSE_LIBS =                   \
+    CCA/Components/Parent               \
+    CCA/Components/Solvers              \
+    CCA/Components/DataArchiver         \
+    CCA/Components/SimulationController \
+    CCA/Components/Regridder            \
+    CCA/Components/LoadBalancers        \
+    CCA/Components/SwitchingCriteria    \
+    CCA/Components/Examples             \
+                                        \
+    $(ARCHES_LIBS)                      \
+    $(ARCHES_SUB_LIBS)                  \
+    $(MPMARCHES_LIB)                    \
+    $(FVM_LIB)                          \
+    $(MPM_LIB)                          \
+    $(ICE_LIB)                          \
+    $(MPMICE_LIB)                       \
+    $(MPMFVM_LIB)                       \
+    $(WASATCH_LIB)                      \
+    $(HEAT_LIB)                         \
+    $(PHASEFIELD_LIB)                   \
+                                        \
+    CCA/Components/Schedulers           \
+    CCA/Components/OnTheFlyAnalysis     \
+    CCA/Components/Models               \
+    CCA/Components/ReduceUda            \
+                                        \
+    Core/Datatypes                      \
+    Core/DataArchive                    \
+    Core/Grid                           \
+    Core/ProblemSpec                    \
+    Core/GeometryPiece                  \
+    CCA/Components/ProblemSpecification \
+    CCA/Ports                           \
+    Core/Parallel                       \
+    Core/Labels                         \
+    Core/Math                           \
+    Core/Disclosure                     \
+    Core/Util                           \
+    Core/Geometry                       \
+    Core/IO                             \
+    Core/Exceptions                     \
+    Core/Containers                     \
+    Core/Malloc                         \
+    Core/OS
+
+###################################################################################
+#
+# Now begin including all of the makefile fragments (sub.mk's)
+#
+
+ALLSUBDIRS := . 
+include $(SCIRUN_SCRIPTS)/recurse.mk
+
+## Remove duplicates from the final list of include paths.
+#    Also, split 'our' thirdparty includes off of the list so
+#    that they can be placed at the beginning of the includes.
+#    This (hopefully on all systems) will mean that our (thirdparty)
+#    include files will be used before any "system" include files.
+
+TP_INCLUDES := $(shell                                 \
+       uniques=;                                       \
+       for i in $(INCLUDES); do                        \
+          found=`echo \"$$uniques\" | grep -- "$$i "`; \
+          if test -z "$$found"; then                   \
+            echo $$i;                                  \
+            uniques="$$uniques$$i ";                   \
+          fi;                                          \
+       done                                            \
+       | grep Thirdparty; )
+
+OTHER_INCLUDES := $(shell                              \
+       uniques=;                                       \
+       for i in $(INCLUDES); do                        \
+          found=`echo \"$$uniques\" | grep -- "$$i "`; \
+          if test -z "$$found"; then                   \
+            echo $$i;                                  \
+            uniques="$$uniques$$i ";                   \
+          fi;                                          \
+       done                                            \
+       | grep -v Thirdparty; )
+
+INCLUDES := $(TP_INCLUDES) $(OTHER_INCLUDES)
+
+
+ALLOBJSUBDIRS :=$(patsubst $(SRCTOP)%,$(OBJTOP)%, $(ALLSUBDIRS))
+
+MAKEFILEDIRS := $(wordlist 2,$(words $(ALLSUBDIRS)),$(ALLSUBDIRS))
+MAKEFILEDIRS := $(subst $(SRCTOP),$(OBJTOP_ABS),$(MAKEFILEDIRS))
+
+SUBMAKEFILES := $(patsubst %,%/Makefile,$(MAKEFILEDIRS))
+
+# Don't use the list of dirs directly because the timestamp on the directly changes
+# when files are modified inside of it... by using a '.created' file, the MAKEFILEDIRS
+# dependency is not invoked accept as needed.
+MAKEFILEDIRSTAG := $(addsuffix /.created, $(MAKEFILEDIRS)) 
+
+# etags generation
+C_FILES := $(patsubst %,%/*.c, $(ALLSUBDIRS))
+CPP_FILES := $(patsubst %,%/*.cc, $(ALLSUBDIRS))
+HEADER_FILES := $(patsubst %,%/*.h, $(ALLSUBDIRS))
+
+ETAGS_FILES := $(wildcard $(HEADER_FILES) $(C_FILES) $(CPP_FILES) )
+TCL_ETAGS_FILES := $(wildcard $(TCL_FILES))
+ETAGS := @ETAGS@
+CTAGS := ctags
+
+################################################################################
+# Place SVN code revision number into .../bin/include/svn_info.h.  This target
+# will kick off every time you run make in order to determine if the SVN revision 
+# number has changed.
+
+$(OBJTOP_ABS)/include/svn_info.h : .FORCE
+	@IFS=' ';                                                                                \
+         tmp_svn=`svn info $(SRCTOP_ABS) 2> /dev/null` ;                                         \
+         sed -e "s%UNKNOWN_REVISION%`echo $$tmp_svn | grep Revision`%"                           \
+             -e "s%UNKNOWN_DATE%`echo $$tmp_svn | grep Date`%"                                   \
+             -e "s%UNKNOWN_URL%`echo $$tmp_svn | grep ^URL`%"                                    \
+             $(SRCTOP_ABS)/include/svn_info.h.template > $(OBJTOP_ABS)/include/svn_info.h.new;   \
+         if test -z "$$tmp_svn"; then                                                            \
+            rm $(OBJTOP_ABS)/include/svn_info.h.new;                                             \
+            if test -f $(OBJTOP_ABS)/include/svn_info.h; then                                    \
+               echo "WARNING: svn info failed... svn_info.h will not contain revision number.";  \
+            else                                                                                 \
+               echo "Warning, svn info failed... using generic .../<bin>/include/svn_info.h";    \
+               cp $(SRCTOP_ABS)/include/svn_info.h.template $(OBJTOP_ABS)/include/svn_info.h;    \
+            fi                                                                                   \
+         else                                                                                    \
+            cmp -s  $(OBJTOP_ABS)/include/svn_info.h.new $(OBJTOP_ABS)/include/svn_info.h;       \
+            if test "$$?" -eq 0; then                                                            \
+               rm $(OBJTOP_ABS)/include/svn_info.h.new;                                          \
+            else                                                                                 \
+               echo "Creating .../<bin>/include/svn_info.h";                                     \
+               mv $(OBJTOP_ABS)/include/svn_info.h.new $(OBJTOP_ABS)/include/svn_info.h;         \
+            fi                                                                                   \
+         fi
+
+# Dummy target to force above svn_info target to kick off every time.
+.FORCE :
+
+################################################################################
+# 'uintah' target is defined in StandAlone/sub.mk
+#
+all:: prereqs packmaker $(ALLTARGETS) uintah
+
+ifeq ($(IS_STATIC_BUILD),no)
+  all:: verify_zlib
+endif
+#
+################################################################################
+
+prereqs : $(MAKEFILEDIRSTAG) $(CREATETCLINDEX) $(LIBDIR) $(SUBMAKEFILES) $(ALLGEN) $(VCDIR) $(VCDEPS)
+	@if test ! -f prereqs; then \
+	  echo "Dummy file to keep Makefile 'prereqs' from continually firing..." >  prereqs; \
+	fi;
+
+$(MAKEFILEDIRSTAG) :
+	@echo creating directory `dirname $@`
+	@mkdir -p `dirname $@`
+	@echo "Dummy file indicating that $@ has been created..." > $@
+	@touch `dirname $@`
+
+packmaker: $(SRCTOP)/build_scripts/packmaker.in $(OBJTOP)/Makefile
+	@echo creating packmaker
+	-@sed -e 's,REPLACE_SCIRUN_OBJTOP,$(OBJTOP_ABS),g' \
+              -e 's,REPLACE_SCIRUN_SRCTOP,$(SRCTOP_ABS),g' \
+              $(SRCTOP)/build_scripts/packmaker.in > packmaker
+	-@chmod a+x packmaker
+
+
+$(LIBDIR):
+	mkdir -p $(LIBDIR)
+
+$(VCDIR):
+	mkdir -p $@
+
+
+# Make emacs etags file
+sciTAGS:  $(ETAGS_FILES) $(TCL_ETAGS_FILES)
+	$(ETAGS) -o sciTAGS $(ETAGS_FILES)
+	$(ETAGS) -o sciTAGS -a -l none --regex='/itcl_class[ \t]+\([^ \t]+\)/\1/' --regex='/[ \t]+method[ \t]+\([^ \t]+\)/\1/' $(TCL_ETAGS_FILES)
+
+# Make ctags file
+sciCTAGS:  $(ETAGS_FILES)
+	$(CTAGS) -o sciCTAGS $(ETAGS_FILES)
+
+# The sophsticated looking $(...) mess below is just to convert a
+# subdirectory of the form a/b/c into ../../..
+ifeq ($(LARGESOS),yes)
+  HERE = $(LIBDIR)/lib$(firstword $(subst /," ",$(subst $(OBJTOP_ABS)/,,$@))).so
+else
+  HERE = $(LIBDIR)/lib$(subst /,_,$(patsubst $(OBJTOP_ABS)/%/,%,$(dir $@))).so
+endif
+$(SUBMAKEFILES): build_scripts/Makefile.tmpl
+	@echo creating $@
+	@sed -e s,@OBJTOP@,$(shell echo $(foreach t,$(subst /," ",$(dir $(subst $(OBJTOP_ABS)/,,$@))),../) | sed -e 's,../ ,../,g' -e 's,/../$$,,'), -e s,@SRCTOP@,$(strip $(SRCTOP)), -e 's,@HERE_TARGET@,$(strip $(HERE)),' $< > $@
+
+ifeq ($(CC_DEPEND_REGEN),-MD)
+  ALLDEPENDS :=  $(patsubst %,%/*.d, $(ALLOBJSUBDIRS))
+else
+  ALLDEPENDS := $(patsubst %,%/depend.mk, $(ALLOBJSUBDIRS))
+endif
+
+# This is a temporary fix until we implement a better version of clean.
+# This should help avoid people accidently cleaning the entire tree when
+# what they really want is just from the current directory down.
+clean::
+	@echo "If you really want to clean up everything in the whole tree,"
+	@echo "type 'make cleanreally'.  If you want to clean this directory"
+	@echo "on down, type:"
+	@echo "   find . -name \"*.$(OBJEXT)\" -o -name depend.mk -o -name \\"
+	@echo "                      ii_files -print | xargs rm -rf"
+
+# Two names for the same thing...
+cleanreally reallyclean::
+        # Remove object files:
+	rm -f $(patsubst %,%/*.$(OBJEXT), $(ALLOBJSUBDIRS))
+        # Remove dependency files:
+ifeq ($(CC_DEPEND_EXT),depend.mk)
+	rm -f $(patsubst %,%/depend.mk, $(ALLOBJSUBDIRS))
+else
+	rm -f $(patsubst %,%/*.$(CC_DEPEND_EXT), $(ALLOBJSUBDIRS))
+endif
+        # Remove core files (except on Macs (which have case-insensitive file systems... (sigh))
+ifneq ($(IS_OSX),yes)
+	rm -f $(patsubst %,%/core, $(ALLOBJSUBDIRS))
+endif
+       # Remove any .cu or .h files that live on the binary side...
+	@( find CCA/Components -name "*.cu" -exec rm -f {} \;)
+	@( find CCA/Components -name "*.h" -exec rm -f {} \;)
+       #
+       # Remove template instantiation files (old SGI compiler?)
+	for fname in $(patsubst %,%/ii_files, $(ALLOBJSUBDIRS)); \
+	  do if test -d $$fname; then rm -rf $$fname; fi; done
+	#
+	rm -f $(patsubst %,%/*~, $(ALLOBJSUBDIRS))
+       #
+       # this catches anything that slipped through
+	@( find CCA/Components -name "*.o" -exec rm -f {} \;)
+	@( find CCA/Components -name "*.d" -exec rm -f {} \;)
+       #
+       # Remove all libraries and executables
+	rm -f $(CLEANLIBS)
+	rm -f $(CLEANPROGS)
+       #
+       # Remove misc stuff...
+	rm -f y.output
+	rm -Rf $(LIBDIR)
+	-rm -f sciTAGS
+	rm -f Uintah/VisIt/udaReaderMTMD/*
+
+distclean:: clean
+	rm -f config.status config.log config.cache
+	rm -f $(CREATETCLINDEX) build_scripts/CC build_scripts/cc
+	rm -f $(patsubst %,%/Makefile, $(ALLOBJSUBDIRS))
+	rm -f include/sci_defs/*.h stamp-h
+
+
+objs: $(CLEANOBJS)
+
+cleanVisIt:
+	@echo "Removing udaReaderMTMD directory,"
+	rm -rf VisIt/udaReaderMTMD
+
+ifeq (,$(findstring objs,$(MAKECMDGOALS)))
+# This includes all of the dependencies.  We prepend the absolute path
+# to the obj dir to prevent make from wasting time searching for them
+# in other directories
+  ifeq ($(CC_DEPEND_EXT),depend.mk)
+    -include $(patsubst %,$(OBJTOP_ABS)/%/depend.mk, $(patsubst $(SRCTOP)/%,%,$(ALLSUBDIRS)))
+  else
+    -include $(patsubst %.$(OBJEXT),$(OBJTOP_ABS)/%.$(CC_DEPEND_EXT), $(CLEANOBJS))
+  endif
+else
+  # If we are making the special target "objs", we skip the dependencies.
+  # This is a hack for a "quick" compile.
+endif
+
+#########################################################################################################
+# Targets for zlib verification
+ifeq ($(IS_STATIC_BUILD),no)
+verify_zlib : sus
+  ifneq ($(IS_OSX),yes)
+	@num_libs=`ldd lib/*.so StandAlone/sus | grep libz[\.] | cut -f3 -d" " | sort -u | wc | awk '{print $$1}'`; \
+         if test "$$num_libs" -ne 1; then                                                                       \
+            echo "";                                                                                            \
+            echo "It appears that more than one version of libz was linked into Uintah...";                     \
+            echo "This will cause the use of compression for UDAs to fail:";                                    \
+            echo "";                                                                                            \
+            ldd lib/*.so StandAlone/sus | grep libz[\.] | cut -f3 -d" " | sort -u;                              \
+            echo "";                                                                                            \
+            echo "Exiting make... Goodbye.";                                                                    \
+            echo "";                                                                                            \
+            exit 1;                                                                                             \
+         fi
+  else
+	@num_libs=`otool -L lib/*.dylib StandAlone/sus | grep libz[\.] | cut -f1 -d" " | sort -u | wc | awk '{print $$1}'`; \
+         if test "$$num_libs" -ne 1; then                                                                       \
+            echo "";                                                                                            \
+            echo "It appears that more than one version of libz was linked into Uintah...";                     \
+            echo "This will cause the use of compression for UDAs to fail:";                                    \
+            echo "";                                                                                            \
+            otool -L lib/*.dylib StandAlone/sus | grep libz[\.] | cut -f1 -d" " | sort -u;                      \
+            echo "";                                                                                            \
+            echo "Exiting make... Goodbye.";                                                                    \
+            echo "";                                                                                            \
+            exit 1;                                                                                             \
+         fi
+  endif
+endif
+
+#
+# This make target will run ldd (linux) / otool (OSX) to display which
+# compression library(s) (libz) is being linked against.  It is only used
+# for debugging purposes.
+#
+show_zlib :
+ifeq ($(IS_STATIC_BUILD),no)
+  ifneq ($(IS_OSX),yes)
+	@ldd lib/*.so StandAlone/sus | grep libz[\.] 
+  else
+	@otool -L lib/*.dylib StandAlone/sus | grep libz[\.]
+  endif
+else
+	@echo "This is a static build... can't determine which libz was linked against."
+endif
+
+#########################################################################################################
+# Targets for regression testing...
+
+gold_standards :
+	@mkdir -p $(OBJTOP_ABS)/TestData;                                                                        \
+         echo -n "Started at: "; date;                                                                           \
+         cd $(OBJTOP_ABS)/TestData;                                                                              \
+         components=`$(SRCTOP_ABS)/R_Tester/helpers/selectComponents.sh $(SRCTOP_ABS)/R_Tester`;                 \
+         if test "$$?" -eq 0; then                                                                               \
+            export PYTHONPATH="$(SRCTOP_ABS)/R_Tester/toplevel:$(SRCTOP_ABS)/R_Tester";                          \
+            $(SRCTOP_ABS)/R_Tester/toplevel/generateGoldStandards.py                                             \
+                                                   -d $(IS_DEBUG) -b $(OBJTOP_ABS) -s $(SRCTOP_ABS) $$components \
+                                                   -m $(SCI_MALLOC_ON) -j $(MAKE_PARALLELISM) -v;                \
+         fi;                                                                                                     \
+         echo -n "Ended at: "; date
+
+#__________________________________
+#  to execute the local regression tester
+runLocalRT:
+	@cd $(OBJTOP_ABS)
+	@$(SRCTOP)/R_Tester/toplevel/startLocalTest $(OBJTOP_ABS) $(SRCTOP_ABS) $(IS_DEBUG) $(SCI_MALLOC_ON)
+
+
+###############################################################################################
+# Build the extra library file needed for static builds when using the NVCC compiler...
+
+ifeq ($(HAVE_CUDA),yes)
+
+# This target (cleancuda) is mostly for debugging...
+cleancuda :
+	rm -f $(DLINK_FILES)
+
+lib/lib$(GPU_EXTRA_LINK).$(SO_OR_A_FILE) : $(CLEANLIBS)
+  ifeq ($(SCI_MAKE_BE_QUIET),true)
+	@echo "Building libgpu_extra_link.$(SO_OR_A_FILE)..."
+	@$(NVCC) $(NVCC_CXXFLAGS) -dlink $(DLINK_FILES) -o lib/lib$(GPU_EXTRA_LINK).$(SO_OR_A_FILE)
+  else
+	$(NVCC) $(NVCC_CXXFLAGS) -dlink $(DLINK_FILES) -o lib/lib$(GPU_EXTRA_LINK).$(SO_OR_A_FILE)
+  endif
+
+endif
+
+###############################################################################################

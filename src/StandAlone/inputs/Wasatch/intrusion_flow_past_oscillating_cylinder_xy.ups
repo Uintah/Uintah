@@ -1,0 +1,186 @@
+<Uintah_specification>
+
+  <Meta>
+    <title> Flow past oscillating cylinder </title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+   <Solver type="hypre"/>
+  <Wasatch>
+
+    <PostProcessingExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="vorticity_z"/>
+      <Vorticity>
+      <Component>Z</Component>
+      <Vel1>
+        <NameTag name="v"/>
+      </Vel1>
+      <Vel2>
+        <NameTag name="u"/>
+      </Vel2>
+      </Vorticity>
+    </PostProcessingExpression>
+
+    <PostProcessingExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="vel_magnitude" state="STATE_DYNAMIC"/>
+      <VelocityMagnitude>
+      <XVelocity>
+        <NameTag name="u"/>
+      </XVelocity>
+      <YVelocity>
+        <NameTag name="v"/>
+      </YVelocity>
+      </VelocityMagnitude>
+    </PostProcessingExpression>
+    
+    <ForceOnGraph tasklist="initialization advance_solution">
+      <NameTag name="vorticity_z"/>
+<!--       <NameTag name="vel_magnitude" state="STATE_DYNAMIC" /> -->
+    </ForceOnGraph>
+
+    <Density method="CONSTANT">
+      <Constant value="1.0" name="density"/>
+    </Density>
+
+
+
+    <EmbeddedGeometry>
+    <MovingGeometry/>
+    <GeometryExpression>
+		 <OscillatingCylinder radius="0.15" insideValue="0.0" outsideValue="1.0" frequency="6.28" amplitude="0.15">
+        <Origin>0, 0</Origin>                           
+        <OscillatingDir>0,1</OscillatingDir>                                   
+        <Axis>Z</Axis>
+		 </OscillatingCylinder>
+    </GeometryExpression>         
+    </EmbeddedGeometry>
+    
+<!-- 
+    <ForceOnGraph tasklist="initialization">
+      <NameTag name="volFraction"  />
+      <NameTag name="xAreaFraction"  />      
+      <NameTag name="yAreaFraction"  />            
+    </ForceOnGraph>
+ -->
+
+    <ForceOnGraph tasklist="advance_solution">
+      <NameTag name="svolFraction"/>
+      <NameTag name="xvolFraction"/>      
+      <NameTag name="yvolFraction"/>            
+    </ForceOnGraph>
+    <BasicExpression type="SVOL">
+       <TaskList>initialization</TaskList>
+       <NameTag name="vorticity_z"/>
+       <Constant>0.0</Constant>
+    </BasicExpression>
+    
+    <BasicExpression type="SVOL">
+       <TaskList>initialization</TaskList>
+       <NameTag name="pressure"/>
+       <Constant>0.0</Constant>
+    </BasicExpression>
+
+    <!-- Set the initial condition expression for x-momentum -->
+    <BasicExpression type="XVOL">
+       <TaskList>initialization</TaskList>
+       <NameTag name="u"/>
+       <Constant>0.1</Constant>
+    </BasicExpression>
+
+    <BasicExpression type="YVOL">
+       <TaskList>initialization</TaskList>
+       <NameTag name="v"/>
+       <Constant>0.0</Constant>
+    </BasicExpression>
+               
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="viscosity"/>
+      <Constant>0.01</Constant>
+    </BasicExpression>
+
+    <!-- Momentum transport equations -->
+    <MomentumEquations>
+ 	
+      <X-Velocity>u</X-Velocity>
+      <X-Momentum>x-mom</X-Momentum>
+      <Y-Velocity>v</Y-Velocity>
+      <Y-Momentum>y-mom</Y-Momentum>
+      <Viscosity>
+        <NameTag name="viscosity"/>
+      </Viscosity>
+      
+      <Pressure>
+        <!-- ReferencePressure value="0.0">
+              <ReferenceCell>[0,0,0]</ReferenceCell>
+        </ReferencePressure -->
+        <Use3DLaplacian>    false</Use3DLaplacian>
+        <Parameters>
+ 	 	 	 	 	 	 <skip>1</skip>
+            <solver>         cg      </solver>
+            <preconditioner> pfmg    </preconditioner>
+            <tolerance>      1e-12  </tolerance>
+            <maxiterations>  500    </maxiterations>
+            <relax_type>     2       </relax_type>
+           </Parameters>
+      </Pressure>
+    </MomentumEquations>
+
+
+  </Wasatch>
+
+
+  <Time>
+    <maxTime>1000</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.0001</delt_min>
+    <delt_max>0.0001</delt_max>
+    <max_Timesteps>20</max_Timesteps>
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+
+  <DataArchiver>
+    <filebase>intrusion_flow_past_oscillating_cylinder_xy.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle="2" interval="0.0001"/>
+    <compression>gzip</compression>
+    <save label="svolFraction"/>    
+    <save label="xvolFraction"/>    
+    <save label="yvolFraction"/>    
+    <save label="x-mom"/>    
+    <save label="y-mom"/>    
+    <save label="vorticity_z"/>
+    <save label="u"/>
+    <save label="v"/>    
+    <save label="pressure"/>
+    <save label="dilatation"/>
+  </DataArchiver> 
+
+  <Grid>
+      <BoundaryConditions>
+				<DefaultMaterial>all</DefaultMaterial>
+				<!-- BOUNDARY CONDITIONS FOR MOMENTUM -->
+				<Face side="x-" type="Velocity">
+					<BCType label="u" var="Dirichlet" value="1.0"/>
+					</Face>
+				<Face side="x+" type="Outflow"/>
+				<Face side="y-" type="Wall"/>
+				<Face side="y+" type="Wall"/>
+      </BoundaryConditions>
+      <Level>
+      <Box label="1">
+        <lower>[-1,-1, -1]</lower>
+        <upper>[ 3, 1, 1]</upper>
+        <!-- extraCells>[1,1,0]</extraCells -->
+        <resolution>[400,200,2]</resolution>
+        <patches>[4,2,1]</patches>
+      </Box>
+      <periodic>[0,0,0]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

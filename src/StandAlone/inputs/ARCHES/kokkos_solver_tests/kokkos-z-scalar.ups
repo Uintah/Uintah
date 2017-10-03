@@ -1,0 +1,339 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<!-- DOCTYPE Uintah_specification SYSTEM "input.dtd" -->
+<!-- @version: -->
+<Uintah_specification>
+  <Meta>
+    <title>Test of 1D transport of kokkos-ized scalars - Pure convection </title>
+  </Meta>
+  <SimulationComponent type="arches"/>
+  <Solver type="hypre"/>
+  <Time>
+    <maxTime>100.</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>1e-5</delt_min>
+    <delt_max>1e-1</delt_max>
+    <delt_init>1e-1</delt_init>
+    <timestep_multiplier>0.3</timestep_multiplier>
+    <max_Timesteps>50</max_Timesteps>
+  </Time>
+  <DataArchiver>
+    <filebase>z-scalar-kokkos-test.uda</filebase>
+    <outputInterval>0.1</outputInterval>
+    <outputInitTimestep/>
+    <save label="cc_phi_upwind"/>
+    <save label="cc_phi_vanleer"/>
+    <save label="cc_phi_superbee"/>
+    <save label="cc_phi_central"/>
+    <save label="fc_phi_upwind"/>
+    <save label="fc_phi_vanleer"/>
+    <save label="fc_phi_superbee"/>
+    <save label="fc_phi_central"/>
+    <checkpoint cycle="2" interval=".3"/>
+    <compression>gzip</compression>
+  </DataArchiver>
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[1.0,1.0,1.0]</upper>
+        <resolution>[24,24,24]</resolution>
+        <extraCells>[1,1,1]</extraCells>
+        <patches>[1,1,1]</patches>
+      </Box>
+      <periodic>[0,0,0]</periodic>
+    </Level>
+    <BoundaryConditions>
+      <DefaultMaterial>all</DefaultMaterial>
+      <Face side="z-">
+        <BCType var="Dirichlet" label="cc_phi_upwind">
+          <value>2</value>
+        </BCType>
+        <BCType var="Dirichlet" label="cc_phi_vanleer">
+          <value>2</value>
+        </BCType>
+        <BCType var="Dirichlet" label="cc_phi_superbee">
+          <value>2</value>
+        </BCType>
+        <BCType var="Dirichlet" label="cc_phi_central">
+          <value>0</value>
+        </BCType>
+        <BCType var="Dirichlet" label="fc_phi_upwind">
+          <value>2</value>
+        </BCType>
+        <BCType var="Dirichlet" label="fc_phi_vanleer">
+          <value>2</value>
+        </BCType>
+        <BCType var="Dirichlet" label="fc_phi_superbee">
+          <value>2</value>
+        </BCType>
+        <BCType var="Dirichlet" label="fc_phi_central">
+          <value>0</value>
+        </BCType>
+      </Face>
+      <Face side="z+">
+        <BCType var="Neumann" label="cc_phi_upwind">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="cc_phi_vanleer">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="cc_phi_superbee">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="cc_phi_central">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="fc_phi_upwind">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="fc_phi_vanleer">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="fc_phi_superbee">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="fc_phi_central">
+          <value>0.</value>
+        </BCType>
+      </Face>
+      <Face side="y-">
+        <BCType var="Neumann" label="cc_phi_upwind">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="cc_phi_vanleer">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="cc_phi_superbee">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="cc_phi_central">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="fc_phi_upwind">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="fc_phi_vanleer">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="fc_phi_superbee">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="fc_phi_central">
+          <value>0.</value>
+        </BCType>
+      </Face>
+      <Face side="y+">
+        <BCType var="Neumann" label="cc_phi_upwind">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="cc_phi_vanleer">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="cc_phi_superbee">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="cc_phi_central">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="fc_phi_upwind">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="fc_phi_vanleer">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="fc_phi_superbee">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="fc_phi_central">
+          <value>0.</value>
+        </BCType>
+      </Face>
+      <Face side="x-">
+        <BCType var="Neumann" label="cc_phi_upwind">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="cc_phi_vanleer">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="cc_phi_superbee">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="cc_phi_central">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="fc_phi_upwind">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="fc_phi_vanleer">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="fc_phi_superbee">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="fc_phi_central">
+          <value>0.</value>
+        </BCType>
+      </Face>
+      <Face side="x+">
+        <BCType var="Neumann" label="cc_phi_upwind">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="cc_phi_vanleer">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="cc_phi_superbee">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="cc_phi_central">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="fc_phi_upwind">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="fc_phi_vanleer">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="fc_phi_superbee">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="fc_phi_central">
+          <value>0.</value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+  </Grid>
+  <PhysicalConstants>
+    <gravity>[0,0,0]</gravity>
+    <reference_point>[0,0,0]</reference_point>
+    <viscosity>0.0002</viscosity>
+  </PhysicalConstants>
+  <CFD>
+    <ARCHES>
+      <TimeIntegrator order="1">
+        <ExplicitIntegrator order="first"/>
+      </TimeIntegrator>
+      <VarID>
+        <var role="uvelocity" label="uVel"/>
+        <var role="vvelocity" label="vVel"/>
+        <var role="wvelocity" label="wVel"/>
+        <var role="total_viscosity" label="gamma"/>
+        <var role="density" label="density"/>
+      </VarID>
+      <PropertyModelsV2>
+        <model label="density" type="constant_property">
+          <grid type="CC"/>
+          <value>1.</value>
+        </model>
+        <model label="gamma" type="constant_property">
+          <grid type="CC"/>
+          <value>1.e-4</value>
+        </model>
+        <model label="uVel" type="constant_property">
+          <grid type="FX"/>
+          <value>0.</value>
+        </model>
+        <model label="vVel" type="constant_property">
+          <grid type="FY"/>
+          <value>0.</value>
+        </model>
+        <model label="wVel" type="constant_property">
+          <grid type="FZ"/>
+          <value>0.9</value>
+        </model>
+      </PropertyModelsV2>
+      <KScalarTransport>
+        <eqn_group label="CCFields" type="CC">
+          <eqn label="cc_phi_upwind">
+            <convection scheme="upwind"/>
+          </eqn>
+          <eqn label="cc_phi_vanleer">
+            <convection scheme="vanleer"/>
+          </eqn>
+          <eqn label="cc_phi_superbee">
+            <convection scheme="superbee"/>
+          </eqn>
+          <eqn label="cc_phi_central">
+            <convection scheme="central"/>
+          </eqn>
+        </eqn_group>
+        <eqn_group label="FZFields" type="FZ">
+          <eqn label="fc_phi_upwind">
+            <convection scheme="upwind"/>
+          </eqn>
+          <eqn label="fc_phi_vanleer">
+            <convection scheme="vanleer"/>
+          </eqn>
+          <eqn label="fc_phi_superbee">
+            <convection scheme="superbee"/>
+          </eqn>
+          <eqn label="fc_phi_central">
+            <convection scheme="central"/>
+          </eqn>
+        </eqn_group>
+      </KScalarTransport>
+      <Initialization>
+        <task task_label="cc_phi_initialize" variable_label="cc_phi_upwind" type="wave">
+          <wave type="square">
+            <grid type="CC"/>
+            <independent_variable label="gridZ" type="CC"/>
+            <square min="0.0" max="1.0" f="1.0" offset="0.5"/>
+          </wave>
+        </task>
+        <task task_label="cc_phi_sb_initialize" variable_label="cc_phi_superbee" type="wave">
+          <wave type="square">
+            <grid type="CC"/>
+            <independent_variable label="gridZ" type="CC"/>
+            <square min="0.0" max="1.0" f="1.0" offset="0.5"/>
+          </wave>
+        </task>
+        <task task_label="cc_phi_vl_initialize" variable_label="cc_phi_vanleer" type="wave">
+          <wave type="square">
+            <grid type="CC"/>
+            <independent_variable label="gridZ" type="CC"/>
+            <square min="0.0" max="1.0" f="1.0" offset="0.5"/>
+          </wave>
+        </task>
+        <task task_label="cc_phi_cen_initialize" variable_label="cc_phi_central" type="wave">
+          <wave type="sine">
+            <grid type="CC"/>
+            <independent_variable label="gridZ" type="CC"/>
+            <sine A="1.0" f="1.0" offset="0."/>
+          </wave>
+        </task>
+        <task task_label="fc_phi_up_initialize" variable_label="fc_phi_upwind" type="wave">
+          <wave type="square">
+            <grid type="FZ"/>
+            <independent_variable label="gridZ" type="CC"/>
+            <square min="0.0" max="1.0" f="1.0" offset="0.5"/>
+          </wave>
+        </task>
+        <task task_label="fc_phi_vl_initialize" variable_label="fc_phi_vanleer" type="wave">
+          <wave type="square">
+            <grid type="FZ"/>
+            <independent_variable label="gridZ" type="CC"/>
+            <square min="0.0" max="1.0" f="1.0" offset="0.5"/>
+          </wave>
+        </task>
+        <task task_label="fc_phi_sb_intialize" variable_label="fc_phi_superbee" type="wave">
+          <wave type="square">
+            <grid type="FZ"/>
+            <independent_variable label="gridZ" type="CC"/>
+            <square min="0.0" max="1.0" f="1.0" offset="0.5"/>
+          </wave>
+        </task>
+        <task task_label="fc_phi_cen_initialize" variable_label="fc_phi_central" type="wave">
+          <wave type="sine">
+            <grid type="FZ"/>
+            <independent_variable label="gridZ" type="CC"/>
+            <sine A="1.0" f="1.0" offset="0."/>
+          </wave>
+        </task>
+      </Initialization>
+      <BoundaryConditions>
+        <force_area_calc/>
+      </BoundaryConditions>
+      <KokkosSolver>
+      </KokkosSolver>
+    </ARCHES>
+  </CFD>
+</Uintah_specification>

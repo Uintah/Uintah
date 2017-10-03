@@ -1,0 +1,628 @@
+#
+#  The MIT License
+#
+#  Copyright (c) 1997-2017 The University of Utah
+# 
+#  Permission is hereby granted, free of charge, to any person obtaining a copy
+#  of this software and associated documentation files (the "Software"), to
+#  deal in the Software without restriction, including without limitation the
+#  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+#  sell copies of the Software, and to permit persons to whom the Software is
+#  furnished to do so, subject to the following conditions:
+# 
+#  The above copyright notice and this permission notice shall be included in
+#  all copies or substantial portions of the Software.
+# 
+#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+#  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+#  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+#  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+#  IN THE SOFTWARE.
+
+
+
+# configVars.mk.in holds all of the variables needed by the make 
+# system to create makefiles. Various Makefiles can include this central
+# copy of the vars. This file has all of the variables and rules common to 
+# all generated makefiles.
+
+# 'a' if archives, 'so' if shared libs.
+SO_OR_A_FILE := @SO_OR_ARCHIVE_EXTENSION@
+IS_STATIC_BUILD := @IS_STATIC_BUILD@
+
+# Blow away a bunch of makes internal rules to improve the performance
+# of make
+.SUFFIXES:
+% :: RCS/%,v
+% :: RCS/%
+% :: %,v
+% :: s.%
+% :: SCCS/s.%
+%.out :: %
+%.c :: %
+%.tex :: %
+
+
+ifeq ($(OBJTOP),.)
+  LIBDIR := lib
+else
+  LIBDIR := $(OBJTOP_ABS)/lib
+endif
+
+# squash any output from noisy environments, we just want the pwd output
+LIBDIR_ABS    := $(shell mkdir -p $(LIBDIR) > /dev/null; cd $(LIBDIR)\
+	           > /dev/null; pwd) 
+
+SCIRUN_LIBDIR := $(LIBDIR)
+
+# squash any output from noisy environments, we just want the pwd output
+SCIRUN_LIBDIR_ABS := $(shell cd $(SCIRUN_LIBDIR) > /dev/null; pwd)
+
+VPATH := $(SRCTOP)
+
+# Optional pieces
+HAVE_VISIT     := @HAVE_VISIT@
+VISIT_INCLUDE  := @INC_VISIT_H@
+VISIT_LIBRARY  := @VISIT_LIB_DIR_FLAG@ @VISIT_LIB_FLAG@
+
+# These cannot be :=
+REFCOUNT_IMPL = $(SRCDIR)/@REFCOUNT_IMPL@
+
+# Subdirectories
+SUBDIRS := Core CCA tools StandAlone VisIt
+
+SUBDIRS += $(COMPONENT_DIRS)
+
+SUBDIRS += testprograms
+
+IS_OSX := @IS_OSX@
+IS_BGQ := @IS_BGQ@
+MAKE_ARCHIVES := @MAKE_ARCHIVES@
+IS_DEBUG := @DEBUG@
+
+# Set to 'yes' if Fortran is disabled:
+NO_FORTRAN := @NO_FORTRAN@
+
+SCI_MALLOC_ON := @SCI_MALLOC_ON@
+
+NEED_OSX_SYSTEMSTUBS := @NEED_OSX_SYSTEMSTUBS@
+
+LDRUN_PREFIX      := @LDRUN_PREFIX@
+
+
+# Libraries and other flags
+
+M_LIBRARY := @M_LIB_DIR_FLAG@ @M_LIB_FLAG@
+
+#ViSUS (nvisusio)
+HAVE_VISUS := @HAVE_VISUS@
+VISUS_LIBRARY := @VISUS_LIB_DIR_FLAG@ @VISUS_LIB_FLAG@
+VISUS_INCLUDE := @INC_VISUS_H@
+
+#ViSUS (Parallel IDX)
+HAVE_PIDX := @HAVE_PIDX@
+PIDX_LIBRARY := @PIDX_LIB_DIR_FLAG@ @PIDX_LIB_FLAG@
+PIDX_INCLUDE := @INC_PIDX_H@
+
+# MallocTrace
+MALLOC_TRACE_INCLUDE = @INC_MALLOC_TRACE_H@
+MALLOC_TRACE_LIBRARY = @MALLOC_TRACE_LIB_DIR_FLAG@ @MALLOC_TRACE_LIB_FLAG@
+
+# Zoltan
+ZOLTAN_INCLUDE = @INC_ZOLTAN_H@
+ZOLTAN_LIBRARY = @ZOLTAN_LIB_DIR_FLAG@ @ZOLTAN_LIB_FLAG@
+
+# Boost
+HAVE_BOOST    := @HAVE_BOOST@
+BOOST_INCLUDE := @INC_BOOST_H@
+BOOST_LIBRARY := @BOOST_LIB_DIR_FLAG@ @BOOST_LIB_FLAG@
+
+# SpatialOps - Wasatch 3P
+HAVE_SPATIALOPS    := @HAVE_SPATIALOPS@
+SPATIALOPS_INCLUDE := @INC_SPATIALOPS_H@
+SPATIALOPS_LIBRARY := @SPATIALOPS_LIB_DIR_FLAG@ @SPATIALOPS_LIB_FLAG@
+
+# ExprLib - Wasatch 3P
+HAVE_EXPRLIB    := @HAVE_EXPRLIB@
+EXPRLIB_INCLUDE := @INC_EXPRLIB_H@
+EXPRLIB_LIBRARY := @EXPRLIB_LIB_DIR_FLAG@ @EXPRLIB_LIB_FLAG@
+
+# TabProps - Wasatch 3P
+HAVE_TABPROPS    := @HAVE_TABPROPS@
+TABPROPS_INCLUDE =  @INC_TABPROPS_H@
+TABPROPS_LIBRARY =  @TABPROPS_LIB_DIR_FLAG@ @TABPROPS_LIB_FLAG@ $(BOOST_LIBRARY)
+
+# RadProps - Wasatch 3P
+HAVE_RADPROPS    := @HAVE_RADPROPS@
+RADPROPS_INCLUDE =  @INC_RADPROPS_H@
+RADPROPS_LIBRARY =  @RADPROPS_LIB_DIR_FLAG@ @RADPROPS_LIB_FLAG@ $(BOOST_LIBRARY)
+
+# PoKiTT - Wasatch 3P Library wrapping Cantera
+HAVE_POKITT    := @HAVE_POKITT@
+POKITT_INCLUDE := @INC_POKITT_H@
+POKITT_LIBRARY := @POKITT_LIB_DIR_FLAG@ @POKITT_LIB_FLAG@
+
+# NSCBC - Wasatch 3P
+HAVE_NSCBC    := @HAVE_NSCBC@
+NSCBC_INCLUDE =  @INC_NSCBC_H@
+
+#############################################################################
+
+HAVE_BLAS      := @HAVE_BLAS@
+HAVE_CBLAS     := @HAVE_CBLAS@
+BLAS_LIBRARY   := @BLAS_LIB_DIR_FLAG@ @BLAS_LIB_FLAG@
+BLAS_INCLUDE   := @INC_BLAS_H@
+HAVE_ACCELERATE	:= @HAVE_ACCELERATE@
+
+# Note: If we are not on an SGI, then LAPACKMP will be the same as
+# LAPACK!
+HAVE_LAPACK    := @HAVE_LAPACK@
+HAVE_LAPACKMP  := @HAVE_LAPACKMP@
+LAPACK_LIBRARY := @LAPACK_LIB_DIR_FLAG@ @LAPACK_LIB_FLAG@
+LAPACKMP_LIBRARY := @LAPACKMP_LIB_DIR_FLAG@ @LAPACKMP_LIB_FLAG@
+
+ifeq ($(IS_BGQ),yes)
+  CFLAGS   := $(CFLAGS) -DPETSC_RESTRICT=__restrict__ -DPETSC_DEPRECATED\(why\)= 
+  CXXFLAGS := $(CXXFLAGS) -DPETSC_RESTRICT=__restrict__ -DPETSC_DEPRECATED\(why\)= 
+endif
+
+PAPI_INCLUDE     := @INC_PAPI_H@
+PAPI_LIBRARY     := @PAPI_LIB_DIR_FLAG@ @PAPI_LIB_FLAG@
+
+GPERFTOOLS_INCLUDE     := @INC_GPERFTOOLS_H@
+GPERFTOOLS_LIBRARY     := @GPERFTOOLS_LIB_DIR_FLAG@ @GPERFTOOLS_LIB_FLAG@
+
+# no include(s), either link with static build or LD_PRELOAD with shared
+HAVE_IPM         := @HAVE_IPM@
+IPM_LIBRARY      := @IPM_LIB_DIR_FLAG@ @IPM_LIB_FLAG@
+
+MPI_INCLUDE := @INC_MPI_H@
+MPI_LIBRARY := @MPI_LIB_DIR_FLAG@ @MPI_LIB_FLAG@
+
+# not blank.  Its "value" is not useful.
+HAVE_MPI := @HAVE_MPI@
+
+HAVE_MAGMA        := @HAVE_MAGMA@
+MAGMA_INCLUDE     := @INC_MAGMA_H@
+MAGMA_LIBRARY     := @MAGMA_LIB_DIR_FLAG@ @MAGMA_LIB_FLAG@
+
+HAVE_CUDA        := @HAVE_CUDA@
+CUDA_INCLUDE     := @INC_CUDA_H@
+CUDA_LIBRARY     := @CUDA_LIB_DIR_FLAG@ @CUDA_LIB_FLAG@
+
+HAVE_TIFF := @HAVE_TIFF@
+TIFF_LIBRARY := @TIFF_LIB_FLAG@ @TIFF_LIB_DIR_FLAG@
+
+XALAN_PATH := @XALAN_PATH@
+
+THREAD_LIBRARY := @THREAD_LIB_FLAG@
+SEMAPHORE_LIB := @SEMAPHORE_LIB_FLAG@
+
+PERL := @PERL@
+SED := sed
+
+MAKE_PARALLELISM := @MAKE_PARALLELISM@
+
+LARGESOS := @LARGESOS@
+
+ifeq ($(LARGESOS),yes)
+  MALLOCLIB := Core
+else
+  MALLOCLIB := Core/Malloc
+endif
+
+# Convenience variables - compounded from above definitions
+
+DL_LIBRARY := @DL_LIB_DIR_FLAG@ @DL_LIB_FLAG@
+Z_LIBRARY := @Z_LIB_DIR_FLAG@ @Z_LIB_FLAG@ 
+
+XML2_LIBRARY := $(Z_LIBRARY) @XML2_LIB_DIR_FLAG@ @XML2_LIB_FLAG@
+XML2_INCLUDE := @INC_XML2_H@
+
+HAVE_HYPRE     := @HAVE_HYPRE@
+HYPRE_INCLUDE  := @INC_HYPRE_H@
+HYPRE_LIBRARY  := @HYPRE_LIB_DIR_FLAG@ @HYPRE_LIB_FLAG@
+
+HAVE_PETSC     := @HAVE_PETSC@
+PETSC_INCLUDE  := @INC_PETSC_H@
+PETSC_LIBRARY  := @PETSC_LIB_DIR_FLAG@ @PETSC_LIB_FLAG@
+
+INCLUDES += -I$(SRCTOP)/include -I$(SRCTOP) -I$(OBJTOP) -I$(OBJTOP)/include $(XML2_INCLUDE) $(MPI_INCLUDE) $(PAPI_INCLUDE) $(GPERFTOOLS_INCLUDE) $(CUDA_INCLUDE) $(MAGMA_INCLUDE) @INC_Z_H@ $(ZOLTAN_INCLUDE) $(TABPROPS_INCLUDE) ${MALLOC_TRACE_INCLUDE}
+FINCLUDES += -I$(SRCTOP) -I$(OBJTOP) -I$(OBJTOP)/include
+
+BUILD_ARCHES=@BUILD_ARCHES@
+BUILD_ICE=@BUILD_ICE@
+BUILD_FVM=@BUILD_FVM@
+BUILD_MODELS_RADIATION=@BUILD_MODELS_RADIATION@
+BUILD_MPM=@BUILD_MPM@
+BUILD_WASATCH=@BUILD_WASATCH@
+BUILD_HEAT=@BUILD_HEAT@
+BUILD_PHASEFIELD=@BUILD_PHASEFIELD@
+
+################################################################
+# Variables and suffix rules for module transformation:
+#
+
+CC              := @CC@
+CXX             := @CXX@
+NVCC            := @NVCC@
+AS              := @AS@
+LD              := @LD@
+CFLAGS          := @CFLAGS@ $(CFLAGS) @WOFF_STRING@
+CXXFLAGS        := @CXXFLAGS@ $(CXXFLAGS) @WOFF_STRING@
+NVCC_CFLAGS     := @NVCC_CFLAGS@ @INC_MPI_H_NVCC@
+NVCC_CXXFLAGS   := @NVCC_CXXFLAGS@ @INC_MPI_H_NVCC@
+SOFLAGS         := $(CFLAGS) @SOFLAGS@ -L$(LIBDIR)
+LDFLAGS         := $(CXXFLAGS) @LDFLAGS@ -L$(LIBDIR)
+NVCC_LDFLAGS    := $(NVCC_CXXFLAGS) @NVCC_LDFLAGS@
+ASFLAGS         := @ASFLAGS@  $(ASFLAGS)
+F77             := @F77@
+FFLAGS          := @FFLAGS@ $(FFLAGS)
+
+# Fortran Library:
+F_LIBRARY	:= @F_LIB_DIR_FLAG@ @F_LIB_FLAG@ @RT_LIB_FLAG@
+REPOSITORY_FLAGS := @REPOSITORY_FLAGS@
+OBJEXT := @OBJEXT@
+
+################################################################
+# When building a static executable, these are the basic PSE libraries that are needed.  (Order matters!)
+# Note, for some of the Uintah executables (most importantly, for 'sus') many more libraries are needed
+# and these libraries are listed in the individual sub.mk file for that executable.
+#
+CORE_STATIC_PSELIBS := \
+    Core_DataArchive Core_Grid Core_ProblemSpec Core_GeometryPiece CCA_Components_ProblemSpecification CCA_Ports \
+    Core_Parallel Core_Math Core_Disclosure Core_Util Core_Exceptions Core_Containers \
+    Core_Malloc Core_IO Core_OS                             
+CORE_STATIC_LIBS := \
+    $(XML2_LIBRARY) $(Z_LIBRARY) $(PETSC_LIBRARY) $(HYPRE_LIBRARY) $(LAPACK_LIBRARY) \
+    $(BLAS_LIBRARY) $(F_LIBRARY) $(IPM_LIBRARY) $(MPI_LIBRARY) $(THREAD_LIBRARY) $(X_LIBRARY) $(M_LIBRARY) \
+    $(DL_LIBRARY) $(CUDA_LIBRARY) $(MAGMA_LIBRARY) $(PAPI_LIBRARY) $(GPERFTOOLS_LIBRARY)
+
+################################################################
+# Auto dependency generation flags
+#
+
+CC_DEPEND_MODE	    := @CC_DEPEND_MODE@
+CC_DEPEND_REGEN      = @CC_DEPEND_REGEN@
+CC_DEPEND_EXT       := @CC_DEPEND_EXT@
+F77_DEPEND_MODE      = @F77_DEPEND_MODE@
+F77_DEPEND_REGEN     = @F77_DEPEND_REGEN@
+F77_DEPEND_EXT	    := @F77_DEPEND_EXT@
+
+NEED_SONAME  := @NEED_SONAME@
+
+# Echo (with no new line)
+ECHO_NNL     := echo @ECHO_N@
+
+ifeq ($(REPOSITORY_FLAGS),)
+  repository = 
+else
+  repository = $(REPOSITORY_FLAGS) $(patsubst %:$(1),%,$(filter %:$(1),$(ALL_LIB_ASSOCIATIONS)))
+endif
+
+ifeq ($(NEED_SONAME),yes)
+  SONAMEFLAG = -Wl,-soname,$(notdir $@)
+else
+  SONAMEFLAG = 
+endif
+
+.SUFFIXES: .cc .cu .c .$(OBJEXT) .s .F .f .cpp .cxx
+
+.cc.$(OBJEXT) .cpp.$(OBJEXT) : $<
+ifeq ($(SCI_MAKE_BE_QUIET),true)
+	@-rm -f $@
+else
+	-rm -f $@
+endif
+ifeq ($(CC_DEPEND_MODE),normal)
+  ifeq ($(SCI_MAKE_BE_QUIET),true)
+	  @echo "Compiling: $<"
+	  @$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@
+  else
+	  $(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@
+  endif
+else
+  ifeq ($(CC_DEPEND_MODE),modify)
+    ifeq ($(SCI_MAKE_BE_QUIET),true)
+	    @echo "Compiling: $<"
+	    @$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@ && $(SED) -e 's,^$(notdir $@),$@,' $(basename $@).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT).tmp && mv -f $(basename $@).$(CC_DEPEND_EXT).tmp $(basename $@).$(CC_DEPEND_EXT)
+    else
+	    $(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@ && $(SED) -e 's,^$(notdir $@),$@,' $(basename $@).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT).tmp && mv -f $(basename $@).$(CC_DEPEND_EXT).tmp $(basename $@).$(CC_DEPEND_EXT)
+    endif
+  else
+    ifeq ($(CC_DEPEND_MODE),move)
+      ifeq ($(SCI_MAKE_BE_QUIET),true)
+	      @echo "Compiling: $<"
+	      @$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@
+	      @sed 's,^$(basename $@),$@,g' $(basename $(notdir $@)).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT)
+	      @rm $(basename $(notdir $@)).$(CC_DEPEND_EXT)
+      else
+	      $(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@
+	      sed 's,^$(basename $@),$@,g' $(basename $(notdir $@)).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT)
+	      rm $(basename $(notdir $@)).$(CC_DEPEND_EXT)
+      endif
+    else
+      ifeq ($(CC_DEPEND_MODE),modify_and_move)
+        ifeq ($(SCI_MAKE_BE_QUIET),true)
+	        @echo "Compiling: $<"
+	        @$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@ && \
+          $(SED) -e 's,^$(notdir $@),$@,' $(basename $(notdir $@)).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT)
+	        @rm $(basename $(notdir $@)).$(CC_DEPEND_EXT)
+        else
+	        $(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@ && \
+          $(SED) -e 's,^$(notdir $@),$@,' $(basename $(notdir $@)).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT)
+	        rm $(basename $(notdir $@)).$(CC_DEPEND_EXT)
+        endif
+      else
+        ifeq ($(CC_DEPEND_MODE),stdout)
+          #
+          # .d - most likely gcc... have to explicitly put it in a .d file.
+          #
+          # -M outputs to stdout(err?) dependency info.  Redirect this output
+          # to a temp file.  Prepend that file to replace filename.o with:
+          # <path_to_file>/filename.o.  Then remove the temp file.
+          #
+          ifeq ($(SCI_MAKE_BE_QUIET),true)
+	          @echo "Compiling: $<"
+	          @rm -f $(basename $@).$(CC_DEPEND_EXT)
+	          @$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< | sed 's,^$(notdir $@),$@,g' > $(basename $@).$(CC_DEPEND_EXT)
+
+            # Now do the actual compile!
+	          @$(CXX) $(CXXFLAGS) $(INCLUDES) $(call repository,$@) -c $< -o $@
+          else
+	          @echo "CREATING DEPENDENCY INFORMATION:"
+	          @rm -f $(basename $@).$(CC_DEPEND_EXT)
+	          $(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< | sed 's,^$(notdir $@),$@,g' > $(basename $@).$(CC_DEPEND_EXT)
+
+            # Now do the actual compile!
+	          @echo "ACTUALLY COMPILING:"
+	          $(CXX) $(CXXFLAGS) $(INCLUDES) $(call repository,$@) -c $< -o $@
+          endif
+        else
+	        @echo ".cc rule: Unknown CC_DEPEND_MODE: $(CC_DEPEND_MODE)"
+	         @exit 1
+        endif
+      endif
+    endif
+  endif
+endif
+
+.cu.$(OBJEXT): $<
+ifeq ($(SCI_MAKE_BE_QUIET),true)
+	@-rm -f $@
+else
+	-rm -f $@
+endif
+#
+# .d - most likely gcc... have to explicitly put it in a .d file.
+#
+# -M outputs to stdout(err?) dependency info.
+# Prepend that file to replace filename.o with:
+#     <path_to_file>/filename.o.
+# Note: For the CUDA compiler (nvcc), it is necessary to generate
+#       dependencies after the compilation phase.
+#
+ifeq ($(SCI_MAKE_BE_QUIET),true)
+	@echo "Compiling CUDA file: $<"
+	@$(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -Xcompiler $(CC_DEPEND_REGEN) $(call repository,$@) -c -dc $< -o $@
+        # FIXME: this should only be done on Titan... probably
+	@rm -f *.d
+	@$(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -M $< | sed 's,^$(notdir $@),$@,g' > $(basename $@).$(CC_DEPEND_EXT)
+else
+	$(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -Xcompiler $(CC_DEPEND_REGEN) $(call repository,$@) -c -dc $< -o $@
+        # On Titan, remove temporary .d files from the top level bin directory.
+        #   FIXME: perhaps should verify that we are on Titan? Though it should not hurt anything...
+	rm -f *.d 
+	$(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -M $< | sed 's,^$(notdir $@),$@,g' > $(basename $@).$(CC_DEPEND_EXT)
+endif
+
+.F.$(OBJEXT): $<
+ifeq ($(SCI_MAKE_BE_QUIET),true)
+	@-rm -f $@
+else
+	-rm -f $@
+endif
+ifeq ($(F77_DEPEND_MODE),normal)
+  ifeq ($(SCI_MAKE_BE_QUIET),true)
+	@echo "Fortran:   $<" 
+	@$(F77) $(FFLAGS) $(FINCLUDES) $(F77_DEPEND_REGEN) -c $< -o $@
+  else
+	$(F77) $(FFLAGS) $(FINCLUDES) $(F77_DEPEND_REGEN) -c $< -o $@
+  endif
+else
+  ifeq ($(F77_DEPEND_MODE),modify)
+	$(F77) $(FFLAGS) $(FINCLUDES) $(F77_DEPEND_REGEN) -c $< -o $@ && if test -f $(basename $@).$(F77_DEPEND_EXT); then $(SED) -e 's,^$(notdir $@),$@,' $(basename $@).$(F77_DEPEND_EXT) > $(basename $@).$(F77_DEPEND_EXT).tmp && mv -f $(basename $@).$(F77_DEPEND_EXT).tmp $(basename $@).$(F77_DEPEND_EXT); fi
+  else
+    ifeq ($(F77_DEPEND_MODE),move)
+	$(F77) $(FFLAGS) $(FINCLUDES) $(F77_DEPEND_REGEN) -c $< -o $@
+	sed 's,^$(basename $@),$@,g' $(basename $(notdir $@)).$(F77_DEPEND_EXT) > $(basename $@).$(F77_DEPEND_EXT)
+	rm $(basename $(notdir $@)).$(F77_DEPEND_EXT)
+    else
+      ifeq ($(F77_DEPEND_MODE),modify_and_move)
+	$(F77) $(FFLAGS) $(FINCLUDES) $(F77_DEPEND_REGEN) -c -o $@ $< && \
+             $(SED) -e 's,^$(notdir $@),$@,' $(basename $(notdir $@)).$(F77_DEPEND_EXT) > $(basename $@).$(F77_DEPEND_EXT)
+	@rm $(basename $(notdir $@)).$(F77_DEPEND_EXT)
+      else
+        ifeq ($(F77_DEPEND_MODE),stdout)
+          #
+          # .d - most likely gcc... have to explicitly put it in a .d file.
+          #
+          # -M outputs to stdout(err?) dependency info.  Redirect this output
+          # to a temp file.  Awk that file to replace filename.o with:
+          # <path_to_file>/filename.o.  Then remove the temp file.
+          #
+	  @rm -f $(basename $@).$(F77_DEPEND_EXT)
+          ifeq ($(SCI_MAKE_BE_QUIET),true)
+            # This just generates the .d dependency file:
+	    @$(F77) $(FFLAGS) $(FINCLUDES) $(F77_DEPEND_REGEN) -c $< | sed 's,^$(notdir $@),$@,g' > $(basename $@).$(F77_DEPEND_EXT)
+
+            # The following if/grep/sed is necessary to fix the .d file for the PGI compiler on Ranger:
+	    @if `grep -q "^../src/" $(basename $@).$(F77_DEPEND_EXT)`; then sed 's,^../src/,,' $(basename $@).$(F77_DEPEND_EXT) > $(basename $@).$(F77_DEPEND_EXT).tmp; mv $(basename $@).$(F77_DEPEND_EXT).tmp $(basename $@).$(F77_DEPEND_EXT) ; fi
+
+            # Now do the actual compile!
+	    @echo "Fortran:   $<"
+	    @$(F77) $(FFLAGS) $(INCLUDES) -c $< -o $@
+          else
+	    @echo "CREATING DEPENDENCY INFORMATION:"
+	    $(F77) $(FFLAGS) $(FINCLUDES) $(F77_DEPEND_REGEN) -c $< | sed 's,^$(notdir $@),$@,g' > $(basename $@).$(F77_DEPEND_EXT)
+
+            # The following if/grep/sed is necessary for PGI compiler on Ranger:
+	    @if `grep -q "^../src/" $(basename $@).$(F77_DEPEND_EXT)`; then sed 's,^../src/,,' $(basename $@).$(F77_DEPEND_EXT) > $(basename $@).$(F77_DEPEND_EXT).tmp; mv $(basename $@).$(F77_DEPEND_EXT).tmp $(basename $@).$(F77_DEPEND_EXT) ; fi
+
+            # Now do the actual compile!
+	    @echo "ACTUALLY COMPILING:"
+	    $(F77) $(FFLAGS) $(INCLUDES) -c $< -o $@
+          endif
+        else
+	  @echo "Unknown F77_DEPEND_MODE: $(F77_DEPEND_MODE) (for $@)"
+	  @exit 1
+        endif
+      endif
+    endif
+  endif
+endif
+
+.f.$(OBJEXT): $<
+	-rm -f $@
+ifeq ($(F77_DEPEND_MODE),normal)
+	$(F77) $(FFLAGS) $(FINCLUDES) $(F77_DEPEND_REGEN) -c $< -o $@
+else
+  ifeq ($(F77_DEPEND_MODE),modify)
+	$(F77) $(FFLAGS) $(FINCLUDES) $(F77_DEPEND_REGEN) -c $< -o $@ && if test -f $(basename $@).$(F77_DEPEND_EXT); then $(SED) -e 's,^$(notdir $@),$@,' $(basename $@).$(F77_DEPEND_EXT) > $(basename $@).$(F77_DEPEND_EXT).tmp && mv -f $(basename $@).$(F77_DEPEND_EXT).tmp $(basename $@).$(F77_DEPEND_EXT); fi
+  else
+    ifeq ($(F77_DEPEND_MODE),move)
+	$(F77) $(FFLAGS) $(FINCLUDES) $(F77_DEPEND_REGEN) -c $< -o $@
+	sed 's,^$(basename $@),$@,g' $(basename $(notdir $@)).$(F77_DEPEND_EXT) > $(basename $@).$(F77_DEPEND_EXT)
+	rm $(basename $(notdir $@)).$(F77_DEPEND_EXT)
+    else
+      ifeq ($(F77_DEPEND_MODE),stdout)
+        #
+        # .d - most likely gcc... have to explicitly put it in a .d file.
+        #
+        # -M outputs to stdout(err?) dependency info.  Redirect this output
+        # to a temp file.  Awk that file to replace filename.o with:
+        # <path_to_file>/filename.o.  Then remove the temp file.
+        #
+	@echo "CREATING DEPENDENCY INFORMATION:"
+	@rm -f $(basename $@).$(F77_DEPEND_EXT)
+	$(F77) $(FFLAGS) $(FINCLUDES) $(F77_DEPEND_REGEN) -c $< | sed 's,^$(notdir $@),$@,g' > $(basename $@).$(F77_DEPEND_EXT)
+
+        # Now do the actual compile!
+	@echo "ACTUALLY COMPILING:"
+	$(F77) $(FFLAGS) $(INCLUDES) -c $< -o $@
+      else
+	@$echo "Unknown F77_DEPEND_MODE: $(F77_DEPEND_MODE) (for $@)"
+	@exit 1
+      endif
+    endif
+  endif
+endif
+
+.c.$(OBJEXT): $<
+ifeq ($(SCI_MAKE_BE_QUIET),true)
+	@-rm -f $@
+else
+	-rm -f $@
+endif
+ifeq ($(CC_DEPEND_MODE),normal)
+  ifeq ($(SCI_MAKE_BE_QUIET),true)
+	@echo "Compiling: $<"
+	@$(CC) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
+  else
+	$(CC) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
+  endif
+else
+  ifeq ($(CC_DEPEND_MODE),modify)
+	$(CC) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@ && $(SED) -e 's,^$(notdir $@),$@,' $(basename $@).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT).tmp && mv -f $(basename $@).$(CC_DEPEND_EXT).tmp $(basename $@).$(CC_DEPEND_EXT)
+  else
+    ifeq ($(CC_DEPEND_MODE),move)
+	$(CC) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
+	sed 's,^$(basename $@),$@,g' $(basename $(notdir $@)).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT)
+	rm $(basename $(notdir $@)).$(CC_DEPEND_EXT)
+    else
+      ifeq ($(CC_DEPEND_MODE),modify_and_move)
+        ifeq ($(SCI_MAKE_BE_QUIET),true)
+	  @echo "Compiling: $<"
+	  @$(CC) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@ && \
+             $(SED) -e 's,^$(notdir $@),$@,' $(basename $(notdir $@)).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT)
+	  @rm $(basename $(notdir $@)).$(CC_DEPEND_EXT)
+        else
+	  $(CC) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@ && \
+             $(SED) -e 's,^$(notdir $@),$@,' $(basename $(notdir $@)).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT)
+	  rm $(basename $(notdir $@)).$(CC_DEPEND_EXT)
+        endif
+      else
+        ifeq ($(CC_DEPEND_MODE),stdout)
+          #
+          # .d - most likely gcc... have to explicitly put it in a .d file.
+          #
+          # -M outputs to stdout(err?) dependency info.  Redirect this output
+          # to a temp file.  Awk that file to replace filename.o with:
+          # <path_to_file>/filename.o.  Then remove the temp file.
+          #
+	  @echo "CREATING DEPENDENCY INFORMATION:"
+	  @rm -f $(basename $@).$(CC_DEPEND_EXT)
+	  $(CC) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< | sed 's,^$(notdir $@),$@,g' > $(basename $@).$(CC_DEPEND_EXT)
+	  @rm -f $(basename $@).depend
+
+          # Now do the actual compile!
+	  @echo "ACTUALLY COMPILING:"
+	  $(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+        else
+	  @echo ".c rule: Unknown CC_DEPEND_MODE: $(CC_DEPEND_MODE)"
+	  @exit 1
+        endif
+      endif
+    endif
+  endif
+endif
+
+.s.$(OBJEXT): $<
+	$(AS) $(ASFLAGS) -o $@ $< -o $@
+
+.cxx.o: $<
+ifeq ($(SCI_MAKE_BE_QUIET),true)
+	@-rm -f $@
+else
+	-rm -f $@
+endif
+ifeq ($(CC_DEPEND_MODE),normal)
+  ifeq ($(SCI_MAKE_BE_QUIET),true)
+	@echo "Compiling: $<"
+	@$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@ ;
+  else
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@ ;
+  endif
+else
+  ifeq ($(CC_DEPEND_MODE),modify)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@ && $(SED) -e 's,^$(notdir $@),$@,' $(basename $@).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT).tmp && mv -f $(basename $@).$(CC_DEPEND_EXT).tmp $(basename $@).$(CC_DEPEND_EXT)
+  else
+    ifeq ($(CC_DEPEND_MODE),move)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@
+	sed 's,^$(basename $@),$@,g' $(basename $(notdir $@)).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT)
+	rm $(basename $(notdir $@)).$(CC_DEPEND_EXT)
+    else
+      ifeq ($(CC_DEPEND_MODE),stdout)
+        #
+        # .d - most likely gcc... have to explicitly put it in a .d file.
+        #
+        # -M outputs to stdout(err?) dependency info.  Redirect this output
+        # to a temp file.  Prepend that file to replace filename.o with:
+        # <path_to_file>/filename.o.  Then remove the temp file.
+        #
+	@echo "CREATING DEPENDENCY INFORMATION:"
+	@rm -f $(basename $@).$(CC_DEPEND_EXT)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< | sed 's,^$(notdir $@),$@,g' > $(basename $@).$(CC_DEPEND_EXT)
+
+        # Now do the actual compile!
+	@echo "ACTUALLY COMPILING:"
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(call repository,$@) -c $< -o $@
+      else
+	@echo ".cxx rule: Unknown CC_DEPEND_MODE: $(CC_DEPEND_MODE)"
+	@exit 1
+      endif
+    endif
+  endif
+endif
