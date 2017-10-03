@@ -2483,7 +2483,7 @@ OnDemandDataWarehouse::getRegionModifiable(       GridVariableBase& var,
   // In non-cubic levels there may be overlapping patches that need to be accounted for.
   std::pair<int, int> overLapCells_range = std::make_pair( 0,0 );
   
-  if ( level->isNonCubic() || true ){             //__________________________________TODO: isNonCubic() doesn't work for all domains. --Todd
+  if ( level->isNonCubic() ){
     overLapCells_range = level->getOverlapCellsInRegion( patches, reqLow, reqHigh);
   }
   

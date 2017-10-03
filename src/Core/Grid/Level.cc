@@ -696,9 +696,9 @@ Level::setIsNonCubicLevel()
 void Level::setOverlappingPatches()
 { 
 
-//  if ( m_isNonCubicDomain == false ){     //The NonCubicDomain variable is not set properly for all problems.  Need to fix.  Todd
- //   return 0;
-//  }
+  if ( m_isNonCubicDomain == false ){     //  for cubic domains just return
+    return;
+  }
 
   for (unsigned i = 0; i < m_real_patches.size(); i++) {
     const Patch* patch = m_real_patches[i];
@@ -762,10 +762,10 @@ Level::getOverlapCellsInRegion( const selectType & patches,
                                 const IntVector  & regionLow, 
                                 const IntVector  & regionHigh) const
 {
-  // cubic domains never have overlapping patches  The NonCubicDomain variable is not set properly for all problems.  Need to fix, which I'm sitting on  Todd
-//  if ( m_isNonCubicDomain == false ){
-//    return 0;
-//  }
+  // cubic domains never have overlapping patches, just return
+  if ( m_isNonCubicDomain == false ){
+    return std::make_pair( -9, -9);
+  }
 
   int minOverlapCells   = INT_MAX;
   int totalOverlapCells = 0;
