@@ -144,22 +144,25 @@ replaced_mem="false"
 replaced_perf="false"
 replaced_input="false"
 replaced_checkpoint="false"
+
+echo "__________________________________$testname"
+
 #__________________________________
 # replace UDA
 if [[ "$do_uda" = "true"|| "$do_all" = "true" ]]; then
   if [ ! -d $replacement_dir/$testname/*.uda ]; then
-    echo "No udas to replace, or not replacing them"
+    echo "  - No uda ($testname) to replace"
   else
   
     # remove the udas, sus.log.txt, and copy the new ones
     failcode="0"
-    echo -n "Replacing $testname udas ... "
+    echo  "  - Replacing uda "
     rm -rf $gold_standard_dir/$testname/*.uda
-    rm -f $gold_standard_dir/$testname/sus.log.txt
+    rm -f  $gold_standard_dir/$testname/sus.log.txt
     
     if [ $? != "0" ]; then
       failcode="1"
-      echo "$testname replacement failed - could not remove old udas"
+      echo "      FAILED: could not remove old udas"
     fi
 
     # if it has a --dereference option, then use it
@@ -168,17 +171,17 @@ if [[ "$do_uda" = "true"|| "$do_all" = "true" ]]; then
     
     # sometimes it doesn't work with --dereference...
     if [ $? != "0" ]; then
-      cp -r $replacement_dir/$testname/*.uda       $gold_standard_dir/$testname/.
-      cp -r $replacement_dir/$testname/sus.log.txt $gold_standard_dir/$testname/.
+      cp -r $replacement_dir/$testname/*.uda       $gold_standard_dir/$testname/. > /dev/null 2>&1
+      cp -r $replacement_dir/$testname/sus.log.txt $gold_standard_dir/$testname/. > /dev/null 2>&1
       
       if [ $? != "0" ]; then
         failcode="1"
-	 echo "$testname replacement failed - could not copy new udas"
+	 echo "      FAILED: could not copy new udas to the goldStandard"
       fi
     fi
     
     if [ "$failcode" = "0" ]; then
-      echo "udas successfully replaced"
+      echo "      Successful"
       replaced_uda="true"
     fi
     
@@ -190,18 +193,18 @@ fi
 if [ "$do_checkpoint" = "true" ]; then
 
   if [ ! -d $replacement_dir/$testname/*.uda/checkpoints ]; then
-    echo "No checkpoints to replace, or not replacing them"
+    echo "  - No checkpoints to replace."
   else
 
     # remove the checkpoints, and copy the new ones
     failcode="0"
-    echo -n "Replacing $testname checkpoints ... "
+    echo -n "  - Replacing checkpoints"
     
     rm -rf $gold_standard_dir/$testname/*.uda/checkpoints
   
     if [ $? != "0" ]; then
       failcode="1"
-      echo "$testname checkpoint replacement failed - could not remove old checkpoint directory"
+      echo "      FAILED: could not remove old checkpoint directory"
     fi
 
     # if it has a --dereference option, then use it
@@ -213,12 +216,12 @@ if [ "$do_checkpoint" = "true" ]; then
       
       if [ $? != "0" ]; then
         failcode="1"
-	echo "$testname checkpoint replacement failed - could not copy the new checkpoint"
+	echo "      FAILED: could not copy the new checkpoint"
       fi
     fi
     
     if [ "$failcode" = "0" ]; then
-      echo "checkpoint successfully replaced"
+      echo "      Successful"
       replaced_checkpoint="true"
     fi
    
@@ -230,30 +233,42 @@ fi
 if [[ "$do_mem" = "true" || "$do_all" = "true" ]]; then
 
   if [ ! -f $gold_standard_dir/$testname/malloc_stats ]; then
-    echo "No memory stats to replace"
+    echo "  - No memory stats to replace"
   else
   
     # replace the memory usage (both normal and restart)
     failcode="0"
-    echo "Replacing $testname memory results"
+    echo "  - Replacing memory usage stats"
     
     rm -f $gold_standard_dir/$testname/*malloc* > /dev/null 2>&1
     
     if [ $? != "0" ]; then
       failcode="1"
-      echo "$testname memory usage replacement failed - could not remove old memory stats file"
+      echo "      FAILED: could not remove old memory stats file"
     fi
     
+    # original uda
     cp $replacement_dir/$testname/malloc_stats                 $gold_standard_dir/$testname/. > /dev/null 2>&1
     cp $replacement_dir/$testname/restart/restart_malloc_stats $gold_standard_dir/$testname/. > /dev/null 2>&1
     
     if [ $? != "0" ]; then
       failcode="1"
-      echo "$testname memory usage replacement failed - could not copy the new memory usage file from either the original uda or the restart"
+      echo "      FAILED - could not copy the new memory usage file from the original uda"
+    fi
+
+    # restart (if it exists)
+    if [ -f $replacement_dir/$testname/restart/restart_malloc_stats ]; then
+    
+      cp $replacement_dir/$testname/restart/restart_malloc_stats $gold_standard_dir/$testname/. > /dev/null 2>&1
+      
+      if [ $? != "0" ]; then
+        failcode="1"
+        echo "      FAILED - could not copy the new memory usage file from the restart"
+      fi
     fi
     
     if [ "$failcode" = "0" ]; then
-      echo "memory stats successfully replaced"
+      echo "      Successful"
       replaced_mem="true"
     fi
     
@@ -264,28 +279,42 @@ fi
 # replace performance stats
 if  [[ "$do_perf" = "true" || "$do_all" = "true" ]]; then
   if [ ! -f $replacement_dir/$testname/timestamp ]; then
-    echo "No performance stats to replace"
+    echo "  - No performance stats to replace"
   else
     # replace the performance results (both normal and restart)
     failcode="0"
-    echo "Replacing $testname performance results"
+    echo "  - Replacing performance stats."
     
     rm -f $gold_standard_dir/$testname/*timestamp > /dev/null 2>&1
     
     if [ $? != "0" ]; then
       failcode="1"
-      echo "$testname performance replacement failed - could not remove old performance stats"
+      echo "      FAILED: could not remove old performance stats"
     fi
     
-    cp $replacement_dir/$testname/timestamp                 $gold_standard_dir/$testname/. > /dev/null 2>&1
-    cp $replacement_dir/$testname/restart/restart_timestamp $gold_standard_dir/$testname/. > /dev/null 2>&1
+    # original uda
+    cp $replacement_dir/$testname/timestamp  $gold_standard_dir/$testname/. > /dev/null 2>&1
+    
     
     if [ $? != "0" ]; then
       failcode="1"
-      echo "$testname performance replacement failed - could not copy the new performance stats from either the original uda or the restart"
+      echo "      FAILED: could not copy the new performance stats from the original uda"
     fi
+    
+    # restart (if it exists)
+    if [ -f $replacement_dir/$testname/restart/restart_timestamp ]; then
+    
+      cp $replacement_dir/$testname/restart/restart_timestamp $gold_standard_dir/$testname/. > /dev/null 2>&1
+      
+      if [ $? != "0" ]; then
+        failcode="1"
+        echo "      FAILED - could not copy the new performance stats from the restart"
+      fi
+    fi
+    
+    
     if [ "$failcode" = "0" ]; then
-      echo "performance stats successfully replaced"
+      echo "      Successful"
       replaced_perf="true"
     fi
     
@@ -295,7 +324,7 @@ fi
 #__________________________________
 # replace input file
 if [ "$do_input" = "true" ]; then
-  echo "Replacing $testname input file"
+  echo "  - Replacing input file"
   cp $replacement_dir/$testname/*.uda/input*.xml $gold_standard_dir/$testname/*.uda/. > /dev/null 2>&1
 fi
 
@@ -304,12 +333,12 @@ fi
 # clear highwater memory and simulation time history logs
 if [[ "$do_logs" = "true" || "$do_all" = "true" ]]; then
   if [ -f $replacement_dir/$testname/memHistory ]; then
-    echo "Clearing ($testname) high water memory usage log."
+    echo "  Clearing ($testname) high water memory usage log."
     mv $replacement_dir/$testname/memHistory $replacement_dir/$testname/memHistory.old
     cleared_logs="true"
   fi
   if [ -f $replacement_dir/$testname/perfHistory ]; then
-    echo "Clearing ($testname) simulation run time log."
+    echo "  Clearing ($testname) simulation run time log."
     mv $replacement_dir/$testname/perfHistory $replacement_dir/$testname/perfHistory.old
     cleared_logs="true"
   fi
