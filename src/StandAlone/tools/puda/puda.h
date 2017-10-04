@@ -80,6 +80,7 @@ namespace Uintah {
     bool tsup_set;
     int tskip;
     int matl;
+    int m_all;
     std::string i_xd;
     std::string filebase;
     std::string particleVariable;
@@ -135,6 +136,7 @@ namespace Uintah {
       tsup_set = false;
       tskip = 1;
       matl  = 0;
+      m_all  = 0;
     }
   };
 

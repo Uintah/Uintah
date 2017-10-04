@@ -132,7 +132,8 @@ usage( const std::string& badarg, const std::string& progname )
   cerr << "  -verbose             (prints status of output)\n";
   cerr << "  -timesteplow <int>   (only outputs timestep from int)\n";
   cerr << "  -timestephigh <int>  (only outputs timesteps upto int)\n";
-  cerr << "  -matl,mat <int>      (only outputs data for matl)\n";
+  cerr << "  -matl,mat <int>      (matl)\n";
+  cerr << "  -m_all               (material number for \"all in one material\")\n";
   cerr << "  -pic                 (prints particle ids of all particles  in cell\n";
   cerr << "                        <i> <j> <k> [ints] on the specified timesteps)\n";
   cerr << "  -pol                 (prints out average of all particles in a cell over an\n";
@@ -409,6 +410,12 @@ main(int argc, char** argv)
       clf.do_material = true;
       mat = clf.matl;
 
+    } else if (s == "-m_all") {
+      if(i+1 >= argc)
+      {
+         usage("-m_all", argv[0]);
+      }
+      clf.m_all = strtoul(argv[++i],(char**)nullptr,10);
     } else if (s == "-verbose") {
       clf.do_verbose = true;
     } else if (s == "-timesteplow" ||

@@ -36,10 +36,12 @@
 // Usage looks like the following, assuming that one is already inside of
 // the uda from which data is to be extracted:
 
-// > /path/to/puda -contactStress -matl M -timesteplow TL -timestephigh TH .
+// > /path/to/puda -contactStress -matl M -m_all MA -timesteplow TL -timestephigh TH .
 
-// where TL and TH are the low and high output timesteps to be analyzed, and
-// M is the maximum material number with which contacts will be sought.
+// where TL and TH are the low and high output timesteps to be analyzed,
+// M is the maximum material number with which contacts will be sought, and
+// MA is the index of the "all in one" material.  MA will be 1 greater than the
+// largest material index (including tracers, if present).
 
 // Output from this will be a series of files of the format contactsWGroupN.YYY
 // where N is the material number with which other materials will contact,
@@ -85,7 +87,7 @@ Uintah::contactStress( DataArchive * da, CommandLineFlags & clf )
                              clf.time_step_lower, clf.time_step_upper);
 
     int maxMatl = clf.matl;
-    int m_all = maxMatl+1;
+    int m_all = clf.m_all;
 
     string fileroot("contactsWGroup");
 
@@ -114,7 +116,7 @@ Uintah::contactStress( DataArchive * da, CommandLineFlags & clf )
         out.precision(8);
 
         out << "%outputting for time["<< t <<"] = " << time << endl;
-        out << "material_1  material_2 nodePos_x nodePos_y nodePos_z nodeIdxI nodeIdxJ nodeIdxK mass_1 mass_2 pressure_1 pressure_2 pressure_N eqStress1 eqStress2 eqStressN color_1 color_2" << endl;
+        out << "%material_1  material_2 nodePos_x nodePos_y nodePos_z nodeIdxI nodeIdxJ nodeIdxK mass_1 mass_2 pressure_1 pressure_2 pressure_N eqStress1 eqStress2 eqStressN color_1 color_2" << endl;
         GridP grid = da->queryGrid(t);
         LevelP level = grid->getLevel(grid->numLevels()-1);
         for(Level::const_patch_iterator iter = level->patchesBegin();
