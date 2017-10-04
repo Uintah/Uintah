@@ -398,6 +398,7 @@ RateDeposition::register_timestep_eval( std::vector<ArchesFieldContainer::Variab
   register_variable( "surf_in_normY" , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::OLDDW  , variable_registry , time_substep );
   register_variable( "surf_in_normZ" , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::OLDDW  , variable_registry , time_substep );
   register_variable( "temperature" , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::LATEST  , variable_registry );
+  register_variable( "volFraction",     ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::OLDDW, variable_registry );
 
   register_variable( "areaFractionFX", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW , variable_registry );
   register_variable( "areaFractionFY", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW , variable_registry );
@@ -407,6 +408,18 @@ RateDeposition::register_timestep_eval( std::vector<ArchesFieldContainer::Variab
 
 void
 RateDeposition::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+     
+    double CaO=_CaO;double MgO=_MgO; double AlO=_AlO;double SiO=_SiO; //const double alpha=0;
+     // const double B0=0; const doulbe B1=0; const double B3=0;
+     double CaOmolar=0.0;               double AlOmolar=0.0;
+     CaOmolar=CaO/(CaO+MgO+AlO+SiO);            AlOmolar=AlO/(CaO+MgO+AlO+SiO);
+     const double alpha=CaOmolar/(AlOmolar+CaOmolar);
+     const double B0=13.8+39.9355*alpha-44.049*alpha*alpha;
+     const double B1=30.481-117.1505*alpha+129.9978*alpha*alpha;
+     const double B2=-40.9429+234.0486*alpha-300.04*alpha*alpha;
+     const double B3= 60.7619-153.9276*alpha+211.1616*alpha*alpha;
+     const double Bactivational=B0+B1*SiO+B2*SiO*SiO+B3*SiO*SiO*SiO;
+     const double Aprepontional=exp(-(0.2693*Bactivational+11.6725));  //const double Bactivational= 47800;
 
   // computed probability variables:
   SFCXVariable<double>& ProbSurfaceX =  *(tsk_info->get_uintah_field<SFCXVariable<double> >(_ProbSurfaceX_name) );
@@ -425,6 +438,7 @@ RateDeposition::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   constSFCXVariable<double>&  areaFractionX =   *(tsk_info->get_const_uintah_field<constSFCXVariable<double> >("areaFractionFX") );
   constSFCYVariable<double>&  areaFractionY =   *(tsk_info->get_const_uintah_field<constSFCYVariable<double> >("areaFractionFY") );
   constSFCZVariable<double>&  areaFractionZ =   *(tsk_info->get_const_uintah_field<constSFCZVariable<double> >("areaFractionFZ") );
+  constCCVariable<double>& volFraction = tsk_info->get_const_uintah_field_add<constCCVariable<double> >("volFraction");
 
   // constant gas temperature
   constCCVariable<double>&   WallTemperature =  *(tsk_info->get_const_uintah_field<constCCVariable<double> >("temperature"));
@@ -443,26 +457,30 @@ RateDeposition::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
      const double T_temp   = WallTemperature(i,j,k);
      //const double MaxT_temp= WallTemperature(i,j,k);
      const double MaxT_temp= 2000.0;
+     
+     if(  Norm_out_X(i,j,k) != 0.0 || Norm_out_Y(i,j,k) !=0 || Norm_out_Z(i,j,k)!=0 ){
 
    // X direction
-     {   Prob_self= compute_prob_stick( areaX_temp, T_temp,MaxT_temp);
-         Prob_near= compute_prob_stick( areaX_temp, WallTemperature(i-1,j,k),MaxT_temp);
+     {   Prob_self= compute_prob_stick(Aprepontional,Bactivational, areaX_temp, T_temp,MaxT_temp);
+         Prob_near= compute_prob_stick(Aprepontional,Bactivational, areaX_temp, WallTemperature(i-1,j,k),MaxT_temp);
 
         ProbSurfaceX(i,j,k) =    Norm_out_X(i,j,k)>0 ? Prob_near: Prob_self;
      }
 
     // Y direction
-    {   Prob_self= compute_prob_stick( areaY_temp, T_temp,MaxT_temp);
-        Prob_near= compute_prob_stick( areaY_temp, WallTemperature(i,j-1,k),MaxT_temp);
+    {   Prob_self= compute_prob_stick(Aprepontional,Bactivational, areaY_temp, T_temp,MaxT_temp);
+        Prob_near= compute_prob_stick(Aprepontional,Bactivational, areaY_temp, WallTemperature(i,j-1,k),MaxT_temp);
 
         ProbSurfaceY(i,j,k) =    Norm_out_Y(i,j,k)>0 ? Prob_near: Prob_self;
      }
    // Z direction
-     {  Prob_self= compute_prob_stick( areaZ_temp, T_temp,MaxT_temp);
-        Prob_near= compute_prob_stick( areaZ_temp, WallTemperature(i,j,k-1),MaxT_temp);
+     {  Prob_self= compute_prob_stick(Aprepontional,Bactivational, areaZ_temp, T_temp,MaxT_temp);
+        Prob_near= compute_prob_stick(Aprepontional,Bactivational, areaZ_temp, WallTemperature(i,j,k-1),MaxT_temp);
 
         ProbSurfaceZ(i,j,k) =    Norm_out_Z(i,j,k)>0 ? Prob_near: Prob_self;
      }
+
+     }//determine flow cell close to wall
   });
 
   for(int e=0; e<_Nenv; e++){
@@ -538,48 +556,51 @@ RateDeposition::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
      const double w_temp=  zvel(i,j,k);
      const double T_temp = ParticleTemperature(i,j,k);
      const double MaxT_temp= MaxParticleTemperature(i,j,k);
+     
+     if(Norm_in_X(i,j,k)!=0.0 ||  Norm_in_Y(i,j,k)!=0.0 || Norm_in_Z(i,j,k)!=0.0 ){
 
     //--------------------compute the particle flux --------------------------------------------------------------
    // X direction
-     {   Prob_self= compute_prob_stick( areaX_temp, T_temp,MaxT_temp);
-         Prob_near= compute_prob_stick( areaX_temp, ParticleTemperature(i-1,j,k), MaxParticleTemperature(i-1,j,k));
+     {   Prob_self= compute_prob_stick(Aprepontional,Bactivational, areaX_temp, T_temp,MaxT_temp);
+         Prob_near= compute_prob_stick(Aprepontional,Bactivational, areaX_temp, ParticleTemperature(i-1,j,k), MaxParticleTemperature(i-1,j,k));
          ProbParticleX(i,j,k) =    Norm_in_X(i,j,k)>0 ? Prob_near: Prob_self;
          ProbDepositionX(i,j,k)= std::min(1.0, 0.5*(ProbParticleX(i,j,k)+sqrt(ProbParticleX(i,j,k)*ProbParticleX(i,j,k) +4*(1-ProbParticleX(i,j,k))*ProbSurfaceX(i,j,k))));
 
-         flux_self=rho_temp*u_temp*weight_temp*_pi_div_six*pow(dia_temp,3);
-         flux_near=rho(i-1,j,k)*xvel(i-1,j,k)*weight(i-1,j,k)*_pi_div_six*pow(diameter(i-1,j,k),3);
+         flux_self=rho_temp*u_temp*weight_temp*_pi_div_six*dia_temp*dia_temp*dia_temp;
+         flux_near=rho(i-1,j,k)*xvel(i-1,j,k)*weight(i-1,j,k)*_pi_div_six*(diameter(i-1,j,k)*diameter(i-1,j,k)*diameter(i-1,j,k));
          FluxPx(i,j,k)=          Norm_in_X(i,j,k)>0? flux_near:flux_self;
 
          RateDepositionX(i,j,k)= FluxPx(i,j,k)*Norm_in_X(i,j,k)>0.0 ? FluxPx(i,j,k)*ProbDepositionX(i,j,k):0.0;
      }
 
     // Y direction
-     {   Prob_self= compute_prob_stick( areaY_temp, T_temp,MaxT_temp);
-         Prob_near= compute_prob_stick( areaY_temp, ParticleTemperature(i,j-1,k), MaxParticleTemperature(i,j-1,k));
+     {   Prob_self= compute_prob_stick(Aprepontional,Bactivational, areaY_temp, T_temp,MaxT_temp);
+         Prob_near= compute_prob_stick(Aprepontional,Bactivational, areaY_temp, ParticleTemperature(i,j-1,k), MaxParticleTemperature(i,j-1,k));
          ProbParticleY(i,j,k) =    Norm_in_Y(i,j,k)>0 ? Prob_near: Prob_self;
          ProbDepositionY(i,j,k)= std::min(1.0, 0.5*(ProbParticleY(i,j,k)+sqrt(ProbParticleY(i,j,k)*ProbParticleY(i,j,k) +4*(1-ProbParticleY(i,j,k))*ProbSurfaceY(i,j,k))));
 
-         flux_self=rho_temp*v_temp*weight_temp*_pi_div_six*pow(dia_temp,3);
-         flux_near=rho(i,j-1,k)*yvel(i,j-1,k)*weight(i,j-1,k)*_pi_div_six*pow(diameter(i,j-1,k),3);
+         flux_self=rho_temp*v_temp*weight_temp*_pi_div_six*dia_temp*dia_temp*dia_temp;
+         flux_near=rho(i,j-1,k)*yvel(i,j-1,k)*weight(i,j-1,k)*_pi_div_six*(diameter(i,j-1,k)*diameter(i,j-1,k)*diameter(i,j-1,k));
          FluxPy(i,j,k)=          Norm_in_Y(i,j,k)>0? flux_near:flux_self;
 
          RateDepositionY(i,j,k)= FluxPy(i,j,k)*Norm_in_Y(i,j,k)>0.0 ? FluxPy(i,j,k)*ProbDepositionY(i,j,k):0.0;
      }
 
     // Z direction
-     {   Prob_self= compute_prob_stick( areaZ_temp, T_temp,MaxT_temp);
-         Prob_near= compute_prob_stick( areaZ_temp, ParticleTemperature(i,j,k-1), MaxParticleTemperature(i,j,k-1));
+     {   Prob_self= compute_prob_stick(Aprepontional,Bactivational, areaZ_temp, T_temp,MaxT_temp);
+         Prob_near= compute_prob_stick(Aprepontional,Bactivational, areaZ_temp, ParticleTemperature(i,j,k-1), MaxParticleTemperature(i,j,k-1));
          ProbParticleZ(i,j,k) =    Norm_in_Z(i,j,k)>0 ? Prob_near: Prob_self;
          ProbDepositionZ(i,j,k)= std::min(1.0, 0.5*(ProbParticleZ(i,j,k)+sqrt(ProbParticleZ(i,j,k)*ProbParticleZ(i,j,k) +4*(1-ProbParticleZ(i,j,k))*ProbSurfaceZ(i,j,k))));
 
-         flux_self=rho_temp*w_temp*weight_temp*_pi_div_six*pow(dia_temp,3);
-         flux_near=rho(i,j,k-1)*zvel(i,j,k-1)*weight(i,j,k-1)*_pi_div_six*pow(diameter(i,j,k-1),3);
+         flux_self=rho_temp*w_temp*weight_temp*_pi_div_six*dia_temp*dia_temp*dia_temp;
+         flux_near=rho(i,j,k-1)*zvel(i,j,k-1)*weight(i,j,k-1)*_pi_div_six*(diameter(i,j,k-1)*diameter(i,j,k-1)*diameter(i,j,k-1));
          FluxPz(i,j,k)=        Norm_in_Z(i,j,k)>0? flux_near:flux_self;
 
          RateDepositionZ(i,j,k)= FluxPz(i,j,k)*Norm_in_Z(i,j,k)>0.0 ? FluxPz(i,j,k)*ProbDepositionZ(i,j,k):0.0;
 
      }
-
+       
+     }//determine flow cell close to wall
 
     });
   } // end for environment
