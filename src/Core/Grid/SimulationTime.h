@@ -83,7 +83,6 @@ public:
   double m_override_restart_delt;   // Override the restart delta T value
 
   double m_max_wall_time;           // Maximum wall time.
-  double m_curr_sim_time;           // Current simulation time, set by SimController
   
   bool m_clamp_time_to_output;      // Clamp the time to the next output or checkpoint
   bool m_end_at_max_time;           // End the simulation at exactly this time.

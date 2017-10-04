@@ -117,8 +117,6 @@ SimulationTime::SimulationTime( const ProblemSpecP & params )
 				"and has been replaced by end_at_max_time_exactly.",
                                 __FILE__, __LINE__);
   }
-
-  m_curr_sim_time = m_init_time;
 }
 
 //__________________________________

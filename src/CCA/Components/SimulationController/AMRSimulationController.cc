@@ -614,7 +614,6 @@ AMRSimulationController::run()
 
     // Update the time and get the next output checkpoint time step.
     d_simTime += d_delt;
-    d_timeinfo->m_curr_sim_time = d_simTime;
 
     // Get the next delta T
     getNextDeltaT();
@@ -681,7 +680,6 @@ AMRSimulationController::doInitialTimestep()
     d_currentGridP->performConsistencyCheck();
 
     d_simTime = d_startSimTime;
-    d_sharedState->setSimulationTime(d_timeinfo);
 
     d_sim->restartInitialize();
 
