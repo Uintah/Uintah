@@ -17,9 +17,8 @@
 #include <Core/Grid/Box.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Exceptions/InvalidValue.h>
+#include <Core/Parallel/MasterLock.h>
 #include <Core/Util/DebugStream.h>
-
-#include <mutex>
 
 
 //============================================
@@ -999,10 +998,11 @@ namespace Uintah{
       bool _do_energy_exchange;
       bool _mpm_energy_exchange;
 
-      std::mutex _bc_face_iterator_lock{};
-      std::mutex _interior_cell_iterator_lock{};
-      std::mutex _bc_cell_iterator_lock{};
-      std::mutex _iterator_initializer_lock{};
+      using Mutex = Uintah::MasterLock;
+      Mutex _bc_face_iterator_lock{};
+      Mutex _interior_cell_iterator_lock{};
+      Mutex _bc_cell_iterator_lock{};
+      Mutex _iterator_initializer_lock{};
 
       const VarLabel* _T_label{nullptr};
 

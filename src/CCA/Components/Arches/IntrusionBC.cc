@@ -36,9 +36,8 @@
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Parallel/CrowdMonitor.hpp>
+#include <Core/Parallel/MasterLock.h>
 #include <Core/Util/DOUT.hpp>
-
-#include <mutex>
 
 using namespace Uintah;
 
@@ -49,7 +48,8 @@ namespace {
 struct intrustion_map_tag{};
 using  intrusion_map_monitor = Uintah::CrowdMonitor<intrustion_map_tag>;
 
-std::mutex intrusion_print_mutex{};
+using Mutex = Uintah::MasterLock;
+Mutex intrusion_print_mutex{};
 
 }
 
@@ -1036,7 +1036,7 @@ IntrusionBC::printIntrusionInformation( const ProcessorGroup*,
                                         DataWarehouse* new_dw )
 {
   // RAII-style approach to acquiring output mutex for this entire scoped block.
-  std::lock_guard<std::mutex> print_lock(intrusion_print_mutex);
+  std::lock_guard<Mutex> print_lock(intrusion_print_mutex);
 
   for (int p = 0; p < patches->size(); p++) {
 

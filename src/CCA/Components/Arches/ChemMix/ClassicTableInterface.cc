@@ -43,6 +43,7 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/InvalidState.h>
+#include <Core/Parallel/MasterLock.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
@@ -52,7 +53,6 @@
 #include <zlib.h>
 
 #include <cstdio>
-#include <mutex>
 #include <sstream>
 
 #define OLD_TABLE 1
@@ -63,8 +63,9 @@ using namespace Uintah;
 
 namespace {
 
-std::mutex dependency_map_mutex{};
-std::mutex enthalpy_map_mutex{};
+using Mutex = Uintah::MasterLock;
+Mutex dependency_map_mutex{};
+Mutex enthalpy_map_mutex{};
 
 }
 
