@@ -61,7 +61,6 @@ void
 Uintah::geocosm( DataArchive * da, CommandLineFlags & clf )
 {
   bool have_volume = false;
-  bool have_plastic_strain = false;
   vector<string> vars;
   vector<const Uintah::TypeDescription*> types;
   da->queryVariables(vars, types);
@@ -71,9 +70,6 @@ Uintah::geocosm( DataArchive * da, CommandLineFlags & clf )
     cout << vars[i] << ": " << types[i]->getName() << endl;
     if(vars[i]=="p.volume"){
        have_volume=true;
-    }
-    if(vars[i]=="p.plasticStrain"){
-       have_plastic_strain=true;
     }
   }
 
@@ -99,12 +95,10 @@ Uintah::geocosm( DataArchive * da, CommandLineFlags & clf )
     filename = partroot + "." + fnum.str() + "." + mnum.str();
     ofstream partfile(filename.c_str());
 
-    if(have_volume && have_plastic_strain){
+    if(have_volume){
       partfile << "# x y z pID color sigxx, sigyy sigzz sigyz sigxz sigxy pressure equiv_stress plasStrain volume" << endl;
-    }else if(!have_volume && have_plastic_strain){
+    }else{
       partfile << "# x y z pID color sigxx, sigyy sigzz sigyz sigxz sigxy pressure equiv_stress plasStrain" << endl;
-    }else if(have_volume && !have_plastic_strain){
-      partfile << "# x y z pID color sigxx, sigyy sigzz sigyz sigxz sigxy pressure equiv_stress volume" << endl;
     }
 
     for(int l=0;l<grid->numLevels();l++){
