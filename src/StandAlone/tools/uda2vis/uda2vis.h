@@ -46,7 +46,6 @@
 namespace Uintah {
 
 TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
-			      SimulationStateP simStateP,
 			      GridP grid,
 			      bool useExtraCells);
 

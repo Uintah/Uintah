@@ -151,6 +151,18 @@ public:
     }
   }
 
+  // getNodeId
+  int getNodeId() const
+  {
+    return node_id;
+  }
+
+  // setNodeId
+  void setNodeId(const int new_node_id)
+  {
+    node_id = new_node_id;
+  }
+
   // getProcId
   int getProcId() const
   {
@@ -293,6 +305,7 @@ private:
 
   int patch_id;
   int proc_id;
+  int node_id;
 };
 
 

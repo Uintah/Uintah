@@ -748,10 +748,76 @@ namespace Uintah {
 // including variable/material info, and level/patch info
 // This uses the scheduler for in-situ.
 TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
-                              SimulationStateP simStateP,
                               GridP gridP,
                               bool useExtraCells)
 {
+  int my_rank, num_procs;
+  MPI::Comm_rank(MPI_COMM_WORLD, &my_rank);
+  MPI::Comm_size(MPI_COMM_WORLD, &num_procs);
+
+  char my_proc_name[MPI_MAX_PROCESSOR_NAME];
+  int resultlen;
+	
+  MPI::Get_processor_name( my_proc_name, &resultlen );
+
+  char all_proc_names[num_procs*MPI_MAX_PROCESSOR_NAME+1];
+  all_proc_names[num_procs*MPI_MAX_PROCESSOR_NAME] = '\0';
+  
+  MPI::Gather(my_proc_name, MPI_MAX_PROCESSOR_NAME, MPI_CHAR,
+	      all_proc_names, MPI_MAX_PROCESSOR_NAME, MPI_CHAR, 0, MPI_COMM_WORLD);
+
+  char proc_name[MPI_MAX_PROCESSOR_NAME];
+  int num_proc_names = 0;
+
+  if( my_rank == 0 )
+  {
+    std::map< std::string, unsigned int > proc_name_map;
+    
+    for( unsigned int i=0; i<num_procs; ++i )
+    {
+      unsigned int cc = i * MPI_MAX_PROCESSOR_NAME;
+      
+      strncpy( &(all_proc_names[cc]), proc_name, MPI_MAX_PROCESSOR_NAME);
+
+      if( proc_name_map.find(std::string(proc_name) ) == proc_name_map.end() )
+      {
+	proc_name_map[ std::string(proc_name) ] = num_proc_names;
+
+	cc = num_proc_names * MPI_MAX_PROCESSOR_NAME;
+	
+	strncpy( proc_name, &(all_proc_names[cc]), MPI_MAX_PROCESSOR_NAME);
+
+	++num_proc_names;	
+      }	  
+    }
+  }    
+    
+  MPI::Bcast(&num_proc_names, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+  std::cerr << "number of unique processors " << num_proc_names << std::endl;
+
+  MPI::Bcast(all_proc_names, num_proc_names*MPI_MAX_PROCESSOR_NAME, MPI_CHAR, 0, MPI_COMM_WORLD);
+
+  int my_proc_index;
+  
+  for( unsigned int i=0; i<num_proc_names; ++i )
+  {
+    unsigned int cc = i * MPI_MAX_PROCESSOR_NAME;
+    
+    strncpy( &(all_proc_names[cc]), proc_name, MPI_MAX_PROCESSOR_NAME);
+
+    if( std::string(my_proc_name) == std::string(proc_name) )
+    {
+      my_proc_index = i;
+      break;
+    }
+  }
+  
+  std::cerr << "Processor rank " << my_rank
+	    << " name " << my_proc_name
+	    << " index " << my_proc_index << std::endl;
+
+  
   DataWarehouse    * dw = schedulerP->getLastDW();
   LoadBalancerPort * lb = schedulerP->getLoadBalancer();
 
@@ -886,6 +952,9 @@ TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
       
       // Get the processor id
       patchInfo.setProcId( lb->getPatchwiseProcessorAssignment(patch) );
+      
+      // Get the node id
+      patchInfo.setNodeId( my_proc_index );
     }
   }
 
