@@ -45,7 +45,6 @@
 
 #include <cstring>
 #include <iomanip>
-//#include <mutex>
 
 
 #define USE_PACKING
@@ -61,7 +60,6 @@ Dout g_affinity(    "KokkosOMP_Affinity"   , false);
 Dout g_dbg(         "KokkosOMP_DBG"        , false);
 Dout g_queuelength( "KokkosOMP_QueueLength", false);
 
-//std::mutex g_scheduler_mutex{};        // main scheduler lock for multi-threaded task selection
 using Mutex = Uintah::MasterLock;
 Mutex g_scheduler_mutex{}; // main scheduler lock for multi-threaded task selection
 
@@ -75,14 +73,6 @@ KokkosOpenMPScheduler::KokkosOpenMPScheduler( const ProcessorGroup   * myworld
                                             ,       KokkosOpenMPScheduler * parentScheduler
                                             )
   : MPIScheduler(myworld, oport, parentScheduler)
-{
-
-}
-
-
-//______________________________________________________________________
-//
-KokkosOpenMPScheduler::~KokkosOpenMPScheduler()
 {
 
 }

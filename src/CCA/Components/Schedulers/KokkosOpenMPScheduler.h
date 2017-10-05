@@ -78,7 +78,7 @@ class KokkosOpenMPScheduler : public MPIScheduler  {
 
     KokkosOpenMPScheduler( const ProcessorGroup * myworld, const Output * oport, KokkosOpenMPScheduler * parentScheduler = nullptr );
 
-    virtual ~KokkosOpenMPScheduler();
+    virtual ~KokkosOpenMPScheduler(){};
     
     virtual void problemSetup( const ProblemSpecP & prob_spec, SimulationStateP & state );
       
