@@ -771,21 +771,27 @@ TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
 
   if( my_rank == 0 )
   {
+    std::cerr << "  --" << all_proc_names << "--" << std::endl;
+
     std::map< std::string, unsigned int > proc_name_map;
     
     for( unsigned int i=0; i<num_procs; ++i )
     {
       unsigned int cc = i * MPI_MAX_PROCESSOR_NAME;
       
-      strncpy( &(all_proc_names[cc]), proc_name, MPI_MAX_PROCESSOR_NAME);
+      strncpy( proc_name, &(all_proc_names[cc]), MPI_MAX_PROCESSOR_NAME);
 
+      std::cerr << i << "  " << cc << "  --" << proc_name << "--" << std::endl;
+      
       if( proc_name_map.find(std::string(proc_name) ) == proc_name_map.end() )
       {
 	proc_name_map[ std::string(proc_name) ] = num_proc_names;
 
 	cc = num_proc_names * MPI_MAX_PROCESSOR_NAME;
 	
-	strncpy( proc_name, &(all_proc_names[cc]), MPI_MAX_PROCESSOR_NAME);
+	strncpy( &(all_proc_names[cc]), proc_name, MPI_MAX_PROCESSOR_NAME);
+	
+	std::cerr << num_proc_names << "  --" << proc_name << "--" << std::endl;
 
 	++num_proc_names;	
       }	  
@@ -794,17 +800,18 @@ TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
     
   MPI::Bcast(&num_proc_names, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
-  std::cerr << "number of unique processors " << num_proc_names << std::endl;
+  if( my_rank == 0 )
+    std::cerr << "number of unique processors " << num_proc_names << std::endl;
 
   MPI::Bcast(all_proc_names, num_proc_names*MPI_MAX_PROCESSOR_NAME, MPI_CHAR, 0, MPI_COMM_WORLD);
 
-  int my_proc_index;
+  int my_proc_index = -1;
   
   for( unsigned int i=0; i<num_proc_names; ++i )
   {
     unsigned int cc = i * MPI_MAX_PROCESSOR_NAME;
     
-    strncpy( &(all_proc_names[cc]), proc_name, MPI_MAX_PROCESSOR_NAME);
+    strncpy( proc_name, &(all_proc_names[cc]), MPI_MAX_PROCESSOR_NAME);
 
     if( std::string(my_proc_name) == std::string(proc_name) )
     {
@@ -814,9 +821,8 @@ TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
   }
   
   std::cerr << "Processor rank " << my_rank
-	    << " name " << my_proc_name
-	    << " index " << my_proc_index << std::endl;
-
+  	    << " name " << my_proc_name
+  	    << " index " << my_proc_index << std::endl;
   
   DataWarehouse    * dw = schedulerP->getLastDW();
   LoadBalancerPort * lb = schedulerP->getLoadBalancer();
