@@ -49,18 +49,15 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Math/MiscMath.h>
+#include <Core/Util/DOUT.hpp>
 
 #include <iostream>
 #include <fstream>
-#include <mutex>
 
 using namespace std;
 using namespace Uintah;
 
 static DebugStream dbg("ARCHES", false);
-
-// Used to sync std::cout when output by multiple ranks
-extern std::mutex coutLock;
 
 //--------------------------------------------------------------------------------------------------
 Arches::Arches(const ProcessorGroup* myworld, const bool doAMR) :
@@ -397,10 +394,13 @@ void Arches::assign_unique_boundary_names( Uintah::ProblemSpecP bcProbSpec )
             fndInc = true;
         }
         // rename this face
-        std::cout << "WARNING: I found a duplicate face label " << faceName;
+        std::ostringstream message;
+        message << "WARNING: I found a duplicate face label " << faceName;
         faceName = faceName + "_" + Arches::number_to_string(j);
-        std::cout << " in your Boundary condition specification. I will rename it to "
-          << faceName << std::endl;
+        message << " in your Boundary condition specification. I will rename it to "
+                << faceName << "\n";
+        DOUT(true, message.str());
+
         faceSpec->replaceAttributeValue("name", faceName);
       }
     }

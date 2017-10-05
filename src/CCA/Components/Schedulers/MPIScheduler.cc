@@ -53,7 +53,6 @@
 #include <cstring>
 #include <iomanip>
 #include <map>
-//#include <mutex>
 #include <sstream>
 
 // Pack data into a buffer before sending -- testing to see if this
@@ -71,13 +70,6 @@ using namespace Uintah;
 
 namespace {
 
-//std::mutex g_lb_mutex{};                // load balancer lock
-//std::mutex g_recv_mutex{};              // for postMPIRecvs
-
-//std::mutex g_msg_vol_mutex{};           // to report thread-safe msg volume info
-//std::mutex g_send_time_mutex{};         // for reporting thread-safe MPI send times
-//std::mutex g_recv_time_mutex{};         // for reporting thread-safe MPI recv times
-//std::mutex g_wait_time_mutex{};         // for reporting thread-safe MPI wait times
 using Mutex = Uintah::MasterLock;
 Mutex g_lb_mutex{};                // load balancer lock
 Mutex g_recv_mutex{};              // for postMPIRecvs
@@ -473,7 +465,6 @@ MPIScheduler::postMPISends( DetailedTask * dtask
       Uintah::MPI::Type_size(datatype, &typeSize);
 
       {
-        //std::lock_guard<std::mutex> msg_vol_lock(g_msg_vol_mutex);
         std::lock_guard<Mutex> msg_vol_lock(g_msg_vol_mutex);
         m_message_volume += count * typeSize;
       }
@@ -492,7 +483,6 @@ MPIScheduler::postMPISends( DetailedTask * dtask
   send_timer.stop();
 
   {
-    //std::lock_guard<std::mutex> send_time_lock(g_send_time_mutex);
     std::lock_guard<Mutex> send_time_lock(g_send_time_mutex);
     mpi_info_[TotalSend] += send_timer().seconds();
   }
@@ -541,7 +531,6 @@ void MPIScheduler::postMPIRecvs( DetailedTask * dtask
   std::sort(sorted_reqs.begin(), sorted_reqs.end(), comparator);
 
   // Need this until race condition on foreign variables is resolved - APH, 09/19/17
-  //std::lock_guard<std::mutex> recv_lock(g_recv_mutex);
   std::lock_guard<Mutex> recv_lock(g_recv_mutex);
   {
 
@@ -692,7 +681,6 @@ void MPIScheduler::postMPIRecvs( DetailedTask * dtask
 
 
   {
-    //std::lock_guard<std::mutex> recv_time_lock(g_recv_time_mutex);
     std::lock_guard<Mutex> recv_time_lock(g_recv_time_mutex);
     mpi_info_[TotalRecv] += recv_timer().seconds();
   }
@@ -762,7 +750,6 @@ void MPIScheduler::processMPIRecvs( int test_type )
   process_recv_timer.stop();
 
   {
-    //std::lock_guard<std::mutex> wait_time_lock(g_wait_time_mutex);
     std::lock_guard<Mutex> wait_time_lock(g_wait_time_mutex);
     mpi_info_[TotalWait] += process_recv_timer().seconds();
   }

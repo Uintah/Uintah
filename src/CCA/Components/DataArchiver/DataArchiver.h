@@ -553,7 +553,6 @@ class DataWarehouse;
        std::vector<bool> d_checkpointCalled;
        bool d_checkpointReductionCalled;
 #endif
-       //std::mutex d_outputLock;
        using Mutex = Uintah::MasterLock;
        Mutex d_outputLock;
 

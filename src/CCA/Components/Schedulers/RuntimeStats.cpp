@@ -34,7 +34,6 @@
 #include <iomanip>
 #include <iostream>
 #include <map>
-#include <mutex>
 #include <set>
 #include <sstream>
 #include <streambuf>
@@ -74,7 +73,6 @@ struct ReportValue
   int m_index{-1};
 };
 
-//std::mutex g_report_lock{};
 using Mutex = Uintah::MasterLock;
 Mutex g_report_lock{};
 
@@ -104,7 +102,6 @@ void RuntimeStats::register_report( Dout const& dout
                                   )
 {
   if (mpi_stats || exec_times || wait_times || task_stats) {
-    //std::unique_lock<std::mutex> lock(g_report_lock);
     std::unique_lock<Mutex> lock(g_report_lock);
     ReportValue value { type, get_value, clear_value };
     g_report_values[dout][name] = value;
@@ -134,7 +131,6 @@ void RuntimeStats::initialize_timestep( std::vector<TaskGraph *> const &  graphs
 {
   if (exec_times || wait_times || task_stats) {
 
-    //std::unique_lock<std::mutex> lock(g_report_lock);
     std::unique_lock<Mutex> lock(g_report_lock);
 
     std::set<std::string> task_names;
@@ -497,7 +493,6 @@ void RuntimeStats::report( MPI_Comm comm )
                    );
   }
 
-  //std::unique_lock<std::mutex> lock(g_report_lock);
   std::unique_lock<Mutex> lock(g_report_lock);
 
   int psize;

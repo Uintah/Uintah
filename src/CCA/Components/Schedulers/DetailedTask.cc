@@ -41,7 +41,6 @@
 #include <sci_defs/config_defs.h>
 #include <sci_defs/cuda_defs.h>
 
-//#include <mutex>
 #include <sstream>
 #include <string>
 
@@ -50,15 +49,12 @@ using namespace Uintah;
 
 
 // declared in DetailedTasks.h - used in both places to protect external ready queue (hence, extern here)
-//extern std::mutex g_external_ready_mutex;
 using Mutex = Uintah::MasterLock;
 extern Mutex g_external_ready_mutex;
 
 
 namespace {
 
-//std::mutex g_internal_dependency_mutex{};
-//std::mutex g_dtask_output_mutex{};
 Mutex g_internal_dependency_mutex{};
 Mutex g_dtask_output_mutex{};
 
@@ -413,7 +409,6 @@ DetailedTask::addInternalRequires( DependencyBatch * req )
 void
 DetailedTask::checkExternalDepCount()
 {
-  //std::lock_guard<std::mutex> external_ready_guard(g_external_ready_mutex);
   std::lock_guard<Mutex> external_ready_guard(g_external_ready_mutex);
 
   DOUT(externaldbg, "Rank-" << Parallel::getMPIRank() << " Task " << this->getTask()->getName() << " external deps: "
@@ -500,7 +495,6 @@ DetailedTask::done( std::vector<OnDemandDataWarehouseP> & dws )
 void
 DetailedTask::dependencySatisfied( InternalDependency * dep )
 {
-  //std::lock_guard<std::mutex> internal_dependency_guard(g_internal_dependency_mutex);
   std::lock_guard<Mutex> internal_dependency_guard(g_internal_dependency_mutex);
 
   ASSERT(numPendingInternalDependencies > 0);

@@ -52,7 +52,6 @@
 #include <atomic>
 #include <cstring>
 #include <iomanip>
-//#include <mutex>
 #include <thread>
 
 
@@ -75,9 +74,6 @@ namespace {
 Dout g_dbg(         "Unified_DBG"        , false);
 Dout g_queuelength( "Unified_QueueLength", false);
 
-//std::mutex g_scheduler_mutex{};           // main scheduler lock for multi-threaded task selection
-//std::mutex g_mark_task_consumed_mutex{};  // allow only one task at a time to enter the task consumed section
-//std::mutex g_lb_mutex{};                  // load balancer lock
 using Mutex = Uintah::MasterLock;
 Mutex g_scheduler_mutex{};           // main scheduler lock for multi-threaded task selection
 Mutex g_mark_task_consumed_mutex{};  // allow only one task at a time to enter the task consumed section
@@ -813,7 +809,6 @@ UnifiedScheduler::markTaskConsumed( int          & numTasksDone
                                   , DetailedTask * dtask
                                   )
 {
-  //std::lock_guard<std::mutex> task_consumed_guard(g_mark_task_consumed_mutex);
   std::lock_guard<Mutex> task_consumed_guard(g_mark_task_consumed_mutex);
 
   // Update the count of tasks consumed by the scheduler.

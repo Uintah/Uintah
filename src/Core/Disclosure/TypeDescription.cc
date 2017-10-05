@@ -31,7 +31,6 @@
 
 #include <iostream>
 #include <map>
-//#include <mutex>
 #include <string>
 #include <sstream>
 #include <vector>
@@ -43,7 +42,6 @@ namespace {
 using register_monitor = Uintah::CrowdMonitor<TypeDescription::register_tag>;
 using lookup_monitor   = Uintah::CrowdMonitor<TypeDescription::lookup_tag>;
 
-//std::mutex get_mpi_type_lock{};
 using Mutex = Uintah::MasterLock;
 Mutex get_mpi_type_lock{};
 std::map<std::string, const TypeDescription*> * types_g     = nullptr;
@@ -183,7 +181,6 @@ TypeDescription::getMPIType() const
   if (d_mpitype == MPI_Datatype(-1)) {
 		// scope the lock_guard
     {
-      //std::lock_guard<std::mutex> guard(get_mpi_type_lock);
       std::lock_guard<Mutex> guard(get_mpi_type_lock);
       if (d_mpitype == MPI_Datatype(-1)) {
         if (d_mpitypemaker) {

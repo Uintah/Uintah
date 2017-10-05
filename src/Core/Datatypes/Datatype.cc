@@ -36,14 +36,15 @@
 
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Util/Assert.h>
+#include <Core/Parallel/MasterLock.h>
 
 #include <atomic>
-#include <mutex>
 
 namespace Uintah {
 
 static std::atomic<int32_t> current_generation{1};
-static std::mutex init_lock{};
+using Mutex = Uintah::MasterLock;
+static Mutex init_lock{};
 
 
 int

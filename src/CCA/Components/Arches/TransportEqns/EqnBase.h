@@ -19,10 +19,6 @@
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <CCA/Components/Arches/Directives.h>
 
-#include <mutex>
-
-extern std::mutex cerrLock;
-
 //========================================================================
 
 /**

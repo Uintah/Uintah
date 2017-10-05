@@ -46,7 +46,6 @@
 #include <Core/Util/Timers/Timers.hpp>
 
 #include <list>
-#include <mutex>
 #include <string>
 #include <vector>
 
@@ -440,7 +439,6 @@ private:
   int d_processor;
   int d_numProcessors;
 
-  //std::mutex d_lock;
   using Mutex = Uintah::MasterLock;
   Mutex d_lock;
     

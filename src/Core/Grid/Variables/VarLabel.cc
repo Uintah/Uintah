@@ -30,7 +30,6 @@
 #include <Core/Util/DebugStream.h>
 
 #include <map>
-//#include <mutex>
 #include <iostream>
 #include <sstream>
 
@@ -48,7 +47,7 @@ static map<string, VarLabel*> allLabels;
 string VarLabel::d_particlePositionName = "p.x";
 
 string VarLabel::d_defaultCompressionMode = "none";
-//static std::mutex lock{};
+
 using Mutex = Uintah::MasterLock;
 static Mutex lock{};
 
