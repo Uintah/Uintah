@@ -139,7 +139,7 @@ visit_handle visit_SimGetMetaData(void *cbdata)
   if( sim->stepInfo )
     delete sim->stepInfo;
   
-  sim->stepInfo = getTimeStepInfo(schedulerP, simStateP, gridP, useExtraCells);
+  sim->stepInfo = getTimeStepInfo(schedulerP, gridP, useExtraCells);
 
   TimeStepInfo* &stepInfo = sim->stepInfo;
   
@@ -470,41 +470,32 @@ visit_handle visit_SimGetMetaData(void *cbdata)
     // Add the patch data
     if (addPatchData)
     {
+      visit_handle vmd = VISIT_INVALID_HANDLE;
+	
       int cent = (mesh_for_patch_data == "CC_Mesh" ?
                   VISIT_VARCENTERING_ZONE : VISIT_VARCENTERING_NODE);
       
-      visit_handle vmd = VISIT_INVALID_HANDLE;
-      
-      if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
+      const char *patch_names[3] =
+	{ "patch/id", "patch/processor", "patch/node" };
+
+      for( unsigned int i=0; i<3; ++i )
       {
-        VisIt_VariableMetaData_setName(vmd, "patch/id");
-        VisIt_VariableMetaData_setMeshName(vmd, mesh_for_patch_data.c_str());
-        VisIt_VariableMetaData_setCentering(vmd, cent);
-        VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
-        VisIt_VariableMetaData_setNumComponents(vmd, 1);
-        VisIt_VariableMetaData_setUnits(vmd, "");
+	if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
+	{
+	  VisIt_VariableMetaData_setName(vmd, patch_names[i]);
+	  VisIt_VariableMetaData_setMeshName(vmd, mesh_for_patch_data.c_str());
+	  VisIt_VariableMetaData_setCentering(vmd, cent);
+	  VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
+	  VisIt_VariableMetaData_setNumComponents(vmd, 1);
+	  VisIt_VariableMetaData_setUnits(vmd, "");
         
-        // ARS - FIXME
-        //      VisIt_VariableMetaData_setHasDataExtents(vmd, false);
-        VisIt_VariableMetaData_setTreatAsASCII(vmd, false);
-        VisIt_SimulationMetaData_addVariable(md, vmd);
+	  // ARS - FIXME
+	  //      VisIt_VariableMetaData_setHasDataExtents(vmd, false);
+	  VisIt_VariableMetaData_setTreatAsASCII(vmd, false);
+	  VisIt_SimulationMetaData_addVariable(md, vmd);
+	}
       }
-
-      if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
-      {
-        VisIt_VariableMetaData_setName(vmd, "patch/processor");
-        VisIt_VariableMetaData_setMeshName(vmd, mesh_for_patch_data.c_str());
-        VisIt_VariableMetaData_setCentering(vmd, cent);
-        VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
-        VisIt_VariableMetaData_setNumComponents(vmd, 1);
-        VisIt_VariableMetaData_setUnits(vmd, "");
-
-        // ARS - FIXME
-        //      VisIt_VariableMetaData_setHasDataExtents(vmd, false);
-        VisIt_VariableMetaData_setTreatAsASCII(vmd, false);
-        VisIt_SimulationMetaData_addVariable(md, vmd);
-      }
-
+      
       for (std::set<std::string>::iterator it=meshes_added.begin();
            it!=meshes_added.end(); ++it)
       {
@@ -1455,7 +1446,8 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
   else if( varName == "processor" ||
       
            strcmp(varname, "patch/id") == 0 ||
-           strcmp(varname, "patch/processor") == 0 ||
+           strcmp(varname, "patch/proc_rank") == 0 ||
+           strcmp(varname, "patch/proc_node") == 0 ||
 
            strncmp(varname, "patch/bounds/low",  16) == 0 ||
            strncmp(varname, "patch/bounds/high", 17) == 0 )
@@ -1596,7 +1588,8 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       // scalar values while the bounds are vector values.
       if( varName == "processor" ||
           strcmp(varname, "patch/id") == 0 ||
-          strcmp(varname, "patch/processor") == 0 )     
+          strcmp(varname, "patch/proc_rank") == 0 ||
+          strcmp(varname, "patch/proc_node") == 0 )
         gd->components = 1;
       else // if( strncmp(varname, "patch/nodes",  11) == 0 ||
            //     strncmp(varname, "patch/bounds/low",  16) == 0 ||
@@ -1641,10 +1634,18 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
         for (int i=0; i<gd->num*gd->components; ++i)
           gd->data[i] = val;
       }
-      // Patch processor Id
-      else if( strcmp(varname, "patch/processor") == 0 )
+      // Patch processor rank
+      else if( strcmp(varname, "patch/proc_rank") == 0 )
       {
-        double val = patchInfo.getProcId();
+        double val = patchInfo.getProcRankId();
+
+        for (int i=0; i<gd->num*gd->components; ++i)
+          gd->data[i] = val;
+      }
+      // Patch processor node
+      else if( strcmp(varname, "patch/proc_node") == 0 )
+      {	
+	double val = patchInfo.getProcNodeId();
 
         for (int i=0; i<gd->num*gd->components; ++i)
           gd->data[i] = val;

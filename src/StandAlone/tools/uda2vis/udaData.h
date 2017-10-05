@@ -151,26 +151,26 @@ public:
     }
   }
 
-  // getNodeId
-  int getNodeId() const
+  // getProcNodeId
+  int getProcNodeId() const
   {
     return node_id;
   }
 
-  // setNodeId
-  void setNodeId(const int new_node_id)
+  // setProcNodeId
+  void setProcNodeId(const int new_node_id)
   {
     node_id = new_node_id;
   }
 
-  // getProcId
-  int getProcId() const
+  // getProcRankId
+  int getProcRankId() const
   {
     return proc_id;
   }
 
-  // setProcId
-  void setProcId(const int new_proc_id)
+  // setProcRankId
+  void setProcRankId(const int new_proc_id)
   {
     proc_id = new_proc_id;
   }

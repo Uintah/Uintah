@@ -324,8 +324,8 @@ TimeStepInfo* getTimeStepInfo(DataArchive *archive,
       // Get the patch id
       patchInfo.setPatchId(patch->getID());
       
-      // Get the processor id
-      patchInfo.setProcId(archive->queryPatchwiseProcessor(patch, timestep));
+      // Get the processor rank id
+      patchInfo.setProcRankId(archive->queryPatchwiseProcessor(patch, timestep));
     }
   }
 
@@ -947,14 +947,14 @@ TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
       patchInfo.setBounds(&patch->neighborsLow()[0],
                           &patch->neighborsHigh()[0], "NEIGHBORS");
 
-      // Get the patch id
+      // Set the patch id
       patchInfo.setPatchId(patch->getID());
       
-      // Get the processor id
-      patchInfo.setProcId( lb->getPatchwiseProcessorAssignment(patch) );
+      // Set the processor rank id
+      patchInfo.setProcRankId( lb->getPatchwiseProcessorAssignment(patch) );
       
-      // Get the node id
-      patchInfo.setNodeId( my_proc_index );
+      // Set the processor node id
+      patchInfo.setProcNodeId( my_proc_index );
     }
   }
 
