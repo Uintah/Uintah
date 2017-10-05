@@ -27,6 +27,8 @@
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/ErosionModel.h>
 #include <CCA/Components/MPM/Contact/Contact.h>
 #include <CCA/Components/MPM/Contact/ContactFactory.h>
+#include <CCA/Components/MPM/Dissolution/Dissolution.h>
+#include <CCA/Components/MPM/Dissolution/DissolutionFactory.h>
 #include <CCA/Components/MPM/CohesiveZone/CZMaterial.h>
 #include <CCA/Components/MPM/Tracer/TracerMaterial.h>
 #include <CCA/Components/MPM/Tracer/Tracer.h>
@@ -102,6 +104,7 @@ SerialMPM::SerialMPM( const ProcessorGroup* myworld ) :
   d_nextOutputTime=0.;
   d_SMALL_NUM_MPM=1e-200;
   contactModel        = 0;
+  dissolutionModel    = 0;
   thermalContactModel = 0;
   heatConductionModel = 0;
   NGP     = 1;
@@ -117,6 +120,7 @@ SerialMPM::~SerialMPM()
   delete lb;
   delete flags;
   delete contactModel;
+  delete dissolutionModel;
   delete thermalContactModel;
   delete heatConductionModel;
   MPMPhysicalBCFactory::clean();
@@ -272,6 +276,8 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
 
   flags->d_computeNormals=needNormals;
 
+  dissolutionModel = DissolutionFactory::create(UintahParallelComponent::d_myworld,
+                                        restart_mat_ps,sharedState,lb,flags);
   thermalContactModel =
     ThermalContactFactory::create(restart_mat_ps, sharedState, lb,flags);
 
@@ -330,6 +336,7 @@ void SerialMPM::outputProblemSpec(ProblemSpecP& root_ps)
   }
 
   contactModel->outputProblemSpec(mpm_ps);
+  dissolutionModel->outputProblemSpec(mpm_ps);
   thermalContactModel->outputProblemSpec(mpm_ps);
 
   for (int i = 0; i < d_sharedState->getNumCZMatls();i++) {
@@ -693,6 +700,7 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
     scheduleSolveHeatEquations(           sched, patches, matls);
     scheduleIntegrateTemperatureRate(     sched, patches, matls);
   }
+  scheduleComputeMassBurnFrac(            sched, patches, matls);
   scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
   scheduleComputeStressTensor(            sched, patches, matls);
   scheduleFinalParticleUpdate(            sched, patches, matls);
@@ -819,13 +827,6 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
     return;
 
   printSchedule(patches,cout_doing,"MPM::scheduleInterpolateParticlesToGrid");
-
-  /* interpolateParticlesToGrid
-   *   in(P.MASS, P.VELOCITY, P.NAT_X)
-   *   operation(interpolate the P.MASS and P.VEL to the grid
-   *             using P.NAT_X and some shape function evaluations)
-   *   out(G.MASS, G.VELOCITY) */
-
 
   Task* t = scinew Task("MPM::interpolateParticlesToGrid",
                         this,&SerialMPM::interpolateParticlesToGrid);
@@ -993,11 +994,6 @@ void SerialMPM::scheduleExMomInterpolated(SchedulerP& sched,
   contactModel->addComputesAndRequiresInterpolated(sched, patches, matls);
 }
 
-/////////////////////////////////////////////////////////////////////////
-/*!  **WARNING** In addition to the stresses and deformations, the internal
- *               heat rate in the particles (pdTdtLabel)
- *               is computed here */
-/////////////////////////////////////////////////////////////////////////
 void SerialMPM::scheduleComputeStressTensor(SchedulerP& sched,
                                             const PatchSet* patches,
                                             const MaterialSet* matls)
@@ -1221,12 +1217,6 @@ void SerialMPM::scheduleExMomIntegrated(SchedulerP& sched,
                            getLevel(patches)->getGrid()->numLevels()))
     return;
 
-  /* exMomIntegrated
-   *   in(G.MASS, G.VELOCITY_STAR, G.ACCELERATION)
-   *   operation(peform operations which will cause each of
-   *              velocity fields to feel the influence of the
-   *              the others according to specific rules)
-   *   out(G.VELOCITY_STAR, G.ACCELERATION) */
   printSchedule(patches,cout_doing,"MPM::scheduleExMomIntegrated");
   contactModel->addComputesAndRequiresIntegrated(sched, patches, matls);
 }
@@ -1267,13 +1257,6 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
                            getLevel(patches)->getGrid()->numLevels()))
     return;
 
-  /*
-   * interpolateToParticlesAndUpdate
-   *   in(G.ACCELERATION, G.VELOCITY_STAR, P.NAT_X)
-   *   operation(interpolate acceleration and v* to particles and
-   *   integrate these to get new particle velocity and position)
-   * out(P.VELOCITY, P.X, P.NAT_X) */
-
   printSchedule(patches,cout_doing,"MPM::scheduleInterpolateToParticlesAndUpdate");
 
   Task* t=scinew Task("MPM::interpolateToParticlesAndUpdate",
@@ -1283,6 +1266,12 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
 
   Ghost::GhostType gac   = Ghost::AroundCells;
   Ghost::GhostType gnone = Ghost::None;
+/*
+  t->requires(Task::NewDW, lb->gStressForSavingLabel,           gac,NGN);
+  t->requires(Task::NewDW, lb->gMassLabel, d_sharedState->getAllInOneMatl(),
+              Task::OutOfDomain, gac,NGN);
+  t->requires(Task::NewDW, lb->gMassLabel,                      gac,NGN);
+*/
   t->requires(Task::NewDW, lb->gAccelerationLabel,              gac,NGN);
   t->requires(Task::NewDW, lb->gVelocityStarLabel,              gac,NGN);
   t->requires(Task::NewDW, lb->gTemperatureRateLabel,           gac,NGN);
@@ -1305,9 +1294,11 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel,        gnone);
   t->requires(Task::OldDW, lb->pLocalizedMPMLabel,              gnone);
 
+  if(flags->d_with_ice || flags->d_doingDissolution){
+    t->requires(Task::NewDW, lb->massBurnFractionLabel,  gac,NGN);
+  }
   if(flags->d_with_ice){
-    t->requires(Task::NewDW, lb->dTdt_NCLabel,         gac,NGN);
-    t->requires(Task::NewDW, lb->massBurnFractionLabel,gac,NGN);
+    t->requires(Task::NewDW, lb->dTdt_NCLabel,           gac,NGN);
   }
 
   t->computes(lb->pDispLabel_preReloc);
@@ -1602,6 +1593,18 @@ SerialMPM::scheduleSetPrescribedMotion(       SchedulerP  & sched,
 
     sched->addTask(t, patches, matls);
    }
+}
+
+void SerialMPM::scheduleComputeMassBurnFrac(SchedulerP& sched,
+                                            const PatchSet* patches,
+                                            const MaterialSet* matls)
+{
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+                           getLevel(patches)->getGrid()->numLevels()))
+    return;
+
+  printSchedule(patches,cout_doing,"MPM::scheduleComputeMassBurnFrac");
+  dissolutionModel->addComputesAndRequiresMassBurnFrac(sched, patches, matls);
 }
 
 void
@@ -3438,10 +3441,13 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     //Carry forward NC_CCweight (put outside of matl loop, only need for matl 0)
     constNCVariable<double> NC_CCweight;
     NCVariable<double> NC_CCweight_new;
+    constNCVariable<double> gMassAll;
     Ghost::GhostType  gnone = Ghost::None;
     old_dw->get(NC_CCweight,       lb->NC_CCweightLabel,  0, patch, gnone, 0);
     new_dw->allocateAndPut(NC_CCweight_new, lb->NC_CCweightLabel,0,patch);
     NC_CCweight_new.copyData(NC_CCweight);
+    new_dw->get(gMassAll,       lb->gMassLabel,
+                d_sharedState->getAllInOneMatl()->get(0), patch, gnone, 0);
 
     vector<double> useInKECalc(numMPMMatls);
     if(flags->d_KEMaterial==-999){
@@ -3482,6 +3488,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       constNCVariable<Vector> gvelocity_star, gacceleration, gvelSPSSP;
       constNCVariable<double> gTemperatureRate, gTempStar;
       constNCVariable<double> dTdt, massBurnFrac, frictionTempRate;
+      constNCVariable<Matrix3> gStress;
+      constNCVariable<double> gMass;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
@@ -3540,25 +3548,44 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       }
       new_dw->get(gacceleration,   lb->gAccelerationLabel,   dwi,patch,gac,NGP);
       new_dw->get(gTemperatureRate,lb->gTemperatureRateLabel,dwi,patch,gac,NGP);
+      new_dw->get(gStress,         lb->gStressForSavingLabel,dwi,patch,gac,NGP);
+      new_dw->get(gMass,           lb->gMassLabel,           dwi,patch,gac,NGP);
       if (flags->d_doExplicitHeatConduction){
         new_dw->get(gTempStar,     lb->gTemperatureStarLabel,dwi,patch,gac,NGP);
       }
       new_dw->get(frictionTempRate,lb->frictionalWorkLabel,  dwi,patch,gac,NGP);
       if(flags->d_with_ice){
         new_dw->get(dTdt,          lb->dTdt_NCLabel,         dwi,patch,gac,NGP);
+      }
+      else{
+        NCVariable<double> dTdt_create;
+        new_dw->allocateTemporary(dTdt_create,                   patch,gac,NGP);
+        dTdt_create.initialize(0.);
+        dTdt = dTdt_create;                         // reference created data
+      }
+      if(flags->d_with_ice || flags->d_doingDissolution){
         new_dw->get(massBurnFrac,  lb->massBurnFractionLabel,dwi,patch,gac,NGP);
       }
       else{
-        NCVariable<double> dTdt_create,massBurnFrac_create;
-        new_dw->allocateTemporary(dTdt_create,                   patch,gac,NGP);
+        NCVariable<double> massBurnFrac_create;
         new_dw->allocateTemporary(massBurnFrac_create,           patch,gac,NGP);
-        dTdt_create.initialize(0.);
         massBurnFrac_create.initialize(0.);
-        dTdt = dTdt_create;                         // reference created data
         massBurnFrac = massBurnFrac_create;         // reference created data
       }
 
       double Cp=mpm_matl->getSpecificHeat();
+
+/*
+      if(m>0){
+       for(NodeIterator iter=patch->getExtraNodeIterator();
+                      !iter.done();iter++){
+        IntVector c = *iter;
+        if(gStress[c].Trace()/3.0 < 9.e5 && gMass[c] != gMassAll[c]){
+        massBurnFrac_create[c] = fabs(0.0002*(gStress[c].Trace()/3.0)/(9.e5));
+        }
+       }
+      }
+*/
 
       if(flags->d_XPIC2){
         // Loop over particles
@@ -3595,12 +3622,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
                                                        + velSSPSSP)*delT;
           pvelnew[idx]  = 2.0*pvelSSPlus[idx] - velSSPSSP   + acc*delT;
           pdispnew[idx] = pdisp[idx] + (pxnew[idx]-px[idx]);
-#if 0
-          // PIC, or XPIC(1)
-          pxnew[idx]    = px[idx]    + vel*delT
-                     - 0.5*(acc*delT + (pvelocity[idx] - pvelSSPlus[idx]))*delT;
-          pvelnew[idx]   = pvelSSPlus[idx]    + acc*delT;
-#endif
           pTempNew[idx]    = pTemperature[idx] + tempRate*delT;
           pTempPreNew[idx] = pTemperature[idx]; // for thermal stress
           pmassNew[idx]    = Max(pmass[idx]*(1.    - burnFraction),0.);
@@ -3720,9 +3741,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         if(pFNew[idx].MaxAbsElemComp(imax, jmax)>10){
           cerr << "Resetting F for particle " << pids[idx] 
                << " with F = " << pFNew[idx] << endl;
-          cerr << "imax, jmax = " << imax << ", " << jmax << endl;
-          pFNew[idx].set(imax,jmax,0.9*pFNew[idx](imax,jmax));
-          cerr << "F is now " << pFNew[idx] << endl;
+//          cerr << "imax, jmax = " << imax << ", " << jmax << endl;
+          cerr << "pmass = " << pmass[idx] << endl;
+//          pFNew[idx].set(imax,jmax,0.9*pFNew[idx](imax,jmax));
+//          cerr << "F is now " << pFNew[idx] << endl;
         }
 
         double J   =pFNew[idx].Determinant();

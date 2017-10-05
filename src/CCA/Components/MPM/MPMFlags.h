@@ -100,6 +100,7 @@ namespace Uintah {
     bool        d_deleteGeometryObjects;
     bool        d_doPressureStabilization;
     bool        d_computeNormals;
+    bool        d_doingDissolution;
     bool        d_computeColinearNormals;
     bool        d_computeNodalHeatFlux;                        // compute the auxilary nodal heat flux
     bool        d_computeScaleFactor;                          // compute the scale factor for viz 

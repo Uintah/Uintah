@@ -55,6 +55,7 @@ endif
 SUBDIRS := \
 	$(SRCDIR)/ConstitutiveModel \
 	$(SRCDIR)/Contact           \
+	$(SRCDIR)/Dissolution       \
 	$(SRCDIR)/ThermalContact    \
 	$(SRCDIR)/PhysicalBC        \
 	$(SRCDIR)/ParticleCreator   \

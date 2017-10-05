@@ -73,8 +73,9 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_interpolator                  =  scinew LinearInterpolator();
   d_do_contact_friction           =  false;
   d_computeNormals                =  false;
+  d_doingDissolution              =  false;
   d_computeColinearNormals        =  true;
-  d_addFrictionWork               =  0.0;               // don't do frictional heating by default
+  d_addFrictionWork               =  0.0;
 
   d_extraSolverFlushes                 =  0;            // Have PETSc do more flushes to save memory
   d_doImplicitHeatConduction           =  false;
@@ -261,6 +262,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
 
   mpm_flag_ps->get("do_contact_friction_heating", d_do_contact_friction);
   mpm_flag_ps->get("computeNormals",              d_computeNormals);
+  mpm_flag_ps->get("doingDissolution",            d_doingDissolution);
   mpm_flag_ps->get("computeColinearNormals",      d_computeColinearNormals);
   if (!d_do_contact_friction) d_addFrictionWork = 0.0;
 
@@ -465,6 +467,7 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
 
   ps->appendElement("do_contact_friction_heating", d_do_contact_friction);
   ps->appendElement("computeNormals",              d_computeNormals);
+  ps->appendElement("doingDissolution",            d_doingDissolution);
   ps->appendElement("computeColinearNormals",      d_computeColinearNormals);
   ps->appendElement("delete_rogue_particles",      d_deleteRogueParticles);
   ps->appendElement("extra_solver_flushes",        d_extraSolverFlushes);

@@ -51,6 +51,7 @@
 
 namespace Uintah {
 
+class Dissolution;
 class ThermalContact;
 class HeatConduction;
 class AnalysisModule;
@@ -89,8 +90,9 @@ public:
   virtual ~SerialMPM();
 
   Contact*         contactModel;
+  Dissolution*     dissolutionModel;
   ThermalContact*  thermalContactModel;
-  HeatConduction* heatConductionModel;
+  HeatConduction*  heatConductionModel;
  
   //////////
   // Insert Documentation Here:
@@ -485,6 +487,9 @@ protected:
 
   virtual void scheduleExMomIntegrated(SchedulerP&, const PatchSet*,
                                        const MaterialSet*);
+
+  virtual void scheduleComputeMassBurnFrac(SchedulerP&, const PatchSet*,
+                                           const MaterialSet*);
 
   void scheduleSetGridBoundaryConditions(SchedulerP&, const PatchSet*,
                                          const MaterialSet* matls);

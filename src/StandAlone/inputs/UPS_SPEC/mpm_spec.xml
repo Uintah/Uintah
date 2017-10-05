@@ -156,6 +156,16 @@
         <master_material                 spec="OPTIONAL INTEGER" />
         <normal_only                     spec="OPTIONAL BOOLEAN" />
       </contact>
+
+      <dissolution                           spec="MULTIPLE NO_DATA" >
+        <mu                              spec="OPTIONAL DOUBLE 'positive'" /> 
+        <volume_constraint               spec="OPTIONAL DOUBLE 'positive'" />
+        <separation_factor               spec="OPTIONAL DOUBLE 'positive'" />
+        <materials                       spec="OPTIONAL MULTIPLE_INTEGERS" />
+        <type                            spec="REQUIRED STRING 'null, test'" />
+        <master_material                 spec="OPTIONAL INTEGER" />
+      </dissolution>
+
       
       <material                          spec="MULTIPLE NO_DATA"
                                            attribute1="name OPTIONAL STRING" >
