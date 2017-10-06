@@ -764,16 +764,14 @@ AMRSimulationController::doInitialTimestep()
         d_scheduler->scheduleTaskMonitoring(d_currentGridP->getLevel(i));
       }
       
-//      taskGraphTimer.reset( true );
-      clock_t start = clock();
-      clock_t diff;
+      taskGraphTimer.reset( true );
       d_scheduler->compile();
-      diff = clock() - start;
-//      taskGraphTimer.stop();
+      taskGraphTimer.stop();
 
-      d_sharedState->d_runTimeStats[ SimulationState::CompilationTime ] += (diff / CLOCKS_PER_SEC);
+      double tg_time = taskGraphTimer().seconds();
+      d_sharedState->d_runTimeStats[ SimulationState::CompilationTime ] += tg_time;
 
-      proc0cout << "Done with taskgraph compile (" << (diff / CLOCKS_PER_SEC) << " seconds)\n";
+      proc0cout << "Done with taskgraph compile (" << tg_time << " seconds)\n";
 
       // No scrubbing for initial step
       d_scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNone);
@@ -803,8 +801,7 @@ AMRSimulationController::executeTimestep( int totalFine, int tg_index )
 {
   MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::executeTimestep()");
 
-  // If the timestep needs to be restarted, this loop will execute
-  // multiple times.
+  // If the timestep needs to be restarted, this loop will execute multiple times.
   bool success = true;
 
   do {
@@ -1161,9 +1158,10 @@ AMRSimulationController::recompile( int totalFine )
 
   taskGraphTimer.stop();
 
-  d_sharedState->d_runTimeStats[ SimulationState::CompilationTime ] += taskGraphTimer().seconds();
+  double tg_time = taskGraphTimer().seconds();
+  d_sharedState->d_runTimeStats[ SimulationState::CompilationTime ] += tg_time;
 
-  proc0cout << "Done with taskgraph re-compile (" << taskGraphTimer().seconds() << " seconds)\n";
+  proc0cout << "Done with taskgraph re-compile (" << tg_time << " seconds)\n";
 } // end recompile()
 
 //______________________________________________________________________
