@@ -1498,7 +1498,7 @@ void Patch::getOtherLevelPatches(int levelOffset,
   
   // based on the expanded range above to search for extra cells, we might
   // have grabbed more patches than we wanted, so refine them here
-  for (int i = 0; i < patches.size(); i++) {
+  for (auto i = 0; i < patches.size(); i++) {
     IntVector lo = patches[i]->getExtraCellLowIndex();
     IntVector hi = patches[i]->getExtraCellHighIndex();
     bool intersect = doesIntersect(low-pc, high+pc, lo, hi );
@@ -1559,7 +1559,7 @@ void Patch::getOtherLevelPatches55902(int levelOffset,
   
   // based on the expanded range above to search for extra cells, we might
   // have grabbed more patches than we wanted, so refine them here
-  for (int i = 0; i < patches.size(); i++) {
+  for (auto i = 0; i < patches.size(); i++) {
     IntVector lo = patches[i]->getExtraCellLowIndex();
     IntVector hi = patches[i]->getExtraCellHighIndex();
     bool intersect = doesIntersect(low-pc, high+pc, lo, hi );
@@ -1619,7 +1619,7 @@ void Patch::getOtherLevelPatchesNB(int levelOffset,
   
   // based on the expanded range above to search for extra cells, we might
   // have grabbed more patches than we wanted, so refine them here
-  for (int i = 0; i < patches.size(); i++) {
+  for (auto i = 0; i < patches.size(); i++) {
     IntVector lo = patches[i]->getExtraNodeLowIndex();
     IntVector hi = patches[i]->getExtraNodeHighIndex();
     bool intersect = doesIntersect(low-pc, high+pc, lo, hi );
@@ -2054,7 +2054,7 @@ void Patch::getFinestRegionsOnPatch(vector<Region>& difference) const
     const LevelP& fineLevel = getLevel()->getFinerLevel(); 
     
     //add overlapping fine patches to finePatch_q                                                       
-    for(int fp=0;fp<finePatches.size();fp++){
+    for(auto fp=0;fp<finePatches.size();fp++){
       IntVector lo = fineLevel->mapCellToCoarser(finePatches[fp]->getCellLowIndex() );
       IntVector hi = fineLevel->mapCellToCoarser(finePatches[fp]->getCellHighIndex());                              
       finePatch_q.push_back(Region(lo, hi));                        

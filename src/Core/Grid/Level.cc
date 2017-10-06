@@ -461,11 +461,7 @@ Level::getRelativeLevel( int offset ) const
 Uintah::Point
 Level::getNodePosition( const IntVector & v ) const
 {
-  if (m_stretched) {
-    return Point(m_face_position[0][v.x()], m_face_position[1][v.y()], m_face_position[2][v.z()]);
-  } else {
-    return m_anchor + m_dcell * v;
-  }
+  return m_anchor + m_dcell * v;
 }
 
 //______________________________________________________________________
@@ -474,30 +470,7 @@ Level::getNodePosition( const IntVector & v ) const
 Uintah::Point
 Level::getCellPosition( const IntVector & v ) const
 {
-  if (m_stretched) {
-    return Point( (m_face_position[0][v.x()]+m_face_position[0][v.x()+1])*0.5,
-                  (m_face_position[1][v.y()]+m_face_position[1][v.y()+1])*0.5,
-                  (m_face_position[2][v.z()]+m_face_position[2][v.z()+1])*0.5);
-  } else {
-    return m_anchor + m_dcell * v + m_dcell * 0.5;
-  }
-}
-
-//______________________________________________________________________
-//
-static
-int
-binary_search( double x, const OffsetArray1<double>& faces, int low, int high )
-{
-  while (high - low > 1) {
-    int m = (low + high) / 2;
-    if (x < faces[m]) {
-      high = m;
-    } else {
-      low = m;
-    }
-  }
-  return low;
+  return m_anchor + m_dcell * v + m_dcell * 0.5;
 }
 
 //______________________________________________________________________
@@ -505,15 +478,8 @@ binary_search( double x, const OffsetArray1<double>& faces, int low, int high )
 IntVector
 Level::getCellIndex( const Point & p ) const
 {
-  if (m_stretched) {
-    int x = binary_search(p.x(), m_face_position[0], m_face_position[0].low(), m_face_position[0].high());
-    int y = binary_search(p.y(), m_face_position[1], m_face_position[1].low(), m_face_position[1].high());
-    int z = binary_search(p.z(), m_face_position[2], m_face_position[2].low(), m_face_position[2].high());
-    return IntVector(x, y, z);
-  } else {
-    Vector v((p - m_anchor) / m_dcell);
-    return IntVector(RoundDown(v.x()), RoundDown(v.y()), RoundDown(v.z()));
-  }
+  Vector v((p - m_anchor) / m_dcell);
+  return IntVector(RoundDown(v.x()), RoundDown(v.y()), RoundDown(v.z()));
 }
 
 //______________________________________________________________________
@@ -521,34 +487,7 @@ Level::getCellIndex( const Point & p ) const
 Uintah::Point
 Level::positionToIndex( const Point & p ) const
 {
-  if(m_stretched){
-    int x = binary_search(p.x(), m_face_position[0], m_face_position[0].low(), m_face_position[0].high());
-    int y = binary_search(p.y(), m_face_position[1], m_face_position[1].low(), m_face_position[1].high());
-    int z = binary_search(p.z(), m_face_position[2], m_face_position[2].low(), m_face_position[2].high());
-
-    //#if SCI_ASSERTION_LEVEL > 0
-    //    if( ( x == d_facePosition[0].high() ) ||
-    //        ( y == d_facePosition[1].high() ) ||
-    //        ( z == d_facePosition[2].high() ) ) {
-    //      static ProgressiveWarning warn( "positionToIndex called with too large a point.", -1 );
-    //    }
-    //#endif
-
-    // If p.x() == the value of the last position in
-    // d_facePosition[0], then the binary_search returns the "high()"
-    // value... and the interpolation below segfaults due to trying to
-    // go to x+1.  The following check prevents this from happening.
-    x = std::min( x, m_face_position[0].high()-2 );
-    y = std::min( y, m_face_position[1].high()-2 );
-    z = std::min( z, m_face_position[2].high()-2 );
-
-    double xfrac = (p.x() - m_face_position[0][x]) / (m_face_position[0][x+1] - m_face_position[0][x]);
-    double yfrac = (p.y() - m_face_position[1][y]) / (m_face_position[1][y+1] - m_face_position[1][y]);
-    double zfrac = (p.z() - m_face_position[2][z]) / (m_face_position[2][z+1] - m_face_position[2][z]);
-    return Point(x+xfrac, y+yfrac, z+zfrac);
-  } else {
-    return Point((p-m_anchor)/m_dcell);
-  }
+  return Point((p-m_anchor)/m_dcell);
 }
 
 //______________________________________________________________________
@@ -614,7 +553,7 @@ void Level::selectPatches( const IntVector  & low
       // neighbors before this query
       std::vector<const Patch*>& cache = m_select_cache[std::make_pair(low, high)];
       cache.reserve(6);  // don't reserve too much to save memory, not too little to avoid too much reallocation
-      for (int i = 0; i < neighbors.size(); i++) {
+      for (auto i = 0; i < neighbors.size(); i++) {
         cache.push_back(neighbors[i]);
       }
     }
@@ -710,7 +649,7 @@ void Level::setOverlappingPatches()
     Patch::selectType neighborPatches;
     selectPatches(lowEC, highEC, neighborPatches, includeExtraCells);
     
-    for ( int j = 0; j < neighborPatches.size(); j++) {
+    for ( auto j = 0; j < neighborPatches.size(); j++) {
       const Patch* neighborPatch = neighborPatches[j];
       
       if ( patch != neighborPatch){
@@ -1480,36 +1419,6 @@ IntVector
 Level::mapNodeToFiner( const IntVector & idx ) const
 {
   return idx * m_grid->getLevel(m_index + 1)->m_refinement_ratio;
-}
-
-//______________________________________________________________________
-//
-// Stretched grid stuff
-void
-Level::getCellWidths( Grid::Axis axis, OffsetArray1<double> & widths ) const
-{
-  const OffsetArray1<double>& faces = m_face_position[axis];
-  widths.resize(faces.low(), faces.high() - 1);
-  for (int i = faces.low(); i < faces.high() - 1; i++) {
-    widths[i] = faces[i + 1] - faces[i];
-  }
-}
-
-//______________________________________________________________________
-//
-void
-Level::getFacePositions( Grid::Axis axis, OffsetArray1<double> & faces ) const
-{
-  faces = m_face_position[axis];
-}
-
-//______________________________________________________________________
-//
-void
-Level::setStretched( Grid::Axis axis, const OffsetArray1<double> & faces )
-{
-  m_face_position[axis] = faces;
-  m_stretched = true;
 }
 
 //______________________________________________________________________

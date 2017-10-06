@@ -939,19 +939,16 @@ namespace Uintah {
     
     /**
      * Returns the cell spacing Vector(dx,dy,dz)
-     *  Note: This will need to change for stretched grids
      */
     inline Vector dCell() const { return getLevel()->dCell(); }
     
     /**
-     * Returns the cell volume dx*dy*dz. This will not work for stretched grids.
-     * Note: This function will throw an exception if the grid is stretched.
+     * Returns the cell volume dx*dy*dz.
      */
     inline double cellVolume() const { return getLevel()->cellVolume(); }
     
     /**
-     * Returns the cell area dx*dy. This will not work for stretched grids.
-     * Note: This function will throw an exception if the grid is stretched.
+     * Returns the cell area dx*dy.
      */
     inline double cellArea( const Patch::FaceType face ) const {
       Vector unitNormal(0,0,0);
@@ -995,8 +992,6 @@ namespace Uintah {
      */
     inline IntVector getCellIndex( const Point & pos ) const { return getLevel()->getCellIndex( pos ); }
     
-    //Below for Fracture *************************************************
-    
     /**
      * Returns the 8 nodes found around the point pos
      */
@@ -1027,7 +1022,6 @@ namespace Uintah {
       IntVector c=getLevel()->getCellIndex(p);
       return containsIndex(l,h,c);
     }
-    //Above for Fracture *************************************************
     
     static inline bool containsIndex(const IntVector &low, const IntVector &high, const IntVector &cell) {
       return low.x()  <= cell.x() &&
@@ -1035,8 +1029,7 @@ namespace Uintah {
              low.z()  <= cell.z() &&
              high.x() >  cell.x() &&
              high.y() >  cell.y() &&
-             high.z() >  cell.z();
-      
+             high.z() >  cell.z(); 
     }
     /**
      * Returns the cell that contains the point pos
