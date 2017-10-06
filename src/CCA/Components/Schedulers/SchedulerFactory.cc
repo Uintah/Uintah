@@ -107,7 +107,7 @@ SchedulerFactory::create( const ProblemSpecP   & ps
 
   //__________________________________
   //  bulletproofing
-  // "-nthreads" at command line, something other than "Unified" specified in UPS file (w/ -do_not_validate)
+  // "-npartitions" at command line, something other than "KokkosOpenMP" specified in UPS file (w/ -do_not_validate)
   if ((Uintah::Parallel::getNumPartitions() > 0) && (scheduler != "KokkosOpenMP")) {
     throw ProblemSetupException("Kokkos-OpenMP Scheduler needed for '-npartitions <n>' option", __FILE__, __LINE__);
   }
@@ -129,6 +129,26 @@ SchedulerFactory::create( const ProblemSpecP   & ps
     std::string error = "\n \tAdd '-npartitions <n>' to the sus command line if you are specifying KokkosOpenMP in your input file.";
     throw ProblemSetupException(error, __FILE__, __LINE__);
   }
+
+#ifdef UINTAH_ENABLE_KOKKOS
+
+  // Kokkos parallel patterns are enabled, but using the Unified Scheduler
+  if (scheduler == "Unified") {
+    std::string error = "\n \tTo use the Unified Scheduler you must disable Kokkos. Build Uintah without Kokkos.";
+    throw ProblemSetupException(error, __FILE__, __LINE__);
+  }
+
+#endif
+
+#ifndef UINTAH_ENABLE_KOKKOS
+
+  // More than 1 partition specified at command line, but Kokkos is not enabled
+  if (Uintah::Parallel::getNumPartitions() > 1) {
+    std::string error = "\n \tTo use the Kokkos-OpenMP Scheduler with more than 1 partition you must enable Kokkos. Build Uintah with Kokkos.";
+    throw ProblemSetupException(error, __FILE__, __LINE__);
+  }
+
+#endif
 
   // Output which scheduler will be used
   proc0cout << "Scheduler: \t\t" << scheduler << std::endl;
