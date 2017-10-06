@@ -2802,8 +2802,10 @@ void Ray::sched_computeCellType ( const LevelP& level,
                                   SchedulerP& sched,
                                   modifiesComputes which)
 {
-  Task* tsk = scinew Task( "Ray::computeCellType", this,
-                           &Ray::computeCellType, which );
+  string taskname = "Ray::computeCellType";
+  Task* tsk = scinew Task( taskname, this, &Ray::computeCellType, which );
+
+  printSchedule(level, g_ray_dbg, taskname);
 
   if ( which == Ray::modifiesVar ){
     tsk->requires(Task::NewDW, d_cellTypeLabel, 0, Task::FineLevel, 0, Task::NormalDomain, d_gn, 0);
