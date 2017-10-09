@@ -30,6 +30,7 @@ using namespace Uintah;
 
 DissolutionMaterialSpec::DissolutionMaterialSpec(ProblemSpecP & ps)
 {
+
   if(ps) {
     vector<int> materials;
     if(ps->get("materials", materials)) {
@@ -64,19 +65,17 @@ DissolutionMaterialSpec::add(unsigned int matlIndex)
   // we only add things once at the start, but want 
   // quick lookup, so keep logical for each material
   // rather than searching a list every time
-  if(d_matls.size()==0)
-    {
+  if(d_matls.size()==0) {
       d_matls.resize(matlIndex+1);
       for(size_t i=0;i<matlIndex+1;i++) d_matls[i] = false;
         
-    }
-  if(matlIndex>=d_matls.size())
-    {
+  }
+  if(matlIndex>=d_matls.size()) {
       vector<bool> copy(d_matls);
       d_matls.resize(matlIndex+1);
       for(size_t i=0;i<copy.size();i++) d_matls[i] = copy[i];
       for(size_t i=copy.size();i<matlIndex+1;i++) d_matls[i] = false;
-    }
+  }
   
   d_matls[matlIndex] = true;
 }

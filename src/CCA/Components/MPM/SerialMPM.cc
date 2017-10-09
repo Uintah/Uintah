@@ -276,8 +276,9 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
 
   flags->d_computeNormals=needNormals;
 
-  dissolutionModel = DissolutionFactory::create(UintahParallelComponent::d_myworld,
-                                        restart_mat_ps,sharedState,lb,flags);
+  dissolutionModel = 
+                  DissolutionFactory::create(UintahParallelComponent::d_myworld,
+                                           restart_mat_ps,sharedState,lb,flags);
   thermalContactModel =
     ThermalContactFactory::create(restart_mat_ps, sharedState, lb,flags);
 
@@ -870,6 +871,7 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->computes(lb->gTemperatureNoBCLabel);
   t->computes(lb->gTemperatureRateLabel);
   t->computes(lb->gExternalHeatRateLabel);
+  t->computes(lb->massBurnFractionLabel);
 
   if(flags->d_with_ice){
     t->computes(lb->gVelocityBCLabel);
@@ -1088,14 +1090,6 @@ void SerialMPM::scheduleComputeInternalForce(SchedulerP& sched,
                            getLevel(patches)->getGrid()->numLevels()))
     return;
 
-  /*
-   * computeInternalForce
-   *   in(P.CONMOD, P.NAT_X, P.VOLUME)
-   *   operation(evaluate the divergence of the stress (stored in
-   *   P.CONMOD) using P.NAT_X and the gradients of the
-   *   shape functions)
-   * out(G.F_INTERNAL) */
-
   printSchedule(patches,cout_doing,"MPM::scheduleComputeInternalForce");
 
   Task* t = scinew Task("MPM::computeInternalForce",
@@ -1266,12 +1260,6 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
 
   Ghost::GhostType gac   = Ghost::AroundCells;
   Ghost::GhostType gnone = Ghost::None;
-/*
-  t->requires(Task::NewDW, lb->gStressForSavingLabel,           gac,NGN);
-  t->requires(Task::NewDW, lb->gMassLabel, d_sharedState->getAllInOneMatl(),
-              Task::OutOfDomain, gac,NGN);
-  t->requires(Task::NewDW, lb->gMassLabel,                      gac,NGN);
-*/
   t->requires(Task::NewDW, lb->gAccelerationLabel,              gac,NGN);
   t->requires(Task::NewDW, lb->gVelocityStarLabel,              gac,NGN);
   t->requires(Task::NewDW, lb->gTemperatureRateLabel,           gac,NGN);
@@ -1294,9 +1282,7 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel,        gnone);
   t->requires(Task::OldDW, lb->pLocalizedMPMLabel,              gnone);
 
-  if(flags->d_with_ice || flags->d_doingDissolution){
-    t->requires(Task::NewDW, lb->massBurnFractionLabel,  gac,NGN);
-  }
+  t->requires(Task::NewDW, lb->massBurnFractionLabel,    gac,NGN);
   if(flags->d_with_ice){
     t->requires(Task::NewDW, lb->dTdt_NCLabel,           gac,NGN);
   }
@@ -2196,7 +2182,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       NCVariable<double> gSp_vol;
       NCVariable<double> gColor;
       NCVariable<double> gTemperatureNoBC;
-      NCVariable<double> gTemperatureRate;
+      NCVariable<double> gTemperatureRate,massBurnFrac;
 
       new_dw->allocateAndPut(gmass,            lb->gMassLabel,       dwi,patch);
       new_dw->allocateAndPut(gColor,           lb->gColorLabel,      dwi,patch);
@@ -2212,6 +2198,8 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
                              dwi,patch);
       new_dw->allocateAndPut(gexternalheatrate,lb->gExternalHeatRateLabel,
                              dwi,patch);
+      new_dw->allocateAndPut(massBurnFrac,     lb->massBurnFractionLabel,
+                             dwi,patch);
 
       gmass.initialize(d_SMALL_NUM_MPM);
       gvolume.initialize(d_SMALL_NUM_MPM);
@@ -2223,6 +2211,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       gTemperatureRate.initialize(0);
       gexternalheatrate.initialize(0);
       gSp_vol.initialize(0.);
+      massBurnFrac.initialize(0.);
 
       // Interpolate particle data to Grid data.
       // This currently consists of the particle velocity and mass
@@ -3441,13 +3430,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     //Carry forward NC_CCweight (put outside of matl loop, only need for matl 0)
     constNCVariable<double> NC_CCweight;
     NCVariable<double> NC_CCweight_new;
-    constNCVariable<double> gMassAll;
     Ghost::GhostType  gnone = Ghost::None;
     old_dw->get(NC_CCweight,       lb->NC_CCweightLabel,  0, patch, gnone, 0);
     new_dw->allocateAndPut(NC_CCweight_new, lb->NC_CCweightLabel,0,patch);
     NC_CCweight_new.copyData(NC_CCweight);
-    new_dw->get(gMassAll,       lb->gMassLabel,
-                d_sharedState->getAllInOneMatl()->get(0), patch, gnone, 0);
 
     vector<double> useInKECalc(numMPMMatls);
     if(flags->d_KEMaterial==-999){
@@ -3488,8 +3474,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       constNCVariable<Vector> gvelocity_star, gacceleration, gvelSPSSP;
       constNCVariable<double> gTemperatureRate, gTempStar;
       constNCVariable<double> dTdt, massBurnFrac, frictionTempRate;
-      constNCVariable<Matrix3> gStress;
-      constNCVariable<double> gMass;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
@@ -3548,8 +3532,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       }
       new_dw->get(gacceleration,   lb->gAccelerationLabel,   dwi,patch,gac,NGP);
       new_dw->get(gTemperatureRate,lb->gTemperatureRateLabel,dwi,patch,gac,NGP);
-      new_dw->get(gStress,         lb->gStressForSavingLabel,dwi,patch,gac,NGP);
-      new_dw->get(gMass,           lb->gMassLabel,           dwi,patch,gac,NGP);
       if (flags->d_doExplicitHeatConduction){
         new_dw->get(gTempStar,     lb->gTemperatureStarLabel,dwi,patch,gac,NGP);
       }
@@ -3563,29 +3545,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         dTdt_create.initialize(0.);
         dTdt = dTdt_create;                         // reference created data
       }
-      if(flags->d_with_ice || flags->d_doingDissolution){
-        new_dw->get(massBurnFrac,  lb->massBurnFractionLabel,dwi,patch,gac,NGP);
-      }
-      else{
-        NCVariable<double> massBurnFrac_create;
-        new_dw->allocateTemporary(massBurnFrac_create,           patch,gac,NGP);
-        massBurnFrac_create.initialize(0.);
-        massBurnFrac = massBurnFrac_create;         // reference created data
-      }
+      new_dw->get(massBurnFrac,    lb->massBurnFractionLabel,dwi,patch,gac,NGP);
 
       double Cp=mpm_matl->getSpecificHeat();
-
-/*
-      if(m>0){
-       for(NodeIterator iter=patch->getExtraNodeIterator();
-                      !iter.done();iter++){
-        IntVector c = *iter;
-        if(gStress[c].Trace()/3.0 < 9.e5 && gMass[c] != gMassAll[c]){
-        massBurnFrac_create[c] = fabs(0.0002*(gStress[c].Trace()/3.0)/(9.e5));
-        }
-       }
-      }
-*/
 
       if(flags->d_XPIC2){
         // Loop over particles
@@ -3741,10 +3703,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         if(pFNew[idx].MaxAbsElemComp(imax, jmax)>10){
           cerr << "Resetting F for particle " << pids[idx] 
                << " with F = " << pFNew[idx] << endl;
-//          cerr << "imax, jmax = " << imax << ", " << jmax << endl;
+          cerr << "imax, jmax = " << imax << ", " << jmax << endl;
           cerr << "pmass = " << pmass[idx] << endl;
-//          pFNew[idx].set(imax,jmax,0.9*pFNew[idx](imax,jmax));
-//          cerr << "F is now " << pFNew[idx] << endl;
+          pFNew[idx].set(imax,jmax,0.9*pFNew[idx](imax,jmax));
+          cerr << "F is now " << pFNew[idx] << endl;
         }
 
         double J   =pFNew[idx].Determinant();

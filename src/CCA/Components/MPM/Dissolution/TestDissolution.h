@@ -75,6 +75,12 @@ WARNING
          
          SimulationStateP    d_sharedState;
          
+         // Dissolution rate
+         double d_rate;
+         double d_PressThresh;
+         // master material
+         int       d_material;
+
       public:
          // Constructor
          TestDissolution(const ProcessorGroup* myworld,

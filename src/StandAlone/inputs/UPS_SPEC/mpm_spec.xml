@@ -158,8 +158,8 @@
       </contact>
 
       <dissolution                           spec="MULTIPLE NO_DATA" >
-        <mu                              spec="OPTIONAL DOUBLE 'positive'" /> 
-        <volume_constraint               spec="OPTIONAL DOUBLE 'positive'" />
+        <rate                            spec="OPTIONAL DOUBLE 'positive'" /> 
+        <PressureThreshold               spec="OPTIONAL DOUBLE 'positive'" />
         <separation_factor               spec="OPTIONAL DOUBLE 'positive'" />
         <materials                       spec="OPTIONAL MULTIPLE_INTEGERS" />
         <type                            spec="REQUIRED STRING 'null, test'" />
