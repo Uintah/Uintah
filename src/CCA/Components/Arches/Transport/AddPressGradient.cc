@@ -1,4 +1,5 @@
 #include <CCA/Components/Arches/Transport/AddPressGradient.h>
+#include <CCA/Components/Arches/GridTools.h>
 
 using namespace Uintah;
 typedef ArchesFieldContainer AFC;
@@ -51,10 +52,8 @@ void AddPressGradient::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info
   // boundary conditions on the pressure fields are applied
   // post linear solve in the PressureBC.cc class.
 
-  IntVector shift(0,0,0);
-  if ( patch->getBCType(Patch::xplus) != Patch::Neighbor ) shift[0] = 1;
-
-  Uintah::BlockRange x_range( patch->getCellLowIndex(), patch->getCellHighIndex()+shift );
+  GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE(1, 0)
+  Uintah::BlockRange x_range( low_fx_patch_range, high_fx_patch_range );
 
   Uintah::parallel_for( x_range, [&](int i, int j, int k){
 
@@ -62,10 +61,8 @@ void AddPressGradient::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info
 
   });
 
-  shift[0] = 0;
-  if ( patch->getBCType(Patch::yplus) != Patch::Neighbor ) shift[1] = 1;
-
-  Uintah::BlockRange y_range( patch->getCellLowIndex(), patch->getCellHighIndex()+shift );
+  GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE(1, 0)
+  Uintah::BlockRange y_range( low_fy_patch_range, high_fy_patch_range );
 
   Uintah::parallel_for( y_range, [&](int i, int j, int k){
 
@@ -73,10 +70,8 @@ void AddPressGradient::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info
 
   });
 
-  shift[1] = 0;
-  if ( patch->getBCType(Patch::zplus) != Patch::Neighbor ) shift[2] = 1;
-
-  Uintah::BlockRange z_range( patch->getCellLowIndex(), patch->getCellHighIndex()+shift );
+  GET_EXTRACELL_FZ_BUFFERED_PATCH_RANGE(1, 0)
+  Uintah::BlockRange z_range( low_fz_patch_range, high_fz_patch_range );
   Uintah::parallel_for( z_range, [&](int i, int j, int k){
 
     zmom(i,j,k) += dt * ( p(i,j,k-1) - p(i,j,k) ) / DX.z();

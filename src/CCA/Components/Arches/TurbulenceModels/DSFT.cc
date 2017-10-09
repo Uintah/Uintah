@@ -156,7 +156,6 @@ DSFT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   constCCVariable<double>& CCwVel = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_cc_w_vel_name));
 
   const Vector Dx = patch->dCell(); //
-  const int Nghostcells = 0;
   int nG1 = 0;
   int nG2 = 0;
   // Compute IsI and Beta

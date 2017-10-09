@@ -68,8 +68,11 @@ private:
     std::string m_ymom_name;
     std::string m_zmom_name;
     std::string m_pressure_name;
+    std::string m_density_name;
+    std::string m_drhodt_name;
 
     bool m_enforceSolvability;
+    bool m_use_mms_drhodt;
 
     SolverInterface* m_hypreSolver;
     SolverParameters* m_hypreSolver_parameters;
