@@ -90,11 +90,13 @@ namespace Uintah { namespace ArchesCore{
         IntVector iDir = patch->faceDirection( bnd->face );
         IntVector vDir(var_help.ioff, var_help.joff, var_help.koff);
 
+        const double dot = vDir[0]*iDir[0] + vDir[1]*iDir[1] + vDir[2]*iDir[2];
+
         const BndCondSpec* spec = bnd->find(var_name);
 
-        if ( var_help.dir == ArchesCore::NODIR ){
+        if ( var_help.dir == ArchesCore::NODIR || dot == 0){
 
-          // CCVariable
+          // CCVariable or CC position in the staggered variable
           for ( bndIter.reset(); !bndIter.done(); bndIter++ ){
 
             var[*bndIter] = 2.0 * spec->value - var[*bndIter-iDir];
@@ -104,23 +106,20 @@ namespace Uintah { namespace ArchesCore{
         } else {
 
           // Staggered Variable
-          double dot = vDir[0]*iDir[0] + vDir[1]*iDir[1] + vDir[2]*iDir[2];
-          if ( dot < 0 ){
+          if ( dot == -1 ){
+          // Normal face -
             for ( bndIter.reset(); !bndIter.done(); bndIter++ ){
               var[*bndIter] = spec->value;
               var[*bndIter - iDir] = spec->value;
             }
-          } else if ( dot > 0 ){
+          } else if ( dot == 1 ){
+          // Normal face +
             for ( bndIter.reset(); !bndIter.done(); bndIter++ ){
               var[*bndIter] = spec->value;
-              var[*bndIter + iDir] = spec->value;
             }
           } else {
-            for ( bndIter.reset(); !bndIter.done(); bndIter++ ){
-              var[*bndIter] = 2. * spec->value - var[*bndIter - iDir];
-            }
+              throw InvalidValue("Error: ...",__FILE__,__LINE__);                  
           }
-
         }
       }
 
@@ -147,8 +146,11 @@ namespace Uintah { namespace ArchesCore{
         IntVector vDir(var_help.ioff, var_help.joff, var_help.koff);
         Vector Dx = patch->dCell();
         double dx = 0.;
+        const double norm = iDir[0]+iDir[1]+iDir[2];
+        const double dot = vDir[0]*iDir[0] + vDir[1]*iDir[1] + vDir[2]*iDir[2];
 
-        if ( vDir == IntVector(0,0,0) ){
+        if ( var_help.dir == ArchesCore::NODIR || dot == 0  ){
+        // CCvariables and CC positions in a staggered variable
 
           IntVector normIDir = iDir * iDir;
           if ( normIDir == IntVector(1,0,0) ){
@@ -163,21 +165,20 @@ namespace Uintah { namespace ArchesCore{
 
           for ( bndIter.reset(); !bndIter.done(); bndIter++ ){
 
-            var[*bndIter] = dx * spec->value + var[*bndIter-iDir];
+            var[*bndIter] = norm*dx * spec->value + var[*bndIter-iDir]; 
 
           }
         } else {
 
           // for staggered variables, only going to allow for zero gradient, one-sided for now
-          double dot = vDir[0]*iDir[0] + vDir[1]*iDir[1] + vDir[2]*iDir[2];
 
-          if ( dot < 0 ){
+          if ( dot == -1 ){
             for ( bndIter.reset(); !bndIter.done(); bndIter++ ){
               IntVector two_iDir(iDir[0]*2,iDir[1]*2,iDir[2]*2);
               var[*bndIter - iDir] = var[*bndIter - two_iDir];
               var[*bndIter] = var[*bndIter-iDir];
             }
-          } else {
+          } else if ( dot == 1 ){
             for ( bndIter.reset(); !bndIter.done(); bndIter++ ){
               var[*bndIter] = var[*bndIter-iDir];
             }
@@ -219,17 +220,19 @@ namespace Uintah { namespace ArchesCore{
         IntVector iDir = patch->faceDirection( bnd->face );
         IntVector vDir(var_help.ioff, var_help.joff, var_help.koff);
 
-        double dot = vDir[0]*iDir[0] + vDir[1]*iDir[1] + vDir[2]*iDir[2];
+        const double dot = vDir[0]*iDir[0] + vDir[1]*iDir[1] + vDir[2]*iDir[2];
 
-        if ( dot < 0 ){
+        if ( dot == -1 ){
+        // Normal face (-)  staggered variables
           for ( bndIter.reset(); !bndIter.done(); bndIter++ ){
-            double rho_face = (rho[*bndIter] + rho[*bndIter - iDir])/2.;
+            const double rho_face = 0.5*(rho[*bndIter] + rho[*bndIter - iDir]);
             var[*bndIter] = m_mdot / (rho_face * bnd->area );
             var[*bndIter - iDir] = var[*bndIter];
           }
-        } else if ( dot < 0 ){
+        } else if ( dot == 1 ){
+        // Normal face (+)  staggered variables
           for ( bndIter.reset(); !bndIter.done(); bndIter++ ){
-            double rho_face = (rho[*bndIter] + rho[*bndIter - iDir])/2.;
+            double rho_face = 0.5*(rho[*bndIter] + rho[*bndIter - iDir]);
             var[*bndIter] = m_mdot / (rho_face * bnd->area );
           }
         } else {
@@ -248,6 +251,186 @@ namespace Uintah { namespace ArchesCore{
     };
 
     //------
+
+    struct MMSalmgren : BaseFunctor{
+
+    public:
+
+      MMSalmgren( std::string x_name, std::string y_name, std::string which_vel) : BaseFunctor(), m_x_name(x_name),
+        m_y_name(y_name), m_which_vel(which_vel){}
+      ~MMSalmgren(){}
+
+      void add_dep( std::vector<std::string>& master_dep ){
+
+        m_dep.push_back( m_y_name );
+        m_dep.push_back( m_x_name );
+        check_master_list( m_dep, master_dep );
+
+      }
+
+      void eval_bc( std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
+                    const BndSpec* bnd, Uintah::Iterator bndIter ){
+        
+        double m_two_pi = 2.0*acos(-1.0);
+        double m_amp = 1.0;
+        
+        T& var = *( tsk_info->get_uintah_field<T>(var_name));
+
+        constCCVariable<double> x =
+          *( tsk_info->get_const_uintah_field<constCCVariable<double> >(m_x_name));
+
+        constCCVariable<double> y =
+          *( tsk_info->get_const_uintah_field<constCCVariable<double> >(m_y_name));
+
+        VariableHelper<T> var_help;
+        IntVector iDir = patch->faceDirection( bnd->face );
+        IntVector vDir(var_help.ioff, var_help.joff, var_help.koff);
+
+        const double dot = vDir[0]*iDir[0] + vDir[1]*iDir[1] + vDir[2]*iDir[2];
+   
+
+        if ( m_which_vel == "u" ){
+
+          if (var_help.dir == ArchesCore::NODIR ){
+            // scalar or CCvariable
+            for ( bndIter.reset(); !bndIter.done(); bndIter++ ){
+              var[*bndIter] = 1.0  - m_amp * cos( m_two_pi * x[*bndIter] )
+                                      * sin( m_two_pi * y[*bndIter] );
+            }
+          } else {
+            // SFCX or SFCY or SFCZ variable
+              if (dot == -1){
+                for ( bndIter.reset(); !bndIter.done(); bndIter++ ){
+                  // (-) faces  two cells at the begin of the domain 
+                  // value are the same because we do not resolve extra cell (i=-1), and we set the BC at i = 0
+//                    var[*bndIter] = 1.0  - m_amp * cos( m_two_pi * x[*bndIter] )
+//                                      * sin( m_two_pi * y[*bndIter] );
+
+                    var[*bndIter] = 1.0  - m_amp * cos( m_two_pi * x[*bndIter- iDir] )
+                                      * sin( m_two_pi * y[*bndIter- iDir] );
+
+  
+                     var[*bndIter- iDir] = 1.0  - m_amp * cos( m_two_pi * x[*bndIter - iDir] )
+                                      * sin( m_two_pi * y[*bndIter- iDir] );
+                }
+              } else { 
+                 for ( bndIter.reset(); !bndIter.done(); bndIter++ ){
+                   // (+) faces one cell at the end of the domain  
+                   var[*bndIter] = 1.0  - m_amp * cos( m_two_pi * x[*bndIter] )
+                                      * sin( m_two_pi * y[*bndIter] );
+                  }
+              }
+          }
+        } else if ( m_which_vel == "v" ){
+
+          if (var_help.dir == ArchesCore::NODIR ){
+            // scalar 
+            for ( bndIter.reset(); !bndIter.done(); bndIter++ ){
+              var[*bndIter] = 1.0  + m_amp * sin( m_two_pi * x[*bndIter] )
+                                  * cos( m_two_pi * y[*bndIter] );
+            }
+          } else {
+          // SFCX or SFCY or SFCZ variable
+            if (dot == -1){
+              for ( bndIter.reset(); !bndIter.done(); bndIter++ ){
+                // (-) faces  two cells 
+//                var[*bndIter] = 1.0  + m_amp * sin( m_two_pi * x[*bndIter] )
+//                                      * cos( m_two_pi * y[*bndIter] );
+                var[*bndIter] = 1.0  + m_amp * sin( m_two_pi * x[*bndIter- iDir] )
+                       * cos( m_two_pi * y[*bndIter- iDir] );
+
+  
+                var[*bndIter- iDir] = 1.0  + m_amp * sin( m_two_pi * x[*bndIter- iDir] )
+                                      * cos( m_two_pi * y[*bndIter- iDir] );
+              }
+            } else { 
+            for ( bndIter.reset(); !bndIter.done(); bndIter++ ){
+              // (+) faces  
+              var[*bndIter] = 1.0  + m_amp * sin( m_two_pi * x[*bndIter] )
+                                      * cos( m_two_pi * y[*bndIter] );
+  
+            }
+          }
+      }
+        } else {
+          throw InvalidValue("Error: Almgren BC  velocoty does not exit", __FILE__, __LINE__);
+        }
+        }
+    private:
+
+      std::string m_y_name;
+      std::string m_x_name;
+      std::string m_which_vel;
+      std::vector<std::string> m_dep;
+
+
+    };
+    //------
+    struct MMSshunn : BaseFunctor{
+
+    public:
+
+      MMSshunn( std::string x_name) : BaseFunctor(), m_x_name(x_name) {}
+      ~MMSshunn(){}
+
+      void add_dep( std::vector<std::string>& master_dep ){
+
+        m_dep.push_back( m_x_name );
+        check_master_list( m_dep, master_dep );
+
+      }
+
+      void eval_bc( std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
+                    const BndSpec* bnd, Uintah::Iterator bndIter ){
+        
+        //const double m_two_pi = 2.0*acos(-1.0);
+        //const double m_amp = 1.0;
+        const double m_k1  = 4.0;
+        const double m_k2  = 2.0;
+        const double m_w0  = 50.0;
+        const double m_rho0 = 20.0;
+        const double m_rho1 = 1.0;
+        
+        double time_d  = tsk_info->get_time(); 
+        int   time_substep = tsk_info->get_time_substep();
+        double factor      = tsk_info->get_ssp_time_factor(time_substep);
+        double dt          = tsk_info->get_dt();
+        time_d = time_d + factor*dt;
+        
+        
+        T& var = *( tsk_info->get_uintah_field<T>(var_name));
+
+        constCCVariable<double> x =
+          *( tsk_info->get_const_uintah_field<constCCVariable<double> >(m_x_name));
+
+        VariableHelper<T> var_help;
+        //IntVector iDir = patch->faceDirection( bnd->face );
+        //IntVector vDir(var_help.ioff, var_help.joff, var_help.koff);
+
+        //const double dot = vDir[0]*iDir[0] + vDir[1]*iDir[1] + vDir[2]*iDir[2];
+        const double z1 = std::exp(-m_k1 * time_d);
+        if (var_help.dir == ArchesCore::NODIR ){
+          // scalar or CCvariable
+          for ( bndIter.reset(); !bndIter.done(); bndIter++ ){
+            const double z2 = std::cosh(m_w0 * std::exp (-m_k2 * time_d) *x[*bndIter]); // x is cc value
+            const double phi = (z1-z2)/(z1 * (1.0 - m_rho0/m_rho1)-z2);
+            const double rho = 1.0/(phi/m_rho1 + (1.0- phi )/m_rho0);
+            var[*bndIter] = phi*rho;
+           } 
+         }
+
+
+        }
+    private:
+
+      std::string m_x_name;
+      std::vector<std::string> m_dep;
+      
+
+
+    };
+    //------
+    
 
     struct SecondaryVariableBC : BaseFunctor {
 
@@ -286,6 +469,7 @@ namespace Uintah { namespace ArchesCore{
 
       std::string m_sec_var_name;
       std::vector<std::string> m_dep;
+      SimulationStateP m_shared_state;
 
     };
 
@@ -355,17 +539,30 @@ namespace Uintah { namespace ArchesCore{
         }
 
         IntVector offset_iDir = iDir + offset;
+        
+        IntVector vDir(var_help.ioff, var_help.joff, var_help.koff);
+        const double dot = vDir[0]*iDir[0] + vDir[1]*iDir[1] + vDir[2]*iDir[2];
+        
 
         if ( parallel_dir ){
-          //The face normal and the velocity are in parallel
-          for ( bndIter.reset(); !bndIter.done(); bndIter++ ){
-
-            const double interp_rho = 0.5*(rho[*bndIter-iDir]+rho[*bndIter]);
-
-            var[*bndIter-iDir] = interp_rho*m_vel_value;
-            var[*bndIter] = var[*bndIter-iDir];
-
-          }
+            //The face normal and the velocity are in parallel
+            if (dot == -1) {
+                //Face +
+                for ( bndIter.reset(); !bndIter.done(); bndIter++ ){
+                      const double interp_rho = 0.5*(rho[*bndIter-iDir]+rho[*bndIter]);
+                     var[*bndIter-iDir] = interp_rho*m_vel_value;
+                      var[*bndIter] = var[*bndIter-iDir];
+                }
+            } else {
+                // Face -
+                for ( bndIter.reset(); !bndIter.done(); bndIter++ ){
+                      const double interp_rho = 0.5*(rho[*bndIter-iDir]+rho[*bndIter]);
+                      var[*bndIter] = interp_rho*m_vel_value;
+                      //var[*bndIter] = var[*bndIter-iDir];
+            }
+            
+            }
+           
         } else {
           //The face normal and the velocity are tangential
           for ( bndIter.reset(); !bndIter.done(); bndIter++ ){
@@ -452,6 +649,39 @@ namespace Uintah { namespace ArchesCore{
                   }
 
                   std::shared_ptr<BaseFunctor> fun(scinew MassFlow(mdot, density_label));
+                  insert_functor( face_name, varname, fun);
+                } else if ( custom_type == "MMS_almgren" ) {
+                  
+                  std::string x_label = "gridX";
+                  std::string y_label = "gridY";
+                  std::string which_vel = "u";
+
+                  db_bc_type->require("which_vel", which_vel);
+                  ProblemSpecP db_coord =  db_bc_type->findBlock("coordinates");
+
+                  if ( db_coord ){
+                    db_coord->getAttribute("x", x_label);
+                    db_coord->getAttribute("y", y_label);
+                  } else {
+                    throw InvalidValue("Error: must have coordinates specified for almgren MMS init condition", __FILE__, __LINE__);
+                  }
+
+                  std::shared_ptr<BaseFunctor> fun(scinew MMSalmgren(x_label, y_label, which_vel));
+                  insert_functor( face_name, varname, fun);
+
+                } else if ( custom_type == "MMS_shunn" ) {
+
+                  std::string x_label = "gridX";
+
+                  ProblemSpecP db_coord =  db_bc_type->findBlock("coordinates");
+
+                  if ( db_coord ){
+                    db_coord->getAttribute("x", x_label);
+                  } else {
+                    throw InvalidValue("Error: must have coordinates specified for shunn MMS init condition", __FILE__, __LINE__);
+                  }
+
+                  std::shared_ptr<BaseFunctor> fun(scinew MMSshunn(x_label));
                   insert_functor( face_name, varname, fun);
 
                 } else if ( custom_type == "table_value" ) {
