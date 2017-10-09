@@ -144,7 +144,7 @@ PressureEqn::initialize( const Patch* patch, ATIM* tsk_info ){
     A.p = A.e + A.w + A.n + A.s + A.t + A.b;
     A.p *= -1;
 
-    const double dt = tsk_info->get_dt();
+    const double dt = 1.0; //tsk_info->get_dt();
 
     // b
     b[c] = ( area_EW * ( xmom[E] - xmom[c] ) +
