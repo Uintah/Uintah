@@ -32,9 +32,9 @@ SourceTermFactoryV2::register_all_tasks( ProblemSpecP& db )
 
   */
 
-  if ( db->findBlock("src") ){
+  if ( db->findBlock("SourceV2") ){
 
-    ProblemSpecP db_init = db->findBlock("src");
+    ProblemSpecP db_init = db->findBlock("SourceV2");
 
     for (ProblemSpecP db_src = db_init->findBlock("src"); db_src != nullptr; db_src = db_src->findNextBlock("src")){
 
@@ -106,9 +106,9 @@ void
 SourceTermFactoryV2::build_all_tasks( ProblemSpecP& db )
 {
 
-  if ( db->findBlock("src") ){
+  if ( db->findBlock("SourceV2") ){
 
-    ProblemSpecP db_init = db->findBlock("src");
+    ProblemSpecP db_init = db->findBlock("SourceV2");
 
     for (ProblemSpecP db_src = db_init->findBlock("src"); db_src != nullptr; db_src = db_src->findNextBlock("src")){
 
@@ -134,9 +134,9 @@ void
 SourceTermFactoryV2::add_task( ProblemSpecP& db )
 {
 
-  if ( db->findBlock("src") ){
+  if ( db->findBlock("SourceV2") ){
 
-    ProblemSpecP db_init = db->findBlock("src");
+    ProblemSpecP db_init = db->findBlock("SourceV2");
 
     for (ProblemSpecP db_src = db_init->findBlock("src"); db_src != nullptr; db_src = db_src->findNextBlock("src")){
 

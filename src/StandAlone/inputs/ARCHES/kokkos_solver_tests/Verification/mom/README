@@ -1,9 +1,9 @@
 to run verification
  
 Convection term:
-python extract_data_spatial_order.py -ups almgren-mms.ups -levels 3 -nsteps 1 -suspath ~/CODE_17_07_17/Uintah/debug/StandAlone -vars "uVel,x_mms" -dire "x" -var_mms "x_mms"
+python extract_data_spatial_order.py -ups almgren-mms.ups -levels 3 -nsteps 1 -suspath ~/CODE_31_08_17/Uintah/debug/StandAlone -vars "x-mom, x_mms" -dire "x" -var_mms "x_mms"
 
 
 Diffusion term:
 
-python extract_data_spatial_order.py -ups almgren-mms_diff.ups -levels 3 -nsteps 1 -suspath ~/CODE_17_07_17/Uintah/debug/StandAlone -vars "uVel,x_mms" -dire "x" -var_mms "x_mms"
+python extract_data_spatial_order.py -ups almgren-mms_diff.ups -levels 3 -nsteps 1 -suspath ~/CODE_31_08_17/Uintah/debug/StandAlone -vars "x-mom,x_mms" -dire "x" -var_mms "x_mms"

@@ -33,11 +33,12 @@ def compute(data = 'data_sine/', var_name ='cc_phi_central', var_mms = 'phi_mms'
         # Normalization  in 2D... 
         DX = dx0*dx0
         e0 = e(f0,fe,DX,p = p)
+        print e0
         L1.append(e0)
 
     L1 = np.array(L1) 
     dx = np.array(dx)
-
+    print L1
     m, b, r_value, p_value, std_err = stats.linregress(np.log(dx),np.log(L1))
     print 'm = ',m,'b = ', b, 'r_value = ' ,r_value  
 

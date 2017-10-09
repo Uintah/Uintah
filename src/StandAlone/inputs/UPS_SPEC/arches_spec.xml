@@ -5,6 +5,18 @@
 
     <ARCHES                             spec="OPTIONAL NO_DATA" >
 
+      <!-- Arches Task Interface Task Controller Section -->
+      <TaskController                   spec="OPTIONAL NO_DATA"> 
+        <TaskPacking                    spec="OPTIONAL NO_DATA">
+          <!-- When any of the flags are present, the task interface tries to 
+               combine work into a single task. Default if no-packing.  -->
+          <global                       spec="OPTIONAL NO_DATA"/>
+          <turbulence                   spec="OPTIONAL NO_DATA"/>
+          <scalar_transport             spec="OPTIONAL NO_DATA"/>
+          <momentum_transport           spec="OPTIONAL NO_DATA"/>
+        </TaskPacking>
+      </TaskController>
+
       <turnonMixedModel                 spec="OPTIONAL BOOLEAN" /> <!-- Move to Properties? not sure what this model is-->
       <recompileTaskgraph               spec="OPTIONAL BOOLEAN" />
 
@@ -61,10 +73,12 @@
 
       </Utilities>
 
+      <!-- These turbulence models are for the new Kokkos Solver -->
       <TurbulenceModels                 spec="OPTIONAL NO_DATA">
          <model                         spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        attribute2="type REQUIRED STRING 'sigma, wale, constant_smagorinsky'">
+                                        attribute2="type REQUIRED STRING 'sigma, wale, constant_smagorinsky, 
+                                                                          dynamic_smagorinsky'">
 
            <Cs                          spec="OPTIONAL DOUBLE"
                                         need_applies_to="type sigma, wale, constant_smagorinsky"/> <!-- default for sigma is 1.35 
@@ -1297,6 +1311,7 @@
             <solver                       spec="REQUIRED STRING 'smg, SMG, PFMG, pfmg, SparseMSG, sparsemsg, CG, cg, Hybrid, hybrid, GMRES, gmres'" />
             <tolerance                    spec="REQUIRED DOUBLE 'positive'" />
             <relax_type                   spec="OPTIONAL INTEGER '0,3'"/> <!-- 0=jacobi,1=weighted jacobi,2=rb symmetric,3=rb non-symmetric -->
+            <normalize_pressure           spec="OPTIONAL BOOLEAN" />
           </Parameters>
         </PressureSolver>
       </KMomentum>

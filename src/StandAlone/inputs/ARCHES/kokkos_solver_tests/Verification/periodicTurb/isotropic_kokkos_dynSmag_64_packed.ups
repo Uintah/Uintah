@@ -9,14 +9,15 @@
   <Solver type="hypre"/>
   <Time>
     <maxTime>     0.67   </maxTime>
+    <!--maxTime>     0.2   </maxTime-->
     <initTime>    0.0     </initTime>
-    <delt_min>    1e-2 </delt_min>
-    <delt_max>    1e-2     </delt_max>
+    <delt_min>    1e-3 </delt_min>
+    <delt_max>    1e-3     </delt_max>
     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
   <DataArchiver>
-    <filebase>kokkos_iso_wale_32.uda</filebase>
-    <outputTimestepInterval>2</outputTimestepInterval>
+    <filebase>K_iso_64_dynSmag_p.uda</filebase>
+    <outputTimestepInterval>10</outputTimestepInterval>
     <outputInitTimestep/>
     <save label="x-mom"/>
     <!--save label="x_mms"/>
@@ -31,10 +32,11 @@
     <save label="vVel_cc"/>
     <save label="wVel_cc"/>
     <save label="gamma"/>
+    <save label="Cs"/>
     <save label="pressure"/>
     <save label="b_press"/>
     <!--save label="viscosity_csigma"/-->
-    <checkpoint cycle="2" interval=".3"/>
+    <!--checkpoint cycle="2" interval=".3"/-->
     <compression>gzip</compression>
   </DataArchiver>
   <Grid>
@@ -42,9 +44,9 @@
       <Box label="1">
         <lower>[0,0,0]</lower>
         <upper>[0.56548668,0.56548668,0.56548668]</upper>
-        <resolution>[32,32,32]</resolution>
+        <resolution>[64,64,64]</resolution>
         <extraCells>[0,0,0]</extraCells>
-        <patches>[1,1,1]</patches>
+        <patches>[3,3,3]</patches>
       </Box>
       <periodic>[1,1,1]</periodic>
     </Level>
@@ -58,6 +60,13 @@
   </PhysicalConstants>
   <CFD>
     <ARCHES>
+
+      <TaskController>
+        <TaskPacking>
+          <turbulence/>
+        </TaskPacking>
+      </TaskController>
+
       <TimeIntegrator order="1">
         <ExplicitIntegrator order="first"/>
       </TimeIntegrator>
@@ -77,6 +86,22 @@
           <grid type="CC"/>
           <value>1.e-3</value>
         </model-->
+
+        <!--model label="interpo_u" type="Interpolation_var">
+          <variable label ="uVel" type="FX"/>
+          <new_variable label ="CCuVel" type="FX"/>
+          <interpolation scheme ="central_face"/>
+        </model>
+        <model label="interpo_v" type="Interpolation_var">
+          <variable label ="vVel" type="FY"/>
+          <new_variable label ="CCvVel" type="FY"/>
+          <interpolation scheme ="central_face"/>
+        </model>
+        <model label="interpo_w" type="Interpolation_var">
+          <variable label ="wVel" type="FZ"/>
+          <new_variable label ="CCwVel" type="FZ"/>
+          <interpolation scheme ="central_face"/>
+        </model-->
       </PropertyModelsV2>
       <!--src_kokkos>
         <src label="x_mms" type="MMS_mom">
@@ -91,8 +116,9 @@
         </src>
       </src_kokkos-->
       <KMomentum>
+        <!--convection scheme="upwind"/-->
         <convection scheme="central"/>
-        <!--convection scheme="four_central"/-->
+        <!--convection scheme="f_central"/-->
         <!--convection scheme="upwind"/-->
         <!--src_x label = "x_mms_source"/>
         <src_y label = "y_mms_source"/-->
@@ -101,10 +127,11 @@
         <src_y label = "y_mms_source_diff"/-->
         <PressureSolver>
           <Parameters>
+            <normalize_pressure>true    </normalize_pressure>
             <solver>           cg     </solver>
             <preconditioner>  pfmg    </preconditioner>
-            <tolerance>      1.0e-10  </tolerance>
-            <maxiterations>    75     </maxiterations>
+            <tolerance>      1.0e-12  </tolerance>
+            <maxiterations>    750     </maxiterations>
             <skip>              1     </skip>
             <setupFrequency>    0     </setupFrequency>
             <jump>              0     </jump>
@@ -112,23 +139,28 @@
         </PressureSolver>
       </KMomentum>
       <TurbulenceModels>
-       <model label="Cwale" type="wale">
-        <Cs>0.5</Cs>
+       <model label="DS" type="dynamic_smagorinsky">
+       <Smagorinsky_constant_name Cs = "Cs" />
+       <Type_of_filter TF="Three_points"/>
+       <epsilon>3.0</epsilon>
        </model>
+       <!--Type_of_filter TF="avg"/-->
+       <!--Type_of_filter TF="Three_points"/-->
+       <!--Type_of_filter TF="Simpson"/-->
       </TurbulenceModels>
       <Initialization>
         <task task_label="x-mom-init" variable_label="x-mom"  type="input_file">
-          <filename>../../../periodicTurb/cbc32_uvw_arches-indexed.gz</filename>
+          <filename>../../../periodicTurb/cbc64_uvw_arches-indexed.gz</filename>
           <vector index="0"/>
           <variable type="FX"/>
         </task>
         <task task_label="y-mom-init" variable_label="y-mom"  type="input_file">
-          <filename>../../../periodicTurb/cbc32_uvw_arches-indexed.gz</filename>
+          <filename>../../../periodicTurb/cbc64_uvw_arches-indexed.gz</filename>
           <vector index="1"/>
           <variable type="FY"/>
         </task>
         <task task_label="z-mom-init" variable_label="z-mom"  type="input_file">
-          <filename>../../../periodicTurb/cbc32_uvw_arches-indexed.gz</filename>
+          <filename>../../../periodicTurb/cbc64_uvw_arches-indexed.gz</filename>
           <vector index="2"/>
           <variable type="FZ"/>
         </task>

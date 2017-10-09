@@ -66,25 +66,6 @@
           <grid type="CC"/>
           <value>1.</value>
         </model>
-        <!--model label="gamma" type="constant_property">
-          <grid type="CC"/>
-          <value>1.</value>
-        </model-->
-        <model label="interpo_u" type="Interpolation_var">
-          <variable label ="uVel" type="FX"/>
-          <new_variable label ="CCuVel" type="FX"/>
-          <interpolation scheme ="central"/>
-        </model>
-        <model label="interpo_v" type="Interpolation_var">
-          <variable label ="vVel" type="FY"/>
-          <new_variable label ="CCvVel" type="FY"/>
-          <interpolation scheme ="central"/>
-        </model>
-        <model label="interpo_w" type="Interpolation_var">
-          <variable label ="wVel" type="FZ"/>
-          <new_variable label ="CCwVel" type="FZ"/>
-          <interpolation scheme ="central"/>
-        </model>
       </PropertyModelsV2>
       <!--src_kokkos>
         <src label="x_mms" type="MMS_mom">
@@ -121,18 +102,24 @@
       </KMomentum>
       <TurbulenceModels>
        <model label="Cwale" type="wale">
-       <CCvelocities CCuVel_label="CCuVel" CCvVel_label="CCvVel" CCwVel_label="CCwVel"/>
-       <!--WALE_constant Cw = "0.65" /-->
-       <WALE_constant Cw = "0.5" />
-       <!--use_my_name_viscosity label="viscosity_csigma"/-->
+        <Cs>0.5</Cs>
        </model>
       </TurbulenceModels>
       <Initialization>
-        <task task_label="x-mom-init" variable_label="x-mom"  type="inputFile">
-          <uVel label ="x-mom"/>
-          <vVel label ="y-mom"/>
-          <wVel label ="z-mom"/>
-          <filename>cbc64_uvw_arches.gz</filename>
+        <task task_label="x-mom-init" variable_label="x-mom"  type="input_file">
+          <filename>../../../periodicTurb/cbc64_uvw_arches-indexed.gz</filename>
+          <vector index="0"/>
+          <variable type="FX"/>
+        </task>
+        <task task_label="y-mom-init" variable_label="y-mom"  type="input_file">
+          <filename>../../../periodicTurb/cbc64_uvw_arches-indexed.gz</filename>
+          <vector index="1"/>
+          <variable type="FY"/>
+        </task>
+        <task task_label="z-mom-init" variable_label="z-mom"  type="input_file">
+          <filename>../../../periodicTurb/cbc64_uvw_arches-indexed.gz</filename>
+          <vector index="2"/>
+          <variable type="FZ"/>
         </task>
       </Initialization>
       <BoundaryConditions>

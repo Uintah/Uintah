@@ -80,7 +80,8 @@ DSmaCs<TT>::problemSetup( ProblemSpecP& db ){
   using namespace Uintah::ArchesCore;
   // u, v , w velocities
 
-  db->findBlock("Smagorinsky_constant_name")->getAttribute("Cs",m_Cs_name);
+  //db->findBlock("Smagorinsky_constant_name")->getAttribute("Cs",m_Cs_name);
+  m_Cs_name = "Cs";
 
   if (db->findBlock("use_my_name_viscosity")){
     db->findBlock("use_my_name_viscosity")->getAttribute("label",m_t_vis_name);
@@ -99,7 +100,7 @@ DSmaCs<TT>::problemSetup( ProblemSpecP& db ){
   }
 
   std::string m_Type_filter_name;
-  db->findBlock("Type_of_filter")->getAttribute("TF",m_Type_filter_name);
+  db->findBlock("filter_type")->getAttribute("TF",m_Type_filter_name);
 
   Type_filter = get_filter_from_string( m_Type_filter_name );
 }

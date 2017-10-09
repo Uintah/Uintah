@@ -32,7 +32,7 @@ DSFT::problemSetup( ProblemSpecP& db ){
   m_cc_w_vel_name = m_w_vel_name + "_cc";
 
   std::string m_Type_filter_name;
-  db->findBlock("Type_of_filter")->getAttribute("TF",m_Type_filter_name);
+  db->findBlock("filter_type")->getAttribute("TF",m_Type_filter_name);
 
   Type_filter = get_filter_from_string( m_Type_filter_name );
 

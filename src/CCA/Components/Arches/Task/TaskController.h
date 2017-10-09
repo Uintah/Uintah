@@ -22,7 +22,7 @@ public:
     // This is a generic, global parameter for task packing.
     // One may want logic with more fine-grained control in
     // some cases. Default is false.
-    ProblemSpecP db_controller = db->findBlock("TaskControler");
+    ProblemSpecP db_controller = db->findBlock("TaskController");
     if ( db_controller != nullptr ){
       ProblemSpecP db_pack = db_controller->findBlock("TaskPacking");
       if ( db_pack != nullptr ){

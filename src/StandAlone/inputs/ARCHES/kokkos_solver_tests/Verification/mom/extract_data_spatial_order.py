@@ -145,7 +145,8 @@ def main():
     p_s   = [int(fs[0]*Nx*refinement), int(fs[1]*Ny*refinement), int(fs[2]*Nz*refinement)] 
     p_end = [int(fe[0]*Nx*refinement), int(fe[1]*Ny*refinement), int(fe[2]*Nz*refinement)] 
     #    #EXTRACT THE variables
-    for var in myvars:                      
+    for var in myvars:
+      print "variable:", var                      
       outFile = 'data/'+ str(var) + '-t' + str(counter) + '.txt'
       the_command = './lineextract -v ' + str(var) + ' -timestep 0 '  + ' -istart ' + str(p_s[0] )+' '+str(p_s[1])+' '+str(p_s[2])+' -iend ' + str(p_end[0] )+' '+str(p_end[1])+' '+str(p_end[2])+ ' -o ' + outFile +' -uda '+udaName
       print 'Executing command: ', the_command
@@ -174,7 +175,7 @@ def main():
   os.system('rm -rf *.uda*')
   os.system('rm -rf *.dot')
   os.system('rm log.txt')  
-  os.system('rm data/*.txt')  
+  #:os.system('rm data/*.txt')  
   
 
 #------------------------------------------------------------------------------

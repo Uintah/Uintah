@@ -75,7 +75,7 @@ DSmaMMML<TT>::problemSetup( ProblemSpecP& db ){
   // u, v , w velocities
 
   std::string m_Type_filter_name;
-  db->findBlock("Type_of_filter")->getAttribute("TF",m_Type_filter_name);
+  db->findBlock("filter_type")->getAttribute("TF",m_Type_filter_name);
 
   const ProblemSpecP params_root = db->getRootNode();
   db->require("epsilon",m_epsilon);
