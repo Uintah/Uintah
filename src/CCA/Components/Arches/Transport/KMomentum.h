@@ -291,7 +291,7 @@ private:
     m_sigmaz_name     = var_map.sigmaz_name;
 
     m_mu_name = var_map.mu_name;
-    m_rho_name = "density";
+    m_rho_name = parse_ups_for_role( DENSITY, db, "density" );
 
     if ( input_db->findBlock("velocity") ){
       // can overide the global velocity space with this:
@@ -418,7 +418,7 @@ private:
 
       typedef std::vector<SourceInfo> VS;
       for (typename VS::iterator i = m_source_info[ieqn].begin(); i != m_source_info[ieqn].end(); i++){
-        register_variable( i->name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+        register_variable( i->name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
       }
 
     }
@@ -434,8 +434,8 @@ private:
     register_variable( m_y_velocity_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::NEWDW, variable_registry, time_substep );
     register_variable( m_z_velocity_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::NEWDW, variable_registry, time_substep );
     register_variable( m_eps_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::OLDDW, variable_registry, time_substep );
-    register_variable( m_mu_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::LATEST, variable_registry, time_substep );
-    register_variable( m_rho_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::LATEST, variable_registry, time_substep );
+    register_variable( m_mu_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+    register_variable( m_rho_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 
   }
 
@@ -445,6 +445,9 @@ private:
 
     Vector Dx = patch->dCell();
     double V = Dx.x()*Dx.y()*Dx.z();
+    
+    Uintah::IntVector low_patch_range = patch->getCellLowIndex();
+    Uintah::IntVector high_patch_range = patch->getCellHighIndex();
 
     CFXT& u     = *(tsk_info->get_const_uintah_field<CFXT>(m_x_velocity_name));
     CFYT& v     = *(tsk_info->get_const_uintah_field<CFYT>(m_y_velocity_name));
@@ -497,7 +500,7 @@ private:
              get_flux( phi, u_fx, v_fy, w_fz, x_psi, y_psi, z_psi,
                        x_flux, y_flux, z_flux, eps );
 
-            GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE( 1, 0 )
+            GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE( 1, 1 )
             Uintah::BlockRange x_range( low_fx_patch_range, high_fx_patch_range );
             Uintah::parallel_for( x_range, get_flux );
 
@@ -511,8 +514,9 @@ private:
              get_flux( phi, u_fx, v_fy, w_fz, x_psi, y_psi, z_psi,
                        x_flux, y_flux, z_flux, eps );
 
-            GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE( 1, 0 )
-            Uintah::BlockRange x_range( low_fx_patch_range, high_fx_patch_range );
+
+            GET_WALL_BUFFERED_PATCH_RANGE(low_patch_range, high_patch_range,1,1,0,1,0,1);
+            Uintah::BlockRange x_range( low_patch_range, high_patch_range );
             Uintah::parallel_for( x_range, get_flux );
 
           }
@@ -528,7 +532,7 @@ private:
             Uintah::ComputeConvectiveFlux<FXT, FYT, FZT >
               get_flux( phi, u_fx, v_fy, w_fz, x_psi, y_psi, z_psi, x_flux, y_flux, z_flux, eps );
 
-            GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE( 1, 0 )
+            GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE( 1, 1 )
             Uintah::BlockRange y_range( low_fy_patch_range, high_fy_patch_range );
             Uintah::parallel_for( y_range, get_flux );
 
@@ -541,8 +545,8 @@ private:
             Uintah::ComputeConvectiveFlux<CFXT, CFYT, CFZT >
               get_flux( phi, u_fx, v_fy, w_fz, x_psi, y_psi, z_psi, x_flux, y_flux, z_flux, eps );
 
-            GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE( 1, 0 )
-            Uintah::BlockRange y_range( low_fy_patch_range, high_fy_patch_range );
+            GET_WALL_BUFFERED_PATCH_RANGE(low_patch_range, high_patch_range,0,1,1,1,0,1);
+            Uintah::BlockRange y_range( low_patch_range, high_patch_range );
             Uintah::parallel_for( y_range, get_flux );
 
           }
@@ -559,7 +563,7 @@ private:
             Uintah::ComputeConvectiveFlux<FXT, FYT, FZT >
               get_flux( phi, u_fx, v_fy, w_fz, x_psi, y_psi, z_psi, x_flux, y_flux, z_flux, eps );
 
-            GET_EXTRACELL_FZ_BUFFERED_PATCH_RANGE( 1, 0 )
+            GET_EXTRACELL_FZ_BUFFERED_PATCH_RANGE( 1, 1 )
             Uintah::BlockRange z_range( low_fz_patch_range, high_fz_patch_range );
             Uintah::parallel_for( z_range, get_flux );
 
@@ -571,9 +575,9 @@ private:
 
             Uintah::ComputeConvectiveFlux<CFXT, CFYT, CFZT >
               get_flux( phi, u_fx, v_fy, w_fz, x_psi, y_psi, z_psi, x_flux, y_flux, z_flux, eps );
-
-            GET_EXTRACELL_FZ_BUFFERED_PATCH_RANGE( 1, 0 )
-            Uintah::BlockRange z_range( low_fz_patch_range, high_fz_patch_range );
+            
+            GET_WALL_BUFFERED_PATCH_RANGE(low_patch_range, high_patch_range,0,1,0,1,1,1);
+            Uintah::BlockRange z_range( low_patch_range, high_patch_range );
             Uintah::parallel_for( z_range, get_flux );
 
           }
@@ -621,13 +625,27 @@ private:
 
         CT& src = *(tsk_info->get_const_uintah_field<CT>((*isrc).name));
         double weight = (*isrc).weight;
-        Uintah::BlockRange src_range(patch->getCellLowIndex(), patch->getCellHighIndex());
 
-        Uintah::parallel_for( src_range, [&](int i, int j, int k){
+        if ( my_dir == ArchesCore::XDIR ){
+          GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE(1, 0)
+          Uintah::BlockRange range_x(low_fx_patch_range, high_fx_patch_range);
+          Uintah::parallel_for( range_x, [&](int i, int j, int k){
+            rhs(i,j,k) += weight * src(i,j,k) * V;
 
-          rhs(i,j,k) += weight * src(i,j,k) * V;
-
-        });
+          });
+        } else if ( my_dir == ArchesCore::YDIR ){
+          GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE(1, 0);
+          Uintah::BlockRange range_y(low_fy_patch_range, high_fy_patch_range);
+          Uintah::parallel_for( range_y, [&](int i, int j, int k){
+            rhs(i,j,k) += weight * src(i,j,k) * V;
+          });
+        } else {
+          GET_EXTRACELL_FZ_BUFFERED_PATCH_RANGE(1, 0);
+          Uintah::BlockRange range_z(low_fz_patch_range, high_fz_patch_range);
+          Uintah::parallel_for( range_z, [&](int i, int j, int k){
+            rhs(i,j,k) += weight * src(i,j,k) * V;
+          });
+        }
       }
     } // equation loop
 #ifdef DO_TIMINGS

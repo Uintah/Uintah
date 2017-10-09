@@ -100,6 +100,7 @@ private:
     typedef typename ArchesCore::VariableHelper<T>::ConstZFaceType CFZT;
 
     std::string m_D_name;
+    std::string m_density_name;
     std::string m_x_velocity_name;
     std::string m_y_velocity_name;
     std::string m_z_velocity_name;
@@ -112,6 +113,7 @@ private:
     std::vector<double> m_high_clip;
     std::vector<double> m_init_value;
 
+    double m_time{0};
     bool m_has_D;
 
     int m_total_eqns;
@@ -236,6 +238,8 @@ private:
   m_y_velocity_name = var_map.vvel_name;
   m_z_velocity_name = var_map.wvel_name;
 
+  m_density_name = parse_ups_for_role( DENSITY, input_db , "density" );
+
   if ( input_db->findBlock("velocity") ){
     // can overide the global velocity space with this:
     input_db->findBlock("velocity")->getAttribute("xlabel",m_x_velocity_name);
@@ -354,6 +358,8 @@ private:
       z_flux.initialize(0.0);
 
     } //equation loop
+    
+    m_time += tsk_info->get_dt(); 
   }
 
   //------------------------------------------------------------------------------------------------
@@ -387,6 +393,7 @@ private:
     //globally common variables
     if ( m_has_D ){
       register_variable( m_D_name       , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::NEWDW  , variable_registry , time_substep, _task_name );
+      register_variable( m_density_name       , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::NEWDW  , variable_registry , time_substep, _task_name );
     }
     register_variable( m_x_velocity_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::LATEST, variable_registry, time_substep, _task_name );
     register_variable( m_y_velocity_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::LATEST, variable_registry, time_substep, _task_name );
@@ -458,9 +465,12 @@ private:
       if ( m_do_diff[ieqn] ) {
 
         CT& D = *(tsk_info->get_const_uintah_field<CT>(m_D_name));
+        CT& density = *(tsk_info->get_const_uintah_field<CT>(m_density_name));
+
 
         //NOTE: No diffusion allowed on boundaries.
-        GET_EXTRACELL_BUFFERED_PATCH_RANGE(1,-1);
+
+        GET_EXTRACELL_BUFFERED_PATCH_RANGE(0,0);
 
         Uintah::BlockRange range_diff(low_patch_range, high_patch_range);
 
@@ -473,12 +483,12 @@ private:
           const double afz  = ( eps(i,j,k) + eps(i,j,k-1) ) / 2. < 0.51 ? 0.0 : 1.0;
           const double afzp = ( eps(i,j,k) + eps(i,j,k+1) ) / 2. < 0.51 ? 0.0 : 1.0;
 
-          rhs(i,j,k) += ax/(2.*Dx.x()) * ( afxp  * ( D(i+1,j,k) + D(i,j,k))   * (phi(i+1,j,k) - phi(i,j,k))
-                                         - afx   * ( D(i,j,k)   + D(i-1,j,k)) * (phi(i,j,k)   - phi(i-1,j,k)) ) +
-                        ay/(2.*Dx.y()) * ( afyp  * ( D(i,j+1,k) + D(i,j,k))   * (phi(i,j+1,k) - phi(i,j,k))
-                                         - afy   * ( D(i,j,k)   + D(i,j-1,k)) * (phi(i,j,k)   - phi(i,j-1,k)) ) +
-                        az/(2.*Dx.z()) * ( afzp  * ( D(i,j,k+1) + D(i,j,k))   * (phi(i,j,k+1) - phi(i,j,k))
-                                         - afz   * ( D(i,j,k)   + D(i,j,k-1)) * (phi(i,j,k)   - phi(i,j,k-1)) );
+          rhs(i,j,k) += ax/(2.*Dx.x()) * ( afxp  * ( D(i+1,j,k) + D(i,j,k))   * (phi(i+1,j,k)/density(i+1,j,k) - phi(i,j,k)/density(i,j,k))
+                                         - afx   * ( D(i,j,k)   + D(i-1,j,k)) * (phi(i,j,k)/density(i,j,k)   - phi(i-1,j,k)/density(i-1,j,k)) ) +
+                        ay/(2.*Dx.y()) * ( afyp  * ( D(i,j+1,k) + D(i,j,k))   * (phi(i,j+1,k)/density(i,j+1,k) - phi(i,j,k)/density(i,j,k))
+                                         - afy   * ( D(i,j,k)   + D(i,j-1,k)) * (phi(i,j,k)/density(i,j,k)   - phi(i,j-1,k)/density(i,j-1,k)) ) +
+                        az/(2.*Dx.z()) * ( afzp  * ( D(i,j,k+1) + D(i,j,k))   * (phi(i,j,k+1)/density(i,j,k) - phi(i,j,k)/density(i,j,k+1))
+                                         - afz   * ( D(i,j,k)   + D(i,j,k-1)) * (phi(i,j,k)/density(i,j,k)   - phi(i,j,k-1)/density(i,j,k-1)) );
 
         });
       }
@@ -522,7 +532,7 @@ private:
 
   template <typename T, typename FluxXT, typename FluxYT, typename FluxZT> void
   KScalarRHS<T, FluxXT, FluxYT, FluxZT>::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
-
+    tsk_info->set_time(m_time);
     m_boundary_functors->apply_bc( _eqn_names, m_bcHelper, tsk_info, patch );
 
   }

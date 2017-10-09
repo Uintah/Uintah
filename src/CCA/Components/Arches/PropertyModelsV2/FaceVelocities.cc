@@ -89,9 +89,9 @@ void FaceVelocities::register_timestep_eval( VIVec& variable_registry, const int
   for (auto iter = m_vel_names.begin(); iter != m_vel_names.end(); iter++ ){
     register_variable( *iter, ArchesFieldContainer::COMPUTES, variable_registry, time_substep, _task_name );
   }
-  register_variable( m_u_vel_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::LATEST, variable_registry, _task_name );
-  register_variable( m_v_vel_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::LATEST, variable_registry, _task_name );
-  register_variable( m_w_vel_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::LATEST, variable_registry, _task_name );
+  register_variable( m_u_vel_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::LATEST, variable_registry, time_substep, _task_name );
+  register_variable( m_v_vel_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::LATEST, variable_registry, time_substep, _task_name );
+  register_variable( m_w_vel_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::LATEST, variable_registry, time_substep, _task_name );
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -124,24 +124,19 @@ void FaceVelocities::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
   wcell_yvel.initialize(0.0);
   wcell_zvel.initialize(0.0);
 
-  //bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
   bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
-  //bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
   bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
-  //bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
   bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
 
   IntVector low = patch->getCellLowIndex();
   IntVector high = patch->getCellHighIndex();
 
   //x-direction:
-  if ( xplus ) high += IntVector(1,0,0);
-  // if ( yminus ) low -= IntVector(0,1,0);
-  // if ( yplus ) high += IntVector(0,1,0);
-  // if ( zminus ) low -= IntVector(0,0,1);
-  // if ( zplus ) high += IntVector(0,0,1);
+  GET_WALL_BUFFERED_PATCH_RANGE(low,high,1,1,0,1,0,1);
   Uintah::BlockRange x_range(low, high);
-
   Uintah::parallel_for( x_range, [&](int i, int j, int k){
 
     ucell_xvel(i,j,k) = 0.5*(uVel(i,j,k) + uVel(i-1,j,k));
@@ -153,11 +148,8 @@ void FaceVelocities::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
   //y-direction:
   low = patch->getCellLowIndex();
   high = patch->getCellHighIndex();
-  if ( yplus ) high += IntVector(0,1,0);
-  // if ( xminus ) low -= IntVector(1,0,0);
-  // if ( xplus ) high += IntVector(1,0,0);
-  // if ( zminus ) low -= IntVector(0,0,1);
-  // if ( zplus ) high += IntVector(0,0,1);
+
+  GET_WALL_BUFFERED_PATCH_RANGE(low,high,0,1,1,1,0,1);
   Uintah::BlockRange y_range(low, high);
 
   Uintah::parallel_for( y_range, [&](int i, int j, int k){
@@ -171,11 +163,8 @@ void FaceVelocities::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
   //z-direction:
   low = patch->getCellLowIndex();
   high = patch->getCellHighIndex();
-  if ( zplus ) high += IntVector(0,0,1);
-  // if ( xminus ) low -= IntVector(1,0,0);
-  // if ( xplus ) high += IntVector(1,0,0);
-  // if ( yminus ) low -= IntVector(0,1,0);
-  // if ( yplus ) high += IntVector(0,1,0);
+
+  GET_WALL_BUFFERED_PATCH_RANGE(low,high,0,1,0,1,1,1);
   Uintah::BlockRange z_range(low, high);
 
   Uintah::parallel_for( z_range, [&](int i, int j, int k){
