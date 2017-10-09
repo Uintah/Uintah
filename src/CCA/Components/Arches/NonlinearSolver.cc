@@ -49,11 +49,4 @@ NonlinearSolver::commonProblemSetup( ProblemSpecP db ){
 
   m_arches_spec = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES");
 
-  // This is a generic, global parameter for task packing.
-  // One may want logic with more fine-grained control in
-  // some cases. Default is false.
-  if ( db->findBlock("global_pack_tasks") ){
-    m_global_pack_tasks = true;
-  }
-
 }

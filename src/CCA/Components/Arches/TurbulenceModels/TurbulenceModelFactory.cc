@@ -1,15 +1,19 @@
 #include <CCA/Components/Arches/TurbulenceModels/TurbulenceModelFactory.h>
 #include <CCA/Components/Arches/Task/TaskInterface.h>
+#include <CCA/Components/Arches/Task/TaskController.h>
 
 //Specific models:
 #include <CCA/Components/Arches/TurbulenceModels/SGSsigma.h>
 #include <CCA/Components/Arches/TurbulenceModels/Smagorinsky.h>
 #include <CCA/Components/Arches/TurbulenceModels/WALE.h>
+#include <CCA/Components/Arches/TurbulenceModels/DSFT.h>
+#include <CCA/Components/Arches/TurbulenceModels/DSmaCs.h>
+#include <CCA/Components/Arches/TurbulenceModels/DSmaMMML.h>
 
 using namespace Uintah;
 
 //--------------------------------------------------------------------------------------------------
-TurbulenceModelFactory::TurbulenceModelFactory( )
+TurbulenceModelFactory::TurbulenceModelFactory(  )
 {}
 
 //--------------------------------------------------------------------------------------------------
@@ -32,6 +36,8 @@ TurbulenceModelFactory::register_all_tasks( ProblemSpecP& db )
    *  ...
    * </Arches>
    */
+
+   using namespace ArchesCore;
 
   if ( db->findBlock("TurbulenceModels")){
 
@@ -56,12 +62,49 @@ TurbulenceModelFactory::register_all_tasks( ProblemSpecP& db )
         TaskInterface::TaskBuilder* tsk_builder = scinew Smagorinsky::Builder( name, 0 );
         register_task( name, tsk_builder );
         m_momentum_closure_tasks.push_back(name);
-        
+
       } else if (type == "wale"){
 
         TaskInterface::TaskBuilder* tsk_builder = scinew WALE::Builder( name, 0 );
         register_task( name, tsk_builder );
         m_momentum_closure_tasks.push_back(name);
+
+      } else if (type == "dynamic_smagorinsky"){
+
+        TaskController& tsk_controller = TaskController::self();
+        const TaskController::Packing& packed_tasks = tsk_controller.get_packing_info();
+
+        if ( packed_tasks.turbulence ){
+          name = "DS_task1";
+          TaskInterface::TaskBuilder* tsk_builder = scinew DSFT::Builder( name, 0 );
+          register_task( name, tsk_builder );
+          m_momentum_closure_tasks.push_back(name);
+
+          name = "DS_task2";
+          TaskInterface::TaskBuilder* tsk_builder2 = scinew DSmaMMML< CCVariable<double> >::Builder( name, 0 );
+          register_task( name, tsk_builder2 );
+          m_momentum_closure_tasks.push_back(name);
+
+          name = "DS_task3";
+          TaskInterface::TaskBuilder* tsk_builder3 = scinew DSmaCs< CCVariable<double> >::Builder( name, 0 );
+          register_task( name, tsk_builder3 );
+          m_momentum_closure_tasks.push_back(name);
+        } else {
+          name = "DS_task1";
+          TaskInterface::TaskBuilder* tsk_builder = scinew DSFT::Builder( name, 0 );
+          register_task( name, tsk_builder );
+          m_momentum_closure_tasks.push_back(name);
+
+          name = "DS_task2";
+          TaskInterface::TaskBuilder* tsk_builder2 = scinew DSmaMMML< constCCVariable<double> >::Builder( name, 0 );
+          register_task( name, tsk_builder2 );
+          m_momentum_closure_tasks.push_back(name);
+
+          name = "DS_task3";
+          TaskInterface::TaskBuilder* tsk_builder3 = scinew DSmaCs< constCCVariable<double> >::Builder( name, 0 );
+          register_task( name, tsk_builder3 );
+          m_momentum_closure_tasks.push_back(name);
+        }
 
       } else {
 
@@ -107,7 +150,7 @@ void TurbulenceModelFactory::schedule_initialization( const LevelP& level,
                                                       const MaterialSet* matls,
                                                       bool doing_restart ){
 
-  for ( auto i = m_task_init_order.begin(); i != m_task_init_order.end(); i++ ){
+  for ( auto i = _active_tasks.begin(); i != _active_tasks.end(); i++ ){
     TaskInterface* tsk = retrieve_task( *i );
     tsk->schedule_init( level, sched, matls, doing_restart );
   }

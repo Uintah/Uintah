@@ -30,6 +30,7 @@
 #include <CCA/Components/Arches/UPSHelper.h>
 #include <CCA/Components/Arches/Transport/PressureEqn.h>
 #include <CCA/Components/Arches/ChemMix/TableLookup.h>
+#include <CCA/Components/Arches/Task/TaskController.h>
 //factories
 #include <CCA/Components/Arches/Task/TaskFactoryHelper.h>
 #include <CCA/Components/Arches/TurbulenceModels/TurbulenceModelFactory.h>
@@ -101,6 +102,9 @@ KokkosSolver::problemSetup( const ProblemSpecP& input_db,
   ProblemSpecP db = input_db;
   ProblemSpecP db_ks = db->findBlock("KokkosSolver");
   ProblemSpecP db_root = db->getRootNode();
+
+  ArchesCore::TaskController& tsk_controller = ArchesCore::TaskController::self();
+  tsk_controller.parse_task_controller(db);
 
   db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("TimeIntegrator")->getAttribute("order", m_rk_order);
   proc0cout << " Time integrator: RK of order " << m_rk_order << "\n \n";
@@ -198,7 +202,7 @@ KokkosSolver::computeTimestep(const LevelP& level, SchedulerP& sched)
 
   if ( found_all_vars ){
 
-    Task* tsk = scinew Task( "KokkosSolver::computeStableTimeStep",this,
+    Task* tsk = scinew Task( "KokkosSolver::computeStableTimeStep", this,
                              &KokkosSolver::computeStableTimeStep);
 
     // Actually compute the dt based on CFD variables.
@@ -455,6 +459,8 @@ KokkosSolver::setupBCs( const LevelP& level, SchedulerP& sched, const MaterialSe
 void
 KokkosSolver::SSPRKSolve( const LevelP& level, SchedulerP& sched ){
 
+  using namespace Uintah::ArchesCore;
+
   const MaterialSet* matls = m_sharedState->allArchesMaterials();
 
   BFM::iterator i_util_fac = m_task_factory_map.find("utility_factory");
@@ -468,6 +474,9 @@ KokkosSolver::SSPRKSolve( const LevelP& level, SchedulerP& sched ){
   TaskFactoryBase::TaskMap all_bc_tasks = i_bc_fac->second->retrieve_all_tasks();
   TaskFactoryBase::TaskMap all_table_tasks = i_table_fac->second->retrieve_all_tasks();
 
+  TaskController& tsk_controller = TaskController::self();
+  const TaskController::Packing& packed_info = tsk_controller.get_packing_info();
+
   // ----------------- SSP RK LOOP -----------------------------------------------------------------
 
   for ( int time_substep = 0; time_substep < m_rk_order; time_substep++ ){
@@ -480,42 +489,42 @@ KokkosSolver::SSPRKSolve( const LevelP& level, SchedulerP& sched ){
 
     // pre-update properties/source tasks)
     i_prop_fac->second->schedule_task_group( "pre_update_property_models",
-      TaskInterface::TIMESTEP_EVAL, m_global_pack_tasks, level, sched, matls, time_substep );
+      TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
 
     // compute momentum closure
     i_turb_model_fac->second->schedule_task_group("momentum_closure",
-      TaskInterface::TIMESTEP_EVAL, m_global_pack_tasks, level, sched, matls, time_substep );
+      TaskInterface::TIMESTEP_EVAL, packed_info.turbulence, level, sched, matls, time_substep );
 
     // ** SCALARS **
     // PRE-PROJECTION
     // first compute the psi functions for the limiters:
     i_transport->second->schedule_task_group("scalar_psi_builders",
-      TaskInterface::TIMESTEP_EVAL, m_global_pack_tasks, level, sched, matls, time_substep );
+      TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
 
     // now construct the RHS:
     i_transport->second->schedule_task_group("scalar_rhs_builders",
-      TaskInterface::TIMESTEP_EVAL, m_global_pack_tasks, level, sched, matls, time_substep );
+      TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
 
     i_transport->second->schedule_task_group("scalar_rhs_builders",
-      TaskInterface::BC, m_global_pack_tasks, level, sched, matls, time_substep );
+      TaskInterface::BC, packed_info.global, level, sched, matls, time_substep );
 
     // now update them:
     i_transport->second->schedule_task_group("scalar_fe_update",
-      TaskInterface::TIMESTEP_EVAL, m_global_pack_tasks, level, sched, matls, time_substep );
+      TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
 
     // ** TABLE LOOKUP **
     i_table_fac->second->schedule_task_group("all_tasks",
-      TaskInterface::TIMESTEP_EVAL, m_global_pack_tasks, level, sched, matls, time_substep );
+      TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
 
     i_table_fac->second->schedule_task_group("all_tasks",
-      TaskInterface::BC, m_global_pack_tasks, level, sched, matls, time_substep );
+      TaskInterface::BC, packed_info.global, level, sched, matls, time_substep );
 
     // ** MOMENTUM **
     i_transport->second->schedule_task_group( "momentum_construction", TaskInterface::TIMESTEP_EVAL,
-      m_global_pack_tasks, level, sched, matls, time_substep );
+      packed_info.global, level, sched, matls, time_substep );
 
     i_transport->second->schedule_task_group( "momentum_fe_update", TaskInterface::TIMESTEP_EVAL,
-      m_global_pack_tasks, level, sched, matls, time_substep );
+      packed_info.global, level, sched, matls, time_substep );
 
     // ** PRESSURE PROJECTION **
     if ( i_transport->second->has_task("build_pressure_system")){
@@ -547,10 +556,10 @@ KokkosSolver::SSPRKSolve( const LevelP& level, SchedulerP& sched ){
 
     // Scalar BCs
     i_transport->second->schedule_task_group("scalar_rhs_builders",
-      TaskInterface::BC, m_global_pack_tasks, level, sched, matls, time_substep );
+      TaskInterface::BC, packed_info.global, level, sched, matls, time_substep );
     // bc factory tasks
     i_bc_fac->second->schedule_task_group("all_tasks",
-      TaskInterface::BC, m_global_pack_tasks, level, sched, matls, time_substep );
+      TaskInterface::BC, packed_info.global, level, sched, matls, time_substep );
 
   } // RK Integrator
 

@@ -54,6 +54,7 @@
 #include <CCA/Components/Arches/ChemMix/TableLookup.h>
 
 //------------------ New Task Interface (start) --------------------------------------------------
+#include <CCA/Components/Arches/Task/TaskController.h>
 #include <CCA/Components/Arches/Task/TaskFactoryHelper.h>
 #include <CCA/Components/Arches/TurbulenceModels/TurbulenceModelFactory.h>
 #include <CCA/Components/Arches/Utility/UtilityFactory.h>
@@ -250,6 +251,8 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
                               GridP& grid )
 {
 
+  ArchesCore::TaskController& tsk_controller = ArchesCore::TaskController::self();
+  tsk_controller.parse_task_controller(params);
 
   // check to see what radiation calc frequency is (default is 1)
   ProblemSpecP transport_ps = params->findBlock("TransportEqns");
@@ -1687,6 +1690,10 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     //------------------ New Task Interface (start) ------------------------------------------------
 
+    using namespace ArchesCore;
+    TaskController& tsk_controller = TaskController::self();
+    const TaskController::Packing& packed_info = tsk_controller.get_packing_info();
+
     _task_factory_map["property_models_factory"]->schedule_task_group( "pre_update_property_models",
       TaskInterface::TIMESTEP_EVAL, dont_pack_tasks, level, sched, matls, curr_level );
 
@@ -1706,10 +1713,10 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       dont_pack_tasks, level, sched, matls, curr_level );
 
     i_transport->second->schedule_task_group("scalar_rhs_builders",
-      TaskInterface::BC, m_global_pack_tasks, level, sched, matls, curr_level );
+      TaskInterface::BC, packed_info.global, level, sched, matls, curr_level );
     // bc factory tasks
     i_bc_fac->second->schedule_task_group("all_tasks",
-      TaskInterface::BC, m_global_pack_tasks, level, sched, matls, curr_level );
+      TaskInterface::BC, packed_info.global, level, sched, matls, curr_level );
 
     //------------------ New Task Interface (end) ------------------------------------------------
 
