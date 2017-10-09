@@ -118,7 +118,7 @@ namespace Uintah { namespace ArchesCore{
               var[*bndIter] = spec->value;
             }
           } else {
-              throw InvalidValue("Error: ...",__FILE__,__LINE__);                  
+              throw InvalidValue("Error: ...",__FILE__,__LINE__);
           }
         }
       }
@@ -165,7 +165,7 @@ namespace Uintah { namespace ArchesCore{
 
           for ( bndIter.reset(); !bndIter.done(); bndIter++ ){
 
-            var[*bndIter] = norm*dx * spec->value + var[*bndIter-iDir]; 
+            var[*bndIter] = norm*dx * spec->value + var[*bndIter-iDir];
 
           }
         } else {
@@ -270,10 +270,10 @@ namespace Uintah { namespace ArchesCore{
 
       void eval_bc( std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
                     const BndSpec* bnd, Uintah::Iterator bndIter ){
-        
+
         double m_two_pi = 2.0*acos(-1.0);
         double m_amp = 1.0;
-        
+
         T& var = *( tsk_info->get_uintah_field<T>(var_name));
 
         constCCVariable<double> x =
@@ -287,7 +287,7 @@ namespace Uintah { namespace ArchesCore{
         IntVector vDir(var_help.ioff, var_help.joff, var_help.koff);
 
         const double dot = vDir[0]*iDir[0] + vDir[1]*iDir[1] + vDir[2]*iDir[2];
-   
+
 
         if ( m_which_vel == "u" ){
 
@@ -301,7 +301,7 @@ namespace Uintah { namespace ArchesCore{
             // SFCX or SFCY or SFCZ variable
               if (dot == -1){
                 for ( bndIter.reset(); !bndIter.done(); bndIter++ ){
-                  // (-) faces  two cells at the begin of the domain 
+                  // (-) faces  two cells at the begin of the domain
                   // value are the same because we do not resolve extra cell (i=-1), and we set the BC at i = 0
 //                    var[*bndIter] = 1.0  - m_amp * cos( m_two_pi * x[*bndIter] )
 //                                      * sin( m_two_pi * y[*bndIter] );
@@ -309,13 +309,13 @@ namespace Uintah { namespace ArchesCore{
                     var[*bndIter] = 1.0  - m_amp * cos( m_two_pi * x[*bndIter- iDir] )
                                       * sin( m_two_pi * y[*bndIter- iDir] );
 
-  
+
                      var[*bndIter- iDir] = 1.0  - m_amp * cos( m_two_pi * x[*bndIter - iDir] )
                                       * sin( m_two_pi * y[*bndIter- iDir] );
                 }
-              } else { 
+              } else {
                  for ( bndIter.reset(); !bndIter.done(); bndIter++ ){
-                   // (+) faces one cell at the end of the domain  
+                   // (+) faces one cell at the end of the domain
                    var[*bndIter] = 1.0  - m_amp * cos( m_two_pi * x[*bndIter] )
                                       * sin( m_two_pi * y[*bndIter] );
                   }
@@ -324,7 +324,7 @@ namespace Uintah { namespace ArchesCore{
         } else if ( m_which_vel == "v" ){
 
           if (var_help.dir == ArchesCore::NODIR ){
-            // scalar 
+            // scalar
             for ( bndIter.reset(); !bndIter.done(); bndIter++ ){
               var[*bndIter] = 1.0  + m_amp * sin( m_two_pi * x[*bndIter] )
                                   * cos( m_two_pi * y[*bndIter] );
@@ -333,22 +333,22 @@ namespace Uintah { namespace ArchesCore{
           // SFCX or SFCY or SFCZ variable
             if (dot == -1){
               for ( bndIter.reset(); !bndIter.done(); bndIter++ ){
-                // (-) faces  two cells 
+                // (-) faces  two cells
 //                var[*bndIter] = 1.0  + m_amp * sin( m_two_pi * x[*bndIter] )
 //                                      * cos( m_two_pi * y[*bndIter] );
                 var[*bndIter] = 1.0  + m_amp * sin( m_two_pi * x[*bndIter- iDir] )
                        * cos( m_two_pi * y[*bndIter- iDir] );
 
-  
+
                 var[*bndIter- iDir] = 1.0  + m_amp * sin( m_two_pi * x[*bndIter- iDir] )
                                       * cos( m_two_pi * y[*bndIter- iDir] );
               }
-            } else { 
+            } else {
             for ( bndIter.reset(); !bndIter.done(); bndIter++ ){
-              // (+) faces  
+              // (+) faces
               var[*bndIter] = 1.0  + m_amp * sin( m_two_pi * x[*bndIter] )
                                       * cos( m_two_pi * y[*bndIter] );
-  
+
             }
           }
       }
@@ -358,8 +358,8 @@ namespace Uintah { namespace ArchesCore{
         }
     private:
 
-      std::string m_y_name;
       std::string m_x_name;
+      std::string m_y_name;
       std::string m_which_vel;
       std::vector<std::string> m_dep;
 
@@ -382,7 +382,7 @@ namespace Uintah { namespace ArchesCore{
 
       void eval_bc( std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
                     const BndSpec* bnd, Uintah::Iterator bndIter ){
-        
+
         //const double m_two_pi = 2.0*acos(-1.0);
         //const double m_amp = 1.0;
         const double m_k1  = 4.0;
@@ -390,14 +390,14 @@ namespace Uintah { namespace ArchesCore{
         const double m_w0  = 50.0;
         const double m_rho0 = 20.0;
         const double m_rho1 = 1.0;
-        
-        double time_d  = tsk_info->get_time(); 
+
+        double time_d  = tsk_info->get_time();
         int   time_substep = tsk_info->get_time_substep();
         double factor      = tsk_info->get_ssp_time_factor(time_substep);
         double dt          = tsk_info->get_dt();
         time_d = time_d + factor*dt;
-        
-        
+
+
         T& var = *( tsk_info->get_uintah_field<T>(var_name));
 
         constCCVariable<double> x =
@@ -416,7 +416,7 @@ namespace Uintah { namespace ArchesCore{
             const double phi = (z1-z2)/(z1 * (1.0 - m_rho0/m_rho1)-z2);
             const double rho = 1.0/(phi/m_rho1 + (1.0- phi )/m_rho0);
             var[*bndIter] = phi*rho;
-           } 
+           }
          }
 
 
@@ -425,12 +425,12 @@ namespace Uintah { namespace ArchesCore{
 
       std::string m_x_name;
       std::vector<std::string> m_dep;
-      
+
 
 
     };
     //------
-    
+
 
     struct SecondaryVariableBC : BaseFunctor {
 
@@ -539,10 +539,10 @@ namespace Uintah { namespace ArchesCore{
         }
 
         IntVector offset_iDir = iDir + offset;
-        
+
         IntVector vDir(var_help.ioff, var_help.joff, var_help.koff);
         const double dot = vDir[0]*iDir[0] + vDir[1]*iDir[1] + vDir[2]*iDir[2];
-        
+
 
         if ( parallel_dir ){
             //The face normal and the velocity are in parallel
@@ -560,9 +560,9 @@ namespace Uintah { namespace ArchesCore{
                       var[*bndIter] = interp_rho*m_vel_value;
                       //var[*bndIter] = var[*bndIter-iDir];
             }
-            
+
             }
-           
+
         } else {
           //The face normal and the velocity are tangential
           for ( bndIter.reset(); !bndIter.done(); bndIter++ ){
@@ -651,7 +651,7 @@ namespace Uintah { namespace ArchesCore{
                   std::shared_ptr<BaseFunctor> fun(scinew MassFlow(mdot, density_label));
                   insert_functor( face_name, varname, fun);
                 } else if ( custom_type == "MMS_almgren" ) {
-                  
+
                   std::string x_label = "gridX";
                   std::string y_label = "gridY";
                   std::string which_vel = "u";

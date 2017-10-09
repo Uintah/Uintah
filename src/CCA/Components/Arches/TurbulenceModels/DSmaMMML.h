@@ -223,7 +223,7 @@ DSmaMMML<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   double filter   = pow(Dx.x()*Dx.y()*Dx.z(),1.0/3.0);
   double filter2  = filter*filter;
   double fhat     = m_epsilon*filter2 ;
-  const int Nghostcells = 0; // I need to review this
+  //const int Nghostcells = 0; // I need to review this
 
 
   int nGhosts1 = -1; //not using a temp field but rather the DW (ie, if nGhost < 0 then DW var)

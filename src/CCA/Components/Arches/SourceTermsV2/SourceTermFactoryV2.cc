@@ -4,6 +4,7 @@
 //Specific source terms:
 #include <CCA/Components/Arches/SourceTermsV2/MMS_mom_csmag.h>
 #include <CCA/Components/Arches/SourceTermsV2/MMS_mom.h>
+#include <CCA/Components/Arches/SourceTermsV2/MMS_Shunn.h>
 #include <CCA/Components/Arches/SourceTermsV2/MMS_scalar.h>
 
 using namespace Uintah;
@@ -58,6 +59,26 @@ SourceTermFactoryV2::register_all_tasks( ProblemSpecP& db )
           tsk = scinew MMS_mom<SFCYVariable<double> >::Builder( name, 0, _shared_state );
         } else {
           tsk = scinew MMS_mom<SFCZVariable<double> >::Builder( name, 0, _shared_state );
+        }
+
+        register_task( name, tsk );
+        _pre_update_source_tasks.push_back( name );
+
+      } else if ( type == "MMS_Shunn" ) {
+
+        std::string var_type;
+        db_src->findBlock("variable")->getAttribute("type", var_type);
+
+        TaskInterface::TaskBuilder* tsk;
+
+        if ( var_type == "CC" ){
+          tsk = scinew MMS_Shunn<CCVariable<double> >::Builder( name, 0, _shared_state );
+        } else if ( var_type == "FX" ){
+          tsk = scinew MMS_Shunn<SFCXVariable<double> >::Builder( name, 0, _shared_state );
+        } else if ( var_type == "FY" ){
+          tsk = scinew MMS_Shunn<SFCYVariable<double> >::Builder( name, 0, _shared_state );
+        } else {
+          tsk = scinew MMS_Shunn<SFCZVariable<double> >::Builder( name, 0, _shared_state );
         }
 
         register_task( name, tsk );
@@ -170,6 +191,24 @@ SourceTermFactoryV2::add_task( ProblemSpecP& db )
         register_task( name, tsk );
         _pre_update_source_tasks.push_back( name );
 
+      } else if ( type == "MMS_Shunn" ) {
+
+        std::string var_type;
+        db_src->findBlock("variable")->getAttribute("type", var_type);
+
+        TaskInterface::TaskBuilder* tsk;
+
+        if ( var_type == "CC" ){
+          tsk = scinew MMS_Shunn<CCVariable<double> >::Builder( name, 0, _shared_state );
+        } else if ( var_type == "FX" ){
+          tsk = scinew MMS_Shunn<SFCXVariable<double> >::Builder( name, 0, _shared_state );
+        } else if ( var_type == "FY" ){
+          tsk = scinew MMS_Shunn<SFCYVariable<double> >::Builder( name, 0, _shared_state );
+        } else {
+          tsk = scinew MMS_Shunn<SFCZVariable<double> >::Builder( name, 0, _shared_state );
+        }
+        register_task( name, tsk );
+        _pre_update_source_tasks.push_back( name );
       } else if ( type == "MMS_mom_csmag" ) {
 
         std::string var_type;

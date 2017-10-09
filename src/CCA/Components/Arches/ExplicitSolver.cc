@@ -1614,7 +1614,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                    SchedulerP& sched)
 {
 
-  typedef std::vector<std::string> SVec;
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
   IntVector periodic_vector = level->getPeriodicBoundaries();

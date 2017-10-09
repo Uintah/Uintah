@@ -4189,16 +4189,12 @@ BoundaryCondition::wallStressLog( const Patch* patch,
 
   Vector Dx = patch->dCell();
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
-  Uintah::parallel_for( range, [&](int i, int j, int k){  
-     double delta_n=0.0;
-     int flow=-1; 
+  Uintah::parallel_for( range, [&](int i, int j, int k){
+     int flow=-1;
      double NonLinearX =0.0;
      double NonLinearY =0.0;
      double NonLinearZ =0.0;
      double yplusCrit=11.63;
-     double utau=0.0; // 
-     double vtau=0.0; // face temperature on plus side
-     double wtau=0.0;
      double molvis=0.0;
      double densityup=0.0;
 
@@ -4208,289 +4204,289 @@ BoundaryCondition::wallStressLog( const Patch* patch,
      constSFCXVariable<double > ufac=constvars->uVelocity;
      constSFCYVariable<double > vfac=constvars->vVelocity;
      constSFCZVariable<double > wfac=constvars->wVelocity;
-  
+
      constCCVariable<double> Gasdensity=constvars->density;
      molvis=d_physicalConsts->getMolecularViscosity();
      //constCCVariable<double> molvis=constvars->viscosity;
-                              // need to see it 
-     
-     double UMtotal=std::sqrt(uctr(i,j,k)*uctr(i,j,k)+vctr(i,j,k)*vctr(i,j,k) +wctr(i,j,k)*wctr(i,j,k)); 
-     
+                              // need to see it
+
+     double UMtotal=std::sqrt(uctr(i,j,k)*uctr(i,j,k)+vctr(i,j,k)*vctr(i,j,k) +wctr(i,j,k)*wctr(i,j,k));
+
      //-------------------------X direction ----------------------------------
      // for the log-log velocity distribution to solve the utau => wall stress
-    
-    // x- direction 
-    
+
+    // x- direction
+
       bool If_wallxmVd=  ( volFraction(i-1,j,k) *volFraction(i-1,j-1,k)<0.5);
-      // vcell at x- direction wall 
+      // vcell at x- direction wall
      if( If_wallxmVd && volFraction(i,j,k)*volFraction(i,j-1,k) > 0.5 ){
-     
+
        const double XmVtot=0.5*std::sqrt((uctr(i+1,j,k)+uctr(i+1,j-1,k))* (uctr(i+1,j,k)+uctr(i+1,j-1,k))
                                        +(vctr(i+1,j,k)+vctr(i+1,j-1,k))* (vctr(i+1,j,k)+vctr(i+1,j-1,k))
                                        +(wctr(i+1,j,k)+wctr(i+1,j-1,k))* (wctr(i+1,j,k)+wctr(i+1,j-1,k)));
-            
-      densityup=0.5*Gasdensity(i+1,j,k)+0.5*Gasdensity(i+1,j-1,k);
-    
-      double XmVtauGuess=yplusCrit*molvis/densityup/Dx.x(); 
-                  
-      newton_solver(XmVtot,Dx.x()*1.5,densityup, molvis, XmVtauGuess);
-      
-      double tauXmVmom= ( XmVtauGuess*densityup*Dx.x()*1.5/ molvis < yplusCrit) ?     molvis*vfac(i+1,j,k)/1.5/Dx.x()      : XmVtauGuess*XmVtauGuess*(0.5*Gasdensity(i+1,j,k)+0.5*Gasdensity(i+1,j-1,k));        
 
-      NonLinearY = (If_wallxmVd && constvars->cellType(i,j-1,k)== flow && XmVtot!=0) ?  NonLinearY- Dx.z() * Dx.y() * tauXmVmom* vfac(i+1,j,k)/XmVtot  : NonLinearY; 
+      densityup=0.5*Gasdensity(i+1,j,k)+0.5*Gasdensity(i+1,j-1,k);
+
+      double XmVtauGuess=yplusCrit*molvis/densityup/Dx.x();
+
+      newton_solver(XmVtot,Dx.x()*1.5,densityup, molvis, XmVtauGuess);
+
+      double tauXmVmom= ( XmVtauGuess*densityup*Dx.x()*1.5/ molvis < yplusCrit) ?     molvis*vfac(i+1,j,k)/1.5/Dx.x()      : XmVtauGuess*XmVtauGuess*(0.5*Gasdensity(i+1,j,k)+0.5*Gasdensity(i+1,j-1,k));
+
+      NonLinearY = (If_wallxmVd && constvars->cellType(i,j-1,k)== flow && XmVtot!=0) ?  NonLinearY- Dx.z() * Dx.y() * tauXmVmom* vfac(i+1,j,k)/XmVtot  : NonLinearY;
       }
 
-    
-      // wcell at x- direction wall 
+
+      // wcell at x- direction wall
       bool If_wallxmWd=  ( volFraction(i-1,j,k) *volFraction(i-1,j,k-1)<0.5);
-      
+
       if (If_wallxmWd && volFraction(i,j,k)*volFraction(i,j,k-1) > 0.5) {
-   
+
         const double XmWtot=0.5*std::sqrt((uctr(i+1,j,k)+uctr(i+1,j,k-1))* (uctr(i+1,j,k)+uctr(i+1,j,k-1))
                                        +(vctr(i+1,j,k)+vctr(i+1,j,k-1))* (vctr(i+1,j,k)+vctr(i+1,j,k-1))
-                                       +(wctr(i+1,j,k)+wctr(i+1,j,k-1))* (wctr(i+1,j,k)+wctr(i+1,j,k-1))); 
-                 
+                                       +(wctr(i+1,j,k)+wctr(i+1,j,k-1))* (wctr(i+1,j,k)+wctr(i+1,j,k-1)));
+
       densityup=0.5*Gasdensity(i+1,j,k)+0.5*Gasdensity(i+1,j,k-1);
-     
-       double    XmWtauGuess=yplusCrit*molvis/densityup/Dx.x(); 
-      
+
+       double    XmWtauGuess=yplusCrit*molvis/densityup/Dx.x();
+
        newton_solver(XmWtot,Dx.x()*1.5,densityup, molvis, XmWtauGuess);
-      
-      double tauXmWmom= ( XmWtauGuess*densityup*Dx.x()*1.5/ molvis < yplusCrit)   ?     molvis*wfac(i+1,j,k)/1.5/Dx.x()   : XmWtauGuess* XmWtauGuess*(0.5*Gasdensity(i+1,j,k)+0.5*Gasdensity(i+1,j,k-1));        
+
+      double tauXmWmom= ( XmWtauGuess*densityup*Dx.x()*1.5/ molvis < yplusCrit)   ?     molvis*wfac(i+1,j,k)/1.5/Dx.x()   : XmWtauGuess* XmWtauGuess*(0.5*Gasdensity(i+1,j,k)+0.5*Gasdensity(i+1,j,k-1));
 
       NonLinearZ = (If_wallxmWd && constvars->cellType(i,j,k-1)== flow&& XmWtot!=0) ?  NonLinearZ- Dx.z() * Dx.y() * tauXmWmom*wfac(i+1,j,k)/XmWtot  : NonLinearZ;
-        } 
-     
-      // x+ -----------------------------------------------------------------------------direction 
-     
+        }
+
+      // x+ -----------------------------------------------------------------------------direction
+
       bool If_wallxpVd=  ( volFraction(i+1,j,k) *volFraction(i+1,j-1,k)<0.5);
-      // vcell at x+ direction wall 
-   
+      // vcell at x+ direction wall
+
       if(If_wallxpVd && volFraction(i,j,k)*volFraction(i,j-1,k) > 0.5 ){
 
       const double XpVtot=0.5*std::sqrt((uctr(i-1,j,k)+uctr(i-1,j-1,k))* (uctr(i-1,j,k)+uctr(i-1,j-1,k))
-                                       +(vctr(i-1,j,k)+vctr(i-1,j-1,k))* (vctr(i-1,j,k)+vctr(i-1,j-1,k)) 
-                                       +(wctr(i-1,j,k)+wctr(i-1,j-1,k))* (wctr(i+1,j,k)+wctr(i+1,j-1,k))); 
+                                       +(vctr(i-1,j,k)+vctr(i-1,j-1,k))* (vctr(i-1,j,k)+vctr(i-1,j-1,k))
+                                       +(wctr(i-1,j,k)+wctr(i-1,j-1,k))* (wctr(i+1,j,k)+wctr(i+1,j-1,k)));
       densityup=0.5*Gasdensity(i-1,j,k)+0.5*Gasdensity(i-1,j-1,k);
-       
-      double XpVtauGuess=yplusCrit*molvis/densityup/Dx.x(); 
+
+      double XpVtauGuess=yplusCrit*molvis/densityup/Dx.x();
 
       newton_solver(XpVtot,Dx.x()*1.5,densityup, molvis,XpVtauGuess);
-      
-      double tauXpVmom=  ( XpVtauGuess*densityup*Dx.x()*1.5/ molvis < yplusCrit) ?     molvis*vfac(i-1,j,k)/1.5/Dx.x()        : XpVtauGuess*XpVtauGuess*(0.5*Gasdensity(i-1,j,k)+0.5*Gasdensity(i-1,j-1,k));        
+
+      double tauXpVmom=  ( XpVtauGuess*densityup*Dx.x()*1.5/ molvis < yplusCrit) ?     molvis*vfac(i-1,j,k)/1.5/Dx.x()        : XpVtauGuess*XpVtauGuess*(0.5*Gasdensity(i-1,j,k)+0.5*Gasdensity(i-1,j-1,k));
 
       NonLinearY = (If_wallxpVd && constvars->cellType(i,j-1,k)== flow && XpVtot!=0) ?  NonLinearY- Dx.z() * Dx.y() * tauXpVmom* vfac(i-1,j,k)/XpVtot  : NonLinearY;
       }
 
-      // Wcell at x+ direction wall 
+      // Wcell at x+ direction wall
       bool If_wallxpWd=  ( volFraction(i+1,j,k) *volFraction(i+1,j,k-1)<0.5);
-      
+
       if(If_wallxpWd && volFraction(i,j,k)*volFraction(i,j,k-1) > 0.5){
 
       const double XpWtot=0.5*std::sqrt((uctr(i-1,j,k)+uctr(i-1,j,k-1))* (uctr(i-1,j,k)+uctr(i-1,j,k-1))
                                        +(vctr(i-1,j,k)+vctr(i-1,j,k-1))* (vctr(i-1,j,k)+vctr(i-1,j,k-1))
                                        +(wctr(i-1,j,k)+wctr(i-1,j,k-1))* (wctr(i-1,j,k)+wctr(i-1,j,k-1)));
       densityup=0.5*Gasdensity(i-1,j,k)+0.5*Gasdensity(i-1,j,k-1);
-   
-      double      XpWtauGuess=yplusCrit*molvis/densityup/Dx.x(); 
-     
+
+      double      XpWtauGuess=yplusCrit*molvis/densityup/Dx.x();
+
       newton_solver(XpWtot,Dx.x()*1.5,densityup, molvis,XpWtauGuess);
-      
-      double tauXpWmom= ( XpWtauGuess*densityup*Dx.x()*1.5/ molvis < yplusCrit) ?     molvis*wfac(i-1,j,k)/1.5/Dx.x()    : XpWtauGuess*XpWtauGuess*0.5*(Gasdensity(i-1,j,k)+0.5*Gasdensity(i-1,j,k-1));        
-      
+
+      double tauXpWmom= ( XpWtauGuess*densityup*Dx.x()*1.5/ molvis < yplusCrit) ?     molvis*wfac(i-1,j,k)/1.5/Dx.x()    : XpWtauGuess*XpWtauGuess*0.5*(Gasdensity(i-1,j,k)+0.5*Gasdensity(i-1,j,k-1));
+
       NonLinearZ = (If_wallxpWd && constvars->cellType(i,j,k-1)== flow && XpWtot!=0) ?  NonLinearZ- Dx.z() * Dx.y() *  tauXpWmom*wfac(i-1,j,k)/XpWtot: NonLinearZ;
       }
-          
-   // y- direction 
+
+   // y- direction
  // ucell at y-direction
-    bool If_wallymUd= ( volFraction(i,j-1,k) *volFraction(i-1,j-1,k)<0.5);  
- 
+    bool If_wallymUd= ( volFraction(i,j-1,k) *volFraction(i-1,j-1,k)<0.5);
+
     if(If_wallymUd && volFraction(i,j,k)*volFraction(i-1,j,k) >0.5){
 
     const double YmUtot=0.5*std::sqrt((uctr(i,j+1,k)+uctr(i-1,j+1,k))* (uctr(i,j+1,k)+uctr(i-1,j+1,k))
                                      +(vctr(i,j+1,k)+vctr(i-1,j+1,k))* (vctr(i,j+1,k)+vctr(i-1,j+1,k))
-                                     +(wctr(i,j+1,k)+wctr(i-1,j+1,k))* (wctr(i,j+1,k)+wctr(i-1,j+1,k))); 
+                                     +(wctr(i,j+1,k)+wctr(i-1,j+1,k))* (wctr(i,j+1,k)+wctr(i-1,j+1,k)));
 
     densityup=0.5*Gasdensity(i,j+1,k)+0.5*Gasdensity(i-1,j+1,k);
-    
-    double YmUtauGuess=yplusCrit*molvis/densityup/Dx.y();  
- 
+
+    double YmUtauGuess=yplusCrit*molvis/densityup/Dx.y();
+
     newton_solver(YmUtot,Dx.y()*1.5, densityup, molvis,YmUtauGuess);
 
-    double tauYmUmom=   ( YmUtauGuess*densityup*Dx.y()*1.5/ molvis < yplusCrit) ?     molvis*ufac(i,j+1,k)/1.5/Dx.y()  :  YmUtauGuess*YmUtauGuess*(0.5*Gasdensity(i,j+1,k)+0.5*Gasdensity(i-1,j+1,k));        
+    double tauYmUmom=   ( YmUtauGuess*densityup*Dx.y()*1.5/ molvis < yplusCrit) ?     molvis*ufac(i,j+1,k)/1.5/Dx.y()  :  YmUtauGuess*YmUtauGuess*(0.5*Gasdensity(i,j+1,k)+0.5*Gasdensity(i-1,j+1,k));
 
     NonLinearX = (If_wallymUd && constvars->cellType(i-1,j,k)== flow&& YmUtot!=0) ?  NonLinearX- Dx.x() * Dx.z() *  tauYmUmom*ufac(i,j+1,k)/YmUtot : NonLinearX;
-  
-   
-    } 
-   
+
+
+    }
+
 
  // wcell at y-direction
-    bool If_wallymWd= ( volFraction(i,j-1,k) *volFraction(i,j-1,k-1)<0.5);  
- 
+    bool If_wallymWd= ( volFraction(i,j-1,k) *volFraction(i,j-1,k-1)<0.5);
+
     if(If_wallymWd && volFraction(i,j,k)*volFraction(i,j,k-1) >0.5 ){
-    
+
     const double YmWtot=0.5*std::sqrt((uctr(i,j+1,k)+uctr(i,j+1,k-1))* (uctr(i,j+1,k)+uctr(i,j+1,k-1))
                                      +(vctr(i,j+1,k)+vctr(i,j+1,k-1))* (vctr(i,j+1,k)+vctr(i,j+1,k-1))
-                                     +(wctr(i,j+1,k)+wctr(i,j+1,k-1))* (wctr(i,j+1,k)+wctr(i,j+1,k-1)) ); 
-      
+                                     +(wctr(i,j+1,k)+wctr(i,j+1,k-1))* (wctr(i,j+1,k)+wctr(i,j+1,k-1)) );
+
     densityup=0.5*Gasdensity(i,j+1,k)+0.5*Gasdensity(i,j+1,k-1);
-     
-    double     YmWtauGuess=yplusCrit*molvis/densityup/Dx.y();  
-  
+
+    double     YmWtauGuess=yplusCrit*molvis/densityup/Dx.y();
+
       newton_solver(YmWtot,Dx.y()*1.5, densityup, molvis,YmWtauGuess);
-  
-    double tauYmWmom=  ( YmWtauGuess*densityup*Dx.y()*1.5/ molvis < yplusCrit) ?     molvis*wfac(i,j+1,k)/1.5/Dx.y()  :   YmWtauGuess*YmWtauGuess*(0.5*Gasdensity(i,j+1,k)+0.5*Gasdensity(i,j+1,k-1));        
-  
+
+    double tauYmWmom=  ( YmWtauGuess*densityup*Dx.y()*1.5/ molvis < yplusCrit) ?     molvis*wfac(i,j+1,k)/1.5/Dx.y()  :   YmWtauGuess*YmWtauGuess*(0.5*Gasdensity(i,j+1,k)+0.5*Gasdensity(i,j+1,k-1));
+
      NonLinearZ = (If_wallymWd && constvars->cellType(i,j,k-1)== flow && YmWtot !=0 ) ?  NonLinearZ- Dx.x() * Dx.z() *  tauYmWmom*wfac(i,j+1,k)/YmWtot : NonLinearZ;
-    } 
-    
-    // y+ direction 
+    }
+
+    // y+ direction
  // ucell at y+direction
-    bool If_wallypUd= ( volFraction(i,j+1,k) *volFraction(i-1,j+1,k)<0.5);  
+    bool If_wallypUd= ( volFraction(i,j+1,k) *volFraction(i-1,j+1,k)<0.5);
 
     if(If_wallypUd && volFraction(i,j,k)*volFraction(i-1,j,k) >0.5 ){
-    
+
       const double YpUtot=0.5*std::sqrt((uctr(i,j-1,k)+uctr(i-1,j-1,k))* (uctr(i,j-1,k)+uctr(i-1,j-1,k))
                                      +(vctr(i,j-1,k)+vctr(i-1,j-1,k))* (vctr(i,j-1,k)+vctr(i-1,j-1,k))
-                                     +(wctr(i,j-1,k)+wctr(i-1,j-1,k))* (wctr(i,j-1,k)+wctr(i-1,j-1,k))); 
-    
+                                     +(wctr(i,j-1,k)+wctr(i-1,j-1,k))* (wctr(i,j-1,k)+wctr(i-1,j-1,k)));
+
       densityup=0.5*Gasdensity(i,j-1,k)+0.5*Gasdensity(i-1,j-1,k);
-     
-    double  YpVtauGuess=yplusCrit*molvis/densityup/Dx.y();  
+
+    double  YpVtauGuess=yplusCrit*molvis/densityup/Dx.y();
 
        newton_solver(YpUtot,Dx.y()*1.5, densityup,molvis,YpVtauGuess) ;
 
-     double tauYpUmom=  ( YpVtauGuess*densityup*Dx.y()*1.5/ molvis < yplusCrit) ?     molvis*ufac(i,j-1,k)/1.5/Dx.y()  :   YpVtauGuess*YpVtauGuess*(0.5*Gasdensity(i,j-1,k)+0.5*Gasdensity(i-1,j-1,k));        
+     double tauYpUmom=  ( YpVtauGuess*densityup*Dx.y()*1.5/ molvis < yplusCrit) ?     molvis*ufac(i,j-1,k)/1.5/Dx.y()  :   YpVtauGuess*YpVtauGuess*(0.5*Gasdensity(i,j-1,k)+0.5*Gasdensity(i-1,j-1,k));
 
      NonLinearX = (If_wallypUd && constvars->cellType(i-1,j,k)== flow && YpUtot !=0) ?  NonLinearX- Dx.x() * Dx.z() *  tauYpUmom*ufac(i,j-1,k)/YpUtot : NonLinearX;
-    
-    
-    
-    } 
-   
+
+
+
+    }
+
 
  // wcell at y+direction
-    bool If_wallypWd= ( volFraction(i,j+1,k) *volFraction(i,j+1,k-1)<0.5);  
-     
+    bool If_wallypWd= ( volFraction(i,j+1,k) *volFraction(i,j+1,k-1)<0.5);
+
     if(If_wallypWd && volFraction(i,j,k)*volFraction(i,j,k-1) > 0.5 ){
 
       const double YpWtot=0.5*std::sqrt((uctr(i,j-1,k)+uctr(i,j-1,k-1))* (uctr(i,j-1,k)+uctr(i,j-1,k-1))
                                      +(vctr(i,j-1,k)+vctr(i,j-1,k-1))* (vctr(i,j-1,k)+vctr(i,j-1,k-1))
-                                     +(wctr(i,j-1,k)+wctr(i,j-1,k-1))* (wctr(i,j-1,k)+wctr(i,j-1,k-1)) ); 
-  
+                                     +(wctr(i,j-1,k)+wctr(i,j-1,k-1))* (wctr(i,j-1,k)+wctr(i,j-1,k-1)) );
+
     densityup=0.5*Gasdensity(i,j-1,k)+0.5*Gasdensity(i,j-1,k-1);
-    
-    double YpWtauGuess=yplusCrit*molvis/densityup/Dx.y();  
-       
+
+    double YpWtauGuess=yplusCrit*molvis/densityup/Dx.y();
+
     newton_solver(YpWtot,Dx.y()*1.5,densityup, molvis,YpWtauGuess) ;
-  
-    double tauYpWmom=   ( YpWtauGuess*densityup*Dx.y()*1.5/ molvis < yplusCrit) ?     molvis*wfac(i,j-1,k)/1.5/Dx.y() :   YpWtauGuess*YpWtauGuess*(0.5*Gasdensity(i,j-1,k)+0.5*Gasdensity(i,j-1,k-1));        
-  
+
+    double tauYpWmom=   ( YpWtauGuess*densityup*Dx.y()*1.5/ molvis < yplusCrit) ?     molvis*wfac(i,j-1,k)/1.5/Dx.y() :   YpWtauGuess*YpWtauGuess*(0.5*Gasdensity(i,j-1,k)+0.5*Gasdensity(i,j-1,k-1));
+
      NonLinearZ = (If_wallypWd && constvars->cellType(i,j,k-1)== flow && YpWtot !=0) ?  NonLinearZ- Dx.x() * Dx.z() *  tauYpWmom*wfac(i,j-1,k)/YpWtot : NonLinearZ;
-     
-     
-     } 
-     
-           
+
+
+     }
+
+
    //-------------------------Z direction ---------------------------------
-          
-   // z- direction 
-   // ucell  z-direction 
-   bool  If_wallzmUd=  ( volFraction(i,j,k-1) *volFraction(i-1,j,k-1)<0.5);  
- 
-   if(If_wallzmUd && volFraction(i,j,k)*volFraction(i-1,j,k) > 0.5){   
-    
+
+   // z- direction
+   // ucell  z-direction
+   bool  If_wallzmUd=  ( volFraction(i,j,k-1) *volFraction(i-1,j,k-1)<0.5);
+
+   if(If_wallzmUd && volFraction(i,j,k)*volFraction(i-1,j,k) > 0.5){
+
        const double ZmUtot=0.5*std::sqrt((uctr(i,j,k+1)+uctr(i-1,j,k+1))* (uctr(i,j,k+1)+uctr(i-1,j,k+1))
                                      +(vctr(i,j,k+1)+vctr(i-1,j,k+1))* (vctr(i,j,k+1)+vctr(i-1,j,k+1))
-                                     +(wctr(i,j,k+1)+wctr(i-1,j,k+1))* (wctr(i,j,k+1)+wctr(i-1,j,k+1))); 
+                                     +(wctr(i,j,k+1)+wctr(i-1,j,k+1))* (wctr(i,j,k+1)+wctr(i-1,j,k+1)));
    densityup=0.5*Gasdensity(i,j,k+1)+0.5*Gasdensity(i-1,j,k+1);
-   
-   double ZmUtauGuess=yplusCrit*molvis/densityup/Dx.z();  
+
+   double ZmUtauGuess=yplusCrit*molvis/densityup/Dx.z();
 
    newton_solver(ZmUtot,Dx.z()*1.5,densityup,molvis,ZmUtauGuess) ;
-    double tauZmUmom=   ( ZmUtauGuess*densityup*Dx.z()*1.5/ molvis < yplusCrit) ?     molvis*ufac(i,j,k+1)/1.5/Dx.z() :   ZmUtauGuess*ZmUtauGuess*(0.5*Gasdensity(i,j,k+1)+0.5*Gasdensity(i-1,j,k+1));        
-   
+    double tauZmUmom=   ( ZmUtauGuess*densityup*Dx.z()*1.5/ molvis < yplusCrit) ?     molvis*ufac(i,j,k+1)/1.5/Dx.z() :   ZmUtauGuess*ZmUtauGuess*(0.5*Gasdensity(i,j,k+1)+0.5*Gasdensity(i-1,j,k+1));
+
     NonLinearX = (If_wallzmUd && constvars->cellType(i-1,j,k)== flow && ZmUtot !=0) ?  NonLinearX- Dx.x() * Dx.y() *  tauZmUmom*ufac(i,j,k+1)/ZmUtot : NonLinearX;
-    }    
-   
-   // vcell  z-direction 
-   bool  If_wallzmVd=  ( volFraction(i,j,k-1) *volFraction(i,j-1,k-1)<0.5);  
- 
+    }
+
+   // vcell  z-direction
+   bool  If_wallzmVd=  ( volFraction(i,j,k-1) *volFraction(i,j-1,k-1)<0.5);
+
     if(If_wallzmVd && volFraction(i,j,k)*volFraction(i,j-1,k) > 0.5){
 
       const double ZmVtot=0.5*std::sqrt((uctr(i,j,k+1)+uctr(i,j-1,k+1))* (uctr(i,j,k+1)+uctr(i,j-1,k+1))
                                     +(vctr(i,j,k+1)+vctr(i,j-1,k+1))* (vctr(i,j,k+1)+vctr(i,j-1,k+1))
                                     +(wctr(i,j,k+1)+wctr(i,j-1,k+1))* (wctr(i,j,k+1)+wctr(i,j-1,k+1)));
-    
+
     densityup=0.5*Gasdensity(i,j-1,k+1)+0.5*Gasdensity(i,j,k+1);
-    
-    double   ZmVtauGuess=yplusCrit*molvis/densityup/Dx.z();  
+
+    double   ZmVtauGuess=yplusCrit*molvis/densityup/Dx.z();
 
     newton_solver(ZmVtot,Dx.z()*1.5,densityup,molvis,ZmVtauGuess) ;
-    double tauZmVmom=   ( ZmVtauGuess*densityup*Dx.z()*1.5/ molvis < yplusCrit) ?     molvis*vfac(i,j,k+1)/1.5/Dx.z() :    ZmVtauGuess*ZmVtauGuess*(0.5*Gasdensity(i,j,k+1)+0.5*Gasdensity(i,j-1,k+1));        
-     
+    double tauZmVmom=   ( ZmVtauGuess*densityup*Dx.z()*1.5/ molvis < yplusCrit) ?     molvis*vfac(i,j,k+1)/1.5/Dx.z() :    ZmVtauGuess*ZmVtauGuess*(0.5*Gasdensity(i,j,k+1)+0.5*Gasdensity(i,j-1,k+1));
+
      NonLinearY = (If_wallzmVd && constvars->cellType(i,j-1,k)== flow && ZmVtot !=0) ?  NonLinearY- Dx.x() * Dx.y() *  tauZmVmom*vfac(i,j,k+1)/ZmVtot : NonLinearY;
     }
-   
-    // z+ direction 
-   // ucell  z+direction 
-   bool  If_wallzpUd=  ( volFraction(i,j,k+1) *volFraction(i-1,j,k+1)<0.5);  
+
+    // z+ direction
+   // ucell  z+direction
+   bool  If_wallzpUd=  ( volFraction(i,j,k+1) *volFraction(i-1,j,k+1)<0.5);
 
    if(If_wallzpUd && volFraction(i,j,k)*volFraction(i-1,j,k) > 0.5 ){
 
      const double ZpUtot=0.5*std::sqrt((uctr(i,j,k-1)+uctr(i-1,j,k-1))* (uctr(i,j,k-1)+uctr(i-1,j,k-1))
                                      +(vctr(i,j,k-1)+vctr(i-1,j,k-1))* (vctr(i,j,k-1)+vctr(i-1,j,k-1))
-                                     +(wctr(i,j,k-1)+wctr(i-1,j,k-1))* (wctr(i,j,k-1)+wctr(i-1,j,k-1))); 
+                                     +(wctr(i,j,k-1)+wctr(i-1,j,k-1))* (wctr(i,j,k-1)+wctr(i-1,j,k-1)));
     densityup=0.5*Gasdensity(i,j,k-1)+0.5*Gasdensity(i-1,j,k-1);
-    
-      double      ZpUtauGuess=yplusCrit*molvis/densityup/Dx.z();  
-   
+
+      double      ZpUtauGuess=yplusCrit*molvis/densityup/Dx.z();
+
    newton_solver(ZpUtot,Dx.z()*1.5,densityup,molvis,ZpUtauGuess) ;
 
-    double tauZpUmom=   ( ZpUtauGuess*densityup*Dx.z()*1.5/ molvis < yplusCrit) ?     molvis*ufac(i,j,k-1)/1.5/Dx.z() :    ZpUtauGuess*ZpUtauGuess*(0.5*Gasdensity(i,j,k-1)+0.5*Gasdensity(i-1,j,k-1));        
-    
-    NonLinearX = (If_wallzpUd && constvars->cellType(i-1,j,k)== flow && ZpUtot !=0) ?  NonLinearX- Dx.x() * Dx.y() *  tauZpUmom*ufac(i,j,k-1)/ZpUtot : NonLinearX;
-   } 
-  
-   // vcell  z+direction 
-   bool  If_wallzpVd=  ( volFraction(i,j,k+1) *volFraction(i,j-1,k+1)<0.5);  
+    double tauZpUmom=   ( ZpUtauGuess*densityup*Dx.z()*1.5/ molvis < yplusCrit) ?     molvis*ufac(i,j,k-1)/1.5/Dx.z() :    ZpUtauGuess*ZpUtauGuess*(0.5*Gasdensity(i,j,k-1)+0.5*Gasdensity(i-1,j,k-1));
 
-  if(If_wallzpVd && volFraction(i,j,k)*volFraction(i,j-1,k)  > 0.5){ 
-  
+    NonLinearX = (If_wallzpUd && constvars->cellType(i-1,j,k)== flow && ZpUtot !=0) ?  NonLinearX- Dx.x() * Dx.y() *  tauZpUmom*ufac(i,j,k-1)/ZpUtot : NonLinearX;
+   }
+
+   // vcell  z+direction
+   bool  If_wallzpVd=  ( volFraction(i,j,k+1) *volFraction(i,j-1,k+1)<0.5);
+
+  if(If_wallzpVd && volFraction(i,j,k)*volFraction(i,j-1,k)  > 0.5){
+
     const double ZpVtot=0.5*std::sqrt((uctr(i,j,k-1)+uctr(i,j-1,k-1))* (uctr(i,j,k-1)+uctr(i,j-1,k-1))
-                                    +(vctr(i,j,k-1)+vctr(i,j-1,k-1))* (vctr(i,j,k-1)+vctr(i,j-1,k-1))  
-                                    +(wctr(i,j,k-1)+wctr(i,j-1,k-1))* (wctr(i,j,k-1)+wctr(i,j-1,k-1))); 
-    
+                                    +(vctr(i,j,k-1)+vctr(i,j-1,k-1))* (vctr(i,j,k-1)+vctr(i,j-1,k-1))
+                                    +(wctr(i,j,k-1)+wctr(i,j-1,k-1))* (wctr(i,j,k-1)+wctr(i,j-1,k-1)));
+
     densityup=0.5*Gasdensity(i,j-1,k-1)+0.5*Gasdensity(i,j,k-1);
-   
-    double   ZpVtauGuess=yplusCrit*molvis/densityup/Dx.z();  
+
+    double   ZpVtauGuess=yplusCrit*molvis/densityup/Dx.z();
 
        newton_solver(ZpVtot,Dx.z()*1.5, densityup, molvis,ZpVtauGuess) ;
-    
-       double tauZpVmom=   ( ZpVtauGuess*densityup*Dx.z()*1.5/ molvis < yplusCrit) ?   molvis*vfac(i,j,k-1)/1.5/Dx.z() :    ZpVtauGuess*ZpVtauGuess*(0.5*Gasdensity(i,j,k-1)+0.5*Gasdensity(i,j-1,k-1));        
-     
+
+       double tauZpVmom=   ( ZpVtauGuess*densityup*Dx.z()*1.5/ molvis < yplusCrit) ?   molvis*vfac(i,j,k-1)/1.5/Dx.z() :    ZpVtauGuess*ZpVtauGuess*(0.5*Gasdensity(i,j,k-1)+0.5*Gasdensity(i,j-1,k-1));
+
      NonLinearY = (If_wallzpVd && constvars->cellType(i,j-1,k)== flow && ZpVtot) ?  NonLinearY- Dx.x() * Dx.y() *  tauZpVmom*vfac(i,j,k-1)/ZpVtot : NonLinearY;
-  
-   
+
+
   }
-   
-         
-    // combing 
-     
+
+
+    // combing
+
       vars->uVelNonlinearSrc(i,j,k)=(!d_slip && constvars->cellType(i,j,k)==flow && UMtotal != 0.0) ? vars->uVelNonlinearSrc(i,j,k)+ NonLinearX :  vars->uVelNonlinearSrc(i,j,k);
       vars->vVelNonlinearSrc(i,j,k)=(!d_slip && constvars->cellType(i,j,k)==flow && UMtotal != 0.0) ? vars->vVelNonlinearSrc(i,j,k)+ NonLinearY :  vars->vVelNonlinearSrc(i,j,k);
       vars->wVelNonlinearSrc(i,j,k)=(!d_slip && constvars->cellType(i,j,k)==flow && UMtotal != 0.0) ? vars->wVelNonlinearSrc(i,j,k)+ NonLinearZ :  vars->wVelNonlinearSrc(i,j,k);
-    
+
       //if(i==20 && j== 0 && k == 8)
-    //{ std::cout<<"log-log rule:\n"<<"i="<<i<<"j="<<j<<"k="<<k<<std::scientific; 
+    //{ std::cout<<"log-log rule:\n"<<"i="<<i<<"j="<<j<<"k="<<k<<std::scientific;
       //std::cout<< "Is_wall "<< If_wallymUd <<"Y "<<( constvars->cellType(i,j-1,k) == WALL || constvars->cellType(i,j-1,k) == INTRUSION)<< "\n";
       //std::cout<< "uVelcoity= "<<  constvars->uVelocity(i,j,k)<<"vVelocity="<<constvars->vVelocity(i,j,k)<<"wVelocity="<<constvars->wVelocity(i,j,k)<<"\n";
       //std::cout<< "uVelcoity(i,j+1,k)= "<<  constvars->uVelocity(i,j+1,k)<<"vVelocity="<<constvars->vVelocity(i,j+1,k)<<"wVelocity(i,j+1,k)="<<constvars->wVelocity(i,j+1,k)<<"\n";
       //std::cout<<" Density="<<constvars->density(i,j,k) << "Viscosity "<< constvars->viscosity(i,j,k)<< "Dy "<< Dx.y()<<"utauY="<< vtauGuess<< "\n";
       //std::cout<< "NonLinearX "<<NonLinearX<< "NonLinearY "<<NonLinearY<< " NonLinearZ "<< NonLinearZ << "\n";
 
-    
+
     //}//end for std::cout
 
 
@@ -4498,7 +4494,7 @@ BoundaryCondition::wallStressLog( const Patch* patch,
 
 }
 //----------------------------------
-void  
+void
 BoundaryCondition::newton_solver( const double& up, const double& yp, const double& density, const double& viscosity,double& utau)
 {
   // solver constants
@@ -4520,17 +4516,17 @@ BoundaryCondition::newton_solver( const double& up, const double& yp, const doub
     df=f/fprime;
     utau=utau-df;
      ///std::cout<< "iterT="<<iterT<<"utau="<<utau<<"A="<<A<<"\n";
-    if (std::abs(df) < d_tol){ 
-      converged =true; 
-      break;  
+    if (std::abs(df) < d_tol){
+      converged =true;
+      break;
       }
     }// end for solver looping process
- 
+
   if (!converged && std::abs(up)> 1e-5 && density != 0.0 && viscosity !=0)
   { std::cout<<"diverge for solving log wall stress, not converged"<<std::endl;
     std::cout<<"up="<<up<<"yp="<<yp<<"density="<<density<<"visocisty="<<viscosity<<"utau="<<utau<< " uinit ="<< uinit<<std::endl;
   }
-   
+
 }
 
 void
@@ -4651,7 +4647,6 @@ BoundaryCondition::wallStressDynSmag( const Patch* p,
   //
   Vector Dx = p->dCell();
 
-  const double delta = std::pow( Dx.x()*Dx.y()*Dx.z(),1./3.);
   const double area_ew = Dx.y() * Dx.z();
   const double area_ns = Dx.z() * Dx.x();
   const double area_tb = Dx.x() * Dx.y();

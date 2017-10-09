@@ -124,12 +124,12 @@ void FaceVelocities::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
   wcell_yvel.initialize(0.0);
   wcell_zvel.initialize(0.0);
 
-  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
-  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
-  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
-  bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
-  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
-  bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+  // bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+  // bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+  // bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+  // bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+  // bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+  // bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
 
   IntVector low = patch->getCellLowIndex();
   IntVector high = patch->getCellHighIndex();
