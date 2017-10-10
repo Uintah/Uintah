@@ -1,6 +1,8 @@
 #include <CCA/Components/Arches/Transport/PressureBC.h>
 
-using namespace Uintah;
+using namespace Uintah::ArchesCore;
+using namespace Uintah; 
+
 typedef ArchesFieldContainer AFC;
 
 //--------------------------------------------------------------------------------------------------

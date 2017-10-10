@@ -18,7 +18,7 @@
 
 //===============================================================
 
-namespace Uintah{
+namespace Uintah{ namespace ArchesCore{
 
   class PressureBC : AtomicTaskInterface {
 
@@ -67,6 +67,6 @@ private:
     std::string m_press;
 
   };
-} // namespace Uintah
+} } // namespace Uintah::ArchesCore
 
 #endif

@@ -214,7 +214,7 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
     register_atomic_task( "vel_rho_hat_bc", velrhohatbc_tsk);
 
     //pressure bcs
-    AtomicTaskInterface::AtomicTaskBuilder* press_bc_tsk = scinew PressureBC::Builder("pressure_bcs", 0);
+    AtomicTaskInterface::AtomicTaskBuilder* press_bc_tsk = scinew ArchesCore::PressureBC::Builder("pressure_bcs", 0);
     register_atomic_task( "pressure_bcs", press_bc_tsk );
 
     //pressure Gradient
