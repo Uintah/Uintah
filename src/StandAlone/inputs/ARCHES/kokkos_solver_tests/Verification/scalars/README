@@ -8,7 +8,6 @@ python extract_data_spatial_order.py -ups kokkos-x-scalar_mms.ups -levels 3 -nst
 
 python extract_data_spatial_order.py -ups kokkos-x-scalar_mms_diff.ups -levels 3 -nsteps 1 -suspath ~/CODE_11_09_17/Uintah/debug/StandAlone/ -vars "cc_phi_upwind, cc_phi_vanleer, cc_phi_superbee, cc_phi_central, phi_mms" -dire "x"
 
-
 for time verification:
 
 python extract_data_temporal_order_v2.py -ups kokkos-x-scalar_mms_t.ups -levels 3 -nsteps 50 -suspath ~/CODE_11_09_17/Uintah/debug/StandAlone/ -vars "cc_phi_upwind, phi_mms" -dire "x"

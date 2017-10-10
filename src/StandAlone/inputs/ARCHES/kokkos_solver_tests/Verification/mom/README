@@ -1,6 +1,7 @@
 to run verification
  
 Convection term:
+
 python extract_data_spatial_order.py -ups almgren-mms_conv.ups -levels 3 -nsteps 1 -suspath ~/CODE_11_09_17/Uintah/debug/StandAlone/ -vars "x-mom,x_mms" -dire "x" -var_mms "x_mms"
 
 
