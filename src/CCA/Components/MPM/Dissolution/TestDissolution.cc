@@ -114,7 +114,7 @@ void TestDissolution::computeMassBurnFraction(const ProcessorGroup*,
        if(gmass[md][c] > 1.e-100 &&
           gStress[md][c].Trace()/3.0 < d_PressThresh && 
           gmass[md][c] != sumMass){
-         massBurnFrac[c] = fabs(d_rate*(gStress[md][c].Trace()/3.0)/
+          massBurnFrac[c] += fabs(d_rate*(gStress[md][c].Trace()/3.0)/
                                                                 d_PressThresh);
        }
     } // nodes
