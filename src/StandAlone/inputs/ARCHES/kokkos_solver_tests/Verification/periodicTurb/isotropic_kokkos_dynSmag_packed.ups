@@ -32,7 +32,6 @@
     <save label="Cs"/>
     <save label="pressure"/>
     <save label="b_press"/>
-    <!--save label="viscosity_csigma"/-->
     <!--checkpoint cycle="2" interval=".3"/-->
     <compression>gzip</compression>
   </DataArchiver>
@@ -79,34 +78,10 @@
           <grid type="CC"/>
           <value>1.</value>
         </model>
-        <!--model label="gamma" type="constant_property">
-          <grid type="CC"/>
-          <value>1.e-3</value>
-        </model-->
 
       </PropertyModelsV2>
-      <!--src_kokkos>
-        <src label="x_mms" type="MMS_mom">
-          <variable type="FX"/>
-          <which_vel>u</which_vel>
-          <coordinates x="ucellX" y="gridY"/>
-        </src>
-        <src label="y_mms" type="MMS_mom">
-          <variable type="FY"/>
-          <which_vel>v</which_vel>
-          <coordinates x="gridX" y="vcellY"/>
-        </src>
-      </src_kokkos-->
       <KMomentum>
-        <!--convection scheme="upwind"/-->
         <convection scheme="central"/>
-        <!--convection scheme="f_central"/-->
-        <!--convection scheme="upwind"/-->
-        <!--src_x label = "x_mms_source"/>
-        <src_y label = "y_mms_source"/-->
-        <!--inviscid/-->
-        <!--src_x label = "x_mms_source_diff"/>
-        <src_y label = "y_mms_source_diff"/-->
         <PressureSolver>
           <Parameters>
             <normalize_pressure>true    </normalize_pressure>
