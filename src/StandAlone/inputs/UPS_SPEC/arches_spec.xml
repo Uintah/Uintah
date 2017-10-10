@@ -83,7 +83,11 @@
            <Cs                          spec="OPTIONAL DOUBLE"
                                         need_applies_to="type sigma, wale, constant_smagorinsky"/> <!-- default for sigma is 1.35 
                                                                                                         default for wale is 0.5 -->
-
+         <filter_type                   spec="OPTIONAL NO_DATA"
+                                        attribute1="TF REQUIRED STRING 'Three_points'"
+                                        need_applies_to="type dynamic_smagorinsky" />
+         <epsilon                       spec="OPTIONAL DOUBLE"
+                                        need_applies_to="type dynamic_smagorinsky"/>
          </model>
       </TurbulenceModels>
 
@@ -1245,7 +1249,8 @@
                                           attribute1="label REQUIRED STRING">
 
             <!--If this tag is present, diffusion is computed.-->
-            <diffusion                    spec="OPTIONAL NO_DATA"/>
+            <diffusion                    spec="OPTIONAL NO_DATA"
+                                          attribute1="scheme REQUIRED STRING 'central'"/>
             <!-- If this tag is present, convection is computed.
              The type refers to the scheme: upwind, central, superbee, roe_minmod.-->
             <convection                   spec="OPTIONAL NO_DATA"
@@ -1287,6 +1292,14 @@
         <convection                     spec="OPTIONAL NO_DATA"
                                         attribute1="scheme REQUIRED STRING 'central, upwind, superbee, roe, vanleer'"/>
         <inviscid                       spec="OPTIONAL NO_DATA"/> <!-- Turn off diffusion -->
+        <src_x                          spec="OPTIONAL NO_DATA"
+                                        attribute1=" label REQUIRED STRING"/>
+
+        <src_y                          spec="OPTIONAL NO_DATA"
+                                        attribute1=" label REQUIRED STRING"/>
+
+        <src_z                          spec="OPTIONAL NO_DATA"
+                                        attribute1=" label REQUIRED STRING"/>
 
         <PressureSolver                 spec="REQUIRED NO_DATA" >
 
@@ -1414,6 +1427,57 @@
 
         </task>
       </Initialization>
+      <!--Source terms for Arches with new interface-->
+        <SourceV2                        spec="OPTIONAL NO_DATA">
+          <src                          spec="MULTIPLE NO_DATA"
+                                        attribute1="label REQUIRED STRING"
+                                        attribute2="type REQUIRED STRING  'MMS_mom,MMS_scalar'">
+                                                                           
+            <!-- Specs for MMS mom -->
+          <variable                     spec="OPTIONAL NO_DATA"
+                                        attribute1="type REQUIRED STRING 'CC,FX,FY,FZ'"
+                                        need_applies_to="type MMS_mom"/>
+
+          <which_vel                  spec="REQUIRED STRING 'u,v,p'"
+                                      need_applies_to="type MMS_mom"/> <!-- for a 2D plane, specify which component
+                                                                                to which this corresponds -->
+          <coordinates                spec="REQUIRED NO_DATA"
+                                      attribute1="x REQUIRED STRING"
+                                      attribute2="y REQUIRED STRING"
+                                      need_applies_to="type MMS_mom"/> <!-- specify the the x and y varlabel names for
+                                                                            the mms -->
+          <!-- Specs for MMS scalar -->
+          <!-- 1D WAVE FORM -->
+          <wave                         spec="OPTIONAL NO_DATA"
+                                        attribute1="type REQUIRED STRING 'sine,square,t3'">
+
+            <grid                       spec="REQUIRED NO_DATA"
+                                        attribute1="type REQUIRED STRING 'CC,FX,FY,FZ'"/> <!-- This is the grid type of the variable you are trying to initialize -->
+
+            <independent_variable       spec="REQUIRED NO_DATA"
+                                        attribute1="label REQUIRED STRING"
+                                        attribute2="type  REQUIRED STRING 'CC,FX,FY,FZ'"/>
+
+            <sine                       spec="REQUIRED NO_DATA"
+                                        attribute1="A REQUIRED DOUBLE"
+                                        attribute2="f REQUIRED DOUBLE"
+                                        attribute3="offset REQUIRED DOUBLE"
+                                        need_applies_to="type sine"/>
+
+            <square                     spec="REQUIRED NO_DATA"
+                                        attribute1="min REQUIRED DOUBLE"
+                                        attribute2="max REQUIRED DOUBLE"
+                                        attribute3="f REQUIRED DOUBLE"
+                                        attribute4="offset REQUIRED DOUBLE"
+                                        need_applies_to="type square"/>
+            <t3                         spec="REQUIRED NO_DATA"
+                                        attribute1="f REQUIRED DOUBLE"
+                                        need_applies_to="type t3"/>
+
+          </wave>
+
+        </src>
+        </SourceV2>
 
       <ParticleModels                 spec="OPTIONAL NO_DATA">
 

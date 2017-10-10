@@ -3,7 +3,7 @@
 <!-- @version: -->
 <Uintah_specification>
   <Meta>
-    <title>almgren mms with BC convection </title>
+    <title>almgren mms only convection </title>
   </Meta>
   <SimulationComponent type="arches"/>
   <Solver type="hypre"/>
@@ -13,11 +13,11 @@
     <delt_min>1e-5</delt_min>
     <delt_max>1e-5</delt_max>
     <delt_init>1e-1</delt_init>
-    <timestep_multiplier>0.3</timestep_multiplier>
+    <timestep_multiplier>1</timestep_multiplier>
     <max_Timesteps>3</max_Timesteps>
   </Time>
   <DataArchiver>
-    <filebase>almgren-mmsBC.uda</filebase>
+    <filebase>almgren-mms-conv.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <!--outputInitTimestep/-->
     <save label="x-mom"/>
@@ -31,8 +31,8 @@
     <save label="vVel"/>
     <save label="wVel"/>
     <save label="gamma"/>
-    <!--save label="pressure"/>
-    <save label="b_press"/-->
+    <save label="pressure"/>
+    <save label="b_press"/>
     <checkpoint cycle="2" interval=".3"/>
     <compression>gzip</compression>
   </DataArchiver>
@@ -42,100 +42,12 @@
         <lower>[0,0,0]</lower>
         <upper>[1.0,1.0,1.0]</upper>
         <resolution>[24,24,24]</resolution>
-        <extraCells>[1,1,1]</extraCells>
+        <extraCells>[0,0,0]</extraCells>
         <patches>[2,2,2]</patches>
       </Box>
-      <periodic>[0,0,0]</periodic>
+      <periodic>[1,1,1]</periodic>
     </Level>
     <BoundaryConditions>
-      <DefaultMaterial>all</DefaultMaterial>
-      <Face side="x-" type = "Wall" >
-        <BCType var="Custom" label="x-mom" type="MMS_almgren">
-          <which_vel>u</which_vel>
-          <coordinates x="ucellX" y="gridY"/>
-          <value>0</value>
-        </BCType>
-        <BCType var="Custom" label="y-mom" type="MMS_almgren">
-          <which_vel>v</which_vel>
-          <coordinates x="gridX" y="vcellY"/>
-          <value>0</value>
-        </BCType>
-        <BCType var= "Neumann" label="z-mom">
-          <value>0.</value>
-        </BCType>
-      </Face>
-
-      <Face side="x+" type ="Wall" >
-        <BCType var="Custom" label="x-mom" type="MMS_almgren">
-          <which_vel>u</which_vel>
-          <coordinates x="ucellX" y="gridY"/>
-          <value>0</value>
-        </BCType>
-        <BCType var="Custom" label="y-mom" type="MMS_almgren">
-          <which_vel>v</which_vel>
-          <coordinates x="gridX" y="vcellY"/>
-          <value>0</value>
-        </BCType>
-        <BCType var= "Neumann" label="z-mom">
-          <value>0.</value>
-        </BCType>
-      </Face>
-
-      <Face side="y-" type ="Wall" >
-        <BCType var="Custom" label="x-mom" type="MMS_almgren">
-          <which_vel>u</which_vel>
-          <coordinates x="ucellX" y="gridY"/>
-          <value>0</value>
-        </BCType>
-        <BCType var="Custom" label="y-mom" type="MMS_almgren">
-          <which_vel>v</which_vel>
-          <coordinates x="gridX" y="vcellY"/>
-          <value>0</value>
-        </BCType>
-        <BCType var= "Neumann" label="z-mom">
-          <value>0.</value>
-        </BCType>
-      </Face>
-
-      <Face side="y+" type ="Wall" >
-        <BCType var="Custom" label="x-mom" type="MMS_almgren">
-          <which_vel>u</which_vel>
-          <coordinates x="ucellX" y="gridY"/>
-          <value>0</value>
-        </BCType>
-        <BCType var="Custom" label="y-mom" type="MMS_almgren">
-          <which_vel>v</which_vel>
-          <coordinates x="gridX" y="vcellY"/>
-          <value>0</value>
-        </BCType>
-        <BCType var= "Neumann" label="z-mom">
-          <value>0.</value>
-        </BCType>
-      </Face>
-
-      <Face side="z-" type ="Wall"  >
-        <BCType var="Neumann" label="x-mom">
-          <value>0.</value>
-        </BCType>
-        <BCType var="Neumann" label="y-mom">
-          <value>0.</value>
-        </BCType>
-        <BCType var= "Neumann" label="z-mom">
-          <value>0.</value>
-        </BCType>
-      </Face>
-
-      <Face side="z+" type ="Wall" >
-        <BCType var="Neumann" label="x-mom">
-          <value>0.</value>
-        </BCType>
-        <BCType var="Neumann" label="y-mom">
-          <value>0.</value>
-        </BCType>
-        <BCType var= "Neumann" label="z-mom">
-          <value>0.</value>
-        </BCType>
-      </Face>
     </BoundaryConditions>
   </Grid>
   <PhysicalConstants>
@@ -178,25 +90,19 @@
         </src>
       </SourceV2>
       <KMomentum>
-        <do_not_build_pressure_system/>
         <convection scheme="central"/>
-        <!--convection scheme="f_central"/-->
-        <!--convection scheme="upwind"/-->
         <src_x label = "x_mms_source"/>
         <src_y label = "y_mms_source"/>
         <inviscid/>
-        <!--src_x label = "x_mms_source_diff"/>
-        <src_y label = "y_mms_source_diff"/-->
         <PressureSolver>
           <Parameters>
             <solver>           cg     </solver>
             <preconditioner>  pfmg    </preconditioner>
             <tolerance>      1.0e-10  </tolerance>
-            <maxiterations>    750     </maxiterations>
+            <maxiterations>    75     </maxiterations>
             <skip>              1     </skip>
             <setupFrequency>    0     </setupFrequency>
             <jump>              0     </jump>
-            <!--enforce_solvability/-->
           </Parameters>
         </PressureSolver>
       </KMomentum>

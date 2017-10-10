@@ -25,11 +25,11 @@ SourceTermFactoryV2::register_all_tasks( ProblemSpecP& db )
 
   /*
 
-      <src>
+      <SourceV2>
         <src label= "Oscar_test" type = "MMS" >
 
         </src>
-      </src>
+  </SourceV2>
 
   */
 

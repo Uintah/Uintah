@@ -191,7 +191,7 @@ PressureEqn::register_timestep_eval(
   register_variable( "x-mom", AFC::REQUIRES, 1, AFC::NEWDW, variable_registry );
   register_variable( "y-mom", AFC::REQUIRES, 1, AFC::NEWDW, variable_registry );
   register_variable( "z-mom", AFC::REQUIRES, 1, AFC::NEWDW, variable_registry );
-  register_variable( m_drhodt_name, AFC::REQUIRES, 0, AFC::NEWDW, variable_registry, time_substep );
+ // register_variable( m_drhodt_name, AFC::REQUIRES, 0, AFC::NEWDW, variable_registry, time_substep );
 
 }
 
@@ -203,14 +203,14 @@ PressureEqn::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   const double area_EW = DX.y()*DX.z();
   const double area_NS = DX.x()*DX.z();
   const double area_TB = DX.x()*DX.y();
-  const double V       = DX.x()*DX.y()*DX.z();
+ // const double V       = DX.x()*DX.y()*DX.z();
 
   CCVariable<double>& b = tsk_info->get_uintah_field_add<CCVariable<double> >("b_press");
   constCCVariable<double>& eps = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_eps_name);
   constSFCXVariable<double>& xmom = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >("x-mom");
   constSFCYVariable<double>& ymom = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >("y-mom");
   constSFCZVariable<double>& zmom = tsk_info->get_const_uintah_field_add<constSFCZVariable<double> >("z-mom");
-  constCCVariable<double>& drhodt = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_drhodt_name);
+  //constCCVariable<double>& drhodt = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_drhodt_name);
 
   const double dt = tsk_info->get_dt();
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );

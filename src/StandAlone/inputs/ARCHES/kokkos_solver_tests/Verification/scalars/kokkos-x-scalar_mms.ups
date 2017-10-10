@@ -50,7 +50,7 @@
   </PhysicalConstants>
   <CFD>
     <ARCHES>
-      <TimeIntegrator order="2">
+      <TimeIntegrator order="1">
         <ExplicitIntegrator order="first"/>
       </TimeIntegrator>
       <VarID>
@@ -86,7 +86,7 @@
           <value>0.</value>
         </model>
       </PropertyModelsV2>
-      <src_kokkos>
+      <SourceV2>
           <src label = "phi_mms" type="MMS_scalar">
           <wave type="sine">
             <grid type="CC"/>
@@ -94,7 +94,7 @@
             <sine A="1.0" f="1.0" offset="0.0"/>
           </wave>
           </src>
-      </src_kokkos>
+      </SourceV2>
       <KScalarTransport>
         <eqn_group label="CCFields" type="CC">
           <!--diffusion_coef label="gamma"/-->

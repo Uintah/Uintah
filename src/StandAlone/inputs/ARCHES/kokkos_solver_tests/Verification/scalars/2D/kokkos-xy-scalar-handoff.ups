@@ -125,8 +125,8 @@
       <KScalarTransport>
         <eqn_group label="CCFields" type="CC">
           <eqn label="phi">
-            <convection scheme="upwind"/>
-            <!--convection scheme="central"/-->
+            <!--convection scheme="upwind"/-->
+            <convection scheme="central"/>
             <src label="phi_mms_source"/>
           </eqn>
         </eqn_group>

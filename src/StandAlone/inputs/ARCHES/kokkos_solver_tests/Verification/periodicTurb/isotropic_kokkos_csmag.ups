@@ -72,15 +72,7 @@
         </model>
       </PropertyModelsV2>
       <KMomentum>
-        <!--convection scheme="upwind"/-->
         <convection scheme="central"/>
-        <!--convection scheme="f_central"/-->
-        <!--convection scheme="upwind"/-->
-        <!--src_x label = "x_mms_source"/>
-        <src_y label = "y_mms_source"/-->
-        <!--inviscid/-->
-        <!--src_x label = "x_mms_source_diff"/>
-        <src_y label = "y_mms_source_diff"/-->
         <PressureSolver>
           <Parameters>
             <normalize_pressure>true    </normalize_pressure>

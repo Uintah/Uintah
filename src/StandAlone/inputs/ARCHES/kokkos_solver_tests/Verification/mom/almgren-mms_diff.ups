@@ -17,7 +17,7 @@
     <max_Timesteps>3</max_Timesteps>
   </Time>
   <DataArchiver>
-    <filebase>almgren-mms.uda</filebase>
+    <filebase>almgren-mms-diff.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <!--outputInitTimestep/-->
     <save label="x-mom"/>
@@ -90,12 +90,6 @@
         </src>
       </SourceV2>
       <KMomentum>
-        <!--convection scheme="central"/-->
-        <!--convection scheme="f_central"/-->
-        <!--convection scheme="upwind"/-->
-        <!--src_x label = "x_mms_source"/>
-        <src_y label = "y_mms_source"/-->
-        <!--inviscid/-->
         <src_x label = "x_mms_source_diff"/>
         <src_y label = "y_mms_source_diff"/>
         <PressureSolver>

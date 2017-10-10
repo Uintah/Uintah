@@ -71,18 +71,6 @@
           <value>1.</value>
         </model-->
       </PropertyModelsV2>
-      <!--src_kokkos>
-        <src label="x_mms" type="MMS_mom">
-          <variable type="FX"/>
-          <which_vel>u</which_vel>
-          <coordinates x="ucellX" y="gridY"/>
-        </src>
-        <src label="y_mms" type="MMS_mom">
-          <variable type="FY"/>
-          <which_vel>v</which_vel>
-          <coordinates x="gridX" y="vcellY"/>
-        </src>
-      </src_kokkos-->
       <KMomentum>
         <convection scheme="central"/>
         <!--convection scheme="four_central"/-->

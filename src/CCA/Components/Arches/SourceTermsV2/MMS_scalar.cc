@@ -228,8 +228,8 @@ MMS_scalar::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     case T1:
     Uintah::parallel_for( range, [&](int i, int j, int k){
       MMS_T1(f_mms(i,j,k), s_t_mms(i,j,k), time_d );
-      /** @brief it is only for f_mms, because we need f_mms(t+dt),
-      without this we are going to get f_mms(t+0.5*dt)  **/
+      // it is only for f_mms, because we need f_mms(t+dt),
+      //without this we are going to get f_mms(t+0.5*dt)  **/
       if (time_substep==2){
         double s_t_dummy  = 0.0;
         double current_time = time_d + factor*dt;
@@ -241,8 +241,8 @@ MMS_scalar::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     Uintah::parallel_for( range, [&](int i, int j, int k){
 
       MMS_T2(f_mms(i,j,k), s_t_mms(i,j,k), time_d );
-      /** @brief it is only for f_mms, because we need f_mms(t+dt),
-      without this we are going to get f_mms(t+0.5*dt)  **/
+      //it is only for f_mms, because we need f_mms(t+dt),
+      //without this we are going to get f_mms(t+0.5*dt)  **/
       if (time_substep==2){
         double s_t_dummy  = 0.0;
         double current_time = time_d + factor*dt;
@@ -260,8 +260,8 @@ MMS_scalar::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
       f_mms(i,j,k)   += f_m;
       s_t_mms(i,j,k) += s_tm;
 
-      /** @brief it is only for f_mms, because we need f_mms(t+dt),
-      without this we are going to get f_mms(t+0.5*dt)  **/
+      // it is only for f_mms, because we need f_mms(t+dt),
+      //without this we are going to get f_mms(t+0.5*dt)  **/
       if (time_substep==2){
         double f_m   = 0.0;
         double s_t_dummy  = 0.0;
