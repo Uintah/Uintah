@@ -90,7 +90,7 @@
       </KMomentum>
       <TurbulenceModels>
        <model label="DS" type="dynamic_smagorinsky">
-       <filter type="Three_points"/>
+       <filter type="three_points"/>
        <epsilon>3.0</epsilon>
        </model>
       </TurbulenceModels>

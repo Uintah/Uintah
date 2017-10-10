@@ -4,16 +4,16 @@
 #include <CCA/Components/Arches/GridTools.h>
 namespace Uintah {
 
-  enum FILTER { THREEPOINTS, SIMPSON, AVG };
+  enum FILTER { THREEPOINTS, SIMPSON, BOX };
 
   static FILTER get_filter_from_string(std::string value){
 
-    if ( value == "Simpson" ){
+    if ( value == "simpson" ){
       return SIMPSON;
-    } else if ( value == "Three_points" ){
+    } else if ( value == "three_points" ){
       return THREEPOINTS;
-    } else if ( value == "avg" ){
-      return AVG;
+    } else if ( value == "box" ){
+      return BOX;
     } else {
       throw InvalidValue("Error: Filter type not recognized: "+value, __FILE__, __LINE__);
     }
@@ -49,7 +49,7 @@ namespace Uintah {
       }
         wt = std::pow(6.0,3.0);
 
-      } else if (Type == AVG) {
+      } else if (Type == BOX) {
       // Doing average on a box with three points
       for ( int m = -1; m <= 1; m++ ){
         for ( int n = -1; n <= 1; n++ ){

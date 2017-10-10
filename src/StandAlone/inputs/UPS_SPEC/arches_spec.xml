@@ -84,7 +84,7 @@
                                         need_applies_to="type sigma, wale, constant_smagorinsky"/> <!-- default for sigma is 1.35 
                                                                                                         default for wale is 0.5 -->
          <filter                        spec="OPTIONAL NO_DATA"
-                                        attribute1="type REQUIRED STRING 'Three_points'"
+                                        attribute1="type REQUIRED STRING 'three_points, simpson, box'"
                                         need_applies_to="type dynamic_smagorinsky" />
          <epsilon                       spec="OPTIONAL DOUBLE"
                                          need_applies_to="type dynamic_smagorinsky"/>
