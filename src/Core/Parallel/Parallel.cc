@@ -34,6 +34,10 @@
 #include <sstream>
 #include <thread>
 
+#ifdef _OPENMP
+  #include <omp.h>
+#endif
+
 using namespace Uintah;
 
 
@@ -47,6 +51,7 @@ bool             Parallel::s_initialized             = false;
 bool             Parallel::s_using_device            = false;
 int              Parallel::s_num_threads             = -1;
 int              Parallel::s_num_partitions          = -1;
+int              Parallel::s_threads_per_partition   = -1;
 int              Parallel::s_world_rank              = -1;
 int              Parallel::s_world_size              = -1;
 std::thread::id  Parallel::s_main_thread_id          = std::this_thread::get_id();
@@ -119,7 +124,35 @@ Parallel::getNumThreads()
 int
 Parallel::getNumPartitions()
 {
+  if (s_num_partitions <= 0) {
+    const char* num_cores = getenv("HPCBIND_NUM_CORES");
+    if (num_cores != nullptr) {
+      s_num_partitions = atoi(num_cores);
+    }
+    else {
+#ifdef _OPENMP
+      s_num_partitions = omp_get_max_threads();
+#else
+      s_num_partitions = 1;
+#endif
+    }
+  }
   return s_num_partitions;
+}
+
+//_____________________________________________________________________________
+//
+int
+Parallel::getThreadsPerPartition()
+{
+  if (s_threads_per_partition <= 0) {
+#ifdef _OPENMP
+    s_threads_per_partition = omp_get_max_threads() / getNumPartitions();
+#else
+    s_threads_per_partition = 1;
+#endif
+  }
+  return s_threads_per_partition;
 }
 
 //_____________________________________________________________________________
@@ -144,6 +177,14 @@ void
 Parallel::setNumPartitions( int num )
 {
   s_num_partitions = num;
+}
+
+//_____________________________________________________________________________
+//
+void
+Parallel::setThreadsPerPartition( int num )
+{
+  s_threads_per_partition = num;
 }
 
 //_____________________________________________________________________________

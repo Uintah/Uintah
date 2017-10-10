@@ -111,6 +111,7 @@ class KokkosOpenMPScheduler : public MPIScheduler  {
     QueueAlg m_task_queue_alg{MostMessages};
 
     std::atomic<int>  m_curr_iteration{0};
+
     int               m_num_tasks{0};
     int               m_curr_phase{0};
     int               m_num_phases{0};

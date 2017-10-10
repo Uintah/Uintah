@@ -96,6 +96,10 @@
 
 #include <svn_info.h>
 
+#ifdef _OPENMP
+  #include <omp.h>
+#endif
+
 #ifdef HAVE_VISIT
 #  include <VisIt/libsim/visit_libsim.h>
 #endif
@@ -276,8 +280,9 @@ main( int argc, char *argv[], char *env[] )
 
   int    restartTimestep     = -1;
   int    udaSuffix           = -1;
-  int    numThreads          = 0;
-  int    numPartitions       = 0;
+  int    numThreads          =  0;
+  int    numPartitions       =  0;
+  int    threadsPerPartition =  0;
 
   std::string udaDir;       // for restart
   std::string filename;     // name of the UDA directory
@@ -332,6 +337,21 @@ main( int argc, char *argv[], char *env[] )
                "or increase MAX_THREADS (.../src/Core/Parallel/Parallel.h) and recompile.", arg, argv[0] );
       }
       Uintah::Parallel::setNumPartitions( numPartitions );
+    }
+    else if (arg == "-nthreadsperpartition") {
+      if (++i == argc) {
+        usage("You must provide a number of thread partitions for -nthreadsperpartition", arg, argv[0]);
+      }
+      threadsPerPartition = atoi(argv[i]);
+      if( threadsPerPartition < 1 ) {
+        usage("Number of threads per partition must be > 0", arg, argv[0]);
+      }
+#ifdef _OPENMP
+      if( threadsPerPartition > omp_get_max_threads() ) {
+        usage("Number of threads per partition must be < omp_get_max_threads()", arg, argv[0]);
+      }
+#endif
+      Uintah::Parallel::setThreadsPerPartition(threadsPerPartition);
     }
     else if (arg == "-solver") {
       if (++i == argc) {

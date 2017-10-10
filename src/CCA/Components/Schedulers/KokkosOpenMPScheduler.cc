@@ -221,51 +221,40 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
 
   static int totaltasks;
 
+//---------------------------------------------------------------------------
+
 #ifdef UINTAH_ENABLE_KOKKOS
 
   // Equally sized partitions on -npartitions and the number of threads within the OpenMP instance prior to partitioning
   // When not multiples of one another, ignore the remainder
-  int numPartitions  = Uintah::Parallel::getNumPartitions();
-  int partition_size = Kokkos::OpenMP::thread_pool_size() / numPartitions;
+  int num_partitions        = Uintah::Parallel::getNumPartitions();
+  int threads_per_partition = Uintah::Parallel::getThreadsPerPartition();
 
   // Functor called each time partition_master is called
   auto task_worker = [&] ( int partition_id, int num_partitions ) {
-
-    if (g_affinity && m_shared_state->getCurrentTopLevelTimeStep() == 0 ) {
-      std::ostringstream message;
-      message << "\n" << "Rank-" << my_rank
-              << " PartitionID: " << partition_id
-              << " ThreadNum: " << omp_get_thread_num()
-              << "\n";
-      DOUT(true, message.str());
-    }
 
     // Each partition created executes this block of code
     // Tasks need not know which partition they're executed by
     // A task_worker can run either a serial task or a Kokkos-based task
 
-    //---------------------------------------------------------------------------
     this->runTasks();
-    //---------------------------------------------------------------------------
 
   }; //end task_worker
 
-  if (!m_shared_state->isCopyDataTimestep()) {
-
     // Executes task_workers
-    Kokkos::OpenMP::partition_master( task_worker
-                                    , numPartitions     // Number of partitions
-                                    , partition_size ); // Threads per partition
-
-  }
+  Kokkos::OpenMP::partition_master( task_worker
+                                  , num_partitions     // Number of partitions
+                                  , threads_per_partition    // Threads per partition
+                                  );
 
 #else //UINTAH_ENABLE_KOKKOS
 
-  //---------------------------------------------------------------------------
   this->runTasks();
-  //---------------------------------------------------------------------------
 
 #endif //UINTAH_ENABLE_KOKKOS
+
+//---------------------------------------------------------------------------
+
 
   //---------------------------------------------------------------------------
   // New way of managing single MPI requests - avoids MPI_Waitsome & MPI_Donesome - APH 07/20/16

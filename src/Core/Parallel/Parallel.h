@@ -125,6 +125,10 @@ class Parallel {
       static int getNumPartitions();
 
       //////////
+      // Returns the number of threads per partition.
+      static int getThreadsPerPartition();
+
+      //////////
       // Returns the ID of the main thread, via std::this_thread::get_id()
       static std::thread::id getMainThreadID();
 
@@ -133,8 +137,12 @@ class Parallel {
       static void setNumThreads( int num );
       
       //////////
-      // Sets the number of task runner thread partitions to the value specified
+      // Sets the number of task runner OMP thread partitions to the value specified
       static void setNumPartitions( int num );
+
+      //////////
+      // Sets the number of threads per OMP partition
+      static void setThreadsPerPartition( int num );
 
       //////////
       // Passes the specified exit code to std::exit()
@@ -156,6 +164,7 @@ class Parallel {
       static bool              s_using_device;
       static int               s_num_threads;
       static int               s_num_partitions;
+      static int               s_threads_per_partition;
       static int               s_world_rank;
       static int               s_world_size;
       static std::thread::id   s_main_thread_id;

@@ -41,17 +41,22 @@ class MasterLock
   public:
 
 #ifdef UINTAH_ENABLE_KOKKOS
+
+    // per OMP standard, a flush region without a list is implied for omp_{set/unset}_lock
     void lock()   { omp_set_lock( &m_lock ); }
     void unlock() { omp_unset_lock( &m_lock ); }
 
     MasterLock()  { omp_init_lock( &m_lock ); }
     ~MasterLock() { omp_destroy_lock( &m_lock ); }
+
 #else
+
     void lock()       { m_mutex.lock(); }
     void unlock()     { m_mutex.unlock(); }
 
     MasterLock()  {}
     ~MasterLock() {}
+
 #endif //UINTAH_ENABLE_KOKKOS
 
   private:
