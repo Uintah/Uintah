@@ -30,6 +30,7 @@ SRCS += \
         $(SRCDIR)/MMS_scalar.cc             \
         $(SRCDIR)/MMS_mom_csmag.cc          \
         $(SRCDIR)/MMS_mom.cc      			    \
+        $(SRCDIR)/MMS_Shunn.cc      			    \
         $(SRCDIR)/SourceTermFactoryV2.cc
 
 ########################################################################

@@ -133,11 +133,6 @@ WARNING
            
     friend std::ostream& operator<<( std::ostream & out, const Uintah::Grid & grid );
 
-    // Used in Level and Patch for stretched grids
-    enum Axis {
-      XAxis, YAxis, ZAxis
-    };
-
 
   private:
     std::vector<LevelP> d_levels;

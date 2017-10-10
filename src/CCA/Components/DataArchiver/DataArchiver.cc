@@ -1790,14 +1790,7 @@ DataArchiver::writeGridBinary( const bool hasGlobals, const string & grid_path, 
     fwrite( anchor,       sizeof(double), 3, fp );  // Anchor Info     - [0,0,0]
     fwrite( period,       sizeof(int),    3, fp );  // 
     fwrite( &id,          sizeof(int),    1, fp );  // ID of Level     - 0
-
-
-    if( level->isStretched() ) {
-      throw "Code doesn't handle strecthed grids yet...";
-    }
-    else {
-      fwrite( cell_spacing, sizeof(double), 3, fp );  // Cell Spacing - [0.1,0.1,0.1]
-    }
+    fwrite( cell_spacing, sizeof(double), 3, fp );  // Cell Spacing - [0.1,0.1,0.1]
 
     LoadBalancerPort * lb = dynamic_cast<LoadBalancerPort*>( getPort("load balancer") );
 
@@ -1909,15 +1902,9 @@ DataArchiver::writeGridOriginal( const bool hasGlobals, const GridP & grid, Prob
       levelElem->appendElement("extraCells", level->getExtraCells());
     }
 
-    levelElem->appendElement("anchor", level->getAnchor());
-    levelElem->appendElement("id",     level->getID());
-
-    if( !level->isStretched() ) {
-      levelElem->appendElement("cellspacing", level->dCell());
-    }
-    else {
-      throw ProblemSetupException( "Stretched Grids are not supported...", __FILE__, __LINE__ );
-    }
+    levelElem->appendElement("anchor",      level->getAnchor());
+    levelElem->appendElement("id",          level->getID());
+    levelElem->appendElement("cellspacing", level->dCell());
 
     //__________________________________
     //  Output patch information:
@@ -2056,16 +2043,12 @@ DataArchiver::writeGridTextWriter( const bool hasGlobals, const string & grid_pa
                                      level->getAnchor().z()
                                    );
     xmlTextWriterWriteFormatElement( writer_grid, BAD_CAST "id", "%d", level->getID() );
-    if( !level->isStretched() ) {
-      xmlTextWriterWriteFormatElement( writer_grid, BAD_CAST "cellspacing", "[%.17g,%.17g,%.17g]",
-                                       level->dCell().x(),
-                                       level->dCell().y(),
-                                       level->dCell().z()
-                                     );
-    }
-    else {
-      throw ProblemSetupException( "Stretched Grids are not supported...", __FILE__, __LINE__ );
-    } // End stretched
+
+    xmlTextWriterWriteFormatElement( writer_grid, BAD_CAST "cellspacing", "[%.17g,%.17g,%.17g]",
+                                     level->dCell().x(),
+                                     level->dCell().y(),
+                                     level->dCell().z()
+                                   );
 
     //__________________________________
     //  output patch information

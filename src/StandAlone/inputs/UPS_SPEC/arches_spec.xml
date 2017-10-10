@@ -5,6 +5,18 @@
 
     <ARCHES                             spec="OPTIONAL NO_DATA" >
 
+      <!-- Arches Task Interface Task Controller Section -->
+      <TaskController                   spec="OPTIONAL NO_DATA"> 
+        <TaskPacking                    spec="OPTIONAL NO_DATA">
+          <!-- When any of the flags are present, the task interface tries to 
+               combine work into a single task. Default if no-packing.  -->
+          <global                       spec="OPTIONAL NO_DATA"/>
+          <turbulence                   spec="OPTIONAL NO_DATA"/>
+          <scalar_transport             spec="OPTIONAL NO_DATA"/>
+          <momentum_transport           spec="OPTIONAL NO_DATA"/>
+        </TaskPacking>
+      </TaskController>
+
       <turnonMixedModel                 spec="OPTIONAL BOOLEAN" /> <!-- Move to Properties? not sure what this model is-->
       <recompileTaskgraph               spec="OPTIONAL BOOLEAN" />
 
@@ -61,15 +73,21 @@
 
       </Utilities>
 
+      <!-- These turbulence models are for the new Kokkos Solver -->
       <TurbulenceModels                 spec="OPTIONAL NO_DATA">
          <model                         spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        attribute2="type REQUIRED STRING 'sigma, wale, constant_smagorinsky'">
+                                        attribute2="type REQUIRED STRING 'sigma, wale, constant_smagorinsky, 
+                                                                          dynamic_smagorinsky'">
 
            <Cs                          spec="OPTIONAL DOUBLE"
                                         need_applies_to="type sigma, wale, constant_smagorinsky"/> <!-- default for sigma is 1.35 
                                                                                                         default for wale is 0.5 -->
-
+         <filter_type                   spec="OPTIONAL NO_DATA"
+                                        attribute1="TF REQUIRED STRING 'Three_points'"
+                                        need_applies_to="type dynamic_smagorinsky" />
+         <epsilon                       spec="OPTIONAL DOUBLE"
+                                        need_applies_to="type dynamic_smagorinsky"/>
          </model>
       </TurbulenceModels>
 
@@ -1231,7 +1249,8 @@
                                           attribute1="label REQUIRED STRING">
 
             <!--If this tag is present, diffusion is computed.-->
-            <diffusion                    spec="OPTIONAL NO_DATA"/>
+            <diffusion                    spec="OPTIONAL NO_DATA"
+                                          attribute1="scheme REQUIRED STRING 'central'"/>
             <!-- If this tag is present, convection is computed.
              The type refers to the scheme: upwind, central, superbee, roe_minmod.-->
             <convection                   spec="OPTIONAL NO_DATA"
@@ -1273,6 +1292,14 @@
         <convection                     spec="OPTIONAL NO_DATA"
                                         attribute1="scheme REQUIRED STRING 'central, upwind, superbee, roe, vanleer'"/>
         <inviscid                       spec="OPTIONAL NO_DATA"/> <!-- Turn off diffusion -->
+        <src_x                          spec="OPTIONAL NO_DATA"
+                                        attribute1=" label REQUIRED STRING"/>
+
+        <src_y                          spec="OPTIONAL NO_DATA"
+                                        attribute1=" label REQUIRED STRING"/>
+
+        <src_z                          spec="OPTIONAL NO_DATA"
+                                        attribute1=" label REQUIRED STRING"/>
 
         <PressureSolver                 spec="REQUIRED NO_DATA" >
 
@@ -1297,6 +1324,7 @@
             <solver                       spec="REQUIRED STRING 'smg, SMG, PFMG, pfmg, SparseMSG, sparsemsg, CG, cg, Hybrid, hybrid, GMRES, gmres'" />
             <tolerance                    spec="REQUIRED DOUBLE 'positive'" />
             <relax_type                   spec="OPTIONAL INTEGER '0,3'"/> <!-- 0=jacobi,1=weighted jacobi,2=rb symmetric,3=rb non-symmetric -->
+            <normalize_pressure           spec="OPTIONAL BOOLEAN" />
           </Parameters>
         </PressureSolver>
       </KMomentum>
@@ -1399,6 +1427,57 @@
 
         </task>
       </Initialization>
+      <!--Source terms for Arches with new interface-->
+        <SourceV2                        spec="OPTIONAL NO_DATA">
+          <src                          spec="MULTIPLE NO_DATA"
+                                        attribute1="label REQUIRED STRING"
+                                        attribute2="type REQUIRED STRING  'MMS_mom,MMS_scalar'">
+                                                                           
+            <!-- Specs for MMS mom -->
+          <variable                     spec="OPTIONAL NO_DATA"
+                                        attribute1="type REQUIRED STRING 'CC,FX,FY,FZ'"
+                                        need_applies_to="type MMS_mom"/>
+
+          <which_vel                  spec="REQUIRED STRING 'u,v,p'"
+                                      need_applies_to="type MMS_mom"/> <!-- for a 2D plane, specify which component
+                                                                                to which this corresponds -->
+          <coordinates                spec="REQUIRED NO_DATA"
+                                      attribute1="x REQUIRED STRING"
+                                      attribute2="y REQUIRED STRING"
+                                      need_applies_to="type MMS_mom"/> <!-- specify the the x and y varlabel names for
+                                                                            the mms -->
+          <!-- Specs for MMS scalar -->
+          <!-- 1D WAVE FORM -->
+          <wave                         spec="OPTIONAL NO_DATA"
+                                        attribute1="type REQUIRED STRING 'sine,square,t3'">
+
+            <grid                       spec="REQUIRED NO_DATA"
+                                        attribute1="type REQUIRED STRING 'CC,FX,FY,FZ'"/> <!-- This is the grid type of the variable you are trying to initialize -->
+
+            <independent_variable       spec="REQUIRED NO_DATA"
+                                        attribute1="label REQUIRED STRING"
+                                        attribute2="type  REQUIRED STRING 'CC,FX,FY,FZ'"/>
+
+            <sine                       spec="REQUIRED NO_DATA"
+                                        attribute1="A REQUIRED DOUBLE"
+                                        attribute2="f REQUIRED DOUBLE"
+                                        attribute3="offset REQUIRED DOUBLE"
+                                        need_applies_to="type sine"/>
+
+            <square                     spec="REQUIRED NO_DATA"
+                                        attribute1="min REQUIRED DOUBLE"
+                                        attribute2="max REQUIRED DOUBLE"
+                                        attribute3="f REQUIRED DOUBLE"
+                                        attribute4="offset REQUIRED DOUBLE"
+                                        need_applies_to="type square"/>
+            <t3                         spec="REQUIRED NO_DATA"
+                                        attribute1="f REQUIRED DOUBLE"
+                                        need_applies_to="type t3"/>
+
+          </wave>
+
+        </src>
+        </SourceV2>
 
       <ParticleModels                 spec="OPTIONAL NO_DATA">
 

@@ -22,6 +22,7 @@ namespace Uintah{
      *         pass into the task exe. **/
     struct SchedToTaskInfo{
       int time_substep{99};
+      double time{0.0};
       double dt{0.};
       bool packed_tasks{false};
     };
@@ -48,6 +49,12 @@ namespace Uintah{
 
         /** @brief return the dt **/
         inline const double get_dt(){ return _tsk_info.dt; };
+        
+        /** @brief return the time **/
+        inline const double get_time(){ return _tsk_info.time; };
+        
+        /** @brief set the time **/ 
+        inline void set_time(const double time){ _tsk_info.time = time; };
 
         /** @brief Return a bool to indicate if this Arches Task is a subset of a larger, single
                    Uintah task. **/
@@ -71,9 +78,9 @@ namespace Uintah{
         inline const double get_ssp_time_factor( const int rk_step ){
 
         if ( rk_step == 0 ){
-           return 0.;
+           return 0.0;
         } else if ( rk_step == 1 ){
-           return 1.;
+           return 1.0;
         } else {
            return 0.5;
         }

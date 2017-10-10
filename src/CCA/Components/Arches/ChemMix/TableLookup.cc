@@ -214,8 +214,8 @@ TableLookup::addLookupSpecies( ){
   std::vector<std::string>& sps = helper.model_req_species;
   std::vector<std::string>& old_sps = helper.model_req_old_species;
 
-  std::vector<bool> sps_check(sps.size(), false);
-  std::vector<bool> old_sps_check(old_sps.size(), false);
+  std::vector<std::string> missing;
+  std::vector<std::string> old_missing;
 
   for ( auto i_tab = m_tables.begin(); i_tab != m_tables.end(); i_tab++ ){
 
@@ -224,8 +224,8 @@ TableLookup::addLookupSpecies( ){
 
       bool test = i_tab->second->insertIntoMap( *i );
 
-      if ( test == true ){
-        sps_check[counter] = true;
+      if ( test == false ){
+        missing.push_back(*i);
       }
 
       counter++;
@@ -238,8 +238,8 @@ TableLookup::addLookupSpecies( ){
 
       bool test = i_tab->second->insertOldIntoMap( *i );
 
-      if ( test == true ){
-        old_sps_check[counter] = true;
+      if ( test == false ){
+        old_missing.push_back(*i);
       }
 
       counter++;
@@ -247,19 +247,24 @@ TableLookup::addLookupSpecies( ){
     }
   }
 
-  //now make sure all species have been accounted for:
-  for ( auto i = sps_check.begin(); i != sps_check.end(); i++ ){
-    if ( !*i ){
-      throw InvalidValue( "Error: The following species wasn\'t found in a table: "+*i,
-                          __FILE__, __LINE__ );
+  if ( missing.size() > 0 ){
+    std::stringstream msg;
+    msg << " Error: The following species were not found in the table: " << endl;
+    for (auto isp = missing.begin(); isp != missing.end(); isp++ ){
+      msg << "       " << *isp << endl;
     }
+    throw InvalidValue( msg.str(), __FILE__, __LINE__ );
   }
-  for ( auto i = old_sps_check.begin(); i != old_sps_check.end(); i++ ){
-    if ( !*i ){
-      throw InvalidValue( "Error: The following species wasn\'t found in a table: "+*i,
-                          __FILE__, __LINE__ );
+
+  if ( old_missing.size() > 0 ){
+    std::stringstream msg;
+    msg << " Error: The following species were not found in the table: " << endl;
+    for (auto isp = old_missing.begin(); isp != old_missing.end(); isp++ ){
+      msg << "       " << *isp << endl;
     }
+    throw InvalidValue( msg.str(), __FILE__, __LINE__ );
   }
+
 }
 
 } //namespace Uintah

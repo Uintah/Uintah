@@ -165,10 +165,10 @@ template <typename T>
 void MMS_mom<T>::register_timestep_eval( std::vector<VarInfo>&
                                           variable_registry, const int time_substep , const bool pack_tasks){
 
-  register_variable( m_MMS_label,             ArchesFieldContainer::MODIFIES ,  variable_registry, time_substep );
-  register_variable( m_MMS_source_label,      ArchesFieldContainer::MODIFIES ,  variable_registry, time_substep );
-  register_variable( m_MMS_source_diff_label, ArchesFieldContainer::MODIFIES ,  variable_registry, time_substep );
-  register_variable( m_MMS_source_t_label,    ArchesFieldContainer::MODIFIES ,  variable_registry, time_substep );
+  register_variable( m_MMS_label,             ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep );
+  register_variable( m_MMS_source_label,      ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep );
+  register_variable( m_MMS_source_diff_label, ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep );
+  register_variable( m_MMS_source_t_label,    ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep );
 
   register_variable( m_x_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
   register_variable( m_y_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
@@ -216,6 +216,20 @@ void MMS_mom<T>::compute_source( const Patch* patch, ArchesTaskInfoManager* tsk_
 
        s_diff_mms(i,j,k) = -2.0*m_amp*m_two_pi*m_two_pi*cos(m_two_pi*x(i,j,k))*sin(m_two_pi*y(i,j,k));
 
+
+     });
+  }  else if (m_which_vel == "p") {
+     const double u_x = 1.0;
+     const double u_y = 1.0;      
+     Uintah::parallel_for( range, [&](int i, int j, int k){
+
+       f_mms(i,j,k) = 1.0  - m_amp * cos( m_two_pi * x(i,j,k) )
+                                  * sin( m_two_pi * y(i,j,k) );
+
+       s_mms(i,j,k) =  m_amp*m_two_pi*u_x*sin(m_two_pi*x(i,j,k))*sin(m_two_pi*y(i,j,k))
+                        - m_amp*m_two_pi*u_y*cos(m_two_pi*x(i,j,k))*cos(m_two_pi*y(i,j,k)); 
+
+       s_diff_mms(i,j,k) = -2.0*m_amp*m_two_pi*m_two_pi*cos(m_two_pi*x(i,j,k))*sin(m_two_pi*y(i,j,k));
 
      });
 

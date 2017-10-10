@@ -150,6 +150,30 @@ namespace Uintah{ namespace ArchesCore{
     if ( patch->getBCType(Patch::xplus) != Patch::Neighbor ){ \
       high_fx_patch_range += Uintah::IntVector(buffer_high,0,0);\
     }
+    
+#define GET_WALL_BUFFERED_PATCH_RANGE(low_patch_range, high_patch_range,\
+    buffer_low_x,buffer_high_x,\
+    buffer_low_y,buffer_high_y,buffer_low_z,buffer_high_z) \
+    \
+    if ( patch->getBCType(Patch::xminus) != Patch::Neighbor ){ \
+      low_patch_range += Uintah::IntVector(buffer_low_x,0,0); \
+    } \
+    if ( patch->getBCType(Patch::xplus) != Patch::Neighbor ){ \
+      high_patch_range += Uintah::IntVector(buffer_high_x,0,0);\
+    } \
+    if ( patch->getBCType(Patch::yminus) != Patch::Neighbor ){ \
+      low_patch_range += Uintah::IntVector(0,buffer_low_y,0); \
+    } \
+    if ( patch->getBCType(Patch::yplus) != Patch::Neighbor ){ \
+      high_patch_range += Uintah::IntVector(0,buffer_high_y,0);\
+    } \
+    if ( patch->getBCType(Patch::zminus) != Patch::Neighbor ){ \
+      low_patch_range += Uintah::IntVector(0,0,buffer_low_z); \
+    } \
+    if ( patch->getBCType(Patch::zplus) != Patch::Neighbor ){ \
+      high_patch_range += Uintah::IntVector(0,0,buffer_high_z);\
+    }
+
 
 /** @brief Get a low and high index for the patch where the buffer is added ONLY in the
            case that the domain edge appears on that side of the patch AND only applied to the

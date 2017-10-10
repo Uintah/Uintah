@@ -226,11 +226,11 @@ protected:
   bool d_do_multi_taskgraphing{false};
   int  d_rad_calc_frequency{1};
 
-  double d_delt;
+  double d_delt{0.0};
   double d_prev_delt{0.0};
   
-  double d_simTime;               // current sim time
-  double d_startSimTime;          // starting sim time
+  double d_simTime{0.0};               // current sim time
+  double d_startSimTime{0.0};          // starting sim time
   
   WallTimers walltimers;
 
@@ -240,7 +240,7 @@ protected:
   int         d_restartTimestep{0};
   int         d_restartIndex{0};
   int         d_last_recompile_timestep{0};
-  bool        d_reduceUda{false};;
+  bool        d_reduceUda{false};
       
   // If d_restartFromScratch is true then don't copy or move any of
   // the old timesteps or dat files from the old directory.  Run as
@@ -286,9 +286,9 @@ private:
   // Percent time in overhead samples
   double overheadValues[OVERHEAD_WINDOW];
   double overheadWeights[OVERHEAD_WINDOW];
-  int    overheadIndex; // Next sample for writing
+  int    overheadIndex{0}; // Next sample for writing
 
-  int    d_nSamples;
+  int    d_nSamples{0};
 
 };
 

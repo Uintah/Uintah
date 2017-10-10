@@ -88,7 +88,7 @@
           <value>0.</value>
         </model>
       </PropertyModelsV2>
-      <src_kokkos>
+      <SourceV2>
           <src label = "phi_mms" type="MMS_scalar">
           <!--wave type="sine_t">
             <grid type="CC"/>
@@ -110,7 +110,7 @@
             <independent_variable label="gridX" type="CC"/>
           </wave-->
           </src>
-      </src_kokkos>
+      </SourceV2>
       <KScalarTransport>
         <eqn_group label="CCFields" type="CC">
           <!--diffusion_coef label="gamma"/-->

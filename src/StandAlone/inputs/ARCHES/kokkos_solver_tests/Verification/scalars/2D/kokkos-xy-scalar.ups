@@ -11,16 +11,20 @@
     <maxTime>100.</maxTime>
     <initTime>0.0</initTime>
     <delt_min>1e-5</delt_min>
-    <delt_max>1e-1</delt_max>
+    <delt_max>1e-5</delt_max>
     <delt_init>1e-1</delt_init>
-    <timestep_multiplier>0.3</timestep_multiplier>
-    <max_Timesteps>50</max_Timesteps>
+    <timestep_multiplier>1</timestep_multiplier>
+    <max_Timesteps>3</max_Timesteps>
   </Time>
   <DataArchiver>
-    <filebase>x-scalar-kokkos-test.uda</filebase>
-    <outputInterval>0.1</outputInterval>
-    <outputInitTimestep/>
-    <save label="cc_phi_upwind"/>
+    <filebase>xy-scalar-kokkos-test.uda</filebase>
+    <!--outputInterval>0.1</outputInterval-->
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <!--outputInitTimestep/-->
+    <save label="phi_x_psi"/>
+    <save label="phi"/>
+    <save label="phi_mms"/>
+    <save label="gridX"/>
     <checkpoint cycle="2" interval=".3"/>
     <compression>gzip</compression>
   </DataArchiver>
@@ -30,11 +34,12 @@
         <lower>[0,0,0]</lower>
         <upper>[1.0,1.0,1.0]</upper>
         <resolution>[24,24,24]</resolution>
-        <extraCells>[0,0,0]</extraCells>
         <patches>[1,1,1]</patches>
       </Box>
       <periodic>[1,1,1]</periodic>
     </Level>
+    <BoundaryConditions>
+    </BoundaryConditions>
   </Grid>
   <PhysicalConstants>
     <gravity>[0,0,0]</gravity>
@@ -60,52 +65,48 @@
         </model>
         <model label="gamma" type="constant_property">
           <grid type="CC"/>
-          <value>1.e-4</value>
+          <value>1.</value>
         </model>
         <model label="uVel" type="constant_property">
           <grid type="FX"/>
-          <value>0.9</value>
+          <value>1.0</value>
         </model>
         <model label="vVel" type="constant_property">
           <grid type="FY"/>
-          <value>0.</value>
+          <value>1.0</value>
         </model>
         <model label="wVel" type="constant_property">
           <grid type="FZ"/>
           <value>0.</value>
         </model>
       </PropertyModelsV2>
-      <src_kokkos>
-          <src label = "phi_mms" type="MMS_scalar">
-          <wave type="sine">
-            <grid type="CC"/>
-            <independent_variable label="gridX" type="CC"/>
-            <sine A="1.0" f="1.0" offset="0.0"/>
-          </wave>
-          </src>
-      </src_kokkos>
+      <SourceV2>
+        <src label="phi_mms" type="MMS_mom">
+          <variable type="CC"/>
+          <which_vel>p</which_vel>
+          <coordinates x="gridX" y="gridY"/>
+        </src>
+      </SourceV2>
       <KScalarTransport>
         <eqn_group label="CCFields" type="CC">
-          <eqn label="cc_phi_upwind">
-            <convection scheme="upwind"/>
+          <eqn label="phi">
+            <!--convection scheme="upwind"/-->
+            <convection scheme="central"/>
             <src label="phi_mms_source"/>
           </eqn>
         </eqn_group>
       </KScalarTransport>
       <Initialization>
-        <task task_label="cc_phi_initialize" variable_label="cc_phi_upwind" type="wave">
-          <wave type="square">
-            <grid type="CC"/>
-            <independent_variable label="gridX" type="CC"/>
-            <square min="0.0" max="1.0" f="1.0" offset="0.5"/>
-          </wave>
+        <task task_label="cc_phi_initialize" variable_label="phi" type="almgren_mms">
+          <variable type="CC"/>
+          <which_vel>u</which_vel>
+          <coordinates x="gridX" y="gridY"/>
         </task>
       </Initialization>
       <BoundaryConditions>
         <force_area_calc/>
       </BoundaryConditions>
       <KokkosSolver>
-      <!--integrator>sandbox</integrator-->
       </KokkosSolver>
     </ARCHES>
   </CFD>

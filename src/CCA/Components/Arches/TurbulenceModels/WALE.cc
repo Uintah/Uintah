@@ -124,9 +124,9 @@ WALE::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   constSFCYVariable<double>& vVel = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >(m_v_vel_name);
   constSFCZVariable<double>& wVel = tsk_info->get_const_uintah_field_add<constSFCZVariable<double> >(m_w_vel_name);
 
-  constSFCXVariable<double>& CCuVel = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >(m_cc_u_vel_name);
-  constSFCYVariable<double>& CCvVel = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >(m_cc_v_vel_name);
-  constSFCZVariable<double>& CCwVel = tsk_info->get_const_uintah_field_add<constSFCZVariable<double> >(m_cc_w_vel_name);
+  constCCVariable<double>& CCuVel = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_cc_u_vel_name);
+  constCCVariable<double>& CCvVel = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_cc_v_vel_name);
+  constCCVariable<double>& CCwVel = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_cc_w_vel_name);
 
   CCVariable<double>& mu_sgc = tsk_info->get_uintah_field_add<CCVariable<double> >(m_t_vis_name);
 

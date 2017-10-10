@@ -568,7 +568,7 @@ RMCRT_Radiation::sched_initialize( const LevelP& level,
 
   //__________________________________
   //  initialize cellType on NON arches level
-  for (int l = 0; l < maxLevels; l++) {
+  for (int l = maxLevels - 1; l >= 0; l--) {
     const LevelP& level = grid->getLevel(l);
     if( level->getIndex() != _archesLevelIndex ){
       // Set the BC on the coarse level

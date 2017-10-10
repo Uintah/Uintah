@@ -190,30 +190,18 @@ public:
   // Grid spacing
   Vector dCell() const { return m_dcell; }
 
-  // Returns the cell volume dx*dy*dz. This will not work for stretched grids.
+  // Returns the cell volume dx*dy*dz.
   double cellVolume() const {
-    if (isStretched()) {
-      throw InternalError( "Cell Volume is not unique for stretched meshes, therefore, you cannot use Patch::cellVolume() or Level::cellVolume().", __FILE__, __LINE__);
-    }
     return m_dcell.x()*m_dcell.y()*m_dcell.z();
   }
 
-  // Returns the cell area dx*dy, dx*dz, or dy*dz. This will not work for stretched grids.
+  // Returns the cell area dx*dy, dx*dz, or dy*dz.
   double cellArea( Vector unitNormal ) const {
-    if (isStretched()) {
-      throw InternalError( "Cell area is not unique for stretched meshes, therefore, you cannot use Patch::cellArea or Level::cellArea.", __FILE__, __LINE__);
-    }
     Vector areas(m_dcell.y() * m_dcell.z(), m_dcell.x() * m_dcell.z(), m_dcell.x() * m_dcell.y());
     return Dot(areas, unitNormal);
   }
 
   Point getAnchor() const { return m_anchor; }
-
-  // For stretched grids
-  bool isStretched() const { return m_stretched; }
-  void getCellWidths(    Grid::Axis axis, OffsetArray1<double> & widths ) const;
-  void getFacePositions( Grid::Axis axis, OffsetArray1<double> & faces ) const;
-  void setStretched(     Grid::Axis axis, const OffsetArray1<double> & faces );
 
   void      setExtraCells( const IntVector & ec );
   IntVector getExtraCells() const { return m_extra_cells; }
@@ -314,13 +302,6 @@ private:
 
   int       m_id;
   IntVector m_refinement_ratio;
-
-  // For stretched grids
-  bool m_stretched{false};
-
-  // This is three different arrays containing the x,y,z coordinate of the face position
-  // be sized to d_idxSize[axis] + 1.  Used only for stretched grids
-  OffsetArray1<double> m_face_position[3];
 
   class IntVectorCompare {
   public:

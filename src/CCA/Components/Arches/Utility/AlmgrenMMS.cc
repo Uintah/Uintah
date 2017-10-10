@@ -1,4 +1,3 @@
-#include <CCA/Components/Arches/Utility/WaveFormInit.h>
+#include <CCA/Components/Arches/Utility/AlmgrenMMS.h>
 
 using namespace Uintah;
-

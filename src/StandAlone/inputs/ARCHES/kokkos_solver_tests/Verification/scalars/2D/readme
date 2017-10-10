@@ -1,0 +1,13 @@
+Without BC: with 2D case with peridic boundary conditions
+
+python extract_data_spatial_order_v2.py -ups kokkos-xy-scalar.ups -levels 3 -nsteps 1 -suspath ~/CODE_11_09_17/Uintah/debug/StandAlone/ -vars "phi,phi_mms" -dire "x" -var_mms "phi_mms"
+
+With BC:
+
+With Dirichlet for y faces, Neumann for z faces, and handoff for x faces
+
+python extract_data_spatial_order_v2.py -ups kokkos-xy-scalar-handoff.ups -levels 3 -nsteps 1 -suspath ~/CODE_11_09_17/Uintah/debug/StandAlone/ -vars "phi,phi_mms" -dire "x" -var_mms "phi_mms"
+
+
+
+

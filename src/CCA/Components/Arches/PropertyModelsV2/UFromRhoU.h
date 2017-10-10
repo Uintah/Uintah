@@ -21,7 +21,7 @@ public:
 
     void register_initialize( VIVec& variable_registry , const bool pack_tasks);
 
-    void register_timestep_init( VIVec& variable_registry , const bool packed_tasks){};
+    void register_timestep_init( VIVec& variable_registry , const bool packed_tasks);
 
     void register_restart_initialize( VIVec& variable_registry , const bool packed_tasks){};
 
@@ -35,7 +35,7 @@ public:
 
     void restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 

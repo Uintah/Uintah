@@ -1,0 +1,164 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<!-- DOCTYPE Uintah_specification SYSTEM "input.dtd" -->
+<!-- @version: -->
+<Uintah_specification>
+  <Meta>
+    <title>Test of 1D transport of kokkos-ized scalars - diffusion with mms</title>
+  </Meta>
+  <SimulationComponent type="arches"/>
+  <Solver type="hypre"/>
+  <Time>
+    <maxTime>100.</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>1e-5</delt_min>
+    <delt_max>1e-1</delt_max>
+    <delt_init>1e-1</delt_init>
+    <timestep_multiplier>0.3</timestep_multiplier>
+    <max_Timesteps>10</max_Timesteps>
+  </Time>
+  <DataArchiver>
+    <filebase>x-scalar-kokkos-mms_diff_sine.uda</filebase>
+    <!--outputInterval>0.1</outputInterval-->
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <!--outputInitTimestep/-->
+    <save label="cc_phi_upwind"/>
+    <save label="cc_phi_vanleer"/>
+    <save label="cc_phi_superbee"/>
+    <save label="cc_phi_central"/>
+    <save label="phi_mms"/>
+    <checkpoint cycle="2" interval=".3"/>
+    <compression>gzip</compression>
+  </DataArchiver>
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[1.0,1.0,1.0]</upper>
+        <resolution>[24,24,24]</resolution>
+        <extraCells>[0,0,0]</extraCells>
+        <patches>[2,2,2]</patches>
+      </Box>
+      <periodic>[1,1,1]</periodic>
+    </Level>
+    <BoundaryConditions>
+    </BoundaryConditions>
+  </Grid>
+  <PhysicalConstants>
+    <gravity>[0,0,0]</gravity>
+    <reference_point>[0,0,0]</reference_point>
+    <viscosity>0.0002</viscosity>
+  </PhysicalConstants>
+  <CFD>
+    <ARCHES>
+      <TimeIntegrator order="1">
+        <ExplicitIntegrator order="first"/>
+      </TimeIntegrator>
+      <VarID>
+        <var role="uvelocity" label="uVel"/>
+        <var role="vvelocity" label="vVel"/>
+        <var role="wvelocity" label="wVel"/>
+        <var role="total_viscosity" label="gamma"/>
+        <var role="density" label="density"/>
+      </VarID>
+      <PropertyModelsV2>
+        <model label="density" type="constant_property">
+          <grid type="CC"/>
+          <value>1.</value>
+        </model>
+        <model label="gamma" type="constant_property">
+          <grid type="CC"/>
+          <value>1.</value>
+        </model>
+        <model label="uVel" type="constant_property">
+          <grid type="FX"/>
+          <value>1.0</value>
+        </model>
+        <model label="vVel" type="constant_property">
+          <grid type="FY"/>
+          <value>0.0</value>
+        </model>
+        <model label="wVel" type="constant_property">
+          <grid type="FZ"/>
+          <value>0.</value>
+        </model>
+        <model label="phi_x" type="constant_property">
+          <grid type="FX"/>
+          <value>0.</value>
+        </model>
+      </PropertyModelsV2>
+      <SourceV2>
+          <src label = "phi_mms" type="MMS_scalar">
+          <wave type="sine">
+            <grid type="CC"/>
+            <independent_variable label="gridX" type="CC"/>
+            <sine A="1.0" f="1.0" offset="0.0"/>
+          </wave>
+          </src>
+      </SourceV2>
+      <KScalarTransport>
+        <eqn_group label="CCFields" type="CC">
+          <diffusion_coef label="gamma"/>
+          <eqn label="cc_phi_upwind">
+            <!--convection scheme="upwind"/>
+            <src label="phi_mms_source"/-->
+            <src label="phi_mms_source_diff"/>
+            <diffusion scheme ="central"/>
+          </eqn>
+          <eqn label="cc_phi_vanleer">
+            <!--convection scheme="vanleer"/>
+            <src label="phi_mms_source"/-->
+            <src label="phi_mms_source_diff"/>
+            <diffusion scheme ="central"/>
+          </eqn>
+          <eqn label="cc_phi_superbee">
+            <!--convection scheme="superbee"/>
+            <src label="phi_mms_source"/-->
+            <src label="phi_mms_source_diff"/>
+            <diffusion scheme ="central"/>
+          </eqn>
+          <eqn label="cc_phi_central">
+            <!--convection scheme="central"/>
+            <src label="phi_mms_source"/-->
+            <src label="phi_mms_source_diff"/>
+            <diffusion scheme ="central"/>
+          </eqn>
+        </eqn_group>
+      </KScalarTransport>
+      <Initialization>
+        <task task_label="cc_phi_initialize" variable_label="cc_phi_upwind" type="wave">
+          <wave type="sine">
+            <grid type="CC"/>
+            <independent_variable label="gridX" type="CC"/>
+            <sine A="1.0" f="1.0" offset="0."/>
+          </wave>
+        </task>
+        <task task_label="cc_phi_sb_initialize" variable_label="cc_phi_superbee" type="wave">
+          <wave type="sine">
+            <grid type="CC"/>
+            <independent_variable label="gridX" type="CC"/>
+            <sine A="1.0" f="1.0" offset="0."/>
+          </wave>
+        </task>
+        <task task_label="cc_phi_vl_initialize" variable_label="cc_phi_vanleer" type="wave">
+          <wave type="sine">
+            <grid type="CC"/>
+            <independent_variable label="gridX" type="CC"/>
+            <sine A="1.0" f="1.0" offset="0."/>
+          </wave>
+        </task>
+        <task task_label="cc_phi_cen_initialize" variable_label="cc_phi_central" type="wave">
+          <wave type="sine">
+            <grid type="CC"/>
+            <independent_variable label="gridX" type="CC"/>
+            <sine A="1.0" f="1.0" offset="0."/>
+          </wave>
+        </task>
+      </Initialization>
+      <BoundaryConditions>
+        <force_area_calc/>
+      </BoundaryConditions>
+      <KokkosSolver>
+      </KokkosSolver>
+    </ARCHES>
+  </CFD>
+</Uintah_specification>

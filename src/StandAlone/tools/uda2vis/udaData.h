@@ -151,14 +151,26 @@ public:
     }
   }
 
-  // getProcId
-  int getProcId() const
+  // getProcNodeId
+  int getProcNodeId() const
+  {
+    return node_id;
+  }
+
+  // setProcNodeId
+  void setProcNodeId(const int new_node_id)
+  {
+    node_id = new_node_id;
+  }
+
+  // getProcRankId
+  int getProcRankId() const
   {
     return proc_id;
   }
 
-  // setProcId
-  void setProcId(const int new_proc_id)
+  // setProcRankId
+  void setProcRankId(const int new_proc_id)
   {
     proc_id = new_proc_id;
   }
@@ -293,6 +305,7 @@ private:
 
   int patch_id;
   int proc_id;
+  int node_id;
 };
 
 

@@ -56,13 +56,13 @@ void visit_SetTimeValues( visit_simulation_data *sim )
   SimulationTime* simTime = sim->simController->getSimulationTime();
 
   VisItUI_setValueI("TimeStep",      sim->cycle, 0);
-  VisItUI_setValueI("MaxTimeStep",   simTime->maxTimestep, 1);
+  VisItUI_setValueI("MaxTimeStep",   simTime->m_max_timestep, 1);
 
   VisItUI_setValueD("Time",          sim->time, 0);
-  VisItUI_setValueD("MaxTime",       simTime->maxTime, 1);
+  VisItUI_setValueD("MaxTime",       simTime->m_max_time, 1);
 
-  VisItUI_setValueI("EndAtMaxTime",      simTime->end_at_max_time, 1);
-  VisItUI_setValueI("ClampTimeToOutput", simTime->clamp_time_to_output, 1);
+  VisItUI_setValueI("EndAtMaxTime",      simTime->m_end_at_max_time, 1);
+  VisItUI_setValueI("ClampTimeToOutput", simTime->m_clamp_time_to_output, 1);
 
   VisItUI_setValueI("StopAtTimeStep",     sim->stopAtTimeStep,     1);
   VisItUI_setValueI("StopAtLastTimeStep", sim->stopAtLastTimeStep, 1);
@@ -91,31 +91,31 @@ void visit_SetDeltaTValues( visit_simulation_data *sim )
   ++row;
 
   VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "DeltaTFactor", 0);
-  VisItUI_setTableValueD("DeltaTVariableTable", row, 1, simTime->delt_factor, 1);
+  VisItUI_setTableValueD("DeltaTVariableTable", row, 1, simTime->m_delt_factor, 1);
   ++row;
 
   VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "MaxDeltaTIncrease", 0);
-  VisItUI_setTableValueD("DeltaTVariableTable", row, 1, simTime->max_delt_increase, 1);
+  VisItUI_setTableValueD("DeltaTVariableTable", row, 1, simTime->m_max_delt_increase, 1);
   ++row;
 
   VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "DeltaTMin", 0);
-  VisItUI_setTableValueD("DeltaTVariableTable", row, 1, simTime->delt_min, 1);
+  VisItUI_setTableValueD("DeltaTVariableTable", row, 1, simTime->m_delt_min, 1);
   ++row;
 
   VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "DeltaTMax", 0);
-  VisItUI_setTableValueD("DeltaTVariableTable", row, 1, simTime->delt_max, 1);
+  VisItUI_setTableValueD("DeltaTVariableTable", row, 1, simTime->m_delt_max, 1);
   ++row;
 
   VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "MaxInitialDeltaT", 0);
-  VisItUI_setTableValueD("DeltaTVariableTable", row, 1, simTime->max_initial_delt, 1);
+  VisItUI_setTableValueD("DeltaTVariableTable", row, 1, simTime->m_max_initial_delt, 1);
   ++row;
 
   VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "InitialDeltaTRange", 0);
-  VisItUI_setTableValueD("DeltaTVariableTable", row, 1, simTime->initial_delt_range, 1);
+  VisItUI_setTableValueD("DeltaTVariableTable", row, 1, simTime->m_initial_delt_range, 1);
   ++row;
 
   VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "OverrideRestartDeltaT", 0);
-  VisItUI_setTableValueD("DeltaTVariableTable", row, 1, simTime->override_restart_delt, 1);
+  VisItUI_setTableValueD("DeltaTVariableTable", row, 1, simTime->m_override_restart_delt, 1);
   ++row;
 
   visit_SetStripChartValue( sim, "DeltaT/Current", sim->delt );
@@ -155,7 +155,7 @@ void visit_SetWallTimes( visit_simulation_data *sim )
   ++row;
   VisItUI_setTableValueS("WallTimesVariableTable", row, 0, "Maximum",  0);
   VisItUI_setTableValueD("WallTimesVariableTable", row, 1,
-                         simTime->max_wall_time, 1);
+                         simTime->m_max_wall_time, 1);
   ++row;
 
   visit_SetStripChartValue( sim, "WallTimes/TimeStep",     walltimers->TimeStep().seconds() );

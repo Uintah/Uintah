@@ -678,16 +678,6 @@
       </Box>
       <spacing          spec="OPTIONAL VECTOR" /> <!-- ????????? -->
       <periodic         spec="OPTIONAL VECTOR 'positive'"/>
-      <Stretch          spec="MULTIPLE NO_DATA" 
-                          attribute1="axis OPTIONAL STRING" >
-        <linear         spec="MULTIPLE NO_DATA"
-                          attribute1="to OPTIONAL STRING"
-                          attribute2="fromSpacing OPTIONAL STRING"
-                          attribute3="toSpacing OPTIONAL STRING" />
-        <uniform        spec="MULTIPLE NO_DATA"
-                          attribute1="to OPTIONAL STRING"
-                          attribute2="spacing OPTIONAL STRING" />
-      </Stretch>
     </Level>
   </Grid>
 
