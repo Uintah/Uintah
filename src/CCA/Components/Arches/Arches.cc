@@ -22,7 +22,6 @@
  * IN THE SOFTWARE.
  */
 
-
 //----- Arches.cc ----------------------------------------------
 #include <CCA/Components/Arches/ArchesParticlesHelper.h>
 #include <Core/IO/UintahZlibUtil.h>
