@@ -100,7 +100,7 @@ DSmaCs<TT>::problemSetup( ProblemSpecP& db ){
   }
 
   std::string m_Type_filter_name;
-  db->findBlock("filter_type")->getAttribute("TF",m_Type_filter_name);
+  db->findBlock("Type_of_filter")->getAttribute("TF",m_Type_filter_name);
 
   Type_filter = get_filter_from_string( m_Type_filter_name );
 }

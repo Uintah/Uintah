@@ -96,7 +96,7 @@
       </KMomentum>
       <TurbulenceModels>
        <model label="DS" type="dynamic_smagorinsky">
-       <filter_type TF="Three_points"/>
+       <Type_of_filter TF="Three_points"/>
        <epsilon>3.0</epsilon>
        </model>
        <!--filter_type  TF="avg"/-->

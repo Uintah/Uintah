@@ -122,11 +122,9 @@
       </KMomentum>
       <TurbulenceModels>
        <model label="DS" type="dynamic_smagorinsky">
-       <!--<Smagorinsky_constant_name Cs = "Cs" />-->
-       <filter_type TF="Three_points"/>
+       <Type_of_filter TF="Three_points"/>
        <epsilon>3.0</epsilon>
        </model>
-       <pack_DS/>
       </TurbulenceModels>
       <Initialization>
         <task task_label="x-mom-init" variable_label="x-mom"  type="input_file">
