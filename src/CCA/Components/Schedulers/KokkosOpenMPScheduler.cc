@@ -225,8 +225,6 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
 
 #ifdef UINTAH_ENABLE_KOKKOS
 
-  // Equally sized partitions on -npartitions and the number of threads within the OpenMP instance prior to partitioning
-  // When not multiples of one another, ignore the remainder
   int num_partitions        = Uintah::Parallel::getNumPartitions();
   int threads_per_partition = Uintah::Parallel::getThreadsPerPartition();
 
@@ -234,8 +232,8 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
   auto task_worker = [&] ( int partition_id, int num_partitions ) {
 
     // Each partition created executes this block of code
-    // Tasks need not know which partition they're executed by
-    // A task_worker can run either a serial task or a Kokkos-based task
+    // A task_worker can run either a serial task, e.g. threads_per_partition == 1
+    //   or a Kokkos-based data parallel task, e.g. threads_per_partition > 1
 
     this->runTasks();
 
@@ -243,8 +241,8 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
 
     // Executes task_workers
   Kokkos::OpenMP::partition_master( task_worker
-                                  , num_partitions     // Number of partitions
-                                  , threads_per_partition    // Threads per partition
+                                  , num_partitions
+                                  , threads_per_partition
                                   );
 
 #else //UINTAH_ENABLE_KOKKOS
