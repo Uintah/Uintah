@@ -89,7 +89,7 @@
       </KMomentum>
       <TurbulenceModels>
        <model label="DS" type="dynamic_smagorinsky">
-       <Type_of_filter TF="Three_points"/>
+       <filter type="Three_points"/>
        <!--Type_of_filter TF="avg"/-->
        <!--Type_of_filter TF="Three_points"/-->
        <!--Type_of_filter TF="Simpson"/-->
