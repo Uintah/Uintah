@@ -27,6 +27,7 @@
 
 #include <CCA/Components/Schedulers/MPIScheduler.h>
 
+#include <atomic>
 #include <string>
 #include <vector>
 
@@ -99,10 +100,8 @@ class KokkosOpenMPScheduler : public MPIScheduler  {
     KokkosOpenMPScheduler( KokkosOpenMPScheduler && )                 = delete;
     KokkosOpenMPScheduler& operator=( KokkosOpenMPScheduler && )      = delete;
 
-    void markTaskConsumed( int & numTasksDone, int & currphase, int numPhases, DetailedTask * dtask );
+    void markTaskConsumed( volatile int * numTasksDone, int & currphase, int numPhases, DetailedTask * dtask );
 
-
-    // thread shared data, needs lock protection when accessed
     std::vector<int>             m_phase_tasks;
     std::vector<int>             m_phase_tasks_done;
     std::vector<DetailedTask*>   m_phase_sync_task;
@@ -110,13 +109,13 @@ class KokkosOpenMPScheduler : public MPIScheduler  {
     DetailedTasks              * m_detailed_tasks{nullptr};
 
     QueueAlg m_task_queue_alg{MostMessages};
-    int      m_curr_iteration{0};
-    int      m_num_tasks_done{0};
-    int      m_num_tasks{0};
-    int      m_curr_phase{0};
-    int      m_num_phases{0};
-    bool     m_abort{false};
-    int      m_abort_point{0};
+
+    std::atomic<int>  m_curr_iteration{0};
+    int               m_num_tasks{0};
+    int               m_curr_phase{0};
+    int               m_num_phases{0};
+    int               m_abort_point{0};
+    bool              m_abort{false};
 
 };
 

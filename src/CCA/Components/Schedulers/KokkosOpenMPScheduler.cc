@@ -63,6 +63,8 @@ Dout g_queuelength( "KokkosOMP_QueueLength", false);
 using Mutex = Uintah::MasterLock;
 Mutex g_scheduler_mutex{}; // main scheduler lock for multi-threaded task selection
 
+volatile int  g_num_tasks_done{0};
+
 }
 
 
@@ -186,15 +188,13 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
 
   mpi_info_.reset( 0 );
 
-  m_num_tasks_done = 0;
-  m_abort = false;
-  m_abort_point = 987654;
+  g_num_tasks_done = 0;
 
   if( m_reloc_new_pos_label && m_dws[m_dwmap[Task::OldDW]] != nullptr ) {
     m_dws[m_dwmap[Task::OldDW]]->exchangeParticleQuantities(m_detailed_tasks, getLoadBalancer(), m_reloc_new_pos_label, iteration);
   }
 
-  m_curr_iteration = iteration;
+  m_curr_iteration.store(iteration, std::memory_order_relaxed);
   m_curr_phase = 0;
   m_num_phases = tg->getNumTaskPhases();
   m_phase_tasks.clear();
@@ -340,15 +340,14 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
 //______________________________________________________________________
 //
 void
-KokkosOpenMPScheduler::markTaskConsumed( int          & numTasksDone
-                                       , int          & currphase
-                                       , int            numPhases
-                                       , DetailedTask * dtask
+KokkosOpenMPScheduler::markTaskConsumed( volatile int          * numTasksDone
+                                       ,          int          & currphase
+                                       ,          int            numPhases
+                                       ,          DetailedTask * dtask
                                        )
 {
-
   // Update the count of tasks consumed by the scheduler.
-  numTasksDone++;
+  (*numTasksDone)++;
 
   // Update the count of this phase consumed.
   m_phase_tasks_done[dtask->getTask()->m_phase]++;
@@ -365,7 +364,7 @@ KokkosOpenMPScheduler::markTaskConsumed( int          & numTasksDone
 void
 KokkosOpenMPScheduler::runTasks()
 {
-  while( m_num_tasks_done < m_num_tasks ) {
+  while( g_num_tasks_done < m_num_tasks ) {
 
     DetailedTask* readyTask = nullptr;
     DetailedTask* initTask  = nullptr;
@@ -387,7 +386,7 @@ KokkosOpenMPScheduler::runTasks()
         if ((m_phase_sync_task[m_curr_phase] != nullptr) && (m_phase_tasks_done[m_curr_phase] == m_phase_tasks[m_curr_phase] - 1)) {
           readyTask = m_phase_sync_task[m_curr_phase];
           havework = true;
-          markTaskConsumed(m_num_tasks_done, m_curr_phase, m_num_phases, readyTask);
+          markTaskConsumed(&g_num_tasks_done, m_curr_phase, m_num_phases, readyTask);
           break;
         }
 
@@ -403,7 +402,7 @@ KokkosOpenMPScheduler::runTasks()
           readyTask = m_detailed_tasks->getNextExternalReadyTask();
           if (readyTask != nullptr) {
             havework = true;
-            markTaskConsumed(m_num_tasks_done, m_curr_phase, m_num_phases, readyTask);
+            markTaskConsumed(&g_num_tasks_done, m_curr_phase, m_num_phases, readyTask);
             break;
           }
         }
@@ -446,7 +445,7 @@ KokkosOpenMPScheduler::runTasks()
             break;
           }
         }
-        if (m_num_tasks_done == m_num_tasks) {
+        if (g_num_tasks_done == m_num_tasks) {
           break;
         }
       }  // end while (!havework)
@@ -460,7 +459,7 @@ KokkosOpenMPScheduler::runTasks()
     // ----------------------------------------------------------------------------------
 
     if (initTask != nullptr) {
-      MPIScheduler::initiateTask(initTask, m_abort, m_abort_point, m_curr_iteration);
+      MPIScheduler::initiateTask(initTask, m_abort, m_abort_point, m_curr_iteration.load(std::memory_order_relaxed));
       initTask->markInitiated();
       initTask->checkExternalDepCount();
     }
@@ -472,7 +471,7 @@ KokkosOpenMPScheduler::runTasks()
         MPIScheduler::initiateReduction(readyTask);
       }
       else {
-        MPIScheduler::runTask(readyTask, m_curr_iteration);
+        MPIScheduler::runTask(readyTask, m_curr_iteration.load(std::memory_order_relaxed));
       }
     }
     else {
