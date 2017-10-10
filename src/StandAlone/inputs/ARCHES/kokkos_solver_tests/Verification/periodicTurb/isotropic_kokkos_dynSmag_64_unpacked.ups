@@ -20,9 +20,6 @@
     <outputTimestepInterval>10</outputTimestepInterval>
     <outputInitTimestep/>
     <save label="x-mom"/>
-    <!--save label="x_mms"/>
-    <save label="y_mms"/>
-    <save label="x_mms_source"/-->
     <save label="y-mom"/>
     <save label="z-mom"/>
     <save label="uVel"/>
@@ -35,7 +32,6 @@
     <save label="Cs"/>
     <save label="pressure"/>
     <save label="b_press"/>
-    <!--save label="viscosity_csigma"/-->
     <!--checkpoint cycle="2" interval=".3"/-->
     <compression>gzip</compression>
   </DataArchiver>
@@ -75,49 +71,9 @@
           <grid type="CC"/>
           <value>1.</value>
         </model>
-        <!--model label="gamma" type="constant_property">
-          <grid type="CC"/>
-          <value>1.e-3</value>
-        </model-->
-
-        <!--model label="interpo_u" type="Interpolation_var">
-          <variable label ="uVel" type="FX"/>
-          <new_variable label ="CCuVel" type="FX"/>
-          <interpolation scheme ="central_face"/>
-        </model>
-        <model label="interpo_v" type="Interpolation_var">
-          <variable label ="vVel" type="FY"/>
-          <new_variable label ="CCvVel" type="FY"/>
-          <interpolation scheme ="central_face"/>
-        </model>
-        <model label="interpo_w" type="Interpolation_var">
-          <variable label ="wVel" type="FZ"/>
-          <new_variable label ="CCwVel" type="FZ"/>
-          <interpolation scheme ="central_face"/>
-        </model-->
       </PropertyModelsV2>
-      <!--src_kokkos>
-        <src label="x_mms" type="MMS_mom">
-          <variable type="FX"/>
-          <which_vel>u</which_vel>
-          <coordinates x="ucellX" y="gridY"/>
-        </src>
-        <src label="y_mms" type="MMS_mom">
-          <variable type="FY"/>
-          <which_vel>v</which_vel>
-          <coordinates x="gridX" y="vcellY"/>
-        </src>
-      </src_kokkos-->
       <KMomentum>
-        <!--convection scheme="upwind"/-->
         <convection scheme="central"/>
-        <!--convection scheme="f_central"/-->
-        <!--convection scheme="upwind"/-->
-        <!--src_x label = "x_mms_source"/>
-        <src_y label = "y_mms_source"/-->
-        <!--inviscid/-->
-        <!--src_x label = "x_mms_source_diff"/>
-        <src_y label = "y_mms_source_diff"/-->
         <PressureSolver>
           <Parameters>
             <normalize_pressure>true    </normalize_pressure>
@@ -133,13 +89,12 @@
       </KMomentum>
       <TurbulenceModels>
        <model label="DS" type="dynamic_smagorinsky">
-       <Smagorinsky_constant_name Cs = "Cs" />
-       <Type_of_filter TF="Three_points"/>
+       <filter_type TF="Three_points"/>
+       <!--filter_type TF="avg"/-->
+       <!--filter_type TF="Three_points"/-->
+       <!--filter_type TF="Simpson"/-->
        <epsilon>3.0</epsilon>
        </model>
-       <!--Type_of_filter TF="avg"/-->
-       <!--Type_of_filter TF="Three_points"/-->
-       <!--Type_of_filter TF="Simpson"/-->
       </TurbulenceModels>
       <Initialization>
         <task task_label="x-mom-init" variable_label="x-mom"  type="input_file">

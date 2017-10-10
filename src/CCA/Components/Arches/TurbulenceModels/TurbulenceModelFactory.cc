@@ -135,13 +135,31 @@ TurbulenceModelFactory::build_all_tasks( ProblemSpecP& db )
       db_model->getAttribute("label", name);
       db_model->getAttribute("type", type);
 
-      TaskInterface* tsk = retrieve_task(name);
-      tsk->problemSetup(db_model);
-      tsk->create_local_labels();
+      if (type == "dynamic_smagorinsky" ) {
 
+        name = "DS_task1"; 
+        TaskInterface* tsk = retrieve_task(name);
+        tsk->problemSetup(db_model);
+        tsk->create_local_labels();
+
+        name = "DS_task2"; 
+        TaskInterface* tsk2 = retrieve_task(name);
+        tsk2->problemSetup(db_model);
+        tsk2->create_local_labels();
+
+        name = "DS_task3"; 
+        TaskInterface* tsk3 = retrieve_task(name);
+        tsk3->problemSetup(db_model);
+        tsk3->create_local_labels();
+
+      } else {
+
+        TaskInterface* tsk = retrieve_task(name);
+        tsk->problemSetup(db_model);
+        tsk->create_local_labels();
+      }
     }
   }
-
 }
 
 //--------------------------------------------------------------------------------------------------
