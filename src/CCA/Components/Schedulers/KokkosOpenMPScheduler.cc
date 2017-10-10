@@ -40,17 +40,16 @@
 #include <Core/Util/Timers/Timers.hpp>
 
 #ifdef UINTAH_ENABLE_KOKKOS
-#  include <Kokkos_Core.hpp>
+  #include <Kokkos_Core.hpp>
 #endif //UINTAH_ENABLE_KOKKOS
 
+#include <atomic>
 #include <cstring>
 #include <iomanip>
 
 
-#define USE_PACKING
-
-
 using namespace Uintah;
+
 
 //______________________________________________________________________
 //
