@@ -43,7 +43,7 @@
         <upper>[1.0,1.0,1.0]</upper>
         <resolution>[24,24,24]</resolution>
         <extraCells>[0,0,0]</extraCells>
-        <patches>[1,1,1]</patches>
+        <patches>[2,2,2]</patches>
       </Box>
       <periodic>[1,1,1]</periodic>
     </Level>
@@ -91,13 +91,9 @@
       </SourceV2>
       <KMomentum>
         <convection scheme="central"/>
-        <!--convection scheme="f_central"/-->
-        <!--convection scheme="upwind"/-->
         <src_x label = "x_mms_source"/>
         <src_y label = "y_mms_source"/>
         <inviscid/>
-        <!--src_x label = "x_mms_source_diff"/>
-        <src_y label = "y_mms_source_diff"/-->
         <PressureSolver>
           <Parameters>
             <solver>           cg     </solver>
