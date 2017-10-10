@@ -3586,7 +3586,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           pdispnew[idx] = pdisp[idx] + (pxnew[idx]-px[idx]);
           pTempNew[idx]    = pTemperature[idx] + tempRate*delT;
           pTempPreNew[idx] = pTemperature[idx]; // for thermal stress
-          pmassNew[idx]    = Max(pmass[idx]*(1.    - burnFraction),0.);
+//          pmassNew[idx]    = Max(pmass[idx]*(1.    - burnFraction),0.);
+          pmassNew[idx]    = Max(pmass[idx] - burnFraction*delT, 0.);
           psizeNew[idx]    = (pmassNew[idx]/pmass[idx])*psize[idx];
 
           thermal_energy += pTemperature[idx] * pmass[idx] * Cp;
@@ -3759,7 +3760,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
           // Change F such that the determinant is equal to the average for
           // the cell
-          pFNew[idx]*=cbrt(J_CC[cell_index]/J);
+          if(J_CC[cell_index] > 0.0 && J > 0.0){
+           pFNew[idx]*=cbrt(J_CC[cell_index]/J);
+          }
+
           // Change L such that it is consistent with the F
           pVelGrad[idx]+= Identity*((log(J_CC[cell_index]/J))/ThreedelT);
 

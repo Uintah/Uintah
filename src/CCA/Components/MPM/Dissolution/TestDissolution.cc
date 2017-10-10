@@ -78,27 +78,32 @@ void TestDissolution::outputProblemSpec(ProblemSpecP& ps)
 void TestDissolution::computeMassBurnFraction(const ProcessorGroup*,
                                               const PatchSubset* patches,
                                               const MaterialSubset* matls,
-                                              DataWarehouse*,
+                                              DataWarehouse* old_dw,
                                               DataWarehouse* new_dw)
 {
    int numMatls = d_sharedState->getNumMPMMatls();
    ASSERTEQ(numMatls, matls->size());
    for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
+    Vector dx = patch->dCell();
+    double area = dx.x()*dx.y();
 
     // Retrieve necessary data from DataWarehouse
-    StaticArray<constNCVariable<double> > gmass(numMatls);
+    StaticArray<constNCVariable<double> > gmass(numMatls),gvolume(numMatls);
     StaticArray<constNCVariable<Matrix3> > gStress(numMatls);
-    NCVariable<double>  massBurnFrac;
+    NCVariable<double>  massBurnRate;
+    constNCVariable<double> NC_CCweight;
+    old_dw->get(NC_CCweight,  lb->NC_CCweightLabel,0, patch, Ghost::None,0);
     for(int m=0;m<matls->size();m++){
       int dwi = matls->get(m);
       new_dw->get(gmass[m],   lb->gMassLabel,    dwi, patch, Ghost::None,0);
+      new_dw->get(gvolume[m], lb->gVolumeLabel,  dwi, patch, Ghost::None,0);
       new_dw->get(gStress[m], lb->gStressForSavingLabel,
                                                  dwi, patch, Ghost::None,0);
     }
 
     int dwiMM = matls->get(d_material);
-    new_dw->getModifiable(massBurnFrac, lb->massBurnFractionLabel, dwiMM,patch);
+    new_dw->getModifiable(massBurnRate, lb->massBurnFractionLabel, dwiMM,patch);
 
     int md = d_material;
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
@@ -111,12 +116,16 @@ void TestDissolution::computeMassBurnFraction(const ProcessorGroup*,
         }
       }
 
-       if(gmass[md][c] > 1.e-100 &&
+      double mdVol = gvolume[md][c]*8.0*NC_CCweight[c];
+
+      if(gmass[md][c] > 1.e-100 &&
           gStress[md][c].Trace()/3.0 < d_PressThresh && 
           gmass[md][c] != sumMass){
-          massBurnFrac[c] += fabs(d_rate*(gStress[md][c].Trace()/3.0)/
-                                                                d_PressThresh);
-       }
+          double rho = gmass[md][c]/gvolume[md][c];
+          massBurnRate[c] += d_rate*area*rho;
+//        massBurnRate[c] += fabs(d_rate*(gStress[md][c].Trace()/3.0)/
+//                                                              d_PressThresh);
+      }
     } // nodes
   } // patches
 }
@@ -129,13 +138,21 @@ void TestDissolution::addComputesAndRequiresMassBurnFrac(SchedulerP & sched,
                       this, &TestDissolution::computeMassBurnFraction);
   
   const MaterialSubset* mss = ms->getUnion();
+  MaterialSubset* z_matl = scinew MaterialSubset();
+  z_matl->add(0);
+  z_matl->addReference();
 
   t->requires(Task::NewDW, lb->gMassLabel,           Ghost::None);
+  t->requires(Task::NewDW, lb->gVolumeLabel,         Ghost::None);
   t->requires(Task::NewDW, lb->gMassLabel, d_sharedState->getAllInOneMatl(),
               Task::OutOfDomain, Ghost::None);
   t->requires(Task::NewDW, lb->gStressForSavingLabel,Ghost::None);
+  t->requires(Task::OldDW, lb->NC_CCweightLabel,z_matl,  Ghost::None);
 
   t->modifies(lb->massBurnFractionLabel, mss);
 
   sched->addTask(t, patches, ms);
+
+  if (z_matl->removeReference())
+    delete z_matl;
 }
