@@ -271,11 +271,6 @@ MMS_scalar::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
         f_mms(i,j,k)   += f_m;
       }
 
-      if ((i == 10) && (j==12) && (k==12)){
-        std::cout << "time_sub  " << time_d   << std::endl; // OD
-        std::cout << " Computed Source  " <<  s_t_mms(i,j,k) << std::endl; // OD
-      }
-
 
     });
     break;
