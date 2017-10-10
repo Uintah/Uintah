@@ -48,10 +48,10 @@ def main(data = 'data_sine/', var_name ='cc_phi_central', var_mms = 'phi_mms', N
         datname.append(data + var_name + '-t'+str(i)+'.txt')
         x0, f0, dx0 = read_file(datname[i])
 
-        plt.figure()
-        plt.plot(x0,f0,'o')
-        plt.plot(xe,fm,'*r')
-        plt.show()    
+        #plt.figure()
+        #plt.plot(x0,f0,'o')
+        #plt.plot(xe,fm,'*r')
+        #plt.show()    
 
         x.append(x0)
         f.append(f0)

@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 def read_file(name_file):
     f = np.loadtxt(name_file)
     Nx = int((np.shape(f)[0])**.5)
-    print 'Nx', Nx
     f = np.reshape(f[:,3],(Nx,Nx),'F') # take the last column of phi and reshape
     xf = []
     L = 1.
