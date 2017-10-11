@@ -823,26 +823,36 @@ void BCFunctors<T>::get_bc_dependencies( std::vector<std::string> varnames, WBCH
       const BndCondSpec* spec = i_bc->second.find(*i_eqn);
 
       if ( spec == NULL ){
-        std::stringstream msg;
-        msg << "Error: Cannot find a boundary condition for variable: " << *i_eqn << " on face: " << facename << std::endl;
-        throw InvalidValue(msg.str(), __FILE__, __LINE__);
-      }
 
-      std::shared_ptr<BaseFunctor> bc_fun = NULL;
-      if ( spec->bcType == CUSTOM ){
-        //CUSTOM BCS (i.e., NOT Dirichlet or Neumann)
-        std::string key_name = pair_face_var_names( facename, *i_eqn );
-        bc_fun = m_bcFunStorage[key_name];
-      }
+        // Only throwing an error for edge BCs.
+        // Interior BC's allowed to be missing
+        if ( i_bc->second.edge_type == EDGE ){
+          std::stringstream msg;
+          msg << "Error: Cannot find a boundary condition for variable: " << *i_eqn << " on face: " << facename << std::endl;
+          throw InvalidValue(msg.str(), __FILE__, __LINE__);
+        }
+        
+      } else {
 
-      if ( bc_fun != NULL ){
-        bc_fun->add_dep( dep );
+        std::shared_ptr<BaseFunctor> bc_fun = NULL;
+        if ( spec->bcType == CUSTOM ){
+          //CUSTOM BCS (i.e., NOT Dirichlet or Neumann)
+          std::string key_name = pair_face_var_names( facename, *i_eqn );
+          bc_fun = m_bcFunStorage[key_name];
+        }
+
+        if ( bc_fun != NULL ){
+          bc_fun->add_dep( dep );
+        }
+
       }
     }
   }
 }
 
 //--------------------------------------------------------------------------------------------------
+
+// This function actually applies the BC to the variable(s)
 template <typename T>
 void BCFunctors<T>::apply_bc( std::vector<std::string> varnames, WBCHelper* bc_helper,
                ArchesTaskInfoManager* tsk_info, const Patch* patch ){
@@ -860,34 +870,39 @@ void BCFunctors<T>::apply_bc( std::vector<std::string> varnames, WBCHelper* bc_h
       const BndCondSpec* spec = i_bc->second.find(*i_eqn);
 
       if ( spec == NULL ){
-        std::stringstream msg;
-        msg << "Error: Cannot find a boundary condition for variable: " << *i_eqn << " on face: " << facename << std::endl;
-        throw InvalidValue(msg.str(), __FILE__, __LINE__);
-      }
 
-      std::shared_ptr<BaseFunctor> bc_fun = NULL;
-      if ( spec->bcType == DIRICHLET ){
-        bc_fun = m_bcFunStorage[func_enum_str(DIRICHLET_FUN)];
-      } else if ( spec->bcType == NEUMANN ){
-        bc_fun = m_bcFunStorage[func_enum_str(NEUMANN_FUN)];
+        // Only throwing an error for edge BCs.
+        // Interior BC's allowed to be missing
+        if ( i_bc->second.edge_type == EDGE ){
+          std::stringstream msg;
+          msg << "Error: Cannot find a boundary condition for variable: " << *i_eqn << " on face: " << facename << std::endl;
+          throw InvalidValue(msg.str(), __FILE__, __LINE__);
+        }
+
       } else {
-        //CUSTOM BCS
-        std::string key_name = pair_face_var_names( facename, *i_eqn );
-        bc_fun = m_bcFunStorage[key_name];
+
+        std::shared_ptr<BaseFunctor> bc_fun = NULL;
+        if ( spec->bcType == DIRICHLET ){
+          bc_fun = m_bcFunStorage[func_enum_str(DIRICHLET_FUN)];
+        } else if ( spec->bcType == NEUMANN ){
+          bc_fun = m_bcFunStorage[func_enum_str(NEUMANN_FUN)];
+        } else {
+          //CUSTOM BCS
+          std::string key_name = pair_face_var_names( facename, *i_eqn );
+          bc_fun = m_bcFunStorage[key_name];
+        }
+
+        const BndSpec bndSpec = i_bc->second;
+
+        // Actually applying the boundary condition here:
+        if ( bc_fun != NULL ){
+          bc_fun->eval_bc( *i_eqn, patch, tsk_info, &bndSpec, cell_iter );
+        } else {
+          throw InvalidValue(
+            "Error: Boundary condition implementation not found for: "+*i_eqn, __FILE__, __LINE__);
+        }
       }
-
-      const BndSpec bndSpec = i_bc->second;
-
-      // Actually applying the boundary condition here:
-      if ( bc_fun != NULL ){
-        bc_fun->eval_bc( *i_eqn, patch, tsk_info, &bndSpec, cell_iter );
-      } else {
-        throw InvalidValue(
-          "Error: Boundary condition not found for: "+*i_eqn, __FILE__, __LINE__);
-      }
-
     }
-
   }
 }
 

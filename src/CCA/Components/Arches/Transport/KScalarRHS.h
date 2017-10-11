@@ -402,7 +402,7 @@ private:
 
   }
 
-  //-------------------------------------------------------------------------------
+  //------------------------------------------------------------------------------------------------
   template <typename T, typename FluxXT, typename FluxYT, typename FluxZT> void
   KScalarRHS<T, FluxXT, FluxYT, FluxZT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 

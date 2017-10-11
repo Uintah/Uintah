@@ -385,8 +385,7 @@ void Arches::assign_unique_boundary_names( Uintah::ProblemSpecP bcProbSpec )
     if( faceName=="none" || faceName=="" ) {
       faceName ="Face_" + strFaceID;
       faceSpec->setAttribute("name",faceName);
-    }
-    else{
+    } else{
       if( faceNameSet.find(faceName) != faceNameSet.end() ) {
         bool fndInc = false;
         int j = 1;
@@ -405,5 +404,39 @@ void Arches::assign_unique_boundary_names( Uintah::ProblemSpecP bcProbSpec )
       }
     }
     faceNameSet.insert(faceName);
+  }
+  i=0;
+  std::set<std::string> interior_faceNameSet;
+  for( Uintah::ProblemSpecP faceSpec =
+    bcProbSpec->findBlock("InteriorFace"); faceSpec != nullptr;
+    faceSpec=faceSpec->findNextBlock("InteriorFace"), ++i ) {
+
+    std::string faceName = "none";
+    faceSpec->getAttribute("name",faceName);
+
+    strFaceID = Arches::number_to_string(i);
+
+    if( faceName=="none" || faceName=="" ) {
+      faceName ="InteriorFace_" + strFaceID;
+      faceSpec->setAttribute("name",faceName);
+    } else{
+      if( faceNameSet.find(faceName) != faceNameSet.end() ) {
+        bool fndInc = false;
+        int j = 1;
+        while( !fndInc ) {
+          if( faceNameSet.find( faceName + "_" + Arches::number_to_string(j) ) != faceNameSet.end())
+            j++;
+          else
+            fndInc = true;
+        }
+        // rename this face
+        std::cout << "WARNING: I found a duplicate face label " << faceName;
+        faceName = faceName + "_" + Arches::number_to_string(j);
+        std::cout << " in your Boundary condition specification. I will rename it to "
+          << faceName << std::endl;
+        faceSpec->replaceAttributeValue("name", faceName);
+      }
+    }
+    interior_faceNameSet.insert(faceName);
   }
 }
