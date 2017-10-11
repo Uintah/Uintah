@@ -652,7 +652,8 @@ void WBCHelper::parse_boundary_conditions(const int ilvl)
                     DBGBC << " functor name = " << functorName << std::endl;
                   } else if ( bndCondBase->getValueType() == Uintah::BoundCondBase::VECTOR_TYPE ){
 
-                    // do nothing
+                    // do nothing currently... need to evaluate?
+                    throw Uintah::ProblemSetupException("Error: Vector Type for BCs not recognized.", __FILE__, __LINE__);
 
                   } else {
                     std::ostringstream msg;
@@ -662,44 +663,6 @@ void WBCHelper::parse_boundary_conditions(const int ilvl)
                   }
                 }
 
-                // switch ( bndCondBase->getValueType() ) {
-                //
-                //   case Uintah::BoundCondBase::DOUBLE_TYPE: {
-                //     const Uintah::BoundCond<double>* const new_bc = dynamic_cast<const Uintah::BoundCond<double>*>(bndCondBase);
-                //     doubleVal = new_bc->getValue();
-                //     bcValType = DOUBLE_TYPE;
-                //     break;
-                //   }
-                //
-                //   case Uintah::BoundCondBase::STRING_TYPE: {
-                //
-                //     const Uintah::BoundCond<std::string>* const new_bc = dynamic_cast<const Uintah::BoundCond<std::string>*>(bndCondBase);
-                //     functorName = new_bc->getValue();
-                //     bcValType = FUNCTOR_TYPE;
-                //
-                //     DBGBC << " functor name = " << functorName << std::endl;
-                //
-                //     break;
-                //   }
-                //   case Uintah::BoundCondBase::VECTOR_TYPE: {
-                //
-                //     //do nothing
-                //     break;
-                //   }
-                //   case Uintah::BoundCondBase::INT_TYPE: {
-                //     // do nothing here... this is added for RMCRT support
-                //     break;
-                //   }
-                //   default:
-                //   {
-                //     std::ostringstream msg;
-                //     msg << "ERROR: It looks like you have specified an unsupported datatype value for boundary " << bndName << ". "
-                //         << "Supported datatypes are: double, vector, and string (i.e. functor name)." << std::endl;
-                //     throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-                //   }
-                //     break;
-                // }
-
                 const BndCondSpec bndCondSpec = { varName, functorName, doubleVal, atomBCTypeEnum,
                                                   bcValType };
 
@@ -708,7 +671,6 @@ void WBCHelper::parse_boundary_conditions(const int ilvl)
               }
             } // boundary child loop (note, a boundary child is what Wasatch thinks of as a boundary condition
           } // boundary faces loop
-
 
           // INTERIOR BOUNDARY CONDITIONS
           if (patch->hasInteriorBoundaryFaces()) {

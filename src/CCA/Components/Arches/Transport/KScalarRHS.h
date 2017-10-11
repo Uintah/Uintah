@@ -358,8 +358,8 @@ private:
       z_flux.initialize(0.0);
 
     } //equation loop
-    
-    m_time += tsk_info->get_dt(); 
+
+    m_time += tsk_info->get_dt();
   }
 
   //------------------------------------------------------------------------------------------------
@@ -514,8 +514,11 @@ private:
 
   }
 
+//--------------------------------------------------------------------------------------------------
   template <typename T, typename FluxXT, typename FluxYT, typename FluxZT> void
-  KScalarRHS<T, FluxXT, FluxYT, FluxZT>::register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){
+  KScalarRHS<T, FluxXT, FluxYT, FluxZT>::register_compute_bcs(
+    std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
+    const int time_substep , const bool packed_tasks){
 
     for ( auto i = _eqn_names.begin(); i != _eqn_names.end(); i++ ){
       register_variable( *i, ArchesFieldContainer::MODIFIES, variable_registry );
@@ -530,6 +533,7 @@ private:
 
   }
 
+//--------------------------------------------------------------------------------------------------
   template <typename T, typename FluxXT, typename FluxYT, typename FluxZT> void
   KScalarRHS<T, FluxXT, FluxYT, FluxZT>::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     tsk_info->set_time(m_time);
