@@ -2696,7 +2696,7 @@ void Ray::coarsen_Q ( const ProcessorGroup*,
       //  Coarsen along the edge of the computational domain
       if( d_coarsenExtraCells && coarsePatch->hasBoundaryFaces() ){
 
-        for(int i=0;i<finePatches.size();i++){
+        for(size_t i=0;i<finePatches.size();i++){
           const Patch* finePatch = finePatches[i];
 
           if( finePatch->hasBoundaryFaces() ){

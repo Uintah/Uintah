@@ -858,7 +858,7 @@ void AMRICE::iteratorTest(const Patch* finePatch,
   IntVector hi(0,0,0);
   
   
-  for(int i=0;i<coarsePatches.size();i++){
+  for(size_t i=0;i<coarsePatches.size();i++){
     const Patch* coarsePatch = coarsePatches[i];
     // iterator should hit the cells over the intersection of the fine and coarse patches
 
@@ -1208,7 +1208,7 @@ void AMRICE::reflux_computeCorrectionFluxes(const ProcessorGroup*,
       
       
       
-      for(int i=0; i < finePatches.size();i++){  
+      for(size_t i=0; i < finePatches.size();i++){  
         const Patch* finePatch = finePatches[i]; 
         
         //__________________________________
@@ -1500,7 +1500,7 @@ void AMRICE::reflux_applyCorrectionFluxes(const ProcessorGroup*,
       Level::selectType finePatches;
       coarsePatch->getOtherLevelPatches(1, finePatches, 1); // get with a ghost cell to make sure you get all patches 
       
-      for(int i=0; i < finePatches.size();i++){  
+      for(size_t i=0; i < finePatches.size();i++){  
         const Patch* finePatch = finePatches[i];        
         //cout_doing << d_myworld->myrank() << "  coarsePatch " << coarsePatch->getID() <<" finepatch " << finePatch->getID()<< endl;
         //__________________________________
@@ -1574,7 +1574,7 @@ void AMRICE::reflux_BP_zero_CFI_cells(const ProcessorGroup*,
              << " Doing reflux_BP_zero_CFI_cells \t\t\t AMRICE L-"
              <<fineLevel->getIndex()<< "->"<< coarseLevel->getIndex()<<endl;
              
-    for(int p=0;p<finePatches.size();p++){  
+    for(size_t p=0;p<finePatches.size();p++){  
       const Patch* finePatch = finePatches[p];
     
 
@@ -1616,7 +1616,7 @@ void AMRICE::reflux_BP_count_CFI_cells(const ProcessorGroup*,
              << " Doing reflux_BP_count_CFI_cells \t\t\t AMRICE L-"
              <<fineLevel->getIndex()<< "->"<< coarseLevel->getIndex()<<endl;
              
-    for(int p=0;p<finePatches.size();p++){  
+    for(size_t p=0;p<finePatches.size();p++){  
       const Patch* finePatch = finePatches[p];
     
 
@@ -1678,7 +1678,7 @@ void AMRICE::reflux_BP_check_CFI_cells(const ProcessorGroup*,
              << " Doing reflux_BP_check_CFI_cells \t\t\t AMRICE L-"
              <<fineLevel->getIndex()<< "->"<< coarseLevel->getIndex() << endl;
              
-    for(int p=0;p<finePatches.size();p++){  
+    for(size_t p=0;p<finePatches.size();p++){  
       const Patch* finePatch = finePatches[p]; 
          
       if(finePatch->hasCoarseFaces() ){
