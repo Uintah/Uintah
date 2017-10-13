@@ -37,7 +37,6 @@
 #include <Core/Labels/MPMICELabel.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Parallel/Parallel.h>
-#include <Core/Containers/StaticArray.h>
 
 #include <string>
 #include <iostream>
@@ -138,9 +137,9 @@ void DDT1Criteria::switchTest(const ProcessorGroup* group,
       // mpm matls
       constNCVariable<double> NC_CCweight;
       constNCVariable<double> gTempAllMatls;
-      StaticArray<constNCVariable<double> > gmass(numMPMMatls);
-      StaticArray<CCVariable<double> >      temp_CC_mpm(numAllMatls);
-      StaticArray<constCCVariable<double> > vol_frac_mpm(numAllMatls);
+      std::vector<constNCVariable<double> > gmass(numMPMMatls);
+      std::vector<CCVariable<double> >      temp_CC_mpm(numAllMatls);
+      std::vector<constCCVariable<double> > vol_frac_mpm(numAllMatls);
 
       Ghost::GhostType  gac = Ghost::AroundCells;
       Ghost::GhostType  gan = Ghost::AroundNodes;

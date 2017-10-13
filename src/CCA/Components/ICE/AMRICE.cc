@@ -537,8 +537,8 @@ void AMRICE::setBC_FineLevel(const ProcessorGroup*,
       
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
-      StaticArray<CCVariable<double> > sp_vol_CC(numICEMatls);
-      StaticArray<constCCVariable<double> > sp_vol_const(numICEMatls);
+      std::vector<CCVariable<double> > sp_vol_CC(numICEMatls);
+      std::vector<constCCVariable<double> > sp_vol_const(numICEMatls);
       
       
       for (int m = 0; m < numICEMatls; m++) {
@@ -650,7 +650,7 @@ void AMRICE::setBC_FineLevel(const ProcessorGroup*,
       customBC_localVars* notUsed = scinew customBC_localVars();
       
       CCVariable<double> press_CC;
-      StaticArray<CCVariable<double> > placeHolder(0);
+      std::vector<CCVariable<double> > placeHolder(0);
       
       fine_new_dw->getModifiable(press_CC, lb->press_CCLabel, 0, patch);
       
@@ -1872,10 +1872,10 @@ AMRICE::errorEstimate(const ProcessorGroup*,
     //__________________________________
     //  initialize mag_grad for all matls
     int numAllMatls = d_sharedState->getNumMatls();
-    StaticArray<CCVariable<double> > mag_grad_rho_CC(numAllMatls);
-    StaticArray<CCVariable<double> > mag_grad_temp_CC(numAllMatls);
-    StaticArray<CCVariable<double> > mag_grad_vol_frac_CC(numAllMatls);
-    StaticArray<CCVariable<double> > mag_div_vel_CC(numAllMatls);
+    std::vector<CCVariable<double> > mag_grad_rho_CC(numAllMatls);
+    std::vector<CCVariable<double> > mag_grad_temp_CC(numAllMatls);
+    std::vector<CCVariable<double> > mag_grad_vol_frac_CC(numAllMatls);
+    std::vector<CCVariable<double> > mag_div_vel_CC(numAllMatls);
           
     for(int m=0;m < numAllMatls;m++){
       Material* matl = d_sharedState->getMaterial( m );

@@ -54,7 +54,6 @@ GENERAL INFORMATION
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/VarLabel.h>
-#include <Core/Containers/StaticArray.h>
 #include <Core/Util/Timers/Timers.hpp>
 
 
@@ -279,19 +278,19 @@ private:
       template<class TYPE> 
       void computeScatteringIntensities(int direction,
                                         constCCVariable<double> &scatkt,
-                                        StaticArray< TYPE > &Intensities,
+                                        std::vector< TYPE > &Intensities,
                                         CCVariable<double> &scatIntensitySource,
                                         constCCVariable<double> &asymmetryFactor,
                                         const Patch* patch);
 
 
       void computeIntensitySource( const Patch* patch,
-				   StaticArray <constCCVariable<double> >&abskp,
-				   StaticArray <constCCVariable<double> > &pTemp,
-				   StaticArray <constCCVariable<double> > &abskg,
+				   std::vector <constCCVariable<double> >&abskp,
+				   std::vector <constCCVariable<double> > &pTemp,
+				   std::vector <constCCVariable<double> > &abskg,
 				   constCCVariable<double>  &gTemp,
-				   StaticArray <CCVariable<double> >&b_sourceArray,
-				   StaticArray <constCCVariable<double> >&spectral_weights);
+				   std::vector <CCVariable<double> >&b_sourceArray,
+				   std::vector <constCCVariable<double> >&spectral_weights);
 
       std::vector<const VarLabel*>  _radIntSource;
       std::vector<std::string> _radIntSource_names;

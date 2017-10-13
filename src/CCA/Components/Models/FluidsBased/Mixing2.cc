@@ -39,7 +39,7 @@
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <CCA/Components/ICE/ICEMaterial.h>
-#include <Core/Containers/StaticArray.h>
+#include <Core/Containers/std::vector.h>
 #include <Core/Math/MiscMath.h>
 #include <iostream>
 
@@ -375,8 +375,8 @@ void Mixing2::computeModelSources(const ProcessorGroup*,
       double dt = delT;
 
       int numSpecies = streams.size();
-      StaticArray<constCCVariable<double> > mf(numSpecies);
-      StaticArray<CCVariable<double> > mfsource(numSpecies);
+      std::vector<constCCVariable<double> > mf(numSpecies);
+      std::vector<CCVariable<double> > mfsource(numSpecies);
       int index = 0;
       double* tmp_mf =scinew double[numSpecies];
       double* new_mf =scinew double[numSpecies];

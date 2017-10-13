@@ -644,7 +644,7 @@ void debugging_Li(const IntVector c,
               flows", James C. Sutherland, Chistopher A. Kenndey
               Journal of Computational Physics, 191, 2003, pp. 502-524
 ____________________________________________________________________*/
-inline void Li(StaticArray<CCVariable<Vector> >& L,
+inline void Li(std::vector<CCVariable<Vector> >& L,
                const IntVector dir,
                const IntVector& c,
                const Patch::FaceType face,
@@ -780,7 +780,7 @@ inline void Li(StaticArray<CCVariable<Vector> >& L,
  Purpose~  compute Li's at one cell inward using upwind first-order 
            differenceing scheme
 ____________________________________________________________________*/
-void computeLi(StaticArray<CCVariable<Vector> >& L,
+void computeLi(std::vector<CCVariable<Vector> >& L,
                const CCVariable<double>& rho,              
                const CCVariable<double>& press,                   
                const CCVariable<Vector>& vel,                  
@@ -949,7 +949,7 @@ int FaceDensity_LODI(const Patch* patch,
     throw InternalError("FaceDensityLODI: Lodi_localVars = null", __FILE__, __LINE__);
   }  
   
-  StaticArray<CCVariable<Vector> >& L = lv->Li;
+  std::vector<CCVariable<Vector> >& L = lv->Li;
   constCCVariable<double>& speedSound = lv->speedSound;
   constCCVariable<Vector>& vel_CC     = lv->vel_CC;  
   
@@ -1059,7 +1059,7 @@ int FaceVel_LODI(const Patch* patch,
   }
      
   // shortcuts       
-  StaticArray<CCVariable<Vector> >& L = lv->Li;      
+  std::vector<CCVariable<Vector> >& L = lv->Li;      
   constCCVariable<double>& rho_CC     = lv->rho_CC;
   constCCVariable<double>& speedSound = lv->speedSound;
   
@@ -1176,7 +1176,7 @@ int FaceTemp_LODI(const Patch* patch,
     throw InternalError("FaceTempLODI: Lodi_localVars = null", __FILE__, __LINE__);
   } 
   // shortcuts  
-  StaticArray<CCVariable<Vector> >& L = lv->Li;
+  std::vector<CCVariable<Vector> >& L = lv->Li;
   constCCVariable<double>& speedSound= lv->speedSound;
   constCCVariable<double>& gamma     = lv->gamma;
   constCCVariable<double>& rho_CC    = lv->rho_CC;
@@ -1276,7 +1276,7 @@ int FaceTemp_LODI(const Patch* patch,
 ______________________________________________________________________  */
 int FacePress_LODI(const Patch* patch,
                     CCVariable<double>& press_CC,
-                    StaticArray<CCVariable<double> >& rho_micro,
+                    std::vector<CCVariable<double> >& rho_micro,
                     SimulationStateP& sharedState, 
                     Patch::FaceType face,
                     Lodi_localVars* lv)
@@ -1287,7 +1287,7 @@ int FacePress_LODI(const Patch* patch,
     throw InternalError("FacePress_LODI: Lodi_localVars = null", __FILE__, __LINE__);
   }
 
-  StaticArray<CCVariable<Vector> >& L = lv->Li;
+  std::vector<CCVariable<Vector> >& L = lv->Li;
  
   
   Vector DX =patch->dCell();

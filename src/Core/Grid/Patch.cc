@@ -34,7 +34,6 @@
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
 #include <Core/Grid/BoundaryConditions/BoundCondFactory.h>
-#include <Core/Containers/StaticArray.h>
 #include <Core/Math/MiscMath.h>
 
 #include <atomic>

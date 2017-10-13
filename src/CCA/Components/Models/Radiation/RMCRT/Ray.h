@@ -28,7 +28,6 @@
 #include <CCA/Components/Models/Radiation/RMCRT/RMCRTCommon.h>
 #include <CCA/Components/Models/Radiation/RMCRT/Radiometer.h>
 #include <CCA/Ports/Scheduler.h>
-#include <Core/Containers/StaticArray.h>
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
@@ -299,9 +298,9 @@ namespace Uintah{
                            const IntVector& fineLevel_ROI_Hi,
                            std::vector<IntVector>& regionLo,
                            std::vector<IntVector>& regionHi,
-                           StaticArray< constCCVariable< T > >& sigmaT4Pi,
-                           StaticArray< constCCVariable< T > >& abskg,
-                           StaticArray< constCCVariable< int > >& cellType,
+                           std::vector< constCCVariable< T > >& sigmaT4Pi,
+                           std::vector< constCCVariable< T > >& abskg,
+                           std::vector< constCCVariable< int > >& cellType,
                            unsigned long int& size,
                            double& sumI,
                            MTRand& mTwister);

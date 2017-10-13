@@ -801,8 +801,8 @@ void ICE::updatePressure(const ProcessorGroup*,
     CCVariable<double> sum_imp_delP;
     constCCVariable<double> press_equil;
     constCCVariable<double> sum_imp_delP_old;
-    StaticArray<CCVariable<double> > placeHolder(0);
-    StaticArray<constCCVariable<double> > sp_vol_CC(numMatls);
+    std::vector<CCVariable<double> > placeHolder(0);
+    std::vector<constCCVariable<double> > sp_vol_CC(numMatls);
          
     old_dw->get(sum_imp_delP_old,        lb->sum_imp_delPLabel,   0,patch,gn,0);
     parent_new_dw->get(press_equil,      lb->press_equil_CCLabel, 0,patch,gn,0);      

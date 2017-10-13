@@ -48,7 +48,6 @@
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
-#include <Core/Containers/StaticArray.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
 
 std::vector<std::string> Uintah::ParticlesHelper::needsRelocation_;
@@ -981,8 +980,8 @@ namespace Uintah {
                 const unsigned int nVars = needsBC_.size();
                 std::vector< Uintah::VarLabel* > needsBCLabels; // vector of varlabels that need bcs
 
-                Uintah::StaticArray< ParticleVariable<double> > allVars(nVars);
-                Uintah::StaticArray< ParticleVariable<double> > tmpVars(nVars);
+		std::vector< ParticleVariable<double> > allVars(nVars);
+		std::vector< ParticleVariable<double> > tmpVars(nVars);
                 for( size_t i=0; i<needsBC_.size(); ++i ){
                   needsBCLabels.push_back( VarLabel::find(needsBC_[i]) );
                   new_dw->getModifiable( allVars[(unsigned)i], needsBCLabels[i], pset );

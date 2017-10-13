@@ -42,7 +42,6 @@
 
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/DebugStream.h>
-#include <Core/Containers/StaticArray.h>
 
 
 static Uintah::DebugStream BC_dbg(  "ICE_BC_DBG", false);
@@ -75,8 +74,8 @@ namespace Uintah {
   //__________________________________
   //  P R E S S U R E        
    void setBC(CCVariable<double>& press_CC,          
-                      StaticArray<CCVariable<double> >& rho_micro,
-                      StaticArray<constCCVariable<double> >& sp_vol,
+                      std::vector<CCVariable<double> >& rho_micro,
+                      std::vector<constCCVariable<double> >& sp_vol,
                       const int surroundingMatl_indx,
                       const std::string& whichVar, 
                       const std::string& kind, 
@@ -88,8 +87,8 @@ namespace Uintah {
                       customBC_localVars* localVars);
              
    void setBC(CCVariable<double>& press_CC,          
-                      StaticArray<CCVariable<double> >& rho_micro,
-                      StaticArray<constCCVariable<double> >& sp_vol,
+                      std::vector<CCVariable<double> >& rho_micro,
+                      std::vector<constCCVariable<double> >& sp_vol,
                       const int surroundingMatl_indx,
                       const std::string& whichVar, 
                       const std::string& kind,       // stub function 

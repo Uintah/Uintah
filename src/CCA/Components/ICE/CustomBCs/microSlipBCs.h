@@ -32,7 +32,6 @@
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
-#include <Core/Containers/StaticArray.h>
 #include <typeinfo>
 
 namespace Uintah {

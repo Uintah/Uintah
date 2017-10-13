@@ -44,7 +44,6 @@ made.
 #include <Core/Labels/MPMLabel.h>
 #include <Core/Math/Matrix3.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Containers/StaticArray.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Parallel/Parallel.h>
@@ -307,7 +306,7 @@ void Kayenta::initializeCMData(const Patch* patch,
   // This method is defined in the ConstitutiveModel base class.
   initSharedDataForExplicit(patch, matl, new_dw);
   ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
-  StaticArray<ParticleVariable<double> > ISVs(d_NINSV+1);
+  std::vector<ParticleVariable<double> > ISVs(d_NINSV+1);
 //  proc0cout << "In initializeCMData" << endl;
   for(int i=0;i<d_NINSV;i++){
     new_dw->allocateAndPut(ISVs[i],ISVLabels[i], pset);
@@ -451,7 +450,7 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
     old_dw->get(peakI1IDist,         peakI1IDistLabel,             pset);
     old_dw->get(pParticleID,         lb->pParticleIDLabel,         pset);
-    StaticArray<constParticleVariable<double> > ISVs(d_NINSV+1);
+    std::vector<constParticleVariable<double> > ISVs(d_NINSV+1);
     for(int i=0;i<d_NINSV;i++){
       old_dw->get(ISVs[i],           ISVLabels[i],                 pset);
     }
@@ -466,7 +465,7 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
     new_dw->get(pvolume_new,     lb->pVolumeLabel_preReloc,                  pset);
     new_dw->get(velGrad,         lb->pVelGradLabel_preReloc,                 pset);
     peakI1IDist_new.copyData(peakI1IDist);
-    StaticArray<ParticleVariable<double> > ISVs_new(d_NINSV+1);
+    std::vector<ParticleVariable<double> > ISVs_new(d_NINSV+1);
     for(int i=0;i<d_NINSV;i++){
       new_dw->allocateAndPut(ISVs_new[i],ISVLabels_preReloc[i], pset);
     }
@@ -617,8 +616,8 @@ void Kayenta::carryForward(const PatchSubset* patches,
     // This method is defined in the ConstitutiveModel base class.
     carryForwardSharedData(pset, old_dw, new_dw, matl);
     // Carry forward the data local to this constitutive model
-    StaticArray<constParticleVariable<double> > ISVs(d_NINSV+1);
-    StaticArray<ParticleVariable<double> > ISVs_new(d_NINSV+1);
+    std::vector<constParticleVariable<double> > ISVs(d_NINSV+1);
+    std::vector<ParticleVariable<double> > ISVs_new(d_NINSV+1);
 
     for(int i=0;i<d_NINSV;i++){
       old_dw->get(ISVs[i],ISVLabels[i], pset);

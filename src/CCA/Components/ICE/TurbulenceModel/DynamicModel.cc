@@ -140,8 +140,8 @@ template void DynamicModel::applyFilter< CCVariable<double>, double >(      cons
   Purpose~ Calculate the filtered values
   -----------------------------------------------------------------------  */
 void DynamicModel::applyFilter(const Patch* patch, 
-                               StaticArray<CCVariable<double> >& var,
-                               StaticArray<CCVariable<double> >& var_hat)
+                               std::vector<CCVariable<double> >& var,
+                               std::vector<CCVariable<double> >& var_hat)
 { 
   int NGC =1;  // number of ghostCells
   for(CellIterator iter = patch->getCellIterator(NGC); !iter.done(); iter++) { 
@@ -187,8 +187,8 @@ void DynamicModel::computeSmagCoeff(DataWarehouse* new_dw,
                                     CCVariable<double>& meanSIJ)
 {
   double Cs, meanSIJ_hat;
-  StaticArray<CCVariable<double> > SIJ(6), SIJ_hat(6), LIJ(6), MIJ(6); 
-  StaticArray<CCVariable<double> > alpha(6), beta(6), beta_hat(6);
+  std::vector<CCVariable<double> > SIJ(6), SIJ_hat(6), LIJ(6), MIJ(6); 
+  std::vector<CCVariable<double> > alpha(6), beta(6), beta_hat(6);
   CCVariable<Vector> vel_CC_hat;
   CCVariable<double> vel_prod, vel_prod_hat, LM, MM; 
 

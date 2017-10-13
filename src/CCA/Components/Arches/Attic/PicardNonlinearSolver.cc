@@ -25,7 +25,6 @@
 //----- PicardNonlinearSolver.cc ----------------------------------------------
 
 #include <CCA/Components/Arches/PicardNonlinearSolver.h>
-#include <Core/Containers/StaticArray.h>
 #include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>

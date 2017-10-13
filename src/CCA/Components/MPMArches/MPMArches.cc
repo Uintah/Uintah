@@ -27,7 +27,6 @@
 #include <cstring>
 #include <fstream>
 #include <CCA/Components/MPMArches/MPMArches.h>
-#include <Core/Containers/StaticArray.h>
 #include <Core/Geometry/Point.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
@@ -355,7 +354,7 @@ void MPMArches::initializeKStability(const ProcessorGroup*,
     int matlindex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
     int numMPMMatls = d_sharedState->getNumMPMMatls();
-    StaticArray<CCVariable<double> > solid_fraction_cc(numMPMMatls);
+    std::vector<CCVariable<double> > solid_fraction_cc(numMPMMatls);
 
     for (int m = 0; m < numMPMMatls; m++) {
 
@@ -1629,11 +1628,11 @@ void MPMArches::computeVoidFracMPM(const ProcessorGroup*,
     int numMPMMatls = d_sharedState->getNumMPMMatls();
     int zeroGhostCells = 0;
 
-    StaticArray<constCCVariable<double> > mat_vol(numMPMMatls);
-    StaticArray<constCCVariable<double> > oldSolidFrac(numMPMMatls);
+    std::vector<constCCVariable<double> > mat_vol(numMPMMatls);
+    std::vector<constCCVariable<double> > oldSolidFrac(numMPMMatls);
     constCCVariable<double> oldVoidFrac;
 
-    StaticArray<CCVariable<double> > solid_fraction_cc(numMPMMatls);
+    std::vector<CCVariable<double> > solid_fraction_cc(numMPMMatls);
     CCVariable<double> void_frac;
     CCVariable<double> solid_sum;
 
@@ -2001,8 +2000,8 @@ void MPMArches::computeVoidFrac(const ProcessorGroup*,
     int archIndex = 0;
     int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
     int numMPMMatls = d_sharedState->getNumMPMMatls();
-    StaticArray<constCCVariable<double> > solid_fraction_cc_old(numMPMMatls);
-    StaticArray<CCVariable<double> > solid_fraction_cc(numMPMMatls);
+    std::vector<constCCVariable<double> > solid_fraction_cc_old(numMPMMatls);
+    std::vector<CCVariable<double> > solid_fraction_cc(numMPMMatls);
 
     // int zeroGhostCells = 0;
 
@@ -2084,12 +2083,12 @@ void MPMArches::computeIntegratedSolidProps(const ProcessorGroup*,
     int archIndex = 0;
     int matlindex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
     int numMPMMatls = d_sharedState->getNumMPMMatls();
-    StaticArray<constCCVariable<double> > solid_fraction_cc(numMPMMatls);
-    StaticArray<constCCVariable<double> > tempSolid_CC(numMPMMatls);
-    StaticArray<constCCVariable<double> > hTSolid_CC(numMPMMatls);
-    StaticArray<constSFCXVariable<double> > hTSolid_FCX(numMPMMatls);
-    StaticArray<constSFCYVariable<double> > hTSolid_FCY(numMPMMatls);
-    StaticArray<constSFCZVariable<double> > hTSolid_FCZ(numMPMMatls);
+    std::vector<constCCVariable<double> > solid_fraction_cc(numMPMMatls);
+    std::vector<constCCVariable<double> > tempSolid_CC(numMPMMatls);
+    std::vector<constCCVariable<double> > hTSolid_CC(numMPMMatls);
+    std::vector<constSFCXVariable<double> > hTSolid_FCX(numMPMMatls);
+    std::vector<constSFCYVariable<double> > hTSolid_FCY(numMPMMatls);
+    std::vector<constSFCZVariable<double> > hTSolid_FCZ(numMPMMatls);
 
     int zeroGhostCells = 0;
 
@@ -2642,40 +2641,40 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
 
     // MPM stuff
 
-    StaticArray<constCCVariable<double> > solid_fraction_cc(numMPMMatls);
+    std::vector<constCCVariable<double> > solid_fraction_cc(numMPMMatls);
 
-    StaticArray<constCCVariable<double> > xvelCC_solid(numMPMMatls);
-    StaticArray<constCCVariable<double> > yvelCC_solid(numMPMMatls);
-    StaticArray<constCCVariable<double> > zvelCC_solid(numMPMMatls);
+    std::vector<constCCVariable<double> > xvelCC_solid(numMPMMatls);
+    std::vector<constCCVariable<double> > yvelCC_solid(numMPMMatls);
+    std::vector<constCCVariable<double> > zvelCC_solid(numMPMMatls);
 
-    StaticArray<constSFCXVariable<double> > xvelFCX_solid(numMPMMatls);
-    StaticArray<constSFCXVariable<double> > yvelFCX_solid(numMPMMatls);
-    StaticArray<constSFCXVariable<double> > zvelFCX_solid(numMPMMatls);
+    std::vector<constSFCXVariable<double> > xvelFCX_solid(numMPMMatls);
+    std::vector<constSFCXVariable<double> > yvelFCX_solid(numMPMMatls);
+    std::vector<constSFCXVariable<double> > zvelFCX_solid(numMPMMatls);
 
-    StaticArray<constSFCYVariable<double> > xvelFCY_solid(numMPMMatls);
-    StaticArray<constSFCYVariable<double> > yvelFCY_solid(numMPMMatls);
-    StaticArray<constSFCYVariable<double> > zvelFCY_solid(numMPMMatls);
+    std::vector<constSFCYVariable<double> > xvelFCY_solid(numMPMMatls);
+    std::vector<constSFCYVariable<double> > yvelFCY_solid(numMPMMatls);
+    std::vector<constSFCYVariable<double> > zvelFCY_solid(numMPMMatls);
 
-    StaticArray<constSFCZVariable<double> > xvelFCZ_solid(numMPMMatls);
-    StaticArray<constSFCZVariable<double> > yvelFCZ_solid(numMPMMatls);
-    StaticArray<constSFCZVariable<double> > zvelFCZ_solid(numMPMMatls);
+    std::vector<constSFCZVariable<double> > xvelFCZ_solid(numMPMMatls);
+    std::vector<constSFCZVariable<double> > yvelFCZ_solid(numMPMMatls);
+    std::vector<constSFCZVariable<double> > zvelFCZ_solid(numMPMMatls);
 
-    StaticArray<CCVariable<double> >   dragForceX_cc(numMPMMatls);
-    StaticArray<CCVariable<double> >   dragForceY_cc(numMPMMatls);
-    StaticArray<CCVariable<double> >   dragForceZ_cc(numMPMMatls);
+    std::vector<CCVariable<double> >   dragForceX_cc(numMPMMatls);
+    std::vector<CCVariable<double> >   dragForceY_cc(numMPMMatls);
+    std::vector<CCVariable<double> >   dragForceZ_cc(numMPMMatls);
 
-    StaticArray<SFCYVariable<double> > dragForceX_fcy(numMPMMatls);
-    StaticArray<SFCZVariable<double> > dragForceX_fcz(numMPMMatls);
+    std::vector<SFCYVariable<double> > dragForceX_fcy(numMPMMatls);
+    std::vector<SFCZVariable<double> > dragForceX_fcz(numMPMMatls);
 
-    StaticArray<SFCZVariable<double> > dragForceY_fcz(numMPMMatls);
-    StaticArray<SFCXVariable<double> > dragForceY_fcx(numMPMMatls);
+    std::vector<SFCZVariable<double> > dragForceY_fcz(numMPMMatls);
+    std::vector<SFCXVariable<double> > dragForceY_fcx(numMPMMatls);
 
-    StaticArray<SFCXVariable<double> > dragForceZ_fcx(numMPMMatls);
-    StaticArray<SFCYVariable<double> > dragForceZ_fcy(numMPMMatls);
+    std::vector<SFCXVariable<double> > dragForceZ_fcx(numMPMMatls);
+    std::vector<SFCYVariable<double> > dragForceZ_fcy(numMPMMatls);
 
-    StaticArray<SFCXVariable<double> > pressForceX(numMPMMatls);
-    StaticArray<SFCYVariable<double> > pressForceY(numMPMMatls);
-    StaticArray<SFCZVariable<double> > pressForceZ(numMPMMatls);
+    std::vector<SFCXVariable<double> > pressForceX(numMPMMatls);
+    std::vector<SFCYVariable<double> > pressForceY(numMPMMatls);
+    std::vector<SFCZVariable<double> > pressForceZ(numMPMMatls);
 
     // Arches stuff
 
@@ -3777,29 +3776,29 @@ void MPMArches::doEnergyExchange(const ProcessorGroup*,
 
     // MPM stuff
 
-    StaticArray<constCCVariable<double> > solid_fraction_cc(numMPMMatls);
-    StaticArray<constCCVariable<double> > tempSolid_cc(numMPMMatls);
-    StaticArray<constSFCXVariable<double> > tempSolid_fcx(numMPMMatls);
-    StaticArray<constSFCYVariable<double> > tempSolid_fcy(numMPMMatls);
-    StaticArray<constSFCZVariable<double> > tempSolid_fcz(numMPMMatls);
+    std::vector<constCCVariable<double> > solid_fraction_cc(numMPMMatls);
+    std::vector<constCCVariable<double> > tempSolid_cc(numMPMMatls);
+    std::vector<constSFCXVariable<double> > tempSolid_fcx(numMPMMatls);
+    std::vector<constSFCYVariable<double> > tempSolid_fcy(numMPMMatls);
+    std::vector<constSFCZVariable<double> > tempSolid_fcz(numMPMMatls);
 
-    StaticArray<constCCVariable<double> > upCC(numMPMMatls);
-    StaticArray<constCCVariable<double> > vpCC(numMPMMatls);
-    StaticArray<constCCVariable<double> > wpCC(numMPMMatls);
-    StaticArray<constSFCXVariable<double> > vpFCX(numMPMMatls);
-    StaticArray<constSFCXVariable<double> > wpFCX(numMPMMatls);
-    StaticArray<constSFCYVariable<double> > upFCY(numMPMMatls);
-    StaticArray<constSFCYVariable<double> > wpFCY(numMPMMatls);
-    StaticArray<constSFCZVariable<double> > upFCZ(numMPMMatls);
-    StaticArray<constSFCZVariable<double> > vpFCZ(numMPMMatls);
+    std::vector<constCCVariable<double> > upCC(numMPMMatls);
+    std::vector<constCCVariable<double> > vpCC(numMPMMatls);
+    std::vector<constCCVariable<double> > wpCC(numMPMMatls);
+    std::vector<constSFCXVariable<double> > vpFCX(numMPMMatls);
+    std::vector<constSFCXVariable<double> > wpFCX(numMPMMatls);
+    std::vector<constSFCYVariable<double> > upFCY(numMPMMatls);
+    std::vector<constSFCYVariable<double> > wpFCY(numMPMMatls);
+    std::vector<constSFCZVariable<double> > upFCZ(numMPMMatls);
+    std::vector<constSFCZVariable<double> > vpFCZ(numMPMMatls);
 
-    StaticArray<CCVariable<double> >   heaTranSolid_cc(numMPMMatls);
-    StaticArray<SFCXVariable<double> > heaTranSolid_fcx(numMPMMatls);
-    StaticArray<SFCYVariable<double> > heaTranSolid_fcy(numMPMMatls);
-    StaticArray<SFCZVariable<double> > heaTranSolid_fcz(numMPMMatls);
-    StaticArray<SFCXVariable<double> > heaTranSolid_fcx_rad(numMPMMatls);
-    StaticArray<SFCYVariable<double> > heaTranSolid_fcy_rad(numMPMMatls);
-    StaticArray<SFCZVariable<double> > heaTranSolid_fcz_rad(numMPMMatls);
+    std::vector<CCVariable<double> >   heaTranSolid_cc(numMPMMatls);
+    std::vector<SFCXVariable<double> > heaTranSolid_fcx(numMPMMatls);
+    std::vector<SFCYVariable<double> > heaTranSolid_fcy(numMPMMatls);
+    std::vector<SFCZVariable<double> > heaTranSolid_fcz(numMPMMatls);
+    std::vector<SFCXVariable<double> > heaTranSolid_fcx_rad(numMPMMatls);
+    std::vector<SFCYVariable<double> > heaTranSolid_fcy_rad(numMPMMatls);
+    std::vector<SFCZVariable<double> > heaTranSolid_fcz_rad(numMPMMatls);
 
     // Arches stuff
 

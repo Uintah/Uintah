@@ -28,7 +28,6 @@
 #include <CCA/Components/Arches/TransportEqns/ScalarEqn.h>
 #include <CCA/Ports/Scheduler.h>
 
-#include <Core/Containers/StaticArray.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/SimulationState.h>
@@ -501,7 +500,7 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
     }
 
     //put extra sources into static array
-    StaticArray <constCCVariable<double> > extraSources (nExtraSources);
+    std::vector <constCCVariable<double> > extraSources (nExtraSources);
     for ( int i = 0; i < nExtraSources; i++ ) {
       const VarLabel* tempLabel = extraSourceLabels[i];
       new_dw->get( extraSources[i], tempLabel, matlIndex, patch, gn, 0);

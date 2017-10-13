@@ -55,7 +55,6 @@
 #include <Core/Math/MiscMath.h>
 
 
-#include <Core/Containers/StaticArray.h>
 #include <cfloat>
 #include <cstdio>
 #include <Core/Util/DebugStream.h>
@@ -1761,26 +1760,26 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     Vector dx       = patch->dCell(); 
     double cell_vol = dx.x()*dx.y()*dx.z();
 
-    StaticArray<double> press_eos(numALLMatls);
-    StaticArray<double> dp_drho(numALLMatls),dp_de(numALLMatls);
-    StaticArray<double> mat_volume(numALLMatls);
+    std::vector<double> press_eos(numALLMatls);
+    std::vector<double> dp_drho(numALLMatls),dp_de(numALLMatls);
+    std::vector<double> mat_volume(numALLMatls);
 
-    StaticArray<CCVariable<double> > vol_frac(numALLMatls);
-    StaticArray<CCVariable<double> > rho_micro(numALLMatls);
-    StaticArray<CCVariable<double> > rho_CC_new(numALLMatls);
-    StaticArray<CCVariable<double> > speedSound(numALLMatls);
-    StaticArray<CCVariable<double> > sp_vol_new(numALLMatls);
-    StaticArray<CCVariable<double> > f_theta(numALLMatls);
-    StaticArray<CCVariable<double> > kappa(numALLMatls);
+    std::vector<CCVariable<double> > vol_frac(numALLMatls);
+    std::vector<CCVariable<double> > rho_micro(numALLMatls);
+    std::vector<CCVariable<double> > rho_CC_new(numALLMatls);
+    std::vector<CCVariable<double> > speedSound(numALLMatls);
+    std::vector<CCVariable<double> > sp_vol_new(numALLMatls);
+    std::vector<CCVariable<double> > f_theta(numALLMatls);
+    std::vector<CCVariable<double> > kappa(numALLMatls);
     
-    StaticArray<constCCVariable<double> > placeHolder(0);
-    StaticArray<constCCVariable<double> > cv(numALLMatls);
-    StaticArray<constCCVariable<double> > gamma(numALLMatls);
-    StaticArray<constCCVariable<double> > sp_vol_CC(numALLMatls); 
-    StaticArray<constCCVariable<double> > Temp(numALLMatls);
-    StaticArray<constCCVariable<double> > rho_CC_old(numALLMatls);
-    StaticArray<constCCVariable<double> > mass_CC(numALLMatls);
-    StaticArray<constCCVariable<Vector> > vel_CC(numALLMatls);
+    std::vector<constCCVariable<double> > placeHolder(0);
+    std::vector<constCCVariable<double> > cv(numALLMatls);
+    std::vector<constCCVariable<double> > gamma(numALLMatls);
+    std::vector<constCCVariable<double> > sp_vol_CC(numALLMatls); 
+    std::vector<constCCVariable<double> > Temp(numALLMatls);
+    std::vector<constCCVariable<double> > rho_CC_old(numALLMatls);
+    std::vector<constCCVariable<double> > mass_CC(numALLMatls);
+    std::vector<constCCVariable<Vector> > vel_CC(numALLMatls);
     
     constCCVariable<double> press;    
     CCVariable<double> press_new, delPress_tmp,sumKappa, TMV_CC;
@@ -1800,8 +1799,8 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     sum_imp_delP.initialize(0.0);
     nIterations.initialize(0);
 
-    StaticArray<MPMMaterial*> mpm_matl(numALLMatls);
-    StaticArray<ICEMaterial*> ice_matl(numALLMatls);
+    std::vector<MPMMaterial*> mpm_matl(numALLMatls);
+    std::vector<ICEMaterial*> ice_matl(numALLMatls);
     for (int m = 0; m < numALLMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       ice_matl[m] = dynamic_cast<ICEMaterial*>(matl);
@@ -2194,19 +2193,19 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
             craps out then try this method.
  Reference:  Se Numerical Methods by Robert W. Hornbeck.
 _____________________________________________________________________*/ 
-void MPMICE::binaryPressureSearch(  StaticArray<constCCVariable<double> >& Temp,
-                            StaticArray<CCVariable<double> >& rho_micro, 
-                            StaticArray<CCVariable<double> >& vol_frac, 
-                            StaticArray<CCVariable<double> >& rho_CC_new,
-                            StaticArray<CCVariable<double> >& speedSound,
-                            StaticArray<double> & dp_drho, 
-                            StaticArray<double> & dp_de, 
-                            StaticArray<double> & press_eos,
+void MPMICE::binaryPressureSearch(  std::vector<constCCVariable<double> >& Temp,
+                            std::vector<CCVariable<double> >& rho_micro, 
+                            std::vector<CCVariable<double> >& vol_frac, 
+                            std::vector<CCVariable<double> >& rho_CC_new,
+                            std::vector<CCVariable<double> >& speedSound,
+                            std::vector<double> & dp_drho, 
+                            std::vector<double> & dp_de, 
+                            std::vector<double> & press_eos,
                             constCCVariable<double> & press,
                             CCVariable<double> & press_new, 
                             double press_ref,
-                            StaticArray<constCCVariable<double> > & cv,
-                            StaticArray<constCCVariable<double> > & gamma,
+                            std::vector<constCCVariable<double> > & cv,
+                            std::vector<constCCVariable<double> > & gamma,
                             double convergence_crit,
                             int numALLMatls,
                             int & count,
@@ -2220,8 +2219,8 @@ void MPMICE::binaryPressureSearch(  StaticArray<constCCVariable<double> >& Temp,
   double c_2;
   double Pleft=0., Pright=0., Ptemp=0., Pm=0.;
   double rhoMicroR=0., rhoMicroL=0.;
-  StaticArray<double> vfR(numALLMatls);
-  StaticArray<double> vfL(numALLMatls);
+  std::vector<double> vfR(numALLMatls);
+  std::vector<double> vfL(numALLMatls);
   Pm = press[c];
   double residual = 1.0;
 

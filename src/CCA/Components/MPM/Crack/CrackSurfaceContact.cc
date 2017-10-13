@@ -47,7 +47,6 @@
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Containers/StaticArray.h>
 #include <vector>
 #include <iostream>
 #include <fstream>
@@ -101,20 +100,20 @@ Crack::AdjustCrackContactInterpolated(const ProcessorGroup*,
     ASSERTEQ(numMatls, matls->size());
 
     // Nodal solutions above crack
-    StaticArray<constNCVariable<int> >    gNumPatls(numMatls);
-    StaticArray<constNCVariable<double> > gmass(numMatls);
-    StaticArray<constNCVariable<double> > gvolume(numMatls);
-    StaticArray<constNCVariable<Vector> > gdisplacement(numMatls);
-    StaticArray<NCVariable<Vector> >      gvelocity(numMatls);
+    std::vector<constNCVariable<int> >    gNumPatls(numMatls);
+    std::vector<constNCVariable<double> > gmass(numMatls);
+    std::vector<constNCVariable<double> > gvolume(numMatls);
+    std::vector<constNCVariable<Vector> > gdisplacement(numMatls);
+    std::vector<NCVariable<Vector> >      gvelocity(numMatls);
 
     // Nodal solutions below crack
-    StaticArray<constNCVariable<int> >    GNumPatls(numMatls);
-    StaticArray<constNCVariable<double> > Gmass(numMatls);
-    StaticArray<constNCVariable<double> > Gvolume(numMatls);
-    StaticArray<constNCVariable<Vector> > GCrackNorm(numMatls);
-    StaticArray<constNCVariable<Vector> > Gdisplacement(numMatls);
-    StaticArray<NCVariable<Vector> >      Gvelocity(numMatls);
-    StaticArray<NCVariable<double> >      frictionWork(numMatls);
+    std::vector<constNCVariable<int> >    GNumPatls(numMatls);
+    std::vector<constNCVariable<double> > Gmass(numMatls);
+    std::vector<constNCVariable<double> > Gvolume(numMatls);
+    std::vector<constNCVariable<Vector> > GCrackNorm(numMatls);
+    std::vector<constNCVariable<Vector> > Gdisplacement(numMatls);
+    std::vector<NCVariable<Vector> >      Gvelocity(numMatls);
+    std::vector<NCVariable<double> >      frictionWork(numMatls);
 
     Ghost::GhostType  gnone = Ghost::None;
 
@@ -282,24 +281,24 @@ Crack::AdjustCrackContactIntegrated(const ProcessorGroup*,
     ASSERTEQ(numMatls, matls->size());
 
     // Nodal solutions above crack
-    StaticArray<constNCVariable<double> > gmass(numMatls);
-    StaticArray<constNCVariable<double> > gvolume(numMatls);
-    StaticArray<constNCVariable<int> >    gNumPatls(numMatls);
-    StaticArray<constNCVariable<Vector> > gdisplacement(numMatls);
-    StaticArray<constNCVariable<Vector> > gvelocity(numMatls); 
-    StaticArray<NCVariable<Vector> >      gvelocity_star(numMatls);
-    StaticArray<NCVariable<Vector> >      gacceleration(numMatls);
+    std::vector<constNCVariable<double> > gmass(numMatls);
+    std::vector<constNCVariable<double> > gvolume(numMatls);
+    std::vector<constNCVariable<int> >    gNumPatls(numMatls);
+    std::vector<constNCVariable<Vector> > gdisplacement(numMatls);
+    std::vector<constNCVariable<Vector> > gvelocity(numMatls); 
+    std::vector<NCVariable<Vector> >      gvelocity_star(numMatls);
+    std::vector<NCVariable<Vector> >      gacceleration(numMatls);
     // Nodal solutions below crack
-    StaticArray<constNCVariable<double> > Gmass(numMatls);
-    StaticArray<constNCVariable<double> > Gvolume(numMatls);
-    StaticArray<constNCVariable<int> >    GNumPatls(numMatls);
-    StaticArray<constNCVariable<Vector> > GCrackNorm(numMatls);
-    StaticArray<constNCVariable<Vector> > Gdisplacement(numMatls);
-    StaticArray<constNCVariable<Vector> > Gvelocity(numMatls); 
-    StaticArray<NCVariable<Vector> >      Gvelocity_star(numMatls);
-    StaticArray<NCVariable<Vector> >      Gacceleration(numMatls);
+    std::vector<constNCVariable<double> > Gmass(numMatls);
+    std::vector<constNCVariable<double> > Gvolume(numMatls);
+    std::vector<constNCVariable<int> >    GNumPatls(numMatls);
+    std::vector<constNCVariable<Vector> > GCrackNorm(numMatls);
+    std::vector<constNCVariable<Vector> > Gdisplacement(numMatls);
+    std::vector<constNCVariable<Vector> > Gvelocity(numMatls); 
+    std::vector<NCVariable<Vector> >      Gvelocity_star(numMatls);
+    std::vector<NCVariable<Vector> >      Gacceleration(numMatls);
     // Friction work
-    StaticArray<NCVariable<double> >      frictionWork(numMatls);
+    std::vector<NCVariable<double> >      frictionWork(numMatls);
 
     Ghost::GhostType  gnone = Ghost::None;
 

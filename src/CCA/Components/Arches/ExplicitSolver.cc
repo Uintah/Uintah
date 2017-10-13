@@ -110,7 +110,6 @@
 #include <CCA/Components/Arches/ParticleModels/CQMOMSourceWrapper.h>
 
 #include <CCA/Components/Arches/ExplicitSolver.h>
-#include <Core/Containers/StaticArray.h>
 #include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
@@ -2623,7 +2622,7 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
       }
     }
 
-    StaticArray<constCCVariable<double> > mass_srcs(d_mass_sources.size());
+    std::vector<constCCVariable<double> > mass_srcs(d_mass_sources.size());
     // Add other source terms to the continuity
     int m=0;
     for (auto iter = d_mass_sources.begin(); iter != d_mass_sources.end(); iter++){

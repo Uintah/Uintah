@@ -82,7 +82,7 @@ void Smagorinsky_Model::computeTurbViscosity(DataWarehouse* new_dw,
   double term = (d_model_constant * filter_width)
                *(d_model_constant * filter_width);
   
-  StaticArray<CCVariable<double> > SIJ(6);
+  std::vector<CCVariable<double> > SIJ(6);
   for (int comp = 0; comp <= 5; comp++) {
     new_dw->allocateTemporary(SIJ[comp], patch,Ghost::AroundCells,2);
     SIJ[comp].initialize(0.0);
@@ -116,7 +116,7 @@ void Smagorinsky_Model::computeStrainRate(const Patch* patch,
                                     const int indx,
                                     SimulationStateP&  d_sharedState,
                                     DataWarehouse* new_dw,
-                                    StaticArray<CCVariable<double> >& SIJ)
+                                    std::vector<CCVariable<double> >& SIJ)
 {
   Vector dx = patch->dCell();
   double delX = dx.x();

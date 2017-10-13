@@ -54,7 +54,6 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Labels/MPMLabel.h>
 #include <CCA/Ports/DataWarehouse.h>
-#include <Core/Containers/StaticArray.h>
 #include <vector>
 
 
@@ -131,12 +130,12 @@ void NodalSVFContact:: exMomIntegrated( const ProcessorGroup*           ,
     double factor;
 
                  constNCVariable<double>    NC_CCweight;
-    StaticArray <constNCVariable<double> >  gmass(numMatls);
-    StaticArray <constNCVariable<double> >  gvolume(numMatls);
-    StaticArray <NCVariable     <double> >  gSVF(numMatls);
-    StaticArray <NCVariable     <Vector> >  gvelocity_star(numMatls);
-    StaticArray <NCVariable     <Vector> >  gvelocity_old(numMatls);
-    StaticArray <NCVariable     <Vector> >  gForce(numMatls);
+    std::vector <constNCVariable<double> >  gmass(numMatls);
+    std::vector <constNCVariable<double> >  gvolume(numMatls);
+    std::vector <NCVariable     <double> >  gSVF(numMatls);
+    std::vector <NCVariable     <Vector> >  gvelocity_star(numMatls);
+    std::vector <NCVariable     <Vector> >  gvelocity_old(numMatls);
+    std::vector <NCVariable     <Vector> >  gForce(numMatls);
 
     //---------- Retrieve necessary data from DataWarehouse ------------------------------------------------
     old_dw-> get(delT,        lb->delTLabel,         getLevel(patches));

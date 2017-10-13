@@ -10,8 +10,6 @@
 #include <CCA/Components/Arches/Directives.h>
 #include <vector>
 #include <string>
-
-#include <Core/Containers/StaticArray.h>
  
 namespace Uintah{
 
