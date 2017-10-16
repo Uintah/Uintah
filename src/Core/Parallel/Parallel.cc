@@ -234,6 +234,7 @@ Parallel::initializeManager( int& argc , char**& argv )
     MpiError(const_cast<char*>("Uinath::MPI::Init"), status);
   }
 
+
 #ifdef THREADED_MPI_AVAILABLE
   if (provided < required) {
     std::cerr << "Provided MPI parallel support of " << provided << " is not enough for the required level of " << required << "\n"
@@ -242,6 +243,7 @@ Parallel::initializeManager( int& argc , char**& argv )
     throw InternalError("Bad MPI level", __FILE__, __LINE__);
   }
 #endif
+
 
   Uintah::worldComm_ = MPI_COMM_WORLD;
   if ((status = Uintah::MPI::Comm_size(Uintah::worldComm_, &s_world_size)) != MPI_SUCCESS) {
@@ -252,36 +254,46 @@ Parallel::initializeManager( int& argc , char**& argv )
     MpiError(const_cast<char*>("Uintah::MPI::Comm_rank"), status);
   }
 
+
 #if ( !defined( DISABLE_SCI_MALLOC ) )
   Uintah::AllocatorSetDefaultTagMalloc(oldtag);
   Uintah::AllocatorMallocStatsAppendNumber( s_world_rank );
 #endif
 
-  if (s_num_partitions > 0) {
+
+#ifdef UINTAH_ENABLE_KOKKOS
     s_root_context = scinew ProcessorGroup(nullptr, Uintah::worldComm_, s_world_rank, s_world_size, s_num_partitions);
-  } else {
+#else
     s_root_context = scinew ProcessorGroup(nullptr, Uintah::worldComm_, s_world_rank, s_world_size, s_num_threads);
-  }
+#endif
 
   if (s_root_context->myrank() == 0) {
     std::string plural = (s_root_context->size() > 1) ? "processes" : "process";
     std::cout << "Parallel: " << s_root_context->size() << " MPI " << plural << " (using MPI)\n";
+
+
 #ifdef THREADED_MPI_AVAILABLE
+
+#ifdef UINTAH_ENABLE_KOKKOS
+    if ( s_num_partitions > 0 ) {
+      std::string plural = (s_num_partitions > 1) ? "partitions" : "partition";
+      std::cout << "Parallel: " << s_num_partitions << " OMP thread " << plural << " per MPI process\n";
+    }
+    if ( s_threads_per_partition > 0 ) {
+      std::cout << "Parallel: " << s_threads_per_partition << " OMP threads per partition\n";
+    }
+#else
     if (s_num_threads > 0) {
       std::cout << "Parallel: " << s_num_threads << " threads per MPI process\n";
     }
-
-    if ( s_num_partitions == 1 ) {
-      std::cout << "Parallel: " << s_num_partitions << " OMP thread partition per MPI process\n";
-    }
-    else if ( s_num_partitions > 1 ) {
-      std::cout << "Parallel: " << s_num_partitions << " OMP thread partitions per MPI process\n";
-    }
+#endif
 
     std::cout << "Parallel: MPI Level Required: " << required << ", provided: " << provided << "\n";
 #endif
   }
-//    Uintah::MPI::Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
+
+    Uintah::MPI::Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
+
 }
 
   //_____________________________________________________________________________

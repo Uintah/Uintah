@@ -85,6 +85,10 @@ KokkosOpenMPScheduler::problemSetup( const ProblemSpecP     & prob_spec
                                    ,       SimulationStateP & state
                                    )
 {
+
+  m_num_partitions        = Uintah::Parallel::getNumPartitions();
+  m_threads_per_partition = Uintah::Parallel::getThreadsPerPartition();
+
   // Default taskReadyQueueAlg
   m_task_queue_alg = MostMessages;
   std::string taskQueueAlg = "MostMessages";
@@ -224,10 +228,6 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
 
 #ifdef UINTAH_ENABLE_KOKKOS
 
-  int num_partitions        = Uintah::Parallel::getNumPartitions();
-  int threads_per_partition = Uintah::Parallel::getThreadsPerPartition();
-
-  // Functor called each time partition_master is called
   auto task_worker = [&] ( int partition_id, int num_partitions ) {
 
     // Each partition created executes this block of code
@@ -240,8 +240,8 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
 
     // Executes task_workers
   Kokkos::OpenMP::partition_master( task_worker
-                                  , num_partitions
-                                  , threads_per_partition
+                                  , m_num_partitions
+                                  , m_threads_per_partition
                                   );
 
 #else //UINTAH_ENABLE_KOKKOS
@@ -465,6 +465,6 @@ KokkosOpenMPScheduler::runTasks()
       }
     }
   }  //end while (numTasksDone < ntasks)
-  ASSERT(m_num_tasks_done == m_num_tasks);
+  ASSERT(g_num_tasks_done == m_num_tasks);
 }
 
