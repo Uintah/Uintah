@@ -426,10 +426,6 @@ RateDeposition::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   Uintah::BlockRange range( patch->getCellLowIndex(), patch->getExtraCellHighIndex() );
   Uintah::parallel_for( range, [&](int i, int j, int k){
 
-    double Prob_self=0.0;
-    double Prob_near=0.0;
-
-    const double T_temp   = WallTemperature(i,j,k);
     const double MaxT_temp= 2000.0;
 
     // Shifts to the WALL cell
@@ -509,11 +505,6 @@ RateDeposition::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     Uintah::BlockRange range( patch->getCellLowIndex(), patch->getExtraCellHighIndex() );
 
     Uintah::parallel_for( range, [&](int i, int j, int k){
-
-      double Prob_self=0.0;
-      double Prob_near=0.0;
-      double flux_self=0.0;
-      double flux_near=0.0;
 
       // Shifts to the FLOW cell
       const int shifti = ( Norm_out_X(i,j,k) > 0.0 ) ? 0 : 1;

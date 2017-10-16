@@ -415,8 +415,8 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
     which_dw->get( temperature , _gas_temperature_varlabel , matlIndex , patch , gn , 0 );
     constCCVariable<double> particle_temperature;
     which_dw->get( particle_temperature , _particle_temperature_varlabel , matlIndex , patch , gn , 0 );
-    StaticArray< constCCVariable<double> > length(_nQn_part);
-    StaticArray< constCCVariable<double> > weight(_nQn_part);
+    std::vector< constCCVariable<double> > length(_nQn_part);
+    std::vector< constCCVariable<double> > weight(_nQn_part);
   for (int i=0; i<_nQn_part;i++ ){
       which_dw->get( length[i], _length_varlabel[i], matlIndex, patch, gn, 0 );
       which_dw->get( weight[i], _weight_varlabel[i], matlIndex, patch, gn, 0 );

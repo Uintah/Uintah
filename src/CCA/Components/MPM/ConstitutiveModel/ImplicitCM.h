@@ -29,7 +29,6 @@
 #include <vector>
 #include <Core/Math/Matrix3.h>
 #include <Core/Math/Short27.h>
-#include <Core/Containers/StaticArray.h>
 #include <Core/Grid/Variables/Array3.h>
 #include <CCA/Components/MPM/Solver.h>
 #include <Core/Grid/Variables/NCVariable.h>

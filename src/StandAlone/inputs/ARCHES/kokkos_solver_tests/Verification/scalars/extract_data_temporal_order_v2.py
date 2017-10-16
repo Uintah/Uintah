@@ -139,7 +139,8 @@ def main():
   counter = 0
   refinement = 1
   for fname in fnames:
-    os.system('mpirun -np '+ str(total_proc) + ' ' + './sus' +' -do_not_validate' + ' ' + fname + ' > log.txt')
+    #os.system('mpirun -np '+ str(total_proc) + ' ' + './sus' +' -do_not_validate' + ' ' + fname + ' > log.txt')
+    os.system('mpirun -np '+ str(total_proc) + ' ' + './sus' + ' ' + fname + ' > log.txt')
     udaName = os.path.splitext(fname)[0] + '.uda'
     p_s   = [int(fs[0]*Nx), int(fs[1]*Ny), int(fs[2]*Nz)] 
     p_end = [int(fe[0]*Nx), int(fe[1]*Ny), int(fe[2]*Nz)] 

@@ -54,7 +54,6 @@
 #include <Core/Math/FastMatrix.h>
 #include <Core/Math/UintahMiscMath.h>
 #include <Core/Grid/Variables/CellIterator.h>
-#include <Core/Containers/StaticArray.h>
 #include <Core/Geometry/Vector.h>
 #include <vector>
 #include <string>
@@ -476,11 +475,11 @@ namespace Uintah {
                                        int numMatls,
                                        FastMatrix & K,
                                        double delT,
-                                       StaticArray<constCCVariable<double> >& vol_frac_CC,
-                                       StaticArray<constCCVariable<double> >& sp_vol_CC,
-                                       StaticArray< constSFC >& vel_FC,
-                                       StaticArray< SFC > & sp_vol_FC,
-                                       StaticArray< SFC > & vel_FCME);
+                                       std::vector<constCCVariable<double> >& vol_frac_CC,
+                                       std::vector<constCCVariable<double> >& sp_vol_CC,
+                                       std::vector< constSFC >& vel_FC,
+                                       std::vector< SFC > & sp_vol_FC,
+                                       std::vector< SFC > & vel_FCME);
 
 
       void addExchangeContributionToFCVel(const ProcessorGroup*,
@@ -842,7 +841,7 @@ namespace Uintah {
       void getVariableExchangeCoefficients( FastMatrix& ,
                                            FastMatrix& H,
                                            IntVector & c,
-                                           StaticArray<constCCVariable<double> >& mass  );
+                                           std::vector<constCCVariable<double> >& mass  );
 
       IntVector upwindCell_X(const IntVector& c,
                              const double& var,

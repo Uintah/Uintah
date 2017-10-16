@@ -749,8 +749,6 @@ void AMRMPM::scheduleTimeAdvance(const LevelP & level,
 //
 void AMRMPM::scheduleFinalizeTimestep( const LevelP& level, SchedulerP& sched)
 {
-  const PatchSet* patches = level->eachPatch();
-
   if (level->getIndex() == 0) {
     const MaterialSet* matls = d_sharedState->allMPMMaterials();
     sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc,
@@ -1456,9 +1454,10 @@ void AMRMPM::scheduleAddParticles(SchedulerP& sched,
                                   const PatchSet* patches,
                                   const MaterialSet* matls)
 {
-  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
-                           getLevel(patches)->getGrid()->numLevels()))
-    return;
+    if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+                           getLevel(patches)->getGrid()->numLevels())){
+      return;
+    }
 
     printSchedule(patches,cout_doing,"AMRMPM::scheduleAddParticles");
 
@@ -2287,7 +2286,7 @@ void AMRMPM::interpolateParticlesToGrid_CFI(const ProcessorGroup*,
       }
 
       // loop over the coarse patches under the fine patches.
-      for(int cp=0; cp<coarsePatches.size(); cp++){
+      for(size_t cp=0; cp<coarsePatches.size(); cp++){
         const Patch* coarsePatch = coarsePatches[cp];
         
         // get coarse level particle data
@@ -2451,7 +2450,7 @@ void AMRMPM::interpolateParticlesToGrid_CFI_GIMP(const ProcessorGroup*,
       }
 
       // loop over the coarse patches under the fine patches.
-      for(int cp=0; cp<coarsePatches.size(); cp++){
+      for(size_t cp=0; cp<coarsePatches.size(); cp++){
         const Patch* coarsePatch = coarsePatches[cp];
         
         // get coarse level particle data
@@ -2555,7 +2554,7 @@ void AMRMPM::coarsenNodalData_CFI(const ProcessorGroup*,
   // coarse fine interfaces.
   const Level* coarseLevel = getLevel(coarsePatches);
   
-  for(int p=0;p<CFI_coarsePatches.size();p++){
+  for(size_t p=0;p<CFI_coarsePatches.size();p++){
     const Patch* coarsePatch = CFI_coarsePatches[p];
 
     string txt = "(zero)";
@@ -2601,7 +2600,7 @@ void AMRMPM::coarsenNodalData_CFI(const ProcessorGroup*,
       const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
 
       // loop over all the fine level patches
-      for(int fp=0;fp<CFI_finePatches.size();fp++){
+      for(size_t fp=0;fp<CFI_finePatches.size();fp++){
         const Patch* finePatch = CFI_finePatches[fp];
 
           // get fine level data
@@ -2711,7 +2710,7 @@ void AMRMPM::coarsenNodalData_CFI2(const ProcessorGroup*,
   // coarse fine interfaces.
   const Level* coarseLevel = getLevel(coarsePatches);
   
-  for(int p=0;p<CFI_coarsePatches.size();p++){
+  for(size_t p=0;p<CFI_coarsePatches.size();p++){
     const Patch* coarsePatch = CFI_coarsePatches[p];
 
     printTask(coarsePatch,cout_doing,"Doing AMRMPM::coarsenNodalData_CFI2");
@@ -2737,7 +2736,7 @@ void AMRMPM::coarsenNodalData_CFI2(const ProcessorGroup*,
       const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
 
             // loop over all the fine level patches
-      for(int fp=0;fp<CFI_finePatches.size();fp++){
+      for(size_t fp=0;fp<CFI_finePatches.size();fp++){
         const Patch* finePatch = CFI_finePatches[fp];
 
           // get fine level data
@@ -3115,7 +3114,7 @@ void AMRMPM::computeInternalForce_CFI(const ProcessorGroup*,
   /*===========TESTING==========`*/ 
         
         // loop over the coarse patches under the fine patches.
-        for(int cp=0; cp<coarsePatches.size(); cp++){
+        for(size_t cp=0; cp<coarsePatches.size(); cp++){
           const Patch* coarsePatch = coarsePatches[cp];
 
           // get coarse level particle data                                                       
@@ -3465,7 +3464,7 @@ void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
   // Set the ZOI on the current level.
   // Look up at the finer level patches
   // for coarse-fine interfaces
-  for(int p=0;p<CFI_coarsePatches.size();p++){
+  for(size_t p=0;p<CFI_coarsePatches.size();p++){
     const Patch* coarsePatch = CFI_coarsePatches[p];
     
     NCVariable<Stencil7> zoi;
@@ -3474,7 +3473,7 @@ void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
     const Level* fineLevel = level->getFinerLevel().get_rep();
 
 
-    for(int p=0;p<CFI_finePatches.size();p++){  
+    for(size_t p=0;p<CFI_finePatches.size();p++){  
       const Patch* finePatch = CFI_finePatches[p];
 
       Vector fine_dx = finePatch->dCell();
@@ -3538,7 +3537,7 @@ void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
   Level::selectType CFI_finePatches2;
   fineLevelCFI_Patches(patches,coarsePatches, CFI_finePatches2  );
   
-  for(int p=0;p<CFI_finePatches2.size();p++){
+  for(size_t p=0;p<CFI_finePatches2.size();p++){
     const Patch* finePatch = CFI_finePatches2[p];
 
     NCVariable<Stencil7> zoi_fine;
@@ -3554,7 +3553,7 @@ void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
       Patch::FaceType patchFace = *iter;
       bool setFace = false;
 
-      for(int p=0;p<coarsePatches.size();p++){
+      for(size_t p=0;p<coarsePatches.size();p++){
         const Patch* coarsePatch = coarsePatches[p];
         Vector coarse_dx = coarsePatch->dCell();
 
@@ -5101,7 +5100,7 @@ void AMRMPM::debug_CFI(const ProcessorGroup*,
       const Level* fineLevel = level->getFinerLevel().get_rep();
       IntVector refineRatio(fineLevel->getRefinementRatio());
 
-      for(int fp=0; fp<finePatches.size(); fp++){
+      for(size_t fp=0; fp<finePatches.size(); fp++){
         const Patch* finePatch = finePatches[fp];
 
         // Determine extents for coarser level particle data
@@ -5209,7 +5208,7 @@ void AMRMPM::coarseLevelCFI_Patches(const PatchSubset* coarsePatches,
     Level::selectType finePatches;
     coarsePatch->getFineLevelPatches(finePatches);
 
-    for(int fp=0;fp<finePatches.size();fp++){  
+    for(size_t fp=0;fp<finePatches.size();fp++){  
       const Patch* finePatch = finePatches[fp];
       
       if(finePatch->hasCoarseFaces() ){
@@ -5442,9 +5441,10 @@ void AMRMPM::scheduleComputeFlux(SchedulerP& sched,
                                  const PatchSet* patches,
                                  const MaterialSet* matls)
 {
-  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
-                           getLevel(patches)->getGrid()->numLevels()))
-    return;
+    if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
+                           getLevel(patches)->getGrid()->numLevels())){
+      return;
+    }
 
     printSchedule(patches,cout_doing,"AMRMPM::scheduleComputeFlux");
 

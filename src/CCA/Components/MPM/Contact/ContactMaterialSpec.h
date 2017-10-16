@@ -25,7 +25,6 @@
 #ifndef __CONTACT_MATERIAL_SPEC_H__
 #define __CONTACT_MATERIAL_SPEC_H__
 
-#include <Core/Containers/StaticArray.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/Variables/NCVariable.h>
@@ -102,7 +101,7 @@ WARNING
          }
           
          //  does this cell have the requested materials
-         bool present(const StaticArray<constNCVariable<double> > & gmass,
+         bool present(const std::vector<constNCVariable<double> > & gmass,
                       IntVector c) const
          {
              static const double EPSILON=1.e-14;

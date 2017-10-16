@@ -49,7 +49,6 @@
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Util/DebugStream.h>
-#include <Core/Containers/StaticArray.h>
 
 
 using namespace Uintah;
@@ -384,7 +383,7 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
     }
 
     //-----ADD Extra Sources
-    StaticArray <constCCVariable<double> > extraSources (nExtraSources);
+    std::vector <constCCVariable<double> > extraSources (nExtraSources);
     for ( int i = 0; i < nExtraSources; i++ ) {
       const VarLabel* tempLabel = extraSourceLabels[i];
       new_dw->get( extraSources[i], tempLabel, d_indx, patch, gn, 0);

@@ -560,8 +560,8 @@ void MesoBurn::computeModelSources(const ProcessorGroup*,
 
     /* All Material Data */
     int numAllMatls = d_sharedState->getNumMatls();
-    StaticArray<constCCVariable<double> >  vol_frac_CC(numAllMatls);
-    StaticArray<constCCVariable<double> >  temp_CC(numAllMatls);
+    std::vector<constCCVariable<double> >  vol_frac_CC(numAllMatls);
+    std::vector<constCCVariable<double> >  temp_CC(numAllMatls);
     for (int m = 0; m < numAllMatls; m++) {
       Material* matl = d_sharedState->getMaterial(m);
       int indx = matl->getDWIndex();

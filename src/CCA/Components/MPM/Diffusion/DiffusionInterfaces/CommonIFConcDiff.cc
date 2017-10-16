@@ -24,7 +24,6 @@
 
 #include <CCA/Components/MPM/Diffusion/DiffusionInterfaces/CommonIFConcDiff.h>
 
-#include <Core/Containers/StaticArray.h>
 #include <Core/Grid/Task.h>
 
 using namespace Uintah;
@@ -68,8 +67,8 @@ void CommonIFConcDiff::sdInterfaceInterpolated(const ProcessorGroup *,
   {
     const Patch* patch = patches->get(p);
 
-    StaticArray<constNCVariable<double> > gmass(num_matls);
-    StaticArray<NCVariable<double> >      gconcentration(num_matls);
+    std::vector<constNCVariable<double> > gmass(num_matls);
+    std::vector<NCVariable<double> >      gconcentration(num_matls);
     for(int m = 0; m < num_matls; m++)
     {
       int dwi = matls->get(m);
@@ -134,8 +133,8 @@ void CommonIFConcDiff::sdInterfaceDivergence(const ProcessorGroup*,
     for(int p = 0; p < patches->size(); p++){
       const Patch* patch = patches->get(p);
 
-      StaticArray<constNCVariable<double> > gmass(num_matls);
-      StaticArray<NCVariable<double> > gconc_rate(num_matls);
+      std::vector<constNCVariable<double> > gmass(num_matls);
+      std::vector<NCVariable<double> > gconc_rate(num_matls);
       for(int m = 0; m < num_matls; m++){
         int dwi = matls->get(m);
         new_dw->get(gmass[m], d_mpm_lb->gMassLabel, dwi, patch, Ghost::None, 0);

@@ -770,7 +770,7 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
   CCVariable<double> ab;
   CCVariable<double> ap;
 
-  StaticArray< CCVariable<double> > radiationFlux_old(_radiationFluxLabels.size()); // must always 6, even when reflections are off.
+  std::vector< CCVariable<double> > radiationFlux_old(_radiationFluxLabels.size()); // must always 6, even when reflections are off.
 
 
   if(reflectionsTurnedOn){
@@ -795,9 +795,9 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
   }
 
 
-  StaticArray< constCCVariable<double> > Intensities((_scatteringOn && !old_DW_isMissingIntensities) ? d_totalOrds : 0);
+  std::vector< constCCVariable<double> > Intensities((_scatteringOn && !old_DW_isMissingIntensities) ? d_totalOrds : 0);
 
-  StaticArray< CCVariable<double> > IntensitiesRestart((_scatteringOn && old_DW_isMissingIntensities) ? d_totalOrds : 0);
+  std::vector< CCVariable<double> > IntensitiesRestart((_scatteringOn && old_DW_isMissingIntensities) ? d_totalOrds : 0);
 
   CCVariable<double> scatIntensitySource;
   constCCVariable<double> scatkt;   //total scattering coefficient
@@ -829,8 +829,8 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
     old_dw->get(scatkt,_scatktLabel, matlIndex , patch,Ghost::None, 0);
   }
 
-  StaticArray< constCCVariable<double> > abskp(_nQn_part);
-  StaticArray< constCCVariable<double> > partTemp(_nQn_part);
+  std::vector< constCCVariable<double> > abskp(_nQn_part);
+  std::vector< constCCVariable<double> > partTemp(_nQn_part);
   for (int ix=0;  ix< _nQn_part; ix++){
       old_dw->get(abskp[ix],_abskp_label_vector[ix], matlIndex , patch,Ghost::None, 0  );
       old_dw->get(partTemp[ix],_temperature_label_vector[ix], matlIndex , patch,Ghost::None, 0  );
@@ -861,9 +861,9 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
 
   //__________________________________
   //begin discrete ordinates
-  StaticArray< constCCVariable<double> > spectral_weights(0); // spectral not supported for DO linear solve
-  StaticArray< CCVariable<double> > Emission_source(1);
-  StaticArray< constCCVariable<double> > abskgas(1);
+  std::vector< constCCVariable<double> > spectral_weights(0); // spectral not supported for DO linear solve
+  std::vector< CCVariable<double> > Emission_source(1);
+  std::vector< constCCVariable<double> > abskgas(1);
   abskgas[0]=constvars->ABSKG;
   Emission_source[0].allocate( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
   Emission_source[0].initialize(0.0);
@@ -1127,7 +1127,7 @@ DORadiationModel::setLabels(){
 
 template<class TYPE>
 void
-DORadiationModel::computeScatteringIntensities(int direction, constCCVariable<double> &scatkt, StaticArray < TYPE > &Intensities, CCVariable<double> &scatIntensitySource,constCCVariable<double> &asymmetryFactor , const Patch* patch){
+DORadiationModel::computeScatteringIntensities(int direction, constCCVariable<double> &scatkt, std::vector < TYPE > &Intensities, CCVariable<double> &scatIntensitySource,constCCVariable<double> &asymmetryFactor , const Patch* patch){
 
 
   direction -=1;   // change from fortran vector to c++ vector
@@ -1161,12 +1161,12 @@ DORadiationModel::computeScatteringIntensities(int direction, constCCVariable<do
 // for sweeping Discrete-Ordinates
 //-----------------------------------------------------------------//
 void
-DORadiationModel::computeIntensitySource( const Patch* patch, StaticArray <constCCVariable<double> >&abskp,
-    StaticArray <constCCVariable<double> > &pTemp,
-    StaticArray< constCCVariable<double> > &abskg,
+DORadiationModel::computeIntensitySource( const Patch* patch, std::vector <constCCVariable<double> >&abskp,
+    std::vector <constCCVariable<double> > &pTemp,
+    std::vector< constCCVariable<double> > &abskg,
                   constCCVariable<double>  &gTemp,
-    StaticArray<     CCVariable<double> > &b_sourceArray,
-    StaticArray<  constCCVariable<double> > &spectral_weights){
+    std::vector<     CCVariable<double> > &b_sourceArray,
+    std::vector<  constCCVariable<double> > &spectral_weights){
 
 
     //Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
@@ -1241,7 +1241,7 @@ DORadiationModel::intensitysolveSweepOptimizedOLD( const Patch* patch,
   // -------------------NEEDS TO BE ADDED, REFLCTIONS ON WALLS -----------------//
   //IntVector domLo = patch->getExtraCellLowIndex();
   //IntVector domHi = patch->getExtraCellHighIndex();
-  //StaticArray< CCVariable<double> > radiationFlux_old(_radiationFluxLabels.size()); // must always 6, even when reflections are off.
+  //std::vector< CCVariable<double> > radiationFlux_old(_radiationFluxLabels.size()); // must always 6, even when reflections are off.
 
   //if(reflectionsTurnedOn){
   //for (unsigned int i=0; i<  _radiationFluxLabels.size(); i++){
@@ -1460,7 +1460,7 @@ DORadiationModel::intensitysolveSweepOptimized( const Patch* patch,
   // -------------------NEEDS TO BE ADDED, REFLCTIONS ON WALLS -----------------//
   //IntVector domLo = patch->getExtraCellLowIndex();
   //IntVector domHi = patch->getExtraCellHighIndex();
-  //StaticArray< CCVariable<double> > radiationFlux_old(_radiationFluxLabels.size()); // must always 6, even when reflections are off.
+  //std::vector< CCVariable<double> > radiationFlux_old(_radiationFluxLabels.size()); // must always 6, even when reflections are off.
 
   //if(reflectionsTurnedOn){
   //for (unsigned int i=0; i<  _radiationFluxLabels.size(); i++){
@@ -1479,7 +1479,7 @@ DORadiationModel::intensitysolveSweepOptimized( const Patch* patch,
 
 
   constCCVariable<double> abskg;
-  StaticArray<constCCVariable<double> >abskg_array (d_nbands);
+  std::vector<constCCVariable<double> >abskg_array (d_nbands);
   if (_LspectralSolve){
     old_dw->get(abskg,_abskg_label_vector[d_nbands-1], matlIndex , patch,Ghost::None, 0  ); // last abskg element is soot only (or zeros)
     for (int iband=0; iband<d_nbands; iband++){
@@ -1575,10 +1575,10 @@ DORadiationModel::getDOSource(const Patch* patch,
   constCCVariable<int> cellType;
   old_dw->get(cellType,_cellTypeLabel,matlIndex,patch,Ghost::None,0);
 
-  StaticArray< constCCVariable<double> > abskp(_nQn_part);
-  StaticArray< constCCVariable<double> > partTemp(_nQn_part);
-  StaticArray< CCVariable <double > > emissSrc(d_nbands);
-  StaticArray< constCCVariable<double> > abskg(d_nbands);
+  std::vector< constCCVariable<double> > abskp(_nQn_part);
+  std::vector< constCCVariable<double> > partTemp(_nQn_part);
+  std::vector< CCVariable <double > > emissSrc(d_nbands);
+  std::vector< constCCVariable<double> > abskg(d_nbands);
 
   for (int ix=0;  ix< _nQn_part; ix++){
     old_dw->get(abskp[ix],_abskp_label_vector[ix], matlIndex , patch,Ghost::None, 0  );
@@ -1591,7 +1591,7 @@ DORadiationModel::getDOSource(const Patch* patch,
       emissSrc[iband].initialize(0.0);  // a sum will be performed on this variable, intialize it to zero.
     }
 
-    StaticArray< constCCVariable<double > > spectral_weights(_LspectralSolve ? d_nbands : 0 );
+    std::vector< constCCVariable<double > > spectral_weights(_LspectralSolve ? d_nbands : 0 );
     if(_LspectralSolve){
       for (int iband=0; iband<d_nbands; iband++){
          old_dw->get(spectral_weights[iband],_abswg_label_vector[iband], matlIndex , patch,Ghost::None, 0  );
@@ -1612,7 +1612,7 @@ DORadiationModel::getDOSource(const Patch* patch,
    
     for (int iband=0; iband<d_nbands; iband++){
 
-      StaticArray< constCCVariable<double> >IntensitiesOld(d_totalOrds);
+      std::vector< constCCVariable<double> >IntensitiesOld(d_totalOrds);
       // reconstruct oldIntensity staticArray for each band
       for( int ix=0;  ix<d_totalOrds ;ix++){
         old_dw->get(IntensitiesOld[ix],_IntensityLabels[ix+(iband)*d_totalOrds], matlIndex , patch,Ghost::None, 0  );
@@ -1679,8 +1679,8 @@ DORadiationModel::computeFluxDiv(const Patch* patch,
   CCVariable <double > volQ;
   CCVariable <double > divQ;
 
-  StaticArray<CCVariable <double > > spectral_volQ(d_nbands);
-  StaticArray<constCCVariable <double > > spectral_abskg(d_nbands);
+  std::vector<CCVariable <double > > spectral_volQ(d_nbands);
+  std::vector<constCCVariable <double > > spectral_abskg(d_nbands);
 
   if(_LspectralSolve){
     for (int iband=0; iband<d_nbands; iband++){
@@ -1708,7 +1708,7 @@ DORadiationModel::computeFluxDiv(const Patch* patch,
   fluxT.initialize(0.0);
   fluxB.initialize(0.0);
 
-  StaticArray< constCCVariable <double > > emissSrc (d_nbands);
+  std::vector< constCCVariable <double > > emissSrc (d_nbands);
   constCCVariable<double> abskt ;
 
   for (int iband=0; iband<d_nbands; iband++){

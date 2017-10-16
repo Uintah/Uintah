@@ -28,7 +28,6 @@
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 #include <CCA/Ports/Scheduler.h>
 
-#include <Core/Containers/StaticArray.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/SimulationState.h>
@@ -278,9 +277,9 @@ CQMOMSourceWrapper::buildSourceTerm( const ProcessorGroup* pc,
       srcs.push_back( tempCCVar );
     }
  
-    StaticArray <constCCVariable<double> > cqmomWeights( _N );
-    StaticArray <constCCVariable<double> > cqmomAbscissas( _N * M);
-    StaticArray <constCCVariable<double> > nodeSource( _N * nSources);
+    std::vector <constCCVariable<double> > cqmomWeights( _N );
+    std::vector <constCCVariable<double> > cqmomAbscissas( _N * M);
+    std::vector <constCCVariable<double> > nodeSource( _N * nSources);
     
     //get weights and abscissas from dw
     int j = 0;

@@ -63,7 +63,6 @@
 #include <Core/Parallel/ProcessorGroup.h>
 
 #include <Core/Math/FastMatrix.h>
-#include <Core/Containers/StaticArray.h>
 #include <Core/Math/Expon.h>
 #include <Core/Util/DebugStream.h>
 
@@ -2279,16 +2278,16 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
     int numMatls    = d_sharedState->getNumICEMatls();
     int numALLMatls = d_sharedState->getNumMatls();
     Vector grav     = getGravity();
-    StaticArray<constCCVariable<double> > placeHolder(0);
-    StaticArray<CCVariable<double>   > rho_micro(max_indx);
-    StaticArray<CCVariable<double>   > sp_vol_CC(max_indx);
-    StaticArray<CCVariable<double>   > rho_CC(max_indx); 
-    StaticArray<CCVariable<double>   > Temp_CC(max_indx);
-    StaticArray<CCVariable<double>   > speedSound(max_indx);
-    StaticArray<CCVariable<double>   > vol_frac_CC(max_indx);
-    StaticArray<CCVariable<Vector>   > vel_CC(max_indx);
-    StaticArray<CCVariable<double>   > cv(max_indx);
-    StaticArray<CCVariable<double>   > gamma(max_indx);
+    std::vector<constCCVariable<double> > placeHolder(0);
+    std::vector<CCVariable<double>   > rho_micro(max_indx);
+    std::vector<CCVariable<double>   > sp_vol_CC(max_indx);
+    std::vector<CCVariable<double>   > rho_CC(max_indx); 
+    std::vector<CCVariable<double>   > Temp_CC(max_indx);
+    std::vector<CCVariable<double>   > speedSound(max_indx);
+    std::vector<CCVariable<double>   > vol_frac_CC(max_indx);
+    std::vector<CCVariable<Vector>   > vel_CC(max_indx);
+    std::vector<CCVariable<double>   > cv(max_indx);
+    std::vector<CCVariable<double>   > gamma(max_indx);
     CCVariable<double>    press_CC, imp_initialGuess, vol_frac_sum;
     
     new_dw->allocateAndPut(press_CC,         lb->press_CCLabel,     0,patch);
@@ -2582,22 +2581,22 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
     static int n_passes;                  
     n_passes ++; 
 
-    StaticArray<double> press_eos(numMatls);
-    StaticArray<double> dp_drho(numMatls),dp_de(numMatls);
-    StaticArray<CCVariable<double> > vol_frac(numMatls);
-    StaticArray<CCVariable<double> > rho_micro(numMatls);
-    StaticArray<CCVariable<double> > rho_CC_new(numMatls);
-    StaticArray<CCVariable<double> > sp_vol_new(numMatls); 
-    StaticArray<CCVariable<double> > speedSound(numMatls);
-    StaticArray<CCVariable<double> > speedSound_new(numMatls);
-    StaticArray<CCVariable<double> > f_theta(numMatls); 
-    StaticArray<CCVariable<double> > kappa(numMatls);
-    StaticArray<constCCVariable<double> > Temp(numMatls);
-    StaticArray<constCCVariable<double> > rho_CC(numMatls);
-    StaticArray<constCCVariable<double> > sp_vol_CC(numMatls);
-    StaticArray<constCCVariable<double> > cv(numMatls);
-    StaticArray<constCCVariable<double> > gamma(numMatls); 
-    StaticArray<constCCVariable<double> > placeHolder(0);   
+    std::vector<double> press_eos(numMatls);
+    std::vector<double> dp_drho(numMatls),dp_de(numMatls);
+    std::vector<CCVariable<double> > vol_frac(numMatls);
+    std::vector<CCVariable<double> > rho_micro(numMatls);
+    std::vector<CCVariable<double> > rho_CC_new(numMatls);
+    std::vector<CCVariable<double> > sp_vol_new(numMatls); 
+    std::vector<CCVariable<double> > speedSound(numMatls);
+    std::vector<CCVariable<double> > speedSound_new(numMatls);
+    std::vector<CCVariable<double> > f_theta(numMatls); 
+    std::vector<CCVariable<double> > kappa(numMatls);
+    std::vector<constCCVariable<double> > Temp(numMatls);
+    std::vector<constCCVariable<double> > rho_CC(numMatls);
+    std::vector<constCCVariable<double> > sp_vol_CC(numMatls);
+    std::vector<constCCVariable<double> > cv(numMatls);
+    std::vector<constCCVariable<double> > gamma(numMatls); 
+    std::vector<constCCVariable<double> > placeHolder(0);   
 
     CCVariable<int> n_iters_equil_press;
     constCCVariable<double> press;
@@ -2975,20 +2974,20 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
 //
 //      const Patch* patch = patches->get(p);
 //
-//      StaticArray<CCVariable<double> > rho_CC_new(numMatls);
-//      StaticArray<CCVariable<double> > sp_vol_new(numMatls);
-//      StaticArray<CCVariable<double> > kappa(numMatls);
-//      StaticArray<CCVariable<double> > f_theta(numMatls);
-//      StaticArray<CCVariable<double> > rho_micro(numMatls);
-//      StaticArray<CCVariable<double> > vol_frac(numMatls);
-//      StaticArray<CCVariable<double> > speedSound_new(numMatls);
+//      std::vector<CCVariable<double> > rho_CC_new(numMatls);
+//      std::vector<CCVariable<double> > sp_vol_new(numMatls);
+//      std::vector<CCVariable<double> > kappa(numMatls);
+//      std::vector<CCVariable<double> > f_theta(numMatls);
+//      std::vector<CCVariable<double> > rho_micro(numMatls);
+//      std::vector<CCVariable<double> > vol_frac(numMatls);
+//      std::vector<CCVariable<double> > speedSound_new(numMatls);
 //
 //      CCVariable<double> press_new;
 //      CCVariable<double> sumKappa;
 //
 //
-//      StaticArray<constCCVariable<double> > rho_CC(numMatls);
-//      StaticArray<constCCVariable<double> > placeHolder(0);
+//      std::vector<constCCVariable<double> > rho_CC(numMatls);
+//      std::vector<constCCVariable<double> > placeHolder(0);
 //
 //
 //      for (int m = 0; m < numMatls; m++) {
@@ -3093,7 +3092,7 @@ void ICE::computeEquilPressure_1_matl(const ProcessorGroup*,
     CCVariable<double> speedSound, f_theta, kappa;
     CCVariable<double> press_eq, sumKappa, sum_imp_delP, rho_CC_new;
     constCCVariable<double> Temp,rho_CC, sp_vol_CC, cv, gamma;   
-    StaticArray<CCVariable<double> > rho_micro(1);
+    std::vector<CCVariable<double> > rho_micro(1);
     
     Ghost::GhostType  gn = Ghost::None;
     ICEMaterial* ice_matl = d_sharedState->getICEMaterial(0);   
@@ -3144,7 +3143,7 @@ void ICE::computeEquilPressure_1_matl(const ProcessorGroup*,
     }
     //__________________________________
     // - apply Boundary conditions
-    StaticArray<constCCVariable<double> > placeHolder(0);
+    std::vector<constCCVariable<double> > placeHolder(0);
     customBC_localVars* BC_localVars   = scinew customBC_localVars();
     
     preprocess_CustomBCs( "EqPress",old_dw, new_dw, lb,  patch, 
@@ -3568,11 +3567,11 @@ template<class constSFC, class SFC>
                                    int numMatls,
                                    FastMatrix& K,
                                    double delT,
-                                   StaticArray<constCCVariable<double> >& vol_frac_CC,
-                                   StaticArray<constCCVariable<double> >& sp_vol_CC,
-                                   StaticArray< constSFC> & vel_FC,
-                                   StaticArray< SFC >& sp_vol_FC,
-                                   StaticArray< SFC >& vel_FCME)        
+                                   std::vector<constCCVariable<double> >& vol_frac_CC,
+                                   std::vector<constCCVariable<double> >& sp_vol_CC,
+                                   std::vector< constSFC> & vel_FC,
+                                   std::vector< SFC >& sp_vol_FC,
+                                   std::vector< SFC >& vel_FCME)        
                                        
 {
   //__________________________________
@@ -3705,15 +3704,15 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
     delt_vartype delT;
     pOldDW->get(delT, d_sharedState->get_delt_label(),level);
 
-    StaticArray<constCCVariable<double> > sp_vol_CC(numMatls);
-    StaticArray<constCCVariable<double> > vol_frac_CC(numMatls);
-    StaticArray<constSFCXVariable<double> > uvel_FC(numMatls);
-    StaticArray<constSFCYVariable<double> > vvel_FC(numMatls);
-    StaticArray<constSFCZVariable<double> > wvel_FC(numMatls);
+    std::vector<constCCVariable<double> > sp_vol_CC(numMatls);
+    std::vector<constCCVariable<double> > vol_frac_CC(numMatls);
+    std::vector<constSFCXVariable<double> > uvel_FC(numMatls);
+    std::vector<constSFCYVariable<double> > vvel_FC(numMatls);
+    std::vector<constSFCZVariable<double> > wvel_FC(numMatls);
 
-    StaticArray<SFCXVariable<double> >uvel_FCME(numMatls),sp_vol_XFC(numMatls);
-    StaticArray<SFCYVariable<double> >vvel_FCME(numMatls),sp_vol_YFC(numMatls);
-    StaticArray<SFCZVariable<double> >wvel_FCME(numMatls),sp_vol_ZFC(numMatls);
+    std::vector<SFCXVariable<double> >uvel_FCME(numMatls),sp_vol_XFC(numMatls);
+    std::vector<SFCYVariable<double> >vvel_FCME(numMatls),sp_vol_YFC(numMatls);
+    std::vector<SFCZVariable<double> >wvel_FCME(numMatls),sp_vol_ZFC(numMatls);
     
     // lowIndex is the same for all vel_FC
     IntVector lowIndex(patch->getExtraSFCXLowIndex()); 
@@ -3839,8 +3838,8 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     CCVariable<double> press_CC;
     CCVariable<double> term1, term2;
     constCCVariable<double>sumKappa, press_equil;
-    StaticArray<CCVariable<double> > placeHolder(0);
-    StaticArray<constCCVariable<double> > sp_vol_CC(numMatls);
+    std::vector<CCVariable<double> > placeHolder(0);
+    std::vector<constCCVariable<double> > sp_vol_CC(numMatls);
    
     const IntVector gc(1,1,1);
     Ghost::GhostType  gn  = Ghost::None;
@@ -4115,12 +4114,12 @@ void ICE::updateVolumeFraction(const ProcessorGroup*,
     Ghost::GhostType  gn = Ghost::None;
     int numALLMatls = d_sharedState->getNumMatls();
     CCVariable<double> sumKappa;
-    StaticArray<CCVariable<double> > vol_frac(numALLMatls);
-    StaticArray<CCVariable<double> > f_theta(numALLMatls);
-    StaticArray<constCCVariable<double> > rho_CC(numALLMatls);
-    StaticArray<constCCVariable<double> > sp_vol(numALLMatls);
-    StaticArray<constCCVariable<double> > modVolSrc(numALLMatls);
-    StaticArray<constCCVariable<double> > kappa(numALLMatls);
+    std::vector<CCVariable<double> > vol_frac(numALLMatls);
+    std::vector<CCVariable<double> > f_theta(numALLMatls);
+    std::vector<constCCVariable<double> > rho_CC(numALLMatls);
+    std::vector<constCCVariable<double> > sp_vol(numALLMatls);
+    std::vector<constCCVariable<double> > modVolSrc(numALLMatls);
+    std::vector<constCCVariable<double> > kappa(numALLMatls);
     new_dw->getModifiable(sumKappa, lb->sumKappaLabel, 0,patch);
     
     Vector dx  = patch->dCell();
@@ -4811,10 +4810,10 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
     Ghost::GhostType  gn  = Ghost::None;
     Ghost::GhostType  gac = Ghost::AroundCells;
 
-    StaticArray<constCCVariable<double> > Tdot(numALLMatls);
-    StaticArray<constCCVariable<double> > vol_frac(numALLMatls);
-    StaticArray<constCCVariable<double> > Temp_CC(numALLMatls);
-    StaticArray<CCVariable<double> > alpha(numALLMatls);
+    std::vector<constCCVariable<double> > Tdot(numALLMatls);
+    std::vector<constCCVariable<double> > vol_frac(numALLMatls);
+    std::vector<constCCVariable<double> > Temp_CC(numALLMatls);
+    std::vector<CCVariable<double> > alpha(numALLMatls);
     constCCVariable<double> rho_CC, f_theta, sp_vol_CC, cv;
     constCCVariable<double> delP, P;
     constCCVariable<double> TMV_CC;
@@ -4997,7 +4996,7 @@ void ICE::computeLagrangian_Transported_Vars(const ProcessorGroup*,
     int numMatls = d_sharedState->getNumICEMatls();
     
     // get mass_L for all ice matls
-    StaticArray<constCCVariable<double> > mass_L(numMatls);
+    std::vector<constCCVariable<double> > mass_L(numMatls);
     for (int m = 0; m < numMatls; m++ ) {
       Material* matl = d_sharedState->getICEMaterial( m );
       int indx = matl->getDWIndex();
@@ -5201,21 +5200,21 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
     //Vector zero(0.,0.,0.);
 
     // Create arrays for the grid data
-    StaticArray<CCVariable<double> > cv(numALLMatls);
-    StaticArray<CCVariable<double> > Temp_CC(numALLMatls);
-    StaticArray<constCCVariable<double> > gamma(numALLMatls);  
-    StaticArray<constCCVariable<double> > vol_frac_CC(numALLMatls);
-    StaticArray<constCCVariable<double> > sp_vol_CC(numALLMatls);
-    StaticArray<constCCVariable<Vector> > mom_L(numALLMatls);
-    StaticArray<constCCVariable<double> > int_eng_L(numALLMatls);
+    std::vector<CCVariable<double> > cv(numALLMatls);
+    std::vector<CCVariable<double> > Temp_CC(numALLMatls);
+    std::vector<constCCVariable<double> > gamma(numALLMatls);  
+    std::vector<constCCVariable<double> > vol_frac_CC(numALLMatls);
+    std::vector<constCCVariable<double> > sp_vol_CC(numALLMatls);
+    std::vector<constCCVariable<Vector> > mom_L(numALLMatls);
+    std::vector<constCCVariable<double> > int_eng_L(numALLMatls);
 
     // Create variables for the results
-    StaticArray<CCVariable<Vector> > mom_L_ME(numALLMatls);
-    StaticArray<CCVariable<Vector> > vel_CC(numALLMatls);
-    StaticArray<CCVariable<double> > int_eng_L_ME(numALLMatls);
-    StaticArray<CCVariable<double> > Tdot(numALLMatls);
-    StaticArray<constCCVariable<double> > mass_L(numALLMatls);
-    StaticArray<constCCVariable<double> > old_temp(numALLMatls);
+    std::vector<CCVariable<Vector> > mom_L_ME(numALLMatls);
+    std::vector<CCVariable<Vector> > vel_CC(numALLMatls);
+    std::vector<CCVariable<double> > int_eng_L_ME(numALLMatls);
+    std::vector<CCVariable<double> > Tdot(numALLMatls);
+    std::vector<constCCVariable<double> > mass_L(numALLMatls);
+    std::vector<constCCVariable<double> > old_temp(numALLMatls);
 
     double b[MAX_MATLS];
     Vector bb[MAX_MATLS];
@@ -5471,8 +5470,8 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
     /*`==========TESTING==========*/ 
     if(d_BC_globalVars->usingLodi || 
        d_BC_globalVars->usingMicroSlipBCs){ 
-      StaticArray<CCVariable<double> > temp_CC_Xchange(numALLMatls);
-      StaticArray<CCVariable<Vector> > vel_CC_Xchange(numALLMatls);      
+      std::vector<CCVariable<double> > temp_CC_Xchange(numALLMatls);
+      std::vector<CCVariable<Vector> > vel_CC_Xchange(numALLMatls);      
       for (int m = 0; m < numALLMatls; m++) {
         Material* matl = d_sharedState->getMaterial(m);
         int indx = matl->getDWIndex();
@@ -5536,8 +5535,8 @@ void ICE::maxMach_on_Lodi_BC_Faces(const ProcessorGroup*,
       
     Ghost::GhostType  gn = Ghost::None;
     int numAllMatls = d_sharedState->getNumMatls();
-    StaticArray<constCCVariable<Vector> > vel_CC(numAllMatls);
-    StaticArray<constCCVariable<double> > speedSound(numAllMatls);
+    std::vector<constCCVariable<Vector> > vel_CC(numAllMatls);
+    std::vector<constCCVariable<double> > speedSound(numAllMatls);
           
     for(int m=0;m < numAllMatls;m++){
       Material* matl = d_sharedState->getMaterial( m );
@@ -5948,9 +5947,9 @@ void ICE::TestConservation(const ProcessorGroup*,
     //__________________________________
     // get face centered velocities to 
     // to compute what's being fluxed through the domain
-    StaticArray<constSFCXVariable<double> >uvel_FC(numICEmatls);
-    StaticArray<constSFCYVariable<double> >vvel_FC(numICEmatls);
-    StaticArray<constSFCZVariable<double> >wvel_FC(numICEmatls);
+    std::vector<constSFCXVariable<double> >uvel_FC(numICEmatls);
+    std::vector<constSFCYVariable<double> >vvel_FC(numICEmatls);
+    std::vector<constSFCZVariable<double> >wvel_FC(numICEmatls);
     for (int m = 0; m < numICEmatls; m++ ) {
       ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
       int indx = ice_matl->getDWIndex();
@@ -5962,7 +5961,7 @@ void ICE::TestConservation(const ProcessorGroup*,
     //__________________________________
     // conservation of mass
     constCCVariable<double> rho_CC;
-    StaticArray<CCVariable<double> > mass(numICEmatls);   
+    std::vector<CCVariable<double> > mass(numICEmatls);   
     for (int m = 0; m < numICEmatls; m++ ) {
 
       ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
@@ -6226,7 +6225,7 @@ void ICE::getConstantExchangeCoefficients( FastMatrix& K, FastMatrix& H  )
 void ICE::getVariableExchangeCoefficients( FastMatrix& ,
                                            FastMatrix& H,
                                            IntVector & c,
-                                           StaticArray<constCCVariable<double> >& mass_L  )
+                                           std::vector<constCCVariable<double> >& mass_L  )
 {
   int numMatls  = d_sharedState->getNumMatls();
 

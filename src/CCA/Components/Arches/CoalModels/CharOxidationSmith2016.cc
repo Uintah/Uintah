@@ -33,7 +33,6 @@
 #include <CCA/Components/Arches/ChemMix/ChemHelper.h>
 #include <CCA/Ports/Scheduler.h>
 
-#include <Core/Containers/StaticArray.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Grid/SimulationState.h>
@@ -459,7 +458,7 @@ CharOxidationSmith2016::initVars( const ProcessorGroup * pc,
     CCVariable<double> particle_Size_rate;
     CCVariable<double> surface_rate;
     CCVariable<double> PO2surf_;
-    StaticArray< CCVariable<double> > reaction_rate_l(_NUM_reactions); // char reaction rate for lth reaction.
+    std::vector< CCVariable<double> > reaction_rate_l(_NUM_reactions); // char reaction rate for lth reaction.
 
     new_dw->allocateAndPut( char_rate, d_modelLabel, matlIndex, patch );
     char_rate.initialize(0.0);
@@ -618,7 +617,7 @@ CharOxidationSmith2016::computeModel( const ProcessorGroup * pc,
     CCVariable<double> particle_Size_rate;
     CCVariable<double> surface_rate;
     CCVariable<double> PO2surf_;
-    StaticArray< CCVariable<double> > reaction_rate_l(_NUM_reactions); // char reaction rate for lth reaction.
+    std::vector< CCVariable<double> > reaction_rate_l(_NUM_reactions); // char reaction rate for lth reaction.
 
     DenseMatrix* dfdrh = scinew DenseMatrix(_NUM_reactions,_NUM_reactions);
 
@@ -654,7 +653,7 @@ CharOxidationSmith2016::computeModel( const ProcessorGroup * pc,
       }
     }
 
-    StaticArray< constCCVariable<double> > old_reaction_rate_l(_NUM_reactions); // char reaction rate for lth reaction.
+    std::vector< constCCVariable<double> > old_reaction_rate_l(_NUM_reactions); // char reaction rate for lth reaction.
     for (int l=0; l<_NUM_reactions;l++ ){
       which_dw->get( old_reaction_rate_l[l], _reaction_rate_varlabels[l], matlIndex, patch, gn, 0 );
     }
@@ -672,8 +671,8 @@ CharOxidationSmith2016::computeModel( const ProcessorGroup * pc,
     which_dw->get( particle_temperature , _particle_temperature_varlabel , matlIndex , patch , gn , 0 );
     constCCVariable<double> particle_density;
     which_dw->get( particle_density , _p_density_varlabel , matlIndex , patch , gn , 0 );
-    StaticArray< constCCVariable<double> > length(_nQn_part);
-    StaticArray< constCCVariable<double> > weight(_nQn_part);
+    std::vector< constCCVariable<double> > length(_nQn_part);
+    std::vector< constCCVariable<double> > weight(_nQn_part);
     for (int i=0; i<_nQn_part;i++ ){
       which_dw->get( length[i], _length_varlabel[i], matlIndex, patch, gn, 0 );
       which_dw->get( weight[i], _weight_varlabel[i], matlIndex, patch, gn, 0 );
@@ -694,7 +693,7 @@ CharOxidationSmith2016::computeModel( const ProcessorGroup * pc,
     new_dw->get( RHS_weight , _RHS_weight_varlabel , matlIndex , patch , gn , 0 );
     constCCVariable<double> number_density;
     which_dw->get( number_density , _number_density_varlabel , matlIndex , patch , gn , 0 );
-    StaticArray< constCCVariable<double> > species(_NUM_species);
+    std::vector< constCCVariable<double> > species(_NUM_species);
     for (int l=0; l<_NUM_species; l++) {
       which_dw->get( species[l], _species_varlabels[l], matlIndex, patch, gn, 0 );
     }

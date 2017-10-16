@@ -143,9 +143,8 @@ PressureEqn::initialize( const Patch* patch, ATIM* tsk_info ){
 
     A.p = A.e + A.w + A.n + A.s + A.t + A.b;
     A.p *= -1;
-
-  });
-
+  
+   });
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -203,7 +202,6 @@ PressureEqn::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   const double area_EW = DX.y()*DX.z();
   const double area_NS = DX.x()*DX.z();
   const double area_TB = DX.x()*DX.y();
- // const double V       = DX.x()*DX.y()*DX.z();
 
   CCVariable<double>& b = tsk_info->get_uintah_field_add<CCVariable<double> >("b_press");
   constCCVariable<double>& eps = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_eps_name);

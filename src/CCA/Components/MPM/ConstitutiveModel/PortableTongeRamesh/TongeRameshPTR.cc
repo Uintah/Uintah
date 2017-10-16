@@ -176,7 +176,7 @@ void TongeRameshPTR::initializeCMData(const Patch* patch,
 	ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
 
     // Again motivated by Kayenta.cc:
-    StaticArray<ParticleVariable<double> > HistVars(d_numHistVar);
+    std::vector<ParticleVariable<double> > HistVars(d_numHistVar);
     for (int i=0; i<d_numHistVar; ++i){
       new_dw->allocateAndPut(HistVars[i], histVarVect[i], pset);
     }
@@ -340,8 +340,8 @@ void TongeRameshPTR::computeStressTensor(const PatchSubset* patches,
     Vector dx            = patch->dCell();
     Vector WaveSpeed(1e-12);
         
-    StaticArray<constParticleVariable<double> > pHistVars_old(d_numHistVar);
-    StaticArray<ParticleVariable<double> > pHistVars_new(d_numHistVar);
+    std::vector<constParticleVariable<double> > pHistVars_old(d_numHistVar);
+    std::vector<ParticleVariable<double> > pHistVars_new(d_numHistVar);
     for (int i=0; i<d_numHistVar; ++i){
       old_dw->get(pHistVars_old[i],            histVarVect[i], pset);
       new_dw->allocateAndPut(pHistVars_new[i], histVarVect_preReloc[i], pset);

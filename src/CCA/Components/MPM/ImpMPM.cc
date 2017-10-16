@@ -2153,12 +2153,12 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     // Create arrays for the grid data
     constNCVariable<double> gTemperatureOld;
     NCVariable<double> gTemperature;
-    StaticArray<NCVariable<double> > gmass(numMatls),gvolume(numMatls),
+    std::vector<NCVariable<double> > gmass(numMatls),gvolume(numMatls),
       gExternalHeatRate(numMatls),gExternalHeatFlux(numMatls),
       gmassall(numMatls);
-    StaticArray<NCVariable<Vector> > gvel_old(numMatls),gacc(numMatls);
-    StaticArray<NCVariable<Vector> > dispNew(numMatls),gvelocity(numMatls);
-    StaticArray<NCVariable<Vector> > gextforce(numMatls),gintforce(numMatls);
+    std::vector<NCVariable<Vector> > gvel_old(numMatls),gacc(numMatls);
+    std::vector<NCVariable<Vector> > dispNew(numMatls),gvelocity(numMatls);
+    std::vector<NCVariable<Vector> > gextforce(numMatls),gintforce(numMatls);
 
     NCVariable<double> GMASS,GVOLUME;
     NCVariable<Vector> GVEL_OLD, GACC, GEXTFORCE;
@@ -2802,7 +2802,7 @@ void ImpMPM::computeContact(const ProcessorGroup*,
     delt_vartype dt;
 
     int numMatls = d_sharedState->getNumMPMMatls();
-    StaticArray<NCVariable<int> >  contact(numMatls);
+    std::vector<NCVariable<int> >  contact(numMatls);
     for(int n = 0; n < numMatls; n++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( n );
       int dwi = mpm_matl->getDWIndex();
@@ -3021,7 +3021,7 @@ void ImpMPM::computeInternalForce(const ProcessorGroup*,
     int numMPMMatls = d_sharedState->getNumMPMMatls();
     int n8or27 = flags->d_8or27;
 
-    StaticArray<NCVariable<Vector> > int_force(numMPMMatls);
+    std::vector<NCVariable<Vector> > int_force(numMPMMatls);
     NCVariable<Vector> INT_FORCE;
     new_dw->allocateTemporary(INT_FORCE,     patch,Ghost::None,0);
     INT_FORCE.initialize(Vector(0,0,0));
@@ -3736,9 +3736,9 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
     INT_FORCE.initialize(Vector(0,0,0));
 
     GSTRESS.initialize(Matrix3(0.));
-    StaticArray<NCVariable<Matrix3> >         gstress(numMatls);
-    StaticArray<constNCVariable<double> >     gvolume(numMatls);
-    StaticArray<NCVariable<Vector> >          int_force(numMatls);
+    std::vector<NCVariable<Matrix3> >         gstress(numMatls);
+    std::vector<constNCVariable<double> >     gvolume(numMatls);
+    std::vector<NCVariable<Vector> >          int_force(numMatls);
 
     Vector dx = patch->dCell();
     double oodx[3];

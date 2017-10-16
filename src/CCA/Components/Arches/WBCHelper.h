@@ -93,6 +93,17 @@ enum BndCondTypeEnum
   CUSTOM
 };
 
+/**
+* @enum BndEdgeType
+* @brief If EDGE, then the boundary is defined as a FACE type. If INTERIOR, then
+*        the boundary condition is INTERIORFACE type.
+*
+**/
+enum BndEdgeType{
+  EDGE,
+  INTERIOR
+};
+
 BndCondTypeEnum select_bc_type_enum( const std::string& bcTypeStr );
 std::string bc_type_enum_to_string( const BndCondTypeEnum bcTypeEnum );
 
@@ -163,7 +174,7 @@ enum BCValueTypeEnum
 //****************************************************************************
 struct BndCondSpec
 {
-  std::string      varName;     // mame of the variable on which we want to apply a BC
+  std::string      varName;     // name of the variable on which we want to apply a BC
   std::string      functorName; // name of the functor applied as bc
   double           value;       // boundary value for this variable
   BndCondTypeEnum  bcType;      // bc type: DIRICHLET, NEUMANN
@@ -196,6 +207,7 @@ struct BndSpec
   std::string              name;      // name of the boundary
   Uintah::Patch::FaceType  face;      // x-minus, x-plus, y-minus, y-plus, z-minus, z-plus
   BndTypeEnum              type;      // Wall, inlet, etc...
+  BndEdgeType              edge_type; // Face or interior
   double                   area;      // discrete area of this boundary
   std::vector<int>         patchIDs;  // List of patch IDs that this boundary lives on.
                                       //Note that a boundary is typically split between several patches.
@@ -312,6 +324,7 @@ protected:
   void add_boundary( const std::string&      bndName,
                      Uintah::Patch::FaceType face,
                      const BndTypeEnum&      bndType,
+                     const BndEdgeType&      bndEdgeType,
                      const int               patchID,
                      const Uintah::BCGeomBase::ParticleBndSpec);
 

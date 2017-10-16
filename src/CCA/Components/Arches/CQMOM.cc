@@ -21,7 +21,6 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Containers/StaticArray.h>
 #include <Core/Util/Timers/Timers.hpp>
 
 #include <iostream>
@@ -278,7 +277,7 @@ void CQMOM::solveCQMOMInversion( const ProcessorGroup* pc,
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
    
     // get moments from data warehouse and put into CCVariable
-    StaticArray <constCCVariable<double> > momentCCVars ( nMoments );
+    std::vector <constCCVariable<double> > momentCCVars ( nMoments );
     int i = 0;
     for( vector<CQMOMEqn*>::iterator iEqn = momentEqns.begin(); iEqn != momentEqns.end(); ++iEqn ) {
       const VarLabel* equation_label = (*iEqn)->getTransportEqnLabel();
@@ -608,7 +607,7 @@ void CQMOM::solveCQMOMInversion321( const ProcessorGroup* pc,
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
     
     // get moments from data warehouse and put into CCVariable
-    StaticArray <constCCVariable<double> > momentCCVars ( nMoments );
+    std::vector <constCCVariable<double> > momentCCVars ( nMoments );
     int i = 0;
     for( vector<CQMOMEqn*>::iterator iEqn = momentEqns.begin(); iEqn != momentEqns.end(); ++iEqn ) {
       const VarLabel* equation_label = (*iEqn)->getTransportEqnLabel();
@@ -768,7 +767,7 @@ void CQMOM::solveCQMOMInversion312( const ProcessorGroup* pc,
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
     
     // get moments from data warehouse and put into CCVariable
-    StaticArray <constCCVariable<double> > momentCCVars ( nMoments );
+    std::vector <constCCVariable<double> > momentCCVars ( nMoments );
     int i = 0;
     for( vector<CQMOMEqn*>::iterator iEqn = momentEqns.begin(); iEqn != momentEqns.end(); ++iEqn ) {
       const VarLabel* equation_label = (*iEqn)->getTransportEqnLabel();
@@ -930,7 +929,7 @@ void CQMOM::solveCQMOMInversion213( const ProcessorGroup* pc,
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
     
     // get moments from data warehouse and put into CCVariable
-    StaticArray <constCCVariable<double> > momentCCVars ( nMoments );
+    std::vector <constCCVariable<double> > momentCCVars ( nMoments );
     int i = 0;
     for( vector<CQMOMEqn*>::iterator iEqn = momentEqns.begin(); iEqn != momentEqns.end(); ++iEqn ) {
       const VarLabel* equation_label = (*iEqn)->getTransportEqnLabel();

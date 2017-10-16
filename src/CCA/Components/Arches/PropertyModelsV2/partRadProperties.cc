@@ -4,7 +4,6 @@
 #include <CCA/Components/Arches/ChemMix/ChemHelper.h>
 #include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
 
-#include <Core/Containers/StaticArray.h>
 using namespace Uintah;
 
 //---------------------------------------------------------------------------
@@ -304,11 +303,11 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   constCCVariable<double>& vol_fraction = *(tsk_info->get_const_uintah_field<constCCVariable<double> >("volFraction"));
 
-  StaticArray<constCCVariable<double> > RC_mass(_nQn_part);
-  StaticArray<constCCVariable<double> > Char_mass(_nQn_part);
-  StaticArray<constCCVariable<double> > weightQuad (_nQn_part);
-  StaticArray<constCCVariable<double> > temperatureQuad(_nQn_part);
-  StaticArray<constCCVariable<double> > sizeQuad(_nQn_part);
+  std::vector<constCCVariable<double> > RC_mass(_nQn_part);
+  std::vector<constCCVariable<double> > Char_mass(_nQn_part);
+  std::vector<constCCVariable<double> > weightQuad (_nQn_part);
+  std::vector<constCCVariable<double> > temperatureQuad(_nQn_part);
+  std::vector<constCCVariable<double> > sizeQuad(_nQn_part);
 
   for (int ix=0; ix< _nQn_part ; ix++){
     if (_isCoal){

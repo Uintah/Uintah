@@ -190,10 +190,10 @@ void lodi_getVars_pressBC( const Patch* patch,
 {
   cout_doing << "lodi_getVars_pressBC on patch "<<patch->getID()<< endl;
   int numMatls = sharedState->getNumMatls();
-  StaticArray<constCCVariable<double> > Temp_CC(numMatls);
-  StaticArray<constCCVariable<double> > f_theta_CC(numMatls);
-  StaticArray<constCCVariable<double> > gamma(numMatls);
-  StaticArray<constCCVariable<double> > cv(numMatls);
+  std::vector<constCCVariable<double> > Temp_CC(numMatls);
+  std::vector<constCCVariable<double> > f_theta_CC(numMatls);
+  std::vector<constCCVariable<double> > gamma(numMatls);
+  std::vector<constCCVariable<double> > cv(numMatls);
   Ghost::GhostType  gn = Ghost::None;
   
   for(int m = 0; m < numMatls; m++) {
@@ -272,7 +272,7 @@ inline void characteristic_source_terms(const IntVector dir,
            Di and dumps out data
 ____________________________________________________________________*/
 void debugging_Di(const IntVector c,
-                  StaticArray<CCVariable<Vector> >& d,
+                  std::vector<CCVariable<Vector> >& d,
                   const vector<double>& s,
                   const IntVector dir,
                   const Patch::FaceType face,
@@ -386,7 +386,7 @@ void debugging_Di(const IntVector c,
               flows", James C. Sutherland, Chistopher A. Kenndey
               Journal of Computational Physics, 191, 2003, pp. 502-524
 ____________________________________________________________________*/
-inline void Di(StaticArray<CCVariable<Vector> >& d,
+inline void Di(std::vector<CCVariable<Vector> >& d,
                const IntVector dir,
                const IntVector& c,
                const Patch::FaceType face,
@@ -526,7 +526,7 @@ inline void Di(StaticArray<CCVariable<Vector> >& d,
  Purpose~  compute Di's at the boundary cells using upwind first-order 
            differenceing scheme
 ____________________________________________________________________*/
-void computeDi(StaticArray<CCVariable<Vector> >& d,
+void computeDi(std::vector<CCVariable<Vector> >& d,
                constCCVariable<double>& rho,              
                const CCVariable<double>& press,                   
                constCCVariable<Vector>& vel,                  
@@ -760,7 +760,7 @@ void  lodi_bc_preprocess( const Patch* patch,
   constCCVariable<double>& temp_old   = lv->temp_old;
   constCCVariable<double>& speedSound = lv->speedSound;
   constCCVariable<Vector>& vel_old    = lv->vel_old;
-  StaticArray<CCVariable<Vector> >& di = lv->di;
+  std::vector<CCVariable<Vector> >& di = lv->di;
   
   //__________________________________
   //   get the data LODI needs from old dw
@@ -946,7 +946,7 @@ void FaceDensity_LODI(const Patch* patch,
   }  
   
   // shortcuts
-  StaticArray<CCVariable<Vector> >& d = lv->di;
+  std::vector<CCVariable<Vector> >& d = lv->di;
   const CCVariable<Vector>& nu      = lv->nu;
   const CCVariable<double>& rho_old = lv->rho_old;
   const CCVariable<Vector>& vel_old = lv->vel_old;
@@ -1095,7 +1095,7 @@ double time = sharedState->getElapsedSimTime();
 /*===========TESTING==========`*/
      
   // shortcuts       
-  StaticArray<CCVariable<Vector> >& d = lv->di;      
+  std::vector<CCVariable<Vector> >& d = lv->di;      
   constCCVariable<double>& rho_old = lv->rho_old;
   constCCVariable<Vector>& vel_old = lv->vel_old; 
   CCVariable<double>& rho_new = lv->rho_CC;
@@ -1374,7 +1374,7 @@ void FaceTemp_LODI(const Patch* patch,
     throw InternalError("FaceTempLODI: Lodi_vars = null", __FILE__, __LINE__);
   } 
   // shortcuts  
-  StaticArray<CCVariable<Vector> >& d = lv->di;
+  std::vector<CCVariable<Vector> >& d = lv->di;
   const CCVariable<double>& E         = lv->E;
   const CCVariable<double>& cv        = lv->cv;
   const CCVariable<double>& gamma     = lv->gamma;
@@ -1578,7 +1578,7 @@ void FaceTemp_LODI(const Patch* patch,
 ---------------------------------------------------------------------  */
 void FacePress_LODI(const Patch* patch,
                     CCVariable<double>& press_CC,
-                    StaticArray<CCVariable<double> >& rho_micro,
+                    std::vector<CCVariable<double> >& rho_micro,
                     SimulationStateP& sharedState, 
                     Patch::FaceType face,
                     Lodi_vars_pressBC* lv)
@@ -1590,11 +1590,11 @@ void FacePress_LODI(const Patch* patch,
   }
 
   int numMatls = sharedState->getNumMatls();
-  StaticArray<double> press_eos(numMatls);
-  StaticArray<constCCVariable<double> >& gamma   = lv->gamma;
-  StaticArray<constCCVariable<double> >& cv      = lv->cv;
-  StaticArray<constCCVariable<double> >& Temp_CC = lv->Temp_CC;
-  StaticArray<constCCVariable<double> >& f_theta = lv->f_theta;
+  std::vector<double> press_eos(numMatls);
+  std::vector<constCCVariable<double> >& gamma   = lv->gamma;
+  std::vector<constCCVariable<double> >& cv      = lv->cv;
+  std::vector<constCCVariable<double> >& Temp_CC = lv->Temp_CC;
+  std::vector<constCCVariable<double> >& f_theta = lv->f_theta;
 
   //__________________________________  
   double press_ref= sharedState->getRefPress();    

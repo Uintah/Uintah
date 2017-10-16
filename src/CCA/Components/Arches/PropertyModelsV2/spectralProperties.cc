@@ -1,6 +1,5 @@
 #include <CCA/Components/Arches/PropertyModelsV2/spectralProperties.h>
 #include <CCA/Components/Arches/ChemMix/ChemHelper.h>
-#include <Core/Containers/StaticArray.h>
 
 using namespace Uintah; 
 
@@ -155,8 +154,8 @@ spectralProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
 
-  StaticArray< CCVariable<double> > abskg(_nbands  ); 
-  StaticArray< CCVariable<double> > abswg(_nbands  ); 
+  std::vector< CCVariable<double> > abskg(_nbands  ); 
+  std::vector< CCVariable<double> > abswg(_nbands  ); 
   for (int i=0; i< _nbands  ; i++){
 
     tsk_info->get_unmanaged_uintah_field<CCVariable<double> >(_abskg_name_vector[i],abskg[i]);

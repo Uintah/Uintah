@@ -27,7 +27,6 @@
 #include <CCA/Components/MPM/MPMBoundCond.h>
 #include <CCA/Components/MPM/MPMFlags.h>
 #include <CCA/Ports/DataWarehouse.h>
-#include <Core/Containers/StaticArray.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Vector.h>
@@ -183,9 +182,9 @@ void SpecifiedBodyContact::exMomInterpolated(const ProcessorGroup*,
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
     // Retrieve necessary data from DataWarehouse
-    StaticArray<constNCVariable<double> > gmass(numMatls);
-    StaticArray<     NCVariable<Vector> > gvelocity(numMatls);
-    StaticArray<     NCVariable<double> > frictionWork(numMatls);
+    std::vector<constNCVariable<double> > gmass(numMatls);
+    std::vector<     NCVariable<Vector> > gvelocity(numMatls);
+    std::vector<     NCVariable<double> > frictionWork(numMatls);
     
     for(int m=0;m<matls->size();m++){
       int dwi = matls->get(m);
@@ -249,11 +248,11 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
   int numMatls = d_sharedState->getNumMPMMatls();
 
   // Retrieve necessary data from DataWarehouse
-  StaticArray<constNCVariable<double> > gmass(numMatls);
-  StaticArray<NCVariable<Vector> >      gvelocity_star(numMatls);
-  StaticArray<constNCVariable<Vector> > gvelocity(numMatls);
-  StaticArray<constNCVariable<Vector> > ginternalForce(numMatls);
-  StaticArray<constNCVariable<double> > gvolume(numMatls);
+  std::vector<constNCVariable<double> > gmass(numMatls);
+  std::vector<NCVariable<Vector> >      gvelocity_star(numMatls);
+  std::vector<constNCVariable<Vector> > gvelocity(numMatls);
+  std::vector<constNCVariable<Vector> > ginternalForce(numMatls);
+  std::vector<constNCVariable<double> > gvolume(numMatls);
   constNCVariable<Vector>                    gsurfnorm;
 
   for(int p=0;p<patches->size();p++){

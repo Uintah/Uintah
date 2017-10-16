@@ -30,7 +30,7 @@
 #include <CCA/Components/ICE/Advection/SecondOrderBase.h>
 #include <Core/Disclosure/TypeDescription.h>
 
-#include <Core/Containers/StaticArray.h>
+
 
 namespace Uintah {
 

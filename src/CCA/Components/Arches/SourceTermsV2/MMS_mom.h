@@ -158,6 +158,7 @@ void MMS_mom<T>::register_timestep_init( std::vector<VarInfo>&
 //--------------------------------------------------------------------------------------------------
 template <typename T>
 void MMS_mom<T>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+
 }
 
 //--------------------------------------------------------------------------------------------------

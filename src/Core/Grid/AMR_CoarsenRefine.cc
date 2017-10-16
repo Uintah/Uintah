@@ -140,7 +140,7 @@ void fineToCoarseOperator(CCVariable<T>& q_CC,
   Level::selectType finePatches;
   coarsePatch->getFineLevelPatches(finePatches);
                           
-  for(int i=0;i<finePatches.size();i++){
+  for(size_t i=0;i<finePatches.size();i++){
     const Patch* finePatch = finePatches[i];
 
     IntVector cl, ch, fl, fh;

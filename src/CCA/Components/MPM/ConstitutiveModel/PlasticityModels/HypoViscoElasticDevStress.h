@@ -28,7 +28,6 @@
 
 #include "DevStressModel.h"
 #include <Core/ProblemSpec/ProblemSpecP.h>
-#include <Core/Containers/StaticArray.h>
 
 #include <Core/Grid/Variables/ParticleVariable.h>
 

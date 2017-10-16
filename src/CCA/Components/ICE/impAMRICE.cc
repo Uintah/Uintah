@@ -718,7 +718,7 @@ void impAMRICE::compute_refluxFluxes_RHS(const ProcessorGroup*,
       //__________________________________
       //   compute the correction
       // one_zero:  used to increment the CFI counter.
-      for(int i=0; i < finePatches.size();i++){  
+      for(size_t i=0; i < finePatches.size();i++){  
         const Patch* finePatch = finePatches[i];       
 
         if(finePatch->hasCoarseFaces() ){
@@ -766,7 +766,7 @@ void impAMRICE::apply_refluxFluxes_RHS(const ProcessorGroup*,
       Level::selectType finePatches;
       coarsePatch->getOtherLevelPatches(1, finePatches, 1); 
 
-      for(int i=0; i < finePatches.size();i++){  
+      for(size_t i=0; i < finePatches.size();i++){  
         const Patch* finePatch = finePatches[i];
         
         if(finePatch->hasCoarseFaces() ){
@@ -874,7 +874,7 @@ void impAMRICE::coarsen_delP(const ProcessorGroup*,
     IntVector r_Ratio = fineLevel->getRefinementRatio();
     double inv_RR = 1.0/( (double)(r_Ratio.x() * r_Ratio.y() * r_Ratio.z()) );
 
-    for(int i=0;i<finePatches.size();i++){
+    for(size_t i=0;i<finePatches.size();i++){
       const Patch* finePatch = finePatches[i];
 
       IntVector cl, ch, fl, fh;
@@ -958,7 +958,7 @@ void impAMRICE::zeroMatrix_UnderFinePatches(const ProcessorGroup*,
       coarsePatch->getFineLevelPatches(finePatches);
     }
 
-    for(int i=0;i<finePatches.size();i++){
+    for(size_t i=0;i<finePatches.size();i++){
       const Patch* finePatch = finePatches[i];
 
       IntVector cl, ch, fl, fh;
@@ -1053,7 +1053,7 @@ void impAMRICE::matrixBC_CFI_coarsePatch(const ProcessorGroup*,
     //__________________________________
     // over all fine patches contained 
     // in the coarse patch
-    for(int i=0; i < finePatches.size();i++){  
+    for(size_t i=0; i < finePatches.size();i++){  
       const Patch* finePatch = finePatches[i];        
 
       if(finePatch->hasCoarseFaces() ){

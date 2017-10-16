@@ -1551,9 +1551,9 @@ struct updateSumI_ML_Functor {
   const IntVector                     fineLevel_ROI_Hi;
   std::vector<IntVector>              regionLo;
   std::vector<IntVector>              regionHi;
-  StaticArray< constCCVariable<T> >   sigmaT4OverPi;
-  StaticArray< constCCVariable<T> >   abskg;
-  StaticArray< constCCVariable<int> > cellType;
+  std::vector< constCCVariable<T> >   sigmaT4OverPi;
+  std::vector< constCCVariable<T> >   abskg;
+  std::vector< constCCVariable<int> > cellType;
   double                              d_threshold;
   bool                                d_allowReflect;
 
@@ -1565,9 +1565,9 @@ struct updateSumI_ML_Functor {
                          const IntVector                     & m_fineLevel_ROI_Hi,
                          std::vector<IntVector>              & m_regionLo,
                          std::vector<IntVector>              & m_regionHi,
-                         StaticArray< constCCVariable<T> >   & m_sigmaT4OverPi,
-                         StaticArray< constCCVariable<T> >   & m_abskg,
-                         StaticArray< constCCVariable<int> > & m_cellType,
+                         std::vector< constCCVariable<T> >   & m_sigmaT4OverPi,
+                         std::vector< constCCVariable<T> >   & m_abskg,
+                         std::vector< constCCVariable<int> > & m_cellType,
                          double                              & m_d_threshold,
                          bool                                & m_d_allowReflect )
     : Dx               ( m_Dx )
@@ -1903,9 +1903,9 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
   //__________________________________
   // retrieve the coarse level data
   // compute the level dependent variables that are constant
-  StaticArray< constCCVariable< T > > abskg(maxLevels);
-  StaticArray< constCCVariable< T > >sigmaT4OverPi(maxLevels);
-  StaticArray< constCCVariable<int> >cellType(maxLevels);
+  std::vector< constCCVariable< T > > abskg(maxLevels);
+  std::vector< constCCVariable< T > >sigmaT4OverPi(maxLevels);
+  std::vector< constCCVariable<int> >cellType(maxLevels);
   constCCVariable< T > abskg_fine;
   constCCVariable< T > sigmaT4OverPi_fine;
  
@@ -3144,7 +3144,7 @@ void Ray::coarsen_Q ( const ProcessorGroup*,
       //  Coarsen along the edge of the computational domain
       if( d_coarsenExtraCells && coarsePatch->hasBoundaryFaces() ){
 
-        for(int i=0;i<finePatches.size();i++){
+        for(size_t i=0;i<finePatches.size();i++){
           const Patch* finePatch = finePatches[i];
 
           if( finePatch->hasBoundaryFaces() ){
@@ -3355,9 +3355,9 @@ void Ray::computeCellType( const ProcessorGroup*,
                            const IntVector& fineLevel_ROI_Hi,
                            vector<IntVector>& regionLo,
                            vector<IntVector>& regionHi,
-                           StaticArray< constCCVariable< T > >& sigmaT4OverPi,
-                           StaticArray< constCCVariable< T > >& abskg,
-                           StaticArray< constCCVariable< int > >& cellType,
+                           std::vector< constCCVariable< T > >& sigmaT4OverPi,
+                           std::vector< constCCVariable< T > >& abskg,
+                           std::vector< constCCVariable< int > >& cellType,
                            unsigned long int& nRaySteps,
                            double& sumI,
                            MTRand& mTwister)
@@ -3736,9 +3736,9 @@ template void  Ray::updateSumI_ML< double> ( Vector&,
                                              const IntVector&,
                                              vector<IntVector>&,
                                              vector<IntVector>&,
-                                             StaticArray< constCCVariable< double > >& sigmaT4OverPi,
-                                             StaticArray< constCCVariable<double> >& abskg,
-                                             StaticArray< constCCVariable< int > >& cellType,
+                                             std::vector< constCCVariable< double > >& sigmaT4OverPi,
+                                             std::vector< constCCVariable<double> >& abskg,
+                                             std::vector< constCCVariable< int > >& cellType,
                                              unsigned long int& ,
                                              double& ,
                                              MTRand&);
@@ -3754,9 +3754,9 @@ template void  Ray::updateSumI_ML< float> ( Vector&,
                                             const IntVector&,
                                             vector<IntVector>&,
                                             vector<IntVector>&,
-                                            StaticArray< constCCVariable< float > >& sigmaT4OverPi,
-                                            StaticArray< constCCVariable< float > >& abskg,
-                                            StaticArray< constCCVariable< int > >& cellType,
+                                            std::vector< constCCVariable< float > >& sigmaT4OverPi,
+                                            std::vector< constCCVariable< float > >& abskg,
+                                            std::vector< constCCVariable< int > >& cellType,
                                             unsigned long int& ,
                                             double& ,
                                             MTRand&);

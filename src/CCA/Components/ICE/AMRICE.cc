@@ -537,8 +537,8 @@ void AMRICE::setBC_FineLevel(const ProcessorGroup*,
       
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
-      StaticArray<CCVariable<double> > sp_vol_CC(numICEMatls);
-      StaticArray<constCCVariable<double> > sp_vol_const(numICEMatls);
+      std::vector<CCVariable<double> > sp_vol_CC(numICEMatls);
+      std::vector<constCCVariable<double> > sp_vol_const(numICEMatls);
       
       
       for (int m = 0; m < numICEMatls; m++) {
@@ -650,7 +650,7 @@ void AMRICE::setBC_FineLevel(const ProcessorGroup*,
       customBC_localVars* notUsed = scinew customBC_localVars();
       
       CCVariable<double> press_CC;
-      StaticArray<CCVariable<double> > placeHolder(0);
+      std::vector<CCVariable<double> > placeHolder(0);
       
       fine_new_dw->getModifiable(press_CC, lb->press_CCLabel, 0, patch);
       
@@ -858,7 +858,7 @@ void AMRICE::iteratorTest(const Patch* finePatch,
   IntVector hi(0,0,0);
   
   
-  for(int i=0;i<coarsePatches.size();i++){
+  for(size_t i=0;i<coarsePatches.size();i++){
     const Patch* coarsePatch = coarsePatches[i];
     // iterator should hit the cells over the intersection of the fine and coarse patches
 
@@ -1208,7 +1208,7 @@ void AMRICE::reflux_computeCorrectionFluxes(const ProcessorGroup*,
       
       
       
-      for(int i=0; i < finePatches.size();i++){  
+      for(size_t i=0; i < finePatches.size();i++){  
         const Patch* finePatch = finePatches[i]; 
         
         //__________________________________
@@ -1500,7 +1500,7 @@ void AMRICE::reflux_applyCorrectionFluxes(const ProcessorGroup*,
       Level::selectType finePatches;
       coarsePatch->getOtherLevelPatches(1, finePatches, 1); // get with a ghost cell to make sure you get all patches 
       
-      for(int i=0; i < finePatches.size();i++){  
+      for(size_t i=0; i < finePatches.size();i++){  
         const Patch* finePatch = finePatches[i];        
         //cout_doing << d_myworld->myrank() << "  coarsePatch " << coarsePatch->getID() <<" finepatch " << finePatch->getID()<< endl;
         //__________________________________
@@ -1574,7 +1574,7 @@ void AMRICE::reflux_BP_zero_CFI_cells(const ProcessorGroup*,
              << " Doing reflux_BP_zero_CFI_cells \t\t\t AMRICE L-"
              <<fineLevel->getIndex()<< "->"<< coarseLevel->getIndex()<<endl;
              
-    for(int p=0;p<finePatches.size();p++){  
+    for(size_t p=0;p<finePatches.size();p++){  
       const Patch* finePatch = finePatches[p];
     
 
@@ -1616,7 +1616,7 @@ void AMRICE::reflux_BP_count_CFI_cells(const ProcessorGroup*,
              << " Doing reflux_BP_count_CFI_cells \t\t\t AMRICE L-"
              <<fineLevel->getIndex()<< "->"<< coarseLevel->getIndex()<<endl;
              
-    for(int p=0;p<finePatches.size();p++){  
+    for(size_t p=0;p<finePatches.size();p++){  
       const Patch* finePatch = finePatches[p];
     
 
@@ -1678,7 +1678,7 @@ void AMRICE::reflux_BP_check_CFI_cells(const ProcessorGroup*,
              << " Doing reflux_BP_check_CFI_cells \t\t\t AMRICE L-"
              <<fineLevel->getIndex()<< "->"<< coarseLevel->getIndex() << endl;
              
-    for(int p=0;p<finePatches.size();p++){  
+    for(size_t p=0;p<finePatches.size();p++){  
       const Patch* finePatch = finePatches[p]; 
          
       if(finePatch->hasCoarseFaces() ){
@@ -1872,10 +1872,10 @@ AMRICE::errorEstimate(const ProcessorGroup*,
     //__________________________________
     //  initialize mag_grad for all matls
     int numAllMatls = d_sharedState->getNumMatls();
-    StaticArray<CCVariable<double> > mag_grad_rho_CC(numAllMatls);
-    StaticArray<CCVariable<double> > mag_grad_temp_CC(numAllMatls);
-    StaticArray<CCVariable<double> > mag_grad_vol_frac_CC(numAllMatls);
-    StaticArray<CCVariable<double> > mag_div_vel_CC(numAllMatls);
+    std::vector<CCVariable<double> > mag_grad_rho_CC(numAllMatls);
+    std::vector<CCVariable<double> > mag_grad_temp_CC(numAllMatls);
+    std::vector<CCVariable<double> > mag_grad_vol_frac_CC(numAllMatls);
+    std::vector<CCVariable<double> > mag_div_vel_CC(numAllMatls);
           
     for(int m=0;m < numAllMatls;m++){
       Material* matl = d_sharedState->getMaterial( m );

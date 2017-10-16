@@ -2411,7 +2411,7 @@ void SerialMPM::addCohesiveZoneForces(const ProcessorGroup*,
     vector<double> S(interpolator->size());
 
     int numMPMMatls=d_sharedState->getNumMPMMatls();
-    StaticArray<NCVariable<Vector> > gext_force(numMPMMatls);
+    std::vector<NCVariable<Vector> > gext_force(numMPMMatls);
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* cz_matl = d_sharedState->getMPMMaterial( m );
       int dwi = cz_matl->getDWIndex();
@@ -3792,8 +3792,8 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
     old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
 
     int numMPMMatls=d_sharedState->getNumMPMMatls();
-    StaticArray<constNCVariable<Vector> > gvelocity(numMPMMatls);
-    StaticArray<constNCVariable<double> > gmass(numMPMMatls);
+    std::vector<constNCVariable<Vector> > gvelocity(numMPMMatls);
+    std::vector<constNCVariable<double> > gmass(numMPMMatls);
     //double rho_init[numMPMMatls];
     Vector dx = patch-> dCell();
     for(int m = 0; m < numMPMMatls; m++){
@@ -4861,12 +4861,12 @@ void SerialMPM::computeNormals(const ProcessorGroup *,
   Ghost::GhostType  gnone = Ghost::None;
 
   int numMPMMatls = d_sharedState->getNumMPMMatls();
-  StaticArray<constNCVariable<double> >  gmass(numMPMMatls);
-  StaticArray<NCVariable<Point> >        gposition(numMPMMatls);
-  StaticArray<NCVariable<Vector> >       gvelocity(numMPMMatls);
-  StaticArray<NCVariable<Vector> >       gsurfnorm(numMPMMatls);
-  StaticArray<NCVariable<double> >       gnormtraction(numMPMMatls);
-  StaticArray<NCVariable<Matrix3> >      gstress(numMPMMatls);
+  std::vector<constNCVariable<double> >  gmass(numMPMMatls);
+  std::vector<NCVariable<Point> >        gposition(numMPMMatls);
+  std::vector<NCVariable<Vector> >       gvelocity(numMPMMatls);
+  std::vector<NCVariable<Vector> >       gsurfnorm(numMPMMatls);
+  std::vector<NCVariable<double> >       gnormtraction(numMPMMatls);
+  std::vector<NCVariable<Matrix3> >      gstress(numMPMMatls);
 
   for (int p = 0; p<patches->size(); p++) {
     const Patch* patch = patches->get(p);

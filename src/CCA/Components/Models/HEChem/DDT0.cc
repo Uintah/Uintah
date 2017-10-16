@@ -399,8 +399,8 @@ void DDT0::computeModelSources(const ProcessorGroup*,
     // Stores level of cracking in particles
     constParticleVariable<double> crackRad;   
  
-    StaticArray<constCCVariable<double> > vol_frac_CC(numAllMatls);
-    StaticArray<constCCVariable<double> > temp_CC(numAllMatls);
+    std::vector<constCCVariable<double> > vol_frac_CC(numAllMatls);
+    std::vector<constCCVariable<double> > temp_CC(numAllMatls);
 	    
     Vector dx = patch->dCell();
     double cell_vol = dx.x()*dx.y()*dx.z();

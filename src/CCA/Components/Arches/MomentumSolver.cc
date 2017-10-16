@@ -49,7 +49,6 @@
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/SourceTerms/ConstSrcTerm.h>
-#include <Core/Containers/StaticArray.h>
 #include <sci_defs/visit_defs.h>
 
 using namespace Uintah;

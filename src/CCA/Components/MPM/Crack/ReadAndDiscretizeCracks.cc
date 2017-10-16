@@ -48,7 +48,6 @@
 #include <CCA/Components/MPM/Crack/CrackGeometry.h>
 #include <CCA/Components/MPM/Crack/CrackGeometryFactory.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Containers/StaticArray.h>
 #include <vector>
 #include <iostream>
 #include <fstream>
