@@ -18,6 +18,7 @@
 #include <CCA/Components/Arches/SourceTerms/RMCRT.h>
 #include <CCA/Components/Arches/SourceTerms/HTConvection.h>
 #include <CCA/Components/Arches/SourceTerms/ZZNoxSolid.h>
+#include <CCA/Components/Arches/SourceTerms/psNox.h>
 #include <CCA/Components/Arches/SourceTerms/PCTransport.h>
 #include <CCA/Components/Arches/SourceTerms/SecondMFMoment.h>
 #include <CCA/Components/Arches/SourceTerms/DissipationSource.h>
@@ -295,6 +296,9 @@ void SourceTermFactory::registerUDSources(ProblemSpecP& db, ArchesLabel* lab, Bo
         SourceTermBase::Builder* srcBuilder = scinew ZZNoxSolid::Builder(src_name, required_varLabels, lab);
         factory.register_source_term( src_name, srcBuilder );
 
+      } else if (src_type == "psNox") {
+        SourceTermBase::Builder* srcBuilder = scinew psNox::Builder(src_name, required_varLabels, lab);
+        factory.register_source_term( src_name, srcBuilder );
 
       } else if (src_type == "mms1"){
         // MMS1 builder
