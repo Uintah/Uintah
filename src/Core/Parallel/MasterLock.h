@@ -57,7 +57,7 @@ class MasterLock
     MasterLock()  {}
     ~MasterLock() {}
 
-#endif //UINTAH_ENABLE_KOKKOS
+#endif // UINTAH_ENABLE_KOKKOS
 
   private:
 
@@ -71,7 +71,7 @@ class MasterLock
     omp_lock_t m_lock;
 #else
     std::mutex m_mutex;
-#endif //UINTAH_ENABLE_KOKKOS
+#endif // UINTAH_ENABLE_KOKKOS
 
 };
 } // end namespace Uintah
