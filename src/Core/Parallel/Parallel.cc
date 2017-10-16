@@ -124,19 +124,6 @@ Parallel::getNumThreads()
 int
 Parallel::getNumPartitions()
 {
-  if (s_num_partitions <= 0) {
-    const char* num_cores = getenv("HPCBIND_NUM_CORES");
-    if (num_cores != nullptr) {
-      s_num_partitions = atoi(num_cores);
-    }
-    else {
-#ifdef _OPENMP
-      s_num_partitions = omp_get_max_threads();
-#else
-      s_num_partitions = 1;
-#endif
-    }
-  }
   return s_num_partitions;
 }
 
@@ -145,13 +132,6 @@ Parallel::getNumPartitions()
 int
 Parallel::getThreadsPerPartition()
 {
-  if (s_threads_per_partition <= 0) {
-#ifdef _OPENMP
-    s_threads_per_partition = omp_get_max_threads() / getNumPartitions();
-#else
-    s_threads_per_partition = 1;
-#endif
-  }
   return s_threads_per_partition;
 }
 
@@ -209,6 +189,29 @@ Parallel::initializeManager( int& argc , char**& argv )
     // input parameters (to sus)) and usage() needs to init MPI so that
     // it only displays the usage to the root process.
   }
+
+#ifdef UINTAH_ENABLE_KOKKOS
+  if (s_num_partitions <= 0) {
+    const char* num_cores = getenv("HPCBIND_NUM_CORES");
+    if (num_cores != nullptr) {
+      s_num_partitions = atoi(num_cores);
+    }
+    else {
+#ifdef _OPENMP
+      s_num_partitions = omp_get_max_threads();
+#else
+      s_num_partitions = 1;
+#endif
+    }
+  }
+  if (s_threads_per_partition <= 0) {
+#ifdef _OPENMP
+    s_threads_per_partition = omp_get_max_threads() / getNumPartitions();
+#else
+    s_threads_per_partition = 1;
+#endif
+  }
+#endif
 
 #ifdef THREADED_MPI_AVAILABLE
   int provided = -1;
@@ -280,7 +283,8 @@ Parallel::initializeManager( int& argc , char**& argv )
       std::cout << "Parallel: " << s_num_partitions << " OMP thread " << plural << " per MPI process\n";
     }
     if ( s_threads_per_partition > 0 ) {
-      std::cout << "Parallel: " << s_threads_per_partition << " OMP threads per partition\n";
+      std::string plural = (s_threads_per_partition > 1) ? "threads" : "thread";
+      std::cout << "Parallel: " << s_threads_per_partition << " OMP " << plural << " per partition\n";
     }
 #else
     if (s_num_threads > 0) {
