@@ -66,6 +66,13 @@ if [ ! -f $MALLOC_STATS ] && [ ! -f $MALLOC_STATS.0 ]; then
   exit 5
 fi
 
+
+if [ ! -f $COMPARISON_MALLOC_STATS ]; then
+  echo "The gold standard malloc_stats file(s) are missing for this test.  Now exiting."
+  exit 5
+fi
+
+
 # merge the malloc_stat files in both the localRT and gold Standards directories
 # After running generating the localRT gold standards they need to be merged
 merge_malloc_stats_files $HERE 

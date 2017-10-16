@@ -835,7 +835,7 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
             print( "\t%s" % (short_message) )
             
       elif memory_RC == 5 * 256:
-          print( "\t*** ERROR, no malloc_stats file.  No memory tests performed." )
+          print( "\t*** ERROR, missing malloc_stats files.  No memory tests performed." )
       
       elif memory_RC == 256:
           print( "\t*** ERROR, test %s failed memory leak test." % (testname) )
