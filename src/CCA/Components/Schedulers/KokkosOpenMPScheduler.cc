@@ -55,7 +55,6 @@ using namespace Uintah;
 //
 namespace {
 
-Dout g_affinity(    "KokkosOMP_Affinity"   , false);
 Dout g_dbg(         "KokkosOMP_DBG"        , false);
 Dout g_queuelength( "KokkosOMP_QueueLength", false);
 
