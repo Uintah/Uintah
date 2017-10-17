@@ -2660,8 +2660,8 @@ void Ray::coarsen_Q ( const ProcessorGroup*,
                       Task::WhichDW which_dw )
 {
   const Level* coarseLevel = getLevel(patches);
-  const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
-  DataWarehouse* dw = new_dw->getOtherDataWarehouse( which_dw );
+  const Level* fineLevel   = coarseLevel->getFinerLevel().get_rep();
+  DataWarehouse* fineLevel_Q_dw = new_dw->getOtherDataWarehouse( which_dw );
 
   //__________________________________
   //
@@ -2689,7 +2689,7 @@ void Ray::coarsen_Q ( const ProcessorGroup*,
 
       // coarsen the coarse patch interior cells
       fineToCoarseOperator(Q_coarse,   computesAve,
-                           variable,   matl, dw,
+                           variable,   matl, fineLevel_Q_dw,
                            coarsePatch, coarseLevel, fineLevel);
 
       //__________________________________
@@ -2712,7 +2712,7 @@ void Ray::coarsen_Q ( const ProcessorGroup*,
             IntVector coarsePatchHi = coarsePatch->getExtraCellHighIndex();
 
             constCCVariable<T> fine_q_CC;
-            new_dw->get(fine_q_CC, variable,   matl, finePatch, d_gn, 0);
+            fineLevel_Q_dw->get(fine_q_CC, variable,   matl, finePatch, d_gn, 0);
 
             //__________________________________
             //  loop over boundary faces for the fine patch
