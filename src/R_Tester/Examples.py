@@ -2,7 +2,7 @@
 
 from sys import argv,exit
 from os import environ, system
-from helpers.runSusTests import runSusTests, inputs_root, generatingGoldStandards
+from helpers.runSusTests import runSusTests, inputs_root, ignorePerformanceTests, generatingGoldStandards
 from helpers.modUPS import modUPS,modUPS2
 
 from os import system
@@ -134,7 +134,7 @@ DEBUGTESTS   =[]
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
-#LIST: LOCALTESTS FLOATTESTS GPUTESTS DEBUGTESTS NIGHTLYTESTS THREADEDTESTS DOMAINTESTS Poisson3_Tests
+#LIST: LOCALTESTS FLOATTESTS GPUTESTS DEBUGTESTS NIGHTLYTESTS THREADEDTESTS DOMAINTESTS Poisson3_Tests BUILDBOTTESTS
 #__________________________________
 
 # returns the list
@@ -155,6 +155,8 @@ def getTestList(me) :
     TESTS = THREADEDTESTS
   elif me == "Poisson3_Tests":
     TESTS = POISSON3TESTS
+  elif me == "BUILDBOTTESTS":
+    TESTS = ignorePerformanceTests( NIGHTLYTESTS )
   else:
     print "\nERROR:Examples.py  getTestList:  The test list (%s) does not exist!\n\n" % me
     exit(1)

@@ -2,7 +2,7 @@
 
 from os import symlink,environ, system
 from sys import argv,exit,platform
-from helpers.runSusTests import runSusTests, inputs_root, generatingGoldStandards
+from helpers.runSusTests import runSusTests, inputs_root, ignorePerformanceTests, generatingGoldStandards
 from helpers.modUPS import modUPS
 
 the_dir = generatingGoldStandards()
@@ -335,7 +335,7 @@ NORMCRT = [
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
-#LIST: COALTESTS CQMOMTESTS DEBUG DQMOMTESTS LOCALTESTS KOKKOSTESTS NIGHTLYTESTS  NORMCRT SCALARTESTS RMCRTTESTS    
+#LIST: COALTESTS CQMOMTESTS DEBUG DQMOMTESTS LOCALTESTS KOKKOSTESTS NIGHTLYTESTS  NORMCRT SCALARTESTS RMCRTTESTS BUILDBOTTESTS
 #__________________________________
 
   
@@ -361,6 +361,8 @@ def getTestList(me) :
     TESTS = NORMCRT
   elif me == "DEBUG":
     TESTS = DEBUG
+  elif me == "BUILDBOTTESTS":
+    TESTS = ignorePerformanceTests( NIGHTLYTESTS )
   else:
     print "\nERROR:ARCHES.py  getTestList:  The test list (%s) does not exist!\n\n" % me
     exit(1)

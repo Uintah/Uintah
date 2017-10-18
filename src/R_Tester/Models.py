@@ -2,7 +2,7 @@
 
 from sys import argv,exit
 from os import environ
-from helpers.runSusTests import runSusTests
+from helpers.runSusTests import runSusTests, inputs_root, ignorePerformanceTests, generatingGoldStandards
 
 #______________________________________________________________________
 #  Test syntax: ( "folder name", "input file", # processors, "OS", ["flags1","flag2"])
@@ -43,7 +43,7 @@ DEBUGTESTS   =[]
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
-#LIST: LOCALTESTS DEBUGTESTS NIGHTLYTESTS
+#LIST: LOCALTESTS DEBUGTESTS NIGHTLYTESTS BUILDBOTTESTS
 #__________________________________
 
 # returns the list  
@@ -54,6 +54,8 @@ def getTestList(me) :
     TESTS = DEBUGTESTS
   elif me == "NIGHTLYTESTS":
     TESTS = NIGHTLYTESTS
+  elif me == "BUILDBOTTESTS":
+    TESTS = ignorePerformanceTests( NIGHTLYTESTS )
   else:
     print "\nERROR:Models.py  getTestList:  The test list (%s) does not exist!\n\n" % me
     exit(1)

@@ -41,7 +41,23 @@ def userFlags (test):
 
 def nullCallback (test, susdir, inputsdir, compare_root, dbg_opt, max_parallelism):
     pass
-#__________________________________    
+
+#______________________________________________________________________
+#  returns a list of tests, with performance tests filtered out
+def ignorePerformanceTests( TESTS ):
+  
+  myTests=[]
+  for test in TESTS:
+    
+    if len(test) == 5:
+      flags = userFlags( test )
+      
+      if not "do_performance_test" in str( flags ):
+        myTests.append( test )
+  return myTests
+        
+    
+#______________________________________________________________________    
 # Function used for checking the input files
 # skip tests that contain 
 #    <outputInitTimestep/> AND  outputTimestepInterval > 1

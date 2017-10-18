@@ -2,7 +2,7 @@
 
 from sys import argv, exit
 from os import environ, system
-from helpers.runSusTests import runSusTests, inputs_root, generatingGoldStandards
+from helpers.runSusTests import runSusTests, inputs_root, ignorePerformanceTests, generatingGoldStandards
 from helpers.modUPS import modUPS
 
 the_dir = generatingGoldStandards()
@@ -82,7 +82,7 @@ DEBUGGING =   [   ("advect",           "advect.ups",           1, "All", ["exact
 #__________________________________
 # The following line is parsed by the local RT script
 # and allows the user to select the different subsets
-#LIST:  AMRTESTS DEBUGGING LOCALTESTS NIGHTLYTESTS
+#LIST:  AMRTESTS DEBUGGING LOCALTESTS NIGHTLYTESTS BUILDBOTTESTS
 #__________________________________
 # returns the list
 def getTestList(me) :
@@ -94,6 +94,8 @@ def getTestList(me) :
     TESTS = NIGHTLYTESTS + AMRTESTS
   elif me == "NIGHTLYTESTS":
     TESTS = NIGHTLYTESTS + AMRTESTS
+  elif me == "BUILDBOTTESTS":
+    TESTS = ignorePerformanceTests( NIGHTLYTESTS )
   else:
     print "\nERROR:ICE.py  getTestList:  The test list (%s) does not exist!\n\n" % me
     exit(1)

@@ -2,7 +2,7 @@
 
 from sys import argv,exit
 from os import environ
-from helpers.runSusTests import runSusTests
+from helpers.runSusTests import runSusTests, inputs_root, ignorePerformanceTests, generatingGoldStandards
 
 #______________________________________________________________________
 #  Test syntax: ( "folder name", "input file", # processors, "OS", ["flags1","flag2"])
@@ -117,7 +117,7 @@ DEBUGTESTS =[("Charpy",                "Charpy.ups",                  8,  "All",
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
-#LIST: LOCALTESTS DAMAGETESTS DEBUGTESTS NIGHTLYTESTS AMRTESTS ARENATESTS
+#LIST: LOCALTESTS DAMAGETESTS DEBUGTESTS NIGHTLYTESTS AMRTESTS ARENATESTS BUILDBOTTESTS
 #__________________________________
 
 # returns the list
@@ -134,6 +134,8 @@ def getTestList(me) :
     TESTS = AMRTESTS
   elif me == "ARENATESTS":
     TESTS = ARENATESTS
+  elif me == "BUILDBOTTESTS":
+    TESTS = ignorePerformanceTests( NIGHTLYTESTS )
   else:
     print "\nERROR:MPM.py  getTestList:  The test list (%s) does not exist!\n\n" % me
     exit(1)
