@@ -670,6 +670,10 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
     scheduleModifyLoadCurves(             level, sched,   matls);
   }
   scheduleApplyExternalLoads(             sched, patches, matls);
+
+  if (flags->d_doingDissolution){
+    scheduleFindSurfaceParticles(         sched, patches, matls);
+  }
   scheduleInterpolateParticlesToGrid(     sched, patches, matls);
   if(flags->d_computeNormals){
     scheduleComputeNormals(               sched, patches, matls);
@@ -840,10 +844,10 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
     t->requires(Task::OldDW, lb->pVelGradLabel,             gan,NGP);
     t->requires(Task::OldDW, lb->pTemperatureGradientLabel, gan,NGP);
   }
-  t->requires(Task::OldDW, lb->pXLabel,                gan,NGP);
-  t->requires(Task::NewDW, lb->pExtForceLabel_preReloc,gan,NGP);
-  t->requires(Task::OldDW, lb->pTemperatureLabel,      gan,NGP);
-  t->requires(Task::OldDW, lb->pSizeLabel,             gan,NGP);
+  t->requires(Task::OldDW, lb->pXLabel,                 gan,NGP);
+  t->requires(Task::NewDW, lb->pExtForceLabel_preReloc, gan,NGP);
+  t->requires(Task::OldDW, lb->pTemperatureLabel,       gan,NGP);
+  t->requires(Task::OldDW, lb->pSizeLabel,              gan,NGP);
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel,gan,NGP);
   if (flags->d_useCBDI) {
     t->requires(Task::NewDW,  lb->pExternalForceCorner1Label,gan,NGP);
@@ -872,7 +876,6 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->computes(lb->gTemperatureRateLabel);
   t->computes(lb->gExternalHeatRateLabel);
   t->computes(lb->massBurnFractionLabel);
-  t->computes(lb->pSurfLabel);
 
   if(flags->d_with_ice){
     t->computes(lb->gVelocityBCLabel);
@@ -1282,7 +1285,9 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pVolumeLabel,                    gnone);
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel,        gnone);
   t->requires(Task::OldDW, lb->pLocalizedMPMLabel,              gnone);
-  t->requires(Task::NewDW, lb->pSurfLabel,                      gnone);
+  if (flags->d_doingDissolution){
+    t->requires(Task::NewDW, lb->pSurfLabel_preReloc,           gnone);
+  }
 
   t->requires(Task::NewDW, lb->massBurnFractionLabel,    gac,NGN);
   if(flags->d_with_ice){
@@ -2140,7 +2145,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       int dwi = mpm_matl->getDWIndex();
 
       // Create arrays for the particle data
-      constParticleVariable<Point>  px,pxOP;
+      constParticleVariable<Point>  px;//,pxOP;
       constParticleVariable<double> pmass, pvolume, pTemperature, pColor;
       constParticleVariable<Vector> pvelocity, pexternalforce;
       constParticleVariable<Point> pExternalForceCorner1, pExternalForceCorner2,
@@ -2149,15 +2154,11 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       constParticleVariable<Matrix3> pFOld;
       constParticleVariable<Matrix3> pVelGrad;
       constParticleVariable<Vector>  pTempGrad;
-      ParticleVariable<int>  pSurf;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
                                                        gan, NGP, lb->pXLabel);
 
-      ParticleSubset* psetOP = old_dw->getParticleSubset(dwi, patch);
-
       old_dw->get(px,             lb->pXLabel,             pset);
-      old_dw->get(pxOP,           lb->pXLabel,             psetOP);
       old_dw->get(pmass,          lb->pMassLabel,          pset);
       old_dw->get(pColor,         lb->pColorLabel,         pset);
       old_dw->get(pvolume,        lb->pVolumeLabel,        pset);
@@ -2210,7 +2211,6 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
                              dwi,patch);
       new_dw->allocateAndPut(massBurnFrac,     lb->massBurnFractionLabel,
                              dwi,patch);
-      new_dw->allocateAndPut(pSurf,            lb->pSurfLabel,      psetOP);
 
       gmass.initialize(d_SMALL_NUM_MPM);
       gvolume.initialize(d_SMALL_NUM_MPM);
@@ -2223,63 +2223,6 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       gexternalheatrate.initialize(0);
       gSp_vol.initialize(0.);
       massBurnFrac.initialize(0.);
-
-//#define COMPUTE_PSURF
-#undef COMPUTE_PSURF
-#ifdef COMPUTE_PSURF
-      Vector dx = patch->dCell();
-      double cellVol=dx.x()*dx.y()*dx.z();
-      double tol = 0.13*cbrt(cellVol);
-      int nclose = 2*d_ndim;
-
-      // Initialize pSurf, find the two nearest neighbors
-      for (ParticleSubset::iterator iter = psetOP->begin();
-           iter != psetOP->end();
-           iter++){
-        particleIndex idx = *iter;
-        vector<particleIndex> close(nclose);
-        vector<double> closestSep(nclose);
-        for(int i=0;i<nclose;i++){
-          close[i]=-999;
-          closestSep[i]=9.e99;
-        }
-        for (ParticleSubset::iterator iter2 = pset->begin();
-             iter2 != pset->end();
-             iter2++){
-          particleIndex idx2 = *iter2;
-          double sep;
-          int howclose;
-          if(pxOP[idx]!=px[idx2]){
-            sep = (pxOP[idx]-px[idx2]).length2();
-            if(sep<closestSep[nclose-1]){
-              howclose=nclose-1;
-              for(int j=nclose-2;j>=0;j--){
-                if(sep<closestSep[j]){
-                  howclose=j;
-                }  // endif
-              }
-              for(int k=nclose-2;k>=howclose;k--){
-                closestSep[k+1]=closestSep[k];
-                close[k+1]=close[k];
-              }
-              closestSep[howclose]=sep;
-              close[howclose]=idx2;
-            }
-          }
-        } // Inner particle loop
-        Vector neighborCent(0.,0.,0.);
-        for(int i=0;i<nclose;i++){
-          neighborCent+= px[close[i]].asVector();
-        }
-        neighborCent/=((double) nclose);
-        Vector posDiff = pxOP[idx].asVector() - neighborCent; 
-        if(posDiff.length() < tol){
-          pSurf[idx] = 0;
-        }else{
-          pSurf[idx] = 1;
-        }
-      } // outer loop over particles
-#endif
 
       // Interpolate particle data to Grid data.
       // This currently consists of the particle velocity and mass
@@ -3534,7 +3477,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       ParticleVariable<Vector> pdispnew,pTempGrad;
       constParticleVariable<Matrix3> pFOld;
       ParticleVariable<Matrix3> pFNew,pVelGrad;
-      constParticleVariable<int> pLocalized, pSurf;
+      constParticleVariable<int> pLocalized;
+      constParticleVariable<double> pSurf;
 
       // for thermal stress analysis
       ParticleVariable<double> pTempPreNew;
@@ -3554,9 +3498,11 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       old_dw->get(pFOld,        lb->pDeformationMeasureLabel,        pset);
       old_dw->get(pVolumeOld,   lb->pVolumeLabel,                    pset);
       old_dw->get(pLocalized,   lb->pLocalizedMPMLabel,              pset);
-      new_dw->get(pSurf,        lb->pSurfLabel,                      pset);
       if(flags->d_XPIC2){
         new_dw->get(pvelSSPlus, lb->pVelocitySSPlusLabel,            pset);
+      }
+      if (flags->d_doingDissolution){
+        new_dw->get(pSurf,        lb->pSurfLabel_preReloc,             pset);
       }
 
       new_dw->allocateAndPut(pvelnew,    lb->pVelocityLabel_preReloc,     pset);
@@ -3656,11 +3602,14 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           pdispnew[idx] = pdisp[idx] + (pxnew[idx]-px[idx]);
           pTempNew[idx]    = pTemperature[idx] + tempRate*delT;
           pTempPreNew[idx] = pTemperature[idx]; // for thermal stress
-//          pmassNew[idx]    = Max(pmass[idx]*(1.    - burnFraction),0.);
-          if(pSurf[idx]){
-          pmassNew[idx]    = Max(pmass[idx] - burnFraction*delT, 0.);
-          }else{
-          pmassNew[idx]    = pmass[idx];
+          if (flags->d_doingDissolution){
+            if(pSurf[idx]>=0.99){
+              pmassNew[idx]    = Max(pmass[idx] - burnFraction*delT, 0.);
+            }else{
+              pmassNew[idx]    = pmass[idx];
+            }
+          } else {
+            pmassNew[idx]    = Max(pmass[idx]*(1.    - burnFraction),0.);
           }
           psizeNew[idx]    = (pmassNew[idx]/pmass[idx])*psize[idx];
 
@@ -5300,5 +5249,122 @@ void SerialMPM::computeNormals(const ProcessorGroup *,
       }
     }  // loop over matls
     delete interpolator;
+  }    // patches
+}
+
+//
+void SerialMPM::scheduleFindSurfaceParticles(SchedulerP   & sched,
+                                             const PatchSet * patches,
+                                             const MaterialSet * matls )
+{
+  printSchedule(patches,cout_doing,"MPMCommon::scheduleFindSurfaceParticles");
+  
+  Task* t = scinew Task("MPM::findSurfaceParticles", this, 
+                        &SerialMPM::findSurfaceParticles);
+
+  Ghost::GhostType  gp;
+  int ngc_p;
+  d_sharedState->getParticleGhostLayer(gp, ngc_p);
+
+  t->requires(Task::OldDW, lb->pXLabel,                  gp, ngc_p);
+  t->requires(Task::OldDW, lb->pSurfLabel,               gp, ngc_p);
+
+  t->computes(lb->pSurfLabel_preReloc);
+
+  sched->addTask(t, patches, matls);
+}
+
+//______________________________________________________________________
+//
+void SerialMPM::findSurfaceParticles(const ProcessorGroup *,
+                                     const PatchSubset    * patches,
+                                     const MaterialSubset * ,
+                                           DataWarehouse  * old_dw,
+                                           DataWarehouse  * new_dw)
+{
+  Ghost::GhostType  gan   = Ghost::AroundNodes;
+  int numMPMMatls = d_sharedState->getNumMPMMatls();
+
+  for (int p = 0; p<patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+    Vector dx = patch->dCell();
+
+    printTask(patches, patch, cout_doing, "Doing findSurfaceParticles");
+
+    for(int m = 0; m < numMPMMatls; m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
+
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
+                                                       gan, NGP, lb->pXLabel);
+      ParticleSubset* psetOP = old_dw->getParticleSubset(dwi, patch);
+
+      constParticleVariable<Point> px, pxOP;
+      constParticleVariable<double> pSurfOld;
+      ParticleVariable<double> pSurf;
+
+      old_dw->get(px,                  lb->pXLabel,                  pset);
+      old_dw->get(pxOP,                lb->pXLabel,                  psetOP);
+      old_dw->get(pSurfOld,            lb->pSurfLabel,               psetOP);
+
+      new_dw->allocateAndPut(pSurf,    lb->pSurfLabel_preReloc,      psetOP);
+
+      double cellVol=dx.x()*dx.y()*dx.z();
+      double tol = 0.13*cbrt(cellVol);
+      int nclose = 2*d_ndim;
+
+      // Initialize pSurf, find the two nearest neighbors
+      for (ParticleSubset::iterator iter = psetOP->begin();
+           iter != psetOP->end();
+           iter++){
+       particleIndex idx = *iter;
+       if(pSurfOld[idx]>0.99 || pSurf[idx]<=0.01){
+        pSurf[idx]=pSurfOld[idx];
+       } else {
+        vector<particleIndex> close(nclose);
+        vector<double> closestSep(nclose);
+        for(int i=0;i<nclose;i++){
+          close[i]=-999;
+          closestSep[i]=9.e99;
+        }
+        for (ParticleSubset::iterator iter2 = pset->begin();
+             iter2 != pset->end();
+             iter2++){
+          particleIndex idx2 = *iter2;
+          double sep;
+          int howclose;
+          if(pxOP[idx]!=px[idx2]){
+            sep = (pxOP[idx]-px[idx2]).length2();
+            if(sep<closestSep[nclose-1]){
+              howclose=nclose-1;
+              for(int j=nclose-2;j>=0;j--){
+                if(sep<closestSep[j]){
+                  howclose=j;
+                }  // endif
+              }
+              for(int k=nclose-2;k>=howclose;k--){
+                closestSep[k+1]=closestSep[k];
+                close[k+1]=close[k];
+              }
+              closestSep[howclose]=sep;
+              close[howclose]=idx2;
+            }
+          }
+        } // Inner particle loop
+        Vector neighborCent(0.,0.,0.);
+        for(int i=0;i<nclose;i++){
+          neighborCent+= px[close[i]].asVector();
+        }
+        neighborCent/=((double) nclose);
+        Vector posDiff = pxOP[idx].asVector() - neighborCent; 
+        if(posDiff.length() < tol){
+          pSurf[idx] = pSurfOld[idx];
+        }else{
+          pSurf[idx] = 1.0;
+        }
+       } // if particle is/is not already a surface particle
+      } // outer loop over particles
+
+    }   // matl loop
   }    // patches
 }

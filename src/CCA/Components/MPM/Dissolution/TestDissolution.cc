@@ -113,21 +113,22 @@ void TestDissolution::computeMassBurnFraction(const ProcessorGroup*,
       IntVector c = *iter;
 
       double sumMass=0.0;
-      double sumOtherVol = 0.0;
+//      double sumOtherVol = 0.0;
       for(int m = 0; m < numMatls; m++){
         if(d_matls.requested(m)) {
           sumMass+=gmass[m][c]; 
-          if(m!=md){
-            sumOtherVol = gvolume[m][c]*8.0*NC_CCweight[c];
-          }
+//          if(m!=md){
+//            sumOtherVol = gvolume[m][c]*8.0*NC_CCweight[c];
+//          }
         }
       }
 
-      double mdVol = gvolume[md][c]*8.0*NC_CCweight[c];
+//      double mdVol = gvolume[md][c]*8.0*NC_CCweight[c];
 
       if(gmass[md][c] >  1.e-100 &&
          gmass[md][c] != sumMass){
           double rho = gmass[md][c]/gvolume[md][c];
+//          double volFrac = (mdVol+sumOtherVol)/cellVol;
           massBurnRate[c] += d_rate*area*rho*2.0*NC_CCweight[c];
 //        massBurnRate[c] += 2.0*NC_CCweight[c]*
 //                           d_rate*area*rho;/* *(sumOtherVol/(sumOtherVol+mdVol));*/
