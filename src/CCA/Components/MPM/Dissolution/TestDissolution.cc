@@ -87,19 +87,22 @@ void TestDissolution::computeMassBurnFraction(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     Vector dx = patch->dCell();
     double area = dx.x()*dx.y();
+//    double cellVol = area*dx.z();
+
+    Ghost::GhostType  gnone = Ghost::None;
 
     // Retrieve necessary data from DataWarehouse
     StaticArray<constNCVariable<double> > gmass(numMatls),gvolume(numMatls);
     StaticArray<constNCVariable<Matrix3> > gStress(numMatls);
     NCVariable<double>  massBurnRate;
     constNCVariable<double> NC_CCweight;
-    old_dw->get(NC_CCweight,  lb->NC_CCweightLabel,0, patch, Ghost::None,0);
+    old_dw->get(NC_CCweight,  lb->NC_CCweightLabel,0, patch, gnone,0);
     for(int m=0;m<matls->size();m++){
       int dwi = matls->get(m);
-      new_dw->get(gmass[m],   lb->gMassLabel,    dwi, patch, Ghost::None,0);
-      new_dw->get(gvolume[m], lb->gVolumeLabel,  dwi, patch, Ghost::None,0);
+      new_dw->get(gmass[m],   lb->gMassLabel,    dwi, patch, gnone,0);
+      new_dw->get(gvolume[m], lb->gVolumeLabel,  dwi, patch, gnone,0);
       new_dw->get(gStress[m], lb->gStressForSavingLabel,
-                                                 dwi, patch, Ghost::None,0);
+                                                 dwi, patch, gnone,0);
     }
 
     int dwiMM = matls->get(d_material);
@@ -110,19 +113,30 @@ void TestDissolution::computeMassBurnFraction(const ProcessorGroup*,
       IntVector c = *iter;
 
       double sumMass=0.0;
+      double sumOtherVol = 0.0;
       for(int m = 0; m < numMatls; m++){
         if(d_matls.requested(m)) {
           sumMass+=gmass[m][c]; 
+          if(m!=md){
+            sumOtherVol = gvolume[m][c]*8.0*NC_CCweight[c];
+          }
         }
       }
 
       double mdVol = gvolume[md][c]*8.0*NC_CCweight[c];
 
-      if(gmass[md][c] > 1.e-100 &&
-          gStress[md][c].Trace()/3.0 < d_PressThresh && 
-          gmass[md][c] != sumMass){
+      if(gmass[md][c] >  1.e-100 &&
+         gmass[md][c] != sumMass){
           double rho = gmass[md][c]/gvolume[md][c];
-          massBurnRate[c] += d_rate*area*rho;
+          massBurnRate[c] += d_rate*area*rho*2.0*NC_CCweight[c];
+//        massBurnRate[c] += 2.0*NC_CCweight[c]*
+//                           d_rate*area*rho;/* *(sumOtherVol/(sumOtherVol+mdVol));*/
+//          cout << "  mdVol = "       << mdVol/cellVol
+//               << ", sumOtherVol = " << sumOtherVol/cellVol 
+//               << ", sOV/(sOV+mV) = " << sumOtherVol/(sumOtherVol+mdVol)
+//               << ", sepscal/sepDis = " << sepscal/sepDis
+//               << ", NC_CCweight = " << NC_CCweight[c]
+//               << ", c = "           << c << endl;
 //        massBurnRate[c] += fabs(d_rate*(gStress[md][c].Trace()/3.0)/
 //                                                              d_PressThresh);
       }
