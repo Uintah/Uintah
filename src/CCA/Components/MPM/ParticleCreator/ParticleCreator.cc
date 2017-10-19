@@ -1014,14 +1014,14 @@ ParticleCreator::checkForSurface( const GeometryPieceP piece, const Point p,
   // Check in front (+y)
   if(!piece->inside(p+Vector(0.,dxpp.y(),0.)))
     ss++;
-#if 1
-  // Check below (-z)
-  if(!piece->inside(p-Vector(0.,0.,dxpp.z())))
-    ss++;
-  // Check above (+z)
-  if(!piece->inside(p+Vector(0.,0.,dxpp.z())))
-    ss++;
-#endif
+  if (d_flags->d_ndim>2){
+    // Check below (-z)
+    if(!piece->inside(p-Vector(0.,0.,dxpp.z())))
+      ss++;
+    // Check above (+z)
+    if(!piece->inside(p+Vector(0.,0.,dxpp.z())))
+      ss++;
+  }
 
   if(ss>0){
     return 1;
@@ -1040,6 +1040,7 @@ ParticleCreator::checkForSurface2(const GeometryPieceP piece, const Point p,
   //  in.  If any of those points are not also inside the object
   //  the current point is on the surface
   
+  cout << "D_NDIM = " << d_flags->d_ndim << endl;
   int ss = 0;
   // Check to the left (-x)
   if(!piece->inside(p-Vector(dxpp.x(),0.,0.)))
@@ -1053,12 +1054,14 @@ ParticleCreator::checkForSurface2(const GeometryPieceP piece, const Point p,
   // Check in front (+y)
   if(!piece->inside(p+Vector(0.,dxpp.y(),0.)))
     ss++;
-  // Check below (-z)
-  if(!piece->inside(p-Vector(0.,0.,dxpp.z())))
-    ss++;
-  // Check above (+z)
-  if(!piece->inside(p+Vector(0.,0.,dxpp.z())))
-    ss++;
+  if (d_flags->d_ndim>2){
+    // Check below (-z)
+    if(!piece->inside(p-Vector(0.,0.,dxpp.z())))
+      ss++;
+    // Check above (+z)
+    if(!piece->inside(p+Vector(0.,0.,dxpp.z())))
+      ss++;
+  }
 #if 1
 #endif
 
@@ -1078,12 +1081,14 @@ ParticleCreator::checkForSurface2(const GeometryPieceP piece, const Point p,
     // Check in front (+y)
     if(!piece->inside(p+Vector(0.,2.0*dxpp.y(),0.)))
       ss++;
-    // Check below (-z)
-    if(!piece->inside(p-Vector(0.,0.,2.0*dxpp.z())))
-      ss++;
-    // Check above (+z)
-    if(!piece->inside(p+Vector(0.,0.,2.0*dxpp.z())))
-      ss++;
+    if (d_flags->d_ndim>2){
+      // Check below (-z)
+      if(!piece->inside(p-Vector(0.,0.,2.0*dxpp.z())))
+        ss++;
+      // Check above (+z)
+      if(!piece->inside(p+Vector(0.,0.,2.0*dxpp.z())))
+        ss++;
+    }
     // Check to the lower-left (-x,-y)
     if(!piece->inside(p-Vector(dxpp.x(),dxpp.y(),0.)))
       ss++;
@@ -1096,19 +1101,20 @@ ParticleCreator::checkForSurface2(const GeometryPieceP piece, const Point p,
     // Check to the lower-right (x,-z)
     if(!piece->inside(p+Vector(dxpp.x(),-dxpp.y(),0.)))
       ss++;
-    // Check to the lower-left (-x,-z)
-    if(!piece->inside(p-Vector(dxpp.x(),0.,dxpp.z())))
-      ss++;
-    // Check to the upper-right (+x,+z)
-    if(!piece->inside(p+Vector(dxpp.x(),0.,dxpp.z())))
-      ss++;
-    // Check to the upper-left (-x,+z)
-    if(!piece->inside(p+Vector(-dxpp.x(),0.,dxpp.z())))
-      ss++;
-    // Check to the lower-right (x,-z)
-    if(!piece->inside(p+Vector(dxpp.x(),0.,-dxpp.z())))
-      ss++;
-
+    if (d_flags->d_ndim>2){
+      // Check to the lower-left (-x,-z)
+      if(!piece->inside(p-Vector(dxpp.x(),0.,dxpp.z())))
+        ss++;
+      // Check to the upper-right (+x,+z)
+      if(!piece->inside(p+Vector(dxpp.x(),0.,dxpp.z())))
+        ss++;
+      // Check to the upper-left (-x,+z)
+      if(!piece->inside(p+Vector(-dxpp.x(),0.,dxpp.z())))
+        ss++;
+      // Check to the lower-right (x,-z)
+      if(!piece->inside(p+Vector(dxpp.x(),0.,-dxpp.z())))
+        ss++;
+    }
   }
   if(ss>0){
     return 0.5;

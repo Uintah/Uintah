@@ -127,6 +127,7 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps,
   ps->require("density",d_density);
   ps->require("thermal_conductivity",d_thermalConductivity);
   ps->require("specific_heat",d_specificHeat);
+  d_needSurfParticles = false;
   
   // Assume the the centered specific heat is C_v
   d_Cv = d_specificHeat;
@@ -339,6 +340,16 @@ double MPMMaterial::getInitialDensity() const
 {
   return d_density;
 }
+
+bool MPMMaterial::getNeedSurfaceParticles() const
+{
+  return d_needSurfParticles;
+}
+
+void MPMMaterial::setNeedSurfaceParticles( const bool NSP ){
+  d_needSurfParticles = NSP;
+}
+
 
 double 
 MPMMaterial::getInitialCp() const

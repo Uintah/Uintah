@@ -79,4 +79,3 @@ DissolutionMaterialSpec::add(unsigned int matlIndex)
   
   d_matls[matlIndex] = true;
 }
-

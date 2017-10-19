@@ -25,6 +25,7 @@
 // TestDissolution.cc
 // One of the derived Dissolution classes.
 #include <CCA/Components/MPM/Dissolution/TestDissolution.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MPM/MPMBoundCond.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>
@@ -46,8 +47,8 @@ using namespace Uintah;
 using std::vector;
 
 TestDissolution::TestDissolution(const ProcessorGroup* myworld,
-                                   ProblemSpecP& ps, SimulationStateP& d_sS, 
-                                   MPMLabel* Mlb,MPMFlags* MFlag)
+                                 ProblemSpecP& ps, SimulationStateP& d_sS, 
+                                 MPMLabel* Mlb,MPMFlags* MFlag)
   : Dissolution(myworld, Mlb, MFlag, ps)
 {
   // Constructor
@@ -57,7 +58,7 @@ TestDissolution::TestDissolution(const ProcessorGroup* myworld,
   ps->require("master_material",  d_material);
   ps->require("rate",             d_rate);
   ps->require("PressureThreshold",d_PressThresh);
-  d_matls.add(d_material); // always need specified material
+//  d_matls.add(d_material); // always need specified material
 }
 
 TestDissolution::~TestDissolution()
@@ -83,6 +84,9 @@ void TestDissolution::computeMassBurnFraction(const ProcessorGroup*,
 {
    int numMatls = d_sharedState->getNumMPMMatls();
    ASSERTEQ(numMatls, matls->size());
+   MPMMaterial* mat = d_sharedState->getMPMMaterial(d_material);
+   mat->setNeedSurfaceParticles(true);
+
    for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     Vector dx = patch->dCell();
@@ -115,7 +119,7 @@ void TestDissolution::computeMassBurnFraction(const ProcessorGroup*,
       double sumMass=0.0;
 //      double sumOtherVol = 0.0;
       for(int m = 0; m < numMatls; m++){
-        if(d_matls.requested(m)) {
+        if(d_matls.requested(m) || m==md) {
           sumMass+=gmass[m][c]; 
 //          if(m!=md){
 //            sumOtherVol = gvolume[m][c]*8.0*NC_CCweight[c];
@@ -132,12 +136,6 @@ void TestDissolution::computeMassBurnFraction(const ProcessorGroup*,
           massBurnRate[c] += d_rate*area*rho*2.0*NC_CCweight[c];
 //        massBurnRate[c] += 2.0*NC_CCweight[c]*
 //                           d_rate*area*rho;/* *(sumOtherVol/(sumOtherVol+mdVol));*/
-//          cout << "  mdVol = "       << mdVol/cellVol
-//               << ", sumOtherVol = " << sumOtherVol/cellVol 
-//               << ", sOV/(sOV+mV) = " << sumOtherVol/(sumOtherVol+mdVol)
-//               << ", sepscal/sepDis = " << sepscal/sepDis
-//               << ", NC_CCweight = " << NC_CCweight[c]
-//               << ", c = "           << c << endl;
 //        massBurnRate[c] += fabs(d_rate*(gStress[md][c].Trace()/3.0)/
 //                                                              d_PressThresh);
       }

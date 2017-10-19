@@ -102,6 +102,7 @@ namespace Uintah {
     bool        d_computeNormals;
     bool        d_doingDissolution;
     bool        d_computeColinearNormals;
+    int         d_ndim;
     bool        d_computeNodalHeatFlux;                        // compute the auxilary nodal heat flux
     bool        d_computeScaleFactor;                          // compute the scale factor for viz 
     bool        d_doGridReset;                                 // Default is true, standard MPM
@@ -141,8 +142,7 @@ namespace Uintah {
      bool centerOfMass;
     };
     reductionVars* d_reductionVars;
-    
-    
+
     const ProcessorGroup* d_myworld;
 
     std::vector<std::string> d_bndy_face_txt_list; 

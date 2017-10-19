@@ -76,6 +76,7 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_doingDissolution              =  false;
   d_computeColinearNormals        =  true;
   d_addFrictionWork               =  0.0;
+  d_ndim                          =  3;
 
   d_extraSolverFlushes                 =  0;            // Have PETSc do more flushes to save memory
   d_doImplicitHeatConduction           =  false;
@@ -264,6 +265,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   mpm_flag_ps->get("computeNormals",              d_computeNormals);
   mpm_flag_ps->get("doingDissolution",            d_doingDissolution);
   mpm_flag_ps->get("computeColinearNormals",      d_computeColinearNormals);
+  mpm_flag_ps->get("d_ndim",                      d_ndim);
   if (!d_do_contact_friction) d_addFrictionWork = 0.0;
 
   mpm_flag_ps->get("delete_rogue_particles",  d_deleteRogueParticles);
@@ -473,6 +475,7 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("extra_solver_flushes",        d_extraSolverFlushes);
   ps->appendElement("boundary_traction_faces",     d_bndy_face_txt_list);
   ps->appendElement("do_scalar_diffusion",         d_doScalarDiffusion);
+  ps->appendElement("d_ndim",                      d_ndim);
 
   // Cyberstone
   ps->appendElement("containerMaterial", d_containerMaterial);

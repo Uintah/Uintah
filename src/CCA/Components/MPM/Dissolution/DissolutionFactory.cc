@@ -49,7 +49,9 @@ Dissolution* DissolutionFactory::create(const ProcessorGroup* myworld,
    
    CompositeDissolution * dissolution_list = scinew CompositeDissolution(myworld, lb, flag);
 
-   for( ProblemSpecP child = mpm_ps->findBlock( "dissolution" ); child != nullptr; child = child->findNextBlock( "dissolution" ) ) {
+   for( ProblemSpecP child = mpm_ps->findBlock( "dissolution" ); 
+                     child != nullptr; 
+                     child = child->findNextBlock( "dissolution" ) ) {
      
      std::string dis_type;
      child->getWithDefault("type",dis_type, "null");
