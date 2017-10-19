@@ -300,15 +300,16 @@ Radiometer::sched_radiometer( const LevelP& level,
                               Task::WhichDW sigma_dw,
                               Task::WhichDW celltype_dw )
 {
-  int L = level->getIndex();
-  Task::WhichDW abskg_dw = d_abskg_dw[L];
-
+  
   // only schedule on the patches that contain radiometers - Spatial task scheduling
   //   we want a PatchSet like: { {19}, {22}, {25} } (singleton subsets like level->eachPatch())
   //     NOT -> { {19,22,25} }, as one proc isn't guaranteed to own the entire, 3-element subset.
   PatchSet* radiometerPatchSet = scinew PatchSet();
   radiometerPatchSet->addReference();
   getPatchSet(sched, level, radiometerPatchSet);
+
+  int L = level->getIndex();
+  Task::WhichDW abskg_dw = get_abskg_whichDW( L, d_abskgLabel );
 
   std::string taskname = "Radiometer::radiometer";
   Task *tsk;
@@ -329,8 +330,9 @@ Radiometer::sched_radiometer( const LevelP& level,
   DOUT(g_ray_dbg, "    sched_radiometer: adding requires for all-to-all variables ");
 
   Ghost::GhostType gac = Ghost::AroundCells;
-  tsk->requires(abskg_dw, d_abskgLabel, gac, SHRT_MAX);
-  tsk->requires(sigma_dw, d_sigmaT4Label, gac, SHRT_MAX);
+
+  tsk->requires(abskg_dw,    d_abskgLabel,    gac, SHRT_MAX);
+  tsk->requires(sigma_dw,    d_sigmaT4Label,  gac, SHRT_MAX);
   tsk->requires(celltype_dw, d_cellTypeLabel, gac, SHRT_MAX);
 
   tsk->modifies(d_VRFluxLabel);

@@ -389,7 +389,7 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
     const LevelP& fineLevel = grid->getLevel(maxLevels-1);
     
     // define per level which abskg dw
-    d_RMCRT->set_abskg_dw_perLevel (fineLevel, Task::NewDW);
+    d_RMCRT->set_abskg_dw_perLevel ( fineLevel, Task::NewDW );
     
     // convert abskg:dbl -> abskg:flt if needed
     d_RMCRT->sched_DoubleToFloat( fineLevel,sched, notUsed );

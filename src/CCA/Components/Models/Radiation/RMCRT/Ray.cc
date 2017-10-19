@@ -451,7 +451,7 @@ Ray::sched_rayTrace( const LevelP& level,
   Task *tsk = nullptr;
   
   int L = level->getIndex();
-  Task::WhichDW abskg_dw = d_abskg_dw[L];
+  Task::WhichDW abskg_dw = get_abskg_whichDW( L, d_abskgLabel );
 
   if (Parallel::usingDevice()) {          // G P U
 
@@ -1453,7 +1453,7 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
 
   Task::MaterialDomainSpec  ND  = Task::NormalDomain;
   Ghost::GhostType         gac  = Ghost::AroundCells;
-  Task::WhichDW            abskg_dw = d_abskg_dw[L_indx];
+  Task::WhichDW        abskg_dw = get_abskg_whichDW(L_indx, d_abskgLabel);
   
   // finest level:
   if ( d_ROI_algo == patch_based ) {          // patch_based we know the number of ghostCells
@@ -1500,7 +1500,7 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
   // declare requires for all coarser levels
   for (int l = 0; l < maxLevels; ++l) {
     int offset = maxLevels - l;
-    Task::WhichDW abskg_dw_CL = d_abskg_dw[l];
+    Task::WhichDW abskg_dw_CL = get_abskg_whichDW( l, d_abskgLabel );
     tsk->requires( abskg_dw_CL, d_abskgLabel,    nullptr, Task::CoarseLevel, offset, nullptr, ND, gac, SHRT_MAX );
     tsk->requires( sigma_dw,    d_sigmaT4Label,  nullptr, Task::CoarseLevel, offset, nullptr, ND, gac, SHRT_MAX );
     tsk->requires( celltype_dw, d_cellTypeLabel, nullptr, Task::CoarseLevel, offset, nullptr, ND, gac, SHRT_MAX );
@@ -1588,7 +1588,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
     LevelP level = new_dw->getGrid()->getLevel(L);
 
     if (level->hasFinerLevel() ) {                               // coarse level data
-      DataWarehouse* abskg_dw = get_abskg_dw(L, new_dw);
+      DataWarehouse* abskg_dw = get_abskg_dw(L, d_abskgLabel, new_dw);
       
       abskg_dw->getLevel(   abskg[L]   ,       d_abskgLabel ,   d_matl , level.get_rep() );
       sigmaT4_dw->getLevel( sigmaT4OverPi[L] , d_sigmaT4Label,  d_matl , level.get_rep() );
@@ -1609,7 +1609,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
   if ( d_ROI_algo == fixed || d_ROI_algo == dynamic ) {
 
     int L = maxLevels - 1;
-    DataWarehouse* abskg_dw = get_abskg_dw(L, new_dw);
+    DataWarehouse* abskg_dw = get_abskg_dw(L, d_abskgLabel, new_dw);
     
     const Patch* notUsed = 0;
     computeExtents(level_0, fineLevel, notUsed, maxLevels, new_dw,
@@ -1648,7 +1648,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
                      regionLo,  regionHi);
 
       int L = maxLevels - 1;
-      DataWarehouse* abskg_dw = get_abskg_dw(L, new_dw);
+      DataWarehouse* abskg_dw = get_abskg_dw(L, d_abskgLabel, new_dw);
       
       DOUT( g_ray_dbg, "    RT DataOnion: getting fine level data across L-" << L );
 
@@ -2605,7 +2605,8 @@ void Ray::sched_CoarsenAll( const LevelP& coarseLevel,
     printSchedule(coarseLevel,g_ray_dbg,"Ray::sched_CoarsenAll");
     
     int L = coarseLevel->getIndex();
-    Task::WhichDW fineLevel_abskg_dw = d_abskg_dw[L+1];    
+    Task::WhichDW fineLevel_abskg_dw = get_abskg_whichDW( L+1, d_abskgLabel);
+    
     sched_Coarsen_Q(coarseLevel, sched, fineLevel_abskg_dw, modifies_abskg,     d_abskgLabel );
     sched_Coarsen_Q(coarseLevel, sched, Task::NewDW,        modifies_sigmaT4,  d_sigmaT4Label );
   }

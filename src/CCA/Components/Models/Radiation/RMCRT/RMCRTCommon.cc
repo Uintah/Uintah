@@ -63,7 +63,7 @@ bool        RMCRTCommon::d_isSeedRandom;
 bool        RMCRTCommon::d_allowReflect;
 int         RMCRTCommon::d_matl;
 std::string RMCRTCommon::d_abskgBC_tag;
-std::map<int,Task::WhichDW>    RMCRTCommon::d_abskg_dw;
+std::map<std::string,Task::WhichDW>    RMCRTCommon::d_abskg_dw;
 
 
 std::vector<IntVector> RMCRTCommon::d_dbgCells;
@@ -182,21 +182,21 @@ RMCRTCommon::sched_DoubleToFloat( const LevelP& level,
 {
   const Uintah::TypeDescription* td = d_compAbskgLabel->typeDescription();
   const Uintah::TypeDescription::Type subtype = td->getSubType()->getType();
-
+  
   int L = level->getIndex();
-  Task::WhichDW myDW = d_abskg_dw[L];
+  Task::WhichDW abskgDW = get_abskg_whichDW( L, d_compAbskgLabel );
   
   // only run task if a conversion is needed.
   Task* tsk = nullptr;
   if ( RMCRTCommon::d_FLT_DBL == TypeDescription::float_type &&  subtype == TypeDescription::double_type ){
-    tsk = scinew Task( "RMCRTCommon::DoubleToFloat", this, &RMCRTCommon::DoubleToFloat, myDW);
+    tsk = scinew Task( "RMCRTCommon::DoubleToFloat", this, &RMCRTCommon::DoubleToFloat, abskgDW);
   } else {
     return;
   }
 
   printSchedule(level, g_ray_dbg, "RMCRTCommon::DoubleToFloat");
 
-  tsk->requires( myDW,       d_compAbskgLabel, d_gn, 0 );
+  tsk->requires( abskgDW,       d_compAbskgLabel, d_gn, 0 );
   tsk->computes(d_abskgLabel);
 
   sched->addTask( tsk, level->eachPatch(), d_matlSet);
@@ -880,10 +880,12 @@ RMCRTCommon::randVector( std::vector <int> &int_array,
 }
 
 //______________________________________________________________________
-//  For multi-level RMCRT algorithms the absorption coefficient can 
-//  be required from either the old_dw or new_dw.  On the coarse level
-//  abskg  _always_ resides in the newDW.  
-//______________________________________________________________________
+// For RMCRT algorithms the absorption coefficient can be required from either the old_dw or
+// new_dw depending on if RMCRT:float is specified.  On coarse levels abskg _always_ resides
+// in the newDW.  If RMCRT:float is used then abskg on the fine level resides in the new_dw.
+// This method creates a global map and the key for the  (map d_abskg_dw <string, Task::WhichDW>)
+// is the labelName_L-X, the value in the map is the old or new dw.
+//_____________________________________________________________________
 void
 RMCRTCommon::set_abskg_dw_perLevel ( const LevelP& fineLevel, 
                                      Task::WhichDW fineLevel_abskg_dw )
@@ -891,28 +893,66 @@ RMCRTCommon::set_abskg_dw_perLevel ( const LevelP& fineLevel,
   int maxLevels = fineLevel->getGrid()->numLevels();
   printSchedule(fineLevel, g_ray_dbg, "RMCRTCommon::set_abskg_dws");
   
+  //__________________________________
+  // fineLevel could have two entries.  One for abskg and abskgRMCRT
+  std::ostringstream key;
+  key << d_compAbskgLabel->getName() << "_L-"<< fineLevel->getIndex();
+  d_abskg_dw[key.str()] = fineLevel_abskg_dw;
+  
+  //__________________________________
+  // fineLevel: FLOAT  abskgRMCRT
+  if ( RMCRTCommon::d_FLT_DBL == TypeDescription::float_type ) {
+    std::ostringstream key1;
+    key1 << d_abskgLabel->getName() << "_L-"<< fineLevel->getIndex();
+    d_abskg_dw[key1.str()] = Task::NewDW;  
+  }
+  
+  //__________________________________
+  // coarse levels always require from the newDW
   for(int L = 0; L<maxLevels; L++) {
   
-    if ( L == fineLevel->getIndex() ) {
-      d_abskg_dw[L] = fineLevel_abskg_dw;
-    } else {
-      d_abskg_dw[L] = Task::NewDW;
-    }
+    if ( L != fineLevel->getIndex() ) {
+      std::ostringstream key2;
+      key2 << d_abskgLabel->getName() << "_L-"<< L;  
+      d_abskg_dw[key2.str()] = Task::NewDW;
+    } 
   }
+  
+#if 0             // debugging
+  for( auto iter = d_abskg_dw.begin(); iter !=  d_abskg_dw.end(); iter++ ){
+    std::cout << " key: " << (*iter).first << " value: " << (*iter).second << std::endl;
+  }
+#endif  
 }
 
 //______________________________________________________________________
-//  return the dw associated with this level
+//  return the dw associated for this abskg and level
 //______________________________________________________________________
 DataWarehouse*
 RMCRTCommon::get_abskg_dw ( const int L,
+                            const VarLabel* label,
                             DataWarehouse* new_dw)
-{
-  Task::WhichDW  dw = d_abskg_dw[L];
+{  
+  Task::WhichDW dw = get_abskg_whichDW ( L, label );
   DataWarehouse* abskg_dw = new_dw->getOtherDataWarehouse( dw );
+  
   return abskg_dw;
 }
 
+//______________________________________________________________________
+//  return the Task::WhichDW for this abskg and level
+//______________________________________________________________________
+Task::WhichDW
+RMCRTCommon::get_abskg_whichDW ( const int L,
+                                 const VarLabel* label)
+{
+  std::ostringstream key;
+  key << label->getName() << "_L-"<< L;
+  Task::WhichDW abskgDW = d_abskg_dw[key.str()];
+
+//  std::cout << "    key: " << key.str() << " value: " << abskgDW << std::endl;
+  return abskgDW;
+}
 
 //______________________________________________________________________
 //
