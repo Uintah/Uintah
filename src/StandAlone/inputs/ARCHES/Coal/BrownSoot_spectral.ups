@@ -1840,12 +1840,6 @@
             <abskt label="abskt"/>
             <DORadiationModel type="sweepSpatiallyParallel">
               <ordinates>6</ordinates>
-              <LinearSolver type="hypre">
-                <res_tol>1.0e-8</res_tol>
-                <ksptype>pfmg</ksptype>
-                <pctype>pfmg</pctype>
-                <max_iter>1500</max_iter>
-              </LinearSolver>
               <initialGuess>prevRadSolve</initialGuess>
               <ScatteringOn>true</ScatteringOn>
             </DORadiationModel>

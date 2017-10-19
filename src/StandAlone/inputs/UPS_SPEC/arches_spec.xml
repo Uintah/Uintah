@@ -1814,7 +1814,7 @@
               <initialGuess               spec="OPTIONAL STRING 'zeros, prevDir, prevRadSolve'"/> <!-- prevRadSolvei -> use previous radiation solve as previous guess.  prevDir= use previous direction for initial guess.  zeros=use zeros as initial guess (default)-->
               <ScatteringOn               spec="OPTIONAL BOOLEAN" /> <!-- turn on scattering -->
               <QuadratureSet               spec="OPTIONAL STRING 'LevelSymmetric, LegendreChebyshev" /> <!-- turn on scattering -->
-              <LinearSolver               spec="OPTIONAL NO_DATA"
+              <LinearSolver               spec="OPTIONAL NO_DATA"  need_applies_to="type linearSolve"
                                           attribute1="type REQUIRED STRING 'hypre, petsc'">
                 <res_tol                  spec="REQUIRED DOUBLE" />
                 <ksptype                  spec="REQUIRED STRING 'pfmg, gmres, cg'" />
