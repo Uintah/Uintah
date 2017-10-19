@@ -871,12 +871,6 @@ RMCRTCommon::randVector( std::vector <int> &int_array,
     int_array[i] = int_array[rand_int];
     int_array[rand_int] = swap;
   }
-  if (cell.x() == 0 && cell.y() == 0 && cell.z() == 0) {
-    for (int i = 0; i < max; i++) {
-      printf("%d ", int_array[i]);
-    }
-    printf("\n");
-  }
 }
 
 //______________________________________________________________________
