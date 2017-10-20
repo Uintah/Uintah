@@ -1040,7 +1040,6 @@ ParticleCreator::checkForSurface2(const GeometryPieceP piece, const Point p,
   //  in.  If any of those points are not also inside the object
   //  the current point is on the surface
   
-  cout << "D_NDIM = " << d_flags->d_ndim << endl;
   int ss = 0;
   // Check to the left (-x)
   if(!piece->inside(p-Vector(dxpp.x(),0.,0.)))

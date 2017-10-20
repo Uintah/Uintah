@@ -377,7 +377,8 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   if (!flags->doMPMOnLevel(level->getIndex(), level->getGrid()->numLevels())) {
     return;
   }
-  Task* t = scinew Task( "MPM::actuallyInitialize", this, &SerialMPM::actuallyInitialize );
+  Task* t = scinew Task( "MPM::actuallyInitialize", this, 
+                          &SerialMPM::actuallyInitialize );
 
   const PatchSet* patches = level->eachPatch();
   printSchedule(patches,cout_doing,"MPM::scheduleInitialize");
@@ -409,6 +410,7 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   t->computes(lb->pCellNAPIDLabel,zeroth_matl);
   t->computes(lb->NC_CCweightLabel,zeroth_matl);
   t->computes(lb->KineticEnergyLabel);
+  t->computes(lb->pSurfLabel);
 
   if(!flags->d_doGridReset){
     t->computes(lb->gDisplacementLabel);
@@ -1977,7 +1979,6 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
       }
       particleIndex numParticles = mpm_matl->createParticles(cellNAPID,
                                                              patch, new_dw);
-
       totalParticles+=numParticles;
       mpm_matl->getConstitutiveModel()->initializeCMData(patch,mpm_matl,new_dw);
       
