@@ -36,15 +36,16 @@
 
 namespace Uintah {
 
+  enum SLIPMODEL {FIRST_ORDER, SECOND_ORDER_DEISSLER, SECOND_ORDER_KARNIADAKIS_BESKOK};
+                     
   //_____________________________________________________________
   // This struct contains misc. variables that are carried around
   struct slip_globalVars{
     double alpha_momentum;        // momentum accommidation coeff
     double alpha_temperature;     // temperature accomidation coeff.
-    std::string SlipModel;        // which slip model  Deissler, Karniadakis-Beskok'
+    SLIPMODEL SlipModel;          // which slip model  Deissler, Karniadakis-Beskok'
     bool        CreepFlow;        // include creep flow in the velocity calculation
   };
-
 
   //____________________________________________________________
   // This struct contains the additional variables required to compute
@@ -61,7 +62,7 @@ namespace Uintah {
     CCVariable<double> lamda;             //  mean free path
     double alpha_momentum;                //  momentum accomodation coefficient
     double alpha_temperature;             //  thermal accomodation coefficient
-    std::string SlipModel;                //  slip model
+    SLIPMODEL SlipModel;                  //  slip model
     bool   CreepFlow;                     //  include creep flow, or not
   };
 

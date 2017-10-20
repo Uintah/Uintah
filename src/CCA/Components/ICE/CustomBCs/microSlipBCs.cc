@@ -86,15 +86,31 @@ bool read_MicroSlip_BC_inputs(const ProblemSpecP& prob_spec,
     }
     slip->require("alpha_momentum",    svb->alpha_momentum);
     slip->require("alpha_temperature", svb->alpha_temperature);
-    slip->require("SlipModel",         svb->SlipModel);
     slip->require("CreepFlow",         svb->CreepFlow);
-  }
+    
+    // slip model type
+    ProblemSpecP slipModel = slip->findBlock("SlipModel");
+    map<string,string> model;
+    slipModel->getAttributes( model );
+    string model_type = model["type"];
+    
+    if( model_type ==  "FirstOrder" ) {
+      svb->SlipModel = FIRST_ORDER;
+    } 
+    else if( model_type ==  "SecondOrder_Deissler" ){
+      svb->SlipModel = SECOND_ORDER_DEISSLER;
+    }
+    else if( model_type ==  "SecondOrder_Karniadakis-Beskok" ){
+      svb->SlipModel = SECOND_ORDER_KARNIADAKIS_BESKOK;
+    }
 
-  if (usingSlip) {
-    cout << "\n WARNING:  Slip boundary conditions are "
-         << " NOT set during the problem initialization \n "
-         << " THESE BOUNDARY CONDITIONS ONLY WORK FOR 1 MATL ICE PROBLEMS \n"
-         << " (The material index has been hard coded in preprocess_MicroSlip_BCs)\n" <<endl;
+    proc0cout << "______________________________________________________________________\n"
+              << "                 MICROSLIP  BOUNDARY CONDITIONS\n\n"
+              << "     model: " << model_type << "\n"
+              << "     WARNING:  Slip boundary conditions are NOT set during the problem initialization \n "
+              << "     THESE BOUNDARY CONDITIONS ONLY WORK FOR 1 MATL ICE PROBLEMS \n"
+              << "     (The material index has been hard coded in preprocess_MicroSlip_BCs)\n"
+              << "______________________________________________________________________\n";
   }
   return usingSlip;
 }
@@ -347,7 +363,7 @@ int set_MicroSlipVelocity_BC(const Patch          * patch,
     constCCVariable<double> temp_CC   = lv->temp_CC;
 
     double alpha_momentum = lv->alpha_momentum;
-    std::string SlipModel = lv->SlipModel;
+    SLIPMODEL   SlipModel = lv->SlipModel;
     bool        CreepFlow = lv->CreepFlow;
 
     IntVector patchLoEC = patch->getExtraCellLowIndex();
@@ -442,13 +458,13 @@ int set_MicroSlipVelocity_BC(const Patch          * patch,
             vel_CC[c][dir] += 0.75 * viscosity[b] * tempgrad[dir]/( rho_CC[b] * temp_CC[b] );
           }
 
-          if(SlipModel == "Deissler"){
+          if( SlipModel == SECOND_ORDER_DEISSLER ){
             double Bv2 = (9.0/8.0) * lamda[b] * lamda[b];
             vel_CC[c][dir] -= Bv2 * velgrad2[pDir][dir];
             vel_CC[c][dir] -= 0.5 * Bv2 * ( velgrad2[axes[1]][dir] + velgrad2[axes[2]][dir] );
           }
 
-          if(SlipModel == "Karniadakis-Beskok"){
+          if( SlipModel == SECOND_ORDER_KARNIADAKIS_BESKOK ){
             double Bv2 = -0.5 * Bv1 * lamda[b];
             vel_CC[c][dir] -= Bv2 * velgrad2[pDir][dir];
           }
@@ -489,7 +505,7 @@ int  set_MicroSlipTemperature_BC(const Patch            * patch,
     CCVariable<double>& lamda              = lv->lamda;
 
     double alpha_temperature = lv->alpha_temperature;
-    string SlipModel         = lv->SlipModel;
+    SLIPMODEL SlipModel      = lv->SlipModel;
 
     IntVector axes      = patch->getFaceAxes(face);
     IntVector offset    = patch->faceDirection(face);
@@ -564,11 +580,11 @@ int  set_MicroSlipTemperature_BC(const Patch            * patch,
 
       temp_CC[c] = wall_temp + Bt1 * tempgrad1[pDir];
 
-      if(SlipModel == "Deissler"){
+      if( SlipModel == SECOND_ORDER_DEISSLER ){
         double Bt2 = lamda[b] * lamda[b] * (9.0/128.0) * (177.0 * gamma[b] - 145.0)/(gamma[b] + 1.0);
         temp_CC[c] -= Bt2 * ( tempgrad2[pDir] + 0.5*( tempgrad2[axes[1]] + tempgrad2[axes[2]] ) );
       }
-      if(SlipModel == "Karniadakis-Beskok"){
+      if( SlipModel == SECOND_ORDER_KARNIADAKIS_BESKOK ){
         double Bt2 = -(Bt1/2) * lamda[b];
         temp_CC[c] -= Bt2 * tempgrad2[pDir];
       }

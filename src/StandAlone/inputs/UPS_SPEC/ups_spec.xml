@@ -643,7 +643,7 @@
       <microSlip            spec="OPTIONAL NO_DATA">
         <alpha_momentum     spec="REQUIRED DOUBLE 'positive'"/>
         <alpha_temperature  spec="REQUIRED DOUBLE 'positive'"/>
-        <SlipModel          spec="REQUIRED STRING 'Deissler, Karniadakis-Beskok'" />
+        <SlipModel          spec="REQUIRED NO_DATA" attribute1="type REQUIRED STRING 'FirstOrder SecondOrder_Deissler SecondOrder_Karniadakis-Beskok'"/>
         <CreepFlow          spec="REQUIRED BOOLEAN" />
       </microSlip>
 
