@@ -536,7 +536,6 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
     CCVariable<double> arches_density;
     new_dw->getModifiable( arches_density, m_densityLabel, m_matl_index, patch );
 
-    std::vector<double> iv1(nIndVars);
     std::vector<int> depVarIndexes(d_nDepVars);
     int ix=0;
     for (DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i){
@@ -548,8 +547,10 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
     Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
     Uintah::parallel_for(range,  [&]( int i,  int j, int k){
 
+      std::vector<double> iv1(nIndVars);
+
       // fill independent variables
-      ix=0;
+      int ix=0;
       for ( std::vector<constCCVariable<double> >::iterator iter = indep_storage.begin(); iter != indep_storage.end(); ++iter ) {
         iv1[ix]=(*iter)(i,j,k);
         ix++;
