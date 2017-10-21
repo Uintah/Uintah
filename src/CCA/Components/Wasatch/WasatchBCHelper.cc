@@ -801,7 +801,7 @@ namespace WasatchCore {
           
           NSCBC::BCBuilder<FieldT>* nscbcBuilder = new NSCBC::BCBuilder<FieldT>( nscbcInfo, mw, gasConstant,
                                                                                  nscbcTagMgr, do2, do3,
-                                                                                 NSCBC::NonreflectingSubSwitch::SUBTRACTION_OFF,
+                                                                                 NSCBC::NonreflectingSubSwitch::SUBTRACTION_ON,
                                                                                  patchID );
           if ( nscbcBuildersMap_.find(bndName) != nscbcBuildersMap_.end() ) {
             if (nscbcBuildersMap_.find(bndName)->second.find(patchID) == nscbcBuildersMap_.find(bndName)->second.end()) {
