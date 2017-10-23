@@ -430,12 +430,23 @@ visit_handle visit_SimGetMetaData(void *cbdata)
                 VisIt_VariableMetaData_setNumComponents(vmd, 4);
               }
               // scalar
-              else 
+              else if (vartype.find("Scalar") != std::string::npos)
               {
                 VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
                 VisIt_VariableMetaData_setNumComponents(vmd, 1);
               }
-
+              else
+              {
+                std::stringstream msg;
+                msg << "Visit libsim - "
+                    << "Uintah variable \"" << varname << "\"  "
+                    << "has an unknown variable type \""
+                    << vartype << "\"";
+            
+                VisItUI_setValueS("SIMULATION_MESSAGE_WARNING", msg.str().c_str(), 1);
+                continue;
+              }
+              
               VisIt_SimulationMetaData_addVariable(md, vmd);
             }
           }
@@ -451,19 +462,22 @@ visit_handle visit_SimGetMetaData(void *cbdata)
       for (std::set<std::string>::iterator it=meshes_added.begin();
            it!=meshes_added.end(); ++it)
       {
-        std::string varname = "patch/nodes/" + *it;
+        if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
+        {
+          std::string varname = "patch/nodes/" + *it;
 
-        VisIt_VariableMetaData_setName(vmd, varname.c_str() );
-        VisIt_VariableMetaData_setMeshName(vmd, "NC_Mesh");
-        VisIt_VariableMetaData_setType(vmd, VISIT_VARCENTERING_NODE);
-        VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_VECTOR);
-        VisIt_VariableMetaData_setNumComponents(vmd, 3);
-        VisIt_VariableMetaData_setUnits(vmd, "");
+          VisIt_VariableMetaData_setName(vmd, varname.c_str() );
+          VisIt_VariableMetaData_setMeshName(vmd, "NC_Mesh");
+          VisIt_VariableMetaData_setCentering(vmd, VISIT_VARCENTERING_NODE);
+          VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_VECTOR);
+          VisIt_VariableMetaData_setNumComponents(vmd, 3);
+          VisIt_VariableMetaData_setUnits(vmd, "");
         
-        // ARS - FIXME
-        //      VisIt_VariableMetaData_setHasDataExtents(vmd, false);
-        VisIt_VariableMetaData_setTreatAsASCII(vmd, false);
-        VisIt_SimulationMetaData_addVariable(md, vmd);
+          // ARS - FIXME
+          //      VisIt_VariableMetaData_setHasDataExtents(vmd, false);
+          VisIt_VariableMetaData_setTreatAsASCII(vmd, false);
+          VisIt_SimulationMetaData_addVariable(md, vmd);
+        }
       }
     }
   
@@ -471,29 +485,29 @@ visit_handle visit_SimGetMetaData(void *cbdata)
     if (addPatchData)
     {
       visit_handle vmd = VISIT_INVALID_HANDLE;
-	
+        
       int cent = (mesh_for_patch_data == "CC_Mesh" ?
                   VISIT_VARCENTERING_ZONE : VISIT_VARCENTERING_NODE);
       
       const char *patch_names[3] =
-	{ "patch/id", "patch/processor", "patch/node" };
+        { "patch/id", "patch/processor", "patch/node" };
 
       for( unsigned int i=0; i<3; ++i )
       {
-	if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
-	{
-	  VisIt_VariableMetaData_setName(vmd, patch_names[i]);
-	  VisIt_VariableMetaData_setMeshName(vmd, mesh_for_patch_data.c_str());
-	  VisIt_VariableMetaData_setCentering(vmd, cent);
-	  VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
-	  VisIt_VariableMetaData_setNumComponents(vmd, 1);
-	  VisIt_VariableMetaData_setUnits(vmd, "");
+        if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
+        {
+          VisIt_VariableMetaData_setName(vmd, patch_names[i]);
+          VisIt_VariableMetaData_setMeshName(vmd, mesh_for_patch_data.c_str());
+          VisIt_VariableMetaData_setCentering(vmd, cent);
+          VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
+          VisIt_VariableMetaData_setNumComponents(vmd, 1);
+          VisIt_VariableMetaData_setUnits(vmd, "");
         
-	  // ARS - FIXME
-	  //      VisIt_VariableMetaData_setHasDataExtents(vmd, false);
-	  VisIt_VariableMetaData_setTreatAsASCII(vmd, false);
-	  VisIt_SimulationMetaData_addVariable(md, vmd);
-	}
+          // ARS - FIXME
+          //      VisIt_VariableMetaData_setHasDataExtents(vmd, false);
+          VisIt_VariableMetaData_setTreatAsASCII(vmd, false);
+          VisIt_SimulationMetaData_addVariable(md, vmd);
+        }
       }
       
       for (std::set<std::string>::iterator it=meshes_added.begin();
@@ -1644,8 +1658,8 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       }
       // Patch processor node
       else if( strcmp(varname, "patch/proc_node") == 0 )
-      {	
-	double val = patchInfo.getProcNodeId();
+      { 
+        double val = patchInfo.getProcNodeId();
 
         for (int i=0; i<gd->num*gd->components; ++i)
           gd->data[i] = val;
