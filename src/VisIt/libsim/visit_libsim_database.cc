@@ -519,7 +519,7 @@ visit_handle visit_SimGetMetaData(void *cbdata)
           
           VisIt_VariableMetaData_setName(vmd, varname.c_str() );
           VisIt_VariableMetaData_setMeshName(vmd, mesh_for_patch_data.c_str());
-          VisIt_VariableMetaData_setType(vmd, cent);
+          VisIt_VariableMetaData_setCentering(vmd, cent);
           VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_VECTOR);
           VisIt_VariableMetaData_setNumComponents(vmd, 3);
           VisIt_VariableMetaData_setUnits(vmd, "");
