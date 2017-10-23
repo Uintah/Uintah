@@ -96,6 +96,8 @@ SchedulerCommon::SchedulerCommon( const ProcessorGroup * myworld, const Output *
   m_dwmap[Task::NewDW] = 1;
 
   m_locallyComputedPatchVarMap = scinew LocallyComputedPatchVarMap;
+
+  m_monitoring = false;
 }
 
 //______________________________________________________________________
