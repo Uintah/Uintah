@@ -338,8 +338,8 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     std::vector<Task::WhichDW> m_tracking_dws;
 
     // Optional task monitoring.
-    bool m_monitoring;          // Monitoring on/off.
-    bool m_monitoring_per_cell; // Record the task runtime attributes on a per
+    bool m_monitoring{false};          // Monitoring on/off.
+    bool m_monitoring_per_cell{false}; // Record the task runtime attributes on a per
                                 // cell basis rather than a per patch basis.
     // Maps for the global or local tasks to be monitored.
     std::map<std::string, const VarLabel *>       m_monitoring_tasks[2];
