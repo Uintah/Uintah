@@ -543,11 +543,11 @@ HypreDriverSStruct::HyprePatch_CC::makeGraphConnections(HYPRE_SStructGraph& grap
   const IntVector& refRat = fineLevel->getRefinementRatio();
   
   //At the CFI compute the fine/coarse level indices and pass them to hypre
-  for(int i = 0; i < coarsePatches.size(); i++){  
+  for(unsigned int i = 0; i < coarsePatches.size(); i++){  
     const Patch* coarsePatch = coarsePatches[i];
     
-    for(int i = 0; i < finePatches.size(); i++){  
-      const Patch* finePatch = finePatches[i];
+    for(unsigned int j = 0; j < finePatches.size(); j++){  
+      const Patch* finePatch = finePatches[j];
 
       vector<Patch::FaceType> cf;
       finePatch->getCoarseFaces(cf);
@@ -797,11 +797,11 @@ HypreDriverSStruct::HyprePatch_CC::makeConnections(HYPRE_SStructMatrix& HA,
   const IntVector& refRat = fineLevel->getRefinementRatio();
   
   //At the CFI compute the fine/coarse level indices and pass them to hypre
-  for(int i = 0; i < coarsePatches.size(); i++){  
+  for(unsigned int i = 0; i < coarsePatches.size(); i++){  
     const Patch* coarsePatch = coarsePatches[i];
     
-    for(int i = 0; i < finePatches.size(); i++){  
-      const Patch* finePatch = finePatches[i];
+    for(unsigned int j = 0; j < finePatches.size(); j++){  
+      const Patch* finePatch = finePatches[j];
       
       //__________________________________
       // get the fine level data
