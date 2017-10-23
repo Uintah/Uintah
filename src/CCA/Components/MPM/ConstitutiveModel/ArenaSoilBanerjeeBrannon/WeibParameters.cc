@@ -28,6 +28,8 @@
 #include <Core/Parallel/Parallel.h>  // fror proc0cout
 #include <Core/Exceptions/InvalidValue.h>
 
+#include <stdexcept>
+
 using namespace Uintah;
 
 WeibParameters::WeibParameters()
@@ -120,7 +122,8 @@ WeibParameters::WeibullParser(const std::string& weibDist)
 
     try {
       d_WeibMed  = std::stod(d_WeibDist);
-    } catch (std::invalid_argument) {
+    }
+    catch (std::invalid_argument) {
       std::ostringstream out;
       out << "** ERROR: ** Input value " << d_WeibDist << " cannot be parsed. Please"
           << " check your input values." << std::endl;

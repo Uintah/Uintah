@@ -28,38 +28,42 @@
 #include <CCA/Components/MPM/ConstitutiveModel/ArenaSoilBanerjeeBrannon/Models/YieldConditionFactory.h>
 
 // Namespace Uintah::
+
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Ports/DataWarehouse.h>
-#include <Core/Labels/MPMLabel.h>
-#include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Malloc/Allocator.h>
+
+#include <Core/Exceptions/InvalidValue.h>
+#include <Core/Exceptions/ParameterNotFound.h>
 
 #include <Core/Grid/Box.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Task.h>
-
-#include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/NodeIterator.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
+#include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
 
-#include <Core/Exceptions/ParameterNotFound.h>
-#include <Core/Exceptions/InvalidValue.h>
+#include <Core/Labels/MPMLabel.h>
+
+#include <Core/Malloc/Allocator.h>
 
 #include <Core/Math/Matrix3.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Math/MiscMath.h>
 
+#include <Core/ProblemSpec/ProblemSpec.h>
+
 // Namespace std::
-#include <fstream>             
-#include <iostream>
-#include <limits>
-#include <cmath>
 #include <cerrno>
 #include <cfenv>
 #include <chrono>
+#include <cmath>
+#include <fstream>             
+#include <iostream>
+#include <limits>
+#include <stdexcept>
 
 // Boost
 //#include <boost/range/combine.hpp>
@@ -1369,7 +1373,8 @@ ArenaPartiallySaturated::computeStepDivisions(Uintah::particleIndex idx,
   try {
     PEAKI1 = state_old.yieldParams.at("PEAKI1");
     //STREN = state_old.yieldParams.at("STREN");
-  } catch (std::out_of_range) {
+  } 
+  catch( std::out_of_range ) {
     std::ostringstream err;
     err << "**ERROR** Could not find yield parameters PEAKI1 and STREN" << std::endl;
     for (auto param : state_old.yieldParams) {
