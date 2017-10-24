@@ -887,7 +887,7 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
         DOUT(detaileddbg, "Rank-" << m_proc_group->myrank() << "    Creating dependency on " << neighbors.size()
                                   << " neighbors:     Low=" << low << ", high=" << high << ", var=" << req->m_var->getName());
 
-        for (int i = 0; i < neighbors.size(); i++) {
+        for (unsigned int i = 0; i < neighbors.size(); i++) {
           const Patch* neighbor = neighbors[i];
 
           // if neighbor is not in my neighborhood just continue as its dependencies are not important to this processor
@@ -928,7 +928,7 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
           
           //__________________________________
           //
-          for (int j = 0; j < fromNeighbors.size(); j++) {
+          for (unsigned int j = 0; j < fromNeighbors.size(); j++) {
             const Patch* fromNeighbor = fromNeighbors[j];
 
             // only add the requirements if fromNeighbor is in my neighborhood
@@ -1071,7 +1071,7 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
 
                         req_patch->getLevel()->selectPatches(low, high, n);
                         bool found = false;
-                        for (int i = 0; i < n.size(); i++) {
+                        for (unsigned int i = 0; i < n.size(); i++) {
                           if (n[i]->getID() == p->getID()) {
                             found = true;
                             break;

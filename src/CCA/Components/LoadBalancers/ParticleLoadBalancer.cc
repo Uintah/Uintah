@@ -136,7 +136,7 @@ ParticleLoadBalancer::collectParticlesForRegrid( const Grid* oldGrid, const vect
         continue;
       }
 
-      for (int i = 0; i < oldPatches.size(); i++) {
+      for (unsigned int i = 0; i < oldPatches.size(); i++) {
         const Patch* oldPatch = oldPatches[i];
 
         recvcounts[m_processor_assignment[oldPatch->getGridIndex()]]++;

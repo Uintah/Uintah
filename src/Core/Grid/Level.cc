@@ -553,7 +553,7 @@ void Level::selectPatches( const IntVector  & low
       // neighbors before this query
       std::vector<const Patch*>& cache = m_select_cache[std::make_pair(low, high)];
       cache.reserve(6);  // don't reserve too much to save memory, not too little to avoid too much reallocation
-      for (auto i = 0; i < neighbors.size(); i++) {
+      for (unsigned int i = 0; i < neighbors.size(); i++) {
         cache.push_back(neighbors[i]);
       }
     }
@@ -649,7 +649,7 @@ void Level::setOverlappingPatches()
     Patch::selectType neighborPatches;
     selectPatches(lowEC, highEC, neighborPatches, includeExtraCells);
     
-    for ( auto j = 0; j < neighborPatches.size(); j++) {
+    for ( unsigned int j = 0; j < neighborPatches.size(); j++) {
       const Patch* neighborPatch = neighborPatches[j];
       
       if ( patch != neighborPatch){

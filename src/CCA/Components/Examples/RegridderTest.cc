@@ -365,7 +365,7 @@ namespace Uintah
         new_dw->getModifiable(density, d_densityLabel, matl, coarsePatch);
         //print(density, "before coarsen density");
         
-        for(int i=0;i<finePatches.size();i++){
+        for(unsigned int i=0;i<finePatches.size();i++){
           const Patch* finePatch = finePatches[i];
           constCCVariable<double> fine_den;
           new_dw->get(fine_den, d_densityLabel, matl, finePatch,

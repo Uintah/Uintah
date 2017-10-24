@@ -564,7 +564,7 @@ void TiledRegridder::CoarsenFlags(GridP oldGrid, int l, vector<IntVector> tiles)
     pbvh.query(low, high, intersecting_patches);
      
     //for each intersecting patch
-    for (int i = 0; i < intersecting_patches.size(); i++)
+    for (unsigned int i = 0; i < intersecting_patches.size(); i++)
     {
       const Patch* patch = intersecting_patches[i];
       //cout << d_myworld->myrank() << "         coarse patch:" << *patch << endl;

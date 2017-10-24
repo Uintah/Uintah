@@ -282,7 +282,7 @@ void Poisson3::refine(const ProcessorGroup*,
       NCVariable<double> finePhi;
       newDW->allocateAndPut(finePhi, phi_label, matl, finePatch);
       // For each coarse patch, compute the overlapped region and interpolate
-      for(int i=0;i<coarsePatches.size();i++){
+      for(unsigned int i=0;i<coarsePatches.size();i++){
         const Patch* coarsePatch = coarsePatches[i];
         constNCVariable<double> coarsePhi;
         newDW->get(coarsePhi, phi_label, matl, coarsePatch,
@@ -373,7 +373,7 @@ void Poisson3::refineInterface(const ProcessorGroup*,
 
           int total_fine = 0;
           // For each coarse patch, compute the overlapped region and interpolate
-          for(int i=0;i<coarsePatches.size();i++){
+          for(unsigned int i=0;i<coarsePatches.size();i++){
             const Patch* coarsePatch = coarsePatches[i];
             IntVector l = Max(coarseLevel->mapNodeToFiner(coarsePatch->getNodeLowIndex()),
                               low);
@@ -454,7 +454,7 @@ void Poisson3::coarsen(const ProcessorGroup*,
       newDW->getModifiable(coarsePhi, phi_label, matl, coarsePatch);
 
       // For each fine patch, compute the overlapped region and interpolate
-      for(int i=0;i<finePatches.size();i++){
+      for(unsigned int i=0;i<finePatches.size();i++){
         const Patch* finePatch = finePatches[i];
         constNCVariable<double> finePhi;
         newDW->get(finePhi, phi_label, matl, finePatch,

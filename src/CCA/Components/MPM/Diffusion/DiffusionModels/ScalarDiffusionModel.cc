@@ -331,7 +331,7 @@ void ScalarDiffusionModel::computeDivergence_CFI(const PatchSubset    * finePatc
                                                      dwi, finePatch);
 
       // loop over the coarse patches under the fine patches.
-      for(int cp=0; cp<coarsePatches.size(); cp++)
+      for(unsigned int cp=0; cp<coarsePatches.size(); cp++)
       {
         const Patch* coarsePatch = coarsePatches[cp];
 
@@ -469,7 +469,7 @@ void ScalarDiffusionModel::baseInitializeSDMData(
   ParticleSubset* pset = NewDW->getParticleSubset(matl->getDWIndex(), patch);
   NewDW->getModifiable(pConcentration, d_lb->diffusion->pConcentration, pset);
 
-  for (int pIndex = 0; pIndex < pset->numParticles(); ++pIndex)
+  for (unsigned int pIndex = 0; pIndex < pset->numParticles(); ++pIndex)
     {
       pConcentration[pIndex] = d_InitialConcentration;
     }

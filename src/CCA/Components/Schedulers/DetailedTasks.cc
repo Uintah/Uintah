@@ -388,7 +388,7 @@ DetailedTasks::createScrubCounts()
           Patch::selectType neighbors;
           IntVector low, high;
           patch->computeVariableExtents(type, req->m_var->getBoundaryLayer(), req->m_gtype, req->m_num_ghost_cells, neighbors, low, high);
-          for (int i = 0; i < neighbors.size(); i++) {
+          for (unsigned int i = 0; i < neighbors.size(); i++) {
             const Patch* neighbor = neighbors[i];
             for (int m = 0; m < matls->size(); m++) {
               addScrubCount(req->m_var, matls->get(m), neighbor, whichdw);

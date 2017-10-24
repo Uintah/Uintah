@@ -1425,7 +1425,7 @@ OnDemandDataWarehouse::getParticleSubset(       int       matlIndex,
   std::vector<ParticleSubset*> subsets;
   std::vector<const Patch*> vneighbors;
 
-  for( int i = 0; i < neighbors.size(); i++ ) {
+  for( unsigned int i = 0; i < neighbors.size(); i++ ) {
     const Patch* neighbor = neighbors[i];
     const Patch* realNeighbor = neighbor->getRealPatch();
     if( neighbor ) {
@@ -2385,7 +2385,7 @@ OnDemandDataWarehouse::getRegionModifiable(       GridVariableBase& var,
   bool foundInDB   = false;                   // found variable in DB
   std::vector<const Patch*> missing_patches;  // patches that do not contain the label
 
-  for (int i = 0; i < patches.size(); i++) {
+  for (unsigned int i = 0; i < patches.size(); i++) {
     const Patch* patch = patches[i];
 
     // After regridding selected patches may return stale patches so
@@ -2881,7 +2881,7 @@ void OnDemandDataWarehouse::getNeighborPatches(const VarLabel* label,
   else
     neighbors.push_back(patch);
 
-  for( int i = 0; i < neighbors.size(); i++ ) {
+  for( unsigned int i = 0; i < neighbors.size(); i++ ) {
     const Patch* neighbor = neighbors[i];
     if( neighbor && (neighbor != patch) ) {
       IntVector low  = Max( neighbor->getExtraLowIndex( basis, label->getBoundaryLayer() ), lowIndex );
@@ -2989,7 +2989,7 @@ void OnDemandDataWarehouse::getValidNeighbors(const VarLabel* label,
   else
     neighbors.push_back(patch);
 
-  for( int i = 0; i < neighbors.size(); i++ ) {
+  for( unsigned int i = 0; i < neighbors.size(); i++ ) {
     const Patch* neighbor = neighbors[i];
     if( neighbor && (neighbor != patch) ) {
       IntVector low  = Max( neighbor->getExtraLowIndex( basis, label->getBoundaryLayer() ), lowIndex );

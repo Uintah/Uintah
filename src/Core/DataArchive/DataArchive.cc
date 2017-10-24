@@ -972,7 +972,7 @@ DataArchive::queryRegion(       Variable  & var,
   Patch::selectType patches;
 
   level->selectPatches( low, high, patches );
-  for(int i=0;i<patches.size();i++){
+  for(unsigned int i=0;i<patches.size();i++){
     const Patch* patch = patches[i];
 
     if (type == 0) {

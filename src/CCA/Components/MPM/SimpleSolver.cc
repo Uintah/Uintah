@@ -90,7 +90,7 @@ void SimpleSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
     const Level* level = patch->getLevel();
     Patch::selectType neighbors;
     level->selectPatches(lowIndex, highIndex, neighbors);
-    for(int i=0;i<neighbors.size();i++){
+    for(unsigned int i=0;i<neighbors.size();i++){
       const Patch* neighbor = neighbors[i];
       
       IntVector plow = neighbor->getNodeLowIndex();

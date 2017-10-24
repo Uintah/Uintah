@@ -743,7 +743,7 @@ RegridderCommon::Dilate(const ProcessorGroup*,
       Level::selectType n;
       patch->getLevel()->selectPatches(low, high, n);
 
-      for (int i = 0; i < n.size(); i++) {
+      for (unsigned int i = 0; i < n.size(); i++) {
         const Patch* p = n[i];
         IntVector low = p->getExtraLowIndex(Patch::CellBased, IntVector(0, 0, 0));
         IntVector high = p->getExtraHighIndex(Patch::CellBased, IntVector(0, 0, 0));

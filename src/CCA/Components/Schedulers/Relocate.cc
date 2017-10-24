@@ -848,7 +848,7 @@ Relocate::findNeighboringPatches(const Patch* patch,
   IntVector h = patch->getExtraCellHighIndex() + IntVector(1,1,1);
    
   level->selectPatches(l, h, neighborPatches);
-  for(int i=0; i<neighborPatches.size(); i++){
+  for(unsigned int i=0; i<neighborPatches.size(); i++){
     const Patch* neighbor=neighborPatches[i];
     neighborSet.insert(neighbor);
   }
@@ -869,7 +869,7 @@ Relocate::findNeighboringPatches(const Patch* patch,
 
     ASSERT( coarsePatches.size() != 0 );
 
-    for(int i=0; i<coarsePatches.size(); i++){
+    for(unsigned int i=0; i<coarsePatches.size(); i++){
       const Patch* neighbor=coarsePatches[i];
       neighborSet.insert(neighbor);
     }
@@ -889,7 +889,7 @@ Relocate::findNeighboringPatches(const Patch* patch,
     Patch::selectType finePatches;
     fineLevel->selectPatches(fl, fh,finePatches); 
 
-    for(int i=0;i<finePatches.size();i++){
+    for(unsigned int i=0;i<finePatches.size();i++){
       const Patch* finePatch = finePatches[i];
       neighborSet.insert(finePatch);
     }  // fine patches loop
@@ -948,7 +948,7 @@ Relocate::relocateParticlesModifies( const ProcessorGroup* pg,
       findNeighboringPatches(patch, level, findFiner, findCoarser, neighborPatches);
       
       // Find all of the neighborPatches, and add them to a set
-      for(int i=0; i<neighborPatches.size(); i++){
+      for(unsigned int i=0; i<neighborPatches.size(); i++){
         const Patch* neighbor=neighborPatches[i];
         scatter_records.addNeighbor( m_lb, pg, neighbor );
       }
@@ -1363,7 +1363,7 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
                                            findCoarser, neighborPatches);
 
       // Find all of the neighborPatches, and add them to a set
-      for(int i=0; i<neighborPatches.size(); i++){
+      for(unsigned int i=0; i<neighborPatches.size(); i++){
         const Patch* neighbor=neighborPatches[i];
         scatter_records.addNeighbor( m_lb, pg, neighbor );
       }

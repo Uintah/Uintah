@@ -357,7 +357,7 @@ void AMRWave::coarsen(const ProcessorGroup*,
       Level::selectType finePatches;
       fineLevel->selectPatches(fineLow, fineHigh, finePatches);
       
-      for (int i = 0; i < finePatches.size(); i++) {
+      for (unsigned int i = 0; i < finePatches.size(); i++) {
         const Patch* finePatch = finePatches[i];
         new_dw->get(fine_phi, phi_label, matl, finePatch, Ghost::None, 0);
         new_dw->get(fine_pi, pi_label, matl, finePatch, Ghost::None, 0);

@@ -597,7 +597,7 @@ LoadBalancerCommon::createNeighborhoods( const GridP & grid
             Patch::selectType old;
             const LevelP& oldLevel = oldGrid->getLevel(l);
             oldLevel->selectPatches(patch->getExtraCellLowIndex() - ghost, patch->getExtraCellHighIndex() + ghost, old);
-            for (int i = 0; i < old.size(); i++)  // add owning processors (they are the old owners)
+            for (unsigned int i = 0; i < old.size(); i++)  // add owning processors (they are the old owners)
                 {
               m_neighbors.insert(old[i]->getRealPatch());
               int nproc = getPatchwiseProcessorAssignment(old[i]);
@@ -651,7 +651,7 @@ LoadBalancerCommon::createNeighborhoods( const GridP & grid
           const LevelP& fineLevel = level->getFinerLevel();
           Patch::selectType fine;
           fineLevel->selectPatches(level->mapCellToFiner(low - ghost), level->mapCellToFiner(high + ghost), fine);
-          for (int i = 0; i < fine.size(); i++) {  //add owning processors
+          for (unsigned int i = 0; i < fine.size(); i++) {  //add owning processors
             m_neighbors.insert(fine[i]->getRealPatch());
             int nproc = getPatchwiseProcessorAssignment(fine[i]);
             if (nproc >= 0) {
@@ -764,7 +764,7 @@ LoadBalancerCommon::addPatchesAndProcsToNeighborhood(const Level * const level,
                                        std::set<int>& processors) {
   Patch::selectType neighborPatches;
   level->selectPatches(low, high, neighborPatches);
-  for (int i = 0; i < neighborPatches.size(); i++) {
+  for (unsigned int i = 0; i < neighborPatches.size(); i++) {
     neighbors.insert(neighborPatches[i]->getRealPatch());
     int nproc = getPatchwiseProcessorAssignment(neighborPatches[i]);
     if (nproc >= 0) {

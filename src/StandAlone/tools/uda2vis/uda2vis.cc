@@ -775,7 +775,7 @@ TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
 
     std::map< std::string, unsigned int > proc_name_map;
     
-    for( unsigned int i=0; i<num_procs; ++i )
+    for( int i=0; i<num_procs; ++i )
     {
       unsigned int cc = i * MPI_MAX_PROCESSOR_NAME;
       
@@ -807,7 +807,7 @@ TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
 
   int my_proc_index = -1;
   
-  for( unsigned int i=0; i<num_proc_names; ++i )
+  for( int i=0; i<num_proc_names; ++i )
   {
     unsigned int cc = i * MPI_MAX_PROCESSOR_NAME;
     

@@ -1543,7 +1543,7 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP & grid, SimulationInterface 
           oldLevel->selectPatches(lowIndex, highIndex, oldPatches);
 
           //compute volume of overlapping regions
-          for (int old = 0; old < oldPatches.size(); old++) {
+          for (unsigned int old = 0; old < oldPatches.size(); old++) {
 
             const Patch* oldPatch = oldPatches[old];
             IntVector oldLow = oldPatch->getCellLowIndex();
@@ -1787,7 +1787,7 @@ SchedulerCommon::copyDataToNewGrid( const ProcessorGroup * /* pg */
           Patch::selectType oldPatches;
           oldLevel->selectPatches(newLowIndex, newHighIndex, oldPatches);
 
-          for (int oldIdx = 0; oldIdx < oldPatches.size(); oldIdx++) {
+          for (unsigned int oldIdx = 0; oldIdx < oldPatches.size(); oldIdx++) {
             const Patch* oldPatch = oldPatches[oldIdx];
 
             if (!oldDataWarehouse->exists(label, matl, oldPatch)) {
