@@ -484,9 +484,9 @@ void lineExtract::doAnalysis(const ProcessorGroup* pg,
     //__________________________________
     // write data if this processor owns this patch
     // and if it's time to write
-    if( proc == pg->myrank() && now >= nextWriteTime){
+    if( proc == pg->myRank() && now >= nextWriteTime){
     
-     cout_doing << pg->myrank() << " " 
+     cout_doing << pg->myRank() << " " 
                 << "Doing doAnalysis (lineExtract)\t\t\t\tL-"
                 << level->getIndex()
                 << " patch " << patch->getGridIndex()<< endl;

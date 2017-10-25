@@ -85,7 +85,7 @@ LoadBalancerCommon::assignResources( DetailedTasks & graph )
 {
   int nTasks = graph.numTasks();
 
-  DOUT(g_lb_dbg, "Rank-" << d_myworld->myrank() << " Assigning Tasks to Resources! (" << nTasks << " tasks)");
+  DOUT(g_lb_dbg, "Rank-" << d_myworld->myRank() << " Assigning Tasks to Resources! (" << nTasks << " tasks)");
 
   for (int i = 0; i < nTasks; i++) {
     DetailedTask* task = graph.getTask(i);
@@ -95,7 +95,7 @@ LoadBalancerCommon::assignResources( DetailedTasks & graph )
       const Patch* patch = patches->get(0);
 
       int idx = getPatchwiseProcessorAssignment(patch);
-      ASSERTRANGE(idx, 0, d_myworld->size());
+      ASSERTRANGE(idx, 0, d_myworld->nRanks());
 
       if (task->getTask()->getType() == Task::Output) {
         task->assignResource(getOutputRank(patch));
@@ -104,7 +104,7 @@ LoadBalancerCommon::assignResources( DetailedTasks & graph )
         task->assignResource(idx);
       }
 
-      DOUT(g_lb_dbg, "Rank-" << d_myworld->myrank() << " Task " << *(task->getTask()) << " put on resource " << idx);
+      DOUT(g_lb_dbg, "Rank-" << d_myworld->myRank() << " Task " << *(task->getTask()) << " put on resource " << idx);
 
 #if SCI_ASSERTION_LEVEL > 0
       std::ostringstream ostr;
@@ -114,10 +114,10 @@ LoadBalancerCommon::assignResources( DetailedTasks & graph )
         const Patch* p = patches->get(i);
         int rank = getPatchwiseProcessorAssignment(p);
         ostr << ' ' << p->getID() << ';' << rank;
-        ASSERTRANGE(rank, 0, d_myworld->size());
+        ASSERTRANGE(rank, 0, d_myworld->nRanks());
 
         if (rank != idx && task->getTask()->getType() != Task::Output) {
-          DOUT( true, "Rank-" << d_myworld->myrank() << " WARNING: inconsistent task (" << task->getTask()->getName()
+          DOUT( true, "Rank-" << d_myworld->myRank() << " WARNING: inconsistent task (" << task->getTask()->getName()
                               << ") assignment (" << rank << ", " << idx << ") in LoadBalancerCommon");
         }
       }
@@ -125,10 +125,10 @@ LoadBalancerCommon::assignResources( DetailedTasks & graph )
     }
     else {
       if (task->getTask()->isReductionTask()) {
-        task->assignResource(d_myworld->myrank());
+        task->assignResource(d_myworld->myRank());
 
         DOUT(g_lb_dbg,
-             d_myworld->myrank() << "  Resource (for no patch task) " << *task->getTask() << " is : " << d_myworld->myrank());
+             d_myworld->myRank() << "  Resource (for no patch task) " << *task->getTask() << " is : " << d_myworld->myRank());
 
       }
       else if (task->getTask()->getType() == Task::InitialSend) {
@@ -144,13 +144,13 @@ LoadBalancerCommon::assignResources( DetailedTasks & graph )
           int i = (*p);
           if (patches == task->getTask()->getPatchSet()->getSubset(i)) {
             task->assignResource(i);
-            DOUT(g_lb_dbg, d_myworld->myrank() << " OncePerProc Task " << *(task->getTask()) << " put on resource " << i);
+            DOUT(g_lb_dbg, d_myworld->myRank() << " OncePerProc Task " << *(task->getTask()) << " put on resource " << i);
           }
         }
       }
       else {
         task->assignResource(0);
-        DOUT(g_lb_dbg, d_myworld->myrank() << " Unknown-type Task " << *(task->getTask()) << " put on resource " << 0);
+        DOUT(g_lb_dbg, d_myworld->myRank() << " Unknown-type Task " << *(task->getTask()) << " put on resource " << 0);
       }
     }
   }
@@ -169,7 +169,7 @@ LoadBalancerCommon::getPatchwiseProcessorAssignment( const Patch * patch )
   ASSERTRANGE( patch->getRealPatch()->getID(), m_assignment_base_patch, m_assignment_base_patch + static_cast<int>(m_processor_assignment.size()) );
   int rank = m_processor_assignment[ patch->getRealPatch()->getGridIndex() ];
 
-  ASSERTRANGE( rank, 0, d_myworld->size() );
+  ASSERTRANGE( rank, 0, d_myworld->nRanks() );
   return rank;
 }
 
@@ -191,7 +191,7 @@ LoadBalancerCommon::getOldProcessorAssignment( const Patch * patch )
   }
 
   int proc = m_old_assignment[patch->getRealPatch()->getGridIndex()];
-  ASSERTRANGE( proc, 0, d_myworld->size() );
+  ASSERTRANGE( proc, 0, d_myworld->nRanks() );
 
   return proc;
 }
@@ -215,7 +215,7 @@ LoadBalancerCommon::useSFC( const LevelP & level, int * order )
   IntVector low(INT_MAX,INT_MAX,INT_MAX);
 
 #ifdef SFC_PARALLEL 
-  std::vector<int> originalPatchCount(d_myworld->size(),0); //store how many patches each patch has originally
+  std::vector<int> originalPatchCount(d_myworld->nRanks(),0); //store how many patches each patch has originally
 #endif
 
   for (Level::const_patch_iterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) {
@@ -234,11 +234,11 @@ LoadBalancerCommon::useSFC( const LevelP & level, int * order )
 #ifdef SFC_PARALLEL
     //place in long longs to avoid overflows with large numbers of patches and processors
     long long pindex = patch->getLevelIndex();
-    long long num_patches = d_myworld->size();
+    long long num_patches = d_myworld->nRanks();
     long long proc = (pindex*num_patches) /(long long)level->numPatches();
 
-    ASSERTRANGE(proc,0,d_myworld->size());
-    if(d_myworld->myrank()==(int)proc) {
+    ASSERTRANGE(proc,0,d_myworld->nRanks());
+    if(d_myworld->myRank()==(int)proc) {
       Vector point=(patch->getCellLowIndex()+patch->getCellHighIndex()).asVector()/2.0;
       for(int d=0;d<dim;d++) {
         positions.push_back(point[dimensions[d]]);
@@ -255,8 +255,8 @@ LoadBalancerCommon::useSFC( const LevelP & level, int * order )
 
 #ifdef SFC_PARALLEL
   //compute patch starting locations
-  std::vector<int> originalPatchStart(d_myworld->size(),0);
-  for(int p=1;p<d_myworld->size();p++) {
+  std::vector<int> originalPatchStart(d_myworld->nRanks(),0);
+  for(int p=1;p<d_myworld->nRanks();p++) {
     originalPatchStart[p]=originalPatchStart[p-1]+originalPatchCount[p-1];
   }
 #endif
@@ -279,7 +279,7 @@ LoadBalancerCommon::useSFC( const LevelP & level, int * order )
   m_sfc.SetOutputVector(&indices);
   
 #ifdef SFC_PARALLEL
-  m_sfc.SetLocalSize(originalPatchCount[d_myworld->myrank()]);
+  m_sfc.SetLocalSize(originalPatchCount[d_myworld->myRank()]);
   m_sfc.GenerateCurve();
 #else
   m_sfc.SetLocalSize(level->numPatches());
@@ -287,9 +287,9 @@ LoadBalancerCommon::useSFC( const LevelP & level, int * order )
 #endif
   
 #ifdef SFC_PARALLEL
-  if( d_myworld->size() > 1 ) {
-    std::vector<int> recvcounts(d_myworld->size(), 0);
-    std::vector<int> displs(d_myworld->size(), 0);
+  if( d_myworld->nRanks() > 1 ) {
+    std::vector<int> recvcounts(d_myworld->nRanks(), 0);
+    std::vector<int> displs(d_myworld->nRanks(), 0);
     
     for (unsigned i = 0; i < recvcounts.size(); i++) {
       displs[i]=originalPatchStart[i]*sizeof(DistributedIndex);
@@ -305,7 +305,7 @@ LoadBalancerCommon::useSFC( const LevelP & level, int * order )
     std::vector<DistributedIndex> rbuf(level->numPatches());
 
     // Gather curve
-    Uintah::MPI::Allgatherv(&indices[0], recvcounts[d_myworld->myrank()], MPI_BYTE, &rbuf[0],
+    Uintah::MPI::Allgatherv(&indices[0], recvcounts[d_myworld->myRank()], MPI_BYTE, &rbuf[0],
                             &recvcounts[0], &displs[0], MPI_BYTE, d_myworld->getComm());
 
     indices.swap(rbuf);
@@ -333,14 +333,14 @@ LoadBalancerCommon::useSFC( const LevelP & level, int * order )
 #endif
 
 #if 0
-  if(d_myworld->myrank()==0) {
+  if(d_myworld->myRank()==0) {
     std::cout << "Warning checking SFC correctness\n";
   }
   for (int i = 0; i < level->numPatches(); i++) {
     for (int j = i+1; j < level->numPatches(); j++) {
       if (order[i] == order[j]) 
       {
-        std::cout << "Rank:" << d_myworld->myrank() <<  ":   ALERT!!!!!! index done twice: index "
+        std::cout << "Rank:" << d_myworld->myRank() <<  ":   ALERT!!!!!! index done twice: index "
                   << i << " has the same value as index " << j << " " << order[i] << std::endl;
         throw InternalError("SFC unsuccessful", __FILE__, __LINE__);
       }
@@ -380,7 +380,7 @@ LoadBalancerCommon::restartInitialize(       DataArchive  * archive
     for( int l = 0; l < grid->numLevels(); l++ ) {
       const LevelP& level = grid->getLevel(l);
       for (Level::const_patch_iterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) {
-        m_processor_assignment[(*iter)->getID()-startingID] = archive->queryPatchwiseProcessor(*iter, time_index) % d_myworld->size();
+        m_processor_assignment[(*iter)->getID()-startingID] = archive->queryPatchwiseProcessor(*iter, time_index) % d_myworld->nRanks();
       }
     }
   } // end queryPatchwiseProcessor
@@ -398,21 +398,21 @@ LoadBalancerCommon::restartInitialize(       DataArchive  * archive
   m_old_assignment = m_processor_assignment;
   m_old_assignment_base_patch = m_assignment_base_patch;
 
-  if (prevNumProcs != d_myworld->size() || m_output_Nth_proc > 1) {
-    if (d_myworld->myrank() == 0){
-      DOUT(g_lb_dbg, "  Original run had " << prevNumProcs << ", this has " << d_myworld->size());
+  if (prevNumProcs != d_myworld->nRanks() || m_output_Nth_proc > 1) {
+    if (d_myworld->myRank() == 0){
+      DOUT(g_lb_dbg, "  Original run had " << prevNumProcs << ", this has " << d_myworld->nRanks());
     }
     m_check_after_restart = true;
   }
 
-  if (d_myworld->myrank() == 0) {
-    DOUT(g_lb_dbg, d_myworld->myrank() << " check after restart: " << m_check_after_restart);
+  if (d_myworld->myRank() == 0) {
+    DOUT(g_lb_dbg, d_myworld->myRank() << " check after restart: " << m_check_after_restart);
 
 #if 0
     int startPatch = (int) (*grid->getLevel(0)->patchesBegin())->getID();
     std::ostringstream message;
       for (unsigned i = 0; i < m_processor_assignment.size(); i++) {
-        message << d_myworld-> myrank() << " patch " << i << " (real " << i+startPatch << ") -> proc "
+        message << d_myworld-> myRank() << " patch " << i << " (real " << i+startPatch << ") -> proc "
                 << m_processor_assignment[i] << " (old " << m_old_assignment[i] << ") - "
                 << m_processor_assignment.size() << ' ' << m_old_assignment.size() << "\n";
       }
@@ -449,12 +449,12 @@ const PatchSet*
 LoadBalancerCommon::createPerProcessorPatchSet( const LevelP & level )
 {
   PatchSet* patches = scinew PatchSet();
-  patches->createEmptySubsets(d_myworld->size());
+  patches->createEmptySubsets(d_myworld->nRanks());
 
   for (Level::const_patch_iterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) {
     const Patch* patch = *iter;
     int proc = getPatchwiseProcessorAssignment(patch);
-    ASSERTRANGE(proc, 0, d_myworld->size());
+    ASSERTRANGE(proc, 0, d_myworld->nRanks());
     PatchSubset* subset = patches->getSubset(proc);
     subset->add(patch);
   }
@@ -469,7 +469,7 @@ const PatchSet*
 LoadBalancerCommon::createPerProcessorPatchSet( const GridP & grid )
 {
   PatchSet* patches = scinew PatchSet();
-  patches->createEmptySubsets(d_myworld->size());
+  patches->createEmptySubsets(d_myworld->nRanks());
 
   for (int i = 0; i < grid->numLevels(); i++) {
     const LevelP level = grid->getLevel(i);
@@ -477,7 +477,7 @@ LoadBalancerCommon::createPerProcessorPatchSet( const GridP & grid )
     for (Level::const_patch_iterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) {
       const Patch* patch = *iter;
       int proc = getPatchwiseProcessorAssignment(patch);
-      ASSERTRANGE(proc, 0, d_myworld->size());
+      ASSERTRANGE(proc, 0, d_myworld->nRanks());
       PatchSubset* subset = patches->getSubset(proc);
       subset->add(patch);
     }
@@ -486,9 +486,9 @@ LoadBalancerCommon::createPerProcessorPatchSet( const GridP & grid )
 
   // DEBUG: report per-proc patch assignment
   if (g_patch_assignment) {
-    const PatchSubset* my_patches = patches->getSubset(d_myworld->myrank());
+    const PatchSubset* my_patches = patches->getSubset(d_myworld->myRank());
     std::ostringstream mesg;
-    mesg << "Rank-" << d_myworld->myrank() << " assigned patches: {";
+    mesg << "Rank-" << d_myworld->myRank() << " assigned patches: {";
     for (auto p = 0; p < my_patches->size(); p++) {
       mesg << (( p == 0 || p == my_patches->size()) ? " " : ", ") << my_patches->get(p)->getID();
     }
@@ -509,13 +509,13 @@ LoadBalancerCommon::createOutputPatchSet( const LevelP & level )
     return m_level_perproc_patchsets[level->getIndex()].get_rep();
   } else {
     PatchSet* patches = scinew PatchSet();
-    patches->createEmptySubsets(d_myworld->size());
+    patches->createEmptySubsets(d_myworld->nRanks());
 
     for (Level::const_patch_iterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) {
       const Patch* patch = *iter;
       int proc = (static_cast<long long>(getPatchwiseProcessorAssignment(patch)) / static_cast<long long>(m_output_Nth_proc))
                   * m_output_Nth_proc;
-      ASSERTRANGE(proc, 0, d_myworld->size());
+      ASSERTRANGE(proc, 0, d_myworld->nRanks());
       PatchSubset* subset = patches->getSubset(proc);
       subset->add(patch);
     }
@@ -532,7 +532,7 @@ LoadBalancerCommon::createNeighborhoods( const GridP & grid
                                        , const bool    hasDistalReqs /* = false */
                                        )
 {
-  int my_rank = d_myworld->myrank();
+  int my_rank = d_myworld->myRank();
   // TODO consider this old warning from Steve:
   //    WARNING - this should be determined from the taskgraph? - Steve
 

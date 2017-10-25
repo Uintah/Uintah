@@ -1238,7 +1238,7 @@ DataArchive::reduceUda_ReadUda( const ProcessorGroup   * pg,
 
     // If this process does not own this patch, then ignore the variable...
     int proc = lb->getPatchwiseProcessorAssignment(patch);
-    if ( proc != pg->myrank() ) {
+    if ( proc != pg->myRank() ) {
       continue;
     }
 

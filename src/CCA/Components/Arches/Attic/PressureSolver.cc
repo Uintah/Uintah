@@ -440,7 +440,7 @@ PressureSolver::pressureLinearSolve_all(const ProcessorGroup* pg,
   int archIndex = 0; // only one arches material
   int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
   ArchesVariables pressureVars;
-  int me = pg->myrank();
+  int me = pg->myRank();
   // initializeMatrix...
   if ( d_construct_solver_obj && !d_always_construct_A )  {
     d_linearSolver->matrixCreate(d_perproc_patches, patches);
@@ -472,7 +472,7 @@ PressureSolver::pressureLinearSolve_all(const ProcessorGroup* pg,
       d_linearSolver->copyPressSoln(patch, &pressureVars);
     }
   } else {
-    if (pg->myrank() == 0){
+    if (pg->myRank() == 0){
       cerr << "pressure solver not converged, using old values" << endl;
     }
     throw InternalError("pressure solver is diverging", __FILE__, __LINE__);
@@ -510,7 +510,7 @@ PressureSolver::pressureLinearSolve_all(const ProcessorGroup* pg,
     if ((timelabels->integrator_step_name == "Predictor")||
         (timelabels->integrator_step_name == "Intermediate")) {
       pressureVars.pressure.initialize(0.0);
-      if (pg->myrank() == 0){
+      if (pg->myRank() == 0){
         cout << "Projection skipped" << endl;
       }
     }else{ 

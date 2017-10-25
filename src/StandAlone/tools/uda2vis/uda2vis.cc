@@ -392,18 +392,18 @@ static GridDataRaw* readGridData(DataArchive *archive,
       high[1] != tmphigh[1] ||
       high[2] != tmphigh[2] )
   {
-    std::cerr << __LINE__ << "  " << variable_name << "  "
-              << dims[0] << "  " << dims[1] << "  " << dims[2] << "     "
-              << size[0] << "  " << size[1] << "  " << size[2] << "     "
+    // std::cerr << __LINE__ << "  " << variable_name << "  "
+    //           << dims[0] << "  " << dims[1] << "  " << dims[2] << "     "
+    //           << size[0] << "  " << size[1] << "  " << size[2] << "     "
       
-              << low[0] << "  " << tmplow[0] << "  "
-              << low[1] << "  " << tmplow[1] << "  "
-              << low[2] << "  " << tmplow[2] << "    "
+    //           << low[0] << "  " << tmplow[0] << "  "
+    //           << low[1] << "  " << tmplow[1] << "  "
+    //           << low[2] << "  " << tmplow[2] << "    "
       
-              << high[0] << "  " << tmphigh[0] << "  "
-              << high[1] << "  " << tmphigh[1] << "  "
-              << high[2] << "  " << tmphigh[2] << "  "
-              << std::endl;
+    //           << high[0] << "  " << tmphigh[0] << "  "
+    //           << high[1] << "  " << tmphigh[1] << "  "
+    //           << high[2] << "  " << tmphigh[2] << "  "
+    //           << std::endl;
 
     for (int i=0; i<gd->num*gd->components; i++)
       gd->data[i] = 0;
@@ -751,79 +751,6 @@ TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
                               GridP gridP,
                               bool useExtraCells)
 {
-  int my_rank, num_procs;
-  MPI::Comm_rank(MPI_COMM_WORLD, &my_rank);
-  MPI::Comm_size(MPI_COMM_WORLD, &num_procs);
-
-  char my_proc_name[MPI_MAX_PROCESSOR_NAME];
-  int resultlen;
-	
-  MPI::Get_processor_name( my_proc_name, &resultlen );
-
-  char all_proc_names[num_procs*MPI_MAX_PROCESSOR_NAME+1];
-  all_proc_names[num_procs*MPI_MAX_PROCESSOR_NAME] = '\0';
-  
-  MPI::Gather(my_proc_name, MPI_MAX_PROCESSOR_NAME, MPI_CHAR,
-	      all_proc_names, MPI_MAX_PROCESSOR_NAME, MPI_CHAR, 0, MPI_COMM_WORLD);
-
-  char proc_name[MPI_MAX_PROCESSOR_NAME];
-  int num_proc_names = 0;
-
-  if( my_rank == 0 )
-  {
-    std::cerr << "  --" << all_proc_names << "--" << std::endl;
-
-    std::map< std::string, unsigned int > proc_name_map;
-    
-    for( int i=0; i<num_procs; ++i )
-    {
-      unsigned int cc = i * MPI_MAX_PROCESSOR_NAME;
-      
-      strncpy( proc_name, &(all_proc_names[cc]), MPI_MAX_PROCESSOR_NAME);
-
-      std::cerr << i << "  " << cc << "  --" << proc_name << "--" << std::endl;
-      
-      if( proc_name_map.find(std::string(proc_name) ) == proc_name_map.end() )
-      {
-	proc_name_map[ std::string(proc_name) ] = num_proc_names;
-
-	cc = num_proc_names * MPI_MAX_PROCESSOR_NAME;
-	
-	strncpy( &(all_proc_names[cc]), proc_name, MPI_MAX_PROCESSOR_NAME);
-	
-	std::cerr << num_proc_names << "  --" << proc_name << "--" << std::endl;
-
-	++num_proc_names;	
-      }	  
-    }
-  }    
-    
-  MPI::Bcast(&num_proc_names, 1, MPI_INT, 0, MPI_COMM_WORLD);
-
-  if( my_rank == 0 )
-    std::cerr << "number of unique processors " << num_proc_names << std::endl;
-
-  MPI::Bcast(all_proc_names, num_proc_names*MPI_MAX_PROCESSOR_NAME, MPI_CHAR, 0, MPI_COMM_WORLD);
-
-  int my_proc_index = -1;
-  
-  for( int i=0; i<num_proc_names; ++i )
-  {
-    unsigned int cc = i * MPI_MAX_PROCESSOR_NAME;
-    
-    strncpy( proc_name, &(all_proc_names[cc]), MPI_MAX_PROCESSOR_NAME);
-
-    if( std::string(my_proc_name) == std::string(proc_name) )
-    {
-      my_proc_index = i;
-      break;
-    }
-  }
-  
-  std::cerr << "Processor rank " << my_rank
-  	    << " name " << my_proc_name
-  	    << " index " << my_proc_index << std::endl;
-  
   DataWarehouse    * dw = schedulerP->getLastDW();
   LoadBalancerPort * lb = schedulerP->getLoadBalancer();
 
@@ -959,8 +886,8 @@ TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
       // Set the processor rank id
       patchInfo.setProcRankId( lb->getPatchwiseProcessorAssignment(patch) );
       
-      // Set the processor node id
-      patchInfo.setProcNodeId( my_proc_index );
+      // Set the processor node id - ARS FIX ME
+      patchInfo.setProcNodeId( 0 );
     }
   }
 

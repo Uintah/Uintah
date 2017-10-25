@@ -39,11 +39,11 @@ SimpleLoadBalancer::SimpleLoadBalancer( const ProcessorGroup * myworld )
 int
 SimpleLoadBalancer::getPatchwiseProcessorAssignment( const Patch * patch )
 {
-  long long     numProcs  = d_myworld->size();
+  long long     numProcs  = d_myworld->nRanks();
   const Patch * realPatch = patch->getRealPatch();
   int           proc      = (realPatch->getLevelIndex() * numProcs) / static_cast<long long>(realPatch->getLevel()->numPatches());
 
-  ASSERTRANGE(proc, 0, d_myworld->size());
+  ASSERTRANGE(proc, 0, d_myworld->nRanks());
 
   return proc;
 }

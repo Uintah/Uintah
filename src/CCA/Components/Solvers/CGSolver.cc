@@ -885,7 +885,7 @@ public:
     double dt = timer().seconds();
     double mflops = (double(flops)*1.e-6)/dt;
     double memrate = (double(memrefs)*1.e-9)/dt;
-    if(pg->myrank() == 0){
+    if(pg->myRank() == 0){
       if(niter < params->maxiterations) {
         cout << "Solve of " << X_label->getName()
               << " on level " << level->getIndex()

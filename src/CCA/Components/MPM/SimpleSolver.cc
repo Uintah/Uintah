@@ -54,7 +54,7 @@ void SimpleSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
                                               const int n8or27)
 {
 
-  int numProcessors = d_myworld->size();
+  int numProcessors = d_myworld->nRanks();
   d_numNodes.resize(numProcessors, 0);
   d_startIndex.resize(numProcessors);
   d_totalNodes = 0;

@@ -173,13 +173,13 @@ RegridderCommon::needsToReGrid(const GridP &oldGrid)
   }
   else if (!d_isAdaptive || timeStepsSinceRegrid < d_minTimestepsBetweenRegrids) {
     retval = false;
-    if (d_myworld->myrank() == 0)
+    if (d_myworld->myRank() == 0)
       rreason << "Not regridding because timesteps since regrid is less than min timesteps between regrid\n";
 
   }
   else if (timeStepsSinceRegrid > d_maxTimestepsBetweenRegrids) {
     retval = true;
-    if (d_myworld->myrank() == 0)
+    if (d_myworld->myRank() == 0)
       rreason << "Regridding because timesteps since regrid is more than max timesteps between regrid\n";
   }
   else  //check if flags are contained within the finer levels patches
@@ -200,7 +200,7 @@ RegridderCommon::needsToReGrid(const GridP &oldGrid)
         fine_level = oldGrid->getLevel(l + 1);
 
       //get coarse level patches
-      const PatchSubset *patches = lb_->getPerProcessorPatchSet(coarse_level)->getSubset(d_myworld->myrank());
+      const PatchSubset *patches = lb_->getPerProcessorPatchSet(coarse_level)->getSubset(d_myworld->myRank());
 
       //for each patch
       for (int p = 0; p < patches->size(); p++) {
@@ -225,13 +225,13 @@ RegridderCommon::needsToReGrid(const GridP &oldGrid)
     }
     GATHER:
     //Only reduce if we are running in parallel
-    if (d_myworld->size() > 1) {
+    if (d_myworld->nRanks() > 1) {
       Uintah::MPI::Allreduce(&result, &retval, 1, MPI_INT, MPI_LOR, d_myworld->getComm());
     }
     else {
       retval = result;
     }
-    if (d_myworld->myrank() == 0 && retval) {
+    if (d_myworld->myRank() == 0 && retval) {
       rreason << "Regridding needed because refinement flag was found\n";
     }
   }
@@ -255,13 +255,13 @@ RegridderCommon::flaggedCellsOnFinestLevel(const GridP& grid)
   DataWarehouse* newDW = sched_->getLastDW();
 
   // mpi version
-  if (d_myworld->size() > 1) {
+  if (d_myworld->nRanks() > 1) {
     int thisproc = false;
     int allprocs;
     for (Level::const_patch_iterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) {
       // here we assume that the per-patch has been set
       PerPatch<PatchFlagP> flaggedPatchCells;
-      if (lb_->getPatchwiseProcessorAssignment(*iter) == d_myworld->myrank()) {
+      if (lb_->getPatchwiseProcessorAssignment(*iter) == d_myworld->myRank()) {
         newDW->get(flaggedPatchCells, d_sharedState->get_refinePatchFlag_label(), 0, *iter);
         if (flaggedPatchCells.get().get_rep()->flag) {
           thisproc = true;
@@ -307,7 +307,7 @@ RegridderCommon::switchInitialize(const ProblemSpecP& params)
     // only changes if "adaptive" is there
     bool adaptive = d_isAdaptive;
     regrid_spec->get("adaptive", adaptive);
-    if (d_myworld->myrank() == 0 && d_isAdaptive != adaptive) {
+    if (d_myworld->myRank() == 0 && d_isAdaptive != adaptive) {
       if (adaptive) {
         std::cout << "Enabling Regridder\n";
       }
@@ -338,7 +338,7 @@ RegridderCommon::problemSetup(const ProblemSpecP& params, const GridP& oldGrid, 
   d_isAdaptive = true;  // use if "adaptive" not there
   regrid_spec->get("adaptive", d_isAdaptive);
 
-  if (d_myworld->myrank() == 0 && !d_isAdaptive) {
+  if (d_myworld->myRank() == 0 && !d_isAdaptive) {
     std::cout << "Regridder inactive.  Using static Grid.\n";
   }
 

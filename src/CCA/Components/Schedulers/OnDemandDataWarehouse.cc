@@ -622,7 +622,7 @@ OnDemandDataWarehouse::sendMPI(       DependencyBatch       * batch,
       ParticleVariableBase* var = dynamic_cast<ParticleVariableBase*>( d_varDB.get( label, matlIndex, patch ) );
 
       int dest = batch->m_to_tasks.front()->getAssignedResourceIndex();
-      ASSERTRANGE( dest, 0, d_myworld->size() );
+      ASSERTRANGE( dest, 0, d_myworld->nRanks() );
 
       ParticleSubset* sendset = 0;
       // first check to see if the receiving proc already has the (old) data
@@ -657,7 +657,7 @@ OnDemandDataWarehouse::sendMPI(       DependencyBatch       * batch,
           }
         }
         old_dw->ss_.add_sendset( sendset, dest, patch, matlIndex, low, high, old_dw->d_generation );
-        // cout << d_myworld->myrank() << "  NO SENDSET: " << patch->getID() << " matl " << matlIndex
+        // cout << d_myworld->myRank() << "  NO SENDSET: " << patch->getID() << " matl " << matlIndex
         //      << " " << low << " " << high << "\n";
       }
       ASSERT( sendset );
@@ -674,7 +674,7 @@ OnDemandDataWarehouse::sendMPI(       DependencyBatch       * batch,
     case TypeDescription::SFCYVariable :
     case TypeDescription::SFCZVariable : {
       if (!d_varDB.exists(label, matlIndex, patch)) {
-        std::cout << d_myworld->myrank() << "  Needed by " << *dep << " on task " << *dep->m_to_tasks.front() << std::endl;
+        std::cout << d_myworld->myRank() << "  Needed by " << *dep << " on task " << *dep->m_to_tasks.front() << std::endl;
         SCI_THROW(
             UnknownVariable(label->getName(), getID(), patch, matlIndex, "in Task OnDemandDataWarehouse::sendMPI", __FILE__, __LINE__));
       }
@@ -717,7 +717,7 @@ OnDemandDataWarehouse::exchangeParticleQuantities(       DetailedTasks    * dts,
     std::set<PSPatchMatlGhostRange>& r = iter->second;
     if( r.size() > 0 ) {
       recvdata[data_index].resize( r.size() );
-      // particles << d_myworld->myrank() << " Posting PARTICLES receives for " << r.size()
+      // particles << d_myworld->myRank() << " Posting PARTICLES receives for " << r.size()
       //           << " subsets from proc " << iter->first << " index " << data_index <<  endl;
       MPI_Request req;
       Uintah::MPI::Irecv(&(recvdata[data_index][0]), r.size(), MPI_INT, iter->first, 16666, d_myworld->getComm(), &req);
@@ -748,7 +748,7 @@ OnDemandDataWarehouse::exchangeParticleQuantities(       DetailedTasks    * dts,
         }
         else {
           if( !d_varDB.exists( pos_var, pmg.matl_, pmg.patch_ ) ) {
-            std::cout << d_myworld->myrank() << "  Naughty: patch " << pmg.patch_->getID() << " matl "
+            std::cout << d_myworld->myRank() << "  Naughty: patch " << pmg.patch_->getID() << " matl "
                  << pmg.matl_ << " id " << pmg.dwid_ << std::endl;
             SCI_THROW( UnknownVariable(pos_var->getName(), getID(), pmg.patch_, pmg.matl_,
                                        "in exchangeParticleQuantities", __FILE__, __LINE__) );
@@ -767,12 +767,12 @@ OnDemandDataWarehouse::exchangeParticleQuantities(       DetailedTasks    * dts,
           ss_.add_sendset( sendset, iter->first, pmg.patch_, pmg.matl_, pmg.low_, pmg.high_, d_generation );
           data[i] = sendset->numParticles();
         }
-        particles2 << d_myworld->myrank() << " Sending PARTICLES to proc " << iter->first
+        particles2 << d_myworld->myRank() << " Sending PARTICLES to proc " << iter->first
                    << ": patch " << pmg.patch_->getID() << " matl " << pmg.matl_ << " low "
                    << pmg.low_ << " high " << pmg.high_ << " index " << i << ": "
                    << senddata[data_index][i] << " particles\n";
       }
-      // particles << d_myworld->myrank() << " Sending PARTICLES: " << s.size() << " subsets to proc "
+      // particles << d_myworld->myRank() << " Sending PARTICLES: " << s.size() << " subsets to proc "
       //           << iter->first << " index " << data_index << endl;
 
       MPI_Request req;
@@ -796,7 +796,7 @@ OnDemandDataWarehouse::exchangeParticleQuantities(       DetailedTasks    * dts,
       for( std::set<PSPatchMatlGhostRange>::iterator riter = r.begin(); riter != r.end();
           riter++, i++ ) {
         const PSPatchMatlGhostRange& pmg = *riter;
-        particles2 << d_myworld->myrank() << " Recving PARTICLES from proc " << iter->first
+        particles2 << d_myworld->myRank() << " Recving PARTICLES from proc " << iter->first
                    << ": patch " << pmg.patch_->getID() << " matl " << pmg.matl_ << " low "
                    << pmg.low_ << " high " << pmg.high_ << ": " << data[i] << "\n";
         if( data[i] == -2 ) {
@@ -815,13 +815,13 @@ OnDemandDataWarehouse::exchangeParticleQuantities(       DetailedTasks    * dts,
         // make room for other multiple subsets pointing into one variable - additional subsets
         // referenced at the index above the last index of the previous subset
         if( data[i] > 0 && foreign_particles > 0 ) {
-          // std::cout << d_myworld->myrank() << "  adjusting particles by " << foreign_particles << std::endl;
+          // std::cout << d_myworld->myRank() << "  adjusting particles by " << foreign_particles << std::endl;
           for( ParticleSubset::iterator iter = subset->begin(); iter != subset->end(); iter++ ) {
             *iter = *iter + foreign_particles;
           }
         }
         foreign_particles += data[i];
-        // std::cout << d_myworld->myrank() << "  Setting foreign particles of patch " << pmg.patch_->getID()
+        // std::cout << d_myworld->myRank() << "  Setting foreign particles of patch " << pmg.patch_->getID()
         //      << " matl " << pmg.matl_ << " " << foreign_particles << std::endl;
       }
       data_index++;
@@ -862,8 +862,8 @@ OnDemandDataWarehouse::recvMPI(       DependencyBatch       * batch,
       // in getting another one (and if we did, it would cause synchronization problems - see
       // comment in sendMPI)
       ParticleSubset* recvset = 0;
-      if( lb && (lb->getOldProcessorAssignment( patch ) == d_myworld->myrank()
-             || lb->getPatchwiseProcessorAssignment( patch ) == d_myworld->myrank()) ) {
+      if( lb && (lb->getOldProcessorAssignment( patch ) == d_myworld->myRank()
+             || lb->getPatchwiseProcessorAssignment( patch ) == d_myworld->myRank()) ) {
         // first part of the conditional means "we used to own the ghost data so use the same particles"
         // second part means "we were just assigned to this patch and need to receive the whole thing"
         // we will never get here if they are both true, as mpi wouldn't need to be scheduled
@@ -899,7 +899,7 @@ OnDemandDataWarehouse::recvMPI(       DependencyBatch       * batch,
         d_varDB.put( label, matlIndex, patch, var, d_scheduler->isCopyDataTimestep(), true );
       }
 
-      if( recvset->numParticles() > 0 && !(lb && lb->getOldProcessorAssignment( patch ) == d_myworld->myrank()
+      if( recvset->numParticles() > 0 && !(lb && lb->getOldProcessorAssignment( patch ) == d_myworld->myRank()
                                       && this == old_dw) ) {
         var->getMPIBuffer( buffer, recvset );
       }
@@ -1014,11 +1014,11 @@ OnDemandDataWarehouse::reduceMPI( const VarLabel       * label,
 
   std::vector<char> recvbuf( packsize );
 
-  DOUT(g_mpi_dbg, "Rank-" << d_myworld->myrank() << " allreduce, name " << label->getName() << " level " << (level ? level->getID() : -1));
+  DOUT(g_mpi_dbg, "Rank-" << d_myworld->myRank() << " allreduce, name " << label->getName() << " level " << (level ? level->getID() : -1));
 
   int error = Uintah::MPI::Allreduce( &sendbuf[0], &recvbuf[0], count, datatype, op, d_myworld->getGlobalComm( nComm ) );
 
-  DOUT(g_mpi_dbg, "Rank-" << d_myworld->myrank() << " allreduce, done " << label->getName() << " level " << (level ? level->getID() : -1));
+  DOUT(g_mpi_dbg, "Rank-" << d_myworld->myRank() << " allreduce, done " << label->getName() << " level " << (level ? level->getID() : -1));
 
   if( error ) {
     DOUT(true, "reduceMPI: Uintah::MPI::Allreduce error: " << error);
@@ -1130,7 +1130,7 @@ OnDemandDataWarehouse::createParticleSubset(       particleIndex numParticles,
   }
 
   if (dbg.active()) {
-    dbg << d_myworld->myrank() << " DW ID " << getID() << " createParticleSubset: MI: " << matlIndex << " P: " << patch->getID()
+    dbg << d_myworld->myRank() << " DW ID " << getID() << " createParticleSubset: MI: " << matlIndex << " P: " << patch->getID()
         << " (" << low << ", " << high << ") size: " << numParticles << "\n";
   }
 
@@ -1161,7 +1161,7 @@ OnDemandDataWarehouse::saveParticleSubset(       ParticleSubset* psubset,
   }
 
   if( dbg.active() ) {
-    dbg << d_myworld->myrank() << " DW ID " << getID() << " saveParticleSubset: MI: " << matlIndex
+    dbg << d_myworld->myRank() << " DW ID " << getID() << " saveParticleSubset: MI: " << matlIndex
         << " P: " << patch->getID() << " (" << low << ", " << high << ") size: "
         << psubset->numParticles() << "\n";
   }
@@ -1178,9 +1178,9 @@ OnDemandDataWarehouse::printParticleSubsets()
   std::cout << "-- Particle Subsets: \n\n";
 
   psetDBType::iterator iter;
-  std::cout << d_myworld->myrank() << " Available psets on DW " << d_generation << ":\n";
+  std::cout << d_myworld->myRank() << " Available psets on DW " << d_generation << ":\n";
   for (iter = d_psetDB.begin(); iter != d_psetDB.end(); iter++) {
-    std::cout << d_myworld->myrank() << " " <<*(iter->second) << std::endl;
+    std::cout << d_myworld->myRank() << " " <<*(iter->second) << std::endl;
   }
   std::cout << "----------------------------------------------\n";
 }
@@ -1201,8 +1201,8 @@ void OnDemandDataWarehouse::insertPSetRecord(       psetDBType&     subsetDB,
 #if SCI_ASSERTION_LEVEL >= 1
   ParticleSubset *subset=queryPSetDB(subsetDB,patch,matlIndex,low,high,0,true);
   if(subset!=0) {
-    if (d_myworld->myrank() == 0) {
-      std::cout << d_myworld->myrank() << "  Duplicate: " << patch->getID() << " matl " << matlIndex << " " << low << " " << high << std::endl;
+    if (d_myworld->myRank() == 0) {
+      std::cout << d_myworld->myRank() << "  Duplicate: " << patch->getID() << " matl " << matlIndex << " " << low << " " << high << std::endl;
       printParticleSubsets();
     }
     SCI_THROW(InternalError("tried to create a particle subset that already exists", __FILE__, __LINE__));
@@ -2285,7 +2285,7 @@ OnDemandDataWarehouse::getLevel(       constGridVariableBase& constGridVar,
   long totalLevelCells = level->totalCells();
 
   if (totalLevelCells != nCellsCopied ) {
-    std::cout << d_myworld->myrank() << "  Unknown Variable " << *label << ", matl " << matlIndex << ", L-" << level->getIndex()
+    std::cout << d_myworld->myRank() << "  Unknown Variable " << *label << ", matl " << matlIndex << ", L-" << level->getIndex()
               << ", Patches on which the variable wasn't found: ";
 
     for (size_t i = 0; i < missing_patches.size(); i++) {
@@ -2300,7 +2300,7 @@ OnDemandDataWarehouse::getLevel(       constGridVariableBase& constGridVar,
   //  Diagnostics
   if (dbg.active()) {
     cerrLock.lock();
-    dbg << d_myworld->myrank() << " getLevel:  Variable " << *label << ", matl " << matlIndex << ", L-" << level->getIndex() << std::endl;
+    dbg << d_myworld->myRank() << " getLevel:  Variable " << *label << ", matl " << matlIndex << ", L-" << level->getIndex() << std::endl;
     cerrLock.unlock();
   }
 
@@ -2496,7 +2496,7 @@ OnDemandDataWarehouse::getRegionModifiable(       GridVariableBase& var,
     
   if ( nCellsCopied == 0  || ( cond1 && cond2 && cond3 ) ) {
     
-    DOUT(true,  d_myworld->myrank() << "  Unknown Variable " << *label << ", matl " << matlIndex << ", L-" << level->getIndex()
+    DOUT(true,  d_myworld->myRank() << "  Unknown Variable " << *label << ", matl " << matlIndex << ", L-" << level->getIndex()
               << ", DW " << getID() << ", Variable exists in DB: " << foundInDB << "\n"
               << "   Requested region: " << reqLow << " " << reqHigh 
               << ", Physical Units: " << level->getCellPosition(reqLow) << ", " << level->getCellPosition(reqHigh) << "\n" 
@@ -2526,7 +2526,7 @@ OnDemandDataWarehouse::getRegionModifiable(       GridVariableBase& var,
 
   if (dbg.active()) {
     cerrLock.lock();
-    dbg << d_myworld->myrank() << "  getRegionModifiable() Variable " << *label << ", matl " << matlIndex << ", L-" << level->getIndex()
+    dbg << d_myworld->myRank() << "  getRegionModifiable() Variable " << *label << ", matl " << matlIndex << ", L-" << level->getIndex()
         << " For region: " << reqLow << " " << reqHigh << "  has been copied" << std::endl;
     cerrLock.unlock();
   }
@@ -2761,7 +2761,7 @@ OnDemandDataWarehouse::decrementScrubCount( const VarLabel* var,
       count = d_varDB.decrementScrubCount(var, matlIndex, patch);
       //}
       //catch (AssertionFailed& e) {
-      //cout << d_myworld->myrank() << " DW " << getID() << " caught exception.\n";
+      //cout << d_myworld->myRank() << " DW " << getID() << " caught exception.\n";
       //throw e;
       //}
       break;
@@ -2948,7 +2948,7 @@ OnDemandDataWarehouse::getSizesForVar(const VarLabel*         label,
     }
   }  //end for vars
   if( v == nullptr ) {
-    // cout << d_myworld->myrank()  << " cannot copy var " << *label << " from patch " << neighbor->getID()
+    // cout << d_myworld->myRank()  << " cannot copy var " << *label << " from patch " << neighbor->getID()
     // << " " << low << " " << high <<  ", DW has " << srcvar->getLow() << " " << srcvar->getHigh() << endl;
     SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex, "on patch", __FILE__, __LINE__) );
   }
@@ -3068,7 +3068,7 @@ OnDemandDataWarehouse::getGridVar(       GridVariableBase& var,
   ASSERTEQ(basis, Patch::translateTypeToBasis(var.virtualGetTypeDescription()->getType(), true));
 
   if (!d_varDB.exists(label, matlIndex, patch)) {
-    std::cout << d_myworld->myrank() << " unable to find variable '" << label->getName() << " on patch: " << patch->getID() << " matl: " << matlIndex << "\n";
+    std::cout << d_myworld->myRank() << " unable to find variable '" << label->getName() << " on patch: " << patch->getID() << " matl: " << matlIndex << "\n";
     SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex, "", __FILE__, __LINE__));
   }
 
@@ -3122,7 +3122,7 @@ OnDemandDataWarehouse::getGridVar(       GridVariableBase& var,
         //if (rw.invoke()) {
         // print out this message if the ProgressiveWarning does
         /*ostringstream errmsg;
-         errmsg << d_myworld->myrank() << " This occurrence for " << label->getName();
+         errmsg << d_myworld->myRank() << " This occurrence for " << label->getName();
          if (patch)
          errmsg << " on patch " << patch->getID();
          errmsg << " for material " << matlIndex;
@@ -3420,7 +3420,7 @@ OnDemandDataWarehouse::checkGetAccess( const VarLabel*        label,
 #if 1
           SCI_THROW(DependencyException(runningTask, label, matlIndex, patch, has, needs, __FILE__, __LINE__));
 #else
-          if ( d_myworld->myrank() == 0 ) {
+          if ( d_myworld->myRank() == 0 ) {
             cout << DependencyException::makeMessage(runningTask, label, matlIndex, patch,has, needs) << endl;
           }
 #endif
@@ -3443,7 +3443,7 @@ OnDemandDataWarehouse::checkGetAccess( const VarLabel*        label,
           }
           if (dbg.active()) {
             cerrLock.lock();
-            dbg << d_myworld->myrank() << " Task running is: " << runningTask->getName();
+            dbg << d_myworld->myRank() << " Task running is: " << runningTask->getName();
             dbg << std::left;
             dbg.width(10);
             dbg << "\t" << varname;
@@ -3515,7 +3515,7 @@ OnDemandDataWarehouse::checkPutAccess( const VarLabel* label,
 #if 1
           SCI_THROW(DependencyException(runningTask, label, matlIndex, patch, has, needs, __FILE__, __LINE__));
 #else
-          if ( d_myworld->myrank() == 0 ) {
+          if ( d_myworld->myRank() == 0 ) {
             cout << DependencyException::makeMessage(runningTask, label, matlIndex, patch,
               }
               has, needs) << endl;
@@ -3879,7 +3879,7 @@ void
 OnDemandDataWarehouse::abortTimestep()
 {
   // BJW - timestep aborting does not work in MPI - disabling until we get fixed.
-  if( d_myworld->size() == 0 ) {
+  if( d_myworld->nRanks() == 0 ) {
     d_aborted = true;
   }
 }
@@ -3905,12 +3905,12 @@ OnDemandDataWarehouse::getVarLabelMatlLevelTriples( std::vector<VarLabelMatl<Lev
 void
 OnDemandDataWarehouse::print()
 {
-  std::cout << d_myworld->myrank() << " VARIABLES in DW " << getID()
-       << "\n" << d_myworld->myrank() << " Variable Patch Material\n"
+  std::cout << d_myworld->myRank() << " VARIABLES in DW " << getID()
+       << "\n" << d_myworld->myRank() << " Variable Patch Material\n"
        << "  -----------------------\n";
 
-  d_varDB.print(std::cout, d_myworld->myrank());
-  d_levelDB.print(std::cout, d_myworld->myrank());
+  d_varDB.print(std::cout, d_myworld->myRank());
+  d_levelDB.print(std::cout, d_myworld->myRank());
 }
 //______________________________________________________________________
 //  print debugging information
@@ -3923,7 +3923,7 @@ OnDemandDataWarehouse::printDebuggingPutInfo( const VarLabel* label,
   if( dbg.active() ) {
     cerrLock.lock();
     int L_indx = patch->getLevel()->getIndex();
-    dbg << d_myworld->myrank() << " Putting (line: "<<line<< ") ";
+    dbg << d_myworld->myRank() << " Putting (line: "<<line<< ") ";
     dbg << std::left;
     dbg.width( 20 );
     dbg << *label << " MI: " << matlIndex << " L-"<< L_indx <<" "<< *patch << " \tinto DW: " << d_generation

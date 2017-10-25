@@ -162,7 +162,7 @@ NonAdiabaticTable::problemSetup( GridP &,
   d_ref_gamma_index = table->addDependentVariable("reference_gamma");
   d_ref_temp_index  = table->addDependentVariable("reference_Temp");
   
-  bool cerrSwitch = (d_myworld->myrank() == 0); 
+  bool cerrSwitch = (d_myworld->myRank() == 0); 
   table->setup(cerrSwitch);
 
 #if 0

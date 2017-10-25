@@ -163,7 +163,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
   DetailedTasks* dts = tg->getDetailedTasks();
 
   if(!dts) {
-    if (d_myworld->myrank() == 0) {
+    if (d_myworld->myRank() == 0) {
       DOUT(true, "DynamicMPIScheduler skipping execute, no tasks");
     }
     return;
@@ -177,7 +177,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
     dts->localTask(i)->resetDependencyCounts();
   }
 
-  int me = d_myworld->myrank();
+  int me = d_myworld->myRank();
 
   // This only happens if "-emit_taskgraphs" is passed to sus
   makeTaskGraphDoc(dts, me);
@@ -238,12 +238,12 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
 
       if ((task->getTask()->getType() == Task::Reduction) || (task->getTask()->usesMPI())) {  //save the reduction task for later
         phaseSyncTask[task->getTask()->m_phase] = task;
-        DOUT(g_task_dbg, "Rank-" << d_myworld->myrank() << " Task Reduction ready " << *task << " deps needed: " << task->getExternalDepCount());
+        DOUT(g_task_dbg, "Rank-" << d_myworld->myRank() << " Task Reduction ready " << *task << " deps needed: " << task->getExternalDepCount());
       } else {
         initiateTask(task, abort, abort_point, iteration);
         task->markInitiated();
         task->checkExternalDepCount();
-        DOUT(g_task_dbg, "Rank-" << d_myworld->myrank() << " Task internal ready " << *task << " deps needed: " << task->getExternalDepCount());
+        DOUT(g_task_dbg, "Rank-" << d_myworld->myRank() << " Task internal ready " << *task << " deps needed: " << task->getExternalDepCount());
 
         // if MPI has completed, it will run on the next iteration
         pending_tasks.insert(task);
@@ -264,15 +264,15 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
       DetailedTask * task = dts->getNextExternalReadyTask();
 
       DOUT(g_task_dbg,
-           "Rank-" << d_myworld->myrank() << " Running task " << *task << "(" << dts->numExternalReadyTasks() << "/" << pending_tasks.size() << " tasks in queue)");;
+           "Rank-" << d_myworld->myRank() << " Running task " << *task << "(" << dts->numExternalReadyTasks() << "/" << pending_tasks.size() << " tasks in queue)");;
 
       pending_tasks.erase(pending_tasks.find(task));
       ASSERTEQ(task->getExternalDepCount(), 0);
       runTask(task, iteration);
       numTasksDone++;
 
-      if (g_task_order && d_myworld->myrank() == d_myworld->size() / 2) {
-        DOUT(true, d_myworld->myrank() << " Running task static order: " << task->getStaticOrder() << " , scheduled order: " << numTasksDone);
+      if (g_task_order && d_myworld->myRank() == d_myworld->nRanks() / 2) {
+        DOUT(true, d_myworld->myRank() << " Running task static order: " << task->getStaticOrder() << " , scheduled order: " << numTasksDone);
       }
       phaseTasksDone[task->getTask()->m_phase]++;
     } 
@@ -287,7 +287,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
       DetailedTask *reducetask = phaseSyncTask[currphase];
       if (reducetask->getTask()->getType() == Task::Reduction) {
         if (!abort) {
-          DOUT(g_task_dbg, "Rank-" << d_myworld->myrank() << " Running Reduce task " << reducetask->getTask()->getName());
+          DOUT(g_task_dbg, "Rank-" << d_myworld->myRank() << " Running Reduce task " << reducetask->getTask()->getName());
         }
         initiateReduction(reducetask);
       }
@@ -298,14 +298,14 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
         ASSERT(reducetask->getExternalDepCount() == 0);
         runTask(reducetask, iteration);
 
-        DOUT(g_task_dbg, "Rank-" << d_myworld->myrank() << " Running OPP task:");;
+        DOUT(g_task_dbg, "Rank-" << d_myworld->myRank() << " Running OPP task:");;
 
       }
       ASSERT(reducetask->getTask()->m_phase == currphase);
 
       numTasksDone++;
-      if (g_task_order && d_myworld->myrank() == d_myworld->size() / 2) {
-        DOUT(true, d_myworld->myrank() << " Running task static order: " << reducetask->getStaticOrder() << " , scheduled order: " << numTasksDone);
+      if (g_task_order && d_myworld->myRank() == d_myworld->nRanks() / 2) {
+        DOUT(true, d_myworld->myRank() << " Running task static order: " << reducetask->getStaticOrder() << " , scheduled order: " << numTasksDone);
       }
       phaseTasksDone[reducetask->getTask()->m_phase]++;
     }
@@ -343,7 +343,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
     float queuelength = lengthsum / totaltasks;
     float allqueuelength = 0;
     Uintah::MPI::Reduce(&queuelength, &allqueuelength, 1, MPI_FLOAT, MPI_SUM, 0, d_myworld->getComm());
-    proc0cout << "average queue length:" << allqueuelength / d_myworld->size() << std::endl;
+    proc0cout << "average queue length:" << allqueuelength / d_myworld->nRanks() << std::endl;
   }
 
   //---------------------------------------------------------------------------

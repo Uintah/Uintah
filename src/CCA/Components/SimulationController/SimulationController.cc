@@ -325,8 +325,8 @@ SimulationController::restartArchiveSetup( void )
     Dir checkpointRestartDir = restartFromDir.getSubdir( "checkpoints" );
 
     d_restart_archive = scinew DataArchive( checkpointRestartDir.getName(),
-                                            d_myworld->myrank(),
-                                            d_myworld->size() );
+                                            d_myworld->myRank(),
+                                            d_myworld->nRanks() );
 
     vector<int>    indices;
     vector<double> times;
@@ -511,7 +511,7 @@ SimulationController::gridSetup( void )
   d_sharedState->setDimensionality(size[0] > 1, size[1] > 1, size[2] > 1);
 
   // Print out meta data
-  if ( d_myworld->myrank() == 0 ) {
+  if ( d_myworld->myRank() == 0 ) {
     d_currentGridP->printStatistics();
     amrout << "Restart grid\n" << *d_currentGridP.get_rep() << "\n";
   }
@@ -802,7 +802,7 @@ SimulationController::ReportStats( bool header /* = false */ )
                                     d_myworld );
   
   // Print the stats for this time step
-  if( d_myworld->myrank() == 0 && header ) {
+  if( d_myworld->myRank() == 0 && header ) {
     dbg << std::endl;
     dbg << "Simulation and run time stats are reported "
         << "at the end of each time step" << std::endl;
@@ -882,7 +882,7 @@ SimulationController::ReportStats( bool header /* = false */ )
       SimulationState::RunTimeStat e = (SimulationState::RunTimeStat)i;
 
       if (runTimeStats[e] > 0) {
-        istats << "rank: " << d_myworld->myrank() << " " << left << setw(19) << runTimeStats.getName(e) << " ["
+        istats << "rank: " << d_myworld->myRank() << " " << left << setw(19) << runTimeStats.getName(e) << " ["
                << runTimeStats.getUnits(e) << "]: " << runTimeStats[e] << "\n";
       }
     }
@@ -892,7 +892,7 @@ SimulationController::ReportStats( bool header /* = false */ )
 
     for (unsigned int i = 0; i < otherStats.size(); i++) {
       if (otherStats[i] > 0) {
-        istats << "rank: " << d_myworld->myrank() << " " << left << setw(19) << otherStats.getName(i) << " ["
+        istats << "rank: " << d_myworld->myRank() << " " << left << setw(19) << otherStats.getName(i) << " ["
                << otherStats.getUnits(i) << "]: " << otherStats[i] << "\n";
       }
     }
@@ -901,7 +901,7 @@ SimulationController::ReportStats( bool header /* = false */ )
   // Update the moving average and get the wall time for this time step.
   Timers::nanoseconds timeStep = walltimers.updateExpMovingAverage();
 
-  if( d_myworld->myrank() == 0 )
+  if( d_myworld->myRank() == 0 )
   {
     ostringstream message;
     message << left
@@ -1095,7 +1095,7 @@ SimulationController::getMemoryStats( bool create /* = false */ )
     }
     else {
       char filename[256];
-      sprintf(filename, "%s.%d", filenamePrefix, d_myworld->myrank());
+      sprintf(filename, "%s.%d", filenamePrefix, d_myworld->myRank());
 
       if ( create ) {
         mallocPerProcStream = scinew ofstream(filename, ios::out | ios::trunc);
@@ -1110,7 +1110,7 @@ SimulationController::getMemoryStats( bool create /* = false */ )
       }
     }
 
-    *mallocPerProcStream << "Proc " << d_myworld->myrank() << "   ";
+    *mallocPerProcStream << "Proc " << d_myworld->myRank() << "   ";
     *mallocPerProcStream << "Timestep "
                          << d_sharedState->getCurrentTopLevelTimeStep() << "   ";
 

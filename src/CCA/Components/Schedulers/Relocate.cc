@@ -262,13 +262,13 @@ Relocate::scheduleParticleRelocation(       Scheduler                           
     GridP grid = coarsestLevelwithParticles->getGrid();
     // make per-proc patch set of each level >= level
     patches = scinew PatchSet();
-    patches->createEmptySubsets(pg->size());
+    patches->createEmptySubsets(pg->nRanks());
     
     for (int i = coarsestLevelwithParticles->getIndex(); i < grid->numLevels(); i++) {
       
       const PatchSet* p = lb->getPerProcessorPatchSet(grid->getLevel(i));
       
-      for (int proc = 0; proc < pg->size(); proc++) {
+      for (int proc = 0; proc < pg->nRanks(); proc++) {
         for (int j = 0; j < p->getSubset(proc)->size(); j++) {
           const Patch* patch = p->getSubset(proc)->get(j);
           patches->getSubset(lb->getPatchwiseProcessorAssignment(patch))->add(patch);
@@ -356,13 +356,13 @@ Relocate::scheduleParticleRelocation( Scheduler                                 
     GridP grid = coarsestLevelwithParticles->getGrid();
     // make per-proc patch set of each level >= level
     patches = scinew PatchSet();
-    patches->createEmptySubsets(pg->size());
+    patches->createEmptySubsets(pg->nRanks());
    
     for (int i = coarsestLevelwithParticles->getIndex(); i < grid->numLevels(); i++) {
       
       const PatchSet* p = lb->getPerProcessorPatchSet(grid->getLevel(i));
       
-      for (int proc = 0; proc < pg->size(); proc++) {
+      for (int proc = 0; proc < pg->nRanks(); proc++) {
         for (int j = 0; j < p->getSubset(proc)->size(); j++) {
           const Patch* patch = p->getSubset(proc)->get(j);
           patches->getSubset(lb->getPatchwiseProcessorAssignment(patch))->add(patch);
@@ -496,7 +496,7 @@ void MPIScatterRecords::addNeighbor( LoadBalancerPort     * lb,
 {
   neighbor = neighbor->getRealPatch();
   int toProc = lb->getPatchwiseProcessorAssignment(neighbor);
-  ASSERTRANGE(toProc, 0, pg->size());
+  ASSERTRANGE(toProc, 0, pg->nRanks());
   
   procmaptype::iterator iter = procs.find(toProc);
   
@@ -560,7 +560,7 @@ Relocate::exchangeParticles(const ProcessorGroup* pg,
   
   int numMatls = (int)reloc_old_labels.size();
 
-  int me = pg->myrank();
+  int me = pg->myRank();
   for(procmaptype::iterator iter = scatter_records->procs.begin();
                            iter != scatter_records->procs.end(); iter++){
     
@@ -684,7 +684,7 @@ Relocate::exchangeParticles(const ProcessorGroup* pg,
     MPI_Request rid;
     int to=iter->first;
     
-    DOUT(g_mpi_dbg, "Rank-" << pg->myrank() << " Send relocate msg size " << sendsize << " tag " << RELOCATE_TAG << " to ");
+    DOUT(g_mpi_dbg, "Rank-" << pg->myRank() << " Send relocate msg size " << sendsize << " tag " << RELOCATE_TAG << " to ");
 
     Uintah::MPI::Isend(buf, sendsize, MPI_PACKED, to, RELOCATE_TAG, pg->getComm(), &rid);
 
@@ -720,11 +720,11 @@ Relocate::exchangeParticles(const ProcessorGroup* pg,
     char* buf = scinew char[size];
     recvbuffers[idx]=buf;
 
-    DOUT(g_mpi_dbg, "Rank-" << pg->myrank() << " Recv relocate msg size " << size << " tag " << RELOCATE_TAG << " from " << iter->first);
+    DOUT(g_mpi_dbg, "Rank-" << pg->myRank() << " Recv relocate msg size " << size << " tag " << RELOCATE_TAG << " from " << iter->first);
 
     Uintah::MPI::Recv(recvbuffers[idx], size, MPI_PACKED, iter->first, RELOCATE_TAG, pg->getComm(), &status);
 
-    DOUT(g_mpi_dbg, "Rank-" << pg->myrank() << " Done Recving relocate msg size " << size << " tag " << RELOCATE_TAG << " from " << iter->first);
+    DOUT(g_mpi_dbg, "Rank-" << pg->myRank() << " Done Recving relocate msg size " << size << " tag " << RELOCATE_TAG << " from " << iter->first);
 
     // Partially unpack
     int position=0;
@@ -916,7 +916,7 @@ Relocate::relocateParticlesModifies( const ProcessorGroup* pg,
   if (patches->size() != 0)
   {
     printTask(patches, patches->get(0),coutdbg,"Relocate::relocateParticles");
-    int me = pg->myrank();
+    int me = pg->myRank();
     
     // First pass: For each of the patches we own, look for particles
     // that left the patch.  Create a scatter record for each one.
@@ -1068,7 +1068,7 @@ Relocate::relocateParticlesModifies( const ProcessorGroup* pg,
     }  // patches loop
     
     //__________________________________
-    if (pg->size() > 1) {
+    if (pg->nRanks() > 1) {
       // send the particles where they need to go
       exchangeParticles(pg, patches, matls, old_dw, new_dw, &scatter_records, total_reloc);
     }
@@ -1107,7 +1107,7 @@ Relocate::relocateParticlesModifies( const ProcessorGroup* pg,
           const Patch* fromPatch=neighborPatches[i];
           
           int fromProc = m_lb->getPatchwiseProcessorAssignment(fromPatch->getRealPatch());
-          ASSERTRANGE( fromProc, 0, pg->size() );
+          ASSERTRANGE( fromProc, 0, pg->nRanks() );
           
           if(fromProc == me){
             ScatterRecord* record = scatter_records.findRecord(fromPatch, toPatch, matl, curLevelIndex);
@@ -1294,7 +1294,7 @@ Relocate::relocateParticlesModifies( const ProcessorGroup* pg,
 
   }  // patch size !-= 0
   
-  if (pg->size() > 1){
+  if (pg->nRanks() > 1){
     finalizeCommunication();
   }
   
@@ -1330,7 +1330,7 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
   int total_reloc[3] = {0,0,0};
   if (patches->size() != 0) {
     printTask(patches, patches->get(0),coutdbg,"Relocate::relocateParticles");
-    int me = pg->myrank();
+    int me = pg->myRank();
 
     // First pass: For each of the patches we own, look for particles
     // that left the patch.  Create a scatter record for each of the patches
@@ -1482,7 +1482,7 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
     }  // patches loop
 
     //__________________________________
-    if (pg->size() > 1) {
+    if (pg->nRanks() > 1) {
       // send the particles where they need to go
       exchangeParticles(pg, patches, matls, old_dw, new_dw,
                                      &scatter_records, total_reloc);
@@ -1525,7 +1525,7 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
           const Patch* fromPatch=neighborPatches[i];
 
           int fromProc = m_lb->getPatchwiseProcessorAssignment(fromPatch->getRealPatch());
-          ASSERTRANGE(fromProc, 0, pg->size());
+          ASSERTRANGE(fromProc, 0, pg->nRanks());
           
           if(fromProc == me){
             ScatterRecord* record = scatter_records.findRecord(fromPatch,
@@ -1730,7 +1730,7 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
   }  // patch size !-= 0
   
 
-  if (pg->size() > 1){
+  if (pg->nRanks() > 1){
     finalizeCommunication();
   }
 

@@ -203,7 +203,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   mpm_flag_ps->get("use_cohesive_zones",          d_useCohesiveZones);
 
   if(d_artificial_viscosity && d_integrator_type == "implicit"){
-    if (d_myworld->myrank() == 0){
+    if (d_myworld->myRank() == 0){
       cerr << "artificial viscosity is not implemented" << endl;
       cerr << "with implicit time integration" << endl;
     }

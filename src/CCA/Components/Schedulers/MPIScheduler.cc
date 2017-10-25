@@ -111,7 +111,7 @@ MPIScheduler::MPIScheduler( const ProcessorGroup * myworld
 
   if (g_time_out) {
     char filename[64];
-    if (d_myworld->myrank() == 0) {
+    if (d_myworld->myRank() == 0) {
       sprintf(filename, "timingstats.avg");
       m_avg_stats.open(filename);
       sprintf(filename, "timingstats.max");
@@ -134,7 +134,7 @@ MPIScheduler::MPIScheduler( const ProcessorGroup * myworld
 //
 MPIScheduler::~MPIScheduler()
 {
-  if ( (g_time_out) && (d_myworld->myrank() == 0) ) {
+  if ( (g_time_out) && (d_myworld->myRank() == 0) ) {
     m_avg_stats.close();
     m_max_stats.close();
   }
@@ -220,7 +220,7 @@ MPIScheduler::verifyChecksum()
   // Spatial tasks don't count against the global checksum
   checksum -= numSpatialTasks;
 
-  int my_rank = d_myworld->myrank();
+  int my_rank = d_myworld->myRank();
   DOUT(g_mpi_dbg, "Rank-" << my_rank << " (Uintah::MPI::Allreduce) Checking checksum of " << checksum);
 
   int result_checksum;
@@ -228,7 +228,7 @@ MPIScheduler::verifyChecksum()
 
   if (checksum != result_checksum) {
     std::cerr << "Failed task checksum comparison! Not all processes are executing the same taskgraph\n";
-    std::cerr << "  Rank-" << my_rank << " of " << d_myworld->size() - 1 << ": has sum " << checksum << "  and global is "
+    std::cerr << "  Rank-" << my_rank << " of " << d_myworld->nRanks() - 1 << ": has sum " << checksum << "  and global is "
               << result_checksum << '\n';
     Uintah::MPI::Abort(d_myworld->getComm(), 1);
   }
@@ -258,7 +258,7 @@ void MPIScheduler::initiateTask( DetailedTask * dtask
 void
 MPIScheduler::initiateReduction( DetailedTask* dtask )
 {
-  DOUT(g_reductions, "Rank-" << d_myworld->myrank() << " Running Reduction Task: " << dtask->getName());
+  DOUT(g_reductions, "Rank-" << d_myworld->myRank() << " Running Reduction Task: " << dtask->getName());
 
   Timers::Simple timer;
 
@@ -366,7 +366,7 @@ MPIScheduler::postMPISends( DetailedTask * dtask
   Timers::Simple send_timer;
   send_timer.start();
 
-  int      my_rank = d_myworld->myrank();
+  int      my_rank = d_myworld->myRank();
   MPI_Comm my_comm = d_myworld->getComm();
 
   DOUT(g_dbg, "Rank-" << my_rank << " postMPISends - task " << *dtask);
@@ -383,7 +383,7 @@ MPIScheduler::postMPISends( DetailedTask * dtask
 
     // Create the MPI type
     int to = batch->m_to_tasks.front()->getAssignedResourceIndex();
-    ASSERTRANGE(to, 0, d_myworld->size());
+    ASSERTRANGE(to, 0, d_myworld->nRanks());
 
     for (DetailedDep* req = batch->m_head; req != nullptr; req = req->m_next) {
 
@@ -508,7 +508,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask * dtask
   Timers::Simple recv_timer;
   recv_timer.start();
 
-  int      my_rank = d_myworld->myrank();
+  int      my_rank = d_myworld->myRank();
   MPI_Comm my_comm = d_myworld->getComm();
 
   if (g_dbg) {
@@ -646,7 +646,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask * dtask
         }
 
         int from = batch->m_from_task->getAssignedResourceIndex();
-        ASSERTRANGE(from, 0, d_myworld->size());
+        ASSERTRANGE(from, 0, d_myworld->nRanks());
 
         DOUT(g_mpi_dbg, "Rank-" << my_rank << " Posting recv for message number "
                                 << batch->m_message_tag << " from rank-" << from
@@ -793,7 +793,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */
     dts->localTask(i)->resetDependencyCounts();
   }
 
-  int my_rank = d_myworld->myrank();
+  int my_rank = d_myworld->myRank();
 
   // This only happens if "-emit_taskgraphs" is passed to sus
   makeTaskGraphDoc( dts, my_rank );
@@ -820,7 +820,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */
 
     numTasksDone++;
 
-    DOUT(g_task_order, "Rank-" << d_myworld->myrank() << " Running task static order: "
+    DOUT(g_task_order, "Rank-" << d_myworld->myRank() << " Running task static order: "
                                << dtask->getStaticOrder() << " , scheduled order: " << numTasksDone);
 
     DOUT(g_task_dbg, "Rank-" << my_rank << " Initiating task:  " << *dtask);
@@ -836,7 +836,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */
       ASSERT( m_recvs.size() == 0u );
       runTask( dtask, iteration );
 
-      DOUT(g_task_dbg, "Rank-" << d_myworld->myrank() << " Completed task:   " << *dtask);
+      DOUT(g_task_dbg, "Rank-" << d_myworld->myRank() << " Completed task:   " << *dtask);
       printTaskLevels( d_myworld, g_task_level, dtask );
     }
 
@@ -917,8 +917,8 @@ MPIScheduler::emitTime( const char* label, double dt )
 void
 MPIScheduler::outputTimingStats( const char* label )
 {
-  int      my_rank      = d_myworld->myrank();
-  int      my_comm_size = d_myworld->size();
+  int      my_rank      = d_myworld->myRank();
+  int      my_comm_size = d_myworld->nRanks();
   MPI_Comm my_comm      = d_myworld->getComm();
 
   // for ExecTimes

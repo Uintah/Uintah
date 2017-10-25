@@ -610,7 +610,7 @@ void SerialMPM::scheduleComputeStableTimestep(const LevelP& level,
   // However, this task needs to do something in the case that MPM
   // is being run on more than one level.
   Task* t = 0;
-  cout_doing << UintahParallelComponent::d_myworld->myrank() << " MPM::scheduleComputeStableTimestep \t\t\t\tL-" <<level->getIndex() << endl;
+  cout_doing << UintahParallelComponent::d_myworld->myRank() << " MPM::scheduleComputeStableTimestep \t\t\t\tL-" <<level->getIndex() << endl;
 
   t = scinew Task("MPM::actuallyComputeStableTimestep",
                    this, &SerialMPM::actuallyComputeStableTimestep);
@@ -1654,7 +1654,7 @@ void SerialMPM::printParticleCount(const ProcessorGroup* pg,
   sumlong_vartype pcount;
   new_dw->get(pcount, lb->partCountLabel);
 
-  if(pg->myrank() == 0){
+  if(pg->myRank() == 0){
     std::cout << "Created " << (long) pcount << " total particles" << std::endl;
   }
 

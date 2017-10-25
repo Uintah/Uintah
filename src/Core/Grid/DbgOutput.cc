@@ -235,7 +235,7 @@ printTaskLevels( const ProcessorGroup * d_myworld
       const Patch* firstPatch = level->getPatch(0);
       if (taskPatches->contains(firstPatch)) {
         std::ostringstream msg;
-        msg << "Rank-" << d_myworld->myrank() << "   ";
+        msg << "Rank-" << d_myworld->myRank() << "   ";
         msg << std::left;
         msg.width(10);
         msg << dtask->getTask()->getName();

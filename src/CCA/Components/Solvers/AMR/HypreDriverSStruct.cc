@@ -216,7 +216,7 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
   ASSERTEQ(sizeof(Stencil7), 7*sizeof(double));
   //__________________________________
   // Set up the grid
-  cout_doing << _pg->myrank() << " Setting up the grid" << "\n";
+  cout_doing << _pg->myRank() << " Setting up the grid" << "\n";
   // Create an empty grid in 3 dimensions with # parts = numLevels.
   const int numDims = 3;
   const int numLevels = _level->getGrid()->numLevels();
@@ -284,7 +284,7 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
   //==================================================================
   // Setup connection graph
   //================================================================== 
-  cout_doing << _pg->myrank() << " Create the graph and stencil" << "\n";
+  cout_doing << _pg->myRank() << " Create the graph and stencil" << "\n";
   HYPRE_SStructGraphCreate(_pg->getComm(), _grid, &_graph);
   _exists[SStructGraph] = SStructCreated;
   
@@ -382,7 +382,7 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
   //==================================================================
   //  Create the rhs
   //==================================================================
-  cout_doing << _pg->myrank() << " Doing setup RHS vector _HB" << "\n";
+  cout_doing << _pg->myRank() << " Doing setup RHS vector _HB" << "\n";
   HYPRE_SStructVectorCreate(_pg->getComm(), _grid, &_HB);
   _exists[SStructB] = SStructCreated;
   
@@ -411,7 +411,7 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
   //==================================================================
   //  Create the solution
   //==================================================================
-  cout_doing << _pg->myrank() << " Doing setup solution vector _HX" << "\n";
+  cout_doing << _pg->myRank() << " Doing setup solution vector _HX" << "\n";
   HYPRE_SStructVectorCreate(_pg->getComm(), _grid, &_HX);
   _exists[SStructX] = SStructCreated;
   
@@ -437,7 +437,7 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
   } else {
 #if 0
     // If guess is not provided by ICE, use zero as initial guess
-    cout_doing << _pg->myrank() << " Default initial guess: zero" << "\n";
+    cout_doing << _pg->myRank() << " Default initial guess: zero" << "\n";
     for (int p = 0 ; p < _patches->size(); p++) {
       // Read Uintah patch info into our data structure, set Uintah pointers
       const Patch* patch = _patches->get(p);
@@ -458,7 +458,7 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
 
   // For solvers that require ParCSR format
   if (_requiresPar) {
-    cout_doing << _pg->myrank() << " Making ParCSR objects from SStruct objects" << "\n";
+    cout_doing << _pg->myRank() << " Making ParCSR objects from SStruct objects" << "\n";
     HYPRE_SStructMatrixGetObject(_HA, (void **) &_HA_Par);
     HYPRE_SStructVectorGetObject(_HB, (void **) &_HB_Par);
     HYPRE_SStructVectorGetObject(_HX, (void **) &_HX_Par);

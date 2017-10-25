@@ -101,8 +101,8 @@ DynamicLoadBalancer::collectParticlesForRegrid( const Grid                     *
   // (it's either this or do 2 consecutive load balances).  For now, it's safe to assume that
   // if there is a new level or a new patch there are no particles there.
 
-  int num_procs = d_myworld->size();
-  int myrank = d_myworld->myrank();
+  int num_procs = d_myworld->nRanks();
+  int myRank = d_myworld->myRank();
   int num_patches = 0;
 
   particles.resize(newGridRegions.size());
@@ -134,7 +134,7 @@ DynamicLoadBalancer::collectParticlesForRegrid( const Grid                     *
         // new patch - no particles yet
         recvcounts[0]++;
         totalsize++;
-        if (d_myworld->myrank() == 0) {
+        if (d_myworld->myRank() == 0) {
           PatchInfo pi(grid_index, 0);
           subpatchParticles.push_back(pi);
         }
@@ -149,7 +149,7 @@ DynamicLoadBalancer::collectParticlesForRegrid( const Grid                     *
       if (oldPatches.size() == 0) {
         recvcounts[0]++;
         totalsize++;
-        if (d_myworld->myrank() == 0) {
+        if (d_myworld->myRank() == 0) {
           PatchInfo pi(grid_index, 0);
           subpatchParticles.push_back(pi);
         }
@@ -161,7 +161,7 @@ DynamicLoadBalancer::collectParticlesForRegrid( const Grid                     *
 
         recvcounts[m_processor_assignment[oldPatch->getGridIndex()]]++;
         totalsize++;
-        if (m_processor_assignment[oldPatch->getGridIndex()] == myrank) {
+        if (m_processor_assignment[oldPatch->getGridIndex()] == myRank) {
           IntVector low, high;
           //loop through the materials and add up the particles
           // the main difference between this and the above portion is that we need to grab the portion of the patch
@@ -190,7 +190,7 @@ DynamicLoadBalancer::collectParticlesForRegrid( const Grid                     *
 
   vector<int> num_particles(num_patches, 0);
 
-  if (d_myworld->size() > 1) {
+  if (d_myworld->nRanks() > 1) {
     //construct a mpi datatype for the PatchInfo
     MPI_Datatype particletype;
     Uintah::MPI::Type_contiguous(2, MPI_INT, &particletype);
@@ -202,10 +202,10 @@ DynamicLoadBalancer::collectParticlesForRegrid( const Grid                     *
       displs[i] = displs[i-1]+recvcounts[i-1];
     }
 
-    Uintah::MPI::Gatherv(&subpatchParticles[0], recvcounts[d_myworld->myrank()], particletype, &recvbuf[0],
+    Uintah::MPI::Gatherv(&subpatchParticles[0], recvcounts[d_myworld->myRank()], particletype, &recvbuf[0],
         &recvcounts[0], &displs[0], particletype, 0, d_myworld->getComm());
 
-    if ( d_myworld->myrank() == 0) {
+    if ( d_myworld->myRank() == 0) {
       for (unsigned i = 0; i < recvbuf.size(); i++) {
         PatchInfo& spi = recvbuf[i];
         num_particles[spi.m_id] += spi.m_num_particles;
@@ -234,9 +234,9 @@ DynamicLoadBalancer::collectParticlesForRegrid( const Grid                     *
     particles[level][index] += num_particles[i];
   }
 
-  if (dbg.active() && d_myworld->myrank() == 0) {
+  if (dbg.active() && d_myworld->myRank() == 0) {
     for (unsigned i = 0; i < num_particles.size(); i++) {
-      dbg << d_myworld->myrank() << "  Post gather index " << i << ": " << " numP : " << num_particles[i] << endl;
+      dbg << d_myworld->myRank() << "  Post gather index " << i << ": " << " numP : " << num_particles[i] << endl;
     }
   }
 
@@ -261,7 +261,7 @@ DynamicLoadBalancer::collectParticles( const Grid                  * grid,
     return;
   }
 
-  if( d_myworld->myrank() == 0 ) {
+  if( d_myworld->myRank() == 0 ) {
     dbg << " DLB::collectParticles\n";
   }
 
@@ -270,8 +270,8 @@ DynamicLoadBalancer::collectParticles( const Grid                  * grid,
     num_patches += grid->getLevel(i)->numPatches();
   }
 
-  int num_procs = d_myworld->size();
-  int myrank = d_myworld->myrank();
+  int num_procs = d_myworld->nRanks();
+  int myRank = d_myworld->myRank();
   // get how many particles were each patch had at the end of the last timestep
   //   gather from each proc - based on the last location
 
@@ -291,7 +291,7 @@ DynamicLoadBalancer::collectParticles( const Grid                  * grid,
         iter != level->patchesEnd(); iter++) {
       Patch *patch = *iter;
       int id = patch->getGridIndex();
-      if (m_processor_assignment[id] != myrank)
+      if (m_processor_assignment[id] != myRank)
         continue;
       int thisPatchParticles = 0;
 
@@ -310,7 +310,7 @@ DynamicLoadBalancer::collectParticles( const Grid                  * grid,
     }
   }
 
-  if (d_myworld->size() > 1) {
+  if (d_myworld->nRanks() > 1) {
     //construct a mpi datatype for the PatchInfo
     vector<int> displs(num_procs, 0);
     vector<int> recvcounts(num_procs,0); // init the counts to 0
@@ -332,10 +332,10 @@ DynamicLoadBalancer::collectParticles( const Grid                  * grid,
     Uintah::MPI::Allgatherv(&particleList[0], particleList.size()*sizeof(PatchInfo),  MPI_BYTE,
                    &all_particles[0], &recvcounts[0], &displs[0], MPI_BYTE, d_myworld->getComm());
         
-    if (dbg.active() && d_myworld->myrank() == 0) {
+    if (dbg.active() && d_myworld->myRank() == 0) {
       for (unsigned i = 0; i < all_particles.size(); i++) {
         PatchInfo& pi = all_particles[i];
-        dbg << d_myworld->myrank() << "  Post gather index " << i << ": " << pi.m_id << " numP : " << pi.m_num_particles << endl;
+        dbg << d_myworld->myRank() << "  Post gather index " << i << ": " << pi.m_id << " numP : " << pi.m_num_particles << endl;
       }
     }
     for (int i = 0; i < num_patches; i++) {
@@ -364,7 +364,7 @@ DynamicLoadBalancer::collectParticles( const Grid                  * grid,
 bool
 DynamicLoadBalancer::assignPatchesFactor( const GridP & grid, bool force )
 {
-  doing << d_myworld->myrank() << "   APF\n";
+  doing << d_myworld->myRank() << "   APF\n";
   vector<vector<double> > patch_costs;
 
   Timers::Simple timer;
@@ -385,7 +385,7 @@ DynamicLoadBalancer::assignPatchesFactor( const GridP & grid, bool force )
   static int lbiter = -1; //counter to identify which regrid
   lbiter++;
 
-  int num_procs = d_myworld->size();
+  int num_procs = d_myworld->nRanks();
 
   getCosts(grid.get_rep(),patch_costs);
 
@@ -414,7 +414,7 @@ DynamicLoadBalancer::assignPatchesFactor( const GridP & grid, bool force )
     }
 
     if (m_do_space_curve) {
-      //cout << d_myworld->myrank() << "   Doing SFC level " << l << endl;
+      //cout << d_myworld->myRank() << "   Doing SFC level " << l << endl;
       useSFC(level, &order[0]);
     }
     
@@ -424,7 +424,7 @@ DynamicLoadBalancer::assignPatchesFactor( const GridP & grid, bool force )
     //hard maximum cost for assigning a patch to a processor
     double avgCost     = (total_cost+previous_total_cost) / num_procs;
     double hardMaxCost = total_cost;    
-    double myMaxCost   = hardMaxCost-(hardMaxCost-avgCost)/d_myworld->size()*(double)d_myworld->myrank();
+    double myMaxCost   = hardMaxCost-(hardMaxCost-avgCost)/d_myworld->nRanks()*(double)d_myworld->myRank();
     double myStoredMax=DBL_MAX;
     int minProcLoc = -1;
 
@@ -451,7 +451,7 @@ DynamicLoadBalancer::assignPatchesFactor( const GridP & grid, bool force )
       }
       double range=hardMaxCost-avgCost;
       myStoredMax =hardMaxCost;
-      myMaxCost   =hardMaxCost-range/d_myworld->size()*(double)d_myworld->myrank();
+      myMaxCost   =hardMaxCost-range/d_myworld->nRanks()*(double)d_myworld->myRank();
     }
 
     //temperary vector to assign the load balance in
@@ -544,7 +544,7 @@ DynamicLoadBalancer::assignPatchesFactor( const GridP & grid, bool force )
         myStoredMax=currentMaxCost;
       }
 
-      double_int maxInfo(myStoredMax,d_myworld->myrank());
+      double_int maxInfo(myStoredMax,d_myworld->myRank());
       double_int min;
 
       //gather the maxes
@@ -571,7 +571,7 @@ DynamicLoadBalancer::assignPatchesFactor( const GridP & grid, bool force )
       
       //set new myMax by having each processor search at even intervals in the range
       double range=hardMaxCost-average;
-      myMaxCost=hardMaxCost-range/d_myworld->size()*(double)d_myworld->myrank();
+      myMaxCost=hardMaxCost-range/d_myworld->nRanks()*(double)d_myworld->myRank();
       iter++;
     }
 
@@ -598,7 +598,7 @@ DynamicLoadBalancer::assignPatchesFactor( const GridP & grid, bool force )
 
     //__________________________________
     //    debugging output
-    if(stats.active() && d_myworld->myrank()==0)
+    if(stats.active() && d_myworld->myRank()==0)
     {
       //calculate lb stats:
       double totalCost=0;
@@ -634,7 +634,7 @@ DynamicLoadBalancer::assignPatchesFactor( const GridP & grid, bool force )
       stats << "\nLoadBalance Stats level(" << l << "):"  << " Mean: " << meanCost << " Min: " << minCost << " Max: " << maxCost << " Imbalance:" << 1-meanCost/maxCost << " max on:" << maxProc << endl;
     }  
 
-    if(lbout.active() && d_myworld->myrank()==0)
+    if(lbout.active() && d_myworld->myRank()==0)
     {
       for(int p=0;p<num_patches;p++)
       {
@@ -662,7 +662,7 @@ DynamicLoadBalancer::assignPatchesFactor( const GridP & grid, bool force )
 
   //__________________________________
   //
-  if(stats.active() && d_myworld->myrank()==0)
+  if(stats.active() && d_myworld->myRank()==0)
   {
       double meanCost = 0;
       double minCost  = totalProcCosts[0];
@@ -693,10 +693,10 @@ DynamicLoadBalancer::assignPatchesFactor( const GridP & grid, bool force )
     
     Uintah::MPI::Reduce(lbtimes,avg,5,MPI_DOUBLE,MPI_SUM,0,d_myworld->getComm());
     
-    if(d_myworld->myrank()==0) {
+    if(d_myworld->myRank()==0) {
       cout << "LoadBalance Avg Times: "; 
       for(int i=0;i<5;i++){
-        avg[i]/=d_myworld->size();
+        avg[i]/=d_myworld->nRanks();
         cout << avg[i] << " ";
       }
       cout << endl;
@@ -706,7 +706,7 @@ DynamicLoadBalancer::assignPatchesFactor( const GridP & grid, bool force )
     
     Uintah::MPI::Reduce(lbtimes,max,5,MPI_DOUBLE,MPI_MAX,0,d_myworld->getComm());
     
-    if(d_myworld->myrank()==0) {
+    if(d_myworld->myRank()==0) {
       cout << "LoadBalance Max Times: "; 
       for(int i=0;i<5;i++){
         cout << max[i] << " ";
@@ -719,10 +719,10 @@ DynamicLoadBalancer::assignPatchesFactor( const GridP & grid, bool force )
   //
   bool doLoadBalancing = force || thresholdExceeded(patch_costs);
   
-  if (d_myworld->myrank() == 0){
+  if (d_myworld->myRank() == 0){
     dbg << " Time to LB: " << timer().seconds() << endl;
   }
-  doing << d_myworld->myrank() << "   APF END\n";
+  doing << d_myworld->myRank() << "   APF END\n";
   
   return doLoadBalancing;
 }
@@ -736,7 +736,7 @@ DynamicLoadBalancer::thresholdExceeded( const vector< vector<double> >& patch_co
   // for both.  If (curStdDev / tmpStdDev) > threshold, return true,
   // and have possiblyDynamicallyRelocate change the load balancing
   
-  int num_procs = d_myworld->size();
+  int num_procs = d_myworld->nRanks();
   int num_levels = patch_costs.size();
   
   vector<vector<double> > currentProcCosts(num_levels);
@@ -770,7 +770,7 @@ DynamicLoadBalancer::thresholdExceeded( const vector< vector<double> >& patch_co
       max_current = 0;
       avg_temp = 0;
       max_temp = 0;
-      for (int i = 0; i < d_myworld->size(); i++) {
+      for (int i = 0; i < d_myworld->nRanks(); i++) {
         if (currentProcCosts[l][i] > max_current) 
           max_current = currentProcCosts[l][i];
         if (tempProcCosts[l][i] > max_temp) 
@@ -779,8 +779,8 @@ DynamicLoadBalancer::thresholdExceeded( const vector< vector<double> >& patch_co
         avg_temp += tempProcCosts[l][i];
       }
 
-      avg_current /= d_myworld->size();
-      avg_temp /= d_myworld->size();
+      avg_current /= d_myworld->nRanks();
+      avg_temp /= d_myworld->nRanks();
 
       total_max_current+=max_current;
       total_avg_current+=avg_current;
@@ -789,7 +789,7 @@ DynamicLoadBalancer::thresholdExceeded( const vector< vector<double> >& patch_co
     }
   }
   else {
-    for(int i=0;i<d_myworld->size();i++) {
+    for(int i=0;i<d_myworld->nRanks();i++) {
       double current_cost=0, temp_cost=0;
       for(int l=0;l<num_levels;l++) {
         current_cost+=currentProcCosts[l][i];
@@ -804,11 +804,11 @@ DynamicLoadBalancer::thresholdExceeded( const vector< vector<double> >& patch_co
       total_avg_current+=current_cost;
       total_avg_temp+=temp_cost;
     }
-    total_avg_current/=d_myworld->size();
-    total_avg_temp/=d_myworld->size();
+    total_avg_current/=d_myworld->nRanks();
+    total_avg_temp/=d_myworld->nRanks();
   }
     
-  if (d_myworld->myrank() == 0) {
+  if (d_myworld->myRank() == 0) {
     stats << "Total:"  << " maxCur:" << total_max_current << " maxTemp:"  << total_max_temp << " avgCur:" << total_avg_current << " avgTemp:" << total_avg_temp <<endl;
   }
 
@@ -836,7 +836,7 @@ DynamicLoadBalancer::assignPatchesRandom( const GridP &, bool force )
 
   int seed;
 
-  if (d_myworld->myrank() == 0) {
+  if (d_myworld->myRank() == 0) {
     struct timeval time; 
     gettimeofday(&time,NULL);
     seed = (time.tv_sec * 1000) + (time.tv_usec / 1000);
@@ -846,7 +846,7 @@ DynamicLoadBalancer::assignPatchesRandom( const GridP &, bool force )
 
   srand( seed );
 
-  int num_procs = d_myworld->size();
+  int num_procs = d_myworld->nRanks();
   int num_patches = (int)m_temp_assignment.size();
 
   vector<int> proc_record(num_procs,0);
@@ -882,7 +882,7 @@ DynamicLoadBalancer::assignPatchesCyclic(const GridP&, bool force)
   // we move each patch up one proc - this obviously isn't a very good
   // lb technique, but it tests its capabilities pretty well.
 
-  int num_procs = d_myworld->size();
+  int num_procs = d_myworld->nRanks();
   for (unsigned i = 0; i < m_temp_assignment.size(); i++) {
     m_temp_assignment[i] = (m_processor_assignment[i] + 1 ) % num_procs;
   }
@@ -917,15 +917,15 @@ DynamicLoadBalancer::needRecompile(       double /*time*/,
   }
 #endif
 
-  if (dbg.active() && d_myworld->myrank() == 0){
-    dbg << d_myworld->myrank() << " DLB::NeedRecompile: do_check: " << do_check << ", timestep: " << timestep 
+  if (dbg.active() && d_myworld->myRank() == 0){
+    dbg << d_myworld->myRank() << " DLB::NeedRecompile: do_check: " << do_check << ", timestep: " << timestep 
         << ", LB:timestepInterval: " << d_lbTimestepInterval << ", time[s]: " << time << ", LB:Interval: " << m_lb_interval 
         << ", Last LB timestep: " << d_lastLbTimestep << ", Last LB time[s]: " << m_last_lb_time << endl;
   }
   
   // if it determines we need to re-load-balance, recompile
   if ( do_check && possiblyDynamicallyReallocate( grid, LoadBalancerPort::check ) ) {
-    doing << d_myworld->myrank() << " DLB - scheduling recompile " <<endl;
+    doing << d_myworld->myRank() << " DLB - scheduling recompile " <<endl;
     return true;
   }
   else {
@@ -974,7 +974,7 @@ DynamicLoadBalancer::getCosts( const Grid * grid, vector< vector<double> > & cos
   
   //__________________________________
   //  Debugging output
-  if (dbg.active() && d_myworld->myrank() == 0) {
+  if (dbg.active() && d_myworld->myRank() == 0) {
     for (unsigned l = 0; l < costs.size(); l++) {
       for (unsigned p = 0; p < costs[l].size(); p++) {
         dbg << "  DLB:getCosts  L: "  << l << " P: " << p << " cost " << costs[l][p] << endl;
@@ -989,8 +989,8 @@ DynamicLoadBalancer::possiblyDynamicallyReallocate( const GridP & grid, int stat
 {
   MALLOC_TRACE_TAG_SCOPE("DynamicLoadBalancer::possiblyDynamicallyReallocate");
 
-  if (d_myworld->myrank() == 0) {
-    dbg << d_myworld->myrank() << " In DLB, state " << state << endl;
+  if (d_myworld->myRank() == 0) {
+    dbg << d_myworld->myRank() << " In DLB, state " << state << endl;
   }
 
   Timers::Simple timer;
@@ -1061,15 +1061,15 @@ DynamicLoadBalancer::possiblyDynamicallyReallocate( const GridP & grid, int stat
       //__________________________________
       //  Debugging output
       if (lb.active()) {
-        // int num_procs = (int)d_myworld->size();
-        int myrank = d_myworld->myrank();
-        if (myrank == 0) {
+        // int num_procs = (int)d_myworld->nRanks();
+        int myRank = d_myworld->myRank();
+        if (myRank == 0) {
           LevelP curLevel = grid->getLevel(0);
           Level::const_patch_iterator iter = curLevel->patchesBegin();
           lb << "  Changing the Load Balance\n";
 
           for (unsigned int i = 0; i < m_processor_assignment.size(); i++) {
-            lb << myrank << " patch " << i << " (real " << (*iter)->getID() << ") -> proc " << m_processor_assignment[i] << " (old "
+            lb << myRank << " patch " << i << " (real " << (*iter)->getID() << ") -> proc " << m_processor_assignment[i] << " (old "
                << m_old_assignment[i] << ") patch size: " << (*iter)->getNumExtraCells() << " low:"
                << (*iter)->getExtraCellLowIndex() << " high: " << (*iter)->getExtraCellHighIndex() << "\n";
             IntVector range = ((*iter)->getExtraCellHighIndex() - (*iter)->getExtraCellLowIndex());
@@ -1168,7 +1168,7 @@ DynamicLoadBalancer::problemSetup( ProblemSpecP & pspec, GridP & grid,  Simulati
   }
 
 
-  if(d_myworld->myrank()==0) {
+  if(d_myworld->myRank()==0) {
     cout << "Dynamic Algorithm: " << dynamicAlgo << endl;
   }
 
@@ -1187,7 +1187,7 @@ DynamicLoadBalancer::problemSetup( ProblemSpecP & pspec, GridP & grid,  Simulati
     d_collectParticles = true;
   }
   else {
-    if (d_myworld->myrank() == 0) {
+    if (d_myworld->myRank() == 0) {
       cout << "Invalid Load Balancer Algorithm: " << dynamicAlgo
         << "\nPlease select 'cyclic', 'random', 'patchFactor' (default), or 'patchFactorParticles'\n"
         << "\nUsing 'patchFactor' load balancer\n";

@@ -233,7 +233,7 @@ void AdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,
   d_ref_temp_index  = table->addDependentVariable("reference_Temp");
 //  d_MW_index        = table->addDependentVariable("mixture_molecular_weight");
   
-  bool cerrSwitch = (d_myworld->myrank() == 0); 
+  bool cerrSwitch = (d_myworld->myRank() == 0); 
   table->setup(cerrSwitch);
 
   //__________________________________

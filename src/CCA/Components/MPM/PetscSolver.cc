@@ -157,7 +157,7 @@ MPMPetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
                                            const int DOFsPerNode,
                                            const int n8or27)
 {
-  int numProcessors = d_myworld->size();
+  int numProcessors = d_myworld->nRanks();
   d_numNodes.resize(numProcessors, 0);
   d_startIndex.resize(numProcessors);
   d_totalNodes = 0;
@@ -313,7 +313,7 @@ void MPMPetscSolver::solve(vector<double>& guess)
 void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
                                   const map<int,int>& dof_diag)
 {
-  int me = d_myworld->myrank();
+  int me = d_myworld->myRank();
   int numlrows = d_numNodes[me];
   
   int numlcolumns = numlrows;

@@ -258,7 +258,7 @@ void flatPlate_heatFlux::doAnalysis(const ProcessorGroup* pg,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     
-    cout_doing << pg->myrank() << " " 
+    cout_doing << pg->myRank() << " " 
                << "Doing doAnalysis (flatPlate_heatFlux)\t\t\t\tL-"
                << level->getIndex()
                << " patch " << patch->getGridIndex()<< endl;

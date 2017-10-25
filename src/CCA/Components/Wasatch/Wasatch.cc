@@ -1827,7 +1827,7 @@ namespace WasatchCore{
       case USE_FOR_OPERATORS: {
         const int levelID = level->getID();
         const Uintah::PatchSet* const allPatches = sched->getLoadBalancer()->getPerProcessorPatchSet(level);
-        const Uintah::PatchSubset* const localPatches = allPatches->getSubset( d_myworld->myrank() );
+        const Uintah::PatchSubset* const localPatches = allPatches->getSubset( d_myworld->myRank() );
 
         std::map< int, const Uintah::PatchSet* >::iterator ip = patchesForOperators_.find( levelID );
 

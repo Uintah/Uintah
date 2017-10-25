@@ -351,7 +351,7 @@ NewStaticMixingTable::tableLookUp(double mixfrac, double mixfracVars, double cur
 void
 NewStaticMixingTable::readMixingTable( const string & inputfile )
 {
-  if( d_myworld->myrank() == 0 ) {
+  if( d_myworld->myRank() == 0 ) {
     cout << "Preparing to read the inputfile:   " << inputfile << "\n";
   }
 
@@ -370,7 +370,7 @@ NewStaticMixingTable::readMixingTable( const string & inputfile )
   d_carbon_air     = getDouble( gzFp );
   d_indepvarscount = getInt(    gzFp );
 
-  if( d_myworld->myrank() == 0 ) {
+  if( d_myworld->myRank() == 0 ) {
     cout << "d_indepvars count: " << d_indepvarscount << "\n";
   }
   
@@ -389,7 +389,7 @@ NewStaticMixingTable::readMixingTable( const string & inputfile )
     else if( varname == "mixture_fraction_variance" ) {
       Fvar_index = ii;
     }
-    if( d_myworld->myrank() == 0 ) {
+    if( d_myworld->myRank() == 0 ) {
       cout << varname << "\n";
     }
   }
@@ -406,13 +406,13 @@ NewStaticMixingTable::readMixingTable( const string & inputfile )
   if (!(F_index == -1))    d_mixfraccount  = eachindepvarcount[F_index];
   if (!(Fvar_index == -1)) d_mixvarcount   = eachindepvarcount[Fvar_index];
 
-  if( d_myworld->myrank() == 0 ) {
+  if( d_myworld->myRank() == 0 ) {
     cout << d_heatlosscount << " " << d_mixfraccount << " " << d_mixvarcount << "\n";
   }
 
   // Total number of variables in the table: non-adaibatic table has sensibile enthalpy too
   d_varscount = getInt( gzFp );
-  if( d_myworld->myrank() == 0 ) {
+  if( d_myworld->myRank() == 0 ) {
     cout<< "d_vars count: " << d_varscount << "\n";
   }
   vars_names= vector<string>(d_varscount);
@@ -516,7 +516,7 @@ NewStaticMixingTable::readMixingTable( const string & inputfile )
     else if(vars_names[ii] == "sootFV")
       soot_index = ii;
 
-    if( d_myworld->myrank() == 0 ) {
+    if( d_myworld->myRank() == 0 ) {
       cout<<vars_names[ii]<<endl;
     }
   }
@@ -594,13 +594,13 @@ NewStaticMixingTable::readMixingTable( const string & inputfile )
     throw InvalidValue("No sootFV found in table " + inputfile,
                        __FILE__, __LINE__);
 
-  if( d_myworld->myrank() == 0 ) {
+  if( d_myworld->myRank() == 0 ) {
     cout << "CO2 index is "  << co2_index  << endl;
     cout << "H2O index is "  << h2o_index  << endl;
   }
   
   if (d_sulfur_chem) {
-    if( d_myworld->myrank() == 0 ) {
+    if( d_myworld->myRank() == 0 ) {
       cout  << "h2s index is "      << h2s_index    << endl; 
       cout  << "so2 index is "      << so2_index    << endl;
       cout  << "so3 index is "      << so3_index    << endl;
@@ -624,7 +624,7 @@ NewStaticMixingTable::readMixingTable( const string & inputfile )
     }
   }
 
-  if( d_myworld->myrank() == 0 ) {
+  if( d_myworld->myRank() == 0 ) {
     cout << "CO index is "   << co_index   << endl;
     cout << "C2H2 index is " << c2h2_index << endl;
     cout << "CH4 index is "  << ch4_index  << endl;
@@ -652,7 +652,7 @@ NewStaticMixingTable::readMixingTable( const string & inputfile )
   if (Hl_index != -1) {
     for (int mm=0; mm< d_heatlosscount; mm++){
       heatLoss[mm] = getDouble( gzFp );
-      //if( d_myworld->myrank() == 0 ) {
+      //if( d_myworld->myRank() == 0 ) {
       //  cout << heatLoss[mm] << endl;
       //}
     }
@@ -702,7 +702,7 @@ NewStaticMixingTable::readMixingTable( const string & inputfile )
   
   // Closing the file pointer
   gzclose( gzFp );
-  if( d_myworld->myrank() == 0 ) {
+  if( d_myworld->myRank() == 0 ) {
     cout << "Table reading is successful" << endl;
   }
 }

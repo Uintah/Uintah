@@ -83,7 +83,7 @@ namespace WasatchCore{
                                1 );
 
         for( Uintah::CellIterator iter=patch->getCellIterator(); !iter.done(); iter++ ){
-          rank[*iter] = pg->myrank();
+          rank[*iter] = pg->myRank();
         }
       } // materials
     } // patches

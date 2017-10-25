@@ -120,7 +120,7 @@ HypreSolver::problemSetup(const ProblemSpecP& params)
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);    
   }
   
-  if(solver != "cg" && preconditioner != "-9" && d_myworld->myrank() == 0 ){
+  if(solver != "cg" && preconditioner != "-9" && d_myworld->myRank() == 0 ){
     cout << "-----------------------------------------------\n";
     cout << " WARNING: Linear solver options \n";
     cout << " The preconditioner ("<<preconditioner<< ") only works with the cg solver\n";
@@ -419,7 +419,7 @@ HypreSolver::pressLinearSolve()
   skip = 1;
   HYPRE_StructSolver solver, precond;
 
-  int me = d_myworld->myrank();
+  int me = d_myworld->myRank();
   Timers::Simple timer;
   timer.start();
 

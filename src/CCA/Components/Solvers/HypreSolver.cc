@@ -837,7 +837,7 @@ namespace Uintah {
         // Test for convergence
         if(final_res_norm > params->tolerance || std::isfinite(final_res_norm) == 0){
           if( params->getRestartTimestepOnFailure() ){
-            if(pg->myrank() == 0)
+            if(pg->myRank() == 0)
               cout << "HypreSolver not converged in " << num_iterations 
                    << "iterations, final residual= " << final_res_norm 
                    << ", requesting smaller timestep\n";
@@ -906,7 +906,7 @@ namespace Uintah {
 
         timer.stop();
 	
-        if(pg->myrank() == 0) {
+        if(pg->myRank() == 0) {
 
           cout << "Solve of " << X_label->getName() 
                << " on level " << level->getIndex()

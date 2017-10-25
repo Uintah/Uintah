@@ -119,7 +119,7 @@ KokkosOpenMPScheduler::problemSetup( const ProblemSpecP     & prob_spec
 
   proc0cout << "   Using \"" << taskQueueAlg << "\" task queue priority algorithm" << std::endl;
 
-  if (d_myworld->myrank() == 0) {
+  if (d_myworld->myRank() == 0) {
     std::cout << "   WARNING: Kokkos-OpenMP Scheduler is EXPERIMENTAL, not all tasks are Kokkos-enabled yet." << std::endl;
   }
 
@@ -181,7 +181,7 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
     m_detailed_tasks->localTask(i)->resetDependencyCounts();
   }
 
-  int my_rank = d_myworld->myrank();
+  int my_rank = d_myworld->myRank();
 
   // This only happens if "-emit_taskgraphs" is passed to sus
   makeTaskGraphDoc(m_detailed_tasks, my_rank);
@@ -263,7 +263,7 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
     float allqueuelength = 0;
     Uintah::MPI::Reduce(&queuelength, &allqueuelength, 1, MPI_FLOAT, MPI_SUM, 0, d_myworld->getComm());
 
-    proc0cout << "average queue length:" << allqueuelength / d_myworld->size() << std::endl;
+    proc0cout << "average queue length:" << allqueuelength / d_myworld->nRanks() << std::endl;
   }
 
   if( m_restartable && tgnum == static_cast<int>(m_task_graphs.size()) - 1 ) {

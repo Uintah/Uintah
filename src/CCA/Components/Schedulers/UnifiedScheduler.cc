@@ -357,7 +357,7 @@ UnifiedScheduler::problemSetup( const ProblemSpecP     & prob_spec
   m_num_threads = Uintah::Parallel::getNumThreads() - 1;
 
   if ( (m_num_threads < 1) &&  Uintah::Parallel::usingDevice() ) {
-    if (d_myworld->myrank() == 0) {
+    if (d_myworld->myRank() == 0) {
       std::cerr << "Error: no thread number specified for Unified Scheduler"
           << std::endl;
       throw ProblemSetupException(
@@ -365,7 +365,7 @@ UnifiedScheduler::problemSetup( const ProblemSpecP     & prob_spec
           __FILE__, __LINE__);
     }
   } else if (m_num_threads > MAX_THREADS) {
-    if (d_myworld->myrank() == 0) {
+    if (d_myworld->myRank() == 0) {
       std::cerr << "Error: Number of threads too large..." << std::endl;
       throw ProblemSetupException(
           "Too many threads. Reduce MAX_THREADS and recompile.", __FILE__,
@@ -373,7 +373,7 @@ UnifiedScheduler::problemSetup( const ProblemSpecP     & prob_spec
     }
   }
 
-  if (d_myworld->myrank() == 0) {
+  if (d_myworld->myRank() == 0) {
     std::string plural = (m_num_threads == 1) ? " thread" : " threads";
     std::cout
         << "   WARNING: Multi-threaded Unified scheduler is EXPERIMENTAL, not all tasks are thread safe yet.\n"
@@ -649,7 +649,7 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
     m_detailed_tasks->localTask(i)->resetDependencyCounts();
   }
 
-  int my_rank = d_myworld->myrank();
+  int my_rank = d_myworld->myRank();
 
   // This only happens if "-emit_taskgraphs" is passed to sus
   makeTaskGraphDoc(m_detailed_tasks, my_rank);
@@ -756,7 +756,7 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
     float allqueuelength = 0;
     Uintah::MPI::Reduce(&queuelength, &allqueuelength, 1, MPI_FLOAT, MPI_SUM, 0, d_myworld->getComm());
 
-    proc0cout << "average queue length:" << allqueuelength / d_myworld->size() << std::endl;
+    proc0cout << "average queue length:" << allqueuelength / d_myworld->nRanks() << std::endl;
   }
 
   if( m_restartable && tgnum == static_cast<int>(m_task_graphs.size()) - 1 ) {
@@ -813,7 +813,7 @@ UnifiedScheduler::markTaskConsumed( int          & numTasksDone
   // Update the count of tasks consumed by the scheduler.
   numTasksDone++;
 
-  if (g_task_order && d_myworld->myrank() == d_myworld->size() / 2) {
+  if (g_task_order && d_myworld->myRank() == d_myworld->nRanks() / 2) {
     DOUT(g_task_dbg, myRankThread() << " Running task static order: " << dtask->getStaticOrder() << ", scheduled order: " << numTasksDone);
   }
 
@@ -4846,7 +4846,7 @@ UnifiedScheduler::init_threads( UnifiedScheduler * sched, int num_threads )
 //------------------------------------------
 UnifiedSchedulerWorker::UnifiedSchedulerWorker( UnifiedScheduler * scheduler )
   : m_scheduler{ scheduler }
-  , m_rank{ scheduler->d_myworld->myrank() }
+  , m_rank{ scheduler->d_myworld->myRank() }
 {
 }
 

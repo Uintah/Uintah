@@ -485,7 +485,7 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
       fort_rdomsrc(idxLo, idxHi, vars->ABSKG, vars->ESRCG,vars->volq, vars->src);
     }  // bands loop
     
-    if(d_myworld->myrank() == 0) {
+    if(d_myworld->myRank() == 0) {
       cerr << "Total Radiation Solve Time: " << timer().seconds() << " seconds\n";
     }
     /*
@@ -559,7 +559,7 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
                       vars->ABSKG, vars->shgamma, vars->ESRCG, vars->src, fraction, fractiontwo, bands);
     }  // bands loop
 
-    if(d_myworld->myrank() == 0) {
+    if(d_myworld->myRank() == 0) {
       cerr << "Total Radiation Solve Time: " << timer().seconds() << " seconds\n";
     }
     /*

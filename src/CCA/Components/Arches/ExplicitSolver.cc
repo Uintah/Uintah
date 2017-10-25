@@ -3461,7 +3461,7 @@ ExplicitSolver::checkDensityLag(const ProcessorGroup* pc,
   for (int p = 0; p < patches->size(); p++) {
 
     if (densityLag > d_maxDensityLag) {
-        if (pc->myrank() == 0)
+        if (pc->myRank() == 0)
           proc0cout << "WARNING: density lag " << densityLag
                << " exceeding maximium "<< d_maxDensityLag
                << " specified. Restarting timestep." << endl;
