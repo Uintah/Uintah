@@ -156,10 +156,10 @@ DetailedTasks::assignMessageTags( int me )
     DependencyBatch* batch = m_dep_batches[i];
 
     int from = batch->m_from_task->getAssignedResourceIndex();
-    ASSERTRANGE(from, 0, m_proc_group->size());
+    ASSERTRANGE(from, 0, m_proc_group->nRanks());
 
     int to = batch->m_to_rank;
-    ASSERTRANGE(to, 0, m_proc_group->size());
+    ASSERTRANGE(to, 0, m_proc_group->nRanks());
 
     if (from == me || to == me) {
       // Easier to go in reverse order now, instead of reinitializing perPairBatchIndices.
@@ -235,7 +235,7 @@ DetailedTasks::computeLocalTasks( int me )
   for (int i = 0; i < (int)m_tasks.size(); i++) {
     DetailedTask* task = m_tasks[i];
 
-    ASSERTRANGE(task->getAssignedResourceIndex(), 0, m_proc_group->size());
+    ASSERTRANGE(task->getAssignedResourceIndex(), 0, m_proc_group->nRanks());
 
     if (task->getAssignedResourceIndex() == me || task->getTask()->getType() == Task::Reduction) {
       m_local_tasks.push_back(task);
@@ -558,8 +558,8 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask     * from
                                        ,       DepCommCond        cond
                                        )
 {
-  ASSERTRANGE(from->getAssignedResourceIndex(), 0, m_proc_group->size());
-  ASSERTRANGE(to->getAssignedResourceIndex(),   0, m_proc_group->size());
+  ASSERTRANGE(from->getAssignedResourceIndex(), 0, m_proc_group->nRanks());
+  ASSERTRANGE(to->getAssignedResourceIndex(),   0, m_proc_group->nRanks());
 
   if (dbg) {
     std::ostringstream message;
@@ -978,7 +978,7 @@ void
 DetailedTasks::emitEdges( ProblemSpecP edgesElement, int rank )
 {
   for (int i = 0; i < static_cast<int>(m_tasks.size()); i++) {
-    ASSERTRANGE(m_tasks[i]->getAssignedResourceIndex(), 0, m_proc_group->size());
+    ASSERTRANGE(m_tasks[i]->getAssignedResourceIndex(), 0, m_proc_group->nRanks());
     if (m_tasks[i]->getAssignedResourceIndex() == rank) {
       m_tasks[i]->emitEdges(edgesElement);
     }
