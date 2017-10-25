@@ -1124,7 +1124,7 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
         // if the size is 0, that's fine.  It means that there are more procs than patches on this level,
         // so the reducer will pick a benign value that won't affect the reduction
 
-        ASSERTRANGE(dtask->getAssignedResourceIndex(), 0, m_proc_group->size());
+        ASSERTRANGE(dtask->getAssignedResourceIndex(), 0, m_proc_group->nRanks());
         for (unsigned i = 0; i < creators.size(); i++) {
           DetailedTask* creator = creators[i];
           if (dtask->getAssignedResourceIndex() == creator->getAssignedResourceIndex() && dtask->getAssignedResourceIndex() == my_rank) {
