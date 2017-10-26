@@ -2069,24 +2069,12 @@ void UCNH::splitCMSpecificParticleData(const Patch* patch,
     }
   }
 
-  int numRefPar=0;
-  for(unsigned int idx=0; idx<oldNumPar; ++idx ){
-    if(prefNew[idx]!=prefOld[idx]){  // do refinement!
-      for(int i = 0;i<fourOrEight;i++){
-        int new_index;
-        if(i==0){
-          new_index=idx;
-        } else {
-          new_index=(oldNumPar-1)+(fourOrEight-1)*numRefPar+i;
-        }
-        bElBarTmp[new_index]     = bElBar[idx];
-        if(d_usePlasticity){
-          pPlasticStrainTmp[new_index]   = pPlasticStrain[idx];
-          pYieldStressTmp[new_index]     = pYieldStress[idx];
-        }
+  for(unsigned int idx=oldNumPar; idx<oldNumPar+numNewPartNeeded; idx++){
+      bElBarTmp[idx]     = Matrix3(1.,0.,0.,0.,1.,0.,0.,0.,1.);
+      if(d_usePlasticity){
+        pPlasticStrainTmp[idx]   =  0.0;
+        pYieldStressTmp[idx]     = 1.e100;
       }
-      numRefPar++;
-    }
   }
 
   new_dw->put(bElBarTmp,           bElBarLabel_preReloc,            true);

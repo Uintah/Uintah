@@ -64,7 +64,6 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_fracture                      =  false;
   d_minGridLevel                  =  0;
   d_maxGridLevel                  =  1000;
-  d_deleteRogueParticles          =  false;
   d_doThermalExpansion            =  true;
   d_refineParticles               =  false;
   d_XPIC2                         =  false;
@@ -250,6 +249,12 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   mpm_flag_ps->get("KEMaterial",        d_KEMaterial);
   mpm_flag_ps->get("use_tracers",       d_useTracers);
 
+  mpm_flag_ps->get("AddOvergrowth",     d_addOvergrowth);
+
+  if(d_addOvergrowth){
+    mpm_flag_ps->get("OvergrowthBaseFilename",d_overgrowthBaseFilename);
+  }
+
   //MMS
   mpm_flag_ps->get("RunMMSProblem",d_mms_type);
   // Flag for CPTI interpolator
@@ -267,8 +272,6 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   mpm_flag_ps->get("computeColinearNormals",      d_computeColinearNormals);
   mpm_flag_ps->get("d_ndim",                      d_ndim);
   if (!d_do_contact_friction) d_addFrictionWork = 0.0;
-
-  mpm_flag_ps->get("delete_rogue_particles",  d_deleteRogueParticles);
 
   // Setting Scalar Diffusion
   mpm_flag_ps->get("do_scalar_diffusion", d_doScalarDiffusion);
@@ -401,7 +404,6 @@ else{
     dbg << " Artificial Viscosity Coeff2 = " << d_artificialViscCoeff2<< endl;
     dbg << " RefineParticles             = " << d_refineParticles << endl;
     dbg << " XPIC2                       = " << d_XPIC2 << endl;
-    dbg << " Delete Rogue Particles?     = " << d_deleteRogueParticles << endl;
     dbg << " Use Load Curves             = " << d_useLoadCurves << endl;
     dbg << " Use CBDI boundary condition = " << d_useCBDI << endl;
     dbg << " Use Cohesive Zones          = " << d_useCohesiveZones << endl;
@@ -471,7 +473,6 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("computeNormals",              d_computeNormals);
   ps->appendElement("doingDissolution",            d_doingDissolution);
   ps->appendElement("computeColinearNormals",      d_computeColinearNormals);
-  ps->appendElement("delete_rogue_particles",      d_deleteRogueParticles);
   ps->appendElement("extra_solver_flushes",        d_extraSolverFlushes);
   ps->appendElement("boundary_traction_faces",     d_bndy_face_txt_list);
   ps->appendElement("do_scalar_diffusion",         d_doScalarDiffusion);
@@ -482,6 +483,10 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("containerRadius",   d_containerRadius);
   ps->appendElement("KEMaterial",        d_KEMaterial);
   ps->appendElement("use_tracers",       d_useTracers);
+  ps->appendElement("AddOvergrowth",     d_addOvergrowth);
+  if(d_addOvergrowth){
+    ps->appendElement("OvergrowthBaseFilename",d_overgrowthBaseFilename);
+  }
 }
 
 

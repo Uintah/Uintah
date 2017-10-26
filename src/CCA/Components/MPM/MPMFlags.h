@@ -70,7 +70,6 @@ namespace Uintah {
     bool        d_useCPTI;                                     // Flag for using CPTI interpolator 
     bool        d_useCohesiveZones;                            // Flag for using cohesive zones
     bool        d_useTracers;                                  // Flag for using tracers
-    bool        d_deleteRogueParticles;                        // Flag to delete rogue particles
     bool        d_doThermalExpansion;                          // Decide whether to do thermExp or not
     bool        d_with_color;                                  // to turn on the color variable
     bool        d_fracture;                                    // to turn on fracture
@@ -117,6 +116,8 @@ namespace Uintah {
     std::string d_insertParticlesFile;                         // File containing activation plan
     bool        d_GEVelProj;                                   // Use the velocity gradient in projecting particle velocity to grid
 
+    bool        d_addOvergrowth;
+    std::string d_overgrowthBaseFilename;                      // File containing overgrowth points
     bool        d_with_ice;
     bool        d_with_arches;
     std::string d_mms_type;                                    // MMS Flag
