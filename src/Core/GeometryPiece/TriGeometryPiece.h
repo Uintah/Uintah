@@ -39,46 +39,46 @@ namespace Uintah {
 
 
 /**************************************
-        
+
 CLASS
    TriGeometryPiece
-        
+
    Creates a triangulated surface piece from the xml input file description.
-        
+
 GENERAL INFORMATION
-        
+
    TriGeometryPiece.h
-        
+
    John A. Schmidt
    Department of Mechanical Engineering
    University of Utah
-        
+
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-        
- 
-        
+
+
+
 KEYWORDS
    TriGeometryPiece BoundingBox inside
-        
+
 DESCRIPTION
    Creates a triangulated surface piece from the xml input file description.
-   Requires one input: file name (convetion use suffix .dat).  
+   Requires one input: file name (convetion use suffix .dat).
    There are methods for checking if a point is inside the surface
    and also for determining the bounding box for the surface.
    The input form looks like this:
        <tri>
          <file>surface.dat</file>
        </tri>
-        
-        
+
+
 WARNING
-        
+
 ****************************************/
 
       class TriGeometryPiece : public GeometryPiece {
       public:
          //////////
-         //  Constructor that takes a ProblemSpecP argument.   It reads the xml 
+         //  Constructor that takes a ProblemSpecP argument.   It reads the xml
          // input specification and builds the triangulated surface piece.
          TriGeometryPiece(ProblemSpecP &);
          //////////
@@ -86,7 +86,7 @@ WARNING
          TriGeometryPiece(const TriGeometryPiece&);
 
          TriGeometryPiece& operator=(const TriGeometryPiece&);
-         
+
          // Destructor
          virtual ~TriGeometryPiece();
 
@@ -99,7 +99,7 @@ WARNING
          // Determins whether a point is inside the triangulated surface.
          virtual bool inside(const Point &p) const;
          bool insideNew(const Point &p, int& cross) const;
-         
+
          //////////
          // Returns the bounding box surrounding the triangulated surface.
          virtual Box getBoundingBox() const;
@@ -107,17 +107,29 @@ WARNING
          void scale(const double factor);
 
          double surfaceArea() const;
-         
+
+         inline int getNumIntersections( const Point& start, const Point& end, double& min_distance ){
+           int intersections = 0;
+           d_grid->countIntersections( start, end, intersections, min_distance );
+           return intersections;
+         }
+
+         inline int getNumIntersections( const Point& start ){
+           int intersections = 0;
+           d_grid->countIntersections( start, intersections );
+           return intersections;
+         }
+
       private:
 
          virtual void outputHelper( ProblemSpecP & ps ) const;
-         
+
          void readPoints(const std::string& file);
          void readTri(const std::string& file);
          void makePlanes();
 //         void makeTriBoxes();
          void insideTriangle(Point& p, int i, int& NCS, int& NES) const;
-         
+
          std::string d_file;
          Box d_box;
          std::vector<Point>     d_points;
@@ -126,7 +138,7 @@ WARNING
 //         std::vector<Box>       d_boxes;
 
          UniformGrid* d_grid;
-         
+
       };
 
 } // End namespace Uintah

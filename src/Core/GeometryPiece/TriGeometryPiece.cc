@@ -46,16 +46,16 @@ const string TriGeometryPiece::TYPE_NAME = "tri";
 TriGeometryPiece::TriGeometryPiece(ProblemSpecP &ps)
 {
   name_ = "Unnamed Tri";
-  
+
   ps->require("name",d_file);
-  
+
   readPoints(d_file);
   readTri(d_file);
 #ifdef USE_PLANES
   makePlanes();
 #endif
 //  makeTriBoxes();
-  
+
   // cout << "Triangulated surfaces read: \t" <<d_tri.size() <<endl;
 
   list<Tri> tri_list;
@@ -64,7 +64,7 @@ TriGeometryPiece::TriGeometryPiece(ProblemSpecP &ps)
   tri_list = tri.makeTriList(d_tri,d_points);
   d_grid = scinew UniformGrid(d_box);
   d_grid->buildUniformGrid(tri_list);
-			      
+
 
 }
 
@@ -141,7 +141,7 @@ TriGeometryPiece::insideNew(const Point &p,int& cross) const
 {
   // Count the number of times a ray from the point p
   // intersects the triangular surface.  If the number
-  // of crossings is odd, the point is inside, else it 
+  // of crossings is odd, the point is inside, else it
   // is outside.
 
   // Check if Point p is outside the bounding box
@@ -162,7 +162,7 @@ TriGeometryPiece::inside(const Point &p) const
 {
   // Count the number of times a ray from the point p
   // intersects the triangular surface.  If the number
-  // of crossings is odd, the point is inside, else it 
+  // of crossings is odd, the point is inside, else it
   // is outside.
 #if 0
   Point test_point = Point(.0025,0.0475, 0.0025);
@@ -178,8 +178,8 @@ TriGeometryPiece::inside(const Point &p) const
   bool inside_new = insideNew(p,cross_new);
 
   return inside_new;
-#else 
-      
+#else
+
   Vector infinity = Vector(1e10,0.,0.) - p.asVector();
   //cerr << "Testing point " << p << endl;
   int crossings = 0, NES = 0;
@@ -195,7 +195,7 @@ TriGeometryPiece::inside(const Point &p) const
       // the point is interior, then angle will be 2PI,
       // else it will be zero.
       // Need to check that the dot product of the intersection pt - p
-      // and infinity - p is greater than 0.  This means that the 
+      // and infinity - p is greater than 0.  This means that the
       // intersection point is NOT behind the p.
       Vector int_ray = hit.asVector() - p.asVector();
       double cos_angle = Dot(infinity,int_ray)/
@@ -208,7 +208,7 @@ TriGeometryPiece::inside(const Point &p) const
       if (NCS % 2 != 0) {
 	crossings++;
 #  if 0
-	cout << "Inside_old hit = " << hit << " vertices: " << 
+	cout << "Inside_old hit = " << hit << " vertices: " <<
 	  d_points[d_tri[i].x()] << " " << d_points[d_tri[i].y()] <<
 	  " " << d_points[d_tri[i].z()] << endl;
 #  endif
@@ -227,9 +227,9 @@ TriGeometryPiece::inside(const Point &p) const
 #  if 0
   if (inside_new != crossing_test) {
     cout << "Point " << p << " have different inside test results" << endl;
-    cout << "inside_new = " << inside_new << " crossing_test = " 
+    cout << "inside_new = " << inside_new << " crossing_test = "
 	 << crossing_test << endl;
-    cout << "cross_new = " << cross_new << " crossings = " << crossings 
+    cout << "cross_new = " << cross_new << " crossings = " << crossings
 	 << endl;
   }
 #  endif
@@ -251,7 +251,7 @@ TriGeometryPiece::readPoints(const string& file)
   std::ifstream source(f.c_str());
   if (!source) {
     std::ostringstream warn;
-    warn << "\n ERROR: opening geometry pts points file ("<< f 
+    warn << "\n ERROR: opening geometry pts points file ("<< f
          << ").\n  The file must be in the same directory as sus \n"
          << "  Do not enclose the filename in quotation marks\n";
     throw ProblemSetupException(warn.str(),__FILE__, __LINE__);
@@ -285,7 +285,7 @@ TriGeometryPiece::readTri(const string& file)
   std::ifstream source(f.c_str());
   if (!source) {
     std::ostringstream warn;
-    warn << "\n ERROR: opening geometry tri points file ("<< f 
+    warn << "\n ERROR: opening geometry tri points file ("<< f
          << ").\n   The file must be in the same directory as sus"
          << "   Do not enclose the filename in quotation marks\n";
     throw ProblemSetupException(warn.str(),__FILE__, __LINE__);
@@ -352,12 +352,12 @@ TriGeometryPiece::insideTriangle( Point& q,int num,int& NCS,
   //  about whether the intersection point is on the edge or vertex,
   //  cause the edge and/or vertex will be defined away.
   //
-  
+
   // Now we project the ri and the vertices of the triangle onto
-  // the dominant coordinate, i.e., the plane's normal largest 
-  // magnitude.  
+  // the dominant coordinate, i.e., the plane's normal largest
+  // magnitude.
   //
-   
+
 
   Vector plane_normal = d_planes[num].normal();
   Vector plane_normal_abs = Abs(plane_normal);
@@ -419,13 +419,13 @@ TriGeometryPiece::insideTriangle( Point& q,int num,int& NCS,
   // Now translate the intersecting point to the origin and the vertices
   // as well.
 
-  for (int i = 0; i < 3; i++) 
+  for (int i = 0; i < 3; i++)
     trans_vt[i] -= trans_pt.asVector();
 
   int SH = 0, NSH = 0;
   double out_edge = 0.;
 
-  if (trans_vt[0].y() < 0.0) 
+  if (trans_vt[0].y() < 0.0)
     SH = -1;
   else
     SH = 1;
@@ -439,7 +439,7 @@ TriGeometryPiece::insideTriangle( Point& q,int num,int& NCS,
     if ( (trans_vt[0].x() > 0.0) && (trans_vt[1].x() > 0.0) )
       NCS += 1;
     else if ( (trans_vt[0].x() > 0.0) || (trans_vt[1].x() > 0.0) ) {
-      out_edge = (trans_vt[0].x() - trans_vt[0].y() * 
+      out_edge = (trans_vt[0].x() - trans_vt[0].y() *
 		  (trans_vt[1].x() - trans_vt[0].x())/
 		  (trans_vt[1].y() - trans_vt[0].y()) );
       if (out_edge == 0.0) {
@@ -461,7 +461,7 @@ TriGeometryPiece::insideTriangle( Point& q,int num,int& NCS,
     if ( (trans_vt[1].x() > 0.0) && (trans_vt[2].x() > 0.0) )
       NCS += 1;
     else if ( (trans_vt[1].x() > 0.0) || (trans_vt[2].x() >0.0) ) {
-      out_edge = (trans_vt[1].x() - trans_vt[1].y() * 
+      out_edge = (trans_vt[1].x() - trans_vt[1].y() *
 		  (trans_vt[2].x() -  trans_vt[1].x())/
 		  (trans_vt[2].y() - trans_vt[1].y()) );
       if (out_edge == 0.0){
@@ -478,14 +478,14 @@ TriGeometryPiece::insideTriangle( Point& q,int num,int& NCS,
     NSH = -1;
   else
     NSH = 1;
-  
-  
+
+
   if ( SH != NSH) {
     if ( (trans_vt[2].x() > 0.0) && (trans_vt[0].x() > 0.0) )
       NCS += 1;
-    
+
     else if ( (trans_vt[2].x() > 0.0) || (trans_vt[0].x() >0.0) ) {
-      out_edge =  (trans_vt[2].x() - trans_vt[2].y() * 
+      out_edge =  (trans_vt[2].x() - trans_vt[2].y() *
 		   (trans_vt[0].x() - trans_vt[2].x())/
 		   (trans_vt[0].y() - trans_vt[2].y()) );
       if (out_edge == 0.0) {
@@ -504,13 +504,13 @@ void TriGeometryPiece::scale(const double factor)
 {
   Vector origin(0.,0.,0.);
 
-  for (vector<Point>::iterator itr = d_points.begin(); itr != d_points.end(); 
+  for (vector<Point>::iterator itr = d_points.begin(); itr != d_points.end();
        itr++) {
     origin = origin +  itr->asVector();
   }
   origin = origin/(static_cast<double>(d_points.size()));
 
-  for (vector<Point>::iterator itr = d_points.begin(); itr != d_points.end(); 
+  for (vector<Point>::iterator itr = d_points.begin(); itr != d_points.end();
        itr++) {
     *itr = factor*(*itr - origin) + origin;
   }
@@ -520,7 +520,7 @@ double TriGeometryPiece::surfaceArea() const
 {
 
   double surfaceArea = 0.;
-  for (vector<IntVector>::const_iterator itr = d_tri.begin(); 
+  for (vector<IntVector>::const_iterator itr = d_tri.begin();
        itr != d_tri.end(); itr++) {
     Point pt[3];
     pt[0] = d_points[itr->x()];

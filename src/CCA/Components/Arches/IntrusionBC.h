@@ -928,6 +928,10 @@ namespace Uintah{
         Vector                        velocity;
         std::string                   name;
 
+        //Approximate thin walls:
+        bool                          thin_wall; //True: then treat intersecting thin walls as a full wall cell
+        double                        thin_wall_delta; //Fraction of dx,dy,or dz that is used as a threshold.
+
         //state space information:
         double density; // from state-space calculation
         std::map<IntVector, double> density_map;

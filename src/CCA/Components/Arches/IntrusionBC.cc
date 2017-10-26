@@ -33,6 +33,7 @@
 #include <CCA/Ports/Scheduler.h>
 
 #include <Core/Exceptions/VariableNotFoundInGrid.h>
+#include <Core/GeometryPiece/TriGeometryPiece.h>
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Parallel/CrowdMonitor.hpp>
@@ -153,11 +154,17 @@ IntrusionBC::problemSetup( const ProblemSpecP& params, const int ilvl )
       db_intrusion->getAttribute("label", name);
       intrusion.name = name;
       intrusion.velocity = Vector(0,0,0);
+      intrusion.thin_wall = false;
 
       if ( db_intrusion->findBlock("ignore_missing_bc") ){
         intrusion.ignore_missing_bc = true;
       } else {
         intrusion.ignore_missing_bc = false;
+      }
+
+      if ( db_intrusion->findBlock("thin_wall") ){
+        intrusion.thin_wall = true;
+        db_intrusion->findBlock("thin_wall")->getAttribute("delta", intrusion.thin_wall_delta);
       }
 
       // set up velocity:
@@ -847,6 +854,17 @@ IntrusionBC::setCellType( const ProcessorGroup*,
     {
       intrusion_map_monitor intrusion_map_lock { intrusion_map_monitor::WRITER };
 
+      bool has_thin_wall = false;
+      for (IntrusionMap::iterator iter = _intrusion_map.begin(); iter != _intrusion_map.end(); ++iter) {
+        if ( iter->second.thin_wall ){
+          has_thin_wall = true;
+        }
+      }
+
+      if ( has_thin_wall ){
+        proc0cout << "\n Notice: Thin wall check detected in input file. Please be patient. \n \n";
+      }
+
       for (IntrusionMap::iterator iter = _intrusion_map.begin(); iter != _intrusion_map.end(); ++iter) {
 
         //make sure cell face iterator map is clean from the start:
@@ -858,15 +876,19 @@ IntrusionBC::setCellType( const ProcessorGroup*,
         }
 
         // ----------------------------------------------------------------------
-        // NOTE: the inline method initialize_the_iterators (below) has been made thread-safe due to shared data structures:
+        // NOTE: the inline method initialize_the_iterators (below) has been made thread-safe
+        //  due to shared data structures:
         //  BCIterator - typedef std::map<int, std::vector<IntVector> >
         //  bc_face_iterator, interior_cell_iterator and bc_cell_iterator
         // ----------------------------------------------------------------------
-        // These data structures are used in member functions, of which some are scheduled tasks, e.g.:
+        // These data structures are used in member functions, of which some are scheduled
+        //  tasks, e.g.:
         //  IntrusionBC::setHattedVelocity, IntrusionBC::addScalarRHS,
         //  IntrusionBC::setDensity, IntrusionBC::computeProperties
         // ----------------------------------------------------------------------
         initialize_the_iterators(patchID, iter->second);
+
+        Vector DX = patch->dCell();
 
         for (int i = 0; i < (int)iter->second.geometry.size(); i++) {
 
@@ -877,10 +899,114 @@ IntrusionBC::setCellType( const ProcessorGroup*,
           for (CellIterator icell = patch->getCellIterator(); !icell.done(); icell++) {
 
             IntVector c = *icell;
-
-            // check current cell
-            // Initialize as a wall
             bool curr_cell = in_or_out(c, piece, patch, iter->second.inverted);
+            bool curr_cell_thin_xp = false;
+            bool curr_cell_thin_xm = false;
+            bool curr_cell_thin_yp = false;
+            bool curr_cell_thin_ym = false;
+            bool curr_cell_thin_zp = false;
+            bool curr_cell_thin_zm = false;
+
+            const std::string type = piece->getType();
+
+            if ( ! curr_cell ){
+              if ( type == "tri" && iter->second.thin_wall ){
+
+
+                GeometryPiece* g_piece = piece.get_rep();
+                TriGeometryPiece* tri_piece = dynamic_cast<TriGeometryPiece*>(g_piece);
+
+                Point pc = patch->getCellPosition(c);
+                Point pcp;
+
+                int nint;
+                double buff_factor = iter->second.thin_wall_delta;
+
+                if ( patch->containsCell(c+IntVector(1,0,0))){
+                  double distance;
+                  pcp = patch->getCellPosition(c+IntVector(1,0,0));
+                  nint = tri_piece->getNumIntersections(pc, pcp, distance);
+
+                  if ( nint > 0 ) {
+                    curr_cell_thin_xp = (nint%2 == 0) ? true : false;
+                    if ( curr_cell_thin_xp && std::abs(distance) > buff_factor*DX.x() )
+                      curr_cell_thin_xp = false;
+                  }
+                }
+
+                if ( patch->containsCell(c-IntVector(1,0,0))){
+                  double distance;
+                  pcp = patch->getCellPosition(c-IntVector(1,0,0));
+                  nint = tri_piece->getNumIntersections(pc, pcp, distance);
+
+                  if ( nint > 0 ) {
+                    curr_cell_thin_xm = (nint%2 == 0) ? true : false;
+                    if ( curr_cell_thin_xm && std::abs(distance) > buff_factor*DX.x() )
+                      curr_cell_thin_xm = false;
+                  }
+                }
+
+                if ( patch->containsCell(c+IntVector(0,1,0))){
+                  double distance;
+                  pcp = patch->getCellPosition(c+IntVector(0,1,0));
+                  nint = tri_piece->getNumIntersections(pc, pcp, distance);
+
+                  if ( nint > 0 ) {
+                    curr_cell_thin_yp = (nint%2 == 0) ? true : false;
+                    if ( curr_cell_thin_yp && std::abs(distance) > buff_factor*DX.y() )
+                      curr_cell_thin_yp = false;
+                  }
+                }
+
+                if ( patch->containsCell(c-IntVector(0,1,0))){
+                  double distance;
+                  pcp = patch->getCellPosition(c-IntVector(0,1,0));
+                  nint = tri_piece->getNumIntersections(pc, pcp, distance);
+
+                  if ( nint > 0 ) {
+                    curr_cell_thin_ym = (nint%2 == 0) ? true : false;
+                    if ( curr_cell_thin_ym && std::abs(distance) > buff_factor*DX.y() )
+                      curr_cell_thin_ym = false;
+                  }
+                }
+
+                if ( patch->containsCell(c+IntVector(0,0,1))){
+                  double distance;
+                  pcp = patch->getCellPosition(c+IntVector(0,0,1));
+                  nint = tri_piece->getNumIntersections(pc, pcp, distance);
+
+                  if ( nint > 0 ) {
+                    curr_cell_thin_zp = (nint%2 == 0) ? true : false;
+                    if ( curr_cell_thin_yp && std::abs(distance) > buff_factor*DX.z() )
+                      curr_cell_thin_zp = false;
+                  }
+                }
+
+                if ( patch->containsCell(c-IntVector(0,0,1))){
+                  double distance;
+                  pcp = patch->getCellPosition(c-IntVector(0,0,1));
+                  nint = tri_piece->getNumIntersections(pc, pcp, distance);
+
+                  if ( nint > 0 ) {
+                    curr_cell_thin_zm = (nint%2 == 0) ? true : false;
+                    if ( curr_cell_thin_zm && std::abs(distance) > buff_factor*DX.z() )
+                      curr_cell_thin_zm = false;
+                  }
+                }
+
+              }
+
+              if ( curr_cell_thin_xm ) curr_cell = true;
+              if ( curr_cell_thin_xp ) curr_cell = true;
+              if ( curr_cell_thin_ym ) curr_cell = true;
+              if ( curr_cell_thin_yp ) curr_cell = true;
+              if ( curr_cell_thin_zm ) curr_cell = true;
+              if ( curr_cell_thin_zp ) curr_cell = true;
+
+            }
+
+
+
 
             if (!doing_restart) {
               if (curr_cell) {

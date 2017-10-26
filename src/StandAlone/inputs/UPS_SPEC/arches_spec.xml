@@ -921,6 +921,19 @@
                                                                                        label= unique name for this intrusion boundary -->
            <geom_object/>                                                         <!-- geometry object associated with this intrusion -->
 
+           <thin_wall                   spec="OPTIONAL NO_DATA"
+                                        attribute1="delta REQUIRED DOUBLE"/>      <!-- [false] Look for thin walls between cells. If the 
+                                                                                       thin geometry cuts between, then make the cell a wall cell.
+                                                                                       This feature has a one-time startup cost that is proportional 
+                                                                                       to the numbers of grid cells/patch and the size of the triangulated 
+                                                                                       surface. 
+                                                                                       The delta attribute represents the max fraction of the distance 
+                                                                                       between the cell center and the intersecting geometry that is used 
+                                                                                       to determine if the cell is a wall or not. For example, if there is a thin
+                                                                                       geometry between cell i and cell i+1 which intersects at i+2/3. If, for cell i, 
+                                                                                       the delta is 0.5 (which means 0.5*dx) then the intersecting geometry is NOT picked up
+                                                                                       by cell i but is picked up by cell i+1 because 0.5*dx < 2/3*dx -->
+
            <ignore_missing_bc           spec="OPTIONAL NO_DATA"/>                 <!-- [false] Allows one to specfiy only the BCs that are relevant.
                                                                                        If found, then for intrusion inlets, the flux of any missing variables (scalars)
                                                                                        is zero. Note that one must still specify all IV for a proper table lookup. -->

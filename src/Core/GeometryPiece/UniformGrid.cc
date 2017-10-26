@@ -137,7 +137,6 @@ Plane Tri::plane()
   return d_plane;
 }
 
-
 UniformGrid::UniformGrid(Box& bound_box)
 {
   const IntVector low(0,0,0), hi(10,10,10);
@@ -230,41 +229,117 @@ void UniformGrid::buildUniformGrid(list<Tri>& polygons)
 
 void UniformGrid::countIntersections(const Point& pt, int& crossings)
 {
-  // Make a ray and shoot it in the +x direction
 
+  //Assuming that the caller intends to check the intersection between pt and infinity:
   Vector infinity = Vector(pt.x()+1e10,pt.y(),pt.z());
   IntVector test_pt_id = cellID(pt);
   IntVector start = d_grid.getLowIndex();
   IntVector stop = d_grid.getHighIndex();
 
   map<double,Tri> cross_map;
+
   for (int i = start.x(); i < stop.x(); i++) {
+
     IntVector curr(i,test_pt_id.y(),test_pt_id.z());
     list<Tri> tris = d_grid[curr];
-    for (list<Tri>::iterator itr = tris.begin(); itr != tris.end();
-	 ++itr) {
+
+    for ( list<Tri>::iterator itr = tris.begin(); itr != tris.end();
+	        ++itr ) {
+
       Point hit;
       if ((itr->plane()).Intersect(pt,infinity,hit)) {
-	Vector int_ray = hit.asVector() - pt.asVector();
-	double cos_angle = Dot(infinity,int_ray)/
-	  (infinity.length()*int_ray.length());
-	if (cos_angle < 0.)
-	  continue;
-	if (itr->inside(hit)) {
-#if 0
-	  cout << "Inside_new hit = " << hit << "vertices: "
-	       << itr->vertex(0) << " " << itr->vertex(1) <<  " "
-	       << itr->vertex(2) << endl;
-#endif
-	  double distance = int_ray.length();
-	  map<double,Tri>::const_iterator duplicate = cross_map.find(distance);
-	  if (duplicate == cross_map.end()) {
-	    cross_map[distance] = *itr;
-	    crossings++;
-	  }
-	}
+
+	      Vector int_ray = hit.asVector() - pt.asVector();
+	      double cos_angle = Dot(infinity,int_ray)/
+	                         (infinity.length()*int_ray.length());
+
+
+	      if (cos_angle < 0.)
+	        continue;
+
+	      if (itr->inside(hit)) {
+
+	        double distance = int_ray.length();
+	        map<double,Tri>::const_iterator duplicate = cross_map.find(distance);
+
+	        if (duplicate == cross_map.end()) {
+
+	          cross_map[distance] = *itr;
+	          crossings++;
+
+	        }
+	      }
       }
     }
   }
-}
 
+}
+void UniformGrid::countIntersections( const Point& pt, const Point& pt_away,
+                                      int& crossings, double& min_distance )
+{
+
+  // This method doesn't assume anything about the direction in which the
+  // ray is sent out from the original point, thus we must loop over all
+  // cells in the bounding box, which makes this approach more expensive.
+  // This method does return the max number of intersections.
+  // We draw a ray from the origin (pt) to the point away (pt_away) and
+  // then attempt to intersect with the triangulated geometry inside of this cell.
+  // A crossing is only counted if the length of the intersected ray is less than
+  // or equal to the length of the distance between the two points.
+  Vector infinity = Vector( pt_away.x() - pt.x(), pt_away.y() - pt.y(), pt_away.z() - pt.z() );
+  IntVector test_pt_id = cellID(pt);
+  IntVector test_pt_away_id = cellID(pt_away);
+  IntVector start = d_grid.getLowIndex();
+  IntVector stop = d_grid.getHighIndex();
+
+  IntVector min = Min(test_pt_id, test_pt_away_id);
+  IntVector max = Max(test_pt_id, test_pt_away_id);
+
+  if ( min.x() > start.x() && min.x() < stop.x() ) start[0] = min[0];
+  if ( min.y() > start.y() && min.y() < stop.y() ) start[1] = min[1];
+  if ( min.z() > start.z() && min.z() < stop.z() ) start[2] = min[2];
+
+  if ( max.x() < stop.x() && max.x() > start.x() ) stop[0] = max[0];
+  if ( max.y() < stop.y() && max.y() > start.y() ) stop[1] = max[1];
+  if ( max.z() < stop.z() && max.z() > start.z() ) stop[2] = max[2];
+
+  //maybe the bounding boxes don't even overlap
+  if ( min.x() > stop.x() || max.x() < start.x() ) start[0] = stop[0];
+  if ( min.y() > stop.y() || max.y() < start.y() ) start[0] = stop[0];
+  if ( min.z() > stop.z() || max.z() < start.z() ) start[0] = stop[0];
+
+  map<double,Tri> cross_map;
+
+  min_distance = 1.e10;
+
+  for (int i = start.x(); i < stop.x(); i++) {
+    for (int j = start.y(); j < stop.y(); j++) {
+      for (int k = start.z(); k < stop.z(); k++) {
+
+        IntVector curr(i,j,k);
+
+        list<Tri> tris = d_grid[curr];
+
+        for (list<Tri>::iterator itr = tris.begin(); itr != tris.end();
+            ++itr) {
+          Point hit;
+          if ((itr->plane()).Intersect(pt,infinity,hit)) {
+            Vector int_ray = hit.asVector() - pt.asVector();
+            double cos_angle = Dot(infinity,int_ray)/
+                               (infinity.length()*int_ray.length());
+            if (cos_angle < 0.) continue;
+            if (itr->inside(hit)) {
+              double distance = int_ray.length();
+              if ( distance <= infinity.length() ){
+                map<double,Tri>::const_iterator duplicate = cross_map.find(distance);
+                if (duplicate == cross_map.end()) {
+                  cross_map[distance] = *itr;
+                  crossings++;
+                }
+                if ( distance < min_distance ) min_distance = distance;
+              }
+            }
+          }
+        }
+  } } }
+}

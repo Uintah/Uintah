@@ -531,12 +531,18 @@
                                 
         <BCType             spec="MULTIPLE NO_DATA"
                               attribute1="id        OPTIONAL STRING '0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,all'"
-                              attribute2="var       REQUIRED STRING 'Neumann, Dirichlet'"
+                              attribute2="var       REQUIRED STRING 'Neumann, Dirichlet, Custom'"
                               attribute3="label     REQUIRED STRING "
-                              attribute4="type      OPTIONAL STRING 'int'" 
+                              attribute4="type      OPTIONAL STRING 'int, subgrid_injector'" 
                               attribute5="value     OPTIONAL STRING" >
                                                                 
           <value            spec="OPTIONAL STRING"/>
+
+          <!-- Area for the subgrid injector. The total contribution to the RHS is
+               RHS += area*value
+               so that value = rho*phi*velocity
+               If area is not specified, then area = cell face area respectively -->
+          <area             spec="OPTIONAL DOUBLE"/> 
 
         </BCType>
       </InteriorFace>
