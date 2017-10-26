@@ -8,7 +8,9 @@
 #
 #  Run sus as normal assuming that you've compiled with the tsan options
 #
-#  --enable-optimize='-g -O1 -mfpmath=sse -fsanitize=thread -fno-inline -fno-omit-frame-pointer -fno-builtin -fPIC -pie'
+#  --enable-optimize='-g -O1  -fsanitize=thread'\
+#    CC=clang-3.8 \     << you need to use the clang compilers.  There are issues compiling/linking with gnu gcc.  10/26/17
+#    CXX=clang++-3.8 \
 #
 #  For details on the different suppression types see
 #
