@@ -249,10 +249,10 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   mpm_flag_ps->get("KEMaterial",        d_KEMaterial);
   mpm_flag_ps->get("use_tracers",       d_useTracers);
 
-  mpm_flag_ps->get("AddOvergrowth",     d_addOvergrowth);
+  mpm_flag_ps->get("DoAuthigenisis",     d_doAuthigenisis);
 
-  if(d_addOvergrowth){
-    mpm_flag_ps->get("OvergrowthBaseFilename",d_overgrowthBaseFilename);
+  if(d_doAuthigenisis){
+    mpm_flag_ps->get("AuthigenisisBaseFilename",d_authigenisisBaseFilename);
   }
 
   //MMS
@@ -483,9 +483,9 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("containerRadius",   d_containerRadius);
   ps->appendElement("KEMaterial",        d_KEMaterial);
   ps->appendElement("use_tracers",       d_useTracers);
-  ps->appendElement("AddOvergrowth",     d_addOvergrowth);
-  if(d_addOvergrowth){
-    ps->appendElement("OvergrowthBaseFilename",d_overgrowthBaseFilename);
+  ps->appendElement("DoAuthigenisis",    d_doAuthigenisis);
+  if(d_doAuthigenisis){
+    ps->appendElement("AuthigenisisBaseFilename",d_authigenisisBaseFilename);
   }
 }
 

@@ -116,8 +116,8 @@ namespace Uintah {
     std::string d_insertParticlesFile;                         // File containing activation plan
     bool        d_GEVelProj;                                   // Use the velocity gradient in projecting particle velocity to grid
 
-    bool        d_addOvergrowth;
-    std::string d_overgrowthBaseFilename;                      // File containing overgrowth points
+    bool        d_doAuthigenisis;
+    std::string d_authigenisisBaseFilename;                      // File containing overgrowth points
     bool        d_with_ice;
     bool        d_with_arches;
     std::string d_mms_type;                                    // MMS Flag

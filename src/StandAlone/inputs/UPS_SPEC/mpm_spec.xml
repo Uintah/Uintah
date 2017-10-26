@@ -48,8 +48,8 @@
       <UsePrescribedDeformation           spec="OPTIONAL BOOLEAN" /> 
       <PrescribedDeformationFile          spec="OPTIONAL STRING" />
       <exactDeformation                   spec="OPTIONAL BOOLEAN" /> 
-      <AddOvergrowth                      spec="OPTIONAL BOOLEAN" /> 
-      <OvergrowthBaseFilename             spec="OPTIONAL STRING" />
+      <DoAuthigenisis                     spec="OPTIONAL BOOLEAN" /> 
+      <AuthigenisisBaseFilename           spec="OPTIONAL STRING" />
       <InsertParticles                    spec="OPTIONAL BOOLEAN" /> 
       <InsertParticlesFile                spec="OPTIONAL STRING" /> 
       <withColor                          spec="OPTIONAL BOOLEAN" />
