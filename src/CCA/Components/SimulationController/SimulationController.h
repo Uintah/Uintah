@@ -201,7 +201,7 @@ protected:
   void timeStateSetup();
   void finalSetup();
 
-  // Get the next delta T
+  void updateSimTime( void );
   void getNextDeltaT( void );
 
   void ReportStats( bool first );     

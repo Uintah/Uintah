@@ -679,6 +679,14 @@ SimulationController::finalSetup()
 //______________________________________________________________________
 //
 void
+SimulationController::updateSimTime( void )
+{
+  d_simTime += d_delt;
+}
+
+//______________________________________________________________________
+//
+void
 SimulationController::getNextDeltaT( void )
 {
   d_prev_delt = d_delt;

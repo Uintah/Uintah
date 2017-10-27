@@ -213,8 +213,8 @@ AMRSimulationController::run()
     d_timeinfo->m_delt_factor = 1;
     d_timeinfo->m_delt_min    = 0;
     d_timeinfo->m_delt_max    = 1e99;
-    d_timeinfo->m_init_time    = static_cast<UdaReducer*>(d_sim)->getInitialTime();
-    d_timeinfo->m_max_time     = static_cast<UdaReducer*>(d_sim)->getMaxTime();
+    d_timeinfo->m_init_time = static_cast<UdaReducer*>(d_sim)->getInitialTime();
+    d_timeinfo->m_max_time  = static_cast<UdaReducer*>(d_sim)->getMaxTime();
     d_timeinfo->m_max_delt_increase = 1e99;
     d_timeinfo->m_max_initial_delt  = 1e99;
   }
@@ -222,14 +222,8 @@ AMRSimulationController::run()
   // Setup, compile, and run the taskgraph for the initialization timestep
   doInitialTimestep();
   
-  // Done with all the initialization.
-  d_scheduler->setInitTimestep(false);
-
-  // Update the profiler weights
-  d_lb->finalizeContributions(d_currentGridP);
-  d_lb->resetCostForecaster();
-
-  // Get the next (initial) delta T
+  // Get the next (initial) delta T - Do this before reporting stats
+  // or the in-situ so the new delt is availble.
   getNextDeltaT();
   
   // Report all of the stats before doing any possible in-situ work
@@ -242,11 +236,12 @@ AMRSimulationController::run()
     exit(0);
 #endif      
 
-  // Reset the runtime performance stats
-  d_sharedState->resetStats();
+  // Update the profiler weights
+  d_lb->finalizeContributions(d_currentGridP);
+  d_lb->resetCostForecaster();
 
-  // Reset memory use tracking variable
-  d_scheduler->resetMaxMemValue();
+  // Done with all the initialization.
+  d_scheduler->setInitTimestep(false);
 
   // ____________________________________________________________________
   // End the zero time step. Which is either initialization or restart.
@@ -286,6 +281,12 @@ AMRSimulationController::run()
   // The main loop where the specified problem is solved.
   while( !isLast() ) {
 
+    // Reset the runtime performance stats
+    d_sharedState->resetStats();
+
+    // Reset memory use tracking variable
+    d_scheduler->resetMaxMemValue();
+    
     // Before any work is done including incrementing the time step
     // check to see if this iteration may be the last one. The Data
     // Archive uses it for determining whether to output or checkpoint
@@ -298,6 +299,9 @@ AMRSimulationController::run()
     // determining when to output or checkpoint.
     d_sharedState->setElapsedWallTime( walltimers.GetWallTime() );
     
+    d_output->findNext_OutputCheckPointTimestep( d_simTime,
+						 first && d_restarting );
+  
     // Put the current simulation time into the shared state so other
     // components can access it.  Also increment (by one) the current
     // time step number so components know what timestep they are on.
@@ -569,9 +573,6 @@ AMRSimulationController::run()
     int tg_index = d_sim->computeTaskGraphIndex();
     executeTimestep( totalFine, tg_index );
       
-    // Update the profiler weights
-    d_lb->finalizeContributions(d_currentGridP);
-
     // If debugging, output the barrier times.
     if( dbg_barrier.active() ) {
       barrierTimer.reset( true );
@@ -604,35 +605,31 @@ AMRSimulationController::run()
       d_output->writeto_xml_files( d_delt, d_currentGridP );
     }
 
-    d_output->findNext_OutputCheckPointTimestep( d_simTime + d_delt );
-    
-    // Done with the time step.
-    if( first ) {
-      d_scheduler->setRestartInitTimestep( false );
-      first = false;
-    }
+    // Update the simulation time
+    updateSimTime();
 
-    // Update the time and get the next output checkpoint time step.
-    d_simTime += d_delt;
-
-    // Get the next delta T
+    // Get the next delta T - Do this before reporting stats or the
+    // in-situ so the new delt is availble.
     getNextDeltaT();
   
     // Report all of the stats before doing any possible in-situ work
     // as that affects the lap timer for the time steps.
-    ReportStats( first );
+    ReportStats( false );
 
     // If compiled with VisIt check the in-situ status for work.
 #ifdef HAVE_VISIT
-    if( CheckInSitu( &visitSimData, first ) )
+    if( CheckInSitu( &visitSimData, false ) )
       break;
 #endif      
 
-    // Reset the runtime performance stats
-    d_sharedState->resetStats();
-    // Reset memory use tracking variable
-    d_scheduler->resetMaxMemValue();
-    
+    // Update the profiler weights
+    d_lb->finalizeContributions(d_currentGridP);
+
+    // Done with the first time step.
+    if( first ) {
+      d_scheduler->setRestartInitTimestep( false );
+      first = false;
+    }
   } // end while main time loop (time is not up, etc)
   
   // d_ups->releaseDocument();
@@ -786,13 +783,6 @@ AMRSimulationController::doInitialTimestep()
     d_output->writeto_xml_files( 0, d_currentGridP );
   }
 
-  // Set the current wall time for this rank (i.e. this value is NOT
-  // sync'd across all ranks). The Data Archive uses it for
-  // determining when to output or checkpoint.
-  d_sharedState->setElapsedWallTime( walltimers.GetWallTime() );
-
-  d_output->findNext_OutputCheckPointTimestep( d_simTime, d_restarting );
-  
 } // end doInitialTimestep()
 
 //______________________________________________________________________
