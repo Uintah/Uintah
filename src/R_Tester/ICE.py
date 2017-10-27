@@ -64,11 +64,15 @@ NIGHTLYTESTS = [   ("advect",             "advect.ups",              1, "All", [
                    ("waterAirOscillator", "waterAirOscillator.ups",  4, "All", ["exactComparison"])    
               ]
               
-DIFFUSION  = [     ("CouettePoiseuille",  "CouettePoiseuille.ups",   1, "All", ["exactComparison"]),
-                   ("rayleigh_dx",         "rayleigh_dx.ups",        1, "All", ["exactComparison"]),      
-                   ("rayleigh_dy",         "rayleigh_dy.ups",        1, "All", ["exactComparison"]),      
-                   ("rayleigh_dz",         "rayleigh_dz.ups",        1, "All", ["exactComparison"])      
+DIFFUSION  = [     ("CouettePoiseuille",  "CouettePoiseuille.ups",  1, "All", ["exactComparison"]),
+                   ("rayleigh_dx",        "rayleigh_dx.ups",        1, "All", ["exactComparison"]),      
+                   ("rayleigh_dy",        "rayleigh_dy.ups",        1, "All", ["exactComparison"]),      
+                   ("rayleigh_dz",        "rayleigh_dz.ups",        1, "All", ["exactComparison"])      
               ]
+              
+LODI        = [    ("Lodi_pulse",        "Lodi_pulse.ups",         8, "All", ["exactComparison"])
+              ]
+
 
 AMRTESTS =    [
                   ("riemann_AMR_3L",      riemann_AMR_3L_ups,       8, "All", ["exactComparison"]),
@@ -87,7 +91,7 @@ DEBUGGING =   [   ("advect",           "advect.ups",           1, "All", ["exact
 #__________________________________
 # The following line is parsed by the local RT script
 # and allows the user to select the different subsets
-#LIST:  AMRTESTS DIFFUSION DEBUGGING LOCALTESTS NIGHTLYTESTS BUILDBOTTESTS
+#LIST:  AMRTESTS DIFFUSION DEBUGGING LOCALTESTS LODI NIGHTLYTESTS BUILDBOTTESTS
 #__________________________________
 # returns the list
 def getTestList(me) :
@@ -98,9 +102,11 @@ def getTestList(me) :
   elif me == "DIFFUSION":
     TESTS = DIFFUSION
   elif me == "LOCALTESTS":
-    TESTS = NIGHTLYTESTS + AMRTESTS + DIFFUSTIONTESTS
+    TESTS = NIGHTLYTESTS + AMRTESTS + DIFFUSION
+  elif me == "LODI":
+    TESTS = LODI
   elif me == "NIGHTLYTESTS":
-    TESTS = NIGHTLYTESTS + AMRTESTS + DIFFUSTIONTESTS
+    TESTS = NIGHTLYTESTS + AMRTESTS + DIFFUSION
   elif me == "BUILDBOTTESTS":
     TESTS = ignorePerformanceTests( NIGHTLYTESTS )
   else:
