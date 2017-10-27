@@ -57,12 +57,17 @@ hotBlob_AMR_3L_ups = modUPS( the_dir,                       \
 
 NIGHTLYTESTS = [   ("advect",             "advect.ups",              1, "All", ["exactComparison"]),
                    ("riemann_1L",         riemann_1L_ups,            1, "All", ["exactComparison"]),
-                   ("CouettePoiseuille",  "CouettePoiseuille.ups",   1, "All", ["exactComparison"]),
                    ("hotBlob2mat",        "hotBlob2mat.ups",         1, "All", ["exactComparison"]),
                    ("hotBlob2mat_sym",    "hotBlob2mat_sym.ups",     1, "All", ["exactComparison"]),
                    ("impHotBlob",         "impHotBlob.ups",          1, "All", ["exactComparison"]),
                    ("hotBlob2mat8patch",  "hotBlob2mat8patch.ups",   8, "All", ["exactComparison"]),
-                   ("waterAirOscillator", "waterAirOscillator.ups",  4, "All", ["exactComparison"])
+                   ("waterAirOscillator", "waterAirOscillator.ups",  4, "All", ["exactComparison"])    
+              ]
+              
+DIFFUSION  = [     ("CouettePoiseuille",  "CouettePoiseuille.ups",   1, "All", ["exactComparison"]),
+                   ("rayleigh_dx",         "rayleigh_dx.ups",        1, "All", ["exactComparison"]),      
+                   ("rayleigh_dy",         "rayleigh_dy.ups",        1, "All", ["exactComparison"]),      
+                   ("rayleigh_dz",         "rayleigh_dz.ups",        1, "All", ["exactComparison"])      
               ]
 
 AMRTESTS =    [
@@ -70,7 +75,7 @@ AMRTESTS =    [
                   ("advect2matAMR",      "advect2matAMR.ups",       1, "All", ["exactComparison"]),
                   ("hotBlob_AMR",        "hotBlob_AMR.ups",         4, "All", ["exactComparison"]),
                   ("hotBlob_AMR_3L",      hotBlob_AMR_3L_ups,       4, "All", ["exactComparison"]),
-                  ("impAdvectAMR",       "impAdvectAMR.ups",        1, "All", ["exactComparison"]),
+                  ("impAdvectAMR",       "impAdvectAMR.ups",        1, "All", ["exactComparison"])
               ]
 
 DEBUGGING =   [   ("advect",           "advect.ups",           1, "All", ["exactComparison"]),
@@ -82,7 +87,7 @@ DEBUGGING =   [   ("advect",           "advect.ups",           1, "All", ["exact
 #__________________________________
 # The following line is parsed by the local RT script
 # and allows the user to select the different subsets
-#LIST:  AMRTESTS DEBUGGING LOCALTESTS NIGHTLYTESTS BUILDBOTTESTS
+#LIST:  AMRTESTS DIFFUSION DEBUGGING LOCALTESTS NIGHTLYTESTS BUILDBOTTESTS
 #__________________________________
 # returns the list
 def getTestList(me) :
@@ -90,10 +95,12 @@ def getTestList(me) :
     TESTS = AMRTESTS
   elif me == "DEBUGGING":
     TESTS = DEBUGGING
+  elif me == "DIFFUSION":
+    TESTS = DIFFUSION
   elif me == "LOCALTESTS":
-    TESTS = NIGHTLYTESTS + AMRTESTS
+    TESTS = NIGHTLYTESTS + AMRTESTS + DIFFUSTIONTESTS
   elif me == "NIGHTLYTESTS":
-    TESTS = NIGHTLYTESTS + AMRTESTS
+    TESTS = NIGHTLYTESTS + AMRTESTS + DIFFUSTIONTESTS
   elif me == "BUILDBOTTESTS":
     TESTS = ignorePerformanceTests( NIGHTLYTESTS )
   else:

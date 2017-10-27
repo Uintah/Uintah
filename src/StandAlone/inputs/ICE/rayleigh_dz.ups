@@ -2,7 +2,7 @@
 
 
 
-<Uintah_specification> 
+<Uintah_specification>
 <!--Please use a consistent set of units, (mks, cgs,...)-->
 
    <Meta>
@@ -23,7 +23,7 @@
        <!--<max_iterations>      2000       </max_iterations> -->
        <timestep_multiplier>1.0        </timestep_multiplier>
    </Time>
-   
+
     <!--____________________________________________________________________-->
     <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
@@ -45,7 +45,7 @@
         <BCType id = "0"   label = "SpecificVol" var = "computeFromDensity">
                               <value> 0.0 </value>
         </BCType>
-      </Face>                  
+      </Face>
       <Face side = "x+">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0. </value>
@@ -66,11 +66,11 @@
       <Face side = "y-">
         <BCType id = "0"   label = "Symmetric" var = "symmetry">
         </BCType>
-      </Face> 
+      </Face>
       <Face side = "y+">
         <BCType id = "0"   label = "Symmetric" var = "symmetry">
         </BCType>
-      </Face> 
+      </Face>
     </BoundaryConditions>
        <Level>
            <Box label="1">
@@ -82,12 +82,12 @@
            </Box>
            <periodic>       [0,0,1]           </periodic>
        </Level>
-    </Grid>    
+    </Grid>
     <!--____________________________________________________________________-->
     <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-      <filebase>rayleigh_dx.uda</filebase>
+      <filebase>rayleigh_dz.uda</filebase>
        <!--<outputTimestepInterval>1</outputTimestepInterval> -->
        <outputInterval>1e-3</outputInterval>
       <save label="press_equil_CC"/>
@@ -97,9 +97,10 @@
       <save label="mom_L_ME_CC"/>
       <save label="mom_source_CC"/>
       <save label="rho_CC"/>
-      <save label="vel_CC"/>     
+      <save label="vel_CC"/>
+      <checkpoint interval="1.5e-3" cycle="1"/>
    </DataArchiver>
-    
+
     <!--____________________________________________________________________-->
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->
@@ -107,12 +108,12 @@
          <cfl>0.4</cfl>
        <ICE>
         <advection type = "SecondOrder" />
-   
+
         <TimeStepControl>
           <Scheme_for_delT_calc> aggressive     </Scheme_for_delT_calc>
           <knob_for_speedSound>  0.0            </knob_for_speedSound>
         </TimeStepControl>
-        
+
         <ImplicitSolver>
            <max_outer_iterations>      20    </max_outer_iterations>
            <outer_iteration_tolerance> 1e-6  </outer_iteration_tolerance>
@@ -133,21 +134,21 @@
             <jump>           0       </jump>
            </Parameters>
         </ImplicitSolver>
-    
-      </ICE>        
+
+      </ICE>
     </CFD>
 
     <!--____________________________________________________________________-->
     <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
-    <!--____________________________________________________________________-->   
+    <!--____________________________________________________________________-->
     <PhysicalConstants>
        <gravity>            [0,0,0]   </gravity>
        <reference_pressure> 101325.0  </reference_pressure>
     </PhysicalConstants>
-    
+
     <!--____________________________________________________________________-->
     <!--      material Properties and Initial Conditions                    -->
-    <!--____________________________________________________________________-->                      
+    <!--____________________________________________________________________-->
     <MaterialProperties>
        <ICE>
          <material>
@@ -164,10 +165,10 @@
                <res>                 [2,2,2]            </res>
                <velocity>      [0.,0.,0.]               </velocity>
                <density>       1.1792946927374306000e+00</density>
-               <pressure>      101325.0                 </pressure>     
+               <pressure>      101325.0                 </pressure>
                <temperature>   300.0                    </temperature>
            </geom_object>
          </material>
-      </ICE>       
-    </MaterialProperties>       
+      </ICE>
+    </MaterialProperties>
 </Uintah_specification>
