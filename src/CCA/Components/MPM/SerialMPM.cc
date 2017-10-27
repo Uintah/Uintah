@@ -405,7 +405,7 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   t->computes(lb->pSizeLabel);
   t->computes(lb->pAreaLabel);
   t->computes(lb->pLocalizedMPMLabel);
-  t->computes(lb->pRefinedLabel);
+//  t->computes(lb->pRefinedLabel);
   t->computes(d_sharedState->get_delt_label(),level.get_rep());
   t->computes(lb->pCellNAPIDLabel,zeroth_matl);
   t->computes(lb->NC_CCweightLabel,zeroth_matl);
@@ -720,9 +720,9 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   if(flags->d_computeScaleFactor){
     scheduleComputeParticleScaleFactor(       sched, patches, matls);
   }
-  if(flags->d_refineParticles){
-    scheduleAddParticles(                     sched, patches, matls);
-  }
+//  if(flags->d_refineParticles){
+  scheduleAddParticles(                     sched, patches, matls);
+//  }
 
   if(d_analysisModules.size() != 0){
     vector<AnalysisModule*>::iterator iter;
@@ -1337,10 +1337,10 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   }
 
   // Carry Forward particle refinement flag
-  if(flags->d_refineParticles){
-    t->requires(Task::OldDW, lb->pRefinedLabel,                Ghost::None);
-    t->computes(             lb->pRefinedLabel_preReloc);
-  }
+//  if(flags->d_refineParticles){
+//    t->requires(Task::OldDW, lb->pRefinedLabel,                Ghost::None);
+//    t->computes(             lb->pRefinedLabel_preReloc);
+//  }
 
   MaterialSubset* z_matl = scinew MaterialSubset();
   z_matl->add(0);
@@ -1523,7 +1523,7 @@ void SerialMPM::scheduleAddParticles(SchedulerP& sched,
   t->modifies(lb->pTemperatureGradientLabel_preReloc);
   t->modifies(lb->pTempPreviousLabel_preReloc);
   t->modifies(lb->pDeformationMeasureLabel_preReloc);
-  t->modifies(lb->pRefinedLabel_preReloc);
+//  t->modifies(lb->pRefinedLabel_preReloc);
   if(flags->d_computeScaleFactor){
     t->modifies(lb->pScaleFactorLabel_preReloc);
   }
@@ -3534,13 +3534,13 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         new_dw->allocateAndPut(pColor_new, lb->pColorLabel_preReloc, pset);
         pColor_new.copyData(pColor);
       }
-      if(flags->d_refineParticles){
-        constParticleVariable<int> pRefinedOld;
-        ParticleVariable<int> pRefinedNew;
-        old_dw->get(pRefinedOld,            lb->pRefinedLabel,          pset);
-        new_dw->allocateAndPut(pRefinedNew, lb->pRefinedLabel_preReloc, pset);
-        pRefinedNew.copyData(pRefinedOld);
-      }
+//    if(flags->d_refineParticles){
+//      constParticleVariable<int> pRefinedOld;
+//      ParticleVariable<int> pRefinedNew;
+//      old_dw->get(pRefinedOld,            lb->pRefinedLabel,          pset);
+//      new_dw->allocateAndPut(pRefinedNew, lb->pRefinedLabel_preReloc, pset);
+//      pRefinedNew.copyData(pRefinedOld);
+//    }
 
       Ghost::GhostType  gac = Ghost::AroundCells;
       new_dw->get(gvelocity_star,  lb->gVelocityStarLabel,   dwi,patch,gac,NGP);
@@ -4346,20 +4346,70 @@ void SerialMPM::addParticles(const ProcessorGroup*,
                              DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-    Vector dx = patch->dCell();
-    printTask(patches, patch,cout_doing, "Doing addParticles");
-    int numMPMMatls=d_sharedState->getNumMPMMatls();
+   const Patch* patch = patches->get(p);
+   printTask(patches, patch,cout_doing, "Doing addParticles");
 
-    //Carry forward CellNAPID
-    constCCVariable<int> NAPID;
-    CCVariable<int> NAPID_new;
-    Ghost::GhostType  gnone = Ghost::None;
-    old_dw->get(NAPID,               lb->pCellNAPIDLabel,    0,patch,gnone,0);
-    new_dw->allocateAndPut(NAPID_new,lb->pCellNAPIDLabel,    0,patch);
-    NAPID_new.copyData(NAPID);
+   //Carry forward CellNAPID
+   constCCVariable<int> NAPID;
+   CCVariable<int> NAPID_new;
+   Ghost::GhostType  gnone = Ghost::None;
+   old_dw->get(NAPID,               lb->pCellNAPIDLabel,    0,patch,gnone,0);
+   new_dw->allocateAndPut(NAPID_new,lb->pCellNAPIDLabel,    0,patch);
+   NAPID_new.copyData(NAPID);
 
+   if(flags->d_doAuthigenisis){
+     flags->d_doAuthigenisis = false;
+
+     cout << "Doing addParticles" << endl;
+
+     Vector dx = patch->dCell();
+     int numMPMMatls=d_sharedState->getNumMPMMatls();
+
+    vector<Point> P;
+    vector<double> color;
     for(int m = 0; m < numMPMMatls; m++){
+      bool splitForAny=false;
+      int numNewPartNeeded=0;
+      P.clear();
+      color.clear();
+
+      stringstream mnum;
+      mnum << m;
+      string mnums = mnum.str();
+      string filename = flags->d_authigenisisBaseFilename + "." + mnums;
+      std::ifstream is(filename.c_str());
+//      if (!is ){
+//        throw ProblemSetupException(
+//                "ERROR Opening prescribed deformation file '"+filename+"'\n",
+//                                                          __FILE__, __LINE__);
+//      }
+//      cout << "filename = " << filename << endl;
+
+      if(is) {
+       while(is) {
+        double x,y,z,col;
+        is >> x >> y >> z >> col;
+//        cout << "x = " << x << endl;
+        Point testPoint(x,y,z);
+//        cout << "patchID = " << patch->getID() << endl;
+        if(patch->containsPoint(testPoint)){
+          P.push_back(testPoint);
+          color.push_back(col);
+          numNewPartNeeded++;
+          splitForAny=true;
+//          cout << "TestPoint = " << testPoint << endl;
+        } else {
+//          cout << "testPoint = " << testPoint << endl;
+        }
+       }
+       is.close();
+      }
+      cout << "numNewPartNeeded = " << numNewPartNeeded << endl;
+//      for(int jim = 0; jim<numNewPartNeeded;jim++){
+//         cout << "P = " << P[jim] << endl;
+//         cout << "color = " << color[jim] << endl;
+//      }
+
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
@@ -4371,7 +4421,7 @@ void SerialMPM::addParticles(const ProcessorGroup*,
       ParticleVariable<double> pvolume,pmass,ptemp,ptempP,pcolor;
       ParticleVariable<double> pESF; 
       ParticleVariable<Vector> pvelocity,pextforce,pdisp,ptempgrad;
-      ParticleVariable<int> pref,ploc,prefOld,pLoadCID,pSplitR1R2R3;
+      ParticleVariable<int> pref,ploc,prefOld,pLoadCID;
       new_dw->getModifiable(px,       lb->pXLabel_preReloc,            pset);
       new_dw->getModifiable(pids,     lb->pParticleIDLabel_preReloc,   pset);
       new_dw->getModifiable(pmass,    lb->pMassLabel_preReloc,         pset);
@@ -4388,7 +4438,6 @@ void SerialMPM::addParticles(const ProcessorGroup*,
       new_dw->getModifiable(ptempgrad,lb->pTemperatureGradientLabel_preReloc,
                                                                        pset);
       new_dw->getModifiable(ptempP,   lb->pTempPreviousLabel_preReloc, pset);
-      new_dw->getModifiable(pref,     lb->pRefinedLabel_preReloc,      pset);
       new_dw->getModifiable(ploc,     lb->pLocalizedMPMLabel_preReloc, pset);
       new_dw->getModifiable(pvelgrad, lb->pVelGradLabel_preReloc,      pset);
       new_dw->getModifiable(pF,  lb->pDeformationMeasureLabel_preReloc,pset);
@@ -4399,108 +4448,17 @@ void SerialMPM::addParticles(const ProcessorGroup*,
         new_dw->getModifiable(pLoadCID,lb->pLoadCurveIDLabel_preReloc, pset);
       }
 
-      new_dw->allocateTemporary(prefOld,       pset);
-      new_dw->allocateTemporary(pSplitR1R2R3,  pset);
-
-      int numNewPartNeeded=0;
-      bool splitForStretch=false;
-      bool splitForAny=false;
-      // Put refinement criteria here
-      const unsigned int origNParticles = pset->addParticles(0);
-      for( unsigned int pp=0; pp<origNParticles; ++pp ){
-       prefOld[pp] = pref[pp];
-       // Conditions to refine particle based on physical state
-       // TODO:  Check below, should be < or <= in first conditional
-       bool splitCriteria=false;
-       //__________________________________
-       // Only set the refinement flags for certain materials
-       for(int i = 0; i< (int)d_thresholdVars.size(); i++ ){
-          thresholdVar data = d_thresholdVars[i];
-          string name  = data.name;
-          double thresholdValue = data.value;
-
-          if(m==data.matl){
-            pSplitR1R2R3[pp]=0;
-            if(name=="stressNorm"){
-               double stressNorm = pstress[pp].Norm();
-               if(stressNorm > thresholdValue){
-                 splitCriteria = true;
-                 splitForAny = true;
-               }
-            }
-            if(name=="stretchRatio"){
-              // This is the same R-vector equation used in CPDI interpolator
-              // The "size" is relative to the grid cell size at this point
-//              Matrix3 dsize = pF[pp]*pSize[pp];
-              Matrix3 dsize = pF[pp]*pSize[pp]*Matrix3(dx[0],0,0,
-                                                       0,dx[1],0,
-                                                       0,0,dx[2]);
-              Vector R1(dsize(0,0), dsize(1,0), dsize(2,0));
-              Vector R2(dsize(0,1), dsize(1,1), dsize(2,1));
-              Vector R3(dsize(0,2), dsize(1,2), dsize(2,2));
-              double R1L=R1.length2();
-              double R2L=R2.length2();
-              double R3L=R3.length2();
-              double R1_R2_ratSq = R1L/R2L;
-              double R1_R3_ratSq = R1L/R3L;
-              double R2_R3_ratSq = R2L/R3L;
-              double tVSq = thresholdValue*thresholdValue;
-              double tV_invSq = 1.0/tVSq;
-//              cout << "R1L = " << R1L << endl;
-//              cout << "R2L = " << R2L << endl;
-//              cout << "R3L = " << R3L << endl;
-              if (R1_R2_ratSq > tVSq){
-                pSplitR1R2R3[pp]=1;
-              } else if (R1_R2_ratSq < tV_invSq) {
-                pSplitR1R2R3[pp]=-1;
-              } else if (R1_R3_ratSq > tVSq && d_ndim==3){
-                pSplitR1R2R3[pp]=2;
-              } else if (R1_R3_ratSq < tV_invSq && d_ndim==3){
-                pSplitR1R2R3[pp]=-2;
-              } else if (R2_R3_ratSq > tVSq && d_ndim==3){
-                 pSplitR1R2R3[pp]=3;
-              } else if (R2_R3_ratSq < tV_invSq && d_ndim==3){
-                 pSplitR1R2R3[pp]=-3;
-              } else {
-                 pSplitR1R2R3[pp]=0;
-              }
-
-              if(pSplitR1R2R3[pp]){
-//                cout << "pSplit = " << pSplitR1R2R3[pp] << endl;
-                splitCriteria  = true;
-                splitForStretch = true;
-                splitForAny = true;
-              }
-           }
-         } // if this matl is in the list
-       } // loop over criteria
-
-       if(splitCriteria && prefOld[pp]==0){
-         pref[pp]++;
-         numNewPartNeeded++;
-       }
-      }  // Loop over original particles
-
-      int fourOrEight=pow(2,d_ndim);
-      if(splitForStretch){
-        fourOrEight=4;
-      }
+      int fourOrEight=pow(2,flags->d_ndim);
       double fourthOrEighth = 1./((double) fourOrEight);
-      numNewPartNeeded*=(fourOrEight+0);
 
       const unsigned int oldNumPar = pset->addParticles(numNewPartNeeded);
-
-//      cout << "oldNumPar = " << oldNumPar << endl;
-//      cout << "numNewPartNeeded = " << numNewPartNeeded << endl;
-//      const unsigned int newNumPar = pset->addParticles(0);
-//      cout << "newNumPar = " << newNumPar << endl;
 
       ParticleVariable<Point> pxtmp;
       ParticleVariable<Matrix3> pFtmp,psizetmp,pstrstmp,pvgradtmp,pSFtmp;
       ParticleVariable<long64> pidstmp;
       ParticleVariable<double> pvoltmp, pmasstmp,ptemptmp,ptempPtmp,pcolortmp;
       ParticleVariable<Vector> pveltmp,pextFtmp,pdisptmp,ptempgtmp;
-      ParticleVariable<int> preftmp,ploctmp,pLoadCIDtmp;
+      ParticleVariable<int> ploctmp,pLoadCIDtmp;
       new_dw->allocateTemporary(pidstmp,  pset);
       new_dw->allocateTemporary(pxtmp,    pset);
       new_dw->allocateTemporary(pvoltmp,  pset);
@@ -4517,7 +4475,6 @@ void SerialMPM::addParticles(const ProcessorGroup*,
       new_dw->allocateTemporary(pdisptmp, pset);
       new_dw->allocateTemporary(pstrstmp, pset);
       new_dw->allocateTemporary(pmasstmp, pset);
-      new_dw->allocateTemporary(preftmp,  pset);
       new_dw->allocateTemporary(ploctmp,  pset);
       new_dw->allocateTemporary(pvgradtmp,pset);
       if (flags->d_with_color) {
@@ -4551,169 +4508,56 @@ void SerialMPM::addParticles(const ProcessorGroup*,
           pLoadCIDtmp[pp]= pLoadCID[pp];
         }
         pmasstmp[pp] = pmass[pp];
-        preftmp[pp]  = pref[pp];
         ploctmp[pp]  = ploc[pp];
         pvgradtmp[pp]= pvelgrad[pp];
       }
 
-      int numRefPar=0;
+      double cellVol = dx.x()*dx.y()*dx.z();
+      double rho = mpm_matl->getInitialDensity();
+      Matrix3 Id;
+      Id.Identity();
       if(splitForAny){
-       // Don't loop over particles unless at least one needs to be refined
-      for( unsigned int idx=0; idx<oldNumPar; ++idx ){
-       if(pref[idx]!=prefOld[idx]){  // do refinement!
-        IntVector c_orig;
-        patch->findCell(px[idx],c_orig);
-        vector<Point> new_part_pos;
-
-        Matrix3 dsize = (pF[idx]*pSize[idx]*Matrix3(dx[0],0,0,
-                                                    0,dx[1],0,
-                                                    0,0,dx[2]));
-
-        // Find vectors to new particle locations, based on particle size and
-        // deformation (patterned after CPDI interpolator code)
-        Vector r[4];
-        if(fourOrEight==8){
-          r[0]=Vector(-dsize(0,0)-dsize(0,1)+dsize(0,2),
-                      -dsize(1,0)-dsize(1,1)+dsize(1,2),
-                      -dsize(2,0)-dsize(2,1)+dsize(2,2))*0.25;
-          r[1]=Vector( dsize(0,0)-dsize(0,1)+dsize(0,2),
-                       dsize(1,0)-dsize(1,1)+dsize(1,2),
-                       dsize(2,0)-dsize(2,1)+dsize(2,2))*0.25;
-          r[2]=Vector( dsize(0,0)+dsize(0,1)+dsize(0,2),
-                       dsize(1,0)+dsize(1,1)+dsize(1,2),
-                       dsize(2,0)+dsize(2,1)+dsize(2,2))*0.25;
-          r[3]=Vector(-dsize(0,0)+dsize(0,1)+dsize(0,2),
-                      -dsize(1,0)+dsize(1,1)+dsize(1,2),
-                      -dsize(2,0)+dsize(2,1)+dsize(2,2))*0.25;
-
-          new_part_pos.push_back(px[idx]+r[0]);
-          new_part_pos.push_back(px[idx]+r[1]);
-          new_part_pos.push_back(px[idx]+r[2]);
-          new_part_pos.push_back(px[idx]+r[3]);
-          new_part_pos.push_back(px[idx]-r[0]);
-          new_part_pos.push_back(px[idx]-r[1]);
-          new_part_pos.push_back(px[idx]-r[2]);
-          new_part_pos.push_back(px[idx]-r[3]);
-        } else if(fourOrEight==4){
-          if(pSplitR1R2R3[idx]){
-            // divide the particle in the direction of longest relative R-vector
-            Vector R(0.,0.,0.);
-            if(pSplitR1R2R3[idx]==1 || pSplitR1R2R3[idx]==2){
-              //cout << "split in R1-direction!" << endl;
-              R = Vector(dsize(0,0), dsize(1,0), dsize(2,0));
-            } else if(pSplitR1R2R3[idx]==3 || pSplitR1R2R3[idx]==-1){
-              //cout << "split in R2-direction!" << endl;
-              R = Vector(dsize(0,1), dsize(1,1), dsize(2,1));
-            } else if(pSplitR1R2R3[idx]==-2 || pSplitR1R2R3[idx]==-3){
-              // Grab the third R-vector
-              R = Vector(dsize(0,2), dsize(1,2), dsize(2,2));
-              //cout << "split in R3-direction!" << endl;
-            }
-            new_part_pos.push_back(px[idx]-.375*R);
-            new_part_pos.push_back(px[idx]-.125*R);
-            new_part_pos.push_back(px[idx]+.125*R);
-            new_part_pos.push_back(px[idx]+.375*R);
-          } else {
-            // divide the particle along x and y direction
-            r[0]=Vector(-dsize(0,0)-dsize(0,1),
-                        -dsize(1,0)-dsize(1,1),
-                         0.0)*0.25;
-            r[1]=Vector( dsize(0,0)-dsize(0,1),
-                         dsize(1,0)-dsize(1,1),
-                         0.0)*0.25;
-
-            new_part_pos.push_back(px[idx]+r[0]);
-            new_part_pos.push_back(px[idx]+r[1]);
-            new_part_pos.push_back(px[idx]-r[0]);
-            new_part_pos.push_back(px[idx]-r[1]);
-          }
-        }
-
-        for(int i = 0;i<fourOrEight;i++){
+        for(int i = 0;i<numNewPartNeeded;i++){
+          IntVector c_orig;
+          patch->findCell(P[i],c_orig);
           long64 cellID = ((long64)c_orig.x() << 16) |
                           ((long64)c_orig.y() << 32) |
                           ((long64)c_orig.z() << 48);
 
           int& myCellNAPID = NAPID_new[c_orig];
-          int new_index;
-          if(i==0){
-             new_index=idx;
-          } else {
-             new_index=(oldNumPar-1)+(fourOrEight-1)*numRefPar+i;
-          }
+          int new_index=oldNumPar+i;
           pidstmp[new_index]    = (cellID | (long64) myCellNAPID);
-          pxtmp[new_index]      = new_part_pos[i];
-          pvoltmp[new_index]    = fourthOrEighth*pvolume[idx];
-          pmasstmp[new_index]   = fourthOrEighth*pmass[idx];
-          pveltmp[new_index]    = pvelocity[idx];
+          pxtmp[new_index]      = P[i];
+          pvoltmp[new_index]    = fourthOrEighth*cellVol;
+          pmasstmp[new_index]   = rho*pvoltmp[new_index];
+          pveltmp[new_index]    = Vector(0.0,0.0,0.0);
           if (flags->d_useLoadCurves) {
-            pLoadCIDtmp[new_index]  = pLoadCID[idx];
+            pLoadCIDtmp[new_index]  = 0;
           }
           if (flags->d_with_color) {
-            pcolortmp[new_index]  = pcolor[idx];
+            pcolortmp[new_index]  = color[i];
           }
-          if(fourOrEight==8){
-            if(flags->d_computeScaleFactor){
-              pSFtmp[new_index]   = 0.5*pscalefac[idx];
-            }
-            psizetmp[new_index]   = 0.5*pSize[idx];
-          } else if(fourOrEight==4){
-           if(pSplitR1R2R3[idx]){
-            // Divide psize in the direction of the biggest R-vector
-            Matrix3 dSNew;
-            if(pSplitR1R2R3[idx]==1 || pSplitR1R2R3[idx]==2){
-              // Split across the first R-vector
-              dSNew = Matrix3(0.25*dsize(0,0), dsize(0,1), dsize(0,2),
-                              0.25*dsize(1,0), dsize(1,1), dsize(1,2),
-                              0.25*dsize(2,0), dsize(2,1), dsize(2,2));
-            } else if(pSplitR1R2R3[idx]==3 || pSplitR1R2R3[idx]==-1){
-              // Split across the second R-vector
-              dSNew = Matrix3(dsize(0,0), 0.25*dsize(0,1), dsize(0,2),
-                              dsize(1,0), 0.25*dsize(1,1), dsize(1,2),
-                              dsize(2,0), 0.25*dsize(2,1), dsize(2,2));
-            } else if(pSplitR1R2R3[idx]==-2 || pSplitR1R2R3[idx]==-3){
-              // Split across the third R-vector
-              dSNew = Matrix3(dsize(0,0), dsize(0,1), 0.25*dsize(0,2),
-                              dsize(1,0), dsize(1,1), 0.25*dsize(1,2),
-                              dsize(2,0), dsize(2,1), 0.25*dsize(2,2));
-            }
-            if(flags->d_computeScaleFactor){
-              pSFtmp[new_index]  = dSNew;
-            }
-            psizetmp[new_index]= pF[idx].Inverse()*dSNew*Matrix3(1./dx[0],0.,0.,
-                                                              0.,1./dx[1],0.,
-                                                              0.,0.,1./dx[2]);
-           } else {
-              // Divide psize by two in both x and y directions
-            if(flags->d_computeScaleFactor){
-              Matrix3 ps=pscalefac[idx];
-              Matrix3 tmp(0.5*ps(0,0), 0.5*ps(0,1), 0.0,
-                          0.5*ps(1,0), 0.5*ps(1,1), 0.0,
-                          0.0,         0.0,         ps(2,2));
-              pSFtmp[new_index]     = tmp;
-             }
-             Matrix3 ps = pSize[idx];
-             Matrix3 tmp(0.5*ps(0,0), 0.5*ps(0,1), 0.0,
-                         0.5*ps(1,0), 0.5*ps(1,1), 0.0,
-                         0.0,         0.0,         ps(2,2));
-             psizetmp[new_index]   = tmp;
-           }
-          } // if fourOrEight==4
-          pextFtmp[new_index]   = pextforce[idx];
-          pFtmp[new_index]      = pF[idx];
-          pdisptmp[new_index]   = pdisp[idx];
-          pstrstmp[new_index]   = pstress[idx];
-          ptemptmp[new_index]   = ptemp[idx];
-          ptempgtmp[new_index]  = ptempgrad[idx];
-          ptempPtmp[new_index]  = ptempP[idx];
-          preftmp[new_index]    = 1;
-          ploctmp[new_index]    = ploc[idx];
-          pvgradtmp[new_index]  = pvelgrad[idx];
+          double zz_size = max(1.0,1./(((double) flags->d_ndim)-1.));
+          psizetmp[new_index] = Matrix3(0.5,0.0,0.0,
+                                        0.0,0.5,0.0,
+                                        0.0,0.0,zz_size);
+          if(flags->d_computeScaleFactor){
+            pSFtmp[new_index]   = Matrix3(dx.x(),0.0,0.0,
+                                          0.0,dx.y(),0.0,
+                                          0.0,0.0,dx.z())*psizetmp[new_index];
+          }
+
+          pextFtmp[new_index]   = Vector(0.0);
+          pFtmp[new_index]      = Id;
+          pdisptmp[new_index]   = Vector(0.0);
+          pstrstmp[new_index]   = Matrix3(0.0);
+          ptemptmp[new_index]   = 300.;
+          ptempgtmp[new_index]  = Vector(0.0);
+          ptempPtmp[new_index]  = 300.;
+          ploctmp[new_index]    = 0.;
+          pvgradtmp[new_index]  = Matrix3(0.0);
           NAPID_new[c_orig]++;
         }
-        numRefPar++;
-       }  // if particle flagged for refinement
-      } // for particles
       } // if any particles flagged for refinement
 
       cm->splitCMSpecificParticleData(patch, dwi, fourOrEight, prefOld, pref,
@@ -4743,10 +4587,10 @@ void SerialMPM::addParticles(const ProcessorGroup*,
         new_dw->put(pLoadCIDtmp,lb->pLoadCurveIDLabel_preReloc,      true);
       }
       new_dw->put(pFtmp,    lb->pDeformationMeasureLabel_preReloc,   true);
-      new_dw->put(preftmp,  lb->pRefinedLabel_preReloc,              true);
       new_dw->put(ploctmp,  lb->pLocalizedMPMLabel_preReloc,         true);
       new_dw->put(pvgradtmp,lb->pVelGradLabel_preReloc,              true);
     }  // for matls
+   }  // if time
   }    // for patches
 }
 

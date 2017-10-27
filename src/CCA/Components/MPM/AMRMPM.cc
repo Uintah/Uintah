@@ -1863,11 +1863,11 @@ void AMRMPM::actuallyInitialize(const ProcessorGroup*,
   IntVector lowNode, highNode;
   level->findNodeIndexRange(lowNode, highNode);
   string interp_type = flags->d_interpolator_type;
-  d_ndim=3;
+  flags->d_ndim=3;
   if((interp_type=="linear" && (highNode.z() - lowNode.z()==2)) ||
      (interp_type=="gimp"   && (highNode.z() - lowNode.z()==4)) ||
      (interp_type=="cpdi"   && (highNode.z() - lowNode.z()==4))){
-     d_ndim=2;
+     flags->d_ndim=2;
   }
 
   if (flags->d_reductionVars->accStrainEnergy) {
@@ -4258,13 +4258,13 @@ void AMRMPM::addParticles(const ProcessorGroup*,
                 pSplitR1R2R3[pp]=1;
               } else if (R1_R2_ratSq < tV_invSq) {
                 pSplitR1R2R3[pp]=-1;
-              } else if (R1_R3_ratSq > tVSq && d_ndim==3){
+              } else if (R1_R3_ratSq > tVSq && flags->d_ndim==3){
                 pSplitR1R2R3[pp]=2;
-              } else if (R1_R3_ratSq < tV_invSq && d_ndim==3){
+              } else if (R1_R3_ratSq < tV_invSq && flags->d_ndim==3){
                 pSplitR1R2R3[pp]=-2;
-              } else if (R2_R3_ratSq > tVSq && d_ndim==3){
+              } else if (R2_R3_ratSq > tVSq && flags->d_ndim==3){
                  pSplitR1R2R3[pp]=3;
-              } else if (R2_R3_ratSq < tV_invSq && d_ndim==3){
+              } else if (R2_R3_ratSq < tV_invSq && flags->d_ndim==3){
                  pSplitR1R2R3[pp]=-3;
               } else {
                  pSplitR1R2R3[pp]=0;
@@ -4308,7 +4308,7 @@ void AMRMPM::addParticles(const ProcessorGroup*,
         }
       }  // Loop over original particles
 
-      int fourOrEight=pow(2,d_ndim);
+      int fourOrEight=pow(2,flags->d_ndim);
       if(splitForStretch){
         fourOrEight=4;
       }

@@ -475,7 +475,7 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
   new_dw->allocateAndPut(pvars.psize,         d_lb->pSizeLabel,         subset);
   new_dw->allocateAndPut(pvars.parea,         d_lb->pAreaLabel,         subset);
   new_dw->allocateAndPut(pvars.plocalized,    d_lb->pLocalizedMPMLabel, subset);
-  new_dw->allocateAndPut(pvars.prefined,      d_lb->pRefinedLabel,      subset);
+//  new_dw->allocateAndPut(pvars.prefined,      d_lb->pRefinedLabel,      subset);
   new_dw->allocateAndPut(pvars.pfiberdir,     d_lb->pFiberDirLabel,     subset);
   new_dw->allocateAndPut(pvars.ptempPrevious, d_lb->pTempPreviousLabel, subset);
   new_dw->allocateAndPut(pvars.pdisp,         d_lb->pDispLabel,         subset);
@@ -664,7 +664,7 @@ ParticleCreator::initializeParticle(const Patch* patch,
 
   // For AMR
   const Level* curLevel = patch->getLevel();
-  pvars.prefined[i]     = curLevel->getIndex();
+//  pvars.prefined[i]     = curLevel->getIndex();
 
   //MMS
   string mms_type = d_flags->d_mms_type;
@@ -952,10 +952,10 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
     particle_state_preReloc.push_back(d_lb->pTemperatureGradientLabel_preReloc);
   }
 
-  if (d_flags->d_refineParticles) {
-    particle_state.push_back(d_lb->pRefinedLabel);
-    particle_state_preReloc.push_back(d_lb->pRefinedLabel_preReloc);
-  }
+//  if (d_flags->d_refineParticles) {
+//    particle_state.push_back(d_lb->pRefinedLabel);
+//    particle_state_preReloc.push_back(d_lb->pRefinedLabel_preReloc);
+//  }
 
   particle_state.push_back(d_lb->pStressLabel);
   particle_state_preReloc.push_back(d_lb->pStressLabel_preReloc);
