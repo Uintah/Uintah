@@ -405,12 +405,12 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   t->computes(lb->pSizeLabel);
   t->computes(lb->pAreaLabel);
   t->computes(lb->pLocalizedMPMLabel);
-//  t->computes(lb->pRefinedLabel);
+  t->computes(lb->pSurfLabel);
   t->computes(d_sharedState->get_delt_label(),level.get_rep());
   t->computes(lb->pCellNAPIDLabel,zeroth_matl);
   t->computes(lb->NC_CCweightLabel,zeroth_matl);
   t->computes(lb->KineticEnergyLabel);
-  t->computes(lb->pSurfLabel);
+  t->computes(lb->AddedParticlesLabel);
 
   if(!flags->d_doGridReset){
     t->computes(lb->gDisplacementLabel);
@@ -1502,6 +1502,8 @@ void SerialMPM::scheduleAddParticles(SchedulerP& sched,
   zeroth_matl->add(0);
   zeroth_matl->addReference();
 
+  t->requires(Task::OldDW, lb->AddedParticlesLabel );
+  t->computes(lb->AddedParticlesLabel);
   t->modifies(lb->pParticleIDLabel_preReloc);
   t->modifies(lb->pXLabel_preReloc);
   t->modifies(lb->pVolumeLabel_preReloc);
@@ -2037,6 +2039,7 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
     new_dw->put(max_vartype(0.0), lb->AccStrainEnergyLabel);
   }
   new_dw->put(sum_vartype(0.0), lb->KineticEnergyLabel);
+  new_dw->put(sum_vartype(0.0), lb->AddedParticlesLabel);
 
   new_dw->put(sumlong_vartype(totalParticles), lb->partCountLabel);
 
@@ -3204,10 +3207,10 @@ void SerialMPM::setPrescribedMotion(const ProcessorGroup*,
 
 
 void SerialMPM::modifyLoadCurves(const ProcessorGroup* ,
-                                   const PatchSubset* patches,
-                                   const MaterialSubset*,
-                                   DataWarehouse* old_dw,
-                                   DataWarehouse* new_dw)
+                                 const PatchSubset* patches,
+                                 const MaterialSubset*,
+                                 DataWarehouse* old_dw,
+                                 DataWarehouse* new_dw)
 {
   // Get the current time
   double time = d_sharedState->getElapsedTime();
@@ -4345,6 +4348,11 @@ void SerialMPM::addParticles(const ProcessorGroup*,
                              DataWarehouse* old_dw,
                              DataWarehouse* new_dw)
 {
+  sum_vartype AddedParticlesOld;
+  old_dw->get(AddedParticlesOld,   lb->AddedParticlesLabel);
+
+  new_dw->put(sum_vartype(AddedParticlesOld),      lb->AddedParticlesLabel);
+
   for(int p=0;p<patches->size();p++){
    const Patch* patch = patches->get(p);
    printTask(patches, patch,cout_doing, "Doing addParticles");
@@ -4357,13 +4365,11 @@ void SerialMPM::addParticles(const ProcessorGroup*,
    new_dw->allocateAndPut(NAPID_new,lb->pCellNAPIDLabel,    0,patch);
    NAPID_new.copyData(NAPID);
 
-   if(flags->d_doAuthigenisis){
-     flags->d_doAuthigenisis = false;
+   if(flags->d_doAuthigenisis && AddedParticlesOld<1.0){
+    cout << "Doing addParticles" << endl;
 
-     cout << "Doing addParticles" << endl;
-
-     Vector dx = patch->dCell();
-     int numMPMMatls=d_sharedState->getNumMPMMatls();
+    Vector dx = patch->dCell();
+    int numMPMMatls=d_sharedState->getNumMPMMatls();
 
     vector<Point> P;
     vector<double> color;
@@ -4378,37 +4384,27 @@ void SerialMPM::addParticles(const ProcessorGroup*,
       string mnums = mnum.str();
       string filename = flags->d_authigenisisBaseFilename + "." + mnums;
       std::ifstream is(filename.c_str());
-//      if (!is ){
-//        throw ProblemSetupException(
-//                "ERROR Opening prescribed deformation file '"+filename+"'\n",
-//                                                          __FILE__, __LINE__);
-//      }
-//      cout << "filename = " << filename << endl;
 
       if(is) {
-       while(is) {
-        double x,y,z,col;
-        is >> x >> y >> z >> col;
-//        cout << "x = " << x << endl;
+       double x,y,z,col;
+       while(is >> x >> y >> z >> col){
         Point testPoint(x,y,z);
-//        cout << "patchID = " << patch->getID() << endl;
         if(patch->containsPoint(testPoint)){
           P.push_back(testPoint);
           color.push_back(col);
           numNewPartNeeded++;
           splitForAny=true;
-//          cout << "TestPoint = " << testPoint << endl;
-        } else {
-//          cout << "testPoint = " << testPoint << endl;
         }
        }
        is.close();
       }
+//      cout << "patchID = " << patch->getID() << endl;
       cout << "numNewPartNeeded = " << numNewPartNeeded << endl;
 //      for(int jim = 0; jim<numNewPartNeeded;jim++){
 //         cout << "P = " << P[jim] << endl;
 //         cout << "color = " << color[jim] << endl;
 //      }
+      double APN = (double) numNewPartNeeded;
 
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
@@ -4589,9 +4585,11 @@ void SerialMPM::addParticles(const ProcessorGroup*,
       new_dw->put(pFtmp,    lb->pDeformationMeasureLabel_preReloc,   true);
       new_dw->put(ploctmp,  lb->pLocalizedMPMLabel_preReloc,         true);
       new_dw->put(pvgradtmp,lb->pVelGradLabel_preReloc,              true);
+      new_dw->put(sum_vartype(APN),      lb->AddedParticlesLabel);
     }  // for matls
-   }  // if time
-  }    // for patches
+   }    // if doAuth && AddedNewParticles<1.0....
+  }   // for patches
+//   flags->d_doAuthigenisis = false;
 }
 
 void SerialMPM::computeParticleScaleFactor(const ProcessorGroup*,

@@ -163,7 +163,7 @@ MPMLabel::MPMLabel()
 			ParticleVariable<double>::getTypeDescription() );
   
   pSurfLabel = VarLabel::create( "p.surface",
-			ParticleVariable<int>::getTypeDescription() );
+			ParticleVariable<double>::getTypeDescription() );
 
   pLastLevelLabel = VarLabel::create( "p.lastlevel",
 			ParticleVariable<int>::getTypeDescription() );
@@ -275,7 +275,7 @@ MPMLabel::MPMLabel()
 			ParticleVariable<double>::getTypeDescription() );
   
   pSurfLabel_preReloc = VarLabel::create( "p.surface+",
-			ParticleVariable<int>::getTypeDescription() );
+			ParticleVariable<double>::getTypeDescription() );
 
   pLastLevelLabel_preReloc = VarLabel::create( "p.lastlevel+",
 			ParticleVariable<int>::getTypeDescription() );
@@ -528,8 +528,9 @@ MPMLabel::MPMLabel()
   TotalMassLabel = VarLabel::create( "TotalMass",
 				 sum_vartype::getTypeDescription() );
 
-  NeedAddMPMMaterialLabel = VarLabel::create("NeedAddMPMMaterial",
+  AddedParticlesLabel = VarLabel::create("AddedParticles",
                                  sum_vartype::getTypeDescription());
+
   for(int iside=0;iside<6;iside++) {
       string label_name = Patch::getFaceName( (Patch::FaceType) iside ); // FIXME: assumes face indices
       
@@ -1021,9 +1022,9 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(AccStrainEnergyLabel);
   VarLabel::destroy(StrainEnergyLabel);
   VarLabel::destroy(KineticEnergyLabel);
+  VarLabel::destroy(AddedParticlesLabel);
   VarLabel::destroy(ThermalEnergyLabel);
   VarLabel::destroy(TotalMassLabel);
-  VarLabel::destroy(NeedAddMPMMaterialLabel);
   VarLabel::destroy(TotalVolumeDeformedLabel);
   for(int iside=0;iside<6;iside++) {
       VarLabel::destroy(BndyContactAreaLabel[iside]);
