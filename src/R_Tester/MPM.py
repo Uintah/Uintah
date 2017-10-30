@@ -35,7 +35,7 @@ NIGHTLYTESTS = [
                   #----------  All Tests ---------  #
                   ("disks_complex",                       "disks_complex.ups",                       6,  "ALL", ["exactComparison"] ),
                   ("heatcond2mat",                        "heatcond2mat.ups",                        1,  "ALL", ["exactComparison"] ),
-                  ("inclined_plane_sphere",               "inclined_plane_sphere.ups",               1,  "ALL", ["exactComparison"] ),
+                  ("NairnFrictionTest",                   "NairnFrictionTest.ups",               1,  "ALL", ["exactComparison"] ),
                   ("foam_crush",                          "foam_crush.ups",                          4,  "ALL", ["exactComparison"] ),
                   ("ColPlate_AffineTrans",                "ColPlate_AffineTrans.ups",                1,  "ALL", ["exactComparison"] ),
 #                  ("periodic_disks",                      "periodic_disks.ups",                      1,  "ALL", [] ),
