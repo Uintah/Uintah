@@ -37,6 +37,8 @@ NIGHTLYTESTS = [
                   ("heatcond2mat",                        "heatcond2mat.ups",                        1,  "ALL", ["exactComparison"] ),
                   ("inclined_plane_sphere",               "inclined_plane_sphere.ups",               1,  "ALL", ["exactComparison"] ),
                   ("foam_crush",                          "foam_crush.ups",                          4,  "ALL", ["exactComparison"] ),
+                  ("ColPlate_AffineTrans",                "ColPlate_AffineTrans.ups",                1,  "ALL", ["exactComparison"] ),
+#                  ("periodic_disks",                      "periodic_disks.ups",                      1,  "ALL", [] ),
 #                  ("periodic_disks",                      "periodic_disks.ups",                      1,  "ALL", [] ),
 #                  ("periodic_spheres3D",                  "periodic_spheres3D.ups",                  8,  "All", ["no_dbg","exactComparison"] ),
 #                  ("const_test_hypo",                     "const_test_hypo.ups",                     1,  "ALL", ["exactComparison"] ),

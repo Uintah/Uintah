@@ -5,7 +5,7 @@
    </Meta>
    <SimulationComponent type="mpm" />
    <Time>
-       <maxTime>1.5</maxTime>
+       <maxTime>0.36</maxTime>
        <initTime>0.0</initTime>
        <delt_min>0.0</delt_min>
        <delt_max>2.0</delt_max>
@@ -40,9 +40,9 @@
       </BoundaryConditions>
       <Level>
          <Box label = "1">
-            <lower>[0.0,-.26, 0.0]</lower>
-            <upper>[0.5,1.00,0.001]</upper>
-            <resolution>[100,252,1]</resolution>
+            <lower>[0.0, -.0,0.0]</lower>
+            <upper>[0.50,0.8,0.005]</upper>
+            <resolution>[100,160,1]</resolution>
             <extraCells>[1,1,1]</extraCells>
             <patches>[1,1,1]</patches>
          </Box>
@@ -53,11 +53,13 @@
       <outputInterval>0.02</outputInterval>
       <save label = "p.x"/>
       <save label = "p.color"/>
+      <save label = "g.mass"/>
       <save label = "p.velocity"/>
       <save label = "p.particleID"/>
       <save label = "p.stress"/>
+      <save label = "p.scalefactor"/>
       <save label = "TotalMomentum"/>
-      <checkpoint cycle = "2" timestepInterval = "100"/>
+      <checkpoint cycle = "2" interval = "0.02"/>
    </DataArchiver>
 
    <MPM>
@@ -70,9 +72,9 @@
      <artificial_viscosity>        true     </artificial_viscosity>
      <artificial_viscosity_heating>false    </artificial_viscosity_heating>
      <do_contact_friction_heating> false    </do_contact_friction_heating>
-     <create_new_particles>        false    </create_new_particles>
-     <UseMomentumForm>             false    </UseMomentumForm>
+     <DoExplicitHeatConduction>    false    </DoExplicitHeatConduction>
      <withColor>                   true     </withColor>
+     <cpdi_lcrit>                  1.0      </cpdi_lcrit>
      <axisymmetric>true</axisymmetric>
    </MPM>
 
@@ -81,9 +83,7 @@
    </PhysicalConstants>
 
    <MaterialProperties>
-
     <MPM>
-
       <material name="Tungsten">
         <density>19235.e3</density>
         <melt_temp>3695.0</melt_temp>
@@ -119,7 +119,7 @@
         <geom_object>
          <parallelepiped label = "Plate1">
            <p1>[0.0,    0.1,   0.0]  </p1>
-           <p2>[0.0,    0.1,   0.001]</p2>
+           <p2>[0.0,    0.1,   0.005]</p2>
            <p3>[0.5,    0.1,   0.0]  </p3>
            <p4>[0.0,    0.0,   0.0]  </p4>
          </parallelepiped>
@@ -150,7 +150,7 @@
          <affineTransformation_A1>[0.7660, 0.6428,0.0]</affineTransformation_A1>
          <affineTransformation_A2>[0.0,    0.0,   1.0]</affineTransformation_A2>
          <affineTransformation_b> [0.0766,0.0357, 0.0]</affineTransformation_b>
-         <!--  -->
+         <!-- -->
          <res>[2,2,1]</res>
          <velocity>[-.1040288,0.08729,0.0]</velocity>
          <temperature>294</temperature>
