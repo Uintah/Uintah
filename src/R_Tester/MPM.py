@@ -33,14 +33,14 @@ from helpers.runSusTests import runSusTests, inputs_root, ignorePerformanceTests
 
 NIGHTLYTESTS = [
                   #----------  All Tests ---------  #
-                  ("disks_complex",                       "disks_complex.ups",                       4,  "ALL", ["exactComparison"] ),
+                  ("disks_complex",                       "disks_complex.ups",                       6,  "ALL", ["exactComparison"] ),
                   ("heatcond2mat",                        "heatcond2mat.ups",                        1,  "ALL", ["exactComparison"] ),
                   ("inclined_plane_sphere",               "inclined_plane_sphere.ups",               1,  "ALL", ["exactComparison"] ),
                   ("foam_crush",                          "foam_crush.ups",                          4,  "ALL", ["exactComparison"] ),
-                  ("periodic_disks",                      "periodic_disks.ups",                      1,  "ALL", [] ),
+#                  ("periodic_disks",                      "periodic_disks.ups",                      1,  "ALL", [] ),
 #                  ("periodic_spheres3D",                  "periodic_spheres3D.ups",                  8,  "All", ["no_dbg","exactComparison"] ),
-                  ("const_test_hypo",                     "const_test_hypo.ups",                     1,  "ALL", ["exactComparison"] ),
-                  ("const_test_cmr",                      "const_test_cmr.ups",                      1,  "ALL", ["exactComparison"] ),
+#                  ("const_test_hypo",                     "const_test_hypo.ups",                     1,  "ALL", ["exactComparison"] ),
+#                  ("const_test_cmr",                      "const_test_cmr.ups",                      1,  "ALL", ["exactComparison"] ),
                   ("const_test_nhp",                      "const_test_nhp.ups",                      1,  "ALL", ["exactComparison"] ),
                   ("const_test_vs",                       "const_test_vs.ups",                       1,  "ALL", ["exactComparison"] ),
                   ("adiCuJC4000s696K",                    "adiCuJC4000s696K.ups",                    1,  "ALL", ["exactComparison"] ),
