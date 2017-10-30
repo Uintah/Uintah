@@ -295,7 +295,8 @@ double ScalarFluxBC::fluxPerParticle(double time, double area) const
   // Get the initial scalar flux that is applied ( t = 0.0 )
   double flux = ScalarFlux(time);
 
-  // Calculate the forec per particle
+  // Calculate dC/dt per particle -- JBH, 9/26/2017
+  // Fixme TODO Make sure area is correct!
   return flux*area;
 }
 

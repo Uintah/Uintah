@@ -997,7 +997,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
           box_ps->getAttributes(patchAttributes);
           proc0cout << "Automatically performing patch layout.\n";
           
-          int numProcs = pg->size();
+          int numProcs = pg->nRanks();
           int targetPatches = (int)(numProcs * autoPatchValue);
           
           Primes::FactorType factors;
@@ -1118,7 +1118,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
         } // end for(int i=0;i<patches.x();i++){
       } // end for(ProblemSpecP box_ps = level_ps->findBlock("Box");
 
-      if (pg->size() > 1 && (level->numPatches() < pg->size()) && !do_amr) {
+      if (pg->nRanks() > 1 && (level->numPatches() < pg->nRanks()) && !do_amr) {
         throw ProblemSetupException("Number of patches must >= the number of processes in an mpi run",
                                     __FILE__, __LINE__);
       }

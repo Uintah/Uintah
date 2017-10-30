@@ -90,13 +90,13 @@ void CostModelForecaster::outputError(const GridP grid)
     {
       const Patch* patch=level->getPatch(p);
       
-      if(d_lb->getPatchwiseProcessorAssignment(patch)!=d_myworld->myrank()){
+      if(d_lb->getPatchwiseProcessorAssignment(patch)!=d_myworld->myRank()){
         continue;
       }
       
       double error = (d_execTimes[patch->getID()] - costs[l][p])/(d_execTimes[patch->getID()] + costs[l][p]);
 
-//      cout << d_myworld->myrank() << " patch:" << patch->getID() << " exectTime: " << d_execTimes[patch->getID()] 
+//      cout << d_myworld->myRank() << " patch:" << patch->getID() << " exectTime: " << d_execTimes[patch->getID()] 
 //           << " cost: " << costs[l][p] << " error: " << error << endl;
      
       IntVector low(patch->getCellLowIndex());
@@ -120,7 +120,7 @@ void CostModelForecaster::outputError(const GridP grid)
   double sum_aerror=0;
   double max_error=0;
   
-  if(d_myworld->size()>1){
+  if(d_myworld->nRanks()>1){
     Uintah::MPI::Reduce(&sum_error_local, &sum_error, 1,MPI_DOUBLE,MPI_SUM,0,d_myworld->getComm());
     Uintah::MPI::Reduce(&sum_aerror_local,&sum_aerror,1,MPI_DOUBLE,MPI_SUM,0,d_myworld->getComm());
     Uintah::MPI::Reduce(&max_error_local, &max_error, 1,MPI_DOUBLE,MPI_MAX,0,d_myworld->getComm());
@@ -132,7 +132,7 @@ void CostModelForecaster::outputError(const GridP grid)
     max_error  = max_error_local;
   }
 
-  if(d_myworld->myrank()==0 && stats.active()) {
+  if(d_myworld->myRank()==0 && stats.active()) {
     sum_error/=size;
     sum_aerror/=size;
     cout << "sMPE: " << sum_error << " sMAPE: " << sum_aerror << " MAXsPE: " << max_error << endl;
@@ -147,7 +147,7 @@ void CostModelForecaster::collectPatchInfo(const GridP grid, vector<PatchInfo> &
   d_lb->collectParticles(grid.get_rep(),num_particles);
 
   vector<PatchInfo> patchList;
-  vector<int> num_patches(d_myworld->size(),0);
+  vector<int> num_patches(d_myworld->nRanks(),0);
 
   int total_patches=0;
   
@@ -163,7 +163,7 @@ void CostModelForecaster::collectPatchInfo(const GridP grid, vector<PatchInfo> &
       num_patches[owner]++;
       
       //if I own patch
-      if(owner==d_myworld->myrank()){
+      if(owner==d_myworld->myRank()){
         // add to patch list
         PatchInfo pinfo(num_particles[l][p],patch->getNumCells(),patch->getNumExtraCells()-patch->getNumCells(),d_execTimes[patch->getID()]);
         patchList.push_back(pinfo);
@@ -171,21 +171,21 @@ void CostModelForecaster::collectPatchInfo(const GridP grid, vector<PatchInfo> &
     }
   }
 
-  vector<int> displs(d_myworld->size(),0), recvs(d_myworld->size(),0);
+  vector<int> displs(d_myworld->nRanks(),0), recvs(d_myworld->nRanks(),0);
 
   //compute recvs and displs
-  for(int i=0;i<d_myworld->size();i++){
+  for(int i=0;i<d_myworld->nRanks();i++){
     recvs[i] = num_patches[i]*sizeof(PatchInfo);
   }
   
-  for(int i=1;i<d_myworld->size();i++) {
+  for(int i=1;i<d_myworld->nRanks();i++) {
     displs[i] = displs[i-1]+recvs[i-1];
   }
   
   patch_info.resize(total_patches);
   
   //allgather the patch info
-  if(d_myworld->size()>1){
+  if(d_myworld->nRanks()>1){
     Uintah::MPI::Allgatherv(&patchList[0], patchList.size()*sizeof(PatchInfo),  MPI_BYTE,
                     &patch_info[0], &recvs[0], &displs[0], MPI_BYTE,
                     d_myworld->getComm());
@@ -350,7 +350,7 @@ CostModelForecaster::finalizeContributions( const GridP currentGrid )
   collectPatchInfo(currentGrid,patch_info);
 
 #if 0
-  if(stats.active() && d_myworld->myrank()==0){
+  if(stats.active() && d_myworld->myRank()==0){
     static int j=0;
     
     for(size_t i=0;i<patch_info.size();i++){
@@ -428,7 +428,7 @@ CostModelForecaster::finalizeContributions( const GridP currentGrid )
   min_norm_least_sq(A,b,x);
   
 #if 0
-  if(d_myworld->myrank()==0){
+  if(d_myworld->myRank()==0){
     cout << " Coefficients: ";
     for(int i=0;i<cols;i++){
       cout << "x["<<i<<"]: "<< x[i]<< "\n";
@@ -454,7 +454,7 @@ CostModelForecaster::finalizeContributions( const GridP currentGrid )
   //update model coefficents
   setCosts(d_x[3], d_x[0], d_x[1], d_x[2]);
   
-  if(d_myworld->myrank()==0 && stats.active()){
+  if(d_myworld->myRank()==0 && stats.active()){
     cout << "Update: patchCost: " << d_patchCost << " cellCost: " << d_cellCost << " d_extraCellCost: " << d_extraCellCost << " particleCost: " << d_particleCost << endl;
   }
   

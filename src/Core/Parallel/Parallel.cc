@@ -270,9 +270,9 @@ Parallel::initializeManager( int& argc , char**& argv )
     s_root_context = scinew ProcessorGroup(nullptr, Uintah::worldComm_, s_world_rank, s_world_size, s_num_threads);
 #endif
 
-  if (s_root_context->myrank() == 0) {
-    std::string plural = (s_root_context->size() > 1) ? "processes" : "process";
-    std::cout << "Parallel: " << s_root_context->size() << " MPI " << plural << " (using MPI)\n";
+  if (s_root_context->myRank() == 0) {
+    std::string plural = (s_root_context->nRanks() > 1) ? "processes" : "process";
+    std::cout << "Parallel: " << s_root_context->nRanks() << " MPI " << plural << " (using MPI)\n";
 
 
 #ifdef THREADED_MPI_AVAILABLE

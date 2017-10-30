@@ -526,6 +526,10 @@ KokkosSolver::SSPRKSolve( const LevelP& level, SchedulerP& sched ){
     i_transport->second->schedule_task_group( "momentum_construction", TaskInterface::TIMESTEP_EVAL,
       packed_info.global, level, sched, matls, time_substep );
 
+    // apply boundary condition
+    i_transport->second->schedule_task_group( "momentum_construction", TaskInterface::BC, false,
+                                              level, sched, matls, time_substep );
+
     i_transport->second->schedule_task_group( "momentum_fe_update", TaskInterface::TIMESTEP_EVAL,
       packed_info.global, level, sched, matls, time_substep );
 
@@ -557,15 +561,17 @@ KokkosSolver::SSPRKSolve( const LevelP& level, SchedulerP& sched ){
       // Correct velocities
       AtomicTaskInterface* gradP_tsk = i_transport->second->retrieve_atomic_task("pressure_correction");
       gradP_tsk->schedule_task(level, sched, matls, AtomicTaskInterface::ATOMIC_STANDARD_TASK, time_substep);
- 
+
     }
+
     // apply boundary conditions
-     i_transport->second->schedule_task_group( "momentum_construction", TaskInterface::BC, false, level, sched, matls, time_substep );
+    i_transport->second->schedule_task_group( "momentum_construction", TaskInterface::BC, false,
+                                               level, sched, matls, time_substep );
 
     //Compute U from rhoU
     i_prop_fac->second->schedule_task( "u_from_rho_u", TaskInterface::TIMESTEP_EVAL,
       level, sched, matls, time_substep, false, true );
-      
+
     i_prop_fac->second->schedule_task( "compute_cc_velocities", TaskInterface::TIMESTEP_EVAL,
       level, sched, matls, time_substep, false, true );
 

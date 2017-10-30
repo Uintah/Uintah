@@ -201,7 +201,7 @@ void Poisson2::timeAdvance(const ProcessorGroup* pg,
     subsched->get_dw(1)->get(residual_var, residual_label);
     residual = residual_var;
 
-    if(pg->myrank() == 0)
+    if(pg->myRank() == 0)
       cerr << "Iteration " << count++ << ", residual=" << residual << '\n';
   } while(residual > maxresidual_);
 

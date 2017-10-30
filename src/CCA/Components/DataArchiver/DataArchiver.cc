@@ -900,7 +900,7 @@ DataArchiver::createIndexXML(Dir& dir)
 {
    ProblemSpecP rootElem = ProblemSpec::createDocument("Uintah_DataArchive");
 
-   rootElem->appendElement("numberOfProcessors", d_myworld->size());
+   rootElem->appendElement("numberOfProcessors", d_myworld->nRanks());
 
    rootElem->appendElement("ParticlePosition", d_particlePositionName);
    
@@ -1564,7 +1564,7 @@ DataArchiver::writeto_xml_files( double delt, const GridP& grid )
 
       metaElem->appendElement("endianness", endianness().c_str());
       metaElem->appendElement("nBits", (int)sizeof(unsigned long) * 8 );
-      metaElem->appendElement("numProcs", d_myworld->size());
+      metaElem->appendElement("numProcs", d_myworld->nRanks());
 
       // Timestep information
       ProblemSpecP timeElem = rootElem->appendChild("Time");
@@ -1794,7 +1794,7 @@ DataArchiver::writeGridBinary( const bool hasGlobals, const string & grid_path, 
 
     LoadBalancerPort * lb = dynamic_cast<LoadBalancerPort*>( getPort("load balancer") );
 
-    procOnLevel[ lev ].resize( d_myworld->size() );
+    procOnLevel[ lev ].resize( d_myworld->nRanks() );
 
     // Iterate over patches.
     Level::const_patch_iterator iter;
@@ -1909,7 +1909,7 @@ DataArchiver::writeGridOriginal( const bool hasGlobals, const GridP & grid, Prob
     //__________________________________
     //  Output patch information:
 
-    procOnLevel[ l ].resize( d_myworld->size() );
+    procOnLevel[ l ].resize( d_myworld->nRanks() );
 
     Level::const_patch_iterator iter;
     for( iter = level->patchesBegin(); iter != level->patchesEnd(); ++iter ) {
@@ -1954,7 +1954,7 @@ DataArchiver::writeGridOriginal( const bool hasGlobals, const GridP & grid, Prob
 
     // Create a pxxxxx.xml file for each proc doing the outputting.
 
-    for( int i = 0; i < d_myworld->size(); i++ ) {
+    for( int i = 0; i < d_myworld->nRanks(); i++ ) {
       if( ( i % lb->getNthRank() ) != 0 || !procOnLevel[l][i] ){
         continue;
       }
@@ -2052,7 +2052,7 @@ DataArchiver::writeGridTextWriter( const bool hasGlobals, const string & grid_pa
 
     //__________________________________
     //  output patch information
-    procOnLevel[ l ].resize( d_myworld->size() );
+    procOnLevel[ l ].resize( d_myworld->nRanks() );
 
     Level::const_patch_iterator iter;
     for(iter=level->patchesBegin(); iter != level->patchesEnd(); ++iter) {
@@ -2139,7 +2139,7 @@ DataArchiver::writeDataTextWriter( const bool hasGlobals, const string & data_pa
     lname << "l" << l;
 
     // create a pxxxxx.xml file for each proc doing the outputting
-    for( int i = 0; i < d_myworld->size(); i++ ) {
+    for( int i = 0; i < d_myworld->nRanks(); i++ ) {
       if ( i % lb->getNthRank() != 0 || !procOnLevel[l][i] ) {
         continue;
       }
@@ -2224,7 +2224,7 @@ DataArchiver::createPIDXCommunicator(       vector<SaveItem> & saveLabels,
                                             SchedulerP       & sched,
                                             bool               isThisCheckpoint )
 {
-  int proc = d_myworld->myrank();
+  int proc = d_myworld->myRank();
   LoadBalancerPort * lb = dynamic_cast< LoadBalancerPort * >( getPort( "load balancer" ) );
 
   // Resize the comms back to 0...
@@ -2238,13 +2238,13 @@ DataArchiver::createPIDXCommunicator(       vector<SaveItem> & saveLabels,
     const LevelP& level = grid->getLevel(i);
     vector< SaveItem >::iterator saveIter;
     const PatchSet* patches = lb->getOutputPerProcessorPatchSet( level );
-    //cout << "[ "<< d_myworld->myrank() << " ] Patch size: " << patches->size() << "\n";
+    //cout << "[ "<< d_myworld->myRank() << " ] Patch size: " << patches->size() << "\n";
     
     /*
       int color = 0;
-      if (patches[d_myworld->myrank()].size() != 0)
+      if (patches[d_myworld->myRank()].size() != 0)
         color = 1;
-      MPI_Comm_split(d_myworld->getComm(), color, d_myworld->myrank(), &(pidxComms[i]));
+      MPI_Comm_split(d_myworld->getComm(), color, d_myworld->myRank(), &(pidxComms[i]));
    */
     
     int color = 0;
@@ -2258,7 +2258,7 @@ DataArchiver::createPIDXCommunicator(       vector<SaveItem> & saveLabels,
       //cout << "Patch rank: " << proc << "\n";
     }
     
-    MPI_Comm_split( d_myworld->getComm(), color, d_myworld->myrank(), &(d_pidxComms[i]) );
+    MPI_Comm_split( d_myworld->getComm(), color, d_myworld->myRank(), &(d_pidxComms[i]) );
     //if (color == 1) {
     //  int nsize;
     //  MPI_Comm_size(pidxComms[i], &nsize);
@@ -2511,7 +2511,7 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
     ldir = tdir.getSubdir(lname.str());
     
     ostringstream pname;
-    pname << "p" << setw(5) << setfill('0') << d_myworld->myrank();
+    pname << "p" << setw(5) << setfill('0') << d_myworld->myRank();
     xmlFilename = ldir.getName() + "/" + pname.str() + ".xml";
     dataFilebase = pname.str() + ".data";
     dataFilename = ldir.getName() + "/" + dataFilebase;
@@ -2830,7 +2830,7 @@ DataArchiver::saveLabels_PIDX( std::vector< SaveItem >     & saveLabels,
   int nSaveItems =  saveLabels.size();
   vector<int> nSaveItemMatls (nSaveItems);
 
-  int rank = pg->myrank();
+  int rank = pg->myRank();
   int rc = -9;               // PIDX return code
 
   //__________________________________
@@ -3736,7 +3736,7 @@ DataArchiver::updateCheckpointInterval( double newinv )
     // If needed create checkpoints/index.xml
     if( !d_checkpointsDir.exists() )
     {
-      if( d_myworld->myrank() == 0) {
+      if( d_myworld->myRank() == 0) {
         d_checkpointsDir = d_dir.createSubdir("checkpoints");
         createIndexXML(d_checkpointsDir);
       }
@@ -3761,7 +3761,7 @@ DataArchiver::updateCheckpointTimestepInterval( int newinv )
     // If needed create checkpoints/index.xml
     if( !d_checkpointsDir.exists())
     {
-      if( d_myworld->myrank() == 0) {
+      if( d_myworld->myRank() == 0) {
         d_checkpointsDir = d_dir.createSubdir("checkpoints");
         createIndexXML(d_checkpointsDir);
       }
@@ -3833,7 +3833,7 @@ DataArchiver::outputTimestep( double time,
                               const GridP& grid,
                               SchedulerP& sched )
 {
-  int proc = d_myworld->myrank();
+  int proc = d_myworld->myRank();
 
   LoadBalancerPort * lb =
     dynamic_cast< LoadBalancerPort * >( getPort( "load balancer" ) );
@@ -3884,7 +3884,7 @@ DataArchiver::checkpointTimestep( double time,
                                   const GridP& grid,
                                   SchedulerP& sched )
 {
-  int proc = d_myworld->myrank();
+  int proc = d_myworld->myRank();
 
   LoadBalancerPort * lb =
     dynamic_cast< LoadBalancerPort * >( getPort( "load balancer" ) );
@@ -3981,7 +3981,7 @@ DataArchiver::setupSharedFileSystem()
 
   // Verify that all MPI processes can see the common file system (with rank 0).
   string fs_test_file_name;
-  if( d_myworld->myrank() == 0 ) {
+  if( d_myworld->myRank() == 0 ) {
 
     d_writeMeta = true;
     // Create a unique file name, using hostname + pid
@@ -4042,7 +4042,7 @@ DataArchiver::setupSharedFileSystem()
     delete[] inbuf;       
   }
 
-  if( d_myworld->myrank() != 0 ) { // Make sure everyone else can see the temp file...
+  if( d_myworld->myRank() != 0 ) { // Make sure everyone else can see the temp file...
 
     struct stat st;
     int s = stat( fs_test_file_name.c_str(), &st );
@@ -4089,7 +4089,7 @@ DataArchiver::setupSharedFileSystem()
     delete[] inbuf;
   }
 
-  if( d_myworld->myrank() == 0 ) {
+  if( d_myworld->myRank() == 0 ) {
     cerr << "Verified shared file system in " << timer().seconds()
 	 << " seconds.\n";
   }
@@ -4117,7 +4117,7 @@ DataArchiver::setupLocalFileSystems()
 
   // See how many shared filesystems that we have
   string basename;
-  if( d_myworld->myrank() == 0 ) {
+  if( d_myworld->myRank() == 0 ) {
     // Create a unique string, using hostname+pid
     char* base = strdup(d_filebase.c_str());
     char* p = base+strlen(base);
@@ -4162,7 +4162,7 @@ DataArchiver::setupLocalFileSystems()
   }
   // Create a file, of the name p0_hostname-p0_pid-processor_number
   ostringstream myname;
-  myname << basename << "-" << d_myworld->myrank() << ".tmp";
+  myname << basename << "-" << d_myworld->myRank() << ".tmp";
   string fname = myname.str();
 
   // This will be an empty file, everything is encoded in the name anyway
@@ -4185,7 +4185,7 @@ DataArchiver::setupLocalFileSystems()
   // See who else we can see
   d_writeMeta=true;
   int i;
-  for(i=0;i<d_myworld->myrank();i++) {
+  for(i=0;i<d_myworld->myRank();i++) {
     ostringstream name;
     name << basename << "-" << i << ".tmp";
     struct stat st;
@@ -4252,7 +4252,7 @@ if(!d_writeMeta) {
   // ensure that all processors wait before they remove the tmp files
   Uintah::MPI::Allreduce(&count, &nunique, 1, MPI_INT, MPI_SUM,
                 d_myworld->getComm());
-  if( d_myworld->myrank() == 0 ) {
+  if( d_myworld->myRank() == 0 ) {
     cerr << "Discovered " << nunique << " unique filesystems in "
 	 << timer().seconds() << " seconds\n";
   }

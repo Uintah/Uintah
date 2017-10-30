@@ -1076,7 +1076,7 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
     
     // output files for debugging
     int timestep = d_sharedState->getCurrentTopLevelTimeStep();
-    int proc = d_myworld->myrank();
+    int proc = d_myworld->myRank();
     ostringstream fname;
     
     fname << "." << proc <<"." << timestep << "." << counter;

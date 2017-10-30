@@ -324,19 +324,25 @@ DORadiationModel::problemSetup( ProblemSpecP& params )
   }
 
   string linear_sol;
-  db->findBlock("LinearSolver")->getAttribute("type",linear_sol);
-  if (!_sweepMethod){
-    if (linear_sol == "petsc"){
-
-      d_linearSolver = scinew RadPetscSolver(d_myworld);
-
-    } else if (linear_sol == "hypre"){
-
-      d_linearSolver = scinew RadHypreSolver(d_myworld);
-
+  if(db->findBlock("LinearSolver") ==nullptr){
+    if (!_sweepMethod){
+      throw ProblemSetupException("Error: Linear solver missing for DORadition model! Specify Linear solver parameters or use sweeping method.", __FILE__, __LINE__);
     }
+  }else{
+    db->findBlock("LinearSolver")->getAttribute("type",linear_sol);
+    if (!_sweepMethod){
+      if (linear_sol == "petsc"){
 
-    d_linearSolver->problemSetup(db);
+        d_linearSolver = scinew RadPetscSolver(d_myworld);
+
+      } else if (linear_sol == "hypre"){
+
+        d_linearSolver = scinew RadHypreSolver(d_myworld);
+
+      }
+
+      d_linearSolver->problemSetup(db);
+    }
   }
 
   const TypeDescription* CC_double = CCVariable<double>::getTypeDescription();

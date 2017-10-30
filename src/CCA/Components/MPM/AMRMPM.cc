@@ -165,6 +165,11 @@ AMRMPM::AMRMPM(const ProcessorGroup* myworld) :SerialMPM(myworld)
   d_one_matl = scinew MaterialSubset();
   d_one_matl->add(0);
   d_one_matl->addReference();
+
+  d_switchCriteria = nullptr;
+  gZOISWBLabel = nullptr;
+  gZOINETLabel = nullptr;
+
 }
 //______________________________________________________________________
 //
@@ -1480,7 +1485,6 @@ void AMRMPM::scheduleAddParticles(SchedulerP& sched,
       t->modifies(lb->diffusion->pConcPrevious_preReloc);
       t->modifies(lb->diffusion->pGradConcentration_preReloc);
       t->modifies(lb->diffusion->pExternalScalarFlux_preReloc);
-      // JBH -- FIXME -- TODO -- Add to MPMDiffusion sublabel?
       t->modifies(lb->diffusion->pArea_preReloc);
       t->modifies(lb->diffusion->pDiffusivity_preReloc);
     }
@@ -1777,7 +1781,7 @@ void AMRMPM::printParticleCount(const ProcessorGroup* pg,
   sumlong_vartype pcount;
   new_dw->get(pcount, lb->partCountLabel);
   
-  if(pg->myrank() == 0){
+  if(pg->myRank() == 0){
     std::cout << "Created " << (long) pcount << " total particles" << std::endl;
   }
 }

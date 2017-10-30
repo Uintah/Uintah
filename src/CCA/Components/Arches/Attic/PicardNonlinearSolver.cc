@@ -563,7 +563,7 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
   double reactscalar_clipped = 0.0;
   double norm;
   double init_norm = 0.0;
-  int num_procs = d_myworld->size();
+  int num_procs = d_myworld->nRanks();
   
   if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) {
     subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_scalarFluxCompLabel, patches, matls); 
@@ -633,7 +633,7 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
       init_norm = norm;
     }
     
-    if(pg->myrank() == 0){
+    if(pg->myRank() == 0){
      cout << "PicardSolver init norm: " << init_norm << " current norm: " << norm << endl;
     }
     max_vartype sc;
@@ -649,12 +649,12 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
           (reactscalar_clipped == 0.0));
 
   if ((nlIterations == d_nonlinear_its)&&(norm > d_resTol)){
-    if(pg->myrank() == 0)
+    if(pg->myRank() == 0)
       cout << "Maximum allowed number of iterations reached" << endl;
   }    
      
   if (norm/(init_norm+1.0e-10) > 1) {
-    if(pg->myrank() == 0){
+    if(pg->myRank() == 0){
        cout << "WARNING! Iterations diverge! Restarting timestep." << endl;
       new_dw->abortTimestep();
       new_dw->restartTimestep();
@@ -662,7 +662,7 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
   }
   
   if ((scalar_clipped > 0.0)||(reactscalar_clipped > 0.0)) {
-    if(pg->myrank() == 0){
+    if(pg->myRank() == 0){
        cout << "WARNING! Scalars got clipped! Restarting timestep." << endl;
       new_dw->abortTimestep();
       new_dw->restartTimestep();
@@ -2111,7 +2111,7 @@ PicardNonlinearSolver::printTotalKE(const ProcessorGroup* ,
     new_dw->get(rhon, d_lab->d_rhoNormLabel);
   }
   double total_kin_energy = tke;
-  int me = d_myworld->myrank();
+  int me = d_myworld->myRank();
   if (me == 0){
      cerr << "Total kinetic energy " <<  total_kin_energy << endl;
   }
@@ -2525,7 +2525,7 @@ PicardNonlinearSolver::checkDensityGuess(const ProcessorGroup* pc,
     }
     new_dw->getModifiable(densityGuess, d_lab->d_densityGuessLabel,indx, patch);
     if (negativeDensityGuess > 0.0) {
-      if (pc->myrank() == 0)
+      if (pc->myRank() == 0)
         cout << "WARNING: got negative density guess. Reverting to old density" << endl;
       old_values_dw->copyOut(densityGuess, d_lab->d_densityCPLabel,indx, patch);
     }   

@@ -140,6 +140,7 @@ private:
 
   }
 
+  //------------------------------------------------------------------------------------------------
   template <typename T, typename FluxXT, typename FluxYT, typename FluxZT>
   KScalarRHS<T, FluxXT, FluxYT, FluxZT>::~KScalarRHS(){
 
@@ -147,6 +148,7 @@ private:
 
   }
 
+  //------------------------------------------------------------------------------------------------
   template <typename T, typename FluxXT, typename FluxYT, typename FluxZT> void
   KScalarRHS<T, FluxXT, FluxYT, FluxZT>::problemSetup( ProblemSpecP& input_db ){
 
@@ -222,10 +224,10 @@ private:
 
     m_source_info.push_back(eqn_srcs);
 
-    // setup the boundary conditions for this eqn set
-    m_boundary_functors->create_bcs( db, _eqn_names );
-
   }
+
+  // setup the boundary conditions for this eqn set
+  m_boundary_functors->create_bcs( input_db, _eqn_names );
 
   delete conv_helper;
 
@@ -529,6 +531,12 @@ private:
     for ( auto i = bc_dep.begin(); i != bc_dep.end(); i++ ){
       register_variable( *i, ArchesFieldContainer::REQUIRES, 0 , ArchesFieldContainer::NEWDW,
                          variable_registry );
+    }
+
+    std::vector<std::string> bc_mod;
+    m_boundary_functors->get_bc_modifies( _eqn_names, m_bcHelper, bc_mod );
+    for ( auto i = bc_mod.begin(); i != bc_mod.end(); i++ ){
+      register_variable( *i, ArchesFieldContainer::MODIFIES, variable_registry );
     }
 
   }

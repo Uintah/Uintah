@@ -654,7 +654,7 @@ void MinMax::doAnalysis(const ProcessorGroup* pg,
     // write data if this processor owns this patch
     // and if it's time to write.  With AMR data the proc
     // may not own the patch
-    if( proc == pg->myrank() && now >= nextWriteTime){  
+    if( proc == pg->myRank() && now >= nextWriteTime){  
 
       printTask(patches, patch,cout_doing,"Doing MinMax::doAnalysis");
 

@@ -33,13 +33,13 @@
       <microSlip>
         <alpha_momentum>       1.0        </alpha_momentum>
         <alpha_temperature>    1.0        </alpha_temperature>
-     <!--   
-        <SlipModel>         "Deissler"    </SlipModel>
-        <CreepFlow>         "true"        </CreepFlow>
-      -->  
-        <SlipModel> Karniadakis-Beskok  </SlipModel>
-        <CreepFlow>         false       </CreepFlow>
-        
+        <CreepFlow>           false       </CreepFlow>
+    
+        <SlipModel type = "FirstOrder"/> 
+  <!--  
+        <SlipModel type = "SecondOrder_Deissler"/>
+        <SlipModel type = "SecondOrder_Karniadakis-Beskok"/>
+   -->
       </microSlip>
     
       <Face side = "x-">

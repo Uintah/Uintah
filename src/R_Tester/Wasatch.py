@@ -3,7 +3,7 @@
 from sys import argv, exit
 from os import environ, system, path
 from commands import getoutput
-from helpers.runSusTests import runSusTests, inputs_root, generatingGoldStandards, build_root
+from helpers.runSusTests import runSusTests, inputs_root, ignorePerformanceTests, build_root, generatingGoldStandards
 from helpers.modUPS import modUPS
 
 the_dir = generatingGoldStandards()
@@ -364,7 +364,7 @@ print( "HAVE_POKITT: %s" % (HAVE_POKITT) )
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
-#LIST: LOCALTESTS DUALTIMETESTS GPUTESTS BCTESTS COMPRESSIBLETESTS CONVECTIONTESTS DEBUGTESTS INTRUSIONTESTS MISCTESTS NIGHTLYTESTS PARTICLETESTS POKITTTESTS PROJECTIONTESTS QMOMTESTS RADIATIONTESTS RKTESTS SCALARTRANSPORTTESTS TURBULENCETESTS VARDENTESTS
+#LIST: LOCALTESTS DUALTIMETESTS GPUTESTS BCTESTS COMPRESSIBLETESTS CONVECTIONTESTS DEBUGTESTS INTRUSIONTESTS MISCTESTS NIGHTLYTESTS PARTICLETESTS POKITTTESTS PROJECTIONTESTS QMOMTESTS RADIATIONTESTS RKTESTS SCALARTRANSPORTTESTS TURBULENCETESTS VARDENTESTS BUILDBOTTESTS
 #__________________________________
 NIGHTLYTESTS = DUALTIMETESTS + RADIATIONTESTS + TURBULENCETESTS + INTRUSIONTESTS + PROJECTIONTESTS + RKTESTS + VARDENTESTS + MISCTESTS + CONVECTIONTESTS + BCTESTS + QMOMTESTS + SCALARTRANSPORTTESTS + PARTICLETESTS + COMPRESSIBLETESTS
 
@@ -410,7 +410,9 @@ def getTestList(me) :
   elif me == "DUALTIMETESTS":
     TESTS = DUALTIMETESTS           
   elif me == "POKITTTESTS":
-    TESTS = POKITTTESTS           
+    TESTS = POKITTTESTS
+  elif me == "BUILDBOTTESTS":
+    TESTS = ignorePerformanceTests( NIGHTLYTESTS )           
   else:
     print "\nERROR:Wasatch.py  getTestList:  The test list (%s) does not exist!\n\n" % me
     exit(1)

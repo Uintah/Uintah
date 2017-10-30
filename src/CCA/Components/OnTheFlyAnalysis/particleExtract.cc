@@ -402,7 +402,7 @@ particleExtract::doAnalysis( const ProcessorGroup * pg,
     //__________________________________
     // write data if this processor owns this patch
     // and if it's time to write
-    if( proc == pg->myrank() && now >= nextWriteTime){
+    if( proc == pg->myRank() && now >= nextWriteTime){
     
       printTask(patches, patch,cout_doing,"Doing particleExtract::doAnalysis");
 

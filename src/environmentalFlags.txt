@@ -94,6 +94,8 @@ ARCHES_TASK_VARS   SCI_DEBUG    Print the variable with associated registration 
 
 ARCHES_BC          SCI_DEBUG    Print out more information about how the code is interpretting and setting up the BCs. 
 
+ARCHES_BC_FUNCTORS SCI_DEBUG    Print out information regarding the bc functor execution
+
 
 MPM:
 __________________________________

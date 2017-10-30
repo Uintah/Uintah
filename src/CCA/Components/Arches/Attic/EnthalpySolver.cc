@@ -563,7 +563,7 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
 //    int currentTimeStep=d_lab->d_sharedState->getCurrentTopLevelTimeStep();
 //    if (currentTimeStep == 1) {
     if (negativeDensityGuess > 0.0) {
-      if (pc->myrank() == 0)
+      if (pc->myRank() == 0)
         cout << "Applying old density fix for enthalpy" << endl;
         
       IntVector idxLo = patch->getFortranCellLowIndex();

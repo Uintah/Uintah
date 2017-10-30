@@ -445,7 +445,7 @@ private:
 
     Vector Dx = patch->dCell();
     double V = Dx.x()*Dx.y()*Dx.z();
-    
+
     Uintah::IntVector low_patch_range = patch->getCellLowIndex();
     Uintah::IntVector high_patch_range = patch->getCellHighIndex();
 
@@ -575,7 +575,7 @@ private:
 
             Uintah::ComputeConvectiveFlux<CFXT, CFYT, CFZT >
               get_flux( phi, u_fx, v_fy, w_fz, x_psi, y_psi, z_psi, x_flux, y_flux, z_flux, eps );
-            
+
             GET_WALL_BUFFERED_PATCH_RANGE(low_patch_range, high_patch_range,0,1,0,1,1,1);
             Uintah::BlockRange z_range( low_patch_range, high_patch_range );
             Uintah::parallel_for( z_range, get_flux );
@@ -667,6 +667,12 @@ private:
     for ( auto i = bc_dep.begin(); i != bc_dep.end(); i++ ){
       register_variable( *i, ArchesFieldContainer::REQUIRES, 0 , ArchesFieldContainer::NEWDW,
                          variable_registry );
+    }
+
+    std::vector<std::string> bc_mod;
+    m_boundary_functors->get_bc_modifies( m_eqn_names, m_bcHelper, bc_mod );
+    for ( auto i = bc_mod.begin(); i != bc_mod.end(); i++ ){
+      register_variable( *i, ArchesFieldContainer::MODIFIES, variable_registry );
     }
 
   }

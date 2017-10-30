@@ -224,7 +224,7 @@ printData(       DataArchive             * archive,
 
         // query all the data up front
         vector<Variable*> vars(patches.size());
-        for (int p = 0; p < patches.size(); p++) {
+        for (unsigned int p = 0; p < patches.size(); p++) {
           if (patches[p]->isVirtual()) continue;
           switch (variable_type->getType()) {
           case Uintah::TypeDescription::CCVariable:
@@ -263,7 +263,7 @@ printData(       DataArchive             * archive,
           IntVector c = *ci;
 
           // find out which patch the variable is on
-          int p = 0;
+          unsigned int p = 0;
           bool foundCell = false;
           Vector dx = level->dCell();
           Vector shift(0,0,0);  // shift the cellPosition if it's a (X,Y,Z)FC variable
@@ -355,7 +355,7 @@ printData(       DataArchive             * archive,
       //__________________________________
       // If the cell indicies were read from a file. 
       if(use_cellIndex_file) {
-        for (int i = 0; i<(int) cells.size(); i++) {
+        for (unsigned int i = 0; i< cells.size(); i++) {
           IntVector c = cells[i];
           vector<T> values;
           try {
@@ -518,7 +518,7 @@ printData_PV(       DataArchive             * archive,
       // query all the data and compute the average up front
       vector<Variable*> vars(patches.size());
       vector<Variable*> ave(patches.size());
-      for (int p = 0; p < patches.size(); p++) {
+      for (unsigned int p = 0; p < patches.size(); p++) {
         vars[p] = scinew ParticleVariable<T>;
         ave[p]  = scinew CCVariable<T>;
 
@@ -544,7 +544,7 @@ printData_PV(       DataArchive             * archive,
 
           // find out which patch it's on (to keep the printing in sorted order.
           // alternatively, we could just iterate through the patches)
-          int p = 0;
+          unsigned int p = 0;
           for (; p < patches.size(); p++) {
             IntVector low  = patches[p]->getExtraCellLowIndex();
             IntVector high = patches[p]->getExtraCellHighIndex();
@@ -576,9 +576,9 @@ printData_PV(       DataArchive             * archive,
       //__________________________________
       // If the cell indicies were read from a file. 
       if(use_cellIndex_file) {
-        for (int i = 0; i<(int) cells.size(); i++) {
+        for (unsigned int i = 0; i< cells.size(); i++) {
           IntVector c = cells[i];
-          int p = 0;
+          unsigned int p = 0;
           
           for (; p < patches.size(); p++) {
             IntVector low  = patches[p]->getExtraCellLowIndex();

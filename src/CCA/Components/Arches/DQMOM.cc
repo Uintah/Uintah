@@ -672,7 +672,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 
 #if defined(DEBUG_MATRICES)
 
-        if( pc->myrank() == 0 ) {
+        if( pc->myRank() == 0 ) {
           if( b_writefile ) {
             char filename[28];
             int currentTimeStep;
@@ -883,7 +883,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         }
 
 #if defined(DEBUG_MATRICES)
-        if( pc->myrank() == 0 ) {
+        if( pc->myRank() == 0 ) {
           if( b_writefile ) {
             char filename[28];
             int currentTimeStep;
@@ -1057,7 +1057,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           Mult( *XX, *Vt, *XXsvd2 );
 
 #if defined(DEBUG_MATRICES)
-          if( pc->myrank() == 0 ) {
+          if( pc->myRank() == 0 ) {
             if( b_writefile ) {
               char filename[28];
               int currentTimeStep;
@@ -1239,7 +1239,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         normX[c] = this_normX;
 
 #if defined(DEBUG_MATRICES)
-        if( pc->myrank() == 0 ) {
+        if( pc->myRank() == 0 ) {
           if( b_writefile ) {
             char filename[28];
             int currentTimeStep;

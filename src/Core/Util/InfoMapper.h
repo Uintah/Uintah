@@ -50,34 +50,34 @@ template<class E, class T>class InfoMapper
 public:
   InfoMapper()
   {
-    d_values.clear();
-    d_names.clear();
-    d_units.clear();
+    m_values.clear();
+    m_names.clear();
+    m_units.clear();
   };
 
   virtual ~InfoMapper() {};
 
   virtual size_t size() const
   {
-    return d_values.size();
+    return m_values.size();
   };
 
   virtual E lastKey() const
   {
-    return (E) d_values.size();
+    return (E) m_values.size();
   };
 
   virtual void clear()
   {
-    d_values.clear();
-    d_names.clear();
-    d_units.clear();
+    m_values.clear();
+    m_names.clear();
+    m_units.clear();
   };
 
   virtual void reset( const T val )
   {
-    for( unsigned int i=0; i<d_values.size(); ++i ) {
-      d_values[(E) i] = val;
+    for( unsigned int i=0; i<m_values.size(); ++i ) {
+      m_values[(E) i] = val;
     }
   };
 
@@ -93,14 +93,14 @@ public:
 
   virtual bool exists( const E key ) const
   {
-    return (d_keys.find( key ) != d_keys.end());
+    return (m_keys.find( key ) != m_keys.end());
   };
 
-  virtual bool exists( const std::string name )
+  virtual bool exists( const std::string name ) const
   {
-    for( unsigned int i=0; i<d_names.size(); ++i )
+    for( unsigned int i=0; i<m_names.size(); ++i )
     {
-      if( name == d_names[(E) i] ) {
+      if( name == m_names[(E) i] ) {
         return true;
       }
     }
@@ -109,12 +109,12 @@ public:
 
   virtual void validate( const E lastKey ) const
   {
-    if( d_values.size() != (unsigned int) lastKey )
+    if( m_values.size() != (unsigned int) lastKey )
     {
       std::stringstream msg;
       msg << "The count does not match. Expected "
 	        << (unsigned int) lastKey << " values. But added "
-	        << d_values.size() << " values.";
+	        << m_values.size() << " values.";
       throw Uintah::InternalError(msg.str(), __FILE__, __LINE__);
     }
   };
@@ -122,12 +122,12 @@ public:
   virtual void insert( const E key, const std::string name,
 		                   const std::string units, const T value )
   {
-    if( !exists( key ) && !exists( name ) && (unsigned int) key == d_keys.size() )
+    if( !exists( key ) && !exists( name ) && (unsigned int) key == m_keys.size() )
     {
-      d_keys[key] = (unsigned int) key;
-      d_values.push_back( value );
-      d_names.push_back( name );
-      d_units.push_back( units );
+      m_keys[key] = (unsigned int) key;
+      m_values.push_back( value );
+      m_names.push_back( name );
+      m_units.push_back( units );
     }
     else
     {
@@ -140,16 +140,16 @@ public:
 
   // void erase( const E key )
   // {
-  //   typename std::map< E, T >::iterator           vIter = d_values.find( key );
-  //   typename std::map< E, std::string >::iterator nIter = d_names.find( key );
-  //   typename std::map< E, std::string >::iterator uIter = d_units.find( key );
+  //   typename std::map< E, T >::iterator           vIter = m_values.find( key );
+  //   typename std::map< E, std::string >::iterator nIter = m_names.find( key );
+  //   typename std::map< E, std::string >::iterator uIter = m_units.find( key );
 
-  //   if( vIter != d_values.end() &&
-  // 	nIter != d_names.end() && uIter != d_units.end() )
+  //   if( vIter != m_values.end() &&
+  // 	nIter != m_names.end() && uIter != m_units.end() )
   //   {
-  //     d_values.erase(key);
-  //     d_names.erase(key);
-  //     d_units.erase(key);
+  //     m_values.erase(key);
+  //     m_names.erase(key);
+  //     m_units.erase(key);
   //   }
   //   else
   //   {
@@ -159,61 +159,61 @@ public:
   //   }
   // }
 
-        T& operator[](E idx)       { return d_values[idx]; };
-  const T& operator[](E idx) const { return d_values[idx]; };
+        T& operator[](E idx)       { return m_values[idx]; };
+  const T& operator[](E idx) const { return m_values[idx]; };
 
   virtual void setValue( const E key, const T value )
   {
-    d_values[key] = value;
+    m_values[key] = value;
   };
 
-  virtual T getValue( const E key )
+  virtual T getValue( const E key ) const
   {
     validKey( key );
 
-    return d_values[key];
+    return m_values[key];
   };
 
-  virtual T getValue( const std::string name )
+  virtual T getValue( const std::string name ) const
   {
     E key = getKey(name);
 
     validKey( key );
 
-    return d_values[ key ];
+    return m_values[ key ];
   };
 
-  virtual std::string getName( const E key )
+  virtual std::string getName( const E key ) const
   {
     validKey( key );
 
-    return d_names[ key ];
+    return m_names[ key ];
   };
 
-  virtual std::string getUnits( const E key )
+  virtual std::string getUnits( const E key ) const
   {
     validKey( key );
 
-    return d_units[ key ];
+    return m_units[ key ];
   };
 
-  virtual E getKey( const std::string name )
+  virtual E getKey( const std::string name ) const
   {
-    for( unsigned int i=0; i<d_names.size(); ++i )
+    for( unsigned int i=0; i<m_names.size(); ++i )
     {
-      if( name == d_names[(E) i] ) {
+      if( name == m_names[(E) i] ) {
         return (E) i;
       }
     }
 
-    return (E) d_values.size();
+    return (E) m_values.size();
   };
 
 protected:
-  std::map< E, unsigned int > d_keys;
-  std::vector< T >            d_values;
-  std::vector< std::string >  d_names;
-  std::vector< std::string >  d_units;
+  std::map< E, unsigned int > m_keys;
+  std::vector< T >            m_values;
+  std::vector< std::string >  m_names;
+  std::vector< std::string >  m_units;
 };
 
 
@@ -222,8 +222,8 @@ template<class E, class T> class ReductionInfoMapper : public InfoMapper<E, T>
 public:
   ReductionInfoMapper()
   {
-    d_average.clear();
-    d_maximum.clear();
+    m_rank_average.clear();
+    m_rank_maximum.clear();
   };
 
   virtual ~ReductionInfoMapper() {};
@@ -232,8 +232,8 @@ public:
   {
     InfoMapper<E, T>::clear();
 
-    d_average.clear();
-    d_maximum.clear();
+    m_rank_average.clear();
+    m_rank_maximum.clear();
   };
 
   virtual void insert( const E key, const std::string name,
@@ -241,87 +241,182 @@ public:
   {
     InfoMapper<E, T>::insert( key, name, units, value );
 
-    d_average.push_back(-1);
-    d_maximum.push_back(double_int(0,-1));
+    m_rank_average.push_back(-1);
+    m_rank_maximum.push_back(double_int(0,-1));
   }
 
-  virtual double getAverage( const E key )
+  // getSum
+  virtual double getSum( const E key ) const
   {
     InfoMapper<E, T>::validKey( key );
 
-    return d_average[ key ];
+    return m_node_sum[ key ];
   };
 
-  virtual double getMaximum( const E key )
+  virtual double getSum( const std::string name ) const
+  {
+    E key = InfoMapper<E, T>::getKey(name);
+
+    InfoMapper<E, T>::validKey( key );
+
+    return m_node_sum[ key ];
+  };
+
+  // getAverage
+  virtual double getAverage( const E key ) const
   {
     InfoMapper<E, T>::validKey( key );
 
-    return d_maximum[ key ].val;
+    return m_rank_average[ key ];
   };
 
-  virtual unsigned int getRank( const E key )
+  virtual double getAverage( const std::string name ) const
+  {
+    E key = InfoMapper<E, T>::getKey(name);
+
+    InfoMapper<E, T>::validKey( key );
+
+    return m_rank_average[ key ];
+  };
+
+  // getMaxium
+  virtual double getMaximum( const E key ) const
   {
     InfoMapper<E, T>::validKey( key );
 
-    return d_maximum[ key ].rank;
+    return m_rank_maximum[ key ].val;
   };
 
+  virtual double getMaximum( const std::string name ) const
+  {
+    E key = InfoMapper<E, T>::getKey(name);
+
+    InfoMapper<E, T>::validKey( key );
+
+    return m_rank_maximum[ key ].val;
+  };
+
+  // getRank
+  virtual unsigned int getRank( const E key ) const
+  {
+    InfoMapper<E, T>::validKey( key );
+
+    return m_rank_maximum[ key ].rank;
+  };
+
+  virtual unsigned int getRank( const std::string name ) const
+  {
+    E key = InfoMapper<E, T>::getKey(name);
+
+    InfoMapper<E, T>::validKey( key );
+
+    return m_rank_maximum[ key ].rank;
+  };
+
+  // reduce
   virtual void reduce( bool allReduce, const ProcessorGroup* myWorld )
   {
-    unsigned int nStats = InfoMapper<E, T>::d_keys.size();
+    unsigned int nStats = InfoMapper<E, T>::m_keys.size();
 
     if( nStats == 0 )
       return;
     
-    if( myWorld->size() > 1)
+    if( myWorld->nRanks() > 1)
     {
-      // A little ugly, but do it anyway so only one reduction is needed
-      // for the sum and one for the maximum. 
+      m_node_sum.resize( nStats );
+
+      m_rank_average.resize( nStats );
+      m_rank_maximum.resize( nStats );
+
+      std::vector<double>      reduced( nStats );
+
       std::vector<double>      toReduce( nStats );
       std::vector<double_int>  toReduceMax( nStats );
 
-      d_average.resize( nStats );
-      d_maximum.resize( nStats );
+      // Perform the reduction acrosss each processor node.
+      for( int n=0; n<myWorld->nNodes(); ++n )
+      {
+	// If this rank belongs to this node then pass the value.
+	if( n == myWorld->myNode() )
+	{
+	  for (size_t i=0; i<nStats; ++i)
+	    toReduce[i] = InfoMapper<E, T>::m_values[i];
+	}
+	// This rank is not on the current node so ignor the values.
+	else
+	{
+	  for (size_t i=0; i<nStats; ++i)
+	    toReduce[i] = 0;
+	}
+	
+        Uintah::MPI::Allreduce( &toReduce[0], &reduced[0], nStats,
+				MPI_DOUBLE, MPI_SUM, myWorld->getComm() );
 
+	// If this rank belongs to this node then save the summation
+	// values.
+	if( n == myWorld->myNode() )
+	{
+	  for (size_t i=0; i<nStats; ++i)
+	    m_node_sum[i] = reduced[i];
+	}
+      }
+
+      // Do the reductions across all ranks.
+      
+      // A little ugly, but do it anyway so only one reduction is needed
+      // for the sum and one for the maximum. 
       for (size_t i=0; i<nStats; ++i)
       {
-        toReduce[i] = InfoMapper<E, T>::d_values[i];
-        toReduceMax[i] = double_int( InfoMapper<E, T>::d_values[i], myWorld->myrank() );
+        toReduce[i] = InfoMapper<E, T>::m_values[i];
+        toReduceMax[i] = double_int( InfoMapper<E, T>::m_values[i],
+				     myWorld->myRank() );
       }
 
       if( allReduce )
       {
-        Uintah::MPI::Allreduce( &toReduce[0],    &d_average[0], nStats, MPI_DOUBLE,     MPI_SUM,    myWorld->getComm() );
-        Uintah::MPI::Allreduce( &toReduceMax[0], &d_maximum[0], nStats, MPI_DOUBLE_INT, MPI_MAXLOC, myWorld->getComm() );
+        Uintah::MPI::Allreduce( &toReduce[0],    &m_rank_average[0], nStats,
+				MPI_DOUBLE,     MPI_SUM,    myWorld->getComm() );
+        Uintah::MPI::Allreduce( &toReduceMax[0], &m_rank_maximum[0], nStats,
+				MPI_DOUBLE_INT, MPI_MAXLOC, myWorld->getComm() );
       }
       else
       {
-        Uintah::MPI::Reduce( &toReduce[0],    &d_average[0], nStats, MPI_DOUBLE,     MPI_SUM,    0, myWorld->getComm() );
-        Uintah::MPI::Reduce( &toReduceMax[0], &d_maximum[0], nStats, MPI_DOUBLE_INT, MPI_MAXLOC, 0, myWorld->getComm() );
+        Uintah::MPI::Reduce( &toReduce[0],    &m_rank_average[0], nStats,
+			     MPI_DOUBLE,     MPI_SUM,    0, myWorld->getComm() );
+        Uintah::MPI::Reduce( &toReduceMax[0], &m_rank_maximum[0], nStats,
+			     MPI_DOUBLE_INT, MPI_MAXLOC, 0, myWorld->getComm() );
       }
 
-      // make sums averages
+      // Calculate the averages.
       for (unsigned i = 0; i < nStats; ++i)
-      {
-        d_average[i] /= myWorld->size();
-      }
+        m_rank_average[i] /= myWorld->nRanks();
     }
+
+    // Single rank so just copy the values.
     else
     {
-      d_average.resize( nStats );
-      d_maximum.resize( nStats );
+      m_node_sum.resize( nStats );
+
+      m_rank_average.resize( nStats );
+      m_rank_maximum.resize( nStats );
 
       for (size_t i=0; i<nStats; ++i)
       {
-        d_average[i] = InfoMapper<E, T>::d_values[i];
-        d_maximum[i] = double_int(InfoMapper<E, T>::d_values[i], 0);
+	double val = InfoMapper<E, T>::m_values[i];
+
+        m_node_sum[i] = val;
+
+        m_rank_average[i] = val;
+        m_rank_maximum[i] = double_int( val, 0);
       }
     }
   };
 
 protected:
-  std::vector< double >     d_average;
-  std::vector< double_int > d_maximum;
+  std::vector< double > m_node_sum;
+
+  std::vector< double >     m_rank_average;
+  std::vector< double_int > m_rank_maximum;
 };
 
 } // End namespace Uintah

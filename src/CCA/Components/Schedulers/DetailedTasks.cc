@@ -157,10 +157,10 @@ DetailedTasks::assignMessageTags( int me )
     DependencyBatch* batch = m_dep_batches[i];
 
     int from = batch->m_from_task->getAssignedResourceIndex();
-    ASSERTRANGE(from, 0, m_proc_group->size());
+    ASSERTRANGE(from, 0, m_proc_group->nRanks());
 
     int to = batch->m_to_rank;
-    ASSERTRANGE(to, 0, m_proc_group->size());
+    ASSERTRANGE(to, 0, m_proc_group->nRanks());
 
     if (from == me || to == me) {
       // Easier to go in reverse order now, instead of reinitializing perPairBatchIndices.
@@ -236,7 +236,7 @@ DetailedTasks::computeLocalTasks( int me )
   for (int i = 0; i < (int)m_tasks.size(); i++) {
     DetailedTask* task = m_tasks[i];
 
-    ASSERTRANGE(task->getAssignedResourceIndex(), 0, m_proc_group->size());
+    ASSERTRANGE(task->getAssignedResourceIndex(), 0, m_proc_group->nRanks());
 
     if (task->getAssignedResourceIndex() == me || task->getTask()->getType() == Task::Reduction) {
       m_local_tasks.push_back(task);
@@ -389,7 +389,7 @@ DetailedTasks::createScrubCounts()
           Patch::selectType neighbors;
           IntVector low, high;
           patch->computeVariableExtents(type, req->m_var->getBoundaryLayer(), req->m_gtype, req->m_num_ghost_cells, neighbors, low, high);
-          for (int i = 0; i < neighbors.size(); i++) {
+          for (unsigned int i = 0; i < neighbors.size(); i++) {
             const Patch* neighbor = neighbors[i];
             for (int m = 0; m < matls->size(); m++) {
               addScrubCount(req->m_var, matls->get(m), neighbor, whichdw);
@@ -503,14 +503,14 @@ DetailedTasks::findMatchingDetailedDep(       DependencyBatch  * batch
         }
         else if (dbg) {
           std::ostringstream message;
-          message << m_proc_group->myrank() << "            Ignoring: " << dep->m_low << " " << dep->m_high << ", fromPatch = ";
+          message << m_proc_group->myRank() << "            Ignoring: " << dep->m_low << " " << dep->m_high << ", fromPatch = ";
           if (fromPatch) {
             message << fromPatch->getID() << '\n';
           }
           else {
             message << "nullptr\n";
           }
-          message << m_proc_group->myrank() << " TP: " << totalLow << " " << totalHigh;
+          message << m_proc_group->myRank() << " TP: " << totalLow << " " << totalHigh;
           DOUT(true, message.str());
         }
       }
@@ -559,17 +559,17 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask     * from
                                        ,       DepCommCond        cond
                                        )
 {
-  ASSERTRANGE(from->getAssignedResourceIndex(), 0, m_proc_group->size());
-  ASSERTRANGE(to->getAssignedResourceIndex(),   0, m_proc_group->size());
+  ASSERTRANGE(from->getAssignedResourceIndex(), 0, m_proc_group->nRanks());
+  ASSERTRANGE(to->getAssignedResourceIndex(),   0, m_proc_group->nRanks());
 
   if (dbg) {
     std::ostringstream message;
-    message << "Rank-" << m_proc_group->myrank() << "  " << *to << " depends on " << *from << "\n";
+    message << "Rank-" << m_proc_group->myRank() << "  " << *to << " depends on " << *from << "\n";
       if (comp) {
-        message << "Rank-" << m_proc_group->myrank() << "  From comp " << *comp;
+        message << "Rank-" << m_proc_group->myRank() << "  From comp " << *comp;
       }
       else {
-        message << "Rank-" << m_proc_group->myrank() << "  From OldDW ";
+        message << "Rank-" << m_proc_group->myRank() << "  From OldDW ";
       }
       message << " to req " << *req;
       DOUT(true, message.str());
@@ -579,18 +579,18 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask     * from
   int fromresource = from->getAssignedResourceIndex();
 
   // if neither task talks to this processor, return
-  if (fromresource != m_proc_group->myrank() && toresource != m_proc_group->myrank()) {
+  if (fromresource != m_proc_group->myRank() && toresource != m_proc_group->myRank()) {
     return;
   }
 
-  if ((toresource == m_proc_group->myrank() || (req->m_patches_dom != Task::ThisLevel && fromresource == m_proc_group->myrank()))
+  if ((toresource == m_proc_group->myRank() || (req->m_patches_dom != Task::ThisLevel && fromresource == m_proc_group->myRank()))
       && fromPatch && !req->m_var->typeDescription()->isReductionVariable()) {
     // add scrub counts for local tasks, and not for non-data deps
     addScrubCount(req->m_var, matl, fromPatch, req->m_whichdw);
   }
 
   // if the dependency is on the same processor then add an internal dependency
-  if (fromresource == m_proc_group->myrank() && fromresource == toresource) {
+  if (fromresource == m_proc_group->myRank() && fromresource == toresource) {
     to->addInternalDependency(from, req->m_var);
 
     // In case of multiple GPUs per node, we don't return.  Multiple GPUs
@@ -609,7 +609,7 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask     * from
   }
 #ifdef HAVE_CUDA
   if (Uintah::Parallel::usingDevice()) {
-    if (fromresource == m_proc_group->myrank() && fromresource == toresource) {
+    if (fromresource == m_proc_group->myRank() && fromresource == toresource) {
       if (fromPatch != toPatch) {
         //printf("In DetailedTasks::createInternalDependencyBatch creating internal dependency from patch %d to patch %d, from task %p to task %p\n", fromPatch->getID(), toPatch->getID(), from, to);
         createInternalDependencyBatch(from, comp, fromPatch, to, req, toPatch, matl, low, high, cond);
@@ -648,14 +648,14 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask     * from
 
     ASSERTL2(newRequireBatch);
 
-    DOUT(dbg, "Rank-" << m_proc_group->myrank() << "          NEW BATCH!");
+    DOUT(dbg, "Rank-" << m_proc_group->myRank() << "          NEW BATCH!");
   }
   else if (m_must_consider_internal_deps) {  // i.e. threaded mode
     if (to->addRequires(batch)) {
       // this is a new requires batch for this task, so add to the batch's toTasks.
       batch->m_to_tasks.push_back(to);
     }
-    DOUT(dbg, "Rank-" << m_proc_group->myrank() << "          USING PREVIOUSLY CREATED BATCH!");
+    DOUT(dbg, "Rank-" << m_proc_group->myRank() << "          USING PREVIOUSLY CREATED BATCH!");
   }
 
   IntVector varRangeLow(INT_MAX, INT_MAX, INT_MAX), varRangeHigh(INT_MIN, INT_MIN, INT_MIN);
@@ -680,7 +680,7 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask     * from
     // debugging output
     if (dbg) {
       std::ostringstream message;
-      message << "Rank-" << m_proc_group->myrank() << "            EXTENDED from " << new_dep->m_low << " " << new_dep->m_high << " to "
+      message << "Rank-" << m_proc_group->myRank() << "            EXTENDED from " << new_dep->m_low << " " << new_dep->m_high << " to "
               << Min(new_dep->m_low, matching_dep->m_low) << " " << Max(new_dep->m_high, matching_dep->m_high) << "\n";
       message << *req->m_var << '\n';
       message << *new_dep->m_req->m_var << '\n';
@@ -713,12 +713,12 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask     * from
       PSPatchMatlGhostRange pmg(fromPatch, matl, matching_dep->m_low, matching_dep->m_high, (int)cond);
 
       if (req->m_var->getName() == "p.x") {
-        DOUT(dbg, "Rank-" << m_proc_group->myrank() << " erasing particles from " << fromresource << " to " << toresource << " var " << *req->m_var
+        DOUT(dbg, "Rank-" << m_proc_group->myRank() << " erasing particles from " << fromresource << " to " << toresource << " var " << *req->m_var
                           << " on patch " << fromPatch->getID() << " matl " << matl << " range " << matching_dep->m_low << " " << matching_dep->m_high
                           << " cond " << cond << " dw " << req->mapDataWarehouse());
       }
 
-      if (fromresource == m_proc_group->myrank()) {
+      if (fromresource == m_proc_group->myRank()) {
         std::set<PSPatchMatlGhostRange>::iterator iter = m_particle_sends[toresource].find(pmg);
         ASSERT(iter != m_particle_sends[toresource].end());
 
@@ -730,7 +730,7 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask     * from
           m_particle_sends[toresource].erase(iter);
         }
       }
-      else if (toresource == m_proc_group->myrank()) {
+      else if (toresource == m_proc_group->myRank()) {
         std::set<PSPatchMatlGhostRange>::iterator iter = m_particle_recvs[fromresource].find(pmg);
         ASSERT(iter != m_particle_recvs[fromresource].end());
         // subtract one from the count
@@ -785,7 +785,7 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask     * from
   if (req->m_var->typeDescription()->getType() == TypeDescription::ParticleVariable && req->m_whichdw == Task::OldDW) {
     PSPatchMatlGhostRange pmg = PSPatchMatlGhostRange(fromPatch, matl, new_dep->m_low, new_dep->m_high, (int)cond, 1);
 
-    if (fromresource == m_proc_group->myrank()) {
+    if (fromresource == m_proc_group->myRank()) {
       std::set<PSPatchMatlGhostRange>::iterator iter = m_particle_sends[toresource].find(pmg);
       if (iter == m_particle_sends[toresource].end()) {  //if does not exist
         //add to the sends list
@@ -796,7 +796,7 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask     * from
         iter->count_++;
       }
     }
-    else if (toresource == m_proc_group->myrank()) {
+    else if (toresource == m_proc_group->myRank()) {
       std::set<PSPatchMatlGhostRange>::iterator iter = m_particle_recvs[fromresource].find(pmg);
       if (iter == m_particle_recvs[fromresource].end()) {
         //add to the recvs list
@@ -809,7 +809,7 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask     * from
 
     }
     if (req->m_var->getName() == "p.x") {
-      DOUT(dbg, "Rank-" << m_proc_group->myrank() << " scheduling particles from " << fromresource << " to " << toresource << " on patch "
+      DOUT(dbg, "Rank-" << m_proc_group->myRank() << " scheduling particles from " << fromresource << " to " << toresource << " on patch "
                         << fromPatch->getID() << " matl " << matl << " range " << low << " " << high << " cond " << cond << " dw "
                         << req->mapDataWarehouse());
     }
@@ -817,7 +817,7 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask     * from
 
   if (dbg) {
     std::ostringstream message;
-    message << "Rank-" << m_proc_group->myrank() << "            ADDED " << low << " " << high << ", fromPatch = ";
+    message << "Rank-" << m_proc_group->myRank() << "            ADDED " << low << " " << high << ", fromPatch = ";
     if (fromPatch) {
       message << fromPatch->getID() << '\n';
     }
@@ -836,7 +836,7 @@ DetailedTasks::getOldDWSendTask( int proc )
 #if SCI_ASSERTION_LEVEL>0
   // verify the map entry has been created
   if (m_send_old_map.find(proc) == m_send_old_map.end()) {
-    std::cout << m_proc_group->myrank() << " Error trying to get oldDWSendTask for processor: " << proc << " but it does not exist\n";
+    std::cout << m_proc_group->myRank() << " Error trying to get oldDWSendTask for processor: " << proc << " but it does not exist\n";
     throw InternalError("oldDWSendTask does not exist", __FILE__, __LINE__);
   }
 #endif 
@@ -979,7 +979,7 @@ void
 DetailedTasks::emitEdges( ProblemSpecP edgesElement, int rank )
 {
   for (int i = 0; i < static_cast<int>(m_tasks.size()); i++) {
-    ASSERTRANGE(m_tasks[i]->getAssignedResourceIndex(), 0, m_proc_group->size());
+    ASSERTRANGE(m_tasks[i]->getAssignedResourceIndex(), 0, m_proc_group->nRanks());
     if (m_tasks[i]->getAssignedResourceIndex() == rank) {
       m_tasks[i]->emitEdges(edgesElement);
     }
@@ -1384,7 +1384,7 @@ void DetailedTasks::createInternalDependencyBatch(       DetailedTask     * from
 #endif
     ASSERTL2(newRequireBatch);
     if (dbg)
-      DOUT(true, "Rank-" << m_proc_group->myrank() << "          NEW BATCH!");
+      DOUT(true, "Rank-" << m_proc_group->myRank() << "          NEW BATCH!");
   } else if (m_must_consider_internal_deps) {  // i.e. threaded mode
     if (to->addInternalRequires(batch)) {
       // this is a new requires batch for this task, so add
@@ -1392,7 +1392,7 @@ void DetailedTasks::createInternalDependencyBatch(       DetailedTask     * from
       batch->m_to_tasks.push_back(to);
     }
 
-    DOUT(dbg, "Rank-" << m_proc_group->myrank() << "          USING PREVIOUSLY CREATED BATCH!");
+    DOUT(dbg, "Rank-" << m_proc_group->myRank() << "          USING PREVIOUSLY CREATED BATCH!");
   }
 
   IntVector varRangeLow(INT_MAX, INT_MAX, INT_MAX), varRangeHigh(INT_MIN, INT_MIN, INT_MIN);
@@ -1424,7 +1424,7 @@ void DetailedTasks::createInternalDependencyBatch(       DetailedTask     * from
     //debugging output
     if (dbg) {
       std::ostringstream message;
-      message << m_proc_group->myrank() << "            EXTENDED from " << new_dep->m_low << " " << new_dep->m_high << " to "
+      message << m_proc_group->myRank() << "            EXTENDED from " << new_dep->m_low << " " << new_dep->m_high << " to "
               << Min(new_dep->m_low, matching_dep->m_low) << " " << Max(new_dep->m_high, matching_dep->m_high) << "\n";
       message << *req->m_var << '\n';
       message << *new_dep->m_req->m_var << '\n';
@@ -1451,11 +1451,11 @@ void DetailedTasks::createInternalDependencyBatch(       DetailedTask     * from
       PSPatchMatlGhostRange pmg(fromPatch, matl, matching_dep->m_low, matching_dep->m_high, (int)cond);
 
       if (req->m_var->getName() == "p.x")
-        DOUT(dbg, "Rank-" << m_proc_group->myrank() << " erasing particles from " << fromresource << " to " << toresource << " var " << *req->m_var
+        DOUT(dbg, "Rank-" << m_proc_group->myRank() << " erasing particles from " << fromresource << " to " << toresource << " var " << *req->m_var
                           << " on patch " << fromPatch->getID() << " matl " << matl << " range " << matching_dep->m_low << " " << matching_dep->m_high
                           << " cond " << cond << " dw " << req->mapDataWarehouse());
 
-      if (fromresource == m_proc_group->myrank()) {
+      if (fromresource == m_proc_group->myRank()) {
         std::set<PSPatchMatlGhostRange>::iterator iter = m_particle_sends[toresource].find(pmg);
         ASSERT(iter!=m_particle_sends[toresource].end());
 
@@ -1466,7 +1466,7 @@ void DetailedTasks::createInternalDependencyBatch(       DetailedTask     * from
         if (iter->count_ == 0) {
           m_particle_sends[toresource].erase(iter);
         }
-      } else if (toresource == m_proc_group->myrank()) {
+      } else if (toresource == m_proc_group->myRank()) {
         std::set<PSPatchMatlGhostRange>::iterator iter = m_particle_recvs[fromresource].find(pmg);
         ASSERT(iter!=m_particle_recvs[fromresource].end());
         //subtract one from the count
@@ -1519,7 +1519,7 @@ void DetailedTasks::createInternalDependencyBatch(       DetailedTask     * from
   if (req->m_var->typeDescription()->getType() == TypeDescription::ParticleVariable && req->m_whichdw == Task::OldDW) {
     PSPatchMatlGhostRange pmg = PSPatchMatlGhostRange(fromPatch, matl, new_dep->m_low, new_dep->m_high, (int)cond, 1);
 
-    if (fromresource == m_proc_group->myrank()) {
+    if (fromresource == m_proc_group->myRank()) {
       std::set<PSPatchMatlGhostRange>::iterator iter = m_particle_sends[toresource].find(pmg);
       if (iter == m_particle_sends[toresource].end())  //if does not exist
           {
@@ -1529,7 +1529,7 @@ void DetailedTasks::createInternalDependencyBatch(       DetailedTask     * from
         //increment count
         iter->count_++;
       }
-    } else if (toresource == m_proc_group->myrank()) {
+    } else if (toresource == m_proc_group->myRank()) {
       std::set<PSPatchMatlGhostRange>::iterator iter = m_particle_recvs[fromresource].find(pmg);
       if (iter == m_particle_recvs[fromresource].end()) {
         // add to the recvs list
@@ -1541,14 +1541,14 @@ void DetailedTasks::createInternalDependencyBatch(       DetailedTask     * from
 
     }
     if (req->m_var->getName() == "p.x")
-      DOUT(dbg, "Rank-" << m_proc_group->myrank() << " scheduling particles from " << fromresource << " to " << toresource << " on patch "
+      DOUT(dbg, "Rank-" << m_proc_group->myRank() << " scheduling particles from " << fromresource << " to " << toresource << " on patch "
                         << fromPatch->getID() << " matl " << matl << " range " << low << " " << high << " cond " << cond << " dw "
                         << req->mapDataWarehouse());
   }
 
   if (dbg) {
     std::ostringstream message;
-    message << m_proc_group->myrank() << "            ADDED " << low << " " << high << ", fromPatch = ";
+    message << m_proc_group->myRank() << "            ADDED " << low << " " << high << ", fromPatch = ";
     if (fromPatch) {
       message << fromPatch->getID() << '\n';
     }

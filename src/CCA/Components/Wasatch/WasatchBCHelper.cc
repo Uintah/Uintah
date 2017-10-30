@@ -137,21 +137,6 @@ namespace WasatchCore {
     }
   }
   
-  
-  // This function returns true if the boundary condition is applied in the same direction
-  // as the staggered field. For example, xminus/xplus on a XVOL field.
-  template <typename MomDirT>
-  NSCBC::Direction get_mom_dir(){}
-  
-  template<>
-  NSCBC::Direction get_mom_dir<SpatialOps::XDIR>(){return NSCBC::XDIR;}
-  
-  template<>
-  NSCBC::Direction get_mom_dir<SpatialOps::YDIR>(){return NSCBC::YDIR;}
-  
-  template<>
-  NSCBC::Direction get_mom_dir<SpatialOps::ZDIR>(){return NSCBC::ZDIR;}
-
   //============================================================================
 
   // This function returns true if the boundary condition is applied in the same direction
@@ -799,7 +784,10 @@ namespace WasatchCore {
                                               nscbcSpec_.pFar,
                                               length );
           
-          NSCBC::BCBuilder<FieldT>* nscbcBuilder = new NSCBC::BCBuilder<FieldT>(nscbcInfo, mw, gasConstant, nscbcTagMgr, do2, do3, patchID);
+          NSCBC::BCBuilder<FieldT>* nscbcBuilder = new NSCBC::BCBuilder<FieldT>( nscbcInfo, mw, gasConstant,
+                                                                                 nscbcTagMgr, do2, do3,
+                                                                                 NSCBC::NonreflectingSubSwitch::SUBTRACTION_ON,
+                                                                                 patchID );
           if ( nscbcBuildersMap_.find(bndName) != nscbcBuildersMap_.end() ) {
             if (nscbcBuildersMap_.find(bndName)->second.find(patchID) == nscbcBuildersMap_.find(bndName)->second.end()) {
               nscbcBuildersMap_.find(bndName)->second.insert( pair< int, NSCBC::BCBuilder<FieldT>* > (patchID, nscbcBuilder)       );

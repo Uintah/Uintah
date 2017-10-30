@@ -117,7 +117,7 @@ void Mixing3::problemSetup(GridP&, SimulationStateP& in_state,
   try {
     gas = scinew IdealGasMix(fname, id);
     int nsp = gas->nSpecies();
-    if(d_myworld->myrank() == 0){
+    if(d_myworld->myRank() == 0){
 #if 0
       cerr.precision(17);
       cerr << "Using ideal gas " << id << "(from " << fname << ") with " << nel << " elements and " << nsp << " species\n";

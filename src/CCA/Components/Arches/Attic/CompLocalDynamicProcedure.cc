@@ -1958,7 +1958,7 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
       }
     }  
 
-    if (pc->myrank() == 0)
+    if (pc->myRank() == 0)
       cerr << "Time for the Filter operation in Turbulence Model: " << 
         timer().seconds() << " seconds\n";
 #endif

@@ -2,7 +2,7 @@
 
 from os import chdir,getcwd,mkdir,system,environ
 from sys import argv,exit,platform
-from helpers.runSusTests import runSusTests, inputs_root
+from helpers.runSusTests import runSusTests, inputs_root, ignorePerformanceTests, generatingGoldStandards
 from helpers.modUPS import modUPS
 
 #______________________________________________________________________
@@ -39,13 +39,16 @@ LOCALTESTS = [ ("switchExample_impm_mpm", "Switcher/switchExample_impm_mpm.ups",
                ("switchExample3",         "Switcher/switchExample3.ups",        1, "All", ["no_restart","no_memoryTest"]), \
                ("ice_perf_test",          "icePerformanceTest.ups",             1, "All", ["do_performance_test"]),  \
                ("mpmice_perf_test",       "mpmicePerformanceTest.ups",          1, "All", ["do_performance_test"]), \
-               ("LBwoRegrid",             "LBwoRegrid.ups",                     2, "All", ["exactComparison"])
+               ("LBwoRegrid",             "LBwoRegrid.ups",                     2, "All", [])     # Cannot use exact comparison since the load
+                                                                                                  # balancer generates fuzz in the dat files.  It's non deterministic.
              ]
+             
 DEBUGTESTS =[]
+
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
-#LIST: LOCALTESTS DEBUGTESTS NIGHTLYTESTS
+#LIST: LOCALTESTS DEBUGTESTS NIGHTLYTESTS BUILDBOTTESTS
 #___________________________________
 
 # returns the list  
@@ -56,7 +59,10 @@ def getTestList(me) :
     TESTS = DEBUGTESTS
   elif me == "NIGHTLYTESTS":
     TESTS = LOCALTESTS + NIGHTLYTESTS
+  elif me == "BUILDBOTTESTS":
+    TESTS = ignorePerformanceTests( LOCALTESTS + NIGHTLYTESTS )
   else:
+    
     print "\nERROR:UCF.py  getTestList:  The test list (%s) does not exist!\n\n" % me
     exit(1)
   return TESTS

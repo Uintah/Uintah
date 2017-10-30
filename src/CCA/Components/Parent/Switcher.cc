@@ -248,7 +248,7 @@ Switcher::Switcher( const ProcessorGroup * myworld,
 Switcher::~Switcher()
 {
 
-  dbg << d_myworld->myrank() << " Switcher::~Switcher" << std::endl;
+  dbg << d_myworld->myRank() << " Switcher::~Switcher" << std::endl;
 
   for (unsigned i = 0; i < d_carryOverVarMatls.size(); i++) {
     if (d_carryOverVarMatls[i] && d_carryOverVarMatls[i]->removeReference()) {
@@ -551,12 +551,12 @@ void Switcher::scheduleCarryOverVars(const LevelP     & level,
         t->requires(Task::OldDW, var, matls, Ghost::None, 0);
         t->computes(var, matls);
      
-        if(UintahParallelComponent::d_myworld->myrank() == 0) {
+        if(UintahParallelComponent::d_myworld->myRank() == 0) {
           if (matls) {
-            std::cout << d_myworld->myrank() << "  Carry over " << *var << "\t\tmatls: " << *matls << " on level " << L_indx << std::endl;
+            std::cout << d_myworld->myRank() << "  Carry over " << *var << "\t\tmatls: " << *matls << " on level " << L_indx << std::endl;
           }
           else {
-            std::cout << d_myworld->myrank() << "  Carry over " << *var << "\t\tAll matls on level " << L_indx << "\n";
+            std::cout << d_myworld->myRank() << "  Carry over " << *var << "\t\tAll matls on level " << L_indx << "\n";
           }
         }
       }

@@ -199,7 +199,11 @@ namespace Uintah{
                                    Task::WhichDW which_dw );
 
       DataWarehouse* get_abskg_dw ( const int L,
-                                   DataWarehouse* new_dw );
+                                    const VarLabel* label,
+                                    DataWarehouse* new_dw );
+                                   
+      Task::WhichDW  get_abskg_whichDW ( const int L,
+                                         const VarLabel* abskg );
                    
       //______________________________________________________________________
       //    Public variables that are used by Radiometer & RMCRT classes
@@ -223,7 +227,7 @@ namespace Uintah{
       TypeDescription::Type d_FLT_DBL;              // Is algorithm based on doubles or floats
       
       static std::vector<IntVector> d_dbgCells;     // cells that we're interrogating when DEBUG is on
-      static std::map <int,Task::WhichDW> d_abskg_dw;   // map that contains level index and whichDW  
+      static std::map <std::string,Task::WhichDW> d_abskg_dw;   // map that contains level index and whichDW  
       
       // This will create only 1 instance for both Ray() and radiometer() classes to use
       static double d_threshold;

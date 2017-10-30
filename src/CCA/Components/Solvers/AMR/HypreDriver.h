@@ -319,7 +319,7 @@ namespace Uintah {
         
         if ((finalResNorm > _params->tolerance) ||(std::isfinite(finalResNorm) == 0)) {
           if (_params->restart){
-            if(pg->myrank() == 0)
+            if(pg->myRank() == 0)
               std::cout << "AMRSolver not converged in " << numIterations 
                         << " iterations, final residual= " << finalResNorm
                         << ", requesting smaller timestep\n";
@@ -342,7 +342,7 @@ namespace Uintah {
 
 	timer.stop();
 	  
-        if(pg->myrank() == 0) {
+        if(pg->myRank() == 0) {
           std::cerr << "Solve of " << _X_label->getName()
                     << " on level " << _level->getIndex()
                     << " completed in " << timer().seconds()

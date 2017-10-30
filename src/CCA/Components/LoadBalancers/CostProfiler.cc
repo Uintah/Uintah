@@ -50,8 +50,8 @@ CostProfiler::addContribution( DetailedTask *task, double cost )
   for(int p=0;p<patches->size();p++)
   {
     const Patch* patch=patches->get(p);
-    if(d_lb->getPatchwiseProcessorAssignment(patch)!=d_myworld->myrank())
-      cout << d_myworld->myrank() << " error patch is owned by processor:" << d_lb->getPatchwiseProcessorAssignment(patch) << " for task:" << task->getName() << endl;
+    if(d_lb->getPatchwiseProcessorAssignment(patch)!=d_myworld->myRank())
+      cout << d_myworld->myRank() << " error patch is owned by processor:" << d_lb->getPatchwiseProcessorAssignment(patch) << " for task:" << task->getName() << endl;
   }
 #endif
   d_profiler.addContribution( task->getPatches(), cost );

@@ -663,8 +663,8 @@ ShellMaterial::computeStressTensor(const PatchSubset* patches,
         exit(1);
       }
       if (!computePlaneStressAndDefGrad(defGradBot_new, sigBot, bulk, shear)) {
-        if (d_world->myrank() == 16) {
-          cerr << "Current Processor = " << d_world->myrank() << endl;
+        if (d_world->myRank() == 16) {
+          cerr << "Current Processor = " << d_world->myRank() << endl;
           cerr << "Normal = " << pNormal[idx] << endl;
           cerr << "R = " << R << endl;
           cerr << "defGradBot = " << defGradBot_new << endl;
@@ -1356,8 +1356,8 @@ ShellMaterial::computePlaneStressAndDefGrad(Matrix3& F, Matrix3& sig,
     Fm(2,2) = 0.99999*F(2,2);
     Jm = Fm.Determinant();
     if (!(Jm > 0.0)) {
-       if (d_world->myrank() == 16) {
-         cerr << "Current Processor = " << d_world->myrank() << endl;
+       if (d_world->myRank() == 16) {
+         cerr << "Current Processor = " << d_world->myRank() << endl;
          cerr << "** ERROR ** F = " << F << " det F = " << J << endl;
          cerr << "** ERROR ** Fm = " << Fm << " det Fm = " << Jm << endl;
        }

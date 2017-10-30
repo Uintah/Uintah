@@ -149,10 +149,10 @@ RadPetscSolver::matrixCreate(const PatchSet* allpatches,
                               const PatchSubset* mypatches)
 {
 
-  //cout << d_myworld->myrank() <<"    RadPetscSolver::matrixCreate " << *mypatches << endl;
+  //cout << d_myworld->myRank() <<"    RadPetscSolver::matrixCreate " << *mypatches << endl;
   // for global index get a petsc index that
   // make it a data memeber
-  int numProcs = d_myworld->size();
+  int numProcs = d_myworld->nRanks();
   ASSERTEQ(numProcs, allpatches->size());
 
   vector<int> numCells(numProcs, 0);
@@ -162,7 +162,7 @@ RadPetscSolver::matrixCreate(const PatchSet* allpatches,
   PetscLocalToGlobalMapping(allpatches, mypatches, numCells, totalCells,
                             d_petscGlobalStart, d_petscLocalToGlobal, d_myworld);
 
-  int me          = d_myworld->myrank();
+  int me          = d_myworld->myRank();
   d_numlrows      = numCells[me];
   d_numlcolumns   = d_numlrows;
   d_globalrows    = (int)totalCells;
@@ -189,7 +189,7 @@ RadPetscSolver::setMatrix(const ProcessorGroup* ,
                            const bool print )
 
 {
-  //cout << d_myworld->myrank() <<"    RadPetscSolver::setMatrix " << patch->getGridIndex() <<  endl;
+  //cout << d_myworld->myRank() <<"    RadPetscSolver::setMatrix " << patch->getGridIndex() <<  endl;
 
   //__________________________________
   //  create the Petsc matrix A and vectors X, B and U.  This routine is called
@@ -361,7 +361,7 @@ RadPetscSolver::setMatrix(const ProcessorGroup* ,
 bool
 RadPetscSolver::radLinearSolve( const int direcn, const bool print_all_info )
 {
-  //cout << d_myworld->myrank() <<"    RadPetscSolver::radLinearSolve "<<  endl;
+  //cout << d_myworld->myRank() <<"    RadPetscSolver::radLinearSolve "<<  endl;
   bool test;
   test = PetscLinearSolve(A, d_b, d_x, d_u,
                           d_pcType, d_kspType, d_overlap,

@@ -39,7 +39,7 @@ PapiInitializationError::PapiInitializationError(const std::string& message, con
   m_message = s.str();
 
 #ifdef EXCEPTIONS_CRASH
-  std::cout << message_ << "\n";
+  std::cout << m_message << "\n";
 #endif
 }
 

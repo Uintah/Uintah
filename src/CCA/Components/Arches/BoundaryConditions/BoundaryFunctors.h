@@ -14,6 +14,10 @@
 #include <CCA/Components/Arches/WBCHelper.h>
 #include <CCA/Components/Arches/GridTools.h>
 
+static Uintah::DebugStream dbgbc("ARCHES_BC_FUNCTORS", false);
+#define DBC_BC_ON  dbgbc.active()
+#define DBGBCFUN  if( DBC_BC_ON  ) dbgbc
+
 namespace Uintah { namespace ArchesCore{
 
   template <typename T>
@@ -36,7 +40,6 @@ namespace Uintah { namespace ArchesCore{
     }
 
     BCFunctors(){}
-
     ~BCFunctors(){}
 
 
@@ -52,8 +55,11 @@ namespace Uintah { namespace ArchesCore{
     struct MMSshunn;
     struct SecondaryVariableBC;
     struct VelocityBC;
+    struct SubGridInjector;
 
     void create_bcs( ProblemSpecP& db, std::vector<std::string> variables );
+
+    void build_bcs( ProblemSpecP db_bc, const std::vector<std::string> variables, const std::string );
 
     std::shared_ptr<BaseFunctor> get_functor( BndCondTypeEnum bnd_type ){
       // This naming isn't great. Would be better to map these with a static function??
@@ -74,8 +80,11 @@ namespace Uintah { namespace ArchesCore{
 
     }
 
-    void get_bc_dependencies( std::vector<std::string> varnames, WBCHelper* bc_helper,
+    void get_bc_dependencies( std::vector<std::string>& varnames, WBCHelper* bc_helper,
                               std::vector<std::string>& dep );
+
+    void get_bc_modifies( std::vector<std::string>& varnames, WBCHelper* bc_helper,
+                          std::vector<std::string>& mod );
 
 
     void apply_bc( std::vector<std::string> varnames, WBCHelper* bc_helper,
@@ -119,160 +128,198 @@ void BCFunctors<T>::create_bcs( ProblemSpecP& db, std::vector<std::string> varia
 
   if ( db_bc ){
 
-    for ( Uintah::ProblemSpecP db_face = db_bc->findBlock("Face"); db_face != nullptr; db_face = db_face->findNextBlock("Face") ){
+    DBGBCFUN << " BC Functors: ** Parsing Face boundary conditions. **" << std::endl;
+    build_bcs( db_bc, variables, "Face" );
+    DBGBCFUN << " BC Functors: ** Parsing InteriorFace boundary conditions. **" << std::endl;
+    build_bcs( db_bc, variables, "InteriorFace" );
+    DBGBCFUN << " BC Functors: ** Done parsing for boundary condition functors. **" << std::endl;
 
-      std::string face_name = "NOT_NAMED";
-      db_face->getAttribute( "name", face_name );
+  }
+}
 
-      if ( face_name == "NOT_NAMED" ){
-        throw ProblemSetupException("Error: You must have a name attribute for all Face boundary conditions.", __FILE__, __LINE__);
-      }
+template <typename T>
+void BCFunctors<T>::build_bcs( ProblemSpecP db_bc, const std::vector<std::string> variables, const std::string EdgeType ){
 
-      for ( Uintah::ProblemSpecP db_bc_type = db_face->findBlock("BCType"); db_bc_type != nullptr; db_bc_type = db_bc_type->findNextBlock("BCType") ){
+ for ( Uintah::ProblemSpecP db_face = db_bc->findBlock(EdgeType); db_face != nullptr; db_face = db_face->findNextBlock(EdgeType) ){
 
-        std::string type;
-        std::string varname;
+   std::string face_name = "NOT_NAMED";
+   db_face->getAttribute( "name", face_name );
 
-        db_bc_type->getAttribute("var", type);
-        db_bc_type->getAttribute("label", varname);
+   if ( face_name == "NOT_NAMED" ){
+     throw ProblemSetupException("Error: You must have a name attribute for all "+EdgeType+" boundary conditions.", __FILE__, __LINE__);
+   }
 
-        bool matched_var = false;
-        for ( auto i = variables.begin(); i != variables.end(); i++ ){
-          if ( *i == varname ){
-            matched_var = true;
-          }
-        }
+   for ( Uintah::ProblemSpecP db_bc_type = db_face->findBlock("BCType"); db_bc_type != nullptr; db_bc_type = db_bc_type->findNextBlock("BCType") ){
+
+     std::string type;
+     std::string varname;
+
+     db_bc_type->getAttribute("var", type);
+     db_bc_type->getAttribute("label", varname);
+
+     //DBGBCFUN << " BC Functors: Looking for a boundary condition for variable " << varname << std::endl;
+
+     bool matched_var = false;
+     for ( auto i = variables.begin(); i != variables.end(); i++ ){
+       if ( *i == varname ){
+         matched_var = true;
+       }
+     }
 
 // -------------- STANDARD BOUNDARY CONDITIONS -----------------------------------------------------
 // Note: These are
 //       If the names don't match, then this would be no bueno.
 
-        if ( matched_var ){
-          if ( type == "Dirichlet" ){
+     if ( matched_var ){
 
-            std::shared_ptr<BaseFunctor> fun(scinew Dirichlet());
-            insert_functor(func_enum_str(DIRICHLET_FUN), fun);
+       DBGBCFUN << " BC Functors: Found a boundary condition for variable " << varname << std::endl;
 
-          } else if ( type == "Neumann" ){
+       if ( type == "Dirichlet" ){
 
-            std::shared_ptr<BaseFunctor> fun(scinew Neumann());
-            insert_functor(func_enum_str(NEUMANN_FUN), fun);
+         std::shared_ptr<BaseFunctor> fun(scinew Dirichlet());
+         insert_functor(func_enum_str(DIRICHLET_FUN), fun);
 
-          } else if ( type == "Custom" ){
+         DBGBCFUN << "              with type: " << type << std::endl;
 
-            std::string custom_type="NA";
-            db_bc_type->getAttribute("type",custom_type);
+       } else if ( type == "Neumann" ){
+
+         std::shared_ptr<BaseFunctor> fun(scinew Neumann());
+         insert_functor(func_enum_str(NEUMANN_FUN), fun);
+
+         DBGBCFUN << "              with type: " << type << std::endl;
+
+       } else if ( type == "Custom" ){
+
+         std::string custom_type="NA";
+         db_bc_type->getAttribute("type",custom_type);
+
+         DBGBCFUN << "              with custom type: " << custom_type << std::endl;
 
 // --------------- HERE IS WHERE WE INSERT CUSTOMIZABLE BC FUNCTORS --------------------------------
 
-            if ( custom_type == "massflow" ){
+         if ( custom_type == "massflow" ){
 
-              double mdot = 0.0;
-              db_bc_type->require("value", mdot);
+           double mdot = 0.0;
+           db_bc_type->require("value", mdot);
 
-              std::string density_label = "density";
-              if ( db_bc_type->findBlock("density") ){
-                db_bc_type->findBlock("density")->getAttribute("label", density_label);
-              }
+           std::string density_label = "density";
+           if ( db_bc_type->findBlock("density") ){
+             db_bc_type->findBlock("density")->getAttribute("label", density_label);
+           }
 
-              std::shared_ptr<BaseFunctor> fun(scinew MassFlow(mdot, density_label));
-              insert_functor( face_name, varname, fun);
-            } else if ( custom_type == "MMS_almgren" ) {
+           std::shared_ptr<BaseFunctor> fun(scinew MassFlow(mdot, density_label));
+           insert_functor( face_name, varname, fun);
+         } else if ( custom_type == "MMS_almgren" ) {
 
-              std::string x_label = "gridX";
-              std::string y_label = "gridY";
-              std::string which_vel = "u";
+           std::string x_label = "gridX";
+           std::string y_label = "gridY";
+           std::string which_vel = "u";
 
-              db_bc_type->require("which_vel", which_vel);
-              ProblemSpecP db_coord =  db_bc_type->findBlock("coordinates");
+           db_bc_type->require("which_vel", which_vel);
+           ProblemSpecP db_coord =  db_bc_type->findBlock("coordinates");
 
-              if ( db_coord ){
-                db_coord->getAttribute("x", x_label);
-                db_coord->getAttribute("y", y_label);
-              } else {
-                throw InvalidValue("Error: must have coordinates specified for almgren MMS init condition", __FILE__, __LINE__);
-              }
+           if ( db_coord ){
+             db_coord->getAttribute("x", x_label);
+             db_coord->getAttribute("y", y_label);
+           } else {
+             throw InvalidValue("Error: must have coordinates specified for almgren MMS init condition", __FILE__, __LINE__);
+           }
 
-              std::shared_ptr<BaseFunctor> fun(scinew MMSalmgren(x_label, y_label, which_vel));
-              insert_functor( face_name, varname, fun);
+           std::shared_ptr<BaseFunctor> fun(scinew MMSalmgren(x_label, y_label, which_vel));
+           insert_functor( face_name, varname, fun);
 
-            } else if ( custom_type == "MMS_shunn" ) {
+         } else if ( custom_type == "MMS_shunn" ) {
 
-              std::string x_label = "gridX";
+           std::string x_label = "gridX";
 
-              ProblemSpecP db_coord =  db_bc_type->findBlock("coordinates");
+           ProblemSpecP db_coord =  db_bc_type->findBlock("coordinates");
 
-              if ( db_coord ){
-                db_coord->getAttribute("x", x_label);
-              } else {
-                throw InvalidValue("Error: must have coordinates specified for shunn MMS init condition", __FILE__, __LINE__);
-              }
+           if ( db_coord ){
+             db_coord->getAttribute("x", x_label);
+           } else {
+             throw InvalidValue("Error: must have coordinates specified for shunn MMS init condition", __FILE__, __LINE__);
+           }
 
-              std::shared_ptr<BaseFunctor> fun(scinew MMSshunn(x_label));
-              insert_functor( face_name, varname, fun);
+           std::shared_ptr<BaseFunctor> fun(scinew MMSshunn(x_label));
+           insert_functor( face_name, varname, fun);
 
-            } else if ( custom_type == "table_value" ) {
+         } else if ( custom_type == "table_value" ) {
 
-              std::string tabulated_var_name = "NA";
-              db_bc_type->require("value", tabulated_var_name);
+           std::string tabulated_var_name = "NA";
+           db_bc_type->require("value", tabulated_var_name);
 
-              std::shared_ptr<BaseFunctor> fun(scinew SecondaryVariableBC(tabulated_var_name));
-              insert_functor( face_name, varname, fun );
+           std::shared_ptr<BaseFunctor> fun(scinew SecondaryVariableBC(tabulated_var_name));
+           insert_functor( face_name, varname, fun );
 
-            } else if ( custom_type == "handoff" ) {
+         } else if ( custom_type == "handoff" ) {
 
-              std::string handoff_var_name = "NA";
-              db_bc_type->require("value", handoff_var_name);
+           std::string handoff_var_name = "NA";
+           db_bc_type->require("value", handoff_var_name);
 
-              std::shared_ptr<BaseFunctor> fun(scinew SecondaryVariableBC(handoff_var_name));
-              insert_functor( face_name, varname, fun );
+           std::shared_ptr<BaseFunctor> fun(scinew SecondaryVariableBC(handoff_var_name));
+           insert_functor( face_name, varname, fun );
 
-            } else if ( custom_type == "velocity" ){
+         } else if ( custom_type == "velocity" ){
 
-              //HARD CODED! - Possibly fix for the future?
-              std::string density_name = "density";
+           //HARD CODED! - Possibly fix for the future?
+           std::string density_name = "density";
 
-              double vel_value=0.0;
-              db_bc_type->require("value", vel_value);
+           double vel_value=0.0;
+           db_bc_type->require("value", vel_value);
 
-              std::shared_ptr<BaseFunctor> fun( scinew VelocityBC(density_name, vel_value));
+           std::shared_ptr<BaseFunctor> fun( scinew VelocityBC(density_name, vel_value));
 
-              insert_functor( face_name, varname, fun );
+           insert_functor( face_name, varname, fun );
 
-            } else {
+         } else if ( custom_type == "subgrid_injector" ){
 
-              throw InvalidValue("Error: Custom functor type not recognized", __FILE__, __LINE__);
+           std::shared_ptr<BaseFunctor> fun( scinew SubGridInjector(varname, db_bc_type));
 
-            }
+           insert_functor( face_name, varname, fun );
 
-          } else {
+         } else {
 
-            throw InvalidValue("Error: BC var type not recognized: "+type, __FILE__, __LINE__);
+           throw InvalidValue("Error: Custom functor type not recognized: "+custom_type,
+                              __FILE__, __LINE__);
 
-          }
-        }
-      }
-    }
-  }
+         }
+
+       } else {
+
+         throw InvalidValue("Error: BC var type not recognized: "+type, __FILE__, __LINE__);
+
+       }
+     }
+   }
+ }
 }
 
 //--------------------------------------------------------------------------------------------------
 // BASE FUNCTOR
 
 template <typename T>
-struct BCFunctors<T>::BaseFunctor{
+struct BCFunctors<T>::BaseFunctor {
 
 public:
 
   BaseFunctor(){}
   virtual ~BaseFunctor(){}
 
+  /** @brief Add dependancies onto the Arches Task for the proper execution of the boundary
+             condition. This may be a nullptr op.**/
   virtual void add_dep( std::vector<std::string>& master_dep ) = 0;
+  /** @brief Add additional modifies onto the Arches Task (outside the root variable) for
+             proper execution of the boundary condition. This may be a nullptr op. **/
+  virtual void add_mod( std::vector<std::string>& master_mod ) = 0;
+  /** @brief Actually evaluate the boundary condition **/
   virtual void eval_bc(
     std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
     const BndSpec* bnd, Uintah::Iterator bndIter ) = 0;
 
 protected:
+
+  std::vector<std::string> m_dep;
+  std::vector<std::string> m_mod;
 
   void check_master_list( std::vector<std::string>& local_dep ,
     std::vector<std::string>& master_list ){
@@ -299,6 +346,8 @@ public:
   ~Dirichlet(){}
 
   void add_dep( std::vector<std::string>& master_dep ){}
+
+  void add_mod( std::vector<std::string>& master_mod ){}
 
   void eval_bc( std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
                 const BndSpec* bnd, Uintah::Iterator bndIter ){
@@ -342,7 +391,6 @@ public:
   }
 
 private:
-  std::vector<std::string> m_dep;
 
 };
 
@@ -354,6 +402,8 @@ public:
   ~Neumann(){}
 
   void add_dep( std::vector<std::string>& master_dep ){}
+
+  void add_mod( std::vector<std::string>& master_mod ){}
 
   void eval_bc( std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
                 const BndSpec* bnd, Uintah::Iterator bndIter ){
@@ -406,7 +456,6 @@ public:
   }
 
 private:
-  std::vector<std::string> m_dep;
 
 };
 
@@ -422,10 +471,12 @@ public:
 
   void add_dep( std::vector<std::string>& master_dep ){
 
-    m_dep.push_back( m_density_name );
-    BaseFunctor::check_master_list( m_dep, master_dep );
+    BaseFunctor::m_dep.push_back( m_density_name );
+    BaseFunctor::check_master_list( BaseFunctor::m_dep, master_dep );
 
   }
+
+  void add_mod( std::vector<std::string>& master_mod ){}
 
   void eval_bc( std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
                 const BndSpec* bnd, Uintah::Iterator bndIter ){
@@ -463,9 +514,6 @@ private:
   const double m_mdot;
   std::string m_density_name;
 
-  std::vector<std::string> m_dep;
-
-
 };
 
 //--------------------------------------------------------------------------------------------------
@@ -480,11 +528,13 @@ public:
 
   void add_dep( std::vector<std::string>& master_dep ){
 
-    m_dep.push_back( m_y_name );
-    m_dep.push_back( m_x_name );
-    BaseFunctor::check_master_list( m_dep, master_dep );
+    BaseFunctor::m_dep.push_back( m_y_name );
+    BaseFunctor::m_dep.push_back( m_x_name );
+    BaseFunctor::check_master_list( BaseFunctor::m_dep, master_dep );
 
   }
+
+  void add_mod( std::vector<std::string>& master_mod ){}
 
   void eval_bc( std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
                 const BndSpec* bnd, Uintah::Iterator bndIter ){
@@ -579,8 +629,6 @@ private:
   std::string m_x_name;
   std::string m_y_name;
   std::string m_which_vel;
-  std::vector<std::string> m_dep;
-
 
 };
 
@@ -595,10 +643,12 @@ public:
 
   void add_dep( std::vector<std::string>& master_dep ){
 
-    m_dep.push_back( m_x_name );
-    BaseFunctor::check_master_list( m_dep, master_dep );
+    BaseFunctor::m_dep.push_back( m_x_name );
+    BaseFunctor::check_master_list( BaseFunctor::m_dep, master_dep );
 
   }
+
+  void add_mod( std::vector<std::string>& master_mod ){}
 
   void eval_bc( std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
                 const BndSpec* bnd, Uintah::Iterator bndIter ){
@@ -644,9 +694,6 @@ public:
 private:
 
   std::string m_x_name;
-  std::vector<std::string> m_dep;
-
-
 
 };
 
@@ -657,7 +704,7 @@ struct BCFunctors<T>::SecondaryVariableBC : BaseFunctor {
 public:
 
   SecondaryVariableBC( std::string sec_var_name ) : m_sec_var_name(sec_var_name){
-    m_dep.push_back( m_sec_var_name );
+    BaseFunctor::m_dep.push_back( m_sec_var_name );
   }
   ~SecondaryVariableBC(){}
 
@@ -665,9 +712,11 @@ public:
 
     // Now adding dependencies to the master list.
     // This checks for repeats to ensure a variable isn't added twice.
-    BaseFunctor::check_master_list( m_dep, master_dep );
+    BaseFunctor::check_master_list( BaseFunctor::m_dep, master_dep );
 
   }
+
+  void add_mod( std::vector<std::string>& master_mod ){}
 
   void eval_bc( std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
                 const BndSpec* bnd, Uintah::Iterator bndIter ){
@@ -688,7 +737,6 @@ public:
 private:
 
   std::string m_sec_var_name;
-  std::vector<std::string> m_dep;
   SimulationStateP m_shared_state;
 
 };
@@ -700,7 +748,7 @@ struct BCFunctors<T>::VelocityBC : BaseFunctor {
 public:
 
   VelocityBC( std::string density_name, double value ):m_density_name(density_name), m_vel_value(value){
-    m_dep.push_back( m_density_name );
+    BaseFunctor::m_dep.push_back( m_density_name );
   }
   ~VelocityBC(){}
 
@@ -708,9 +756,11 @@ public:
 
     // Now adding dependencies to the master list.
     // This checks for repeats to ensure a variable isn't added twice.
-    BaseFunctor::check_master_list( m_dep, master_dep );
+    BaseFunctor::check_master_list( BaseFunctor::m_dep, master_dep );
 
   }
+
+  void add_mod( std::vector<std::string>& master_mod ){}
 
   void eval_bc( std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
                 const BndSpec* bnd, Uintah::Iterator bndIter ){
@@ -800,7 +850,80 @@ private:
 
   std::string m_density_name;
   const double m_vel_value;
-  std::vector<std::string> m_dep;
+
+};
+
+//--------------------------------------------------------------------------------------------------
+template <typename T>
+struct BCFunctors<T>::SubGridInjector : BaseFunctor {
+
+public:
+
+  SubGridInjector( const std::string phi_name, ProblemSpecP db )
+  : m_phi_name(phi_name) {
+
+    //value in this context is rho*phi
+    db->require("value", m_rho_phi_u);
+
+    m_use_face_area = true;
+    if ( db->findBlock("area") ){
+      db->require( "area", m_area );
+      m_use_face_area = false;
+    }
+
+  }
+  ~SubGridInjector(){}
+
+  void add_dep( std::vector<std::string>& master_dep ){}
+
+  void add_mod( std::vector<std::string>& master_mod ){
+
+    const std::string rhs_name = m_phi_name+"_rhs";
+
+    std::cout << " Setting up for : " << rhs_name << std::endl;
+    auto i = find(master_mod.begin(), master_mod.end(), rhs_name);
+
+    if ( i == master_mod.end() ){
+      master_mod.push_back(rhs_name);
+    }
+
+  }
+
+  void eval_bc( std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
+                const BndSpec* bnd, Uintah::Iterator bndIter ){
+
+    VariableHelper<T> var_help;
+    T& var = tsk_info->get_uintah_field_add<T>(var_name);
+
+    T& rhs = tsk_info->get_uintah_field_add<T>(m_phi_name+"_rhs");
+
+    IntVector iDir = patch->faceDirection( bnd->face );
+
+    double area = 0.0;
+    Vector DX = patch->dCell();
+    if ( m_use_face_area ){
+      area = std::abs(iDir[0]) * DX.y() * DX.z() +
+             std::abs(iDir[1]) * DX.z() * DX.x() +
+             std::abs(iDir[2]) * DX.x() * DX.y();
+    } else {
+      area = m_area;
+    }
+
+    for ( bndIter.reset(); !bndIter.done(); bndIter++ ){
+
+      IntVector c = *bndIter;
+
+      rhs[c] += m_rho_phi_u * area;
+
+    }
+  }
+
+private:
+
+  const std::string m_phi_name;
+  double m_rho_phi_u;
+  double m_area;
+  bool m_use_face_area;
 
 };
 
@@ -810,8 +933,8 @@ private:
 
 //--------------------------------------------------------------------------------------------------
 template <typename T>
-void BCFunctors<T>::get_bc_dependencies( std::vector<std::string> varnames, WBCHelper* bc_helper,
-                          std::vector<std::string>& dep ){
+void BCFunctors<T>::get_bc_dependencies( std::vector<std::string>& varnames, WBCHelper* bc_helper,
+                                         std::vector<std::string>& dep ){
 
   const BndMapT& bc_info = bc_helper->get_boundary_information();
   for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
@@ -822,7 +945,7 @@ void BCFunctors<T>::get_bc_dependencies( std::vector<std::string> varnames, WBCH
 
       const BndCondSpec* spec = i_bc->second.find(*i_eqn);
 
-      if ( spec == NULL ){
+      if ( spec == nullptr ){
 
         // Only throwing an error for edge BCs.
         // Interior BC's allowed to be missing
@@ -831,18 +954,60 @@ void BCFunctors<T>::get_bc_dependencies( std::vector<std::string> varnames, WBCH
           msg << "Error: Cannot find a boundary condition for variable: " << *i_eqn << " on face: " << facename << std::endl;
           throw InvalidValue(msg.str(), __FILE__, __LINE__);
         }
-        
+
       } else {
 
-        std::shared_ptr<BaseFunctor> bc_fun = NULL;
+        std::shared_ptr<BaseFunctor> bc_fun = nullptr;
         if ( spec->bcType == CUSTOM ){
           //CUSTOM BCS (i.e., NOT Dirichlet or Neumann)
           std::string key_name = pair_face_var_names( facename, *i_eqn );
           bc_fun = m_bcFunStorage[key_name];
         }
 
-        if ( bc_fun != NULL ){
+        if ( bc_fun != nullptr ){
           bc_fun->add_dep( dep );
+        }
+
+      }
+    }
+  }
+}
+
+//--------------------------------------------------------------------------------------------------
+template <typename T>
+void BCFunctors<T>::get_bc_modifies( std::vector<std::string>& varnames, WBCHelper* bc_helper,
+                                     std::vector<std::string>& mod ){
+
+  const BndMapT& bc_info = bc_helper->get_boundary_information();
+  for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
+
+    std::string facename = i_bc->second.name;
+
+    for ( auto i_eqn = varnames.begin(); i_eqn != varnames.end(); i_eqn++ ){
+
+      const BndCondSpec* spec = i_bc->second.find(*i_eqn);
+
+      if ( spec == nullptr ){
+
+        // Only throwing an error for edge BCs.
+        // Interior BC's allowed to be missing
+        if ( i_bc->second.edge_type == EDGE ){
+          std::stringstream msg;
+          msg << "Error: Cannot find a boundary condition for variable: " << *i_eqn << " on face: " << facename << std::endl;
+          throw InvalidValue(msg.str(), __FILE__, __LINE__);
+        }
+
+      } else {
+
+        std::shared_ptr<BaseFunctor> bc_fun = nullptr;
+        if ( spec->bcType == CUSTOM ){
+          //CUSTOM BCS (i.e., NOT Dirichlet or Neumann)
+          std::string key_name = pair_face_var_names( facename, *i_eqn );
+          bc_fun = m_bcFunStorage[key_name];
+        }
+
+        if ( bc_fun != nullptr ){
+          bc_fun->add_mod( mod );
         }
 
       }
@@ -869,7 +1034,7 @@ void BCFunctors<T>::apply_bc( std::vector<std::string> varnames, WBCHelper* bc_h
 
       const BndCondSpec* spec = i_bc->second.find(*i_eqn);
 
-      if ( spec == NULL ){
+      if ( spec == nullptr ){
 
         // Only throwing an error for edge BCs.
         // Interior BC's allowed to be missing
@@ -881,7 +1046,7 @@ void BCFunctors<T>::apply_bc( std::vector<std::string> varnames, WBCHelper* bc_h
 
       } else {
 
-        std::shared_ptr<BaseFunctor> bc_fun = NULL;
+        std::shared_ptr<BaseFunctor> bc_fun = nullptr;
         if ( spec->bcType == DIRICHLET ){
           bc_fun = m_bcFunStorage[func_enum_str(DIRICHLET_FUN)];
         } else if ( spec->bcType == NEUMANN ){
@@ -895,11 +1060,15 @@ void BCFunctors<T>::apply_bc( std::vector<std::string> varnames, WBCHelper* bc_h
         const BndSpec bndSpec = i_bc->second;
 
         // Actually applying the boundary condition here:
-        if ( bc_fun != NULL ){
+        if ( bc_fun != nullptr ){
           bc_fun->eval_bc( *i_eqn, patch, tsk_info, &bndSpec, cell_iter );
         } else {
-          throw InvalidValue(
-            "Error: Boundary condition implementation not found for: "+*i_eqn, __FILE__, __LINE__);
+          std::stringstream msg;
+          msg << "Error: Boundary condition implementation not found." << " \n " <<
+                 " Var name:     " << spec->varName << std::endl <<
+                 "  Face name:    " << facename << std::endl <<
+                 "  Functor name: " << spec->functorName << std::endl;
+          throw InvalidValue( msg.str(), __FILE__, __LINE__);
         }
       }
     }

@@ -45,7 +45,7 @@ RegridderCommon* RegridderFactory::create(ProblemSpecP& ps, const ProcessorGroup
     std::string regridderName;
     regridderPS->getAttribute("type", regridderName);
 
-    if (world->myrank() == 0) {
+    if (world->myRank() == 0) {
       std::cout << "Using Regridder " << regridderName << std::endl;
     }
     if (regridderName == "Tiled") {

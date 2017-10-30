@@ -67,12 +67,22 @@ public:
 
   ~ProcessorGroup(){};
 
-  int size() const
+  int nNodes() const
   {
-    return m_size;
+    return m_nNodes;
   }
 
-  int myrank() const
+  int myNode() const
+  {
+    return m_node;
+  }
+
+  int nRanks() const
+  {
+    return m_nRanks;
+  }
+
+  int myRank() const
   {
     return m_rank;
   }
@@ -110,8 +120,12 @@ private:
   ProcessorGroup( ProcessorGroup && )                 = delete;
   ProcessorGroup& operator=( ProcessorGroup && )      = delete;
 
+  int  m_node;
+  int  m_nNodes;
+
   int  m_rank;
-  int  m_size;
+  int  m_nRanks;
+
   int  m_threads;
 
   MPI_Comm                        m_comm;

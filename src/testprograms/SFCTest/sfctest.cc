@@ -51,11 +51,11 @@ int main(int argc, char** argv)
 
 	int div=(int)pow((float)DIM,ref);
 	
-	unsigned int P=d_myworld->size();
+	unsigned int P=d_myworld->nRanks();
 	unsigned int N=(unsigned int)pow((float)BINS,ref);
 	unsigned int n=N/P;
 	int rem=N%P;
-	int rank=d_myworld->myrank();
+	int rank=d_myworld->myRank();
 	LOCS xx,yy;
 
 	Uintah::SFC<LOCS> mycurve(d_myworld);
@@ -191,9 +191,9 @@ int main(int argc, char** argv)
       j++;
     }
 
-    n=N/d_myworld->size();
+    n=N/d_myworld->nRanks();
     MPI_Status status;
-    for(int p=1;p<d_myworld->size();p++)
+    for(int p=1;p<d_myworld->nRanks();p++)
     {
       if(p<rem)
         r=n+1;

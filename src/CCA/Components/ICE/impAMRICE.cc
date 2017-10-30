@@ -242,7 +242,7 @@ void impAMRICE::scheduleMultiLevelPressureSolve(  SchedulerP& sched,
                                           const MaterialSet* all_matls)
 {
   d_recompileSubsched = true;
-  cout_doing << d_myworld->myrank() <<
+  cout_doing << d_myworld->myRank() <<
                 " impAMRICE::scheduleMultiLevelPressureSolve" << endl;
   
   Task* t = scinew Task("impAMRICE::multiLevelPressureSolve", 
@@ -337,7 +337,7 @@ void impAMRICE::scheduleMultiLevelPressureSolve(  SchedulerP& sched,
   const PatchSet   * perprocPatches = loadBal->getPerProcessorPatchSet( grid );
 
   sched->addTask(t, perprocPatches, all_matls);
-  cout << d_myworld->myrank() << " proc_patches are " << *perprocPatches << "\n";
+  cout << d_myworld->myRank() << " proc_patches are " << *perprocPatches << "\n";
 
 }
 /*___________________________________________________________________ 
@@ -355,7 +355,7 @@ void impAMRICE::multiLevelPressureSolve(const ProcessorGroup* pg,
   // this function will be called exactly once per processor, regardless of the number of patches assigned
   // get the patches our processor is responsible for
 
-  cout_doing << d_myworld->myrank() << " impAMRICE::MultiLevelPressureSolve on patch " << *patches << endl;
+  cout_doing << d_myworld->myRank() << " impAMRICE::MultiLevelPressureSolve on patch " << *patches << endl;
   //__________________________________
   // define Matl sets and subsets
   const MaterialSet* all_matls = d_sharedState->allMaterials();
@@ -518,7 +518,7 @@ void impAMRICE::multiLevelPressureSolve(const ProcessorGroup* pg,
     subNewDW->get(max_RHS,     lb->max_RHSLabel);
     subOldDW->get(max_RHS_old, lb->max_RHSLabel);
     
-    if(pg->myrank() == 0) {
+    if(pg->myRank() == 0) {
       cout << "Outer iteration " << counter
            << " max_rhs before solve "<< max_RHS_old
            << " after solve " << max_RHS<< endl;
@@ -529,12 +529,12 @@ void impAMRICE::multiLevelPressureSolve(const ProcessorGroup* pg,
                                           //  too many outer iterations
     if (counter > d_iters_before_timestep_restart ){
       restart = true;
-      if(pg->myrank() == 0)
+      if(pg->myRank() == 0)
         cout <<"\nWARNING: max iterations befor timestep restart reached\n"<<endl;
     }
                                           //  solver has requested a restart
     if (d_subsched->get_dw(3)->timestepRestarted() ) {
-      if(pg->myrank() == 0)
+      if(pg->myRank() == 0)
         cout << "\nWARNING: Solver had requested a restart\n" <<endl;
       restart = true;
     }
@@ -544,7 +544,7 @@ void impAMRICE::multiLevelPressureSolve(const ProcessorGroup* pg,
       smallest_max_RHS_sofar = max_RHS;
     }
     if(((max_RHS - smallest_max_RHS_sofar) > 100.0*smallest_max_RHS_sofar) ){
-      if(pg->myrank() == 0)
+      if(pg->myRank() == 0)
         cout << "\nWARNING: outer iteration is diverging now "
              << "restarting the timestep"
              << " Max_RHS " << max_RHS 
@@ -641,7 +641,7 @@ void impAMRICE::multiLevelPressureSolve(const ProcessorGroup* pg,
     //__________________________________
     //  Compute reflux_fluxes task
     const Level* fineLevel = coarseLevel->getFinerLevel().get_rep(); 
-    cout_doing << d_myworld->myrank() 
+    cout_doing << d_myworld->myRank() 
                << " impAMRICE::scheduleCompute_refluxFluxes_RHS\t\t\t\tL-" 
                << fineLevel->getIndex() << "->"<< coarseLevel->getIndex()<< endl;
 
@@ -668,7 +668,7 @@ void impAMRICE::multiLevelPressureSolve(const ProcessorGroup* pg,
     
     //__________________________________
     //  Apply reflux corrections to rhs   
-    cout_doing << d_myworld->myrank() 
+    cout_doing << d_myworld->myRank() 
                << " impAMRICE::scheduleApply_refluxFluxes_RHS\t\t\t\tL-" 
                << fineLevel->getIndex() << "->"<< coarseLevel->getIndex()<< endl;
 
@@ -700,7 +700,7 @@ void impAMRICE::compute_refluxFluxes_RHS(const ProcessorGroup*,
   const Level* coarseLevel = getLevel(coarsePatches);
   const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
   
-  cout_doing << d_myworld->myrank() 
+  cout_doing << d_myworld->myRank() 
              << " Doing reflux_computeCorrectionFluxes \t\t\t impAMRICE L-"
              <<fineLevel->getIndex()<< "->"<< coarseLevel->getIndex();
   
@@ -742,7 +742,7 @@ void impAMRICE::apply_refluxFluxes_RHS(const ProcessorGroup*,
   const Level* coarseLevel = getLevel(coarsePatches);
   const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
   
-  cout_doing << d_myworld->myrank() 
+  cout_doing << d_myworld->myRank() 
              << " Doing apply_refluxFluxes_RHS \t\t\t\t impAMRICE L-"
              <<fineLevel->getIndex()<< "->"<< coarseLevel->getIndex();
   
@@ -806,7 +806,7 @@ void impAMRICE::scheduleCoarsen_delP(SchedulerP& sched,
                                const MaterialSubset* press_matl,
                                const VarLabel* variable)
 {                                                                          
-  cout_doing << d_myworld->myrank()<< " impAMRICE::scheduleCoarsen_"<< variable->getName()
+  cout_doing << d_myworld->myRank()<< " impAMRICE::scheduleCoarsen_"<< variable->getName()
              <<"\t\t\t\t\tL-" << coarseLevel->getIndex() << endl;
 
   Task* t = scinew Task("impAMRICE::coarsen_delP",
@@ -839,7 +839,7 @@ void impAMRICE::coarsen_delP(const ProcessorGroup*,
   for(int p=0;p<coarsePatches->size();p++){
     const Patch* coarsePatch = coarsePatches->get(p);
     
-    cout_doing << d_myworld->myrank()<< " Doing Coarsen_" << variable->getName()
+    cout_doing << d_myworld->myRank()<< " Doing Coarsen_" << variable->getName()
                << " on patch " << coarsePatch->getID() 
                << "\t\t\t ICE \tL-" <<coarseLevel->getIndex()<< endl;
     int indx = 0;           
@@ -915,7 +915,7 @@ void impAMRICE::scheduleZeroMatrix_UnderFinePatches(SchedulerP& sched,
                                               const LevelP& coarseLevel,
                                               const MaterialSubset* one_matl)
 { 
-  cout_doing << d_myworld->myrank()
+  cout_doing << d_myworld->myRank()
              << " impAMRICE::scheduleZeroMatrix_RHS_UnderFinePatches\t\t\tL-" 
              << coarseLevel->getIndex() << endl;
   
@@ -943,7 +943,7 @@ void impAMRICE::zeroMatrix_UnderFinePatches(const ProcessorGroup*,
   for(int p=0;p<coarsePatches->size();p++){
     const Patch* coarsePatch = coarsePatches->get(p);
     
-    cout_doing << d_myworld->myrank()
+    cout_doing << d_myworld->myRank()
                << " Doing zeroMatrix_UnderFinePatches on patch "
                << coarsePatch->getID() << "\t ICE \tL-" <<coarseLevel->getIndex()<< endl;
                
@@ -997,7 +997,7 @@ void impAMRICE::schedule_matrixBC_CFI_coarsePatch(SchedulerP& sched,
 
 {
   if(coarseLevel->hasFinerLevel()){
-    cout_doing << d_myworld->myrank() 
+    cout_doing << d_myworld->myRank() 
                << " impAMRICE::matrixBC_CFI_coarsePatch\t\t\t\t\tL-" 
                << coarseLevel->getIndex() <<endl;
 
@@ -1035,7 +1035,7 @@ void impAMRICE::matrixBC_CFI_coarsePatch(const ProcessorGroup*,
   const Level* coarseLevel = getLevel(coarsePatches);
   const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
   
-  cout_doing << d_myworld->myrank() 
+  cout_doing << d_myworld->myRank() 
              << " Doing matrixBC_CFI_coarsePatch \t\t\t ICE \tL-"
              <<coarseLevel->getIndex();
   //__________________________________
@@ -1147,7 +1147,7 @@ void impAMRICE::schedule_bogus_imp_delP(SchedulerP& sched,
                                  const MaterialSubset* press_matl,
                                  const MaterialSet* all_matls)
 {
-  cout_doing << d_myworld->myrank() 
+  cout_doing << d_myworld->myRank() 
              << " impAMRICE::schedule_bogus_impDelP"<<endl;
 
   Task* t = scinew Task("bogus_imp_delP",this, &impAMRICE::bogus_imp_delP);
@@ -1166,7 +1166,7 @@ void impAMRICE::bogus_imp_delP(const ProcessorGroup*,
                          DataWarehouse*,
                          DataWarehouse* new_dw)       
 { 
-  cout<< d_myworld->myrank()<<" Doing bogus_imp_delP "
+  cout<< d_myworld->myRank()<<" Doing bogus_imp_delP "
             <<"\t\t\t\t\t ICE \tALL LEVELS" << endl;
   for(int p=0;p<patches->size();p++){  
     const Patch* patch = patches->get(p);

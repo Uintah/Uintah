@@ -443,7 +443,6 @@ protected:
   const VarLabel* RefineFlagZMinLabel;
 
   std::vector<MPMPhysicalBC*> d_physicalBCs;
-  IntegratorType d_integrator;
 
   SwitchingCriteria* d_switchCriteria;
 private:

@@ -115,7 +115,7 @@ void UdaReducer::problemSetup(const ProblemSpecP& prob_spec,
   
   //__________________________________
   //  Find timestep data from the original uda
-  d_dataArchive = scinew DataArchive( d_udaDir, d_myworld->myrank(), d_myworld->size() );
+  d_dataArchive = scinew DataArchive( d_udaDir, d_myworld->myRank(), d_myworld->nRanks() );
   d_dataArchive->queryTimesteps( d_timesteps, d_times );  
   d_dataArchive->turnOffXMLCaching();
   
@@ -196,7 +196,7 @@ void UdaReducer::sched_readDataArchive(const LevelP& level,
                                       SchedulerP& sched){
   GridP grid = level->getGrid();
   const PatchSet* perProcPatches = d_lb->getPerProcessorPatchSet(grid);
-  const PatchSubset* patches = perProcPatches->getSubset(d_myworld->myrank());  
+  const PatchSubset* patches = perProcPatches->getSubset(d_myworld->myRank());  
     
     
   Task* t = scinew Task("UdaReducer::readDataArchive", this, 

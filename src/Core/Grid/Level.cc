@@ -555,7 +555,7 @@ void Level::selectPatches( const IntVector  & low
       // neighbors before this query
       std::vector<const Patch*>& cache = m_select_cache[std::make_pair(low, high)];
       cache.reserve(6);  // don't reserve too much to save memory, not too little to avoid too much reallocation
-      for (auto i = 0; i < neighbors.size(); i++) {
+      for (unsigned int i = 0; i < neighbors.size(); i++) {
         cache.push_back(neighbors[i]);
       }
     }
@@ -651,7 +651,7 @@ void Level::setOverlappingPatches()
     Patch::selectType neighborPatches;
     selectPatches(lowEC, highEC, neighborPatches, includeExtraCells);
     
-    for ( auto j = 0; j < neighborPatches.size(); j++) {
+    for ( unsigned int j = 0; j < neighborPatches.size(); j++) {
       const Patch* neighborPatch = neighborPatches[j];
       
       if ( patch != neighborPatch){
@@ -956,8 +956,8 @@ Level::setBCTypes()
     // only sus uses Parallel, but anybody else who uses DataArchive
     // to read data does not
     myworld = Parallel::getRootProcessorGroup();
-    numProcs = myworld->size();
-    rank = myworld->myrank();
+    numProcs = myworld->nRanks();
+    rank = myworld->myRank();
   }
 
   std::vector<int> displacements(numProcs, 0);
@@ -1118,11 +1118,11 @@ Level::setBCTypes()
     double avg[ nTimes ] = { 0 };
     Uintah::MPI::Reduce(rtimes, avg, nTimes, MPI_DOUBLE, MPI_SUM, 0, myworld->getComm());
 
-    if (myworld->myrank() == 0) {
+    if (myworld->myRank() == 0) {
 
       std::cout << "SetBCType Avg Times: ";
       for (int i = 0; i < nTimes; i++) {
-        avg[i] /= myworld->size();
+        avg[i] /= myworld->nRanks();
         std::cout << avg[i] << " ";
       }
       std::cout << std::endl;
@@ -1131,7 +1131,7 @@ Level::setBCTypes()
     double max[nTimes] = { 0 };
     Uintah::MPI::Reduce(rtimes, max, nTimes, MPI_DOUBLE, MPI_MAX, 0, myworld->getComm());
 
-    if (myworld->myrank() == 0) {
+    if (myworld->myRank() == 0) {
       std::cout << "SetBCType Max Times: ";
       for (int i = 0; i < nTimes; i++) {
         std::cout << max[i] << " ";

@@ -406,7 +406,7 @@ void SFC<LOCS>::ProfileMergeParameters(int repeat)
   ASSERT(BulletProof(PARALLEL));
 #endif
 
-  rank=d_myworld->myrank();
+  rank=d_myworld->myRank();
   Comm=d_myworld->getComm();
 
   if((int)refinements*DIM<=(int)sizeof(unsigned char)*8)
@@ -663,7 +663,7 @@ void SFC<LOCS>::ProfileMergeParametersT(int repeat)
 template<class LOCS>
 void SFC<LOCS>::GenerateCurve(int mode)
 {
-  P=d_myworld->size();
+  P=d_myworld->nRanks();
   ASSERT(BulletProof(mode));
 
   switch(dim)
@@ -694,7 +694,7 @@ void SFC<LOCS>::GenerateDim(int mode)
       SetCleanup(BATCHERS);
 
     //make new sub group if needed?
-    rank=d_myworld->myrank();
+    rank=d_myworld->myRank();
     Comm=d_myworld->getComm();
     //Pick which generate to use
     if((int)refinements*DIM<=(int)sizeof(unsigned char)*8)

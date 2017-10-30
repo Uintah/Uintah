@@ -657,7 +657,7 @@ RMCRT_Radiation::sched_restartInitialize( const LevelP& level,
 
   // Find the first patch, on the arches level, that this mpi rank owns.
   const Uintah::PatchSet* const ps = sched->getLoadBalancer()->getPerProcessorPatchSet(archesLevel);
-  const PatchSubset* myPatches = ps->getSubset(_my_world->myrank());
+  const PatchSubset* myPatches = ps->getSubset(_my_world->myRank());
   const Patch* firstPatch = myPatches->get(0);
 
   if (level == archesLevel) {

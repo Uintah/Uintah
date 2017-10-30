@@ -115,7 +115,7 @@ void Mixing2::problemSetup(GridP&, SimulationStateP& in_state,
     cerr << "refPressure=" << gas->refPressure() << '\n';
     gas->setState_TPY(200, 101325, "H2:1");
 #endif
-    if(d_myworld->myrank() == 0){
+    if(d_myworld->myRank() == 0){
 #if 0
       int nel = gas->nElements();
       cerr.precision(17);

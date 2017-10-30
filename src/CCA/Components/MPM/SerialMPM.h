@@ -603,7 +603,7 @@ protected:
 
   bool             d_fracture;
   bool             d_recompile;
-  IntegratorType   d_integrator;
+
   MaterialSubset*  d_loadCurveIndex;
   
   std::vector<AnalysisModule*> d_analysisModules;

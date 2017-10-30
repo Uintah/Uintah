@@ -88,9 +88,9 @@ bool PetscLinearSolve(Mat& A,
 #if 0
   char matrix_file[100],RHS_file[100], X_file[100];
 
-  sprintf(RHS_file,   "RHS.proc_%d_iter",   myworld->myrank());
-  sprintf(X_file,     "X_proc_%d_iter",     myworld->myrank());
-  sprintf(matrix_file,"matrix_proc_%d",myworld->myrank());
+  sprintf(RHS_file,   "RHS.proc_%d_iter",   myworld->myRank());
+  sprintf(X_file,     "X_proc_%d_iter",     myworld->myRank());
+  sprintf(matrix_file,"matrix_proc_%d",myworld->myRank());
 
   PetscViewer RHS_view;
   PetscViewerASCIIOpen(PETSC_COMM_WORLD,RHS_file,&RHS_view);
@@ -248,7 +248,7 @@ bool PetscLinearSolve(Mat& A,
   if (ierr)
     throw UintahPetscError(ierr, "KSPGetIterationNumber", __FILE__, __LINE__);
 
-  int me = myworld->myrank();
+  int me = myworld->myRank();
 
   ierr = VecNorm(X,NORM_1,&norm);
   if(ierr)
