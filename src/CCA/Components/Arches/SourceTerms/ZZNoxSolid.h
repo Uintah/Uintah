@@ -132,7 +132,6 @@ private:
   std::string m_rcmass_root; 
   std::string m_rho_coal_root; 
   std::string m_coal_temperature_root; 
-  std::string rcmassqn_name;
   std::vector<double> m_rc_scaling_const; 
   std::vector<double> m_weight_scaling_const; 
   std::vector<double> m_particle_size; 
