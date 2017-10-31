@@ -1794,10 +1794,10 @@
               <geom_object/>
             </injector_region>
 
-            <!-- specs nneded for second moment of mixture fraction source-->
+            <!-- specs needed for second moment of mixture fraction source-->
             <scalar_dissipation_label   spec="REQUIRED STRING" need_applies_to="type moment2_mixture_fraction_src"/>
 
-            <!-- specs needed for the dissipation term for 2eqn scalr var model -->
+            <!-- specs needed for the dissipation term for 2eqn scalar var model -->
             <mixture_fraction_label     spec="REQUIRED STRING" need_applies_to="type dissipation_src,
                                                                                      brown_soot"/> <!-- mixture fraction label -->
             <gradmixfrac_label          spec="REQUIRED STRING" need_applies_to="type dissipation_src"/> <!-- label for the gradient of the mixture fraction -->
