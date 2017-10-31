@@ -14,7 +14,6 @@
 #include <CCA/Components/Arches/ParticleModels/CoalHelper.h>
 
 
-#include <iomanip>      // std::setprecision
 //===========================================================================
 using namespace std;
 using namespace Uintah;
@@ -55,18 +54,20 @@ psNox::problemSetup(const ProblemSpecP& inputdb)
     _Nit = _N_ad/(1-_Ash_ad-_H2O_ad);
   }
 
-   _alpha1=0.0; 
-   _alpha2=0.8; 
-   _alpha3=0.2; 
 
-   _beta1=0.0; 
-   _beta2=0.8;
-   _beta3=0.2;
+  db->getWithDefault("devol_to_HCN",        _beta2,          0.8);
+  db->getWithDefault("devol_to_NH3",        _beta3,          0.2);
+  db->getWithDefault("charOxy_to_HCN",      _gamma2,         0.8);
+  db->getWithDefault("charOxy_to_NH3",      _gamma3,         0.2);
+  db->getWithDefault("Tar_to_HCN",          _alpha2,         0.8);
+  db->getWithDefault("Tar_to_NH3",          _alpha3,         0.2);
 
 
-   _gamma1=0.0; 
-   _gamma2=0.8;
-   _gamma3=0.2;
+   _beta1=1.0-_beta2-_beta3;     // devol
+
+   _alpha1=1.0-_alpha2-_alpha3;   // tar
+
+   _gamma1=1.0- _gamma2-_gamma3; // char-oxy
 
 
   db->getWithDefault("PreExpReburn",_A_reburn  ,34830  );
@@ -354,8 +355,8 @@ psNox::computeSource( const ProcessorGroup* pc,
           double weight   =  0.0;
           double p_area =  0.0;
           weight   = rcmass_weighted_scaled(i,j,k)/rcmass_unweighted_unscaled(i,j,k)*m_rc_scaling_const[i_env]*m_weight_scaling_const[i_env]; 
-          p_area = M_PI*length[i_env](i,j,k)*length[i_env](i,j,k);
-          temp_coal_mass_concentration[i_env](i,j,k) =weight * p_area;
+          p_area = M_PI*length[i_env](i,j,k)*length[i_env](i,j,k);     // m^2
+          temp_coal_mass_concentration[i_env](i,j,k) =weight * p_area; // m^2 / m^3
           }); 
     }
 
@@ -365,8 +366,8 @@ psNox::computeSource( const ProcessorGroup* pc,
     enum spc{ sNO, sHCN, sNH3, sN2, sO2};
 
     //  ----- RXN KEY  ----  //
-    //      #0 forward extended zeldovisch
-    //      #1 reverse extended zeldovisch
+    //      #0 forward extended zeldovich
+    //      #1 reverse extended zeldovich
     //      #2 fuel NOx de soete r1   [HCN][O2] --> [NO]
     //      #3 fuel NOx de soete r2   [HCN][NO] --> [N2]
     //      #4 fuel NOx de soete r3   [NH3][O2] --> [NO]
@@ -422,8 +423,8 @@ psNox::computeSource( const ProcessorGroup* pc,
         //nrate_coef[sNO][5]=1.0;
         //prate_coef[sN2][5]=1.0;
         //nrate_coef[sNO][6]=1.0;
-        //prate_coef[sHCN][6]=0.5;
-        //prate_coef[sNH3][6]=0.5;
+        //prate_coef[sHCN][6]=1.0;
+        //prate_coef[sNH3][6]=0.0;
         //nrate_coef[sNO][7]=1.0;
         //prate_coef[sNO][8]=_beta1;
         //prate_coef[sHCN][8]=_beta2;
@@ -432,6 +433,10 @@ psNox::computeSource( const ProcessorGroup* pc,
         //prate_coef[sNO][9]=_gamma1;
         //prate_coef[sHCN][9]=_gamma2;
         //prate_coef[sNH3][9]=_gamma3;
+        //
+        //prate_coef[sNO][10]=_alpha1;
+        //prate_coef[sHCN][10]=_alpha2;
+        //prate_coef[sNH3][10]=_alpha3;
 
 
     //NO,HCN,NH3 source terms in continuum phase
@@ -455,11 +460,11 @@ psNox::computeSource( const ProcessorGroup* pc,
         double H2O_m = H2O(i,j,k)      * density(i,j,k)/_MW_H2O;  //(mol/m3)
         double NO_m  = max(tran_NO(i,j,k),1e-20 ) * density(i,j,k)/_MW_NO;   //(mol/m3)
         std::vector<double> Spec_i_m(nSpecies);
-         Spec_i_m[sNO]=NO_m;
-         Spec_i_m[sHCN]=max(tran_HCN(i,j,k),1e-20) * density(i,j,k)/_MW_HCN;
-         Spec_i_m[sNH3]=max(tran_NH3(i,j,k),1e-20) * density(i,j,k)/_MW_NH3;
-         Spec_i_m[sN2]= N2_m;
-         Spec_i_m[sO2]= O2_m;
+        Spec_i_m[sNO]=NO_m;
+        Spec_i_m[sHCN]=max(tran_HCN(i,j,k),1e-20) * density(i,j,k)/_MW_HCN;
+        Spec_i_m[sNH3]=max(tran_NH3(i,j,k),1e-20) * density(i,j,k)/_MW_NH3;
+        Spec_i_m[sN2]= N2_m;
+        Spec_i_m[sO2]= O2_m;
         //convert unit: (mol fraction: mol/mol)
         double O2_mp  = O2(i,j,k)      /_MW_O2 * mix_mol_weight_r; //(mol/mol)
         double NO_mp  = max(tran_NO(i,j,k) ,1e-20)/_MW_NO * mix_mol_weight_r; //(mol/mol)
@@ -535,34 +540,28 @@ psNox::computeSource( const ProcessorGroup* pc,
         rxn_rates[8]=devolRate;
         rxn_rates[9]=CharOxyRate;
         rxn_rates[10]=TarRate;
-
+      
         for (int ispec =0 ; ispec<nSpecies ; ispec++){
-         double num=0.0;
-         double denom=0.0;
-         double instantanousRate=0.0;
+          double num=0.0;
+          double denom=0.0;
+          double instantanousRate=0.0;
           for (int ix =0 ; ix<nRates ; ix++){
             num+=  prate_coef[ispec][ix]*rxn_rates[ix];
             denom+=nrate_coef[ispec][ix]*rxn_rates[ix];
           }
-          instantanousRate=num-denom;
+          instantanousRate=-denom;
           denom=denom/Spec_i_m[ispec];
           double netRate;                                
 
-
-          // rate clipping
-          //if (denom[jx] > 1e-68){
-            double final_species = num/denom*(1.0-std::exp(-delta_t*denom)) + Spec_i_m[ispec]*std::exp(-delta_t*denom);
-            netRate= (final_species-Spec_i_m[ispec])/delta_t;                 //(mol/sm3)                          
-          //}else{
-            //netRate= totalRate[jx];                 //(mol/sm3)                          
-          //}
-            
-            
-            for (int ispec2 =0 ; ispec2<nSpecies ; ispec2++){
-              for (unsigned int irxn =0 ; irxn<rel_ind[ispec].size() ; irxn++){
-                rate_coef[ispec2][rel_ind[ispec][irxn]]*= netRate/instantanousRate; // linear scaling of rates.
-              }
+          //double final_species = num/denom*(1.0-std::exp(-delta_t*denom)) + Spec_i_m[ispec]*std::exp(-delta_t*denom); // quasi-analytical approach ( may need a check on denom)
+          double final_species = (num*delta_t + Spec_i_m[ispec])/(1.0 + denom*delta_t); // quasi-implicit approach
+          netRate= (final_species-Spec_i_m[ispec])/delta_t-num;                 //(mol/sm3)                          
+              
+          for (int ispec2 =0 ; ispec2<nSpecies ; ispec2++){
+            for (unsigned int irxn =0 ; irxn<rel_ind[ispec].size() ; irxn++){
+              rate_coef[ispec2][rel_ind[ispec][irxn]]*= min(netRate/instantanousRate,1.000); // linear scaling of rates (negitive rates only).
             }
+          }
         }
 
        for (int ix =0 ; ix<nRates ; ix++){
@@ -571,11 +570,11 @@ psNox::computeSource( const ProcessorGroup* pc,
          NH3_src(i,j,k) +=rxn_rates[ix]*rate_coef[sNH3][ix]*_MW_NH3;
        }
 
-        } else {
-          NO_src(i,j,k)  = 0.0; //(kg/sm3)                          
-          HCN_src(i,j,k) = 0.0; //(kg/sm3)
-          NH3_src(i,j,k) = 0.0; //(kg/sm3)
-        } 
+     } else {  // if volFraction
+        NO_src(i,j,k)  = 0.0; //(kg/sm3)                          
+        HCN_src(i,j,k) = 0.0; //(kg/sm3)
+        NH3_src(i,j,k) = 0.0; //(kg/sm3)
+     } 
     });
   } // end for patch loop
 }
