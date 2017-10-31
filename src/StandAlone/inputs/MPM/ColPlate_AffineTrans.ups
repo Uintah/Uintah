@@ -5,7 +5,7 @@
    </Meta>
    <SimulationComponent type="mpm" />
    <Time>
-       <maxTime>0.36</maxTime>
+       <maxTime>0.28</maxTime>
        <initTime>0.0</initTime>
        <delt_min>0.0</delt_min>
        <delt_max>2.0</delt_max>
@@ -74,7 +74,9 @@
      <do_contact_friction_heating> false    </do_contact_friction_heating>
      <DoExplicitHeatConduction>    false    </DoExplicitHeatConduction>
      <withColor>                   true     </withColor>
+     <!-- the domain scaling feature in cpdi is not implemented in axisymmetry 
      <cpdi_lcrit>                  1.0      </cpdi_lcrit>
+     -->
      <axisymmetric>true</axisymmetric>
    </MPM>
 
