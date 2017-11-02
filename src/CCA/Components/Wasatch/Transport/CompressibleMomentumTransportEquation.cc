@@ -601,7 +601,6 @@ namespace WasatchCore{
               typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::GradientX, SVolField, SVolField >::type NeumannT;
               typedef typename SpatialOps::NeboBoundaryConditionBuilder<DirichletT> DiriOpT;
               typedef typename SpatialOps::NeboBoundaryConditionBuilder<NeumannT> NeumOpT;
-              typedef typename WasatchCore::ConstantBCNew<FieldT,DiriOpT>::Builder constBCDirichletT;
               typedef typename WasatchCore::ConstantBCNew<FieldT,NeumOpT>::Builder constBCNeumannT;
               
               // for normal fluxes
@@ -632,7 +631,6 @@ namespace WasatchCore{
               typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::GradientY, SVolField, SVolField >::type NeumannT;
               typedef typename SpatialOps::NeboBoundaryConditionBuilder<DirichletT> DiriOpT;
               typedef typename SpatialOps::NeboBoundaryConditionBuilder<NeumannT> NeumOpT;
-              typedef typename WasatchCore::ConstantBCNew<FieldT,DiriOpT>::Builder constBCDirichletT;
               typedef typename WasatchCore::ConstantBCNew<FieldT,NeumOpT>::Builder constBCNeumannT;
               
               // for normal fluxes
@@ -663,7 +661,6 @@ namespace WasatchCore{
               typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::GradientZ, SVolField, SVolField >::type NeumannT;
               typedef typename SpatialOps::NeboBoundaryConditionBuilder<DirichletT> DiriOpT;
               typedef typename SpatialOps::NeboBoundaryConditionBuilder<NeumannT> NeumOpT;
-              typedef typename WasatchCore::ConstantBCNew<FieldT,DiriOpT>::Builder constBCDirichletT;
               typedef typename WasatchCore::ConstantBCNew<FieldT,NeumOpT>::Builder constBCNeumannT;
               
               // for normal fluxes
@@ -787,9 +784,6 @@ namespace WasatchCore{
   template class CompressibleMomentumTransportEquation<SpatialOps::XDIR>;
   template class CompressibleMomentumTransportEquation<SpatialOps::YDIR>;
   template class CompressibleMomentumTransportEquation<SpatialOps::ZDIR>;
-  template struct NormalDirTypeSelector<SpatialOps::XDIR>;
-  template struct NormalDirTypeSelector<SpatialOps::YDIR>;
-  template struct NormalDirTypeSelector<SpatialOps::ZDIR>;
 } // namespace Wasatch
 
 

@@ -734,7 +734,7 @@ namespace WasatchCore {
     Expr::ExpressionFactory& factory = *(grafCat_[ADVANCE_SOLUTION]->exprFactory);
     typedef SVolField FieldT;
     
-    bool do2, do3;
+    bool do2=false, do3=false;
     const Expr::Tag& u = nscbcTagMgr[NSCBC::U];
     const Expr::Tag& v = nscbcTagMgr[NSCBC::V];
     const Expr::Tag& w = nscbcTagMgr[NSCBC::W];
