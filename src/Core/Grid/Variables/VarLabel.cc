@@ -124,7 +124,7 @@ VarLabel::printAll()
 {
   map<string, VarLabel*>::iterator iter = allLabels.begin();
   for (; iter != allLabels.end(); iter++) {
-    std::cerr << (*iter).second->d_name << "\n";
+    std::cout << (*iter).second->d_name << std::endl;
   }
 }
 
