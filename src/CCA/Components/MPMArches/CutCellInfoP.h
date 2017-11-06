@@ -26,6 +26,9 @@
 #ifndef UINTAH_HOMEBREW_CutCellInfoP_H
 #define UINTAH_HOMEBREW_CutCellInfoP_H
 
+#include <CCA/Components/MPMArches/CutCellInfo.h>
+#include <Core/Grid/Variables/PerPatch.h>
+
 namespace Uintah {
 
 template<class T> class Handle;
