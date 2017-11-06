@@ -55,11 +55,8 @@ WARNING
   
 ****************************************/
 
-#include <CCA/Components/MPMArches/CutCellInfoP.h>
 #include <Core/Util/RefCounted.h>
-#include <Core/Containers/OffsetArray1.h>
-#include <Core/Grid/Variables/CCVariable.h>
-#include <Core/Grid/Variables/Array3.h>
+
 namespace Uintah {
 
 struct CutCellInfo : public RefCounted {
