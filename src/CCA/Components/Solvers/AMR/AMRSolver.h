@@ -60,7 +60,7 @@ WARNING
 namespace Uintah {
 
   class AMRSolver :
-    public SolverInterface, public UintahParallelComponent { 
+    public UintahParallelComponent, public SolverInterface { 
 
    
   public:
