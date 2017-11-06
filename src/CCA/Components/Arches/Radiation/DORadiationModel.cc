@@ -1180,7 +1180,7 @@ DORadiationModel::computeIntensitySource( const Patch* patch, std::vector <const
     if( _radiateAtGasTemp ){
       for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
         double sum=(_sigma/M_PI)*abskp[qn][*iter]*std::pow(gTemp[*iter],4.0);
-    for ( int iStatic=0; iStatic< b_sourceArray.size(); iStatic++){
+    for ( unsigned int iStatic=0; iStatic< b_sourceArray.size(); iStatic++){
         b_sourceArray[iStatic][*iter]+=sum*_grey_reference_weight[iStatic];
     }
 
@@ -1193,7 +1193,7 @@ DORadiationModel::computeIntensitySource( const Patch* patch, std::vector <const
     }else{
       for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
         double sum=((_sigma/M_PI)*abskp[qn][*iter])*std::pow(pTemp[qn][*iter],4.0);
-          for (int iStatic=0; iStatic< b_sourceArray.size(); iStatic++){
+          for (unsigned int iStatic=0; iStatic< b_sourceArray.size(); iStatic++){
             b_sourceArray[iStatic][*iter]+=sum*_grey_reference_weight[iStatic];
           }
       //Uintah::parallel_for( range,[&](int i, int j, int k){
@@ -1208,13 +1208,13 @@ DORadiationModel::computeIntensitySource( const Patch* patch, std::vector <const
     if (_LspectralSolve){
       for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
          const double T4=std::pow(gTemp[*iter],4.0);
-        for ( int iStatic=0; iStatic< b_sourceArray.size(); iStatic++){
+        for ( unsigned int iStatic=0; iStatic< b_sourceArray.size(); iStatic++){
           b_sourceArray[iStatic][*iter]+=(_sigma/M_PI)*spectral_weights[iStatic][*iter]*abskg[iStatic][*iter]*T4;
         }
       }
     }else{
       for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-        for ( int iStatic=0; iStatic< b_sourceArray.size(); iStatic++){ // 1 iteration for non-spectral cases
+        for ( unsigned int iStatic=0; iStatic< b_sourceArray.size(); iStatic++){ // 1 iteration for non-spectral cases
           b_sourceArray[iStatic][*iter]+=(_sigma/M_PI)*abskg[iStatic][*iter]*std::pow(gTemp[*iter],4.0);
         }
       }
