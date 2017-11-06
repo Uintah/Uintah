@@ -242,7 +242,7 @@ void AMRCCHeat2D::task_coarsen ( ProcessorGroup const * /*myworld*/, const Patch
         Level::selectType patches_fine;
         level_fine->selectPatches ( l_fine, h_fine, patches_fine );
 
-        for ( int i = 0; i < patches_fine.size(); ++i )
+        for ( unsigned int i = 0; i < patches_fine.size(); ++i )
         {
             const Patch * patch_fine = patches_fine[i];
             dbg_out3 << "= Fine Patch " << *patch_fine << std::endl;
