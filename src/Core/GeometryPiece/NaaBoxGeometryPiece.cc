@@ -89,7 +89,7 @@ NaaBoxGeometryPiece::init( const Point& p1,
   p4minusP1 = p4 - p1;
 
   // p5 is the opposite corner to p1 and is used for the bounding box.
-  Point p5 = p1 + (p2minusP1 + p3minusP1 + p4minusP1);
+  // Point p5 = p1 + (p2minusP1 + p3minusP1 + p4minusP1);
 
   // Find the bounding box with the following gross code
   double lowX = min(min(min(p1.x(),p2.x()),min(p2.x(),p3.x())),p4.x());
