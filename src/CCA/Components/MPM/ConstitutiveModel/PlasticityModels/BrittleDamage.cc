@@ -190,7 +190,7 @@ BrittleDamage::addComputesAndRequires(Task* task,
   VarLabel* pDefGradLabel     = VarLabel::find( "p.deformationMeasure+" );
   VarLabel* pParticleIDLabel  = VarLabel::find( "p.particleID" );  
   VarLabel* pVolumeLabel      = VarLabel::find( "p.volume+" );
-  VarLabel* TotalLocalizedParticleLabel  = VarLabel::find( "TotalLocalizedParticle" );
+  // VarLabel* TotalLocalizedParticleLabel  = VarLabel::find( "TotalLocalizedParticle" );
 
 
   task->requires( Task::OldDW, pFailureStressOrStrainLabel, matls, gnone);   
