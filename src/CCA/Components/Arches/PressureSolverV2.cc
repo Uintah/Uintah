@@ -46,7 +46,6 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Util/DebugStream.h>
 
