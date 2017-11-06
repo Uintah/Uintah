@@ -27,7 +27,6 @@
 
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Output.h>
-#include <CCA/Ports/SimulationInterface.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/SimulationStateP.h>
