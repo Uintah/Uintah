@@ -33,6 +33,7 @@
 #include <Core/Grid/Variables/ReductionVariable.h>
 #include <Core/Grid/Variables/Stencil7.h>
 #include <Core/Grid/Variables/Stencil4.h>
+#include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Math/Matrix3.h>
 #include <Core/Disclosure/TypeUtils.h>
 
@@ -84,6 +85,9 @@ template class Uintah::SFCZVariable<double>;
 template class Uintah::SFCZVariable<float>;
 template class Uintah::SFCZVariable<int>;
 template class Uintah::SFCZVariable<Uintah::long64>;
+
+template class Uintah::PerPatch<double>;
+template class Uintah::PerPatch<int>;
 
 template class Uintah::ReductionVariable<double, Uintah::Reductions::Min<double> >;
 

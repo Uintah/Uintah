@@ -27,7 +27,9 @@
 #define UINTAH_HOMEBREW_CutCellInfoP_H
 
 #include <CCA/Components/MPMArches/CutCellInfo.h>
+#include <Core/Exceptions/InternalError.h>
 #include <Core/Grid/Variables/PerPatch.h>
+#include <Core/Util/Handle.h>
 
 namespace Uintah {
 
@@ -35,6 +37,26 @@ template<class T> class Handle;
 class CutCellInfo;
 typedef Handle<CutCellInfo> CutCellInfoP;
 
+
+  template<>
+  inline void PerPatch<CutCellInfoP>::readNormal(std::istream& in, bool swapBytes)
+  {
+    // Note if swap bytes for CutCellInfoP is implemente then this
+    // template specialization can be deleted as the general template
+    // will work.
+    SCI_THROW(InternalError("Swap bytes for CutCellInfoP is not implemented", __FILE__, __LINE__));
+
+    ssize_t linesize = (ssize_t)(sizeof(CutCellInfoP));
+    
+    CutCellInfoP val;
+    
+    in.read((char*) &val, linesize);
+    
+    // if (swapBytes)
+    //   Uintah::swapbytes(val);
+    
+    value = std::make_shared<CutCellInfoP>(val);
+  }
 } // End namespace Uintah
 
 #endif

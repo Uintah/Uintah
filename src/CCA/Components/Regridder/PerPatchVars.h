@@ -26,11 +26,11 @@
 #define UINTAH_CCA_COMPONENTS_REGRIDDERS_PERPATCHVARS_H
 
 //-- Uintah framework includes --//
-#include <Core/Util/RefCounted.h>
-#include <Core/Util/Handle.h>
-#include <Core/Grid/Variables/CCVariable.h>
-#include <Core/Geometry/IntVector.h>
 #include <Core/Exceptions/InternalError.h>
+#include <Core/Geometry/IntVector.h>
+#include <Core/Grid/Variables/PerPatch.h>
+#include <Core/Util/Handle.h>
+#include <Core/Util/RefCounted.h>
 
 namespace Uintah {
 
@@ -71,6 +71,25 @@ namespace Uintah {
 
   typedef Handle<PatchFlag> PatchFlagP;
 
+  template<>
+  inline void PerPatch<PatchFlagP>::readNormal(std::istream& in, bool swapBytes)
+  {
+    // Note if swap bytes for PatchFlagP is implemente then this
+    // template specialization can be deleted as the general template
+    // will work.
+    SCI_THROW(InternalError("Swap bytes for PatchFlagP is not implemented", __FILE__, __LINE__));
+
+    ssize_t linesize = (ssize_t)(sizeof(PatchFlagP));
+    
+    PatchFlagP val;
+    
+    in.read((char*) &val, linesize);
+    
+    // if (swapBytes)
+    //   Uintah::swapbytes(val);
+    
+    value = std::make_shared<PatchFlagP>(val);
+  }
 }
 
 #endif // End UINTAH_CCA_COMPONENTS_REGRIDDERS_PERPATCHVARS_H
