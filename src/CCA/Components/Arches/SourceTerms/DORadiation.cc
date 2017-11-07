@@ -164,6 +164,16 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
   }
 
   if (_sweepMethod){
+    // check to see if a sweep compatible scheduler is being used
+    ProblemSpecP db_sched = db->getRootNode()->findBlock("Scheduler");
+    if (db_sched != nullptr){
+       std::string scheduler_name;
+       db_sched->getAttribute ("type",scheduler_name);
+       if (scheduler_name=="DynamicMPI"){
+         throw ProblemSetupException("Error: DORadiation sweeps is not compatible with the DynamicMPI scheduler. ",__FILE__, __LINE__);
+       }
+    }
+
     _radIntSource= std::vector<const VarLabel*> (d_nbands);
     for (int iband=0; iband<d_nbands; iband++){
       ostringstream my_stringstream_object;
