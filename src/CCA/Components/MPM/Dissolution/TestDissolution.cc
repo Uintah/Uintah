@@ -129,8 +129,11 @@ void TestDissolution::computeMassBurnFraction(const ProcessorGroup*,
 
 //      double mdVol = gvolume[md][c]*8.0*NC_CCweight[c];
 
+      double pressure = gStress[md][c].Trace()/(-3.);
+
       if(gmass[md][c] >  1.e-100 &&
-         gmass[md][c] != sumMass){
+         gmass[md][c] != sumMass && 
+         pressure > d_PressThresh){
           double rho = gmass[md][c]/gvolume[md][c];
 //          double volFrac = (mdVol+sumOtherVol)/cellVol;
           massBurnRate[c] += d_rate*area*rho*2.0*NC_CCweight[c];

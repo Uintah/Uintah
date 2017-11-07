@@ -3247,6 +3247,9 @@ void SerialMPM::modifyLoadCurves(const ProcessorGroup* ,
           cout << "time, load = " << time << " " << load << endl;
         } // Loop over points on load curve
       } //if(timeToNextLoad...
+      if(nextIndex>=numPOLC){ // shut down the simulation
+        d_sharedState->setEndSimulation();
+      } // endif
     } // if bcs_type == "Pressure"
   }   // Loop over physical BCs
 }
@@ -3615,6 +3618,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           } else {
             pmassNew[idx]    = Max(pmass[idx]*(1.    - burnFraction),0.);
           }
+//          if(pmassNew[idx]==0.){
+//            cout << "particle consumed at " << pxnew[idx] << endl;
+//          }
           psizeNew[idx]    = (pmassNew[idx]/pmass[idx])*psize[idx];
 
           thermal_energy += pTemperature[idx] * pmass[idx] * Cp;
@@ -5134,22 +5140,6 @@ void SerialMPM::findSurfaceParticles(const ProcessorGroup *,
 
   int doit=timestep%20;
 
-#if 0
-  // Determine dimensionality
-  // To be recognized as 2D, must be in the x-y plane
-  // A 1D problem must be in the x-direction.
-  IntVector lowNode, highNode;
-  const Level* level = getLevel(patches);
-  level->findInteriorNodeIndexRange(lowNode, highNode);
-  int ndim=3;
-  if(highNode.z() - lowNode.z()==2) {
-    ndim=2;
-    if(highNode.y() - lowNode.y()==2) {
-       ndim=1;
-    }
-  }
-#endif
-
   for (int p = 0; p<patches->size(); p++) {
     const Patch* patch = patches->get(p);
     Vector dx = patch->dCell();
@@ -5182,7 +5172,7 @@ void SerialMPM::findSurfaceParticles(const ProcessorGroup *,
       new_dw->allocateAndPut(pSurf,    lb->pSurfLabel_preReloc,      psetOP);
 
       double cellVol=dx.x()*dx.y()*dx.z();
-      double tol = 0.13*cbrt(cellVol);
+      double tol = 0.125*cbrt(cellVol);
       int nclose = 2*flags->d_ndim;
 
       // Either carry forward the particle surface data, or recompute it every
@@ -5250,6 +5240,7 @@ void SerialMPM::findSurfaceParticles(const ProcessorGroup *,
             pSurf[idx] = pSurfOld[idx];
           }else{
             pSurf[idx] = 1.0;
+//            cout << "assigned new surface particle at " << px[idx] << endl;
           }
          } // if particle is/is not already a surface particle
         } // outer loop over particles

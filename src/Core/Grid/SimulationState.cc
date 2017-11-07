@@ -101,6 +101,7 @@ SimulationState::SimulationState(ProblemSpecP &ps)
   all_arches_matls  = 0;
   all_fvm_matls     = 0;
   all_matls         = 0;
+  endSim            = false;
   
   orig_all_matls    = 0;
   refine_flag_matls = 0;

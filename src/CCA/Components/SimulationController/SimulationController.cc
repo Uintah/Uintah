@@ -302,7 +302,8 @@ SimulationController::isLast( void )
 	   ( d_sharedState->getCurrentTopLevelTimeStep() >=
 	     d_timeinfo->maxTimestep ) ||
 	   ( d_timeinfo->max_wall_time != 0 &&
-	     Time::currentSeconds() >= d_timeinfo->max_wall_time ) );
+	     Time::currentSeconds() >= d_timeinfo->max_wall_time ) ||
+             d_sharedState->getEndSimulation() );
 }
 
 //______________________________________________________________________

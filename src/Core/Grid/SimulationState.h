@@ -200,6 +200,14 @@ public:
     ngc = particle_ghost_layer;
   }
 
+  inline void setEndSimulation(){
+     endSim=true;
+  }
+
+  inline bool getEndSimulation(){
+     return endSim;
+  }
+
   void finalizeMaterials();
   const MaterialSet* allMPMMaterials() const;
   const MaterialSet* allCZMaterials() const;
@@ -351,6 +359,8 @@ private:
   //! so all components can know how many particle ghost cells to ask for
   Ghost::GhostType particle_ghost_type;
   int particle_ghost_layer;
+
+  bool endSim;
 
   //! in switcher we need to clear the materials, but don't 
   //! delete them yet or we might have VarLabel problems when 
