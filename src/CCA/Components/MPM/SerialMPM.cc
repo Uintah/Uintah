@@ -716,13 +716,13 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
                                                           tracer_matls_sub,
                                                           all_matls);
   }
-  scheduleInsertParticles(                    sched, patches, matls);
+  scheduleInsertParticles(                sched, patches, matls);
   if(flags->d_computeScaleFactor){
-    scheduleComputeParticleScaleFactor(       sched, patches, matls);
+    scheduleComputeParticleScaleFactor(   sched, patches, matls);
   }
-//  if(flags->d_refineParticles){
-  scheduleAddParticles(                     sched, patches, matls);
-//  }
+  if(flags->d_canAddParticles){
+    scheduleAddParticles(                  sched, patches, matls);
+  }
 
   if(d_analysisModules.size() != 0){
     vector<AnalysisModule*>::iterator iter;
@@ -1525,7 +1525,6 @@ void SerialMPM::scheduleAddParticles(SchedulerP& sched,
   t->modifies(lb->pTemperatureGradientLabel_preReloc);
   t->modifies(lb->pTempPreviousLabel_preReloc);
   t->modifies(lb->pDeformationMeasureLabel_preReloc);
-//  t->modifies(lb->pRefinedLabel_preReloc);
   if(flags->d_computeScaleFactor){
     t->modifies(lb->pScaleFactorLabel_preReloc);
   }

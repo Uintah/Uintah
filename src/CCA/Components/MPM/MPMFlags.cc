@@ -66,6 +66,7 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_maxGridLevel                  =  1000;
   d_doThermalExpansion            =  true;
   d_refineParticles               =  false;
+  d_canAddParticles               =  false;
   d_XPIC2                         =  false;
   d_artificialDampCoeff           =  0.0;
   d_forceIncrementFactor          =  1.0;
@@ -199,7 +200,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   mpm_flag_ps->get("withColor",  d_with_color);
   mpm_flag_ps->get("artificial_damping_coeff", d_artificialDampCoeff);
   mpm_flag_ps->get("artificial_viscosity",     d_artificial_viscosity);
-  mpm_flag_ps->get("refine_particles",         d_refineParticles);
+  mpm_flag_ps->get("CanAddParticles",          d_canAddParticles);
   mpm_flag_ps->get("XPIC2",                    d_XPIC2);
   if(d_artificial_viscosity){
     d_artificial_viscosity_heating=true;
@@ -401,7 +402,7 @@ else{
     dbg << " Artificial Viscosity Htng   = " << d_artificial_viscosity_heating<< endl;
     dbg << " Artificial Viscosity Coeff1 = " << d_artificialViscCoeff1<< endl;
     dbg << " Artificial Viscosity Coeff2 = " << d_artificialViscCoeff2<< endl;
-    dbg << " RefineParticles             = " << d_refineParticles << endl;
+    dbg << " CanAddParticles             = " << d_canAddParticles << endl;
     dbg << " XPIC2                       = " << d_XPIC2 << endl;
     dbg << " Use Load Curves             = " << d_useLoadCurves << endl;
     dbg << " Use CBDI boundary condition = " << d_useCBDI << endl;
@@ -435,7 +436,7 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("artificial_viscosity_heating",       d_artificial_viscosity_heating);
   ps->appendElement("artificial_viscosity_coeff1",        d_artificialViscCoeff1);
   ps->appendElement("artificial_viscosity_coeff2",        d_artificialViscCoeff2);
-  ps->appendElement("refine_particles",                   d_refineParticles);
+  ps->appendElement("CanAddParticles",                    d_canAddParticles);
   ps->appendElement("XPIC2",                              d_XPIC2);
   ps->appendElement("use_cohesive_zones",                 d_useCohesiveZones);
   ps->appendElement("use_load_curves",                    d_useLoadCurves);
