@@ -47,6 +47,12 @@ PressureEqn::problemSetup( ProblemSpecP& db ){
   m_zmom_name = "z-mom";
 
 
+  const ProblemSpecP params_root = db->getRootNode();
+  if (params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("KMomentum")->findBlock("use_drhodt")){
+    params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("KMomentum")->findBlock("use_drhodt")->getAttribute("label",m_drhodt_name);
+  }else {
+    params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("KMomentum")->findBlock("drhodt")->getAttribute("label",m_drhodt_name);
+  }
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -186,11 +192,11 @@ PressureEqn::register_timestep_eval(
   const int time_substep, const bool packed_tasks ){
 
   register_variable( "b_press", AFC::MODIFIES, variable_registry, time_substep );
-  register_variable( m_eps_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry );
-  register_variable( "x-mom", AFC::REQUIRES, 1, AFC::NEWDW, variable_registry );
-  register_variable( "y-mom", AFC::REQUIRES, 1, AFC::NEWDW, variable_registry );
-  register_variable( "z-mom", AFC::REQUIRES, 1, AFC::NEWDW, variable_registry );
- // register_variable( m_drhodt_name, AFC::REQUIRES, 0, AFC::NEWDW, variable_registry, time_substep );
+  register_variable( m_eps_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep );
+  register_variable( "x-mom", AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep );
+  register_variable( "y-mom", AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep );
+  register_variable( "z-mom", AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep );
+  register_variable( m_drhodt_name, AFC::REQUIRES, 0, AFC::NEWDW, variable_registry, time_substep );
 
 }
 
@@ -202,13 +208,14 @@ PressureEqn::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   const double area_EW = DX.y()*DX.z();
   const double area_NS = DX.x()*DX.z();
   const double area_TB = DX.x()*DX.y();
+  const double V       = DX.x()*DX.y()*DX.z();
 
   CCVariable<double>& b = tsk_info->get_uintah_field_add<CCVariable<double> >("b_press");
   constCCVariable<double>& eps = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_eps_name);
   constSFCXVariable<double>& xmom = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >("x-mom");
   constSFCYVariable<double>& ymom = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >("y-mom");
   constSFCZVariable<double>& zmom = tsk_info->get_const_uintah_field_add<constSFCZVariable<double> >("z-mom");
-  //constCCVariable<double>& drhodt = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_drhodt_name);
+  constCCVariable<double>& drhodt = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_drhodt_name);
 
   const double dt = tsk_info->get_dt();
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
@@ -217,8 +224,8 @@ PressureEqn::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     b(i,j,k) = ( area_EW * ( xmom(i+1,j,k) - xmom(i,j,k) ) +
                  area_NS * ( ymom(i,j+1,k) - ymom(i,j,k) ) +
-                 area_TB * ( zmom(i,j,k+1) - zmom(i,j,k) ) )/dt;
-                 //+V*drhodt(i,j,k)  ) / dt ;
+                 area_TB * ( zmom(i,j,k+1) - zmom(i,j,k) ) + 
+                 V*drhodt(i,j,k)  ) / dt ;
     b(i,j,k)  *= -eps(i,j,k) ;
 
   });
