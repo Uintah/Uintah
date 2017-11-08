@@ -38,6 +38,7 @@ SRCS += \
         $(SRCDIR)/UFromRhoU.cc              \
         $(SRCDIR)/VariableStats.cc          \
         $(SRCDIR)/WallHFVariable.cc         \
+        $(SRCDIR)/UnweigthVariable.cc       \
         $(SRCDIR)/cloudBenchmark.cc         \
         $(SRCDIR)/gasRadProperties.cc       \
         $(SRCDIR)/partRadProperties.cc      \

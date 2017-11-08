@@ -19,6 +19,7 @@
 #include <CCA/Components/Arches/PropertyModelsV2/partRadProperties.h>
 #include <CCA/Components/Arches/PropertyModelsV2/sootVolumeFrac.h>
 #include <CCA/Components/Arches/PropertyModelsV2/CO.h>
+#include <CCA/Components/Arches/PropertyModelsV2/UnweigthVariable.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 
@@ -254,11 +255,55 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
   TaskInterface::TaskBuilder* vel_tsk = scinew FaceVelocities::Builder( m_vel_name, 0 );
   register_task(m_vel_name, vel_tsk);
   _pre_update_property_tasks.push_back(m_vel_name);
+ 
+ // get phi from rho phi
+  if ( db->findBlock("KScalarTransport") ){
+    ProblemSpecP db_st = db->findBlock("KScalarTransport");
+    for (ProblemSpecP eqn_db = db_st->findBlock("eqn_group"); eqn_db != nullptr; eqn_db = eqn_db->findNextBlock("eqn_group")){
+
+      std::string group_name = "null";
+      std::string type = "null";
+      eqn_db->getAttribute("label", group_name);
+      eqn_db->getAttribute("type", type );
+      std::string weight_task_name = "weigth_var_"+group_name;
+      
+      if ( type == "CC" ){
+        TaskInterface::TaskBuilder* weigth_var_tsk = 
+        scinew UnweigthVariable<CCVariable<double>>::Builder( weight_task_name , 0 );
+        register_task( weight_task_name, weigth_var_tsk );
+        _phi_from_rho_phi.push_back(weight_task_name);
+      }
+   }   
+    
+  
+  }
 
   if ( db->findBlock("KMomentum") ){
 
-    TaskInterface::TaskBuilder* u_from_rho_u_tsk = scinew UFromRhoU::Builder( "u_from_rho_u", 0);
-    register_task("u_from_rho_u", u_from_rho_u_tsk);
+    //std::string m_u_vel_name = parse_ups_for_role( UVELOCITY, db, "uVelocitySPBC" );
+    //std::string m_v_vel_name = parse_ups_for_role( VVELOCITY, db, "vVelocitySPBC" );
+    //std::string m_w_vel_name = parse_ups_for_role( WVELOCITY, db, "wVelocitySPBC" );
+    
+    std::string unw_mom_name = "uVel"; // compute u from rhou
+    TaskInterface::TaskBuilder* unw_x_tsk = 
+    scinew UnweigthVariable<SFCXVariable<double>>::Builder( unw_mom_name , 0 );
+    register_task( unw_mom_name,  unw_x_tsk );
+    _u_from_rho_u.push_back(unw_mom_name);
+    
+    unw_mom_name = "vVel"; // compute v from rhov
+    TaskInterface::TaskBuilder* unw_y_tsk = 
+    scinew UnweigthVariable<SFCYVariable<double>>::Builder( unw_mom_name , 0 );
+    register_task( unw_mom_name,  unw_y_tsk );
+    _u_from_rho_u.push_back(unw_mom_name);
+    
+    unw_mom_name = "wVel"; // compute w from rhow
+    TaskInterface::TaskBuilder* unw_z_tsk = 
+    scinew UnweigthVariable<SFCZVariable<double>>::Builder( unw_mom_name , 0 );
+    register_task( unw_mom_name,  unw_z_tsk );
+    _u_from_rho_u.push_back(unw_mom_name);
+
+    //TaskInterface::TaskBuilder* u_from_rho_u_tsk = scinew UFromRhoU::Builder( "u_from_rho_u", 0);
+    //register_task("u_from_rho_u", u_from_rho_u_tsk);
 
     TaskInterface::TaskBuilder* cc_u = scinew CCVel::Builder("compute_cc_velocities", 0 );
     register_task("compute_cc_velocities", cc_u );
@@ -312,14 +357,47 @@ if ( db->findBlock("PropertyModelsV2") != nullptr){
     }
   }
 
+  if ( db->findBlock("KScalarTransport") ){
+    ProblemSpecP db_st = db->findBlock("KScalarTransport");
+    for (ProblemSpecP group_db = db_st->findBlock("eqn_group"); 
+    group_db != nullptr; group_db = group_db->findNextBlock("eqn_group")){
+    std::string group_name = "null";
+    std::string type = "null";
+    group_db->getAttribute("label", group_name);
+    group_db->getAttribute("type", type );
+    std::string weight_task_name = "weigth_var_"+group_name;
+    TaskInterface* tsk = retrieve_task(weight_task_name);
+    proc0cout << "       Task: " << group_name << "  Type: " << "compute_rho phi" << std::endl;
+    tsk->problemSetup(group_db);
+    tsk->create_local_labels();
+
+    }
+    }
   TaskInterface* tsk = retrieve_task("face_velocities");
   tsk->problemSetup(db);
   tsk->create_local_labels();
 
+  ProblemSpecP db_mom = db->findBlock("KMomentum");
   if ( db->findBlock("KMomentum")){
-    tsk = retrieve_task("u_from_rho_u");
-    tsk->problemSetup(db);
-    tsk->create_local_labels();
+
+    TaskInterface* un_tsk = retrieve_task("uVel");
+    print_task_setup_info( "uvel-compute", "u from rho u");
+    un_tsk->problemSetup( db_mom );
+    un_tsk->create_local_labels();
+    
+    un_tsk = retrieve_task("vVel");
+    print_task_setup_info( "vvel-compute", "v from rho v");
+    un_tsk->problemSetup( db_mom );
+    un_tsk->create_local_labels();
+    
+    un_tsk = retrieve_task("wVel");
+    print_task_setup_info( "wvel-compute", "w from rho w");
+    un_tsk->problemSetup( db_mom );
+    un_tsk->create_local_labels();
+
+//    tsk = retrieve_task("u_from_rho_u");
+//    tsk->problemSetup(db);
+//    tsk->create_local_labels();
 
     tsk = retrieve_task("compute_cc_velocities");
     tsk->problemSetup(db);
@@ -394,6 +472,25 @@ PropertyModelFactoryV2::add_task( ProblemSpecP& db )
 
     }
   }
+
+  if ( db->findBlock("KScalarTransport") ){
+    ProblemSpecP db_st = db->findBlock("KScalarTransport");
+    for (ProblemSpecP group_db = db_st->findBlock("eqn_group"); 
+    group_db != nullptr; group_db = group_db->findNextBlock("eqn_group")){
+    std::string group_name = "null";
+    std::string type = "null";
+    group_db->getAttribute("label", group_name);
+    group_db->getAttribute("type", type );
+
+    TaskInterface* tsk = retrieve_task(group_name);
+    proc0cout << "       Task: " << group_name << "  Type: " << "compute_rho phi" << std::endl;
+    tsk->problemSetup(group_db);
+    tsk->create_local_labels();
+    
+    }
+    
+  }
+
 }
 
 //--------------------------------------------------------------------------------------------------

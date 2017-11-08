@@ -38,7 +38,14 @@ namespace Uintah{
       } else if ( subset == "variable_stat_models" ){
 
         return _var_stats_tasks;
+      } else if ( subset == "phifromrhophi" ){
 
+        return _phi_from_rho_phi;   
+
+      } else if ( subset == "ufromrhou" ){
+
+        return _u_from_rho_u;        
+        
       } else if ( subset == _all_tasks_str ){
 
         return _active_tasks;
@@ -66,6 +73,8 @@ namespace Uintah{
     std::vector<std::string> _pre_table_post_iv_update;   ///<Tasks that execute after IV update and before table lookup
     std::vector<std::string> _rad_properties_tasks;       ///<Tasks use to compute the total absorption coefficient
     std::vector<std::string> _var_stats_tasks;            ///<All Tasks associated with variable stats
+    std::vector<std::string> _phi_from_rho_phi;
+    std::vector<std::string> _u_from_rho_u;
 
     std::vector<std::string> _task_order;                 ///<The order in which these tasks should execute
 
