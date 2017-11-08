@@ -51,7 +51,8 @@ PressureEqn::problemSetup( ProblemSpecP& db ){
   if (params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("KMomentum")->findBlock("use_drhodt")){
     params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("KMomentum")->findBlock("use_drhodt")->getAttribute("label",m_drhodt_name);
   }else {
-    params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("KMomentum")->findBlock("drhodt")->getAttribute("label",m_drhodt_name);
+    //params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("KMomentum")->findBlock("drhodt")->getAttribute("label",m_drhodt_name);
+    m_drhodt_name = "drhodt"; 
   }
 }
 

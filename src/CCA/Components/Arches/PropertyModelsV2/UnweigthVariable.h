@@ -59,6 +59,8 @@ private:
     std::string m_var_name;         
     std::string m_rho_name;        
     std::string m_un_var_name;   
+    std::vector<std::string> m_eqn_names;
+    std::vector<std::string> m_un_eqn_names;
     std::vector<int> m_ijk_off;
     int m_dir;
     int Nghost_cells;
@@ -96,24 +98,35 @@ UnweigthVariable<T>::~UnweigthVariable()
 template <typename T>
 void UnweigthVariable<T>::problemSetup( ProblemSpecP& db ){
   // works for scalars
+  //m_total_eqns = 0;
+  
   for( ProblemSpecP db_eqn = db->findBlock("eqn"); db_eqn != nullptr; db_eqn = db_eqn->findNextBlock("eqn") ) {
     std::string eqn_name;
     db_eqn->getAttribute("label", eqn_name);
     m_var_name = "rho_"+eqn_name;
     m_un_var_name = eqn_name;
+    m_un_eqn_names.push_back(m_un_var_name);
+    m_eqn_names.push_back(m_var_name);
+    
   }
   
   if (_task_name == "uVel"){
     m_var_name = "x-mom";
     m_un_var_name = _task_name;
+    m_un_eqn_names.push_back(m_un_var_name);
+    m_eqn_names.push_back(m_var_name);
     
   } else if (_task_name == "vVel"){
     m_var_name = "y-mom";
     m_un_var_name = _task_name;
+    m_un_eqn_names.push_back(m_un_var_name);
+    m_eqn_names.push_back(m_var_name);
     
   } else if (_task_name == "wVel"){
     m_var_name = "z-mom";
     m_un_var_name = _task_name;
+    m_un_eqn_names.push_back(m_un_var_name);
+    m_eqn_names.push_back(m_var_name);
     
   }
 
@@ -135,8 +148,13 @@ void UnweigthVariable<T>::register_initialize(
 {
   ArchesCore::VariableHelper<T> helper;
   if ( helper.dir == ArchesCore::NODIR){
-    register_variable( m_un_var_name, ArchesFieldContainer::REQUIRES, Nghost_cells, ArchesFieldContainer::NEWDW, variable_registry );
-    register_variable( m_var_name, ArchesFieldContainer::MODIFIES ,  variable_registry );
+    // scalar at cc 
+    const int istart = 0;
+    const int iend = m_eqn_names.size();
+    for (int ieqn = istart; ieqn < iend; ieqn++ ){
+      register_variable( m_un_eqn_names[ieqn] , ArchesFieldContainer::REQUIRES, Nghost_cells, ArchesFieldContainer::NEWDW, variable_registry );
+      register_variable( m_eqn_names[ieqn],     ArchesFieldContainer::MODIFIES ,  variable_registry );
+    }
   } else {
     register_variable( m_var_name, ArchesFieldContainer::REQUIRES, Nghost_cells, ArchesFieldContainer::NEWDW, variable_registry );
     register_variable( m_un_var_name, ArchesFieldContainer::MODIFIES ,  variable_registry );
@@ -162,12 +180,17 @@ void UnweigthVariable<T>::initialize( const Patch* patch, ArchesTaskInfoManager*
   Uintah::BlockRange range( cell_lo, cell_hi );
   
   if ( helper.dir == ArchesCore::NODIR){
-    T&  var = tsk_info->get_uintah_field_add<T>(m_var_name);
-    CT& un_var = tsk_info->get_const_uintah_field_add<CT>(m_un_var_name);
-    Uintah::parallel_for( range, [&](int i, int j, int k){
-      const double rho_inter = 0.5 * (rho(i,j,k)+rho(i-ioff,j-joff,k-koff)); 
-      var(i,j,k) = un_var(i,j,k)*rho_inter; 
-    });
+    //scalar 
+    const int istart = 0;
+    const int iend = m_eqn_names.size();
+    for (int ieqn = istart; ieqn < iend; ieqn++ ){
+      T&  var = tsk_info->get_uintah_field_add<T>(m_eqn_names[ieqn]);
+      CT& un_var = tsk_info->get_const_uintah_field_add<CT>(m_un_eqn_names[ieqn]);
+      Uintah::parallel_for( range, [&](int i, int j, int k){
+        const double rho_inter = 0.5 * (rho(i,j,k)+rho(i-ioff,j-joff,k-koff)); 
+        var(i,j,k) = un_var(i,j,k)*rho_inter; 
+      });
+    }
   }else {
     CT&  var = tsk_info->get_const_uintah_field_add<CT>(m_var_name);
     T& un_var = tsk_info->get_uintah_field_add<T>(m_un_var_name);
@@ -263,8 +286,12 @@ void UnweigthVariable<T>::register_timestep_eval(
   std::vector<ArchesFieldContainer::VariableInformation>&
   variable_registry, const int time_substep , const bool packed_tasks)
 {
-  register_variable( m_un_var_name, ArchesFieldContainer::MODIFIES ,  variable_registry, time_substep );
-  register_variable( m_var_name, ArchesFieldContainer::REQUIRES, Nghost_cells, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+  const int istart = 0;
+  const int iend = m_eqn_names.size();
+  for (int ieqn = istart; ieqn < iend; ieqn++ ){
+    register_variable( m_un_eqn_names[ieqn], ArchesFieldContainer::MODIFIES ,  variable_registry, time_substep );
+    register_variable( m_eqn_names[ieqn], ArchesFieldContainer::REQUIRES, Nghost_cells, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+  }
   register_variable( m_rho_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 
 }
@@ -274,11 +301,9 @@ template <typename T>
 void UnweigthVariable<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   ArchesCore::VariableHelper<T> helper;
+  
   typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
-  T& un_var = tsk_info->get_uintah_field_add<T>(m_un_var_name);
-  CT& var = tsk_info->get_const_uintah_field_add<CT>(m_var_name);
   constCCVariable<double>& rho = tsk_info->get_const_uintah_field_add<constCCVariable<double>>(m_rho_name);
-
   const int ioff = m_ijk_off[0];
   const int joff = m_ijk_off[1];
   const int koff = m_ijk_off[2];
@@ -289,12 +314,17 @@ void UnweigthVariable<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_i
   GET_WALL_BUFFERED_PATCH_RANGE(cell_lo,cell_hi,ioff,0,joff,0,koff,0)  
   Uintah::BlockRange range( cell_lo, cell_hi );
 
-  Uintah::parallel_for( range, [&](int i, int j, int k){
-    const double rho_inter = 0.5 * (rho(i,j,k)+rho(i-ioff,j-joff,k-koff)); 
-    un_var(i,j,k) = var(i,j,k)/rho_inter; 
-  });
+  const int istart = 0;
+  const int iend = m_eqn_names.size();
+  for (int ieqn = istart; ieqn < iend; ieqn++ ){
+    T& un_var = tsk_info->get_uintah_field_add<T>(m_un_eqn_names[ieqn]);
+    CT& var = tsk_info->get_const_uintah_field_add<CT>(m_eqn_names[ieqn]);
+    Uintah::parallel_for( range, [&](int i, int j, int k){
+      const double rho_inter = 0.5 * (rho(i,j,k)+rho(i-ioff,j-joff,k-koff)); 
+      un_var(i,j,k) = var(i,j,k)/rho_inter; 
+    });
   
-
+  }
 }
 }
 #endif

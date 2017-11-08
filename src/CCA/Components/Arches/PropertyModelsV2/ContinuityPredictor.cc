@@ -21,7 +21,8 @@ ContinuityPredictor::problemSetup( ProblemSpecP& db ){
   if (db->findBlock("KMomentum")->findBlock("use_drhodt")){
     db->findBlock("KMomentum")->findBlock("use_drhodt")->getAttribute("label",m_label_drhodt);
   }else {
-    db->findBlock("KMomentum")->findBlock("drhodt")->getAttribute("label",m_label_drhodt);
+    //db->findBlock("KMomentum")->findBlock("drhodt")->getAttribute("label",m_label_drhodt);
+    m_label_drhodt = "drhodt"; 
   }
   
 }

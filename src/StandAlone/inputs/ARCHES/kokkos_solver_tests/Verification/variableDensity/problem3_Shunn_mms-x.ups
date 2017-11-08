@@ -58,7 +58,7 @@
     <save label="gamma"/>
     <save label="density"/>
     <save label="density_star"/>
-    <save label="density_exact"/>
+    <!--save label="density_exact"/-->
     <save label="continuity_balance"/>
     <save label="b_press"/>
     <save label="pressure"/>
@@ -73,7 +73,7 @@
         <upper>[1.0,1,0.1]</upper>
         <resolution>[192,192,4]</resolution>
         <extraCells>[0,0,0]</extraCells>
-        <patches>[4,4,1]</patches>
+        <patches>[1,1,1]</patches>
       </Box>
       <periodic>[1,1,1]</periodic>
     </Level>
@@ -122,13 +122,13 @@
         <rho1>1.0</rho1>
         <mixture_fraction label = "phi"/>
         </model>
-        <model label= "comp_density_extact" type = "coldflow_rp" >
+        <!--model label= "comp_density_extact" type = "coldflow_rp" >
         <property label = "density_exact" />
         <rho0>5.0</rho0>
         <rho1>1.0</rho1>
-        <weigthed_mixture_fraction label = "rho_phi"/>
+        <weigthed_mixture_fraction label = "rho_phi"/-->
         <!--use_exact_guess/-->
-        </model>
+        <!--/model-->
       </StateProperties>
       <KMomentum>
         <!--do_not_build_pressure_system/--> <!--If I do not want to do projection... -->

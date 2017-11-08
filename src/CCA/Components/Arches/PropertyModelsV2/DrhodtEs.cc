@@ -18,7 +18,8 @@ DrhodtEs::~DrhodtEs(){
 void
 DrhodtEs::problemSetup( ProblemSpecP& db ){
 
-  db->findBlock("KMomentum")->findBlock("drhodt")->getAttribute("label",m_label_drhodt);
+  //db->findBlock("KMomentum")->findBlock("drhodt")->getAttribute("label",m_label_drhodt);
+  m_label_drhodt = "drhodt";
   using namespace ArchesCore;
   m_label_density = parse_ups_for_role( DENSITY, db, "density" );
 

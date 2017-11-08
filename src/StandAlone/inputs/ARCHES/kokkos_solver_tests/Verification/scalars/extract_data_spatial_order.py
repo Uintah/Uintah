@@ -179,7 +179,7 @@ def main():
   os.system('rm -rf *.uda*')
   os.system('rm -rf *.dot')
   os.system('rm log.txt')  
-  os.system('rm data/*.txt')  
+  #os.system('rm data/*.txt')  
   
 
 #------------------------------------------------------------------------------
