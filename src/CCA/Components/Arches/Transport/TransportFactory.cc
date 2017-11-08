@@ -204,6 +204,9 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
     _momentum_solve.push_back( compute_psi_name );
     _momentum_solve.push_back( mom_task_name );
 
+     if ( db ->findBlock("KMomentum")->findBlock("do_not_build_pressure_system")){
+     
+     }else{
     //Pressure eqn
     TaskInterface::TaskBuilder* press_tsk = scinew PressureEqn::Builder("build_pressure_system", 0, _shared_state);
     register_task( "build_pressure_system", press_tsk );
@@ -220,6 +223,7 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
     //pressure Gradient
     AtomicTaskInterface::AtomicTaskBuilder* gradP_tsk = scinew AddPressGradient::Builder("pressure_correction", 0);
     register_atomic_task( "pressure_correction", gradP_tsk);
+    }
 
   }
 }
@@ -317,6 +321,9 @@ TransportFactory::build_all_tasks( ProblemSpecP& db )
     fe_tsk->problemSetup( db_mom );
     fe_tsk->create_local_labels();
 
+     if ( db_mom ->findBlock("do_not_build_pressure_system")){
+     
+     }else{
     TaskInterface* press_tsk = retrieve_task("build_pressure_system");
     print_task_setup_info("build_pressure_system", "building pressure terms, A, b");
     press_tsk->problemSetup( db_mom );
@@ -336,6 +343,7 @@ TransportFactory::build_all_tasks( ProblemSpecP& db )
     print_task_setup_info("pressure_bcs", "apply bcs to the solution of the linear pressure system");
     press_bc_tsk->problemSetup(db_mom);
     press_bc_tsk->create_local_labels();
+    }
 
 
   }
