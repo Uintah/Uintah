@@ -275,7 +275,23 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
         scinew UnweigthVariable<CCVariable<double>>::Builder( weight_task_name , 0 );
         register_task( weight_task_name, weigth_var_tsk );
         _phi_from_rho_phi.push_back(weight_task_name);
+      } else if ( type == "FX" ){
+        TaskInterface::TaskBuilder* weigth_var_tsk = 
+        scinew UnweigthVariable<SFCXVariable<double>>::Builder( weight_task_name , 0 );
+        register_task( weight_task_name, weigth_var_tsk );
+        _phi_from_rho_phi.push_back(weight_task_name);
+      } else if ( type == "FY" ){
+        TaskInterface::TaskBuilder* weigth_var_tsk = 
+        scinew UnweigthVariable<SFCYVariable<double>>::Builder( weight_task_name , 0 );
+        register_task( weight_task_name, weigth_var_tsk );
+        _phi_from_rho_phi.push_back(weight_task_name);
+      } else if ( type == "FZ" ){
+        TaskInterface::TaskBuilder* weigth_var_tsk = 
+        scinew UnweigthVariable<SFCZVariable<double>>::Builder( weight_task_name , 0 );
+        register_task( weight_task_name, weigth_var_tsk );
+        _phi_from_rho_phi.push_back(weight_task_name);
       }
+      
    }   
     
   

@@ -94,7 +94,7 @@ InitializeFactory::register_all_tasks( ProblemSpecP& db )
         }
 
         register_task( task_name, tsk );
-        if (db_task ->findBlock("density_label")){
+        if (db_task ->findBlock("which_density")){
            _weighted_var_tasks.push_back(task_name);
         } else {
            _unweighted_var_tasks.push_back(task_name);
@@ -118,7 +118,7 @@ InitializeFactory::register_all_tasks( ProblemSpecP& db )
         }
 
         register_task( task_name, tsk );
-        if (db_task ->findBlock("density_label")){
+        if (db_task ->findBlock("which_density")){
            _weighted_var_tasks.push_back(task_name);
         } else {
            _unweighted_var_tasks.push_back(task_name);

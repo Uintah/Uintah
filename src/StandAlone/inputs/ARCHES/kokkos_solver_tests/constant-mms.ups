@@ -72,6 +72,7 @@
         <model label="my_constant_model" type="constant">
           <const_property label="prop1" value="3.456"/>
           <const_property label="prop2" value="1.234"/>
+          <const_property label="density" value="1."/>
         </model>
         <model label="my_coldflow_model" type="coldflow">
           <property label="prop3" rho0="0.0" rho1=".89"/>
@@ -84,14 +85,14 @@
         </model>
       </StateProperties>
       <PropertyModelsV2>
-        <model label="density" type="constant_property">
-          <grid type="CC"/>
-          <value>1.</value>
-        </model>
         <model label="gamma" type="constant_property">
           <grid type="CC"/>
           <value>1.e-4</value>
         </model>
+        <!--model label="density" type="constant_property">
+          <grid type="CC"/>
+          <value>1.</value>
+        </model-->
       </PropertyModelsV2>
       <KScalarTransport>
         <eqn_group label="CCFields" type="CC">

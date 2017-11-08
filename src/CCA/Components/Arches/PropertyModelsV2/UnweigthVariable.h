@@ -146,19 +146,19 @@ void UnweigthVariable<T>::register_initialize(
   std::vector<ArchesFieldContainer::VariableInformation>&
   variable_registry , const bool pack_tasks )
 {
-  ArchesCore::VariableHelper<T> helper;
-  if ( helper.dir == ArchesCore::NODIR){
+  //ArchesCore::VariableHelper<T> helper;
+  //if ( helper.dir == ArchesCore::NODIR){
     // scalar at cc 
-    const int istart = 0;
-    const int iend = m_eqn_names.size();
-    for (int ieqn = istart; ieqn < iend; ieqn++ ){
-      register_variable( m_un_eqn_names[ieqn] , ArchesFieldContainer::REQUIRES, Nghost_cells, ArchesFieldContainer::NEWDW, variable_registry );
-      register_variable( m_eqn_names[ieqn],     ArchesFieldContainer::MODIFIES ,  variable_registry );
-    }
-  } else {
-    register_variable( m_var_name, ArchesFieldContainer::REQUIRES, Nghost_cells, ArchesFieldContainer::NEWDW, variable_registry );
-    register_variable( m_un_var_name, ArchesFieldContainer::MODIFIES ,  variable_registry );
+  const int istart = 0;
+  const int iend = m_eqn_names.size();
+  for (int ieqn = istart; ieqn < iend; ieqn++ ){
+    register_variable( m_un_eqn_names[ieqn] , ArchesFieldContainer::REQUIRES, Nghost_cells, ArchesFieldContainer::NEWDW, variable_registry );
+    register_variable( m_eqn_names[ieqn],     ArchesFieldContainer::MODIFIES ,  variable_registry );
   }
+  //} else {
+  //  register_variable( m_var_name, ArchesFieldContainer::REQUIRES, Nghost_cells, ArchesFieldContainer::NEWDW, variable_registry );
+ //   register_variable( m_un_var_name, ArchesFieldContainer::MODIFIES ,  variable_registry );
+  //}
   register_variable( m_rho_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry );
 
 }
@@ -179,27 +179,27 @@ void UnweigthVariable<T>::initialize( const Patch* patch, ArchesTaskInfoManager*
   GET_WALL_BUFFERED_PATCH_RANGE(cell_lo,cell_hi,ioff,0,joff,0,koff,0)  
   Uintah::BlockRange range( cell_lo, cell_hi );
   
-  if ( helper.dir == ArchesCore::NODIR){
+  //if ( helper.dir == ArchesCore::NODIR){
     //scalar 
-    const int istart = 0;
-    const int iend = m_eqn_names.size();
-    for (int ieqn = istart; ieqn < iend; ieqn++ ){
-      T&  var = tsk_info->get_uintah_field_add<T>(m_eqn_names[ieqn]);
-      CT& un_var = tsk_info->get_const_uintah_field_add<CT>(m_un_eqn_names[ieqn]);
-      Uintah::parallel_for( range, [&](int i, int j, int k){
-        const double rho_inter = 0.5 * (rho(i,j,k)+rho(i-ioff,j-joff,k-koff)); 
-        var(i,j,k) = un_var(i,j,k)*rho_inter; 
-      });
-    }
-  }else {
-    CT&  var = tsk_info->get_const_uintah_field_add<CT>(m_var_name);
-    T& un_var = tsk_info->get_uintah_field_add<T>(m_un_var_name);
-  
+  const int istart = 0;
+  const int iend = m_eqn_names.size();
+  for (int ieqn = istart; ieqn < iend; ieqn++ ){
+    T&  var = tsk_info->get_uintah_field_add<T>(m_eqn_names[ieqn]);
+    CT& un_var = tsk_info->get_const_uintah_field_add<CT>(m_un_eqn_names[ieqn]);
     Uintah::parallel_for( range, [&](int i, int j, int k){
       const double rho_inter = 0.5 * (rho(i,j,k)+rho(i-ioff,j-joff,k-koff)); 
-      un_var(i,j,k) = var(i,j,k)/rho_inter; 
+      var(i,j,k) = un_var(i,j,k)*rho_inter; 
     });
-  }  
+  }
+  //}else {
+  //  CT&  var = tsk_info->get_const_uintah_field_add<CT>(m_var_name);
+  //  T& un_var = tsk_info->get_uintah_field_add<T>(m_un_var_name);
+  
+  //  Uintah::parallel_for( range, [&](int i, int j, int k){
+  //    const double rho_inter = 0.5 * (rho(i,j,k)+rho(i-ioff,j-joff,k-koff)); 
+  //    un_var(i,j,k) = var(i,j,k)/rho_inter; 
+  //  });
+  //}  
 
 }
 
@@ -210,13 +210,20 @@ void UnweigthVariable<T>::register_compute_bcs(
        const int time_substep , const bool packed_tasks)
 {
   ArchesCore::VariableHelper<T> helper;
+  const int istart = 0;
+  const int iend = m_eqn_names.size();
   if ( helper.dir == ArchesCore::NODIR){
-    register_variable( m_var_name, ArchesFieldContainer::MODIFIES ,  variable_registry, time_substep );
-    register_variable( m_un_var_name, ArchesFieldContainer::REQUIRES, Nghost_cells, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+    // scalar at cc 
+    for (int ieqn = istart; ieqn < iend; ieqn++ ){
+      register_variable( m_eqn_names[ieqn], ArchesFieldContainer::MODIFIES ,  variable_registry, time_substep );
+      register_variable( m_un_eqn_names[ieqn], ArchesFieldContainer::REQUIRES, Nghost_cells, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+    }
   }else {
-    register_variable( m_un_var_name, ArchesFieldContainer::MODIFIES ,  variable_registry, time_substep );
-    register_variable( m_var_name, ArchesFieldContainer::REQUIRES, Nghost_cells, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 
+    for (int ieqn = istart; ieqn < iend; ieqn++ ){
+      register_variable( m_un_eqn_names[ieqn], ArchesFieldContainer::MODIFIES ,  variable_registry, time_substep );
+      register_variable( m_eqn_names[ieqn], ArchesFieldContainer::REQUIRES, Nghost_cells, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+    }
   }
    register_variable( m_rho_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 
@@ -242,38 +249,48 @@ void UnweigthVariable<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager
 
     const double dot = vDir[0]*iDir[0] + vDir[1]*iDir[1] + vDir[2]*iDir[2];
     
-    
+        
     if ( helper.dir == ArchesCore::NODIR){
-      T&  var = tsk_info->get_uintah_field_add<T>(m_var_name);
-      CT& un_var = tsk_info->get_const_uintah_field_add<CT>(m_un_var_name);
+      //scalar 
+      const int istart = 0;
+      const int iend = m_eqn_names.size();
+      for (int ieqn = istart; ieqn < iend; ieqn++ ){
+        T&  var = tsk_info->get_uintah_field_add<T>(m_eqn_names[ieqn]);
+        CT& un_var = tsk_info->get_const_uintah_field_add<CT>(m_un_eqn_names[ieqn]);
     
-      for ( cell_iter.reset(); !cell_iter.done(); cell_iter++ ){
-        IntVector c = *cell_iter;
-        var[c] = un_var[c]*rho[c]; 
-      }    
+        for ( cell_iter.reset(); !cell_iter.done(); cell_iter++ ){
+          IntVector c = *cell_iter;
+          var[c] = un_var[c]*rho[c]; 
+        }
+      } 
     } else {
       // only works if var is mom
-      T&  un_var = tsk_info->get_uintah_field_add<T>(m_un_var_name);
-      CT& var = tsk_info->get_const_uintah_field_add<CT>(m_var_name);
+      const int istart = 0;
+      const int iend = m_eqn_names.size();
+      for (int ieqn = istart; ieqn < iend; ieqn++ ){
+
+        T&  un_var = tsk_info->get_uintah_field_add<T>(m_un_eqn_names[ieqn]);
+        CT& var = tsk_info->get_const_uintah_field_add<CT>(m_eqn_names[ieqn]);
     
-      if ( dot == -1 ){
-        // face (-) in Staggered Variablewe set BC at 0
-        for ( cell_iter.reset(); !cell_iter.done(); cell_iter++ ){
-          IntVector c = *cell_iter;
-          IntVector cp = *cell_iter - iDir;
-          const double rho_inter = 0.5 * (rho[c]+rho[cp]); 
-          un_var[cp] = var[cp]/rho_inter; // BC 
-          un_var[c] = un_var[cp]; // extra cell 
-        }
-      } else {
-      // face (+) in Staggered Variablewe set BC at extra cell
-        for ( cell_iter.reset(); !cell_iter.done(); cell_iter++ ){
-          IntVector c = *cell_iter;
-          IntVector cp = *cell_iter - iDir;
-          const double rho_inter = 0.5 * (rho[c]+rho[cp]); 
-          un_var[c] = var[c]/rho_inter; // BC and extra cell value
-        }      
-      }
+        if ( dot == -1 ){
+          // face (-) in Staggered Variablewe set BC at 0
+          for ( cell_iter.reset(); !cell_iter.done(); cell_iter++ ){
+            IntVector c = *cell_iter;
+            IntVector cp = *cell_iter - iDir;
+            const double rho_inter = 0.5 * (rho[c]+rho[cp]); 
+            un_var[cp] = var[cp]/rho_inter; // BC 
+            un_var[c] = un_var[cp]; // extra cell 
+          }
+        } else {
+       // face (+) in Staggered Variablewe set BC at extra cell
+          for ( cell_iter.reset(); !cell_iter.done(); cell_iter++ ){
+            IntVector c = *cell_iter;
+            IntVector cp = *cell_iter - iDir;
+            const double rho_inter = 0.5 * (rho[c]+rho[cp]); 
+            un_var[c] = var[c]/rho_inter; // BC and extra cell value
+          }      
+       }
+       }
     
     }
     

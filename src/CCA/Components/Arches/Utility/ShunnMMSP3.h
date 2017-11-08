@@ -68,11 +68,15 @@ private:
     double m_uf;
     double m_vf;
 
+    std::vector<int> m_ijk_off;
     const std::string m_var_name;
 
     std::string m_x_name;
     std::string m_y_name;
     std::string m_which_vel;
+    std::string m_density_name;
+    int m_dir;
+    bool m_use_density;
 
   };
 
@@ -81,6 +85,20 @@ private:
   ShunnMMSP3<T>::ShunnMMSP3( std::string task_name, int matl_index, const std::string var_name ) :
   TaskInterface( task_name, matl_index ), m_var_name(var_name){
 
+  ArchesCore::VariableHelper<T> helper;
+  m_ijk_off.push_back(0);
+  m_ijk_off.push_back(0);
+  m_ijk_off.push_back(0);
+
+
+  if ( helper.dir == ArchesCore::XDIR ||
+       helper.dir == ArchesCore::YDIR ||
+       helper.dir == ArchesCore::ZDIR ){
+       m_dir = helper.dir;
+       m_ijk_off[0] = helper.ioff;
+       m_ijk_off[1] = helper.joff;
+       m_ijk_off[2] = helper.koff;
+  }
 
   }
 
@@ -101,6 +119,11 @@ private:
     db->getWithDefault( "vf", m_vf, 0.0);
 
     db->require("which_vel", m_which_vel);
+    m_use_density = false;
+    if (db->findBlock("which_density")) {
+      db->findBlock("which_density")->getAttribute("label", m_density_name);
+      m_use_density = true;
+    }
     ProblemSpecP db_coord = db->findBlock("coordinates");
     if ( db_coord ){
       db_coord->getAttribute("x", m_x_name);
@@ -120,6 +143,9 @@ private:
     register_variable( m_var_name,     AFC::MODIFIES, variable_registry );
     register_variable( m_x_name, AFC::REQUIRES, 0, AFC::NEWDW, variable_registry, _task_name );
     register_variable( m_y_name, AFC::REQUIRES, 0, AFC::NEWDW, variable_registry, _task_name );
+    if (m_use_density){
+      register_variable( m_density_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, _task_name );
+    }
 
   }
 
@@ -135,15 +161,22 @@ private:
     const double time_d = 0.0;
 
     if ( m_which_vel == "u" ){
+      constCCVariable<double>& rho = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_density_name);
     // for velocity
+      const int ioff = m_ijk_off[0];
+      const int joff = m_ijk_off[1];
+      const int koff = m_ijk_off[2];
       Uintah::parallel_for( range, [&](int i, int j, int k){
         const double phi_f = (1.0 + sin(m_k*m_pi*(x(i,j,k)-m_uf*time_d))*
                         sin(m_k*m_pi*(y(i,j,k)-m_vf*time_d))*cos(m_w0*m_pi*time_d))/(1.0 + 
                         m_rho0/m_rho1+(1.0-m_rho0/m_rho1)*sin(m_k*m_pi*(x(i,j,k)-m_uf*time_d))*
                         sin(m_k*m_pi*(y(i,j,k)-m_vf*time_d))*cos(m_w0*m_pi*time_d));
-        const double rho = 1.0/(phi_f/m_rho1 + (1.0- phi_f )/m_rho0); 
+        const double rho_d = 1.0/(phi_f/m_rho1 + (1.0- phi_f )/m_rho0); 
+        const double rho_inter = 0.5 * (rho(i,j,k)+rho(i-ioff,j-joff,k-koff)); 
         
-        f_mms(i,j,k) = m_uf -m_w0/m_k/4.0*cos(m_k*m_pi*(x(i,j,k)-m_uf*time_d))*sin(m_k*m_pi*(y(i,j,k)-m_vf*time_d))*sin(m_w0*m_pi*time_d)*(m_rho1-m_rho0)/rho;
+        //const double f_resolution = (rho_d/rho_inter); // Only for testing liner interpolation of density
+        const double f_resolution = 1.0;
+        f_mms(i,j,k) = m_uf*f_resolution  - m_w0/m_k/4.0*cos(m_k*m_pi*(x(i,j,k)-m_uf*time_d))*sin(m_k*m_pi*(y(i,j,k)-m_vf*time_d))*sin(m_w0*m_pi*time_d)*(m_rho1-m_rho0)/rho_inter; 
       });
     } else if ( m_which_vel == "rho_u" ){
     // for velocity
