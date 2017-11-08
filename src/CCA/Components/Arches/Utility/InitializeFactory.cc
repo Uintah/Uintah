@@ -3,6 +3,7 @@
 #include <CCA/Components/Arches/Utility/WaveFormInit.h>
 #include <CCA/Components/Arches/Utility/RandParticleLoc.h>
 #include <CCA/Components/Arches/Utility/ShunnMMS.h>
+#include <CCA/Components/Arches/Utility/ShunnMMSP3.h>
 #include <CCA/Components/Arches/Utility/AlmgrenMMS.h>
 #include <CCA/Components/Arches/Utility/TaylorGreen3D.h>
 #include <CCA/Components/Arches/Utility/InitLagrangianParticleVelocity.h>
@@ -73,6 +74,7 @@ InitializeFactory::register_all_tasks( ProblemSpecP& db )
         } else {
           throw InvalidValue("Error: Grid type not valid for WaveForm initializer: "+variable_type, __FILE__, __LINE__);
         }
+           _unweighted_var_tasks.push_back(task_name);
       } else if ( type == "shunn_mms"){
 
         std::string var_type;
@@ -92,6 +94,29 @@ InitializeFactory::register_all_tasks( ProblemSpecP& db )
 
         register_task( task_name, tsk );
 
+      } else if ( type == "shunn_mms_p3"){
+
+        std::string var_type;
+        db_task->findBlock("variable")->getAttribute("type", var_type);
+
+        TaskInterface::TaskBuilder* tsk;
+
+        if ( var_type == "CC" ){
+          tsk = scinew ShunnMMSP3<CCVariable<double> >::Builder( task_name, 0, eqn_name );
+        } else if ( var_type == "FX" ){
+          tsk = scinew ShunnMMSP3<SFCXVariable<double> >::Builder( task_name, 0, eqn_name );
+        } else if ( var_type == "FY" ){
+          tsk = scinew ShunnMMSP3<SFCYVariable<double> >::Builder( task_name, 0, eqn_name );
+        } else {
+          tsk = scinew ShunnMMSP3<SFCZVariable<double> >::Builder( task_name, 0, eqn_name );
+        }
+
+        register_task( task_name, tsk );
+        if (db_task ->findBlock("density_label")){
+           _weighted_var_tasks.push_back(task_name);
+        } else {
+           _unweighted_var_tasks.push_back(task_name);
+        }
       } else if ( type == "almgren_mms"){
 
         std::string var_type;
@@ -110,6 +135,7 @@ InitializeFactory::register_all_tasks( ProblemSpecP& db )
         }
 
         register_task( task_name, tsk );
+        _unweighted_var_tasks.push_back(task_name);
 
         } else if ( type == "taylor_green3d"){
   
@@ -127,24 +153,28 @@ InitializeFactory::register_all_tasks( ProblemSpecP& db )
           }
   
           register_task( task_name, tsk );
+          _unweighted_var_tasks.push_back(task_name);
   
 
       } else if ( type == "random_lagrangian_particles"){
 
         TaskInterface::TaskBuilder* tsk = scinew RandParticleLoc::Builder( task_name, 0 );
         register_task( task_name, tsk );
+        _unweighted_var_tasks.push_back(task_name);
 
       } else if ( type == "lagrangian_particle_velocity"){
 
         TaskInterface::TaskBuilder* tsk
           = scinew InitLagrangianParticleVelocity::Builder( task_name, 0 );
         register_task( task_name, tsk );
+        _unweighted_var_tasks.push_back(task_name);
 
       } else if ( type == "lagrangian_particle_size"){
 
         TaskInterface::TaskBuilder* tsk
           = scinew InitLagrangianParticleSize::Builder( task_name, 0 );
         register_task( task_name, tsk );
+        _unweighted_var_tasks.push_back(task_name);
 
       } else if ( type == "input_file" ){
 
@@ -164,6 +194,7 @@ InitializeFactory::register_all_tasks( ProblemSpecP& db )
         }
 
         register_task( task_name, tsk );
+        _unweighted_var_tasks.push_back(task_name);
 
       } else {
 
