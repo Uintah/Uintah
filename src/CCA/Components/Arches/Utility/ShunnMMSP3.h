@@ -167,10 +167,10 @@ private:
       const int joff = m_ijk_off[1];
       const int koff = m_ijk_off[2];
       Uintah::parallel_for( range, [&](int i, int j, int k){
-        const double phi_f = (1.0 + sin(m_k*m_pi*(x(i,j,k)-m_uf*time_d))*
-                        sin(m_k*m_pi*(y(i,j,k)-m_vf*time_d))*cos(m_w0*m_pi*time_d))/(1.0 + 
-                        m_rho0/m_rho1+(1.0-m_rho0/m_rho1)*sin(m_k*m_pi*(x(i,j,k)-m_uf*time_d))*
-                        sin(m_k*m_pi*(y(i,j,k)-m_vf*time_d))*cos(m_w0*m_pi*time_d));
+        //const double phi_f = (1.0 + sin(m_k*m_pi*(x(i,j,k)-m_uf*time_d))*
+        //                sin(m_k*m_pi*(y(i,j,k)-m_vf*time_d))*cos(m_w0*m_pi*time_d))/(1.0 + 
+        //                m_rho0/m_rho1+(1.0-m_rho0/m_rho1)*sin(m_k*m_pi*(x(i,j,k)-m_uf*time_d))*
+        //                sin(m_k*m_pi*(y(i,j,k)-m_vf*time_d))*cos(m_w0*m_pi*time_d));
         //const double rho_d = 1.0/(phi_f/m_rho1 + (1.0- phi_f )/m_rho0); 
         const double rho_inter = 0.5 * (rho(i,j,k)+rho(i-ioff,j-joff,k-koff)); 
         

@@ -1345,6 +1345,7 @@
                                                                            almgren_mms,
                                                                            shunn_mms,
                                                                            shunn_mms_p3,
+                                                                           taylor_green3d,
                                                                            input_file,
                                                                            random_lagrangian_particles,
                                                                            lagrangian_particle_velocity,
@@ -1352,7 +1353,7 @@
 
           <variable                     spec="OPTIONAL NO_DATA"
                                         attribute1="type REQUIRED STRING 'CC,FX,FY,FZ'"
-                                        need_applies_to="type almgren_mms,shunn_mms, shunn_mms_p3,input_file"/>
+                                        need_applies_to="type almgren_mms, taylor_green3d,shunn_mms, shunn_mms_p3,input_file"/>
 
           <which_density                spec="OPTIONAL NO_DATA"
                                         attribute1="label REQUIRED STRING"/> <!-- If we are compute ui or phi-->
@@ -1388,13 +1389,14 @@
           <uf   spec="REQUIRED STRING" need_applies_to="type shunn_mms_p3 "/>
           <vf   spec="REQUIRED STRING" need_applies_to="type shunn_mms_p3 "/>
 
-          <which_vel                  spec="REQUIRED STRING 'u,v,p'"
-                                      need_applies_to="type shunn_mms_p3, almgren_mms "/> <!-- for a 2D plane, specify which component
+          <which_vel                  spec="REQUIRED STRING 'u,v,w,p'"
+                                      need_applies_to="type shunn_mms_p3, taylor_green3d, almgren_mms "/> <!-- for a 2D plane, specify which component
                                                                                 to which this corresponds -->
           <coordinates                spec="REQUIRED NO_DATA"
                                       attribute1="x REQUIRED STRING"
                                       attribute2="y REQUIRED STRING"
-                                      need_applies_to="type shunn_mms_p3, almgren_mms"/> <!-- specify the the x and y varlabel names for
+                                      attribute3="z OPTIONAL STRING"
+                                      need_applies_to="type shunn_mms_p3,taylor_green3d, almgren_mms"/> <!-- specify the the x and y varlabel names for
                                                                             the mms -->
           <grid                       spec="REQUIRED NO_DATA"
                                       attribute1="x REQUIRED STRING"
@@ -1464,7 +1466,7 @@
                                         attribute1="type REQUIRED STRING 'CC,FX,FY,FZ'"
                                         need_applies_to="type MMS_mom, MMS_Shunn, MMS_Shunn_p3"/>
 
-          <which_vel                  spec="REQUIRED STRING 'u,v,p'"
+          <which_vel                  spec="REQUIRED STRING 'u,v,w,p'"
                                       need_applies_to="type MMS_mom, MMS_Shunn_p3"/> <!-- for a 2D plane, specify which component
                                                                                 to which this corresponds -->
           <coordinates                spec="REQUIRED NO_DATA"
