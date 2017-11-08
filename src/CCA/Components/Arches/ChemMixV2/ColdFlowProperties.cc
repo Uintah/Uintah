@@ -15,21 +15,27 @@ ColdFlowProperties::~ColdFlowProperties(){
 //--------------------------------------------------------------------------------------------------
 void ColdFlowProperties::problemSetup( ProblemSpecP& db ){
 
-  for ( ProblemSpecP db_prop = db->findBlock("coldflow_property");
+  for ( ProblemSpecP db_prop = db->findBlock("property");
 	db_prop.get_rep() != nullptr;
-        db_prop = db_prop->findNextBlock("coldflow_property") ){
+        db_prop = db_prop->findNextBlock("property") ){
 
     std::string label;
     bool inverted = false;
-    double value0;
-    double value1;
-
+    //double value0;
+    //double value1;
+    double m_rho0;
+    double m_rho1;
+    
     db_prop->getAttribute("label", label);
-    db_prop->getAttribute("stream_0", value0);
-    db_prop->getAttribute("stream_1", value1);
+    //db_prop->getAttribute("rho0", value0);
+    //db_prop->getAttribute("rho1", value1);
+    db->getWithDefault( "rho0", m_rho0, 20.0);
+    db->getWithDefault( "rho1", m_rho1, 1.0);
+    
     inverted = db_prop->findBlock("volumetric");
 
-    SpeciesInfo info{ value0, value1, inverted };
+//    SpeciesInfo info{ value0, value1, inverted };
+    SpeciesInfo info{ m_rho0, m_rho1, inverted };
 
     m_name_to_value.insert( std::make_pair( label, info ));
 
@@ -55,15 +61,19 @@ void ColdFlowProperties::register_initialize( VIVec& variable_registry , const b
     register_variable( i->first, ArchesFieldContainer::COMPUTES, variable_registry );
   }
 
+  register_variable( m_mixfrac_label, ArchesFieldContainer::REQUIRES, 0,
+                     ArchesFieldContainer::NEWDW, variable_registry );
+
 }
 
 //--------------------------------------------------------------------------------------------------
 void ColdFlowProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  for ( auto i = m_name_to_value.begin(); i != m_name_to_value.end(); i++ ){
-    CCVariable<double>& var = tsk_info->get_uintah_field_add<CCVariable<double> >( i->first );
-    var.initialize(0.0);
-  }
+  eval(patch, tsk_info );
+//  for ( auto i = m_name_to_value.begin(); i != m_name_to_value.end(); i++ ){
+//    CCVariable<double>& var = tsk_info->get_uintah_field_add<CCVariable<double> >( i->first );
+//    var.initialize(0.0);
+//  }
 
 }
 
@@ -100,7 +110,7 @@ void ColdFlowProperties::register_restart_initialize( VIVec& variable_registry ,
 
 //--------------------------------------------------------------------------------------------------
 void ColdFlowProperties::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
-
+  
   // for ( auto i = m_name_to_value.begin(); i != m_name_to_value.end(); i++ ){
   //   CCVariable<double>& var = tsk_info->get_uintah_field_add<CCVariable<double> >( i->first );
   //   var.initialize(i->second);
@@ -111,11 +121,11 @@ void ColdFlowProperties::restart_initialize( const Patch* patch, ArchesTaskInfoM
 void ColdFlowProperties::register_timestep_eval( VIVec& variable_registry, const int time_substep , const bool packed_tasks){
 
   for ( auto i = m_name_to_value.begin(); i != m_name_to_value.end(); i++ ){
-    register_variable( i->first, ArchesFieldContainer::MODIFIES, variable_registry );
+    register_variable( i->first, ArchesFieldContainer::MODIFIES, variable_registry, time_substep );
   }
 
   register_variable( m_mixfrac_label, ArchesFieldContainer::REQUIRES, 0,
-                     ArchesFieldContainer::NEWDW, variable_registry );
+                     ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 
 }
 
@@ -131,26 +141,20 @@ void ColdFlowProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_in
 
     Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
 
-    Uintah::parallel_for( range, [&]( int i, int j, int k ){
-
-      const double value = ( info.volumetric ) ?
-                           1./(f(i,j,k) / info.stream_1 + ( 1. - f(i,j,k) ) / info.stream_2) :
-                           f(i,j,k) * info.stream_1 + ( 1. - f(i,j,k) ) * info.stream_2;
-      prop(i,j,k) = value;
-
+      Uintah::parallel_for( range, [&]( int i, int j, int k ){
+        prop(i,j,k) = 1./(f(i,j,k) / info.rho1 + ( 1. - f(i,j,k) ) / info.rho0);
     });
-
   }
 }
 
 void ColdFlowProperties::register_compute_bcs( VIVec& variable_registry, const int time_substep , const bool packed_tasks){
 
   for ( auto i = m_name_to_value.begin(); i != m_name_to_value.end(); i++ ){
-    register_variable( i->first, ArchesFieldContainer::MODIFIES, variable_registry );
+    register_variable( i->first, ArchesFieldContainer::MODIFIES, variable_registry, time_substep  );
   }
 
   register_variable( m_mixfrac_label, ArchesFieldContainer::REQUIRES, 0,
-                     ArchesFieldContainer::NEWDW, variable_registry );
+                     ArchesFieldContainer::NEWDW, variable_registry, time_substep  );
 
 }
 
@@ -163,7 +167,7 @@ void ColdFlowProperties::compute_bcs( const Patch* patch, ArchesTaskInfoManager*
 
     //Get the iterator
     Uintah::Iterator cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
-    std::string facename = i_bc->second.name;
+    //std::string facename = i_bc->second.name;
 
     IntVector iDir = patch->faceDirection( i_bc->second.face );
 
@@ -177,13 +181,14 @@ void ColdFlowProperties::compute_bcs( const Patch* patch, ArchesTaskInfoManager*
         IntVector c = *cell_iter;
         IntVector cp = *cell_iter - iDir;
 
-        const double f_interp = 0.5 *( f[c] + f[cp] );
+        //const double f_interp = 0.5 *( f[c] + f[cp] );
 
-        const double value = ( info.volumetric ) ?
-                             1./(f_interp / info.stream_1 + ( 1. - f_interp ) / info.stream_2) :
-                             f_interp * info.stream_1 + ( 1. - f_interp ) * info.stream_2;
+        //const double value = ( info.volumetric ) ?
+        //                     1./(f_interp / info.rho1 + ( 1. - f_interp ) / info.rho0) :
+        //                     f_interp * info.rho1 + ( 1. - f_interp ) * info.rho0;
 
-        prop[c] = 2. * value - prop[cp];
+        //prop[c] = 2. * value - prop[cp];
+        prop[c] = 1./(f[c]/info.rho1 + (1.-f[c])/info.rho0);
 
       }
     }
