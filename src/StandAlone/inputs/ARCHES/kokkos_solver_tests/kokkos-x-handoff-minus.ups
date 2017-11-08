@@ -141,7 +141,7 @@
       <BoundaryConditions>
         <force_area_calc/>
         <bc type="handoff" label="phi_handoff">
-          <filename>inputs/ARCHES/kokkos_solver_tests/handoff/phi_handoff.txt</filename>
+          <filename>../../../inputs/ARCHES/kokkos_solver_tests/handoff/phi_handoff.txt</filename>
           <relative_xyz>[0, .5, .5]</relative_xyz>
           <!-- Note that since the dirichlet condition is used, the label
                for the default condition doesnt matter -->

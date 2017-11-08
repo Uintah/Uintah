@@ -74,10 +74,12 @@
           <const_property label="prop2" value="1.234"/>
         </model>
         <model label="my_coldflow_model" type="coldflow">
-          <coldflow_property label="prop3" stream_0="0.0" stream_1=".89"/>
-          <coldflow_property label="prop4" stream_0="0.14" stream_1="1.18">
-            <volumetric/>
-          </coldflow_property>
+          <property label="prop3" rho0="0.0" rho1=".89"/>
+          <property label="prop4" rho0="0.14" rho1="1.18">
+          <!--coldflow_property label="prop3" stream_0="0.0" stream_1=".89"/>
+          <coldflow_property label="prop4" stream_0="0.14" stream_1="1.18"-->
+            <!--volumetric/-->
+          </property>
           <mixture_fraction label="cc_phi_upwind"/>
         </model>
       </StateProperties>

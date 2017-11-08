@@ -24,6 +24,9 @@
     <save label="uVel"/>
     <save label="vVel"/>
     <save label="wVel"/>
+    <save label="uVel_cc"/>
+    <save label="vVel_cc"/>
+    <save label="wVel_cc"/>
     <save label="gamma"/>
     <save label="pressure"/>
     <save label="b_press"/>
@@ -61,12 +64,17 @@
         <var role="total_viscosity" label="gamma"/>
         <var role="density" label="density"/>
       </VarID>
-      <PropertyModelsV2>
+      <!--PropertyModelsV2>
         <model label="density" type="constant_property">
           <grid type="CC"/>
           <value>1.</value>
         </model>
-      </PropertyModelsV2>
+      </PropertyModelsV2-->
+      <StateProperties> 
+        <model label="my_constant_model" type="constant">
+          <const_property label="density" value="1."/>
+        </model>
+      </StateProperties>
       <!--src_kokkos>
         <src label="x_mms" type="MMS_mom">
           <variable type="FX"/>
