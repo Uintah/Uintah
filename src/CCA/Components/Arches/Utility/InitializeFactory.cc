@@ -74,7 +74,8 @@ InitializeFactory::register_all_tasks( ProblemSpecP& db )
         } else {
           throw InvalidValue("Error: Grid type not valid for WaveForm initializer: "+variable_type, __FILE__, __LINE__);
         }
-           _unweighted_var_tasks.push_back(task_name);
+        _unweighted_var_tasks.push_back(task_name);
+
       } else if ( type == "shunn_mms"){
 
         std::string var_type;
@@ -93,6 +94,11 @@ InitializeFactory::register_all_tasks( ProblemSpecP& db )
         }
 
         register_task( task_name, tsk );
+        if (db_task ->findBlock("density_label")){
+           _weighted_var_tasks.push_back(task_name);
+        } else {
+           _unweighted_var_tasks.push_back(task_name);
+        }
 
       } else if ( type == "shunn_mms_p3"){
 

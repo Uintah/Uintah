@@ -10,16 +10,16 @@
   <Time>
     <maxTime>1.0</maxTime>
     <initTime>0.0</initTime>
-    <delt_min>1e-5</delt_min>
-    <delt_max>1e-5</delt_max>
+    <delt_min>5e-4</delt_min>
+    <delt_max>5e-4</delt_max>
     <delt_init>1e-1</delt_init>
     <timestep_multiplier>1.0</timestep_multiplier>
-    <max_Timesteps>10000000</max_Timesteps>
+    <max_Timesteps>100</max_Timesteps>
   </Time>
   <DataArchiver>
     <filebase>x-problem1_Shunn_mms.uda</filebase>
     <!--outputInterval>0.1</outputInterval-->
-    <outputTimestepInterval>100</outputTimestepInterval>
+    <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
     <save label="x-mom"/>
     <save label="x_mms"/>
@@ -63,9 +63,9 @@
       <Box label="1">
         <lower>[0,0,0]</lower>
         <upper>[2.0,0.1,0.1]</upper>
-        <resolution>[48,4,4]</resolution>
+        <resolution>[96,4,4]</resolution>
         <extraCells>[1,0,0]</extraCells>
-        <patches>[1,1,1]</patches>
+        <patches>[2,1,1]</patches>
       </Box>
       <periodic>[0,1,1]</periodic>
     </Level>
