@@ -131,8 +131,6 @@
         <!--/model-->
       </StateProperties>
       <KMomentum>
-        <compute_density_star/>
-        <!--do_not_build_pressure_system/--> <!--If I do not want to do projection... -->
         <!--use_drhodt label="scalar_mms_drhodt"/-->
         <drhodt label="drhodt"/>
         <convection scheme="central"/>

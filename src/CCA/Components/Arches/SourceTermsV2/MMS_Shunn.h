@@ -108,22 +108,22 @@ MMS_Shunn<T>::~MMS_Shunn(){
 template <typename T>
 void MMS_Shunn<T>::problemSetup( ProblemSpecP& db ){
 
-    db->getWithDefault( "k1", m_k1, 4.0);
-    db->getWithDefault( "k2", m_k2, 2.0);
-    db->getWithDefault( "w0", m_w0, 50.0);
-    db->getWithDefault( "rho0", m_rho0, 20.0);
-    db->getWithDefault( "rho1", m_rho1, 1.0);
-    db->getWithDefault( "D", m_D, 0.03);
+  db->getWithDefault( "k1", m_k1, 4.0);
+  db->getWithDefault( "k2", m_k2, 2.0);
+  db->getWithDefault( "w0", m_w0, 50.0);
+  db->getWithDefault( "rho0", m_rho0, 20.0);
+  db->getWithDefault( "rho1", m_rho1, 1.0);
+  db->getWithDefault( "D", m_D, 0.03);
     
     
-    ProblemSpecP db_coord = db->findBlock("coordinates");
-    if ( db_coord ){
-      db_coord->getAttribute("x_face", m_x_face_name);
-      db_coord->getAttribute("x", m_x_name);
-    } else {
-      throw InvalidValue("Error: must have coordinates specified for almgren MMS init condition",
-        __FILE__, __LINE__);
-    }
+  ProblemSpecP db_coord = db->findBlock("grid");
+  if ( db_coord ){
+    db_coord->getAttribute("x", m_x_name);
+    db_coord->getAttribute("x_face", m_x_face_name);
+  } else {
+    throw InvalidValue("Error: must have coordinates specified for shunn MMS init condition",
+      __FILE__, __LINE__);
+  }
 
   m_MMS_label             = _task_name;
   m_rho_u_label           = _task_name + "_rho_u";

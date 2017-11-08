@@ -46,13 +46,10 @@ PressureEqn::problemSetup( ProblemSpecP& db ){
   m_ymom_name = "y-mom";
   m_zmom_name = "z-mom";
 
-
-  const ProblemSpecP params_root = db->getRootNode();
-  if (params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("KMomentum")->findBlock("use_drhodt")){
-    params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("KMomentum")->findBlock("use_drhodt")->getAttribute("label",m_drhodt_name);
-  }else {
-    //params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("KMomentum")->findBlock("drhodt")->getAttribute("label",m_drhodt_name);
-    m_drhodt_name = "drhodt"; 
+  m_drhodt_name = "drhodt"; 
+  
+  if (db->findBlock("drhodt")){
+    db->findBlock("drhodt")->getAttribute("label",m_drhodt_name);
   }
 }
 

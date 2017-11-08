@@ -204,25 +204,23 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
     _momentum_solve.push_back( compute_psi_name );
     _momentum_solve.push_back( mom_task_name );
 
-     if ( db ->findBlock("KMomentum")->findBlock("do_not_build_pressure_system")){
-     
-     }else{
-    //Pressure eqn
-    TaskInterface::TaskBuilder* press_tsk = scinew PressureEqn::Builder("build_pressure_system", 0, _shared_state);
-    register_task( "build_pressure_system", press_tsk );
-    _pressure_eqn.push_back("build_pressure_system");
+    if ( db ->findBlock("KMomentum")->findBlock("PressureSolver")){
+      //Pressure eqn
+      TaskInterface::TaskBuilder* press_tsk = scinew PressureEqn::Builder("build_pressure_system", 0, _shared_state);
+      register_task( "build_pressure_system", press_tsk );
+      _pressure_eqn.push_back("build_pressure_system");
 
-    //BC for velrhohat
-    AtomicTaskInterface::AtomicTaskBuilder* velrhohatbc_tsk = scinew VelRhoHatBC::Builder("vel_rho_hat_bc", 0);
-    register_atomic_task( "vel_rho_hat_bc", velrhohatbc_tsk);
+      //BC for velrhohat
+      AtomicTaskInterface::AtomicTaskBuilder* velrhohatbc_tsk = scinew VelRhoHatBC::Builder("vel_rho_hat_bc", 0);
+      register_atomic_task( "vel_rho_hat_bc", velrhohatbc_tsk);
 
-    //pressure bcs
-    AtomicTaskInterface::AtomicTaskBuilder* press_bc_tsk = scinew ArchesCore::PressureBC::Builder("pressure_bcs", 0);
-    register_atomic_task( "pressure_bcs", press_bc_tsk );
+      //pressure bcs
+      AtomicTaskInterface::AtomicTaskBuilder* press_bc_tsk = scinew ArchesCore::PressureBC::Builder("pressure_bcs", 0);
+      register_atomic_task( "pressure_bcs", press_bc_tsk );
 
-    //pressure Gradient
-    AtomicTaskInterface::AtomicTaskBuilder* gradP_tsk = scinew AddPressGradient::Builder("pressure_correction", 0);
-    register_atomic_task( "pressure_correction", gradP_tsk);
+      //pressure Gradient
+      AtomicTaskInterface::AtomicTaskBuilder* gradP_tsk = scinew AddPressGradient::Builder("pressure_correction", 0);
+      register_atomic_task( "pressure_correction", gradP_tsk);
     }
 
   }
@@ -320,30 +318,33 @@ TransportFactory::build_all_tasks( ProblemSpecP& db )
     print_task_setup_info( "z-mom-update", "fe update");
     fe_tsk->problemSetup( db_mom );
     fe_tsk->create_local_labels();
-
-     if ( db_mom ->findBlock("do_not_build_pressure_system")){
+    
      
-     }else{
-    TaskInterface* press_tsk = retrieve_task("build_pressure_system");
-    print_task_setup_info("build_pressure_system", "building pressure terms, A, b");
-    press_tsk->problemSetup( db_mom );
-    press_tsk->create_local_labels();
 
-    AtomicTaskInterface* rhouhatbc_tsk = retrieve_atomic_task("vel_rho_hat_bc");
-    print_task_setup_info("vel_rho_hat_bc", "applies bc on rhouhat");
-    rhouhatbc_tsk->problemSetup(db_mom);
-    rhouhatbc_tsk->create_local_labels();
+    if ( db_mom ->findBlock("PressureSolver")){
+      TaskInterface* press_tsk = retrieve_task("build_pressure_system");
+      print_task_setup_info("build_pressure_system", "building pressure terms, A, b");
+      press_tsk->problemSetup( db_mom );
+      press_tsk->create_local_labels();
 
-    AtomicTaskInterface* gradP_tsk = retrieve_atomic_task("pressure_correction");
-    print_task_setup_info("pressure_correction", "correction for vels");
-    gradP_tsk->problemSetup(db_mom);
-    gradP_tsk->create_local_labels();
+      AtomicTaskInterface* rhouhatbc_tsk = retrieve_atomic_task("vel_rho_hat_bc");
+      print_task_setup_info("vel_rho_hat_bc", "applies bc on rhouhat");
+      rhouhatbc_tsk->problemSetup(db_mom);
+      rhouhatbc_tsk->create_local_labels();
 
-    AtomicTaskInterface* press_bc_tsk = retrieve_atomic_task("pressure_bcs");
-    print_task_setup_info("pressure_bcs", "apply bcs to the solution of the linear pressure system");
-    press_bc_tsk->problemSetup(db_mom);
-    press_bc_tsk->create_local_labels();
-    }
+      AtomicTaskInterface* gradP_tsk = retrieve_atomic_task("pressure_correction");
+      print_task_setup_info("pressure_correction", "correction for vels");
+      gradP_tsk->problemSetup(db_mom);
+      gradP_tsk->create_local_labels();
+
+      AtomicTaskInterface* press_bc_tsk = retrieve_atomic_task("pressure_bcs");
+      print_task_setup_info("pressure_bcs", "apply bcs to the solution of the linear pressure system");
+      press_bc_tsk->problemSetup(db_mom);
+      press_bc_tsk->create_local_labels();
+   } else {
+      proc0cout << "\n Warning: Pressure-solver tasks  are not included " << std::endl;
+      proc0cout << "          Please consult a developer if you are concerned.\n" << std::endl;
+   }
 
 
   }

@@ -106,8 +106,10 @@ private:
       db->findBlock("which_density")->getAttribute("label", m_density_name);
       m_use_density = true;
     }
+    
 
-    ProblemSpecP db_coord = db->findBlock("coordinates");
+
+    ProblemSpecP db_coord = db->findBlock("grid");
     if ( db_coord ){
       db_coord->getAttribute("x", m_x_name);
     } else {

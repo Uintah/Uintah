@@ -590,11 +590,10 @@
                                                                      VelocityInlet, StABL, PressureBC, WallBC, OutletBC, NOutletBC, VelocityFileInput, MassFlowInlet, PartMassFlowInlet,
                                                                      Swirl, FromFile, ForcedDirichlet, TurbulentInlet, Tabulated powerLawProfile logWindProfile'"
                               attribute3="label     REQUIRED STRING "
-                              attribute4="type      OPTIONAL STRING 'int, velocity, handoff'" 
+                              attribute4="type      OPTIONAL STRING 'int, velocity, handoff,MMS_almgren'" 
                               attribute5="value     OPTIONAL STRING" >
                                                                 
           <value            spec="OPTIONAL STRING"/>
-
           <inputfile        spec="REQUIRED STRING"  need_applies_to="var TurbulentInlet" />
           
           <period           spec="OPTIONAL INTEGER 'positive'" need_applies_to="var TurbulentInlet"/>
@@ -626,6 +625,9 @@
           <!-- One might want to specify a non-normal, mass flow inlet. This allows one to specify those components -->
           <massflow_unitVector  spec="OPTIONAL VECTOR" need_applies_to="var MassFlowInlet, PartMassFlowInlet"/> <!-- Specify the vector. The Normal component value is ignored. -->
 
+          <which_vel   spec="OPTIONAL STRING" need_applies_to= "var Custom"/> <!--This a MMS BC for almgren problem only for verification-->
+          <coordinates spec="OPTIONAL NO_DATA" attribute1 = "x REQUIRED STRING"
+                       attribute2 = "y REQUIRED STRING" need_applies_to= "var Custom"/> <!-- used in MMS_almgren BC -->
         </BCType>
       </Face>
       

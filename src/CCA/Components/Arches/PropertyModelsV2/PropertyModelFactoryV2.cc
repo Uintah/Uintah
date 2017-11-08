@@ -1,6 +1,7 @@
 #include <CCA/Components/Arches/PropertyModelsV2/PropertyModelFactoryV2.h>
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 //Specific models:
+#include <CCA/Components/Arches/UPSHelper.h>
 #include <CCA/Components/Arches/Utility/TaskAlgebra.h>
 #include <CCA/Components/Arches/PropertyModelsV2/WallHFVariable.h>
 #include <CCA/Components/Arches/PropertyModelsV2/VariableStats.h>
@@ -299,29 +300,55 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
 
   if ( db->findBlock("KMomentum") ){
 
-    //std::string m_u_vel_name = parse_ups_for_role( UVELOCITY, db, "uVelocitySPBC" );
-    //std::string m_v_vel_name = parse_ups_for_role( VVELOCITY, db, "vVelocitySPBC" );
-    //std::string m_w_vel_name = parse_ups_for_role( WVELOCITY, db, "wVelocitySPBC" );
+    using namespace ArchesCore;
+    m_u_vel_name = parse_ups_for_role( UVELOCITY, db, "uVelocitySPBC" );
+    m_v_vel_name = parse_ups_for_role( VVELOCITY, db, "vVelocitySPBC" );
+    m_w_vel_name = parse_ups_for_role( WVELOCITY, db, "wVelocitySPBC" );
+    m_density_name = parse_ups_for_role( DENSITY, db, "density" );
     
-    std::string unw_mom_name = "uVel"; // compute u from rhou
+    // compute u from rhou
     TaskInterface::TaskBuilder* unw_x_tsk = 
-    scinew UnweigthVariable<SFCXVariable<double>>::Builder( unw_mom_name , 0 );
-    register_task( unw_mom_name,  unw_x_tsk );
-    _u_from_rho_u.push_back(unw_mom_name);
+    scinew UnweigthVariable<SFCXVariable<double>>::Builder( m_u_vel_name , 0 );
+    register_task( m_u_vel_name,  unw_x_tsk );
+    _u_from_rho_u.push_back(m_u_vel_name);
     
-    unw_mom_name = "vVel"; // compute v from rhov
+    // compute v from rhov
     TaskInterface::TaskBuilder* unw_y_tsk = 
-    scinew UnweigthVariable<SFCYVariable<double>>::Builder( unw_mom_name , 0 );
-    register_task( unw_mom_name,  unw_y_tsk );
-    _u_from_rho_u.push_back(unw_mom_name);
+    scinew UnweigthVariable<SFCYVariable<double>>::Builder( m_v_vel_name , 0 );
+    register_task( m_v_vel_name,  unw_y_tsk );
+    _u_from_rho_u.push_back(m_v_vel_name);
     
-    unw_mom_name = "wVel"; // compute w from rhow
+     // compute w from rhow
     TaskInterface::TaskBuilder* unw_z_tsk = 
-    scinew UnweigthVariable<SFCZVariable<double>>::Builder( unw_mom_name , 0 );
-    register_task( unw_mom_name,  unw_z_tsk );
-    _u_from_rho_u.push_back(unw_mom_name);
+    scinew UnweigthVariable<SFCZVariable<double>>::Builder( m_w_vel_name , 0 );
+    register_task( m_w_vel_name,  unw_z_tsk );
+    _u_from_rho_u.push_back(m_w_vel_name);
+   
+
+    bool compute_density_star = true;
     
-    if (db->findBlock("KMomentum")->findBlock("compute_density_star")){
+    if (db->findBlock("StateProperties")){
+
+      ProblemSpecP db_sp = db->findBlock("StateProperties");
+      // It is going to look in StateProperties to see if density is constant
+      for ( ProblemSpecP db_p = db_sp->findBlock("model");
+	    db_p.get_rep() != nullptr;
+            db_p = db_p->findNextBlock("model")){
+
+        std::string d_type;
+        std::string d_label;
+        db_p->getAttribute("type", d_type);
+        if (d_type == "constant") {
+          if ( db_p->findBlock("const_property")){
+            db_p->findBlock("const_property")->getAttribute("label", d_label);
+            if (d_label == m_density_name) {
+              compute_density_star = false;
+            } 
+          }
+        }
+      }
+    }   
+    if (compute_density_star){
       TaskInterface::TaskBuilder* ds = scinew DensityStar::Builder( "density_star", 0 );
       register_task( "density_star", ds );
     }
@@ -409,23 +436,44 @@ if ( db->findBlock("PropertyModelsV2") != nullptr){
   ProblemSpecP db_mom = db->findBlock("KMomentum");
   if ( db->findBlock("KMomentum")){
 
-    TaskInterface* un_tsk = retrieve_task("uVel");
+    TaskInterface* un_tsk = retrieve_task(m_u_vel_name);
     print_task_setup_info( "uvel-compute", "u from rho u");
     un_tsk->problemSetup( db_mom );
     un_tsk->create_local_labels();
     
-    un_tsk = retrieve_task("vVel");
+    un_tsk = retrieve_task(m_v_vel_name);
     print_task_setup_info( "vvel-compute", "v from rho v");
     un_tsk->problemSetup( db_mom );
     un_tsk->create_local_labels();
     
-    un_tsk = retrieve_task("wVel");
+    un_tsk = retrieve_task(m_w_vel_name);
     print_task_setup_info( "wvel-compute", "w from rho w");
     un_tsk->problemSetup( db_mom );
     un_tsk->create_local_labels();
     
+    bool compute_density_star = true;
+    
+    if (db->findBlock("StateProperties")){// if I want to define density in other factory
+      ProblemSpecP db_sp = db->findBlock("StateProperties");
+      // It is going to look in StateProperties to see if density is constant
+      for ( ProblemSpecP db_p = db_sp->findBlock("model");
+	    db_p.get_rep() != nullptr;
+            db_p = db_p->findNextBlock("model")){
 
-    if (db->findBlock("KMomentum")->findBlock("compute_density_star")){
+        std::string d_type;
+        std::string d_label;
+        db_p->getAttribute("type", d_type);
+        if (d_type == "constant") {
+          if ( db_p->findBlock("const_property")){
+            db_p->findBlock("const_property")->getAttribute("label", d_label);
+            if (d_label == m_density_name) {
+              compute_density_star = false;
+            } 
+          }
+        }
+      }
+    }  
+    if (compute_density_star){
       tsk = retrieve_task("density_star");
       tsk->problemSetup(db);
       tsk->create_local_labels();

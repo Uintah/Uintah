@@ -73,12 +73,6 @@
         <var role="total_viscosity" label="gamma"/>
         <var role="density" label="density"/>
       </VarID>
-      <PropertyModelsV2>
-        <model label="density" type="constant_property">
-          <grid type="CC"/>
-          <value>1.</value>
-        </model>
-      </PropertyModelsV2>
       <KMomentum>
         <convection scheme="central"/>
         <PressureSolver>

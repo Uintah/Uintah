@@ -843,27 +843,16 @@
 
           <!-- Cold Flow Properties
                Cold flow mixing does the following:
-               mixed_value = f * stream_1 + (1 - f) * stream_2
+               rho         = (f/rho1 +(1-f)/rho0)^(-1)
                where f is the mixture fraction.
-               These properties are assumed on a per mass basis. If the quantity is not
-               per mass (e.g., density), then you must specify the species to be <volumetric/>.
-               For example:
-               (per mass)
-               mix_value = f * stream_0 + ( 1 - f ) * stream_1
-               (per vol)
-               1/mix_value = f/stream_0 + ( 1 - f ) / stream_1
 
-               Note that in the cases of volumetric properties, the resulting grid variable is
-               on a per volume bases (ie, the inversion to get the mix value is done for you)
           -->
-          <coldflow_property           spec="MULTIPLE NO_DATA"
+          <property           spec="MULTIPLE NO_DATA"
                                        attribute1="label REQUIRED STRING"
-                                       attribute2="stream_0 REQUIRED DOUBLE"
-                                       attribute3="stream_1 REQUIRED DOUBLE"
                                        need_applies_to="type coldflow">
-            <volumetric               spec="OPTIONAL NO_DATA"/>
-          </coldflow_property>
-
+          </property>
+          <rho0 spec="REQUIRED STRING" need_applies_to="type coldflow"/>
+          <rho1 spec="REQUIRED STRING" need_applies_to="type coldflow"/>
           <mixture_fraction           spec="REQUIRED NO_DATA"
                                       attribute1="label REQUIRED STRING"
                                       need_applies_to="type coldflow"/>
@@ -1291,7 +1280,7 @@
           <velocity                     spec="OPTIONAL NO_DATA"
                                         attribute1="xlabel REQUIRED STRING"
                                         attribute2="ylabel REQUIRED STRING"
-                                        attribute3="zlabel REQUIRED STRING"/>A
+                                        attribute3="zlabel REQUIRED STRING"/>
 
           <diffusion_coef               spec="OPTIONAL NO_DATA"
                                         attribute1="label REQUIRED STRING"/>
@@ -1313,8 +1302,10 @@
 
         <src_z                          spec="OPTIONAL NO_DATA"
                                         attribute1=" label REQUIRED STRING"/>
-
-        <PressureSolver                 spec="REQUIRED NO_DATA" >
+        <drhodt                          spec="OPTIONAL NO_DATA"
+                                         attribute1=" label REQUIRED STRING"/> <!--name of drhodt-->
+        <!--PressureSolver                 spec="REQUIRED NO_DATA" -->
+        <PressureSolver                 spec="OPTIONAL NO_DATA" >
 
           <enforce_solvability          spec="OPTIONAL NO_DATA"/> <!-- For some problems, this parameter is required to solve the system (e.g., periodic, variable density ) -->
 
@@ -1352,6 +1343,8 @@
                                         attribute2="variable_label   OPTIONAL STRING"
                                         attribute3="type  REQUIRED STRING 'wave,
                                                                            almgren_mms,
+                                                                           shunn_mms,
+                                                                           shunn_mms_p3,
                                                                            input_file,
                                                                            random_lagrangian_particles,
                                                                            lagrangian_particle_velocity,
@@ -1359,8 +1352,10 @@
 
           <variable                     spec="OPTIONAL NO_DATA"
                                         attribute1="type REQUIRED STRING 'CC,FX,FY,FZ'"
-                                        need_applies_to="type almgren_mms, input_file"/>
+                                        need_applies_to="type almgren_mms,shunn_mms, shunn_mms_p3,input_file"/>
 
+          <which_density                spec="OPTIONAL NO_DATA"
+                                        attribute1="label REQUIRED STRING"/> <!-- If we are compute ui or phi-->
           <!-- 1D WAVE FORM -->
           <wave                         spec="OPTIONAL NO_DATA"
                                         attribute1="type REQUIRED STRING 'sine,square'">
@@ -1387,18 +1382,36 @@
 
           </wave>
 
+          <!-- Shunn MMS P3 -->
+          <rho0 spec="REQUIRED STRING" need_applies_to="type shunn_mms_p3 "/>
+          <rho1 spec="REQUIRED STRING" need_applies_to="type shunn_mms_p3 "/>
+          <uf   spec="REQUIRED STRING" need_applies_to="type shunn_mms_p3 "/>
+          <vf   spec="REQUIRED STRING" need_applies_to="type shunn_mms_p3 "/>
+
+          <which_vel                  spec="REQUIRED STRING 'u,v,p'"
+                                      need_applies_to="type shunn_mms_p3, almgren_mms "/> <!-- for a 2D plane, specify which component
+                                                                                to which this corresponds -->
+          <coordinates                spec="REQUIRED NO_DATA"
+                                      attribute1="x REQUIRED STRING"
+                                      attribute2="y REQUIRED STRING"
+                                      need_applies_to="type shunn_mms_p3, almgren_mms"/> <!-- specify the the x and y varlabel names for
+                                                                            the mms -->
+          <grid                       spec="REQUIRED NO_DATA"
+                                      attribute1="x REQUIRED STRING"
+                                      need_applies_to="type shunn_mms"/> 
+
           <!-- ALMGREN MMS -->
           <amplitude                  spec="OPTIONAL DOUBLE"
                                       need_applies_to="type almgren_mms"/>
           <frequency                  spec="OPTIONAL DOUBLE"
                                       need_applies_to="type almgren_mms"/>
-          <which_vel                  spec="REQUIRED STRING 'u,v'"
-                                      need_applies_to="type almgren_mms"/> <!-- for a 2D plane, specify which component
+          <!--which_vel                  spec="REQUIRED STRING 'u,v,p'"
+                                      need_applies_to="type almgren_mms "/--> <!-- for a 2D plane, specify which component
                                                                                 to which this corresponds -->
-          <coordinates                spec="REQUIRED NO_DATA"
+          <!--coordinates                spec="REQUIRED NO_DATA"
                                       attribute1="x REQUIRED STRING"
                                       attribute2="y REQUIRED STRING"
-                                      need_applies_to="type almgren_mms"/> <!-- specify the the x and y varlabel names for
+                                      need_applies_to="type almgren_mms "/--> <!-- specify the the x and y varlabel names for
                                                                             the mms -->
 
           <!-- Input file -->
@@ -1441,24 +1454,35 @@
         </task>
       </Initialization>
       <!--Source terms for Arches with new interface-->
-        <SourceV2                        spec="OPTIONAL NO_DATA">
+        <SourceV2                       spec="OPTIONAL NO_DATA">
           <src                          spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        attribute2="type REQUIRED STRING  'MMS_mom,MMS_scalar'">
+                                        attribute2="type REQUIRED STRING  'MMS_mom, MMS_scalar, MMS_Shunn, MMS_Shunn_p3'">
                                                                            
             <!-- Specs for MMS mom -->
           <variable                     spec="OPTIONAL NO_DATA"
                                         attribute1="type REQUIRED STRING 'CC,FX,FY,FZ'"
-                                        need_applies_to="type MMS_mom"/>
+                                        need_applies_to="type MMS_mom, MMS_Shunn, MMS_Shunn_p3"/>
 
           <which_vel                  spec="REQUIRED STRING 'u,v,p'"
-                                      need_applies_to="type MMS_mom"/> <!-- for a 2D plane, specify which component
+                                      need_applies_to="type MMS_mom, MMS_Shunn_p3"/> <!-- for a 2D plane, specify which component
                                                                                 to which this corresponds -->
           <coordinates                spec="REQUIRED NO_DATA"
                                       attribute1="x REQUIRED STRING"
                                       attribute2="y REQUIRED STRING"
-                                      need_applies_to="type MMS_mom"/> <!-- specify the the x and y varlabel names for
+                                      need_applies_to="type MMS_mom, MMS_Shunn_p3"/> <!-- specify the the x and y varlabel names for
                                                                             the mms -->
+          <grid                       spec="REQUIRED NO_DATA"
+                                      attribute1="x_face REQUIRED STRING"
+                                      attribute2="x REQUIRED STRING"
+                                      need_applies_to="type MMS_Shunn"/> <!--the mms -->
+
+          <!--Shunn Problem 3-->
+          <rho0 spec="REQUIRED STRING" need_applies_to="type MMS_Shunn_p3 "/>
+          <rho1 spec="REQUIRED STRING" need_applies_to="type MMS_Shunn_p3 "/>
+          <uf   spec="REQUIRED STRING" need_applies_to="type MMS_Shunn_p3 "/>
+          <vf   spec="REQUIRED STRING" need_applies_to="type MMS_Shunn_p3 "/>
+
           <!-- Specs for MMS scalar -->
           <!-- 1D WAVE FORM -->
           <wave                         spec="OPTIONAL NO_DATA"

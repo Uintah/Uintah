@@ -17,7 +17,7 @@
     <max_Timesteps>3</max_Timesteps>
   </Time>
   <DataArchiver>
-    <filebase>almgren-mmsBC.uda</filebase>
+    <filebase>mmsBC-almgren.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <!--outputInitTimestep/-->
     <save label="x-mom"/>
@@ -156,15 +156,20 @@
         <var role="density" label="density"/>
       </VarID>
       <PropertyModelsV2>
-        <model label="density" type="constant_property">
+        <!--model label="density" type="constant_property">
           <grid type="CC"/>
           <value>1.</value>
-        </model>
+        </model-->
         <model label="gamma" type="constant_property">
           <grid type="CC"/>
           <value>1.</value>
         </model>
       </PropertyModelsV2>
+      <StateProperties> 
+        <model label="density_model" type="constant">
+          <const_property label="density" value="1."/>
+        </model>
+      </StateProperties>
       <SourceV2>
         <src label="x_mms" type="MMS_mom">
           <variable type="FX"/>
@@ -178,7 +183,7 @@
         </src>
       </SourceV2>
       <KMomentum>
-        <do_not_build_pressure_system/>
+        <!--do_not_build_pressure_system/-->
         <convection scheme="central"/>
         <!--convection scheme="f_central"/-->
         <!--convection scheme="upwind"/-->
