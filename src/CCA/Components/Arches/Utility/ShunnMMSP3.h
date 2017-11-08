@@ -171,7 +171,7 @@ private:
                         sin(m_k*m_pi*(y(i,j,k)-m_vf*time_d))*cos(m_w0*m_pi*time_d))/(1.0 + 
                         m_rho0/m_rho1+(1.0-m_rho0/m_rho1)*sin(m_k*m_pi*(x(i,j,k)-m_uf*time_d))*
                         sin(m_k*m_pi*(y(i,j,k)-m_vf*time_d))*cos(m_w0*m_pi*time_d));
-        const double rho_d = 1.0/(phi_f/m_rho1 + (1.0- phi_f )/m_rho0); 
+        //const double rho_d = 1.0/(phi_f/m_rho1 + (1.0- phi_f )/m_rho0); 
         const double rho_inter = 0.5 * (rho(i,j,k)+rho(i-ioff,j-joff,k-koff)); 
         
         //const double f_resolution = (rho_d/rho_inter); // Only for testing liner interpolation of density

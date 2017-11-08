@@ -58,12 +58,13 @@ private:
 
     std::string m_var_name;         
     std::string m_rho_name;        
-    std::string m_un_var_name;   
+    std::string m_un_var_name;
     std::vector<std::string> m_eqn_names;
     std::vector<std::string> m_un_eqn_names;
     std::vector<int> m_ijk_off;
     int m_dir;
     int Nghost_cells;
+    bool m_compute_mom; 
 
   };
 
@@ -109,24 +110,27 @@ void UnweigthVariable<T>::problemSetup( ProblemSpecP& db ){
     m_eqn_names.push_back(m_var_name);
     
   }
-  
+  m_compute_mom = false;
   if (_task_name == "uVel"){
     m_var_name = "x-mom";
     m_un_var_name = _task_name;
     m_un_eqn_names.push_back(m_un_var_name);
     m_eqn_names.push_back(m_var_name);
+    m_compute_mom = true;
     
   } else if (_task_name == "vVel"){
     m_var_name = "y-mom";
     m_un_var_name = _task_name;
     m_un_eqn_names.push_back(m_un_var_name);
     m_eqn_names.push_back(m_var_name);
+    m_compute_mom = true;
     
   } else if (_task_name == "wVel"){
     m_var_name = "z-mom";
     m_un_var_name = _task_name;
     m_un_eqn_names.push_back(m_un_var_name);
     m_eqn_names.push_back(m_var_name);
+    m_compute_mom = true;
     
   }
 
@@ -212,7 +216,8 @@ void UnweigthVariable<T>::register_compute_bcs(
   ArchesCore::VariableHelper<T> helper;
   const int istart = 0;
   const int iend = m_eqn_names.size();
-  if ( helper.dir == ArchesCore::NODIR){
+
+  if ( helper.dir == ArchesCore::NODIR || m_compute_mom == false){
     // scalar at cc 
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
       register_variable( m_eqn_names[ieqn], ArchesFieldContainer::MODIFIES ,  variable_registry, time_substep );
@@ -249,11 +254,11 @@ void UnweigthVariable<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager
 
     const double dot = vDir[0]*iDir[0] + vDir[1]*iDir[1] + vDir[2]*iDir[2];
     
-        
+    const int istart = 0;
+    const int iend = m_eqn_names.size();        
+
     if ( helper.dir == ArchesCore::NODIR){
       //scalar 
-      const int istart = 0;
-      const int iend = m_eqn_names.size();
       for (int ieqn = istart; ieqn < iend; ieqn++ ){
         T&  var = tsk_info->get_uintah_field_add<T>(m_eqn_names[ieqn]);
         CT& un_var = tsk_info->get_const_uintah_field_add<CT>(m_un_eqn_names[ieqn]);
@@ -263,10 +268,33 @@ void UnweigthVariable<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager
           var[c] = un_var[c]*rho[c]; 
         }
       } 
+    } else if (m_compute_mom == false) {
+      for (int ieqn = istart; ieqn < iend; ieqn++ ){
+
+        T&  var = tsk_info->get_uintah_field_add<T>(m_eqn_names[ieqn]);// rho*phi
+        CT& un_var = tsk_info->get_const_uintah_field_add<CT>(m_un_eqn_names[ieqn]); // phi
+    
+        if ( dot == -1 ){
+          // face (-) in Staggered Variablewe set BC at 0
+          for ( cell_iter.reset(); !cell_iter.done(); cell_iter++ ){
+            IntVector c = *cell_iter;
+            IntVector cp = *cell_iter - iDir;
+            const double rho_inter = 0.5 * (rho[c]+rho[cp]); 
+            var[cp] = un_var[cp]*rho_inter; // BC 
+            var[c]  = var[cp]; // extra cell 
+          }
+        } else {
+       // face (+) in Staggered Variablewe set BC at extra cell
+          for ( cell_iter.reset(); !cell_iter.done(); cell_iter++ ){
+            IntVector c = *cell_iter;
+            IntVector cp = *cell_iter - iDir;
+            const double rho_inter = 0.5 * (rho[c]+rho[cp]); 
+            var[c] = un_var[c]*rho_inter; // BC and extra cell value
+          }      
+       }
+       }
     } else {
       // only works if var is mom
-      const int istart = 0;
-      const int iend = m_eqn_names.size();
       for (int ieqn = istart; ieqn < iend; ieqn++ ){
 
         T&  un_var = tsk_info->get_uintah_field_add<T>(m_un_eqn_names[ieqn]);

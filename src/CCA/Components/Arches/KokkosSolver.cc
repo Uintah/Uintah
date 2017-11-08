@@ -360,9 +360,9 @@ KokkosSolver::initialize( const LevelP& level, SchedulerP& sched, const bool doi
   // variable that computed with density such as rho*u  
   m_task_factory_map["initialize_factory"]->schedule_task_group( "weighted_var_tasks", TaskInterface::INITIALIZE, pack_tasks, level, sched, matls );
 
+
   //m_task_factory_map["table_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, pack_tasks, level, sched, matls );
   //m_task_factory_map["table_factory"]->schedule_task_group( "all_tasks", TaskInterface::BC, pack_tasks, level, sched, matls );
-
 
   //Need to apply BC's after everything is initialized
   m_task_factory_map["transport_factory"]->schedule_task_group( "momentum_construction", TaskInterface::BC, pack_tasks, level, sched, matls );
