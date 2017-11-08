@@ -54,7 +54,7 @@
   </PhysicalConstants>
   <CFD>
     <ARCHES>
-      <TimeIntegrator order="2">
+      <TimeIntegrator order="1">
         <ExplicitIntegrator order="first"/>
       </TimeIntegrator>
       <VarID>

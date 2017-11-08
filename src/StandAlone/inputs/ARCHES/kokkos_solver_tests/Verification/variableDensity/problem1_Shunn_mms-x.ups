@@ -163,6 +163,7 @@
       <KMomentum>
         <!--do_not_build_pressure_system/--> <!--If I do not want to do projection... -->
         <!--use_drhodt label="x_mms_drhodt"/-->
+        <compute_density_star/>
         <drhodt label="drhodt"/>
         <convection scheme="central"/>
         <!--inviscid/-->

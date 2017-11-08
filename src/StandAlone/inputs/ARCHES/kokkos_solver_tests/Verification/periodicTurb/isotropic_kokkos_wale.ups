@@ -31,7 +31,7 @@
     <save label="vVel_cc"/>
     <save label="wVel_cc"/>
     <save label="drhodt"/>
-    <save label="density_star"/>
+    <!--save label="density_star"/-->
     <save label="density"/>
     <save label="gamma"/>
     <save label="pressure"/>

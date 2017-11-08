@@ -320,10 +320,12 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
     scinew UnweigthVariable<SFCZVariable<double>>::Builder( unw_mom_name , 0 );
     register_task( unw_mom_name,  unw_z_tsk );
     _u_from_rho_u.push_back(unw_mom_name);
-
-    TaskInterface::TaskBuilder* ds = scinew DensityStar::Builder( "density_star", 0 );
-    register_task( "density_star", ds );
-     
+    
+    if (db->findBlock("KMomentum")->findBlock("compute_density_star")){
+      TaskInterface::TaskBuilder* ds = scinew DensityStar::Builder( "density_star", 0 );
+      register_task( "density_star", ds );
+    }
+    
     TaskInterface::TaskBuilder* con = scinew ContinuityPredictor::Builder( "continuity_check", 0 );
     register_task( "continuity_check", con );
       
@@ -421,10 +423,13 @@ if ( db->findBlock("PropertyModelsV2") != nullptr){
     print_task_setup_info( "wvel-compute", "w from rho w");
     un_tsk->problemSetup( db_mom );
     un_tsk->create_local_labels();
+    
 
-    tsk = retrieve_task("density_star");
-    tsk->problemSetup(db);
-    tsk->create_local_labels();
+    if (db->findBlock("KMomentum")->findBlock("compute_density_star")){
+      tsk = retrieve_task("density_star");
+      tsk->problemSetup(db);
+      tsk->create_local_labels();
+    }
 
     tsk = retrieve_task("continuity_check");
     tsk->problemSetup(db);
