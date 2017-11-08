@@ -32,6 +32,9 @@ SRCS += \
         $(SRCDIR)/CO.cc                     \
         $(SRCDIR)/ConstantProperty.cc       \
         $(SRCDIR)/DensityPredictor.cc       \
+        $(SRCDIR)/ContinuityPredictor.cc    \
+        $(SRCDIR)/DensityStar.cc    \
+        $(SRCDIR)/DrhodtEs.cc    \
         $(SRCDIR)/FaceVelocities.cc         \
         $(SRCDIR)/OneDWallHT.cc             \
         $(SRCDIR)/PropertyModelFactoryV2.cc \

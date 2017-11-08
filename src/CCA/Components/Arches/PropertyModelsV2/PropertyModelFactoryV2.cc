@@ -5,6 +5,9 @@
 #include <CCA/Components/Arches/PropertyModelsV2/WallHFVariable.h>
 #include <CCA/Components/Arches/PropertyModelsV2/VariableStats.h>
 #include <CCA/Components/Arches/PropertyModelsV2/DensityPredictor.h>
+#include <CCA/Components/Arches/PropertyModelsV2/DensityStar.h>
+#include <CCA/Components/Arches/PropertyModelsV2/ContinuityPredictor.h>
+#include <CCA/Components/Arches/PropertyModelsV2/DrhodtEs.h>
 #include <CCA/Components/Arches/PropertyModelsV2/OneDWallHT.h>
 #include <CCA/Components/Arches/PropertyModelsV2/ConstantProperty.h>
 #include <CCA/Components/Arches/PropertyModelsV2/FaceVelocities.h>
@@ -302,6 +305,14 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
     register_task( unw_mom_name,  unw_z_tsk );
     _u_from_rho_u.push_back(unw_mom_name);
 
+    TaskInterface::TaskBuilder* ds = scinew DensityStar::Builder( "density_star", 0 );
+    register_task( "density_star", ds );
+     
+    TaskInterface::TaskBuilder* con = scinew ContinuityPredictor::Builder( "continuity_check", 0 );
+    register_task( "continuity_check", con );
+      
+    TaskInterface::TaskBuilder* dre = scinew DrhodtEs::Builder( "drhodt", 0 );
+    register_task( "drhodt", dre );
     //TaskInterface::TaskBuilder* u_from_rho_u_tsk = scinew UFromRhoU::Builder( "u_from_rho_u", 0);
     //register_task("u_from_rho_u", u_from_rho_u_tsk);
 
@@ -395,6 +406,17 @@ if ( db->findBlock("PropertyModelsV2") != nullptr){
     un_tsk->problemSetup( db_mom );
     un_tsk->create_local_labels();
 
+    tsk = retrieve_task("density_star");
+    tsk->problemSetup(db);
+    tsk->create_local_labels();
+
+    tsk = retrieve_task("continuity_check");
+    tsk->problemSetup(db);
+    tsk->create_local_labels();
+          
+    tsk = retrieve_task("drhodt");
+    tsk->problemSetup(db);
+    tsk->create_local_labels();
 //    tsk = retrieve_task("u_from_rho_u");
 //    tsk->problemSetup(db);
 //    tsk->create_local_labels();
