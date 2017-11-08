@@ -74,11 +74,13 @@ private:
     std::string m_x_name;
 
     std::string m_MMS_label;
+    std::string m_rho_u_label;
     std::string m_MMS_scalar_label;
     std::string m_MMS_source_label;
     std::string m_MMS_source_scalar_label;
     std::string m_MMS_rho_scalar_label;
     std::string m_MMS_rho_label;
+    std::string m_MMS_rho_face_label;
     std::string m_MMS_drhodt_label;
     
     //std::string m_MMS_source_diff_label;
@@ -124,12 +126,14 @@ void MMS_Shunn<T>::problemSetup( ProblemSpecP& db ){
     }
 
   m_MMS_label             = _task_name;
+  m_rho_u_label           = _task_name + "_rho_u";
   m_MMS_scalar_label      = _task_name+"_scalar";
   m_MMS_source_label      = _task_name + "_source";
   m_MMS_source_scalar_label = _task_name + "_source_scalar";
   
   m_MMS_rho_scalar_label   = _task_name+"_rho_scalar";
   m_MMS_rho_label          = _task_name+"_rho";
+  m_MMS_rho_face_label          = _task_name+"_rho_face";
   m_MMS_drhodt_label       = _task_name+"_drhodt";
   
 
@@ -143,6 +147,7 @@ template <typename T>
 void MMS_Shunn<T>::create_local_labels(){
 
   register_new_variable< T >( m_MMS_label);
+  register_new_variable< T >( m_rho_u_label);
   register_new_variable< CCVariable<double> >( m_MMS_scalar_label);
   register_new_variable< CCVariable<double> >( m_MMS_source_scalar_label);
   register_new_variable< CCVariable<double> >( m_MMS_drhodt_label);
@@ -151,6 +156,7 @@ void MMS_Shunn<T>::create_local_labels(){
   //register_new_variable< T >( m_MMS_source_t_label);
   register_new_variable< CCVariable<double> >( m_MMS_rho_scalar_label);
   register_new_variable< CCVariable<double> >( m_MMS_rho_label);
+  register_new_variable< T >( m_MMS_rho_face_label);
 
 }
 
@@ -160,6 +166,7 @@ void MMS_Shunn<T>::register_initialize( std::vector<VarInfo>&
                                       variable_registry , const bool pack_tasks){
 
   register_variable( m_MMS_label,               ArchesFieldContainer::COMPUTES, variable_registry );
+  register_variable( m_rho_u_label,             ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable( m_MMS_scalar_label,        ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable( m_MMS_source_label,        ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable( m_MMS_source_scalar_label, ArchesFieldContainer::COMPUTES, variable_registry );
@@ -167,6 +174,7 @@ void MMS_Shunn<T>::register_initialize( std::vector<VarInfo>&
   //register_variable( m_MMS_source_t_label,    ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable( m_MMS_rho_scalar_label,    ArchesFieldContainer::COMPUTES ,  variable_registry);
   register_variable( m_MMS_rho_label,           ArchesFieldContainer::COMPUTES ,  variable_registry );
+  register_variable( m_MMS_rho_face_label,      ArchesFieldContainer::COMPUTES ,  variable_registry);
   register_variable( m_MMS_drhodt_label,        ArchesFieldContainer::COMPUTES ,  variable_registry );
 
   register_variable( m_x_face_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry );
@@ -200,11 +208,13 @@ void MMS_Shunn<T>::register_timestep_eval( std::vector<VarInfo>&
                                           variable_registry, const int time_substep , const bool pack_tasks){
 
   register_variable( m_MMS_label,               ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep );
+  register_variable( m_rho_u_label,             ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep );
   register_variable( m_MMS_scalar_label,        ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep );
   register_variable( m_MMS_source_label,        ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep );
   register_variable( m_MMS_source_scalar_label, ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep );
   register_variable( m_MMS_rho_scalar_label,    ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep );
   register_variable( m_MMS_rho_label,           ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep );
+  register_variable( m_MMS_rho_face_label,      ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep );
   register_variable( m_MMS_drhodt_label,        ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep );
 
  // register_variable( m_MMS_source_diff_label, ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep );
@@ -228,10 +238,12 @@ void MMS_Shunn<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 template <typename T>
 void MMS_Shunn<T>::compute_source( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  T& u_mms = *(tsk_info->get_uintah_field<T>(m_MMS_label));
+  T& u_mms = tsk_info->get_uintah_field_add<T>(m_MMS_label);
+  T& rho_u_mms = tsk_info->get_uintah_field_add<T>(m_rho_u_label);
   CCVariable<double>& phi_mms = *(tsk_info->get_uintah_field<CCVariable<double> >(m_MMS_scalar_label));
   CCVariable<double>& rho_phi_mms = *(tsk_info->get_uintah_field<CCVariable<double> >(m_MMS_rho_scalar_label));
   CCVariable<double>& rho_mms = *(tsk_info->get_uintah_field<CCVariable<double> >(m_MMS_rho_label));
+  T& rho_face_mms = tsk_info->get_uintah_field_add<T>(m_MMS_rho_face_label);
 
   CCVariable<double>& phi_source_mms = *(tsk_info->get_uintah_field<CCVariable<double> >(m_MMS_source_scalar_label));
   CCVariable<double>& drhodt_mms = *(tsk_info->get_uintah_field<CCVariable<double> >(m_MMS_drhodt_label));
@@ -269,6 +281,8 @@ void MMS_Shunn<T>::compute_source( const Patch* patch, ArchesTaskInfoManager* ts
       
       u_mms(i,j,k) = (2.0*m_k2*x_f(i,j,k)*r01*std::exp(-m_k1*time_d)*u1/(u1*u1 + 1.0) + 
         r01*k12*std::exp(-k12*time_d)/m_w0*(2.0*std::atan(u1)-m_pi/2.0))/rho; 
+      rho_u_mms(i,j,k) = u_mms(i,j,k)* rho;
+      rho_face_mms(i,j,k) = rho; // density at faces  
       
     });
           
