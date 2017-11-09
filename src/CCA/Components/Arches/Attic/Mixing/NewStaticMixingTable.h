@@ -59,7 +59,7 @@ POSSIBLE REVISIONS
 
 #include <CCA/Components/Arches/Mixing/Stream.h>
 #include <CCA/Components/Arches/Mixing/MixingModel.h>
-#include <Core/Parallel/UintahParallelComponent.h>
+
 #include   <vector>
 #include   <string>
 

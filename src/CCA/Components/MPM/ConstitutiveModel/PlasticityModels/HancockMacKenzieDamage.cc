@@ -24,6 +24,7 @@
 
 
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/HancockMacKenzieDamage.h>
+#include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Math/Gaussian.h>
 #include <cmath>
 

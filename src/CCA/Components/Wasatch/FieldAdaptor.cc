@@ -187,8 +187,7 @@ namespace WasatchCore{
 #define declare_method( FIELDT )                                              \
   template so::MemoryWindow                                                   \
   get_memory_window_for_uintah_field<FIELDT>( const Uintah::Patch* const  );  \
-  template so::MemoryWindow get_memory_window_for_masks<FIELDT>( const Uintah::Patch* const  );  \
-  template Uintah::Ghost::GhostType get_uintah_ghost_type<FIELDT>();
+  template so::MemoryWindow get_memory_window_for_masks<FIELDT>( const Uintah::Patch* const  );
 
 #define declare_variants( VOLT )                \
   declare_method( VOLT );                       \

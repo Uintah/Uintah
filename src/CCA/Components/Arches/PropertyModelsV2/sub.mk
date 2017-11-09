@@ -32,12 +32,16 @@ SRCS += \
         $(SRCDIR)/CO.cc                     \
         $(SRCDIR)/ConstantProperty.cc       \
         $(SRCDIR)/DensityPredictor.cc       \
+        $(SRCDIR)/ContinuityPredictor.cc    \
+        $(SRCDIR)/DensityStar.cc    \
+        $(SRCDIR)/DrhodtEs.cc    \
         $(SRCDIR)/FaceVelocities.cc         \
         $(SRCDIR)/OneDWallHT.cc             \
         $(SRCDIR)/PropertyModelFactoryV2.cc \
         $(SRCDIR)/UFromRhoU.cc              \
         $(SRCDIR)/VariableStats.cc          \
         $(SRCDIR)/WallHFVariable.cc         \
+        $(SRCDIR)/UnweigthVariable.cc       \
         $(SRCDIR)/cloudBenchmark.cc         \
         $(SRCDIR)/gasRadProperties.cc       \
         $(SRCDIR)/partRadProperties.cc      \

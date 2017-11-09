@@ -466,7 +466,7 @@ void ESMPM2::interpESPotentialToPart(const ProcessorGroup*, const PatchSubset* p
     anchor.y(anchor.y() + cell_dim.y()/2);
     anchor.z(anchor.z() + cell_dim.z()/2);
 
-    double cell_vol = cell_dim.x() * cell_dim.y() * cell_dim.z();
+    // double cell_vol = cell_dim.x() * cell_dim.y() * cell_dim.z();
     double dxinv[3] = {1/cell_dim.x(), 1/cell_dim.y(), 1/cell_dim.z()};
 
     IntVector low_idx  = patch->getCellLowIndex();
@@ -502,8 +502,8 @@ void ESMPM2::interpESPotentialToPart(const ProcessorGroup*, const PatchSubset* p
         IntVector cell_idx(Floor(norm_pos.x()), Floor(norm_pos.y()),
                            Floor(norm_pos.z()));
 
-        Point cell_center = Point(cell_idx.x() + .5, cell_idx.y() + .5,
-                                  cell_idx.z() + .5);
+        // Point cell_center = Point(cell_idx.x() + .5, cell_idx.y() + .5,
+        //                           cell_idx.z() + .5);
 
         double fx = norm_pos.x() - cell_idx.x();
         double fy = norm_pos.y() - cell_idx.y();

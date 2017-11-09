@@ -199,7 +199,6 @@ ParticleCreator::createParticles(MPMMaterial* matl,
       }
     } // if smooth geometry piece
 
-
     // The following is for FileGeometryPiece, I'm not sure why this
     // isn't in a conditional.  JG
 
@@ -546,16 +545,16 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
      new_dw->allocateAndPut(pvars.pcolor,     d_lb->pColorLabel,        subset);
   }
   if(d_doScalarDiffusion){
-     new_dw->allocateAndPut(pvars.parea,  d_lb->diffusion->pArea,         subset);
+     new_dw->allocateAndPut(pvars.parea,  d_lb->diffusion->pArea,       subset);
 
      new_dw->allocateAndPut(pvars.pConcentration,
-                                          d_lb->diffusion->pConcentration,  subset);
+                                      d_lb->diffusion->pConcentration,  subset);
      new_dw->allocateAndPut(pvars.pConcPrevious,
-                                          d_lb->diffusion->pConcPrevious,   subset);
+                                      d_lb->diffusion->pConcPrevious,   subset);
      new_dw->allocateAndPut(pvars.pConcGrad,
-                                          d_lb->diffusion->pGradConcentration,   subset);
+                                 d_lb->diffusion->pGradConcentration,   subset);
      new_dw->allocateAndPut(pvars.pExternalScalarFlux,
-                                          d_lb->diffusion->pExternalScalarFlux, subset);
+                                  d_lb->diffusion->pExternalScalarFlux, subset);
   }
   if(d_withGaussSolver){
      new_dw->allocateAndPut(pvars.pPosCharge,
@@ -563,9 +562,9 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
      new_dw->allocateAndPut(pvars.pNegCharge,
                                           d_lb->pNegChargeLabel,    subset);
      new_dw->allocateAndPut(pvars.pPosChargeGrad,
-                                          d_lb->pPosChargeGradLabel,    subset);
+                                          d_lb->pPosChargeGradLabel,subset);
      new_dw->allocateAndPut(pvars.pNegChargeGrad,
-                                          d_lb->pNegChargeGradLabel,    subset);
+                                          d_lb->pNegChargeGradLabel,subset);
      new_dw->allocateAndPut(pvars.pPermittivity,
                                           d_lb->pPermittivityLabel, subset);
   }

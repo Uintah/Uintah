@@ -171,7 +171,7 @@ void
 ElectrostaticSolve::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
   const MaterialSet* fvm_matls = d_shared_state->allFVMMaterials();
-  const MaterialSet* all_matls = d_shared_state->allMaterials();
+  // const MaterialSet* all_matls = d_shared_state->allMaterials();
 
   scheduleComputeConductivity(   sched, level, fvm_matls);
   scheduleComputeFCConductivity( sched, level, d_es_matlset);

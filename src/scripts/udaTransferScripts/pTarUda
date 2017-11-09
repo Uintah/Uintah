@@ -131,7 +131,7 @@ fi
 
 export TAR createExtract
 
-export PTAR_FILES=/tmp/ptar_files_`basename $uda`_`whoami`
+export PTAR_FILES=/tmp/ptar_`basename $uda`_`whoami`
 
 echo "_____________________________________"
 echo "Inputs:"
@@ -156,7 +156,7 @@ validateTarredFilesDir()
   
   if test -d "$STAMP_DIR"; then
     echo ""
-    echo "  WARNING: The previous attempt at tarring the directores was interrupted."
+    echo "  WARNING: The previous attempt at tarring/untarring the directores was interrupted."
     echo "           The list of directories already tarred can be found at:"
     echo "                 $STAMP_DIR/stamp"
     echo ""
@@ -168,7 +168,7 @@ validateTarredFilesDir()
       return
     fi
     
-    echo "  Do you wish to continue tarring the remaining directories? (y/n)"
+    echo "  Do you wish to continue tarring/untarring the remaining directories? (y/n)"
     echo "  If not, manually remove the following directory and run this script again:"
     echo "           $STAMP_DIR"
     echo ""
@@ -181,6 +181,7 @@ validateTarredFilesDir()
       exit 1
     fi
   else
+    echo "  Making the stamp directory $STAMP_DIR"
     mkdir $STAMP_DIR
   fi
 }
@@ -239,7 +240,7 @@ echo ""                                 >> $PTAR_RECORD
 cd $uda
 
 #-------------------------------
-# make a sorted list of directories to tar
+# make a sorted list of directories to tar/untar
 # Let the user edit that file with vi
 /bin/rm -f $PTAR_FILES
 
@@ -271,7 +272,14 @@ if test "$allTimesteps" == "N"; then
   $EDITOR $PTAR_FILES
 fi
 
-chmod ug+rw $PTAR_FILES 
+#__________________________________
+# Some uda have _hundreds_ of timesteps.
+# You must break up the list of files into smaller files
+let nLines=$nproc*10
+
+split --lines=$nLines --suffix-length=3 --numeric-suffixes $PTAR_FILES $PTAR_FILES.
+
+chmod ug+rw $PTAR_FILES* 
 
 #______________________________________________________________________ 
 # Now tar the directories
@@ -280,7 +288,11 @@ echo -n "Starting at: " | tee -a $PTAR_RECORD
 date | tee -a $PTAR_RECORD
 echo | tee -a $PTAR_RECORD
 
-/usr/bin/time -p $MAKE  -s -f $pTardir/pTarUda_driver_$OS -j $nproc | tee -a $PTAR_RECORD
+for X in $PTAR_FILES.*; do
+  PTAR_FILES_N="$X"
+  export PTAR_FILES_N
+  /usr/bin/time -p $MAKE  -s -f $pTardir/pTarUda_driver_$OS -j $nproc | tee -a $PTAR_RECORD
+done
 
 echo | tee -a $PTAR_RECORD
 echo -n "Ending at: " | tee -a $PTAR_RECORD

@@ -25,9 +25,9 @@
 #ifndef UINTAH_HOMEBREW_RIGIDMPM_H
 #define UINTAH_HOMEBREW_RIGIDMPM_H
 
-#include <Core/Parallel/UintahParallelComponent.h>
+#include <CCA/Components/MPM/SerialMPM.h>
+
 #include <CCA/Ports/DataWarehouseP.h>
-#include <CCA/Ports/SimulationInterface.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>

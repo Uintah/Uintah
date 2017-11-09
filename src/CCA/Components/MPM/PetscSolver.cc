@@ -206,7 +206,7 @@ MPMPetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
     Patch::selectType neighbors;
     level->selectPatches(lowIndex, highIndex, neighbors);
     //For each neighbor and myself
-    for(int i=0;i<neighbors.size();i++){
+    for(unsigned int i=0;i<neighbors.size();i++){
       const Patch* neighbor = neighbors[i];
       IntVector plow(0,0,0),phigh(0,0,0);
       if(n8or27==8){

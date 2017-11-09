@@ -154,7 +154,10 @@ ZZNoxSolid::sched_computeSource( const LevelP& level, SchedulerP& sched, int tim
 
   for ( int i = 0; i < m_num_env; i++){ 
     // weighted scaled variable = original variable/variable_scaling_constant * weight/weight_scaling_constant
-    rcmassqn_name = ParticleTools::append_qn_env( m_rcmass_root, i );                               //weighted scaled rcmass
+    std::string rcmass_name;
+    std::string rho_coalqn_name;
+    std::string coal_temperatureqn_name;
+    const std::string rcmassqn_name = ParticleTools::append_qn_env( m_rcmass_root, i );             //weighted scaled rcmass
     tsk->requires( which_dw, VarLabel::find(rcmassqn_name), Ghost::None, 0 );       
     rcmass_name = ParticleTools::append_env( m_rcmass_root, i );                                    //unweighted unscaled rcmass, original value of rcmass of per particle 
     tsk->requires( which_dw, VarLabel::find(rcmass_name), Ghost::None, 0 ); 
@@ -311,11 +314,14 @@ ZZNoxSolid::computeSource( const ProcessorGroup* pc,
     new_dw->allocateTemporary( temp_coal_mass_temperature, patch );
     temp_coal_mass_temperature.initialize(0.0); 
     for ( int i_env = 0; i_env < m_num_env; i_env++){
+      std::string rcmass_name;
+      std::string rho_coalqn_name;
+      std::string coal_temperatureqn_name;
       constCCVariable<double> rcmass_weighted_scaled;
       constCCVariable<double> rcmass_unweighted_unscaled;
       constCCVariable<double> rho_coal;
       constCCVariable<double> coal_temperature;
-      rcmassqn_name = ParticleTools::append_qn_env( m_rcmass_root, i_env );
+      const std::string rcmassqn_name = ParticleTools::append_qn_env( m_rcmass_root, i_env );
       which_dw->get( rcmass_weighted_scaled, VarLabel::find(rcmassqn_name), matlIndex, patch, gn, 0 );  
       rcmass_name = ParticleTools::append_env( m_rcmass_root, i_env );
       which_dw->get( rcmass_unweighted_unscaled, VarLabel::find(rcmass_name), matlIndex, patch, gn, 0 );  

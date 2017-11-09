@@ -129,23 +129,23 @@ private:
     if ( m_which_vel == "u" ){
       Uintah::parallel_for( range, [&](int i, int j, int k){
         var(i,j,k) = 2.0/sqrt(3.0) * sin( m_c + m_two_pi/3.0 )
-                     * sin( 2 * m_two_pi * x(i,j,k) )
-                     * cos( 2 * m_two_pi * y(i,j,k) )
-                     * cos( 2 * m_two_pi * z(i,j,k) );
+                     * sin( m_two_pi * x(i,j,k) )
+                     * cos( m_two_pi * y(i,j,k) )
+                     * cos( m_two_pi * z(i,j,k) );
       });
-    } else if ( m_which_vel == "u" ){
+    } else if ( m_which_vel == "v" ){
       Uintah::parallel_for( range, [&](int i, int j, int k){
         var(i,j,k) = 2.0/sqrt(3.0) * sin( m_c - m_two_pi/3.0 )
-                     * sin( 2 * m_two_pi * y(i,j,k) )
-                     * cos( 2 * m_two_pi * x(i,j,k) )
-                     * cos( 2 * m_two_pi * z(i,j,k) );
+                     * sin( m_two_pi * y(i,j,k) )
+                     * cos( m_two_pi * x(i,j,k) )
+                     * cos( m_two_pi * z(i,j,k) );
       });
     } else {
       Uintah::parallel_for( range, [&](int i, int j, int k){
         var(i,j,k) = 2.0/sqrt(3.0) * sin(m_c )
-                     * sin( 2 * m_two_pi * z(i,j,k) )
-                     * cos( 2 * m_two_pi * x(i,j,k) )
-                     * cos( 2 * m_two_pi * y(i,j,k) );
+                     * sin( m_two_pi * z(i,j,k) )
+                     * cos( m_two_pi * x(i,j,k) )
+                     * cos( m_two_pi * y(i,j,k) );
       });
     }
 

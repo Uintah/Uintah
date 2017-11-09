@@ -166,6 +166,7 @@ cbc = np.loadtxt('cbc_spectrum.txt')
 
 count = 1
 
+lineextract =  args.sus + '/tools/extractors/lineextract' 
 this_dir = 'TKE_data_'+datetime.datetime.now().strftime("%y%m%d_%H%M%S")
 os.system('mkdir '+this_dir)
 
@@ -173,13 +174,13 @@ for element in TS:
 
     #EXTRACT THE VELOCITIES                
 #    the_command = './lineextract -v x-mom -timestep '+str(element)+' -istart 0 0 0 -iend '+str(P0)+' '+str(P1)+' '+str(P2)+' -o uvelTKE.'+str(count)+' -uda '+uda_name              
-    the_command = './lineextract -v uVel -timestep '+str(element)+' -istart 0 0 0 -iend '+str(P0)+' '+str(P1)+' '+str(P2)+' -o uvelTKE.'+str(count)+' -uda '+uda_name              
+    the_command = lineextract + ' -v uVel -timestep '+str(element)+' -istart 0 0 0 -iend '+str(P0)+' '+str(P1)+' '+str(P2)+' -o uvelTKE.'+str(count)+' -uda '+uda_name              
     os.system(the_command)
 #    the_command = './lineextract -v y-mom -timestep '+str(element)+' -istart 0 0 0 -iend '+str(P0)+' '+str(P1)+' '+str(P2)+' -o vvelTKE.'+str(count)+' -uda '+uda_name              
-    the_command = './lineextract -v vVel -timestep '+str(element)+' -istart 0 0 0 -iend '+str(P0)+' '+str(P1)+' '+str(P2)+' -o vvelTKE.'+str(count)+' -uda '+uda_name              
+    the_command = lineextract+' -v vVel -timestep '+str(element)+' -istart 0 0 0 -iend '+str(P0)+' '+str(P1)+' '+str(P2)+' -o vvelTKE.'+str(count)+' -uda '+uda_name              
     os.system(the_command)
 #    the_command = './lineextract -v z-mom -timestep '+str(element)+' -istart 0 0 0 -iend '+str(P0)+' '+str(P1)+' '+str(P2)+' -o wvelTKE.'+str(count)+' -uda '+uda_name              
-    the_command = './lineextract -v wVel -timestep '+str(element)+' -istart 0 0 0 -iend '+str(P0)+' '+str(P1)+' '+str(P2)+' -o wvelTKE.'+str(count)+' -uda '+uda_name              
+    the_command = lineextract+' -v wVel -timestep '+str(element)+' -istart 0 0 0 -iend '+str(P0)+' '+str(P1)+' '+str(P2)+' -o wvelTKE.'+str(count)+' -uda '+uda_name              
     os.system(the_command)
     
     os.system('mv uvelTKE.* '+this_dir+'/.')

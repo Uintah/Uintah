@@ -2083,7 +2083,7 @@ SchedulerCommon::scheduleTaskMonitoring( const LevelP& level )
   Task* t = scinew Task("SchedulerCommon::recordTaskMonitoring",
                         this, &SchedulerCommon::recordTaskMonitoring);
 
-  Ghost::GhostType gn = Ghost::None;
+  // Ghost::GhostType gn = Ghost::None;
 
   for (unsigned i = 0; i < 2; ++i)
   {
@@ -2115,7 +2115,7 @@ SchedulerCommon::scheduleTaskMonitoring( const PatchSet* patches )
   Task* t = scinew Task("SchedulerCommon::recordTaskMonitoring",
                         this, &SchedulerCommon::recordTaskMonitoring);
 
-  Ghost::GhostType gn = Ghost::None;
+  // Ghost::GhostType gn = Ghost::None;
 
   for (unsigned i = 0; i < 2; ++i)
   {
@@ -2143,7 +2143,7 @@ void SchedulerCommon::recordTaskMonitoring(const ProcessorGroup*,
 {
   // For all of the patches record the tasking monitoring attribute
   // value.
-  const Level* level = getLevel(patches);
+  // const Level* level = getLevel(patches);
 
   for(int p=0; p<patches->size(); p++)
   {

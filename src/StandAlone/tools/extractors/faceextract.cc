@@ -134,7 +134,7 @@ void printData(DataArchive* archive, string& variable_name,
   out.setf(ios::scientific,ios::floatfield);
   out.precision(16);
   
-  bool cellNotFound = false;
+  // bool cellNotFound = false;
   //__________________________________
   
   if (verbose)
@@ -234,7 +234,7 @@ void printData(DataArchive* archive, string& variable_name,
           break;
       }
       if (p == patches.size()) {
-        cellNotFound = true;
+        // cellNotFound = true;
         continue;
       }
       unsigned int p_xm = 0;
@@ -246,7 +246,7 @@ void printData(DataArchive* archive, string& variable_name,
           break;
       }
       if (p_xm == patches.size()) {
-        cellNotFound = true;
+        // cellNotFound = true;
         continue;
       }
       unsigned int p_ym = 0;
@@ -258,7 +258,7 @@ void printData(DataArchive* archive, string& variable_name,
           break;
       }
       if (p_ym == patches.size()) {
-        cellNotFound = true;
+        // cellNotFound = true;
         continue;
       }
       unsigned int p_zm = 0;
@@ -270,7 +270,7 @@ void printData(DataArchive* archive, string& variable_name,
           break;
       }
       if (p_zm == patches.size()) {
-        cellNotFound = true;
+        // cellNotFound = true;
         continue;
       }
       unsigned int p_xp = 0;
@@ -282,7 +282,7 @@ void printData(DataArchive* archive, string& variable_name,
           break;
       }
       if (p_xp == patches.size()) {
-        cellNotFound = true;
+        // cellNotFound = true;
         continue;
       }
       unsigned int p_yp = 0;
@@ -294,7 +294,7 @@ void printData(DataArchive* archive, string& variable_name,
           break;
       }
       if (p_yp == patches.size()) {
-        cellNotFound = true;
+        // cellNotFound = true;
         continue;
       }
       unsigned int p_zp = 0;
@@ -306,7 +306,7 @@ void printData(DataArchive* archive, string& variable_name,
           break;
       }
       if (p_zp == patches.size()) {
-        cellNotFound = true;
+        // cellNotFound = true;
         continue;
       }
           

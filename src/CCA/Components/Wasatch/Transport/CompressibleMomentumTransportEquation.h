@@ -184,7 +184,6 @@ namespace WasatchCore{
                 typedef OpTypes<MyFieldT> Ops;
                 typedef typename Ops::InterpC2FX   DirichletT;
                 typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::GradientX, SVolField, SVolField >::type NeumannT;
-                typedef typename SpatialOps::NeboBoundaryConditionBuilder<DirichletT> DiriOpT;
                 typedef typename SpatialOps::NeboBoundaryConditionBuilder<NeumannT> NeumOpT;
                 typedef typename ConstantBCNew<MyFieldT,NeumOpT>::Builder constBCNeumannT;
                 
@@ -211,7 +210,6 @@ namespace WasatchCore{
                 typedef OpTypes<MyFieldT> Ops;
                 typedef typename Ops::InterpC2FY   DirichletT;
                 typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::GradientY, SVolField, SVolField >::type NeumannT;
-                typedef typename SpatialOps::NeboBoundaryConditionBuilder<DirichletT> DiriOpT;
                 typedef typename SpatialOps::NeboBoundaryConditionBuilder<NeumannT> NeumOpT;
                 typedef typename ConstantBCNew<MyFieldT,NeumOpT>::Builder constBCNeumannT;
                 
@@ -238,7 +236,6 @@ namespace WasatchCore{
                 typedef OpTypes<MyFieldT> Ops;
                 typedef typename Ops::InterpC2FZ   DirichletT;
                 typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::GradientZ, SVolField, SVolField >::type NeumannT;
-                typedef typename SpatialOps::NeboBoundaryConditionBuilder<DirichletT> DiriOpT;
                 typedef typename SpatialOps::NeboBoundaryConditionBuilder<NeumannT> NeumOpT;
                 typedef typename ConstantBCNew<MyFieldT,NeumOpT>::Builder constBCNeumannT;
                 

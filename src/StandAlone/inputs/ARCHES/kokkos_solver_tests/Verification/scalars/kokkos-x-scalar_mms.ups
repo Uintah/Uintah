@@ -69,6 +69,10 @@
           <grid type="CC"/>
           <value>1.</value>
         </model>
+        <!--model label="x-mom" type="constant_property">
+          <grid type="FX"/>
+          <value>1.0</value>
+        </model-->
         <model label="uVel" type="constant_property">
           <grid type="FX"/>
           <value>1.0</value>
@@ -97,23 +101,24 @@
       </SourceV2>
       <KScalarTransport>
         <eqn_group label="CCFields" type="CC">
-          <!--diffusion_coef label="gamma"/-->
-          <eqn label="cc_phi_upwind">
-            <convection scheme="upwind"/>
-            <src label="phi_mms_source"/>
-            <!--src label="phi_mms_source_diff"/-->
-            <!--diffusion/-->
-          </eqn>
-          <eqn label="cc_phi_vanleer">
-            <convection scheme="vanleer"/>
-            <src label="phi_mms_source"/>
-          </eqn>
           <eqn label="cc_phi_superbee">
             <convection scheme="superbee"/>
             <src label="phi_mms_source"/>
           </eqn>
           <eqn label="cc_phi_central">
             <convection scheme="central"/>
+            <src label="phi_mms_source"/>
+          </eqn>
+          <!--diffusion_coef label="gamma"/-->
+          <eqn label="cc_phi_upwind">
+            <convection scheme="upwind"/>
+            <!--convection scheme="central"/-->
+            <src label="phi_mms_source"/>
+            <!--src label="phi_mms_source_diff"/-->
+            <!--diffusion/-->
+          </eqn>
+          <eqn label="cc_phi_vanleer">
+            <convection scheme="vanleer"/>
             <src label="phi_mms_source"/>
           </eqn>
         </eqn_group>

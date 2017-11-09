@@ -26,7 +26,6 @@
  */
 
 #include <Core/Grid/LevelP.h>
-#include <CCA/Ports/SimulationInterface.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <CCA/Ports/DataWarehouse.h>

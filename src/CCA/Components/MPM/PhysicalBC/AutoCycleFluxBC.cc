@@ -30,6 +30,7 @@
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
+#include <Core/Grid/Variables/VarTypes.h>
 
 #include <string>
 #include <iostream>

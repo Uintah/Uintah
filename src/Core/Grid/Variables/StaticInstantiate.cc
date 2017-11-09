@@ -8,6 +8,7 @@
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
+#include <Core/Grid/Variables/PerPatch.h>
 
 namespace Uintah {
 
@@ -58,6 +59,8 @@ void instantiateVariableTypes()
   SFCZVariable<float>::getTypeDescription();
   SFCZVariable<int>::getTypeDescription();
   
+  PerPatch<double>::getTypeDescription();
+  PerPatch<int>::getTypeDescription();
 }
 
 } // end namespace Uintah

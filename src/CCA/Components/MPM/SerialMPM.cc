@@ -3435,7 +3435,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           totalMom   += pvelnew[idx]*pmass[idx];
           totalmass  += pmass[idx];
         }
-      } else {
+      } else {  // Not XPIC(2)
         // Loop over particles
         for(ParticleSubset::iterator iter = pset->begin();
             iter != pset->end(); iter++){

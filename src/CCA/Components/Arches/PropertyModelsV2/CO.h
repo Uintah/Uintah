@@ -23,7 +23,7 @@ public:
 
     void register_timestep_init( VIVec& variable_registry , const bool packed_tasks);
 
-    void register_restart_initialize( VIVec& variable_registry , const bool packed_tasks);
+    void register_restart_initialize( VIVec& variable_registry , const bool packed_tasks){}
 
     void register_timestep_eval( VIVec& variable_registry, const int time_substep , const bool packed_tasks);
 
@@ -31,9 +31,9 @@ public:
 
     void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ); 
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    void restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ); 
+    void restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
@@ -87,7 +87,7 @@ public:
       Step 4: update d to time t+1
       Step 5: update y to time t+1
     **/
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_inf ); 
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_inf );
 
     void create_local_labels();
 
@@ -113,40 +113,40 @@ public:
 
 private:
 
-    Discretization_new* _disc;
-    BoundaryCondition_new* _boundary_condition;
-    double _Rgas;
-    double _MW_CO;
-    double _MW_H2O;
-    double _MW_O2;
-    double _st_O2;
-    double _st_H2O;
-    double _a;
-    double _b;
-    double _c;
-    double _A;
-    double _Ea;
-    double _prNo;
-    double _T_crit;
+    Discretization_new* m_disc;
+    BoundaryCondition_new* m_boundary_condition;
+    const double m_Rgas{1.9872041};      // Kcol/K/mol
+    const double m_MW_CO{28.01};         // g/mol
+    const double m_MW_H2O{18.01528};     // ""
+    const double m_MW_O2{31.9988};       // ""
+    double m_st_O2;
+    double m_st_H2O;
+    double m_a;
+    double m_b;
+    double m_c;
+    double m_A;
+    double m_Ea;
+    double m_prNo;
+    double m_T_crit;
 
-    std::string _conv_scheme;
-    std::string _CO_model_name;
-    std::string _CO_diff_name;
-    std::string _CO_conv_name;
-    std::string _defect_name;
-    std::string _rate_name;
-    std::string _rho_table_name;
-    std::string _temperature_table_name;
-    std::string _CO_table_name;
-    std::string _H2O_table_name;
-    std::string _O2_table_name;
-    std::string _MW_table_name;
-    std::string _u_vel;
-    std::string _v_vel;
-    std::string _w_vel;
-    std::string _area_frac;
-    std::string _turb_visc;
-    std::string _vol_frac;
+    std::string m_conv_scheme;
+    std::string m_CO_model_name;
+    std::string m_CO_diff_name;
+    std::string m_CO_conv_name;
+    std::string m_defect_name;
+    std::string m_rate_name;
+    std::string m_rho_table_name;
+    std::string m_temperature_table_name;
+    std::string m_CO_table_name;
+    std::string m_H2O_table_name;
+    std::string m_O2_table_name;
+    std::string m_MW_table_name;
+    std::string m_u_vel;
+    std::string m_v_vel;
+    std::string m_w_vel;
+    std::string m_area_frac;
+    std::string m_turb_visc;
+    std::string m_vol_frac;
 
   };
 }

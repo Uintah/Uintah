@@ -151,6 +151,18 @@ public:
     }
   }
 
+  // getNumNodes
+  int getNumNodes() const
+  {
+    return num_nodes;
+  }
+
+  // setNumNodes
+  void setNumNodes(const int new_num_nodes)
+  {
+    num_nodes = new_num_nodes;
+  }
+
   // getProcNodeId
   int getProcNodeId() const
   {
@@ -306,6 +318,7 @@ private:
   int patch_id;
   int proc_id;
   int node_id;
+  unsigned int num_nodes;
 };
 
 

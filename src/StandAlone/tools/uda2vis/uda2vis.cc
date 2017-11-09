@@ -254,6 +254,7 @@ TimeStepInfo* getTimeStepInfo(DataArchive *archive,
       const Patch* patch = *(level->patchesBegin());
       ConsecutiveRangeSet matls =
         archive->queryMaterials(vars[i], patch, timestep);
+
       if (matls.size() > 0) {
 
         // Copy the list of materials
@@ -443,6 +444,75 @@ static GridDataRaw* readGridData(DataArchive *archive,
 
 
 /////////////////////////////////////////////////////////////////////
+// Read the grid data for the given index range
+// This function uses the archive for file reading.
+template<template <typename> class VAR, typename T>
+static GridDataRaw* readPatchData(DataArchive *archive,
+                                  const Patch *patch,
+                                  const LevelP level,
+				  std::string variable_name,
+                                  int material,
+				  int timestep,
+                                  int low[3],
+                                  int high[3],
+				  bool queryRegion)
+{
+  // this queries the entire patch, including extra cells and boundary cells
+  GridDataRaw *gd = new GridDataRaw;
+  gd->components = numComponents<T>();
+
+  for (int i=0; i<3; i++) {
+    gd->low[i] = low[i];
+    gd->high[i] = high[i];
+  }
+
+  gd->num = (high[0]-low[0])*(high[1]-low[1])*(high[2]-low[2]);
+  gd->data = new double[gd->num*gd->components];
+  
+  if( archive->exists( variable_name, patch, timestep ) )
+  {
+    if (variable_name == "refinePatchFlag")
+    {
+      VAR< PatchFlagP > refinePatchFlag;
+
+      archive->query(refinePatchFlag, variable_name, material, patch, timestep);
+
+      const T p = refinePatchFlag.get().get_rep()->flag;
+
+      for (int i=0; i<gd->num; ++i)
+        copyComponents<T>(&gd->data[i*gd->components], p);
+    }
+    else if (variable_name.find("FileInfo") == 0 ||
+	     variable_name.find("CellInformation") == 0 ||
+	     variable_name.find("CutCellInfo") == 0)
+    {
+      for (int i=0; i<gd->num*gd->components; ++i)
+        gd->data[i] = 0;
+    }
+    else
+    {
+      VAR<T> var;
+      PerPatchBase* patchVar = dynamic_cast<PerPatchBase*>(&var);
+
+      archive->query(*patchVar, variable_name, material, patch, timestep);
+
+      const T *p = (T*) patchVar->getBasePointer();
+
+      for (int i=0; i<gd->num; ++i)
+        copyComponents<T>(&gd->data[i*gd->components], *p);
+    }
+  }
+  else
+  {
+    for (int i=0; i<gd->num*gd->components; ++i)
+      gd->data[i] = 0;
+  }
+  
+  return gd;
+}
+
+
+/////////////////////////////////////////////////////////////////////
 // Read the grid data based on the type
 // This function uses the archive for file reading.
 template<template<typename> class VAR>
@@ -483,13 +553,61 @@ GridDataRaw* getGridDataMainType(DataArchive *archive,
   case Uintah::TypeDescription::short_int_type:
   case Uintah::TypeDescription::long_type:
   case Uintah::TypeDescription::long64_type:
-    std::cerr << "Subtype " << subtype->getName() << " is not implemented..."
-              << std::endl;
+    std::cerr << "Uintah::uda2vis::getGridDataMainType Error: "
+              << "Subtype " << subtype->getType() << "  for variable: "
+              << subtype->getName() << " is not implemented." << std::endl;
     return nullptr;
   default:
-    std::cerr << "Unknown subtype: "
-          << subtype->getType() << "  "
-          << subtype->getName() << std::endl;
+    std::cerr << "Uintah::uda2vis::getGridDataMainType Error: "
+              << "Subtype " << subtype->getType() << "  for variable: "
+              << subtype->getName() << " is unkwown." << std::endl;
+    return nullptr;
+  }
+}
+
+
+/////////////////////////////////////////////////////////////////////
+// Read the grid data for a given patch.
+// This function uses the archive for file reading.
+template<template<typename> class VAR>
+GridDataRaw* getPatchDataMainType(DataArchive *archive,
+                                  const Patch *patch,
+                                  const LevelP level,
+				  std::string variable_name,
+                                  int material,
+				  int timestep,
+                                  int low[3],
+                                  int high[3],
+				  bool queryRegion,
+                                  const Uintah::TypeDescription *subtype)
+{
+  switch (subtype->getType())
+  {
+  case Uintah::TypeDescription::double_type:
+    return readPatchData<VAR, double>(archive, patch, level, variable_name,
+                                      material, timestep, low, high, queryRegion);
+  case Uintah::TypeDescription::float_type:
+    return readPatchData<VAR, float>(archive, patch, level, variable_name,
+                                     material, timestep, low, high, queryRegion);
+  case Uintah::TypeDescription::int_type:
+    return readPatchData<VAR, int>(archive, patch, level, variable_name,
+                                   material, timestep, low, high, queryRegion);
+  case Uintah::TypeDescription::Vector:
+  case Uintah::TypeDescription::Stencil7:
+  case Uintah::TypeDescription::Stencil4:
+  case Uintah::TypeDescription::Matrix3:
+  case Uintah::TypeDescription::bool_type:
+  case Uintah::TypeDescription::short_int_type:
+  case Uintah::TypeDescription::long_type:
+  case Uintah::TypeDescription::long64_type:
+    std::cerr << "Uintah::uda2vis::getPatchDataMainType Error: "
+              << "Subtype " << subtype->getType() << "  for variable: "
+              << subtype->getName() << " is not implemented." << std::endl;
+    return nullptr;
+  default:
+    std::cerr << "Uintah::uda2vis::getPatchDataMainType Error: "
+              << "Subtype " << subtype->getType() << "  for variable: "
+              << subtype->getName() << " is unkwown." << std::endl;
     return nullptr;
   }
 }
@@ -531,7 +649,11 @@ GridDataRaw* getGridData(DataArchive *archive,
 
   if (!maintype || !subtype)
   {
-    std::cerr << "couldn't find variable " << variable_name <<  std::endl;
+    std::cerr << "Uintah::uda2vis::getGridData couldn't find variable type "
+              << variable_name << "  "
+	      << (maintype ? maintype->getName() : " no main type" ) << "  "
+	      << ( subtype ?  subtype->getName() : " no subtype" ) << "  "
+	      << std::endl;
     return nullptr;
   }
 
@@ -557,8 +679,14 @@ GridDataRaw* getGridData(DataArchive *archive,
     return getGridDataMainType<SFCZVariable>(archive, patch, level,
                                              variable_name, material, timestep,
                                              low, high, queryRegion, subtype);
+  case Uintah::TypeDescription::PerPatch:
+    return getPatchDataMainType<PerPatch>(archive, patch, level,
+                                          variable_name, material, timestep,
+                                          low, high, queryRegion, subtype);
   default:
-    std::cerr << "Type is unknown." << std::endl;
+    std::cerr << "Uintah::uda2vis::getGridData :"
+              << "unknown subtype: " << subtype->getName()
+              << " for volume variable: " << variable_name << std::endl;
     return nullptr;
   }
 }
@@ -691,7 +819,11 @@ ParticleDataRaw* getParticleData(DataArchive *archive,
   }
 
   if (!maintype || !subtype) {
-    std::cerr << "couldn't find variable " << variable_name <<  std::endl;
+    std::cerr << "Uintah::uda2vis::getGridData couldn't find variable type "
+              << variable_name << "  "
+	      << (maintype ? maintype->getName() : " no main type" ) << "  "
+	      << ( subtype ?  subtype->getName() : " no subtype" ) << "  "
+	      << std::endl;
     return nullptr;
   }
 
@@ -724,8 +856,9 @@ ParticleDataRaw* getParticleData(DataArchive *archive,
     return readParticleData<Matrix3>(archive, patch, variable_name,
                                      material, timestep);
   default:
-    std::cerr << "Unknown subtype for particle data: "
-              << subtype->getName() << std::endl;
+    std::cerr << "Uintah::uda2vis::getGridData :"
+              << "unknown subtype: " << subtype->getName()
+              << " for particle variable: " << variable_name << std::endl;
     return nullptr;
   }
 }
@@ -882,11 +1015,11 @@ TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
 
       // Set the patch id
       patchInfo.setPatchId(patch->getID());
-      
+
       // Set the processor rank id
       patchInfo.setProcRankId( lb->getPatchwiseProcessorAssignment(patch) );
       
-      // Set the processor node id - ARS FIX ME
+      // Set the processor node id
       patchInfo.setProcNodeId( 0 );
     }
   }
@@ -1036,7 +1169,6 @@ static GridDataRaw* readGridData(SchedulerP schedulerP,
 
   // this queries the entire patch, including extra cells and boundary cells
   VAR<T> var;
-  schedulerP->getLoadBalancer()->getPatchwiseProcessorAssignment(patch);
 
   //  IntVector low = var.getLowIndex();
   //  IntVector high = var.getHighIndex();
@@ -1086,16 +1218,7 @@ static GridDataRaw* readPatchData(SchedulerP schedulerP,
 {
   DataWarehouse *dw = schedulerP->getLastDW();
 
-  // IntVector ilow(low[0], low[1], low[2]);
-  // IntVector ihigh(high[0], high[1], high[2]);
-
   // this queries the entire patch, including extra cells and boundary cells
-  VAR<T> var;
-  schedulerP->getLoadBalancer()->getPatchwiseProcessorAssignment(patch);
-
-  //  IntVector low = var.getLowIndex();
-  //  IntVector high = var.getHighIndex();
-
   GridDataRaw *gd = new GridDataRaw;
   gd->components = numComponents<T>();
 
@@ -1120,15 +1243,19 @@ static GridDataRaw* readPatchData(SchedulerP schedulerP,
       for (int i=0; i<gd->num; ++i)
         copyComponents<T>(&gd->data[i*gd->components], p);
     }
-    else if (varLabel->getName().find("FileInfo") == 0)
+
+    else if (varLabel->getName().find("FileInfo") == 0 ||
+	     varLabel->getName().find("CellInformation") == 0 ||
+	     varLabel->getName().find("CutCellInfo") == 0)
     {
       for (int i=0; i<gd->num*gd->components; ++i)
         gd->data[i] = 0;
     }
     else
     {
+      VAR<T> var;
       PerPatchBase* patchVar = dynamic_cast<PerPatchBase*>(&var);
-      
+
       dw->get(*patchVar, varLabel, material, patch);
 
       const T *p = (T*) patchVar->getBasePointer();
@@ -1187,14 +1314,14 @@ GridDataRaw* getGridDataMainType(SchedulerP schedulerP,
   case Uintah::TypeDescription::short_int_type:
   case Uintah::TypeDescription::long_type:
   case Uintah::TypeDescription::long64_type:
-    std::cerr << "Uintah/VisIt Libsim Error: "
-              << "Subtype " << subtype->getName() << " is not implemented..."
-              << std::endl;
+    std::cerr << "Uintah/VisIt Libsim getGridDataMainType Error: "
+              << "Subtype " << subtype->getType() << "  for variable: "
+              << subtype->getName() << " is not implemented." << std::endl;
     return nullptr;
   default:
-    std::cerr << "Uintah/VisIt Libsim Error: unknown subtype: "
-              << subtype->getType() << "  for variable: "
-              << subtype->getName() << std::endl;
+    std::cerr << "Uintah/VisIt Libsim getGridDataMainType Error: "
+              << "Subtype " << subtype->getType() << "  for variable: "
+              << subtype->getName() << " is unkwown." << std::endl;
     return nullptr;
   }
 }
@@ -1231,14 +1358,14 @@ GridDataRaw* getPatchDataMainType(SchedulerP schedulerP,
   case Uintah::TypeDescription::short_int_type:
   case Uintah::TypeDescription::long_type:
   case Uintah::TypeDescription::long64_type:
-    std::cerr << "Uintah/VisIt Libsim Error: "
-              << "Subtype " << subtype->getName() << " is not implemented..."
-              << std::endl;
+    std::cerr << "Uintah/VisIt Libsim getPatchDataMainType Error: "
+              << "Subtype " << subtype->getType() << "  for variable: "
+              << subtype->getName() << " is not implemented." << std::endl;
     return nullptr;
   default:
-    std::cerr << "Uintah/VisIt Libsim Error: unknown subtype: "
-              << subtype->getType() << "  for variable: "
-              << subtype->getName() << std::endl;
+    std::cerr << "Uintah/VisIt Libsim getPatchDataMainType Error: "
+              << "Subtype " << subtype->getType() << "  for variable: "
+              << subtype->getName() << " is unkwown." << std::endl;
     return nullptr;
   }
 }
@@ -1291,8 +1418,11 @@ GridDataRaw* getGridData(SchedulerP schedulerP,
 
   if (!maintype || !subtype)
   {
-    std::cerr << "Uintah/VisIt Libsim Error: couldn't find variable type for "
-              << variable_name <<  std::endl;
+    std::cerr << "Uintah/VisIt Libsim Error: couldn't find variable type "
+              << variable_name << "  "
+	      << (maintype ? maintype->getName() : " no main type" ) << "  "
+	      << ( subtype ?  subtype->getName() : " no subtype" ) << "  "
+	      << std::endl;
     return nullptr;
   }
 
@@ -1505,8 +1635,11 @@ ParticleDataRaw* getParticleData(SchedulerP schedulerP,
   }
 
   if (!maintype || !subtype) {
-    std::cerr << "Uintah/VisIt Libsim Error: couldn't find variable "
-              << variable_name << std::endl;
+    std::cerr << "Uintah/VisIt Libsim Error: couldn't find variable type"
+              << variable_name << "  "
+	      << (maintype ? maintype->getName() : " no main type" ) << "  "
+	      << ( subtype ?  subtype->getName() : " no subtype" ) << "  "
+	      << std::endl;
     return nullptr;
   }
 
@@ -1532,7 +1665,7 @@ ParticleDataRaw* getParticleData(SchedulerP schedulerP,
   default:
     std::cerr << "Uintah/VisIt Libsim Error: " 
               << "unknown subtype for particle data: " << subtype->getName()
-              << " for vairable: " << variable_name << std::endl;
+              << " for particle vairable: " << variable_name << std::endl;
     return nullptr;
   }
 }

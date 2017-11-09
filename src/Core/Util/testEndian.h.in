@@ -45,6 +45,7 @@
 
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
+#include <Core/Geometry/IntVector.h>
 #include <string>
 
 
@@ -82,6 +83,7 @@ void swapbytes(float& i);
 void swapbytes(double& i);
 void swapbytes(Point &i);
 void swapbytes(Vector &i);
+void swapbytes(IntVector &i);
 void swapbytes(FILE* &i);
 
 bool isBigEndian();

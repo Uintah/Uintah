@@ -36,7 +36,6 @@
 
 //-- Uintah includes --//
 #include <Core/ProblemSpec/ProblemSpecP.h>
-#include <Core/Parallel/UintahParallelComponent.h>
 #include <CCA/Ports/SolverInterface.h>
 
 namespace WasatchCore{
