@@ -965,6 +965,8 @@ with_mpi_include
 with_mpi_extra_libs
 with_cuda
 with_hypre
+with_hypre_lib
+with_hypre_include
 with_petsc
 with_boost
 with_boost_library
@@ -1713,6 +1715,9 @@ Optional Packages:
 --with-cuda=DIR         Use the CUDA installation in DIR
 --with-hypre=DIR        Use the hypre installation in DIR. Set to 'built-in'
                           if explicit linking of hypre is NOT required.
+--with-hypre-lib=DIR    Use the hypre libraries installed in DIR
+--with-hypre-include=DIR
+                          Use the hypre include files installed in DIR
 --with-petsc=DIR        Use the petsc installation in DIR (or set to
                           'built-in').
 --with-boost=DIR        Use the Boost library in DIR/lib
@@ -4234,6 +4239,136 @@ $as_echo "$as_me: WARNING: the files are $the_files " >&2;}
         else
 	  # Is a directory... remove trailing / (if any)
           with_hypre=${with_hypre%/}
+        fi
+      fi
+    fi
+  fi
+
+
+
+
+# Check whether --with-hypre_lib was given.
+if test "${with_hypre_lib+set}" = set; then :
+  withval=$with_hypre_lib; with_hypre_lib="$withval"
+   sci_required_hypre=yes
+else
+  with_hypre_lib=NOT_SET
+fi
+
+  sci_arg_with_list="$sci_arg_with_list --with-hypre_lib --without-hypre_lib"
+  if test "$with_hypre_lib" != NOT_SET; then
+
+    # Check that params 5 and 6 have valid values
+    if test "DIR" != "DIR" -a "DIR" != "FILE" -a "DIR" != "FILES" ; then
+      as_fn_error FILE "Internal Uintah configure error for '--with-hypre_lib': invalid value of 'DIR' used for 5th parameter - should be DIR" "$LINENO" 5
+    fi
+    if test "WITHOUT-IS-NOT-VALID" != "WITHOUT-IS-VALID" -a "WITHOUT-IS-NOT-VALID" != "WITHOUT-IS-NOT-VALID" ; then
+      as_fn_error $? "Internal Uintah configure error for '--with-hypre_lib': invalid value of 'WITHOUT-IS-NOT-VALID' used for 6th parameter - should be WITHOUT-IS-NOT-VALID.  Please report." "$LINENO" 5
+    fi
+
+    # Verify --without is valid
+    if test "$with_hypre_lib" = "no" ; then
+      if test "WITHOUT-IS-NOT-VALID" != "WITHOUT-IS-VALID"; then
+        as_fn_error $? "'--without-hypre_lib' is not supported!" "$LINENO" 5
+      fi
+    fi
+
+    # Verify tha a DIR or FILE was provided.
+    if test "$with_hypre_lib" = "yes" ; then
+      if test "DIR" = "FILE" ; then
+        as_fn_error $? "When using '--with-hypre_lib' you must specify the appropriate file." "$LINENO" 5
+      else
+        as_fn_error $? "When using '--with-hypre_lib' you must specify the appropriate directory." "$LINENO" 5
+      fi
+    fi
+    if test "$with_hypre_lib" != "built-in" -a "$with_hypre_lib" != NOT_SET -a "$with_hypre_lib" != "no"; then
+      if test "DIR" = "FILE"; then
+        # Verify that it is a regular file (or a symbolic link).
+        if test ! -f "$with_hypre_lib" ; then
+          as_fn_error $? "The parameter \"$with_hypre_lib\" provided to --with-hypre_lib is not a file!  Please verify that the path and file are correct." "$LINENO" 5
+        fi
+      else
+        if test "DIR" = "FILES"; then
+          # Verify that valid files are listed...
+          the_files=$(echo $with_hypre_lib | tr "," "\n")
+          { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: the files are $the_files " >&5
+$as_echo "$as_me: WARNING: the files are $the_files " >&2;}
+          for the_file in $the_files; do
+            if test ! -f "$the_file"; then
+              as_fn_error $? "The parameter \"$the_file\" provided to --with-hypre_lib is not a file!  Please verify that the path and file are correct." "$LINENO" 5
+            fi
+          done
+        elif test ! -d "$with_hypre_lib"; then
+          # Verify that a valid directory is listed...
+          as_fn_error $? "The parameter \"$with_hypre_lib\" provided to --with-hypre_lib is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        else
+	  # Is a directory... remove trailing / (if any)
+          with_hypre_lib=${with_hypre_lib%/}
+        fi
+      fi
+    fi
+  fi
+
+
+
+
+# Check whether --with-hypre_include was given.
+if test "${with_hypre_include+set}" = set; then :
+  withval=$with_hypre_include; with_hypre_include="$withval"
+   sci_required_hypre=yes
+else
+  with_hypre_include=NOT_SET
+fi
+
+  sci_arg_with_list="$sci_arg_with_list --with-hypre_include --without-hypre_include"
+  if test "$with_hypre_include" != NOT_SET; then
+
+    # Check that params 5 and 6 have valid values
+    if test "DIR" != "DIR" -a "DIR" != "FILE" -a "DIR" != "FILES" ; then
+      as_fn_error FILE "Internal Uintah configure error for '--with-hypre_include': invalid value of 'DIR' used for 5th parameter - should be DIR" "$LINENO" 5
+    fi
+    if test "WITHOUT-IS-NOT-VALID" != "WITHOUT-IS-VALID" -a "WITHOUT-IS-NOT-VALID" != "WITHOUT-IS-NOT-VALID" ; then
+      as_fn_error $? "Internal Uintah configure error for '--with-hypre_include': invalid value of 'WITHOUT-IS-NOT-VALID' used for 6th parameter - should be WITHOUT-IS-NOT-VALID.  Please report." "$LINENO" 5
+    fi
+
+    # Verify --without is valid
+    if test "$with_hypre_include" = "no" ; then
+      if test "WITHOUT-IS-NOT-VALID" != "WITHOUT-IS-VALID"; then
+        as_fn_error $? "'--without-hypre_include' is not supported!" "$LINENO" 5
+      fi
+    fi
+
+    # Verify tha a DIR or FILE was provided.
+    if test "$with_hypre_include" = "yes" ; then
+      if test "DIR" = "FILE" ; then
+        as_fn_error $? "When using '--with-hypre_include' you must specify the appropriate file." "$LINENO" 5
+      else
+        as_fn_error $? "When using '--with-hypre_include' you must specify the appropriate directory." "$LINENO" 5
+      fi
+    fi
+    if test "$with_hypre_include" != "built-in" -a "$with_hypre_include" != NOT_SET -a "$with_hypre_include" != "no"; then
+      if test "DIR" = "FILE"; then
+        # Verify that it is a regular file (or a symbolic link).
+        if test ! -f "$with_hypre_include" ; then
+          as_fn_error $? "The parameter \"$with_hypre_include\" provided to --with-hypre_include is not a file!  Please verify that the path and file are correct." "$LINENO" 5
+        fi
+      else
+        if test "DIR" = "FILES"; then
+          # Verify that valid files are listed...
+          the_files=$(echo $with_hypre_include | tr "," "\n")
+          { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: the files are $the_files " >&5
+$as_echo "$as_me: WARNING: the files are $the_files " >&2;}
+          for the_file in $the_files; do
+            if test ! -f "$the_file"; then
+              as_fn_error $? "The parameter \"$the_file\" provided to --with-hypre_include is not a file!  Please verify that the path and file are correct." "$LINENO" 5
+            fi
+          done
+        elif test ! -d "$with_hypre_include"; then
+          # Verify that a valid directory is listed...
+          as_fn_error $? "The parameter \"$with_hypre_include\" provided to --with-hypre_include is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        else
+	  # Is a directory... remove trailing / (if any)
+          with_hypre_include=${with_hypre_include%/}
         fi
       fi
     fi
@@ -40908,7 +41043,7 @@ if test "$BUILD_ARCHES" = "yes"; then
 fi
 
 if test "$BUILD_WASATCH" = "yes" -o "$BUILD_ARCHES" = "yes"; then
-  if test "$with_hypre" = NOT_SET; then
+  if test "$with_hypre" = NOT_SET -a "$with_hypre_include" = NOT_SET; then
     { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING:  Requiring Hypre due to Arches or Wasatch... " >&5
 $as_echo "$as_me: WARNING:  Requiring Hypre due to Arches or Wasatch... " >&2;}
     with_hypre=yes
@@ -40932,11 +41067,23 @@ else
      { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Relying on a built-in version of Hypre" >&5
 $as_echo "$as_me: WARNING: Relying on a built-in version of Hypre" >&2;}
   else
-
-     if test "$with_hypre" != NOT_SET -a "$with_hypre" != "yes"; then
-        _sci_lib="$with_hypre/lib"
-        _sci_inc="$with_hypre/include"
-        _sci_optional=specific
+     if test "$with_hypre" != NOT_SET ; then
+       if test "$with_hypre_include" != NOT_SET -o "$with_hypre_lib" != NOT_SET ; then
+         as_fn_error $? "You cannot use --with-hypre and --with-hypre-include/--with-hypre-library. " "$LINENO" 5
+       elif test "$with_hypre" != "yes"; then
+         _sci_lib="$with_hypre/lib"
+         _sci_inc="$with_hypre/include"
+         _sci_optional=specific
+       fi
+     elif test "$with_hypre_lib" != NOT_SET -o "$with_hypre_include" != NOT_SET; then
+       if test "$with_hypre_lib" = NOT_SET -o "$with_hypre_include" = NOT_SET; then
+         as_fn_error $? "You must specify both --with-hypre-include and --with-hypre-library. " "$LINENO" 5
+       else
+         _sci_lib="$with_hypre_lib"
+         _sci_inc="$with_hypre_include"
+         with_hypre="yes"
+         _sci_optional=specific
+       fi
 
 	# Try to avoid accidentally allowing system libraries to shadow the specific libraries the user has requested.
         if test "$USING_GCC" = "yes" -o "$USING_ICC" = "yes"; then
