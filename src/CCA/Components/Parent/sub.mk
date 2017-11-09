@@ -53,6 +53,7 @@ PSELIBS := \
         $(ICE)                             \
         $(MPM)                             \
         $(MPMICE)                          \
+        $(ELECTROCHEM)                     \
         $(FVM)                             \
         $(MPMFVM)                          \
         $(COMPONENTS)/Examples             \

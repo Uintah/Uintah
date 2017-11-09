@@ -62,6 +62,10 @@ ifeq ($(BUILD_FVM),yes)
   endif
 endif
 
+ifeq ($(BUILD_ELECTROCHEM),yes)
+  ELECTROCHEM :=$(SRCDIR)/ElectroChem
+endif
+
 ifeq ($(BUILD_HEAT),yes)
   HEAT := $(SRCDIR)/Heat
 endif
@@ -77,6 +81,7 @@ SUBDIRS := \
         $(ARCHES)                      \
         $(MPMARCHES)                   \
         $(WASATCH)                     \
+        $(ELECTROCHEM)                 \
         $(FVM)                         \
         $(MPMFVM)                      \
         $(HEAT)                        \

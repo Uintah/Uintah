@@ -73,6 +73,10 @@
 #  include <CCA/Components/Wasatch/Wasatch.h>
 #endif
 
+#ifndef NO_ELECTROCHEM
+#include <CCA/Components/ElectroChem/ImpCPDI.h>
+#endif
+
 #ifndef NO_FVM
 #include <CCA/Components/FVM/ElectrostaticSolve.h>
 #include <CCA/Components/FVM/GaussSolve.h>
@@ -194,6 +198,14 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
   } 
 #else
   turned_off_options += "MPMARCHES ";
+#endif
+
+#ifndef NO_ELECTROCHEM
+  if (sim_comp == "imp_cpdi"){
+	  return scinew ImpCPDI(world);
+  }
+#else
+  turned_off_options += "Ele ";
 #endif
 
 #ifndef NO_FVM
