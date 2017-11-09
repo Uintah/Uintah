@@ -378,6 +378,7 @@
                                                 mpnp,
                                                 esmpm,
                                                 esmpm2,
+                                                imp_cpdi,
                                                 advectslabs,
                                                 unifiedschedulertest,poissongpu1,poisson1,
                                                 poisson2, poisson3, poisson4, benchmark,

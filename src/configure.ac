@@ -740,6 +740,13 @@ SCI_ARG_ENABLE(arches,
   [BUILD_ARCHES="no"
    DEF_ARCHES=["#define NO_ARCHES"]])
 
+SCI_ARG_ENABLE(electrochem,
+  AC_HELP_STRING(--enable-electrochem,
+                 Turn on the ELECTROCHEM component.),
+  [BUILD_ELECTROCHEM="yes"],
+  [BUILD_ELECTROCHEM="no"
+   DEF_ELECTROCHEM=["#define NO_ELECTROCHEM"]])
+
 SCI_ARG_ENABLE(fvm,
   AC_HELP_STRING(--enable-fvm,
                  Turn on the FVM component.),
@@ -787,6 +794,7 @@ SCI_ARG_ENABLE(all_components,
                  Turn on the all components.),
   [use_all_components="yes"
    BUILD_ARCHES="yes"
+   BUILD_ELECTROCHEM="yes"
    BUILD_FVM="yes"
    BUILD_ICE="yes"
    BUILD_MPM="yes"
@@ -794,6 +802,7 @@ SCI_ARG_ENABLE(all_components,
    BUILD_HEAT="yes"
    BUILD_PHASEFIELD="yes"
    DEF_ARCHES=
+   DEF_ELECTROCHEM=
    DEF_FVM=
    DEF_ICE=
    DEF_MPM=
@@ -812,6 +821,7 @@ DEF_MODELS_RADIATION=
 
 if test "$use_all_components" = "yes" -a          \
         \( "$enable_arches"           = "yes" -o  \
+           "$enable_electrochem"      = "yes" -o  \
            "$enable_fvm"              = "yes" -o  \
            "$enable_ice"              = "yes" -o  \
            "$enable_models_radiation" = "yes" -o  \
@@ -821,13 +831,15 @@ if test "$use_all_components" = "yes" -a          \
            "$enable_phasefield"       = "yes" \); then
    AC_MSG_ERROR( Please do not use both --enable-all-components and --enable-<specific-component> )
 fi
-if test "$BUILD_ARCHES"     != "yes"           -a   \
-        "$BUILD_FVM"        != "yes"           -a   \
-        "$BUILD_ICE"        != "yes"           -a   \
-        "$BUILD_MPM"        != "yes"           -a   \
-        "$BUILD_WASATCH"    != "yes"           -a   \
-        "$BUILD_HEAT"       != "yes"           -a   \
-        "$BUILD_PHASEFIELD" != "yes" ; then
+
+if test "$BUILD_ARCHES"      != "yes"           -a   \
+        "$BUILD_FVM"         != "yes"           -a   \
+        "$BUILD_ELECTROCHEM" != "yes"           -a   \
+        "$BUILD_ICE"         != "yes"           -a   \
+        "$BUILD_MPM"         != "yes"           -a   \
+        "$BUILD_WASATCH"     != "yes"           -a   \
+        "$BUILD_HEAT"        != "yes"           -a   \
+        "$BUILD_PHASEFIELD"  != "yes" ; then
   add_important_warning "-------------------------------------------------------------------------"
   msg="!!! NO COMPONENTS WERE SPECIFIED! ONLY UTILITY PROGRAMS WILL BE BUILT !!!"
   add_important_warning "$msg"
@@ -1359,6 +1371,7 @@ fi
 # NO_FORTRAN is used in configVars.mk[.in] and DEF_NO_FORTRAN is used in uintah_testdefs.h.in
 
 AC_SUBST(BUILD_ARCHES)
+AC_SUBST(BUILD_ELECTROCHEM)
 AC_SUBST(BUILD_FVM)
 AC_SUBST(BUILD_ICE)
 AC_SUBST(BUILD_MODELS_RADIATION)
@@ -1368,6 +1381,7 @@ AC_SUBST(BUILD_HEAT)
 AC_SUBST(BUILD_PHASEFIELD)
 
 AC_SUBST(DEF_ARCHES)
+AC_SUBST(DEF_ELECTROCHEM)
 AC_SUBST(DEF_FVM)
 AC_SUBST(DEF_ICE)
 AC_SUBST(DEF_MPM)

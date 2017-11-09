@@ -81,6 +81,10 @@ ifeq ($(BUILD_ARCHES),yes)
   ARCHES_LIBS        = $(COMPONENTS)/Arches
 endif
 
+ifeq ($(BUILD_ELECTROCHEM),yes)
+  ELECTROCHEM_LIB    = CCA/Components/ElectroChem
+endif
+
 ifeq ($(BUILD_FVM),yes)
   FVM_LIB            = CCA/Components/FVM
   ifeq ($(BUILD_MPM),yes)
@@ -145,6 +149,7 @@ ALL_PSE_LIBS =                              \
         $(ARCHES_LIBS)                      \
         $(ARCHES_SUB_LIBS)                  \
         $(MPMARCHES_LIB)                    \
+        $(ELECTROCHEM_LIB)                  \
         $(FVM_LIB)                          \
         $(MPM_LIB)                          \
         $(ICE_LIB)                          \
@@ -169,6 +174,7 @@ ALL_STATIC_PSE_LIBS =                   \
     $(ARCHES_LIBS)                      \
     $(ARCHES_SUB_LIBS)                  \
     $(MPMARCHES_LIB)                    \
+    $(ELECTROCHEM_LIB)                  \
     $(FVM_LIB)                          \
     $(MPM_LIB)                          \
     $(ICE_LIB)                          \

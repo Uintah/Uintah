@@ -39,22 +39,6 @@
 ## M4sh Initialization. ##
 ## -------------------- ##
 
-##
-## IMPORTANT!!!  Configure developers, PLEASE READ:
-##
-## The following BULLET PROOFING needs to be placed manually into
-## configure every time after autoconf is run, and before configure is
-## checked in:
-##
-## To avoid allowing invalid arguments to configure, we have to manually
-## hack the 'configure' script after it has been 'autoconf'd, and add the
-## line "enable_option_checking=fatal".  There apparently is no way to do
-## this through autoconf macros... sigh.  Manually find this entire text
-## block (comment and all) in configure, MOVE IT ALL TO THE TOP OF THE FILE
-## (just after the MIT license), and uncomment the following line:
-##
-enable_option_checking=fatal
-
 # Be more Bourne compatible
 DUALCASE=1; export DUALCASE # for MKS sh
 if test -n "${ZSH_VERSION+set}" && (emulate sh) >/dev/null 2>&1; then :
@@ -859,6 +843,7 @@ DEF_NO_FORTRAN
 DEF_MPM
 DEF_ICE
 DEF_FVM
+DEF_ELECTROCHEM
 DEF_ARCHES
 BUILD_PHASEFIELD
 BUILD_HEAT
@@ -867,6 +852,7 @@ BUILD_MPM
 BUILD_MODELS_RADIATION
 BUILD_ICE
 BUILD_FVM
+BUILD_ELECTROCHEM
 BUILD_ARCHES
 OGL_ERR_MACRO
 DEBUG
@@ -1015,6 +1001,7 @@ enable_scinew_line_numbers
 enable_throw_level
 enable_rpath
 enable_arches
+enable_electrochem
 enable_fvm
 enable_ice
 enable_mpm
@@ -1687,6 +1674,7 @@ Optional Features:
 --enable-throw-level=N  Use throw level N (0-3)
 --enable-rpath          Set a default runtime library search path
 --enable-arches         Turn on the Arches component - and Radiation Model.
+--enable-electrochem    Turn on the ELECTROCHEM component.
 --enable-fvm            Turn on the FVM component.
 --enable-ice            Turn on the Ice component.
 --enable-mpm            Turn on the Mpm component.
@@ -3009,6 +2997,22 @@ fi
 
   sci_arg_var_list="$sci_arg_var_list NVCC_LDFLAGS"
 
+
+##
+## IMPORTANT!!!  Configure developers, PLEASE READ:
+##
+## The following BULLET PROOFING needs to be placed manually into
+## configure every time after autoconf is run, and before configure is
+## checked in:
+##
+## To avoid allowing invalid arguments to configure, we have to manually
+## hack the 'configure' script after it has been 'autoconf'd, and add the
+## line "enable_option_checking=fatal".  There apparently is no way to do
+## this through autoconf macros... sigh.  Manually find this entire text
+## block (comment and all) in configure, MOVE IT ALL TO THE TOP OF THE FILE
+## (just after the MIT license), and uncomment the following line:
+##
+# enable_option_checking=fatal
 
 # Make sure we can run config.sub.
 $SHELL "$ac_aux_dir/config.sub" sun4 >/dev/null 2>&1 ||
@@ -6159,6 +6163,18 @@ fi
 
 
 
+  # Check whether --enable-electrochem was given.
+if test "${enable_electrochem+set}" = set; then :
+  enableval=$enable_electrochem; BUILD_ELECTROCHEM="yes"
+else
+  BUILD_ELECTROCHEM="no"
+   DEF_ELECTROCHEM="#define NO_ELECTROCHEM"
+fi
+
+  sci_arg_enable_list="$sci_arg_enable_list --enable-electrochem --disable-electrochem"
+
+
+
   # Check whether --enable-fvm was given.
 if test "${enable_fvm+set}" = set; then :
   enableval=$enable_fvm; BUILD_FVM="yes"
@@ -6235,6 +6251,7 @@ fi
 if test "${enable_all_components+set}" = set; then :
   enableval=$enable_all_components; use_all_components="yes"
    BUILD_ARCHES="yes"
+   BUILD_ELECTROCHEM="yes"
    BUILD_FVM="yes"
    BUILD_ICE="yes"
    BUILD_MPM="yes"
@@ -6242,6 +6259,7 @@ if test "${enable_all_components+set}" = set; then :
    BUILD_HEAT="yes"
    BUILD_PHASEFIELD="yes"
    DEF_ARCHES=
+   DEF_ELECTROCHEM=
    DEF_FVM=
    DEF_ICE=
    DEF_MPM=
@@ -6265,6 +6283,7 @@ DEF_MODELS_RADIATION=
 
 if test "$use_all_components" = "yes" -a          \
         \( "$enable_arches"           = "yes" -o  \
+           "$enable_electrochem"      = "yes" -o  \
            "$enable_fvm"              = "yes" -o  \
            "$enable_ice"              = "yes" -o  \
            "$enable_models_radiation" = "yes" -o  \
@@ -6274,13 +6293,15 @@ if test "$use_all_components" = "yes" -a          \
            "$enable_phasefield"       = "yes" \); then
    as_fn_error $? "Please do not use both --enable-all-components and --enable-<specific-component> " "$LINENO" 5
 fi
-if test "$BUILD_ARCHES"     != "yes"           -a   \
-        "$BUILD_FVM"        != "yes"           -a   \
-        "$BUILD_ICE"        != "yes"           -a   \
-        "$BUILD_MPM"        != "yes"           -a   \
-        "$BUILD_WASATCH"    != "yes"           -a   \
-        "$BUILD_HEAT"       != "yes"           -a   \
-        "$BUILD_PHASEFIELD" != "yes" ; then
+
+if test "$BUILD_ARCHES"      != "yes"           -a   \
+        "$BUILD_FVM"         != "yes"           -a   \
+        "$BUILD_ELECTROCHEM" != "yes"           -a   \
+        "$BUILD_ICE"         != "yes"           -a   \
+        "$BUILD_MPM"         != "yes"           -a   \
+        "$BUILD_WASATCH"     != "yes"           -a   \
+        "$BUILD_HEAT"        != "yes"           -a   \
+        "$BUILD_PHASEFIELD"  != "yes" ; then
   add_important_warning "-------------------------------------------------------------------------"
   msg="!!! NO COMPONENTS WERE SPECIFIED! ONLY UTILITY PROGRAMS WILL BE BUILT !!!"
   add_important_warning "$msg"
@@ -8356,6 +8377,8 @@ if test "$with_fortran" = "no"; then
 fi
 
 # NO_FORTRAN is used in configVars.mk[.in] and DEF_NO_FORTRAN is used in uintah_testdefs.h.in
+
+
 
 
 
