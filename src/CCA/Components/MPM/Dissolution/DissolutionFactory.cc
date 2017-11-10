@@ -25,6 +25,7 @@
 #include <CCA/Components/MPM/Dissolution/DissolutionFactory.h>
 #include <CCA/Components/MPM/Dissolution/NullDissolution.h>
 #include <CCA/Components/MPM/Dissolution/TestDissolution.h>
+#include <CCA/Components/MPM/Dissolution/StressRateDissolution.h>
 #include <CCA/Components/MPM/Dissolution/CompositeDissolution.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -57,11 +58,17 @@ Dissolution* DissolutionFactory::create(const ProcessorGroup* myworld,
      child->getWithDefault("type",dis_type, "null");
      
      if (dis_type == "null") {
-       dissolution_list->add(scinew NullDissolution(myworld,ss,lb,flag));
+      dissolution_list->add(scinew NullDissolution(myworld,ss,lb,flag));
      }
+//     else if (dis_type == "stress_threshold") {
      else if (dis_type == "test") {
-       dissolution_list->add(scinew TestDissolution(myworld,child,ss,lb,flag));
-       flag->d_doingDissolution=true;
+      dissolution_list->add(scinew TestDissolution(myworld,child,ss,lb,flag));
+      flag->d_doingDissolution=true;
+     }
+     else if (dis_type == "stress_rate") {
+      dissolution_list->add(scinew StressRateDissolution(myworld,
+                                                         child,ss,lb,flag));
+      flag->d_doingDissolution=true;
      }
      else {
        cerr << "Unknown Dissolution Type R (" << dis_type << ")" << std::endl;;

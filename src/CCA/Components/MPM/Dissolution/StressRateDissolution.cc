@@ -22,9 +22,9 @@
  * IN THE SOFTWARE.
  */
 
-// TestDissolution.cc
+// StressRateDissolution.cc
 // One of the derived Dissolution classes.
-#include <CCA/Components/MPM/Dissolution/TestDissolution.h>
+#include <CCA/Components/MPM/Dissolution/StressRateDissolution.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MPM/MPMBoundCond.h>
 #include <Core/Geometry/Vector.h>
@@ -46,7 +46,7 @@ using namespace std;
 using namespace Uintah;
 using std::vector;
 
-TestDissolution::TestDissolution(const ProcessorGroup* myworld,
+StressRateDissolution::StressRateDissolution(const ProcessorGroup* myworld,
                                  ProblemSpecP& ps, SimulationStateP& d_sS, 
                                  MPMLabel* Mlb,MPMFlags* MFlag)
   : Dissolution(myworld, Mlb, MFlag, ps)
@@ -61,11 +61,11 @@ TestDissolution::TestDissolution(const ProcessorGroup* myworld,
 //  d_matls.add(d_material); // always need specified material
 }
 
-TestDissolution::~TestDissolution()
+StressRateDissolution::~StressRateDissolution()
 {
 }
 
-void TestDissolution::outputProblemSpec(ProblemSpecP& ps)
+void StressRateDissolution::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP dissolution_ps = ps->appendChild("dissolution");
   dissolution_ps->appendElement("type","test");
@@ -76,7 +76,7 @@ void TestDissolution::outputProblemSpec(ProblemSpecP& ps)
   d_matls.outputProblemSpec(dissolution_ps);
 }
 
-void TestDissolution::computeMassBurnFraction(const ProcessorGroup*,
+void StressRateDissolution::computeMassBurnFraction(const ProcessorGroup*,
                                               const PatchSubset* patches,
                                               const MaterialSubset* matls,
                                               DataWarehouse* old_dw,
@@ -147,12 +147,13 @@ void TestDissolution::computeMassBurnFraction(const ProcessorGroup*,
   } // patches
 }
 
-void TestDissolution::addComputesAndRequiresMassBurnFrac(SchedulerP & sched,
+void StressRateDissolution::addComputesAndRequiresMassBurnFrac(
+                                                      SchedulerP & sched,
                                                       const PatchSet* patches,
                                                       const MaterialSet* ms)
 {
-  Task * t = scinew Task("TestDissolution::computeMassBurnFraction", 
-                      this, &TestDissolution::computeMassBurnFraction);
+  Task * t = scinew Task("StressRateDissolution::computeMassBurnFraction", 
+                      this, &StressRateDissolution::computeMassBurnFraction);
   
   const MaterialSubset* mss = ms->getUnion();
   MaterialSubset* z_matl = scinew MaterialSubset();

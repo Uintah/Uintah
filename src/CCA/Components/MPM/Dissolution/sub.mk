@@ -31,9 +31,10 @@
 SRCDIR   := CCA/Components/MPM/Dissolution
 
 SRCS     += \
-	$(SRCDIR)/TestDissolution.cc \
-	$(SRCDIR)/NullDissolution.cc      \
-	$(SRCDIR)/DissolutionFactory.cc   \
-	$(SRCDIR)/CompositeDissolution.cc \
+	$(SRCDIR)/TestDissolution.cc         \
+	$(SRCDIR)/StressRateDissolution.cc   \
+	$(SRCDIR)/NullDissolution.cc         \
+	$(SRCDIR)/DissolutionFactory.cc      \
+	$(SRCDIR)/CompositeDissolution.cc    \
 	$(SRCDIR)/DissolutionMaterialSpec.cc \
 	$(SRCDIR)/Dissolution.cc
