@@ -108,7 +108,6 @@ NIGHTLYTESTS = [
    ("kokkos-x-scalar"                   , "kokkos_solver_tests/kokkos-x-scalar.ups"                 , 1   , "All"   , ["exactComparison"]), 
    ("kokkos-y-scalar"                   , "kokkos_solver_tests/kokkos-y-scalar.ups"                 , 1   , "All"   , ["exactComparison"]), 
    ("kokkos-z-scalar"                   , "kokkos_solver_tests/kokkos-z-scalar.ups"                 , 1   , "All"   , ["exactComparison"]), 
-   ("almgren-mms_conv"                   , "kokkos_solver_tests/Verification/mom/almgren-mms_conv.ups" , 1   , "All"   , ["exactComparison"]), 
 #__________________________________
 # THESE TESTS FAIL TO RUN TO COMPLETION ON A CUDA ENABLED BUILD   "corrupted double-linked list: 0x00000000024b8120 ***"
    ("coal_channel_hi_vel"               , "Coal/coal_channel_hi_vel.ups"                            , 1   , "All"   , ["exactComparison"     , "no_cuda"]) , 
@@ -191,7 +190,6 @@ LOCALTESTS = [
    ("kokkos-x-scalar"                   , "kokkos_solver_tests/kokkos-x-scalar.ups"                 , 1   , "All"  , ["exactComparison"]), 
    ("kokkos-y-scalar"                   , "kokkos_solver_tests/kokkos-y-scalar.ups"                 , 1   , "All"  , ["exactComparison"]), 
    ("kokkos-z-scalar"                   , "kokkos_solver_tests/kokkos-z-scalar.ups"                 , 1   , "All"  , ["exactComparison"]), 
-   ("almgren-mms_conv"                   , "kokkos_solver_tests/Verification/mom/almgren-mms_conv.ups" , 1   , "All"   , ["exactComparison"]), 
 #__________________________________
 # THESE TESTS FAIL TO RUN TO COMPLETION ON A CUDA ENABLED BUILD, "corrupted double-linked list: 0x00000000024b8120 ***"
    ("coal_RadPropsPlanck"               , "Coal/coal_RadPropsPlanck.ups"                            , 1   , "All"  , ["exactComparison"   , "no_cuda"]) ,
@@ -263,12 +261,12 @@ RMCRTTESTS = [
 ]
 
 KOKKOSTESTS = [
-   ("kokkos-x-scalar"                   , "kokkos_solver_tests/kokkos-x-scalar.ups"                                              , 1   , "All" , ["exactComparison"]), 
-   ("kokkos-y-scalar"                   , "kokkos_solver_tests/kokkos-y-scalar.ups"                                              , 1   , "All" , ["exactComparison"]), 
-   ("kokkos-z-scalar"                   , "kokkos_solver_tests/kokkos-z-scalar.ups"                                              , 1   , "All" , ["exactComparison"]), 
+   ("kokkos-x-scalar"                   , "kokkos_solver_tests/kokkos-x-scalar.ups"                                              , 1   , "All"   , ["exactComparison"]), 
+   ("kokkos-y-scalar"                   , "kokkos_solver_tests/kokkos-y-scalar.ups"                                              , 1   , "All"   , ["exactComparison"]), 
+   ("kokkos-z-scalar"                   , "kokkos_solver_tests/kokkos-z-scalar.ups"                                              , 1   , "All"   , ["exactComparison"]), 
    ("almgren-mms_conv"                  , "kokkos_solver_tests/Verification/mom/almgren-mms_conv.ups"                            , 1   , "All"   , ["exactComparison"]), 
    ("almgren-mms_diff"                  , "kokkos_solver_tests/Verification/mom/almgren-mms_diff.ups"                            , 1   , "All"   , ["exactComparison"]), 
-   ("almgren-mmsBC"                     , "kokkos_solver_tests/Verification/mom/almgren-mmsBC.ups"                               , 1   , "All"      , ["exactComparison"]), 
+   ("almgren-mmsBC"                     , "kokkos_solver_tests/Verification/mom/almgren-mmsBC.ups"                               , 1   , "All"   , ["exactComparison"]), 
    ("kokkos-x-scalar_mms_diff"          , "kokkos_solver_tests/Verification/scalars/kokkos-x-scalar_mms_diff.ups"                , 1   , "All"   , ["exactComparison"]), 
    ("kokkos-x-scalar_mms"               , "kokkos_solver_tests/Verification/scalars/kokkos-x-scalar_mms.ups"                     , 1   , "All"   , ["exactComparison"]), 
    ("kokkos-x-scalar_mms_RK1"           , "kokkos_solver_tests/Verification/scalars/kokkos-x-scalar_mms_RK1.ups"                 , 1   , "All"   , ["exactComparison"]), 
