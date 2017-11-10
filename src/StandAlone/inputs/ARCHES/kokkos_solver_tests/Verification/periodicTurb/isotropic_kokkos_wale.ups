@@ -97,17 +97,18 @@
       </TurbulenceModels>
       <Initialization>
         <task task_label="uVel-init" variable_label="uVel"  type="input_file">
-          <filename>../../../periodicTurb/cbc32_uvw_arches-indexed.gz</filename>
+          <!--filename>../../../periodicTurb/cbc32_uvw_arches-indexed.gz</filename-->
+          <filename>inputs/ARCHES/periodicTurb/cbc32_uvw_arches-indexed.gz</filename>
           <vector index="0"/>
           <variable type="FX"/>
         </task>
         <task task_label="vVel-init" variable_label="vVel"  type="input_file">
-          <filename>../../../periodicTurb/cbc32_uvw_arches-indexed.gz</filename>
+          <filename>inputs/ARCHES/periodicTurb/cbc32_uvw_arches-indexed.gz</filename>
           <vector index="1"/>
           <variable type="FY"/>
         </task>
         <task task_label="wVel-init" variable_label="wVel"  type="input_file">
-          <filename>../../../periodicTurb/cbc32_uvw_arches-indexed.gz</filename>
+          <filename>inputs/ARCHES/periodicTurb/cbc32_uvw_arches-indexed.gz</filename>
           <vector index="2"/>
           <variable type="FZ"/>
         </task>

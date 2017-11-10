@@ -1384,10 +1384,12 @@
           </wave>
 
           <!-- Shunn MMS P3 -->
-          <rho0 spec="REQUIRED STRING" need_applies_to="type shunn_mms_p3 "/>
-          <rho1 spec="REQUIRED STRING" need_applies_to="type shunn_mms_p3 "/>
-          <uf   spec="REQUIRED STRING" need_applies_to="type shunn_mms_p3 "/>
-          <vf   spec="REQUIRED STRING" need_applies_to="type shunn_mms_p3 "/>
+          <rho0 spec="OPTIONAL STRING" need_applies_to="type shunn_mms_p3 "/>
+          <rho1 spec="OPTIONAL STRING" need_applies_to="type shunn_mms_p3 "/>
+          <uf   spec="OPTIONAL STRING" need_applies_to="type shunn_mms_p3 "/>
+          <vf   spec="OPTIONAL STRING" need_applies_to="type shunn_mms_p3 "/>
+          <k    spec="OPTIONAL STRING" need_applies_to="type shunn_mms_p3 "/>
+          <w0   spec="OPTIONAL STRING" need_applies_to="type shunn_mms_p3 "/>
 
           <which_vel                  spec="REQUIRED STRING 'u,v,w,p'"
                                       need_applies_to="type shunn_mms_p3, taylor_green3d, almgren_mms "/> <!-- for a 2D plane, specify which component
@@ -1480,10 +1482,13 @@
                                       need_applies_to="type MMS_Shunn"/> <!--the mms -->
 
           <!--Shunn Problem 3-->
-          <rho0 spec="REQUIRED STRING" need_applies_to="type MMS_Shunn_p3 "/>
-          <rho1 spec="REQUIRED STRING" need_applies_to="type MMS_Shunn_p3 "/>
-          <uf   spec="REQUIRED STRING" need_applies_to="type MMS_Shunn_p3 "/>
-          <vf   spec="REQUIRED STRING" need_applies_to="type MMS_Shunn_p3 "/>
+          <rho0 spec="OPTIONAL STRING" need_applies_to="type MMS_Shunn_p3"/>
+          <rho1 spec="OPTIONAL STRING" need_applies_to="type MMS_Shunn_p3"/>
+          <uf   spec="OPTIONAL STRING" need_applies_to="type MMS_Shunn_p3"/>
+          <vf   spec="OPTIONAL STRING" need_applies_to="type MMS_Shunn_p3"/>
+          <k    spec="OPTIONAL STRING" need_applies_to="type MMS_Shunn_p3"/>
+          <w0   spec="OPTIONAL STRING" need_applies_to="type MMS_Shunn_p3"/>
+          <D    spec="OPTIONAL STRING" need_applies_to="type MMS_Shunn_p3"/>
 
           <!-- Specs for MMS scalar -->
           <!-- 1D WAVE FORM -->
@@ -1515,6 +1520,10 @@
 
           </wave>
 
+          <amplitude                  spec="OPTIONAL DOUBLE"
+                                      need_applies_to="type MMS_mom"/>
+          <frequency                  spec="OPTIONAL DOUBLE"
+                                      need_applies_to="type MMS_mom"/>
         </src>
         </SourceV2>
 
