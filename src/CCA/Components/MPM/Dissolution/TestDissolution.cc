@@ -24,6 +24,17 @@
 
 // TestDissolution.cc
 // One of the derived Dissolution classes.
+//
+// This dissolution model generates a constant rate of dissolution,
+// where "rate of dissolution" is the velocity with which a surface is removed.
+// In this model, dissolution occurs if the following criteria are met:
+// 1.  The "master_material" (the material being dissolved), and at least
+//     one of the materials in the "materials" list is present.
+// 2.  The pressure exceeds the "thresholdPressure"
+// The dissolution rate is converted to a rate of mass decrease which is
+// then applied to identified surface particles in 
+// interpolateToParticlesAndUpdate
+
 #include <CCA/Components/MPM/Dissolution/TestDissolution.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MPM/MPMBoundCond.h>
@@ -91,7 +102,7 @@ void TestDissolution::computeMassBurnFraction(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     Vector dx = patch->dCell();
     double area = dx.x()*dx.y();
-    double cellVol = area*dx.z();
+//    double cellVol = area*dx.z();
 
     Ghost::GhostType  gnone = Ghost::None;
 
@@ -117,31 +128,26 @@ void TestDissolution::computeMassBurnFraction(const ProcessorGroup*,
       IntVector c = *iter;
 
       double sumMass=0.0;
-      double sumOtherVol = 0.0;
+//      double sumOtherVol = 0.0;
       for(int m = 0; m < numMatls; m++){
         if(d_matls.requested(m) || m==md) {
           sumMass+=gmass[m][c]; 
-          if(m!=md){
-            sumOtherVol = gvolume[m][c]*8.0*NC_CCweight[c];
-          }
+//          if(m!=md){
+//            sumOtherVol = gvolume[m][c]*8.0*NC_CCweight[c];
+//          }
         }
       }
 
-      double mdVol   = gvolume[md][c]*8.0*NC_CCweight[c];
-      double volFrac = (mdVol+sumOtherVol)/cellVol;
+//      double mdVol   = gvolume[md][c]*8.0*NC_CCweight[c];
+//      double volFrac = (mdVol+sumOtherVol)/cellVol;
 
       double pressure = gStress[md][c].Trace()/(-3.);
 
       if(gmass[md][c] >  1.e-100  &&
          gmass[md][c] != sumMass  && 
-         pressure > d_PressThresh &&
-         volFrac > 0.6){
+         pressure > d_PressThresh){ // && volFrac > 0.6){
           double rho = gmass[md][c]/gvolume[md][c];
           massBurnRate[c] += d_rate*area*rho*2.0*NC_CCweight[c];
-//        massBurnRate[c] += 2.0*NC_CCweight[c]*
-//                           d_rate*area*rho;/* *(sumOtherVol/(sumOtherVol+mdVol));*/
-//        massBurnRate[c] += fabs(d_rate*(gStress[md][c].Trace()/3.0)/
-//                                                              d_PressThresh);
       }
     } // nodes
   } // patches

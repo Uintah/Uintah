@@ -3663,7 +3663,15 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
           pTempNew[idx]    = pTemperature[idx] + tempRate*delT;
           pTempPreNew[idx] = pTemperature[idx]; // for thermal stress
-          pmassNew[idx]    = Max(pmass[idx]*(1.    - burnFraction),0.);
+          if (flags->d_doingDissolution){
+            if(pSurf[idx]>=0.99){
+              pmassNew[idx]    = Max(pmass[idx] - burnFraction*delT, 0.);
+            }else{
+              pmassNew[idx]    = pmass[idx];
+            }
+          } else {
+            pmassNew[idx]    = Max(pmass[idx]*(1.    - burnFraction),0.);
+          }
           psizeNew[idx]    = (pmassNew[idx]/pmass[idx])*psize[idx];
   
           thermal_energy += pTemperature[idx] * pmass[idx] * Cp;
@@ -3738,7 +3746,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
                << " with F = " << pFNew[idx] << endl;
           cerr << "imax, jmax = " << imax << ", " << jmax << endl;
           cerr << "pmass = " << pmass[idx] << endl;
-          pFNew[idx].set(imax,jmax,0.9*pFNew[idx](imax,jmax));
+//          pFNew[idx].set(imax,jmax,0.9*pFNew[idx](imax,jmax));
+          pFNew[idx]=Identity;
           cerr << "F is now " << pFNew[idx] << endl;
         }
 
