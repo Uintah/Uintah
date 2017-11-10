@@ -364,6 +364,7 @@
       <pos_charge_density        spec="OPTIONAL DOUBLE"/>
       <neg_charge_density        spec="OPTIONAL DOUBLE"/>
       <permittivity              spec="OPTIONAL DOUBLE"/>
+      <rel_permittivity          spec="OPTIONAL DOUBLE"/>
     </geom_object>
       
     <SimulationComponent          spec="REQUIRED NO_DATA"

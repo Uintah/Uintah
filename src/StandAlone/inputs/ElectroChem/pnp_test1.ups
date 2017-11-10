@@ -1,0 +1,152 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- Unit:
+     lenght = nm
+-->
+
+<Uintah_specification>
+
+   <Meta>
+       <title>FVM Solution of PNP</title>
+   </Meta>
+
+   <SimulationComponent type="mpnp" />
+
+   <Time>
+     <maxTime>0.1</maxTime>                          
+     <initTime>0.0</initTime>                        
+     <delt_min>0.1</delt_min>                    
+     <delt_max>1</delt_max>                          
+     <timestep_multiplier>2</timestep_multiplier>    
+   </Time>
+   
+   <DataArchiver>
+     <filebase>pnp_test1.uda</filebase>                   
+     <outputTimestepInterval>1</outputTimestepInterval>    
+     <!--
+     -->
+     <save label = "cc.esPotential"/>                            
+     <save label = "cc.rhsEsPotential"/>                            
+     <save label = "cc.PosCharge"/>
+     <save label = "cc.NegCharge"/>                            
+     <save label = "cc.RelativePermittivity"/>                            
+     <save label = "cc.MatId"/>                            
+     <save label = "cc.InterfaceCell"/>                            
+     <save label = "cc.GridPermittivity"/>                            
+     <save label = "cc.GridTotalCharge"/>                            
+     <checkpoint cycle = "2" interval = ".01"/>            
+   </DataArchiver>
+
+   <Grid>
+     <Level>                                          
+       <Box label = "1">                                
+         <lower>      [  0.0,   0.0, 0.0] </lower>               
+         <upper>      [135.0, 115.0, 1.0] </upper>               
+         <resolution> [135,   115,   1]  </resolution> 
+         <extraCells> [1,1,1]       </extraCells>
+         <patches>    [1,1,1]       </patches>             
+       </Box>                                           
+     </Level>                                         
+     <BoundaryConditions>
+       <Face side = "x-">
+         <BCType id = "all" label = "Voltage" var = "Neumann">
+                <value> 0.0 </value>
+         </BCType>
+       </Face>
+       <Face side = "x+">
+         <BCType id = "all" label = "Voltage" var = "Neumann">
+                <value> 0.0 </value>
+         </BCType>
+       </Face>
+       <Face side = "y-">
+         <BCType id = "all" label = "Voltage" var = "Dirichlet">
+                <value> -1.0 </value>
+         </BCType>
+       </Face>                  
+       <Face side = "y+">
+         <BCType id = "all" label = "Voltage" var = "Dirichlet">
+                <value> 1.0 </value>
+         </BCType>
+       </Face>
+       <Face side = "z-">
+         <BCType id = "all" label = "Voltage" var = "Neumann">
+                <value> 0.0 </value>
+         </BCType>
+       </Face>                  
+       <Face side = "z+">
+         <BCType id = "all" label = "Voltage" var = "Neumann">
+                <value> 0.0 </value>
+         </BCType>
+        </Face>
+     </BoundaryConditions>
+   </Grid>
+
+   <Solver type = "hypre" />
+
+   <MaterialProperties>
+     <FVM>
+       <material name="neg_electrode">
+         <geom_object>
+           <box label="box_neg_elec">
+             <min> [ 25.0,  0.0, 0.0 ] </min>
+             <max> [ 55.0, 90.0, 1.0 ] </max>
+           </box>
+           <pos_charge_density> 1.0  </pos_charge_density>
+           <neg_charge_density> 1.0  </neg_charge_density>
+           <rel_permittivity> 1.0 </rel_permittivity>
+         </geom_object>
+       </material>
+       <material name="pos_electrode">
+         <geom_object>
+           <box label="box_pos_elec">
+             <min> [  80.0,  25.0, 0.0 ] </min>
+             <max> [ 110.0, 115.0, 1.0 ] </max>
+           </box>
+           <pos_charge_density> 1.0  </pos_charge_density>
+           <neg_charge_density> 1.0  </neg_charge_density>
+           <rel_permittivity> 1.0 </rel_permittivity>
+         </geom_object>
+       </material>
+       <material name="electrolyte">
+         <geom_object>
+           <difference>
+             <box label="whole_domain">
+               <min> [   0.0,   0.0, 0.0 ]       </min>
+               <max> [ 135.0, 115.0, 1.0 ]       </max>
+             </box>
+             <union>
+               <box label="box_neg_elec"/>
+               <box label="box_pos_elec"/>
+             </union>
+           </difference>
+           <pos_charge_density> 1.0  </pos_charge_density>
+           <neg_charge_density> 1.0  </neg_charge_density>
+           <rel_permittivity> 1.0 </rel_permittivity>
+         </geom_object>
+       </material>
+     </FVM>
+   </MaterialProperties>           
+
+   <FVM>
+     <unit_charge>  1.602e-19 </unit_charge>
+     <permittivity> 8.85e-21  </permittivity>
+     <delt>.1</delt>
+     <Parameters variable="electrostatic_solver">
+       <!-- CGSolver options -->
+       <norm>     LInfinity  </norm>
+       <criteria> Absolute   </criteria>
+
+       <!-- Hypre options -->
+       <solver>         cg  </solver>
+       <preconditioner> pfmg    </preconditioner>
+       <tolerance>      1.e-8  </tolerance>
+       <maxiterations>  7500    </maxiterations>
+       <npre>           1       </npre>
+       <npost>          1       </npost>
+       <skip>           0       </skip>
+       <jump>           0       </jump>
+       <setupFrequency> 3       </setupFrequency>
+     </Parameters>
+   </FVM> 
+</Uintah_specification>
+
