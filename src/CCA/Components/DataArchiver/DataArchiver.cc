@@ -2815,8 +2815,7 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
     }  
       
     PIDXOutputContext pidx;
-    vector<TypeDescription::Type> GridVarTypes =
-      pidx.getSupportedVariableTypes();
+    vector<TypeDescription::Type> GridVarTypes = pidx.getSupportedVariableTypes();
     
     // Bulletproofing
     isVarTypeSupported( saveLabels, GridVarTypes );
@@ -2987,9 +2986,8 @@ DataArchiver::saveLabels_PIDX( std::vector< SaveItem >     & saveLabels,
   unsigned char ***patch_buffer;
   patch_buffer = (unsigned char***)malloc(sizeof(unsigned char**) * actual_number_of_variables);
   
-  int vc = 0;
-  int vcm = 0;
-  
+  int vc = 0;  // Variable Counter
+  int vcm = 0; // Variable Counter Material
   for(saveIter = saveLabels.begin(); saveIter != saveLabels.end(); saveIter++) 
   {
     const VarLabel* label = saveIter->label;
@@ -3012,11 +3010,15 @@ DataArchiver::saveLabels_PIDX( std::vector< SaveItem >     & saveLabels,
     string type_name = "float64";
     int    the_size  = sizeof( double );
 
+    std::cout << "type for " <<  label->getName() << "is: " << subtype->getType() << std::endl;
     switch( subtype->getType( )) {
 
     case Uintah::TypeDescription::Stencil7 : sample_per_variable = 7; break;
     case Uintah::TypeDescription::Stencil4 : sample_per_variable = 4; break;
     case Uintah::TypeDescription::Vector   : sample_per_variable = 3; break;
+    case Uintah::TypeDescription::Point    : sample_per_variable = 3; break;
+    case Uintah::TypeDescription::Matrix3  : sample_per_variable = 9; break;
+
     case Uintah::TypeDescription::int_type :
       the_size = sizeof( int );
       type_name = "int32";
@@ -3057,7 +3059,10 @@ DataArchiver::saveLabels_PIDX( std::vector< SaveItem >     & saveLabels,
     
       cout << "here: " << var_mat_name.c_str() << ", " << (varSubType_size * 8) << ", " << data_type << "\n";
 
+      bool isParticle = ( label->typeDescription()->getType() == Uintah::TypeDescription::ParticleVariable );
+
       rc = PIDX_variable_create((char*) var_mat_name.c_str(),
+                                /* isParticle, <- Add this to PIDX spec*/
                                 varSubType_size * 8, data_type,
                                 &(pidx.varDesc[vc][m]));
       
@@ -3100,16 +3105,53 @@ DataArchiver::saveLabels_PIDX( std::vector< SaveItem >     & saveLabels,
             patchExts.print(cout); 
           }
                     
-          //__________________________________
-          // allocate memory for the grid variables
-          size_t arraySize = varSubType_size * patchExts.totalCells_EC;
-
-          patch_buffer[vcm][p] = (unsigned char*)malloc( arraySize );
-          memset( patch_buffer[vcm][p], 0, arraySize );
-          
+         
           //__________________________________
           //  Read in Array3 data to t-buffer
-          new_dw->emitPIDX(pidx, label, matlIndex, patch, patch_buffer[vcm][p], arraySize);
+          size_t arraySize;
+          if( td->getType() == Uintah::TypeDescription::ParticleVariable ) {
+
+            ParticleVariableBase * pv = new_dw->getParticleVariable( label, matlIndex, patch );
+            void * ptr; // Pointer to data? but we don't use it so not digging into what it is for.
+            string elems; // We don't use this either.
+            pv->getSizeInfo( elems, arraySize, ptr );
+
+
+            int num_particles = arraySize / ( sample_per_variable * the_size );
+            cout << "num particles is: " << num_particles << ", array size: " << arraySize << ", samples: " << sample_per_variable
+                 << ", size of sample: " << the_size << "\n";
+
+            patch_buffer[vcm][p] = (unsigned char*)malloc( arraySize );
+
+            // Figure out the # of particles in order to create the patch_buffer of the correct size...
+            // Or pass in a vector and figure it out after this call somewhere...
+            //
+            // if we don't have to do the above comments, then we can consolidate this code with the code below.
+            //
+            
+            new_dw->emitPIDX( pidx, label, matlIndex, patch, patch_buffer[vcm][p], arraySize );
+
+            if( subtype->getType() == Uintah::TypeDescription::Point ){
+              cout << "point values are: ";
+              for( int i = 0; i < num_particles; i++ ) {
+                double * darray = (double*) patch_buffer[vcm][p];
+                cout << darray[i] << ", ";
+              }
+              cout << "\n";
+            }
+            
+          }
+          else {
+
+            //__________________________________
+            // allocate memory for the grid variables
+            arraySize = varSubType_size * patchExts.totalCells_EC;
+
+            patch_buffer[vcm][p] = (unsigned char*)malloc( arraySize );
+            memset( patch_buffer[vcm][p], 0, arraySize );
+
+            new_dw->emitPIDX( pidx, label, matlIndex, patch, patch_buffer[vcm][p], arraySize );
+          }
 
           #if 0           // to hardwire buffer values for debugging.
           pidx.hardWireBufferValues(t_buffer, patchExts, arraySize, sample_per_variable );

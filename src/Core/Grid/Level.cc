@@ -377,6 +377,10 @@ Level::computeVariableExtents( const TypeDescription::Type   type
       lo = CCLo;
       hi = CCHi + ( IntVector(0, 0, 1) * not_periodic );
       break;
+    case TypeDescription::ParticleVariable :
+      lo = CCLo;
+      hi = CCHi;
+      break;
     case TypeDescription::NCVariable :
       findInteriorCellIndexRange( lo, hi );
       break;

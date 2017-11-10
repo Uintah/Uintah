@@ -25,19 +25,22 @@
 #ifndef UINTAH_HOMEBREW_GridVARIABLE_H
 #define UINTAH_HOMEBREW_GridVARIABLE_H
 
-#include <Core/Grid/Variables/Array3.h>
-#include <Core/Grid/Variables/GridVariableBase.h>
+#include <Core/Exceptions/InternalError.h>
+#include <Core/Exceptions/TypeMismatchException.h>
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Disclosure/TypeUtils.h>
 #include <Core/Grid/Patch.h>
-#include <CCA/Ports/InputContext.h>
-#include <CCA/Ports/OutputContext.h>
+#include <Core/Grid/Variables/Array3.h>
+#include <Core/Grid/Variables/GridVariableBase.h>
 #include <Core/IO/SpecializedRunLengthEncoder.h>
-#include <Core/Exceptions/TypeMismatchException.h>
-
-#include <Core/Exceptions/InternalError.h>
-#include <Core/Geometry/Vector.h>
 #include <Core/Malloc/Allocator.h>
+
+#include <CCA/Ports/InputContext.h>
+#include <CCA/Ports/PIDXOutputContext.h>
+#include <CCA/Ports/OutputContext.h>
+
+#include <sci_defs/pidx_defs.h>
+
 #include <cstring>
 
 namespace Uintah {
@@ -152,14 +155,50 @@ WARNING
 
     virtual IntVector getHigh() const { return this->getHighIndex(); }
 
-    virtual void emitNormal(std::ostream& out, const IntVector& l, const IntVector& h,
-                            ProblemSpecP /*varnode*/, bool outputDoubleAsFloat)
+    
+#if HAVE_PIDX
+    virtual void emitPIDX(       PIDXOutputContext & pc,
+                                 unsigned char     * pidx_buffer,
+                           const IntVector         & l,
+                           const IntVector         & h,
+                           const size_t              pidx_bufferSize )
     {
-      const TypeDescription* td = fun_getTypeDescription((T*)0);
-      if(td->isFlat())
+      // This seems inefficient  -Todd
+
+      ProblemSpecP dummy;
+      bool outputDoubleAsFloat = pc.isOutputDoubleAsFloat();
+  
+      // read the Array3 variable into tmpStream
+      std::ostringstream tmpStream;
+      emitNormal( tmpStream, l, h, dummy, outputDoubleAsFloat );
+
+      // Create a string from the ostringstream
+      std::string tmpString   = tmpStream.str();
+  
+      // create a c-string
+      const char* writebuffer = tmpString.c_str();
+      size_t uda_bufferSize   = tmpString.size();
+
+      // copy the write buffer into the pidx_buffer
+      if( uda_bufferSize == pidx_bufferSize) {
+        memcpy( pidx_buffer, writebuffer, uda_bufferSize );
+      }
+      else {
+        throw InternalError("ERROR: Variable::emitPIDX() error reading in buffer", __FILE__, __LINE__);
+      }
+    }
+#endif
+
+    virtual void emitNormal( std::ostream& out, const IntVector& l, const IntVector& h,
+                             ProblemSpecP /*varnode*/, bool outputDoubleAsFloat )
+    {
+      const TypeDescription* td = fun_getTypeDescription( (T*)nullptr );
+      if( td->isFlat() ) {
         Array3<T>::write(out, l, h, outputDoubleAsFloat);
-      else
+      }
+      else {
         SCI_THROW(InternalError("Cannot yet write non-flat objects!\n", __FILE__, __LINE__));
+      }
     }
 
     virtual bool emitRLE(std::ostream& out, const IntVector& l, const IntVector& h,

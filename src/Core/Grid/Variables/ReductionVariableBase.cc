@@ -24,6 +24,7 @@
 
 
 #include <Core/Grid/Variables/ReductionVariableBase.h>
+
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Exceptions/InternalError.h>
 
@@ -37,10 +38,9 @@ ReductionVariableBase::ReductionVariableBase()
 {
 }   
 
-
 RefCounted*
 ReductionVariableBase::getRefCounted()
 {
-  SCI_THROW(InternalError("getRefCounted not implemented for ReductionVariable", __FILE__, __LINE__));
+  SCI_THROW( InternalError( "getRefCounted not implemented for ReductionVariable", __FILE__, __LINE__ ) );
 }
     

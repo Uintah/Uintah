@@ -25,24 +25,26 @@
 #ifndef UINTAH_HOMEBREW_PARTICLEVARIABLE_H
 #define UINTAH_HOMEBREW_PARTICLEVARIABLE_H
 
-
-#include <Core/Util/FancyAssert.h>
-#include <Core/Exceptions/InternalError.h>
-#include <Core/Util/Assert.h>
-#include <Core/Util/Endian.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/Grid/Variables/ParticleVariableBase.h>
-#include <Core/Grid/Variables/constGridVariable.h>
-#include <CCA/Ports/InputContext.h>
-#include <CCA/Ports/OutputContext.h>
-#include <Core/Exceptions/TypeMismatchException.h>
-#include <Core/Grid/Variables/ParticleData.h>
-#include <Core/Grid/Variables/ParticleSubset.h>
-#include <Core/Grid/Patch.h>
-#include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Disclosure/TypeUtils.h>
+#include <Core/Exceptions/InternalError.h>
+#include <Core/Exceptions/TypeMismatchException.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Variables/constGridVariable.h>
+#include <Core/Grid/Variables/ParticleData.h>
+#include <Core/Grid/Variables/ParticleSubset.h>
+#include <Core/Grid/Variables/ParticleVariableBase.h>
 #include <Core/IO/SpecializedRunLengthEncoder.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Util/Assert.h>
+#include <Core/Util/Endian.h>
+#include <Core/Util/FancyAssert.h>
+
+#include <CCA/Ports/InputContext.h>
+#include <CCA/Ports/PIDXOutputContext.h>
+#include <CCA/Ports/OutputContext.h>
+
 #include <iostream>
 #include <cstring>
 
@@ -163,10 +165,13 @@ public:
   virtual void packsizeMPI(int* bufpos,
                            const ProcessorGroup* pg,
                            ParticleSubset* pset);
-  virtual void emitNormal(std::ostream& out, const IntVector& l,
-                          const IntVector& h, ProblemSpecP varnode, bool outputDoubleAsFloat);
-  virtual bool emitRLE(std::ostream& out, const IntVector& l, const IntVector& h,
-                       ProblemSpecP varnode);
+  virtual void emitNormal( std::ostream& out, const IntVector&, const IntVector&, ProblemSpecP, bool outputDoubleAsFloat );
+  virtual bool emitRLE( std::ostream& out, const IntVector& l, const IntVector& h, ProblemSpecP varnode );
+  virtual void emitPIDX(       PIDXOutputContext & oc,
+                               unsigned char     * buffer,
+                         const IntVector         & /* l */,
+                         const IntVector         & /* h */,
+                         const size_t              pidx_bufferSize ); // buffer size used for bullet proofing.
   
   virtual void readNormal(std::istream& in, bool swapBytes);
   virtual void readRLE(std::istream& in, bool swapBytes, int nByteMode);
@@ -512,14 +517,16 @@ template<class T>
 
   // Specialized in ParticleVariable_special.cc
   template<>
-   void
-  ParticleVariable<double>::emitNormal(std::ostream& out, const IntVector&,
-                                  const IntVector&, ProblemSpecP varnode, bool outputDoubleAsFloat );
+  void
+  ParticleVariable<double>::emitNormal( std::ostream& out, const IntVector&, const IntVector&, ProblemSpecP varnode, bool outputDoubleAsFloat );
 
   template<class T>
   void
-  ParticleVariable<T>::emitNormal(std::ostream& out, const IntVector&,
-                                  const IntVector&, ProblemSpecP varnode, bool /*outputDoubleAsFloat*/ )
+  ParticleVariable<T>::emitNormal(       std::ostream & out,
+                                   const IntVector    & /* l */,
+                                   const IntVector    & /* h */,
+                                         ProblemSpecP   varnode,
+                                         bool           /*outputDoubleAsFloat*/ )
   {
     const TypeDescription* td = fun_getTypeDescription((T*)nullptr);
 
@@ -570,6 +577,29 @@ template<class T>
     return true;
   }
   
+  template<class T>
+  void
+  ParticleVariable<T>::emitPIDX(       PIDXOutputContext & oc,
+                                       unsigned char     * buffer,
+                                 const IntVector         & /* l */,
+                                 const IntVector         & /* h */,
+                                 const size_t              pidx_bufferSize ) // buffer size used for bullet proofing.
+  {
+    const TypeDescription* td = fun_getTypeDescription((T*)nullptr);
+
+    //int numParticles = d_pset->numParticles();
+
+    if( !td->isFlat() ){ // Not certain what this is for?
+      SCI_THROW(InternalError("Cannot yet write non-flat objects!\n", __FILE__, __LINE__));
+    }
+    else {
+
+      // FIXME: Add in assertion that pidx_bufferSize == "calculate the d_pdata->size * size of element"
+
+      memcpy( buffer, d_pdata->data, pidx_bufferSize );
+    }
+  }
+
   template<class T>
   void
   ParticleVariable<T>::readNormal(std::istream& in, bool swapBytes)

@@ -2623,12 +2623,12 @@ OnDemandDataWarehouse::emit(       OutputContext& oc,
 
 #if HAVE_PIDX
 void
-OnDemandDataWarehouse::emitPIDX(PIDXOutputContext& pc,
-                                 const VarLabel* label,
-                                 int matlIndex,
-                                 const Patch* patch,
-                                 unsigned char* buffer,
-                                 const size_t bufferSize)
+OnDemandDataWarehouse::emitPIDX(       PIDXOutputContext & pc,
+                                 const VarLabel          * label,
+                                       int                 matlIndex,
+                                 const Patch             * patch,
+                                       unsigned char     * buffer,
+                                 const size_t              bufferSize )
 {
   checkGetAccess( label, matlIndex, patch );
 
@@ -2688,7 +2688,7 @@ OnDemandDataWarehouse::emitPIDX(PIDXOutputContext& pc,
     SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex, "OnDemandDataWarehouse::emit ", __FILE__, __LINE__) );
   }
 
-  m_var->emitPIDX( pc, buffer, l, h, bufferSize);
+  m_var->emitPIDX( pc, buffer, l, h, bufferSize );
 }
 
 #endif

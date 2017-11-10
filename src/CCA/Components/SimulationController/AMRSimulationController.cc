@@ -591,7 +591,7 @@ AMRSimulationController::run()
     {
       // If PIDX is not being used write timestep.xml for both
       // checkpoints and time step dumps.
-      d_output->writeto_xml_files( d_delt, d_currentGridP );
+      //d_output->writeto_xml_files( d_delt, d_currentGridP );
     }
 
     d_output->findNext_OutputCheckPointTimestep( d_simTime + d_delt );

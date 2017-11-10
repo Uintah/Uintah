@@ -23,17 +23,22 @@
  */
 
 #include <Core/Grid/Variables/GridVariableBase.h>
+
 #include <Core/Disclosure/TypeDescription.h>
+#include <Core/Exceptions/InternalError.h>
+#include <Core/Geometry/IntVector.h>
 #include <Core/Parallel/BufferInfo.h>
 
-#include <Core/Geometry/IntVector.h>
-#include <Core/Exceptions/InternalError.h>
+#include <string>
 
 using namespace Uintah;
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
-void GridVariableBase::getMPIBuffer(BufferInfo& buffer,
-                                    const IntVector& low, const IntVector& high)
+void
+GridVariableBase::getMPIBuffer(       BufferInfo & buffer,
+                                const IntVector  & low,
+                                const IntVector  & high )
 {
   const TypeDescription* td = virtualGetTypeDescription()->getSubType();
   MPI_Datatype basetype=td->getMPIType();
@@ -50,9 +55,15 @@ void GridVariableBase::getMPIBuffer(BufferInfo& buffer,
   MPI_Datatype type2d;
   Uintah::MPI::Type_create_hvector(d.y(), 1, strides.y(), type1d, &type2d);
   Uintah::MPI::Type_free(&type1d);
+
   MPI_Datatype type3d;
   Uintah::MPI::Type_create_hvector(d.z(), 1, strides.z(), type2d, &type3d);
-  Uintah::MPI::Type_free(&type2d);
-  Uintah::MPI::Type_commit(&type3d);
-  buffer.add(startbuf, 1, type3d, true);
+
+  Uintah::MPI::Type_free(   &type2d );
+  Uintah::MPI::Type_commit( &type3d );
+
+  buffer.add( startbuf, 1, type3d, true );
 }
+
+//______________________________________________________________________
+//

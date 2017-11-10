@@ -29,11 +29,11 @@
 #include <Core/Grid/Variables/ParticleSubset.h>
 #include <Core/Grid/Variables/Variable.h>
 #include <Core/Grid/Variables/constVariable.h>
-
 #include <Core/Util/Assert.h>
 
-#include   <vector>
+#include <vector>
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 namespace Uintah {
   class BufferInfo;
@@ -120,7 +120,6 @@ WARNING
       virtual void packsizeMPI(int* bufpos,
                                const ProcessorGroup* pg,
                                ParticleSubset* pset) = 0;
-
       virtual int size() = 0;
 
       virtual size_t getDataSize() const = 0;

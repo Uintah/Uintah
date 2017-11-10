@@ -27,8 +27,9 @@
 #define UINTAH_HOMEBREW_ReductionVariableBase_H
 
 #include <Core/Grid/Variables/Variable.h>
-#include <iosfwd>
 #include <Core/Parallel/UintahMPI.h>
+
+#include <iosfwd>
 
 namespace Uintah {
 

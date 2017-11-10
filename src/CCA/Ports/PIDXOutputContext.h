@@ -168,7 +168,7 @@ class PIDXOutputContext {
                            PIDX_flags     flags,
                      const PatchSubset  * patches,
                            PIDX_point     dims,
-                     const int            type);
+                     const int            type );
     
     void setLevelExtents( const std::string & desc, 
                                 IntVector     lo,

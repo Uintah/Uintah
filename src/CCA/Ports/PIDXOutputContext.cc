@@ -132,10 +132,12 @@ PIDXOutputContext::getSupportedVariableTypes(){
     
   vector<TypeDescription::Type> GridVarTypes;
   GridVarTypes.empty();
-  GridVarTypes.push_back(TypeDescription::CCVariable );        // This is where you define what types are supported.
-  GridVarTypes.push_back(TypeDescription::SFCXVariable );
-  GridVarTypes.push_back(TypeDescription::SFCYVariable );
-  GridVarTypes.push_back(TypeDescription::SFCZVariable );
+  GridVarTypes.push_back( TypeDescription::CCVariable );        // This is where you define what types are supported.
+  GridVarTypes.push_back( TypeDescription::SFCXVariable );
+  GridVarTypes.push_back( TypeDescription::SFCYVariable );
+  GridVarTypes.push_back( TypeDescription::SFCZVariable );
+  GridVarTypes.push_back( TypeDescription::ParticleVariable );
+  GridVarTypes.push_back( TypeDescription::NCVariable );
   return GridVarTypes;
 }
  
@@ -145,20 +147,14 @@ string
 PIDXOutputContext::getDirectoryName(TypeDescription::Type TD)
 {
   switch ( TD ){
-      case TypeDescription::CCVariable:
-        return "CCVars";  
-        break;
-      case TypeDescription::SFCXVariable:
-        return "SFCXVars";
-        break;
-      case TypeDescription::SFCYVariable:
-        return "SFCYVars";
-        break;
-      case TypeDescription::SFCZVariable:
-        return "SFCZVars";
-        break;
-      default:
-         throw Uintah::InternalError("  PIDXOutputContext::getDirectoryName type description not supported", __FILE__, __LINE__);
+    case TypeDescription::CCVariable:       return "CCVars";           break;
+    case TypeDescription::SFCXVariable:     return "SFCXVars";         break;
+    case TypeDescription::SFCYVariable:     return "SFCYVars";         break;
+    case TypeDescription::SFCZVariable:     return "SFCZVars";         break;
+    case TypeDescription::ParticleVariable: return "ParticleVariable"; break;
+    case TypeDescription::NCVariable:       return "NCVariable";       break;
+    default:
+      throw Uintah::InternalError("  PIDXOutputContext::getDirectoryName type description not supported", __FILE__, __LINE__);
   }
 }
 //______________________________________________________________________
@@ -262,8 +258,8 @@ PIDXOutputContext::initialize( const string       & filename,
     PIDX_set_io_mode( this->file, PIDX_RAW_IO );
 
     // FIXME: The 1 below represents the 1st timestep... but if we begin output on another timestep, this should be changed...
-    PIDX_set_cache_time_step( this->file, 1 );
-    checkReturnCode( rc, desc + " - PIDX_enable_idx_io", __FILE__, __LINE__ );
+    //PIDX_set_cache_time_step( this->file, 1 );
+    //checkReturnCode( rc, desc + " - PIDX_enable_idx_io", __FILE__, __LINE__ );
   }
   
   
