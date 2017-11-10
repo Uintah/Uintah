@@ -64,17 +64,17 @@ void SimpleSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
     int mytotal = 0;
     const PatchSubset* patchsub = perproc_patches->getSubset(p);
     for (int ps = 0; ps<patchsub->size(); ps++) {
-    const Patch* patch = patchsub->get(ps);
-    IntVector plowIndex = patch->getNodeLowIndex();
-    IntVector phighIndex = patch->getNodeHighIndex();
+      const Patch* patch = patchsub->get(ps);
+      IntVector plowIndex = patch->getNodeLowIndex();
+      IntVector phighIndex = patch->getNodeHighIndex();
 
-    long nn = (phighIndex[0]-plowIndex[0])*
-              (phighIndex[1]-plowIndex[1])*
-              (phighIndex[2]-plowIndex[2])*DOFsPerNode;
+      long nn = (phighIndex[0]-plowIndex[0])*
+                (phighIndex[1]-plowIndex[1])*
+                (phighIndex[2]-plowIndex[2])*DOFsPerNode;
 
-    d_petscGlobalStart[patch]=d_totalNodes;
-    d_totalNodes+=nn;
-    mytotal+=nn;
+      d_petscGlobalStart[patch]=d_totalNodes;
+      d_totalNodes+=nn;
+      mytotal+=nn;
     
     }
     d_numNodes[p] = mytotal;

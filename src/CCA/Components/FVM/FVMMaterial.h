@@ -39,7 +39,8 @@ namespace Uintah {
     public:
       enum FVMMethod{
         ESPotential,
-        Gauss
+        Gauss,
+        PNP
       };
       FVMMaterial(ProblemSpecP& ps, SimulationStateP& shared_state,
                   FVMMethod method_type);
@@ -50,6 +51,13 @@ namespace Uintah {
                                            CCVariable<double>& charge1,
                                            CCVariable<double>& charge2,
                                            const Patch* patch);
+
+      void initializeMPNPValues(const int idx, const Patch* patch,
+                                      CCVariable<double>& permitivity,
+                                      CCVariable<double>& pos_charge,
+                                      CCVariable<double>& neg_charge,
+                                      CCVariable<int>& mat_id,
+                                      CCVariable<int>& interface_cell);
 
     private:
        std::vector<GeometryObject*> d_geom_objs;

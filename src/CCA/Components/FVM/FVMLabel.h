@@ -45,15 +45,22 @@ namespace Uintah{
       const VarLabel* ccPosChargeDensity;
       const VarLabel* ccNegChargeDensity;
       const VarLabel* ccPermittivity;
+      const VarLabel* ccRelativePermittivity;
       const VarLabel* fcxConductivity;
       const VarLabel* fcyConductivity;
       const VarLabel* fczConductivity;
+      const VarLabel* fcxRelativePermittivity;
+      const VarLabel* fcyRelativePermittivity;
+      const VarLabel* fczRelativePermittivity;
       const VarLabel* fcxConcentration;
       const VarLabel* fcyConcentration;
       const VarLabel* fczConcentration;
       const VarLabel* fcxMass;
       const VarLabel* fcyMass;
       const VarLabel* fczMass;
+
+      const VarLabel* ccMatId;
+      const VarLabel* ccInterfaceCell;
   };
 } // End Uintah namespace
 

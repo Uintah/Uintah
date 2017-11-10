@@ -34,29 +34,32 @@ FVMLabel::FVMLabel()
 {
 
   ccESPotential       = VarLabel::create("cc.esPotential",
-	                      CCVariable<double>::getTypeDescription());
+	                          CCVariable<double>::getTypeDescription());
   ccESPotentialMatrix = VarLabel::create("cc.esPotentialMatrix",
-	                      CCVariable<Stencil7>::getTypeDescription());
+	                          CCVariable<Stencil7>::getTypeDescription());
   ccRHS_ESPotential   = VarLabel::create("cc.rhsEsPotential",
-	                      CCVariable<double>::getTypeDescription());
+	                          CCVariable<double>::getTypeDescription());
   ccConductivity      = VarLabel::create("cc.Conductivity",
-                        CCVariable<double>::getTypeDescription());
+                            CCVariable<double>::getTypeDescription());
   ccGridConductivity  = VarLabel::create("cc.GridConductivity",
-                          CCVariable<double>::getTypeDescription());
+                            CCVariable<double>::getTypeDescription());
   ccCurrent           = VarLabel::create("cc.Current",
-                          CCVariable<Vector>::getTypeDescription());
+                            CCVariable<Vector>::getTypeDescription());
   ccPosCharge         = VarLabel::create("cc.PosCharge",
-                          CCVariable<double>::getTypeDescription());
+                            CCVariable<double>::getTypeDescription());
   ccNegCharge         = VarLabel::create("cc.NegCharge",
-                          CCVariable<double>::getTypeDescription());
+                            CCVariable<double>::getTypeDescription());
   ccTotalCharge       = VarLabel::create("cc.TotalCharge",
                             CCVariable<double>::getTypeDescription());
   ccPosChargeDensity  = VarLabel::create("cc.Charge_Density1",
-                          CCVariable<double>::getTypeDescription());
+                            CCVariable<double>::getTypeDescription());
   ccNegChargeDensity  = VarLabel::create("cc.Charge_Density2",
-                          CCVariable<double>::getTypeDescription());
-  ccPermittivity      = VarLabel::create("cc.Permittivity",
-                          CCVariable<double>::getTypeDescription());
+                            CCVariable<double>::getTypeDescription());
+
+  ccPermittivity          = VarLabel::create("cc.Permittivity",
+                            CCVariable<double>::getTypeDescription());
+  ccRelativePermittivity  = VarLabel::create("cc.Permittivity",
+                            CCVariable<double>::getTypeDescription());
 
   fcxConductivity     = VarLabel::create("fcx.Conductivity",
                         SFCXVariable<double>::getTypeDescription());
@@ -64,6 +67,13 @@ FVMLabel::FVMLabel()
                         SFCYVariable<double>::getTypeDescription());
   fczConductivity     = VarLabel::create("fcz.Conductivity",
                         SFCZVariable<double>::getTypeDescription());
+
+  fcxRelativePermittivity = VarLabel::create("fcx.Conductivity",
+                            SFCXVariable<double>::getTypeDescription());
+  fcyRelativePermittivity = VarLabel::create("fcy.Conductivity",
+                            SFCYVariable<double>::getTypeDescription());
+  fczRelativePermittivity = VarLabel::create("fcz.Conductivity",
+                            SFCZVariable<double>::getTypeDescription());
 
   fcxConcentration    = VarLabel::create("fcx.Concentration",
                         SFCXVariable<double>::getTypeDescription());
@@ -78,6 +88,11 @@ FVMLabel::FVMLabel()
                         SFCYVariable<double>::getTypeDescription());
   fczMass             = VarLabel::create("fcz.Mass",
                         SFCZVariable<double>::getTypeDescription());
+
+  ccMatId         = VarLabel::create("cc.MatId",
+                    CCVariable<int>::getTypeDescription());
+  ccInterfaceCell = VarLabel::create("cc.InterfaceCell",
+                    CCVariable<int>::getTypeDescription());
 }
 
 FVMLabel::~FVMLabel()
@@ -94,14 +109,21 @@ FVMLabel::~FVMLabel()
   VarLabel::destroy(ccPosChargeDensity);
   VarLabel::destroy(ccNegChargeDensity);
   VarLabel::destroy(ccPermittivity);
+  VarLabel::destroy(ccRelativePermittivity);
   VarLabel::destroy(fcxConductivity);
   VarLabel::destroy(fcyConductivity);
   VarLabel::destroy(fczConductivity);
+  VarLabel::destroy(fcxRelativePermittivity);
+  VarLabel::destroy(fcyRelativePermittivity);
+  VarLabel::destroy(fczRelativePermittivity);
   VarLabel::destroy(fcxConcentration);
   VarLabel::destroy(fcyConcentration);
   VarLabel::destroy(fczConcentration);
   VarLabel::destroy(fcxMass);
   VarLabel::destroy(fcyMass);
   VarLabel::destroy(fczMass);
+
+  VarLabel::destroy(ccMatId);
+  VarLabel::destroy(ccInterfaceCell);
 }
 

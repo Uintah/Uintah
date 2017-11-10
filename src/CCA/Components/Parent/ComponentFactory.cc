@@ -75,12 +75,12 @@
 
 #ifndef NO_ELECTROCHEM
 #include <CCA/Components/ElectroChem/ImpCPDI.h>
+#include <CCA/Components/ElectroChem/MPNP.h>
 #endif
 
 #ifndef NO_FVM
 #include <CCA/Components/FVM/ElectrostaticSolve.h>
 #include <CCA/Components/FVM/GaussSolve.h>
-#include <CCA/Components/FVM/MPNP.h>
 #endif
 
 #if !defined(NO_MPM) && !defined(NO_FVM)
@@ -204,6 +204,10 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
   if (sim_comp == "imp_cpdi"){
 	  return scinew ImpCPDI(world);
   }
+
+  if (sim_comp == "mpnp"){
+    return scinew MPNP(world);
+  }
 #else
   turned_off_options += "Ele ";
 #endif
@@ -215,10 +219,6 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
 
   if(sim_comp == "gauss_solver"){
     return scinew GaussSolve(world);
-  }
-
-  if(sim_comp == "mpnp"){
-    return scinew MPNP(world);
   }
 #else
   turned_off_options += "FVM ";
