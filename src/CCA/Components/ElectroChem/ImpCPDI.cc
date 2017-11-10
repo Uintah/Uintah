@@ -23,6 +23,7 @@
  */
 
 #include <CCA/Components/ElectroChem/ImpCPDI.h>
+#include <Core/Grid/SimulationState.h>
 
 using namespace Uintah;
 
@@ -30,10 +31,30 @@ using namespace Uintah;
 ImpCPDI::ImpCPDI(const ProcessorGroup* myworld) :
   UintahParallelComponent(myworld)
 {
+  d_mpm_lb = scinew MPMLabel();
+  d_impec_flags = scinew ImpECFlags();
+
+  d_SMALL_NUM = 1e-200;
+  d_initial_dt = 0.0;
+  d_next_output_time = 0.0;
+  d_stop_time = 0.0;
+  d_num_iterations = 0;
+  d_NGP = 1;
+  d_NGN = 1;
+
+  d_one_matl = scinew MaterialSubset();
+  d_one_matl->add(0);
+  d_one_matl->addReference();
 }
 
 ImpCPDI::~ImpCPDI()
 {
+  delete d_mpm_lb;
+  delete d_impec_flags;
+
+  if(d_one_matl->removeReference()){
+    delete d_one_matl;
+  }
 }
 
 void ImpCPDI::problemSetup( const ProblemSpecP&     params,
@@ -41,6 +62,7 @@ void ImpCPDI::problemSetup( const ProblemSpecP&     params,
                                   GridP&            grid,
                                   SimulationStateP& state )
 {
+  d_shared_state = state;
 }
 
 void ImpCPDI::preGridProblemSetup( const ProblemSpecP&     params, 

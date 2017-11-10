@@ -32,6 +32,8 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := CCA/Components/ElectroChem
 
 SRCS   += $(SRCDIR)/ImpCPDI.cc \
+          $(SRCDIR)/ImpECFlags.cc \
+          $(SRCDIR)/MPNP.cc
 
 #include $(SCIRUN_SCRIPTS)/recurse.mk          
 
