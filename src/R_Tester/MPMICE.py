@@ -50,6 +50,7 @@ LOCALTESTS = [   ("massX",                    "massX.ups",                 1,  "
                  ("DDT",                      "DDT.ups",                   1,  "ALL", ["exactComparison","no_dbg"]),
                  ("InductionTime",            "InductionTime.ups",         1  ,"ALL", ["exactComparison","no_dbg"]),
                  ("InductionPropagation",     "InductionPropagation.ups",  1  ,"ALL", ["exactComparison","no_dbg"]),
+                 ("PBX_Cylinder_Ext_Load",    "PBX_array/oneCylinder.ups", 4  ,"ALL", ["exactComparison","no_restart","no_dbg"])
     	       ]
 DEBUGTESTS =[]
 #__________________________________

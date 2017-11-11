@@ -6,12 +6,12 @@
    </Meta>  
    <SimulationComponent type="mpmice" />
    
-   
+   <!--
    <LoadBalancer type="DLB">
      <timestepInterval> 200         </timestepInterval>
      <hasParticles> true </hasParticles>
    </LoadBalancer>
-   
+   -->
     <!--____________________________________________________________________-->
     <!--   T  I  M  E     V  A  R  I  A  B  L  E  S                         -->
     <!--____________________________________________________________________-->
@@ -21,6 +21,7 @@
        <delt_min>           0.0       </delt_min>
        <delt_max>           1.0       </delt_max>
        <delt_init>          1e-20    </delt_init>
+       <max_Timesteps>      700      </max_Timesteps>
        <timestep_multiplier>0.2       </timestep_multiplier>
        <max_delt_increase>  0.5      </max_delt_increase>
    </Time>    
@@ -84,10 +85,10 @@
        <Level>
            <Box label = "1">
               <lower>        [ 0.000, 0.000, 0.0000] </lower>
-              <upper>        [ 0.025, 0.025,  0.01]    </upper>
+              <upper>        [ 0.025, 0.025,  0.0005]    </upper>
               <extraCells>   [1,1,1]                 </extraCells>
-              <patches>      [1,1,1]                 </patches> 
-              <resolution>   [25,25,1]               </resolution>
+              <patches>      [2,2,1]                 </patches> 
+              <resolution>   [50,50,1]               </resolution>
            </Box>
        </Level>
     </Grid>
@@ -96,9 +97,9 @@
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-      <filebase>2DCylinder.uda</filebase>
+      <filebase>2D_PBX_Cylinder_Ext_Load.uda</filebase>
       <!--<outputInterval> 0.00005 </outputInterval> -->
-      <outputTimestepInterval> 10 </outputTimestepInterval>
+      <outputTimestepInterval> 20 </outputTimestepInterval>
       <save label="press_CC"/>
       <save label="temp_CC"/>
       <save label="rho_CC"/>
@@ -117,7 +118,8 @@
       <save label="p.mass"/>
       <save label="p.stress"/>
       <save label="p.externalforce"/>
-      <checkpoint cycle = "2" timestepInterval = "1000"/>
+      <save label="p.velocity"/>
+      <checkpoint cycle = "2" timestepInterval = "100"/>
     </DataArchiver>
 
     <!--____________________________________________________________________-->
@@ -316,7 +318,6 @@
           <toMaterial>   product   </toMaterial>
           <G>       3.0e-10 </G>
           <b>       1.5     </b>
-          <rho0>    1840.0  </rho0>
           <E0>      5.0e6   </E0>
           <useCrackModel>      false  </useCrackModel>
           <Gcrack>             4.0e-18 </Gcrack>
@@ -337,6 +338,21 @@
           <BoundaryParticles>    3            </BoundaryParticles>
           <IgnitionTemp>         1e100        </IgnitionTemp>    <!-- turn off deflagration -->
           <ThresholdPressureSB>  50000.       </ThresholdPressureSB>
+          
+          <adjust_IO_intervals>
+            <PressureSwitch>
+              <PressureThreshold>     5e9    </PressureThreshold>
+              <newOutputInterval>      1e-6  </newOutputInterval>
+              <newCheckPointInterval>  1e-6  </newCheckPointInterval>
+            </PressureSwitch>
+
+            <DetonationDetected>
+              <remainingTimesteps>     2000  </remainingTimesteps>
+              <newOutputInterval>      1.5e-6  </newOutputInterval>
+              <newCheckPointInterval>  1.5e-6  </newCheckPointInterval>
+            </DetonationDetected>
+          </adjust_IO_intervals>
+          
         </DDT1>
       </Model>  
     </Models>
@@ -358,7 +374,7 @@
                 <load> -8e9 </load>                 
               </time_point>                          
               <time_point>                           
-                <time> 5e-6 </time>                  
+                <time> 5e-7 </time>                  
                 <load> 0</load>                  
               </time_point>                          
            </load_curve>                             
