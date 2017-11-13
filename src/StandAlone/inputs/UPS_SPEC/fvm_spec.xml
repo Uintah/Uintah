@@ -28,6 +28,8 @@
       </Parameters>
       <unit_charge         spec="OPTIONAL DOUBLE"/>
       <permittivity        spec="OPTIONAL DOUBLE"/>
+      <boltzmanns_const    spec="OPTIONAL DOUBLE"/>
+      <temperature         spec="OPTIONAL DOUBLE"/>
     </FVM>
     
     <ESMPM                  spec="OPTIONAL NO_DATA">
@@ -38,6 +40,7 @@
   <MaterialProperties>
     <FVM               spec="OPTIONAL NO_DATA">
       <material        spec="MULTIPLE NO_DATA" attribute1="name OPTIONAL STRING" >
+        <diffusivity   spec="OPTIONAL DOUBLE"/>
         <geom_object   spec="MULTIPLE" />
       </material>
     </FVM>

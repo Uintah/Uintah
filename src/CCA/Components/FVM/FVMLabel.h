@@ -46,6 +46,8 @@ namespace Uintah{
       const VarLabel* ccTotalCharge;
       const VarLabel* ccPosChargeDensity;
       const VarLabel* ccNegChargeDensity;
+      const VarLabel* ccDPosChargeDt;
+      const VarLabel* ccDNegChargeDt;
       const VarLabel* ccPermittivity;
       const VarLabel* ccRelativePermittivity;
       const VarLabel* fcxConductivity;

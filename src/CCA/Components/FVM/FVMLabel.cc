@@ -59,6 +59,10 @@ FVMLabel::FVMLabel()
                             CCVariable<double>::getTypeDescription());
   ccNegChargeDensity  = VarLabel::create("cc.Charge_Density2",
                             CCVariable<double>::getTypeDescription());
+  ccDPosChargeDt      = VarLabel::create("cc.DPosChargeDt",
+                            CCVariable<double>::getTypeDescription());
+  ccDNegChargeDt      = VarLabel::create("cc.DNegChargeDt",
+                            CCVariable<double>::getTypeDescription());
 
   ccPermittivity          = VarLabel::create("cc.Permittivity",
                             CCVariable<double>::getTypeDescription());
@@ -114,6 +118,8 @@ FVMLabel::~FVMLabel()
   VarLabel::destroy(ccTotalCharge);
   VarLabel::destroy(ccPosChargeDensity);
   VarLabel::destroy(ccNegChargeDensity);
+  VarLabel::destroy(ccDPosChargeDt);
+  VarLabel::destroy(ccDNegChargeDt);
   VarLabel::destroy(ccPermittivity);
   VarLabel::destroy(ccRelativePermittivity);
   VarLabel::destroy(fcxConductivity);

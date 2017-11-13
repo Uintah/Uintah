@@ -123,6 +123,16 @@ WARNING
                                  LevelP level,
                                  Scheduler* sched);
 
+    void scheduleComputeDcDt(SchedulerP&        sched,
+                             const LevelP&      level,
+                             const MaterialSet* fvm_matls);
+
+    void computeDcDt(const ProcessorGroup* pg,
+                     const PatchSubset* patches,
+                     const MaterialSubset* fvm_matls,
+                           DataWarehouse* old_dw,
+                           DataWarehouse* new_dw);
+
     void scheduleUpdateMPNPValues(SchedulerP& sched,
                                   const LevelP& level,
                                   const MaterialSet* fvm_matls);
@@ -138,7 +148,11 @@ WARNING
     double d_delt;
     double d_unit_charge;
     double d_permittivity;
+    double d_boltzmanns;
+    double d_temp;
     double d_alpha;
+    double d_beta;
+    double d_gamma;
     SolverInterface* d_solver;
     SolverParameters* d_solver_parameters;
     MaterialSet* d_one_matl_set;

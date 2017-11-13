@@ -2,6 +2,8 @@
 <!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
 <!-- Unit:
      lenght = nm
+     density = atoms/nm^3
+     diffusivity = nm^2/us
 -->
 
 <Uintah_specification>
@@ -86,6 +88,7 @@
    <MaterialProperties>
      <FVM>
        <material name="neg_electrode">
+         <diffusivity>0.0</diffusivity>
          <geom_object>
            <box label="box_neg_elec">
              <min> [ 45.0,  0.0, 0.0 ] </min>
@@ -101,6 +104,7 @@
          </geom_object>
        </material>
        <material name="electrolyte">
+         <diffusivity>1.9e3</diffusivity>
          <geom_object>
            <difference>
              <box label="whole_domain">
@@ -109,17 +113,19 @@
              </box>
              <box label="box_neg_elec"/>
            </difference>
-           <pos_charge_density> 1.0  </pos_charge_density>
-           <neg_charge_density> 1.0  </neg_charge_density>
-           <rel_permittivity> 100.0 </rel_permittivity>
+           <pos_charge_density> 0.6  </pos_charge_density>
+           <neg_charge_density> 0.6  </neg_charge_density>
+           <rel_permittivity> 88.0 </rel_permittivity>
          </geom_object>
        </material>
      </FVM>
    </MaterialProperties>           
 
    <FVM>
-     <unit_charge>  1.602e-19 </unit_charge>
-     <permittivity> 8.85e-21  </permittivity>
+     <unit_charge>      1.602e-19 </unit_charge>
+     <permittivity>     8.85e-21  </permittivity>
+     <boltzmanns_const> 1.38e-23  </boltzmanns_const>
+     <temperature>      300       </temperature>
      <delt>.1</delt>
      <Parameters variable="electrostatic_solver">
        <!-- CGSolver options -->
