@@ -91,6 +91,25 @@ WARNING
                                      DataWarehouse* old_dw,
                                      DataWarehouse* new_dw);
 
+    void scheduleComputePermittivity(SchedulerP& sched,
+                                     const LevelP& level,
+                                     const MaterialSet* fvm_matls);
+
+    void computePermittivity(const ProcessorGroup* pg,
+                             const PatchSubset* patches,
+                             const MaterialSubset* fvm_matls,
+                                   DataWarehouse* old_dw,
+                                   DataWarehouse* new_dw);
+
+    void scheduleComputeFCPermittivity(SchedulerP& sched,
+                                       const LevelP& level,
+                                       const MaterialSet* es_matls);
+
+    void computeFCPermittivity(const ProcessorGroup* pg,
+                               const PatchSubset* patches,
+                               const MaterialSubset* es_matls,
+                                     DataWarehouse* old_dw,
+                                     DataWarehouse* new_dw);
 
     FVMLabel* d_lb;
     SimulationStateP d_shared_state;

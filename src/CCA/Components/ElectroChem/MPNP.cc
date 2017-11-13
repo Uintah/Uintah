@@ -228,5 +228,136 @@ void MPNP::computeStableTimestep(const ProcessorGroup* pg,
 void
 MPNP::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
+  const MaterialSet* fvm_matls = d_shared_state->allFVMMaterials();
+  const MaterialSet* all_matls = d_shared_state->allMaterials();
 
+  scheduleComputePermittivity(   sched, level, fvm_matls);
+  scheduleComputeFCPermittivity( sched, level, d_one_matl_set);
+  /**
+  scheduleBuildMatrixAndRhs(     sched, level, d_one_matl_set);
+
+  d_solver->scheduleSolve(level, sched, d_one_matl_set,
+                          d_lb->ccESPotentialMatrix, Task::NewDW,
+                          d_lb->ccESPotential, false,
+                          d_lb->ccRHS_ESPotential, Task::NewDW,
+                          0, Task::OldDW,
+                          d_solver_parameters,false);
+
+  scheduleUpdateESPotential(sched, level, d_es_matlset);
+  scheduleComputeCurrent(sched, level, d_es_matlset);
+  */
+
+}
+//______________________________________________________________________
+//
+void MPNP::scheduleComputePermittivity(SchedulerP& sched,
+                                       const LevelP& level,
+                                       const MaterialSet* fvm_matls)
+{
+  Task* t = scinew Task("MPNP::computePermittivity", this,
+                        &MPNP::computePermittivity);
+
+  t->requires(Task::OldDW, d_lb->ccRelativePermittivity, Ghost::AroundCells, 1);
+  t->computes(d_lb->ccRelativePermittivity);
+  t->computes(d_lb->ccGridPermittivity, d_one_matl_subset, Task::OutOfDomain);
+
+  sched->addTask(t, level->eachPatch(), fvm_matls);
+}
+//______________________________________________________________________
+//
+void MPNP::computePermittivity(const ProcessorGroup* pg,
+                               const PatchSubset* patches,
+                               const MaterialSubset* fvm_matls,
+                                     DataWarehouse* old_dw,
+                                     DataWarehouse* new_dw)
+{
+  int num_matls = d_shared_state->getNumFVMMatls();
+  for (int p = 0; p < patches->size(); p++){
+    const Patch* patch = patches->get(p);
+
+    CCVariable<double>   grid_permittivity;
+
+    new_dw->allocateAndPut(grid_permittivity, d_lb->ccGridPermittivity, 0, patch);
+
+    grid_permittivity.initialize(0.0);
+
+    for(int m = 0; m < num_matls; m++){
+      FVMMaterial* fvm_matl = d_shared_state->getFVMMaterial(m);
+      int idx = fvm_matl->getDWIndex();
+
+      constCCVariable<double> old_permittivty;
+      CCVariable<double> permittivity;
+
+      old_dw->get(old_permittivty, d_lb->ccRelativePermittivity, idx, patch, Ghost::AroundCells, 1);
+      new_dw->allocateAndPut(permittivity, d_lb->ccRelativePermittivity,  idx, patch);
+
+      for(CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
+        IntVector c = *iter;
+        permittivity[c] = old_permittivty[c];
+        if(permittivity[c] > 0.0){
+          grid_permittivity[c] = permittivity[c];
+        }
+      }
+    } // material loop
+  } // patch loop
+}
+//______________________________________________________________________
+//
+void MPNP::scheduleComputeFCPermittivity(SchedulerP& sched,
+                                         const LevelP& level,
+                                         const MaterialSet* es_matls)
+{
+  Task* t = scinew Task("MPNP::computeFCPermittivity", this,
+                        &MPNP::computeFCPermittivity);
+
+    t->requires(Task::NewDW, d_lb->ccGridPermittivity, Ghost::AroundCells, 1);
+    t->computes(d_lb->fcxRelativePermittivity, d_one_matl_subset, Task::OutOfDomain);
+    t->computes(d_lb->fcyRelativePermittivity, d_one_matl_subset, Task::OutOfDomain);
+    t->computes(d_lb->fczRelativePermittivity, d_one_matl_subset, Task::OutOfDomain);
+    sched->addTask(t, level->eachPatch(), es_matls);
+}
+
+void MPNP::computeFCPermittivity(const ProcessorGroup* pg,
+                                 const PatchSubset* patches,
+                                 const MaterialSubset* es_matls,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw)
+{
+  for (int p = 0; p < patches->size(); p++){
+    const Patch* patch = patches->get(p);
+
+    constCCVariable<double>  grid_permittivity;
+
+    SFCXVariable<double> fcx_permittivity;
+    SFCYVariable<double> fcy_permittivity;
+    SFCZVariable<double> fcz_permittivity;
+
+
+    new_dw->get(grid_permittivity, d_lb->ccGridPermittivity, 0, patch, Ghost::AroundCells, 1);
+    new_dw->allocateAndPut(fcx_permittivity, d_lb->fcxRelativePermittivity, 0, patch);
+    new_dw->allocateAndPut(fcy_permittivity, d_lb->fcyRelativePermittivity, 0, patch);
+    new_dw->allocateAndPut(fcz_permittivity, d_lb->fczRelativePermittivity, 0, patch);
+
+    fcx_permittivity.initialize(0.0);
+    fcy_permittivity.initialize(0.0);
+    fcz_permittivity.initialize(0.0);
+
+    for(CellIterator iter = patch->getSFCXIterator(); !iter.done(); iter++){
+      IntVector c = *iter;
+      IntVector offset(-1,0,0);
+      fcx_permittivity[c] = .5*(grid_permittivity[c] + grid_permittivity[c + offset]);
+    }
+
+    for(CellIterator iter = patch->getSFCYIterator(); !iter.done(); iter++){
+      IntVector c = *iter;
+      IntVector offset(0,-1,0);
+      fcy_permittivity[c] = .5*(grid_permittivity[c] + grid_permittivity[c + offset]);
+    }
+
+    for(CellIterator iter = patch->getSFCZIterator(); !iter.done(); iter++){
+      IntVector c = *iter;
+      IntVector offset(0,0,-1);
+      fcz_permittivity[c] = .5*(grid_permittivity[c] + grid_permittivity[c + offset]);
+    }
+  } // patch loop
 }

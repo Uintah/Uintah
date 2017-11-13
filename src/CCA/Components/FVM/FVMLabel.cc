@@ -43,6 +43,8 @@ FVMLabel::FVMLabel()
                             CCVariable<double>::getTypeDescription());
   ccGridConductivity  = VarLabel::create("cc.GridConductivity",
                             CCVariable<double>::getTypeDescription());
+  ccGridPermittivity  = VarLabel::create("cc.GridPermittivity",
+                            CCVariable<double>::getTypeDescription());
   ccCurrent           = VarLabel::create("cc.Current",
                             CCVariable<Vector>::getTypeDescription());
   ccPosCharge         = VarLabel::create("cc.PosCharge",
@@ -102,6 +104,7 @@ FVMLabel::~FVMLabel()
   VarLabel::destroy(ccRHS_ESPotential);
   VarLabel::destroy(ccConductivity);
   VarLabel::destroy(ccGridConductivity);
+  VarLabel::destroy(ccGridPermittivity);
   VarLabel::destroy(ccCurrent);
   VarLabel::destroy(ccPosCharge);
   VarLabel::destroy(ccNegCharge);
