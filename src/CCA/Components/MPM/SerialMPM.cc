@@ -2938,6 +2938,8 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,"Doing computeAndIntegrateAcceleration");
 
+    Vector dxCell = patch->dCell();
+    double delX = dxCell.x();
     Ghost::GhostType  gnone = Ghost::None;
     Vector gravity = flags->d_gravity;
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
@@ -2975,6 +2977,15 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
         }
         acceleration[c] = acc +  gravity;
         velocity_star[c] = velocity[c] + acceleration[c] * delT;
+        if(velocity_star[c].length()*delT > delX && c.z() >= 0){
+          cout << "n = " << c << endl;
+          cout << "mass = " << mass[c] << endl;
+          cout << "ratio = " << velocity_star[c].length()*delT/delX << endl;
+          cout << "velocity = " << velocity[c] << endl;
+          cout << "vel_star = " << velocity_star[c] << endl;
+          cout << "acceleration = " << acceleration[c] << endl << endl;
+          velocity_star[c] = velocity[c];
+        }
       }
     }    // matls
   }
@@ -3747,7 +3758,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           cerr << "imax, jmax = " << imax << ", " << jmax << endl;
           cerr << "pmass = " << pmass[idx] << endl;
 //          pFNew[idx].set(imax,jmax,0.9*pFNew[idx](imax,jmax));
-          pFNew[idx]=Identity;
+//          pFNew[idx]=Identity;
+          pFNew[idx]=pFOld[idx];
           cerr << "F is now " << pFNew[idx] << endl;
         }
 
