@@ -91,7 +91,6 @@ void StressRateDissolution::computeMassBurnFraction(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     Vector dx = patch->dCell();
     double area = dx.x()*dx.y();
-    double cellVol = area*dx.z();
 
     Ghost::GhostType  gnone = Ghost::None;
 
@@ -117,31 +116,20 @@ void StressRateDissolution::computeMassBurnFraction(const ProcessorGroup*,
       IntVector c = *iter;
 
       double sumMass=0.0;
-      double sumOtherVol = 0.0;
       for(int m = 0; m < numMatls; m++){
         if(d_matls.requested(m) || m==md) {
           sumMass+=gmass[m][c]; 
-          if(m!=md){
-            sumOtherVol = gvolume[m][c]*8.0*NC_CCweight[c];
-          }
         }
       }
-
-      double mdVol   = gvolume[md][c]*8.0*NC_CCweight[c];
-      double volFrac = (mdVol+sumOtherVol)/cellVol;
 
       double pressure = gStress[md][c].Trace()/(-3.);
 
       if(gmass[md][c] >  1.e-100  &&
          gmass[md][c] != sumMass  && 
-         pressure > d_PressThresh &&
-         volFrac > 0.6){
+         pressure > d_PressThresh){
           double rho = gmass[md][c]/gvolume[md][c];
-          massBurnRate[c] += d_rate*area*rho*2.0*NC_CCweight[c];
-//        massBurnRate[c] += 2.0*NC_CCweight[c]*
-//                           d_rate*area*rho;/* *(sumOtherVol/(sumOtherVol+mdVol));*/
-//        massBurnRate[c] += fabs(d_rate*(gStress[md][c].Trace()/3.0)/
-//                                                              d_PressThresh);
+          double pressFactor = (pressure - d_PressThresh)/d_PressThresh;
+          massBurnRate[c] += d_rate*area*rho*2.0*NC_CCweight[c]*pressFactor;
       }
     } // nodes
   } // patches
