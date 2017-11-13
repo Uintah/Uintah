@@ -59,6 +59,7 @@ DEBUGTESTS =[]
 #LIST: AMRTESTS DEBUGTESTS LOCALTESTS NIGHTLYTESTS BUILDBOTTESTS
 #__________________________________
 
+
 # returns the list
 def getTestList(me) :
   if me == "AMRTESTS":
@@ -70,7 +71,7 @@ def getTestList(me) :
   elif me == "NIGHTLYTESTS":
     TESTS = LOCALTESTS + NIGHTLYTESTS + AMRTESTS
   elif me == "BUILDBOTTESTS":
-    TESTS = ignorePerformanceTests( NIGHTLYTESTS )
+    TESTS = ignorePerformanceTests( LOCALTESTS + NIGHTLYTESTS + AMRTESTS )
   else:
     print "\nERROR:MPMICE.py  getTestList:  The test list (%s) does not exist!\n\n" % me
     exit(1)
