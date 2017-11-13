@@ -45,6 +45,8 @@ FVMLabel::FVMLabel()
                             CCVariable<double>::getTypeDescription());
   ccGridPermittivity  = VarLabel::create("cc.GridPermittivity",
                             CCVariable<double>::getTypeDescription());
+  ccGridTotalCharge   = VarLabel::create("cc.GridTotalCharge",
+                            CCVariable<double>::getTypeDescription());
   ccCurrent           = VarLabel::create("cc.Current",
                             CCVariable<Vector>::getTypeDescription());
   ccPosCharge         = VarLabel::create("cc.PosCharge",
@@ -60,7 +62,7 @@ FVMLabel::FVMLabel()
 
   ccPermittivity          = VarLabel::create("cc.Permittivity",
                             CCVariable<double>::getTypeDescription());
-  ccRelativePermittivity  = VarLabel::create("cc.Permittivity",
+  ccRelativePermittivity  = VarLabel::create("cc.RelativePermittivity",
                             CCVariable<double>::getTypeDescription());
 
   fcxConductivity     = VarLabel::create("fcx.Conductivity",
@@ -70,11 +72,11 @@ FVMLabel::FVMLabel()
   fczConductivity     = VarLabel::create("fcz.Conductivity",
                         SFCZVariable<double>::getTypeDescription());
 
-  fcxRelativePermittivity = VarLabel::create("fcx.Conductivity",
+  fcxRelativePermittivity = VarLabel::create("fcx.RelativePermittivity",
                             SFCXVariable<double>::getTypeDescription());
-  fcyRelativePermittivity = VarLabel::create("fcy.Conductivity",
+  fcyRelativePermittivity = VarLabel::create("fcy.RelativePermittivity",
                             SFCYVariable<double>::getTypeDescription());
-  fczRelativePermittivity = VarLabel::create("fcz.Conductivity",
+  fczRelativePermittivity = VarLabel::create("fcz.RelativePermittivity",
                             SFCZVariable<double>::getTypeDescription());
 
   fcxConcentration    = VarLabel::create("fcx.Concentration",
@@ -105,6 +107,7 @@ FVMLabel::~FVMLabel()
   VarLabel::destroy(ccConductivity);
   VarLabel::destroy(ccGridConductivity);
   VarLabel::destroy(ccGridPermittivity);
+  VarLabel::destroy(ccGridTotalCharge);
   VarLabel::destroy(ccCurrent);
   VarLabel::destroy(ccPosCharge);
   VarLabel::destroy(ccNegCharge);

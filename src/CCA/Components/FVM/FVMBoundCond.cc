@@ -73,9 +73,9 @@ void FVMBoundCond::setConductivityBC(const Patch* patch, int dwi, CCVariable<dou
 
 void FVMBoundCond::setESBoundaryConditions(const Patch* patch, int dwi,
                                            CCVariable<Stencil7>& A, CCVariable<double>& rhs,
-                                           constSFCXVariable<double>& fcx_conductivity,
-                                           constSFCYVariable<double>& fcy_conductivity,
-                                           constSFCZVariable<double>& fcz_conductivity)
+                                           constSFCXVariable<double>& fcx_value,
+                                           constSFCYVariable<double>& fcy_value,
+                                           constSFCZVariable<double>& fcz_value)
 {
   IntVector xoffset(1,0,0);
   IntVector yoffset(0,1,0);
@@ -103,7 +103,7 @@ void FVMBoundCond::setESBoundaryConditions(const Patch* patch, int dwi,
     for (int child = 0;  child < numChildren; child++) {
       double bc_value = -9;
       Iterator bound_ptr;
-      bool foundIterator =  getIteratorBCValueBCKind<double>( patch, face, child,
+      bool foundIterator = getIteratorBCValueBCKind<double>( patch, face, child,
     			                      "Voltage", dwi, bc_value, bound_ptr,bc_kind);
       if(foundIterator){
         switch (face) {
@@ -112,10 +112,10 @@ void FVMBoundCond::setESBoundaryConditions(const Patch* patch, int dwi,
               IntVector c(*bound_ptr - xoffset);
               if(bc_kind == "Dirichlet"){
                 A[c].e = 0;
-                rhs[c] -= bc_value * fcx_conductivity[c + xoffset] * e;
+                rhs[c] -= bc_value * fcx_value[c + xoffset] * e;
               }else if(bc_kind == "Neumann"){
                 A[c].e = 0;
-                A[c].p += fcx_conductivity[c + xoffset] * e;
+                A[c].p += fcx_value[c + xoffset] * e;
                 rhs[c] -= bc_value * a_e;
               }
             }
@@ -126,10 +126,10 @@ void FVMBoundCond::setESBoundaryConditions(const Patch* patch, int dwi,
               IntVector c(*bound_ptr + xoffset);
               if(bc_kind == "Dirichlet"){
                 A[c].w = 0;
-                rhs[c] -= bc_value * fcx_conductivity[c] * w;
+                rhs[c] -= bc_value * fcx_value[c] * w;
               }else if(bc_kind == "Neumann"){
                 A[c].w = 0;
-                A[c].p += fcx_conductivity[c] * w;
+                A[c].p += fcx_value[c] * w;
                 rhs[c] -= bc_value * a_w;
               }
             }
@@ -140,10 +140,10 @@ void FVMBoundCond::setESBoundaryConditions(const Patch* patch, int dwi,
               IntVector c(*bound_ptr - yoffset);
               if(bc_kind == "Dirichlet"){
                 A[c].n = 0;
-                rhs[c] -= bc_value * fcy_conductivity[c + yoffset] * n;
+                rhs[c] -= bc_value * fcy_value[c + yoffset] * n;
               }else if(bc_kind == "Neumann"){
                 A[c].n = 0;
-                A[c].p += fcy_conductivity[c + yoffset] * n;
+                A[c].p += fcy_value[c + yoffset] * n;
                 rhs[c] -= bc_value * a_n;
               }
             }
@@ -154,10 +154,10 @@ void FVMBoundCond::setESBoundaryConditions(const Patch* patch, int dwi,
               IntVector c(*bound_ptr + yoffset);
               if(bc_kind == "Dirichlet"){
                 A[c].s = 0;
-                rhs[c] -= bc_value * fcy_conductivity[c] * s;
+                rhs[c] -= bc_value * fcy_value[c] * s;
               }else if(bc_kind == "Neumann"){
                 A[c].s = 0;
-                A[c].p += fcy_conductivity[c] * s;
+                A[c].p += fcy_value[c] * s;
                 rhs[c] -= bc_value * a_s;
               }
             }
@@ -168,10 +168,10 @@ void FVMBoundCond::setESBoundaryConditions(const Patch* patch, int dwi,
               IntVector c(*bound_ptr - zoffset);
               if(bc_kind == "Dirichlet"){
                 A[c].t = 0;
-                rhs[c] -= bc_value * fcz_conductivity[c + zoffset] * t;
+                rhs[c] -= bc_value * fcz_value[c + zoffset] * t;
               }else if(bc_kind == "Neumann"){
                 A[c].t = 0;
-                A[c].p += fcz_conductivity[c + zoffset] * t;
+                A[c].p += fcz_value[c + zoffset] * t;
                 rhs[c] -= bc_value * a_t;
               }
             }
@@ -182,10 +182,10 @@ void FVMBoundCond::setESBoundaryConditions(const Patch* patch, int dwi,
               IntVector c(*bound_ptr + zoffset);
               if(bc_kind == "Dirichlet"){
                 A[c].b = 0;
-                rhs[c] -= bc_value * fcz_conductivity[c] * b;
+                rhs[c] -= bc_value * fcz_value[c] * b;
               }else if(bc_kind == "Neumann"){
                 A[c].b = 0;
-                A[c].p += fcz_conductivity[c] * b;
+                A[c].p += fcz_value[c] * b;
                 rhs[c] -= bc_value * a_b;
               }
             }

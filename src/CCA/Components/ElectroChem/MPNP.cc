@@ -60,6 +60,7 @@ MPNP::MPNP(const ProcessorGroup* myworld)
   d_delt = 0;
   d_unit_charge = 0;
   d_permittivity = 1.0;
+  d_alpha = 0.0;
   d_solver = 0;
   d_shared_state = 0;
 
@@ -119,6 +120,11 @@ void MPNP::problemSetup(const ProblemSpecP& prob_spec,
   fvm_ps->require("delt", d_delt);
   fvm_ps->require("unit_charge", d_unit_charge);
   fvm_ps->require("permittivity", d_permittivity);
+
+  // Still need to add code to throw error message
+  if(d_permittivity > 0){
+    d_alpha = d_unit_charge/d_permittivity;
+  }
 
   ProblemSpecP mat_ps = root_ps->findBlockWithOutAttribute("MaterialProperties");
   ProblemSpecP fvm_mat_ps = mat_ps->findBlock("FVM");
@@ -231,9 +237,9 @@ MPNP::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
   const MaterialSet* fvm_matls = d_shared_state->allFVMMaterials();
   const MaterialSet* all_matls = d_shared_state->allMaterials();
 
-  scheduleComputePermittivity(   sched, level, fvm_matls);
+  scheduleComputeMPNPValues(   sched, level, fvm_matls);
   scheduleComputeFCPermittivity( sched, level, d_one_matl_set);
-  /**
+
   scheduleBuildMatrixAndRhs(     sched, level, d_one_matl_set);
 
   d_solver->scheduleSolve(level, sched, d_one_matl_set,
@@ -243,60 +249,72 @@ MPNP::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
                           0, Task::OldDW,
                           d_solver_parameters,false);
 
+  /**
   scheduleUpdateESPotential(sched, level, d_es_matlset);
   scheduleComputeCurrent(sched, level, d_es_matlset);
   */
-
+  scheduleUpdateMPNPValues(sched, level, fvm_matls);
 }
 //______________________________________________________________________
 //
-void MPNP::scheduleComputePermittivity(SchedulerP& sched,
+void MPNP::scheduleComputeMPNPValues(SchedulerP& sched,
                                        const LevelP& level,
                                        const MaterialSet* fvm_matls)
 {
-  Task* t = scinew Task("MPNP::computePermittivity", this,
-                        &MPNP::computePermittivity);
+  Task* t = scinew Task("MPNP::computeMPNPValues", this,
+                        &MPNP::computeMPNPValues);
 
   t->requires(Task::OldDW, d_lb->ccRelativePermittivity, Ghost::AroundCells, 1);
-  t->computes(d_lb->ccRelativePermittivity);
-  t->computes(d_lb->ccGridPermittivity, d_one_matl_subset, Task::OutOfDomain);
+  t->requires(Task::OldDW, d_lb->ccPosCharge,    Ghost::AroundCells, 1);
+  t->requires(Task::OldDW, d_lb->ccNegCharge,    Ghost::AroundCells, 1);
 
+  t->computes(d_lb->ccGridPermittivity, d_one_matl_subset, Task::OutOfDomain);
+  t->computes(d_lb->ccGridTotalCharge,  d_one_matl_subset, Task::OutOfDomain);
   sched->addTask(t, level->eachPatch(), fvm_matls);
 }
 //______________________________________________________________________
 //
-void MPNP::computePermittivity(const ProcessorGroup* pg,
-                               const PatchSubset* patches,
-                               const MaterialSubset* fvm_matls,
-                                     DataWarehouse* old_dw,
-                                     DataWarehouse* new_dw)
+void MPNP::computeMPNPValues(const ProcessorGroup* pg,
+                             const PatchSubset* patches,
+                             const MaterialSubset* fvm_matls,
+                                   DataWarehouse* old_dw,
+                                   DataWarehouse* new_dw)
 {
   int num_matls = d_shared_state->getNumFVMMatls();
   for (int p = 0; p < patches->size(); p++){
     const Patch* patch = patches->get(p);
 
-    CCVariable<double>   grid_permittivity;
+    constCCVariable<int> old_mat_id;
+    constCCVariable<int> old_interface_cell;
+
+    CCVariable<double> grid_permittivity;
+    CCVariable<double> grid_total_charge;
 
     new_dw->allocateAndPut(grid_permittivity, d_lb->ccGridPermittivity, 0, patch);
+    new_dw->allocateAndPut(grid_total_charge, d_lb->ccGridTotalCharge,  0, patch);
 
     grid_permittivity.initialize(0.0);
+    grid_total_charge.initialize(0.0);
 
     for(int m = 0; m < num_matls; m++){
       FVMMaterial* fvm_matl = d_shared_state->getFVMMaterial(m);
       int idx = fvm_matl->getDWIndex();
 
-      constCCVariable<double> old_permittivty;
-      CCVariable<double> permittivity;
+      constCCVariable<double> permittivity;
+      constCCVariable<double> pos_charge;
+      constCCVariable<double> neg_charge;
 
-      old_dw->get(old_permittivty, d_lb->ccRelativePermittivity, idx, patch, Ghost::AroundCells, 1);
-      new_dw->allocateAndPut(permittivity, d_lb->ccRelativePermittivity,  idx, patch);
+      old_dw->get(permittivity, d_lb->ccRelativePermittivity, idx, patch, Ghost::AroundCells, 1);
+      old_dw->get(pos_charge,   d_lb->ccPosCharge,            idx, patch, Ghost::AroundCells, 1);
+      old_dw->get(neg_charge,   d_lb->ccNegCharge,            idx, patch, Ghost::AroundCells, 1);
 
       for(CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
         IntVector c = *iter;
-        permittivity[c] = old_permittivty[c];
         if(permittivity[c] > 0.0){
           grid_permittivity[c] = permittivity[c];
         }
+
+        grid_total_charge[c] = d_alpha * (pos_charge[c] - neg_charge[c]);
       }
     } // material loop
   } // patch loop
@@ -359,5 +377,191 @@ void MPNP::computeFCPermittivity(const ProcessorGroup* pg,
       IntVector offset(0,0,-1);
       fcz_permittivity[c] = .5*(grid_permittivity[c] + grid_permittivity[c + offset]);
     }
+  } // patch loop
+}
+//______________________________________________________________________
+//
+void MPNP::scheduleBuildMatrixAndRhs(SchedulerP& sched,
+                                     const LevelP& level,
+                                     const MaterialSet* es_matl)
+{
+  Task* task = scinew Task("MPNP::buildMatrixAndRhs", this,
+                           &MPNP::buildMatrixAndRhs,
+                           level, sched.get_rep());
+
+  task->requires(Task::NewDW, d_lb->fcxRelativePermittivity,   Ghost::AroundCells, 1);
+  task->requires(Task::NewDW, d_lb->fcyRelativePermittivity,   Ghost::AroundCells, 1);
+  task->requires(Task::NewDW, d_lb->fczRelativePermittivity,   Ghost::AroundCells, 1);
+  task->requires(Task::NewDW, d_lb->ccGridTotalCharge, Ghost::AroundCells, 1);
+
+  task->computes(d_lb->ccESPotentialMatrix, d_one_matl_subset, Task::OutOfDomain);
+  task->computes(d_lb->ccRHS_ESPotential,   d_one_matl_subset, Task::OutOfDomain);
+
+  sched->addTask(task, level->eachPatch(), es_matl);
+}
+//______________________________________________________________________
+//
+void MPNP::buildMatrixAndRhs(const ProcessorGroup* pg,
+                             const PatchSubset* patches,
+                             const MaterialSubset* ,
+                                   DataWarehouse* old_dw,
+                                   DataWarehouse* new_dw,
+                                   LevelP level,
+                                   Scheduler* sched)
+{
+  FVMBoundCond bc;
+  IntVector xoffset(1,0,0);
+  IntVector yoffset(0,1,0);
+  IntVector zoffset(0,0,1);
+
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    Vector dx = patch->dCell();
+
+    double a_n = dx.x() * dx.z(); double a_s = dx.x() * dx.z();
+    double a_e = dx.y() * dx.z(); double a_w = dx.y() * dx.z();
+    double a_t = dx.x() * dx.y(); double a_b = dx.x() * dx.y();
+    // double vol = dx.x() * dx.y() * dx.z();
+
+    double n = a_n / dx.y(); double s = a_s / dx.y();
+    double e = a_e / dx.x(); double w = a_w / dx.x();
+    double t = a_t / dx.z(); double b = a_b / dx.z();
+
+    constSFCXVariable<double> fcx_permittivity;
+    constSFCYVariable<double> fcy_permittivity;
+    constSFCZVariable<double> fcz_permittivity;
+    constCCVariable<double>   total_charge;
+
+    new_dw->get(fcx_permittivity, d_lb->fcxRelativePermittivity,   0, patch, Ghost::AroundCells, 1);
+    new_dw->get(fcy_permittivity, d_lb->fcyRelativePermittivity,   0, patch, Ghost::AroundCells, 1);
+    new_dw->get(fcz_permittivity, d_lb->fczRelativePermittivity,   0, patch, Ghost::AroundCells, 1);
+    new_dw->get(total_charge,     d_lb->ccGridTotalCharge, 0, patch, Ghost::AroundCells, 1);
+
+    CCVariable<Stencil7> A;
+    CCVariable<double> rhs;
+    new_dw->allocateAndPut(A,   d_lb->ccESPotentialMatrix, 0, patch);
+    new_dw->allocateAndPut(rhs, d_lb->ccRHS_ESPotential,   0, patch);
+
+    //__________________________________
+    //  Initialize A
+    for(CellIterator iter(patch->getExtraCellIterator()); !iter.done(); iter++){
+      IntVector c = *iter;
+      Stencil7&  A_tmp=A[c];
+      A_tmp.p = 0.0;
+      A_tmp.n = 0.0;   A_tmp.s = 0.0;
+      A_tmp.e = 0.0;   A_tmp.w = 0.0;
+      A_tmp.t = 0.0;   A_tmp.b = 0.0;
+      rhs[c] = 0;
+    }
+
+    // iterate over cells;
+    for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+      IntVector c = *iter;
+      Stencil7&  A_tmp=A[c];
+
+      double efc = e*fcx_permittivity[c + xoffset];
+      double wfc = w*fcx_permittivity[c];
+      double nfc = n*fcy_permittivity[c + yoffset];
+      double sfc = s*fcy_permittivity[c];
+      double tfc = t*fcz_permittivity[c + zoffset];
+      double bfc = b*fcz_permittivity[c];
+      double center = efc + wfc + nfc + sfc + tfc + bfc;
+
+      A_tmp.p = -center;
+      A_tmp.n = nfc;   A_tmp.s = sfc;
+      A_tmp.e = efc;   A_tmp.w = wfc;
+      A_tmp.t = tfc;   A_tmp.b = bfc;
+
+      rhs[c] = total_charge[c];
+    } // End CellIterator
+
+    bc.setESBoundaryConditions(patch, 0, A, rhs,
+                               fcx_permittivity, fcy_permittivity, fcz_permittivity);
+
+  } // End patches
+}
+//______________________________________________________________________
+//
+void MPNP::scheduleUpdateMPNPValues(SchedulerP& sched,
+                                    const LevelP& level,
+                                    const MaterialSet* fvm_matls)
+{
+  Task* t = scinew Task("MPNP::updateMPNPValues", this,
+                        &MPNP::updateMPNPValues);
+
+  t->requires(Task::OldDW, d_lb->ccRelativePermittivity, Ghost::AroundCells, 1);
+  t->requires(Task::OldDW, d_lb->ccPosCharge,            Ghost::AroundCells, 1);
+  t->requires(Task::OldDW, d_lb->ccNegCharge,            Ghost::AroundCells, 1);
+
+  t->requires(Task::OldDW, d_lb->ccMatId,         d_one_matl_subset, Ghost::AroundCells, 1);
+  t->requires(Task::OldDW, d_lb->ccInterfaceCell, d_one_matl_subset, Ghost::AroundCells, 1);
+
+  t->computes(d_lb->ccRelativePermittivity);
+  t->computes(d_lb->ccPosCharge);
+  t->computes(d_lb->ccNegCharge);
+  t->computes(d_lb->ccMatId,         d_one_matl_subset, Task::OutOfDomain);
+  t->computes(d_lb->ccInterfaceCell, d_one_matl_subset, Task::OutOfDomain);
+  sched->addTask(t, level->eachPatch(), fvm_matls);
+}
+//______________________________________________________________________
+//
+void MPNP::updateMPNPValues(const ProcessorGroup* pg,
+                            const PatchSubset* patches,
+                            const MaterialSubset* fvm_matls,
+                                  DataWarehouse* old_dw,
+                                  DataWarehouse* new_dw)
+{
+  int num_matls = d_shared_state->getNumFVMMatls();
+  for (int p = 0; p < patches->size(); p++){
+    const Patch* patch = patches->get(p);
+
+    constCCVariable<int> old_mat_id;
+    constCCVariable<int> old_interface_cell;
+
+    CCVariable<int> mat_id;
+    CCVariable<int> interface_cell;
+
+    old_dw->get(old_mat_id,         d_lb->ccMatId,         0, patch, Ghost::AroundCells, 1);
+    old_dw->get(old_interface_cell, d_lb->ccInterfaceCell, 0, patch, Ghost::AroundCells, 1);
+
+    new_dw->allocateAndPut(mat_id,            d_lb->ccMatId,            0, patch);
+    new_dw->allocateAndPut(interface_cell,    d_lb->ccInterfaceCell,    0, patch);
+
+    mat_id.initialize(-1);
+    interface_cell.initialize(0);
+
+    for(int m = 0; m < num_matls; m++){
+      FVMMaterial* fvm_matl = d_shared_state->getFVMMaterial(m);
+      int idx = fvm_matl->getDWIndex();
+
+      constCCVariable<double> old_permittivity;
+      constCCVariable<double> old_pos_charge;
+      constCCVariable<double> old_neg_charge;
+
+      CCVariable<double> permittivity;
+      CCVariable<double> pos_charge;
+      CCVariable<double> neg_charge;
+
+      old_dw->get(old_permittivity, d_lb->ccRelativePermittivity, idx, patch, Ghost::AroundCells, 1);
+      old_dw->get(old_pos_charge,   d_lb->ccPosCharge,    idx, patch, Ghost::AroundCells, 1);
+      old_dw->get(old_neg_charge,   d_lb->ccNegCharge,    idx, patch, Ghost::AroundCells, 1);
+
+      new_dw->allocateAndPut(permittivity, d_lb->ccRelativePermittivity,  idx, patch);
+      new_dw->allocateAndPut(pos_charge,   d_lb->ccPosCharge,             idx, patch);
+      new_dw->allocateAndPut(neg_charge,   d_lb->ccNegCharge,             idx, patch);
+
+      for(CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
+        IntVector c = *iter;
+
+        permittivity[c]   = old_permittivity[c];
+        pos_charge[c]     = old_pos_charge[c];
+        neg_charge[c]     = old_neg_charge[c];
+
+        if(old_mat_id[c] == idx){
+          mat_id[c] = old_mat_id[c];
+          interface_cell[c] = old_interface_cell[c];
+        }
+      }
+    } // material loop
   } // patch loop
 }

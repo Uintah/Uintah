@@ -7,7 +7,7 @@
 <Uintah_specification>
 
    <Meta>
-       <title>FVM Solution of PNP - Test 1</title>
+       <title>FVM Solution of PNP - Test 2</title>
    </Meta>
 
    <SimulationComponent type="mpnp" />
@@ -21,7 +21,7 @@
    </Time>
    
    <DataArchiver>
-     <filebase>pnp_test1.uda</filebase>                   
+     <filebase>pnp_test2.uda</filebase>                   
      <outputTimestepInterval>1</outputTimestepInterval>    
      <!--
      -->
@@ -41,8 +41,8 @@
      <Level>                                          
        <Box label = "1">                                
          <lower>      [  0.0,   0.0, 0.0] </lower>               
-         <upper>      [130.0, 115.0, 1.0] </upper>               
-         <resolution> [130,   115,   1]  </resolution> 
+         <upper>      [135.0, 115.0, 1.0] </upper>               
+         <resolution> [135,   115,   1]  </resolution> 
          <extraCells> [1,1,1]       </extraCells>
          <patches>    [1,1,1]       </patches>             
        </Box>                                           
@@ -88,12 +88,19 @@
        <material name="neg_electrode">
          <geom_object>
            <box label="box_neg_elec">
-             <min> [ 45.0,  0.0, 0.0 ] </min>
-             <max> [ 85.0, 50.0, 1.0 ] </max>
-             <!--
-             <min> [  0.0, 45.0, 0.0 ] </min>
-             <max> [ 85.0, 75.0, 1.0 ] </max>
-             -->
+             <min> [ 25.0,  0.0, 0.0 ] </min>
+             <max> [ 55.0, 90.0, 1.0 ] </max>
+           </box>
+           <pos_charge_density> 1.0  </pos_charge_density>
+           <neg_charge_density> 1.0  </neg_charge_density>
+           <rel_permittivity> 3.0 </rel_permittivity>
+         </geom_object>
+       </material>
+       <material name="pos_electrode">
+         <geom_object>
+           <box label="box_pos_elec">
+             <min> [  80.0,  25.0, 0.0 ] </min>
+             <max> [ 110.0, 115.0, 1.0 ] </max>
            </box>
            <pos_charge_density> 1.0  </pos_charge_density>
            <neg_charge_density> 1.0  </neg_charge_density>
@@ -105,13 +112,16 @@
            <difference>
              <box label="whole_domain">
                <min> [   0.0,   0.0, 0.0 ]       </min>
-               <max> [ 130.0, 115.0, 1.0 ]       </max>
+               <max> [ 135.0, 115.0, 1.0 ]       </max>
              </box>
-             <box label="box_neg_elec"/>
+             <union>
+               <box label="box_neg_elec"/>
+               <box label="box_pos_elec"/>
+             </union>
            </difference>
            <pos_charge_density> 1.0  </pos_charge_density>
            <neg_charge_density> 1.0  </neg_charge_density>
-           <rel_permittivity> 100.0 </rel_permittivity>
+           <rel_permittivity> 88.0 </rel_permittivity>
          </geom_object>
        </material>
      </FVM>
@@ -129,7 +139,7 @@
        <!-- Hypre options -->
        <solver>         cg  </solver>
        <preconditioner> pfmg    </preconditioner>
-       <tolerance>      1.e-9  </tolerance>
+       <tolerance>      1.e-8  </tolerance>
        <maxiterations>  7500    </maxiterations>
        <npre>           1       </npre>
        <npost>          1       </npost>
