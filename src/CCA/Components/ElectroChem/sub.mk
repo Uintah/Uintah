@@ -38,6 +38,7 @@ SRCS   += $(SRCDIR)/ImpCPDI.cc \
 #include $(SCIRUN_SCRIPTS)/recurse.mk          
 
 PSELIBS := \
+       CCA/Components/FVM              \
        CCA/Components/OnTheFlyAnalysis \
        CCA/Ports                       \
        Core/Disclosure                 \

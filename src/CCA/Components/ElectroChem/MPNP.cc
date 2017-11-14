@@ -178,6 +178,7 @@ void MPNP::initialize(const ProcessorGroup*,
                             DataWarehouse* old_dw,
                             DataWarehouse* new_dw)
 {
+  std::cout << "************MPNP Start Initialize***********" << std::endl;
   FVMBoundCond bc;
   int num_matls = d_shared_state->getNumFVMMatls();
 
@@ -209,6 +210,7 @@ void MPNP::initialize(const ProcessorGroup*,
 
     }
   }
+  std::cout << "************MPNP End Initialize*************" << std::endl;
 }
 //__________________________________
 //
@@ -241,6 +243,7 @@ void MPNP::computeStableTimestep(const ProcessorGroup* pg,
 void
 MPNP::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
+  std::cout << "************MPNP Start TimeAdvance***********" << std::endl;
   const MaterialSet* fvm_matls = d_shared_state->allFVMMaterials();
 
   scheduleComputeMPNPValues(   sched, level, fvm_matls);
@@ -259,7 +262,9 @@ MPNP::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
   scheduleUpdateESPotential(sched, level, d_es_matlset);
   scheduleComputeCurrent(sched, level, d_es_matlset);
   */
+  scheduleComputeDcDt(     sched, level, fvm_matls);
   scheduleUpdateMPNPValues(sched, level, fvm_matls);
+  std::cout << "************MPNP End TimeAdvance*************" << std::endl;
 }
 //______________________________________________________________________
 //
@@ -270,9 +275,9 @@ void MPNP::scheduleComputeMPNPValues(SchedulerP& sched,
   Task* t = scinew Task("MPNP::computeMPNPValues", this,
                         &MPNP::computeMPNPValues);
 
-  t->requires(Task::OldDW, d_lb->ccRelativePermittivity, Ghost::AroundCells, 1);
-  t->requires(Task::OldDW, d_lb->ccPosCharge,    Ghost::AroundCells, 1);
-  t->requires(Task::OldDW, d_lb->ccNegCharge,    Ghost::AroundCells, 1);
+  t->requires(Task::OldDW, d_lb->ccRelativePermittivity, d_gac, 1);
+  t->requires(Task::OldDW, d_lb->ccPosCharge,            d_gac, 1);
+  t->requires(Task::OldDW, d_lb->ccNegCharge,            d_gac, 1);
 
   t->computes(d_lb->ccGridPermittivity, d_one_matl_subset, Task::OutOfDomain);
   t->computes(d_lb->ccGridTotalCharge,  d_one_matl_subset, Task::OutOfDomain);
@@ -286,6 +291,7 @@ void MPNP::computeMPNPValues(const ProcessorGroup* pg,
                                    DataWarehouse* old_dw,
                                    DataWarehouse* new_dw)
 {
+  std::cout << "**********MPNP Start ComputeMPNPValues***********" << std::endl;
   int num_matls = d_shared_state->getNumFVMMatls();
   for (int p = 0; p < patches->size(); p++){
     const Patch* patch = patches->get(p);
@@ -310,9 +316,9 @@ void MPNP::computeMPNPValues(const ProcessorGroup* pg,
       constCCVariable<double> pos_charge;
       constCCVariable<double> neg_charge;
 
-      old_dw->get(permittivity, d_lb->ccRelativePermittivity, idx, patch, Ghost::AroundCells, 1);
-      old_dw->get(pos_charge,   d_lb->ccPosCharge,            idx, patch, Ghost::AroundCells, 1);
-      old_dw->get(neg_charge,   d_lb->ccNegCharge,            idx, patch, Ghost::AroundCells, 1);
+      old_dw->get(permittivity, d_lb->ccRelativePermittivity, idx, patch, d_gac, 1);
+      old_dw->get(pos_charge,   d_lb->ccPosCharge,            idx, patch, d_gac, 1);
+      old_dw->get(neg_charge,   d_lb->ccNegCharge,            idx, patch, d_gac, 1);
 
       for(CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
         IntVector c = *iter;
@@ -324,6 +330,7 @@ void MPNP::computeMPNPValues(const ProcessorGroup* pg,
       }
     } // material loop
   } // patch loop
+  std::cout << "**********MPNP End ComputeMPNPValues*************" << std::endl;
 }
 //______________________________________________________________________
 //
@@ -334,7 +341,7 @@ void MPNP::scheduleComputeFCPermittivity(SchedulerP& sched,
   Task* t = scinew Task("MPNP::computeFCPermittivity", this,
                         &MPNP::computeFCPermittivity);
 
-    t->requires(Task::NewDW, d_lb->ccGridPermittivity, Ghost::AroundCells, 1);
+    t->requires(Task::NewDW, d_lb->ccGridPermittivity, d_gac, 1);
     t->computes(d_lb->fcxRelativePermittivity, d_one_matl_subset, Task::OutOfDomain);
     t->computes(d_lb->fcyRelativePermittivity, d_one_matl_subset, Task::OutOfDomain);
     t->computes(d_lb->fczRelativePermittivity, d_one_matl_subset, Task::OutOfDomain);
@@ -347,17 +354,18 @@ void MPNP::computeFCPermittivity(const ProcessorGroup* pg,
                                        DataWarehouse* old_dw,
                                        DataWarehouse* new_dw)
 {
+  std::cout << "********MPNP Start ComputeFCPermittivity**********" << std::endl;
   for (int p = 0; p < patches->size(); p++){
     const Patch* patch = patches->get(p);
 
-    constCCVariable<double>  grid_permittivity;
+    constCCVariable<double> grid_permittivity;
 
     SFCXVariable<double> fcx_permittivity;
     SFCYVariable<double> fcy_permittivity;
     SFCZVariable<double> fcz_permittivity;
 
 
-    new_dw->get(grid_permittivity, d_lb->ccGridPermittivity, 0, patch, Ghost::AroundCells, 1);
+    new_dw->get(grid_permittivity, d_lb->ccGridPermittivity, 0, patch, d_gac, 1);
     new_dw->allocateAndPut(fcx_permittivity, d_lb->fcxRelativePermittivity, 0, patch);
     new_dw->allocateAndPut(fcy_permittivity, d_lb->fcyRelativePermittivity, 0, patch);
     new_dw->allocateAndPut(fcz_permittivity, d_lb->fczRelativePermittivity, 0, patch);
@@ -384,6 +392,7 @@ void MPNP::computeFCPermittivity(const ProcessorGroup* pg,
       fcz_permittivity[c] = .5*(grid_permittivity[c] + grid_permittivity[c + offset]);
     }
   } // patch loop
+  std::cout << "********MPNP End ComputeFCPermittivity************" << std::endl;
 }
 //______________________________________________________________________
 //
@@ -395,10 +404,10 @@ void MPNP::scheduleBuildMatrixAndRhs(SchedulerP& sched,
                            &MPNP::buildMatrixAndRhs,
                            level, sched.get_rep());
 
-  task->requires(Task::NewDW, d_lb->fcxRelativePermittivity, Ghost::AroundCells, 1);
-  task->requires(Task::NewDW, d_lb->fcyRelativePermittivity, Ghost::AroundCells, 1);
-  task->requires(Task::NewDW, d_lb->fczRelativePermittivity, Ghost::AroundCells, 1);
-  task->requires(Task::NewDW, d_lb->ccGridTotalCharge,       Ghost::AroundCells, 1);
+  task->requires(Task::NewDW, d_lb->fcxRelativePermittivity, d_gac, 1);
+  task->requires(Task::NewDW, d_lb->fcyRelativePermittivity, d_gac, 1);
+  task->requires(Task::NewDW, d_lb->fczRelativePermittivity, d_gac, 1);
+  task->requires(Task::NewDW, d_lb->ccGridTotalCharge,       d_gac, 1);
 
   task->computes(d_lb->ccESPotentialMatrix, d_one_matl_subset, Task::OutOfDomain);
   task->computes(d_lb->ccRHS_ESPotential,   d_one_matl_subset, Task::OutOfDomain);
@@ -415,6 +424,7 @@ void MPNP::buildMatrixAndRhs(const ProcessorGroup* pg,
                                    LevelP level,
                                    Scheduler* sched)
 {
+  std::cout << "********MPNP Start BuildMatrixAndRHS************" << std::endl;
   FVMBoundCond bc;
   IntVector xoffset(1,0,0);
   IntVector yoffset(0,1,0);
@@ -438,10 +448,10 @@ void MPNP::buildMatrixAndRhs(const ProcessorGroup* pg,
     constSFCZVariable<double> fcz_permittivity;
     constCCVariable<double>   total_charge;
 
-    new_dw->get(fcx_permittivity, d_lb->fcxRelativePermittivity,   0, patch, Ghost::AroundCells, 1);
-    new_dw->get(fcy_permittivity, d_lb->fcyRelativePermittivity,   0, patch, Ghost::AroundCells, 1);
-    new_dw->get(fcz_permittivity, d_lb->fczRelativePermittivity,   0, patch, Ghost::AroundCells, 1);
-    new_dw->get(total_charge,     d_lb->ccGridTotalCharge, 0, patch, Ghost::AroundCells, 1);
+    new_dw->get(fcx_permittivity, d_lb->fcxRelativePermittivity,   0, patch, d_gac, 1);
+    new_dw->get(fcy_permittivity, d_lb->fcyRelativePermittivity,   0, patch, d_gac, 1);
+    new_dw->get(fcz_permittivity, d_lb->fczRelativePermittivity,   0, patch, d_gac, 1);
+    new_dw->get(total_charge,     d_lb->ccGridTotalCharge, 0, patch, d_gac, 1);
 
     CCVariable<Stencil7> A;
     CCVariable<double> rhs;
@@ -485,6 +495,7 @@ void MPNP::buildMatrixAndRhs(const ProcessorGroup* pg,
                                fcx_permittivity, fcy_permittivity, fcz_permittivity);
 
   } // End patches
+  std::cout << "********MPNP End BuildMatrixAndRHS**************" << std::endl;
 }
 //______________________________________________________________________
 //
@@ -494,9 +505,12 @@ void MPNP::scheduleComputeDcDt(SchedulerP&        sched,
 {
   Task* t = scinew Task("MPNP::computeDcDt", this, &MPNP::computeDcDt);
 
-  t->requires(Task::NewDW, d_lb->ccESPotential, Ghost::AroundCells, 1);
-  t->requires(Task::OldDW, d_lb->ccPosCharge,   Ghost::AroundCells, 1);
-  t->requires(Task::OldDW, d_lb->ccNegCharge,   Ghost::AroundCells, 1);
+  t->requires(Task::OldDW, d_lb->ccPosCharge, d_gac, 1);
+  t->requires(Task::OldDW, d_lb->ccNegCharge, d_gac, 1);
+
+  t->requires(Task::OldDW, d_lb->ccMatId,         d_one_matl_subset, d_gac, 1);
+  t->requires(Task::OldDW, d_lb->ccInterfaceCell, d_one_matl_subset, d_gac, 1);
+  t->requires(Task::NewDW, d_lb->ccESPotential,   d_one_matl_subset, d_gac, 1);
 
   t->computes(d_lb->ccDPosChargeDt);
   t->computes(d_lb->ccDNegChargeDt);
@@ -511,12 +525,26 @@ void MPNP::computeDcDt(const ProcessorGroup* pg,
                              DataWarehouse* old_dw,
                              DataWarehouse* new_dw)
 {
+  std::cout << "********MPNP Start ComputesDcDt**************" << std::endl;
   int num_matls = d_shared_state->getNumFVMMatls();
+
+  double pflux_n, pflux_s, pflux_e, pflux_w, pflux_t, pflux_b;
+  double nflux_n, nflux_s, nflux_e, nflux_w, nflux_t, nflux_b;
+
   for (int p = 0; p < patches->size(); p++){
     const Patch* patch = patches->get(p);
+    Vector dx = patch->dCell();
+
+    double a_n = dx.x() * dx.z(); double a_s = dx.x() * dx.z();
+    double a_e = dx.y() * dx.z(); double a_w = dx.y() * dx.z();
+    double a_t = dx.x() * dx.y(); double a_b = dx.x() * dx.y();
 
     constCCVariable<double> es_potential;
-    new_dw->get(es_potential, d_lb->ccESPotential, 0, patch, Ghost::AroundCells, 1);
+    constCCVariable<int>    mat_id;
+    constCCVariable<int>    cell_interface;
+    new_dw->get(es_potential,   d_lb->ccESPotential,   0, patch, d_gac, 1);
+    new_dw->get(mat_id,         d_lb->ccMatId,         0, patch, d_gac, 1);
+    new_dw->get(cell_interface, d_lb->ccInterfaceCell, 0, patch, d_gac, 1);
 
     for(int m = 0; m < num_matls; m++){
       FVMMaterial* fvm_matl = d_shared_state->getFVMMaterial(m);
@@ -528,17 +556,20 @@ void MPNP::computeDcDt(const ProcessorGroup* pg,
       CCVariable<double> dpdt;
       CCVariable<double> dndt;
 
-      old_dw->get(pos_charge, d_lb->ccPosCharge, idx, patch, Ghost::AroundCells, 1);
-      old_dw->get(neg_charge, d_lb->ccNegCharge, idx, patch, Ghost::AroundCells, 1);
+      old_dw->get(pos_charge, d_lb->ccPosCharge, idx, patch, d_gac, 1);
+      old_dw->get(neg_charge, d_lb->ccNegCharge, idx, patch, d_gac, 1);
 
       new_dw->allocateAndPut(dpdt, d_lb->ccDPosChargeDt, idx, patch);
       new_dw->allocateAndPut(dndt, d_lb->ccDNegChargeDt, idx, patch);
 
       dpdt.initialize(0.0);
       dndt.initialize(0.0);
+      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+        IntVector c = *iter;
+      } // End Cell iterator
     }
   }
-
+  std::cout << "********MPNP End ComputesDcDt****************" << std::endl;
 }
 //______________________________________________________________________
 //
@@ -571,6 +602,7 @@ void MPNP::updateMPNPValues(const ProcessorGroup* pg,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw)
 {
+  std::cout << "********MPNP Start UpdateMPNPValues************" << std::endl;
   int num_matls = d_shared_state->getNumFVMMatls();
   for (int p = 0; p < patches->size(); p++){
     const Patch* patch = patches->get(p);
@@ -624,4 +656,5 @@ void MPNP::updateMPNPValues(const ProcessorGroup* pg,
       }
     } // material loop
   } // patch loop
+  std::cout << "********MPNP End UpdateMPNPValues**************" << std::endl;
 }

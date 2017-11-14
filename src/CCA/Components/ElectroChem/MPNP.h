@@ -157,6 +157,9 @@ WARNING
     SolverParameters* d_solver_parameters;
     MaterialSet* d_one_matl_set;
     MaterialSubset* d_one_matl_subset;
+
+    Ghost::GhostType  d_gan = Ghost::AroundNodes;
+    Ghost::GhostType  d_gac = Ghost::AroundCells;
     
     MPNP(const MPNP&);
     MPNP& operator=(const MPNP&);

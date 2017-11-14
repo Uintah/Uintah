@@ -54,9 +54,21 @@
          <BCType id = "all" label = "Voltage" var = "Neumann">
                 <value> 0.0 </value>
          </BCType>
+         <BCType id = "all" label = "PosCharge" var = "Neumann">
+                <value> 0.0 </value>
+         </BCType>
+         <BCType id = "all" label = "NegCharge" var = "Neumann">
+                <value> 0.0 </value>
+         </BCType>
        </Face>
        <Face side = "x+">
          <BCType id = "all" label = "Voltage" var = "Neumann">
+                <value> 0.0 </value>
+         </BCType>
+         <BCType id = "all" label = "PosCharge" var = "Neumann">
+                <value> 0.0 </value>
+         </BCType>
+         <BCType id = "all" label = "NegCharge" var = "Neumann">
                 <value> 0.0 </value>
          </BCType>
        </Face>
@@ -64,19 +76,43 @@
          <BCType id = "all" label = "Voltage" var = "Dirichlet">
                 <value> -1.0 </value>
          </BCType>
+         <BCType id = "all" label = "PosCharge" var = "Neumann">
+                <value> 0.0 </value>
+         </BCType>
+         <BCType id = "all" label = "NegCharge" var = "Neumann">
+                <value> 0.0 </value>
+         </BCType>
        </Face>                  
        <Face side = "y+">
          <BCType id = "all" label = "Voltage" var = "Dirichlet">
                 <value> 1.0 </value>
+         </BCType>
+         <BCType id = "all" label = "PosCharge" var = "Neumann">
+                <value> 0.0 </value>
+         </BCType>
+         <BCType id = "all" label = "NegCharge" var = "Neumann">
+                <value> 0.0 </value>
          </BCType>
        </Face>
        <Face side = "z-">
          <BCType id = "all" label = "Voltage" var = "Neumann">
                 <value> 0.0 </value>
          </BCType>
+         <BCType id = "all" label = "PosCharge" var = "Neumann">
+                <value> 0.0 </value>
+         </BCType>
+         <BCType id = "all" label = "NegCharge" var = "Neumann">
+                <value> 0.0 </value>
+         </BCType>
        </Face>                  
        <Face side = "z+">
          <BCType id = "all" label = "Voltage" var = "Neumann">
+                <value> 0.0 </value>
+         </BCType>
+         <BCType id = "all" label = "PosCharge" var = "Neumann">
+                <value> 0.0 </value>
+         </BCType>
+         <BCType id = "all" label = "NegCharge" var = "Neumann">
                 <value> 0.0 </value>
          </BCType>
         </Face>
