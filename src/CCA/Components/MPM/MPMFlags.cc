@@ -95,7 +95,7 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_doGridReset                        =  true;
   d_min_part_mass                      =  3.e-15;
   d_min_subcycles_for_F                =  1;
-  d_min_mass_for_acceleration          =  0;            // Min mass to allow division by in computing acceleration
+  d_min_mass_for_acceleration          =  1.1e-200;            // Min mass to allow division by in computing acceleration
   d_max_vel                            =  3.e105;
   d_with_ice                           =  false;
   d_with_arches                        =  false;
