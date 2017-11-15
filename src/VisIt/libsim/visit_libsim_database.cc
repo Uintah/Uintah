@@ -430,22 +430,22 @@ visit_handle visit_SimGetMetaData(void *cbdata)
                 VisIt_VariableMetaData_setNumComponents(vmd, 4);
               }
               // scalar
-              else if (vartype.find("Scalar") != std::string::npos)
+              else // if (vartype.find("Scalar") != std::string::npos)
               {
                 VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
                 VisIt_VariableMetaData_setNumComponents(vmd, 1);
               }
-              else
-              {
-                std::stringstream msg;
-                msg << "Visit libsim - "
-                    << "Uintah variable \"" << varname << "\"  "
-                    << "has an unknown variable type \""
-                    << vartype << "\"";
+              // else
+              // {
+              //   std::stringstream msg;
+              //   msg << "Visit libsim - "
+              //       << "Uintah variable \"" << varname << "\"  "
+              //       << "has an unknown variable type \""
+              //       << vartype << "\"";
             
-                VisItUI_setValueS("SIMULATION_MESSAGE_WARNING", msg.str().c_str(), 1);
-                continue;
-              }
+              //   VisItUI_setValueS("SIMULATION_MESSAGE_WARNING", msg.str().c_str(), 1);
+              //   continue;
+              // }
               
               VisIt_SimulationMetaData_addVariable(md, vmd);
             }

@@ -5,8 +5,6 @@
 #include <Core/Util/DebugStream.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
-#include <CCA/Ports/SimulationInterface.h>
-#include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/GeometryPiece/GeometryPiece.h>
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
 #include <CCA/Components/Arches/ParticleModels/ParticleTools.h>

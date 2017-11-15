@@ -268,6 +268,7 @@ private:
     int iend = _eqn_names.size();
     for (int i = istart; i < iend; i++ ){
       register_new_variable<T>( _eqn_names[i] );
+      register_new_variable<T>( "rho_"+_eqn_names[i] ); //weighted variable      
       register_new_variable<T>( _eqn_names[i]+"_rhs" );
       register_new_variable<FXT>( _eqn_names[i]+"_x_flux" );
       register_new_variable<FYT>( _eqn_names[i]+"_y_flux" );
@@ -284,6 +285,7 @@ private:
     const int iend = _eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
       register_variable(  _eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry );
+      register_variable(  "rho_"+_eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry );
       register_variable(  _eqn_names[ieqn]+"_rhs", ArchesFieldContainer::COMPUTES , variable_registry );
       register_variable(  _eqn_names[ieqn]+"_x_flux", ArchesFieldContainer::COMPUTES , variable_registry, _task_name );
       register_variable(  _eqn_names[ieqn]+"_y_flux", ArchesFieldContainer::COMPUTES , variable_registry, _task_name );
@@ -291,6 +293,7 @@ private:
     }
   }
 
+  //------------------------------------------------------------------------------------------------
   template <typename T, typename FluxXT, typename FluxYT, typename FluxZT> void
   KScalarRHS<T, FluxXT, FluxYT, FluxZT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
@@ -302,9 +305,11 @@ private:
 
       T& rhs    = *(tsk_info->get_uintah_field<T>(_eqn_names[ieqn]+"_rhs"));
       T& phi    = *(tsk_info->get_uintah_field<T>(_eqn_names[ieqn]));
+      T& rho_phi    = *(tsk_info->get_uintah_field<T>("rho_"+_eqn_names[ieqn]));
       Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
       Uintah::parallel_for( range, [&](int i, int j, int k){
         phi(i,j,k) = scalar_init_value;
+        rho_phi(i,j,k) = 0.0;
         rhs(i,j,k) = 0.0;
       });
 
@@ -327,15 +332,18 @@ private:
     const int istart = 0;
     const int iend = _eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
-      register_variable( _eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry  );
-      register_variable( _eqn_names[ieqn]+"_rhs", ArchesFieldContainer::COMPUTES , variable_registry  );
-      register_variable( _eqn_names[ieqn], ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::OLDDW , variable_registry  );
+      register_variable( "rho_"+_eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry, _task_name  );
+      register_variable( _eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry, _task_name  );
+      register_variable( _eqn_names[ieqn]+"_rhs", ArchesFieldContainer::COMPUTES , variable_registry, _task_name  );
+      register_variable( _eqn_names[ieqn], ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::OLDDW , variable_registry, _task_name  );
+      register_variable( "rho_"+_eqn_names[ieqn], ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::OLDDW , variable_registry, _task_name  );
       register_variable( _eqn_names[ieqn]+"_x_flux", ArchesFieldContainer::COMPUTES, variable_registry, _task_name );
       register_variable( _eqn_names[ieqn]+"_y_flux", ArchesFieldContainer::COMPUTES, variable_registry, _task_name );
       register_variable( _eqn_names[ieqn]+"_z_flux", ArchesFieldContainer::COMPUTES, variable_registry, _task_name );
     }
   }
 
+  //------------------------------------------------------------------------------------------------
   template <typename T, typename FluxXT, typename FluxYT, typename FluxZT> void
   KScalarRHS<T, FluxXT, FluxYT, FluxZT>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
@@ -346,14 +354,17 @@ private:
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
 
       T& phi = tsk_info->get_uintah_field_add<T>( _eqn_names[ieqn] );
+      T& rho_phi = tsk_info->get_uintah_field_add<T>( "rho_"+_eqn_names[ieqn] );
       T& rhs = tsk_info->get_uintah_field_add<T>( _eqn_names[ieqn]+"_rhs" );
       CT& old_phi = tsk_info->get_const_uintah_field_add<CT>( _eqn_names[ieqn] );
+      CT& old_rho_phi = tsk_info->get_const_uintah_field_add<CT>("rho_"+_eqn_names[ieqn] );
 
       FXT& x_flux = tsk_info->get_uintah_field_add<FXT>(_eqn_names[ieqn]+"_x_flux");
       FYT& y_flux = tsk_info->get_uintah_field_add<FYT>(_eqn_names[ieqn]+"_y_flux");
       FZT& z_flux = tsk_info->get_uintah_field_add<FZT>(_eqn_names[ieqn]+"_z_flux");
 
       phi.copyData(old_phi);
+      rho_phi.copyData(old_rho_phi);
       rhs.initialize(0.0);
       x_flux.initialize(0.0);
       y_flux.initialize(0.0);
@@ -375,6 +386,7 @@ private:
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
 
       register_variable( _eqn_names[ieqn], ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name );
+      register_variable( "rho_"+_eqn_names[ieqn], ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name );
       register_variable( _eqn_names[ieqn]+"_rhs", ArchesFieldContainer::MODIFIES, variable_registry, time_substep, _task_name );
       register_variable( _eqn_names[ieqn]+"_x_flux", ArchesFieldContainer::MODIFIES, variable_registry, time_substep, _task_name );
       register_variable( _eqn_names[ieqn]+"_y_flux", ArchesFieldContainer::MODIFIES, variable_registry, time_substep, _task_name );
@@ -395,7 +407,6 @@ private:
     //globally common variables
     if ( m_has_D ){
       register_variable( m_D_name       , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::NEWDW  , variable_registry , time_substep, _task_name );
-      register_variable( m_density_name       , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::NEWDW  , variable_registry , time_substep, _task_name );
     }
     register_variable( m_x_velocity_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::LATEST, variable_registry, time_substep, _task_name );
     register_variable( m_y_velocity_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::LATEST, variable_registry, time_substep, _task_name );
@@ -430,6 +441,7 @@ private:
     const int iend = _eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
 
+      CT& rho_phi     = tsk_info->get_const_uintah_field_add<CT>("rho_"+_eqn_names[ieqn]);
       CT& phi     = tsk_info->get_const_uintah_field_add<CT>(_eqn_names[ieqn]);
       T& rhs      = tsk_info->get_uintah_field_add<T>(_eqn_names[ieqn]+"_rhs");
 
@@ -456,7 +468,7 @@ private:
         z_psi_ptr = z_field_tool.get(_eqn_names[ieqn]+"_z_psi");
 
         Uintah::ComputeConvectiveFlux<FluxXT, FluxYT, FluxZT >
-          get_flux( phi, u, v, w, (*x_psi_ptr), (*y_psi_ptr), (*z_psi_ptr),
+          get_flux( rho_phi, u, v, w, (*x_psi_ptr), (*y_psi_ptr), (*z_psi_ptr),
                     x_flux, y_flux, z_flux, eps );
 
         Uintah::parallel_for( range_cl_to_ech, get_flux );
@@ -467,7 +479,6 @@ private:
       if ( m_do_diff[ieqn] ) {
 
         CT& D = *(tsk_info->get_const_uintah_field<CT>(m_D_name));
-        CT& density = *(tsk_info->get_const_uintah_field<CT>(m_density_name));
 
 
         //NOTE: No diffusion allowed on boundaries.
@@ -485,13 +496,12 @@ private:
           const double afz  = ( eps(i,j,k) + eps(i,j,k-1) ) / 2. < 0.51 ? 0.0 : 1.0;
           const double afzp = ( eps(i,j,k) + eps(i,j,k+1) ) / 2. < 0.51 ? 0.0 : 1.0;
 
-          rhs(i,j,k) += ax/(2.*Dx.x()) * ( afxp  * ( D(i+1,j,k) + D(i,j,k))   * (phi(i+1,j,k)/density(i+1,j,k) - phi(i,j,k)/density(i,j,k))
-                                         - afx   * ( D(i,j,k)   + D(i-1,j,k)) * (phi(i,j,k)/density(i,j,k)   - phi(i-1,j,k)/density(i-1,j,k)) ) +
-                        ay/(2.*Dx.y()) * ( afyp  * ( D(i,j+1,k) + D(i,j,k))   * (phi(i,j+1,k)/density(i,j+1,k) - phi(i,j,k)/density(i,j,k))
-                                         - afy   * ( D(i,j,k)   + D(i,j-1,k)) * (phi(i,j,k)/density(i,j,k)   - phi(i,j-1,k)/density(i,j-1,k)) ) +
-                        az/(2.*Dx.z()) * ( afzp  * ( D(i,j,k+1) + D(i,j,k))   * (phi(i,j,k+1)/density(i,j,k) - phi(i,j,k)/density(i,j,k+1))
-                                         - afz   * ( D(i,j,k)   + D(i,j,k-1)) * (phi(i,j,k)/density(i,j,k)   - phi(i,j,k-1)/density(i,j,k-1)) );
-
+          rhs(i,j,k) += ax/(2.*Dx.x()) * ( afxp  * ( D(i+1,j,k) + D(i,j,k))   * (phi(i+1,j,k) - phi(i,j,k))
+                                         - afx   * ( D(i,j,k)   + D(i-1,j,k)) * (phi(i,j,k)   - phi(i-1,j,k)) ) +
+                        ay/(2.*Dx.y()) * ( afyp  * ( D(i,j+1,k) + D(i,j,k))   * (phi(i,j+1,k) - phi(i,j,k))
+                                         - afy   * ( D(i,j,k)   + D(i,j-1,k)) * (phi(i,j,k)   - phi(i,j-1,k)) ) +
+                        az/(2.*Dx.z()) * ( afzp  * ( D(i,j,k+1) + D(i,j,k))   * (phi(i,j,k+1) - phi(i,j,k))
+                                         - afz   * ( D(i,j,k)   + D(i,j,k-1)) * (phi(i,j,k)   - phi(i,j,k-1)) );
         });
       }
 

@@ -179,7 +179,7 @@ Grid::parsePatchFromFile( FILE * fp, LevelP level, vector<int> & procMapForLevel
     }
   } // end while()
 
-  if( !foundId || !foundProc || !foundHighIndex ) {
+  if( !foundId || !foundProc || !foundLowIndex || !foundHighIndex ) {
     throw InternalError("Grid::parsePatchFromFile() - Missing a <Patch> child tag...", __FILE__, __LINE__ );
   }
 
@@ -219,7 +219,7 @@ Grid::parseLevelFromFile( FILE * fp, vector<int> & procMapForLevel )
 {
   int       numPatches       = 0;
   int       numPatchesRead   = 0;
-  int       totalCells       = -1;
+  // int       totalCells       = -1;
 
   bool      done_with_level  = false;
 
@@ -236,7 +236,7 @@ Grid::parseLevelFromFile( FILE * fp, vector<int> & procMapForLevel )
   bool      foundId          = false;
 
   IntVector extraCells(0,0,0);
-  bool      foundExtraCells  = false;
+  // bool      foundExtraCells  = false;
 
   bool      levelCreated     = false;
 
@@ -305,11 +305,11 @@ Grid::parseLevelFromFile( FILE * fp, vector<int> & procMapForLevel )
         numPatches = atoi( pieces[1].c_str() );
       }
       else if( pieces[0] == "<totalCells>" ) {
-        totalCells = atoi( pieces[1].c_str() );
+        // totalCells = atoi( pieces[1].c_str() );
       }
       else if( pieces[0] == "<extraCells>" ) {
         extraCells = IntVector::fromString( pieces[1] );
-        foundExtraCells = true;
+        // foundExtraCells = true;
       }
       else if( pieces[0] == "<anchor>" ) {
         Vector v = Vector::fromString( pieces[1] );
@@ -371,8 +371,8 @@ Grid::parseLevelFromFile( FILE * fp, vector<int> & procMapForLevel )
 bool
 Grid::parseGridFromFile( FILE * fp, vector< vector<int> > & procMap )
 {
-  int  numLevelsRead  = 0;
-  int  numLevels      = 0;
+  int  num_levelsRead  = 0;
+  int  num_levels      = 0;
   bool doneWithGrid   = false;
   bool foundLevelTag  = false;
 
@@ -390,9 +390,9 @@ Grid::parseGridFromFile( FILE * fp, vector< vector<int> > & procMap )
       foundLevelTag = true;
 
       procMap.push_back( vector<int>() );
-      vector<int> & procMapForLevel = procMap[ numLevelsRead ];
+      vector<int> & procMapForLevel = procMap[ num_levelsRead ];
  
-      numLevelsRead++;
+      num_levelsRead++;
 
       parseLevelFromFile( fp, procMapForLevel );
     }
@@ -402,7 +402,7 @@ Grid::parseGridFromFile( FILE * fp, vector< vector<int> > & procMap )
     else {
       vector< string > pieces = UintahXML::splitXMLtag( line );
       if( pieces[0] == "<numLevels>" ) {
-        numLevels = atoi( pieces[1].c_str() );
+        num_levels = atoi( pieces[1].c_str() );
       }
       else {
         ostringstream msg;
@@ -411,13 +411,15 @@ Grid::parseGridFromFile( FILE * fp, vector< vector<int> > & procMap )
       }
     }
   }
+
   if( !foundLevelTag ) {
     throw InternalError( "Grid.cc::parseGridFromFile(): Did not find '<Level>' tag in file.", __FILE__, __LINE__ );
   }
 
-  // Verify that the <numLevels> tag matches the actual number of levels that we have parsed.
-  // If not, then there is an error in the xml file (most likely it was corrupted or written out incorrectly.
-  ASSERTEQ( numLevels, numLevelsRead );
+  // Verify that the <numLevels> tag matches the actual number of
+  // levels parsed.  If not, then there is an error in the xml file
+  // Most likely it was corrupted or written out incorrectly.
+  ASSERTEQ( num_levels, num_levelsRead );
 
   return doneWithGrid;
 
@@ -429,15 +431,15 @@ Grid::parseGridFromFile( FILE * fp, vector< vector<int> > & procMap )
 void
 Grid::readLevelsFromFileBinary( FILE * fp, vector< vector<int> > & procMap )
 {
-  int    numLevels, num_patches;
+  int    num_levels, num_patches;
   long   num_cells;
   int    extra_cells[3], period[3];
   double anchor[3], cell_spacing[3];
   int    l_id;
   
-  fread( & numLevels,    sizeof(int),    1, fp );
+  fread( & num_levels,    sizeof(int),    1, fp );
 
-  for( int lev = 0; lev < numLevels; lev++ ) {
+  for( int lev = 0; lev < num_levels; lev++ ) {
     fread( & num_patches,  sizeof(int),    1, fp );    // Number of Patches -  100
     fread( & num_cells,    sizeof(long),   1, fp );    // Number of Cells   - 8000
     fread(   extra_cells,  sizeof(int),    3, fp );    // Extra Cell Info   - [1,1,1]
@@ -1135,7 +1137,8 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
       //level->assignBCS(grid_ps,0);
       levelIndex++;
    }
-   if(numLevels() >1 && !do_amr) {  // bullet proofing
+
+  if(numLevels() > 1 && !do_amr) {  // bullet proofing
      throw ProblemSetupException("Grid.cc:problemSetup: Multiple levels encountered in non-AMR grid", __FILE__, __LINE__);
    }
 } // end problemSetup()

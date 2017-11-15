@@ -25,10 +25,7 @@
 #ifndef _SPECIFICHEAT_H_
 #define _SPECIFICHEAT_H_
 
-
-#include <CCA/Ports/SimulationInterface.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
-#include <Core/Grid/SimulationStateP.h>
 
 namespace Uintah {
 

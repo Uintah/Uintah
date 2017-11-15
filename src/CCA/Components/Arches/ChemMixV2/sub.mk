@@ -28,7 +28,8 @@ endif
 
 SRCS += \
 	$(SRCDIR)/ChemMixFactory.cc                 \
-  $(SRCDIR)/ColdFlowProperties.cc             \
+        $(SRCDIR)/ColdFlowProperties.cc             \
+        $(SRCDIR)/ColdFlowPropertiesRP.cc             \
 	$(SRCDIR)/ConstantStateProperties.cc 
 
 ########################################################################

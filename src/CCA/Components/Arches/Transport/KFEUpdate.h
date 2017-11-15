@@ -208,13 +208,20 @@ private:
 
     typedef std::vector<std::string> SV;
     for ( SV::iterator i = _eqn_names.begin(); i != _eqn_names.end(); i++){
-      register_variable( *i, ArchesFieldContainer::MODIFIES, variable_registry, time_substep );
+      if ((*i == "x-mom") || (*i == "y-mom") || (*i == "z-mom")){
+        register_variable(*i, ArchesFieldContainer::MODIFIES, variable_registry, time_substep );
+        register_variable( *i, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry, time_substep );
+
+      } else {
+        register_variable( "rho_"+*i, ArchesFieldContainer::MODIFIES, variable_registry, time_substep );
+        register_variable( "rho_"+*i, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry, time_substep );
+
+      }
       std::string rhs_name = *i + "_rhs";
       register_variable( rhs_name, ArchesFieldContainer::MODIFIES, variable_registry, time_substep );
       register_variable( *i+"_x_flux", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
       register_variable( *i+"_y_flux", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
       register_variable( *i+"_z_flux", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
-      register_variable( *i, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry, time_substep );
     }
   }
 
@@ -232,9 +239,15 @@ private:
 
     for ( SV::iterator i = _eqn_names.begin(); i != _eqn_names.end(); i++){
 
-      T& phi = *(tsk_info->get_uintah_field<T>(*i));
+       std::string var_name;
+      if ((*i == "x-mom") || (*i == "y-mom") || (*i == "z-mom")){
+        var_name = *i;
+      } else {
+        var_name = "rho_"+*i;
+      }      
+      T& phi = *(tsk_info->get_uintah_field<T>(var_name));
       T& rhs = *(tsk_info->get_uintah_field<T>(*i+"_rhs"));
-      CT& old_phi = *(tsk_info->get_const_uintah_field<CT>(*i, ArchesFieldContainer::OLDDW));
+      CT& old_phi = *(tsk_info->get_const_uintah_field<CT>(var_name, ArchesFieldContainer::OLDDW));
       CFXT& x_flux = *(tsk_info->get_const_uintah_field<CFXT>(*i+"_x_flux"));
       CFYT& y_flux = *(tsk_info->get_const_uintah_field<CFYT>(*i+"_y_flux"));
       CFZT& z_flux = *(tsk_info->get_const_uintah_field<CFZT>(*i+"_z_flux"));

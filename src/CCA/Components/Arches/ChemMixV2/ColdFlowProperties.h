@@ -61,8 +61,8 @@ private:
 
     struct SpeciesInfo{
 
-      double stream_1;
-      double stream_2;
+      double rho0;
+      double rho1;
       bool volumetric;
 
     };

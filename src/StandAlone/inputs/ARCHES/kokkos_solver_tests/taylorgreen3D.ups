@@ -3,29 +3,25 @@
 <!-- @version: -->
 <Uintah_specification>
   <Meta>
-    <title>almgren mms only convection </title>
+    <title>TaylorGreen3D </title>
   </Meta>
   <SimulationComponent type="arches"/>
   <Solver type="hypre"/>
   <Time>
     <maxTime>100.</maxTime>
     <initTime>0.0</initTime>
-    <delt_min>1e-5</delt_min>
-    <delt_max>1e-5</delt_max>
+    <delt_min>1e-3</delt_min>
+    <delt_max>1e-3</delt_max>
     <delt_init>1e-1</delt_init>
     <timestep_multiplier>1</timestep_multiplier>
-    <max_Timesteps>3</max_Timesteps>
+    <max_Timesteps>1000</max_Timesteps>
   </Time>
   <DataArchiver>
-    <filebase>almgren-mms-conv.uda</filebase>
-    <outputTimestepInterval>1</outputTimestepInterval>
-    <!--outputInitTimestep/-->
+    <filebase>TaylorGreen3D.uda</filebase>
+    <outputTimestepInterval>10</outputTimestepInterval>
+    <outputInitTimestep/>
     <save label="x-mom"/>
-    <save label="x_mms"/>
-    <save label="y_mms"/>
-    <save label="x_mms_source"/>
     <save label="y-mom"/>
-    <save label="y_mms"/>
     <save label="z-mom"/>
     <save label="uVel"/>
     <save label="vVel"/>
@@ -43,7 +39,7 @@
         <upper>[1.0,1.0,1.0]</upper>
         <resolution>[24,24,24]</resolution>
         <extraCells>[0,0,0]</extraCells>
-        <patches>[2,2,2]</patches>
+        <patches>[1,1,1]</patches>
       </Box>
       <periodic>[1,1,1]</periodic>
     </Level>
@@ -74,26 +70,12 @@
         </model>
         <model label="gamma" type="constant_property">
           <grid type="CC"/>
-          <value>1.</value>
+          <value>1e-2</value>
         </model>
       </PropertyModelsV2>
-      <SourceV2>
-        <src label="x_mms" type="MMS_mom">
-          <variable type="FX"/>
-          <which_vel>u</which_vel>
-          <coordinates x="ucellX" y="gridY"/>
-        </src>
-        <src label="y_mms" type="MMS_mom">
-          <variable type="FY"/>
-          <which_vel>v</which_vel>
-          <coordinates x="gridX" y="vcellY"/>
-        </src>
-      </SourceV2>
       <KMomentum>
         <convection scheme="central"/>
-        <src_x label = "x_mms_source"/>
-        <src_y label = "y_mms_source"/>
-        <inviscid/>
+        <!--inviscid/-->
         <PressureSolver>
           <Parameters>
             <solver>           cg     </solver>
@@ -107,15 +89,20 @@
         </PressureSolver>
       </KMomentum>
       <Initialization>
-        <task task_label="x-mom-init" variable_label="x-mom" type="almgren_mms">
+        <task task_label="uVel-init" variable_label="uVel" type="taylor_green3d">
           <variable type="FX"/>
           <which_vel>u</which_vel>
-          <coordinates x="ucellX" y="gridY"/>
+          <coordinates x="ucellX" y="gridY" z="gridZ"/>
         </task>
-        <task task_label="y-mom-init" variable_label="y-mom" type="almgren_mms">
+        <task task_label="vVel-init" variable_label="vVel" type="taylor_green3d">
           <variable type="FY"/>
           <which_vel>v</which_vel>
-          <coordinates x="gridX" y="vcellY"/>
+          <coordinates x="gridX" y="vcellY" z="gridZ"/>
+        </task>
+        <task task_label="wVel-init" variable_label="wVel" type="taylor_green3d">
+          <variable type="FZ"/>
+          <which_vel>w</which_vel>
+          <coordinates x="gridX" y="gridY" z="wcellZ"/>
         </task>
       </Initialization>
       <BoundaryConditions>

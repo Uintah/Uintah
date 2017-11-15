@@ -711,6 +711,8 @@ DataArchive::query(       Variable     & var,
     (static_cast<ParticleVariableBase*>(&var))->allocate(psubset);
 //      (dynamic_cast<ParticleVariableBase*>(&var))->allocate(psubset);
   }
+  else if (td->getType() == TypeDescription::PerPatch) {
+  }
   else if (td->getType() != TypeDescription::ReductionVariable) {
     var.allocate( patch, varinfo.boundaryLayer );
   }

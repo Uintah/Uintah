@@ -28,7 +28,7 @@
     <save label="phi_mms"/>
     <save label="gridX"/>
     <save label="phi_handoff"/>
-    <checkpoint cycle="2" interval=".3"/>
+    <checkpoint cycle="2" interval="1e-5"/>
     <compression>gzip</compression>
   </DataArchiver>
   <Grid>
@@ -141,7 +141,7 @@
       <BoundaryConditions>
         <force_area_calc/>
         <bc type="handoff" label="phi_handoff">
-          <filename>BC_mms/x_lr.dat</filename>
+          <filename>inputs/ARCHES/kokkos_solver_tests/Verification/scalars/2D/BC_mms/x_lr.dat</filename>
           <relative_xyz>[0, 0, 0]</relative_xyz>
           <!-- Note that since the dirichlet condition is used, the label
                for the default condition doesnt matter -->

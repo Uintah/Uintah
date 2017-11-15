@@ -25,6 +25,7 @@
 #ifndef UINTAH_HOMEBREW_APPLICATIONCOMMON_H
 #define UINTAH_HOMEBREW_APPLICATIONCOMMON_H
 
+#include <Core/Parallel/UintahParallelComponent.h>
 #include <CCA/Ports/ApplicationInterface.h>
 #include <CCA/Ports/SchedulerP.h>
 
@@ -33,14 +34,19 @@
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/SimulationState.h>
 #include <Core/Grid/SimulationTime.h>
 #include <Core/OS/Dir.h>
 #include <Core/Util/Handle.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
+#include <CCA/Ports/Scheduler.h>
+
 #include <sci_defs/visit_defs.h>
 
 namespace Uintah {
+
+class Output;
 
 /**************************************
 
@@ -72,25 +78,27 @@ WARNING
 
 class DataWarehouse;
   
-class ApplicationCommon : public ApplicationInterface {
+  class ApplicationCommon : public UintahParallelComponent,
+			    public ApplicationInterface {
 
 public:
-  ApplicationCommon();
+    ApplicationCommon(const ProcessorGroup* myworld,
+		      const SimulationStateP sharedState = nullptr);
 
   virtual ~ApplicationCommon();
   
   //////////
   // Insert Documentation Here:
+  virtual void getComponents();
+
   virtual void problemSetup( const ProblemSpecP &prob_spec );
   
   virtual void problemSetup( const ProblemSpecP & prob_spec,
 			     const ProblemSpecP & restart_prob_spec,
-                                          GridP & grid,
-			       SimulationStateP & state ) = 0;
+                                          GridP & grid ) = 0;
   
   virtual void preGridProblemSetup( const ProblemSpecP     & params, 
-				    GridP            & grid,
-				    SimulationStateP & state ) {};
+				    GridP            & grid ) {};
   
   virtual void outputProblemSpec( ProblemSpecP & ps ) {};
   
@@ -159,6 +167,11 @@ public:
 			      const GridP& /*grid*/)
   { return false; }
   
+  virtual const VarLabel* get_delt_label() const { return m_delt_label; }
+
+  virtual void updateSimTime( void );
+  virtual void getNextDeltaT( void );
+  
   //////////
   virtual void setAMR(bool val) {m_AMR = val; }
   virtual bool isAMR() const { return m_AMR; }
@@ -172,9 +185,50 @@ public:
   virtual void haveModifiedVars( bool val ) { m_haveModifiedVars = val; }
   virtual bool haveModifiedVars() const { return m_haveModifiedVars; }
 
-  virtual void setSimulationTime( SimulationTime * st ) { m_simulationTime = st; }
-  virtual SimulationTime * getSimulationTime() const { return m_simulationTime; }
+  // Returns the integer timestep index of the top level of the
+  // simulation.  All simulations start with a top level time step
+  // number of 0.  This value is incremented by one for each
+  // simulation time step processed.  The 'set' function should only
+  // be called by the SimulationController at the beginning of a
+  // simulation.  The 'increment' function is called by the
+  // SimulationController at the end of each timestep.
+  virtual int  getTimeStep() const { return m_timeStep; }
+  virtual void setTimeStep( int timeStep )
+  {
+    m_timeStep = timeStep;
+    m_sharedState->setCurrentTopLevelTimeStep( timeStep );
+  }
+  virtual void incrementTimeStep() { setTimeStep(++m_timeStep); }
 
+  //////////
+  virtual SimulationTime * getSimulationTime() const { return m_simulationTime; }
+  virtual SimulationStateP getSimulationStateP() { return m_sharedState; };
+  //////////
+  virtual   void setDelt( double val ) { m_delt = val; };
+  virtual double getDelt() const { return m_delt; };
+
+  virtual   void setPrevDelt( double val ) { m_prev_delt = val; };
+  virtual double getPrevDelt() const { return m_prev_delt; };
+
+  virtual   void setSimTime( double val )
+  {
+    m_simTime = val;
+    m_sharedState->setElapsedSimTime( m_simTime );
+  };
+    
+  virtual double getSimTime() const { return m_simTime; };
+
+  virtual   void setStartSimTime( double val )
+  {
+    m_startSimTime = val;
+    setSimTime(val);
+  };
+    
+  virtual double getStartSimTime() const { return m_startSimTime; };
+    
+  virtual bool isLast( double walltime, int currentTimeStep ) const;
+  virtual bool maybeLast( double walltime, int currentTimeStep ) const;
+    
   //////////
   virtual const VarLabel* getOutputIntervalLabel() const {
     return m_outputIntervalLabel;
@@ -207,6 +261,9 @@ public:
 				  SchedulerP& /*sched*/) {};
  
 protected:
+  SchedulerP           m_scheduler{nullptr};
+  Output*              m_output{nullptr};
+
   bool m_AMR {false};
   bool m_lockstepAMR {false};
 
@@ -217,6 +274,8 @@ protected:
   bool m_updateCheckpointInterval {false};
   bool m_updateOutputInterval {false};
 
+  const VarLabel* m_delt_label;
+  
   const VarLabel* m_outputIntervalLabel;
   const VarLabel* m_outputTimestepIntervalLabel;
   const VarLabel* m_checkpointIntervalLabel;
@@ -224,6 +283,17 @@ protected:
 
   SimulationTime* m_simulationTime {nullptr};
   
+  double m_delt{0.0};
+  double m_prev_delt{0.0};
+
+  double m_simTime{0.0};             // current sim time
+  double m_startSimTime{0.0};        // starting sim time
+
+  // The time step that the simulation is at.
+  int    m_timeStep;
+    
+  SimulationStateP m_sharedState{nullptr};
+
 private:
   ApplicationCommon(const ApplicationCommon&);
   ApplicationCommon& operator=(const ApplicationCommon&);

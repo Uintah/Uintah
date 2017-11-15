@@ -29,7 +29,6 @@
 
 #include <CCA/Components/MPM/Contact/Contact.h>
 #include <CCA/Ports/DataWarehouseP.h>
-#include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>

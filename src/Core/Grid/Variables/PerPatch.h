@@ -30,6 +30,7 @@
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Disclosure/TypeUtils.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Util/Endian.h>
 #include <stdio.h>
 #include <cstring>
 #include <memory>
@@ -76,6 +77,7 @@ WARNING
 
       virtual ~PerPatch();
 
+     const TypeDescription* virtualGetTypeDescription() const { return getTypeDescription(); }
       static const TypeDescription* getTypeDescription();
 
       inline operator T () const {
@@ -117,6 +119,42 @@ WARNING
         return (retVal == dst) ? true : false;
       }
 
+     virtual void emitNormal(std::ostream& out, const IntVector& l, const IntVector& h,
+			     ProblemSpecP /*varnode*/, bool outputDoubleAsFloat)
+     {
+       ssize_t linesize = (ssize_t)(sizeof(T));
+       
+       out.write((char*) (value.get()), linesize);
+     }
+
+     virtual void readNormal(std::istream& in, bool swapBytes)
+     {
+       ssize_t linesize = (ssize_t)(sizeof(T));
+       
+       T val;
+       
+       in.read((char*) &val, linesize);
+       
+       if (swapBytes)
+       	 Uintah::swapbytes(val);
+       
+       value = std::make_shared<T>(val);
+     }
+
+     void print(std::ostream& out) const {
+       out << "Patch variable ";
+       out.width(10);
+       out << value.get() << " " << std::endl;
+     }
+
+    // Static variable whose entire purpose is to cause the
+    // (instantiated) type of this class to be registered with the
+    // Core/Disclosure/TypeDescription class when this class' object
+    // code is originally loaded from the shared library.  The
+    // 'registerMe' variable is not used for anything else in the
+    // program.
+    static TypeDescription::Register registerMe;
+
    private:
 
       static TypeDescription* td;
@@ -125,11 +163,35 @@ WARNING
 
    }; // end class PerPatch
 
+  
+  template<>
+  inline void PerPatch<double *>::readNormal(std::istream& in, bool swapBytes)
+  {
+    ssize_t linesize = (ssize_t)(sizeof(double *));
+    
+    double* val;
+    
+    in.read((char*) &val, linesize);
+    
+    // if (swapBytes)
+    //   Uintah::swapbytes(val);
+    
+    value = std::make_shared<double *>(val);
+  }
 
    template<class T>
    TypeDescription* PerPatch<T>::td = 0;
    
-   template<class T>
+  // The following line is the initialization (creation) of the
+  // 'registerMe' static variable (for each version of CCVariable
+  // (double, int, etc)).  Note, the 'registerMe' variable is created
+  // when the object code is initially loaded (usually during intial
+  // program load by the operating system).
+  template<class T>
+  TypeDescription::Register
+  PerPatch<T>::registerMe( getTypeDescription() );
+
+  template<class T>
      Variable*
      PerPatch<T>::maker()
      {

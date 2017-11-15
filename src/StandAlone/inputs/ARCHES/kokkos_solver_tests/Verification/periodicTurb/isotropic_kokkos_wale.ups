@@ -30,6 +30,9 @@
     <save label="uVel_cc"/>
     <save label="vVel_cc"/>
     <save label="wVel_cc"/>
+    <save label="drhodt"/>
+    <!--save label="density_star"/-->
+    <save label="density"/>
     <save label="gamma"/>
     <save label="pressure"/>
     <save label="b_press"/>
@@ -68,16 +71,11 @@
         <var role="total_viscosity" label="gamma"/>
         <var role="density" label="density"/>
       </VarID>
-      <PropertyModelsV2>
-        <model label="density" type="constant_property">
-          <grid type="CC"/>
-          <value>1.</value>
+      <StateProperties> 
+        <model label="density_model" type="constant">
+          <const_property label="density" value="1."/>
         </model>
-        <!--model label="gamma" type="constant_property">
-          <grid type="CC"/>
-          <value>1.e-3</value>
-        </model-->
-      </PropertyModelsV2>
+      </StateProperties>
       <KMomentum>
         <convection scheme="central"/>
         <PressureSolver>
@@ -98,18 +96,19 @@
        </model>
       </TurbulenceModels>
       <Initialization>
-        <task task_label="x-mom-init" variable_label="x-mom"  type="input_file">
-          <filename>../../../periodicTurb/cbc32_uvw_arches-indexed.gz</filename>
+        <task task_label="uVel-init" variable_label="uVel"  type="input_file">
+          <!--filename>../../../periodicTurb/cbc32_uvw_arches-indexed.gz</filename-->
+          <filename>inputs/ARCHES/periodicTurb/cbc32_uvw_arches-indexed.gz</filename>
           <vector index="0"/>
           <variable type="FX"/>
         </task>
-        <task task_label="y-mom-init" variable_label="y-mom"  type="input_file">
-          <filename>../../../periodicTurb/cbc32_uvw_arches-indexed.gz</filename>
+        <task task_label="vVel-init" variable_label="vVel"  type="input_file">
+          <filename>inputs/ARCHES/periodicTurb/cbc32_uvw_arches-indexed.gz</filename>
           <vector index="1"/>
           <variable type="FY"/>
         </task>
-        <task task_label="z-mom-init" variable_label="z-mom"  type="input_file">
-          <filename>../../../periodicTurb/cbc32_uvw_arches-indexed.gz</filename>
+        <task task_label="wVel-init" variable_label="wVel"  type="input_file">
+          <filename>inputs/ARCHES/periodicTurb/cbc32_uvw_arches-indexed.gz</filename>
           <vector index="2"/>
           <variable type="FZ"/>
         </task>

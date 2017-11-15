@@ -32,6 +32,7 @@
 #include <Core/Grid/Variables/GridIterator.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/NodeIterator.h>
+#include <Core/Grid/Variables/PerPatch.h>
 
 #include <Core/Containers/ConsecutiveRangeSet.h>
 
@@ -475,6 +476,42 @@ findMinMax( DataArchive         * da,
   } // end if( dx dy dz )
 
 } // end findMinMax()
+////////////////////////////////////////////////////////////////////////////////////
+//
+template <class Tvar, class Ttype>
+void
+findMinMaxPP( DataArchive         * da,
+	      const string        & var,
+	      int                   matl,
+	      const Patch         * patch,
+	      int                   timestep,
+	      CommandLineFlags    & clf )
+{
+  Tvar value;
+
+  const Uintah::TypeDescription * td = value.getTypeDescription();
+
+  da->query(value, var, matl, patch, timestep);
+
+  if( !clf.be_brief ) {
+      cout << "\t\t\t\t" << td->getName() << "\n";
+  }
+
+  Ttype min, max;
+  IntVector c_min, c_max;
+  
+  int minCnt = 1;
+  int maxCnt = 1;
+  
+  // Set initial values:
+  max = value;
+  min = max;
+  // c_max = patch->getID();
+  // c_min = c_max;
+  
+  printMinMax<Ttype>( clf, var, matl, patch, td->getSubType(), &min, &max, &c_min, &c_max, minCnt, maxCnt );
+
+} // end findMinMax()
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -773,7 +810,26 @@ Uintah::varsummary( DataArchive* da, CommandLineFlags & clf, int mat )
                   break;
                 }
               default:
-                cerr << "SCFZVariable  of unknown type: " << subtype->getType() << "\n";
+                cerr << "SCFZVariable of unknown type: " << subtype->getType() << "\n";
+                break;
+              }
+              break;
+              //__________________________________
+              //   PerPatch   V A R I A B L E S
+            case Uintah::TypeDescription::PerPatch:
+              switch(subtype->getType()){
+              case Uintah::TypeDescription::double_type:
+                {
+                  findMinMaxPP<PerPatch<double>,double>( da, var, matl, patch, t, clf );
+                  break;
+                }
+              case Uintah::TypeDescription::int_type:
+                {
+                  findMinMaxPP<PerPatch<int>,int>( da, var, matl, patch, t, clf );
+                  break;
+                }
+              default:
+                cerr << "PerPatch of unknown type: " << subtype->getType() << "\n";
                 break;
               }
               break;

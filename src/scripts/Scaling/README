@@ -4,6 +4,9 @@ ______________________________________________________________________
 To perform a scalability test copy the tarball "copyRenameThisDir.tar.gz" to the machine of interest and 
 untar it.  
 
+- Copy src/scripts/Scaling/extract* to new directory
+
+
 - Edit the files 
 
  extractScalingData

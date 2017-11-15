@@ -62,7 +62,6 @@ POSSIBLE REVISIONS
 #include <CCA/Components/Arches/BoundaryCondition.h>
 #include <CCA/Components/Arches/ChemMix/MixingRxnModel.h>
 #include <CCA/Components/Arches/Filter.h>
-#include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/VarLabel.h>
 

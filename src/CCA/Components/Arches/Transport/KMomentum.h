@@ -109,6 +109,7 @@ private:
     std::string m_sigmax_name;
     std::string m_sigmay_name;
     std::string m_sigmaz_name;
+    std::vector<std::string> m_vel_name;
 
     std::vector<std::string> m_eqn_names;
     std::vector<bool> m_do_clip;
@@ -165,6 +166,7 @@ private:
 
     ProblemSpecP db = input_db;
     ConvectionHelper* conv_helper = scinew ConvectionHelper();
+    using namespace ArchesCore;
 
     //Convection
     if ( db->findBlock("convection")){
@@ -206,6 +208,7 @@ private:
     std::vector<SourceInfo> eqn_srcs;
     if ( my_dir == ArchesCore::XDIR ){
 
+      m_vel_name.push_back(parse_ups_for_role( UVELOCITY, db, "uVelocitySPBC" ));
       for ( ProblemSpecP src_db = db->findBlock("src_x");
             src_db != nullptr; src_db = src_db->findNextBlock("src_x") ){
 
@@ -228,6 +231,7 @@ private:
 
     } else if ( my_dir == ArchesCore::YDIR ){
 
+      m_vel_name.push_back(parse_ups_for_role( VVELOCITY, db, "vVelocitySPBC" ));
       for ( ProblemSpecP src_db = db->findBlock("src_y");
             src_db != nullptr; src_db = src_db->findNextBlock("src_y") ){
 
@@ -250,6 +254,7 @@ private:
 
     } else if ( my_dir == ArchesCore::ZDIR ){
 
+      m_vel_name.push_back(parse_ups_for_role( WVELOCITY, db, "wVelocitySPBC" ));
       for ( ProblemSpecP src_db = db->findBlock("src_z");
             src_db != nullptr; src_db = src_db->findNextBlock("src_z") ){
 
@@ -277,7 +282,6 @@ private:
 
     delete conv_helper;
 
-    using namespace ArchesCore;
 
     ArchesCore::GridVarMap<T> var_map;
     var_map.problemSetup( input_db );
@@ -309,6 +313,7 @@ private:
     const int istart = 0;
     int iend = m_eqn_names.size();
     for (int i = istart; i < iend; i++ ){
+      register_new_variable<T>( m_vel_name[i] );
       register_new_variable<T>( m_eqn_names[i] );
       register_new_variable<T>( m_eqn_names[i]+"_rhs" );
       register_new_variable<FXT>( m_eqn_names[i]+"_x_flux" );
@@ -327,6 +332,7 @@ private:
     const int istart = 0;
     const int iend = m_eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
+      register_variable(  m_vel_name[ieqn] , ArchesFieldContainer::COMPUTES , variable_registry );
       register_variable(  m_eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry );
       register_variable(  m_eqn_names[ieqn]+"_rhs", ArchesFieldContainer::COMPUTES , variable_registry );
       register_variable(  m_eqn_names[ieqn]+"_x_flux", ArchesFieldContainer::COMPUTES , variable_registry );
@@ -345,12 +351,14 @@ private:
 
       double scalar_init_value = m_init_value[ieqn];
 
+      T& u    = tsk_info->get_uintah_field_add<T>(m_vel_name[ieqn]);
       T& phi    = tsk_info->get_uintah_field_add<T>(m_eqn_names[ieqn]);
       T& rhs    = tsk_info->get_uintah_field_add<T>(m_eqn_names[ieqn]+"_rhs");
       Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
       Uintah::parallel_for( range, [&](int i, int j, int k){
         phi(i,j,k) = scalar_init_value;
         rhs(i,j,k) = 0.0;
+        u(i,j,k)   = 0.0;
       });
 
       FXT& x_flux = tsk_info->get_uintah_field_add<FXT>(m_eqn_names[ieqn]+"_x_flux");
@@ -372,9 +380,11 @@ private:
     const int istart = 0;
     const int iend = m_eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
+      register_variable( m_vel_name[ieqn], ArchesFieldContainer::COMPUTES , variable_registry  );    
       register_variable( m_eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry  );
       register_variable( m_eqn_names[ieqn]+"_rhs", ArchesFieldContainer::COMPUTES , variable_registry  );
       register_variable( m_eqn_names[ieqn], ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::OLDDW , variable_registry  );
+      register_variable( m_vel_name[ieqn], ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::OLDDW , variable_registry  );
     }
   }
 
@@ -385,12 +395,14 @@ private:
     const int istart = 0;
     const int iend = m_eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
-
-      T& phi = *(tsk_info->get_uintah_field<T>( m_eqn_names[ieqn] ));
-      T& rhs = *(tsk_info->get_uintah_field<T>( m_eqn_names[ieqn]+"_rhs" ));
-      CT& old_phi = *(tsk_info->get_const_uintah_field<CT>( m_eqn_names[ieqn] ));
+      T& u    = tsk_info->get_uintah_field_add<T>(m_vel_name[ieqn]);
+      T& phi =  tsk_info->get_uintah_field_add<T>( m_eqn_names[ieqn] );
+      T& rhs =  tsk_info->get_uintah_field_add<T>( m_eqn_names[ieqn]+"_rhs" );
+      CT& old_phi = tsk_info->get_const_uintah_field_add<CT>( m_eqn_names[ieqn] );
+      CT& old_u    = tsk_info->get_const_uintah_field_add<CT>(m_vel_name[ieqn]);
 
       phi.copyData(old_phi);
+      u.copyData(old_u);
       rhs.initialize(0.0);
 
     } //equation loop

@@ -16,10 +16,19 @@ TaskFactoryBase::~TaskFactoryBase()
   for (BuildMap::iterator i = _builders.begin(); i != _builders.end(); i++ ){
     delete i->second;
   }
+
   for (TaskMap::iterator i = _tasks.begin(); i != _tasks.end(); i++ ){
     delete i->second;
   }
-}
+
+  for (ABuildMap::iterator i = _atomic_builders.begin(); i != _atomic_builders.end(); i++ ){
+    delete i->second;
+  }
+  
+  for (ATaskMap::iterator i = _atomic_tasks.begin(); i != _atomic_tasks.end(); i++ ){
+     delete i->second;
+   } 
+ }
 
 //--------------------------------------------------------------------------------------------------
 void
