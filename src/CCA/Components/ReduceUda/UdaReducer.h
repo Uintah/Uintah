@@ -26,6 +26,7 @@
 #define UINTAH_HOMEBREW_Component_UdaReducer_H
 
 #include <Core/Parallel/UintahParallelComponent.h>
+#include <CCA/Components/ReduceUda/Module.h>
 #include <CCA/Ports/SimulationInterface.h>
 #include <CCA/Ports/Output.h>
 #include <Core/DataArchive/DataArchive.h>
@@ -40,12 +41,13 @@
 
 namespace Uintah {
   class LoadBalancerPort;
+  class Module;
 
 /**************************************
 
 CLASS
    SimulationInterface
-   
+
    Short description...
 
 GENERAL INFORMATION
@@ -57,33 +59,33 @@ GENERAL INFORMATION
    University of Utah
 
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-  
-   
+
+
 KEYWORDS
    Simulation_Interface
 
 DESCRIPTION
    Long description...
-  
+
 WARNING
-  
+
 ****************************************/
 
   class UdaReducer : public SimulationInterface, public UintahParallelComponent {
   public:
-    UdaReducer( const ProcessorGroup * myworld, 
+    UdaReducer( const ProcessorGroup * myworld,
                 const std::string    & d_udaDir );
 
     virtual ~UdaReducer();
 
-    virtual void problemSetup( const ProblemSpecP     & params, 
-                               const ProblemSpecP     & restart_prob_spec, 
-                                     GridP            & grid, 
+    virtual void problemSetup( const ProblemSpecP     & params,
+                               const ProblemSpecP     & restart_prob_spec,
+                                     GridP            & grid,
                                      SimulationStateP & state );
 
     virtual void scheduleInitialize( const LevelP     & level,
                                            SchedulerP & );
-                                           
+
     virtual void scheduleRestartInitialize( const LevelP     & level,
                                                   SchedulerP & );
 
@@ -99,8 +101,8 @@ WARNING
     virtual bool needRecompile( const double   time,
                                 const double   dt,
                                 const GridP  & grid );
-                               
-    virtual void scheduleFinalizeTimestep(const LevelP& level, 
+
+    virtual void scheduleFinalizeTimestep(const LevelP& level,
                                           SchedulerP&){};
 
     // stubs
@@ -109,29 +111,29 @@ WARNING
     virtual void scheduleRefine                ( const PatchSet*, SchedulerP& ){};
     virtual void scheduleRefineInterface       ( const LevelP& , SchedulerP& , bool, bool){};
 
-    
+
     double getMaxTime();
-    
+
     double getInitialTime();
 
     GridP getGrid();
   //______________________________________________________________________
-  //  
+  //
   private:
     UdaReducer(const UdaReducer&);
     UdaReducer& operator=(const UdaReducer&);
 
     void initialize(const ProcessorGroup*,
-                    const PatchSubset* patches,     
-                    const MaterialSubset* matls,    
-                    DataWarehouse* /*old_dw*/,      
-                    DataWarehouse* new_dw);         
+                    const PatchSubset* patches,
+                    const MaterialSubset* matls,
+                    DataWarehouse* /*old_dw*/,
+                    DataWarehouse* new_dw);
 
     void computeDelT(const ProcessorGroup*,
-                     const PatchSubset* patches,    
-                     const MaterialSubset* matls,   
-                     DataWarehouse* /*old_dw*/,     
-                     DataWarehouse* new_dw);        
+                     const PatchSubset* patches,
+                     const MaterialSubset* matls,
+                     DataWarehouse* /*old_dw*/,
+                     DataWarehouse* new_dw);
 
     void sched_readDataArchive(const LevelP& level,
                                SchedulerP& sched);
@@ -148,8 +150,18 @@ WARNING
                           DataWarehouse*,
                           DataWarehouse* );
 
+    void sched_Test( const LevelP& level,
+                       SchedulerP& sched );
+
+    void doAnalysis(const ProcessorGroup*,
+                    const PatchSubset* patches,
+                    const MaterialSubset* matls,
+                    DataWarehouse* old_dw,
+                    DataWarehouse* new_dw);
+
+
     std::string            d_udaDir;
-    bool                   d_gridChanged;     
+    bool                   d_gridChanged;
 
     std::vector<int>       d_timesteps;
     std::vector<int>       d_numMatls;
@@ -159,16 +171,23 @@ WARNING
     GridP                  d_oldGrid;
     DataArchive          * d_dataArchive;
     Output               * d_dataArchiver;
-    
+
     int                    d_timeIndex;
 
     LoadBalancerPort     * d_lb;
     const VarLabel       * delt_label;
     SimulationStateP       d_sharedState;
     SimpleMaterial       * d_oneMatl;
+
+    VarLabel* testVLabel;
+    VarLabel* testDLabel;
+    
+    std::vector<Module*> d_Modules;
+
+
   };
 } // End namespace Uintah
-   
+
 
 
 #endif
