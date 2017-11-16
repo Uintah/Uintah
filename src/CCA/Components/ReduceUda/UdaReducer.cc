@@ -44,7 +44,7 @@
 
 using namespace std;
 using namespace Uintah;
-Dout dbg("UdaReduce", false);
+Dout dbg_pp("postProcess", false);
 //__________________________________
 //  ToDo
 //  - copy On-the-Fly files directories
@@ -242,7 +242,7 @@ void  UdaReducer::scheduleTimeAdvance( const LevelP& level,
 void UdaReducer::sched_Test(const LevelP& level,
                               SchedulerP& sched)
 {
-  printSchedule( level, dbg,"UdaReducer::sched_Test" );
+  printSchedule( level, dbg_pp,"UdaReducer::sched_Test" );
 
   Task* t = scinew Task("UdaReducer::doAnalysis",
                    this,&UdaReducer::doAnalysis);
@@ -278,7 +278,7 @@ void UdaReducer::doAnalysis(const ProcessorGroup*,
   for(int p = 0; p<patches->size(); p++){
     const Patch* patch = patches->get(p);
 
-    printTask(patches, patch, dbg, "UdaReducer::doAnalysis" );
+    printTask(patches, patch, dbg_pp, "UdaReducer::doAnalysis" );
 
     const VarLabel* vel_CCLabel   = VarLabel::find( "vel_CC" );
     const VarLabel* press_CCLabel = VarLabel::find( "press_CC" );
