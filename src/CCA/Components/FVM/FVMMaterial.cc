@@ -39,6 +39,7 @@ using namespace Uintah;
 FVMMaterial::FVMMaterial( ProblemSpecP& ps, SimulationStateP& shared_state,
                           FVMMethod method_type )
 {
+  d_diffusivity = 0.0;
   d_method_type = method_type;
   std::list<GeometryObject::DataItem> geom_obj_data;
 
@@ -56,6 +57,7 @@ FVMMaterial::FVMMaterial( ProblemSpecP& ps, SimulationStateP& shared_state,
     geom_obj_data.push_back(GeometryObject::DataItem("pos_charge_density",GeometryObject::Double));
     geom_obj_data.push_back(GeometryObject::DataItem("neg_charge_density",GeometryObject::Double));
     geom_obj_data.push_back(GeometryObject::DataItem("rel_permittivity",GeometryObject::Double));
+    ps->require("diffusivity", d_diffusivity);
   }
 
   for ( ProblemSpecP geom_obj_ps = ps->findBlock("geom_object"); geom_obj_ps != nullptr; geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
@@ -122,8 +124,8 @@ void FVMMaterial::initializePermittivityAndCharge(CCVariable<double>& permittivi
 
         if(piece->inside(center)){
           permittivity[c] += d_geom_objs[obj]->getInitialData_double("permittivity");
-          pos_charge[c] += volume * d_geom_objs[obj]->getInitialData_double("pos_charge_density");
-          neg_charge[c] += volume * d_geom_objs[obj]->getInitialData_double("neg_charge_density");
+          pos_charge[c] += d_geom_objs[obj]->getInitialData_double("pos_charge_density");
+          neg_charge[c] += d_geom_objs[obj]->getInitialData_double("neg_charge_density");
         }
       }
     }
@@ -135,7 +137,8 @@ FVMMaterial::initializeMPNPValues(const int idx, const Patch* patch,
                                         CCVariable<double>& pos_charge,
                                         CCVariable<double>& neg_charge,
                                         CCVariable<int>&    mat_id,
-                                        CCVariable<int>&    interface_cell)
+                                        CCVariable<int>&    interface_cell,
+                                        CCVariable<int>&    boundary_cell)
 {
   Vector dx = patch->dCell();
   double volume = dx.x() * dx.y() * dx.z();
@@ -202,18 +205,19 @@ FVMMaterial::initializeMPNPValues(const int idx, const Patch* patch,
         pos_charge[c] = volume * d_geom_objs[obj]->getInitialData_double("pos_charge_density");
         neg_charge[c] = volume * d_geom_objs[obj]->getInitialData_double("neg_charge_density");
 
+        if(xplus_bd){
+          if(c.x() + 1 < high_idx.x()){
+            if(!piece->inside(center_xp))
+              interface_cell[c] += 1;
+            boundary_cell[c] +=1;
+          }
+        }else{
+          if(!piece->inside(center_xp))
+            interface_cell[c] += 1;
+        }
         if(!piece->inside(center_xm)){
           if(xminus_bd){
             if(c.x() - 1 >= low_idx.x()){
-              interface_cell[c] += 1;
-            }
-          }else{
-            interface_cell[c] += 1;
-          }
-        }
-        if(!piece->inside(center_xp)){
-          if(xplus_bd){
-            if(c.x() + 1 < high_idx.x()){
               interface_cell[c] += 2;
             }
           }else{
@@ -221,18 +225,18 @@ FVMMaterial::initializeMPNPValues(const int idx, const Patch* patch,
           }
         }
 
+        if(!piece->inside(center_yp)){
+         if(yplus_bd){
+           if(c.y() + 1 < high_idx.y()){
+             interface_cell[c] += 4;
+           }
+         }else{
+           interface_cell[c] += 4;
+         }
+        }
         if(!piece->inside(center_ym)){
           if(yminus_bd){
             if(c.y() - 1 >= low_idx.y()){
-              interface_cell[c] += 4;
-            }
-          }else{
-            interface_cell[c] += 4;
-          }
-        }
-        if(!piece->inside(center_yp)){
-          if(yplus_bd){
-            if(c.y() + 1 < high_idx.y()){
               interface_cell[c] += 8;
             }
           }else{
@@ -240,24 +244,25 @@ FVMMaterial::initializeMPNPValues(const int idx, const Patch* patch,
           }
         }
 
-        if(!piece->inside(center_zm)){
-          if(zminus_bd){
-            if(c.z() - 1 >= low_idx.z()){
+        if(!piece->inside(center_zp)){
+          if(zplus_bd){
+            if(c.z() + 1 < high_idx.z()){
               interface_cell[c] += 16;
             }
           }else{
             interface_cell[c] += 16;
           }
         }
-        if(!piece->inside(center_zp)){
-          if(zplus_bd){
-            if(c.z() + 1 < high_idx.z()){
+        if(!piece->inside(center_zm)){
+          if(zminus_bd){
+            if(c.z() - 1 >= low_idx.z()){
               interface_cell[c] += 32;
             }
           }else{
             interface_cell[c] += 32;
           }
         }
+
       }
     }
   }

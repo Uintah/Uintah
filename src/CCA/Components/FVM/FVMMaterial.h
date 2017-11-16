@@ -57,7 +57,10 @@ namespace Uintah {
                                       CCVariable<double>& pos_charge,
                                       CCVariable<double>& neg_charge,
                                       CCVariable<int>&    mat_id,
-                                      CCVariable<int>&    interface_cell);
+                                      CCVariable<int>&    interface_cell,
+                                      CCVariable<int>&    boundary_cell);
+
+      double getDiffusivity(){ return d_diffusivity; }
 
     private:
        std::vector<GeometryObject*> d_geom_objs;
@@ -66,6 +69,7 @@ namespace Uintah {
        // copy constructor
        FVMMaterial(const FVMMaterial &fvmm);
        FVMMaterial& operator=(const FVMMaterial &fvmm);
+       double d_diffusivity;
 
        FVMMethod d_method_type;
   };

@@ -65,6 +65,7 @@ namespace Uintah{
 
       const VarLabel* ccMatId;
       const VarLabel* ccInterfaceCell;
+      const VarLabel* ccBoundaryCell;
   };
 } // End Uintah namespace
 

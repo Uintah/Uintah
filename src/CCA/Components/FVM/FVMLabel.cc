@@ -101,6 +101,8 @@ FVMLabel::FVMLabel()
                     CCVariable<int>::getTypeDescription());
   ccInterfaceCell = VarLabel::create("cc.InterfaceCell",
                     CCVariable<int>::getTypeDescription());
+  ccBoundaryCell  = VarLabel::create("cc.BoundaryCell",
+                    CCVariable<int>::getTypeDescription());
 }
 
 FVMLabel::~FVMLabel()
@@ -137,5 +139,6 @@ FVMLabel::~FVMLabel()
 
   VarLabel::destroy(ccMatId);
   VarLabel::destroy(ccInterfaceCell);
+  VarLabel::destroy(ccBoundaryCell);
 }
 

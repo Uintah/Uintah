@@ -30,6 +30,7 @@
 #include <Core/Util/Handle.h>
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <CCA/Ports/SimulationInterface.h>
+#include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <CCA/Ports/SolverInterface.h>
@@ -143,6 +144,37 @@ WARNING
                                 DataWarehouse* old_dw,
                                 DataWarehouse* new_dw);
 
+    void getInnerRange(const Patch* patch, IntVector& low, IntVector& high)
+    {
+      low = patch->getCellLowIndex();
+      high = patch->getCellHighIndex();
+      if(high.x() - low.x() > 2){
+        if(patch->getBCType(Patch::xminus) != Patch::Neighbor){
+          low += IntVector(1,0,0);
+        }
+        if(patch->getBCType(Patch::xplus) != Patch::Neighbor){
+          high -= IntVector(1,0,0);
+        }
+      }
+
+      if(high.y() - low.y() > 2){
+        if(patch->getBCType(Patch::yminus) != Patch::Neighbor){
+          low += IntVector(0,1,0);
+        }
+        if(patch->getBCType(Patch::yplus) != Patch::Neighbor){
+          high -= IntVector(0,1,0);
+        }
+      }
+      if(high.z() - low.z() > 2){
+        if(patch->getBCType(Patch::zminus) != Patch::Neighbor){
+          low += IntVector(0,0,1);
+        }
+        if(patch->getBCType(Patch::zplus) != Patch::Neighbor){
+          high -= IntVector(0,0,1);
+        }
+      }
+    }
+
     FVMLabel* d_lb;
     SimulationStateP d_shared_state;
     double d_delt;
@@ -160,7 +192,7 @@ WARNING
 
     Ghost::GhostType  d_gan = Ghost::AroundNodes;
     Ghost::GhostType  d_gac = Ghost::AroundCells;
-    
+
     MPNP(const MPNP&);
     MPNP& operator=(const MPNP&);
          

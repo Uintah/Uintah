@@ -17,9 +17,10 @@
    <Time>
      <maxTime>0.1</maxTime>                          
      <initTime>0.0</initTime>                        
-     <delt_min>0.1</delt_min>                    
-     <delt_max>1</delt_max>                          
-     <timestep_multiplier>2</timestep_multiplier>    
+     <delt_min>1.0e-10</delt_min>                    
+     <delt_max>1.0e-10</delt_max>                          
+     <timestep_multiplier>1</timestep_multiplier>    
+     <max_Timesteps> 10 </max_Timesteps>
    </Time>
    
    <DataArchiver>
@@ -162,7 +163,7 @@
      <permittivity>     8.85e-21  </permittivity>
      <boltzmanns_const> 1.38e-23  </boltzmanns_const>
      <temperature>      300       </temperature>
-     <delt>.1</delt>
+     <delt>1e-10</delt>
      <Parameters variable="electrostatic_solver">
        <!-- CGSolver options -->
        <norm>     LInfinity  </norm>
