@@ -39,8 +39,6 @@ namespace Uintah {
   class DataWarehouse;
   class Material;
   class Patch;
-  
-
   class Module {
 
   public:
@@ -51,25 +49,20 @@ namespace Uintah {
 
     virtual void problemSetup(const ProblemSpecP& params,
                               const ProblemSpecP& restart_prob_spec,
-                              GridP& grid,
-                              SimulationStateP& state) = 0;
+                              GridP&              grid,
+                              SimulationStateP&   state) = 0;
 
     virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
                                                             
                               
-    virtual void scheduleInitialize(SchedulerP& sched,
-                                    const LevelP& level) =0;
-                                    
-    virtual void scheduleRestartInitialize(SchedulerP& sched,
-                                           const LevelP& level) =0;
-    
-    virtual void restartInitialize() = 0;
-    
-    virtual void scheduleDoAnalysis(SchedulerP& sched,
+    virtual void scheduleInitialize(SchedulerP&   sched,
                                     const LevelP& level) =0;
     
-    virtual void scheduleDoAnalysis_preReloc(SchedulerP& sched,
+    virtual void scheduleDoAnalysis(SchedulerP&   sched,
                                     const LevelP& level) =0;
+    
+    virtual void scheduleDoAnalysis_preReloc(SchedulerP&   sched,
+                                             const LevelP& level) =0;
   };
 }
 

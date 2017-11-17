@@ -29,7 +29,6 @@
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/CellIterator.h>
-
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/DebugStream.h>
 
@@ -57,14 +56,12 @@ statistics::statistics(ProblemSpecP& module_spec,
   d_monitorCell = IntVector(0,0,0);
   d_doHigherOrderStats = false;
 
-  // Reynolds Shear Stress related
-  d_RS_matl     = -9;
-  d_computeReynoldsStress = false;
 
   required = false;
 }
 
-//__________________________________
+//______________________________________________________________________
+//
 statistics::~statistics()
 {
   dbg << " Doing: destorying statistics " << endl;
@@ -88,12 +85,6 @@ statistics::~statistics()
       VarLabel::destroy( Q.Qmean4_Label );
     }
   }
-
-  if ( d_computeReynoldsStress ){
-    VarLabel::destroy( d_velPrime_Label );
-    VarLabel::destroy( d_velSum_Label  );
-    VarLabel::destroy( d_velMean_Label  );
-  }
 }
 
 //______________________________________________________________________
@@ -116,22 +107,12 @@ void statistics::problemSetup(const ProblemSpecP& prob_spec,
   d_prob_spec->require("timeStop",   d_stopTime);
   
   // Start time < stop time
-  if(d_startTime > d_stopTime ){
-    throw ProblemSetupException("\n ERROR:statistics: startTime > stopTime. \n", __FILE__, __LINE__);
+  if(d_startTime >= d_stopTime ){
+    throw ProblemSetupException("\n ERROR:statistics: startTime >= stopTime. \n", __FILE__, __LINE__);
   }
   
   // debugging
-  d_prob_spec->get("monitorCell",    d_monitorCell);
-
-
-  //__________________________________
-  //  read in when each variable started 
-  string comment = "__________________________________\n"
-                   "\tIf you want to overide the value of\n \t  startTimeTimestep\n \t  startTimeTimestepReynoldsStress\n"
-                   "\tsee checkpoints/t*****/timestep.xml\n"
-                   "\t__________________________________";
-  d_prob_spec->addComment( comment ) ;
-
+  d_prob_spec->get("monitorCell", d_monitorCell);
   
   //__________________________________
   // find the material to extract data from.  Default is matl 0.
@@ -156,10 +137,9 @@ void statistics::problemSetup(const ProblemSpecP& prob_spec,
   vector<int> m;
   m.push_back( defaultMatl );
 
-  proc0cout << "__________________________________ Data Analysis module: statistics" << endl;
+  proc0cout << "__________________________________ Post Process module: statistics" << endl;
   d_prob_spec->get("computeHigherOrderStats", d_doHigherOrderStats );
   if (d_doHigherOrderStats){
-
     proc0cout << "         Computing 2nd, 3rd and 4th order statistics for all of the variables listed"<< endl;
   } else {
     proc0cout << "         Computing 2nd order statistics for all of the variables listed"<< endl;
@@ -167,7 +147,6 @@ void statistics::problemSetup(const ProblemSpecP& prob_spec,
 
   //__________________________________
   //  Read in variables label names
-
    ProblemSpecP vars_ps = d_prob_spec->findBlock("Variables");
   if (!vars_ps){
     throw ProblemSetupException("statistics: Couldn't find <Variables> tag", __FILE__, __LINE__);
@@ -236,24 +215,6 @@ void statistics::problemSetup(const ProblemSpecP& prob_spec,
       Q.Qmean4_Label    = VarLabel::create( "mean4_" + name,     td);
       Q.Qkurtosis_Label = VarLabel::create( "kurtosis_" + name,  td);
     }
-
-    //__________________________________
-    //  computeReynoldsStress with this Var?
-    if (attribute["computeReynoldsStress"].empty() == false){
-      d_computeReynoldsStress = true;
-      Q.computeRstess    = true;
-      d_RS_matl = matl;
-      proc0cout << "         Computing uv_prime, uw_prime, vw_prime using ("<< name << ")" << endl;
-    }
-
-    //__________________________________
-    // keep track of which summation variables
-    // have been initialized.  A user can
-    // add a variable on a restart.  Default is false.
-    Q.isInitialized[lowOrder]     = false;
-    Q.isInitialized[highOrder]    = false;
-    d_isReynoldsStressInitialized = false;
-
     d_Qstats.push_back( Q );
 
     //__________________________________
@@ -279,16 +240,6 @@ void statistics::problemSetup(const ProblemSpecP& prob_spec,
            << mesg.str() << ")";
       proc0cout << warn.str() << endl;
     }
-  }
-
-
-  //__________________________________
-  //  computeReynoldsStress with this Var?
-  if ( d_computeReynoldsStress){
-    const TypeDescription* td = CCVariable<Vector>::getTypeDescription();
-    d_velPrime_Label = VarLabel::create( "uv_vw_wu_prime", td);
-    d_velSum_Label   = VarLabel::create( "sum_uv_vw_wu",   td);
-    d_velMean_Label  = VarLabel::create( "mean_uv_vw_wu",  td);
   }
 
   //__________________________________
@@ -321,13 +272,8 @@ void statistics::problemSetup(const ProblemSpecP& prob_spec,
   d_matlSet->addAll(m);
   d_matlSet->addReference();
   d_matSubSet = d_matlSet->getUnion();
-  proc0cout << "__________________________________ Data Analysis module: statistics" << endl;
-  
-#ifdef HAVE_VISIT
-  if( sharedState->getVisIt() ) {
-    required = true;
-  }
-#endif
+  proc0cout << "__________________________________ Post Process module: statistics" << endl;
+ 
 }
 
 //______________________________________________________________________
@@ -349,12 +295,6 @@ void statistics::scheduleInitialize(SchedulerP& sched,
       t->computes ( Q.Qsum3_Label );
       t->computes ( Q.Qsum4_Label );
     }
-  }
-
-  //__________________________________
-  //  For Reynolds Stress components
-  if( d_computeReynoldsStress ){
-    t->computes ( d_velSum_Label );
   }
 
   sched->addTask(t, level->eachPatch(), d_matlSet);
@@ -390,160 +330,7 @@ void statistics::initialize(const ProcessorGroup*,
         }
       }
     }  // loop over Qstat
-
-    //__________________________________
-    //
-    if( d_computeReynoldsStress && !d_isReynoldsStressInitialized ){
-      proc0cout << "    Statistics: initializing summation variables needed for Reynolds Stress calculation" << endl;
-      allocateAndZero<Vector>( new_dw, d_velSum_Label,  d_RS_matl, patch );
-    }
   }  // pathes
-}
-
-//______________________________________________________________________
-// This allows the user to restart from an uda in which this module was
-// turned off.  Only execute task if the labels were NOT in the checkpoint
-void statistics::scheduleRestartInitialize(SchedulerP& sched,
-                                           const LevelP& level)
-{
-
-  printSchedule( level,dbg,"statistics::scheduleRestartInitialize" );
-
-  DataWarehouse* new_dw = sched->getLastDW();
-
-  // Find the first patch on this level that this mpi rank owns.
-  const Uintah::PatchSet* const ps = sched->getLoadBalancer()->getPerProcessorPatchSet(level);
-  int rank = Parallel::getMPIRank();
-  const PatchSubset* myPatches = ps->getSubset(rank);
-  const Patch* firstPatch = myPatches->get(0);
-
-  Task* t = scinew Task("statistics::restartInitialize",
-                   this,&statistics::restartInitialize);
-
-  bool addTask = false;
-
-  for ( unsigned int i =0 ; i < d_Qstats.size(); i++ ) {
-    Qstats Q = d_Qstats[i];
-
-    // Do the summation Variables exist in checkpoint
-    //              low order
-    if (new_dw->exists( Q.Qsum_Label, Q.matl, firstPatch) ){
-      Q.isInitialized[lowOrder] = true;
-      d_Qstats[i].isInitialized[lowOrder] = true;
-    }
-
-
-    //              high order
-    if( d_doHigherOrderStats ){
-      if ( new_dw->exists( Q.Qsum3_Label, Q.matl, firstPatch) ){
-        Q.isInitialized[highOrder] = true;
-        d_Qstats[i].isInitialized[highOrder] = true;
-      }
-    }
-
-    // if the Q.sum was not in previous checkpoint compute it
-    if( !Q.isInitialized[lowOrder] ){
-      t->computes ( Q.Qsum_Label );
-      t->computes ( Q.Qsum2_Label );
-      addTask = true;
-      proc0cout << "    Statistics: Adding lowOrder computes for " << Q.Q_Label->getName() << endl;
-    }
-
-    if( d_doHigherOrderStats && !Q.isInitialized[highOrder] ){
-      t->computes ( Q.Qsum3_Label );
-      t->computes ( Q.Qsum4_Label );
-      addTask = true;
-      proc0cout << "    Statistics: Adding highOrder computes for " << Q.Q_Label->getName() << endl;
-    }
-  }
-
-  //__________________________________
-  //  Reynolds stress
-  // Do the summation Variables exist in checkpoint
-  if(d_computeReynoldsStress ){
-    if (new_dw->exists( d_velSum_Label, d_RS_matl, firstPatch) ){
-      d_isReynoldsStressInitialized = true;
-    } else {
-      t->computes ( d_velSum_Label );
-      addTask = true;
-      proc0cout << "    Statistics: Adding computes for Reynolds Stress (u'v', u'w', w'u') terms "  << endl;
-    }
-  }
-
-  // only add task if a variable was not found in old_dw
-  if ( addTask ){
-    sched->addTask(t, level->eachPatch(), d_matlSet);
-  }
-}
-
-
-//______________________________________________________________________
-//
-void statistics::restartInitialize(const ProcessorGroup*,
-                                   const PatchSubset* patches,
-                                   const MaterialSubset*,
-                                   DataWarehouse*,
-                                   DataWarehouse* new_dw)
-{
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-    printTask(patches, patch,dbg,"Doing statistics::restartInitialize");
-
-    for ( unsigned int i =0 ; i < d_Qstats.size(); i++ ) {
-      Qstats Q = d_Qstats[i];
-      switch(Q.subtype->getType()) {
-
-        case TypeDescription::double_type:{         // double
-          allocateAndZeroSums<double>( new_dw, patch, Q);
-          break;
-        }
-        case TypeDescription::Vector: {             // Vector
-          allocateAndZeroSums<Vector>( new_dw, patch, Q);
-          break;
-        }
-        default: {
-          throw InternalError("statistics: invalid data type", __FILE__, __LINE__);
-        }
-      }
-    }  // loop over Qstat
-
-    //__________________________________
-    //
-    if ( d_computeReynoldsStress && !d_isReynoldsStressInitialized ){
-      proc0cout << "    Statistics: initializing summation variables needed for Reynolds Stress calculation" << endl;
-      allocateAndZero<Vector>( new_dw, d_velSum_Label,  d_RS_matl, patch );
-    }
-
-  }  // pathes
-}
-
-//______________________________________________________________________
-//
-void
-statistics::restartInitialize()
-{
-}
-
-//______________________________________________________________________
-//  output the starting timestep for each variable
-//  The user can turn add variables on restarts
-void
-statistics::outputProblemSpec( ProblemSpecP& root_ps)
-{
-  if( root_ps == nullptr ) {
-    throw InternalError("ERROR: DataAnalysis Module:statistics::outputProblemSpec:  ProblemSpecP is nullptr", __FILE__, __LINE__);
-  }
-
-  ProblemSpecP da_ps = root_ps->appendChild("DataAnalysisRestart");
-
-  ProblemSpecP m_ps = da_ps->appendChild("Module");
-  m_ps->setAttribute( "name","statistics" );
-  ProblemSpecP st_ps = m_ps->appendChild("StartTimestep");
-
-  for ( unsigned int i =0 ; i < d_Qstats.size(); i++ ) {
-    Qstats Q = d_Qstats[i];
-    st_ps->appendElement( Q.Q_Label->getName().c_str(), Q.getStart() );
-  }
 }
 
 //______________________________________________________________________
@@ -599,26 +386,6 @@ void statistics::scheduleDoAnalysis(SchedulerP& sched,
     }
 //    Q.print();
   }
-
-  //__________________________________
-  //  Reynolds Stress Terms
-  if ( d_computeReynoldsStress ){
-    MaterialSubset* matSubSet = scinew MaterialSubset();
-    matSubSet->add( d_RS_matl );
-    matSubSet->addReference();
-
-    t->requires( Task::OldDW, d_velSum_Label,  matSubSet, gn, 0 );
-
-
-    t->computes ( d_velPrime_Label,  matSubSet );
-    t->computes ( d_velSum_Label,    matSubSet );
-    t->computes ( d_velMean_Label,   matSubSet );
-    if(matSubSet && matSubSet->removeReference()){
-      delete matSubSet;
-    }
-  }
-
-
   sched->addTask(t, level->eachPatch(), d_matlSet);
 }
 
@@ -646,9 +413,6 @@ void statistics::doAnalysis(const ProcessorGroup* pg,
         }
         case TypeDescription::Vector: {             // Vector
           computeStatsWrapper< Vector >(old_dw, new_dw, patches,  patch, Q);
-
-          computeReynoldsStressWrapper( old_dw, new_dw, patches,  patch, Q);
-
           break;
         }
         default: {
@@ -658,9 +422,6 @@ void statistics::doAnalysis(const ProcessorGroup* pg,
     }  // qstats loop
   }  // patches
 }
-
-
-
 
 //______________________________________________________________________
 //  computeStatsWrapper:
@@ -673,14 +434,15 @@ void statistics::computeStatsWrapper( DataWarehouse* old_dw,
 {
   double now = d_sharedState->getElapsedSimTime();
 
+  cout << " now: " << now << " d_startTime: " << d_startTime << " d_stopTime: " << d_stopTime << endl;
+
   if(now < d_startTime || now > d_stopTime){
 
-//    proc0cout << " IGNORING------------DataAnalysis: Statistics" << endl;
+    proc0cout << " IGNORING------------DataAnalysis: Statistics" << endl;
     allocateAndZeroStats<T>( new_dw, patch, Q);
-    carryForwardSums( old_dw, new_dw, patches, Q );
-
+    allocateAndZeroSums<T>(  new_dw, patch, Q);
   }else {
-//    proc0cout << " Computing------------DataAnalysis: Statistics" << endl;
+    proc0cout << " Computing------------DataAnalysis: Statistics" << endl;
 
     computeStats< T >(old_dw, new_dw, patch, Q);
   }
@@ -806,102 +568,6 @@ void statistics::computeStats( DataWarehouse* old_dw,
     }
   }
 }
-//______________________________________________________________________
-//  computeReynoldsStressWrapper:
-void statistics::computeReynoldsStressWrapper( DataWarehouse* old_dw,
-                                               DataWarehouse* new_dw,
-                                               const PatchSubset* patches,
-                                               const Patch*    patch,
-                                               Qstats& Q)
-{
-  double now = d_sharedState->getElapsedSimTime();
-
-  if(now < d_startTime || now > d_stopTime){
-
-//    proc0cout << " IGNORING------------statistics::computeReynoldsStress" << endl;
-    // define the matl subset for this variable
-    MaterialSubset* matSubSet = scinew MaterialSubset();
-    matSubSet->add( Q.matl );
-    matSubSet->addReference();
-
-    new_dw->transferFrom(    old_dw, d_velSum_Label,   patches, matSubSet );
-    allocateAndZero<Vector>( new_dw, d_velPrime_Label, d_RS_matl, patch );
-    allocateAndZero<Vector>( new_dw, d_velMean_Label,  d_RS_matl, patch );
-
-    if(matSubSet && matSubSet->removeReference()){
-      delete matSubSet;
-    }
-  }else {
-//    proc0cout << " Computing------------statistics::computeReynoldsStress" << endl;
-    computeReynoldsStress( old_dw, new_dw,patch, Q);
-  }
-}
-
-//______________________________________________________________________
-//  Computes u'v', u'w', v'w'
-void statistics::computeReynoldsStress( DataWarehouse* old_dw,
-                                        DataWarehouse* new_dw,
-                                        const Patch* patch,
-                                        Qstats& Q)
-{
-  if ( Q.computeRstess == false ){
-    return;
-  }
-
-  const int matl = Q.matl;
-  constCCVariable<Vector> vel;
-  constCCVariable<Vector> vel_mean;
-  constCCVariable<Vector> Qsum_old;
-
-  Ghost::GhostType  gn  = Ghost::None;
-  new_dw->get ( vel,       Q.Q_Label,        matl, patch, gn, 0 );
-  new_dw->get ( vel_mean,  Q.Qmean_Label,    matl, patch, gn, 0 );
-  old_dw->get ( Qsum_old,  d_velSum_Label,   matl, patch, gn, 0 );
-
-  CCVariable< Vector > Qsum;
-  CCVariable< Vector > Qmean;
-  CCVariable< Vector > uv_vw_wu;
-
-  new_dw->allocateAndPut( Qsum,      d_velSum_Label,    matl, patch );
-  new_dw->allocateAndPut( Qmean,     d_velMean_Label,   matl, patch );
-  new_dw->allocateAndPut( uv_vw_wu,  d_velPrime_Label,  matl, patch );
-  
-  int ts = d_sharedState->getCurrentTopLevelTimeStep();
-  
-  Q.setStart(ts);
-  int Q_ts = Q.getStart();
-  int timestep = ts - Q_ts + 1;
-
-  Vector nTimesteps(timestep);
-
-  //__________________________________
-  // UV_prime(i) = mean(U .* V) - mean(U) .* mean(V);
-  // UW_prime(i) = mean(U .* W) - mean(U) .* mean(W);
-  // VW_prime(i) = mean(V .* W) - mean(V) .* mean(W)
-
-  for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
-    IntVector c = *iter;
-
-    Vector me  = Multiply(vel[c], vel[c] );   /// u = uv, vw, wu
-    Qsum[c]    = me + Qsum_old[c];
-    Qmean[c]   = Qsum[c]/nTimesteps;
-
-
-    uv_vw_wu[c] = Qmean[c] - Multiply(vel_mean[c],vel_mean[c]);
-#if 0
-    //__________________________________
-    //  debugging
-    if ( c == d_monitorCell ){
-      cout << "  ReynoldsStress stats:  \n \t \t"<< d_monitorCell << " nTimestep: " << nTimesteps.x()
-           <<  " topLevelTimestep " <<  d_sharedState->getCurrentTopLevelTimeStep()
-           << " d_startTimeTimestepReynoldsStress: " << d_startTimeTimestepReynoldsStress
-           <<"\n \t \t"<<Q.Q_Label->getName()<< ": " << vel[c]<< " vel_CC_mean: " << vel_mean[c]
-           <<"\n \t \tuv_vw_wu: " << me << ",  uv_vw_wu_sum: " << Qsum[c]<< ",  uv_vw_wu_mean: " << Qmean[c]
-           <<"\n \t \tuv_vw_wu_prime: " <<  uv_vw_wu[c] << endl;
-    }
-#endif
-  }
-}
 
 //______________________________________________________________________
 //  allocateAndZero  statistics variables
@@ -929,13 +595,12 @@ void statistics::allocateAndZeroSums( DataWarehouse* new_dw,
                                       Qstats& Q )
 {
   int matl = Q.matl;
-  if ( !Q.isInitialized[lowOrder] ){
-    allocateAndZero<T>( new_dw, Q.Qsum_Label,  matl, patch );
-    allocateAndZero<T>( new_dw, Q.Qsum2_Label, matl, patch );
+  allocateAndZero<T>( new_dw, Q.Qsum_Label,  matl, patch );
+  allocateAndZero<T>( new_dw, Q.Qsum2_Label, matl, patch );
 //    proc0cout << "    Statistics: " << Q.Q_Label->getName() << " initializing low order sums on patch: " << patch->getID()<<endl;
-  }
 
-  if( d_doHigherOrderStats && !Q.isInitialized[highOrder] ){
+
+  if( d_doHigherOrderStats ){
     allocateAndZero<T>( new_dw, Q.Qsum3_Label, matl, patch );
     allocateAndZero<T>( new_dw, Q.Qsum4_Label, matl, patch );
 //    proc0cout << "    Statistics: " << Q.Q_Label->getName() << " initializing high order sums on patch: " << patch->getID() << endl;
@@ -956,28 +621,3 @@ void statistics::allocateAndZero( DataWarehouse* new_dw,
   Q.initialize( zero );
 }
 
-
-//______________________________________________________________________
-//  carryForward  summation variables
-void statistics::carryForwardSums( DataWarehouse* old_dw,
-                                   DataWarehouse* new_dw,
-                                   const PatchSubset* patches,
-                                   const Qstats& Q )
-{
-    // define the matl subset for this variable
-  MaterialSubset* matSubSet = scinew MaterialSubset();
-  matSubSet->add( Q.matl );
-  matSubSet->addReference();
-
-  new_dw->transferFrom(old_dw, Q.Qsum_Label,  patches, matSubSet  );
-  new_dw->transferFrom(old_dw, Q.Qsum2_Label, patches, matSubSet );
-
-  if( d_doHigherOrderStats ){
-    new_dw->transferFrom(old_dw, Q.Qsum3_Label, patches, matSubSet );
-    new_dw->transferFrom(old_dw, Q.Qsum4_Label, patches, matSubSet );
-  }
-
-  if(matSubSet && matSubSet->removeReference()){
-    delete matSubSet;
-  }
-}

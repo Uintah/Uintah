@@ -55,7 +55,7 @@ KEYWORDS
    statistics
 
 DESCRIPTION
-   This computes turbulence related statistical quantities
+   Computes the mean, variance, skewness, kurtosis CCVariable<double,Vector>
 
 
 WARNING
@@ -80,11 +80,6 @@ WARNING
 
     virtual void scheduleInitialize(SchedulerP& sched,
                                     const LevelP& level);
-
-    virtual void scheduleRestartInitialize(SchedulerP& sched,
-                                           const LevelP& level);
-
-    virtual void restartInitialize();
 
     virtual void scheduleDoAnalysis(SchedulerP& sched,
                                     const LevelP& level);
@@ -117,8 +112,6 @@ WARNING
       VarLabel* Qmean4_Label;
       VarLabel* Qkurtosis_Label;
 
-      std::map<ORDER,bool> isInitialized;
-
       const Uintah::TypeDescription* subtype;
 
       // Code for keeping track of which timestep
@@ -150,19 +143,6 @@ WARNING
       };
       
     };
-    
-    //__________________________________
-    // For Reynolds Shear Stress computations
-    bool d_isReynoldsStressInitialized; // have the sum label been initialized for the RS terms
-    bool d_computeReynoldsStress;       // on/off switch
-    int  d_RS_matl;                     // material index used for Reynolds Shear Stress variables
-    VarLabel* d_velPrime_Label;         // u'v', v'w', w'u'
-    VarLabel* d_velSum_Label;           // sum(u'v'), sum(v'w'), sum(w'u')              over timesteps
-    VarLabel* d_velMean_Label;          // sum(u'v')/N, sum(v'w')/N, sum(w'u')/N        over timesteps where N = number of timesteps
-
-    inline Vector Multiply(Vector a, Vector b){
-      return Vector(a.x()*b.y(), a.y()*b.z(), a.z()*b.x() );
-    }
 
     //__________________________________
     //
@@ -172,11 +152,6 @@ WARNING
                     DataWarehouse*,
                     DataWarehouse* new_dw);
 
-    void restartInitialize(const ProcessorGroup*,
-                           const PatchSubset* patches,
-                           const MaterialSubset*,
-                           DataWarehouse*,
-                           DataWarehouse* new_dw);
 
     void doAnalysis(const ProcessorGroup* pg,
                     const PatchSubset* patches,
@@ -195,17 +170,6 @@ WARNING
                        DataWarehouse* new_dw,
                        const Patch*   patch,
                        Qstats& Q);
-
-    void computeReynoldsStressWrapper( DataWarehouse* old_dw,
-                                       DataWarehouse* new_dw,
-                                       const PatchSubset* patches,
-                                       const Patch*    patch,
-                                       Qstats& Q);
-
-    void computeReynoldsStress( DataWarehouse* old_dw,
-                                DataWarehouse* new_dw,
-                                const Patch*    patch,
-                                Qstats& Q);
 
     template <class T>
     void allocateAndZero( DataWarehouse* new_dw,

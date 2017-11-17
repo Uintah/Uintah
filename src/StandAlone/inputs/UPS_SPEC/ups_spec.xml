@@ -790,6 +790,30 @@
             
     </Module>
   </DataAnalysis>
+
+  <!--__________________________________-->
+  <PostProcess                          spec="OPTIONAL NO_DATA" >
+    <Module                             spec="MULTIPLE NO_DATA"
+                                          attribute1="type REQUIRED STRING 'statistics'" >
+      
+      <!--  Common __________________________________-->
+      <material                         spec="OPTIONAL STRING" />
+      <materialIndex                    spec="OPTIONAL INTEGER" />
+      <timeStart                        spec="REQUIRED DOUBLE"  need_applies_to="type statistics"/>
+      <timeStop                         spec="REQUIRED DOUBLE"  need_applies_to="type statistics"/>
+      <Variables                        spec="OPTIONAL NO_DATA" need_applies_to="type statistics">
+        <analyze                        spec="MULTIPLE NO_DATA"
+                                          attribute1="label REQUIRED STRING" 
+                                          attribute2="matl  OPTIONAL STRING"
+                                          attribute3="level OPTIONAL STRING" />
+      </Variables>
+ 
+      <!--statistics ____________________________________--> 
+      <computeHigherOrderStats         spec="OPTIONAL BOOLEAN"  need_applies_to="type statistics" />
+            
+    </Module>
+  </PostProcess>
+
   
   <!--__________________________________-->
   

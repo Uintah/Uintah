@@ -43,10 +43,10 @@ ModuleFactory::~ModuleFactory()
 std::vector<Module*>
 ModuleFactory::create(const ProblemSpecP& prob_spec,
                       SimulationStateP&   sharedState,
-                      Output* dataArchiver)
+                      Output*             dataArchiver)
 {
   string module("");
-  ProblemSpecP da_ps = prob_spec->findBlock("DataAnalysis");
+  ProblemSpecP da_ps = prob_spec->findBlock("PostProcess");
 
   vector<Module*> modules;
  
@@ -55,17 +55,18 @@ ModuleFactory::create(const ProblemSpecP& prob_spec,
     for( ProblemSpecP module_ps = da_ps->findBlock( "Module" ); module_ps != nullptr; module_ps = module_ps->findNextBlock( "Module" ) ) {
                         
       if( !module_ps ) {
-        throw ProblemSetupException( "\nERROR:<DataAnalysis>, could not find find <Module> tag \n", __FILE__, __LINE__ );
+        throw ProblemSetupException( "\nERROR:<PostProcess>, could not find find <Module> tag \n", __FILE__, __LINE__ );
       }
+      
       map<string,string> attributes;
       module_ps->getAttributes(attributes);
-      module = attributes["name"];
+      module = attributes["type"];
 
       if ( module == "statistics" ) {
         modules.push_back ( scinew statistics( module_ps, sharedState, dataArchiver) );
       }
       else {
-        throw ProblemSetupException("\nERROR:<DataAnalysis> Unknown analysis module.  "+module,__FILE__, __LINE__);
+        throw ProblemSetupException("\nERROR:<PostProcess> Unknown analysis module.  "+module,__FILE__, __LINE__);
       }
     } 
   }

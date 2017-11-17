@@ -211,7 +211,7 @@ void UdaReducer::scheduleRestartInitialize(const LevelP& level,
 
 //______________________________________________________________________
 //
-void UdaReducer::initialize(const ProcessorGroup*,
+void UdaReducer::initialize(const ProcessorGroup* pg,
 			       const PatchSubset* patches,
 			       const MaterialSubset* /*matls*/,
 			       DataWarehouse* /*old_dw*/,
@@ -219,6 +219,8 @@ void UdaReducer::initialize(const ProcessorGroup*,
 {
   delt_vartype delt_var = 0.0;
   new_dw->put( delt_var, delt_label );
+
+  new_dw->print();
 }
 
 //______________________________________________________________________
@@ -227,7 +229,8 @@ void  UdaReducer::scheduleTimeAdvance( const LevelP& level,
                                        SchedulerP& sched )
 {
   sched_readDataArchive( level, sched );
-  sched_Test( level, sched );
+
+//  sched_Test( level, sched );
   
   vector<Module*>::iterator iter;
   for( iter  = d_Modules.begin(); iter != d_Modules.end(); iter++){
@@ -478,9 +481,11 @@ void UdaReducer::readDataArchive(const ProcessorGroup* pg,
   int timestep = d_timesteps[d_timeIndex];
   proc0cout << "*** working on timestep: " << timestep << " physical time: " << time << endl;
 
+#if 0
   old_dw->unfinalize();
-  d_dataArchive->reduceUda_ReadUda(pg, d_timeIndex, d_oldGrid, patches, old_dw, d_lb);
+  d_dataArchive->reduceUda_ReadUda(pg, d_timeIndex-1, d_oldGrid, patches, old_dw, d_lb);
   old_dw->refinalize();
+#endif 
   
   d_dataArchive->reduceUda_ReadUda(pg, d_timeIndex, d_oldGrid, patches, new_dw, d_lb);
   d_timeIndex++;
