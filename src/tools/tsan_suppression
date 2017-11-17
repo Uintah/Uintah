@@ -20,3 +20,6 @@
 #type  :  location
 
 race:thread_fence
+race:Uintah::UnifiedScheduler::runTasks
+race:Uintah::UnifiedScheduler::execute
+race:Uintah::Impl::(anonymous namespace)::thread_driver
