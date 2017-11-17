@@ -56,7 +56,6 @@ WARNING
    none
 ****************************************/
 
-#include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/NonlinearSolver.h>
 #include <CCA/Components/Arches/MomentumSolver.h>
 #include <CCA/Ports/DataWarehouseP.h>

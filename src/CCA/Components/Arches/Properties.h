@@ -57,8 +57,6 @@ POSSIBLE REVISIONS
 
 #include <sci_defs/uintah_defs.h>
 
-#include <CCA/Components/Arches/Arches.h>
-#include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/BoundaryCondition.h>
 #include <CCA/Components/Arches/ChemMix/MixingRxnModel.h>
 #include <CCA/Components/Arches/Filter.h>
@@ -66,6 +64,8 @@ POSSIBLE REVISIONS
 #include <Core/Grid/Variables/VarLabel.h>
 
 namespace Uintah {
+class ArchesLabel;
+class MPMArchesLabel;
 class MixingModel;
 class MixingRxnTable;
 class TabPropsInterface;

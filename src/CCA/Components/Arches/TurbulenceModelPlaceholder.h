@@ -28,7 +28,6 @@
 #define Uintah_Components_Arches_TurbulenceModelPlaceholder_h
 
 
-#include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/TurbulenceModel.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
@@ -36,6 +35,8 @@
 #include <Core/Grid/Variables/CCVariable.h>
 
 namespace Uintah {
+  class ArchesLabel;
+  class MPMArchesLabel;
   class PhysicalConstants;
   class BoundaryCondition;
 

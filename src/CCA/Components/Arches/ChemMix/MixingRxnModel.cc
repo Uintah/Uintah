@@ -30,7 +30,6 @@
 // includes for Arches
 #include <CCA/Components/Arches/ChemMix/MixingRxnModel.h>
 #include <CCA/Components/Arches/Properties.h>
-#include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
 #include <CCA/Components/Arches/UPSHelper.h>
