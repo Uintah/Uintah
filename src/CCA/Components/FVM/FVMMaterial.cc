@@ -209,58 +209,72 @@ FVMMaterial::initializeMPNPValues(const int idx, const Patch* patch,
           if(c.x() + 1 < high_idx.x()){
             if(!piece->inside(center_xp))
               interface_cell[c] += 1;
+          }else{
             boundary_cell[c] +=1;
           }
         }else{
           if(!piece->inside(center_xp))
             interface_cell[c] += 1;
         }
-        if(!piece->inside(center_xm)){
-          if(xminus_bd){
-            if(c.x() - 1 >= low_idx.x()){
+
+        if(xminus_bd){
+          if(c.x() - 1 >= low_idx.x()){
+            if(!piece->inside(center_xm))
               interface_cell[c] += 2;
-            }
           }else{
+            boundary_cell[c] +=2;
+          }
+        }else{
+          if(!piece->inside(center_xm))
             interface_cell[c] += 2;
-          }
         }
 
-        if(!piece->inside(center_yp)){
-         if(yplus_bd){
-           if(c.y() + 1 < high_idx.y()){
-             interface_cell[c] += 4;
-           }
-         }else{
-           interface_cell[c] += 4;
-         }
+        if(yplus_bd){
+          if(c.y() + 1 < high_idx.y()){
+            if(!piece->inside(center_yp))
+              interface_cell[c] += 4;
+          }else{
+            boundary_cell[c] += 4;
+          }
+        }else{
+          if(!piece->inside(center_yp))
+            interface_cell[c] += 4;
         }
-        if(!piece->inside(center_ym)){
-          if(yminus_bd){
-            if(c.y() - 1 >= low_idx.y()){
+
+        if(yminus_bd){
+          if(c.y() - 1 >= low_idx.y()){
+            if(!piece->inside(center_ym))
               interface_cell[c] += 8;
-            }
           }else{
-            interface_cell[c] += 8;
+            boundary_cell[c] += 8;
           }
+        }else{
+          if(!piece->inside(center_ym))
+            interface_cell[c] += 8;
         }
 
-        if(!piece->inside(center_zp)){
-          if(zplus_bd){
-            if(c.z() + 1 < high_idx.z()){
+        if(zplus_bd){
+          if(c.z() + 1 < high_idx.z()){
+            if(!piece->inside(center_zp))
               interface_cell[c] += 16;
-            }
           }else{
+            boundary_cell[c] += 16;
+          }
+        }else{
+          if(!piece->inside(center_zp))
             interface_cell[c] += 16;
-          }
         }
-        if(!piece->inside(center_zm)){
-          if(zminus_bd){
-            if(c.z() - 1 >= low_idx.z()){
+
+        if(zminus_bd){
+          if(c.z() - 1 >= low_idx.z()){
+            if(!piece->inside(center_zm))
               interface_cell[c] += 32;
-            }
           }else{
-            interface_cell[c] += 32;
+            boundary_cell[c] += 32;
           }
+        }else{
+          if(!piece->inside(center_zm))
+            interface_cell[c] += 32;
         }
 
       }

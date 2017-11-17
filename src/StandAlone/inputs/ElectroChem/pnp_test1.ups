@@ -17,24 +17,27 @@
    <Time>
      <maxTime>0.1</maxTime>                          
      <initTime>0.0</initTime>                        
-     <delt_min>1.0e-10</delt_min>                    
-     <delt_max>1.0e-10</delt_max>                          
+     <delt_min>1.0e-9</delt_min>                    
+     <delt_max>1.0e-9</delt_max>                          
      <timestep_multiplier>1</timestep_multiplier>    
-     <max_Timesteps> 10 </max_Timesteps>
+     <max_Timesteps> 100000 </max_Timesteps>
    </Time>
    
    <DataArchiver>
      <filebase>pnp_test1.uda</filebase>                   
-     <outputTimestepInterval>1</outputTimestepInterval>    
+     <outputTimestepInterval>1000</outputTimestepInterval>    
      <!--
      -->
      <save label = "cc.esPotential"/>                            
      <save label = "cc.rhsEsPotential"/>                            
      <save label = "cc.PosCharge"/>
      <save label = "cc.NegCharge"/>                            
+     <save label = "cc.DPosChargeDt"/>
+     <save label = "cc.DNegChargeDt"/>                            
      <save label = "cc.RelativePermittivity"/>                            
      <save label = "cc.MatId"/>                            
      <save label = "cc.InterfaceCell"/>                            
+     <save label = "cc.BoundaryCell"/>
      <save label = "cc.GridPermittivity"/>                            
      <save label = "cc.GridTotalCharge"/>                            
      <checkpoint cycle = "2" interval = ".01"/>            
@@ -163,7 +166,7 @@
      <permittivity>     8.85e-21  </permittivity>
      <boltzmanns_const> 1.38e-23  </boltzmanns_const>
      <temperature>      300       </temperature>
-     <delt>1e-10</delt>
+     <delt>1e-9</delt>
      <Parameters variable="electrostatic_solver">
        <!-- CGSolver options -->
        <norm>     LInfinity  </norm>
