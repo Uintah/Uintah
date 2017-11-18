@@ -31,33 +31,68 @@
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/DebugStream.h>
-
 #include <sci_defs/visit_defs.h>
 
 #include <iostream>
 #include <cstdio>
 #include <iomanip>
+/*______________________________________________________________________
+  The post processing module will compute the mean, variance, skewness and Kurtosis 
+  for a set of CCVariables in an existing uda over the timesteps in the uda.  
+  The usage is:    
+      
+   sus -reduce_uda <uda>
+      
+   Make the following changes to the <uda>/input.xml
+      
+  <SimulationComponent type="reduce_uda"/>    
 
+  <save label="mean_press_CC"/>
+  <save label="variance_press_CC"/>
+  <save label="skewness_press_CC"/>
+  <save label="kurtosis_press_CC"/>
+
+  <save label="mean_vel_CC"/>
+  <save label="variance_vel_CC"/>
+  <save label="skewness_vel_CC"/>
+  <save label="kurtosis_vel_CC"/>
+
+  <PostProcess>
+    <Module type = "statistics">
+      <timeStart>   2e-9    </timeStart>
+      <timeStop>   100      </timeStop>
+      <material>    Air     </material>              << A)
+      <materialIndex> 0     </materialIndex>         << B)   You must specifie either A or B
+      <monitorCell> [0,0,0] </monitorCell>           << Used to monitor calculations in one cell
+      <computeHigherOrderStats> true </computeHigherOrderStats>   << Needed to compute skewness and Kurtosis
+      <Variables>
+        <analyze label="press_CC"  matl="0"/>        << Variables of interest
+        <analyze label="vel_CC"    matl="0"/>
+      </Variables>
+    </Module>         
+  </PostProcess>
+
+______________________________________________________________________*/
 
 using namespace Uintah;
 using namespace std;
+
 static DebugStream dbg("POSTPROCESS_STATISTICS", false);
 //______________________________________________________________________
-statistics::statistics(ProblemSpecP& module_spec,
+statistics::statistics(ProblemSpecP    & module_spec,
                        SimulationStateP& sharedState,
-                       Output* dataArchiver)
-  : Module(module_spec, sharedState, dataArchiver)
+                       Output          * dataArchiver,
+                       DataArchive     * dataArchive)
+  : Module(module_spec, sharedState, dataArchiver, dataArchive)
 {
   d_sharedState  = sharedState;
   d_prob_spec    = module_spec;
   d_dataArchiver = dataArchiver;
+  d_dataArchive  = dataArchive;
   d_matlSet     = 0;
   d_stopTime    = DBL_MAX;
-  d_monitorCell = IntVector(0,0,0);
+  d_monitorCell = IntVector(-9,-9,-9);
   d_doHigherOrderStats = false;
-
-
-  required = false;
 }
 
 //______________________________________________________________________
@@ -75,14 +110,11 @@ statistics::~statistics()
     VarLabel::destroy( Q.Qsum_Label );
     VarLabel::destroy( Q.Qsum2_Label );
     VarLabel::destroy( Q.Qmean_Label );
-    VarLabel::destroy( Q.Qmean2_Label );
     VarLabel::destroy( Q.Qvariance_Label );
 
     if( d_doHigherOrderStats ){
       VarLabel::destroy( Q.Qsum3_Label );
-      VarLabel::destroy( Q.Qmean3_Label );
       VarLabel::destroy( Q.Qsum4_Label );
-      VarLabel::destroy( Q.Qmean4_Label );
     }
   }
 }
@@ -90,7 +122,7 @@ statistics::~statistics()
 //______________________________________________________________________
 //     P R O B L E M   S E T U P
 void statistics::problemSetup(const ProblemSpecP& prob_spec,
-                              const ProblemSpecP& restart_prob_spec,
+                              const ProblemSpecP&,
                               GridP& grid,
                               SimulationStateP& sharedState)
 {
@@ -111,6 +143,20 @@ void statistics::problemSetup(const ProblemSpecP& prob_spec,
     throw ProblemSetupException("\n ERROR:statistics: startTime >= stopTime. \n", __FILE__, __LINE__);
   }
   
+  std::vector<double> uda_times;
+  std::vector<int> uda_timesteps;
+  d_dataArchive->queryTimesteps( uda_timesteps, uda_times );
+  
+  
+  if ( d_startTime < uda_times[0] ){
+    ostringstream warn;
+    warn << "  ERROR:statistics: The startTime (" << d_startTime 
+         << ") must be greater than the time at timestep 1 (" << uda_times[0] << ")" << endl;
+    throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+  }
+  
+  
+  
   // debugging
   d_prob_spec->get("monitorCell", d_monitorCell);
   
@@ -123,10 +169,10 @@ void statistics::problemSetup(const ProblemSpecP& prob_spec,
   Material* matl = nullptr;
 
   if(d_prob_spec->findBlock("material") ){
-    matl = d_sharedState->parseAndLookupMaterial(d_prob_spec, "material");
-  } else if (d_prob_spec->findBlock("materialIndex") ){
+    matl = d_sharedState->parseAndLookupMaterial( d_prob_spec, "material" );
+  } else if ( d_prob_spec->findBlock("materialIndex") ){
     int indx;
-    d_prob_spec->get("materialIndex", indx);
+    d_prob_spec->get( "materialIndex", indx );
     matl = d_sharedState->getMaterial(indx);
   } else {
     matl = d_sharedState->getMaterial(0);
@@ -197,22 +243,18 @@ void statistics::problemSetup(const ProblemSpecP& prob_spec,
     Q.matl    = matl;
     Q.Q_Label = label;
     Q.subtype = subtype;
-    Q.computeRstess = false;
     Q.initializeTimestep();          // initialize the start timestep = 0;
 
     Q.Qsum_Label      = VarLabel::create( "sum_" + name,      td);
     Q.Qsum2_Label     = VarLabel::create( "sum2_" + name,     td);
     Q.Qmean_Label     = VarLabel::create( "mean_" + name,     td);
-    Q.Qmean2_Label    = VarLabel::create( "mean2_" + name,    td);
     Q.Qvariance_Label = VarLabel::create( "variance_" + name, td);
 
     if( d_doHigherOrderStats ){
       Q.Qsum3_Label     = VarLabel::create( "sum3_" + name,      td);
-      Q.Qmean3_Label    = VarLabel::create( "mean3_" + name,     td);
       Q.Qskewness_Label = VarLabel::create( "skewness_" + name,  td);
 
       Q.Qsum4_Label     = VarLabel::create( "sum4_" + name,      td);
-      Q.Qmean4_Label    = VarLabel::create( "mean4_" + name,     td);
       Q.Qkurtosis_Label = VarLabel::create( "kurtosis_" + name,  td);
     }
     d_Qstats.push_back( Q );
@@ -239,24 +281,6 @@ void statistics::problemSetup(const ProblemSpecP& prob_spec,
       warn << "WARNING:  You've activated the DataAnalysis:statistics module but your not saving the variable(s) ("
            << mesg.str() << ")";
       proc0cout << warn.str() << endl;
-    }
-  }
-
-  //__________________________________
-  //  On restart read the starttimestep for each variable from checkpoing/t***/timestep.xml
-  if(restart_prob_spec){ 
-    ProblemSpecP da_rs_ps = restart_prob_spec->findBlock("DataAnalysisRestart");
-    
-    ProblemSpecP stat_ps = da_rs_ps->findBlockWithAttributeValue("Module", "name", "statistics");
-    ProblemSpecP st_ps   = stat_ps->findBlock("StartTimestep");
-    
-    for ( unsigned int i =0 ; i < d_Qstats.size(); i++ ) {
-      Qstats& Q = d_Qstats[i];
-      int timestep;
-      st_ps->require( Q.Q_Label->getName().c_str(), timestep  );
-      Q.setStart(timestep);
-      proc0cout <<  "         " << Q.Q_Label->getName() << "\t\t startTimestep: " << timestep << endl;                   
-      
     }
   }
 
@@ -357,13 +381,10 @@ void statistics::scheduleDoAnalysis(SchedulerP& sched,
     t->requires( Task::NewDW, Q.Q_Label,     matSubSet, gn, 0 );
     t->requires( Task::OldDW, Q.Qsum_Label,  matSubSet, gn, 0 );
     t->requires( Task::OldDW, Q.Qsum2_Label, matSubSet, gn, 0 );
-
-
     
     t->computes ( Q.Qsum_Label,       matSubSet );
     t->computes ( Q.Qsum2_Label,      matSubSet );
     t->computes ( Q.Qmean_Label,      matSubSet );
-    t->computes ( Q.Qmean2_Label,     matSubSet );
     t->computes ( Q.Qvariance_Label,  matSubSet );
 
     //__________________________________
@@ -373,11 +394,8 @@ void statistics::scheduleDoAnalysis(SchedulerP& sched,
       t->requires( Task::OldDW, Q.Qsum3_Label, matSubSet, gn, 0 );
       t->requires( Task::OldDW, Q.Qsum4_Label, matSubSet, gn, 0 );
 
-
       t->computes ( Q.Qsum3_Label,     matSubSet );
       t->computes ( Q.Qsum4_Label,     matSubSet );
-      t->computes ( Q.Qmean3_Label,    matSubSet );
-      t->computes ( Q.Qmean4_Label,    matSubSet );
       t->computes ( Q.Qskewness_Label, matSubSet );
       t->computes ( Q.Qkurtosis_Label, matSubSet );
     }
@@ -397,6 +415,8 @@ void statistics::doAnalysis(const ProcessorGroup* pg,
                             DataWarehouse* old_dw,
                             DataWarehouse* new_dw)
 {
+
+  
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
@@ -433,16 +453,13 @@ void statistics::computeStatsWrapper( DataWarehouse* old_dw,
                                       Qstats& Q)
 {
   double now = d_sharedState->getElapsedSimTime();
-
-  cout << " now: " << now << " d_startTime: " << d_startTime << " d_stopTime: " << d_stopTime << endl;
-
+  
   if(now < d_startTime || now > d_stopTime){
-
-    proc0cout << " IGNORING------------DataAnalysis: Statistics" << endl;
+    //proc0cout << " IGNORING------------DataAnalysis: Statistics" << endl;
     allocateAndZeroStats<T>( new_dw, patch, Q);
     allocateAndZeroSums<T>(  new_dw, patch, Q);
   }else {
-    proc0cout << " Computing------------DataAnalysis: Statistics" << endl;
+    //proc0cout << " Computing------------DataAnalysis: Statistics" << endl;
 
     computeStats< T >(old_dw, new_dw, patch, Q);
   }
@@ -472,13 +489,11 @@ void statistics::computeStats( DataWarehouse* old_dw,
   CCVariable< T > Qsum;
   CCVariable< T > Qsum2;
   CCVariable< T > Qmean;
-  CCVariable< T > Qmean2;
   CCVariable< T > Qvariance;
 
   new_dw->allocateAndPut( Qsum,      Q.Qsum_Label,      matl, patch );
   new_dw->allocateAndPut( Qsum2,     Q.Qsum2_Label,     matl, patch );
   new_dw->allocateAndPut( Qmean,     Q.Qmean_Label,     matl, patch );
-  new_dw->allocateAndPut( Qmean2,    Q.Qmean2_Label,    matl, patch );
   new_dw->allocateAndPut( Qvariance, Q.Qvariance_Label, matl, patch );
 
   int ts = d_sharedState->getCurrentTopLevelTimeStep();
@@ -499,23 +514,24 @@ void statistics::computeStats( DataWarehouse* old_dw,
     Qmean[c]   = Qsum[c]/nTimesteps;
 
     Qsum2[c]   = me * me + Qsum2_old[c];
-    Qmean2[c]  = Qsum2[c]/nTimesteps;
+    T Qmean2   = Qsum2[c]/nTimesteps;
 
-    Qvariance[c] = Qmean2[c] - Qmean[c] * Qmean[c];
-
-#if 0
-    //__________________________________
-    //  debugging
-    if ( c == d_monitorCell ){
-      cout << "  stats:  " << d_monitorCell <<  setw(10)<< Q.Q_Label->getName() << " nTimestep: " << nTimesteps
-           <<"\t topLevelTimestep " <<  d_sharedState->getCurrentTopLevelTimeStep()
-           << " d_startTimestep: " << d_startTimeTimestep
-           <<"\t Q_var: " << me
-           <<"\t Qsum: "  << Qsum[c]
-           <<"\t Qmean: " << Qmean[c] << endl;
-    }
-#endif
-
+    Qvariance[c] = Qmean2 - Qmean[c] * Qmean[c];
+  }
+  
+  //__________________________________
+  //  debugging
+  if ( d_monitorCell != IntVector(-9,-9,-9) && patch->containsCell (d_monitorCell) ){
+    IntVector c = d_monitorCell;
+    cout << "  stats:  " << c <<  setw(10)<< Q.Q_Label->getName() << " timestep: " << timestep
+         <<"\t topLevelTimestep " <<  d_sharedState->getCurrentTopLevelTimeStep()
+         << " d_startTime: " << d_startTime << "\n"
+         <<"\t Q_var: " << Qvar[c]
+         <<"\t Qsum: "  << Qsum[c]
+         <<"\t Qsum2: "  << Qsum2[c]
+         <<"\t Qmean: " << Qmean[c]
+         <<"\t Qvariance: " << Qvariance[c]
+         << endl;
   }
 
   //__________________________________
@@ -530,15 +546,11 @@ void statistics::computeStats( DataWarehouse* old_dw,
 
     CCVariable< T > Qsum3;
     CCVariable< T > Qsum4;
-    CCVariable< T > Qmean3;
-    CCVariable< T > Qmean4;
 
     CCVariable< T > Qskewness;
     CCVariable< T > Qkurtosis;
     new_dw->allocateAndPut( Qsum3,     Q.Qsum3_Label,     matl, patch );
     new_dw->allocateAndPut( Qsum4,     Q.Qsum4_Label,     matl, patch );
-    new_dw->allocateAndPut( Qmean3,    Q.Qmean3_Label,    matl, patch );
-    new_dw->allocateAndPut( Qmean4,    Q.Qmean4_Label,    matl, patch );
     new_dw->allocateAndPut( Qskewness, Q.Qskewness_Label, matl, patch );
     new_dw->allocateAndPut( Qkurtosis, Q.Qkurtosis_Label, matl, patch );
 
@@ -554,17 +566,28 @@ void statistics::computeStats( DataWarehouse* old_dw,
 
       // skewness
       Qsum3[c]  = me * me2 + Qsum3_old[c];
-      Qmean3[c] = Qsum3[c]/nTimesteps;
+      T Qmean3  = Qsum3[c]/nTimesteps;
 
-      Qskewness[c] = Qmean3[c] - Qbar3 - 3 * Qvariance[c] * Qbar;
+      Qskewness[c] = Qmean3 - Qbar3 - 3 * Qvariance[c] * Qbar;
 
       // kurtosis
       Qsum4[c]  = me2 * me2 + Qsum4_old[c];
-      Qmean4[c] = Qsum4[c]/nTimesteps;
+      T Qmean4  = Qsum4[c]/nTimesteps;
 
-      Qkurtosis[c] = Qmean4[c] - Qbar4
+      Qkurtosis[c] = Qmean4 - Qbar4
                    - 6 * Qvariance[c] * Qbar2
                    - 4 * Qskewness[c] * Qbar;
+    }
+    
+    //__________________________________
+    //  debugging
+    if ( d_monitorCell != IntVector(-9,-9,-9) && patch->containsCell (d_monitorCell)){
+      IntVector c = d_monitorCell;
+      cout <<"\t Qsum3: "  << Qsum3[c]
+           <<"\t Qsum4: "  << Qsum4[c]
+           <<"\t Qskewness: " << Qskewness[c]
+           <<"\t Qkurtosis: " << Qkurtosis[c]
+           << endl;
     }
   }
 }

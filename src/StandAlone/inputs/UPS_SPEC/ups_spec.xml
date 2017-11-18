@@ -801,6 +801,7 @@
       <materialIndex                    spec="OPTIONAL INTEGER" />
       <timeStart                        spec="REQUIRED DOUBLE"  need_applies_to="type statistics"/>
       <timeStop                         spec="REQUIRED DOUBLE"  need_applies_to="type statistics"/>
+      <monitorCell                      spec="OPTIONAL VECTOR"  need_applies_to="type statistics"/>
       <Variables                        spec="OPTIONAL NO_DATA" need_applies_to="type statistics">
         <analyze                        spec="MULTIPLE NO_DATA"
                                           attribute1="label REQUIRED STRING" 

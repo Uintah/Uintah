@@ -31,9 +31,10 @@ Module::Module()
 {
 }
 
-Module::Module(ProblemSpecP& prob_spec, 
-               SimulationStateP& sharedState,
-               Output* dataArchiever)
+Module::Module(ProblemSpecP     & prob_spec, 
+               SimulationStateP & sharedState, 
+               Output           * dataArchiver,
+               DataArchive      * d_dataArchive )
 {
 }
 

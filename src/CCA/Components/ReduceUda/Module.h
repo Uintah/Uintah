@@ -44,16 +44,17 @@ namespace Uintah {
   public:
     
     Module();
-    Module(ProblemSpecP& prob_spec, SimulationStateP& sharedState, Output* dataArchiver);
+    Module(ProblemSpecP     & prob_spec, 
+           SimulationStateP & sharedState, 
+           Output           * dataArchiver,
+           DataArchive      * d_dataArchive );
+
     virtual ~Module();
 
     virtual void problemSetup(const ProblemSpecP& params,
                               const ProblemSpecP& restart_prob_spec,
                               GridP&              grid,
                               SimulationStateP&   state) = 0;
-
-    virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
-                                                            
                               
     virtual void scheduleInitialize(SchedulerP&   sched,
                                     const LevelP& level) =0;

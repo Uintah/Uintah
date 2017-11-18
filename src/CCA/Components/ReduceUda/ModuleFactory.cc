@@ -42,8 +42,9 @@ ModuleFactory::~ModuleFactory()
 //
 std::vector<Module*>
 ModuleFactory::create(const ProblemSpecP& prob_spec,
-                      SimulationStateP&   sharedState,
-                      Output*             dataArchiver)
+                      SimulationStateP  & sharedState,
+                      Output            * dataArchiver,
+                      DataArchive       * dataArchive)
 {
   string module("");
   ProblemSpecP da_ps = prob_spec->findBlock("PostProcess");
@@ -63,7 +64,7 @@ ModuleFactory::create(const ProblemSpecP& prob_spec,
       module = attributes["type"];
 
       if ( module == "statistics" ) {
-        modules.push_back ( scinew statistics( module_ps, sharedState, dataArchiver) );
+        modules.push_back ( scinew statistics( module_ps, sharedState, dataArchiver, dataArchive) );
       }
       else {
         throw ProblemSetupException("\nERROR:<PostProcess> Unknown analysis module.  "+module,__FILE__, __LINE__);

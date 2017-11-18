@@ -25,6 +25,7 @@
 #ifndef Packages_Uintah_CCA_Components_ReduceUda_Factory_h
 #define Packages_Uintah_CCA_Components_ReduceUda_Factory_h
 
+#include <Core/DataArchive/DataArchive.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <CCA/Ports/Output.h>
@@ -41,8 +42,9 @@ namespace Uintah {
     public:      
       static
        std::vector< Module*>  create(const ProblemSpecP& prob_spec,
-                                     SimulationStateP&   sharedState,
-                                     Output*             dataArchiever);
+                                     SimulationStateP  & sharedState,
+                                     Output            * dataArchiever,
+                                     DataArchive       * dataArchive);
   };
 }
 

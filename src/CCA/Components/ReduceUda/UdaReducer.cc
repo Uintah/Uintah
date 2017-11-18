@@ -163,7 +163,7 @@ void UdaReducer::problemSetup(const ProblemSpecP& prob_spec,
 
   //__________________________________
   //  create the analysis modules
-  d_Modules = ModuleFactory::create(prob_spec, d_sharedState, d_dataArchiver);
+  d_Modules = ModuleFactory::create(prob_spec, d_sharedState, d_dataArchiver, d_dataArchive);
 
   vector<Module*>::iterator iter;
   for( iter  = d_Modules.begin(); iter != d_Modules.end(); iter++) {
@@ -219,8 +219,6 @@ void UdaReducer::initialize(const ProcessorGroup* pg,
 {
   delt_vartype delt_var = 0.0;
   new_dw->put( delt_var, delt_label );
-
-  new_dw->print();
 }
 
 //______________________________________________________________________
@@ -276,8 +274,6 @@ void UdaReducer::doAnalysis(const ProcessorGroup*,
                             DataWarehouse* old_dw,
                             DataWarehouse* new_dw)
 {
-  const Level* level = getLevel(patches);
-
   for(int p = 0; p<patches->size(); p++){
     const Patch* patch = patches->get(p);
 
@@ -310,9 +306,7 @@ void UdaReducer::doAnalysis(const ProcessorGroup*,
     }
 
     //__________________________________
-    //  Loop over the boundary faces
-    Vector dx = patch->dCell();
-             
+    //  Loop over the boundary faces             
     vector<Patch::FaceType> bf;
     patch->getBoundaryFaces(bf);
 

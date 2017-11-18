@@ -27,6 +27,7 @@
 #define Packages_Uintah_CCA_Components_ReduceUda_statistics_h
 #include <CCA/Components/ReduceUda/Module.h>
 #include <CCA/Ports/Output.h>
+#include <Core/DataArchive/DataArchive.h>
 #include <Core/Grid/Material.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
@@ -34,8 +35,7 @@
 #include <Core/Grid/LevelP.h>
 #include <vector>
 
-namespace Uintah {
-
+namespace Uintah{
 
 /**************************************
 
@@ -63,9 +63,10 @@ WARNING
 ****************************************/
   class statistics : public Module {
   public:
-    statistics(ProblemSpecP&     prob_spec,
+    statistics(ProblemSpecP    & prob_spec,
                SimulationStateP& sharedState,
-		 Output*           dataArchiver);
+		 Output          * dataArchiver,
+               DataArchive     * dataArchive);
 
     statistics();
 
@@ -75,8 +76,6 @@ WARNING
                               const ProblemSpecP& restart_prob_spec,
                               GridP& grid,
                               SimulationStateP& sharedState);
-                              
-    virtual void outputProblemSpec( ProblemSpecP& ps);
 
     virtual void scheduleInitialize(SchedulerP& sched,
                                     const LevelP& level);
@@ -88,28 +87,23 @@ WARNING
                                      const LevelP& level) {};
 
   private:
-    enum ORDER {lowOrder, highOrder};
 
     //__________________________________
-    //  container to hold
+    //  container to hold each variable to compute stats
     struct Qstats{
 //      std::string  name;
-      bool computeRstess;
       int matl;
       VarLabel* Q_Label;
       VarLabel* Qsum_Label;
       VarLabel* Qmean_Label;
 
       VarLabel* Qsum2_Label;
-      VarLabel* Qmean2_Label;
       VarLabel* Qvariance_Label;
 
       VarLabel* Qsum3_Label;
-      VarLabel* Qmean3_Label;
       VarLabel* Qskewness_Label;
 
       VarLabel* Qsum4_Label;
-      VarLabel* Qmean4_Label;
       VarLabel* Qkurtosis_Label;
 
       const Uintah::TypeDescription* subtype;
@@ -186,29 +180,22 @@ WARNING
                                const Patch*   patch,
                                const Qstats& Q);
 
-    void carryForwardSums( DataWarehouse* old_dw,
-                           DataWarehouse* new_dw,
-                           const PatchSubset* patches,
-                           const Qstats& Q );
-
     //__________________________________
     // global constants
     double    d_startTime;
     double    d_stopTime;
-//    int       d_startTimeTimestep;   // timestep when stats are turn on.
     IntVector d_monitorCell;         // Cell to output
 
     bool d_doHigherOrderStats;
     std::vector< Qstats >  d_Qstats;
 
-    SimulationStateP d_sharedState;
-    Output* d_dataArchiver;
-    ProblemSpecP d_prob_spec;
-    const Material* d_matl;
-    MaterialSet* d_matlSet;
+    SimulationStateP      d_sharedState;
+    DataArchive         * d_dataArchive;
+    Output              * d_dataArchiver;
+    ProblemSpecP          d_prob_spec;
+    const Material      * d_matl;
+    MaterialSet         * d_matlSet;
     const MaterialSubset* d_matSubSet;
-
-    bool required;
   };
 }
 
