@@ -294,6 +294,11 @@ for X in $PTAR_FILES.*; do
   /usr/bin/time -p $MAKE  -s -f $pTardir/pTarUda_driver_$OS -j $nproc | tee -a $PTAR_RECORD
 done
 
+if test $createExtract == "create"; then
+echo $CWD
+find . -type f -name "*.gz" -print | sed s/.tar.gz//g |xargs /bin/rm -rf
+fi
+
 echo | tee -a $PTAR_RECORD
 echo -n "Ending at: " | tee -a $PTAR_RECORD
 date |tee -a $PTAR_RECORD

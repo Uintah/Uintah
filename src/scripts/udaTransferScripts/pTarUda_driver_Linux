@@ -1,12 +1,12 @@
 #_____________________________________________________________________.
 #      pTarUda_driver
 #   09/03/15
-# This is a makefile that does parallel tar of the timesteps in a uda directory.
+# This is a makefile that does parallel tar/untar of the timesteps in a uda directory.
 # The orginal directories are not removed.
 #_____________________________________________________________________.
 
 SHELL = /bin/bash
-FILES      := $(shell cat $(PTAR_FILES))
+FILES      := $(shell cat $(PTAR_FILES_N))
 TAR_FILES  := $(wildcard *.tar)
 
 SRCS =   $(shell for i in $(FILES) ; do \
@@ -16,8 +16,8 @@ SRCS =   $(shell for i in $(FILES) ; do \
 DESTS := $(patsubst %,$(STAMP_DIR)/stamp/%,$(SRCS))
 
 all: $(STAMP_DIR)/stamp $(DESTS)
-	@echo "Blowing away the list of tarred directores"
-	rm -rf $(STAMP_DIR)
+	@echo "Removing the list of tarred/untarred directories $(STAMP_DIR)/stamp"
+	rm -rf $(STAMP_DIR)/stamp
 
 $(STAMP_DIR)/stamp:
 	mkdir $@
