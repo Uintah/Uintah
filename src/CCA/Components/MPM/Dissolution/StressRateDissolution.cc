@@ -68,7 +68,7 @@ StressRateDissolution::~StressRateDissolution()
 void StressRateDissolution::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP dissolution_ps = ps->appendChild("dissolution");
-  dissolution_ps->appendElement("type","test");
+  dissolution_ps->appendElement("type","stress_rate");
   dissolution_ps->appendElement("master_material",   d_material);
   dissolution_ps->appendElement("rate",              d_rate);
   dissolution_ps->appendElement("PressureThreshold", d_PressThresh);
