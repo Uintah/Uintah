@@ -36,6 +36,7 @@
 #include <vector>
 
 namespace Uintah{
+namespace postProcess{
 
 /**************************************
 
@@ -198,5 +199,5 @@ WARNING
     const MaterialSubset* d_matSubSet;
   };
 }
-
+}
 #endif

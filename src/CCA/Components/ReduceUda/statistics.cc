@@ -75,6 +75,7 @@
 ______________________________________________________________________*/
 
 using namespace Uintah;
+using namespace postProcess;
 using namespace std;
 
 static DebugStream dbg("POSTPROCESS_STATISTICS", false);

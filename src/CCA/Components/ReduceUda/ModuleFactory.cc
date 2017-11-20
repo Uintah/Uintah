@@ -29,6 +29,7 @@
 
 using namespace std;
 using namespace Uintah;
+using namespace postProcess;
 
 ModuleFactory::ModuleFactory()
 {
@@ -64,7 +65,7 @@ ModuleFactory::create(const ProblemSpecP& prob_spec,
       module = attributes["type"];
 
       if ( module == "statistics" ) {
-        modules.push_back ( scinew statistics( module_ps, sharedState, dataArchiver, dataArchive) );
+        modules.push_back ( scinew postProcess::statistics( module_ps, sharedState, dataArchiver, dataArchive) );
       }
       else {
         throw ProblemSetupException("\nERROR:<PostProcess> Unknown analysis module.  "+module,__FILE__, __LINE__);
