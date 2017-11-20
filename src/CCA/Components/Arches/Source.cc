@@ -23,6 +23,7 @@
  */
 
 #include <CCA/Components/Arches/Source.h>
+#include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/Discretization.h>
 #include <CCA/Components/Arches/PhysicalConstants.h>
 #include <CCA/Components/Arches/BoundaryCondition.h>

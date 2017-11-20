@@ -48,7 +48,6 @@ GENERAL INFORMATION
 #include <CCA/Components/Arches/TimeIntegratorLabel.h>
 #include <CCA/Components/Arches/ArchesVariables.h>
 #include <CCA/Components/Arches/ArchesConstVariables.h>
-#include <CCA/Components/Arches/Arches.h>
 #include <CCA/Ports/SchedulerP.h>
 #include <CCA/Ports/DataWarehouseP.h>
 #include <Core/Grid/LevelP.h>
@@ -60,6 +59,7 @@ GENERAL INFORMATION
 namespace Uintah {
 
   class ArchesLabel;
+  class MPMArchesLabel;
 
 class DORadiationModel{
 

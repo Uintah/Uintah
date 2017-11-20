@@ -531,6 +531,7 @@ DataArchive::queryGlobals( vector<string>                         & names,
   bool result = ProblemSpec::findBlock( "<globals>", d_indexFile );
 
   if( !result ) {
+    d_lock.unlock();
     return;
   }
 

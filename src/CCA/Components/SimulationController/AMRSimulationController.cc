@@ -546,29 +546,6 @@ AMRSimulationController::run()
     DataWarehouse* oldDW = d_scheduler->get_dw(0);
     oldDW->override( delt_vartype(d_delt), d_sharedState->get_delt_label() );
 
-    // A component may update the output interval or the checkpoint
-    // interval during a simulation.  For example in deflagration ->
-    // detonation simulations
-    if( !first ) {
-      if( d_sharedState->updateOutputInterval() ) {
-        min_vartype outputInv_var;
-        oldDW->get( outputInv_var, d_sharedState->get_outputInterval_label() );
-        
-        if( !outputInv_var.isBenignValue() ) {
-          d_output->updateOutputInterval( outputInv_var );
-        }
-      }
-
-      if( d_sharedState->updateCheckpointInterval() ) {
-        min_vartype checkInv_var;
-        oldDW->get( checkInv_var, d_sharedState->get_checkpointInterval_label() );
-        
-        if ( !checkInv_var.isBenignValue() ){
-          d_output->updateCheckpointInterval( checkInv_var );
-        }
-      }
-    }
-
     // Execute the current timestep, restarting if necessary
     int tg_index = d_sim->computeTaskGraphIndex();
     executeTimestep( totalFine, tg_index );
@@ -603,6 +580,29 @@ AMRSimulationController::run()
       // If PIDX is not being used write timestep.xml for both
       // checkpoints and time step dumps.
       d_output->writeto_xml_files( d_delt, d_currentGridP );
+    }
+
+    // A component may update the output interval or the checkpoint
+    // interval during a simulation.  For example in deflagration ->
+    // detonation simulations
+    DataWarehouse* newDW = d_scheduler->getLastDW();
+    
+    if( d_sharedState->updateOutputInterval() ) {
+      min_vartype outputInv_var;
+      newDW->get( outputInv_var, d_sharedState->get_outputInterval_label() );
+        
+      if( !outputInv_var.isBenignValue() ) {
+	d_output->updateOutputInterval( outputInv_var );
+      }
+    }
+
+    if( d_sharedState->updateCheckpointInterval() ) {
+      min_vartype checkInv_var;
+      newDW->get( checkInv_var, d_sharedState->get_checkpointInterval_label() );
+        
+      if ( !checkInv_var.isBenignValue() ){
+	d_output->updateCheckpointInterval( checkInv_var );
+      }
     }
 
     // Update the simulation time

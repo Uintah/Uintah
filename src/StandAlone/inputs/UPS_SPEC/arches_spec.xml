@@ -1555,13 +1555,21 @@
 
 
             <!-- deposition model -->
+            <SiO                        spec="OPTIONAL DOUBLE 'positive'"
+                                        need_applies_to="type rate_deposition"/>       <!-- CaO mass fraction-->
+            <AlO                        spec="OPTIONAL DOUBLE 'positive'"
+                                        need_applies_to="type rate_deposition"/>       <!-- MgO mass fraction -->
+            <TiO                        spec="OPTIONAL DOUBLE 'positive'"
+                                        need_applies_to="type rate_deposition"/>       <!-- AlO mass fraction-->
+            <FeO                        spec="OPTIONAL DOUBLE 'positive'"
+                                        need_applies_to="type rate_deposition"/>       <!-- SiO mass fraction-->
             <CaO                        spec="OPTIONAL DOUBLE 'positive'"
                                         need_applies_to="type rate_deposition"/>       <!-- CaO mass fraction-->
             <MgO                        spec="OPTIONAL DOUBLE 'positive'"
                                         need_applies_to="type rate_deposition"/>       <!-- MgO mass fraction -->
-            <AlO                        spec="OPTIONAL DOUBLE 'positive'"
+            <NaO                        spec="OPTIONAL DOUBLE 'positive'"
                                         need_applies_to="type rate_deposition"/>       <!-- AlO mass fraction-->
-            <SiO                        spec="OPTIONAL DOUBLE 'positive'"
+            <KO                        spec="OPTIONAL DOUBLE 'positive'"
                                         need_applies_to="type rate_deposition"/>       <!-- SiO mass fraction-->
             <!-- Simple rate expression -->
             <A                          spec="REQUIRED DOUBLE 'positive'"

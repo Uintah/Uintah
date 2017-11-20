@@ -24,7 +24,6 @@
 
 //----- MomentumSolver.cc ----------------------------------------------
 
-#include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <CCA/Components/Arches/BoundaryCondition.h>
@@ -252,22 +251,22 @@ MomentumSolver::problemSetup(const ProblemSpecP& params,
 
   // Running with VisIt so add in the variables that the user can
   // modify.
-  if( sharedState->getVisIt() && !initialized ) {
+//   if( sharedState->getVisIt() && !initialized ) {
     // variable 1 - Must start with the component name and have NO
     // spaces in the var name
-    SimulationState::interactiveVar var;
-    var.name     = "ARCHES-Re_limit";
-    var.type     = Uintah::TypeDescription::double_type;
-    var.value    = (void *) &d_re_limit;
-    var.range[0]   = 2;
-    var.range[1]   = 1e9;
-    var.modifiable = true;
-    var.recompile  = false;
-    var.modified   = false;
-    sharedState->d_UPSVars.push_back( var );
+//     SimulationState::interactiveVar var;
+//     var.name     = "ARCHES-Re_limit";
+//     var.type     = Uintah::TypeDescription::double_type;
+//     var.value    = (void *) &d_re_limit;
+//     var.range[0]   = 2;
+//     var.range[1]   = 1e9;
+//     var.modifiable = true;
+//     var.recompile  = false;
+//     var.modified   = false;
+//     sharedState->d_UPSVars.push_back( var );
 
-    initialized = true;
-  }
+//     initialized = true;
+//   }
 #endif
 }
 

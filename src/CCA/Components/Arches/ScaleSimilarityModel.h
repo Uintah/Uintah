@@ -56,10 +56,11 @@ DESCRIPTION
 WARNING
    none
 ****************************************/
-#include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/TurbulenceModel.h>
 
 namespace Uintah {
+class ArchesLabel;
+class MPMArchesLabel;
 class PhysicalConstants;
 class BoundaryCondition;
 

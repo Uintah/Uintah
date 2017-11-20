@@ -60,11 +60,12 @@ WARNING
    none
 ****************************************/
 
-#include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/Filter.h>
-#include <Core/Grid/Variables/VarLabel.h>
 
 namespace Uintah {
+class VarLabel;
+class ArchesLabel;
+class MPMArchesLabel;
 class TimeIntegratorLabel;
 class TurbulenceModel
 {

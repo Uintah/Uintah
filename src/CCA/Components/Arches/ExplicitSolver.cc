@@ -110,7 +110,6 @@
 #include <CCA/Components/Arches/ParticleModels/CQMOMSourceWrapper.h>
 
 #include <CCA/Components/Arches/ExplicitSolver.h>
-#include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <CCA/Components/Arches/BoundaryCondition.h>
@@ -889,7 +888,7 @@ ExplicitSolver::computeTimestep(const LevelP& level, SchedulerP& sched)
   Task* tsk = scinew Task( "ExplicitSolver::computeStableTimeStep",this,
                            &ExplicitSolver::computeStableTimeStep);
 
-  //printSchedule(level,dbg, "ExplicitSolver::computeStableTimeStep");
+  //printSchedule(level,dbg, "ExplicitSolver::computeStableTimestep");
 
   if(level->getIndex() == d_archesLevelIndex) {
 

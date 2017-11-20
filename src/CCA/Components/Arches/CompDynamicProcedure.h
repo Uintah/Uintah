@@ -58,7 +58,6 @@ WARNING
    none
 ****************************************/
 
-#include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/TurbulenceModel.h>
 #include <iostream>
 
