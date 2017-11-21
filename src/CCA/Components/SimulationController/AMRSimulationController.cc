@@ -536,32 +536,8 @@ AMRSimulationController::run()
       barrier_times[3] += barrierTimer().seconds();
     }
 
-    // Adjust the delT for each level and store it in all applicable dws.
-    double delT_fine = d_app->getDelT();
-    int    skip      = totalFine;
-
-    for( int i = 0; i < d_currentGridP->numLevels(); ++i ) {
-      const Level* level = d_currentGridP->getLevel(i).get_rep();
-      
-      if( d_app->isAMR() && i != 0 && !d_app->isLockstepAMR() ) {
-        int rr = level->getRefinementRatioMaxDim();
-        delT_fine /= rr;
-        skip      /= rr;
-      }
-       
-      for( int idw = 0; idw < totalFine; idw += skip ) {
-        DataWarehouse* dw = d_scheduler->get_dw( idw );
-        dw->override( delt_vartype( delT_fine ), d_app->getDelTLabel(), level );
-      }
-    }
-
-    // Override for the global level as well (only matters on dw 0)
-    DataWarehouse* oldDW = d_scheduler->get_dw(0);
-    oldDW->override( delt_vartype(d_app->getDelT()), d_app->getDelTLabel() );
-
-    // Execute the current time step, restarting if necessary
-    int tg_index = d_app->computeTaskGraphIndex();
-    executeTimeStep( totalFine, tg_index );
+    // Execute the current time step, restarting if necessary.
+    executeTimeStep( totalFine );
       
     // If debugging, output the barrier times.
     if( dbg_barrier.active() ) {
@@ -718,11 +694,6 @@ AMRSimulationController::doInitialTimeStep()
     bool needNewLevel = false;
 
     do {
-      if ( needNewLevel ) {
-        d_scheduler->initialize( 1, 1 );
-        d_scheduler->advanceDataWarehouse( d_currentGridP, true );
-      }
-
       proc0cout << "\nCompiling initialization taskgraph...\n";
 
       // Initialize the CFD and/or MPM data
@@ -746,7 +717,12 @@ AMRSimulationController::doInitialTimeStep()
       // Compute the next time step.
       scheduleComputeStableTimeStep();
   
-      // NOTE ARS - FIXME before the output
+      // Initialize the system var (time step and simulation time)
+      d_app->scheduleInitializeSystemVars( d_currentGridP,
+					   d_lb->getPerProcessorPatchSet(d_currentGridP),
+					   d_scheduler);
+
+      // NOTE ARS - FIXME before the output so the values can be saved.
       // Monitoring tasks must be scheduled last!!
       for (int i = 0; i < d_currentGridP->numLevels(); i++) {
         d_scheduler->scheduleTaskMonitoring(d_currentGridP->getLevel(i));
@@ -762,18 +738,14 @@ AMRSimulationController::doInitialTimeStep()
       d_output->sched_allOutputTasks( d_app->getDelT(),
 				      d_currentGridP, d_scheduler, recompile );
             
-      // Initialize the system var (time step and simulation time)
-      d_app->scheduleInitializeSystemVars( d_currentGridP,
-					   d_lb->getPerProcessorPatchSet(d_currentGridP),
-					   d_scheduler);
-
       taskGraphTimer.reset( true );
       d_scheduler->compile();
       taskGraphTimer.stop();
 
       d_runTimeStats[ CompilationTime ] += taskGraphTimer().seconds();
 
-      proc0cout << "Done with taskgraph compile (" << taskGraphTimer().seconds() << " seconds)\n";
+      proc0cout << "Done with taskgraph compile ("
+		<< taskGraphTimer().seconds() << " seconds)\n";
 
       // No scrubbing for initial step
       d_scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNone);
@@ -782,6 +754,12 @@ AMRSimulationController::doInitialTimeStep()
       needNewLevel = ( d_regridder && d_regridder->isAdaptive() &&
                        d_currentGridP->numLevels() < d_regridder->maxLevels() &&
                        doRegridding(true) );
+
+      if ( needNewLevel ) {
+        d_scheduler->initialize( 1, 1 );
+        d_scheduler->advanceDataWarehouse( d_currentGridP, true );
+      }
+
     } while ( needNewLevel );
 
     d_output->writeto_xml_files( 0, 0, 0, d_currentGridP );
@@ -792,17 +770,44 @@ AMRSimulationController::doInitialTimeStep()
 //______________________________________________________________________
 //
 void
-AMRSimulationController::executeTimeStep( int totalFine, int tg_index )
+AMRSimulationController::executeTimeStep( int totalFine )
 {
   MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::executeTimeStep()");
 
   // If the time step needs to be restarted, this loop will execute
   // multiple times.
-  bool success = true;
+  bool success = false;
 
-  do {
-    bool restartable = d_app->restartableTimeSteps();
-    d_scheduler->setRestartable(restartable);
+  int tg_index = d_app->computeTaskGraphIndex();
+
+  bool restartable = d_app->restartableTimeSteps();
+  d_scheduler->setRestartable(restartable);
+
+  // Execute at least once.
+  while (!success)
+  {
+    // Adjust the delT for each level and store it in all applicable dws.
+    double delT_fine = d_app->getDelT();
+    int skip         = totalFine;
+
+    for (int i = 0; i < d_currentGridP->numLevels(); ++i) {
+      const Level* level = d_currentGridP->getLevel(i).get_rep();
+
+      if( d_app->isAMR() && i != 0 && !d_app->isLockstepAMR() ) {
+  	int trr = level->getRefinementRatioMaxDim();
+  	delT_fine /= trr;
+  	skip /= trr;
+      }
+
+      for (int idw = 0; idw < totalFine; idw += skip) {
+  	DataWarehouse* dw = d_scheduler->get_dw(idw);
+  	dw->override(delt_vartype(delT_fine), d_app->getDelTLabel(), level);
+      }
+    }
+
+    // Override for the global level as well (only matters on dw 0)
+    DataWarehouse* oldDW = d_scheduler->get_dw(0);
+    oldDW->override(delt_vartype(d_app->getDelT()), d_app->getDelTLabel());
 
     // TODO: figure what this if clause attempted to accomplish and
     // clean up -APH, 06/14/17
@@ -844,16 +849,15 @@ AMRSimulationController::executeTimeStep( int totalFine, int tg_index )
       d_scheduler->execute( tg_index, iteration);
     }
 
-    //__________________________________
-    //  If time step has been restarted
+    //  If time step has been restarted adjust the delta T and restart.
     if (d_scheduler->get_dw(totalFine)->timestepRestarted()) {
       ASSERT(restartable);
 
-      for (int i = 1; i <= totalFine; i++) {
+      for (int i = 1; i <= totalFine; ++i) {
         d_scheduler->replaceDataWarehouse(i, d_currentGridP);
       }
 
-      // Figure out new delT
+      // Get the new delT
       double new_delT = d_app->recomputeTimeStep(d_app->getDelT());
 
       proc0cout << "Restarting time step at " << d_app->getSimTime()
@@ -861,7 +865,7 @@ AMRSimulationController::executeTimeStep( int totalFine, int tg_index )
 		<< " to " << new_delT
                 << std::endl;
 
-      // bulletproofing
+      // Bulletproofing
       if (new_delT < d_app->getSimulationTime()->m_delt_min || new_delT <= 0) {
         std::ostringstream warn;
         warn << "The new delT (" << new_delT << ") is either less than "
@@ -871,68 +875,21 @@ AMRSimulationController::executeTimeStep( int totalFine, int tg_index )
 
       d_app->setDelT( new_delT );
 
-      // Reevaluate the outputing and checkpointing.
+      // Re-evaluate the outputing and checkpointing.
       d_output->reevaluate_OutputCheckPointTimestep(d_app->getSimTime(),
 						    d_app->getDelT());
 
-      // Adjust the delT for each level and store it in all applicable dws.
-      double delT_fine = d_app->getDelT();
-      int skip         = totalFine;
-
-      for (int i = 0; i < d_currentGridP->numLevels(); ++i) {
-	const Level* level = d_currentGridP->getLevel(i).get_rep();
-
-	if( d_app->isAMR() && i != 0 && !d_app->isLockstepAMR() ) {
-	  int trr = level->getRefinementRatioMaxDim();
-	  delT_fine /= trr;
-	  skip /= trr;
-	}
-
-	for (int idw = 0; idw < totalFine; idw += skip) {
-	  DataWarehouse* dw = d_scheduler->get_dw(idw);
-	  dw->override(delt_vartype(delT_fine), d_app->getDelTLabel(), level);
-	}
-      }
-
-      // Override for the global level as well (only matters on dw 0)
-      DataWarehouse* oldDW = d_scheduler->get_dw(0);
-      oldDW->override(delt_vartype(d_app->getDelT()), d_app->getDelTLabel());
-
-    success = false;
+      success = false;
     }
     else {
       if (d_scheduler->get_dw(1)->timestepAborted()) {
         throw InternalError("Execution aborted, cannot restart time step\n", __FILE__, __LINE__);
       }
+
       success = true;
     }
-
-    // // Adjust the delT for each level and store it in all applicable dws.
-    // double delT_fine = d_app->getDelT();
-    // int skip         = totalFine;
-
-    // for (int i = 0; i < d_currentGridP->numLevels(); ++i) {
-    //   const Level* level = d_currentGridP->getLevel(i).get_rep();
-
-    //   if( d_app->isAMR() && i != 0 && !d_app->isLockstepAMR() ) {
-    // 	int trr = level->getRefinementRatioMaxDim();
-    // 	delT_fine /= trr;
-    // 	skip /= trr;
-    //   }
-
-    //   for (int idw = 0; idw < totalFine; idw += skip) {
-    // 	DataWarehouse* dw = d_scheduler->get_dw(idw);
-    // 	dw->override(delt_vartype(delT_fine), d_app->getDelTLabel(), level);
-    //   }
-    // }
-
-    // // Override for the global level as well (only matters on dw 0)
-    // DataWarehouse* oldDW = d_scheduler->get_dw(0);
-    // oldDW->override(delt_vartype(d_app->getDelT()), d_app->getDelTLabel());
-  }
-  while (!success);
-  
-}  // end executeTimeStep()
+  } 
+}
 
 //______________________________________________________________________
 //
@@ -1173,7 +1130,12 @@ AMRSimulationController::recompile( int totalFine )
   // Compute the next time step.
   scheduleComputeStableTimeStep();
   
-  // NOTE ARS - FIXME before the output
+  // Update the system var (time step and simulation time)
+  d_app->scheduleUpdateSystemVars( d_currentGridP,
+				   d_lb->getPerProcessorPatchSet(d_currentGridP),
+				   d_scheduler);
+
+  // NOTE ARS - FIXME before the output so the values can be saved.
   // Monitoring tasks must be scheduled last!!
   for (int i = 0; i < d_currentGridP->numLevels(); i++) {
     d_scheduler->scheduleTaskMonitoring(d_currentGridP->getLevel(i));
@@ -1188,10 +1150,6 @@ AMRSimulationController::recompile( int totalFine )
   d_output->sched_allOutputTasks( d_app->getDelT(),
 				  d_currentGridP, d_scheduler, true );
 
-  // Update the system var (time step and simulation time)
-  d_app->scheduleUpdateSystemVars( d_currentGridP,
-				   d_lb->getPerProcessorPatchSet(d_currentGridP),
-				   d_scheduler);
   d_scheduler->compile();
 
   taskGraphTimer.stop();
@@ -1415,10 +1373,14 @@ AMRSimulationController::scheduleComputeStableTimeStep()
 {
   MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::scheduleComputeStableTimeStep()");
 
+  // Schedule the application to compute the next time step on a per
+  // patch basis.
   for (int i = 0; i < d_currentGridP->numLevels(); i++) {
     d_app->scheduleComputeStableTimeStep(d_currentGridP->getLevel(i), d_scheduler);
   }
 
+  // Schedule the reduction of the time step on a per patch basis to a
+  // per rank basis.
   d_app->scheduleReduceSystemVars( d_currentGridP,
 				   d_lb->getPerProcessorPatchSet(d_currentGridP),
 				   d_scheduler);

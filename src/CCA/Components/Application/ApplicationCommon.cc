@@ -260,7 +260,7 @@ ApplicationCommon::scheduleReduceSystemVars(const GridP& grid,
   // --Todd
   // TODO: Look into this - APH 02/27/17
 
-  // Coarsen delt computes the global delt variable
+  // Coarsen delT computes the global delT variable
   task->computes(m_delTLabel);
 
   for (int i = 0; i < grid->numLevels(); i++) {
@@ -299,9 +299,9 @@ ApplicationCommon::reduceSystemVars( const ProcessorGroup *,
 {
   MALLOC_TRACE_TAG_SCOPE("ApplicationCommon::reduceSysVar()");
 
-  // The goal of this task is to line up the delt across all levels.
-  // If the coarse one already exists (the one without an associated
-  // level), then we must not be doing AMR
+  // The goal of this task is to line up the delT across all levels.
+  // If the coarse delT already exists (the one without an associated
+  // level), then the application is not doing AMR.
   Patch* patch = nullptr;
 
   if (patches->size() != 0 && !new_dw->exists(m_delTLabel, -1, patch)) {
@@ -316,12 +316,11 @@ ApplicationCommon::reduceSystemVars( const ProcessorGroup *,
       }
 
       if (new_dw->exists(m_delTLabel, -1, *level->patchesBegin())) {
-        delt_vartype deltvar;
-        double delt;
-        new_dw->get(deltvar, m_delTLabel, level.get_rep());
+        delt_vartype delTvar;
+        double delT;
+        new_dw->get(delTvar, m_delTLabel, level.get_rep());
 
-        delt = deltvar;
-        new_dw->put(delt_vartype(delt * multiplier), m_delTLabel);
+        new_dw->put(delt_vartype(delTvar * multiplier), m_delTLabel);
       }
     }
   }
@@ -388,7 +387,7 @@ void
 ApplicationCommon::finalizeSystemVars( SchedulerP& scheduler )
 {
   // Get the next delta T - Do this before reporting stats or the
-  // in-situ so the new delt is availble.
+  // in-situ so the new delT is availble.
   getNextDelT( scheduler );
   
   // An application may update the output interval or the checkpoint
@@ -643,23 +642,23 @@ ApplicationCommon::getNextDelT( SchedulerP& scheduler )
   // Adjust the delt
   m_delT *= m_simulationTime->m_delt_factor;
       
-  // Check to see if the new delt is below the delt_min
+  // Check to see if the new delT is below the delt_min
   if( m_delT < m_simulationTime->m_delt_min ) {
-    proc0cout << "WARNING: raising delt from " << m_delT;
+    proc0cout << "WARNING: raising delT from " << m_delT;
     
     m_delT = m_simulationTime->m_delt_min;
     
     proc0cout << " to minimum: " << m_delT << '\n';
   }
 
-  // Check to see if the new delt was increased too much over the
+  // Check to see if the new delT was increased too much over the
   // previous delt
   double delt_tmp = (1.0+m_simulationTime->m_max_delt_increase) * m_prevDelT;
   
   if( m_prevDelT > 0.0 &&
       m_simulationTime->m_max_delt_increase > 0 &&
       m_delT > delt_tmp ) {
-    proc0cout << "WARNING (a): lowering delt from " << m_delT;
+    proc0cout << "WARNING (a): lowering delT from " << m_delT;
     
     m_delT = delt_tmp;
     
@@ -668,11 +667,11 @@ ApplicationCommon::getNextDelT( SchedulerP& scheduler )
               << ")\n";
   }
 
-  // Check to see if the new delt exceeds the max_initial_delt
+  // Check to see if the new delT exceeds the max_initial_delt
   if( m_simTime <= m_simulationTime->m_initial_delt_range &&
       m_simulationTime->m_max_initial_delt > 0 &&
       m_delT > m_simulationTime->m_max_initial_delt ) {
-    proc0cout << "WARNING (b): lowering delt from " << m_delT ;
+    proc0cout << "WARNING (b): lowering delT from " << m_delT ;
 
     m_delT = m_simulationTime->m_max_initial_delt;
 
@@ -680,22 +679,22 @@ ApplicationCommon::getNextDelT( SchedulerP& scheduler )
              << " (for initial timesteps)\n";
   }
 
-  // Check to see if the new delt exceeds the delt_max
+  // Check to see if the new delT exceeds the delt_max
   if( m_delT > m_simulationTime->m_delt_max ) {
-    proc0cout << "WARNING (c): lowering delt from " << m_delT;
+    proc0cout << "WARNING (c): lowering delT from " << m_delT;
 
     m_delT = m_simulationTime->m_delt_max;
     
     proc0cout << " to maximum: " << m_delT << '\n';
   }
 
-  // Clamp delt to match the requested output and/or checkpoint times
+  // Clamp delT to match the requested output and/or checkpoint times
   if( m_simulationTime->m_clamp_time_to_output ) {
 
     // Clamp to the output time
     double nextOutput = m_output->getNextOutputTime();
     if (nextOutput != 0 && m_simTime + m_delT > nextOutput) {
-      proc0cout << "WARNING (d): lowering delt from " << m_delT;
+      proc0cout << "WARNING (d): lowering delT from " << m_delT;
 
       m_delT = nextOutput - m_simTime;
 
@@ -706,7 +705,7 @@ ApplicationCommon::getNextDelT( SchedulerP& scheduler )
     // Clamp to the checkpoint time
     double nextCheckpoint = m_output->getNextCheckpointTime();
     if (nextCheckpoint != 0 && m_simTime + m_delT > nextCheckpoint) {
-      proc0cout << "WARNING (d): lowering delt from " << m_delT;
+      proc0cout << "WARNING (d): lowering delT from " << m_delT;
 
       m_delT = nextCheckpoint - m_simTime;
 
@@ -715,19 +714,19 @@ ApplicationCommon::getNextDelT( SchedulerP& scheduler )
     }
   }
   
-  // Clamp delt to the max end time,
+  // Clamp delT to the max end time,
   if (m_simulationTime->m_end_at_max_time &&
       m_simTime + m_delT > m_simulationTime->m_max_time) {
     m_delT = m_simulationTime->m_max_time - m_simTime;
   }
 
-  // Write the new delt to the data warehouse
+  // Write the new delT to the data warehouse
   newDW->override( delt_vartype(m_delT), m_delTLabel );
 }
 
 //______________________________________________________________________
 //
-// Determines if the time step was the last one. 
+// Determines if the time step is the last one. 
 bool
 ApplicationCommon::isLastTimeStep( double walltime ) const
 {

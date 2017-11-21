@@ -80,7 +80,7 @@ class AMRSimulationController : public SimulationController {
      void doInitialTimeStep( );
 
      //! Execute a time step
-     void executeTimeStep( int totalFine, int tg_index );
+     void executeTimeStep( int totalFine );
 
      //! If doing AMR do the regridding
      bool doRegridding( bool initialTimeStep );
