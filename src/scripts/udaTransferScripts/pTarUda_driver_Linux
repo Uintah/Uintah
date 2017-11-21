@@ -16,8 +16,8 @@ SRCS =   $(shell for i in $(FILES) ; do \
 DESTS := $(patsubst %,$(STAMP_DIR)/stamp/%,$(SRCS))
 
 all: $(STAMP_DIR)/stamp $(DESTS)
-	@echo "Removing the list of tarred/untarred directories $(STAMP_DIR)/stamp"
-	rm -rf $(STAMP_DIR)/stamp
+	@echo "Removing the list of tarred/untarred directories $(STAMP_DIR)"
+	/bin/rm -rf $(STAMP_DIR)
 
 $(STAMP_DIR)/stamp:
 	mkdir $@
@@ -25,35 +25,59 @@ $(STAMP_DIR)/stamp:
 #__________________________________
 #   CHECKPOINTS
 #
-$(STAMP_DIR)/stamp/./checkpoints/% :
-	@mkdir -p $(STAMP_DIR)/stamp/checkpoints
+# $(@F):  directory name, excluding the path
 
-	@echo "Working on checkpoints/`basename $@`"
-	if test -a checkpoints/`basename $@`; then 				\
-	  if test ${createExtract} == "create"; then 				\
-	    ${TAR} checkpoints/`basename $@`.tar.gz checkpoints/`basename $@`;	\
-	  fi;									\
-	  if test ${createExtract} == "extract"; then 				\
-	    ${TAR} checkpoints/`basename $@`;					\
-	  fi;									\
+$(STAMP_DIR)/stamp/checkpoints/% :
+	@mkdir -p $(STAMP_DIR)/stamp/checkpoints
+	if test -a checkpoints/$(@F); then                                     \
+	  echo "  Working on checkpoints $(@F)"                                \
+#                                                                             \
+#        __________________________________                                   \
+	  if test ${createExtract} == "create"; then                           \
+	    ${TAR} checkpoints/$(@F).tar.gz checkpoints/$(@F);                 \
+#                                                                             \
+	    if test "$$?" == "0" -a $(deleteOrgTimesteps) == "Y"; then         \
+	       echo "    Deleting original timestep (checkpoints/$(@F))";      \
+	       /bin/rm -rf checkpoints/$(@F);                                  \
+	    fi;                                                                \
+	  fi;                                                                  \
+#                                                                             \
+#        __________________________________                                   \
+	  if test ${createExtract} == "extract"; then                          \
+	    ${TAR} checkpoints/$(@F);	                                    \
+	  fi;					                                    \
+	  echo "  Finished ${createExtract} checkpoints/$(@F)";                \
+	  touch $(STAMP_DIR)/stamp/checkpoints/$(@F);                          \
+	else                                                                   \
+	 echo "   checkpoints/$(@F) Does not exist!";                          \
 	fi
-	@echo "Finished ${createExtract} checkpoints/`basename $@`"
-	@touch $(STAMP_DIR)/stamp/checkpoints/`basename $@`
 
 
 #__________________________________
 #  ALL OTHER DIRS
 #
-$(STAMP_DIR)/stamp/% :
-	@echo "  Working on `basename $@`"
-	if test -a `basename $@`; then 			\
-	  if test ${createExtract} == "create"; then 	\
-	   ${TAR} `basename $@`.tar.gz `basename $@`;	\
-	  fi;						\
-          if test ${createExtract} == "extract"; then 	\
-	    ${TAR} `basename $@`;			\
-	  fi;						\
-        fi
-	@echo "Finished ${createExtract} `basename $@`"
-	@touch $(STAMP_DIR)/stamp/`basename $@`
+# $(@F):  directory name, excluding the path
 
+$(STAMP_DIR)/stamp/% :
+	if test -a $(@F); then                                                 \
+	   echo "  Working on $(@F)";                                          \
+#                                                                             \
+#        __________________________________                                   \
+	  if test ${createExtract} == "create"; then                           \
+	   ${TAR} $(@F).tar.gz $(@F);                                          \
+#                                                                             \
+	    if test "$$?" == "0" -a $(deleteOrgTimesteps) == "Y"; then         \
+	       echo "    Deleting original timestep ($(@F))";                  \
+	       /bin/rm -rf $(@F);                                              \
+	    fi;                                                                \
+	  fi;		                                                         \
+#                                                                             \
+#        __________________________________                                   \
+	  if test ${createExtract} == "extract"; then                          \
+	    ${TAR} $(@F);                                                      \
+	  fi;                                                                  \
+	  echo "  Finished ${createExtract} $(@F)";                            \
+	  touch $(STAMP_DIR)/stamp/$(@F);                                      \
+	else                                                                   \
+	 echo "   $(@F) Does not exist!";                                      \
+	fi

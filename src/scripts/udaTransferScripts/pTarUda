@@ -30,6 +30,7 @@ unalias -a cd
 nproc="10"
 allTimesteps="Y"
 continueTarring="N"
+deleteOrgTimesteps="N"
 MAKE=make
 OS="Linux"
 FIND=find
@@ -62,6 +63,9 @@ while [ "$#" -gt 0 ]; do
   -create|--create)
       createExtract="create"
       ;;
+  -deleteOrgTimesteps|---deleteOrgTimesteps)
+      deleteOrgTimesteps="Y"
+      ;;
   -extract|--extract)
       createExtract="extract"
       recordName="pUntar_record"
@@ -86,13 +90,14 @@ if [ $show_help -ne 0 ]; then
       This script does not delete the original timestep directories. 
 
       Options:                        default
-          -np:              [int]        10       Number of processores used.
-          -allTimesteps:    [y/n]         Y       operate on all directories in uda?  If "n" then a vi window will open allowing you to edit the timesteps
-          -create           blank         X       create new archives
-          -extract          blank                 extract timestep archieves
-          -continueTarring  blank                 continue tarring if previous attempts failed
-          -uda              [dir name]            uda name
-          -help:                                  Display this option summary
+          -np:                 [int]        10       Number of processores used.
+          -allTimesteps:       [y/n]         Y       operate on all directories in uda?  If "n" then a vi window will open allowing you to edit the timesteps
+          -create              blank         X       create new archives
+          -deleteOrgTimesteps  blank                 delete  original timesteps directories after they have been tarred. 
+          -extract             blank                 extract timestep archieves
+          -continueTarring     blank                 continue tarring if previous attempts failed
+          -uda                 [dir name]            uda name
+          -help:                                     Display this option summary
 EOF
   exit 0
 fi
@@ -115,7 +120,7 @@ if test $createExtract == "create"; then
   if test "$rc" = "0"; then
     TAR="tar  --use-compress-program 'pigz' -cBf"
   else
-    TAR="tar --use-compress-program 'gzip' -cBf"
+    TAR="tar --use-compress-program 'gzip'  -cBf"
   fi
 fi
 
@@ -129,7 +134,8 @@ if test $createExtract == "extract"; then
   fi
 fi
 
-export TAR createExtract
+
+export TAR createExtract deleteOrgTimesteps
 
 export PTAR_FILES=/tmp/ptar_`basename $uda`_`whoami`
 
@@ -138,6 +144,7 @@ echo "Inputs:"
 echo "	# processors:          $nproc"
 echo "	allDirectories:        $allTimesteps"
 echo "	create/extract:        $createExtract"
+echo "	deleteOrgTimesteps:     $deleteOrgTimesteps"
 echo "	continueTarring:       $continueTarring"
 echo "	uda:                   $uda"
 echo "	PTAR_FILES:            $PTAR_FILES"
@@ -247,16 +254,16 @@ cd $uda
 if test $createExtract == "create"; then
   $FIND .                -maxdepth 1 -type d  -exec basename {} \; | grep -v "\.\|t[0-9]\|checkpoints\|.tarred_files" >$PTAR_FILES
   $FIND ./t*             -maxdepth 0 -type d  -exec basename {} \; >>$PTAR_FILES
-  $FIND ./checkpoints    -maxdepth 1 -type d  >>$PTAR_FILES
+  $FIND ./checkpoints    -maxdepth 1 -type d   | sed "s|^\./||"    >>$PTAR_FILES
 fi
 if test $createExtract == "extract"; then
   $FIND .                -maxdepth 1 -name "*.gz" -exec basename {} \;  >$PTAR_FILES
-  $FIND ./checkpoints    -maxdepth 1 -name "*.gz" >>$PTAR_FILES
+  $FIND ./checkpoints    -maxdepth 1 -name "*.gz" | sed "s|^\./||"     >>$PTAR_FILES
 fi
 
 
 #remove "./checkpoints" from PTAR_FILES
-sed -i /".\/checkpoints$"/d $PTAR_FILES
+sed -i /"checkpoints$"/d $PTAR_FILES
 
 #more $PTAR_FILES
 
