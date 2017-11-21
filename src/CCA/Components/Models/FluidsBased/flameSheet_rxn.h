@@ -83,7 +83,7 @@ WARNING
 
     virtual void restartInitialize() {}
       
-    virtual void scheduleComputeStableTimestep(SchedulerP&,
+    virtual void scheduleComputeStableTimeStep(SchedulerP&,
                                                const LevelP& level,
                                                const ModelInfo*);
       

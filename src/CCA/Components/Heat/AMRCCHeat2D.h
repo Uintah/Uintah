@@ -50,14 +50,17 @@ protected:
     double refine_threshold;
 
 public:
-    AMRCCHeat2D ( ProcessorGroup const * myworld, int verbosity = 0 );
+    AMRCCHeat2D ( const ProcessorGroup * myworld,
+		  const SimulationStateP sharedState,
+		  int verbosity = 0 );
+  
     virtual ~AMRCCHeat2D ();
 
 protected:
     AMRCCHeat2D ( AMRCCHeat2D const & ) = delete;
     AMRCCHeat2D & operator= ( AMRCCHeat2D const & ) = delete;
 
-    virtual void problemSetup ( ProblemSpecP const & params, ProblemSpecP const & restart_prob_spec, GridP & grid, SimulationStateP & state ) override;
+    virtual void problemSetup ( ProblemSpecP const & params, ProblemSpecP const & restart_prob_spec, GridP & grid ) override;
     virtual void scheduleTimeAdvance ( LevelP const & level, SchedulerP & ) override;
     virtual void scheduleRefine ( PatchSet const * patches, SchedulerP & sched ) override;
     virtual void scheduleRefineInterface ( LevelP const & /*level_fine*/, SchedulerP & /*sched*/, bool /*need_old_coarse*/, bool /*need_new_coarse*/ ) override {};

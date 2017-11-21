@@ -25,6 +25,8 @@
 #ifndef UINTAH_HOMEBREW_MPM_COMMON_H
 #define UINTAH_HOMEBREW_MPM_COMMON_H
 
+#include <CCA/Components/Application/ApplicationCommon.h>
+
 #include <CCA/Components/MPM/MPMFlags.h>
 #include <CCA/Ports/DataWarehouseP.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
@@ -38,31 +40,26 @@ namespace Uintah {
 
   class ProcessorGroup;
   
-  class MPMCommon {
-
+  class MPMCommon : public ApplicationCommon
+  {
   public:
+    MPMCommon(const ProcessorGroup* myworld, SimulationStateP sharedState);
 
-    MPMCommon(const ProcessorGroup* myworld);
     virtual ~MPMCommon();
 
     virtual void materialProblemSetup(const ProblemSpecP& prob_spec,
-                                      SimulationStateP& sharedState,
                                       MPMFlags* flags, bool isRestart);
 
     virtual void cohesiveZoneProblemSetup(const ProblemSpecP& prob_spec,
-                                          SimulationStateP& sharedState,
                                           MPMFlags* flags);
                                           
     void scheduleUpdateStress_DamageErosionModels(SchedulerP        & sched,
                                                   const PatchSet    * patches,
                                                   const MaterialSet * matls );
-
-   private:
-    const ProcessorGroup* d_myworld     = nullptr;
-    SimulationStateP      d_sharedState;
+  private:
     MPMFlags*             d_flags       = nullptr;
     
-   protected:
+  protected:
     /*! update the stress field due to damage & erosion*/
     void updateStress_DamageErosionModels(const ProcessorGroup  *,
                                           const PatchSubset     * patches,

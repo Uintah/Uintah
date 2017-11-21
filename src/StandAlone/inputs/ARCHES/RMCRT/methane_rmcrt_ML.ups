@@ -6,7 +6,7 @@
   <SimulationComponent type="arches"/>
   <Solver type="hypre"/>
   <!--  needed for rmcrt -->
-  <AMR>
+  <AMR type="StaticGridML">
     <useLockStep> true </useLockStep>
   </AMR>
   <Time>

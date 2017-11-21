@@ -70,8 +70,9 @@ SRCS +=                                              \
         $(SRCDIR)/WasatchParticlesHelper.cc          
 
 PSELIBS :=                        \
-        CCA/Components/Schedulers \
+        CCA/Components/Application \
         CCA/Components/Models     \
+        CCA/Components/Schedulers \
         CCA/Ports                 \
         Core/Disclosure           \
         Core/Exceptions           \
@@ -125,4 +126,3 @@ endif
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
-

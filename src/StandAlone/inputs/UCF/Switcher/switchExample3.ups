@@ -12,15 +12,13 @@
     <!--__________________________________-->
     <!-- phase 1: setup the initial grid and define CC variables -->
     <subcomponent>                                                   
-      <input_file>inputs/UCF/Switcher/ex3_phases1_3.ups</input_file>             
-
+      <input_file>inputs/UCF/Switcher/ex3_phases1_3.ups</input_file>
       <SwitchCriteria type = "Timestep">                             
         <timestep> 3 </timestep>                                     
       </SwitchCriteria>                                              
     </subcomponent>                                                  
     <!--__________________________________-->       
-    <!-- heat transfer calculation phase: impm -->                                                                 
-    <subcomponent>                                                   
+    <!-- heat transfer calculation phase: impm -->    <subcomponent>
       <input_file>inputs/UCF/Switcher/ex3_phase2.ups</input_file> 
       <SwitchCriteria type = "simpleBurn">
         <reactant_material>    1      </reactant_material>
@@ -34,7 +32,7 @@
     <!--__________________________________-->
     <!-- explosion phase: mpmice -->
     <subcomponent>                                                   
-      <input_file>inputs/UCF/Switcher/ex3_phases1_3.ups</input_file>                                              
+      <input_file>inputs/UCF/Switcher/ex3_phases1_3.ups</input_file>
     </subcomponent>
     
     <!-- variables that must be carried over from phase 1 to 3 -->

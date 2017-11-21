@@ -340,7 +340,7 @@ void Kayenta::initializeCMData(const Patch* patch,
        peakI1IDist[*iter] = weibGen.rand(pVolume[*iter]);
     }
   }
-  computeStableTimestep(patch, matl, new_dw);
+  computeStableTimeStep(patch, matl, new_dw);
 }
 
 void Kayenta::addParticleState(std::vector<const VarLabel*>& from,
@@ -354,7 +354,7 @@ void Kayenta::addParticleState(std::vector<const VarLabel*>& from,
   from.push_back(peakI1IDistLabel);
   to.push_back(peakI1IDistLabel_preReloc);
 }
-void Kayenta::computeStableTimestep(const Patch* patch,
+void Kayenta::computeStableTimeStep(const Patch* patch,
                                     const MPMMaterial* matl,
                                     DataWarehouse* new_dw)
 {

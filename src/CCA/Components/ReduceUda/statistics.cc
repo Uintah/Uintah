@@ -31,8 +31,6 @@
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/DebugStream.h>
-#include <sci_defs/visit_defs.h>
-
 #include <iostream>
 #include <cstdio>
 #include <iomanip>
@@ -125,9 +123,11 @@ statistics::~statistics()
 void statistics::problemSetup(const ProblemSpecP& prob_spec,
                               const ProblemSpecP&,
                               GridP& grid,
-                              SimulationStateP& sharedState)
+			      SimulationStateP& sharedState)
 {
   dbg << "Doing problemSetup \t\t\t\tstatistics" << endl;
+
+  d_sharedState = sharedState;
 
   int numMatls  = d_sharedState->getNumMatls();
   if(!d_dataArchiver){
@@ -298,7 +298,6 @@ void statistics::problemSetup(const ProblemSpecP& prob_spec,
   d_matlSet->addReference();
   d_matSubSet = d_matlSet->getUnion();
   proc0cout << "__________________________________ Post Process module: statistics" << endl;
- 
 }
 
 //______________________________________________________________________

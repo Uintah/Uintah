@@ -27,7 +27,9 @@
 namespace Uintah {
   class impAMRICE : public AMRICE{
   public:
-    impAMRICE(const ProcessorGroup* myworld);
+    impAMRICE(const ProcessorGroup* myworld,
+	      const SimulationStateP sharedState);
+    
     virtual ~impAMRICE();
     
   void scheduleTimeAdvance( const LevelP& level, 

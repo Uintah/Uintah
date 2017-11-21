@@ -38,17 +38,17 @@
  *
  */
 
-#include <sci_defs/petsc_defs.h>
-#include <sci_defs/uintah_defs.h>
+#include <CCA/Components/Application/ApplicationCommon.h>
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModuleFactory.h>
-#include <CCA/Ports/SimulationInterface.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
-#include <Core/Grid/SimulationStateP.h>
-#include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Util/Handle.h>
+
+#include <sci_defs/petsc_defs.h>
+#include <sci_defs/uintah_defs.h>
+
 #include <string>
 
 // Divergence constraint instead of drhodt in pressure equation
@@ -69,7 +69,7 @@ namespace Uintah {
   class ArchesLabel;
   class ArchesParticlesHelper;
 
-class Arches : public UintahParallelComponent, public SimulationInterface {
+class Arches : public ApplicationCommon {
 
 public:
 
@@ -78,13 +78,14 @@ public:
   enum NUMGHOSTS {ZEROGHOSTCELLS , ONEGHOSTCELL, TWOGHOSTCELLS,
                   THREEGHOSTCELLS, FOURGHOSTCELLS, FIVEGHOSTCELLS };
 
-  Arches(const ProcessorGroup* myworld, const bool doAMR);
+  Arches(const ProcessorGroup* myworld,
+	 const SimulationStateP sharedState);
 
   virtual ~Arches();
 
   virtual void problemSetup(const ProblemSpecP& params,
                             const ProblemSpecP& materials_ps,
-                            GridP& grid, SimulationStateP&);
+                            GridP& grid);
 
   virtual void scheduleInitialize(const LevelP& level,
                                   SchedulerP&);
@@ -94,7 +95,7 @@ public:
 
   virtual void restartInitialize();
 
-  virtual void scheduleComputeStableTimestep(const LevelP& level,
+  virtual void scheduleComputeStableTimeStep(const LevelP& level,
                                              SchedulerP&);
   void
   MPMArchesIntrusionSetupForResart( const LevelP& level, SchedulerP& sched,
@@ -115,9 +116,9 @@ public:
     m_MAlab = MAlb;
   }
 
-  virtual double recomputeTimestep(double current_dt);
+  virtual double recomputeTimeStep(double current_dt);
 
-  virtual bool restartableTimesteps();
+  virtual bool restartableTimeSteps();
 
   void setWithMPMARCHES() {
     m_with_mpmarches = true;
@@ -163,7 +164,6 @@ private:
 
   PhysicalConstants* m_physicalConsts;
   NonlinearSolver* m_nlSolver;
-  SimulationStateP m_sharedState;
   const MPMArchesLabel* m_MAlab;
   Uintah::ProblemSpecP m_arches_spec;
   ArchesParticlesHelper* m_particlesHelper;
@@ -172,7 +172,7 @@ private:
 
   bool m_doing_restart;
   bool m_with_mpmarches;
-  bool m_do_AMR;
+
   bool m_do_lagrangian_particles;
   bool m_recompile_taskgraph;
 

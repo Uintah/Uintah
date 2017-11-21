@@ -130,7 +130,7 @@ void TestModel::scheduleInitialize(SchedulerP&,
 }
 
 //______________________________________________________________________     
-void TestModel::scheduleComputeStableTimestep(SchedulerP&,
+void TestModel::scheduleComputeStableTimeStep(SchedulerP&,
                                               const LevelP&,
                                               const ModelInfo*)
 {

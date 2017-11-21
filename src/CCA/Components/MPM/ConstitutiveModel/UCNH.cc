@@ -332,7 +332,7 @@ void UCNH::initializeCMData(const Patch* patch,
   // If not implicit, compute timestep
   if(!(flag->d_integrator == MPMFlags::Implicit)) {
     // End by computing the stable timestep
-    computeStableTimestep(patch, matl, new_dw);
+    computeStableTimeStep(patch, matl, new_dw);
   }
 }
 //______________________________________________________________________
@@ -500,7 +500,7 @@ double UCNH::computeRhoMicroCM(double pressure,
 }
 //______________________________________________________________________
 //
-void UCNH::computeStableTimestep(const Patch* patch,
+void UCNH::computeStableTimeStep(const Patch* patch,
                                   const MPMMaterial* matl,
                                   DataWarehouse* new_dw)
 {

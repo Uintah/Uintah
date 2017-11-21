@@ -194,17 +194,17 @@ void flatPlate_heatFlux::problemSetup(const ProblemSpecP& prob_spec,
   p->endPt   = end;
   d_plane.push_back(p);
   
-#ifdef HAVE_VISIT
-  if( sharedState->getVisIt() ) {
-    SimulationState::analysisVar aVar;
-    aVar.name  = M_lb->gHeatFluxLabel->getName();
-    aVar.matl  = d_matl->getDWIndex();
-    aVar.level = -1;
-    aVar.labels.push_back( v_lb->total_heatRateLabel );
+// #ifdef HAVE_VISIT
+//   if( sharedState->getVisIt() ) {
+//     SimulationState::analysisVar aVar;
+//     aVar.name  = M_lb->gHeatFluxLabel->getName();
+//     aVar.matl  = d_matl->getDWIndex();
+//     aVar.level = -1;
+//     aVar.labels.push_back( v_lb->total_heatRateLabel );
     
-    d_sharedState->d_analysisVars.push_back(aVar);
-  }
-#endif
+//     d_sharedState->d_analysisVars.push_back(aVar);
+//   }
+// #endif
 }
 
 //______________________________________________________________________

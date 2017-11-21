@@ -107,18 +107,18 @@ DynamicMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec,
 
   SchedulerCommon::problemSetup(prob_spec, state);
 
-#ifdef HAVE_VISIT
-  static bool initialized = false;
+// #ifdef HAVE_VISIT
+//   static bool initialized = false;
 
-  // Running with VisIt so add in the variables that the user can
-  // modify.
-  if( m_shared_state->getVisIt() && !initialized ) {
-    m_shared_state->d_douts.push_back( &g_dbg );
-    m_shared_state->d_douts.push_back( &g_queue_length );
+//   // Running with VisIt so add in the variables that the user can
+//   // modify.
+//   if( m_shared_state->getVisIt() && !initialized ) {
+//     m_shared_state->d_douts.push_back( &g_dbg );
+//     m_shared_state->d_douts.push_back( &g_queue_length );
 
-    initialized = true;
-  }
-#endif
+//     initialized = true;
+//   }
+// #endif
 }
 
 //______________________________________________________________________
@@ -140,7 +140,7 @@ void
 DynamicMPIScheduler::execute( int tgnum     /*=0*/,
                               int iteration /*=0*/ )
 {
-  if (m_shared_state->isCopyDataTimestep()) {
+  if (m_is_copy_data_timestep) {
     MPIScheduler::execute(tgnum, iteration);
     return;
   }
@@ -190,7 +190,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
 
 #if 0
   // hook to post all the messages up front
-  if (!m_shared_state->isCopyDataTimestep()) {
+  if (!m_is_copy_data_timestep) {
     // post the receives in advance
     for (int i = 0; i < ntasks; i++) {
       initiateTask( dts->localTask(i), abort, abort_point, iteration );
@@ -385,13 +385,11 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
   m_exec_timer.stop();
 
   // compute the net timings
-  if (m_shared_state != nullptr) {
-    computeNetRunTimeStats(m_shared_state->d_runTimeStats);
-  }
+  MPIScheduler::computeNetRunTimeStats();
 
   // only do on top-level scheduler
   if ( m_parent_scheduler == nullptr ) {
-    outputTimingStats( "DynamicMPIScheduler" );
+    MPIScheduler::outputTimingStats( "DynamicMPIScheduler" );
   }
 
   RuntimeStats::report(d_myworld->getComm());

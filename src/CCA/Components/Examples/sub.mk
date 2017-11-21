@@ -69,6 +69,7 @@ ifeq ($(HAVE_CUDA),yes)
 endif
 
 PSELIBS := \
+        CCA/Components/Application \
         CCA/Components/Models \
         CCA/Ports             \
         Core/DataArchive      \

@@ -34,7 +34,6 @@
 #include <Core/Grid/Level.h>                  // for Level, Level::selectType
 #include <Core/Grid/LevelP.h>                 // for LevelP
 #include <Core/Grid/Patch.h>                  // for Patch, Patch::FaceType, etc
-#include <Core/Grid/SimulationStateP.h>       // for SimulationStateP
 #include <Core/Grid/Variables/ComputeSet.h>   // for PatchSubset, etc
 #include <Core/Grid/Variables/NCVariable.h>   // for constNCVariable
 #include <Core/Grid/Variables/constVariable.h>  // for constVariable
@@ -53,14 +52,15 @@ class FluxBCModel;
 class AMRMPM : public SerialMPM {
 
 public:
-  AMRMPM(const ProcessorGroup* myworld);
+  AMRMPM(const ProcessorGroup* myworld,
+	 const SimulationStateP sharedState);
+  
   virtual ~AMRMPM();
   SDInterfaceModel* d_sdInterfaceModel;
 
   virtual void problemSetup(const ProblemSpecP& params, 
                             const ProblemSpecP& restart_prob_spec,
-                            GridP&,
-                            SimulationStateP&);
+                            GridP&);
 
   virtual void outputProblemSpec(ProblemSpecP& ps);
          
@@ -70,7 +70,7 @@ public:
   void schedulePrintParticleCount(const LevelP& level, 
                                   SchedulerP& sched);
 
-  virtual void scheduleComputeStableTimestep(const LevelP& level,
+  virtual void scheduleComputeStableTimeStep(const LevelP& level,
                                              SchedulerP&);
          
   virtual void scheduleTimeAdvance(const LevelP& level, 
@@ -109,9 +109,6 @@ public:
 //    Explicit,
 //    Implicit,
 //  };
-
-  //Inherit this from the SerialMPM base class
-  //SimulationStateP d_sharedState;
 
 protected:
   friend class ESMPM;

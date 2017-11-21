@@ -26,39 +26,50 @@
 #include <CCA/Components/Regridder/RegridderFactory.h>
 #include <CCA/Components/Regridder/SingleLevelRegridder.h>
 #include <CCA/Components/Regridder/TiledRegridder.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 
 //-- Uintah framework includes --//
 #include <Core/Parallel/ProcessorGroup.h>
 
 using namespace Uintah;
 
-RegridderCommon* RegridderFactory::create(ProblemSpecP& ps, const ProcessorGroup* world)
+RegridderCommon* RegridderFactory::create(ProblemSpecP& ps,
+                                          const ProcessorGroup* world)
 {
-  RegridderCommon* regridder = 0;
+  RegridderCommon* regridder = nullptr;
 
   // Parse the AMR/Regridder portion of the input file
   ProblemSpecP amrPS = ps->findBlock("AMR");
-  ProblemSpecP regridderPS = amrPS->findBlock("Regridder");
 
-  if (regridderPS) {
+  std::string amrType;
+  amrPS->getAttribute("type", amrType);
 
-    std::string regridderName;
-    regridderPS->getAttribute("type", regridderName);
+  if( amrType == "" || amrType == "'Dynamic'" )
+  {
+    ProblemSpecP regridderPS = amrPS->findBlock("Regridder");
+    
+    if (regridderPS) {
+      
+      std::string regridderName;
+      regridderPS->getAttribute("type", regridderName);
+      
+      if (world->myRank() == 0 && regridderName != "" ) {
+        std::cout << "Using Regridder " << regridderName << std::endl;
+      }
 
-    if (world->myRank() == 0) {
-      std::cout << "Using Regridder " << regridderName << std::endl;
+      if (regridderName == "Tiled") {
+        regridder = scinew TiledRegridder(world);
+      }
+      else if (regridderName == "SingleLevel") {
+        regridder = scinew SingleLevelRegridder(world);
+      }
     }
-    if (regridderName == "Tiled") {
-      regridder = scinew TiledRegridder(world);
-    }
-    else if (regridderName == "SingleLevel") {
-      regridder = scinew SingleLevelRegridder(world);
-    }
-    else {
-      regridder = 0;
+    
+    if( regridder == nullptr )
+    {
+        throw ProblemSetupException( "No AMR Regridder block or type specified", __FILE__, __LINE__);
     }
   }
 
   return regridder;
-
 }

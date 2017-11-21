@@ -157,7 +157,7 @@ void ZeroOrder::scheduleInitialize(SchedulerP&,
 }
 //______________________________________________________________________
 //      
-void ZeroOrder::scheduleComputeStableTimestep(SchedulerP&,
+void ZeroOrder::scheduleComputeStableTimeStep(SchedulerP&,
                                               const LevelP&,
                                               const ModelInfo*)
 {

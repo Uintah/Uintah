@@ -24,10 +24,7 @@
 
 // MPMArches.cc
 
-#include <cstring>
-#include <fstream>
 #include <CCA/Components/MPMArches/MPMArches.h>
-#include <Core/Geometry/Point.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <CCA/Components/Arches/BoundaryCondition.h>
@@ -37,32 +34,33 @@
 #include <CCA/Components/Arches/TurbulenceModel.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Core/Grid/LinearInterpolator.h>
+#include <CCA/Components/MPM/MPMBoundCond.h>
 #include <CCA/Components/MPM/ThermalContact/ThermalContact.h>
-#include <CCA/Components/MPMArches/MPMArchesLabel.h>
-#include <CCA/Ports/Scheduler.h>
 #include <CCA/Components/MPMArches/CutCellInfo.h>
 #include <CCA/Components/MPMArches/CutCellInfoP.h>
+#include <CCA/Components/MPMArches/MPMArchesLabel.h>
+
+#include <CCA/Ports/Output.h>
+#include <CCA/Ports/Regridder.h>
+#include <CCA/Ports/SolverInterface.h>
+#include <CCA/Ports/Scheduler.h>
+
+#include <Core/Exceptions/VariableNotFoundInGrid.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Task.h>
+#include <Core/Grid/LinearInterpolator.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/CellIterator.h>
-#include <CCA/Components/MPM/MPMBoundCond.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/NodeIterator.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Grid/Variables/ComputeSet.h>
-#include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
-#include <Core/Grid/Task.h>
-#include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Exceptions/VariableNotFoundInGrid.h>
-#include <CCA/Ports/SolverInterface.h>
-
-using namespace Uintah;
-using namespace std;
 
 #include <CCA/Components/MPMArches/fortran/collect_drag_cc_fort.h>
 #include <CCA/Components/MPMArches/fortran/collect_scalar_fctocc_fort.h>
@@ -73,6 +71,12 @@ using namespace std;
 #include <CCA/Components/MPMArches/fortran/read_complex_geometry_fort.h>
 #include <CCA/Components/MPMArches/fortran/read_complex_geometry_walls_fort.h>
 
+#include <cstring>
+#include <fstream>
+
+using namespace Uintah;
+using namespace std;
+
 // ****************************************************************************
 // Actual constructor for MPMArches
 // ****************************************************************************
@@ -80,19 +84,20 @@ using namespace std;
 #undef RIGID_MPM
 // #define RIGID_MPM
 
-  MPMArches::MPMArches(const ProcessorGroup* myworld, const bool doAMR)
-: UintahParallelComponent(myworld)
+MPMArches::MPMArches(const ProcessorGroup* myworld,
+		     const SimulationStateP sharedState)
+  : ApplicationCommon(myworld, sharedState)
 {
   Mlb  = scinew MPMLabel();
   d_MAlb = scinew MPMArchesLabel();
 #ifdef RIGID_MPM
-  d_mpm      = scinew RigidMPM(myworld);
+  d_mpm      = scinew RigidMPM(myworld, m_sharedState);
 #else
-  d_mpm      = scinew SerialMPM(myworld);
+  d_mpm      = scinew SerialMPM(myworld, m_sharedState);
 #endif
-  d_arches      = scinew Arches(myworld, doAMR);
+  d_arches      = scinew Arches(myworld, m_sharedState);
   d_SMALL_NUM = 1.e-100;
-  nofTimeSteps = 0;
+  nofTimesteps = 0;
   d_doingRestart = false;
 }
 
@@ -102,6 +107,9 @@ using namespace std;
 
 MPMArches::~MPMArches()
 {
+  d_mpm->releaseComponents();
+  d_arches->releaseComponents();
+
   delete d_MAlb;
   delete d_mpm;
   delete d_arches;
@@ -121,10 +129,20 @@ MPMArches::~MPMArches()
 // ****************************************************************************
 
 void MPMArches::problemSetup(const ProblemSpecP& prob_spec,
-    const ProblemSpecP& materials_ps,
-    GridP& grid, SimulationStateP& sharedState)
+			     const ProblemSpecP& materials_ps,
+			     GridP& grid)
 {
-  d_sharedState = sharedState;
+  //__________________________________
+  //  M P M
+  d_mpm->setComponents( this, prob_spec );
+
+  //__________________________________
+  //  A R C H E S 
+  d_arches->setComponents( this, prob_spec );
+
+  // force base read
+  dynamic_cast<ApplicationInterface*>(d_arches)->problemSetup( prob_spec );
+
 
   ProblemSpecP restart_mat_ps = 0;
   if (materials_ps){
@@ -134,7 +152,6 @@ void MPMArches::problemSetup(const ProblemSpecP& prob_spec,
     restart_mat_ps = prob_spec;
   }
 
-
   ProblemSpecP db = prob_spec->findBlock("Multimaterial");
 
   if( db.get_rep() == nullptr ) { // Make sure the Multimaterial block exists...
@@ -142,6 +159,7 @@ void MPMArches::problemSetup(const ProblemSpecP& prob_spec,
     printf("ERROR: It appears that the <Multimaterial> tag is missing from the problem specification (.ups file)...\n");
     printf("\n");
   }
+
   d_mpm->setWithARCHES();
   d_arches->setWithMPMARCHES();
 
@@ -164,28 +182,8 @@ void MPMArches::problemSetup(const ProblemSpecP& prob_spec,
   // cut cells do not currently support moving geometries
   calcVel = !dontCalcVel;
 
-  Output* dataArchiver = dynamic_cast<Output*>(getPort("output"));
-  if(!dataArchiver){
-    throw InternalError("MPMARCHES:couldn't get output port", __FILE__, __LINE__);
-  }
-  d_arches->attachPort("output",dataArchiver);
-  d_mpm->attachPort("output",dataArchiver);
-
-  Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
-  if(!sched){
-    throw InternalError("MPMARCHES:couldn't get scheduler port", __FILE__, __LINE__);
-  }
-
-  d_mpm->attachPort("scheduler",sched);
-
-  SolverInterface* solver = dynamic_cast<SolverInterface*>(getPort("solver"));
-  if(!solver){
-    throw InternalError("ARCHES needs a solver component to work", __FILE__, __LINE__);
-  }
-  d_arches->attachPort("solver", solver);
-
   d_mpm->setMPMLabel(Mlb);
-  d_mpm->problemSetup(prob_spec, materials_ps,grid, d_sharedState);
+  d_mpm->problemSetup(prob_spec, materials_ps, grid);
   // set multimaterial label in Arches to access interface variables
   d_arches->setMPMArchesLabel(d_MAlb);
 
@@ -194,7 +192,7 @@ void MPMArches::problemSetup(const ProblemSpecP& prob_spec,
   //d_Alab = d_arches->getArchesLabel();
   d_Alab = scinew ArchesLabel();
 
-  d_arches->problemSetup(prob_spec, materials_ps,grid, d_sharedState);
+  d_arches->problemSetup(prob_spec, materials_ps, grid);
 
   //Hard coding these to get it compiling.
   // d_arches->getBoundaryCondition()->setIfCalcEnergyExchange(d_calcEnergyExchange);
@@ -211,14 +209,14 @@ void MPMArches::problemSetup(const ProblemSpecP& prob_spec,
   //__________________________________
   //  create analysis modules
   // call problemSetup
-  d_analysisModules = AnalysisModuleFactory::create(prob_spec, sharedState, dataArchiver);
+  d_analysisModules = AnalysisModuleFactory::create(prob_spec, m_sharedState, m_output);
 
   if(d_analysisModules.size() != 0){
     vector<AnalysisModule*>::iterator iter;
     for( iter  = d_analysisModules.begin();
          iter != d_analysisModules.end(); iter++){
       AnalysisModule* am = *iter;
-      am->problemSetup(prob_spec, materials_ps, grid, sharedState);
+      am->problemSetup(prob_spec, materials_ps, grid, m_sharedState);
     }
   }
 
@@ -271,9 +269,9 @@ void MPMArches::scheduleInitialize(const LevelP& level,
 
 #ifdef ExactMPMArchesInitialize
   const PatchSet* patches = level->eachPatch();
-  const MaterialSet* arches_matls = d_sharedState->allArchesMaterials();
-  const MaterialSet* mpm_matls = d_sharedState->allMPMMaterials();
-  const MaterialSet* all_matls = d_sharedState->allMaterials();
+  const MaterialSet* arches_matls = m_sharedState->allArchesMaterials();
+  const MaterialSet* mpm_matls = m_sharedState->allMPMMaterials();
+  const MaterialSet* all_matls = m_sharedState->allMaterials();
 
   scheduleInterpolateParticlesToGrid(sched, patches, mpm_matls);
   scheduleInterpolateNCToCC(sched, patches, mpm_matls);
@@ -281,7 +279,7 @@ void MPMArches::scheduleInitialize(const LevelP& level,
 #endif
 
   const PatchSet* patches = level->eachPatch();
-  const MaterialSet* arches_matls = d_sharedState->allArchesMaterials();
+  const MaterialSet* arches_matls = m_sharedState->allArchesMaterials();
   scheduleInitializeKStability(sched, patches, arches_matls);
   if (d_useCutCell)
     scheduleInitializeCutCells(sched, patches, arches_matls);
@@ -317,7 +315,7 @@ void MPMArches::scheduleInitializeKStability(SchedulerP& sched,
     const PatchSet* patches,
     const MaterialSet* arches_matls)
 {
-  const MaterialSubset* mpm_matls = d_sharedState->allMPMMaterials()->getUnion();
+  const MaterialSubset* mpm_matls = m_sharedState->allMPMMaterials()->getUnion();
   // set initial values for Stability factors due to drag
   Task* t = scinew Task("MPMArches::initializeKStability",
       this, &MPMArches::initializeKStability);
@@ -351,14 +349,14 @@ void MPMArches::initializeKStability(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlindex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matlindex = m_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
-    int numMPMMatls = d_sharedState->getNumMPMMatls();
+    int numMPMMatls = m_sharedState->getNumMPMMatls();
     std::vector<CCVariable<double> > solid_fraction_cc(numMPMMatls);
 
     for (int m = 0; m < numMPMMatls; m++) {
 
-      Material* matl = d_sharedState->getMPMMaterial( m );
+      Material* matl = m_sharedState->getMPMMaterial( m );
       int dwindex = matl->getDWIndex();
       new_dw->allocateAndPut(solid_fraction_cc[m], d_MAlb->solid_fraction_CCLabel,
           dwindex, patch);
@@ -466,7 +464,7 @@ void MPMArches::initializeCutCells(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlindex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matlindex = m_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
     CCVariable<cutcell> d_CCell;
     new_dw->allocateAndPut(d_CCell, d_MAlb->cutCellLabel,
@@ -898,9 +896,9 @@ void MPMArches::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
       Ghost::AroundNodes, numGhostCells);
 
   t->computes(Mlb->gMassLabel);
-  t->computes(Mlb->gMassLabel, d_sharedState->getAllInOneMatl(),
+  t->computes(Mlb->gMassLabel, m_sharedState->getAllInOneMatl(),
       Task::OutOfDomain);
-  t->computes(Mlb->gTemperatureLabel, d_sharedState->getAllInOneMatl(),
+  t->computes(Mlb->gTemperatureLabel, m_sharedState->getAllInOneMatl(),
       Task::OutOfDomain);
   t->computes(Mlb->gVolumeLabel);
   t->computes(Mlb->gVelocityLabel);
@@ -928,7 +926,7 @@ void MPMArches::interpolateParticlesToGrid(const ProcessorGroup*,
     vector<double> S(interpolator->size());
 
 
-    int numMatls = d_sharedState->getNumMPMMatls();
+    int numMatls = m_sharedState->getNumMPMMatls();
     int numGhostCells = 1;
 
 #ifdef debugExactInitializeMPMArches
@@ -936,16 +934,16 @@ void MPMArches::interpolateParticlesToGrid(const ProcessorGroup*,
     NCVariable<double> gmassglobal;
     NCVariable<double> gtempglobal;
     new_dw->allocateAndPut(gmassglobal,Mlb->gMassLabel,
-        d_sharedState->getAllInOneMatl()->get(0), patch);
+        m_sharedState->getAllInOneMatl()->get(0), patch);
     new_dw->allocateAndPut(gtempglobal,Mlb->gTemperatureLabel,
-        d_sharedState->getAllInOneMatl()->get(0), patch);
+        m_sharedState->getAllInOneMatl()->get(0), patch);
     gmassglobal.initialize(d_mpm->d_SMALL_NUM_MPM);
     gtempglobal.initialize(0.0);
 #endif
 
     for(int m = 0; m < numMatls; m++){
 
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
       int matlindex = mpm_matl->getDWIndex();
 
       constParticleVariable<Point>  px;
@@ -1065,11 +1063,11 @@ void MPMArches::interpolateParticlesToGrid(const ProcessorGroup*,
 //______________________________________________________________________
 //
 
-void MPMArches::scheduleComputeStableTimestep(const LevelP& level,
+void MPMArches::scheduleComputeStableTimeStep(const LevelP& level,
     SchedulerP& sched)
 {
   // Schedule computing the Arches stable timestep
-  d_arches->scheduleComputeStableTimestep(level, sched);
+  d_arches->scheduleComputeStableTimeStep(level, sched);
   // MPM stable timestep is a by-product of the CM
 }
 
@@ -1080,17 +1078,17 @@ void MPMArches::scheduleTimeAdvance( const LevelP & level,
     SchedulerP   & sched)
 {
   const PatchSet* patches = level->eachPatch();
-  const MaterialSet* arches_matls = d_sharedState->allArchesMaterials();
-  const MaterialSet* mpm_matls = d_sharedState->allMPMMaterials();
-  const MaterialSet* all_matls = d_sharedState->allMaterials();
+  const MaterialSet* arches_matls = m_sharedState->allArchesMaterials();
+  const MaterialSet* mpm_matls = m_sharedState->allMPMMaterials();
+  const MaterialSet* all_matls = m_sharedState->allMaterials();
 
-  //double time = d_Alab->d_sharedState->getElapsedSimTime();
+  // double time = m_sharedState->getElapsedSimTime();
 
-  nofTimeSteps++ ;
+  nofTimesteps++ ;
   // note: this counter will only get incremented each
   // time the taskgraph is recompiled
 
-//  //  if (nofTimeSteps < 2 && !d_restart) {
+//  //  if (nofTimesteps < 2 && !d_restart) {
 //  if (time < 1.0E-10) {
 //    d_recompile = true;
 //  }
@@ -1165,9 +1163,9 @@ void MPMArches::scheduleTimeAdvance( const LevelP & level,
 
   sched->scheduleParticleRelocation(level,
                                     Mlb->pXLabel_preReloc,
-                                    d_sharedState->d_particleState_preReloc,
+                                    m_sharedState->d_particleState_preReloc,
                                     Mlb->pXLabel,
-                                    d_sharedState->d_particleState,
+                                    m_sharedState->d_particleState,
                                     Mlb->pParticleIDLabel,
                                     mpm_matls);
 }
@@ -1241,7 +1239,7 @@ void MPMArches::interpolateNCToCC(const ProcessorGroup*,
 
       Vector zero(0.0,0.0,0.);
       int numGhostCells = 1;
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
       int matlindex = mpm_matl->getDWIndex();
 
       // Create arrays for the grid data
@@ -1374,7 +1372,7 @@ void MPMArches::interpolateCCToFC(const ProcessorGroup*,
     for(int m=0;m<matls->size();m++){
 
       int numGhostCells = 1;
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
       int matlindex = mpm_matl->getDWIndex();
 
       constCCVariable<double > cmass;
@@ -1590,7 +1588,7 @@ void MPMArches::scheduleComputeVoidFracMPM(SchedulerP& sched,
 
   int zeroGhostCells = 0;
 
-//  double time = d_sharedState->getElapsedSimTime();
+//  double time = m_sharedState->getElapsedSimTime();
 //  bool recalculateVoidFrac = false;
 //  if (time < 1.0e-10 || !d_stationarySolid) recalculateVoidFrac = true;
 
@@ -1624,8 +1622,8 @@ void MPMArches::computeVoidFracMPM(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlindex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
-    int numMPMMatls = d_sharedState->getNumMPMMatls();
+    int matlindex = m_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int numMPMMatls = m_sharedState->getNumMPMMatls();
     int zeroGhostCells = 0;
 
     std::vector<constCCVariable<double> > mat_vol(numMPMMatls);
@@ -1636,7 +1634,7 @@ void MPMArches::computeVoidFracMPM(const ProcessorGroup*,
     CCVariable<double> void_frac;
     CCVariable<double> solid_sum;
 
-    double time = d_sharedState->getElapsedSimTime();
+    double time = m_sharedState->getElapsedSimTime();
     bool recalculateVoidFrac = false;
     if (time < 1.0e-10 || !d_stationarySolid) recalculateVoidFrac = true;
     bool recalculateSolidFrac = recalculateVoidFrac;
@@ -1644,7 +1642,7 @@ void MPMArches::computeVoidFracMPM(const ProcessorGroup*,
     // get and allocate
 
     for (int m = 0; m < numMPMMatls; m++) {
-      Material* matl = d_sharedState->getMPMMaterial( m );
+      Material* matl = m_sharedState->getMPMMaterial( m );
       int dwindex = matl->getDWIndex();
       new_dw->get(mat_vol[m], d_MAlb->cVolumeLabel,
           dwindex, patch, Ghost::None, zeroGhostCells);
@@ -1652,14 +1650,14 @@ void MPMArches::computeVoidFracMPM(const ProcessorGroup*,
     old_dw->get(oldVoidFrac, d_MAlb->void_frac_MPM_CCLabel,
         matlindex, patch, Ghost::None, zeroGhostCells);
     for (int m = 0; m < numMPMMatls; m++) {
-      Material* matl = d_sharedState->getMPMMaterial( m );
+      Material* matl = m_sharedState->getMPMMaterial( m );
       int dwindex = matl->getDWIndex();
       old_dw->get(oldSolidFrac[m], d_MAlb->solid_fraction_CCLabel,
           dwindex, patch, Ghost::None, zeroGhostCells);
     }
 
     for (int m = 0; m < numMPMMatls; m++) {
-      Material* matl = d_sharedState->getMPMMaterial( m );
+      Material* matl = m_sharedState->getMPMMaterial( m );
       int dwindex = matl->getDWIndex();
       new_dw->allocateAndPut(solid_fraction_cc[m], d_MAlb->solid_fraction_CCLabel,
           dwindex, patch);
@@ -1813,7 +1811,7 @@ void MPMArches::copyCutCells(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = m_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
     constCCVariable<double> oldNormal1;
     CCVariable<double> normal1;
@@ -1969,7 +1967,7 @@ void MPMArches::scheduleComputeVoidFrac(SchedulerP& sched,
 
   int zeroGhostCells = 0;
 
-//  double time = d_sharedState->getElapsedSimTime();
+//  double time = m_sharedState->getElapsedSimTime();
 //  if (time < 1.0E-10)
 //    d_recompile = true;
 
@@ -1998,8 +1996,8 @@ void MPMArches::computeVoidFrac(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
-    int numMPMMatls = d_sharedState->getNumMPMMatls();
+    int matlIndex = m_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int numMPMMatls = m_sharedState->getNumMPMMatls();
     std::vector<constCCVariable<double> > solid_fraction_cc_old(numMPMMatls);
     std::vector<CCVariable<double> > solid_fraction_cc(numMPMMatls);
 
@@ -2081,8 +2079,8 @@ void MPMArches::computeIntegratedSolidProps(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlindex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
-    int numMPMMatls = d_sharedState->getNumMPMMatls();
+    int matlindex = m_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int numMPMMatls = m_sharedState->getNumMPMMatls();
     std::vector<constCCVariable<double> > solid_fraction_cc(numMPMMatls);
     std::vector<constCCVariable<double> > tempSolid_CC(numMPMMatls);
     std::vector<constCCVariable<double> > hTSolid_CC(numMPMMatls);
@@ -2096,7 +2094,7 @@ void MPMArches::computeIntegratedSolidProps(const ProcessorGroup*,
 
     for (int m = 0; m < numMPMMatls; m++) {
 
-      Material* matl = d_sharedState->getMPMMaterial( m );
+      Material* matl = m_sharedState->getMPMMaterial( m );
       int dwindex = matl->getDWIndex();
 
       new_dw->get(solid_fraction_cc[m], d_MAlb->solid_fraction_CCLabel,
@@ -2224,7 +2222,7 @@ void MPMArches::computeTotalHT(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlindex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matlindex = m_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
     constCCVariable<double> integHTS_CC;
     constSFCXVariable<double> integHTS_FCX;
@@ -2636,8 +2634,8 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
-    int numMPMMatls  = d_sharedState->getNumMPMMatls();
+    int matlIndex = m_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int numMPMMatls  = m_sharedState->getNumMPMMatls();
 
     // MPM stuff
 
@@ -2861,7 +2859,7 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
 
     for (int m = 0; m < numMPMMatls; m++) {
 
-      Material* matl = d_sharedState->getMPMMaterial( m );
+      Material* matl = m_sharedState->getMPMMaterial( m );
       int idx = matl->getDWIndex();
 
       new_dw->get(solid_fraction_cc[m], d_MAlb->solid_fraction_CCLabel,
@@ -3134,7 +3132,7 @@ void MPMArches::collectToCCGasMomExchSrcs(const ProcessorGroup*,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = m_sharedState->getArchesMaterial(archIndex)->getDWIndex();
     CCVariable<double> su_dragx_cc;
     constSFCYVariable<double> su_dragx_fcy;
     constSFCZVariable<double> su_dragx_fcz;
@@ -3316,7 +3314,7 @@ void MPMArches::interpolateCCToFCGasMomExchSrcs(const ProcessorGroup*,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = m_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
     constCCVariable<double> su_dragx_cc;
     constCCVariable<double> sp_dragx_cc;
@@ -3474,7 +3472,7 @@ void MPMArches::redistributeDragForceFromCCtoFC(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    int numMPMMatls  = d_sharedState->getNumMPMMatls();
+    int numMPMMatls  = m_sharedState->getNumMPMMatls();
     // MPM stuff
 
     CCVariable<double> dragForceX_cc;
@@ -3489,7 +3487,7 @@ void MPMArches::redistributeDragForceFromCCtoFC(const ProcessorGroup*,
 
     for (int m = 0; m < numMPMMatls; m++) {
 
-      Material* matl = d_sharedState->getMPMMaterial( m );
+      Material* matl = m_sharedState->getMPMMaterial( m );
       int idx = matl->getDWIndex();
 
       new_dw->get(dragForceX_cc, d_MAlb->DragForceX_CCLabel,
@@ -3770,8 +3768,8 @@ void MPMArches::doEnergyExchange(const ProcessorGroup*,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
-    int numMPMMatls  = d_sharedState->getNumMPMMatls();
+    int matlIndex = m_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int numMPMMatls  = m_sharedState->getNumMPMMatls();
     Vector Dx = patch->dCell();
 
     // MPM stuff
@@ -3858,7 +3856,7 @@ void MPMArches::doEnergyExchange(const ProcessorGroup*,
 
     for (int m = 0; m < numMPMMatls; m++) {
 
-      Material* matl = d_sharedState->getMPMMaterial( m );
+      Material* matl = m_sharedState->getMPMMaterial( m );
       int idx = matl->getDWIndex();
 
       int zeroGhostCells = 0;
@@ -4200,7 +4198,7 @@ void MPMArches::collectToCCGasEnergyExchSrcs(const ProcessorGroup*,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = m_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
     constSFCXVariable<double> su_enth_fcx;
     constSFCYVariable<double> su_enth_fcy;
@@ -4323,7 +4321,7 @@ void MPMArches::putAllForcesOnCC(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     for(int m=0;m<matls->size();m++){
 
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
       int matlindex = mpm_matl->getDWIndex();
       int numGhostCells = 1;
       int zeroGhostCells = 0;
@@ -4500,7 +4498,7 @@ void MPMArches::putAllForcesOnNC(const ProcessorGroup*,
 
     for(int m=0;m<matls->size();m++){
 
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
       int matlindex = mpm_matl->getDWIndex();
       constCCVariable<Vector> acc_archesCC;
       NCVariable<Vector> acc_archesNC;
@@ -4569,7 +4567,7 @@ void MPMArches::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
   Task* t = scinew Task("MPMArches::computeAndIntegrateAcceleration",
       this, &MPMArches::computeAndIntegrateAcceleration);
 
-  t->requires(Task::OldDW, d_sharedState->get_delt_label() );
+  t->requires(Task::OldDW, m_sharedState->get_delt_label() );
 
   t->requires(Task::NewDW, Mlb->gMassLabel,          Ghost::None);
   t->requires(Task::NewDW, Mlb->gInternalForceLabel, Ghost::None);
@@ -4593,15 +4591,15 @@ void MPMArches::computeAndIntegrateAcceleration(const ProcessorGroup* pg,
 
     Ghost::GhostType  gnone = Ghost::None;
     //    Vector gravity = d_mpm->flags->d_gravity;
-    for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+    for(int m = 0; m < m_sharedState->getNumMPMMatls(); m++){
+      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
 
       constNCVariable<Vector> internalforce, externalforce, velocity;
       constNCVariable<double> mass;
 
       delt_vartype delT;
-      old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
+      old_dw->get(delT, m_sharedState->get_delt_label(), getLevel(patches) );
 
       new_dw->get(internalforce,Mlb->gInternalForceLabel, dwi, patch, gnone, 0);
       new_dw->get(externalforce,Mlb->gExternalForceLabel, dwi, patch, gnone, 0);
@@ -4655,8 +4653,8 @@ void MPMArches::solveHeatEquations(const ProcessorGroup* pg,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+    for(int m = 0; m < m_sharedState->getNumMPMMatls(); m++){
+      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
       double Cv = mpm_matl->getSpecificHeat();
 
@@ -4690,12 +4688,12 @@ bool MPMArches::needRecompile(double time, double dt,
     return d_recompile;
   }
 }
-double MPMArches::recomputeTimestep(double current_dt) {
-  return d_arches->recomputeTimestep(current_dt);
+double MPMArches::recomputeTimeStep(double current_dt) {
+  return d_arches->recomputeTimeStep(current_dt);
 }
 
-bool MPMArches::restartableTimesteps() {
-  return d_arches->restartableTimesteps();
+bool MPMArches::restartableTimeSteps() {
+  return d_arches->restartableTimeSteps();
 }
 
 namespace Uintah {

@@ -431,24 +431,24 @@ UnifiedScheduler::problemSetup( const ProblemSpecP     & prob_spec
   // this spawns threads, sets affinity, etc
   init_threads(this, m_num_threads);
 
-#ifdef HAVE_VISIT
-  static bool initialized = false;
+// #ifdef HAVE_VISIT
+//   static bool initialized = false;
 
-  // Running with VisIt so add in the variables that the user can
-  // modify.
-  if( m_shared_state->getVisIt() && !initialized ) {
-    m_shared_state->d_douts.push_back( &g_dbg  );
-    m_shared_state->d_douts.push_back( &g_queuelength  );
+//   // Running with VisIt so add in the variables that the user can
+//   // modify.
+//   if( m_shared_state->getVisIt() && !initialized ) {
+//     m_shared_state->d_douts.push_back( &g_dbg  );
+//     m_shared_state->d_douts.push_back( &g_queuelength  );
 
-#ifdef HAVE_CUDA
-    m_shared_state->d_debugStreams.push_back( &gpu_stats  );
-    m_shared_state->d_debugStreams.push_back( &simulate_multiple_gpus  );
-    m_shared_state->d_debugStreams.push_back( &gpudbg  );
-#endif
+// #ifdef HAVE_CUDA
+//     m_shared_state->d_debugStreams.push_back( &gpu_stats  );
+//     m_shared_state->d_debugStreams.push_back( &simulate_multiple_gpus  );
+//     m_shared_state->d_debugStreams.push_back( &gpudbg  );
+// #endif
     
-    initialized = true;
-  }
-#endif
+//     initialized = true;
+//   }
+// #endif
 }
 
 //______________________________________________________________________
@@ -560,7 +560,7 @@ UnifiedScheduler::runTask( DetailedTask*         dtask
       if (!dtask->getTask()->getHasSubScheduler()) {
         //add my task time to the total time
         mpi_info_[TotalTask] += total_task_time;
-        if (!m_shared_state->isCopyDataTimestep() &&
+        if (!m_is_copy_data_timestep &&
 	    dtask->getTask()->getType() != Task::Output) {
           //add contribution for patchlist
           getLoadBalancer()->addContribution(dtask, total_task_time);
@@ -613,7 +613,7 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
 {
   // copy data timestep must be single threaded for now and
   //  also needs to run deterministically, in a static order
-  if (m_shared_state->isCopyDataTimestep()) {
+  if (m_is_copy_data_timestep) {
     MPIScheduler::execute( tgnum, iteration );
     return;
   }
@@ -696,7 +696,7 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
   //------------------------------------------------------------------------------------------------
   // activate TaskRunners
   //------------------------------------------------------------------------------------------------
-  if (!m_shared_state->isCopyDataTimestep()) {
+  if (!m_is_copy_data_timestep) {
     Impl::g_run_tasks.store(1, std::memory_order_relaxed);
     for (int i = 1; i < Impl::g_num_threads; ++i) {
       Impl::g_thread_states[i] = Impl::ThreadState::Active;
@@ -712,7 +712,7 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
   //------------------------------------------------------------------------------------------------
   // deactivate TaskRunners
   //------------------------------------------------------------------------------------------------
-  if (!m_shared_state->isCopyDataTimestep()) {
+  if (!m_is_copy_data_timestep) {
     Impl::g_run_tasks.store(0, std::memory_order_relaxed);
 
     Impl::thread_fence();
@@ -783,10 +783,10 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
 
     // Stats specific to this threaded scheduler - TaskRunner threads start at g_runners[1]
     for (int i = 1; i < m_num_threads; ++i) {
-      m_shared_state->d_runTimeStats[SimulationState::TaskWaitThreadTime] += Impl::g_runners[i]->getWaitTime();
+      (*d_runTimeStats)[TaskWaitThreadTime] += Impl::g_runners[i]->getWaitTime();
     }
 
-    MPIScheduler::computeNetRunTimeStats(m_shared_state->d_runTimeStats);
+    MPIScheduler::computeNetRunTimeStats();
   }
 
   // only do on toplevel scheduler

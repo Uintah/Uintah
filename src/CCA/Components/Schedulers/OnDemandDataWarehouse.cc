@@ -346,6 +346,8 @@ OnDemandDataWarehouse::get(       ReductionVariableBase& var,
 {
   checkGetAccess( label, matlIndex, 0 );
   if( !d_levelDB.exists( label, matlIndex, level ) ) {
+    // std::vector<int> junk;
+    // std::cerr << junk[99999999999] << std::endl;
     SCI_THROW( UnknownVariable(label->getName(), getID(), level, matlIndex, "on reduction", __FILE__, __LINE__) );
   }
 
@@ -896,7 +898,7 @@ OnDemandDataWarehouse::recvMPI(       DependencyBatch       * batch,
           int allocated_particles = old_dw->d_foreignParticleQuantities[std::make_pair( matlIndex, patch )];
           var->allocate( allocated_particles );
         }
-        d_varDB.put( label, matlIndex, patch, var, d_scheduler->isCopyDataTimestep(), true );
+        d_varDB.put( label, matlIndex, patch, var, d_scheduler->copyTimestep(), true );
       }
 
       if( recvset->numParticles() > 0 && !(lb && lb->getOldProcessorAssignment( patch ) == d_myworld->myRank()
@@ -929,7 +931,7 @@ OnDemandDataWarehouse::recvMPI(       DependencyBatch       * batch,
                                    << "  from proc: " << lb->getPatchwiseProcessorAssignment( patch )
                                    << "  low: " << low << "  high: " << high << " sizes: " << size);
 
-      d_varDB.putForeign( label, matlIndex, patch, var, d_scheduler->isCopyDataTimestep() );  //put new var in data warehouse
+      d_varDB.putForeign( label, matlIndex, patch, var, d_scheduler->copyTimestep() );  //put new var in data warehouse
       var->getMPIBuffer( buffer, dep->m_low, dep->m_high );
     }
       break;
@@ -976,7 +978,7 @@ OnDemandDataWarehouse::reduceMPI( const VarLabel       * label,
       var->setBenignValue();
 
       // put it in the db so the next get won't fail and so we won't have to delete it manually
-      d_levelDB.put( label, matlIndex, level, var, d_scheduler->isCopyDataTimestep(), true );
+      d_levelDB.put( label, matlIndex, level, var, d_scheduler->copyTimestep(), true );
     }
 
     int sendcount;
@@ -1059,7 +1061,7 @@ OnDemandDataWarehouse::put( const ReductionVariableBase& var,
                           task graph */);
 
   // Put it in the database
-  bool init = (d_scheduler->isCopyDataTimestep()) || !(d_levelDB.exists( label, matlIndex, level ));
+  bool init = (d_scheduler->copyTimestep()) || !(d_levelDB.exists( label, matlIndex, level ));
   d_levelDB.putReduce( label, matlIndex, level, var.clone(), init );
 
 }
@@ -1089,7 +1091,7 @@ OnDemandDataWarehouse::override( const SoleVariableBase & var,
   checkPutAccess(label, matlIndex, 0, true);
 
   // Put it in the database, replace whatever may already be there
-  d_levelDB.put(label, matlIndex, level, var.clone(), d_scheduler->isCopyDataTimestep(), true);
+  d_levelDB.put(label, matlIndex, level, var.clone(), d_scheduler->copyTimestep(), true);
 }
 
 //______________________________________________________________________
@@ -1109,7 +1111,7 @@ OnDemandDataWarehouse::put( const SoleVariableBase& var,
                           task graph */);
   // Put it in the database
   if (!d_levelDB.exists(label, matlIndex, level)) {
-    d_levelDB.put(label, matlIndex, level, var.clone(), d_scheduler->isCopyDataTimestep(), false);
+    d_levelDB.put(label, matlIndex, level, var.clone(), d_scheduler->copyTimestep(), false);
   }
 }
 
@@ -1749,7 +1751,7 @@ OnDemandDataWarehouse::put(       ParticleVariableBase& var,
   // Put it in the database
   printDebuggingPutInfo( label, matlIndex, patch, __LINE__ );
 
-  d_varDB.put( label, matlIndex, patch, var.clone(), d_scheduler->isCopyDataTimestep(), replace );
+  d_varDB.put( label, matlIndex, patch, var.clone(), d_scheduler->copyTimestep(), replace );
 }
 
 //______________________________________________________________________
@@ -1889,7 +1891,7 @@ OnDemandDataWarehouse::allocateAndPut(       GridVariableBase& var,
 
     // put the variable in the database
     printDebuggingPutInfo( label, matlIndex, patch, __LINE__ );
-    d_varDB.put(label, matlIndex, patch, var.clone(), d_scheduler->isCopyDataTimestep(), true);
+    d_varDB.put(label, matlIndex, patch, var.clone(), d_scheduler->copyTimestep(), true);
   }
   else {
     {
@@ -1911,7 +1913,7 @@ OnDemandDataWarehouse::allocateAndPut(       GridVariableBase& var,
           // It wasn't allocated as part of another patch's superpatch;
           // it existed as ghost patch of another patch.. so we have no
           // choice but to blow it away and replace it.
-          d_varDB.put(label, matlIndex, patch, 0, d_scheduler->isCopyDataTimestep(), true);
+          d_varDB.put(label, matlIndex, patch, 0, d_scheduler->copyTimestep(), true);
 
           // this is just a tricky way to uninitialize var
           Variable* tmpVar = dynamic_cast<Variable*>(var.cloneType());
@@ -2061,7 +2063,7 @@ OnDemandDataWarehouse::allocateAndPut(       GridVariableBase& var,
             // so replace the old one
             printDebuggingPutInfo(label, matlIndex, patchGroupMember, __LINE__);
 
-            d_varDB.put(label, matlIndex, patchGroupMember, clone, d_scheduler->isCopyDataTimestep(), true);
+            d_varDB.put(label, matlIndex, patchGroupMember, clone, d_scheduler->copyTimestep(), true);
           } else {
             // Either the old ghost variable section encloses this new one
             // (so leave it), or neither encloses the other (so just forget
@@ -2073,7 +2075,7 @@ OnDemandDataWarehouse::allocateAndPut(       GridVariableBase& var,
           // it didn't exist before -- add it
           printDebuggingPutInfo(label, matlIndex, patchGroupMember, __LINE__);
 
-          d_varDB.put(label, matlIndex, patchGroupMember, clone, d_scheduler->isCopyDataTimestep(), false);
+          d_varDB.put(label, matlIndex, patchGroupMember, clone, d_scheduler->copyTimestep(), false);
         }
       }
     } // end varDB_lock{ Uintah::CrowdMonitor<varDB_tag>::WRITER }
@@ -2149,7 +2151,7 @@ OnDemandDataWarehouse::put(       GridVariableBase& var,
    // error would have been thrown above if the any reallocation would be
    // needed
    ASSERT(no_realloc);
-   d_varDB.put(label, matlIndex, patch, var.clone(), d_scheduler->isCopyDataTimestep(),true);
+   d_varDB.put(label, matlIndex, patch, var.clone(), d_scheduler->copyTimestep(),true);
 }
 
 //______________________________________________________________________
@@ -2181,7 +2183,7 @@ OnDemandDataWarehouse::put(       PerPatchBase& var,
   checkPutAccess( label, matlIndex, patch, replace );
 
   // Put it in the database
-  d_varDB.put( label, matlIndex, patch, var.clone(), d_scheduler->isCopyDataTimestep(), true );
+  d_varDB.put( label, matlIndex, patch, var.clone(), d_scheduler->copyTimestep(), true );
 }
 
 //______________________________________________________________________
@@ -2317,7 +2319,7 @@ OnDemandDataWarehouse::putLevelDB(       GridVariableBase* gridVar,
                                          int               matlIndex /* = -1 */ )
 {
   // Put it in the level database
-  bool init = (d_scheduler->isCopyDataTimestep()) || !(d_levelDB.exists( label, matlIndex, level ));
+  bool init = (d_scheduler->copyTimestep()) || !(d_levelDB.exists( label, matlIndex, level ));
 
   //GridVariableBase* v = dynamic_cast<GridVariableBase*>( &constGridVar )->clone();
   d_levelDB.put( label, matlIndex, level, gridVar, init, true );
@@ -3230,7 +3232,7 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse*  from,
             found = true;
             GridVariableBase* v =
                 dynamic_cast<GridVariableBase*>( fromDW->d_varDB.get( var, matl, patch ) )->clone();
-            d_varDB.put( var, matl, copyPatch, v, d_scheduler->isCopyDataTimestep(), replace );
+            d_varDB.put( var, matl, copyPatch, v, d_scheduler->copyTimestep(), replace );
           }
 
 #ifdef HAVE_CUDA
@@ -3284,13 +3286,13 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse*  from,
 
           ParticleVariableBase* v = dynamic_cast<ParticleVariableBase*>( fromDW->d_varDB.get( var, matl, patch ) );
           if( patch == copyPatch ) {
-            d_varDB.put( var, matl, copyPatch, v->clone(), d_scheduler->isCopyDataTimestep(), replace );
+            d_varDB.put( var, matl, copyPatch, v->clone(), d_scheduler->copyTimestep(), replace );
           }
           else {
             ParticleVariableBase* newv = v->cloneType();
             newv->copyPointer( *v );
             newv->setParticleSubset( subset );
-            d_varDB.put( var, matl, copyPatch, newv, d_scheduler->isCopyDataTimestep(), replace );
+            d_varDB.put( var, matl, copyPatch, newv, d_scheduler->copyTimestep(), replace );
           }
         }
           break;
@@ -3299,7 +3301,7 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse*  from,
             SCI_THROW(UnknownVariable(var->getName(), getID(), patch, matl, "in transferFrom", __FILE__, __LINE__) );
           }
           PerPatchBase* v = dynamic_cast<PerPatchBase*>( fromDW->d_varDB.get( var, matl, patch ) );
-          d_varDB.put( var, matl, copyPatch, v->clone(), d_scheduler->isCopyDataTimestep(), replace );
+          d_varDB.put( var, matl, copyPatch, v->clone(), d_scheduler->copyTimestep(), replace );
         }
           break;
         case TypeDescription::ReductionVariable :

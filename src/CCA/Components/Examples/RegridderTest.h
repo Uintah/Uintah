@@ -25,8 +25,8 @@
 #ifndef Packages_Uintah_CCA_Components_Examples_RegridderTest_h
 #define Packages_Uintah_CCA_Components_Examples_RegridderTest_h
 
-#include <Core/Parallel/UintahParallelComponent.h>
-#include <CCA/Ports/SimulationInterface.h>
+#include <CCA/Components/Application/ApplicationCommon.h>
+
 #include <Core/Geometry/Vector.h>
 
 namespace Uintah
@@ -63,18 +63,20 @@ WARNING
   
 ****************************************/
 
-  class RegridderTest: public UintahParallelComponent, public SimulationInterface {
+  class RegridderTest: public ApplicationCommon {
   public:
-    RegridderTest ( const ProcessorGroup* myworld );
+    RegridderTest ( const ProcessorGroup* myworld,
+		    const SimulationStateP sharedState );
+
     virtual ~RegridderTest ( void );
 
     // Interface inherited from Simulation Interface
     virtual void problemSetup(const ProblemSpecP& params, 
                               const ProblemSpecP& restart_prob_spec, 
-                              GridP& grid, SimulationStateP& state );
+                              GridP& grid);
     virtual void scheduleInitialize            ( const LevelP& level, SchedulerP& scheduler );
     virtual void scheduleRestartInitialize     ( const LevelP& level, SchedulerP& scheduler );
-    virtual void scheduleComputeStableTimestep ( const LevelP& level, SchedulerP& scheduler );
+    virtual void scheduleComputeStableTimeStep ( const LevelP& level, SchedulerP& scheduler );
     virtual void scheduleTimeAdvance           ( const LevelP& level, SchedulerP& scheduler);
     virtual void scheduleErrorEstimate         ( const LevelP& level, SchedulerP& scheduler );
     virtual void scheduleInitialErrorEstimate  ( const LevelP& level, SchedulerP& scheduler );
@@ -87,7 +89,7 @@ WARNING
                       const PatchSubset* patches, const MaterialSubset* matls,
                       DataWarehouse* old_dw, DataWarehouse* new_dw );
 
-    void computeStableTimestep ( const ProcessorGroup*,
+    void computeStableTimeStep ( const ProcessorGroup*,
                                  const PatchSubset* patches,
                                  const MaterialSubset* matls,
                                  DataWarehouse* old_dw, DataWarehouse* new_dw );
@@ -113,7 +115,6 @@ WARNING
                   DataWarehouse*, DataWarehouse* new_dw);
 
     ExamplesLabel*   d_examplesLabel;
-    SimulationStateP d_sharedState;
     SimpleMaterial*  d_material;
 
     VarLabel* d_oldDensityLabel;

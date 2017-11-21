@@ -44,7 +44,7 @@
      <checkpoint cycle = "2" timestepInterval = "10"/>
   </DataArchiver>
    <!--__________________________________-->
-  <AMR>
+   <AMR type="StaticGridML" >
      <useLockStep> true </useLockStep>
      <MPM>
        <manualGrid> true </manualGrid>

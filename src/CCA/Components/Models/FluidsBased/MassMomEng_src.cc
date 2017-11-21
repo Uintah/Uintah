@@ -114,7 +114,7 @@ void MassMomEng_src::scheduleInitialize(SchedulerP&,
 }
 
 //______________________________________________________________________     
-void MassMomEng_src::scheduleComputeStableTimestep(SchedulerP&,
+void MassMomEng_src::scheduleComputeStableTimeStep(SchedulerP&,
                                               const LevelP&,
                                               const ModelInfo*)
 {

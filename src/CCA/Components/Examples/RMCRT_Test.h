@@ -25,11 +25,11 @@
 #ifndef Packages_Uintah_CCA_Components_Examples_RMCRT_Test_h
 #define Packages_Uintah_CCA_Components_Examples_RMCRT_Test_h
 
+#include <CCA/Components/Application/ApplicationCommon.h>
+
 #include <CCA/Components/Models/Radiation/RMCRT/Ray.h>
-#include <CCA/Ports/SimulationInterface.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Grid/Patch.h>
-#include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/GeometryPiece/GeometryPiece.h>
 
@@ -70,20 +70,22 @@ WARNING
   
 ****************************************/
 
-  class RMCRT_Test: public UintahParallelComponent, public SimulationInterface {
+  class RMCRT_Test : public ApplicationCommon {
 
   public:
 
-    RMCRT_Test ( const ProcessorGroup* myworld );
+    RMCRT_Test ( const ProcessorGroup* myworld,
+		 const SimulationStateP sharedState );
+    
     virtual ~RMCRT_Test ( void );
 
     // Interface inherited from Simulation Interface
     virtual void problemSetup(const ProblemSpecP& params, 
                               const ProblemSpecP& restart_prob_spec, 
-                              GridP& grid, SimulationStateP& state );
+                              GridP& grid );
     virtual void scheduleInitialize            ( const LevelP& level, SchedulerP& scheduler );
     virtual void scheduleRestartInitialize     ( const LevelP& level, SchedulerP& scheduler );
-    virtual void scheduleComputeStableTimestep ( const LevelP& level, SchedulerP& scheduler );
+    virtual void scheduleComputeStableTimeStep ( const LevelP& level, SchedulerP& scheduler );
     virtual void scheduleTimeAdvance           ( const LevelP& level, SchedulerP& scheduler);
     virtual void scheduleInitialErrorEstimate  ( const LevelP& level, SchedulerP& scheduler );
     virtual void scheduleCoarsen               ( const LevelP& level, SchedulerP& scheduler );
@@ -106,7 +108,7 @@ WARNING
                             DataWarehouse*,
                             DataWarehouse* new_dw);
 
-    void computeStableTimestep ( const ProcessorGroup*,
+    void computeStableTimeStep ( const ProcessorGroup*,
                                  const PatchSubset* patches,
                                  const MaterialSubset* matls,
                                  DataWarehouse* old_dw, 
@@ -143,7 +145,6 @@ WARNING
     
     Ray* d_RMCRT{nullptr};
     
-    SimulationStateP d_sharedState;
     SimpleMaterial*  d_material{nullptr};
 
     VarLabel* d_colorLabel{nullptr};

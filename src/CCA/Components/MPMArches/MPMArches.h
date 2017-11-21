@@ -53,13 +53,8 @@ WARNING
 
 ****************************************/
 
-#include <Core/Parallel/UintahParallelComponent.h>
-#include <Core/ProblemSpec/ProblemSpecP.h>
-#include <Core/Grid/GridP.h>
-#include <Core/Grid/LevelP.h>
-#include <Core/Grid/Patch.h>
-#include <CCA/Ports/DataWarehouseP.h>
-#include <CCA/Ports/SimulationInterface.h>
+// NOTE: SOMETHING IS FUBAR IN THE DEFINITION OF cutcell AS IT RELATES TO
+// swapbytes. AS SUCH, THEY MUST BE DEFINED BEFORE ApplicationCommon.h
 
 namespace Uintah {
  struct cutcell { double d_cutcell[13]; }; //centroids/surface normals/areafractions
@@ -70,6 +65,13 @@ namespace Uintah {
   void swapbytes( Uintah::cutcell& );
 
 }
+
+#include <CCA/Components/Application/ApplicationCommon.h>
+
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Grid/GridP.h>
+#include <Core/Grid/LevelP.h>
+#include <Core/Grid/Patch.h>
 
 #include <CCA/Components/MPM/Contact/Contact.h>
 #include <CCA/Components/MPM/SerialMPM.h>
@@ -88,15 +90,17 @@ namespace Uintah {
 
  const TypeDescription* fun_getTypeDescription(cutcell*);
 
-class MPMArches : public UintahParallelComponent, public SimulationInterface {
+class MPMArches : public ApplicationCommon {
 public:
-  MPMArches(const ProcessorGroup* myworld, const bool doAMR);
+  MPMArches(const ProcessorGroup* myworld,
+	    const SimulationStateP sharedState);
+  
   virtual ~MPMArches();
 
   // Read inputs from ups file for MPMArches case
   virtual void problemSetup(const ProblemSpecP& params, 
                             const ProblemSpecP& materials_ps,
-                            GridP& grid, SimulationStateP&);
+                            GridP& grid);
 
   virtual void restartInitialize();
 
@@ -124,7 +128,7 @@ public:
 						  const MaterialSet* matls);
 
   //////////
-  virtual void scheduleComputeStableTimestep(const LevelP& level,
+  virtual void scheduleComputeStableTimeStep(const LevelP& level,
 					     SchedulerP&);
 	 
   //////////
@@ -232,9 +236,9 @@ public:
 
     virtual bool needRecompile(double time, double dt,
 			       const GridP& grid);
-      virtual double recomputeTimestep(double current_dt);
+      virtual double recomputeTimeStep(double current_dt);
       
-      virtual bool restartableTimesteps();
+      virtual bool restartableTimeSteps();
 
  protected:
 
@@ -361,7 +365,6 @@ public:
   MPMArches(const MPMArches&);
   MPMArches& operator=(const MPMArches&);
 	 
-  SimulationStateP d_sharedState;
   MPMLabel* Mlb;
   const ArchesLabel* d_Alab;
   const MPMArchesLabel* d_MAlb;
@@ -383,7 +386,7 @@ public:
   bool d_calcEnergyExchange;
   bool d_DORad;
   bool d_radiation;
-  int nofTimeSteps;
+  int nofTimesteps;
   bool d_recompile;
   double prturb;
   double cpfluid;

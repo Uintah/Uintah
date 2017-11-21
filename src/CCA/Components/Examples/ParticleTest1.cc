@@ -43,8 +43,9 @@ using namespace std;
 
 using namespace Uintah;
 
-ParticleTest1::ParticleTest1(const ProcessorGroup* myworld)
-  : UintahParallelComponent(myworld)
+ParticleTest1::ParticleTest1(const ProcessorGroup* myworld,
+			     const SimulationStateP sharedState)
+  : ApplicationCommon(myworld, sharedState)
 {
   lb_ = scinew ExamplesLabel();
 }
@@ -56,16 +57,15 @@ ParticleTest1::~ParticleTest1()
 
 void ParticleTest1::problemSetup(const ProblemSpecP& params, 
                                  const ProblemSpecP& restart_prob_spec, 
-                                 GridP& /*grid*/,SimulationStateP& sharedState)
+                                 GridP& /*grid*/)
 {
-  sharedState_ = sharedState;
   dynamic_cast<Scheduler*>(getPort("scheduler"))->setPositionVar(lb_->pXLabel);
   ProblemSpecP pt1 = params->findBlock("ParticleTest1");
   pt1->getWithDefault("doOutput", doOutput_, 0);
   pt1->getWithDefault("doGhostCells", doGhostCells_ , 0);
   
   mymat_ = scinew SimpleMaterial();
-  sharedState_->registerSimpleMaterial(mymat_);
+  m_sharedState->registerSimpleMaterial(mymat_);
 
 }
  
@@ -77,7 +77,7 @@ void ParticleTest1::scheduleInitialize(const LevelP& level,
   task->computes(lb_->pXLabel);
   task->computes(lb_->pMassLabel);
   task->computes(lb_->pParticleIDLabel);
-  sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
+  sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
 }
  
 void ParticleTest1::scheduleRestartInitialize(const LevelP& level,
@@ -85,20 +85,20 @@ void ParticleTest1::scheduleRestartInitialize(const LevelP& level,
 {
 }
 
-void ParticleTest1::scheduleComputeStableTimestep(const LevelP& level,
+void ParticleTest1::scheduleComputeStableTimeStep(const LevelP& level,
                                           SchedulerP& sched)
 {
-  Task* task = scinew Task("computeStableTimestep",
-                           this, &ParticleTest1::computeStableTimestep);
-  task->computes(sharedState_->get_delt_label(),level.get_rep());
-  sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
+  Task* task = scinew Task("computeStableTimeStep",
+                           this, &ParticleTest1::computeStableTimeStep);
+  task->computes(m_sharedState->get_delt_label(),level.get_rep());
+  sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
 
 }
 
 void
 ParticleTest1::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
-  const MaterialSet* matls = sharedState_->allMaterials();
+  const MaterialSet* matls = m_sharedState->allMaterials();
 
   Task* task = scinew Task("timeAdvance",
                            this, &ParticleTest1::timeAdvance);
@@ -125,7 +125,7 @@ ParticleTest1::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
   task->computes(lb_->pXLabel_preReloc);
   task->computes(lb_->pMassLabel_preReloc);
   task->computes(lb_->pParticleIDLabel_preReloc);
-  sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
+  sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
 
   lb_->d_particleState.clear();
   lb_->d_particleState_preReloc.clear();
@@ -149,13 +149,13 @@ ParticleTest1::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 
 }
 
-void ParticleTest1::computeStableTimestep(const ProcessorGroup* /*pg*/,
+void ParticleTest1::computeStableTimeStep(const ProcessorGroup* /*pg*/,
                                      const PatchSubset* patches,
                                      const MaterialSubset* /*matls*/,
                                      DataWarehouse*,
                                      DataWarehouse* new_dw)
 {
-  new_dw->put(delt_vartype(1), sharedState_->get_delt_label(),getLevel(patches));
+  new_dw->put(delt_vartype(1), m_sharedState->get_delt_label(),getLevel(patches));
 }
 
 void ParticleTest1::initialize(const ProcessorGroup*,

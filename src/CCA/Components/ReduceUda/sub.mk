@@ -40,6 +40,7 @@ SRCS     += \
        $(SRCDIR)/spatioTemporalAvg.cc
 
 PSELIBS := \
+	CCA/Components/Application \
 	CCA/Ports \
 	Core/DataArchive \
 	Core/Parallel    \

@@ -80,20 +80,20 @@ TaskGraph::TaskGraph(       SchedulerCommon   * sched
 {
   m_load_balancer = dynamic_cast<LoadBalancerPort*>( m_scheduler->getPort("load balancer") );
 
-#ifdef HAVE_VISIT
-  static bool initialized = false;
+// #ifdef HAVE_VISIT
+//   static bool initialized = false;
 
-  // Running with VisIt so add in the variables that the user can modify.
-  if (state->getVisIt() && !initialized) {
+//   // Running with VisIt so add in the variables that the user can modify.
+//   if (state->getVisIt() && !initialized) {
 
-    state->d_douts.push_back(&tgphasedbg);
-    state->d_douts.push_back(&compdbg);
-    state->d_douts.push_back(&tgdbg);
-    state->d_douts.push_back(&detaileddbg);
+//     state->d_douts.push_back(&tgphasedbg);
+//     state->d_douts.push_back(&compdbg);
+//     state->d_douts.push_back(&tgdbg);
+//     state->d_douts.push_back(&detaileddbg);
 
-    initialized = true;
-  }
-#endif
+//     initialized = true;
+//   }
+// #endif
 }
 
 //______________________________________________________________________
@@ -732,6 +732,15 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
                                      , bool               modifies
                                      )
 {
+  if( dtask->getName().find("accumulateEnergySourceSinks") != std::string::npos )
+    // std::cerr << __FUNCTION__ << "  " << __LINE__ << "  "
+    // 	      << dtask->getName() << "  "
+    // 	      <<  req->mapDataWarehouse() << "  "
+    // 	      << m_scheduler->get_dw(0) << "  " 
+    // 	      << m_scheduler->get_dw(req->mapDataWarehouse()) << "  " 
+    // 	      << m_scheduler->getLastDW() << "  " 
+    // 	      << std::endl;
+
   int my_rank = m_proc_group->myRank();
   for (; req != nullptr; req = req->m_next) {
 
@@ -741,8 +750,8 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
 
     if (m_scheduler->isOldDW(req->mapDataWarehouse()) && !m_scheduler->isNewDW(req->mapDataWarehouse() + 1)) {
       continue;
-    }
-
+    }    
+    
     DOUT(detaileddbg, "Rank-" << m_proc_group->myRank() << "  req: " << *req);
 
     constHandle<PatchSubset> patches = req->getPatchesUnderDomain(dtask->d_patches);
@@ -1009,7 +1018,7 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
                       std::cout << "creator=" << *creator << "\n";
                     }
                     std::cout << "neighbor=" << *fromNeighbor << ", matl=" << matl << "\n";
-                    std::cout << "Rank-" << my_rank << "\n";
+                    std::cout << "Rank-" << m_proc_group->myRank() << "\n";
 
                     SCI_THROW(InternalError("Failed to find comp for dep!", __FILE__, __LINE__));
                   }
@@ -1127,7 +1136,7 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
         ASSERTRANGE(dtask->getAssignedResourceIndex(), 0, m_proc_group->nRanks());
         for (unsigned i = 0; i < creators.size(); i++) {
           DetailedTask* creator = creators[i];
-          if (dtask->getAssignedResourceIndex() == creator->getAssignedResourceIndex() && dtask->getAssignedResourceIndex() == my_rank) {
+          if (dtask->getAssignedResourceIndex() == creator->getAssignedResourceIndex() && dtask->getAssignedResourceIndex() == m_proc_group->myRank() ) {
             dtask->addInternalDependency(creator, req->m_var);
             DOUT(detaileddbg, "Rank-" << m_proc_group->myRank() << "    Created reduction dependency between " << *dtask << " and " << *creator);
           }

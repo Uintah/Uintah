@@ -26,9 +26,9 @@
 #ifndef Packages_Uintah_CCA_Components_Examples_Poisson3_h
 #define Packages_Uintah_CCA_Components_Examples_Poisson3_h
 
+#include <CCA/Components/Application/ApplicationCommon.h>
+
 #include <CCA/Components/Examples/Interpolator.h>
-#include <Core/Parallel/UintahParallelComponent.h>
-#include <CCA/Ports/SimulationInterface.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/VarLabel.h>
@@ -68,14 +68,16 @@ WARNING
 
 
 
-  class Poisson3 : public UintahParallelComponent, public SimulationInterface {
+  class Poisson3 : public ApplicationCommon {
   public:
-    Poisson3(const ProcessorGroup* myworld);
+    Poisson3(const ProcessorGroup* myworld,
+	     const SimulationStateP sharedState);
+    
     virtual ~Poisson3();
 
     virtual void problemSetup(const ProblemSpecP& params, 
                               const ProblemSpecP& restart_prob_spec, 
-                              GridP& grid, SimulationStateP&);
+                              GridP& grid);
                               
     virtual void scheduleInitialize(const LevelP& level,
                                     SchedulerP& sched);
@@ -84,7 +86,7 @@ WARNING
                                            SchedulerP& sched);
                                     
                                           
-    virtual void scheduleComputeStableTimestep(const LevelP& level,
+    virtual void scheduleComputeStableTimeStep(const LevelP& level,
                                                SchedulerP&);
                                                
     virtual void scheduleTimeAdvance( const LevelP& level, 
@@ -121,7 +123,7 @@ WARNING
                     const PatchSubset* patches, const MaterialSubset* matls,
                     DataWarehouse* old_dw, DataWarehouse* new_dw);
                     
-    void computeStableTimestep(const ProcessorGroup*,
+    void computeStableTimeStep(const ProcessorGroup*,
                                const PatchSubset* patches,
                                const MaterialSubset* matls,
                                DataWarehouse* old_dw, DataWarehouse* new_dw);
@@ -133,7 +135,6 @@ WARNING
 
     const VarLabel* phi_label;
     const VarLabel* residual_label;
-    SimulationStateP sharedState_;
     double delt_;
     SimpleMaterial* mymat_;
     Interpolator interpolator_;

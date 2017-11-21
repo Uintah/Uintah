@@ -316,12 +316,12 @@ ViscoScram::initializeCMData(const Patch* patch,
     pStrainRate[idx] = zero;
   }
 
-  computeStableTimestep(patch, matl, new_dw);
+  computeStableTimeStep(patch, matl, new_dw);
 }
 
 
 void 
-ViscoScram::computeStableTimestep(const Patch* patch,
+ViscoScram::computeStableTimeStep(const Patch* patch,
                                   const MPMMaterial* matl,
                                   DataWarehouse* new_dw)
 {

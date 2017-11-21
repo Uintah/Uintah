@@ -85,10 +85,10 @@ CompMooneyRivlin::initializeCMData(const Patch* patch,
   // This method is defined in the ConstitutiveModel base class.
   initSharedDataForExplicit(patch, matl, new_dw);
 
-  computeStableTimestep(patch, matl, new_dw);
+  computeStableTimeStep(patch, matl, new_dw);
 }
 
-void CompMooneyRivlin::computeStableTimestep(const Patch* patch,
+void CompMooneyRivlin::computeStableTimeStep(const Patch* patch,
                                              const MPMMaterial* matl,
                                              DataWarehouse* new_dw)
 {

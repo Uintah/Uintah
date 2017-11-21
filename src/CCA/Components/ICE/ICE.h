@@ -26,37 +26,43 @@
 #ifndef UINTAH_HOMEBREW_ICE_H
 #define UINTAH_HOMEBREW_ICE_H
 
-#include <Core/Grid/Variables/Stencil7.h>
+// NOTE: SOMETHING IS FUBAR IN THE DEFINITION OF fflux AS IT RELATES TO
+// swapbytes. AS SUCH, Advector.h MUST BE CALLED BEFORE ApplicationCommon.h
+
 #include <CCA/Components/ICE/Advection/Advector.h>
+#include <CCA/Components/Application/ApplicationCommon.h>
+
 #include <CCA/Components/ICE/customInitialize.h>
 #include <CCA/Components/ICE/CustomBCs/LODI2.h>
 #include <CCA/Components/ICE/BoundaryCond.h>
 #include <CCA/Components/ICE/TurbulenceModel/Turbulence.h>
 #include <CCA/Components/ICE/ExchangeCoefficients.h>
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
+
 #include <CCA/Ports/ModelInterface.h>
-#include <CCA/Ports/Output.h>
-#include <CCA/Ports/SolverInterface.h>
-#include <CCA/Ports/SimulationInterface.h>
+
+#include <Core/Geometry/Vector.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
+#include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Grid/Variables/SoleVariable.h>
+#include <Core/Grid/Variables/Stencil7.h>
 #include <Core/Grid/Variables/Utils.h>
+
 #include <Core/Labels/ICELabel.h>
 #include <Core/Labels/MPMICELabel.h>
-#include <Core/Parallel/UintahParallelComponent.h>
-#include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Math/FastMatrix.h>
 #include <Core/Math/UintahMiscMath.h>
-#include <Core/Grid/Variables/CellIterator.h>
-#include <Core/Geometry/Vector.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+
 #include <vector>
 #include <string>
+
 #include <sci_defs/hypre_defs.h>
 
 #ifdef HAVE_CUDA
@@ -113,24 +119,25 @@ namespace Uintah {
     };
 
 
-    class ICE : public UintahParallelComponent, public SimulationInterface {
+    class ICE : public ApplicationCommon {
     public:
-      ICE(const ProcessorGroup* myworld, const bool doAMR = false);
+      ICE(const ProcessorGroup* myworld,
+	  const SimulationStateP sharedState);
+      
       virtual ~ICE();
 
-      virtual bool restartableTimesteps();
+      virtual bool restartableTimeSteps();
 
-      virtual double recomputeTimestep(double current_dt);
+      virtual double recomputeTimeStep(double current_dt);
 
       virtual void problemSetup(const ProblemSpecP& params,
                                 const ProblemSpecP& restart_prob_spec,
-                                GridP& grid, SimulationStateP&);
+                                GridP& grid);
 
       virtual void outputProblemSpec(ProblemSpecP& ps);
 
       virtual void updateExchangeCoefficients(const ProblemSpecP& params,
-                                              GridP& grid,
-                                              SimulationStateP&);
+                                              GridP& grid);
 
       virtual void scheduleInitialize(const LevelP& level,
                                       SchedulerP&);
@@ -140,7 +147,7 @@ namespace Uintah {
 
       virtual void restartInitialize();
 
-      virtual void scheduleComputeStableTimestep(const LevelP&,
+      virtual void scheduleComputeStableTimeStep(const LevelP&,
                                                 SchedulerP&);
 
       virtual void scheduleTimeAdvance( const LevelP& level,
@@ -872,7 +879,6 @@ namespace Uintah {
       std::vector<IntVector>d_dbgIndices;
 
       // flags
-      bool d_doAMR;
       bool d_doRefluxing;
       int  d_surroundingMatl_indx;
       bool d_impICE;
@@ -993,8 +999,6 @@ namespace Uintah {
 
       ICELabel* lb;
       MPMICELabel* MIlb;
-      SimulationStateP d_sharedState;
-      Output* dataArchiver;
       SchedulerP d_subsched;
 
       bool   d_recompileSubsched;
@@ -1041,7 +1045,6 @@ namespace Uintah {
       ICE(const ICE&);
       ICE& operator=(const ICE&);
 
-      SolverInterface* d_solver;
       SolverParameters* d_solver_parameters;
 
       //______________________________________________________________________

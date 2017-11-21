@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef Packages_Uintah_CCA_Components_CCHeat3D_AMRCCHeat3D_h
-#define Packages_Uintah_CCA_Components_CCHeat3D_AMRCCHeat3D_h
+#ifndef Packages_Uintah_CCA_Components_Heat_AMRCCHeat3D_h
+#define Packages_Uintah_CCA_Components_Heat_AMRCCHeat3D_h
 
 #include <CCA/Components/Heat/CCHeat3D.h>
 
@@ -50,14 +50,17 @@ protected:
     double refine_threshold;
 
 public:
-    AMRCCHeat3D ( ProcessorGroup const * myworld, int verbosity = 0 );
+    AMRCCHeat3D ( const ProcessorGroup * myworld,
+		  const SimulationStateP sharedState,
+		  int verbosity = 0 );
+  
     virtual ~AMRCCHeat3D ();
 
 protected:
     AMRCCHeat3D ( AMRCCHeat3D const & ) = delete;
     AMRCCHeat3D & operator= ( AMRCCHeat3D const & ) = delete;
 
-    virtual void problemSetup ( ProblemSpecP const & params, ProblemSpecP const & restart_prob_spec, GridP & grid, SimulationStateP & state ) override;
+    virtual void problemSetup ( ProblemSpecP const & params, ProblemSpecP const & restart_prob_spec, GridP & grid ) override;
     virtual void scheduleTimeAdvance ( LevelP const & level, SchedulerP & ) override;
     virtual void scheduleRefine ( PatchSet const * patches, SchedulerP & sched ) override;
     virtual void scheduleRefineInterface ( LevelP const & /*level_fine*/, SchedulerP & /*sched*/, bool /*need_old_coarse*/, bool /*need_new_coarse*/ ) override {};

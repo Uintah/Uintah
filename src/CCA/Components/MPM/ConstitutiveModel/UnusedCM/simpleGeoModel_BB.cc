@@ -176,7 +176,7 @@ void simpleGeoModel_BB::initializeCMData(const Patch* patch,
     pBackStress[*iter].set(0.0);
     pBackStressIso[*iter] = Identity*d_cm.fluid_pressur_initial;
   }
-  computeStableTimestep(patch, matl, new_dw);
+  computeStableTimeStep(patch, matl, new_dw);
 }
 
 void
@@ -203,7 +203,7 @@ void simpleGeoModel_BB::allocateCMDataAdd(DataWarehouse* new_dw,
 
 }
 
-void simpleGeoModel_BB::computeStableTimestep(const Patch* patch,
+void simpleGeoModel_BB::computeStableTimeStep(const Patch* patch,
                                              const MPMMaterial* matl,
                                              DataWarehouse* new_dw)
 {

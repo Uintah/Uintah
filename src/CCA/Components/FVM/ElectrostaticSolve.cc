@@ -51,15 +51,15 @@
 
 using namespace Uintah;
 
-ElectrostaticSolve::ElectrostaticSolve(const ProcessorGroup* myworld)
-  : UintahParallelComponent(myworld)
+ElectrostaticSolve::ElectrostaticSolve(const ProcessorGroup* myworld,
+				       const SimulationStateP sharedState)
+  : ApplicationCommon(myworld, sharedState)
 {
   d_lb = scinew FVMLabel();
 
   d_solver_parameters = 0;
   d_delt = 0;
   d_solver = 0;
-  d_shared_state = 0;
   d_with_mpm = false;
 
   d_es_matl  = scinew MaterialSubset();
@@ -89,11 +89,8 @@ ElectrostaticSolve::~ElectrostaticSolve()
 //
 void ElectrostaticSolve::problemSetup(const ProblemSpecP& prob_spec,
                                       const ProblemSpecP& restart_prob_spec,
-                                      GridP& grid,
-                                      SimulationStateP& shared_state)
+                                      GridP& grid)
 {
-  d_shared_state = shared_state;
-
   d_solver = dynamic_cast<SolverInterface*>(getPort("solver"));
   if(!d_solver) {
     throw InternalError("ST1:couldn't get solver port", __FILE__, __LINE__);
@@ -110,7 +107,7 @@ void ElectrostaticSolve::problemSetup(const ProblemSpecP& prob_spec,
   ProblemSpecP fvm_ps = prob_spec->findBlock("FVM");
 
   d_solver_parameters = d_solver->readParameters(fvm_ps, "electrostatic_solver",
-                                             d_shared_state);
+                                             m_sharedState);
   d_solver_parameters->setSolveOnExtraCells(false);
     
   fvm_ps->require("delt", d_delt);
@@ -121,8 +118,8 @@ void ElectrostaticSolve::problemSetup(const ProblemSpecP& prob_spec,
   if( !d_with_mpm ) {
     for ( ProblemSpecP ps = fvm_mat_ps->findBlock("material"); ps != nullptr; ps = ps->findNextBlock("material") ) {
 
-      FVMMaterial *mat = scinew FVMMaterial(ps, d_shared_state, FVMMaterial::ESPotential);
-      d_shared_state->registerFVMMaterial(mat);
+      FVMMaterial *mat = scinew FVMMaterial(ps, m_sharedState, FVMMaterial::ESPotential);
+      m_sharedState->registerFVMMaterial(mat);
     }
   }
 }
@@ -139,7 +136,7 @@ void
 ElectrostaticSolve::scheduleInitialize( const LevelP     & level,
                                               SchedulerP & sched )
 {
-  const MaterialSet* fvm_matls = d_shared_state->allFVMMaterials();
+  const MaterialSet* fvm_matls = m_sharedState->allFVMMaterials();
 
   Task* t = scinew Task("ElectrostaticSolve::initialize", this,
                         &ElectrostaticSolve::initialize);
@@ -157,21 +154,21 @@ void ElectrostaticSolve::scheduleRestartInitialize(const LevelP& level,
 }
 //__________________________________
 // 
-void ElectrostaticSolve::scheduleComputeStableTimestep(const LevelP& level,
+void ElectrostaticSolve::scheduleComputeStableTimeStep(const LevelP& level,
                                           SchedulerP& sched)
 {
-  Task* task = scinew Task("computeStableTimestep",this, 
-                           &ElectrostaticSolve::computeStableTimestep);
-  task->computes(d_shared_state->get_delt_label(),level.get_rep());
-  sched->addTask(task, level->eachPatch(), d_shared_state->allFVMMaterials());
+  Task* task = scinew Task("computeStableTimeStep",this, 
+                           &ElectrostaticSolve::computeStableTimeStep);
+  task->computes(m_sharedState->get_delt_label(),level.get_rep());
+  sched->addTask(task, level->eachPatch(), m_sharedState->allFVMMaterials());
 }
 //__________________________________
 //
 void
 ElectrostaticSolve::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
-  const MaterialSet* fvm_matls = d_shared_state->allFVMMaterials();
-  // const MaterialSet* all_matls = d_shared_state->allMaterials();
+  const MaterialSet* fvm_matls = m_sharedState->allFVMMaterials();
+  // const MaterialSet* all_matls = m_sharedState->allMaterials();
 
   scheduleComputeConductivity(   sched, level, fvm_matls);
   scheduleComputeFCConductivity( sched, level, d_es_matlset);
@@ -190,12 +187,12 @@ ElectrostaticSolve::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 }
 //__________________________________
 //
-void ElectrostaticSolve::computeStableTimestep(const ProcessorGroup*,
+void ElectrostaticSolve::computeStableTimeStep(const ProcessorGroup*,
                                   const PatchSubset* pss,
                                   const MaterialSubset*,
                                   DataWarehouse*, DataWarehouse* new_dw)
 {
-  new_dw->put(delt_vartype(d_delt), d_shared_state->get_delt_label(),getLevel(pss));
+  new_dw->put(delt_vartype(d_delt), m_sharedState->get_delt_label(),getLevel(pss));
 }
 //__________________________________
 //
@@ -205,12 +202,12 @@ void ElectrostaticSolve::initialize(const ProcessorGroup*,
                        DataWarehouse*, DataWarehouse* new_dw)
 {
   FVMBoundCond bc;
-  int num_matls = d_shared_state->getNumFVMMatls();
+  int num_matls = m_sharedState->getNumFVMMatls();
 
   for (int p = 0; p < patches->size(); p++){
     const Patch* patch = patches->get(p);
     for(int m = 0; m < num_matls; m++){
-      FVMMaterial* fvm_matl = d_shared_state->getFVMMaterial(m);
+      FVMMaterial* fvm_matl = m_sharedState->getFVMMaterial(m);
       int idx = fvm_matl->getDWIndex();
 
       CCVariable<double> conductivity;
@@ -250,7 +247,7 @@ void ElectrostaticSolve::computeConductivity(const ProcessorGroup* pg,
                                              DataWarehouse* old_dw,
                                              DataWarehouse* new_dw)
 {
-  int num_matls = d_shared_state->getNumFVMMatls();
+  int num_matls = m_sharedState->getNumFVMMatls();
   for (int p = 0; p < patches->size(); p++){
     const Patch* patch = patches->get(p);
 
@@ -261,7 +258,7 @@ void ElectrostaticSolve::computeConductivity(const ProcessorGroup* pg,
     grid_conductivity.initialize(0.0);
 
     for(int m = 0; m < num_matls; m++){
-      FVMMaterial* fvm_matl = d_shared_state->getFVMMaterial(m);
+      FVMMaterial* fvm_matl = m_sharedState->getFVMMaterial(m);
       int idx = fvm_matl->getDWIndex();
 
       constCCVariable<double> old_conductivty;

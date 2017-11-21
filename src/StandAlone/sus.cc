@@ -37,7 +37,7 @@
  *        <li> <b>SimulationController</b> </li>
  *        <li> <b>Regridder</b> </li>
  *        <li> <b>SolverInterface</b> </li>
- *        <li> <b>SimulationInterface and UintahParallelComponent</b> (e.g. ICE, MPM, etc) </li>
+ *        <li> <b>ApplicationInterface and UintahParallelComponent</b> (e.g. ICE, MPM, etc) </li>
  *        <li> <b>ModelMaker</b> </li>
  *        <li> <b>LoadBalancer</b> </li>
  *        <li> <b>DataArchiver</b> </li>
@@ -88,11 +88,11 @@
 #include <Core/Util/Environment.h>
 #include <Core/Util/FileUtils.h>
 
+#include <sci_defs/cuda_defs.h>
 #include <sci_defs/hypre_defs.h>
 #include <sci_defs/malloc_defs.h>
 #include <sci_defs/uintah_defs.h>
 #include <sci_defs/visit_defs.h>
-#include <sci_defs/cuda_defs.h>
 
 #include <svn_info.h>
 
@@ -173,7 +173,6 @@ usage( const std::string& message, const std::string& badarg, const std::string&
     std::cerr << "Usage: " << progname << " [options] <input_file_name>\n\n";
     std::cerr << "Valid options are:\n";
     std::cerr << "-h[elp]              : This usage information\n";
-    std::cerr << "-AMR                 : use AMR simulation controller\n";
 #ifdef HAVE_CUDA
     std::cerr << "-gpu                 : use available GPU devices, requires multi-threaded Unified scheduler \n";
 #endif
@@ -262,7 +261,6 @@ main( int argc, char *argv[], char *env[] )
   /*
    * Default values
    */
-  bool   do_AMR              = false;
   bool   emit_graphs         = false;
   bool   local_filesystem    = false;
   bool   restart             = false;
@@ -297,12 +295,6 @@ main( int argc, char *argv[], char *env[] )
     std::string arg = argv[i];
     if ((arg == "-help") || (arg == "-h")) {
       usage("", "", argv[0]);
-    }
-    else if (arg == "-AMR" || arg == "-amr") {
-      if( reduce_uda ) {
-        usage( "You may not use '-amr' and '-reduce_uda' at the same time.", arg, argv[0] );
-      }
-      do_AMR = true;
     }
     else if (arg == "-nthreads") {
       if (++i == argc) {
@@ -407,9 +399,6 @@ main( int argc, char *argv[], char *env[] )
       validateUps = false;
     }
     else if (arg == "-reduce_uda" || arg == "-reduceUda") {
-      if( do_AMR ) {
-        usage( "You may not use '-amr' and '-reduce_uda' at the same time.", arg, argv[0] );
-      }
       reduce_uda = true;
     }
     else if (arg == "-arches" || arg == "-ice" || arg == "-impm" || arg == "-mpm" || arg == "-mpmarches" || arg == "-mpmice"
@@ -655,7 +644,7 @@ main( int argc, char *argv[], char *env[] )
 	std::string title;
 	
 	if( ups->findBlock( "Meta" ) )
-	  ups->findBlock( "Meta" )->require( "title", title );
+	  ups->findBlock( "Meta" )->get( "title", title );
 	
 	if( title.size() )
 	{
@@ -685,30 +674,44 @@ main( int argc, char *argv[], char *env[] )
     }
 #endif
 
-    // If the AMR block is defined default to turning AMR on.
-    if ( !do_AMR ) {
-      ProblemSpecP grid_ps = ups->findBlock( "Grid" );
-      if( grid_ps ) {
-        grid_ps->getAttribute( "doAMR", do_AMR );
-      }
-    }
+    //______________________________________________________________________
+    // Create the components
+    MALLOC_TRACE_TAG("main():create components");
 
+    //__________________________________
+    // Simulation controller
     const ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
 
-    SimulationController* ctl = scinew AMRSimulationController( world, do_AMR, ups );
+    SimulationController* ctl = scinew AMRSimulationController( world, ups );
 
-    ctl->getSimulationStateP()->setUseLocalFileSystems( local_filesystem );
-
+    // set sim. controller flags for reduce uda
+    if ( reduce_uda ) {
+      ctl->setReduceUdaFlags( udaDir );
+    }
+    
 #ifdef HAVE_VISIT
-    ctl->getSimulationStateP()->setVisIt( do_VisIt );
+    ctl->setVisIt( do_VisIt );
 #endif
 
-    RegridderCommon* regridder = nullptr;
-    if( do_AMR ) {
-      regridder = RegridderFactory::create( ups, world );
-      if ( regridder ) {
-        ctl->attachPort( "regridder", regridder );
-      }
+    //__________________________________
+    // Component and application interface
+    UintahParallelComponent* comp =
+      ComponentFactory::create( ups, world, nullptr, udaDir );
+    
+    ApplicationInterface* app = dynamic_cast<ApplicationInterface*>(comp);
+
+    // Read the UPS file to get the general application details.
+    app->problemSetup( ups );
+    
+#ifdef HAVE_VISIT
+    app->setVisIt( do_VisIt );
+#endif
+
+    ctl->attachPort( "app", app );
+
+    // Can not do a reduce uda with AMR
+    if ( reduce_uda && app->isAMR() ) {
+      usage( "You may not use '-amr' and '-reduce_uda' at the same time.", "-reduce_uda", argv[0] );
     }
 
     //__________________________________
@@ -717,65 +720,66 @@ main( int argc, char *argv[], char *env[] )
 
     proc0cout << "Implicit Solver: \t" << solve->getName() << "\n";
 
-
-    //______________________________________________________________________
-    // Create the components
-    MALLOC_TRACE_TAG("main():create components");
-
+    comp->attachPort( "solver", solve );
 
     //__________________________________
-    // Component
-    // try to make it from the command line first, then look in ups file
-    UintahParallelComponent* comp = ComponentFactory::create( ups, world, do_AMR, udaDir );
-    SimulationInterface* sim = dynamic_cast<SimulationInterface*>(comp);
+    // Regridder
+    RegridderCommon* regridder = nullptr;
 
-    // set sim. controller flags for reduce uda
-    if ( reduce_uda ) {
-      ctl->setReduceUdaFlags( udaDir );
+    if( app->isAMR() ) {
+      regridder = RegridderFactory::create( ups, world );
+
+      if ( regridder ) {
+        ctl->attachPort( "regridder", regridder );
+	comp->attachPort( "regridder", regridder );
+      }
     }
 
-    ctl->attachPort(  "sim",       sim );
-    comp->attachPort( "solver",    solve );
-    comp->attachPort( "regridder", regridder );
-    
 #ifndef NO_ICE
     //__________________________________
     //  Model
     ModelMaker* modelmaker = scinew ModelFactory(world);
+
     comp->attachPort("modelmaker", modelmaker);
 #endif
 
     //__________________________________
     // Load balancer
     LoadBalancerCommon* lbc = LoadBalancerFactory::create( ups, world );
-    lbc->attachPort("sim", sim);
+
     if( regridder ) {
       regridder->attachPort( "load balancer", lbc );
-      lbc->attachPort(       "regridder",     regridder );
+
+      lbc->attachPort( "regridder", regridder );
     }
     
     //__________________________________
     // Output
-    DataArchiver * dataarchiver = scinew DataArchiver( world, udaSuffix );
-    Output       * output       = dataarchiver;
-    ctl->attachPort( "output", dataarchiver );
-    dataarchiver->attachPort( "load balancer", lbc );
-    comp->attachPort( "output", dataarchiver );
-    dataarchiver->attachPort( "sim", sim );
+    DataArchiver * dataArchiver = scinew DataArchiver( world, udaSuffix );
+
+    dataArchiver->attachPort( "app", app );
+    dataArchiver->attachPort( "load balancer", lbc );
     
+    dataArchiver->setUseLocalFileSystems( local_filesystem );
+
+    ctl->attachPort( "output", dataArchiver );
+    comp->attachPort( "output", dataArchiver );
+
     //__________________________________
     // Scheduler
-    SchedulerCommon* sched = SchedulerFactory::create(ups, world, output);
+    SchedulerCommon* sched = SchedulerFactory::create(ups, world, dataArchiver);
     sched->attachPort( "load balancer", lbc );
-    ctl->attachPort(   "scheduler",     sched );
-    lbc->attachPort(   "scheduler",     sched );
-    comp->attachPort(  "scheduler",     sched );
+    
+    comp->attachPort( "scheduler", sched );
+    ctl->attachPort( "scheduler", sched );
+    lbc->attachPort( "scheduler", sched );
 
     sched->setStartAddr( start_addr );
     
     if ( regridder ) {
       regridder->attachPort( "scheduler", sched );
     }
+
     sched->addReference();
 
     if ( emit_graphs ) {
@@ -788,27 +792,36 @@ main( int argc, char *argv[], char *env[] )
       ctl->doRestart( udaDir, restartTimestep, restartFromScratch, restartRemoveOldDir );
     }
     
-    // This gives memory held by the 'ups' back before the simulation starts... Assuming
-    // no one else is holding on to it...
+    // This gives memory held by the 'ups' back before the simulation
+    // starts... Assuming no one else is holding on to it...
     ups = nullptr;
 
     ctl->run();
-    delete ctl;
 
-    sched->removeReference();
-    delete sched;
+    // Clean up.  Something has a handle to the scheduler and
+    // simulation state within the application component. As such,
+    // when they are deleted an ASSERT is thrown. So skip trying to
+    // delete them for now.
+
+    ctl->releaseComponents();
+    app->releaseComponents();
+    
+    delete ctl;
     if ( regridder ) {
       delete regridder;
     }
     delete lbc;
-    delete sim;
     delete solve;
-    delete output;
+    sched->removeReference();
+    // delete sched;
+    delete dataArchiver;
 
 #ifndef NO_ICE
     delete modelmaker;
 #endif
+    // delete comp;
   }
+  
   catch (ProblemSetupException& e) {
     // Don't show a stack trace in the case of ProblemSetupException.
     std::lock_guard<std::mutex> cerr_guard(cerr_mutex);

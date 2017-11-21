@@ -205,7 +205,7 @@ ViscoScramForBinder::initializeCMData(const Patch* patch,
     deformationGradient[*iter] = one;
     pstress[*iter] = zero;
   }
-  computeStableTimestep(patch, matl, new_dw);
+  computeStableTimeStep(patch, matl, new_dw);
 }
 
 void 
@@ -297,7 +297,7 @@ ViscoScramForBinder::addParticleState(std::vector<const VarLabel*>& from,
 }
 
 void 
-ViscoScramForBinder::computeStableTimestep(const Patch* patch,
+ViscoScramForBinder::computeStableTimeStep(const Patch* patch,
                                            const MPMMaterial* matl,
                                            DataWarehouse* new_dw)
 {

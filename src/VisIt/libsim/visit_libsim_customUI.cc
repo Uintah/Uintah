@@ -27,17 +27,20 @@
 #include "visit_libsim.h"
 #include "visit_libsim_customUI.h"
 
-#include <sci_defs/visit_defs.h>
+#include <CCA/Ports/ApplicationInterface.h>
+#include <CCA/Ports/Output.h>
 
 #include <CCA/Components/Schedulers/MPIScheduler.h>
 #include <CCA/Components/SimulationController/SimulationController.h>
 
 #include <Core/Grid/Material.h>
+#include <Core/Grid/SimulationTime.h>
 #include <Core/OS/ProcessInfo.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/DOUT.hpp>
 
-#include <CCA/Ports/Output.h>
+
+#include <sci_defs/visit_defs.h>
 
 #define ALL_LEVELS 99
 #define FINEST_LEVEL -1
@@ -53,10 +56,11 @@ namespace Uintah {
 //---------------------------------------------------------------------
 void visit_SetTimeValues( visit_simulation_data *sim )
 {
-  SimulationTime* simTime = sim->simController->getSimulationTime();
+  SimulationTime* simTime =
+    sim->simController->getApplicationInterface()->getSimulationTime();
 
-  VisItUI_setValueI("TimeStep",      sim->cycle, 0);
-  VisItUI_setValueI("MaxTimeStep",   simTime->m_max_timestep, 1);
+  VisItUI_setValueI("Timestep",      sim->cycle, 0);
+  VisItUI_setValueI("MaxTimestep",   simTime->m_max_time_steps, 1);
 
   VisItUI_setValueD("Time",          sim->time, 0);
   VisItUI_setValueD("MaxTime",       simTime->m_max_time, 1);
@@ -64,10 +68,10 @@ void visit_SetTimeValues( visit_simulation_data *sim )
   VisItUI_setValueI("EndAtMaxTime",      simTime->m_end_at_max_time, 1);
   VisItUI_setValueI("ClampTimeToOutput", simTime->m_clamp_time_to_output, 1);
 
-  VisItUI_setValueI("StopAtTimeStep",     sim->stopAtTimeStep,     1);
-  VisItUI_setValueI("StopAtLastTimeStep", sim->stopAtLastTimeStep, 1);
+  VisItUI_setValueI("StopAtTimestep",     sim->stopAtTimestep,     1);
+  VisItUI_setValueI("StopAtLastTimestep", sim->stopAtLastTimestep, 1);
 
-  // visit_SetStripChartValue( sim, "TimeStep", (double) sim->cycle );
+  // visit_SetStripChartValue( sim, "Timestep", (double) sim->cycle );
 }
 
 //---------------------------------------------------------------------
@@ -76,7 +80,8 @@ void visit_SetTimeValues( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_SetDeltaTValues( visit_simulation_data *sim )
 {
-  SimulationTime* simTime = sim->simController->getSimulationTime();
+  SimulationTime* simTime =
+    sim->simController->getApplicationInterface()->getSimulationTime();
 
   int row = 0;
 
@@ -129,7 +134,8 @@ void visit_SetDeltaTValues( visit_simulation_data *sim )
 void visit_SetWallTimes( visit_simulation_data *sim )
 {
   WallTimers* walltimers  = sim->simController->getWallTimers();
-  SimulationTime* simTime = sim->simController->getSimulationTime();
+  SimulationTime* simTime =
+    sim->simController->getApplicationInterface()->getSimulationTime();
 
   double time = walltimers->GetWallTime();
 
@@ -171,9 +177,12 @@ void visit_SetWallTimes( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_SetOutputIntervals( visit_simulation_data *sim )
 {
-  SimulationTime*  simTime    = sim->simController->getSimulationTime();
-  SimulationStateP simStateP  = sim->simController->getSimulationStateP();
-  Output          *output     = sim->simController->getOutput();
+  ApplicationInterface* simInterface =
+    sim->simController->getApplicationInterface();
+
+  SimulationTime* simTime = simInterface->getSimulationTime();
+
+  Output          *output       = sim->simController->getOutput();
 
   VisItUI_setTableValueS("OutputIntervalVariableTable",
                          -1, -1, "CLEAR_TABLE", 0);
@@ -189,13 +198,13 @@ void visit_SetOutputIntervals( visit_simulation_data *sim )
     // Output interval based on time.
     if( output->getOutputInterval() > 0 )
     {
-      name = simStateP->get_outputInterval_label()->getName();
+      name = "OutputInterval";
       val = output->getOutputInterval();
     }
-    // Output interval based on timestep.
+    // Output interval based on time step.
     else
     {
-      name = simStateP->get_outputTimestepInterval_label()->getName();
+      name = "OutputTimeStepInterval";
       val = output->getOutputTimestepInterval();
     }
 
@@ -209,13 +218,13 @@ void visit_SetOutputIntervals( visit_simulation_data *sim )
     // Checkpoint interval based on times.
     if( output->getCheckpointInterval() > 0 )
     {
-      name = simStateP->get_checkpointInterval_label()->getName();
+      name = "CheckpointInterval";
       val = output->getCheckpointInterval();
     }
       // Checkpoint interval based on timestep.
     else
     {
-      name = simStateP->get_checkpointTimestepInterval_label()->getName();
+      name = "CheckpointTimeStepInterval";
       val = output->getCheckpointTimestepInterval();
     }
 
@@ -244,12 +253,13 @@ void visit_SetAnalysisVars( visit_simulation_data *sim )
   const char table[] = "AnalysisVariableTable";
     
   GridP           gridP      = sim->gridP;
-  SimulationStateP simStateP = sim->simController->getSimulationStateP();
+  ApplicationInterface* simInterface =
+    sim->simController->getApplicationInterface();
   SchedulerP      schedulerP = sim->simController->getSchedulerP();
   DataWarehouse  *dw         = sim->simController->getSchedulerP()->getLastDW();
 
-  std::vector< SimulationState::analysisVar > analysisVars =
-    simStateP->d_analysisVars;
+  std::vector< ApplicationInterface::analysisVar > analysisVars =
+    simInterface->getAnalysisVars();
     
   VisItUI_setTableValueS("AnalysisVariableTable", -1, -1, "CLEAR_TABLE", 0);
 
@@ -263,7 +273,7 @@ void visit_SetAnalysisVars( visit_simulation_data *sim )
 
     for( unsigned int i=0; i<analysisVars.size(); ++i )
     {
-      SimulationState::analysisVar analysisVar = analysisVars[i];
+      ApplicationInterface::analysisVar analysisVar = analysisVars[i];
 
       // Set level info
       for (unsigned int l=0; l<numLevels; ++l)
@@ -464,17 +474,19 @@ void visit_SetAnalysisVars( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_SetUPSVars( visit_simulation_data *sim )
 {
-  SimulationStateP simStateP = sim->simController->getSimulationStateP();
+  ApplicationInterface* simInterface =
+    sim->simController->getApplicationInterface();
 
-  if( simStateP->d_UPSVars.size() )
+  if( simInterface->getUPSVars().size() )
   {
     VisItUI_setValueS( "UPSVariableGroupBox", "SHOW_WIDGET", 1);
 
-    std::vector< SimulationState::interactiveVar > &vars = simStateP->d_UPSVars;
+    std::vector< ApplicationInterface::interactiveVar > &vars =
+      simInterface->getUPSVars();
       
     for( unsigned int i=0; i<vars.size(); ++i )
     {
-      SimulationState::interactiveVar &var = vars[i];
+      ApplicationInterface:: interactiveVar &var = vars[i];
       
       var.modified = false;
       
@@ -527,8 +539,9 @@ void visit_SetUPSVars( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_SetGridInfo( visit_simulation_data *sim )
 {
-  SimulationStateP simStateP = sim->simController->getSimulationStateP();
-  GridP           gridP      = sim->gridP;
+  ApplicationInterface* simInterface =
+    sim->simController->getApplicationInterface();
+  GridP                gridP        = sim->gridP;
 
   VisItUI_setValueS( "GridInfoGroupBox", "SHOW_WIDGET", 1);
   VisItUI_setTableValueS("GridInfoTable", -1, -1, "CLEAR_TABLE", 0);
@@ -585,10 +598,8 @@ void visit_SetGridInfo( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_SetRuntimeStats( visit_simulation_data *sim )
 {
-  SimulationStateP simStateP = sim->simController->getSimulationStateP();
-
-  ReductionInfoMapper< SimulationState::RunTimeStat, double > &runTimeStats =
-    simStateP->d_runTimeStats;
+  const ReductionInfoMapper< RunTimeStatsEnum, double > &runTimeStats =
+    sim->simController->getRunTimeStats();
 
   VisItUI_setValueS( "RunTimeStatsGroupBox", "SHOW_WIDGET", 1);
   VisItUI_setTableValueS("RuntimeStatsTable", -1, -1, "CLEAR_TABLE", 0);
@@ -597,7 +608,7 @@ void visit_SetRuntimeStats( visit_simulation_data *sim )
 
   for (unsigned int i=0; i<runTimeStats.size(); ++i)
   {
-    SimulationState::RunTimeStat e = (SimulationState::RunTimeStat) i;
+    RunTimeStatsEnum e = (RunTimeStatsEnum) i;
     
     std::string name  = runTimeStats.getName(e);
     std::string units = runTimeStats.getUnits(e);
@@ -645,7 +656,8 @@ void visit_SetRuntimeStats( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_SetMPIStats( visit_simulation_data *sim )
 {
-  SimulationStateP simStateP = sim->simController->getSimulationStateP();
+  ApplicationInterface* simInterface =
+    sim->simController->getApplicationInterface();
 
   MPIScheduler *mpiScheduler = dynamic_cast<MPIScheduler*>
     (sim->simController->getSchedulerP().get_rep());
@@ -695,10 +707,8 @@ void visit_SetMPIStats( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_SetOtherStats( visit_simulation_data *sim )
 {
-  SimulationStateP simStateP = sim->simController->getSimulationStateP();
-
-  ReductionInfoMapper< unsigned int, double > &otherStats =
-    simStateP->d_otherStats;
+  const ReductionInfoMapper< unsigned int, double > &otherStats =
+    sim->simController->getOtherStats();
 
   if( otherStats.size() )
   {
@@ -778,18 +788,19 @@ void visit_SetStripChartValue( visit_simulation_data *sim,
 //---------------------------------------------------------------------
 void visit_SetStateVars( visit_simulation_data *sim )
 {
-  SimulationStateP simStateP = sim->simController->getSimulationStateP();
+  ApplicationInterface* simInterface =
+    sim->simController->getApplicationInterface();
 
-  if( simStateP->d_UPSVars.size() )
+  if( simInterface->getStateVars().size() )
   {
     VisItUI_setValueS( "StateVariableGroupBox", "SHOW_WIDGET", 1);
 
-    std::vector< SimulationState::interactiveVar > &vars =
-      simStateP->d_stateVars;
+    std::vector< ApplicationInterface::interactiveVar > &vars =
+      simInterface->getStateVars();
       
     for( unsigned int i=0; i<vars.size(); ++i )
     {
-      SimulationState::interactiveVar &var = vars[i];
+      ApplicationInterface::interactiveVar &var = vars[i];
       
       var.modified = false;
       
@@ -842,23 +853,24 @@ void visit_SetStateVars( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_SetDebugStreams( visit_simulation_data *sim )
 {
-  SimulationStateP simStateP  = sim->simController->getSimulationStateP();
+  ApplicationInterface* simInterface =
+    sim->simController->getApplicationInterface();
 
   VisItUI_setTableValueS("DebugStreamTable",
                          -1, -1, "CLEAR_TABLE", 0);
 
-  if( simStateP->d_debugStreams.size() )
+  if( simInterface->getDebugStreams().size() )
   {
     VisItUI_setValueS( "DebugStreamGroupBox", "SHOW_WIDGET", 1);
 
-    unsigned int nStreams = simStateP->d_debugStreams.size();
+    unsigned int nStreams = simInterface->getDebugStreams().size();
     
     for( unsigned int i=0; i<nStreams; ++i )
     {
       // Add in the stream and state.
-      std::string name     = simStateP->d_debugStreams[i]->getName();
-      std::string filename = simStateP->d_debugStreams[i]->getFilename();
-      bool        active   = simStateP->d_debugStreams[i]->active();
+      std::string name     = simInterface->getDebugStreams()[i]->getName();
+      std::string filename = simInterface->getDebugStreams()[i]->getFilename();
+      bool        active   = simInterface->getDebugStreams()[i]->active();
 
       VisItUI_setTableValueS("DebugStreamTable",
                              i, 0, name.c_str(),  0);
@@ -878,23 +890,24 @@ void visit_SetDebugStreams( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_SetDouts( visit_simulation_data *sim )
 {
-  SimulationStateP simStateP  = sim->simController->getSimulationStateP();
+  ApplicationInterface* simInterface =
+    sim->simController->getApplicationInterface();
 
   VisItUI_setTableValueS("DoutTable",
                          -1, -1, "CLEAR_TABLE", 0);
 
-  if( simStateP->d_douts.size() )
+  if( simInterface->getDouts().size() )
   {
     VisItUI_setValueS( "DoutGroupBox", "SHOW_WIDGET", 1);
 
-    unsigned int nStreams = simStateP->d_douts.size();
+    unsigned int nStreams = simInterface->getDouts().size();
     
     for( unsigned int i=0; i<nStreams; ++i )
     {
       // Add in the stream and state.
-      std::string name     = simStateP->d_douts[i]->name();
-      std::string filename = "cout"; //simStateP->d_douts[i]->getFilename();
-      bool        active   = simStateP->d_douts[i]->active();
+      std::string name     = simInterface->getDouts()[i]->name();
+      std::string filename = "cout"; //simInterface->getDouts()[i]->getFilename();
+      bool        active   = simInterface->getDouts()[i]->active();
 
       VisItUI_setTableValueS("DoutTable",
                              i, 0, name.c_str(), 0);

@@ -286,7 +286,7 @@ void MesoBurn::initialize(const ProcessorGroup*,
 }
 
 //______________________________________________________________________
-void MesoBurn::scheduleComputeStableTimestep(SchedulerP&, 
+void MesoBurn::scheduleComputeStableTimeStep(SchedulerP&, 
                                              const LevelP&, 
                                              const ModelInfo*){
   // None necessary...

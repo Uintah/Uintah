@@ -164,7 +164,7 @@ void CompNeoHookImplicit::addParticleState(std::vector<const VarLabel*>& from,
 {
 }
 
-void CompNeoHookImplicit::computeStableTimestep(const Patch*,
+void CompNeoHookImplicit::computeStableTimeStep(const Patch*,
                                            const MPMMaterial*,
                                            DataWarehouse*)
 {

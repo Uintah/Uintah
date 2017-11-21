@@ -888,7 +888,7 @@ ExplicitSolver::computeTimestep(const LevelP& level, SchedulerP& sched)
   Task* tsk = scinew Task( "ExplicitSolver::computeStableTimeStep",this,
                            &ExplicitSolver::computeStableTimeStep);
 
-  //printSchedule(level,dbg, "ExplicitSolver::computeStableTimestep");
+  //printSchedule(level,dbg, "ExplicitSolver::computeStableTimeStep");
 
   if(level->getIndex() == d_archesLevelIndex) {
 

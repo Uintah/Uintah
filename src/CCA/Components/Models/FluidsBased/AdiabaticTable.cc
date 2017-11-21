@@ -37,6 +37,7 @@
 #include <CCA/Components/Models/FluidsBased/TableInterface.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
 #include <CCA/Ports/Scheduler.h>
+#include <CCA/Ports/Regridder.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Box.h>
@@ -188,6 +189,7 @@ void AdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,
                                   ModelSetup* setup, const bool isRestart)
 {
   cout_doing << "Doing problemSetup \t\t\t\tADIABATIC_TABLE" << endl;
+
   d_sharedState = in_state;
   
   ProblemSpecP base_ps = params->findBlock("AdiabaticTable");
@@ -501,7 +503,7 @@ void AdiabaticTable::initialize(const ProcessorGroup*,
     if (d_usingProbePts){
       FILE *fp;
       IntVector cell;
-      string udaDir = d_dataArchiver->getOutputLocation();
+      string udaDir = m_output->getOutputLocation();
       
         for (unsigned int i =0 ; i < d_probePts.size(); i++) {
           if(patch->findCell(Point(d_probePts[i]),cell) ) {
@@ -809,7 +811,7 @@ void AdiabaticTable::computeModelSources(const ProcessorGroup*,
         
         if (time >= nextDumpTime){        // is it time to dump the points
           FILE *fp;
-          string udaDir = d_dataArchiver->getOutputLocation();
+          string udaDir = m_output->getOutputLocation();
           IntVector cell_indx;
           
           // loop through all the points and dump if that patch contains them
@@ -950,7 +952,7 @@ void AdiabaticTable::testConservation(const ProcessorGroup*,
   }
 }
 //__________________________________      
-void AdiabaticTable::scheduleComputeStableTimestep(SchedulerP&,
+void AdiabaticTable::scheduleComputeStableTimeStep(SchedulerP&,
                                       const LevelP&,
                                       const ModelInfo*)
 {
@@ -973,8 +975,8 @@ void AdiabaticTable::scheduleErrorEstimate(const LevelP& coarseLevel,
   t->requires(Task::NewDW, d_scalar->scalar_CCLabel,  gac, 1);
   
   t->computes(d_scalar->mag_grad_scalarLabel);
-  t->modifies(d_sharedState->get_refineFlag_label(),      d_sharedState->refineFlagMaterials(), Task::OutOfDomain);
-  t->modifies(d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials(), Task::OutOfDomain);
+  t->modifies(m_regridder->getRefineFlagLabel(),      m_regridder->refineFlagMaterials(), Task::OutOfDomain);
+  t->modifies(m_regridder->getRefinePatchFlagLabel(), m_regridder->refineFlagMaterials(), Task::OutOfDomain);
   
   sched->addTask(t, coarseLevel->eachPatch(), d_sharedState->allICEMaterials());
 }
@@ -993,8 +995,8 @@ void AdiabaticTable::errorEstimate(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     
     Ghost::GhostType  gac  = Ghost::AroundCells;
-    const VarLabel* refineFlagLabel = d_sharedState->get_refineFlag_label();
-    const VarLabel* refinePatchLabel= d_sharedState->get_refinePatchFlag_label();
+    const VarLabel* refineFlagLabel = m_regridder->getRefineFlagLabel();
+    const VarLabel* refinePatchLabel= m_regridder->getRefinePatchFlagLabel();
     
     CCVariable<int> refineFlag;
     new_dw->getModifiable(refineFlag, refineFlagLabel, 0, patch);      

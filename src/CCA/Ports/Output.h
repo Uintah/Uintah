@@ -26,13 +26,17 @@
  */
 
 #include <CCA/Ports/SchedulerP.h>
+#include <CCA/Components/SimulationController/RunTimeStatsEnums.h>
+
 #include <Core/Containers/ConsecutiveRangeSet.h>
 #include <Core/Grid/GridP.h>
+#include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/Variables/MaterialSetP.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/OS/Dir.h>
 #include <Core/Parallel/UintahParallelPort.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Util/InfoMapper.h>
 
 #include <string>
 #include <map>
@@ -72,8 +76,6 @@ WARNING
   
 ****************************************/
 
-class SimulationState;
-
   class Output : public UintahParallelPort {
   public:
     Output();
@@ -83,7 +85,7 @@ class SimulationState;
     // Insert Documentation Here:
     virtual void problemSetup(const ProblemSpecP& params,
 			      const ProblemSpecP& restart_prob_spec,
-                              SimulationState* state) = 0;
+                              const SimulationStateP& sharedState) = 0;
 
     virtual void initializeOutput(const ProblemSpecP& params) = 0;
     //////////
@@ -96,36 +98,53 @@ class SimulationState;
     // set timeinfoFlags and 
     virtual void reduceUdaSetup(Dir& fromDir) = 0;
 
-    virtual bool needRecompile(double time, double delt,
+    virtual bool needRecompile(const double simTime,
+			       const double delT,
                                const GridP& grid) = 0;
 
     //////////
     // Call this after all other tasks have been added to the scheduler
-    virtual void finalizeTimestep(double t, double delt, const GridP&,
-                                  SchedulerP&, bool recompile = false ) = 0;
+    virtual void finalizeTimestep(const int timeStep,
+				  const double simTime,
+				  const double delt,
+				  const GridP      & /* grid */,
+                                        SchedulerP & /* scheduler */,
+				        bool recompile = false ) = 0;
 
     // schedule all output tasks
-    virtual void sched_allOutputTasks(double delt, const GridP&,
-                                      SchedulerP&, bool recompile = false ) = 0;
+    virtual void sched_allOutputTasks(const double delT,
+				      const GridP      & /* grid */,
+                                            SchedulerP & /* scheduler */,
+				            bool recompile = false ) = 0;
 
     //////////
     // Call this after a timestep restart where delt is adjusted to
     // make sure there still will be output and/or checkpoint timestep
-    virtual void reevaluate_OutputCheckPointTimestep(double time) = 0;
+    virtual void reevaluate_OutputCheckPointTimestep(const double simTime,
+						     const double delT) = 0;
 
     //////////
     // Call this after the timestep has been executed to find the
     // next time step to output
-    virtual void findNext_OutputCheckPointTimestep(double time,
-						   bool restart = false) = 0;
+    virtual void findNext_OutputCheckPointTimestep(const int timeStep, 
+						   const double simTime,
+						   const double delT,
+						   const bool restart = false) = 0;
     
     //////////
     // update or write to the xml files
-    virtual void writeto_xml_files(double delt, const GridP& grid) = 0;
-    virtual void writeto_xml_files( std::map< std::string, std::pair<std::string, std::string> > &modifiedVars ) = 0;
+    virtual void writeto_xml_files( const int timeStep,
+				    const double simTime,
+				    const double delT,
+				    const GridP& grid) = 0;
+    
+    virtual void writeto_xml_files( const int timeStep,
+				    std::map< std::string,
+				    std::pair<std::string,
+				    std::string> > &modifiedVars ) = 0;
      
-      //////////
-      // Insert Documentation Here:
+    //////////
+    // Insert Documentation Here:
     virtual const std::string getOutputLocation() const = 0;
 
     // Get the time/timestep the next output will occur
@@ -149,20 +168,16 @@ class SimulationState;
     // Returns true if the label is being saved
     virtual bool isLabelSaved( const std::string & label ) const = 0;
 
-    // update output interval
-    virtual void updateOutputInterval( double inv ) = 0;
-    virtual void updateOutputTimestepInterval( int inv ) = 0;
-
-    // get output interval
+    // output interval
+    virtual void   setOutputInterval( double inv ) = 0;
     virtual double getOutputInterval() const = 0;
+    virtual void   setOutputTimestepInterval( int inv ) = 0;
     virtual int    getOutputTimestepInterval() const = 0;
     
-    // update checkpoint interval
-    virtual void updateCheckpointInterval( double inv ) = 0;
-    virtual void updateCheckpointTimestepInterval( int inv ) = 0;
-
     // get checkpoint interval
+    virtual void   setCheckpointInterval( double inv ) = 0;
     virtual double getCheckpointInterval() const = 0;
+    virtual void   setCheckpointTimestepInterval( int inv ) = 0;
     virtual int    getCheckpointTimestepInterval() const = 0;
     virtual int    getCheckpointWalltimeInterval() const = 0;
 
@@ -174,15 +189,36 @@ class SimulationState;
     virtual void   setSaveAsPIDX() = 0;
 
     //! Called by In-situ VisIt to force the dump of a time step's data.
-    virtual void outputTimestep( double time, double delt,
-				 const GridP& grid, SchedulerP& sched ) = 0;
+    virtual void outputTimestep( const int timeStep,
+				 const double simTime,
+				 const double delT,
+				 const GridP& grid,
+				 SchedulerP& sched ) = 0;
 
-    virtual void checkpointTimestep( double time, double delt,
-				     const GridP& grid, SchedulerP& sched ) = 0;
+    virtual void checkpointTimestep( const int timeStep,
+				     const double simTime,
+				     const double delT,
+				     const GridP& grid,
+				     SchedulerP& sched ) = 0;
+
+    virtual void maybeLastTimestep( bool val ) = 0;
+    virtual bool maybeLastTimestep() = 0;
+
+    virtual void   setElapsedWallTime( double val ) = 0;
+    virtual double getElapsedWallTime() const = 0;
+
+    virtual void setUseLocalFileSystems( bool val ) = 0;
+    virtual bool getUseLocalFileSystems() const = 0;
+
+    virtual void setSwitchState(bool val) = 0;
+    virtual bool getSwitchState() const = 0;
+    
     //////////
     // Get the directory of the current time step for outputting info.
     virtual const std::string& getLastTimestepOutputLocation() const = 0;
     
+    virtual void setRunTimeStats( ReductionInfoMapper< RunTimeStatsEnum, double > *runTimeStats) = 0;
+
   private:
     
     Output( const Output& );

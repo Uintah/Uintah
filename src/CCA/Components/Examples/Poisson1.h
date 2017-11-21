@@ -26,8 +26,8 @@
 #ifndef Packages_Uintah_CCA_Components_Examples_Poisson1_h
 #define Packages_Uintah_CCA_Components_Examples_Poisson1_h
 
-#include <Core/Parallel/UintahParallelComponent.h>
-#include <CCA/Ports/SimulationInterface.h>
+#include <CCA/Components/Application/ApplicationCommon.h>
+
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/VarLabel.h>
 
@@ -63,14 +63,16 @@ WARNING
   
 ****************************************/
 
-  class Poisson1 : public UintahParallelComponent, public SimulationInterface {
+  class Poisson1 : public ApplicationCommon {
   public:
-    Poisson1(const ProcessorGroup* myworld);
+    Poisson1(const ProcessorGroup* myworld,
+	     const SimulationStateP sharedState);
+    
     virtual ~Poisson1();
 
     virtual void problemSetup(const ProblemSpecP& params, 
                               const ProblemSpecP& restart_prob_spec, 
-                              GridP& grid, SimulationStateP&);
+                              GridP& grid);
                               
     virtual void scheduleInitialize(const LevelP& level,
                                     SchedulerP& sched);
@@ -78,7 +80,7 @@ WARNING
     virtual void scheduleRestartInitialize(const LevelP& level,
                                            SchedulerP& sched);
                                     
-    virtual void scheduleComputeStableTimestep(const LevelP& level,
+    virtual void scheduleComputeStableTimeStep(const LevelP& level,
                                                SchedulerP&);
                                                
     virtual void scheduleTimeAdvance( const LevelP& level, 
@@ -92,7 +94,7 @@ WARNING
                     DataWarehouse* new_dw);
                     
                     
-    void computeStableTimestep(const ProcessorGroup*,
+    void computeStableTimeStep(const ProcessorGroup*,
                                const PatchSubset* patches,
                                const MaterialSubset* matls,
                                DataWarehouse* old_dw,
@@ -104,7 +106,6 @@ WARNING
                      DataWarehouse* old_dw,
                      DataWarehouse* new_dw);
                      
-    SimulationStateP sharedState_;
     double delt_;
     SimpleMaterial* mymat_;
     const VarLabel* phi_label;

@@ -529,7 +529,7 @@ ArenaPartiallySaturated::initializeCMData(const Uintah::Patch* patch,
   }
 
   // Compute timestep
-  computeStableTimestep(patch, matl, new_dw);
+  computeStableTimeStep(patch, matl, new_dw);
 }
 
 void 
@@ -621,7 +621,7 @@ ArenaPartiallySaturated::initializeInternalVariables(const Uintah::Patch* patch,
 // Compute stable timestep based on both the particle velocities
 // and wave speed
 void 
-ArenaPartiallySaturated::computeStableTimestep(const Uintah::Patch* patch,
+ArenaPartiallySaturated::computeStableTimeStep(const Uintah::Patch* patch,
                                                const Uintah::MPMMaterial* matl,
                                                Uintah::DataWarehouse* new_dw)
 {

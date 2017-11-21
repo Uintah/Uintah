@@ -31,13 +31,13 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 
 #include <Core/Grid/DbgOutput.h>
+#include <Core/Grid/SimpleMaterial.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/MaterialSetP.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Util/FileUtils.h>
 #include <Core/Util/DOUT.hpp>
-
 
 
 #include <iomanip>
@@ -50,9 +50,12 @@ Dout dbg_pp("postProcess", false);
 //  - copy On-the-Fly files directories
 //______________________________________________________________________
 //
-UdaReducer::UdaReducer( const ProcessorGroup * world,
+UdaReducer::UdaReducer( const ProcessorGroup * myworld,
+			const SimulationStateP sharedState,
                         const string         & udaDir ) :
-  UintahParallelComponent( world ), d_udaDir(udaDir), d_dataArchive(0),
+  ApplicationCommon( myworld, sharedState ),
+  d_udaDir(udaDir),
+  d_dataArchive(0),
   d_timeIndex(0)
 {
   testVLabel = VarLabel::create("testV_CC", CCVariable<Vector>::getTypeDescription());
@@ -84,10 +87,8 @@ UdaReducer::~UdaReducer()
 //
 void UdaReducer::problemSetup(const ProblemSpecP& prob_spec,
                               const ProblemSpecP& restart_ps,
-                              GridP& grid,
-                              SimulationStateP& state)
+                              GridP& grid)
 {
-
   //__________________________________
   //  Add a warning message
   proc0cout << "\n______________________________________________________________________\n";
@@ -117,15 +118,14 @@ void UdaReducer::problemSetup(const ProblemSpecP& prob_spec,
 
   //__________________________________
   //
-  d_sharedState = state;
-  d_sharedState->setIsLockstepAMR(true);
-  d_sharedState->setSwitchState(true);         /// HACK NEED TO CHANGE THIS
+  setLockstepAMR(true);
+  m_output->setSwitchState(true);         /// HACK NEED TO CHANGE THIS
 
   // This matl is for delT
   d_oneMatl = scinew SimpleMaterial();
-  d_sharedState->registerSimpleMaterial( d_oneMatl );
+  m_sharedState->registerSimpleMaterial( d_oneMatl );
 
-  delt_label = d_sharedState->get_delt_label();
+  delt_label = m_sharedState->get_delt_label();
 
   d_dataArchiver = dynamic_cast<Output*>(getPort("output"));
   if(!d_dataArchiver){
@@ -163,12 +163,12 @@ void UdaReducer::problemSetup(const ProblemSpecP& prob_spec,
 
   //__________________________________
   //  create the analysis modules
-  d_Modules = ModuleFactory::create(prob_spec, d_sharedState, d_dataArchiver, d_dataArchive);
+  d_Modules = ModuleFactory::create(prob_spec, m_sharedState, m_output, d_dataArchive);
 
   vector<Module*>::iterator iter;
   for( iter  = d_Modules.begin(); iter != d_Modules.end(); iter++) {
     Module* m = *iter;
-    m->problemSetup(prob_spec, restart_ps, grid, d_sharedState);
+    m->problemSetup(prob_spec, restart_ps, grid, m_sharedState);
   }
 
   proc0cout << "\n";
@@ -191,7 +191,7 @@ void UdaReducer::scheduleInitialize(const LevelP& level,
   const PatchSet* perProcPatches = d_lb->getPerProcessorPatchSet(grid);
   t->setType(Task::OncePerProc);
 
-  sched->addTask( t, perProcPatches, d_sharedState->allMaterials() );
+  sched->addTask( t, perProcPatches, m_sharedState->allMaterials() );
   
   vector<Module*>::iterator iter;
   for( iter  = d_Modules.begin(); iter != d_Modules.end(); iter++){
@@ -249,7 +249,7 @@ void UdaReducer::sched_Test(const LevelP& level,
                    this,&UdaReducer::doAnalysis);
 
 
-  const MaterialSet*    matls     = d_sharedState->allMaterials();
+  const MaterialSet*    matls     = m_sharedState->allMaterials();
   const MaterialSubset* matls_sub = matls->getUnion();
 
   const VarLabel* vel_CCLabel   = VarLabel::find( "vel_CC" );
@@ -488,7 +488,7 @@ void UdaReducer::readDataArchive(const ProcessorGroup* pg,
 
 //______________________________________________________________________
 //
-void UdaReducer::scheduleComputeStableTimestep(const LevelP& level,
+void UdaReducer::scheduleComputeStableTimeStep(const LevelP& level,
                                                SchedulerP& sched)
 {
   Task* t = scinew Task("UdaReducer::computeDelT",
@@ -500,7 +500,7 @@ void UdaReducer::scheduleComputeStableTimestep(const LevelP& level,
   const PatchSet* perProcPatches = d_lb->getPerProcessorPatchSet(grid);
 
   t->setType(Task::OncePerProc);
-  sched->addTask( t, perProcPatches, d_sharedState->allMaterials() );
+  sched->addTask( t, perProcPatches, m_sharedState->allMaterials() );
 
 }
 

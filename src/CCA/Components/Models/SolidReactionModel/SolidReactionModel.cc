@@ -193,7 +193,7 @@ void SolidReactionModel::scheduleInitialize(SchedulerP&,
 }
 
 
-void SolidReactionModel::scheduleComputeStableTimestep(SchedulerP& sched,
+void SolidReactionModel::scheduleComputeStableTimeStep(SchedulerP& sched,
                                                        const LevelP& level,
                                                        const ModelInfo*)
 {

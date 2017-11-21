@@ -25,10 +25,8 @@
 #ifndef UINTAH_HOMEBREW_SERIALMPM_H
 #define UINTAH_HOMEBREW_SERIALMPM_H
 
-#include <Core/Parallel/UintahParallelComponent.h>
 #include <CCA/Ports/DataWarehouseP.h>
 #include <CCA/Ports/Output.h>
-#include <CCA/Ports/SimulationInterface.h>
 #include <CCA/Ports/SwitchingCriteria.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/GridP.h>
@@ -83,9 +81,11 @@ WARNING
   
 ****************************************/
 
-class SerialMPM : public MPMCommon, public SimulationInterface, public UintahParallelComponent {
+  class SerialMPM : public MPMCommon {
 public:
-  SerialMPM(const ProcessorGroup* myworld);
+    SerialMPM(const ProcessorGroup* myworld,
+	      const SimulationStateP sharedState);
+
   virtual ~SerialMPM();
 
   Contact*         contactModel;
@@ -95,8 +95,8 @@ public:
   //////////
   // Insert Documentation Here:
   virtual void problemSetup(const ProblemSpecP& params, 
-                            const ProblemSpecP& restart_prob_spec, GridP&,
-                            SimulationStateP&);
+                            const ProblemSpecP& restart_prob_spec,
+			    GridP&);
 
   virtual void outputProblemSpec(ProblemSpecP& ps);
 
@@ -118,7 +118,7 @@ public:
                                  const MaterialSet* matls);
   //////////
   // Insert Documentation Here:
-  virtual void scheduleComputeStableTimestep(const LevelP& level, SchedulerP&);
+  virtual void scheduleComputeStableTimeStep(const LevelP& level, SchedulerP&);
 
   //////////
   // Insert Documentation Here:
@@ -575,10 +575,8 @@ protected:
     }
   };
   
-  SimulationStateP d_sharedState;
   MPMLabel* lb;
   MPMFlags* flags;
-  Output* dataArchiver;
 
   double           d_nextOutputTime;
   double           d_SMALL_NUM_MPM;

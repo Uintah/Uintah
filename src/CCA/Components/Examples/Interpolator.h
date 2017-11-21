@@ -25,12 +25,8 @@
 #ifndef Packages_Uintah_CCA_Components_Examples_Interpolator_h
 #define Packages_Uintah_CCA_Components_Examples_Interpolator_h
 
-#include <Core/Parallel/UintahParallelComponent.h>
-#include <CCA/Ports/SimulationInterface.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/NCVariable.h>
-
-
 
 /**************************************
 

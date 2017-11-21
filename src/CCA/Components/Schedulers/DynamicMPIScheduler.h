@@ -69,7 +69,7 @@ class DynamicMPIScheduler : public MPIScheduler {
 
     virtual void execute( int tgnum = 0, int iteration = 0 );
     
-    virtual bool useInternalDeps() { return !m_shared_state->isCopyDataTimestep(); }
+    virtual bool useInternalDeps() { return !m_is_copy_data_timestep; }
     
 
   private:

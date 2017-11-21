@@ -50,7 +50,9 @@ public:
   //  the constructor of SerialMPM should be reflected here.*/
   //
   ///////////////////////////////////////////////////////////////////////////
-  ShellMPM(const ProcessorGroup* myworld);
+  ShellMPM(const ProcessorGroup* myworld,
+	   const SimulationStateP sharedState);
+  
   virtual ~ShellMPM();
 
   ///////////////////////////////////////////////////////////////////////////
@@ -61,7 +63,7 @@ public:
   ///////////////////////////////////////////////////////////////////////////
   virtual void problemSetup(const ProblemSpecP& params, 
                             const ProblemSpecP& restart_prob_spec, 
-                            GridP& grid,SimulationStateP&);
+                            GridP& grid);
          
 protected:
 
@@ -72,7 +74,6 @@ protected:
   ///////////////////////////////////////////////////////////////////////////
 #if 0
   virtual void materialProblemSetup(const ProblemSpecP& prob_spec, 
-                                    SimulationStateP& sharedState,
                                     MPMLabel* lb, MPMFlags* flags);
 #endif
          

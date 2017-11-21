@@ -32,11 +32,20 @@ namespace Uintah {
 
   class ICELabel {
     public:
-
-      ICELabel();
-      ~ICELabel();
-
+    
+    ICELabel();
+    ~ICELabel();
+    
+    const VarLabel* timeStepLabel;
+    const VarLabel* simulationTimeLabel;
     const VarLabel* delTLabel;
+
+    const VarLabel* outputIntervalLabel;
+    const VarLabel* outputTimeStepIntervalLabel;
+    const VarLabel* checkpointIntervalLabel;
+    const VarLabel* checkpointTimeStepIntervalLabel;
+
+    const VarLabel* endSimulationLabel;
 
     // Cell centered variables
     const VarLabel* TMV_CCLabel;

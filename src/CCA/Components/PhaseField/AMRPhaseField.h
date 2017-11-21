@@ -28,6 +28,7 @@
 #include <Core/Grid/Variables/PerPatch.h>
 #include <CCA/Components/PhaseField/PhaseField.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
+#include <CCA/Ports/Regridder.h>
 
 namespace Uintah
 {
@@ -503,7 +504,8 @@ protected:
 
     using PhaseField<VariableType, NumGhosts, Dimension>::psi_label;
     using PhaseField<VariableType, NumGhosts, Dimension>::u_label;
-    using PhaseField<VariableType, NumGhosts, Dimension>::state;
+    using PhaseField<VariableType, NumGhosts, Dimension>::m_sharedState;
+    using PhaseField<VariableType, NumGhosts, Dimension>::m_regridder;
     using PhaseField<VariableType, NumGhosts, Dimension>::dbg_out1;
     using PhaseField<VariableType, NumGhosts, Dimension>::dbg_out2;
     using PhaseField<VariableType, NumGhosts, Dimension>::dbg_out3;
@@ -526,7 +528,10 @@ protected:
     double refine_threshold;
 
 public:
-    AMRPhaseField ( ProcessorGroup const * myworld, int verbosity = 0 );
+    AMRPhaseField ( const ProcessorGroup * myworld,
+		    const SimulationStateP sharedState,
+		    int verbosity = 0 );
+  
     virtual ~AMRPhaseField ();
 
 protected:
@@ -534,7 +539,7 @@ protected:
     AMRPhaseField & operator= ( AMRPhaseField const & ) = delete;
 
 public:
-    virtual void problemSetup ( ProblemSpecP const & params, ProblemSpecP const & restart_prob_spec, GridP & grid, SimulationStateP & state ) override;
+    virtual void problemSetup ( ProblemSpecP const & params, ProblemSpecP const & restart_prob_spec, GridP & grid ) override;
     virtual void scheduleRefine ( PatchSet const * patches, SchedulerP & sched ) override;
     virtual void scheduleRefineInterface ( LevelP const & level_fine, SchedulerP & sched, bool need_old_coarse, bool need_new_coarse )
     {
@@ -559,7 +564,8 @@ class AMRPhaseFieldTest : public AMRPhaseField<VariableType, NumGhosts, Dimensio
     using FlagView = PF::FlagView;
     using PhaseField<VariableType, NumGhosts, Dimension>::psi_label;
     using PhaseField<VariableType, NumGhosts, Dimension>::u_label;
-    using PhaseField<VariableType, NumGhosts, Dimension>::state;
+    using PhaseField<VariableType, NumGhosts, Dimension>::m_sharedState;
+    using PhaseField<VariableType, NumGhosts, Dimension>::m_regridder;
     using PhaseField<VariableType, NumGhosts, Dimension>::dbg_out1;
     using PhaseField<VariableType, NumGhosts, Dimension>::dbg_out2;
     using PhaseField<VariableType, NumGhosts, Dimension>::dbg_out3;
@@ -596,8 +602,8 @@ using AMRCCPhaseField3DTest = AMRPhaseFieldTest <PF::CellCentered, 1, 3>;
 using AMRNCPhaseField3DTest = AMRPhaseFieldTest <PF::NodeCentered, 1, 3>;
 
 template<PF::VariableType VariableType, int NumGhosts, int Dimension>
-AMRPhaseField<VariableType, NumGhosts, Dimension>::AMRPhaseField ( ProcessorGroup const * myworld, int verbosity )
-    : PhaseField<VariableType, NumGhosts, Dimension> ( myworld, verbosity )
+AMRPhaseField<VariableType, NumGhosts, Dimension>::AMRPhaseField ( const ProcessorGroup * myworld, const SimulationStateP sharedState, int verbosity )
+  : PhaseField<VariableType, NumGhosts, Dimension> ( myworld, sharedState, verbosity )
 {}
 
 template<PF::VariableType VariableType, int NumGhosts, int Dimension>
@@ -605,9 +611,9 @@ AMRPhaseField<VariableType, NumGhosts, Dimension>::~AMRPhaseField ()
 {}
 
 template<PF::VariableType VariableType, int NumGhosts, int Dimension>
-void AMRPhaseField<VariableType, NumGhosts, Dimension>::problemSetup ( ProblemSpecP const & params, ProblemSpecP const & restart_prob_spec, GridP & grid, SimulationStateP & state )
+void AMRPhaseField<VariableType, NumGhosts, Dimension>::problemSetup ( ProblemSpecP const & params, ProblemSpecP const & restart_prob_spec, GridP & grid )
 {
-    PhaseField<VariableType, NumGhosts, Dimension>::problemSetup ( params, restart_prob_spec, grid, state );
+    PhaseField<VariableType, NumGhosts, Dimension>::problemSetup ( params, restart_prob_spec, grid );
 
     ProblemSpecP diffusion = params->findBlock ( "PhaseField" );
     diffusion->require ( "refine_threshold", refine_threshold );
@@ -630,7 +636,7 @@ void AMRPhaseField<VariableType, NumGhosts, Dimension>::scheduleRefine ( PatchSe
     }
     task->computes ( psi_label );
     task->computes ( u_label );
-    sched->addTask ( task, patches, state->allMaterials() );
+    sched->addTask ( task, patches, m_sharedState->allMaterials() );
 }
 
 template<PF::VariableType VariableType, int NumGhosts, int Dimension>
@@ -641,7 +647,7 @@ void AMRPhaseField<VariableType, NumGhosts, Dimension>::scheduleCoarsen ( LevelP
     task->requires ( Task::NewDW, u_label, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0 );
     task->modifies ( psi_label );
     task->modifies ( u_label );
-    sched->addTask ( task, level_coarse->eachPatch(), state->allMaterials() );
+    sched->addTask ( task, level_coarse->eachPatch(), m_sharedState->allMaterials() );
 }
 
 template<PF::VariableType VariableType, int NumGhosts, int Dimension>
@@ -649,9 +655,9 @@ void AMRPhaseField<VariableType, NumGhosts, Dimension>::scheduleErrorEstimate ( 
 {
     Task * task = scinew Task ( "AMRPhaseField::task_error_estimate", this, &AMRPhaseField::task_error_estimate );
     task->requires ( Task::NewDW, psi_label, Ghost::Ghost::None, 0 ); // this is actually the old value of this
-    task->modifies ( state->get_refineFlag_label(), state->refineFlagMaterials() );
-    task->modifies ( state->get_refinePatchFlag_label(), state->refineFlagMaterials() );
-    sched->addTask ( task, level_coarse->eachPatch(), state->allMaterials() );
+    task->modifies ( m_regridder->getRefineFlagLabel(), m_regridder->refineFlagMaterials() );
+    task->modifies ( m_regridder->getRefinePatchFlagLabel(), m_regridder->refineFlagMaterials() );
+    sched->addTask ( task, level_coarse->eachPatch(), m_sharedState->allMaterials() );
 }
 
 template<PF::VariableType VariableType, int NumGhosts, int Dimension>
@@ -766,8 +772,8 @@ void AMRPhaseField<VariableType, NumGhosts, Dimension>::task_error_estimate ( Pr
 
         FlagVariable flag_refine;
         PerPatch<PatchFlagP> flag_refine_patch;
-        dw_new->getModifiable ( flag_refine, state->get_refineFlag_label(), 0, patch );
-        dw_new->get ( flag_refine_patch, state->get_refinePatchFlag_label(), 0, patch );
+        dw_new->getModifiable ( flag_refine, m_regridder->getRefineFlagLabel(), 0, patch );
+        dw_new->get ( flag_refine_patch, m_regridder->getRefinePatchFlagLabel(), 0, patch );
         dbg_out4 << "flag_refine \t window " << flag_refine.getLowIndex() << flag_refine.getHighIndex() << std::endl;
 
         PatchFlag * patch_flag_refine = flag_refine_patch.get().get_rep();
@@ -799,8 +805,8 @@ void AMRPhaseFieldTest<VariableType, NumGhosts, Dimension>::task_error_estimate 
 
         FlagVariable flag_refine;
         PerPatch<PatchFlagP> flag_refine_patch;
-        dw_new->getModifiable ( flag_refine, state->get_refineFlag_label(), 0, patch );
-        dw_new->get ( flag_refine_patch, state->get_refinePatchFlag_label(), 0, patch );
+        dw_new->getModifiable ( flag_refine, m_regridder->getRefineFlagLabel(), 0, patch );
+        dw_new->get ( flag_refine_patch, m_regridder->getRefinePatchFlagLabel(), 0, patch );
         dbg_out4 << "flag_refine \t window " << flag_refine.getLowIndex() << flag_refine.getHighIndex() << std::endl;
 
         PatchFlag * patch_flag_refine = flag_refine_patch.get().get_rep();

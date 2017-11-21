@@ -308,7 +308,7 @@ void Mixing2::initialize(const ProcessorGroup*,
   }
 }
       
-void Mixing2::scheduleComputeStableTimestep(SchedulerP&,
+void Mixing2::scheduleComputeStableTimeStep(SchedulerP&,
                                            const LevelP&,
                                            const ModelInfo*)
 {

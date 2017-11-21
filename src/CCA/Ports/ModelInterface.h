@@ -34,6 +34,7 @@
 #include <Core/Util/Handle.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <CCA/Ports/SchedulerP.h>
+#include <CCA/Ports/Regridder.h>
 #include <CCA/Ports/Output.h>
 
 #include <Core/Grid/Variables/CCVariable.h>
@@ -147,7 +148,7 @@ WARNING
 
      virtual void restartInitialize() {}
       
-     virtual void scheduleComputeStableTimestep(SchedulerP& sched,
+     virtual void scheduleComputeStableTimeStep(SchedulerP& sched,
 						const LevelP& level,
 						const ModelInfo*) = 0;
       
@@ -176,14 +177,24 @@ WARNING
 
      virtual void setMPMLabel(MPMLabel* MLB);
                                                
-    bool computesThermoTransportProps() const;
-    bool d_modelComputesThermoTransportProps;
-    Output* d_dataArchiver;
-   
+     virtual void setRegridder( Regridder* regridder ) { m_regridder = regridder; };
+     virtual void setOutput( Output* output ) { m_output = output; };
+
+     virtual bool adjustOutputInterval()     const { return false; };
+     virtual bool adjustCheckpointInterval() const { return false; };
+
+     virtual bool mayEndSimulation()         const { return false; };
+          
+     bool computesThermoTransportProps() const;
+     bool d_modelComputesThermoTransportProps;
+
    protected:
+     Regridder* m_regridder{nullptr};
+     Output* m_output{nullptr};
+   
      const ProcessorGroup* d_myworld;
-   private:
      
+   private:     
      ModelInterface(const ModelInterface&);
      ModelInterface& operator=(const ModelInterface&);
    };

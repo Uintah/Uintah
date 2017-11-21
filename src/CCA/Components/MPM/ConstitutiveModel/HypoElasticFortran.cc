@@ -128,7 +128,7 @@ HypoElasticFortran::initializeCMData( const Patch* patch,
   // This method is defined in the ConstitutiveModel base class.
   initSharedDataForExplicit(patch, matl, new_dw);
 
-  computeStableTimestep(patch, matl, new_dw);
+  computeStableTimeStep(patch, matl, new_dw);
 }
 
 void
@@ -139,7 +139,7 @@ HypoElasticFortran::addParticleState(std::vector<const VarLabel*>& from,
 }
 
 void
-HypoElasticFortran::computeStableTimestep( const Patch* patch,
+HypoElasticFortran::computeStableTimeStep( const Patch* patch,
                                            const MPMMaterial* matl,
                                            DataWarehouse* new_dw )
 {

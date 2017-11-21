@@ -101,6 +101,7 @@ ifeq ($(HAVE_CUDA),yes)
 endif
 
 PSELIBS := \
+	CCA/Components/Application \
         CCA/Components/Arches/fortran   \
         CCA/Components/Models           \
         CCA/Components/OnTheFlyAnalysis \

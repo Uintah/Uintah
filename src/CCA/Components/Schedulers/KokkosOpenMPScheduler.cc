@@ -145,7 +145,7 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
 {
   // copy data timestep must be single threaded for now and
   //  also needs to run deterministically, in a static order
-  if (m_shared_state->isCopyDataTimestep()) {
+  if (m_is_copy_data_timestep) {
     MPIScheduler::execute(tgnum, iteration);
     return;
   }
@@ -286,9 +286,7 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
   m_exec_timer.stop();
 
   // compute the net timings
-  if ( m_shared_state != nullptr ) {
-    MPIScheduler::computeNetRunTimeStats(m_shared_state->d_runTimeStats);
-  }
+  MPIScheduler::computeNetRunTimeStats();
 
   // only do on toplevel scheduler
   if (m_parent_scheduler == nullptr) {

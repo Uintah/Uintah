@@ -51,15 +51,15 @@
 
 using namespace Uintah;
 
-MPNP::MPNP(const ProcessorGroup* myworld)
-  : UintahParallelComponent(myworld)
+MPNP::MPNP(const ProcessorGroup* myworld,
+	   const SimulationStateP sharedState)
+  : ApplicationCommon(myworld, sharedState)
 {
   d_lb = scinew FVMLabel();
 
   d_solver_parameters = 0;
   d_delt = 0;
   d_solver = 0;
-  d_shared_state = 0;
 
   d_mpnp_matl  = scinew MaterialSubset();
   d_mpnp_matl->add(0);
@@ -89,12 +89,9 @@ MPNP::~MPNP()
 //__________________________________
 //
 void MPNP::problemSetup(const ProblemSpecP& prob_spec,
-                              const ProblemSpecP& restart_prob_spec,
-                              GridP& grid,
-                              SimulationStateP& shared_state)
+			const ProblemSpecP& restart_prob_spec,
+			GridP& grid)
 {
-  d_shared_state = shared_state;
-  
   ProblemSpecP root_ps = 0;
   if (restart_prob_spec){
     root_ps = restart_prob_spec;
@@ -106,7 +103,6 @@ void MPNP::problemSetup(const ProblemSpecP& prob_spec,
 void
 MPNP::outputProblemSpec(ProblemSpecP& ps)
 {
-
 }
 
 //__________________________________
@@ -115,21 +111,23 @@ void
 MPNP::scheduleInitialize( const LevelP     & level,
                                               SchedulerP & sched )
 {
-
 }
+
 //__________________________________
 //
 void MPNP::scheduleRestartInitialize(const LevelP& level,
                                             SchedulerP& sched)
 {
 }
+
 //__________________________________
 // 
-void MPNP::scheduleComputeStableTimestep(const LevelP& level,
+void MPNP::scheduleComputeStableTimeStep(const LevelP& level,
                                           SchedulerP& sched)
 {
 
 }
+
 //__________________________________
 //
 void
@@ -137,14 +135,14 @@ MPNP::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
 
 }
+
 //__________________________________
 //
-void MPNP::computeStableTimestep(const ProcessorGroup*,
+void MPNP::computeStableTimeStep(const ProcessorGroup*,
                                   const PatchSubset* pss,
                                   const MaterialSubset*,
                                   DataWarehouse*, DataWarehouse* new_dw)
 {
-
 }
 
 //__________________________________
@@ -154,6 +152,4 @@ void MPNP::initialize(const ProcessorGroup*,
                        const MaterialSubset* matls,
                        DataWarehouse*, DataWarehouse* new_dw)
 {
-
-
 }

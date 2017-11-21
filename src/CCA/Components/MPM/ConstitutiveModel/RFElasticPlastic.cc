@@ -325,7 +325,7 @@ RFElasticPlastic::initializeCMData(const Patch* patch,
   // Initialize the variables shared by all constitutive models
   // This method is defined in the ConstitutiveModel base class.
   initSharedDataForExplicit(patch, matl, new_dw);
-  computeStableTimestep(patch, matl, new_dw);
+  computeStableTimeStep(patch, matl, new_dw);
 
   // Put stuff in here to initialize each particle's
   // constitutive model parameters and deformationMeasure
@@ -359,7 +359,7 @@ RFElasticPlastic::initializeCMData(const Patch* patch,
 //______________________________________________________________________
 //
 void 
-RFElasticPlastic::computeStableTimestep(const Patch* patch,
+RFElasticPlastic::computeStableTimeStep(const Patch* patch,
                                       const MPMMaterial* matl,
                                       DataWarehouse* new_dw)
 {

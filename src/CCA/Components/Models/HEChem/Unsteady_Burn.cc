@@ -237,7 +237,7 @@ void Unsteady_Burn::initialize(const ProcessorGroup*,
 }
 
 
-void Unsteady_Burn::scheduleComputeStableTimestep(SchedulerP&, const LevelP&, const ModelInfo*){
+void Unsteady_Burn::scheduleComputeStableTimeStep(SchedulerP&, const LevelP&, const ModelInfo*){
   // None necessary...
 }
 

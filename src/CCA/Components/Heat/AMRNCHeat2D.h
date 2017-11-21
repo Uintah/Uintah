@@ -55,14 +55,17 @@ protected:
 #endif
 
 public:
-    AMRNCHeat2D ( ProcessorGroup const * myworld, int verbosity = 0 );
+    AMRNCHeat2D ( const ProcessorGroup * myworld,
+		  const SimulationStateP sharedState,
+		  int verbosity = 0 );
+  
     virtual ~AMRNCHeat2D ();
 
 protected:
     AMRNCHeat2D ( AMRNCHeat2D const & ) = delete;
     AMRNCHeat2D & operator= ( AMRNCHeat2D const & ) = delete;
 
-    virtual void problemSetup ( ProblemSpecP const & params, ProblemSpecP const & restart_prob_spec, GridP & grid, SimulationStateP & state ) override;
+    virtual void problemSetup ( ProblemSpecP const & params, ProblemSpecP const & restart_prob_spec, GridP & grid ) override;
     virtual void scheduleTimeAdvance ( LevelP const & level, SchedulerP & ) override;
     virtual void scheduleRefine ( PatchSet const * patches, SchedulerP & sched ) override;
     virtual void scheduleRefineInterface ( LevelP const & /*level_fine*/, SchedulerP & /*sched*/, bool /*need_old_coarse*/, bool /*need_new_coarse*/ ) override {};

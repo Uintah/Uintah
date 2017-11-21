@@ -27,7 +27,10 @@
 
 #include <Core/Grid/SimulationState.h>
 #include <Core/Util/DOUT.hpp>
+#include <Core/Util/InfoMapper.h>
 #include <Core/Util/Timers/Timers.hpp>
+
+#include <CCA/Components/SimulationController/RunTimeStatsEnums.h>
 
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
 
@@ -62,7 +65,7 @@ public:
   // used to declare timers
   template <typename Tag> using TripTimer = Timers::ThreadTrip< Tag >;
 
-  using InfoStats = InfoMapper< SimulationState::RunTimeStat, double >;
+  using InfoStats = InfoMapper< RunTimeStatsEnum, double >;
 
   // NOT THREAD SAFE -- should only be called from the master thread
   // by the parent scheduler

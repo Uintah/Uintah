@@ -25,21 +25,20 @@
 #ifndef Packages_Uintah_CCA_Components_Heat_CCHeat2D_h
 #define Packages_Uintah_CCA_Components_Heat_CCHeat2D_h
 
+#include <CCA/Components/Application/ApplicationCommon.h>
+
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
 #include <Core/Grid/Ghost.h>
 #include <Core/Grid/Patch.h>
-#include <Core/Grid/SimulationState.h>
 #include <Core/Grid/SimpleMaterial.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/BlockRange.hpp>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/VarLabel.h>
-#include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/Util/DebugStream.h>
 #include <CCA/Components/Heat/TimeScheme.h>
 #include <CCA/Ports/Scheduler.h>
-#include <CCA/Ports/SimulationInterface.h>
 #include <CCA/Ports/SolverInterface.h>
 
 #define DBG_MATRIX
@@ -48,8 +47,7 @@ namespace Uintah
 {
 
 class CCHeat2D :
-    public UintahParallelComponent,
-    public SimulationInterface
+    public ApplicationCommon
 {
 protected:
     using ConstVariable = constCCVariable<double>;
@@ -109,19 +107,21 @@ protected:
 #   define GET_VIEW_A get_view ( A )
 #endif
 
-    SimulationStateP state;
     SolverInterface * solver;
     SolverParameters * solver_parameters;
 
 public:
-    CCHeat2D ( const ProcessorGroup * myworld, int verbosity = 0 );
+    CCHeat2D ( const ProcessorGroup * myworld,
+	       const SimulationStateP sharedState,
+	       int verbosity = 0 );
+  
     virtual ~CCHeat2D();
 
 protected:
     CCHeat2D ( CCHeat2D const & ) = delete;
     CCHeat2D & operator= ( CCHeat2D const & ) = delete;
 
-    virtual void problemSetup ( ProblemSpecP const & params, ProblemSpecP const & restart_prob_spec, GridP & grid, SimulationStateP & state ) override;
+    virtual void problemSetup ( ProblemSpecP const & params, ProblemSpecP const & restart_prob_spec, GridP & grid ) override;
     virtual void scheduleInitialize ( LevelP const & level, SchedulerP & sched ) override;
     virtual void scheduleRestartInitialize ( LevelP const & /*level*/, SchedulerP & /*sched*/ ) override {} // TODO
     virtual void scheduleComputeStableTimestep ( LevelP const & level, SchedulerP & sched ) override;

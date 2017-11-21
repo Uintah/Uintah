@@ -27,6 +27,9 @@
 
 #include <CCA/Ports/Output.h>
 #include <CCA/Ports/PIDXOutputContext.h>
+
+#include <CCA/Components/SimulationController/RunTimeStatsEnums.h>
+
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/MaterialSetP.h>
@@ -72,7 +75,7 @@ class DataWarehouse;
      ****************************************/
     
    //! Handles outputting the data.
-   class DataArchiver : public Output, public UintahParallelComponent {
+  class DataArchiver : public UintahParallelComponent, public Output {
      public:
        DataArchiver( const ProcessorGroup * myworld, int udaSuffix = -1 );
        virtual ~DataArchiver();
@@ -85,7 +88,7 @@ class DataWarehouse;
        //! data, then you can pass a nullptr SimulationState
        virtual void problemSetup( const ProblemSpecP    & params,
 				  const ProblemSpecP    & restart_prob_spec,
-                                        SimulationState * state );
+				  const SimulationStateP& state );
 
        virtual void outputProblemSpec( ProblemSpecP & root_ps );
 
@@ -103,8 +106,8 @@ class DataWarehouse;
        //! if they are to be copied at all (fromScratch is false).
        virtual void restartSetup( Dir    & restartFromDir,
                                   int      startTimestep,
-                                  int      timestep,
-                                  double   time,
+                                  int      timeStep,
+                                  double   simTime,
                                   bool     fromScratch,
                                   bool     removeOldDir );
 
@@ -120,33 +123,44 @@ class DataWarehouse;
 
        //! Checks to see if this is an output timestep. 
        //! If it is, setup directories and xml files that we need to output.
-       //! Call once per timestep, and if recompiling,
+       //! Call once per time step, and if recompiling,
        //! after all the other tasks are scheduled.
-       virtual void finalizeTimestep(       double       time,
-                                            double       delt,
-                                      const GridP      &,
-                                            SchedulerP &,
+       virtual void finalizeTimestep( const int timeStep,
+                                      const double       simTime,
+                                      const double       delT,
+                                      const GridP      & /* grid */,
+                                            SchedulerP & /* scheduler */,
                                             bool         recompile = false );
            
        //! schedule the output tasks if we are recompiling the taskgraph.  
-       virtual void sched_allOutputTasks(       double       delt,
+       virtual void sched_allOutputTasks( const double       delT,
                                           const GridP      & /* grid */,
                                                 SchedulerP & /* scheduler */,
                                                 bool         recompile = false );
                                       
        //! Call this after a timestep restart where delt is adjusted to
        //! make sure there still will be output and/or checkpoint timestep
-       virtual void reevaluate_OutputCheckPointTimestep(double time);
+       virtual void reevaluate_OutputCheckPointTimestep(const double simTime,
+							const double delT);
 
-     //! Call this after the timestep has been executed to find the
+       //! Call this after the timestep has been executed to find the
        //! next time step to output
-       virtual void findNext_OutputCheckPointTimestep( double time,
-						       bool restart = false );
+       virtual void findNext_OutputCheckPointTimestep( const int timeStep, 
+						       const double simTime,
+						       const double delT,
+						       const bool restart = false );
 
        //! write meta data to xml files 
        //! Call after timestep has completed.
-       virtual void writeto_xml_files( double delt, const GridP & grid );
-       virtual void writeto_xml_files( std::map< std::string, std::pair<std::string, std::string> > &modifiedVars );
+       virtual void writeto_xml_files( const int timeStep,
+				       const double simTime,
+				       const double delt,
+				       const GridP & grid );
+
+       virtual void writeto_xml_files( const int timeStep,
+				       std::map< std::string,
+				       std::pair<std::string,
+				       std::string> > &modifiedVars );
 
        //! Returns as a string the name of the top of the output directory.
        virtual const std::string getOutputLocation() const;
@@ -196,17 +210,18 @@ class DataWarehouse;
 
        bool isLabelSaved ( const std::string & label ) const;
        
-       //! Allow a component to define the output and checkpoint interval on the fly.
-       void updateOutputInterval( double inv );
-       void updateOutputTimestepInterval( int inv );
-       void updateCheckpointInterval( double inv );
-       void updateCheckpointTimestepInterval( int inv );
-
+       //! Allow a component to adjust the output and checkpoint
+       //! interval on the fly.
+       void   setOutputInterval( double inv );
        double getOutputInterval()         const { return d_outputInterval; }
+       void   setOutputTimestepInterval( int inv );
        int    getOutputTimestepInterval() const { return d_outputTimestepInterval; }
 
+       void   setCheckpointInterval( double inv );
        double getCheckpointInterval()         const { return d_checkpointInterval; }
+       void   setCheckpointTimestepInterval( int inv );
        int    getCheckpointTimestepInterval() const { return d_checkpointTimestepInterval; }
+
        int    getCheckpointWalltimeInterval() const { return d_checkpointWalltimeInterval; }
 
        bool   savingAsPIDX() const { return ( d_outputFileFormat == PIDX ); } 
@@ -216,12 +231,32 @@ class DataWarehouse;
        void   setSaveAsPIDX() { d_outputFileFormat = PIDX; }
 
        //! Called by In-situ VisIt to force the dump of a time step's data.
-       void outputTimestep( double time, double delt,
-                            const GridP& grid, SchedulerP& sched );
+       void outputTimestep( const int timeStep,
+			    const double simTime,
+			    const double delT,
+                            const GridP& grid,
+			    SchedulerP& sched );
 
-       void checkpointTimestep( double time, double delt,
-                                const GridP& grid, SchedulerP& sched );
+       void checkpointTimestep( const int timeStep,
+				const double simTime,
+				const double delT,
+				const GridP& grid,
+				SchedulerP& sched );
 
+       void maybeLastTimestep( bool val ) { d_maybeLastTimestep = val; };
+       bool maybeLastTimestep() { return d_maybeLastTimestep; };
+     
+       void setSwitchState(bool val) { d_switchState = val; }
+       bool getSwitchState() const { return d_switchState; }   
+    
+       void   setElapsedWallTime( double val ) { d_elapsedWallTime = val; };
+       double getElapsedWallTime() const { return d_elapsedWallTime; };
+     
+       void setUseLocalFileSystems(bool val) { d_useLocalFileSystems = val; };
+       bool getUseLocalFileSystems() const { return d_useLocalFileSystems; };
+     
+       void setRunTimeStats( ReductionInfoMapper< RunTimeStatsEnum, double > *runTimeStats) { d_runTimeStats = runTimeStats; };
+     
      public:
 
        //! problemSetup parses the ups file into a list of these
@@ -258,7 +293,8 @@ class DataWarehouse;
        //         PIDX related
        //! output the all of the saveLabels in PIDX format
        size_t
-          saveLabels_PIDX( std::vector< SaveItem >   & saveLabels,
+          saveLabels_PIDX( const int timeStep,
+			   std::vector< SaveItem >   & saveLabels,
                            const ProcessorGroup      * pg,
                            const PatchSubset         * patches,      
                            DataWarehouse             * new_dw,          
@@ -305,7 +341,8 @@ class DataWarehouse;
        //! helper for beginOutputTimestep - creates and writes
        //! the necessary directories and xml files to begin the 
        //! output timestep.
-       void makeTimestepDirs( Dir& dir,
+       void makeTimeStepDirs( const int timeStep,
+			      Dir& dir,
                               std::vector<SaveItem>& saveLabels,
                               const GridP& grid,
                               std::string* pTimestepDir );
@@ -330,8 +367,9 @@ class DataWarehouse;
 
        //! Helper for finalizeTimestep - determines if, based on the current
        //! time and timestep, this will be an output or checkpoint timestep.
-       void beginOutputTimestep( const double   time,
-                                 const double   delt,
+       void beginOutputTimestep( const int timeStep,
+                                 const double   simTime,
+                                 const double   delT,
                                  const GridP  & grid );
 
        //! helper for initializeOutput - writes the initial index.xml file,
@@ -386,10 +424,10 @@ class DataWarehouse;
        double d_outputInterval;         // In seconds.
        int    d_outputTimestepInterval; // Number of time steps.
 
-       double d_nextOutputTime;         // used when d_outputInterval != 0
-       int    d_nextOutputTimestep;     // used when d_outputTimestepInterval != 0
+       double d_nextOutputTime;     // used when d_outputInterval != 0
+       int    d_nextOutputTimestep; // used when d_outputTimestepInterval != 0
 
-       bool   d_outputLastTimestep;     // Output the last time step.
+       bool   d_outputLastTimestep; // Output the last time step.
      
        //int d_currentTimestep;
        Dir    d_dir;                    //!< top of uda dir
@@ -415,7 +453,19 @@ class DataWarehouse;
      
        std::string d_particlePositionName;
 
-       //double d_currentTime;
+       const VarLabel* m_timeStepLabel;
+       const VarLabel* m_simTimeLabel;
+       const VarLabel* m_delTLabel;
+    
+       double d_elapsedWallTime {0};
+       bool d_maybeLastTimestep{false};
+
+       bool d_switchState{false};
+
+       // Tells the data archiver that we are running with each MPI node
+       // having a separate file system.  (Simulation defaults to running
+       // on a shared file system.)
+       bool d_useLocalFileSystems{false};
 
        //! d_saveLabelNames is a temporary list containing VarLabel
        //! names to be saved and the materials to save them for.  The
@@ -503,11 +553,12 @@ class DataWarehouse;
        bool d_usingReduceUda;
        
        Dir d_fromDir;                   // keep track of the original uda
-       void copy_outputProblemSpec(Dir& fromDir, Dir& toDir);
+       void copy_outputProblemSpec(const int timeStep,
+				   Dir& fromDir, Dir& toDir);
        
        // returns either the top level timestep or if reduceUda is used
        // a value from the index.xml file
-       int getTimestepTopLevel();
+       int getTimestepTopLevel(const int timeStep);
 
        //-----------------------------------------------------------
        // RNJ - 
@@ -546,6 +597,8 @@ class DataWarehouse;
        //! redo output and Checkpoint tasks.
        int d_numLevelsInOutput;
 
+       ReductionInfoMapper< RunTimeStatsEnum, double > *d_runTimeStats;
+
 #if SCI_ASSERTION_LEVEL >= 2
        //! double-check to make sure that DA::output is only called once per level per processor per type
        std::vector<bool> d_outputCalled;
@@ -555,8 +608,7 @@ class DataWarehouse;
        std::mutex d_outputLock;
 
        DataArchiver(const DataArchiver&);
-       DataArchiver& operator=(const DataArchiver&);
-      
+       DataArchiver& operator=(const DataArchiver&);      
    };
 
 } // End namespace Uintah

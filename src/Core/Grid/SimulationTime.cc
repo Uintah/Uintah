@@ -38,9 +38,19 @@ using namespace Uintah;
 
 SimulationTime::SimulationTime( const ProblemSpecP & params )
 {
+  // proc0cout << "  Reading the <Time> block from: "
+  // 	    << Uintah::basename(params->getFile()) << "\n";
+
   m_delt_factor = 1.0;
   
   ProblemSpecP time_ps = params->findBlock( "Time" );
+
+  if ( !time_ps ) {
+    throw ProblemSetupException("ERROR SimulationTime \n"
+				"Can not find the <Time> block.",
+                                __FILE__, __LINE__);
+  }
+
   time_ps->require( "maxTime", m_max_time );
   time_ps->require( "initTime", m_init_time );
   time_ps->require( "delt_min", m_delt_min );
@@ -56,8 +66,8 @@ SimulationTime::SimulationTime( const ProblemSpecP & params )
     m_initial_delt_range = 0;
   }
   else if( m_initial_delt_range < 0 ) {
-    std::cerr << "Negative initial_delt_range is not allowed.\n";
-    std::cerr << "resetting to 0 (i.e. the value is ignored)\n";
+    proc0cout << "Negative initial_delt_range is not allowed.\n";
+    proc0cout << "resetting to 0 (i.e. the value is ignored)\n";
     m_initial_delt_range = 0;
   }
   
@@ -65,41 +75,42 @@ SimulationTime::SimulationTime( const ProblemSpecP & params )
     m_max_delt_increase = 0;
   }
   else if( m_max_wall_time < 0 ) {
-    std::cerr << "Negative max_wall_time is not allowed.\n";
-    std::cerr << "resetting to 0 (i.e. the value is ignored)\n";
+    proc0cout << "Negative max_wall_time is not allowed.\n";
+    proc0cout << "resetting to 0 (i.e. the value is ignored)\n";
     m_max_delt_increase = 0;
   }
     
   if( !time_ps->get( "override_restart_delt", m_override_restart_delt) ) {
     m_override_restart_delt = 0.0;
   }
-  else if( m_max_timestep < 0 ) {
-    std::cerr << "Negative override_restart_delt is not allowed.\n";
-    std::cerr << "resetting to 0 (i.e. the value is ignored)\n";
-    m_max_timestep = 0;
+  else if( m_override_restart_delt < 0 ) {
+    proc0cout << "Negative override_restart_delt is not allowed.\n";
+    proc0cout << "resetting to 0 (i.e. the value is ignored)\n";
+    m_override_restart_delt = 0.0;
   }
 
-  if( !time_ps->get( "max_Timesteps", m_max_timestep ) ) {
-    m_max_timestep = 0;
+  if( !time_ps->get( "max_Timesteps", m_max_time_steps ) ) {
+    m_max_time_steps = 0;
   }
-  else if( m_max_timestep < 0 ) {
-    std::cerr << "Negative maxTimesteps is not allowed.\n";
-    std::cerr << "resetting to 0 (i.e. the value is ignored)\n";
-    m_max_timestep = 0;
+  else if( m_max_time_steps < 0 ) {
+    proc0cout << "Negative max_Timesteps is not allowed.\n";
+    proc0cout << "resetting to 0 (i.e. the value is ignored)\n";
+    m_max_time_steps = 0;
   }
   
   if( !time_ps->get( "max_wall_time", m_max_wall_time ) ) {
     m_max_wall_time = 0;
   }
   else if( m_max_wall_time < 0 ) {
-    std::cerr << "Negative max_wall_time is not allowed.\n";
-    std::cerr << "resetting to 0 (i.e. the value is ignored)\n";
+    proc0cout << "Negative max_wall_time is not allowed.\n";
+    proc0cout << "resetting to 0 (i.e. the value is ignored)\n";
     m_max_wall_time = 0;
   }
   
   if ( !time_ps->get( "clamp_time_to_output", m_clamp_time_to_output ) ) {
     m_clamp_time_to_output = false;
   }
+
   if ( !time_ps->get( "end_at_max_time_exactly", m_end_at_max_time ) ) {
     m_end_at_max_time = false;
   }
@@ -125,13 +136,21 @@ SimulationTime::SimulationTime( const ProblemSpecP & params )
 void
 SimulationTime::problemSetup( const ProblemSpecP & params )
 {
-  proc0cout << "  Reading <Time> section from: " <<
-  Uintah::basename(params->getFile()) << "\n";
+  proc0cout << "  Reading the <Time> block from: "
+	    << Uintah::basename(params->getFile()) << "\n";
+
   ProblemSpecP time_ps = params->findBlock("Time");
-  time_ps->require("delt_min", m_delt_min);
-  time_ps->require("delt_max", m_delt_max);
-  time_ps->require("timestep_multiplier", m_delt_factor);
+
+  if ( !time_ps ) {
+    throw ProblemSetupException("ERROR SimulationTime \n"
+				"Can not find the <Time> block.",
+                                __FILE__, __LINE__);
+  }
   
+  time_ps->require( "delt_min", m_delt_min );
+  time_ps->require( "delt_max", m_delt_max );
+  time_ps->require( "timestep_multiplier", m_delt_factor );
+
   if( !time_ps->get("delt_init", m_max_initial_delt) &&
       !time_ps->get("max_initial_delt", m_max_initial_delt) ) {
     m_max_initial_delt = 0;
@@ -141,8 +160,8 @@ SimulationTime::problemSetup( const ProblemSpecP & params )
     m_initial_delt_range = 0;
   }
   else if( m_initial_delt_range < 0 ) {
-    std::cerr << "Negative initial_delt_range is not allowed.\n";
-    std::cerr << "resetting to 0 (i.e. the value is ignored)\n";
+    proc0cout << "Negative initial_delt_range is not allowed.\n";
+    proc0cout << "resetting to 0 (i.e. the value is ignored)\n";
     m_initial_delt_range = 0;
   }
 
@@ -150,8 +169,8 @@ SimulationTime::problemSetup( const ProblemSpecP & params )
     m_max_delt_increase = 0;
   }
   else if( m_max_wall_time < 0 ) {
-    std::cerr << "Negative max_wall_time is not allowed.\n";
-    std::cerr << "resetting to 0 (i.e. the value is ignored)\n";
+    proc0cout << "Negative max_wall_time is not allowed.\n";
+    proc0cout << "resetting to 0 (i.e. the value is ignored)\n";
     m_max_delt_increase = 0;
   }
   

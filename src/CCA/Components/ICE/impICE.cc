@@ -147,7 +147,7 @@ void ICE::scheduleSetupRHS(  SchedulerP& sched,
   t->computes(lb->vol_fracZ_FCLabel);
   t->computes(lb->term2Label, one_matl,oims);
   
-  if(d_doAMR){  // compute refluxing variables if using AMR
+  if(isAMR()){  // compute refluxing variables if using AMR
     t->computes(lb->vol_frac_X_FC_fluxLabel);
     t->computes(lb->vol_frac_Y_FC_fluxLabel);
     t->computes(lb->vol_frac_Z_FC_fluxLabel);
@@ -340,7 +340,7 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
   // NewDW = ParentNewDW
   
 #ifdef HAVE_HYPRE
-  if (d_solver->getName() == "hypre") {
+  if (m_solver->getName() == "hypre") {
     t->requires(Task::OldDW,hypre_solver_label);
     t->computes(hypre_solver_label);
     
@@ -351,6 +351,7 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
 
   //__________________________________
   // common Variables
+  // t->requires( Task::OldDW, lb->timeStepLabel);
   t->requires( Task::OldDW, lb->delTLabel,level.get_rep());
   t->requires( Task::NewDW, lb->vol_frac_CCLabel,   gac,2); 
   t->requires( Task::NewDW, lb->sp_vol_CCLabel,     gac,1);
@@ -438,9 +439,9 @@ ICE::setupMatrix( const ProcessorGroup *,
           new_dw->getOtherDataWarehouse(Task::ParentNewDW);
             
     delt_vartype delT;
-    parent_old_dw->get(delT, d_sharedState->get_delt_label(),level);
+    parent_old_dw->get(delT, m_sharedState->get_delt_label(),level);
     Vector dx     = patch->dCell();
-    int numMatls  = d_sharedState->getNumMatls();
+    int numMatls  = m_sharedState->getNumMatls();
     CCVariable<Stencil7> A; 
     CCVariable<double> imp_delP;
     constCCVariable<double> sumKappa;
@@ -467,7 +468,7 @@ ICE::setupMatrix( const ProcessorGroup *,
     } 
   
     for(int m = 0; m < numMatls; m++) {
-      Material* matl = d_sharedState->getMaterial( m );
+      Material* matl = m_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
       constSFCXVariable<double> sp_volX_FC, vol_fracX_FC;
       constSFCYVariable<double> sp_volY_FC, vol_fracY_FC;
@@ -566,12 +567,11 @@ void ICE::setupRHS(const ProcessorGroup*,
       pOldDW  = old_dw;
     }
            
-    int numMatls  = d_sharedState->getNumMatls();
+    int numMatls  = m_sharedState->getNumMatls();
     delt_vartype delT;
-    pOldDW->get(delT, d_sharedState->get_delt_label(), level);
+    pOldDW->get(delT, m_sharedState->get_delt_label(), level);
     
-    bool newGrid = d_sharedState->isRegridTimestep();
-    Advector* advector = d_advector->clone(new_dw,patch,newGrid );
+    Advector* advector = d_advector->clone(new_dw,patch,isRegridTimeStep());
     
     CCVariable<double> q_advected, rhs;
     CCVariable<double> sumAdvection, massExchTerm;
@@ -601,7 +601,7 @@ void ICE::setupRHS(const ProcessorGroup*,
 
     
     for(int m = 0; m < numMatls; m++) {
-      Material* matl = d_sharedState->getMaterial( m );
+      Material* matl = m_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
       constSFCXVariable<double> uvel_FC;
       constSFCYVariable<double> vvel_FC;
@@ -641,7 +641,7 @@ void ICE::setupRHS(const ProcessorGroup*,
       varBasket->patch  = patch;
       varBasket->level  = level;
       varBasket->lb     = lb;
-      varBasket->doRefluxing             = d_doAMR; // always reflux with amr
+      varBasket->doRefluxing             = isAMR(); // always reflux with amr
       varBasket->is_Q_massSpecific       = false;
       varBasket->useCompatibleFluxes     = d_useCompatibleFluxes;
       varBasket->AMR_subCycleProgressVar = 0;       // for lockstep it's always 0
@@ -793,7 +793,7 @@ void ICE::updatePressure(const ProcessorGroup*,
     DataWarehouse* parent_old_dw = 
           new_dw->getOtherDataWarehouse(Task::ParentOldDW);
                     
-    int numMatls  = d_sharedState->getNumMatls(); 
+    int numMatls  = m_sharedState->getNumMatls(); 
     Ghost::GhostType  gn = Ghost::None;
           
     CCVariable<double> press_CC;     
@@ -812,7 +812,7 @@ void ICE::updatePressure(const ProcessorGroup*,
     press_CC.initialize(d_EVIL_NUM);
     
     for(int m = 0; m < numMatls; m++) {
-      Material* matl = d_sharedState->getMaterial( m );
+      Material* matl = m_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
       parent_new_dw->get(sp_vol_CC[m],lb->sp_vol_CCLabel, indx,patch,gn,0);
     }             
@@ -835,7 +835,7 @@ void ICE::updatePressure(const ProcessorGroup*,
                             lb,  patch, 999, d_BC_globalVars, BC_localVars );
 
     setBC(press_CC, placeHolder, sp_vol_CC, d_surroundingMatl_indx,
-          "sp_vol", "Pressure", patch ,d_sharedState, 0, new_dw, 
+          "sp_vol", "Pressure", patch ,m_sharedState, 0, new_dw, 
            d_BC_globalVars, BC_localVars );
            
     delete_CustomBCs(d_BC_globalVars, BC_localVars);
@@ -868,7 +868,7 @@ void ICE::computeDel_P(const ProcessorGroup*,
     
     printTask(patches, patch, cout_doing, "Doing ICE::computeDel_P" );
             
-    int numMatls  = d_sharedState->getNumMatls(); 
+    int numMatls  = m_sharedState->getNumMatls(); 
       
     CCVariable<double> delP_Dilatate;
     CCVariable<double> delP_MassX;
@@ -894,7 +894,7 @@ void ICE::computeDel_P(const ProcessorGroup*,
     delP_MassX.initialize(0.0); 
          
     for(int m = 0; m < numMatls; m++) {
-      Material* matl = d_sharedState->getMaterial( m );
+      Material* matl = m_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
       new_dw->get(rho_CC,      lb->rho_CCLabel,    indx,patch,gn,0);
       //__________________________________
@@ -933,7 +933,7 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
 
   //__________________________________
   // define Matl sets and subsets
-  const MaterialSet* all_matls = d_sharedState->allMaterials();
+  const MaterialSet* all_matls = m_sharedState->allMaterials();
   const MaterialSubset* all_matls_sub = all_matls->getUnion();
   MaterialSubset* one_matl    = d_press_matl;
   
@@ -962,8 +962,8 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
   //  Move data from parentOldDW to subSchedNewDW.
   delt_vartype dt;
   subNewDW = d_subsched->get_dw(3);
-  ParentOldDW->get(dt, d_sharedState->get_delt_label(),level.get_rep());
-  subNewDW->put(dt, d_sharedState->get_delt_label(),level.get_rep());
+  ParentOldDW->get(dt, m_sharedState->get_delt_label(),level.get_rep());
+  subNewDW->put(dt, m_sharedState->get_delt_label(),level.get_rep());
    
   max_vartype max_RHS_old;
   ParentNewDW->get(max_RHS_old, lb->max_RHSLabel);
@@ -971,7 +971,7 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
 
 #ifdef HAVE_HYPRE
   SoleVariable<hypre_solver_structP> hypre_solverP_;
-  if (d_solver->getName() == "hypre") {
+  if (m_solver->getName() == "hypre") {
     if (ParentOldDW->exists(hypre_solver_label)) {
       ParentOldDW->get(hypre_solverP_, hypre_solver_label);
       subNewDW->put(   hypre_solverP_, hypre_solver_label);
@@ -1021,7 +1021,7 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
 
 
       
-      d_solver->scheduleSolve(level, d_subsched, d_press_matlSet,
+      m_solver->scheduleSolve(level, d_subsched, d_press_matlSet,
                               lb->matrixLabel,   Task::NewDW,
                               lb->imp_delPLabel, modifies_X,
                               lb->rhsLabel,      Task::OldDW,
@@ -1075,11 +1075,15 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
               << " after solve " << max_RHS<< endl;
     
     // output files for debugging
-    int timestep = d_sharedState->getCurrentTopLevelTimeStep();
+    double timeStep = m_sharedState->getCurrentTopLevelTimeStep();
+
+    // timeStep_vartype timeStep;
+    // ParentOldDW->get(timeStep, lb->timeStepLabel);
+
     int proc = d_myworld->myRank();
     ostringstream fname;
     
-    fname << "." << proc <<"." << timestep << "." << counter;
+    fname << "." << proc <<"." << timeStep << "." << counter;
     d_solver_parameters->setOutputFileName(fname.str());
     
     //__________________________________
@@ -1131,7 +1135,7 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
   bool replace = true;
 
 #ifdef HAVE_HYPRE
-  if (d_solver->getName() == "hypre") {
+  if (m_solver->getName() == "hypre") {
     if (subNewDW->exists(hypre_solver_label)) {
       subNewDW->get(hypre_solverP_,hypre_solver_label);
       ParentNewDW->put(hypre_solverP_, hypre_solver_label);

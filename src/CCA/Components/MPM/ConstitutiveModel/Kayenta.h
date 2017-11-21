@@ -117,7 +117,7 @@ namespace Uintah {
     Kayenta* clone();
 
     // compute stable timestep for this patch
-    virtual void computeStableTimestep(const Patch* patch,
+    virtual void computeStableTimeStep(const Patch* patch,
                                        const MPMMaterial* matl,
                                        DataWarehouse* new_dw);
     // compute stress at each particle in the patch

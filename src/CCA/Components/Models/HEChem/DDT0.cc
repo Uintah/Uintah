@@ -262,7 +262,7 @@ void DDT0::initialize(const ProcessorGroup*,
 
 //______________________________________________________________________
 //      
-void DDT0::scheduleComputeStableTimestep(SchedulerP&,
+void DDT0::scheduleComputeStableTimeStep(SchedulerP&,
                                           const LevelP&,
                                           const ModelInfo*)
 {

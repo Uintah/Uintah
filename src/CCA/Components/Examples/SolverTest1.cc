@@ -33,7 +33,6 @@
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/SoleVariable.h>
 #include <Core/Grid/Variables/CellIterator.h>
-#include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
@@ -45,8 +44,9 @@
 
 using namespace Uintah;
 
-SolverTest1::SolverTest1(const ProcessorGroup* myworld)
-  : UintahParallelComponent(myworld)
+SolverTest1::SolverTest1(const ProcessorGroup* myworld,
+			 const SimulationStateP sharedState)
+  : ApplicationCommon(myworld, sharedState)
 {
   lb_ = scinew ExamplesLabel();
 }
@@ -61,7 +61,7 @@ SolverTest1::~SolverTest1()
 //
 void SolverTest1::problemSetup(const ProblemSpecP& prob_spec, 
                                const ProblemSpecP& restart_prob_spec, 
-                               GridP&, SimulationStateP& sharedState)
+                               GridP&)
 {
   solver = dynamic_cast<SolverInterface*>(getPort("solver"));
   if(!solver) {
@@ -70,10 +70,9 @@ void SolverTest1::problemSetup(const ProblemSpecP& prob_spec,
   
   ProblemSpecP st_ps = prob_spec->findBlock("SolverTest");
   solver_parameters = solver->readParameters(st_ps, "implicitPressure",
-                                             sharedState);
+                                             m_sharedState);
   solver_parameters->setSolveOnExtraCells(false);
     
-  sharedState_ = sharedState;
   st_ps->require("delt", delt_);
 
   // whether or not to do laplacian in x,y,or z direction
@@ -94,14 +93,14 @@ void SolverTest1::problemSetup(const ProblemSpecP& prob_spec,
     throw ProblemSetupException("SolverTest: Must specify one of X_Laplacian, Y_Laplacian, or Z_Laplacian",
                                 __FILE__, __LINE__);
   mymat_ = scinew SimpleMaterial();
-  sharedState->registerSimpleMaterial(mymat_);
+  m_sharedState->registerSimpleMaterial(mymat_);
 }
 //__________________________________
 // 
 void SolverTest1::scheduleInitialize(const LevelP& level,
                                SchedulerP& sched)
 {
-  solver->scheduleInitialize(level,sched,sharedState_->allMaterials());
+  solver->scheduleInitialize(level,sched,m_sharedState->allMaterials());
 }
 //__________________________________
 //
@@ -111,13 +110,13 @@ void SolverTest1::scheduleRestartInitialize(const LevelP& level,
 }
 //__________________________________
 // 
-void SolverTest1::scheduleComputeStableTimestep(const LevelP& level,
+void SolverTest1::scheduleComputeStableTimeStep(const LevelP& level,
                                           SchedulerP& sched)
 {
-  Task* task = scinew Task("computeStableTimestep",this, 
-                           &SolverTest1::computeStableTimestep);
-  task->computes(sharedState_->get_delt_label(),level.get_rep());
-  sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
+  Task* task = scinew Task("computeStableTimeStep",this, 
+                           &SolverTest1::computeStableTimeStep);
+  task->computes(m_sharedState->get_delt_label(),level.get_rep());
+  sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
 }
 //__________________________________
 //
@@ -130,9 +129,9 @@ SolverTest1::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
   task->computes(lb_->pressure_matrix);
   task->computes(lb_->pressure_rhs);
 
-  sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
+  sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
 
-  solver->scheduleSolve(level, sched, sharedState_->allMaterials(), 
+  solver->scheduleSolve(level, sched, m_sharedState->allMaterials(), 
                         lb_->pressure_matrix, Task::NewDW, lb_->pressure, 
                         false, lb_->pressure_rhs, Task::NewDW, 0, Task::OldDW, 
                         solver_parameters,false);
@@ -140,12 +139,12 @@ SolverTest1::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 }
 //__________________________________
 //
-void SolverTest1::computeStableTimestep(const ProcessorGroup*,
+void SolverTest1::computeStableTimeStep(const ProcessorGroup*,
                                   const PatchSubset* pss,
                                   const MaterialSubset*,
                                   DataWarehouse*, DataWarehouse* new_dw)
 {
-  new_dw->put(delt_vartype(delt_), sharedState_->get_delt_label(),getLevel(pss));
+  new_dw->put(delt_vartype(delt_), m_sharedState->get_delt_label(),getLevel(pss));
 }
 //__________________________________
 //

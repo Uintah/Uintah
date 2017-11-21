@@ -103,7 +103,7 @@
     <checkpoint cycle="2" timestepInterval="3"/>
     <compression>gzip</compression>
   </DataArchiver>
-  <AMR>
+  <AMR type="StaticGridML">
     <useLockStep> true </useLockStep>
   </AMR>
   <Grid doAMR="true">

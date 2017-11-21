@@ -32,6 +32,7 @@
 
 #include <CCA/Components/SimulationController/SimulationController.h>
 #include <CCA/Components/OnTheFlyAnalysis/MinMax.h>
+#include <CCA/Ports/ApplicationInterface.h>
 #include <CCA/Ports/Output.h>
 
 #include <Core/Grid/Material.h>
@@ -144,8 +145,8 @@ void visit_InitLibSim( visit_simulation_data *sim )
   sim->imageWidth    = 640;
   sim->imageFormat   = 2;
 
-  sim->stopAtTimeStep = 0;
-  sim->stopAtLastTimeStep = 0;
+  sim->stopAtTimestep = 0;
+  sim->stopAtLastTimestep = 0;
 
   sim->stepInfo = nullptr;
 
@@ -325,7 +326,7 @@ bool visit_CheckState( visit_simulation_data *sim )
       }
 
       // Check to see if the user wants to stop.
-      if( sim->cycle == sim->stopAtTimeStep )
+      if( sim->cycle == sim->stopAtTimestep )
       {
         sim->runMode = VISIT_SIMMODE_STOPPED;
       }
@@ -506,25 +507,26 @@ bool visit_CheckState( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_UpdateSimData( visit_simulation_data *sim, 
                           GridP currentGrid,
-                          double time, double delt, double delt_next,
+			  double time,  unsigned int cycle,
+			  double delt, double delt_next,
 			  bool first, bool last )
 {
-  SimulationStateP simStateP = sim->simController->getSimulationStateP();
+  ApplicationInterface* appInterface =
+    sim->simController->getApplicationInterface();
 
-  // Update all of the simulation grid and time dependent
-  // variables.
-  sim->gridP         = currentGrid;
-  sim->time          = time;
-  sim->delt          = delt;
-  sim->delt_next     = delt_next;
+  // Update all of the simulation grid and time dependent variables.
+  sim->gridP     = currentGrid;
+
+  sim->time      = time;
+  sim->cycle     = cycle;
+  sim->delt      = delt;
+  sim->delt_next = delt_next;
   
-  sim->first         = first;
-
-  sim->cycle         = simStateP->getCurrentTopLevelTimeStep();
+  sim->first     = first;
 
   // Check to see if at the last iteration. If so stop so the
   // user can have once last chance see the data.
-  if( sim->stopAtLastTimeStep && last )
+  if( sim->stopAtLastTimestep && last )
   {
     sim->runMode = VISIT_SIMMODE_STOPPED;
 
@@ -593,7 +595,7 @@ void visit_Initialize( visit_simulation_data *sim )
   if( Parallel::usingMPI() )
     VisItSetGetDomainList(visit_SimGetDomainList, (void*) sim);
 
-  VisItUI_textChanged("MaxTimeStep", visit_MaxTimeStepCallback, (void*) sim);
+  VisItUI_textChanged("MaxTimestep", visit_MaxTimestepCallback, (void*) sim);
   VisItUI_textChanged("MaxTime",     visit_MaxTimeCallback,     (void*) sim);
   VisItUI_valueChanged("EndOnMaxTime",
                        visit_EndOnMaxTimeCallback, (void*) sim);
@@ -617,10 +619,10 @@ void visit_Initialize( visit_simulation_data *sim )
   VisItUI_textChanged("ImageWidth",     visit_ImageWidthCallback,  (void*) sim);
   VisItUI_valueChanged("ImageFormat",   visit_ImageFormatCallback, (void*) sim);
 
-  VisItUI_textChanged("StopAtTimeStep",
-                      visit_StopAtTimeStepCallback,      (void*) sim);
-  VisItUI_valueChanged("StopAtLastTimeStep",
-                       visit_StopAtLastTimeStepCallback, (void*) sim);
+  VisItUI_textChanged("StopAtTimestep",
+                      visit_StopAtTimestepCallback,      (void*) sim);
+  VisItUI_valueChanged("StopAtLastTimestep",
+                       visit_StopAtLastTimestepCallback, (void*) sim);
 
   VisItUI_cellChanged("StateVariableTable",
                       visit_StateVariableCallback, (void*) sim);

@@ -166,7 +166,7 @@ void Simple_Burn::scheduleInitialize(SchedulerP&,
 }
 //______________________________________________________________________
 //      
-void Simple_Burn::scheduleComputeStableTimestep(SchedulerP&,
+void Simple_Burn::scheduleComputeStableTimeStep(SchedulerP&,
                                               const LevelP&,
                                               const ModelInfo*)
 {

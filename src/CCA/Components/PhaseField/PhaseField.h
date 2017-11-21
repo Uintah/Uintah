@@ -25,19 +25,18 @@
 #ifndef Packages_Uintah_CCA_Components_PhaseField_PhaseField_h
 #define Packages_Uintah_CCA_Components_PhaseField_PhaseField_h
 
+#include <CCA/Components/Application/ApplicationCommon.h>
+
 #include <Core/Grid/Ghost.h>
 #include <Core/Grid/Patch.h>
-#include <Core/Grid/SimulationState.h>
 #include <Core/Grid/SimpleMaterial.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/BlockRange.hpp>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/VarLabel.h>
-#include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/Util/DebugStream.h>
 #include <CCA/Ports/Scheduler.h>
-#include <CCA/Ports/SimulationInterface.h>
 
 namespace Uintah
 {
@@ -331,8 +330,7 @@ std::ostream& operator << ( std::ostream& stream, const BlockRange& range )
 
 template<PF::VariableType VariableType, int NumGhosts, int Dimension>
 class PhaseField :
-    public UintahParallelComponent,
-    public SimulationInterface
+    public ApplicationCommon
 {
 protected:
     constexpr static Patch::FaceType start_face = static_cast<Patch::FaceType> ( 0 );
@@ -496,18 +494,18 @@ protected:
     VarLabel const * grad_psi_norm2_label, * grad_psi_label[Dimension];
     VarLabel const * a_label, * a2_label, * b_label[b_size];
 
-    SimulationStateP state;
-
-
 public:
-    PhaseField ( const ProcessorGroup * myworld, int verbosity = 0 );
+    PhaseField ( const ProcessorGroup * myworld,
+		 const SimulationStateP sharedState,
+		 int verbosity = 0 );
+  
     virtual ~PhaseField();
 
 protected:
     PhaseField ( PhaseField const & ) = delete;
     PhaseField & operator= ( PhaseField const & ) = delete;
 
-    virtual void problemSetup ( ProblemSpecP const & params, ProblemSpecP const & restart_prob_spec, GridP & grid, SimulationStateP & state ) override;
+    virtual void problemSetup ( ProblemSpecP const & params, ProblemSpecP const & restart_prob_spec, GridP & grid ) override;
     virtual void scheduleInitialize ( LevelP const & level, SchedulerP & sched ) override;
     virtual void scheduleRestartInitialize ( LevelP const & level, SchedulerP & sched )
     {
@@ -549,8 +547,8 @@ using CCPhaseField3D = PhaseField <PF::CellCentered, 1, 3>;
 using NCPhaseField3D = PhaseField <PF::NodeCentered, 1, 3>;
 
 template<PF::VariableType VariableType, int NumGhosts, int Dimension>
-PhaseField<VariableType, NumGhosts, Dimension>::PhaseField ( ProcessorGroup const * myworld, int verbosity )
-    : UintahParallelComponent ( myworld )
+PhaseField<VariableType, NumGhosts, Dimension>::PhaseField ( ProcessorGroup const * myworld, const SimulationStateP sharedState, int verbosity )
+  : ApplicationCommon ( myworld, sharedState )
     , dbg_out1 ( "PhaseField", verbosity > 0 )
     , dbg_out2 ( "PhaseField", verbosity > 1 )
     , dbg_out3 ( "PhaseField", verbosity > 2 )
@@ -587,11 +585,11 @@ PhaseField<VariableType, NumGhosts, Dimension>::~PhaseField()
 }
 
 template<PF::VariableType VariableType, int NumGhosts, int Dimension>
-void PhaseField<VariableType, NumGhosts, Dimension>::problemSetup ( ProblemSpecP const & params, ProblemSpecP const & /*restart_prob_spec*/, GridP & /*grid*/, SimulationStateP & simulation_state )
+void PhaseField<VariableType, NumGhosts, Dimension>::problemSetup ( ProblemSpecP const & params, ProblemSpecP const & /*restart_prob_spec*/, GridP & /*grid*/ )
 {
-    state = simulation_state;
-    state->setIsLockstepAMR ( true );
-    state->registerSimpleMaterial ( scinew SimpleMaterial() );
+    setLockstepAMR( true );
+
+    m_sharedState->registerSimpleMaterial ( scinew SimpleMaterial() );
 
     ProblemSpecP phase_field = params->findBlock ( "PhaseField" );
     phase_field->require ( "delt", delt );
@@ -618,15 +616,15 @@ void PhaseField<VariableType, NumGhosts, Dimension>::scheduleInitialize ( LevelP
         task->computes ( grad_psi_label[d] );
     for ( int d = 0; d < b_size; ++d )
         task->computes ( b_label[d] );
-    sched->addTask ( task, level->eachPatch(), state->allMaterials() );
+    sched->addTask ( task, level->eachPatch(), m_sharedState->allMaterials() );
 }
 
 template<PF::VariableType VariableType, int NumGhosts, int Dimension>
 void PhaseField<VariableType, NumGhosts, Dimension>::scheduleComputeStableTimestep ( LevelP const & level, SchedulerP & sched )
 {
     Task * task = scinew Task ( "PhaseField::task_compute_stable_timestep", this, &PhaseField::task_compute_stable_timestep );
-    task->computes ( state->get_delt_label(), level.get_rep() );
-    sched->addTask ( task, level->eachPatch(), state->allMaterials() );
+    task->computes ( m_sharedState->get_delt_label(), level.get_rep() );
+    sched->addTask ( task, level->eachPatch(), m_sharedState->allMaterials() );
 }
 
 template<PF::VariableType VariableType, int NumGhosts, int Dimension>
@@ -647,9 +645,9 @@ void PhaseField<VariableType, NumGhosts, Dimension>::scheduleTimeAdvance ( Level
     task_time_advance_current_solution_requires ( level, task_current_solution );
     task_time_advance_current_solution_computes ( task_current_solution );
 
-    sched->addTask ( task_psi_grad, level->eachPatch(), state->allMaterials() );
-    sched->addTask ( task_anisotropy_terms, level->eachPatch(), state->allMaterials() );
-    sched->addTask ( task_current_solution, level->eachPatch(), state->allMaterials() );
+    sched->addTask ( task_psi_grad, level->eachPatch(), m_sharedState->allMaterials() );
+    sched->addTask ( task_anisotropy_terms, level->eachPatch(), m_sharedState->allMaterials() );
+    sched->addTask ( task_current_solution, level->eachPatch(), m_sharedState->allMaterials() );
 
     dbg_out2 << std::endl;
 }
@@ -764,7 +762,7 @@ template<PF::VariableType VariableType, int NumGhosts, int Dimension>
 void PhaseField<VariableType, NumGhosts, Dimension>::task_compute_stable_timestep ( ProcessorGroup const * /*myworld*/, PatchSubset const * patches, MaterialSubset const * /*matls*/, DataWarehouse * /*dw_old*/, DataWarehouse * dw_new )
 {
     dbg_out1 << "==== PhaseField::task_compute_stable_timestep ====" << std::endl;
-    dw_new->put ( delt_vartype ( delt ), state->get_delt_label(), getLevel ( patches ) );
+    dw_new->put ( delt_vartype ( delt ), m_sharedState->get_delt_label(), getLevel ( patches ) );
     dbg_out2 << std::endl;
 }
 

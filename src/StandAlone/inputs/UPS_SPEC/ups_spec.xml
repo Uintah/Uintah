@@ -818,7 +818,8 @@
   
   <!--__________________________________-->
   
-  <AMR                                  spec="OPTIONAL NO_DATA" >
+  <AMR                                  spec="OPTIONAL NO_DATA"
+					attribute1="type OPTIONAL STRING 'Dynamic StaticGridML'">
     <doMultiTaskgraphing                spec="OPTIONAL BOOLEAN" />
     <useLockStep                        spec="OPTIONAL BOOLEAN" /> <!-- defaults to FALSE.  FIXME: correct?  Is it optional? -->
 

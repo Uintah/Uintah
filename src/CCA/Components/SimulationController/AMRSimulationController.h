@@ -62,7 +62,6 @@ class AMRSimulationController : public SimulationController {
 
    public:
      AMRSimulationController( const ProcessorGroup * myworld
-                            ,       bool             doAMR
                             ,       ProblemSpecP     pspec
                             );
 
@@ -77,14 +76,14 @@ class AMRSimulationController : public SimulationController {
 
      AMRSimulationController& operator=( const AMRSimulationController& );
      
-     //! Set up, compile, and execute initial timestep
-     void doInitialTimestep( );
+     //! Set up, compile, and execute initial time step
+     void doInitialTimeStep( );
 
-     //! Execute a timestep
-     void executeTimestep( int totalFine, int tg_index );
+     //! Execute a time step
+     void executeTimeStep( int totalFine, int tg_index );
 
      //! If doing AMR do the regridding
-     bool doRegridding( bool initialTimestep );
+     bool doRegridding( bool initialTimeStep );
 
      //! Asks a variety of components if one of them needs the
      //! taskgraph to recompile.
@@ -92,15 +91,16 @@ class AMRSimulationController : public SimulationController {
      
      void recompile( int totalFine );
 
-     //! recursively schedule refinement, coarsening, and time advances for finer levels,
-     //! compensating for time refinement. Builds one taskgraph
+     //! Recursively schedule refinement, coarsening, and time
+     //! advances for finer levels, compensating for time
+     //! refinement. Builds one taskgraph
      void subCycleCompile( int startDW
                          , int dwStride
                          , int numLevel
                          , int step
                          );
      
-     //! recursively executes taskgraphs, as several were executed.
+     //! Recursively executes taskgraphs, as several were executed.
      //! Similar to subCycleCompile, except that this executes the
      //! recursive taskgraphs, and compile builds one taskgraph (to
      //! exsecute once) recursively.
@@ -110,15 +110,8 @@ class AMRSimulationController : public SimulationController {
                          , bool rootCycle
                          );
      
-     void scheduleComputeStableTimestep();
+     void scheduleComputeStableTimeStep();
      
-     void reduceSysVar( const ProcessorGroup *
-                      , const PatchSubset    * patches
-                      , const MaterialSubset * /*matls*/
-                      ,       DataWarehouse  * /*old_dw*/
-                      ,       DataWarehouse  * new_dw
-                      );
-
      // Optional flag for scrubbing, defaulted to true.
      bool d_scrubDataWarehouse{true};
 

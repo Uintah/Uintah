@@ -104,7 +104,6 @@ MPIScheduler::MPIScheduler( const ProcessorGroup * myworld
   : SchedulerCommon(myworld, oport)
   , m_parent_scheduler{parentScheduler}
 {
-
 #ifdef UINTAH_ENABLE_KOKKOS
   Kokkos::initialize();
 #endif //UINTAH_ENABLE_KOKKOS
@@ -154,25 +153,25 @@ MPIScheduler::problemSetup( const ProblemSpecP     & prob_spec
 {
   SchedulerCommon::problemSetup(prob_spec, state);
 
-#ifdef HAVE_VISIT
-  static bool initialized = false;
+// #ifdef HAVE_VISIT
+//   static bool initialized = false;
 
-  // Running with VisIt so add in the variables that the user can
-  // modify.
-  if( m_shared_state->getVisIt() && !initialized ) {
-    m_shared_state->d_douts.push_back( &g_dbg );
-    m_shared_state->d_douts.push_back( &g_send_stats );
-    m_shared_state->d_douts.push_back( &g_reductions );
-    m_shared_state->d_douts.push_back( &g_time_out );
-    m_shared_state->d_douts.push_back( &g_task_level );
-    m_shared_state->d_douts.push_back( &g_task_order );
-    m_shared_state->d_douts.push_back( &g_task_dbg );
-    m_shared_state->d_douts.push_back( &g_mpi_dbg  );
-    m_shared_state->d_douts.push_back( &g_exec_out  );
+//   // Running with VisIt so add in the variables that the user can
+//   // modify.
+//   if( m_shared_state->getVisIt() && !initialized ) {
+//     m_shared_state->d_douts.push_back( &g_dbg );
+//     m_shared_state->d_douts.push_back( &g_send_stats );
+//     m_shared_state->d_douts.push_back( &g_reductions );
+//     m_shared_state->d_douts.push_back( &g_time_out );
+//     m_shared_state->d_douts.push_back( &g_task_level );
+//     m_shared_state->d_douts.push_back( &g_task_order );
+//     m_shared_state->d_douts.push_back( &g_task_dbg );
+//     m_shared_state->d_douts.push_back( &g_mpi_dbg  );
+//     m_shared_state->d_douts.push_back( &g_exec_out  );
 
-    initialized = true;
-  }
-#endif
+//     initialized = true;
+//   }
+// #endif
 }
 
 //______________________________________________________________________
@@ -308,7 +307,7 @@ MPIScheduler::runTask( DetailedTask * dtask
     if (!dtask->getTask()->getHasSubScheduler()) {
       //add my task time to the total time
       mpi_info_[TotalTask] += total_task_time;
-      if (!m_shared_state->isCopyDataTimestep() &&
+      if (!m_is_copy_data_timestep &&
 	  dtask->getTask()->getType() != Task::Output) {
         // add contribution for patchlist
         getLoadBalancer()->addContribution(dtask, total_task_time);
@@ -888,11 +887,9 @@ MPIScheduler::execute( int tgnum     /* = 0 */
   finalizeTimestep();
 
   m_exec_timer.stop();
-
+  
   // compute the net timings
-  if (m_shared_state != nullptr) {
-    computeNetRunTimeStats(m_shared_state->d_runTimeStats);
-  }
+  computeNetRunTimeStats();
 
   // only do on top-level scheduler
   if ( m_parent_scheduler == nullptr ) {
@@ -1088,16 +1085,18 @@ MPIScheduler::outputTimingStats( const char* label )
       DOUT(g_send_stats, message.str());
     }
   }
-
 }
 
 //______________________________________________________________________
 //  Take the various timers and compute the net results
-void MPIScheduler::computeNetRunTimeStats(InfoMapper< SimulationState::RunTimeStat, double >& runTimeStats)
+void MPIScheduler::computeNetRunTimeStats()
 {
-  // don't count output time
-  runTimeStats[SimulationState::TaskExecTime      ] += mpi_info_[TotalTask] - runTimeStats[SimulationState::TotalIOTime];
-  runTimeStats[SimulationState::TaskLocalCommTime ] += mpi_info_[TotalRecv] + mpi_info_[TotalSend];
-  runTimeStats[SimulationState::TaskWaitCommTime  ] += mpi_info_[TotalWait];
-  runTimeStats[SimulationState::TaskReduceCommTime] += mpi_info_[TotalReduce];
+  if( d_runTimeStats )
+  {
+    // don't count output time
+    (*d_runTimeStats)[TaskExecTime      ] += mpi_info_[TotalTask] - (*d_runTimeStats)[TotalIOTime];
+    (*d_runTimeStats)[TaskLocalCommTime ] += mpi_info_[TotalRecv] + mpi_info_[TotalSend];
+    (*d_runTimeStats)[TaskWaitCommTime  ] += mpi_info_[TotalWait];
+    (*d_runTimeStats)[TaskReduceCommTime] += mpi_info_[TotalReduce];
+  }
 }

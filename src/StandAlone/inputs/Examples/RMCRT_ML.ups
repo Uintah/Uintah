@@ -104,12 +104,12 @@
          <resolution> [80,80,80]  </resolution>          
          <patches>    [2,2,2]     </patches>
          <extraCells> [1,1,1]     </extraCells>           
-      </Box>                                         
+      </Box>
     </Level>
 
   </Grid>
   <!--__________________________________-->
-  <AMR>
+  <AMR type="StaticGridML" >
     <useLockStep> true </useLockStep>
   </AMR>    
   <!--__________________________________-->

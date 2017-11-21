@@ -25,17 +25,15 @@
 #ifndef UINTAH_HOMEBREW_Component_UdaReducer_H
 #define UINTAH_HOMEBREW_Component_UdaReducer_H
 
-#include <Core/Parallel/UintahParallelComponent.h>
+#include <CCA/Components/Application/ApplicationCommon.h>
+
 #include <CCA/Components/ReduceUda/Module.h>
-#include <CCA/Ports/SimulationInterface.h>
 #include <CCA/Ports/Output.h>
 #include <Core/DataArchive/DataArchive.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Material.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/VarLabel.h>
-#include <Core/Grid/SimulationStateP.h>
-#include <Core/Grid/SimpleMaterial.h>
 
 #include <vector>
 
@@ -46,13 +44,13 @@ namespace Uintah {
 /**************************************
 
 CLASS
-   SimulationInterface
+   UdaReducer
 
    Short description...
 
 GENERAL INFORMATION
 
-   SimulationInterface.h
+   UdaReducer.h
 
    Steven G. Parker
    Department of Computer Science
@@ -71,17 +69,17 @@ WARNING
 
 ****************************************/
 
-  class UdaReducer : public SimulationInterface, public UintahParallelComponent {
+  class UdaReducer : public ApplicationCommon {
   public:
     UdaReducer( const ProcessorGroup * myworld,
-                const std::string    & d_udaDir );
+		const SimulationStateP sharedState,
+                const std::string    & udaDir );
 
     virtual ~UdaReducer();
 
     virtual void problemSetup( const ProblemSpecP     & params,
                                const ProblemSpecP     & restart_prob_spec,
-                                     GridP            & grid,
-                                     SimulationStateP & state );
+                                     GridP            & grid );
 
     virtual void scheduleInitialize( const LevelP     & level,
                                            SchedulerP & );
@@ -91,7 +89,7 @@ WARNING
 
     virtual void restartInitialize() {}
 
-    virtual void scheduleComputeStableTimestep( const LevelP &,
+    virtual void scheduleComputeStableTimeStep( const LevelP &,
                                                       SchedulerP & );
 
     virtual void scheduleTimeAdvance( const LevelP     & level,
@@ -176,7 +174,6 @@ WARNING
 
     LoadBalancerPort     * d_lb;
     const VarLabel       * delt_label;
-    SimulationStateP       d_sharedState;
     SimpleMaterial       * d_oneMatl;
 
     VarLabel* testVLabel;

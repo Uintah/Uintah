@@ -25,19 +25,12 @@
 #include <Core/Grid/SimulationState.h>
 
 #include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Grid/Grid.h>
-#include <Core/Grid/Level.h>
 #include <Core/Grid/Material.h>
 #include <Core/Grid/SimpleMaterial.h>
+#include <Core/Grid/Variables/MaterialSetP.h>
 #include <Core/Grid/Variables/PerPatch.h>
-#include <Core/Grid/Variables/Reductions.h>
-#include <Core/Grid/Variables/ReductionVariable.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/Util/DebugStream.h>
-#include <Core/Util/DOUT.hpp>
-#include <Core/Util/StringUtil.h>
 
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <CCA/Components/ICE/ICEMaterial.h>
@@ -47,53 +40,22 @@
 #include <CCA/Components/FVM/FVMMaterial.h>
 
 using namespace Uintah;
-using namespace std;
 
-SimulationState::SimulationState(ProblemSpecP &ps)
+static int count=0;
+
+SimulationState::SimulationState()
 {
+  if( count++ >= 1)
+    throw ProblemSetupException("Allocated multiple SimulationStates", __FILE__, __LINE__);
+
+  // delta t
   VarLabel* nonconstDelt = 
-    VarLabel::create("delT", delt_vartype::getTypeDescription() );
+    VarLabel::create(delT_name, delt_vartype::getTypeDescription() );
 
   nonconstDelt->allowMultipleComputes();
-  delt_label = nonconstDelt;
-
-  refineFlag_label      = VarLabel::create("refineFlag",     CCVariable<int>::getTypeDescription());
-  oldRefineFlag_label   = VarLabel::create("oldRefineFlag",  CCVariable<int>::getTypeDescription());
-  refinePatchFlag_label = VarLabel::create("refinePatchFlag",PerPatch<int>::getTypeDescription());
-  switch_label          = VarLabel::create("switchFlag",     max_vartype::getTypeDescription());
+  m_deltLabel = nonconstDelt;
 
   //__________________________________
-  //  These variables can be modified by a component.
-  VarLabel* nonconstOutputInv =             // output interval
-    VarLabel::create("outputInterval",
-		     min_vartype::getTypeDescription() );
-  VarLabel* nonconstOutputTimestepInv =     // output timestep interval
-    VarLabel::create("outputTimestepInterval",
-		     min_vartype::getTypeDescription() );
-
-  VarLabel* nonconstCheckpointInv =         // check point interval
-    VarLabel::create("checkpointInterval",
-		     min_vartype::getTypeDescription() );
-  
-  VarLabel* nonconstCheckpointTimestepInv = // check point timestep interval
-    VarLabel::create("checkpointTimestepInterval",
-		     min_vartype::getTypeDescription() );
-
-  nonconstOutputInv->allowMultipleComputes();
-  nonconstOutputTimestepInv->allowMultipleComputes();
-
-  nonconstCheckpointInv->allowMultipleComputes();
-  nonconstCheckpointTimestepInv->allowMultipleComputes();
-
-  outputInterval_label             = nonconstOutputInv;
-  outputTimestepInterval_label     = nonconstOutputTimestepInv;
-
-  checkpointInterval_label         = nonconstCheckpointInv;
-  checkpointTimestepInterval_label = nonconstCheckpointTimestepInv;
-
-  //__________________________________
-  max_matl_index    = 0;
-
   all_mpm_matls     = 0;
   all_cz_matls      = 0;
   all_ice_matls     = 0;
@@ -103,90 +65,23 @@ SimulationState::SimulationState(ProblemSpecP &ps)
   all_matls         = 0;
   
   orig_all_matls    = 0;
-  refine_flag_matls = 0;
   allInOneMatl      = 0;
+}
+//__________________________________
+//
+SimulationState::~SimulationState()
+{
+  VarLabel::destroy(m_deltLabel);
 
-  d_topLevelTimeStep = 0;
-  d_elapsed_sim_time  = 0.0;
-  d_elapsed_wall_time = 0.0;
+  clearMaterials();
 
-  d_numDims = 0;
-  d_activeDims[0] = d_activeDims[1] = d_activeDims[2] = 0;
-
-  d_isCopyDataTimestep        = false;
-
-  d_isRegridTimestep          = false;
-   
-  d_timeRefinementRatio       = 0;
-  
-  d_lockstepAMR               = false;
-  d_updateOutputInterval      = false;
-  d_updateCheckpointInterval  = false;
-  d_recompileTaskGraph        = false;
-  d_overheadAvg               = 0; // Average time spent in overhead.
-  d_usingLocalFileSystems     = false;
-
-  d_switchState               = false;
-  d_haveModifiedVars          = false;
-  
-  d_simulationTime            = 0;
-
-  d_maybeLast                 = false;
-
-  ProblemSpecP amr = ps->findBlock("AMR");
-  
-  if (amr){
-    amr->get("useLockStep", d_lockstepAMR);
+  for (unsigned i = 0; i < old_matls.size(); i++){
+    delete old_matls[i];
   }
-    
-  std::string timeStr("seconds");
-  std::string bytesStr("MBytes");
-    
-  d_runTimeStats.insert( CompilationTime,           std::string("Compilation"),           timeStr, 0 );
-  d_runTimeStats.insert( RegriddingTime,            std::string("Regridding"),            timeStr, 0 );
-  d_runTimeStats.insert( RegriddingCompilationTime, std::string("RegriddingCompilation"), timeStr, 0 );
-  d_runTimeStats.insert( RegriddingCopyDataTime,    std::string("RegriddingCopyData"),    timeStr, 0 );
-  d_runTimeStats.insert( LoadBalancerTime,          std::string("LoadBalancer"),          timeStr, 0 );
 
-  d_runTimeStats.insert( TaskExecTime,       std::string("TaskExec"),           timeStr, 0 );
-  d_runTimeStats.insert( TaskLocalCommTime,  std::string("TaskLocalComm"),      timeStr, 0 );
-  d_runTimeStats.insert( TaskWaitCommTime,   std::string("TaskWaitCommTime"),   timeStr, 0 );
-  d_runTimeStats.insert( TaskReduceCommTime, std::string("TaskReduceCommTime"), timeStr, 0 );
-  d_runTimeStats.insert( TaskWaitThreadTime, std::string("TaskWaitThread"),     timeStr, 0 );
-
-  d_runTimeStats.insert( XMLIOTime,          std::string("XMLIO"),            timeStr, 0 );
-  d_runTimeStats.insert( OutputIOTime,       std::string("OutputIO"),         timeStr, 0 );
-  d_runTimeStats.insert( ReductionIOTime,    std::string("ReductionIO"),      timeStr, 0 );
-  d_runTimeStats.insert( CheckpointIOTime,   std::string("CheckpointIO"),     timeStr, 0 );
-  d_runTimeStats.insert( CheckpointReductionIOTime, std::string("CheckpointReductionIO"),     timeStr, 0 );
-  d_runTimeStats.insert( TotalIOTime,        std::string("TotalIO"),          timeStr, 0 );
-
-  d_runTimeStats.insert( OutputIORate,       std::string("OutputIORate"),     "MBytes/sec", 0 );
-  d_runTimeStats.insert( ReductionIORate,    std::string("ReductionIORate"),  "MBytes/sec", 0 );
-  d_runTimeStats.insert( CheckpointIORate,   std::string("CheckpointIORate"), "MBytes/sec", 0 );
-  d_runTimeStats.insert( CheckpointReducIORate, std::string("CheckpointReducIORate"), "MBytes/sec", 0 );
-
-  d_runTimeStats.insert( SCIMemoryUsed,      std::string("SCIMemoryUsed"),      bytesStr, 0 );
-  d_runTimeStats.insert( SCIMemoryMaxUsed,   std::string("SCIMemoryMaxUsed"),   bytesStr, 0 );
-  d_runTimeStats.insert( SCIMemoryHighwater, std::string("SCIMemoryHighwater"), bytesStr, 0 );
-  d_runTimeStats.insert( MemoryUsed,         std::string("MemoryUsed"),         bytesStr, 0 );
-  d_runTimeStats.insert( MemoryResident,     std::string("MemoryResident"),     bytesStr, 0 );
-
-#ifdef USE_PAPI_COUNTERS
-  d_runTimeStats.insert( TotalFlops,  std::string("TotalFlops") , "FLOPS" , 0 );
-  d_runTimeStats.insert( TotalVFlops, std::string("TotalVFlops"), "FLOPS" , 0 );
-  d_runTimeStats.insert( L2Misses,    std::string("L2Misses")   , "misses", 0 );
-  d_runTimeStats.insert( L3Misses,    std::string("L3Misses")   , "misses", 0 );
-  d_runTimeStats.insert( TLBMisses,   std::string("TLBMisses")  , "misses", 0 );
-#endif
-
-  d_runTimeStats.validate( MAX_TIMING_STATS );
-
-  resetStats();
-
-#ifdef HAVE_VISIT
-  d_doVisIt = false;
-#endif
+  if(orig_all_matls && orig_all_matls->removeReference()){
+    delete orig_all_matls;
+  }
 }
 //__________________________________
 //
@@ -196,9 +91,6 @@ void SimulationState::registerMaterial(Material* matl)
   matl->setDWIndex((int)matls.size());      
 
   matls.push_back(matl);                    
-  if ((int)matls.size() > max_matl_index) { 
-    max_matl_index = matls.size();          
-  }                                         
 
   if(matl->hasName()) {                    
     named_matls[matl->getName()] = matl;
@@ -215,10 +107,6 @@ void SimulationState::registerMaterial(Material* matl,unsigned int index)
     matls.resize(index+1);
   }                  
   matls[index]=matl;                        
-
-  if ((int)matls.size() > max_matl_index) { 
-    max_matl_index = matls.size();          
-  }                                         
 
   if(matl->hasName()){                      
     named_matls[matl->getName()] = matl;    
@@ -313,49 +201,49 @@ void SimulationState::registerSimpleMaterial(SimpleMaterial* matl)
 //
 void SimulationState::finalizeMaterials()
 {
-                                    // MPM
+  // MPM
   if (all_mpm_matls && all_mpm_matls->removeReference()){
     delete all_mpm_matls;
   }
   all_mpm_matls = scinew MaterialSet();
   all_mpm_matls->addReference();
-  vector<int> tmp_mpm_matls(mpm_matls.size());
+  std::vector<int> tmp_mpm_matls(mpm_matls.size());
   for( int i=0; i<(int)mpm_matls.size(); i++ ) {
     tmp_mpm_matls[i] = mpm_matls[i]->getDWIndex();
   }
   all_mpm_matls->addAll(tmp_mpm_matls);
   
-                                    // Cohesive Zone
+  // Cohesive Zone
   if (all_cz_matls && all_cz_matls->removeReference()){
     delete all_cz_matls;
   }
   all_cz_matls = scinew MaterialSet();
   all_cz_matls->addReference();
-  vector<int> tmp_cz_matls(cz_matls.size());
+  std::vector<int> tmp_cz_matls(cz_matls.size());
   for( int i=0; i<(int)cz_matls.size(); i++ ) {
     tmp_cz_matls[i] = cz_matls[i]->getDWIndex();
   }
   all_cz_matls->addAll(tmp_cz_matls);
   
-                                    // Arches Matls
+  // Arches Matls
   if (all_arches_matls && all_arches_matls->removeReference()){
     delete all_arches_matls;
   }
   all_arches_matls = scinew MaterialSet();
   all_arches_matls->addReference();
-  vector<int> tmp_arches_matls(arches_matls.size());
+  std::vector<int> tmp_arches_matls(arches_matls.size());
   for (int i = 0; i<(int)arches_matls.size();i++){
     tmp_arches_matls[i] = arches_matls[i]->getDWIndex();
   }
   all_arches_matls->addAll(tmp_arches_matls);
 
-                                    // ICE Matls
+  // ICE Matls
   if (all_ice_matls && all_ice_matls->removeReference()){
     delete all_ice_matls;
   }
   all_ice_matls = scinew MaterialSet();
   all_ice_matls->addReference();
-  vector<int> tmp_ice_matls(ice_matls.size());
+  std::vector<int> tmp_ice_matls(ice_matls.size());
   for(int i=0;i<(int)ice_matls.size();i++) {
     tmp_ice_matls[i] = ice_matls[i]->getDWIndex();
   }
@@ -367,32 +255,32 @@ void SimulationState::finalizeMaterials()
   }
   all_fvm_matls = scinew MaterialSet();
   all_fvm_matls->addReference();
-  vector<int> tmp_fvm_matls(fvm_matls.size());
+  std::vector<int> tmp_fvm_matls(fvm_matls.size());
   for(int i=0;i<(int)fvm_matls.size();i++) {
     tmp_fvm_matls[i] = fvm_matls[i]->getDWIndex();
   }
   all_fvm_matls->addAll(tmp_fvm_matls);
 
-                                    // Wasatch Matls
+  // Wasatch Matls
   if (all_wasatch_matls && all_wasatch_matls->removeReference()){
     delete all_wasatch_matls;
   }
   all_wasatch_matls = scinew MaterialSet();
   all_wasatch_matls->addReference();
-  vector<int> tmp_wasatch_matls(wasatch_matls.size());
+  std::vector<int> tmp_wasatch_matls(wasatch_matls.size());
 
   for(int i=0;i<(int)wasatch_matls.size();i++){
     tmp_wasatch_matls[i] = wasatch_matls[i]->getDWIndex();
   }
   all_wasatch_matls->addAll(tmp_wasatch_matls);
   
-                                      // All Matls
+  // All Matls
   if (all_matls && all_matls->removeReference()){
     delete all_matls;
   }
   all_matls = scinew MaterialSet();
   all_matls->addReference();
-  vector<int> tmp_matls(matls.size());
+  std::vector<int> tmp_matls(matls.size());
   
   for(int i=0; i<(int)matls.size(); i++) {
     tmp_matls[i] = matls[i]->getDWIndex();
@@ -413,13 +301,6 @@ void SimulationState::finalizeMaterials()
   // a material that represents all materials 
   // (i.e. summed over all materials -- the whole enchilada)
   allInOneMatl->add((int)matls.size());
-
-  //refine matl subset, only done on matl 0 (matl independent)
-  if (!refine_flag_matls) {
-    refine_flag_matls = scinew MaterialSubset();
-    refine_flag_matls->addReference();
-    refine_flag_matls->add(0);
-  }
 }
 //__________________________________
 //
@@ -483,33 +364,6 @@ void SimulationState::clearMaterials()
   all_fvm_matls     = 0;
   all_wasatch_matls = 0;
   allInOneMatl      = 0;
-}
-//__________________________________
-//
-SimulationState::~SimulationState()
-{
-  VarLabel::destroy(delt_label);
-  VarLabel::destroy(refineFlag_label);
-  VarLabel::destroy(oldRefineFlag_label);
-  VarLabel::destroy(refinePatchFlag_label);
-  VarLabel::destroy(switch_label);
-  VarLabel::destroy(outputInterval_label);
-  VarLabel::destroy(outputTimestepInterval_label);
-  VarLabel::destroy(checkpointInterval_label);
-  VarLabel::destroy(checkpointTimestepInterval_label);
-  clearMaterials();
-
-  for (unsigned i = 0; i < old_matls.size(); i++){
-    delete old_matls[i];
-  }
-
-  if(refine_flag_matls && refine_flag_matls->removeReference()){
-    delete refine_flag_matls;
-  }
-
-  if(orig_all_matls && orig_all_matls->removeReference()){
-    delete orig_all_matls;
-  }
 }
 //__________________________________
 //
@@ -578,16 +432,9 @@ void SimulationState::setOriginalMatlsFromRestart(MaterialSet* matls)
   
 //__________________________________
 //
-const MaterialSubset* SimulationState::refineFlagMaterials() const
-{
-  ASSERT(refine_flag_matls != 0);
-  return refine_flag_matls;
-}
-//__________________________________
-//
 Material* SimulationState::getMaterialByName(const std::string& name) const
 {
-  map<string, Material*>::const_iterator iter = named_matls.find(name);
+  std::map<std::string, Material*>::const_iterator iter = named_matls.find(name);
   if(iter == named_matls.end()){
     return 0;
   }
@@ -603,7 +450,7 @@ Material* SimulationState::parseAndLookupMaterial(ProblemSpecP& params,
   Material* result = getMaterial(0);
 
   if( getNumMatls() > 1){
-    string matlname;
+    std::string matlname;
     if(!params->get(name, matlname)){
       throw ProblemSetupException("Cannot find material section", __FILE__, __LINE__);
     }
@@ -615,27 +462,3 @@ Material* SimulationState::parseAndLookupMaterial(ProblemSpecP& params,
   }
   return result;
 }
-//__________________________________
-//
-void SimulationState::resetStats()
-{
-  d_runTimeStats.reset( 0 );  
-  d_otherStats.reset( 0 );  
-}
-//__________________________________
-//
-void SimulationState::setDimensionality(bool x, bool y, bool z)
-{
-  d_numDims = 0;
-  int currentDim = 0;
-  bool args[3] = {x,y,z};
-
-  for (int i = 0; i < 3; i++) {
-    if (args[i]) {
-      d_numDims++;
-      d_activeDims[currentDim] = i;
-      currentDim++;
-    }
-  }
-}
-

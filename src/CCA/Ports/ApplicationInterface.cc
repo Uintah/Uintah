@@ -68,7 +68,7 @@ ApplicationInterface::scheduleTimeAdvance(const LevelP&,
 
 void
 ApplicationInterface::scheduleErrorEstimate( const LevelP&,
-                                                  SchedulerP& )
+					     SchedulerP& )
 {
   throw InternalError( "scheduleErrorEstimate not implemented for this component", __FILE__, __LINE__ );
 }
@@ -81,13 +81,13 @@ ApplicationInterface::scheduleInitialErrorEstimate(const LevelP& /*coarseLevel*/
 }
 
 double
-ApplicationInterface::recomputeTimestep(double)
+ApplicationInterface::recomputeTimeStep(double)
 {
-  throw InternalError("recomputeTimestep not implemented for this component", __FILE__, __LINE__);
+  throw InternalError("recomputeTimeStep not implemented for this component", __FILE__, __LINE__);
 }
 
 bool
-ApplicationInterface::restartableTimesteps()
+ApplicationInterface::restartableTimeSteps()
 {
   return false;
 }

@@ -91,7 +91,7 @@ WARNING
 
     virtual void restartInitialize() {}
       
-    virtual void scheduleComputeStableTimestep(SchedulerP&,
+    virtual void scheduleComputeStableTimeStep(SchedulerP&,
 					       const LevelP& level,
 					       const ModelInfo*);
       
@@ -119,6 +119,9 @@ WARNING
                                          const PatchSet* patches,
                                          const ModelInfo* mi);
 
+    
+  virtual bool adjustOutputInterval()     const { return d_adj_IO_Press->onOff || d_adj_IO_Det->onOff; };
+  virtual bool adjustCheckpointInterval() const { return d_adj_IO_Press->onOff || d_adj_IO_Det->onOff; };
 
   private:    
   
@@ -216,6 +219,7 @@ WARNING
     MaterialSet* d_mymatls;
     MaterialSubset* d_one_matl;
    
+    double d_max_initial_delt;
 
     std::string fromMaterial, toMaterial, burnMaterial;
     // Detonation Model
@@ -297,7 +301,6 @@ WARNING
     };
     saveConservedVars* d_saveConservedVars;
       
-    
     //__________________________________
     // struct used to adjust the I/O intervals based 
     // on either a pressure threshold exceeded or a detonation has been detected

@@ -154,7 +154,7 @@ void IandG::scheduleInitialize(SchedulerP&,
 }
 //______________________________________________________________________
 //      
-void IandG::scheduleComputeStableTimestep(SchedulerP&,
+void IandG::scheduleComputeStableTimeStep(SchedulerP&,
                                           const LevelP&,
                                           const ModelInfo*)
 {

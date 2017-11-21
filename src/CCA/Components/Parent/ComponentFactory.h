@@ -25,7 +25,7 @@
 #ifndef Packages_Uintah_CCA_Components_Parent_ComponentFactory_h
 #define Packages_Uintah_CCA_Components_Parent_ComponentFactory_h
 
-#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Grid/SimulationStateP.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <string>
 
@@ -40,10 +40,10 @@ namespace Uintah {
   public:
     // this function has a switch for all known components
     
-    static UintahParallelComponent* create(ProblemSpecP& ps, const ProcessorGroup* world, 
-                                           bool doAMR, std::string uda);
-
-
+    static UintahParallelComponent* create(ProblemSpecP& ps,
+                                           const ProcessorGroup* world, 
+					   const SimulationStateP sharedState,
+                                           std::string uda);
   };
 } // End namespace Uintah
 

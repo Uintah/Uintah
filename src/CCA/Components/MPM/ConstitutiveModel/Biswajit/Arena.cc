@@ -207,7 +207,7 @@ void Arena::initializeCMData(const Patch* patch,
     pKappaState[*iter] = 0.0;
     pLocalized[*iter] = 0.0;
   }
-  computeStableTimestep(patch, matl, new_dw);
+  computeStableTimeStep(patch, matl, new_dw);
 
   // Initialize the data for the internal variable model
   d_intvar->initializeInternalVariable(pset, new_dw);
@@ -215,7 +215,7 @@ void Arena::initializeCMData(const Patch* patch,
 
 // Compute stable timestep based on both the particle velocities
 // and wave speed
-void Arena::computeStableTimestep(const Patch* patch,
+void Arena::computeStableTimeStep(const Patch* patch,
                                         const MPMMaterial* matl,
                                         DataWarehouse* new_dw)
 {

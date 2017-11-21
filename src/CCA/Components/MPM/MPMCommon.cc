@@ -33,8 +33,9 @@ using namespace Uintah;
 
 static DebugStream cout_doing("MPM", false);
 
-MPMCommon::MPMCommon(const ProcessorGroup* myworld)
-  : d_myworld(myworld)
+MPMCommon::MPMCommon(const ProcessorGroup* myworld,
+		     SimulationStateP sharedState) :
+  ApplicationCommon(myworld, sharedState)
 {
 }
 
@@ -44,11 +45,9 @@ MPMCommon::~MPMCommon()
 //______________________________________________________________________
 //
 void MPMCommon::materialProblemSetup(const ProblemSpecP& prob_spec, 
-                                     SimulationStateP& sharedState,
                                      MPMFlags* flags, 
                                      bool isRestart)
 {
-  d_sharedState = sharedState;
   d_flags = flags;
   
   //Search for the MaterialProperties block and then get the MPM section
@@ -73,24 +72,23 @@ void MPMCommon::materialProblemSetup(const ProblemSpecP& prob_spec,
     // cout << "Material attribute = " << index_val << ", " << index << ", " << id << "\n";
 
     //Create and register as an MPM material
-    MPMMaterial *mat = scinew MPMMaterial(ps, sharedState, flags,isRestart);
+    MPMMaterial *mat = scinew MPMMaterial(ps, m_sharedState, flags,isRestart);
     // When doing restart, we need to make sure that we load the materials
     // in the same order that they were initially created.  Restarts will
     // ALWAYS have an index number as in <material index = "0">.
     // Index_val = -1 means that we don't register the material by its 
     // index number.
     if (index_val > -1){
-      sharedState->registerMPMMaterial(mat,index_val);
+      m_sharedState->registerMPMMaterial(mat,index_val);
     }
     else{
-      sharedState->registerMPMMaterial(mat);
+      m_sharedState->registerMPMMaterial(mat);
     }
   }
 }
 //______________________________________________________________________
 //
 void MPMCommon::cohesiveZoneProblemSetup(const ProblemSpecP& prob_spec, 
-                                         SimulationStateP& sharedState,
                                          MPMFlags* flags)
 {
   //Search for the MaterialProperties block and then get the MPM section
@@ -116,7 +114,7 @@ void MPMCommon::cohesiveZoneProblemSetup(const ProblemSpecP& prob_spec,
     // cout << "Material attribute = " << index_val << ", " << index << ", " << id << "\n";
 
     //Create and register as an MPM material
-    CZMaterial *mat = scinew CZMaterial(ps, sharedState, flags);
+    CZMaterial *mat = scinew CZMaterial(ps, m_sharedState, flags);
 
     // When doing restart, we need to make sure that we load the materials
     // in the same order that they were initially created.  Restarts will
@@ -124,10 +122,10 @@ void MPMCommon::cohesiveZoneProblemSetup(const ProblemSpecP& prob_spec,
     // Index_val = -1 means that we don't register the material by its 
     // index number.
     if (index_val > -1){
-      sharedState->registerCZMaterial(mat,index_val);
+      m_sharedState->registerCZMaterial(mat,index_val);
     }
     else{
-      sharedState->registerCZMaterial(mat);
+      m_sharedState->registerCZMaterial(mat);
     }
   }
 }
@@ -142,9 +140,9 @@ void MPMCommon::scheduleUpdateStress_DamageErosionModels(SchedulerP   & sched,
   Task* t = scinew Task("MPM::updateStress_DamageErosionModels", this, 
                         &MPMCommon::updateStress_DamageErosionModels);
                         
-  int numMatls = d_sharedState->getNumMPMMatls();
+  int numMatls = m_sharedState->getNumMPMMatls();
   for(int m = 0; m < numMatls; m++){
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial(m);
     
     DamageModel* dm = mpm_matl->getDamageModel();
     dm->addComputesAndRequires(t, mpm_matl);
@@ -169,10 +167,10 @@ void MPMCommon::updateStress_DamageErosionModels(const ProcessorGroup *,
     printTask(patches, patch,cout_doing,
               "Doing updateStress_DamageModel");
 
-    int numMPMMatls = d_sharedState->getNumMPMMatls();
+    int numMPMMatls = m_sharedState->getNumMPMMatls();
     for(int m = 0; m < numMPMMatls; m++){
     
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
       

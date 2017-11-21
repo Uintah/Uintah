@@ -226,7 +226,7 @@ HyperElasticPlastic::initializeCMData(const Patch* patch,
   // Initialize the data for the plasticity model
   d_plasticity->initializeInternalVars(pset, new_dw);
 
-  computeStableTimestep(patch, matl, new_dw);
+  computeStableTimeStep(patch, matl, new_dw);
 }
 
 void HyperElasticPlastic::allocateCMDataAddRequires(Task* task,
@@ -300,7 +300,7 @@ HyperElasticPlastic::allocateCMDataAdd(DataWarehouse* new_dw,
 }
 
 void 
-HyperElasticPlastic::computeStableTimestep(const Patch* patch,
+HyperElasticPlastic::computeStableTimeStep(const Patch* patch,
                                            const MPMMaterial* matl,
                                            DataWarehouse* new_dw)
 {

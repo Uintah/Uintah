@@ -24,8 +24,8 @@
 #ifndef Packages_Uintah_CCA_Components_Examples_UnifiedSchedulerTest_h
 #define Packages_Uintah_CCA_Components_Examples_UnifiedSchedulerTest_h
 
-#include <Core/Parallel/UintahParallelComponent.h>
-#include <CCA/Ports/SimulationInterface.h>
+#include <CCA/Components/Application/ApplicationCommon.h>
+
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Task.h>
@@ -64,18 +64,18 @@ namespace Uintah {
 
    ****************************************/
 
-  class UnifiedSchedulerTest : public UintahParallelComponent, public SimulationInterface {
+  class UnifiedSchedulerTest : public ApplicationCommon {
 
     public:
 
-      UnifiedSchedulerTest(const ProcessorGroup* myworld);
+      UnifiedSchedulerTest(const ProcessorGroup* myworld,
+			   const SimulationStateP sharedState);
 
       virtual ~UnifiedSchedulerTest();
 
       virtual void problemSetup(const ProblemSpecP& params,
                                 const ProblemSpecP& restart_prob_spec,
-                                GridP& grid,
-                                SimulationStateP& simState);
+                                GridP& grid);
 
       virtual void scheduleInitialize(const LevelP& level,
                                       SchedulerP& sched);
@@ -83,14 +83,13 @@ namespace Uintah {
       virtual void scheduleRestartInitialize(const LevelP& level,
                                              SchedulerP& sched);
 
-      virtual void scheduleComputeStableTimestep(const LevelP& level,
+      virtual void scheduleComputeStableTimeStep(const LevelP& level,
                                                  SchedulerP& sched);
 
       virtual void scheduleTimeAdvance(const LevelP& level,
                                        SchedulerP& sched);
 
     private:
-      SimulationStateP sharedState_;
       double delt_;
       SimpleMaterial* simpleMaterial_;
       const VarLabel* phi_label;
@@ -102,7 +101,7 @@ namespace Uintah {
                       DataWarehouse* /*old_dw*/,
                       DataWarehouse* new_dw);
 
-      void computeStableTimestep(const ProcessorGroup* pg,
+      void computeStableTimeStep(const ProcessorGroup* pg,
                                  const PatchSubset* patches,
                                  const MaterialSubset* matls,
                                  DataWarehouse* old_dw,

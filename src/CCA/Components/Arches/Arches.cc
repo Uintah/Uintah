@@ -63,21 +63,20 @@ static DebugStream dbg("ARCHES", false);
 extern std::mutex coutLock;
 
 //--------------------------------------------------------------------------------------------------
-Arches::Arches(const ProcessorGroup* myworld, const bool doAMR) :
-  UintahParallelComponent(myworld)
+Arches::Arches(const ProcessorGroup* myworld,
+	       const SimulationStateP sharedState) :
+  ApplicationCommon(myworld, sharedState)
 {
   m_MAlab               = 0;
   m_nlSolver            = 0;
   m_physicalConsts      = 0;
   m_doing_restart        = false;
   m_with_mpmarches      = false;
-  m_do_AMR               = doAMR;
   m_recompile_taskgraph = false;
 
   //lagrangian particles:
   m_particlesHelper = scinew ArchesParticlesHelper();
   m_particlesHelper->sync_with_arches(this);
-
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -102,14 +101,10 @@ Arches::~Arches()
 void
 Arches::problemSetup( const ProblemSpecP     & params,
                       const ProblemSpecP     & materials_ps,
-                            GridP            & grid,
-                            SimulationStateP & sharedState )
+                            GridP            & grid )
 {
-
-
-  m_sharedState= sharedState;
   ArchesMaterial* mat= scinew ArchesMaterial();
-  sharedState->registerArchesMaterial(mat);
+  m_sharedState->registerArchesMaterial(mat);
   ProblemSpecP db = params->findBlock("CFD")->findBlock("ARCHES");
   m_arches_spec = db;
 
@@ -117,7 +112,7 @@ Arches::problemSetup( const ProblemSpecP     & params,
   m_do_lagrangian_particles = m_arches_spec->findBlock("LagrangianParticles");
   if ( m_do_lagrangian_particles ) {
     m_particlesHelper->problem_setup( params,m_arches_spec->findBlock("LagrangianParticles"),
-                                      sharedState);
+                                      m_sharedState);
   }
 
   //  Multi-level related
@@ -130,7 +125,6 @@ Arches::problemSetup( const ProblemSpecP     & params,
       db->getRootNode()->findBlock("Grid")->findBlock("BoundaryConditions");
     assign_unique_boundary_names( bcProbSpec );
   }
-
 
   db->getWithDefault("recompileTaskgraph",  m_recompile_taskgraph,false);
 
@@ -163,7 +157,6 @@ Arches::problemSetup( const ProblemSpecP     & params,
   } else {
 
     throw InvalidValue("Nonlinear solver not supported.", __FILE__, __LINE__);
-
   }
 
   //User the builder to build the solver, delete the builder when done.
@@ -186,27 +179,27 @@ Arches::problemSetup( const ProblemSpecP     & params,
       throw InternalError("ARCHES:couldn't get output port", __FILE__, __LINE__);
     }
 
-    m_analysis_modules = AnalysisModuleFactory::create(params, sharedState, dataArchiver);
+    m_analysis_modules = AnalysisModuleFactory::create(params, m_sharedState, dataArchiver);
 
     if(m_analysis_modules.size() != 0) {
       vector<AnalysisModule*>::iterator iter;
       for( iter  = m_analysis_modules.begin();
            iter != m_analysis_modules.end(); iter++) {
         AnalysisModule* am = *iter;
-        am->problemSetup(params, materials_ps, grid, sharedState);
+        am->problemSetup(params, materials_ps, grid, m_sharedState);
       }
     }
   }
+
   //__________________________________
   // Bulletproofing needed for multi-level RMCRT
-  if(m_do_AMR && !sharedState->isLockstepAMR()) {
+  if(isAMR() && !isLockstepAMR()) {
     ostringstream msg;
     msg << "\n ERROR: You must add \n"
         << " <useLockStep> true </useLockStep> \n"
         << " inside of the <AMR> section for multi-level ARCHES & MPMARCHES. \n";
     throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
   }
-
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -262,7 +255,7 @@ Arches::restartInitialize()
 
 //--------------------------------------------------------------------------------------------------
 void
-Arches::scheduleComputeStableTimestep(const LevelP& level,
+Arches::scheduleComputeStableTimeStep(const LevelP& level,
                                       SchedulerP& sched)
 {
   m_nlSolver->computeTimestep(level, sched );
@@ -290,10 +283,10 @@ Arches::scheduleTimeAdvance( const LevelP& level,
 
   printSchedule(level,dbg, "Arches::scheduleTimeAdvance");
 
-  if( m_sharedState->isRegridTimestep() ) { // needed for single level regridding on restarts
+  if( isRegridTimeStep() ) { // needed for single level regridding on restarts
     m_doing_restart = true;                  // this task is called twice on a regrid.
     m_recompile_taskgraph =true;
-    m_sharedState->setRegridTimestep(false);
+    setRegridTimeStep(false);
   }
 
   if ( m_doing_restart ) {
@@ -357,13 +350,13 @@ int Arches::computeTaskGraphIndex()
 }
 
 //--------------------------------------------------------------------------------------------------
-double Arches::recomputeTimestep(double current_dt) {
-  return m_nlSolver->recomputeTimestep(current_dt);
+double Arches::recomputeTimeStep(double current_dt) {
+  return m_nlSolver->recomputeTimeStep(current_dt);
 }
 
 //--------------------------------------------------------------------------------------------------
-bool Arches::restartableTimesteps() {
-  return m_nlSolver->restartableTimesteps();
+bool Arches::restartableTimeSteps() {
+  return m_nlSolver->restartableTimeSteps();
 }
 
 //-------------------------------------------------------------------------------------------------

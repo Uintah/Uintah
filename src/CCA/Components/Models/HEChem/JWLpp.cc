@@ -156,7 +156,7 @@ void JWLpp::scheduleInitialize(SchedulerP&,
 }
 //______________________________________________________________________
 //      
-void JWLpp::scheduleComputeStableTimestep(SchedulerP&,
+void JWLpp::scheduleComputeStableTimeStep(SchedulerP&,
                                           const LevelP&,
                                           const ModelInfo*)
 {

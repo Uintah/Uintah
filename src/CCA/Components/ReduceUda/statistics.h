@@ -66,7 +66,7 @@ WARNING
   public:
     statistics(ProblemSpecP    & prob_spec,
                SimulationStateP& sharedState,
-		 Output          * dataArchiver,
+	       Output          * dataArchiver,
                DataArchive     * dataArchive);
 
     statistics();
@@ -76,7 +76,9 @@ WARNING
     virtual void problemSetup(const ProblemSpecP& prob_spec,
                               const ProblemSpecP& restart_prob_spec,
                               GridP& grid,
-                              SimulationStateP& sharedState);
+			      SimulationStateP& sharedState);
+                              
+    virtual void outputProblemSpec( ProblemSpecP& ps) {};
 
     virtual void scheduleInitialize(SchedulerP& sched,
                                     const LevelP& level);

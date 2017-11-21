@@ -25,13 +25,13 @@
 #ifndef UINTAH_HOMEBREW_MPMICE_H
 #define UINTAH_HOMEBREW_MPMICE_H
 
-#include <Core/Parallel/UintahParallelComponent.h>
+#include <CCA/Components/Application/ApplicationCommon.h>
+
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <CCA/Ports/DataWarehouseP.h>
-#include <CCA/Ports/SimulationInterface.h>
 #include <CCA/Components/ICE/ICEMaterial.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MPM/Contact/Contact.h>
@@ -79,20 +79,22 @@ WARNING
 
 enum MPMType {STAND_MPMICE = 0, RIGID_MPMICE, SHELL_MPMICE, FRACTURE_MPMICE};
 
-class MPMICE : public SimulationInterface, public UintahParallelComponent {
+class MPMICE : public ApplicationCommon {
 
 public:
-//  MPMICE(const ProcessorGroup* myworld, const bool doAMR);
-  MPMICE(const ProcessorGroup* myworld, MPMType type, const bool doAMR = false);
+  MPMICE(const ProcessorGroup* myworld,
+         const SimulationStateP sharedState,
+         MPMType type, const bool doAMR = false);
+  
   virtual ~MPMICE();
   
-  virtual bool restartableTimesteps();
+  virtual bool restartableTimeSteps();
 
-  virtual double recomputeTimestep(double current_dt); 
+  virtual double recomputeTimeStep(double current_dt); 
           
   virtual void problemSetup(const ProblemSpecP& params, 
                             const ProblemSpecP& restart_prob_spec, 
-                            GridP& grid, SimulationStateP&);
+                            GridP& grid);
 
   virtual void outputProblemSpec(ProblemSpecP& ps);
          
@@ -104,12 +106,12 @@ public:
 
   virtual void restartInitialize();
 
-  virtual void scheduleComputeStableTimestep(const LevelP& level,
+  virtual void scheduleComputeStableTimeStep(const LevelP& level,
                                              SchedulerP&);
   
   // scheduleTimeAdvance version called by the AMR simulation controller.
   virtual void scheduleTimeAdvance( const LevelP& level, 
-				        SchedulerP&);
+				    SchedulerP&);
  
   virtual void scheduleFinalizeTimestep(const LevelP& level, 
                                         SchedulerP&);
@@ -178,13 +180,13 @@ public:
                                     const MaterialSet*);
             
   void scheduleComputeInternalForce(SchedulerP&, const PatchSet*,
-				    const MaterialSet*);
+                                    const MaterialSet*);
 
   void computeInternalForce(const ProcessorGroup*,
-			    const PatchSubset* patches,
-			    const MaterialSubset* matls,
-			    DataWarehouse* old_dw,
-			    DataWarehouse* new_dw);
+                            const PatchSubset* patches,
+                            const MaterialSubset* matls,
+                            DataWarehouse* old_dw,
+                            DataWarehouse* new_dw);
 
 //______________________________________________________________________
 //       A C T U A L   S T E P S : 
@@ -407,8 +409,7 @@ private:
 protected:
   MPMICE(const MPMICE&);
   MPMICE& operator=(const MPMICE&);
-  SimulationStateP d_sharedState; 
-  Output* dataArchiver;
+
   MPMLabel* Mlb;
   ICELabel* Ilb;
   MPMICELabel* MIlb;
@@ -419,7 +420,6 @@ protected:
   int              d_8or27;
   int              NGN;
   bool             d_recompile;
-  bool             d_doAMR;
   bool             d_testForNegTemps_mpm;
   bool             do_mlmpmice;
 

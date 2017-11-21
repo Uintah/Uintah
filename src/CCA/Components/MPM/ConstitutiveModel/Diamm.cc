@@ -232,7 +232,7 @@ void Diamm::initializeCMData(const Patch* patch,
     }
   }
 
-  computeStableTimestep(patch, matl, new_dw);
+  computeStableTimeStep(patch, matl, new_dw);
 }
 
 void Diamm::addParticleState(std::vector<const VarLabel*>& from,
@@ -245,7 +245,7 @@ void Diamm::addParticleState(std::vector<const VarLabel*>& from,
   }
 }
 
-void Diamm::computeStableTimestep(const Patch* patch,
+void Diamm::computeStableTimeStep(const Patch* patch,
                                     const MPMMaterial* matl,
                                     DataWarehouse* new_dw)
 {

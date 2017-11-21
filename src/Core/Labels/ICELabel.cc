@@ -51,8 +51,54 @@ ICELabel::ICELabel()
   const TypeDescription* sum_variable = sum_vartype::getTypeDescription();
   const TypeDescription* max_variable = max_vartype::getTypeDescription();
 
-  delTLabel = VarLabel::create( "delT", delt_vartype::getTypeDescription() );
-    
+  // Time Step
+  timeStepLabel =
+    VarLabel::create(timeStep_name, timeStep_vartype::getTypeDescription() );
+
+  // Simulation Time
+  simulationTimeLabel =
+    VarLabel::create(simTime_name, simTime_vartype::getTypeDescription() );
+
+  // delta t
+  VarLabel* nonconstDelt =
+    VarLabel::create(delT_name, delt_vartype::getTypeDescription() );
+  nonconstDelt->allowMultipleComputes();
+  delTLabel = nonconstDelt;
+
+  // output interval
+  VarLabel* nonconstOutputInv =
+    VarLabel::create(outputInterval_name,
+		     min_vartype::getTypeDescription() );
+  nonconstOutputInv->allowMultipleComputes();
+  outputIntervalLabel = nonconstOutputInv;
+
+  // output time step interval
+  VarLabel* nonconstOutputTimeStepInv =
+    VarLabel::create(outputTimeStepInterval_name,
+  		     min_vartype::getTypeDescription() );
+  nonconstOutputTimeStepInv->allowMultipleComputes();
+  outputTimeStepIntervalLabel = nonconstOutputTimeStepInv;
+
+  // check point interval
+  VarLabel* nonconstCheckpointInv =
+    VarLabel::create(checkpointInterval_name,
+		     min_vartype::getTypeDescription() );
+  nonconstCheckpointInv->allowMultipleComputes();
+  checkpointIntervalLabel = nonconstCheckpointInv;
+  
+  // check point time step interval
+  VarLabel* nonconstCheckpointTimeStepInv =
+    VarLabel::create(checkpointTimeStepInterval_name,
+  		     min_vartype::getTypeDescription() );
+  nonconstCheckpointTimeStepInv->allowMultipleComputes();
+  checkpointTimeStepIntervalLabel = nonconstCheckpointTimeStepInv;
+
+  // End Simulation  
+  VarLabel* nonconstEndSimulation =
+    VarLabel::create(endSimulation_name,
+		     bool_or_vartype::getTypeDescription() );
+  nonconstEndSimulation->allowMultipleComputes();
+  endSimulationLabel = nonconstEndSimulation;
   
   //__________________________________
   // Cell Centered variables
@@ -259,8 +305,18 @@ ICELabel::ICELabel()
 
 ICELabel::~ICELabel()
 {
-    // Cell centered variables
+    VarLabel::destroy(timeStepLabel);
+    VarLabel::destroy(simulationTimeLabel);
     VarLabel::destroy(delTLabel);
+    
+    VarLabel::destroy(outputIntervalLabel);
+    VarLabel::destroy(outputTimeStepIntervalLabel);
+    VarLabel::destroy(checkpointIntervalLabel);
+    VarLabel::destroy(checkpointTimeStepIntervalLabel);
+    
+    VarLabel::destroy(endSimulationLabel);
+
+    // Cell centered variables
     VarLabel::destroy(press_CCLabel);
     VarLabel::destroy(TMV_CCLabel);
     VarLabel::destroy(press_equil_CCLabel);

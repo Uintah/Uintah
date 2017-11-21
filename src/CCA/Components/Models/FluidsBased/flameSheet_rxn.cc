@@ -512,7 +512,7 @@ void flameSheet_rxn::testConservation(const ProcessorGroup*,
   }
 }
 //__________________________________      
-void flameSheet_rxn::scheduleComputeStableTimestep(SchedulerP&,
+void flameSheet_rxn::scheduleComputeStableTimeStep(SchedulerP&,
                                            const LevelP&,
                                            const ModelInfo*)
 {

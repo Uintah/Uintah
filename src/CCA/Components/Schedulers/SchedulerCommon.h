@@ -30,6 +30,8 @@
 #include <CCA/Components/Schedulers/Relocate.h>
 #include <CCA/Ports/Scheduler.h>
 
+#include <CCA/Components/SimulationController/RunTimeStatsEnums.h>
+
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/SimulationStateP.h>
@@ -43,13 +45,13 @@
 
 namespace Uintah {
 
-
+class ApplicationInterface;
 class Output;
 class DetailedTask;
 class DetailedTasks;
 class TaskGraph;
 class LocallyComputedPatchVarMap;
-
+  
 using LabelMatlMap            = std::map<const VarLabel*, MaterialSubset*, VarLabel::Compare>;
 using VarLabelMaterialListMap = std::map< std::string, std::list<int> >;
 using ReductionTasksMap       = std::map<VarLabelMatl<Level, DataWarehouse>, Task*>;
@@ -89,7 +91,8 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
 
     virtual ~SchedulerCommon();
 
-    virtual void problemSetup( const ProblemSpecP & prob_spec, SimulationStateP & state );
+    virtual void problemSetup( const ProblemSpecP & prob_spec,
+			       const SimulationStateP & state );
 
     virtual void doEmitTaskGraphDocs();
 
@@ -231,7 +234,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
 
     virtual void setPositionVar( const VarLabel* posLabel ) { m_reloc_new_pos_label = posLabel; }
 
-    virtual void scheduleAndDoDataCopy( const GridP & grid, SimulationInterface * sim );
+    virtual void scheduleAndDoDataCopy( const GridP & grid, ApplicationInterface * sim );
 
     // Clear the recorded task monitoring attribute values.
     virtual void clearTaskMonitoring();
@@ -272,7 +275,10 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
 
     int getMaxLevelOffset() { return m_max_level_offset; }
 
-    bool isCopyDataTimestep() { return m_shared_state->isCopyDataTimestep() || m_is_init_timestep; }
+    bool isCopyDataTimestep() { return m_is_copy_data_timestep; }
+      
+    bool copyTimestep() { return (m_is_copy_data_timestep ||
+				  m_is_init_timestep); }
 
     void setInitTimestep( bool isInitTimestep ) { m_is_init_timestep = isInitTimestep; }
 
@@ -282,6 +288,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
 
     const VarLabel* m_reloc_new_pos_label{nullptr};
 
+    void setRunTimeStats( ReductionInfoMapper< RunTimeStatsEnum, double > *runTimeStats) { d_runTimeStats = runTimeStats; };
 
   protected:
 
@@ -315,6 +322,10 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
 
 
     bool                                m_restartable{false};
+    // Some places need to know if this is a copy data timestep or
+    // a normal timestep.  (A copy data timestep is AMR's current 
+    // method of getting data from an old to a new grid).
+    bool                                m_is_copy_data_timestep{false};
     bool                                m_is_init_timestep{false};
     bool                                m_is_restart_init_timestep{false};
     int                                 m_current_task_graph{-1};
@@ -338,9 +349,12 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     std::vector<Task::WhichDW> m_tracking_dws;
 
     // Optional task monitoring.
+    MaterialSubset* m_dummy_matl{0};
+
     bool m_monitoring{false};          // Monitoring on/off.
-    bool m_monitoring_per_cell{false}; // Record the task runtime attributes on a per
-                                // cell basis rather than a per patch basis.
+    bool m_monitoring_per_cell{false}; // Record the task runtime attributes
+                                       // on a per cell basis rather than a
+                                       // per patch basis.
     // Maps for the global or local tasks to be monitored.
     std::map<std::string, const VarLabel *>       m_monitoring_tasks[2];
     std::map<std::string, std::map<int, double> > m_monitoring_values[2];
@@ -363,6 +377,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     // do not checkpoint these variables
     std::set<std::string> m_no_checkpoint_vars;
 
+    ReductionInfoMapper< RunTimeStatsEnum, double > *d_runTimeStats{nullptr};
 
   private:
 
@@ -426,6 +441,5 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
 
   };
 } // End namespace Uintah
-
 
 #endif

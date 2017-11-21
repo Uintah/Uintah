@@ -266,7 +266,7 @@ void JWLppMPM::initializeCMData(const Patch* patch,
     }
   }
 
-  computeStableTimestep(patch, matl, new_dw);
+  computeStableTimeStep(patch, matl, new_dw);
 }
 
 void JWLppMPM::addParticleState(std::vector<const VarLabel*>& from,
@@ -279,7 +279,7 @@ void JWLppMPM::addParticleState(std::vector<const VarLabel*>& from,
   to.push_back(pProgressdelFLabel_preReloc);
 }
 
-void JWLppMPM::computeStableTimestep(const Patch* patch,
+void JWLppMPM::computeStableTimeStep(const Patch* patch,
                                      const MPMMaterial* matl,
                                      DataWarehouse* new_dw)
 {

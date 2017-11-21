@@ -106,7 +106,7 @@ HypoElasticImplicit::addParticleState( std::vector<const VarLabel*>& from,
 {
 }
 
-void HypoElasticImplicit::computeStableTimestep(const Patch*,
+void HypoElasticImplicit::computeStableTimeStep(const Patch*,
                                            const MPMMaterial*,
                                            DataWarehouse*)
 {

@@ -21,6 +21,8 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+
+
 #include <CCA/Components/ICE/ICE.h>
 #include <CCA/Components/ICE/AMRICE.h>
 #include <CCA/Components/ICE/impAMRICE.h>
@@ -48,13 +50,16 @@ using namespace Uintah;
 static DebugStream cout_doing("ICE_DOING_COUT", false);
 static DebugStream cout_dbg("impAMRICE_DBG", false);
 
-impAMRICE::impAMRICE(const ProcessorGroup* myworld)
-  : AMRICE(myworld)
+impAMRICE::impAMRICE(const ProcessorGroup* myworld,
+		     const SimulationStateP sharedState) :
+  AMRICE(myworld, sharedState)
 {
 }   
+
 impAMRICE::~impAMRICE()
 {
 };                                               
+
 /* _____________________________________________________________________
  Function~  impAMRICE::scheduleLockstepTimeAdvance--
 _____________________________________________________________________*/
@@ -67,9 +72,9 @@ impAMRICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
   GridP grid = level->getGrid();
   int maxLevel = grid->numLevels();
 
-  const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
-  const MaterialSet* mpm_matls = d_sharedState->allMPMMaterials();
-  const MaterialSet* all_matls = d_sharedState->allMaterials();  
+  const MaterialSet* ice_matls = m_sharedState->allICEMaterials();
+  const MaterialSet* mpm_matls = m_sharedState->allMPMMaterials();
+  const MaterialSet* all_matls = m_sharedState->allMaterials();  
 
   MaterialSubset* one_matl = d_press_matl;
   const MaterialSubset* ice_matls_sub = ice_matls->getUnion();
@@ -358,7 +363,7 @@ void impAMRICE::multiLevelPressureSolve(const ProcessorGroup* pg,
   cout_doing << d_myworld->myRank() << " impAMRICE::MultiLevelPressureSolve on patch " << *patches << endl;
   //__________________________________
   // define Matl sets and subsets
-  const MaterialSet* all_matls = d_sharedState->allMaterials();
+  const MaterialSet* all_matls = m_sharedState->allMaterials();
   MaterialSubset* one_matl    = d_press_matl;
   
   //__________________________________
@@ -381,8 +386,8 @@ void impAMRICE::multiLevelPressureSolve(const ProcessorGroup* pg,
   // on all the levels
   delt_vartype dt;
   subNewDW = d_subsched->get_dw(3);
-  ParentOldDW->get(dt, d_sharedState->get_delt_label());
-  subNewDW->put(dt, d_sharedState->get_delt_label());
+  ParentOldDW->get(dt, m_sharedState->get_delt_label());
+  subNewDW->put(dt, m_sharedState->get_delt_label());
    
   max_vartype max_RHS_old;
   ParentNewDW->get(max_RHS_old, lb->max_RHSLabel);
@@ -438,7 +443,7 @@ void impAMRICE::multiLevelPressureSolve(const ProcessorGroup* pg,
       // so just pass in the coarsest level as it always exists.
       const VarLabel* whichInitialGuess = nullptr; 
       
-      d_solver->scheduleSolve(grid->getLevel(0), d_subsched, d_press_matlSet,
+      m_solver->scheduleSolve(grid->getLevel(0), d_subsched, d_press_matlSet,
                               lb->matrixLabel,   Task::NewDW,
                               lb->imp_delPLabel, modifies_X,
                               lb->rhsLabel,      Task::OldDW,
@@ -820,7 +825,7 @@ void impAMRICE::scheduleCoarsen_delP(SchedulerP& sched,
 
   t->modifies(variable, d_press_matl, oims);        
 
-  sched->addTask(t, coarseLevel->eachPatch(), d_sharedState->allICEMaterials());
+  sched->addTask(t, coarseLevel->eachPatch(), m_sharedState->allICEMaterials());
 }
 
 /* _____________________________________________________________________
@@ -926,7 +931,7 @@ void impAMRICE::scheduleZeroMatrix_UnderFinePatches(SchedulerP& sched,
   if(coarseLevel->hasFinerLevel()){                                                                      
     t->modifies(lb->matrixLabel, one_matl, oims);
   }   
-  sched->addTask(t, coarseLevel->eachPatch(), d_sharedState->allICEMaterials());
+  sched->addTask(t, coarseLevel->eachPatch(), m_sharedState->allICEMaterials());
 }
 /* _____________________________________________________________________
  Function~  impAMRICE::zeroMatrix_UnderFinePatches

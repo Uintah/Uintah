@@ -28,8 +28,10 @@
 
 using namespace Uintah;
 
-CCHeat3D::CCHeat3D ( ProcessorGroup const * myworld, int verbosity )
-    : UintahParallelComponent ( myworld )
+CCHeat3D::CCHeat3D ( const ProcessorGroup * myworld,
+		     const SimulationStateP sharedState,
+		     int verbosity )
+  : ApplicationCommon ( myworld, sharedState )
     , dbg_out1 ( "CCHeat3D", verbosity > 0 )
     , dbg_out2 ( "CCHeat3D", verbosity > 1 )
     , dbg_out3 ( "CCHeat3D", verbosity > 2 )
@@ -67,11 +69,11 @@ CCHeat3D::~CCHeat3D()
 #endif
 }
 
-void CCHeat3D::problemSetup ( ProblemSpecP const & params, ProblemSpecP const & /*restart_prob_spec*/, GridP & /*grid*/, SimulationStateP & simulation_state )
+void CCHeat3D::problemSetup ( ProblemSpecP const & params, ProblemSpecP const & /*restart_prob_spec*/, GridP & /*grid*/ )
 {
-    state = simulation_state;
-    state->setIsLockstepAMR ( true );
-    state->registerSimpleMaterial ( scinew SimpleMaterial() );
+    setLockstepAMR( true );
+
+    m_sharedState->registerSimpleMaterial ( scinew SimpleMaterial() );
 
     ProblemSpecP heat = params->findBlock ( "FDHeat" );
     std::string scheme;
@@ -89,7 +91,7 @@ void CCHeat3D::problemSetup ( ProblemSpecP const & params, ProblemSpecP const & 
         {
             throw InternalError ( "CCHeat2D:couldn't get solver port", __FILE__, __LINE__ );
         }
-        solver_parameters = solver->readParameters ( solv, "u" , state );
+        solver_parameters = solver->readParameters ( solv, "u" , m_sharedState );
         solver_parameters->setSolveOnExtraCells ( false );
     }
 }
@@ -98,14 +100,14 @@ void CCHeat3D::scheduleInitialize ( LevelP const & level, SchedulerP & sched )
 {
     Task * task = scinew Task ( "CCHeat3D::task_initialize", this, &CCHeat3D::task_initialize );
     task->computes ( u_label );
-    sched->addTask ( task, level->eachPatch(), state->allMaterials() );
+    sched->addTask ( task, level->eachPatch(), m_sharedState->allMaterials() );
 }
 
 void CCHeat3D::scheduleComputeStableTimestep ( LevelP const & level, SchedulerP & sched )
 {
     Task * task = scinew Task ( "CCHeat3D::task_compute_stable_timestep", this, &CCHeat3D::task_compute_stable_timestep );
-    task->computes ( state->get_delt_label(), level.get_rep() );
-    sched->addTask ( task, level->eachPatch(), state->allMaterials() );
+    task->computes ( m_sharedState->get_delt_label(), level.get_rep() );
+    sched->addTask ( task, level->eachPatch(), m_sharedState->allMaterials() );
 }
 
 void CCHeat3D::scheduleTimeAdvance ( LevelP const & level, SchedulerP & sched )
@@ -129,7 +131,7 @@ void CCHeat3D::scheduleTimeAdvance_forward_euler ( LevelP const & level, Schedul
     Task * task = scinew Task ( "CCHeat3D::task_farward_euler_time_advance", this, &CCHeat3D::task_farward_euler_time_advance );
     task->requires ( Task::OldDW, u_label, Ghost::AroundCells, 1 );
     task->computes ( u_label );
-    sched->addTask ( task, level->eachPatch(), state->allMaterials() );
+    sched->addTask ( task, level->eachPatch(), m_sharedState->allMaterials() );
 }
 
 void CCHeat3D::scheduleTimeAdvance_backward_euler_assemble ( LevelP const & level, SchedulerP & sched )
@@ -147,12 +149,12 @@ void CCHeat3D::scheduleTimeAdvance_backward_euler_assemble ( LevelP const & leve
     task->computes ( At_label );
     task->computes ( Ab_label );
 #endif
-    sched->addTask ( task, level->allPatches(), state->allMaterials() );
+    sched->addTask ( task, level->allPatches(), m_sharedState->allMaterials() );
 }
 
 void CCHeat3D::scheduleTimeAdvance_backward_euler_solve ( LevelP const & level, SchedulerP & sched )
 {
-    solver->scheduleSolve ( level, sched, state->allMaterials(),
+    solver->scheduleSolve ( level, sched, m_sharedState->allMaterials(),
                             matrix_label, Task::NewDW, // A
                             u_label, false,            // x
                             rhs_label, Task::NewDW,    // b
@@ -184,7 +186,7 @@ void CCHeat3D::task_initialize ( ProcessorGroup const * /*myworld*/, PatchSubset
 void CCHeat3D::task_compute_stable_timestep ( ProcessorGroup const * /*myworld*/, PatchSubset const * patches, MaterialSubset const * /*matls*/, DataWarehouse * /*dw_old*/, DataWarehouse * dw_new )
 {
     dbg_out1 << "==== CCHeat3D::task_compute_stable_timestep ====" << std::endl;
-    dw_new->put ( delt_vartype ( delt ), state->get_delt_label(), getLevel ( patches ) );
+    dw_new->put ( delt_vartype ( delt ), m_sharedState->get_delt_label(), getLevel ( patches ) );
     dbg_out2 << std::endl;
 }
 

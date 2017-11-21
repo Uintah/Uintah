@@ -25,6 +25,8 @@
 #ifndef UINTAH_CCA_COMPONENTS_MPMFVM_ESMPM_H
 #define UINTAH_CCA_COMPONENTS_MPMFVM_ESMPM_H
 
+#include <CCA/Components/Application/ApplicationCommon.h>
+
 #include <CCA/Components/FVM/FVMLabel.h>
 #include <CCA/Components/FVM/ElectrostaticSolve.h>
 #include <CCA/Components/MPMFVM/ESConductivityModel.h>
@@ -33,7 +35,6 @@
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Output.h>
 #include <CCA/Ports/Scheduler.h>
-#include <CCA/Ports/SimulationInterface.h>
 #include <CCA/Ports/SwitchingCriteria.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Point.h>
@@ -41,10 +42,8 @@
 #include <Core/Grid/Ghost.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
-#include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Labels/MPMLabel.h>
-#include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 
@@ -52,14 +51,16 @@
 #include <string>
 
 namespace Uintah {
-  class ESMPM : public UintahParallelComponent, public SimulationInterface {
+  class ESMPM : public ApplicationCommon {
     public:
-      ESMPM(const ProcessorGroup* myworld);
+      ESMPM(const ProcessorGroup* myworld,
+	    const SimulationStateP sharedState);
+    
       ~ESMPM();
 
       virtual void problemSetup(const ProblemSpecP& prob_spec,
                                 const ProblemSpecP& restart_prob_spec,
-                                GridP& grid, SimulationStateP& state);
+                                GridP& grid);
 
       virtual void outputProblemSpec(ProblemSpecP& prob_spec);
 
@@ -69,7 +70,7 @@ namespace Uintah {
 
       virtual void restartInitialize();
 
-      virtual void scheduleComputeStableTimestep(const LevelP& level, SchedulerP& sched);
+      virtual void scheduleComputeStableTimeStep(const LevelP& level, SchedulerP& sched);
 
       virtual void scheduleTimeAdvance( const LevelP& level, SchedulerP& sched);
 
@@ -97,8 +98,6 @@ namespace Uintah {
       double d_TINY_RHO;
       std::string d_cd_model_name;
 
-      SimulationStateP d_shared_state;
-      Output* d_data_archiver;
       AMRMPM* d_amrmpm;
       ElectrostaticSolve* d_esfvm;
       MPMLabel* d_mpm_lb;
@@ -111,7 +110,6 @@ namespace Uintah {
       SwitchingCriteria* d_switch_criteria;
 
       Ghost::GhostType d_gac;
-
   };
 }
 #endif
