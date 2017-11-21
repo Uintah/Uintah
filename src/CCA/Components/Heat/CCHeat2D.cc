@@ -103,7 +103,7 @@ void CCHeat2D::scheduleInitialize ( LevelP const & level, SchedulerP & sched )
     sched->addTask ( task, level->eachPatch(), m_sharedState->allMaterials() );
 }
 
-void CCHeat2D::scheduleComputeStableTimestep ( LevelP const & level, SchedulerP & sched )
+void CCHeat2D::scheduleComputeStableTimeStep ( LevelP const & level, SchedulerP & sched )
 {
     Task * task = scinew Task ( "CCHeat2D::task_compute_stable_timestep", this, &CCHeat2D::task_compute_stable_timestep );
     task->computes ( m_sharedState->get_delt_label(), level.get_rep() );

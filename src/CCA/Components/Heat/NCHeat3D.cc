@@ -119,7 +119,7 @@ void NCHeat3D::scheduleInitialize ( LevelP const & level, SchedulerP & sched )
     sched->addTask ( task, level->eachPatch(), m_sharedState->allMaterials() );
 }
 
-void NCHeat3D::scheduleComputeStableTimestep ( LevelP const & level, SchedulerP & sched )
+void NCHeat3D::scheduleComputeStableTimeStep ( LevelP const & level, SchedulerP & sched )
 {
     Task * task = scinew Task ( "NCHeat3D::task_compute_stable_timestep", this, &NCHeat3D::task_compute_stable_timestep );
     task->computes ( m_sharedState->get_delt_label(), level.get_rep() );

@@ -511,7 +511,7 @@ protected:
     {
         /*TODO*/
     };
-    virtual void scheduleComputeStableTimestep ( LevelP const & level, SchedulerP & sched ) override;
+    virtual void scheduleComputeStableTimeStep ( LevelP const & level, SchedulerP & sched ) override;
     virtual void scheduleTimeAdvance ( LevelP const & level, SchedulerP & ) override;
 
 protected:
@@ -620,7 +620,7 @@ void PhaseField<VariableType, NumGhosts, Dimension>::scheduleInitialize ( LevelP
 }
 
 template<PF::VariableType VariableType, int NumGhosts, int Dimension>
-void PhaseField<VariableType, NumGhosts, Dimension>::scheduleComputeStableTimestep ( LevelP const & level, SchedulerP & sched )
+void PhaseField<VariableType, NumGhosts, Dimension>::scheduleComputeStableTimeStep ( LevelP const & level, SchedulerP & sched )
 {
     Task * task = scinew Task ( "PhaseField::task_compute_stable_timestep", this, &PhaseField::task_compute_stable_timestep );
     task->computes ( m_sharedState->get_delt_label(), level.get_rep() );

@@ -136,7 +136,7 @@ protected:
     virtual void problemSetup ( ProblemSpecP const & params, ProblemSpecP const & restart_prob_spec, GridP & grid ) override;
     virtual void scheduleInitialize ( LevelP const & level, SchedulerP & sched ) override;
     virtual void scheduleRestartInitialize ( LevelP const & /*level*/, SchedulerP & /*sched*/ ) override {}
-    virtual void scheduleComputeStableTimestep ( LevelP const & level, SchedulerP & sched ) override;
+    virtual void scheduleComputeStableTimeStep ( LevelP const & level, SchedulerP & sched ) override;
     virtual void scheduleTimeAdvance ( LevelP const & level, SchedulerP & ) override;
 
     void scheduleTimeAdvance_forward_euler ( LevelP const & level, SchedulerP & );
