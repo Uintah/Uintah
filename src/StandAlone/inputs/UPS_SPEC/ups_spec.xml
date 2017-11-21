@@ -794,15 +794,15 @@
   <!--__________________________________-->
   <PostProcess                          spec="OPTIONAL NO_DATA" >
     <Module                             spec="MULTIPLE NO_DATA"
-                                          attribute1="type REQUIRED STRING 'statistics'" >
+                                          attribute1="type REQUIRED STRING 'statistics, spatioTemporalAvg" >
       
       <!--  Common __________________________________-->
       <material                         spec="OPTIONAL STRING" />
       <materialIndex                    spec="OPTIONAL INTEGER" />
-      <timeStart                        spec="REQUIRED DOUBLE"  need_applies_to="type statistics"/>
-      <timeStop                         spec="REQUIRED DOUBLE"  need_applies_to="type statistics"/>
-      <monitorCell                      spec="OPTIONAL VECTOR"  need_applies_to="type statistics"/>
-      <Variables                        spec="OPTIONAL NO_DATA" need_applies_to="type statistics">
+      <timeStart                        spec="REQUIRED DOUBLE"  need_applies_to="type statistics, spatioTemporalAvg"/>
+      <timeStop                         spec="REQUIRED DOUBLE"  need_applies_to="type statistics, spatioTemporalAvg"/>
+      <monitorCell                      spec="OPTIONAL VECTOR"  need_applies_to="type statistics, spatioTemporalAvg"/>
+      <Variables                        spec="OPTIONAL NO_DATA" need_applies_to="type statistics, spatioTemporalAvg">
         <analyze                        spec="MULTIPLE NO_DATA"
                                           attribute1="label REQUIRED STRING" 
                                           attribute2="matl  OPTIONAL STRING"
@@ -811,6 +811,10 @@
  
       <!--statistics ____________________________________--> 
       <computeHigherOrderStats         spec="OPTIONAL BOOLEAN"  need_applies_to="type statistics" />
+      
+      <!--spatioTemporalAvg _____________________________--> 
+      <domain                          spec="OPTIONAL STRING 'everywhere interior, boundaries'"  need_applies_to="type spatioTemporalAvg" />
+      <avgBoxCells                     spec="REQUIRED VECTOR"  need_applies_to="type spatioTemporalAvg" />
             
     </Module>
   </PostProcess>
