@@ -24,6 +24,7 @@
 
 #include <CCA/Components/ReduceUda/ModuleFactory.h>
 #include <CCA/Components/ReduceUda/statistics.h>
+#include <CCA/Components/ReduceUda/spatioTemporalAvg.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/SimulationState.h>
 
@@ -66,6 +67,9 @@ ModuleFactory::create(const ProblemSpecP& prob_spec,
 
       if ( module == "statistics" ) {
         modules.push_back ( scinew postProcess::statistics( module_ps, sharedState, dataArchiver, dataArchive) );
+      }
+      else if ( module == "spatioTemporalAvg" ) {
+        modules.push_back ( scinew postProcess::spatioTemporalAvg( module_ps, sharedState, dataArchiver, dataArchive) );
       }
       else {
         throw ProblemSetupException("\nERROR:<PostProcess> Unknown analysis module.  "+module,__FILE__, __LINE__);

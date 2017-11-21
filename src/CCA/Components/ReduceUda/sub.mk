@@ -36,7 +36,8 @@ SRCS     += \
 	$(SRCDIR)/UdaReducer.cc           \
 	$(SRCDIR)/Module.cc               \
 	$(SRCDIR)/ModuleFactory.cc        \
-	$(SRCDIR)/statistics.cc
+	$(SRCDIR)/statistics.cc           \
+       $(SRCDIR)/spatioTemporalAvg.cc
 
 PSELIBS := \
 	CCA/Ports \
