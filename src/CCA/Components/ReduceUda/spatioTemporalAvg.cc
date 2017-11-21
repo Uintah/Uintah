@@ -15,7 +15,7 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHEVERYWHERE THE
  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
@@ -31,6 +31,7 @@
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Util/StringUtil.h>
 #include <sci_defs/visit_defs.h>
 
 #include <iostream>
@@ -47,21 +48,22 @@
 
   <SimulationComponent type="reduce_uda"/>
 
-  <save label="spatioTemporalAvg_press_CC"/>
-  <save label="spatioTemporalAvg_variance_press_CC"/>
+  <save label="avg_press_CC"/>
+  <save label="avg_variance_press_CC"/>
 
-  <save label="spatioTemporalAvg_vel_CC"/>
-  <save label="spatioTemporalAvg_variance_vel_CC"/>
+  <save label="avg_vel_CC"/>
+  <save label="avg_variance_vel_CC"/>
 
   <PostProcess>
     <Module type = "spatioTemporalAvg">
-      <timeStart>   2e-9    </timeStart>
-      <timeStop>   100      </timeStop>
-      <material>    Air     </material>              << A)
-      <materialIndex> 0     </materialIndex>         << B)   You must specifie either A or B
-      <monitorCell> [0,0,0] </monitorCell>           << Used to monitor calculations in one cell
+      <timeStart>   2e-9     </timeStart>
+      <timeStop>   100       </timeStop>
+      <material>    Air      </material>
+      <domain>   everywhere  </domain>        << options: everwhere, interior, boundaries
+      <avgBoxCells>  [5,5,5] </avgBoxCells>   << size of box to average over, cells.
+      
       <Variables>
-        <analyze label="press_CC"  matl="0"/>        << Variables of interest
+        <analyze label="press_CC"  matl="0"/>
         <analyze label="vel_CC"    matl="0"/>
       </Variables>
     </Module>
@@ -85,9 +87,10 @@ spatioTemporalAvg::spatioTemporalAvg(ProblemSpecP    & module_spec,
   d_prob_spec    = module_spec;
   d_dataArchiver = dataArchiver;
   d_dataArchive  = dataArchive;
-  d_matlSet     = 0;
-  d_stopTime    = DBL_MAX;
-  d_monitorCell = IntVector(-9,-9,-9);
+  d_matlSet      = 0;
+  d_stopTime     = DBL_MAX;
+  d_monitorCell  = IntVector(-9,-9,-9);
+  d_compDomain   = EVERYWHERE;
 }
 
 //______________________________________________________________________
@@ -116,6 +119,9 @@ void spatioTemporalAvg::problemSetup(const ProblemSpecP  & prob_spec,
 {
   dbg << "Doing problemSetup \t\t\t\tspatioTemporalAvg" << endl;
 
+  proc0cout << "__________________________________ Post Process module: spatioTemporalAvg" << endl;
+  proc0cout << "         Computing spatial Temporal average for all of the variables listed"<< endl;
+
   int numMatls  = d_sharedState->getNumMatls();
   if(!d_dataArchiver){
     throw InternalError("spatioTemporalAvg:couldn't get output port", __FILE__, __LINE__);
@@ -123,7 +129,27 @@ void spatioTemporalAvg::problemSetup(const ProblemSpecP  & prob_spec,
 
   //__________________________________
   //  region to average over
-  d_prob_spec->require("avgOver_nCells", d_avgOver_nCells );
+  d_prob_spec->require("avgBoxCells", d_avgBoxCells );
+
+
+  //__________________________________
+  //  domain
+  string ans = "null";
+  d_prob_spec->get( "domain", ans );
+
+  ans = string_toupper(ans);
+  if ( ans == "EVERYWHERE" ){
+    d_compDomain = EVERYWHERE;
+    proc0cout << "    Computational Domain: Everywhere\n";
+  }
+  else if ( ans == "INTERIOR" ){
+    d_compDomain = INTERIOR;
+    proc0cout << "    Computational Domain: InteriorCells\n";
+  }
+  else if ( ans == "BOUNDARIES" ) {
+    d_compDomain = BOUNDARIES;
+    proc0cout << "    Computational Domain: Domain boundaries\n";
+  }
 
   //__________________________________
   //  Read in timing information
@@ -173,8 +199,7 @@ void spatioTemporalAvg::problemSetup(const ProblemSpecP  & prob_spec,
   vector<int> m;
   m.push_back( defaultMatl );
 
-  proc0cout << "__________________________________ Post Process module: spatioTemporalAvg" << endl;
-  proc0cout << "         Computing 2nd order spatioTemporalAvg for all of the variables listed"<< endl;
+
 
   //__________________________________
   //  Read in variables label names
@@ -210,12 +235,13 @@ void spatioTemporalAvg::problemSetup(const ProblemSpecP  & prob_spec,
     }
 
     //__________________________________
-    // Only CCVariable Doubles and Vectors for now
+    // Only CCVariable doubles, floats and Vectors for now
     const Uintah::TypeDescription* td = label->typeDescription();
     const Uintah::TypeDescription* subtype = td->getSubType();
 
     if( td->getType() != TypeDescription::CCVariable  ||
         ( subtype->getType() != TypeDescription::double_type &&
+          subtype->getType() != TypeDescription::float_type &&
           subtype->getType() != TypeDescription::Vector ) ) {
       ostringstream warn;
       warn << "ERROR:Module:spatioTemporalAvg: ("<<label->getName() << " " << td->getName() << " ) has not been implemented\n";
@@ -230,8 +256,8 @@ void spatioTemporalAvg::problemSetup(const ProblemSpecP  & prob_spec,
     Q.subtype = subtype;
     Q.initializeTimestep();          // initialize the start timestep = 0;
 
-    Q.avgLabel      = VarLabel::create( "spatioTemporalAvg_" + name,     td);
-    Q.varianceLabel = VarLabel::create( "spatioTemporalAvg_variance_" + name, td);
+    Q.avgLabel      = VarLabel::create( "avg_" + name,     td);
+    Q.varianceLabel = VarLabel::create( "avg_variance_" + name, td);
     d_Qstats.push_back( Q );
 
     //__________________________________
@@ -305,6 +331,10 @@ void spatioTemporalAvg::initialize(const ProcessorGroup  *,
           allocateAndZeroLabels<double>( new_dw,  patch,  Q );
           break;
         }
+        case TypeDescription::float_type:{         // float
+          allocateAndZeroLabels<float>( new_dw,  patch,  Q );
+          break;
+        }
         case TypeDescription::Vector: {             // Vector
           allocateAndZeroLabels<Vector>( new_dw,  patch,  Q );
           break;
@@ -370,11 +400,15 @@ void spatioTemporalAvg::doAnalysis(const ProcessorGroup * pg,
       switch(Q.subtype->getType()) {
 
         case TypeDescription::double_type:{         // double
-          computeAvgWrapper< double >(old_dw, new_dw, patches, patch, Q);
+          computeAvgWrapper<double>(old_dw, new_dw, patches, patch, Q);
+          break;
+        }
+        case TypeDescription::float_type:{         // float
+          computeAvgWrapper<float>(old_dw, new_dw, patches, patch, Q);
           break;
         }
         case TypeDescription::Vector: {             // Vector
-          computeAvgWrapper< Vector >(old_dw, new_dw, patches,  patch, Q);
+          computeAvgWrapper<Vector>(old_dw, new_dw, patches,  patch, Q);
           break;
         }
         default: {
@@ -426,112 +460,120 @@ void spatioTemporalAvg::computeAvg( DataWarehouse  * old_dw,
   new_dw->allocateAndPut( Qavg,      Q.avgLabel,     matl, patch );
   new_dw->allocateAndPut( Qvariance, Q.varianceLabel, matl, patch );
 
+  T zero = T(0.0);
+  Qavg.initialize( zero );
+  Qvariance.initialize( zero );
+
   //__________________________________
   //  compute the number boxes to avg over
-  CellIterator iter = patch->getCellIterator();
-  IntVector lo = iter.begin();
-  IntVector hi = iter.end();
-  IntVector nBoxes(-9,-9,-9);
+  if (d_compDomain == EVERYWHERE || d_compDomain == INTERIOR ){
 
-  for (int d=0; d<3; d++){
-    nBoxes[d] = (int) std::ceil( (double) (hi[d] - lo[d])/(double)d_avgOver_nCells[d] );
-  }
-
-  //__________________________________
-  //  loop over boxes that this patch owns
-  for ( int i=0; i<nBoxes.x(); i++ ){
-    for ( int j=0; j<nBoxes.y(); j++ ){
-      for ( int k=0; k<nBoxes.z(); k++ ){
-
-        IntVector start = lo + IntVector(i,j,k) * d_avgOver_nCells;
-     //   cout << " Box: start: " << start << endl;
-
-        // compute the average
-        T Q_avg = T(0);
-        double n=0;
-
-        for(CellIterator aveCells( IntVector(0,0,0), d_avgOver_nCells ); !aveCells.done(); aveCells++){
-          IntVector c = start + *aveCells;
-          if ( patch->containsIndex(lo, hi, c) ){
-             Q_avg += Qvar[c];
-             n++;
-          }
-        }
-        Q_avg = Q_avg/T(n);
-
-        // Set the quantity
-        for(CellIterator aveCells( IntVector(0,0,0), d_avgOver_nCells ); !aveCells.done(); aveCells++){
-          IntVector c = start + *aveCells;
-          if ( patch->containsIndex(lo, hi, c) ){
-            Qavg[c] = Q_avg;
-          }
-        }
-      }  // k box
-    }  // j box
-  }  // i box
-
-  //__________________________________
-  //  Loop over the boundary faces that this patch owns
-  vector<Patch::FaceType> bf;
-  patch->getBoundaryFaces(bf);
-
-  for( vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
-    Patch::FaceType face = *itr;
-
-    IntVector avgPanelCells = d_avgOver_nCells;
-    IntVector axes = patch->getFaceAxes(face);
-    int pDir = axes[0];
-    avgPanelCells[pDir] = 1;
-
-    cout << "//__________________________________  " << patch->getFaceName(face) << endl;
-    CellIterator cIter = patch->getFaceIterator( face, Patch::ExtraMinusEdgeCells );
-    IntVector lo = cIter.begin();
-    IntVector hi = cIter.end();
-
-    //__________________________________
-    //  compute the number of panels on this face
-    IntVector nPanels(-9,-9,-9);
+    CellIterator iter = patch->getCellIterator();
+    IntVector lo = iter.begin();
+    IntVector hi = iter.end();
+    IntVector nBoxes(-9,-9,-9);
 
     for (int d=0; d<3; d++){
-      nPanels[d] = (int) std::ceil( (double) (hi[d] - lo[d])/(double)avgPanelCells[d] );
+      nBoxes[d] = (int) std::ceil( (double) (hi[d] - lo[d])/(double)d_avgBoxCells[d] );
     }
 
     //__________________________________
-    //  Loop over the panels to average over
-    //   cout << " nPanels: " << nPanels << endl;
+    //  loop over boxes that this patch owns
+    for ( int i=0; i<nBoxes.x(); i++ ){
+      for ( int j=0; j<nBoxes.y(); j++ ){
+        for ( int k=0; k<nBoxes.z(); k++ ){
 
-    for ( int i=0; i<nPanels.x(); i++ ){
-      for ( int j=0; j<nPanels.y(); j++ ){
-        for ( int k=0; k<nPanels.z(); k++ ){
-
-          IntVector start = lo + IntVector(i,j,k) * avgPanelCells;
-       //   cout << " Panel: start: " << start << endl;
+          IntVector start = lo + IntVector(i,j,k) * d_avgBoxCells;
+       //   cout << " Box: start: " << start << endl;
 
           // compute the average
           T Q_avg = T(0);
           double n=0;
 
-          for(CellIterator aveCells( IntVector(0,0,0), avgPanelCells ); !aveCells.done(); aveCells++){
+          for(CellIterator aveCells( IntVector(0,0,0), d_avgBoxCells ); !aveCells.done(); aveCells++){
             IntVector c = start + *aveCells;
             if ( patch->containsIndex(lo, hi, c) ){
                Q_avg += Qvar[c];
                n++;
             }
           }
-
           Q_avg = Q_avg/T(n);
 
           // Set the quantity
-          for(CellIterator aveCells( IntVector(0,0,0), avgPanelCells ); !aveCells.done(); aveCells++){
+          for(CellIterator aveCells( IntVector(0,0,0), d_avgBoxCells ); !aveCells.done(); aveCells++){
             IntVector c = start + *aveCells;
             if ( patch->containsIndex(lo, hi, c) ){
               Qavg[c] = Q_avg;
             }
           }
-        }  // k panel
-      }  // j panel
-    }  // i panel
-  }  // face loop
+        }  // k box
+      }  // j box
+    }  // i box
+  }
+
+  //__________________________________
+  //  Loop over the boundary faces that this patch owns
+  if (d_compDomain == EVERYWHERE || d_compDomain == BOUNDARIES ){
+    vector<Patch::FaceType> bf;
+    patch->getBoundaryFaces(bf);
+
+    for( vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
+      Patch::FaceType face = *itr;
+
+      IntVector avgPanelCells = d_avgBoxCells;
+      IntVector axes = patch->getFaceAxes(face);
+      int pDir = axes[0];
+      avgPanelCells[pDir] = 1;
+
+      cout << "//__________________________________  " << patch->getFaceName(face) << endl;
+      CellIterator iter = patch->getFaceIterator( face, Patch::ExtraMinusEdgeCells );
+      IntVector lo = iter.begin();
+      IntVector hi = iter.end();
+
+      //__________________________________
+      //  compute the number of panels on this face
+      IntVector nPanels(-9,-9,-9);
+
+      for (int d=0; d<3; d++){
+        nPanels[d] = (int) std::ceil( (double) (hi[d] - lo[d])/(double)avgPanelCells[d] );
+      }
+
+      //__________________________________
+      //  Loop over the panels to average over
+      cout << " nPanels: " << nPanels << " avePanelCells: " << avgPanelCells << endl;
+
+      for ( int i=0; i<nPanels.x(); i++ ){
+        for ( int j=0; j<nPanels.y(); j++ ){
+          for ( int k=0; k<nPanels.z(); k++ ){
+
+            IntVector start = lo + IntVector(i,j,k) * avgPanelCells;
+            // compute the average
+            T Q_avg = T(0);
+            double n=0;
+
+            for(CellIterator aveCells( IntVector(0,0,0), avgPanelCells ); !aveCells.done(); aveCells++){
+              IntVector c = start + *aveCells;
+              if ( patch->containsIndex(lo, hi, c) ){
+                 Q_avg += Qvar[c];
+                 n++;
+              }
+            }
+
+            Q_avg = Q_avg/T(n);
+            cout << " Panel: start: " << start << " Q_avg: " << Q_avg << endl;
+
+            // Set the quantity
+            for(CellIterator aveCells( IntVector(0,0,0), avgPanelCells ); !aveCells.done(); aveCells++){
+              IntVector c = start + *aveCells;
+              if ( patch->containsIndex(lo, hi, c) ){
+                Qavg[c] = Q_avg;
+              }
+            }
+          }  // k panel
+        }  // j panel
+      }  // i panel
+    }  // face loop
+  }
 
   //__________________________________
   //  debugging

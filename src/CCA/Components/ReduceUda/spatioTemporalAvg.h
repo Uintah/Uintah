@@ -15,7 +15,7 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHEVERYWHERE THE
  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
@@ -56,7 +56,7 @@ KEYWORDS
    spatioTemporalAvg
 
 DESCRIPTION
-   Computes spatial,temporal averages for CCVariable<double,Vector>
+   Computes spatial,temporal averages for CCVariable<double,float,Vector>
 
 
 WARNING
@@ -65,11 +65,11 @@ WARNING
   class spatioTemporalAvg : public Module {
   public:
     spatioTemporalAvg(ProblemSpecP    & prob_spec,
-               SimulationStateP& sharedState,
-		 Output          * dataArchiver,
-               DataArchive     * dataArchive);
+                      SimulationStateP& sharedState,
+		        Output          * dataArchiver,
+                      DataArchive     * dataArchive);
 
-    spatioTemporalAvg();
+    spatioTemporalAvg(); 
 
     virtual ~spatioTemporalAvg();
 
@@ -92,7 +92,6 @@ WARNING
     //__________________________________
     //  container to hold each variable to compute stats
     struct Qstats{
-//      std::string  name;
       int matl;
       VarLabel* Q_Label;
       VarLabel* avgLabel;
@@ -115,12 +114,10 @@ WARNING
 
       // only set the timestep once
       void setStart( const int me) {
-
         if(isSet == false){
           timestep = me;
           isSet   = true;
         }
-        //std::cout << "  setStart: " << isSet << " timestep: " << timestep << " " << name << std::endl;
       }
 
       void print(){
@@ -167,12 +164,16 @@ WARNING
                           const VarLabel * label,
                           const int        matl,
                           const Patch    * patch );
+                          
+                          
+    enum Domain {EVERYWHERE, INTERIOR, BOUNDARIES};
     //__________________________________
     // global constants
     double    d_startTime;
     double    d_stopTime;
+    Domain    d_compDomain;          // domain to compute averages
     IntVector d_monitorCell;         // Cell to output
-    IntVector d_avgOver_nCells;      // number of cells to average over.
+    IntVector d_avgBoxCells;         // number of cells to average over.
     std::vector< Qstats >  d_Qstats;
 
 
