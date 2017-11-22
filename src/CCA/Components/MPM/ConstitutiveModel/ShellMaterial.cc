@@ -257,7 +257,7 @@ ShellMaterial::initializeCMData(const Patch* patch,
     pStressBot[pidx]  = Zero;
   }
 
-  computeStableTimestep(patch, matl, new_dw);
+  computeStableTimeStep(patch, matl, new_dw);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -267,7 +267,7 @@ ShellMaterial::initializeCMData(const Patch* patch,
 // are computed as a side-effect of compute Stress Tensor
 //
 void 
-ShellMaterial::computeStableTimestep(const Patch* patch,
+ShellMaterial::computeStableTimeStep(const Patch* patch,
                                      const MPMMaterial* matl,
                                      DataWarehouse* new_dw)
 {

@@ -124,7 +124,7 @@ void ProgramBurn::initializeCMData(const Patch* patch,
     pProgress[*iter] = 0.;
   }
 
-  computeStableTimestep(patch, matl, new_dw);
+  computeStableTimeStep(patch, matl, new_dw);
 }
 
 void ProgramBurn::addParticleState(std::vector<const VarLabel*>& from,
@@ -135,7 +135,7 @@ void ProgramBurn::addParticleState(std::vector<const VarLabel*>& from,
   to.push_back(pProgressFLabel_preReloc);
 }
 
-void ProgramBurn::computeStableTimestep(const Patch* patch,
+void ProgramBurn::computeStableTimeStep(const Patch* patch,
                                         const MPMMaterial* matl,
                                         DataWarehouse* new_dw)
 {

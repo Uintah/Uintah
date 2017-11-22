@@ -1,6 +1,7 @@
 #include <CCA/Components/Examples/AMRHeat.hpp>
 #include <CCA/Components/Regridder/PerPatchVars.h>
 #include <CCA/Ports/Scheduler.h>
+#include <CCA/Ports/Regridder.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Task.h>
@@ -11,7 +12,9 @@
 
 using namespace Uintah;
 
-AMRHeat::AMRHeat(const ProcessorGroup* world) : Heat(world)
+AMRHeat::AMRHeat(const ProcessorGroup* myworld,
+		 const SimulationStateP sharedState) :
+  Heat(myworld, sharedState)
 {
 
 }
@@ -23,10 +26,9 @@ AMRHeat::~AMRHeat()
 
 void AMRHeat::problemSetup(const ProblemSpecP&     ps,
                            const ProblemSpecP&     restart_ps,
-                                 GridP&            grid,
-                                 SimulationStateP& state)
+                                 GridP&            grid)
 {
-  Heat::problemSetup(ps, restart_ps, grid, state);
+  Heat::problemSetup(ps, restart_ps, grid);
   ProblemSpecP heat_ps   = ps->findBlock("Heat");
 
   heat_ps->require("refine_threshold", d_refine_threshold);
@@ -43,9 +45,9 @@ void AMRHeat::scheduleErrorEstimate(const LevelP&     coarseLevel,
 {
   Task* task = scinew Task("AMRHeat::errorEstimate", this, &AMRHeat::errorEstimate);
   task->requires(Task::NewDW, d_lb->temperature_nc, Ghost::AroundNodes, 1);
-  task->modifies(d_state->get_refineFlag_label(), d_state->refineFlagMaterials());
-  task->modifies(d_state->get_refinePatchFlag_label(), d_state->refineFlagMaterials());
-  sched->addTask(task, coarseLevel->eachPatch(), d_state->allMaterials());
+  task->modifies(m_regridder->getRefineFlagLabel(), m_regridder->refineFlagMaterials());
+  task->modifies(m_regridder->getRefinePatchFlagLabel(), m_regridder->refineFlagMaterials());
+  sched->addTask(task, coarseLevel->eachPatch(), m_sharedState->allMaterials());
 }
 
 void AMRHeat::errorEstimate(const ProcessorGroup* pg,
@@ -64,8 +66,8 @@ void AMRHeat::errorEstimate(const ProcessorGroup* pg,
     CCVariable<int> refine_flag;
     PerPatch<PatchFlagP> refine_patch_flag;
 
-    new_dw->getModifiable(refine_flag, d_state->get_refineFlag_label(), 0, patch);
-    new_dw->get(refine_patch_flag, d_state->get_refinePatchFlag_label(), 0, patch);
+    new_dw->getModifiable(refine_flag, m_regridder->getRefineFlagLabel(), 0, patch);
+    new_dw->get(refine_patch_flag, m_regridder->getRefinePatchFlagLabel(), 0, patch);
     new_dw->get(temp, d_lb->temperature_nc, 0, patch, Ghost::AroundNodes, 1);
 
     PatchFlag* refine_patch = refine_patch_flag.get().get_rep();
@@ -134,7 +136,7 @@ void AMRHeat::scheduleRefine (const PatchSet*   patches,
     task->requires(Task::NewDW, d_lb->temperature_nc, 0, Task::CoarseLevel,
                    0, Task::NormalDomain, Ghost::AroundNodes, 1);
     task->computes(d_lb->temperature_nc);
-    sched->addTask(task, patches, d_state->allMaterials());
+    sched->addTask(task, patches, m_sharedState->allMaterials());
   }
 }
 

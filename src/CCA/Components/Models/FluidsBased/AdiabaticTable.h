@@ -36,6 +36,7 @@
 #include <vector>
 
 namespace Uintah {
+
   class ICELabel;
   class TableInterface;
 
@@ -86,7 +87,7 @@ WARNING
 
     virtual void restartInitialize() {}
       
-    virtual void scheduleComputeStableTimestep(SchedulerP&,
+    virtual void scheduleComputeStableTimeStep(SchedulerP&,
                                                const LevelP& level,
                                                const ModelInfo*);
                                   
@@ -139,9 +140,9 @@ WARNING
                           const ModelInfo* mi);
 
     void computeScaledVariance(const Patch* Patch,
-                               DataWarehouse* new_dw,                                 
-                               const int indx,                                        
-                               constCCVariable<double> f_old,                         
+                               DataWarehouse* new_dw,
+                               const int indx,
+                               constCCVariable<double> f_old,
                                std::vector<constCCVariable<double> >& ind_vars);
                                
     void  errorEstimate(const ProcessorGroup*,

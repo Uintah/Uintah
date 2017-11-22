@@ -25,6 +25,8 @@
  * IN THE SOFTWARE.
  */
 
+#include <CCA/Components/SimulationController/RunTimeStatsEnums.h>
+
 #include <CCA/Ports/SchedulerP.h>
 
 #include <Core/Grid/GridP.h>
@@ -34,6 +36,7 @@
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Parallel/UintahParallelPort.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Util/InfoMapper.h>
 
 #include <set>
 #include <string>
@@ -104,11 +107,11 @@ public:
   virtual bool needRecompile( double, double, const GridP& ) { return false; }
 
   //! In AMR, we need to tell the Load balancer that we're regridding
-  //    virtual void doRegridTimestep() {}
+  //    virtual void doRegridTimeStep() {}
 
   //! Reads the problem spec file for the LoadBalancer section, and looks
   //! for entries such as outputNthProc, dynamicAlgorithm, and interval.
-  virtual void problemSetup (ProblemSpecP &, GridP & grid, SimulationStateP & state ) = 0;
+  virtual void problemSetup (ProblemSpecP &, GridP & grid, const SimulationStateP & state ) = 0;
 
   //! Creates the Load Balancer's Neighborhood.
   //! This is a vector of patches that represent any patch that this load
@@ -172,7 +175,12 @@ public:
 
   // Resets forecaster to the defaults.
   virtual void resetCostForecaster() = 0;
+  
+  virtual int  getNumDims() const = 0;
+  virtual int* getActiveDims() = 0;
+  virtual void setDimensionality(bool x, bool y, bool z) = 0;
 
+  virtual void setRunTimeStats( ReductionInfoMapper< RunTimeStatsEnum, double > *runTimeStats) = 0;
 
 private:
 

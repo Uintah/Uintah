@@ -193,10 +193,10 @@ NonLocalDruckerPrager::initializeCMData(const Patch* patch,
 
 
 
-  computeStableTimestep(patch, matl, new_dw);
+  computeStableTimeStep(patch, matl, new_dw);
 }
 
-void NonLocalDruckerPrager::computeStableTimestep(const Patch* patch,
+void NonLocalDruckerPrager::computeStableTimeStep(const Patch* patch,
                                              const MPMMaterial* matl,
                                              DataWarehouse* new_dw)
 {

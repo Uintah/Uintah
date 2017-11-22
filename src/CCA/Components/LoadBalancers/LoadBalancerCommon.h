@@ -28,9 +28,12 @@
 #include <CCA/Ports/LoadBalancerPort.h>
 #include <CCA/Ports/SFC.h>
 
+#include <CCA/Components/SimulationController/RunTimeStatsEnums.h>
+
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Parallel/UintahParallelComponent.h>
+#include <Core/Util/InfoMapper.h>
 
 #include <set>
 #include <string>
@@ -134,7 +137,9 @@ public:
 
   /// Reads the problem spec file for the LoadBalancer section, and looks 
   /// for entries such as outputNthProc, dynamicAlgorithm, and interval.
-  virtual void problemSetup( ProblemSpecP & pspec, GridP & grid, SimulationStateP & state );
+  virtual void problemSetup( ProblemSpecP & pspec,
+			     GridP & grid,
+			     const SimulationStateP & state );
 
   // for DynamicLoadBalancer mostly, but if we're called then it also means the 
   // grid might have changed and need to create a new perProcessorPatchSet
@@ -185,6 +190,11 @@ public:
                                 , const GridP        & grid
                                 );
    
+  int  getNumDims() const { return m_numDims; };
+  int* getActiveDims() { return m_activeDims; };
+  void setDimensionality(bool x, bool y, bool z);
+
+  void setRunTimeStats( ReductionInfoMapper< RunTimeStatsEnum, double > *runTimeStats) { d_runTimeStats = runTimeStats; };     
 
 protected:
 
@@ -236,6 +246,13 @@ protected:
   Handle< const PatchSet >              m_grid_perproc_patchsets;
   std::vector< Handle<const PatchSet> > m_output_patchsets;
 
+  // Which dimensions are active.  Get the number of dimensions, and
+  // then that many indices of activeDims are set to which dimensions
+  // are being used.
+  int m_numDims{0};
+  int m_activeDims[3];
+
+  ReductionInfoMapper< RunTimeStatsEnum, double > *d_runTimeStats;
 
 private:
 

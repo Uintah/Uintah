@@ -859,7 +859,7 @@ namespace PTR	// Portable TongeRamesh
 	brittle_damage->maxDamage      = matParamArray[31];
     brittle_damage->usePlaneStrain = std::fabs(matParamArray[32])>0.1;
 	brittle_damage->maxDamageInc   = matParamArray[33];
-    brittle_damage->useDamageTimeStep = std::fabs(matParamArray[34])>0.1;
+    brittle_damage->useDamageTimestep = std::fabs(matParamArray[34])>0.1;
     brittle_damage->useOldStress      = flags->useOldStress;
 	brittle_damage->dt_increaseFactor = matParamArray[35];
     brittle_damage->incInitialDamage  = std::fabs(matParamArray[36])>0.1;
@@ -1877,7 +1877,7 @@ namespace PTR	// Portable TongeRamesh
 	return 1/inv_prefactor;
   }
 
-  double computeStableTimestep(	const ModelData initialData,
+  double computeStableTimeStep(	const ModelData initialData,
                                 const Vector3 pVelocity,
                                 const Vector3 dx,
                                 const double pMass,

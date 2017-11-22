@@ -158,7 +158,7 @@ void P_Alpha::initializeCMData(const Patch* patch,
      bElBar[*iter]       = Identity;
   }
 
-  computeStableTimestep(patch, matl, new_dw);
+  computeStableTimeStep(patch, matl, new_dw);
 }
 
 void P_Alpha::addParticleState(std::vector<const VarLabel*>& from,
@@ -173,7 +173,7 @@ void P_Alpha::addParticleState(std::vector<const VarLabel*>& from,
   to.push_back(bElBarLabel_preReloc);
 }
 
-void P_Alpha::computeStableTimestep(const Patch* patch,
+void P_Alpha::computeStableTimeStep(const Patch* patch,
                                     const MPMMaterial* matl,
                                     DataWarehouse* new_dw)
 {

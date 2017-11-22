@@ -28,19 +28,22 @@
 #include <Core/Grid/Variables/PerPatch.h>
 #include <CCA/Components/Heat/blockrange_io.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
+#include <CCA/Ports/Regridder.h>
 
 using namespace Uintah;
 
-AMRCCHeat3D::AMRCCHeat3D ( ProcessorGroup const * myworld, int verbosity )
-    : CCHeat3D ( myworld, verbosity )
+AMRCCHeat3D::AMRCCHeat3D ( const ProcessorGroup * myworld,
+			   const SimulationStateP sharedState,
+			   int verbosity )
+  : CCHeat3D ( myworld, sharedState, verbosity )
 {}
 
 AMRCCHeat3D::~AMRCCHeat3D ()
 {}
 
-void AMRCCHeat3D::problemSetup ( ProblemSpecP const & params, ProblemSpecP const & restart_prob_spec, GridP & grid, SimulationStateP & state )
+void AMRCCHeat3D::problemSetup ( ProblemSpecP const & params, ProblemSpecP const & restart_prob_spec, GridP & grid )
 {
-    CCHeat3D::problemSetup ( params, restart_prob_spec, grid, state );
+    CCHeat3D::problemSetup ( params, restart_prob_spec, grid );
 
     ProblemSpecP diffusion = params->findBlock ( "FDHeat" );
     diffusion->require ( "refine_threshold", refine_threshold );
@@ -96,7 +99,7 @@ void AMRCCHeat3D::scheduleRefine ( PatchSet const * patches, SchedulerP & sched 
         Task * task = scinew Task ( "AMRCCHeat3D::task_refine", this, &AMRCCHeat3D::task_refine );
         task->requires ( Task::NewDW, u_label, 0, Task::CoarseLevel, 0, Task::NormalDomain, Ghost::None, 0 );
         task->computes ( u_label );
-        sched->addTask ( task, patches, state->allMaterials() );
+        sched->addTask ( task, patches, m_sharedState->allMaterials() );
     }
 }
 
@@ -105,16 +108,16 @@ void AMRCCHeat3D::scheduleCoarsen ( LevelP const & level_coarse, SchedulerP & sc
     Task * task = scinew Task ( "AMRCCHeat3D::task_coarsen", this, &AMRCCHeat3D::task_coarsen );
     task->requires ( Task::NewDW, u_label, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0 );
     task->modifies ( u_label );
-    sched->addTask ( task, level_coarse->eachPatch(), state->allMaterials() );
+    sched->addTask ( task, level_coarse->eachPatch(), m_sharedState->allMaterials() );
 }
 
 void AMRCCHeat3D::scheduleErrorEstimate ( LevelP const & level_coarse, SchedulerP & sched )
 {
     Task * task = scinew Task ( "AMRCCHeat3D::task_error_estimate", this, &AMRCCHeat3D::task_error_estimate );
     task->requires ( Task::NewDW, u_label, Ghost::Ghost::None, 0 ); // this is actually the old value of this
-    task->modifies ( state->get_refineFlag_label(), state->refineFlagMaterials() );
-    task->modifies ( state->get_refinePatchFlag_label(), state->refineFlagMaterials() );
-    sched->addTask ( task, level_coarse->eachPatch(), state->allMaterials() );
+    task->modifies ( m_regridder->getRefineFlagLabel(), m_regridder->refineFlagMaterials() );
+    task->modifies ( m_regridder->getRefinePatchFlagLabel(), m_regridder->refineFlagMaterials() );
+    sched->addTask ( task, level_coarse->eachPatch(), m_sharedState->allMaterials() );
 }
 
 void AMRCCHeat3D::scheduleInitialErrorEstimate ( LevelP const & level_coarse, SchedulerP & sched )
@@ -128,7 +131,7 @@ void AMRCCHeat3D::scheduleTimeAdvance_forward_euler_refinement ( LevelP const & 
     task->requires ( Task::OldDW, u_label, Ghost::AroundCells, 1 );
     task->requires ( Task::OldDW, u_label, 0, Task::CoarseLevel, 0, Task::NormalDomain, Ghost::AroundCells, 1 );
     task->computes ( u_label );
-    sched->addTask ( task, level->eachPatch(), state->allMaterials() );
+    sched->addTask ( task, level->eachPatch(), m_sharedState->allMaterials() );
 }
 
 void AMRCCHeat3D::task_forward_euler_time_advance_refinement ( ProcessorGroup const * myworld, PatchSubset const * patches, MaterialSubset const * matls, DataWarehouse * dw_old, DataWarehouse * dw_new )
@@ -275,8 +278,8 @@ void AMRCCHeat3D::task_error_estimate ( ProcessorGroup const * /*myworld*/, Patc
 
         FlagVariable flag_refine;
         PerPatch<PatchFlagP> flag_refine_patch;
-        dw_new->getModifiable ( flag_refine, state->get_refineFlag_label(), 0, patch );
-        dw_new->get ( flag_refine_patch, state->get_refinePatchFlag_label(), 0, patch );
+        dw_new->getModifiable ( flag_refine, m_regridder->getRefineFlagLabel(), 0, patch );
+        dw_new->get ( flag_refine_patch, m_regridder->getRefinePatchFlagLabel(), 0, patch );
         dbg_out4 << "flag_refine \t window " << flag_refine.getLowIndex() << flag_refine.getHighIndex() << std::endl;
 
         PatchFlag * patch_flag_refine = flag_refine_patch.get().get_rep();

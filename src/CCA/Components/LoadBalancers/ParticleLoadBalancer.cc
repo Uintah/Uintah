@@ -858,14 +858,14 @@ bool ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int 
   // this must be called here (it creates the new per-proc patch sets)
   // even if DLB does nothing.  Don't move or return earlier.
   LoadBalancerCommon::possiblyDynamicallyReallocate( grid, flag );
-  m_shared_state->d_runTimeStats[SimulationState::LoadBalancerTime] +=
-    timer().seconds();
+
+  (*d_runTimeStats)[LoadBalancerTime] += timer().seconds();
   
   return changed;
 }
 
 void
-ParticleLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid,  SimulationStateP& state)
+ParticleLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid, const SimulationStateP& state)
 {
   proc0cout << "Warning the ParticleLoadBalancer is experimental, use at your own risk\n";
 
@@ -896,28 +896,29 @@ ParticleLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid,  Simulation
   m_do_space_curve = spaceCurve;
   d_lbThreshold = threshold;
 
-  ASSERT(m_shared_state->getNumDims()>0 || m_shared_state->getNumDims()<4);
-  //set curve parameters that do not change between timesteps
-  m_sfc.SetNumDimensions(m_shared_state->getNumDims());
+  // Set curve parameters that do not change between timesteps
+  ASSERT( m_numDims > 0 || m_numDims < 4);
+  
+  m_sfc.SetNumDimensions(m_numDims);
   m_sfc.SetMergeMode(1);
   m_sfc.SetCleanup(BATCHERS);
   m_sfc.SetMergeParameters(3000,500,2,.15);  //Should do this by profiling
 
-#ifdef HAVE_VISIT
-  static bool initialized = false;
+// #ifdef HAVE_VISIT
+//   static bool initialized = false;
 
-  // Running with VisIt so add in the variables that the user can
-  // modify.
-  if( m_shared_state->getVisIt() && !initialized ) {
-    m_shared_state->d_debugStreams.push_back( &doing  );
-    m_shared_state->d_debugStreams.push_back( &lb );
-    m_shared_state->d_debugStreams.push_back( &dbg );
-    m_shared_state->d_debugStreams.push_back( &stats  );
-    m_shared_state->d_debugStreams.push_back( &times );
-    m_shared_state->d_debugStreams.push_back( &lbout );
+//   // Running with VisIt so add in the variables that the user can
+//   // modify.
+//   if( m_shared_state->getVisIt() && !initialized ) {
+//     m_shared_state->d_debugStreams.push_back( &doing  );
+//     m_shared_state->d_debugStreams.push_back( &lb );
+//     m_shared_state->d_debugStreams.push_back( &dbg );
+//     m_shared_state->d_debugStreams.push_back( &stats  );
+//     m_shared_state->d_debugStreams.push_back( &times );
+//     m_shared_state->d_debugStreams.push_back( &lbout );
 
-    initialized = true;
-  }
-#endif
+//     initialized = true;
+//   }
+// #endif
 }
 

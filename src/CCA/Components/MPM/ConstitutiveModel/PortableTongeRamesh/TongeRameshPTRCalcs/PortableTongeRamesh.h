@@ -105,7 +105,7 @@ namespace PTR                   // Portable TongeRamesh
 
 	// Control damage evolution timestepping:
 	double maxDamageInc; /* Maximum damage increment in a time step */
-	bool   useDamageTimeStep; // Control the global timestep with the damage timestep
+	bool   useDamageTimestep; // Control the global timestep with the damage timestep
 	bool   useOldStress;      // Compute the damage based on the stress from the previous timestep
 	double dt_increaseFactor;
 	bool   incInitialDamage; // Include the initial flaw as a part of the damage level
@@ -210,7 +210,7 @@ namespace PTR                   // Portable TongeRamesh
                                     const ArtificialViscosity av
                                     );
 
-  double computeStableTimestep(	const ModelData initialData,
+  double computeStableTimeStep(	const ModelData initialData,
                                 const Vector3 pVelocity,
                                 const Vector3 dx,
                                 const double pMass,

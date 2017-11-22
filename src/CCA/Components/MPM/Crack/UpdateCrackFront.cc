@@ -134,6 +134,7 @@ void Crack::addComputesAndRequiresRecollectCrackFrontSegments(Task* t,
 {
   Ghost::GhostType  gac = Ghost::AroundCells;
   int NGC=2*NGN;
+  // t->requires(Task::OldDW, lb->timeStepLabel);
   t->requires(Task::NewDW, lb->gMassLabel, gac, NGC);
   t->requires(Task::NewDW, lb->GMassLabel, gac, NGC);
   t->requires(Task::OldDW,lb->pSizeLabel, Ghost::None);
@@ -360,8 +361,10 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
       // Save crack elements, crack nodes and crack-front nodes
       // for crack geometry visualization
       if(saveCrackGeometry) {
-        int curTimeStep=d_sharedState->getCurrentTopLevelTimeStep();
-        if(pid==0) OutputCrackGeometry(m,curTimeStep);
+	double timeStep = m_sharedState->getCurrentTopLevelTimeStep();
+	// timeStep_vartype timeStep;
+	// old_dw->get(timeStep, lb->timeStepLabel);
+        if(pid==0) OutputCrackGeometry(m,timeStep);
       }
 
     } // End of loop over matls

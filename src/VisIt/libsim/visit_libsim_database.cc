@@ -32,6 +32,7 @@
 
 #include <CCA/Components/Schedulers/MPIScheduler.h>
 #include <CCA/Components/SimulationController/SimulationController.h>
+#include <CCA/Ports/ApplicationInterface.h>
 #include <CCA/Ports/SchedulerP.h>
 #include <CCA/Ports/Output.h>
 
@@ -122,7 +123,6 @@ visit_handle visit_SimGetMetaData(void *cbdata)
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
   SchedulerP      schedulerP = sim->simController->getSchedulerP();
-  SimulationStateP simStateP = sim->simController->getSimulationStateP();
   GridP           gridP      = sim->gridP;
       
   if( !schedulerP.get_rep() || !gridP.get_rep() )
@@ -329,7 +329,7 @@ visit_handle visit_SimGetMetaData(void *cbdata)
           {
             /* Set the mesh’s properties.*/
             VisIt_MeshMetaData_setName(mmd, mesh_for_this_var.c_str());
-            if( sim->simController->doAMR() )
+            if( sim->simController->getApplicationInterface()->isAMR() )
               VisIt_MeshMetaData_setMeshType(mmd, VISIT_MESHTYPE_AMR);
             else
               VisIt_MeshMetaData_setMeshType(mmd, VISIT_MESHTYPE_AMR);
@@ -553,8 +553,8 @@ visit_handle visit_SimGetMetaData(void *cbdata)
       for( unsigned j=0; j<2; ++j )
       {
         // Add in the processor runtime stats.
-        const ReductionInfoMapper< SimulationState::RunTimeStat, double > &runTimeStats =
-          simStateP->d_runTimeStats;
+        const ReductionInfoMapper< RunTimeStatsEnum, double > &runTimeStats =
+          sim->simController->getRunTimeStats();
         
         for( unsigned int i=0; i<runTimeStats.size(); ++i )
         {
@@ -563,10 +563,10 @@ visit_handle visit_SimGetMetaData(void *cbdata)
           if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
           {
             std::string stat = std::string("processor/runtime/") +
-              runTimeStats.getName( (SimulationState::RunTimeStat) i ) + proc_level[j];
+              runTimeStats.getName( (RunTimeStatsEnum) i ) + proc_level[j];
             
             std::string units = 
-              runTimeStats.getUnits( (SimulationState::RunTimeStat) i );
+              runTimeStats.getUnits( (RunTimeStatsEnum) i );
             
             VisIt_VariableMetaData_setName(vmd, stat.c_str());
             VisIt_VariableMetaData_setMeshName(vmd, mesh_for_patch_data.c_str());
@@ -598,7 +598,7 @@ visit_handle visit_SimGetMetaData(void *cbdata)
                 mpiScheduler->mpi_info_.getName( (MPIScheduler::TimingStat) i ) + proc_level[j];;
               
               std::string units = 
-                runTimeStats.getUnits( (SimulationState::RunTimeStat) i );
+                runTimeStats.getUnits( (RunTimeStatsEnum) i );
               
               VisIt_VariableMetaData_setName(vmd, stat.c_str());
               VisIt_VariableMetaData_setMeshName(vmd, mesh_for_patch_data.c_str());
@@ -1442,7 +1442,6 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
   SchedulerP schedulerP      = sim->simController->getSchedulerP();
-  SimulationStateP simStateP = sim->simController->getSimulationStateP();
   GridP gridP                = sim->gridP;
 
   // bool &useExtraCells   = sim->useExtraCells;
@@ -1452,8 +1451,8 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
 
   // int timestate = sim->cycle;
 
-  bool isParticleVar  = false;
-  bool isInternalVar  = false;
+  bool isParticleVar = false;
+  bool isInternalVar = false;
 
   // Get the var name sans the material. If a patch or processor
   // variable then the var name will be either "patch" or "processor".
@@ -1571,8 +1570,8 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
     MPIScheduler *mpiScheduler = dynamic_cast<MPIScheduler*>
       (sim->simController->getSchedulerP().get_rep());
 
-    const ReductionInfoMapper< SimulationState::RunTimeStat, double > &runTimeStats =
-      simStateP->d_runTimeStats;
+    const ReductionInfoMapper< RunTimeStatsEnum, double > &runTimeStats =
+      sim->simController->getRunTimeStats();
 
     LevelInfo &levelInfo = stepInfo->levelInfo[level];
     PatchInfo &patchInfo = levelInfo.patchInfo[local_patch];

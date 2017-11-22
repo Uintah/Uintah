@@ -152,7 +152,14 @@ RMCRT_Radiation::problemSetup( const ProblemSpecP& inputdb )
 
       //__________________________________
       //  bulletproofing
-      if(!_sharedState->isLockstepAMR()){
+      ProblemSpecP amr = inputdb->findBlock("AMR");
+      bool lockstepAMR = false;
+
+      if (amr) {
+        amr->get("useLockStep", lockstepAMR);
+      }
+
+      if(!lockstepAMR){
         std::ostringstream msg;
         msg << "\n ERROR: You must add \n"
             << " <useLockStep> true </useLockStep> \n"
@@ -166,7 +173,6 @@ RMCRT_Radiation::problemSetup( const ProblemSpecP& inputdb )
 
     } else if ( type == "singleLevel" ) {         // 1 LEVEL
       _whichAlgo = singleLevel;
-
     }
   }
 #if 0

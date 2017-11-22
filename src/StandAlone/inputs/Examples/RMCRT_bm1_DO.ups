@@ -125,9 +125,9 @@
   -->
   </Grid>
   <!--__________________________________-->
-  <AMR>
+  <AMR type="StaticGridML" >
     <useLockStep> true </useLockStep>
-  </AMR>    
+  </AMR>
   <!--__________________________________-->
   <DataArchiver>
   <filebase>RMCRT_bm1_DO.uda</filebase>

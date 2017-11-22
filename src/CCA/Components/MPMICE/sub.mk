@@ -36,9 +36,10 @@ SRCS   += \
         $(SRCDIR)/MPMICE.cc \
 
 PSELIBS := \
+	CCA/Components/Application \
 	CCA/Components/MPM \
 	CCA/Components/ICE \
-        CCA/Components/OnTheFlyAnalysis \
+	CCA/Components/OnTheFlyAnalysis \
 	CCA/Ports          \
 	Core/Disclosure    \
 	Core/Exceptions    \

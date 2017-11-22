@@ -25,6 +25,8 @@
 #ifndef Packages_Uintah_CCA_Components_Head_CCHeat3D_h
 #define Packages_Uintah_CCA_Components_Head_CCHeat3D_h
 
+#include <CCA/Components/Application/ApplicationCommon.h>
+
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
 #include <Core/Grid/Ghost.h>
@@ -35,12 +37,12 @@
 #include <Core/Grid/Variables/BlockRange.hpp>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/VarLabel.h>
-#include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/Util/DebugStream.h>
 #include <CCA/Components/Heat/TimeScheme.h>
 #include <CCA/Ports/Scheduler.h>
-#include <CCA/Ports/SimulationInterface.h>
 #include <CCA/Ports/SolverInterface.h>
+
+#include <sci_defs/kokkos_defs.h>
 
 #define DBG_MATRIX
 
@@ -48,8 +50,7 @@ namespace Uintah
 {
 
 class CCHeat3D :
-    public UintahParallelComponent,
-    public SimulationInterface
+    public ApplicationCommon
 {
 protected:
     using ConstVariable = constCCVariable<double>;
@@ -111,22 +112,24 @@ protected:
 #   define GET_VIEW_A get_view ( A )
 #endif
 
-    SimulationStateP state;
     SolverInterface * solver;
     SolverParameters * solver_parameters;
 
 public:
-    CCHeat3D ( const ProcessorGroup * myworld, int verbosity = 0 );
+    CCHeat3D ( const ProcessorGroup * myworld,
+	       const SimulationStateP sharedState,
+	       int verbosity = 0 );
+  
     virtual ~CCHeat3D();
 
 protected:
     CCHeat3D ( CCHeat3D const & ) = delete;
     CCHeat3D & operator= ( CCHeat3D const & ) = delete;
 
-    virtual void problemSetup ( ProblemSpecP const & params, ProblemSpecP const & restart_prob_spec, GridP & grid, SimulationStateP & state ) override;
+    virtual void problemSetup ( ProblemSpecP const & params, ProblemSpecP const & restart_prob_spec, GridP & grid ) override;
     virtual void scheduleInitialize ( LevelP const & level, SchedulerP & sched ) override;
     virtual void scheduleRestartInitialize ( LevelP const & /*level*/, SchedulerP & /*sched*/ ) override {} // TODO
-    virtual void scheduleComputeStableTimestep ( LevelP const & level, SchedulerP & sched ) override;
+    virtual void scheduleComputeStableTimeStep ( LevelP const & level, SchedulerP & sched ) override;
     virtual void scheduleTimeAdvance ( LevelP const & level, SchedulerP & ) override;
 
     void scheduleTimeAdvance_forward_euler ( LevelP const & level, SchedulerP & );

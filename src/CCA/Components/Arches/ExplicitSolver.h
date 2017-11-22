@@ -56,7 +56,6 @@ WARNING
    none
 ****************************************/
 
-#include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/NonlinearSolver.h>
 #include <CCA/Components/Arches/MomentumSolver.h>
 #include <CCA/Ports/DataWarehouseP.h>
@@ -275,11 +274,11 @@ public:
   virtual void sched_getCCVelocities(const LevelP& level,
                                      SchedulerP&);
 
-  inline double recomputeTimestep(double current_dt) {
+  inline double recomputeTimeStep(double current_dt) {
     return current_dt/2;
   }
 
-  inline bool restartableTimesteps() {
+  inline bool restartableTimeSteps() {
     return true;
   }
 

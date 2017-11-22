@@ -827,7 +827,7 @@ void HyperelasticPlastic::initializeCMData(const Patch* patch,
   // If not implicit, compute timestep
   if(!(flag->d_integrator == MPMFlags::Implicit)) {
     // End by computing the stable timestep
-    computeStableTimestep(patch, matl, new_dw);
+    computeStableTimeStep(patch, matl, new_dw);
   }
 }
 
@@ -1031,7 +1031,7 @@ double HyperelasticPlastic::computeRhoMicroCM(double pressure,
   return rho_cur;
 }
 
-void HyperelasticPlastic::computeStableTimestep(const Patch* patch,
+void HyperelasticPlastic::computeStableTimeStep(const Patch* patch,
                                   const MPMMaterial* matl,
                                   DataWarehouse* new_dw)
 {

@@ -40,6 +40,7 @@ SUBDIRS := $(SRCDIR)/fortran
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
 PSELIBS := \
+	CCA/Components/Application \
 	CCA/Ports          \
 	Core/Grid          \
 	Core/Util          \
@@ -52,7 +53,7 @@ PSELIBS := \
 	CCA/Components/MPM \
 	CCA/Components/Arches \
 	CCA/Components/Arches/fortran \
-  CCA/Components/OnTheFlyAnalysis \
+	CCA/Components/OnTheFlyAnalysis \
 	Core/Exceptions \
 	Core/Util       \
 	Core/Geometry   

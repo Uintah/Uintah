@@ -102,7 +102,7 @@
         <minimum_mass_for_acc>  1.0e-15   </minimum_mass_for_acc>
     </MPM>
    <!--__________________________________-->
-    <AMR>
+    <AMR type="StaticGridML" >
       <useLockStep> true </useLockStep>
       <MPM>
         <manualGrid> true </manualGrid>

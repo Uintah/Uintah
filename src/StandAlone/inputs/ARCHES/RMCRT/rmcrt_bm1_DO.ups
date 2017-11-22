@@ -14,7 +14,7 @@
     <max_Timesteps> 4       </max_Timesteps>
     <timestep_multiplier>0.4</timestep_multiplier>
   </Time>
-  <AMR>
+  <AMR type="StaticGridML" >
     <useLockStep> true </useLockStep>
   </AMR>
   <!--__________________________________-->

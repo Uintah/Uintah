@@ -35,6 +35,7 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 
 #include <sci_defs/cuda_defs.h>
+#include <sci_defs/kokkos_defs.h>
 
 #include <iostream>
 #include <string>
@@ -133,7 +134,6 @@ SchedulerFactory::create( const ProblemSpecP   & ps
   if ((Uintah::Parallel::getNumThreads() > 0) && (scheduler != "Unified")) {
     throw ProblemSetupException("Unified Scheduler needed for '-nthreads <n>' option", __FILE__, __LINE__);
   }
-
 
   // "-gpu" provided at command line, but not using "Unified"
   if ((scheduler != "Unified") && Uintah::Parallel::usingDevice()) {

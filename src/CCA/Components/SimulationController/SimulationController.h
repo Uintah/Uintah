@@ -25,21 +25,22 @@
 #ifndef UINTAH_HOMEBREW_SIMULATIONCONTROLLER_H
 #define UINTAH_HOMEBREW_SIMULATIONCONTROLLER_H
 
+#include <CCA/Components/SimulationController/RunTimeStatsEnums.h>
+
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Grid/SimulationStateP.h>
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Util/InfoMapper.h>
 #include <Core/Util/Timers/Timers.hpp>
 
 #include <CCA/Ports/DataWarehouseP.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/SchedulerP.h>
 
-#include <sci_defs/visit_defs.h>
 #include <sci_defs/papi_defs.h> // for PAPI performance counters
+#include <sci_defs/visit_defs.h>
 
 #ifdef HAVE_VISIT
 #  include <VisIt/libsim/visit_libsim.h>
@@ -57,7 +58,7 @@ class  DataArchive;
 class  LoadBalancerPort;
 class  Output;
 class  Regridder;
-class  SimulationInterface;
+class  ApplicationInterface;
 class  SimulationTime;
 
 /**************************************
@@ -155,13 +156,13 @@ private:
 class SimulationController : public UintahParallelComponent {
 
 public:
-  SimulationController( const ProcessorGroup* myworld, bool doAMR, ProblemSpecP pspec );
+  SimulationController( const ProcessorGroup* myworld, ProblemSpecP pspec );
   virtual ~SimulationController();
 
   //! Notifies (before calling run) the SimulationController
   //! that this is simulation is a restart.
   void doRestart( const std::string& restartFromDir,
-                  int           timestep,
+                  int           timeStep,
                   bool          fromScratch,
                   bool          removeOldDir );
 
@@ -173,27 +174,27 @@ public:
      
   ProblemSpecP         getProblemSpecP() { return d_ups; }
   ProblemSpecP         getGridProblemSpecP() { return d_grid_ps; }
-  SimulationStateP     getSimulationStateP() { return d_sharedState; }
   SchedulerP           getSchedulerP() { return d_scheduler; }
   LoadBalancerPort*    getLoadBalancer() { return d_lb; }
   Output*              getOutput() { return d_output; }
-  SimulationTime*      getSimulationTime() { return d_timeinfo; }
-  SimulationInterface* getSimulationInterface() { return d_sim; }
+  ApplicationInterface* getApplicationInterface() { return d_app; }
   Regridder*           getRegridder() { return d_regridder; }
-
-  bool                 doAMR() { return d_doAMR; }
 
   WallTimers*          getWallTimers() { return &walltimers; }
 
+  bool getRecompileTaskGraph() const { return d_recompileTaskGraph; }
+  void setRecompileTaskGraph(bool val) { d_recompileTaskGraph = val; }
+
+  void releaseComponents();
+  
 protected:
 
-  bool isLast( void );
-  bool maybeLast( void );
-    
+  void getComponents();
+  
   void restartArchiveSetup();
   void outputSetup();
   void schedulerSetup();
-  void simulationInterfaceSetup();
+  void applicationSetup();
   void gridSetup();
   void regridderSetup();
   void loadBalancerSetup();
@@ -201,56 +202,52 @@ protected:
   void timeStateSetup();
   void finalSetup();
 
-  void updateSimTime( void );
-  void getNextDeltaT( void );
+  void ReportStats( bool first );
+  void ResetStats( void );
 
-  void ReportStats( bool first );     
   void getMemoryStats( bool create = false );
   void getPAPIStats  ( );
   
   ProblemSpecP         d_ups{nullptr};
   ProblemSpecP         d_grid_ps{nullptr};       // Problem Spec for the Grid
   ProblemSpecP         d_restart_ps{nullptr};    // Problem Spec for restarting
-  SimulationStateP     d_sharedState{nullptr};
   SchedulerP           d_scheduler{nullptr};
   LoadBalancerPort*    d_lb{nullptr};
   Output*              d_output{nullptr};
-  SimulationTime*      d_timeinfo{nullptr};
-  SimulationInterface* d_sim{nullptr};
+  ApplicationInterface* d_app{nullptr};
   Regridder*           d_regridder{nullptr};
   DataArchive*         d_restart_archive{nullptr};     // Only used when restarting: Data from UDA we are restarting from.
 
   GridP                d_currentGridP;
 
-  bool d_doAMR{false};
   bool d_do_multi_taskgraphing{false};
   int  d_rad_calc_frequency{1};
-
-  double d_delt{0.0};
-  double d_prev_delt{0.0};
-  
-  double d_simTime{0.0};               // current sim time
-  double d_startSimTime{0.0};          // starting sim time
-  
+    
   WallTimers walltimers;
 
   /* For restarting */
   bool        d_restarting{false};
   std::string d_fromDir;
-  int         d_restartTimestep{0};
+  int         d_restartTimeStep{0};
   int         d_restartIndex{0};
-  int         d_last_recompile_timestep{0};
+  int         d_last_recompile_timeStep{0};
   bool        d_reduceUda{false};
       
   // If d_restartFromScratch is true then don't copy or move any of
-  // the old timesteps or dat files from the old directory.  Run as
+  // the old time steps or dat files from the old directory.  Run as
   // as if it were running from scratch but with initial conditions
   // given by the restart checkpoint.
   bool d_restartFromScratch{false};
 
   // If !d_restartFromScratch, then this indicates whether to move
-  // or copy the old timesteps.
+  // or copy the old time steps.
   bool d_restartRemoveOldDir{false};
+
+  bool d_recompileTaskGraph{false};
+  
+  // Runtime stat mappers.
+  ReductionInfoMapper< RunTimeStatsEnum, double > d_runTimeStats;
+  ReductionInfoMapper< unsigned int,     double > d_otherStats;
 
 #ifdef USE_PAPI_COUNTERS
   int         m_papi_event_set;            // PAPI event set
@@ -273,8 +270,22 @@ protected:
 #endif
 
 #ifdef HAVE_VISIT
+public:
+  void setVisIt( unsigned int val ) { d_doVisIt = val; }
+  unsigned int  getVisIt() { return d_doVisIt; }
+
   bool CheckInSitu( visit_simulation_data *visitSimData, bool first );
-#endif     
+
+  const ReductionInfoMapper< RunTimeStatsEnum, double > getRunTimeStats() const
+  { return d_runTimeStats; };
+
+  const ReductionInfoMapper< unsigned int,     double > getOtherStats() const
+  { return d_otherStats; };
+
+protected:
+  unsigned int d_doVisIt;
+#endif
+
 private:
 
   // eliminate copy, assignment and move
@@ -289,7 +300,6 @@ private:
   int    overheadIndex{0}; // Next sample for writing
 
   int    d_nSamples{0};
-
 };
 
 } // End namespace Uintah

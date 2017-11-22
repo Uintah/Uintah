@@ -51,15 +51,15 @@
 
 using namespace Uintah;
 
-GaussSolve::GaussSolve(const ProcessorGroup* myworld)
-  : UintahParallelComponent(myworld)
+GaussSolve::GaussSolve(const ProcessorGroup* myworld,
+		       const SimulationStateP sharedState)
+  : ApplicationCommon(myworld, sharedState)
 {
   d_lb = scinew FVMLabel();
 
   d_solver_parameters = 0;
   d_delt = 0;
   d_solver = 0;
-  d_shared_state = 0;
   d_with_mpm = false;
   d_elem_charge = 0.0;
 
@@ -90,11 +90,8 @@ GaussSolve::~GaussSolve()
 //
 void GaussSolve::problemSetup(const ProblemSpecP& prob_spec,
                               const ProblemSpecP& restart_prob_spec,
-                              GridP& grid,
-                              SimulationStateP& shared_state)
+                              GridP& grid)
 {
-  d_shared_state = shared_state;
-
   d_solver = dynamic_cast<SolverInterface*>(getPort("solver"));
   if(!d_solver) {
     throw InternalError("ST1:couldn't get solver port", __FILE__, __LINE__);
@@ -111,7 +108,7 @@ void GaussSolve::problemSetup(const ProblemSpecP& prob_spec,
   ProblemSpecP fvm_ps = prob_spec->findBlock("FVM");
 
   d_solver_parameters = d_solver->readParameters(fvm_ps, "gauss1_solver",
-                                             d_shared_state);
+                                             m_sharedState);
   d_solver_parameters->setSolveOnExtraCells(false);
     
   fvm_ps->require("delt", d_delt);
@@ -123,8 +120,8 @@ void GaussSolve::problemSetup(const ProblemSpecP& prob_spec,
   if( !d_with_mpm ){
     for ( ProblemSpecP ps = fvm_mat_ps->findBlock("material"); ps != nullptr; ps = ps->findNextBlock("material") ) {
 
-      FVMMaterial *mat = scinew FVMMaterial( ps, d_shared_state, FVMMaterial::Gauss );
-      d_shared_state->registerFVMMaterial( mat );
+      FVMMaterial *mat = scinew FVMMaterial( ps, m_sharedState, FVMMaterial::Gauss );
+      m_sharedState->registerFVMMaterial( mat );
     }
   }
 }
@@ -140,7 +137,7 @@ void
 GaussSolve::scheduleInitialize( const LevelP     & level,
                                       SchedulerP & sched )
 {
-  const MaterialSet* fvm_matls = d_shared_state->allFVMMaterials();
+  const MaterialSet* fvm_matls = m_sharedState->allFVMMaterials();
 
   Task* t = scinew Task( "GaussSolve::initialize", this, &GaussSolve::initialize );
 
@@ -162,7 +159,7 @@ GaussSolve::initialize( const ProcessorGroup *,
                               DataWarehouse  * new_dw )
 {
   FVMBoundCond bc;
-  int num_matls = d_shared_state->getNumFVMMatls();
+  int num_matls = m_sharedState->getNumFVMMatls();
 
   for (int p = 0; p < patches->size(); p++){
     const Patch* patch = patches->get(p);
@@ -177,7 +174,7 @@ GaussSolve::initialize( const ProcessorGroup *,
     neg_charge.initialize(0.0);
     permittivity.initialize(0.0);
     for(int m = 0; m < num_matls; m++){
-      FVMMaterial* fvm_matl = d_shared_state->getFVMMaterial(m);
+      FVMMaterial* fvm_matl = m_sharedState->getFVMMaterial(m);
       fvm_matl->initializePermittivityAndCharge(permittivity, pos_charge,
                                                 neg_charge, patch);
       //bc.setConductivityBC(patch, idx, conductivity);
@@ -192,13 +189,13 @@ void GaussSolve::scheduleRestartInitialize(const LevelP& level,
 }
 //__________________________________
 // 
-void GaussSolve::scheduleComputeStableTimestep(const LevelP& level,
+void GaussSolve::scheduleComputeStableTimeStep(const LevelP& level,
                                           SchedulerP& sched)
 {
-  Task* task = scinew Task("computeStableTimestep",this, 
-                           &GaussSolve::computeStableTimestep);
-  task->computes(d_shared_state->get_delt_label(),level.get_rep());
-  sched->addTask(task, level->eachPatch(), d_shared_state->allFVMMaterials());
+  Task* task = scinew Task("computeStableTimeStep",this, 
+                           &GaussSolve::computeStableTimeStep);
+  task->computes(m_sharedState->get_delt_label(),level.get_rep());
+  sched->addTask(task, level->eachPatch(), m_sharedState->allFVMMaterials());
 }
 //__________________________________
 //
@@ -221,13 +218,13 @@ GaussSolve::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 //
 
 void
-GaussSolve::computeStableTimestep( const ProcessorGroup *,
+GaussSolve::computeStableTimeStep( const ProcessorGroup *,
                                    const PatchSubset    * pss,
                                    const MaterialSubset *,
                                          DataWarehouse  *,
                                          DataWarehouse  * new_dw )
 {
-  new_dw->put(delt_vartype(d_delt), d_shared_state->get_delt_label(),getLevel(pss));
+  new_dw->put(delt_vartype(d_delt), m_sharedState->get_delt_label(),getLevel(pss));
 }
 
 

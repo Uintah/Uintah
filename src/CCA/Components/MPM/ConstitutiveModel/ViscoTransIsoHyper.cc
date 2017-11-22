@@ -228,7 +228,7 @@ void ViscoTransIsoHyper::initializeCMData(const Patch* patch,
     history5[*iter] = zero;
     history6[*iter] = zero;
   }
-  computeStableTimestep(patch, matl, new_dw);
+  computeStableTimeStep(patch, matl, new_dw);
 }
 
 void ViscoTransIsoHyper::addParticleState(std::vector<const VarLabel*>& from,
@@ -261,7 +261,7 @@ void ViscoTransIsoHyper::addParticleState(std::vector<const VarLabel*>& from,
   to.push_back(pHistory6Label_preReloc);
 }
 
-void ViscoTransIsoHyper::computeStableTimestep(const Patch* patch,
+void ViscoTransIsoHyper::computeStableTimeStep(const Patch* patch,
                                           const MPMMaterial* matl,
                                           DataWarehouse* new_dw)
 //______TIME STEP DEPENDS ON:
@@ -315,7 +315,7 @@ void ViscoTransIsoHyper::computeStressTensor(const PatchSubset* patches,
                                         DataWarehouse* old_dw,
                                         DataWarehouse* new_dw)
 //COMPUTES THE STRESS ON ALL THE PARTICLES IN A GIVEN PATCH FOR A GIVEN MATERIAL
-//CALLED ONCE PER TIME STEP CONTAINS A COPY OF computeStableTimestep
+//CALLED ONCE PER TIME STEP CONTAINS A COPY OF computeStableTimeStep
 {
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);

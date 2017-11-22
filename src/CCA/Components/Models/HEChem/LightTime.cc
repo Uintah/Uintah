@@ -27,6 +27,7 @@
 #include <CCA/Components/Regridder/PerPatchVars.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <CCA/Ports/Scheduler.h>
+#include <CCA/Ports/Regridder.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/CCVariable.h>
@@ -164,7 +165,7 @@ void LightTime::initialize(const ProcessorGroup*,
 }
 //______________________________________________________________________
 //      
-void LightTime::scheduleComputeStableTimestep(SchedulerP&,
+void LightTime::scheduleComputeStableTimeStep(SchedulerP&,
                                           const LevelP&,
                                           const ModelInfo*)
 {
@@ -376,8 +377,8 @@ void LightTime::scheduleErrorEstimate(const LevelP& coarseLevel,
   t->requires(Task::NewDW, reactedFractionLabel,   react_matl, gac, 1);
   
   t->computes(mag_grad_Fr_Label, react_matl);
-  t->modifies(d_sharedState->get_refineFlag_label(),      d_sharedState->refineFlagMaterials());
-  t->modifies(d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials());
+  t->modifies(m_regridder->getRefineFlagLabel(),      m_regridder->refineFlagMaterials());
+  t->modifies(m_regridder->getRefinePatchFlagLabel(), m_regridder->refineFlagMaterials());
   
   sched->addTask(t, coarseLevel->eachPatch(), mymatls);
 }
@@ -395,8 +396,8 @@ void LightTime::errorEstimate(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     
     Ghost::GhostType  gac  = Ghost::AroundCells;
-    const VarLabel* refineFlagLabel = d_sharedState->get_refineFlag_label();
-    const VarLabel* refinePatchLabel= d_sharedState->get_refinePatchFlag_label();
+    const VarLabel* refineFlagLabel = m_regridder->getRefineFlagLabel();
+    const VarLabel* refinePatchLabel= m_regridder->getRefinePatchFlagLabel();
     
     CCVariable<int> refineFlag;
     new_dw->getModifiable(refineFlag, refineFlagLabel, 0, patch);      

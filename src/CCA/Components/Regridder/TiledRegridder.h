@@ -67,8 +67,8 @@ WARNING
     virtual Grid* regrid(Grid* oldGrid);
 		
     virtual void problemSetup(const ProblemSpecP& params,
-			         const GridP& grid,
-			         const SimulationStateP& state);
+			      const GridP& grid,
+			      const SimulationStateP& state);
 
     std::vector<IntVector> getMinPatchSize() {return d_minTileSize;}
 

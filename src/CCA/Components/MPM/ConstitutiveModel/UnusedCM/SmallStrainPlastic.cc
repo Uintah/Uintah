@@ -459,7 +459,7 @@ SmallStrainPlastic::initializeCMData(const Patch* patch,
     initSharedDataForImplicit(patch, matl, new_dw);
   else {
     initSharedDataForExplicit(patch, matl, new_dw);
-    computeStableTimestep(patch, matl, new_dw);
+    computeStableTimeStep(patch, matl, new_dw);
   }
 
   // Put stuff in here to initialize each particle's
@@ -524,7 +524,7 @@ SmallStrainPlastic::initializeCMData(const Patch* patch,
 }
 
 void 
-SmallStrainPlastic::computeStableTimestep(const Patch* patch,
+SmallStrainPlastic::computeStableTimeStep(const Patch* patch,
                                       const MPMMaterial* matl,
                                       DataWarehouse* new_dw)
 {

@@ -47,7 +47,7 @@
 #include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>
 #include <CCA/Components/SimulationController/AMRSimulationController.h>
 #include <CCA/Ports/ProblemSpecInterface.h>
-#include <CCA/Ports/SimulationInterface.h>
+#include <CCA/Ports/ApplicationInterface.h>
 #include <Core/DataArchive/DataArchive.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -131,11 +131,13 @@ main( int argc, char *argv[], char *env[] )
     Uintah::Parallel::initializeManager(argc, argv);
     const ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
 
-    UintahParallelComponent * comp = ComponentFactory::create( ups, world, false, udafile[0] );
-    SimulationInterface     * sim  = dynamic_cast<SimulationInterface*>( comp );
+    UintahParallelComponent * comp =
+      ComponentFactory::create( ups, world, nullptr, udafile[0] );
+    ApplicationInterface     * app  =
+      dynamic_cast<ApplicationInterface*>( comp );
 
     DataArchiver out_uda(world);
-    out_uda.attachPort("sim", sim);
+    out_uda.attachPort("app", app);
     out_uda.problemSetup(ups, nullptr, nullptr);
     out_uda.initializeOutput(ups);
     new_uda_dir = out_uda.getOutputLocation();

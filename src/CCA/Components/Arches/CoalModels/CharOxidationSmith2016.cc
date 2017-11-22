@@ -41,11 +41,12 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 
+#include <sci_defs/visit_defs.h>
+
 #include <iomanip>
 #include <iostream>
 #include <numeric>
 
-#include <sci_defs/visit_defs.h>
 #define SQUARE(x) x*x
 #define CUBE(x) x*x*x
 using namespace Uintah;
@@ -374,43 +375,40 @@ CharOxidationSmith2016::problemSetup(const ProblemSpecP& params, int qn)
     }
   }
 
-
 #ifdef HAVE_VISIT
   static bool initialized = false;
 
   // Running with VisIt so add in the variables that the user can
   // modify.
-  if( d_sharedState->getVisIt() && !initialized ) {
+//   if( d_sharedState->getVisIt() && !initialized ) {
     // variable 1 - Must start with the component name and have NO
     // spaces in the var name.
-    SimulationState::interactiveVar var;
-    var.name     = "Arches-CharOx-PreExp-Factor-O2";
-    var.type     = Uintah::TypeDescription::double_type;
-    var.value    = (void *) &(_a_l[0]);
-    var.range[0]   = -1.0e9;
-    var.range[1]   = +1.0e9;
-    var.modifiable = true;
-    var.recompile  = false;
-    var.modified   = false;
-    d_sharedState->d_UPSVars.push_back( var );
+//     SimulationState::interactiveVar var;
+//     var.name     = "Arches-CharOx-PreExp-Factor-O2";
+//     var.type     = Uintah::TypeDescription::double_type;
+//     var.value    = (void *) &(_a_l[0]);
+//     var.range[0]   = -1.0e9;
+//     var.range[1]   = +1.0e9;
+//     var.modifiable = true;
+//     var.recompile  = false;
+//     var.modified   = false;
+//     d_sharedState->d_UPSVars.push_back( var );
 
     // variable 2 - Must start with the component name and have NO
     // spaces in the var name.
-    var.name     = "Arches-CharOx-Activation-Energy-O2";
-    var.type     = Uintah::TypeDescription::double_type;
-    var.value    = (void *) &(_e_l[0]);
-    var.range[0]   = -1.0e9;
-    var.range[1]   = +1.0e9;
-    var.modifiable = true;
-    var.recompile  = false;
-    var.modified   = false;
-    d_sharedState->d_UPSVars.push_back( var );
+//     var.name     = "Arches-CharOx-Activation-Energy-O2";
+//     var.type     = Uintah::TypeDescription::double_type;
+//     var.value    = (void *) &(_e_l[0]);
+//     var.range[0]   = -1.0e9;
+//     var.range[1]   = +1.0e9;
+//     var.modifiable = true;
+//     var.recompile  = false;
+//     var.modified   = false;
+//     d_sharedState->d_UPSVars.push_back( var );
 
-    initialized = true;
-  }
+//     initialized = true;
+//   }
 #endif
-
-
 }
 
 

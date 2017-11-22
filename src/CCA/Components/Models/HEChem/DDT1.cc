@@ -60,6 +60,8 @@ DDT1::DDT1(const ProcessorGroup* myworld,
            const ProblemSpecP& prob_spec)
   : ModelInterface(myworld), d_prob_spec(prob_spec), d_params(params)
 {
+  d_max_initial_delt = 0;
+  
   d_mymatls  = 0;
   d_one_matl = 0;
   Ilb  = scinew ICELabel();
@@ -161,6 +163,13 @@ void DDT1::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup*, cons
 {
   d_sharedState = sharedState;
   
+  ProblemSpecP time_ps = d_prob_spec->findBlock( "Time" );
+
+  if( !time_ps->get( "delt_init", d_max_initial_delt) &&
+      !time_ps->get("max_initial_delt", d_max_initial_delt ) ) {
+    d_max_initial_delt = 0;
+  }
+
   ProblemSpecP ddt_ps = d_params->findBlock("DDT1");
   // Required for JWL++
   ddt_ps->require("ThresholdPressureJWL",   d_threshold_press_JWL);
@@ -450,7 +459,7 @@ void DDT1::initialize(const ProcessorGroup*,
                       DataWarehouse* new_dw){
   int m0 = d_matl0->getDWIndex();
   
-  double initTimestep = d_sharedState->getSimulationTime()->m_max_initial_delt;
+  double initTimestep = d_max_initial_delt;
   
  
   for(int p=0;p<patches->size();p++) {
@@ -491,7 +500,7 @@ void DDT1::initialize(const ProcessorGroup*,
 
 //______________________________________________________________________
 //      
-void DDT1::scheduleComputeStableTimestep(SchedulerP&,
+void DDT1::scheduleComputeStableTimeStep(SchedulerP&,
                                          const LevelP&,
                                          const ModelInfo*)
 {
@@ -596,10 +605,8 @@ void DDT1::scheduleComputeModelSources(SchedulerP& sched,
     t1->requires( Task::OldDW, adjOutIntervalsLabel );
     t1->computes( adjOutIntervalsLabel );
     
-    t1->computes( d_sharedState->get_outputInterval_label() );
-    t1->computes( d_sharedState->get_checkpointInterval_label() );
-    d_sharedState->updateOutputInterval( true );
-    d_sharedState->updateCheckpointInterval( true ); 
+    t1->computes( Ilb->outputIntervalLabel );
+    t1->computes( Ilb->checkpointIntervalLabel );
   } 
   
   sched->addTask(t1, level->eachPatch(), d_mymatls);    
@@ -1060,7 +1067,7 @@ void DDT1::computeBurnLogic(const ProcessorGroup*,
               inductionTime_new =  (delta_x*A)/S_f_new ;
               inductionTime[c] = inductionTime_new ;
 
-              double initTimestep = d_sharedState->getSimulationTime()->m_max_initial_delt;
+              double initTimestep = d_max_initial_delt;
 
               if(inductionTimeOld[c] != ( initTimestep + 1e-20)){ //initializes induction time to the calculated indcutiontime on the first timestep. 
                 inductionTime[c] = (0.2*inductionTime_new) + (0.8*inductionTimeOld[c]) ;
@@ -1113,11 +1120,7 @@ void DDT1::computeBurnLogic(const ProcessorGroup*,
       max_vartype me;
       old_dw->get( me,  adjOutIntervalsLabel );
       double hasSwitched = me; 
-    
-      // for readability
-      const VarLabel* outIntervalLabel      = d_sharedState->get_outputInterval_label();
-      const VarLabel* chkpointIntervalLabel = d_sharedState->get_checkpointInterval_label();
-      
+
       //__________________________________
       // Pressure
       if ( press_switch_adj_IO && d_adj_IO_Press->onOff && isDoubleEqual( hasSwitched, ZERO) ){
@@ -1130,8 +1133,8 @@ void DDT1::computeBurnLogic(const ProcessorGroup*,
         cout << *patch << endl;
         cout << "    new outputInterval: " << newOUT << " new checkpoint Interval: " << newCKPT << "\n\n"<<  endl;
 
-        new_dw->put( min_vartype( newOUT ),  outIntervalLabel );
-        new_dw->put( min_vartype( newCKPT ), chkpointIntervalLabel );
+        new_dw->put( min_vartype( newOUT ),  Ilb->outputIntervalLabel );
+        new_dw->put( min_vartype( newCKPT ), Ilb->checkpointIntervalLabel );
       }             
       //__________________________________
       //  DETONATON
@@ -1145,8 +1148,8 @@ void DDT1::computeBurnLogic(const ProcessorGroup*,
         cout << *patch << endl;
         cout << "    new outputInterval: " << newOUT << " new checkpoint Interval: " << newCKPT << "\n\n"<< endl;
 
-        new_dw->put( min_vartype( newOUT ),  outIntervalLabel );
-        new_dw->put( min_vartype( newCKPT ), chkpointIntervalLabel );
+        new_dw->put( min_vartype( newOUT ),  Ilb->outputIntervalLabel );
+        new_dw->put( min_vartype( newCKPT ), Ilb->checkpointIntervalLabel );
       }
       else {        
       //__________________________________
@@ -1156,8 +1159,8 @@ void DDT1::computeBurnLogic(const ProcessorGroup*,
         oldOUT.setBenignValue();
         oldCKPT.setBenignValue();
 
-        new_dw->put( oldOUT,  outIntervalLabel );
-        new_dw->put( oldCKPT, chkpointIntervalLabel );
+        new_dw->put( oldOUT,  Ilb->outputIntervalLabel );
+        new_dw->put( oldCKPT, Ilb->checkpointIntervalLabel );
       }
       new_dw->put( max_vartype(hasSwitched), adjOutIntervalsLabel );
     }

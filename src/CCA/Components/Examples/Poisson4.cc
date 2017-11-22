@@ -44,8 +44,9 @@
 using namespace std;
 using namespace Uintah;
 
-Poisson4::Poisson4(const ProcessorGroup* myworld)
-  : UintahParallelComponent(myworld)
+Poisson4::Poisson4(const ProcessorGroup* myworld,
+		   const SimulationStateP sharedState)
+  : ApplicationCommon(myworld, sharedState)
 {
 
   phi_label = VarLabel::create("phi", 
@@ -64,17 +65,15 @@ Poisson4::~Poisson4()
 //
 void Poisson4::problemSetup(const ProblemSpecP& params, 
                             const ProblemSpecP& restart_prob_spec, 
-                            GridP& /*grid*/, 
-                            SimulationStateP& sharedState)
+                            GridP& /*grid*/)
 {
-  sharedState_ = sharedState;
   ProblemSpecP poisson = params->findBlock("Poisson");
   
   poisson->require("delt", delt_);
   
   mymat_ = scinew SimpleMaterial();
   
-  sharedState->registerSimpleMaterial(mymat_);
+  m_sharedState->registerSimpleMaterial(mymat_);
 }
 //______________________________________________________________________
 //
@@ -86,7 +85,7 @@ void Poisson4::scheduleInitialize(const LevelP& level,
                      
   task->computes(phi_label);
   task->computes(residual_label);
-  sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
+  sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
 }
 //______________________________________________________________________
 //
@@ -96,15 +95,15 @@ void Poisson4::scheduleRestartInitialize(const LevelP& level,
 }
 //______________________________________________________________________
 //
-void Poisson4::scheduleComputeStableTimestep(const LevelP& level,
+void Poisson4::scheduleComputeStableTimeStep(const LevelP& level,
                                              SchedulerP& sched)
 {
-  Task* task = scinew Task("Poisson4::computeStableTimestep",
-                     this, &Poisson4::computeStableTimestep);
+  Task* task = scinew Task("Poisson4::computeStableTimeStep",
+                     this, &Poisson4::computeStableTimeStep);
                      
   task->requires(Task::NewDW, residual_label);
-  task->computes(sharedState_->get_delt_label(),level.get_rep());
-  sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
+  task->computes(m_sharedState->get_delt_label(),level.get_rep());
+  sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
 }
 //______________________________________________________________________
 //
@@ -143,7 +142,7 @@ Poisson4::scheduleTimeAdvance( const LevelP& level,
 {
 
   const PatchSet* patches = level->eachPatch();
-  const MaterialSet* matls = sharedState_->allMaterials();
+  const MaterialSet* matls = m_sharedState->allMaterials();
 
   scheduleTimeAdvance0(sched,patches,matls);
 
@@ -157,12 +156,12 @@ Poisson4::scheduleTimeAdvance( const LevelP& level,
   task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
   task->computes(phi_label);
   task->computes(residual_label);
-  sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
+  sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
 #endif
 }
 //______________________________________________________________________
 //
-void Poisson4::computeStableTimestep(const ProcessorGroup* pg,
+void Poisson4::computeStableTimeStep(const ProcessorGroup* pg,
                                      const PatchSubset* patches,
                                      const MaterialSubset* /*matls*/,
                                      DataWarehouse*,
@@ -173,7 +172,7 @@ void Poisson4::computeStableTimestep(const ProcessorGroup* pg,
     new_dw->get(residual, residual_label);
     cerr << "Residual=" << residual << '\n';
   }
-  new_dw->put(delt_vartype(delt_), sharedState_->get_delt_label(),getLevel(patches));
+  new_dw->put(delt_vartype(delt_), m_sharedState->get_delt_label(),getLevel(patches));
 }
 
 //______________________________________________________________________

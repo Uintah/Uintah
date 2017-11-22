@@ -200,7 +200,7 @@ namespace Vaango {
     }
 
     // compute stable timestep for this patch
-    virtual void computeStableTimestep(const Uintah::Patch* patch,
+    virtual void computeStableTimeStep(const Uintah::Patch* patch,
                                        const Uintah::MPMMaterial* matl,
                                        Uintah::DataWarehouse* new_dw);
 

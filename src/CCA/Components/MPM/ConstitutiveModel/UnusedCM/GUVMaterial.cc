@@ -170,7 +170,7 @@ GUVMaterial::initializeCMData(const Patch* patch,
     pStress[pidx] = Zero;
   }
 
-  computeStableTimestep(patch, matl, new_dw);
+  computeStableTimeStep(patch, matl, new_dw);
 }
 
 void 
@@ -263,7 +263,7 @@ GUVMaterial::allocateCMDataAdd(DataWarehouse* new_dw,
 // are computed as a side-effect of compute Stress Tensor
 //
 void 
-GUVMaterial::computeStableTimestep(const Patch* patch,
+GUVMaterial::computeStableTimeStep(const Patch* patch,
                                    const MPMMaterial* matl,
                                    DataWarehouse* new_dw)
 {
@@ -285,7 +285,7 @@ GUVMaterial::computeStableTimestep(const Patch* patch,
   double c_dil = 0.0;
   Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
 
-  debug_data << "GUVMaterial::computeStableTimestep: patch = " << patch
+  debug_data << "GUVMaterial::computeStableTimeStep: patch = " << patch
              << " matl = " << matl << " new_dw = " << new_dw << endl;
 
   double mu_lipid = d_cm.Shear_lipid;
@@ -296,7 +296,7 @@ GUVMaterial::computeStableTimestep(const Patch* patch,
   for(;iter != pset->end();iter++){
     particleIndex idx = *iter;
 
-    debug_data << "GUVMaterial::computeStableTimestep: particle = " << idx
+    debug_data << "GUVMaterial::computeStableTimeStep: particle = " << idx
                << " type = " << pType[idx]
                << " thick = " << pThick[idx]
                << " normal = " << pNormal[idx] << endl;

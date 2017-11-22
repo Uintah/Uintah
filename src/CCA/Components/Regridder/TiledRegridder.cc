@@ -440,18 +440,18 @@ void TiledRegridder::problemSetup(const ProblemSpecP& params,
     }
   }
 
-#ifdef HAVE_VISIT
-  static bool initialized = false;
+// #ifdef HAVE_VISIT
+//   static bool initialized = false;
 
-  // Running with VisIt so add in the variables that the user can
-  // modify.
-  if( d_sharedState->getVisIt() && !initialized ) {
-    d_sharedState->d_debugStreams.push_back( &grid_dbg );
-    d_sharedState->d_debugStreams.push_back( &rgtimes );
+//   // Running with VisIt so add in the variables that the user can
+//   // modify.
+//   if( d_sharedState->getVisIt() && !initialized ) {
+//     d_sharedState->d_debugStreams.push_back( &grid_dbg );
+//     d_sharedState->d_debugStreams.push_back( &rgtimes );
 
-    initialized = true;
-  }
-#endif
+//     initialized = true;
+//   }
+// #endif
 }
 
 //_________________________________________________________________

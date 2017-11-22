@@ -25,6 +25,7 @@
 //----- Discretization.cc ----------------------------------------------
 
 #include <CCA/Components/Arches/Discretization.h>
+#include <CCA/Components/Arches/Arches.h>
 #include <Core/Geometry/Vector.h>
 #include <CCA/Components/Arches/CellInformation.h>
 #include <CCA/Components/Arches/StencilMatrix.h>

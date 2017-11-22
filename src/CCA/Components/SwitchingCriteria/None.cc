@@ -54,7 +54,7 @@ void None::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
   
   Task* t = scinew Task("switchTest", this, &None::switchTest);
 
-  t->computes(d_sharedState->get_switch_label());
+  t->computes(d_switch_label);
   sched->addTask(t, level->eachPatch(),d_sharedState->allMaterials());
 }
 
@@ -69,5 +69,5 @@ void None::switchTest(const ProcessorGroup* group,
   double sw = 0;
   max_vartype switch_condition(sw);
   const Level* allLevels = 0;
-  new_dw->put(switch_condition,d_sharedState->get_switch_label(),allLevels);
+  new_dw->put(switch_condition,d_switch_label,allLevels);
 }

@@ -17,7 +17,7 @@
     <max_Timesteps>50</max_Timesteps>
   </Time>
   <DataArchiver>
-    <filebase>x-scalar-kokkos-mms_sine_t.uda</filebase>
+    <filebase>kokkos-x-scalar_mms_RK2.uda</filebase>
     <!--outputInterval>0.1</outputInterval-->
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>

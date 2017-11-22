@@ -167,11 +167,11 @@ SoilFoam::initializeCMData(const Patch* patch,
     p_sv_min[*iter] = 0.0;
   }
 
-  computeStableTimestep(patch, matl, new_dw);
+  computeStableTimeStep(patch, matl, new_dw);
 
 }
 
-void SoilFoam::computeStableTimestep(const Patch* patch,
+void SoilFoam::computeStableTimeStep(const Patch* patch,
                                              const MPMMaterial* matl,
                                              DataWarehouse* new_dw)
 {

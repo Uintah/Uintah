@@ -51,6 +51,7 @@ SUBDIRS := $(SRCDIR)/EOS \
 include $(SCIRUN_SCRIPTS)/recurse.mk          
 
 PSELIBS := \
+       CCA/Components/Application \
        CCA/Components/OnTheFlyAnalysis \
        CCA/Ports                       \
        Core/Disclosure                 \

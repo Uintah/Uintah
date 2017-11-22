@@ -110,7 +110,6 @@
 #include <CCA/Components/Arches/ParticleModels/CQMOMSourceWrapper.h>
 
 #include <CCA/Components/Arches/ExplicitSolver.h>
-#include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <CCA/Components/Arches/BoundaryCondition.h>

@@ -31,7 +31,7 @@
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/LoadBalancerPort.h>
 #include <CCA/Ports/Output.h>
-#include <CCA/Ports/SimulationInterface.h>
+#include <CCA/Ports/ApplicationInterface.h>
 
 #include <Core/Exceptions/ErrnoException.h>
 #include <Core/Exceptions/InternalError.h>
@@ -126,6 +126,10 @@ SchedulerCommon::~SchedulerCommon()
   // Task monitoring variables.
   if( m_monitoring )
   {
+    if (m_dummy_matl && m_dummy_matl->removeReference()){
+      delete m_dummy_matl;
+    }
+    
     // Loop through the global (0) and local (1) tasks
     for (unsigned int i = 0; i < 2; ++i)
     {
@@ -279,7 +283,7 @@ SchedulerCommon::finalizeNodes( int process /* = 0 */ )
 //______________________________________________________________________
 //
 void
-SchedulerCommon::problemSetup( const ProblemSpecP & prob_spec, SimulationStateP & state )
+SchedulerCommon::problemSetup( const ProblemSpecP & prob_spec, const SimulationStateP & state )
 {
   m_shared_state = state;
 
@@ -431,7 +435,8 @@ SchedulerCommon::problemSetup( const ProblemSpecP & prob_spec, SimulationStateP 
         // the tasks are divided by component.
         std::string varName = taskName;
         std::size_t found = varName.find("::");
-        varName.replace(found, 2 ,"/");
+	if( found != std::string::npos)
+	  varName.replace(found, 2 ,"/");
         
         // Set the variable name to the task name plus the attribute
         // name and store in a map for easy lookup by the task and
@@ -448,6 +453,13 @@ SchedulerCommon::problemSetup( const ProblemSpecP & prob_spec, SimulationStateP 
 
     m_monitoring = (m_monitoring_tasks[0].size() ||
                     m_monitoring_tasks[1].size() );
+
+    if(m_monitoring)
+    {
+      m_dummy_matl = scinew MaterialSubset();
+      m_dummy_matl->add(0);
+      m_dummy_matl->addReference();
+    }
   }
 
   // If small_messages not specified in UPS Scheduler block, still
@@ -462,17 +474,17 @@ SchedulerCommon::problemSetup( const ProblemSpecP & prob_spec, SimulationStateP 
   m_no_scrub_vars.insert("refineFlag");
   m_no_scrub_vars.insert("refinePatchFlag");
   
-#ifdef HAVE_VISIT
-  static bool initialized = false;
+// #ifdef HAVE_VISIT
+//   static bool initialized = false;
 
-  // Running with VisIt so add in the variables that the user can
-  // modify.
-  if( m_shared_state->getVisIt() && !initialized ) {
-     m_shared_state->d_douts.push_back( &g_schedulercommon_dbg  );
+//   // Running with VisIt so add in the variables that the user can
+//   // modify.
+//   if( m_shared_state->getVisIt() && !initialized ) {
+//      m_shared_state->d_douts.push_back( &g_schedulercommon_dbg  );
 
-    initialized = true;
-  }
-#endif
+//     initialized = true;
+//   }
+// #endif
 }
 
 //______________________________________________________________________
@@ -1107,6 +1119,12 @@ SchedulerCommon::replaceDataWarehouse(       int     index
     return;
   }
 
+  // std::cerr << __FUNCTION__ << "  " << __LINE__ << "  "
+  // 	    << get_dw(0) << "  " 
+  // 	    << get_dw(1) << "  " 
+  // 	    << getLastDW() << "  " 
+  // 	    << std::endl;
+  
   for (unsigned i = 0; i < m_task_graphs.size(); i++) {
     DetailedTasks* dts = m_task_graphs[i]->getDetailedTasks();
     if (dts) {
@@ -1385,7 +1403,7 @@ SchedulerCommon::finalizeTimestep()
 //______________________________________________________________________
 //
 void
-SchedulerCommon::scheduleAndDoDataCopy( const GridP & grid, SimulationInterface * sim )
+SchedulerCommon::scheduleAndDoDataCopy( const GridP & grid, ApplicationInterface * sim )
 {
   Timers::Simple timer;
   timer.start();
@@ -1498,7 +1516,7 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP & grid, SimulationInterface 
   std::vector<Handle<PatchSet> > copyPatchSets(grid->numLevels(), (PatchSet*)0);
   SchedulerP sched(dynamic_cast<Scheduler*>(this));
 
-  m_shared_state->setCopyDataTimestep( true);
+  m_is_copy_data_timestep = true;
 
   for (int L = 0; L < grid->numLevels(); L++) {
     LevelP newLevel = grid->getLevel(L);
@@ -1655,9 +1673,10 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP & grid, SimulationInterface 
     }
   }
 
-  // set so the load balancer will make an adequate neighborhood, as the default
-  // neighborhood isn't good enough for the copy data timestep
-  m_shared_state->setCopyDataTimestep(true);  //-- do we still need this?  - BJW
+  // set so the load balancer will make an adequate neighborhood, as
+  // the default neighborhood isn't good enough for the copy data
+  // timestep
+  m_is_copy_data_timestep = true;  //-- do we still need this?  - BJW
 
 #if !defined( DISABLE_SCI_MALLOC )
   const char* tag = AllocatorSetDefaultTag("DoDataCopy");
@@ -1665,14 +1684,14 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP & grid, SimulationInterface 
 
   this->compile();
 
-  m_shared_state->d_runTimeStats[SimulationState::RegriddingCompilationTime] += timer().seconds();
+  (*d_runTimeStats)[RegriddingCompilationTime] += timer().seconds();
 
   // save these and restore them, since the next execute will append the scheduler's, and we don't want to.
-  double exec_time   = m_shared_state->d_runTimeStats[SimulationState::TaskExecTime];
-  double local_time  = m_shared_state->d_runTimeStats[SimulationState::TaskLocalCommTime];
-  double wait_time   = m_shared_state->d_runTimeStats[SimulationState::TaskWaitCommTime];
-  double reduce_time = m_shared_state->d_runTimeStats[SimulationState::TaskReduceCommTime];
-  double thread_time = m_shared_state->d_runTimeStats[SimulationState::TaskWaitThreadTime];
+  double exec_time   = (*d_runTimeStats)[TaskExecTime];
+  double local_time  = (*d_runTimeStats)[TaskLocalCommTime];
+  double wait_time   = (*d_runTimeStats)[TaskWaitCommTime];
+  double reduce_time = (*d_runTimeStats)[TaskReduceCommTime];
+  double thread_time = (*d_runTimeStats)[TaskWaitThreadTime];
 
   timer.reset( true );
   this->execute();
@@ -1717,16 +1736,16 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP & grid, SimulationInterface 
 
   newDataWarehouse->refinalize();
 
-  m_shared_state->d_runTimeStats[SimulationState::RegriddingCopyDataTime] += timer().seconds();
+  (*d_runTimeStats)[RegriddingCopyDataTime] += timer().seconds();
 
   // restore values from before the regrid and data copy
-  m_shared_state->d_runTimeStats[SimulationState::TaskExecTime]       = exec_time;
-  m_shared_state->d_runTimeStats[SimulationState::TaskLocalCommTime]  = local_time;
-  m_shared_state->d_runTimeStats[SimulationState::TaskWaitCommTime]   = wait_time;
-  m_shared_state->d_runTimeStats[SimulationState::TaskReduceCommTime] = reduce_time;
-  m_shared_state->d_runTimeStats[SimulationState::TaskWaitThreadTime] = thread_time;
+  (*d_runTimeStats)[TaskExecTime]       = exec_time;
+  (*d_runTimeStats)[TaskLocalCommTime]  = local_time;
+  (*d_runTimeStats)[TaskWaitCommTime]   = wait_time;
+  (*d_runTimeStats)[TaskReduceCommTime] = reduce_time;
+  (*d_runTimeStats)[TaskWaitThreadTime] = thread_time;
 
-  m_shared_state->setCopyDataTimestep(false);
+  m_is_copy_data_timestep = false;
 }
 
 //______________________________________________________________________
@@ -1741,6 +1760,8 @@ SchedulerCommon::copyDataToNewGrid( const ProcessorGroup * /* pg */
 {
   DOUT(g_schedulercommon_dbg, "SchedulerCommon::copyDataToNewGrid() BGN on patches " << *patches);
 
+  // std::cerr << __FUNCTION__ << "  " << __LINE__ << std::endl;
+			       
   OnDemandDataWarehouse* oldDataWarehouse = dynamic_cast<OnDemandDataWarehouse*>(old_dw);
   OnDemandDataWarehouse* newDataWarehouse = dynamic_cast<OnDemandDataWarehouse*>(new_dw);
 
@@ -1851,7 +1872,7 @@ SchedulerCommon::copyDataToNewGrid( const ProcessorGroup * /* pg */
                     GridVariableBase* newVariable = v->cloneType();
                     newVariable->rewindow(newLowIndex, newHighIndex);
                     newVariable->copyPatch(v, srclow, srchigh);
-                    newDataWarehouse->d_varDB.put(label, matl, newPatch, newVariable, isCopyDataTimestep(), false);
+                    newDataWarehouse->d_varDB.put(label, matl, newPatch, newVariable, copyTimestep(), false);
 
                   } else {
                     GridVariableBase* newVariable = dynamic_cast<GridVariableBase*>(newDataWarehouse->d_varDB.get(label, matl, newPatch));
@@ -2089,10 +2110,10 @@ SchedulerCommon::scheduleTaskMonitoring( const LevelP& level )
   {
     for( const auto &it : m_monitoring_tasks[i] )
     {
-      t->computes( it.second );
+      t->computes( it.second, m_dummy_matl, Task::OutOfDomain );
       
-      overrideVariableBehavior(it.second->getName(),
-                               false, false, true, true, true);
+      // overrideVariableBehavior(it.second->getName(),
+      //                          false, false, true, true, true);
       // treatAsOld copyData noScrub notCopyData noCheckpoint
     }
   }
@@ -2121,10 +2142,10 @@ SchedulerCommon::scheduleTaskMonitoring( const PatchSet* patches )
   {
     for( const auto &it : m_monitoring_tasks[i] )
     {
-      t->computes( it.second );
+      t->computes( it.second, m_dummy_matl, Task::OutOfDomain );
       
-      overrideVariableBehavior(it.second->getName(),
-                               false, false, true, true, true);
+      // overrideVariableBehavior(it.second->getName(),
+      //                          false, false, true, true, true);
       // treatAsOld copyData noScrub notCopyData noCheckpoint
     }
   }
@@ -2201,10 +2222,15 @@ SchedulerCommon::sumTaskMonitoringValues(DetailedTask * dtask)
       {
         // Strip off the attribute name from the task name.
         std::string taskName = it.first;
-        size_t found = taskName.find_last_of("::");
-        // std::string attribute = taskName.substr(found + 1);
-        taskName = taskName.substr(0, found-1);
 
+	// For a local task strip off the attribute name.
+	if( i == 1 )
+	{
+	  size_t found = taskName.find_last_of("::");
+	  // std::string attribute = taskName.substr(found + 1);
+	  taskName = taskName.substr(0, found-1);
+	}
+	
         // Is this task being monitored ?
         if( (i == 0) || // Global monitoring yes, otherwise check.
             (i == 1 && taskName == dtask->getTask()->getName()) )
@@ -2221,7 +2247,7 @@ SchedulerCommon::sumTaskMonitoringValues(DetailedTask * dtask)
             // execution time which is then weighted by the number of
             // cells in CostModelForecaster::addContribution
             if (!dtask->getTask()->getHasSubScheduler() &&
-                !m_shared_state->isCopyDataTimestep() &&
+                !m_is_copy_data_timestep &&
                 dtask->getTask()->getType() != Task::Output) {
               value = dtask->task_exec_time() / num_cells;
 

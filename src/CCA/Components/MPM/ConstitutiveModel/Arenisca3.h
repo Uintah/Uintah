@@ -161,7 +161,7 @@ namespace Uintah {
     Arenisca3* clone();
 
     // compute stable timestep for this patch
-    virtual void computeStableTimestep(const Patch* patch,
+    virtual void computeStableTimeStep(const Patch* patch,
                                        const MPMMaterial* matl,
                                        DataWarehouse* new_dw);
 

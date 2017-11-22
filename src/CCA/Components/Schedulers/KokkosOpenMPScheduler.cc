@@ -39,6 +39,8 @@
 #include <Core/Util/DOUT.hpp>
 #include <Core/Util/Timers/Timers.hpp>
 
+#include <sci_defs/kokkos_defs.h>
+
 #ifdef UINTAH_ENABLE_KOKKOS
   #include <Kokkos_Core.hpp>
 #endif //UINTAH_ENABLE_KOKKOS
@@ -147,7 +149,7 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
 {
   // copy data timestep must be single threaded for now and
   //  also needs to run deterministically, in a static order
-  if (m_shared_state->isCopyDataTimestep()) {
+  if (m_is_copy_data_timestep) {
     MPIScheduler::execute(tgnum, iteration);
     return;
   }
@@ -308,9 +310,7 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
   m_exec_timer.stop();
 
   // compute the net timings
-  if ( m_shared_state != nullptr ) {
-    MPIScheduler::computeNetRunTimeStats(m_shared_state->d_runTimeStats);
-  }
+  MPIScheduler::computeNetRunTimeStats();
 
   // only do on toplevel scheduler
   if (m_parent_scheduler == nullptr) {

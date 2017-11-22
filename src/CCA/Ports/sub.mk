@@ -32,6 +32,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := CCA/Ports
 
 SRCS += \
+        $(SRCDIR)/ApplicationInterface.cc \
         $(SRCDIR)/DataWarehouse.cc        \
         $(SRCDIR)/LoadBalancerPort.cc     \
         $(SRCDIR)/ModelInterface.cc       \
@@ -41,7 +42,6 @@ SRCS += \
         $(SRCDIR)/Regridder.cc            \
         $(SRCDIR)/Scheduler.cc            \
         $(SRCDIR)/SFC.cc                  \
-        $(SRCDIR)/SimulationInterface.cc  \
         $(SRCDIR)/SolverInterface.cc      \
         $(SRCDIR)/SwitchingCriteria.cc    
 

@@ -94,7 +94,7 @@ void CompNeoHook::initializeCMData(const Patch* patch,
   // This method is defined in the ConstitutiveModel base class.
   initSharedDataForExplicit(patch, matl, new_dw);
 
-  computeStableTimestep(patch, matl, new_dw);
+  computeStableTimeStep(patch, matl, new_dw);
 }
 
 void CompNeoHook::allocateCMDataAddRequires(Task* task,
@@ -132,7 +132,7 @@ void CompNeoHook::addParticleState(std::vector<const VarLabel*>& ,
   // Add the local particle state data for this constitutive model.
 }
 
-void CompNeoHook::computeStableTimestep(const Patch* patch,
+void CompNeoHook::computeStableTimeStep(const Patch* patch,
                                         const MPMMaterial* matl,
                                         DataWarehouse* new_dw)
 {

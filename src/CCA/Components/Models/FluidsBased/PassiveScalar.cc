@@ -29,6 +29,7 @@
 #include <CCA/Components/Models/FluidsBased/PassiveScalar.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
 #include <CCA/Ports/Scheduler.h>
+#include <CCA/Ports/Regridder.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
 #include <Core/GeometryPiece/UnionGeometryPiece.h>
@@ -147,6 +148,7 @@ void PassiveScalar::problemSetup(GridP&, SimulationStateP& in_state,
                         ModelSetup* setup, const bool isRestart)
 {
   cout_doing << "Doing problemSetup \t\t\t\tPASSIVE_SCALAR" << endl;
+
   d_sharedState = in_state;
   
   ProblemSpecP PS_ps = params->findBlock("PassiveScalar");
@@ -586,7 +588,7 @@ void PassiveScalar::computeModelSources(const ProcessorGroup*,
   }  // patches
 }
 //__________________________________      
-void PassiveScalar::scheduleComputeStableTimestep(SchedulerP&,
+void PassiveScalar::scheduleComputeStableTimeStep(SchedulerP&,
                                                   const LevelP&,
                                                   const ModelInfo*)
 {
@@ -686,8 +688,8 @@ void PassiveScalar::scheduleErrorEstimate(const LevelP& coarseLevel,
   t->requires(Task::NewDW, d_scalar->scalar_CCLabel,  d_matl_sub, gac,1);
   
   t->computes(d_scalar->mag_grad_scalarLabel, d_matl_sub);
-  t->modifies(d_sharedState->get_refineFlag_label(),      d_sharedState->refineFlagMaterials());
-  t->modifies(d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials());
+  t->modifies(m_regridder->getRefineFlagLabel(),      m_regridder->refineFlagMaterials());
+  t->modifies(m_regridder->getRefinePatchFlagLabel(), m_regridder->refineFlagMaterials());
  
   // define the material set of 0 and whatever the passive scalar index is 
   // don't add matl 0 twice 
@@ -718,8 +720,8 @@ void PassiveScalar::errorEstimate(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     
     Ghost::GhostType  gac  = Ghost::AroundCells;
-    const VarLabel* refineFlagLabel = d_sharedState->get_refineFlag_label();
-    const VarLabel* refinePatchLabel= d_sharedState->get_refinePatchFlag_label();
+    const VarLabel* refineFlagLabel = m_regridder->getRefineFlagLabel();
+    const VarLabel* refinePatchLabel= m_regridder->getRefinePatchFlagLabel();
     
     CCVariable<int> refineFlag;
     new_dw->getModifiable(refineFlag, refineFlagLabel, 0, patch);      

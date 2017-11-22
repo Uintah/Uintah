@@ -211,7 +211,7 @@ void TongeRameshPTR::initializeCMData(const Patch* patch,
 	// If not implicit, compute timestep
 	if(!(flag->d_integrator == MPMFlags::Implicit)) {
 		// End by computing the stable timestep
-		computeStableTimestep(patch, matl, new_dw);
+		computeStableTimeStep(patch, matl, new_dw);
 	}
 }
 
@@ -289,7 +289,7 @@ double TongeRameshPTR::computeRhoMicroCM(double pressure,
 	throw std::runtime_error("TongeRameshPTR::computeRhoMicroCM() has not been updated");
 }
 
-void TongeRameshPTR::computeStableTimestep(const Patch* patch,
+void TongeRameshPTR::computeStableTimeStep(const Patch* patch,
                                            const MPMMaterial* matl,
                                            DataWarehouse* new_dw)
 {

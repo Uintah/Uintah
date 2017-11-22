@@ -28,6 +28,7 @@
 #include <CCA/Components/Regridder/PerPatchVars.h>
 #include <CCA/Ports/SolverInterface.h>
 #include <CCA/Ports/Scheduler.h>
+#include <CCA/Ports/Regridder.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Grid/AMR_CoarsenRefine.h>
@@ -54,8 +55,9 @@ static DebugStream cout_doing("AMRICE_DOING_COUT", false);
 //setenv SCI_DEBUG AMR:+ you can see the new grid it creates
 
 
-AMRICE::AMRICE(const ProcessorGroup* myworld)
-  : ICE(myworld, true)
+AMRICE::AMRICE(const ProcessorGroup* myworld,
+	       const SimulationStateP sharedState) :
+  ICE(myworld, sharedState)
 {
 }
 
@@ -65,12 +67,12 @@ AMRICE::~AMRICE()
 //___________________________________________________________________
 void AMRICE::problemSetup(const ProblemSpecP& params, 
                           const ProblemSpecP& restart_prob_spec, 
-                          GridP& grid, SimulationStateP& sharedState)
+                          GridP& grid)
 {
   cout_doing << d_myworld->myRank() 
              << " Doing problemSetup  \t\t\t AMRICE" << '\n';
              
-  ICE::problemSetup(params, restart_prob_spec,grid, sharedState);
+  ICE::problemSetup(params, restart_prob_spec,grid);
   ProblemSpecP ice_ps;
   ProblemSpecP amr_ps = params->findBlock("AMR");
   
@@ -150,7 +152,7 @@ void AMRICE::problemSetup(const ProblemSpecP& params,
       printf( "WARNING: AMRICE.cc: stringstream failed...\n" );
     }
 
-    int numMatls = d_sharedState->getNumMatls();
+    int numMatls = m_sharedState->getNumMatls();
 
     //__________________________________
     //  bulletproofing    
@@ -200,8 +202,6 @@ void AMRICE::problemSetup(const ProblemSpecP& params,
   
   //__________________________________
   //manual manipulate the scheduling of copy data
-  Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
-
 
   //overrideVariableBehavior(string var, bool treatAsOld, bool copyData, bool noScrub, bool notCopyData, bool noCheckpoint)
   //                             (1)             (2)             (3)           (4)            (5)            (6)
@@ -213,31 +213,31 @@ void AMRICE::problemSetup(const ProblemSpecP& params,
   //  noCheckpoint:   do not checkpoint this variable.
   
   // we need these for AMRICE::refine
-  sched->overrideVariableBehavior("specific_heat",true, true, false, false, false);
-  sched->overrideVariableBehavior("gamma",        true, true, false, false, false);
-  sched->overrideVariableBehavior("vol_frac_CC",  true, true, false, false, false);
-  sched->overrideVariableBehavior("sp_vol_CC",    d_with_mpm, true,  false, false, false);
+  m_scheduler->overrideVariableBehavior("specific_heat",true, true, false, false, false);
+  m_scheduler->overrideVariableBehavior("gamma",        true, true, false, false, false);
+  m_scheduler->overrideVariableBehavior("vol_frac_CC",  true, true, false, false, false);
+  m_scheduler->overrideVariableBehavior("sp_vol_CC",    d_with_mpm, true,  false, false, false);
   if (d_with_mpm)
-    sched->overrideVariableBehavior("temp_CC",      true, true, false, false, false);
+    m_scheduler->overrideVariableBehavior("temp_CC",      true, true, false, false, false);
 
   //We need these variables from OldDW to use between tasks, but do not
   // schedule datacopy
   
-  sched->overrideVariableBehavior("mass_X_FC_flux",     false, false, true, false, false);
-  sched->overrideVariableBehavior("mass_Y_FC_flux",     false, false, true, false, false);
-  sched->overrideVariableBehavior("mass_Z_FC_flux",     false, false, true, false, false);
-  sched->overrideVariableBehavior("mom_X_FC_flux",      false, false, true, false, false);
-  sched->overrideVariableBehavior("mom_Y_FC_flux",      false, false, true, false, false);
-  sched->overrideVariableBehavior("mom_Z_FC_flux",      false, false, true, false, false);
-  sched->overrideVariableBehavior("sp_vol_X_FC_flux",   false, false, true, false, false);
-  sched->overrideVariableBehavior("sp_vol_Y_FC_flux",   false, false, true, false, false);
-  sched->overrideVariableBehavior("sp_vol_Z_FC_flux",   false, false, true, false, false);
-  sched->overrideVariableBehavior("int_eng_X_FC_flux",  false, false, true, false, false);
-  sched->overrideVariableBehavior("int_eng_Y_FC_flux",  false, false, true, false, false);
-  sched->overrideVariableBehavior("int_eng_Z_FC_flux",  false, false, true, false, false);
-  sched->overrideVariableBehavior("vol_frac_X_FC_flux", false, false, true, false, false);
-  sched->overrideVariableBehavior("vol_frac_Y_FC_flux", false, false, true, false, false);
-  sched->overrideVariableBehavior("vol_frac_Z_FC_flux", false, false, true, false, false);
+  m_scheduler->overrideVariableBehavior("mass_X_FC_flux",     false, false, true, false, false);
+  m_scheduler->overrideVariableBehavior("mass_Y_FC_flux",     false, false, true, false, false);
+  m_scheduler->overrideVariableBehavior("mass_Z_FC_flux",     false, false, true, false, false);
+  m_scheduler->overrideVariableBehavior("mom_X_FC_flux",      false, false, true, false, false);
+  m_scheduler->overrideVariableBehavior("mom_Y_FC_flux",      false, false, true, false, false);
+  m_scheduler->overrideVariableBehavior("mom_Z_FC_flux",      false, false, true, false, false);
+  m_scheduler->overrideVariableBehavior("sp_vol_X_FC_flux",   false, false, true, false, false);
+  m_scheduler->overrideVariableBehavior("sp_vol_Y_FC_flux",   false, false, true, false, false);
+  m_scheduler->overrideVariableBehavior("sp_vol_Z_FC_flux",   false, false, true, false, false);
+  m_scheduler->overrideVariableBehavior("int_eng_X_FC_flux",  false, false, true, false, false);
+  m_scheduler->overrideVariableBehavior("int_eng_Y_FC_flux",  false, false, true, false, false);
+  m_scheduler->overrideVariableBehavior("int_eng_Z_FC_flux",  false, false, true, false, false);
+  m_scheduler->overrideVariableBehavior("vol_frac_X_FC_flux", false, false, true, false, false);
+  m_scheduler->overrideVariableBehavior("vol_frac_Y_FC_flux", false, false, true, false, false);
+  m_scheduler->overrideVariableBehavior("vol_frac_Z_FC_flux", false, false, true, false, false);
   
   //__________________________________
   // MODELS
@@ -248,9 +248,9 @@ void AMRICE::problemSetup(const ProblemSpecP& params,
     string varLabelX = rvar->var_X_FC_flux->getName();
     string varLabelY = rvar->var_Y_FC_flux->getName();
     string varLabelZ = rvar->var_Z_FC_flux->getName();
-    sched->overrideVariableBehavior(varLabelX, false, false, true, false, false);
-    sched->overrideVariableBehavior(varLabelY, false, false, true, false, false);
-    sched->overrideVariableBehavior(varLabelZ, false, false, true, false, false);
+    m_scheduler->overrideVariableBehavior(varLabelX, false, false, true, false, false);
+    m_scheduler->overrideVariableBehavior(varLabelY, false, false, true, false, false);
+    m_scheduler->overrideVariableBehavior(varLabelZ, false, false, true, false, false);
   } 
 }
 //___________________________________________________________________              
@@ -338,8 +338,8 @@ void AMRICE::scheduleRefineInterface(const LevelP& fineLevel,
   
     Task::MaterialDomainSpec ND   = Task::NormalDomain;
     Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
-    const MaterialSet* all_matls = d_sharedState->allMaterials();
-    const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
+    const MaterialSet* all_matls = m_sharedState->allMaterials();
+    const MaterialSet* ice_matls = m_sharedState->allICEMaterials();
 
     scheduleRefineInterface_Variable(fineLevel, sched, lb->press_CCLabel, oims,d_press_matlSet, needCoarseOld, needCoarseNew);
     scheduleRefineInterface_Variable(fineLevel, sched, lb->rho_CCLabel,   ND,  ice_matls,       needCoarseOld, needCoarseNew);
@@ -484,7 +484,7 @@ void AMRICE::scheduleSetBC_FineLevel(const PatchSet* patches,
     t->requires(Task::NewDW, lb->specific_heatLabel,0, Task::CoarseLevel, 0, ND, gn,0);
     t->requires(Task::NewDW, lb->vol_frac_CCLabel,  0, Task::CoarseLevel, 0, ND, gn,0);
     
-    const MaterialSubset* all_matls = d_sharedState->allMaterials()->getUnion();
+    const MaterialSubset* all_matls = m_sharedState->allMaterials()->getUnion();
 
 
     t->modifies(lb->press_CCLabel, d_press_matl, oims);     
@@ -509,7 +509,7 @@ void AMRICE::scheduleSetBC_FineLevel(const PatchSet* patches,
         t->modifies(tvar->var);
       }
     }
-    sched->addTask(t, patches, d_sharedState->allICEMaterials());
+    sched->addTask(t, patches, m_sharedState->allICEMaterials());
   }
 }
 
@@ -532,7 +532,7 @@ void AMRICE::setBC_FineLevel(const ProcessorGroup*,
                << " Doing setBC_FineLevel"<< "\t\t\t\t AMRICE L-" 
                << fineLevel->getIndex() << " Patches: " << *patches <<endl;
                
-    int  numICEMatls = d_sharedState->getNumICEMatls();
+    int  numICEMatls = m_sharedState->getNumICEMatls();
 //    bool dbg_onOff = cout_dbg.active();      // is cout_dbg switch on or off (turn off for threaded scheduler)
       
     for(int p=0;p<patches->size();p++){
@@ -542,7 +542,7 @@ void AMRICE::setBC_FineLevel(const ProcessorGroup*,
       
       
       for (int m = 0; m < numICEMatls; m++) {
-        ICEMaterial* matl = d_sharedState->getICEMaterial(m);
+        ICEMaterial* matl = m_sharedState->getICEMaterial(m);
         int indx = matl->getDWIndex(); 
         CCVariable<double> rho_CC, temp_CC, cv, gamma,vol_frac;
         CCVariable<Vector> vel_CC;
@@ -610,16 +610,16 @@ void AMRICE::setBC_FineLevel(const ProcessorGroup*,
 
         
         setBC(rho_CC, "Density",  placeHolder, placeHolder,
-              patch,d_sharedState, indx, fine_new_dw, d_BC_globalVars, BC_localVars);
+              patch,m_sharedState, indx, fine_new_dw, d_BC_globalVars, BC_localVars);
 
         setBC(vel_CC, "Velocity", 
-              patch,d_sharedState, indx, fine_new_dw, d_BC_globalVars, BC_localVars);       
+              patch,m_sharedState, indx, fine_new_dw, d_BC_globalVars, BC_localVars);       
 
         setBC(temp_CC,"Temperature",gamma, cv,
-              patch,d_sharedState, indx, fine_new_dw, d_BC_globalVars, BC_localVars);
+              patch,m_sharedState, indx, fine_new_dw, d_BC_globalVars, BC_localVars);
 
         setSpecificVolBC(sp_vol_CC[m], "SpecificVol", false,rho_CC,vol_frac,
-                         patch,d_sharedState, indx);
+                         patch,m_sharedState, indx);
                          
         sp_vol_const[m] = sp_vol_CC[m];  // needed by pressure BC
                          
@@ -639,7 +639,7 @@ void AMRICE::setBC_FineLevel(const ProcessorGroup*,
               CCVariable<double> q_CC;
               fine_new_dw->getModifiable(q_CC, tvar->var, indx, patch);
           
-              setBC(q_CC, Labelname,  patch, d_sharedState, indx, fine_new_dw);
+              setBC(q_CC, Labelname,  patch, m_sharedState, indx, fine_new_dw);
             }
           }
         }
@@ -655,7 +655,7 @@ void AMRICE::setBC_FineLevel(const ProcessorGroup*,
       fine_new_dw->getModifiable(press_CC, lb->press_CCLabel, 0, patch);
       
       setBC(press_CC, placeHolder, sp_vol_const, d_surroundingMatl_indx,
-            "sp_vol", "Pressure", patch , d_sharedState, 0, fine_new_dw, 
+            "sp_vol", "Pressure", patch , m_sharedState, 0, fine_new_dw, 
             d_BC_globalVars, notUsed);
             
       delete_CustomBCs(d_BC_globalVars, notUsed);
@@ -730,7 +730,7 @@ void AMRICE::scheduleRefine(const PatchSet* patches,
     task->computes(lb->sp_vol_CCLabel);
     task->computes(lb->temp_CCLabel);
     task->computes(lb->vel_CCLabel);
-    sched->addTask(task, patches, d_sharedState->allICEMaterials());
+    sched->addTask(task, patches, m_sharedState->allICEMaterials());
     
     //__________________________________
     // Sub Task 
@@ -922,8 +922,8 @@ void AMRICE::scheduleCoarsen(const LevelP& coarseLevel,
 
   Task::MaterialDomainSpec ND   = Task::NormalDomain;                            
   Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.  
-  const MaterialSet* all_matls = d_sharedState->allMaterials();
-  const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
+  const MaterialSet* all_matls = m_sharedState->allMaterials();
+  const MaterialSet* ice_matls = m_sharedState->allICEMaterials();
           
   const MaterialSubset* all_matls_sub = all_matls->getUnion();
   const PatchSet* patch_set = coarseLevel->eachPatch();
@@ -1174,7 +1174,7 @@ void AMRICE::scheduleReflux_computeCorrectionFluxes(const LevelP& coarseLevel,
   task->computes(lb->sp_vol_Y_FC_corrLabel);
   task->computes(lb->sp_vol_Z_FC_corrLabel);
   
-  sched->addTask(task, coarseLevel->eachPatch(), d_sharedState->allICEMaterials()); 
+  sched->addTask(task, coarseLevel->eachPatch(), m_sharedState->allICEMaterials()); 
 }
 /*___________________________________________________________________
  Function~  AMRICE::Reflux_computeCorrectionFluxesFluxes--  
@@ -1462,7 +1462,7 @@ void AMRICE::scheduleReflux_applyCorrection(const LevelP& coarseLevel,
   task->modifies(lb->eng_advLabel);
   task->modifies(lb->mom_advLabel);
 
-  sched->addTask(task, coarseLevel->eachPatch(), d_sharedState->allICEMaterials()); 
+  sched->addTask(task, coarseLevel->eachPatch(), m_sharedState->allICEMaterials()); 
 }
 /*___________________________________________________________________
  Function~  AMRICE::Reflux_applyCorrectionFluxes--
@@ -1706,7 +1706,7 @@ void AMRICE::reflux_BP_check_CFI_cells(const ProcessorGroup*,
             
             if(isRight_CP_FP_pair){
 
-              int n_ice_matls = d_sharedState->getNumICEMatls();
+              int n_ice_matls = m_sharedState->getNumICEMatls();
               int n_touched_cells = (getFaceMark(0, finePatch, patchFace) )/n_ice_matls;
               int n_CFI_cells     =  getFaceMark(1, finePatch, patchFace);
               //__________________________________
@@ -1758,7 +1758,7 @@ void AMRICE::scheduleErrorEstimate(const LevelP& coarseLevel,
              << " AMRICE::scheduleErrorEstimate \t\t\tL-" 
              << coarseLevel->getIndex() << '\n';
   bool initial = false;             
-  if(d_sharedState->getCurrentTopLevelTimeStep() == 0){
+  if(m_sharedState->getCurrentTopLevelTimeStep() == 0){
     initial = true;  // during initialization 
   }
   Task* t = scinew Task("AMRICE::errorEstimate", 
@@ -1769,8 +1769,8 @@ void AMRICE::scheduleErrorEstimate(const LevelP& coarseLevel,
   bool  fat = true;  // possibly (F)rom (A)nother (T)askgraph
   
 
-  const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
-  const MaterialSet* all_matls = d_sharedState->allMaterials();  
+  const MaterialSet* ice_matls = m_sharedState->allICEMaterials();
+  const MaterialSet* all_matls = m_sharedState->allMaterials();  
   
   const MaterialSubset* matls_sub;
   const MaterialSubset* ice_matls_sub = ice_matls->getUnion();
@@ -1797,10 +1797,10 @@ void AMRICE::scheduleErrorEstimate(const LevelP& coarseLevel,
   t->computes(lb->mag_grad_vol_frac_CCLabel);
   t->computes(lb->mag_grad_press_CCLabel,d_press_matl);
   
-  t->modifies(d_sharedState->get_refineFlag_label(),      d_sharedState->refineFlagMaterials(), oims);
-  t->modifies(d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials(), oims);
+  t->modifies(m_regridder->getRefineFlagLabel(),      m_regridder->refineFlagMaterials(), oims);
+  t->modifies(m_regridder->getRefinePatchFlagLabel(), m_regridder->refineFlagMaterials(), oims);
   
-  sched->addTask(t, coarseLevel->eachPatch(), d_sharedState->allMaterials());
+  sched->addTask(t, coarseLevel->eachPatch(), m_sharedState->allMaterials());
   
   //__________________________________
   // Models
@@ -1812,7 +1812,7 @@ void AMRICE::scheduleErrorEstimate(const LevelP& coarseLevel,
 
 /*_____________________________________________________________________
  Function~  AMRICE::set_refinementFlags
-______________________________________________________________________*/         
+______________________________________________________________________*/
 void AMRICE::set_refineFlags( constCCVariable<double>& mag_grad_q_CC,
                               double threshold,
                               CCVariable<int>& refineFlag,
@@ -1848,8 +1848,8 @@ AMRICE::errorEstimate(const ProcessorGroup*,
     
     cout_doing << " patch " << patch->getID()<< endl;
     Ghost::GhostType  gac  = Ghost::AroundCells;
-    const VarLabel* refineFlagLabel = d_sharedState->get_refineFlag_label();
-    const VarLabel* refinePatchLabel= d_sharedState->get_refinePatchFlag_label();
+    const VarLabel* refineFlagLabel = m_regridder->getRefineFlagLabel();
+    const VarLabel* refinePatchLabel= m_regridder->getRefinePatchFlagLabel();
     
     CCVariable<int> refineFlag;
     new_dw->getModifiable(refineFlag, refineFlagLabel, 0, patch);      
@@ -1871,14 +1871,14 @@ AMRICE::errorEstimate(const ProcessorGroup*,
 
     //__________________________________
     //  initialize mag_grad for all matls
-    int numAllMatls = d_sharedState->getNumMatls();
+    int numAllMatls = m_sharedState->getNumMatls();
     std::vector<CCVariable<double> > mag_grad_rho_CC(numAllMatls);
     std::vector<CCVariable<double> > mag_grad_temp_CC(numAllMatls);
     std::vector<CCVariable<double> > mag_grad_vol_frac_CC(numAllMatls);
     std::vector<CCVariable<double> > mag_div_vel_CC(numAllMatls);
           
     for(int m=0;m < numAllMatls;m++){
-      Material* matl = d_sharedState->getMaterial( m );
+      Material* matl = m_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
       new_dw->allocateAndPut(mag_grad_rho_CC[indx],     
                          lb->mag_grad_rho_CCLabel,     indx,patch);
@@ -1901,18 +1901,18 @@ AMRICE::errorEstimate(const ProcessorGroup*,
     // During initialization only compute for ICE matls
     int numMatls = 0;
     if (initial){
-      numMatls = d_sharedState->getNumICEMatls();
+      numMatls = m_sharedState->getNumICEMatls();
     }else{
-      numMatls = d_sharedState->getNumMatls();
+      numMatls = m_sharedState->getNumMatls();
     }
     
     for(int m=0;m < numMatls;m++){
       
       Material* matl;
       if(initial){
-        matl = d_sharedState->getICEMaterial( m );
+        matl = m_sharedState->getICEMaterial( m );
       }else{
-        matl = d_sharedState->getMaterial( m );
+        matl = m_sharedState->getMaterial( m );
       }
       
       int indx = matl->getDWIndex();        

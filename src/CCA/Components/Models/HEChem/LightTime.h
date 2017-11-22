@@ -30,7 +30,9 @@
 #include <Core/Grid/Variables/ComputeSet.h>
 
 namespace Uintah {
+  
   class ICELabel;
+  
 /**************************************
 
 CLASS
@@ -79,7 +81,7 @@ WARNING
 
     virtual void restartInitialize() {}
       
-    virtual void scheduleComputeStableTimestep(SchedulerP&,
+    virtual void scheduleComputeStableTimeStep(SchedulerP&,
                                                const LevelP& level,
                                                const ModelInfo*);
       

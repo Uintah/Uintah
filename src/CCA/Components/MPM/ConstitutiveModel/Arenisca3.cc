@@ -336,12 +336,12 @@ void Arenisca3::initializeCMData(const Patch* patch,
     }
   }
 
-  computeStableTimestep(patch, matl, new_dw);
+  computeStableTimeStep(patch, matl, new_dw);
 }
 
 // Compute stable timestep based on both the particle velocities
 // and wave speed
-void Arenisca3::computeStableTimestep(const Patch* patch,
+void Arenisca3::computeStableTimeStep(const Patch* patch,
                                      //ParticleSubset* pset, //T2D: this should be const
                                      const MPMMaterial* matl,
                                      DataWarehouse* new_dw)

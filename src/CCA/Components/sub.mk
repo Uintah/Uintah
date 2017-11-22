@@ -81,6 +81,7 @@ SUBDIRS := \
         $(MPMFVM)                      \
         $(HEAT)                        \
         $(PHASEFIELD)                  \
+        $(SRCDIR)/Application          \
         $(SRCDIR)/DataArchiver         \
         $(SRCDIR)/Examples             \
         $(SRCDIR)/LoadBalancers        \

@@ -201,7 +201,7 @@ void Steady_Burn::initialize(const ProcessorGroup*,
 }
 
 //______________________________________________________________________
-void Steady_Burn::scheduleComputeStableTimestep(SchedulerP&, const LevelP&, const ModelInfo*){
+void Steady_Burn::scheduleComputeStableTimeStep(SchedulerP&, const LevelP&, const ModelInfo*){
   // None necessary...
 }
 

@@ -28,6 +28,7 @@
 #include <Core/Grid/Variables/PerPatch.h>
 #include <CCA/Components/Heat/blockrange_io.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
+#include <CCA/Ports/Regridder.h>
 
 #ifdef CUSTOM_OUT
 #include <iomanip>
@@ -39,16 +40,18 @@
 
 using namespace Uintah;
 
-Uintah::AMRNCHeat2D::AMRNCHeat2D ( const Uintah::ProcessorGroup * myworld, int verbosity )
-    : NCHeat2D ( myworld, verbosity )
+Uintah::AMRNCHeat2D::AMRNCHeat2D ( const ProcessorGroup * myworld,
+				   const SimulationStateP sharedState,
+				   int verbosity )
+  : NCHeat2D ( myworld, sharedState, verbosity )
 {}
 
 AMRNCHeat2D::~AMRNCHeat2D ()
 {}
 
-void AMRNCHeat2D::problemSetup ( ProblemSpecP const & params, ProblemSpecP const & restart_prob_spec, GridP & grid, SimulationStateP & state )
+void AMRNCHeat2D::problemSetup ( ProblemSpecP const & params, ProblemSpecP const & restart_prob_spec, GridP & grid )
 {
-    NCHeat2D::problemSetup ( params, restart_prob_spec, grid, state );
+    NCHeat2D::problemSetup ( params, restart_prob_spec, grid );
 
     ProblemSpecP diffusion = params->findBlock ( "FDHeat" );
     diffusion->require ( "refine_threshold", refine_threshold );
@@ -105,7 +108,7 @@ void AMRNCHeat2D::scheduleRefine ( PatchSet const * patches, SchedulerP & sched 
         Task * task = scinew Task ( "AMRNCHeat2D::task_refine", this, &AMRNCHeat2D::task_refine );
         task->requires ( Task::NewDW, u_label, 0, Task::CoarseLevel, 0, Task::NormalDomain, Ghost::AroundNodes, 1 );
         task->computes ( u_label );
-        sched->addTask ( task, patches, state->allMaterials() );
+        sched->addTask ( task, patches, m_sharedState->allMaterials() );
     }
 }
 
@@ -114,16 +117,16 @@ void AMRNCHeat2D::scheduleCoarsen ( LevelP const & level_coarse, SchedulerP & sc
     Task * task = scinew Task ( "AMRNCHeat2D::task_coarsen", this, &AMRNCHeat2D::task_coarsen );
     task->requires ( Task::NewDW, u_label, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0 );
     task->modifies ( u_label );
-    sched->addTask ( task, level_coarse->eachPatch(), state->allMaterials() );
+    sched->addTask ( task, level_coarse->eachPatch(), m_sharedState->allMaterials() );
 }
 
 void AMRNCHeat2D::scheduleErrorEstimate ( LevelP const & level_coarse, SchedulerP & sched )
 {
     Task * task = scinew Task ( "AMRNCHeat2D::task_error_estimate", this, &AMRNCHeat2D::task_error_estimate );
     task->requires ( Task::NewDW, u_label, Ghost::AroundNodes, 1 ); // this is actually the old value of this
-    task->modifies ( state->get_refineFlag_label(), state->refineFlagMaterials() );
-    task->modifies ( state->get_refinePatchFlag_label(), state->refineFlagMaterials() );
-    sched->addTask ( task, level_coarse->eachPatch(), state->allMaterials() );
+    task->modifies ( m_regridder->getRefineFlagLabel(), m_regridder->refineFlagMaterials() );
+    task->modifies ( m_regridder->getRefinePatchFlagLabel(), m_regridder->refineFlagMaterials() );
+    sched->addTask ( task, level_coarse->eachPatch(), m_sharedState->allMaterials() );
 }
 
 void AMRNCHeat2D::scheduleInitialErrorEstimate ( LevelP const & level_coarse, SchedulerP & sched )
@@ -137,7 +140,7 @@ void AMRNCHeat2D::scheduleTimeAdvance_forward_euler_refinement ( LevelP const & 
     task->requires ( Task::OldDW, u_label, Ghost::AroundNodes, 1 );
     task->requires ( Task::OldDW, u_label, 0, Task::CoarseLevel, 0, Task::NormalDomain, Ghost::AroundNodes, 1 );
     task->computes ( u_label );
-    sched->addTask ( task, level->eachPatch(), state->allMaterials() );
+    sched->addTask ( task, level->eachPatch(), m_sharedState->allMaterials() );
 }
 
 void AMRNCHeat2D::task_forward_euler_time_advance_refinement ( ProcessorGroup const * myworld, PatchSubset const * patches, MaterialSubset const * matls, DataWarehouse * dw_old, DataWarehouse * dw_new )
@@ -285,7 +288,7 @@ void AMRNCHeat2D::task_error_estimate ( ProcessorGroup const * /*myworld*/, Patc
     PVtkFile * out_pvtk = nullptr;
     const Level * level = getLevel ( patches );
     const int & levelID = level->getIndex();
-    const int & timestep = state->getCurrentTopLevelTimeStep();
+    const int & timestep = getTimestep();
     std::string out_path, time_path, level_path, patch_path;
 
     if ( timestep + 1 >= dataArchiver->getNextOutputTimestep() )
@@ -313,8 +316,8 @@ void AMRNCHeat2D::task_error_estimate ( ProcessorGroup const * /*myworld*/, Patc
 
         FlagVariable flag_refine;
         PerPatch<PatchFlagP> flag_refine_patch;
-        dw_new->getModifiable ( flag_refine, state->get_refineFlag_label(), 0, patch );
-        dw_new->get ( flag_refine_patch, state->get_refinePatchFlag_label(), 0, patch );
+        dw_new->getModifiable ( flag_refine, m_regridder->getRefineFlagLabel(), 0, patch );
+        dw_new->get ( flag_refine_patch, m_regridder->getRefinePatchFlagLabel(), 0, patch );
         dbg_out4 << "flag_refine \t window " << flag_refine.getLowIndex() << flag_refine.getHighIndex() << std::endl;
 
         PatchFlag * patch_flag_refine = flag_refine_patch.get().get_rep();
@@ -345,7 +348,7 @@ void AMRNCHeat2D::task_error_estimate ( ProcessorGroup const * /*myworld*/, Patc
 
             VtkFile * out_vtk = new VtkFile ( out_path + "/" + time_path + "/rf" + level_path, patch->getID() );
             out_vtk->set_grid ( patch->getLevel()->dCell().x(), patch->getLevel()->dCell().y(), patch->getLevel()->dCell().z(), h.x() - l.x(), h.y() - l.y(), h.z() - l.z(), p0.x(), p0.y(), p0.z() );
-            out_vtk->add_cell_data ( state->get_refineFlag_label()->getName() + "/" + std::to_string ( levelID ), flag_refine, flag_refine.getLowIndex(), flag_refine.getHighIndex() );
+            out_vtk->add_cell_data ( m_regridder->getRefineFlagLabel()->getName() + "/" + std::to_string ( levelID ), flag_refine, flag_refine.getLowIndex(), flag_refine.getHighIndex() );
             out_vtk->save();
             out_pvtk->add ( out_vtk->file_name() );
             delete out_vtk;

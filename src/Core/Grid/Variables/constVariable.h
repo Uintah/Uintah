@@ -27,6 +27,8 @@
 #include <Core/Grid/Variables/constVariableBase.h>
 #include <Core/Util/Assert.h>
 
+#include <sci_defs/kokkos_defs.h>
+
 #ifdef UINTAH_ENABLE_KOKKOS
   #include <Core/Grid/Variables/Array3.h>
 #endif // end UINTAH_ENABLE_KOKKOS

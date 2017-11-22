@@ -104,11 +104,11 @@ void vorticity::problemSetup(const ProblemSpecP& prob_spec,
   d_matl_set->addReference();
   d_matl_sub = d_matl_set->getUnion();
 
-#ifdef HAVE_VISIT
-  if( sharedState->getVisIt() ) {
-    required = true;
-  }
-#endif
+// #ifdef HAVE_VISIT
+//   if( sharedState->getVisIt() ) {
+//     required = true;
+//   }
+// #endif
 }
 
 //______________________________________________________________________

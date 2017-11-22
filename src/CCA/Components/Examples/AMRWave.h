@@ -62,12 +62,15 @@ WARNING
   class VarLabel;
   class AMRWave : public Wave {
   public:
-    AMRWave(const ProcessorGroup* myworld);
+    AMRWave(const ProcessorGroup* myworld,
+	    const SimulationStateP sharedState);
+    
     virtual ~AMRWave();
 
     virtual void problemSetup(const ProblemSpecP& params, 
                               const ProblemSpecP& restart_prob_spec, 
-                              GridP& grid, SimulationStateP& sharedState);
+                              GridP& grid);
+    
     virtual void scheduleRefineInterface(const LevelP& fineLevel,
                                          SchedulerP& scheduler,
                                          bool needCoarseOld, 

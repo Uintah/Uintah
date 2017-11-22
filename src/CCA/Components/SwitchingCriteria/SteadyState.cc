@@ -79,7 +79,7 @@ void SteadyState::scheduleInitialize(const LevelP& level, SchedulerP& sched)
                         this, &SteadyState::initialize);
   t->computes(heatFluxSumLabel);
   t->computes(heatFluxSumTimeDerivativeLabel);
-  t->computes(d_sharedState->get_switch_label());
+  t->computes(d_switch_label);
 
   sched->addTask(t, level->eachPatch(), d_sharedState->allMaterials());
 
@@ -95,7 +95,7 @@ void SteadyState::initialize(const ProcessorGroup*,
  
   new_dw->put(max_vartype(0.0), heatFluxSumLabel);
   new_dw->put(max_vartype(0.0), heatFluxSumTimeDerivativeLabel);
-  new_dw->put(max_vartype(0.0),d_sharedState->get_switch_label());
+  new_dw->put(max_vartype(0.0),d_switch_label);
 
 }
 
@@ -116,7 +116,7 @@ void SteadyState::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
 
   t->computes(heatFluxSumLabel);
   t->computes(heatFluxSumTimeDerivativeLabel);
-  t->computes(d_sharedState->get_switch_label());
+  t->computes(d_switch_label);
 
   sched->addTask(t, level->eachPatch(),d_sharedState->allMaterials());
 
@@ -164,7 +164,7 @@ void SteadyState::switchTest(const ProcessorGroup* group,
   max_vartype switch_condition(sw);
 
   const Level* allLevels = 0;
-  new_dw->put(switch_condition,d_sharedState->get_switch_label(),allLevels);
+  new_dw->put(switch_condition,d_switch_label,allLevels);
 
 }
 
@@ -172,7 +172,7 @@ void SteadyState::switchTest(const ProcessorGroup* group,
 void SteadyState::scheduleDummy(const LevelP& level, SchedulerP& sched)
 {
   Task* t = scinew Task("SteadyState::dummy", this, &SteadyState::dummy);
-  t->requires(Task::OldDW,d_sharedState->get_switch_label(),level.get_rep());
+  t->requires(Task::OldDW,d_switch_label,level.get_rep());
   sched->addTask(t, level->eachPatch(),d_sharedState->allMaterials());
 }
 
@@ -183,6 +183,6 @@ void SteadyState::dummy(const ProcessorGroup* group,
                         DataWarehouse* new_dw)
 {
   max_vartype old_sw(1.23);
-  old_dw->get(old_sw,d_sharedState->get_switch_label());
+  old_dw->get(old_sw,d_switch_label);
   proc0cout << "old_sw = " << old_sw << endl;
 }

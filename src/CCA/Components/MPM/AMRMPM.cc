@@ -42,6 +42,7 @@
 #include <CCA/Ports/DataWarehouse.h>                     // for DataWarehouse
 #include <CCA/Ports/Output.h>                            // for Output
 #include <CCA/Ports/Scheduler.h>                         // for Scheduler
+#include <CCA/Ports/Regridder.h>
 #include <Core/Disclosure/TypeUtils.h>                   // for long64
 #include <Core/Exceptions/InternalError.h>               // for InternalError
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -73,7 +74,6 @@
 #include <Core/Math/Matrix3.h>                           // for Matrix3, swapbytes, etc
 #include <Core/Parallel/Parallel.h>                      // for proc0cout
 #include <Core/Parallel/ProcessorGroup.h>                // for ProcessorGroup
-#include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/Parallel/UintahParallelPort.h>            // for UintahParallelPort
 #include <Core/ProblemSpec/ProblemSpec.h>                // for Vector, IntVector, etc
 #include <Core/ProblemSpec/ProblemSpecP.h>               // for ProblemSpecP
@@ -120,7 +120,9 @@ static DebugStream amr_doing("AMRMPM", false);
 //  Need to Add gimp interpolation
 
 
-AMRMPM::AMRMPM(const ProcessorGroup* myworld) :SerialMPM(myworld)
+AMRMPM::AMRMPM(const ProcessorGroup* myworld,
+	       const SimulationStateP sharedState) :
+  SerialMPM(myworld, sharedState)
 {
   //lb = scinew MPMLabel();
   //flags = scinew MPMFlags(myworld);
@@ -133,7 +135,6 @@ AMRMPM::AMRMPM(const ProcessorGroup* myworld) :SerialMPM(myworld)
   NGP     = -9;
   NGN     = -9;
   d_nPaddingCells_Coarse = -9;
-  dataArchiver = 0;
   d_acc_ans = Vector(0,0,0);
   d_acc_tol = 1e-7;
   d_vel_ans = Vector(-100,0,0);
@@ -204,20 +205,11 @@ AMRMPM::~AMRMPM()
 //
 void AMRMPM::problemSetup(const ProblemSpecP& prob_spec, 
                           const ProblemSpecP& restart_prob_spec,
-                          GridP& grid,
-                          SimulationStateP& sharedState)
+                          GridP& grid)
 {
   cout_doing<<"Doing problemSetup\t\t\t\t\t AMRMPM"<<endl;
   
-  d_sharedState = sharedState;
-
-  dynamic_cast<Scheduler*>(getPort("scheduler"))->setPositionVar(lb->pXLabel);
-
-  dataArchiver = dynamic_cast<Output*>(getPort("output"));
-
-  if(!dataArchiver){
-    throw InternalError("AMRMPM:couldn't get output port", __FILE__, __LINE__);
-  }
+  m_scheduler->setPositionVar(lb->pXLabel);
 
   bool isRestart = false;
   ProblemSpecP mat_ps = 0;
@@ -230,9 +222,8 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
 
   ProblemSpecP mpm_soln_ps = prob_spec->findBlock("MPM");
 
-
   // Read all MPM flags (look in MPMFlags.cc)
-  flags->readMPMFlags(mat_ps, dataArchiver);
+  flags->readMPMFlags(mat_ps, m_output);
   if (flags->d_integrator_type == "implicit"){
     throw ProblemSetupException("Can't use implicit integration with AMRMPM",
                                  __FILE__, __LINE__);
@@ -293,7 +284,7 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
         cerr << "WARNING: AMRMPM.cc: stringstream failed...\n";
       }
 
-      int numMatls = d_sharedState->getNumMatls();
+      int numMatls = m_sharedState->getNumMatls();
 
       //__________________________________
       // if using "all" matls 
@@ -371,7 +362,7 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
 
   //__________________________________
   //  bulletproofing
-  if(!d_sharedState->isLockstepAMR()){
+  if(!isLockstepAMR()){
     ostringstream msg;
     msg << "\n ERROR: You must add \n"
         << " <useLockStep> true </useLockStep> \n"
@@ -391,7 +382,7 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
   
   bool needNorms;
   contactModel = ContactFactory::create(UintahParallelComponent::d_myworld,
-                                        mat_ps,sharedState,lb,flags, needNorms);
+                                        mat_ps,m_sharedState,lb,flags, needNorms);
 
   // Determine extents for coarser level particle data
   // Linear Interpolation:  1 layer of coarse level cells
@@ -402,14 +393,14 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
 //  NGP = 1;
 /*===========TESTING==========`*/
 
-  d_sharedState->setParticleGhostLayer(Ghost::AroundNodes, NGP);
+  m_sharedState->setParticleGhostLayer(Ghost::AroundNodes, NGP);
 
-  materialProblemSetup(mat_ps, d_sharedState,flags, isRestart);
+  materialProblemSetup(mat_ps,flags, isRestart);
 
   if(flags->d_doScalarDiffusion){
-    d_sdInterfaceModel = SDInterfaceModelFactory::create(mat_ps, d_sharedState, flags, lb);
+    d_sdInterfaceModel = SDInterfaceModelFactory::create(mat_ps, m_sharedState, flags, lb);
   }
-  d_fluxbc = FluxBCModelFactory::create(d_sharedState, flags);
+  d_fluxbc = FluxBCModelFactory::create(m_sharedState, flags);
 }
 
 //______________________________________________________________________
@@ -429,8 +420,8 @@ void AMRMPM::outputProblemSpec(ProblemSpecP& root_ps)
   }
 
   ProblemSpecP mpm_ps = mat_ps->appendChild("MPM");
-  for (int i = 0; i < d_sharedState->getNumMPMMatls();i++) {
-    MPMMaterial* mat = d_sharedState->getMPMMaterial(i);
+  for (int i = 0; i < m_sharedState->getNumMPMMatls();i++) {
+    MPMMaterial* mat = m_sharedState->getMPMMaterial(i);
     ProblemSpecP cm_ps = mat->outputProblemSpec(mpm_ps);
   }
   contactModel->outputProblemSpec(mpm_ps);
@@ -482,7 +473,7 @@ void AMRMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
   t->computes(lb->pSizeLabel);
   t->computes(lb->pRefinedLabel);
   t->computes(lb->pLastLevelLabel);
-  t->computes(d_sharedState->get_delt_label(),level.get_rep());
+  t->computes(m_sharedState->get_delt_label(),level.get_rep());
   t->computes(lb->pCellNAPIDLabel,d_one_matl);
   t->computes(lb->NC_CCweightLabel,d_one_matl);
 
@@ -523,10 +514,10 @@ void AMRMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
     t->computes(lb->pPermittivityLabel);
   }
 
-  int numMPM = d_sharedState->getNumMPMMatls();
+  int numMPM = m_sharedState->getNumMPMMatls();
   const PatchSet* patches = level->eachPatch();
   for(int m = 0; m < numMPM; m++){
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     cm->addInitialComputesAndRequires(t, mpm_matl, patches);
     
@@ -542,7 +533,7 @@ void AMRMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
     }
   }
 
-  sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
+  sched->addTask(t, level->eachPatch(), m_sharedState->allMPMMaterials());
 
   if (level->getIndex() == 0 ) schedulePrintParticleCount(level, sched);
 
@@ -570,11 +561,11 @@ void AMRMPM::schedulePrintParticleCount(const LevelP& level,
   t->requires(Task::NewDW, lb->partCountLabel);
   t->setType(Task::OncePerProc);
 
-  sched->addTask(t, sched->getLoadBalancer()->getPerProcessorPatchSet(level), d_sharedState->allMPMMaterials());
+  sched->addTask(t, sched->getLoadBalancer()->getPerProcessorPatchSet(level), m_sharedState->allMPMMaterials());
 }
 //______________________________________________________________________
 //
-void AMRMPM::scheduleComputeStableTimestep(const LevelP&,
+void AMRMPM::scheduleComputeStableTimeStep(const LevelP&,
                                               SchedulerP&)
 {
   // Nothing to do here - delt is computed as a by-product of the
@@ -589,7 +580,7 @@ void AMRMPM::scheduleTimeAdvance(const LevelP & level,
   if(level->getIndex() > 0)  // only schedule once
     return;
 
-  const MaterialSet* matls = d_sharedState->allMPMMaterials();
+  const MaterialSet* matls = m_sharedState->allMPMMaterials();
   int maxLevels = level->getGrid()->numLevels();
   GridP grid = level->getGrid();
 
@@ -755,11 +746,11 @@ void AMRMPM::scheduleTimeAdvance(const LevelP & level,
 void AMRMPM::scheduleFinalizeTimestep( const LevelP& level, SchedulerP& sched)
 {
   if (level->getIndex() == 0) {
-    const MaterialSet* matls = d_sharedState->allMPMMaterials();
+    const MaterialSet* matls = m_sharedState->allMPMMaterials();
     sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc,
-                                      d_sharedState->d_particleState_preReloc,
+                                      m_sharedState->d_particleState_preReloc,
                                       lb->pXLabel, 
-                                      d_sharedState->d_particleState,
+                                      m_sharedState->d_particleState,
                                       lb->pParticleIDLabel, matls);
   }
 }
@@ -1080,12 +1071,12 @@ void AMRMPM::scheduleComputeStressTensor(SchedulerP& sched,
   
   printSchedule(patches,cout_doing,"AMRMPM::scheduleComputeStressTensor");
   
-  int numMatls = d_sharedState->getNumMPMMatls();
+  int numMatls = m_sharedState->getNumMPMMatls();
   Task* t = scinew Task("AMRMPM::computeStressTensor",
                   this, &AMRMPM::computeStressTensor);
                   
   for(int m = 0; m < numMatls; m++){
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial(m);
     const MaterialSubset* matlset = mpm_matl->thisMaterial();
     
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
@@ -1094,7 +1085,7 @@ void AMRMPM::scheduleComputeStressTensor(SchedulerP& sched,
     t->computes(lb->p_qLabel_preReloc, matlset);
   }
 
-  t->computes(d_sharedState->get_delt_label(),getLevel(patches));
+  t->computes(m_sharedState->get_delt_label(),getLevel(patches));
   t->computes(lb->StrainEnergyLabel);
 
   sched->addTask(t, patches, matls);
@@ -1202,7 +1193,7 @@ void AMRMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
   Task* t = scinew Task("AMRMPM::computeAndIntegrateAcceleration",
                   this, &AMRMPM::computeAndIntegrateAcceleration);
 
-  t->requires(Task::OldDW, d_sharedState->get_delt_label() );
+  t->requires(Task::OldDW, m_sharedState->get_delt_label() );
 
   t->requires(Task::NewDW, lb->gMassLabel,          Ghost::None);
   t->requires(Task::NewDW, lb->gInternalForceLabel, Ghost::None);
@@ -1252,7 +1243,7 @@ void AMRMPM::scheduleSetGridBoundaryConditions(SchedulerP& sched,
                this,  &AMRMPM::setGridBoundaryConditions);
 
   const MaterialSubset* mss = matls->getUnion();
-  t->requires(Task::OldDW, d_sharedState->get_delt_label() );
+  t->requires(Task::OldDW, m_sharedState->get_delt_label() );
   
   t->modifies(             lb->gAccelerationLabel,     mss);
   t->modifies(             lb->gVelocityStarLabel,     mss);
@@ -1282,7 +1273,7 @@ void AMRMPM::scheduleComputeLAndF(SchedulerP& sched,
   Task* t=scinew Task("AMRMPM::computeLAndF",
                 this, &AMRMPM::computeLAndF);
 
-  t->requires(Task::OldDW, d_sharedState->get_delt_label() );
+  t->requires(Task::OldDW, m_sharedState->get_delt_label() );
 
   t->requires(Task::NewDW, lb->gVelocityStarLabel,              d_gac,NGN);
   
@@ -1329,7 +1320,7 @@ void AMRMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   Task* t=scinew Task("AMRMPM::interpolateToParticlesAndUpdate",
                 this, &AMRMPM::interpolateToParticlesAndUpdate);
                 
-  t->requires(Task::OldDW, d_sharedState->get_delt_label() );
+  t->requires(Task::OldDW, m_sharedState->get_delt_label() );
 
   t->requires(Task::NewDW, lb->gAccelerationLabel,              d_gac,NGN);
   t->requires(Task::NewDW, lb->gVelocityStarLabel,              d_gac,NGN);
@@ -1444,7 +1435,7 @@ void AMRMPM::scheduleFinalParticleUpdate(SchedulerP& sched,
   Task* t=scinew Task("AMRMPM::finalParticleUpdate",
                       this, &AMRMPM::finalParticleUpdate);
 
-  t->requires(Task::OldDW, d_sharedState->get_delt_label() );
+  t->requires(Task::OldDW, m_sharedState->get_delt_label() );
 
   t->requires(Task::NewDW, lb->pdTdtLabel,           d_gn);
   t->requires(Task::NewDW, lb->pMassLabel_preReloc,  d_gn);
@@ -1507,9 +1498,9 @@ void AMRMPM::scheduleAddParticles(SchedulerP& sched,
     t->requires(Task::OldDW, lb->pCellNAPIDLabel, d_one_matl, Ghost::None);
     t->computes(             lb->pCellNAPIDLabel, d_one_matl);
 
-    int numMatls = d_sharedState->getNumMPMMatls();
+    int numMatls = m_sharedState->getNumMPMMatls();
     for(int m = 0; m < numMatls; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial(m);
       ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
       cm->addSplitParticlesComputesAndRequires(t, mpm_matl, patches);
       if(flags->d_doScalarDiffusion){
@@ -1602,9 +1593,9 @@ void AMRMPM::scheduleRefine(const PatchSet* patches, SchedulerP& sched)
     t->computes(lb->p_qLabel);
   }
 
-  int numMPM = d_sharedState->getNumMPMMatls();
+  int numMPM = m_sharedState->getNumMPMMatls();
   for(int m = 0; m < numMPM; m++){
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial(m);
     
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     cm->addInitialComputesAndRequires(t, mpm_matl, patches);
@@ -1615,10 +1606,10 @@ void AMRMPM::scheduleRefine(const PatchSet* patches, SchedulerP& sched)
     ErosionModel* em = mpm_matl->getErosionModel();
     em->addInitialComputesAndRequires(t, mpm_matl);
   }
-  t->computes(d_sharedState->get_delt_label(),getLevel(patches));
+  t->computes(m_sharedState->get_delt_label(),getLevel(patches));
 
 
-  sched->addTask(t, patches, d_sharedState->allMPMMaterials());
+  sched->addTask(t, patches, m_sharedState->allMPMMaterials());
 }
 //______________________________________________________________________
 //
@@ -1640,7 +1631,7 @@ void AMRMPM::scheduleCoarsen(const LevelP& coarseLevel,
                            &AMRMPM::coarsen);
 
   Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.  
-  const MaterialSet* all_matls = d_sharedState->allMaterials();
+  const MaterialSet* all_matls = m_sharedState->allMaterials();
   const PatchSet* patch_set = coarseLevel->eachPatch();
 
   bool  fat = true;  // possibly (F)rom (A)nother (T)askgraph
@@ -1750,14 +1741,14 @@ void AMRMPM::scheduleErrorEstimate(const LevelP& coarseLevel,
   Task* task = scinew Task("AMRMPM::errorEstimate", this, 
                            &AMRMPM::errorEstimate);
 
-  task->modifies(d_sharedState->get_refineFlag_label(),
-                                        d_sharedState->refineFlagMaterials());
-  task->modifies(d_sharedState->get_refinePatchFlag_label(),
-                                        d_sharedState->refineFlagMaterials());
+  task->modifies(m_regridder->getRefineFlagLabel(),
+                                        m_regridder->refineFlagMaterials());
+  task->modifies(m_regridder->getRefinePatchFlagLabel(),
+                                        m_regridder->refineFlagMaterials());
   task->requires(Task::NewDW, lb->MPMRefineCellLabel, Ghost::None);
 
   sched->addTask(task, coarseLevel->eachPatch(),
-                                        d_sharedState->allMPMMaterials());
+                                        m_sharedState->allMPMMaterials());
 }
 //______________________________________________________________________
 // Schedule to mark initial flags for AMR regridding
@@ -1827,7 +1818,7 @@ void AMRMPM::actuallyInitialize(const ProcessorGroup*,
     }
 
     for(int m=0;m<matls->size();m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
       int indx = mpm_matl->getDWIndex();
       
       if(!flags->d_doGridReset){
@@ -1940,14 +1931,14 @@ void AMRMPM::partitionOfUnity(const ProcessorGroup*,
     new_dw->allocateAndPut(refineCell, lb->MPMRefineCellLabel, 0, patch);
     refineCell.initialize(0.0);
 
-    int numMatls = d_sharedState->getNumMPMMatls();
+    int numMatls = m_sharedState->getNumMPMMatls();
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
     const Matrix3 nU;
 
     for(int m = 0; m < numMatls; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
@@ -2011,7 +2002,7 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     printTask(patches,patch,cout_doing,
                            "Doing AMRMPM::interpolateParticlesToGrid");
 
-    int numMatls = d_sharedState->getNumMPMMatls();
+    int numMatls = m_sharedState->getNumMPMMatls();
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
@@ -2024,7 +2015,7 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 #endif
 
     for(int m = 0; m < numMatls; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
 
       // Create arrays for the particle data
@@ -2229,7 +2220,7 @@ void AMRMPM::interpolateParticlesToGrid_CFI(const ProcessorGroup*,
     printTask(finePatches,finePatch,cout_doing,
                           "Doing AMRMPM::interpolateParticlesToGrid_CFI");
 
-    int numMatls = d_sharedState->getNumMPMMatls();
+    int numMatls = m_sharedState->getNumMPMMatls();
     ParticleInterpolator* interpolator =flags->d_interpolator->clone(finePatch);
 
     constNCVariable<Stencil7> zoi_fine;
@@ -2265,7 +2256,7 @@ void AMRMPM::interpolateParticlesToGrid_CFI(const ProcessorGroup*,
     finePatch->getOtherLevelPatches55902(-1, coarsePatches, padding);
 
     for(int m = 0; m < numMatls; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
 
       // get fine level nodal data
@@ -2393,7 +2384,7 @@ void AMRMPM::interpolateParticlesToGrid_CFI_GIMP(const ProcessorGroup*,
     printTask(finePatches,finePatch,cout_doing,
                           "Doing AMRMPM::interpolateParticlesToGrid_CFI_GIMP");
 
-    int numMatls = d_sharedState->getNumMPMMatls();
+    int numMatls = m_sharedState->getNumMPMMatls();
     ParticleInterpolator* interpolator =flags->d_interpolator->clone(finePatch);
 
     constNCVariable<Stencil7> zoi_fine;
@@ -2429,7 +2420,7 @@ void AMRMPM::interpolateParticlesToGrid_CFI_GIMP(const ProcessorGroup*,
     finePatch->getOtherLevelPatches55902(-1, coarsePatches, padding);
 
     for(int m = 0; m < numMatls; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
 
       // get fine level nodal data
@@ -2567,9 +2558,9 @@ void AMRMPM::coarsenNodalData_CFI(const ProcessorGroup*,
     }
     printTask(coarsePatch,cout_doing,"Doing AMRMPM::coarsenNodalData_CFI"+txt);
     
-    int numMatls = d_sharedState->getNumMPMMatls();                  
+    int numMatls = m_sharedState->getNumMPMMatls();                  
     for(int m = 0; m < numMatls; m++){                               
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );    
+      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );    
       int dwi = mpm_matl->getDWIndex();
       
       // get coarse level data
@@ -2719,9 +2710,9 @@ void AMRMPM::coarsenNodalData_CFI2(const ProcessorGroup*,
 
     printTask(coarsePatch,cout_doing,"Doing AMRMPM::coarsenNodalData_CFI2");
     
-    int numMatls = d_sharedState->getNumMPMMatls();                  
+    int numMatls = m_sharedState->getNumMPMMatls();                  
     for(int m = 0; m < numMatls; m++){                               
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );    
+      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );    
       int dwi = mpm_matl->getDWIndex();
       
       // get coarse level data
@@ -2813,10 +2804,10 @@ void AMRMPM::normalizeNodalVelTempConc(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     printTask(patches,patch,cout_doing,"Doing AMRMPM::normalizeNodalVelTempConc");
 
-    int numMatls = d_sharedState->getNumMPMMatls();
+    int numMatls = m_sharedState->getNumMPMMatls();
 
     for(int m = 0; m < numMatls; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
 
       // get  level nodal data
@@ -2904,9 +2895,9 @@ void AMRMPM::computeStressTensor(const ProcessorGroup*,
   printTask(patches, patches->get(0),cout_doing,
                                            "Doing AMRMPM::computeStressTensor");
 
-  for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
+  for(int m = 0; m < m_sharedState->getNumMPMMatls(); m++){
 
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial(m);
 
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
 
@@ -2940,10 +2931,10 @@ void AMRMPM::computeInternalForce(const ProcessorGroup*,
     
     string interp_type = flags->d_interpolator_type;
 
-    int numMPMMatls = d_sharedState->getNumMPMMatls();
+    int numMPMMatls = m_sharedState->getNumMPMMatls();
 
     for(int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
       
       constParticleVariable<Point>   px;
@@ -3102,10 +3093,10 @@ void AMRMPM::computeInternalForce_CFI(const ProcessorGroup*,
       constNCVariable<Stencil7> zoi_fine;
       new_dw->get(zoi_fine, lb->gZOILabel, 0, finePatch, Ghost::None, 0 );
   
-      int numMPMMatls = d_sharedState->getNumMPMMatls();
+      int numMPMMatls = m_sharedState->getNumMPMMatls();
       
       for(int m = 0; m < numMPMMatls; m++){
-        MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+        MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
         int dwi = mpm_matl->getDWIndex();
         
         NCVariable<Vector> internalforce;
@@ -3225,8 +3216,8 @@ void AMRMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
 
     Vector gravity = flags->d_gravity;
     
-    for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+    for(int m = 0; m < m_sharedState->getNumMPMMatls(); m++){
+      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
 
       // Get required variables for this patch
@@ -3239,7 +3230,7 @@ void AMRMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
       constNCVariable<double> gNegCharge, gNegChargeNoBC;
 
       delt_vartype delT;
-      old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
+      old_dw->get(delT, m_sharedState->get_delt_label(), getLevel(patches) );
 
       new_dw->get(internalforce, lb->gInternalForceLabel, dwi, patch, d_gn, 0);
       new_dw->get(externalforce, lb->gExternalForceLabel, dwi, patch, d_gn, 0);
@@ -3367,15 +3358,15 @@ void AMRMPM::setGridBoundaryConditions(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,"Doing AMRMPM::setGridBoundaryConditions");
 
-    int numMPMMatls=d_sharedState->getNumMPMMatls();
+    int numMPMMatls=m_sharedState->getNumMPMMatls();
     
     delt_vartype delT;            
-    old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
+    old_dw->get(delT, m_sharedState->get_delt_label(), getLevel(patches) );
     
     string interp_type = flags->d_interpolator_type;
 
     for(int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
       
       NCVariable<Vector> gvelocity_star;
@@ -3622,12 +3613,12 @@ void AMRMPM::computeLAndF(const ProcessorGroup*,
     Vector dx = patch->dCell();
     double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
 
-    int numMPMMatls=d_sharedState->getNumMPMMatls();
+    int numMPMMatls=m_sharedState->getNumMPMMatls();
     delt_vartype delT;
-    old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
+    old_dw->get(delT, m_sharedState->get_delt_label(), getLevel(patches) );
 
     for(int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
       // Get the arrays of particle values to be changed
       constParticleVariable<Point> px;
@@ -3837,9 +3828,9 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     double minconc = 5e11;
     double maxconc = 0;
 
-    int numMPMMatls=d_sharedState->getNumMPMMatls();
+    int numMPMMatls=m_sharedState->getNumMPMMatls();
     delt_vartype delT;
-    old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
+    old_dw->get(delT, m_sharedState->get_delt_label(), getLevel(patches) );
 
     //Carry forward NC_CCweight (put outside of matl loop, only need for matl 0)
     constNCVariable<double> NC_CCweight;
@@ -3850,7 +3841,7 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     NC_CCweight_new.copyData(NC_CCweight);
 
     for(int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
 
       // Used for AutoCycleFluxBC, scalar flux boundary conditions
@@ -4097,11 +4088,11 @@ void AMRMPM::finalParticleUpdate(const ProcessorGroup*,
               "Doing finalParticleUpdate");
 
     delt_vartype delT;
-    old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
+    old_dw->get(delT, m_sharedState->get_delt_label(), getLevel(patches) );
 
-    int numMPMMatls=d_sharedState->getNumMPMMatls();
+    int numMPMMatls=m_sharedState->getNumMPMMatls();
     for(int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
       // Get the arrays of particle values to be changed
       constParticleVariable<double> pdTdt,pmassNew;
@@ -4152,7 +4143,7 @@ void AMRMPM::addParticles(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     Vector dx = patch->dCell();
     printTask(patches, patch,cout_doing, "Doing addParticles");
-    int numMPMMatls=d_sharedState->getNumMPMMatls();
+    int numMPMMatls=m_sharedState->getNumMPMMatls();
 
     //Carry forward CellNAPID
     constCCVariable<int> NAPID;
@@ -4167,7 +4158,7 @@ void AMRMPM::addParticles(const ProcessorGroup*,
     new_dw->getModifiable(refineCell, lb->MPMRefineCellLabel, 0, patch);
 
     for(int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
       ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
@@ -4768,9 +4759,9 @@ void AMRMPM::computeParticleScaleFactor(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing, "Doing computeParticleScaleFactor");
 
-    int numMPMMatls=d_sharedState->getNumMPMMatls();
+    int numMPMMatls=m_sharedState->getNumMPMMatls();
     for(int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
@@ -4780,7 +4771,7 @@ void AMRMPM::computeParticleScaleFactor(const ProcessorGroup*,
       new_dw->get(pF,           lb->pDeformationMeasureLabel_preReloc,    pset);
       new_dw->allocateAndPut(pScaleFactor, lb->pScaleFactorLabel_preReloc,pset);
 
-      if(dataArchiver->isOutputTimestep()){
+      if(m_output->isOutputTimestep()){
         Vector dx = patch->dCell();
         for(ParticleSubset::iterator iter  = pset->begin();
                                      iter != pset->end(); iter++){
@@ -4811,9 +4802,9 @@ AMRMPM::errorEstimate(const ProcessorGroup*,
     constCCVariable<double> refineCell;
     CCVariable<int>      refineFlag;
     PerPatch<PatchFlagP> refinePatchFlag;
-    new_dw->getModifiable(refineFlag, d_sharedState->get_refineFlag_label(),
+    new_dw->getModifiable(refineFlag, m_regridder->getRefineFlagLabel(),
                                                                   0, patch);
-    new_dw->get(refinePatchFlag, d_sharedState->get_refinePatchFlag_label(),
+    new_dw->get(refinePatchFlag, m_regridder->getRefinePatchFlagLabel(),
                                                                   0, patch);
     new_dw->get(refineCell,     lb->MPMRefineCellLabel, 0, patch, d_gn, 0);
 
@@ -4907,9 +4898,9 @@ void AMRMPM::refineGrid(const ProcessorGroup*,
       }
     }
 
-    int numMPMMatls=d_sharedState->getNumMPMMatls();
+    int numMPMMatls=m_sharedState->getNumMPMMatls();
     for(int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
 
       if (cout_doing.active()) {
@@ -4981,7 +4972,7 @@ void AMRMPM::scheduleCountParticles(const PatchSet* patches,
   Task* t = scinew Task("AMRMPM::countParticles",this, 
                         &AMRMPM::countParticles);
   t->computes(lb->partCountLabel);
-  sched->addTask(t, patches, d_sharedState->allMPMMaterials());
+  sched->addTask(t, patches, m_sharedState->allMPMMaterials());
 }
 //______________________________________________________________________
 //
@@ -4992,7 +4983,7 @@ void AMRMPM::countParticles(const ProcessorGroup*,
                             DataWarehouse* new_dw)
 {
   long int totalParticles=0;
-  int numMPMMatls = d_sharedState->getNumMPMMatls();
+  int numMPMMatls = m_sharedState->getNumMPMMatls();
   
 //  const Level* level = getLevel(patches);
 //  cout << "Level " << level->getIndex() << " has " << level->numPatches() << " patches" << endl;
@@ -5002,7 +4993,7 @@ void AMRMPM::countParticles(const ProcessorGroup*,
     printTask(patches,patch,cout_doing,"Doing AMRMPM::countParticles");
     
     for(int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
       
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
@@ -5282,7 +5273,7 @@ void AMRMPM::scheduleInterpolateToParticlesAndUpdate_CFI(SchedulerP& sched,
     Task::MaterialDomainSpec  ND  = Task::NormalDomain;
     #define allPatches 0
     #define allMatls 0
-    t->requires(Task::OldDW, d_sharedState->get_delt_label() );
+    t->requires(Task::OldDW, m_sharedState->get_delt_label() );
     
     t->requires(Task::OldDW, lb->pXLabel, gn);
     t->requires(Task::NewDW, lb->gVelocityStarLabel, allPatches, Task::FineLevel,allMatls,   ND, d_gn,0);
@@ -5311,7 +5302,7 @@ void AMRMPM::interpolateToParticlesAndUpdate_CFI(const ProcessorGroup*,
   const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
   
   delt_vartype delT;
-  old_dw->get(delT, d_sharedState->get_delt_label(), coarseLevel );
+  old_dw->get(delT, m_sharedState->get_delt_label(), coarseLevel );
   
   //__________________________________
   //Loop over the coarse level patches
@@ -5319,7 +5310,7 @@ void AMRMPM::interpolateToParticlesAndUpdate_CFI(const ProcessorGroup*,
     const Patch* coarsePatch = coarsePatches->get(p);
     printTask(coarsePatches,coarsePatch,cout_doing,"AMRMPM::interpolateToParticlesAndUpdate_CFI");
 
-    int numMatls = d_sharedState->getNumMPMMatls();
+    int numMatls = m_sharedState->getNumMPMMatls();
         
     Level::selectType finePatches;
     coarsePatch->getFineLevelPatches(finePatches);
@@ -5338,7 +5329,7 @@ void AMRMPM::interpolateToParticlesAndUpdate_CFI(const ProcessorGroup*,
         new_dw->get(zoi_fine, lb->gZOILabel, 0, finePatch, Ghost::None, 0 );
 
         for(int m = 0; m < numMatls; m++){
-          MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+          MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
           int dwi = mpm_matl->getDWIndex();
 
           // get fine level grid data
@@ -5455,9 +5446,9 @@ void AMRMPM::scheduleComputeFlux(SchedulerP& sched,
     Task* t = scinew Task("AMRMPM::computeFlux",
                      this,&AMRMPM::computeFlux);
 
-    int numMPM = d_sharedState->getNumMPMMatls();
+    int numMPM = m_sharedState->getNumMPMMatls();
     for(int m = 0; m < numMPM; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial(m);
       ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
       sdm->scheduleComputeFlux(t, mpm_matl, patches);
     }
@@ -5476,10 +5467,10 @@ void AMRMPM::computeFlux(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     printTask(patches,patch,cout_doing,"Doing AMRMPM::computeFlux");
 
-    int numMatls = d_sharedState->getNumMPMMatls();
+    int numMatls = m_sharedState->getNumMPMMatls();
 
     for(int m = 0; m < numMatls; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial(m);
       ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
       sdm->computeFlux(patch, mpm_matl, old_dw, new_dw);
     }
@@ -5501,9 +5492,9 @@ void AMRMPM::scheduleComputeDivergence(SchedulerP& sched,
                     this,&AMRMPM::computeDivergence);
 
 #if 1
-  int numMPM = d_sharedState->getNumMPMMatls();
+  int numMPM = m_sharedState->getNumMPMMatls();
   for(int m = 0; m < numMPM; m++){
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial(m);
     ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
     sdm->scheduleComputeDivergence(t, mpm_matl, patches);
   }
@@ -5524,10 +5515,10 @@ void AMRMPM::computeDivergence(const ProcessorGroup*,
     printTask(patches,patch,cout_doing,
              "Doing AMRMPM::computeDivergence");
 
-    int numMatls = d_sharedState->getNumMPMMatls();
+    int numMatls = m_sharedState->getNumMPMMatls();
 
     for(int m = 0; m < numMatls; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial(m);
       ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
       sdm->computeDivergence(patch, mpm_matl, old_dw, new_dw);
     }
@@ -5548,9 +5539,9 @@ void AMRMPM::scheduleComputeDivergence_CFI(SchedulerP& sched,
     Task* t = scinew Task("AMRMPM::computeDivergence_CFI",
                      this,&AMRMPM::computeDivergence_CFI);
 
-    int numMPM = d_sharedState->getNumMPMMatls();
+    int numMPM = m_sharedState->getNumMPMMatls();
     for(int m = 0; m < numMPM; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial(m);
       ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
       sdm->scheduleComputeDivergence_CFI(t, mpm_matl, patches);
     }
@@ -5566,10 +5557,10 @@ void AMRMPM::computeDivergence_CFI(const ProcessorGroup*,
                                    DataWarehouse* old_dw,
                                    DataWarehouse* new_dw)
 {
-  int numMatls = d_sharedState->getNumMPMMatls();
+  int numMatls = m_sharedState->getNumMPMMatls();
 
   for(int m = 0; m < numMatls; m++){
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial(m);
     ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
     sdm->computeDivergence_CFI(patches, mpm_matl, old_dw, new_dw);
   }
@@ -5619,7 +5610,7 @@ void AMRMPM::scheduleInitializeScalarFluxBCs(const LevelP& level,
     t->requires(Task::NewDW, lb->pLoadCurveIDLabel, Ghost::None);
     t->computes(lb->materialPointsPerLoadCurveLabel, d_loadCurveIndex,
                 Task::OutOfDomain);
-    sched->addTask(t, patches, d_sharedState->allMPMMaterials());
+    sched->addTask(t, patches, m_sharedState->allMPMMaterials());
 
 #if 1
     // Create a task that calculates the force to be associated with
@@ -5628,7 +5619,7 @@ void AMRMPM::scheduleInitializeScalarFluxBCs(const LevelP& level,
                     this, &AMRMPM::initializeScalarFluxBC);
     t->requires(Task::NewDW, lb->materialPointsPerLoadCurveLabel,
                             d_loadCurveIndex, Task::OutOfDomain, Ghost::None);
-    sched->addTask(t, patches, d_sharedState->allMPMMaterials());
+    sched->addTask(t, patches, m_sharedState->allMPMMaterials());
 #endif
   }
   
@@ -5656,10 +5647,10 @@ void AMRMPM::countMaterialPointsPerFluxLoadCurve(const ProcessorGroup*,
       // Loop through the patches and count
       for(int p=0;p<patches->size();p++){
         const Patch* patch = patches->get(p);
-        int numMPMMatls=d_sharedState->getNumMPMMatls();
+        int numMPMMatls=m_sharedState->getNumMPMMatls();
         int numPts = 0;
         for(int m = 0; m < numMPMMatls; m++){
-          MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+          MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
           int dwi = mpm_matl->getDWIndex();
 
           ParticleSubset* pset = new_dw->getParticleSubset(dwi, patch);
@@ -5694,7 +5685,7 @@ void AMRMPM::initializeScalarFluxBC(const ProcessorGroup*,
 
   // Calculate the scalar flux at each particle
   for(int p=0;p<patches->size();p++){
-    int numMPMMatls=d_sharedState->getNumMPMMatls();
+    int numMPMMatls=m_sharedState->getNumMPMMatls();
     for(int m = 0; m < numMPMMatls; m++){
 
       int nofSFBCs = 0;
@@ -5763,7 +5754,7 @@ void AMRMPM::applyExternalScalarFlux(const ProcessorGroup* ,
                                      DataWarehouse* new_dw)
 {
   // Get the current time
-  double time = d_sharedState->getElapsedSimTime();
+  double time = m_sharedState->getElapsedSimTime();
 
   if (cout_doing.active())
     cout_doing << "Current Time (applyExternalScalarFlux) = " << time << endl;
@@ -5794,10 +5785,10 @@ void AMRMPM::applyExternalScalarFlux(const ProcessorGroup* ,
     // Place for user defined loading scenarios to be defined,
     // otherwise pExternalForce is just carried forward.
 
-    int numMPMMatls=d_sharedState->getNumMPMMatls();
+    int numMPMMatls=m_sharedState->getNumMPMMatls();
 
     for(int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 

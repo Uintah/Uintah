@@ -33,7 +33,7 @@
     <save label="gamma"/>
     <save label="pressure"/>
     <save label="b_press"/>
-    <checkpoint cycle="2" interval=".3"/>
+    <checkpoint cycle="2" interval="1e-5"/>
     <compression>gzip</compression>
   </DataArchiver>
   <Grid>

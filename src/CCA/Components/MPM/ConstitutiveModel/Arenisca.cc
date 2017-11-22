@@ -473,12 +473,12 @@ void Arenisca::initializeCMData(const Patch* patch,
                                 *wdist.WeibMed;
     }
   }
-  computeStableTimestep(patch, matl, new_dw);
+  computeStableTimeStep(patch, matl, new_dw);
 }
 
 // Compute stable timestep based on both the particle velocities
 // and wave speed
-void Arenisca::computeStableTimestep(const Patch* patch,
+void Arenisca::computeStableTimeStep(const Patch* patch,
                                      //ParticleSubset* pset, //T2D: this should be const
                                      const MPMMaterial* matl,
                                      DataWarehouse* new_dw)
@@ -1321,7 +1321,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
 
     double delT_new = WaveSpeed.minComponent();
     //cout<<"delT_new="<<delT_new<<endl;
-    //computeStableTimestep(patch,pset,matl,new_dw);
+    //computeStableTimeStep(patch,pset,matl,new_dw);
 
 #ifdef JC_DEBUG_SMALL_TIMESTEP
         //cout <<"delT_new="<<delT_new;

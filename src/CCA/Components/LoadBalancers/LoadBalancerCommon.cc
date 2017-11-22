@@ -70,6 +70,7 @@ LoadBalancerCommon::LoadBalancerCommon( const ProcessorGroup * myworld )
   : UintahParallelComponent( myworld )
   , m_sfc( myworld )
 {
+  m_activeDims[0] = m_activeDims[1] = m_activeDims[2] = 0;
 }
 
 //______________________________________________________________________
@@ -162,7 +163,7 @@ int
 LoadBalancerCommon::getPatchwiseProcessorAssignment( const Patch * patch )
 {
   // If on a copy-data timestep and we ask about an old patch, that could cause problems.
-  if( m_shared_state->isCopyDataTimestep() && patch->getRealPatch()->getID() < m_assignment_base_patch ) {
+  if( m_scheduler->isCopyDataTimestep() && patch->getRealPatch()->getID() < m_assignment_base_patch ) {
     return -patch->getID();
   }
  
@@ -204,10 +205,6 @@ LoadBalancerCommon::useSFC( const LevelP & level, int * order )
   std::vector<DistributedIndex> indices; //output
   std::vector<double> positions;
 
-  //this should be removed when dimensions in shared state is done
-  int dim=m_shared_state->getNumDims();
-  int *dimensions=m_shared_state->getActiveDims();
-
   IntVector min_patch_size(INT_MAX,INT_MAX,INT_MAX);  
 
   // get the overall range in all dimensions from all patches
@@ -240,15 +237,15 @@ LoadBalancerCommon::useSFC( const LevelP & level, int * order )
     ASSERTRANGE(proc,0,d_myworld->nRanks());
     if(d_myworld->myRank()==(int)proc) {
       Vector point=(patch->getCellLowIndex()+patch->getCellHighIndex()).asVector()/2.0;
-      for(int d=0;d<dim;d++) {
-        positions.push_back(point[dimensions[d]]);
+      for(int d=0;d<m_numDims;d++) {
+        positions.push_back(point[m_activeDims[d]]);
       }
     }
     originalPatchCount[proc]++;
 #else
     Vector point=(patch->getCellLowIndex()+patch->getCellHighIndex()).asVector()/2.0;
-    for(int d=0;d<dim;d++) {
-      positions.push_back(point[dimensions[d]]);
+    for(int d=0;d<m_numDims;d++) {
+      positions.push_back(point[m_activeDims[d]]);
     }
 #endif
   }
@@ -267,9 +264,17 @@ LoadBalancerCommon::useSFC( const LevelP & level, int * order )
   // Center of patchset
   Vector center = (high+low).asVector()/2.0;
  
-  double r[3]     = {(double)range[dimensions[0]], (double)range[dimensions[1]], (double)range[dimensions[2]]};
-  double c[3]     = {(double)center[dimensions[0]],(double)center[dimensions[1]], (double)center[dimensions[2]]};
-  double delta[3] = {(double)min_patch_size[dimensions[0]], (double)min_patch_size[dimensions[1]], (double)min_patch_size[dimensions[2]]};
+  double r[3]     = {(double)range[m_activeDims[0]],
+		     (double)range[m_activeDims[1]],
+		     (double)range[m_activeDims[2]]};
+
+  double c[3]     = {(double)center[m_activeDims[0]],
+		     (double)center[m_activeDims[1]],
+		     (double)center[m_activeDims[2]]};
+
+  double delta[3] = {(double)min_patch_size[m_activeDims[0]],
+		     (double)min_patch_size[m_activeDims[1]],
+		     (double)min_patch_size[m_activeDims[2]]};
 
   // Create SFC
   m_sfc.SetDimensions(r);
@@ -590,7 +595,7 @@ LoadBalancerCommon::createNeighborhoods( const GridP & grid
                                            m_distal_neighbors, m_distal_neighborhood_processors);
         }
 
-        if (m_shared_state->isCopyDataTimestep() && proc == my_rank) {
+        if (m_scheduler->isCopyDataTimestep() && proc == my_rank) {
           if (oldGrid->numLevels() > l) {
             // on copy data timestep we need old patches that line up with this proc's patches,
             // get the other way around at the end
@@ -614,7 +619,7 @@ LoadBalancerCommon::createNeighborhoods( const GridP & grid
 
         // add multi-level (AMR) stuff - so the patch will know about coarsening and refining
         // First look down levels (coarser)
-        if (l > 0 && (proc == my_rank || (oldproc == my_rank && !m_shared_state->isCopyDataTimestep()))) {
+        if (l > 0 && (proc == my_rank || (oldproc == my_rank && !m_scheduler->isCopyDataTimestep()))) {
           LevelP coarseLevel = level;
 
           // get the max level offset and max ghost cells to consider for neighborhood creation
@@ -645,7 +650,7 @@ LoadBalancerCommon::createNeighborhoods( const GridP & grid
           }
         }
         // Second look up a single level (finer)
-        if (l < grid->numLevels() - 1 && (proc == my_rank || (oldproc == my_rank && !m_shared_state->isCopyDataTimestep()))) {
+        if (l < grid->numLevels() - 1 && (proc == my_rank || (oldproc == my_rank && !m_scheduler->isCopyDataTimestep()))) {
 
           IntVector ghost(maxGhost, maxGhost, maxGhost);
           const LevelP& fineLevel = level->getFinerLevel();
@@ -668,7 +673,7 @@ LoadBalancerCommon::createNeighborhoods( const GridP & grid
     }
   }
 
-  if (m_shared_state->isCopyDataTimestep()) {
+  if (m_scheduler->isCopyDataTimestep()) {
     // Regrid timestep postprocess 
     // 1)- go through the old grid and 
     //     find which patches used to be on this proc 
@@ -821,11 +826,13 @@ LoadBalancerCommon::inNeighborhood( const Patch * patch, const bool hasDistalReq
 void
 LoadBalancerCommon::problemSetup( ProblemSpecP     & pspec
                                 , GridP            & grid
-                                , SimulationStateP & state
+                                , const SimulationStateP & state
                                 )
 {
   m_shared_state = state;
+
   m_scheduler = dynamic_cast<Scheduler*>(getPort("scheduler"));
+
   ProblemSpecP p = pspec->findBlock("LoadBalancer");
   m_output_Nth_proc = 1;
 
@@ -833,29 +840,49 @@ LoadBalancerCommon::problemSetup( ProblemSpecP     & pspec
     p->getWithDefault("outputNthProc", m_output_Nth_proc, 1);
   }
 
-#ifdef HAVE_VISIT
-  static bool initialized = false;
+// #ifdef HAVE_VISIT
+//   static bool initialized = false;
 
-  // Running with VisIt so add in the variables that the user can
-  // modify.
-  if( m_shared_state->getVisIt() && !initialized ) {
-    SimulationState::interactiveVar var;
-    var.name     = "LoadBalancer-DoSpaceCurve";
-    var.type     = Uintah::TypeDescription::bool_type;
-    var.value    = (void *) &m_do_space_curve;
-    var.range[0] = 0;
-    var.range[1] = 1;
-    var.modifiable = true;
-    var.recompile  = false;
-    var.modified   = false;
-    m_shared_state->d_UPSVars.push_back( var );
+//   // Running with VisIt so add in the variables that the user can
+//   // modify.
+//   if( m_shared_state->getVisIt() && !initialized ) {
+//     SimulationState::interactiveVar var;
+//     var.name     = "LoadBalancer-DoSpaceCurve";
+//     var.type     = Uintah::TypeDescription::bool_type;
+//     var.value    = (void *) &m_do_space_curve;
+//     var.range[0] = 0;
+//     var.range[1] = 1;
+//     var.modifiable = true;
+//     var.recompile  = false;
+//     var.modified   = false;
+//     m_shared_state->d_UPSVars.push_back( var );
 
-//    m_shared_state->d_debugStreams.push_back( &g_lb_dbg  );
-//    m_shared_state->d_debugStreams.push_back( &g_neighborhood_dbg );
+// //    m_shared_state->d_debugStreams.push_back( &g_lb_dbg  );
+// //    m_shared_state->d_debugStreams.push_back( &g_neighborhood_dbg );
 
-    initialized = true;
+//     initialized = true;
+//   }
+// #endif
+}
+
+//__________________________________
+//
+void
+LoadBalancerCommon::setDimensionality(bool x, bool y, bool z)
+{
+  m_numDims = 0;
+  
+  int currentDim = 0;
+  bool args[3] = {x,y,z};
+
+  for (int i = 0; i < 3; i++) {
+    if (args[i]) {
+      m_numDims++;
+      m_activeDims[currentDim] = i;
+
+      ++currentDim;
+    }
   }
-#endif
 }
 
 //______________________________________________________________________

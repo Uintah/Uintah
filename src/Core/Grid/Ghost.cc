@@ -34,4 +34,18 @@ std::string Ghost::names[numGhostTypes] =
 IntVector Ghost::directions[numGhostTypes] =
 { IntVector(0,0,0), IntVector(1,1,1), IntVector(1,1,1),
   IntVector(1,0,0), IntVector(0,1,0), IntVector(0,0,1),
-  IntVector(1,1,1) };
+  IntVector(1,1,1),
+  // One sided ghosts
+  IntVector(1,1,1),
+  IntVector(1,1,0),
+  IntVector(1,0,1),
+  IntVector(1,0,0),
+  IntVector(0,1,1),
+  IntVector(0,1,0),
+  IntVector(0,0,1),
+  IntVector(0,0,0)  
+  };
+
+
+
+

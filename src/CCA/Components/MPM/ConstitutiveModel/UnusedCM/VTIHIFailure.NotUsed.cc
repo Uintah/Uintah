@@ -366,7 +366,7 @@ void ViscoTransIsoHyperImplicit::addParticleState(
   to.push_back(pHistory6Label_preReloc);
 }
 
-void ViscoTransIsoHyperImplicit::computeStableTimestep(const Patch*,
+void ViscoTransIsoHyperImplicit::computeStableTimeStep(const Patch*,
                                                   const MPMMaterial*,
                                                   DataWarehouse*)
 {
@@ -386,7 +386,7 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
                                          Solver* solver,
                                          const bool )
 //COMPUTES THE STRESS ON ALL THE PARTICLES IN A GIVEN PATCH FOR A GIVEN MATERIAL
-//CALLED ONCE PER TIME STEP CONTAINS A COPY OF computeStableTimestep
+//CALLED ONCE PER TIME STEP CONTAINS A COPY OF computeStableTimeStep
 {
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);

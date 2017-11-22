@@ -25,6 +25,8 @@
 #ifndef CCA_PORTS_SCHEDULER_H
 #define CCA_PORTS_SCHEDULER_H
 
+#include <CCA/Components/SimulationController/RunTimeStatsEnums.h>
+
 #include <Core/Parallel/UintahParallelPort.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/Variables/ComputeSet.h>
@@ -32,6 +34,7 @@
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/Task.h>
+#include <Core/Util/InfoMapper.h>
 
 #include <list>
 #include <map>
@@ -44,7 +47,7 @@ namespace Uintah {
 
   class LoadBalancerPort;
   class Task;
-  class SimulationInterface;
+  class ApplicationInterface;
 
 /**************************************
 
@@ -84,7 +87,8 @@ class Scheduler : public UintahParallelPort {
     // if the simulation has been "restarted".
     virtual void setGeneration( int id ) = 0;
 
-    virtual void problemSetup( const ProblemSpecP& prob_spec, SimulationStateP& state ) = 0;
+    virtual void problemSetup( const ProblemSpecP& prob_spec,
+			       const SimulationStateP& state ) = 0;
 
     virtual void checkMemoryUse( unsigned long & memUsed,
 				 unsigned long & highwater,
@@ -190,7 +194,7 @@ class Scheduler : public UintahParallelPort {
                                            ) = 0;
 
     //! Schedule copying data to new grid after regridding
-    virtual void scheduleAndDoDataCopy( const GridP & grid, SimulationInterface * sim ) = 0;
+    virtual void scheduleAndDoDataCopy( const GridP & grid, ApplicationInterface * sim ) = 0;
 
     virtual void clearTaskMonitoring() = 0;
     virtual void scheduleTaskMonitoring( const LevelP& level ) = 0;
@@ -233,11 +237,14 @@ class Scheduler : public UintahParallelPort {
 
     virtual int getMaxLevelOffset() = 0;
 
+    virtual bool copyTimestep() = 0;
     virtual bool isCopyDataTimestep() = 0;
 
     virtual void setInitTimestep( bool ) = 0;
 
     virtual void setRestartInitTimestep( bool ) = 0;
+
+    virtual void setRunTimeStats( ReductionInfoMapper< RunTimeStatsEnum, double > *runTimeStats) = 0;
 
   private:
 

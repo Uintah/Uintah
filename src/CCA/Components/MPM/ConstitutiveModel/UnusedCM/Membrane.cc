@@ -144,7 +144,7 @@ void Membrane::initializeCMData(const Patch* patch,
           iter != pset->end(); iter++) {
           defGradIP[*iter] = Identity;
   }
-  computeStableTimestep(patch, matl, new_dw);
+  computeStableTimeStep(patch, matl, new_dw);
 }
 
 void Membrane::addParticleState(std::vector<const VarLabel*>& from,
@@ -155,7 +155,7 @@ void Membrane::addParticleState(std::vector<const VarLabel*>& from,
   to.push_back(defGradInPlaneLabel_preReloc);
 }
 
-void Membrane::computeStableTimestep(const Patch* patch,
+void Membrane::computeStableTimeStep(const Patch* patch,
                                            const MPMMaterial* matl,
                                            DataWarehouse* new_dw)
 {

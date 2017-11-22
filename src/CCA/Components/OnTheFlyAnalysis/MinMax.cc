@@ -272,18 +272,18 @@ void MinMax::problemSetup(const ProblemSpecP& prob_spec,
     me.reductionMinLabel = meMin;
     d_analyzeVars.push_back(me);
   
-#ifdef HAVE_VISIT
-    if( sharedState->getVisIt() ) {
-      SimulationState::analysisVar aVar;
-      aVar.name  = label->getName();
-      aVar.matl  = matl;
-      aVar.level = level;
-      aVar.labels.push_back( meMin );
-      aVar.labels.push_back( meMax );
+// #ifdef HAVE_VISIT
+//     if( sharedState->getVisIt() ) {
+//       SimulationState::analysisVar aVar;
+//       aVar.name  = label->getName();
+//       aVar.matl  = matl;
+//       aVar.level = level;
+//       aVar.labels.push_back( meMin );
+//       aVar.labels.push_back( meMax );
     
-      d_sharedState->d_analysisVars.push_back(aVar);
-    }
-#endif
+//       d_sharedState->d_analysisVars.push_back(aVar);
+//     }
+// #endif
   }
   
   //__________________________________

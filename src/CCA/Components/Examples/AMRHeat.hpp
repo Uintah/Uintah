@@ -8,13 +8,14 @@
 namespace Uintah {
   class AMRHeat : public Heat {
   public:
-    AMRHeat(const ProcessorGroup* world);
+    AMRHeat(const ProcessorGroup* world,
+	    const SimulationStateP sharedState);
+    
     virtual ~AMRHeat();
 
     virtual void problemSetup(const ProblemSpecP&     ps,
                               const ProblemSpecP&     restart_ps,
-                                    GridP&            grid,
-                                    SimulationStateP& state);
+                                    GridP&            grid);
 
     virtual void scheduleRefineInterface(const LevelP&     fineLevel,
                                                SchedulerP& scheduler,

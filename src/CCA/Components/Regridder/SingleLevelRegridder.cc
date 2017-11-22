@@ -116,17 +116,17 @@ void SingleLevelRegridder::problemSetup(const ProblemSpecP& params,
     }
   }
 
-#ifdef HAVE_VISIT
-  static bool initialized = false;
+// #ifdef HAVE_VISIT
+//   static bool initialized = false;
 
-  // Running with VisIt so add in the variables that the user can
-  // modify.
-  if( d_sharedState->getVisIt() && !initialized ) {
-    d_sharedState->d_debugStreams.push_back( &grid_dbg );
+//   // Running with VisIt so add in the variables that the user can
+//   // modify.
+//   if( d_sharedState->getVisIt() && !initialized ) {
+//     d_sharedState->d_debugStreams.push_back( &grid_dbg );
 
-    initialized = true;
-  }
-#endif
+//     initialized = true;
+//   }
+// #endif
 }
 
 

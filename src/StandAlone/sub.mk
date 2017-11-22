@@ -70,7 +70,8 @@ else
           $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY)                      \
           $(TABPROPS_LIBRARY) $(RADPROPS_LIBRARY)                       \
           $(BOOST_LIBRARY) $(CUDA_LIBRARY)                              \
-          $(PAPI_LIBRARY) $(GPERFTOOLS_LIBRARY) $(PIDX_LIBRARY)
+          $(PAPI_LIBRARY) $(GPERFTOOLS_LIBRARY) $(PIDX_LIBRARY)         \
+          $(KOKKOS_LIBRARY)
 endif
 
 PSELIBS := $(GPU_EXTRA_LINK) $(PSELIBS)

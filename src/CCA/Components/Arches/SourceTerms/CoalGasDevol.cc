@@ -10,6 +10,8 @@
 //#include <CCA/Components/Arches/CoalModels/KobayashiSarofimDevol.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 
+#include <sci_defs/kokkos_defs.h>
+
 //===========================================================================
 
 using namespace std;

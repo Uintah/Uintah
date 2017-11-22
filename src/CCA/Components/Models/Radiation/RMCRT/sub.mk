@@ -27,9 +27,14 @@
 SRCDIR := CCA/Components/Models/Radiation/RMCRT
 
 SRCS += $(SRCDIR)/RMCRTCommon.cc \
-        $(SRCDIR)/Ray.cc \
         $(SRCDIR)/Radiometer.cc \
         $(SRCDIR)/RayGPU.cc
+
+ifeq ($(HAVE_KOKKOS),yes)
+  SRCS += $(SRCDIR)/RayKokkos.cc
+else
+  SRCS += $(SRCDIR)/Ray.cc
+endif
 
 ifneq ($(HAVE_CUDA),)
   SRCS += $(SRCDIR)/RayGPUKernel.cu

@@ -56,7 +56,7 @@ if(!mms_type.empty()) {
     if(mms_type == "GeneralizedVortex" || mms_type == "ExpandingRing"){
 //	cout << "Entered CM" << endl;
   	initSharedDataForExplicit(patch, matl, new_dw);
-  	computeStableTimestep(patch, matl, new_dw);
+  	computeStableTimeStep(patch, matl, new_dw);
 
     } else if (mms_type == "AxisAligned" || mms_type == "AxisAligned3L" ){
   	Matrix3 I; I.Identity();
@@ -98,13 +98,13 @@ if(!mms_type.empty()) {
     	pStress[idx] = (I*p + Shear)/J;
   	}
 
-  	computeStableTimestep(patch, matl, new_dw);
+  	computeStableTimeStep(patch, matl, new_dw);
     }
 } 
 // Default Uintah case
 	else {
 		initSharedDataForExplicit(patch, matl, new_dw);
-  		computeStableTimestep(patch, matl, new_dw);
+  		computeStableTimeStep(patch, matl, new_dw);
   	}
 }
 
@@ -114,7 +114,7 @@ void CNH_MMS::addParticleState(std::vector<const VarLabel*>& ,
   // Add the local particle state data for this constitutive model.
 }
 
-void CNH_MMS::computeStableTimestep(const Patch* patch,
+void CNH_MMS::computeStableTimeStep(const Patch* patch,
                                         const MPMMaterial* matl,
                                         DataWarehouse* new_dw)
 {

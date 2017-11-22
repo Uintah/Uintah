@@ -86,7 +86,7 @@ void IdealGasMP::initializeCMData(const Patch* patch,
   // This method is defined in the ConstitutiveModel base class.
   initSharedDataForExplicit(patch, matl, new_dw);
 
-  computeStableTimestep(patch, matl, new_dw);
+  computeStableTimeStep(patch, matl, new_dw);
 }
 
 void IdealGasMP::addParticleState(std::vector<const VarLabel*>& ,
@@ -95,7 +95,7 @@ void IdealGasMP::addParticleState(std::vector<const VarLabel*>& ,
   // Add the local particle state data for this constitutive model.
 }
 
-void IdealGasMP::computeStableTimestep(const Patch* patch,
+void IdealGasMP::computeStableTimeStep(const Patch* patch,
                                            const MPMMaterial* matl,
                                            DataWarehouse* new_dw)
 {

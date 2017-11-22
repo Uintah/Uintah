@@ -114,8 +114,8 @@ typedef struct
   int imageWidth;
   int imageFormat;
 
-  int  stopAtTimeStep;
-  bool stopAtLastTimeStep;
+  int  stopAtTimestep;
+  bool stopAtLastTimestep;
 
   // The first row is the strip chart name.
   std::string stripChartNames[5][5];
@@ -135,7 +135,8 @@ bool visit_CheckState(visit_simulation_data *sim);
 
 void visit_UpdateSimData( visit_simulation_data *sim, 
                           GridP currentGrid,
-                          double time, double delt, double delt_next,
+			  double time,  unsigned int cycle,
+			  double delt,  double delt_next,
                           bool first, bool last );
 
 void visit_Initialize( visit_simulation_data *sim );

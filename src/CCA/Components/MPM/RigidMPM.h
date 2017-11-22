@@ -71,14 +71,15 @@ WARNING
 
 class RigidMPM : public SerialMPM {
 public:
-  RigidMPM(const ProcessorGroup* myworld);
+  RigidMPM(const ProcessorGroup* myworld,
+	   const SimulationStateP sharedState);
   virtual ~RigidMPM();
 
   //////////
   // Insert Documentation Here:
   virtual void problemSetup(const ProblemSpecP& params, 
                             const ProblemSpecP& restart_prob_spec, 
-                            GridP& grid, SimulationStateP&);
+                            GridP& grid);
          
   //////////
   // Insert Documentation Here:

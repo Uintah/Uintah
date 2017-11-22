@@ -55,6 +55,7 @@ PSELIBS := \
         $(MPMICE)                          \
         $(FVM)                             \
         $(MPMFVM)                          \
+        $(COMPONENTS)/Application          \
         $(COMPONENTS)/Examples             \
         $(COMPONENTS)/ReduceUda            \
         $(COMPONENTS)/ProblemSpecification \

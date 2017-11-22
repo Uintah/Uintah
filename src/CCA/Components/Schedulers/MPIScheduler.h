@@ -97,7 +97,7 @@ class MPIScheduler : public SchedulerCommon {
     // Performs the reduction task. (In threaded, Unified scheduler, a single worker thread will execute this.)
     virtual void initiateReduction( DetailedTask* dtask );
 
-            void computeNetRunTimeStats(InfoMapper< SimulationState::RunTimeStat, double >& runTimeStats);
+    void computeNetRunTimeStats();
 
     // timing statistics for Uintah infrastructure overhead
     enum TimingStat {

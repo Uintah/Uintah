@@ -1,5 +1,4 @@
 #include <CCA/Components/Arches/PropertyModels/NormScalarVariance.h>
-#include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/PhysicalConstants.h>
 #include <CCA/Components/Arches/BoundaryCondition.h>
 

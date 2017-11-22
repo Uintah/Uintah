@@ -45,8 +45,9 @@
 
 using namespace Uintah;
 
-DOSweep::DOSweep(const ProcessorGroup* myworld)
-  : UintahParallelComponent(myworld)
+DOSweep::DOSweep(const ProcessorGroup* myworld,
+		 const SimulationStateP sharedState)
+  : ApplicationCommon(myworld, sharedState)
 {
   lb_ = scinew ExamplesLabel();
 }
@@ -61,7 +62,7 @@ DOSweep::~DOSweep()
 //
 void DOSweep::problemSetup(const ProblemSpecP& prob_spec, 
                            const ProblemSpecP& restart_prob_spec, 
-                           GridP&, SimulationStateP& sharedState)
+                           GridP&)
 {
   solver = dynamic_cast<SolverInterface*>(getPort("solver"));
   if(!solver) {
@@ -70,10 +71,9 @@ void DOSweep::problemSetup(const ProblemSpecP& prob_spec,
   
   ProblemSpecP st_ps = prob_spec->findBlock("DOSweep");
   solver_parameters = solver->readParameters(st_ps, "implicitPressure",
-                                             sharedState);
+                                             m_sharedState);
   solver_parameters->setSolveOnExtraCells(false);
     
-  sharedState_ = sharedState;
   st_ps->require("delt", delt_);
 
   // whether or not to do laplacian in x,y,or z direction
@@ -94,14 +94,14 @@ void DOSweep::problemSetup(const ProblemSpecP& prob_spec,
     throw ProblemSetupException("DOSweep: Must specify one of X_Laplacian, Y_Laplacian, or Z_Laplacian",
                                 __FILE__, __LINE__);
   mymat_ = scinew SimpleMaterial();
-  sharedState->registerSimpleMaterial(mymat_);
+  m_sharedState->registerSimpleMaterial(mymat_);
 }
 //__________________________________
 // 
 void DOSweep::scheduleInitialize(const LevelP& level,
                                  SchedulerP& sched)
 {
-  solver->scheduleInitialize(level,sched,sharedState_->allMaterials());
+  solver->scheduleInitialize(level,sched,m_sharedState->allMaterials());
 }
 //__________________________________
 //
@@ -111,13 +111,13 @@ void DOSweep::scheduleRestartInitialize(const LevelP& level,
 }
 //__________________________________
 // 
-void DOSweep::scheduleComputeStableTimestep(const LevelP& level,
+void DOSweep::scheduleComputeStableTimeStep(const LevelP& level,
                                             SchedulerP& sched)
 {
-  Task* task = scinew Task("computeStableTimestep",this, 
-                           &DOSweep::computeStableTimestep);
-  task->computes(sharedState_->get_delt_label(),level.get_rep());
-  sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
+  Task* task = scinew Task("computeStableTimeStep",this, 
+                           &DOSweep::computeStableTimeStep);
+  task->computes(m_sharedState->get_delt_label(),level.get_rep());
+  sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
 }
 //__________________________________
 //
@@ -130,9 +130,9 @@ DOSweep::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
   task->computes(lb_->pressure_matrix);
   task->computes(lb_->pressure_rhs);
 
-  sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
+  sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
 
-  solver->scheduleSolve(level, sched, sharedState_->allMaterials(), 
+  solver->scheduleSolve(level, sched, m_sharedState->allMaterials(), 
                         lb_->pressure_matrix, Task::NewDW, lb_->pressure, 
                         false, lb_->pressure_rhs, Task::NewDW, 0, Task::OldDW, 
                         solver_parameters,false);
@@ -140,12 +140,12 @@ DOSweep::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 }
 //__________________________________
 //
-void DOSweep::computeStableTimestep(const ProcessorGroup*,
+void DOSweep::computeStableTimeStep(const ProcessorGroup*,
                                     const PatchSubset* pss,
                                     const MaterialSubset*,
                                     DataWarehouse*, DataWarehouse* new_dw)
 {
-  new_dw->put(delt_vartype(delt_), sharedState_->get_delt_label(),getLevel(pss));
+  new_dw->put(delt_vartype(delt_), m_sharedState->get_delt_label(),getLevel(pss));
 }
 //__________________________________
 //

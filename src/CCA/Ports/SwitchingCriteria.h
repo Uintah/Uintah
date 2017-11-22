@@ -31,9 +31,10 @@
 #include <Core/Grid/LevelP.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
-
 namespace Uintah {
 
+  class VarLabel;
+  
   class SwitchingCriteria : public UintahParallelPort {
     
   public:
@@ -50,6 +51,15 @@ namespace Uintah {
     virtual void scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
       {};
 
+    virtual void setSwitchLabel( const VarLabel* switch_label )
+    {
+      d_switch_label = switch_label;
+    }
+    
+  protected:
+
+    const VarLabel* d_switch_label;
+    
   private:
     
     SwitchingCriteria(const SwitchingCriteria&);

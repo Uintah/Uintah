@@ -25,7 +25,6 @@
 #ifndef Uintah_Component_Arches_NonlinearSolver_h
 #define Uintah_Component_Arches_NonlinearSolver_h
 
-#include <CCA/Components/Arches/Arches.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
@@ -75,9 +74,9 @@ public:
 
   virtual void computeTimestep( const LevelP& level, SchedulerP& sched ) = 0;
 
-  virtual double recomputeTimestep(double current_dt) = 0;
+  virtual double recomputeTimeStep(double current_dt) = 0;
 
-  virtual bool restartableTimesteps() = 0;
+  virtual bool restartableTimeSteps() = 0;
 
   virtual void initialize( const LevelP& lvl, SchedulerP& sched, const bool doing_restart ) = 0;
 

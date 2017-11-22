@@ -1271,12 +1271,14 @@ void Patch::getGhostOffsets(VariableBasis basis, Ghost::GhostType gtype,
     SCI_THROW(InternalError("ghost cells should not be specified with Ghost::None", __FILE__, __LINE__));
 
   if (basis == CellBased) {
-    if (gtype == Ghost::AroundCells) {
-      // Cells around cells
-      lowOffset = highOffset = g;
-    }
-    else {
       // cells around nodes/faces
+    if (gtype == Ghost::AroundCells) {
+      lowOffset = highOffset = g;
+    }else if (gtype > Ghost::AroundFaces  ){
+      IntVector aroundDir = Ghost::getGhostTypeDir(gtype);
+      lowOffset = g * (IntVector(1,1,1)-aroundDir);
+      highOffset =g * aroundDir;
+    }else {
       IntVector aroundDir = Ghost::getGhostTypeDir(gtype);
       lowOffset = g * aroundDir;
       highOffset = lowOffset - aroundDir;

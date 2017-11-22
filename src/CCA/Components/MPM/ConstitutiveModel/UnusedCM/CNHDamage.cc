@@ -214,7 +214,7 @@ CNHDamage::initializeCMData(const Patch* patch,
     initSharedDataForImplicit(patch, matl, new_dw);
   else {
     initSharedDataForExplicit(patch, matl, new_dw);
-    computeStableTimestep(patch, matl, new_dw);
+    computeStableTimeStep(patch, matl, new_dw);
   }
 
   // Local stuff

@@ -66,7 +66,9 @@ namespace Uintah {
     virtual ~RegridderCommon();
 
     //! Initialize with regridding parameters from ups file
-    virtual void problemSetup(const ProblemSpecP& params, const GridP& grid, const SimulationStateP& state);
+    virtual void problemSetup(const ProblemSpecP& params,
+			      const GridP& grid,
+			      const SimulationStateP& state);
 
     //! On a Switch, basically asks whether to turn off/on the Regridding
     virtual void switchInitialize(const ProblemSpecP& params);
@@ -112,7 +114,7 @@ namespace Uintah {
     virtual void scheduleInitializeErrorEstimate(const LevelP& level);
 
     //! Schedules task to dilate existing error flags
-    virtual void scheduleDilation(const LevelP& level);
+    virtual void scheduleDilation(const LevelP& level, const bool isLockstepAMR);
 
     //! Asks if we are going to do regridding
     virtual bool flaggedCellsOnFinestLevel(const GridP& grid);
@@ -127,6 +129,8 @@ namespace Uintah {
     {
       return d_dynamicDilation;
     }
+
+    virtual void setOverheadAverage(double val) { d_overheadAverage = val; }
 
     enum FilterType {
       FILTER_STAR,
@@ -155,6 +159,18 @@ namespace Uintah {
                 const VarLabel* to_put,
                 CCVariable<int>* filter,
                 IntVector depth);
+
+    const MaterialSubset* refineFlagMaterials() const;
+    
+    const VarLabel* getRefineFlagLabel() const {
+      return m_refineFlagLabel;
+    }
+    const VarLabel* getOldRefineFlagLabel() const {
+      return m_oldRefineFlagLabel;
+    }
+    const VarLabel* getRefinePatchFlagLabel() const {
+      return m_refinePatchFlagLabel;
+    }
 
   protected:
 
@@ -202,9 +218,16 @@ namespace Uintah {
     int d_dilationTimestep;           ///<The last timestep that the dilation was changed
     int d_maxTimestepsBetweenRegrids;
     int d_minTimestepsBetweenRegrids;
+    double d_overheadAverage;
     double d_amrOverheadLow;          ///<Percentage low target for AMR overhead
     double d_amrOverheadHigh;         ///<Percentage high target for AMR overhead
 
+    MaterialSubset * refine_flag_matls{nullptr};
+    
+    const VarLabel* m_refineFlagLabel;
+    const VarLabel* m_oldRefineFlagLabel;
+    const VarLabel* m_refinePatchFlagLabel;
+    
     bool flaggedCellsExist(constCCVariable<int>& flaggedCells, IntVector low, IntVector high);
 
     IntVector Less(const IntVector& a, const IntVector& b);

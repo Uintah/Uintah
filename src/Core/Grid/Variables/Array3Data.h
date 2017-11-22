@@ -31,6 +31,8 @@
 #include <Core/Util/FancyAssert.h>
 #include <Core/Malloc/Allocator.h>
 
+#include <sci_defs/kokkos_defs.h>
+
 #ifdef UINTAH_ENABLE_KOKKOS
 #include <Kokkos_Core.hpp>
 #endif //UINTAH_ENABLE_KOKKOS

@@ -51,8 +51,9 @@
 using namespace std;
 using namespace Uintah;
 
-UnifiedSchedulerTest::UnifiedSchedulerTest(const ProcessorGroup* myworld) :
-    UintahParallelComponent(myworld)
+UnifiedSchedulerTest::UnifiedSchedulerTest(const ProcessorGroup* myworld,
+					   const SimulationStateP sharedState) :
+  ApplicationCommon(myworld, sharedState)
 {
   phi_label = VarLabel::create("phi", NCVariable<double>::getTypeDescription());
   residual_label = VarLabel::create("residual", sum_vartype::getTypeDescription());
@@ -67,10 +68,8 @@ UnifiedSchedulerTest::~UnifiedSchedulerTest()
 //
 void UnifiedSchedulerTest::problemSetup(const ProblemSpecP& params,
                                         const ProblemSpecP& restart_prob_spec,
-                                        GridP& grid,
-                                        SimulationStateP& sharedState)
+                                        GridP& grid)
 {
-  sharedState_ = sharedState;
   ProblemSpecP unifiedSchedTest = params->findBlock("UnifiedSchedulerTest");
   unifiedSchedTest->require("delt", delt_);
   simpleMaterial_ = scinew SimpleMaterial();
@@ -86,7 +85,7 @@ void UnifiedSchedulerTest::scheduleInitialize(const LevelP& level,
   multiTask->computesWithScratchGhost(phi_label, nullptr, Uintah::Task::NormalDomain, Ghost::AroundNodes, 1);
   //multiTask->computes(phi_label);
   multiTask->computes(residual_label);
-  sched->addTask(multiTask, level->eachPatch(), sharedState_->allMaterials());
+  sched->addTask(multiTask, level->eachPatch(), m_sharedState->allMaterials());
 }
 //______________________________________________________________________
 //
@@ -96,14 +95,14 @@ void UnifiedSchedulerTest::scheduleRestartInitialize(const LevelP& level,
 }
 //______________________________________________________________________
 //
-void UnifiedSchedulerTest::scheduleComputeStableTimestep(const LevelP& level,
+void UnifiedSchedulerTest::scheduleComputeStableTimeStep(const LevelP& level,
                                                          SchedulerP& sched)
 {
-  Task* task = scinew Task("UnifiedSchedulerTest::computeStableTimestep", this, &UnifiedSchedulerTest::computeStableTimestep);
+  Task* task = scinew Task("UnifiedSchedulerTest::computeStableTimeStep", this, &UnifiedSchedulerTest::computeStableTimeStep);
 
   task->requires(Task::NewDW, residual_label);
-  task->computes(sharedState_->get_delt_label(), level.get_rep());
-  sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
+  task->computes(m_sharedState->get_delt_label(), level.get_rep());
+  sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
 }
 //______________________________________________________________________
 //
@@ -124,12 +123,12 @@ void UnifiedSchedulerTest::scheduleTimeAdvance(const LevelP& level,
   task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
   task->computesWithScratchGhost(phi_label, nullptr, Uintah::Task::NormalDomain, Ghost::AroundNodes, 1);
   task->computes(residual_label);
-  sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
+  sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
 }
 
 //______________________________________________________________________
 //
-void UnifiedSchedulerTest::computeStableTimestep(const ProcessorGroup* pg,
+void UnifiedSchedulerTest::computeStableTimeStep(const ProcessorGroup* pg,
                                                  const PatchSubset* patches,
                                                  const MaterialSubset* matls,
                                                  DataWarehouse* old_dw,
@@ -140,7 +139,7 @@ void UnifiedSchedulerTest::computeStableTimestep(const ProcessorGroup* pg,
     new_dw->get(residual, residual_label);
     cerr << "Residual=" << residual << '\n';
   }
-  new_dw->put(delt_vartype(delt_), sharedState_->get_delt_label(), getLevel(patches));
+  new_dw->put(delt_vartype(delt_), m_sharedState->get_delt_label(), getLevel(patches));
 }
 
 //______________________________________________________________________

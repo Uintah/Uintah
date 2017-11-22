@@ -71,7 +71,15 @@ namespace Uintah {
          AroundFacesY,
          AroundFacesZ,
          AroundFaces,
-         numGhostTypes // 7
+         xpypzp,   // 7
+         xpypzm,   // 8
+         xpymzp,   // 9
+         xpymzm,   // 10
+         xmypzp,   // 11
+         xmypzm,   // 12
+         xmymzp,   // 13
+         xmymzm,   // 14
+         numGhostTypes // 15
       };
 
      static Uintah::IntVector getGhostTypeDir(Ghost::GhostType gtype)

@@ -152,7 +152,7 @@
       </Box>
     </Level>
   </Grid>
-  <AMR>
+  <AMR type="StaticGridML" >
     <useLockStep> true </useLockStep>
   </AMR>
   <PhysicalConstants>

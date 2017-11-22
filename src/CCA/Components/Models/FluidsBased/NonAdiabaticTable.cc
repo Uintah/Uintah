@@ -432,7 +432,7 @@ void NonAdiabaticTable::initialize(const ProcessorGroup*,
     if (d_usingProbePts){
       FILE *fp;
       IntVector cell;
-      string udaDir = d_dataArchiver->getOutputLocation();
+      string udaDir = m_output->getOutputLocation();
       
         for (unsigned int i =0 ; i < d_probePts.size(); i++) {
           if(patch->findCell(Point(d_probePts[i]),cell) ) {
@@ -796,7 +796,7 @@ void NonAdiabaticTable::computeModelSources(const ProcessorGroup*,
         
         if (time >= nextDumpTime){        // is it time to dump the points
           FILE *fp;
-          string udaDir = d_dataArchiver->getOutputLocation();
+          string udaDir = m_output->getOutputLocation();
           IntVector cell_indx;
           
           // loop through all the points and dump if that patch contains them
@@ -901,7 +901,7 @@ void NonAdiabaticTable::testConservation(const ProcessorGroup*,
   }
 }
 //__________________________________      
-void NonAdiabaticTable::scheduleComputeStableTimestep(SchedulerP&,
+void NonAdiabaticTable::scheduleComputeStableTimeStep(SchedulerP&,
                                       const LevelP&,
                                       const ModelInfo*)
 {

@@ -236,6 +236,47 @@ ReductionVariable<bool, Reductions::And<bool> >
   index += sizeof(char);
 }
 
+#if !defined(__digital__) || defined(__GNUC__)
+template<>
+#endif
+
+void
+ReductionVariable<bool, Reductions::Or<bool> >
+   ::getMPIInfo(int& count, MPI_Datatype& datatype, MPI_Op& op)
+{
+   datatype = MPI_CHAR;
+   count = 1;
+   op = MPI_LOR;
+}
+
+#if !defined(__digital__) || defined(__GNUC__)
+template<>
+#endif
+
+ void
+ReductionVariable<bool, Reductions::Or<bool> >
+   ::getMPIData(vector<char>& data, int& index)
+{
+  ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(char)));
+  char* ptr = reinterpret_cast<char*>(&data[index]);
+  *ptr = value;
+  index += sizeof(char);
+}
+
+#if !defined(__digital__) || defined(__GNUC__)
+template<>
+#endif
+
+void
+ReductionVariable<bool, Reductions::Or<bool> >
+::putMPIData(vector<char>& data, int& index)
+{
+  ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(char)));
+  char* ptr = reinterpret_cast<char*>(&data[index]);
+  value = *ptr;
+  index += sizeof(char);
+}
+
 #if !defined( __PGI ) && !defined( OSX_SNOW_LEOPARD_OR_LATER )
 // We reduce a "long", not a long64 because on 2/24/03, LAM-MPI did not
 // support Uintah::MPI::Reduce for LONG_LONG_INT.  We could use Uintah::MPI::Create_op instead?

@@ -68,9 +68,9 @@ public:
   // The simulation runs to either the maximum number of time steps
   // (maxTimestep) or the maximum simulation time (maxTime), which
   // ever comes first. If the "max_Timestep" is not specified in the .ups
-  // file, then it is set to INT_MAX-1.
+  // file, then it is set to zero.
   
-  int    m_max_timestep;             // Maximum number of time steps to run.
+  int    m_max_time_steps;           // Maximum number of time steps to run.
   double m_max_time;                 // Maximum simulation time
   double m_init_time;                // Initial simulation time
   

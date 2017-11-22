@@ -26,10 +26,10 @@
 #ifndef UINTAH_CCA_COMPONENTS_FVM_MPNP_H
 #define UINTAH_CCA_COMPONENTS_FVM_MPNP_H
 
+#include <CCA/Components/Application/ApplicationCommon.h>
+
 #include <Core/Util/RefCounted.h>
 #include <Core/Util/Handle.h>
-#include <Core/Parallel/UintahParallelComponent.h>
-#include <CCA/Ports/SimulationInterface.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <CCA/Ports/SolverInterface.h>
@@ -56,14 +56,16 @@ WARNING
   
 ****************************************/
 
-  class MPNP : public UintahParallelComponent, public SimulationInterface {
+  class MPNP : public ApplicationCommon {
   public:
-    MPNP(const ProcessorGroup* myworld);
+    MPNP(const ProcessorGroup* myworld,
+	 const SimulationStateP sharedState);
+    
     virtual ~MPNP();
 
     virtual void problemSetup(const ProblemSpecP& params,
                               const ProblemSpecP& restart_prob_spec,
-                              GridP& grid, SimulationStateP&);
+                              GridP& grid);
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
                               
@@ -73,7 +75,7 @@ WARNING
     virtual void scheduleRestartInitialize(const LevelP& level,
                                            SchedulerP& sched);
                                            
-    virtual void scheduleComputeStableTimestep(const LevelP& level,
+    virtual void scheduleComputeStableTimeStep(const LevelP& level,
                                                SchedulerP&);
     virtual void scheduleTimeAdvance( const LevelP& level, 
                                       SchedulerP&);
@@ -83,14 +85,13 @@ WARNING
     void initialize(const ProcessorGroup*,
                     const PatchSubset* patches, const MaterialSubset* matls,
                     DataWarehouse* old_dw, DataWarehouse* new_dw);
-    void computeStableTimestep(const ProcessorGroup*,
+    void computeStableTimeStep(const ProcessorGroup*,
                                const PatchSubset* patches,
                                const MaterialSubset* matls,
                                DataWarehouse* old_dw, DataWarehouse* new_dw);
 
 
     FVMLabel* d_lb;
-    SimulationStateP d_shared_state;
     double d_delt;
     SolverInterface* d_solver;
     SolverParameters* d_solver_parameters;

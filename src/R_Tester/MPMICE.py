@@ -50,6 +50,7 @@ LOCALTESTS = [   ("massX",                    "massX.ups",                 1,  "
                  ("DDT",                      "DDT.ups",                   1,  "ALL", ["exactComparison","no_dbg"]),
                  ("InductionTime",            "InductionTime.ups",         1  ,"ALL", ["exactComparison","no_dbg"]),
                  ("InductionPropagation",     "InductionPropagation.ups",  1  ,"ALL", ["exactComparison","no_dbg"]),
+                 ("PBX_Cylinder_Ext_Load",    "PBX_array/oneCylinder.ups", 4  ,"ALL", ["exactComparison","no_restart","no_dbg"])
     	       ]
 DEBUGTESTS =[]
 #__________________________________
@@ -57,6 +58,7 @@ DEBUGTESTS =[]
 # and allows the user to select the tests to run
 #LIST: AMRTESTS DEBUGTESTS LOCALTESTS NIGHTLYTESTS BUILDBOTTESTS
 #__________________________________
+
 
 # returns the list
 def getTestList(me) :
@@ -69,7 +71,7 @@ def getTestList(me) :
   elif me == "NIGHTLYTESTS":
     TESTS = LOCALTESTS + NIGHTLYTESTS + AMRTESTS
   elif me == "BUILDBOTTESTS":
-    TESTS = ignorePerformanceTests( NIGHTLYTESTS )
+    TESTS = ignorePerformanceTests( LOCALTESTS + NIGHTLYTESTS + AMRTESTS )
   else:
     print "\nERROR:MPMICE.py  getTestList:  The test list (%s) does not exist!\n\n" % me
     exit(1)

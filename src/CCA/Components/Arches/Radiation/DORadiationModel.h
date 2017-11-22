@@ -48,7 +48,6 @@ GENERAL INFORMATION
 #include <CCA/Components/Arches/TimeIntegratorLabel.h>
 #include <CCA/Components/Arches/ArchesVariables.h>
 #include <CCA/Components/Arches/ArchesConstVariables.h>
-#include <CCA/Components/Arches/Arches.h>
 #include <CCA/Ports/SchedulerP.h>
 #include <CCA/Ports/DataWarehouseP.h>
 #include <Core/Grid/LevelP.h>
@@ -60,6 +59,7 @@ GENERAL INFORMATION
 namespace Uintah {
 
   class ArchesLabel;
+  class MPMArchesLabel;
 
 class DORadiationModel{
 
@@ -168,13 +168,13 @@ public:
         return _nQn_part;
       }
       inline int xDir( int ix){
-        return (int) _plusX[ix];
+        return   _plusX[ix];
       }
       inline int yDir( int ix){
-        return (int) _plusY[ix];
+        return  _plusY[ix] ;
       }
       inline int zDir( int ix){
-        return (int) _plusZ[ix];
+        return  _plusZ[ix] ;
       }
 
       std::vector<std::string> gasAbsorptionNames(){

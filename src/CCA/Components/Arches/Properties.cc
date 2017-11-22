@@ -24,7 +24,6 @@
 
 //----- Properties.cc --------------------------------------------------
 #include <CCA/Components/Arches/Properties.h>
-#include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #if HAVE_TABPROPS
 # include <CCA/Components/Arches/ChemMix/TabPropsInterface.h>

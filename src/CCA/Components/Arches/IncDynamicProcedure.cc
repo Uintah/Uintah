@@ -25,6 +25,7 @@
 //----- IncDynamicProcedure.cc --------------------------------------------------
 
 #include <CCA/Components/Arches/IncDynamicProcedure.h>
+#include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/PhysicalConstants.h>
 #include <CCA/Components/Arches/BoundaryCondition.h>
 #include <CCA/Components/Arches/CellInformation.h>

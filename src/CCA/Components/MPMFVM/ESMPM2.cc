@@ -26,8 +26,12 @@
 #include <CCA/Components/MPM/PhysicalBC/FluxBCModel.h>
 #include <CCA/Components/MPMFVM/ESMPM2.h>
 
-#include <Core/Grid/DbgOutput.h>
+#include <CCA/Ports/Output.h>
+#include <CCA/Ports/Regridder.h>
+#include <CCA/Ports/Scheduler.h>
+#include <CCA/Ports/SolverInterface.h>
 
+#include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/CCVariable.h>
@@ -51,16 +55,17 @@ static DebugStream cout_doing("ESMPM2_DOING_COUT", false);
 //#define DEBUG_VEL
 #undef CBDI_FLUXBCS
 
-ESMPM2::ESMPM2(const ProcessorGroup* myworld) : UintahParallelComponent(myworld)
+ESMPM2::ESMPM2(const ProcessorGroup* myworld,
+	       const SimulationStateP sharedState) :
+  ApplicationCommon(myworld, sharedState)
 {
-  d_amrmpm = scinew AMRMPM(myworld);
-  d_gaufvm = scinew GaussSolve(myworld);
+  d_amrmpm = scinew AMRMPM(myworld, m_sharedState);
+  d_gaufvm = scinew GaussSolve(myworld, m_sharedState);
 
   d_mpm_lb = scinew MPMLabel();
   d_fvm_lb = scinew FVMLabel();
 
   d_mpm_flags = 0;
-  d_data_archiver = 0;
   d_switch_criteria = 0;
 
   d_TINY_RHO  = 1.e-12;
@@ -74,6 +79,9 @@ ESMPM2::ESMPM2(const ProcessorGroup* myworld) : UintahParallelComponent(myworld)
 
 ESMPM2::~ESMPM2()
 {
+  d_amrmpm->releaseComponents();
+  d_gaufvm->releaseComponents();
+
   delete d_amrmpm;
   delete d_gaufvm;
   delete d_mpm_lb;
@@ -81,34 +89,22 @@ ESMPM2::~ESMPM2()
 }
 
 void ESMPM2::problemSetup(const ProblemSpecP& prob_spec, const ProblemSpecP& restart_prob_spec,
-                          GridP& grid, SimulationStateP& shared_state)
+                          GridP& grid)
 {
-  d_shared_state = shared_state;
-  d_data_archiver = dynamic_cast<Output*>(getPort("output"));
-  Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
-
   //**** Start MPM Section *****
-  d_amrmpm->attachPort("output", d_data_archiver);
-  d_amrmpm->attachPort("scheduler", sched);
-  d_amrmpm->problemSetup(prob_spec, restart_prob_spec, grid, d_shared_state);
+  d_amrmpm->setComponents( this, prob_spec );
+  d_amrmpm->problemSetup(prob_spec, restart_prob_spec, grid);
 
   //**** Start FVM Section *****
-  d_gaufvm->attachPort("output", d_data_archiver);
-  d_gaufvm->attachPort("scheduler", sched);
-  SolverInterface* solver = dynamic_cast<SolverInterface*>(getPort("solver"));
-  if(!solver){
-    throw InternalError("ElectrostaticSolve needs a solver component to work", __FILE__, __LINE__);
-  }
-  d_gaufvm->attachPort("solver", solver);
-
+  d_gaufvm->setComponents( this, prob_spec );
+ 
   d_gaufvm->setWithMPM(true);
-
-  d_gaufvm->problemSetup(prob_spec, restart_prob_spec, grid, d_shared_state);
+  d_gaufvm->problemSetup(prob_spec, restart_prob_spec, grid);
 
   d_switch_criteria = dynamic_cast<SwitchingCriteria*>(getPort("switch_criteria"));
 
   if(d_switch_criteria){
-    d_switch_criteria->problemSetup(prob_spec, restart_prob_spec, d_shared_state);
+    d_switch_criteria->problemSetup(prob_spec, restart_prob_spec, m_sharedState);
   }
 
   ProblemSpecP mpm_ps = 0;
@@ -166,9 +162,9 @@ void ESMPM2::restartInitialize()
   d_amrmpm->restartInitialize();
 }
 
-void ESMPM2::scheduleComputeStableTimestep(const LevelP& level, SchedulerP& sched)
+void ESMPM2::scheduleComputeStableTimeStep(const LevelP& level, SchedulerP& sched)
 {
-  d_amrmpm->scheduleComputeStableTimestep(level, sched);
+  d_amrmpm->scheduleComputeStableTimeStep(level, sched);
 }
 
 void ESMPM2::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
@@ -177,8 +173,8 @@ void ESMPM2::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
   if(level->getIndex() > 0)
     return;
 
-  const MaterialSet* mpm_matls = d_shared_state->allMPMMaterials();
-  const MaterialSet* all_matls = d_shared_state->allMaterials();
+  const MaterialSet* mpm_matls = m_sharedState->allMPMMaterials();
+  const MaterialSet* all_matls = m_sharedState->allMaterials();
   const MaterialSubset* mpm_matlsub = mpm_matls->getUnion();
 
   int maxLevels = level->getGrid()->numLevels();
@@ -380,9 +376,9 @@ void ESMPM2::computeCCChargeMass(const ProcessorGroup*, const PatchSubset* patch
       cc_permittivity.initialize(0.0);
       cc_part_count.initialize(0);
 
-      int numMatls = d_shared_state->getNumMPMMatls();
+      int numMatls = m_sharedState->getNumMPMMatls();
       for(int m = 0; m < numMatls; m++){
-        MPMMaterial* mpm_matl = d_shared_state->getMPMMaterial( m );
+        MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
         int dwi = mpm_matl->getDWIndex();
 
         constParticleVariable<double> p_poscharge;
@@ -475,9 +471,9 @@ void ESMPM2::interpESPotentialToPart(const ProcessorGroup*, const PatchSubset* p
     constCCVariable<double> cc_espotential;
     new_dw->get(cc_espotential, d_fvm_lb->ccESPotential, 0, patch, d_gac, 1);
 
-    int numMatls = d_shared_state->getNumMPMMatls();
+    int numMatls = m_sharedState->getNumMPMMatls();
     for(int m = 0; m < numMatls; m++){
-      MPMMaterial* mpm_matl = d_shared_state->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
 
       constParticleVariable<Point> p_position;

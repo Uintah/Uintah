@@ -25,18 +25,21 @@
 #ifndef UINTAH_HOMEBREW_REGRIDDER_H
 #define UINTAH_HOMEBREW_REGRIDDER_H
 
-#include <Core/Geometry/IntVector.h>
 #include <Core/Parallel/UintahParallelPort.h>
+
+#include <Core/Geometry/IntVector.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
-#include <CCA/Ports/SchedulerP.h>
-#include <vector>
 
+#include <vector>
 
 namespace Uintah {
 
+  class VarLabel;
+  
 /**************************************
 
 CLASS
@@ -103,7 +106,8 @@ WARNING
     virtual void scheduleInitializeErrorEstimate(const LevelP& level) = 0;
 
     //! Schedules task to dilate existing error flags
-    virtual void scheduleDilation(const LevelP& level) = 0;
+    virtual void scheduleDilation(const LevelP& level,
+				  const bool isLockstepAMR) = 0;
 
     //! Asks if we are going to do regridding
     virtual bool flaggedCellsOnFinestLevel(const GridP& grid) = 0;
@@ -120,6 +124,15 @@ WARNING
     virtual bool useDynamicDilation() = 0;
 
     virtual std::vector<Uintah::IntVector> getMinPatchSize() = 0;
+
+    virtual void setOverheadAverage(double val) = 0;
+    
+    virtual const MaterialSubset* refineFlagMaterials() const = 0;
+    
+    virtual const VarLabel* getRefineFlagLabel() const = 0;
+    virtual const VarLabel* getOldRefineFlagLabel() const = 0;
+    virtual const VarLabel* getRefinePatchFlagLabel() const = 0;
+    
   private:
     Regridder(const Regridder&);
     Regridder& operator=(const Regridder&);

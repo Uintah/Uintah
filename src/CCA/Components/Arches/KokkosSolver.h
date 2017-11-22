@@ -104,9 +104,9 @@ namespace Uintah{
                     DataWarehouse* old_dw,
                     DataWarehouse* new_dw );
 
-  double recomputeTimestep(double current_dt){return current_dt/2.;};
+  double recomputeTimeStep(double current_dt){return current_dt/2.;};
 
-  inline bool restartableTimesteps() {
+  inline bool restartableTimeSteps() {
     return false;
   }
 

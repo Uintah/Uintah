@@ -790,10 +790,40 @@
             
     </Module>
   </DataAnalysis>
+
+  <!--__________________________________-->
+  <PostProcess                          spec="OPTIONAL NO_DATA" >
+    <Module                             spec="MULTIPLE NO_DATA"
+                                          attribute1="type REQUIRED STRING 'statistics, spatioTemporalAvg" >
+      
+      <!--  Common __________________________________-->
+      <material                         spec="OPTIONAL STRING" />
+      <materialIndex                    spec="OPTIONAL INTEGER" />
+      <timeStart                        spec="REQUIRED DOUBLE"  need_applies_to="type statistics, spatioTemporalAvg"/>
+      <timeStop                         spec="REQUIRED DOUBLE"  need_applies_to="type statistics, spatioTemporalAvg"/>
+      <monitorCell                      spec="OPTIONAL VECTOR"  need_applies_to="type statistics, spatioTemporalAvg"/>
+      <Variables                        spec="OPTIONAL NO_DATA" need_applies_to="type statistics, spatioTemporalAvg">
+        <analyze                        spec="MULTIPLE NO_DATA"
+                                          attribute1="label REQUIRED STRING" 
+                                          attribute2="matl  OPTIONAL STRING"
+                                          attribute3="level OPTIONAL STRING" />
+      </Variables>
+ 
+      <!--statistics ____________________________________--> 
+      <computeHigherOrderStats         spec="OPTIONAL BOOLEAN"  need_applies_to="type statistics" />
+      
+      <!--spatioTemporalAvg _____________________________--> 
+      <domain                          spec="OPTIONAL STRING 'everywhere interior, boundaries'"  need_applies_to="type spatioTemporalAvg" />
+      <avgBoxCells                     spec="REQUIRED VECTOR"  need_applies_to="type spatioTemporalAvg" />
+            
+    </Module>
+  </PostProcess>
+
   
   <!--__________________________________-->
   
-  <AMR                                  spec="OPTIONAL NO_DATA" >
+  <AMR                                  spec="OPTIONAL NO_DATA"
+					attribute1="type OPTIONAL STRING 'Dynamic StaticGridML'">
     <doMultiTaskgraphing                spec="OPTIONAL BOOLEAN" />
     <useLockStep                        spec="OPTIONAL BOOLEAN" /> <!-- defaults to FALSE.  FIXME: correct?  Is it optional? -->
 

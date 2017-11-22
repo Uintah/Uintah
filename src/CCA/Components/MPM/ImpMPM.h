@@ -28,8 +28,6 @@
 
 #include <Core/Geometry/Vector.h>
 
-#include <Core/Parallel/UintahParallelComponent.h>
-#include <CCA/Ports/SimulationInterface.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
@@ -83,17 +81,18 @@ WARNING
   
 ****************************************/
 
-class ImpMPM : public MPMCommon, public UintahParallelComponent, 
-  public SimulationInterface {
+class ImpMPM : public MPMCommon {
 public:
-  ImpMPM(const ProcessorGroup* myworld);
+  ImpMPM(const ProcessorGroup* myworld,
+	 const SimulationStateP sharedStat);
+  
   virtual ~ImpMPM();
 
   //////////
   // Insert Documentation Here:
   virtual void problemSetup(const ProblemSpecP& params, 
                             const ProblemSpecP& mat_ps,
-                            GridP& grid, SimulationStateP&);
+                            GridP& grid);
 
   virtual void outputProblemSpec(ProblemSpecP& ps);
 
@@ -105,7 +104,7 @@ public:
 
   //////////
   // Insert Documentation Here:
-  virtual void scheduleComputeStableTimestep(const LevelP& level, SchedulerP&);
+  virtual void scheduleComputeStableTimeStep(const LevelP& level, SchedulerP&);
 
   //////////
   // Insert Documentation Here:
@@ -126,13 +125,11 @@ public:
   void scheduleInitialErrorEstimate(const LevelP& coarseLevel,
                                     SchedulerP& sched);
 
-  virtual bool restartableTimesteps();
-  virtual double recomputeTimestep(double new_dt);
+  virtual bool restartableTimeSteps();
+  virtual double recomputeTimeStep(double new_dt);
 
   void scheduleSwitchTest(const LevelP& level, SchedulerP& sched);
   
-  void setSharedState(SimulationStateP& ssp);
-
   void setMPMLabel(MPMLabel* Mlb)
   {
 
@@ -513,7 +510,6 @@ private:
   ImpMPM(const ImpMPM&);
   ImpMPM& operator=(const ImpMPM&);
 
-  SimulationStateP d_sharedState;
   MPMLabel* lb;
   ImpMPMFlags* flags;
 

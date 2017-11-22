@@ -60,7 +60,6 @@ WARNING
    none
 ****************************************/
 
-#include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/TurbulenceModel.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
@@ -68,6 +67,8 @@ WARNING
 #include <Core/Grid/Variables/CCVariable.h>
 
 namespace Uintah {
+class ArchesLabel;
+class MPMArchesLabel;
 class PhysicalConstants;
 class BoundaryCondition;
 

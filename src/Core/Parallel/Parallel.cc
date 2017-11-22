@@ -29,6 +29,8 @@
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Parallel/UintahMPI.h>
 
+#include <sci_defs/kokkos_defs.h>
+
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
@@ -237,7 +239,6 @@ Parallel::initializeManager( int& argc , char**& argv )
     MpiError(const_cast<char*>("Uinath::MPI::Init"), status);
   }
 
-
 #ifdef THREADED_MPI_AVAILABLE
   if (provided < required) {
     std::cerr << "Provided MPI parallel support of " << provided << " is not enough for the required level of " << required << "\n"
@@ -246,7 +247,6 @@ Parallel::initializeManager( int& argc , char**& argv )
     throw InternalError("Bad MPI level", __FILE__, __LINE__);
   }
 #endif
-
 
   Uintah::worldComm_ = MPI_COMM_WORLD;
   if ((status = Uintah::MPI::Comm_size(Uintah::worldComm_, &s_world_size)) != MPI_SUCCESS) {

@@ -135,7 +135,7 @@ void TransIsoHyper::initializeCMData(const Patch* patch,
     fail[*iter] = 0.0 ;
     stretch[*iter] = 1.0;
   }
-  computeStableTimestep(patch, matl, new_dw);
+  computeStableTimeStep(patch, matl, new_dw);
 }
 
 void TransIsoHyper::addParticleState(std::vector<const VarLabel*>& from,
@@ -154,7 +154,7 @@ void TransIsoHyper::addParticleState(std::vector<const VarLabel*>& from,
   to.push_back(pFailureLabel_preReloc);
 }
 
-void TransIsoHyper::computeStableTimestep(const Patch* patch,
+void TransIsoHyper::computeStableTimeStep(const Patch* patch,
                                           const MPMMaterial* matl,
                                           DataWarehouse* new_dw)
   //__________________________TIME STEP DEPENDS ON:
@@ -210,7 +210,7 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
   //___________________________________COMPUTES THE STRESS ON ALL THE PARTICLES
   //__________________________________ IN A GIVEN PATCH FOR A GIVEN MATERIAL
   //___________________________________CALLED ONCE PER TIME STEP
-  //___________________________________CONTAINS A COPY OF computeStableTimestep
+  //___________________________________CONTAINS A COPY OF computeStableTimeStep
 {
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);

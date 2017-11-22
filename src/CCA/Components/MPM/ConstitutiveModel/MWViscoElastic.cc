@@ -155,7 +155,7 @@ void MWViscoElastic::initializeCMData(const Patch* patch,
       pstress_e_d[*iter] = zero;
   }
 
-  computeStableTimestep(patch, matl, new_dw);
+  computeStableTimeStep(patch, matl, new_dw);
 }
 
 void MWViscoElastic::addParticleState(std::vector<const VarLabel*>& from,
@@ -176,7 +176,7 @@ void MWViscoElastic::addParticleState(std::vector<const VarLabel*>& from,
   to.push_back(pStress_e_dLabel_preReloc);
 }
 
-void MWViscoElastic::computeStableTimestep(const Patch* patch,
+void MWViscoElastic::computeStableTimeStep(const Patch* patch,
                                            const MPMMaterial* matl,
                                            DataWarehouse* new_dw)
 {

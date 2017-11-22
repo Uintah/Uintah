@@ -28,6 +28,7 @@
 
 #include <Core/Grid/Variables/Reductions.h>
 #include <Core/Grid/Variables/ReductionVariable.h>
+#include <Core/Grid/Variables/SoleVariable.h>
 #include <Core/Disclosure/TypeUtils.h>
 
 namespace Uintah {
@@ -59,6 +60,20 @@ namespace Uintah {
       
      ****************************************/
 
+   // System vars related to the application
+   const std::string timeStep_name( "timeStep" );
+   const std::string simTime_name( "simulationTime" );
+   const std::string delT_name( "delT" );
+
+   const std::string outputInterval_name( "outputInterval" );
+   const std::string outputTimeStepInterval_name( "outputTimeStepInterval" );
+   const std::string checkpointInterval_name( "checkpointInterval" );
+   const std::string checkpointTimeStepInterval_name( "checkpointTimeStepInterval" );
+   const std::string endSimulation_name( "endSimulation" );
+  
+   typedef SoleVariable<unsigned int > timeStep_vartype;
+   typedef SoleVariable<double       >  simTime_vartype;
+  
    typedef ReductionVariable<double, Reductions::Min<double> > delt_vartype;
 
    typedef ReductionVariable<double, Reductions::Max<double> > max_vartype;
@@ -68,6 +83,8 @@ namespace Uintah {
    typedef ReductionVariable<double, Reductions::Sum<double> > sum_vartype;
 
    typedef ReductionVariable<bool,   Reductions::And<bool> >   bool_and_vartype;
+
+   typedef ReductionVariable<bool,   Reductions::Or<bool> >    bool_or_vartype;
     
    typedef ReductionVariable<Vector, Reductions::Min<Vector> > minvec_vartype;
    

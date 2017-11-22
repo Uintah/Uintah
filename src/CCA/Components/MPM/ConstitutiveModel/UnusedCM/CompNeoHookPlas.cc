@@ -159,7 +159,7 @@ void CompNeoHookPlas::initializeCMData(const Patch* patch,
     bElBar[*iter] = Identity;
   }
 
-  computeStableTimestep(patch, matl, new_dw);
+  computeStableTimeStep(patch, matl, new_dw);
 }
 
 void CompNeoHookPlas::allocateCMDataAddRequires(Task* task,
@@ -217,7 +217,7 @@ void CompNeoHookPlas::allocateCMDataAdd(DataWarehouse* new_dw,
   (*newState)[ bElBarLabel]=bElBar.clone();
 }
 
-void CompNeoHookPlas::computeStableTimestep(const Patch* patch,
+void CompNeoHookPlas::computeStableTimeStep(const Patch* patch,
                                              const MPMMaterial* matl,
                                              DataWarehouse* new_dw)
 {

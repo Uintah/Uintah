@@ -189,28 +189,27 @@ FOWYDevol::problemSetup(const ProblemSpecP& params, int qn)
   _weight_small = weight_eqn.getSmallClipPlusTol();
   _weight_scaling_constant = weight_eqn.getScalingConstant(d_quadNode);
 
-
 #ifdef HAVE_VISIT
   static bool initialized = false;
 
   // Running with VisIt so add in the variables that the user can
   // modify.
-  if( d_sharedState->getVisIt() && !initialized ) {
+//  if( d_sharedState->getVisIt() && !initialized ) {
     // variable 1 - Must start with the component name and have NO
     // spaces in the var name.
-    SimulationState::interactiveVar var;
-    var.name     = "Arches-Devol-Ultimate-Yield";
-    var.type     = Uintah::TypeDescription::double_type;
-    var.value    = (void *) &( _v_hiT);
-    var.range[0]   = -1.0e9;
-    var.range[1]   = +1.0e9;
-    var.modifiable = true;
-    var.recompile  = false;
-    var.modified   = false;
-    d_sharedState->d_UPSVars.push_back( var );
+//     SimulationState::interactiveVar var;
+//     var.name     = "Arches-Devol-Ultimate-Yield";
+//     var.type     = Uintah::TypeDescription::double_type;
+//     var.value    = (void *) &( _v_hiT);
+//     var.range[0]   = -1.0e9;
+//     var.range[1]   = +1.0e9;
+//     var.modifiable = true;
+//     var.recompile  = false;
+//     var.modified   = false;
+//     d_sharedState->d_UPSVars.push_back( var );
 
-    initialized = true;
-  }
+  //   initialized = true;
+  // }
 #endif
 }
 

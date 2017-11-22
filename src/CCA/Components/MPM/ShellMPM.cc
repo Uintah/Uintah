@@ -44,7 +44,9 @@ static DebugStream cout_doing("ShellMPM", false);
 //
 // Construct ShellMPM using the SerialMPM constructor
 //
-ShellMPM::ShellMPM(const ProcessorGroup* myworld):SerialMPM(myworld)
+ShellMPM::ShellMPM(const ProcessorGroup* myworld,
+		   const SimulationStateP sharedState) :
+  SerialMPM(myworld, sharedState)
 {
 }
 
@@ -64,9 +66,9 @@ ShellMPM::~ShellMPM()
 void 
 ShellMPM::problemSetup(const ProblemSpecP& prob_spec, 
                        const ProblemSpecP& restart_prob_spec, 
-                       GridP& grid, SimulationStateP& sharedState)
+                       GridP& grid)
 {
-  SerialMPM::problemSetup(prob_spec, restart_prob_spec,grid, sharedState);
+  SerialMPM::problemSetup(prob_spec, restart_prob_spec, grid);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -78,7 +80,6 @@ ShellMPM::problemSetup(const ProblemSpecP& prob_spec,
 #if 0 
 void 
 ShellMPM::materialProblemSetup(const ProblemSpecP& prob_spec, 
-                               SimulationStateP& sharedState,
                                MPMLabel* lb, 
                                MPMFlags* flags)
 {
@@ -86,10 +87,10 @@ ShellMPM::materialProblemSetup(const ProblemSpecP& prob_spec,
   ProblemSpecP mat_ps     = prob_spec->findBlockWithOutAttribute("MaterialProperties");
   ProblemSpecP mpm_mat_ps = mat_ps->findBlock("MPM");
   for( ProblemSpecP ps = mpm_mat_ps->findBlock("material"); ps != nullptr; ps = ps->findNextBlock("material") ) {
-    MPMMaterial *mat = scinew MPMMaterial(ps, sharedState,flags);
+    MPMMaterial *mat = scinew MPMMaterial(ps, m_sharedState,flags);
 
     //register as an MPM material
-    sharedState->registerMPMMaterial(mat);
+    m_sharedState->registerMPMMaterial(mat);
   }
 }
 #endif
@@ -121,9 +122,9 @@ ShellMPM::schedInterpolateParticleRotToGrid(SchedulerP& sched,
 {
   Task* t = scinew Task("ShellMPM::interpolateParticleRotToGrid",
                         this,&ShellMPM::interpolateParticleRotToGrid);
-  int numMatls = d_sharedState->getNumMPMMatls();
+  int numMatls = m_sharedState->getNumMPMMatls();
   for(int m = 0; m < numMatls; m++){
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     //cerr << "Material = " << m << " numMatls = " << numMatls 
     //   << " mpm_matl = " << mpm_matl << " Cm = " << cm  << endl;
@@ -144,9 +145,9 @@ ShellMPM::interpolateParticleRotToGrid(const ProcessorGroup*,
                                        DataWarehouse* old_dw,
                                        DataWarehouse* new_dw)
 {
-  int numMatls = d_sharedState->getNumMPMMatls();
+  int numMatls = m_sharedState->getNumMPMMatls();
   for(int m = 0; m < numMatls; m++){
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     ShellMaterial* smcm = dynamic_cast<ShellMaterial*>(cm);
     if (smcm) smcm->interpolateParticleRotToGrid(patches, mpm_matl, 
@@ -181,9 +182,9 @@ ShellMPM::schedComputeRotInternalMoment(SchedulerP& sched,
 {
   Task* t = scinew Task("MPM::computeRotInternalMoment",
                         this, &ShellMPM::computeRotInternalMoment);
-  int numMatls = d_sharedState->getNumMPMMatls();
+  int numMatls = m_sharedState->getNumMPMMatls();
   for(int m = 0; m < numMatls; m++){
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     ShellMaterial* smcm = dynamic_cast<ShellMaterial*>(cm);
     if (smcm) smcm->addComputesRequiresRotInternalMoment(t, mpm_matl, patches);
@@ -203,9 +204,9 @@ ShellMPM::computeRotInternalMoment(const ProcessorGroup*,
                                    DataWarehouse* new_dw)
 {
   // Loop over materials
-  int numMatls = d_sharedState->getNumMPMMatls();
+  int numMatls = m_sharedState->getNumMPMMatls();
   for(int m = 0; m < numMatls; m++){
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     ShellMaterial* smcm = dynamic_cast<ShellMaterial*>(cm);
     if (smcm) smcm->computeRotInternalMoment(patches, mpm_matl, old_dw, new_dw);
@@ -239,9 +240,9 @@ ShellMPM::schedComputeRotAcceleration(SchedulerP& sched,
   Task* t = scinew Task("MPM::computeRotAcceleration",
                         this, &ShellMPM::computeRotAcceleration);
 
-  int numMatls = d_sharedState->getNumMPMMatls();
+  int numMatls = m_sharedState->getNumMPMMatls();
   for(int m = 0; m < numMatls; m++){
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     ShellMaterial* smcm = dynamic_cast<ShellMaterial*>(cm);
     if (smcm) smcm->addComputesRequiresRotAcceleration(t, mpm_matl, patches);
@@ -262,9 +263,9 @@ ShellMPM::computeRotAcceleration(const ProcessorGroup*,
                                  DataWarehouse* new_dw)
 {
   // Loop over materials
-  int numMatls = d_sharedState->getNumMPMMatls();
+  int numMatls = m_sharedState->getNumMPMMatls();
   for(int m = 0; m < numMatls; m++){
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     ShellMaterial* smcm = dynamic_cast<ShellMaterial*>(cm);
     if (smcm) smcm->computeRotAcceleration(patches, mpm_matl, old_dw, new_dw);
@@ -299,9 +300,9 @@ ShellMPM::schedParticleNormalRotRateUpdate(SchedulerP& sched,
   Task* t=scinew Task("ShellMPM::schedParticleNormalRotRateUpdate",
                       this, &ShellMPM::particleNormalRotRateUpdate);
 
-  int numMatls = d_sharedState->getNumMPMMatls();
+  int numMatls = m_sharedState->getNumMPMMatls();
   for(int m = 0; m < numMatls; m++){
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     ShellMaterial* smcm = dynamic_cast<ShellMaterial*>(cm);
     if (smcm) {
@@ -327,9 +328,9 @@ ShellMPM::particleNormalRotRateUpdate(const ProcessorGroup*,
                                       DataWarehouse* new_dw)
 {
   // Loop over materials
-  int numMatls = d_sharedState->getNumMPMMatls();
+  int numMatls = m_sharedState->getNumMPMMatls();
   for(int m = 0; m < numMatls; m++){
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     ShellMaterial* smcm = dynamic_cast<ShellMaterial*>(cm);
     if (smcm) {

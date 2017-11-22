@@ -25,6 +25,8 @@
 #ifndef CORE_PARALLEL_MASTERLOCK_H
 #define CORE_PARALLEL_MASTERLOCK_H
 
+#include <sci_defs/kokkos_defs.h>
+
 #include <mutex>
 #include <omp.h>
 

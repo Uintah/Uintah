@@ -266,7 +266,7 @@ ViscoScramImplicit::addParticleState( std::vector<const VarLabel*>& from,
   to.push_back(pRandLabel_preReloc);
 }
 
-void ViscoScramImplicit::computeStableTimestep(const Patch*,
+void ViscoScramImplicit::computeStableTimeStep(const Patch*,
                                            const MPMMaterial*,
                                            DataWarehouse*)
 {

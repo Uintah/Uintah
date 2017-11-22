@@ -32,6 +32,8 @@
 #include <sstream>
 #include <string>
 
+#include <sci_defs/kokkos_defs.h>
+
 /**
  * @class  ClassicTableInterface
  * @author Jeremy Thornock

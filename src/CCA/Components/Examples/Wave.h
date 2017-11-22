@@ -26,8 +26,8 @@
 #ifndef Packages_Uintah_CCA_Components_Examples_Wave_h
 #define Packages_Uintah_CCA_Components_Examples_Wave_h
 
-#include <Core/Parallel/UintahParallelComponent.h>
-#include <CCA/Ports/SimulationInterface.h>
+#include <CCA/Components/Application/ApplicationCommon.h>
+
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Task.h>
@@ -64,14 +64,16 @@ WARNING
 ****************************************/
 
   class VarLabel;
-  class Wave : public UintahParallelComponent, public SimulationInterface {
+  class Wave : public ApplicationCommon {
   public:
-    Wave(const ProcessorGroup* myworld);
+    Wave(const ProcessorGroup* myworld,
+	 const SimulationStateP sharedState);
+    
     virtual ~Wave();
 
     virtual void problemSetup(const ProblemSpecP& params, 
                               const ProblemSpecP& restart_prob_spec,
-                              GridP& grid, SimulationStateP&);
+                              GridP& grid);
                               
     virtual void scheduleInitialize(const LevelP& level,
                                     SchedulerP& sched);
@@ -79,7 +81,7 @@ WARNING
     virtual void scheduleRestartInitialize(const LevelP& level,
                                            SchedulerP& sched);
                                     
-    virtual void scheduleComputeStableTimestep(const LevelP& level,
+    virtual void scheduleComputeStableTimeStep(const LevelP& level,
                                                SchedulerP&);
     virtual void scheduleTimeAdvance( const LevelP& level, 
                                       SchedulerP&);
@@ -106,7 +108,7 @@ WARNING
     void initialize(const ProcessorGroup*,
                     const PatchSubset* patches, const MaterialSubset* matls,
                     DataWarehouse* old_dw, DataWarehouse* new_dw);
-    void computeStableTimestep(const ProcessorGroup*,
+    void computeStableTimeStep(const ProcessorGroup*,
                                const PatchSubset* patches,
                                const MaterialSubset* matls,
                                DataWarehouse* old_dw, DataWarehouse* new_dw);
@@ -132,7 +134,6 @@ WARNING
     double r0;
     std::string initial_condition;
     std::string integration;
-    SimulationStateP sharedState_;
     SimpleMaterial* mymat_;
     Step rk4steps[4];
 
