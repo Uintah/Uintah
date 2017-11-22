@@ -381,14 +381,14 @@ DORadiationModel::problemSetup( ProblemSpecP& params )
 
     // this was added with the hope that it could be extended to one-sided ghost cell requirements
    _gv =std::vector< std::vector < std::vector < Ghost::GhostType > > >   (2,  std::vector < std::vector < Ghost::GhostType > > (2, std::vector < Ghost::GhostType > (2) ));
-   _gv[0][0][0] =Ghost::AroundCells ;
-   _gv[0][0][1] =Ghost::AroundCells ;
-   _gv[0][1][0] =Ghost::AroundCells ;
-   _gv[0][1][1] =Ghost::AroundCells ;
-   _gv[1][0][0] =Ghost::AroundCells ;
-   _gv[1][0][1] =Ghost::AroundCells ;
-   _gv[1][1][0] =Ghost::AroundCells ;
-   _gv[1][1][1] =Ghost::AroundCells ;
+   _gv[0][0][0] =Ghost::xpypzp;
+   _gv[0][0][1] =Ghost::xpypzm;
+   _gv[0][1][0] =Ghost::xpymzp;
+   _gv[0][1][1] =Ghost::xpymzm;
+   _gv[1][0][0] =Ghost::xmypzp;
+   _gv[1][0][1] =Ghost::xmypzm;
+   _gv[1][1][0] =Ghost::xmymzp;
+   _gv[1][1][1] =Ghost::xmymzm;
 
 }
 //______________________________________________________________________
@@ -1265,7 +1265,7 @@ DORadiationModel::intensitysolveSweepOptimizedOLD( const Patch* patch,
   new_dw->getModifiable(intensity,_IntensityLabels[cdirecn] , matlIndex, patch);   // change to computes when making it its own task
 
   constCCVariable <double > ghost_intensity;
-  new_dw->get( ghost_intensity, _IntensityLabels[cdirecn], matlIndex, patch, _gv[(int) _plusX[cdirecn]][(int) _plusY[cdirecn]][(int) _plusZ[cdirecn]],1 );
+  new_dw->get( ghost_intensity, _IntensityLabels[cdirecn], matlIndex, patch, _gv[_plusX[cdirecn] ? 1 : 0 ][_plusY[cdirecn] ? 1: 0  ][_plusZ[cdirecn] ? 1: 0  ],1 );
 
 
   constCCVariable <double > emissSrc;
@@ -1497,7 +1497,7 @@ DORadiationModel::intensitysolveSweepOptimized( const Patch* patch,
   for (int iband=0; iband<d_nbands; iband++){
 
     CCVariable <double > intensity;
-    new_dw->getModifiable(intensity,_IntensityLabels[cdirecn+iband*d_totalOrds] , matlIndex, patch,Ghost::AroundCells, 1);   
+    new_dw->getModifiable(intensity,_IntensityLabels[cdirecn+iband*d_totalOrds] , matlIndex, patch, _gv[_plusX[cdirecn] ][_plusY[cdirecn]  ][_plusZ[cdirecn]  ],1 );
 
     constCCVariable <double > emissSrc;
     if(_scatteringOn){

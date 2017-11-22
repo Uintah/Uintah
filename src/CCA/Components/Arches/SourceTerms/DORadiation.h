@@ -206,6 +206,7 @@ private:
   const VarLabel* _radiationFluxBLabel;
   const VarLabel* _radiationVolqLabel;
   const PatchSet* _perproc_patches;
+  std::vector< std::vector < std::vector < Ghost::GhostType > > >   _gv;
 
       std::vector<const VarLabel*>  _radIntSource;
       std::vector<std::string> _radIntSource_names;
