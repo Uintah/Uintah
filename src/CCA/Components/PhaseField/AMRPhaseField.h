@@ -30,6 +30,8 @@
 #include <CCA/Components/Regridder/PerPatchVars.h>
 #include <CCA/Ports/Regridder.h>
 
+#include <sci_defs/kokkos_defs.h>
+
 namespace Uintah
 {
 

@@ -43,6 +43,7 @@
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/Timers/Timers.hpp>
 
+#include <sci_defs/kokkos_defs.h>
 #include <sci_defs/visit_defs.h>
 
 #ifdef UINTAH_ENABLE_KOKKOS

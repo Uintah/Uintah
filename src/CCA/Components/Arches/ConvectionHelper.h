@@ -3,6 +3,8 @@
 
 #include <CCA/Components/Arches/GridTools.h>
 
+#include <sci_defs/kokkos_defs.h>
+
 /** @class ConvectionHelper
     @author J. Thornock
     @date Dec, 2015

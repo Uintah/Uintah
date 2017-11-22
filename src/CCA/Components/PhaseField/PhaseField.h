@@ -38,6 +38,8 @@
 #include <Core/Util/DebugStream.h>
 #include <CCA/Ports/Scheduler.h>
 
+#include <sci_defs/kokkos_defs.h>
+
 namespace Uintah
 {
 

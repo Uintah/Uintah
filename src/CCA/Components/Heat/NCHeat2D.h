@@ -41,6 +41,8 @@
 #include <CCA/Ports/Scheduler.h>
 // #include <CCA/Ports/SolverInterface.h>
 
+#include <sci_defs/kokkos_defs.h>
+
 #ifdef CUSTOM_OUT
 #   include <CCA/Components/Heat/visitfile.hpp>
 #   include <CCA/Ports/Output.h>

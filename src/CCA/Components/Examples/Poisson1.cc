@@ -38,6 +38,8 @@
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
 
+#include <sci_defs/kokkos_defs.h>
+
 using namespace std;
 using namespace Uintah;
 

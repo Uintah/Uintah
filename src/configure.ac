@@ -519,6 +519,14 @@ SCI_ARG_WITH(gperftools,
   DIR,
   WITHOUT-IS-NOT-VALID)
 
+SCI_ARG_WITH(kokkos,
+  AC_HELP_STRING(--with-kokkos=DIR,
+                 Use the Kokkos installation in DIR),
+  [with_kokkos="$withval"],
+  [with_kokkos=NOT_SET],
+  DIR,
+  WITHOUT-IS-NOT-VALID)
+
 SCI_ARG_WITH(ipm,
   AC_HELP_STRING(--with-ipm=DIR,
                  Use the ipm installation in DIR),
@@ -3727,6 +3735,41 @@ AC_SUBST(GPERFTOOLS_LIB_DIR_FLAG)
 AC_SUBST(GPERFTOOLS_LIB_FLAG)
 
 sci_defs_files="$sci_defs_files include/sci_defs/gperftools_testdefs.h"
+
+##  --  search for kokkos stuff  -------------------------------------------
+
+if test "$with_kokkos" != NOT_SET; then
+
+  _sci_optional=specific
+  _sci_lib="$with_kokkos"
+  # account for lib64 or lib32 or just lib...
+  BASE_LIB_PATH(_sci_lib,$_sci_lib)
+  _sci_inc="$with_kokkos/include"
+
+  AC_LANG(C++)
+  SCI_TRY_LINK(KOKKOS, Kokkos libraries and headers,
+               Kokkos_Core.hpp,
+               $_sci_inc,
+               kokkos,
+               $_sci_lib,
+               ,
+               [],
+               $_sci_optional)
+  AC_LANG(C)
+  
+  if test "$HAVE_KOKKOS" = "yes"; then
+     DEF_KOKKOS="#define UINTAH_ENABLE_KOKKOS"
+  fi
+
+fi
+
+AC_SUBST(HAVE_KOKKOS)
+AC_SUBST(DEF_KOKKOS)
+AC_SUBST(INC_KOKKOS_H)
+AC_SUBST(KOKKOS_LIB_DIR_FLAG)
+AC_SUBST(KOKKOS_LIB_FLAG)
+
+sci_defs_files="$sci_defs_files include/sci_defs/kokkos_testdefs.h"
 
 ##  --  search for ipm stuff  -------------------------------------------
 _sci_lib=

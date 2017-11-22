@@ -51,6 +51,8 @@
 
 #include <zlib.h>
 
+#include <sci_defs/kokkos_defs.h>
+
 #include <cstdio>
 #include <mutex>
 #include <sstream>

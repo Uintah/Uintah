@@ -40,6 +40,7 @@
 #include <include/sci_defs/uintah_testdefs.h.in>
 
 #include <sci_defs/visit_defs.h>
+#include <sci_defs/kokkos_defs.h>
 
 #include <fstream>
 #include <vector>

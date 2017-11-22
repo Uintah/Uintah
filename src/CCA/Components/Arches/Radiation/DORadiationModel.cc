@@ -49,6 +49,7 @@
 #include <Core/Util/Timers/Timers.hpp>
 
 #include <sci_defs/hypre_defs.h>
+#include <sci_defs/kokkos_defs.h>
 
 #ifdef HAVE_HYPRE
 #  include <CCA/Components/Arches/Radiation/RadHypreSolver.h>

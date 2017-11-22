@@ -27,6 +27,8 @@
 
 #include <CCA/Components/Heat/CCHeat3D.h>
 
+#include <sci_defs/kokkos_defs.h>
+
 namespace Uintah
 {
 

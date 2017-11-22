@@ -113,7 +113,6 @@ make install CC=$CC CXX=$CXX LINK=$LINK
 echo ""
 echo "______________________________________________________________________"
 echo " Add the following to your configure line"
-echo "  CXXFLAGS='-DUINTAH_ENABLE_KOKKOS -I$INSTALL_PATH/include' \\"
-echo "  LDFLAGS='-L$INSTALL_PATH/lib -lkokkos'"
+echo "  --with-kokkos=$INSTALL_PATH"
 
 exit 0

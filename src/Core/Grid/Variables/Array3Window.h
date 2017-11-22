@@ -30,6 +30,8 @@
 #include <climits>
 #include <Core/Geometry/IntVector.h>
 
+#include <sci_defs/kokkos_defs.h>
+
 #if SCI_ASSERTION_LEVEL >= 3
 // test the range and throw a more informative exception
 // instead of testing one index's range

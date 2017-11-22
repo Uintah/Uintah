@@ -28,6 +28,8 @@
 #include <Core/Grid/Variables/CCVariable.h>
 #include <CCA/Components/Heat/NCHeat3D.h>
 
+#include <sci_defs/kokkos_defs.h>
+
 namespace Uintah
 {
 
