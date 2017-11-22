@@ -717,11 +717,6 @@ AMRSimulationController::doInitialTimeStep()
       // Compute the next time step.
       scheduleComputeStableTimeStep();
   
-      // Initialize the system var (time step and simulation time)
-      d_app->scheduleInitializeSystemVars( d_currentGridP,
-					   d_lb->getPerProcessorPatchSet(d_currentGridP),
-					   d_scheduler);
-
       // NOTE ARS - FIXME before the output so the values can be saved.
       // Monitoring tasks must be scheduled last!!
       for (int i = 0; i < d_currentGridP->numLevels(); i++) {
@@ -738,6 +733,12 @@ AMRSimulationController::doInitialTimeStep()
       d_output->sched_allOutputTasks( d_app->getDelT(),
 				      d_currentGridP, d_scheduler, recompile );
             
+      // Initialize the system var (time step and simulation time).
+      // Must be done after the output.
+      d_app->scheduleInitializeSystemVars( d_currentGridP,
+					   d_lb->getPerProcessorPatchSet(d_currentGridP),
+					   d_scheduler);
+
       taskGraphTimer.reset( true );
       d_scheduler->compile();
       taskGraphTimer.stop();
@@ -1130,11 +1131,6 @@ AMRSimulationController::recompile( int totalFine )
   // Compute the next time step.
   scheduleComputeStableTimeStep();
   
-  // Update the system var (time step and simulation time)
-  d_app->scheduleUpdateSystemVars( d_currentGridP,
-				   d_lb->getPerProcessorPatchSet(d_currentGridP),
-				   d_scheduler);
-
   // NOTE ARS - FIXME before the output so the values can be saved.
   // Monitoring tasks must be scheduled last!!
   for (int i = 0; i < d_currentGridP->numLevels(); i++) {
@@ -1149,6 +1145,12 @@ AMRSimulationController::recompile( int totalFine )
 
   d_output->sched_allOutputTasks( d_app->getDelT(),
 				  d_currentGridP, d_scheduler, true );
+
+  // Update the system var (time step and simulation time). Must be
+  // done after the output.
+  d_app->scheduleUpdateSystemVars( d_currentGridP,
+				   d_lb->getPerProcessorPatchSet(d_currentGridP),
+				   d_scheduler);
 
   d_scheduler->compile();
 
@@ -1379,8 +1381,8 @@ AMRSimulationController::scheduleComputeStableTimeStep()
     d_app->scheduleComputeStableTimeStep(d_currentGridP->getLevel(i), d_scheduler);
   }
 
-  // Schedule the reduction of the time step on a per patch basis to a
-  // per rank basis.
+  // Schedule the reduction of the time step and other variables on a
+  // per patch basis to a per rank basis.
   d_app->scheduleReduceSystemVars( d_currentGridP,
 				   d_lb->getPerProcessorPatchSet(d_currentGridP),
 				   d_scheduler);
