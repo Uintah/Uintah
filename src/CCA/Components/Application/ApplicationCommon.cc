@@ -1,3 +1,4 @@
+
 /*
  * The MIT License
  *
@@ -473,16 +474,10 @@ ApplicationCommon::initializeSystemVars( const ProcessorGroup *,
 
   // const Level* level = getLevel(patches);
   
-  // std::cerr << "**********  " << __FUNCTION__ << "  " << __LINE__ << "  "
-  // 	    << old_dw << "  " << new_dw << "  "
-  // 	    << m_timeStep << std::endl;
-  
   // Initialize the time step.
-  if( old_dw )
-    old_dw->put(timeStep_vartype(m_timeStep), m_timeStepLabel);
   new_dw->put(timeStep_vartype(m_timeStep), m_timeStepLabel);
 
-  m_sharedState->setElapsedSimTime( m_timeStep );  
+  m_sharedState->setCurrentTopLevelTimeStep( m_timeStep );  
 
   // Initialize the simulation time.
   new_dw->put(simTime_vartype(m_simTime), m_simulationTimeLabel);
@@ -490,9 +485,6 @@ ApplicationCommon::initializeSystemVars( const ProcessorGroup *,
   // new_dw->put(simTime_vartype(m_simTime), m_simulationTimeLabel, level);
 
   m_sharedState->setElapsedSimTime( m_simTime );  
-
-  // std::cerr << "**********  " << __FUNCTION__ << "  " << __LINE__ << "  "
-  // 	    << m_simTime << std::endl;  
 }
 
 
@@ -550,12 +542,11 @@ ApplicationCommon::updateSystemVars( const ProcessorGroup *,
   {
     // const Level* level = getLevel(patches);
   
-    // std::cerr << "**********  " << __FUNCTION__ << "  " << __LINE__ << "  "
-    // 	    << m_timeStep << std::endl;
-    
     // Store the time step so it can be incremented at the top of the
     // time step where it is over written.
     new_dw->put(timeStep_vartype(m_timeStep), m_timeStepLabel);
+
+    m_sharedState->setCurrentTopLevelTimeStep( m_timeStep );  
     
     // Update the simulation time.
     m_simTime += m_delT;
@@ -563,9 +554,6 @@ ApplicationCommon::updateSystemVars( const ProcessorGroup *,
     // new_dw->put(simTime_vartype(m_simTime), m_simulationTimeLabel, level);
     
     m_sharedState->setElapsedSimTime( m_simTime );  
-    
-    // std::cerr << "**********  " << __FUNCTION__ << "  " << __LINE__ << "  "
-    // 	      << m_simTime << std::endl; 
   }
 }
 
