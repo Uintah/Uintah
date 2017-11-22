@@ -39,8 +39,8 @@
 
 #include <include/sci_defs/uintah_testdefs.h.in>
 
-#include <sci_defs/visit_defs.h>
 #include <sci_defs/kokkos_defs.h>
+#include <sci_defs/visit_defs.h>
 
 #include <fstream>
 #include <vector>
@@ -537,17 +537,16 @@ Ray::sched_rayTrace( const LevelP& level,
     tsk->computes( d_PPTimerLabel );
   }
   sched->overrideVariableBehavior(d_PPTimerLabel->getName(),
-				  false, false, true, true, true);
+                                  false, false, true, true, true);
 #endif
 
   sched->addTask( tsk, level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT );
 
 }
 
+
 //______________________________________________________________________
 //
-#ifdef UINTAH_ENABLE_KOKKOS
-
 namespace {
 
 template <typename T>
@@ -1064,7 +1063,6 @@ struct solveDivQFunctor {
 };  // end solveDivQFunctor
 }   // end namespace
 
-#endif // end UINTAH_ENABLE_KOKKOS
 
 //---------------------------------------------------------------------------
 // Method: The actual work of the ray tracer
@@ -1294,8 +1292,6 @@ Ray::rayTrace( const ProcessorGroup* pg,
     //______________________________________________________________________
   if( d_solveDivQ){
 
-#ifdef UINTAH_ENABLE_KOKKOS
-
     bool latinHyperCube = ( d_rayDirSampleAlgo == LATIN_HYPER_CUBE ) ? true : false;
 
     double DyDx = Dx.y() / Dx.x();
@@ -1326,59 +1322,6 @@ Ray::rayTrace( const ProcessorGroup* pg,
 
     // This parallel_reduce replaces the cellIterator loop used to solve DivQ
     Uintah::parallel_reduce( range, functor, size );
-
-#else // else UINTAH_ENABLE_KOKKOS
-
-    vector <int> rand_i( d_rayDirSampleAlgo == LATIN_HYPER_CUBE ? d_nDivQRays : 0);  // only needed for LHC scheme
-
-    for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-      IntVector origin = *iter;
-      
-      // don't compute in intrusions and walls
-      if( celltype[origin] != d_flowCell ){
-        continue;
-      }
-
-      if (d_rayDirSampleAlgo == LATIN_HYPER_CUBE){
-        randVector(rand_i, mTwister, origin);
-      }
-      double sumI = 0;
-      Point CC_pos = level->getCellPosition(origin);
-
-      // ray loop
-      for (int iRay=0; iRay < d_nDivQRays; iRay++){
-
-        Vector direction_vector;
-        if (d_rayDirSampleAlgo == LATIN_HYPER_CUBE){        // Latin-Hyper-Cube sampling
-          direction_vector =findRayDirectionHyperCube(mTwister, origin, iRay, rand_i[iRay],iRay );
-        }else{                                              // Naive Monte-Carlo sampling
-          direction_vector =findRayDirection(mTwister, origin, iRay );
-        }
-
-        Vector rayOrigin;
-        ray_Origin( mTwister, CC_pos, Dx, d_CCRays, rayOrigin);
-
-        updateSumI< T >( level, direction_vector, rayOrigin, origin, Dx,  sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
-
-      }  // Ray loop
-
-      //__________________________________
-      //  Compute divQ
-      divQ[origin] = -4.0 * M_PI * abskg[origin] * ( sigmaT4OverPi[origin] - (sumI/d_nDivQRays) );
-
-      // radiationVolq is the incident energy per cell (W/m^3) and is necessary when particle heat transfer models (i.e. Shaddix) are used
-      radiationVolq[origin] = 4.0 * M_PI * (sumI/d_nDivQRays) ;
-/*`==========TESTING==========*/
-#if DEBUG == 1
-    if( isDbgCell(origin) ) {
-          printf( "\n      [%d, %d, %d]  sumI: %g  divQ: %g radiationVolq: %g  abskg: %g,    sigmaT4: %g \n",
-                    origin.x(), origin.y(), origin.z(), sumI,divQ[origin], radiationVolq[origin],abskg[origin], sigmaT4OverPi[origin]);
-    }
-#endif
-/*===========TESTING==========`*/
-    }  // end cell iterator
-
-#endif // end UINTAH_ENABLE_KOKKOS
 
   }  // end of if(_solveDivQ)
 
@@ -1531,10 +1474,9 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
 
 }
 
+
 //______________________________________________________________________
 //
-#ifdef UINTAH_ENABLE_KOKKOS
-
 namespace {
 
 template <typename T>
@@ -1860,7 +1802,6 @@ struct updateSumI_ML_Functor {
 };  // end updateSumI_ML_Functor
 }   // end namespace
 
-#endif // end UINTAH_ENABLE_KOKKOS
 
 //---------------------------------------------------------------------------
 // Ray tracer using the multilevel "data onion" scheme
@@ -2105,8 +2046,6 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
     //______________________________________________________________________
     if (d_solveDivQ) {
 
-#ifdef UINTAH_ENABLE_KOKKOS
-
       updateSumI_ML_Functor<T> functor( Dx,
                                         domain_BB,
                                         maxLevels,
@@ -2217,69 +2156,6 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
 /*===========TESTING==========`*/
 
       }, nRaySteps); // end cell iterator
-
-#else // else UINTAH_ENABLE_KOKKOS
-
-      vector <int> rand_i( d_rayDirSampleAlgo == LATIN_HYPER_CUBE  ? d_nDivQRays : 0);  // only needed for LHC scheme
-
-      for (CellIterator iter = finePatch->getCellIterator(); !iter.done(); iter++){
-
-        IntVector origin = *iter;
-        
-        // don't compute in intrusions and walls
-        if(cellType[my_L][origin] != d_flowCell ){
-          continue;
-        }
-        
-        Point CC_pos = fineLevel->getCellPosition(origin);
-
-        if (d_rayDirSampleAlgo == LATIN_HYPER_CUBE){
-          randVector(rand_i, mTwister, origin);
-        }
-
-        double sumI = 0;
-
-        //__________________________________
-        //  ray loop
-        for (int iRay=0; iRay < d_nDivQRays; iRay++){
-
-          Vector direction_vector;
-          if (d_rayDirSampleAlgo== LATIN_HYPER_CUBE){       // Latin-Hyper-Cube sampling
-            direction_vector =findRayDirectionHyperCube( mTwister, origin, iRay,rand_i[iRay],iRay );
-          }else{                                            // Naive Monte-Carlo sampling
-            direction_vector =findRayDirection( mTwister, origin, iRay );
-          }
-
-          Vector rayOrigin;
-          int my_L = maxLevels - 1;
-          ray_Origin( mTwister, CC_pos, Dx[my_L], d_CCRays, rayOrigin );
-
-          updateSumI_ML< T >( direction_vector, rayOrigin, origin, Dx, domain_BB, maxLevels, fineLevel,
-                         fineLevel_ROI_Lo, fineLevel_ROI_Hi, regionLo, regionHi, sigmaT4OverPi, abskg, cellType,
-                         nRaySteps, sumI, mTwister );
-
-
-        }  // Ray loop
-
-        //__________________________________
-        //  Compute divQ
-        divQ_fine[origin] = -4.0 * M_PI * abskg_fine[origin] * ( sigmaT4OverPi_fine[origin] - (sumI/d_nDivQRays) );
-
-        // radiationVolq is the incident energy per cell (W/m^3) and is necessary when particle heat transfer models (i.e. Shaddix) are used
-        radiationVolq_fine[origin] = 4.0 * M_PI * (sumI/d_nDivQRays) ;
-
-/*`==========TESTING==========*/
-#if DEBUG == 1
-    if( isDbgCell(origin) ) {
-          printf( "\n      [%d, %d, %d]  sumI: %g  divQ: %g radiationVolq: %g  abskg: %g,    sigmaT4: %g \n\n",
-                    origin.x(), origin.y(), origin.z(), sumI,divQ_fine[origin], radiationVolq_fine[origin],abskg_fine[origin], sigmaT4OverPi_fine[origin]);
-    }
-#endif
-/*===========TESTING==========`*/
-      }  // end cell iterator
-
-#endif // end UINTAH_ENABLE_KOKKOS
-
     }  // end of if(_solveDivQ)
 
     //__________________________________
