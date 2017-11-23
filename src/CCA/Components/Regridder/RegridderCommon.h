@@ -65,6 +65,8 @@ namespace Uintah {
     RegridderCommon(const ProcessorGroup* pg);
     virtual ~RegridderCommon();
 
+    virtual void releaseComponents();
+
     //! Initialize with regridding parameters from ups file
     virtual void problemSetup(const ProblemSpecP& params,
 			      const GridP& grid,
@@ -175,8 +177,8 @@ namespace Uintah {
   protected:
 
     ProblemSpecP       grid_ps_;
-    LoadBalancerPort * lb_;
-    Scheduler        * sched_;
+    LoadBalancerPort * m_loadBalancer;
+    Scheduler        * m_scheduler;
 
     SimulationStateP d_sharedState;  ///< Shared global space, to keep track of timesteps
     bool d_isAdaptive;               ///< If false, do not regrid (stick with what you have)

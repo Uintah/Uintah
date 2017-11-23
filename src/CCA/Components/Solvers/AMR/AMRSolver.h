@@ -68,6 +68,8 @@ namespace Uintah {
     AMRSolver(const ProcessorGroup* myworld);
     virtual ~AMRSolver();
 
+    virtual void releaseComponents() {};
+    
     virtual SolverParameters* readParameters(ProblemSpecP& params,
                                              const std::string& name,
                                              SimulationStateP& state);

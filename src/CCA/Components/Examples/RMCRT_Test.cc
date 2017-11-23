@@ -117,11 +117,10 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
 
   // TG-0 = carry forward tasks
   // TG-1 = normal RMCRT computations
-  Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
-  sched->setNumTaskGraphs(RMCRTCommon::NUM_GRAPHS);
+  m_scheduler->setNumTaskGraphs(RMCRTCommon::NUM_GRAPHS);
 
   // manually manipulate the scheduling of copy data for the shootRay task
-  sched->overrideVariableBehavior("color",false, false, true, false, false);
+   m_scheduler->overrideVariableBehavior("color",false, false, true, false, false);
 
   //__________________________________
   // Read in component specific variables

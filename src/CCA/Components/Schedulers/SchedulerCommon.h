@@ -91,6 +91,8 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
 
     virtual ~SchedulerCommon();
 
+    virtual void releaseComponents();
+
     virtual void problemSetup( const ProblemSpecP & prob_spec,
 			       const SimulationStateP & state );
 
@@ -332,7 +334,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     int                                 m_generation{0};
     int                                 m_dwmap[Task::TotalDWs];
     const Output*                       m_out_port{nullptr};
-    SimulationStateP                    m_shared_state{nullptr};
+    SimulationStateP                    m_sharedState{nullptr};
     std::vector<OnDemandDataWarehouseP> m_dws;
     std::vector<TaskGraph*>             m_task_graphs;
 

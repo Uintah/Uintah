@@ -58,9 +58,6 @@ DORadiation::DORadiation( std::string src_name, ArchesLabel* labels, MPMArchesLa
   _source_grid_type = CC_SRC; // or FX_SRC, or FY_SRC, or FZ_SRC, or CCVECTOR_SRC
 
   _DO_model = 0;
-
-
-
 }
 
 DORadiation::~DORadiation()

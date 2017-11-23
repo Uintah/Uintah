@@ -94,6 +94,7 @@ void launchIceEquilibrationKernelUnified(dim3 dimGrid,
 
 namespace Uintah {
 
+  class ModelMaker;
   class ModelInfo;
   class ModelInterface;
   class Turbulence;
@@ -126,6 +127,8 @@ namespace Uintah {
       
       virtual ~ICE();
 
+      virtual bool needModelMaker() const { return true; }
+      
       virtual bool restartableTimeSteps();
 
       virtual double recomputeTimeStep(double current_dt);

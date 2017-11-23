@@ -59,18 +59,18 @@ void ParticleTest1::problemSetup(const ProblemSpecP& params,
                                  const ProblemSpecP& restart_prob_spec, 
                                  GridP& /*grid*/)
 {
-  dynamic_cast<Scheduler*>(getPort("scheduler"))->setPositionVar(lb_->pXLabel);
+  m_scheduler->setPositionVar(lb_->pXLabel);
+  
   ProblemSpecP pt1 = params->findBlock("ParticleTest1");
   pt1->getWithDefault("doOutput", doOutput_, 0);
   pt1->getWithDefault("doGhostCells", doGhostCells_ , 0);
   
   mymat_ = scinew SimpleMaterial();
   m_sharedState->registerSimpleMaterial(mymat_);
-
 }
  
 void ParticleTest1::scheduleInitialize(const LevelP& level,
-                               SchedulerP& sched)
+				       SchedulerP& sched)
 {
   Task* task = scinew Task("initialize",
                            this, &ParticleTest1::initialize);

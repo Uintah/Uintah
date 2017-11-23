@@ -70,7 +70,7 @@ WARNING
 
 ****************************************/
 
-  class Contact : public UintahParallelComponent {
+  class Contact {
       public:
          // Constructor
          Contact(const ProcessorGroup* myworld, MPMLabel* Mlb, MPMFlags* MFlag,

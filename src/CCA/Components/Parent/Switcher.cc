@@ -287,13 +287,11 @@ Switcher::problemSetup( const ProblemSpecP     & /*params*/,
 
   d_app = dynamic_cast<ApplicationInterface*>(comp);
 
-  ModelMaker* modelmaker = dynamic_cast<ModelMaker*>( getPort("modelmaker") ); 
-  comp->attachPort("modelmaker", modelmaker);
-
-  comp->attachPort( "scheduler", m_scheduler );
-  comp->attachPort( "solver",    m_solver );
-  comp->attachPort( "regridder", m_regridder );
-  comp->attachPort( "output",    m_output );
+  comp->attachPort( "scheduler",   m_scheduler );
+  comp->attachPort( "modelMarker", m_modelMaker );
+  comp->attachPort( "solver",      m_solver );
+  comp->attachPort( "regridder",   m_regridder );
+  comp->attachPort( "output",      m_output );
 
   d_app->getComponents();    
 
@@ -849,19 +847,16 @@ Switcher::needRecompile(       double   simTime,
 
     d_app = dynamic_cast<ApplicationInterface*>(comp);
 
-    ModelMaker* modelmaker =
-      dynamic_cast<ModelMaker*>( getPort("modelmaker") ); 
-    comp->attachPort("modelmaker", modelmaker);
-
-    comp->attachPort( "scheduler", m_scheduler );
-    comp->attachPort( "solver",    m_solver );
-    comp->attachPort( "regridder", m_regridder );
-    comp->attachPort( "output",    m_output );
+    comp->attachPort( "scheduler",   m_scheduler );
+    comp->attachPort( "modelMarker", m_modelMaker );
+    comp->attachPort( "solver",      m_solver );
+    comp->attachPort( "regridder",   m_regridder );
+    comp->attachPort( "output",      m_output );
 
     d_app->getComponents();    
 
     // Clean up the old models.
-    modelmaker->clearModels();
+    m_modelMaker->clearModels();
 
     // read in the problemSpec on next subcomponent
     ProblemSpecP restart_prob_spec = nullptr;

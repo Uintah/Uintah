@@ -67,9 +67,9 @@ void TiledRegridder::ComputeTiles( vector<IntVector> &tiles,
                                    IntVector tile_size, 
                                    IntVector cellRefinementRatio)
 {
-  DataWarehouse *dw=sched_->getLastDW();
+  DataWarehouse *dw=m_scheduler->getLastDW();
 
-  const PatchSubset *ps=lb_->getPerProcessorPatchSet(level)->getSubset(d_myworld->myRank());
+  const PatchSubset *ps=m_loadBalancer->getPerProcessorPatchSet(level)->getSubset(d_myworld->myRank());
   int newLevelIndex=level->getIndex()+1;
 
   //for each patch I own
@@ -241,7 +241,7 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
   OutputGridStats(newGrid);
 
   //initialize the weights on new patches
-  lb_->initializeWeights(oldGrid,newGrid);
+  m_loadBalancer->initializeWeights(oldGrid,newGrid);
 
   rtimes[10] += timer().seconds();
   timer.reset( true );
@@ -520,9 +520,9 @@ void TiledRegridder::CoarsenFlags(GridP oldGrid, int l, vector<IntVector> tiles)
 
   ASSERT(l-1>=0);
 
-  DataWarehouse *dw=sched_->getLastDW();
+  DataWarehouse *dw=m_scheduler->getLastDW();
   LevelP level=oldGrid->getLevel(l-1); //get level above this level to write flags to
-  const PatchSubset *cp=lb_->getPerProcessorPatchSet(level)->getSubset(d_myworld->myRank());
+  const PatchSubset *cp=m_loadBalancer->getPerProcessorPatchSet(level)->getSubset(d_myworld->myRank());
 
   if (cp->size() == 0)
     return;

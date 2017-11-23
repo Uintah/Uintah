@@ -36,6 +36,8 @@ public:
   DirectSolve(const ProcessorGroup* myworld);
   virtual ~DirectSolve();
 
+  virtual void releaseComponents() {};
+  
   virtual SolverParameters* readParameters(       ProblemSpecP     & params,
                                             const std::string      & name,
                                                   SimulationStateP & state );

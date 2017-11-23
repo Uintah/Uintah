@@ -278,7 +278,7 @@ main( int argc, char *argv[], char *env[] )
 
   std::string udaDir;       // for restart
   std::string filename;     // name of the UDA directory
-  std::string solver = "";  // empty string defaults to CGSolver
+  std::string solverName = "";  // empty string defaults to CGSolver
 
 #ifdef HAVE_VISIT
   // Assume if VisIt is compiled in that the user may want to connect
@@ -314,7 +314,7 @@ main( int argc, char *argv[], char *env[] )
       if (++i == argc) {
         usage("You must provide a solver name for -solver", arg, argv[0]);
       }
-      solver = argv[i];
+      solverName = argv[i];
     }
     else if (arg == "-mpi") {
       // TODO: Remove all traces of the need to use "-mpi" on the command line - APH 09/16/16
@@ -682,144 +682,164 @@ main( int argc, char *argv[], char *env[] )
     // Simulation controller
     const ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
 
-    SimulationController* ctl = scinew AMRSimulationController( world, ups );
+    SimulationController* simController =
+      scinew AMRSimulationController( world, ups );
 
     // set sim. controller flags for reduce uda
     if ( reduce_uda ) {
-      ctl->setReduceUdaFlags( udaDir );
+      simController->setReduceUdaFlags( udaDir );
     }
     
 #ifdef HAVE_VISIT
-    ctl->setVisIt( do_VisIt );
+    simController->setVisIt( do_VisIt );
 #endif
 
     //__________________________________
     // Component and application interface
-    UintahParallelComponent* comp =
+    UintahParallelComponent* appComp =
       ComponentFactory::create( ups, world, nullptr, udaDir );
     
-    ApplicationInterface* app = dynamic_cast<ApplicationInterface*>(comp);
+    ApplicationInterface* application =
+      dynamic_cast<ApplicationInterface*>(appComp);
 
     // Read the UPS file to get the general application details.
-    app->problemSetup( ups );
+    application->problemSetup( ups );
     
 #ifdef HAVE_VISIT
-    app->setVisIt( do_VisIt );
+    application->setVisIt( do_VisIt );
 #endif
 
-    ctl->attachPort( "app", app );
+    simController->attachPort( "app", application );
 
     // Can not do a reduce uda with AMR
-    if ( reduce_uda && app->isAMR() ) {
+    if ( reduce_uda && application->isAMR() ) {
       usage( "You may not use '-amr' and '-reduce_uda' at the same time.", "-reduce_uda", argv[0] );
     }
 
     //__________________________________
     // Solver
-    SolverInterface * solve = SolverFactory::create( ups, world, solver );
+    SolverInterface * solver = SolverFactory::create( ups, world, solverName );
 
-    proc0cout << "Implicit Solver: \t" << solve->getName() << "\n";
+    UintahParallelComponent* solverComp =
+      dynamic_cast<UintahParallelComponent*>(solver);
 
-    comp->attachPort( "solver", solve );
+    proc0cout << "Implicit Solver: \t" << solver->getName() << "\n";
+
+    appComp->attachPort( "solver", solver );
 
     //__________________________________
     // Regridder
     RegridderCommon* regridder = nullptr;
 
-    if( app->isAMR() ) {
+    if( application->isAMR() ) {
       regridder = RegridderFactory::create( ups, world );
 
       if ( regridder ) {
-        ctl->attachPort( "regridder", regridder );
-	comp->attachPort( "regridder", regridder );
+        simController->attachPort( "regridder", regridder );
+	appComp->attachPort( "regridder", regridder );
       }
     }
 
-#ifndef NO_ICE
+
     //__________________________________
     //  Model
-    ModelMaker* modelmaker = scinew ModelFactory(world);
+    ModelMaker* modelMaker = nullptr;
 
-    comp->attachPort("modelmaker", modelmaker);
-#endif
+    if( application->needModelMaker() ) {
+      modelMaker = scinew ModelFactory(world);
+
+      if( modelMaker )
+	appComp->attachPort("modelMaker", modelMaker);
+    }
 
     //__________________________________
     // Load balancer
-    LoadBalancerCommon* lbc = LoadBalancerFactory::create( ups, world );
+    LoadBalancerCommon* loadBalancer =
+      LoadBalancerFactory::create( ups, world );
 
     if( regridder ) {
-      regridder->attachPort( "load balancer", lbc );
+      regridder->attachPort( "load balancer", loadBalancer );
 
-      lbc->attachPort( "regridder", regridder );
+      loadBalancer->attachPort( "regridder", regridder );
     }
     
     //__________________________________
     // Output
     DataArchiver * dataArchiver = scinew DataArchiver( world, udaSuffix );
 
-    dataArchiver->attachPort( "app", app );
-    dataArchiver->attachPort( "load balancer", lbc );
+    dataArchiver->attachPort( "app", application );
+    dataArchiver->attachPort( "load balancer", loadBalancer );
     
     dataArchiver->setUseLocalFileSystems( local_filesystem );
 
-    ctl->attachPort( "output", dataArchiver );
-    comp->attachPort( "output", dataArchiver );
+    simController->attachPort( "output", dataArchiver );
+    appComp->attachPort( "output", dataArchiver );
 
     //__________________________________
     // Scheduler
-    SchedulerCommon* sched = SchedulerFactory::create(ups, world, dataArchiver);
-    sched->attachPort( "load balancer", lbc );
-    
-    comp->attachPort( "scheduler", sched );
-    ctl->attachPort( "scheduler", sched );
-    lbc->attachPort( "scheduler", sched );
+    SchedulerCommon* scheduler =
+      SchedulerFactory::create(ups, world, dataArchiver);
 
-    sched->setStartAddr( start_addr );
+    scheduler->attachPort( "load balancer", loadBalancer );
+    
+    appComp->attachPort( "scheduler", scheduler );
+    simController->attachPort( "scheduler", scheduler );
+    loadBalancer->attachPort( "scheduler", scheduler );
+
+    scheduler->setStartAddr( start_addr );
+    scheduler->addReference();
     
     if ( regridder ) {
-      regridder->attachPort( "scheduler", sched );
+      regridder->attachPort( "scheduler", scheduler );
     }
 
-    sched->addReference();
-
     if ( emit_graphs ) {
-      sched->doEmitTaskGraphDocs();
+      scheduler->doEmitTaskGraphDocs();
     }
 
     //__________________________________
     // Start the simulation controller
     if ( restart ) {
-      ctl->doRestart( udaDir, restartTimestep, restartFromScratch, restartRemoveOldDir );
+      simController->doRestart( udaDir, restartTimestep, restartFromScratch, restartRemoveOldDir );
     }
     
     // This gives memory held by the 'ups' back before the simulation
     // starts... Assuming no one else is holding on to it...
     ups = nullptr;
 
-    ctl->run();
+    simController->run();
 
     // Clean up.  Something has a handle to the scheduler and
     // simulation state within the application component. As such,
     // when they are deleted an ASSERT is thrown. So skip trying to
     // delete them for now.
+    simController->releaseComponents();
+    appComp->releaseComponents();
 
-    ctl->releaseComponents();
-    app->releaseComponents();
+    scheduler->releaseComponents();
+    loadBalancer->releaseComponents();
+    solverComp->releaseComponents();
+    dataArchiver->releaseComponents();
     
-    delete ctl;
+    scheduler->removeReference();
+
+    delete simController;
+   
     if ( regridder ) {
+      regridder->releaseComponents();
       delete regridder;
     }
-    delete lbc;
-    delete solve;
-    sched->removeReference();
-    // delete sched;
+
+    delete loadBalancer;
+    delete solver;
     delete dataArchiver;
 
-#ifndef NO_ICE
-    delete modelmaker;
-#endif
-    // delete comp;
+    if ( modelMaker ) {
+      delete modelMaker;
+    }
+
+    delete scheduler;
+    delete application;
   }
   
   catch (ProblemSetupException& e) {

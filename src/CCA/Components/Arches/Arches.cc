@@ -133,12 +133,6 @@ Arches::problemSetup( const ProblemSpecP     & params,
   const ProblemSpecP db_root = db->getRootNode();
   m_physicalConsts->problemSetup(db_root);
 
-  SolverInterface* hypreSolver = dynamic_cast<SolverInterface*>(getPort("solver"));
-
-  if(!hypreSolver) {
-    throw InternalError("ARCHES:couldn't get hypreSolver port", __FILE__, __LINE__);
-  }
-
   //--- Create the solver/algorithm ---
   NonlinearSolver::NLSolverBuilder* builder;
   if (   db->findBlock("ExplicitSolver") ) {
@@ -148,11 +142,11 @@ Arches::problemSetup( const ProblemSpecP     & params,
                                               m_physicalConsts,
                                               d_myworld,
                                               m_particlesHelper,
-                                              hypreSolver );
+                                              m_solver );
 
   } else if ( db->findBlock("KokkosSolver")) {
 
-    builder = scinew KokkosSolver::Builder( m_sharedState, d_myworld, hypreSolver );
+    builder = scinew KokkosSolver::Builder( m_sharedState, d_myworld, m_solver );
 
   } else {
 
@@ -166,20 +160,19 @@ Arches::problemSetup( const ProblemSpecP     & params,
   m_nlSolver->problemSetup( db, m_sharedState, grid );
 
   // tell the infrastructure how many tasksgraphs are needed.
-  Scheduler* sched = dynamic_cast<Scheduler*>(UintahParallelComponent::getPort("scheduler"));
   int num_task_graphs=m_nlSolver->taskGraphsRequested();
-  sched->setNumTaskGraphs(num_task_graphs);
+  m_scheduler->setNumTaskGraphs(num_task_graphs);
 
   //__________________________________
   // On the Fly Analysis. The belongs at bottom
   // of task after all of the problemSetups have been called.
   if(!m_with_mpmarches) {
-    Output* dataArchiver = dynamic_cast<Output*>(getPort("output"));
-    if(!dataArchiver) {
+    if(!m_output) {
       throw InternalError("ARCHES:couldn't get output port", __FILE__, __LINE__);
     }
 
-    m_analysis_modules = AnalysisModuleFactory::create(params, m_sharedState, dataArchiver);
+    m_analysis_modules =
+      AnalysisModuleFactory::create(params, m_sharedState, m_output);
 
     if(m_analysis_modules.size() != 0) {
       vector<AnalysisModule*>::iterator iter;

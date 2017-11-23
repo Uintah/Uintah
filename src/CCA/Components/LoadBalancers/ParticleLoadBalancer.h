@@ -27,9 +27,6 @@
 
 #include <CCA/Components/LoadBalancers/LoadBalancerCommon.h>
 
-#include <Core/Grid/Grid.h>
-#include <Core/Parallel/UintahParallelComponent.h>
-#include <Core/ProblemSpec/ProblemSpecP.h>
 #include <sci_defs/uintah_defs.h>
 
 #include <set>

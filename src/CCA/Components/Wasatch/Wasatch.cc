@@ -140,7 +140,6 @@ namespace WasatchCore{
 
     materials_   = nullptr;
     timeStepper_ = nullptr;
-    linSolver_   = nullptr;
 
     isRestarting_ = false;
 
@@ -392,7 +391,7 @@ namespace WasatchCore{
     
     // TSAAD: keep the line of code below for future use. at this time, there is no apparent use for
     // it. it doesn't do anything.
-    //    dynamic_cast<Uintah::Scheduler*>(getPort("scheduler"))->setPositionVar(pPosLabel);
+    //    m_scheduler->setPositionVar(pPosLabel);
     double deltMin, deltMax;
     uintahSpec->findBlock("Time")->require("delt_min", deltMin);
     uintahSpec->findBlock("Time")->require("delt_max", deltMax);
@@ -527,31 +526,25 @@ namespace WasatchCore{
     }
 
     // we are able to get the solver port from here
-    linSolver_ = dynamic_cast<Uintah::SolverInterface*>(getPort("solver"));
-    if( !linSolver_ ){
-      throw Uintah::InternalError("Wasatch: couldn't get solver port", __FILE__, __LINE__);
-    }
-    else{
-      proc0cout << "Detected solver: " << linSolver_->getName() << std::endl;
-      const bool hasMomentum = wasatchSpec_->findBlock("MomentumEquations");
-      if( hasMomentum ){
-        std::string densMethod;
-        wasatchSpec_->findBlock("Density")->getAttribute("method",densMethod);
-        const bool isCompressible = densMethod == "COMPRESSIBLE";
-
-        bool needPressureSolve = true;
-        if( wasatchSpec_->findBlock("MomentumEquations")->findBlock("DisablePressureSolve") ) needPressureSolve = false;
-        if( isCompressible ) needPressureSolve = false;
-
-        Wasatch::need_pressure_solve( needPressureSolve );
-
-        if( needPressureSolve && (linSolver_->getName()).compare("hypre") != 0 ){
-          std::ostringstream msg;
-          msg << "  Invalid solver specified: "<< linSolver_->getName() << std::endl
-              << "  Wasatch currently works with hypre solver only. Please change your solver type." << std::endl
-              << std::endl;
-          throw std::runtime_error( msg.str() );
-        }
+    proc0cout << "Detected solver: " << m_solver->getName() << std::endl;
+    const bool hasMomentum = wasatchSpec_->findBlock("MomentumEquations");
+    if( hasMomentum ){
+      std::string densMethod;
+      wasatchSpec_->findBlock("Density")->getAttribute("method",densMethod);
+      const bool isCompressible = densMethod == "COMPRESSIBLE";
+      
+      bool needPressureSolve = true;
+      if( wasatchSpec_->findBlock("MomentumEquations")->findBlock("DisablePressureSolve") ) needPressureSolve = false;
+      if( isCompressible ) needPressureSolve = false;
+      
+      Wasatch::need_pressure_solve( needPressureSolve );
+      
+      if( needPressureSolve && (m_solver->getName()).compare("hypre") != 0 ){
+	std::ostringstream msg;
+	msg << "  Invalid solver specified: "<< m_solver->getName() << std::endl
+	    << "  Wasatch currently works with hypre solver only. Please change your solver type." << std::endl
+	    << std::endl;
+	throw std::runtime_error( msg.str() );
       }
     }
     
@@ -657,7 +650,7 @@ namespace WasatchCore{
                                                                       isConstDensity,
                                                                       densityTag,
                                                                       graphCategories_,
-                                                                      *linSolver_,
+                                                                      *m_solver,
                                                                       m_sharedState );
         adaptors_.insert( adaptors_.end(), adaptors.begin(), adaptors.end() );
       }
@@ -716,7 +709,7 @@ namespace WasatchCore{
     {
       try{
         parse_poisson_equation( poissonEqnParams, graphCategories_,
-                                *linSolver_, m_sharedState );
+                                *m_solver, m_sharedState );
       }
       catch( std::runtime_error& err ){
         std::ostringstream msg;
@@ -730,7 +723,7 @@ namespace WasatchCore{
     if( wasatchSpec_->findBlock("Radiation") ){
       parse_radiation_solver( wasatchSpec_->findBlock("Radiation"),
                               *graphCategories_[ADVANCE_SOLUTION],
-                              *linSolver_, m_sharedState, persistent_fields() );
+                              *m_solver, m_sharedState, persistent_fields() );
     }
 
     if( buildTimeIntegrator_ ){
@@ -772,8 +765,7 @@ namespace WasatchCore{
       // For RMCRT there will be 2 task graphs - put the radiation tasks in TG-1, otherwise tasks go into TG-0, or both TGs
       //   TG-0 == carry forward and/or non-radiation timesteps
       //   TG-1 == RMCRT radiation timestep
-      Uintah::Scheduler* sched = dynamic_cast<Uintah::Scheduler*>(getPort("scheduler"));
-      sched->setNumTaskGraphs(2);
+      m_scheduler->setNumTaskGraphs(2);
       Uintah::ProblemSpecP radFreqSpec = uintahSpec;
       radFreqSpec->getWithDefault( "calc_frequency",  radCalcFrequency_, 1 );
       //---------------------------------------------------------------------------------------------------------------------------

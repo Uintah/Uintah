@@ -156,7 +156,7 @@ Grid* SingleLevelRegridder::regrid(Grid* oldGrid)
     if( l == d_level_index) {
 
       const LevelP level = oldGrid->getLevel(l);
-      const PatchSubset *patchSS=lb_->getPerProcessorPatchSet(level)->getSubset(d_myworld->myRank());
+      const PatchSubset *patchSS=m_loadBalancer->getPerProcessorPatchSet(level)->getSubset(d_myworld->myRank());
       vector<IntVector> mytiles;
 
       // For each patch I own
@@ -209,7 +209,7 @@ Grid* SingleLevelRegridder::regrid(Grid* oldGrid)
   TiledRegridder::OutputGridStats(newGrid);
 
   // initialize the weights on new patches
-  lb_->initializeWeights(oldGrid,newGrid);
+  m_loadBalancer->initializeWeights(oldGrid,newGrid);
 
 #if SCI_ASSERTION_LEVEL > 0
   if(! TiledRegridder::verifyGrid(newGrid) ){

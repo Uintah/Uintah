@@ -163,7 +163,6 @@ ICE::~ICE()
 #ifdef HAVE_HYPRE
   VarLabel::destroy(hypre_solver_label);
 #endif
-
   delete d_customInitialize_basket;
   delete d_BC_globalVars->lodi;
   delete d_BC_globalVars->slip;
@@ -234,6 +233,7 @@ ICE::~ICE()
   if(d_modelInfo){
     delete d_modelInfo;
   }
+
   //  releasePort("solver");
 }
 
@@ -334,8 +334,8 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
     impSolver->getWithDefault("iters_before_timestep_restart",    
                                d_iters_before_timestep_restart, 5);
     d_impICE = true;
-    Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
-    d_subsched = sched->createSubScheduler();
+
+    d_subsched = m_scheduler->createSubScheduler();
     d_subsched->initialize(3,1);
     d_subsched->setRestartable(true); 
     d_subsched->clearMappings();
@@ -516,12 +516,11 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
     orig_or_restart_ps = restart_prob_spec;
   }  
     
-  ModelMaker* modelMaker = dynamic_cast<ModelMaker*>(getPort("modelmaker"));
-  if(modelMaker){
+  if(m_modelMaker){
 
-    modelMaker->makeModels(orig_or_restart_ps, prob_spec, grid, m_sharedState, isAMR());
-    d_models = modelMaker->getModels();
-    releasePort("ModelMaker");
+    m_modelMaker->makeModels(orig_or_restart_ps, prob_spec, grid, m_sharedState, isAMR());
+    d_models = m_modelMaker->getModels();
+
     d_modelSetup = scinew ICEModelSetup();
       
     // problem setup for each model  
@@ -710,11 +709,8 @@ ICE::outputProblemSpec( ProblemSpecP & root_ps )
 
   ProblemSpecP models_ps = root->appendChild("Models");
 
-  ModelMaker* modelmaker = 
-    dynamic_cast<ModelMaker*>(getPort("modelmaker"));
-  
-  if (modelmaker) {
-    modelmaker->outputProblemSpec(models_ps);
+  if (m_modelMaker) {
+    m_modelMaker->outputProblemSpec(models_ps);
   }
 
   //__________________________________

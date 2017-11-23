@@ -107,8 +107,20 @@ RegridderCommon::~RegridderCommon()
   }
 }
 
-//__________________________________
+//______________________________________________________________________
 //
+void RegridderCommon::releaseComponents()
+{
+  releasePort( "scheduler" );
+  m_scheduler  = nullptr;
+
+  releasePort( "load balancer" );
+  m_loadBalancer  = nullptr;
+
+  d_sharedState = nullptr;
+}
+
+//______________________________________________________________________//
 const MaterialSubset* RegridderCommon::refineFlagMaterials() const
 {
   ASSERT(refine_flag_matls != 0);
@@ -128,8 +140,8 @@ RegridderCommon::needRecompile(double /*time*/, double /*delt*/, const GridP& /*
     {
       //compute the average overhead
 
-      int numDims = lb_->getNumDims();
-      int *activeDims = lb_->getActiveDims();      
+      int numDims = m_loadBalancer->getNumDims();
+      int *activeDims = m_loadBalancer->getActiveDims();      
       IntVector newDilation(0, 0, 0);
       
       //if above overhead threshold
@@ -212,7 +224,7 @@ RegridderCommon::needsToReGrid(const GridP &oldGrid)
   else  //check if flags are contained within the finer levels patches
   {
     int result = false;
-    DataWarehouse *dw = sched_->getLastDW();
+    DataWarehouse *dw = m_scheduler->getLastDW();
     //for each level finest to coarsest
     for (int l = oldGrid->numLevels() - 1; l >= 0; l--) {
       //if on finest level skip
@@ -227,7 +239,7 @@ RegridderCommon::needsToReGrid(const GridP &oldGrid)
         fine_level = oldGrid->getLevel(l + 1);
 
       //get coarse level patches
-      const PatchSubset *patches = lb_->getPerProcessorPatchSet(coarse_level)->getSubset(d_myworld->myRank());
+      const PatchSubset *patches = m_loadBalancer->getPerProcessorPatchSet(coarse_level)->getSubset(d_myworld->myRank());
 
       //for each patch
       for (int p = 0; p < patches->size(); p++) {
@@ -279,7 +291,7 @@ RegridderCommon::flaggedCellsOnFinestLevel(const GridP& grid)
 {
   rdbg << "RegridderCommon::flaggedCellsOnFinestLevel() BGN" << std::endl;
   const Level* level = grid->getLevel(grid->numLevels() - 1).get_rep();
-  DataWarehouse* newDW = sched_->getLastDW();
+  DataWarehouse* newDW = m_scheduler->getLastDW();
 
   // mpi version
   if (d_myworld->nRanks() > 1) {
@@ -288,7 +300,7 @@ RegridderCommon::flaggedCellsOnFinestLevel(const GridP& grid)
     for (Level::const_patch_iterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) {
       // here we assume that the per-patch has been set
       PerPatch<PatchFlagP> flaggedPatchCells;
-      if (lb_->getPatchwiseProcessorAssignment(*iter) == d_myworld->myRank()) {
+      if (m_loadBalancer->getPatchwiseProcessorAssignment(*iter) == d_myworld->myRank()) {
         newDW->get(flaggedPatchCells, m_refinePatchFlagLabel, 0, *iter);
         if (flaggedPatchCells.get().get_rep()->flag) {
           thisproc = true;
@@ -356,8 +368,8 @@ RegridderCommon::problemSetup(const ProblemSpecP& params, const GridP& oldGrid, 
 
   grid_ps_ = params->findBlock("Grid");
 
-  sched_ = dynamic_cast< Scheduler * >(        getPort( "scheduler" ) );
-  lb_    = dynamic_cast< LoadBalancerPort * >( getPort( "load balancer" ) );
+  m_scheduler = dynamic_cast< Scheduler * >( getPort( "scheduler" ) );
+  m_loadBalancer = dynamic_cast< LoadBalancerPort * >( getPort( "load balancer" ) );
 
   ProblemSpecP amr_spec = params->findBlock("AMR");
   ProblemSpecP regrid_spec = amr_spec->findBlock("Regridder");
@@ -446,8 +458,8 @@ RegridderCommon::problemSetup(const ProblemSpecP& params, const GridP& oldGrid, 
   initFilter(d_patchFilter, FILTER_BOX, d_minBoundaryCells);
 
   // we need these so they don't get scrubbed
-  sched_->overrideVariableBehavior("DilatedCellsStability", true, false, false, false, false);
-  sched_->overrideVariableBehavior("DilatedCellsRegrid", true, false, false, false, false);
+  m_scheduler->overrideVariableBehavior("DilatedCellsStability", true, false, false, false, false);
+  m_scheduler->overrideVariableBehavior("DilatedCellsRegrid", true, false, false, false, false);
 
   rdbg << "RegridderCommon::problemSetup() END" << std::endl;
 }
@@ -718,10 +730,10 @@ RegridderCommon::scheduleDilation(const LevelP& level, const bool isLockstepAMR)
   dilate_regrid_task->requires(Task::NewDW, m_refineFlagLabel, refine_flag_matls, Ghost::AroundCells, ngc_regrid);
 
   dilate_stability_task->computes(d_dilatedCellsStabilityLabel, refine_flag_matls);
-  sched_->addTask(dilate_stability_task, level->eachPatch(), all_matls);
+  m_scheduler->addTask(dilate_stability_task, level->eachPatch(), all_matls);
 
   dilate_regrid_task->computes(d_dilatedCellsRegridLabel, refine_flag_matls);
-  sched_->addTask(dilate_regrid_task, level->eachPatch(), all_matls);
+  m_scheduler->addTask(dilate_regrid_task, level->eachPatch(), all_matls);
 }
 
 //______________________________________________________________________
@@ -856,7 +868,7 @@ RegridderCommon::scheduleInitializeErrorEstimate(const LevelP& level)
   task->computes(  m_oldRefineFlagLabel, refine_flag_matls);
   task->computes(m_refinePatchFlagLabel, refine_flag_matls);
 
-  sched_->addTask(task, level->eachPatch(), d_sharedState->allMaterials());
+  m_scheduler->addTask(task, level->eachPatch(), d_sharedState->allMaterials());
 }
 
 //______________________________________________________________________

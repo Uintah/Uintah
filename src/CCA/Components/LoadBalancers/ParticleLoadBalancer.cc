@@ -153,7 +153,7 @@ ParticleLoadBalancer::collectParticlesForRegrid( const Grid* oldGrid, const vect
           if (dw) {
             //loop through the materials and add up the particles
             //   go through all materials since getting an MPMMaterial correctly would depend on MPM
-            for (int m = 0; m < m_shared_state->getNumMatls(); m++) {
+            for (int m = 0; m < m_sharedState->getNumMatls(); m++) {
               ParticleSubset* psubset = 0;
               if (dw->haveParticleSubset(m, oldPatch, low, high))
                 psubset = dw->getParticleSubset(m, oldPatch, low, high);
@@ -267,7 +267,7 @@ void ParticleLoadBalancer::collectParticles(const Grid* grid, vector<vector<int>
       if (dw) {
         //loop through the materials and add up the particles
         //   go through all materials since getting an MPMMaterial correctly would depend on MPM
-        for (int m = 0; m < m_shared_state->getNumMatls(); m++) {
+        for (int m = 0; m < m_sharedState->getNumMatls(); m++) {
           if (dw->haveParticleSubset(m, patch))
             thisPatchParticles += dw->getParticleSubset(m, patch)->numParticles();
         }
@@ -671,8 +671,8 @@ bool
 ParticleLoadBalancer::needRecompile(double /*time*/, double /*delt*/, 
                                     const GridP& grid)
 {
-  double time = m_shared_state->getElapsedSimTime();
-  int timestep = m_shared_state->getCurrentTopLevelTimeStep();
+  double time = m_sharedState->getElapsedSimTime();
+  int timestep = m_sharedState->getCurrentTopLevelTimeStep();
 
   bool do_check = false;
 #if 1
@@ -788,10 +788,10 @@ bool ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int 
     if (state != LoadBalancerPort::check) {
       force = true;
       if (d_lbTimestepInterval != 0) {
-        d_lastLbTimestep = m_shared_state->getCurrentTopLevelTimeStep();
+        d_lastLbTimestep = m_sharedState->getCurrentTopLevelTimeStep();
       }
       else if (m_lb_interval != 0) {
-        m_last_lb_time = m_shared_state->getElapsedSimTime();
+        m_last_lb_time = m_sharedState->getElapsedSimTime();
       }
     }
     m_old_assignment = m_processor_assignment;
@@ -909,13 +909,13 @@ ParticleLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid, const Simul
 
 //   // Running with VisIt so add in the variables that the user can
 //   // modify.
-//   if( m_shared_state->getVisIt() && !initialized ) {
-//     m_shared_state->d_debugStreams.push_back( &doing  );
-//     m_shared_state->d_debugStreams.push_back( &lb );
-//     m_shared_state->d_debugStreams.push_back( &dbg );
-//     m_shared_state->d_debugStreams.push_back( &stats  );
-//     m_shared_state->d_debugStreams.push_back( &times );
-//     m_shared_state->d_debugStreams.push_back( &lbout );
+//   if( m_sharedState->getVisIt() && !initialized ) {
+//     m_sharedState->d_debugStreams.push_back( &doing  );
+//     m_sharedState->d_debugStreams.push_back( &lb );
+//     m_sharedState->d_debugStreams.push_back( &dbg );
+//     m_sharedState->d_debugStreams.push_back( &stats  );
+//     m_sharedState->d_debugStreams.push_back( &times );
+//     m_sharedState->d_debugStreams.push_back( &lbout );
 
 //     initialized = true;
 //   }

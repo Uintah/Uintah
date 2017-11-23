@@ -192,6 +192,8 @@ WARNING
     virtual const VarLabel* getDelTLabel() const = 0;
 
     //////////
+    virtual bool needModelMaker() const { return false; }
+    
     virtual void setAMR(bool val) = 0;
     virtual bool isAMR() const = 0;
   

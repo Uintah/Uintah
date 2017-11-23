@@ -436,14 +436,14 @@ UnifiedScheduler::problemSetup( const ProblemSpecP     & prob_spec
 
 //   // Running with VisIt so add in the variables that the user can
 //   // modify.
-//   if( m_shared_state->getVisIt() && !initialized ) {
-//     m_shared_state->d_douts.push_back( &g_dbg  );
-//     m_shared_state->d_douts.push_back( &g_queuelength  );
+//   if( m_sharedState->getVisIt() && !initialized ) {
+//     m_sharedState->d_douts.push_back( &g_dbg  );
+//     m_sharedState->d_douts.push_back( &g_queuelength  );
 
 // #ifdef HAVE_CUDA
-//     m_shared_state->d_debugStreams.push_back( &gpu_stats  );
-//     m_shared_state->d_debugStreams.push_back( &simulate_multiple_gpus  );
-//     m_shared_state->d_debugStreams.push_back( &gpudbg  );
+//     m_sharedState->d_debugStreams.push_back( &gpu_stats  );
+//     m_sharedState->d_debugStreams.push_back( &simulate_multiple_gpus  );
+//     m_sharedState->d_debugStreams.push_back( &gpudbg  );
 // #endif
     
 //     initialized = true;
@@ -779,7 +779,7 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
   m_exec_timer.stop();
 
   // compute the net timings
-  if ( m_shared_state != nullptr ) {
+  if ( m_sharedState != nullptr ) {
 
     // Stats specific to this threaded scheduler - TaskRunner threads start at g_runners[1]
     for (int i = 1; i < m_num_threads; ++i) {

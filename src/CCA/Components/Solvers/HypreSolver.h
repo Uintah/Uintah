@@ -215,6 +215,8 @@ namespace Uintah {
     HypreSolver2(const ProcessorGroup* myworld);
     virtual ~HypreSolver2();
 
+    virtual void releaseComponents() {};
+    
     virtual SolverParameters* readParameters(       ProblemSpecP     & params,
                                               const std::string      & name,
                                                     SimulationStateP & state );

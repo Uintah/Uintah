@@ -44,7 +44,8 @@
 namespace Uintah {
 
 class DataWarehouse;
-
+class ApplicationInterface;
+class LoadBalancerPort;
 
    /**************************************
      
@@ -80,6 +81,8 @@ class DataWarehouse;
        DataArchiver( const ProcessorGroup * myworld, int udaSuffix = -1 );
        virtual ~DataArchiver();
 
+       virtual void releaseComponents();
+    
        static bool d_wereSavesAndCheckpointsInitialized;
 
        //! Sets up when the DataArchiver will output and what data, according
@@ -416,8 +419,11 @@ class DataWarehouse;
        //! i.e., filebase.000
        std::string d_filebase;
 
+       ApplicationInterface* m_application{nullptr};
+       LoadBalancerPort * m_loadBalancer{nullptr};
+    
        //! pointer to simulation state, to get timestep and time info
-       SimulationStateP d_sharedState;
+       SimulationStateP m_sharedState;
 
        // Only one of these should be non-zero.  The value is read
        // from the .ups file.

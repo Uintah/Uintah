@@ -143,13 +143,24 @@ DataArchiver::~DataArchiver()
 //______________________________________________________________________
 //
 void
+DataArchiver::releaseComponents()
+{
+  m_sharedState = nullptr;
+}
+
+//______________________________________________________________________
+//
+void
 DataArchiver::problemSetup( const ProblemSpecP    & params,
 			    const ProblemSpecP    & restart_prob_spec,
 			    const SimulationStateP& sharedState )
 {
   dbg << "Doing ProblemSetup \t\t\t\tDataArchiver\n";
 
-  d_sharedState = sharedState;
+  m_application = dynamic_cast<ApplicationInterface*>(getPort("app")); 
+  m_loadBalancer = dynamic_cast<LoadBalancerPort*>( getPort("load balancer") );
+
+  m_sharedState = sharedState;
   d_upsFile = params;
   ProblemSpecP p = params->findBlock("DataArchiver");
   
@@ -163,10 +174,7 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
       
       insitu_ps = insitu_ps->get("haveModifiedVars", haveModifiedVars);
 
-      ApplicationInterface* app =
-	dynamic_cast<ApplicationInterface*>(getPort("app")); 
-
-      app->haveModifiedVars( haveModifiedVars );
+      m_application->haveModifiedVars( haveModifiedVars );
 
       if( haveModifiedVars )
       {
@@ -435,10 +443,10 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
 
   // Running with VisIt so add in the variables that the user can
   // modify.
-//   if( d_sharedState->getVisIt() && !initialized ) {
-//     d_sharedState->d_debugStreams.push_back( &dbg  );
+//   if( m_sharedState->getVisIt() && !initialized ) {
+//     m_sharedState->d_debugStreams.push_back( &dbg  );
 // #ifdef HAVE_PIDX
-//     d_sharedState->d_debugStreams.push_back( &dbgPIDX );
+//     m_sharedState->d_debugStreams.push_back( &dbgPIDX );
 // #endif
 //     initialized = true;
 //   }
@@ -452,10 +460,7 @@ DataArchiver::outputProblemSpec( ProblemSpecP & root_ps )
 {
   dbg << "Doing outputProblemSpec \t\t\t\tDataArchiver\n";
 
-  ApplicationInterface* app =
-    dynamic_cast<ApplicationInterface*>(getPort("app"));
-
-  if( app->haveModifiedVars() ) {
+  if( m_application->haveModifiedVars() ) {
 
     ProblemSpecP root = root_ps->getRootNode();
 
@@ -464,7 +469,7 @@ DataArchiver::outputProblemSpec( ProblemSpecP & root_ps )
     if( is_ps == nullptr )
       is_ps = root->appendChild("InSitu");
 
-    is_ps->appendElement("haveModifiedVars", app->haveModifiedVars());
+    is_ps->appendElement("haveModifiedVars", m_application->haveModifiedVars());
   }
 }
 
@@ -1641,13 +1646,10 @@ DataArchiver::writeto_xml_files( const int timeStep,
       // writeGridBinary( hasGlobals, grid_path, grid );
 #endif
       // Add the <Materials> section to the timestep.xml
-      ApplicationInterface* app =
-	dynamic_cast<ApplicationInterface*>(getPort("app")); 
-
       GeometryPieceFactory::resetGeometryPiecesOutput();
 
       // output each components output Problem spec
-      app->outputProblemSpec( rootElem );
+      m_application->outputProblemSpec( rootElem );
 
       outputProblemSpec( rootElem );
 
@@ -1714,7 +1716,7 @@ DataArchiver::writeto_xml_files( const int timeStep,
 				 std::string> > &modifiedVars )
 {
 #ifdef HAVE_VISIT  
-//   if( isProc0_macro && d_sharedState->getVisIt() && modifiedVars.size() )
+//   if( isProc0_macro && m_sharedState->getVisIt() && modifiedVars.size() )
   {
     dbg << "  writeto_xml_files() begin\n";
 
@@ -1843,8 +1845,6 @@ DataArchiver::writeGridBinary( const bool hasGlobals, const string & grid_path, 
     fwrite( &id,          sizeof(int),    1, fp );  // ID of Level     - 0
     fwrite( cell_spacing, sizeof(double), 3, fp );  // Cell Spacing - [0.1,0.1,0.1]
 
-    LoadBalancerPort * lb = dynamic_cast<LoadBalancerPort*>( getPort("load balancer") );
-
     procOnLevel[ lev ].resize( d_myworld->nRanks() );
 
     // Iterate over patches.
@@ -1853,9 +1853,9 @@ DataArchiver::writeGridBinary( const bool hasGlobals, const string & grid_path, 
       const Patch* patch = *iter;
 
       int       patch_id   = patch->getID();
-      int       rank_id    = lb->getOutputRank( patch );
+      int       rank_id    = m_loadBalancer->getOutputRank( patch );
 
-      int proc = lb->getOutputRank( patch );
+      int proc = m_loadBalancer->getOutputRank( patch );
       procOnLevel[ lev ][ proc ] = true;
 
       IntVector ecliiv  = patch->getExtraCellLowIndex();
@@ -1931,8 +1931,6 @@ DataArchiver::writeGridOriginal( const bool hasGlobals, const GridP & grid, Prob
   // "grid.xml" section using libxml2's TextWriter which is a
   // streaming output format which doesn't use a DOM tree.
 
-  LoadBalancerPort * lb = dynamic_cast<LoadBalancerPort*>(getPort("load balancer"));
-
   ProblemSpecP gridElem = rootElem->appendChild( "Grid" );
 
   //__________________________________
@@ -1971,7 +1969,7 @@ DataArchiver::writeGridOriginal( const bool hasGlobals, const GridP & grid, Prob
       IntVector lo_EC = patch->getExtraCellLowIndex();
       IntVector hi_EC = patch->getExtraCellHighIndex();
           
-      int proc = lb->getOutputRank( patch );
+      int proc = m_loadBalancer->getOutputRank( patch );
       procOnLevel[ l ][ proc ] = true;
 
       Box box = patch->getExtraBox();
@@ -2006,7 +2004,7 @@ DataArchiver::writeGridOriginal( const bool hasGlobals, const GridP & grid, Prob
     // Create a pxxxxx.xml file for each proc doing the outputting.
 
     for( int i = 0; i < d_myworld->nRanks(); i++ ) {
-      if( ( i % lb->getNthRank() ) != 0 || !procOnLevel[l][i] ){
+      if( ( i % m_loadBalancer->getNthRank() ) != 0 || !procOnLevel[l][i] ){
         continue;
       }
           
@@ -2043,9 +2041,6 @@ DataArchiver::writeGridTextWriter( const bool hasGlobals, const string & grid_pa
   // Break out the <Grid> and <Data> sections and write those to
   // grid.xml and data.xml files using libxml2's TextWriter which is a
   // streaming output format which doesn't use a DOM tree.
-
-  LoadBalancerPort * lb =
-    dynamic_cast<LoadBalancerPort*>( getPort("load balancer") );
 
   string name_grid = grid_path + "grid.xml";
 
@@ -2114,7 +2109,7 @@ DataArchiver::writeGridTextWriter( const bool hasGlobals, const string & grid_pa
       IntVector lo_EC = patch->getExtraCellLowIndex();
       IntVector hi_EC = patch->getExtraCellHighIndex();
           
-      int proc = lb->getOutputRank( patch );
+      int proc = m_loadBalancer->getOutputRank( patch );
       procOnLevel[ l ][ proc ] = true;
 
       Box box = patch->getExtraBox();
@@ -2177,8 +2172,6 @@ DataArchiver::writeDataTextWriter( const bool hasGlobals, const string & data_pa
                                    const vector< vector<bool> > & procOnLevel )
 {
   int                   numLevels = grid->numLevels();
-  LoadBalancerPort    * lb = dynamic_cast<LoadBalancerPort*>( getPort("load balancer") );
-
   string                data_filename = data_path + "data.xml";
   xmlTextWriterPtr      data_writer = xmlNewTextWriterFilename( data_filename.c_str(), 0 );
 
@@ -2191,7 +2184,7 @@ DataArchiver::writeDataTextWriter( const bool hasGlobals, const string & data_pa
 
     // create a pxxxxx.xml file for each proc doing the outputting
     for( int i = 0; i < d_myworld->nRanks(); i++ ) {
-      if ( i % lb->getNthRank() != 0 || !procOnLevel[l][i] ) {
+      if ( i % m_loadBalancer->getNthRank() != 0 || !procOnLevel[l][i] ) {
         continue;
       }
       ostringstream pname;
@@ -2232,13 +2225,11 @@ DataArchiver::scheduleOutputTimestep(       vector<SaveItem> & saveLabels,
 {
   // Schedule a bunch of tasks - one for each variable, for each patch
   int                var_cnt = 0;
-  LoadBalancerPort * lb =
-    dynamic_cast< LoadBalancerPort * >( getPort( "load balancer" ) ); 
   
   for( int i = 0; i < grid->numLevels(); i++ ) {
 
     const LevelP& level = grid->getLevel(i);
-    const PatchSet* patches = lb->getOutputPerProcessorPatchSet( level );
+    const PatchSet* patches = m_loadBalancer->getOutputPerProcessorPatchSet( level );
     
     string taskName = "DataArchiver::outputVariables";
     if ( isThisCheckpoint ) {
@@ -2264,7 +2255,7 @@ DataArchiver::scheduleOutputTimestep(       vector<SaveItem> & saveLabels,
     }
 
     task->setType( Task::Output );
-    sched->addTask( task, patches, d_sharedState->allMaterials() );
+    sched->addTask( task, patches, m_sharedState->allMaterials() );
   }
   
   dbg << "  scheduled output task for " << var_cnt << " variables\n";
@@ -2278,7 +2269,6 @@ DataArchiver::createPIDXCommunicator(       vector<SaveItem> & saveLabels,
                                             bool               isThisCheckpoint )
 {
   int proc = d_myworld->myRank();
-  LoadBalancerPort * lb = dynamic_cast< LoadBalancerPort * >( getPort( "load balancer" ) );
 
   // Resize the comms back to 0...
   d_pidxComms.clear();
@@ -2290,7 +2280,7 @@ DataArchiver::createPIDXCommunicator(       vector<SaveItem> & saveLabels,
 
     const LevelP& level = grid->getLevel(i);
     vector< SaveItem >::iterator saveIter;
-    const PatchSet* patches = lb->getOutputPerProcessorPatchSet( level );
+    const PatchSet* patches = m_loadBalancer->getOutputPerProcessorPatchSet( level );
     //cout << "[ "<< d_myworld->myRank() << " ] Patch size: " << patches->size() << "\n";
     
     /*
@@ -2400,7 +2390,7 @@ DataArchiver::outputReductionVars( const ProcessorGroup *,
   Timers::Simple timer;
   timer.start();
 
-  double simTime = d_sharedState->getElapsedSimTime();
+  double simTime = m_sharedState->getElapsedSimTime();
 
   // simTime_vartype simTime_var(0);
   // if( old_dw )
@@ -2479,7 +2469,7 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
 
   dbg << "  outputVariables task begin\n";
 
-  double timeStep = d_sharedState->getCurrentTopLevelTimeStep();
+  double timeStep = m_sharedState->getCurrentTopLevelTimeStep();
   
   // timeStep_vartype timeStep_var(0);
   // if( old_dw )
@@ -3564,7 +3554,7 @@ DataArchiver::initCheckpoints(SchedulerP& sched)
        
        saveItem.setMaterials(map_iter->first, map_iter->second, d_prevMatls, d_prevMatlSet);
 
-       if (string(var->getName()) == "delT") {
+       if (string(var->getName()) == delT_name) {
          hasDelT = true;
        }
      }
@@ -3585,7 +3575,7 @@ DataArchiver::initCheckpoints(SchedulerP& sched)
 
 
    if (!hasDelT) {
-     VarLabel* var = VarLabel::find("delT");
+     VarLabel* var = VarLabel::find(delT_name);
      if (var == nullptr) {
        throw ProblemSetupException("delT variable not found to checkpoint.",__FILE__, __LINE__);
      }
@@ -3900,9 +3890,6 @@ DataArchiver::outputTimestep( const int timeStep,
 {
   int proc = d_myworld->myRank();
 
-  LoadBalancerPort * lb =
-    dynamic_cast< LoadBalancerPort * >( getPort( "load balancer" ) );
-
   DataWarehouse* oldDW = sched->get_dw(0);
   DataWarehouse* newDW = sched->getLastDW();
   
@@ -3926,7 +3913,7 @@ DataArchiver::outputTimestep( const int timeStep,
   for( int i = 0; i < grid->numLevels(); ++i ) {
     const LevelP& level = grid->getLevel( i );
 
-    const PatchSet* patches = lb->getOutputPerProcessorPatchSet(level);
+    const PatchSet* patches = m_loadBalancer->getOutputPerProcessorPatchSet(level);
 
     outputVariables( nullptr, patches->getSubset(proc), nullptr, oldDW, newDW, OUTPUT );
     outputVariables( nullptr, patches->getSubset(proc), nullptr, oldDW, newDW, CHECKPOINT );
@@ -3952,9 +3939,6 @@ DataArchiver::checkpointTimestep( const int timeStep,
                                   SchedulerP& sched )
 {
   int proc = d_myworld->myRank();
-
-  LoadBalancerPort * lb =
-    dynamic_cast< LoadBalancerPort * >( getPort( "load balancer" ) );
 
   DataWarehouse* oldDW = sched->get_dw(0);
   DataWarehouse* newDW = sched->getLastDW();
@@ -3990,7 +3974,7 @@ DataArchiver::checkpointTimestep( const int timeStep,
   for( int i = 0; i < grid->numLevels(); ++i ) {
     const LevelP& level = grid->getLevel( i );
 
-    const PatchSet* patches = lb->getOutputPerProcessorPatchSet(level);
+    const PatchSet* patches = m_loadBalancer->getOutputPerProcessorPatchSet(level);
 
     outputVariables( nullptr, patches->getSubset(proc),
 		     nullptr, oldDW, newDW, CHECKPOINT );

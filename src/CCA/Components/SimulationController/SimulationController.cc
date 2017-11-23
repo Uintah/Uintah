@@ -345,6 +345,11 @@ SimulationController::getComponents( void )
 void
 SimulationController::releaseComponents( void )
 {
+  releasePort( "app" );
+  releasePort( "load balancer" );
+  releasePort( "regridder" );
+  releasePort( "output" );
+
   d_app       = nullptr;
   d_scheduler = nullptr;
   d_regridder = nullptr;

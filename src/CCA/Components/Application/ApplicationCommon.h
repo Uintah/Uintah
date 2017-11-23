@@ -45,6 +45,7 @@
 
 namespace Uintah {
 
+class ModelMaker;
 class Regridder;
 class Output;
 
@@ -297,11 +298,15 @@ private:
 
 protected:
   Scheduler*       m_scheduler{nullptr};
+  ModelMaker*      m_modelMaker{nullptr};
   SolverInterface* m_solver{nullptr};
   Regridder*       m_regridder{nullptr};
   Output*          m_output{nullptr};
 
 private:
+  bool parentApp {true};
+  bool childApp  {false};
+  
   bool m_AMR {false};
   bool m_lockstepAMR {false};
 

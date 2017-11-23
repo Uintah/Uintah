@@ -88,6 +88,8 @@ public:
   
   virtual ~MPMICE();
   
+  virtual bool needModelMaker() const { return d_ice->needModelMaker(); }
+    
   virtual bool restartableTimeSteps();
 
   virtual double recomputeTimeStep(double current_dt); 

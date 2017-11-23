@@ -159,16 +159,16 @@ MPIScheduler::problemSetup( const ProblemSpecP     & prob_spec
 
 //   // Running with VisIt so add in the variables that the user can
 //   // modify.
-//   if( m_shared_state->getVisIt() && !initialized ) {
-//     m_shared_state->d_douts.push_back( &g_dbg );
-//     m_shared_state->d_douts.push_back( &g_send_stats );
-//     m_shared_state->d_douts.push_back( &g_reductions );
-//     m_shared_state->d_douts.push_back( &g_time_out );
-//     m_shared_state->d_douts.push_back( &g_task_level );
-//     m_shared_state->d_douts.push_back( &g_task_order );
-//     m_shared_state->d_douts.push_back( &g_task_dbg );
-//     m_shared_state->d_douts.push_back( &g_mpi_dbg  );
-//     m_shared_state->d_douts.push_back( &g_exec_out  );
+//   if( m_sharedState->getVisIt() && !initialized ) {
+//     m_sharedState->d_douts.push_back( &g_dbg );
+//     m_sharedState->d_douts.push_back( &g_send_stats );
+//     m_sharedState->d_douts.push_back( &g_reductions );
+//     m_sharedState->d_douts.push_back( &g_time_out );
+//     m_sharedState->d_douts.push_back( &g_task_level );
+//     m_sharedState->d_douts.push_back( &g_task_order );
+//     m_sharedState->d_douts.push_back( &g_task_dbg );
+//     m_sharedState->d_douts.push_back( &g_mpi_dbg  );
+//     m_sharedState->d_douts.push_back( &g_exec_out  );
 
 //     initialized = true;
 //   }
@@ -183,7 +183,7 @@ MPIScheduler::createSubScheduler()
   UintahParallelPort * lbp      = getPort("load balancer");
   MPIScheduler       * newsched = scinew MPIScheduler( d_myworld, m_out_port, this );
   newsched->attachPort( "load balancer", lbp );
-  newsched->m_shared_state = m_shared_state;
+  newsched->m_sharedState = m_sharedState;
   return newsched;
 }
 
@@ -800,7 +800,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */
 
   mpi_info_.reset( 0 );
 
-  DOUT(g_dbg, "Rank-" << my_rank << ", MPI Scheduler executing taskgraph: " << tgnum << ", timestep: " << m_shared_state->getCurrentTopLevelTimeStep()
+  DOUT(g_dbg, "Rank-" << my_rank << ", MPI Scheduler executing taskgraph: " << tgnum << ", timestep: " << m_sharedState->getCurrentTopLevelTimeStep()
                       << " with " << dts->numTasks() << " tasks (" << ntasks << " local)");
 
   if( m_reloc_new_pos_label && m_dws[m_dwmap[Task::OldDW]] != nullptr ) {
@@ -932,9 +932,9 @@ MPIScheduler::outputTimingStats( const char* label )
 
       // Report which timesteps TaskExecTime values have been accumulated over
       fout << "Reported values are cumulative over 10 timesteps ("
-           << m_shared_state->getCurrentTopLevelTimeStep()-9
+           << m_sharedState->getCurrentTopLevelTimeStep()-9
            << " through "
-           << m_shared_state->getCurrentTopLevelTimeStep()
+           << m_sharedState->getCurrentTopLevelTimeStep()
            << ")" << std::endl;
 
       for (auto iter = g_exec_times.begin(); iter != g_exec_times.end(); ++iter) {
@@ -962,7 +962,7 @@ MPIScheduler::outputTimingStats( const char* label )
       numCells += range.x() * range.y() * range.z();
 
       // go through all materials since getting an MPMMaterial correctly would depend on MPM
-      for (int m = 0; m < m_shared_state->getNumMatls(); m++) {
+      for (int m = 0; m < m_sharedState->getNumMatls(); m++) {
         if (dw->haveParticleSubset(m, patch)) {
           numParticles += dw->getParticleSubset(m, patch)->numParticles();
         }
@@ -1038,7 +1038,7 @@ MPIScheduler::outputTimingStats( const char* label )
 
     for (size_t file = 0; file < files.size(); ++file) {
       std::ofstream& out = *files[file];
-      out << "Timestep " << m_shared_state->getCurrentTopLevelTimeStep() << std::endl;
+      out << "Timestep " << m_sharedState->getCurrentTopLevelTimeStep() << std::endl;
       for (size_t i = 0; i < (*data[file]).size(); i++) {
         out << label << ": " << m_labels[i] << ": ";
         int len = static_cast<int>(strlen(m_labels[i]) + strlen("MPIScheduler: ") + strlen(": "));

@@ -36,6 +36,8 @@ namespace Uintah {
     CGSolver( const ProcessorGroup * myworld );
     virtual ~CGSolver();
 
+    virtual void releaseComponents() {};
+
     virtual SolverParameters* readParameters(       ProblemSpecP     & params,
                                               const std::string      & name,
                                                     SimulationStateP & state );

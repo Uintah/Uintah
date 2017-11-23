@@ -192,12 +192,6 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
     d_switchCriteria->problemSetup(prob_spec,restart_prob_spec,m_sharedState);
   }
 
-  ModelMaker* models = dynamic_cast<ModelMaker*>(getPort("modelmaker"));
-
-  if(models){  // of there are models then push the port down to ICE
-    d_ice->attachPort("modelmaker",models);
-  }
-  
   d_ice->problemSetup(prob_spec, restart_prob_spec,grid);
 
   // An ice model may adjust the output interval or the checkpoint
@@ -206,7 +200,8 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
   adjustOutputInterval( d_ice->adjustOutputInterval() );      
   adjustCheckpointInterval( d_ice->adjustCheckpointInterval() );
   
-  if(models){  // some models may need to have access to MPMLabels
+  // some models may need to have access to MPMLabels
+  if(d_ice->d_models.size()){
     for(vector<ModelInterface*>::iterator iter = d_ice->d_models.begin();
        iter != d_ice->d_models.end(); iter++){
       (*iter)->setMPMLabel(Mlb);

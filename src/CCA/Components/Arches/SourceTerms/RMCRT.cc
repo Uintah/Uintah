@@ -150,22 +150,6 @@ RMCRT_Radiation::problemSetup( const ProblemSpecP& inputdb )
       _whichAlgo = dataOnion;
       _RMCRT->setBC_onOff( true );
 
-      //__________________________________
-      //  bulletproofing
-      ProblemSpecP amr = inputdb->findBlock("AMR");
-      bool lockstepAMR = false;
-
-      if (amr) {
-        amr->get("useLockStep", lockstepAMR);
-      }
-
-      if(!lockstepAMR){
-        std::ostringstream msg;
-        msg << "\n ERROR: You must add \n"
-            << " <useLockStep> true </useLockStep> \n"
-            << " inside of the <AMR> section. \n";
-        throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
-      }
     } else if ( type == "RMCRT_coarseLevel" ) {   // 2 LEVEL
 
       _whichAlgo = coarseLevel;

@@ -151,13 +151,8 @@ ImpMPM::problemSetup( const ProblemSpecP     & prob_spec,
 {
   cout_doing << " Doing ImpMPM::problemSetup\n";
 
-  dynamic_cast<Scheduler*>(getPort("scheduler"))->setPositionVar(lb->pXLabel);
+  m_scheduler->setPositionVar(lb->pXLabel);
   
-  Output* dataArchiver = dynamic_cast<Output*>(getPort("output"));
-  if(!dataArchiver){
-    throw InternalError("ImpMPM:couldn't get output port", __FILE__, __LINE__);
-  }
-
   ProblemSpecP mpm_ps = 0;
   ProblemSpecP restart_mat_ps = 0;
   bool isRestart = false;
@@ -189,7 +184,7 @@ ImpMPM::problemSetup( const ProblemSpecP     & prob_spec,
   if (mpm_soln_ps) {
 
     // Read all MPM flags (look in MPMFlags.cc)
-    flags->readMPMFlags( restart_mat_ps, dataArchiver );
+    flags->readMPMFlags( restart_mat_ps, m_output );
      
     if (flags->d_integrator_type != "implicit") {
       throw ProblemSetupException("Can't use explicit integration with -impm", __FILE__, __LINE__);
@@ -270,10 +265,9 @@ ImpMPM::problemSetup( const ProblemSpecP     & prob_spec,
   d_solver->initialize();
 
   // setup sub scheduler
-  Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
-  sched->setRestartable(true);
+  m_scheduler->setRestartable(true);
 
-  d_subsched = sched->createSubScheduler();
+  d_subsched = m_scheduler->createSubScheduler();
   d_subsched->initialize(3,1);
   d_subsched->clearMappings();
   d_subsched->mapDataWarehouse(Task::ParentOldDW, 0);
