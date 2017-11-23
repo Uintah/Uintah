@@ -855,10 +855,11 @@ Switcher::needRecompile(       double   simTime,
     comp->attachPort( "regridder",  m_regridder );
     comp->attachPort( "output",     m_output );
 
-    d_app->getComponents();    
+    d_app->getComponents();
 
     // Clean up the old models.
-    m_modelMaker->clearModels();
+    if( needModelMaker() )
+      m_modelMaker->clearModels();
 
     // read in the problemSpec on next subcomponent
     ProblemSpecP restart_prob_spec = nullptr;
