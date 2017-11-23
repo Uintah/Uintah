@@ -138,18 +138,9 @@ ApplicationCommon::~ApplicationCommon()
   
   if( m_simulationTime )
     delete m_simulationTime;
-  
-  if( parentApp )
-  {
-    if( m_sharedState.get_rep() )
-    {
-      // Dump the local reference count which will delete the shared state.
-      m_sharedState->removeReference();
-      
-      // delete m_sharedState.get_rep();
-    }
-  }
 
+  // No need to delete the shared state as it is referecne counted
+  // which will automatically delete it.
   m_sharedState = nullptr;
 }
 
