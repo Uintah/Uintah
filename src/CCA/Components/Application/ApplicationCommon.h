@@ -216,10 +216,13 @@ public:
   virtual const VarLabel* getDelTLabel() const { return m_delTLabel; }
 
   //////////
-  virtual void setAMR(bool val) {m_AMR = val; }
+  virtual void setModelMaker(bool val) { m_needModelMaker = val; }
+  virtual bool needModelMaker() const { return m_needModelMaker; }
+    
+  virtual void setAMR(bool val) { m_AMR = val; }
   virtual bool isAMR() const { return m_AMR; }
   
-  virtual void setLockstepAMR(bool val) {m_lockstepAMR = val; }
+  virtual void setLockstepAMR(bool val) { m_lockstepAMR = val; }
   virtual bool isLockstepAMR() const { return m_lockstepAMR; }
 
   virtual void setDynamicRegridding(bool val) {m_dynamicRegridding = val; }
@@ -306,7 +309,8 @@ protected:
 private:
   bool parentApp {true};
   bool childApp  {false};
-  
+
+  bool m_needModelMaker {false};
   bool m_AMR {false};
   bool m_lockstepAMR {false};
 

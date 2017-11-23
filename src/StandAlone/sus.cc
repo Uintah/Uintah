@@ -728,41 +728,10 @@ main( int argc, char *argv[], char *env[] )
     appComp->attachPort( "solver", solver );
 
     //__________________________________
-    // Regridder
-    RegridderCommon* regridder = nullptr;
-
-    if( application->isAMR() ) {
-      regridder = RegridderFactory::create( ups, world );
-
-      if ( regridder ) {
-        simController->attachPort( "regridder", regridder );
-	appComp->attachPort( "regridder", regridder );
-      }
-    }
-
-
-    //__________________________________
-    //  Model
-    ModelMaker* modelMaker = nullptr;
-
-    if( application->needModelMaker() ) {
-      modelMaker = scinew ModelFactory(world);
-
-      if( modelMaker )
-	appComp->attachPort("modelMaker", modelMaker);
-    }
-
-    //__________________________________
     // Load balancer
     LoadBalancerCommon* loadBalancer =
       LoadBalancerFactory::create( ups, world );
 
-    if( regridder ) {
-      regridder->attachPort( "load balancer", loadBalancer );
-
-      loadBalancer->attachPort( "regridder", regridder );
-    }
-    
     //__________________________________
     // Output
     DataArchiver * dataArchiver = scinew DataArchiver( world, udaSuffix );
@@ -789,12 +758,40 @@ main( int argc, char *argv[], char *env[] )
     scheduler->setStartAddr( start_addr );
     scheduler->addReference();
     
-    if ( regridder ) {
-      regridder->attachPort( "scheduler", scheduler );
-    }
-
     if ( emit_graphs ) {
       scheduler->doEmitTaskGraphDocs();
+    }
+
+    //__________________________________
+    // Regridder - optional
+    RegridderCommon* regridder = nullptr;
+
+    if( application->isAMR() ) {
+      regridder = RegridderFactory::create( ups, world );
+
+      if( regridder )
+      {
+	regridder->attachPort( "scheduler", scheduler );
+	regridder->attachPort( "load balancer", loadBalancer );
+
+        simController->attachPort( "regridder", regridder );
+	appComp->attachPort( "regridder", regridder );
+
+	loadBalancer->attachPort( "regridder", regridder );
+      }
+    }
+
+    //__________________________________
+    //  Model Maker - optional
+    ModelMaker* modelMaker = nullptr;
+
+    if( application->needModelMaker() ) {
+      modelMaker = scinew ModelFactory(world);
+
+      if( modelMaker )
+      {
+	appComp->attachPort("modelMaker", modelMaker);
+      }
     }
 
     //__________________________________

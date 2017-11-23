@@ -61,15 +61,11 @@ ApplicationCommon::ApplicationCommon(const ProcessorGroup* myworld,
 
     parentApp = true;
     childApp  = false;
-
-    std::cerr << __FUNCTION__ << "  Parent app" << std::endl;
   }
   else
   {
     parentApp = false;
     childApp  = true;
-
-    std::cerr << __FUNCTION__ << "  Child app" << std::endl;
   }
   
   //__________________________________

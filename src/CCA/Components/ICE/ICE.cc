@@ -110,6 +110,8 @@ ICE::ICE(const ProcessorGroup* myworld,
 	 const SimulationStateP sharedState) :
   ApplicationCommon(myworld, sharedState)
 {
+  setModelMaker(true);
+      
   lb   = scinew ICELabel();
 
 #ifdef HAVE_HYPRE

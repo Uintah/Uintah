@@ -122,13 +122,15 @@ Switcher::Switcher( const ProcessorGroup * myworld,
 
     ApplicationInterface* app = dynamic_cast<ApplicationInterface*>(comp);
     attachPort( "app", app );
-        
-    //__________________________________
+
+    if( app->needModelMaker() )
+      setModelMaker( true );
+    
     // Create solver port and attach it to the switcher component.
     SolverInterface * solver = SolverFactory::create( subCompUps, myworld );    
     attachPort( "sub_solver", solver );
 
-    comp->attachPort( "solver",    solver );
+    comp->attachPort( "solver", solver );
 
     //__________________________________
     // create switching criteria port and attach it switcher component
@@ -138,8 +140,8 @@ Switcher::Switcher( const ProcessorGroup * myworld,
     if( switch_criteria ) {
       switch_criteria->setSwitchLabel( d_switch_label );
 
-      attachPort(      "switch_criteria",switch_criteria);
-      comp->attachPort("switch_criteria",switch_criteria);
+      attachPort(      "switch_criteria", switch_criteria);
+      comp->attachPort("switch_criteria", switch_criteria);
     }
 
     //__________________________________
@@ -287,11 +289,11 @@ Switcher::problemSetup( const ProblemSpecP     & /*params*/,
 
   d_app = dynamic_cast<ApplicationInterface*>(comp);
 
-  comp->attachPort( "scheduler",   m_scheduler );
-  comp->attachPort( "modelMarker", m_modelMaker );
-  comp->attachPort( "solver",      m_solver );
-  comp->attachPort( "regridder",   m_regridder );
-  comp->attachPort( "output",      m_output );
+  comp->attachPort( "scheduler",  m_scheduler );
+  comp->attachPort( "modelMaker", m_modelMaker );
+  comp->attachPort( "solver",     m_solver );
+  comp->attachPort( "regridder",  m_regridder );
+  comp->attachPort( "output",     m_output );
 
   d_app->getComponents();    
 
@@ -847,11 +849,11 @@ Switcher::needRecompile(       double   simTime,
 
     d_app = dynamic_cast<ApplicationInterface*>(comp);
 
-    comp->attachPort( "scheduler",   m_scheduler );
-    comp->attachPort( "modelMarker", m_modelMaker );
-    comp->attachPort( "solver",      m_solver );
-    comp->attachPort( "regridder",   m_regridder );
-    comp->attachPort( "output",      m_output );
+    comp->attachPort( "scheduler",  m_scheduler );
+    comp->attachPort( "modelMaker", m_modelMaker );
+    comp->attachPort( "solver",     m_solver );
+    comp->attachPort( "regridder",  m_regridder );
+    comp->attachPort( "output",     m_output );
 
     d_app->getComponents();    
 

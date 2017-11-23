@@ -127,8 +127,6 @@ namespace Uintah {
       
       virtual ~ICE();
 
-      virtual bool needModelMaker() const { return true; }
-      
       virtual bool restartableTimeSteps();
 
       virtual double recomputeTimeStep(double current_dt);
