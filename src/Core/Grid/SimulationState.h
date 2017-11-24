@@ -174,9 +174,6 @@ public:
   std::vector<std::vector<const VarLabel* > > d_cohesiveZoneState_preReloc;
 
   // Misc state that should be moved.
-  const VarLabel* get_delt_label() const { return m_deltLabel; }
-
-  
   double getElapsedSimTime() const { return d_elapsed_sim_time; }
   void   setElapsedSimTime(double t) { d_elapsed_sim_time = t; }
 
@@ -224,7 +221,6 @@ private:
   int particle_ghost_layer{0};
 
   // Misc state that should be moved.
-  const VarLabel* m_deltLabel;
 
   // The time step that the top level (w.r.t. AMR) is at during a
   // simulation.  Usually corresponds to the Data Warehouse generation

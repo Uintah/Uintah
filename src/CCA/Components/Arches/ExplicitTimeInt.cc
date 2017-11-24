@@ -116,7 +116,7 @@ void ExplicitTimeInt::sched_fe_update( SchedulerP& sched,
 
   } 
 
-  tsk->requires(Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label(), Ghost::None, 0);
+  tsk->requires(Task::OldDW, d_fieldLabels->d_delTLabel, Ghost::None, 0);
 
   sched->addTask( tsk, patches, matls ); 
 
@@ -157,7 +157,7 @@ void ExplicitTimeInt::fe_update( const ProcessorGroup*,
       std::string eqn_name = "some_eqn"; 
 
       delt_vartype DT;
-      old_dw->get(DT, d_fieldLabels->d_sharedState->get_delt_label());
+      old_dw->get(DT, d_fieldLabels->d_delTLabel);
       double dt = DT; 
 
       singlePatchFEUpdate( patch, 

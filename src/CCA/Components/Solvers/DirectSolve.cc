@@ -262,18 +262,9 @@ private:
 };
 
 SolverParameters *
-DirectSolve::readParameters(       ProblemSpecP     & params, 
-                             const string           & varname,
-                                   SimulationStateP & state )
-{
-  DirectSolveParams* p = scinew DirectSolveParams();
-  return p;
-}
-
-
-SolverParameters *
 DirectSolve::readParameters(       ProblemSpecP & params,
-                             const string       & varname )
+                             const string       & varname,
+			     const SimulationStateP & state )
 {
   DirectSolveParams* p = scinew DirectSolveParams();
   return p;

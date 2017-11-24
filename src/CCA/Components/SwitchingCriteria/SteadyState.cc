@@ -41,35 +41,41 @@ static DebugStream dbg("SWITCHER", false);
 
 SteadyState::SteadyState(ProblemSpecP& ps)
 {
-  ps->require("material", d_material);
-  ps->require("num_steps", d_numSteps);
+  ps->require("material", m_material);
+  ps->require("num_steps", m_numSteps);
 
-  proc0cout << "material = " << d_material << endl;
-  proc0cout << "num_steps  = " << d_numSteps << endl;
+  proc0cout << "material = " << m_material << endl;
+  proc0cout << "num_steps  = " << m_numSteps << endl;
 
-  heatRate_CCLabel = 
+  m_heatRate_CCLabel = 
     VarLabel::create("heatRate_CC",CCVariable<double>::getTypeDescription());
 
-  heatFluxSumLabel = 
+  m_heatFluxSumLabel = 
     VarLabel::create("heatFluxSum",sum_vartype::getTypeDescription() );
 
-  heatFluxSumTimeDerivativeLabel = 
+  m_heatFluxSumTimeDerivativeLabel = 
     VarLabel::create("heatFluxSumTimeDerivative", 
                      sum_vartype::getTypeDescription() );
+  // delta t
+  VarLabel* nonconstDelT =
+    VarLabel::create(delT_name, delt_vartype::getTypeDescription() );
+  nonconstDelT->allowMultipleComputes();
+  m_delTLabel = nonconstDelT;
 }
 
 SteadyState::~SteadyState()
 {
-  VarLabel::destroy(heatRate_CCLabel);
-  VarLabel::destroy(heatFluxSumLabel);
-  VarLabel::destroy(heatFluxSumTimeDerivativeLabel);
+  VarLabel::destroy(m_heatRate_CCLabel);
+  VarLabel::destroy(m_heatFluxSumLabel);
+  VarLabel::destroy(m_heatFluxSumTimeDerivativeLabel);
+  VarLabel::destroy(m_delTLabel);
 }
 
 void SteadyState::problemSetup(const ProblemSpecP& ps, 
                                const ProblemSpecP& restart_prob_spec, 
                                SimulationStateP& state)
 {
-  d_sharedState = state;
+  m_sharedState = state;
 }
 
 void SteadyState::scheduleInitialize(const LevelP& level, SchedulerP& sched)
@@ -77,12 +83,11 @@ void SteadyState::scheduleInitialize(const LevelP& level, SchedulerP& sched)
 
   Task* t = scinew Task("SteadyState::actuallyInitialize",
                         this, &SteadyState::initialize);
-  t->computes(heatFluxSumLabel);
-  t->computes(heatFluxSumTimeDerivativeLabel);
+  t->computes(m_heatFluxSumLabel);
+  t->computes(m_heatFluxSumTimeDerivativeLabel);
   t->computes(d_switch_label);
 
-  sched->addTask(t, level->eachPatch(), d_sharedState->allMaterials());
-
+  sched->addTask(t, level->eachPatch(), m_sharedState->allMaterials());
 }
 
 void SteadyState::initialize(const ProcessorGroup*,
@@ -93,10 +98,9 @@ void SteadyState::initialize(const ProcessorGroup*,
 {
   proc0cout << "Initializing heatFluxSum and heatFluxSumTimeDerivative" << endl;
  
-  new_dw->put(max_vartype(0.0), heatFluxSumLabel);
-  new_dw->put(max_vartype(0.0), heatFluxSumTimeDerivativeLabel);
+  new_dw->put(max_vartype(0.0), m_heatFluxSumLabel);
+  new_dw->put(max_vartype(0.0), m_heatFluxSumTimeDerivativeLabel);
   new_dw->put(max_vartype(0.0),d_switch_label);
-
 }
 
 void SteadyState::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
@@ -107,18 +111,18 @@ void SteadyState::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
 
   MaterialSubset* container = scinew MaterialSubset();
 
-  container->add(d_material);
+  container->add(m_material);
   container->addReference();
 
-  t->requires(Task::NewDW, heatRate_CCLabel,container,Ghost::None);
-  t->requires(Task::OldDW, heatFluxSumLabel);
-  t->requires(Task::OldDW, d_sharedState->get_delt_label());
+  t->requires(Task::NewDW, m_heatRate_CCLabel,container,Ghost::None);
+  t->requires(Task::OldDW, m_heatFluxSumLabel);
+  t->requires(Task::OldDW, m_delTLabel);
 
-  t->computes(heatFluxSumLabel);
-  t->computes(heatFluxSumTimeDerivativeLabel);
+  t->computes(m_heatFluxSumLabel);
+  t->computes(m_heatFluxSumTimeDerivativeLabel);
   t->computes(d_switch_label);
 
-  sched->addTask(t, level->eachPatch(),d_sharedState->allMaterials());
+  sched->addTask(t, level->eachPatch(),m_sharedState->allMaterials());
 
   scheduleDummy(level,sched);
 }
@@ -138,34 +142,33 @@ void SteadyState::switchTest(const ProcessorGroup* group,
     printTask(patches, patch,dbg,"Doing Switching Criteria:SimpleBurnCriteria::switchTest");
     
     constCCVariable<double> heatFlux;
-    new_dw->get(heatFlux, heatRate_CCLabel,0,patch,Ghost::None,0);
+    new_dw->get(heatFlux, m_heatRate_CCLabel,0,patch,Ghost::None,0);
     
     for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
       heatFluxSum += heatFlux[*iter];
     }   
   }
 
-  new_dw->put(max_vartype(heatFluxSum),heatFluxSumLabel);
+  new_dw->put(max_vartype(heatFluxSum), m_heatFluxSumLabel);
   proc0cout << "heatFluxSum = " << heatFluxSum << endl;
 
   max_vartype oldHeatFluxSum;
-  old_dw->get(oldHeatFluxSum,heatFluxSumLabel);
+  old_dw->get(oldHeatFluxSum, m_heatFluxSumLabel);
   proc0cout << "oldHeatFluxSum = " << oldHeatFluxSum << endl;
 
   delt_vartype delT;
-  old_dw->get(delT,d_sharedState->get_delt_label(),getLevel(patches));
+  old_dw->get(delT,m_delTLabel,getLevel(patches));
 
   double dH_dt = (heatFluxSum - oldHeatFluxSum)/delT;
   max_vartype heatFluxSumTimeDerivative(dH_dt);
   proc0cout << "heatFluxSumTimeDerivative = " << heatFluxSumTimeDerivative << endl;
 
-  new_dw->put(heatFluxSumTimeDerivative,heatFluxSumTimeDerivativeLabel);
+  new_dw->put(heatFluxSumTimeDerivative, m_heatFluxSumTimeDerivativeLabel);
 
   max_vartype switch_condition(sw);
 
   const Level* allLevels = 0;
   new_dw->put(switch_condition,d_switch_label,allLevels);
-
 }
 
 
@@ -173,7 +176,7 @@ void SteadyState::scheduleDummy(const LevelP& level, SchedulerP& sched)
 {
   Task* t = scinew Task("SteadyState::dummy", this, &SteadyState::dummy);
   t->requires(Task::OldDW,d_switch_label,level.get_rep());
-  sched->addTask(t, level->eachPatch(),d_sharedState->allMaterials());
+  sched->addTask(t, level->eachPatch(),m_sharedState->allMaterials());
 }
 
 void SteadyState::dummy(const ProcessorGroup* group,

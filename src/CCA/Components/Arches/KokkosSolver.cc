@@ -58,7 +58,13 @@ KokkosSolver::KokkosSolver( SimulationStateP& shared_state,
                             const ProcessorGroup* myworld,
                             SolverInterface* solver )
   : NonlinearSolver( myworld ), m_sharedState(shared_state), m_hypreSolver(solver)
-{}
+{
+  // delta t
+  VarLabel* nonconstDelT =
+    VarLabel::create(delT_name, delt_vartype::getTypeDescription() );
+  nonconstDelT->allowMultipleComputes();
+  m_delTLabel = nonconstDelT;
+}
 
 //--------------------------------------------------------------------------------------------------
 KokkosSolver::~KokkosSolver(){
@@ -69,6 +75,7 @@ KokkosSolver::~KokkosSolver(){
 
   delete m_table_lookup;
 
+  VarLabel::destroy(m_delTLabel);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -207,7 +214,7 @@ KokkosSolver::computeTimestep(const LevelP& level, SchedulerP& sched)
 
     // Actually compute the dt based on CFD variables.
 
-    tsk->computes( m_sharedState->get_delt_label(), level.get_rep() );
+    tsk->computes( m_delTLabel, level.get_rep() );
 
     m_uLabel = VarLabel::find( uname );
     m_vLabel = VarLabel::find( vname );
@@ -243,7 +250,7 @@ KokkosSolver::computeTimestep(const LevelP& level, SchedulerP& sched)
     Task* tsk = scinew Task( "KokkosSolver::setTimeStep", this,
                              &KokkosSolver::setTimeStep );
 
-    tsk->computes( m_sharedState->get_delt_label(), level.get_rep() );
+    tsk->computes( m_delTLabel, level.get_rep() );
 
     sched->addTask( tsk, level->eachPatch(), m_sharedState->allArchesMaterials() );
 
@@ -304,8 +311,7 @@ KokkosSolver::computeStableTimeStep( const ProcessorGroup*,
 
     });
 
-    new_dw->put(delt_vartype(dt), m_sharedState->get_delt_label(), level);
-
+    new_dw->put(delt_vartype(dt), m_delTLabel, level);
   }
 }
 
@@ -318,7 +324,7 @@ KokkosSolver::setTimeStep( const ProcessorGroup*,
                            DataWarehouse* new_dw ){
   const Level* level = getLevel(patches);
   for (int p = 0; p < patches->size(); p++) {
-    new_dw->put(delt_vartype(m_dt_init), m_sharedState->get_delt_label(), level);
+    new_dw->put(delt_vartype(m_dt_init), m_delTLabel, level);
   }
 }
 

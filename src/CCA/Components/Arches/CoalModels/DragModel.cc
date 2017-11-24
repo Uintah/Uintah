@@ -249,7 +249,7 @@ DragModel::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeS
   tsk->requires( Task::NewDW, i->second, gn, 0 );
 
   // get time step size for model clipping
-  tsk->requires( Task::OldDW,d_fieldLabels->d_sharedState->get_delt_label(), Ghost::None, 0);
+  tsk->requires( Task::OldDW,d_fieldLabels->d_delTLabel, Ghost::None, 0);
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 
@@ -336,7 +336,7 @@ DragModel::computeModel( const ProcessorGroup* pc,
     }
 
     delt_vartype DT;
-    old_dw->get(DT, d_fieldLabels->d_sharedState->get_delt_label());
+    old_dw->get(DT, d_fieldLabels->d_delTLabel);
     const double dt = DT;
 
     double c_gravity=_gravity[_dir];

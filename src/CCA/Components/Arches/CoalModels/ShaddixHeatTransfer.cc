@@ -296,7 +296,7 @@ ShaddixHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched,
     tsk->modifies(d_pTLabel);
   }
 
-  tsk->requires( Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label(), Ghost::None, 0);
+  tsk->requires( Task::OldDW, d_fieldLabels->d_delTLabel, Ghost::None, 0);
 
   DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self();
   CoalModelFactory& modelFactory = CoalModelFactory::self();

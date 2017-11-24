@@ -830,6 +830,13 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
       }
     }
 
+    // ARS - FIX ME
+    // if (patches)
+    //   std::cerr << " patches  " << patches->size() << std::endl;
+
+    // if( matls )
+    //   std::cerr << " matls  " << matls->size() << std::endl;
+
     if (patches && !patches->empty() && matls && !matls->empty()) {
 
       if (req->m_var->typeDescription()->isReductionVariable()) {
@@ -1130,8 +1137,9 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
         }
 #endif
         ct.findReductionComps(req, nullptr, matl, creators, m_proc_group);
-        // if the size is 0, that's fine.  It means that there are more procs than patches on this level,
-        // so the reducer will pick a benign value that won't affect the reduction
+        // if the size is 0, that's fine.  It means that there are
+        // more procs than patches on this level, so the reducer will
+        // pick a benign value that won't affect the reduction
 
         ASSERTRANGE(dtask->getAssignedResourceIndex(), 0, m_proc_group->nRanks());
         for (unsigned i = 0; i < creators.size(); i++) {
@@ -1143,18 +1151,26 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
         }
       }
     }
-    else if (patches && patches->empty() && (req->m_patches_dom == Task::FineLevel || dtask->getTask()->getType() == Task::OncePerProc
-                                                                                   || dtask->getTask()->getType() == Task::Output
-                                                                                   || dtask->getTask()->getName() == "SchedulerCommon::copyDataToNewGrid")) {
-      // this is a either coarsen task where there aren't any fine patches, or a PerProcessor task where
-      // there aren't any patches on this processor.  Perfectly legal, so do nothing
+    // ARS - FIX ME
+    //else if (patches && patches->empty() &&
+    else if (patches && (patches->empty() || patches->size() <= 1 ) &&
+	     (req->m_patches_dom == Task::FineLevel ||
+	      dtask->getTask()->getType() == Task::OncePerProc ||
+	      dtask->getTask()->getType() == Task::Output ||
+	      dtask->getTask()->getName() == "SchedulerCommon::copyDataToNewGrid")) {
+      // this is a either coarsen task where there aren't any fine
+      // patches, or a PerProcessor task where there aren't any
+      // patches on this processor.  Perfectly legal, so do nothing
 
-      // another case is the copy-data-to-new-grid task, which will either compute or modify to every patch
-      // but not both.  So it will yell at you for the detailed task's patches not intersecting with the 
-      // computes or modifies... (maybe there's a better way) - bryan
+      // another case is the copy-data-to-new-grid task, which will
+      // either compute or modify to every patch but not both.  So it
+      // will yell at you for the detailed task's patches not
+      // intersecting with the computes or modifies... (maybe there's
+      // a better way) - bryan
     }
     else if ( dtask->d_matls &&  req->m_matls && dtask->d_patches &&  req->m_patches &&   patches.get_rep()->size()== 0  ) {
-       //Fields were required on a subset of the domain with ghosts.   This should be legal.
+       //Fields were required on a subset of the domain with ghosts.
+       //This should be legal.
     }
     else {
       std::ostringstream desc;

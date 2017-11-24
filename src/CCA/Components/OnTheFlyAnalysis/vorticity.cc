@@ -54,12 +54,12 @@ static DebugStream cout_dbg("VORTICITY_DBG_COUT", false);
 //______________________________________________________________________
 vorticity::vorticity(ProblemSpecP& module_spec,
                      SimulationStateP& sharedState,
-                     Output* dataArchiver)
-  : AnalysisModule(module_spec, sharedState, dataArchiver)
+                     Output* output)
+  : AnalysisModule(module_spec, sharedState, output)
 {
   d_sharedState = sharedState;
   d_prob_spec = module_spec;
-  d_dataArchiver = dataArchiver;
+  d_output = output;
   d_matl_set = 0;
   v_lb = scinew vorticityLabel();
   I_lb  = scinew ICELabel();
@@ -83,12 +83,11 @@ vorticity::~vorticity()
 //     P R O B L E M   S E T U P
 void vorticity::problemSetup(const ProblemSpecP& prob_spec,
                              const ProblemSpecP& ,
-                             GridP& grid,
-                             SimulationStateP& sharedState)
+                             GridP& grid)
 {
   cout_doing << "Doing problemSetup \t\t\t\tvorticity" << endl;
   
-  if(!d_dataArchiver){
+  if(!d_output){
     throw InternalError("vorticity:couldn't get output port", __FILE__, __LINE__);
   }
   

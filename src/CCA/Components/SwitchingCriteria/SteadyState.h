@@ -68,12 +68,14 @@ namespace Uintah {
 
 
     private:
-      unsigned int d_material;
-      unsigned int d_numSteps;
-      const VarLabel* heatRate_CCLabel;
-      const VarLabel* heatFluxSumLabel;
-      const VarLabel* heatFluxSumTimeDerivativeLabel;
-      SimulationStateP d_sharedState; 
+      unsigned int m_material;
+      unsigned int m_numSteps;
+      const VarLabel* m_heatRate_CCLabel;
+      const VarLabel* m_heatFluxSumLabel;
+      const VarLabel* m_heatFluxSumTimeDerivativeLabel;
+      const VarLabel* m_delTLabel;
+      
+      SimulationStateP m_sharedState; 
     };
 } // End namespace Uintah
 

@@ -55,6 +55,11 @@ _shared_state( shared_state )
   _T_copy_label = VarLabel::create( "T_copy", CC_double );
   _True_T_Label = VarLabel::create( "true_wall_temperature", CC_double);
 
+  // delta t
+  VarLabel* nonconstDelT =
+    VarLabel::create(delT_name, delt_vartype::getTypeDescription() );
+  nonconstDelT->allowMultipleComputes();
+  _delTLabel = nonconstDelT;
 }
 
 //_________________________________________
@@ -67,6 +72,8 @@ WallModelDriver::~WallModelDriver()
     delete *iter;
 
   }
+
+  VarLabel::destroy(_delTLabel);
 
   VarLabel::destroy( _T_copy_label );
   VarLabel::destroy( _True_T_Label );
@@ -258,7 +265,7 @@ WallModelDriver::sched_doWallHT( const LevelP& level, SchedulerP& sched, const i
 
   }
 
-  task->requires( Task::OldDW,_shared_state->get_delt_label(), Ghost::None, 0);
+  task->requires( Task::OldDW, _delTLabel, Ghost::None, 0);
   sched->addTask(task, level->eachPatch(), _shared_state->allArchesMaterials());
 
 }
@@ -283,7 +290,7 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
     vars.relax = _relax;
     vars.time = _shared_state->getElapsedSimTime();
     delt_vartype DT;
-    old_dw->get(DT, _shared_state->get_delt_label());
+    old_dw->get(DT, _delTLabel);
     vars.delta_t = DT;
 
     // Note: The local T_copy is necessary because boundary conditions are being applied

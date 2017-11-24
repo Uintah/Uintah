@@ -92,7 +92,7 @@ void PoissonGPU1::scheduleComputeStableTimeStep(const LevelP& level, SchedulerP&
   Task * task = scinew Task("PoissonGPU1::computeStableTimeStep", this, &PoissonGPU1::computeStableTimeStep);
 
   task->requires(Task::NewDW, residual_label);
-  task->computes(m_sharedState->get_delt_label(), level.get_rep());
+  task->computes(getDelTLabel(), level.get_rep());
   sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
 }
 //______________________________________________________________________
@@ -120,7 +120,7 @@ void PoissonGPU1::computeStableTimeStep(const ProcessorGroup* pg,
     cerr << "Residual=" << residual << endl;
   }
 
-  new_dw->put(delt_vartype(delt_), m_sharedState->get_delt_label(), getLevel(patches));
+  new_dw->put(delt_vartype(delt_), getDelTLabel(), getLevel(patches));
 }
 //______________________________________________________________________
 //

@@ -66,13 +66,13 @@ static DebugStream cout_dbg("momentumAnalysis_dbg", false);
 //
 momentumAnalysis::momentumAnalysis(ProblemSpecP& module_spec,
                                    SimulationStateP& sharedState,
-                                   Output* dataArchiver)
+                                   Output* output)
 
-  : AnalysisModule(module_spec, sharedState, dataArchiver)
+  : AnalysisModule(module_spec, sharedState, output)
 {
   d_sharedState  = sharedState;
   d_prob_spec    = module_spec;
-  d_dataArchiver = dataArchiver;
+  d_output = output;
   d_zeroMatl     = 0;
   d_zeroMatlSet  = 0;
   d_zeroPatch    = 0;
@@ -92,7 +92,7 @@ momentumAnalysis::momentumAnalysis(ProblemSpecP& module_spec,
   labels->convectMom_fluxes  = VarLabel::create( "convectMom_fluxes", sumvec_vartype::getTypeDescription() );
   labels->viscousMom_fluxes  = VarLabel::create( "viscousMom_fluxes", sumvec_vartype::getTypeDescription() );
   labels->pressForces        = VarLabel::create( "pressForces",       sumvec_vartype::getTypeDescription() );
-  labels->delT               = d_sharedState->get_delt_label();
+  labels->delT               = getDelTLabel();
 }
 
 //__________________________________
@@ -130,13 +130,12 @@ momentumAnalysis::~momentumAnalysis()
 //______________________________________________________________________
 //
 void momentumAnalysis::problemSetup(const ProblemSpecP&,
-                                 const ProblemSpecP& restart_prob_spec,
-                                 GridP& grid,
-                                 SimulationStateP& sharedState)
+				    const ProblemSpecP& restart_prob_spec,
+				    GridP& grid)
 {
   cout_doing << "Doing problemSetup \t\t\t\tmomentumAnalysis" << endl;
 
-  if(!d_dataArchiver){
+  if(!d_output){
     throw InternalError("momentumAnalysis:couldn't get output port", __FILE__, __LINE__);
   }
 
@@ -294,7 +293,7 @@ void momentumAnalysis::initialize( const ProcessorGroup*,
     new_dw->put(fileInfo,    labels->fileVarsStruct, 0, patch);
 
     if(patch->getGridIndex() == 0){   // only need to do this once
-      string udaDir = d_dataArchiver->getOutputLocation();
+      string udaDir = d_output->getOutputLocation();
 
       //  Bulletproofing
       DIR *check = opendir(udaDir.c_str());
@@ -597,7 +596,7 @@ void momentumAnalysis::doAnalysis(const ProcessorGroup* pg,
         myFiles = fileInfo.get().get_rep()->files;
       }
 
-      string udaDir = d_dataArchiver->getOutputLocation();
+      string udaDir = d_output->getOutputLocation();
       string filename = udaDir + "/" + "momentumAnalysis.dat";
       FILE *fp=nullptr;
 

@@ -28,7 +28,9 @@
 //#define HYPRE_TIMING
 
 #include <CCA/Ports/SolverInterface.h>
+
 #include <Core/Parallel/UintahParallelComponent.h>
+#include <Core/Grid/SimulationState.h>
 #include <Core/Util/Handle.h>
 #include <Core/Util/RefCounted.h>
 
@@ -81,8 +83,6 @@ namespace Uintah {
     // SparseMSG parameters
     int    jump;               // Hypre Sparse MSG parameter
     
-    SimulationStateP state;    // simulation state
-    
     void setSolveFrequency(const int freq) {
       solveFrequency = freq;
     }
@@ -91,6 +91,7 @@ namespace Uintah {
       return solveFrequency;
     }
 
+    SimulationStateP m_sharedState;
   };
 
 
@@ -217,9 +218,9 @@ namespace Uintah {
 
     virtual void releaseComponents() {};
     
-    virtual SolverParameters* readParameters(       ProblemSpecP     & params,
-                                              const std::string      & name,
-                                                    SimulationStateP & state );
+    virtual SolverParameters* readParameters(       ProblemSpecP & params,
+                                              const std::string  & name,
+                                              const SimulationStateP & state );
 
     /**
      *  @brief Schedules the solution of the linear system \[ \mathbf{A} \mathbf{x} = \mathbf{b}\].
@@ -242,19 +243,19 @@ namespace Uintah {
      * @param params Specifies the solver parameters usually parsed from the input file.
      *
      */    
-    virtual void scheduleSolve( const LevelP           & level,
-                                      SchedulerP       & sched,
-                                const MaterialSet      * matls,
-                                const VarLabel         * A,    
-                                      Task::WhichDW      which_A_dw,  
-                                const VarLabel         * x,
-                                      bool               modifies_x,
-                                const VarLabel         * b,    
-                                      Task::WhichDW      which_b_dw,  
-                                const VarLabel         * guess,
-                                      Task::WhichDW      which_guess_dw,
-                                const SolverParameters * params,
-                                      bool               modifies_hypre = false );
+    virtual void scheduleSolve( const LevelP           & level_in,
+                                      SchedulerP       & sched_in,
+                                const MaterialSet      * matls_in,
+                                const VarLabel         * A_in,
+                                      Task::WhichDW      which_A_dw_in,  
+                                const VarLabel         * x_in,
+                                      bool               modifies_x_in,
+                                const VarLabel         * b_in,
+                                      Task::WhichDW      which_b_dw_in,  
+                                const VarLabel         * guess_in,
+                                      Task::WhichDW      which_guess_dw_in,
+                                const SolverParameters * params_in,
+                                      bool               modifies_hypre_in = false );
 
     virtual void scheduleInitialize( const LevelP      & level,
                                            SchedulerP  & sched,
@@ -271,6 +272,7 @@ namespace Uintah {
                            DataWarehouse  * old_dw,
                            DataWarehouse  * new_dw );
 
+    const VarLabel * m_timeStepLabel;
     const VarLabel * hypre_solver_label;
   };
 }

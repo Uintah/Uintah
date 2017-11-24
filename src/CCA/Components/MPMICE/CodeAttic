@@ -197,7 +197,7 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
     cout_doing << "Doing HEChemistry on patch "<< patch->getID()
                <<"\t\t\t\t MPMICE" << endl;
     delt_vartype delT;
-    old_dw->get(delT, d_sharedState->get_delt_label());
+    old_dw->get(delT, Ilb->delTLabel);
     int numALLMatls=d_sharedState->getNumMatls();
     std::vector<CCVariable<double> > burnedMass(numALLMatls);
     std::vector<CCVariable<double> > createdVol(numALLMatls);
@@ -325,7 +325,7 @@ void MPMICE::scheduleInterpolateCCToNC(SchedulerP& sched,
   const MaterialSubset* mss = mpm_matls->getUnion();
   Ghost::GhostType  gac = Ghost::AroundCells;
                                                                                 
-  t->requires(Task::OldDW, d_sharedState->get_delt_label());
+  t->requires(Task::OldDW, Ilb->delTLabel);
   t->requires(Task::NewDW, Ilb->mass_L_CCLabel,         gac,1);
   t->requires(Task::NewDW, Ilb->mom_L_CCLabel,          gac,1);
   t->requires(Task::NewDW, Ilb->int_eng_L_CCLabel,      gac,1);
@@ -360,7 +360,7 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
     int numMPMMatls = d_sharedState->getNumMPMMatls();
                                                                                 
     delt_vartype delT;
-    old_dw->get(delT, d_sharedState->get_delt_label());
+    old_dw->get(delT, Ilb->delTLabel);
     Ghost::GhostType  gac = Ghost::AroundCells;
     Ghost::GhostType  gn  = Ghost::None;
                                                                                 

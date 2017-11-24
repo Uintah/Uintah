@@ -23,7 +23,9 @@
  */
 
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
-#include <Core/Grid/SimulationState.h>
+
+#include <Core/Grid/Variables/VarLabel.h>
+#include <Core/Grid/Variables/VarTypes.h>
 
 using namespace Uintah;
 
@@ -32,17 +34,18 @@ AnalysisModule::AnalysisModule()
 }
 
 AnalysisModule::AnalysisModule(ProblemSpecP& prob_spec, 
-                               SimulationStateP& sharedState,
+			       SimulationStateP& sharedState,
                                Output* dataArchiever)
 {
-  // sharedState->d_otherStats.insert( (unsigned int) OnTheFlyAnalysisMinMaxTime,
-  // 				    std::string("OnTheFlyAnalysisMinMaxTime"),
-  // 				    "seconds", 0 );
-
-  // sharedState->d_otherStats.validate( MAX_OTHER_STATS );
+  // delta t
+  VarLabel* nonconstDelT =
+    VarLabel::create(delT_name, delt_vartype::getTypeDescription() );
+  nonconstDelT->allowMultipleComputes();
+  m_delTLabel = nonconstDelT;
 }
 
 AnalysisModule::~AnalysisModule()
 {
+  VarLabel::destroy(m_delTLabel);
 }
     

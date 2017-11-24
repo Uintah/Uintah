@@ -157,7 +157,7 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
 {
   dbg << "Doing ProblemSetup \t\t\t\tDataArchiver\n";
 
-  m_application = dynamic_cast<ApplicationInterface*>(getPort("app")); 
+  m_application = dynamic_cast<ApplicationInterface*>( getPort("application") );
   m_loadBalancer = dynamic_cast<LoadBalancerPort*>( getPort("load balancer") );
 
   m_sharedState = sharedState;

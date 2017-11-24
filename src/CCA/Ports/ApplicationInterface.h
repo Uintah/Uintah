@@ -89,8 +89,7 @@ WARNING
     //////////
     // Insert Documentation Here:
     virtual void getComponents() = 0;
-    virtual void setComponents( const ApplicationCommon *parent,
-				const ProblemSpecP &prob_spec ) = 0;
+    virtual void setComponents( const ApplicationCommon *parent ) = 0;
     virtual void releaseComponents() = 0;
     
     virtual void problemSetup( const ProblemSpecP &prob_spec ) = 0;

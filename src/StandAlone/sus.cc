@@ -58,6 +58,7 @@
 #include <CCA/Components/Regridder/RegridderFactory.h>
 #include <CCA/Components/Schedulers/SchedulerFactory.h>
 #include <CCA/Components/SimulationController/AMRSimulationController.h>
+#include <CCA/Components/Solvers/SolverFactory.h>
 #include <CCA/Components/Solvers/CGSolver.h>
 #include <CCA/Components/Solvers/DirectSolve.h>
 
@@ -65,26 +66,13 @@
 #  include <CCA/Components/Solvers/HypreSolver.h>
 #endif
 
-#include <CCA/Components/Solvers/SolverFactory.h>
-
 #ifdef HAVE_CUDA
 #  include <CCA/Components/Schedulers/UnifiedScheduler.h>
 #endif
 
-#include <CCA/Ports/DataWarehouse.h>
-
-#include <Core/Disclosure/TypeDescription.h>
 #include <Core/Exceptions/Exception.h>
-#include <Core/Exceptions/InternalError.h>
-#include <Core/Exceptions/InvalidGrid.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/OS/ProcessInfo.h>
-#include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Parallel/UintahMPI.h>
-#include <Core/Util/DOUT.hpp>
 #include <Core/Util/Environment.h>
 #include <Core/Util/FileUtils.h>
 
@@ -709,7 +697,7 @@ main( int argc, char *argv[], char *env[] )
     application->setVisIt( do_VisIt );
 #endif
 
-    simController->attachPort( "app", application );
+    simController->attachPort( "application", application );
 
     // Can not do a reduce uda with AMR
     if ( reduce_uda && application->isAMR() ) {
@@ -736,7 +724,7 @@ main( int argc, char *argv[], char *env[] )
     // Output
     DataArchiver * dataArchiver = scinew DataArchiver( world, udaSuffix );
 
-    dataArchiver->attachPort( "app", application );
+    dataArchiver->attachPort( "application", application );
     dataArchiver->attachPort( "load balancer", loadBalancer );
     
     dataArchiver->setUseLocalFileSystems( local_filesystem );

@@ -134,13 +134,12 @@ void MPMArches::problemSetup(const ProblemSpecP& prob_spec,
 {
   //__________________________________
   //  M P M
-  d_mpm->setComponents( this, prob_spec );
+  d_mpm->setComponents( this );
+  dynamic_cast<ApplicationCommon*>(d_mpm)->problemSetup( prob_spec );
 
   //__________________________________
   //  A R C H E S 
-  d_arches->setComponents( this, prob_spec );
-
-  // force base read
+  d_arches->setComponents( this );
   dynamic_cast<ApplicationInterface*>(d_arches)->problemSetup( prob_spec );
 
 
@@ -216,7 +215,7 @@ void MPMArches::problemSetup(const ProblemSpecP& prob_spec,
     for( iter  = d_analysisModules.begin();
          iter != d_analysisModules.end(); iter++){
       AnalysisModule* am = *iter;
-      am->problemSetup(prob_spec, materials_ps, grid, m_sharedState);
+      am->problemSetup(prob_spec, materials_ps, grid);
     }
   }
 
@@ -229,7 +228,6 @@ void MPMArches::problemSetup(const ProblemSpecP& prob_spec,
   }
 
   d_enthalpy_label = VarLabel::find( d_enthalpy_name );
-
 }
 
 void MPMArches::outputProblemSpec(ProblemSpecP& root_ps)
@@ -4567,7 +4565,7 @@ void MPMArches::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
   Task* t = scinew Task("MPMArches::computeAndIntegrateAcceleration",
       this, &MPMArches::computeAndIntegrateAcceleration);
 
-  t->requires(Task::OldDW, m_sharedState->get_delt_label() );
+  t->requires(Task::OldDW, Mlb->delTLabel );
 
   t->requires(Task::NewDW, Mlb->gMassLabel,          Ghost::None);
   t->requires(Task::NewDW, Mlb->gInternalForceLabel, Ghost::None);
@@ -4599,7 +4597,7 @@ void MPMArches::computeAndIntegrateAcceleration(const ProcessorGroup* pg,
       constNCVariable<double> mass;
 
       delt_vartype delT;
-      old_dw->get(delT, m_sharedState->get_delt_label(), getLevel(patches) );
+      old_dw->get(delT, Mlb->delTLabel, getLevel(patches) );
 
       new_dw->get(internalforce,Mlb->gInternalForceLabel, dwi, patch, gnone, 0);
       new_dw->get(externalforce,Mlb->gExternalForceLabel, dwi, patch, gnone, 0);

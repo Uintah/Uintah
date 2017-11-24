@@ -102,7 +102,7 @@ void Poisson3::scheduleComputeStableTimeStep(const LevelP& level,
   Task* task = scinew Task("computeStableTimeStep",
                            this, &Poisson3::computeStableTimeStep);
   task->requires(Task::NewDW, residual_label, level.get_rep());
-  task->computes(m_sharedState->get_delt_label(),level.get_rep());
+  task->computes(getDelTLabel(),level.get_rep());
   sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
 }
 
@@ -134,7 +134,7 @@ void Poisson3::computeStableTimeStep(const ProcessorGroup* pg,
     new_dw->get(residual, residual_label, getLevel(pss));
     cout << "Level " << getLevel(pss)->getIndex() << ": Residual=" << residual << '\n';
   }
-  new_dw->put(delt_vartype(delt_), m_sharedState->get_delt_label(),getLevel(pss));
+  new_dw->put(delt_vartype(delt_), getDelTLabel(),getLevel(pss));
 }
 
 void Poisson3::initialize(const ProcessorGroup*,

@@ -88,20 +88,25 @@ ESMPM2::~ESMPM2()
   delete d_fvm_lb;
 }
 
-void ESMPM2::problemSetup(const ProblemSpecP& prob_spec, const ProblemSpecP& restart_prob_spec,
+void ESMPM2::problemSetup(const ProblemSpecP& prob_spec,
+			  const ProblemSpecP& restart_prob_spec,
                           GridP& grid)
 {
   //**** Start MPM Section *****
-  d_amrmpm->setComponents( this, prob_spec );
+  d_amrmpm->setComponents( this );
+  dynamic_cast<ApplicationCommon*>(d_amrmpm)->problemSetup( prob_spec );
+  
   d_amrmpm->problemSetup(prob_spec, restart_prob_spec, grid);
 
   //**** Start FVM Section *****
-  d_gaufvm->setComponents( this, prob_spec );
+  d_gaufvm->setComponents( this );
+  dynamic_cast<ApplicationCommon*>(d_gaufvm)->problemSetup( prob_spec );
  
   d_gaufvm->setWithMPM(true);
   d_gaufvm->problemSetup(prob_spec, restart_prob_spec, grid);
 
-  d_switch_criteria = dynamic_cast<SwitchingCriteria*>(getPort("switch_criteria"));
+  d_switch_criteria =
+    dynamic_cast<SwitchingCriteria*>(getPort("switch_criteria"));
 
   if(d_switch_criteria){
     d_switch_criteria->problemSetup(prob_spec, restart_prob_spec, m_sharedState);

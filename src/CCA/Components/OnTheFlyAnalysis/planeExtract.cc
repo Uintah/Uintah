@@ -56,12 +56,12 @@ static DebugStream cout_dbg("PLANEEXTRACT_DBG_COUT", false);
 //______________________________________________________________________
 planeExtract::planeExtract(ProblemSpecP& module_spec,
                            SimulationStateP& sharedState,
-                           Output* dataArchiver)
-  : AnalysisModule(module_spec, sharedState, dataArchiver)
+                           Output* output)
+  : AnalysisModule(module_spec, sharedState, output)
 {
   d_sharedState = sharedState;
   d_prob_spec = module_spec;
-  d_dataArchiver = dataArchiver;
+  d_output = output;
   d_matl_set = 0;
   d_zero_matl = 0;
   ps_lb = scinew planeExtractLabel();
@@ -93,13 +93,12 @@ planeExtract::~planeExtract()
 //     P R O B L E M   S E T U P
 void planeExtract::problemSetup(const ProblemSpecP& prob_spec,
                                 const ProblemSpecP& ,
-                                GridP& grid,
-                                SimulationStateP& sharedState)
+                                GridP& grid)
 {
   cout_doing << "Doing problemSetup \t\t\t\tplaneExtract" << endl;
   
   int numMatls  = d_sharedState->getNumMatls();
-  if(!d_dataArchiver){
+  if(!d_output){
     throw InternalError("planeExtract:couldn't get output port", __FILE__, __LINE__);
   }
                                
@@ -367,7 +366,7 @@ void planeExtract::initialize(const ProcessorGroup*,
 
     
     if(patch->getGridIndex() == 0){   // only need to do this once
-      string udaDir = d_dataArchiver->getOutputLocation();
+      string udaDir = d_output->getOutputLocation();
 
       //  Bulletproofing
       DIR *check = opendir(udaDir.c_str());
@@ -430,7 +429,7 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
                               DataWarehouse* old_dw,
                               DataWarehouse* new_dw)
 {   
-  UintahParallelComponent * DA = dynamic_cast<UintahParallelComponent*>( d_dataArchiver );
+  UintahParallelComponent * DA = dynamic_cast<UintahParallelComponent*>( d_output );
   LoadBalancerPort        * lb = dynamic_cast<LoadBalancerPort*>( DA->getPort("load balancer") );
     
   const Level* level = getLevel(patches);
@@ -477,7 +476,7 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
         }
         
         // create the directory structure
-        string udaDir = d_dataArchiver->getOutputLocation();
+        string udaDir = d_output->getOutputLocation();
         string dirName = d_planes[p]->name;
         string planePath = udaDir + "/" + dirName;
         

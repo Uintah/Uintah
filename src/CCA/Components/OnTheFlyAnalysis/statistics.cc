@@ -54,13 +54,14 @@ static DebugStream cout_doing("STATISTICS_DOING_COUT", false);
 static DebugStream cout_dbg("STATISTICS_DBG_COUT", false);
 //______________________________________________________________________
 statistics::statistics(ProblemSpecP& module_spec,
-                       SimulationStateP& sharedState,
-                       Output* dataArchiver)
-  : AnalysisModule(module_spec, sharedState, dataArchiver)
+		       SimulationStateP& sharedState,
+                       Output* output)
+  : AnalysisModule(module_spec, sharedState, output)
 {
-  d_sharedState  = sharedState;
   d_prob_spec    = module_spec;
-  d_dataArchiver = dataArchiver;
+  d_sharedState  = sharedState;
+  d_output       = output;
+  
   d_matlSet     = 0;
   d_stopTime    = DBL_MAX;
   d_monitorCell = IntVector(0,0,0);
@@ -109,13 +110,12 @@ statistics::~statistics()
 //     P R O B L E M   S E T U P
 void statistics::problemSetup(const ProblemSpecP& prob_spec,
                               const ProblemSpecP& restart_prob_spec,
-                              GridP& grid,
-                              SimulationStateP& sharedState)
+                              GridP& grid)
 {
   cout_doing << "Doing problemSetup \t\t\t\tstatistics" << endl;
 
   int numMatls  = d_sharedState->getNumMatls();
-  if(!d_dataArchiver){
+  if(!d_output){
     throw InternalError("statistics:couldn't get output port", __FILE__, __LINE__);
   }
 
@@ -272,13 +272,13 @@ void statistics::problemSetup(const ProblemSpecP& prob_spec,
     std::string kurtosis = "kurtosis_"+ name;
     ostringstream mesg;
     mesg << "";
-    if( !d_dataArchiver->isLabelSaved( variance ) ){
+    if( !d_output->isLabelSaved( variance ) ){
       mesg << variance;
     }
-    if( !d_dataArchiver->isLabelSaved( skew )  && d_doHigherOrderStats){
+    if( !d_output->isLabelSaved( skew )  && d_doHigherOrderStats){
       mesg << " " << skew;
     }
-    if( !d_dataArchiver->isLabelSaved( kurtosis ) && d_doHigherOrderStats){
+    if( !d_output->isLabelSaved( kurtosis ) && d_doHigherOrderStats){
       mesg << " " << kurtosis;
     }
 

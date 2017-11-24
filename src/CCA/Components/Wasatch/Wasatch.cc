@@ -1099,7 +1099,7 @@ namespace WasatchCore{
       Uintah::Task* task = scinew Uintah::Task( "compute timestep", this, &Wasatch::computeDelT );
 
       // jcs it appears that for reduction variables we cannot specify the patches - only the materials.
-      task->computes( m_sharedState->get_delt_label(),
+      task->computes( getDelTLabel(),
                       level.get_rep() );
       //              materials_->getUnion() );
       // jcs why can't we specify a material here?  It doesn't seem to be working if I do.
@@ -1184,7 +1184,7 @@ namespace WasatchCore{
       dualTimeTask->hasSubScheduler();
 
       // we need the "outer" timestep for this temporary example
-      dualTimeTask->requires( Uintah::Task::OldDW, m_sharedState->get_delt_label() );
+      dualTimeTask->requires( Uintah::Task::OldDW, getDelTLabel() );
       
       Expr::TagList timeTags;
       timeTags.push_back( TagNames::self().time     );
@@ -1610,7 +1610,7 @@ namespace WasatchCore{
                            this,
                            &Wasatch::update_current_time,
                           rkStage );
-      updateCurrentTimeTask->requires( (has_dual_time() ? Uintah::Task::ParentOldDW : Uintah::Task::OldDW), m_sharedState->get_delt_label() );
+      updateCurrentTimeTask->requires( (has_dual_time() ? Uintah::Task::ParentOldDW : Uintah::Task::OldDW), getDelTLabel() );
       
       const Uintah::TypeDescription* perPatchTD = Uintah::PerPatch<double>::getTypeDescription();
       dtLabel_      = (!dtLabel_     ) ? Uintah::VarLabel::create( TagNames::self().dt.name(), perPatchTD )       : dtLabel_     ;
@@ -1647,7 +1647,7 @@ namespace WasatchCore{
     // grab the timestep
     Uintah::delt_vartype deltat;
     Uintah::DataWarehouse* whichDW = has_dual_time() ? oldDW->getOtherDataWarehouse(Uintah::Task::ParentOldDW) : oldDW;
-    whichDW->get( deltat, m_sharedState->get_delt_label() );
+    whichDW->get( deltat, getDelTLabel() );
     const Expr::Tag timeTag = TagNames::self().time;
     double rks = (double) rkStage;
     double* timeCor = timeIntegrator_.timeCorrection;
@@ -1785,17 +1785,17 @@ namespace WasatchCore{
         // FOR FIXED dt: (min = max in input file)
         // if this is not the first timestep, then grab dt from the olddw.
         // This will avoid Uintah's message that it is setting dt to max dt/min dt
-        old_dw->get( deltat, m_sharedState->get_delt_label() );
+        old_dw->get( deltat, getDelTLabel() );
       }
     }
     
     if( useStableDT ){
-      new_dw->put(Uintah::delt_vartype(val),m_sharedState->get_delt_label(),
+      new_dw->put(Uintah::delt_vartype(val),getDelTLabel(),
                   Uintah::getLevel(patches) );
     }
     else{
       new_dw->put( deltat,
-                  m_sharedState->get_delt_label(),
+                  getDelTLabel(),
                   Uintah::getLevel(patches) );
     }
   }

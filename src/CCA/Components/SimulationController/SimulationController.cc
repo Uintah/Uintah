@@ -311,7 +311,7 @@ SimulationController::doRestart( const string & restartFromDir, int timeStep,
 void
 SimulationController::getComponents( void )
 {
-  d_app = dynamic_cast<ApplicationInterface*>( getPort( "app" ) );
+  d_app = dynamic_cast<ApplicationInterface*>( getPort( "application" ) );
 
   if( !d_app ) {
     throw InternalError("dynamic_cast of 'd_app' failed!",
@@ -345,7 +345,7 @@ SimulationController::getComponents( void )
 void
 SimulationController::releaseComponents( void )
 {
-  releasePort( "app" );
+  releasePort( "application" );
   releasePort( "load balancer" );
   releasePort( "regridder" );
   releasePort( "output" );

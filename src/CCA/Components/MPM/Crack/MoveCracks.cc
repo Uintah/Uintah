@@ -110,7 +110,7 @@ Crack::addComputesAndRequiresMoveCracks(Task* t,
                                         const PatchSet* /*patches*/,
                                         const MaterialSet* /*matls*/) const
 {
-  t->requires(Task::OldDW, d_sharedState->get_delt_label() );
+  t->requires(Task::OldDW, lb->delTLabel );
 
   Ghost::GhostType  gac = Ghost::AroundCells;
   int NGC=2*NGN;
@@ -149,7 +149,7 @@ Crack::MoveCracks(const ProcessorGroup*,
     double dx_min=Min(dx.x(),dx.y(),dx.z());
 
     delt_vartype delT;
-    old_dw->get(delT, d_sharedState->get_delt_label(),getLevel(patches) );
+    old_dw->get(delT, lb->delTLabel,getLevel(patches) );
 
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     for(int m = 0; m < numMPMMatls; m++){ 

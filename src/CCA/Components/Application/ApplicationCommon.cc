@@ -58,14 +58,6 @@ ApplicationCommon::ApplicationCommon(const ProcessorGroup* myworld,
   if( m_sharedState == nullptr )
   {
     m_sharedState = scinew SimulationState();
-
-    parentApp = true;
-    childApp  = false;
-  }
-  else
-  {
-    parentApp = false;
-    childApp  = true;
   }
   
   //__________________________________
@@ -144,8 +136,7 @@ ApplicationCommon::~ApplicationCommon()
   m_sharedState = nullptr;
 }
 
-void ApplicationCommon::setComponents( const ApplicationCommon *parent,
-				       const ProblemSpecP &prob_spec )
+void ApplicationCommon::setComponents( const ApplicationCommon *parent )
 {
   attachPort( "scheduler",  parent->m_scheduler );
   attachPort( "modelMaker", parent->m_modelMaker );
@@ -154,8 +145,6 @@ void ApplicationCommon::setComponents( const ApplicationCommon *parent,
   attachPort( "output",     parent->m_output );
 
   getComponents();
-
-  problemSetup( prob_spec );
 }
 
 void ApplicationCommon::getComponents()
@@ -345,7 +334,6 @@ ApplicationCommon::reduceSystemVars( const ProcessorGroup *,
 
       if (new_dw->exists(m_delTLabel, -1, *level->patchesBegin())) {
         delt_vartype delTvar;
-        double delT;
         new_dw->get(delTvar, m_delTLabel, level.get_rep());
 
         new_dw->put(delt_vartype(delTvar * multiplier), m_delTLabel);
@@ -494,7 +482,7 @@ void
 ApplicationCommon::initializeSystemVars( const ProcessorGroup *,
 					 const PatchSubset    * patches,
 					 const MaterialSubset * /*matls*/,
-					       DataWarehouse  * old_dw,
+					       DataWarehouse  * /*old_dw*/,
 				               DataWarehouse  * new_dw )
 {
   MALLOC_TRACE_TAG_SCOPE("ApplicationCommon::initializeSystemVar()");
@@ -511,7 +499,10 @@ ApplicationCommon::initializeSystemVars( const ProcessorGroup *,
 
   // new_dw->put(simTime_vartype(m_simTime), m_simulationTimeLabel, level);
 
-  m_sharedState->setElapsedSimTime( m_simTime );  
+  m_sharedState->setElapsedSimTime( m_simTime );
+
+  // std::cerr << "**********  " << __FUNCTION__ << "  " << __LINE__ << "  "
+  // 	    << new_dw << std::endl;  
 }
 
 
@@ -581,6 +572,9 @@ ApplicationCommon::updateSystemVars( const ProcessorGroup *,
     // new_dw->put(simTime_vartype(m_simTime), m_simulationTimeLabel, level);
     
     m_sharedState->setElapsedSimTime( m_simTime );  
+
+    // std::cerr << "**********  " << __FUNCTION__ << "  " << __LINE__ << "  "
+    // 	      << new_dw << std::endl;  
   }
 }
 

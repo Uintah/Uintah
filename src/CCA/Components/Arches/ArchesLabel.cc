@@ -89,6 +89,12 @@ ArchesLabel::ArchesLabel()
   }
   d_symTensorMatl->addReference();
 
+  // delta t
+  VarLabel* nonconstDelT =
+    VarLabel::create(delT_name, delt_vartype::getTypeDescription() );
+  nonconstDelT->allowMultipleComputes();
+  d_delTLabel = nonconstDelT;
+
   // Cell Information
   d_cellInfoLabel = VarLabel::create("cellInformation",
                             PerPatch<CellInformationP>::getTypeDescription());
@@ -287,6 +293,8 @@ ArchesLabel::~ArchesLabel()
   for( ArchesLabel::AbscissaMap::iterator iA = CQMOMAbscissas.begin(); iA != CQMOMAbscissas.end(); ++iA ) {
     VarLabel::destroy(iA->second);
   }
+
+  VarLabel::destroy(d_delTLabel);
 
   VarLabel::destroy(d_strainMagnitudeLabel);
   VarLabel::destroy(d_strainMagnitudeMLLabel);

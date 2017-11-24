@@ -95,8 +95,7 @@ public:
   //////////
   // Insert Documentation Here:
   virtual void getComponents();
-  virtual void setComponents( const ApplicationCommon *parent,
-			      const ProblemSpecP &prob_spec );
+  virtual void setComponents( const ApplicationCommon *parent );
   virtual void releaseComponents();
 
   virtual void problemSetup( const ProblemSpecP &prob_spec );
@@ -307,9 +306,6 @@ protected:
   Output*          m_output{nullptr};
 
 private:
-  bool parentApp {true};
-  bool childApp  {false};
-
   bool m_needModelMaker {false};
   bool m_AMR {false};
   bool m_lockstepAMR {false};

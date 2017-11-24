@@ -116,7 +116,7 @@ namespace Uintah
   void RegridderTest::scheduleComputeStableTimeStep ( const LevelP& level, SchedulerP& scheduler )
   {
     Task* task = scinew Task( "computeStableTimeStep", this, &RegridderTest::computeStableTimeStep );
-    task->computes( m_sharedState->get_delt_label(),level.get_rep() );
+    task->computes( getDelTLabel(),level.get_rep() );
     scheduler->addTask( task, level->eachPatch(), m_sharedState->allMaterials() );
   }
 
@@ -211,7 +211,7 @@ namespace Uintah
   {
     const Level* level = getLevel(patches);
     double delt = level->dCell().x();
-    new_dw->put(delt_vartype(delt), m_sharedState->get_delt_label(), level);
+    new_dw->put(delt_vartype(delt), getDelTLabel(), level);
   }
 
   void RegridderTest::timeAdvance ( const ProcessorGroup*,

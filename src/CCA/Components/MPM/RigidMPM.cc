@@ -165,7 +165,7 @@ void RigidMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
   Task* t = scinew Task("RigidMPM::computeAndIntegrateAcceleration",
                         this, &RigidMPM::computeAndIntegrateAcceleration);
 
-  t->requires(Task::OldDW, m_sharedState->get_delt_label() );
+  t->requires(Task::OldDW, lb->delTLabel );
 
   t->requires(Task::NewDW, lb->gVelocityLabel,          Ghost::None);
 
@@ -374,7 +374,7 @@ void RigidMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   Task* t=scinew Task("RigidMPM::interpolateToParticlesAndUpdate",
                       this, &RigidMPM::interpolateToParticlesAndUpdate);
 
-  t->requires(Task::OldDW, m_sharedState->get_delt_label() );
+  t->requires(Task::OldDW, lb->delTLabel );
 
   Ghost::GhostType  gac = Ghost::AroundCells;
   t->requires(Task::NewDW, lb->gTemperatureRateLabel,  gac,NGN);
@@ -459,7 +459,7 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     double ke=0;
     int numMPMMatls=m_sharedState->getNumMPMMatls();
     delt_vartype delT;
-    old_dw->get(delT, m_sharedState->get_delt_label(), getLevel(patches) );
+    old_dw->get(delT, lb->delTLabel, getLevel(patches) );
 
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );

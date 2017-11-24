@@ -120,7 +120,7 @@ void NonLinearDiff2::scheduleComputeFlux(
   task->requires(Task::OldDW, d_lb->pNegChargeGradLabel, matlset, gnone);
   task->requires(Task::NewDW, d_lb->pESGradPotential, matlset, gnone);
 
-  task->computes(d_sharedState->get_delt_label(),getLevel(patch));
+  task->computes(d_lb->delTLabel,getLevel(patch));
 
   task->computes(d_lb->pPosChargeFluxLabel_preReloc, matlset);
   task->computes(d_lb->pNegChargeFluxLabel_preReloc, matlset);
@@ -188,7 +188,7 @@ void NonLinearDiff2::scheduleComputeDivergence(       Task         * task,
 {
   Ghost::GhostType  gan   = Ghost::AroundNodes;
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::OldDW, d_sharedState->get_delt_label());
+  task->requires(Task::OldDW, d_lb->delTLabel);
   task->requires(Task::OldDW, d_lb->pXLabel,                   gan, NGP);
   task->requires(Task::OldDW, d_lb->pSizeLabel,                gan, NGP);
   task->requires(Task::OldDW, d_lb->pMassLabel,                gan, NGP);

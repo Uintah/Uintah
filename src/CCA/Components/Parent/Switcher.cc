@@ -121,7 +121,7 @@ Switcher::Switcher( const ProcessorGroup * myworld,
       ComponentFactory::create(subCompUps, myworld, m_sharedState, "");
 
     ApplicationInterface* app = dynamic_cast<ApplicationInterface*>(comp);
-    attachPort( "app", app );
+    attachPort( "application", app );
 
     if( app->needModelMaker() )
       setModelMaker( true );
@@ -188,7 +188,7 @@ Switcher::Switcher( const ProcessorGroup * myworld,
   // there should be n-1 switching critiera specified.
   int num_switch_criteria = 0;
   for (int i = 0; i < num_components; i++) {
-    UintahParallelComponent* comp = dynamic_cast<UintahParallelComponent*>(getPort("app",i));
+    UintahParallelComponent* comp = dynamic_cast<UintahParallelComponent*>(getPort("application",i));
     SwitchingCriteria* sw = dynamic_cast<SwitchingCriteria*>(comp->getPort("switch_criteria"));
     if (sw) {
       num_switch_criteria++;
@@ -203,7 +203,7 @@ Switcher::Switcher( const ProcessorGroup * myworld,
   // Add the "None" SwitchCriteria to the last component, so the switchFlag label
   // is computed in the last stage.
 
-  UintahParallelComponent* last_comp = dynamic_cast<UintahParallelComponent*>(getPort("app",num_components-1));
+  UintahParallelComponent* last_comp = dynamic_cast<UintahParallelComponent*>(getPort("application",num_components-1));
 
   SwitchingCriteria* none_switch_criteria = scinew None();
   
@@ -284,23 +284,16 @@ Switcher::problemSetup( const ProblemSpecP     & /*params*/,
   proc0cout << "\n------------ Switching to component (" << d_componentIndex <<") \n";
   proc0cout << "  Reading input file: " << d_in_file[d_componentIndex] << "\n";
 
-  UintahParallelComponent* comp =
-    dynamic_cast<UintahParallelComponent*>( getPort("app",d_componentIndex) );
-
-  d_app = dynamic_cast<ApplicationInterface*>(comp);
-
-  comp->attachPort( "scheduler",  m_scheduler );
-  comp->attachPort( "modelMaker", m_modelMaker );
-  comp->attachPort( "solver",     m_solver );
-  comp->attachPort( "regridder",  m_regridder );
-  comp->attachPort( "output",     m_output );
-
-  d_app->getComponents();    
-
   // Read the ups file for the first subcomponent.
   ProblemSpecP subCompUps =
     ProblemSpecReader().readInputFile(d_in_file[d_componentIndex]);  
   
+  UintahParallelComponent* comp =
+    dynamic_cast<UintahParallelComponent*>( getPort("application",d_componentIndex) );
+
+  d_app = dynamic_cast<ApplicationInterface*>(comp);
+  d_app->setComponents( this );
+
   // Send the subcomponent's UPS file to it's sim interface.
   d_app->problemSetup(subCompUps, restart_prob_spec, grid );  
 
@@ -845,7 +838,7 @@ Switcher::needRecompile(       double   simTime,
     proc0cout << "  Reading input file: " << d_in_file[d_componentIndex] << "\n";
 
     UintahParallelComponent* comp =
-      dynamic_cast<UintahParallelComponent*>( getPort("app",d_componentIndex) );
+      dynamic_cast<UintahParallelComponent*>( getPort("application",d_componentIndex) );
 
     d_app = dynamic_cast<ApplicationInterface*>(comp);
 

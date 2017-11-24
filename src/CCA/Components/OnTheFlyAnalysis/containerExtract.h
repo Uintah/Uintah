@@ -33,6 +33,7 @@
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
+#include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
 
 #include <map>
@@ -60,15 +61,14 @@ namespace Uintah {
     public:
       containerExtract(ProblemSpecP& prob_spec,
           SimulationStateP& sharedState,
-          Output* dataArchiver);
+          Output* output);
       containerExtract();
 
       virtual ~containerExtract();
 
       virtual void problemSetup(const ProblemSpecP& prob_spec,
                                 const ProblemSpecP& restart_prob_spec,
-                                GridP& grid,
-                                SimulationStateP& sharedState);
+                                GridP& grid);
                                 
       virtual void outputProblemSpec(ProblemSpecP& ps){};          
 
@@ -146,7 +146,7 @@ namespace Uintah {
       std::vector<VarLabel*> d_varLabels;
       SimulationStateP d_sharedState;
       std::vector<container*> d_containers;
-      Output* d_dataArchiver;
+      Output* d_output;
       ProblemSpecP d_prob_spec;
       const Material* d_matl;
       MaterialSet* d_matl_set;

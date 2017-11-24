@@ -28,6 +28,7 @@
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
 #include <CCA/Ports/Output.h>
 #include <Core/Grid/Material.h>
+#include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/GridP.h>
@@ -64,8 +65,8 @@ WARNING
   class statistics : public AnalysisModule {
   public:
     statistics(ProblemSpecP& prob_spec,
-              SimulationStateP& sharedState,
-		Output* dataArchiver);
+	       SimulationStateP& sharedState,
+	       Output* output);
 
     statistics();
 
@@ -73,8 +74,7 @@ WARNING
 
     virtual void problemSetup(const ProblemSpecP& prob_spec,
                               const ProblemSpecP& restart_prob_spec,
-                              GridP& grid,
-                              SimulationStateP& sharedState);
+                              GridP& grid);
                               
     virtual void outputProblemSpec( ProblemSpecP& ps);
 
@@ -238,7 +238,7 @@ WARNING
     std::vector< Qstats >  d_Qstats;
 
     SimulationStateP d_sharedState;
-    Output* d_dataArchiver;
+    Output* d_output;
     ProblemSpecP d_prob_spec;
     const Material* d_matl;
     MaterialSet* d_matlSet;

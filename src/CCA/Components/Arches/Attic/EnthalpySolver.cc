@@ -288,7 +288,7 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
     parent_old_dw = Task::OldDW;
   }
 
-  tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
+  tsk->requires(parent_old_dw, d_lab->d_delTLabel);
   
   // This task requires enthalpy and density from old time step for transient
   // calculation
@@ -393,7 +393,7 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
      parent_old_dw = old_dw;
   }
   delt_vartype delT;
-  parent_old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  parent_old_dw->get(delT, d_lab->d_delTLabel );
   double delta_t = delT;
   delta_t *= timelabels->time_multiplier;
 
@@ -686,7 +686,7 @@ EnthalpySolver::sched_enthalpyLinearSolve(SchedulerP& sched,
   Ghost::GhostType  gn = Ghost::None;
   Task::MaterialDomainSpec oams = Task::OutOfDomain;  //outside of arches matlSet.
   
-  tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
+  tsk->requires(parent_old_dw, d_lab->d_delTLabel);
   
   tsk->requires(Task::NewDW,   d_lab->d_densityGuessLabel, gn, 0);
   tsk->requires(Task::NewDW,   d_lab->d_cellInfoLabel,     gn, 0);
@@ -731,7 +731,7 @@ EnthalpySolver::enthalpyLinearSolve(const ProcessorGroup* pc,
   }
   
   delt_vartype delT;
-  parent_old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  parent_old_dw->get(delT, d_lab->d_delTLabel );
   double delta_t = delT;
   delta_t *= timelabels->time_multiplier;
   Ghost::GhostType  gac = Ghost::AroundCells;

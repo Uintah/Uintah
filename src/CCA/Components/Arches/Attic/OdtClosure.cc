@@ -294,7 +294,7 @@ OdtClosure::reComputeTurbSubmodel(const ProcessorGroup* pc,
     int archIndex = 0; // only one arches material
     int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     delt_vartype delT;
-    new_dw->get(delT, d_lab->d_sharedState->get_delt_label(), getLevel(patches));
+    new_dw->get(delT, d_lab->d_delTLabel, getLevel(patches));
     double deltaT_les = delT;
     double deltaT_odt=Min(0.001,deltaT_les/10);
     

@@ -209,7 +209,7 @@ LinearSwelling::sched_computeModel( const LevelP& level, SchedulerP& sched, int 
     tsk->requires( Task::NewDW, m_birth_label, gn, 0 );
   
   // get time step size for model clipping
-  tsk->requires( Task::OldDW,d_fieldLabels->d_sharedState->get_delt_label(), Ghost::None, 0);
+  tsk->requires( Task::OldDW,d_fieldLabels->d_delTLabel, Ghost::None, 0);
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 
@@ -258,7 +258,7 @@ LinearSwelling::computeModel( const ProcessorGroup * pc,
     constCCVariable<double> RHS_weight;
     new_dw->get( RHS_weight , m_RHS_weight_varlabel , matlIndex , patch , gn , 0 );
     delt_vartype DT;
-    old_dw->get(DT, d_fieldLabels->d_sharedState->get_delt_label());
+    old_dw->get(DT, d_fieldLabels->d_delTLabel);
     constCCVariable<double> birth;
     bool add_birth = false;
     if ( m_birth_label != nullptr ){

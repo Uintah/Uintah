@@ -82,10 +82,10 @@ namespace Uintah {
 
       const std::string getRoleString( VARID role );
 
-      SimulationStateP d_sharedState;
-
       // recompile task graph flag
       bool recompile_taskgraph;
+
+      SimulationStateP d_sharedState;
 
       // material subset for stencils
       MaterialSubset* d_stencilMatl;
@@ -93,6 +93,9 @@ namespace Uintah {
       MaterialSubset* d_vectorMatl;
       MaterialSubset* d_tensorMatl;
       MaterialSubset* d_symTensorMatl;
+
+      // Delta t label
+      const VarLabel* d_delTLabel;
 
       // Cell Information
       // for old_dw, perpatch var

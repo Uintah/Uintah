@@ -179,7 +179,7 @@ Arches::problemSetup( const ProblemSpecP     & params,
       for( iter  = m_analysis_modules.begin();
            iter != m_analysis_modules.end(); iter++) {
         AnalysisModule* am = *iter;
-        am->problemSetup(params, materials_ps, grid, m_sharedState);
+        am->problemSetup(params, materials_ps, grid);
       }
     }
   }

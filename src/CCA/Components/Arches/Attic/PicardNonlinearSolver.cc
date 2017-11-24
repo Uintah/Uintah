@@ -216,7 +216,7 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
   Ghost::GhostType  gac = Ghost::AroundCells;
   Task::MaterialDomainSpec oams = Task::OutOfDomain;  //outside of arches matlSet.
   
-  tsk->requires(Task::OldDW, d_lab->d_sharedState->get_delt_label());
+  tsk->requires(Task::OldDW, d_lab->d_delTLabel);
   if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) {
     tsk->requires(Task::OldDW, d_lab->d_scalarFluxCompLabel,
                   d_lab->d_vectorMatl, oams, gn,  0);
@@ -620,7 +620,7 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
     subsched->execute();    
     
     delt_vartype delT;
-    old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+    old_dw->get(delT, d_lab->d_delTLabel );
     
     double delta_t = delT;
     delta_t *= d_timeIntegratorLabels[curr_level]->time_multiplier;
@@ -2230,7 +2230,7 @@ PicardNonlinearSolver::sched_getDensityGuess(SchedulerP& sched,
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gaf = Ghost::AroundFaces;
     
-  tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
+  tsk->requires(parent_old_dw, d_lab->d_delTLabel);
   tsk->requires(old_values_dw, d_lab->d_densityCPLabel,     gn, 0);
   tsk->requires(Task::NewDW,   d_lab->d_densityCPLabel,     gac, 1);
   tsk->requires(Task::NewDW,   d_lab->d_uVelocitySPBCLabel, gaf, 1);
@@ -2266,7 +2266,7 @@ PicardNonlinearSolver::getDensityGuess(const ProcessorGroup*,
     parent_old_dw = old_dw;
   }
   delt_vartype delT;
-  parent_old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  parent_old_dw->get(delT, d_lab->d_delTLabel );
   double delta_t = delT;
   delta_t *= timelabels->time_multiplier;
 

@@ -344,7 +344,7 @@ void RMCRT_Test::scheduleComputeStableTimeStep ( const LevelP& level, SchedulerP
 
   Task* task = scinew Task( "RMCRT_Test::computeStableTimeStep", this, &RMCRT_Test::computeStableTimeStep );
 
-  task->computes( m_sharedState->get_delt_label(),level.get_rep() );
+  task->computes( getDelTLabel(),level.get_rep() );
 
   scheduler->addTask( task, level->eachPatch(), m_sharedState->allMaterials() );
 }
@@ -945,7 +945,7 @@ void RMCRT_Test::computeStableTimeStep (const ProcessorGroup*,
   const Level* level = getLevel(patches);
   double delt = level->dCell().x();
 
-  new_dw->put(delt_vartype(delt), m_sharedState->get_delt_label(), level);
+  new_dw->put(delt_vartype(delt), getDelTLabel(), level);
 }
 
 //______________________________________________________________________

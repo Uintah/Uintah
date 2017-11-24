@@ -145,7 +145,7 @@ void Wave::scheduleComputeStableTimeStep(const LevelP& level,
 {
   Task* task = scinew Task("computeStableTimeStep",
                            this, &Wave::computeStableTimeStep);
-  task->computes(m_sharedState->get_delt_label(),level.get_rep());
+  task->computes(getDelTLabel(),level.get_rep());
   sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
 }
 //______________________________________________________________________
@@ -161,7 +161,7 @@ Wave::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
     if(level->getIndex()>0){        // REFINE 
       addRefineDependencies(task, phi_label, true, true);
     }
-    //task->requires(Task::OldDW, m_sharedState->get_delt_label());
+    //task->requires(Task::OldDW, getDelTLabel());
     task->computes(phi_label);
     task->computes(pi_label);
     sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
@@ -183,7 +183,7 @@ Wave::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
       Task* task = scinew Task("timeAdvance",
                                this, &Wave::timeAdvanceRK4, s);
                                
-      task->requires(Task::OldDW, m_sharedState->get_delt_label(), level.get_rep());
+      task->requires(Task::OldDW, getDelTLabel(), level.get_rep());
       task->requires(Task::OldDW, phi_label,      Ghost::None);
       task->requires(Task::OldDW, pi_label,       Ghost::None);
       task->requires(s->cur_dw, s->curphi_label,  Ghost::AroundCells, 1);
@@ -245,7 +245,7 @@ void Wave::computeStableTimeStep(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     double delt = patch->dCell().minComponent();
     const Level* level = getLevel(patches);
-    new_dw->put(delt_vartype(delt), m_sharedState->get_delt_label(), level);
+    new_dw->put(delt_vartype(delt), getDelTLabel(), level);
   }
 }
 
@@ -273,7 +273,7 @@ void Wave::timeAdvanceEuler(const ProcessorGroup*,
 
       // cout << " Doing Wave::timeAdvanceEuler on patch " << patch->getID() << ", matl " << matl << endl;
       delt_vartype dt;
-      old_dw->get(dt, m_sharedState->get_delt_label(), level);
+      old_dw->get(dt, getDelTLabel(), level);
 
       constCCVariable<double> oldPhi;
       old_dw->get(oldPhi, phi_label, matl, patch, Ghost::AroundCells, 1);
@@ -395,7 +395,7 @@ void Wave::timeAdvanceRK4(const ProcessorGroup*,
 
       //cout << " Doing Wave::timeAdvanceRK4 on patch " << patch->getID() << ", matl " << matl << endl;
       delt_vartype dt;
-      old_dw->get(dt, m_sharedState->get_delt_label(), level);
+      old_dw->get(dt, getDelTLabel(), level);
 
       DataWarehouse* cur_dw = new_dw->getOtherDataWarehouse(s->cur_dw);
       constCCVariable<double> curPhi;

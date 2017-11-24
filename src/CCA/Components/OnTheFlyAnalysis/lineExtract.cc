@@ -58,15 +58,16 @@ using namespace std;
 //  setenv SCI_DEBUG "LINEEXTRACT_DBG_COUT:+" 
 static DebugStream cout_doing("LINEEXTRACT_DOING_COUT", false);
 static DebugStream cout_dbg("LINEEXTRACT_DBG_COUT", false);
-//______________________________________________________________________              
+//______________________________________________________________________
 lineExtract::lineExtract(ProblemSpecP& module_spec,
-                         SimulationStateP& sharedState,
-                         Output* dataArchiver)
-  : AnalysisModule(module_spec, sharedState, dataArchiver)
+			 SimulationStateP& sharedState,
+                         Output* output)
+  : AnalysisModule(module_spec, sharedState, output)
 {
-  d_sharedState = sharedState;
-  d_prob_spec = module_spec;
-  d_dataArchiver = dataArchiver;
+  d_prob_spec    = module_spec;
+  d_sharedState  = sharedState;
+  d_output       = output;
+  
   d_matl_set = 0;
   d_zero_matl = 0;
   ps_lb = scinew lineExtractLabel();
@@ -98,13 +99,12 @@ lineExtract::~lineExtract()
 //     P R O B L E M   S E T U P
 void lineExtract::problemSetup(const ProblemSpecP& prob_spec,
                                const ProblemSpecP& ,
-                               GridP& grid,
-                               SimulationStateP& sharedState)
+                               GridP& grid)
 {
   cout_doing << "Doing problemSetup \t\t\t\tlineExtract" << endl;
   
   int numMatls  = d_sharedState->getNumMatls();
-  if(!d_dataArchiver){
+  if(!d_output){
     throw InternalError("lineExtract:couldn't get output port", __FILE__, __LINE__);
   }
                                
@@ -366,7 +366,7 @@ void lineExtract::initialize(const ProcessorGroup*,
     new_dw->put(fileInfo,    ps_lb->fileVarsStructLabel, 0, patch);
     
     if(patch->getGridIndex() == 0){   // only need to do this once
-      string udaDir = d_dataArchiver->getOutputLocation();
+      string udaDir = d_output->getOutputLocation();
 
       //  Bulletproofing
       DIR *check = opendir(udaDir.c_str());
@@ -438,7 +438,7 @@ void lineExtract::doAnalysis(const ProcessorGroup* pg,
                              DataWarehouse* old_dw,
                              DataWarehouse* new_dw)
 {   
-  UintahParallelComponent * DA = dynamic_cast<UintahParallelComponent*>(d_dataArchiver);
+  UintahParallelComponent * DA = dynamic_cast<UintahParallelComponent*>(d_output);
   LoadBalancerPort        * lb = dynamic_cast<LoadBalancerPort*>( DA->getPort("load balancer"));
     
   const Level* level = getLevel(patches);
@@ -572,7 +572,7 @@ void lineExtract::doAnalysis(const ProcessorGroup* pg,
       for (unsigned int l =0 ; l < d_lines.size(); l++) {
       
         // create the directory structure
-        string udaDir = d_dataArchiver->getOutputLocation();
+        string udaDir = d_output->getOutputLocation();
         string dirName = d_lines[l]->name;
         string linePath = udaDir + "/" + dirName;
         
