@@ -35,25 +35,49 @@
 #include <CCA/Components/Wasatch/Expressions/EmbeddedGeometry/EmbeddedGeometryHelper.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditionBase.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditions.h>
+#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditionsOneSided.h>
 #include <CCA/Components/Wasatch/BCHelper.h>
 #include <CCA/Components/Wasatch/WasatchBCHelper.h>
 
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 
+#include <boost/algorithm/string.hpp>
+
+#ifdef HAVE_POKITT
 // PoKiTT expressions that we require here
 #include <pokitt/CanteraObjects.h>
 #include <pokitt/MixtureMolWeight.h>
 #include <pokitt/SpeciesN.h>
+#endif
 
 namespace WasatchCore{
 
 typedef SpatialOps::SVolField FieldT;  // this is the field type we will support for species transport
 
+
+template< typename FaceT, typename GradT >
+struct SpeciesBoundaryTyper
+{
+  typedef SpatialOps::SVolField CellT;
+  typedef SpatialOps::Divergence DivT;
+
+  typedef typename SpatialOps::OperatorTypeBuilder<GradT, CellT, CellT>::type CellNeumannT;
+  typedef typename SpatialOps::OperatorTypeBuilder<DivT, FaceT, CellT>::type FaceNeumannT;
+
+  typedef typename SpatialOps::NeboBoundaryConditionBuilder<CellNeumannT> CellNeumannBCOpT;
+  typedef typename SpatialOps::NeboBoundaryConditionBuilder<FaceNeumannT> FaceNeumannBCOpT;
+
+  typedef typename ConstantBCNew<CellT,CellNeumannBCOpT>::Builder ConstantCellNeumannBC;
+  typedef typename ConstantBCNew<FaceT,FaceNeumannBCOpT>::Builder ConstantFaceNeumannBC;
+};
+
 std::vector<EqnTimestepAdaptorBase*>
 setup_species_equations( Uintah::ProblemSpecP specEqnParams,
+                         Uintah::ProblemSpecP wasatchSpec,
                          const TurbulenceParameters& turbParams,
                          const Expr::Tag densityTag,
+                         const Expr::TagList velTags,
                          const Expr::Tag temperatureTag,
                          GraphCategories& gc )
 {
@@ -82,7 +106,7 @@ setup_species_equations( Uintah::ProblemSpecP specEqnParams,
     if( i == nspec-1 ) continue; // don't build the nth species equation
 
     proc0cout << "Setting up transport equation for species " << specName << std::endl;
-    SpeciesTransportEquation* specEqn = scinew SpeciesTransportEquation( specEqnParams, turbParams, i, gc, densityTag, temperatureTag, tagNames.mixMW );
+    SpeciesTransportEquation* specEqn = scinew SpeciesTransportEquation( specEqnParams, wasatchSpec, turbParams, i, gc, densityTag, velTags, temperatureTag, tagNames.mixMW );
     specEqns.push_back( new EqnTimestepAdaptor<FieldT>(specEqn) );
 
     // default to zero mass fraction for species unless specified otherwise
@@ -110,8 +134,8 @@ setup_species_equations( Uintah::ProblemSpecP specEqnParams,
 
   // the last species mass fraction
   typedef pokitt::SpeciesN<FieldT>::Builder SpecN;
-  factory  .register_expression( scinew SpecN( yiTags[nspec-1], yiTags, pokitt::ERRORSPECN, 0 /* no ghost cells for RHS calculation */ ) );
-  icFactory.register_expression( scinew SpecN( yiTags[nspec-1], yiTags, pokitt::ERRORSPECN, 0 /* no ghost cells for RHS calculation */ ) );
+  factory  .register_expression( scinew SpecN( yiTags[nspec-1], yiTags, pokitt::ERRORSPECN, DEFAULT_NUMBER_OF_GHOSTS ) );
+  icFactory.register_expression( scinew SpecN( yiTags[nspec-1], yiTags, pokitt::ERRORSPECN, DEFAULT_NUMBER_OF_GHOSTS ) );
 
   return specEqns;
 }
@@ -120,18 +144,22 @@ setup_species_equations( Uintah::ProblemSpecP specEqnParams,
 
 SpeciesTransportEquation::
 SpeciesTransportEquation( Uintah::ProblemSpecP params,
+                          Uintah::ProblemSpecP wasatchSpec,
                           const TurbulenceParameters& turbParams,
                           const int specNum,
                           GraphCategories& gc,
                           const Expr::Tag densityTag,
+                          const Expr::TagList velTags,
                           const Expr::Tag temperatureTag,
                           const Expr::Tag mmwTag )
 : TransportEquation( gc, "rho_"+CanteraObjects::species_name(specNum), NODIR, false ),  // jcs should we allow constant density?  possibly...
+  wasatchSpec_( wasatchSpec ),
   params_( params ),
   turbParams_( turbParams ),
   specNum_( specNum ),
   primVarTag_( CanteraObjects::species_name(specNum), Expr::STATE_NONE ),
   densityTag_    ( densityTag     ),
+  velTags_       ( velTags        ),
   temperatureTag_( temperatureTag ),
   mmwTag_        ( mmwTag         ),
   nspec_( CanteraObjects::number_species() )
@@ -168,13 +196,46 @@ SpeciesTransportEquation::
 setup_boundary_conditions( WasatchBCHelper& bcHelper,
                            GraphCategories& graphCat )
 {
-  // jcs at some point we will need to include support for NSCBC here.
+  Expr::ExpressionFactory& advSlnFactory = *(graphCat[ADVANCE_SOLUTION]->exprFactory);
+  Expr::ExpressionFactory& initFactory   = *(graphCat[INITIALIZATION  ]->exprFactory);
+
+  const TagNames& tagNames = TagNames::self();
 
   assert( !isConstDensity_ );
+
+  // set up the extra fields for setting BCs on primitives
+  const Expr::Tag temporaryYTag( "temporary_" + this->primVarTag_.name() + "_for_bcs", Expr::STATE_NONE );
+  const Expr::Tag temporaryRhoTag( "temporary_rho_for_bcs", Expr::STATE_NONE );
+  const Expr::Tag temporaryRhoYTag( "temporary_rho" + this->primVarTag_.name() + "_for_bcs", Expr::STATE_NONE );
+
+  if( !( advSlnFactory.have_entry( temporaryYTag ) ) ){
+    advSlnFactory.register_expression( new Expr::ConstantExpr<SVolField>::Builder( temporaryYTag, 0.0 ) );
+  }
+  if( !( initFactory.have_entry( temporaryYTag ) ) ){
+    initFactory.register_expression( new Expr::ConstantExpr<SVolField>::Builder( temporaryYTag, 0.0 ) );
+  }
+  if( !( advSlnFactory.have_entry( temporaryRhoYTag ) ) ){
+    typedef ExprAlgebra<SVolField>::Builder RhoY;
+    advSlnFactory.register_expression( new RhoY( temporaryRhoYTag, Expr::tag_list( temporaryRhoTag, temporaryYTag ), ExprAlgebra<SVolField>::PRODUCT ) );
+  }
+  if( !( initFactory.have_entry( temporaryRhoYTag ) ) ){
+    typedef ExprAlgebra<SVolField>::Builder RhoY;
+    initFactory.register_expression( new RhoY( temporaryRhoYTag, Expr::tag_list( temporaryRhoTag, temporaryYTag ), ExprAlgebra<SVolField>::PRODUCT ) );
+  }
 
   BOOST_FOREACH( const BndMapT::value_type& bndPair, bcHelper.get_boundary_information() ){
     const std::string& bndName = bndPair.first;
     const BndSpec& myBndSpec = bndPair.second;
+
+    // a lambda to make decorated tags for boundary condition expressions for a this boundary spec
+    //
+    // param: exprName: a string, the name of the field on which we will impose the boundary condition
+    // param: description: a string describing the boundary condition, such as "neumann-zero-for-outflow" or "dirichlet-for-inflow"
+    // param: direction: a string for the direction of the boundary face, such as "X", "Y", or "Z"
+    auto get_decorated_tag = [&myBndSpec]( const std::string exprName, const std::string description, const std::string direction )
+    {
+      return Expr::Tag( exprName + "_STATE_NONE_" + description + "_bc_" + myBndSpec.name + "_" + direction + "dir", Expr::STATE_NONE );
+    };
 
     // for variable density problems, we must ALWAYS guarantee proper boundary conditions for
     // (rho y_i)_{n+1}. Since we apply bcs on (rho y_i) at the bottom of the graph, we can't apply
@@ -193,8 +254,8 @@ setup_boundary_conditions( WasatchBCHelper& bcHelper,
                               : (face==Uintah::Patch::yminus || face==Uintah::Patch::yplus) ? "Y"
                               : (face==Uintah::Patch::zminus || face==Uintah::Patch::zplus) ? "Z" : "INVALID";
 
-        const std::string diffFluxName( primVarTag_.name() + "_" + tagNames.diffusiveflux + "_"  + dir );
-        const std::string convFluxName( solnVarName_       + "_" + tagNames.convectiveflux + "_" + dir );
+        const std::string diffFluxName( primVarTag_.name() + "_diffFlux_" + dir );
+        const std::string convFluxName( this->solnVarName_ + "_convFlux_" + dir );
 
         // set zero convective and diffusive fluxes
         const BndCondSpec diffFluxBCSpec = { diffFluxName, "none" , 0.0, DIRICHLET, DOUBLE_TYPE };
@@ -202,9 +263,143 @@ setup_boundary_conditions( WasatchBCHelper& bcHelper,
         bcHelper.add_boundary_condition( bndName, diffFluxBCSpec );
         bcHelper.add_boundary_condition( bndName, convFluxBCSpec );
       }
-      case VELOCITY:
+      break;
+
+
       case OUTFLOW:
-      case OPEN:
+      case OPEN:{
+
+        const std::string normalConvFluxNameBase = this->solnVarName_ + "_convFlux_"; // normal convective flux
+        const std::string normalDiffFluxNameBase = primVarTag_.name() + "_diffFlux_"; // normal diffusive flux
+
+        Expr::Tag neumannZeroConvectiveFluxTag,
+                  neumannZeroDiffFluxTag,
+                  neumannZeroRhoYTag;
+        std::string normalConvFluxName,
+                    normalDiffFluxName;
+
+        // build boundary conditions for x, y, and z faces
+        switch( myBndSpec.face ) {
+          case Uintah::Patch::xplus:
+          case Uintah::Patch::xminus:
+          {
+            std::string dir = "X";
+            typedef SpeciesBoundaryTyper<SpatialOps::SSurfXField, SpatialOps::GradientX> BCTypes;
+            BCTypes bcTypes;
+
+            normalConvFluxName = normalConvFluxNameBase + dir;
+            normalDiffFluxName = normalDiffFluxNameBase + dir;
+
+            neumannZeroDiffFluxTag       = get_decorated_tag( normalDiffFluxName, "nuemann-zero", dir );
+            neumannZeroConvectiveFluxTag = get_decorated_tag( normalConvFluxName, "nuemann-zero", dir );
+            neumannZeroRhoYTag           = get_decorated_tag( this->solnVarName_, "nuemann-zero", dir );
+
+            if( !advSlnFactory.have_entry( neumannZeroDiffFluxTag       ) ) advSlnFactory.register_expression( new typename BCTypes::ConstantFaceNeumannBC( neumannZeroDiffFluxTag      , 0.0 ) );
+            if( !advSlnFactory.have_entry( neumannZeroConvectiveFluxTag ) ) advSlnFactory.register_expression( new typename BCTypes::ConstantFaceNeumannBC( neumannZeroConvectiveFluxTag, 0.0 ) );
+            if( !advSlnFactory.have_entry( neumannZeroRhoYTag           ) ) advSlnFactory.register_expression( new typename BCTypes::ConstantCellNeumannBC( neumannZeroRhoYTag          , 0.0 ) );
+            if( !initFactory  .have_entry( neumannZeroRhoYTag           ) ) initFactory  .register_expression( new typename BCTypes::ConstantCellNeumannBC( neumannZeroRhoYTag          , 0.0 ) );
+          }
+          break;
+          case Uintah::Patch::yminus:
+          case Uintah::Patch::yplus:
+          {
+            std::string dir = "Y";
+            typedef SpeciesBoundaryTyper<SpatialOps::SSurfYField, SpatialOps::GradientY> BCTypes;
+            BCTypes bcTypes;
+
+            normalConvFluxName = normalConvFluxNameBase + dir;
+            normalDiffFluxName = normalDiffFluxNameBase + dir;
+
+            neumannZeroDiffFluxTag       = get_decorated_tag( normalDiffFluxName, "nuemann-zero", dir );
+            neumannZeroConvectiveFluxTag = get_decorated_tag( normalConvFluxName, "nuemann-zero", dir );
+            neumannZeroRhoYTag           = get_decorated_tag( this->solnVarName_, "nuemann-zero", dir );
+
+            if( !advSlnFactory.have_entry( neumannZeroDiffFluxTag       ) ) advSlnFactory.register_expression( new typename BCTypes::ConstantFaceNeumannBC( neumannZeroDiffFluxTag      , 0.0 ) );
+            if( !advSlnFactory.have_entry( neumannZeroConvectiveFluxTag ) ) advSlnFactory.register_expression( new typename BCTypes::ConstantFaceNeumannBC( neumannZeroConvectiveFluxTag, 0.0 ) );
+            if( !advSlnFactory.have_entry( neumannZeroRhoYTag           ) ) advSlnFactory.register_expression( new typename BCTypes::ConstantCellNeumannBC( neumannZeroRhoYTag          , 0.0 ) );
+            if( !initFactory  .have_entry( neumannZeroRhoYTag           ) ) initFactory  .register_expression( new typename BCTypes::ConstantCellNeumannBC( neumannZeroRhoYTag          , 0.0 ) );
+          }
+          break;
+          case Uintah::Patch::zminus:
+          case Uintah::Patch::zplus:
+          {
+            std::string dir = "Z";
+            typedef SpeciesBoundaryTyper<SpatialOps::SSurfZField, SpatialOps::GradientZ> BCTypes;
+            BCTypes bcTypes;
+
+            normalConvFluxName = normalConvFluxNameBase + dir;
+            normalDiffFluxName = normalDiffFluxNameBase + dir;
+
+            neumannZeroDiffFluxTag       = get_decorated_tag( normalDiffFluxName, "nuemann-zero", dir );
+            neumannZeroConvectiveFluxTag = get_decorated_tag( normalConvFluxName, "nuemann-zero", dir );
+            neumannZeroRhoYTag           = get_decorated_tag( this->solnVarName_, "nuemann-zero", dir );
+
+            if( !advSlnFactory.have_entry( neumannZeroDiffFluxTag       ) ) advSlnFactory.register_expression( new typename BCTypes::ConstantFaceNeumannBC( neumannZeroDiffFluxTag      , 0.0 ) );
+            if( !advSlnFactory.have_entry( neumannZeroConvectiveFluxTag ) ) advSlnFactory.register_expression( new typename BCTypes::ConstantFaceNeumannBC( neumannZeroConvectiveFluxTag, 0.0 ) );
+            if( !advSlnFactory.have_entry( neumannZeroRhoYTag           ) ) advSlnFactory.register_expression( new typename BCTypes::ConstantCellNeumannBC( neumannZeroRhoYTag          , 0.0 ) );
+            if( !initFactory  .have_entry( neumannZeroRhoYTag           ) ) initFactory  .register_expression( new typename BCTypes::ConstantCellNeumannBC( neumannZeroRhoYTag          , 0.0 ) );
+          }
+          break;
+          default:
+            break;
+        }
+
+        // make boundary condition specifications, connecting the name of the field (first) and the name of the modifier expression (second)
+        BndCondSpec diffFluxSpec = {normalDiffFluxName, neumannZeroDiffFluxTag.name()      , 0.0, NEUMANN, FUNCTOR_TYPE};
+        BndCondSpec convFluxSpec = {normalConvFluxName, neumannZeroConvectiveFluxTag.name(), 0.0, NEUMANN, FUNCTOR_TYPE};
+        BndCondSpec rhoYSpec     = {this->solnVarName_, neumannZeroRhoYTag.name()          , 0.0, NEUMANN, FUNCTOR_TYPE};
+
+        // add boundary condition specifications to this boundary
+        bcHelper.add_boundary_condition( bndName, diffFluxSpec );
+        bcHelper.add_boundary_condition( bndName, convFluxSpec );
+        bcHelper.add_boundary_condition( bndName, rhoYSpec     );
+      }
+      break;
+
+      case VELOCITY:{
+
+        Expr::Tag bcCopiedRhoYTag;
+
+        switch( myBndSpec.face ) {
+          case Uintah::Patch::xplus:
+          case Uintah::Patch::xminus:
+          {
+            std::string dir = "X";
+            typedef typename BCCopier<SVolField>::Builder CopiedCellBC;
+            bcCopiedRhoYTag = get_decorated_tag( this->solnVarTag_.name(), "bccopy-for-inflow", dir );
+            if( !initFactory  .have_entry( bcCopiedRhoYTag ) ) initFactory  .register_expression( new CopiedCellBC( bcCopiedRhoYTag, temporaryRhoYTag ) );
+            if( !advSlnFactory.have_entry( bcCopiedRhoYTag ) ) advSlnFactory.register_expression( new CopiedCellBC( bcCopiedRhoYTag, temporaryRhoYTag ) );
+          }
+          break;
+          case Uintah::Patch::yminus:
+          case Uintah::Patch::yplus:
+          {
+            std::string dir = "Y";
+            typedef typename BCCopier<SVolField>::Builder CopiedCellBC;
+            bcCopiedRhoYTag = get_decorated_tag( this->solnVarTag_.name(), "bccopy-for-inflow", dir );
+            if( !initFactory  .have_entry( bcCopiedRhoYTag ) ) initFactory  .register_expression( new CopiedCellBC( bcCopiedRhoYTag, temporaryRhoYTag ) );
+            if( !advSlnFactory.have_entry( bcCopiedRhoYTag ) ) advSlnFactory.register_expression( new CopiedCellBC( bcCopiedRhoYTag, temporaryRhoYTag ) );
+          }
+          break;
+          case Uintah::Patch::zminus:
+          case Uintah::Patch::zplus:
+          {
+            std::string dir = "Z";
+            typedef typename BCCopier<SVolField>::Builder CopiedCellBC;
+            bcCopiedRhoYTag = get_decorated_tag( this->solnVarTag_.name(), "bccopy-for-inflow", dir );
+            if( !initFactory  .have_entry( bcCopiedRhoYTag ) ) initFactory  .register_expression( new CopiedCellBC( bcCopiedRhoYTag, temporaryRhoYTag ) );
+            if( !advSlnFactory.have_entry( bcCopiedRhoYTag ) ) advSlnFactory.register_expression( new CopiedCellBC( bcCopiedRhoYTag, temporaryRhoYTag ) );
+          }
+          break;
+          default:
+            break;
+        }
+
+        BndCondSpec rhoYDirichletBC = {this->solnVarTag_.name(), bcCopiedRhoYTag.name(), 0.0, DIRICHLET, FUNCTOR_TYPE};
+        bcHelper.add_boundary_condition( bndName, rhoYDirichletBC );
+      }
+      break;
+
       case USER:
       default:
       {
@@ -225,6 +420,7 @@ SpeciesTransportEquation::apply_initial_boundary_conditions( const GraphHelper& 
                                                              WasatchBCHelper& bcHelper )
 {
   const Category taskCat = INITIALIZATION;
+  std::cout << "taskCat set to INITIALIZATION\n";
 
   Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
 
@@ -247,6 +443,12 @@ SpeciesTransportEquation::apply_initial_boundary_conditions( const GraphHelper& 
   if( factory.have_entry(initial_condition_tag()) ){
     bcHelper.apply_boundary_condition<FieldT>( initial_condition_tag(), taskCat );
   }
+  if( factory.have_entry(primVarTag_) ){
+    bcHelper.apply_boundary_condition<FieldT>( primVarTag_, taskCat, true );
+  }
+  // bcs for hard inflow - set primitive and conserved variables
+  const Expr::Tag temporaryYTag( "temporary_" + this->primVarTag_.name() + "_for_bcs", Expr::STATE_NONE );
+  bcHelper.apply_boundary_condition<FieldT>( temporaryYTag, taskCat, true );
 }
 
 //------------------------------------------------------------------------------
@@ -256,8 +458,26 @@ SpeciesTransportEquation::apply_boundary_conditions( const GraphHelper& graphHel
                                                      WasatchBCHelper& bcHelper )
 {
   const Category taskCat = ADVANCE_SOLUTION;
+  std::cout << "taskCat set to ADVANCE_SOLUTION\n";
   bcHelper.apply_boundary_condition<FieldT>( solution_variable_tag(), taskCat );
   bcHelper.apply_boundary_condition<FieldT>( rhs_tag(), taskCat, true ); // apply the rhs bc directly inside the extra cell
+
+  // bcs for hard inflow - set primitive and conserved variables
+  bcHelper.apply_boundary_condition<FieldT>( primVarTag_, taskCat );
+  const Expr::Tag temporaryYTag( "temporary_" + this->primVarTag_.name() + "_for_bcs", Expr::STATE_NONE );
+  bcHelper.apply_boundary_condition<FieldT>( temporaryYTag, taskCat, true );
+
+
+  const TagNames& tagNames = TagNames::self();
+  const std::string normalConvFluxName_nodir = this->solnVarName_ + "_convFlux_";
+  const std::string normalDiffFluxName_nodir = primVarTag_.name() + "_diffFlux_";
+  bcHelper.apply_boundary_condition<SpatialOps::SSurfXField>(Expr::Tag(normalDiffFluxName_nodir + 'X', Expr::STATE_NONE), taskCat);
+  bcHelper.apply_boundary_condition<SpatialOps::SSurfYField>(Expr::Tag(normalDiffFluxName_nodir + 'Y', Expr::STATE_NONE), taskCat);
+  bcHelper.apply_boundary_condition<SpatialOps::SSurfZField>(Expr::Tag(normalDiffFluxName_nodir + 'Z', Expr::STATE_NONE), taskCat);
+  bcHelper.apply_boundary_condition<SpatialOps::SSurfXField>(Expr::Tag(normalConvFluxName_nodir + 'X', Expr::STATE_NONE), taskCat);
+  bcHelper.apply_boundary_condition<SpatialOps::SSurfYField>(Expr::Tag(normalConvFluxName_nodir + 'Y', Expr::STATE_NONE), taskCat);
+  bcHelper.apply_boundary_condition<SpatialOps::SSurfZField>(Expr::Tag(normalConvFluxName_nodir + 'Z', Expr::STATE_NONE), taskCat);
+  bcHelper.apply_nscbc_boundary_condition(this->rhs_tag(), NSCBC::SPECIES, taskCat, this->specNum_);
 }
 
 //------------------------------------------------------------------------------

@@ -118,6 +118,8 @@ namespace WasatchCore{
 
   std::vector<EqnTimestepAdaptorBase*>
   parse_species_equations( Uintah::ProblemSpecP params,
+                           Uintah::ProblemSpecP wasatchSpec,
+                           Uintah::ProblemSpecP momentumParams,
                            const TurbulenceParameters& turbParams,
                            const Expr::Tag& densityTag,
                            GraphCategories& gc );

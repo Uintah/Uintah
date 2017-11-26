@@ -362,6 +362,125 @@ namespace WasatchCore{
   };
 
   //-------------------------------------------------------------------------------------------------
+  /**
+   *  \class    VelocityDependentConstantBC
+   *  \ingroup  Expressions
+   *  \author   Mike Hansen
+   *  \date     August, 2017
+   *
+   *  \brief Applies a boundary condition on outflows (or inflows) only, as determined by a velocity field, used for nonreflecting compressible flow BCs
+   */
+  template< typename FieldT, typename OpT >
+  class VelocityDependentConstantBC
+      : public BoundaryConditionBase<FieldT>
+  {
+  public:
+    class Builder : public Expr::ExpressionBuilder
+    {
+    public:
+      enum FlowType
+      {
+        APPLY_ON_INFLOW,
+        APPLY_ON_OUTFLOW
+      };
+
+    private:
+      const double bcVal_;
+      double plusMinusSide_;
+      const Expr::Tag velocityTag_;
+      FlowType flowType_;
+
+    public:
+      Builder( const Expr::Tag& resultTag,
+               const double bcVal,
+               const Uintah::Patch::FaceType& face,
+               const Expr::Tag& velocityTag,
+               FlowType flowType )
+    : ExpressionBuilder( resultTag ),
+      bcVal_( bcVal ),
+      velocityTag_( velocityTag ),
+      flowType_( flowType )
+    {
+        switch ( face ) {
+          case Uintah::Patch::xplus:
+          case Uintah::Patch::yplus:
+          case Uintah::Patch::zplus:
+          {
+            plusMinusSide_ = +1.;
+          }
+          break;
+          case Uintah::Patch::xminus:
+          case Uintah::Patch::yminus:
+          case Uintah::Patch::zminus:
+          {
+            plusMinusSide_ = -1.;
+          }
+          break;
+          default:
+            break;
+        }
+    }
+      inline Expr::ExpressionBase* build() const{ return new VelocityDependentConstantBC( bcVal_,
+                                                                                          plusMinusSide_,
+                                                                                          velocityTag_,
+                                                                                          flowType_ ); }
+
+    };
+
+    private:
+    const OpT* op_;
+
+    typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::Interpolant,SpatialOps::SVolField,FieldT>::type VelocityInterpOpT;
+    const VelocityInterpOpT* velocityInterpOp_;
+
+    const double bcVal_;
+    const double plusMinusSide_;
+    typename Builder::FlowType flowType_;
+    DECLARE_FIELD(SpatialOps::SVolField, normalVelocity_)
+
+    VelocityDependentConstantBC( const double bcVal,
+                                 const double plusMinusSide,
+                                 const Expr::Tag& velocityTag,
+                                 typename Builder::FlowType flowType ) :
+                                 bcVal_( bcVal ),
+                                 plusMinusSide_( plusMinusSide ),
+                                 flowType_( flowType )
+    {
+      this->set_gpu_runnable( true );
+      normalVelocity_ = this->template create_field_request<SpatialOps::SVolField>( velocityTag );
+    }
+
+    public:
+    ~VelocityDependentConstantBC(){}
+    void evaluate()
+    {
+      using namespace SpatialOps;
+      FieldT& lhs = this->value();
+      const SpatialOps::SVolField& velocity = normalVelocity_->field_ref();
+      SpatFldPtr<FieldT> lhsWithBcApplied = SpatialFieldStore::get<FieldT>( lhs );
+
+      *lhsWithBcApplied <<= lhs;
+      (*op_)(*this->interiorSvolSpatialMask_, *lhsWithBcApplied, bcVal_, this->isMinusFace_);
+
+
+      switch( flowType_ ){
+        case Builder::APPLY_ON_OUTFLOW:
+          lhs <<= cond( ( plusMinusSide_ * (*velocityInterpOp_)(velocity) ) > 0.0, *lhsWithBcApplied ) ( lhs );
+          break;
+        case Builder::APPLY_ON_INFLOW:
+          lhs <<= cond( ( plusMinusSide_ * (*velocityInterpOp_)(velocity) ) < 0.0, *lhsWithBcApplied ) ( lhs );
+          break;
+        default:
+          break;
+      }
+    }
+    void bind_operators( const SpatialOps::OperatorDatabase& opdb )
+    {
+      op_ = opdb.retrieve_operator<OpT>();
+      velocityInterpOp_ = opdb.retrieve_operator<VelocityInterpOpT>();
+    }
+  };
+  //-------------------------------------------------------------------------------------------------
 
   /*
    \brief The STAGGERED_MASK macro returns a mask that consists of the two points on each side of the svol extra cell mask.

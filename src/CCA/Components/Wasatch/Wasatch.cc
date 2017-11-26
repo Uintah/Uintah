@@ -607,8 +607,9 @@ namespace WasatchCore{
     // Build species transport equations
     //
     Uintah::ProblemSpecP specEqnParams = wasatchSpec_->findBlock("SpeciesTransportEquations");
+    Uintah::ProblemSpecP momEqnParams = wasatchSpec_->findBlock("MomentumEquations");
     if( specEqnParams ){
-      EquationAdaptors specEqns = parse_species_equations( specEqnParams, turbParams, densityTag, graphCategories_ );
+      EquationAdaptors specEqns = parse_species_equations( specEqnParams, wasatchSpec_, momEqnParams, turbParams, densityTag, graphCategories_ );
       adaptors_.insert( adaptors_.end(), specEqns.begin(), specEqns.end() );
     }
 
@@ -1311,6 +1312,38 @@ namespace WasatchCore{
         particlesHelper_->schedule_find_boundary_particles(level,sched);
       }
       
+      // -----------------------------------------------------------------------
+      // BOUNDARY CONDITIONS TREATMENT
+      // -----------------------------------------------------------------------
+      proc0cout << "------------------------------------------------" << std::endl
+          << "SETTING BOUNDARY CONDITIONS:" << std::endl;
+      proc0cout << "------------------------------------------------" << std::endl;
+
+      typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
+
+      for( EquationAdaptors::const_iterator ia=adaptors_.begin(); ia!=adaptors_.end(); ++ia ){
+        EqnTimestepAdaptorBase* const adaptor = *ia;
+        EquationBase* transEq = adaptor->equation();
+        std::string eqnLabel = transEq->solution_variable_name();
+        //______________________________________________________
+        // set up boundary conditions on this transport equation
+        try{
+          // only verify boundary conditions on the first stage!
+          if( isRestarting_ ) transEq->setup_boundary_conditions(*bcHelperMap_[level->getID()], graphCategories_);
+          proc0cout << "Setting BCs for transport equation '" << eqnLabel << "'" << std::endl;
+          transEq->apply_boundary_conditions(*advSolGraphHelper, *bcHelperMap_[level->getID()]);
+        }
+        catch( std::runtime_error& e ){
+          std::ostringstream msg;
+          msg << e.what()
+                      << std::endl
+                      << "ERORR while setting boundary conditions on equation '" << eqnLabel << "'"
+                      << std::endl;
+          throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+        }
+      }
+      proc0cout << "------------------------------------------------" << std::endl;
+
       for( int iStage=1; iStage<=nRKStages_; iStage++ ){
         // jcs why do we need this instead of getting the level?
         // jcs notes:
@@ -1331,38 +1364,6 @@ namespace WasatchCore{
         
         // Compute the cell type only when radiation is present. This may change in the future.
         if( doRadiation_ ) cellType_->schedule_carry_forward(allPatches,materials_,sched);
-        
-        // -----------------------------------------------------------------------
-        // BOUNDARY CONDITIONS TREATMENT
-        // -----------------------------------------------------------------------
-        proc0cout << "------------------------------------------------" << std::endl
-        << "SETTING BOUNDARY CONDITIONS:" << std::endl;
-        proc0cout << "------------------------------------------------" << std::endl;
-        
-        typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
-        
-        for( EquationAdaptors::const_iterator ia=adaptors_.begin(); ia!=adaptors_.end(); ++ia ){
-          EqnTimestepAdaptorBase* const adaptor = *ia;
-          EquationBase* transEq = adaptor->equation();
-          std::string eqnLabel = transEq->solution_variable_name();
-          //______________________________________________________
-          // set up boundary conditions on this transport equation
-          try{
-            // only verify boundary conditions on the first stage!
-            if( isRestarting_ && iStage < 2 ) transEq->setup_boundary_conditions(*bcHelperMap_[level->getID()], graphCategories_);
-            proc0cout << "Setting BCs for transport equation '" << eqnLabel << "'" << std::endl;
-            transEq->apply_boundary_conditions(*advSolGraphHelper, *bcHelperMap_[level->getID()]);
-          }
-          catch( std::runtime_error& e ){
-            std::ostringstream msg;
-            msg << e.what()
-            << std::endl
-            << "ERORR while setting boundary conditions on equation '" << eqnLabel << "'"
-            << std::endl;
-            throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-          }
-        }
-        proc0cout << "------------------------------------------------" << std::endl;
         
         //
         // process clipping on fields - must be done AFTER all bcs are applied

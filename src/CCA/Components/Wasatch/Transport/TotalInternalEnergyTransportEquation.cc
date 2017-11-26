@@ -40,35 +40,34 @@
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditions.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditionsOneSided.h>
 #ifdef HAVE_POKITT
+#include <pokitt/SpeciesN.h>
+#include <pokitt/MixtureMolWeight.h>
 #include <pokitt/thermo/InternalEnergy.h>
 #include <pokitt/thermo/Temperature.h>
 #include <pokitt/thermo/Enthalpy.h>
 #include <pokitt/transport/HeatFlux.h>
 #include <pokitt/transport/ThermalCondMix.h>
 #include <pokitt/thermo/HeatCapacity_Cp.h>
+#include <pokitt/thermo/HeatCapacity_Cv.h>
 #endif
 
 namespace WasatchCore {
-  
-#define SETUP_PLUS_BC(DIR,VELIDX) \
-{\
-  typedef typename SpatialOps::UnitTriplet<DIR>::type UnitTripletT; \
-  typedef typename SpatialOps::OneSidedOpTypeBuilder<SpatialOps::Gradient,SpatialOps::OneSidedStencil3<typename UnitTripletT::Negate>, MyFieldT>::type OpT;\
-  retModTag = Expr::Tag(this->solnVarName_ + "_rhs_mod_plus_side_" + bndName, Expr::STATE_NONE);\
-  typedef typename BCOneSidedConvFluxDiv<MyFieldT,OpT>::Builder retbuilderT;\
-  builder3 = new retbuilderT( retModTag, velTags_[VELIDX], Expr::Tag("rhoet_and_pressure", Expr::STATE_NONE) );\
-}
-  
-#define SETUP_MINUS_BC(DIR,VELIDX)\
-{\
-  typedef typename SpatialOps::UnitTriplet<DIR>::type UnitTripletT; \
-  typedef typename SpatialOps::OneSidedOpTypeBuilder<SpatialOps::Gradient,SpatialOps::OneSidedStencil3<UnitTripletT>,MyFieldT>::type OpT;\
-  retModTag = Expr::Tag(this->solnVarName_ + "_rhs_mod_minus_side_" + bndName, Expr::STATE_NONE);\
-  typedef typename BCOneSidedConvFluxDiv<MyFieldT,OpT>::Builder retbuilderT;\
-  builder3 = new retbuilderT( retModTag, velTags_[VELIDX], Expr::Tag("rhoet_and_pressure", Expr::STATE_NONE) );\
-}
 
-   //============================================================================
+  template< typename FaceT, typename GradT >
+  struct EnergyBoundaryTyper
+  {
+    typedef SpatialOps::SVolField CellT;
+    typedef SpatialOps::Divergence DivT;
+
+    typedef typename SpatialOps::OperatorTypeBuilder<GradT, CellT, CellT>::type CellNeumannT;
+    typedef typename SpatialOps::OperatorTypeBuilder<DivT, FaceT, CellT>::type FaceNeumannT;
+
+    typedef typename SpatialOps::NeboBoundaryConditionBuilder<CellNeumannT> CellNeumannBCOpT;
+    typedef typename SpatialOps::NeboBoundaryConditionBuilder<FaceNeumannT> FaceNeumannBCOpT;
+
+    typedef typename ConstantBCNew<CellT,CellNeumannBCOpT>::Builder ConstantCellNeumannBC;
+    typedef typename ConstantBCNew<FaceT,FaceNeumannBCOpT>::Builder ConstantFaceNeumannBC;
+  };
 
   /**
    *  \class  TemperaturePurePerfectGas
@@ -520,12 +519,16 @@ namespace WasatchCore {
                                                            massFracTags_,
                                                            primVarTag_,
                                                            kineticEnergyTag_,
-                                                           oldTempTag ) );
+                                                           oldTempTag,
+                                                           1.e-3,
+                                                           5000.,
+                                                           1000 ) );
       typedef pokitt::HeatCapacity_Cp<SVolField>::Builder Cp;
-      solnFactory.register_expression( new Cp( tags.heatCapacity, temperatureTag, massFracTags_ ) );
+      solnFactory.register_expression( new Cp( tags.cp, temperatureTag, massFracTags_ ) );
+      typedef pokitt::HeatCapacity_Cv<SVolField>::Builder Cv;
+      solnFactory.register_expression( new Cv( tags.cv, temperatureTag, massFracTags_ ) );
     }
-    else
-#   endif
+#   else
     {
       // calorically perfect gas
       typedef TemperaturePurePerfectGas<MyFieldT>::Builder SimpleTemperature;
@@ -548,6 +551,7 @@ namespace WasatchCore {
       solnFactory.register_expression( new ReciprocalFunc( tags.cv, tags.mixMW, slope,0.0 ) );
 
     }
+#   endif
     //----------------------------------------------------------
     // viscous dissipation
     typedef ViscousDissipation<MyFieldT>::Builder ViscDissip;
@@ -765,171 +769,273 @@ namespace WasatchCore {
 //    ScalarTransportEquation<SVolField>::setup_boundary_conditions(bcHelper,graphCat);
     Expr::ExpressionFactory& advSlnFactory = *(graphCat[ADVANCE_SOLUTION]->exprFactory);
     Expr::ExpressionFactory& initFactory   = *(graphCat[INITIALIZATION  ]->exprFactory);
-    
-    const TagNames& tagNames = TagNames::self();
-    
+
+    // strings for BC spec names, will depend on boundary face
+    const std::string normalConvFluxNameBase = "rhoet_and_pressure_convFlux_";
+    std::string heatFluxName;
+    std::string heatFluxNameBase = "Temperature_diffVelocity_";
+#   ifdef HAVE_POKITT
+    Uintah::ProblemSpecP speciesParams = wasatchSpec_->findBlock("SpeciesTransportEquations");
+    if( speciesParams ){
+      const TagNames& tagNames = TagNames::self();
+      const std::string str = tagNames.xHeatFlux.name();
+      heatFluxNameBase = str.substr(0, str.size()-1);
+    }
+#   endif
+
+    // set up the extra fields for setting BCs on primitives
+    const Expr::Tag temporaryTTag( "temporary_Temperature_for_bcs", Expr::STATE_NONE );
+    const Expr::Tag temporaryMMWTag( "temporary_mmw_for_bcs", Expr::STATE_NONE );
+
+#   ifdef HAVE_POKITT
+    Expr::TagList temporaryYTags;
+    for( const auto& yTag : massFracTags_ ){
+      temporaryYTags.push_back( Expr::Tag( "temporary_" + yTag.name() + "_for_bcs", Expr::STATE_NONE ) );
+    }
+#   endif
+    Expr::TagList temporaryVelocityTags = {Expr::Tag(), Expr::Tag(), Expr::Tag()};
+    for( int i=0; i<3; ++i ){
+      if( velTags_[i].name() != "" ){
+        temporaryVelocityTags[i] = Expr::Tag( "temporary_" + velTags_[i].name() + "_for_bcs", Expr::STATE_NONE );
+      }
+    }
+    const Expr::Tag temporaryRhoTag( "temporary_rho_for_bcs", Expr::STATE_NONE );
+    const Expr::Tag temporaryEtTag( "temporary_Et_for_bcs", Expr::STATE_NONE );
+    const Expr::Tag temporaryRhoEtTag( "temporary_rhoEt_for_bcs", Expr::STATE_NONE );
+
+
+    // get reference state
+    double refTemperature = 300.;
+    if (wasatchSpec_->findBlock("NSCBC")) {
+      Uintah::ProblemSpecP nscbcXMLSpec = wasatchSpec_->findBlock("NSCBC");
+      nscbcXMLSpec->getAttribute("Tfarfield", refTemperature);
+    }
+
+    if( !( advSlnFactory.have_entry( temporaryTTag ) ) ){
+      advSlnFactory.register_expression( new Expr::ConstantExpr<SVolField>::Builder( temporaryTTag, refTemperature ) );
+    }
+    if( !( initFactory.have_entry( temporaryTTag ) ) ){
+      initFactory.register_expression( new Expr::ConstantExpr<SVolField>::Builder( temporaryTTag, refTemperature ) );
+    }
+    if( wasatchSpec_->findBlock("SpeciesTransportEquations") ){
+#ifdef HAVE_POKITT
+      const int nspec = CanteraObjects::number_species();
+      if( !( advSlnFactory.have_entry( temporaryYTags[nspec-1] ) ) ){
+        advSlnFactory.register_expression( new pokitt::SpeciesN<MyFieldT>::Builder( temporaryYTags[nspec-1], temporaryYTags, pokitt::ERRORSPECN, DEFAULT_NUMBER_OF_GHOSTS ) );
+      }
+      if( !( initFactory.have_entry( temporaryYTags[nspec-1] ) ) ){
+        initFactory.register_expression( new pokitt::SpeciesN<MyFieldT>::Builder( temporaryYTags[nspec-1], temporaryYTags, pokitt::ERRORSPECN, DEFAULT_NUMBER_OF_GHOSTS ) );
+      }
+      if( !( advSlnFactory.have_entry( temporaryMMWTag ) ) ){
+        advSlnFactory.register_expression( new pokitt::MixtureMolWeight<MyFieldT>::Builder( temporaryMMWTag, temporaryYTags, pokitt::MASS ) );
+      }
+      if( !( initFactory.have_entry( temporaryMMWTag ) ) ){
+        initFactory.register_expression( new pokitt::MixtureMolWeight<MyFieldT>::Builder( temporaryMMWTag, temporaryYTags, pokitt::MASS ) );
+      }
+#endif
+    }
+    else{
+      if( !( advSlnFactory.have_entry( temporaryMMWTag ) ) ){
+        advSlnFactory.register_expression( new Expr::ConstantExpr<SVolField>::Builder( temporaryMMWTag, 28.966 ) ); // how to from input file?
+      }
+      if( !( initFactory.have_entry( temporaryMMWTag ) ) ){
+        initFactory.register_expression( new Expr::ConstantExpr<SVolField>::Builder( temporaryMMWTag, 28.966 ) ); // how to from input file?
+      }
+    }
+
+    if( !( advSlnFactory.have_entry( temporaryRhoEtTag ) ) ){
+      if( wasatchSpec_->findBlock("SpeciesTransportEquations") ){
+#ifdef HAVE_POKITT
+        typedef pokitt::TotalInternalEnergy<SVolField>::Builder TotalEnergy;
+        advSlnFactory.register_expression( new TotalEnergy( temporaryEtTag, temporaryTTag, temporaryYTags, temporaryVelocityTags ) );
+        typedef ExprAlgebra<SVolField>::Builder ExprAlg;
+        advSlnFactory.register_expression( new ExprAlg( temporaryRhoEtTag, Expr::tag_list( temporaryRhoTag, temporaryEtTag ), ExprAlgebra<SVolField>::PRODUCT ) );
+#endif
+      }
+      else
+      {
+        const TagNames& tagNames = TagNames::self();
+        typedef TotalInternalEnergy_PurePerfectGas_IC<SVolField>::Builder TotalEnergy;
+        advSlnFactory.register_expression( new TotalEnergy( temporaryEtTag, temporaryTTag, temporaryVelocityTags, tagNames.mixMW ) );
+        typedef ExprAlgebra<SVolField>::Builder ExprAlg;
+        advSlnFactory.register_expression( new ExprAlg( temporaryRhoEtTag, Expr::tag_list( temporaryRhoTag, temporaryEtTag ), ExprAlgebra<SVolField>::PRODUCT ) );
+      }
+    }
+    if( !( initFactory.have_entry( temporaryRhoEtTag ) ) ){
+      if( wasatchSpec_->findBlock("SpeciesTransportEquations") ){
+#ifdef HAVE_POKITT
+// AND IF HAVE SPECIES TRANSPORT EQUATIONS........
+      typedef pokitt::TotalInternalEnergy<SVolField>::Builder TotalEnergy;
+      initFactory.register_expression( new TotalEnergy( temporaryEtTag, temporaryTTag, temporaryYTags, temporaryVelocityTags ) );
+      typedef ExprAlgebra<SVolField>::Builder ExprAlg;
+      initFactory.register_expression( new ExprAlg( temporaryRhoEtTag, Expr::tag_list( temporaryRhoTag, temporaryEtTag ), ExprAlgebra<SVolField>::PRODUCT ) );
+#endif
+      }
+      else{
+        const TagNames& tagNames = TagNames::self();
+        typedef TotalInternalEnergy_PurePerfectGas_IC<SVolField>::Builder TotalEnergy;
+        initFactory.register_expression( new TotalEnergy( temporaryEtTag, temporaryTTag, temporaryVelocityTags, tagNames.mixMW ) );
+        typedef ExprAlgebra<SVolField>::Builder ExprAlg;
+        initFactory.register_expression( new ExprAlg( temporaryRhoEtTag, Expr::tag_list( temporaryRhoTag, temporaryEtTag ), ExprAlgebra<SVolField>::PRODUCT ) );
+      }
+    }
     
     // make logical decisions based on the specified boundary types
     BOOST_FOREACH( const BndMapT::value_type& bndPair, bcHelper.get_boundary_information() ){
       const std::string& bndName = bndPair.first;
       const BndSpec& myBndSpec = bndPair.second;
+
+      // a lambda to make decorated tags for boundary condition expressions
+      //
+      // param: exprName: a string, the name of the field on which we will impose the boundary condition
+      // param: description: a string describing the boundary condition, such as "neumann-zero-for-outflow" or "dirichlet-for-inflow"
+      // param: direction: a string for the direction of the boundary face, such as "X", "Y", or "Z"
+      auto get_decorated_tag = [&myBndSpec](const std::string exprName, const std::string description, const std::string direction) -> Expr::Tag
+      {
+        return Expr::Tag( exprName + "_STATE_NONE_" + description + "_bc_" + myBndSpec.name + "_" + direction + "dir", Expr::STATE_NONE );
+      };
       
       switch ( myBndSpec.type ){
         case OUTFLOW:
         case OPEN:{
-          // for constant density problems, on all types of boundary conditions, set the scalar rhs
-          // to zero. The variable density case requires setting the scalar rhs to zero ALL the time
-          // and is handled in the code above.
 
-          //-----------------------------------------------
-          // Use Neumann zero on the normal convective fluxes
+          // tags for modifier expressions and strings for BC spec names, will depend on boundary face
           std::string normalConvFluxName;
-          Expr::Tag convModTag, rhoetModTag;
-          switch (myBndSpec.face) {
+          Expr::Tag neumannZeroConvectiveFluxTag,
+                    neumannZeroHeatFluxTag,
+                    neumannZeroEnergyTag;
+
+          // build boundary conditions for x, y, and z faces
+          switch( myBndSpec.face ) {
             case Uintah::Patch::xplus:
             case Uintah::Patch::xminus:
             {
-              normalConvFluxName = "rhoet_and_pressure_convFlux_X";
-              convModTag = Expr::Tag( normalConvFluxName + "_STATE_NONE" + "_bc_" + myBndSpec.name + "_xdirbc", Expr::STATE_NONE );
-              rhoetModTag = Expr::Tag( this->solnVarName_ + "_STATE_NONE" + "_bc_" + myBndSpec.name + "_xdirbc", Expr::STATE_NONE );
-              
-              typedef OpTypes<MyFieldT> Ops;
-              typedef typename Ops::InterpC2FX   DirichletT;
-              typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::GradientX, SVolField, SVolField >::type NeumannT;
-              typedef typename SpatialOps::NeboBoundaryConditionBuilder<DirichletT> DiriOpT;
-              typedef typename SpatialOps::NeboBoundaryConditionBuilder<NeumannT> NeumOpT;
-              typedef typename ConstantBCNew<MyFieldT,DiriOpT>::Builder constBCDirichletT;
-              typedef typename ConstantBCNew<MyFieldT,NeumOpT>::Builder constBCNeumannT;
+              std::string dir = "X";
+              typedef EnergyBoundaryTyper<SpatialOps::SSurfXField, SpatialOps::GradientX> BCTypes;
+              BCTypes bcTypes;
 
-              // for normal fluxes
-              typedef typename SpatialOps::SSurfXField FluxT;
-              typedef typename SpatialOps::OperatorTypeBuilder<Divergence,  FluxT, SpatialOps::SVolField >::type NeumannFluxT;
-              typedef typename SpatialOps::NeboBoundaryConditionBuilder<NeumannFluxT> NeumFluxOpT;
-              typedef typename ConstantBCNew<FluxT, NeumFluxOpT>::Builder constBCNeumannFluxT;
-              
-              if (!advSlnFactory.have_entry(convModTag)) advSlnFactory.register_expression( new constBCNeumannFluxT( convModTag, 0.0 ) );
-              if (!initFactory.have_entry(rhoetModTag)) initFactory.register_expression( new constBCNeumannT( rhoetModTag, 0.0 ) );
-              if (!advSlnFactory.have_entry(rhoetModTag)) advSlnFactory.register_expression( new constBCNeumannT( rhoetModTag, 0.0 ) );
+              heatFluxName       = heatFluxNameBase + dir;
+              normalConvFluxName = normalConvFluxNameBase + dir;
+
+              neumannZeroEnergyTag         = get_decorated_tag( this->solnVarTag_.name(), "neumann-zero", dir );
+              neumannZeroConvectiveFluxTag = get_decorated_tag( normalConvFluxName      , "neumann-zero", dir );
+              neumannZeroHeatFluxTag       = get_decorated_tag( heatFluxName            , "neumann-zero", dir );
+
+              if( !advSlnFactory.have_entry( neumannZeroHeatFluxTag       ) ) advSlnFactory.register_expression( new typename BCTypes::ConstantFaceNeumannBC( neumannZeroHeatFluxTag      , 0.0 ) );
+              if( !advSlnFactory.have_entry( neumannZeroConvectiveFluxTag ) ) advSlnFactory.register_expression( new typename BCTypes::ConstantFaceNeumannBC( neumannZeroConvectiveFluxTag, 0.0 ) );
+              if( !advSlnFactory.have_entry( neumannZeroEnergyTag         ) ) advSlnFactory.register_expression( new typename BCTypes::ConstantCellNeumannBC( neumannZeroEnergyTag        , 0.0 ) );
+              if( !initFactory  .have_entry( neumannZeroEnergyTag         ) ) initFactory  .register_expression( new typename BCTypes::ConstantCellNeumannBC( neumannZeroEnergyTag        , 0.0 ) );
             }
-              break;
+            break;
             case Uintah::Patch::yminus:
             case Uintah::Patch::yplus:
             {
-              normalConvFluxName = "rhoet_and_pressure_convFlux_Y";
-              convModTag = Expr::Tag( normalConvFluxName + "_STATE_NONE" + "_bc_" + myBndSpec.name + "_ydirbc", Expr::STATE_NONE );
-              rhoetModTag = Expr::Tag( this->solnVarName_ + "_STATE_NONE" + "_bc_" + myBndSpec.name + "_ydirbc", Expr::STATE_NONE );
+              std::string dir = "Y";
+              typedef EnergyBoundaryTyper<SpatialOps::SSurfYField, SpatialOps::GradientY> BCTypes;
+              BCTypes bcTypes;
 
-              typedef OpTypes<MyFieldT> Ops;
-              typedef typename Ops::InterpC2FY   DirichletT;
-              typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::GradientY, SVolField, SVolField >::type NeumannT;
-              typedef typename SpatialOps::NeboBoundaryConditionBuilder<DirichletT> DiriOpT;
-              typedef typename SpatialOps::NeboBoundaryConditionBuilder<NeumannT> NeumOpT;
-              typedef typename ConstantBCNew<MyFieldT,DiriOpT>::Builder constBCDirichletT;
-              typedef typename ConstantBCNew<MyFieldT,NeumOpT>::Builder constBCNeumannT;
+              heatFluxName       = heatFluxNameBase + dir;
+              normalConvFluxName = normalConvFluxNameBase + dir;
 
-              // for normal fluxes
-              typedef typename SpatialOps::SSurfYField FluxT;
-              typedef typename SpatialOps::OperatorTypeBuilder<Divergence, FluxT, SpatialOps::SVolField >::type NeumannFluxT;
-              typedef typename SpatialOps::NeboBoundaryConditionBuilder<NeumannFluxT> NeumFluxOpT;
-              typedef typename ConstantBCNew<FluxT, NeumFluxOpT>::Builder constBCNeumannFluxT;
-              
-              if (!advSlnFactory.have_entry(convModTag)) advSlnFactory.register_expression( new constBCNeumannFluxT( convModTag, 0.0 ) );
-              if (!initFactory.have_entry(rhoetModTag)) initFactory.register_expression( new constBCNeumannT( rhoetModTag, 0.0 ) );
-              if (!advSlnFactory.have_entry(rhoetModTag)) advSlnFactory.register_expression( new constBCNeumannT( rhoetModTag, 0.0 ) );
+              neumannZeroEnergyTag         = get_decorated_tag( this->solnVarTag_.name(), "neumann-zero", dir );
+              neumannZeroConvectiveFluxTag = get_decorated_tag( normalConvFluxName      , "neumann-zero", dir );
+              neumannZeroHeatFluxTag       = get_decorated_tag( heatFluxName            , "neumann-zero", dir );
+
+              if( !advSlnFactory.have_entry( neumannZeroHeatFluxTag       ) ) advSlnFactory.register_expression( new typename BCTypes::ConstantFaceNeumannBC( neumannZeroHeatFluxTag      , 0.0 ) );
+              if( !advSlnFactory.have_entry( neumannZeroConvectiveFluxTag ) ) advSlnFactory.register_expression( new typename BCTypes::ConstantFaceNeumannBC( neumannZeroConvectiveFluxTag, 0.0 ) );
+              if( !advSlnFactory.have_entry( neumannZeroEnergyTag         ) ) advSlnFactory.register_expression( new typename BCTypes::ConstantCellNeumannBC( neumannZeroEnergyTag        , 0.0 ) );
+              if( !initFactory  .have_entry( neumannZeroEnergyTag         ) ) initFactory  .register_expression( new typename BCTypes::ConstantCellNeumannBC( neumannZeroEnergyTag        , 0.0 ) );
             }
-              break;
+            break;
             case Uintah::Patch::zminus:
             case Uintah::Patch::zplus:
             {
-              normalConvFluxName = "rhoet_and_pressure_convFlux_Z";
-              convModTag = Expr::Tag( normalConvFluxName + "_STATE_NONE" + "_bc_" + myBndSpec.name + "_zdirbc", Expr::STATE_NONE );
-              rhoetModTag = Expr::Tag( this->solnVarName_ + "_STATE_NONE" + "_bc_" + myBndSpec.name + "_zdirbc", Expr::STATE_NONE );
-              
-              typedef OpTypes<MyFieldT> Ops;
-              typedef typename Ops::InterpC2FZ   DirichletT;
-              typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::GradientZ, SVolField, SVolField >::type NeumannT;
-              typedef typename SpatialOps::NeboBoundaryConditionBuilder<DirichletT> DiriOpT;
-              typedef typename SpatialOps::NeboBoundaryConditionBuilder<NeumannT> NeumOpT;
-              typedef typename ConstantBCNew<MyFieldT,DiriOpT>::Builder constBCDirichletT;
-              typedef typename ConstantBCNew<MyFieldT,NeumOpT>::Builder constBCNeumannT;
+              std::string dir = "Z";
+              typedef EnergyBoundaryTyper<SpatialOps::SSurfZField, SpatialOps::GradientZ> BCTypes;
+              BCTypes bcTypes;
 
-              // for normal fluxes
-              typedef typename SpatialOps::SSurfZField FluxT;
-              typedef typename SpatialOps::OperatorTypeBuilder<Divergence,  FluxT, SpatialOps::SVolField >::type NeumannFluxT;
-              typedef typename SpatialOps::NeboBoundaryConditionBuilder<NeumannFluxT> NeumFluxOpT;
-              typedef typename ConstantBCNew<FluxT, NeumFluxOpT>::Builder constBCNeumannFluxT;
-              
-              if (!advSlnFactory.have_entry(convModTag)) advSlnFactory.register_expression( new constBCNeumannFluxT( convModTag, 0.0 ) );
-              if (!initFactory.have_entry(rhoetModTag)) initFactory.register_expression( new constBCNeumannT( rhoetModTag, 0.0 ) );
-              if (!advSlnFactory.have_entry(rhoetModTag)) advSlnFactory.register_expression( new constBCNeumannT( rhoetModTag, 0.0 ) );
+              heatFluxName       = heatFluxNameBase + dir;
+              normalConvFluxName = normalConvFluxNameBase + dir;
+
+              neumannZeroEnergyTag         = get_decorated_tag( this->solnVarTag_.name(), "neumann-zero", dir );
+              neumannZeroConvectiveFluxTag = get_decorated_tag( normalConvFluxName      , "neumann-zero", dir );
+              neumannZeroHeatFluxTag       = get_decorated_tag( heatFluxName            , "neumann-zero", dir );
+
+              if( !advSlnFactory.have_entry( neumannZeroHeatFluxTag       ) ) advSlnFactory.register_expression( new typename BCTypes::ConstantFaceNeumannBC( neumannZeroHeatFluxTag      , 0.0 ) );
+              if( !advSlnFactory.have_entry( neumannZeroConvectiveFluxTag ) ) advSlnFactory.register_expression( new typename BCTypes::ConstantFaceNeumannBC( neumannZeroConvectiveFluxTag, 0.0 ) );
+              if( !advSlnFactory.have_entry( neumannZeroEnergyTag         ) ) advSlnFactory.register_expression( new typename BCTypes::ConstantCellNeumannBC( neumannZeroEnergyTag        , 0.0 ) );
+              if( !initFactory  .have_entry( neumannZeroEnergyTag         ) ) initFactory  .register_expression( new typename BCTypes::ConstantCellNeumannBC( neumannZeroEnergyTag        , 0.0 ) );
             }
-              break;
+            break;
             default:
               break;
           }
-          BndCondSpec convFluxSpec = {normalConvFluxName,convModTag.name(), 0.0, NEUMANN, FUNCTOR_TYPE};
-          bcHelper.add_boundary_condition(bndName, convFluxSpec);
-          //-----------------------------------------------
-          
-          //Create the one sided stencil gradient
-          Expr::Tag retModTag;
-          Expr::ExpressionBuilder* builder3 = NULL;
-          
-          switch (myBndSpec.face) {
-            case Uintah::Patch::xplus:
-            {
-              SETUP_PLUS_BC(SpatialOps::XDIR, 0);
-            }
-              break;
-            case Uintah::Patch::yplus:
-            {
-              SETUP_PLUS_BC(SpatialOps::YDIR, 1);
-            }
-              break;
-            case Uintah::Patch::zplus:
-            {
-              SETUP_PLUS_BC(SpatialOps::ZDIR, 2);
-            }
-              break;
-            case Uintah::Patch::xminus:
-            {
-              SETUP_MINUS_BC(SpatialOps::XDIR, 0);
-            }
-              break;
-            case Uintah::Patch::yminus:
-            {
-              SETUP_MINUS_BC(SpatialOps::YDIR, 1);
-            }
-              break;
-            case Uintah::Patch::zminus:
-            {
-              SETUP_MINUS_BC(SpatialOps::ZDIR, 2);
-            }
-              break;
-            default:
-              break;
-          }
-          
-          advSlnFactory.register_expression(builder3);
-          BndCondSpec retRHSSpec = {this->rhs_tag().name(), retModTag.name(), 0.0, DIRICHLET, FUNCTOR_TYPE};
-          bcHelper.add_boundary_condition(bndName, retRHSSpec);
-          
-          // set Neumann 0 on rhoet
-          BndCondSpec retBCSpec = {this->solnVarName_, rhoetModTag.name(), 0.0, NEUMANN, FUNCTOR_TYPE};
-          bcHelper.add_boundary_condition(bndName, retBCSpec);
 
+          BndCondSpec energySpec   = {this->solnVarTag_.name(), neumannZeroEnergyTag.name()        , 0.0, NEUMANN, FUNCTOR_TYPE};
+          BndCondSpec convFluxSpec = {normalConvFluxName      , neumannZeroConvectiveFluxTag.name(), 0.0, NEUMANN, FUNCTOR_TYPE};
+          BndCondSpec heatFluxSpec = {heatFluxName            , neumannZeroHeatFluxTag.name()      , 0.0, NEUMANN, FUNCTOR_TYPE};
+
+          bcHelper.add_boundary_condition( bndName, heatFluxSpec );
+          bcHelper.add_boundary_condition( bndName, energySpec   );
+          bcHelper.add_boundary_condition( bndName, convFluxSpec );
         }
-          break; // OUTFLOW/OPEN
+        break;
         case USER:
         {
           // parse through the list of user specified BCs that are relevant to this transport equation
         }
           break;
-        case VELOCITY:
-        {
-          // parse through the list of user specified BCs that are relevant to this transport equation
+        case VELOCITY:{
+
+          Expr::Tag bcCopiedEnergyTag;
+
+          // build boundary conditions for x, y, and z faces
+          switch( myBndSpec.face ) {
+            case Uintah::Patch::xplus:
+            case Uintah::Patch::xminus:
+            {
+              std::string dir = "X";
+              typedef typename BCCopier<SVolField>::Builder CopiedCellBC;
+              bcCopiedEnergyTag = get_decorated_tag( this->solnVarTag_.name(), "bccopy-for-inflow", dir );
+              if( !initFactory  .have_entry( bcCopiedEnergyTag ) ) initFactory  .register_expression( new CopiedCellBC( bcCopiedEnergyTag, temporaryRhoEtTag ) );
+              if( !advSlnFactory.have_entry( bcCopiedEnergyTag ) ) advSlnFactory.register_expression( new CopiedCellBC( bcCopiedEnergyTag, temporaryRhoEtTag ) );
+            }
+            break;
+            case Uintah::Patch::yminus:
+            case Uintah::Patch::yplus:
+            {
+              std::string dir = "Y";
+              typedef typename BCCopier<SVolField>::Builder CopiedCellBC;
+              bcCopiedEnergyTag = get_decorated_tag( this->solnVarTag_.name(), "bccopy-for-inflow", dir );
+              if( !initFactory  .have_entry( bcCopiedEnergyTag ) ) initFactory  .register_expression( new CopiedCellBC( bcCopiedEnergyTag, temporaryRhoEtTag ) );
+              if( !advSlnFactory.have_entry( bcCopiedEnergyTag ) ) advSlnFactory.register_expression( new CopiedCellBC( bcCopiedEnergyTag, temporaryRhoEtTag ) );
+            }
+            break;
+            case Uintah::Patch::zminus:
+            case Uintah::Patch::zplus:
+            {
+              std::string dir = "Z";
+              typedef typename BCCopier<SVolField>::Builder CopiedCellBC;
+              bcCopiedEnergyTag = get_decorated_tag( this->solnVarTag_.name(), "bccopy-for-inflow", dir );
+              if( !initFactory  .have_entry( bcCopiedEnergyTag ) ) initFactory  .register_expression( new CopiedCellBC( bcCopiedEnergyTag, temporaryRhoEtTag ) );
+              if( !advSlnFactory.have_entry( bcCopiedEnergyTag ) ) advSlnFactory.register_expression( new CopiedCellBC( bcCopiedEnergyTag, temporaryRhoEtTag ) );
+            }
+            break;
+            default:
+              break;
+          }
+
+          BndCondSpec energyDirichletBC = {this->solnVarTag_.name(), bcCopiedEnergyTag.name(), 0.0, DIRICHLET, FUNCTOR_TYPE};
+
+          bcHelper.add_boundary_condition( bndName, energyDirichletBC );
+
+          // set zero rhoet RHS at inlets - for nscbc???
+          //          BndCondSpec rhoetRHSBCSpec = {this->rhs_tag().name(), "none", 0.0, DIRICHLET, DOUBLE_TYPE};
+          //          bcHelper.add_boundary_condition(bndName, rhoetRHSBCSpec);
         }
-          break;
+        break;
+        case WALL:
+          // parse through the list of user specified BCs that are relevant to this transport equation
         default:
           break;
       }
@@ -941,13 +1047,32 @@ namespace WasatchCore {
   
   void TotalInternalEnergyTransportEquation::
   apply_boundary_conditions( const GraphHelper& graphHelper,
-                            WasatchBCHelper& bcHelper )
+                             WasatchBCHelper& bcHelper )
   {
     //ScalarTransportEquation<SVolField>::apply_boundary_conditions(graphHelper, bcHelper);
     const Category taskCat = ADVANCE_SOLUTION;
     bcHelper.apply_boundary_condition<MyFieldT>( solnvar_np1_tag(), taskCat );
     bcHelper.apply_boundary_condition<MyFieldT>( rhs_tag(), taskCat, true ); // apply the rhs bc directly inside the extra cell
 
+    std::string heatFluxNameBase = "Temperature_diffVelocity_";
+#   ifdef HAVE_POKITT
+    Uintah::ProblemSpecP speciesParams = wasatchSpec_->findBlock("SpeciesTransportEquations");
+    if( speciesParams ){
+      const TagNames& tagNames = TagNames::self();
+      const std::string str = tagNames.xHeatFlux.name();
+      heatFluxNameBase = str.substr(0, str.size()-1);
+    }
+#   endif
+
+
+    // bcs for hard inflow - set primitive and conserved variables
+    bcHelper.apply_boundary_condition<SpatialOps::SVolField>(this->temperatureTag_, taskCat, true);
+    const Expr::Tag temporaryTTag( "temporary_Temperature_for_bcs", Expr::STATE_NONE );
+    bcHelper.apply_boundary_condition<MyFieldT>( temporaryTTag, taskCat, true );
+
+    bcHelper.apply_boundary_condition<SpatialOps::SSurfXField>(Expr::Tag(heatFluxNameBase + "X", Expr::STATE_NONE), taskCat);
+    bcHelper.apply_boundary_condition<SpatialOps::SSurfYField>(Expr::Tag(heatFluxNameBase + "Y", Expr::STATE_NONE), taskCat);
+    bcHelper.apply_boundary_condition<SpatialOps::SSurfZField>(Expr::Tag(heatFluxNameBase + "Z", Expr::STATE_NONE), taskCat);
     bcHelper.apply_boundary_condition<SpatialOps::SSurfXField>(Expr::Tag("rhoet_and_pressure_convFlux_X", Expr::STATE_NONE), taskCat);
     bcHelper.apply_boundary_condition<SpatialOps::SSurfYField>(Expr::Tag("rhoet_and_pressure_convFlux_Y", Expr::STATE_NONE), taskCat);
     bcHelper.apply_boundary_condition<SpatialOps::SSurfZField>(Expr::Tag("rhoet_and_pressure_convFlux_Z", Expr::STATE_NONE), taskCat);

@@ -326,7 +326,9 @@ namespace WasatchCore{
                           Expr::TagList& strainTags,
                           const Expr::Tag& dilTag,
                           Expr::ExpressionFactory& factory,
-                          Expr::Tag& normalStrainTag)
+                          Expr::Tag& normalStrainTag,
+                          Expr::Tag& shearStrainTag1,
+                          Expr::Tag& shearStrainTag2 )
   {
     typedef typename SpatialOps::FaceTypes<FieldT>::XFace XFace;
     typedef typename SpatialOps::FaceTypes<FieldT>::YFace YFace;
@@ -349,6 +351,8 @@ namespace WasatchCore{
         if( momComponent == XDIR ) {
           normalStrainID = strainID;
           normalStrainTag = strainXt;
+          shearStrainTag1 = strainYt;
+          shearStrainTag2 = strainZt;
         }
       }
       if( doMom[1] ){
@@ -356,6 +360,8 @@ namespace WasatchCore{
         if( momComponent == YDIR ) {
           normalStrainID = strainID;
           normalStrainTag = strainYt;
+          shearStrainTag1 = strainZt;
+          shearStrainTag2 = strainXt;
         }
       }
       if( doMom[2] ){
@@ -363,6 +369,8 @@ namespace WasatchCore{
         if( momComponent == ZDIR ) {
           normalStrainID = strainID;
           normalStrainTag = strainZt;
+          shearStrainTag1 = strainXt;
+          shearStrainTag2 = strainYt;
         }
       }
       factory.cleave_from_children( normalStrainID );
@@ -382,7 +390,9 @@ namespace WasatchCore{
                          Expr::TagList& strainTags,
                          const Expr::Tag& dilTag,
                          Expr::ExpressionFactory& factory,
-                         Expr::Tag& normalStrainTag)
+                         Expr::Tag& normalStrainTag,
+                         Expr::Tag& shearStrainTag1,
+                         Expr::Tag& shearStrainTag2 )
   {
     typedef SVolField FieldT;
     typedef SpatialOps::FaceTypes<FieldT>::XFace XFace;
@@ -406,6 +416,8 @@ namespace WasatchCore{
         if( momComponent == XDIR ) {
           normalStrainID = strainID;
           normalStrainTag = strainXt;
+          shearStrainTag1 = strainYt;
+          shearStrainTag2 = strainZt;
         }
       }
       if( doMom[1] ){
@@ -413,6 +425,8 @@ namespace WasatchCore{
         if( momComponent == YDIR ) {
           normalStrainID = strainID;
           normalStrainTag = strainYt;
+          shearStrainTag1 = strainZt;
+          shearStrainTag2 = strainXt;
         }
       }
       if( doMom[2] ){
@@ -420,6 +434,8 @@ namespace WasatchCore{
         if( momComponent == ZDIR ) {
           normalStrainID = strainID;
           normalStrainTag = strainZt;
+          shearStrainTag1 = strainXt;
+          shearStrainTag2 = strainYt;
         }
       }
       factory.cleave_from_children( normalStrainID );
@@ -675,7 +691,8 @@ namespace WasatchCore{
     //___________________________________
     // diffusive flux (strain components)
     Expr::TagList strainTags;
-    this->normalStrainID_ = register_strain_tensor<FieldT>(momComponent, doMom, this->isViscous_, this->velTags_, strainTags, dilTag, factory, this->normalStrainTag_);
+    this->normalStrainID_ = register_strain_tensor<FieldT>(momComponent, doMom, this->isViscous_, this->velTags_, strainTags, dilTag, factory,
+                                                           this->normalStrainTag_, this->shearStrainTag1_, this->shearStrainTag2_);
     
     //--------------------------------------
     // TURBULENCE
@@ -772,15 +789,18 @@ namespace WasatchCore{
   template class MomentumTransportEquationBase< YVolField >;
   template class MomentumTransportEquationBase< ZVolField >;
   
-#define REGISTER_STRAIN(VOL)                                    \
-  template Expr::ExpressionID                                   \
-  register_strain_tensor<VOL>( const Direction momComponent,    \
-                               const bool* const doMom,         \
-                               const bool isViscous,            \
-                               const Expr::TagList& velTags,    \
-                               Expr::TagList& strainTags,       \
-                               const Expr::Tag& dilTag,         \
-                               Expr::ExpressionFactory& factory, Expr::Tag& normalStrainTag );
+#define REGISTER_STRAIN(VOL)\
+  template Expr::ExpressionID \
+  register_strain_tensor<VOL>( const Direction momComponent, \
+                               const bool* const doMom,\
+                               const bool isViscous,\
+                               const Expr::TagList& velTags,\
+                               Expr::TagList& strainTags,\
+                               const Expr::Tag& dilTag,\
+                               Expr::ExpressionFactory& factory,\
+                               Expr::Tag& normalStrainTag,\
+                               Expr::Tag& shearStrainTag1,\
+                               Expr::Tag& shearStrainTag2 );
   
   REGISTER_STRAIN( XVolField )
   REGISTER_STRAIN( YVolField )
