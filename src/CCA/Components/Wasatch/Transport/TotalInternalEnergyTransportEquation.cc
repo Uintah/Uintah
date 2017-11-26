@@ -528,6 +528,27 @@ namespace WasatchCore {
       typedef pokitt::HeatCapacity_Cv<SVolField>::Builder Cv;
       solnFactory.register_expression( new Cv( tags.cv, temperatureTag, massFracTags_ ) );
     }
+    else{
+      // calorically perfect gas
+      typedef TemperaturePurePerfectGas<MyFieldT>::Builder SimpleTemperature;
+      solnFactory.register_expression( scinew SimpleTemperature( temperatureTag, primVarTag_, kineticEnergyTag_, tags.mixMW ) );
+
+      const double gasConstant = 8314.459848;  // universal R = J/(kmol K).
+
+      typedef Expr::LinearFunction<MyFieldT>::Builder SimpleEnthalpy;
+      solnFactory.register_expression( scinew SimpleEnthalpy( tags.enthalpy, temperatureTag, 7.0/2.0*gasConstant, 0.0 ) );
+
+      // register expressions for CP and CV
+      typedef MultiplicativeInverse<MyFieldT>::Builder ReciprocalFunc;
+
+      // register an expression for cp = 7/2 * R/Mw
+      double slope = 7.0/2.0 * gasConstant;
+      solnFactory.register_expression( new ReciprocalFunc( tags.cp, tags.mixMW, slope,0.0 ) );
+
+      // register an expression for cv = 5/2 * R/Mw
+      slope = 5.0/2.0 * gasConstant;
+      solnFactory.register_expression( new ReciprocalFunc( tags.cv, tags.mixMW, slope,0.0 ) );
+    }
 #   else
     {
       // calorically perfect gas
