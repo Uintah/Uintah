@@ -67,7 +67,7 @@ void PoissonGPU1::problemSetup(const ProblemSpecP& params,
   poisson->require("delt", delt_);
 
   mymat_ = scinew SimpleMaterial();
-  sharedState->registerSimpleMaterial(mymat_);
+  m_sharedState->registerSimpleMaterial(mymat_);
 }
 //______________________________________________________________________
 //

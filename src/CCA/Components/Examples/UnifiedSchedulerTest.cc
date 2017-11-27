@@ -73,7 +73,7 @@ void UnifiedSchedulerTest::problemSetup(const ProblemSpecP& params,
   ProblemSpecP unifiedSchedTest = params->findBlock("UnifiedSchedulerTest");
   unifiedSchedTest->require("delt", delt_);
   simpleMaterial_ = scinew SimpleMaterial();
-  sharedState->registerSimpleMaterial(simpleMaterial_);
+  m_sharedState->registerSimpleMaterial(simpleMaterial_);
 }
 //______________________________________________________________________
 //
