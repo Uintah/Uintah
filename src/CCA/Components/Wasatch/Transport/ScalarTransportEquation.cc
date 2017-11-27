@@ -353,42 +353,6 @@ namespace WasatchCore{
           break;
         }
         case USER:{
-
-          Expr::ExpressionFactory& advSlnFactory = *(graphCat[ADVANCE_SOLUTION]->exprFactory);
-          Expr::ExpressionFactory& initFactory   = *(graphCat[INITIALIZATION  ]->exprFactory);
-
-          const std::string diffFluxNameBase = this->solution_variable_name() + "_diffVelocity_";
-          std::string diffFluxName;
-          Expr::Tag diffFluxModTag;
-
-          switch (myBndSpec.face) {
-            case Uintah::Patch::xplus:
-            {
-              diffFluxName = diffFluxNameBase + "X";
-              diffFluxModTag = Expr::Tag( diffFluxNameBase + "X_STATE_NONE" + "_bc_" + myBndSpec.name + "_xdirbc", Expr::STATE_NONE );
-
-              typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::GradientX, SVolField, SVolField >::type NeumannT;
-              typedef typename SpatialOps::NeboBoundaryConditionBuilder<NeumannT> NeumOpT;
-              typedef typename ConstantBCNew<MyFieldT,NeumOpT>::Builder constBCNeumannT;
-
-              typedef typename SpatialOps::SSurfXField FluxT;
-              typedef typename SpatialOps::OperatorTypeBuilder<Divergence,  FluxT, SpatialOps::SVolField >::type NeumannFluxT;
-              typedef typename SpatialOps::NeboBoundaryConditionBuilder<NeumannFluxT> NeumFluxOpT;
-              typedef typename ConstantBCNew<FluxT, NeumFluxOpT>::Builder constBCNeumannFluxT;
-
-              if (!advSlnFactory.have_entry(diffFluxModTag)) advSlnFactory.register_expression( new constBCNeumannFluxT( diffFluxModTag, -40.0 ) );
-            }
-            break;
-            case Uintah::Patch::xminus:
-            case Uintah::Patch::yminus:
-            case Uintah::Patch::yplus:
-            case Uintah::Patch::zminus:
-            case Uintah::Patch::zplus:
-            default:
-              break;
-          }
-          BndCondSpec diffFluxSpec = {diffFluxName, diffFluxModTag.name(), 0.0, NEUMANN, FUNCTOR_TYPE};
-          bcHelper.add_boundary_condition(bndName, diffFluxSpec);
           // parse through the list of user specified BCs that are relevant to this transport equation
           break;
         }
