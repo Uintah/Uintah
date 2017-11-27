@@ -70,17 +70,16 @@ WARNING
   public:
     particleExtract(ProblemSpecP& prob_spec,
                     SimulationStateP& sharedState,
-		      Output* dataArchiver);
+		    Output* output);
     particleExtract();
                     
     virtual ~particleExtract();
    
     virtual void problemSetup(const ProblemSpecP& prob_spec,
                               const ProblemSpecP& restart_prob_spec,
-                              GridP& grid,
-                              SimulationStateP& sharedState);
+                              GridP& grid);
 
-    virtual void outputProblemSpec(ProblemSpecP& ps){};                              
+    virtual void outputProblemSpec(ProblemSpecP& ps){};
     
     virtual void scheduleInitialize(SchedulerP& sched,
                                     const LevelP& level);
@@ -142,7 +141,7 @@ WARNING
     double d_colorThreshold;
     std::vector<VarLabel*> d_varLabels;
     SimulationStateP d_sharedState;
-    Output* d_dataArchiver;
+    Output* d_output;
     ProblemSpecP d_prob_spec;
     const Material* d_matl;
     MaterialSet* d_matl_set;

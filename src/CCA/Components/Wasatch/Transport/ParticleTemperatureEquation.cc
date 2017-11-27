@@ -99,7 +99,7 @@ namespace WasatchCore{
                                                     pPosTags_,
                                                     tagNames.preynolds,
                                                     pSizeTag_,
-                                                    tagNames.heatCapacity,
+                                                    tagNames.cp,
                                                     gViscTag_,
                                                     tagNames.thermalConductivity) );
 

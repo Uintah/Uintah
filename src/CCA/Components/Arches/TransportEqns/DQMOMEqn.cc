@@ -945,7 +945,7 @@ DQMOMEqn::sched_solveTransportEqn( const LevelP& level, SchedulerP& sched, int t
 
   //Old
   tsk->requires(Task::OldDW, d_transportVarLabel, Ghost::None, 0);
-  tsk->requires(Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label(), Ghost::None, 0 );
+  tsk->requires(Task::OldDW, d_fieldLabels->d_delTLabel, Ghost::None, 0 );
   tsk->requires(Task::OldDW, d_fieldLabels->d_volFractionLabel, Ghost::None, 0 );
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
@@ -971,7 +971,7 @@ DQMOMEqn::solveTransportEqn( const ProcessorGroup* pc,
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
     delt_vartype DT;
-    old_dw->get(DT, d_fieldLabels->d_sharedState->get_delt_label());
+    old_dw->get(DT, d_fieldLabels->d_delTLabel);
     double dt = DT;
 
     CCVariable<double> phi;    // phi @ current sub-level

@@ -117,11 +117,10 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
 
   // TG-0 = carry forward tasks
   // TG-1 = normal RMCRT computations
-  Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
-  sched->setNumTaskGraphs(RMCRTCommon::NUM_GRAPHS);
+  m_scheduler->setNumTaskGraphs(RMCRTCommon::NUM_GRAPHS);
 
   // manually manipulate the scheduling of copy data for the shootRay task
-  sched->overrideVariableBehavior("color",false, false, true, false, false);
+   m_scheduler->overrideVariableBehavior("color",false, false, true, false, false);
 
   //__________________________________
   // Read in component specific variables
@@ -345,7 +344,7 @@ void RMCRT_Test::scheduleComputeStableTimeStep ( const LevelP& level, SchedulerP
 
   Task* task = scinew Task( "RMCRT_Test::computeStableTimeStep", this, &RMCRT_Test::computeStableTimeStep );
 
-  task->computes( m_sharedState->get_delt_label(),level.get_rep() );
+  task->computes( getDelTLabel(),level.get_rep() );
 
   scheduler->addTask( task, level->eachPatch(), m_sharedState->allMaterials() );
 }
@@ -946,7 +945,7 @@ void RMCRT_Test::computeStableTimeStep (const ProcessorGroup*,
   const Level* level = getLevel(patches);
   double delt = level->dCell().x();
 
-  new_dw->put(delt_vartype(delt), m_sharedState->get_delt_label(), level);
+  new_dw->put(delt_vartype(delt), getDelTLabel(), level);
 }
 
 //______________________________________________________________________

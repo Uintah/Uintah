@@ -208,7 +208,7 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
 
   d_timeSubStep = timeSubStep; 
 
-  tsk->requires( Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label(), Ghost::None, 0);
+  tsk->requires( Task::OldDW, d_fieldLabels->d_delTLabel, Ghost::None, 0);
 
   if (d_timeSubStep == 0 && !d_labelSchedInit) {
     // Every model term needs to set this flag after the varLabel is computed. 
@@ -343,7 +343,7 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     delt_vartype DT;
-    old_dw->get(DT, d_fieldLabels->d_sharedState->get_delt_label());
+    old_dw->get(DT, d_fieldLabels->d_delTLabel);
     double dt = DT;
 
     CCVariable<double> devol_rate;

@@ -25,10 +25,9 @@
 #ifndef Packages_Uintah_CCA_Ports_AnalysisModule_h
 #define Packages_Uintah_CCA_Ports_AnalysisModule_h
 
-#include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Output.h>
 #include <Core/Grid/GridP.h>
-#include <Core/Grid/Patch.h>
+#include <Core/Grid/LevelP.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 
@@ -36,11 +35,8 @@
 
 namespace Uintah {
 
-  class DataWarehouse;
-  class ICELabel;
   class Material;
-  class Patch;
-  
+  class VarLabel;
 
   class AnalysisModule {
 
@@ -54,13 +50,15 @@ namespace Uintah {
     // };
     
     AnalysisModule();
-    AnalysisModule(ProblemSpecP& prob_spec, SimulationStateP& sharedState, Output* dataArchiver);
+    AnalysisModule(ProblemSpecP& prob_spec,
+		   SimulationStateP& sharedState,
+		   Output* dataArchiver);
+    
     virtual ~AnalysisModule();
 
     virtual void problemSetup(const ProblemSpecP& params,
                               const ProblemSpecP& restart_prob_spec,
-                              GridP& grid,
-                              SimulationStateP& state) = 0;
+                              GridP& grid) = 0;
 
     virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
                                                             
@@ -78,6 +76,11 @@ namespace Uintah {
     
     virtual void scheduleDoAnalysis_preReloc(SchedulerP& sched,
                                     const LevelP& level) =0;
+
+    virtual const VarLabel* getDelTLabel() const { return m_delTLabel; }
+
+  protected:
+    const VarLabel *m_delTLabel;
   };
 }
 

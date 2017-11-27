@@ -31,11 +31,10 @@
 #include <Core/Grid/LevelP.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/SchedulerP.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/ComputeSet.h>
-#include <Core/Grid/Variables/Reductions.h>
-#include <Core/Grid/Variables/ReductionVariable.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
 #include <string>
 
@@ -136,8 +135,8 @@ namespace Uintah {
     }
 
     virtual SolverParameters* readParameters(       ProblemSpecP     & params,
-                                              const std::string      & name,
-                                                    SimulationStateP & state ) = 0;
+					      const std::string      & name,
+					      const SimulationStateP &state ) = 0;
 
     virtual void scheduleInitialize( const LevelP      & level,
                                            SchedulerP  & sched,

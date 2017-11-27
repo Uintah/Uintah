@@ -150,6 +150,7 @@ namespace Uintah{
     NONLINEARSOLVER m_nonlinear_solver;
 
     // Store these labels to compute a stable dt
+    const VarLabel* m_delTLabel;
     const VarLabel* m_uLabel;
     const VarLabel* m_vLabel;
     const VarLabel* m_wLabel;

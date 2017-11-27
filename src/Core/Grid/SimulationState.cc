@@ -48,13 +48,6 @@ SimulationState::SimulationState()
   if( count++ >= 1)
     throw ProblemSetupException("Allocated multiple SimulationStates", __FILE__, __LINE__);
 
-  // delta t
-  VarLabel* nonconstDelt = 
-    VarLabel::create(delT_name, delt_vartype::getTypeDescription() );
-
-  nonconstDelt->allowMultipleComputes();
-  m_deltLabel = nonconstDelt;
-
   //__________________________________
   all_mpm_matls     = 0;
   all_cz_matls      = 0;
@@ -71,8 +64,6 @@ SimulationState::SimulationState()
 //
 SimulationState::~SimulationState()
 {
-  VarLabel::destroy(m_deltLabel);
-
   clearMaterials();
 
   for (unsigned i = 0; i < old_matls.size(); i++){

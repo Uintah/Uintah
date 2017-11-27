@@ -473,7 +473,7 @@ void AMRMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
   t->computes(lb->pSizeLabel);
   t->computes(lb->pRefinedLabel);
   t->computes(lb->pLastLevelLabel);
-  t->computes(m_sharedState->get_delt_label(),level.get_rep());
+  t->computes(lb->delTLabel,level.get_rep());
   t->computes(lb->pCellNAPIDLabel,d_one_matl);
   t->computes(lb->NC_CCweightLabel,d_one_matl);
 
@@ -1085,7 +1085,7 @@ void AMRMPM::scheduleComputeStressTensor(SchedulerP& sched,
     t->computes(lb->p_qLabel_preReloc, matlset);
   }
 
-  t->computes(m_sharedState->get_delt_label(),getLevel(patches));
+  t->computes(lb->delTLabel,getLevel(patches));
   t->computes(lb->StrainEnergyLabel);
 
   sched->addTask(t, patches, matls);
@@ -1193,7 +1193,7 @@ void AMRMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
   Task* t = scinew Task("AMRMPM::computeAndIntegrateAcceleration",
                   this, &AMRMPM::computeAndIntegrateAcceleration);
 
-  t->requires(Task::OldDW, m_sharedState->get_delt_label() );
+  t->requires(Task::OldDW, lb->delTLabel );
 
   t->requires(Task::NewDW, lb->gMassLabel,          Ghost::None);
   t->requires(Task::NewDW, lb->gInternalForceLabel, Ghost::None);
@@ -1243,7 +1243,7 @@ void AMRMPM::scheduleSetGridBoundaryConditions(SchedulerP& sched,
                this,  &AMRMPM::setGridBoundaryConditions);
 
   const MaterialSubset* mss = matls->getUnion();
-  t->requires(Task::OldDW, m_sharedState->get_delt_label() );
+  t->requires(Task::OldDW, lb->delTLabel );
   
   t->modifies(             lb->gAccelerationLabel,     mss);
   t->modifies(             lb->gVelocityStarLabel,     mss);
@@ -1273,7 +1273,7 @@ void AMRMPM::scheduleComputeLAndF(SchedulerP& sched,
   Task* t=scinew Task("AMRMPM::computeLAndF",
                 this, &AMRMPM::computeLAndF);
 
-  t->requires(Task::OldDW, m_sharedState->get_delt_label() );
+  t->requires(Task::OldDW, lb->delTLabel );
 
   t->requires(Task::NewDW, lb->gVelocityStarLabel,              d_gac,NGN);
   
@@ -1320,7 +1320,7 @@ void AMRMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   Task* t=scinew Task("AMRMPM::interpolateToParticlesAndUpdate",
                 this, &AMRMPM::interpolateToParticlesAndUpdate);
                 
-  t->requires(Task::OldDW, m_sharedState->get_delt_label() );
+  t->requires(Task::OldDW, lb->delTLabel );
 
   t->requires(Task::NewDW, lb->gAccelerationLabel,              d_gac,NGN);
   t->requires(Task::NewDW, lb->gVelocityStarLabel,              d_gac,NGN);
@@ -1435,7 +1435,7 @@ void AMRMPM::scheduleFinalParticleUpdate(SchedulerP& sched,
   Task* t=scinew Task("AMRMPM::finalParticleUpdate",
                       this, &AMRMPM::finalParticleUpdate);
 
-  t->requires(Task::OldDW, m_sharedState->get_delt_label() );
+  t->requires(Task::OldDW, lb->delTLabel );
 
   t->requires(Task::NewDW, lb->pdTdtLabel,           d_gn);
   t->requires(Task::NewDW, lb->pMassLabel_preReloc,  d_gn);
@@ -1606,7 +1606,7 @@ void AMRMPM::scheduleRefine(const PatchSet* patches, SchedulerP& sched)
     ErosionModel* em = mpm_matl->getErosionModel();
     em->addInitialComputesAndRequires(t, mpm_matl);
   }
-  t->computes(m_sharedState->get_delt_label(),getLevel(patches));
+  t->computes(lb->delTLabel,getLevel(patches));
 
 
   sched->addTask(t, patches, m_sharedState->allMPMMaterials());
@@ -3230,7 +3230,7 @@ void AMRMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
       constNCVariable<double> gNegCharge, gNegChargeNoBC;
 
       delt_vartype delT;
-      old_dw->get(delT, m_sharedState->get_delt_label(), getLevel(patches) );
+      old_dw->get(delT, lb->delTLabel, getLevel(patches) );
 
       new_dw->get(internalforce, lb->gInternalForceLabel, dwi, patch, d_gn, 0);
       new_dw->get(externalforce, lb->gExternalForceLabel, dwi, patch, d_gn, 0);
@@ -3361,7 +3361,7 @@ void AMRMPM::setGridBoundaryConditions(const ProcessorGroup*,
     int numMPMMatls=m_sharedState->getNumMPMMatls();
     
     delt_vartype delT;            
-    old_dw->get(delT, m_sharedState->get_delt_label(), getLevel(patches) );
+    old_dw->get(delT, lb->delTLabel, getLevel(patches) );
     
     string interp_type = flags->d_interpolator_type;
 
@@ -3615,7 +3615,7 @@ void AMRMPM::computeLAndF(const ProcessorGroup*,
 
     int numMPMMatls=m_sharedState->getNumMPMMatls();
     delt_vartype delT;
-    old_dw->get(delT, m_sharedState->get_delt_label(), getLevel(patches) );
+    old_dw->get(delT, lb->delTLabel, getLevel(patches) );
 
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
@@ -3830,7 +3830,7 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
     int numMPMMatls=m_sharedState->getNumMPMMatls();
     delt_vartype delT;
-    old_dw->get(delT, m_sharedState->get_delt_label(), getLevel(patches) );
+    old_dw->get(delT, lb->delTLabel, getLevel(patches) );
 
     //Carry forward NC_CCweight (put outside of matl loop, only need for matl 0)
     constNCVariable<double> NC_CCweight;
@@ -4088,7 +4088,7 @@ void AMRMPM::finalParticleUpdate(const ProcessorGroup*,
               "Doing finalParticleUpdate");
 
     delt_vartype delT;
-    old_dw->get(delT, m_sharedState->get_delt_label(), getLevel(patches) );
+    old_dw->get(delT, lb->delTLabel, getLevel(patches) );
 
     int numMPMMatls=m_sharedState->getNumMPMMatls();
     for(int m = 0; m < numMPMMatls; m++){
@@ -5273,7 +5273,7 @@ void AMRMPM::scheduleInterpolateToParticlesAndUpdate_CFI(SchedulerP& sched,
     Task::MaterialDomainSpec  ND  = Task::NormalDomain;
     #define allPatches 0
     #define allMatls 0
-    t->requires(Task::OldDW, m_sharedState->get_delt_label() );
+    t->requires(Task::OldDW, lb->delTLabel );
     
     t->requires(Task::OldDW, lb->pXLabel, gn);
     t->requires(Task::NewDW, lb->gVelocityStarLabel, allPatches, Task::FineLevel,allMatls,   ND, d_gn,0);
@@ -5302,7 +5302,7 @@ void AMRMPM::interpolateToParticlesAndUpdate_CFI(const ProcessorGroup*,
   const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
   
   delt_vartype delT;
-  old_dw->get(delT, m_sharedState->get_delt_label(), coarseLevel );
+  old_dw->get(delT, lb->delTLabel, coarseLevel );
   
   //__________________________________
   //Loop over the coarse level patches

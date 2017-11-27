@@ -286,7 +286,7 @@ namespace Uintah {
             tsk->requires( Task::NewDW, _a_labs->d_uVelocitySPBCLabel, Ghost::None, 0 ); 
             tsk->requires( Task::NewDW, _a_labs->d_vVelocitySPBCLabel, Ghost::None, 0 ); 
             tsk->requires( Task::NewDW, _a_labs->d_wVelocitySPBCLabel, Ghost::None, 0 ); 
-            tsk->requires( Task::OldDW, _a_labs->d_sharedState->get_delt_label(), Ghost::None, 0);
+            tsk->requires( Task::OldDW, _a_labs->d_delTLabel, Ghost::None, 0);
             tsk->requires( Task::NewDW, _a_labs->d_cellTypeLabel, Ghost::None, 0 );
 
             if ( !_no_species ){
@@ -334,7 +334,7 @@ namespace Uintah {
               old_dw->get( old_rho, _a_labs->d_densityCPLabel, indx, patch, Ghost::None, 0 ); 
 
               delt_vartype DT;
-              old_dw->get(DT, _a_labs->d_sharedState->get_delt_label());
+              old_dw->get(DT, _a_labs->d_delTLabel);
               double dt = DT; 
 
               if ( !_no_species ){

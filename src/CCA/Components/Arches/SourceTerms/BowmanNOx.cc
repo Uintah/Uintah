@@ -134,7 +134,7 @@ BowmanNOx::computeSource( const ProcessorGroup* pc,
     old_dw->get( T   , _temperature_label , matlIndex , patch , gType , nGhosts );
     old_dw->get( vol_fraction, _field_labels->d_volFractionLabel, matlIndex, patch, gType, nGhosts );
 //    delt_vartype DT;
-//    old_dw->get(DT, _field_labels->d_sharedState->get_delt_label());
+//    old_dw->get(DT, _field_labels->d_delTLabel);
 //    double dt = DT;
 
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){

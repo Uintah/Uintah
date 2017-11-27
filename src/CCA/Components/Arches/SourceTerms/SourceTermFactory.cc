@@ -374,7 +374,7 @@ void SourceTermFactory::registerUDSources(ProblemSpecP& db, ArchesLabel* lab, Bo
         factory.register_source_term( src_name, srcBuilder );
 
       } else if ( src_type == "manifold_rxn" ) {
-        SourceTermBase::Builder* srcBuilder = scinew ManifoldRxn::Builder(src_name, required_varLabels, shared_state );
+        SourceTermBase::Builder* srcBuilder = scinew ManifoldRxn::Builder(src_name, required_varLabels, lab);
         factory.register_source_term( src_name, srcBuilder );
 
       } else if ( src_type == "momentum_drag_src" ) {

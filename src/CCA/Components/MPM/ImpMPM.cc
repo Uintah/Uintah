@@ -151,13 +151,8 @@ ImpMPM::problemSetup( const ProblemSpecP     & prob_spec,
 {
   cout_doing << " Doing ImpMPM::problemSetup\n";
 
-  dynamic_cast<Scheduler*>(getPort("scheduler"))->setPositionVar(lb->pXLabel);
+  m_scheduler->setPositionVar(lb->pXLabel);
   
-  Output* dataArchiver = dynamic_cast<Output*>(getPort("output"));
-  if(!dataArchiver){
-    throw InternalError("ImpMPM:couldn't get output port", __FILE__, __LINE__);
-  }
-
   ProblemSpecP mpm_ps = 0;
   ProblemSpecP restart_mat_ps = 0;
   bool isRestart = false;
@@ -189,7 +184,7 @@ ImpMPM::problemSetup( const ProblemSpecP     & prob_spec,
   if (mpm_soln_ps) {
 
     // Read all MPM flags (look in MPMFlags.cc)
-    flags->readMPMFlags( restart_mat_ps, dataArchiver );
+    flags->readMPMFlags( restart_mat_ps, m_output );
      
     if (flags->d_integrator_type != "implicit") {
       throw ProblemSetupException("Can't use explicit integration with -impm", __FILE__, __LINE__);
@@ -270,10 +265,9 @@ ImpMPM::problemSetup( const ProblemSpecP     & prob_spec,
   d_solver->initialize();
 
   // setup sub scheduler
-  Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
-  sched->setRestartable(true);
+  m_scheduler->setRestartable(true);
 
-  d_subsched = sched->createSubScheduler();
+  d_subsched = m_scheduler->createSubScheduler();
   d_subsched->initialize(3,1);
   d_subsched->clearMappings();
   d_subsched->mapDataWarehouse(Task::ParentOldDW, 0);
@@ -374,7 +368,7 @@ void ImpMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
   if(flags->d_artificial_viscosity){
     t->computes(lb->p_qLabel);        //  only used for imp -> exp transition
   }
-  t->computes(m_sharedState->get_delt_label(),level.get_rep());
+  t->computes(lb->delTLabel,level.get_rep());
 
   t->computes(lb->pExternalHeatFluxLabel);
 
@@ -847,11 +841,11 @@ void ImpMPM::scheduleComputeStableTimeStep(const LevelP& level,SchedulerP& sched
   const MaterialSet* matls = m_sharedState->allMPMMaterials();
   
   if (flags->doMPMOnLevel(level->getIndex(), level->getGrid()->numLevels()) ) {
-    t->requires(Task::OldDW,m_sharedState->get_delt_label());
+    t->requires(Task::OldDW,lb->delTLabel);
     t->requires(Task::NewDW, lb->pVelocityLabel,   Ghost::None);
   }
   // compute a delT on all levels even levels where impm is not running
-  t->computes( m_sharedState->get_delt_label(),level.get_rep() );
+  t->computes( lb->delTLabel,level.get_rep() );
 
   sched->addTask(t,level->eachPatch(), matls);
 }
@@ -1123,7 +1117,7 @@ void ImpMPM::scheduleComputeContact(SchedulerP& sched,
   Task* t = scinew Task("ImpMPM::computeContact",
                          this, &ImpMPM::computeContact);
 
-  t->requires(Task::OldDW,m_sharedState->get_delt_label());
+  t->requires(Task::OldDW,lb->delTLabel);
   if(d_rigid_body){
     t->modifies(lb->dispNewLabel);
     t->requires(Task::NewDW,lb->gMassLabel,        Ghost::None);
@@ -1172,7 +1166,7 @@ void ImpMPM::scheduleComputeStressTensor(SchedulerP& sched,
   Task* t = scinew Task("ImpMPM::computeStressTensorImplicit",
                     this, &ImpMPM::computeStressTensorImplicit,recursion);
 
-  t->requires(Task::ParentOldDW,m_sharedState->get_delt_label());
+  t->requires(Task::ParentOldDW,lb->delTLabel);
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
@@ -1191,7 +1185,7 @@ void ImpMPM::scheduleFormStiffnessMatrix(SchedulerP& sched,
                     this, &ImpMPM::formStiffnessMatrix);
 
   t->requires(Task::ParentNewDW,lb->gMassAllLabel, Ghost::None);
-  t->requires(Task::ParentOldDW,m_sharedState->get_delt_label());
+  t->requires(Task::ParentOldDW,lb->delTLabel);
 
   t->setType(Task::OncePerProc);
   sched->addTask(t, patches, matls);
@@ -1239,7 +1233,7 @@ void ImpMPM::scheduleFormQ(SchedulerP& sched,const PatchSet* patches,
 
   Ghost::GhostType  gnone = Ghost::None;
 
-  t->requires(Task::ParentOldDW,m_sharedState->get_delt_label());
+  t->requires(Task::ParentOldDW,lb->delTLabel);
   t->requires(Task::NewDW,      lb->gInternalForceLabel,gnone,0);
   t->requires(Task::ParentNewDW,lb->gExternalForceLabel,gnone,0);
   t->requires(Task::OldDW,      lb->dispNewLabel,       gnone,0);
@@ -1319,7 +1313,7 @@ void ImpMPM::scheduleUpdateGridKinematics(SchedulerP& sched,
   t->requires(Task::OldDW,lb->dispNewLabel,Ghost::None,0);
   t->computes(lb->dispNewLabel);
   t->computes(lb->gVelocityLabel);
-  t->requires(Task::ParentOldDW, m_sharedState->get_delt_label() );
+  t->requires(Task::ParentOldDW, lb->delTLabel );
   t->requires(Task::NewDW,      lb->dispIncLabel,         Ghost::None,0);
   t->requires(Task::ParentNewDW,lb->gVelocityOldLabel,    Ghost::None,0);
   t->requires(Task::ParentNewDW,lb->gContactLabel,        Ghost::None,0);
@@ -1393,7 +1387,7 @@ void ImpMPM::scheduleIterate(SchedulerP& sched,const LevelP& level,
     }
   }
 
-  task->requires(Task::OldDW,m_sharedState->get_delt_label());
+  task->requires(Task::OldDW,lb->delTLabel);
 
   task->setType(Task::OncePerProc);
   sched->addTask(task,patches,m_sharedState->allMaterials());
@@ -1443,7 +1437,7 @@ void ImpMPM::scheduleComputeAcceleration(SchedulerP& sched,
   Task* t = scinew Task("ImpMPM::computeAcceleration",
                             this, &ImpMPM::computeAcceleration);
 
-  t->requires(Task::OldDW, m_sharedState->get_delt_label() );
+  t->requires(Task::OldDW, lb->delTLabel );
 
   t->modifies(lb->gAccelerationLabel);
   t->requires(Task::NewDW, lb->gVelocityOldLabel,Ghost::None);
@@ -1466,7 +1460,7 @@ void ImpMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
                     this, &ImpMPM::interpolateToParticlesAndUpdate);
 
  
-  t->requires(Task::OldDW, m_sharedState->get_delt_label() );
+  t->requires(Task::OldDW, lb->delTLabel );
 
   t->requires(Task::NewDW, lb->gAccelerationLabel,     Ghost::AroundCells,1);
   t->requires(Task::NewDW, lb->dispNewLabel,           Ghost::AroundCells,1);
@@ -1533,7 +1527,7 @@ void ImpMPM::scheduleRefine(const PatchSet* patches,
   t->computes(lb->pDeformationMeasureLabel);
   t->computes(lb->pStressLabel);
   t->computes(lb->pCellNAPIDLabel);
-  t->computes(m_sharedState->get_delt_label(),getLevel(patches));
+  t->computes(lb->delTLabel,getLevel(patches));
 
   t->computes(lb->pExternalHeatFluxLabel);
 
@@ -1710,7 +1704,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
         d_subsched->get_dw(0)->getParticleSubset(matl, patch);
 
       delt_vartype dt;
-      old_dw->get(dt,m_sharedState->get_delt_label(), patch->getLevel());
+      old_dw->get(dt,lb->delTLabel, patch->getLevel());
       d_subsched->get_dw(3)->put(sum_vartype(0.0),lb->dispIncQNorm0);
       d_subsched->get_dw(3)->put(sum_vartype(0.0),lb->dispIncNormMax);
 
@@ -1734,7 +1728,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
       double new_dt;
       new_dt = dt;
       d_subsched->get_dw(3)->put(delt_vartype(new_dt),
-                                  m_sharedState->get_delt_label());
+                                  lb->delTLabel);
     }
   }
 
@@ -2831,7 +2825,7 @@ void ImpMPM::computeContact(const ProcessorGroup*,
         new_dw->getModifiable(dispNew,lb->dispNewLabel,matl, patch);
 
         delt_vartype dt;
-        old_dw->get(dt, m_sharedState->get_delt_label(), patch->getLevel() );
+        old_dw->get(dt, lb->delTLabel, patch->getLevel() );
 
         for (NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
           IntVector c = *iter;
@@ -2974,7 +2968,7 @@ void ImpMPM::formStiffnessMatrix(const ProcessorGroup*,
       parent_new_dw->get(gmass,lb->gMassAllLabel,matlindex,patch,Ghost::None,0);
       DataWarehouse* parent_old_dw =
         new_dw->getOtherDataWarehouse(Task::ParentOldDW);
-      parent_old_dw->get(dt,m_sharedState->get_delt_label(), patch->getLevel());
+      parent_old_dw->get(dt,lb->delTLabel, patch->getLevel());
 
       double v[1];
 
@@ -3132,7 +3126,7 @@ void ImpMPM::formQ(const ProcessorGroup*, const PatchSubset* patches,
       DataWarehouse* parent_old_dw = 
         new_dw->getOtherDataWarehouse(Task::ParentOldDW);
 
-      parent_old_dw->get(dt,m_sharedState->get_delt_label(), patch->getLevel());
+      parent_old_dw->get(dt,lb->delTLabel, patch->getLevel());
       new_dw->get(       intForce, lb->gInternalForceLabel,dwi,patch,gnone,0);
       old_dw->get(       dispNew,  lb->dispNewLabel,       dwi,patch,gnone,0);
       parent_new_dw->get(extForce, lb->gExternalForceLabel,dwi,patch,gnone,0);
@@ -3295,7 +3289,7 @@ void ImpMPM::updateGridKinematics(const ProcessorGroup*,
         new_dw->getOtherDataWarehouse(Task::ParentNewDW);
       DataWarehouse* parent_old_dw = 
         new_dw->getOtherDataWarehouse(Task::ParentOldDW);
-      parent_old_dw->get(dt, m_sharedState->get_delt_label(),patch->getLevel());
+      parent_old_dw->get(dt, lb->delTLabel,patch->getLevel());
       old_dw->get(dispNew_old,         lb->dispNewLabel,   dwi,patch,gnone,0);
       new_dw->get(dispInc,             lb->dispIncLabel,   dwi,patch,gnone,0);
       new_dw->allocateAndPut(dispNew,  lb->dispNewLabel,   dwi,patch);
@@ -3501,7 +3495,7 @@ void ImpMPM::computeAcceleration(const ProcessorGroup*,
       new_dw->get(velocity,lb->gVelocityOldLabel,dwi, patch, gnone, 0);
       new_dw->get(dispNew, lb->dispNewLabel,     dwi, patch, gnone, 0);
 
-      old_dw->get(delT, m_sharedState->get_delt_label(), getLevel(patches) );
+      old_dw->get(delT, lb->delTLabel, getLevel(patches) );
 
       double fodts = 4./(delT*delT);
       double fodt = 4./(delT);
@@ -3617,7 +3611,7 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       }
       pTempGradNew.copyData(pTempGrad);
 
-      old_dw->get(delT, m_sharedState->get_delt_label(), getLevel(patches) );
+      old_dw->get(delT, lb->delTLabel, getLevel(patches) );
       double Cp=mpm_matl->getSpecificHeat();
 
       for(ParticleSubset::iterator iter = pset->begin();
@@ -3947,7 +3941,7 @@ void ImpMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
     } else{
       Vector dx = patch->dCell();
       delt_vartype old_delT;
-      old_dw->get(old_delT, m_sharedState->get_delt_label(), patch->getLevel());
+      old_dw->get(old_delT, lb->delTLabel, patch->getLevel());
 
       int numMPMMatls=m_sharedState->getNumMPMMatls();
       for(int m = 0; m < numMPMMatls; m++){

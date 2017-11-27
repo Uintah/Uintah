@@ -41,4 +41,5 @@ DataWarehouse::DataWarehouse( const ProcessorGroup * myworld
 
 DataWarehouse::~DataWarehouse()
 {
+  d_scheduler = nullptr;
 }

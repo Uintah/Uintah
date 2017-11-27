@@ -121,14 +121,16 @@ Switcher::Switcher( const ProcessorGroup * myworld,
       ComponentFactory::create(subCompUps, myworld, m_sharedState, "");
 
     ApplicationInterface* app = dynamic_cast<ApplicationInterface*>(comp);
-    attachPort( "app", app );
-        
-    //__________________________________
+    attachPort( "application", app );
+
+    if( app->needModelMaker() )
+      setModelMaker( true );
+    
     // Create solver port and attach it to the switcher component.
     SolverInterface * solver = SolverFactory::create( subCompUps, myworld );    
     attachPort( "sub_solver", solver );
 
-    comp->attachPort( "solver",    solver );
+    comp->attachPort( "solver", solver );
 
     //__________________________________
     // create switching criteria port and attach it switcher component
@@ -138,8 +140,8 @@ Switcher::Switcher( const ProcessorGroup * myworld,
     if( switch_criteria ) {
       switch_criteria->setSwitchLabel( d_switch_label );
 
-      attachPort(      "switch_criteria",switch_criteria);
-      comp->attachPort("switch_criteria",switch_criteria);
+      attachPort(      "switch_criteria", switch_criteria);
+      comp->attachPort("switch_criteria", switch_criteria);
     }
 
     //__________________________________
@@ -186,7 +188,7 @@ Switcher::Switcher( const ProcessorGroup * myworld,
   // there should be n-1 switching critiera specified.
   int num_switch_criteria = 0;
   for (int i = 0; i < num_components; i++) {
-    UintahParallelComponent* comp = dynamic_cast<UintahParallelComponent*>(getPort("app",i));
+    UintahParallelComponent* comp = dynamic_cast<UintahParallelComponent*>(getPort("application",i));
     SwitchingCriteria* sw = dynamic_cast<SwitchingCriteria*>(comp->getPort("switch_criteria"));
     if (sw) {
       num_switch_criteria++;
@@ -201,7 +203,7 @@ Switcher::Switcher( const ProcessorGroup * myworld,
   // Add the "None" SwitchCriteria to the last component, so the switchFlag label
   // is computed in the last stage.
 
-  UintahParallelComponent* last_comp = dynamic_cast<UintahParallelComponent*>(getPort("app",num_components-1));
+  UintahParallelComponent* last_comp = dynamic_cast<UintahParallelComponent*>(getPort("application",num_components-1));
 
   SwitchingCriteria* none_switch_criteria = scinew None();
   
@@ -282,25 +284,16 @@ Switcher::problemSetup( const ProblemSpecP     & /*params*/,
   proc0cout << "\n------------ Switching to component (" << d_componentIndex <<") \n";
   proc0cout << "  Reading input file: " << d_in_file[d_componentIndex] << "\n";
 
-  UintahParallelComponent* comp =
-    dynamic_cast<UintahParallelComponent*>( getPort("app",d_componentIndex) );
-
-  d_app = dynamic_cast<ApplicationInterface*>(comp);
-
-  ModelMaker* modelmaker = dynamic_cast<ModelMaker*>( getPort("modelmaker") ); 
-  comp->attachPort("modelmaker", modelmaker);
-
-  comp->attachPort( "scheduler", m_scheduler );
-  comp->attachPort( "solver",    m_solver );
-  comp->attachPort( "regridder", m_regridder );
-  comp->attachPort( "output",    m_output );
-
-  d_app->getComponents();    
-
   // Read the ups file for the first subcomponent.
   ProblemSpecP subCompUps =
     ProblemSpecReader().readInputFile(d_in_file[d_componentIndex]);  
   
+  UintahParallelComponent* comp =
+    dynamic_cast<UintahParallelComponent*>( getPort("application",d_componentIndex) );
+
+  d_app = dynamic_cast<ApplicationInterface*>(comp);
+  d_app->setComponents( this );
+
   // Send the subcomponent's UPS file to it's sim interface.
   d_app->problemSetup(subCompUps, restart_prob_spec, grid );  
 
@@ -845,23 +838,21 @@ Switcher::needRecompile(       double   simTime,
     proc0cout << "  Reading input file: " << d_in_file[d_componentIndex] << "\n";
 
     UintahParallelComponent* comp =
-      dynamic_cast<UintahParallelComponent*>( getPort("app",d_componentIndex) );
+      dynamic_cast<UintahParallelComponent*>( getPort("application",d_componentIndex) );
 
     d_app = dynamic_cast<ApplicationInterface*>(comp);
 
-    ModelMaker* modelmaker =
-      dynamic_cast<ModelMaker*>( getPort("modelmaker") ); 
-    comp->attachPort("modelmaker", modelmaker);
+    comp->attachPort( "scheduler",  m_scheduler );
+    comp->attachPort( "modelMaker", m_modelMaker );
+    comp->attachPort( "solver",     m_solver );
+    comp->attachPort( "regridder",  m_regridder );
+    comp->attachPort( "output",     m_output );
 
-    comp->attachPort( "scheduler", m_scheduler );
-    comp->attachPort( "solver",    m_solver );
-    comp->attachPort( "regridder", m_regridder );
-    comp->attachPort( "output",    m_output );
-
-    d_app->getComponents();    
+    d_app->getComponents();
 
     // Clean up the old models.
-    modelmaker->clearModels();
+    if( needModelMaker() )
+      m_modelMaker->clearModels();
 
     // read in the problemSpec on next subcomponent
     ProblemSpecP restart_prob_spec = nullptr;

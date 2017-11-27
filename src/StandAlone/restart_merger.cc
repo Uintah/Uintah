@@ -137,7 +137,7 @@ main( int argc, char *argv[], char *env[] )
       dynamic_cast<ApplicationInterface*>( comp );
 
     DataArchiver out_uda(world);
-    out_uda.attachPort("app", app);
+    out_uda.attachPort("application", app);
     out_uda.problemSetup(ups, nullptr, nullptr);
     out_uda.initializeOutput(ups);
     new_uda_dir = out_uda.getOutputLocation();

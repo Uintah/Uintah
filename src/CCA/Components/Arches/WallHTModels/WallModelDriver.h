@@ -100,6 +100,8 @@ namespace Uintah{
       SimulationStateP& _shared_state;
       int _matl_index;                   ///< Material index
 
+      const VarLabel* _delTLabel;
+    
       // Net heat flux var labels:
       const VarLabel* _T_copy_label;
 

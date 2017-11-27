@@ -104,36 +104,29 @@ percent=`echo $meminfo | cut -d " " -f 1`
 abs=`echo $meminfo | cut -d " " -f 2`
 testHighwater=`echo $meminfo | cut -d " " -f 3`
 
-
+returnCode=0
 #__________________________________
 if [ $percent -gt "10" -a $abs -gt "1000000" ]; then
   echo "***Highwater memory usage test failed"
   echo " -- memory usage increased by %$percent ($abs bytes)" > $TMPDIR/highwater_shortmessage.txt
-  exit 2
+  returnCode= 2
 
 elif [ $percent -gt "0" ]; then
   echo " -- memory usage increased by %$percent ($abs bytes)" > $TMPDIR/highwater_shortmessage.txt
-  exit 0
 elif [ $percent -lt "0" ]; then
   let percent_improvement=-$percent;
   echo " -- memory usage improved by %$percent_improvement ($abs bytes)" > $TMPDIR/highwater_shortmessage.txt
-  exit 0
 else
   echo "" > $TMPDIR/highwater_shortmessage.txt
   echo "    Highwater memory usage check passed!"
-  exit 0
 fi
 
 
 #__________________________________
 if [ $MAKEPLOTS -eq "1" ]; then
-  echo "Saving highwater memory usage"
+  echo -e "    Saving highwater memory usage\n"
 
   memHistory="$COMPARE_ROOT/$TEST/memHistory"
-
-  if [ ! -f $here ]; then
-    echo "#date highwaterUsage(bytes)" > $memHistory
-  fi
 
   now=`date +%m-%d-%Y`
   echo "$now  $testHighwater" >> $memHistory
@@ -147,8 +140,9 @@ if [ $MAKEPLOTS -eq "1" ]; then
 
   #make a local copy
   cp $memHistory ./memHistory
-
+  
+  echo -e "  Plotting memory usage\n"
   gnuplot $HELPERPATH/plotMemUsage.gp
   
 fi
-exit 1
+exit $returnCode

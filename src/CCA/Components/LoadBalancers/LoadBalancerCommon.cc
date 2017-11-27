@@ -81,6 +81,16 @@ LoadBalancerCommon::~LoadBalancerCommon()
 
 //______________________________________________________________________
 //
+void LoadBalancerCommon::releaseComponents()
+{
+  releasePort( "scheduler" );
+  m_scheduler  = nullptr;
+
+  m_sharedState = nullptr;
+}
+
+//______________________________________________________________________
+//
 void
 LoadBalancerCommon::assignResources( DetailedTasks & graph )
 {
@@ -829,7 +839,7 @@ LoadBalancerCommon::problemSetup( ProblemSpecP     & pspec
                                 , const SimulationStateP & state
                                 )
 {
-  m_shared_state = state;
+  m_sharedState = state;
 
   m_scheduler = dynamic_cast<Scheduler*>(getPort("scheduler"));
 
@@ -845,7 +855,7 @@ LoadBalancerCommon::problemSetup( ProblemSpecP     & pspec
 
 //   // Running with VisIt so add in the variables that the user can
 //   // modify.
-//   if( m_shared_state->getVisIt() && !initialized ) {
+//   if( m_sharedState->getVisIt() && !initialized ) {
 //     SimulationState::interactiveVar var;
 //     var.name     = "LoadBalancer-DoSpaceCurve";
 //     var.type     = Uintah::TypeDescription::bool_type;
@@ -855,10 +865,10 @@ LoadBalancerCommon::problemSetup( ProblemSpecP     & pspec
 //     var.modifiable = true;
 //     var.recompile  = false;
 //     var.modified   = false;
-//     m_shared_state->d_UPSVars.push_back( var );
+//     m_sharedState->d_UPSVars.push_back( var );
 
-// //    m_shared_state->d_debugStreams.push_back( &g_lb_dbg  );
-// //    m_shared_state->d_debugStreams.push_back( &g_neighborhood_dbg );
+// //    m_sharedState->d_debugStreams.push_back( &g_lb_dbg  );
+// //    m_sharedState->d_debugStreams.push_back( &g_neighborhood_dbg );
 
 //     initialized = true;
 //   }

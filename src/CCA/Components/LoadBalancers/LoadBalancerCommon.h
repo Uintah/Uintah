@@ -30,9 +30,11 @@
 
 #include <CCA/Components/SimulationController/RunTimeStatsEnums.h>
 
+#include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Parallel/UintahParallelComponent.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Util/InfoMapper.h>
 
 #include <set>
@@ -109,6 +111,8 @@ public:
   LoadBalancerCommon( const ProcessorGroup * myworld );
 
   virtual ~LoadBalancerCommon();
+
+  virtual void releaseComponents();
 
   //! Returns the MPI rank of the process on which the patch is to be executed.
   virtual int getPatchwiseProcessorAssignment( const Patch * patch );
@@ -229,7 +233,7 @@ protected:
   SFC <double> m_sfc;
   bool         m_do_space_curve{false};
 
-  SimulationStateP          m_shared_state;            ///< to keep track of timesteps
+  SimulationStateP          m_sharedState;            ///< to keep track of timesteps
   Scheduler               * m_scheduler {nullptr};     ///< store the scheduler to not have to keep passing it in
   std::set<const Patch*>    m_neighbors;               ///< the neighborhood.  See createNeighborhood
   std::set<int>             m_neighborhood_processors; ///< a list of processors that are in this processors neighborhood

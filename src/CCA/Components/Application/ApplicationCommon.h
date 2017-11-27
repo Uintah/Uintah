@@ -45,6 +45,7 @@
 
 namespace Uintah {
 
+class ModelMaker;
 class Regridder;
 class Output;
 
@@ -94,8 +95,7 @@ public:
   //////////
   // Insert Documentation Here:
   virtual void getComponents();
-  virtual void setComponents( const ApplicationCommon *parent,
-			      const ProblemSpecP &prob_spec );
+  virtual void setComponents( const ApplicationCommon *parent );
   virtual void releaseComponents();
 
   virtual void problemSetup( const ProblemSpecP &prob_spec );
@@ -215,10 +215,13 @@ public:
   virtual const VarLabel* getDelTLabel() const { return m_delTLabel; }
 
   //////////
-  virtual void setAMR(bool val) {m_AMR = val; }
+  virtual void setModelMaker(bool val) { m_needModelMaker = val; }
+  virtual bool needModelMaker() const { return m_needModelMaker; }
+    
+  virtual void setAMR(bool val) { m_AMR = val; }
   virtual bool isAMR() const { return m_AMR; }
   
-  virtual void setLockstepAMR(bool val) {m_lockstepAMR = val; }
+  virtual void setLockstepAMR(bool val) { m_lockstepAMR = val; }
   virtual bool isLockstepAMR() const { return m_lockstepAMR; }
 
   virtual void setDynamicRegridding(bool val) {m_dynamicRegridding = val; }
@@ -297,11 +300,13 @@ private:
 
 protected:
   Scheduler*       m_scheduler{nullptr};
+  ModelMaker*      m_modelMaker{nullptr};
   SolverInterface* m_solver{nullptr};
   Regridder*       m_regridder{nullptr};
   Output*          m_output{nullptr};
 
 private:
+  bool m_needModelMaker {false};
   bool m_AMR {false};
   bool m_lockstepAMR {false};
 

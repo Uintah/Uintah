@@ -193,7 +193,7 @@ PressureSolver::sched_buildLinearMatrix(SchedulerP& sched,
   Ghost::GhostType  gn  = Ghost::None;
   Ghost::GhostType  gaf = Ghost::AroundFaces;
   
-  tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
+  tsk->requires(parent_old_dw, d_lab->d_delTLabel);
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,       gac, 1);
   tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
 
@@ -252,7 +252,7 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
   }
   
   delt_vartype delT;
-  parent_old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  parent_old_dw->get(delT, d_lab->d_delTLabel );
   double delta_t = delT;
   delta_t *= timelabels->time_multiplier;
 

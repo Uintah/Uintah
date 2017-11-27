@@ -55,15 +55,15 @@ using namespace std;
 //  setenv SCI_DEBUG "particleExtract_DBG_COUT:+" 
 static DebugStream cout_doing("particleExtract_DOING_COUT", false);
 static DebugStream cout_dbg("particleExtract_DBG_COUT", false);
-//______________________________________________________________________              
+//______________________________________________________________________        
 particleExtract::particleExtract(ProblemSpecP& module_spec,
                          SimulationStateP& sharedState,
-                         Output* dataArchiver)
-  : AnalysisModule(module_spec, sharedState, dataArchiver)
+                         Output* output)
+  : AnalysisModule(module_spec, sharedState, output)
 {
   d_sharedState  = sharedState;
   d_prob_spec    = module_spec;
-  d_dataArchiver = dataArchiver;
+  d_output = output;
   d_matl_set = 0;
   ps_lb = scinew particleExtractLabel();
   M_lb = scinew MPMLabel();
@@ -88,14 +88,13 @@ particleExtract::~particleExtract()
 //     P R O B L E M   S E T U P
 void particleExtract::problemSetup(const ProblemSpecP& prob_spec,
                                    const ProblemSpecP& ,
-                                   GridP& grid,
-                                   SimulationStateP& sharedState)
+                                   GridP& grid)
 {
   cout_doing << "Doing problemSetup \t\t\t\tparticleExtract" << endl;
 
   d_matl = d_sharedState->parseAndLookupMaterial(d_prob_spec, "material");
   
-  if(!d_dataArchiver){
+  if(!d_output){
     throw InternalError("particleExtract:couldn't get output port", __FILE__, __LINE__);
   }
   
@@ -174,8 +173,8 @@ void particleExtract::problemSetup(const ProblemSpecP& prob_spec,
  
  // Tell the shared state that these variable need to be relocated
   int matl = d_matl->getDWIndex();
-  sharedState->d_particleState_preReloc[matl].push_back(ps_lb->filePointerLabel_preReloc);
-  sharedState->d_particleState[matl].push_back(ps_lb->filePointerLabel);
+  d_sharedState->d_particleState_preReloc[matl].push_back(ps_lb->filePointerLabel_preReloc);
+  d_sharedState->d_particleState[matl].push_back(ps_lb->filePointerLabel);
   
   //__________________________________
   //  Warning
@@ -245,7 +244,7 @@ void particleExtract::initialize(const ProcessorGroup*,
     
     
     if(patch->getGridIndex() == 0){   // only need to do this once
-      string udaDir = d_dataArchiver->getOutputLocation();
+      string udaDir = d_output->getOutputLocation();
 
       //  Bulletproofing
       DIR *check = opendir(udaDir.c_str());
@@ -373,7 +372,7 @@ particleExtract::doAnalysis( const ProcessorGroup * pg,
                              DataWarehouse        * old_dw,
                              DataWarehouse        * new_dw )
 {   
-  UintahParallelComponent * DA = dynamic_cast<UintahParallelComponent*>(d_dataArchiver);
+  UintahParallelComponent * DA = dynamic_cast<UintahParallelComponent*>(d_output);
   LoadBalancerPort        * lb = dynamic_cast<LoadBalancerPort*>( DA->getPort("load balancer"));
     
   const Level* level = getLevel(patches);
@@ -488,7 +487,7 @@ particleExtract::doAnalysis( const ProcessorGroup * pg,
       }            
       
       // create the directory structure
-      string udaDir = d_dataArchiver->getOutputLocation();
+      string udaDir = d_output->getOutputLocation();
       string pPath = udaDir + "/particleExtract";
 
       ostringstream li;

@@ -26,6 +26,7 @@
 #ifndef Packages_Uintah_CCA_Components_ontheflyAnalysis_MinMax_h
 #define Packages_Uintah_CCA_Components_ontheflyAnalysis_MinMax_h
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
+#include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Output.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
@@ -61,15 +62,14 @@ GENERAL INFORMATION
 
     MinMax(ProblemSpecP& prob_spec,
            SimulationStateP& sharedState,
-	   Output* dataArchiver);
+	   Output* output);
     MinMax();
                     
     virtual ~MinMax();
    
     virtual void problemSetup(const ProblemSpecP& prob_spec,
                               const ProblemSpecP& restart_prob_spec,
-                              GridP& grid,
-                              SimulationStateP& sharedState);
+                              GridP& grid);
                               
     virtual void outputProblemSpec(ProblemSpecP& ps){};    
                                   
@@ -152,7 +152,7 @@ GENERAL INFORMATION
     
     SchedulerP       d_scheduler{nullptr};
     SimulationStateP d_sharedState;
-    Output* d_dataArchiver;
+    Output* d_output;
     ProblemSpecP d_prob_spec;
     
     const Material*  d_matl;

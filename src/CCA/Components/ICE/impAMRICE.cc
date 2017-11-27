@@ -386,8 +386,8 @@ void impAMRICE::multiLevelPressureSolve(const ProcessorGroup* pg,
   // on all the levels
   delt_vartype dt;
   subNewDW = d_subsched->get_dw(3);
-  ParentOldDW->get(dt, m_sharedState->get_delt_label());
-  subNewDW->put(dt, m_sharedState->get_delt_label());
+  ParentOldDW->get(dt, lb->delTLabel);
+  subNewDW->put(dt, lb->delTLabel);
    
   max_vartype max_RHS_old;
   ParentNewDW->get(max_RHS_old, lb->max_RHSLabel);

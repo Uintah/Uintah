@@ -67,8 +67,8 @@ WARNING
   class flatPlate_heatFlux : public AnalysisModule {
   public:
     flatPlate_heatFlux(ProblemSpecP& prob_spec,
-              SimulationStateP& sharedState,
-		Output* dataArchiver);
+		       SimulationStateP& sharedState,
+		       Output* output);
               
     flatPlate_heatFlux();
                     
@@ -76,8 +76,7 @@ WARNING
    
     virtual void problemSetup(const ProblemSpecP& prob_spec,
                               const ProblemSpecP& restart_prob_spec,
-                              GridP& grid,
-                              SimulationStateP& sharedState);
+                              GridP& grid);
                               
     virtual void outputProblemSpec(ProblemSpecP& ps){};
                               
@@ -127,7 +126,7 @@ WARNING
     //__________________________________
     // global constants
     SimulationStateP d_sharedState;
-    Output* d_dataArchiver;
+    Output* d_output;
     ProblemSpecP d_prob_spec;
     
     const Material* d_matl;

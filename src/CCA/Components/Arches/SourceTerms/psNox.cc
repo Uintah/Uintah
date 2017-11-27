@@ -288,7 +288,7 @@ psNox::computeSource( const ProcessorGroup* pc,
     old_dw->get( vol_fraction, _field_labels->d_volFractionLabel, matlIndex, patch, gn, 0 );
     //get timestep
     delt_vartype DT;
-    old_dw->get( DT, _shared_state->get_delt_label());
+    old_dw->get( DT, _field_labels->d_delTLabel);
     const double delta_t = DT;
     Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
     //define constants

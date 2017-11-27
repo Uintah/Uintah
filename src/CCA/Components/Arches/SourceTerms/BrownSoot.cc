@@ -13,7 +13,7 @@ using namespace std;
 using namespace Uintah;
 
 BrownSoot::BrownSoot( std::string src_name, ArchesLabel* field_labels,
-                                                    vector<std::string> req_label_names, std::string type )
+		      vector<std::string> req_label_names, std::string type )
 : SourceTermBase(src_name, field_labels->d_sharedState, req_label_names, type), _field_labels(field_labels)
 {
 
@@ -44,7 +44,7 @@ BrownSoot::problemSetup(const ProblemSpecP& inputdb)
   db->getWithDefault("Ns_label",             m_Ns_name,               "Ns");
   db->getWithDefault("o2_label",             m_O2_name,               "O2");
   db->getWithDefault("oh_label",             m_OH_name,               "OH");
-  db->getWithDefault("co2_label",	         m_CO2_name,		      "CO2");
+  db->getWithDefault("co2_label",	     m_CO2_name,	      "CO2");
   db->getWithDefault("h2o_label",            m_H2O_name,              "H2O");
   db->getWithDefault("density_label",        m_rho_name,              "density");
   db->getWithDefault("temperature_label",    m_temperature_name,      "radiation_temperature");
@@ -205,7 +205,7 @@ BrownSoot::computeSource( const ProcessorGroup* pc,
 
     /// Obtain time-step length
     delt_vartype DT;
-    old_dw->get( DT, _shared_state->get_delt_label());
+    old_dw->get( DT, _field_labels->d_delTLabel);
     const double delta_t = DT;
 
     const double Afs = 5.02E8;          ///< preexponential: soot formation (1/s)

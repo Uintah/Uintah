@@ -240,6 +240,8 @@ namespace Uintah {
     // particle x, y, and z position (of type double)
     const Uintah::VarLabel *pXLabel_,*pYLabel_,*pZLabel_;
 
+    const Uintah::VarLabel *delTLabel_;
+
     static std::string pPosName_, pIDName_;
     
     // list of varlabels to be destroyed

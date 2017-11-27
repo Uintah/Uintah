@@ -245,7 +245,7 @@ BirthDeath::sched_computeModel( const LevelP& level, SchedulerP& sched, int time
   }
 
   tsk->requires(Task::NewDW, _w_rhs_label, Ghost::None, 0);
-  tsk->requires(Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label(), Ghost::None, 0);
+  tsk->requires(Task::OldDW, d_fieldLabels->d_delTLabel, Ghost::None, 0);
   tsk->requires(Task::OldDW, VarLabel::find("volFraction"), Ghost::None, 0 );
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
@@ -280,7 +280,7 @@ BirthDeath::computeModel( const ProcessorGroup* pc,
     double area_z = DX.x()*DX.y();
 
     delt_vartype DT;
-    old_dw->get(DT, d_fieldLabels->d_sharedState->get_delt_label());
+    old_dw->get(DT, d_fieldLabels->d_delTLabel);
     double dt = DT;
 
     CCVariable<double> model;

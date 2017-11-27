@@ -82,12 +82,12 @@ static DebugStream cout_dbg("CONTAINEREXTRACT_DBG_COUT", false);
 //______________________________________________________________________              
 containerExtract::containerExtract( ProblemSpecP     & module_spec,
                                     SimulationStateP & sharedState,
-                                    Output           * dataArchiver )
-  : AnalysisModule(module_spec, sharedState, dataArchiver)
+                                    Output           * output )
+  : AnalysisModule(module_spec, sharedState, output)
 {
   d_sharedState = sharedState;
   d_prob_spec = module_spec;
-  d_dataArchiver = dataArchiver;
+  d_output = output;
   d_matl_set = 0;
   ps_lb = scinew containerExtractLabel();
 }
@@ -125,14 +125,13 @@ containerExtract::~containerExtract()
 //     P R O B L E M   S E T U P
 void containerExtract::problemSetup(const ProblemSpecP& prob_spec,
                                const ProblemSpecP& restart_prob_spec,
-                               GridP& grid,
-                               SimulationStateP& sharedState)
+                               GridP& grid)
 {
   cout_doing << "Doing problemSetup \t\t\t\tcontainerExtract" << endl;
 
   d_matl = d_sharedState->parseAndLookupMaterial(d_prob_spec, "material");
   
-  if(!d_dataArchiver){
+  if(!d_output){
     throw InternalError("containerExtract:couldn't get output port", __FILE__, __LINE__);
   }
   
@@ -381,7 +380,7 @@ void containerExtract::initialize(const ProcessorGroup*,
     new_dw->put(max_vartype(tminus), ps_lb->lastWriteTimeLabel);
 
     if(patch->getGridIndex() == 0){   // only need to do this once
-      string udaDir = d_dataArchiver->getOutputLocation();
+      string udaDir = d_output->getOutputLocation();
 
       //  Bulletproofing
       DIR *check = opendir(udaDir.c_str());
@@ -563,7 +562,7 @@ void containerExtract::initialize(const ProcessorGroup*,
   // create the directory structure
   for(unsigned int i = 0; i < d_containers.size(); i++) {
     container* cnt = d_containers[i];
-    string udaDir = d_dataArchiver->getOutputLocation();
+    string udaDir = d_output->getOutputLocation();
     string dirPath = udaDir + "/" + cnt->name;
 
     ostringstream l;
@@ -621,7 +620,7 @@ void containerExtract::doAnalysis(const ProcessorGroup* pg,
                              DataWarehouse* old_dw,
                              DataWarehouse* new_dw)
 {   
-  UintahParallelComponent* DA = dynamic_cast<UintahParallelComponent*>(d_dataArchiver);
+  UintahParallelComponent* DA = dynamic_cast<UintahParallelComponent*>(d_output);
   LoadBalancerPort * lb = dynamic_cast<LoadBalancerPort*>( DA->getPort("load balancer"));
 
   const Level* level = getLevel(patches);
@@ -767,7 +766,7 @@ void containerExtract::doAnalysis(const ProcessorGroup* pg,
           IntVector c = exc->c;
           ostringstream fname;
           // create the directory structure
-          string udaDir = d_dataArchiver->getOutputLocation();
+          string udaDir = d_output->getOutputLocation();
           string dirPath = udaDir + "/" + cnt->name; 
 
           ostringstream l;

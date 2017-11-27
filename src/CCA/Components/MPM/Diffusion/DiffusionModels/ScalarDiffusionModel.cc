@@ -153,7 +153,7 @@ void ScalarDiffusionModel::scheduleComputeDivergence(      Task         * task,
 {
   Ghost::GhostType  gan   = Ghost::AroundNodes;
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::OldDW, d_sharedState->get_delt_label());
+  task->requires(Task::OldDW, d_lb->delTLabel);
   task->requires(Task::OldDW, d_lb->pXLabel,                   gan, NGP);
   task->requires(Task::OldDW, d_lb->pSizeLabel,                gan, NGP);
   task->requires(Task::OldDW, d_lb->pMassLabel,                gan, NGP);

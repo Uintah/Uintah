@@ -439,7 +439,7 @@ ICE::setupMatrix( const ProcessorGroup *,
           new_dw->getOtherDataWarehouse(Task::ParentNewDW);
             
     delt_vartype delT;
-    parent_old_dw->get(delT, m_sharedState->get_delt_label(),level);
+    parent_old_dw->get(delT, lb->delTLabel,level);
     Vector dx     = patch->dCell();
     int numMatls  = m_sharedState->getNumMatls();
     CCVariable<Stencil7> A; 
@@ -569,7 +569,7 @@ void ICE::setupRHS(const ProcessorGroup*,
            
     int numMatls  = m_sharedState->getNumMatls();
     delt_vartype delT;
-    pOldDW->get(delT, m_sharedState->get_delt_label(), level);
+    pOldDW->get(delT, lb->delTLabel, level);
     
     Advector* advector = d_advector->clone(new_dw,patch,isRegridTimeStep());
     
@@ -962,8 +962,8 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
   //  Move data from parentOldDW to subSchedNewDW.
   delt_vartype dt;
   subNewDW = d_subsched->get_dw(3);
-  ParentOldDW->get(dt, m_sharedState->get_delt_label(),level.get_rep());
-  subNewDW->put(dt, m_sharedState->get_delt_label(),level.get_rep());
+  ParentOldDW->get(dt, lb->delTLabel,level.get_rep());
+  subNewDW->put(dt, lb->delTLabel,level.get_rep());
    
   max_vartype max_RHS_old;
   ParentNewDW->get(max_RHS_old, lb->max_RHSLabel);

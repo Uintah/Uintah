@@ -102,7 +102,7 @@ void NCHeat3D::problemSetup ( ProblemSpecP const & params, ProblemSpecP const & 
 //      ProblemSpecP solv = params->findBlock ( "Solver" );
 //      solver = dynamic_cast<SolverInterface *> ( getPort ( "solver" ) );
 //      if ( !solver ) throw InternalError ( "NCHeat3D:couldn't get solver port", __FILE__, __LINE__ );
-//      solver_parameters = solver->readParameters ( solv, "u" , m_sharedState );
+//      solver_parameters = solver->readParameters ( solv, "u" );
 //      solver_parameters->setSolveOnExtraCells ( false );
         throw InternalError ( "\n ERROR: implicit solver not implemented for node centered variables", __FILE__, __LINE__ );
     }
@@ -122,7 +122,7 @@ void NCHeat3D::scheduleInitialize ( LevelP const & level, SchedulerP & sched )
 void NCHeat3D::scheduleComputeStableTimeStep ( LevelP const & level, SchedulerP & sched )
 {
     Task * task = scinew Task ( "NCHeat3D::task_compute_stable_timestep", this, &NCHeat3D::task_compute_stable_timestep );
-    task->computes ( m_sharedState->get_delt_label(), level.get_rep() );
+    task->computes ( getDelTLabel(), level.get_rep() );
     sched->addTask ( task, level->eachPatch(), m_sharedState->allMaterials() );
 }
 
@@ -216,7 +216,7 @@ void NCHeat3D::task_initialize ( ProcessorGroup const * /*myworld*/, PatchSubset
 void NCHeat3D::task_compute_stable_timestep ( ProcessorGroup const * /*myworld*/, PatchSubset const * patches, MaterialSubset const * /*matls*/, DataWarehouse * /*dw_old*/, DataWarehouse * dw_new )
 {
     dbg_out1 << "==== NCHeat3D::task_compute_stable_timestep ====" << std::endl;
-    dw_new->put ( delt_vartype ( delt ), m_sharedState->get_delt_label(), getLevel ( patches ) );
+    dw_new->put ( delt_vartype ( delt ), getDelTLabel(), getLevel ( patches ) );
     dbg_out2 << std::endl;
 }
 

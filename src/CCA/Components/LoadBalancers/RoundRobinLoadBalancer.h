@@ -26,7 +26,6 @@
 #define CCA_COMPONENTS_LOADBALANCERS_ROUNDROBINLOADBALANCER_H
 
 #include <CCA/Components/LoadBalancers/LoadBalancerCommon.h>
-#include <Core/Parallel/UintahParallelComponent.h>
 
 namespace Uintah {
 

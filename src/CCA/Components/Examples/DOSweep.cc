@@ -70,8 +70,7 @@ void DOSweep::problemSetup(const ProblemSpecP& prob_spec,
   }
   
   ProblemSpecP st_ps = prob_spec->findBlock("DOSweep");
-  solver_parameters = solver->readParameters(st_ps, "implicitPressure",
-                                             m_sharedState);
+  solver_parameters = solver->readParameters(st_ps, "implicitPressure",m_sharedState);
   solver_parameters->setSolveOnExtraCells(false);
     
   st_ps->require("delt", delt_);
@@ -116,7 +115,7 @@ void DOSweep::scheduleComputeStableTimeStep(const LevelP& level,
 {
   Task* task = scinew Task("computeStableTimeStep",this, 
                            &DOSweep::computeStableTimeStep);
-  task->computes(m_sharedState->get_delt_label(),level.get_rep());
+  task->computes(getDelTLabel(),level.get_rep());
   sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
 }
 //__________________________________
@@ -145,7 +144,7 @@ void DOSweep::computeStableTimeStep(const ProcessorGroup*,
                                     const MaterialSubset*,
                                     DataWarehouse*, DataWarehouse* new_dw)
 {
-  new_dw->put(delt_vartype(delt_), m_sharedState->get_delt_label(),getLevel(pss));
+  new_dw->put(delt_vartype(delt_), getDelTLabel(),getLevel(pss));
 }
 //__________________________________
 //

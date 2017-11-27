@@ -107,7 +107,6 @@
 
 //-- Uintah Framework Includes --//
 #include <CCA/Components/Application/ApplicationCommon.h>
-#include <CCA/Ports/SolverInterface.h>
 
 //-- Wasatch includes --//
 #include "PatchInfo.h"
@@ -353,8 +352,6 @@ namespace WasatchCore{
     PatchInfoMap patchInfoMap_; ///< Information about each patch
 
     TimeStepper* timeStepper_;  ///< The TimeStepper used to advance equations registered here.
-
-    Uintah::SolverInterface* linSolver_;
 
     Uintah::Ray* rmcrt_; // RMCRT solver. needed to pass along to other tasks and expressions...
     CellType* cellType_;

@@ -26,6 +26,7 @@
 #ifndef Packages_Uintah_CCA_Components_ontheflyAnalysis_planeExtract_h
 #define Packages_Uintah_CCA_Components_ontheflyAnalysis_planeExtract_h
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
+#include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Output.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
@@ -70,15 +71,14 @@ WARNING
   public:
     planeExtract(ProblemSpecP& prob_spec,
                  SimulationStateP& sharedState,
-		   Output* dataArchiver);
+		   Output* output);
     planeExtract();
                     
     virtual ~planeExtract();
    
     virtual void problemSetup(const ProblemSpecP& prob_spec,
                               const ProblemSpecP& restart_prob_spec,
-                              GridP& grid,
-                              SimulationStateP& sharedState);
+                              GridP& grid);
                               
     virtual void outputProblemSpec(ProblemSpecP& ps){};
                               
@@ -198,7 +198,7 @@ WARNING
     
     SimulationStateP d_sharedState;
     std::vector<plane*>   d_planes;
-    Output*          d_dataArchiver;
+    Output*          d_output;
     ProblemSpecP     d_prob_spec;
     std::set<std::string> d_isDirCreated;
     

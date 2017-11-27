@@ -26,6 +26,7 @@
 #ifndef MOMENTUM_ANALYSIS_H
 #define MOMENTUM_ANALYSIS_H
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
+#include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Output.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/GridP.h>
@@ -66,7 +67,7 @@ WARNING
   public:
     momentumAnalysis(ProblemSpecP& prob_spec,
                      SimulationStateP& sharedState,
-		       Output* dataArchiver);
+		     Output* output);
 
     momentumAnalysis();
 
@@ -74,8 +75,7 @@ WARNING
 
     virtual void problemSetup(const ProblemSpecP& prob_spec,
                               const ProblemSpecP& restart_prob_spec,
-                              GridP& grid,
-                              SimulationStateP& sharedState);
+                              GridP& grid);
 
     virtual void outputProblemSpec(ProblemSpecP& ps){};
 
@@ -204,7 +204,7 @@ WARNING
     //__________________________________
     // global constants
     SimulationStateP d_sharedState;
-    Output* d_dataArchiver;
+    Output* d_output;
     ProblemSpecP d_prob_spec;
 
     MaterialSubset* d_zeroMatl;

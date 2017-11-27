@@ -110,6 +110,8 @@ ICE::ICE(const ProcessorGroup* myworld,
 	 const SimulationStateP sharedState) :
   ApplicationCommon(myworld, sharedState)
 {
+  setModelMaker(true);
+      
   lb   = scinew ICELabel();
 
 #ifdef HAVE_HYPRE
@@ -163,7 +165,6 @@ ICE::~ICE()
 #ifdef HAVE_HYPRE
   VarLabel::destroy(hypre_solver_label);
 #endif
-
   delete d_customInitialize_basket;
   delete d_BC_globalVars->lodi;
   delete d_BC_globalVars->slip;
@@ -234,6 +235,7 @@ ICE::~ICE()
   if(d_modelInfo){
     delete d_modelInfo;
   }
+
   //  releasePort("solver");
 }
 
@@ -326,7 +328,7 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
     d_delT_knob = 0.5;      // default value when running implicit
     d_solver_parameters = m_solver->readParameters(impSolver, 
                                                    "implicitPressure",
-                                                   m_sharedState);
+						   m_sharedState);
     d_solver_parameters->setSolveOnExtraCells(false);
     d_solver_parameters->setRestartTimestepOnFailure(true);
     impSolver->require("max_outer_iterations",      d_max_iter_implicit);
@@ -334,8 +336,8 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
     impSolver->getWithDefault("iters_before_timestep_restart",    
                                d_iters_before_timestep_restart, 5);
     d_impICE = true;
-    Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
-    d_subsched = sched->createSubScheduler();
+
+    d_subsched = m_scheduler->createSubScheduler();
     d_subsched->initialize(3,1);
     d_subsched->setRestartable(true); 
     d_subsched->clearMappings();
@@ -516,12 +518,11 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
     orig_or_restart_ps = restart_prob_spec;
   }  
     
-  ModelMaker* modelMaker = dynamic_cast<ModelMaker*>(getPort("modelmaker"));
-  if(modelMaker){
+  if(m_modelMaker){
 
-    modelMaker->makeModels(orig_or_restart_ps, prob_spec, grid, m_sharedState, isAMR());
-    d_models = modelMaker->getModels();
-    releasePort("ModelMaker");
+    m_modelMaker->makeModels(orig_or_restart_ps, prob_spec, grid, m_sharedState, isAMR());
+    d_models = m_modelMaker->getModels();
+
     d_modelSetup = scinew ICEModelSetup();
       
     // problem setup for each model  
@@ -548,7 +549,7 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
       is_BC_specified(prob_spec, Labelname, tvar->matls);
     }
     
-    d_modelInfo = scinew ModelInfo(m_sharedState->get_delt_label(),
+    d_modelInfo = scinew ModelInfo(lb->delTLabel,
                                lb->modelMass_srcLabel,
                                lb->modelMom_srcLabel,
                                lb->modelEng_srcLabel,
@@ -572,7 +573,7 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
       vector<AnalysisModule*>::iterator iter;
       for( iter  = d_analysisModules.begin(); iter != d_analysisModules.end(); iter++) {
         AnalysisModule* am = *iter;
-        am->problemSetup(prob_spec, restart_prob_spec, grid, m_sharedState);
+        am->problemSetup(prob_spec, restart_prob_spec, grid);
       }
     }
   }  // mpm
@@ -710,11 +711,8 @@ ICE::outputProblemSpec( ProblemSpecP & root_ps )
 
   ProblemSpecP models_ps = root->appendChild("Models");
 
-  ModelMaker* modelmaker = 
-    dynamic_cast<ModelMaker*>(getPort("modelmaker"));
-  
-  if (modelmaker) {
-    modelmaker->outputProblemSpec(models_ps);
+  if (m_modelMaker) {
+    m_modelMaker->outputProblemSpec(models_ps);
   }
 
   //__________________________________
@@ -905,7 +903,7 @@ void ICE::scheduleComputeStableTimeStep(const LevelP& level,
   t->requires(Task::NewDW, lb->sp_vol_CCLabel,     gn,  0, true);   
   t->requires(Task::NewDW, lb->viscosityLabel,     gn,  0, true);        
   
-  t->computes(m_sharedState->get_delt_label(),level.get_rep());
+  t->computes(lb->delTLabel,level.get_rep());
   sched->addTask(t,level->eachPatch(), ice_matls); 
   
   //__________________________________
@@ -1598,7 +1596,6 @@ void ICE::scheduleAccumulateEnergySourceSinks(SchedulerP& sched,
   Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
 
   // t->requires(Task::OldDW, lb->simulationTimeLabel);
-  // t->requires(Task::OldDW, lb->simulationTimeLabel, getLevel(patches));
   t->requires(Task::OldDW, lb->delTLabel, getLevel(patches));
   t->requires(Task::NewDW, lb->press_CCLabel,     press_matl,oims, gn);
   t->requires(Task::NewDW, lb->delP_DilatateLabel,press_matl,oims, gn);
@@ -4530,14 +4527,16 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
                                   DataWarehouse* new_dw)
 {  
   double simTime = m_sharedState->getElapsedSimTime();
+
+  // {
+  //   simTime_vartype simTime;
+  //   old_dw->get(simTime, lb->simulationTimeLabel);
+
+  //   std::cerr << "**********  " << __FUNCTION__ << "  " << __LINE__ << "  "
+  // 	      << old_dw << "  " << new_dw << "  "
+  // 	      << simTime << std::endl;
+  // }
   
-  // simTime_vartype simTime;
-  // old_dw->get(simTime, lb->simulationTimeLabel);
-
-  // std::cerr << "**********  " << __FUNCTION__ << "  " << __LINE__ << "  "
-  // 	    << old_dw << "  " << new_dw << "  "
-  // 	    << simTime << std::endl;
-
   const Level* level = getLevel(patches);
   
   for(int p=0;p<patches->size();p++){

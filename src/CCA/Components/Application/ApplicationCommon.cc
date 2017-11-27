@@ -32,6 +32,7 @@
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/VarTypes.h>
 
+#include <CCA/Ports/ModelMaker.h>
 #include <CCA/Ports/Output.h>
 #include <CCA/Ports/Regridder.h>
 #include <CCA/Ports/Scheduler.h>
@@ -55,7 +56,9 @@ ApplicationCommon::ApplicationCommon(const ProcessorGroup* myworld,
   // the SimulationState and then pass that to the other applications.
   
   if( m_sharedState == nullptr )
+  {
     m_sharedState = scinew SimulationState();
+  }
   
   //__________________________________
   //  These variables can be modified by an application.
@@ -128,21 +131,20 @@ ApplicationCommon::~ApplicationCommon()
   if( m_simulationTime )
     delete m_simulationTime;
 
-  if( m_sharedState.get_rep() )
-    delete m_sharedState.get_rep();
+  // No need to delete the shared state as it is referecne counted
+  // which will automatically delete it.
+  m_sharedState = nullptr;
 }
 
-void ApplicationCommon::setComponents( const ApplicationCommon *parent,
-				       const ProblemSpecP &prob_spec )
+void ApplicationCommon::setComponents( const ApplicationCommon *parent )
 {
-  attachPort( "scheduler", parent->m_scheduler );
-  attachPort( "solver",    parent->m_solver );
-  attachPort( "regridder", parent->m_regridder );
-  attachPort( "output",    parent->m_output );
+  attachPort( "scheduler",  parent->m_scheduler );
+  attachPort( "modelMaker", parent->m_modelMaker );
+  attachPort( "solver",     parent->m_solver );
+  attachPort( "regridder",  parent->m_regridder );
+  attachPort( "output",     parent->m_output );
 
   getComponents();
-
-  problemSetup( prob_spec );
 }
 
 void ApplicationCommon::getComponents()
@@ -150,21 +152,28 @@ void ApplicationCommon::getComponents()
   m_scheduler = dynamic_cast<Scheduler*>( getPort("scheduler") );
 
   if( isDynamicRegridding() && !m_scheduler ) {
-    throw InternalError("dynamic_cast of 'd_regridder' failed!",
+    throw InternalError("dynamic_cast of 'm_regridder' failed!",
+                        __FILE__, __LINE__);
+  }
+
+  m_modelMaker = dynamic_cast<ModelMaker*>( getPort("modelMaker") );
+
+  if( needModelMaker() && !m_modelMaker ) {
+    throw InternalError("dynamic_cast of 'm_modelMaker' failed!",
                         __FILE__, __LINE__);
   }
 
   m_solver = dynamic_cast<SolverInterface*>( getPort("solver") );
 
   if( !m_solver ) {
-    throw InternalError("dynamic_cast of 'd_solver' failed!",
+    throw InternalError("dynamic_cast of 'm_solver' failed!",
                         __FILE__, __LINE__);
   }
 
   m_regridder = dynamic_cast<Regridder*>( getPort("regridder") );
 
   if( isDynamicRegridding() && !m_regridder ) {
-    throw InternalError("dynamic_cast of 'd_regridder' failed!",
+    throw InternalError("dynamic_cast of 'm_regridder' failed!",
                         __FILE__, __LINE__);
   }
 
@@ -178,10 +187,17 @@ void ApplicationCommon::getComponents()
 
 void ApplicationCommon::releaseComponents()
 {
-  m_scheduler = nullptr;
-  m_solver    = nullptr;
-  m_regridder = nullptr;
-  m_output    = nullptr;
+  releasePort( "scheduler" );
+  releasePort( "modelMaker" );
+  releasePort( "solver" );
+  releasePort( "regridder" );
+  releasePort( "output" );
+
+  m_scheduler  = nullptr;
+  m_modelMaker = nullptr;
+  m_solver     = nullptr;
+  m_regridder  = nullptr;
+  m_output     = nullptr;
 }
 
 void ApplicationCommon::problemSetup( const ProblemSpecP &prob_spec )
@@ -318,7 +334,6 @@ ApplicationCommon::reduceSystemVars( const ProcessorGroup *,
 
       if (new_dw->exists(m_delTLabel, -1, *level->patchesBegin())) {
         delt_vartype delTvar;
-        double delT;
         new_dw->get(delTvar, m_delTLabel, level.get_rep());
 
         new_dw->put(delt_vartype(delTvar * multiplier), m_delTLabel);
@@ -467,7 +482,7 @@ void
 ApplicationCommon::initializeSystemVars( const ProcessorGroup *,
 					 const PatchSubset    * patches,
 					 const MaterialSubset * /*matls*/,
-					       DataWarehouse  * old_dw,
+					       DataWarehouse  * /*old_dw*/,
 				               DataWarehouse  * new_dw )
 {
   MALLOC_TRACE_TAG_SCOPE("ApplicationCommon::initializeSystemVar()");
@@ -484,7 +499,10 @@ ApplicationCommon::initializeSystemVars( const ProcessorGroup *,
 
   // new_dw->put(simTime_vartype(m_simTime), m_simulationTimeLabel, level);
 
-  m_sharedState->setElapsedSimTime( m_simTime );  
+  m_sharedState->setElapsedSimTime( m_simTime );
+
+  // std::cerr << "**********  " << __FUNCTION__ << "  " << __LINE__ << "  "
+  // 	    << new_dw << std::endl;  
 }
 
 
@@ -554,6 +572,9 @@ ApplicationCommon::updateSystemVars( const ProcessorGroup *,
     // new_dw->put(simTime_vartype(m_simTime), m_simulationTimeLabel, level);
     
     m_sharedState->setElapsedSimTime( m_simTime );  
+
+    // std::cerr << "**********  " << __FUNCTION__ << "  " << __LINE__ << "  "
+    // 	      << new_dw << std::endl;  
   }
 }
 

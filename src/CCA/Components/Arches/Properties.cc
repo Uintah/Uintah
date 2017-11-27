@@ -314,7 +314,7 @@ Properties::sched_computeDrhodt(SchedulerP& sched,
   Ghost::GhostType  ga = Ghost::AroundCells;
 
   tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
-  tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
+  tsk->requires(parent_old_dw, d_lab->d_delTLabel);
   tsk->requires(parent_old_dw, d_lab->d_oldDeltaTLabel);
 
   tsk->requires(Task::NewDW   , d_lab->d_densityCPLabel    , gn , 0);
@@ -357,7 +357,7 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
     drhodt_1st_order = 2;
   }
   delt_vartype delT, old_delT;
-  parent_old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  parent_old_dw->get(delT, d_lab->d_delTLabel );
 
 
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){

@@ -54,12 +54,12 @@ static DebugStream cout_dbg("FLATPLATE_HEATFLUX_DBG_COUT", false);
 //______________________________________________________________________
 flatPlate_heatFlux::flatPlate_heatFlux(ProblemSpecP& module_spec,
                                        SimulationStateP& sharedState,
-                                       Output* dataArchiver)
-  : AnalysisModule(module_spec, sharedState, dataArchiver)
+                                       Output* output)
+  : AnalysisModule(module_spec, sharedState, output)
 {
   d_sharedState  = sharedState;
   d_prob_spec    = module_spec;
-  d_dataArchiver = dataArchiver;
+  d_output = output;
   d_matl = nullptr;
   d_matl_set = nullptr;
   d_matl_sub = nullptr;
@@ -89,12 +89,11 @@ flatPlate_heatFlux::~flatPlate_heatFlux()
 //     P R O B L E M   S E T U P
 void flatPlate_heatFlux::problemSetup(const ProblemSpecP& prob_spec,
                                       const ProblemSpecP& restart_prob_spec,
-                                      GridP& grid,
-                                      SimulationStateP& sharedState)
+                                      GridP& grid)
 {
   cout_doing << "Doing problemSetup \t\t\t\tflatPlate_heatFlux" << endl;
   
-  if(!d_dataArchiver){
+  if(!d_output){
     throw InternalError("flatPlate_heatFlux:couldn't get output port", __FILE__, __LINE__);
   }
   

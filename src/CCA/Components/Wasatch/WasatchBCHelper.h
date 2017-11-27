@@ -35,6 +35,7 @@
 #define WASATCH_BC_HELPER
 
 //-- Wasatch Includes --//
+#include <sci_defs/wasatch_defs.h>
 #include <CCA/Components/Wasatch/BCHelper.h>
 #include <CCA/Components/Wasatch/PatchInfo.h>
 #include <CCA/Components/Wasatch/GraphHelperTools.h>
@@ -240,6 +241,8 @@ namespace WasatchCore {
     
     NSCBCSpec nscbcSpec_;
     
+    const bool hasSpeciesTransportEquations_;
+
   public:
     
     WasatchBCHelper( const Uintah::LevelP& level,
@@ -313,13 +316,13 @@ namespace WasatchCore {
      *
      *  \param taskCat Specifies on which graph to apply this boundary condition.
      *
-     *  \param setOnExtraOnly Optional boolean flag - specifies whether to set the boundary value
-     *  DIRECTLY on the extra cells without doing averaging using interior cells. This is only useful
-     *  for DIRICHLET boundary conditions.
+     *  \param speciesNumber Optional integer specifying the species index for multispecies flow.
+     *  Do not set this for anything but a species transport equation.
      */
     void apply_nscbc_boundary_condition( const Expr::Tag& varTag,
                                          const NSCBC::TransportVal& quantity,
-                                         const Category& taskCat  );
+                                         const Category& taskCat,
+                                         const int speciesNumber = -1);
 
     /**
      *  \brief Allows one to inject dummy dependencies to help with boundary condition expressions.

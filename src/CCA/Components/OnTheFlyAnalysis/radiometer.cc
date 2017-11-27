@@ -48,12 +48,12 @@ static DebugStream cout_doing("radiometer", false);
 
 OnTheFly_radiometer::OnTheFly_radiometer(ProblemSpecP& module_spec,
                                          SimulationStateP& sharedState,
-                                         Output* dataArchiver)
-  : AnalysisModule(module_spec, sharedState, dataArchiver)
+                                         Output* output)
+  : AnalysisModule(module_spec, sharedState, output)
 {
   d_sharedState = sharedState;
   d_module_ps   = module_spec;
-  d_dataArchiver = dataArchiver;
+  d_output = output;
 }
 
 //__________________________________
@@ -70,8 +70,7 @@ OnTheFly_radiometer::~OnTheFly_radiometer()
 //______________________________________________________________________
 void OnTheFly_radiometer::problemSetup(const ProblemSpecP& ,
                                        const ProblemSpecP& ,
-                                       GridP& grid,
-                                       SimulationStateP& sharedState)
+                                       GridP& grid)
 {
 
 #ifdef USE_RADIOMETER
@@ -159,7 +158,7 @@ void OnTheFly_radiometer::problemSetup(const ProblemSpecP& ,
   bool getExtraInputs = true;
   d_radiometer->problemSetup(rad_ps, rad_ps, grid, d_sharedState, getExtraInputs);
   
-  if(!d_dataArchiver->isLabelSaved( "VRFlux" ) ){
+  if(!d_output->isLabelSaved( "VRFlux" ) ){
     throw ProblemSetupException("\nERROR:  You've activated the radiometer but your not saving the variable (VRFlux)\n",__FILE__, __LINE__);
   }
 #endif  

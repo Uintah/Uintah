@@ -101,7 +101,7 @@ PressureSolver::problemSetup(ProblemSpecP& params,SimulationStateP& state)
   d_source = scinew Source(d_physicalConsts);
 
   d_hypreSolver_parameters = d_hypreSolver->readParameters(db, "pressure",
-                                                           state);
+							   state);
   d_hypreSolver_parameters->setSolveOnExtraCells(false);
 
   //force a zero setup frequency since nothing else
@@ -242,7 +242,7 @@ PressureSolver::sched_buildLinearMatrix(SchedulerP& sched,
   Ghost::GhostType  gn  = Ghost::None;
   Ghost::GhostType  gaf = Ghost::AroundFaces;
 
-  tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
+  tsk->requires(parent_old_dw, d_lab->d_delTLabel);
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,       gac, 1);
 
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,      gac, 1);
@@ -305,7 +305,7 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
   }
 
   delt_vartype delT;
-  parent_old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  parent_old_dw->get(delT, d_lab->d_delTLabel );
   double delta_t = delT;
   delta_t *= timelabels->time_multiplier;
 

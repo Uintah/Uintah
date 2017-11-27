@@ -163,7 +163,7 @@ MaximumTemperature::sched_computeModel( const LevelP& level, SchedulerP& sched, 
   tsk->requires( which_dw, _max_pT_varlabel, gn, 0 ); 
   tsk->requires( which_dw, _weight_scaled_varlabel, gn, 0 ); 
   tsk->requires( which_dw, _max_pT_weighted_scaled_varlabel, gn, 0 ); 
-  tsk->requires( Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label()); 
+  tsk->requires( Task::OldDW, d_fieldLabels->d_delTLabel); 
   tsk->requires( Task::NewDW, _RHS_source_varlabel, gn, 0 ); 
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
@@ -192,7 +192,7 @@ MaximumTemperature::computeModel( const ProcessorGroup * pc,
     double vol = Dx.x()* Dx.y()* Dx.z(); 
      
     delt_vartype DT;
-    old_dw->get(DT, d_fieldLabels->d_sharedState->get_delt_label());
+    old_dw->get(DT, d_fieldLabels->d_delTLabel);
     double dt = DT;
 
     CCVariable<double> maxT_rate;

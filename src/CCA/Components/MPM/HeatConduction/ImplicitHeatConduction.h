@@ -141,7 +141,7 @@ namespace Uintah {
                                          DataWarehouse* new_dw);
 
   private:
-    MPMLabel* lb;
+    MPMLabel* d_lb;
     MPMFlags* d_flag;
     MaterialSubset* one_matl;
     bool do_IHC;

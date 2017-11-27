@@ -47,8 +47,10 @@ class EqnTimestepAdaptorBase;
 
 std::vector<EqnTimestepAdaptorBase*>
 setup_species_equations( Uintah::ProblemSpecP params,
+                         Uintah::ProblemSpecP wasatchSpec,
                          const TurbulenceParameters& turbParams,
                          const Expr::Tag densityTag,
+                         const Expr::TagList velTags,
                          const Expr::Tag temperatureTag,
                          GraphCategories& gc );
 
@@ -62,10 +64,12 @@ setup_species_equations( Uintah::ProblemSpecP params,
 class SpeciesTransportEquation : public TransportEquation
 {
   Uintah::ProblemSpecP params_;
+  Uintah::ProblemSpecP wasatchSpec_;
   const TurbulenceParameters turbParams_;
   const int specNum_;
   const Expr::Tag primVarTag_;
   const Expr::Tag densityTag_, temperatureTag_, mmwTag_;
+  const Expr::TagList velTags_;
   const int nspec_;
   Expr::TagList yiTags_;
 
@@ -73,10 +77,12 @@ class SpeciesTransportEquation : public TransportEquation
 public:
 
   SpeciesTransportEquation( Uintah::ProblemSpecP params,
+                            Uintah::ProblemSpecP wasatchSpec,
                             const TurbulenceParameters& turbParams,
                             const int specNum,
                             GraphCategories& gc,
                             const Expr::Tag densityTag,
+                            const Expr::TagList velTags,
                             const Expr::Tag temperatureTag,
                             const Expr::Tag mmwTag );
 

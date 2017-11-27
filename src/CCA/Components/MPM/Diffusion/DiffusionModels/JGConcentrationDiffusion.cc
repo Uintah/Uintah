@@ -130,7 +130,7 @@ void JGConcentrationDiffusion::scheduleComputeFlux(      Task         * task,
   task->requires(Task::OldDW, d_lb->diffusion->pGradConcentration, matlset, gnone);
 
   task->computes(d_lb->diffusion->pFlux_preReloc, matlset);
-  task->computes(d_sharedState->get_delt_label(),getLevel(patch));
+  task->computes(d_lb->delTLabel,getLevel(patch));
 }
 
 void JGConcentrationDiffusion::addSplitParticlesComputesAndRequires(

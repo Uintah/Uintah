@@ -26,6 +26,7 @@
 #ifndef Packages_Uintah_CCA_Components_ontheflyAnalysis_lineExtract_h
 #define Packages_Uintah_CCA_Components_ontheflyAnalysis_lineExtract_h
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
+#include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Output.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
@@ -69,16 +70,15 @@ WARNING
   class lineExtract : public AnalysisModule {
   public:
     lineExtract(ProblemSpecP& prob_spec,
-                    SimulationStateP& sharedState,
-		      Output* dataArchiver);
+		SimulationStateP& sharedState,
+		Output* output);
     lineExtract();
                     
     virtual ~lineExtract();
    
     virtual void problemSetup(const ProblemSpecP& prob_spec,
                               const ProblemSpecP& restart_prob_spec,
-                              GridP& grid,
-                              SimulationStateP& sharedState);
+                              GridP& grid);
                               
     virtual void outputProblemSpec(ProblemSpecP& ps){};
                               
@@ -143,7 +143,7 @@ WARNING
     std::vector<int> d_varMatl;
     SimulationStateP d_sharedState;
     std::vector<line*> d_lines;
-    Output* d_dataArchiver;
+    Output* d_output;
     ProblemSpecP d_prob_spec;
     const Material* d_matl;
     MaterialSet* d_matl_set;

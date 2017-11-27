@@ -89,8 +89,7 @@ WARNING
     //////////
     // Insert Documentation Here:
     virtual void getComponents() = 0;
-    virtual void setComponents( const ApplicationCommon *parent,
-				const ProblemSpecP &prob_spec ) = 0;
+    virtual void setComponents( const ApplicationCommon *parent ) = 0;
     virtual void releaseComponents() = 0;
     
     virtual void problemSetup( const ProblemSpecP &prob_spec ) = 0;
@@ -192,6 +191,9 @@ WARNING
     virtual const VarLabel* getDelTLabel() const = 0;
 
     //////////
+    virtual void setModelMaker(bool val) = 0;
+    virtual bool needModelMaker() const = 0;
+    
     virtual void setAMR(bool val) = 0;
     virtual bool isAMR() const = 0;
   

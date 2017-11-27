@@ -130,6 +130,12 @@ namespace Uintah {
     pYLabel_ = nullptr;
     pZLabel_ = nullptr;
     materials_ = nullptr;
+
+    // delta t
+    VarLabel* nonconstDelT =
+      VarLabel::create(delT_name, delt_vartype::getTypeDescription() );
+    nonconstDelT->allowMultipleComputes();
+    delTLabel_ = nonconstDelT;
   }
   
   //------------------------------------------------------------------
@@ -142,6 +148,8 @@ namespace Uintah {
       Uintah::VarLabel::destroy(*it);
       ++it;
     }
+
+    VarLabel::destroy(delTLabel_);
   }
   
   //------------------------------------------------------------------
@@ -886,7 +894,7 @@ namespace Uintah {
     }
     task->modifies(pIDLabel_ );
     task->modifies(pPosLabel_);
-    task->requires(Task::OldDW, sharedState_->get_delt_label());
+    task->requires(Task::OldDW, delTLabel_);
     sched->addTask(task, level->eachPatch(), materials_);
   }
   
@@ -901,7 +909,7 @@ namespace Uintah {
     using namespace Uintah;
     
     delt_vartype DT;
-    old_dw->get(DT, sharedState_->get_delt_label());
+    old_dw->get(DT, delTLabel_);
     const double dt = DT;
 
     for( int m=0; m<matls->size(); ++m ){

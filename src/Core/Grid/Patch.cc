@@ -1652,6 +1652,7 @@ Patch::VariableBasis Patch::translateTypeToBasis(Uintah::TypeDescription::Type t
     return ZFaceBased;
   case TypeDescription::ParticleVariable:
   case TypeDescription::PerPatch:
+  case TypeDescription::SoleVariable:
     return CellBased;
   default:
     if (mustExist)

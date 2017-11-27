@@ -125,7 +125,7 @@ void UdaReducer::problemSetup(const ProblemSpecP& prob_spec,
   d_oneMatl = scinew SimpleMaterial();
   m_sharedState->registerSimpleMaterial( d_oneMatl );
 
-  delt_label = m_sharedState->get_delt_label();
+  delt_label = getDelTLabel();
 
   d_dataArchiver = dynamic_cast<Output*>(getPort("output"));
   if(!d_dataArchiver){

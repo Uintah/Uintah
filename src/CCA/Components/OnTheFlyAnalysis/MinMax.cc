@@ -73,12 +73,12 @@ ______________________________________________________________________*/
           
 MinMax::MinMax( ProblemSpecP     & module_spec,
                 SimulationStateP & sharedState,
-                Output           * dataArchiver )
-  : AnalysisModule(module_spec, sharedState, dataArchiver)
+                Output           * output )
+  : AnalysisModule(module_spec, sharedState, output)
 {
   d_sharedState = sharedState;
   d_prob_spec = module_spec;
-  d_dataArchiver = dataArchiver;
+  d_output = output;
   d_matl_set = nullptr;
   d_zero_matl = nullptr;
   d_lb = scinew MinMaxLabel();
@@ -111,13 +111,12 @@ MinMax::~MinMax()
 //     P R O B L E M   S E T U P
 void MinMax::problemSetup(const ProblemSpecP& prob_spec,
                           const ProblemSpecP&,
-                          GridP& grid,
-                          SimulationStateP& sharedState)
+                          GridP& grid)
 {
   cout_doing << "Doing problemSetup \t\t\t\tMinMax" << endl;
   
   int numMatls  = d_sharedState->getNumMatls();
-  if(!d_dataArchiver){
+  if(!d_output){
     throw InternalError("MinMax:couldn't get output port", __FILE__, __LINE__);
   }
                                
@@ -339,7 +338,7 @@ void MinMax::initialize(const ProcessorGroup*,
     new_dw->put(fileInfo,    d_lb->fileVarsStructLabel, 0, patch);
     
     if(patch->getGridIndex() == 0){   // only need to do this once
-      string udaDir = d_dataArchiver->getOutputLocation();
+      string udaDir = d_output->getOutputLocation();
 
       //  Bulletproofing
       DIR *check = opendir(udaDir.c_str());
@@ -476,8 +475,8 @@ void MinMax::computeMinMax(const ProcessorGroup* pg,
   DataWarehouse * dw = d_scheduler->get_dw(0);
   
   delt_vartype delt_var;
-  if( dw->exists( d_sharedState->get_delt_label() ) ) {
-    d_scheduler->get_dw(0)->get( delt_var, d_sharedState->get_delt_label() );
+  if( dw->exists( getDelTLabel() ) ) {
+    d_scheduler->get_dw(0)->get( delt_var, getDelTLabel() );
     now += delt_var;
   }
 
@@ -596,7 +595,7 @@ void MinMax::doAnalysis(const ProcessorGroup* pg,
   Timers::Simple timer;
   timer.start();
 
-  UintahParallelComponent * DA = dynamic_cast<UintahParallelComponent*>(d_dataArchiver);
+  UintahParallelComponent * DA = dynamic_cast<UintahParallelComponent*>(d_output);
   LoadBalancerPort        * lb = dynamic_cast<LoadBalancerPort*>( DA->getPort("load balancer"));
     
   const Level* level = getLevel(patches);
@@ -617,8 +616,8 @@ void MinMax::doAnalysis(const ProcessorGroup* pg,
   DataWarehouse * dw = d_scheduler->get_dw(0);
   
   delt_vartype delt_var;
-  if( dw->exists( d_sharedState->get_delt_label() ) ) {
-    d_scheduler->get_dw(0)->get( delt_var, d_sharedState->get_delt_label() );
+  if( dw->exists( getDelTLabel() ) ) {
+    d_scheduler->get_dw(0)->get( delt_var, getDelTLabel() );
     now += delt_var;
   }
 
@@ -677,7 +676,7 @@ void MinMax::doAnalysis(const ProcessorGroup* pg,
 
         //__________________________________
         // create the directory structure
-        string minmaxDir = d_dataArchiver->getOutputLocation() + "/MinMax";
+        string minmaxDir = d_output->getOutputLocation() + "/MinMax";
 
         if( d_isDirCreated.count(minmaxDir) == 0){
           createDirectory(minmaxDir);

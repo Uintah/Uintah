@@ -103,7 +103,7 @@ void Heat::scheduleComputeStableTimeStep(const LevelP&     level,
 {
   Task *task = scinew Task("Heat::computeStableTimeStep", this,
                            &Heat::computeStableTimeStep);
-  task->computes(m_sharedState->get_delt_label(), level.get_rep());
+  task->computes(getDelTLabel(), level.get_rep());
   sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
 }
 
@@ -113,7 +113,7 @@ void Heat::computeStableTimeStep(const ProcessorGroup* pg,
                                        DataWarehouse*  old_dw,
                                        DataWarehouse*  new_dw)
 {
-  new_dw->put(delt_vartype(d_delt), m_sharedState->get_delt_label(), getLevel(patches));
+  new_dw->put(delt_vartype(d_delt), getDelTLabel(), getLevel(patches));
 }
 
 void Heat::scheduleTimeAdvance( const LevelP&     level,

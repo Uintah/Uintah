@@ -64,6 +64,8 @@ WARNING
     ModelFactory(const ProcessorGroup* myworld);
     virtual ~ModelFactory();
 
+    virtual void releaseComponents() {};
+    
     std::vector<ModelInterface*> getModels();
     void clearModels();
     virtual void makeModels(const ProblemSpecP& orig_or_restart_ps, 

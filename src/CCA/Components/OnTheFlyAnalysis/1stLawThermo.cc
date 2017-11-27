@@ -58,13 +58,13 @@ static DebugStream cout_dbg("FirstLawThermo_dbg", false);
 //______________________________________________________________________              
 FirstLawThermo::FirstLawThermo(ProblemSpecP& module_spec,
                                SimulationStateP& sharedState,
-                               Output* dataArchiver)
+                               Output* output)
                                
-  : AnalysisModule(module_spec, sharedState, dataArchiver)
+  : AnalysisModule(module_spec, sharedState, output)
 {
   d_sharedState  = sharedState;
   d_prob_spec    = module_spec;
-  d_dataArchiver = dataArchiver;
+  d_output = output;
   d_zeroMatl     = 0;
   d_zeroMatlSet  = 0;
   d_zeroPatch    = 0;
@@ -110,12 +110,11 @@ FirstLawThermo::~FirstLawThermo()
 //     P R O B L E M   S E T U P
 void FirstLawThermo::problemSetup(const ProblemSpecP&,
                                   const ProblemSpecP& restart_prob_spec,
-                                  GridP& grid,
-                                  SimulationStateP& sharedState)
+                                  GridP& grid)
 {
   cout_doing << "Doing problemSetup \t\t\t\tFirstLawThermo" << endl;
   
-  if(!d_dataArchiver){
+  if(!d_output){
     throw InternalError("FirstLawThermo:couldn't get output port", __FILE__, __LINE__);
   }
   
@@ -247,7 +246,7 @@ FirstLawThermo::initialize( const ProcessorGroup *,
     new_dw->put(fileInfo,    FL_lb->fileVarsStructLabel, 0, patch);
     
     if(patch->getGridIndex() == 0){   // only need to do this once
-      string udaDir = d_dataArchiver->getOutputLocation();
+      string udaDir = d_output->getOutputLocation();
 
       //  Bulletproofing
       DIR *check = opendir(udaDir.c_str());
@@ -349,7 +348,7 @@ void FirstLawThermo::compute_ICE_Contributions(const ProcessorGroup* pg,
   delt_vartype delT;
   
   old_dw->get(analysisTime, FL_lb->lastCompTimeLabel);
-  old_dw->get(delT, d_sharedState->get_delt_label(),level);
+  old_dw->get(delT, getDelTLabel(),level);
   
   double lastCompTime = analysisTime;
   double nextCompTime = lastCompTime + 1.0/d_analysisFreq;  
@@ -671,7 +670,7 @@ void FirstLawThermo::doAnalysis(const ProcessorGroup* pg,
         myFiles = fileInfo.get().get_rep()->files;
       } 
       
-      string udaDir = d_dataArchiver->getOutputLocation();
+      string udaDir = d_output->getOutputLocation();
       string filename = udaDir + "/" + "1stLawThermo.dat";
       FILE *fp=nullptr;
 

@@ -59,10 +59,12 @@ WARNING
    --------------------------------------------------------------------------*/
 
 #include <Core/ProblemSpec/ProblemSpecP.h>
-#include <CCA/Ports/SolverInterface.h>
+
+#include <string>
 
 namespace Uintah {
 
+  class SolverInterface;
   class ProcessorGroup;
 
   class SolverFactory

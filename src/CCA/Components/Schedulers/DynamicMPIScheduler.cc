@@ -112,9 +112,9 @@ DynamicMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec,
 
 //   // Running with VisIt so add in the variables that the user can
 //   // modify.
-//   if( m_shared_state->getVisIt() && !initialized ) {
-//     m_shared_state->d_douts.push_back( &g_dbg );
-//     m_shared_state->d_douts.push_back( &g_queue_length );
+//   if( m_sharedState->getVisIt() && !initialized ) {
+//     m_sharedState->d_douts.push_back( &g_dbg );
+//     m_sharedState->d_douts.push_back( &g_queue_length );
 
 //     initialized = true;
 //   }
@@ -128,9 +128,9 @@ DynamicMPIScheduler::createSubScheduler()
 {
   UintahParallelPort  * lbp      = getPort("load balancer");
   DynamicMPIScheduler * newsched = scinew DynamicMPIScheduler( d_myworld, m_out_port, this );
-  newsched->m_shared_state = m_shared_state;
+  newsched->m_sharedState = m_sharedState;
   newsched->attachPort( "load balancer", lbp );
-  newsched->m_shared_state = m_shared_state;
+  newsched->m_sharedState = m_sharedState;
   return newsched;
 }
 

@@ -80,7 +80,9 @@ WARNING
       UintahParallelPort* getPort(const std::string& name, unsigned int i);
       void releasePort(const std::string& name);
       unsigned int numConnections(const std::string& name);
-      
+
+     virtual void releaseComponents() = 0;
+     
    protected:
       const ProcessorGroup* d_myworld;
    };

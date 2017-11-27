@@ -122,6 +122,8 @@ MPMICE::MPMICE(const ProcessorGroup* myworld,
                          // to MPM materials, for which its value is hardcoded,
                          // unlike the situation for ice materials
 
+  setModelMaker( d_ice->needModelMaker() );
+  
   d_switchCriteria = 0;
 }
 
@@ -165,7 +167,9 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
 
   //__________________________________
   //  M P M
-  d_mpm->setComponents( this, prob_spec );
+  d_mpm->setComponents( this );
+  dynamic_cast<ApplicationCommon*>(d_mpm)->problemSetup( prob_spec );
+
   d_mpm->setWithICE();
   d_mpm->problemSetup(prob_spec, restart_prob_spec,grid);
 
@@ -178,7 +182,9 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
 
   //__________________________________
   //  I C E
-  d_ice->setComponents( this, prob_spec );
+  d_ice->setComponents( this );
+  dynamic_cast<ApplicationCommon*>(d_ice)->problemSetup( prob_spec );
+
   d_ice->setMPMICELabel(MIlb);
   d_ice->setWithMPM();
   if(d_rigidMPM){
@@ -192,12 +198,6 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
     d_switchCriteria->problemSetup(prob_spec,restart_prob_spec,m_sharedState);
   }
 
-  ModelMaker* models = dynamic_cast<ModelMaker*>(getPort("modelmaker"));
-
-  if(models){  // of there are models then push the port down to ICE
-    d_ice->attachPort("modelmaker",models);
-  }
-  
   d_ice->problemSetup(prob_spec, restart_prob_spec,grid);
 
   // An ice model may adjust the output interval or the checkpoint
@@ -206,7 +206,8 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
   adjustOutputInterval( d_ice->adjustOutputInterval() );      
   adjustCheckpointInterval( d_ice->adjustCheckpointInterval() );
   
-  if(models){  // some models may need to have access to MPMLabels
+  // some models may need to have access to MPMLabels
+  if(d_ice->d_models.size()){
     for(vector<ModelInterface*>::iterator iter = d_ice->d_models.begin();
        iter != d_ice->d_models.end(); iter++){
       (*iter)->setMPMLabel(Mlb);
@@ -245,7 +246,7 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
     for( iter  = d_analysisModules.begin();
          iter != d_analysisModules.end(); iter++){
       AnalysisModule* am = *iter;
-      am->problemSetup(prob_spec, restart_prob_spec, grid, m_sharedState);
+      am->problemSetup(prob_spec, restart_prob_spec, grid);
     }
   }  
 }
@@ -906,7 +907,7 @@ void MPMICE::scheduleComputeCCVelAndTempRates(SchedulerP& sched,
 
   Ghost::GhostType  gn = Ghost::None;
 
-  t->requires(Task::OldDW, m_sharedState->get_delt_label(),getLevel(patches));
+  t->requires(Task::OldDW, Ilb->delTLabel,getLevel(patches));
   t->requires(Task::NewDW, Ilb->mass_L_CCLabel,         gn);
   t->requires(Task::NewDW, Ilb->mom_L_CCLabel,          gn);  
   t->requires(Task::NewDW, Ilb->int_eng_L_CCLabel,      gn);  
@@ -956,7 +957,7 @@ void MPMICE::scheduleInterpolateCCToNC(SchedulerP& sched,
   Ghost::GhostType  gan = Ghost::AroundNodes;
   Ghost::GhostType  gac = Ghost::AroundCells;
                                                                                 
-  t->requires(Task::OldDW, m_sharedState->get_delt_label(),getLevel(patches));
+  t->requires(Task::OldDW, Ilb->delTLabel,getLevel(patches));
   t->requires(Task::NewDW, Ilb->dVdt_CCLabel,       gan,1);
   t->requires(Task::NewDW, Ilb->dTdt_CCLabel,       gan,1);
   
@@ -991,7 +992,7 @@ void MPMICE::scheduleComputePressure(SchedulerP& sched,
   t = scinew Task("MPMICE::computeEquilibrationPressure",
             this, &MPMICE::computeEquilibrationPressure, press_matl);
   
-  t->requires(Task::OldDW, m_sharedState->get_delt_label(),getLevel(patches));
+  t->requires(Task::OldDW, Ilb->delTLabel,getLevel(patches));
 
                               // I C E
   Ghost::GhostType  gn  = Ghost::None;
@@ -1589,7 +1590,7 @@ void MPMICE::computeCCVelAndTempRates(const ProcessorGroup*,
     int numMPMMatls = m_sharedState->getNumMPMMatls();
 
     delt_vartype delT;
-    old_dw->get(delT, m_sharedState->get_delt_label());
+    old_dw->get(delT, Ilb->delTLabel);
 
     for (int m = 0; m < numMPMMatls; m++) {
       MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
@@ -1655,7 +1656,7 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
     int numMPMMatls = m_sharedState->getNumMPMMatls();
 
     delt_vartype delT;
-    old_dw->get(delT, m_sharedState->get_delt_label());
+    old_dw->get(delT, Ilb->delTLabel);
 
     for (int m = 0; m < numMPMMatls; m++) {
       MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );

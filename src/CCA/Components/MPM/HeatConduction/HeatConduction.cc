@@ -149,7 +149,7 @@ void HeatConduction::scheduleIntegrateTemperatureRate(SchedulerP& sched,
 
   const MaterialSubset* mss = matls->getUnion();
 
-  t->requires(Task::OldDW, d_sharedState->get_delt_label() );
+  t->requires(Task::OldDW, d_lb->delTLabel );
 
   t->requires(Task::NewDW, d_lb->gTemperatureLabel,     Ghost::None);
   t->requires(Task::NewDW, d_lb->gTemperatureNoBCLabel, Ghost::None);
@@ -442,7 +442,7 @@ void HeatConduction::integrateTemperatureRate(const ProcessorGroup*,
       constNCVariable<double> temp_old,temp_oldNoBC;
       NCVariable<double> temp_rate,tempStar;
       delt_vartype delT;
-      old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
+      old_dw->get(delT, d_lb->delTLabel, getLevel(patches) );
  
       new_dw->get(temp_old,    d_lb->gTemperatureLabel,     dwi,patch,gnone,0);
       new_dw->get(temp_oldNoBC,d_lb->gTemperatureNoBCLabel, dwi,patch,gnone,0);

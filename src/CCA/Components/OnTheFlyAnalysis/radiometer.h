@@ -53,7 +53,7 @@ _____________________________________________________________________*/
   public:
     OnTheFly_radiometer(ProblemSpecP& prob_spec,
                         SimulationStateP& sharedState,
-		          Output* dataArchiver);
+		          Output* output);
 
     OnTheFly_radiometer();
 
@@ -61,8 +61,7 @@ _____________________________________________________________________*/
 
     virtual void problemSetup(const ProblemSpecP& prob_spec,
                               const ProblemSpecP& restart_prob_spec,
-                              GridP& grid,
-                              SimulationStateP& sharedState);
+                              GridP& grid);
 
     virtual void outputProblemSpec(ProblemSpecP& ps){};
 
@@ -98,7 +97,7 @@ _____________________________________________________________________*/
     Radiometer* d_radiometer;
 
     ProblemSpecP d_module_ps;
-    Output* d_dataArchiver;
+    Output* d_output;
     SimulationStateP d_sharedState;
   };
 }

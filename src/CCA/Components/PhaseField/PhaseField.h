@@ -625,7 +625,7 @@ template<PF::VariableType VariableType, int NumGhosts, int Dimension>
 void PhaseField<VariableType, NumGhosts, Dimension>::scheduleComputeStableTimeStep ( LevelP const & level, SchedulerP & sched )
 {
     Task * task = scinew Task ( "PhaseField::task_compute_stable_timestep", this, &PhaseField::task_compute_stable_timestep );
-    task->computes ( m_sharedState->get_delt_label(), level.get_rep() );
+    task->computes ( getDelTLabel(), level.get_rep() );
     sched->addTask ( task, level->eachPatch(), m_sharedState->allMaterials() );
 }
 
@@ -764,7 +764,7 @@ template<PF::VariableType VariableType, int NumGhosts, int Dimension>
 void PhaseField<VariableType, NumGhosts, Dimension>::task_compute_stable_timestep ( ProcessorGroup const * /*myworld*/, PatchSubset const * patches, MaterialSubset const * /*matls*/, DataWarehouse * /*dw_old*/, DataWarehouse * dw_new )
 {
     dbg_out1 << "==== PhaseField::task_compute_stable_timestep ====" << std::endl;
-    dw_new->put ( delt_vartype ( delt ), m_sharedState->get_delt_label(), getLevel ( patches ) );
+    dw_new->put ( delt_vartype ( delt ), getDelTLabel(), getLevel ( patches ) );
     dbg_out2 << std::endl;
 }
 

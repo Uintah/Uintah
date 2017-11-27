@@ -94,6 +94,7 @@ void launchIceEquilibrationKernelUnified(dim3 dimGrid,
 
 namespace Uintah {
 
+  class ModelMaker;
   class ModelInfo;
   class ModelInterface;
   class Turbulence;
