@@ -52,7 +52,7 @@ if [ "$MACHINE" == "uintah-build" ]; then
   WEBLOG=http://155.101.15.100/~${LOGNAME}/Uintah.html
   
   if [ "$LOGNAME" == "gpu_rt" ]; then
-    DEFAULT_MAIL_TO="ahumphrey@sci.utah.edu,t.harman@utah.edu,bradpeterson@gmail.com,jthornock@gmail.com,derkhar@gmail.com,bisaac2@gmail.com"
+    DEFAULT_MAIL_TO="ahumphrey@sci.utah.edu,t.harman@utah.edu,bradpeterson@gmail.com,jthornock@gmail.com,derkhar@gmail.com,bisaac2@gmail.com,allen@sci.utah.edu"
     export TEST_COMPONENTS="Examples ICE ARCHES"
   fi
   
