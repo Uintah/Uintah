@@ -3,7 +3,13 @@
 # Buildbot test script. Execute this script in the top level source dir:
 # i.e. /Uintah/trunk/src
 
-# Note thsi script will automatically creat a patch via svn (max 640 Mbytes).
+# 1. Before running this script the src code must be fully up to date.
+
+# 2. If you are adding new files they must be checked in first.
+
+# 3. There are some other gottas regarding svn ...
+
+# Note thsi script will automatically create a patch via svn (max 640 Mbytes).
 # It will contain context lines which are superfluous and make the patch
 # bigger than necessary.
 buildbot --verbose try --connect=pb --master=uintah-build.chpc.utah.edu:8031 --username=buildbot_try --passwd=try_buildbot --vc=svn --topdir=. --who=`whoami`
