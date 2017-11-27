@@ -153,7 +153,15 @@ WARNING
                      DataWarehouse  * new_dw,
                      const Patch    * patch,
                      Qstats         & Q);
-                     
+
+    template <class T>
+    void query( const Patch         * patch,
+                constCCVariable< T >& Qvar,
+                CCVariable< T >     & Qavg,
+                CCVariable< T >     & Qvariance,
+                IntVector           & avgBoxCells,
+                CellIterator        & iter);
+  
     template <class T>
     void allocateAndZeroLabels( DataWarehouse * new_dw,
                                 const Patch   *   patch,

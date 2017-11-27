@@ -15,7 +15,7 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHEVERYWHERE THE
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
@@ -61,7 +61,7 @@
       <material>    Air      </material>
       <domain>   everywhere  </domain>        << options: everwhere, interior, boundaries
       <avgBoxCells>  [5,5,5] </avgBoxCells>   << size of box to average over, cells.
-      
+
       <Variables>
         <analyze label="press_CC"  matl="0"/>
         <analyze label="vel_CC"    matl="0"/>
@@ -469,46 +469,7 @@ void spatioTemporalAvg::computeAvg( DataWarehouse  * old_dw,
   if (d_compDomain == EVERYWHERE || d_compDomain == INTERIOR ){
 
     CellIterator iter = patch->getCellIterator();
-    IntVector lo = iter.begin();
-    IntVector hi = iter.end();
-    IntVector nBoxes(-9,-9,-9);
-
-    for (int d=0; d<3; d++){
-      nBoxes[d] = (int) std::ceil( (double) (hi[d] - lo[d])/(double)d_avgBoxCells[d] );
-    }
-
-    //__________________________________
-    //  loop over boxes that this patch owns
-    for ( int i=0; i<nBoxes.x(); i++ ){
-      for ( int j=0; j<nBoxes.y(); j++ ){
-        for ( int k=0; k<nBoxes.z(); k++ ){
-
-          IntVector start = lo + IntVector(i,j,k) * d_avgBoxCells;
-       //   cout << " Box: start: " << start << endl;
-
-          // compute the average
-          T Q_avg = T(0);
-          double n=0;
-
-          for(CellIterator aveCells( IntVector(0,0,0), d_avgBoxCells ); !aveCells.done(); aveCells++){
-            IntVector c = start + *aveCells;
-            if ( patch->containsIndex(lo, hi, c) ){
-               Q_avg += Qvar[c];
-               n++;
-            }
-          }
-          Q_avg = Q_avg/T(n);
-
-          // Set the quantity
-          for(CellIterator aveCells( IntVector(0,0,0), d_avgBoxCells ); !aveCells.done(); aveCells++){
-            IntVector c = start + *aveCells;
-            if ( patch->containsIndex(lo, hi, c) ){
-              Qavg[c] = Q_avg;
-            }
-          }
-        }  // k box
-      }  // j box
-    }  // i box
+    spatioTemporalAvg::query( patch, Qvar, Qavg, Qvariance, d_avgBoxCells, iter);
   }
 
   //__________________________________
@@ -525,53 +486,10 @@ void spatioTemporalAvg::computeAvg( DataWarehouse  * old_dw,
       int pDir = axes[0];
       avgPanelCells[pDir] = 1;
 
-      cout << "//__________________________________  " << patch->getFaceName(face) << endl;
       CellIterator iter = patch->getFaceIterator( face, Patch::ExtraMinusEdgeCells );
-      IntVector lo = iter.begin();
-      IntVector hi = iter.end();
 
-      //__________________________________
-      //  compute the number of panels on this face
-      IntVector nPanels(-9,-9,-9);
+      spatioTemporalAvg::query( patch, Qvar, Qavg, Qvariance, avgPanelCells, iter);
 
-      for (int d=0; d<3; d++){
-        nPanels[d] = (int) std::ceil( (double) (hi[d] - lo[d])/(double)avgPanelCells[d] );
-      }
-
-      //__________________________________
-      //  Loop over the panels to average over
-      cout << " nPanels: " << nPanels << " avePanelCells: " << avgPanelCells << endl;
-
-      for ( int i=0; i<nPanels.x(); i++ ){
-        for ( int j=0; j<nPanels.y(); j++ ){
-          for ( int k=0; k<nPanels.z(); k++ ){
-
-            IntVector start = lo + IntVector(i,j,k) * avgPanelCells;
-            // compute the average
-            T Q_avg = T(0);
-            double n=0;
-
-            for(CellIterator aveCells( IntVector(0,0,0), avgPanelCells ); !aveCells.done(); aveCells++){
-              IntVector c = start + *aveCells;
-              if ( patch->containsIndex(lo, hi, c) ){
-                 Q_avg += Qvar[c];
-                 n++;
-              }
-            }
-
-            Q_avg = Q_avg/T(n);
-            cout << " Panel: start: " << start << " Q_avg: " << Q_avg << endl;
-
-            // Set the quantity
-            for(CellIterator aveCells( IntVector(0,0,0), avgPanelCells ); !aveCells.done(); aveCells++){
-              IntVector c = start + *aveCells;
-              if ( patch->containsIndex(lo, hi, c) ){
-                Qavg[c] = Q_avg;
-              }
-            }
-          }  // k panel
-        }  // j panel
-      }  // i panel
     }  // face loop
   }
 
@@ -588,6 +506,63 @@ void spatioTemporalAvg::computeAvg( DataWarehouse  * old_dw,
          << endl;
   }
 }
+
+
+//______________________________________________________________________
+//
+template <class T>
+void spatioTemporalAvg::query( const Patch         * patch,
+                               constCCVariable< T >& Qvar,
+                               CCVariable< T >     & Qavg,
+                               CCVariable< T >     & Qvariance,
+                               IntVector           & avgBoxCells,
+                               CellIterator        & iter)
+{
+    IntVector lo = iter.begin();
+    IntVector hi = iter.end();
+    IntVector nBoxes(-9,-9,-9);
+
+    for (int d=0; d<3; d++){
+      nBoxes[d] = (int) std::ceil( (double) (hi[d] - lo[d])/(double)avgBoxCells[d] );
+    }
+  //__________________________________
+  //  loop over boxes that this patch owns
+  for ( int i=0; i<nBoxes.x(); i++ ){
+    for ( int j=0; j<nBoxes.y(); j++ ){
+      for ( int k=0; k<nBoxes.z(); k++ ){
+
+        IntVector start = lo + IntVector(i,j,k) * avgBoxCells;
+     //   cout << " Box: start: " << start << endl;
+
+        // compute the average
+        T Q_sum = T(0);
+        double nCells=0;
+
+        for(CellIterator aveCells( IntVector(0,0,0), avgBoxCells ); !aveCells.done(); aveCells++){
+          IntVector c = start + *aveCells;
+          if ( patch->containsIndex(lo, hi, c) ){
+             Q_sum += Qvar[c];
+             nCells++;
+          }
+        }
+
+        T Q_avg  = Q_sum/T(nCells);
+        T Q_avg2 = ( Q_sum * Q_sum )/T( nCells );
+        T Q_var  = Q_avg2 - Q_avg * Q_avg;
+
+        // Set the quantity
+        for(CellIterator aveCells( IntVector(0,0,0), avgBoxCells ); !aveCells.done(); aveCells++){
+          IntVector c = start + *aveCells;
+          if ( patch->containsIndex(lo, hi, c) ){
+            Qavg[c]      = Q_avg;
+            Qvariance[c] = Q_var;
+          }
+        }
+      }  // k box
+    }  // j box
+  }  // i box
+}
+
 //______________________________________________________________________
 //  allocateAndZero  averaged
 template <class T>
