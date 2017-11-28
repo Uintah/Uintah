@@ -91,10 +91,10 @@ public:
   SerialMPM(const ProcessorGroup* myworld);
   virtual ~SerialMPM();
 
-  Contact*         contactModel;
-  ThermalContact*  thermalContactModel;
-  HeatConduction* heatConductionModel;
-  SDInterfaceModel*	d_sdInterfaceModel;
+  Contact           * contactModel;
+  ThermalContact    * thermalContactModel;
+  HeatConduction    * heatConductionModel;
+  SDInterfaceModel  *	d_sdInterfaceModel;
   //////////
   // Insert Documentation Here:
   virtual void problemSetup(const ProblemSpecP& params, 

@@ -31,6 +31,7 @@
 #include <string>
 #include <CCA/Components/MPM/Diffusion/DiffusionInterfaces/CommonIFConcDiff.h>
 #include <CCA/Components/MPM/Diffusion/DiffusionInterfaces/DiscreteInterface.h>
+#include <CCA/Components/MPM/Diffusion/DiffusionInterfaces/SimpleDiffusionContact.h>
 #include <CCA/Components/MPM/Diffusion/DiffusionInterfaces/SDInterfaceModel.h>
 
 using namespace std;
@@ -44,7 +45,7 @@ SDInterfaceModel* SDInterfaceModelFactory::create(ProblemSpecP& ps,
   ProblemSpecP mpm_ps = 
      ps->findBlockWithOutAttribute("MaterialProperties")->findBlock("MPM");
 	if(!mpm_ps)
-    throw ProblemSetupException("Cannot find scalar_diffuion_model tag", __FILE__, __LINE__);
+    throw ProblemSetupException("Cannot find scalar_diffusion_model tag", __FILE__, __LINE__);
 
   ProblemSpecP child = mpm_ps->findBlock("diffusion_interface");
 
@@ -72,6 +73,8 @@ SDInterfaceModel* SDInterfaceModelFactory::create(ProblemSpecP& ps,
     return(scinew SDInterfaceModel(child, ss, flags, mpm_lb));
   }else if (diff_interface_type == "discrete"){
     return(scinew DiscreteSDInterface(child, ss, flags, mpm_lb));
+  }else if (diff_interface_type == "simple") {
+    return(scinew SimpleSDInterface(child, ss, flags, mpm_lb));
   }else{
     throw ProblemSetupException("Unknown Scalar Interface Type ("+diff_interface_type+")", __FILE__, __LINE__);
   }

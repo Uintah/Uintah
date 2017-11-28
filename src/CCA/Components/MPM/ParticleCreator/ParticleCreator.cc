@@ -1039,10 +1039,10 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
     particle_state_preReloc.push_back(d_lb->pVelGradLabel_preReloc);
   }
 
-  if(!d_flags->d_AMR){
+//  if(!d_flags->d_AMR){
     particle_state.push_back(d_lb->pTemperatureGradientLabel);
     particle_state_preReloc.push_back(d_lb->pTemperatureGradientLabel_preReloc);
-  }
+//  }
 
   if (d_flags->d_refineParticles) {
     particle_state.push_back(d_lb->pRefinedLabel);

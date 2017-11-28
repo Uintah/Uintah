@@ -88,8 +88,10 @@ void CommonIFConcDiff::sdInterfaceInterpolated(const ProcessorGroup *,
       double g_sum_concmass = 0;
 
       for(int m = 0; m < num_matls; m++){
-        g_sum_mass += gmass[m][c];
-        g_sum_concmass += gconcentration[m][c] * gmass[m][c];
+        if (d_materials_list.requested(m)) {
+          g_sum_mass += gmass[m][c];
+          g_sum_concmass += gconcentration[m][c] * gmass[m][c];
+        }
       }
 
       double g_conc = g_sum_concmass / g_sum_mass;
@@ -98,8 +100,7 @@ void CommonIFConcDiff::sdInterfaceInterpolated(const ProcessorGroup *,
 //      for(unsigned int m = 0; m < d_materials_list.size(); m++)
       for (int m = 0; m < num_matls; ++m)
       {
-        if (d_materials_list.requested(m))
-        {
+        if (d_materials_list.requested(m)) {
           gconcentration[m][c] = g_conc;
         }
 //        int mat_idx = d_materials_list[m];

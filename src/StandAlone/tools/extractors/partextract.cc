@@ -137,7 +137,7 @@ main( int argc, char** argv )
       particleVariable = argv[++i]; 
       if (particleVariable[0] == '-') 
         usage("-partvar <particle variable name>", argv[0]);
-    } else if(s == "-partid"){
+    } else if(s == "-partid" || s == "-partID"){
 //      do_partid=true;
       string id = argv[++i];
       if (id[0] == '-') 
@@ -865,7 +865,7 @@ void printParticleVariable(DataArchive* da,
                       if (particleID == 0) {
                         for(;iter != pset->end(); iter++){
                           cout << time << " " << patchIndex << " " << matl; 
-                          cout << " " << pid[*iter];
+                          cout << " " << std::setw(10) << std::right << pid[*iter];
                           if(include_position_output){
                             cout << " " << pos[*iter].x()
                                  << " " << pos[*iter].y()

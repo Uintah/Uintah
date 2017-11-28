@@ -68,12 +68,20 @@ namespace Uintah {
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
 
+    const VarLabel* getInterfaceFluxLabel() const;
+
   protected:
 
+    void setBaseComputesAndRequiresDivergence(       Task             * task ,
+                                              const  MaterialSubset   * matls );
     MPMLabel* d_mpm_lb;
     SimulationStateP d_shared_state;
     ContactMaterialSpec d_materials_list;
     MPMFlags* d_mpm_flags;
+
+    // Stores dC/dt at the interface points.
+    VarLabel* sdInterfaceRate;
+
     SDInterfaceModel(const SDInterfaceModel&);
     SDInterfaceModel& operator=(const SDInterfaceModel&);
     

@@ -3974,8 +3974,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           CMX         = CMX + (pxnew[idx]*pmass[idx]).asVector();
           totalMom   += pvelnew[idx]*pmass[idx];
           totalmass  += pmass[idx];
-        }
-      }
+        } // Loop over pset
+      } // Else not XPIC2
 
       // Compute velocity gradient and deformation gradient on every particle
       // This can/should be combined into the loop above, once it is working

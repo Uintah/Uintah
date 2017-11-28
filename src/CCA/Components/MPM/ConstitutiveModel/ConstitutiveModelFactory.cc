@@ -49,6 +49,7 @@
 #include <CCA/Components/MPM/ConstitutiveModel/ShellMaterial.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ElasticPlasticHP.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ReactiveDiffusiveElasticPlasticHP.h>
+#include <CCA/Components/MPM/ConstitutiveModel/CleanReactiveDiffusiveElasticPlasticHP.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MurnaghanMPM.h>
 #include <CCA/Components/MPM/ConstitutiveModel/IdealGasMP.h>
 #include <CCA/Components/MPM/ConstitutiveModel/P_Alpha.h>
@@ -272,7 +273,7 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
   
   else if (cm_type == "reactive_diffusive_EP") {
     computes_pLocalizedMPM = true;
-    return(scinew ReactionDiffusionEP(child, flags));
+    return(scinew CleanReactionDiffusionEP(child, flags));
   }
   
   else if (cm_type ==  "TongeRameshPTR") {
