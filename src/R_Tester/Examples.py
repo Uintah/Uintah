@@ -99,25 +99,27 @@ FLOATTESTS    = [  ("RMCRT_FLT_test_1L", "RMCRT_FLT_bm1_1L.ups",     1,   "ALL",
                    ("RMCRT_FLT_bm1_DO",  "RMCRT_FLT_bm1_DO.ups",     1,   "ALL", ["exactComparison"])
                  ]
 
-THREADEDTESTS = [  ("RMCRT_test_1L_thread",           "RMCRT_bm1_1L.ups",          1,   "ALL", ["exactComparison", "sus_options=-nthreads 4"]),
-                   ("RMCRT_1L_bounded_threaded_2proc", "RMCRT_bm1_1L_bounded.ups", 2,   "ALL", ["exactComparison", "sus_options=-nthreads 4"]),
-                   ("RMCRT_bm1_DO_thread",            "RMCRT_bm1_DO.ups",          1,   "ALL", ["exactComparison", "sus_options=-nthreads 8"]),
-                   ("RMCRT_bm1_DO_thread_2proc",      "RMCRT_bm1_DO.ups",          2,   "ALL", ["exactComparison", "sus_options=-nthreads 4"]),
-                   ("RMCRT_ML_thread",                "RMCRT_ML.ups",              1,   "ALL", ["exactComparison", "sus_options=-nthreads 4"]),
-                   ("RMCRT_ML_thread_2proc",          "RMCRT_ML.ups",              2,   "ALL", ["exactComparison", "sus_options=-nthreads 4"]),
-                   ("RMCRT_+Domain_thread_2proc",     "RMCRT_+Domain.ups",         2,   "ALL", ["exactComparison", "sus_options=-nthreads 4"]),
-                   ("RMCRT_+Domain_ML_thread_2proc",  "RMCRT_+Domain_ML.ups",      2,   "ALL", ["exactComparison", "sus_options=-nthreads 4"]),
-                   ("RMCRT_+Domain_DO_thread_2proc",  "RMCRT_+Domain_DO.ups",      2,   "ALL", ["exactComparison", "sus_options=-nthreads 4"])
+THREADEDTESTS = [  ("RMCRT_test_1L_thread",            "RMCRT_bm1_1L.ups",          1,   "ALL", ["exactComparison", "sus_options=-nthreads 4"]),
+                   ("RMCRT_1L_bounded_threaded_2proc", "RMCRT_bm1_1L_bounded.ups",  2,   "ALL", ["exactComparison", "sus_options=-nthreads 4"]),
+                   ("RMCRT_bm1_DO_thread",             "RMCRT_bm1_DO.ups",          1,   "ALL", ["exactComparison", "sus_options=-nthreads 8"]),
+                   ("RMCRT_bm1_DO_thread_2proc",       "RMCRT_bm1_DO.ups",          2,   "ALL", ["exactComparison", "sus_options=-nthreads 4"]),
+                   ("RMCRT_ML_thread",                 "RMCRT_ML.ups",              1,   "ALL", ["exactComparison", "sus_options=-nthreads 4"]),
+                   ("RMCRT_ML_thread_2proc",           "RMCRT_ML.ups",              2,   "ALL", ["exactComparison", "sus_options=-nthreads 4"]),
+                   ("RMCRT_+Domain_thread_2proc",      "RMCRT_+Domain.ups",         2,   "ALL", ["exactComparison", "sus_options=-nthreads 4"]),
+                   ("RMCRT_+Domain_ML_thread_2proc",   "RMCRT_+Domain_ML.ups",      2,   "ALL", ["exactComparison", "sus_options=-nthreads 4"]),
+                   ("RMCRT_+Domain_DO_thread_2proc",   "RMCRT_+Domain_DO.ups",      2,   "ALL", ["exactComparison", "sus_options=-nthreads 4"])
 
                  ]
 
 GPUTESTS      = [
-                   ("RMCRT_test_1L_GPU",     "RMCRT_bm1_1L.ups",            1, "Linux", ["gpu",  "exactComparison", "sus_options=-nthreads 4 -gpu"]),
-                   ("RMCRT_ML_GPU",          "RMCRT_ML.ups",                1, "Linux", ["gpu",  "exactComparison", "sus_options=-nthreads 4 -gpu"]),
-                   ("RMCRT_1L_reflect_GPU",  "RMCRT_1L_reflect.ups",        1, "Linux", ["gpu",  "exactComparison", "sus_options=-nthreads 4 -gpu"]),
-                   ("RMCRT_bm1_DO_GPU",      "RMCRT_bm1_DO.ups",            1, "Linux", ["gpu",  "exactComparison", "sus_options=-nthreads 4 -gpu"]),
-                   ("RMCRT_1L_perf_GPU",      RMCRT_1L_perf_GPU_ups,        1, "Linux", ["gpu",  "do_performance_test", "sus_options=-nthreads 2 -gpu"]),
-                   ("RMCRT_DO_perf_GPU",      RMCRT_DO_perf_GPU_ups,        1, "Linux", ["gpu",  "do_performance_test", "sus_options=-nthreads 2 -gpu"])
+                   ("RMCRT_test_1L_GPU",          "RMCRT_bm1_1L.ups",           1, "Linux", ["gpu",  "exactComparison",     "sus_options=-nthreads 4 -gpu"]),
+                   ("RMCRT_ML_GPU",               "RMCRT_ML.ups",               1, "Linux", ["gpu",  "exactComparison",     "sus_options=-nthreads 4 -gpu"]),
+                   ("RMCRT_1L_reflect_GPU",       "RMCRT_1L_reflect.ups",       1, "Linux", ["gpu",  "exactComparison",     "sus_options=-nthreads 4 -gpu"]),
+                   ("RMCRT_bm1_DO_GPU",           "RMCRT_bm1_DO.ups",           1, "Linux", ["gpu",  "exactComparison",     "sus_options=-nthreads 4 -gpu"]),
+                   ("RMCRT_1L_perf_GPU",           RMCRT_1L_perf_GPU_ups,       1, "Linux", ["gpu",  "do_performance_test", "sus_options=-nthreads 2 -gpu"]),
+                   ("RMCRT_DO_perf_GPU",           RMCRT_DO_perf_GPU_ups,       1, "Linux", ["gpu",  "do_performance_test", "sus_options=-nthreads 4 -gpu"]),
+                   ("UnifiedScheduler_GPU_1proc", "unifiedSchedulerTest.ups",   1, "Linux", ["gpu",  "exactComparison",     "sus_options=-nthreads 4 -gpu"]),
+                   ("UnifiedScheduler_GPU_2proc", "unifiedSchedulerTest.ups",   2, "Linux", ["gpu",  "exactComparison",     "sus_options=-nthreads 4 -gpu"])
                ]
 
 DOMAINTESTS   =[   ("RMCRT_+Domain",         "RMCRT_+Domain.ups",        8, "ALL", ["exactComparison"]),
@@ -127,7 +129,7 @@ DOMAINTESTS   =[   ("RMCRT_+Domain",         "RMCRT_+Domain.ups",        8, "ALL
               
 POISSON3TESTS = [ #("poisson3_2L",         "poisson3_2L.ups",             2, "All", ["exactComparison"] ),       
                   #("poisson3_3L",         "poisson3_3L.ups",             2, "All", ["exactComparison"] ),       
-                  ("poisson3_+Domain_1L", "poisson3_+Domain_1L.ups",     2, "All", ["exactComparison"] )        
+                  ("poisson3_+Domain_1L",  "poisson3_+Domain_1L.ups",     2, "All", ["exactComparison"] )        
                 ]
 DEBUGTESTS   =[]
 
