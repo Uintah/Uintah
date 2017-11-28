@@ -58,7 +58,6 @@
 
 #ifdef HAVE_CUDA
 #  include <CCA/Components/Examples/UnifiedSchedulerTest.h>
-#  include <CCA/Components/Examples/PoissonGPU1.h>
 #endif
 
 #if !defined(NO_ARCHES)
@@ -272,9 +271,6 @@ ComponentFactory::create( ProblemSpecP& prob_spec,
   }
 
 #ifdef HAVE_CUDA
-  if (sim_comp == "poissongpu1" || sim_comp == "POISSONGPU1") {
-    return scinew PoissonGPU1(myworld, sharedState);
-  }
   if (sim_comp == "unifiedschedulertest" || sim_comp == "UNIFIEDSCHEDULERTEST") {
     return scinew UnifiedSchedulerTest(myworld, sharedState);
   }

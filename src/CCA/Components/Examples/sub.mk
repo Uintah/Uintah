@@ -59,12 +59,9 @@ ifeq ($(BUILD_MODELS_RADIATION),yes)
 endif
 
 ifeq ($(HAVE_CUDA),yes)
-  SRCS += $(SRCDIR)/PoissonGPU1.cc                 \
-          $(SRCDIR)/PoissonGPU1Kernel.cu           \
-          $(SRCDIR)/UnifiedSchedulerTest.cc        \
+  SRCS += $(SRCDIR)/UnifiedSchedulerTest.cc        \
           $(SRCDIR)/UnifiedSchedulerTestKernel.cu
   DLINK_FILES += \
-          CCA/Components/Examples/PoissonGPU1Kernel.o           \
           CCA/Components/Examples/UnifiedSchedulerTestKernel.o 
 endif
 

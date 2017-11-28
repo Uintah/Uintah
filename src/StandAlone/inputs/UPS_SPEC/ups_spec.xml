@@ -379,7 +379,7 @@
                                                 esmpm,
                                                 esmpm2,
                                                 advectslabs,
-                                                unifiedschedulertest,poissongpu1,poisson1,
+                                                unifiedschedulertest, poisson1,
                                                 poisson2, poisson3, poisson4, benchmark,
                                                 rigidmpmice,reduce_uda, rmpmice,smpm,
                                                 smpmice,switcher,wave,
