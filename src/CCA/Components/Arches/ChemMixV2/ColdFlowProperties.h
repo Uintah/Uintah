@@ -38,6 +38,8 @@ public:
 
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
+    void get_properties( const Patch* patch, ArchesTaskInfoManager* tsk_info ); 
+
     //Build instructions for this (ColdFlowProperties) class.
     class Builder : public TaskInterface::TaskBuilder {
 

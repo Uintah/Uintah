@@ -55,6 +55,9 @@ void ColdFlowProperties::register_initialize( VIVec& variable_registry , const b
     register_variable( i->first, ArchesFieldContainer::COMPUTES, variable_registry );
   }
 
+  register_variable( m_mixfrac_label, ArchesFieldContainer::REQUIRES, 0,
+                     ArchesFieldContainer::NEWDW, variable_registry );
+
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -64,6 +67,8 @@ void ColdFlowProperties::initialize( const Patch* patch, ArchesTaskInfoManager* 
     CCVariable<double>& var = tsk_info->get_uintah_field_add<CCVariable<double> >( i->first );
     var.initialize(0.0);
   }
+
+  get_properties( patch, tsk_info );
 
 }
 
@@ -92,19 +97,16 @@ void ColdFlowProperties::timestep_init( const Patch* patch, ArchesTaskInfoManage
 //--------------------------------------------------------------------------------------------------
 void ColdFlowProperties::register_restart_initialize( VIVec& variable_registry , const bool packed_tasks){
 
-  // for ( auto i = m_name_to_value.begin(); i != m_name_to_value.end(); i++ ){
-  //   register_variable( i->first, ArchesFieldContainer::COMPUTES, variable_registry );
-  // }
+  for ( auto i = m_name_to_value.begin(); i != m_name_to_value.end(); i++ ){
+    register_variable( i->first, ArchesFieldContainer::COMPUTES, variable_registry );
+  }
 
 }
 
 //--------------------------------------------------------------------------------------------------
 void ColdFlowProperties::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  // for ( auto i = m_name_to_value.begin(); i != m_name_to_value.end(); i++ ){
-  //   CCVariable<double>& var = tsk_info->get_uintah_field_add<CCVariable<double> >( i->first );
-  //   var.initialize(i->second);
-  // }
+  get_properties( patch, tsk_info );
 
 }
 
@@ -121,26 +123,8 @@ void ColdFlowProperties::register_timestep_eval( VIVec& variable_registry, const
 
 void ColdFlowProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  constCCVariable<double>& f =
-    tsk_info->get_const_uintah_field_add<constCCVariable<double> >( m_mixfrac_label );
+  get_properties( patch, tsk_info );
 
-  for ( auto i = m_name_to_value.begin(); i != m_name_to_value.end(); i++ ){
-
-    CCVariable<double>& prop = tsk_info->get_uintah_field_add<CCVariable<double> >( i->first );
-    const SpeciesInfo info = i->second;
-
-    Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
-
-    Uintah::parallel_for( range, [&]( int i, int j, int k ){
-
-      const double value = ( info.volumetric ) ?
-                           1./(f(i,j,k) / info.stream_1 + ( 1. - f(i,j,k) ) / info.stream_2) :
-                           f(i,j,k) * info.stream_1 + ( 1. - f(i,j,k) ) * info.stream_2;
-      prop(i,j,k) = value;
-
-    });
-
-  }
 }
 
 void ColdFlowProperties::register_compute_bcs( VIVec& variable_registry, const int time_substep , const bool packed_tasks){
@@ -187,5 +171,29 @@ void ColdFlowProperties::compute_bcs( const Patch* patch, ArchesTaskInfoManager*
 
       }
     }
+  }
+}
+
+void ColdFlowProperties::get_properties( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+
+  constCCVariable<double>& f =
+    tsk_info->get_const_uintah_field_add<constCCVariable<double> >( m_mixfrac_label );
+
+  for ( auto i = m_name_to_value.begin(); i != m_name_to_value.end(); i++ ){
+
+    CCVariable<double>& prop = tsk_info->get_uintah_field_add<CCVariable<double> >( i->first );
+    const SpeciesInfo info = i->second;
+
+    Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
+
+    Uintah::parallel_for( range, [&]( int i, int j, int k ){
+
+      const double value = ( info.volumetric ) ?
+                           1./(f(i,j,k) / info.stream_1 + ( 1. - f(i,j,k) ) / info.stream_2) :
+                           f(i,j,k) * info.stream_1 + ( 1. - f(i,j,k) ) * info.stream_2;
+      prop(i,j,k) = value;
+
+    });
+
   }
 }

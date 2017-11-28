@@ -852,6 +852,7 @@
                                        attribute2="stream_0 REQUIRED DOUBLE" 
                                        attribute3="stream_1 REQUIRED DOUBLE"
                                        need_applies_to="type coldflow">
+            <volumetric                spec="OPTIONAL NO_DATA"/> <!-- Add this if the property is kg/vol (e.g. density) -->
           </property>
           <mixture_fraction           spec="REQUIRED NO_DATA"
                                       attribute1="label REQUIRED STRING"

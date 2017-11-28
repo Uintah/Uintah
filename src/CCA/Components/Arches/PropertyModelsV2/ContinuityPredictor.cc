@@ -100,7 +100,7 @@ ContinuityPredictor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
   const double area_EW = DX.y()*DX.z();
   const double area_NS = DX.x()*DX.z();
   const double area_TB = DX.x()*DX.y();
-  const double vol       = DX.x()*DX.y()*DX.z();
+  const double vol     = DX.x()*DX.y()*DX.z();
 
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
   Uintah::parallel_for( range, [&](int i, int j, int k){

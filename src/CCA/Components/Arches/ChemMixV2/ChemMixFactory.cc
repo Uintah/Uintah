@@ -35,11 +35,9 @@ ChemMixFactory::register_all_tasks( ProblemSpecP& db )
       if ( type == "constant" ){
         TaskInterface::TaskBuilder* tsk = scinew ConstantStateProperties::Builder( label, 0 );
         register_task( label, tsk );
-        m_compute_density_table.push_back( label );
       } else if ( type == "coldflow" ){
         TaskInterface::TaskBuilder* tsk = scinew ColdFlowProperties::Builder( label, 0 );
         register_task( label, tsk );
-        m_compute_density_table.push_back( label );
       } else {
         throw InvalidValue("Error: Unknown state property evaluator type: "+type, __FILE__, __LINE__);
       }

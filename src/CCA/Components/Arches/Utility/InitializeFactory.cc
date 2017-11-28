@@ -144,12 +144,12 @@ InitializeFactory::register_all_tasks( ProblemSpecP& db )
         _unweighted_var_tasks.push_back(task_name);
 
         } else if ( type == "taylor_green3d"){
-  
+
           std::string var_type;
           db_task->findBlock("variable")->getAttribute("type", var_type);
-  
+
           TaskInterface::TaskBuilder* tsk;
-  
+
           if ( var_type == "FX" ){
             tsk = scinew TaylorGreen3D<SFCXVariable<double> >::Builder( task_name, 0, eqn_name );
           } else if ( var_type == "FY" ){
@@ -157,10 +157,10 @@ InitializeFactory::register_all_tasks( ProblemSpecP& db )
           } else {
             tsk = scinew TaylorGreen3D<SFCZVariable<double> >::Builder( task_name, 0, eqn_name );
           }
-  
+
           register_task( task_name, tsk );
           _unweighted_var_tasks.push_back(task_name);
-  
+
 
       } else if ( type == "random_lagrangian_particles"){
 

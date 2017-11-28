@@ -116,7 +116,9 @@
       </PropertyModelsV2>
       <StateProperties>
         <model label= "cold_flow_property_evaluator" type = "coldflow" >
-          <property label = "density" stream_1 = "5.0" stream_0 = "1.0" />
+          <property label = "density" stream_1 = "5.0" stream_0 = "1.0">
+            <volumetric/>
+          </property>
           <mixture_fraction label = "phi"/>
         </model>
       </StateProperties>
