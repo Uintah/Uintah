@@ -52,15 +52,12 @@ public:
 
 private:
 
-    std::string m_label_density; 
-    std::string m_label_densityStar; 
+    std::string m_label_density;
+    std::string m_label_densityStar;
     int _time_order;
     std::vector<double> _alpha;
     std::vector<double> _beta;
     std::vector<double> _time_factor;
-
-    //void compute_density(  const Patch* patch, ArchesTaskInfoManager* tsk_info);
-
 
   };
 }

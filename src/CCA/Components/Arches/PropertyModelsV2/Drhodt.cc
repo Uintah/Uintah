@@ -1,4 +1,4 @@
-#include <CCA/Components/Arches/PropertyModelsV2/DrhodtEs.h>
+#include <CCA/Components/Arches/PropertyModelsV2/Drhodt.h>
 #include <CCA/Components/Arches/KokkosTools.h>
 #include <CCA/Components/Arches/UPSHelper.h>
 
@@ -6,19 +6,18 @@
 namespace Uintah{
 
 //--------------------------------------------------------------------------------------------------
-DrhodtEs::DrhodtEs( std::string task_name, int matl_index ) :
+Drhodt::Drhodt( std::string task_name, int matl_index ) :
 TaskInterface( task_name, matl_index ) {
 }
 
 //--------------------------------------------------------------------------------------------------
-DrhodtEs::~DrhodtEs(){
+Drhodt::~Drhodt(){
 }
 
 //--------------------------------------------------------------------------------------------------
 void
-DrhodtEs::problemSetup( ProblemSpecP& db ){
+Drhodt::problemSetup( ProblemSpecP& db ){
 
-  //db->findBlock("KMomentum")->findBlock("drhodt")->getAttribute("label",m_label_drhodt);
   m_label_drhodt = "drhodt";
   using namespace ArchesCore;
   m_label_density = parse_ups_for_role( DENSITY, db, "density" );
@@ -27,42 +26,33 @@ DrhodtEs::problemSetup( ProblemSpecP& db ){
 
 //--------------------------------------------------------------------------------------------------
 void
-DrhodtEs::create_local_labels(){
+Drhodt::create_local_labels(){
+
   register_new_variable<CCVariable<double> >( m_label_drhodt );
 
 }
 
 //--------------------------------------------------------------------------------------------------
 void
-DrhodtEs::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>&
+Drhodt::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>&
                                        variable_registry, const bool packed_tasks ){
+
   register_variable( m_label_drhodt , ArchesFieldContainer::COMPUTES, variable_registry );
+
 }
 
 //--------------------------------------------------------------------------------------------------
 void
-DrhodtEs::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+Drhodt::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& drhodt = tsk_info->get_uintah_field_add<CCVariable<double> >( m_label_drhodt );
   drhodt.initialize(0.0);
-}
-
-//--------------------------------------------------------------------------------------------------
-void
-DrhodtEs::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>&
-                                          variable_registry, const bool packed_tasks ){
 
 }
 
 //--------------------------------------------------------------------------------------------------
 void
-DrhodtEs::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
-
-}
-
-//--------------------------------------------------------------------------------------------------
-void
-DrhodtEs::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>&
+Drhodt::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>&
                                           variable_registry, const int time_substep,
                                           const bool packed_tasks ){
   register_variable( m_label_density , ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
@@ -73,13 +63,13 @@ DrhodtEs::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInfo
 
 //--------------------------------------------------------------------------------------------------
 void
-DrhodtEs::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+Drhodt::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   constCCVariable<double>& rho = tsk_info->get_const_uintah_field_add<constCCVariable<double> >( m_label_density );
   constCCVariable<double>& old_rho = tsk_info->get_const_uintah_field_add<constCCVariable<double> >( m_label_density, ArchesFieldContainer::OLDDW);
-  
+
   CCVariable<double>& drhodt = tsk_info->get_uintah_field_add<CCVariable<double> >( m_label_drhodt );
-  drhodt.initialize(0.0); 
+  drhodt.initialize(0.0);
   const double dt = tsk_info->get_dt();
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
   Uintah::parallel_for( range, [&](int i, int j, int k){

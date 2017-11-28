@@ -34,7 +34,7 @@ SRCS += \
         $(SRCDIR)/DensityPredictor.cc       \
         $(SRCDIR)/ContinuityPredictor.cc    \
         $(SRCDIR)/DensityStar.cc    \
-        $(SRCDIR)/DrhodtEs.cc    \
+        $(SRCDIR)/Drhodt.cc    \
         $(SRCDIR)/FaceVelocities.cc         \
         $(SRCDIR)/OneDWallHT.cc             \
         $(SRCDIR)/PropertyModelFactoryV2.cc \

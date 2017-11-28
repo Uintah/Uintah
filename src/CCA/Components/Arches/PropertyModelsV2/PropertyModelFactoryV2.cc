@@ -8,7 +8,7 @@
 #include <CCA/Components/Arches/PropertyModelsV2/DensityPredictor.h>
 #include <CCA/Components/Arches/PropertyModelsV2/DensityStar.h>
 #include <CCA/Components/Arches/PropertyModelsV2/ContinuityPredictor.h>
-#include <CCA/Components/Arches/PropertyModelsV2/DrhodtEs.h>
+#include <CCA/Components/Arches/PropertyModelsV2/Drhodt.h>
 #include <CCA/Components/Arches/PropertyModelsV2/OneDWallHT.h>
 #include <CCA/Components/Arches/PropertyModelsV2/ConstantProperty.h>
 #include <CCA/Components/Arches/PropertyModelsV2/FaceVelocities.h>
@@ -367,10 +367,8 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
     TaskInterface::TaskBuilder* con = scinew ContinuityPredictor::Builder( "continuity_check", 0 );
     register_task( "continuity_check", con );
 
-    TaskInterface::TaskBuilder* dre = scinew DrhodtEs::Builder( "drhodt", 0 );
+    TaskInterface::TaskBuilder* dre = scinew Drhodt::Builder( "drhodt", 0 );
     register_task( "drhodt", dre );
-    //TaskInterface::TaskBuilder* u_from_rho_u_tsk = scinew UFromRhoU::Builder( "u_from_rho_u", 0);
-    //register_task("u_from_rho_u", u_from_rho_u_tsk);
 
     TaskInterface::TaskBuilder* cc_u = scinew CCVel::Builder("compute_cc_velocities", 0 );
     register_task("compute_cc_velocities", cc_u );
@@ -497,9 +495,6 @@ if ( db->findBlock("PropertyModelsV2") != nullptr){
     tsk = retrieve_task("drhodt");
     tsk->problemSetup(db);
     tsk->create_local_labels();
-//    tsk = retrieve_task("u_from_rho_u");
-//    tsk->problemSetup(db);
-//    tsk->create_local_labels();
 
     tsk = retrieve_task("compute_cc_velocities");
     tsk->problemSetup(db);
