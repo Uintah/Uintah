@@ -94,7 +94,7 @@ SimulationController::SimulationController( const ProcessorGroup * myworld,
   d_recompileTaskGraph     = false;
   
   d_restarting             = false;
-  d_reduceUda              = false;
+  d_postProcessUda         = false;
   d_do_multi_taskgraphing  = false;
   d_restart_archive        = nullptr;
   d_app                    = 0;
@@ -286,10 +286,10 @@ SimulationController::~SimulationController()
 //______________________________________________________________________
 //
 void
-SimulationController::setReduceUdaFlags( const string & fromDir )
+SimulationController::setPostProcessFlags( const string & fromDir )
 {
-  d_reduceUda   = true;
-  d_fromDir     = fromDir;
+  d_postProcessUda   = true;
+  d_fromDir          = fromDir;
 }
 
 //______________________________________________________________________

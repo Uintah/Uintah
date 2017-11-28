@@ -22,12 +22,12 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_HOMEBREW_Component_UdaReducer_H
-#define UINTAH_HOMEBREW_Component_UdaReducer_H
+#ifndef UINTAH_HOMEBREW_Component_PostProcess_H
+#define UINTAH_HOMEBREW_Component_PostProcess_H
 
 #include <CCA/Components/Application/ApplicationCommon.h>
-
-#include <CCA/Components/ReduceUda/Module.h>
+#include <CCA/Components/PostProcessUda/Common.h>
+#include <CCA/Components/PostProcessUda/Module.h>
 #include <CCA/Ports/Output.h>
 #include <Core/DataArchive/DataArchive.h>
 #include <Core/Grid/Grid.h>
@@ -41,41 +41,17 @@ namespace Uintah {
   class LoadBalancerPort;
   class Module;
 
-/**************************************
 
-CLASS
-   UdaReducer
-
-   Short description...
-
-GENERAL INFORMATION
-
-   UdaReducer.h
-
-   Steven G. Parker
-   Department of Computer Science
-   University of Utah
-
-   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-
-
-KEYWORDS
-   Simulation_Interface
-
-DESCRIPTION
-   Long description...
-
-WARNING
-
-****************************************/
-
-  class UdaReducer : public ApplicationCommon {
+  class PostProcessUda : 
+  public ApplicationCommon, 
+  public PostProcessCommon {
+  
   public:
-    UdaReducer( const ProcessorGroup * myworld,
-		const SimulationStateP sharedState,
-                const std::string    & udaDir );
+    PostProcessUda( const ProcessorGroup * myworld,
+		      const SimulationStateP sharedState,
+                    const std::string    & udaDir );
 
-    virtual ~UdaReducer();
+    virtual ~PostProcessUda();
 
     virtual void problemSetup( const ProblemSpecP     & params,
                                const ProblemSpecP     & restart_prob_spec,
@@ -118,8 +94,8 @@ WARNING
   //______________________________________________________________________
   //
   private:
-    UdaReducer(const UdaReducer&);
-    UdaReducer& operator=(const UdaReducer&);
+    PostProcessUda(const PostProcessUda&);
+    PostProcessUda& operator=(const PostProcessUda&);
 
     void initialize(const ProcessorGroup*,
                     const PatchSubset* patches,
@@ -176,9 +152,6 @@ WARNING
     const VarLabel       * delt_label;
     SimpleMaterial       * d_oneMatl;
 
-    VarLabel* testVLabel;
-    VarLabel* testDLabel;
-    
     std::vector<Module*> d_Modules;
 
 

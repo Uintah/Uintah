@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/ReduceUda/statistics.h>
+#include <CCA/Components/PostProcessUda/statistics.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/DbgOutput.h>
@@ -39,11 +39,11 @@
   for a set of CCVariables in an existing uda over the timesteps in the uda.  
   The usage is:    
       
-   sus -reduce_uda <uda>
+   sus -postProcessUda <uda>
       
    Make the following changes to the <uda>/input.xml
       
-  <SimulationComponent type="reduce_uda"/>    
+  <SimulationComponent type="postProcessUda"/>    
 
   <save label="mean_press_CC"/>
   <save label="variance_press_CC"/>
@@ -82,7 +82,8 @@ statistics::statistics(ProblemSpecP    & module_spec,
                        SimulationStateP& sharedState,
                        Output          * dataArchiver,
                        DataArchive     * dataArchive)
-  : Module(module_spec, sharedState, dataArchiver, dataArchive)
+  : Module(module_spec, sharedState, dataArchiver, dataArchive),
+    PostProcessCommon()
 {
   d_sharedState  = sharedState;
   d_prob_spec    = module_spec;

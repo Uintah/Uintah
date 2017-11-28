@@ -107,7 +107,7 @@ DataArchiver::DataArchiver(const ProcessorGroup* myworld, int udaSuffix)
   d_saveParticleVariables = false;
   d_saveP_x               = false;
   d_particlePositionName  = "p.x";
-  d_usingReduceUda        = false;
+  d_doPostProcessUda      = false;
   d_outputFileFormat      = UDA;
   //d_currentTime=-1;
   //d_currentTimestep=-1;
@@ -611,7 +611,7 @@ DataArchiver::restartSetup( Dir    & restartFromDir,
 // checkpoint files to the new directory.  This also removes the
 // global (dat) variables from the saveLabels variables
 void
-DataArchiver::reduceUdaSetup(Dir& fromDir)
+DataArchiver::postProcessUdaSetup(Dir& fromDir)
 {
   //__________________________________
   // copy files
@@ -711,9 +711,9 @@ DataArchiver::reduceUdaSetup(Dir& fromDir)
   d_outputInitTimestep     = true;
   d_outputInterval         = 0.0;
   d_outputTimestepInterval = 1;
-  d_usingReduceUda         = true;
+  d_doPostProcessUda       = true;
 
-} // end reduceUdaSetup()
+} // end postProcessUdaSetup()
 
 //______________________________________________________________________
 //
@@ -1247,7 +1247,7 @@ DataArchiver::makeTimeStepDirs( const int timeStep,
   int numLevels = grid->numLevels();
   // time should be currentTime+delt
   
-  int dir_timestep = getTimestepTopLevel(timeStep);  // could be modified by reduceUda
+  int dir_timestep = getTimestepTopLevel(timeStep);
 
   dbg << "      makeTimeStepDirs for timestep: " << timeStep
       << " dir_timestep: " << dir_timestep<< "\n";
@@ -1478,7 +1478,7 @@ DataArchiver::writeto_xml_files( const int timeStep,
   //__________________________________
   //  Writeto XML files
   // to check for output nth proc
-  int dir_timestep = getTimestepTopLevel( timeStep );  // could be modified by reduceUda
+  int dir_timestep = getTimestepTopLevel( timeStep );
   
   // start dumping files to disk
   vector<Dir*> baseDirs;
@@ -1694,7 +1694,7 @@ DataArchiver::writeto_xml_files( const int timeStep,
       
       //__________________________________
       // copy the component sections of timestep.xml.
-      if( d_usingReduceUda ) {
+      if( d_doPostProcessUda ) {
         copy_outputProblemSpec( timeStep, d_fromDir, d_dir );
       }
     }
@@ -1723,7 +1723,7 @@ DataArchiver::writeto_xml_files( const int timeStep,
     //__________________________________
     //  Writeto XML files
     // to check for output nth proc
-    int dir_timestep = getTimestepTopLevel( timeStep ); // could be modified by reduceUda
+    int dir_timestep = getTimestepTopLevel( timeStep );
   
     string iname = d_dir.getName()+"/index.xml";
 
@@ -2535,7 +2535,7 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
   }
   
   ostringstream tname;
-  tname << "t" << setw(5) << setfill('0') << getTimestepTopLevel( timeStep );    // could be modified by reduceUda
+  tname << "t" << setw(5) << setfill('0') << getTimestepTopLevel( timeStep );
 
   Dir tdir = dir.getSubdir( tname.str() );
   Dir ldir;
@@ -3835,7 +3835,7 @@ void
 DataArchiver::copy_outputProblemSpec( const int timeStep,
 				      Dir & fromDir, Dir & toDir )
 {
-  int dir_timestep = getTimestepTopLevel( timeStep );  // could be modified by reduceUda
+  int dir_timestep = getTimestepTopLevel( timeStep );
   
   ostringstream tname;
   tname << "t" << setw(5) << setfill('0') << dir_timestep;
@@ -3866,12 +3866,11 @@ DataArchiver::copy_outputProblemSpec( const int timeStep,
 } 
 
 //______________________________________________________________________
-// If your using reduceUda then use use a mapping that's defined in
-// reduceUdaSetup()
+// If your using PostProcessUda then use its mapping 
 int
 DataArchiver::getTimestepTopLevel( const int timeStep )
 {
-  if ( d_usingReduceUda ) {
+  if ( d_doPostProcessUda ) {
     return d_restartTimestepIndicies[ timeStep ];
   }
   else {

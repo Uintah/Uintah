@@ -89,7 +89,7 @@ SUBDIRS := \
         $(SRCDIR)/OnTheFlyAnalysis     \
         $(SRCDIR)/Parent               \
         $(SRCDIR)/ProblemSpecification \
-        $(SRCDIR)/ReduceUda            \
+        $(SRCDIR)/PostProcessUda       \
         $(SRCDIR)/Regridder            \
         $(SRCDIR)/Schedulers           \
         $(SRCDIR)/SimulationController \

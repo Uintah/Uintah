@@ -120,14 +120,14 @@ public:
 
 
   //__________________________________
-  //  This is used by reduceUda component.  Iit reads in the data and puts it into the DW.
+  //  This is used by postProcessUda component.  It reads in the data and puts it into the DW.
   //  This is a specialization of restartInitialize().
-  void reduceUda_ReadUda( const ProcessorGroup * pg,
-                          const int              timestep,
-                          const GridP          & grid,
-                          const PatchSubset    * patches,
-                          DataWarehouse        * dw,
-                          LoadBalancerPort     * lb ); 
+  void postProcess_ReadUda( const ProcessorGroup * pg,
+                            const int              timestep,
+                            const GridP          & grid,
+                            const PatchSubset    * patches,
+                            DataWarehouse        * dw,
+                            LoadBalancerPort     * lb ); 
 
   static void queryEndiannessAndBits( ProblemSpecP doc, std::string & endianness, int & numBits );
 

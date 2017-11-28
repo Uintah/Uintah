@@ -57,7 +57,7 @@ PSELIBS := \
         $(MPMFVM)                          \
         $(COMPONENTS)/Application          \
         $(COMPONENTS)/Examples             \
-        $(COMPONENTS)/ReduceUda            \
+        $(COMPONENTS)/PostProcessUda       \
         $(COMPONENTS)/ProblemSpecification \
         $(COMPONENTS)/Solvers              \
         $(COMPONENTS)/SwitchingCriteria    \

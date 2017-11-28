@@ -49,7 +49,7 @@
 #include <CCA/Components/MPMICE/MPMICE.h>
 #include <CCA/Components/Parent/ComponentFactory.h>
 #include <CCA/Components/Parent/Switcher.h>
-#include <CCA/Components/ReduceUda/UdaReducer.h>
+#include <CCA/Components/PostProcessUda/PostProcess.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
@@ -321,8 +321,8 @@ ComponentFactory::create( ProblemSpecP& prob_spec,
   if (sim_comp == "switcher" || sim_comp == "SWITCHER") {
     return scinew Switcher(myworld, sharedState, prob_spec, uda);
   } 
-  if (sim_comp == "reduce_uda") {
-    return scinew UdaReducer(myworld, sharedState, uda);
+  if (sim_comp == "postProcessUda") {
+    return scinew PostProcessUda(myworld, sharedState, uda);
   } 
 #ifndef NO_HEAT
 

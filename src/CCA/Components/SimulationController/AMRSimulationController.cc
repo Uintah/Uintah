@@ -24,7 +24,7 @@
 
 #include <CCA/Components/SimulationController/AMRSimulationController.h>
 
-#include <CCA/Components/ReduceUda/UdaReducer.h>
+#include <CCA/Components/PostProcessUda/PostProcess.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/LoadBalancerPort.h>
@@ -206,16 +206,16 @@ AMRSimulationController::run()
   GpuUtilities::assignPatchesToGpus( d_currentGridP );
 #endif
 
-  //  reduceUda - needs to be done after the time info is read but
+  //  postProcessUda - needs to be done after the time info is read but
   //  before the initial time step.
-  if( d_reduceUda ) {
+  if( d_postProcessUda ) {
     Dir fromDir( d_fromDir );
-    d_output->reduceUdaSetup( fromDir );
+    d_output->postProcessUdaSetup( fromDir );
     d_app->getSimulationTime()->m_delt_factor = 1;
     d_app->getSimulationTime()->m_delt_min    = 0;
     d_app->getSimulationTime()->m_delt_max    = 1e99;
-    d_app->getSimulationTime()->m_init_time = static_cast<UdaReducer*>(d_app)->getInitialTime();
-    d_app->getSimulationTime()->m_max_time  = static_cast<UdaReducer*>(d_app)->getMaxTime();
+    d_app->getSimulationTime()->m_init_time = static_cast<PostProcessUda*>(d_app)->getInitialTime();
+    d_app->getSimulationTime()->m_max_time  = static_cast<PostProcessUda*>(d_app)->getMaxTime();
     d_app->getSimulationTime()->m_max_delt_increase = 1e99;
     d_app->getSimulationTime()->m_max_initial_delt  = 1e99;
   }
@@ -449,10 +449,10 @@ AMRSimulationController::run()
     }
 
     // This step is a hack but it is the only way to get a new grid
-    // from UdaReducer and needs to be done before
+    // from postProcessUda and needs to be done before
     // advanceDataWarehouse is called.
-    if (d_reduceUda) {
-      d_currentGridP = static_cast<UdaReducer*>(d_app)->getGrid();
+    if (d_postProcessUda) {
+      d_currentGridP = static_cast<PostProcessUda*>(d_app)->getGrid();
     }
 
     // After one step (either time step or initialization) and

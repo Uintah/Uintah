@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/ReduceUda/Module.h>
+#include <CCA/Components/PostProcessUda/Module.h>
 #include <Core/Grid/SimulationState.h>
 
 using namespace Uintah;

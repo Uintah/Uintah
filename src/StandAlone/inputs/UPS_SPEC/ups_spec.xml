@@ -372,7 +372,7 @@
                                                 burger,dosweep, ice,
                                                 impm, mpm,
                                                 mpmarches, 
-                                                mpmf, mpmice, amrmpm, wasatch, reduce_uda,
+                                                mpmf, mpmice, amrmpm, wasatch, postProcessUda,
                                                 electrostatic_solver,
                                                 gauss_solver,
                                                 mpnp,

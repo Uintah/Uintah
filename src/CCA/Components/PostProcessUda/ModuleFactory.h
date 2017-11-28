@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef Packages_Uintah_CCA_Components_ReduceUda_Factory_h
-#define Packages_Uintah_CCA_Components_ReduceUda_Factory_h
+#ifndef Packages_Uintah_CCA_Components_PostProcessUda_Factory_h
+#define Packages_Uintah_CCA_Components_PostProcessUda_Factory_h
 
 #include <Core/DataArchive/DataArchive.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>

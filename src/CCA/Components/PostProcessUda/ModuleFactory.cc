@@ -22,9 +22,9 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/ReduceUda/ModuleFactory.h>
-#include <CCA/Components/ReduceUda/statistics.h>
-#include <CCA/Components/ReduceUda/spatioTemporalAvg.h>
+#include <CCA/Components/PostProcessUda/ModuleFactory.h>
+#include <CCA/Components/PostProcessUda/statistics.h>
+#include <CCA/Components/PostProcessUda/spatioTemporalAvg.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/SimulationState.h>
 

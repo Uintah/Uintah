@@ -170,7 +170,7 @@ public:
   virtual void run() = 0;
 
   //  sets simulationController flags
-  void setReduceUdaFlags( const std::string& fromDir );
+  void setPostProcessFlags( const std::string& fromDir );
      
   ProblemSpecP         getProblemSpecP() { return d_ups; }
   ProblemSpecP         getGridProblemSpecP() { return d_grid_ps; }
@@ -231,7 +231,7 @@ protected:
   int         d_restartTimeStep{0};
   int         d_restartIndex{0};
   int         d_last_recompile_timeStep{0};
-  bool        d_reduceUda{false};
+  bool        d_postProcessUda{false};
       
   // If d_restartFromScratch is true then don't copy or move any of
   // the old time steps or dat files from the old directory.  Run as
