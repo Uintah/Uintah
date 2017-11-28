@@ -1246,7 +1246,8 @@
       <KScalarTransport                 spec="OPTIONAL NO_DATA">
         <eqn_group                      spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        attribute2="type REQUIRED STRING 'CC,FX,FY,FZ'">
+                                        attribute2="type REQUIRED STRING 'CC,FX,FY,FZ'"
+                                        attribute3="class OPTIONAL STRING 'density_weighted, dqmom_wa, dqmom_w, volumetric'">
           <eqn                            spec="MULTIPLE NO_DATA"
                                           attribute1="label REQUIRED STRING">
 

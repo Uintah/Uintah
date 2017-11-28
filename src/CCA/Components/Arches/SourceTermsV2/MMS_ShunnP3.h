@@ -11,89 +11,89 @@ namespace Uintah{
 
 public:
 
-    MMS_ShunnP3<T>( std::string task_name, int matl_index, SimulationStateP shared_state  );
-    ~MMS_ShunnP3<T>();
+  MMS_ShunnP3<T>( std::string task_name, int matl_index, SimulationStateP shared_state  );
+  ~MMS_ShunnP3<T>();
 
-    void problemSetup( ProblemSpecP& db );
+  void problemSetup( ProblemSpecP& db );
 
-    //Build instructions for this (MMS_ShunnP3) class.
-    class Builder : public TaskInterface::TaskBuilder {
+  //Build instructions for this (MMS_ShunnP3) class.
+  class Builder : public TaskInterface::TaskBuilder {
 
-      public:
+    public:
 
-      Builder( std::string task_name, int matl_index, SimulationStateP shared_state ) :
-        _task_name(task_name), _matl_index(matl_index), _shared_state(shared_state){}
-      ~Builder(){}
+    Builder( std::string task_name, int matl_index, SimulationStateP shared_state ) :
+      _task_name(task_name), _matl_index(matl_index), _shared_state(shared_state){}
+    ~Builder(){}
 
-      MMS_ShunnP3* build()
-      { return scinew MMS_ShunnP3<T>( _task_name, _matl_index, _shared_state  ); }
+    MMS_ShunnP3* build()
+    { return scinew MMS_ShunnP3<T>( _task_name, _matl_index, _shared_state  ); }
 
-      private:
+    private:
 
-      std::string _task_name;
-      int _matl_index;
+    std::string _task_name;
+    int _matl_index;
 
-      SimulationStateP _shared_state;
-    };
+    SimulationStateP _shared_state;
+  };
 
- protected:
+protected:
 
-    typedef ArchesFieldContainer::VariableInformation VarInfo;
+  typedef ArchesFieldContainer::VariableInformation VarInfo;
 
-    void register_initialize( std::vector<VarInfo>& variable_registry, const bool pack_tasks);
+  void register_initialize( std::vector<VarInfo>& variable_registry, const bool pack_tasks);
 
-    void register_timestep_init( std::vector<VarInfo>& variable_registry, const bool pack_tasks);
+  void register_timestep_init( std::vector<VarInfo>& variable_registry, const bool pack_tasks);
 
-    void register_timestep_eval( std::vector<VarInfo>& variable_registry, const int time_substep,
+  void register_timestep_eval( std::vector<VarInfo>& variable_registry, const int time_substep,
                                  const bool pack_tasks);
 
-    void register_compute_bcs( std::vector<VarInfo>& variable_registry, const int time_substep,
-                               const bool pack_tasks){}
+  void register_compute_bcs( std::vector<VarInfo>& variable_registry, const int time_substep,
+                             const bool pack_tasks){}
 
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
+  void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+  void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+  void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+  void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    void create_local_labels();
+  void create_local_labels();
 
 private:
 
-    const double m_pi = acos(-1.0);
-    double m_k ;
-    double m_w0 ;
-    double m_rho0; 
-    double m_rho1;
-    double m_uf;
-    double m_vf;
-    double m_D;
+  const double m_pi = acos(-1.0);
+  double m_k ;
+  double m_w0 ;
+  double m_rho0;
+  double m_rho1;
+  double m_uf;
+  double m_vf;
+  double m_D;
 
-    std::string m_x_name;
-    std::string m_y_name;
+  std::string m_x_name;
+  std::string m_y_name;
 
-    std::string m_MMS_label;
-    std::string m_rho_u_label;
-    //std::string m_MMS_scalar_label;
-    std::string m_MMS_source_label;
-    //std::string m_MMS_source_scalar_label;
-    //std::string m_MMS_rho_scalar_label;
-    std::string m_MMS_rho_label;
-    //std::string m_MMS_rho_face_label;
-    std::string m_MMS_drhodt_label;
-    std::string m_MMS_continuity_label;
-    std::string m_which_vel;
+  std::string m_MMS_label;
+  std::string m_rho_u_label;
+  //std::string m_MMS_scalar_label;
+  std::string m_MMS_source_label;
+  //std::string m_MMS_source_scalar_label;
+  //std::string m_MMS_rho_scalar_label;
+  std::string m_MMS_rho_label;
+  //std::string m_MMS_rho_face_label;
+  std::string m_MMS_drhodt_label;
+  std::string m_MMS_continuity_label;
+  std::string m_which_vel;
 
-    //std::string m_MMS_source_diff_label;
-    //std::string m_MMS_source_t_label;
+  //std::string m_MMS_source_diff_label;
+  //std::string m_MMS_source_t_label;
 
-    SimulationStateP _shared_state;
+  SimulationStateP _shared_state;
 
-    void compute_source( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+  void compute_source( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-  };
+};
 
 //--------------------------------------------------------------------------------------------------
 template <typename T>
@@ -111,45 +111,43 @@ MMS_ShunnP3<T>::~MMS_ShunnP3(){
 template <typename T>
 void MMS_ShunnP3<T>::problemSetup( ProblemSpecP& db ){
 
-    db->getWithDefault( "k", m_k, 2.0);
-    db->getWithDefault( "w0", m_w0, 2.0);
-    db->getWithDefault( "rho0", m_rho0, 20.0);
-    db->getWithDefault( "rho1", m_rho1, 1.0);
-    db->getWithDefault( "D", m_D, 0.001);
-    db->getWithDefault( "uf", m_uf, 0.0);
-    db->getWithDefault( "vf", m_vf, 0.0);
-    
-    
-    db->require("which_vel", m_which_vel);
-    ProblemSpecP db_coord = db->findBlock("coordinates");
-    if ( db_coord ){
-      db_coord->getAttribute("x", m_x_name);
-      db_coord->getAttribute("y", m_y_name);
-    } else {
-      throw InvalidValue("Error: must have coordinates specified for almgren MMS init condition",
-        __FILE__, __LINE__);
-    }
+  db->getWithDefault( "k", m_k, 2.0);
+  db->getWithDefault( "w0", m_w0, 2.0);
+  db->getWithDefault( "rho0", m_rho0, 20.0);
+  db->getWithDefault( "rho1", m_rho1, 1.0);
+  db->getWithDefault( "D", m_D, 0.001);
+  db->getWithDefault( "uf", m_uf, 0.0);
+  db->getWithDefault( "vf", m_vf, 0.0);
+
+  db->require("which_vel", m_which_vel);
+  ProblemSpecP db_coord = db->findBlock("coordinates");
+  if ( db_coord ){
+    db_coord->getAttribute("x", m_x_name);
+    db_coord->getAttribute("y", m_y_name);
+  } else {
+    throw InvalidValue("Error: must have coordinates specified for almgren MMS init condition",
+      __FILE__, __LINE__);
+  }
 
   m_MMS_label             = _task_name;
   m_rho_u_label           = _task_name + "_rho_u";
   //m_MMS_scalar_label      = _task_name+"_scalar";
   m_MMS_source_label      = _task_name + "_source";
   //m_MMS_source_scalar_label = _task_name + "_source_scalar";
-  
+
   //m_MMS_rho_scalar_label   = _task_name+"_rho_scalar";
   m_MMS_rho_label          = _task_name+"_rho";
   //m_MMS_rho_face_label          = _task_name+"_rho_face";
-  
+
   m_MMS_drhodt_label       = _task_name+"_drhodt";
   m_MMS_continuity_label       = _task_name+"_continuity";
-  
 
   //m_MMS_source_diff_label = _task_name + "_source_diff";
   //m_MMS_source_t_label    = _task_name + "_source_time";
 
 }
 
-//--------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 template <typename T>
 void MMS_ShunnP3<T>::create_local_labels(){
 
@@ -165,11 +163,11 @@ void MMS_ShunnP3<T>::create_local_labels(){
   //register_new_variable< CCVariable<double> >( m_MMS_rho_scalar_label);
   register_new_variable< CCVariable<double> >( m_MMS_rho_label);
   //register_new_variable< T >( m_MMS_rho_face_label);
-  
+
 
 }
 
-//--------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 template <typename T>
 void MMS_ShunnP3<T>::register_initialize( std::vector<VarInfo>&
                                       variable_registry , const bool pack_tasks){
@@ -184,7 +182,7 @@ void MMS_ShunnP3<T>::register_initialize( std::vector<VarInfo>&
   //register_variable( m_MMS_rho_scalar_label,    ArchesFieldContainer::COMPUTES ,  variable_registry);
   register_variable( m_MMS_rho_label,           ArchesFieldContainer::COMPUTES ,  variable_registry );
   //register_variable( m_MMS_rho_face_label,      ArchesFieldContainer::COMPUTES ,  variable_registry);
-  
+
   register_variable( m_MMS_drhodt_label,        ArchesFieldContainer::COMPUTES ,  variable_registry );
   register_variable( m_MMS_continuity_label,        ArchesFieldContainer::COMPUTES ,  variable_registry );
 
@@ -268,12 +266,12 @@ void MMS_ShunnP3<T>::compute_source( const Patch* patch, ArchesTaskInfoManager* 
     // for velocity
       Uintah::parallel_for( range, [&](int i, int j, int k){
         const double phi_f = (1.0 + std::sin(m_k*m_pi*(x(i,j,k)-m_uf*time_d))*
-                        std::sin(m_k*m_pi*(y(i,j,k)-m_vf*time_d))*std::cos(m_w0*m_pi*time_d))/(1.0 + 
+                        std::sin(m_k*m_pi*(y(i,j,k)-m_vf*time_d))*std::cos(m_w0*m_pi*time_d))/(1.0 +
                         m_rho0/m_rho1+(1.0-m_rho0/m_rho1)*std::sin(m_k*m_pi*(x(i,j,k)-m_uf*time_d))*
                         std::sin(m_k*m_pi*(y(i,j,k)-m_vf*time_d))*std::cos(m_w0*m_pi*time_d));
 
-        rho_mms(i,j,k) = 1.0/(phi_f/m_rho1 + (1.0- phi_f )/m_rho0); 
-        
+        rho_mms(i,j,k) = 1.0/(phi_f/m_rho1 + (1.0- phi_f )/m_rho0);
+
         rho_f_mms(i,j,k) = m_uf*rho_mms(i,j,k) - m_w0/m_k/4.0*std::cos(m_k*m_pi*(x(i,j,k)-m_uf*time_d))*std::sin(m_k*m_pi*(y(i,j,k)-m_vf*time_d))*std::sin(m_w0*m_pi*time_d)*(m_rho1-m_rho0);
         f_mms(i,j,k)     = rho_f_mms(i,j,k)/rho_mms(i,j,k);
 
@@ -378,16 +376,16 @@ void MMS_ShunnP3<T>::compute_source( const Patch* patch, ArchesTaskInfoManager* 
     // for scalar
       Uintah::parallel_for( range, [&](int i, int j, int k){
         f_mms(i,j,k) = (1.0 + std::sin(m_k*m_pi*(x(i,j,k)-m_uf*time_d))*
-                        std::sin(m_k*m_pi*(y(i,j,k)-m_vf*time_d))*std::cos(m_w0*m_pi*time_d))/(1.0 + 
+                        std::sin(m_k*m_pi*(y(i,j,k)-m_vf*time_d))*std::cos(m_w0*m_pi*time_d))/(1.0 +
                         m_rho0/m_rho1+(1.0-m_rho0/m_rho1)*std::sin(m_k*m_pi*(x(i,j,k)-m_uf*time_d))*
                         std::sin(m_k*m_pi*(y(i,j,k)-m_vf*time_d))*std::cos(m_w0*m_pi*time_d));
 
-        rho_mms(i,j,k) =1.0/(f_mms(i,j,k)/m_rho1 + (1.0- f_mms(i,j,k) )/m_rho0); 
+        rho_mms(i,j,k) =1.0/(f_mms(i,j,k)/m_rho1 + (1.0- f_mms(i,j,k) )/m_rho0);
 
         rho_f_mms(i,j,k) = f_mms(i,j,k)*rho_mms(i,j,k);
-        
+
         const double t2 = m_pi*m_w0*time_d;
-	const double t3 = cos(t2);
+        const double t3 = cos(t2);
         const double t14 = m_uf*time_d;
         const double t4 = -t14+x(i,j,k);
         const double t5 = m_k*m_pi*t4;
@@ -470,12 +468,13 @@ void MMS_ShunnP3<T>::compute_source( const Patch* patch, ArchesTaskInfoManager* 
                                t67-m_k*m_pi*t3*t9*t15*t17*t20*t25*t42*
                                t66-m_k*m_pi*t3*t6*t17*t20*t25*t28*t42*t67;
 
-  });
+    });
+
     // drhodt
     Uintah::parallel_for( range, [&](int i, int j, int k){
 
         const double t2 = m_pi*m_w0*time_d;
-	const double t3 = cos(t2);
+        const double t3 = cos(t2);
         const double t12 = m_uf*time_d;
         const double t4 = -t12+x(i,j,k);
         const double t5 = m_k*m_pi*t4;
@@ -508,8 +507,8 @@ void MMS_ShunnP3<T>::compute_source( const Patch* patch, ArchesTaskInfoManager* 
         drhodt_mms(i,j,k) = 1.0/pow(t19*(t15*t18-1.0)-t10*
                             t15*t18,2.0)*(-t19*(t18*t27+t15*t31*t32)+t10*t18*t27+t10*t15*t31*t32);
 
-  });
-  
+    });
+
     Uintah::parallel_for( range, [&](int i, int j, int k){
         const double t2 = m_pi*m_w0*time_d;
         const double t3 = cos(t2);
@@ -574,10 +573,7 @@ void MMS_ShunnP3<T>::compute_source( const Patch* patch, ArchesTaskInfoManager* 
 
     });
 
-  }       
-
-
-}
-}
+  }
+} } //Uintah::MMS_ShunnP3
 
 #endif

@@ -27,6 +27,7 @@
     and then reconfigure, and Endian.h will be regenerated automatically.
 */
 #include <Core/Util/Endian.h>
+#include <Core/Geometry/IntVector.h>
 
 #include <sci_defs/bits_defs.h> // for SCI_32BITS
 #include <sci_defs/osx_defs.h>  // for OSX_SNOW_LEOPARD_OR_LATER
