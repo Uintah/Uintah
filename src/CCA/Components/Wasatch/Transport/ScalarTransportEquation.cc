@@ -375,11 +375,6 @@ namespace WasatchCore{
     bcHelper.apply_boundary_condition<FieldT>( solution_variable_tag(), taskCat );
     bcHelper.apply_boundary_condition<FieldT>( rhs_tag(), taskCat, true ); // apply the rhs bc directly inside the extra cell
 
-    const std::string diffFluxNameBase = this->solution_variable_name() + "_diffVelocity_";
-    bcHelper.apply_boundary_condition<SpatialOps::SSurfXField>(Expr::Tag(diffFluxNameBase + "X", Expr::STATE_NONE), taskCat);
-    bcHelper.apply_boundary_condition<SpatialOps::SSurfYField>(Expr::Tag(diffFluxNameBase + "Y", Expr::STATE_NONE), taskCat);
-    bcHelper.apply_boundary_condition<SpatialOps::SSurfZField>(Expr::Tag(diffFluxNameBase + "Z", Expr::STATE_NONE), taskCat);
-  
     if( !isConstDensity_ && hasConvection_ ){
       // set bcs for solnVar_*
       const TagNames& tagNames = TagNames::self();
