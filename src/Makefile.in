@@ -181,7 +181,7 @@ ALL_STATIC_PSE_LIBS =                   \
     CCA/Components/Schedulers           \
     CCA/Components/OnTheFlyAnalysis     \
     CCA/Components/Models               \
-    CCA/Components/postProcessUda       \
+    CCA/Components/PostProcessUda       \
                                         \
     Core/Datatypes                      \
     Core/DataArchive                    \
