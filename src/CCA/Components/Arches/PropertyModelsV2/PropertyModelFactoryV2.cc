@@ -23,7 +23,7 @@
 #include <CCA/Components/Arches/PropertyModelsV2/partRadProperties.h>
 #include <CCA/Components/Arches/PropertyModelsV2/sootVolumeFrac.h>
 #include <CCA/Components/Arches/PropertyModelsV2/CO.h>
-#include <CCA/Components/Arches/PropertyModelsV2/UnweigthVariable.h>
+#include <CCA/Components/Arches/PropertyModelsV2/UnweightVariable.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 
@@ -285,22 +285,22 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
 
         if ( type == "CC" ){
           TaskInterface::TaskBuilder* weigth_var_tsk =
-          scinew UnweigthVariable<CCVariable<double>>::Builder( weight_task_name , 0 );
+          scinew UnweightVariable<CCVariable<double>>::Builder( weight_task_name , 0 );
           register_task( weight_task_name, weigth_var_tsk );
           _phi_from_rho_phi.push_back(weight_task_name);
         } else if ( type == "FX" ){
           TaskInterface::TaskBuilder* weigth_var_tsk =
-          scinew UnweigthVariable<SFCXVariable<double>>::Builder( weight_task_name , 0 );
+          scinew UnweightVariable<SFCXVariable<double>>::Builder( weight_task_name , 0 );
           register_task( weight_task_name, weigth_var_tsk );
           _phi_from_rho_phi.push_back(weight_task_name);
         } else if ( type == "FY" ){
           TaskInterface::TaskBuilder* weigth_var_tsk =
-          scinew UnweigthVariable<SFCYVariable<double>>::Builder( weight_task_name , 0 );
+          scinew UnweightVariable<SFCYVariable<double>>::Builder( weight_task_name , 0 );
           register_task( weight_task_name, weigth_var_tsk );
           _phi_from_rho_phi.push_back(weight_task_name);
         } else if ( type == "FZ" ){
           TaskInterface::TaskBuilder* weigth_var_tsk =
-          scinew UnweigthVariable<SFCZVariable<double>>::Builder( weight_task_name , 0 );
+          scinew UnweightVariable<SFCZVariable<double>>::Builder( weight_task_name , 0 );
           register_task( weight_task_name, weigth_var_tsk );
           _phi_from_rho_phi.push_back(weight_task_name);
         }
@@ -319,19 +319,19 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
 
     // compute u from rhou
     TaskInterface::TaskBuilder* unw_x_tsk =
-    scinew UnweigthVariable<SFCXVariable<double>>::Builder( m_u_vel_name , 0 );
+    scinew UnweightVariable<SFCXVariable<double>>::Builder( m_u_vel_name , 0 );
     register_task( m_u_vel_name,  unw_x_tsk );
     _u_from_rho_u.push_back(m_u_vel_name);
 
     // compute v from rhov
     TaskInterface::TaskBuilder* unw_y_tsk =
-    scinew UnweigthVariable<SFCYVariable<double>>::Builder( m_v_vel_name , 0 );
+    scinew UnweightVariable<SFCYVariable<double>>::Builder( m_v_vel_name , 0 );
     register_task( m_v_vel_name,  unw_y_tsk );
     _u_from_rho_u.push_back(m_v_vel_name);
 
      // compute w from rhow
     TaskInterface::TaskBuilder* unw_z_tsk =
-    scinew UnweigthVariable<SFCZVariable<double>>::Builder( m_w_vel_name , 0 );
+    scinew UnweightVariable<SFCZVariable<double>>::Builder( m_w_vel_name , 0 );
     register_task( m_w_vel_name,  unw_z_tsk );
     _u_from_rho_u.push_back(m_w_vel_name);
 
