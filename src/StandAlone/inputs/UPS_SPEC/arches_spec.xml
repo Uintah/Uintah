@@ -847,12 +847,12 @@
                where f is the mixture fraction.
 
           -->
-          <property           spec="MULTIPLE NO_DATA"
+          <property                    spec="MULTIPLE NO_DATA"
                                        attribute1="label REQUIRED STRING"
+                                       attribute2="stream_0 REQUIRED DOUBLE" 
+                                       attribute3="stream_1 REQUIRED DOUBLE"
                                        need_applies_to="type coldflow">
           </property>
-          <rho0 spec="REQUIRED STRING" need_applies_to="type coldflow"/>
-          <rho1 spec="REQUIRED STRING" need_applies_to="type coldflow"/>
           <mixture_fraction           spec="REQUIRED NO_DATA"
                                       attribute1="label REQUIRED STRING"
                                       need_applies_to="type coldflow"/>
@@ -1385,8 +1385,6 @@
           </wave>
 
           <!-- Shunn MMS P3 -->
-          <rho0 spec="OPTIONAL STRING" need_applies_to="type shunn_mms_p3 "/>
-          <rho1 spec="OPTIONAL STRING" need_applies_to="type shunn_mms_p3 "/>
           <uf   spec="OPTIONAL STRING" need_applies_to="type shunn_mms_p3 "/>
           <vf   spec="OPTIONAL STRING" need_applies_to="type shunn_mms_p3 "/>
           <k    spec="OPTIONAL STRING" need_applies_to="type shunn_mms_p3 "/>
@@ -1483,8 +1481,6 @@
                                       need_applies_to="type MMS_Shunn"/> <!--the mms -->
 
           <!--Shunn Problem 3-->
-          <rho0 spec="OPTIONAL STRING" need_applies_to="type MMS_Shunn_p3"/>
-          <rho1 spec="OPTIONAL STRING" need_applies_to="type MMS_Shunn_p3"/>
           <uf   spec="OPTIONAL STRING" need_applies_to="type MMS_Shunn_p3"/>
           <vf   spec="OPTIONAL STRING" need_applies_to="type MMS_Shunn_p3"/>
           <k    spec="OPTIONAL STRING" need_applies_to="type MMS_Shunn_p3"/>

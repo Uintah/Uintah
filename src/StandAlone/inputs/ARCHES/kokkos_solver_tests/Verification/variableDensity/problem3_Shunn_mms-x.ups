@@ -115,20 +115,10 @@
         </model>
       </PropertyModelsV2>
       <StateProperties>
-        <model label= "comp_density" type = "coldflow" >
-        <!--property label = "density" rho0 = "2.0" rho1 = "1.0" /-->
-        <property label = "density" />
-        <rho0>5.0</rho0>
-        <rho1>1.0</rho1>
-        <mixture_fraction label = "phi"/>
+        <model label= "cold_flow_property_evaluator" type = "coldflow" >
+          <property label = "density" stream_1 = "5.0" stream_0 = "1.0" />
+          <mixture_fraction label = "phi"/>
         </model>
-        <!--model label= "comp_density_extact" type = "coldflow_rp" >
-        <property label = "density_exact" />
-        <rho0>5.0</rho0>
-        <rho1>1.0</rho1>
-        <weigthed_mixture_fraction label = "rho_phi"/-->
-        <!--use_exact_guess/-->
-        <!--/model-->
       </StateProperties>
       <KMomentum>
         <!--use_drhodt label="scalar_mms_drhodt"/-->
@@ -153,8 +143,6 @@
         <task task_label="uVel-init" variable_label="uVel" type="shunn_mms_p3">
           <variable type="FX"/>
           <which_vel>u</which_vel>
-          <rho0>5.0</rho0>
-          <rho1>1.0</rho1>
           <uf>0.5</uf>
           <vf>0.5</vf>
           <coordinates x="ucellX" y="gridY"/>
@@ -163,8 +151,6 @@
         <task task_label="vVel-init" variable_label="vVel" type="shunn_mms_p3">
           <variable type="FY"/>
           <which_vel>u</which_vel>
-          <rho0>5.0</rho0>
-          <rho1>1.0</rho1>
           <uf>0.5</uf>
           <vf>0.5</vf>
           <coordinates x="gridX" y="vcellY"/>
@@ -173,8 +159,6 @@
         <task task_label="phi-init" variable_label="phi" type="shunn_mms_p3">
           <variable type="CC"/>
           <which_vel>p</which_vel>
-          <rho0>5.0</rho0>
-          <rho1>1.0</rho1>
           <uf>0.5</uf>
           <vf>0.5</vf>
           <coordinates x="gridX" y="gridY"/>
@@ -184,8 +168,6 @@
         <src label="x_mms" type="MMS_Shunn_p3">
           <variable type="FX"/>
           <which_vel>u</which_vel>
-          <rho0>5.0</rho0>
-          <rho1>1.0</rho1>
           <uf>0.5</uf>
           <vf>0.5</vf>
           <coordinates x="ucellX" y="gridY"/>
@@ -193,8 +175,6 @@
         <src label="y_mms" type="MMS_Shunn_p3">
           <variable type="FY"/>
           <which_vel>u</which_vel>
-          <rho0>5.0</rho0>
-          <rho1>1.0</rho1>
           <uf>0.5</uf>
           <vf>0.5</vf>
           <coordinates x="vcellY" y="gridX"/> <!--same that u but y=x and x=y -->
@@ -202,8 +182,6 @@
         <src label="scalar_mms" type="MMS_Shunn_p3">
           <variable type="CC"/>
           <which_vel>p</which_vel>
-          <rho0>5.0</rho0>
-          <rho1>1.0</rho1>
           <uf>0.5</uf>
           <vf>0.5</vf>
           <coordinates x="gridX" y="gridY"/>

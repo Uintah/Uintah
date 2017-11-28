@@ -63,7 +63,7 @@ private:
     const double m_pi = acos(-1.0);
     double m_k;
     double m_w0 ;
-    double m_rho0; 
+    double m_rho0;
     double m_rho1;
     double m_uf;
     double m_vf;
@@ -111,10 +111,61 @@ private:
   template <typename T>
   void ShunnMMSP3<T>::problemSetup( ProblemSpecP& db ){
 
+    // Going to grab density from the cold flow properties list.
+    // Note that the original Shunn paper mapped the fuel density (f=1) to rho1 and the air density (f=0)
+    // to rho0. This is opposite of what Arches traditionally has done. So, in this file, we stick to
+    // the Shunn notation but remap the density names for convienence.
+
+    //NOTE: We are going to assume that the property the code is looking for is called "density"
+    //      (as specified by the user)
+    ProblemSpecP db_prop = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("StateProperties");
+    bool found_coldflow_density = false;
+
+    for ( ProblemSpecP db_p = db_prop->findBlock("model");
+          db_p.get_rep() != nullptr;
+          db_p = db_p->findNextBlock("model")){
+
+      std::string label;
+      std::string type;
+
+      db_p->getAttribute("label", label);
+      db_p->getAttribute("type", type);
+
+      if ( type == "coldflow" ){
+
+        for ( ProblemSpecP db_cf = db_p->findBlock("property");
+              db_cf.get_rep() != nullptr;
+              db_cf = db_cf->findNextBlock("property") ){
+
+          std::string label;
+          double value0;
+          double value1;
+
+          db_cf->getAttribute("label", label);
+
+          std::cout << "LABEL = " << label << std::endl;
+
+          if ( label == "density" ){
+            db_cf->getAttribute("stream_0", value0);
+            db_cf->getAttribute("stream_1", value1);
+
+            found_coldflow_density = true;
+
+            //NOTICE: We are inverting the mapping here. See note above.
+            m_rho0 = value1;
+            m_rho1 = value0;
+
+          }
+        }
+      }
+    }
+
+    if ( !found_coldflow_density ){
+      throw InvalidValue("Error: Cold flow property specification wasnt found which is needed to use the ShunnP3 initial condition.", __FILE__, __LINE__);
+    }
+
     db->getWithDefault( "k", m_k, 2.0);
     db->getWithDefault( "w0", m_w0, 2.0);
-    db->getWithDefault( "rho0", m_rho0, 20.0);
-    db->getWithDefault( "rho1", m_rho1, 1.0);
     db->getWithDefault( "uf", m_uf, 0.0);
     db->getWithDefault( "vf", m_vf, 0.0);
 
@@ -152,7 +203,7 @@ private:
   //------------------------------------------------------------------------------------------------
   template <typename T>
   void ShunnMMSP3<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
-    
+
     T& f_mms = *(tsk_info->get_uintah_field<T>(m_var_name));
     constCCVariable<double>& x = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_x_name);
     constCCVariable<double>& y = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_y_name);
@@ -168,37 +219,37 @@ private:
       const int koff = m_ijk_off[2];
       Uintah::parallel_for( range, [&](int i, int j, int k){
         //const double phi_f = (1.0 + sin(m_k*m_pi*(x(i,j,k)-m_uf*time_d))*
-        //                sin(m_k*m_pi*(y(i,j,k)-m_vf*time_d))*cos(m_w0*m_pi*time_d))/(1.0 + 
+        //                sin(m_k*m_pi*(y(i,j,k)-m_vf*time_d))*cos(m_w0*m_pi*time_d))/(1.0 +
         //                m_rho0/m_rho1+(1.0-m_rho0/m_rho1)*sin(m_k*m_pi*(x(i,j,k)-m_uf*time_d))*
         //                sin(m_k*m_pi*(y(i,j,k)-m_vf*time_d))*cos(m_w0*m_pi*time_d));
-        //const double rho_d = 1.0/(phi_f/m_rho1 + (1.0- phi_f )/m_rho0); 
-        const double rho_inter = 0.5 * (rho(i,j,k)+rho(i-ioff,j-joff,k-koff)); 
-        
+        //const double rho_d = 1.0/(phi_f/m_rho1 + (1.0- phi_f )/m_rho0);
+        const double rho_inter = 0.5 * (rho(i,j,k)+rho(i-ioff,j-joff,k-koff));
+
         //const double f_resolution = (rho_d/rho_inter); // Only for testing liner interpolation of density
         const double f_resolution = 1.0;
-        f_mms(i,j,k) = m_uf*f_resolution  - m_w0/m_k/4.0*cos(m_k*m_pi*(x(i,j,k)-m_uf*time_d))*sin(m_k*m_pi*(y(i,j,k)-m_vf*time_d))*sin(m_w0*m_pi*time_d)*(m_rho1-m_rho0)/rho_inter; 
+        f_mms(i,j,k) = m_uf*f_resolution  - m_w0/m_k/4.0*cos(m_k*m_pi*(x(i,j,k)-m_uf*time_d))*sin(m_k*m_pi*(y(i,j,k)-m_vf*time_d))*sin(m_w0*m_pi*time_d)*(m_rho1-m_rho0)/rho_inter;
       });
     } else if ( m_which_vel == "rho_u" ){
     // for velocity
       Uintah::parallel_for( range, [&](int i, int j, int k){
         const double phi_f = (1.0 + sin(m_k*m_pi*(x(i,j,k)-m_uf*time_d))*
-                        sin(m_k*m_pi*(y(i,j,k)-m_vf*time_d))*cos(m_w0*m_pi*time_d))/(1.0 + 
+                        sin(m_k*m_pi*(y(i,j,k)-m_vf*time_d))*cos(m_w0*m_pi*time_d))/(1.0 +
                         m_rho0/m_rho1+(1.0-m_rho0/m_rho1)*sin(m_k*m_pi*(x(i,j,k)-m_uf*time_d))*
                         sin(m_k*m_pi*(y(i,j,k)-m_vf*time_d))*cos(m_w0*m_pi*time_d));
-         
-        const double rho = 1.0/(phi_f/m_rho1 + (1.0- phi_f )/m_rho0); 
+
+        const double rho = 1.0/(phi_f/m_rho1 + (1.0- phi_f )/m_rho0);
         f_mms(i,j,k) = m_uf*rho -m_w0/m_k/4.0*cos(m_k*m_pi*(x(i,j,k)-m_uf*time_d))*sin(m_k*m_pi*(y(i,j,k)-m_vf*time_d))*sin(m_w0*m_pi*time_d)*(m_rho1-m_rho0);
     });
-    
+
     } else {
     // for scalar
       Uintah::parallel_for( range, [&](int i, int j, int k){
         f_mms(i,j,k) = (1.0 + sin(m_k*m_pi*(x(i,j,k)-m_uf*time_d))*
-                        sin(m_k*m_pi*(y(i,j,k)-m_vf*time_d))*cos(m_w0*m_pi*time_d))/(1.0 + 
+                        sin(m_k*m_pi*(y(i,j,k)-m_vf*time_d))*cos(m_w0*m_pi*time_d))/(1.0 +
                         m_rho0/m_rho1+(1.0-m_rho0/m_rho1)*sin(m_k*m_pi*(x(i,j,k)-m_uf*time_d))*
                         sin(m_k*m_pi*(y(i,j,k)-m_vf*time_d))*cos(m_w0*m_pi*time_d));
     });
-    }       
+    }
   }
 }
 #endif

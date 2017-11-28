@@ -23,7 +23,7 @@ ChemMixFactory::register_all_tasks( ProblemSpecP& db )
     ProblemSpecP db_sp = db->findBlock("StateProperties");
 
     for ( ProblemSpecP db_p = db_sp->findBlock("model");
-	  db_p.get_rep() != nullptr;
+          db_p.get_rep() != nullptr;
           db_p = db_p->findNextBlock("model")){
 
       std::string label;
