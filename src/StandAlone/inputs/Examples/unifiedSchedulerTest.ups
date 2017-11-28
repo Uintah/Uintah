@@ -24,14 +24,11 @@
   <!--__________________________________-->
   <DataArchiver>
   <filebase>unifiedtest.uda</filebase>
-      <!-- <outputTimestepInterval>1</outputTimestepInterval> -->
-      <outputTimestepInterval>4</outputTimestepInterval> 
+      <outputTimestepInterval>1</outputTimestepInterval>
       <save label = "phi"/>
       <save label = "residual"/>
-      <!-- <checkpoint cycle = "2" timestepInterval = "1"/> --> <!-- This one -->
-      <checkpoint interval="0" cycle="0"/>
+      <checkpoint cycle = "2" timestepInterval = "1"/>
   </DataArchiver> 
-  
   
   
   <!--__________________________________-->
