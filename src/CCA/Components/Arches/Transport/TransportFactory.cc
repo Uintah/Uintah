@@ -318,8 +318,6 @@ TransportFactory::build_all_tasks( ProblemSpecP& db )
     print_task_setup_info( "z-mom-update", "fe update");
     fe_tsk->problemSetup( db_mom );
     fe_tsk->create_local_labels();
-    
-     
 
     if ( db_mom ->findBlock("PressureSolver")){
       TaskInterface* press_tsk = retrieve_task("build_pressure_system");
@@ -342,8 +340,7 @@ TransportFactory::build_all_tasks( ProblemSpecP& db )
       press_bc_tsk->problemSetup(db_mom);
       press_bc_tsk->create_local_labels();
    } else {
-      proc0cout << "\n Warning: Pressure-solver tasks  are not included " << std::endl;
-      proc0cout << "          Please consult a developer if you are concerned.\n" << std::endl;
+     throw ProblemSetupException("Error: Please update UPS file to include a <PressureSolver> tag since momentum was detected.", __FILE__, __LINE__); 
    }
 
 

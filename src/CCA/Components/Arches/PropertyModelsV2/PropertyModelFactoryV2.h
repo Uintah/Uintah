@@ -40,12 +40,12 @@ namespace Uintah{
         return _var_stats_tasks;
       } else if ( subset == "phifromrhophi" ){
 
-        return _phi_from_rho_phi;   
+        return _phi_from_rho_phi;
 
       } else if ( subset == "ufromrhou" ){
 
-        return _u_from_rho_u;        
-        
+        return _u_from_rho_u;
+
       } else if ( subset == _all_tasks_str ){
 
         return _active_tasks;
@@ -79,11 +79,11 @@ namespace Uintah{
     std::vector<std::string> _task_order;                 ///<The order in which these tasks should execute
 
     std::string m_vel_name;                               ///<Name of the task that creates all face velocities
-    std::string m_u_vel_name;                               ///<Name of u velocity
-    std::string m_v_vel_name;                               ///<Name of u velocity
-    std::string m_w_vel_name;                               ///<Name of u velocity
-    std::string m_density_name;                               ///<Name of u velocity
-    std::string m_stress_tensor_name;                               ///<Name of the task that creates sigma tensor for the momemtum equation
+    std::string m_u_vel_name;                             ///<Name of u velocity
+    std::string m_v_vel_name;                             ///<Name of u velocity
+    std::string m_w_vel_name;                             ///<Name of u velocity
+    std::string m_density_name;                           ///<Name of u velocity
+    std::string m_stress_tensor_name;                     ///<Name of the task that creates sigma tensor for the momemtum equation
 
     ProblemSpecP create_taskAlegebra_spec( ProblemSpecP db_model, const std::string name );
 

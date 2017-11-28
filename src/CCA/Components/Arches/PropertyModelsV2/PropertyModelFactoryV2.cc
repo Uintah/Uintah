@@ -463,10 +463,12 @@ if ( db->findBlock("PropertyModelsV2") != nullptr){
     bool compute_density_star = true;
 
     if (db->findBlock("StateProperties")){// if I want to define density in other factory
+
       ProblemSpecP db_sp = db->findBlock("StateProperties");
-      // It is going to look in StateProperties to see if density is constant
+
+      // Don't compute star density if properties are constant
       for ( ProblemSpecP db_p = db_sp->findBlock("model");
-	    db_p.get_rep() != nullptr;
+            db_p.get_rep() != nullptr;
             db_p = db_p->findNextBlock("model")){
 
         std::string d_type;
@@ -482,6 +484,7 @@ if ( db->findBlock("PropertyModelsV2") != nullptr){
         }
       }
     }
+
     if (compute_density_star){
       tsk = retrieve_task("density_star");
       tsk->problemSetup(db);
@@ -499,6 +502,7 @@ if ( db->findBlock("PropertyModelsV2") != nullptr){
     tsk = retrieve_task("compute_cc_velocities");
     tsk->problemSetup(db);
     tsk->create_local_labels();
+
   }
 
   for ( auto i = m_task_init_order.begin(); i != m_task_init_order.end(); i++ ){
@@ -508,7 +512,6 @@ if ( db->findBlock("PropertyModelsV2") != nullptr){
       tsk->create_local_labels();
     }
   }
-
 }
 
 void
