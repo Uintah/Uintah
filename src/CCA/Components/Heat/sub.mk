@@ -45,6 +45,7 @@ VTK_SRCS :=                        \
          $(SRCDIR)/vtkfile.cpp     \
 
 PSELIBS :=                         \
+        CCA/Components/Application \
         CCA/Components/Schedulers \
         CCA/Components/Models     \
         CCA/Ports                 \

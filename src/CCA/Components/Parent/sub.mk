@@ -37,6 +37,7 @@ SRCS := $(SRCDIR)/Switcher.cc \
 
 # ARCHES et. al. should have been seen by CCA/Components/sub.mk
 PSELIBS := \
+        CCA/Components/Application         \
         CCA/Ports                          \
         Core/Containers                    \
         Core/Disclosure                    \
