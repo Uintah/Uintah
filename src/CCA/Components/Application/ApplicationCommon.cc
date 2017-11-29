@@ -40,9 +40,9 @@
 
 using namespace Uintah;
 
-ApplicationCommon::ApplicationCommon(const ProcessorGroup* myworld,
-				     const SimulationStateP sharedState) :
-  UintahParallelComponent(myworld), m_sharedState(sharedState)
+ApplicationCommon::ApplicationCommon( const ProcessorGroup   * myworld,
+                                      const SimulationStateP   sharedState )
+    : UintahParallelComponent(myworld), m_sharedState(sharedState)
 {
   // There should only be one SimulationState. If there is a single
   // application the ComponentFactory will pass in a null pointer
@@ -54,61 +54,47 @@ ApplicationCommon::ApplicationCommon(const ProcessorGroup* myworld,
 
   // If there are combined applications (aka MPMICE) it will create
   // the SimulationState and then pass that to the other applications.
-  
-  if( m_sharedState == nullptr )
-  {
+
+  if (m_sharedState == nullptr) {
     m_sharedState = scinew SimulationState();
   }
-  
+
   //__________________________________
   //  These variables can be modified by an application.
 
   // Time Step
-  m_timeStepLabel =
-    VarLabel::create(timeStep_name, timeStep_vartype::getTypeDescription() );
+  m_timeStepLabel = VarLabel::create(timeStep_name, timeStep_vartype::getTypeDescription());
 
   // Simulation Time
-  m_simulationTimeLabel =
-    VarLabel::create(simTime_name, simTime_vartype::getTypeDescription() );
+  m_simulationTimeLabel = VarLabel::create(simTime_name, simTime_vartype::getTypeDescription());
 
   // delta t
-  VarLabel* nonconstDelT =
-    VarLabel::create(delT_name, delt_vartype::getTypeDescription() );
+  VarLabel* nonconstDelT = VarLabel::create(delT_name, delt_vartype::getTypeDescription());
   nonconstDelT->allowMultipleComputes();
   m_delTLabel = nonconstDelT;
 
   // output interval
-  VarLabel* nonconstOutputInv =
-    VarLabel::create(outputInterval_name,
-		     min_vartype::getTypeDescription() );
+  VarLabel* nonconstOutputInv = VarLabel::create(outputInterval_name, min_vartype::getTypeDescription());
   nonconstOutputInv->allowMultipleComputes();
   m_outputIntervalLabel = nonconstOutputInv;
 
   // output time step interval
-  VarLabel* nonconstOutputTimeStepInv =
-    VarLabel::create(outputTimeStepInterval_name,
-  		     min_vartype::getTypeDescription() );
+  VarLabel* nonconstOutputTimeStepInv = VarLabel::create(outputTimeStepInterval_name, min_vartype::getTypeDescription());
   nonconstOutputTimeStepInv->allowMultipleComputes();
   m_outputTimeStepIntervalLabel = nonconstOutputTimeStepInv;
 
   // check point interval
-  VarLabel* nonconstCheckpointInv =
-    VarLabel::create(checkpointInterval_name,
-		     min_vartype::getTypeDescription() );
+  VarLabel* nonconstCheckpointInv = VarLabel::create(checkpointInterval_name, min_vartype::getTypeDescription());
   nonconstCheckpointInv->allowMultipleComputes();
   m_checkpointIntervalLabel = nonconstCheckpointInv;
-  
+
   // check point time step interval
-  VarLabel* nonconstCheckpointTimeStepInv =
-    VarLabel::create(checkpointTimeStepInterval_name,
-  		     min_vartype::getTypeDescription() );
+  VarLabel* nonconstCheckpointTimeStepInv = VarLabel::create(checkpointTimeStepInterval_name, min_vartype::getTypeDescription());
   nonconstCheckpointTimeStepInv->allowMultipleComputes();
   m_checkpointTimeStepIntervalLabel = nonconstCheckpointTimeStepInv;
 
   // End Simulation  
-  VarLabel* nonconstEndSimulation =
-    VarLabel::create(endSimulation_name,
-		     bool_or_vartype::getTypeDescription() );
+  VarLabel* nonconstEndSimulation = VarLabel::create(endSimulation_name, bool_or_vartype::getTypeDescription());
   nonconstEndSimulation->allowMultipleComputes();
   m_endSimulationLabel = nonconstEndSimulation;
 }
@@ -131,8 +117,7 @@ ApplicationCommon::~ApplicationCommon()
   if( m_simulationTime )
     delete m_simulationTime;
 
-  // No need to delete the shared state as it is referecne counted
-  // which will automatically delete it.
+  // No need to delete the shared state as it is refcounted
   m_sharedState = nullptr;
 }
 
@@ -152,36 +137,31 @@ void ApplicationCommon::getComponents()
   m_scheduler = dynamic_cast<Scheduler*>( getPort("scheduler") );
 
   if( isDynamicRegridding() && !m_scheduler ) {
-    throw InternalError("dynamic_cast of 'm_regridder' failed!",
-                        __FILE__, __LINE__);
+    throw InternalError("dynamic_cast of 'm_regridder' failed!", __FILE__, __LINE__);
   }
 
   m_modelMaker = dynamic_cast<ModelMaker*>( getPort("modelMaker") );
 
   if( needModelMaker() && !m_modelMaker ) {
-    throw InternalError("dynamic_cast of 'm_modelMaker' failed!",
-                        __FILE__, __LINE__);
+    throw InternalError("dynamic_cast of 'm_modelMaker' failed!", __FILE__, __LINE__);
   }
 
   m_solver = dynamic_cast<SolverInterface*>( getPort("solver") );
 
   if( !m_solver ) {
-    throw InternalError("dynamic_cast of 'm_solver' failed!",
-                        __FILE__, __LINE__);
+    throw InternalError("dynamic_cast of 'm_solver' failed!",  __FILE__, __LINE__);
   }
 
   m_regridder = dynamic_cast<Regridder*>( getPort("regridder") );
 
   if( isDynamicRegridding() && !m_regridder ) {
-    throw InternalError("dynamic_cast of 'm_regridder' failed!",
-                        __FILE__, __LINE__);
+    throw InternalError("dynamic_cast of 'm_regridder' failed!", __FILE__, __LINE__);
   }
 
   m_output = dynamic_cast<Output*>( getPort("output") );
 
   if( !m_output ) {
-    throw InternalError("dynamic_cast of 'm_output' failed!",
-                        __FILE__, __LINE__);
+    throw InternalError("dynamic_cast of 'm_output' failed!", __FILE__, __LINE__);
   }
 }
 
@@ -202,37 +182,36 @@ void ApplicationCommon::releaseComponents()
 
 void ApplicationCommon::problemSetup( const ProblemSpecP &prob_spec )
 {
-  m_simulationTime = scinew SimulationTime( prob_spec );
+  m_simulationTime = scinew SimulationTime(prob_spec);
 
   m_simTime = m_simulationTime->m_init_time;
 
   // Check for an AMR attribute with the grid.
-  ProblemSpecP grid_ps = prob_spec->findBlock( "Grid" );
+  ProblemSpecP grid_ps = prob_spec->findBlock("Grid");
 
-  if( grid_ps ) {
-    grid_ps->getAttribute( "doAMR", m_AMR );
+  if (grid_ps) {
+    grid_ps->getAttribute("doAMR", m_AMR);
 
     m_dynamicRegridding = m_AMR;
   }
 
   // If the AMR block is defined default to turning AMR on.
-  ProblemSpecP amr_ps = prob_spec->findBlock( "AMR" );
-  
-  if( amr_ps ) {
+  ProblemSpecP amr_ps = prob_spec->findBlock("AMR");
+
+  if (amr_ps) {
     m_AMR = true;
 
     std::string type;
-    amr_ps->getAttribute( "type", type );
+    amr_ps->getAttribute("type", type);
 
-    m_dynamicRegridding = (type.empty() || type == std::string( "Dynamic" ));
+    m_dynamicRegridding = (type.empty() || type == std::string("Dynamic"));
 
-    amr_ps->get( "useLockStep", m_lockstepAMR );
+    amr_ps->get("useLockStep", m_lockstepAMR);
   }
 }
 
 void
-ApplicationCommon::scheduleRefine(const PatchSet*,
-				  SchedulerP&)
+ApplicationCommon::scheduleRefine(const PatchSet*, SchedulerP&)
 {
   throw InternalError( "scheduleRefine not implemented for this application\n", __FILE__, __LINE__ );
 }
@@ -267,7 +246,7 @@ ApplicationCommon::scheduleReduceSystemVars(const GridP& grid,
   // Reduce the system vars which are on a per patch basis to a per
   // rank basis.
   Task* task = scinew Task("ApplicationCommon::reduceSystemVars", this,
-			   &ApplicationCommon::reduceSystemVars);
+			                     &ApplicationCommon::reduceSystemVars);
 
   task->setType(Task::OncePerProc);
   task->usesMPI(true);
@@ -356,8 +335,7 @@ ApplicationCommon::reduceSystemVars( const ProcessorGroup *,
   // interval during a simulation.  For example in deflagration ->
   // detonation simulations
   if (m_adjustOutputInterval) {
-    if (patches->size() != 0 &&
-	!new_dw->exists(m_outputIntervalLabel, -1, patch)) {
+    if (patches->size() != 0 && !new_dw->exists(m_outputIntervalLabel, -1, patch)) {
       min_vartype inv;
       inv.setBenignValue();
       new_dw->put(inv, m_outputIntervalLabel);
@@ -369,8 +347,7 @@ ApplicationCommon::reduceSystemVars( const ProcessorGroup *,
   }
 
   if (m_adjustCheckpointInterval) {
-    if (patches->size() != 0 &&
-	!new_dw->exists(m_checkpointIntervalLabel, -1, patch)) {
+    if (patches->size() != 0 && !new_dw->exists(m_checkpointIntervalLabel, -1, patch)) {
       min_vartype inv;
       inv.setBenignValue();
       new_dw->put(inv, m_checkpointIntervalLabel);
@@ -383,8 +360,7 @@ ApplicationCommon::reduceSystemVars( const ProcessorGroup *,
 
   // An application may request that the simulation end early.
   if (m_mayEndSimulation) {
-    if (patches->size() != 0 &&
-	!new_dw->exists(m_endSimulationLabel, -1, patch)) {
+    if (patches->size() != 0 && !new_dw->exists(m_endSimulationLabel, -1, patch)) {
       max_vartype endSim;
       endSim.setBenignValue();
       new_dw->put(endSim, m_endSimulationLabel);
@@ -444,9 +420,9 @@ ApplicationCommon::finalizeSystemVars( SchedulerP& scheduler )
 //______________________________________________________________________
 //
 void
-ApplicationCommon::scheduleInitializeSystemVars(const GridP& grid,
-						const PatchSet* perProcPatchSet,
-						SchedulerP& scheduler)
+ApplicationCommon::scheduleInitializeSystemVars( const GridP      & grid,
+						                                     const PatchSet   * perProcPatchSet,
+						                                           SchedulerP & scheduler)
 {
   // Initialize the system vars which are on a per rank basis.
   Task* task = scinew Task("ApplicationCommon::initializeSystemVars", this,
@@ -461,10 +437,8 @@ ApplicationCommon::scheduleInitializeSystemVars(const GridP& grid,
   //   task->computes(m_simulationTimeLabel, grid->getLevel(i).get_rep());
   // }
   
-  scheduler->overrideVariableBehavior(m_timeStepLabel->getName(),
-				      false, false, true, false, true);
-  scheduler->overrideVariableBehavior(m_simulationTimeLabel->getName(),
-				      false, false, true, false, true);
+  scheduler->overrideVariableBehavior(m_timeStepLabel->getName(), false, false, true, false, true);
+  scheduler->overrideVariableBehavior(m_simulationTimeLabel->getName(), false, false, true, false, true);
   // treatAsOld copyData noScrub notCopyData noCheckpoint
 
   // std::cerr << __FUNCTION__ << "  "
@@ -480,10 +454,10 @@ ApplicationCommon::scheduleInitializeSystemVars(const GridP& grid,
 //
 void
 ApplicationCommon::initializeSystemVars( const ProcessorGroup *,
-					 const PatchSubset    * patches,
-					 const MaterialSubset * /*matls*/,
-					       DataWarehouse  * /*old_dw*/,
-				               DataWarehouse  * new_dw )
+					                               const PatchSubset    * patches,
+					                               const MaterialSubset * /*matls*/,
+					                                     DataWarehouse  * /*old_dw*/,
+				                                       DataWarehouse  * new_dw )
 {
   MALLOC_TRACE_TAG_SCOPE("ApplicationCommon::initializeSystemVar()");
 

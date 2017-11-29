@@ -155,7 +155,9 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
 			    const ProblemSpecP    & restart_prob_spec,
 			    const SimulationStateP& sharedState )
 {
-  dbg << "Doing ProblemSetup \t\t\t\tDataArchiver\n";
+  if (dbg.active()) {
+    dbg << "Doing ProblemSetup \t\t\t\tDataArchiver\n";
+  }
 
   m_application = dynamic_cast<ApplicationInterface*>( getPort("application") );
   m_loadBalancer = dynamic_cast<LoadBalancerPort*>( getPort("load balancer") );
@@ -176,25 +178,23 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
 
       m_application->haveModifiedVars( haveModifiedVars );
 
-      if( haveModifiedVars )
-      {
-	std::stringstream tmpstr;
-	tmpstr << "DataArchiver found previously modified variables that "
-	       << "have not been merged into the checkpoint restart "
-	       << "input.xml file from the from index.xml file. " << std::endl
-	       << "The modified variables can be found in the "
-	       << "index.xml file under the 'InSitu' block." << std::endl
-	       << "Once merged, change the variable 'haveModifiedVars' in "
-	       << "the 'InSitu' block in the checkpoint restart timestep.xml "
-	       << "file to 'false'";
+      if (haveModifiedVars) {
+	      std::stringstream tmpstr;
+	      tmpstr << "DataArchiver found previously modified variables that "
+	             << "have not been merged into the checkpoint restart "
+	             << "input.xml file from the from index.xml file. " << std::endl
+	             << "The modified variables can be found in the "
+	             << "index.xml file under the 'InSitu' block." << std::endl
+	             << "Once merged, change the variable 'haveModifiedVars' in "
+	             << "the 'InSitu' block in the checkpoint restart timestep.xml "
+	             << "file to 'false'";
 	
-	throw ProblemSetupException( tmpstr.str() ,__FILE__, __LINE__);
+	      throw ProblemSetupException(tmpstr.str(), __FILE__, __LINE__);
       }
-      else
-      {
-	proc0cout << "DataArchiver found previously modified vars. "
-		  << "Assuming the checkpoint restart input.xml file "
-		  << "has been updated." << std::endl;
+      else {
+        proc0cout << "DataArchiver found previously modified vars. "
+                  << "Assuming the checkpoint restart input.xml file "
+                  << "has been updated." << std::endl;
       }
     }
   }
@@ -203,9 +203,9 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
   // PIDX related
   string type;
   p->getAttribute("type", type);
-  if( type == "pidx" || type == "PIDX" ) {
+  if (type == "pidx" || type == "PIDX") {
     d_outputFileFormat = PIDX;
-    d_PIDX_flags.problemSetup( p );
+    d_PIDX_flags.problemSetup(p);
     //d_PIDX_flags.print();
   }
 
@@ -458,7 +458,9 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
 void
 DataArchiver::outputProblemSpec( ProblemSpecP & root_ps )
 {
-  dbg << "Doing outputProblemSpec \t\t\t\tDataArchiver\n";
+  if (dbg.active()) {
+    dbg << "Doing outputProblemSpec \t\t\t\tDataArchiver\n";
+  }
 
   if( m_application->haveModifiedVars() ) {
 
@@ -968,8 +970,8 @@ DataArchiver::createIndexXML(Dir& dir)
 //______________________________________________________________________
 //
 void
-DataArchiver::finalizeTimestep( const int timeStep,
-				const double  simTime, 
+DataArchiver::finalizeTimestep( const int     timeStep,
+				                        const double  simTime,
                                 const double  delT,
                                 const GridP & grid, 
                                 SchedulerP  & sched,
@@ -978,10 +980,12 @@ DataArchiver::finalizeTimestep( const int timeStep,
   //this function should get called exactly once per timestep
   
   //  static bool wereSavesAndCheckpointsInitialized = false;
-  dbg << "  finalizeTimestep,"
-      << " time step = " << timeStep
-      << " sim time = " << simTime
-      << " delT= " << delT << "\n";
+  if (dbg.active()) {
+    dbg << " finalizeTimestep,"
+        << " time step = " << timeStep
+        << " sim time = " << simTime
+        << " delT= " << delT << "\n";
+  }
   
   beginOutputTimestep( timeStep, simTime, delT, grid );
 
@@ -1014,11 +1018,8 @@ DataArchiver::finalizeTimestep( const int timeStep,
       d_wereSavesAndCheckpointsInitialized = true;
     
       // Can't do checkpoints on init timestep....
-      if( d_checkpointInterval > 0.0 ||
-	  d_checkpointTimestepInterval > 0 ||
-	  d_checkpointWalltimeInterval > 0 ) {
-
-        initCheckpoints( sched );
+      if (d_checkpointInterval > 0.0 || d_checkpointTimestepInterval > 0 || d_checkpointWalltimeInterval > 0) {
+        initCheckpoints(sched);
       }
     }
   }
@@ -1042,7 +1043,9 @@ DataArchiver::sched_allOutputTasks(       double       delt,
                                           SchedulerP & sched,
                                           bool         recompile /* = false */ )
 {
-  dbg << "  sched_allOutputTasks \n";
+  if (dbg.active()) {
+    dbg << "  sched_allOutputTasks \n";
+  }
   
   // we don't want to schedule more tasks unless we're recompiling
   if ( !recompile ) {
@@ -1072,7 +1075,9 @@ DataArchiver::sched_allOutputTasks(       double       delt,
     
     sched->addTask(task, nullptr, nullptr);
     
-    dbg << "  scheduled output tasks (reduction variables)\n";
+    if (dbg.active()) {
+      dbg << "  scheduled output tasks (reduction variables)\n";
+    }
 
     if ( delt != 0.0 || d_outputInitTimestep ) {
       scheduleOutputTimestep( d_saveLabels, grid, sched, false );
@@ -1101,7 +1106,9 @@ DataArchiver::sched_allOutputTasks(       double       delt,
     }
     sched->addTask(task, nullptr, nullptr);
     
-    dbg << "  scheduled output tasks (checkpoint variables)\n";
+    if (dbg.active()) {
+      dbg << "  scheduled output tasks (checkpoint variables)\n";
+    }
     
     scheduleOutputTimestep( d_checkpointLabels, grid, sched, true );
   }
@@ -1123,11 +1130,14 @@ DataArchiver::sched_allOutputTasks(       double       delt,
 //
 void
 DataArchiver::beginOutputTimestep( const int timeStep,
-				   const double simTime, 
+				                           const double simTime,
                                    const double delT,
                                    const GridP& grid )
 {
-  dbg << "    beginOutputTimestep\n";
+
+  if (dbg.active()) {
+    dbg << "    beginOutputTimestep\n";
+  }
 
   // Do *not* update the next values here as the original values are
   // needed to compare with if there is a timestep restart.  See
@@ -1229,9 +1239,11 @@ DataArchiver::beginOutputTimestep( const int timeStep,
     //index->releaseDocument();
   }
 
-  dbg << "    write output timestep (" << d_isOutputTimestep << ")" << std::endl
-      << "    write CheckPoints (" << d_isCheckpointTimestep << ")" << std::endl
-      << "    end\n";
+  if (dbg.active()) {
+    dbg << "    write output timestep (" << d_isOutputTimestep << ")" << std::endl
+        << "    write CheckPoints (" << d_isCheckpointTimestep << ")" << std::endl
+        << "    end\n";
+  }
   
 } // end beginOutputTimestep
 
@@ -1249,8 +1261,10 @@ DataArchiver::makeTimeStepDirs( const int timeStep,
   
   int dir_timestep = getTimestepTopLevel(timeStep);
 
-  dbg << "      makeTimeStepDirs for timestep: " << timeStep
-      << " dir_timestep: " << dir_timestep<< "\n";
+  if (dbg.active()) {
+    dbg << "      makeTimeStepDirs for timestep: " << timeStep
+        << " dir_timestep: " << dir_timestep<< "\n";
+  }
   
   ostringstream tname;
   tname << "t" << setw(5) << setfill('0') << dir_timestep;
@@ -1284,7 +1298,9 @@ void
 DataArchiver::reevaluate_OutputCheckPointTimestep( const double simTime,
 						   const double delT )
 {
-  dbg << "  reevaluate_OutputCheckPointTimestep() begin\n";
+  if (dbg.active()) {
+    dbg << "  reevaluate_OutputCheckPointTimestep() begin\n";
+  }
 
   // Call this on a timestep restart. If lowering the delt goes
   // beneath the threshold, cancel the output and/or checkpoint
@@ -1309,7 +1325,10 @@ DataArchiver::reevaluate_OutputCheckPointTimestep( const double simTime,
   d_checkpointCalled.resize(d_numLevelsInOutput, false);
   d_checkpointReductionCalled = false;
 #endif
-  dbg << "  reevaluate_OutputCheckPointTimestep() end\n";
+
+  if (dbg.active()) {
+    dbg << "  reevaluate_OutputCheckPointTimestep() end\n";
+  }
 }
 
 //______________________________________________________________________
@@ -1320,7 +1339,9 @@ DataArchiver::findNext_OutputCheckPointTimestep( const int timeStep,
 						 const double delT,
 						 const bool restart )
 {
-  dbg << "  findNext_OutputCheckPoint_Timestep() begin\n";
+  if (dbg.active()) {
+    dbg << "  findNext_OutputCheckPoint_Timestep() begin\n";
+  }
 
   if( restart )
   {
@@ -1437,22 +1458,24 @@ DataArchiver::findNext_OutputCheckPointTimestep( const int timeStep,
     }
   }
 
-  dbg << "  " << std::setprecision(15) << timeStep
-      << "  " << std::setprecision(15) << simTime << "  " << "\n"
-      << "    is output timestep: " << d_isOutputTimestep
-      << "       output interval: " << std::setprecision(15) << d_outputInterval
-      << "  next output sim time: " << std::setprecision(15) << d_nextOutputTime 
-      << "       output timestep: " << d_outputTimestepInterval
-      << "  next output timestep: " << d_nextOutputTimestep << "\n"
-    
-      << "    is checkpoint timestep: " << d_isCheckpointTimestep
-      << "       checkpoint interval: " << std::setprecision(15) << d_checkpointInterval
-      << "  next checkpoint sim time: " << std::setprecision(15) << d_nextCheckpointTime 
-      << "       checkpoint timestep: " << d_checkpointTimestepInterval
-      << "  next checkpoint timestep: " << d_nextCheckpointTimestep
-      << "  next checkpoint walltime: " << std::setprecision(15) << d_nextCheckpointWalltime << "\n";
+  if (dbg.active()) {
+    dbg << "  " << std::setprecision(15) << timeStep
+        << "  " << std::setprecision(15) << simTime << "  " << "\n"
+        << "    is output timestep: " << d_isOutputTimestep
+        << "       output interval: " << std::setprecision(15) << d_outputInterval
+        << "  next output sim time: " << std::setprecision(15) << d_nextOutputTime
+        << "       output timestep: " << d_outputTimestepInterval
+        << "  next output timestep: " << d_nextOutputTimestep << "\n"
 
-  dbg << "  findNext_OutputCheckPoint_Timestep() end\n";
+        << "    is checkpoint timestep: " << d_isCheckpointTimestep
+        << "       checkpoint interval: " << std::setprecision(15) << d_checkpointInterval
+        << "  next checkpoint sim time: " << std::setprecision(15) << d_nextCheckpointTime
+        << "       checkpoint timestep: " << d_checkpointTimestepInterval
+        << "  next checkpoint timestep: " << d_nextCheckpointTimestep
+        << "  next checkpoint walltime: " << std::setprecision(15) << d_nextCheckpointWalltime << "\n";
+    
+    dbg << "  findNext_OutputCheckPoint_Timestep() end\n";
+  }
 
 } // end findNext_OutputCheckPoint_Timestep()
 
@@ -1468,7 +1491,9 @@ DataArchiver::writeto_xml_files( const int timeStep,
   Timers::Simple timer;
   timer.start();
   
-  dbg << "  writeto_xml_files() begin\n";
+  if (dbg.active()) {
+    dbg << "  writeto_xml_files() begin\n";
+  }
 
   if( !d_isCheckpointTimestep && !d_isOutputTimestep ) {
     dbg << "   This is not an output (or checkpoint) timestep, so just returning...\n";
@@ -1704,7 +1729,9 @@ DataArchiver::writeto_xml_files( const int timeStep,
   (*d_runTimeStats)[XMLIOTime] += myTime;
   (*d_runTimeStats)[TotalIOTime ] += myTime;
 
-  dbg << "  end\n";
+  if (dbg.active()) {
+    dbg << "  end\n";
+  }
 }
 
 //______________________________________________________________________
@@ -2258,7 +2285,9 @@ DataArchiver::scheduleOutputTimestep(       vector<SaveItem> & saveLabels,
     sched->addTask( task, patches, m_sharedState->allMaterials() );
   }
   
-  dbg << "  scheduled output task for " << var_cnt << " variables\n";
+  if (dbg.active()) {
+    dbg << "  scheduled output task for " << var_cnt << " variables\n";
+  }
 }
 
 #if HAVE_PIDX
@@ -2331,7 +2360,9 @@ DataArchiver::getOutputLocation() const
 void
 DataArchiver::indexAddGlobals()
 {
-  dbg << "  indexAddGlobals()\n";
+  if (dbg.active()) {
+    dbg << "  indexAddGlobals()\n";
+  }
 
   // add info to index.xml about each global (reduction) var assume
   // for now that global variables that get computed will not change
@@ -2384,8 +2415,10 @@ DataArchiver::outputReductionVars( const ProcessorGroup *,
   if( new_dw->timestepRestarted() || d_saveReductionLabels.empty() ) {
     return;
   }
-    
-  dbg << "  outputReductionVars task begin\n";
+
+  if (dbg.active()) {
+    dbg << "  outputReductionVars task begin\n";
+  }
 
   Timers::Simple timer;
   timer.start();
@@ -2413,7 +2446,11 @@ DataArchiver::outputReductionVars( const ProcessorGroup *,
     
     for (int m = 0; m < matls->size(); m++) {
       int matlIndex = matls->get(m);
-      dbg << "    Reduction " << var->getName() << " matl: " << matlIndex << "\n";
+
+      if (dbg.active()) {
+        dbg << "    Reduction " << var->getName() << " matl: " << matlIndex << "\n";
+      }
+
       ostringstream filename;
       filename << d_dir.getName() << "/" << var->getName();
       if (matlIndex < 0)
@@ -2467,7 +2504,9 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
     return;
   }
 
-  dbg << "  outputVariables task begin\n";
+  if (dbg.active()) {
+    dbg << "  outputVariables task begin\n";
+  }
 
   double timeStep = m_sharedState->getCurrentTopLevelTimeStep();
   
@@ -2670,13 +2709,15 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
         
         //__________________________________
         //  debugging output
-        dbg << "    "<<var->getName() << ", materials: ";
-        for(int m=0;m<var_matls->size();m++) {
-          if(m != 0)
-            dbg << ", ";
-          dbg << var_matls->get(m);
+        if (dbg.active()) {
+          dbg << "    " << var->getName() << ", materials: ";
+          for (int m = 0; m < var_matls->size(); m++) {
+            if (m != 0)
+              dbg << ", ";
+            dbg << var_matls->get(m);
+          }
+          dbg << "\n";
         }
-        dbg <<"\n";
         
         //__________________________________
         // loop through patches and materials
@@ -2861,7 +2902,9 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
     
   (*d_runTimeStats)[TotalIOTime ] += myTime;
 
-  dbg << "  outputVariables task end\n";
+  if (dbg.active()) {
+    dbg << "  outputVariables task end\n";
+  }
 } // end outputVariables()
 
 //______________________________________________________________________
@@ -3398,7 +3441,9 @@ DataArchiver::makeVersionedDir()
 void
 DataArchiver::initSaveLabels(SchedulerP& sched, bool initTimestep)
 {
-  dbg << "  initSaveLabels()\n";
+  if (dbg.active()) {
+    dbg << "  initSaveLabels()\n";
+  }
 
   // if this is the initTimestep, then don't complain about saving all
   // the vars, just save the ones you can.  They'll most likely be
@@ -3440,34 +3485,36 @@ DataArchiver::initSaveLabels(SchedulerP& sched, bool initTimestep)
       if (initTimestep) {
         // ignore this on the init timestep, cuz lots of vars aren't
         // computed on the init timestep
-        dbg << "    Ignoring var " << iter->labelName
-	    << " on initialization timestep\n";
+
+        if (dbg.active()) {
+          dbg << "    Ignoring var " << iter->labelName << " on initialization timestep\n";
+        }
+
         continue;
-      } else {
-        throw ProblemSetupException((*iter).labelName +
-				    " variable not computed for saving.",
-				    __FILE__, __LINE__);
+      }
+      else {
+        throw ProblemSetupException((*iter).labelName + " variable not computed for saving.", __FILE__, __LINE__);
       }
     }
     saveItem.label = var;
     saveItem.matlSet.clear();
-    
-    for (ConsecutiveRangeSet::iterator crs_iter = (*iter).levels.begin();
-	 crs_iter != (*iter).levels.end(); ++crs_iter) {
+
+    for (ConsecutiveRangeSet::iterator crs_iter = (*iter).levels.begin(); crs_iter != (*iter).levels.end(); ++crs_iter) {
 
       ConsecutiveRangeSet matlsToSave = (ConsecutiveRangeSet((*found).second)).intersected((*iter).matls);
       saveItem.setMaterials(*crs_iter, matlsToSave, d_prevMatls, d_prevMatlSet);
 
       if (((*iter).matls != ConsecutiveRangeSet::all) && ((*iter).matls != matlsToSave)) {
-        throw ProblemSetupException((*iter).labelName +
-				    " variable not computed for all materials specified to save.",
-				    __FILE__, __LINE__);
+        throw ProblemSetupException((*iter).labelName + " variable not computed for all materials specified to save.",
+        __FILE__,
+                                    __LINE__);
       }
     }
-    
+
     if (saveItem.label->typeDescription()->isReductionVariable()) {
       d_saveReductionLabels.push_back(saveItem);
-    } else {
+    }
+    else {
       d_saveLabels.push_back(saveItem);
     }
   }
@@ -3482,7 +3529,10 @@ DataArchiver::initSaveLabels(SchedulerP& sched, bool initTimestep)
 void
 DataArchiver::initCheckpoints(SchedulerP& sched)
 {
-   dbg << "  initCheckpoints()\n";
+  if (dbg.active()) {
+    dbg << "  initCheckpoints()\n";
+  }
+
    typedef vector<const Task::Dependency*> dep_vector;
    const dep_vector& initreqs = sched->getInitialRequires();
    

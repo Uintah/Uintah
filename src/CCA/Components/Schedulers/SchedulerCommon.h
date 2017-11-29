@@ -93,8 +93,8 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
 
     virtual void releaseComponents();
 
-    virtual void problemSetup( const ProblemSpecP & prob_spec,
-			       const SimulationStateP & state );
+    virtual void problemSetup( const ProblemSpecP     & prob_spec,
+			                         const SimulationStateP & state );
 
     virtual void doEmitTaskGraphDocs();
 

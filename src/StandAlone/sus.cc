@@ -754,18 +754,17 @@ main( int argc, char *argv[], char *env[] )
     // Regridder - optional
     RegridderCommon* regridder = nullptr;
 
-    if( application->isAMR() ) {
-      regridder = RegridderFactory::create( ups, world );
+    if (application->isAMR()) {
+      regridder = RegridderFactory::create(ups, world);
 
-      if( regridder )
-      {
-	regridder->attachPort( "scheduler", scheduler );
-	regridder->attachPort( "load balancer", loadBalancer );
+      if (regridder) {
+        regridder->attachPort("scheduler", scheduler);
+        regridder->attachPort("load balancer", loadBalancer);
 
-        simController->attachPort( "regridder", regridder );
-	appComp->attachPort( "regridder", regridder );
+        simController->attachPort("regridder", regridder);
+        appComp->attachPort("regridder", regridder);
 
-	loadBalancer->attachPort( "regridder", regridder );
+        loadBalancer->attachPort("regridder", regridder);
       }
     }
 
@@ -773,12 +772,11 @@ main( int argc, char *argv[], char *env[] )
     //  Model Maker - optional
     ModelMaker* modelMaker = nullptr;
 
-    if( application->needModelMaker() ) {
+    if (application->needModelMaker()) {
       modelMaker = scinew ModelFactory(world);
 
-      if( modelMaker )
-      {
-	appComp->attachPort("modelMaker", modelMaker);
+      if (modelMaker) {
+        appComp->attachPort("modelMaker", modelMaker);
       }
     }
 
