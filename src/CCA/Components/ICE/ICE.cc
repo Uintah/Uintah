@@ -4526,17 +4526,13 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
                                   DataWarehouse* old_dw, 
                                   DataWarehouse* new_dw)
 {  
+
+  // simTime_vartype simTimeVar;
+  // old_dw->get(simTimeVar, lb->simulationTimeLabel);
+
+  // double simTime = simTimeVar;
   double simTime = m_sharedState->getElapsedSimTime();
 
-  // {
-  //   simTime_vartype simTime;
-  //   old_dw->get(simTime, lb->simulationTimeLabel);
-
-  //   std::cerr << "**********  " << __FUNCTION__ << "  " << __LINE__ << "  "
-  // 	      << old_dw << "  " << new_dw << "  "
-  // 	      << simTime << std::endl;
-  // }
-  
   const Level* level = getLevel(patches);
   
   for(int p=0;p<patches->size();p++){

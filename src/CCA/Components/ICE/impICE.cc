@@ -1075,11 +1075,12 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
               << " after solve " << max_RHS<< endl;
     
     // output files for debugging
+    // timeStep_vartype timeStepVar;
+    // ParentOldDW->get(timeStepVar, lb->timeStepLabel);
+
+    // double timeStep = timeStepVar;
     double timeStep = m_sharedState->getCurrentTopLevelTimeStep();
-
-    // timeStep_vartype timeStep;
-    // ParentOldDW->get(timeStep, lb->timeStepLabel);
-
+    
     int proc = d_myworld->myRank();
     ostringstream fname;
     

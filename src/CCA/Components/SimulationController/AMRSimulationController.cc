@@ -283,20 +283,15 @@ AMRSimulationController::run()
   // The main loop where the specified application problem is solved.
   while( !d_app->isLastTimeStep( walltimers.GetWallTime() ) ) {
 
-    // Reset the runtime performance stats
-    ResetStats();
-    
-    // Reset memory use tracking variable
-    d_scheduler->resetMaxMemValue();
-    
-    // Clear the task monitoring.
-    d_scheduler->clearTaskMonitoring();
+    // Perform a bunch of housekeeping operations at the top of the
+    // loop. Performing them here asures that everything is ready
+    // after the inital time step. It also reduces duplicate code.
 
     // Before any work is done including incrementing the time step
-    // check to see if this iteration may be the last one. The Data
-    // Archive uses it for determining whether to output or checkpoint
-    // the last time step. Maybelast uses the wall time and is sync'd
-    // across all ranks.
+    // check to see if this iteration may be the last one. The
+    // DataArchiver uses it for determining whether to output or
+    // checkpoint the last time step. Maybelast uses the wall time and
+    // is sync'd across all ranks.
 
     // The predicted time is a best guess at what the wall time will be
     // when the time step is finished. It is currently used only for
@@ -312,15 +307,31 @@ AMRSimulationController::run()
     // determining when to output or checkpoint.
     d_output->setElapsedWallTime( walltimers.GetWallTime() );
     
-    // Get the next output checkpoint time step.
+    // Get the next output checkpoint time step. This step is not done
+    // in beginOutputTimestep because the original values are needed
+    // to compare with if there is a timestep restart so it is
+    // performed here. At this point the time step, sim time, and all
+    // wall time are all in sync.
+
     d_output->findNext_OutputCheckPointTimestep( d_app->getTimeStep(),
 						 d_app->getSimTime(),
 						 d_app->getDelT(),
 						 first && d_restarting );
-  
+
+    // Reset the runtime performance stats
+    ResetStats();
+    
+    // Reset memory use tracking variable
+    d_scheduler->resetMaxMemValue();
+    
+    // Clear the task monitoring.
+    d_scheduler->clearTaskMonitoring();
+    
     // Increment (by one) the current time step number so components
     // know what time step they are on.
-    d_app->incrementTimeStep();
+    d_app->incrementTimeStep( d_currentGridP );
+
+    // Ready for the next time step. 
 
 #ifdef USE_GPERFTOOLS
     if (gheapprofile.active()){
@@ -455,38 +466,30 @@ AMRSimulationController::run()
       d_currentGridP = static_cast<PostProcessUda*>(d_app)->getGrid();
     }
 
-    // After one step (either time step or initialization) and
-    // correction the delta finalize the old time step, e.g. finalize
+    // After one step (either time step or initialization) and the
+    // updating of delta T finalize the old time step, e.g. finalize
     // and advance the Datawarehouse
     d_scheduler->advanceDataWarehouse( d_currentGridP );
 
 #ifndef DISABLE_SCI_MALLOC
     AllocatorSetDefaultTagLineNumber( d_app->getTimeStep() );
 #endif
-    
-    // Each application has their own init_delt specified.  On a switch
-    // from one application to the next, delT needs to be adjusted to
-    // the value specified in the input file.  To detect the switch of
-    // applications, compare the old_init_delt before the
-    // needRecompile() to the new_init_delt after the needRecompile().
-    double old_init_delT = d_app->getSimulationTime()->m_max_initial_delt;
-    double new_init_delT = 0.;
 
     bool nr = needRecompile();
-
+    
 #ifdef HAVE_PIDX
     nr = (nr || pidx_need_to_recompile || pidx_restore_nth_rank);
 #endif         
 
     if( nr || first ) {
-
+    
       // Recompile taskgraph, re-assign BCs, reset recompile flag.      
       if (nr) {
         d_currentGridP->assignBCS(d_grid_ps, d_lb);
         d_currentGridP->performConsistencyCheck();
         d_recompileTaskGraph = false;
       }
-
+    
 #ifdef HAVE_PIDX
       if( pidx_requested_nth_rank > 1 ) {      
         if( pidx_restore_nth_rank ) {
@@ -510,20 +513,17 @@ AMRSimulationController::run()
         }
       }
 #endif
-      
-      new_init_delT = d_app->getSimulationTime()->m_max_initial_delt;
-       
-      if( new_init_delT != old_init_delT ) {
-        // Writes to the DW in the next section below.
-        d_app->setDelT( new_init_delT );
-      }
 
       d_scheduler->setRestartInitTimestep( false );
       recompile( totalFine );
     }
     else {
-      // This is not correct if we have switched to a different component, since the delT will be wrong
-      d_output->finalizeTimestep(d_app->getTimeStep(), d_app->getSimTime(), d_app->getDelT(), d_currentGridP, d_scheduler, 0);
+      // This is not correct if we have switched to a different
+      // component, since the delT will be wrong
+      d_output->finalizeTimestep(d_app->getTimeStep(),
+				 d_app->getSimTime(),
+				 d_app->getDelT(),
+				 d_currentGridP, d_scheduler, 0);
     }
 
     if( dbg_barrier.active() ) {
@@ -564,7 +564,10 @@ AMRSimulationController::run()
     {
       // If PIDX is not being used write timestep.xml for both
       // checkpoints and time step dumps.
-      d_output->writeto_xml_files(d_app->getTimeStep(), d_app->getSimTime(), d_app->getDelT(), d_currentGridP);
+      d_output->writeto_xml_files(d_app->getTimeStep(),
+				  d_app->getSimTime(),
+				  d_app->getDelT(),
+				  d_currentGridP);
     }
     
     // Finalize the application system vars inculding getting the next
@@ -718,10 +721,13 @@ AMRSimulationController::doInitialTimeStep()
 
       // Output tasks
       const bool recompile = true;
-      d_output->finalizeTimestep(d_app->getTimeStep(), d_app->getSimTime(), d_app->getDelT(),
+      d_output->finalizeTimestep(d_app->getTimeStep(),
+				 d_app->getSimTime(),
+				 d_app->getDelT(),
                                  d_currentGridP, d_scheduler, recompile);
 
-      d_output->sched_allOutputTasks(d_app->getDelT(), d_currentGridP, d_scheduler, recompile);
+      d_output->sched_allOutputTasks(d_app->getDelT(),
+				     d_currentGridP, d_scheduler, recompile);
 
       // Initialize the system var (time step and simulation time).
       // Must be done after the output.
@@ -773,29 +779,8 @@ AMRSimulationController::executeTimeStep( int totalFine )
   // Execute at least once.
   while (!success)
   {
-    // Adjust the delT for each level and store it in all applicable dws.
-    double delT_fine = d_app->getDelT();
-    int skip         = totalFine;
-
-    for (int i = 0; i < d_currentGridP->numLevels(); ++i) {
-      const Level* level = d_currentGridP->getLevel(i).get_rep();
-
-      if (d_app->isAMR() && i != 0 && !d_app->isLockstepAMR()) {
-        int trr = level->getRefinementRatioMaxDim();
-        delT_fine /= trr;
-        skip /= trr;
-      }
-
-      for (int idw = 0; idw < totalFine; idw += skip) {
-        DataWarehouse* dw = d_scheduler->get_dw(idw);
-        dw->override(delt_vartype(delT_fine), d_app->getDelTLabel(), level);
-      }
-    }
-
-    // Override for the global level as well (only matters on dw 0)
-    DataWarehouse* oldDW = d_scheduler->get_dw(0);
-    oldDW->override(delt_vartype(d_app->getDelT()), d_app->getDelTLabel());
-
+    d_app->adjustDelTForAllLevels( d_scheduler, d_currentGridP, totalFine );
+    
     // TODO: figure what this if clause attempted to accomplish and
     // clean up -APH, 06/14/17
     
@@ -830,37 +815,27 @@ AMRSimulationController::executeTimeStep( int totalFine )
     //   (multiple primary task graphs) this is passed to
     //   scheduler->execute(), default index is 0
     else {
-      int iteration = (d_last_recompile_timeStep == d_app->getTimeStep()) ? 0 : 1;
+      int iteration =
+	(d_last_recompile_timeStep == d_app->getTimeStep()) ? 0 : 1;
       
       d_scheduler->execute( tg_index, iteration);
     }
 
     //  If time step has been restarted adjust the delta T and restart.
-    if (d_scheduler->get_dw(totalFine)->timestepRestarted()) {
+    if (d_scheduler->get_dw(totalFine)->timestepRestarted() )
+    {
       ASSERT(restartable);
 
       for (int i = 1; i <= totalFine; ++i) {
         d_scheduler->replaceDataWarehouse(i, d_currentGridP);
       }
 
-      // Get the new delT
-      double new_delT = d_app->recomputeTimeStep(d_app->getDelT());
-
-      proc0cout << "Restarting time step at " << d_app->getSimTime() << ", changing delt from "
-          << d_app->getDelT() << " to " << new_delT << std::endl;
-
-      // Bulletproofing
-      if (new_delT < d_app->getSimulationTime()->m_delt_min || new_delT <= 0) {
-        std::ostringstream warn;
-        warn << "The new delT (" << new_delT << ") is either less than "
-             << "delT_min (" << d_app->getSimulationTime()->m_delt_min << ") or equal to 0";
-        throw InternalError(warn.str(), __FILE__, __LINE__);
-      }
-
-      d_app->setDelT( new_delT );
+      // Recompute the delta T.
+      d_app->recomputeTimeStep();
 
       // Re-evaluate the outputing and checkpointing.
-      d_output->reevaluate_OutputCheckPointTimestep(d_app->getSimTime(), d_app->getDelT());
+      d_output->reevaluate_OutputCheckPointTimestep(d_app->getSimTime(),
+						    d_app->getDelT());
 
       success = false;
     }
@@ -997,7 +972,8 @@ AMRSimulationController::needRecompile()
     d_recompileTaskGraph;
   
   if( d_regridder )
-    recompile |= d_regridder->needRecompile(d_app->getSimTime(), d_app->getDelT(), d_currentGridP);
+    recompile |= d_regridder->needRecompile(d_app->getSimTime(),
+					    d_app->getDelT(), d_currentGridP);
 
 #ifdef HAVE_VISIT
   // Check all of the component variables that might require the task
@@ -1120,12 +1096,19 @@ AMRSimulationController::recompile( int totalFine )
   }
   
   // Output tasks
-  d_output->finalizeTimestep(d_app->getTimeStep(), d_app->getSimTime(), d_app->getDelT(), d_currentGridP, d_scheduler, true);
+  d_output->finalizeTimestep(d_app->getTimeStep(),
+			     d_app->getSimTime(),
+			     d_app->getDelT(),
+			     d_currentGridP, d_scheduler, true);
 
-  d_output->sched_allOutputTasks(d_app->getDelT(), d_currentGridP, d_scheduler, true);
+  d_output->sched_allOutputTasks(d_app->getDelT(),
+				 d_currentGridP, d_scheduler, true);
 
-  // Update the system var (time step and simulation time). Must be done after the output.
-  d_app->scheduleUpdateSystemVars(d_currentGridP, d_lb->getPerProcessorPatchSet(d_currentGridP), d_scheduler);
+  // Update the system var (time step and simulation time). Must be
+  // done after the output.
+  d_app->scheduleUpdateSystemVars(d_currentGridP,
+				  d_lb->getPerProcessorPatchSet(d_currentGridP),
+				  d_scheduler);
 
   d_scheduler->compile();
 

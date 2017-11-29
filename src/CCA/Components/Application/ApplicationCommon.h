@@ -198,6 +198,7 @@ public:
   
   // Redo a time step if current time advance is not converging.
   // Returned time is the new dt to use.
+  virtual void   recomputeTimeStep();
   virtual double recomputeTimeStep(double delT);
   virtual bool restartableTimeSteps();
   
@@ -212,6 +213,8 @@ public:
 			      const GridP& /*grid*/)
   { return false; }
   
+  virtual const VarLabel* getTimeStepLabel() const { return m_timeStepLabel; }
+  virtual const VarLabel* getSimTimeLabel() const { return m_simulationTimeLabel; }
   virtual const VarLabel* getDelTLabel() const { return m_delTLabel; }
 
   //////////
@@ -266,9 +269,13 @@ private:
     // the values via the data warehouse.
     
   //////////
-  virtual   void getNextDelT( SchedulerP& scheduler );  
-  virtual   void setDelT( double val ) { m_delT = val; }
+  virtual   void setDelT( double val );
   virtual double getDelT() const { return m_delT; }
+  virtual   void restartDelT( double val );
+  virtual   void getNextDelT( SchedulerP& scheduler );  
+  virtual   void adjustDelTForAllLevels( SchedulerP& scheduler,
+					 const GridP & grid,
+					 const int totalFine );
 
   virtual   void setPrevDelT( double val ) { m_prevDelT = val; }
   virtual double getPrevDelT() const { return m_prevDelT; }
@@ -292,7 +299,7 @@ private:
   // beginning of a simulation.  The 'increment' function is called by
   // the SimulationController at the beginning of each time step.
   virtual void setTimeStep( int timeStep );
-  virtual void incrementTimeStep();
+  virtual void incrementTimeStep( const GridP & grid );
   virtual int  getTimeStep() const { return m_timeStep; }
 
   virtual bool isLastTimeStep( double walltime ) const;
