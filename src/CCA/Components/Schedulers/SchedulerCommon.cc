@@ -1064,7 +1064,11 @@ DataWarehouse*
 SchedulerCommon::get_dw( int idx )
 {
   ASSERTRANGE(idx, 0, static_cast<int>(m_dws.size()));
-  return m_dws[idx].get_rep();
+
+  if( 0 <= idx &&  idx < static_cast<int>(m_dws.size()) )
+    return m_dws[idx].get_rep();
+  else
+    return nullptr;
 }
 
 //______________________________________________________________________
