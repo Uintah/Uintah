@@ -960,8 +960,7 @@ SimulationController::ReportStats( bool header /* = false */ )
     if (dbgTime.active() && d_nSamples ) {
       double realSecondsNow =
         timeStep.seconds() / d_app->getDelT();
-      double realSecondsAvg = walltimers.TimeStep().seconds() /
-	(d_app->getSimTime()-d_app->getSimTimeStart());
+      double realSecondsAvg = walltimers.TimeStep().seconds() / (d_app->getSimTime()-d_app->getSimTimeStart());
 
       dbgTime << "1 simulation second takes ";
 

@@ -1145,14 +1145,14 @@ DataArchiver::beginOutputTimestep( const int timeStep,
 
   // Check for an output.
   d_isOutputTimestep =
-    // Output based on the simulation time.
+      // Output based on the simulation time.
     ( ((d_outputInterval > 0.0 &&
-	(delT != 0.0 || d_outputInitTimestep)) &&
+	     (delT != 0.0 || d_outputInitTimestep)) &&
        (simTime + delT >= d_nextOutputTime) ) ||
 
       // Output based on the timestep interval.
       ((d_outputTimestepInterval > 0 &&
-	(delT != 0.0 || d_outputInitTimestep)) &&
+	     (delT != 0.0 || d_outputInitTimestep)) &&
        (timeStep >= d_nextOutputTimestep)) ||
 
       // Output based on the being the last timestep.
@@ -1496,7 +1496,9 @@ DataArchiver::writeto_xml_files( const int timeStep,
   }
 
   if( !d_isCheckpointTimestep && !d_isOutputTimestep ) {
-    dbg << "   This is not an output (or checkpoint) timestep, so just returning...\n";
+    if (dbg.active()) {
+      dbg << "   This is not an output (or checkpoint) timestep, so just returning...\n";
+    }
     return;
   }
   
