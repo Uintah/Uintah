@@ -732,15 +732,6 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
                                      , bool               modifies
                                      )
 {
-  if( dtask->getName().find("accumulateEnergySourceSinks") != std::string::npos )
-    // std::cerr << __FUNCTION__ << "  " << __LINE__ << "  "
-    // 	      << dtask->getName() << "  "
-    // 	      <<  req->mapDataWarehouse() << "  "
-    // 	      << m_scheduler->get_dw(0) << "  " 
-    // 	      << m_scheduler->get_dw(req->mapDataWarehouse()) << "  " 
-    // 	      << m_scheduler->getLastDW() << "  " 
-    // 	      << std::endl;
-
   int my_rank = m_proc_group->myRank();
   for (; req != nullptr; req = req->m_next) {
 
@@ -752,7 +743,7 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
       continue;
     }    
     
-    DOUT(detaileddbg, "Rank-" << m_proc_group->myRank() << "  req: " << *req);
+    DOUT(detaileddbg, "Rank-" << my_rank << "  req: " << *req);
 
     constHandle<PatchSubset> patches = req->getPatchesUnderDomain(dtask->d_patches);
     if (req->m_var->typeDescription()->isReductionVariable() && m_scheduler->isNewDW(req->mapDataWarehouse())) {
@@ -900,7 +891,7 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
         }
 
         ASSERT(std::is_sorted(neighbors.begin(), neighbors.end(), Patch::Compare()));
-        DOUT(detaileddbg, "Rank-" << m_proc_group->myRank() << "    Creating dependency on " << neighbors.size()
+        DOUT(detaileddbg, "Rank-" << my_rank << "    Creating dependency on " << neighbors.size()
                                   << " neighbors:     Low=" << low << ", high=" << high << ", var=" << req->m_var->getName());
 
         for (unsigned int i = 0; i < neighbors.size(); i++) {
@@ -1015,8 +1006,8 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
                   else {
 
                     //if neither the patch or the neighbor are on this processor then the computing task doesn't exist so just continue
-                    if (m_load_balancer->getPatchwiseProcessorAssignment(patch)    != m_proc_group->myRank() &&
-                        m_load_balancer->getPatchwiseProcessorAssignment(neighbor) != m_proc_group->myRank()) {
+                    if (m_load_balancer->getPatchwiseProcessorAssignment(patch)    != my_rank &&
+                        m_load_balancer->getPatchwiseProcessorAssignment(neighbor) != my_rank) {
                       continue;
                     }
 
@@ -1025,7 +1016,7 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
                       std::cout << "creator=" << *creator << "\n";
                     }
                     std::cout << "neighbor=" << *fromNeighbor << ", matl=" << matl << "\n";
-                    std::cout << "Rank-" << m_proc_group->myRank() << "\n";
+                    std::cout << "Rank-" << my_rank << "\n";
 
                     SCI_THROW(InternalError("Failed to find comp for dep!", __FILE__, __LINE__));
                   }
@@ -1061,8 +1052,8 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
                       warn.invoke();
 #endif
                       if (detaileddbg.active()) {
-                        std::cout << m_proc_group->myRank() << " Task that requires with ghost cells and modifies\n";
-                        std::cout << m_proc_group->myRank() << " RGM: var: " << *req->m_var << " compute: " << *creator << " mod "
+                        std::cout << my_rank << " Task that requires with ghost cells and modifies\n";
+                        std::cout << my_rank << " RGM: var: " << *req->m_var << " compute: " << *creator << " mod "
                                     << *dtask << " PRT " << *prevReqTask << " " << from_l << " " << from_h << "\n";
                       }
                     }
@@ -1070,7 +1061,7 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
                   else {
                     // dep requires what is to be modified before it is to be modified so create a dependency between them
                     // so the modifying won't conflict with the previous require.
-                    DOUT(detaileddbg, "Rank-" << m_proc_group->myRank() << "       Requires to modifies dependency from " << prevReqTask->getName()
+                    DOUT(detaileddbg, "Rank-" << my_rank << "       Requires to modifies dependency from " << prevReqTask->getName()
                                               << " to " << dtask->getName() << " (created by " << creator->getName() << ")");
                     if (creator->getPatches() && creator->getPatches()->size() > 1) {
                       // if the creator works on many patches, then don't create links between patches that don't touch
@@ -1113,7 +1104,7 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
                   DetailedTask* subsequentCreator = m_detailed_tasks->getOldDWSendTask(subsequentProc);
                   m_detailed_tasks->possiblyCreateDependency(subsequentCreator, comp, fromNeighbor, dtask, req, patch, matl, from_l,
                                                              from_h, DetailedDep::SubsequentIterations);
-                  DOUT(detaileddbg, "Rank-" << m_proc_group->myRank() << "   Adding condition reqs for " << *req->m_var << " task : " << *creator << "  to " << *dtask);
+                  DOUT(detaileddbg, "Rank-" << my_rank << "   Adding condition reqs for " << *req->m_var << " task : " << *creator << "  to " << *dtask);
                 }
               }
               m_detailed_tasks->possiblyCreateDependency(creator, comp, fromNeighbor, dtask, req, patch, matl, from_l, from_h, cond);
@@ -1144,9 +1135,9 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
         ASSERTRANGE(dtask->getAssignedResourceIndex(), 0, m_proc_group->nRanks());
         for (unsigned i = 0; i < creators.size(); i++) {
           DetailedTask* creator = creators[i];
-          if (dtask->getAssignedResourceIndex() == creator->getAssignedResourceIndex() && dtask->getAssignedResourceIndex() == m_proc_group->myRank() ) {
+          if (dtask->getAssignedResourceIndex() == creator->getAssignedResourceIndex() && dtask->getAssignedResourceIndex() == my_rank ) {
             dtask->addInternalDependency(creator, req->m_var);
-            DOUT(detaileddbg, "Rank-" << m_proc_group->myRank() << "    Created reduction dependency between " << *dtask << " and " << *creator);
+            DOUT(detaileddbg, "Rank-" << my_rank << "    Created reduction dependency between " << *dtask << " and " << *creator);
           }
         }
       }
