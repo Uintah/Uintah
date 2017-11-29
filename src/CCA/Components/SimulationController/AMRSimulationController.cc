@@ -55,7 +55,7 @@
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
-
+#include <Core/Util/DebugStream.h>
 
 #ifdef HAVE_CUDA
 #  include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
