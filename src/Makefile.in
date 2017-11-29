@@ -158,6 +158,7 @@ ALL_PSE_LIBS =                              \
   #          THE NEEDS OF STATIC LINKING.  DO NOT ALPHABETIZE THEM!
 ALL_STATIC_PSE_LIBS =                   \
     CCA/Components/Parent               \
+    CCA/Components/Application          \
     CCA/Components/Solvers              \
     CCA/Components/DataArchiver         \
     CCA/Components/SimulationController \
