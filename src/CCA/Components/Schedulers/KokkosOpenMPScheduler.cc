@@ -65,6 +65,9 @@ Mutex g_scheduler_mutex{}; // main scheduler lock for multi-threaded task select
 
 volatile int  g_num_tasks_done{0};
 
+bool g_have_hypre_task{false};
+DetailedTask* g_HypreTask;
+
 }
 
 
@@ -228,29 +231,38 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
 
 //---------------------------------------------------------------------------
 
+  while ( g_num_tasks_done < m_num_tasks ) {
+
 #ifdef UINTAH_ENABLE_KOKKOS
 
-  auto task_worker = [&] ( int partition_id, int num_partitions ) {
+    auto task_worker = [&] ( int partition_id, int num_partitions ) {
 
-    // Each partition created executes this block of code
-    // A task_worker can run either a serial task, e.g. threads_per_partition == 1
-    //   or a Kokkos-based data parallel task, e.g. threads_per_partition > 1
+      // Each partition created executes this block of code
+      // A task_worker can run either a serial task, e.g. threads_per_partition == 1
+      //   or a Kokkos-based data parallel task, e.g. threads_per_partition > 1
 
-    this->runTasks();
+      this->runTasks();
 
-  }; //end task_worker
+    }; //end task_worker
 
     // Executes task_workers
-  Kokkos::OpenMP::partition_master( task_worker
-                                  , m_num_partitions
-                                  , m_threads_per_partition
-                                  );
+    Kokkos::OpenMP::partition_master( task_worker
+                                    , m_num_partitions
+                                    , m_threads_per_partition );
 
 #else //UINTAH_ENABLE_KOKKOS
 
-  this->runTasks();
+    this->runTasks();
 
 #endif //UINTAH_ENABLE_KOKKOS
+
+    if ( g_have_hypre_task ) {
+      DOUT(g_dbg, " Exited runTasks to run a " << g_HypreTask->getTask()->getType() << " task" );
+      MPIScheduler::runTask(g_HypreTask, m_curr_iteration.load(std::memory_order_relaxed));
+      g_have_hypre_task = false;
+    }
+
+  } // end while ( g_num_tasks_done < m_num_tasks )
 
 //---------------------------------------------------------------------------
 
@@ -349,7 +361,7 @@ KokkosOpenMPScheduler::markTaskConsumed( volatile int          * numTasksDone
 void
 KokkosOpenMPScheduler::runTasks()
 {
-  while( g_num_tasks_done < m_num_tasks ) {
+  while( g_num_tasks_done < m_num_tasks && !g_have_hypre_task ) {
 
     DetailedTask* readyTask = nullptr;
     DetailedTask* initTask  = nullptr;
@@ -359,9 +371,21 @@ KokkosOpenMPScheduler::runTasks()
     // ----------------------------------------------------------------------------------
     // Part 1 (serial): Task selection
     // ----------------------------------------------------------------------------------
-    g_scheduler_mutex.lock();
     {
+      std::lock_guard<Mutex> scheduler_mutex_guard(g_scheduler_mutex);
+
       while (!havework) {
+
+        /*
+         * (1.0)
+         *
+         * If it is time for a Hypre task, exit partitions.
+         *
+         */
+        if ( g_have_hypre_task ) {
+          return;
+        }
+
         /*
          * (1.1)
          *
@@ -388,6 +412,13 @@ KokkosOpenMPScheduler::runTasks()
           if (readyTask != nullptr) {
             havework = true;
             markTaskConsumed(&g_num_tasks_done, m_curr_phase, m_num_phases, readyTask);
+
+            if ( readyTask->getTask()->getType() == Task::Hypre ) {
+              g_HypreTask = readyTask;
+              g_have_hypre_task = true;
+              return;
+            }
+
             break;
           }
         }
@@ -419,6 +450,7 @@ KokkosOpenMPScheduler::runTasks()
             }
           }
         }
+
         /*
          * (1.4)
          *
@@ -430,12 +462,12 @@ KokkosOpenMPScheduler::runTasks()
             break;
           }
         }
+
         if (g_num_tasks_done == m_num_tasks) {
           break;
         }
       }  // end while (!havework)
-    }
-    g_scheduler_mutex.unlock();
+    }  // end lock_guard
 
 
 
@@ -450,7 +482,7 @@ KokkosOpenMPScheduler::runTasks()
     }
     else if (readyTask) {
 
-      DOUT(g_dbg, " Task now external ready: " << *readyTask)
+      DOUT(g_dbg, " Task now external ready: " << *readyTask);
 
       if (readyTask->getTask()->getType() == Task::Reduction) {
         MPIScheduler::initiateReduction(readyTask);

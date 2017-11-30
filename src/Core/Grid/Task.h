@@ -290,9 +290,9 @@ public: // class Task
     , InitialSend
     , OncePerProc // make sure to pass a PerProcessor PatchSet to the addTask function
     , Output
-    , Spatial    // e.g. Radiometer task (spatial scheduling); must call task->setType(Task::Spatial)
+    , Spatial     // e.g. Radiometer task (spatial scheduling); must call task->setType(Task::Spatial)
+    , Hypre       // previously identified as a OncePerProc
   };
-    
 
 
   Task( const std::string & taskName, TaskType type )

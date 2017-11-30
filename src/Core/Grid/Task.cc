@@ -1175,6 +1175,9 @@ operator <<( std::ostream & out, const Task::TaskType & tt )
     case Task::Spatial :
       out << "Spatial";
       break;
+    case Task::Hypre :
+      out << "Hypre";
+      break;
   }
   return out;
 }

@@ -442,8 +442,8 @@ SchedulerCommon::problemSetup( const ProblemSpecP & prob_spec, const SimulationS
         // the tasks are divided by component.
         std::string varName = taskName;
         std::size_t found = varName.find("::");
-	if( found != std::string::npos)
-	  varName.replace(found, 2 ,"/");
+        if( found != std::string::npos)
+          varName.replace(found, 2 ,"/");
         
         // Set the variable name to the task name plus the attribute
         // name and store in a map for easy lookup by the task and
@@ -632,7 +632,7 @@ SchedulerCommon::printTrackedVars( DetailedTask * dtask, int when )
     const PatchSubset* patches = dtask->getPatches();
 
     // a once-per-proc task is liable to have multiple levels, and thus calls to getLevel(patches) will fail
-    if (dtask->getTask()->getType() != Task::OncePerProc && (!patches || getLevel(patches)->getIndex() != levelnum)) {
+    if (dtask->getTask()->getType() != Task::OncePerProc && dtask->getTask()->getType() != Task::Hypre && (!patches || getLevel(patches)->getIndex() != levelnum)) {
       std::ostringstream mesg;
       mesg << "WARNING: VarTracker: Not printing requested variable (" << m_tracking_vars[i] << ") because patch is non-standard.\n";
       handleError(2, mesg.str(), m_tracking_vars[i]);
@@ -884,10 +884,10 @@ SchedulerCommon::addTask(       Task        * task
           const DataWarehouse* const_dw = get_dw(dw);
           VarLabelMatl<Level,DataWarehouse> key(dep->m_var, matlIdx, dep->m_reduction_level, const_dw);
 
-	  // For reduction variables there may be multiple computes
-	  // each of which will create reduction task. The last
-	  // reduction task should be kept. This is because the tasks
-	  // do not get sorted.
+          // For reduction variables there may be multiple computes
+          // each of which will create reduction task. The last
+          // reduction task should be kept. This is because the tasks
+          // do not get sorted.
           if( m_reduction_tasks.find(key) == m_reduction_tasks.end() )
           {
             DOUT( g_schedulercommon_dbg, "Rank-" << d_myworld->myRank() << " Excluding previous reduction task for variable: " << dep->m_var->getName() << " on level " << levelidx << ", DW " << dw << " dep->m_reduction_level " << dep->m_reduction_level << " material index " << matlIdx );
@@ -904,10 +904,10 @@ SchedulerCommon::addTask(       Task        * task
             const DataWarehouse* const_dw = get_dw(dw);
             VarLabelMatl<Level,DataWarehouse> key(dep->m_var, matlIdx, dep->m_reduction_level, const_dw);
 
-	    // For reduction variables there may be multiple computes
-	    // each of which will create reduction task. The last
-	    // reduction task should be kept. This is because the
-	    // tasks do not get sorted.
+            // For reduction variables there may be multiple computes
+            // each of which will create reduction task. The last
+            // reduction task should be kept. This is because the
+            // tasks do not get sorted.
             if( m_reduction_tasks.find(key) == m_reduction_tasks.end() )
             {
               DOUT( g_schedulercommon_dbg, "Rank-" << d_myworld->myRank() << " Excluding previous reduction task for variable: " << dep->m_var->getName() << " on level " << levelidx << ", DW " << dw << " dep->m_reduction_level " << dep->m_reduction_level << " material index " << matlIdx );
@@ -1131,10 +1131,10 @@ SchedulerCommon::replaceDataWarehouse(       int     index
   }
 
   // std::cerr << __FUNCTION__ << "  " << __LINE__ << "  "
-  // 	    << get_dw(0) << "  " 
-  // 	    << get_dw(1) << "  " 
-  // 	    << getLastDW() << "  " 
-  // 	    << std::endl;
+  //           << get_dw(0) << "  " 
+  //           << get_dw(1) << "  " 
+  //           << getLastDW() << "  " 
+  //           << std::endl;
   
   for (unsigned i = 0; i < m_task_graphs.size(); i++) {
     DetailedTasks* dts = m_task_graphs[i]->getDetailedTasks();
@@ -1772,7 +1772,7 @@ SchedulerCommon::copyDataToNewGrid( const ProcessorGroup * /* pg */
   DOUT(g_schedulercommon_dbg, "SchedulerCommon::copyDataToNewGrid() BGN on patches " << *patches);
 
   // std::cerr << __FUNCTION__ << "  " << __LINE__ << std::endl;
-			       
+
   OnDemandDataWarehouse* oldDataWarehouse = dynamic_cast<OnDemandDataWarehouse*>(old_dw);
   OnDemandDataWarehouse* newDataWarehouse = dynamic_cast<OnDemandDataWarehouse*>(new_dw);
 
@@ -2234,14 +2234,14 @@ SchedulerCommon::sumTaskMonitoringValues(DetailedTask * dtask)
         // Strip off the attribute name from the task name.
         std::string taskName = it.first;
 
-	// For a local task strip off the attribute name.
-	if( i == 1 )
-	{
-	  size_t found = taskName.find_last_of("::");
-	  // std::string attribute = taskName.substr(found + 1);
-	  taskName = taskName.substr(0, found-1);
-	}
-	
+        // For a local task strip off the attribute name.
+        if( i == 1 )
+        {
+          size_t found = taskName.find_last_of("::");
+          // std::string attribute = taskName.substr(found + 1);
+          taskName = taskName.substr(0, found-1);
+        }
+
         // Is this task being monitored ?
         if( (i == 0) || // Global monitoring yes, otherwise check.
             (i == 1 && taskName == dtask->getTask()->getName()) )

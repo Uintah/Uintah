@@ -68,7 +68,7 @@ Dout detaileddbg(       "TaskGraphDetailed", false);
 //______________________________________________________________________
 //
 TaskGraph::TaskGraph(       SchedulerCommon   * sched
-		                ,       SimulationStateP  & state
+                    ,       SimulationStateP  & state
                     , const ProcessorGroup    * pg
                     ,       Scheduler::tgType   type
                     ,       int                 index
@@ -445,7 +445,7 @@ TaskGraph::createDetailedTasks(       bool            useInternalDeps
     // OncePerProc tasks
     if (ps && ms) {
       // only create OncePerProc tasks and output tasks once on each processor.
-      if (task->getType() == Task::OncePerProc) {
+      if (task->getType() == Task::OncePerProc || task->getType() == Task::Hypre) {
         // only schedule this task on processors in the neighborhood
         const std::set<int> neighborhood_procs = (task->m_max_ghost_cells.at(levelID) >= MAX_HALO_DEPTH) ? distal_procs : local_procs;
         for (auto p = neighborhood_procs.begin(); p != neighborhood_procs.end(); ++p) {
@@ -518,13 +518,13 @@ TaskGraph::createDetailedTasks(       bool            useInternalDeps
     }
     else if (!ps) {
       if (task->getType() == Task::Reduction) {
-	for (int m = 0; m < ms->size(); m++) {
-	  const MaterialSubset* mss = ms->getSubset(m);
-	  createDetailedTask(task, nullptr, mss);
-	}
+        for (int m = 0; m < ms->size(); m++) {
+          const MaterialSubset* mss = ms->getSubset(m);
+          createDetailedTask(task, nullptr, mss);
+        }
       }
       else
-	SCI_THROW(InternalError("Task has MaterialSet, but no PatchSet", __FILE__, __LINE__));
+        SCI_THROW(InternalError("Task has MaterialSet, but no PatchSet", __FILE__, __LINE__));
     }
     else {
       SCI_THROW(InternalError("Task has PatchSet, but no MaterialSet", __FILE__, __LINE__));
@@ -686,8 +686,8 @@ TaskGraph::remapTaskDWs( int dwmap[] )
     // we need to adjust based on which level they are on, but first 
     // we need to find the coarsest level.  The NewDW is relative to the coarsest
     // level executing in this taskgraph.
-    if (m_type == Scheduler::IntermediateTaskGraph && (m_tasks[i]->getType() != Task::Output && m_tasks[i]->getType() != Task::OncePerProc)) {
-      if (m_tasks[i]->getType() == Task::OncePerProc || m_tasks[i]->getType() == Task::Output) {
+    if (m_type == Scheduler::IntermediateTaskGraph && (m_tasks[i]->getType() != Task::Output && m_tasks[i]->getType() != Task::OncePerProc && m_tasks[i]->getType() != Task::Hypre)) {
+      if (m_tasks[i]->getType() == Task::OncePerProc || m_tasks[i]->getType() == Task::Hypre || m_tasks[i]->getType() == Task::Output) {
         levelmin = 0;
         continue;
       }
@@ -708,7 +708,7 @@ TaskGraph::remapTaskDWs( int dwmap[] )
     // on the level it was originally mapped, so leave it as it is
     dwmap[Task::CoarseNewDW] = dwmap[Task::NewDW];
     for (unsigned i = 0; i < m_tasks.size(); i++) {
-      if (m_tasks[i]->getType() != Task::Output && m_tasks[i]->getType() != Task::OncePerProc) {
+      if (m_tasks[i]->getType() != Task::Output && m_tasks[i]->getType() != Task::OncePerProc && m_tasks[i]->getType() != Task::Hypre) {
         const PatchSet* ps = m_tasks[i]->getPatchSet();
         if (!ps) {
           continue;
@@ -761,7 +761,7 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
     int levelID = 0;
     const Patch* origPatch = nullptr;
     const Level* origLevel = nullptr;
-    if ((dtask->d_patches) && (dtask->getTask()->getType() != Task::OncePerProc)) {
+    if ((dtask->d_patches) && (dtask->getTask()->getType() != Task::OncePerProc) && (dtask->getTask()->getType() != Task::Hypre)) {
       origPatch = dtask->d_patches->get(0);
       origLevel = origPatch->getLevel();
       levelID = origLevel->getID();
@@ -1145,10 +1145,11 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
     // ARS - FIX ME
     //else if (patches && patches->empty() &&
     else if (patches && (patches->empty() || patches->size() <= 1 ) &&
-	     (req->m_patches_dom == Task::FineLevel ||
-	      dtask->getTask()->getType() == Task::OncePerProc ||
-	      dtask->getTask()->getType() == Task::Output ||
-	      dtask->getTask()->getName() == "SchedulerCommon::copyDataToNewGrid")) {
+             (req->m_patches_dom == Task::FineLevel ||
+             dtask->getTask()->getType() == Task::OncePerProc ||
+             dtask->getTask()->getType() == Task::Hypre ||
+             dtask->getTask()->getType() == Task::Output ||
+             dtask->getTask()->getName() == "SchedulerCommon::copyDataToNewGrid")) {
       // this is a either coarsen task where there aren't any fine
       // patches, or a PerProcessor task where there aren't any
       // patches on this processor.  Perfectly legal, so do nothing

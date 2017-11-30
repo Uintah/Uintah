@@ -632,7 +632,7 @@ operator<<( std::ostream & out, const DetailedTask & dtask )
         out << patches->get(i)->getID();
       }
       // a once-per-proc task is liable to have multiple levels, and thus calls to getLevel(patches) will fail
-      if (dtask.getTask()->getType() == Task::OncePerProc) {
+      if (dtask.getTask()->getType() == Task::OncePerProc || dtask.getTask()->getType() == Task::Hypre) {
         out << ", on multiple levels";
       }
       else {

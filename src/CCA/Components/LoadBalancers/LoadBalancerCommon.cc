@@ -102,7 +102,7 @@ LoadBalancerCommon::assignResources( DetailedTasks & graph )
     DetailedTask* task = graph.getTask(i);
 
     const PatchSubset* patches = task->getPatches();
-    if (patches && patches->size() > 0 && task->getTask()->getType() != Task::OncePerProc) {
+    if (patches && patches->size() > 0 && task->getTask()->getType() != Task::OncePerProc && task->getTask()->getType() != Task::Hypre) {
       const Patch* patch = patches->get(0);
 
       int idx = getPatchwiseProcessorAssignment(patch);
@@ -146,7 +146,7 @@ LoadBalancerCommon::assignResources( DetailedTasks & graph )
         // Already assigned, do nothing
         ASSERT(task->getAssignedResourceIndex() != -1);
       }
-      else if (task->getTask()->getType() == Task::OncePerProc) {
+      else if (task->getTask()->getType() == Task::OncePerProc || task->getTask()->getType() == Task::Hypre) {
 
         // patch-less task, not execute-once, set to run on all procs
         // once per patch subset (empty or not)
@@ -155,7 +155,7 @@ LoadBalancerCommon::assignResources( DetailedTasks & graph )
           int i = (*p);
           if (patches == task->getTask()->getPatchSet()->getSubset(i)) {
             task->assignResource(i);
-            DOUT(g_lb_dbg, d_myworld->myRank() << " OncePerProc Task " << *(task->getTask()) << " put on resource " << i);
+            DOUT(g_lb_dbg, d_myworld->myRank() << " " << task->getTask()->getType() << " Task " << *(task->getTask()) << " put on resource " << i);
           }
         }
       }
@@ -275,16 +275,16 @@ LoadBalancerCommon::useSFC( const LevelP & level, int * order )
   Vector center = (high+low).asVector()/2.0;
  
   double r[3]     = {(double)range[m_activeDims[0]],
-		     (double)range[m_activeDims[1]],
-		     (double)range[m_activeDims[2]]};
+                     (double)range[m_activeDims[1]],
+                     (double)range[m_activeDims[2]]};
 
   double c[3]     = {(double)center[m_activeDims[0]],
-		     (double)center[m_activeDims[1]],
-		     (double)center[m_activeDims[2]]};
+                     (double)center[m_activeDims[1]],
+                     (double)center[m_activeDims[2]]};
 
   double delta[3] = {(double)min_patch_size[m_activeDims[0]],
-		     (double)min_patch_size[m_activeDims[1]],
-		     (double)min_patch_size[m_activeDims[2]]};
+                     (double)min_patch_size[m_activeDims[1]],
+                     (double)min_patch_size[m_activeDims[2]]};
 
   // Create SFC
   m_sfc.SetDimensions(r);

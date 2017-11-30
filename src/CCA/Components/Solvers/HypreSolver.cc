@@ -96,23 +96,22 @@ namespace Uintah {
                   const HypreSolver2Params * params_in,
                         bool                 modifies_hypre_in)
       : level(level_in),
-	matlset(matlset_in),
+        matlset(matlset_in),
         A_label(A_in),
-	which_A_dw(which_A_dw_in),
+        which_A_dw(which_A_dw_in),
         X_label(x_in), 
         modifies_X(modifies_X_in),
         b_label(b_in),
-	which_b_dw(which_b_dw_in),
+        which_b_dw(which_b_dw_in),
         guess_label(guess_in),
-	which_guess_dw(which_guess_dw_in),
-	params(params_in),
+        which_guess_dw(which_guess_dw_in),
+        params(params_in),
         modifies_hypre(modifies_hypre_in)
     {
       // Time Step
-      m_timeStepLabel =
-	VarLabel::create(timeStep_name, timeStep_vartype::getTypeDescription() );
+      m_timeStepLabel = VarLabel::create(timeStep_name, timeStep_vartype::getTypeDescription() );
       hypre_solver_label = VarLabel::create("hypre_solver_label",
-					    SoleVariable<hypre_solver_structP>::getTypeDescription());
+                                            SoleVariable<hypre_solver_structP>::getTypeDescription());
                    
       firstPassThrough_ = true;
       movingAverage_    = 0.0;
@@ -145,8 +144,8 @@ namespace Uintah {
       int timeStep = params->m_sharedState->getCurrentTopLevelTimeStep();
 
       // std::cerr << "**********  " << __FUNCTION__ << "  " << __LINE__ << "  "
-      // 		<< old_dw << "  " << new_dw << "  "
-      // 		<< std::endl;
+      //           << old_dw << "  " << new_dw << "  "
+      //           << std::endl;
 
       // int timeStep = 0;
       // simTime_vartype timeStep_var;
@@ -154,8 +153,8 @@ namespace Uintah {
       // timeStep = timeStep_var;
 
       // std::cerr << "**********  " << __FUNCTION__ << "  " << __LINE__ << "  "
-      // 		<< old_dw << "  " << new_dw << "  "
-      // 		<< timeStep << std::endl;
+      //           << old_dw << "  " << new_dw << "  "
+      //           << timeStep << std::endl;
       
       //________________________________________________________
       // Solve frequency
@@ -444,7 +443,7 @@ namespace Uintah {
             }
           }
           if (timeStep == 1 || restart || do_setup)
-	    HYPRE_StructMatrixAssemble(*HA);
+            HYPRE_StructMatrixAssemble(*HA);
         }
 
         //__________________________________
@@ -494,7 +493,7 @@ namespace Uintah {
           }
         }
         if (timeStep == 1 || restart || do_setup)
-	  HYPRE_StructVectorAssemble(*HB);
+          HYPRE_StructVectorAssemble(*HB);
 
         //__________________________________
         // Create the solution vector
@@ -546,15 +545,15 @@ namespace Uintah {
           }  // initialGuess
         } // patch loop
         if (timeStep == 1 || restart || do_setup)
-	  HYPRE_StructVectorAssemble(*HX);
-	
+          HYPRE_StructVectorAssemble(*HX);
+
         hypre_EndTiming(tMatVecSetup_);
         //__________________________________
         //  Dynamic tolerances  Arches uses this
         double precond_tolerance = 0.0;
 
-	Timers::Simple solve_timer;
-	solve_timer.start();
+        Timers::Simple solve_timer;
+        solve_timer.start();
 
         hypre_BeginTiming(tSolveOnly_);
         
@@ -931,7 +930,7 @@ namespace Uintah {
         hypre_ClearTiming();
 
         timer.stop();
-	
+
         if(pg->myRank() == 0) {
 
           cout << "Solve of " << X_label->getName() 
@@ -943,14 +942,13 @@ namespace Uintah {
             // alpha = 2/(N+1)
             // averaging window is 10 timeSteps.
             double alpha = 2.0/(std::min(timeStep - 2, 10) + 1);
-            movingAverage_ =
-	      alpha*solve_timer().seconds() + (1-alpha)*movingAverage_;
+            movingAverage_ = alpha*solve_timer().seconds() + (1-alpha)*movingAverage_;
 
             cout << "mean: " <<  movingAverage_ << " s, ";
           }
 
-	  cout << num_iterations << " iterations, residual = "
-	       << final_res_norm << ")." << std::endl;
+          cout << num_iterations << " iterations, residual = "
+               << final_res_norm << ")." << std::endl;
         }
 
         timer.reset( true );
@@ -1108,7 +1106,7 @@ namespace Uintah {
       VarLabel::create(timeStep_name, timeStep_vartype::getTypeDescription() );
     
     hypre_solver_label = VarLabel::create("hypre_solver_label",
-					  SoleVariable<hypre_solver_structP>::getTypeDescription());
+                                          SoleVariable<hypre_solver_structP>::getTypeDescription());
     
   }
 
@@ -1124,7 +1122,7 @@ namespace Uintah {
   
   SolverParameters* HypreSolver2::readParameters(ProblemSpecP& params,
                                                  const string& varname,
-						 const SimulationStateP& state)
+                                                 const SimulationStateP& state)
   {
     HypreSolver2Params* hypreSolveParams = scinew HypreSolver2Params();
     hypreSolveParams->m_sharedState = state;
@@ -1352,16 +1350,16 @@ namespace Uintah {
     }
 
     // std::cerr << "**********  " << __FUNCTION__ << "  " << __LINE__ << "  "
-    // 	      << sched->get_dw(0) << "  " 
-    // 	      << sched->get_dw(1) << "  " 
-    // 	      << sched->getLastDW() << std::endl;
+    //           << sched->get_dw(0) << "  " 
+    //           << sched->get_dw(1) << "  " 
+    //           << sched->getLastDW() << std::endl;
 
     task->requires(Task::OldDW, m_timeStepLabel);
 
     sched->overrideVariableBehavior(hypre_solver_label->getName(),false,false,
                                     false,true,true);
 
-    task->setType(Task::OncePerProc);
+    task->setType(Task::Hypre);
     sched->addTask(task, lb->getPerProcessorPatchSet(level), matls);
   }
 
