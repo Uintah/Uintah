@@ -851,7 +851,7 @@ Switcher::needRecompile(       double   simTime,
     // the value specified in the input file. 
     double new_delT = getSimulationTime()->m_max_initial_delt;
 
-    proc0cout << "Switching delt from " << m_delT
+    proc0cout << "Switching delT from " << m_delT
 	      << " to " << new_delT
 	      << std::endl;
     

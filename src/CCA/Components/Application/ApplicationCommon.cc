@@ -576,7 +576,7 @@ ApplicationCommon::recomputeTimeStep()
   double new_delT = recomputeTimeStep(m_delT);
 
   proc0cout << "Restarting time step at " << m_simTime
-	    << ", changing delt from " << m_delT
+	    << ", changing delT from " << m_delT
 	    << " to " << new_delT
 	    << std::endl;
 
