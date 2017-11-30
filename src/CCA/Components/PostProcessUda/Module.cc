@@ -23,22 +23,165 @@
  */
 
 #include <CCA/Components/PostProcessUda/Module.h>
+#include <Core/DataArchive/DataArchive.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Grid/Material.h>
 #include <Core/Grid/SimulationState.h>
+#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <ostream>                         // for operator<<, basic_ostream
+#include <vector>
 
 using namespace Uintah;
+using namespace std;
 
 Module::Module()
 {
 }
 
-Module::Module(ProblemSpecP     & prob_spec, 
-               SimulationStateP & sharedState, 
+Module::Module(ProblemSpecP     & prob_spec,
+               SimulationStateP & sharedState,
                Output           * dataArchiver,
-               DataArchive      * d_dataArchive )
+               DataArchive      * dataArchive )
 {
+  d_sharedState  = sharedState;
+  d_dataArchiver = dataArchiver;
+  d_dataArchive  = dataArchive;
+
+ if(!d_dataArchiver){
+    throw InternalError("spatioTemporalAvg:couldn't get output port", __FILE__, __LINE__);
+  }
+
 }
 
 Module::~Module()
 {
 }
-    
+
+//______________________________________________________________________
+//  Parse the ups file and read timeStart and timeStop
+void Module::readTimeStartStop(const ProblemSpecP & ps,
+                               double & startTime,
+                               double & stopTime)
+{
+  ProblemSpecP prob_spec = ps;
+  prob_spec->require("timeStart",  startTime);
+  prob_spec->require("timeStop",   stopTime);
+
+  //__________________________________
+  // bulletproofing
+  // Start time < stop time
+  if(startTime >= stopTime ){
+    throw ProblemSetupException("\n ERROR:PostProcess: startTime >= stopTime. \n", __FILE__, __LINE__);
+  }
+
+  std::vector<double> uda_times;
+  std::vector<int> uda_timesteps;
+  d_dataArchive->queryTimesteps( uda_timesteps, uda_times );
+
+  if ( startTime < uda_times[0] ){
+    std::ostringstream warn;
+    warn << "  ERROR:PostProcess: The startTime (" << startTime
+         << ") must be greater than the time at timestep 1 (" << uda_times[0] << ")";
+    throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+  }
+}
+
+//______________________________________________________________________
+//  Read the ups file and create the material set
+//  The material set is the default matl + any optional matls specified on the labels
+void Module::createMatlSet(const ProblemSpecP & ps,
+                           MaterialSet  * matlSet,
+                           map<string,int> & Qmatls )
+{
+  //__________________________________
+  // Find the material.  Default is matl 0.
+  // The user can specify either
+  //  <material>   atmosphere </material>
+  //  <materialIndex> 1 </materialIndex>
+  ProblemSpecP module_ps = ps;
+
+  Material* matl = nullptr;
+  int numMatls   = d_sharedState->getNumMatls();
+
+  if( module_ps->findBlock("material") ){
+    matl = d_sharedState->parseAndLookupMaterial( module_ps, "material" );
+  } else if ( module_ps->findBlock("materialIndex") ){
+    int indx;
+    module_ps->get( "materialIndex", indx );
+    matl = d_sharedState->getMaterial(indx);
+  } else {
+    matl = d_sharedState->getMaterial(0);
+  }
+
+  int defaultMatl = matl->getDWIndex();
+
+  vector<int> m;
+  m.push_back( defaultMatl );
+
+  //__________________________________
+  //  Read in variables label names for optional matl indicies
+   ProblemSpecP vars_ps = module_ps->findBlock("Variables");
+  if (!vars_ps){
+    throw ProblemSetupException("PostProcessing: Couldn't find <Variables> tag", __FILE__, __LINE__);
+  }
+
+  for( ProblemSpecP var_spec = vars_ps->findBlock("analyze"); var_spec != nullptr; var_spec = var_spec->findNextBlock("analyze") ) {
+    map<string,string> attribute;
+    var_spec->getAttributes(attribute);
+
+    //__________________________________
+    //  Read in the optional material index. It may be different
+    //  from the default index
+    int matl = defaultMatl;
+    if (attribute["matl"].empty() == false){
+      matl = atoi(attribute["matl"].c_str());
+    }
+
+    // bulletproofing
+    if(matl < 0 || matl > numMatls){
+      throw ProblemSetupException("PostProcessing: problemSetup:: Invalid material index specified for a variable", __FILE__, __LINE__);
+    }
+
+    string name = attribute["label"];
+    Qmatls[name] = matl;                // matl associated with each Varlabel
+    m.push_back(matl);
+  }
+
+  //__________________________________
+  //  create the matl set
+  // remove any duplicate entries
+  sort(m.begin(), m.end());
+  vector<int>::iterator it;
+  it = unique(m.begin(), m.end());
+  m.erase(it, m.end());
+
+  matlSet->addAll(m);
+  matlSet->addReference();
+}
+
+
+//______________________________________________________________________
+//  allocateAndZero
+template <class T>
+void Module::allocateAndZero( DataWarehouse * new_dw,
+                              const VarLabel * label,
+                              const int matl,
+                              const Patch * patch )
+{
+  CCVariable<T> Q;
+  new_dw->allocateAndPut( Q, label, matl, patch );
+  T zero(0.0);
+  Q.initialize( zero );
+}
+
+//______________________________________________________________________
+// Instantiate the explicit template instantiations.
+//
+template void Module::allocateAndZero<float> ( DataWarehouse  *, const VarLabel *, const int matl, const Patch * );
+template void Module::allocateAndZero<double>( DataWarehouse  *, const VarLabel *, const int matl, const Patch * );
+template void Module::allocateAndZero<Vector>( DataWarehouse  *, const VarLabel *, const int matl, const Patch * );
+
+

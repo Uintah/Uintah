@@ -26,24 +26,23 @@
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/DbgOutput.h>
-#include <Core/Grid/Grid.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/CellIterator.h>
-#include <Core/Exceptions/InternalError.h>
+#include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Util/DebugStream.h>
+
 #include <iostream>
-#include <cstdio>
 #include <iomanip>
 /*______________________________________________________________________
-  The post processing module will compute the mean, variance, skewness and Kurtosis 
-  for a set of CCVariables in an existing uda over the timesteps in the uda.  
-  The usage is:    
-      
+  The post processing module will compute the mean, variance, skewness and Kurtosis
+  for a set of CCVariables in an existing uda over the timesteps in the uda.
+  The usage is:
+
    sus -postProcessUda <uda>
-      
+
    Make the following changes to the <uda>/input.xml
-      
-  <SimulationComponent type="postProcessUda"/>    
+
+  <SimulationComponent type="postProcessUda"/>
 
   <save label="mean_press_CC"/>
   <save label="variance_press_CC"/>
@@ -67,7 +66,7 @@
         <analyze label="press_CC"  matl="0"/>        << Variables of interest
         <analyze label="vel_CC"    matl="0"/>
       </Variables>
-    </Module>         
+    </Module>
   </PostProcess>
 
 ______________________________________________________________________*/
@@ -82,17 +81,9 @@ statistics::statistics(ProblemSpecP    & module_spec,
                        SimulationStateP& sharedState,
                        Output          * dataArchiver,
                        DataArchive     * dataArchive)
-  : Module(module_spec, sharedState, dataArchiver, dataArchive),
-    PostProcessCommon()
+  : Module(module_spec, sharedState, dataArchiver, dataArchive)
 {
-  d_sharedState  = sharedState;
-  d_prob_spec    = module_spec;
-  d_dataArchiver = dataArchiver;
-  d_dataArchive  = dataArchive;
-  d_matlSet     = 0;
-  d_stopTime    = DBL_MAX;
-  d_monitorCell = IntVector(-9,-9,-9);
-  d_doHigherOrderStats = false;
+  d_prob_spec = module_spec;
 }
 
 //______________________________________________________________________
@@ -121,71 +112,22 @@ statistics::~statistics()
 
 //______________________________________________________________________
 //     P R O B L E M   S E T U P
-void statistics::problemSetup(const ProblemSpecP& prob_spec,
-                              const ProblemSpecP&,
-                              GridP& grid,
-			      SimulationStateP& sharedState)
+void statistics::problemSetup()
 {
   dbg << "Doing problemSetup \t\t\t\tstatistics" << endl;
 
-  d_sharedState = sharedState;
+  proc0cout << "__________________________________ Post Process module: statistics" << endl;
+  readTimeStartStop(d_prob_spec, d_startTime, d_stopTime);
 
-  int numMatls  = d_sharedState->getNumMatls();
-  if(!d_dataArchiver){
-    throw InternalError("statistics:couldn't get output port", __FILE__, __LINE__);
-  }
+  d_matlSet = scinew MaterialSet();
+  map<string,int> Qmatls;
 
-  //__________________________________
-  //  Read in timing information
-  d_prob_spec->require("timeStart",  d_startTime);
-  d_prob_spec->require("timeStop",   d_stopTime);
-  
-  // Start time < stop time
-  if(d_startTime >= d_stopTime ){
-    throw ProblemSetupException("\n ERROR:statistics: startTime >= stopTime. \n", __FILE__, __LINE__);
-  }
-  
-  std::vector<double> uda_times;
-  std::vector<int> uda_timesteps;
-  d_dataArchive->queryTimesteps( uda_timesteps, uda_times );
-  
-  
-  if ( d_startTime < uda_times[0] ){
-    ostringstream warn;
-    warn << "  ERROR:statistics: The startTime (" << d_startTime 
-         << ") must be greater than the time at timestep 1 (" << uda_times[0] << ")" << endl;
-    throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-  }
-  
-  
-  
+  createMatlSet( d_prob_spec, d_matlSet, Qmatls );
+  proc0cout << "  StartTime: " << d_startTime << " stopTime: "<< d_stopTime << " " << *d_matlSet << endl;
+
   // debugging
   d_prob_spec->get("monitorCell", d_monitorCell);
-  
-  //__________________________________
-  // find the material to extract data from.  Default is matl 0.
-  // The user can use either
-  //  <material>   atmosphere </material>
-  //  <materialIndex> 1 </materialIndex>
 
-  Material* matl = nullptr;
-
-  if(d_prob_spec->findBlock("material") ){
-    matl = d_sharedState->parseAndLookupMaterial( d_prob_spec, "material" );
-  } else if ( d_prob_spec->findBlock("materialIndex") ){
-    int indx;
-    d_prob_spec->get( "materialIndex", indx );
-    matl = d_sharedState->getMaterial(indx);
-  } else {
-    matl = d_sharedState->getMaterial(0);
-  }
-
-  int defaultMatl = matl->getDWIndex();
-
-  vector<int> m;
-  m.push_back( defaultMatl );
-
-  proc0cout << "__________________________________ Post Process module: statistics" << endl;
   d_prob_spec->get("computeHigherOrderStats", d_doHigherOrderStats );
   if (d_doHigherOrderStats){
     proc0cout << "         Computing 2nd, 3rd and 4th order statistics for all of the variables listed"<< endl;
@@ -203,21 +145,6 @@ void statistics::problemSetup(const ProblemSpecP& prob_spec,
   for( ProblemSpecP var_spec = vars_ps->findBlock("analyze"); var_spec != nullptr; var_spec = var_spec->findNextBlock("analyze") ) {
     map<string,string> attribute;
     var_spec->getAttributes(attribute);
-
-    //__________________________________
-    //  Read in the optional material index from the variables that may be different
-    //  from the default index and construct the material set
-    int matl = defaultMatl;
-    if (attribute["matl"].empty() == false){
-      matl = atoi(attribute["matl"].c_str());
-    }
-
-    // bulletproofing
-    if(matl < 0 || matl > numMatls){
-      throw ProblemSetupException("statistics: problemSetup: analyze: Invalid material index specified for a variable", __FILE__, __LINE__);
-    }
-    m.push_back(matl);
-
 
     // What is the label name and does it exist?
     string name = attribute["label"];
@@ -242,7 +169,7 @@ void statistics::problemSetup(const ProblemSpecP& prob_spec,
     //__________________________________
     // create the labels for this variable
     Qstats Q;
-    Q.matl    = matl;
+    Q.matl    = Qmatls[name];
     Q.Q_Label = label;
     Q.subtype = subtype;
     Q.initializeTimestep();          // initialize the start timestep = 0;
@@ -285,23 +212,11 @@ void statistics::problemSetup(const ProblemSpecP& prob_spec,
       proc0cout << warn.str() << endl;
     }
   }
-
-  //__________________________________
-  //  create the matl set
-  // remove any duplicate entries
-  sort(m.begin(), m.end());
-  vector<int>::iterator it;
-  it = unique(m.begin(), m.end());
-  m.erase(it, m.end());
-
-  d_matlSet = scinew MaterialSet();
-  d_matlSet->addAll(m);
-  d_matlSet->addReference();
-  d_matSubSet = d_matlSet->getUnion();
   proc0cout << "__________________________________ Post Process module: statistics" << endl;
 }
 
 //______________________________________________________________________
+//
 void statistics::scheduleInitialize(SchedulerP& sched,
                                    const LevelP& level)
 {
@@ -359,8 +274,9 @@ void statistics::initialize(const ProcessorGroup*,
 }
 
 //______________________________________________________________________
-void statistics::scheduleDoAnalysis(SchedulerP& sched,
-                                    const LevelP& level)
+//
+void statistics::scheduleDoAnalysis(SchedulerP   & sched,
+                                    const LevelP & level)
 {
   printSchedule( level,dbg,"statistics::scheduleDoAnalysis" );
 
@@ -382,7 +298,7 @@ void statistics::scheduleDoAnalysis(SchedulerP& sched,
     t->requires( Task::NewDW, Q.Q_Label,     matSubSet, gn, 0 );
     t->requires( Task::OldDW, Q.Qsum_Label,  matSubSet, gn, 0 );
     t->requires( Task::OldDW, Q.Qsum2_Label, matSubSet, gn, 0 );
-    
+
     t->computes ( Q.Qsum_Label,       matSubSet );
     t->computes ( Q.Qsum2_Label,      matSubSet );
     t->computes ( Q.Qmean_Label,      matSubSet );
@@ -416,8 +332,6 @@ void statistics::doAnalysis(const ProcessorGroup* pg,
                             DataWarehouse* old_dw,
                             DataWarehouse* new_dw)
 {
-
-  
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
@@ -454,7 +368,7 @@ void statistics::computeStatsWrapper( DataWarehouse* old_dw,
                                       Qstats& Q)
 {
   double now = d_sharedState->getElapsedSimTime();
-  
+
   if(now < d_startTime || now > d_stopTime){
     //proc0cout << " IGNORING------------DataAnalysis: Statistics" << endl;
     allocateAndZeroStats<T>( new_dw, patch, Q);
@@ -498,7 +412,7 @@ void statistics::computeStats( DataWarehouse* old_dw,
   new_dw->allocateAndPut( Qvariance, Q.Qvariance_Label, matl, patch );
 
   int ts = d_sharedState->getCurrentTopLevelTimeStep();
-  
+
   Q.setStart(ts);
   int Q_ts = Q.getStart();
   int timestep = ts - Q_ts + 1;
@@ -519,7 +433,7 @@ void statistics::computeStats( DataWarehouse* old_dw,
 
     Qvariance[c] = Qmean2 - Qmean[c] * Qmean[c];
   }
-  
+
   //__________________________________
   //  debugging
   if ( d_monitorCell != IntVector(-9,-9,-9) && patch->containsCell (d_monitorCell) ){
@@ -579,7 +493,7 @@ void statistics::computeStats( DataWarehouse* old_dw,
                    - 6 * Qvariance[c] * Qbar2
                    - 4 * Qskewness[c] * Qbar;
     }
-    
+
     //__________________________________
     //  debugging
     if ( d_monitorCell != IntVector(-9,-9,-9) && patch->containsCell (d_monitorCell)){
@@ -596,9 +510,9 @@ void statistics::computeStats( DataWarehouse* old_dw,
 //______________________________________________________________________
 //  allocateAndZero  statistics variables
 template <class T>
-void statistics::allocateAndZeroStats( DataWarehouse* new_dw,
-                                      const Patch* patch,
-                                      const Qstats& Q )
+void statistics::allocateAndZeroStats(DataWarehouse * new_dw,
+                                      const Patch   * patch,
+                                      const Qstats  & Q )
 {
   int matl = Q.matl;
   allocateAndZero<T>( new_dw, Q.Qvariance_Label,  matl, patch );
@@ -614,9 +528,9 @@ void statistics::allocateAndZeroStats( DataWarehouse* new_dw,
 //______________________________________________________________________
 //  allocateAndZero  summation variables
 template <class T>
-void statistics::allocateAndZeroSums( DataWarehouse* new_dw,
-                                      const Patch* patch,
-                                      Qstats& Q )
+void statistics::allocateAndZeroSums( DataWarehouse * new_dw,
+                                      const Patch   * patch,
+                                      const Qstats  & Q )
 {
   int matl = Q.matl;
   allocateAndZero<T>( new_dw, Q.Qsum_Label,  matl, patch );
@@ -630,18 +544,3 @@ void statistics::allocateAndZeroSums( DataWarehouse* new_dw,
 //    proc0cout << "    Statistics: " << Q.Q_Label->getName() << " initializing high order sums on patch: " << patch->getID() << endl;
   }
 }
-
-//______________________________________________________________________
-//  allocateAndZero
-template <class T>
-void statistics::allocateAndZero( DataWarehouse* new_dw,
-                                  const VarLabel* label,
-                                  const int       matl,
-                                  const Patch*    patch )
-{
-  CCVariable<T> Q;
-  new_dw->allocateAndPut( Q, label, matl, patch );
-  T zero(0.0);
-  Q.initialize( zero );
-}
-

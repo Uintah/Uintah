@@ -24,22 +24,9 @@
 
 #include <CCA/Components/PostProcessUda/PostProcess.h>
 #include <CCA/Components/PostProcessUda/ModuleFactory.h>
-#include <CCA/Components/DataArchiver/DataArchiver.h>
-#include <CCA/Ports/LoadBalancerPort.h>
-#include <CCA/Ports/Scheduler.h>
-#include <Core/Exceptions/InternalError.h>
-#include <Core/Exceptions/ProblemSetupException.h>
 
-#include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/SimpleMaterial.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Grid/Task.h>
-#include <Core/Grid/Variables/MaterialSetP.h>
-#include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Util/FileUtils.h>
 #include <Core/Util/DOUT.hpp>
-
-
 #include <iomanip>
 
 using namespace std;
@@ -51,8 +38,7 @@ Dout dbg_pp("postProcess", false);
 PostProcessUda::PostProcessUda( const ProcessorGroup * myworld,
 			           const SimulationStateP sharedState,
                                 const string         & udaDir ) :
-  ApplicationCommon( myworld, sharedState ), 
-  PostProcessCommon(),
+  ApplicationCommon( myworld, sharedState ),
   d_udaDir(udaDir),
   d_dataArchive(0),
   d_timeIndex(0)
@@ -63,20 +49,17 @@ PostProcessUda::PostProcessUda( const ProcessorGroup * myworld,
 PostProcessUda::~PostProcessUda()
 {
   delete d_dataArchive;
-  
+
   for (unsigned int i = 0; i < d_savedLabels.size(); i++){
     VarLabel::destroy(d_savedLabels[i]);
   }
-  
+
   if(d_Modules.size() != 0){
     vector<Module*>::iterator iter;
-    for( iter  = d_Modules.begin();
-         iter != d_Modules.end(); iter++){
+    for( iter  = d_Modules.begin();iter != d_Modules.end(); iter++){
       delete *iter;
     }
   }
-  
-  
 }
 //______________________________________________________________________
 //
@@ -159,11 +142,11 @@ void PostProcessUda::problemSetup(const ProblemSpecP& prob_spec,
   vector<Module*>::iterator iter;
   for( iter  = d_Modules.begin(); iter != d_Modules.end(); iter++) {
     Module* m = *iter;
-    m->problemSetup(prob_spec, restart_ps, grid, m_sharedState);
+    m->problemSetup();
   }
 
   proc0cout << "\n";
- 
+
 }
 
 //______________________________________________________________________
@@ -183,14 +166,14 @@ void PostProcessUda::scheduleInitialize(const LevelP& level,
   t->setType(Task::OncePerProc);
 
   sched->addTask( t, perProcPatches, m_sharedState->allMaterials() );
-  
+
   vector<Module*>::iterator iter;
   for( iter  = d_Modules.begin(); iter != d_Modules.end(); iter++){
     Module* m = *iter;
     m->scheduleInitialize( sched, level);
   }
-  
-  
+
+
 }
 
 //______________________________________________________________________
@@ -218,12 +201,12 @@ void  PostProcessUda::scheduleTimeAdvance( const LevelP& level,
                                            SchedulerP& sched )
 {
   sched_readDataArchive( level, sched );
-  
+
   vector<Module*>::iterator iter;
   for( iter  = d_Modules.begin(); iter != d_Modules.end(); iter++){
     Module* m = *iter;
     m->scheduleDoAnalysis( sched, level);
-  }         
+  }
 }
 
 //______________________________________________________________________
@@ -324,8 +307,8 @@ void PostProcessUda::readDataArchive(const ProcessorGroup* pg,
   old_dw->unfinalize();
   d_dataArchive->postProcess_ReadUda(pg, d_timeIndex-1, d_oldGrid, patches, old_dw, d_lb);
   old_dw->refinalize();
-#endif 
-  
+#endif
+
   d_dataArchive->postProcess_ReadUda(pg, d_timeIndex, d_oldGrid, patches, new_dw, d_lb);
   d_timeIndex++;
 }
