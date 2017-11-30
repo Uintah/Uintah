@@ -39,6 +39,7 @@ SRCS   += $(SRCDIR)/ESMPM.cc \
 #include $(SCIRUN_SCRIPTS)/recurse.mk          
 
 PSELIBS := \
+       CCA/Components/Application      \
        CCA/Components/MPM              \
        CCA/Components/FVM              \
        CCA/Components/OnTheFlyAnalysis \

@@ -18,22 +18,15 @@ namespace Uintah{
     void build_all_tasks( ProblemSpecP& db );
 
     std::vector<std::string> retrieve_task_subset( const std::string subset ) {
-      
-      if ( subset == "compute_density_table" ){
 
-        return m_compute_density_table;
-
-      } else if ( subset == "compute_exact_density" ){
-
-        return m_compute_exact_density;
-
-      } else if ( subset == _all_tasks_str ){
+      if ( subset == _all_tasks_str ){
 
         return _active_tasks;
 
       } else {
 
         throw InvalidValue("Error: Accessing the base class implementation of retrieve_task_subset in CheMixFactory, which means there is no specific implementation for this factory.",__FILE__,__LINE__);
+        
       }
     }
 
@@ -55,8 +48,6 @@ namespace Uintah{
   private:
 
     std::vector<std::string> m_task_order;
-    std::vector<std::string> m_compute_density_table;                 
-    std::vector<std::string> m_compute_exact_density;    
 
   };
 }

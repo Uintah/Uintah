@@ -800,14 +800,12 @@ SCI_ARG_ENABLE(all_components,
    BUILD_MPM="yes"
    BUILD_WASATCH="yes"
    BUILD_HEAT="yes"
-   BUILD_PHASEFIELD="yes"
    DEF_ARCHES=
    DEF_FVM=
    DEF_ICE=
    DEF_MPM=
    DEF_WASATCH=
    DEF_HEAT=
-   DEF_PHASEFIELD=
   ],
   [use_all_components="no"])
 

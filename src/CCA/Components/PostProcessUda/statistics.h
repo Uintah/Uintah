@@ -23,9 +23,10 @@
  */
 
 
-#ifndef Packages_Uintah_CCA_Components_ReduceUda_statistics_h
-#define Packages_Uintah_CCA_Components_ReduceUda_statistics_h
-#include <CCA/Components/ReduceUda/Module.h>
+#ifndef Packages_Uintah_CCA_Components_PostProcessUda_statistics_h
+#define Packages_Uintah_CCA_Components_PostProcessUda_statistics_h
+#include <CCA/Components/PostProcessUda/Common.h>
+#include <CCA/Components/PostProcessUda/Module.h>
 #include <CCA/Ports/Output.h>
 #include <Core/DataArchive/DataArchive.h>
 #include <Core/Grid/Material.h>
@@ -62,7 +63,7 @@ DESCRIPTION
 WARNING
 
 ****************************************/
-  class statistics : public Module {
+  class statistics : public Module, public PostProcessCommon {
   public:
     statistics(ProblemSpecP    & prob_spec,
                SimulationStateP& sharedState,

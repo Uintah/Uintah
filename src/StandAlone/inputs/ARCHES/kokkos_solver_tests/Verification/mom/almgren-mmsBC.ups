@@ -42,10 +42,10 @@
         <lower>[0,0,0]</lower>
         <upper>[1.0,1.0,1.0]</upper>
         <resolution>[24,24,24]</resolution>
-        <extraCells>[1,1,1]</extraCells>
+        <extraCells>[1,1,0]</extraCells>
         <patches>[1,1,1]</patches>
       </Box>
-      <periodic>[0,0,0]</periodic>
+      <periodic>[0,0,1]</periodic>
     </Level>
     <BoundaryConditions>
       <DefaultMaterial>all</DefaultMaterial>
@@ -192,7 +192,7 @@
         <inviscid/>
         <!--src_x label = "x_mms_source_diff"/>
         <src_y label = "y_mms_source_diff"/-->
-        <!--PressureSolver>
+        <PressureSolver>
           <Parameters>
             <solver>           cg     </solver>
             <preconditioner>  pfmg    </preconditioner>
@@ -202,7 +202,7 @@
             <setupFrequency>    0     </setupFrequency>
             <jump>              0     </jump>
           </Parameters>
-        </PressureSolver-->
+        </PressureSolver>
       </KMomentum>
       <Initialization>
         <task task_label="uVel-init" variable_label="uVel" type="almgren_mms">

@@ -96,7 +96,7 @@ WARNING
                               bool removeOldDir) = 0;
     //////////
     // set timeinfoFlags and 
-    virtual void reduceUdaSetup(Dir& fromDir) = 0;
+    virtual void postProcessUdaSetup(Dir& fromDir) = 0;
 
     virtual bool needRecompile(const double simTime,
 			       const double delT,

@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef Packages_Uintah_CCA_Components_ReduceUda_Module_h
-#define Packages_Uintah_CCA_Components_ReduceUda_Module_h
+#ifndef Packages_Uintah_CCA_Components_PostProcessUda_Module_h
+#define Packages_Uintah_CCA_Components_PostProcessUda_Module_h
 
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Output.h>

@@ -116,7 +116,7 @@ class LoadBalancerPort;
 
        //! Call this after problemSetup it will copy the data and
        //! checkpoint files ignore dumping reduction variables.
-       virtual void reduceUdaSetup( Dir& fromDir );
+       virtual void postProcessUdaSetup( Dir& fromDir );
 
        //! Copy a section between udas .
        void copySection( Dir & fromDir, Dir & toDir, const std::string & file, const std::string & section );
@@ -553,16 +553,16 @@ class LoadBalancerPort;
        std::map< int, ProblemSpecP > d_CheckpointXMLDataDocs;
 
        //__________________________________
-       //  reduceUda related
+       //  PostProcessUda related
        //  used for migrating timestep directories
        std::map< int, int> d_restartTimestepIndicies;
-       bool d_usingReduceUda;
+       bool d_doPostProcessUda;
        
        Dir d_fromDir;                   // keep track of the original uda
        void copy_outputProblemSpec(const int timeStep,
 				   Dir& fromDir, Dir& toDir);
        
-       // returns either the top level timestep or if reduceUda is used
+       // returns either the top level timestep or if postProcessUda is used
        // a value from the index.xml file
        int getTimestepTopLevel(const int timeStep);
 

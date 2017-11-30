@@ -91,6 +91,39 @@ public:
 
 private:
 
+    enum EQUATION_CLASS {DENSITY_WEIGHTED, DQMOM_WA, DQMOM_W, NO_PREMULT};
+
+    void assign_eqn_class_enum( std::string my_class ){
+      if ( my_class == "density_weighted" ){
+        m_eqn_class = DENSITY_WEIGHTED;
+      } else if ( my_class == "dqmom_wa" ){
+        m_eqn_class = DQMOM_WA;
+      } else if ( my_class == "dqmom_w" ){
+        m_eqn_class = DQMOM_W;
+      } else if ( my_class == "volumetric"){
+        m_eqn_class = NO_PREMULT;
+      } else {
+        throw ProblemSetupException( "Error: eqn group type not recognized.",
+                                     __FILE__, __LINE__ );
+      }
+    }
+
+    inline std::string get_premultiplier_name(){
+
+      switch( m_eqn_class ){
+        case DENSITY_WEIGHTED:
+          return "rho_";
+        case DQMOM_WA:
+          return "weighted_";
+        case DQMOM_W:
+          return "none";
+        case NO_PREMULT:
+          return "none";
+        default:
+          return "none";
+      }
+    }
+
     typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
     typedef typename ArchesCore::VariableHelper<T>::XFaceType FXT;
     typedef typename ArchesCore::VariableHelper<T>::YFaceType FYT;
@@ -100,20 +133,21 @@ private:
     typedef typename ArchesCore::VariableHelper<T>::ConstZFaceType CFZT;
 
     std::string m_D_name;
-    std::string m_density_name;
+    std::string m_premultiplier_name;
     std::string m_x_velocity_name;
     std::string m_y_velocity_name;
     std::string m_z_velocity_name;
     std::string m_eps_name;
 
-    std::vector<std::string> _eqn_names;
+    EQUATION_CLASS m_eqn_class;
+
+    std::vector<std::string> m_eqn_names;
     std::vector<bool> m_do_diff;
     std::vector<bool> m_do_clip;
     std::vector<double> m_low_clip;
     std::vector<double> m_high_clip;
     std::vector<double> m_init_value;
 
-    double m_time{0};
     bool m_has_D;
 
     int m_total_eqns;
@@ -152,112 +186,128 @@ private:
   template <typename T, typename FluxXT, typename FluxYT, typename FluxZT> void
   KScalarRHS<T, FluxXT, FluxYT, FluxZT>::problemSetup( ProblemSpecP& input_db ){
 
-  m_total_eqns = 0;
+    m_total_eqns = 0;
 
-  ConvectionHelper* conv_helper = scinew ConvectionHelper();
-  for( ProblemSpecP db = input_db->findBlock("eqn"); db != nullptr; db = db->findNextBlock("eqn") ) {
+    ConvectionHelper* conv_helper = scinew ConvectionHelper();
 
-    //Equation name
-    std::string eqn_name;
-    db->getAttribute("label", eqn_name);
-    _eqn_names.push_back(eqn_name);
-
-    //Convection
-    if ( db->findBlock("convection")){
-      std::string conv_scheme;
-      db->findBlock("convection")->getAttribute("scheme", conv_scheme);
-      m_conv_scheme.push_back(conv_helper->get_limiter_from_string(conv_scheme));
-    } else {
-      m_conv_scheme.push_back(NOCONV);
+    std::string eqn_class = "density_weighted";
+    if ( input_db->findAttribute("class") ){
+      input_db->getAttribute("class", eqn_class);
     }
+    assign_eqn_class_enum(eqn_class);
 
-    //Diffusion
-    if ( db->findBlock("diffusion")){
-      m_do_diff.push_back(true);
-    } else {
-      m_do_diff.push_back(false);
-    }
+    for( ProblemSpecP db = input_db->findBlock("eqn"); db != nullptr; db = db->findNextBlock("eqn") ) {
 
-    //Clipping
-    if ( db->findBlock("clip")){
-      m_do_clip.push_back(true);
-      double low; double high;
-      db->findBlock("clip")->getAttribute("low", low);
-      db->findBlock("clip")->getAttribute("high", high);
-      m_low_clip.push_back(low);
-      m_high_clip.push_back(high);
-    } else {
-      m_do_clip.push_back(false);
-      m_low_clip.push_back(-999.9);
-      m_high_clip.push_back(999.9);
-    }
+      //Equation name
+      std::string eqn_name;
+      db->getAttribute("label", eqn_name);
+      m_eqn_names.push_back(eqn_name);
 
-    //Initial Value
-    if ( db->findBlock("initialize") ){
-      double value;
-      db->findBlock("initialize")->getAttribute("value",value);
-      m_init_value.push_back(value);
-    }
-    else {
-      m_init_value.push_back(0.0);
-    }
+      //Check for something other than density weighted:
 
-    std::vector<SourceInfo> eqn_srcs;
-    for ( ProblemSpecP src_db = db->findBlock("src"); src_db != nullptr; src_db = src_db->findNextBlock("src") ) {
-
-      std::string src_label;
-      double weight = 1.0;
-
-      src_db->getAttribute("label",src_label);
-
-      if ( src_db->findBlock("weight")){
-        src_db->findBlock("weight")->getAttribute("value",weight);
+      if ( db->findBlock("dqmom_wa")){
+        m_eqn_class = DQMOM_WA;
+      } else if ( db->findBlock("volumetric")){
+        m_eqn_class = NO_PREMULT;
+      } else {
+        m_eqn_class = DENSITY_WEIGHTED;
       }
 
-      SourceInfo info;
-      info.name = src_label;
-      info.weight = weight;
+      //Convection
+      if ( db->findBlock("convection")){
+        std::string conv_scheme;
+        db->findBlock("convection")->getAttribute("scheme", conv_scheme);
+        m_conv_scheme.push_back(conv_helper->get_limiter_from_string(conv_scheme));
+      } else {
+        m_conv_scheme.push_back(NOCONV);
+      }
 
-      eqn_srcs.push_back(info);
+      //Diffusion
+      if ( db->findBlock("diffusion")){
+        m_do_diff.push_back(true);
+      } else {
+        m_do_diff.push_back(false);
+      }
+
+      //Clipping
+      if ( db->findBlock("clip")){
+        m_do_clip.push_back(true);
+        double low; double high;
+        db->findBlock("clip")->getAttribute("low", low);
+        db->findBlock("clip")->getAttribute("high", high);
+        m_low_clip.push_back(low);
+        m_high_clip.push_back(high);
+      } else {
+        m_do_clip.push_back(false);
+        m_low_clip.push_back(-999.9);
+        m_high_clip.push_back(999.9);
+      }
+
+      //Initial Value
+      if ( db->findBlock("initialize") ){
+        double value;
+        db->findBlock("initialize")->getAttribute("value",value);
+        m_init_value.push_back(value);
+      }
+      else {
+        m_init_value.push_back(0.0);
+      }
+
+      std::vector<SourceInfo> eqn_srcs;
+      for ( ProblemSpecP src_db = db->findBlock("src"); src_db != nullptr; src_db = src_db->findNextBlock("src") ) {
+
+        std::string src_label;
+        double weight = 1.0;
+
+        src_db->getAttribute("label",src_label);
+
+        if ( src_db->findBlock("weight")){
+          src_db->findBlock("weight")->getAttribute("value",weight);
+        }
+
+        SourceInfo info;
+        info.name = src_label;
+        info.weight = weight;
+
+        eqn_srcs.push_back(info);
+
+      }
+
+      m_source_info.push_back(eqn_srcs);
 
     }
 
-    m_source_info.push_back(eqn_srcs);
+    // setup the boundary conditions for this eqn set
+    m_boundary_functors->create_bcs( input_db, m_eqn_names );
 
-  }
+    delete conv_helper;
 
-  // setup the boundary conditions for this eqn set
-  m_boundary_functors->create_bcs( input_db, _eqn_names );
+    using namespace ArchesCore;
 
-  delete conv_helper;
+    ArchesCore::GridVarMap<T> var_map;
+    var_map.problemSetup( input_db );
+    m_eps_name = var_map.vol_frac_name;
+    m_x_velocity_name = var_map.uvel_name;
+    m_y_velocity_name = var_map.vvel_name;
+    m_z_velocity_name = var_map.wvel_name;
 
-  using namespace ArchesCore;
+    m_premultiplier_name = get_premultiplier_name();
 
-  ArchesCore::GridVarMap<T> var_map;
-  var_map.problemSetup( input_db );
-  m_eps_name = var_map.vol_frac_name;
-  m_x_velocity_name = var_map.uvel_name;
-  m_y_velocity_name = var_map.vvel_name;
-  m_z_velocity_name = var_map.wvel_name;
+    if ( input_db->findBlock("velocity") ){
+      // can overide the global velocity space with this:
+      input_db->findBlock("velocity")->getAttribute("xlabel",m_x_velocity_name);
+      input_db->findBlock("velocity")->getAttribute("ylabel",m_y_velocity_name);
+      input_db->findBlock("velocity")->getAttribute("zlabel",m_z_velocity_name);
+    }
 
-  m_density_name = parse_ups_for_role( DENSITY, input_db , "density" );
+    // Diffusion coeff -- assuming the same one across all eqns.
+    m_D_name = "NA";
+    m_has_D = false;
 
-  if ( input_db->findBlock("velocity") ){
-    // can overide the global velocity space with this:
-    input_db->findBlock("velocity")->getAttribute("xlabel",m_x_velocity_name);
-    input_db->findBlock("velocity")->getAttribute("ylabel",m_y_velocity_name);
-    input_db->findBlock("velocity")->getAttribute("zlabel",m_z_velocity_name);
-  }
-
-  // Diffusion coeff -- assuming the same one across all eqns.
-  m_D_name = "NA";
-  m_has_D = false;
-
-  if ( input_db->findBlock("diffusion_coef") ) {
-    input_db->findBlock("diffusion_coef")->getAttribute("label",m_D_name);
-    m_has_D = true;
-  }
-
+    if ( input_db->findBlock("diffusion_coef") ) {
+      input_db->findBlock("diffusion_coef")->getAttribute("label",m_D_name);
+      m_has_D = true;
+    }
   }
 
   template <typename T, typename FluxXT, typename FluxYT, typename FluxZT>
@@ -265,14 +315,15 @@ private:
   KScalarRHS<T, FluxXT, FluxYT, FluxZT>::create_local_labels(){
 
     const int istart = 0;
-    int iend = _eqn_names.size();
+    int iend = m_eqn_names.size();
     for (int i = istart; i < iend; i++ ){
-      register_new_variable<T>( _eqn_names[i] );
-      register_new_variable<T>( "rho_"+_eqn_names[i] ); //weighted variable      
-      register_new_variable<T>( _eqn_names[i]+"_rhs" );
-      register_new_variable<FXT>( _eqn_names[i]+"_x_flux" );
-      register_new_variable<FYT>( _eqn_names[i]+"_y_flux" );
-      register_new_variable<FZT>( _eqn_names[i]+"_z_flux" );
+      register_new_variable<T>( m_eqn_names[i] );
+      if ( m_premultiplier_name != "none" )
+        register_new_variable<T>( m_premultiplier_name+m_eqn_names[i] );
+      register_new_variable<T>( m_eqn_names[i]+"_rhs" );
+      register_new_variable<FXT>( m_eqn_names[i]+"_x_flux" );
+      register_new_variable<FYT>( m_eqn_names[i]+"_y_flux" );
+      register_new_variable<FZT>( m_eqn_names[i]+"_z_flux" );
     }
   }
 
@@ -282,14 +333,15 @@ private:
     const bool packed_tasks ){
 
     const int istart = 0;
-    const int iend = _eqn_names.size();
+    const int iend = m_eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
-      register_variable(  _eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry );
-      register_variable(  "rho_"+_eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry );
-      register_variable(  _eqn_names[ieqn]+"_rhs", ArchesFieldContainer::COMPUTES , variable_registry );
-      register_variable(  _eqn_names[ieqn]+"_x_flux", ArchesFieldContainer::COMPUTES , variable_registry, _task_name );
-      register_variable(  _eqn_names[ieqn]+"_y_flux", ArchesFieldContainer::COMPUTES , variable_registry, _task_name );
-      register_variable(  _eqn_names[ieqn]+"_z_flux", ArchesFieldContainer::COMPUTES , variable_registry, _task_name );
+      register_variable(  m_eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry );
+      if ( m_premultiplier_name != "none" )
+        register_variable( m_premultiplier_name+m_eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry );
+      register_variable(  m_eqn_names[ieqn]+"_rhs", ArchesFieldContainer::COMPUTES , variable_registry );
+      register_variable(  m_eqn_names[ieqn]+"_x_flux", ArchesFieldContainer::COMPUTES , variable_registry, _task_name );
+      register_variable(  m_eqn_names[ieqn]+"_y_flux", ArchesFieldContainer::COMPUTES , variable_registry, _task_name );
+      register_variable(  m_eqn_names[ieqn]+"_z_flux", ArchesFieldContainer::COMPUTES , variable_registry, _task_name );
     }
   }
 
@@ -298,30 +350,29 @@ private:
   KScalarRHS<T, FluxXT, FluxYT, FluxZT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     const int istart = 0;
-    const int iend = _eqn_names.size();
+    const int iend = m_eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
 
       double scalar_init_value = m_init_value[ieqn];
 
-      T& rhs    = *(tsk_info->get_uintah_field<T>(_eqn_names[ieqn]+"_rhs"));
-      T& phi    = *(tsk_info->get_uintah_field<T>(_eqn_names[ieqn]));
-      T& rho_phi    = *(tsk_info->get_uintah_field<T>("rho_"+_eqn_names[ieqn]));
-      Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
-      Uintah::parallel_for( range, [&](int i, int j, int k){
-        phi(i,j,k) = scalar_init_value;
-        rho_phi(i,j,k) = 0.0;
-        rhs(i,j,k) = 0.0;
-      });
+      T& rhs = tsk_info->get_uintah_field_add<T>(m_eqn_names[ieqn]+"_rhs");
+      T& phi = tsk_info->get_uintah_field_add<T>(m_eqn_names[ieqn]);
 
-      FXT& x_flux = *(tsk_info->get_uintah_field<FXT>(_eqn_names[ieqn]+"_x_flux"));
-      FYT& y_flux = *(tsk_info->get_uintah_field<FYT>(_eqn_names[ieqn]+"_y_flux"));
-      FZT& z_flux = *(tsk_info->get_uintah_field<FZT>(_eqn_names[ieqn]+"_z_flux"));
+      rhs.initialize(0.0);
+      phi.initialize(scalar_init_value);
 
-      Uintah::parallel_for( range, [&](int i, int j, int k){
-        x_flux(i,j,k) = 0.0;
-        y_flux(i,j,k) = 0.0;
-        z_flux(i,j,k) = 0.0;
-      });
+      FXT& x_flux = tsk_info->get_uintah_field_add<FXT>(m_eqn_names[ieqn]+"_x_flux");
+      FYT& y_flux = tsk_info->get_uintah_field_add<FYT>(m_eqn_names[ieqn]+"_y_flux");
+      FZT& z_flux = tsk_info->get_uintah_field_add<FZT>(m_eqn_names[ieqn]+"_z_flux");
+
+      x_flux.initialize(0.0);
+      y_flux.initialize(0.0);
+      z_flux.initialize(0.0);
+
+      if ( m_premultiplier_name != "none" ){
+        T& rho_phi  = tsk_info->get_uintah_field_add<T>(m_premultiplier_name+m_eqn_names[ieqn]);
+        rho_phi.initialize(0.0);
+      }
 
     } //eqn loop
   }
@@ -330,16 +381,18 @@ private:
   template <typename T, typename FluxXT, typename FluxYT, typename FluxZT> void
   KScalarRHS<T, FluxXT, FluxYT, FluxZT>::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){
     const int istart = 0;
-    const int iend = _eqn_names.size();
+    const int iend = m_eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
-      register_variable( "rho_"+_eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry, _task_name  );
-      register_variable( _eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry, _task_name  );
-      register_variable( _eqn_names[ieqn]+"_rhs", ArchesFieldContainer::COMPUTES , variable_registry, _task_name  );
-      register_variable( _eqn_names[ieqn], ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::OLDDW , variable_registry, _task_name  );
-      register_variable( "rho_"+_eqn_names[ieqn], ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::OLDDW , variable_registry, _task_name  );
-      register_variable( _eqn_names[ieqn]+"_x_flux", ArchesFieldContainer::COMPUTES, variable_registry, _task_name );
-      register_variable( _eqn_names[ieqn]+"_y_flux", ArchesFieldContainer::COMPUTES, variable_registry, _task_name );
-      register_variable( _eqn_names[ieqn]+"_z_flux", ArchesFieldContainer::COMPUTES, variable_registry, _task_name );
+      if ( m_premultiplier_name != "none" ){
+        register_variable( m_premultiplier_name+m_eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry, _task_name  );
+        register_variable( m_premultiplier_name+m_eqn_names[ieqn], ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::OLDDW , variable_registry, _task_name );
+      }
+      register_variable( m_eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry, _task_name  );
+      register_variable( m_eqn_names[ieqn]+"_rhs", ArchesFieldContainer::COMPUTES , variable_registry, _task_name  );
+      register_variable( m_eqn_names[ieqn], ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::OLDDW , variable_registry, _task_name  );
+      register_variable( m_eqn_names[ieqn]+"_x_flux", ArchesFieldContainer::COMPUTES, variable_registry, _task_name );
+      register_variable( m_eqn_names[ieqn]+"_y_flux", ArchesFieldContainer::COMPUTES, variable_registry, _task_name );
+      register_variable( m_eqn_names[ieqn]+"_z_flux", ArchesFieldContainer::COMPUTES, variable_registry, _task_name );
     }
   }
 
@@ -349,30 +402,31 @@ private:
 
     typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
     const int istart = 0;
-    const int iend = _eqn_names.size();
+    const int iend = m_eqn_names.size();
 
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
 
-      T& phi = tsk_info->get_uintah_field_add<T>( _eqn_names[ieqn] );
-      T& rho_phi = tsk_info->get_uintah_field_add<T>( "rho_"+_eqn_names[ieqn] );
-      T& rhs = tsk_info->get_uintah_field_add<T>( _eqn_names[ieqn]+"_rhs" );
-      CT& old_phi = tsk_info->get_const_uintah_field_add<CT>( _eqn_names[ieqn] );
-      CT& old_rho_phi = tsk_info->get_const_uintah_field_add<CT>("rho_"+_eqn_names[ieqn] );
+      T& phi = tsk_info->get_uintah_field_add<T>( m_eqn_names[ieqn] );
+      T& rhs = tsk_info->get_uintah_field_add<T>( m_eqn_names[ieqn]+"_rhs" );
+      CT& old_phi = tsk_info->get_const_uintah_field_add<CT>( m_eqn_names[ieqn] );
 
-      FXT& x_flux = tsk_info->get_uintah_field_add<FXT>(_eqn_names[ieqn]+"_x_flux");
-      FYT& y_flux = tsk_info->get_uintah_field_add<FYT>(_eqn_names[ieqn]+"_y_flux");
-      FZT& z_flux = tsk_info->get_uintah_field_add<FZT>(_eqn_names[ieqn]+"_z_flux");
+      if ( m_premultiplier_name != "none" ){
+        CT& old_rho_phi = tsk_info->get_const_uintah_field_add<CT>(m_premultiplier_name+m_eqn_names[ieqn] );
+        T& rho_phi      = tsk_info->get_uintah_field_add<T>( m_premultiplier_name+m_eqn_names[ieqn] );
+        rho_phi.copyData(old_rho_phi);
+      }
+
+      FXT& x_flux = tsk_info->get_uintah_field_add<FXT>(m_eqn_names[ieqn]+"_x_flux");
+      FYT& y_flux = tsk_info->get_uintah_field_add<FYT>(m_eqn_names[ieqn]+"_y_flux");
+      FZT& z_flux = tsk_info->get_uintah_field_add<FZT>(m_eqn_names[ieqn]+"_z_flux");
 
       phi.copyData(old_phi);
-      rho_phi.copyData(old_rho_phi);
       rhs.initialize(0.0);
       x_flux.initialize(0.0);
       y_flux.initialize(0.0);
       z_flux.initialize(0.0);
 
     } //equation loop
-
-    m_time += tsk_info->get_dt();
   }
 
   //------------------------------------------------------------------------------------------------
@@ -382,19 +436,20 @@ private:
                           const int time_substep , const bool packed_tasks ){
 
     const int istart = 0;
-    const int iend = _eqn_names.size();
+    const int iend = m_eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
 
-      register_variable( _eqn_names[ieqn], ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name );
-      register_variable( "rho_"+_eqn_names[ieqn], ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name );
-      register_variable( _eqn_names[ieqn]+"_rhs", ArchesFieldContainer::MODIFIES, variable_registry, time_substep, _task_name );
-      register_variable( _eqn_names[ieqn]+"_x_flux", ArchesFieldContainer::MODIFIES, variable_registry, time_substep, _task_name );
-      register_variable( _eqn_names[ieqn]+"_y_flux", ArchesFieldContainer::MODIFIES, variable_registry, time_substep, _task_name );
-      register_variable( _eqn_names[ieqn]+"_z_flux", ArchesFieldContainer::MODIFIES, variable_registry, time_substep, _task_name );
+      register_variable( m_eqn_names[ieqn], ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name );
+      if ( m_premultiplier_name != "none" )
+        register_variable( m_premultiplier_name+m_eqn_names[ieqn], ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name );
+      register_variable( m_eqn_names[ieqn]+"_rhs", ArchesFieldContainer::MODIFIES, variable_registry, time_substep, _task_name );
+      register_variable( m_eqn_names[ieqn]+"_x_flux", ArchesFieldContainer::MODIFIES, variable_registry, time_substep, _task_name );
+      register_variable( m_eqn_names[ieqn]+"_y_flux", ArchesFieldContainer::MODIFIES, variable_registry, time_substep, _task_name );
+      register_variable( m_eqn_names[ieqn]+"_z_flux", ArchesFieldContainer::MODIFIES, variable_registry, time_substep, _task_name );
       if ( m_conv_scheme[ieqn] != NOCONV ){
-        register_variable( _eqn_names[ieqn]+"_x_psi", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name, packed_tasks );
-        register_variable( _eqn_names[ieqn]+"_y_psi", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name, packed_tasks );
-        register_variable( _eqn_names[ieqn]+"_z_psi", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name, packed_tasks );
+        register_variable( m_eqn_names[ieqn]+"_x_psi", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name, packed_tasks );
+        register_variable( m_eqn_names[ieqn]+"_y_psi", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name, packed_tasks );
+        register_variable( m_eqn_names[ieqn]+"_z_psi", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, _task_name, packed_tasks );
       }
 
       typedef std::vector<SourceInfo> VS;
@@ -438,19 +493,23 @@ private:
 #endif
 
     const int istart = 0;
-    const int iend = _eqn_names.size();
+    const int iend = m_eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
 
-      CT& rho_phi     = tsk_info->get_const_uintah_field_add<CT>("rho_"+_eqn_names[ieqn]);
-      CT& phi     = tsk_info->get_const_uintah_field_add<CT>(_eqn_names[ieqn]);
-      T& rhs      = tsk_info->get_uintah_field_add<T>(_eqn_names[ieqn]+"_rhs");
+      CT* rho_phi_ptr;
+      if ( m_premultiplier_name != "none" )
+        rho_phi_ptr = tsk_info->get_const_uintah_field<CT>(m_premultiplier_name+m_eqn_names[ieqn]);
+
+      CT& rho_phi = *rho_phi_ptr;
+      CT& phi     = tsk_info->get_const_uintah_field_add<CT>(m_eqn_names[ieqn]);
+      T& rhs      = tsk_info->get_uintah_field_add<T>(m_eqn_names[ieqn]+"_rhs");
 
       rhs.initialize(0.0);
 
       //Convection:
-      FXT& x_flux = tsk_info->get_uintah_field_add<FXT>(_eqn_names[ieqn]+"_x_flux");
-      FYT& y_flux = tsk_info->get_uintah_field_add<FYT>(_eqn_names[ieqn]+"_y_flux");
-      FZT& z_flux = tsk_info->get_uintah_field_add<FZT>(_eqn_names[ieqn]+"_z_flux");
+      FXT& x_flux = tsk_info->get_uintah_field_add<FXT>(m_eqn_names[ieqn]+"_x_flux");
+      FYT& y_flux = tsk_info->get_uintah_field_add<FYT>(m_eqn_names[ieqn]+"_y_flux");
+      FZT& z_flux = tsk_info->get_uintah_field_add<FZT>(m_eqn_names[ieqn]+"_z_flux");
 
       if ( m_conv_scheme[ieqn] != NOCONV ){
 
@@ -459,19 +518,27 @@ private:
         FluxZT* z_psi_ptr;
 
         FieldTool<FluxXT> x_field_tool(tsk_info);
-        x_psi_ptr = x_field_tool.get(_eqn_names[ieqn]+"_x_psi");
+        x_psi_ptr = x_field_tool.get(m_eqn_names[ieqn]+"_x_psi");
 
         FieldTool<FluxYT> y_field_tool(tsk_info);
-        y_psi_ptr = y_field_tool.get(_eqn_names[ieqn]+"_y_psi");
+        y_psi_ptr = y_field_tool.get(m_eqn_names[ieqn]+"_y_psi");
 
         FieldTool<FluxZT> z_field_tool(tsk_info);
-        z_psi_ptr = z_field_tool.get(_eqn_names[ieqn]+"_z_psi");
+        z_psi_ptr = z_field_tool.get(m_eqn_names[ieqn]+"_z_psi");
 
-        Uintah::ComputeConvectiveFlux<FluxXT, FluxYT, FluxZT >
-          get_flux( rho_phi, u, v, w, (*x_psi_ptr), (*y_psi_ptr), (*z_psi_ptr),
-                    x_flux, y_flux, z_flux, eps );
+        if ( m_premultiplier_name != "none" ){
+          Uintah::ComputeConvectiveFlux<FluxXT, FluxYT, FluxZT >
+            get_flux( rho_phi, u, v, w, (*x_psi_ptr), (*y_psi_ptr), (*z_psi_ptr),
+                      x_flux, y_flux, z_flux, eps );
 
-        Uintah::parallel_for( range_cl_to_ech, get_flux );
+          Uintah::parallel_for( range_cl_to_ech, get_flux );
+        } else {
+          Uintah::ComputeConvectiveFlux<FluxXT, FluxYT, FluxZT >
+            get_flux( phi, u, v, w, (*x_psi_ptr), (*y_psi_ptr), (*z_psi_ptr),
+                      x_flux, y_flux, z_flux, eps );
+
+          Uintah::parallel_for( range_cl_to_ech, get_flux );
+        }
 
       }
 
@@ -532,19 +599,19 @@ private:
     std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
     const int time_substep , const bool packed_tasks){
 
-    for ( auto i = _eqn_names.begin(); i != _eqn_names.end(); i++ ){
+    for ( auto i = m_eqn_names.begin(); i != m_eqn_names.end(); i++ ){
       register_variable( *i, ArchesFieldContainer::MODIFIES, variable_registry );
     }
 
     std::vector<std::string> bc_dep;
-    m_boundary_functors->get_bc_dependencies( _eqn_names, m_bcHelper, bc_dep );
+    m_boundary_functors->get_bc_dependencies( m_eqn_names, m_bcHelper, bc_dep );
     for ( auto i = bc_dep.begin(); i != bc_dep.end(); i++ ){
       register_variable( *i, ArchesFieldContainer::REQUIRES, 0 , ArchesFieldContainer::NEWDW,
                          variable_registry );
     }
 
     std::vector<std::string> bc_mod;
-    m_boundary_functors->get_bc_modifies( _eqn_names, m_bcHelper, bc_mod );
+    m_boundary_functors->get_bc_modifies( m_eqn_names, m_bcHelper, bc_mod );
     for ( auto i = bc_mod.begin(); i != bc_mod.end(); i++ ){
       register_variable( *i, ArchesFieldContainer::MODIFIES, variable_registry );
     }
@@ -554,9 +621,7 @@ private:
 //--------------------------------------------------------------------------------------------------
   template <typename T, typename FluxXT, typename FluxYT, typename FluxZT> void
   KScalarRHS<T, FluxXT, FluxYT, FluxZT>::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
-    tsk_info->set_time(m_time);
-    m_boundary_functors->apply_bc( _eqn_names, m_bcHelper, tsk_info, patch );
-
+    m_boundary_functors->apply_bc( m_eqn_names, m_bcHelper, tsk_info, patch );
   }
 }
 #endif

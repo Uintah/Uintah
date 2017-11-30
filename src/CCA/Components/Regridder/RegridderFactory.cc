@@ -33,8 +33,8 @@
 
 using namespace Uintah;
 
-RegridderCommon* RegridderFactory::create(ProblemSpecP& ps,
-                                          const ProcessorGroup* world)
+RegridderCommon* RegridderFactory::create(       ProblemSpecP   & ps,
+                                           const ProcessorGroup * world )
 {
   RegridderCommon* regridder = nullptr;
 
@@ -44,16 +44,15 @@ RegridderCommon* RegridderFactory::create(ProblemSpecP& ps,
   std::string amrType;
   amrPS->getAttribute("type", amrType);
 
-  if( amrType == "" || amrType == "'Dynamic'" )
-  {
+  if (amrType == "" || amrType == "'Dynamic'") {
     ProblemSpecP regridderPS = amrPS->findBlock("Regridder");
-    
+
     if (regridderPS) {
-      
+
       std::string regridderName;
       regridderPS->getAttribute("type", regridderName);
-      
-      if (world->myRank() == 0 && regridderName != "" ) {
+
+      if (world->myRank() == 0 && regridderName != "") {
         std::cout << "Using Regridder " << regridderName << std::endl;
       }
 
@@ -64,10 +63,9 @@ RegridderCommon* RegridderFactory::create(ProblemSpecP& ps,
         regridder = scinew SingleLevelRegridder(world);
       }
     }
-    
-    if( regridder == nullptr )
-    {
-        throw ProblemSetupException( "No AMR Regridder block or type specified", __FILE__, __LINE__);
+
+    if (regridder == nullptr) {
+      throw ProblemSetupException("No AMR Regridder block or type specified", __FILE__, __LINE__);
     }
   }
 

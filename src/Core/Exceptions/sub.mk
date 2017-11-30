@@ -42,14 +42,18 @@ SRCS   += \
           $(SRCDIR)/InvalidGrid.cc             \
           $(SRCDIR)/InvalidState.cc            \
           $(SRCDIR)/InvalidValue.cc            \
-          $(SRCDIR)/PapiInitializationError.cc \
           $(SRCDIR)/ParameterNotFound.cc       \
           $(SRCDIR)/ProblemSetupException.cc   \
           $(SRCDIR)/TypeMismatchException.cc   \
           $(SRCDIR)/UintahPetscError.cc        \
           $(SRCDIR)/VariableNotFoundInGrid.cc  
+          
+ifeq ($(HAVE_PAPI),yes)
+  SRCS += $(SRCDIR)/PapiInitializationError.cc
+endif
 
 PSELIBS :=
+
 LIBS := $(DL_LIBRARY) $(Z_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

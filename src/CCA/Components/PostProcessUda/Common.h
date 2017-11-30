@@ -22,23 +22,20 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/ReduceUda/Module.h>
-#include <Core/Grid/SimulationState.h>
+#ifndef Packages_Uintah_CCA_Components_PostProcessUda_Common_h
+#define Packages_Uintah_CCA_Components_PostProcessUda_Common_h
 
-using namespace Uintah;
 
-Module::Module()
-{
+namespace Uintah {
+
+  class PostProcessCommon  {
+
+    public: 
+
+      PostProcessCommon();
+      ~PostProcessCommon();
+  
+  };
 }
 
-Module::Module(ProblemSpecP     & prob_spec, 
-               SimulationStateP & sharedState, 
-               Output           * dataArchiver,
-               DataArchive      * d_dataArchive )
-{
-}
-
-Module::~Module()
-{
-}
-    
+#endif

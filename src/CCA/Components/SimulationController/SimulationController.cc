@@ -94,7 +94,7 @@ SimulationController::SimulationController( const ProcessorGroup * myworld,
   d_recompileTaskGraph     = false;
   
   d_restarting             = false;
-  d_reduceUda              = false;
+  d_postProcessUda         = false;
   d_do_multi_taskgraphing  = false;
   d_restart_archive        = nullptr;
   d_app                    = 0;
@@ -286,24 +286,10 @@ SimulationController::~SimulationController()
 //______________________________________________________________________
 //
 void
-SimulationController::setReduceUdaFlags( const string & fromDir )
+SimulationController::setPostProcessFlags( const string & fromDir )
 {
-  d_reduceUda   = true;
-  d_fromDir     = fromDir;
-}
-
-//______________________________________________________________________
-//
-
-void
-SimulationController::doRestart( const string & restartFromDir, int timeStep,
-                                 bool fromScratch, bool removeOldDir )
-{
-  d_restarting          = true;
-  d_fromDir             = restartFromDir;
-  d_restartTimeStep     = timeStep;
-  d_restartFromScratch  = fromScratch;
-  d_restartRemoveOldDir = removeOldDir;
+  d_postProcessUda   = true;
+  d_fromDir          = fromDir;
 }
 
 //______________________________________________________________________
@@ -354,6 +340,20 @@ SimulationController::releaseComponents( void )
   d_scheduler = nullptr;
   d_regridder = nullptr;
   d_output    = nullptr;
+}
+
+//______________________________________________________________________
+//
+
+void
+SimulationController::doRestart( const string & restartFromDir, int timeStep,
+                                 bool fromScratch, bool removeOldDir )
+{
+  d_restarting          = true;
+  d_fromDir             = restartFromDir;
+  d_restartTimeStep     = timeStep;
+  d_restartFromScratch  = fromScratch;
+  d_restartRemoveOldDir = removeOldDir;
 }
 
 //______________________________________________________________________
@@ -636,30 +636,13 @@ SimulationController::timeStateSetup()
     // Set the simulation time to the restart simulation time.
     d_app->setSimTimeStart( simTimeStart );
 
-    double delT;
-
-    // Check to see if the user has set a restart delT
-    if (d_app->getSimulationTime()->m_override_restart_delt != 0) {
-      delT = d_app->getSimulationTime()->m_override_restart_delt;
-      proc0cout << "Overriding restart delT with " << delT << "\n";
-
-      d_scheduler->get_dw(1)->override( delt_vartype(delT),
-                                        d_app->getDelTLabel() );
-    }
-    // Set the delT to the value from the last simulation.  If in the
-    // last sim delT was clamped based on the values of prevDelT, then
-    // delT will be off if it doesn't match.
-    else
-    {
-      delT = d_restart_archive->getOldDelt( d_restartIndex );
-    }
-
-    d_app->setDelT( delT );
+    // Set the delta T to the restart delta T.
+    d_app->restartDelT( d_restart_archive->getOldDelt( d_restartIndex ) );
     
     // Tell the scheduler the generation of the re-started simulation.
     // (Add +1 because the scheduler will be starting on the next
     // time step.)
-    d_scheduler->setGeneration( d_restartTimeStep + 1);
+    d_scheduler->setGeneration( d_restartTimeStep + 1 );
       
     // This delete is an enigma. If it is called then memory is not
     // leaked, but sometimes if is called, then everything segfaults.
@@ -960,8 +943,7 @@ SimulationController::ReportStats( bool header /* = false */ )
     if (dbgTime.active() && d_nSamples ) {
       double realSecondsNow =
         timeStep.seconds() / d_app->getDelT();
-      double realSecondsAvg = walltimers.TimeStep().seconds() /
-	(d_app->getSimTime()-d_app->getSimTimeStart());
+      double realSecondsAvg = walltimers.TimeStep().seconds() / (d_app->getSimTime()-d_app->getSimTimeStart());
 
       dbgTime << "1 simulation second takes ";
 

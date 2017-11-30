@@ -22,7 +22,7 @@ DensityStar::problemSetup( ProblemSpecP& db ){
   m_label_density = parse_ups_for_role( DENSITY, db, "density" );
   m_label_densityStar = m_label_density + "_star" ;
   ProblemSpecP db_root = db->getRootNode();
-  
+
   db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("TimeIntegrator")->getAttribute("order", _time_order);
 
   if ( _time_order == 1 ){
@@ -73,12 +73,13 @@ DensityStar::problemSetup( ProblemSpecP& db ){
   } else {
     throw InvalidValue("Error: <TimeIntegrator> must have value: 1, 2, or 3 (representing the order).",__FILE__, __LINE__);
   }
-  
+
 }
 
 //--------------------------------------------------------------------------------------------------
 void
 DensityStar::create_local_labels(){
+
   register_new_variable<CCVariable<double> >( m_label_densityStar );
 
 }
@@ -87,8 +88,10 @@ DensityStar::create_local_labels(){
 void
 DensityStar::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>&
                                        variable_registry, const bool packed_tasks ){
+
   register_variable( m_label_densityStar , ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable( m_label_density , ArchesFieldContainer::REQUIRES,0, ArchesFieldContainer::NEWDW, variable_registry);
+
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -101,18 +104,17 @@ DensityStar::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
   Uintah::parallel_for( range, [&](int i, int j, int k){
     rhoStar(i,j,k)   = rho(i,j,k);
-  });  
-//  rhoStar.initialize(0.0);
+  });
+
 }
 
 //--------------------------------------------------------------------------------------------------
 void
 DensityStar::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>&
                                           variable_registry, const bool packed_tasks ){
-                                          
+
   register_variable( m_label_densityStar , ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable( m_label_densityStar , ArchesFieldContainer::REQUIRES,0, ArchesFieldContainer::OLDDW, variable_registry);
- 
 
 }
 
@@ -135,9 +137,9 @@ DensityStar::register_timestep_eval( std::vector<ArchesFieldContainer::VariableI
   register_variable( "x-mom", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
   register_variable( "y-mom", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
   register_variable( "z-mom", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
-  
+
   register_variable( m_label_density , ArchesFieldContainer::MODIFIES, variable_registry, time_substep );
-  register_variable( m_label_density , ArchesFieldContainer::REQUIRES,0, ArchesFieldContainer::OLDDW, variable_registry, time_substep );
+  register_variable( m_label_density , ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry, time_substep );
 
   register_variable( m_label_densityStar, ArchesFieldContainer::MODIFIES, variable_registry, time_substep );
 
@@ -151,10 +153,10 @@ DensityStar::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   constSFCYVariable<double>& ymom = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >("y-mom");
   constSFCZVariable<double>& zmom = tsk_info->get_const_uintah_field_add<constSFCZVariable<double> >("z-mom");
 
-  constCCVariable<double>& old_rho = tsk_info->get_const_uintah_field_add<constCCVariable<double> >( m_label_density,ArchesFieldContainer::OLDDW);  
+  constCCVariable<double>& old_rho = tsk_info->get_const_uintah_field_add<constCCVariable<double> >( m_label_density,ArchesFieldContainer::OLDDW);
   CCVariable<double>& rho = tsk_info->get_uintah_field_add<CCVariable<double> >( m_label_density );
   CCVariable<double>& rhoStar = tsk_info->get_uintah_field_add<CCVariable<double> >( m_label_densityStar );
-  
+
   const int time_substep = tsk_info->get_time_substep();
   const double dt = tsk_info->get_dt();
 
@@ -163,19 +165,19 @@ DensityStar::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   const double area_NS = DX.x()*DX.z();
   const double area_TB = DX.x()*DX.y();
   const double vol       = DX.x()*DX.y()*DX.z();
-  
+
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
   Uintah::parallel_for( range, [&](int i, int j, int k){
-    rhoStar(i,j,k)   = rho(i,j,k) - (area_EW * ( xmom(i+1,j,k) - xmom(i,j,k) ) +
-                                         area_NS * ( ymom(i,j+1,k) - ymom(i,j,k) )+
-                                         area_TB * ( zmom(i,j,k+1) - zmom(i,j,k) ))*dt/vol;
-                                         
+
+    rhoStar(i,j,k)   = rho(i,j,k) - ( area_EW * ( xmom(i+1,j,k) - xmom(i,j,k) ) +
+                                      area_NS * ( ymom(i,j+1,k) - ymom(i,j,k) )+
+                                      area_TB * ( zmom(i,j,k+1) - zmom(i,j,k) )) * dt / vol;
+
     rhoStar(i,j,k) = _alpha[time_substep] * old_rho(i,j,k) + _beta[time_substep] * rhoStar(i,j,k);
-                                         
-    rho(i,j,k)  = rhoStar(i,j,k); // I am copy density guess in density                                  
+
+    rho(i,j,k)  = rhoStar(i,j,k); // I am copy density guess in density
+
   });
-  // } 
-  }
-//--------------------------------------------------------------------------------------------------
+}
 
 } //namespace Uintah

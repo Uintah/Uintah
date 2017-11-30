@@ -173,7 +173,7 @@ private:
 
     _eqn_names.clear();
     for (ProblemSpecP eqn_db = db->findBlock("eqn");
-	 eqn_db.get_rep() != nullptr;
+	       eqn_db.get_rep() != nullptr;
          eqn_db = eqn_db->findNextBlock("eqn")){
 
       std::string scalar_name;
@@ -239,12 +239,12 @@ private:
 
     for ( SV::iterator i = _eqn_names.begin(); i != _eqn_names.end(); i++){
 
-       std::string var_name;
+      std::string var_name;
       if ((*i == "x-mom") || (*i == "y-mom") || (*i == "z-mom")){
         var_name = *i;
       } else {
         var_name = "rho_"+*i;
-      }      
+      }
       T& phi = *(tsk_info->get_uintah_field<T>(var_name));
       T& rhs = *(tsk_info->get_uintah_field<T>(*i+"_rhs"));
       CT& old_phi = *(tsk_info->get_const_uintah_field<CT>(var_name, ArchesFieldContainer::OLDDW));

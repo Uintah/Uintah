@@ -37,6 +37,7 @@ SRCS := $(SRCDIR)/Switcher.cc \
 
 # ARCHES et. al. should have been seen by CCA/Components/sub.mk
 PSELIBS := \
+        CCA/Components/Application         \
         CCA/Ports                          \
         Core/Containers                    \
         Core/Disclosure                    \
@@ -57,7 +58,7 @@ PSELIBS := \
         $(MPMFVM)                          \
         $(COMPONENTS)/Application          \
         $(COMPONENTS)/Examples             \
-        $(COMPONENTS)/ReduceUda            \
+        $(COMPONENTS)/PostProcessUda       \
         $(COMPONENTS)/ProblemSpecification \
         $(COMPONENTS)/Solvers              \
         $(COMPONENTS)/SwitchingCriteria    \

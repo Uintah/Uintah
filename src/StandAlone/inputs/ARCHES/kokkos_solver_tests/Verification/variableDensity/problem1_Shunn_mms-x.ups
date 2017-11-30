@@ -146,23 +146,11 @@
       </PropertyModelsV2>
       <StateProperties>
         <model label= "comp_density" type = "coldflow" >
-        <!--property label = "density" rho0 = "2.0" rho1 = "1.0" /-->
-        <property label = "density" />
-        <rho0>20.0</rho0>
-        <rho1>1.0</rho1>
-        <mixture_fraction label = "phi"/>
+          <property label = "density" stream_0 = "1.0" stream_1 = "20.0" />
+          <mixture_fraction label = "phi"/>
         </model>
-        <!--model label= "comp_density_extact" type = "coldflow_rp" >
-        <property label = "density_exact" />
-        <rho0>20.0</rho0>
-        <rho1>1.0</rho1>
-        <weigthed_mixture_fraction label = "rho_phi"/-->
-        <!--use_exact_guess/-->
-        <!--/model-->
       </StateProperties>
       <KMomentum>
-        <!--do_not_build_pressure_system/--> <!--If I do not want to do projection... -->
-        <!--use_drhodt label="x_mms_drhodt"/-->
         <drhodt label="drhodt"/>
         <convection scheme="central"/>
         <!--inviscid/-->
@@ -182,31 +170,23 @@
         <task task_label="u-init" variable_label="uVel" type="shunn_mms">
           <variable type="FX"/>
           <which_vel>u</which_vel>
-          <rho0>20.0</rho0>
-          <rho1>1.0</rho1>
           <grid x="ucellX"/>
           <which_density label="density" />
         </task>
         <!--task task_label="x-mom-init" variable_label="uVel" type="shunn_mms">
           <variable type="FX"/>
           <which_vel>u</which_vel>
-          <rho0>20.0</rho0>
-          <rho1>1.0</rho1>
           <coordinates x="ucellX" />
         </task-->
         <task task_label="phi-init" variable_label="phi" type="shunn_mms">
           <variable type="CC"/>
           <which_vel>p</which_vel>
-          <rho0>20.0</rho0>
-          <rho1>1.0</rho1>
           <grid x="gridX"/>
         </task>
       </Initialization>
       <SourceV2>
         <src label="x_mms" type="MMS_Shunn">
           <variable type="FX"/>
-          <rho0>20.0</rho0>
-          <rho1>1.0</rho1>
           <grid x_face ="ucellX"  x ="gridX"/>
         </src>
       </SourceV2>

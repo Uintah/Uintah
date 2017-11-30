@@ -109,7 +109,6 @@ private:
     double _gamma1;
     double _gamma2;
     double _gamma3;
-    double m_ash_mass_fraction;
     int m_num_env; 
 
   std::string devol_name; ///< string name for the average molecular weight (from table)

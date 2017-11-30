@@ -43,7 +43,7 @@ PSELIBS := \
 	Core/ProblemSpec \
 	Core/Util        \
 	CCA/Components/DataArchiver    \
-	CCA/Components/ReduceUda       \
+	CCA/Components/PostProcessUda  \
 	CCA/Components/Regridder       \
 	CCA/Components/Schedulers      \
 	CCA/Ports        \

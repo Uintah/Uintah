@@ -30,10 +30,11 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := CCA/Components/ReduceUda
+SRCDIR   := CCA/Components/PostProcessUda
 
 SRCS     += \
-	$(SRCDIR)/UdaReducer.cc           \
+	$(SRCDIR)/Common.cc               \
+	$(SRCDIR)/PostProcess.cc          \
 	$(SRCDIR)/Module.cc               \
 	$(SRCDIR)/ModuleFactory.cc        \
 	$(SRCDIR)/statistics.cc           \

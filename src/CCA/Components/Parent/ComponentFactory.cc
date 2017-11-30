@@ -49,7 +49,7 @@
 #include <CCA/Components/MPMICE/MPMICE.h>
 #include <CCA/Components/Parent/ComponentFactory.h>
 #include <CCA/Components/Parent/Switcher.h>
-#include <CCA/Components/ReduceUda/UdaReducer.h>
+#include <CCA/Components/PostProcessUda/PostProcess.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
@@ -58,7 +58,6 @@
 
 #ifdef HAVE_CUDA
 #  include <CCA/Components/Examples/UnifiedSchedulerTest.h>
-#  include <CCA/Components/Examples/PoissonGPU1.h>
 #endif
 
 #if !defined(NO_ARCHES)
@@ -272,9 +271,6 @@ ComponentFactory::create( ProblemSpecP& prob_spec,
   }
 
 #ifdef HAVE_CUDA
-  if (sim_comp == "poissongpu1" || sim_comp == "POISSONGPU1") {
-    return scinew PoissonGPU1(myworld, sharedState);
-  }
   if (sim_comp == "unifiedschedulertest" || sim_comp == "UNIFIEDSCHEDULERTEST") {
     return scinew UnifiedSchedulerTest(myworld, sharedState);
   }
@@ -325,8 +321,8 @@ ComponentFactory::create( ProblemSpecP& prob_spec,
   if (sim_comp == "switcher" || sim_comp == "SWITCHER") {
     return scinew Switcher(myworld, sharedState, prob_spec, uda);
   } 
-  if (sim_comp == "reduce_uda") {
-    return scinew UdaReducer(myworld, sharedState, uda);
+  if (sim_comp == "postProcessUda") {
+    return scinew PostProcessUda(myworld, sharedState, uda);
   } 
 #ifndef NO_HEAT
 

@@ -79,6 +79,7 @@ WARNING
   
   class ApplicationInterface : public UintahParallelPort {
 
+    friend class Switcher;
     friend class SimulationController;
     friend class AMRSimulationController;
     
@@ -174,6 +175,7 @@ WARNING
 
     // Redo a time step if current time advance is not converging.
     // Returned time is the new dt to use.
+    virtual void   recomputeTimeStep() = 0;
     virtual double recomputeTimeStep(double delt);
     virtual bool restartableTimeSteps();
 
@@ -188,6 +190,8 @@ WARNING
                                 const GridP& /*grid*/)
     { return false; }
 
+    virtual const VarLabel* getTimeStepLabel() const = 0;
+    virtual const VarLabel* getSimTimeLabel() const = 0;
     virtual const VarLabel* getDelTLabel() const = 0;
 
     //////////
@@ -240,9 +244,13 @@ WARNING
     {};
  
   private:
-    virtual   void getNextDelT( SchedulerP& scheduler ) = 0;
     virtual   void setDelT( double val ) = 0;
     virtual double getDelT() const = 0;
+    virtual   void restartDelT( double val ) = 0;
+    virtual   void getNextDelT( SchedulerP& scheduler ) = 0;
+    virtual   void adjustDelTForAllLevels( SchedulerP& scheduler,
+					   const GridP & grid,
+					   const int totalFine ) = 0;
     
     virtual   void setPrevDelT( double val ) = 0;
     virtual double getPrevDelT() const = 0;
@@ -261,7 +269,7 @@ WARNING
     // 'increment' function is called by the SimulationController at
     // the begining of each time step.
     virtual void setTimeStep( int ts ) = 0;
-    virtual void incrementTimeStep() = 0;
+    virtual void incrementTimeStep( const GridP & grid ) = 0;
     virtual int  getTimeStep() const = 0;
 
     virtual bool isLastTimeStep( double walltime ) const = 0;

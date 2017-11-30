@@ -1757,10 +1757,15 @@ void AMRICE::scheduleErrorEstimate(const LevelP& coarseLevel,
   cout_doing << d_myworld->myRank() 
              << " AMRICE::scheduleErrorEstimate \t\t\tL-" 
              << coarseLevel->getIndex() << '\n';
-  bool initial = false;             
-  if(m_sharedState->getCurrentTopLevelTimeStep() == 0){
-    initial = true;  // during initialization 
-  }
+
+  // timeStep_vartype timeStepVar(0);
+  // if( sched->get_dw(0) && sched->get_dw(0)->exists(lb->timeStepLabel) )
+  //   sched->get_dw(0)->get(timeStepVar, lb->timeStepLabel);
+
+  // bool initial = (timeStepVar == 0); // during initialization 
+
+  bool initial = (m_sharedState->getCurrentTopLevelTimeStep() == 0);
+
   Task* t = scinew Task("AMRICE::errorEstimate", 
                   this, &AMRICE::errorEstimate, initial);  
   

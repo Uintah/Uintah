@@ -54,7 +54,7 @@
 #include <CCA/Components/Models/ModelFactory.h>
 #include <CCA/Components/Parent/ComponentFactory.h>
 #include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>
-#include <CCA/Components/ReduceUda/UdaReducer.h>
+#include <CCA/Components/PostProcessUda/PostProcess.h>
 #include <CCA/Components/Regridder/RegridderFactory.h>
 #include <CCA/Components/Schedulers/SchedulerFactory.h>
 #include <CCA/Components/SimulationController/AMRSimulationController.h>
@@ -175,7 +175,7 @@ usage( const std::string& message, const std::string& badarg, const std::string&
     std::cerr << "-local_filesystem    : If using MPI, use this flag if each node has a local disk.\n";
     std::cerr << "-emit_taskgraphs     : Output taskgraph information\n";
     std::cerr << "-restart             : Give the checkpointed uda directory as the input file\n";
-    std::cerr << "-reduce_uda          : Reads <uda-dir>/input.xml file and removes unwanted labels (see FAQ).\n";
+    std::cerr << "-postProcessUda      : Passes variables in an uda through post processing tasks, computing new variables and creating a new uda.\n";
     std::cerr << "-uda_suffix <number> : Make a new uda dir with <number> as the default suffix\n";
     std::cerr << "-t <timestep>        : Restart timestep (last checkpoint is default, you can use -t 0 for the first checkpoint)\n";
     std::cerr << "-svnDiff             : runs svn diff <src/...../Packages/Uintah \n";
@@ -256,7 +256,7 @@ main( int argc, char *argv[], char *env[] )
   bool   emit_graphs         = false;
   bool   local_filesystem    = false;
   bool   restart             = false;
-  bool   reduce_uda          = false;
+  bool   postProcessUda      = false;
   bool   do_svnDiff          = false;
   bool   do_svnStat          = false;
   bool   restartFromScratch  = true;
@@ -421,8 +421,8 @@ main( int argc, char *argv[], char *env[] )
     else if (arg == "-do_not_validate") {
       validateUps = false;
     }
-    else if (arg == "-reduce_uda" || arg == "-reduceUda") {
-      reduce_uda = true;
+    else if (arg == "-postProcessUda" || arg == "-PostProcessUda") {
+      postProcessUda = true;
     }
     else if (arg == "-arches" || arg == "-ice" || arg == "-impm" || arg == "-mpm" || arg == "-mpmarches" || arg == "-mpmice"
         || arg == "-poisson1" || arg == "-poisson2" || arg == "-switcher" || arg == "-poisson4" || arg == "-benchmark"
@@ -507,7 +507,7 @@ main( int argc, char *argv[], char *env[] )
 
   //__________________________________
   //  bulletproofing
-  if ( restart || reduce_uda ) {
+  if ( restart || postProcessUda ) {
     udaDir = filename;
     filename = filename + "/input.xml";
 
@@ -709,8 +709,8 @@ main( int argc, char *argv[], char *env[] )
       scinew AMRSimulationController( world, ups );
 
     // set sim. controller flags for reduce uda
-    if ( reduce_uda ) {
-      simController->setReduceUdaFlags( udaDir );
+    if ( postProcessUda ) {
+      simController->setPostProcessFlags( udaDir );
     }
     
 #ifdef HAVE_VISIT
@@ -734,9 +734,9 @@ main( int argc, char *argv[], char *env[] )
 
     simController->attachPort( "application", application );
 
-    // Can not do a reduce uda with AMR
-    if ( reduce_uda && application->isAMR() ) {
-      usage( "You may not use '-amr' and '-reduce_uda' at the same time.", "-reduce_uda", argv[0] );
+    // Can not do a postProcess uda with AMR
+    if ( postProcessUda && application->isAMR() ) {
+      usage( "You may not use '-amr' and '-postProcessUda' at the same time.", "-postProcessUda", argv[0] );
     }
 
     //__________________________________
@@ -789,18 +789,17 @@ main( int argc, char *argv[], char *env[] )
     // Regridder - optional
     RegridderCommon* regridder = nullptr;
 
-    if( application->isAMR() ) {
-      regridder = RegridderFactory::create( ups, world );
+    if (application->isAMR()) {
+      regridder = RegridderFactory::create(ups, world);
 
-      if( regridder )
-      {
-	regridder->attachPort( "scheduler", scheduler );
-	regridder->attachPort( "load balancer", loadBalancer );
+      if (regridder) {
+        regridder->attachPort("scheduler", scheduler);
+        regridder->attachPort("load balancer", loadBalancer);
 
-        simController->attachPort( "regridder", regridder );
-	appComp->attachPort( "regridder", regridder );
+        simController->attachPort("regridder", regridder);
+        appComp->attachPort("regridder", regridder);
 
-	loadBalancer->attachPort( "regridder", regridder );
+        loadBalancer->attachPort("regridder", regridder);
       }
     }
 
@@ -808,12 +807,11 @@ main( int argc, char *argv[], char *env[] )
     //  Model Maker - optional
     ModelMaker* modelMaker = nullptr;
 
-    if( application->needModelMaker() ) {
+    if (application->needModelMaker()) {
       modelMaker = scinew ModelFactory(world);
 
-      if( modelMaker )
-      {
-	appComp->attachPort("modelMaker", modelMaker);
+      if (modelMaker) {
+        appComp->attachPort("modelMaker", modelMaker);
       }
     }
 

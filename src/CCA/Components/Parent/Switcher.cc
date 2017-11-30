@@ -876,6 +876,11 @@ Switcher::needRecompile(       double   simTime,
     // Send the subcomponent's UPS file to the switcher's simulation
     // time.  Note this goes into the switcher not the subcomponent.
     getSimulationTime()->problemSetup( subCompUps );
+    
+    // Each application has their own init_delt specified.  On a switch
+    // from one application to the next, delT needs to be adjusted to
+    // the value specified in the input file. 
+    setDelT( getSimulationTime()->m_max_initial_delt );
 
     // This is needed to get the "ICE surrounding matl"
     d_app->restartInitialize();

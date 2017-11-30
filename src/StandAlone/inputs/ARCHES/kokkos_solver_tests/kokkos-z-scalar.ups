@@ -219,11 +219,12 @@
         <var role="total_viscosity" label="gamma"/>
         <var role="density" label="density"/>
       </VarID>
-      <PropertyModelsV2>
-        <model label="density" type="constant_property">
-          <grid type="CC"/>
-          <value>1.</value>
+      <StateProperties> 
+        <model label="density_model" type="constant">
+          <const_property label="density" value="1."/>
         </model>
+      </StateProperties>
+      <PropertyModelsV2>
         <model label="gamma" type="constant_property">
           <grid type="CC"/>
           <value>1.e-4</value>

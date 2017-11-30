@@ -88,7 +88,7 @@ class Scheduler : public UintahParallelPort {
     virtual void setGeneration( int id ) = 0;
 
     virtual void problemSetup( const ProblemSpecP& prob_spec,
-			       const SimulationStateP& state ) = 0;
+			                         const SimulationStateP& state ) = 0;
 
     virtual void checkMemoryUse( unsigned long & memUsed,
 				 unsigned long & highwater,

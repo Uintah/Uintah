@@ -3,13 +3,12 @@
 //Specific property evaluators:
 #include <CCA/Components/Arches/ChemMixV2/ConstantStateProperties.h>
 #include <CCA/Components/Arches/ChemMixV2/ColdFlowProperties.h>
-#include <CCA/Components/Arches/ChemMixV2/ColdFlowPropertiesRP.h>
 
 using namespace Uintah;
 
 ChemMixFactory::ChemMixFactory( )
 {
-  _factory_name = "ChemMixFactory"; 
+  _factory_name = "ChemMixFactory";
 }
 
 ChemMixFactory::~ChemMixFactory()
@@ -24,7 +23,7 @@ ChemMixFactory::register_all_tasks( ProblemSpecP& db )
     ProblemSpecP db_sp = db->findBlock("StateProperties");
 
     for ( ProblemSpecP db_p = db_sp->findBlock("model");
-	  db_p.get_rep() != nullptr;
+          db_p.get_rep() != nullptr;
           db_p = db_p->findNextBlock("model")){
 
       std::string label;
@@ -36,15 +35,9 @@ ChemMixFactory::register_all_tasks( ProblemSpecP& db )
       if ( type == "constant" ){
         TaskInterface::TaskBuilder* tsk = scinew ConstantStateProperties::Builder( label, 0 );
         register_task( label, tsk );
-        m_compute_density_table.push_back( label );
       } else if ( type == "coldflow" ){
         TaskInterface::TaskBuilder* tsk = scinew ColdFlowProperties::Builder( label, 0 );
         register_task( label, tsk );
-        m_compute_density_table.push_back( label );
-      } else if ( type == "coldflow_rp" ){
-        TaskInterface::TaskBuilder* tsk = scinew ColdFlowPropertiesRP::Builder( label, 0 );
-        register_task( label, tsk );
-        m_compute_exact_density.push_back( label );
       } else {
         throw InvalidValue("Error: Unknown state property evaluator type: "+type, __FILE__, __LINE__);
       }

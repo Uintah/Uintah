@@ -1177,14 +1177,14 @@ DataArchive::restartInitialize( const int                index,
 
 //______________________________________________________________________
 //  This method is a specialization of restartInitialize().
-//  It's only used by the reduceUda component
+//  It's only used by the postProcessUda component
 void
-DataArchive::reduceUda_ReadUda( const ProcessorGroup   * pg,
-                                const int                timeIndex,
-                                const GridP            & grid,
-                                const PatchSubset      * patches,
-                                      DataWarehouse    * dw,
-                                      LoadBalancerPort * lb )
+DataArchive::postProcess_ReadUda( const ProcessorGroup   * pg,
+                                  const int                timeIndex,
+                                  const GridP            & grid,
+                                  const PatchSubset      * patches,
+                                        DataWarehouse    * dw,
+                                        LoadBalancerPort * lb )
 {
   vector<int>    timesteps;
   vector<double> times;
@@ -1262,7 +1262,7 @@ DataArchive::reduceUda_ReadUda( const ProcessorGroup   * pg,
     delete var;
   }
 
-} // end reduceUda_ReadUda()
+} // end postProcess_ReadUda()
 
 //______________________________________________________________________
 //

@@ -23,9 +23,10 @@
  */
 
 
-#ifndef Packages_Uintah_CCA_Components_ReduceUda_spatioTemporalAvg_h
-#define Packages_Uintah_CCA_Components_ReduceUda_spatioTemporalAvg_h
-#include <CCA/Components/ReduceUda/Module.h>
+#ifndef Packages_Uintah_CCA_Components_PostProcessUda_spatioTemporalAvg_h
+#define Packages_Uintah_CCA_Components_PostProcessUda_spatioTemporalAvg_h
+#include <CCA/Components/PostProcessUda/Common.h>
+#include <CCA/Components/PostProcessUda/Module.h>
 #include <CCA/Ports/Output.h>
 #include <Core/DataArchive/DataArchive.h>
 #include <Core/Grid/Material.h>
@@ -62,7 +63,7 @@ DESCRIPTION
 WARNING
 
 ****************************************/
-  class spatioTemporalAvg : public Module {
+  class spatioTemporalAvg : public Module, public PostProcessCommon {
   public:
     spatioTemporalAvg(ProblemSpecP    & prob_spec,
                       SimulationStateP& sharedState,
@@ -153,7 +154,15 @@ WARNING
                      DataWarehouse  * new_dw,
                      const Patch    * patch,
                      Qstats         & Q);
-                     
+
+    template <class T>
+    void query( const Patch         * patch,
+                constCCVariable< T >& Qvar,
+                CCVariable< T >     & Qavg,
+                CCVariable< T >     & Qvariance,
+                IntVector           & avgBoxCells,
+                CellIterator        & iter);
+  
     template <class T>
     void allocateAndZeroLabels( DataWarehouse * new_dw,
                                 const Patch   *   patch,
