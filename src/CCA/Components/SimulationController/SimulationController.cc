@@ -430,61 +430,12 @@ SimulationController::restartArchiveSetup( void )
 //
 void
 SimulationController::outputSetup( void )
-{
-  // Set up the output now as it may be needed by simulation
-  // interface.
-  d_output->problemSetup( d_ups, d_restart_ps, d_app->getSimulationStateP() );
-
-  d_output->setRunTimeStats( &d_runTimeStats );
-  
-  // Note: there are other downstream calls to d_output to complete
-  // the setup. See finialSetup().
-}
-
-//______________________________________________________________________
-//
-void
-SimulationController::schedulerSetup( void )
-{
-
-  // Set up the scheduler now as it will be needed by simulation
-  // interface.
-
-  d_scheduler->problemSetup( d_ups, d_app->getSimulationStateP() );
-
-  // Additional set up calls.
-  d_scheduler->setInitTimestep( true );
-  d_scheduler->setRestartInitTimestep( d_restarting );
-  d_scheduler->initialize( 1, 1 );
-  d_scheduler->clearTaskMonitoring();
-
-  d_scheduler->setRunTimeStats( &d_runTimeStats );
-  
-  // Note: there are other downstream calls to d_scheduler to complete
-  // the setup. See outOfSyncSetup().
-}
-
-//______________________________________________________________________
-//
-void
-SimulationController::applicationSetup( void )
-{
-  d_app->getComponents();
-
-  // Set up the application as it may change the inital grid
+{  
+  // Set up the output - needs to be done before the application is
   // setup.
+  d_output->setRunTimeStats( &d_runTimeStats );
 
-  // Note: normally problemSetup would be called here but the grid is
-  // needed and it has not yet been created. Further the simulation
-  // controller needs the regridder which obviously needs the grid.
-
-  // Further the application may need to change the grid
-  // before it is setup.
-
-  // As such, get the application, create the grid, let the
-  // simulation interafce make its changes to the grid, setup the
-  // grid, then set up the simulation interface. The simulation
-  // interface call to problemSetup is done in outOfSyncSetup().
+  d_output->problemSetup( d_ups, d_restart_ps, d_app->getSimulationStateP() );
 }
 
 //______________________________________________________________________
@@ -549,12 +500,31 @@ SimulationController::regridderSetup( void )
 {
   // Set up the regridder.
 
-  // Do this step before fully setting up the simulation interface so
+  // Do this step before fully setting up the application interface so
   // that Switcher (being a simulation interface) can reset the state
-  // of the regridder. See outOfSyncSetup().
+  // of the regridder.
   if( d_regridder ) {
     d_regridder->problemSetup( d_ups, d_currentGridP, d_app->getSimulationStateP() );
   }
+}
+
+//______________________________________________________________________
+//
+void
+SimulationController::schedulerSetup( void )
+{
+  // Now that the grid is completely set up, set up the scheduler.
+  d_scheduler->setRunTimeStats( &d_runTimeStats );
+
+  d_scheduler->problemSetup( d_ups, d_app->getSimulationStateP() );
+
+  // Additional set up calls.
+  d_scheduler->setInitTimestep( true );
+  d_scheduler->setRestartInitTimestep( d_restarting );
+  d_scheduler->initialize( 1, 1 );
+  d_scheduler->clearTaskMonitoring();
+
+  d_scheduler->advanceDataWarehouse( d_currentGridP, true );
 }
 
 //______________________________________________________________________
@@ -564,6 +534,8 @@ SimulationController::loadBalancerSetup( void )
 {
   // Set up the load balancer.
   d_lb = d_scheduler->getLoadBalancer();
+
+  d_lb->setRunTimeStats( &d_runTimeStats );
 
   //  Set the dimensionality of the problem.
   IntVector low, high, size;
@@ -577,25 +549,14 @@ SimulationController::loadBalancerSetup( void )
   // In addition, do this step after regridding setup as the minimum
   // patch size that the regridder will create will be known.
   d_lb->problemSetup( d_ups, d_currentGridP, d_app->getSimulationStateP() );
-
-  d_lb->setRunTimeStats( &d_runTimeStats );
 }
 
 //______________________________________________________________________
 //
 void
-SimulationController::outOfSyncSetup()
+SimulationController::applicationSetup( void )
 {
-  // Complete the setup of the application and scheduler that
-  // could not be completed until the grid was setup.
-  
-  // The simulation interface was initialized earlier because the it
-  // was needed to possibly set the grid's extra cells before the
-  // grid's ProblemSetup was called (it can not be done afterwards).
-
-  // Do this step after setting up the regridder so that Switcher
-  // (being a simulation interface) can reset the state of the
-  // regridder.
+  d_app->getComponents();
 
   // Pass the d_restart_ps to the component's problemSetup.  For
   // restarting, pull the <MaterialProperties> from the d_restart_ps.
@@ -604,20 +565,16 @@ SimulationController::outOfSyncSetup()
   // DataArchive::restartInitialize.
   d_app->problemSetup(d_ups, d_restart_ps, d_currentGridP);
 
-  // The scheduler was setup earlier because the simulation interface
-  // needed it.
-
-  // Complete the setup of the scheduler.
-  d_scheduler->advanceDataWarehouse( d_currentGridP, true );
+  // Finalize the shared state/materials
+  d_app->getSimulationStateP()->finalizeMaterials();
 }
+
 
 //______________________________________________________________________
 //
 void
 SimulationController::timeStateSetup()
 {
-  // Set up the time state.
-
   // Restarting so initialize time state using the archive data.
   if( d_restarting ) {
     simdbg << "Restarting... loading data\n";
@@ -651,7 +608,7 @@ SimulationController::timeStateSetup()
   else /* if( !d_restarting ) */ {
     d_app->setTimeStep( 0 );
     d_app->setSimTimeStart( 0 );
-    d_app->setDelT( 0 );    
+    d_app->setDelT( 0 );
   }
 }
 
@@ -660,19 +617,13 @@ SimulationController::timeStateSetup()
 void
 SimulationController::finalSetup()
 {
-  // Finalize the shared state/materials
-  d_app->getSimulationStateP()->finalizeMaterials();
-
-  // The output was initalized earlier because the simulation
-  // interface needed it. 
-  
   // This step is done after the call to d_app->problemSetup to get
   // the defaults set by the simulation interface into the input.xml,
   // which the output writes along with index.xml
   d_output->initializeOutput(d_ups);
 
   // This step is done after the output is initalized so that global
-  // reduction ouput vars are copied to the new uda. Further, it must
+  // reduction output vars are copied to the new uda. Further, it must
   // be called after timeStateSetup() is call so that checkpoints are
   // copied to the new uda as well.
   if( d_restarting ) {

@@ -98,7 +98,7 @@ WARNING
     virtual void problemSetup( const ProblemSpecP     & params,
                                const ProblemSpecP     & restart_prob_spec,
                                      GridP            & grid ) = 0;
-    
+
     virtual void preGridProblemSetup( const ProblemSpecP & params, 
                                       GridP            & grid ) {};
 

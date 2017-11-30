@@ -193,12 +193,11 @@ protected:
   
   void restartArchiveSetup();
   void outputSetup();
-  void schedulerSetup();
-  void applicationSetup();
   void gridSetup();
   void regridderSetup();
   void loadBalancerSetup();
-  void outOfSyncSetup();
+  void applicationSetup();
+  void schedulerSetup();
   void timeStateSetup();
   void finalSetup();
 
