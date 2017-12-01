@@ -74,6 +74,9 @@ ModuleFactory::create(const ProblemSpecP& prob_spec,
       else if ( module == "spatioTemporalAvg" ) {
         modules.push_back ( scinew postProcess::spatioTemporalAvg( module_ps, sharedState, dataArchiver, dataArchive) );
       }
+      else if ( module == "reduceUda" ) {
+        // do nothing
+      }      
       else {
         throw ProblemSetupException("\nERROR:<PostProcess> Unknown analysis module.  "+module,__FILE__, __LINE__);
       }

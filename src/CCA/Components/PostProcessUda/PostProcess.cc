@@ -39,9 +39,7 @@ PostProcessUda::PostProcessUda( const ProcessorGroup * myworld,
 			           const SimulationStateP sharedState,
                                 const string         & udaDir ) :
   ApplicationCommon( myworld, sharedState ),
-  d_udaDir(udaDir),
-  d_dataArchive(0),
-  d_timeIndex(0)
+  d_udaDir(udaDir)
 {}
 
 //______________________________________________________________________
@@ -97,15 +95,10 @@ void PostProcessUda::problemSetup(const ProblemSpecP& prob_spec,
   m_output->setSwitchState(true);         /// HACK NEED TO CHANGE THIS
 
   // This matl is for delT
-  d_oneMatl = scinew SimpleMaterial();
-  m_sharedState->registerSimpleMaterial( d_oneMatl );
+  SimpleMaterial * oneMatl = scinew SimpleMaterial();
+  m_sharedState->registerSimpleMaterial( oneMatl );
 
   delt_label = getDelTLabel();
-
-  d_dataArchiver = dynamic_cast<Output*>(getPort("output"));
-  if(!d_dataArchiver){
-    throw InternalError("postProcessUda:couldn't get output port", __FILE__, __LINE__);
-  }
 
   //__________________________________
   //  Find timestep data from the original uda
@@ -172,8 +165,6 @@ void PostProcessUda::scheduleInitialize(const LevelP& level,
     Module* m = *iter;
     m->scheduleInitialize( sched, level);
   }
-
-
 }
 
 //______________________________________________________________________
@@ -212,29 +203,17 @@ void  PostProcessUda::scheduleTimeAdvance( const LevelP& level,
 //______________________________________________________________________
 //    Schedule for each patch that this processor owns.
 //    The DataArchiver::output() will cherry pick the variables to output
-
 void PostProcessUda::sched_readDataArchive(const LevelP& level,
                                            SchedulerP& sched)
 {
+  Task* t = scinew Task("PostProcessUda::readDataArchive", this,
+                        &PostProcessUda::readDataArchive);
+                        
   GridP grid = level->getGrid();
   const PatchSet* perProcPatches = d_lb->getPerProcessorPatchSet(grid);
   const PatchSubset* patches = perProcPatches->getSubset(d_myworld->myRank());
 
-
-  Task* t = scinew Task("PostProcessUda::readDataArchive", this,
-                        &PostProcessUda::readDataArchive);
-
-
-  // manually determine which matls to use in scheduling.
-  // The sharedState does not have any materials registered
-  // so you have to do it manually
-  MaterialSetP allMatls = scinew MaterialSet();
-  allMatls->createEmptySubsets(1);
-  MaterialSubset* allMatlSubset = allMatls->getSubset(0);
-
-  MaterialSetP prevMatlSet = 0;
-  ConsecutiveRangeSet prevRangeSet;
-
+  vector<int> allMatls_vec;
   //__________________________________
   //  Loop over all saved labels
   for (unsigned int i = 0; i < d_savedLabels.size(); i++) {
@@ -246,36 +225,22 @@ void PostProcessUda::sched_readDataArchive(const LevelP& level,
 
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
-
       ConsecutiveRangeSet matls = d_dataArchive->queryMaterials(labelName, patch, d_timeIndex);
       matlsRangeSet = matlsRangeSet.unioned(matls);
     }
 
     //__________________________________
-    // Compute the material set and subset
-    MaterialSet* matlSet;
-    if (prevMatlSet != nullptr && prevRangeSet == matlsRangeSet) {
-      matlSet = prevMatlSet.get_rep();
+    // Compute the material set
+    vector<int> matls_vec;
+    matls_vec.reserve(matlsRangeSet.size());
+
+    for (ConsecutiveRangeSet::iterator iter = matlsRangeSet.begin(); iter != matlsRangeSet.end(); iter++) {
+      matls_vec.push_back(*iter);
+      allMatls_vec.push_back(*iter);
     }
-    else {
-
-      matlSet = scinew MaterialSet();
-      vector<int> matls_vec;
-      matls_vec.reserve(matlsRangeSet.size());
-
-      for (ConsecutiveRangeSet::iterator iter = matlsRangeSet.begin(); iter != matlsRangeSet.end(); iter++) {
-        if ( !allMatlSubset->contains(*iter) ) {
-          allMatlSubset->add(*iter);
-        }
-	 matls_vec.push_back(*iter);
-      }
-
-      matlSet->addAll(matls_vec);
-      prevRangeSet = matlsRangeSet;
-      prevMatlSet  = matlSet;
-    }
-
-    allMatlSubset->sort();
+    
+    MaterialSet * matlSet = scinew MaterialSet();
+    matlSet->addAll(matls_vec);
 
     //__________________________________
     // schedule the computes for each patch that
@@ -283,12 +248,20 @@ void PostProcessUda::sched_readDataArchive(const LevelP& level,
     // will then pick and choose which variables to write based on the input file
     t->computes(label, patches, matlSet->getUnion());
   }  // loop savedLabels
+  
+  // clean out duplicate entries in the material set
+  sort( allMatls_vec.begin(), allMatls_vec.end() );
+  vector<int>::iterator it;
+  it = unique( allMatls_vec.begin(), allMatls_vec.end() );
+  allMatls_vec.erase(it, allMatls_vec.end() );
 
+  MaterialSet * allMatls = scinew MaterialSet();
+  allMatls->addAll(allMatls_vec);
+  allMatls->addReference();
+    
   t->setType(Task::OncePerProc);
-  sched->addTask(t, perProcPatches, allMatls.get_rep());
-
+  sched->addTask(t, perProcPatches, allMatls );
 }
-
 
 //______________________________________________________________________
 //  This task reads data from the dataArchive and 'puts' it into the data Warehouse
@@ -311,6 +284,8 @@ void PostProcessUda::readDataArchive(const ProcessorGroup* pg,
 
   d_dataArchive->postProcess_ReadUda(pg, d_timeIndex, d_oldGrid, patches, new_dw, d_lb);
   d_timeIndex++;
+//  new_dw->print();
+  
 }
 
 

@@ -114,9 +114,6 @@ namespace Uintah {
                           DataWarehouse*,
                           DataWarehouse* );
 
-    void sched_Test( const LevelP& level,
-                       SchedulerP& sched );
-
     void doAnalysis(const ProcessorGroup*,
                     const PatchSubset* patches,
                     const MaterialSubset* matls,
@@ -133,15 +130,12 @@ namespace Uintah {
     std::vector<VarLabel*> d_savedLabels;
 
     GridP                  d_oldGrid;
-    DataArchive          * d_dataArchive;
-    Output               * d_dataArchiver;
+    DataArchive          * d_dataArchive = nullptr;
 
-    int                    d_timeIndex;
+    int                    d_timeIndex = 0;
 
     LoadBalancerPort     * d_lb;
     const VarLabel       * delt_label;
-    SimpleMaterial       * d_oneMatl;
-
     std::vector<Module*> d_Modules;
 
 
