@@ -149,7 +149,7 @@ MPIScheduler::~MPIScheduler()
 //
 void
 MPIScheduler::problemSetup( const ProblemSpecP     & prob_spec
-                          ,       SimulationStateP & state
+                          , const SimulationStateP & state
                           )
 {
   SchedulerCommon::problemSetup(prob_spec, state);

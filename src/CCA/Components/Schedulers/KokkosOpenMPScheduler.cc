@@ -84,7 +84,7 @@ KokkosOpenMPScheduler::~KokkosOpenMPScheduler()
 //
 void
 KokkosOpenMPScheduler::problemSetup( const ProblemSpecP     & prob_spec
-                                   ,       SimulationStateP & state
+                                   , const SimulationStateP & state
                                    )
 {
   // Default taskReadyQueueAlg

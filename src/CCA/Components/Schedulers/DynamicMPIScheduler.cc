@@ -49,9 +49,10 @@ Dout g_queue_length( "DynamicMPI_QueueLength", false);
 
 //______________________________________________________________________
 //
-DynamicMPIScheduler::DynamicMPIScheduler( const ProcessorGroup*      myworld,
-                                          const Output*              oport,
-                                                DynamicMPIScheduler* parentScheduler )
+DynamicMPIScheduler::DynamicMPIScheduler( const ProcessorGroup*      myworld
+                                        , const Output*              oport
+                                        ,       DynamicMPIScheduler* parentScheduler
+                                        )
   : MPIScheduler( myworld, oport, parentScheduler )
 {
   m_task_queue_alg =  MostMessages;
@@ -67,8 +68,9 @@ DynamicMPIScheduler::~DynamicMPIScheduler()
 //______________________________________________________________________
 //
 void
-DynamicMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec,
-                                         SimulationStateP& state )
+DynamicMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec
+                                 , const SimulationStateP& state
+                                 )
 {
   std::string taskQueueAlg = "";
 
@@ -137,8 +139,9 @@ DynamicMPIScheduler::createSubScheduler()
 //______________________________________________________________________
 //
 void
-DynamicMPIScheduler::execute( int tgnum     /*=0*/,
-                              int iteration /*=0*/ )
+DynamicMPIScheduler::execute( int tgnum     /*=0*/
+                            , int iteration /*=0*/
+                            )
 {
   if (m_is_copy_data_timestep) {
     MPIScheduler::execute(tgnum, iteration);

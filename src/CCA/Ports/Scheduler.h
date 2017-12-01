@@ -87,12 +87,14 @@ class Scheduler : public UintahParallelPort {
     // if the simulation has been "restarted".
     virtual void setGeneration( int id ) = 0;
 
-    virtual void problemSetup( const ProblemSpecP& prob_spec,
-			                         const SimulationStateP& state ) = 0;
+    virtual void problemSetup( const ProblemSpecP     & prob_spec
+			                       , const SimulationStateP & state
+			                       ) = 0;
 
-    virtual void checkMemoryUse( unsigned long & memUsed,
-				 unsigned long & highwater,
-				 unsigned long & maxMemUsed ) = 0;
+    virtual void checkMemoryUse( unsigned long & memUsed
+				                       , unsigned long & highwater
+				                       , unsigned long & maxMemUsed
+				                       ) = 0;
     
     virtual void setStartAddr( char * start ) = 0;  // sbrk memory start location (for memory tracking)
 
@@ -238,6 +240,7 @@ class Scheduler : public UintahParallelPort {
     virtual int getMaxLevelOffset() = 0;
 
     virtual bool copyTimestep() = 0;
+
     virtual bool isCopyDataTimestep() = 0;
 
     virtual void setInitTimestep( bool ) = 0;
