@@ -227,7 +227,7 @@ namespace Uintah {
       // std::cerr << "**********  " << __FUNCTION__ << "  " << __LINE__ << "  "
       //           << old_dw << "  " << new_dw << "  "
       //           << timeStep << std::endl;
-      
+
       //________________________________________________________
       // Solve frequency
       const int solvFreq = params->solveFrequency;
@@ -259,7 +259,7 @@ namespace Uintah {
 
         //
         //if(omp_get_thread_num()==0)
-        //	printf("number of threads: %d, available threads: %d\n", omp_get_num_threads(), omp_get_max_threads());
+        //  printf("number of threads: %d, available threads: %d\n", omp_get_num_threads(), omp_get_max_threads());
 
         const PatchSubset * patches;
 
@@ -386,6 +386,7 @@ namespace Uintah {
                                    {-1, 0, 0},
                                    { 0,-1, 0},
                                    { 0, 0,-1}};
+
               for ( int i = 0; i < 4; i++ ) {
                 HYPRE_StructStencilSetElement(stencil, i, offsets[i]);
               }
@@ -681,13 +682,13 @@ namespace Uintah {
             if ( timeStep == 1 || restart ) {
               HYPRE_StructSMGCreate(pg->getComm(), solver);
               hypre_solver_s->solver_type = smg;
-              hypre_solver_s->created_solver=true;
+              hypre_solver_s->created_solver = true;
             }
             else if ( do_setup ) {
               HYPRE_StructSMGDestroy(*solver);
               HYPRE_StructSMGCreate(pg->getComm(), solver);
               hypre_solver_s->solver_type = smg;
-              hypre_solver_s->created_solver=true;
+              hypre_solver_s->created_solver = true;
             }
 
             HYPRE_StructSMGSetMemoryUse   (*solver, 0);
@@ -715,13 +716,13 @@ namespace Uintah {
             if ( timeStep == 1 || restart ) {
               HYPRE_StructPFMGCreate(pg->getComm(), solver);
               hypre_solver_s->solver_type = pfmg;
-              hypre_solver_s->created_solver=true;
+              hypre_solver_s->created_solver = true;
             }
             else if ( do_setup ) {
               HYPRE_StructPFMGDestroy(*solver);
               HYPRE_StructPFMGCreate(pg->getComm(), solver);
               hypre_solver_s->solver_type = pfmg;
-              hypre_solver_s->created_solver=true;
+              hypre_solver_s->created_solver = true;
             }
 
             HYPRE_StructPFMGSetMaxIter  (*solver, params->maxiterations);
@@ -752,13 +753,13 @@ namespace Uintah {
             if ( timeStep == 1 || restart ) {
               HYPRE_StructSparseMSGCreate(pg->getComm(), solver);
               hypre_solver_s->solver_type = sparsemsg;
-              hypre_solver_s->created_solver=true;
+              hypre_solver_s->created_solver = true;
             }
             else if ( do_setup ) {
               HYPRE_StructSparseMSGDestroy(*solver);
               HYPRE_StructSparseMSGCreate(pg->getComm(), solver);
               hypre_solver_s->solver_type = sparsemsg;
-              hypre_solver_s->created_solver=true;
+              hypre_solver_s->created_solver = true;
             }
 
             HYPRE_StructSparseMSGSetMaxIter  (*solver, params->maxiterations);
@@ -792,13 +793,13 @@ namespace Uintah {
             if ( timeStep == 1 || restart ) {
               HYPRE_StructPCGCreate(pg->getComm(),solver);
               hypre_solver_s->solver_type = pcg;
-              hypre_solver_s->created_solver=true;
+              hypre_solver_s->created_solver = true;
             }
             else if ( do_setup ) {
               HYPRE_StructPCGDestroy(*solver);
               HYPRE_StructPCGCreate(pg->getComm(), solver);
               hypre_solver_s->solver_type = pcg;
-              hypre_solver_s->created_solver=true;
+              hypre_solver_s->created_solver = true;
             }
 
             HYPRE_StructPCGSetMaxIter  (*solver, params->maxiterations);
@@ -816,7 +817,7 @@ namespace Uintah {
               setupPrecond(pg, precond, precond_setup, *precond_solver,
                            precond_tolerance,precond_solver_type);
               hypre_solver_s->precond_solver_type = precond_solver_type;
-              hypre_solver_s->created_precond_solver=true;
+              hypre_solver_s->created_precond_solver = true;
               HYPRE_StructPCGSetPrecond(*solver, precond, precond_setup, *precond_solver);
             }
             else if ( do_setup ) {
@@ -824,7 +825,7 @@ namespace Uintah {
               setupPrecond(pg, precond, precond_setup, *precond_solver,
                            precond_tolerance,precond_solver_type);
               hypre_solver_s->precond_solver_type = precond_solver_type;
-              hypre_solver_s->created_precond_solver=true;
+              hypre_solver_s->created_precond_solver = true;
               HYPRE_StructPCGSetPrecond(*solver, precond, precond_setup, *precond_solver);
             }
 
@@ -850,13 +851,13 @@ namespace Uintah {
             if ( timeStep == 1 || restart ) {
               HYPRE_StructHybridCreate(pg->getComm(), solver);
               hypre_solver_s->solver_type = hybrid;
-              hypre_solver_s->created_solver=true;
+              hypre_solver_s->created_solver = true;
             }
             else if ( do_setup ) {
               HYPRE_StructHybridDestroy(*solver);
               HYPRE_StructHybridCreate(pg->getComm(), solver);
               hypre_solver_s->solver_type = hybrid;
-              hypre_solver_s->created_solver=true;
+              hypre_solver_s->created_solver = true;
             }
 
             HYPRE_StructHybridSetDSCGMaxIter   (*solver, 100);
@@ -874,9 +875,9 @@ namespace Uintah {
 
             if ( timeStep == 1 || restart ) {
               setupPrecond(pg, precond, precond_setup, *precond_solver,
-              precond_tolerance,precond_solver_type);
+                           precond_tolerance,precond_solver_type);
               hypre_solver_s->precond_solver_type = precond_solver_type;
-              hypre_solver_s->created_precond_solver=true;
+              hypre_solver_s->created_precond_solver = true;
               HYPRE_StructHybridSetPrecond(*solver,
                                            (HYPRE_PtrToStructSolverFcn)precond,
                                            (HYPRE_PtrToStructSolverFcn)precond_setup,
@@ -887,7 +888,7 @@ namespace Uintah {
               setupPrecond(pg, precond, precond_setup, *precond_solver,
                            precond_tolerance,precond_solver_type);
               hypre_solver_s->precond_solver_type = precond_solver_type;
-              hypre_solver_s->created_precond_solver=true;
+              hypre_solver_s->created_precond_solver = true;
               HYPRE_StructHybridSetPrecond(*solver,
                                            (HYPRE_PtrToStructSolverFcn)precond,
                                            (HYPRE_PtrToStructSolverFcn)precond_setup,
@@ -935,7 +936,7 @@ namespace Uintah {
               setupPrecond(pg, precond, precond_setup, *precond_solver,
                            precond_tolerance,precond_solver_type);
               hypre_solver_s->precond_solver_type = precond_solver_type;
-              hypre_solver_s->created_precond_solver=true;
+              hypre_solver_s->created_precond_solver = true;
               HYPRE_StructGMRESSetPrecond(*solver, precond, precond_setup,
                                           *precond_solver);
             }
@@ -944,7 +945,7 @@ namespace Uintah {
               setupPrecond(pg, precond, precond_setup, *precond_solver,
                            precond_tolerance,precond_solver_type);
               hypre_solver_s->precond_solver_type = precond_solver_type;
-              hypre_solver_s->created_precond_solver=true;
+              hypre_solver_s->created_precond_solver = true;
               HYPRE_StructGMRESSetPrecond(*solver, precond, precond_setup,
                                           *precond_solver);
             }
@@ -977,13 +978,19 @@ namespace Uintah {
           //__________________________________
           // Test for convergence
           if ( final_res_norm > params->tolerance || std::isfinite(final_res_norm) == 0 ) {
-            if ( params->getRestartTimestepOnFailure() ){
-              if ( pg->myRank() == 0 )
+            if ( params->getRestartTimestepOnFailure() ) {
+
+#ifdef _OPENMP
+              if ( pg->myRank() == 0 && omp_get_thread_num() == 0 ) {
+#else
+              if ( pg->myRank() == 0 ) {
+#endif
                 cout << "HypreSolver not converged in " << num_iterations
                      << "iterations, final residual= "  << final_res_norm
                      << ", requesting smaller timestep\n";
                 //new_dw->abortTimestep();
                 //new_dw->restartTimestep();
+              }
             }
             else {
               throw ConvergenceFailure("HypreSolver variable: "+X_label->getName()+", solver: "+params->solvertype+", preconditioner: "+params->precondtype,
@@ -1051,9 +1058,9 @@ namespace Uintah {
           timer.stop();
 
 #ifdef _OPENMP
-          if (pg->myRank() == 0 && omp_get_thread_num() == 0) {
+          if ( pg->myRank() == 0 && omp_get_thread_num() == 0 ) {
 #else
-          if (pg->myRank() == 0) {
+          if ( pg->myRank() == 0 ) {
 #endif
             cout << "Solve of "        << X_label->getName()
                  << " on level "       << level->getIndex()
