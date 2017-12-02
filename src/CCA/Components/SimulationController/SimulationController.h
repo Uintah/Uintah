@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_HOMEBREW_SIMULATIONCONTROLLER_H
-#define UINTAH_HOMEBREW_SIMULATIONCONTROLLER_H
+#ifndef CCA_COMPONENTS_SIMULATIONCONTROLLER_SIMULATIONCONTROLLER_H
+#define CCA_COMPONENTS_SIMULATIONCONTROLLER_SIMULATIONCONTROLLER_H
 
 #include <CCA/Components/SimulationController/RunTimeStatsEnums.h>
 
@@ -64,20 +64,23 @@ class  SimulationTime;
 /**************************************
 
  CLASS
- WallTimer
+   WallTimer
 
  KEYWORDS
- Util, Wall Timers
+   Util, Wall Timers
 
  DESCRIPTION
- Utility class to manage the Wall Time.
+   Utility class to manage the Wall Time.
 
  ****************************************/
 
 class WallTimers {
 
+
 public:
-  WallTimers() { d_nSamples = 0; d_wallTimer.start(); };
+
+  WallTimers() { m_num_samples = 0; m_wall_timer.start(); };
+
 
 public:
 
@@ -87,37 +90,39 @@ public:
   Timers::Simple InSitu;             // In-situ time for previous time step
 
   int    getWindow( void ) { return AVERAGE_WINDOW; };
-  void resetWindow( void ) { d_nSamples = 0; };
+  void resetWindow( void ) { m_num_samples = 0; };
   
-  Timers::nanoseconds updateExpMovingAverage( void )
-  {
+  Timers::nanoseconds updateExpMovingAverage( void ) {
+
     Timers::nanoseconds laptime = TimeStep.lap();
     
-    // Ignore the first sample as that is for initalization.
-    if( d_nSamples )
-    {
-      // Calulate the exponential moving average for this time step.
+    // Ignore the first sample as that is for initialization.
+    if( m_num_samples ) {
+      // Calculate the exponential moving average for this time step.
       // Multiplier: (2 / (Time periods + 1) )
       // EMA: {current - EMA(previous)} x multiplier + EMA(previous).
       
-      double mult = 2.0 / ((double) std::min(d_nSamples, AVERAGE_WINDOW) + 1.0);
+      double mult = 2.0 / ((double) std::min(m_num_samples, AVERAGE_WINDOW) + 1.0);
       
       ExpMovingAverage = mult * laptime + (1.0-mult) * ExpMovingAverage();
     }
-    else
+    else {
       ExpMovingAverage = laptime;
+    }
       
-    ++d_nSamples;
+    ++m_num_samples;
 
     return laptime;
-  }
 
-  double GetWallTime() { return d_wallTimer().seconds(); };
+  } // end Timers::nanoseconds
+
+  double GetWallTime() { return m_wall_timer().seconds(); };
+
 
 private:
-  int d_nSamples;        // Number of samples for the moving average
 
-  Timers::Simple d_wallTimer;
+  int              m_num_samples;        // Number of samples for the moving average
+  Timers::Simple   m_wall_timer;
 };
 
 
@@ -143,7 +148,7 @@ private:
        Simulation_Controller
       
   DESCRIPTION
-       Abstract baseclass for the SimulationControllers.
+       Abstract base class for the SimulationControllers.
        Introduced to make the "old" SimulationController
        and the new AMRSimulationController interchangeable.
      
@@ -155,38 +160,42 @@ private:
 //! entire simulation. 
 class SimulationController : public UintahParallelComponent {
 
+
 public:
-  SimulationController( const ProcessorGroup* myworld, ProblemSpecP pspec );
+
+  SimulationController( const ProcessorGroup * myworld, ProblemSpecP pspec );
+
   virtual ~SimulationController();
 
   //! Notifies (before calling run) the SimulationController
   //! that this is simulation is a restart.
-  void doRestart( const std::string& restartFromDir,
-                  int           timeStep,
-                  bool          fromScratch,
-                  bool          removeOldDir );
+  void doRestart( const std::string & restartFromDir
+                ,       int           timeStep
+                ,       bool          fromScratch
+                ,       bool          removeOldDir
+                );
 
   //! Execute the simulation
   virtual void run() = 0;
 
   //  sets simulationController flags
-  void setPostProcessFlags( const std::string& fromDir );
+  void setPostProcessFlags( const std::string & fromDir );
      
-  ProblemSpecP         getProblemSpecP() { return d_ups; }
-  ProblemSpecP         getGridProblemSpecP() { return d_grid_ps; }
-  SchedulerP           getSchedulerP() { return d_scheduler; }
-  LoadBalancerPort*    getLoadBalancer() { return d_lb; }
-  Output*              getOutput() { return d_output; }
-  ApplicationInterface* getApplicationInterface() { return d_app; }
-  Regridder*           getRegridder() { return d_regridder; }
+  ProblemSpecP          getProblemSpecP() { return m_ups; }
+  ProblemSpecP          getGridProblemSpecP() { return m_grid_ps; }
+  SchedulerP            getSchedulerP() { return m_scheduler; }
+  LoadBalancerPort*     getLoadBalancer() { return m_lb; }
+  Output*               getOutput() { return m_output; }
+  ApplicationInterface* getApplicationInterface() { return m_app; }
+  Regridder*            getRegridder() { return m_regridder; }
+  WallTimers*           getWallTimers() { return &m_wall_timers; }
 
-  WallTimers*          getWallTimers() { return &walltimers; }
-
-  bool getRecompileTaskGraph() const { return d_recompileTaskGraph; }
-  void setRecompileTaskGraph(bool val) { d_recompileTaskGraph = val; }
+  bool getRecompileTaskGraph() const { return m_recompile_taskgraph; }
+  void setRecompileTaskGraph(bool val) { m_recompile_taskgraph = val; }
 
   void releaseComponents();
   
+
 protected:
 
   void getComponents();
@@ -207,46 +216,44 @@ protected:
   void getMemoryStats( bool create = false );
   void getPAPIStats  ( );
   
-  ProblemSpecP         d_ups{nullptr};
-  ProblemSpecP         d_grid_ps{nullptr};       // Problem Spec for the Grid
-  ProblemSpecP         d_restart_ps{nullptr};    // Problem Spec for restarting
-  SchedulerP           d_scheduler{nullptr};
-  LoadBalancerPort*    d_lb{nullptr};
-  Output*              d_output{nullptr};
-  ApplicationInterface* d_app{nullptr};
-  Regridder*           d_regridder{nullptr};
-  DataArchive*         d_restart_archive{nullptr};     // Only used when restarting: Data from UDA we are restarting from.
+  ProblemSpecP           m_ups{nullptr};
+  ProblemSpecP           m_grid_ps{nullptr};       // Problem Spec for the Grid
+  ProblemSpecP           m_restart_ps{nullptr};    // Problem Spec for restarting
+  SchedulerP             m_scheduler{nullptr};
+  GridP                  m_current_gridP{nullptr};
+  LoadBalancerPort     * m_lb{nullptr};
+  Output               * m_output{nullptr};
+  ApplicationInterface * m_app{nullptr};
+  Regridder            * m_regridder{nullptr};
+  DataArchive          * m_restart_archive{nullptr};     // Only used when restarting: Data from UDA we are restarting from.
 
-  GridP                d_currentGridP;
-
-  bool d_do_multi_taskgraphing{false};
-  int  d_rad_calc_frequency{1};
+  bool m_do_multi_taskgraphing{false};
     
-  WallTimers walltimers;
+  WallTimers m_wall_timers;
 
   /* For restarting */
-  bool        d_restarting{false};
-  std::string d_fromDir;
-  int         d_restartTimeStep{0};
-  int         d_restartIndex{0};
-  int         d_last_recompile_timeStep{0};
-  bool        d_postProcessUda{false};
+  bool        m_restarting{false};
+  std::string m_from_dir;
+  int         m_restart_timestep{0};
+  int         m_restart_index{0};
+  int         m_last_recompile_timeStep{0};
+  bool        m_post_process_uda{false};
       
-  // If d_restartFromScratch is true then don't copy or move any of
+  // If m_restart_from_scratch is true then don't copy or move any of
   // the old time steps or dat files from the old directory.  Run as
   // as if it were running from scratch but with initial conditions
   // given by the restart checkpoint.
-  bool d_restartFromScratch{false};
+  bool m_restart_from_scratch{false};
 
-  // If !d_restartFromScratch, then this indicates whether to move
-  // or copy the old time steps.
-  bool d_restartRemoveOldDir{false};
+  // If !m_restart_from_scratch, then this indicates whether to move or copy the old time steps.
+  bool m_restart_remove_old_dir{false};
 
-  bool d_recompileTaskGraph{false};
+  bool m_recompile_taskgraph{false};
   
   // Runtime stat mappers.
-  ReductionInfoMapper< RunTimeStatsEnum, double > d_runTimeStats;
-  ReductionInfoMapper< unsigned int,     double > d_otherStats;
+  ReductionInfoMapper< RunTimeStatsEnum, double > m_runtime_stats;
+  ReductionInfoMapper< unsigned int,     double > m_other_stat;
+
 
 #ifdef USE_PAPI_COUNTERS
   int         m_papi_event_set;            // PAPI event set
@@ -268,22 +275,24 @@ protected:
   std::map<int, PapiEvent>   m_papi_events;
 #endif
 
+
 #ifdef HAVE_VISIT
 public:
-  void setVisIt( unsigned int val ) { d_doVisIt = val; }
-  unsigned int  getVisIt() { return d_doVisIt; }
+  void setVisIt( unsigned int val ) { m_do_visit = val; }
+  unsigned int  getVisIt() { return m_do_visit; }
 
   bool CheckInSitu( visit_simulation_data *visitSimData, bool first );
 
   const ReductionInfoMapper< RunTimeStatsEnum, double > getRunTimeStats() const
-  { return d_runTimeStats; };
+  { return m_runtime_stats; };
 
   const ReductionInfoMapper< unsigned int,     double > getOtherStats() const
-  { return d_otherStats; };
+  { return m_other_stat; };
 
 protected:
-  unsigned int d_doVisIt;
+  unsigned int m_do_visit;
 #endif
+
 
 private:
 
@@ -294,13 +303,13 @@ private:
   SimulationController& operator=( SimulationController && )      = delete;
 
   // Percent time in overhead samples
-  double overheadValues[OVERHEAD_WINDOW];
-  double overheadWeights[OVERHEAD_WINDOW];
-  int    overheadIndex{0}; // Next sample for writing
+  double m_overhead_values[OVERHEAD_WINDOW];
+  double m_overhead_weights[OVERHEAD_WINDOW];
+  int    m_overhead_index{0}; // Next sample for writing
+  int    m_num_samples{0};
 
-  int    d_nSamples{0};
 };
 
-} // End namespace Uintah
+} // end namespace Uintah
 
 #endif // CCA_COMPONENTS_SIMULATIONCONTROLLER_SIMULATIONCONTROLLER_H

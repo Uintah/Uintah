@@ -39,6 +39,7 @@
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Util/DOUT.hpp>
 
 #include <CCA/Ports/LoadBalancerPort.h>
 #include <CCA/Ports/Output.h>
@@ -56,6 +57,7 @@
 #include <iomanip>
 #include <iostream>
 #include <map>
+#include <sstream>
 #include <sys/param.h>
 #include <vector>
 
@@ -69,39 +71,30 @@
 
 using namespace std;
 
-static Uintah::DebugStream dbg(     "SimulationStats",            true  );
-static Uintah::DebugStream dbgTime( "SimulationTimeStats",        false );
-static Uintah::DebugStream simdbg(  "SimulationController",       false );
-static Uintah::DebugStream stats(   "ComponentTimings",           false );
-static Uintah::DebugStream istats(  "IndividualComponentTimings", false );
-extern Uintah::DebugStream amrout;
+namespace {
+
+Uintah::Dout g_sim_stats(         "SimulationStats",            true  );
+Uintah::Dout g_sim_time_stats(    "SimulationTimeStats",        false );
+Uintah::Dout g_sim_ctrl_dbg(      "SimulationController",       false );
+Uintah::Dout g_comp_timings(      "ComponentTimings",           false );
+Uintah::Dout g_indv_comp_timings( "IndividualComponentTimings", false );
+
+}
 
 namespace Uintah {
 
-SimulationController::SimulationController( const ProcessorGroup * myworld,
-                                                  ProblemSpecP     prob_spec )
-  : UintahParallelComponent( myworld ), d_ups( prob_spec )
+SimulationController::SimulationController( const ProcessorGroup * myworld
+                                          ,       ProblemSpecP     prob_spec
+                                          )
+  : UintahParallelComponent( myworld ), m_ups( prob_spec )
 {
   //initialize the overhead percentage
-  overheadIndex = 0;
   for( int i = 0; i < OVERHEAD_WINDOW; ++i ) {
     double x = (double) i / (double) (OVERHEAD_WINDOW/2);
-    overheadValues[i]  = 0;
-    overheadWeights[i] = 8.0 - x*x*x;
+    m_overhead_values[i]  = 0;
+    m_overhead_weights[i] = 8.0 - x*x*x;
   }
-
-  d_nSamples               = 0;
-  d_recompileTaskGraph     = false;
-  
-  d_restarting             = false;
-  d_postProcessUda         = false;
-  d_do_multi_taskgraphing  = false;
-  d_restart_archive        = nullptr;
-  d_app                    = 0;
-
-  d_grid_ps                = d_ups->findBlock( "Grid" );
-
-  d_restart_ps             = 0;
+  m_grid_ps                = m_ups->findBlock( "Grid" );
   
 #ifdef USE_PAPI_COUNTERS
   /*
@@ -225,58 +218,57 @@ SimulationController::SimulationController( const ProcessorGroup * myworld,
   std::string timeStr("seconds");
   std::string bytesStr("MBytes");
     
-  d_runTimeStats.insert( CompilationTime,           std::string("Compilation"),           timeStr, 0 );
-  d_runTimeStats.insert( RegriddingTime,            std::string("Regridding"),            timeStr, 0 );
-  d_runTimeStats.insert( RegriddingCompilationTime, std::string("RegriddingCompilation"), timeStr, 0 );
-  d_runTimeStats.insert( RegriddingCopyDataTime,    std::string("RegriddingCopyData"),    timeStr, 0 );
-  d_runTimeStats.insert( LoadBalancerTime,          std::string("LoadBalancer"),          timeStr, 0 );
+  m_runtime_stats.insert( CompilationTime,           std::string("Compilation"),           timeStr, 0 );
+  m_runtime_stats.insert( RegriddingTime,            std::string("Regridding"),            timeStr, 0 );
+  m_runtime_stats.insert( RegriddingCompilationTime, std::string("RegriddingCompilation"), timeStr, 0 );
+  m_runtime_stats.insert( RegriddingCopyDataTime,    std::string("RegriddingCopyData"),    timeStr, 0 );
+  m_runtime_stats.insert( LoadBalancerTime,          std::string("LoadBalancer"),          timeStr, 0 );
 
-  d_runTimeStats.insert( TaskExecTime,       std::string("TaskExec"),           timeStr, 0 );
-  d_runTimeStats.insert( TaskLocalCommTime,  std::string("TaskLocalComm"),      timeStr, 0 );
-  d_runTimeStats.insert( TaskWaitCommTime,   std::string("TaskWaitCommTime"),   timeStr, 0 );
-  d_runTimeStats.insert( TaskReduceCommTime, std::string("TaskReduceCommTime"), timeStr, 0 );
-  d_runTimeStats.insert( TaskWaitThreadTime, std::string("TaskWaitThread"),     timeStr, 0 );
+  m_runtime_stats.insert( TaskExecTime,              std::string("TaskExec"),              timeStr, 0 );
+  m_runtime_stats.insert( TaskLocalCommTime,         std::string("TaskLocalComm"),         timeStr, 0 );
+  m_runtime_stats.insert( TaskWaitCommTime,          std::string("TaskWaitCommTime"),      timeStr, 0 );
+  m_runtime_stats.insert( TaskReduceCommTime,        std::string("TaskReduceCommTime"),    timeStr, 0 );
+  m_runtime_stats.insert( TaskWaitThreadTime,        std::string("TaskWaitThread"),        timeStr, 0 );
 
-  d_runTimeStats.insert( XMLIOTime,          std::string("XMLIO"),            timeStr, 0 );
-  d_runTimeStats.insert( OutputIOTime,       std::string("OutputIO"),         timeStr, 0 );
-  d_runTimeStats.insert( ReductionIOTime,    std::string("ReductionIO"),      timeStr, 0 );
-  d_runTimeStats.insert( CheckpointIOTime,   std::string("CheckpointIO"),     timeStr, 0 );
-  d_runTimeStats.insert( CheckpointReductionIOTime, std::string("CheckpointReductionIO"),     timeStr, 0 );
-  d_runTimeStats.insert( TotalIOTime,        std::string("TotalIO"),          timeStr, 0 );
+  m_runtime_stats.insert( XMLIOTime,                 std::string("XMLIO"),                 timeStr, 0 );
+  m_runtime_stats.insert( OutputIOTime,              std::string("OutputIO"),              timeStr, 0 );
+  m_runtime_stats.insert( ReductionIOTime,           std::string("ReductionIO"),           timeStr, 0 );
+  m_runtime_stats.insert( CheckpointIOTime,          std::string("CheckpointIO"),          timeStr, 0 );
+  m_runtime_stats.insert( CheckpointReductionIOTime, std::string("CheckpointReductionIO"), timeStr, 0 );
+  m_runtime_stats.insert( TotalIOTime,               std::string("TotalIO"),               timeStr, 0 );
 
-  d_runTimeStats.insert( OutputIORate,       std::string("OutputIORate"),     "MBytes/sec", 0 );
-  d_runTimeStats.insert( ReductionIORate,    std::string("ReductionIORate"),  "MBytes/sec", 0 );
-  d_runTimeStats.insert( CheckpointIORate,   std::string("CheckpointIORate"), "MBytes/sec", 0 );
-  d_runTimeStats.insert( CheckpointReducIORate, std::string("CheckpointReducIORate"), "MBytes/sec", 0 );
+  m_runtime_stats.insert( OutputIORate,              std::string("OutputIORate"),     "MBytes/sec", 0 );
+  m_runtime_stats.insert( ReductionIORate,           std::string("ReductionIORate"),  "MBytes/sec", 0 );
+  m_runtime_stats.insert( CheckpointIORate,          std::string("CheckpointIORate"), "MBytes/sec", 0 );
+  m_runtime_stats.insert( CheckpointReducIORate,     std::string("CheckpointReducIORate"), "MBytes/sec", 0 );
 
-  d_runTimeStats.insert( SCIMemoryUsed,      std::string("SCIMemoryUsed"),      bytesStr, 0 );
-  d_runTimeStats.insert( SCIMemoryMaxUsed,   std::string("SCIMemoryMaxUsed"),   bytesStr, 0 );
-  d_runTimeStats.insert( SCIMemoryHighwater, std::string("SCIMemoryHighwater"), bytesStr, 0 );
-  d_runTimeStats.insert( MemoryUsed,         std::string("MemoryUsed"),         bytesStr, 0 );
-  d_runTimeStats.insert( MemoryResident,     std::string("MemoryResident"),     bytesStr, 0 );
+  m_runtime_stats.insert( SCIMemoryUsed,             std::string("SCIMemoryUsed"),         bytesStr, 0 );
+  m_runtime_stats.insert( SCIMemoryMaxUsed,          std::string("SCIMemoryMaxUsed"),      bytesStr, 0 );
+  m_runtime_stats.insert( SCIMemoryHighwater,        std::string("SCIMemoryHighwater"),    bytesStr, 0 );
+  m_runtime_stats.insert( MemoryUsed,                std::string("MemoryUsed"),            bytesStr, 0 );
+  m_runtime_stats.insert( MemoryResident,            std::string("MemoryResident"),        bytesStr, 0 );
 
 #ifdef USE_PAPI_COUNTERS
-  d_runTimeStats.insert( TotalFlops,  std::string("TotalFlops") , "FLOPS" , 0 );
-  d_runTimeStats.insert( TotalVFlops, std::string("TotalVFlops"), "FLOPS" , 0 );
-  d_runTimeStats.insert( L2Misses,    std::string("L2Misses")   , "misses", 0 );
-  d_runTimeStats.insert( L3Misses,    std::string("L3Misses")   , "misses", 0 );
-  d_runTimeStats.insert( TLBMisses,   std::string("TLBMisses")  , "misses", 0 );
+  m_runtime_stats.insert( TotalFlops,  std::string("TotalFlops") , "FLOPS" , 0 );
+  m_runtime_stats.insert( TotalVFlops, std::string("TotalVFlops"), "FLOPS" , 0 );
+  m_runtime_stats.insert( L2Misses,    std::string("L2Misses")   , "misses", 0 );
+  m_runtime_stats.insert( L3Misses,    std::string("L3Misses")   , "misses", 0 );
+  m_runtime_stats.insert( TLBMisses,   std::string("TLBMisses")  , "misses", 0 );
 #endif
 
-  d_runTimeStats.validate( MAX_TIMING_STATS );
+  m_runtime_stats.validate( MAX_TIMING_STATS );
 
   ResetStats();
 
-#ifdef HAVE_VISIT
-  d_doVisIt = false;
-#endif     
 } // end SimulationController constructor
 
 //______________________________________________________________________
 //
 SimulationController::~SimulationController()
 {
-  delete d_restart_archive;
+  if (m_restart_archive) {
+    delete m_restart_archive;
+  }
 
 #ifdef USE_PAPI_COUNTERS
   delete m_papi_event_values;
@@ -288,8 +280,8 @@ SimulationController::~SimulationController()
 void
 SimulationController::setPostProcessFlags( const string & fromDir )
 {
-  d_postProcessUda   = true;
-  d_fromDir          = fromDir;
+  m_post_process_uda  = true;
+  m_from_dir          = fromDir;
 }
 
 //______________________________________________________________________
@@ -297,32 +289,28 @@ SimulationController::setPostProcessFlags( const string & fromDir )
 void
 SimulationController::getComponents( void )
 {
-  d_app = dynamic_cast<ApplicationInterface*>( getPort( "application" ) );
+  m_app = dynamic_cast<ApplicationInterface*>( getPort( "application" ) );
 
-  if( !d_app ) {
-    throw InternalError("dynamic_cast of 'd_app' failed!",
-                        __FILE__, __LINE__);
+  if( !m_app ) {
+    throw InternalError("dynamic_cast of 'm_app' failed!", __FILE__, __LINE__);
   }
 
-  d_scheduler = dynamic_cast<Scheduler*>( getPort("scheduler") );
+  m_scheduler = dynamic_cast<Scheduler*>( getPort("scheduler") );
 
-  if( !d_scheduler ) {
-    throw InternalError("dynamic_cast of 'd_scheduler' failed!",
-                        __FILE__, __LINE__);
+  if( !m_scheduler ) {
+    throw InternalError("dynamic_cast of 'm_scheduler' failed!", __FILE__, __LINE__);
   }
 
-  d_regridder = dynamic_cast<Regridder*>( getPort("regridder") );
+  m_regridder = dynamic_cast<Regridder*>( getPort("regridder") );
 
-  if( d_app->isDynamicRegridding() && !d_regridder ) {
-    throw InternalError("dynamic_cast of 'd_regridder' failed!",
-                        __FILE__, __LINE__);
+  if( m_app->isDynamicRegridding() && !m_regridder ) {
+    throw InternalError("dynamic_cast of 'm_regridder' failed!", __FILE__, __LINE__);
   }
 
-  d_output = dynamic_cast<Output*>( getPort("output") );
+  m_output = dynamic_cast<Output*>( getPort("output") );
 
-  if( !d_output ) {
-    throw InternalError("dynamic_cast of 'd_output' failed!",
-                        __FILE__, __LINE__);
+  if( !m_output ) {
+    throw InternalError("dynamic_cast of 'm_output' failed!", __FILE__, __LINE__);
   }
 }
 
@@ -336,24 +324,27 @@ SimulationController::releaseComponents( void )
   releasePort( "regridder" );
   releasePort( "output" );
 
-  d_app       = nullptr;
-  d_scheduler = nullptr;
-  d_regridder = nullptr;
-  d_output    = nullptr;
+  m_app       = nullptr;
+  m_scheduler = nullptr;
+  m_regridder = nullptr;
+  m_output    = nullptr;
 }
 
 //______________________________________________________________________
 //
 
 void
-SimulationController::doRestart( const string & restartFromDir, int timeStep,
-                                 bool fromScratch, bool removeOldDir )
+SimulationController::doRestart( const string & restartFromDir
+                               ,       int      timeStep
+                               ,       bool     fromScratch
+                               ,       bool     removeOldDir
+                               )
 {
-  d_restarting          = true;
-  d_fromDir             = restartFromDir;
-  d_restartTimeStep     = timeStep;
-  d_restartFromScratch  = fromScratch;
-  d_restartRemoveOldDir = removeOldDir;
+  m_restarting             = true;
+  m_from_dir               = restartFromDir;
+  m_restart_timestep       = timeStep;
+  m_restart_from_scratch   = fromScratch;
+  m_restart_remove_old_dir = removeOldDir;
 }
 
 //______________________________________________________________________
@@ -362,16 +353,16 @@ void
 SimulationController::restartArchiveSetup( void )
 {
   // Set up the restart archive now as it is need by the output.
-  if( d_restarting ) {
+  if( m_restarting ) {
     // Create the DataArchive here, and store it, as it is used a few
     // times. The grid needs to be read before the ProblemSetup, and
     // not all of the data can be read until after ProblemSetup, so
     // DataArchive operations are needed.
 
-    Dir restartFromDir( d_fromDir );
+    Dir restartFromDir( m_from_dir );
     Dir checkpointRestartDir = restartFromDir.getSubdir( "checkpoints" );
 
-    d_restart_archive = scinew DataArchive( checkpointRestartDir.getName(),
+    m_restart_archive = scinew DataArchive( checkpointRestartDir.getName(),
                                             d_myworld->myRank(),
                                             d_myworld->nRanks() );
 
@@ -379,7 +370,7 @@ SimulationController::restartArchiveSetup( void )
     vector<double> times;
 
     try {
-      d_restart_archive->queryTimesteps( indices, times );
+      m_restart_archive->queryTimesteps( indices, times );
     }
     catch( InternalError & ie ) {
       cerr << "\n";
@@ -394,35 +385,32 @@ SimulationController::restartArchiveSetup( void )
     }
 
     // Find the right time to query the grid
-    if (d_restartTimeStep == 0) {
-      d_restartIndex = 0; // timestep == 0 means use the first timestep
-      // reset d_restartTimestep to what it really is
-      d_restartTimeStep = indices[0];
+    if (m_restart_timestep == 0) {
+      m_restart_index    = 0;          // timestep == 0 means use the first timestep
+      m_restart_timestep = indices[0]; // reset m_restart_timestep to what it really is
     }
-    else if (d_restartTimeStep == -1 && indices.size() > 0) {
-      d_restartIndex = (unsigned int)(indices.size() - 1); 
-      // reset d_restartTimeStep to what it really is
-      d_restartTimeStep = indices[indices.size() - 1];
+    else if (m_restart_timestep == -1 && indices.size() > 0) {
+      m_restart_index    = (unsigned int)(indices.size() - 1);
+      m_restart_timestep = indices[indices.size() - 1]; // reset m_restart_timestep to what it really is
     }
     else {
       for (int index = 0; index < (int)indices.size(); index++)
-        if (indices[index] == d_restartTimeStep) {
-          d_restartIndex = index;
+        if (indices[index] == m_restart_timestep) {
+          m_restart_index = index;
           break;
         }
     }
       
-    if (d_restartIndex == (int) indices.size()) {
+    if (m_restart_index == (int) indices.size()) {
       // timestep not found
       ostringstream message;
-      message << "Time step " << d_restartTimeStep << " not found";
+      message << "Time step " << m_restart_timestep << " not found";
       throw InternalError(message.str(), __FILE__, __LINE__);
     }
 
     // Do this call before calling DataArchive::restartInitialize,
     // because problemSetup() creates VarLabels the DataArchive needs.
-    d_restart_ps =
-      d_restart_archive->getTimestepDocForComponent( d_restartIndex );
+    m_restart_ps = m_restart_archive->getTimestepDocForComponent( m_restart_index );
   }
 }
 
@@ -431,11 +419,10 @@ SimulationController::restartArchiveSetup( void )
 void
 SimulationController::outputSetup( void )
 {  
-  // Set up the output - needs to be done before the application is
-  // setup.
-  d_output->setRunTimeStats( &d_runTimeStats );
+  // Set up the output - needs to be done before the application is setup.
+  m_output->setRunTimeStats( &m_runtime_stats );
 
-  d_output->problemSetup( d_ups, d_restart_ps, d_app->getSimulationStateP() );
+  m_output->problemSetup( m_ups, m_restart_ps, m_app->getSimulationStateP() );
 }
 
 //______________________________________________________________________
@@ -444,7 +431,7 @@ void
 SimulationController::gridSetup( void )
 {
   // Set up the grid.
-  if( d_restarting ) {
+  if( m_restarting ) {
     // tsaad & bisaac: At this point, and during a restart, there not
     // legitimate load balancer. This means that the grid obtained
     // from the data archiver will global domain BCs on every MPI Rank
@@ -456,11 +443,10 @@ SimulationController::gridSetup( void )
     // conditions. Once that is done, a legitimate load balancer will
     // be created later on - after which we use said balancer and
     // assign BCs to the grid.  NOTE the "false" argument below.
-    d_currentGridP =
-      d_restart_archive->queryGrid( d_restartIndex, d_ups, false );
+    m_current_gridP = m_restart_archive->queryGrid( m_restart_index, m_ups, false );
   }
-  else /* if( !d_restarting ) */ {
-    d_currentGridP = scinew Grid();
+  else /* if( !m_restarting ) */ {
+    m_current_gridP = scinew Grid();
 
     // The call to preGridProblemSetup() by the simulation interface
     // allows for a call to grid->setExtraCells() to be made before
@@ -474,22 +460,21 @@ SimulationController::gridSetup( void )
     // though it does not follow normal paradigm of calling
     // problemSetup immediately after a component or other object is
     // created.
-    d_app->preGridProblemSetup( d_ups, d_currentGridP );
+    m_app->preGridProblemSetup( m_ups, m_current_gridP );
 
     // Now that the simulation interface has made its changes do the
     // normal grid problemSetup()
-    d_currentGridP->problemSetup( d_ups, d_myworld, d_app->isAMR() );
+    m_current_gridP->problemSetup( m_ups, d_myworld, m_app->isAMR() );
   }
 
-  if( d_currentGridP->numLevels() == 0 ) {
-    throw InternalError("No problem (no levels in grid) specified.",
-                        __FILE__, __LINE__);
+  if( m_current_gridP->numLevels() == 0 ) {
+    throw InternalError("No problem (no levels in grid) specified.", __FILE__, __LINE__);
   }
 
   // Print out meta data
   if ( d_myworld->myRank() == 0 ) {
-    d_currentGridP->printStatistics();
-    amrout << "Restart grid\n" << *d_currentGridP.get_rep() << "\n";
+    m_current_gridP->printStatistics();
+//    DOUT(true, "Restart grid\n" << *m_current_gridP.get_rep());
   }
 }
 
@@ -500,11 +485,10 @@ SimulationController::regridderSetup( void )
 {
   // Set up the regridder.
 
-  // Do this step before fully setting up the application interface so
-  // that Switcher (being a simulation interface) can reset the state
-  // of the regridder.
-  if( d_regridder ) {
-    d_regridder->problemSetup( d_ups, d_currentGridP, d_app->getSimulationStateP() );
+  // Do this step before fully setting up the application interface so that the
+  // Switcher (being an application) can reset the state of the regridder.
+  if( m_regridder ) {
+    m_regridder->problemSetup( m_ups, m_current_gridP, m_app->getSimulationStateP() );
   }
 }
 
@@ -514,17 +498,17 @@ void
 SimulationController::schedulerSetup( void )
 {
   // Now that the grid is completely set up, set up the scheduler.
-  d_scheduler->setRunTimeStats( &d_runTimeStats );
+  m_scheduler->setRunTimeStats( &m_runtime_stats );
 
-  d_scheduler->problemSetup( d_ups, d_app->getSimulationStateP() );
+  m_scheduler->problemSetup( m_ups, m_app->getSimulationStateP() );
 
   // Additional set up calls.
-  d_scheduler->setInitTimestep( true );
-  d_scheduler->setRestartInitTimestep( d_restarting );
-  d_scheduler->initialize( 1, 1 );
-  d_scheduler->clearTaskMonitoring();
+  m_scheduler->setInitTimestep( true );
+  m_scheduler->setRestartInitTimestep( m_restarting );
+  m_scheduler->initialize( 1, 1 );
+  m_scheduler->clearTaskMonitoring();
 
-  d_scheduler->advanceDataWarehouse( d_currentGridP, true );
+  m_scheduler->advanceDataWarehouse( m_current_gridP, true );
 }
 
 //______________________________________________________________________
@@ -533,22 +517,21 @@ void
 SimulationController::loadBalancerSetup( void )
 {
   // Set up the load balancer.
-  d_lb = d_scheduler->getLoadBalancer();
+  m_lb = m_scheduler->getLoadBalancer();
 
-  d_lb->setRunTimeStats( &d_runTimeStats );
+  m_lb->setRunTimeStats( &m_runtime_stats );
 
   //  Set the dimensionality of the problem.
   IntVector low, high, size;
-  d_currentGridP->getLevel(0)->findCellIndexRange(low, high);
+  m_current_gridP->getLevel(0)->findCellIndexRange(low, high);
 
-  size = high - low -
-    d_currentGridP->getLevel(0)->getExtraCells()*IntVector(2,2,2);
+  size = high - low - m_current_gridP->getLevel(0)->getExtraCells()*IntVector(2,2,2);
   
-  d_lb->setDimensionality(size[0] > 1, size[1] > 1, size[2] > 1);
+  m_lb->setDimensionality(size[0] > 1, size[1] > 1, size[2] > 1);
  
   // In addition, do this step after regridding setup as the minimum
   // patch size that the regridder will create will be known.
-  d_lb->problemSetup( d_ups, d_currentGridP, d_app->getSimulationStateP() );
+  m_lb->problemSetup( m_ups, m_current_gridP, m_app->getSimulationStateP() );
 }
 
 //______________________________________________________________________
@@ -556,17 +539,17 @@ SimulationController::loadBalancerSetup( void )
 void
 SimulationController::applicationSetup( void )
 {
-  d_app->getComponents();
+  m_app->getComponents();
 
-  // Pass the d_restart_ps to the component's problemSetup.  For
-  // restarting, pull the <MaterialProperties> from the d_restart_ps.
+  // Pass the m_restart_ps to the component's problemSetup.  For
+  // restarting, pull the <MaterialProperties> from the m_restart_ps.
   // If the properties are not available, then pull the properties
-  // from the d_ups instead.  This step needs to be done before
+  // from the m_ups instead.  This step needs to be done before
   // DataArchive::restartInitialize.
-  d_app->problemSetup(d_ups, d_restart_ps, d_currentGridP);
+  m_app->problemSetup(m_ups, m_restart_ps, m_current_gridP);
 
   // Finalize the shared state/materials
-  d_app->getSimulationStateP()->finalizeMaterials();
+  m_app->getSimulationStateP()->finalizeMaterials();
 }
 
 
@@ -576,39 +559,40 @@ void
 SimulationController::timeStateSetup()
 {
   // Restarting so initialize time state using the archive data.
-  if( d_restarting ) {
-    simdbg << "Restarting... loading data\n";
+  if( m_restarting ) {
+
+    DOUT(g_sim_ctrl_dbg, "Restarting... loading data");
 
     double simTimeStart;
     
-    d_restart_archive->restartInitialize( d_restartIndex,
-                                          d_currentGridP,
-                                          d_scheduler->get_dw(1),
-                                          d_lb,
+    m_restart_archive->restartInitialize( m_restart_index,
+                                          m_current_gridP,
+                                          m_scheduler->get_dw(1),
+                                          m_lb,
                                           &simTimeStart );
 
     // Set the time step to the restart time step.
-    d_app->setTimeStep( d_restartTimeStep );
+    m_app->setTimeStep( m_restart_timestep );
 
     // Set the simulation time to the restart simulation time.
-    d_app->setSimTimeStart( simTimeStart );
+    m_app->setSimTimeStart( simTimeStart );
 
     // Set the delta T to the restart delta T.
-    d_app->restartDelT( d_restart_archive->getOldDelt( d_restartIndex ) );
+    m_app->restartDelT( m_restart_archive->getOldDelt( m_restart_index ) );
     
     // Tell the scheduler the generation of the re-started simulation.
     // (Add +1 because the scheduler will be starting on the next
     // time step.)
-    d_scheduler->setGeneration( d_restartTimeStep + 1 );
+    m_scheduler->setGeneration( m_restart_timestep + 1 );
       
     // This delete is an enigma. If it is called then memory is not
     // leaked, but sometimes if is called, then everything segfaults.
-    // delete d_restart_archive;
+    // delete m_restart_archive;
   }
-  else /* if( !d_restarting ) */ {
-    d_app->setTimeStep( 0 );
-    d_app->setSimTimeStart( 0 );
-    d_app->setDelT( 0 );
+  else /* if( !m_restarting ) */ {
+    m_app->setTimeStep( 0 );
+    m_app->setSimTimeStart( 0 );
+    m_app->setDelT( 0 );
   }
 }
 
@@ -617,35 +601,34 @@ SimulationController::timeStateSetup()
 void
 SimulationController::finalSetup()
 {
-  // This step is done after the call to d_app->problemSetup to get
+  // This step is done after the call to m_app->problemSetup to get
   // the defaults set by the simulation interface into the input.xml,
   // which the output writes along with index.xml
-  d_output->initializeOutput(d_ups);
+  m_output->initializeOutput(m_ups);
 
-  // This step is done after the output is initalized so that global
+  // This step is done after the output is initialized so that global
   // reduction output vars are copied to the new uda. Further, it must
   // be called after timeStateSetup() is call so that checkpoints are
   // copied to the new uda as well.
-  if( d_restarting ) {
-    Dir dir( d_fromDir );
-    d_output->restartSetup( dir, 0, d_restartTimeStep,
-			    d_app->getSimTimeStart(),
-                            d_restartFromScratch, d_restartRemoveOldDir );
+  if( m_restarting ) {
+    Dir dir( m_from_dir );
+    m_output->restartSetup( dir, 0, m_restart_timestep, m_app->getSimTimeStart(),
+                            m_restart_from_scratch, m_restart_remove_old_dir );
   }
 
   // Miscellaneous initializations.
-  ProblemSpecP amr_ps = d_ups->findBlock("AMR");
+  ProblemSpecP amr_ps = m_ups->findBlock("AMR");
   if( amr_ps ) {
-    amr_ps->get( "doMultiTaskgraphing", d_do_multi_taskgraphing );
+    amr_ps->get( "doMultiTaskgraphing", m_do_multi_taskgraphing );
   }
 
 #ifdef HAVE_VISIT
   if( getVisIt() ) {
-    d_app->getDebugStreams().push_back( &dbg );
-    d_app->getDebugStreams().push_back( &dbgTime );
-    d_app->getDebugStreams().push_back( &simdbg );
-    d_app->getDebugStreams().push_back( &stats );
-    d_app->getDebugStreams().push_back( &istats );
+    m_app->getDouts().push_back( &g_sim_stats );
+    m_app->getDouts().push_back( &g_sim_time_stats );
+    m_app->getDouts().push_back( &g_sim_ctrl_dbg );
+    m_app->getDouts().push_back( &g_comp_timings );
+    m_app->getDouts().push_back( &g_indv_comp_timings );
   }
 #endif
 }
@@ -654,8 +637,8 @@ SimulationController::finalSetup()
 //
 void SimulationController::ResetStats( void )
 {
-  d_runTimeStats.reset( 0 );  
-  d_otherStats.reset( 0 );  
+  m_runtime_stats.reset( 0 );
+  m_other_stat.reset( 0 );  
 }
 
 //______________________________________________________________________
@@ -668,139 +651,139 @@ SimulationController::ReportStats( bool header /* = false */ )
   getMemoryStats();
   getPAPIStats();
 
-  d_runTimeStats.reduce(d_regridder &&
-			d_regridder->useDynamicDilation(),
-			d_myworld );
+  m_runtime_stats.reduce( m_regridder && m_regridder->useDynamicDilation(), d_myworld );
   
-  d_otherStats.reduce(d_regridder &&
-		      d_regridder->useDynamicDilation(),
-		      d_myworld );
+  m_other_stat.reduce( m_regridder && m_regridder->useDynamicDilation(), d_myworld );
 
   // Reduce the MPI runtime stats.
-  MPIScheduler * mpiScheduler = dynamic_cast<MPIScheduler*>( d_scheduler.get_rep() );
-
-  if( mpiScheduler )
-    mpiScheduler->mpi_info_.reduce( d_regridder &&
-                                    d_regridder->useDynamicDilation(),
-                                    d_myworld );
+  MPIScheduler * mpiScheduler = dynamic_cast<MPIScheduler*>( m_scheduler.get_rep() );
+  if( mpiScheduler ) {
+    mpiScheduler->mpi_info_.reduce( m_regridder && m_regridder->useDynamicDilation(), d_myworld );
+  }
   
   // Print the stats for this time step
   if( d_myworld->myRank() == 0 && header ) {
-    dbg << std::endl;
-    dbg << "Simulation and run time stats are reported "
-        << "at the end of each time step" << std::endl;
-    dbg << "EMA == Wall time as an exponential moving average "
-        << "using a window of the last " << walltimers.getWindow()
-        << " time steps" << std::endl;
+    std::ostringstream message;
+    message << std::endl;
+    message << "Simulation and run time stats are reported "
+            << "at the end of each time step" << std::endl;
+    message << "EMA == Wall time as an exponential moving average "
+            << "using a window of the last " << m_wall_timers.getWindow()
+            << " time steps" << std::endl;
 
-    dbg.flush();
+    DOUT(g_sim_stats, message.str());
+
     cout.flush();
   }
   
   // With the sum reduces, use double, since with memory it is possible that
   // it will overflow
-  double        avg_memused      = d_runTimeStats.getAverage( SCIMemoryUsed );
-  unsigned long max_memused      = d_runTimeStats.getMaximum( SCIMemoryUsed );
-  int           max_memused_rank = d_runTimeStats.getRank( SCIMemoryUsed );
+  double        avg_memused      = m_runtime_stats.getAverage( SCIMemoryUsed );
+  unsigned long max_memused      = m_runtime_stats.getMaximum( SCIMemoryUsed );
+  int           max_memused_rank = m_runtime_stats.getRank(    SCIMemoryUsed );
 
-  double        avg_highwater      = d_runTimeStats.getAverage( SCIMemoryHighwater );
-  unsigned long max_highwater      = d_runTimeStats.getMaximum( SCIMemoryHighwater );
-  int           max_highwater_rank = d_runTimeStats.getRank( SCIMemoryHighwater );
+  double        avg_highwater      = m_runtime_stats.getAverage( SCIMemoryHighwater );
+  unsigned long max_highwater      = m_runtime_stats.getMaximum( SCIMemoryHighwater );
+  int           max_highwater_rank = m_runtime_stats.getRank(    SCIMemoryHighwater );
     
   // Sum up the average time for overhead related components. These
   // same values are used in SimulationState::getOverheadTime.
   double overhead_time =
-    (d_runTimeStats.getAverage(CompilationTime)           +
-     d_runTimeStats.getAverage(RegriddingTime)            +
-     d_runTimeStats.getAverage(RegriddingCompilationTime) +
-     d_runTimeStats.getAverage(RegriddingCopyDataTime)    +
-     d_runTimeStats.getAverage(LoadBalancerTime));
+    (m_runtime_stats.getAverage(CompilationTime)           +
+     m_runtime_stats.getAverage(RegriddingTime)            +
+     m_runtime_stats.getAverage(RegriddingCompilationTime) +
+     m_runtime_stats.getAverage(RegriddingCopyDataTime)    +
+     m_runtime_stats.getAverage(LoadBalancerTime));
 
   // Sum up the average times for simulation components. These
   // same values are used in SimulationState::getTotalTime.
   double total_time =
     (overhead_time +
-     d_runTimeStats.getAverage(TaskExecTime)       +
-     d_runTimeStats.getAverage(TaskLocalCommTime)  +
-     d_runTimeStats.getAverage(TaskWaitCommTime) +
-     d_runTimeStats.getAverage(TaskReduceCommTime)   +
-     d_runTimeStats.getAverage(TaskWaitThreadTime));
+     m_runtime_stats.getAverage(TaskExecTime)       +
+     m_runtime_stats.getAverage(TaskLocalCommTime)  +
+     m_runtime_stats.getAverage(TaskWaitCommTime)   +
+     m_runtime_stats.getAverage(TaskReduceCommTime) +
+     m_runtime_stats.getAverage(TaskWaitThreadTime));
   
     // Calculate percentage of time spent in overhead.
   double percent_overhead = overhead_time / total_time;
   
   double overheadAverage = 0;
 
-  // Set the overhead percentage. Ignore the first sample as that is
-  // for initalization.
-  if (d_nSamples) {
-    overheadValues[overheadIndex] = percent_overhead;
+  // Set the overhead percentage. Ignore the first sample as that is for initialization.
+  if (m_num_samples) {
+    m_overhead_values[m_overhead_index] = percent_overhead;
 
     double overhead = 0;
     double weight = 0;
 
-    int sample_size = min(d_nSamples, OVERHEAD_WINDOW);
+    int sample_size = min(m_num_samples, OVERHEAD_WINDOW);
 
     // Calculate total weight by incrementing through the overhead
     // sample array backwards and multiplying samples by the weights
     for (int i = 0; i < sample_size; ++i) {
-      unsigned int index = (overheadIndex - i + OVERHEAD_WINDOW) % OVERHEAD_WINDOW;
-      overhead += overheadValues[index] * overheadWeights[i];
-      weight   += overheadWeights[i];
+      unsigned int index = (m_overhead_index - i + OVERHEAD_WINDOW) % OVERHEAD_WINDOW;
+      overhead += m_overhead_values[index] * m_overhead_weights[i];
+      weight   += m_overhead_weights[i];
     }
 
     // Increment the overhead index
-    overheadIndex = (overheadIndex + 1) % OVERHEAD_WINDOW;
+    m_overhead_index = (m_overhead_index + 1) % OVERHEAD_WINDOW;
 
     overheadAverage = overhead / weight;
 
-    if( d_regridder )
-      d_regridder->setOverheadAverage(overheadAverage);
+    if( m_regridder ) {
+      m_regridder->setOverheadAverage(overheadAverage);
+    }
   } 
 
   // Output time step statistics...
-  if (istats.active()) {
-    istats << "Run time performance stats" << std::endl;
+  if (g_indv_comp_timings) {
 
-    for (unsigned int i = 0; i < d_runTimeStats.size(); i++) {
+    std::ostringstream message;
+    message << "Per proc runtime performance stats" << std::endl;
+
+    for (unsigned int i = 0; i < m_runtime_stats.size(); ++i) {
       RunTimeStatsEnum e = (RunTimeStatsEnum) i;
 
-      if (d_runTimeStats[e] > 0) {
-        istats << "rank: " << d_myworld->myRank() << " "
-	       << left << setw(19) << d_runTimeStats.getName(e) << " ["
-               << d_runTimeStats.getUnits(e) << "]: " << d_runTimeStats[e] << "\n";
+      if (m_runtime_stats[e] > 0) {
+        message << "rank: " << d_myworld->myRank() << " "
+	              << left << setw(19) << m_runtime_stats.getName(e) << " ["
+                << m_runtime_stats.getUnits(e) << "]: " << m_runtime_stats[e] << "\n";
       }
     }
 
-    if (d_otherStats.size())
-      istats << "Other performance stats" << std::endl;
+    if (m_other_stat.size()) {
+      message << "Other performance stats" << std::endl;
+    }
 
-    for (unsigned int i = 0; i < d_otherStats.size(); i++) {
-      if (d_otherStats[i] > 0) {
-        istats << "rank: " << d_myworld->myRank() << " "
-	       << left << setw(19) << d_otherStats.getName(i) << " ["
-               << d_otherStats.getUnits(i) << "]: " << d_otherStats[i] << "\n";
+    for (unsigned int i = 0; i < m_other_stat.size(); ++i) {
+      if (m_other_stat[i] > 0) {
+        message << "rank: " << d_myworld->myRank() << " "
+	              << left << setw(19) << m_other_stat.getName(i) << " ["
+                << m_other_stat.getUnits(i) << "]: " << m_other_stat[i] << "\n";
       }
     }
+    DOUT(true, message.str());
   } 
 
   // Update the moving average and get the wall time for this time step.
-  Timers::nanoseconds timeStep = walltimers.updateExpMovingAverage();
+  Timers::nanoseconds timeStep = m_wall_timers.updateExpMovingAverage();
 
   if( d_myworld->myRank() == 0 )
   {
     ostringstream message;
     message << left
-            << "Timestep "   << setw(8)  << d_app->getTimeStep()
-            << "Time="       << setw(12) << d_app->getSimTime()
-//          << "delT="       << setw(12) << d_app->getPrevDelT()
-            << "Next delT="  << setw(12) << d_app->getDelT()
+            << "Timestep "   << setw(8)  << m_app->getTimeStep()
+            << "Time="       << setw(12) << m_app->getSimTime()
+//            << "delT="       << setw(12) << m_app->getPrevDelT()
+            << "Next delT="  << setw(12) << m_app->getDelT()
 
-            << "Wall Time=" << setw(10) << walltimers.GetWallTime()
-            // << "All Time steps= " << setw(12) << walltimers.TimeStep().seconds()
-            // << "Current Time Step= " << setw(12) << timeStep.seconds()
-            << "EMA="        << setw(12) << walltimers.ExpMovingAverage().seconds()
-            // << "In-situ Time = " << setw(12) << walltimers.InSitu().seconds()
+            << "Wall Time=" << setw(10) << m_wall_timers.GetWallTime()
+//            << "All Time steps= " << setw(12) << walltimers.TimeStep().seconds()
+//            << "Current Time Step= " << setw(12) << timeStep.seconds()
+            << "EMA="        << setw(12) << m_wall_timers.ExpMovingAverage().seconds()
+//            << "In-situ Time = " << setw(12) << walltimers.InSitu().seconds()
       ;
 
     // Report on the memory used.
@@ -827,16 +810,18 @@ SimulationController::ReportStats( bool header /* = false */ )
                 << " (max on rank: " << setw(6) << max_highwater_rank << ")";
     }
 
-    dbg << message.str() << "\n";
-    dbg.flush();
+    DOUT(g_sim_stats, message.str());
+
     cout.flush();
 
     // Ignore the first sample as that is for initialization.
-    if (stats.active() && d_nSamples) {
+    if (g_comp_timings&& m_num_samples) {
 
-      stats << "Run time performance stats" << std::endl;
+      std::ostringstream message;
+
+      message << "Run time performance stats" << std::endl;
       
-      stats << "  " << left
+      message << "  " << left
             << setw(21) << "Description"
             << setw(15) << "Units"
             << setw(15) << "Average"
@@ -845,106 +830,103 @@ SimulationController::ReportStats( bool header /* = false */ )
             << setw(13) << "100*(1-ave/max) '% load imbalance'"
             << "\n";
       
-      for (unsigned int i=0; i<d_runTimeStats.size(); ++i)
-      {
+      for (unsigned int i=0; i<m_runtime_stats.size(); ++i) {
         RunTimeStatsEnum e = (RunTimeStatsEnum) i;
         
-        if (d_runTimeStats.getMaximum(e) > 0)
-        {
-          stats << "  " << left
-                << setw(21) << d_runTimeStats.getName(e)
-                << "[" << setw(10) << d_runTimeStats.getUnits(e) << "]"
-                << " : " << setw(12) << d_runTimeStats.getAverage(e)
-                << " : " << setw(12) << d_runTimeStats.getMaximum(e)
-                << " : " << setw(10) << d_runTimeStats.getRank(e)
+        if (m_runtime_stats.getMaximum(e) > 0) {
+          message << "  " << left
+                << setw(21) << m_runtime_stats.getName(e)
+                << "[" << setw(10) << m_runtime_stats.getUnits(e) << "]"
+                << " : " << setw(12) << m_runtime_stats.getAverage(e)
+                << " : " << setw(12) << m_runtime_stats.getMaximum(e)
+                << " : " << setw(10) << m_runtime_stats.getRank(e)
                 << " : " << setw(10)
-                << 100.0 * (1.0 - (d_runTimeStats.getAverage(e) /
-                                   d_runTimeStats.getMaximum(e)))
+                << 100.0 * (1.0 - (m_runtime_stats.getAverage(e) / m_runtime_stats.getMaximum(e)))
                 << "\n";
         }
       }
       
       // Report the overhead percentage.
       if( !std::isnan(overheadAverage) ) {
-        stats << "  Percentage of time spent in overhead : "
-              << overheadAverage * 100.0 <<  "\n";
+        message << "  Percentage of time spent in overhead : " << overheadAverage * 100.0;
       }
 
-      if( d_otherStats.size() )
-        stats << "Other performance stats" << std::endl;
+      if( m_other_stat.size() )
+        message << "Other performance stats" << std::endl;
       
-      for (unsigned int i=0; i<d_otherStats.size(); ++i)
-      {
-        if (d_otherStats.getMaximum(i) > 0)
-        {
-          stats << "  " << left
-                << setw(21) << d_otherStats.getName(i)
-                << "["   << setw(10) << d_otherStats.getUnits(i) << "]"
-                << " : " << setw(12) << d_otherStats.getAverage(i)
-                << " : " << setw(12) << d_otherStats.getMaximum(i)
-                << " : " << setw(10) << d_otherStats.getRank(i)
+      for (unsigned int i=0; i<m_other_stat.size(); ++i) {
+        if (m_other_stat.getMaximum(i) > 0) {
+          message << "  " << left
+                << setw(21) << m_other_stat.getName(i)
+                << "["   << setw(10) << m_other_stat.getUnits(i) << "]"
+                << " : " << setw(12) << m_other_stat.getAverage(i)
+                << " : " << setw(12) << m_other_stat.getMaximum(i)
+                << " : " << setw(10) << m_other_stat.getRank(i)
                 << " : " << setw(10)
-                << 100.0 * (1.0 - (d_otherStats.getAverage(i) / d_otherStats.getMaximum(i)))
+                << 100.0 * (1.0 - (m_other_stat.getAverage(i) / m_other_stat.getMaximum(i)))
                 << "\n";
         }
       }
+      DOUT(true, message.str());
     }
   
     // Ignore the first sample as that is for initialization.
-    if (dbgTime.active() && d_nSamples ) {
-      double realSecondsNow =
-        timeStep.seconds() / d_app->getDelT();
-      double realSecondsAvg = walltimers.TimeStep().seconds() / (d_app->getSimTime()-d_app->getSimTimeStart());
+    if (g_sim_time_stats && m_num_samples ) {
 
-      dbgTime << "1 simulation second takes ";
+      std::ostringstream message;
 
-      dbgTime << left << showpoint << setprecision(3) << setw(4);
+      double realSecondsNow = timeStep.seconds() / m_app->getDelT();
+      double realSecondsAvg = m_wall_timers.TimeStep().seconds() / (m_app->getSimTime()-m_app->getSimTimeStart());
+
+      message << "1 simulation second takes ";
+
+      message << left << showpoint << setprecision(3) << setw(4);
 
       if (realSecondsNow < SECONDS_PER_MINUTE) {
-        dbgTime << realSecondsNow << " seconds (now), ";
+        message << realSecondsNow << " seconds (now), ";
       }
       else if (realSecondsNow < SECONDS_PER_HOUR) {
-        dbgTime << realSecondsNow / SECONDS_PER_MINUTE << " minutes (now), ";
+        message << realSecondsNow / SECONDS_PER_MINUTE << " minutes (now), ";
       }
       else if (realSecondsNow < SECONDS_PER_DAY) {
-        dbgTime << realSecondsNow / SECONDS_PER_HOUR << " hours (now), ";
+        message << realSecondsNow / SECONDS_PER_HOUR << " hours (now), ";
       }
       else if (realSecondsNow < SECONDS_PER_WEEK) {
-        dbgTime << realSecondsNow / SECONDS_PER_DAY << " days (now), ";
+        message << realSecondsNow / SECONDS_PER_DAY << " days (now), ";
       }
       else if (realSecondsNow < SECONDS_PER_YEAR) {
-        dbgTime << realSecondsNow / SECONDS_PER_WEEK << " weeks (now), ";
+        message << realSecondsNow / SECONDS_PER_WEEK << " weeks (now), ";
       }
       else {
-        dbgTime << realSecondsNow / SECONDS_PER_YEAR << " years (now), ";
+        message << realSecondsNow / SECONDS_PER_YEAR << " years (now), ";
       }
 
-      dbgTime << setw(4);
+      message << setw(4);
 
       if (realSecondsAvg < SECONDS_PER_MINUTE) {
-        dbgTime << realSecondsAvg << " seconds (avg) ";
+        message << realSecondsAvg << " seconds (avg) ";
       }
       else if (realSecondsAvg < SECONDS_PER_HOUR) {
-        dbgTime << realSecondsAvg / SECONDS_PER_MINUTE << " minutes (avg) ";
+        message << realSecondsAvg / SECONDS_PER_MINUTE << " minutes (avg) ";
       }
       else if (realSecondsAvg < SECONDS_PER_DAY) {
-        dbgTime << realSecondsAvg / SECONDS_PER_HOUR << " hours (avg) ";
+        message << realSecondsAvg / SECONDS_PER_HOUR << " hours (avg) ";
       }
       else if (realSecondsAvg < SECONDS_PER_WEEK) {
-        dbgTime << realSecondsAvg / SECONDS_PER_DAY << " days (avg) ";
+        message << realSecondsAvg / SECONDS_PER_DAY << " days (avg) ";
       }
       else if (realSecondsAvg < SECONDS_PER_YEAR) {
-        dbgTime << realSecondsAvg / SECONDS_PER_WEEK << " weeks (avg) ";
+        message << realSecondsAvg / SECONDS_PER_WEEK << " weeks (avg) ";
       }
       else {
-        dbgTime << realSecondsAvg / SECONDS_PER_YEAR << " years (avg) ";
+        message << realSecondsAvg / SECONDS_PER_YEAR << " years (avg) ";
       }
 
-      dbgTime << "to calculate." << "\n";
+      DOUT(true, message.str());
     }
   }
 
-  ++d_nSamples;
+  ++m_num_samples;
 
 } // end printSimulationStats()
 
@@ -954,19 +936,22 @@ SimulationController::ReportStats( bool header /* = false */ )
 void
 SimulationController::getMemoryStats( bool create /* = false */ )
 {
-  unsigned long memUsed, highwater, maxMemUsed;
-  d_scheduler->checkMemoryUse(memUsed, highwater, maxMemUsed);
+  unsigned long memUsed;
+  unsigned long highwater;
+  unsigned long maxMemUsed;
 
-  d_runTimeStats[SCIMemoryUsed] = memUsed;
-  d_runTimeStats[SCIMemoryMaxUsed] = maxMemUsed;
-  d_runTimeStats[SCIMemoryHighwater] = highwater;
+  m_scheduler->checkMemoryUse(memUsed, highwater, maxMemUsed);
+
+  m_runtime_stats[SCIMemoryUsed]      = memUsed;
+  m_runtime_stats[SCIMemoryMaxUsed]   = maxMemUsed;
+  m_runtime_stats[SCIMemoryHighwater] = highwater;
 
   if (ProcessInfo::isSupported(ProcessInfo::MEM_SIZE)) {
-    d_runTimeStats[MemoryUsed] = ProcessInfo::getMemoryUsed();
+    m_runtime_stats[MemoryUsed] = ProcessInfo::getMemoryUsed();
   }
 
   if (ProcessInfo::isSupported(ProcessInfo::MEM_RSS)) {
-    d_runTimeStats[MemoryResident] = ProcessInfo::getMemoryResident();
+    m_runtime_stats[MemoryResident] = ProcessInfo::getMemoryResident();
   }
 
   // Get memory stats for each proc if MALLOC_PERPROC is in the environment.
@@ -974,28 +959,23 @@ SimulationController::getMemoryStats( bool create /* = false */ )
     ostream* mallocPerProcStream = nullptr;
     char* filenamePrefix = getenv("MALLOC_PERPROC");
 
+    // provide a default filename if none provided
     if (!filenamePrefix || strlen(filenamePrefix) == 0) {
-      mallocPerProcStream = &dbg;
+      filenamePrefix = (char*)"malloc.log";
+    }
+
+    char filename[256];
+    sprintf(filename, "%s.%d", filenamePrefix, d_myworld->myRank());
+
+    if (create) {
+      mallocPerProcStream = scinew ofstream(filename, ios::out | ios::trunc);
     }
     else {
-      char filename[256];
-      sprintf(filename, "%s.%d", filenamePrefix, d_myworld->myRank());
-
-      if ( create ) {
-        mallocPerProcStream = scinew ofstream(filename, ios::out | ios::trunc);
-      }
-      else {
-        mallocPerProcStream = scinew ofstream(filename, ios::out | ios::app);
-      }
-
-      if( !mallocPerProcStream ) {
-        delete mallocPerProcStream;
-        mallocPerProcStream = &dbg;
-      }
+      mallocPerProcStream = scinew ofstream(filename, ios::out | ios::app);
     }
 
-    *mallocPerProcStream << "Proc " << d_myworld->myRank() << "   ";
-    *mallocPerProcStream << "TimeStep " << d_app->getTimeStep() << "   ";
+    *mallocPerProcStream << "Proc "     << d_myworld->myRank()  << "   ";
+    *mallocPerProcStream << "TimeStep " << m_app->getTimeStep() << "   ";
 
     if (ProcessInfo::isSupported(ProcessInfo::MEM_SIZE)) {
       *mallocPerProcStream << "Size " << ProcessInfo::getMemoryUsed() << "   ";
@@ -1005,15 +985,17 @@ SimulationController::getMemoryStats( bool create /* = false */ )
       *mallocPerProcStream << "RSS " << ProcessInfo::getMemoryResident() << "   ";
     }
 
-    *mallocPerProcStream << "Sbrk " << (char*)sbrk(0) - d_scheduler->getStartAddr() << "   ";
+    *mallocPerProcStream << "Sbrk " << (char*)sbrk(0) - m_scheduler->getStartAddr() << "   ";
+
 #ifndef DISABLE_SCI_MALLOC
     *mallocPerProcStream << "Sci_Malloc_MemUsed " << memUsed << "   ";
     *mallocPerProcStream << "Sci_Malloc_MaxMemUsed " << maxMemUsed << "   ";
     *mallocPerProcStream << "Sci_Malloc_Highwater " << highwater;
 #endif
-    *mallocPerProcStream << "\n";
 
-    if( mallocPerProcStream != &dbg ) {
+    *mallocPerProcStream << std::endl;
+
+    if (mallocPerProcStream) {
       delete mallocPerProcStream;
     }
   }
@@ -1037,8 +1019,8 @@ SimulationController::getPAPIStats( )
     // query all PAPI events - find which are supported, flag those that are unsupported
     for (std::map<int, PapiEvent>::iterator iter = m_papi_events.begin(); iter != m_papi_events.end(); ++iter) {
       if (iter->second.m_is_supported) {
-        d_runTimeStats[ iter->second.m_sim_stat_name ] =
-	  static_cast<double>(m_papi_event_values[m_papi_events.find(iter->first)->second.m_event_value_idx]);
+        m_runtime_stats[ iter->second.m_sim_stat_name ] =
+	        static_cast<double>(m_papi_event_values[m_papi_events.find(iter->first)->second.m_event_value_idx]);
       }
     }
   }
@@ -1068,18 +1050,18 @@ SimulationController::CheckInSitu( visit_simulation_data * visitSimData,
   if( getVisIt() ) {
     // Note this timer is used as a laptimer so the stop must come
     // after the lap time is taken so not to affect it.
-    walltimers.TimeStep.stop();
+    m_wall_timers.TimeStep.stop();
 
-    walltimers.InSitu.start();
+    m_wall_timers.InSitu.start();
 
     // Update all of the simulation grid and time dependent variables.
-    visit_UpdateSimData( visitSimData, d_currentGridP,
-			 d_app->getSimTime(),
-			 d_app->getTimeStep(),
-			 d_app->getPrevDelT(),
-			 d_app->getDelT(),
+    visit_UpdateSimData( visitSimData, m_current_gridP,
+			 m_app->getSimTime(),
+			 m_app->getTimeStep(),
+			 m_app->getPrevDelT(),
+			 m_app->getDelT(),
                          first,
-			 d_app->isLastTimeStep(walltimers.GetWallTime()) );
+			 m_app->isLastTimeStep(m_wall_timers.GetWallTime()) );
 
     // Check the state - if the return value is true the user issued
     // a termination.
@@ -1097,19 +1079,19 @@ SimulationController::CheckInSitu( visit_simulation_data * visitSimData,
 
     // The user may have adjusted delT so get it from the data
     // warehouse. If not then this call is a no-op.
-    DataWarehouse* newDW = d_scheduler->getLastDW();
+    DataWarehouse* newDW = m_scheduler->getLastDW();
     delt_vartype delT_var;
-    newDW->get( delT_var, d_app->getDelTLabel() );
-    d_app->setDelT( delT_var );
+    newDW->get( delT_var, m_app->getDelTLabel() );
+    m_app->setDelT( delT_var );
 
     // Add the modified variable information into index.xml file.
-    getOutput()->writeto_xml_files(d_app->getTimeStep(),
+    getOutput()->writeto_xml_files(m_app->getTimeStep(),
 				   visitSimData->modifiedVars);
 
-    walltimers.InSitu.stop();
+    m_wall_timers.InSitu.stop();
 
     // Note this timer is used as a laptimer.
-    walltimers.TimeStep.start();
+    m_wall_timers.TimeStep.start();
   }
 
   return false;

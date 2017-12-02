@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_HOMEBREW_AMRSIMULATIONCONTROLLER_H
-#define UINTAH_HOMEBREW_AMRSIMULATIONCONTROLLER_H
+#ifndef CCA_COMPONENTS_SIMULATIONCONTROLLER_AMRSIMULATIONCONTROLLER_H
+#define CCA_COMPONENTS_SIMULATIONCONTROLLER_AMRSIMULATIONCONTROLLER_H
 
 #include <CCA/Components/SimulationController/SimulationController.h>
 
@@ -60,66 +60,69 @@ namespace Uintah {
 //! Controls the execution of an AMR Simulation
 class AMRSimulationController : public SimulationController {
 
-   public:
-     AMRSimulationController( const ProcessorGroup * myworld
-                            ,       ProblemSpecP     pspec
-                            );
 
-     virtual ~AMRSimulationController(){};
-     
-     virtual void run();
+public:
 
-
-   protected:
-
-     AMRSimulationController( const AMRSimulationController& );
-
-     AMRSimulationController& operator=( const AMRSimulationController& );
-     
-     //! Set up, compile, and execute initial time step
-     void doInitialTimeStep( );
-
-     //! Execute a time step
-     void executeTimeStep( int totalFine );
-
-     //! If doing AMR do the regridding
-     bool doRegridding( bool initialTimeStep );
-
-     //! Asks a variety of components if one of them needs the
-     //! taskgraph to recompile.
-     bool needRecompile();
-     
-     void recompile( int totalFine );
-
-     //! Recursively schedule refinement, coarsening, and time
-     //! advances for finer levels, compensating for time
-     //! refinement. Builds one taskgraph
-     void subCycleCompile( int startDW
-                         , int dwStride
-                         , int numLevel
-                         , int step
+  AMRSimulationController( const ProcessorGroup * myworld
+                         ,       ProblemSpecP     pspec
                          );
-     
-     //! Recursively executes taskgraphs, as several were executed.
-     //! Similar to subCycleCompile, except that this executes the
-     //! recursive taskgraphs, and compile builds one taskgraph (to
-     //! exsecute once) recursively.
-     void subCycleExecute( int startDW
-                         , int dwStride
-                         , int numLevel
-                         , bool rootCycle
-                         );
-     
-     void scheduleComputeStableTimeStep();
-     
-     // Optional flag for scrubbing, defaulted to true.
-     bool d_scrubDataWarehouse{true};
 
-     // Barrier timers used when running and regridding.
-     Timers::Simple barrierTimer;
-     double barrier_times[5];
-   };
+  virtual ~AMRSimulationController(){};
 
-} // End namespace Uintah
+  virtual void run();
 
-#endif
+
+protected:
+
+  AMRSimulationController( const AMRSimulationController& );
+
+  AMRSimulationController& operator=( const AMRSimulationController& );
+
+  //! Set up, compile, and execute initial time step
+  void doInitialTimeStep( );
+
+  //! Execute a time step
+  void executeTimeStep( int totalFine );
+
+  //! If doing AMR do the regridding
+  bool doRegridding( bool initialTimeStep );
+
+  //! Asks a variety of components if one of them needs the
+  //! taskgraph to recompile.
+  bool needRecompile();
+
+  void recompile( int totalFine );
+
+  //! Recursively schedule refinement, coarsening, and time
+  //! advances for finer levels, compensating for time
+  //! refinement. Builds one taskgraph
+  void subCycleCompile( int startDW
+                      , int dwStride
+                      , int numLevel
+                      , int step
+                      );
+
+  //! Recursively executes taskgraphs, as several were executed.
+  //! Similar to subCycleCompile, except that this executes the
+  //! recursive taskgraphs, and compile builds one taskgraph (to
+  //! execute once) recursively.
+  void subCycleExecute( int startDW
+                      , int dwStride
+                      , int numLevel
+                      , bool rootCycle
+                      );
+
+  void scheduleComputeStableTimeStep();
+
+  // Optional flag for scrubbing, defaulted to true.
+  bool m_scrub_datawarehouse{true};
+
+  // Barrier timers used when running and regridding.
+  Timers::Simple m_barrier_timer;
+  double         m_barrier_times[5];
+
+};
+
+} // end namespace Uintah
+
+#endif // CCA_COMPONENTS_SIMULATIONCONTROLLER_AMRSIMULATIONCONTROLLER_H
