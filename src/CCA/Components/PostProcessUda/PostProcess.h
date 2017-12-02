@@ -26,15 +26,7 @@
 #define UINTAH_HOMEBREW_Component_PostProcess_H
 
 #include <CCA/Components/Application/ApplicationCommon.h>
-#include <CCA/Components/PostProcessUda/Common.h>
 #include <CCA/Components/PostProcessUda/Module.h>
-#include <CCA/Ports/Output.h>
-#include <Core/DataArchive/DataArchive.h>
-#include <Core/Grid/Grid.h>
-#include <Core/Grid/Material.h>
-#include <Core/Grid/Variables/ComputeSet.h>
-#include <Core/Grid/Variables/VarLabel.h>
-
 #include <vector>
 
 namespace Uintah {
@@ -42,42 +34,40 @@ namespace Uintah {
   class Module;
 
 
-  class PostProcessUda : 
-  public ApplicationCommon, 
-  public PostProcessCommon {
-  
+  class PostProcessUda : public ApplicationCommon {
+
   public:
     PostProcessUda( const ProcessorGroup * myworld,
-		      const SimulationStateP sharedState,
+                    const SimulationStateP sharedState,
                     const std::string    & udaDir );
 
     virtual ~PostProcessUda();
 
-    virtual void problemSetup( const ProblemSpecP     & params,
-                               const ProblemSpecP     & restart_prob_spec,
-                                     GridP            & grid );
+    virtual void problemSetup( const ProblemSpecP & params,
+                               const ProblemSpecP & restart_prob_spec,
+                               GridP              & grid );
 
-    virtual void scheduleInitialize( const LevelP     & level,
-                                           SchedulerP & );
+    virtual void scheduleInitialize( const LevelP & level,
+                                     SchedulerP   & );
 
-    virtual void scheduleRestartInitialize( const LevelP     & level,
-                                                  SchedulerP & );
+    virtual void scheduleRestartInitialize( const LevelP & level,
+                                            SchedulerP   & );
 
     virtual void restartInitialize() {}
 
     virtual void scheduleComputeStableTimeStep( const LevelP &,
-                                                      SchedulerP & );
+                                                SchedulerP   & );
 
-    virtual void scheduleTimeAdvance( const LevelP     & level,
-                                            SchedulerP & );
+    virtual void scheduleTimeAdvance( const LevelP & level,
+                                      SchedulerP   & );
 
 
     virtual bool needRecompile( const double   time,
                                 const double   dt,
                                 const GridP  & grid );
 
-    virtual void scheduleFinalizeTimestep(const LevelP& level,
-                                          SchedulerP&){};
+    virtual void scheduleFinalizeTimestep(const LevelP & level,
+                                          SchedulerP   &){};
 
     // stubs
     virtual void scheduleInitialErrorEstimate  ( const LevelP& , SchedulerP&  ){};
@@ -124,9 +114,6 @@ namespace Uintah {
                           DataWarehouse*,
                           DataWarehouse* );
 
-    void sched_Test( const LevelP& level,
-                       SchedulerP& sched );
-
     void doAnalysis(const ProcessorGroup*,
                     const PatchSubset* patches,
                     const MaterialSubset* matls,
@@ -143,15 +130,12 @@ namespace Uintah {
     std::vector<VarLabel*> d_savedLabels;
 
     GridP                  d_oldGrid;
-    DataArchive          * d_dataArchive;
-    Output               * d_dataArchiver;
+    DataArchive          * d_dataArchive = nullptr;
 
-    int                    d_timeIndex;
+    int                    d_timeIndex = 0;
 
     LoadBalancerPort     * d_lb;
     const VarLabel       * delt_label;
-    SimpleMaterial       * d_oneMatl;
-
     std::vector<Module*> d_Modules;
 
 

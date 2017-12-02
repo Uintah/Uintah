@@ -320,7 +320,7 @@ UnifiedScheduler::verifyAnyGpuActive()
 //
 void
 UnifiedScheduler::problemSetup( const ProblemSpecP     & prob_spec
-                              ,       SimulationStateP & state
+                              , const SimulationStateP & state
                               )
 {
   // Default taskReadyQueueAlg

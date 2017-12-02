@@ -26,7 +26,6 @@
 #include <CCA/Components/PostProcessUda/statistics.h>
 #include <CCA/Components/PostProcessUda/spatioTemporalAvg.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Grid/SimulationState.h>
 
 using namespace std;
 using namespace Uintah;
@@ -48,6 +47,10 @@ ModuleFactory::create(const ProblemSpecP& prob_spec,
                       Output            * dataArchiver,
                       DataArchive       * dataArchive)
 {
+ 
+ 
+// scinew PostProcessCommon( sharedState, dataArchiver, dataArchive);
+ 
   string module("");
   ProblemSpecP da_ps = prob_spec->findBlock("PostProcess");
 
@@ -71,6 +74,9 @@ ModuleFactory::create(const ProblemSpecP& prob_spec,
       else if ( module == "spatioTemporalAvg" ) {
         modules.push_back ( scinew postProcess::spatioTemporalAvg( module_ps, sharedState, dataArchiver, dataArchive) );
       }
+      else if ( module == "reduceUda" ) {
+        // do nothing
+      }      
       else {
         throw ProblemSetupException("\nERROR:<PostProcess> Unknown analysis module.  "+module,__FILE__, __LINE__);
       }

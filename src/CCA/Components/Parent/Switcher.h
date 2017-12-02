@@ -61,6 +61,9 @@ namespace Uintah {
     virtual void scheduleSwitchInitialization(  const LevelP& level, SchedulerP& sched );
     virtual void scheduleFinalizeTimestep(      const LevelP& level, SchedulerP& sched );
 
+    virtual void switchApplication( const ProblemSpecP     & restart_prob_spec,
+				    const GridP            & grid );
+
     virtual bool needRecompile( double time, double delt, const GridP& grid );
     virtual void restartInitialize();
     virtual bool restartableTimeSteps();

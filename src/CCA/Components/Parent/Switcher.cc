@@ -253,6 +253,7 @@ Switcher::Switcher( const ProcessorGroup * myworld,
   proc0cout << "Number of components " << d_numComponents << std::endl;
   proc0cout << "-----------------------------Switcher::Switcher bottom" << std::endl;
 }
+
 //______________________________________________________________________
 //
 Switcher::~Switcher()
@@ -268,63 +269,40 @@ Switcher::~Switcher()
   }
   d_carryOverVarMatls.clear();
 }
+
 //______________________________________________________________________
-// Setup the first component 
+// 
 void
-Switcher::problemSetup( const ProblemSpecP     & /*params*/,
+Switcher::problemSetup( const ProblemSpecP     & params,
                         const ProblemSpecP     & restart_prob_spec,
                               GridP            & grid )
 {  
   dbg << "Doing ProblemSetup \t\t\t\tSwitcher"<< std::endl;
+
   if (restart_prob_spec){
     readSwitcherState(restart_prob_spec, m_sharedState);
   }
-  
-  // Get the initial simulation component and initialize the need components
-  proc0cout << "\n------------ Switching to component (" << d_componentIndex <<") \n";
-  proc0cout << "  Reading input file: " << d_in_file[d_componentIndex] << "\n";
 
-  // Read the ups file for the first subcomponent.
-  ProblemSpecP subCompUps =
-    ProblemSpecReader().readInputFile(d_in_file[d_componentIndex]);  
-  
-  UintahParallelComponent* comp =
-    dynamic_cast<UintahParallelComponent*>( getPort("application",d_componentIndex) );
+  switchApplication( restart_prob_spec, grid );
 
-  d_app = dynamic_cast<ApplicationInterface*>(comp);
-  d_app->setComponents( this );
-
-  // Send the subcomponent's UPS file to it's sim interface.
-  d_app->problemSetup(subCompUps, restart_prob_spec, grid );  
-
-  // Send the subcomponent's UPS file to the data archiver to get the
-  // output and checkpointing parameters.
-  m_output->problemSetup( subCompUps, restart_prob_spec, m_sharedState );
+  proc0cout << "__________________________________\n\n";
   
-  // Read in the grid adaptivity flag from the subcomponent's UPS file.
-  if (m_regridder) {
-    m_regridder->switchInitialize( subCompUps );
-  }
-  
-  // Send the subcomponent's UPS file to the switcher's simulation
-  // time.  Note this goes into the switcher not the subcomponent.
-  getSimulationTime()->problemSetup( subCompUps );
-    
   //__________________________________
   // init Variables:
   //   - determine the label from the string names
   //   - determine the MaterialSet from the string matlSetName
   //   - store this info to be used later
   std::map<int, initVars*>::iterator it;
-  for (it = d_initVars.begin(); it != d_initVars.end(); it++) {
-
+  for (it = d_initVars.begin(); it != d_initVars.end(); it++)
+  {
     int comp = it->first;
-    proc0cout << " init Variables:  component: " << comp << std::endl;
-    initVars* tmp = it->second;
+    initVars* vars = it->second;
 
+    dbg << " init Variables:  component: " << comp << std::endl;
+    
     // Find the varLabel   
-    std::vector<std::string>& varNames = tmp->varNames;
-    std::vector<VarLabel*> varLabels = tmp->varLabels;
+    std::vector<std::string>& varNames = vars->varNames;
+    std::vector<VarLabel*> varLabels = vars->varLabels;
 
     for (unsigned j = 0; j < varNames.size(); j++) {
 
@@ -362,7 +340,6 @@ Switcher::problemSetup( const ProblemSpecP     & /*params*/,
       throw ProblemSetupException(error, __FILE__, __LINE__);
     }
   }
-  proc0cout << "-----------------------------------\n\n";
 }
 
 //______________________________________________________________________
@@ -495,8 +472,8 @@ void Switcher::scheduleInitNewVars(const LevelP     & level,
     
     matlSet.push_back(matls);
 
-    proc0cout << "init Variable  " << initVar->varNames[i] << " \t matls: " 
-              << nextComp_matls << " levels " << initVar->levels[i] << std::endl;
+    dbg << "init Variable  " << initVar->varNames[i] << " \t matls: " 
+	<< nextComp_matls << " levels " << initVar->levels[i] << std::endl;
     
     const MaterialSubset* matl_ss = matls->getUnion();
     
@@ -606,13 +583,11 @@ void Switcher::initNewVars(const ProcessorGroup *,
   max_vartype switch_condition;
   new_dw->get(switch_condition, d_switch_label, 0);
 
-
   if (!switch_condition)
     return; 
-
     
-  proc0cout << "__________________________________" << std::endl;
-  proc0cout << "initNewVars \t\t\t\tSwitcher"<< std::endl;
+  dbg << "__________________________________" << std::endl
+      << "initNewVars \t\t\t\tSwitcher" << std::endl;
   //__________________________________
   // loop over the init vars, initialize them and put them in the new_dw
   initVars* initVar  = d_initVars.find(d_componentIndex+1)->second;
@@ -630,12 +605,14 @@ void Switcher::initNewVars(const ProcessorGroup *,
     int relative_indx   = L_indx - numLevels;
     int init_Levels     = initVar->levels[i];
     
-    proc0cout << "    varName: " << l->getName() << " \t\t matls " << initVar->matlSetNames[i] << " level " << init_Levels << std::endl;
+    dbg << "    varName: " << l->getName()
+	<< " \t\t matls " << initVar->matlSetNames[i]
+	<< " level " << init_Levels << std::endl;
     
     bool onThisLevel = false;
 
-    if (init_Levels == L_indx     ||   // user can specify: a level,
-        init_Levels == ALL_LEVELS  ||   // nothing,
+    if (init_Levels == L_indx     ||     // user can specify: a level,
+        init_Levels == ALL_LEVELS  ||    // all levels,
         init_Levels == relative_indx) {  // or a relative indx, -1, -2
       onThisLevel = true;
     }
@@ -661,7 +638,8 @@ void Switcher::initNewVars(const ProcessorGroup *,
       for (int p = 0; p < patches->size(); p++) {
         const Patch* patch = patches->get(p);
         
-        proc0cout << "    indx: " << indx << " patch " << *patch << " " << l->getName() << std::endl;
+        dbg << "    indx: " << indx << " patch " << *patch << " "
+	    << l->getName() << std::endl;
         
         switch (l->typeDescription()->getType()) {
 
@@ -758,7 +736,8 @@ void Switcher::initNewVars(const ProcessorGroup *,
       }  // patch loop
     }  // matl loop
   }  // varlabel loop
-  proc0cout << "__________________________________" << std::endl;
+
+  dbg << "__________________________________" << std::endl;
 }
 //______________________________________________________________________
 //
@@ -802,6 +781,40 @@ void Switcher::carryOverVars(const ProcessorGroup *,
     }
   }
 }
+  
+//______________________________________________________________________
+// 
+void Switcher::switchApplication( const ProblemSpecP     & restart_prob_spec,
+				  const GridP            & grid )
+{
+  // Get the initial simulation component and initialize the need components
+  proc0cout << "\n------------ Switching to application (" << d_componentIndex <<") \n";
+  proc0cout << "  Reading input file: " << d_in_file[d_componentIndex] << "\n";
+
+  // Read the ups file for the first subcomponent.
+  ProblemSpecP subCompUps =
+    ProblemSpecReader().readInputFile(d_in_file[d_componentIndex]);  
+  
+  d_app =
+    dynamic_cast<ApplicationInterface*>( getPort("application", d_componentIndex) );
+  d_app->setComponents( this );
+
+  // Send the subcomponent's UPS file to it's sim interface.
+  d_app->problemSetup(subCompUps, restart_prob_spec, const_cast<GridP&>(grid) );  
+
+  // Send the subcomponent's UPS file to the data archiver to get the
+  // output and checkpointing parameters.
+  m_output->problemSetup( subCompUps, restart_prob_spec, m_sharedState );
+  
+  // Read in the grid adaptivity flag from the subcomponent's UPS file.
+  if (m_regridder) {
+    m_regridder->switchInitialize( subCompUps );
+  }
+  
+  // Send the subcomponent's UPS file to the switcher's simulation
+  // time.  Note this goes into the switcher not the subcomponent.
+  getSimulationTime()->problemSetup( subCompUps );
+}
 
 //______________________________________________________________________
 //  This is where the actual component switching takes place.
@@ -833,61 +846,30 @@ Switcher::needRecompile(       double   simTime,
     // need to be done by the Switcher component...
     GeometryPieceFactory::resetFactory();
 
-    // Get the next simulation component and initialize the need components
-    proc0cout << "\n------------ Switching to component (" << d_componentIndex <<") \n";
-    proc0cout << "  Reading input file: " << d_in_file[d_componentIndex] << "\n";
-
-    UintahParallelComponent* comp =
-      dynamic_cast<UintahParallelComponent*>( getPort("application",d_componentIndex) );
-
-    d_app = dynamic_cast<ApplicationInterface*>(comp);
-
-    comp->attachPort( "scheduler",  m_scheduler );
-    comp->attachPort( "modelMaker", m_modelMaker );
-    comp->attachPort( "solver",     m_solver );
-    comp->attachPort( "regridder",  m_regridder );
-    comp->attachPort( "output",     m_output );
-
-    d_app->getComponents();
-
     // Clean up the old models.
     if( needModelMaker() )
       m_modelMaker->clearModels();
 
-    // read in the problemSpec on next subcomponent
-    ProblemSpecP restart_prob_spec = nullptr;
-
-    ProblemSpecP subCompUps =
-      ProblemSpecReader().readInputFile(d_in_file[d_componentIndex]);
-
-    // Send the subcomponent's UPS file to it's sim interface.
-    d_app->problemSetup(subCompUps, restart_prob_spec, const_cast<GridP&>(grid));
-
-    // Send the subcomponent's UPS file to the data archiver to get
-    // the output and checkpointing parameters.
-    m_output->problemSetup( subCompUps, restart_prob_spec, m_sharedState );
-    // m_output->initializeOutput(subCompUps);
-
-    // Read in the grid adaptivity flag from the subcomponent's UPS file.
-    if (m_regridder) {
-      m_regridder->switchInitialize( subCompUps );
-    }
-  
-    // Send the subcomponent's UPS file to the switcher's simulation
-    // time.  Note this goes into the switcher not the subcomponent.
-    getSimulationTime()->problemSetup( subCompUps );
+    switchApplication( nullptr, grid );
     
     // Each application has their own init_delt specified.  On a switch
     // from one application to the next, delT needs to be adjusted to
     // the value specified in the input file. 
-    setDelT( getSimulationTime()->m_max_initial_delt );
+    double new_delT = getSimulationTime()->m_max_initial_delt;
+
+    proc0cout << "Switching the Next delT from " << m_delT
+	      << " to " << new_delT
+	      << std::endl;
+    
+    setDelT( new_delT );
 
     // This is needed to get the "ICE surrounding matl"
     d_app->restartInitialize();
     m_sharedState->finalizeMaterials();
 
-    retval = true;
     proc0cout << "__________________________________\n\n";
+    
+    retval = true;
   } 
   else {
     m_output->setSwitchState(false);

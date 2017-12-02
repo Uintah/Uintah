@@ -25,16 +25,12 @@
 
 #ifndef Packages_Uintah_CCA_Components_PostProcessUda_spatioTemporalAvg_h
 #define Packages_Uintah_CCA_Components_PostProcessUda_spatioTemporalAvg_h
-#include <CCA/Components/PostProcessUda/Common.h>
+
 #include <CCA/Components/PostProcessUda/Module.h>
-#include <CCA/Ports/Output.h>
-#include <Core/DataArchive/DataArchive.h>
 #include <Core/Grid/Material.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
-#include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
-#include <vector>
 
 namespace Uintah{
 namespace postProcess{
@@ -63,7 +59,7 @@ DESCRIPTION
 WARNING
 
 ****************************************/
-  class spatioTemporalAvg : public Module, public PostProcessCommon {
+  class spatioTemporalAvg : public Module {
   public:
     spatioTemporalAvg(ProblemSpecP    & prob_spec,
                       SimulationStateP& sharedState,
@@ -74,10 +70,7 @@ WARNING
 
     virtual ~spatioTemporalAvg();
 
-    virtual void problemSetup(const ProblemSpecP  & prob_spec,
-                              const ProblemSpecP  & restart_prob_spec,
-                              GridP               & grid,
-                              SimulationStateP    & sharedState);
+    virtual void problemSetup();
 
     virtual void scheduleInitialize(SchedulerP   & sched,
                                     const LevelP & level);
@@ -157,42 +150,29 @@ WARNING
 
     template <class T>
     void query( const Patch         * patch,
-                constCCVariable< T >& Qvar,
-                CCVariable< T >     & Qavg,
-                CCVariable< T >     & Qvariance,
+                constCCVariable<T>  & Qvar,
+                CCVariable<T>       & Qavg,
+                CCVariable<T>       & Qvariance,
                 IntVector           & avgBoxCells,
                 CellIterator        & iter);
   
     template <class T>
     void allocateAndZeroLabels( DataWarehouse * new_dw,
-                                const Patch   *   patch,
-                                Qstats        & Q);
-
-    template <class T>
-    void allocateAndZero( DataWarehouse  * new_dw,
-                          const VarLabel * label,
-                          const int        matl,
-                          const Patch    * patch );
-                          
+                                const Patch   * patch,
+                                Qstats        & Q);              
                           
     enum Domain {EVERYWHERE, INTERIOR, BOUNDARIES};
     //__________________________________
     // global constants
-    double    d_startTime;
-    double    d_stopTime;
-    Domain    d_compDomain;          // domain to compute averages
-    IntVector d_monitorCell;         // Cell to output
-    IntVector d_avgBoxCells;         // number of cells to average over.
+    double    d_startTime  = 0;
+    double    d_stopTime   = DBL_MAX;
+    Domain    d_compDomain = EVERYWHERE;            // domain to compute averages
+    IntVector d_monitorCell = IntVector(-9,-9,-9);  // Cell to output
+    IntVector d_avgBoxCells;                        // number of cells to average over.
     std::vector< Qstats >  d_Qstats;
 
-
-    SimulationStateP      d_sharedState;
-    DataArchive         * d_dataArchive;
-    Output              * d_dataArchiver;
-    ProblemSpecP          d_prob_spec;
-    const Material      * d_matl;
-    MaterialSet         * d_matlSet;
-    const MaterialSubset* d_matSubSet;
+    ProblemSpecP   d_prob_spec;
+    MaterialSet  * d_matlSet = nullptr;
   };
 }
 }

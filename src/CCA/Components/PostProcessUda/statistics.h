@@ -25,16 +25,11 @@
 
 #ifndef Packages_Uintah_CCA_Components_PostProcessUda_statistics_h
 #define Packages_Uintah_CCA_Components_PostProcessUda_statistics_h
-#include <CCA/Components/PostProcessUda/Common.h>
+
 #include <CCA/Components/PostProcessUda/Module.h>
-#include <CCA/Ports/Output.h>
-#include <Core/DataArchive/DataArchive.h>
 #include <Core/Grid/Material.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Grid/Variables/CCVariable.h>
-#include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
-#include <vector>
 
 namespace Uintah{
 namespace postProcess{
@@ -63,22 +58,19 @@ DESCRIPTION
 WARNING
 
 ****************************************/
-  class statistics : public Module, public PostProcessCommon {
+  class statistics : public Module {
   public:
     statistics(ProblemSpecP    & prob_spec,
                SimulationStateP& sharedState,
-	       Output          * dataArchiver,
+	        Output          * dataArchiver,
                DataArchive     * dataArchive);
 
     statistics();
 
     virtual ~statistics();
 
-    virtual void problemSetup(const ProblemSpecP& prob_spec,
-                              const ProblemSpecP& restart_prob_spec,
-                              GridP& grid,
-			      SimulationStateP& sharedState);
-                              
+    virtual void problemSetup();
+
     virtual void outputProblemSpec( ProblemSpecP& ps) {};
 
     virtual void scheduleInitialize(SchedulerP& sched,
@@ -115,19 +107,19 @@ WARNING
       // Code for keeping track of which timestep
       int timestep;
       bool isSet;
-      
+
       void initializeTimestep(){
         timestep = 0;
         isSet    = false;
       }
-      
+
       int getStart(){
         return timestep;
       }
-      
+
       // only set the timestep once
       void setStart( const int me) {
-        
+
         if(isSet == false){
           timestep = me;
           isSet   = true;
@@ -139,7 +131,7 @@ WARNING
 	const std::string name = Q_Label->getName();
         std::cout << name << " matl: " << matl << " subtype: " << subtype->getName() << " startTimestep: " << timestep <<"\n";
       };
-      
+
     };
 
     //__________________________________
@@ -170,36 +162,26 @@ WARNING
                        Qstats& Q);
 
     template <class T>
-    void allocateAndZero( DataWarehouse* new_dw,
-                          const VarLabel* label,
-                          const int       matl,
-                          const Patch*    patch );
-    template <class T>
-    void allocateAndZeroSums( DataWarehouse* new_dw,
-                              const Patch*   patch,
-                              Qstats& Q);
+    void allocateAndZeroSums( DataWarehouse * new_dw,
+                              const Patch   * patch,
+                              const Qstats  & Q);
 
     template <class T>
-    void allocateAndZeroStats( DataWarehouse* new_dw,
-                               const Patch*   patch,
-                               const Qstats& Q);
+    void allocateAndZeroStats( DataWarehouse * new_dw,
+                               const Patch   * patch,
+                               const Qstats  & Q);
 
     //__________________________________
     // global constants
-    double    d_startTime;
-    double    d_stopTime;
-    IntVector d_monitorCell;         // Cell to output
+    double    d_startTime    = 0;
+    double    d_stopTime     = DBL_MAX;
+    IntVector d_monitorCell  = IntVector(-9,-9,-9);         // Cell to output
 
-    bool d_doHigherOrderStats;
+    bool d_doHigherOrderStats = false;
     std::vector< Qstats >  d_Qstats;
 
-    SimulationStateP      d_sharedState;
-    DataArchive         * d_dataArchive;
-    Output              * d_dataArchiver;
     ProblemSpecP          d_prob_spec;
-    const Material      * d_matl;
-    MaterialSet         * d_matlSet;
-    const MaterialSubset* d_matSubSet;
+    MaterialSet         * d_matlSet = nullptr;
   };
 }
 }

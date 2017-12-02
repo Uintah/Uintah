@@ -30,10 +30,9 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := CCA/Components/PostProcessUda
+SRCDIR := CCA/Components/PostProcessUda
 
-SRCS     += \
-	$(SRCDIR)/Common.cc               \
+SRCS += \
 	$(SRCDIR)/PostProcess.cc          \
 	$(SRCDIR)/Module.cc               \
 	$(SRCDIR)/ModuleFactory.cc        \
@@ -42,20 +41,18 @@ SRCS     += \
 
 PSELIBS := \
 	CCA/Components/Application \
-	CCA/Ports \
+	CCA/Ports                  \
+        \
+	Core/Containers  \
 	Core/DataArchive \
-	Core/Parallel    \
-	Core/Grid        \
-	Core/Util        \
 	Core/Disclosure  \
 	Core/Exceptions  \
-	Core/ProblemSpec \
+	Core/Grid        \
 	Core/OS          \
-	Core/Exceptions  \
-	Core/Containers  \
-	Core/Util \
-	\
-	Core/Math
+	Core/Math        \
+	Core/Parallel    \
+	Core/ProblemSpec \
+	Core/Util
 
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 

@@ -27,12 +27,9 @@
 
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Output.h>
-#include <Core/Grid/GridP.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/Variables/ComputeSet.h>
-
-#include <Core/Geometry/Vector.h>
 
 namespace Uintah {
 
@@ -42,28 +39,42 @@ namespace Uintah {
   class Module {
 
   public:
-    
+
     Module();
-    Module(ProblemSpecP     & prob_spec, 
-           SimulationStateP & sharedState, 
+    Module(ProblemSpecP     & prob_spec,
+           SimulationStateP & sharedState,
            Output           * dataArchiver,
-           DataArchive      * d_dataArchive );
+           DataArchive      * dataArchive );
 
     virtual ~Module();
 
-    virtual void problemSetup(const ProblemSpecP& params,
-                              const ProblemSpecP& restart_prob_spec,
-                              GridP&              grid,
-                              SimulationStateP&   state) = 0;
-                              
-    virtual void scheduleInitialize(SchedulerP&   sched,
-                                    const LevelP& level) =0;
-    
-    virtual void scheduleDoAnalysis(SchedulerP&   sched,
-                                    const LevelP& level) =0;
-    
-    virtual void scheduleDoAnalysis_preReloc(SchedulerP&   sched,
-                                             const LevelP& level) =0;
+    virtual void problemSetup() = 0;
+
+    virtual void scheduleInitialize(SchedulerP &   sched,
+                                    const LevelP & level) =0;
+
+    virtual void scheduleDoAnalysis(SchedulerP &   sched,
+                                    const LevelP & level) =0;
+
+    virtual void scheduleDoAnalysis_preReloc(SchedulerP   & sched,
+                                             const LevelP & level) =0;
+    void readTimeStartStop(const ProblemSpecP & ps,
+                           double & startTime,
+                           double & stopTime);
+
+    void createMatlSet(const ProblemSpecP        &  module_ps,
+                       MaterialSet               * matlSet,
+                       std::map<std::string,int> & Qmatls);
+
+    template <class T>
+    void allocateAndZero( DataWarehouse  * new_dw,
+                          const VarLabel * label,
+                          const int        matl,
+                          const Patch    * patch );
+
+    SimulationStateP   d_sharedState;
+    DataArchive      * d_dataArchive   = nullptr;
+    Output           * d_dataArchiver  = nullptr;
   };
 }
 
