@@ -38,7 +38,6 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Util/DebugStream.h>
 #include <Core/Util/DOUT.hpp>
 
 #include <CCA/Ports/LoadBalancerPort.h>
@@ -69,7 +68,6 @@
 #define SECONDS_PER_WEEK      604800.0
 #define SECONDS_PER_YEAR    31536000.0
 
-using namespace std;
 
 namespace {
 
@@ -81,12 +79,14 @@ Uintah::Dout g_indv_comp_timings( "IndividualComponentTimings", false );
 
 }
 
+
 namespace Uintah {
 
 SimulationController::SimulationController( const ProcessorGroup * myworld
                                           ,       ProblemSpecP     prob_spec
                                           )
-  : UintahParallelComponent( myworld ), m_ups( prob_spec )
+  : UintahParallelComponent( myworld )
+  , m_ups( prob_spec )
 {
   //initialize the overhead percentage
   for( int i = 0; i < OVERHEAD_WINDOW; ++i ) {
@@ -94,8 +94,9 @@ SimulationController::SimulationController( const ProcessorGroup * myworld
     m_overhead_values[i]  = 0;
     m_overhead_weights[i] = 8.0 - x*x*x;
   }
-  m_grid_ps                = m_ups->findBlock( "Grid" );
   
+  m_grid_ps = m_ups->findBlock( "Grid" );
+
 #ifdef USE_PAPI_COUNTERS
   /*
    * Setup PAPI events to track.
@@ -123,19 +124,19 @@ SimulationController::SimulationController( const ProcessorGroup * myworld
    */
 
   // PAPI_FP_OPS - floating point operations executed
-  m_papi_events.insert(pair<int, PapiEvent>(PAPI_FP_OPS, PapiEvent("PAPI_FP_OPS", SimulationState::TotalFlops)));
+  m_papi_events.insert(pair<int, PapiEvent>(PAPI_FP_OPS, PapiEvent("PAPI_FP_OPS", TotalFlops)));
 
   // PAPI_DP_OPS - floating point operations executed; optimized to count scaled double precision vector operations
-  m_papi_events.insert(pair<int, PapiEvent>(PAPI_DP_OPS, PapiEvent("PAPI_DP_OPS", SimulationState::TotalVFlops)));
+  m_papi_events.insert(pair<int, PapiEvent>(PAPI_DP_OPS, PapiEvent("PAPI_DP_OPS", TotalVFlops)));
 
   // PAPI_L2_TCM - level 2 total cache misses
-  m_papi_events.insert(pair<int, PapiEvent>(PAPI_L2_TCM, PapiEvent("PAPI_L2_TCM", SimulationState::L2Misses)));
+  m_papi_events.insert(pair<int, PapiEvent>(PAPI_L2_TCM, PapiEvent("PAPI_L2_TCM", L2Misses)));
 
   // PAPI_L3_TCM - level 3 total cache misses
-  m_papi_events.insert(pair<int, PapiEvent>(PAPI_L3_TCM, PapiEvent("PAPI_L3_TCM", SimulationState::L3Misses)));
+  m_papi_events.insert(pair<int, PapiEvent>(PAPI_L3_TCM, PapiEvent("PAPI_L3_TCM", L3Misses)));
 
   // PAPI_TLB_TL - Total translation lookaside buffer misses
-  m_papi_events.insert(pair<int, PapiEvent>(PAPI_TLB_TL, PapiEvent("PAPI_TLB_TL", SimulationState::TLBMisses)));
+  m_papi_events.insert(pair<int, PapiEvent>(PAPI_TLB_TL, PapiEvent("PAPI_TLB_TL", TLBMisses)));
 
   m_papi_event_values = scinew long long[m_papi_events.size()];
   m_papi_event_set    = PAPI_NULL;
@@ -278,7 +279,7 @@ SimulationController::~SimulationController()
 //______________________________________________________________________
 //
 void
-SimulationController::setPostProcessFlags( const string & fromDir )
+SimulationController::setPostProcessFlags( const std::string & fromDir )
 {
   m_post_process_uda  = true;
   m_from_dir          = fromDir;
@@ -334,10 +335,10 @@ SimulationController::releaseComponents( void )
 //
 
 void
-SimulationController::doRestart( const string & restartFromDir
-                               ,       int      timeStep
-                               ,       bool     fromScratch
-                               ,       bool     removeOldDir
+SimulationController::doRestart( const std::string & restartFromDir
+                               ,       int           timeStep
+                               ,       bool          fromScratch
+                               ,       bool          removeOldDir
                                )
 {
   m_restarting             = true;
@@ -366,21 +367,21 @@ SimulationController::restartArchiveSetup( void )
                                             d_myworld->myRank(),
                                             d_myworld->nRanks() );
 
-    vector<int>    indices;
-    vector<double> times;
+    std::vector<int>    indices;
+    std::vector<double> times;
 
     try {
       m_restart_archive->queryTimesteps( indices, times );
     }
     catch( InternalError & ie ) {
-      cerr << "\n";
-      cerr << "An internal error was caught while trying to restart:\n";
-      cerr << "\n";
-      cerr << ie.message() << "\n";
-      cerr << "This most likely means that the simulation UDA that you have specified\n";
-      cerr << "to use for the restart does not have any checkpoint data in it.  Look\n";
-      cerr << "in <uda>/checkpoints/ for timestep directories (t#####/) to verify.\n";
-      cerr << "\n";
+      std::cerr << "\n";
+      std::cerr << "An internal error was caught while trying to restart:\n";
+      std::cerr << "\n";
+      std::cerr << ie.message() << "\n";
+      std::cerr << "This most likely means that the simulation UDA that you have specified\n";
+      std::cerr << "to use for the restart does not have any checkpoint data in it.  Look\n";
+      std::cerr << "in <uda>/checkpoints/ for timestep directories (t#####/) to verify.\n";
+      std::cerr << "\n";
       Parallel::exitAll(1);
     }
 
@@ -403,7 +404,7 @@ SimulationController::restartArchiveSetup( void )
       
     if (m_restart_index == (int) indices.size()) {
       // timestep not found
-      ostringstream message;
+      std::ostringstream message;
       message << "Time step " << m_restart_timestep << " not found";
       throw InternalError(message.str(), __FILE__, __LINE__);
     }
@@ -673,7 +674,7 @@ SimulationController::ReportStats( bool header /* = false */ )
 
     DOUT(g_sim_stats, message.str());
 
-    cout.flush();
+    std::cout.flush();
   }
   
   // With the sum reduces, use double, since with memory it is possible that
@@ -717,7 +718,7 @@ SimulationController::ReportStats( bool header /* = false */ )
     double overhead = 0;
     double weight = 0;
 
-    int sample_size = min(m_num_samples, OVERHEAD_WINDOW);
+    int sample_size = std::min(m_num_samples, OVERHEAD_WINDOW);
 
     // Calculate total weight by incrementing through the overhead
     // sample array backwards and multiplying samples by the weights
@@ -748,7 +749,7 @@ SimulationController::ReportStats( bool header /* = false */ )
 
       if (m_runtime_stats[e] > 0) {
         message << "rank: " << d_myworld->myRank() << " "
-	              << left << setw(19) << m_runtime_stats.getName(e) << " ["
+	              << std::left << std::setw(19) << m_runtime_stats.getName(e) << " ["
                 << m_runtime_stats.getUnits(e) << "]: " << m_runtime_stats[e] << "\n";
       }
     }
@@ -760,7 +761,7 @@ SimulationController::ReportStats( bool header /* = false */ )
     for (unsigned int i = 0; i < m_other_stat.size(); ++i) {
       if (m_other_stat[i] > 0) {
         message << "rank: " << d_myworld->myRank() << " "
-	              << left << setw(19) << m_other_stat.getName(i) << " ["
+	              << std::left << std::setw(19) << m_other_stat.getName(i) << " ["
                 << m_other_stat.getUnits(i) << "]: " << m_other_stat[i] << "\n";
       }
     }
@@ -772,47 +773,47 @@ SimulationController::ReportStats( bool header /* = false */ )
 
   if( d_myworld->myRank() == 0 )
   {
-    ostringstream message;
-    message << left
-            << "Timestep "   << setw(8)  << m_app->getTimeStep()
-            << "Time="       << setw(12) << m_app->getSimTime()
+    std::ostringstream message;
+    message << std::left
+            << "Timestep "   << std::setw(8)  << m_app->getTimeStep()
+            << "Time="       << std::setw(12) << m_app->getSimTime()
 //            << "delT="       << setw(12) << m_app->getPrevDelT()
-            << "Next delT="  << setw(12) << m_app->getDelT()
+            << "Next delT="  << std::setw(12) << m_app->getDelT()
 
-            << "Wall Time=" << setw(10) << m_wall_timers.GetWallTime()
+            << "Wall Time=" << std::setw(10) << m_wall_timers.GetWallTime()
 //            << "All Time steps= " << setw(12) << walltimers.TimeStep().seconds()
 //            << "Current Time Step= " << setw(12) << timeStep.seconds()
-            << "EMA="        << setw(12) << m_wall_timers.ExpMovingAverage().seconds()
+            << "EMA="        << std::setw(12) << m_wall_timers.ExpMovingAverage().seconds()
 //            << "In-situ Time = " << setw(12) << walltimers.InSitu().seconds()
       ;
 
     // Report on the memory used.
     if (avg_memused == max_memused && avg_highwater == max_highwater) {
-      message << "Memory Use=" << setw(8)
+      message << "Memory Use=" << std::setw(8)
               << ProcessInfo::toHumanUnits((unsigned long) avg_memused);
 
       if(avg_highwater)
-        message << "    Highwater Memory Use=" << setw(8)
+        message << "    Highwater Memory Use=" << std::setw(8)
                 << ProcessInfo::toHumanUnits((unsigned long) avg_highwater);
     }
     else {
-      message << "Memory Used=" << setw(10)
+      message << "Memory Used=" << std::setw(10)
               << ProcessInfo::toHumanUnits((unsigned long) avg_memused)
-              << " (avg) " << setw(10)
+              << " (avg) " << std::setw(10)
               << ProcessInfo::toHumanUnits(max_memused)
-              << " (max on rank: " << setw(6) << max_memused_rank << ")";
+              << " (max on rank: " << std::setw(6) << max_memused_rank << ")";
 
       if (avg_highwater)
-        message << "    Highwater Memory Used=" << setw(10)
+        message << "    Highwater Memory Used=" << std::setw(10)
                 << ProcessInfo::toHumanUnits((unsigned long)avg_highwater)
-                << " (avg) " << setw(10)
+                << " (avg) " << std::setw(10)
                 << ProcessInfo::toHumanUnits(max_highwater)
-                << " (max on rank: " << setw(6) << max_highwater_rank << ")";
+                << " (max on rank: " << std::setw(6) << max_highwater_rank << ")";
     }
 
     DOUT(g_sim_stats, message.str());
 
-    cout.flush();
+    std::cout.flush();
 
     // Ignore the first sample as that is for initialization.
     if (g_comp_timings&& m_num_samples) {
@@ -821,26 +822,26 @@ SimulationController::ReportStats( bool header /* = false */ )
 
       message << "Run time performance stats" << std::endl;
       
-      message << "  " << left
-            << setw(21) << "Description"
-            << setw(15) << "Units"
-            << setw(15) << "Average"
-            << setw(15) << "Maximum"
-            << setw(13) << "Rank"
-            << setw(13) << "100*(1-ave/max) '% load imbalance'"
+      message << "  " << std::left
+            << std::setw(21) << "Description"
+            << std::setw(15) << "Units"
+            << std::setw(15) << "Average"
+            << std::setw(15) << "Maximum"
+            << std::setw(13) << "Rank"
+            << std::setw(13) << "100*(1-ave/max) '% load imbalance'"
             << "\n";
       
       for (unsigned int i=0; i<m_runtime_stats.size(); ++i) {
         RunTimeStatsEnum e = (RunTimeStatsEnum) i;
         
         if (m_runtime_stats.getMaximum(e) > 0) {
-          message << "  " << left
-                << setw(21) << m_runtime_stats.getName(e)
-                << "[" << setw(10) << m_runtime_stats.getUnits(e) << "]"
-                << " : " << setw(12) << m_runtime_stats.getAverage(e)
-                << " : " << setw(12) << m_runtime_stats.getMaximum(e)
-                << " : " << setw(10) << m_runtime_stats.getRank(e)
-                << " : " << setw(10)
+          message << "  " << std::left
+                << std::setw(21) << m_runtime_stats.getName(e)
+                << "[" << std::setw(10) << m_runtime_stats.getUnits(e) << "]"
+                << " : " << std::setw(12) << m_runtime_stats.getAverage(e)
+                << " : " << std::setw(12) << m_runtime_stats.getMaximum(e)
+                << " : " << std::setw(10) << m_runtime_stats.getRank(e)
+                << " : " << std::setw(10)
                 << 100.0 * (1.0 - (m_runtime_stats.getAverage(e) / m_runtime_stats.getMaximum(e)))
                 << "\n";
         }
@@ -856,13 +857,13 @@ SimulationController::ReportStats( bool header /* = false */ )
       
       for (unsigned int i=0; i<m_other_stat.size(); ++i) {
         if (m_other_stat.getMaximum(i) > 0) {
-          message << "  " << left
-                << setw(21) << m_other_stat.getName(i)
-                << "["   << setw(10) << m_other_stat.getUnits(i) << "]"
-                << " : " << setw(12) << m_other_stat.getAverage(i)
-                << " : " << setw(12) << m_other_stat.getMaximum(i)
-                << " : " << setw(10) << m_other_stat.getRank(i)
-                << " : " << setw(10)
+          message << "  " << std::left
+                << std::setw(21) << m_other_stat.getName(i)
+                << "["   << std::setw(10) << m_other_stat.getUnits(i) << "]"
+                << " : " << std::setw(12) << m_other_stat.getAverage(i)
+                << " : " << std::setw(12) << m_other_stat.getMaximum(i)
+                << " : " << std::setw(10) << m_other_stat.getRank(i)
+                << " : " << std::setw(10)
                 << 100.0 * (1.0 - (m_other_stat.getAverage(i) / m_other_stat.getMaximum(i)))
                 << "\n";
         }
@@ -880,7 +881,7 @@ SimulationController::ReportStats( bool header /* = false */ )
 
       message << "1 simulation second takes ";
 
-      message << left << showpoint << setprecision(3) << setw(4);
+      message << std::left << std::showpoint << std::setprecision(3) << std::setw(4);
 
       if (realSecondsNow < SECONDS_PER_MINUTE) {
         message << realSecondsNow << " seconds (now), ";
@@ -901,7 +902,7 @@ SimulationController::ReportStats( bool header /* = false */ )
         message << realSecondsNow / SECONDS_PER_YEAR << " years (now), ";
       }
 
-      message << setw(4);
+      message << std::setw(4);
 
       if (realSecondsAvg < SECONDS_PER_MINUTE) {
         message << realSecondsAvg << " seconds (avg) ";
@@ -956,7 +957,7 @@ SimulationController::getMemoryStats( bool create /* = false */ )
 
   // Get memory stats for each proc if MALLOC_PERPROC is in the environment.
   if (getenv("MALLOC_PERPROC")) {
-    ostream* mallocPerProcStream = nullptr;
+    std::ostream* mallocPerProcStream = nullptr;
     char* filenamePrefix = getenv("MALLOC_PERPROC");
 
     // provide a default filename if none provided
@@ -968,10 +969,10 @@ SimulationController::getMemoryStats( bool create /* = false */ )
     sprintf(filename, "%s.%d", filenamePrefix, d_myworld->myRank());
 
     if (create) {
-      mallocPerProcStream = scinew ofstream(filename, ios::out | ios::trunc);
+      mallocPerProcStream = scinew std::ofstream(filename, std::ios::out | std::ios::trunc);
     }
     else {
-      mallocPerProcStream = scinew ofstream(filename, ios::out | ios::app);
+      mallocPerProcStream = scinew std::ofstream(filename, std::ios::out | std::ios::app);
     }
 
     *mallocPerProcStream << "Proc "     << d_myworld->myRank()  << "   ";

@@ -68,7 +68,9 @@
 #include <iomanip>
 #include <ctime>
 
+
 using namespace Uintah;
+
 
 namespace {
 
@@ -81,6 +83,7 @@ DebugStream gheapprofile("HeapProfiler"           , false);
 DebugStream gheapchecker("HeapChecker"            , false);
 
 }
+
 
 AMRSimulationController::AMRSimulationController( const ProcessorGroup * myworld
                                                 ,       ProblemSpecP     pspec

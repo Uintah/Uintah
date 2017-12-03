@@ -39,7 +39,7 @@
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/SchedulerP.h>
 
-#include <sci_defs/papi_defs.h> // for PAPI performance counters
+#include <sci_defs/papi_defs.h>
 #include <sci_defs/visit_defs.h>
 
 #ifdef HAVE_VISIT
@@ -51,6 +51,7 @@
 
 // Window size for the exponential moving average
 #define AVERAGE_WINDOW 10
+
 
 namespace Uintah {
 
@@ -123,6 +124,7 @@ private:
 
   int              m_num_samples;        // Number of samples for the moving average
   Timers::Simple   m_wall_timer;
+
 };
 
 
