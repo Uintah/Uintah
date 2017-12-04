@@ -161,12 +161,12 @@ echo "yes."
 echo -n "  Testing: does $REMOTEDIR_PARENT exist on the remote machine... "
 
 #create a script that checks if a file exists and outputs 0 if it does
-cat > .testfile.abcdefg << fin
+cat > /tmp/.testfile.abcdefg << fin
 #!/bin/sh
 test -d $REMOTEDIR_PARENT;  echo $?
 fin
 
-scp -q .testfile.abcdefg $LOGIN:
+scp -q /tmp/.testfile.abcdefg $LOGIN:
 
 #execute the script
 command="sh .testfile.abcdefg"
@@ -174,7 +174,7 @@ test=`$SSH -x $LOGIN $command`
 
 #remove the scripts both locally & remote
 $SSH -x $LOGIN "/bin/rm -f .testfile.abcdefg"
-/bin/rm -f .testfile.abcdefg
+/bin/rm -f /tmp/.testfile.abcdefg
 
 if test "$test" != "0"; then
   echo ""
@@ -291,8 +291,9 @@ if test "$transferWholeUda" == "n" -o "$transferWholeUda" == "N"; then
   fi
 fi
 
-$EDITOR $PSCP_FILES
 chmod ug+rw $PSCP_FILES
+$EDITOR $PSCP_FILES
+
  
 echo
 echo -n "Starting at: " | tee -a $DATA_TRANSFER_RECORD
