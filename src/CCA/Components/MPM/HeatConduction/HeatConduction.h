@@ -78,6 +78,9 @@ namespace Uintah {
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw);
 
+    void computeStableTimestep(const double thermalConductivity ,
+                               const double dX                  );
+
   private:
     MPMLabel* d_lb;
     MPMFlags* d_flag;

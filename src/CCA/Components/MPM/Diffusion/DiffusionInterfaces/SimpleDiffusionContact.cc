@@ -114,10 +114,10 @@ void SimpleSDInterface::sdInterfaceDivergence(
   int               numGhost;
   d_shared_state->getParticleGhostLayer(typeGhost, numGhost);
 
-  StaticArray<constNCVariable<double> > gMass(numMatls);  // m_i,j = gMass[j][i]
+  StaticArray<constNCVariable<double> > gVolume(numMatls);
   StaticArray<constNCVariable<double> > gConc(numMatls);  // C_i,j = gConc[j][i]
 
-  NCVariable<double> gTotalMass;
+  NCVariable<double> gTotalVolume;
 
   delt_vartype delT;
   oldDW->get(delT, d_shared_state->get_delt_label(), getLevel(patches) );
@@ -127,18 +127,18 @@ void SimpleSDInterface::sdInterfaceDivergence(
     const Patch* patch = patches->get(patchIdx);
 
     std::vector<NCVariable<double> > gdCdt_interface(numMatls);
-    std::vector<NCVariable<double> > gConcMass(numMatls);
+    std::vector<NCVariable<double> > gFluxAmount(numMatls);
 
     std::vector<double> massNormFactor(numMatls);
     // Loop over materials and preload our arrays of material based nodal data
 
-    newDW->allocateTemporary(gTotalMass, patch);
-    gTotalMass.initialize(0);
+    newDW->allocateTemporary(gTotalVolume, patch);
+    gTotalVolume.initialize(0);
     for (int mIdx = 0; mIdx < numMatls; ++mIdx)
     {
       int dwi = matls->get(mIdx);
-      newDW->get(gMass[mIdx],
-                 d_mpm_lb->gMassLabel,           dwi, patch, typeGhost,   numGhost);
+      newDW->get(gVolume[mIdx],
+                 d_mpm_lb->gVolumeLabel,         dwi, patch, typeGhost,   numGhost);
       newDW->get(gConc[mIdx],
                  d_mpm_lb->gConcentrationLabel,  dwi, patch, typeGhost,   numGhost);
 
@@ -149,14 +149,16 @@ void SimpleSDInterface::sdInterfaceDivergence(
       //massNormFactor[mIdx] = mpm_matl->getMassNormFactor();
       massNormFactor[mIdx] = 1.0;
 
-      newDW->allocateTemporary(gConcMass[mIdx], patch);
-      gConcMass[mIdx].initialize(0.0);
+      newDW->allocateTemporary(gFluxAmount[mIdx], patch);
+      gFluxAmount[mIdx].initialize(0.0);
 
 
       for (NodeIterator nIt = patch->getNodeIterator(); !nIt.done(); ++nIt) {
         IntVector node = *nIt;
-        gConcMass[mIdx][node] = gMass[mIdx][node] * massNormFactor[mIdx];
-        gTotalMass[node] += gMass[mIdx][node];
+//        gConcMass[mIdx][node] = gMass[mIdx][node] * massNormFactor[mIdx];
+        gFluxAmount[mIdx][node] = gVolume[mIdx][node] * massNormFactor[mIdx];
+//        gTotalMass[node] += gMass[mIdx][node];
+        gTotalVolume[node] += gVolume[mIdx][node];
       }
     }
 
@@ -168,8 +170,9 @@ void SimpleSDInterface::sdInterfaceDivergence(
       IntVector node = *nIt;
       int mIdx = 0;
       while (mIdx < numMatls && doInterface[node] == 0) {
-        double checkMass = gMass[mIdx][node];
-        if ((checkMass > 1e-15) && checkMass != gTotalMass[node]) {
+//        double checkMass = gMass[mIdx][node];
+        double checkVolume = gVolume[mIdx][node];
+        if ((checkVolume > 1e-15) && checkVolume != gTotalVolume[node]) {
           doInterface[node] = 1;
         }
         ++mIdx;
@@ -184,8 +187,8 @@ void SimpleSDInterface::sdInterfaceDivergence(
       if (doInterface[node] == 1) {
         for (int mIdx = 0; mIdx < numMatls; ++mIdx) {
           // Break out if we're not working with this material contact
-          numerator   += (gConc[mIdx][node] * gConcMass[mIdx][node]);
-          denominator += gConcMass[mIdx][node];
+          numerator   += (gConc[mIdx][node] * gFluxAmount[mIdx][node]);
+          denominator += gFluxAmount[mIdx][node];
         }
         double contactConcentration = numerator/denominator;
 

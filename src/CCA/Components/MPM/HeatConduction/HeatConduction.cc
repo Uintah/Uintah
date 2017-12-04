@@ -80,6 +80,7 @@ void HeatConduction::scheduleComputeInternalHeatRate(SchedulerP& sched,
   t->requires(Task::OldDW, d_lb->pTemperatureGradientLabel,       gan, NGP);
   t->requires(Task::OldDW, d_lb->pDeformationMeasureLabel,        gan, NGP);
   t->requires(Task::NewDW, d_lb->gMassLabel,                      gnone);
+  t->computes(d_sharedState->get_delt_label(), getLevel(patches));
   t->computes(d_lb->gdTdtLabel);
 
   sched->addTask(t, patches, matls);
@@ -165,6 +166,8 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
                                              DataWarehouse* old_dw,
                                              DataWarehouse* new_dw)
 {
+  double minTimestep = 1.0e+99;
+
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
@@ -178,10 +181,8 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
     vector<Vector> d_S(interpolator->size());
 
     Vector dx = patch->dCell();
-    double oodx[3];
-    oodx[0] = 1.0/dx.x();
-    oodx[1] = 1.0/dx.y();
-    oodx[2] = 1.0/dx.z();
+    Vector oodx(1.0/dx.x(),1.0/dx.y(),1.0/dx.z());
+    Vector dx2 = dx * dx;
 
     Ghost::GhostType  gnone = Ghost::None;
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
@@ -226,7 +227,9 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
                                           psize[idx], deformationGradient[idx]);
 
         // Calculate k/(rho*Cv)
-        double alpha = kappa*pvol[idx]/Cv; 
+        double alpha = kappa*pvol[idx]/Cv;
+        double timestepThisParticle= (dx2/(2.0*alpha)).minComponent();
+        minTimestep = min(minTimestep,timestepThisParticle);
         Vector dT_dx = pTempGrad[idx];
         double Tdot_cond = 0.0;
         IntVector node(0,0,0);
@@ -236,9 +239,9 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
         for (int k = 0; k < NN; k++){
           node = ni[k];
           if(patch->containsNode(node)){
-           Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],d_S[k].z()*oodx[2]);
-           Tdot_cond = Dot(div, dT_dx)*(alpha/gMass[node]);
-           gdTdt[node] -= Tdot_cond;
+            Vector div = d_S[k]*oodx;
+            Tdot_cond = Dot(div, dT_dx)*(alpha/gMass[node]);
+            gdTdt[node] -= Tdot_cond;
 
            if (cout_heat.active()) {
               cout_heat << "   node = " << node << " div = " << div 
@@ -251,6 +254,7 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
         } // Loop over local nodes
       } // Loop over particles 
     }  // End of loop over materials
+    new_dw->put(delt_vartype(minTimestep), d_lb->delTLabel, patch->getLevel());
     delete interpolator;
   }  // End of loop over patches
 }
