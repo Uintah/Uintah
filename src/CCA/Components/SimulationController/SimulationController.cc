@@ -649,7 +649,7 @@ void SimulationController::ResetStats( void )
 void
 SimulationController::ScheduleReportStats( bool header )
 {
-  // ARS - FIX ME - SCHEDULE INSTEAD
+  // ARS - FIX ME - SCHEDULE INSTEAD - comment out
   return;
   
 //   std::cerr << "*************" << __FUNCTION__ << "  " << __LINE__ << "  " << header << std::endl;
@@ -804,7 +804,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
     message << std::left
             << "Timestep "   << std::setw(8)  << m_app->getTimeStep()
             << "Time="       << std::setw(12) << m_app->getSimTime()
-            << "delT="       << std::setw(12) << m_app->getDelT()
+            // << "delT="       << std::setw(12) << m_app->getDelT()
             << "Next delT="  << std::setw(12) << m_app->getNextDelT()
 
             << "Wall Time=" << std::setw(10) << m_wall_timers.GetWallTime()
