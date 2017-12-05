@@ -80,7 +80,7 @@ WARNING
 class DataWarehouse;
   
   class ApplicationCommon : public UintahParallelComponent,
-			    public ApplicationInterface {
+                            public ApplicationInterface {
 
     friend class SimulationController;
     friend class AMRSimulationController;
@@ -88,7 +88,7 @@ class DataWarehouse;
 
 public:
   ApplicationCommon(const ProcessorGroup* myworld,
-		    const SimulationStateP sharedState);
+                    const SimulationStateP sharedState);
 
   virtual ~ApplicationCommon();
   
@@ -101,22 +101,22 @@ public:
   virtual void problemSetup( const ProblemSpecP &prob_spec );
   
   virtual void problemSetup( const ProblemSpecP & prob_spec,
-			     const ProblemSpecP & restart_prob_spec,
+                             const ProblemSpecP & restart_prob_spec,
                                           GridP & grid ) = 0;
   
   virtual void preGridProblemSetup( const ProblemSpecP & params, 
-				    GridP              & grid ) {};
+                                    GridP              & grid ) {};
   
   virtual void outputProblemSpec( ProblemSpecP & prob_spec ) {};
   
   //////////
   // Insert Documentation Here:
   virtual void scheduleInitialize( const LevelP & level,
-				   SchedulerP & scheduler ) = 0;
+                                   SchedulerP & scheduler ) = 0;
   
   // on a restart schedule an initialization task
   virtual void scheduleRestartInitialize( const LevelP & level,
-					  SchedulerP & scheduler )  = 0;
+                                          SchedulerP & scheduler )  = 0;
   
   //////////
   // restartInitialize() is called once and only once if and when a
@@ -131,7 +131,7 @@ public:
   //////////
   // Insert Documentation Here:
   virtual void scheduleComputeStableTimeStep( const LevelP & level,
-					      SchedulerP & scheduler ) = 0;
+                                              SchedulerP & scheduler ) = 0;
   
   //////////
   // Insert Documentation Here:
@@ -140,40 +140,38 @@ public:
   //////////
   // Insert Documentation Here:
   virtual void scheduleReduceSystemVars(const GridP& grid,
-					const PatchSet* perProcPatchSet,
-					SchedulerP& scheduler);
+                                        const PatchSet* perProcPatchSet,
+                                        SchedulerP& scheduler);
 
   virtual void reduceSystemVars( const ProcessorGroup *,
-				 const PatchSubset    * patches,
-				 const MaterialSubset * /*matls*/,
-				       DataWarehouse  * /*old_dw*/,
-			               DataWarehouse  * new_dw );
+                                 const PatchSubset    * patches,
+                                 const MaterialSubset * /*matls*/,
+                                       DataWarehouse  * /*old_dw*/,
+                                       DataWarehouse  * new_dw );
   
-  virtual void finalizeSystemVars( SchedulerP& scheduler );
-    
   //////////
   // Insert Documentation Here:
   virtual void scheduleInitializeSystemVars(const GridP& grid,
-					    const PatchSet* perProcPatchSet,
-					    SchedulerP& scheduler);
+                                            const PatchSet* perProcPatchSet,
+                                            SchedulerP& scheduler);
 
   virtual void initializeSystemVars( const ProcessorGroup *,
-				     const PatchSubset    * patches,
-				     const MaterialSubset * /*matls*/,
-				           DataWarehouse  * /*old_dw*/,
-			                   DataWarehouse  * new_dw );
+                                     const PatchSubset    * patches,
+                                     const MaterialSubset * /*matls*/,
+                                           DataWarehouse  * /*old_dw*/,
+                                           DataWarehouse  * new_dw );
       
   //////////
   // Insert Documentation Here:
   virtual void scheduleUpdateSystemVars(const GridP& grid,
-					const PatchSet* perProcPatchSet,
-					SchedulerP& scheduler);
+                                        const PatchSet* perProcPatchSet,
+                                        SchedulerP& scheduler);
 
   virtual void updateSystemVars( const ProcessorGroup *,
-				 const PatchSubset    * patches,
-				 const MaterialSubset * /*matls*/,
-				       DataWarehouse  * /*old_dw*/,
-			               DataWarehouse  * new_dw );
+                                 const PatchSubset    * patches,
+                                 const MaterialSubset * /*matls*/,
+                                       DataWarehouse  * /*old_dw*/,
+                                       DataWarehouse  * new_dw );
       
   // this is for wrapping up a time step when it can't be done in
   // scheduleTimeAdvance.
@@ -182,19 +180,19 @@ public:
      
   virtual void scheduleRefine( const PatchSet* patches, SchedulerP& scheduler );
   virtual void scheduleRefineInterface( const LevelP     & fineLevel, 
-					SchedulerP & scheduler,
-					bool         needCoarseOld,
-					bool         needCoarseNew );
+                                        SchedulerP & scheduler,
+                                        bool         needCoarseOld,
+                                        bool         needCoarseNew );
   virtual void scheduleCoarsen( const LevelP     & coarseLevel, 
-				SchedulerP & scheduler );
+                                SchedulerP & scheduler );
 
   /// Schedule to mark flags for AMR regridding
   virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
-				     SchedulerP& sched);
+                                     SchedulerP& sched);
   
   /// Schedule to mark initial flags for AMR regridding
   virtual void scheduleInitialErrorEstimate(const LevelP& coarseLevel,
-					    SchedulerP& sched);
+                                            SchedulerP& sched);
   
   // Redo a time step if current time advance is not converging.
   // Returned time is the new dt to use.
@@ -205,12 +203,13 @@ public:
   // use this to get the progress ratio of an AMR subcycle
   double getSubCycleProgress(DataWarehouse* fineNewDW);
   
+  virtual void prepareForNextTimeStep( const GridP & grid );
 
   //////////
   // ask the application if it needs to be recompiled
   virtual bool needRecompile( double /*time*/,
-			      double /*dt*/,
-			      const GridP& /*grid*/)
+                              double /*dt*/,
+                              const GridP& /*grid*/)
   { return false; }
   
   virtual const VarLabel* getTimeStepLabel() const { return m_timeStepLabel; }
@@ -260,7 +259,7 @@ public:
 
 
   virtual void scheduleSwitchTest(const LevelP& /*level*/,
-				  SchedulerP& /*sched*/) {};
+                                  SchedulerP& /*sched*/) {};
 private:
     // The classes are private because only the top level application
     // should be changing them. This only really matter when there are
@@ -271,14 +270,13 @@ private:
   //////////
   virtual   void setDelT( double val );
   virtual double getDelT() const { return m_delT; }
-  virtual   void restartDelT( double val );
-  virtual   void getNextDelT( SchedulerP& scheduler );  
-  virtual   void adjustDelTForAllLevels( SchedulerP& scheduler,
-					 const GridP & grid,
-					 const int totalFine );
+  virtual   void setDelTForAllLevels( SchedulerP& scheduler,
+                                      const GridP & grid,
+                                      const int totalFine );
 
-  virtual   void setPrevDelT( double val ) { m_prevDelT = val; }
-  virtual double getPrevDelT() const { return m_prevDelT; }
+  virtual   void setNextDelT( double val );
+  virtual double getNextDelT() const { return m_nextDelT; }
+  virtual   void validateNextDelT( DataWarehouse  * new_dw );
 
   //////////
   virtual   void setSimTime( double val );
@@ -342,7 +340,7 @@ private:
   SimulationTime* m_simulationTime {nullptr};
   
   double m_delT{0.0};
-  double m_prevDelT{0.0};
+  double m_nextDelT{0.0};
 
   double m_simTime{0.0};             // current sim time
   double m_simTimeStart{0.0};        // starting sim time

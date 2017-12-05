@@ -43,6 +43,7 @@
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/SimulationTime.h>
+#include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Grid/Variables/ReductionVariable.h>
 #include <Core/Grid/Variables/SoleVariable.h>
@@ -74,20 +75,20 @@ using namespace Uintah;
 
 namespace {
 
-DebugStream amrout(      "AMR"                    , false);
-DebugStream dbg(         "AMRSimulationController", false);
-DebugStream dbg_barrier( "MPIBarriers"            , false);
-DebugStream dbg_dwmem(   "LogDWMemory"            , false);
-DebugStream gprofile(    "CPUProfiler"            , false);
-DebugStream gheapprofile("HeapProfiler"           , false);
-DebugStream gheapchecker("HeapChecker"            , false);
+  DebugStream amrout(      "AMR"                    , false);
+  DebugStream dbg(         "AMRSimulationController", false);
+  DebugStream dbg_barrier( "MPIBarriers"            , false);
+  DebugStream dbg_dwmem(   "LogDWMemory"            , false);
+  DebugStream gprofile(    "CPUProfiler"            , false);
+  DebugStream gheapprofile("HeapProfiler"           , false);
+  DebugStream gheapchecker("HeapChecker"            , false);
 
 }
 
 
 AMRSimulationController::AMRSimulationController( const ProcessorGroup * myworld
-                                                ,       ProblemSpecP     pspec
-                                                )
+						  ,       ProblemSpecP     pspec
+						  )
   :  SimulationController( myworld, pspec )
 {
 }
@@ -106,11 +107,9 @@ AMRSimulationController::run()
   // If VisIt has been included into the build, initialize the lib sim
   // so that a user can connect to the simulation via VisIt.
 #ifdef HAVE_VISIT
-  visit_simulation_data visitSimData;
-
   if( getVisIt() ) {
-    visitSimData.simController = this;
-    visitSimData.runMode = getVisIt();
+    m_visitSimData->simController = this;
+    m_visitSimData->runMode = getVisIt();
 
     // Running with VisIt so add in the variables that the user can
     // modify.
@@ -135,7 +134,7 @@ AMRSimulationController::run()
     m_app->getDebugStreams().push_back( &gheapprofile );
     m_app->getDebugStreams().push_back( &gheapchecker );
 
-    visit_InitLibSim( &visitSimData );
+    visit_InitLibSim( m_visitSimData );
   }
 #endif
 
@@ -211,37 +210,11 @@ AMRSimulationController::run()
   GpuUtilities::assignPatchesToGpus( m_current_gridP );
 #endif
 
-  //  postProcessUda - needs to be done after the time info is read but
-  //  before the initial time step.
-  if( m_post_process_uda ) {
-    Dir fromDir( m_from_dir );
-    m_output->postProcessUdaSetup( fromDir );
-    m_app->getSimulationTime()->m_delt_factor = 1;
-    m_app->getSimulationTime()->m_delt_min    = 0;
-    m_app->getSimulationTime()->m_delt_max    = 1e99;
-    m_app->getSimulationTime()->m_init_time = static_cast<PostProcessUda*>(m_app)->getInitialTime();
-    m_app->getSimulationTime()->m_max_time  = static_cast<PostProcessUda*>(m_app)->getMaxTime();
-    m_app->getSimulationTime()->m_max_delt_increase = 1e99;
-    m_app->getSimulationTime()->m_max_initial_delt  = 1e99;
-  }
-
   // Setup, compile, and run the taskgraph for the initialization time step
   doInitialTimeStep();
-  
-  // Finalize the application system vars including getting the next
-  // delta T - Do this before reporting stats or the in-situ so the
-  // new delT is available.
-  m_app->finalizeSystemVars( m_scheduler );
-  
-  // Report all of the stats before doing any possible in-situ work
-  // as that effects the lap timer for the time steps.
-  ReportStats( first );
 
-  // If compiled with VisIt check the in-situ status for work.
-#ifdef HAVE_VISIT
-  if( CheckInSitu( &visitSimData, first ) )
-    exit(0);
-#endif      
+  // ARS - FIX ME - SCHEDULE INSTEAD
+  ReportStats( nullptr, nullptr, nullptr, nullptr, nullptr, true );
 
   // Update the profiler weights
   m_lb->finalizeContributions(m_current_gridP);
@@ -301,7 +274,8 @@ AMRSimulationController::run()
     // when the time step is finished. It is currently used only for
     // outputing and checkpointing. Both of which typically take much
     // longer than the simulation calculation.
-    double walltime = m_wall_timers.GetWallTime() + 1.5 * m_wall_timers.ExpMovingAverage().seconds();
+    double walltime = m_wall_timers.GetWallTime() +
+      1.5 * m_wall_timers.ExpMovingAverage().seconds();
 
     m_output->maybeLastTimestep( m_app->maybeLastTimeStep( walltime ) );
     
@@ -317,9 +291,9 @@ AMRSimulationController::run()
     // wall time are all in sync.
 
     m_output->findNext_OutputCheckPointTimestep( m_app->getTimeStep(),
-						                                     m_app->getSimTime(),
-						                                     m_app->getDelT(),
-						                                     first && m_restarting );
+						 m_app->getSimTime(),
+						 m_app->getNextDelT(),
+						 first && m_restarting );
 
     // Reset the runtime performance stats
     ResetStats();
@@ -331,8 +305,9 @@ AMRSimulationController::run()
     m_scheduler->clearTaskMonitoring();
     
     // Increment (by one) the current time step number so components
-    // know what time step they are on.
-    m_app->incrementTimeStep( m_current_gridP );
+    // know what time step they are on and get the delta T that will
+    // be used.
+    m_app->prepareForNextTimeStep( m_current_gridP );
 
     // Ready for the next time step. 
 
@@ -382,7 +357,6 @@ AMRSimulationController::run()
         if( tmp_time >= m_output->getNextCheckpointWalltime() )
           pidx_checkpointing = true;    
       }
-
       
       // Checkpointing
       if( pidx_checkpointing ) {
@@ -418,7 +392,9 @@ AMRSimulationController::run()
     // Regridding
     if (m_regridder) {
       // If not the first time step or restarting check for regridding
-      if ((!first || m_restarting) && m_regridder->needsToReGrid(m_current_gridP)) {
+      if ((!first || m_restarting) &&
+	  m_regridder->needsToReGrid(m_current_gridP)) {
+	
         proc0cout << " Need to regrid." << std::endl;
         doRegridding( false );
       }
@@ -452,7 +428,6 @@ AMRSimulationController::run()
 #ifndef DISABLE_SCI_MALLOC
       DumpAllocator(DefaultAllocator(), filename.c_str());
 #endif
-
     }
 
     if (dbg_barrier.active()) {
@@ -514,7 +489,6 @@ AMRSimulationController::run()
         }
       }
 #endif
-
       m_scheduler->setRestartInitTimestep( false );
       recompile( totalFine );
     }
@@ -522,11 +496,11 @@ AMRSimulationController::run()
       // This is not correct if we have switched to a different
       // component, since the delT will be wrong
       m_output->finalizeTimestep( m_app->getTimeStep(),
-		                              m_app->getSimTime(),
-			                            m_app->getDelT(),
-			                            m_current_gridP,
-			                            m_scheduler,
-			                            0 );
+				  m_app->getSimTime(),
+				  m_app->getDelT(),
+				  m_current_gridP,
+				  m_scheduler,
+				  0 );
     }
 
     if( dbg_barrier.active() ) {
@@ -561,33 +535,21 @@ AMRSimulationController::run()
     // For PIDX only save timestep.xml when checkpointing.  Normal
     // time step dumps using PIDX do not need to write the xml
     // information.      
-    if( !m_output->savingAsPIDX() || (m_output->savingAsPIDX() && pidx_checkpointing) )
+    if( !m_output->savingAsPIDX() ||
+	(m_output->savingAsPIDX() && pidx_checkpointing) )
 #endif    
-    {
-      // If PIDX is not being used write timestep.xml for both
-      // checkpoints and time step dumps.
-      m_output->writeto_xml_files( m_app->getTimeStep(),
-				                           m_app->getSimTime(),
-				                           m_app->getDelT(),
-				                           m_current_gridP );
-    }
+      {
+	// If PIDX is not being used write timestep.xml for both
+	// checkpoints and time step dumps.
+	m_output->writeto_xml_files( m_app->getTimeStep(),
+				     m_app->getSimTime(),
+				     m_app->getDelT(),
+				     m_current_gridP );
+      }
+
+    // ARS - FIX ME - SCHEDULE INSTEAD
+    ReportStats( nullptr, nullptr, nullptr, nullptr, nullptr, false );
     
-    // Finalize the application system vars including getting the next
-    // delta T - Do this before reporting stats or the in-situ so the
-    // new delT is available.
-    m_app->finalizeSystemVars( m_scheduler );
-  
-    // Report all of the stats before doing any possible in-situ work
-    // as that affects the lap timer for the time steps.
-    ReportStats( false );
-
-    // If compiled with VisIt check the in-situ status for work.
-#ifdef HAVE_VISIT
-    if( CheckInSitu( &visitSimData, false ) ) {
-      break;
-    }
-#endif      
-
     // Update the profiler weights
     m_lb->finalizeContributions(m_current_gridP);
 
@@ -652,9 +614,18 @@ AMRSimulationController::doInitialTimeStep()
 
     // Initialize the system var (time step and simulation time)
     m_app->scheduleInitializeSystemVars( m_current_gridP,
-					                               m_lb->getPerProcessorPatchSet(m_current_gridP),
-					                               m_scheduler );
-  
+					 m_lb->getPerProcessorPatchSet(m_current_gridP),
+					 m_scheduler );
+
+    // Report all of the stats before doing any possible in-situ work
+    // as that effects the lap timer for the time steps.
+    ScheduleReportStats( true );
+    
+    // If compiled with VisIt check the in-situ status for work.
+#ifdef HAVE_VISIT
+    ScheduleCheckInSitu( true );
+#endif      
+
     taskGraphTimer.reset( true );
     m_scheduler->compile();
     taskGraphTimer.stop();
@@ -726,11 +697,11 @@ AMRSimulationController::doInitialTimeStep()
       // Output tasks
       const bool recompile = true;
       m_output->finalizeTimestep( m_app->getTimeStep(),
-				                          m_app->getSimTime(),
-				                          m_app->getDelT(),
-				                          m_current_gridP,
-				                          m_scheduler,
-				                          recompile) ;
+				  m_app->getSimTime(),
+				  m_app->getDelT(),
+				  m_current_gridP,
+				  m_scheduler,
+				  recompile) ;
 
       m_output->sched_allOutputTasks( m_app->getDelT(),
                                       m_current_gridP,
@@ -738,8 +709,19 @@ AMRSimulationController::doInitialTimeStep()
 
       // Initialize the system var (time step and simulation time).
       // Must be done after the output.
-      m_app->scheduleInitializeSystemVars( m_current_gridP, m_lb->getPerProcessorPatchSet(m_current_gridP), m_scheduler );
+      m_app->scheduleInitializeSystemVars( m_current_gridP,
+					   m_lb->getPerProcessorPatchSet(m_current_gridP),
+					   m_scheduler );
 
+      // Report all of the stats before doing any possible in-situ work
+      // as that effects the lap timer for the time steps.
+      ScheduleReportStats( true );
+    
+      // If compiled with VisIt check the in-situ status for work.
+#ifdef HAVE_VISIT
+      ScheduleCheckInSitu( true );
+#endif      
+    
       taskGraphTimer.reset( true );
       m_scheduler->compile();
       taskGraphTimer.stop();
@@ -785,7 +767,7 @@ AMRSimulationController::executeTimeStep( int totalFine )
 
   // Execute at least once.
   while (!success) {
-    m_app->adjustDelTForAllLevels( m_scheduler, m_current_gridP, totalFine );
+    m_app->setDelTForAllLevels( m_scheduler, m_current_gridP, totalFine );
 
     // Standard data warehouse scrubbing.
     if (m_scrub_datawarehouse && m_lb->getNthRank() == 1) {
@@ -901,23 +883,29 @@ AMRSimulationController::doRegridding( bool initialTimeStep )
 
       // amrout << "---------- OLD GRID ----------" << std::endl << *(oldGrid.get_rep());
       for (int i = 0; i < m_current_gridP->numLevels(); i++) {
-        std::cout << " Level " << i << " has " << m_current_gridP->getLevel(i)->numPatches() << " patches...";
+        std::cout << " Level " << i
+		  << " has " << m_current_gridP->getLevel(i)->numPatches() << " patch(es).";
       }
       std::cout << "\n";
 
       if (amrout.active()) {
-        amrout << "---------- NEW GRID ----------\n" << "Grid has " << m_current_gridP->numLevels() << " level(s)\n";
+        amrout << "---------- NEW GRID ----------\n"
+	       << "Grid has " << m_current_gridP->numLevels() << " level(s)\n";
 
         for( int levelIndex = 0; levelIndex < m_current_gridP->numLevels(); levelIndex++ ) {
           LevelP level = m_current_gridP->getLevel( levelIndex );
 
-          amrout << "  Level " << level->getID() << ", indx: " << level->getIndex() << " has " << level->numPatches() << " patch(es)\n";
+          amrout << "  Level " << level->getID()
+		 << ", indx: " << level->getIndex()
+		 << " has " << level->numPatches() << " patch(es).\n";
 
           for( Level::patch_iterator patchIter = level->patchesBegin(); patchIter < level->patchesEnd(); patchIter++ ) {
             const Patch* patch = *patchIter;
-            amrout << "(Patch " << patch->getID() << " proc " << m_lb->getPatchwiseProcessorAssignment(patch) << ": box="
-                   << patch->getExtraBox() << ", lowIndex=" << patch->getExtraCellLowIndex() << ", highIndex="
-                   << patch->getExtraCellHighIndex() << ")\n";
+            amrout << "(Patch " << patch->getID()
+		   << " proc " << m_lb->getPatchwiseProcessorAssignment(patch)
+		   << ": box=" << patch->getExtraBox()
+		   << ", lowIndex=" << patch->getExtraCellLowIndex()
+		   << ", highIndex=" << patch->getExtraCellHighIndex() << ")\n";
           }
         }
       }
@@ -962,10 +950,10 @@ AMRSimulationController::needRecompile()
 
   // Currently, m_output, m_sim, m_lb, m_regridder can request a recompile
   bool recompile =
-       m_output->needRecompile(m_app->getSimTime(), m_app->getDelT(), m_current_gridP) ||
-       m_app->needRecompile(m_app->getSimTime(), m_app->getDelT(), m_current_gridP)    ||
-       m_lb->needRecompile(m_app->getSimTime(), m_app->getDelT(), m_current_gridP)     ||
-       m_recompile_taskgraph;
+    m_output->needRecompile(m_app->getSimTime(), m_app->getDelT(), m_current_gridP) ||
+    m_app->needRecompile(m_app->getSimTime(), m_app->getDelT(), m_current_gridP)    ||
+    m_lb->needRecompile(m_app->getSimTime(), m_app->getDelT(), m_current_gridP)     ||
+    m_recompile_taskgraph;
   
   if (m_regridder) {
     recompile |= m_regridder->needRecompile(m_app->getSimTime(), m_app->getDelT(), m_current_gridP);
@@ -977,14 +965,14 @@ AMRSimulationController::needRecompile()
 
   // ARS - Should this check be on the component level?
   for( unsigned int i=0; i<m_app->getUPSVars().size(); ++i )
-  {
-    ApplicationInterface::interactiveVar &var = m_app->getUPSVars()[i];
-
-    if( var.modified && var.recompile )
     {
-      recompile = true;
+      ApplicationInterface::interactiveVar &var = m_app->getUPSVars()[i];
+
+      if( var.modified && var.recompile )
+	{
+	  recompile = true;
+	}
     }
-  }
 #endif
   
   return recompile;
@@ -1072,7 +1060,7 @@ AMRSimulationController::recompile( int totalFine )
       m_app->scheduleErrorEstimate(m_current_gridP->getLevel(i), m_scheduler);
 
       if (i < m_regridder->maxLevels() - 1) { // we don't use error estimates if we don't make another level, so don't dilate
-        m_regridder->scheduleDilation(m_current_gridP->getLevel(i),  m_app->isLockstepAMR());
+        m_regridder->scheduleDilation(m_current_gridP->getLevel(i), m_app->isLockstepAMR());
       }
     }
   }
@@ -1093,11 +1081,11 @@ AMRSimulationController::recompile( int totalFine )
   
   // Output tasks
   m_output->finalizeTimestep( m_app->getTimeStep(),
-			                        m_app->getSimTime(),
-			                        m_app->getDelT(),
-			                        m_current_gridP,
-			                        m_scheduler,
-			                        true );
+			      m_app->getSimTime(),
+			      m_app->getDelT(),
+			      m_current_gridP,
+			      m_scheduler,
+			      true );
 
   m_output->sched_allOutputTasks(m_app->getDelT(), m_current_gridP, m_scheduler, true);
 
@@ -1105,7 +1093,16 @@ AMRSimulationController::recompile( int totalFine )
   // done after the output.
   m_app->scheduleUpdateSystemVars( m_current_gridP,
                                    m_lb->getPerProcessorPatchSet(m_current_gridP),
-				                           m_scheduler );
+				   m_scheduler );
+
+  // Report all of the stats before doing any possible in-situ work
+  // as that effects the lap timer for the time steps.
+  ScheduleReportStats( false );
+
+  // If compiled with VisIt check the in-situ status for work.
+#ifdef HAVE_VISIT
+  ScheduleCheckInSitu( false );
+#endif      
 
   m_scheduler->compile();
 
@@ -1146,7 +1143,7 @@ AMRSimulationController::subCycleCompile( int startDW,
   }
   
   ASSERT(dwStride > 0 && numLevel < m_current_gridP->numLevels())
-  m_scheduler->clearMappings();
+    m_scheduler->clearMappings();
   m_scheduler->mapDataWarehouse(Task::OldDW, startDW);
   m_scheduler->mapDataWarehouse(Task::NewDW, startDW+dwStride);
   m_scheduler->mapDataWarehouse(Task::CoarseOldDW, coarseStartDW);
@@ -1338,6 +1335,6 @@ AMRSimulationController::scheduleComputeStableTimeStep()
   // Schedule the reduction of the time step and other variables on a
   // per patch basis to a per rank basis.
   m_app->scheduleReduceSystemVars( m_current_gridP,
-				                           m_lb->getPerProcessorPatchSet(m_current_gridP),
-				                           m_scheduler);
+				   m_lb->getPerProcessorPatchSet(m_current_gridP),
+				   m_scheduler);
 }

@@ -218,35 +218,35 @@ ApplicationCommon::scheduleRefine(const PatchSet*, SchedulerP&)
 
 void
 ApplicationCommon::scheduleRefineInterface(const LevelP&,
-					   SchedulerP&,
-					   bool, bool)
+                                           SchedulerP&,
+                                           bool, bool)
 {
   throw InternalError( "scheduleRefineInterface is not implemented for this application\n", __FILE__, __LINE__ );
 }
 
 void
 ApplicationCommon::scheduleCoarsen(const LevelP&,
-				   SchedulerP&)
+                                   SchedulerP&)
 {
   throw InternalError( "scheduleCoarsen is not implemented for this application\n", __FILE__, __LINE__ );
 }
 
 void
 ApplicationCommon::scheduleTimeAdvance(const LevelP&,
-				       SchedulerP&)
+                                       SchedulerP&)
 {
   throw InternalError( "scheduleTimeAdvance is not implemented for this application", __FILE__, __LINE__ );
 }
 
 void
 ApplicationCommon::scheduleReduceSystemVars(const GridP& grid,
-					    const PatchSet* perProcPatchSet,
-					    SchedulerP& scheduler)
+                                            const PatchSet* perProcPatchSet,
+                                            SchedulerP& scheduler)
 {
   // Reduce the system vars which are on a per patch basis to a per
   // rank basis.
   Task* task = scinew Task("ApplicationCommon::reduceSystemVars", this,
-			                     &ApplicationCommon::reduceSystemVars);
+                           &ApplicationCommon::reduceSystemVars);
 
   task->setType(Task::OncePerProc);
   task->usesMPI(true);
@@ -288,10 +288,10 @@ ApplicationCommon::scheduleReduceSystemVars(const GridP& grid,
 //
 void
 ApplicationCommon::reduceSystemVars( const ProcessorGroup *,
-				     const PatchSubset    * patches,
-				     const MaterialSubset * /*matls*/,
-				           DataWarehouse  * /*old_dw*/,
-				           DataWarehouse  * new_dw )
+                                     const PatchSubset    * patches,
+                                     const MaterialSubset * /*matls*/,
+                                           DataWarehouse  * /*old_dw*/,
+                                           DataWarehouse  * new_dw )
 {
   MALLOC_TRACE_TAG_SCOPE("ApplicationCommon::reduceSysVar()");
 
@@ -324,6 +324,9 @@ ApplicationCommon::reduceSystemVars( const ProcessorGroup *,
     new_dw->reduceMPI(m_delTLabel, 0, 0, -1);
   }
 
+  // Validate the next delta T
+  validateNextDelT( new_dw );
+
   // Reduce the output interval, checkpoint interval, and end
   // simulation variables. If no value was computed on an MPI rank, a
   // benign value will be set. If the reduction result is also a
@@ -344,6 +347,13 @@ ApplicationCommon::reduceSystemVars( const ProcessorGroup *,
     if (d_myworld->nRanks() > 1) {
       new_dw->reduceMPI(m_outputIntervalLabel, 0, 0, -1);
     }
+
+    min_vartype outputInv_var;
+    new_dw->get( outputInv_var, m_outputIntervalLabel );
+      
+    if( !outputInv_var.isBenignValue() ) {
+      m_output->setOutputInterval( outputInv_var );
+    }
   }
 
   if (m_adjustCheckpointInterval) {
@@ -355,6 +365,13 @@ ApplicationCommon::reduceSystemVars( const ProcessorGroup *,
 
     if (d_myworld->nRanks() > 1) {
       new_dw->reduceMPI(m_checkpointIntervalLabel, 0, 0, -1);
+    }
+
+    min_vartype checkInv_var;
+    new_dw->get( checkInv_var, m_checkpointIntervalLabel );
+    
+    if ( !checkInv_var.isBenignValue() ) {
+      m_output->setCheckpointInterval( checkInv_var );
     }
   }
 
@@ -369,6 +386,13 @@ ApplicationCommon::reduceSystemVars( const ProcessorGroup *,
     if (d_myworld->nRanks() > 1) {
       new_dw->reduceMPI(m_endSimulationLabel, 0, 0, -1);
     }
+
+    bool_or_vartype endSim_var;
+    new_dw->get( endSim_var, m_endSimulationLabel );
+    
+    if ( !endSim_var.isBenignValue() ) {
+      m_endSimulation = endSim_var;
+    }
   }
 }  // end reduceSysVar()
 
@@ -376,60 +400,16 @@ ApplicationCommon::reduceSystemVars( const ProcessorGroup *,
 //______________________________________________________________________
 //
 void
-ApplicationCommon::finalizeSystemVars( SchedulerP& scheduler )
-{
-  // Get the next delta T - Do this before reporting stats or the
-  // in-situ so the new delT is availble.
-  getNextDelT( scheduler );
-  
-  // An application may update the output interval or the checkpoint
-  // interval during a simulation.  For example in deflagration ->
-  // detonation simulations
-  DataWarehouse* newDW = scheduler->getLastDW();
-
-  if( m_adjustOutputInterval ) {
-    min_vartype outputInv_var;
-    newDW->get( outputInv_var, m_outputIntervalLabel );
-      
-    if( !outputInv_var.isBenignValue() ) {
-      m_output->setOutputInterval( outputInv_var );
-    }
-  }
-
-  if( m_adjustCheckpointInterval ) {
-    min_vartype checkInv_var;
-    newDW->get( checkInv_var, m_checkpointIntervalLabel );
-    
-    if ( !checkInv_var.isBenignValue() ) {
-      m_output->setCheckpointInterval( checkInv_var );
-    }
-  }
-
-  // An application may request that the simulation end early.
-  if( m_mayEndSimulation ) {
-    bool_or_vartype endSim_var;
-    newDW->get( endSim_var, m_endSimulationLabel );
-    
-    if ( !endSim_var.isBenignValue() ) {
-      m_endSimulation = endSim_var;
-    }
-  }
-}
-
-
-//______________________________________________________________________
-//
-void
 ApplicationCommon::scheduleInitializeSystemVars( const GridP      & grid,
-						                                     const PatchSet   * perProcPatchSet,
-						                                           SchedulerP & scheduler)
+                                                                                     const PatchSet   * perProcPatchSet,
+                                                                                           SchedulerP & scheduler)
 {
   // std::cerr << "**********  " << __FUNCTION__ << "  " << __LINE__ << "  "
-  // 	    << std::endl;
+  //        << std::endl;
 
   // Initialize the system vars which are on a per rank basis.
   Task* task = scinew Task("ApplicationCommon::initializeSystemVars", this,
-  			   &ApplicationCommon::initializeSystemVars);
+                           &ApplicationCommon::initializeSystemVars);
 
   task->setType(Task::OncePerProc);
   
@@ -437,16 +417,16 @@ ApplicationCommon::scheduleInitializeSystemVars( const GridP      & grid,
   task->computes(m_simulationTimeLabel);
 
   scheduler->overrideVariableBehavior(m_timeStepLabel->getName(),
-  				      false, false, true, false, true);
+                                      false, false, true, false, true);
   scheduler->overrideVariableBehavior(m_simulationTimeLabel->getName(),
-  				      false, false, true, false, true);
+                                      false, false, true, false, true);
   // treatAsOld copyData noScrub notCopyData noCheckpoint
 
   // std::cerr << __FUNCTION__ << "  "
-  // 	    << grid->numLevels() << "  " 
-  // 	    << scheduler->get_dw(0) << "  " 
-  // 	    << scheduler->get_dw(1) << "  " 
-  // 	    << scheduler->getLastDW() << std::endl;
+  //        << grid->numLevels() << "  " 
+  //        << scheduler->get_dw(0) << "  " 
+  //        << scheduler->get_dw(1) << "  " 
+  //        << scheduler->getLastDW() << std::endl;
     
   scheduler->addTask(task, perProcPatchSet, m_sharedState->allMaterials());
 }
@@ -455,15 +435,15 @@ ApplicationCommon::scheduleInitializeSystemVars( const GridP      & grid,
 //
 void
 ApplicationCommon::initializeSystemVars( const ProcessorGroup *,
-					                               const PatchSubset    * patches,
-					                               const MaterialSubset * /*matls*/,
-					                                     DataWarehouse  * /*old_dw*/,
-				                                       DataWarehouse  * new_dw )
+                                                                       const PatchSubset    * patches,
+                                                                       const MaterialSubset * /*matls*/,
+                                                                             DataWarehouse  * /*old_dw*/,
+                                                                       DataWarehouse  * new_dw )
 {
   MALLOC_TRACE_TAG_SCOPE("ApplicationCommon::initializeSystemVar()");
 
   // std::cerr << "**********  " << __FUNCTION__ << "  " << __LINE__ << "  "
-  // 	    << new_dw << std::endl;  
+  //        << new_dw << std::endl;  
 
   // Initialize the time step.
   new_dw->put(timeStep_vartype(m_timeStep), m_timeStepLabel);
@@ -476,7 +456,7 @@ ApplicationCommon::initializeSystemVars( const ProcessorGroup *,
   m_sharedState->setElapsedSimTime( m_simTime );
 
   // std::cerr << "**********  " << __FUNCTION__ << "  " << __LINE__ << "  "
-  // 	    << new_dw << std::endl;  
+  //        << new_dw << std::endl;  
 }
 
 
@@ -484,12 +464,12 @@ ApplicationCommon::initializeSystemVars( const ProcessorGroup *,
 //
 void
 ApplicationCommon::scheduleUpdateSystemVars(const GridP& grid,
-					    const PatchSet* perProcPatchSet,
-					    SchedulerP& scheduler)
+                                            const PatchSet* perProcPatchSet,
+                                            SchedulerP& scheduler)
 {
   // Update the system vars which are on a per rank basis.
   Task* task = scinew Task("ApplicationCommon::updateSystemVars", this,
-  			   &ApplicationCommon::updateSystemVars);
+                           &ApplicationCommon::updateSystemVars);
 
   task->setType(Task::OncePerProc);
   
@@ -497,16 +477,16 @@ ApplicationCommon::scheduleUpdateSystemVars(const GridP& grid,
   task->computes(m_simulationTimeLabel);
 
   scheduler->overrideVariableBehavior(m_timeStepLabel->getName(),
-  				      false, false, true, false, true);
+                                      false, false, true, false, true);
   scheduler->overrideVariableBehavior(m_simulationTimeLabel->getName(),
-  				      false, false, true, false, true);
+                                      false, false, true, false, true);
   // treatAsOld copyData noScrub notCopyData noCheckpoint
 
   // std::cerr << __FUNCTION__ << "  "
-  // 	    << grid->numLevels() << "  " 
-  // 	    << scheduler->get_dw(0) << "  " 
-  // 	    << scheduler->get_dw(1) << "  " 
-  // 	    << scheduler->getLastDW() << std::endl;
+  //        << grid->numLevels() << "  " 
+  //        << scheduler->get_dw(0) << "  " 
+  //        << scheduler->get_dw(1) << "  " 
+  //        << scheduler->getLastDW() << std::endl;
     
   scheduler->addTask(task, perProcPatchSet, m_sharedState->allMaterials());
 }
@@ -515,15 +495,15 @@ ApplicationCommon::scheduleUpdateSystemVars(const GridP& grid,
 //
 void
 ApplicationCommon::updateSystemVars( const ProcessorGroup *,
-				     const PatchSubset    * patches,
-				     const MaterialSubset * /*matls*/,
-				           DataWarehouse  * /*old_dw*/,
-				           DataWarehouse  * new_dw )
+                                     const PatchSubset    * patches,
+                                     const MaterialSubset * /*matls*/,
+                                           DataWarehouse  * /*old_dw*/,
+                                           DataWarehouse  * new_dw )
 {
   MALLOC_TRACE_TAG_SCOPE("ApplicationCommon::updateSystemVar()");
 
   // std::cerr << "**********  " << __FUNCTION__ << "  " << __LINE__ << "  "
-  // 	    << new_dw << std::endl;  
+  //        << new_dw << std::endl;  
 
   // If the time step is being restarted do not update the simulation
   // time. The time step does not get up dated here but is stored so
@@ -545,7 +525,7 @@ ApplicationCommon::updateSystemVars( const ProcessorGroup *,
   }
 
   // std::cerr << "**********  " << __FUNCTION__ << "  " << __LINE__ << "  "
-  // 	    << new_dw << std::endl;  
+  //        << new_dw << std::endl;  
 }
 
 
@@ -553,7 +533,7 @@ ApplicationCommon::updateSystemVars( const ProcessorGroup *,
 //
 void
 ApplicationCommon::scheduleErrorEstimate( const LevelP&,
-					  SchedulerP& )
+                                          SchedulerP& )
 {
   throw InternalError( "scheduleErrorEstimate is not implemented for this application", __FILE__, __LINE__ );
 }
@@ -562,7 +542,7 @@ ApplicationCommon::scheduleErrorEstimate( const LevelP&,
 //
 void
 ApplicationCommon::scheduleInitialErrorEstimate(const LevelP& /*coarseLevel*/,
-						SchedulerP& /*sched*/)
+                                                SchedulerP& /*sched*/)
 {
   throw InternalError("scheduleInitialErrorEstimate is not implemented for this application", __FILE__, __LINE__);
 }
@@ -576,15 +556,15 @@ ApplicationCommon::recomputeTimeStep()
   double new_delT = recomputeTimeStep(m_delT);
 
   proc0cout << "Restarting time step at " << m_simTime
-	    << ", changing delT from " << m_delT
-	    << " to " << new_delT
-	    << std::endl;
+            << ", changing delT from " << m_delT
+            << " to " << new_delT
+            << std::endl;
 
   // Bulletproofing
   if (new_delT < m_simulationTime->m_delt_min || new_delT <= 0) {
     std::ostringstream warn;
     warn << "The new delT (" << new_delT << ") is either less than "
-	 << "delT_min (" << m_simulationTime->m_delt_min << ") or equal to 0";
+         << "delT_min (" << m_simulationTime->m_delt_min << ") or equal to 0";
     throw InternalError(warn.str(), __FILE__, __LINE__);
   }
   
@@ -630,9 +610,33 @@ ApplicationCommon::getSubCycleProgress(DataWarehouse* fineDW)
 //______________________________________________________________________
 //
 void
-ApplicationCommon::adjustDelTForAllLevels( SchedulerP& scheduler,
-					   const GridP & grid,
-					   const int totalFine )
+ApplicationCommon::prepareForNextTimeStep( const GridP & grid )
+{
+  // Increment (by one) the current time step number so components
+  // know what time step they are on and get the delta T that will be
+  // used.
+  incrementTimeStep( grid );
+
+  // Get the delta that will be used for the time step.
+  delt_vartype delt_var;
+  m_scheduler->getLastDW()->get( delt_var, m_delTLabel );
+  m_delT = delt_var;
+}
+
+//______________________________________________________________________
+//
+void
+ApplicationCommon::setDelT( double val )
+{
+  m_delT = val;
+}
+
+//______________________________________________________________________
+//
+void
+ ApplicationCommon::setDelTForAllLevels( SchedulerP& scheduler,
+                                        const GridP & grid,
+                                        const int totalFine )
 {
   // Adjust the delT for each level and store it in all applicable dws.
   double delT_fine = m_delT;
@@ -669,132 +673,138 @@ ApplicationCommon::adjustDelTForAllLevels( SchedulerP& scheduler,
 //______________________________________________________________________
 //
 void
-ApplicationCommon::setDelT( double val )
+ApplicationCommon::setNextDelT( double val )
 {
-  m_delT = val;
-}
+  // Only used for restarting.
 
-//______________________________________________________________________
-//
-void
-ApplicationCommon::restartDelT( double val )
-{
   // Check to see if the user has set a restart delT
-  if (getSimulationTime()->m_override_restart_delt != 0) {
+  if (m_simulationTime->m_override_restart_delt != 0) {
     proc0cout << "Overriding restart delT " << m_delT << " with "
-	      << getSimulationTime()->m_override_restart_delt << "\n";
+              << m_simulationTime->m_override_restart_delt << "\n";
     
-    m_delT = getSimulationTime()->m_override_restart_delt;
+    m_nextDelT = m_simulationTime->m_override_restart_delt;
 
-    m_scheduler->get_dw(1)->override(delt_vartype(m_delT), m_delTLabel);
+    m_scheduler->getLastDW()->override(delt_vartype(m_nextDelT), m_delTLabel);
   }
-  // Set the delT to the value from the last simulation.  If in the
-  // last sim delT was clamped based on the values of prevDelT, then
-  // delT will be off if it doesn't match.
+
+  // Otherwise get the next delta T from the archive.
+  else if( m_scheduler->getLastDW()->exists( m_delTLabel ) )
+  {
+    delt_vartype delt_var;
+    m_scheduler->getLastDW()->get( delt_var, m_delTLabel );
+    m_nextDelT = delt_var;
+  }
+
+  // All else fails use the previous delta T
   else
   {
-    m_delT = val;
+    m_nextDelT = val;
+    m_scheduler->getLastDW()->override(delt_vartype(m_nextDelT), m_delTLabel);
   }
+
+  std::cerr << "*************" << __FUNCTION__ << "  " << __LINE__ << "  " << m_nextDelT << "  " << val << std::endl;
 }
 
 //______________________________________________________________________
 //
 void
-ApplicationCommon::getNextDelT( SchedulerP& scheduler )
+ApplicationCommon::validateNextDelT( DataWarehouse* newDW )
 {
-  m_prevDelT = m_delT;
+  // Retrieve the proposed next delta T and adjust it based on
+  // simulation time info parameters.
 
-  // Retrieve the next delta T and adjust it based on timeinfo
-  // parameters.
-  DataWarehouse* newDW = scheduler->getLastDW();
-						   
+  // NOTE: This check is performed BEFORE the simulation time is
+  // updated. As such, the actual simulation time is the current
+  // simulation time plus the current delta T.
+
   delt_vartype delt_var;
   newDW->get( delt_var, m_delTLabel );
-  m_delT = delt_var;
+  m_nextDelT = delt_var;
 
-  // Adjust the delt
-  m_delT *= m_simulationTime->m_delt_factor;
+  // Adjust the next delT by the factor
+  m_nextDelT *= m_simulationTime->m_delt_factor;
       
-  // Check to see if the new delT is below the delt_min
-  if( m_delT < m_simulationTime->m_delt_min ) {
-    proc0cout << "WARNING: raising delT from " << m_delT;
+  // Check to see if the next delT is below the delt_min
+  if( m_nextDelT < m_simulationTime->m_delt_min ) {
+    proc0cout << "WARNING: raising delT from " << m_nextDelT;
     
-    m_delT = m_simulationTime->m_delt_min;
+    m_nextDelT = m_simulationTime->m_delt_min;
     
-    proc0cout << " to minimum: " << m_delT << '\n';
+    proc0cout << " to minimum: " << m_nextDelT << '\n';
   }
 
-  // Check to see if the new delT was increased too much over the
-  // previous delt
-  double delt_tmp = (1.0+m_simulationTime->m_max_delt_increase) * m_prevDelT;
+  // Check to see if the next delT was increased too much over the
+  // current delT
+  double delt_tmp = (1.0+m_simulationTime->m_max_delt_increase) * m_delT;
   
-  if( m_prevDelT > 0.0 &&
+  if( m_delT > 0.0 &&
       m_simulationTime->m_max_delt_increase > 0 &&
-      m_delT > delt_tmp ) {
-    proc0cout << "WARNING (a): lowering delT from " << m_delT;
+      m_nextDelT > delt_tmp ) {
+    proc0cout << "WARNING (a): lowering delT from " << m_nextDelT;
     
-    m_delT = delt_tmp;
+    m_nextDelT = delt_tmp;
     
-    proc0cout << " to maxmimum: " << m_delT
+    proc0cout << " to maxmimum: " << m_nextDelT
               << " (maximum increase of " << m_simulationTime->m_max_delt_increase
               << ")\n";
   }
 
-  // Check to see if the new delT exceeds the max_initial_delt
-  if( m_simTime <= m_simulationTime->m_initial_delt_range &&
-      m_simulationTime->m_max_initial_delt > 0 &&
-      m_delT > m_simulationTime->m_max_initial_delt ) {
-    proc0cout << "WARNING (b): lowering delT from " << m_delT ;
+  // Check to see if the next delT exceeds the max_initial_delt
+  if( m_simulationTime->m_max_initial_delt > 0 &&
+      m_simTime+m_delT <= m_simulationTime->m_initial_delt_range &&
+      m_nextDelT > m_simulationTime->m_max_initial_delt ) {
+    proc0cout << "WARNING (b): lowering delT from " << m_nextDelT ;
 
-    m_delT = m_simulationTime->m_max_initial_delt;
+    m_nextDelT = m_simulationTime->m_max_initial_delt;
 
-    proc0cout<< " to maximum: " << m_delT
+    proc0cout<< " to maximum: " << m_nextDelT
              << " (for initial timesteps)\n";
   }
 
-  // Check to see if the new delT exceeds the delt_max
-  if( m_delT > m_simulationTime->m_delt_max ) {
-    proc0cout << "WARNING (c): lowering delT from " << m_delT;
+  // Check to see if the next delT exceeds the delt_max
+  if( m_nextDelT > m_simulationTime->m_delt_max ) {
+    proc0cout << "WARNING (c): lowering delT from " << m_nextDelT;
 
-    m_delT = m_simulationTime->m_delt_max;
+    m_nextDelT = m_simulationTime->m_delt_max;
     
-    proc0cout << " to maximum: " << m_delT << '\n';
+    proc0cout << " to maximum: " << m_nextDelT << '\n';
   }
 
-  // Clamp delT to match the requested output and/or checkpoint times
+  // Clamp the next delT to match the requested output and/or
+  // checkpoint times
   if( m_simulationTime->m_clamp_time_to_output ) {
 
     // Clamp to the output time
     double nextOutput = m_output->getNextOutputTime();
-    if (nextOutput != 0 && m_simTime + m_delT > nextOutput) {
-      proc0cout << "WARNING (d): lowering delT from " << m_delT;
+    if (nextOutput != 0 && m_simTime + m_delT + m_nextDelT > nextOutput) {
+      proc0cout << "WARNING (d): lowering delT from " << m_nextDelT;
 
-      m_delT = nextOutput - m_simTime;
+      m_nextDelT = nextOutput - (m_simTime+m_delT);
 
-      proc0cout << " to " << m_delT
+      proc0cout << " to " << m_nextDelT
                 << " to line up with output time\n";
     }
 
     // Clamp to the checkpoint time
     double nextCheckpoint = m_output->getNextCheckpointTime();
-    if (nextCheckpoint != 0 && m_simTime + m_delT > nextCheckpoint) {
-      proc0cout << "WARNING (d): lowering delT from " << m_delT;
+    if (nextCheckpoint != 0 && m_simTime + m_delT + m_nextDelT > nextCheckpoint) {
+      proc0cout << "WARNING (d): lowering delT from " << m_nextDelT;
 
-      m_delT = nextCheckpoint - m_simTime;
+      m_nextDelT = nextCheckpoint - (m_simTime+m_delT);
 
-      proc0cout << " to " << m_delT
+      proc0cout << " to " << m_nextDelT
                 << " to line up with checkpoint time\n";
     }
   }
   
   // Clamp delT to the max end time,
   if (m_simulationTime->m_end_at_max_time &&
-      m_simTime + m_delT > m_simulationTime->m_max_time) {
-    m_delT = m_simulationTime->m_max_time - m_simTime;
+      m_simTime + m_delT + m_nextDelT > m_simulationTime->m_max_time) {
+    m_nextDelT = m_simulationTime->m_max_time - (m_simTime+m_delT);
   }
 
-  // Write the new delT to the data warehouse
-  newDW->override( delt_vartype(m_delT), m_delTLabel );
+  // Write the next delT to the data warehouse
+  newDW->override( delt_vartype(m_nextDelT), m_delTLabel );
 }
 
 //______________________________________________________________________
@@ -809,7 +819,7 @@ ApplicationCommon::isLastTimeStep( double walltime ) const
 
   return ( m_endSimulation ||
 
-	   ( m_simTime >= m_simulationTime->m_max_time ) ||
+           ( m_simTime >= m_simulationTime->m_max_time ) ||
 
            ( m_simulationTime->m_max_time_steps > 0 &&
              m_timeStep >= m_simulationTime->m_max_time_steps ) ||
@@ -835,12 +845,12 @@ ApplicationCommon::maybeLastTimeStep( double walltime ) const
   Uintah::MPI::Bcast( &walltime, 1, MPI_DOUBLE, 0, d_myworld->getComm() );
   
   return ( (m_simTime + m_delT >= m_simulationTime->m_max_time) ||
-	   
-	   (m_simulationTime->m_max_time_steps > 0 &&
-	    m_timeStep + 1 >= m_simulationTime->m_max_time_steps) ||
-	   
-	   (m_simulationTime->m_max_wall_time > 0 &&
-	    walltime >= m_simulationTime->m_max_wall_time) );
+           
+           (m_simulationTime->m_max_time_steps > 0 &&
+            m_timeStep + 1 >= m_simulationTime->m_max_time_steps) ||
+           
+           (m_simulationTime->m_max_wall_time > 0 &&
+            walltime >= m_simulationTime->m_max_wall_time) );
 }
 
 //______________________________________________________________________
@@ -851,7 +861,7 @@ void ApplicationCommon::setTimeStep( int timeStep )
 
   // Kludge to get the time step and simulation time on the inital DW.
   m_scheduler->get_dw(1)->override(timeStep_vartype(m_timeStep),
-				   m_timeStepLabel );
+                                   m_timeStepLabel );
   
   m_sharedState->setCurrentTopLevelTimeStep( timeStep );
 }
@@ -895,18 +905,18 @@ void ApplicationCommon::incrementTimeStep( const GridP & grid )
       DataWarehouse* dw = m_scheduler->get_dw(idw);
 
       // std::cerr << "**********  " << __FUNCTION__ << "  " << __LINE__ << "  "
-      // 		<< "level " << i << "  dw " << idw << "  " << dw
-      // 		<< std::endl;
+      //                << "level " << i << "  dw " << idw << "  " << dw
+      //                << std::endl;
 
       // Kludge to get the time step and simulation time on all DW.
       if( dw )
       {
-      	dw->override(timeStep_vartype(getTimeStep()),
-      		     getTimeStepLabel() );
-	
-      	dw->override(simTime_vartype(getSimTime()),
-      		     getSimTimeLabel() );
-      	// std::cerr << "**********  " << __FUNCTION__ << "  " << __LINE__ << std::endl;
+        dw->override(timeStep_vartype(getTimeStep()),
+                     getTimeStepLabel() );
+        
+        dw->override(simTime_vartype(getSimTime()),
+                     getSimTimeLabel() );
+        // std::cerr << "**********  " << __FUNCTION__ << "  " << __LINE__ << std::endl;
       }
     }
   }
@@ -920,7 +930,7 @@ void ApplicationCommon::setSimTime( double val )
 
   // Kludge to get the time step and simulation time on all DW.
   m_scheduler->get_dw(1)->override(simTime_vartype(m_simTime),
-				   m_simulationTimeLabel );
+                                   m_simulationTimeLabel );
   
   m_sharedState->setElapsedSimTime( m_simTime );
 }

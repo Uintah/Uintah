@@ -77,11 +77,9 @@ class  SimulationTime;
 
 class WallTimers {
 
-
 public:
 
   WallTimers() { m_num_samples = 0; m_wall_timer.start(); };
-
 
 public:
 
@@ -119,12 +117,10 @@ public:
 
   double GetWallTime() { return m_wall_timer().seconds(); };
 
-
 private:
 
-  int              m_num_samples;        // Number of samples for the moving average
+  int              m_num_samples;  // Number of samples for the moving average
   Timers::Simple   m_wall_timer;
-
 };
 
 
@@ -162,7 +158,6 @@ private:
 //! entire simulation. 
 class SimulationController : public UintahParallelComponent {
 
-
 public:
 
   SimulationController( const ProcessorGroup * myworld, ProblemSpecP pspec );
@@ -181,7 +176,7 @@ public:
   virtual void run() = 0;
 
   //  sets simulationController flags
-  void setPostProcessFlags( const std::string & fromDir );
+  void setPostProcessFlags();
      
   ProblemSpecP          getProblemSpecP() { return m_ups; }
   ProblemSpecP          getGridProblemSpecP() { return m_grid_ps; }
@@ -196,7 +191,14 @@ public:
   void setRecompileTaskGraph(bool val) { m_recompile_taskgraph = val; }
 
   void releaseComponents();
-  
+
+  void ScheduleReportStats( bool header );
+  void ReportStats(const ProcessorGroup*,
+                   const PatchSubset*,
+                   const MaterialSubset*,
+                         DataWarehouse*,
+                         DataWarehouse*,
+                         bool header);
 
 protected:
 
@@ -211,29 +213,27 @@ protected:
   void schedulerSetup();
   void timeStateSetup();
   void finalSetup();
-
-  void ReportStats( bool first );
   void ResetStats( void );
 
   void getMemoryStats( bool create = false );
   void getPAPIStats  ( );
   
   ProblemSpecP           m_ups{nullptr};
-  ProblemSpecP           m_grid_ps{nullptr};       // Problem Spec for the Grid
-  ProblemSpecP           m_restart_ps{nullptr};    // Problem Spec for restarting
+  ProblemSpecP           m_grid_ps{nullptr};     // Problem Spec for the Grid
+  ProblemSpecP           m_restart_ps{nullptr};  // Problem Spec for restarting
   SchedulerP             m_scheduler{nullptr};
   GridP                  m_current_gridP{nullptr};
   LoadBalancerPort     * m_lb{nullptr};
   Output               * m_output{nullptr};
   ApplicationInterface * m_app{nullptr};
   Regridder            * m_regridder{nullptr};
-  DataArchive          * m_restart_archive{nullptr};     // Only used when restarting: Data from UDA we are restarting from.
+  DataArchive          * m_restart_archive{nullptr}; // Only used when restarting: Data from checkpoint UDA.
 
   bool m_do_multi_taskgraphing{false};
     
   WallTimers m_wall_timers;
 
-  /* For restarting */
+  // Used when restarting.
   bool        m_restarting{false};
   std::string m_from_dir;
   int         m_restart_timestep{0};
@@ -247,7 +247,8 @@ protected:
   // given by the restart checkpoint.
   bool m_restart_from_scratch{false};
 
-  // If !m_restart_from_scratch, then this indicates whether to move or copy the old time steps.
+  // If not m_restart_from_scratch, then this indicates whether to move
+  // or copy the old time steps.
   bool m_restart_remove_old_dir{false};
 
   bool m_recompile_taskgraph{false};
@@ -255,7 +256,6 @@ protected:
   // Runtime stat mappers.
   ReductionInfoMapper< RunTimeStatsEnum, double > m_runtime_stats;
   ReductionInfoMapper< unsigned int,     double > m_other_stat;
-
 
 #ifdef USE_PAPI_COUNTERS
   int         m_papi_event_set;            // PAPI event set
@@ -277,13 +277,18 @@ protected:
   std::map<int, PapiEvent>   m_papi_events;
 #endif
 
-
 #ifdef HAVE_VISIT
 public:
   void setVisIt( unsigned int val ) { m_do_visit = val; }
   unsigned int  getVisIt() { return m_do_visit; }
 
-  bool CheckInSitu( visit_simulation_data *visitSimData, bool first );
+  void ScheduleCheckInSitu( bool header );
+  void CheckInSitu(const ProcessorGroup*,
+                   const PatchSubset*,
+                   const MaterialSubset*,
+                         DataWarehouse*,
+                         DataWarehouse*,
+                         bool first);
 
   const ReductionInfoMapper< RunTimeStatsEnum, double > getRunTimeStats() const
   { return m_runtime_stats; };
@@ -293,23 +298,21 @@ public:
 
 protected:
   unsigned int m_do_visit;
+  visit_simulation_data *m_visitSimData;
 #endif
 
-
 private:
-
-  // eliminate copy, assignment and move
-  SimulationController( const SimulationController & )            = delete;
-  SimulationController& operator=( const SimulationController & ) = delete;
-  SimulationController( SimulationController && )                 = delete;
-  SimulationController& operator=( SimulationController && )      = delete;
-
   // Percent time in overhead samples
   double m_overhead_values[OVERHEAD_WINDOW];
   double m_overhead_weights[OVERHEAD_WINDOW];
   int    m_overhead_index{0}; // Next sample for writing
   int    m_num_samples{0};
 
+  // eliminate copy, assignment and move
+  SimulationController( const SimulationController & )            = delete;
+  SimulationController& operator=( const SimulationController & ) = delete;
+  SimulationController( SimulationController && )                 = delete;
+  SimulationController& operator=( SimulationController && )      = delete;
 };
 
 } // end namespace Uintah
