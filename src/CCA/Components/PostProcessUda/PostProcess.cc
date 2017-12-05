@@ -36,7 +36,7 @@ Dout dbg_pp("postProcess", false);
 //______________________________________________________________________
 //
 PostProcessUda::PostProcessUda( const ProcessorGroup * myworld,
-			           const SimulationStateP sharedState,
+				const SimulationStateP sharedState,
                                 const string         & udaDir ) :
   ApplicationCommon( myworld, sharedState ),
   d_udaDir(udaDir)
@@ -138,8 +138,19 @@ void PostProcessUda::problemSetup(const ProblemSpecP& prob_spec,
     m->problemSetup();
   }
 
-  proc0cout << "\n";
+  // Adjust the time state - done after it is read.
+  getSimulationTime()->m_delt_factor = 1;
+  getSimulationTime()->m_delt_min    = 0;
+  getSimulationTime()->m_delt_max    = 1e99;
+  getSimulationTime()->m_init_time = getInitialTime();
+  getSimulationTime()->m_max_time  = getMaxTime();
+  getSimulationTime()->m_max_delt_increase = 1e99;
+  getSimulationTime()->m_max_initial_delt  = 1e99;
+  
+  Dir fromDir( d_udaDir );
+  m_output->postProcessUdaSetup( fromDir );
 
+  proc0cout << "\n";
 }
 
 //______________________________________________________________________
