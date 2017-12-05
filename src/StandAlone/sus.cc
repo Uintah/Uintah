@@ -673,9 +673,9 @@ main( int argc, char *argv[], char *env[] )
     SimulationController* simController =
       scinew AMRSimulationController( world, ups );
 
-    // set sim. controller flags for reduce uda
+    // Set the simulation controller flags for reduce uda
     if ( postProcessUda ) {
-      simController->setPostProcessFlags( udaDir );
+      simController->setPostProcessFlags();
     }
     
 #ifdef HAVE_VISIT
