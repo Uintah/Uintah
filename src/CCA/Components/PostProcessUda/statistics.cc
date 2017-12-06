@@ -130,9 +130,9 @@ void statistics::problemSetup()
 
   d_prob_spec->get("computeHigherOrderStats", d_doHigherOrderStats );
   if (d_doHigherOrderStats){
-    proc0cout << "         Computing 2nd, 3rd and 4th order statistics for all of the variables listed"<< endl;
+    proc0cout << "  Computing 2nd, 3rd and 4th order statistics for all of the variables listed"<< endl;
   } else {
-    proc0cout << "         Computing 2nd order statistics for all of the variables listed"<< endl;
+    proc0cout << "  Computing 2nd order statistics for all of the variables listed"<< endl;
   }
 
   //__________________________________

@@ -80,6 +80,10 @@ WARNING
 
     void scheduleDoAnalysis_preReloc(SchedulerP   & sched,
                                      const LevelP & level) {};
+                                     
+    virtual int getTimestep_OldDW();
+
+    std::string getName(){ return "spatioTemporalAvg"; };
 
   private:
 
@@ -149,6 +153,13 @@ WARNING
                      Qstats         & Q);
 
     template <class T>
+    void computeTimeAverage( const Patch         * patch,
+                             CellIterator        & iter,
+                             constCCVariable< T >& Qvar,
+                             constCCVariable< T >& Qvar_old,
+                             CCVariable< T >     & Qavg );
+
+    template <class T>
     void query( const Patch         * patch,
                 constCCVariable<T>  & Qvar,
                 CCVariable<T>       & Qavg,
@@ -166,13 +177,17 @@ WARNING
     // global constants
     double    d_startTime  = 0;
     double    d_stopTime   = DBL_MAX;
+    bool      d_doTemporalAvg = false;
+    int       d_baseTimestep  = NOTUSED;           // timestep used in computing time averages
+    
     Domain    d_compDomain = EVERYWHERE;            // domain to compute averages
     IntVector d_monitorCell = IntVector(-9,-9,-9);  // Cell to output
     IntVector d_avgBoxCells;                        // number of cells to average over.
     std::vector< Qstats >  d_Qstats;
 
-    ProblemSpecP   d_prob_spec;
-    MaterialSet  * d_matlSet = nullptr;
+    ProblemSpecP        d_prob_spec;
+    MaterialSet       * d_matlSet = nullptr;
+    LoadBalancerPort  * d_lb      = nullptr;
   };
 }
 }

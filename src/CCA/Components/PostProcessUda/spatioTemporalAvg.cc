@@ -120,15 +120,15 @@ void spatioTemporalAvg::problemSetup()
   ans = string_toupper(ans);
   if ( ans == "EVERYWHERE" ){
     d_compDomain = EVERYWHERE;
-    proc0cout << "    Computational Domain: Everywhere\n";
+    proc0cout << "  Computational Domain: Everywhere\n";
   }
   else if ( ans == "INTERIOR" ){
     d_compDomain = INTERIOR;
-    proc0cout << "    Computational Domain: InteriorCells\n";
+    proc0cout << "  Computational Domain: InteriorCells\n";
   }
   else if ( ans == "BOUNDARIES" ) {
     d_compDomain = BOUNDARIES;
-    proc0cout << "    Computational Domain: Domain boundaries\n";
+    proc0cout << "  Computational Domain: Domain boundaries\n";
   }
 
   //__________________________________
@@ -141,6 +141,18 @@ void spatioTemporalAvg::problemSetup()
 
   createMatlSet( d_prob_spec, d_matlSet, Qmatls );
   proc0cout << "  StartTime: " << d_startTime << " stopTime: "<< d_stopTime << " " << *d_matlSet << endl;
+
+  //__________________________________
+  //  
+  ProblemSpecP temp_ps = d_prob_spec->findBlock("TemporalAvg");
+  map<string,string> attribute;
+  temp_ps->getAttributes(attribute);
+  if ( attribute["OnOff"] == "on" ){
+    d_doTemporalAvg = true;
+    temp_ps->require( "baseTimestep", d_baseTimestep );
+    proc0cout << "  Temporal Average:  baseTimestep: " << d_baseTimestep << endl;
+  }
+  
 
   // debugging
   d_prob_spec->get("monitorCell", d_monitorCell);
@@ -215,8 +227,12 @@ void spatioTemporalAvg::scheduleInitialize(SchedulerP   & sched,
 {
   printSchedule( level,dbg,"spatioTemporalAvg::scheduleInitialize" );
 
+  d_lb = sched->getLoadBalancer();
+
   Task* t = scinew Task("spatioTemporalAvg::initialize",
                    this,&spatioTemporalAvg::initialize);
+
+
 
   for ( unsigned int i =0 ; i < d_Qstats.size(); i++ ) {
     const Qstats Q = d_Qstats[i];
@@ -303,8 +319,6 @@ void spatioTemporalAvg::doAnalysis(const ProcessorGroup * pg,
                                    DataWarehouse        * old_dw,
                                    DataWarehouse        * new_dw)
 {
-
-
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
@@ -368,11 +382,17 @@ void spatioTemporalAvg::computeAvg( DataWarehouse  * old_dw,
 {
   const int matl = Q.matl;
 
+  constCCVariable<T> Qvar_old;
+  if ( d_doTemporalAvg ){
+    old_dw->get ( Qvar_old, Q.Q_Label, matl, patch, Ghost::None, 0 );
+  }
+  
   constCCVariable<T> Qvar;
-  new_dw->get ( Qvar, Q.Q_Label, matl, patch, Ghost::None, 0 );
-
+  new_dw->get ( Qvar,     Q.Q_Label, matl, patch, Ghost::None, 0 );
+  
   CCVariable< T > Qavg;
   CCVariable< T > Qvariance;
+  
   new_dw->allocateAndPut( Qavg,      Q.avgLabel,     matl, patch );
   new_dw->allocateAndPut( Qvariance, Q.varianceLabel, matl, patch );
 
@@ -385,6 +405,8 @@ void spatioTemporalAvg::computeAvg( DataWarehouse  * old_dw,
   if (d_compDomain == EVERYWHERE || d_compDomain == INTERIOR ){
 
     CellIterator iter = patch->getCellIterator();
+    
+    computeTimeAverage<T>( patch, iter, Qvar, Qvar_old, Qavg);
     spatioTemporalAvg::query( patch, Qvar, Qavg, Qvariance, d_avgBoxCells, iter);
   }
 
@@ -404,6 +426,7 @@ void spatioTemporalAvg::computeAvg( DataWarehouse  * old_dw,
 
       CellIterator iter = patch->getFaceIterator( face, Patch::ExtraMinusEdgeCells );
 
+      computeTimeAverage<T>( patch, iter, Qvar, Qvar_old, Qavg);
       spatioTemporalAvg::query( patch, Qvar, Qavg, Qvariance, avgPanelCells, iter);
 
     }  // face loop
@@ -420,6 +443,36 @@ void spatioTemporalAvg::computeAvg( DataWarehouse  * old_dw,
          <<"\t Qavg: "  << Qavg[c]
 //         <<"\t Qvariance: " << Qvariance[c]
          << endl;
+  }
+}
+
+
+//______________________________________________________________________
+//
+template <class T>
+void spatioTemporalAvg::computeTimeAverage( const Patch         * patch,
+                                            CellIterator        & iter,
+                                            constCCVariable< T >& Qvar,
+                                            constCCVariable< T >& Qvar_old,
+                                            CCVariable< T >     & Qavg )
+{
+  if( d_doTemporalAvg == false) {
+    return;
+  }
+  
+  int timeStep = d_sharedState->getCurrentTopLevelTimeStep();
+  
+  T deltaTime = T( d_udaTimes[timeStep] - d_udaTimes[d_baseTimestep] );
+ 
+#if 1
+  cout << " timeStep: " << timeStep << " udaTime: " << d_udaTimes[timeStep]
+       << " d_baseTimestep: " << d_baseTimestep << " baseTime: " << d_udaTimes[d_baseTimestep]
+       << " deltaTime: " << deltaTime << endl;
+#endif
+
+  for (;!iter.done();iter++){
+    IntVector c = *iter;
+    Qavg[c] = ( Qvar[c] - Qvar_old[c] )/deltaTime;
   }
 }
 
@@ -489,4 +542,12 @@ void spatioTemporalAvg::allocateAndZeroLabels( DataWarehouse * new_dw,
   int matl = Q.matl;
   allocateAndZero<T>( new_dw, Q.avgLabel,      matl, patch );
   allocateAndZero<T>( new_dw, Q.varianceLabel, matl, patch );
+}
+
+
+//______________________________________________________________________
+//
+int spatioTemporalAvg::getTimestep_OldDW()
+{
+  return d_baseTimestep;
 }

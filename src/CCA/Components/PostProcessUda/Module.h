@@ -58,6 +58,13 @@ namespace Uintah {
 
     virtual void scheduleDoAnalysis_preReloc(SchedulerP   & sched,
                                              const LevelP & level) =0;
+                                             
+    // populate the old_dw with variables from timestep
+    enum {NOTUSED = -9};
+    virtual int getTimestep_OldDW(){ return NOTUSED; };
+    
+    virtual std::string getName()=0;
+    
     void readTimeStartStop(const ProblemSpecP & ps,
                            double & startTime,
                            double & stopTime);

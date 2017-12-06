@@ -51,9 +51,8 @@ Module::Module(ProblemSpecP     & prob_spec,
   d_dataArchive  = dataArchive;
 
  if(!d_dataArchiver){
-    throw InternalError("spatioTemporalAvg:couldn't get output port", __FILE__, __LINE__);
+    throw InternalError("Module:couldn't get output port", __FILE__, __LINE__);
   }
-
 }
 
 Module::~Module()

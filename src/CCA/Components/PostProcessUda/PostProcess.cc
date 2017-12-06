@@ -24,6 +24,7 @@
 
 #include <CCA/Components/PostProcessUda/PostProcess.h>
 #include <CCA/Components/PostProcessUda/ModuleFactory.h>
+#include <Core/Exceptions/InternalError.h>
 
 #include <Core/Grid/SimpleMaterial.h>
 #include <Core/Util/DOUT.hpp>
@@ -75,9 +76,9 @@ void PostProcessUda::problemSetup(const ProblemSpecP& prob_spec,
   proc0cout << "    - You must manually copy all On-the-Fly files/directories from the original uda\n";
   proc0cout << "      to the new uda, postProcessUda ignores them.\n\n";
   proc0cout << "    - The <outputInterval>, <outputTimestepInterval> tags are ignored and every\n";
-  proc0cout << "      timestep in the original uda is processed. \n";
+  proc0cout << "      timestep in the original uda is processed. \n\n";
   proc0cout << "    - Use a different uda name for the modifed uda to prevent confusion with the original uda.\n\n";
-  proc0cout << "    - In the timestep.xml files the follow non-essential entries will be changed:\n";
+  proc0cout << "    - In the new.uda/timestep.xml the follow non-essential entries will be changed:\n";
   proc0cout << "           numProcs:      Number of procs used during the reduceUda run.\n";
   proc0cout << "           oldDelt:       Difference in timesteps, i.e., time(TS) - time (TS-1), in physical time.\n";
   proc0cout << "           proc:          The processor to patch assignment.\n\n";
@@ -162,7 +163,7 @@ void PostProcessUda::scheduleInitialize(const LevelP& level,
   vector<Module*>::iterator iter;
   for( iter  = d_Modules.begin(); iter != d_Modules.end(); iter++){
     Module* m = *iter;
-    m->scheduleInitialize( sched, level);
+    m->scheduleInitialize( sched, level );
   }
 }
 
@@ -252,16 +253,48 @@ void PostProcessUda::readDataArchive(const ProcessorGroup* pg,
                                      DataWarehouse* old_dw,
                                      DataWarehouse* new_dw)
 {
-  double time = d_times[d_timeIndex];
+  double time  = d_times[d_timeIndex];
   int timestep = d_timesteps[d_timeIndex];
   proc0cout << "    *** working on timestep: " << timestep << " physical time: " << time << endl;
 
-#if 0
-  old_dw->unfinalize();
-  d_dataArchive->postProcess_ReadUda(pg, d_timeIndex-1, d_oldGrid, patches, old_dw, d_lb);
-  old_dw->refinalize();
+  // populate the old_dw with variables from the uda.
+  // Only one timestep
+
+#if 1
+  int timeIndex = NOTUSED;
+  bool isSet    = false;
+  
+  vector<Module*>::iterator iter;
+  for( iter  = d_Modules.begin(); iter != d_Modules.end(); iter++){
+    Module* m = *iter;
+    int tmp = m->getTimestep_OldDW();
+
+    // bulletproofing
+    if ( isSet && tmp != timeIndex ){
+      ostringstream err;
+      err << "ERROR: PostProcessUda::readDataArchive.  The module (" << m->getName() << ") "
+          << "requested data from a previous timestep.  You can only specify one timestep for all modules.\n";
+      throw InternalError( err.str(), __FILE__, __LINE__ );
+    }
+    
+    if ( isSet == false && tmp != NOTUSED ){
+      timeIndex  = tmp;
+      isSet = true;
+    }
+  }
+#endif
+  
+#if 1
+  if( timeIndex != NOTUSED && timestep >= timeIndex ){
+   cout <<"    timeIndex: " << timeIndex << endl;
+    GridP myGrid = d_dataArchive->queryGrid(timeIndex);
+   old_dw->unfinalize();
+   d_dataArchive->postProcess_ReadUda(pg, timeIndex, myGrid, patches, old_dw, d_lb);
+   old_dw->refinalize();
+  }
 #endif
 
+  // new dw
   d_dataArchive->postProcess_ReadUda(pg, d_timeIndex, d_oldGrid, patches, new_dw, d_lb);
   d_timeIndex++;
 //  new_dw->print();

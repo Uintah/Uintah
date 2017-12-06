@@ -114,8 +114,8 @@ namespace Uintah {
                     const MaterialSubset* matls,
                     DataWarehouse* old_dw,
                     DataWarehouse* new_dw);
-
-
+                    
+    enum {NOTUSED = -9};
     std::string            d_udaDir;
     bool                   d_gridChanged;
 

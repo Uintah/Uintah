@@ -82,6 +82,7 @@ WARNING
     void scheduleDoAnalysis_preReloc(SchedulerP& sched,
                                      const LevelP& level) {};
 
+    std::string getName(){ return "statistics"; };
   private:
 
     //__________________________________
