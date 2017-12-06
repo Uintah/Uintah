@@ -75,6 +75,7 @@ namespace Uintah {
     SimulationStateP   d_sharedState;
     DataArchive      * d_dataArchive   = nullptr;
     Output           * d_dataArchiver  = nullptr;
+    std::vector<double> d_udaTimes;                 // physical time pulled from uda:index.xml
   };
 }
 

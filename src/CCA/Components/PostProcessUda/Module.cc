@@ -76,15 +76,14 @@ void Module::readTimeStartStop(const ProblemSpecP & ps,
   if(startTime >= stopTime ){
     throw ProblemSetupException("\n ERROR:PostProcess: startTime >= stopTime. \n", __FILE__, __LINE__);
   }
+  
+  std::vector<int> udaTimesteps;
+  d_dataArchive->queryTimesteps( udaTimesteps, d_udaTimes );
 
-  std::vector<double> uda_times;
-  std::vector<int> uda_timesteps;
-  d_dataArchive->queryTimesteps( uda_timesteps, uda_times );
-
-  if ( startTime < uda_times[0] ){
+  if ( startTime < d_udaTimes[0] ){
     std::ostringstream warn;
     warn << "  ERROR:PostProcess: The startTime (" << startTime
-         << ") must be greater than the time at timestep 1 (" << uda_times[0] << ")";
+         << ") must be greater than the time at timestep 1 (" << d_udaTimes[0] << ")";
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
 }
@@ -103,23 +102,20 @@ void Module::createMatlSet(const ProblemSpecP & ps,
   //  <materialIndex> 1 </materialIndex>
   ProblemSpecP module_ps = ps;
 
-  Material* matl = nullptr;
-  int numMatls   = d_sharedState->getNumMatls();
+  int numMatls = d_sharedState->getNumMatls();
 
+  int defaultMatlIndex = 0;
+  
   if( module_ps->findBlock("material") ){
-    matl = d_sharedState->parseAndLookupMaterial( module_ps, "material" );
-  } else if ( module_ps->findBlock("materialIndex") ){
-    int indx;
-    module_ps->get( "materialIndex", indx );
-    matl = d_sharedState->getMaterial(indx);
-  } else {
-    matl = d_sharedState->getMaterial(0);
-  }
-
-  int defaultMatl = matl->getDWIndex();
-
+    Material* matl = d_sharedState->parseAndLookupMaterial( module_ps, "material" );
+    defaultMatlIndex = matl->getDWIndex();
+  } 
+  else if ( module_ps->findBlock("materialIndex") ){
+    module_ps->get( "materialIndex", defaultMatlIndex );
+  } 
+  
   vector<int> m;
-  m.push_back( defaultMatl );
+  m.push_back( defaultMatlIndex );
 
   //__________________________________
   //  Read in variables label names for optional matl indicies
@@ -135,7 +131,7 @@ void Module::createMatlSet(const ProblemSpecP & ps,
     //__________________________________
     //  Read in the optional material index. It may be different
     //  from the default index
-    int matl = defaultMatl;
+    int matl = defaultMatlIndex;
     if (attribute["matl"].empty() == false){
       matl = atoi(attribute["matl"].c_str());
     }

@@ -51,7 +51,7 @@ namespace Uintah {
                                      SchedulerP   & );
 
     virtual void scheduleRestartInitialize( const LevelP & level,
-                                            SchedulerP   & );
+                                            SchedulerP   & ){};
 
     virtual void restartInitialize() {}
 
@@ -87,11 +87,6 @@ namespace Uintah {
     PostProcessUda(const PostProcessUda&);
     PostProcessUda& operator=(const PostProcessUda&);
 
-    void initialize(const ProcessorGroup*,
-                    const PatchSubset* patches,
-                    const MaterialSubset* matls,
-                    DataWarehouse* /*old_dw*/,
-                    DataWarehouse* new_dw);
 
     void computeDelT(const ProcessorGroup*,
                      const PatchSubset* patches,
