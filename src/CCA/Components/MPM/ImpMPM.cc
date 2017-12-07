@@ -1951,7 +1951,7 @@ void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
         }
         
         // Get the load curve data
-        constParticleVariable<int> pLoadCurveID;
+        constParticleVariable<IntVector> pLoadCurveID;
         old_dw->get(pLoadCurveID, lb->pLoadCurveIDLabel, pset);
         
         if(do_PressureBCs){
@@ -1959,14 +1959,15 @@ void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
           ParticleSubset::iterator iter = pset->begin();
           for(;iter != pset->end(); iter++){
             particleIndex idx = *iter;
-            int loadCurveID = pLoadCurveID[idx]-1;
-            if (loadCurveID < 0) {
-              pExternalForce_new[idx] = Vector(0.,0.,0.);
-            } else {
-              PressureBC* pbc = pbcP[loadCurveID];
-              double force = forceMagPerPart[loadCurveID];
-              pExternalForce_new[idx] = pbc->getForceVector(px[idx],force,time);
-            }
+            pExternalForce_new[idx] = Vector(0.,0.,0.);
+            for(int k=0;k<3;k++){
+              int loadCurveID = pLoadCurveID[idx](k)-1;
+              if (loadCurveID >= 0) {
+                PressureBC* pbc = pbcP[loadCurveID];
+                double force = forceMagPerPart[loadCurveID];
+                pExternalForce_new[idx] += pbc->getForceVector(px[idx],force,time);
+              }
+            } // for k=0...
           }
         } //end d0_PressureBCs
 
@@ -1978,18 +1979,19 @@ void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
           for(;iter != pset->end(); iter++){
             //input the theta calculation here.
             particleIndex idx = *iter;
-            int loadCurveID = pLoadCurveID[idx]-1;
-            if (loadCurveID < 0) {
-              pExternalHeatFlux_new[idx] = 0.;
-            } else {
-              //              pExternalHeatFlux_new[idx] = mag;
-              pExternalHeatFlux_new[idx] = pExternalHeatFlux[idx];
+            pExternalHeatFlux_new[idx] = 0.;
+            for(int k=0;k<3;k++){
+              int loadCurveID = pLoadCurveID[idx](k)-1;
+              if (loadCurveID >= 0) {
+                //              pExternalHeatFlux_new[idx] = mag;
+                pExternalHeatFlux_new[idx] += pExternalHeatFlux[idx];
+              }
             }
           }
         }
 
         // Recycle the loadCurveIDs
-        ParticleVariable<int> pLoadCurveID_new;
+        ParticleVariable<IntVector> pLoadCurveID_new;
         new_dw->allocateAndPut(pLoadCurveID_new, 
                                lb->pLoadCurveIDLabel_preReloc, pset);
         pLoadCurveID_new.copyData(pLoadCurveID);
