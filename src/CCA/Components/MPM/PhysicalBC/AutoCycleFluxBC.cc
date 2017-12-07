@@ -261,8 +261,6 @@ void AutoCycleFluxBC::applyExternalScalarFlux(const ProcessorGroup* , const Patc
       ParticleVariable<double> pExternalScalarFlux_pR;
       ParticleVariable<double> pAvgConc;
 
-
-
       old_dw->get(px,    d_mpm_lb->pXLabel,    pset);
       if(d_mpm_flags->d_doScalarDiffusion){
         // JBH -- Fixme -- TODO -- Fold into diffusion sublabel?
@@ -282,7 +280,7 @@ void AutoCycleFluxBC::applyExternalScalarFlux(const ProcessorGroup* , const Patc
 #endif
 
       if (d_mpm_flags->d_useLoadCurves) {
-        constParticleVariable<int> pLoadCurveID;
+        constParticleVariable<IntVector> pLoadCurveID;
         old_dw->get(pLoadCurveID, d_mpm_lb->pLoadCurveIDLabel, pset);
         bool do_FluxBCs=false;
         for (int ii = 0; ii < (int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++) {
@@ -297,27 +295,28 @@ void AutoCycleFluxBC::applyExternalScalarFlux(const ProcessorGroup* , const Patc
           // Iterate over the particles
           for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++){
             particleIndex idx = *iter;
-            int loadCurveID = pLoadCurveID[idx]-1;
-            if (loadCurveID < 0) {
-              pExternalScalarFlux[idx] = 0.0;
-            } else {
+            pExternalScalarFlux[idx] = 0.0;
+            for(int k=0;k<3;k++){
+            int loadCurveID = pLoadCurveID[idx](k)-1;
+              if (loadCurveID >= 0) {
 #if 0
-              pExternalScalarFlux[idx] = d_flux_sign * fluxPerPart[loadCurveID];
+                pExternalScalarFlux[idx] = d_flux_sign * fluxPerPart[loadCurveID];
 #else
-              ScalarFluxBC* pbc = pbcP[loadCurveID];
-              double area = parea[idx].length();
-              pExternalScalarFlux[idx] = d_flux_sign * pbc->fluxPerParticle(time, area) / pvol[idx];
+                ScalarFluxBC* pbc = pbcP[loadCurveID];
+                double area = parea[idx].length();
+                pExternalScalarFlux[idx] += d_flux_sign * pbc->fluxPerParticle(time, area) / pvol[idx];
 #endif
 #if defined USE_FLUX_RESTRICTION
-              if(d_mpm_flags->d_doScalarDiffusion){
-                double flux_restriction = (4 + log(1-pConcentration[idx]))/4;
-                if (flux_restriction < 0.0){
-                  flux_restriction = 0.0;
+                if(d_mpm_flags->d_doScalarDiffusion){
+                  double flux_restriction = (4 + log(1-pConcentration[idx]))/4;
+                  if (flux_restriction < 0.0){
+                    flux_restriction = 0.0;
+                  }
+                  pExternalScalarFlux[idx] *= flux_restriction;
                 }
-                pExternalScalarFlux[idx] *= flux_restriction;
-              }
 #endif
-            }
+              } // endif loadCurveID >=0
+            } // for k
           }
         } else {
           for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++){
@@ -358,13 +357,17 @@ void AutoCycleFluxBC::countMaterialPointsPerFluxLoadCurve(const ProcessorGroup*,
           int dwi = mpm_matl->getDWIndex();
 
           ParticleSubset* pset = new_dw->getParticleSubset(dwi, patch);
-          constParticleVariable<int> pLoadCurveID;
+          constParticleVariable<IntVector> pLoadCurveID;
           new_dw->get(pLoadCurveID, d_mpm_lb->pLoadCurveIDLabel, pset);
 
           ParticleSubset::iterator iter = pset->begin();
           for(;iter != pset->end(); iter++){
             particleIndex idx = *iter;
-            if (pLoadCurveID[idx] == (nofSFBCs)) ++numPts;
+            for(int k = 0;k<3;k++){
+              if (pLoadCurveID[idx](k) == (nofSFBCs)){
+                 ++numPts;
+              }
+            }
           }
         } // matl loop
         new_dw->put(sumlong_vartype(numPts),

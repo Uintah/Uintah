@@ -179,14 +179,11 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
     }
 
     _patchIntVector =  IntVector(0,0,0);
-    _xPatch_boundary=std::vector<double>(0);//3 1-D vectors since domains aren't square ( can 2D vectors be non-square?)
-    _yPatch_boundary=std::vector<double>(0);
-    _zPatch_boundary=std::vector<double>(0);
+      
+    _xyzPatch_boundary=std::vector<std::vector<double> > (3,std::vector<double> (0) );// 3 vectors for x, y, and z.
     ProblemSpecP db_level = db->getRootNode()->findBlock("Grid")->findBlock("Level");
-    std::vector<Vector> boxDimensionsHi(0);
-    std::vector<Vector> boxDimensionsLo(0);
     std::vector<Box> boxDimensions(0);
-    double pTol=1e-10;// absolute_tolerance_for reduncant patch boundaries, avoided relative because of zeros
+    double pTol=1e-10;// (meters)  absolute_tolerance_for redundant patch boundaries, avoided relative because of zeros
     _multiBox=false;
     for ( ProblemSpecP db_box = db_level->findBlock("Box"); db_box != nullptr; db_box = db_box->findNextBlock("Box")){
       if (db_box->findNextBlock("Box") != nullptr){
@@ -201,62 +198,66 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
       db_box->require( "upper", boxHi );
       if(_multiBox){
         boxDimensions.push_back(Box((Point) boxLo,(Point) boxHi));
-        boxDimensionsHi.push_back(boxLo);
-        boxDimensionsHi.push_back(boxHi);
       }
 
-      for (int j=0; j<3; j++){
-        for (int i=0; i<tempPatchIntVector[j]+1; i++){
-          double patch_node=(boxHi[j]-boxLo[j])*((double) i / (double) tempPatchIntVector[j])+boxLo[j];
-          if (j==0){
-            bool abscissa_exists=false;
-            for (unsigned int k=0; k <_xPatch_boundary.size(); k++){
-              if (patch_node < (_xPatch_boundary[k]+pTol) && patch_node > (_xPatch_boundary[k]-pTol)){
+      for (int idir=0; idir<3; idir++){
+        for (int i=0; i<tempPatchIntVector[idir]+1; i++){
+          double patch_node=(boxHi[idir]-boxLo[idir])*((double) i / (double) tempPatchIntVector[idir])+boxLo[idir];
+
+            bool abscissa_exists=false; // check if patch boundary is present in current matrix
+            for (unsigned int k=0; k <_xyzPatch_boundary[idir].size(); k++){
+              if (patch_node < (_xyzPatch_boundary[idir][k]+pTol) && patch_node > (_xyzPatch_boundary[idir][k]-pTol)){
                 abscissa_exists=true;
                 break;
               }
             }
             if (abscissa_exists==false){
-              _xPatch_boundary.push_back(patch_node);
+              _xyzPatch_boundary[idir].push_back(patch_node);
             }
-          } else if (j==1){
-            bool abscissa_exists=false;
-            for (unsigned int k=0; k <_yPatch_boundary.size(); k++){
-              if (patch_node < (_yPatch_boundary[k]+pTol) && patch_node > (_yPatch_boundary[k]-pTol)){
-                abscissa_exists=true;
-                break;
-              }
-            }
-            if (abscissa_exists==false){
-              _yPatch_boundary.push_back(patch_node);
-            }
-          } else if (j==2){
-            bool abscissa_exists=false;
-            for (unsigned int k=0; k <_zPatch_boundary.size(); k++){
-              if (patch_node < (_zPatch_boundary[k]+pTol) && patch_node > (_zPatch_boundary[k]-pTol)){
-                abscissa_exists=true;
-                break;
-              }
-            }
-            if (abscissa_exists==false){
-              _zPatch_boundary.push_back(patch_node);
-            }
-            //xPatchBoundary.push_back( );
-          } // end logic checking for redundant abscissa
         } // end iterating over elements in a single direction
       } // end iterating over x y z, patch dimensions
-
     } // end iterating over boxes
 
-    std::sort(_xPatch_boundary.begin(),_xPatch_boundary.end());
-    std::sort(_yPatch_boundary.begin(),_yPatch_boundary.end());
-    std::sort(_zPatch_boundary.begin(),_zPatch_boundary.end());
 
-    _patchIntVector[0]=_xPatch_boundary.size()-1;
-    _patchIntVector[1]=_yPatch_boundary.size()-1;
-    _patchIntVector[2]=_zPatch_boundary.size()-1;
 
-  _doesPatchExist =  std::vector< std::vector < std::vector < bool > > >(_patchIntVector[0] ,std::vector < std::vector < bool > > (_patchIntVector[1],std::vector < bool > (_patchIntVector[2] , _multiBox ? false : true )));
+    std::sort(_xyzPatch_boundary[0].begin(),_xyzPatch_boundary[0].end());
+    std::sort(_xyzPatch_boundary[1].begin(),_xyzPatch_boundary[1].end());
+    std::sort(_xyzPatch_boundary[2].begin(),_xyzPatch_boundary[2].end());
+
+    if(_multiBox){  // check for staggered patch layouts and throw error if found.  We do this by checking to see if all patch boundarys line up with all patch-box bondaries.
+      for ( ProblemSpecP db_box = db_level->findBlock("Box"); db_box != nullptr; db_box = db_box->findNextBlock("Box")){
+        IntVector tempPatchIntVector(0,0,0);
+        db_box->require( "patches", tempPatchIntVector );
+        Vector boxLo(0,0,0);
+        Vector boxHi(0,0,0);
+        db_box->require( "lower", boxLo );
+        db_box->require( "upper", boxHi );
+
+        IntVector checkBoxLo, checkBoxHi;
+
+        for (int idir=0; idir < 3; idir++){
+          for (unsigned int k=0; k <_xyzPatch_boundary[idir].size(); k++){
+            if (boxLo[idir] < (_xyzPatch_boundary[idir][k]+pTol) && boxLo[idir] > (_xyzPatch_boundary[idir][k]-pTol)){
+              checkBoxLo[idir]=k; 
+            }
+            if (boxHi[idir] < (_xyzPatch_boundary[idir][k]+pTol) && boxHi[idir] > (_xyzPatch_boundary[idir][k]-pTol)){
+              checkBoxHi[idir]=k; 
+              break;
+            }
+          }
+        }
+
+        if( tempPatchIntVector[0] !=  (checkBoxHi[0]-checkBoxLo[0]) || tempPatchIntVector[1] !=  (checkBoxHi[1]-checkBoxLo[1]) ||  tempPatchIntVector[2] !=  (checkBoxHi[2]-checkBoxLo[2]) ) {
+          throw InvalidValue("Error: The selected patch layout doesn't appear to be compatible with DORadiation Sweeps.", __FILE__, __LINE__);
+        }
+      }
+    }
+
+    _patchIntVector[0]=_xyzPatch_boundary[0].size()-1;
+    _patchIntVector[1]=_xyzPatch_boundary[1].size()-1;
+    _patchIntVector[2]=_xyzPatch_boundary[2].size()-1;
+
+    _doesPatchExist =  std::vector< std::vector < std::vector < bool > > >(_patchIntVector[0] ,std::vector < std::vector < bool > > (_patchIntVector[1],std::vector < bool > (_patchIntVector[2] , _multiBox ? false : true )));
 
     _nphase=_patchIntVector[0]+_patchIntVector[1]+_patchIntVector[2]-2;
     _nDir=_DO_model->getIntOrdinates();
@@ -279,7 +280,6 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
                 for (int k=std::max(0,std::min(iphase-j-_patchIntVector[0],_patchIntVector[2]-1));  k< std::min(iphase-j+1,_patchIntVector[2]);  k++ ){
                   if (iphase-j-k < _patchIntVector[0] ){
 
-
                     // adjust for non- x+ y+ z+ directions
                     int iAdj =iphase-j-k;
                     int jAdj =j;
@@ -296,11 +296,11 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
 
 
                     for (unsigned int ibox=0; ibox < boxDimensions.size(); ibox++){
-                      if( boxDimensions[ibox].contains(Point((_xPatch_boundary[iAdj]+_xPatch_boundary[iAdj + (idir==0 ? 1 : -1)])/2.0,(_yPatch_boundary[jAdj]+_yPatch_boundary[jAdj + (jdir==0 ? 1 : -1)])/2.0,(_zPatch_boundary[kAdj] + _zPatch_boundary[kAdj + (kdir==0 ? 1 : -1)])/2.0)) ){
+                      if( boxDimensions[ibox].contains(Point((_xyzPatch_boundary[0][iAdj]+_xyzPatch_boundary[0][iAdj + (idir==0 ? 1 : -1)])/2.0,(_xyzPatch_boundary[1][jAdj]+_xyzPatch_boundary[1][jAdj + (jdir==0 ? 1 : -1)])/2.0,(_xyzPatch_boundary[2][kAdj] + _xyzPatch_boundary[2][kAdj + (kdir==0 ? 1 : -1)])/2.0)) ){
 
-                        _doesPatchExist[iAdj+(idir==0 ? 0 : -1)][jAdj+(jdir==0 ? 0 : -1)][kAdj+(kdir==0 ? 0 : -1)]=true ;
+                        _doesPatchExist[iAdj+(idir==0 ? 0 : -1)][jAdj+(jdir==0 ? 0 : -1)][kAdj+(kdir==0 ? 0 : -1)]=true;
 
-                        foundIntersection=true;
+                        foundIntersection=true; // Intersection found with a single box, ergo, the patch must exist
                         if (firstTimeThrough==false){ // no need to populate boolean matrix
                           break;
                         }
@@ -714,10 +714,9 @@ DORadiation::doSweepAdvanced( const ProcessorGroup* pc,
         Vector PatchHi= patch->getBox().upper().toVector();
         Vector patchMid=(patchLo+PatchHi)/2.0;
 
-        xPatch=getSweepPatchIndex(patchMid[0],_xPatch_boundary);
-        yPatch=getSweepPatchIndex(patchMid[1],_yPatch_boundary);
-        zPatch=getSweepPatchIndex(patchMid[2],_zPatch_boundary);
-
+        xPatch=getSweepPatchIndex(patchMid[0],_xyzPatch_boundary[0]);
+        yPatch=getSweepPatchIndex(patchMid[1],_xyzPatch_boundary[1]);
+        zPatch=getSweepPatchIndex(patchMid[2],_xyzPatch_boundary[2]);
 
 
       }else{
@@ -875,7 +874,7 @@ DORadiation::sched_computeSourceSweep( const LevelP& level, SchedulerP& sched, i
                   if( _doesPatchExist[iAdj+(idir==0 ? 0 : -1)][jAdj+(jdir==0 ? 0 : -1)][kAdj+(kdir==0 ? 0 : -1)]==false) { // needed for multi-box problems
                     continue ;
                   }
-                  Point patchCenter((_xPatch_boundary[iAdj]+_xPatch_boundary[iAdj + (idir==0 ? 1 : -1)])/2.0,(_yPatch_boundary[jAdj]+_yPatch_boundary[jAdj + (jdir==0 ? 1 : -1)])/2.0,(_zPatch_boundary[kAdj] + _zPatch_boundary[kAdj + (kdir==0 ? 1 : -1)])/2.0);
+                  Point patchCenter((_xyzPatch_boundary[0][iAdj]+_xyzPatch_boundary[0][iAdj + (idir==0 ? 1 : -1)])/2.0,(_xyzPatch_boundary[1][jAdj]+_xyzPatch_boundary[1][jAdj + (jdir==0 ? 1 : -1)])/2.0,(_xyzPatch_boundary[2][kAdj] + _xyzPatch_boundary[2][kAdj + (kdir==0 ? 1 : -1)])/2.0);
                   RelevantPatches.push_back(  level.get_rep()->getPatchFromPoint( patchCenter, false ));
 
                 } // check on i (is it in domain?)

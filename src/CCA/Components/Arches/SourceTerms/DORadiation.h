@@ -152,9 +152,8 @@ private:
   int _nstage;
 
   bool _multiBox; 
-  std::vector<double> _xPatch_boundary; /// all patch boundaries (approximate), needed for spatial parallel functionality for sweeps, 
-  std::vector<double> _yPatch_boundary;
-  std::vector<double> _zPatch_boundary;
+  std::vector<std::vector<double> > _xyzPatch_boundary;/// all patch boundaries (approximate), needed for multi-box weeps, 
+
   std::vector< std::vector < std::vector < bool > > > _doesPatchExist;
   std::vector<const PatchSubset*> _RelevantPatchesXpYpZp;   /// Some redundancy here, since XpYpZp = XmYmZm [ end : start ]
   std::vector<const PatchSubset*> _RelevantPatchesXpYpZm;   /// only need four sets...

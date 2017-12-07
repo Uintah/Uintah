@@ -138,8 +138,6 @@ WARNING
 					  const PatchSet* perProcPatchSet,
 					  SchedulerP& scheduler) = 0;
 
-    virtual void finalizeSystemVars( SchedulerP& scheduler ) = 0;
-    
     //////////
     // Insert Documentation Here:
     virtual void scheduleInitializeSystemVars(const GridP& grid,
@@ -173,8 +171,8 @@ WARNING
     virtual void scheduleInitialErrorEstimate(const LevelP& coarseLevel,
                                               SchedulerP& sched);
 
-    // Redo a time step if current time advance is not converging.
-    // Returned time is the new dt to use.
+    // Recompute a time step if current time advance is not
+    // converging.  The returned time is the new delta T.
     virtual void   recomputeTimeStep() = 0;
     virtual double recomputeTimeStep(double delt);
     virtual bool restartableTimeSteps();
@@ -182,6 +180,9 @@ WARNING
     // use this to get the progress ratio of an AMR subcycle
     double getSubCycleProgress(DataWarehouse* fineNewDW);
 
+
+    //////////
+    virtual void prepareForNextTimeStep( const GridP & grid ) = 0;
 
     //////////
     // ask the component if it needs to be recompiled
@@ -213,7 +214,6 @@ WARNING
      
     //////////
     virtual SimulationTime * getSimulationTime() const = 0;
-
     virtual SimulationStateP getSimulationStateP() const = 0;
 
     //////////
@@ -246,14 +246,12 @@ WARNING
   private:
     virtual   void setDelT( double val ) = 0;
     virtual double getDelT() const = 0;
-    virtual   void restartDelT( double val ) = 0;
-    virtual   void getNextDelT( SchedulerP& scheduler ) = 0;
-    virtual   void adjustDelTForAllLevels( SchedulerP& scheduler,
-					   const GridP & grid,
-					   const int totalFine ) = 0;
-    
-    virtual   void setPrevDelT( double val ) = 0;
-    virtual double getPrevDelT() const = 0;
+    virtual   void setDelTForAllLevels( SchedulerP& scheduler,
+					const GridP & grid,
+					const int totalFine ) = 0;
+
+    virtual   void setNextDelT( double val ) = 0;
+    virtual double getNextDelT() const = 0;
     
     virtual   void setSimTime( double val ) = 0;
     virtual double getSimTime() const = 0;

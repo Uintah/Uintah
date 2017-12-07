@@ -42,7 +42,7 @@ if [ "$OS" = "Linux" ]; then
       COMMON="      --with-mpi=built-in \\
       --with-cuda=/usr/lib/nvidia-cuda-toolkit \\
       --with-boost=/usr/ \\
-      --enable-gencode=35 \\
+      --enable-gencode=52 \\
       --enable-ray-scatter \\
       --enable-arches \\
       --enable-ice \\

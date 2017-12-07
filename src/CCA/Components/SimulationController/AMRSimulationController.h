@@ -60,23 +60,18 @@ namespace Uintah {
 //! Controls the execution of an AMR Simulation
 class AMRSimulationController : public SimulationController {
 
-
 public:
 
   AMRSimulationController( const ProcessorGroup * myworld
                          ,       ProblemSpecP     pspec
                          );
 
-  virtual ~AMRSimulationController(){};
+  virtual ~AMRSimulationController() {};
 
   virtual void run();
 
-
 protected:
 
-  AMRSimulationController( const AMRSimulationController& );
-
-  AMRSimulationController& operator=( const AMRSimulationController& );
 
   //! Set up, compile, and execute initial time step
   void doInitialTimeStep( );
@@ -118,8 +113,16 @@ protected:
   bool m_scrub_datawarehouse{true};
 
   // Barrier timers used when running and regridding.
-  Timers::Simple m_barrier_timer;
-  double         m_barrier_times[5];
+  Timers::Simple  m_barrier_timer;
+  double          m_barrier_times[5];
+
+private:
+
+  // eliminate copy, assignment and move
+  AMRSimulationController( const AMRSimulationController & )            = delete;
+  AMRSimulationController& operator=( const AMRSimulationController & ) = delete;
+  AMRSimulationController( AMRSimulationController && )                 = delete;
+  AMRSimulationController& operator=( AMRSimulationController && )      = delete;
 
 };
 
