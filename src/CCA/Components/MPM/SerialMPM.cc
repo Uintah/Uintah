@@ -1713,13 +1713,17 @@ void SerialMPM::countMaterialPointsPerLoadCurve(const ProcessorGroup*,
           int dwi = mpm_matl->getDWIndex();
 
           ParticleSubset* pset = new_dw->getParticleSubset(dwi, patch);
-          constParticleVariable<int> pLoadCurveID;
+          constParticleVariable<IntVector> pLoadCurveID;
           new_dw->get(pLoadCurveID, lb->pLoadCurveIDLabel, pset);
 
           ParticleSubset::iterator iter = pset->begin();
           for(;iter != pset->end(); iter++){
             particleIndex idx = *iter;
-            if (pLoadCurveID[idx] == (nofPressureBCs)) ++numPts;
+            for(int k = 0;k<3;k++){
+              if (pLoadCurveID[idx](k) == (nofPressureBCs)){
+                ++numPts;
+              }
+            }
           }
         } // matl loop
         new_dw->put(sumlong_vartype(numPts),
@@ -1758,7 +1762,7 @@ void SerialMPM::initializePressureBC(const ProcessorGroup*,
       new_dw->get(px, lb->pXLabel, pset);
       new_dw->get(psize, lb->pSizeLabel, pset);
       new_dw->get(pDeformationMeasure, lb->pDeformationMeasureLabel, pset);
-      constParticleVariable<int> pLoadCurveID;
+      constParticleVariable<IntVector> pLoadCurveID;
       new_dw->get(pLoadCurveID, lb->pLoadCurveIDLabel, pset);
       ParticleVariable<Vector> pExternalForce;
       new_dw->getModifiable(pExternalForce, lb->pExternalForceLabel, pset);
@@ -1803,10 +1807,12 @@ void SerialMPM::initializePressureBC(const ProcessorGroup*,
           ParticleSubset::iterator iter = pset->begin();
           for(;iter != pset->end(); iter++){
             particleIndex idx = *iter;
-            if (pLoadCurveID[idx] == nofPressureBCs) {
+            pExternalForce[idx] = Vector(0.,0.,0.);
+            for(int k=0;k<3;k++){
+             if (pLoadCurveID[idx](k) == nofPressureBCs) {
               if (flags->d_useCBDI) {
                Vector dxCell = patch->dCell();
-               pExternalForce[idx] = pbc->getForceVectorCBDI(px[idx],psize[idx],
+               pExternalForce[idx] +=pbc->getForceVectorCBDI(px[idx],psize[idx],
                                     pDeformationMeasure[idx],forcePerPart,time,
                                     pExternalForceCorner1[idx],
                                     pExternalForceCorner2[idx],
@@ -1814,10 +1820,11 @@ void SerialMPM::initializePressureBC(const ProcessorGroup*,
                                     pExternalForceCorner4[idx],
                                     dxCell);
               } else {
-               pExternalForce[idx] = pbc->getForceVector(px[idx],
+               pExternalForce[idx] += pbc->getForceVector(px[idx],
                                                         forcePerPart,time);
               }// if CBDI
             } // if pLoadCurveID...
+           } // Loop over elements of the loadCurveID IntVector
           }  // loop over particles
         }   // if pressure loop
       }    // loop over all Physical BCs
@@ -2089,7 +2096,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       old_dw->get(psize,          lb->pSizeLabel,          pset);
       old_dw->get(pFOld,          lb->pDeformationMeasureLabel,pset);
       new_dw->get(pexternalforce, lb->pExtForceLabel_preReloc, pset);
-      constParticleVariable<int> pLoadCurveID;
+      constParticleVariable<IntVector> pLoadCurveID;
       if (flags->d_useCBDI) {
         new_dw->get(pExternalForceCorner1,
                    lb->pExternalForceCorner1Label, pset);
@@ -2184,7 +2191,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
             //gexternalheatrate[node] += pexternalheatrate[idx]      * S[k];
           }
         }
-        if (flags->d_useCBDI && pLoadCurveID[idx]>0) {
+        if (flags->d_useCBDI && pLoadCurveID[idx].x()>0) {
           vector<IntVector> niCorner1(linear_interpolator->size());
           vector<IntVector> niCorner2(linear_interpolator->size());
           vector<IntVector> niCorner3(linear_interpolator->size());
@@ -3170,8 +3177,8 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
         }
 
         // Get the load curve data
-        constParticleVariable<int> pLoadCurveID;
-        ParticleVariable<int> pLoadCurveID_new;
+        constParticleVariable<IntVector> pLoadCurveID;
+        ParticleVariable<IntVector> pLoadCurveID_new;
         // Recycle the loadCurveIDs
         old_dw->get(pLoadCurveID, lb->pLoadCurveIDLabel, pset);
         new_dw->allocateAndPut(pLoadCurveID_new,
@@ -3201,18 +3208,17 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
           // Iterate over the particles
           ParticleSubset::iterator iter = pset->begin();
           for(;iter != pset->end(); iter++){
-            particleIndex idx = *iter;
-            int loadCurveID = pLoadCurveID[idx]-1;
-            if (loadCurveID < 0) {
-              //pExternalForce_new[idx] = pExternalForce[idx];
-              pExternalForce_new[idx] = Vector(0.,0.,0.);
-            } else {
+           particleIndex idx = *iter;
+           pExternalForce_new[idx] = Vector(0.,0.,0.);
+           for(int k=0;k<3;k++){
+            int loadCurveID = pLoadCurveID[idx](k)-1;
+            if (loadCurveID >= 0) {
               PressureBC* pbc = pbcP[loadCurveID];
               double force = forcePerPart[loadCurveID];
 
               if (flags->d_useCBDI) {
                Vector dxCell = patch->dCell();
-               pExternalForce_new[idx] = pbc->getForceVectorCBDI(px[idx],
+               pExternalForce_new[idx] += pbc->getForceVectorCBDI(px[idx],
                                  psize[idx],pDeformationMeasure[idx],force,time,
                                     pExternalForceCorner1[idx],
                                     pExternalForceCorner2[idx],
@@ -3220,9 +3226,10 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
                                     pExternalForceCorner4[idx],
                                     dxCell);
               } else {
-               pExternalForce_new[idx] =pbc->getForceVector(px[idx],force,time);
+               pExternalForce_new[idx]+=pbc->getForceVector(px[idx],force,time);
               }
-            }
+            } // loadCurveID >=0
+           }  // loop over elements of the IntVector
           }
         } else {  // using load curves, but not pressure BCs
           // Set to zero
@@ -4113,7 +4120,8 @@ void SerialMPM::addParticles(const ProcessorGroup*,
       ParticleVariable<double> pvolume,pmass,ptemp,ptempP,pcolor;
       ParticleVariable<double> pESF; 
       ParticleVariable<Vector> pvelocity,pextforce,pdisp,ptempgrad;
-      ParticleVariable<int> pref,ploc,prefOld,pLoadCID,pSplitR1R2R3;
+      ParticleVariable<int> pref,ploc,prefOld,pSplitR1R2R3;
+      ParticleVariable<IntVector> pLoadCID;
       new_dw->getModifiable(px,       lb->pXLabel_preReloc,            pset);
       new_dw->getModifiable(pids,     lb->pParticleIDLabel_preReloc,   pset);
       new_dw->getModifiable(pmass,    lb->pMassLabel_preReloc,         pset);
@@ -4242,7 +4250,8 @@ void SerialMPM::addParticles(const ProcessorGroup*,
       ParticleVariable<long64> pidstmp;
       ParticleVariable<double> pvoltmp, pmasstmp,ptemptmp,ptempPtmp,pcolortmp;
       ParticleVariable<Vector> pveltmp,pextFtmp,pdisptmp,ptempgtmp;
-      ParticleVariable<int> preftmp,ploctmp,pLoadCIDtmp;
+      ParticleVariable<int> preftmp,ploctmp;
+      ParticleVariable<IntVector> pLoadCIDtmp;
       new_dw->allocateTemporary(pidstmp,  pset);
       new_dw->allocateTemporary(pxtmp,    pset);
       new_dw->allocateTemporary(pvoltmp,  pset);
@@ -4753,7 +4762,7 @@ SerialMPM::refine(const ProcessorGroup*,
         ParticleVariable<Vector> pvelocity, pexternalforce, pdisp,pTempGrad;
         ParticleVariable<Matrix3> psize, pVelGrad;
         ParticleVariable<double> pTempPrev,p_q;
-        ParticleVariable<int>    pLoadCurve,pLoc;
+        ParticleVariable<IntVector> pLoadCurve,pLoc;
         ParticleVariable<long64> pID;
         ParticleVariable<Matrix3> pdeform, pstress;
 

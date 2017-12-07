@@ -29,6 +29,7 @@
 #include <Core/Util/FancyAssert.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
+#include <Core/Geometry/IntVector.h>
 #include <Core/Malloc/Allocator.h>
 
 #include <sci_defs/bits_defs.h> // for SCI_32BITS
@@ -191,6 +192,25 @@ const TypeDescription* fun_getTypeDescription(Vector*)
    return td;
 }
 
+static MPI_Datatype makeMPI_IntVector()
+{
+   ASSERTEQ(sizeof(Vector), sizeof(double)*3);
+   MPI_Datatype mpitype;
+   Uintah::MPI::Type_vector(1, 3, 3, MPI_INT, &mpitype);
+   Uintah::MPI::Type_commit(&mpitype);
+   return mpitype;
+}
+
+const TypeDescription* fun_getTypeDescription(IntVector*)
+{
+   static TypeDescription* td;
+   if(!td){
+      td = scinew TypeDescription(TypeDescription::IntVector,
+				  "IntVector", true, &makeMPI_IntVector);
+   }
+   return td;
+}
+
 void fun_getLargeValue(bool* val)
 {
   // this should never get called.  It doesn't make sense for a bool
@@ -211,13 +231,16 @@ void fun_getZeroValue(  long long * val ) { *val = 0; }
 void fun_getZeroValue(  bool    * val ) { *val = false; }
 void fun_getZeroValue(  long64  * val ) { *val = 0; }
 void fun_getZeroValue(  Vector  * val ) { *val = Vector(0,0,0); }
+void fun_getZeroValue(  IntVector  * val ) { *val = IntVector(0,0,0); }
 
 void fun_getLargeValue( long64  * val ) { *val = LONG_MAX; }
 void fun_getLargeValue( Vector  * val ) { *val = Vector(DBL_MAX,DBL_MAX,DBL_MAX); }
+void fun_getLargeValue( IntVector  * val ) { *val = IntVector(INT_MAX,INT_MAX,INT_MAX); }
 void fun_getLargeValue( double  * val ) { *val = DBL_MAX; }
 
 void fun_getSmallValue( long64  * val ) { *val = LONG_MIN; }
 void fun_getSmallValue( Vector  * val ) { *val = Vector(-DBL_MAX,-DBL_MAX,-DBL_MAX); }
+void fun_getSmallValue( IntVector  * val ) { *val = IntVector(-INT_MAX,-INT_MAX,-INT_MAX); }
 void fun_getSmallValue( double  * val ) { *val = -DBL_MAX; }
 
 } // End namespace Uintah

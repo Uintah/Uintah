@@ -23,6 +23,7 @@
  */
 
 #include <Core/Geometry/Vector.h>
+#include <Core/Geometry/IntVector.h>
 
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/Variables/CCVariable.h>
@@ -41,6 +42,7 @@
 
 
 template class Uintah::ParticleVariable<Uintah::Vector>;
+template class Uintah::ParticleVariable<Uintah::IntVector>;
 template class Uintah::ParticleVariable<Uintah::Matrix3>;
 template class Uintah::ParticleVariable<Uintah::Point>;
 template class Uintah::ParticleVariable<double>;

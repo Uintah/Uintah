@@ -99,7 +99,7 @@ namespace Uintah {
     ParticleVariable<long64> pparticleID;
     ParticleVariable<Vector> pdisp,pTempGrad,parea;
     ParticleVariable<Vector> pfiberdir; 
-    ParticleVariable<int> pLoadCurveID;
+    ParticleVariable<IntVector> pLoadCurveID;
     ParticleVariable<int> plocalized;
     ParticleVariable<int> prefined;
     ParticleVariable<int> pLastLevel;
@@ -147,7 +147,8 @@ namespace Uintah {
     //////////////////////////////////////////////////////////////////////////
     /*! Get the LoadCurveID applicable for this material point */
     //////////////////////////////////////////////////////////////////////////
-    int getLoadCurveID(const Point& pp, const Vector& dxpp, Vector& areacomps);
+    IntVector getLoadCurveID(const Point& pp, const Vector& dxpp, 
+                                                    Vector& areacomps);
 
     //////////////////////////////////////////////////////////////////////////
     /*! Print MPM physical boundary condition information */

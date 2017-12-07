@@ -728,9 +728,9 @@ MPMLabel::MPMLabel()
   materialPointsPerLoadCurveLabel = VarLabel::create("pointsPerCurve", 
                             sumlong_vartype::getTypeDescription());
   pLoadCurveIDLabel = VarLabel::create("p.loadCurveID",
-                            ParticleVariable<int>::getTypeDescription());
+                            ParticleVariable<IntVector>::getTypeDescription());
   pLoadCurveIDLabel_preReloc = VarLabel::create("p.loadCurveID+",
-                            ParticleVariable<int>::getTypeDescription());
+                            ParticleVariable<IntVector>::getTypeDescription());
 
   // Labels for shell materials
   pThickTopLabel = VarLabel::create("p.thickTop",

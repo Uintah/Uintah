@@ -404,9 +404,9 @@ ParticleCreator::createParticles(MPMMaterial* matl,
                                      pvars.parea[pidx].z()*areacomps.z());
           }
         } else {
-          pvars.pLoadCurveID[pidx] = 0;
+          pvars.pLoadCurveID[pidx] = IntVector(0,0,0);
         }
-        if(pvars.pLoadCurveID[pidx]==0 && d_doScalarDiffusion) {
+        if(pvars.pLoadCurveID[pidx].x()==0 && d_doScalarDiffusion) {
           pvars.parea[pidx]=Vector(0.);
         }
       }
@@ -421,10 +421,11 @@ ParticleCreator::createParticles(MPMMaterial* matl,
 // Get the LoadCurveID applicable for this material point
 // WARNING : Should be called only once per particle during a simulation 
 // because it updates the number of particles to which a BC is applied.
-int ParticleCreator::getLoadCurveID(const Point& pp, const Vector& dxpp,
-                                    Vector& areacomps)
+IntVector ParticleCreator::getLoadCurveID(const Point& pp, const Vector& dxpp,
+                                          Vector& areacomps)
 {
-  int ret=0;
+  IntVector ret(0,0,0);
+  int k=0;
   for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++){
     string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
         
@@ -433,28 +434,32 @@ int ParticleCreator::getLoadCurveID(const Point& pp, const Vector& dxpp,
       PressureBC* pbc = 
         dynamic_cast<PressureBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
       if (pbc->flagMaterialPoint(pp, dxpp)) {
-         ret = pbc->loadCurveID(); 
+         ret(k) = pbc->loadCurveID(); 
+         k++;
       }
     }
     else if (bcs_type == "ScalarFlux") {
       ScalarFluxBC* pbc = 
         dynamic_cast<ScalarFluxBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
       if (pbc->flagMaterialPoint(pp, dxpp, areacomps)) {
-         ret = pbc->loadCurveID(); 
+         ret(k) = pbc->loadCurveID(); 
+         k++;
       }
     }
     else if (bcs_type == "HeatFlux") {      
       HeatFluxBC* hfbc = 
         dynamic_cast<HeatFluxBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
       if (hfbc->flagMaterialPoint(pp, dxpp)) {
-        ret = hfbc->loadCurveID(); 
+         ret(k) = hfbc->loadCurveID(); 
+         k++;
       }
     }
     else if (bcs_type == "ArchesHeatFlux") {      
       ArchesHeatFluxBC* hfbc = 
         dynamic_cast<ArchesHeatFluxBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
       if (hfbc->flagMaterialPoint(pp, dxpp)) {
-        ret = hfbc->loadCurveID(); 
+         ret(k) = hfbc->loadCurveID(); 
+         k++;
       }
     }
   }

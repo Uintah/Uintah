@@ -33,6 +33,7 @@
 
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
+#include <Core/Geometry/IntVector.h>
 
 namespace Uintah {
 
@@ -54,6 +55,7 @@ typedef int64_t long64;
  const TypeDescription* fun_getTypeDescription(float*);
  const TypeDescription* fun_getTypeDescription(Point*);
  const TypeDescription* fun_getTypeDescription(Vector*);
+ const TypeDescription* fun_getTypeDescription(IntVector*);
 
 // THIS IS A GUESS -> Because of the order of instantiation of
 // templates by the IBM xlC compiler, we can not declare the
@@ -82,6 +84,7 @@ typedef int64_t long64;
  void fun_getZeroValue(bool*);
  void fun_getZeroValue(int64_t*);
  void fun_getZeroValue(Vector*);
+ void fun_getZeroValue(IntVector*);
 
 // these functions should never get called - they just exist for
 // template completeness
@@ -91,6 +94,8 @@ typedef int64_t long64;
  void fun_getSmallValue(long64*);
  void fun_getLargeValue(Vector*);
  void fun_getSmallValue(Vector*);
+ void fun_getLargeValue(IntVector*);
+ void fun_getSmallValue(IntVector*);
 
 } // End namespace Uintah
    
@@ -109,5 +114,3 @@ namespace Uintah {
 #endif // STATIC_BUILD
 
 #endif
-
-

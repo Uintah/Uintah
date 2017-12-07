@@ -2041,7 +2041,7 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       old_dw->get(pTemperature,         lb->pTemperatureLabel,        pset);
 
 #ifdef CBDI_FLUXBCS
-      constParticleVariable<int> pLoadCurveID;
+      constParticleVariable<IntVector> pLoadCurveID;
       if (flags->d_useLoadCurves) {
         old_dw->get(pLoadCurveID,       lb->pLoadCurveIDLabel,        pset);
       }
@@ -2170,17 +2170,17 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         particleIndex idx = *iter;
 
         Point flux_pos;
-        if(pLoadCurveID[idx]==1){
+        if(pLoadCurveID[idx].x()==1){
           flux_pos=Point(px[idx].x()-0.5*psize[idx](0,0)*dx.x(),
                          px[idx].y(),
                          px[idx].z());
         }
-        if(pLoadCurveID[idx]==2){
+        if(pLoadCurveID[idx].x()==2){
           flux_pos=Point(px[idx].x()+0.5*psize[idx](0,0)*dx.x(),
                          px[idx].y(),
                          px[idx].z());
         }
-        if(pLoadCurveID[idx]==3){
+        if(pLoadCurveID[idx].x()==3){
           flux_pos=Point(px[idx].x(),
                          px[idx].y()+0.5*psize[idx](1,1)*dx.y(),
                          px[idx].z());
@@ -4169,7 +4169,8 @@ void AMRMPM::addParticles(const ProcessorGroup*,
       ParticleVariable<double> pvolume,pmass,ptemp,ptempP,pcolor,pconc,pconcpre;
       ParticleVariable<double> pESF,pD;
       ParticleVariable<Vector> pvelocity,pextforce,pdisp,pconcgrad,pArea;
-      ParticleVariable<int> pref,ploc,plal,prefOld,pLoadCID,pSplitR1R2R3;
+      ParticleVariable<int> pref,ploc,plal,prefOld,pSplitR1R2R3;
+      ParticleVariable<IntVector> pLoadCID;
       new_dw->getModifiable(px,       lb->pXLabel_preReloc,            pset);
       new_dw->getModifiable(pids,     lb->pParticleIDLabel_preReloc,   pset);
       new_dw->getModifiable(pmass,    lb->pMassLabel_preReloc,         pset);
@@ -4346,7 +4347,8 @@ void AMRMPM::addParticles(const ProcessorGroup*,
       ParticleVariable<double> pvoltmp, pmasstmp,ptemptmp,ptempPtmp,pESFtmp;
       ParticleVariable<double> pcolortmp, pconctmp, pconcpretmp,pDtmp;
       ParticleVariable<Vector> pveltmp,pextFtmp,pdisptmp,pconcgradtmp,pareatmp;
-      ParticleVariable<int> preftmp,ploctmp,plaltmp,pLoadCIDtmp;
+      ParticleVariable<int> preftmp,ploctmp,plaltmp;
+      ParticleVariable<IntVector> pLoadCIDtmp;
       new_dw->allocateTemporary(pidstmp,  pset);
       new_dw->allocateTemporary(pxtmp,    pset);
       new_dw->allocateTemporary(pvoltmp,  pset);
@@ -4606,11 +4608,11 @@ void AMRMPM::addParticles(const ProcessorGroup*,
                    pxtmp[last_index].asVector().length2()){
                   pareatmp[last_index]     = 0.0;
                   pareatmp[new_idx]        = pArea[idx];
-                  pLoadCIDtmp[last_index]  = 0;
+                  pLoadCIDtmp[last_index]  = IntVector(0,0,0);
                   pLoadCIDtmp[new_idx]     = pLoadCID[idx];
                 } else{
                   pareatmp[new_idx]        = 0.0;
-                  pLoadCIDtmp[new_idx]     = 0;
+                  pLoadCIDtmp[new_idx]     = IntVector(0,0,0);
                 } // if pxtmp
               } // if i==0
             } // if pArea
@@ -4919,7 +4921,8 @@ void AMRMPM::refineGrid(const ProcessorGroup*,
         ParticleVariable<Matrix3> psize;
         ParticleVariable<Vector>  parea;
         ParticleVariable<double> pTempPrev,pColor,pConc,pConcPrev,pExtScalFlux;
-        ParticleVariable<int>    pLoadCurve,pLastLevel,pRefined;
+        ParticleVariable<int>    pLastLevel,pRefined;
+        ParticleVariable<IntVector> pLoadCurve;
         ParticleVariable<long64> pID;
         ParticleVariable<Matrix3> pdeform, pstress, pVelGrad;
         
