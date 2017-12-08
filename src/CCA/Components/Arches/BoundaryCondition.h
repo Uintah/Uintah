@@ -315,7 +315,8 @@ void setHattedIntrusionVelocity( const Patch* p,
                                  SFCXVariable<double>& u,
                                  SFCYVariable<double>& v,
                                  SFCZVariable<double>& w,
-                                 constCCVariable<double>& density );
+                                 constCCVariable<double>& density,
+                                 bool& set_nonnormal_values );
 
 void sched_setIntrusionDensity( SchedulerP& sched,
                                 const LevelP& level,

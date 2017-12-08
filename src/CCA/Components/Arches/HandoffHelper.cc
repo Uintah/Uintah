@@ -8,11 +8,8 @@ using namespace ArchesCore;
 void HandoffHelper::readInputFile( std::string file_name, const int index, FFInfo& info ){
 
   std::string varname="null";
-  double dx=0.;
-  double dy=0.;
   IntVector relative_ijk(0,0,0);
   Vector relative_xyz(0,0,0);
-  std::string default_type="null";
   double default_value=0.;
   CellToValue values;
 
@@ -70,13 +67,54 @@ void HandoffHelper::readInputFile( std::string file_name, const int index, FFInf
       values.insert( std::make_pair( C2, v[index] ));
 
     }
-
-  //  info{ values, relative_xyz, dx, dy, default_type, varname, default_value  };
-
   }
+
+  gzclose( file );
 
   info.values = values;
 
+}
+
+void HandoffHelper::readInputFile( std::string file_name, FFInfo& info ){
+
+  std::string varname="null";
+  IntVector relative_ijk(0,0,0);
+  Vector relative_xyz(0,0,0);
+  double default_value=0.;
+  CellToVector values;
+
+  gzFile file = gzopen( file_name.c_str(), "r" );
+  if ( file == nullptr ) {
+    throw ProblemSetupException( "Unable to open the given handoff input file: "
+                                 + file_name, __FILE__, __LINE__);
+  }
+
+  info.name = getString( file );
+
+  info.dx = getDouble( file );
+  info.dy = getDouble( file );
+
+  int num_points = getInt( file );
+
+  for ( int i = 0; i < num_points; i++ ) {
+
+    int I = getInt( file );
+    int J = getInt( file );
+    int K = getInt( file );
+
+    Vector v;
+
+    v[0] = getDouble( file );
+    v[1] = getDouble( file );
+    v[2] = getDouble( file );
+    IntVector C(I,J,K);
+
+    values.insert( std::make_pair( C, v ));
+
+  }
+
   gzclose( file );
+
+  info.vec_values = values;
 
 }

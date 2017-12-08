@@ -3928,12 +3928,13 @@ BoundaryCondition::setHattedIntrusionVelocity( const Patch* p,
                                                SFCXVariable<double>& u,
                                                SFCYVariable<double>& v,
                                                SFCZVariable<double>& w,
-                                               constCCVariable<double>& density )
+                                               constCCVariable<double>& density,
+                                               bool& set_nonnormal_values )
 {
   if ( _using_new_intrusion ) {
     const Level* level = p->getLevel();
     const int i = level->getID();
-    _intrusionBC[i]->setHattedVelocity( p, u, v, w, density );
+    _intrusionBC[i]->setHattedVelocity( p, u, v, w, density, set_nonnormal_values );
   }
 }
 void
