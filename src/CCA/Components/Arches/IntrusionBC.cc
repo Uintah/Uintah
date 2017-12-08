@@ -29,6 +29,7 @@
 #include <CCA/Components/Arches/ChemMix/MixingRxnModel.h>
 #include <CCA/Components/Arches/Properties.h>
 #include <CCA/Components/Arches/ChemMix/TableLookup.h>
+#include <CCA/Components/Arches/HandoffHelper.h>
 #include <CCA/Components/MPMArches/MPMArchesLabel.h>
 #include <CCA/Ports/Scheduler.h>
 
@@ -507,7 +508,7 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
             std::map<std::string, scalarInletBase*>::iterator scalar_iter = iIntrusion->second.scalar_map.find( iv_var_names[niv] );
 
             if ( scalar_iter == iIntrusion->second.scalar_map.end() ){
-              throw InvalidValue("Error: Cannot compute property values for IntrusionBC. Make sure all IV's are specified!", __FILE__, __LINE__);
+              throw InvalidValue("Error: Cannot compute property values for IntrusionBC. Make sure all IV's are specified! ("+iv_var_names[niv]+")", __FILE__, __LINE__);
             }
 
             double scalar_var = scalar_iter->second->get_scalar( c );
