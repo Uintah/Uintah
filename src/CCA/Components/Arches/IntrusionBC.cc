@@ -1049,8 +1049,6 @@ IntrusionBC::printIntrusionInformation( const ProcessorGroup*,
 
   for (int p = 0; p < patches->size(); p++) {
 
-    const Patch* patch = patches->get(p);
-
     proc0cout << "----- Intrusion Summary ----- \n " << std::endl;
 
     for (IntrusionMap::iterator iter = _intrusion_map.begin(); iter != _intrusion_map.end(); ++iter) {
