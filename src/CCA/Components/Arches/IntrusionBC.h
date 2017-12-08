@@ -749,7 +749,6 @@ namespace Uintah{
 
             Point xyz(m_relative_xyz[0], m_relative_xyz[1], m_relative_xyz[2]);
             IntVector rel_ijk = patch->getLevel()->getCellIndex( xyz );
-            typedef std::map<IntVector, Vector> CellToVector;
 
             if ( set_nonnormal_values ){
 
