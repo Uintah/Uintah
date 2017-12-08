@@ -486,14 +486,15 @@ void ImpMPM::countMaterialPointsPerLoadCurve(const ProcessorGroup*,
           int dwi = mpm_matl->getDWIndex();
 
           ParticleSubset* pset = new_dw->getParticleSubset(dwi, patch);
-          constParticleVariable<int> pLoadCurveID;
+          constParticleVariable<IntVector> pLoadCurveID;
           new_dw->get(pLoadCurveID, lb->pLoadCurveIDLabel, pset);
 
           ParticleSubset::iterator iter = pset->begin();
           for(;iter != pset->end(); iter++){
             particleIndex idx = *iter;
-            if (pLoadCurveID[idx] == (nofHeatFluxBCs)) 
-              ++numPts;
+            for(int k=0;k<3;k++){
+             if (pLoadCurveID[idx](k) == (nofHeatFluxBCs)) ++numPts;
+             }
           }
         } // matl loop
         //cout << "numPts found = " << numPts << endl;
@@ -513,13 +514,15 @@ void ImpMPM::countMaterialPointsPerLoadCurve(const ProcessorGroup*,
           int dwi = mpm_matl->getDWIndex();
 
           ParticleSubset* pset = new_dw->getParticleSubset(dwi, patch);
-          constParticleVariable<int> pLoadCurveID;
+          constParticleVariable<IntVector> pLoadCurveID;
           new_dw->get(pLoadCurveID, lb->pLoadCurveIDLabel, pset);
 
           ParticleSubset::iterator iter = pset->begin();
           for(;iter != pset->end(); iter++){
             particleIndex idx = *iter;
-            if (pLoadCurveID[idx] == (nofPressureBCs)) ++numPts;
+            for(int k=0;k<3;k++){
+             if (pLoadCurveID[idx](k) == (nofPressureBCs)) ++numPts;
+            }
           }
         } // matl loop
         new_dw->put(sumlong_vartype(numPts),
@@ -593,7 +596,7 @@ void ImpMPM::initializeHeatFluxBC(const ProcessorGroup*,
           ParticleSubset* pset = new_dw->getParticleSubset(dwi, patch);
           constParticleVariable<Point>  px;
           new_dw->get(px, lb->pXLabel,             pset);
-          constParticleVariable<int> pLoadCurveID;
+          constParticleVariable<IntVector> pLoadCurveID;
           new_dw->get(pLoadCurveID, lb->pLoadCurveIDLabel, pset);
           ParticleVariable<double> pExternalHeatFlux;
           new_dw->getModifiable(pExternalHeatFlux, lb->pExternalHeatFluxLabel, 
@@ -602,13 +605,15 @@ void ImpMPM::initializeHeatFluxBC(const ProcessorGroup*,
           ParticleSubset::iterator iter = pset->begin();
           for(;iter != pset->end(); iter++){
             particleIndex idx = *iter;
-            if (pLoadCurveID[idx] == nofHeatFluxBCs) {
+            for(int k=0;k<3;k++){
+             if (pLoadCurveID[idx](k) == nofHeatFluxBCs) {
               if (bcs_type == "HeatFlux")
-                pExternalHeatFlux[idx] = phf->getFlux(px[idx], fluxPerPart);
+                pExternalHeatFlux[idx] += phf->getFlux(px[idx], fluxPerPart);
               if (bcs_type == "ArchesHeatFlux") {
-                pExternalHeatFlux[idx] = pahf->getFlux(px[idx], fluxPerPart);
+                pExternalHeatFlux[idx] += pahf->getFlux(px[idx], fluxPerPart);
                 //   cout << "pExternalHeatFlux[idx] = " << pExternalHeatFlux[idx]         << endl;
               }
+             }
             }
           }
         } // matl loop
@@ -668,7 +673,7 @@ void ImpMPM::initializePressureBC(const ProcessorGroup*,
           ParticleSubset* pset = new_dw->getParticleSubset(dwi, patch);
           constParticleVariable<Point>  px;
           new_dw->get(px, lb->pXLabel,             pset);
-          constParticleVariable<int> pLoadCurveID;
+          constParticleVariable<IntVector> pLoadCurveID;
           new_dw->get(pLoadCurveID, lb->pLoadCurveIDLabel, pset);
           ParticleVariable<Vector> pExternalForce;
           new_dw->getModifiable(pExternalForce, lb->pExternalForceLabel, pset);
@@ -676,9 +681,11 @@ void ImpMPM::initializePressureBC(const ProcessorGroup*,
           ParticleSubset::iterator iter = pset->begin();
           for(;iter != pset->end(); iter++){
             particleIndex idx = *iter;
-            if (pLoadCurveID[idx] == nofPressureBCs) {
-              pExternalForce[idx] = pbc->getForceVector(px[idx], forcePerPart,
+            for(int k=0;k<3;k++){
+             if (pLoadCurveID[idx](k) == nofPressureBCs) {
+              pExternalForce[idx] += pbc->getForceVector(px[idx], forcePerPart,
                                                         time);
+             }
             }
           }
 
