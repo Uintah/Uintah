@@ -605,16 +605,16 @@ void ImpMPM::initializeHeatFluxBC(const ProcessorGroup*,
           ParticleSubset::iterator iter = pset->begin();
           for(;iter != pset->end(); iter++){
             particleIndex idx = *iter;
-            for(int k=0;k<3;k++){
-             if (pLoadCurveID[idx](k) == nofHeatFluxBCs) {
+//            for(int k=0;k<3;k++){
+             if (pLoadCurveID[idx](0) == nofHeatFluxBCs) {
               if (bcs_type == "HeatFlux")
-                pExternalHeatFlux[idx] += phf->getFlux(px[idx], fluxPerPart);
+                pExternalHeatFlux[idx] = phf->getFlux(px[idx], fluxPerPart);
               if (bcs_type == "ArchesHeatFlux") {
-                pExternalHeatFlux[idx] += pahf->getFlux(px[idx], fluxPerPart);
+                pExternalHeatFlux[idx] = pahf->getFlux(px[idx], fluxPerPart);
                 //   cout << "pExternalHeatFlux[idx] = " << pExternalHeatFlux[idx]         << endl;
               }
              }
-            }
+//            }
           }
         } // matl loop
       }  // patch loop
@@ -1991,7 +1991,7 @@ void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
               int loadCurveID = pLoadCurveID[idx](k)-1;
               if (loadCurveID >= 0) {
                 //              pExternalHeatFlux_new[idx] = mag;
-                pExternalHeatFlux_new[idx] += pExternalHeatFlux[idx];
+                pExternalHeatFlux_new[idx] = pExternalHeatFlux[idx];
               }
             }
           }
