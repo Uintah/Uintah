@@ -213,9 +213,6 @@ AMRSimulationController::run()
   // Setup, compile, and run the taskgraph for the initialization time step
   doInitialTimeStep();
 
-  // ARS - FIX ME - SCHEDULE INSTEAD - Comment out
-  ReportStats( nullptr, nullptr, nullptr, nullptr, nullptr, true );
-
   // Update the profiler weights
   m_lb->finalizeContributions(m_current_gridP);
   m_lb->resetCostForecaster();
@@ -547,9 +544,6 @@ AMRSimulationController::run()
 				     m_current_gridP );
       }
 
-    // ARS - FIX ME - SCHEDULE INSTEAD - Comment out
-    ReportStats( nullptr, nullptr, nullptr, nullptr, nullptr, false );
-    
     // Update the profiler weights
     m_lb->finalizeContributions(m_current_gridP);
 

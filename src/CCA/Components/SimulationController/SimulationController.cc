@@ -649,22 +649,21 @@ void SimulationController::ResetStats( void )
 void
 SimulationController::ScheduleReportStats( bool header )
 {
-  // ARS - FIX ME - SCHEDULE INSTEAD - comment out
-  return;
-  
-//   std::cerr << "*************" << __FUNCTION__ << "  " << __LINE__ << "  " << header << std::endl;
-
   Task* task = scinew Task("SimulationController::ReportStats",
                            this, &SimulationController::ReportStats, header);
   
   task->setType(Task::OncePerProc);
 
-  m_scheduler->addTask(task, nullptr, nullptr );
+  // Require delta T so that the task gets scheduled
+  // correctly. Otherwise the scheduler/taskgraph will toss an error :
+  // Caught std exception: map::at: key not found
+  task->requires(Task::NewDW, m_app->getDelTLabel() );
 
-  
-  // m_scheduler->addTask(task,
-  //                   m_lb->getPerProcessorPatchSet(m_current_gridP),
-  //                   m_app->getSimulationStateP()->allMaterials());
+  m_scheduler->addTask(task,
+		       m_lb->getPerProcessorPatchSet(m_current_gridP),
+		       m_app->getSimulationStateP()->allMaterials() );
+
+  // std::cerr << "*************" << __FUNCTION__ << "  " << __LINE__ << "  " << header << std::endl;
 }
 
 void
@@ -685,10 +684,11 @@ SimulationController::ReportStats(const ProcessorGroup*,
 
   // Reduce the MPI runtime stats.
   MPIScheduler * mpiScheduler = dynamic_cast<MPIScheduler*>( m_scheduler.get_rep() );
+
   if( mpiScheduler ) {
     mpiScheduler->mpi_info_.reduce( m_regridder && m_regridder->useDynamicDilation(), d_myworld );
   }
-  
+
   // Print the stats for this time step
   if( d_myworld->myRank() == 0 && header ) {
     std::ostringstream message;
@@ -1071,10 +1071,22 @@ void
 SimulationController::ScheduleCheckInSitu( bool first )
 {
   if( getVisIt() ) {
+
     Task* task = scinew Task("SimulationController::CheckInSitu",
                              this, &SimulationController::CheckInSitu, first);
     
-    m_scheduler->addTask(task, nullptr, nullptr );
+    task->setType(Task::OncePerProc);
+
+    // Require delta T so that the task gets scheduled
+    // correctly. Otherwise the scheduler/taskgraph will toss an error
+    // : Caught std exception: map::at: key not found
+    task->requires(Task::NewDW, m_app->getDelTLabel() );
+
+    m_scheduler->addTask(task,
+			 m_lb->getPerProcessorPatchSet(m_current_gridP),
+			 m_app->getSimulationStateP()->allMaterials() );
+
+    // std::cerr << "*************" << __FUNCTION__ << "  " << __LINE__ << "  " << first << std::endl;
   }
 }
 
