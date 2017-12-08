@@ -1166,8 +1166,12 @@ IntrusionBC::addScalarRHS( const Patch* patch,
 
         bool found_bc = true;
         if ( scalar_iter == iIntrusion->second.scalar_map.end() ){
-          if ( !iIntrusion->second.ignore_missing_bc )
-            throw InvalidValue("Error: Cannot match scalar value to scalar name in intrusion: "+scalar_name, __FILE__, __LINE__);
+          if ( !iIntrusion->second.ignore_missing_bc ){
+            std::stringstream msg;
+            msg << "Error: Cannot match scalar value to scalar name in intrusion: " << scalar_name << std::endl
+            << "Use the <ignore_missing_bc/> tag if you wish to ignore/assume zero conditions for non-specified scalars " << std::endl;
+            throw InvalidValue(msg.str(), __FILE__, __LINE__);
+          }
           found_bc = false;
         }
 
@@ -1234,8 +1238,12 @@ IntrusionBC::addScalarRHS( const Patch* patch,
 
         bool found_bc = true;
         if ( scalar_iter == iIntrusion->second.scalar_map.end() ){
-          if ( !iIntrusion->second.ignore_missing_bc )
-            throw InvalidValue("Error: Cannot match scalar value to scalar name in intrusion: "+scalar_name, __FILE__, __LINE__);
+          if ( !iIntrusion->second.ignore_missing_bc ){
+            std::stringstream msg;
+            msg << "Error: Cannot match scalar value to scalar name in intrusion: " << scalar_name << std::endl
+            << "Use the <ignore_missing_bc/> tag if you wish to ignore/assume zero conditions for non-specified scalars " << std::endl;
+            throw InvalidValue(msg.str(), __FILE__, __LINE__);
+          }
           found_bc = false;
         }
 

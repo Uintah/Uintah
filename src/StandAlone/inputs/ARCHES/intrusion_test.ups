@@ -175,9 +175,7 @@
             </geom_object>
             <flux_dir>x+</flux_dir>
             <velocity type="flat">
-              <u>10.0</u>
-              <v>0.0</v>
-              <w>0.0</w>
+              <flat_velocity>[10.,0,0]</flat_velocity>
             </velocity>
             <scalars>
               <scalar label="mixture_fraction" type="flat">
@@ -194,9 +192,7 @@
             </geom_object>
             <flux_dir>y+</flux_dir>
             <velocity type="flat">
-              <u>0.0</u>
-              <v>10.1</v>
-              <w>0.0</w>
+              <flat_velocity>[0,10.1,0]</flat_velocity>
             </velocity>
             <scalars>
               <scalar label="mixture_fraction" type="flat">

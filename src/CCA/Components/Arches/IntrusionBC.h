@@ -584,7 +584,6 @@ namespace Uintah{
 
           void problem_setup( ProblemSpecP& db ){
 
-
             double u;
             double v;
             double w;
@@ -600,9 +599,11 @@ namespace Uintah{
             }
 
             if ( db_flat && !is_mass_flow_rate ) {
-              db_flat->getWithDefault("u",u,0.0);
-              db_flat->getWithDefault("v",v,0.0);
-              db_flat->getWithDefault("w",w,0.0);
+              Vector vel;
+              db_flat->require("flat_velocity", vel);
+              u = vel[0];
+              v = vel[1];
+              w = vel[2];
             } else {
               u=0.0;
               v=0.0;
@@ -629,11 +630,9 @@ namespace Uintah{
               IntVector c = *i;
               for ( int idir = 0; idir < 6; idir++ ){
                 if ( directions[idir] != 0 ){
-
-                  u[c] = _bc_velocity[0];
-                  v[c] = _bc_velocity[1];
-                  w[c] = _bc_velocity[2];
-
+                  if ( std::abs(_bc_velocity[0]) > 1.e-16 ) u[c] = _bc_velocity[0];
+                  if ( std::abs(_bc_velocity[1]) > 1.e-16 ) v[c] = _bc_velocity[1];
+                  if ( std::abs(_bc_velocity[2]) > 1.e-16 ) w[c] = _bc_velocity[2];
                 }
               }
             }
@@ -666,10 +665,6 @@ namespace Uintah{
 
             db_v->require("input_file", _file_reference);
             db_v->require("relative_xyz", m_relative_xyz);
-            m_non_normal = true;
-            if ( db_v->findBlock("ignore_non_normal") ){
-              m_non_normal = false;
-            }
 
             int num_flux_dir = 0; // Only allow for ONE flux direction
 
@@ -756,53 +751,8 @@ namespace Uintah{
             IntVector rel_ijk = patch->getLevel()->getCellIndex( xyz );
             typedef std::map<IntVector, Vector> CellToVector;
 
-            bool do_nonnormal = false;
-            if ( m_non_normal && set_nonnormal_values ){
-              do_nonnormal = true;
-            }
+            if ( set_nonnormal_values ){
 
-            if ( !do_nonnormal ){
-
-              for ( std::vector<IntVector>::iterator i = iBC_iter->second.begin();
-                                                     i != iBC_iter->second.end();
-                                                     i++){
-
-                IntVector c = *i;
-                IntVector c_rel = *i - rel_ijk; //note that this is the relative index position
-                c_rel[_zeroed_index] = 0;
-
-                auto iter = m_handoff_information.vec_values.find(c_rel);
-
-                if ( iter != m_handoff_information.vec_values.end() ){
-
-                  Vector bc_value = m_handoff_information.vec_values[c_rel];
-
-                  if ( _flux_i == 0 ){
-                    //-x
-                    u[c] = bc_value[0];
-                  } else if ( _flux_i == 1 ){
-                    //+x
-                    u[c] = bc_value[0];
-                  } else if ( _flux_i == 2 ){
-                    //-y
-                    v[c] = bc_value[1];
-                  } else if ( _flux_i == 3 ){
-                    //+y
-                    v[c] = bc_value[1];
-                  } else if ( _flux_i == 4 ){
-                    //-z
-                    w[c] = bc_value[2];
-                  } else {
-                    //+z
-                    w[c] = bc_value[2];
-                  }
-
-                }
-              }
-
-            } else {
-
-              // also change the other components
               for ( std::vector<IntVector>::iterator i = iBC_iter->second.begin();
                                                      i != iBC_iter->second.end();
                                                      i++){
@@ -822,48 +772,48 @@ namespace Uintah{
                     //-x
                     u[c] = bc_value[0];
                     if ( patch->containsCell(c-IntVector(1,0,0)) ){
-                      v[c-IntVector(1,0,0)] = bc_value[1];
-                      w[c-IntVector(1,0,0)] = bc_value[2];
+                      if ( std::abs(bc_value[1]) > 1.e-16) v[c-IntVector(1,0,0)] = bc_value[1];
+                      if ( std::abs(bc_value[2]) > 1.e-16) w[c-IntVector(1,0,0)] = bc_value[2];
                     }
 
                   } else if ( _flux_i == 1 ){
 
                     //+x
                     u[c] = bc_value[0];
-                    v[c] = bc_value[1];
-                    w[c] = bc_value[2];
+                    if ( std::abs(bc_value[1]) > 1.e-16) v[c] = bc_value[1];
+                    if ( std::abs(bc_value[2]) > 1.e-16) w[c] = bc_value[2];
 
                   } else if ( _flux_i == 2 ){
 
                     //-y
                     v[c] = bc_value[1];
                     if ( patch->containsCell(c-IntVector(0,1,0)) ){
-                      w[c-IntVector(0,1,0)] = bc_value[2];
-                      u[c-IntVector(0,1,0)] = bc_value[0];
+                      if ( std::abs(bc_value[2]) > 1.e-16) w[c-IntVector(0,1,0)] = bc_value[2];
+                      if ( std::abs(bc_value[0]) > 1.e-16) u[c-IntVector(0,1,0)] = bc_value[0];
                     }
 
                   } else if ( _flux_i == 3 ){
 
                     //+y
                     v[c] = bc_value[1];
-                    w[c] = bc_value[2];
-                    u[c] = bc_value[0];
+                    if ( std::abs(bc_value[2]) > 1.e-16) w[c] = bc_value[2];
+                    if ( std::abs(bc_value[0]) > 1.e-16) u[c] = bc_value[0];
 
                   } else if ( _flux_i == 4 ){
 
                     //-z
                     w[c] = bc_value[2];
                     if ( patch->containsCell(c-IntVector(0,0,1)) ){
-                      u[c-IntVector(0,0,1)] = bc_value[0];
-                      v[c-IntVector(0,0,1)] = bc_value[1];
+                      if ( std::abs(bc_value[0]) > 1.e-16) u[c-IntVector(0,0,1)] = bc_value[0];
+                      if ( std::abs(bc_value[1]) > 1.e-16) v[c-IntVector(0,0,1)] = bc_value[1];
                     }
 
                   } else {
 
                     //+z
                     w[c] = bc_value[2];
-                    u[c] = bc_value[0];
-                    v[c] = bc_value[1];
+                    if ( std::abs(bc_value[0]) > 1.e-16) u[c] = bc_value[0];
+                    if ( std::abs(bc_value[1]) > 1.e-16) v[c] = bc_value[1];
 
                   }
                 }
@@ -909,8 +859,6 @@ namespace Uintah{
           ArchesCore::HandoffHelper::FFInfo m_handoff_information;
 
           Vector m_relative_xyz;
-          bool m_non_normal{false};
-
       };
 
       typedef std::map<int, std::vector<IntVector> > BCIterator;
