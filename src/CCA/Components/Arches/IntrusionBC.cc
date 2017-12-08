@@ -1312,10 +1312,13 @@ IntrusionBC::addScalarRHS( const Patch* patch,
 
       if ( iIntrusion->second.type != IntrusionBC::SIMPLE_WALL ){
 
-        //std::map<std::string,double>::iterator scalar_iter =  iIntrusion->second.varnames_values_map.find( scalar_name );
         std::map<std::string, scalarInletBase*>::iterator scalar_iter = iIntrusion->second.scalar_map.find( scalar_name );
 
-        //if ( scalar_iter == iIntrusion->second.varnames_values_map.end() ){
+        Vector relative_xyz = scalar_iter->second->get_relative_xyz();
+
+        Point xyz(relative_xyz[0], relative_xyz[1], relative_xyz[2]);
+        IntVector rel_ijk = patch->getLevel()->getCellIndex( xyz );
+
         bool found_bc = true;
         if ( scalar_iter == iIntrusion->second.scalar_map.end() ){
           if ( !iIntrusion->second.ignore_missing_bc )
@@ -1330,6 +1333,7 @@ IntrusionBC::addScalarRHS( const Patch* patch,
           for ( std::vector<IntVector>::iterator i = iBC_iter->second.begin(); i != iBC_iter->second.end(); i++){
 
             IntVector c = *i;
+            IntVector c_rel = c - rel_ijk;
 
             for ( int idir = 0; idir < 6; idir++ ){
 
@@ -1341,7 +1345,7 @@ IntrusionBC::addScalarRHS( const Patch* patch,
 
                 double face_vel = V[_iHelp[idir]];
 
-                scalar_iter->second->set_scalar_rhs( idir, c, RHS, face_den, face_vel, area );
+                scalar_iter->second->set_scalar_rhs( idir, c_rel, RHS, face_den, face_vel, area );
 
               }
             }

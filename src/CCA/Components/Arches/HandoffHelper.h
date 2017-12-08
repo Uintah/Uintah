@@ -11,6 +11,9 @@ class HandoffHelper{
 
 public:
 
+  HandoffHelper(){}
+  ~HandoffHelper(){} 
+
   typedef std::map<IntVector, double> CellToValue;
 
   /** @brief From file info container **/

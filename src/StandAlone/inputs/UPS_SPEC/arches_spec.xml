@@ -945,9 +945,17 @@
                                         need_applies_to="type flat"/>
             <w                          spec="OPTIONAL DOUBLE"
                                         need_applies_to="type flat"/>
-            <!-- from input file -->
+
+            <!-- Input file spec (handoff) -->
             <input_file                 spec="REQUIRED STRING"
-                                        need_applies_to="type from_file"/>
+                                        need_applies_to="type from_file"/> <!-- name (and path if appropriate) of the handoff file -->
+            <default_value              spec="REQUIRED DOUBLE" 
+                                        need_applies_to="type from_file"/> <!-- default condition for the scalar if the handoff information 
+                                                                              isn't found in the handoff file. Note that only a Dirichlet
+                                                                              condition is currently supported -->
+            <relative_xyz               spec="REQUIRED VECTOR"
+                                        need_applies_to="type from_file"/> <!-- relative position of the 0,0,0 value of the handoff plane -->
+
 
             <!-- mass flow [kg/sec]-->
             <flow_rate                  spec="REQUIRED DOUBLE"
@@ -960,12 +968,24 @@
             <scalar                     spec="MULTIPLE NO_DATA"
                                         attribute1="label OPTIONAL STRING"
                                         attribute2="type REQUIRED STRING 'flat, from_file, tabulated'">
-              <input_file               spec="OPTIONAL STRING"
-                                        need_applies_to="type from_file"/>
+              <!-- Input file spec (handoff) -->
+              <input_file               spec="REQUIRED STRING"
+                                        need_applies_to="type from_file"/> <!-- name (and path if appropriate) of the handoff file -->
+              <default_value            spec="REQUIRED DOUBLE" 
+                                        need_applies_to="type from_file"/> <!-- default condition for the scalar if the handoff information 
+                                                                                isn't found in the handoff file. Note that only a Dirichlet
+                                                                                condition is currently supported -->
+              <relative_xyz             spec="REQUIRED VECTOR"
+                                        need_applies_to="type from_file"/> <!-- relative position of the 0,0,0 value of the handoff plane -->
+
+              <!-- Constant Values -->
               <constant                 spec="OPTIONAL DOUBLE"
-                                        need_applies_to="type flat"/>
+                                        need_applies_to="type flat"/> <!-- Constant value of the scalar -->
+
+              <!-- Tabulated Values -->
               <depend_varname           spec="REQUIRED STRING"
-                                        need_applies_to="type tabulated"/>
+                                        need_applies_to="type tabulated"/> <!-- Name of the scalar for table lookup  (e.g., "O2") -->
+
             </scalar>
 
            </scalars>

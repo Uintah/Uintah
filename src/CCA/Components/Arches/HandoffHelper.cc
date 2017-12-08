@@ -22,7 +22,7 @@ void HandoffHelper::readInputFile( std::string file_name, const int index, FFInf
                                  + file_name, __FILE__, __LINE__);
   }
 
-  info.varname = getString( file );
+  info.name = getString( file );
 
   info.dx = getDouble( file );
   info.dy = getDouble( file );
