@@ -784,11 +784,11 @@ visit_handle visit_SimGetMetaData(void *cbdata)
 
       if(strcmp( "Save", cmd_names[i] ) == 0 )
         enabled = (!sim->first &&
-                   !sim->simController->getOutput()->isOutputTimestep());
+                   !sim->simController->getOutput()->isOutputTimeStep());
 
       else if(strcmp( "Checkpoint", cmd_names[i] ) == 0 )
         enabled = (!sim->first &&
-                   !sim->simController->getOutput()->isCheckpointTimestep());
+                   !sim->simController->getOutput()->isCheckpointTimeStep());
       else
         enabled = true;
 

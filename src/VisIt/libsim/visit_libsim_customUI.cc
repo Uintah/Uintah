@@ -59,8 +59,8 @@ void visit_SetTimeValues( visit_simulation_data *sim )
   SimulationTime* simTime =
     sim->simController->getApplicationInterface()->getSimulationTime();
 
-  VisItUI_setValueI("Timestep",      sim->cycle, 0);
-  VisItUI_setValueI("MaxTimestep",   simTime->m_max_time_steps, 1);
+  VisItUI_setValueI("TimeStep",      sim->cycle, 0);
+  VisItUI_setValueI("MaxTimeStep",   simTime->m_max_time_steps, 1);
 
   VisItUI_setValueD("Time",          sim->time, 0);
   VisItUI_setValueD("MaxTime",       simTime->m_max_time, 1);
@@ -68,10 +68,10 @@ void visit_SetTimeValues( visit_simulation_data *sim )
   VisItUI_setValueI("EndAtMaxTime",      simTime->m_end_at_max_time, 1);
   VisItUI_setValueI("ClampTimeToOutput", simTime->m_clamp_time_to_output, 1);
 
-  VisItUI_setValueI("StopAtTimestep",     sim->stopAtTimestep,     1);
-  VisItUI_setValueI("StopAtLastTimestep", sim->stopAtLastTimestep, 1);
+  VisItUI_setValueI("StopAtTimeStep",     sim->stopAtTimeStep,     1);
+  VisItUI_setValueI("StopAtLastTimeStep", sim->stopAtLastTimeStep, 1);
 
-  // visit_SetStripChartValue( sim, "Timestep", (double) sim->cycle );
+  // visit_SetStripChartValue( sim, "TimeStep", (double) sim->cycle );
 }
 
 //---------------------------------------------------------------------
@@ -205,7 +205,7 @@ void visit_SetOutputIntervals( visit_simulation_data *sim )
     else
     {
       name = "OutputTimeStepInterval";
-      val = output->getOutputTimestepInterval();
+      val = output->getOutputTimeStepInterval();
     }
 
     // This var must be in row specified by OutputIntervalRow so
@@ -225,7 +225,7 @@ void visit_SetOutputIntervals( visit_simulation_data *sim )
     else
     {
       name = "CheckpointTimeStepInterval";
-      val = output->getCheckpointTimestepInterval();
+      val = output->getCheckpointTimeStepInterval();
     }
 
     // This var must be in row specified by CheckpointIntervalRow so

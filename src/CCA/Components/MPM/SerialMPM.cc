@@ -4526,7 +4526,7 @@ void SerialMPM::computeParticleScaleFactor(const ProcessorGroup*,
       new_dw->get(pF,           lb->pDeformationMeasureLabel_preReloc,    pset);
       new_dw->allocateAndPut(pScaleFactor, lb->pScaleFactorLabel_preReloc,pset);
 
-      if(m_output->isOutputTimestep()){
+      if(m_output->isOutputTimeStep()){
         Vector dx = patch->dCell();
         for(ParticleSubset::iterator iter  = pset->begin();
                                      iter != pset->end(); iter++){

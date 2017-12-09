@@ -114,8 +114,8 @@ typedef struct
   int imageWidth;
   int imageFormat;
 
-  int  stopAtTimestep;
-  bool stopAtLastTimestep;
+  int  stopAtTimeStep;
+  bool stopAtLastTimeStep;
 
   // The first row is the strip chart name.
   std::string stripChartNames[5][5];

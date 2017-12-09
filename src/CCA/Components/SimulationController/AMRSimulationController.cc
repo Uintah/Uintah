@@ -227,28 +227,35 @@ AMRSimulationController::run()
   AllocatorSetDefaultTagLineNumber( m_app->getTimeStep() );
 #endif
 
-#ifdef HAVE_PIDX
-  // Setup for PIDX
-  static bool pidx_need_to_recompile = false;
-  static bool pidx_restore_nth_rank  = false;
-  static int  pidx_requested_nth_rank = -1;
-  
-  if( m_output->savingAsPIDX() ) {
-    if( pidx_requested_nth_rank == -1 ) {
-      pidx_requested_nth_rank = m_lb->getNthRank();
+  // DAV CAN THIS BE MOVED INTO THE OTHER m_output->initializeOutput()?
+  // WHICH IS LOCATED IN SimulationController::finalSetup()  
 
-      if( pidx_requested_nth_rank > 1 ) {
-        proc0cout << "Input file requests output to be saved by every "
-                  << pidx_requested_nth_rank << "th processor.\n"
-                  << "  - However, setting output to every processor "
-                  << "until a checkpoint is reached." << std::endl;
-        m_lb->setNthRank( 1 );
-        m_lb->possiblyDynamicallyReallocate( m_current_gridP, LoadBalancerPort::regrid );
-        m_output->setSaveAsPIDX();
-      }
-    }
-  }
-#endif
+  // ALSO CAN ONE SAVE THE INITAL TIMESTEP USING PIDX???
+  // i.e SHOULD THIS COME BEFORE doInitialTimeStep???
+  m_output->initializeOutput( m_current_gridP );  
+
+// #ifdef HAVE_PIDX
+//   // Setup for PIDX
+//   static bool pidx_need_to_recompile = false;
+//   static bool pidx_restore_nth_rank  = false;
+//   static int  pidx_requested_nth_rank = -1;
+  
+//   if( m_output->savingAsPIDX() ) {
+//     if( pidx_requested_nth_rank == -1 ) {
+//       pidx_requested_nth_rank = m_lb->getNthRank();
+
+//       if( pidx_requested_nth_rank > 1 ) {
+//         proc0cout << "Input file requests output to be saved by every "
+//                   << pidx_requested_nth_rank << "th processor.\n"
+//                   << "  - However, setting output to every processor "
+//                   << "until a checkpoint is reached." << std::endl;
+//         m_lb->setNthRank( 1 );
+//         m_lb->possiblyDynamicallyReallocate( m_current_gridP, LoadBalancerPort::regrid );
+//         m_output->setSaveAsPIDX();
+//       }
+//     }
+//   }
+// #endif
 
   // Set the timer for the main loop. This timer is sync'ed with the
   // simulation time to get a measurement of the simulation to wall time.
@@ -274,7 +281,7 @@ AMRSimulationController::run()
     double walltime = m_wall_timers.GetWallTime() +
       1.5 * m_wall_timers.ExpMovingAverage().seconds();
 
-    m_output->maybeLastTimestep( m_app->maybeLastTimeStep( walltime ) );
+    m_output->maybeLastTimeStep( m_app->maybeLastTimeStep( walltime ) );
     
     // Set the current wall time for this rank (i.e. this value is NOT
     // sync'd across all ranks). The Data Archive uses it for
@@ -282,15 +289,16 @@ AMRSimulationController::run()
     m_output->setElapsedWallTime( m_wall_timers.GetWallTime() );
     
     // Get the next output checkpoint time step. This step is not done
-    // in beginOutputTimestep because the original values are needed
+    // in beginOutputTimeStep because the original values are needed
     // to compare with if there is a timestep restart so it is
     // performed here. At this point the time step, sim time, and all
     // wall time are all in sync.
 
-    m_output->findNext_OutputCheckPointTimestep( m_app->getTimeStep(),
+    m_output->findNext_OutputCheckPointTimeStep( m_app->getTimeStep(),
 						 m_app->getSimTime(),
 						 m_app->getNextDelT(),
-						 first && m_restarting );
+						 first && m_restarting,
+						 m_current_gridP );
 
     // Reset the runtime performance stats
     ResetStats();
@@ -311,7 +319,7 @@ AMRSimulationController::run()
 #ifdef USE_GPERFTOOLS
     if (gheapprofile.active()){
       char heapename[512];
-      sprintf(heapename, "Timestep %d", m_app->getTimeStep());
+      sprintf(heapename, "TimeStep %d", m_app->getTimeStep());
       HeapProfilerDump(heapename);
     }
 #endif
@@ -324,67 +332,70 @@ AMRSimulationController::run()
       }
     }
 
-#ifdef HAVE_PIDX
-    bool pidx_checkpointing = false;
+  // DAV THIS HAS BEEN BEEN MOVED INTO
+  // m_output->findNext_OutputCheckPointTimeStep
+    
+// #ifdef HAVE_PIDX
+//     bool pidx_checkpointing = false;
 
-    if( m_output->savingAsPIDX() ) {
+//     if( m_output->savingAsPIDX() ) {
 
-      pidx_checkpointing =
-        // Output the checkpoint based on the simulation time.
-        ( (m_output->getCheckpointInterval() > 0 &&
-           (m_app->getSimTime()+m_app->getDelT()) >= m_output->getNextCheckpointTime()) ||
+//       pidx_checkpointing =
+//         // Output the checkpoint based on the simulation time.
+//         ( (m_output->getCheckpointInterval() > 0 &&
+//            (m_app->getSimTime()+m_app->getDelT()) >= m_output->getNextCheckpointTime()) ||
 
-          // Output the checkpoint based on the time step interval.
-          (m_output->getCheckpointTimestepInterval() > 0 &&
-           m_app->getTimeStep() == m_output->getNextCheckpointTimestep()) ||
+//           // Output the checkpoint based on the time step interval.
+//           (m_output->getCheckpointTimeStepInterval() > 0 &&
+//            m_app->getTimeStep() == m_output->getNextCheckpointTimeStep()) ||
 
-          // Output the checkpoint based on the being the last time step.
-          (m_app->getSimulationTime()->m_max_wall_time > 0 && m_ouput->maybeLast()) );
+//           // Output the checkpoint based on the being the last time step.
+//           (m_app->getSimulationTime()->m_max_wall_time > 0 && m_ouput->maybeLast()) );
 
-      // When using the wall clock time for checkpoints, rank 0
-      // determines the wall time and sends it to all other ranks.
-      if( m_output->getCheckpointWalltimeInterval() > 0 ) {
-        double tmp_time = -1;
+//       // When using the wall clock time for checkpoints, rank 0
+//       // determines the wall time and sends it to all other ranks.
+//       if( m_output->getCheckpointWalltimeInterval() > 0 ) {
+//         double tmp_time = -1;
 
-        if( Parallel::getMPIRank() == 0 ) {
-          tmp_time = m_output->getElapsedWallTime();
-        }
-        Uintah::MPI::Bcast( &tmp_time, 1, MPI_DOUBLE, 0, d_myworld->getComm() );
+//         if( Parallel::getMPIRank() == 0 ) {
+//           tmp_time = m_output->getElapsedWallTime();
+//         }
+//         Uintah::MPI::Bcast( &tmp_time, 1, MPI_DOUBLE, 0, d_myworld->getComm() );
 
-        if( tmp_time >= m_output->getNextCheckpointWalltime() )
-          pidx_checkpointing = true;    
-      }
+//         if( tmp_time >= m_output->getNextCheckpointWalltime() )
+//           pidx_checkpointing = true;    
+//       }
       
-      // Checkpointing
-      if( pidx_checkpointing ) {
+//       // Checkpointing
+//       if( pidx_checkpointing ) {
 
-        if( pidx_requested_nth_rank > 1 ) {
-          proc0cout << "This is a checkpoint time step (" << m_app->getTimeStep()
-                    << ") - need to recompile with nth proc set to: "
-                    << pidx_requested_nth_rank << std::endl;
+//         if( pidx_requested_nth_rank > 1 ) {
+//           proc0cout << "This is a checkpoint time step (" << m_app->getTimeStep()
+//                     << ") - need to recompile with nth proc set to: "
+//                     << pidx_requested_nth_rank << std::endl;
 
-          m_lb->setNthRank( pidx_requested_nth_rank );
-          m_lb->possiblyDynamicallyReallocate( m_current_gridP, LoadBalancerPort::regrid );
-          m_output->setSaveAsUDA();
-          pidx_need_to_recompile = true;
-        }
-      }
+//           m_lb->setNthRank( pidx_requested_nth_rank );
+//           m_lb->possiblyDynamicallyReallocate( m_current_gridP, LoadBalancerPort::regrid );
+//           m_output->setSaveAsUDA();
+//           pidx_need_to_recompile = true;
+//         }
+//       }
 
-      // Output
-      if( ( m_output->getOutputTimestepInterval() > 0 &&
-            m_app->getTimeStep() == m_output->getNextOutputTimestep() ) ||
-          ( m_output->getOutputInterval() > 0         &&
-            ( m_app->getSimTime() + m_app->getDelT() ) >= m_output->getNextOutputTime() ) ) {
+//       // Output
+//       if( ( m_output->getOutputTimeStepInterval() > 0 &&
+//             m_app->getTimeStep() == m_output->getNextOutputTimeStep() ) ||
+//           ( m_output->getOutputInterval() > 0         &&
+//             ( m_app->getSimTime() + m_app->getDelT() ) >= m_output->getNextOutputTime() ) ) {
 
-        proc0cout << "This is an output time step: " << m_app->getTimeStep() << "\n";
+//         proc0cout << "This is an output time step: " << m_app->getTimeStep() << "\n";
 
-        if( pidx_need_to_recompile ) { // If this is also a checkpoint time step
-          proc0cout << "   Postposing as this is also a checkpoint time step...\n";
-          m_output->postponeNextOutputTimestep();
-        }
-      }
-    }
-#endif
+//         if( pidx_need_to_recompile ) { // If this is also a checkpoint time step
+//           proc0cout << "   Postposing as this is also a checkpoint time step...\n";
+//           m_output->postponeNextOutputTimeStep();
+//         }
+//       }
+//     }
+// #endif
 
     // Regridding
     if (m_regridder) {
@@ -451,9 +462,12 @@ AMRSimulationController::run()
 
     bool nr = needRecompile();
     
-#ifdef HAVE_PIDX
-    nr = (nr || pidx_need_to_recompile || pidx_restore_nth_rank);
-#endif         
+    // DAV THIS HAS BEEN MOVED INTO needRecompile ABOVE WHICH CALLS
+    // m_output->needRecompile().
+
+// #ifdef HAVE_PIDX
+//     nr = (nr || pidx_need_to_recompile || pidx_restore_nth_rank);
+// #endif         
 
     if( nr || first ) {
     
@@ -463,36 +477,39 @@ AMRSimulationController::run()
         m_current_gridP->performConsistencyCheck();
         m_recompile_taskgraph = false;
       }
-    
-#ifdef HAVE_PIDX
-      if( pidx_requested_nth_rank > 1 ) {      
-        if( pidx_restore_nth_rank ) {
-          proc0cout << "This is the time step following a checkpoint - "
-                    << "need to put the task graph back with a recompile - "
-                    << "setting nth output to 1\n";
-          m_lb->setNthRank( 1 );
-          m_lb->possiblyDynamicallyReallocate( m_current_gridP, LoadBalancerPort::regrid );
-          m_output->setSaveAsPIDX();
-          pidx_restore_nth_rank = false;
-        }
+
+      // DAV THIS HAS BEEN MOVED INTO m_output->recompile(
+      // m_current_gridP ) WHICH IS CALLED IN recompile() BELOW.
+
+// #ifdef HAVE_PIDX
+//       if( pidx_requested_nth_rank > 1 ) {      
+//         if( pidx_restore_nth_rank ) {
+//           proc0cout << "This is the time step following a checkpoint - "
+//                     << "need to put the task graph back with a recompile - "
+//                     << "setting nth output to 1\n";
+//           m_lb->setNthRank( 1 );
+//           m_lb->possiblyDynamicallyReallocate( m_current_gridP, LoadBalancerPort::regrid );
+//           m_output->setSaveAsPIDX();
+//           pidx_restore_nth_rank = false;
+//         }
         
-        if( pidx_need_to_recompile ) {
-          // Don't need to recompile on the next time step as it will
-          // happen on this one.  However, the nth rank value will
-          // need to be restored after this time step, so set
-          // pidx_restore_nth_rank to true.
-          pidx_need_to_recompile = false;
-          pidx_restore_nth_rank = true;
-        }
-      }
-#endif
+//         if( pidx_need_to_recompile ) {
+//           // Don't need to recompile on the next time step as it will
+//           // happen on this one.  However, the nth rank value will
+//           // need to be restored after this time step, so set
+//           // pidx_restore_nth_rank to true.
+//           pidx_need_to_recompile = false;
+//           pidx_restore_nth_rank = true;
+//         }
+//       }
+// #endif
       m_scheduler->setRestartInitTimestep( false );
       recompile( totalFine );
     }
     else {
       // This is not correct if we have switched to a different
       // component, since the delT will be wrong
-      m_output->finalizeTimestep( m_app->getTimeStep(),
+      m_output->finalizeTimeStep( m_app->getTimeStep(),
 				  m_app->getSimTime(),
 				  m_app->getDelT(),
 				  m_current_gridP,
@@ -528,21 +545,26 @@ AMRSimulationController::run()
       }
     }
 
-#ifdef HAVE_PIDX
-    // For PIDX only save timestep.xml when checkpointing.  Normal
-    // time step dumps using PIDX do not need to write the xml
-    // information.      
-    if( !m_output->savingAsPIDX() ||
-	(m_output->savingAsPIDX() && pidx_checkpointing) )
-#endif    
-      {
-	// If PIDX is not being used write timestep.xml for both
-	// checkpoints and time step dumps.
-	m_output->writeto_xml_files( m_app->getTimeStep(),
-				     m_app->getSimTime(),
-				     m_app->getDelT(),
-				     m_current_gridP );
-      }
+    // DAV THIS HAS BEEN MOVED INTO m_output->writeto_xml_files()
+    
+// #ifdef HAVE_PIDX
+//     // For PIDX only save timestep.xml when checkpointing.  Normal
+//     // time step dumps using PIDX do not need to write the xml
+//     // information.      
+//     if( !m_output->savingAsPIDX() ||
+// 	(m_output->savingAsPIDX() && pidx_checkpointing) )
+// #endif    
+      // {
+      // 	// If PIDX is not being used write timestep.xml for both
+      // 	// checkpoints and time step dumps.
+
+
+    // ARS - CAN THIS BE SCHEDULED??
+    m_output->writeto_xml_files( m_app->getTimeStep(),
+				 m_app->getSimTime(),
+				 m_app->getDelT(),
+				 m_current_gridP );
+    // }
 
     // Update the profiler weights
     m_lb->finalizeContributions(m_current_gridP);
@@ -616,9 +638,7 @@ AMRSimulationController::doInitialTimeStep()
     ScheduleReportStats( true );
     
     // If compiled with VisIt check the in-situ status for work.
-#ifdef HAVE_VISIT
     ScheduleCheckInSitu( true );
-#endif      
 
     taskGraphTimer.reset( true );
     m_scheduler->compile();
@@ -681,7 +701,10 @@ AMRSimulationController::doInitialTimeStep()
 
       // Compute the next time step.
       scheduleComputeStableTimeStep();
-  
+
+      // ARS COMMENT THESE TASKS WILL BE SCHEDULED FOR EACH
+      // LEVEL. THAT MAY OR MAY NOT BE REASONABLE.
+      
       // NOTE ARS - FIXME before the output so the values can be saved.
       // Monitoring tasks must be scheduled last!!
       for (int i = 0; i < m_current_gridP->numLevels(); i++) {
@@ -690,7 +713,7 @@ AMRSimulationController::doInitialTimeStep()
 
       // Output tasks
       const bool recompile = true;
-      m_output->finalizeTimestep( m_app->getTimeStep(),
+      m_output->finalizeTimeStep( m_app->getTimeStep(),
 				  m_app->getSimTime(),
 				  m_app->getDelT(),
 				  m_current_gridP,
@@ -699,7 +722,7 @@ AMRSimulationController::doInitialTimeStep()
 
       m_output->sched_allOutputTasks( m_app->getDelT(),
                                       m_current_gridP,
-                                      m_scheduler, recompile );
+				      m_scheduler, recompile );
 
       // Initialize the system var (time step and simulation time).
       // Must be done after the output.
@@ -712,9 +735,7 @@ AMRSimulationController::doInitialTimeStep()
       ScheduleReportStats( true );
     
       // If compiled with VisIt check the in-situ status for work.
-#ifdef HAVE_VISIT
       ScheduleCheckInSitu( true );
-#endif      
     
       taskGraphTimer.reset( true );
       m_scheduler->compile();
@@ -728,9 +749,10 @@ AMRSimulationController::doInitialTimeStep()
       m_scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNone);
       m_scheduler->execute();
 
-      needNewLevel = ( m_regridder && m_regridder->isAdaptive() &&
-                       m_current_gridP->numLevels() < m_regridder->maxLevels() &&
-                       doRegridding(true) );
+      needNewLevel =
+	( m_regridder && m_regridder->isAdaptive() &&
+	  m_current_gridP->numLevels() < m_regridder->maxLevels() &&
+	  doRegridding(true) );
 
       if ( needNewLevel ) {
         m_scheduler->initialize( 1, 1 );
@@ -807,7 +829,7 @@ AMRSimulationController::executeTimeStep( int totalFine )
       m_app->recomputeTimeStep();
 
       // Re-evaluate the outputting and checkpointing.
-      m_output->reevaluate_OutputCheckPointTimestep(m_app->getSimTime(), m_app->getDelT());
+      m_output->reevaluate_OutputCheckPointTimeStep(m_app->getSimTime(), m_app->getDelT());
 
       success = false;
     }
@@ -927,7 +949,7 @@ AMRSimulationController::doRegridding( bool initialTimeStep )
     }
     
     retVal = true;
-  }  // grid != oldGrid
+  } // grid != oldGrid
 
   if (!initialTimeStep)
     proc0cout << "______________________________________________________________________\n";
@@ -959,14 +981,14 @@ AMRSimulationController::needRecompile()
 
   // ARS - Should this check be on the component level?
   for( unsigned int i=0; i<m_app->getUPSVars().size(); ++i )
+  {
+    ApplicationInterface::interactiveVar &var = m_app->getUPSVars()[i];
+    
+    if( var.modified && var.recompile )
     {
-      ApplicationInterface::interactiveVar &var = m_app->getUPSVars()[i];
-
-      if( var.modified && var.recompile )
-	{
-	  recompile = true;
-	}
+      recompile = true;
     }
+  }
 #endif
   
   return recompile;
@@ -985,6 +1007,8 @@ AMRSimulationController::recompile( int totalFine )
 
   proc0cout << "Compiling taskgraph...\n";
 
+  m_output->recompile( m_current_gridP );
+  
   m_last_recompile_timeStep = m_app->getTimeStep();
 
   m_scheduler->initialize( 1, totalFine );
@@ -1074,14 +1098,16 @@ AMRSimulationController::recompile( int totalFine )
   }
   
   // Output tasks
-  m_output->finalizeTimestep( m_app->getTimeStep(),
+  m_output->finalizeTimeStep( m_app->getTimeStep(),
 			      m_app->getSimTime(),
 			      m_app->getDelT(),
 			      m_current_gridP,
 			      m_scheduler,
 			      true );
 
-  m_output->sched_allOutputTasks(m_app->getDelT(), m_current_gridP, m_scheduler, true);
+  m_output->sched_allOutputTasks(m_app->getDelT(),
+				 m_current_gridP,
+				 m_scheduler, true);
 
   // Update the system var (time step and simulation time). Must be
   // done after the output.
@@ -1094,9 +1120,7 @@ AMRSimulationController::recompile( int totalFine )
   ScheduleReportStats( false );
 
   // If compiled with VisIt check the in-situ status for work.
-#ifdef HAVE_VISIT
   ScheduleCheckInSitu( false );
-#endif      
 
   m_scheduler->compile();
 
@@ -1207,7 +1231,7 @@ AMRSimulationController::subCycleExecute( int startDW,
   MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::subCycleExecutue()");
 
   // there are 2n+1 taskgraphs, n for the basic timestep, n for intermediate 
-  // timestep work, and 1 for the errorEstimate and stableTimestep, where n
+  // timestep work, and 1 for the errorEstimate and stableTimeStep, where n
   // is the number of levels.
   
   // amrout << "Start AMRSimulationController::subCycleExecute, level=" << numLevel << '\n';

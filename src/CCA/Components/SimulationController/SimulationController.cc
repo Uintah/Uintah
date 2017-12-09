@@ -1064,12 +1064,12 @@ SimulationController::getPAPIStats( )
 #endif
 }
   
-#ifdef HAVE_VISIT
 //______________________________________________________________________
 //
 void
 SimulationController::ScheduleCheckInSitu( bool first )
 {
+#ifdef HAVE_VISIT
   if( getVisIt() ) {
 
     Task* task = scinew Task("SimulationController::CheckInSitu",
@@ -1088,6 +1088,7 @@ SimulationController::ScheduleCheckInSitu( bool first )
 
     // std::cerr << "*************" << __FUNCTION__ << "  " << __LINE__ << "  " << first << std::endl;
   }
+#endif      
 }
 
 //______________________________________________________________________
@@ -1100,6 +1101,7 @@ SimulationController::CheckInSitu(const ProcessorGroup*,
                                         DataWarehouse*,
                                         bool first)
 {
+#ifdef HAVE_VISIT
   // If VisIt has been included into the build, check the lib sim
   // state to see if there is a connection and if so check to see if
   // anything needs to be done.
@@ -1144,7 +1146,7 @@ SimulationController::CheckInSitu(const ProcessorGroup*,
     // Note this timer is used as a laptimer.
     m_wall_timers.TimeStep.start();
   }
-}
 #endif
+}
 
 } // namespace Uintah

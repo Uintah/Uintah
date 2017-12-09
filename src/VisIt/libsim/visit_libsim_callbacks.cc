@@ -304,7 +304,7 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
       Output *output = sim->simController->getOutput();
       SchedulerP schedulerP = sim->simController->getSchedulerP();
       
-      output->outputTimestep( sim->cycle, sim->time, sim->delt, sim->gridP, schedulerP );
+      output->outputTimeStep( sim->cycle, sim->time, sim->delt, sim->gridP, schedulerP );
     }
     else
       VisItUI_setValueS("SIMULATION_MESSAGE_BOX",
@@ -323,7 +323,7 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
       Output *output = sim->simController->getOutput();
       SchedulerP schedulerP = sim->simController->getSchedulerP();
       
-      output->checkpointTimestep( sim->cycle, sim->time, sim->delt, sim->gridP, schedulerP );
+      output->checkpointTimeStep( sim->cycle, sim->time, sim->delt, sim->gridP, schedulerP );
     }
     else
       VisItUI_setValueS("SIMULATION_MESSAGE_BOX",
@@ -509,10 +509,10 @@ int visit_ProcessVisItCommand( visit_simulation_data *sim )
 
 
 //---------------------------------------------------------------------
-// MaxTimestepCallback
+// MaxTimeStepCallback
 //     Custom UI callback for a line edit box
 //---------------------------------------------------------------------
-void visit_MaxTimestepCallback(char *val, void *cbdata)
+void visit_MaxTimeStepCallback(char *val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
   SimulationTime* simTime =
@@ -529,13 +529,13 @@ void visit_MaxTimestepCallback(char *val, void *cbdata)
 	<< "Resetting the value.";
     VisItUI_setValueS("SIMULATION_MESSAGE_BOX", msg.str().c_str(), 1);
 
-    VisItUI_setValueI("MaxTimestep", simTime->m_max_time_steps, 1);
+    VisItUI_setValueI("MaxTimeStep", simTime->m_max_time_steps, 1);
   }
   else
   {  
     simTime->m_max_time_steps = newValue;
     
-    visit_VarModifiedMessage( sim, "MaxTimestep", oldValue, newValue);
+    visit_VarModifiedMessage( sim, "MaxTimeStep", oldValue, newValue);
   }
 }
 
@@ -958,7 +958,7 @@ void visit_OutputIntervalVariableCallback(char *val, void *cbdata)
       output->setOutputInterval( value );
     // Output interval based on timestep.
     else
-      output->setOutputTimestepInterval( value );
+      output->setOutputTimeStepInterval( value );
   }
  
   // Checkpoint interval.
@@ -969,16 +969,16 @@ void visit_OutputIntervalVariableCallback(char *val, void *cbdata)
       output->setCheckpointInterval( value );
     // Checkpoint interval based on timestep.
     else
-      output->setCheckpointTimestepInterval( value );
+      output->setCheckpointTimeStepInterval( value );
   }
 }
 
 
 //---------------------------------------------------------------------
-// ClampTimestepsToOutputCallback
+// ClampTimeStepsToOutputCallback
 //     Custom UI callback for a check box
 //---------------------------------------------------------------------
-void visit_ClampTimestepsToOutputCallback(int val, void *cbdata)
+void visit_ClampTimeStepsToOutputCallback(int val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
   SimulationTime* simTime =
@@ -1066,10 +1066,10 @@ void visit_ImageFormatCallback(int val, void *cbdata)
 }
 
 //---------------------------------------------------------------------
-// StopAtTimestepCallback
+// StopAtTimeStepCallback
 //     Custom UI callback for a line edit
 //---------------------------------------------------------------------
-void visit_StopAtTimestepCallback(char *val, void *cbdata)
+void visit_StopAtTimeStepCallback(char *val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
@@ -1082,22 +1082,22 @@ void visit_StopAtTimestepCallback(char *val, void *cbdata)
 	<< "stopping the simulation is before the current time step. "
 	<< "Setting the value to the next time step.";
     VisItUI_setValueS("SIMULATION_MESSAGE_BOX", msg.str().c_str(), 1);
-    VisItUI_setValueI("StopAtTimestep", sim->cycle+1, 1);
-    sim->stopAtTimestep = sim->cycle+1;
+    VisItUI_setValueI("StopAtTimeStep", sim->cycle+1, 1);
+    sim->stopAtTimeStep = sim->cycle+1;
   }
   else
-    sim->stopAtTimestep = newValue;
+    sim->stopAtTimeStep = newValue;
 }
 
 //---------------------------------------------------------------------
-// StopAtLastTimestepCallback
+// StopAtLastTimeStepCallback
 //     Custom UI callback for a check box
 //---------------------------------------------------------------------
-void visit_StopAtLastTimestepCallback(int val, void *cbdata)
+void visit_StopAtLastTimeStepCallback(int val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-  sim->stopAtLastTimestep = val;
+  sim->stopAtLastTimeStep = val;
 }
 
 

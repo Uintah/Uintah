@@ -88,10 +88,12 @@ WARNING
                               const SimulationStateP& sharedState) = 0;
 
     virtual void initializeOutput(const ProblemSpecP& params) = 0;
+    virtual void initializeOutput(const GridP& grid) = 0;
+    
     //////////
     // Call this when restarting from a checkpoint after calling
     // problemSetup.
-    virtual void restartSetup(Dir& restartFromDir, int startTimestep,
+    virtual void restartSetup(Dir& restartFromDir, int startTimeStep,
                               int timestep, double time, bool fromScratch,
                               bool removeOldDir) = 0;
     //////////
@@ -102,9 +104,11 @@ WARNING
 			       const double delT,
                                const GridP& grid) = 0;
 
+    virtual void recompile(const GridP& grid) = 0;
+
     //////////
     // Call this after all other tasks have been added to the scheduler
-    virtual void finalizeTimestep(const int timeStep,
+    virtual void finalizeTimeStep(const int timeStep,
 				  const double simTime,
 				  const double delt,
 				  const GridP      & /* grid */,
@@ -118,18 +122,19 @@ WARNING
 				            bool recompile = false ) = 0;
 
     //////////
-    // Call this after a timestep restart where delt is adjusted to
-    // make sure there still will be output and/or checkpoint timestep
-    virtual void reevaluate_OutputCheckPointTimestep(const double simTime,
+    // Call this after a time step restart where delt is adjusted to
+    // make sure there still will be output and/or checkpoint time step
+    virtual void reevaluate_OutputCheckPointTimeStep(const double simTime,
 						     const double delT) = 0;
 
     //////////
-    // Call this after the timestep has been executed to find the
+    // Call this after the time step has been executed to find the
     // next time step to output
-    virtual void findNext_OutputCheckPointTimestep(const int timeStep, 
+    virtual void findNext_OutputCheckPointTimeStep(const int timeStep, 
 						   const double simTime,
 						   const double delT,
-						   const bool restart = false) = 0;
+						   const bool restart,
+						   const GridP& grid) = 0;
     
     //////////
     // update or write to the xml files
@@ -147,23 +152,23 @@ WARNING
     // Insert Documentation Here:
     virtual const std::string getOutputLocation() const = 0;
 
-    // Get the time/timestep the next output will occur
+    // Get the time/time step the next output will occur
     virtual double getNextOutputTime() const = 0;
-    virtual int    getNextOutputTimestep() const = 0;
+    virtual int    getNextOutputTimeStep() const = 0;
 
-    // Pushes output back by one timestep.
-    virtual void postponeNextOutputTimestep() = 0; 
+    // Pushes output back by one time step.
+    virtual void postponeNextOutputTimeStep() = 0; 
 
-    // Get the time / timestep/ walltime that the next checkpoint will occur
+    // Get the time / time step/ wall time that the next checkpoint will occur
     virtual double getNextCheckpointTime()     const = 0; // Simulation time (seconds and fractions there of)
-    virtual int    getNextCheckpointTimestep() const = 0; // integer - time step
-    virtual int    getNextCheckpointWalltime() const = 0; // integer - seconds
+    virtual int    getNextCheckpointTimeStep() const = 0; // integer - time step
+    virtual int    getNextCheckpointWallTime() const = 0; // integer - seconds
       
-    // Returns true if data will be output this timestep
-    virtual bool isOutputTimestep() const = 0;
+    // Returns true if data will be output this time step
+    virtual bool isOutputTimeStep() const = 0;
 
-    // Returns true if data will be checkpointed this timestep
-    virtual bool isCheckpointTimestep() const = 0;
+    // Returns true if data will be checkpointed this time step
+    virtual bool isCheckpointTimeStep() const = 0;
 
     // Returns true if the label is being saved
     virtual bool isLabelSaved( const std::string & label ) const = 0;
@@ -171,15 +176,15 @@ WARNING
     // output interval
     virtual void   setOutputInterval( double inv ) = 0;
     virtual double getOutputInterval() const = 0;
-    virtual void   setOutputTimestepInterval( int inv ) = 0;
-    virtual int    getOutputTimestepInterval() const = 0;
+    virtual void   setOutputTimeStepInterval( int inv ) = 0;
+    virtual int    getOutputTimeStepInterval() const = 0;
     
     // get checkpoint interval
     virtual void   setCheckpointInterval( double inv ) = 0;
     virtual double getCheckpointInterval() const = 0;
-    virtual void   setCheckpointTimestepInterval( int inv ) = 0;
-    virtual int    getCheckpointTimestepInterval() const = 0;
-    virtual int    getCheckpointWalltimeInterval() const = 0;
+    virtual void   setCheckpointTimeStepInterval( int inv ) = 0;
+    virtual int    getCheckpointTimeStepInterval() const = 0;
+    virtual int    getCheckpointWallTimeInterval() const = 0;
 
     // Returns true if the UPS file has specified to save the UDA using PIDX format.
     virtual bool   savingAsPIDX() const = 0;
@@ -189,20 +194,20 @@ WARNING
     virtual void   setSaveAsPIDX() = 0;
 
     //! Called by In-situ VisIt to force the dump of a time step's data.
-    virtual void outputTimestep( const int timeStep,
+    virtual void outputTimeStep( const int timeStep,
 				 const double simTime,
 				 const double delT,
 				 const GridP& grid,
 				 SchedulerP& sched ) = 0;
 
-    virtual void checkpointTimestep( const int timeStep,
+    virtual void checkpointTimeStep( const int timeStep,
 				     const double simTime,
 				     const double delT,
 				     const GridP& grid,
 				     SchedulerP& sched ) = 0;
 
-    virtual void maybeLastTimestep( bool val ) = 0;
-    virtual bool maybeLastTimestep() = 0;
+    virtual void maybeLastTimeStep( bool val ) = 0;
+    virtual bool maybeLastTimeStep() = 0;
 
     virtual void   setElapsedWallTime( double val ) = 0;
     virtual double getElapsedWallTime() const = 0;
@@ -215,7 +220,7 @@ WARNING
     
     //////////
     // Get the directory of the current time step for outputting info.
-    virtual const std::string& getLastTimestepOutputLocation() const = 0;
+    virtual const std::string& getLastTimeStepOutputLocation() const = 0;
     
     virtual void setRunTimeStats( ReductionInfoMapper< RunTimeStatsEnum, double > *runTimeStats) = 0;
 

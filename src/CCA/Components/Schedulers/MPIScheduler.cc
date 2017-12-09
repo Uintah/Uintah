@@ -395,7 +395,7 @@ MPIScheduler::postMPISends( DetailedTask * dtask
      }
 
      // if we send/recv to an output task, don't send/recv if not an output timestep
-     if (req->m_to_tasks.front()->getTask()->getType() == Task::Output && !m_out_port->isOutputTimestep() && !m_out_port->isCheckpointTimestep()) {
+     if (req->m_to_tasks.front()->getTask()->getType() == Task::Output && !m_out_port->isOutputTimeStep() && !m_out_port->isCheckpointTimeStep()) {
        DOUT(g_dbg, "Rank-" << my_rank << "   Ignoring non-output-timestep send for " << *req);
        continue;
      }
@@ -585,8 +585,8 @@ void MPIScheduler::postMPIRecvs( DetailedTask * dtask
           continue;
         }
         // if we send/recv to an output task, don't send/recv if not an output timestep
-        if (req->m_to_tasks.front()->getTask()->getType() == Task::Output && !m_out_port->isOutputTimestep()
-            && !m_out_port->isCheckpointTimestep()) {
+        if (req->m_to_tasks.front()->getTask()->getType() == Task::Output && !m_out_port->isOutputTimeStep()
+            && !m_out_port->isCheckpointTimeStep()) {
           DOUT(g_dbg, "Rank-" << my_rank << "   Ignoring non-output-timestep receive for " << *req);
           continue;
         }
@@ -1038,7 +1038,7 @@ MPIScheduler::outputTimingStats( const char* label )
 
     for (size_t file = 0; file < files.size(); ++file) {
       std::ofstream& out = *files[file];
-      out << "Timestep " << m_sharedState->getCurrentTopLevelTimeStep() << std::endl;
+      out << "TimeStep " << m_sharedState->getCurrentTopLevelTimeStep() << std::endl;
       for (size_t i = 0; i < (*data[file]).size(); i++) {
         out << label << ": " << m_labels[i] << ": ";
         int len = static_cast<int>(strlen(m_labels[i]) + strlen("MPIScheduler: ") + strlen(": "));

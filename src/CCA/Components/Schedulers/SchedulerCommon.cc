@@ -205,7 +205,7 @@ SchedulerCommon::makeTaskGraphDoc(const DetailedTasks* /* dt*/, int rank )
     return;
   }
 
-  if (!m_out_port->isOutputTimestep()) {
+  if (!m_out_port->isOutputTimeStep()) {
     return;
   }
 
@@ -272,8 +272,8 @@ SchedulerCommon::finalizeNodes( int process /* = 0 */ )
     return;
   }
 
-  if (m_out_port->isOutputTimestep()) {
-    std::string timestep_dir(m_out_port->getLastTimestepOutputLocation());
+  if (m_out_port->isOutputTimeStep()) {
+    std::string timestep_dir(m_out_port->getLastTimeStepOutputLocation());
 
     std::ostringstream fname;
     fname << "/taskgraph_" << std::setw(5) << std::setfill('0') << process << ".xml";

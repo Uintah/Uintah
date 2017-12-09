@@ -277,11 +277,7 @@ protected:
   std::map<int, PapiEvent>   m_papi_events;
 #endif
 
-#ifdef HAVE_VISIT
 public:
-  void setVisIt( unsigned int val ) { m_do_visit = val; }
-  unsigned int  getVisIt() { return m_do_visit; }
-
   void ScheduleCheckInSitu( bool header );
   void CheckInSitu(const ProcessorGroup*,
                    const PatchSubset*,
@@ -289,6 +285,10 @@ public:
                          DataWarehouse*,
                          DataWarehouse*,
                          bool first);
+
+#ifdef HAVE_VISIT
+  void setVisIt( unsigned int val ) { m_do_visit = val; }
+  unsigned int  getVisIt() { return m_do_visit; }
 
   const ReductionInfoMapper< RunTimeStatsEnum, double > getRunTimeStats() const
   { return m_runtime_stats; };
