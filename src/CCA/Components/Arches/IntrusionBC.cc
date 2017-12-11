@@ -1157,11 +1157,6 @@ IntrusionBC::addScalarRHS( const Patch* patch,
 
         std::map<std::string, scalarInletBase*>::iterator scalar_iter = iIntrusion->second.scalar_map.find( scalar_name );
 
-        Vector relative_xyz = scalar_iter->second->get_relative_xyz();
-
-        Point xyz(relative_xyz[0], relative_xyz[1], relative_xyz[2]);
-        IntVector rel_ijk = patch->getLevel()->getCellIndex( xyz );
-
         bool found_bc = true;
         if ( scalar_iter == iIntrusion->second.scalar_map.end() ){
           if ( !iIntrusion->second.ignore_missing_bc ){
@@ -1172,6 +1167,10 @@ IntrusionBC::addScalarRHS( const Patch* patch,
           }
           found_bc = false;
         }
+
+        Vector relative_xyz = scalar_iter->second->get_relative_xyz();
+        Point xyz(relative_xyz[0], relative_xyz[1], relative_xyz[2]);
+        IntVector rel_ijk = patch->getLevel()->getCellIndex( xyz );
 
         if ( !iIntrusion->second.interior_cell_iterator.empty() && found_bc ) {
 
@@ -1229,11 +1228,6 @@ IntrusionBC::addScalarRHS( const Patch* patch,
 
         std::map<std::string, scalarInletBase*>::iterator scalar_iter = iIntrusion->second.scalar_map.find( scalar_name );
 
-        // The relative_ijk value is (0,0,0) unless this BC is a handoff file type
-        Vector relative_xyz = scalar_iter->second->get_relative_xyz();
-        Point xyz(relative_xyz[0], relative_xyz[1], relative_xyz[2]);
-        IntVector rel_ijk = patch->getLevel()->getCellIndex( xyz );
-
         bool found_bc = true;
         if ( scalar_iter == iIntrusion->second.scalar_map.end() ){
           if ( !iIntrusion->second.ignore_missing_bc ){
@@ -1244,6 +1238,11 @@ IntrusionBC::addScalarRHS( const Patch* patch,
           }
           found_bc = false;
         }
+
+        // The relative_ijk value is (0,0,0) unless this BC is a handoff file type
+        Vector relative_xyz = scalar_iter->second->get_relative_xyz();
+        Point xyz(relative_xyz[0], relative_xyz[1], relative_xyz[2]);
+        IntVector rel_ijk = patch->getLevel()->getCellIndex( xyz );
 
         if ( !iIntrusion->second.interior_cell_iterator.empty() && found_bc ) {
 
