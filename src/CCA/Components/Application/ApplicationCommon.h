@@ -207,10 +207,16 @@ public:
 
   //////////
   // ask the application if it needs to be recompiled
-  virtual bool needRecompile( double /*time*/,
-                              double /*dt*/,
-                              const GridP& /*grid*/)
-  { return false; }
+  virtual bool needRecompile( const GridP& /*grid*/)
+  {
+    if( m_recompile ) {
+      m_recompile = false;
+      return true;
+    }
+    else{
+      return false;
+    }
+  }
   
   virtual const VarLabel* getTimeStepLabel() const { return m_timeStepLabel; }
   virtual const VarLabel* getSimTimeLabel() const { return m_simulationTimeLabel; }
@@ -310,6 +316,8 @@ protected:
   Regridder*       m_regridder{nullptr};
   Output*          m_output{nullptr};
 
+  bool m_recompile {false};
+    
 private:
   bool m_needModelMaker {false};
   bool m_AMR {false};

@@ -94,32 +94,26 @@ WARNING
     // Call this when restarting from a checkpoint after calling
     // problemSetup.
     virtual void restartSetup(Dir& restartFromDir, int startTimeStep,
-                              int timestep, double time, bool fromScratch,
+                              int timeStep, double simTime, bool fromScratch,
                               bool removeOldDir) = 0;
     //////////
     // set timeinfoFlags and 
     virtual void postProcessUdaSetup(Dir& fromDir) = 0;
 
-    virtual bool needRecompile(const double simTime,
-			       const double delT,
-                               const GridP& grid) = 0;
+    virtual bool needRecompile(const GridP& grid) = 0;
 
     virtual void recompile(const GridP& grid) = 0;
 
     //////////
     // Call this after all other tasks have been added to the scheduler
-    virtual void finalizeTimeStep(const int timeStep,
-				  const double simTime,
-				  const double delt,
-				  const GridP      & /* grid */,
+    virtual void finalizeTimeStep(const GridP      & /* grid */,
                                         SchedulerP & /* scheduler */,
 				        bool recompile = false ) = 0;
 
     // schedule all output tasks
-    virtual void sched_allOutputTasks(const double delT,
-				      const GridP      & /* grid */,
-                                            SchedulerP & /* scheduler */,
-				            bool recompile = false ) = 0;
+    virtual void sched_allOutputTasks( const GridP      & /* grid */,
+                                             SchedulerP & /* scheduler */,
+				             bool recompile = false ) = 0;
 
     //////////
     // Call this after a time step restart where delt is adjusted to
@@ -130,21 +124,14 @@ WARNING
     //////////
     // Call this after the time step has been executed to find the
     // next time step to output
-    virtual void findNext_OutputCheckPointTimeStep(const int timeStep, 
-						   const double simTime,
-						   const double delT,
-						   const bool restart,
+    virtual void findNext_OutputCheckPointTimeStep(const bool restart,
 						   const GridP& grid) = 0;
     
     //////////
     // update or write to the xml files
-    virtual void writeto_xml_files( const int timeStep,
-				    const double simTime,
-				    const double delT,
-				    const GridP& grid) = 0;
+    virtual void writeto_xml_files( const GridP& grid) = 0;
     
-    virtual void writeto_xml_files( const int timeStep,
-				    std::map< std::string,
+    virtual void writeto_xml_files( std::map< std::string,
 				    std::pair<std::string,
 				    std::string> > &modifiedVars ) = 0;
      
@@ -194,16 +181,10 @@ WARNING
     virtual void   setSaveAsPIDX() = 0;
 
     //! Called by In-situ VisIt to force the dump of a time step's data.
-    virtual void outputTimeStep( const int timeStep,
-				 const double simTime,
-				 const double delT,
-				 const GridP& grid,
+    virtual void outputTimeStep( const GridP& grid,
 				 SchedulerP& sched ) = 0;
 
-    virtual void checkpointTimeStep( const int timeStep,
-				     const double simTime,
-				     const double delT,
-				     const GridP& grid,
+    virtual void checkpointTimeStep( const GridP& grid,
 				     SchedulerP& sched ) = 0;
 
     virtual void maybeLastTimeStep( bool val ) = 0;

@@ -105,7 +105,6 @@ SerialMPM::SerialMPM( const ProcessorGroup* myworld,
   heatConductionModel = 0;
   NGP     = 1;
   NGN     = 1;
-  d_recompile = false;
   d_loadCurveIndex=0;
   d_switchCriteria = 0;
 }
@@ -4800,18 +4799,6 @@ SerialMPM::refine(const ProcessorGroup*,
   }
 
 } // end refine()
-
-bool
-SerialMPM::needRecompile( double, double, const GridP& )
-{
-  if( d_recompile ){
-    d_recompile = false;
-    return true;
-  }
-  else {
-    return false;
-  }
-}
 
 //
 void SerialMPM::scheduleComputeNormals(SchedulerP   & sched,

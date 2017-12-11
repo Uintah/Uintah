@@ -69,8 +69,9 @@ WARNING
 
   class SimulationController;
   class AMRSimulationController;
-  class ApplicationCommon;
   class DataWarehouse;
+  class DataArchiver;
+  class ApplicationCommon;
   class SimulationTime;
   class VarLabel;
 
@@ -79,9 +80,10 @@ WARNING
   
   class ApplicationInterface : public UintahParallelPort {
 
-    friend class Switcher;
     friend class SimulationController;
     friend class AMRSimulationController;
+    friend class DataArchiver;
+    friend class Switcher;
     
   public:
     ApplicationInterface();
@@ -186,10 +188,7 @@ WARNING
 
     //////////
     // ask the component if it needs to be recompiled
-    virtual bool needRecompile( double /*time*/,
-                                double /*dt*/,
-                                const GridP& /*grid*/)
-    { return false; }
+    virtual bool needRecompile( const GridP& /*grid*/) = 0;
 
     virtual const VarLabel* getTimeStepLabel() const = 0;
     virtual const VarLabel* getSimTimeLabel() const = 0;

@@ -1088,10 +1088,10 @@ void MPMArches::scheduleTimeAdvance( const LevelP & level,
 
 //  //  if (nofTimesteps < 2 && !d_restart) {
 //  if (time < 1.0E-10) {
-//    d_recompile = true;
+//    m_recompile = true;
 //  }
 //  else
-//    d_recompile = false;
+//    m_recompile = false;
 
   d_mpm->scheduleApplyExternalLoads(sched, patches, mpm_matls);
   d_mpm->scheduleInterpolateParticlesToGrid(sched, patches, mpm_matls);
@@ -1139,7 +1139,7 @@ void MPMArches::scheduleTimeAdvance( const LevelP & level,
   // once exchange terms are determined
 
   if ( d_doingRestart ) {
-    d_arches->MPMArchesIntrusionSetupForResart( level, sched, d_recompile, d_doingRestart );
+    d_arches->MPMArchesIntrusionSetupForResart( level, sched, m_recompile, d_doingRestart );
     d_doingRestart = false;
   }
 
@@ -1598,7 +1598,7 @@ void MPMArches::scheduleComputeVoidFracMPM(SchedulerP& sched,
       mpm_matls->getUnion(), Ghost::None, zeroGhostCells);
 
 //  if (time < 1.0E-10)
-//    d_recompile = true;
+//    m_recompile = true;
 
   t->computes(d_MAlb->solid_fraction_CCLabel, mpm_matls->getUnion());
   t->computes(d_MAlb->void_frac_MPM_CCLabel, arches_matls->getUnion());
@@ -1967,7 +1967,7 @@ void MPMArches::scheduleComputeVoidFrac(SchedulerP& sched,
 
 //  double time = m_sharedState->getElapsedSimTime();
 //  if (time < 1.0E-10)
-//    d_recompile = true;
+//    m_recompile = true;
 
   if (d_useCutCell)
     t->requires(Task::NewDW, d_MAlb->void_frac_CutCell_CCLabel,
@@ -4673,19 +4673,6 @@ void MPMArches::solveHeatEquations(const ProcessorGroup* pg,
 
 }
 
-// ****************************************************************************
-// Function to return boolean for recompiling taskgraph
-// ****************************************************************************
-bool MPMArches::needRecompile(double time, double dt,
-    const GridP& grid) {
-
-  if ( d_recompile ) {
-    d_recompile = false;
-    return true;
-  } else {
-    return d_recompile;
-  }
-}
 double MPMArches::recomputeTimeStep(double current_dt) {
   return d_arches->recomputeTimeStep(current_dt);
 }

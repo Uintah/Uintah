@@ -107,9 +107,6 @@ public:
   virtual void scheduleAnalysis( const LevelP& level,
 				 SchedulerP&);
 
-  virtual bool needRecompile(double time, double dt,
-                             const GridP& grid);
-
   virtual int computeTaskGraphIndex();
 
   void setMPMArchesLabel(const MPMArchesLabel* MAlb){
@@ -174,7 +171,6 @@ private:
   bool m_with_mpmarches;
 
   bool m_do_lagrangian_particles;
-  bool m_recompile_taskgraph;
 
   int m_arches_level_index;
 

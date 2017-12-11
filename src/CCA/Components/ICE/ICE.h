@@ -863,9 +863,6 @@ namespace Uintah {
                              const double& var,
                              double is_logical_R_face );
 
-      virtual bool needRecompile(double time, double dt,
-                                 const GridP& grid);
-
       double getRefPress() const {
         return d_ref_press;
       }
@@ -883,7 +880,6 @@ namespace Uintah {
       bool d_doRefluxing;
       int  d_surroundingMatl_indx;
       bool d_impICE;
-      bool d_recompile;
       bool d_with_mpm;
       bool d_with_rigid_mpm;
       bool d_viscousFlow;

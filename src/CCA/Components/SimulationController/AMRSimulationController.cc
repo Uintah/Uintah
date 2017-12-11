@@ -294,10 +294,7 @@ AMRSimulationController::run()
     // performed here. At this point the time step, sim time, and all
     // wall time are all in sync.
 
-    m_output->findNext_OutputCheckPointTimeStep( m_app->getTimeStep(),
-						 m_app->getSimTime(),
-						 m_app->getNextDelT(),
-						 first && m_restarting,
+    m_output->findNext_OutputCheckPointTimeStep( first && m_restarting,
 						 m_current_gridP );
 
     // Reset the runtime performance stats
@@ -509,12 +506,7 @@ AMRSimulationController::run()
     else {
       // This is not correct if we have switched to a different
       // component, since the delT will be wrong
-      m_output->finalizeTimeStep( m_app->getTimeStep(),
-				  m_app->getSimTime(),
-				  m_app->getDelT(),
-				  m_current_gridP,
-				  m_scheduler,
-				  0 );
+      m_output->finalizeTimeStep( m_current_gridP, m_scheduler, 0 );
     }
 
     if( dbg_barrier.active() ) {
@@ -560,14 +552,11 @@ AMRSimulationController::run()
 
 
     // ARS - CAN THIS BE SCHEDULED??
-    m_output->writeto_xml_files( m_app->getTimeStep(),
-				 m_app->getSimTime(),
-				 m_app->getDelT(),
-				 m_current_gridP );
+    m_output->writeto_xml_files( m_current_gridP );
     // }
 
     // Update the profiler weights
-    m_lb->finalizeContributions(m_current_gridP);
+    m_lb->finalizeContributions( m_current_gridP );
 
     // Done with the first time step.
     if( first ) {
@@ -713,15 +702,12 @@ AMRSimulationController::doInitialTimeStep()
 
       // Output tasks
       const bool recompile = true;
-      m_output->finalizeTimeStep( m_app->getTimeStep(),
-				  m_app->getSimTime(),
-				  m_app->getDelT(),
-				  m_current_gridP,
+
+      m_output->finalizeTimeStep( m_current_gridP,
 				  m_scheduler,
 				  recompile) ;
 
-      m_output->sched_allOutputTasks( m_app->getDelT(),
-                                      m_current_gridP,
+      m_output->sched_allOutputTasks( m_current_gridP,
 				      m_scheduler, recompile );
 
       // Initialize the system var (time step and simulation time).
@@ -761,7 +747,7 @@ AMRSimulationController::doInitialTimeStep()
 
     } while ( needNewLevel );
 
-    m_output->writeto_xml_files( 0, 0, 0, m_current_gridP );
+    m_output->writeto_xml_files( m_current_gridP );
   }
 
 } // end doInitialTimeStep()
@@ -966,9 +952,12 @@ AMRSimulationController::needRecompile()
 
   // Currently, m_output, m_sim, m_lb, m_regridder can request a recompile
   bool recompile =
-    m_output->needRecompile(m_app->getSimTime(), m_app->getDelT(), m_current_gridP) ||
-    m_app->needRecompile(m_app->getSimTime(), m_app->getDelT(), m_current_gridP)    ||
+    m_output->needRecompile( m_current_gridP ) ||
+
+    m_app->needRecompile( m_current_gridP )    ||
+
     m_lb->needRecompile(m_app->getSimTime(), m_app->getDelT(), m_current_gridP)     ||
+
     m_recompile_taskgraph;
   
   if (m_regridder) {
@@ -1098,16 +1087,9 @@ AMRSimulationController::recompile( int totalFine )
   }
   
   // Output tasks
-  m_output->finalizeTimeStep( m_app->getTimeStep(),
-			      m_app->getSimTime(),
-			      m_app->getDelT(),
-			      m_current_gridP,
-			      m_scheduler,
-			      true );
+  m_output->finalizeTimeStep( m_current_gridP, m_scheduler, true );
 
-  m_output->sched_allOutputTasks(m_app->getDelT(),
-				 m_current_gridP,
-				 m_scheduler, true);
+  m_output->sched_allOutputTasks( m_current_gridP, m_scheduler, true );
 
   // Update the system var (time step and simulation time). Must be
   // done after the output.

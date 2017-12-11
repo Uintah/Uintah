@@ -92,7 +92,6 @@ MPMICE::MPMICE(const ProcessorGroup* myworld,
  
   d_rigidMPM = false;
   d_testForNegTemps_mpm = true;
-  d_recompile = false;
 
   switch(mpmtype) {
   case RIGID_MPMICE:
@@ -2386,17 +2385,6 @@ void MPMICE::binaryPressureSearch(  std::vector<constCCVariable<double> >& Temp,
     }
   }
 #endif
-}
-
-//______________________________________________________________________
-bool MPMICE::needRecompile(double time, double dt, const GridP& grid) {
-  if(d_recompile){
-    d_recompile = false;
-    return true;
-  }
-  else{
-    return false;
-  }
 }
 
 //______________________________________________________________________

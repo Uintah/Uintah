@@ -64,7 +64,7 @@ namespace Uintah {
     virtual void switchApplication( const ProblemSpecP     & restart_prob_spec,
 				    const GridP            & grid );
 
-    virtual bool needRecompile( double time, double delt, const GridP& grid );
+    virtual bool needRecompile( const GridP& grid );
     virtual void restartInitialize();
     virtual bool restartableTimeSteps();
     virtual double recomputeTimeStep( double dt );

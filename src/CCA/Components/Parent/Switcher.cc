@@ -819,13 +819,12 @@ void Switcher::switchApplication( const ProblemSpecP     & restart_prob_spec,
 //______________________________________________________________________
 //  This is where the actual component switching takes place.
 bool
-Switcher::needRecompile(       double   simTime,
-                               double   delT,
-                         const GridP  & grid )
+Switcher::needRecompile( const GridP & grid )
 {
   dbg << "  Doing Switcher::needRecompile " << std::endl;
   
-  bool retval  = false;
+  m_recompile  = false;
+
   d_restarting = true;
   d_doSwitching.resize(grid->numLevels());
   
@@ -869,14 +868,15 @@ Switcher::needRecompile(       double   simTime,
 
     proc0cout << "__________________________________\n\n";
     
-    retval = true;
+    m_recompile = true;
   } 
   else {
     m_output->setSwitchState(false);
   }
-  retval |= d_app->needRecompile(simTime, delT, grid);
 
-  return retval;
+  m_recompile |= d_app->needRecompile(grid);
+
+  return m_recompile;
 }
 //______________________________________________________________________
 //

@@ -304,7 +304,7 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
       Output *output = sim->simController->getOutput();
       SchedulerP schedulerP = sim->simController->getSchedulerP();
       
-      output->outputTimeStep( sim->cycle, sim->time, sim->delt, sim->gridP, schedulerP );
+      output->outputTimeStep( sim->gridP, schedulerP );
     }
     else
       VisItUI_setValueS("SIMULATION_MESSAGE_BOX",
@@ -323,7 +323,7 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
       Output *output = sim->simController->getOutput();
       SchedulerP schedulerP = sim->simController->getSchedulerP();
       
-      output->checkpointTimeStep( sim->cycle, sim->time, sim->delt, sim->gridP, schedulerP );
+      output->checkpointTimeStep( sim->gridP, schedulerP );
     }
     else
       VisItUI_setValueS("SIMULATION_MESSAGE_BOX",
