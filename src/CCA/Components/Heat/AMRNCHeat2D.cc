@@ -291,11 +291,11 @@ void AMRNCHeat2D::task_error_estimate ( ProcessorGroup const * /*myworld*/, Patc
     const int & timestep = getTimestep();
     std::string out_path, time_path, level_path, patch_path;
 
-    if ( timestep + 1 >= dataArchiver->getNextOutputTimestep() )
+    if ( timestep + 1 >= m_output->getNextOutputTimeStep() )
     {
         dbg_out1 << "==== AMRNCHeat2D::task_save" << std::endl;
         std::stringstream time_ss, level_ss;
-        out_path = dataArchiver->getOutputLocation();
+        out_path = m_output->getOutputLocation();
         time_ss << "t" << std::setw ( 5 ) << std::setfill ( '0' ) << timestep;
         level_ss << "l" << levelID;
         time_path = time_ss.str();
@@ -363,7 +363,7 @@ void AMRNCHeat2D::task_error_estimate ( ProcessorGroup const * /*myworld*/, Patc
 
         if ( rf_out_visit.find ( levelID ) == rf_out_visit.end() )
         {
-            rf_out_visit.emplace ( levelID, new VisitFile ( dataArchiver->getOutputLocation(), "rf_level" + std::to_string ( levelID ), false ) );
+            rf_out_visit.emplace ( levelID, new VisitFile ( m_output->getOutputLocation(), "rf_level" + std::to_string ( levelID ), false ) );
         }
         rf_out_visit[levelID]->add ( time_path + "/rf" + level_path + "/" + out_pvtk->file_name() );
         delete out_pvtk;
