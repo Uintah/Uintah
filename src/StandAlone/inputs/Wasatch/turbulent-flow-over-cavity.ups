@@ -9,7 +9,7 @@
   <Wasatch>
     <FieldClipping tasklist="advance_solution">
       <FieldExpression type="SVOL" min="0" max="10">
-        <NameTag name="f" state="STATE_DYNAMIC"/>        
+        <NameTag name="f" state="STATE_NP1"/>        
       </FieldExpression>                    
     </FieldClipping>
 

@@ -144,13 +144,7 @@ decayIsotropicTurbulenceDSmag64_ups = modUPS( turbulenceDir, \
 #______________________________________________________________________
 
 DEBUGTESTS = [
-  ("compressible-test-1d-nonreflecting-x",  "compressible-test-1d-nonreflecting-x.ups", 1,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
-  ("compressible-test-1d-nonreflecting-y",  "compressible-test-1d-nonreflecting-y.ups", 1,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
-  ("compressible-test-1d-nonreflecting-z",  "compressible-test-1d-nonreflecting-z.ups", 1,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),    
-  ("compressible-test-2d-nonreflecting-xy",  "compressible-test-2d-nonreflecting-xy.ups", 1,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
-  ("compressible-test-2d-nonreflecting-xz",  "compressible-test-2d-nonreflecting-xz.ups", 1,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
-  ("compressible-test-2d-nonreflecting-yz",  "compressible-test-2d-nonreflecting-yz.ups", 1,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),    
-  ("compressible-test-3d-nonreflecting",  "compressible-test-3d-nonreflecting.ups", 8,  "All",  ["exactComparison","no_restart","no_memoryTest"] )  
+  ("turbulent-flow-over-cavity",                         "turbulent-flow-over-cavity.ups",    8,  "All",  ["abs_tolerance=1e-8","no_restart","no_memoryTest","no_dbg"] )
   ]
 
 DUALTIMETESTS=[
