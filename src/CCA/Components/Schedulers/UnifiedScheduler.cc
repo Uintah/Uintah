@@ -1235,7 +1235,7 @@ UnifiedScheduler::runTasks( int thread_id )
           // it wasn't going to output data, but that would require more task graph recompilations,
           // which can be even costlier overall.  So we do the check here.)
 
-          if ((m_out_port->isOutputTimestep() || m_out_port->isCheckpointTimestep())
+          if ((m_out_port->isOutputTimeStep() || m_out_port->isCheckpointTimeStep())
               || ((readyTask->getTask()->getName() != "DataArchiver::outputVariables")
                   && (readyTask->getTask()->getName() != "DataArchiver::outputVariables(checkpoint)"))) {
             initiateD2H(readyTask);
@@ -1685,7 +1685,7 @@ void UnifiedScheduler::turnIntoASuperPatch(GPUDataWarehouse* const gpudw,
     //This thread turned the lowest ID'd patch in the region into a superpatch.  Go through *neighbor* patches
     //in the superpatch region and flag them as being a superpatch as well (the copySuperPatchInfo call below
     //can also flag it as a superpatch.
-    for( int i = 0; i < neighbors.size(); i++) {
+    for( unsigned int i = 0; i < neighbors.size(); i++) {
       if (neighbors[i]->getRealPatch() != firstPatchInSuperPatch) {  //This if statement is because there is no need to merge itself
 
         //These neighbor patches may not have yet been handled by a prior task.  So go ahead and make sure they show up in the database
@@ -4350,7 +4350,7 @@ UnifiedScheduler::findIntAndExtGpuDependencies( DetailedTask * dtask
         }
         // if we send/recv to an output task, don't send/recv if not an output timestep
         if (req->m_to_tasks.front()->getTask()->getType() == Task::Output
-            && !m_out_port->isOutputTimestep() && !m_out_port->isCheckpointTimestep()) {
+            && !m_out_port->isOutputTimeStep() && !m_out_port->isCheckpointTimeStep()) {
           if (gpu_stats.active()) {
             cerrLock.lock();
             gpu_stats << myRankThread()
@@ -4412,7 +4412,7 @@ UnifiedScheduler::findIntAndExtGpuDependencies( DetailedTask * dtask
           continue;
         }
         // if we send/recv to an output task, don't send/recv if not an output timestep
-        if (req->m_to_tasks.front()->getTask()->getType() == Task::Output && !m_out_port->isOutputTimestep() && !m_out_port->isCheckpointTimestep()) {
+        if (req->m_to_tasks.front()->getTask()->getType() == Task::Output && !m_out_port->isOutputTimeStep() && !m_out_port->isCheckpointTimeStep()) {
           if (gpu_stats.active()) {
             cerrLock.lock();
             {
