@@ -550,8 +550,6 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
 
             density = mixingTable->getTableValue(iv, "density",inert_list);
 
-            cout_intrusiondebug << "IntrusionBC::Got a value for density = " << density << std::endl;
-
             //get values for all other scalars that depend on a table lookup:
             for (std::map<std::string, scalarInletBase*>::iterator iter_lookup = iIntrusion->second.scalar_map.begin();
                                                                    iter_lookup != iIntrusion->second.scalar_map.end();
@@ -601,6 +599,9 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
           }
 
           iIntrusion->second.density_map.insert(std::make_pair(c, density));
+
+          cout_intrusiondebug << "IntrusionBC::Got a value for density = " << density << std::endl;
+
           //
           //Note: Using the last value of density to set the total intrusion density.
           //This is needed for mass flow inlet conditions but assumes a constant density across the face

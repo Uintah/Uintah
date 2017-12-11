@@ -162,7 +162,6 @@
             <velocity type="from_file">
               <input_file>inputs/ARCHES/handoff/input/intrusion_test/handoff_velocity.dat</input_file>
               <relative_xyz>[0,.8,.8]</relative_xyz>
-              <non_normal/>
             </velocity>
             <scalars>
               <scalar label="mixture_fraction" type="from_file">
