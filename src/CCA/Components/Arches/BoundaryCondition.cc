@@ -4039,146 +4039,150 @@ BoundaryCondition::wallStressConstSmag( const Patch* p,
 
   constCCVariable<double> IsImag;
   const int indx = 0;
-  dw->get( IsImag, d_lab->d_strainMagnitudeLabel, indx, p, Ghost::AroundCells, 1 );
 
-  for (CellIterator iter=p->getCellIterator(); !iter.done(); iter++) {
-    IntVector c = *iter;
-    IntVector xm = *iter - IntVector(1,0,0);
-    IntVector xp = *iter + IntVector(1,0,0);
-    IntVector ym = *iter - IntVector(0,1,0);
-    IntVector yp = *iter + IntVector(0,1,0);
-    IntVector zm = *iter - IntVector(0,0,1);
-    IntVector zp = *iter + IntVector(0,0,1);
-    IntVector xmym = *iter + IntVector(-1,-1,0);
-    IntVector xmyp = *iter + IntVector(-1,1,0);
-    IntVector xmzm = *iter + IntVector(-1,0,-1);
-    IntVector xmzp = *iter + IntVector(-1,0,1);
-    IntVector xpym = *iter + IntVector(1,-1,0);
-    IntVector xpzm = *iter + IntVector(1,0,-1);
-    IntVector ymzm = *iter + IntVector(0,-1,-1);
-    IntVector ymzp = *iter + IntVector(0,-1,1);
-    IntVector ypzm = *iter + IntVector(0,1,-1);
-    IntVector x_so = IntVector(standoff,0,0);
-    IntVector y_so = IntVector(0,standoff,0);
-    IntVector z_so = IntVector(0,0,standoff);
-    //apply u-mom bc -
-    if ( eps[xm] * eps[c] > .5 ){
-      // Y-
-      if ( eps[ym] * eps[xmym] < .5 ){
-        const double i_so = ( eps[c+y_so] * eps[xm+y_so] > .5 ) ?
-                             standoff :
-                             0;
-        const double ISI = 0.5 * ( IsImag[c+IntVector(0,i_so,0)] + IsImag[c+IntVector(-1,i_so,0)] );
-        const double mu_t = pow( csmag_wall * delta, 2.0 ) * rho[c] * ISI;
-        Su[c] -= 2.0 * area_ns * ( mu_t + viscos ) * uvel[c] / dy;
+  if ( dw->exists( d_lab->d_strainMagnitudeLabel, indx, p ) ){
+
+    dw->get( IsImag, d_lab->d_strainMagnitudeLabel, indx, p, Ghost::AroundCells, 1 );
+
+    for (CellIterator iter=p->getCellIterator(); !iter.done(); iter++) {
+      IntVector c = *iter;
+      IntVector xm = *iter - IntVector(1,0,0);
+      IntVector xp = *iter + IntVector(1,0,0);
+      IntVector ym = *iter - IntVector(0,1,0);
+      IntVector yp = *iter + IntVector(0,1,0);
+      IntVector zm = *iter - IntVector(0,0,1);
+      IntVector zp = *iter + IntVector(0,0,1);
+      IntVector xmym = *iter + IntVector(-1,-1,0);
+      IntVector xmyp = *iter + IntVector(-1,1,0);
+      IntVector xmzm = *iter + IntVector(-1,0,-1);
+      IntVector xmzp = *iter + IntVector(-1,0,1);
+      IntVector xpym = *iter + IntVector(1,-1,0);
+      IntVector xpzm = *iter + IntVector(1,0,-1);
+      IntVector ymzm = *iter + IntVector(0,-1,-1);
+      IntVector ymzp = *iter + IntVector(0,-1,1);
+      IntVector ypzm = *iter + IntVector(0,1,-1);
+      IntVector x_so = IntVector(standoff,0,0);
+      IntVector y_so = IntVector(0,standoff,0);
+      IntVector z_so = IntVector(0,0,standoff);
+      //apply u-mom bc -
+      if ( eps[xm] * eps[c] > .5 ){
+        // Y-
+        if ( eps[ym] * eps[xmym] < .5 ){
+          const double i_so = ( eps[c+y_so] * eps[xm+y_so] > .5 ) ?
+                               standoff :
+                               0;
+          const double ISI = 0.5 * ( IsImag[c+IntVector(0,i_so,0)] + IsImag[c+IntVector(-1,i_so,0)] );
+          const double mu_t = pow( csmag_wall * delta, 2.0 ) * rho[c] * ISI;
+          Su[c] -= 2.0 * area_ns * ( mu_t + viscos ) * uvel[c] / dy;
+        }
+        // Y+
+        if ( eps[yp] * eps[xmyp] < .5 ){
+          const double i_so = ( eps[c-y_so] * eps[xm-y_so] > .5 ) ?
+                               standoff :
+                               0;
+          const double ISI = 0.5*(IsImag[c+IntVector(0,-i_so,0)] + IsImag[c+IntVector(-1,-i_so,0)]);
+          const double mu_t = pow( csmag_wall*delta, 2.0 ) * rho[c] * ISI;
+          Su[c] -= 2.0 * area_ns * ( mu_t + viscos ) * uvel[c] / dy;
+        }
+        // Z-
+        if ( eps[zm] * eps[xmzm] < .5 ){
+          const double i_so = ( eps[c+z_so] * eps[xm+z_so] > .5 ) ?
+                               standoff :
+                               0;
+          const double ISI = 0.5 * ( IsImag[c+IntVector(0,0,i_so)] + IsImag[c+IntVector(-1,0,i_so)] );
+          const double mu_t = pow( csmag_wall * delta, 2.0 ) * rho[c] * ISI;
+          Su[c] -= 2.0 * area_tb * ( mu_t + viscos ) * uvel[c] / dz;
+        }
+        // Z+
+        if ( eps[zp] * eps[xmzp] < .5 ){
+          const double i_so = ( eps[c-z_so] * eps[xm-z_so] > .5 ) ?
+                               standoff :
+                               0;
+          const double ISI = 0.5*(IsImag[c+IntVector(0,0,-i_so)] + IsImag[c+IntVector(-1,0,-i_so)]);
+          const double mu_t = pow( csmag_wall*delta, 2.0 ) * rho[c] * ISI;
+          Su[c] -= 2.0 * area_tb * ( mu_t + viscos ) * uvel[c] / dy;
+        }
       }
-      // Y+
-      if ( eps[yp] * eps[xmyp] < .5 ){
-        const double i_so = ( eps[c-y_so] * eps[xm-y_so] > .5 ) ?
-                             standoff :
-                             0;
-        const double ISI = 0.5*(IsImag[c+IntVector(0,-i_so,0)] + IsImag[c+IntVector(-1,-i_so,0)]);
-        const double mu_t = pow( csmag_wall*delta, 2.0 ) * rho[c] * ISI;
-        Su[c] -= 2.0 * area_ns * ( mu_t + viscos ) * uvel[c] / dy;
+      //apply v-mom bc -
+      if ( eps[ym] * eps[c] > 0.5 ) {
+        // X-
+        if ( eps[xm] * eps[xmym] < .5 ){
+          const double i_so = ( eps[c+x_so] * eps[ym+x_so] > .5 ) ?
+                               standoff :
+                               0;
+          const double ISI = 0.5 * ( IsImag[c+IntVector(i_so,0,0)] + IsImag[c+IntVector(i_so,-1,0)] );
+          const double mu_t = pow( csmag_wall * delta, 2.0 ) * rho[c] * ISI;
+          Sv[c] -= 2.0 * area_ew * ( mu_t + viscos ) * vvel[c] / dx;
+        }
+        // X+
+        if ( eps[xp] * eps[xpym] < .5 ){
+          const double i_so = ( eps[c-x_so] * eps[ym-x_so] > .5 ) ?
+                               standoff :
+                               0;
+          const double ISI = 0.5 * ( IsImag[c+IntVector(-i_so,0,0)] + IsImag[c+IntVector(-i_so,-1,0)] );
+          const double mu_t = pow( csmag_wall * delta, 2.0 ) * rho[c] * ISI;
+          Sv[c] -= 2.0 * area_ew * ( mu_t + viscos ) * vvel[c] / dx;
+        }
+        // Z-
+        if ( eps[zm] * eps[ymzm] < .5 ){
+          const double i_so = ( eps[c+z_so] * eps[ym+z_so] > .5 ) ?
+                               standoff :
+                               0;
+          const double ISI = 0.5 * ( IsImag[c+IntVector(0,0,i_so)] + IsImag[c+IntVector(0,-1,i_so)] );
+          const double mu_t = pow( csmag_wall * delta, 2.0 ) * rho[c] * ISI;
+          Sv[c] -= 2.0 * area_tb * ( mu_t + viscos ) * vvel[c] / dz;
+        }
+        // Z+
+        if ( eps[zp] * eps[ymzp] < .5 ){
+          const double i_so = ( eps[c-z_so] * eps[ym-z_so] > .5 ) ?
+                               standoff :
+                               0;
+          const double ISI = 0.5 * ( IsImag[c+IntVector(0,0,-i_so)] + IsImag[c+IntVector(0,-1,-i_so)] );
+          const double mu_t = pow( csmag_wall * delta, 2.0 ) * rho[c] * ISI;
+          Sv[c] -= 2.0 * area_tb * ( mu_t + viscos ) * vvel[c] / dz;
+        }
       }
-      // Z-
-      if ( eps[zm] * eps[xmzm] < .5 ){
-        const double i_so = ( eps[c+z_so] * eps[xm+z_so] > .5 ) ?
-                             standoff :
-                             0;
-        const double ISI = 0.5 * ( IsImag[c+IntVector(0,0,i_so)] + IsImag[c+IntVector(-1,0,i_so)] );
-        const double mu_t = pow( csmag_wall * delta, 2.0 ) * rho[c] * ISI;
-        Su[c] -= 2.0 * area_tb * ( mu_t + viscos ) * uvel[c] / dz;
+      //apply w-mom bc -
+      if ( eps[zm] * eps[c] > 0.5 ) {
+        // X-
+        if ( eps[xm] * eps[xmzm] < .5 ){
+          const double i_so = ( eps[c+x_so] * eps[zm+x_so] > .5 ) ?
+                               standoff :
+                               0;
+          const double ISI = 0.5 * ( IsImag[c+IntVector(i_so,0,0)] + IsImag[c+IntVector(i_so,0,-1)] );
+          const double mu_t = pow( csmag_wall * delta, 2.0 ) * rho[c] * ISI;
+          Sw[c] -= 2.0 * area_ew * ( mu_t + viscos ) * wvel[c] / dx;
+        }
+        // X+
+        if ( eps[xp] * eps[xpzm] < .5 ){
+          const double i_so = ( eps[c-x_so] * eps[zm-x_so] > .5 ) ?
+                               standoff :
+                               0;
+          const double ISI = 0.5 * ( IsImag[c+IntVector(-i_so,0,0)] + IsImag[c+IntVector(-i_so,0,-1)] );
+          const double mu_t = pow( csmag_wall * delta, 2.0 ) * rho[c] * ISI;
+          Sw[c] -= 2.0 * area_ew * ( mu_t + viscos ) * wvel[c] / dx;
+        }
+        // Y-
+        if ( eps[ym] * eps[ymzm] < .5 ){
+          const double i_so = ( eps[c+y_so] * eps[zm+y_so] > .5 ) ?
+                               standoff :
+                               0;
+          const double ISI = 0.5 * ( IsImag[c+IntVector(0,i_so,0)] + IsImag[c+IntVector(0,i_so,-1)] );
+          const double mu_t = pow( csmag_wall * delta, 2.0 ) * rho[c] * ISI;
+          Sw[c] -= 2.0 * area_ns * ( mu_t + viscos ) * wvel[c] / dy;
+        }
+        // Y+
+        if ( eps[yp] * eps[ypzm] < .5 ){
+          const double i_so = ( eps[c-y_so] * eps[zm-y_so] > .5 ) ?
+                               standoff :
+                               0;
+          const double ISI = 0.5*(IsImag[c+IntVector(0,-i_so,0)] + IsImag[c+IntVector(0,-i_so,-1)]);
+          const double mu_t = pow( csmag_wall*delta, 2.0 ) * rho[c] * ISI;
+          Sw[c] -= 2.0 * area_ns * ( mu_t + viscos ) * wvel[c] / dy;
+        }
       }
-      // Z+
-      if ( eps[zp] * eps[xmzp] < .5 ){
-        const double i_so = ( eps[c-z_so] * eps[xm-z_so] > .5 ) ?
-                             standoff :
-                             0;
-        const double ISI = 0.5*(IsImag[c+IntVector(0,0,-i_so)] + IsImag[c+IntVector(-1,0,-i_so)]);
-        const double mu_t = pow( csmag_wall*delta, 2.0 ) * rho[c] * ISI;
-        Su[c] -= 2.0 * area_tb * ( mu_t + viscos ) * uvel[c] / dy;
-      }
-    }
-    //apply v-mom bc -
-    if ( eps[ym] * eps[c] > 0.5 ) {
-      // X-
-      if ( eps[xm] * eps[xmym] < .5 ){
-        const double i_so = ( eps[c+x_so] * eps[ym+x_so] > .5 ) ?
-                             standoff :
-                             0;
-        const double ISI = 0.5 * ( IsImag[c+IntVector(i_so,0,0)] + IsImag[c+IntVector(i_so,-1,0)] );
-        const double mu_t = pow( csmag_wall * delta, 2.0 ) * rho[c] * ISI;
-        Sv[c] -= 2.0 * area_ew * ( mu_t + viscos ) * vvel[c] / dx;
-      }
-      // X+
-      if ( eps[xp] * eps[xpym] < .5 ){
-        const double i_so = ( eps[c-x_so] * eps[ym-x_so] > .5 ) ?
-                             standoff :
-                             0;
-        const double ISI = 0.5 * ( IsImag[c+IntVector(-i_so,0,0)] + IsImag[c+IntVector(-i_so,-1,0)] );
-        const double mu_t = pow( csmag_wall * delta, 2.0 ) * rho[c] * ISI;
-        Sv[c] -= 2.0 * area_ew * ( mu_t + viscos ) * vvel[c] / dx;
-      }
-      // Z-
-      if ( eps[zm] * eps[ymzm] < .5 ){
-        const double i_so = ( eps[c+z_so] * eps[ym+z_so] > .5 ) ?
-                             standoff :
-                             0;
-        const double ISI = 0.5 * ( IsImag[c+IntVector(0,0,i_so)] + IsImag[c+IntVector(0,-1,i_so)] );
-        const double mu_t = pow( csmag_wall * delta, 2.0 ) * rho[c] * ISI;
-        Sv[c] -= 2.0 * area_tb * ( mu_t + viscos ) * vvel[c] / dz;
-      }
-      // Z+
-      if ( eps[zp] * eps[ymzp] < .5 ){
-        const double i_so = ( eps[c-z_so] * eps[ym-z_so] > .5 ) ?
-                             standoff :
-                             0;
-        const double ISI = 0.5 * ( IsImag[c+IntVector(0,0,-i_so)] + IsImag[c+IntVector(0,-1,-i_so)] );
-        const double mu_t = pow( csmag_wall * delta, 2.0 ) * rho[c] * ISI;
-        Sv[c] -= 2.0 * area_tb * ( mu_t + viscos ) * vvel[c] / dz;
-      }
-    }
-    //apply w-mom bc -
-    if ( eps[zm] * eps[c] > 0.5 ) {
-      // X-
-      if ( eps[xm] * eps[xmzm] < .5 ){
-        const double i_so = ( eps[c+x_so] * eps[zm+x_so] > .5 ) ?
-                             standoff :
-                             0;
-        const double ISI = 0.5 * ( IsImag[c+IntVector(i_so,0,0)] + IsImag[c+IntVector(i_so,0,-1)] );
-        const double mu_t = pow( csmag_wall * delta, 2.0 ) * rho[c] * ISI;
-        Sw[c] -= 2.0 * area_ew * ( mu_t + viscos ) * wvel[c] / dx;
-      }
-      // X+
-      if ( eps[xp] * eps[xpzm] < .5 ){
-        const double i_so = ( eps[c-x_so] * eps[zm-x_so] > .5 ) ?
-                             standoff :
-                             0;
-        const double ISI = 0.5 * ( IsImag[c+IntVector(-i_so,0,0)] + IsImag[c+IntVector(-i_so,0,-1)] );
-        const double mu_t = pow( csmag_wall * delta, 2.0 ) * rho[c] * ISI;
-        Sw[c] -= 2.0 * area_ew * ( mu_t + viscos ) * wvel[c] / dx;
-      }
-      // Y-
-      if ( eps[ym] * eps[ymzm] < .5 ){
-        const double i_so = ( eps[c+y_so] * eps[zm+y_so] > .5 ) ?
-                             standoff :
-                             0;
-        const double ISI = 0.5 * ( IsImag[c+IntVector(0,i_so,0)] + IsImag[c+IntVector(0,i_so,-1)] );
-        const double mu_t = pow( csmag_wall * delta, 2.0 ) * rho[c] * ISI;
-        Sw[c] -= 2.0 * area_ns * ( mu_t + viscos ) * wvel[c] / dy;
-      }
-      // Y+
-      if ( eps[yp] * eps[ypzm] < .5 ){
-        const double i_so = ( eps[c-y_so] * eps[zm-y_so] > .5 ) ?
-                             standoff :
-                             0;
-        const double ISI = 0.5*(IsImag[c+IntVector(0,-i_so,0)] + IsImag[c+IntVector(0,-i_so,-1)]);
-        const double mu_t = pow( csmag_wall*delta, 2.0 ) * rho[c] * ISI;
-        Sw[c] -= 2.0 * area_ns * ( mu_t + viscos ) * wvel[c] / dy;
-      }
-    }
-  }// end cell loop
+    }// end cell loop
+  } // If strainRate exists
 }// end function
 
 void
