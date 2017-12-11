@@ -40,7 +40,7 @@
 namespace Uintah{
 
   // setenv SCI_DEBUG INTRUSION_DEBUG:+
-  static DebugStream cout_intrusiondebug("INTRUSION_DEBUG",false);
+  static DebugStream cout_intrusiondebug("ARCHES_INTRUSION_SETUP_INFO",false);
 
   class VarLabel;
   class ArchesLabel;
