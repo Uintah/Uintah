@@ -1563,8 +1563,8 @@ DataArchiver::findNext_OutputCheckPointTimeStep( const int timeStep,
   }
 #endif
   
-  // if (dbg.active()) {
-    proc0cout << "  " << std::setprecision(15) << timeStep
+  if (dbg.active()) {
+    dbg << "  " << std::setprecision(15) << timeStep
         << "  " << std::setprecision(15) << simTime << "  " << "\n"
         << "    is output timestep: " << m_isOutputTimeStep
         << "       output interval: " << std::setprecision(15) << m_outputInterval
@@ -1580,7 +1580,7 @@ DataArchiver::findNext_OutputCheckPointTimeStep( const int timeStep,
         << "  next checkpoint WallTime: " << std::setprecision(15) << m_nextCheckpointWallTime << "\n";
     
     dbg << "  findNext_OutputCheckPoint_TimeStep() end\n";
-  // }
+  }
 
 } // end findNext_OutputCheckPoint_TimeStep()
 
