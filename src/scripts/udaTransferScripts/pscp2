@@ -1,12 +1,39 @@
 #! /bin/bash
 #
-#.......................................................................
+#______________________________________________________________________
 # pscp2 <num Processors> <transfer entire uda (y/n)> < remove remote directory> < localDirectory> <login@Machine>:<remote dir>
 # You must be able to ssh onto the remote machine without a password
 # or it won't work.
-#.......................................................................
+#______________________________________________________________________
 #echo $argv
 #
+#______________________________________________________________________
+# function that removes any unwanted chatter from the ssh command
+function silent_ssh {
+  local tmpFile="/tmp/.psp2SSH"
+  local connectionString="$1"
+  local commands="$2"
+
+  /bin/rm $tmpFile &>/dev/null
+  echo "BEGIN" > $tmpFile
+  
+  echo " commands" >> $tmpFile
+  # ececute command
+  $SSH -x $connectionString   \
+      "echo 'END';            \
+      $commands;              \
+      echo 'BEGIN'" &>/dev/null >> $tmpFile 
+  
+  echo "END" >> $tmpFile
+  
+  # remove chatter
+  sed -i /BEGIN/,/END/d  $tmpFile
+  
+  cat $tmpFile
+  /bin/rm $tmpFile 2>&1 2>/dev/null
+}
+
+
 #------------------
 # unalias commands
 unalias -a ssh
@@ -30,15 +57,6 @@ else
    SSH=ssh
 fi
 
-# Need /usr/bin/which as the shell which doesn't give us the full path...
-if test ! -x /usr/bin/which; then
-  echo ""
-  echo "Error:  Can't find /usr/bin/which...  Goodbye."
-  echo ""
-  exit 1
-fi
-
-#pscp2fulldir=`/usr/bin/which $0`
 pscp2fulldir=`readlink -f $0`
 pscp2dir=`dirname $pscp2fulldir`
 
@@ -66,7 +84,7 @@ export REMOTEDIR=$REMOTEDIR_PARENT/`basename $localDir`
 export PSCP_FILES=/tmp/pscp_files_`basename $localDir`_`whoami`
 
 #determing the remote parent group
-export GROUP=`ssh -x $LOGIN "cd $REMOTEDIR_PARENT && stat . --format %G"`
+export GROUP=$(silent_ssh $LOGIN "cd $REMOTEDIR_PARENT && stat . --format %G")
 
 echo "_____________________________________"
 echo "Inputs:"
@@ -124,7 +142,7 @@ validateTransferredFilesDir()
 
 export STAMP_DIR=$localDir/.transferred_files
 validateTransferredFilesDir
-
+#__________________________________
 if test ! -d "$STAMP_DIR"; then
   # Didn't have permissions to make the directory... so place it in tmp
   echo ""
@@ -135,12 +153,14 @@ if test ! -d "$STAMP_DIR"; then
   validateTransferredFilesDir
 fi
 
+#__________________________________
 if test ! -d "$STAMP_DIR"; then
   echo ""
   echo "  ERROR: Did not have permissions to create $STAMP_DIR directory.  Goodbye."
   echo ""
 fi
 
+#__________________________________
 if test "$localDir" == "."; then
   echo ""
   echo "  ERROR: You can't set the local dir to '.'"
@@ -148,6 +168,7 @@ if test "$localDir" == "."; then
   exit 1
 fi
 
+#__________________________________
 echo -n "  Testing: does the local folder ($localDir) exist... "
 if test ! -e $localDir; then
   echo ""
@@ -158,40 +179,27 @@ if test ! -e $localDir; then
 fi
 echo "yes."
 
-echo -n "  Testing: does $REMOTEDIR_PARENT exist on the remote machine... "
+#__________________________________
+echo -n "  Testing: does $REMOTEDIR_PARENT exist on the remote machine and is there write permission... "
 
-#create a script that checks if a file exists and outputs 0 if it does
-cat > /tmp/.testfile.abcdefg << fin
-#!/bin/sh
-test -d $REMOTEDIR_PARENT;  echo $?
-fin
+ans=$(silent_ssh $LOGIN "test -d  $REMOTEDIR_PARENT && \
+                         test -w  $REMOTEDIR_PARENT && \
+                         echo $?")
 
-scp -q /tmp/.testfile.abcdefg $LOGIN:
-
-#execute the script
-command="sh .testfile.abcdefg"
-test=`$SSH -x $LOGIN $command`
-
-#remove the scripts both locally & remote
-$SSH -x $LOGIN "/bin/rm -f .testfile.abcdefg"
-/bin/rm -f /tmp/.testfile.abcdefg
-
-if test "$test" != "0"; then
+if test "$ans" != "0"; then
   echo ""
   echo ""
-  echo "  ERROR:  The destination remote directory '$REMOTEDIR_PARENT' does not exist..."
+  echo "  ERROR:  The destination remote directory '$REMOTEDIR_PARENT' does not exist or you don't have write permission..."
   echo "          Are you sure you typed it in correctly?"
   echo ""
-  echo "           NOTE: result of ssh test was: '$test'"
   echo ""
   exit
 fi
 echo "yes."
 
-
 #__________________________________
 echo -n "  Testing: does passwordless access work... "
-test=`$SSH -x $LOGIN "echo 'password_access_works'"`
+test=$(silent_ssh $LOGIN "echo 'password_access_works'")
 if test "$test" != "password_access_works"; then
   echo ""
   echo ""
@@ -212,7 +220,7 @@ fi
 
 #__________________________________
 echo -n "  Testing: Do we know about the remote operating system?... "
-OS=`$SSH -x $LOGIN uname`
+OS=$(silent_ssh $LOGIN uname)
 
 if test "$OS" == "Darwin"; then
   # Darwin and Linux are similar enought that this works...
@@ -231,7 +239,6 @@ echo "_____________________________________"
 
 #--------------------------------------------------------------------------
 # Now do the work
-
 #--------------------------------------------------------------------------
 # record some info for posterity
 
@@ -254,11 +261,11 @@ echo ""                                 >> $DATA_TRANSFER_RECORD
 # remove the remote directory
 if test "$rmDir" == "y" -o "$rmDir" == "Y"; then
   echo "Now removing $REMOTEDIR from $remote_machine if it exists..."
-  $SSH -x $LOGIN "/bin/rm -rf $REMOTEDIR; mkdir $REMOTEDIR; chgrp $GROUP $REMOTEDIR"
+  silent_ssh $LOGIN "/bin/rm -rf $REMOTEDIR; mkdir $REMOTEDIR; chgrp $GROUP $REMOTEDIR"
 else
   echo $SSH -x $LOGIN \"mkdir -p $REMOTEDIR\"
-  $SSH -x $LOGIN "mkdir -p $REMOTEDIR; chgrp $GROUP $REMOTEDIR"
-  scp $DATA_TRANSFER_RECORD $LOGIN\:$REMOTEDIR
+  silent_ssh $LOGIN "mkdir -p $REMOTEDIR; chgrp $GROUP $REMOTEDIR"
+  scp $DATA_TRANSFER_RECORD $LOGIN\:$REMOTEDIR >& /dev/null
 fi
 
 cd $localDir
@@ -294,7 +301,6 @@ fi
 chmod ug+rw $PSCP_FILES
 $EDITOR $PSCP_FILES
 
- 
 echo
 echo -n "Starting at: " | tee -a $DATA_TRANSFER_RECORD
 date | tee -a $DATA_TRANSFER_RECORD
@@ -308,4 +314,4 @@ echo -n "Ending at: " | tee -a $DATA_TRANSFER_RECORD
 date |tee -a $DATA_TRANSFER_RECORD
 echo
 
-scp $DATA_TRANSFER_RECORD $LOGIN\:$REMOTEDIR
+scp $DATA_TRANSFER_RECORD $LOGIN\:$REMOTEDIR &> /dev/null
