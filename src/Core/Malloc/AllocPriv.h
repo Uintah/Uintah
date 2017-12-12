@@ -170,7 +170,7 @@ struct Allocator {
     size_t mysize;
 
   size_t pagesize;
-  bool dieing;
+  bool dying;
 };
 
 void AllocError(const char*);

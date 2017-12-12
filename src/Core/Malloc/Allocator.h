@@ -34,8 +34,8 @@
  *
  */
 
-#ifndef Malloc_Allocator_h
-#define Malloc_Allocator_h 1
+#ifndef CORE_MALLOC_ALLOCATOR_H
+#define CORE_MALLOC_ALLOCATOR_H 1
 
 #include <sci_defs/malloc_defs.h>
 
@@ -84,11 +84,9 @@ void MakeDefaultAllocator();
 
 void PrintTag(void*);
 
-//
 // These functions are for use in tracking down memory leaks.  In the
-// MALLOC_STATS file, non-freed memory will be listed with the specified
-// tag...
-//
+// MALLOC_STATS file, non-freed memory will be listed with the specified tag...
+
 const char* AllocatorSetDefaultTagMalloc(const char* tag);
 const char* AllocatorSetDefaultTagNew(const char* tag);
 int         AllocatorSetDefaultTagLineNumber(int line_number);
@@ -98,41 +96,56 @@ void        AllocatorResetDefaultTagLineNumber();
 const char* AllocatorSetDefaultTag(const char* tag);
 void        AllocatorResetDefaultTag();
 
-// The MPI that comes with the Ubuntu Lenny kernel, for whatever reason, calls atexit(), which, if
-// we are in a sci-malloc enabled build, causes our malloc to kick off (for the very first time), which
-// causes us to call atexit(), which deadlocks and hangs.  This hack avoids that.  For most OSes, this
-// should just be commented out.
-//#define USE_LENNY_HACK
 
 // append the num to the MallocStats file if MallocStats are dumped to a file
 // (negative appends nothing)
 void AllocatorMallocStatsAppendNumber(int num);
   
 Allocator* DefaultAllocator();
-void GetGlobalStats(Allocator*,
-		    size_t& nalloc, size_t& sizealloc,
-		    size_t& nfree, size_t& sizefree,
-		    size_t& nfillbin,
-		    size_t& nmmap, size_t& sizemmap,
-		    size_t& nmunmap, size_t& sizemunmap,
-		    size_t& highwater_alloc, size_t& highwater_mmap,
-		    size_t& bytes_overhead,
-		    size_t& bytes_free,
-		    size_t& bytes_fragmented,
-		    size_t& bytes_inuse,
-		    size_t& bytes_inhunks);
-void GetGlobalStats(Allocator*,
-		    size_t& nalloc, size_t& sizealloc,
-		    size_t& nfree, size_t& sizefree,
-		    size_t& nfillbin,
-		    size_t& nmmap, size_t& sizemmap,
-		    size_t& nmunmap, size_t& sizemunmap,
-		    size_t& highwater_alloc, size_t& highwater_mmap);
+
+void GetGlobalStats( Allocator*,
+                     size_t& nalloc,
+                     size_t& sizealloc,
+                     size_t& nfree,
+                     size_t& sizefree,
+                     size_t& nfillbin,
+                     size_t& nmmap,
+                     size_t& sizemmap,
+                     size_t& nmunmap,
+                     size_t& sizemunmap,
+                     size_t& highwater_alloc,
+                     size_t& highwater_mmap,
+                     size_t& bytes_overhead,
+                     size_t& bytes_free,
+                     size_t& bytes_fragmented,
+                     size_t& bytes_inuse,
+                     size_t& bytes_inhunks );
+
+void GetGlobalStats( Allocator*,
+                     size_t& nalloc,
+                     size_t& sizealloc,
+                     size_t& nfree,
+                     size_t& sizefree,
+                     size_t& nfillbin,
+                     size_t& nmmap,
+                     size_t& sizemmap,
+                     size_t& nmunmap,
+                     size_t& sizemunmap,
+                     size_t& highwater_alloc,
+                     size_t& highwater_mmap );
+
 int  GetNbins(Allocator*);
-void GetBinStats(Allocator*, int binno, size_t& minsize, size_t& maxsize,
-		 size_t& nalloc, size_t& nfree, size_t& ninlist);
+
+void GetBinStats( Allocator*,
+                  int binno,
+                  size_t& minsize,
+                  size_t& maxsize,
+                  size_t& nalloc,
+                  size_t& nfree,
+                  size_t& ninlist );
 
 void AuditAllocator(Allocator*);
+
 void DumpAllocator(Allocator*, const char* filename = "alloc.dump");
 
   // Functions for locking and unlocking the allocator.  In the
@@ -161,5 +174,5 @@ void DumpAllocator(Allocator*, const char* filename = "alloc.dump");
 
 #endif // MALLOC_TRACE
 
-#endif // Malloc_Allocator_h 1
+#endif // CORE_MALLOC_ALLOCATOR_H 1
  

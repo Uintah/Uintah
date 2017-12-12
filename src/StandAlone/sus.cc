@@ -107,14 +107,6 @@
 using namespace Uintah;
 
 
-#if defined( USE_LENNY_HACK )
-  // See Core/Malloc/Allocator.cc for more info.
-  namespace Uintah {
-    extern void shutdown();
-  };
-#endif
-
-
 namespace {
 
 std::mutex cerr_mutex{};
@@ -233,10 +225,6 @@ abortCleanupFunc()
 int
 main( int argc, char *argv[], char *env[] )
 {
-#if defined( USE_LENNY_HACK )
-  std::atexit( Uintah::shutdown );
-#endif
-
   sanityChecks();
 
 #if HAVE_IEEEFP_H
