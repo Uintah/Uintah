@@ -234,7 +234,7 @@ int
 main( int argc, char *argv[], char *env[] )
 {
 #if defined( USE_LENNY_HACK )
-  atexit( Uintah::shutdown );
+  std::atexit( Uintah::shutdown );
 #endif
 
   sanityChecks();

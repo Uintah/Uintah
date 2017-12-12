@@ -552,8 +552,8 @@ Allocator* MakeAllocator()
     if(a->trace_out){
       if(!a->stats_out){
         a->stats_out=a->trace_out;
-#if !defined( USE_LENNY_HACK )
-        atexit(shutdown);
+#if defined( USE_LENNY_HACK )
+        std::atexit(shutdown);
         atexit_added=true;
 #endif
       }
@@ -580,8 +580,8 @@ Allocator* MakeAllocator()
       a->stats_out = 0;
     }
     if((a->stats_out || statsfile) && !atexit_added){
-#if !defined( USE_LENNY_HACK )	
-      atexit(shutdown);
+#if defined( USE_LENNY_HACK )
+      std::atexit(shutdown);
 #endif
     }
   } else {

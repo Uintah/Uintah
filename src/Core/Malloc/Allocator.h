@@ -102,7 +102,7 @@ void        AllocatorResetDefaultTag();
 // we are in a sci-malloc enabled build, causes our malloc to kick off (for the very first time), which
 // causes us to call atexit(), which deadlocks and hangs.  This hack avoids that.  For most OSes, this
 // should just be commented out.
-#define USE_LENNY_HACK 
+//#define USE_LENNY_HACK
 
 // append the num to the MallocStats file if MallocStats are dumped to a file
 // (negative appends nothing)
@@ -138,7 +138,7 @@ void DumpAllocator(Allocator*, const char* filename = "alloc.dump");
   // Functions for locking and unlocking the allocator.  In the
   // pthreads implementation, these use a recursive lock that will
   // allow the same thread to lock and unlock the allocator until
-  // UnLockAllocator is called.  In other implentations this just uses
+  // UnLockAllocator is called.  In other implementations this just uses
   // the regular lock and unlock functions.
   void LockAllocator(Allocator*);
   void UnLockAllocator(Allocator*);
