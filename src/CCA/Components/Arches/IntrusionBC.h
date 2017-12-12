@@ -55,6 +55,7 @@ namespace Uintah{
     public:
 
       enum INTRUSION_TYPE { INLET, SIMPLE_WALL };
+      enum INLET_TYPE { FLAT, HANDOFF, MASSFLOW, TABULATED };
 
       IntrusionBC( const ArchesLabel* lab, const MPMArchesLabel* mpmlab, Properties* props,
                    TableLookup* table_lookup, int WALL );
@@ -232,6 +233,8 @@ namespace Uintah{
 
           virtual Vector get_relative_xyz(){ return Vector(0,0,0);}
 
+          virtual bool is_flat(){ return false; }
+
         protected:
 
           std::vector<IntVector> _dHelp;
@@ -241,7 +244,6 @@ namespace Uintah{
           std::vector<double>    _sHelp;
           ScalarBCType           _type;
           int                    _flux_dir;     ///< In the case of handoff files, only this flux dir allowed.
-
 
       };
 
@@ -276,6 +278,8 @@ namespace Uintah{
             return _C;
 
           };
+
+          bool is_flat(){ return true; }
 
         private:
 
@@ -866,6 +870,7 @@ namespace Uintah{
 
         // The name of the intrusion is the key value in the map that stores all intrusions
         INTRUSION_TYPE                type;
+        INLET_TYPE                    velocity_inlet_type;
         std::vector<GeometryPieceP>   geometry;
         std::vector<const VarLabel*>  labels;
         std::map<std::string, double> varnames_values_map;

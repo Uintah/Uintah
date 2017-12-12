@@ -948,6 +948,8 @@
                                         need_applies_to="type from_file"/> <!-- relative position of the 0,0,0 value of the handoff plane -->
                                         
             <!-- mass flow [kg/sec]-->
+            <!-- NOTE: With mass flow, you must specify flat values of scalars which 
+                       determine the density value. -->
             <flow_rate                  spec="REQUIRED DOUBLE"
                                         need_applies_to="type massflow"/>
 

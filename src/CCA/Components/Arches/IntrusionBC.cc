@@ -194,6 +194,7 @@ IntrusionBC::problemSetup( const ProblemSpecP& params, const int ilvl )
         } else if ( vel_type == "massflow" ){
 
           intrusion.type = IntrusionBC::INLET;
+          intrusion.velocity_inlet_type = IntrusionBC::MASSFLOW;
           intrusion.velocity_inlet_generator = scinew FlatVelProf();
 
           double flow_rate = 0.0;
@@ -487,8 +488,24 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
         MixingRxnModel* mixingTable = _table_lookup->get_table();
         StringVec iv_var_names = mixingTable->getAllIndepVars();
 
-        //BCIterator::iterator iBC_iter = (iIntrusion->second.bc_cell_iterator).find(patchID);
         BCIterator::iterator iBC_iter = (iIntrusion->second.interior_cell_iterator).find(patchID);
+
+        if ( iIntrusion->second.velocity_inlet_type == MASSFLOW ){
+          for ( auto i = iv_var_names.begin(); i != iv_var_names.end(); i++ ){
+
+            std::map<std::string, scalarInletBase*>::iterator scalar_iter
+              = iIntrusion->second.scalar_map.find( *i );
+
+            if ( scalar_iter == iIntrusion->second.scalar_map.end() ){
+              throw InvalidValue("Error: Cannot compute property values for IntrusionBC. Make sure all IV's are specified! ("+*i+")", __FILE__, __LINE__);
+            }
+
+            if ( !scalar_iter->second->is_flat() ){
+              throw InvalidValue("Error: Cannot use massfloat condition on velocity with non-flat condition on iv scalars! (see "+*i+" spec in input file)", __FILE__, __LINE__);
+            }
+
+          }
+        }
 
         // start face iterator
         bool found_valid_density = false;
@@ -506,10 +523,6 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
 
             std::map<std::string, scalarInletBase*>::iterator scalar_iter
               = iIntrusion->second.scalar_map.find( iv_var_names[niv] );
-
-            if ( scalar_iter == iIntrusion->second.scalar_map.end() ){
-              throw InvalidValue("Error: Cannot compute property values for IntrusionBC. Make sure all IV's are specified! ("+iv_var_names[niv]+")", __FILE__, __LINE__);
-            }
 
             double scalar_var = scalar_iter->second->get_scalar( patch, c );
 
@@ -671,7 +684,7 @@ IntrusionBC::setIntrusionVelocities( const ProcessorGroup*,
         new_dw->get( area_var, iter->second.bc_area );
         double area = area_var;
 
-        if ( iter->second.mass_flow_rate != 0.0 ){
+        if ( iter->second.velocity_inlet_type == MASSFLOW ){
 
           V = iter->second.mass_flow_rate / ( iter->second.density * area );
 

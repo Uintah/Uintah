@@ -191,8 +191,8 @@
               </box>
             </geom_object>
             <flux_dir>y+</flux_dir>
-            <velocity type="flat">
-              <flat_velocity>[0,10.1,0]</flat_velocity>
+            <velocity type="massflow">
+              <flow_rate>23.836</flow_rate>
             </velocity>
             <scalars>
               <scalar label="mixture_fraction" type="flat">
