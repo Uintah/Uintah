@@ -1862,14 +1862,17 @@ namespace WasatchCore{
  int
  Wasatch::computeTaskGraphIndex()
  {
-   // component specifies task graph index  for next timestep. SimController passes this to scheduler for execution
+   // The component specifies task graph index for next
+   // timestep. SimController passes this to scheduler for execution.
    if (doRadiation_) {
 
-     // setup the correct task graph for execution
+     // Setup the correct task graph for execution.
      int time_step = m_sharedState->getCurrentTopLevelTimeStep();
 
-     // also do radiation solve on timestep 1
-     int task_graph_index = ((time_step % radCalcFrequency_ == 0) || (time_step == 1) ? Uintah::RMCRTCommon::TG_RMCRT : Uintah::RMCRTCommon::TG_CARRY_FORWARD);
+     // Also do radiation solve on timestep 1.
+     int task_graph_index =
+       ((time_step % radCalcFrequency_ == 0) ||
+	(time_step == 1) ? Uintah::RMCRTCommon::TG_RMCRT : Uintah::RMCRTCommon::TG_CARRY_FORWARD);
 
      return task_graph_index;
    }

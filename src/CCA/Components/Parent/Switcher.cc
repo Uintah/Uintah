@@ -407,7 +407,7 @@ void Switcher::scheduleSwitchInitialization(const LevelP     & level,
 {
   if (d_doSwitching[level->getIndex()]) {
     printSchedule(level,dbg,"Switcher::scheduleSwitchInitialization");
-    d_app->switchInitialize(level,sched);
+    d_app->scheduleSwitchInitialization(level, sched);
   }
 }
 

@@ -580,11 +580,12 @@ void RMCRT_Test::scheduleRefineInterface ( const LevelP&,
 //______________________________________________________________________
 int RMCRT_Test::computeTaskGraphIndex()
 {
-  // setup the correct task graph for execution
+  // Setup the correct task graph for execution.
   int time_step = m_sharedState->getCurrentTopLevelTimeStep();
 
-  // also do radiation solve on timestep 1
-  int task_graph_index = ((time_step % d_radCalc_freq == 0) || (time_step == 1) ? Uintah::RMCRTCommon::TG_RMCRT : Uintah::RMCRTCommon::TG_CARRY_FORWARD);
+  // Also do radiation solve on timestep 1.
+  int task_graph_index = ((time_step % d_radCalc_freq == 0) ||
+			  (time_step == 1) ? Uintah::RMCRTCommon::TG_RMCRT : Uintah::RMCRTCommon::TG_CARRY_FORWARD);
 
   return task_graph_index;
 }

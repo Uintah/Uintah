@@ -319,8 +319,9 @@ Arches::scheduleAnalysis( const LevelP& level,
 
 int Arches::computeTaskGraphIndex()
 {
-  // setup the task graph for execution on the next timestep
+  // Setup the task graph for execution on the next timestep.
   int time_step = m_sharedState->getCurrentTopLevelTimeStep();
+  
   return m_nlSolver->getTaskGraphIndex( time_step );
 }
 

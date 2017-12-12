@@ -1138,7 +1138,7 @@ SimulationController::CheckInSitu(const ProcessorGroup*,
     // visit_EndLibSim( m_visitSimData );
 
     // Add the modified variable information into index.xml file.
-    getOutput()->writeto_xml_files(m_visitSimData->modifiedVars);
+    m_output->writeto_xml_files(m_visitSimData->modifiedVars);
 
     m_wall_timers.InSitu.stop();
 

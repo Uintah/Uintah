@@ -436,9 +436,11 @@ void ImpMPM::scheduleRestartInitialize(const LevelP& level,
                                        SchedulerP& sched)
 {
 }
+
 //______________________________________________________________________
 //
-void ImpMPM::switchInitialize(const LevelP& level, SchedulerP& sched)
+void ImpMPM::scheduleSwitchInitialization(const LevelP& level,
+					  SchedulerP& sched)
 {
   if (!flags->doMPMOnLevel(level->getIndex(), level->getGrid()->numLevels()))
     return;
@@ -456,8 +458,6 @@ void ImpMPM::switchInitialize(const LevelP& level, SchedulerP& sched)
     // Schedule the initialization of pressure BCs per particle
     scheduleInitializePressureBCs(level, sched);
   }
-
-
 }
 
 

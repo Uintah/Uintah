@@ -211,27 +211,6 @@ void ApplicationCommon::problemSetup( const ProblemSpecP &prob_spec )
 }
 
 void
-ApplicationCommon::scheduleRefine(const PatchSet*, SchedulerP&)
-{
-  throw InternalError( "scheduleRefine not implemented for this application\n", __FILE__, __LINE__ );
-}
-
-void
-ApplicationCommon::scheduleRefineInterface(const LevelP&,
-                                           SchedulerP&,
-                                           bool, bool)
-{
-  throw InternalError( "scheduleRefineInterface is not implemented for this application\n", __FILE__, __LINE__ );
-}
-
-void
-ApplicationCommon::scheduleCoarsen(const LevelP&,
-                                   SchedulerP&)
-{
-  throw InternalError( "scheduleCoarsen is not implemented for this application\n", __FILE__, __LINE__ );
-}
-
-void
 ApplicationCommon::scheduleTimeAdvance(const LevelP&,
                                        SchedulerP&)
 {
@@ -401,8 +380,8 @@ ApplicationCommon::reduceSystemVars( const ProcessorGroup *,
 //
 void
 ApplicationCommon::scheduleInitializeSystemVars( const GridP      & grid,
-                                                                                     const PatchSet   * perProcPatchSet,
-                                                                                           SchedulerP & scheduler)
+						 const PatchSet   * perProcPatchSet,
+						       SchedulerP & scheduler)
 {
   // std::cerr << "**********  " << __FUNCTION__ << "  " << __LINE__ << "  "
   //        << std::endl;
@@ -435,10 +414,10 @@ ApplicationCommon::scheduleInitializeSystemVars( const GridP      & grid,
 //
 void
 ApplicationCommon::initializeSystemVars( const ProcessorGroup *,
-                                                                       const PatchSubset    * patches,
-                                                                       const MaterialSubset * /*matls*/,
-                                                                             DataWarehouse  * /*old_dw*/,
-                                                                       DataWarehouse  * new_dw )
+					 const PatchSubset    * patches,
+					 const MaterialSubset * /*matls*/,
+					       DataWarehouse  * /*old_dw*/,
+					       DataWarehouse  * new_dw )
 {
   MALLOC_TRACE_TAG_SCOPE("ApplicationCommon::initializeSystemVar()");
 
@@ -528,6 +507,32 @@ ApplicationCommon::updateSystemVars( const ProcessorGroup *,
   //        << new_dw << std::endl;  
 }
 
+//______________________________________________________________________
+//
+void
+ApplicationCommon::scheduleRefine(const PatchSet*, SchedulerP&)
+{
+  throw InternalError( "scheduleRefine not implemented for this application\n", __FILE__, __LINE__ );
+}
+
+//______________________________________________________________________
+//
+void
+ApplicationCommon::scheduleRefineInterface(const LevelP&,
+                                           SchedulerP&,
+                                           bool, bool)
+{
+  throw InternalError( "scheduleRefineInterface is not implemented for this application\n", __FILE__, __LINE__ );
+}
+
+//______________________________________________________________________
+//
+void
+ApplicationCommon::scheduleCoarsen(const LevelP&,
+                                   SchedulerP&)
+{
+  throw InternalError( "scheduleCoarsen is not implemented for this application\n", __FILE__, __LINE__ );
+}
 
 //______________________________________________________________________
 //
@@ -545,6 +550,26 @@ ApplicationCommon::scheduleInitialErrorEstimate(const LevelP& /*coarseLevel*/,
                                                 SchedulerP& /*sched*/)
 {
   throw InternalError("scheduleInitialErrorEstimate is not implemented for this application", __FILE__, __LINE__);
+}
+
+//______________________________________________________________________
+//
+double
+ApplicationCommon::getSubCycleProgress(DataWarehouse* fineDW)
+{
+  // DWs are always created in order of time.
+  int fineID = fineDW->getID();  
+  int coarseNewID = fineDW->getOtherDataWarehouse(Task::CoarseNewDW)->getID();
+
+  // Need to do this check, on init timestep, old DW is nullptr, and
+  // getOtherDW will throw exception.
+  if (fineID == coarseNewID) {
+    return 1.0;
+  }
+
+  int coarseOldID = fineDW->getOtherDataWarehouse(Task::CoarseOldDW)->getID();
+  
+  return ((double)fineID-coarseOldID) / (coarseNewID-coarseOldID);
 }
 
 //______________________________________________________________________
@@ -577,34 +602,6 @@ double
 ApplicationCommon::recomputeTimeStep(double)
 {
   throw InternalError("recomputeTimestep is not implemented for this application", __FILE__, __LINE__);
-}
-
-//______________________________________________________________________
-//
-bool
-ApplicationCommon::restartableTimeSteps()
-{
-  return false;
-}
-
-//______________________________________________________________________
-//
-double
-ApplicationCommon::getSubCycleProgress(DataWarehouse* fineDW)
-{
-  // DWs are always created in order of time.
-  int fineID = fineDW->getID();  
-  int coarseNewID = fineDW->getOtherDataWarehouse(Task::CoarseNewDW)->getID();
-
-  // Need to do this check, on init timestep, old DW is nullptr, and
-  // getOtherDW will throw exception.
-  if (fineID == coarseNewID) {
-    return 1.0;
-  }
-
-  int coarseOldID = fineDW->getOtherDataWarehouse(Task::CoarseOldDW)->getID();
-  
-  return ((double)fineID-coarseOldID) / (coarseNewID-coarseOldID);
 }
 
 //______________________________________________________________________

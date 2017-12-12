@@ -69,15 +69,7 @@ WARNING
 
   class ApplicationCommon;
 
-  class SimulationController;
-  class AMRSimulationController;
-
   class DataWarehouse;
-  class DataArchiver;
-
-  class LoadBalancersCommon;
-  class DynamicLoadBalancer;
-  class ParticleLoadBalancer;
 
   class SimulationTime;
   class VarLabel;
@@ -87,6 +79,9 @@ WARNING
   
   class ApplicationInterface : public UintahParallelPort {
 
+    // NOTE: ONLY CS infrasture should be a friend class - the actual
+    // applictions should NOT have access to private member methods as
+    // they should get those values via the Data Warehouse.
     friend class SimulationController;
     friend class AMRSimulationController;
     friend class DataArchiver;
@@ -101,107 +96,120 @@ WARNING
     ApplicationInterface();
     virtual ~ApplicationInterface();
     
-    //////////
-    // Insert Documentation Here:
-    virtual void getComponents() = 0;
+    // Methods for managing the components attached via the ports.
     virtual void setComponents( const ApplicationCommon *parent ) = 0;
+    virtual void getComponents() = 0;
     virtual void releaseComponents() = 0;
-    
+
+    // Top level problem set up called by sus.
     virtual void problemSetup( const ProblemSpecP &prob_spec ) = 0;
     
+    // Top level problem set up called by simulation controller.
     virtual void problemSetup( const ProblemSpecP     & params,
                                const ProblemSpecP     & restart_prob_spec,
                                      GridP            & grid ) = 0;
 
+    // Called to add missing grid based UPS specs.
     virtual void preGridProblemSetup( const ProblemSpecP & params, 
-                                      GridP            & grid ) {};
+                                            GridP        & grid ) = 0;
 
-    virtual void outputProblemSpec( ProblemSpecP & ps ) {};
-      
-    //////////
-    // Insert Documentation Here:
-    virtual void scheduleInitialize( const LevelP & level,
-                                     SchedulerP & sched ) = 0;
+    // Used to write parts of the problem spec.
+    virtual void outputProblemSpec( ProblemSpecP & ps ) = 0;
+
+    // Schedule the inital setup of the problem.
+    virtual void scheduleInitialize( const LevelP     & level,
+                                           SchedulerP & scheduler ) = 0;
                                  
-    // on a restart schedule an initialization task
-    virtual void scheduleRestartInitialize( const LevelP & level,
-                                            SchedulerP & sched ) = 0;
+    // On a restart schedule an initialization task.
+    virtual void scheduleRestartInitialize( const LevelP     & level,
+                                                  SchedulerP & scheduler ) = 0;
 
-    //////////
     // restartInitialize() is called once and only once if and when a
     // simulation is restarted.  This allows the simulation component
     // to handle initializations that are necessary when a simulation
     // is restarted.
-    // 
-    virtual void restartInitialize() {}
+    virtual void restartInitialize() = 0;
 
-    virtual void switchInitialize( const LevelP & level, SchedulerP & sched ) {}
+    // Ask the application which primary task graph it wishes to
+    // execute this time step, this will be an index into the
+    // scheduler's vector of task-graphs.
+    virtual int computeTaskGraphIndex() = 0;
+
+    // Schedule the inital switching.
+    virtual void scheduleSwitchInitialization( const LevelP     & level,
+					             SchedulerP & sched ) = 0;
       
-    //////////
-    // Insert Documentation Here:
+    virtual void scheduleSwitchTest( const LevelP &     level,
+                                           SchedulerP & scheduler ) = 0;
+
+    // Schedule the actual time step advencement tasks.
+    virtual void scheduleTimeAdvance( const LevelP     & level,
+				            SchedulerP & scheduler ) = 0;
+
+    // Optionally schedule tasks that can not be done in scheduleTimeAdvance.
+    virtual void scheduleFinalizeTimestep( const LevelP     & level,
+					         SchedulerP & scheduler ) = 0;
+
+    // Optionally schedule analysis tasks.
+    virtual void scheduleAnalysis( const LevelP     & level,
+				         SchedulerP & scheduler) = 0;
+
+    // Optionally schedule a task that determines the next delt T value.
     virtual void scheduleComputeStableTimeStep( const LevelP & level,
-                                                SchedulerP & sched ) = 0;
+                                                SchedulerP   & scheduler ) = 0;
       
-    //////////
-    // Insert Documentation Here:
-    virtual void scheduleTimeAdvance(const LevelP& level, SchedulerP&);
+    // Reduce the system wide values such as the next delta T.
+    virtual void scheduleReduceSystemVars(const GridP      & grid,
+					  const PatchSet   * perProcPatchSet,
+					        SchedulerP & scheduler) = 0;
 
-    //////////
-    // Insert Documentation Here:
-    virtual void scheduleReduceSystemVars(const GridP& grid,
-					  const PatchSet* perProcPatchSet,
-					  SchedulerP& scheduler) = 0;
-
-    //////////
-    // Insert Documentation Here:
-    virtual void scheduleInitializeSystemVars(const GridP& grid,
-					      const PatchSet* perProcPatchSet,
-					      SchedulerP& scheduler) = 0;
+    // Schedule the initialization of system values such at the time step.
+    virtual void scheduleInitializeSystemVars(const GridP      & grid,
+					      const PatchSet   * perProcPatchSet,
+					            SchedulerP & scheduler) = 0;
     
-    virtual void scheduleUpdateSystemVars(const GridP& grid,
-					  const PatchSet* perProcPatchSet,
-					  SchedulerP& scheduler) = 0;
+    // Schedule the updating of system values such at the time step.
+    virtual void scheduleUpdateSystemVars(const GridP      & grid,
+					  const PatchSet   * perProcPatchSet,
+					        SchedulerP & scheduler) = 0;
     
-    // This is for wrapping up a timestep when it can't be done in
-    // scheduleTimeAdvance.
-    virtual void scheduleFinalizeTimestep(const LevelP& level, SchedulerP&) {}
-    virtual void scheduleAnalysis(const LevelP& level, SchedulerP&) {}
-     
-    virtual void scheduleRefine( const PatchSet* patches,
-				 SchedulerP& scheduler );
+    // Methods used for scheduling AMR regridding.
+    virtual void scheduleRefine( const PatchSet   * patches,
+				       SchedulerP & scheduler ) = 0;
     
     virtual void scheduleRefineInterface( const LevelP     & fineLevel, 
-                                          SchedulerP & scheduler,
-                                          bool         needCoarseOld,
-                                          bool         needCoarseNew );
+                                                SchedulerP & scheduler,
+                                                bool         needCoarseOld,
+                                                bool         needCoarseNew ) = 0;
+
     virtual void scheduleCoarsen( const LevelP     & coarseLevel, 
-                                  SchedulerP & scheduler );
+                                        SchedulerP & scheduler ) = 0;
 
-    /// Schedule to mark flags for AMR regridding
-    virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
-                                       SchedulerP& sched);
+    // Schedule to mark flags for AMR regridding
+    virtual void scheduleErrorEstimate( const LevelP     & coarseLevel,
+					      SchedulerP & scheduler) = 0;
 
-    /// Schedule to mark initial flags for AMR regridding
-    virtual void scheduleInitialErrorEstimate(const LevelP& coarseLevel,
-                                              SchedulerP& sched);
+    // Schedule to mark initial flags for AMR regridding
+    virtual void scheduleInitialErrorEstimate(const LevelP     & coarseLevel,
+                                                    SchedulerP & sched) = 0;
+
+    // Used to get the progress ratio of an AMR regridding subcycle.
+    virtual double getSubCycleProgress(DataWarehouse* fineNewDW) = 0;
+
 
     // Recompute a time step if current time advance is not
     // converging.  The returned time is the new delta T.
     virtual void   recomputeTimeStep() = 0;
-    virtual double recomputeTimeStep(double delt);
-    virtual bool restartableTimeSteps();
+    virtual double recomputeTimeStep( double delt ) = 0;
+    virtual bool restartableTimeSteps() = 0;
 
-    // use this to get the progress ratio of an AMR subcycle
-    double getSubCycleProgress(DataWarehouse* fineNewDW);
-
-
-    //////////
+    // Updates the tiem step and the delta T.
     virtual void prepareForNextTimeStep( const GridP & grid ) = 0;
 
-    //////////
-    // ask the component if it needs to be recompiled
-    virtual bool needRecompile( const GridP& /*grid*/) = 0;
+    // Asks the application if it needs to be recompiled.
+    virtual bool needRecompile( const GridP & grid ) = 0;
 
+    // Labels for access value in the data warehouse.
     virtual const VarLabel* getTimeStepLabel() const = 0;
     virtual const VarLabel* getSimTimeLabel() const = 0;
     virtual const VarLabel* getDelTLabel() const = 0;
@@ -219,41 +227,32 @@ WARNING
     virtual void setDynamicRegridding(bool val) = 0;
     virtual bool isDynamicRegridding() const = 0;
   
-    //////////
+    // Boolean for vars chanegd by the in-situ.
     virtual void haveModifiedVars( bool val ) = 0;
     virtual bool haveModifiedVars() const = 0;
      
     //////////
-    virtual SimulationTime * getSimulationTime() const = 0;
-    virtual SimulationStateP getSimulationStateP() const = 0;
-
-    //////////
     virtual bool isRegridTimeStep() const = 0;
     virtual void setRegridTimeStep(bool ans) = 0;
     
-    //////////
+    // Some applications can adjust the output interval.
     virtual void adjustOutputInterval(bool ans) = 0;
     virtual bool adjustOutputInterval() const = 0;
      
-    //////////
+    // Some applications can adjust the checkpoint interval.
     virtual void adjustCheckpointInterval(bool ans) = 0;
     virtual bool adjustCheckpointInterval() const = 0;
 
-    //////////
+    // Some applications can end the simulation early.
     virtual void mayEndSimulation(bool ans) = 0;
     virtual bool mayEndSimulation() const = 0;
 
-    //////////
-    // ask the component which primary task graph it wishes to
-    // execute this time step, this will be an index into the
-    // scheduler's vector of task-graphs.
-    virtual int computeTaskGraphIndex()
-    { return 0; }
+    // Access methods for member classes.
+    virtual SimulationTime * getSimulationTime() const = 0;
+    virtual SimulationStateP getSimulationStateP() const = 0;
 
-    virtual void scheduleSwitchTest(const LevelP& /*level*/,
-                                    SchedulerP& /*sched*/)
-    {};
- 
+    // The member methods are private as the child application should
+    // ONLY get/set these values via the data warehouse.
   private:
     virtual   void setDelT( double val ) = 0;
     virtual double getDelT() const = 0;
@@ -273,6 +272,7 @@ WARNING
     // Returns the integer time step index of the simulation.  All
     // simulations start with a time step number of 0.  This value is
     // incremented by one for each simulation time step processed.
+
     // The 'set' function should only be called by the
     // SimulationController at the beginning of a simulation.  The
     // 'increment' function is called by the SimulationController at
@@ -328,7 +328,5 @@ WARNING
 #endif
   };
 } // End namespace Uintah
-   
-
 
 #endif

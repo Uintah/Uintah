@@ -45,9 +45,10 @@
 
 namespace Uintah {
 
-class ModelMaker;
-class Regridder;
-class Output;
+  class DataWarehouse;  
+  class ModelMaker;
+  class Output;
+  class Regridder;
 
 /**************************************
 
@@ -77,320 +78,324 @@ WARNING
   
 ****************************************/
 
-class DataWarehouse;
-  
   class ApplicationCommon : public UintahParallelComponent,
                             public ApplicationInterface {
 
-    friend class SimulationController;
-    friend class AMRSimulationController;
     friend class Switcher;
 
-public:
-  ApplicationCommon(const ProcessorGroup* myworld,
-                    const SimulationStateP sharedState);
+  public:
+    ApplicationCommon(const ProcessorGroup* myworld,
+		      const SimulationStateP sharedState);
 
-  virtual ~ApplicationCommon();
+    virtual ~ApplicationCommon();
   
-  //////////
-  // Insert Documentation Here:
-  virtual void getComponents();
-  virtual void setComponents( const ApplicationCommon *parent );
-  virtual void releaseComponents();
+    // Methods for managing the components attached via the ports.
+    virtual void setComponents( const ApplicationCommon *parent );
+    virtual void getComponents();
+    virtual void releaseComponents();
 
-  virtual void problemSetup( const ProblemSpecP &prob_spec );
-  
-  virtual void problemSetup( const ProblemSpecP & prob_spec,
-                             const ProblemSpecP & restart_prob_spec,
-                                          GridP & grid ) = 0;
-  
-  virtual void preGridProblemSetup( const ProblemSpecP & params, 
-                                    GridP              & grid ) {};
-  
-  virtual void outputProblemSpec( ProblemSpecP & prob_spec ) {};
-  
-  //////////
-  // Insert Documentation Here:
-  virtual void scheduleInitialize( const LevelP & level,
-                                   SchedulerP & scheduler ) = 0;
-  
-  // on a restart schedule an initialization task
-  virtual void scheduleRestartInitialize( const LevelP & level,
-                                          SchedulerP & scheduler )  = 0;
-  
-  //////////
-  // restartInitialize() is called once and only once if and when a
-  // simulation is restarted.  This allows the simulation component
-  // to handle initializations that are necessary when a simulation
-  // is restarted.
-     // 
-  virtual void restartInitialize() {}
+    // Top level problem set up called by sus.
+    virtual void problemSetup( const ProblemSpecP &prob_spec );
+    
+    // Top level problem set up called by simulation controller.
+    virtual void problemSetup( const ProblemSpecP     & params,
+                               const ProblemSpecP     & restart_prob_spec,
+                                     GridP            & grid ) = 0;
 
-  virtual void switchInitialize( const LevelP & level, SchedulerP & scheduler ) {}
-  
-  //////////
-  // Insert Documentation Here:
-  virtual void scheduleComputeStableTimeStep( const LevelP & level,
-                                              SchedulerP & scheduler ) = 0;
-  
-  //////////
-  // Insert Documentation Here:
-  virtual void scheduleTimeAdvance(const LevelP& level, SchedulerP& scheduler);
-  
-  //////////
-  // Insert Documentation Here:
-  virtual void scheduleReduceSystemVars(const GridP& grid,
-                                        const PatchSet* perProcPatchSet,
-                                        SchedulerP& scheduler);
+    // Called to add missing grid based UPS specs.
+    virtual void preGridProblemSetup( const ProblemSpecP & params, 
+                                            GridP        & grid ) {};
 
-  virtual void reduceSystemVars( const ProcessorGroup *,
-                                 const PatchSubset    * patches,
-                                 const MaterialSubset * /*matls*/,
-                                       DataWarehouse  * /*old_dw*/,
-                                       DataWarehouse  * new_dw );
-  
-  //////////
-  // Insert Documentation Here:
-  virtual void scheduleInitializeSystemVars(const GridP& grid,
-                                            const PatchSet* perProcPatchSet,
-                                            SchedulerP& scheduler);
-
-  virtual void initializeSystemVars( const ProcessorGroup *,
-                                     const PatchSubset    * patches,
-                                     const MaterialSubset * /*matls*/,
-                                           DataWarehouse  * /*old_dw*/,
-                                           DataWarehouse  * new_dw );
+    // Used to write parts of the problem spec.
+    virtual void outputProblemSpec( ProblemSpecP & ps ) {};
       
-  //////////
-  // Insert Documentation Here:
-  virtual void scheduleUpdateSystemVars(const GridP& grid,
-                                        const PatchSet* perProcPatchSet,
-                                        SchedulerP& scheduler);
+    // Schedule the inital setup of the problem.
+    virtual void scheduleInitialize( const LevelP     & level,
+                                           SchedulerP & scheduler ) = 0;
+                                 
+    // On a restart schedule an initialization task.
+    virtual void scheduleRestartInitialize( const LevelP     & level,
+                                                  SchedulerP & scheduler ) = 0;
 
-  virtual void updateSystemVars( const ProcessorGroup *,
-                                 const PatchSubset    * patches,
-                                 const MaterialSubset * /*matls*/,
-                                       DataWarehouse  * /*old_dw*/,
-                                       DataWarehouse  * new_dw );
+    // restartInitialize() is called once and only once if and when a
+    // simulation is restarted.  This allows the simulation component
+    // to handle initializations that are necessary when a simulation
+    // is restarted.
+    virtual void restartInitialize() {}
+
+    // Ask the application which primary task graph it wishes to
+    // execute this time step, this will be an index into the
+    // scheduler's vector of task-graphs.
+    virtual int computeTaskGraphIndex() { return 0; }
+
+    // Schedule the inital switching.
+    virtual void scheduleSwitchInitialization( const LevelP     & level,
+					             SchedulerP & sched ) {}
       
-  // this is for wrapping up a time step when it can't be done in
-  // scheduleTimeAdvance.
-  virtual void scheduleFinalizeTimeStep(const LevelP& level, SchedulerP&) {}
-  virtual void scheduleAnalysis(const LevelP& level, SchedulerP&) {}
+    virtual void scheduleSwitchTest( const LevelP &     level,
+                                           SchedulerP & scheduler ) {};
+
+    // Schedule the actual time step advencement tasks.
+    virtual void scheduleTimeAdvance( const LevelP     & level,
+				            SchedulerP & scheduler );
+
+    // Optionally schedule tasks that can not be done in scheduleTimeAdvance.
+    virtual void scheduleFinalizeTimestep( const LevelP     & level,
+					         SchedulerP & scheduler ) {}
+
+    // Optionally schedule analysis tasks.
+    virtual void scheduleAnalysis( const LevelP     & level,
+				         SchedulerP & scheduler) {}
+
+    // Optionally schedule a task that determines the next delt T value.
+    virtual void scheduleComputeStableTimeStep( const LevelP & level,
+                                                SchedulerP   & scheduler ) = 0;
+      
+    // Reduce the system wide values such as the next delta T.
+    virtual void scheduleReduceSystemVars(const GridP      & grid,
+					  const PatchSet   * perProcPatchSet,
+					        SchedulerP & scheduler);
+
+    void reduceSystemVars( const ProcessorGroup *,
+			   const PatchSubset    * patches,
+			   const MaterialSubset * /*matls*/,
+			         DataWarehouse  * /*old_dw*/,
+			         DataWarehouse  * new_dw );
+      
+    // Schedule the initialization of system values such at the time step.
+    virtual void scheduleInitializeSystemVars(const GridP      & grid,
+					      const PatchSet   * perProcPatchSet,
+					            SchedulerP & scheduler);
+    
+    void initializeSystemVars( const ProcessorGroup *,
+			       const PatchSubset    * patches,
+			       const MaterialSubset * /*matls*/,
+			             DataWarehouse  * /*old_dw*/,
+			             DataWarehouse  * new_dw );
+    
+    // Schedule the updating of system values such at the time step.
+    virtual void scheduleUpdateSystemVars(const GridP      & grid,
+					  const PatchSet   * perProcPatchSet,
+					        SchedulerP & scheduler);
+    
+    void updateSystemVars( const ProcessorGroup *,
+			   const PatchSubset    * patches,
+			   const MaterialSubset * /*matls*/,
+			         DataWarehouse  * /*old_dw*/,
+			         DataWarehouse  * new_dw );
+    
+    // Methods used for scheduling AMR regridding.
+    virtual void scheduleRefine( const PatchSet   * patches,
+				       SchedulerP & scheduler );
+    
+    virtual void scheduleRefineInterface( const LevelP     & fineLevel, 
+                                                SchedulerP & scheduler,
+                                                bool         needCoarseOld,
+                                                bool         needCoarseNew );
+
+    virtual void scheduleCoarsen( const LevelP     & coarseLevel, 
+                                        SchedulerP & scheduler );
+
+    // Schedule to mark flags for AMR regridding
+    virtual void scheduleErrorEstimate( const LevelP     & coarseLevel,
+					      SchedulerP & scheduler);
+
+    // Schedule to mark initial flags for AMR regridding
+    virtual void scheduleInitialErrorEstimate(const LevelP     & coarseLevel,
+                                                    SchedulerP & sched);
+
+    // Used to get the progress ratio of an AMR regridding subcycle.
+    virtual double getSubCycleProgress(DataWarehouse* fineNewDW);
+
+
+    // Recompute a time step if current time advance is not
+    // converging.  The returned time is the new delta T.
+    virtual void   recomputeTimeStep();
+    virtual double recomputeTimeStep( double delt );
+    virtual bool restartableTimeSteps() { return false; }
+
+    // Updates the time step and the delta T.
+    virtual void prepareForNextTimeStep( const GridP & grid );
+
+    // Asks the application if it needs to be recompiled.
+    virtual bool needRecompile( const GridP & grid );
+
+    // Labels for access value in the data warehouse.
+    virtual const VarLabel* getTimeStepLabel() const { return m_timeStepLabel; }
+    virtual const VarLabel* getSimTimeLabel() const { return m_simulationTimeLabel; }
+    virtual const VarLabel* getDelTLabel() const { return m_delTLabel; }
+
+    //////////
+    virtual void setModelMaker(bool val) { m_needModelMaker = val; }
+    virtual bool needModelMaker() const { return m_needModelMaker; }
+    
+    virtual void setAMR(bool val) { m_AMR = val; }
+    virtual bool isAMR() const { return m_AMR; }
+  
+    virtual void setLockstepAMR(bool val) { m_lockstepAMR = val; }
+    virtual bool isLockstepAMR() const { return m_lockstepAMR; }
+
+    virtual void setDynamicRegridding(bool val) {m_dynamicRegridding = val; }
+    virtual bool isDynamicRegridding() const { return m_dynamicRegridding; }
+  
+    // Boolean for vars chanegd by the in-situ.
+    virtual void haveModifiedVars( bool val ) { m_haveModifiedVars = val; }
+    virtual bool haveModifiedVars() const { return m_haveModifiedVars; }
      
-  virtual void scheduleRefine( const PatchSet* patches, SchedulerP& scheduler );
-  virtual void scheduleRefineInterface( const LevelP     & fineLevel, 
-                                        SchedulerP & scheduler,
-                                        bool         needCoarseOld,
-                                        bool         needCoarseNew );
-  virtual void scheduleCoarsen( const LevelP     & coarseLevel, 
-                                SchedulerP & scheduler );
+    //////////
+    virtual bool isRegridTimeStep() const { return m_isRegridTimeStep; }
+    virtual void setRegridTimeStep(bool ans) { m_isRegridTimeStep = ans; }
 
-  /// Schedule to mark flags for AMR regridding
-  virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
-                                     SchedulerP& sched);
+    // Some applications can adjust the output interval.
+    virtual void adjustOutputInterval(bool ans) { m_adjustOutputInterval = ans; }
+    virtual bool adjustOutputInterval() const { return m_adjustOutputInterval; }
+     
+    // Some applications can adjust the checkpoint interval.
+    virtual void adjustCheckpointInterval(bool ans) { m_adjustCheckpointInterval = ans; }
+    virtual bool adjustCheckpointInterval() const { return m_adjustCheckpointInterval; }
+
+    // Some applications can end the simulation early.
+    virtual void mayEndSimulation(bool ans) { m_mayEndSimulation = ans; }
+    virtual bool mayEndSimulation() const { return m_mayEndSimulation; }
+
+    // Access methods for member classes.
+    virtual SimulationTime * getSimulationTime() const { return m_simulationTime; }
+    virtual SimulationStateP getSimulationStateP() const { return m_sharedState; };
   
-  /// Schedule to mark initial flags for AMR regridding
-  virtual void scheduleInitialErrorEstimate(const LevelP& coarseLevel,
-                                            SchedulerP& sched);
-  
-  // Redo a time step if current time advance is not converging.
-  // Returned time is the new dt to use.
-  virtual void   recomputeTimeStep();
-  virtual double recomputeTimeStep(double delT);
-  virtual bool restartableTimeSteps();
-  
-  // use this to get the progress ratio of an AMR subcycle
-  double getSubCycleProgress(DataWarehouse* fineNewDW);
-  
-  virtual void prepareForNextTimeStep( const GridP & grid );
-
-  //////////
-  // ask the application if it needs to be recompiled
-  virtual bool needRecompile( const GridP& /*grid*/);
-  
-  virtual const VarLabel* getTimeStepLabel() const { return m_timeStepLabel; }
-  virtual const VarLabel* getSimTimeLabel() const { return m_simulationTimeLabel; }
-  virtual const VarLabel* getDelTLabel() const { return m_delTLabel; }
-
-  //////////
-  virtual void setModelMaker(bool val) { m_needModelMaker = val; }
-  virtual bool needModelMaker() const { return m_needModelMaker; }
-    
-  virtual void setAMR(bool val) { m_AMR = val; }
-  virtual bool isAMR() const { return m_AMR; }
-  
-  virtual void setLockstepAMR(bool val) { m_lockstepAMR = val; }
-  virtual bool isLockstepAMR() const { return m_lockstepAMR; }
-
-  virtual void setDynamicRegridding(bool val) {m_dynamicRegridding = val; }
-  virtual bool isDynamicRegridding() const { return m_dynamicRegridding; }
-  
-  virtual void haveModifiedVars( bool val ) { m_haveModifiedVars = val; }
-  virtual bool haveModifiedVars() const { return m_haveModifiedVars; }
-
-  //////////
-  virtual SimulationTime * getSimulationTime() const { return m_simulationTime; }
-  virtual SimulationStateP getSimulationStateP() const { return m_sharedState; };
-        
-  virtual bool isRegridTimeStep() const { return m_isRegridTimeStep; }
-  virtual void setRegridTimeStep(bool ans) { m_isRegridTimeStep = ans; }
-
-  //////////
-  virtual void adjustOutputInterval(bool ans) { m_adjustOutputInterval = ans; }
-  virtual bool adjustOutputInterval() const { return m_adjustOutputInterval; }
-  
-  //////////
-  virtual void adjustCheckpointInterval(bool ans) { m_adjustCheckpointInterval = ans; }
-  virtual bool adjustCheckpointInterval() const { return m_adjustCheckpointInterval; }
-    
-  //////////
-  virtual void mayEndSimulation(bool ans) { m_mayEndSimulation = ans; }
-  virtual bool mayEndSimulation() const { return m_mayEndSimulation; }
-
-  //////////
-  // ask the application which primary task graph it wishes to
-  // execute this time step, this will be an index into the
-  // scheduler's vector of task-graphs.
-  virtual int computeTaskGraphIndex() { return 0; }
-
-
-  virtual void scheduleSwitchTest(const LevelP& /*level*/,
-                                  SchedulerP& /*sched*/) {};
-private:
+  private:
     // The classes are private because only the top level application
     // should be changing them. This only really matter when there are
     // application built upon multiple application. The children
     // applications will not have valid values. They should ALWAYS get
     // the values via the data warehouse.
     
-  //////////
-  virtual   void setDelT( double val );
-  virtual double getDelT() const { return m_delT; }
-  virtual   void setDelTForAllLevels( SchedulerP& scheduler,
-                                      const GridP & grid,
-                                      const int totalFine );
+    //////////
+    virtual   void setDelT( double val );
+    virtual double getDelT() const { return m_delT; }
+    virtual   void setDelTForAllLevels( SchedulerP& scheduler,
+					const GridP & grid,
+					const int totalFine );
 
-  virtual   void setNextDelT( double val );
-  virtual double getNextDelT() const { return m_nextDelT; }
-  virtual   void validateNextDelT( DataWarehouse  * new_dw );
+    virtual   void setNextDelT( double val );
+    virtual double getNextDelT() const { return m_nextDelT; }
+    virtual   void validateNextDelT( DataWarehouse  * new_dw );
 
-  //////////
-  virtual   void setSimTime( double val );
-  virtual double getSimTime() const { return m_simTime; };
+    //////////
+    virtual   void setSimTime( double val );
+    virtual double getSimTime() const { return m_simTime; };
 
-  virtual   void setSimTimeStart( double val )
-  {
-    m_simTimeStart = val;
-    setSimTime(val);
-  }
+    virtual   void setSimTimeStart( double val )
+    {
+      m_simTimeStart = val;
+      setSimTime(val);
+    }
     
-  virtual double getSimTimeStart() const { return m_simTimeStart; }
+    virtual double getSimTimeStart() const { return m_simTimeStart; }
     
-  // Returns the integer time step index of the simulation.  All
-  // simulations start with a time step number of 0.  This value is
-  // incremented by one before a time step is processed.  The 'set'
-  // function should only be called by the SimulationController at the
-  // beginning of a simulation.  The 'increment' function is called by
-  // the SimulationController at the beginning of each time step.
-  virtual void setTimeStep( int timeStep );
-  virtual void incrementTimeStep( const GridP & grid );
-  virtual int  getTimeStep() const { return m_timeStep; }
+    // Returns the integer time step index of the simulation.  All
+    // simulations start with a time step number of 0.  This value is
+    // incremented by one before a time step is processed.  The 'set'
+    // function should only be called by the SimulationController at the
+    // beginning of a simulation.  The 'increment' function is called by
+    // the SimulationController at the beginning of each time step.
+    virtual void setTimeStep( int timeStep );
+    virtual void incrementTimeStep( const GridP & grid );
+    virtual int  getTimeStep() const { return m_timeStep; }
 
-  virtual bool isLastTimeStep( double walltime ) const;
-  virtual bool maybeLastTimeStep( double walltime ) const;
+    virtual bool isLastTimeStep( double walltime ) const;
+    virtual bool maybeLastTimeStep( double walltime ) const;
 
-protected:
-  Scheduler*       m_scheduler{nullptr};
-  ModelMaker*      m_modelMaker{nullptr};
-  SolverInterface* m_solver{nullptr};
-  Regridder*       m_regridder{nullptr};
-  Output*          m_output{nullptr};
+  protected:
+    Scheduler*       m_scheduler{nullptr};
+    ModelMaker*      m_modelMaker{nullptr};
+    SolverInterface* m_solver{nullptr};
+    Regridder*       m_regridder{nullptr};
+    Output*          m_output{nullptr};
 
-  bool m_recompile {false};
+    bool m_recompile {false};
     
-private:
-  bool m_needModelMaker {false};
-  bool m_AMR {false};
-  bool m_lockstepAMR {false};
+  private:
+    bool m_needModelMaker {false};
+    bool m_AMR {false};
+    bool m_lockstepAMR {false};
 
-  bool m_dynamicRegridding {false};
+    bool m_dynamicRegridding {false};
   
-  bool m_isRegridTimeStep {false};
+    bool m_isRegridTimeStep {false};
 
-  bool m_haveModifiedVars {false};
+    bool m_haveModifiedVars {false};
 
-  bool m_adjustCheckpointInterval {false};
-  bool m_adjustOutputInterval {false};
+    bool m_adjustCheckpointInterval {false};
+    bool m_adjustOutputInterval {false};
 
-  bool m_mayEndSimulation {false};
+    bool m_mayEndSimulation {false};
   
-  const VarLabel* m_timeStepLabel;
-  const VarLabel* m_simulationTimeLabel;
-  const VarLabel* m_delTLabel;
+    const VarLabel* m_timeStepLabel;
+    const VarLabel* m_simulationTimeLabel;
+    const VarLabel* m_delTLabel;
   
-  const VarLabel* m_outputIntervalLabel;
-  const VarLabel* m_outputTimeStepIntervalLabel;
-  const VarLabel* m_checkpointIntervalLabel;
-  const VarLabel* m_checkpointTimeStepIntervalLabel;
+    const VarLabel* m_outputIntervalLabel;
+    const VarLabel* m_outputTimeStepIntervalLabel;
+    const VarLabel* m_checkpointIntervalLabel;
+    const VarLabel* m_checkpointTimeStepIntervalLabel;
 
-  const VarLabel* m_endSimulationLabel;
+    const VarLabel* m_endSimulationLabel;
 
-  SimulationTime* m_simulationTime {nullptr};
+    SimulationTime* m_simulationTime {nullptr};
   
-  double m_delT{0.0};
-  double m_nextDelT{0.0};
+    double m_delT{0.0};
+    double m_nextDelT{0.0};
 
-  double m_simTime{0.0};             // current sim time
-  double m_simTimeStart{0.0};        // starting sim time
+    double m_simTime{0.0};             // current sim time
+    double m_simTimeStart{0.0};        // starting sim time
 
-  // The time step that the simulation is at.
-  int    m_timeStep{0};
+    // The time step that the simulation is at.
+    int    m_timeStep{0};
 
-  bool   m_endSimulation{false};
+    bool   m_endSimulation{false};
 
-protected:    
-  SimulationStateP m_sharedState{nullptr};
+  protected:    
+    SimulationStateP m_sharedState{nullptr};
 
-private:
-  ApplicationCommon(const ApplicationCommon&);
-  ApplicationCommon& operator=(const ApplicationCommon&);
+  private:
+    ApplicationCommon(const ApplicationCommon&);
+    ApplicationCommon& operator=(const ApplicationCommon&);
 
 #ifdef HAVE_VISIT
-public:
-  // Reduction analysis variables for on the fly analysis
-  virtual std::vector< analysisVar > & getAnalysisVars() { return m_analysisVars; }
+  public:
+    // Reduction analysis variables for on the fly analysis
+    virtual std::vector< analysisVar > & getAnalysisVars() { return m_analysisVars; }
   
-  // Interactive variables from the UPS problem spec.
-  virtual std::vector< interactiveVar > & getUPSVars() { return m_UPSVars; }
+    // Interactive variables from the UPS problem spec.
+    virtual std::vector< interactiveVar > & getUPSVars() { return m_UPSVars; }
   
-  // Interactive state variables from the application.
-  virtual std::vector< interactiveVar > & getStateVars() { return m_stateVars; }
+    // Interactive state variables from the application.
+    virtual std::vector< interactiveVar > & getStateVars() { return m_stateVars; }
   
-  // Debug streams that can be turned on or off.
-  virtual std::vector< DebugStream * > & getDebugStreams() { return m_debugStreams; }
-  virtual std::vector< Dout * > & getDouts() { return m_douts; }
+    // Debug streams that can be turned on or off.
+    virtual std::vector< DebugStream * > & getDebugStreams() { return m_debugStreams; }
+    virtual std::vector< Dout * > & getDouts() { return m_douts; }
   
-  virtual void setVisIt( unsigned int val ) { m_doVisIt = val; }
-  virtual unsigned int  getVisIt() { return m_doVisIt; }
+    virtual void setVisIt( unsigned int val ) { m_doVisIt = val; }
+    virtual unsigned int  getVisIt() { return m_doVisIt; }
 
-protected:
-  // Reduction analysis variables for on the fly analysis
-  std::vector< analysisVar > m_analysisVars;
+  protected:
+    // Reduction analysis variables for on the fly analysis
+    std::vector< analysisVar > m_analysisVars;
   
-  // Interactive variables from the UPS problem spec.
-  std::vector< interactiveVar > m_UPSVars;
+    // Interactive variables from the UPS problem spec.
+    std::vector< interactiveVar > m_UPSVars;
 
-  // Interactive state variables from the application.
-  std::vector< interactiveVar > m_stateVars;
+    // Interactive state variables from the application.
+    std::vector< interactiveVar > m_stateVars;
 
-  // Debug streams that can be turned on or off.
-  std::vector< DebugStream * > m_debugStreams;
-  std::vector< Dout * > m_douts;
+    // Debug streams that can be turned on or off.
+    std::vector< DebugStream * > m_debugStreams;
+    std::vector< Dout * > m_douts;
 
-  unsigned int m_doVisIt{false};
+    unsigned int m_doVisIt{false};
 #endif
-};
+  };
 
 } // End namespace Uintah
    
