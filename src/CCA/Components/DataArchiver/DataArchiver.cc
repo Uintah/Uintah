@@ -158,7 +158,16 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
   }
 
   m_application = dynamic_cast<ApplicationInterface*>( getPort("application") );
+
+  if( !m_application ) {
+    throw InternalError("dynamic_cast of 'm_application' failed!", __FILE__, __LINE__);
+  }
+
   m_loadBalancer = dynamic_cast<LoadBalancerPort*>( getPort("load balancer") );
+
+  if( !m_loadBalancer ) {
+    throw InternalError("dynamic_cast of 'm_loadBalancer' failed!", __FILE__, __LINE__);
+  }
 
   m_sharedState = sharedState;
   m_upsFile = params;
@@ -541,12 +550,12 @@ DataArchiver::initializeOutput( const GridP& grid )
 #ifdef HAVE_PIDX
   // Setup for PIDX
   if( savingAsPIDX() ) {
-    if( m_pidx_requestem_nth_rank == -1 ) {
-      m_pidx_requestem_nth_rank = m_loadBalancer->getNthRank();
+    if( m_pidx_requested_nth_rank == -1 ) {
+      m_pidx_requested_nth_rank = m_loadBalancer->getNthRank();
 
-      if( m_pidx_requestem_nth_rank > 1 ) {
+      if( m_pidx_requested_nth_rank > 1 ) {
         proc0cout << "Input file requests output to be saved by every "
-                  << m_pidx_requestem_nth_rank << "th processor.\n"
+                  << m_pidx_requested_nth_rank << "th processor.\n"
                   << "  - However, setting output to every processor "
                   << "until a checkpoint is reached." << std::endl;
         m_loadBalancer->setNthRank( 1 );
@@ -1042,7 +1051,9 @@ DataArchiver::finalizeTimeStep( const GridP & grid,
       m_wereSavesAndCheckpointsInitialized = true;
     
       // Can't do checkpoints on init timestep....
-      if (m_checkpointInterval > 0.0 || m_checkpointTimeStepInterval > 0 || m_checkpointWallTimeInterval > 0) {
+      if (m_checkpointInterval > 0.0 ||
+	  m_checkpointTimeStepInterval > 0 ||
+	  m_checkpointWallTimeInterval > 0) {
         initCheckpoints(sched);
       }
     }
@@ -1070,7 +1081,7 @@ DataArchiver::sched_allOutputTasks( const GridP      & grid,
     dbg << "  sched_allOutputTasks \n";
   }
   
-  // we don't want to schedule more tasks unless we're recompiling
+  // Don't schedule more tasks unless recompiling.
   if ( !recompile ) {
     return;
   }
@@ -1209,12 +1220,7 @@ DataArchiver::beginOutputTimeStep( const GridP& grid )
   // Checkpoint based on the being the wall time.
   if( m_checkpointWallTimeInterval > 0 ) {
 
-    // When using the wall time for checkpoints, rank 0 determines the
-    // wall time and sends it to all other ranks.
-    double wallTime = getElapsedWallTime();
-    Uintah::MPI::Bcast( &wallTime, 1, MPI_DOUBLE, 0, d_myworld->getComm() );
-
-    if( wallTime >= m_nextCheckpointWallTime )
+    if( m_elapsedWallTime >= m_nextCheckpointWallTime )
       m_isCheckpointTimeStep = true;	
   }
   
@@ -1374,6 +1380,7 @@ DataArchiver::findNext_OutputCheckPointTimeStep( const bool restart,
 
   const int timeStep = m_application->getTimeStep();
   const double simTime = m_application->getSimTime();
+  const double delT = m_application->getNextDelT();
 
   if( restart )
   {
@@ -1407,12 +1414,7 @@ DataArchiver::findNext_OutputCheckPointTimeStep( const bool restart,
     }
     // Checkpoint based on the wall time.
     else if( m_checkpointWallTimeInterval > 0 ) {
-      // When using the wall time for checkpoints, rank 0 determines the
-      // wall time and sends it to all other ranks.
-      double wallTime = getElapsedWallTime();
-      Uintah::MPI::Bcast( &wallTime, 1, MPI_DOUBLE, 0, d_myworld->getComm() );
-
-      m_nextCheckpointWallTime = wallTime + m_checkpointWallTimeInterval;
+      m_nextCheckpointWallTime = m_elapsedWallTime + m_checkpointWallTimeInterval;
     }
   }
   
@@ -1475,15 +1477,9 @@ DataArchiver::findNext_OutputCheckPointTimeStep( const bool restart,
     // Checkpoint based on the wall time.
     else if( m_checkpointWallTimeInterval > 0 ) {
 
-      // When using the wall time for checkpoints, rank 0 determines
-      // the wall time and sends it to all other ranks.
-      double wallTime = getElapsedWallTime();
-
-      Uintah::MPI::Bcast( &wallTime, 1, MPI_DOUBLE, 0, d_myworld->getComm() );
-
-      if( wallTime >= m_nextCheckpointWallTime ) {
+      if( m_elapsedWallTime >= m_nextCheckpointWallTime ) {
         m_nextCheckpointWallTime +=
-	  floor( (wallTime - m_nextCheckpointWallTime) /
+	  floor( (m_elapsedWallTime - m_nextCheckpointWallTime) /
 		 m_checkpointWallTimeInterval ) *
 	  m_checkpointWallTimeInterval + m_checkpointWallTimeInterval;
       }
@@ -1512,28 +1508,23 @@ DataArchiver::findNext_OutputCheckPointTimeStep( const bool restart,
     // Checkpoint based on the being the wall time.
     if( m_checkpointWallTimeInterval > 0 ) {
       
-      // When using the wall time for checkpoints, rank 0 determines the
-      // wall time and sends it to all other ranks.
-      double wallTime = getElapsedWallTime();
-      Uintah::MPI::Bcast( &wallTime, 1, MPI_DOUBLE, 0, d_myworld->getComm() );
-      
-      if( wallTime >= m_nextCheckpointWallTime )
+      if( m_elapsedWallTime >= m_nextCheckpointWallTime )
 	m_pidx_checkpointing = true;	
     }
     
     // Checkpointing
     if( m_pidx_checkpointing ) {
       
-      if( m_pidx_requestem_nth_rank > 1 ) {
+      if( m_pidx_requested_nth_rank > 1 ) {
 	proc0cout << "This is a checkpoint time step (" << timeStep
 		  << ") - need to recompile with nth proc set to: "
-		  << m_pidx_requestem_nth_rank << std::endl;
+		  << m_pidx_requested_nth_rank << std::endl;
 	
-	m_loadBalancer->setNthRank( m_pidx_requestem_nth_rank );
+	m_loadBalancer->setNthRank( m_pidx_requested_nth_rank );
 	m_loadBalancer->possiblyDynamicallyReallocate( grid,
 						       LoadBalancerPort::regrid );
 	setSaveAsUDA();
-	m_pidx_neem_to_recompile = true;
+	m_pidx_need_to_recompile = true;
       }
     }
 
@@ -1555,7 +1546,7 @@ DataArchiver::findNext_OutputCheckPointTimeStep( const bool restart,
       proc0cout << "This is an output time step: " << timeStep << ".  ";
 
       // If this is also a checkpoint time step postpone the output
-      if( m_pidx_neem_to_recompile ) {
+      if( m_pidx_need_to_recompile ) {
 	postponeNextOutputTimeStep();
 
 	proc0cout << "   Postposing as it is also a checkpoint time step.";
@@ -1860,7 +1851,7 @@ DataArchiver::writeto_xml_files( std::map< std::string,
 				 std::pair<std::string,
 				 std::string> > &modifiedVars )
 {
-#ifdef HAVE_VISIT  
+#ifdef HAVE_VISIT
 //   if( isProc0_macro && m_sharedState->getVisIt() && modifiedVars.size() )
   {
     dbg << "  writeto_xml_files() begin\n";
@@ -3042,6 +3033,8 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
 {
   size_t totalBytesSaved = 0;
 #if HAVE_PIDX
+  const int timeStep = m_application->getTimeStep();
+
   int levelid = getLevel(patches)->getIndex(); 
   const Level* level = getLevel(patches);
 
@@ -3835,7 +3828,7 @@ DataArchiver::needRecompile(const GridP& /*grid*/)
   bool retVal = false;
   
 #ifdef HAVE_PIDX
-  retVal = (retVal || m_pidx_neem_to_recompile || m_pidx_restore_nth_rank);
+  retVal = (retVal || m_pidx_need_to_recompile || m_pidx_restore_nth_rank);
 #endif         
 
   return retVal;
@@ -3848,7 +3841,7 @@ DataArchiver::recompile( const GridP& grid )
 {
 
 #ifdef HAVE_PIDX
-  if( m_pidx_requestem_nth_rank > 1 ) {      
+  if( m_pidx_requested_nth_rank > 1 ) {      
     if( m_pidx_restore_nth_rank ) {
       proc0cout << "This is the time step following a checkpoint - "
 		<< "need to put the task graph back with a recompile - "
@@ -3860,12 +3853,12 @@ DataArchiver::recompile( const GridP& grid )
       m_pidx_restore_nth_rank = false;
     }
         
-    if( m_pidx_neem_to_recompile ) {
+    if( m_pidx_need_to_recompile ) {
       // Don't need to recompile on the next time step as it will
       // happen on this one.  However, the nth rank value will
       // need to be restored after this time step, so set
       // pidx_restore_nth_rank to true.
-      m_pidx_neem_to_recompile = false;
+      m_pidx_need_to_recompile = false;
       m_pidx_restore_nth_rank = true;
     }
   }
@@ -4138,6 +4131,19 @@ DataArchiver::checkpointTimeStep( const GridP& grid,
   m_isOutputTimeStep = false;
   m_isCheckpointTimeStep = false;
 }
+
+//______________________________________________________________________
+// Called by In-situ VisIt to dump a checkpoint.
+//
+void
+DataArchiver::setElapsedWallTime( double val )
+{
+  // When using the wall time, rank 0 determines the wall time and
+  // sends it to all other ranks.
+  Uintah::MPI::Bcast( &val, 1, MPI_DOUBLE, 0, d_myworld->getComm() );
+  
+  m_elapsedWallTime = val;
+};
 
 //______________________________________________________________________
 //

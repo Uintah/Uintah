@@ -67,11 +67,18 @@ WARNING
   
 ****************************************/
 
+  class ApplicationCommon;
+
   class SimulationController;
   class AMRSimulationController;
+
   class DataWarehouse;
   class DataArchiver;
-  class ApplicationCommon;
+
+  class LoadBalancersCommon;
+  class DynamicLoadBalancer;
+  class ParticleLoadBalancer;
+
   class SimulationTime;
   class VarLabel;
 
@@ -83,6 +90,11 @@ WARNING
     friend class SimulationController;
     friend class AMRSimulationController;
     friend class DataArchiver;
+
+    friend class LoadBalancersCommon;
+    friend class DynamicLoadBalancer;
+    friend class ParticleLoadBalancer;
+
     friend class Switcher;
     
   public:

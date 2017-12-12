@@ -28,6 +28,7 @@
 #include <CCA/Components/LoadBalancers/CostModelForecaster.h>
 #include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>
 #include <CCA/Components/Schedulers/DetailedTasks.h>
+#include <CCA/Ports/ApplicationInterface.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Regridder.h>
 #include <CCA/Ports/Scheduler.h>
@@ -67,9 +68,9 @@ DynamicLoadBalancer::DynamicLoadBalancer( const ProcessorGroup * myworld ) :
   LoadBalancerCommon(myworld), d_costForecaster(0)
 {
   m_lb_interval = 0.0;
-  m_last_lb_time = 0.0;
-  d_lbTimestepInterval = 0;
-  d_lastLbTimestep = 0;
+  m_last_lb_simTime = 0.0;
+  m_lb_timeStep_interval = 0;
+  m_last_lb_timeStep = 0;
   m_check_after_restart = false;
 
   d_dynamicAlgorithm = patch_factor_lb;  
@@ -892,35 +893,36 @@ DynamicLoadBalancer::assignPatchesCyclic(const GridP&, bool force)
 //______________________________________________________________________
 //
 bool 
-DynamicLoadBalancer::needRecompile(       double /*time*/,
-                                          double /*delt*/, 
-                                    const GridP & grid )
+DynamicLoadBalancer::needRecompile( const GridP & grid )
 {
-  double time = m_sharedState->getElapsedSimTime();
-  int timestep = m_sharedState->getCurrentTopLevelTimeStep();
+  const int timeStep   = m_application->getTimeStep();
+  const double simTime = m_application->getSimTime();
 
   bool do_check = false;
 #if 1
-  if (d_lbTimestepInterval != 0 && timestep >= d_lastLbTimestep + d_lbTimestepInterval) {
-    d_lastLbTimestep = timestep;
+  if (m_lb_timeStep_interval != 0 &&
+      timeStep >= m_last_lb_timeStep + m_lb_timeStep_interval) {
+    m_last_lb_timeStep = timeStep;
     do_check = true;
   }
-  else if (m_lb_interval != 0 && time >= m_last_lb_time + m_lb_interval) {
-    m_last_lb_time = time;
+  else if (m_lb_interval != 0 &&
+	   simTime >= m_last_lb_simTime + m_lb_interval) {
+    m_last_lb_simTime = simTime;
     do_check = true;
   }
-  else if ((time == 0 && d_collectParticles == true) || m_check_after_restart) {
-    // do AFTER initialization timestep too (no matter how much init regridding),
-    // so we can compensate for new particles
+  else if ((simTime == 0 && d_collectParticles == true) ||
+	   m_check_after_restart) {
+    // do AFTER initialization time step too (no matter how much init
+    // regridding), so we can compensate for new particles
     do_check = true;
     m_check_after_restart = false;
   }
 #endif
 
   if (dbg.active() && d_myworld->myRank() == 0){
-    dbg << d_myworld->myRank() << " DLB::NeedRecompile: do_check: " << do_check << ", timestep: " << timestep 
-        << ", LB:timestepInterval: " << d_lbTimestepInterval << ", time[s]: " << time << ", LB:Interval: " << m_lb_interval 
-        << ", Last LB timestep: " << d_lastLbTimestep << ", Last LB time[s]: " << m_last_lb_time << endl;
+    dbg << d_myworld->myRank() << " DLB::NeedRecompile: do_check: " << do_check << ", time step: " << timeStep 
+        << ", LB:timestepInterval: " << m_lb_timeStep_interval << ", time[s]: " << simTime << ", LB:Interval: " << m_lb_interval 
+        << ", Last LB time step: " << m_last_lb_timeStep << ", Last LB time[s]: " << m_last_lb_simTime << endl;
   }
   
   // if it determines we need to re-load-balance, recompile
@@ -996,6 +998,9 @@ DynamicLoadBalancer::possiblyDynamicallyReallocate( const GridP & grid, int stat
   Timers::Simple timer;
   timer.start();
 
+  const int timeStep   = m_application->getTimeStep();
+  const double simTime = m_application->getSimTime();
+
   bool changed = false;
   bool force = false;
 
@@ -1004,11 +1009,11 @@ DynamicLoadBalancer::possiblyDynamicallyReallocate( const GridP & grid, int stat
   if (state != LoadBalancerPort::restart) {
     if (state != LoadBalancerPort::check) {
       force = true;
-      if (d_lbTimestepInterval != 0) {
-        d_lastLbTimestep = m_sharedState->getCurrentTopLevelTimeStep();
+      if (m_lb_timeStep_interval != 0) {
+        m_last_lb_timeStep = timeStep;
       }
       else if (m_lb_interval != 0) {
-        m_last_lb_time = m_sharedState->getElapsedSimTime();
+        m_last_lb_simTime = simTime;
       }
     }
     
@@ -1143,17 +1148,17 @@ DynamicLoadBalancer::problemSetup( ProblemSpecP & pspec, GridP & grid, const Sim
       d_costForecaster= scinew CostModelForecaster(d_myworld,this,d_patchCost,d_cellCost,d_extraCellCost,d_particleCost);
     }
     else if(costAlgo=="Kalman") {
-      int timestepWindow;
-      p->getWithDefault("profileTimestepWindow",timestepWindow,10);
+      int timeStepWindow;
+      p->getWithDefault("profileTimeStepWindow",timeStepWindow,10);
       d_costForecaster=scinew CostProfiler(d_myworld,ProfileDriver::KALMAN,this);
-      d_costForecaster->setTimestepWindow(timestepWindow);
+      d_costForecaster->setTimestepWindow(timeStepWindow);
       d_collectParticles=false;
     }
     else if(costAlgo=="Memory") {
-      int timestepWindow;
-      p->getWithDefault("profileTimestepWindow",timestepWindow,10);
+      int timeStepWindow;
+      p->getWithDefault("profileTimeStepWindow",timeStepWindow,10);
       d_costForecaster=scinew CostProfiler(d_myworld,ProfileDriver::MEMORY,this);
-      d_costForecaster->setTimestepWindow(timestepWindow);
+      d_costForecaster->setTimestepWindow(timeStepWindow);
       d_collectParticles=false;
     }
     else if(costAlgo=="Model") {
@@ -1195,7 +1200,7 @@ DynamicLoadBalancer::problemSetup( ProblemSpecP & pspec, GridP & grid, const Sim
   }
 
   m_lb_interval = interval;
-  d_lbTimestepInterval = timestepInterval;
+  m_lb_timeStep_interval = timestepInterval;
   m_do_space_curve = spaceCurve;
   d_lbThreshold = threshold;
 

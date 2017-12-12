@@ -609,6 +609,35 @@ ApplicationCommon::getSubCycleProgress(DataWarehouse* fineDW)
 
 //______________________________________________________________________
 //
+bool
+ApplicationCommon::needRecompile( const GridP& /*grid*/)
+{
+#ifdef HAVE_VISIT
+  // Check all of the application variables that might require the task
+  // graph to be recompiled.
+  for( unsigned int i=0; i<getUPSVars().size(); ++i )
+  {
+    ApplicationInterface::interactiveVar &var = getUPSVars()[i];
+    
+    if( var.modified && var.recompile )
+    {
+      m_recompile = true;
+      break;
+    }
+  }
+#endif
+  
+  if( m_recompile ) {
+    m_recompile = false;
+    return true;
+  }
+  else {
+    return false;
+  }
+}
+
+//______________________________________________________________________
+//
 void
 ApplicationCommon::prepareForNextTimeStep( const GridP & grid )
 {

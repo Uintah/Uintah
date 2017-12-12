@@ -283,24 +283,26 @@ AMRSimulationController::run()
 
     m_output->maybeLastTimeStep( m_app->maybeLastTimeStep( walltime ) );
     
-    // Set the current wall time for this rank (i.e. this value is NOT
+    // Set the current wall time for this rank (i.e. this value is
     // sync'd across all ranks). The Data Archive uses it for
     // determining when to output or checkpoint.
     m_output->setElapsedWallTime( m_wall_timers.GetWallTime() );
     
     // Get the next output checkpoint time step. This step is not done
-    // in beginOutputTimeStep because the original values are needed
-    // to compare with if there is a timestep restart so it is
-    // performed here. At this point the time step, sim time, and all
-    // wall time are all in sync.
+    // in m_output->beginOutputTimeStep because the original values
+    // are needed to compare with if there is a timestep restart so it
+    // is performed here.
 
+    // NOTE: It is called BEFORE m_app->prepareForNextTimeStep because
+    // at this point the delT, nextDelT, time step, sim time, and all
+    // wall times are all in sync.
     m_output->findNext_OutputCheckPointTimeStep( first && m_restarting,
 						 m_current_gridP );
 
-    // Reset the runtime performance stats
+    // Reset the runtime performance stats.
     ResetStats();
     
-    // Reset memory use tracking variable
+    // Reset memory use tracking variable.
     m_scheduler->resetMaxMemValue();
     
     // Clear the task monitoring.
@@ -412,7 +414,7 @@ AMRSimulationController::run()
       }
     }
 
-    // Compute number of dataWarehouses - multiplies by the time
+    // Compute number of data warehouses - multiplies by the time
     // refinement ratio for each level.
     int totalFine = 1;
 
@@ -457,8 +459,15 @@ AMRSimulationController::run()
     AllocatorSetDefaultTagLineNumber( m_app->getTimeStep() );
 #endif
 
-    bool nr = needRecompile();
-    
+    // Various components can request a recompile including the
+    // in-situ which will set the m_recompile_taskgraph flag.
+    m_recompile_taskgraph = ( m_recompile_taskgraph ||
+			      m_app->needRecompile   ( m_current_gridP ) ||
+			      m_output->needRecompile( m_current_gridP ) ||
+			      m_lb->needRecompile    ( m_current_gridP ) ||
+			      (m_regridder &&
+			       m_regridder->needRecompile( m_current_gridP )) );
+
     // DAV THIS HAS BEEN MOVED INTO needRecompile ABOVE WHICH CALLS
     // m_output->needRecompile().
 
@@ -466,10 +475,10 @@ AMRSimulationController::run()
 //     nr = (nr || pidx_need_to_recompile || pidx_restore_nth_rank);
 // #endif         
 
-    if( nr || first ) {
-    
+    if( m_recompile_taskgraph || first ) {
+
       // Recompile taskgraph, re-assign BCs, reset recompile flag.      
-      if (nr) {
+      if (m_recompile_taskgraph) {
         m_current_gridP->assignBCS(m_grid_ps, m_lb);
         m_current_gridP->performConsistencyCheck();
         m_recompile_taskgraph = false;
@@ -501,12 +510,13 @@ AMRSimulationController::run()
 //       }
 // #endif
       m_scheduler->setRestartInitTimestep( false );
-      recompile( totalFine );
+
+      compileTaskGraph( totalFine );
     }
     else {
       // This is not correct if we have switched to a different
       // component, since the delT will be wrong
-      m_output->finalizeTimeStep( m_current_gridP, m_scheduler, 0 );
+      m_output->finalizeTimeStep( m_current_gridP, m_scheduler, false );
     }
 
     if( dbg_barrier.active() ) {
@@ -703,12 +713,9 @@ AMRSimulationController::doInitialTimeStep()
       // Output tasks
       const bool recompile = true;
 
-      m_output->finalizeTimeStep( m_current_gridP,
-				  m_scheduler,
-				  recompile) ;
+      m_output->finalizeTimeStep( m_current_gridP, m_scheduler, recompile) ;
 
-      m_output->sched_allOutputTasks( m_current_gridP,
-				      m_scheduler, recompile );
+      m_output->sched_allOutputTasks( m_current_gridP, m_scheduler, recompile );
 
       // Initialize the system var (time step and simulation time).
       // Must be done after the output.
@@ -945,50 +952,10 @@ AMRSimulationController::doRegridding( bool initialTimeStep )
 
 //______________________________________________________________________
 //
-bool
-AMRSimulationController::needRecompile()
-{
-  MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::needRecompile()");
-
-  // Currently, m_output, m_sim, m_lb, m_regridder can request a recompile
-  bool recompile =
-    m_output->needRecompile( m_current_gridP ) ||
-
-    m_app->needRecompile( m_current_gridP )    ||
-
-    m_lb->needRecompile(m_app->getSimTime(), m_app->getDelT(), m_current_gridP)     ||
-
-    m_recompile_taskgraph;
-  
-  if (m_regridder) {
-    recompile |= m_regridder->needRecompile(m_app->getSimTime(), m_app->getDelT(), m_current_gridP);
-  }
-
-#ifdef HAVE_VISIT
-  // Check all of the component variables that might require the task
-  // graph to be recompiled.
-
-  // ARS - Should this check be on the component level?
-  for( unsigned int i=0; i<m_app->getUPSVars().size(); ++i )
-  {
-    ApplicationInterface::interactiveVar &var = m_app->getUPSVars()[i];
-    
-    if( var.modified && var.recompile )
-    {
-      recompile = true;
-    }
-  }
-#endif
-  
-  return recompile;
-}
-
-//______________________________________________________________________
-//
 void
-AMRSimulationController::recompile( int totalFine )
+AMRSimulationController::compileTaskGraph( int totalFine )
 {
-  MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::Recompile()");
+  MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::compileTaskGraph()");
 
   Timers::Simple taskGraphTimer;
 
@@ -1111,7 +1078,7 @@ AMRSimulationController::recompile( int totalFine )
   m_runtime_stats[ CompilationTime ] += taskGraphTimer().seconds();
 
   proc0cout << "Done with taskgraph re-compile (" << taskGraphTimer().seconds() << " seconds)\n";
-} // end recompile()
+} // end compileTaskGraph()
 
 //______________________________________________________________________
 //

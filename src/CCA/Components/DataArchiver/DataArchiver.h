@@ -243,7 +243,7 @@ class LoadBalancerPort;
     void setSwitchState(bool val) { m_switchState = val; }
     bool getSwitchState() const { return m_switchState; }   
     
-    void   setElapsedWallTime( double val ) { m_elapsedWallTime = val; };
+    void   setElapsedWallTime( double val );
     double getElapsedWallTime() const { return m_elapsedWallTime; };
      
     void setUseLocalFileSystems(bool val) { m_useLocalFileSystems = val; };
@@ -596,9 +596,9 @@ class LoadBalancerPort;
     ReductionInfoMapper< RunTimeStatsEnum, double > *m_runTimeStats;
 
 #ifdef HAVE_PIDX
-    bool m_pidx_neem_to_recompile {false};
+    bool m_pidx_need_to_recompile {false};
     bool m_pidx_restore_nth_rank {false};
-    int  m_pidx_requestem_nth_rank {-1};
+    int  m_pidx_requested_nth_rank {-1};
     bool m_pidx_checkpointing {false};
 #endif
     

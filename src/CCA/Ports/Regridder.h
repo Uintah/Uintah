@@ -81,8 +81,7 @@ WARNING
     virtual void switchInitialize(const ProblemSpecP& params) = 0;
 
     //! Asks if we need to recompile the task graph.
-    virtual bool needRecompile(double time, double delt,
-                               const GridP& grid) = 0;
+    virtual bool needRecompile(const GridP& grid) = 0;
 
     //! Do we need to regrid this timestep?
     virtual bool needsToReGrid(const GridP&) = 0;

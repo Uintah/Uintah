@@ -104,7 +104,7 @@ public:
 
   //! Determines if the Load Balancer requests a taskgraph recompile.
   //! Only possible for Dynamic Load Balancers.
-  virtual bool needRecompile( double, double, const GridP& ) { return false; }
+  virtual bool needRecompile( const GridP& ) = 0;
 
   //! In AMR, we need to tell the Load balancer that we're regridding
   //    virtual void doRegridTimeStep() {}

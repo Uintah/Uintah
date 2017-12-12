@@ -82,11 +82,7 @@ protected:
   //! If doing AMR do the regridding
   bool doRegridding( bool initialTimeStep );
 
-  //! Asks a variety of components if one of them needs the
-  //! taskgraph to recompile.
-  bool needRecompile();
-
-  void recompile( int totalFine );
+  void compileTaskGraph( int totalFine );
 
   //! Recursively schedule refinement, coarsening, and time
   //! advances for finer levels, compensating for time

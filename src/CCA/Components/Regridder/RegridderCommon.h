@@ -75,9 +75,9 @@ namespace Uintah {
     //! On a Switch, basically asks whether to turn off/on the Regridding
     virtual void switchInitialize(const ProblemSpecP& params);
 
-    //! Asks if we need to recompile the task graph.
-    //! Will return true if we did a regrid
-    virtual bool needRecompile(double time, double delt, const GridP& grid);
+    //! Asks if the task graph needs to be recompiled.
+    //! Returns true if a regrid operation occured.
+    virtual bool needRecompile(const GridP& grid);
 
     //! Do we need to regrid this timestep?
     virtual bool needsToReGrid(const GridP& grid);

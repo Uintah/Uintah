@@ -69,7 +69,7 @@ namespace Uintah {
     ~DynamicLoadBalancer();
 
     virtual void problemSetup(ProblemSpecP& pspec, GridP& grid, const SimulationStateP& state);
-    virtual bool needRecompile(double time, double delt, const GridP& grid); 
+    virtual bool needRecompile(const GridP& grid); 
 
     /// call one of the assignPatches functions.
     /// Will initially need to load balance (on first timestep), and thus  
@@ -139,9 +139,6 @@ namespace Uintah {
 
     bool   d_levelIndependent;
     
-    int    d_lbTimestepInterval;
-    int    d_lastLbTimestep;
-    
     bool   d_do_AMR;
     ProblemSpecP d_pspec;
     
@@ -154,7 +151,6 @@ namespace Uintah {
     
     int  d_dynamicAlgorithm;
     bool d_collectParticles;
-
   };
 } // End namespace Uintah
 

@@ -130,7 +130,7 @@ const MaterialSubset* RegridderCommon::refineFlagMaterials() const
 //______________________________________________________________________
 //
 bool
-RegridderCommon::needRecompile(double /*time*/, double /*delt*/, const GridP& /*grid*/)
+RegridderCommon::needRecompile( const GridP& /*grid*/ )
 {
   rdbg << "RegridderCommon::needRecompile() BGN" << std::endl;
   bool retval = d_newGrid;
