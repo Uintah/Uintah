@@ -720,6 +720,8 @@ main( int argc, char *argv[], char *env[] )
     LoadBalancerCommon* loadBalancer =
       LoadBalancerFactory::create( ups, world );
 
+    loadBalancer->attachPort( "application", application );
+
     //__________________________________
     // Output
     DataArchiver * dataArchiver = scinew DataArchiver( world, udaSuffix );
