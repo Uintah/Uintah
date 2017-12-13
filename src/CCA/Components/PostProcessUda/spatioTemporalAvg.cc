@@ -359,7 +359,7 @@ void spatioTemporalAvg::computeAvgWrapper( DataWarehouse     * old_dw,
                                            Qstats& Q)
 {
   double now = d_sharedState->getElapsedSimTime();
-
+  
   if(now < d_startTime || now > d_stopTime){
     //proc0cout << " IGNORING------------DataAnalysis: spatioTemporalAvg" << endl;
     allocateAndZeroLabels< T >( new_dw, patch, Q );
@@ -380,10 +380,19 @@ void spatioTemporalAvg::computeAvg( DataWarehouse  * old_dw,
                                     const Patch    * patch,
                                     Qstats& Q)
 {
+  static proc0patch0cout mesg( d_Qstats.size() );
+  ostringstream msg;
+  msg <<"    spatioTemporalAvg::computeAvg( "<< Q.Q_Label->getName() << " )\n";
+  mesg.print(patch, msg );
+  //__________________________________
+  
+  
   const int matl = Q.matl;
 
   constCCVariable<T> Qvar_old;
   if ( d_doTemporalAvg ){
+  
+//    cout << "   OLD_DW: " << old_dw->getID() <<  " exists: " << old_dw->exists( Q.Q_Label, matl, patch) << endl;
     old_dw->get ( Qvar_old, Q.Q_Label, matl, patch, Ghost::None, 0 );
   }
   
@@ -456,18 +465,18 @@ void spatioTemporalAvg::computeTimeAverage( const Patch         * patch,
                                             constCCVariable< T >& Qvar_old,
                                             CCVariable< T >     & Qavg )
 {
-  if( d_doTemporalAvg == false) {
+
+  int timeStep = d_sharedState->getCurrentTopLevelTimeStep();
+  if( d_doTemporalAvg == false && timeStep < d_baseTimestep ) {
     return;
   }
-  
-  int timeStep = d_sharedState->getCurrentTopLevelTimeStep();
-  
+    
   T deltaTime = T( d_udaTimes[timeStep] - d_udaTimes[d_baseTimestep] );
  
-#if 1
-  cout << " timeStep: " << timeStep << " udaTime: " << d_udaTimes[timeStep]
-       << " d_baseTimestep: " << d_baseTimestep << " baseTime: " << d_udaTimes[d_baseTimestep]
-       << " deltaTime: " << deltaTime << endl;
+#if 0
+  proc0cout << " timeStep: " << timeStep << " udaTime: " << d_udaTimes[timeStep]
+            << " d_baseTimestep: " << d_baseTimestep << " baseTime: " << d_udaTimes[d_baseTimestep]
+            << " deltaTime: " << deltaTime << endl;
 #endif
 
   for (;!iter.done();iter++){
@@ -487,13 +496,13 @@ void spatioTemporalAvg::query( const Patch         * patch,
                                IntVector           & avgBoxCells,
                                CellIterator        & iter)
 {
-    IntVector lo = iter.begin();
-    IntVector hi = iter.end();
-    IntVector nBoxes(-9,-9,-9);
+  IntVector lo = iter.begin();
+  IntVector hi = iter.end();
+  IntVector nBoxes(-9,-9,-9);
 
-    for (int d=0; d<3; d++){
-      nBoxes[d] = (int) std::ceil( (double) (hi[d] - lo[d])/(double)avgBoxCells[d] );
-    }
+  for (int d=0; d<3; d++){
+    nBoxes[d] = (int) std::ceil( (double) (hi[d] - lo[d])/(double)avgBoxCells[d] );
+  }
   //__________________________________
   //  loop over boxes that this patch owns
   for ( int i=0; i<nBoxes.x(); i++ ){

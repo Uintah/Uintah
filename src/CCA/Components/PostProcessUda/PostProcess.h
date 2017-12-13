@@ -119,15 +119,15 @@ namespace Uintah {
     std::string            d_udaDir;
     bool                   d_gridChanged;
 
-    std::vector<int>       d_timesteps;
+    std::vector<int>       d_udaTimesteps;
     std::vector<int>       d_numMatls;
-    std::vector<double>    d_times;
-    std::vector<VarLabel*> d_savedLabels;
+    std::vector<double>    d_udaTimes;
+    std::vector<VarLabel*> d_udaSavedLabels;
 
     GridP                  d_oldGrid;
     DataArchive          * d_dataArchive = nullptr;
 
-    int                    d_timeIndex = 0;
+    int                    d_simTimestep = 0;
 
     const VarLabel       * delt_label;
     std::vector<Module*> d_Modules;

@@ -78,11 +78,24 @@ namespace Uintah {
                           const VarLabel * label,
                           const int        matl,
                           const Patch    * patch );
-
     SimulationStateP   d_sharedState;
     DataArchive      * d_dataArchive   = nullptr;
     Output           * d_dataArchiver  = nullptr;
     std::vector<double> d_udaTimes;                 // physical time pulled from uda:index.xml
+    
+    //__________________________________
+    //
+    class proc0patch0cout {
+      public:
+        proc0patch0cout( const int nTimesPerTimestep);
+                              
+        void print(const Patch * patch,
+                   std::ostringstream& msg);
+      private:
+        int d_count             =0;        
+        int d_nTimesPerTimestep =0;        
+    
+    };
   };
 }
 

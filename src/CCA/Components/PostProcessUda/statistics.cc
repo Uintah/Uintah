@@ -390,6 +390,12 @@ void statistics::computeStats( DataWarehouse* old_dw,
                                const Patch*    patch,
                                Qstats& Q)
 {
+  static proc0patch0cout mesg( d_Qstats.size() );
+  ostringstream msg;
+  msg <<"    statistics::computeStats( "<< Q.Q_Label->getName() << " )\n";
+  mesg.print(patch, msg );
+  //__________________________________
+  
   const int matl = Q.matl;
 
   constCCVariable<T> Qvar;

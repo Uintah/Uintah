@@ -180,3 +180,28 @@ template void Module::allocateAndZero<double>( DataWarehouse  *, const VarLabel 
 template void Module::allocateAndZero<Vector>( DataWarehouse  *, const VarLabel *, const int matl, const Patch * );
 
 
+
+//______________________________________________________________________
+//
+Module::proc0patch0cout::proc0patch0cout( const int nPerTimestep)
+{
+  d_nTimesPerTimestep = nPerTimestep;
+}
+
+//______________________________________________________________________
+//
+void Module::proc0patch0cout::print(const Patch * patch,
+                                   std::ostringstream& msg)
+{
+  if( d_count <= d_nTimesPerTimestep ){
+    if( patch->getID() == 0 && Uintah::Parallel::getMPIRank() == 0 && Uintah::Parallel::getMainThreadID() == std::this_thread::get_id() ){
+      std::cout << msg.str();
+      d_count += 1;  
+    }
+  } 
+  else {
+    d_count = 0;
+  }
+}
+
+
