@@ -23,7 +23,8 @@ from helpers.modUPS import modUPS
 #       abs_tolerance=[double]  - absolute tolerance used in comparisons
 #       rel_tolerance=[double]  - relative tolerance used in comparisons
 #       exactComparison         - set absolute/relative tolerance = 0  for uda comparisons
-#       startFromCheckpoint     - start test from checkpoint. (/home/csafe-tester/CheckPoints/..../testname.uda.000)
+#       postProcessRun          - start test from an existing uda in the checkpoints directory.  Compute new quantities and save them in a new uda
+#       startFromCheckpoint     - start test from checkpoint. (/home/rt/CheckPoints/..../testname.uda.000)
 #       sus_options="string"    - Additional command line options for sus command
 #
 #  Notes: 
@@ -32,15 +33,15 @@ from helpers.modUPS import modUPS
 #______________________________________________________________________
 
 
-NIGHTLYTESTS = [ ("ice_perf_32KPatches",  "icePerf_32KPatches.ups",            10, "All", ["do_performance_test"]),
+NIGHTLYTESTS = [  ("ice_perf_32KPatches",  "icePerf_32KPatches.ups",            10, "All", ["do_performance_test"]),
+                  ("PostProcessUda",       "N/A",                               8,  "All", [ "postProcessUda", "exactComparison"] ) )
                ]
 
-LOCALTESTS = [ ("switchExample_impm_mpm", "Switcher/switchExample_impm_mpm.ups",1, "All", ["no_memoryTest"]), \
-               ("switchExample3",         "Switcher/switchExample3.ups",        1, "All", ["no_restart","no_memoryTest"]), \
-               ("ice_perf_test",          "icePerformanceTest.ups",             1, "All", ["do_performance_test"]),  \
-               ("mpmice_perf_test",       "mpmicePerformanceTest.ups",          1, "All", ["do_performance_test"]), \
-               ("LBwoRegrid",             "LBwoRegrid.ups",                     2, "All", [])     # Cannot use exact comparison since the load
-                                                                                                  # balancer generates fuzz in the dat files.  It's non deterministic.
+LOCALTESTS = [ ("switchExample_impm_mpm", "Switcher/switchExample_impm_mpm.ups",1, "All", ["no_memoryTest"]),
+               ("switchExample3",         "Switcher/switchExample3.ups",        1, "All", ["no_restart","no_memoryTest"]),
+               ("ice_perf_test",          "icePerformanceTest.ups",             1, "All", ["do_performance_test"]), 
+               ("mpmice_perf_test",       "mpmicePerformanceTest.ups",          1, "All", ["do_performance_test"]), 
+               ("LBwoRegrid",             "LBwoRegrid.ups",                     2, "All", []),     # Cannot use exact comparison since the load balancer generates fuzz in the dat files.  It's non deterministic.                                                                               
              ]
              
 DEBUGTESTS =[]
