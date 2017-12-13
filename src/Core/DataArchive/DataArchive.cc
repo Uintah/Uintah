@@ -1074,7 +1074,7 @@ void
 DataArchive::restartInitialize( const int                index,
                                 const GridP            & grid,
                                       DataWarehouse    * dw,
-                                      LoadBalancerPort * lb,
+                                      LoadBalancer * lb,
                                       double           * pTime )
 {
   vector<int>    ts_indices;
@@ -1184,7 +1184,7 @@ DataArchive::postProcess_ReadUda( const ProcessorGroup   * pg,
                                   const GridP            & grid,
                                   const PatchSubset      * patches,
                                         DataWarehouse    * dw,
-                                        LoadBalancerPort * lb )
+                                        LoadBalancer * lb )
 {
   vector<int>    timesteps;
   vector<double> times;
