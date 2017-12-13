@@ -1790,9 +1790,12 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
 
       const int patchID = varIter->first.m_patchID;
       const Patch * patch = nullptr;
+      const Level* level = nullptr;
+
       for (int i = 0; i < numPatches; i++) {
         if (patches->get(i)->getID() == patchID) {
           patch = patches->get(i);
+          level = patch->getLevel();
         }
       }
       if (!patch) {
@@ -1800,7 +1803,6 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
         SCI_THROW( InternalError("UnifiedScheduler::initiateD2H() patch not found.", __FILE__, __LINE__));
       }
       const int matlID = varIter->first.m_matlIndex;
-      const Level* level = getLevel(patches.get_rep());
       int levelID = level->getID();
       if (curDependency->m_var->typeDescription()->getType() == TypeDescription::ReductionVariable) {
         levelID = -1;
@@ -2974,12 +2976,13 @@ UnifiedScheduler::ghostCellsProcessingReady( DetailedTask * dtask )
     const int numPatches = patches->size();
     const int patchID = varIter->first.m_patchID;
     const Patch * patch = nullptr;
+    const Level * level = nullptr;
     for (int i = 0; i < numPatches; i++) {
       if (patches->get(i)->getID() == patchID) {
         patch = patches->get(i);
+        level = patch->getLevel();
       }
     }
-    const Level* level = getLevel(patches.get_rep());
     int levelID = level->getID();
     if (curDependency->m_var->typeDescription()->getType() == TypeDescription::ReductionVariable) {
       levelID = -1;
@@ -3057,12 +3060,13 @@ UnifiedScheduler::allHostVarsProcessingReady( DetailedTask * dtask )
     const int numPatches = patches->size();
     const int patchID = varIter->first.m_patchID;
     const Patch * patch = nullptr;
+    const Level * level = nullptr;
     for (int i = 0; i < numPatches; i++) {
       if (patches->get(i)->getID() == patchID) {
         patch = patches->get(i);
+        level = patch->getLevel();
       }
     }
-    const Level* level = getLevel(patches.get_rep());
     int levelID = level->getID();
     if (curDependency->m_var->typeDescription()->getType() == TypeDescription::ReductionVariable) {
       levelID = -1;
@@ -3152,14 +3156,13 @@ UnifiedScheduler::allGPUVarsProcessingReady( DetailedTask * dtask )
     const int numPatches = patches->size();
     const int patchID = varIter->first.m_patchID;
     const Patch * patch = nullptr;
-
+    const Level * level = nullptr;
     for (int i = 0; i < numPatches; i++) {
       if (patches->get(i)->getID() == patchID) {
         patch = patches->get(i);
+        level = patch->getLevel();
       }
     }
-
-    const Level* level = getLevel(patches.get_rep());
     int levelID = level->getID();
     if (curDependency->m_var->typeDescription()->getType() == TypeDescription::ReductionVariable) {
       levelID = -1;
@@ -3339,7 +3342,7 @@ UnifiedScheduler::markDeviceComputesDataAsValid( DetailedTask * dtask )
         for (int j = 0; j < numMatls; j++) {
           int patchID = patches->get(i)->getID();
           int matlID = matls->get(j);
-          const Level* level = getLevel(patches.get_rep());
+          const Level* level = patches->get(i)->getLevel();
           int levelID = level->getID();
           if (gpudw->isAllocatedOnGPU(comp->m_var->getName().c_str(), patchID, matlID, levelID)) {
             gpudw->compareAndSwapSetValidOnGPU(comp->m_var->getName().c_str(), patchID, matlID, levelID);
@@ -3424,20 +3427,22 @@ UnifiedScheduler::initiateD2HForHugeGhostCells( DetailedTask * dtask )
         for (int j = 0; j < numMatls; ++j) {
           const int patchID = patches->get(i)->getID();
           const int matlID  = matls->get(j);
-          const Level* level = getLevel(patches.get_rep());
-          const int levelID = level->getID();
+
           const std::string compVarName = comp->m_var->getName();
 
           const Patch * patch = nullptr;
+          const Level* level = nullptr;
           for (int i = 0; i < numPatches; i++) {
             if (patches->get(i)->getID() == patchID) {
              patch = patches->get(i);
+             level = patch->getLevel();
             }
           }
           if (!patch) {
            printf("ERROR:\nUnifiedScheduler::initiateD2HForHugeGhostCells() patch not found.\n");
            SCI_THROW( InternalError("UnifiedScheduler::initiateD2HForHugeGhostCells() patch not found.", __FILE__, __LINE__));
           }
+          const int levelID = level->getID();
 
           const unsigned int deviceNum = GpuUtilities::getGpuIndexForPatch(patch);
           GPUDataWarehouse * gpudw = dw->getGPUDW(deviceNum);
@@ -3699,22 +3704,27 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
     int dwIndex = dependantVar->mapDataWarehouse();
     OnDemandDataWarehouseP dw = m_dws[dwIndex];
 
+    //Find the patch and level objects associated with the patchID
     const int patchID = varIter->first.m_patchID;
-    const Level* level = getLevel(patches.get_rep());
-    int levelID = level->getID();
-    if (dependantVar->m_var->typeDescription()->getType() == TypeDescription::ReductionVariable) {
-      levelID = -1;
-    }
     const Patch * patch = nullptr;
+    const Level * level = nullptr;
     for (int i = 0; i < numPatches; i++) {
       if (patches->get(i)->getID() == patchID) {
         patch = patches->get(i);
+        level = patch->getLevel();
       }
     }
+
     if (!patch) {
       printf("ERROR:\nUnifiedScheduler::initiateD2H() patch not found.\n");
       SCI_THROW( InternalError("UnifiedScheduler::initiateD2H() patch not found.", __FILE__, __LINE__));
     }
+
+    int levelID = level->getID();
+    if (dependantVar->m_var->typeDescription()->getType() == TypeDescription::ReductionVariable) {
+      levelID = -1;
+    }
+
     const int matlID = varIter->first.m_matlIndex;
 
     unsigned int deviceNum = GpuUtilities::getGpuIndexForPatch(patch);
