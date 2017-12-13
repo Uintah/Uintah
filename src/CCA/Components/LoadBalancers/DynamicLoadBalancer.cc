@@ -926,7 +926,7 @@ DynamicLoadBalancer::needRecompile( const GridP & grid )
   }
   
   // if it determines we need to re-load-balance, recompile
-  if ( do_check && possiblyDynamicallyReallocate( grid, LoadBalancerPort::check ) ) {
+  if ( do_check && possiblyDynamicallyReallocate( grid, LoadBalancer::check ) ) {
     doing << d_myworld->myRank() << " DLB - scheduling recompile " <<endl;
     return true;
   }
@@ -1006,8 +1006,8 @@ DynamicLoadBalancer::possiblyDynamicallyReallocate( const GridP & grid, int stat
 
   // don't do on a restart unless procs changed between runs.  For restarts, this is 
   // called mainly to update the perProc Patch sets (at the bottom)
-  if (state != LoadBalancerPort::restart) {
-    if (state != LoadBalancerPort::check) {
+  if (state != LoadBalancer::restart) {
+    if (state != LoadBalancer::check) {
       force = true;
       if (m_lb_timeStep_interval != 0) {
         m_last_lb_timeStep = timeStep;
@@ -1051,13 +1051,13 @@ DynamicLoadBalancer::possiblyDynamicallyReallocate( const GridP & grid, int stat
 
     //__________________________________
     //
-    if (dynamicAllocate || state != LoadBalancerPort::check) {
+    if (dynamicAllocate || state != LoadBalancer::check) {
       //d_oldAssignment = d_processorAssignment;
       changed = true;
       m_processor_assignment = m_temp_assignment;
       m_assignment_base_patch = (*grid->getLevel(0)->patchesBegin())->getID();
 
-      if (state == LoadBalancerPort::init) {
+      if (state == LoadBalancer::init) {
         // set it up so the old and new are in same place
         m_old_assignment = m_processor_assignment;
         m_old_assignment_base_patch = m_assignment_base_patch;
@@ -1091,9 +1091,9 @@ DynamicLoadBalancer::possiblyDynamicallyReallocate( const GridP & grid, int stat
   
   m_temp_assignment.resize(0);
   
-  int flag = LoadBalancerPort::check;
-  if ( changed || state == LoadBalancerPort::restart ) {
-    flag = LoadBalancerPort::regrid;
+  int flag = LoadBalancer::check;
+  if ( changed || state == LoadBalancer::restart ) {
+    flag = LoadBalancer::regrid;
   }
   
   // this must be called here (it creates the new per-proc patch sets) even if DLB does nothing.  Don't move or return earlier.
@@ -1227,20 +1227,20 @@ DynamicLoadBalancer::problemSetup( ProblemSpecP & pspec, GridP & grid, const Sim
     d_costForecaster->setMinPatchSize(mps);
   }
 
-// #ifdef HAVE_VISIT
-//   static bool initialized = false;
+#ifdef HAVE_VISIT
+  static bool initialized = false;
 
-//   // Running with VisIt so add in the variables that the user can
-//   // modify.
-//   if( m_sharedState->getVisIt() && !initialized ) {
-//     m_sharedState->d_debugStreams.push_back( &doing  );
-//     m_sharedState->d_debugStreams.push_back( &lb );
-//     m_sharedState->d_debugStreams.push_back( &dbg );
-//     m_sharedState->d_debugStreams.push_back( &stats  );
-//     m_sharedState->d_debugStreams.push_back( &times );
-//     m_sharedState->d_debugStreams.push_back( &lbout );
+  // Running with VisIt so add in the variables that the user can
+  // modify.
+  if( m_application->getVisIt() && !initialized ) {
+    m_application->getDebugStreams().push_back( &doing  );
+    m_application->getDebugStreams().push_back( &lb );
+    m_application->getDebugStreams().push_back( &dbg );
+    m_application->getDebugStreams().push_back( &stats  );
+    m_application->getDebugStreams().push_back( &times );
+    m_application->getDebugStreams().push_back( &lbout );
 
-//     initialized = true;
-//   }
-// #endif
+    initialized = true;
+  }
+#endif
 }

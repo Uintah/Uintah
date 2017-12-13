@@ -25,7 +25,7 @@
 
 #include <CCA/Components/Examples/SolverTest1.h>
 #include <CCA/Components/Examples/ExamplesLabel.h>
-#include <CCA/Ports/LoadBalancerPort.h>
+#include <CCA/Ports/LoadBalancer.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/Stencil7.h>

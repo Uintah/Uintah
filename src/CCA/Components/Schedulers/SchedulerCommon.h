@@ -46,6 +46,7 @@
 namespace Uintah {
 
 class ApplicationInterface;
+class LoadBalancer;
 class Output;
 class DetailedTask;
 class DetailedTasks;
@@ -87,14 +88,16 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
 
   public:
 
-    SchedulerCommon( const ProcessorGroup * myworld, const Output * oport );
+    SchedulerCommon( const ProcessorGroup * myworld );
 
     virtual ~SchedulerCommon();
 
+    virtual void setComponents( const SchedulerCommon *parent );
+    virtual void getComponents();
     virtual void releaseComponents();
 
     virtual void problemSetup( const ProblemSpecP     & prob_spec,
-			                         const SimulationStateP & state );
+			       const SimulationStateP & state );
 
     virtual void doEmitTaskGraphDocs();
 
@@ -145,9 +148,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     virtual const std::set<const VarLabel*, VarLabel::Compare>& getInitialRequiredVars() const { return m_init_required_vars; }
     virtual const std::set<const VarLabel*, VarLabel::Compare>& getComputedVars()        const { return m_computed_vars; }
 
-    virtual LoadBalancerPort * getLoadBalancer();
-
-    virtual void releaseLoadBalancer();
+    virtual LoadBalancer * getLoadBalancer() { return m_loadBalancer; };
 
     virtual DataWarehouse* get_dw( int idx );
 
@@ -322,7 +323,6 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
       , PRINT_AFTER_EXEC  = 4
     };
 
-
     bool                                m_restartable{false};
     // Some places need to know if this is a copy data timestep or
     // a normal timestep.  (A copy data timestep is AMR's current 
@@ -333,7 +333,11 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     int                                 m_current_task_graph{-1};
     int                                 m_generation{0};
     int                                 m_dwmap[Task::TotalDWs];
-    const Output*                       m_out_port{nullptr};
+
+    ApplicationInterface * m_application  {nullptr};
+    LoadBalancer         * m_loadBalancer {nullptr};
+    Output               * m_output       {nullptr};
+  
     SimulationStateP                    m_sharedState{nullptr};
     std::vector<OnDemandDataWarehouseP> m_dws;
     std::vector<TaskGraph*>             m_task_graphs;

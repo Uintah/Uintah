@@ -40,7 +40,7 @@
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModuleFactory.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
 #include <CCA/Ports/DataWarehouse.h>
-#include <CCA/Ports/LoadBalancerPort.h>
+#include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Regridder.h>
 #include <CCA/Ports/Scheduler.h>
 
@@ -489,7 +489,7 @@ void SerialMPM::schedulePrintParticleCount(const LevelP& level,
                         this, &SerialMPM::printParticleCount);
   t->requires(Task::NewDW, lb->partCountLabel);
   t->setType(Task::OncePerProc);
-  sched->addTask(t, sched->getLoadBalancer()->getPerProcessorPatchSet(level),
+  sched->addTask(t, m_loadBalancer->getPerProcessorPatchSet(level),
                  m_sharedState->allMPMMaterials());
 }
 //__________________________________

@@ -36,7 +36,7 @@
 
 #include <CCA/Components/Regridder/PerPatchVars.h>
 #include <CCA/Ports/DataWarehouse.h>
-#include <CCA/Ports/LoadBalancerPort.h>
+#include <CCA/Ports/LoadBalancer.h>
 #include <Core/DataArchive/DataArchive.h>
 #include <Core/Grid/Variables/PerPatch.h>
 
@@ -902,7 +902,7 @@ TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
                               bool useExtraCells)
 {
   DataWarehouse    * dw = schedulerP->getLastDW();
-  LoadBalancerPort * lb = schedulerP->getLoadBalancer();
+  LoadBalancer * lb = schedulerP->getLoadBalancer();
 
   int numLevels = gridP->numLevels();
   TimeStepInfo *stepInfo = new TimeStepInfo();

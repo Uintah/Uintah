@@ -28,10 +28,11 @@
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
 #include <CCA/Components/Schedulers/TaskGraph.h>
-#include <CCA/Ports/DataWarehouse.h>
-#include <CCA/Ports/LoadBalancerPort.h>
-#include <CCA/Ports/Output.h>
+
 #include <CCA/Ports/ApplicationInterface.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <CCA/Ports/LoadBalancer.h>
+#include <CCA/Ports/Output.h>
 
 #include <Core/Exceptions/ErrnoException.h>
 #include <Core/Exceptions/InternalError.h>
@@ -83,9 +84,8 @@ char* SchedulerCommon::start_addr = nullptr;
 
 //______________________________________________________________________
 //
-SchedulerCommon::SchedulerCommon( const ProcessorGroup * myworld, const Output * oport )
+SchedulerCommon::SchedulerCommon( const ProcessorGroup * myworld )
   : UintahParallelComponent( myworld )
-  , m_out_port( oport )
 {
   for (int i = 0; i < Task::TotalDWs; i++) {
     m_dwmap[i] = Task::InvalidDW;
@@ -141,10 +141,48 @@ SchedulerCommon::~SchedulerCommon()
   }
 }
 
+void SchedulerCommon::setComponents( const SchedulerCommon *parent )
+{
+  attachPort( "load balancer",  parent->m_loadBalancer );
+  attachPort( "output",     parent->m_output );
+  attachPort( "application", parent->m_application );
+
+  getComponents();
+}
+
+void SchedulerCommon::getComponents()
+{
+  m_loadBalancer = dynamic_cast<LoadBalancer*>( getPort("load balancer") );
+
+  if( !m_loadBalancer ) {
+    throw InternalError("dynamic_cast of 'm_loadBalancer' failed!", __FILE__, __LINE__);
+  }
+
+  m_output = dynamic_cast<Output*>( getPort("output") );
+
+  if( !m_output ) {
+    throw InternalError("dynamic_cast of 'm_output' failed!", __FILE__, __LINE__);
+  }
+
+  m_application = dynamic_cast<ApplicationInterface*>( getPort("application") );
+
+  if( !m_application ) {
+    throw InternalError("dynamic_cast of 'm_application' failed!", __FILE__, __LINE__);
+  }
+}
+
 //______________________________________________________________________
 //
 void SchedulerCommon::releaseComponents()
 {
+  releasePort( "load balancer" );
+  releasePort( "output" );
+  releasePort( "application" );
+
+  m_loadBalancer = nullptr;
+  m_output       = nullptr;
+  m_application  = nullptr;
+
   m_sharedState = nullptr;
 }
 
@@ -205,7 +243,7 @@ SchedulerCommon::makeTaskGraphDoc(const DetailedTasks* /* dt*/, int rank )
     return;
   }
 
-  if (!m_out_port->isOutputTimeStep()) {
+  if (!m_output->isOutputTimeStep()) {
     return;
   }
 
@@ -272,8 +310,8 @@ SchedulerCommon::finalizeNodes( int process /* = 0 */ )
     return;
   }
 
-  if (m_out_port->isOutputTimeStep()) {
-    std::string timestep_dir(m_out_port->getLastTimeStepOutputLocation());
+  if (m_output->isOutputTimeStep()) {
+    std::string timestep_dir(m_output->getLastTimeStepOutputLocation());
 
     std::ostringstream fname;
     fname << "/taskgraph_" << std::setw(5) << std::setfill('0') << process << ".xml";
@@ -560,8 +598,6 @@ SchedulerCommon::printTrackedVars( DetailedTask * dtask, int when )
 {
   bool printedHeader = false;
 
-  LoadBalancerPort * lb = getLoadBalancer();
-
   unsigned taskNum;
   for (taskNum = 0; taskNum < m_tracking_tasks.size(); taskNum++) {
     if (m_tracking_tasks[taskNum] == dtask->getTask()->getName())
@@ -649,8 +685,8 @@ SchedulerCommon::printTrackedVars( DetailedTask * dtask, int when )
       }
 
       // Don't print ghost patches (dw->get will yell at you).
-      if ((m_tracking_dws[i] == Task::OldDW && lb->getOldProcessorAssignment(patch) != d_myworld->myRank()) ||
-          (m_tracking_dws[i] == Task::NewDW && lb->getPatchwiseProcessorAssignment(patch) != d_myworld->myRank())) {
+      if ((m_tracking_dws[i] == Task::OldDW && m_loadBalancer->getOldProcessorAssignment(patch) != d_myworld->myRank()) ||
+          (m_tracking_dws[i] == Task::NewDW && m_loadBalancer->getPatchwiseProcessorAssignment(patch) != d_myworld->myRank())) {
         continue;
       }
 
@@ -755,16 +791,6 @@ SchedulerCommon::printTrackedVars( DetailedTask * dtask, int when )
     }  // end for patches loop
   }  // end for i : trackingVars.size()
 }  // end printTrackedVars()
-
-//______________________________________________________________________
-//
-LoadBalancerPort *
-SchedulerCommon::getLoadBalancer()
-{
-  UintahParallelPort * upp = getPort( "load balancer" );
-  LoadBalancerPort   * lb  = dynamic_cast< LoadBalancerPort * >( upp );
-  return lb;
-}
 
 //______________________________________________________________________
 //
@@ -954,14 +980,6 @@ void SchedulerCommon::addTask(       std::shared_ptr<Task>   task
       m_num_tasks++;
     }
   }
-}
-
-//______________________________________________________________________
-//
-void
-SchedulerCommon::releaseLoadBalancer()
-{
-  releasePort( "load balancer" );
 }
 
 //______________________________________________________________________
@@ -1341,7 +1359,7 @@ SchedulerCommon::compile()
   // TODO: which of the two cases should we be using and why do both exist - APH 06/07/17
 #if 1
   for (int i = 0; i < grid->numLevels(); i++) {
-    const PatchSubset* patches = getLoadBalancer()->getPerProcessorPatchSet(grid->getLevel(i))->getSubset(d_myworld->myRank());
+    const PatchSubset* patches = m_loadBalancer->getPerProcessorPatchSet(grid->getLevel(i))->getSubset(d_myworld->myRank());
 
     if (patches->size() > 0) {
       m_locallyComputedPatchVarMap->addComputedPatchSet(patches);
@@ -1552,7 +1570,7 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP & grid, ApplicationInterface
         // weren't entirely covered by patches on the old grid, and
         // interpolate them.  then after, copy the data, and if
         // necessary, overwrite interpolated data
-        const PatchSubset *ps = getLoadBalancer()->getPerProcessorPatchSet(newLevel)->getSubset(d_myworld->myRank());
+        const PatchSubset *ps = m_loadBalancer->getPerProcessorPatchSet(newLevel)->getSubset(d_myworld->myRank());
 
         // for each patch I own
         for (int p = 0; p < ps->size(); p++) {
@@ -1990,11 +2008,7 @@ SchedulerCommon::scheduleParticleRelocation( const LevelP       & level
     }
     m_reloc_new_pos_label = new_posLabel;
 
-    UintahParallelPort * upp = getPort( "load balancer" );
-    LoadBalancerPort   * lb = dynamic_cast< LoadBalancerPort * >( upp );
-
-    m_relocate_1.scheduleParticleRelocation(this, d_myworld, lb, level, old_posLabel, old_labels, new_posLabel, new_labels,
-                                       particleIDLabel, matls);
+    m_relocate_1.scheduleParticleRelocation(this, d_myworld, m_loadBalancer, level, old_posLabel, old_labels, new_posLabel, new_labels, particleIDLabel, matls);
     releasePort("load balancer");
   }
 
@@ -2003,11 +2017,8 @@ SchedulerCommon::scheduleParticleRelocation( const LevelP       & level
       ASSERTEQ(m_reloc_new_pos_label, new_posLabel);
     }
     m_reloc_new_pos_label = new_posLabel;
-    UintahParallelPort * upp = getPort( "load balancer" );
-    LoadBalancerPort   * lb  = dynamic_cast< LoadBalancerPort * >( upp );
-    m_relocate_2.scheduleParticleRelocation(this, d_myworld, lb, level, old_posLabel, old_labels, new_posLabel, new_labels,
-                                       particleIDLabel, matls);
-    releasePort("load balancer");
+
+    m_relocate_2.scheduleParticleRelocation(this, d_myworld, m_loadBalancer, level, old_posLabel, old_labels, new_posLabel, new_labels, particleIDLabel, matls);
   }
 }
 
@@ -2028,11 +2039,8 @@ SchedulerCommon::scheduleParticleRelocation( const LevelP       & coarsestLevelw
   }
 
   m_reloc_new_pos_label = new_posLabel;
-  UintahParallelPort * upp = getPort( "load balancer" );
-  LoadBalancerPort   * lb = dynamic_cast< LoadBalancerPort * >( upp );
-  m_relocate_1.scheduleParticleRelocation(this, d_myworld, lb, coarsestLevelwithParticles, old_posLabel, old_labels, new_posLabel,
-                                     new_labels, particleIDLabel, matls);
-  releasePort("load balancer");
+
+  m_relocate_1.scheduleParticleRelocation(this, d_myworld, m_loadBalancer, coarsestLevelwithParticles, old_posLabel, old_labels, new_posLabel, new_labels, particleIDLabel, matls);
 }
 
 //______________________________________________________________________
@@ -2045,10 +2053,8 @@ SchedulerCommon::scheduleParticleRelocation( const LevelP       & coarsestLevelw
                                            )
 {
   m_reloc_new_pos_label = posLabel;
-  UintahParallelPort * upp = getPort( "load balancer" );
-  LoadBalancerPort   * lb  = dynamic_cast< LoadBalancerPort * >( upp );
-  m_relocate_1.scheduleParticleRelocation(this, d_myworld, lb, coarsestLevelwithParticles, posLabel, otherLabels, matls);
-  releasePort("load balancer");
+
+  m_relocate_1.scheduleParticleRelocation(this, d_myworld, m_loadBalancer, coarsestLevelwithParticles, posLabel, otherLabels, matls);
 }
 
 //______________________________________________________________________

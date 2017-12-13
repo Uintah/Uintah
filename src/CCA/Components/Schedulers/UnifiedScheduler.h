@@ -86,7 +86,8 @@ class UnifiedScheduler : public MPIScheduler  {
 
   public:
 
-    UnifiedScheduler( const ProcessorGroup * myworld, const Output * oport, UnifiedScheduler * parentScheduler = nullptr );
+    UnifiedScheduler( const ProcessorGroup * myworld,
+		      UnifiedScheduler * parentScheduler = nullptr );
 
     virtual ~UnifiedScheduler();
     
@@ -161,7 +162,7 @@ class UnifiedScheduler : public MPIScheduler  {
                                ,       OnDemandDataWarehouse * dw
                                ,       OnDemandDataWarehouse * old_dw
                                , const DetailedDep           * dep
-                               ,       LoadBalancerPort      * lb
+                               ,       LoadBalancer      * lb
                                ,       DeviceVarDest           des
                                );
 

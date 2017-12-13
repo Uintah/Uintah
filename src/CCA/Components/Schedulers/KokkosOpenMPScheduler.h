@@ -76,7 +76,8 @@ class KokkosOpenMPScheduler : public MPIScheduler  {
 
   public:
 
-    KokkosOpenMPScheduler( const ProcessorGroup * myworld, const Output * oport, KokkosOpenMPScheduler * parentScheduler = nullptr );
+    KokkosOpenMPScheduler( const ProcessorGroup * myworld,
+			   KokkosOpenMPScheduler * parentScheduler = nullptr );
 
     virtual ~KokkosOpenMPScheduler();
     

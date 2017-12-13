@@ -59,7 +59,7 @@ class DynamicMPIScheduler : public MPIScheduler {
 
   public:
 
-    DynamicMPIScheduler( const ProcessorGroup* myworld, const Output* oport, DynamicMPIScheduler* parentScheduler = 0 );
+    DynamicMPIScheduler( const ProcessorGroup* myworld, DynamicMPIScheduler* parentScheduler = 0 );
 
     virtual ~DynamicMPIScheduler();
 

@@ -24,7 +24,8 @@
 
 
 #include <CCA/Components/Regridder/SingleLevelRegridder.h>
-#include <CCA/Ports/LoadBalancerPort.h>
+#include <CCA/Ports/ApplicationInterface.h>
+#include <CCA/Ports/LoadBalancer.h>
 
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -116,17 +117,17 @@ void SingleLevelRegridder::problemSetup(const ProblemSpecP& params,
     }
   }
 
-// #ifdef HAVE_VISIT
-//   static bool initialized = false;
+#ifdef HAVE_VISIT
+  static bool initialized = false;
 
-//   // Running with VisIt so add in the variables that the user can
-//   // modify.
-//   if( d_sharedState->getVisIt() && !initialized ) {
-//     d_sharedState->d_debugStreams.push_back( &grid_dbg );
+  // Running with VisIt so add in the variables that the user can
+  // modify.
+  if( m_application->getVisIt() && !initialized ) {
+    m_application->getDebugStreams().push_back( &grid_dbg );
 
-//     initialized = true;
-//   }
-// #endif
+    initialized = true;
+  }
+#endif
 }
 
 

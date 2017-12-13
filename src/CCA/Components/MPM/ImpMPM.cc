@@ -69,7 +69,7 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Math/MinMax.h>
-#include <CCA/Ports/LoadBalancerPort.h>
+#include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Output.h>
 #include <Core/Util/DebugStream.h>
 #include <CCA/Components/MPM/PetscSolver.h>
@@ -405,8 +405,7 @@ void ImpMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
   if (flags->d_temp_solve == false)
     t->computes(lb->gTemperatureLabel,one_matl);
 
-  LoadBalancerPort * loadbal = sched->getLoadBalancer();
-  d_perproc_patches = loadbal->getPerProcessorPatchSet(level);
+  d_perproc_patches = m_loadBalancer->getPerProcessorPatchSet(level);
 
   sched->addTask(t, d_perproc_patches, m_sharedState->allMPMMaterials());
 
@@ -864,8 +863,8 @@ ImpMPM::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
     return;
 
   const MaterialSet * matls = m_sharedState->allMPMMaterials();
-  LoadBalancerPort  * loadbal = sched->getLoadBalancer();
-  d_perproc_patches = loadbal->getPerProcessorPatchSet(level);
+
+  d_perproc_patches = m_loadBalancer->getPerProcessorPatchSet(level);
   d_perproc_patches->addReference();
 
   scheduleApplyExternalLoads(          sched, d_perproc_patches,         matls);

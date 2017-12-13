@@ -323,8 +323,11 @@ WBCHelper::WBCHelper( const Uintah::LevelP& level,
                       ProblemSpecP arches_spec )
 : materials_   (materials   ), m_arches_spec(arches_spec)
 {
-  const Uintah::PatchSet* const allPatches = sched->getLoadBalancer()->getPerProcessorPatchSet(level);
-  const Uintah::PatchSubset* const localPatches = allPatches->getSubset( Uintah::Parallel::getMPIRank() );
+  const Uintah::PatchSet* const allPatches =
+    sched->getLoadBalancer()->getPerProcessorPatchSet(level);
+  const Uintah::PatchSubset* const localPatches =
+    allPatches->getSubset( Uintah::Parallel::getMPIRank() );
+
   localPatches_ = new Uintah::PatchSet;
   localPatches_->addEach( localPatches->getVector() );
   const int ilvl = level->getID();

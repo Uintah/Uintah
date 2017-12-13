@@ -28,7 +28,7 @@
 #include <CCA/Components/Solvers/SolverFactory.h>
 #include <CCA/Components/SwitchingCriteria/None.h>
 #include <CCA/Components/SwitchingCriteria/SwitchingCriteriaFactory.h>
-#include <CCA/Ports/LoadBalancerPort.h>
+#include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/ModelMaker.h>
 #include <CCA/Ports/Output.h>
 #include <CCA/Ports/Regridder.h>
@@ -426,7 +426,7 @@ void Switcher::scheduleSwitchTest(const LevelP     & level,
   
   // the component is responsible for determining when it is to switch.
   t->requires(Task::NewDW, d_switch_label);
-  sched->addTask(t,sched->getLoadBalancer()->getPerProcessorPatchSet(level),m_sharedState->allMaterials());
+  sched->addTask(t, m_loadBalancer->getPerProcessorPatchSet(level),m_sharedState->allMaterials());
 }
 
 //______________________________________________________________________

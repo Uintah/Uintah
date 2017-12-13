@@ -26,7 +26,7 @@
 
 #include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>
 #include <CCA/Ports/DataWarehouse.h>
-#include <CCA/Ports/LoadBalancerPort.h>
+#include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/OutputContext.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/ApplicationInterface.h>
@@ -163,7 +163,7 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
     throw InternalError("dynamic_cast of 'm_application' failed!", __FILE__, __LINE__);
   }
 
-  m_loadBalancer = dynamic_cast<LoadBalancerPort*>( getPort("load balancer") );
+  m_loadBalancer = dynamic_cast<LoadBalancer*>( getPort("load balancer") );
 
   if( !m_loadBalancer ) {
     throw InternalError("dynamic_cast of 'm_loadBalancer' failed!", __FILE__, __LINE__);
@@ -449,13 +449,13 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
 
   // Running with VisIt so add in the variables that the user can
   // modify.
-//   if( m_sharedState->getVisIt() && !initialized ) {
-//     m_sharedState->m_debugStreams.push_back( &dbg  );
-// #ifdef HAVE_PIDX
-//     m_sharedState->m_debugStreams.push_back( &dbgPIDX );
-// #endif
-//     initialized = true;
-//   }
+  if( m_application->getVisIt() && !initialized ) {
+    m_application->getDebugStreams().push_back( &dbg  );
+#ifdef HAVE_PIDX
+    m_application->getDebugStreams().push_back( &dbgPIDX );
+#endif
+    initialized = true;
+  }
 #endif
 }
 
@@ -560,7 +560,7 @@ DataArchiver::initializeOutput( const GridP& grid )
                   << "until a checkpoint is reached." << std::endl;
         m_loadBalancer->setNthRank( 1 );
         m_loadBalancer->possiblyDynamicallyReallocate( grid,
-						       LoadBalancerPort::regrid );
+						       LoadBalancer::regrid );
         setSaveAsPIDX();
       }
     }
@@ -1522,7 +1522,7 @@ DataArchiver::findNext_OutputCheckPointTimeStep( const bool restart,
 	
 	m_loadBalancer->setNthRank( m_pidx_requested_nth_rank );
 	m_loadBalancer->possiblyDynamicallyReallocate( grid,
-						       LoadBalancerPort::regrid );
+						       LoadBalancer::regrid );
 	setSaveAsUDA();
 	m_pidx_need_to_recompile = true;
       }
@@ -3848,7 +3848,7 @@ DataArchiver::recompile( const GridP& grid )
 		<< "setting nth output to 1\n";
       m_loadBalancer->setNthRank( 1 );
       m_loadBalancer->possiblyDynamicallyReallocate( grid,
-						     LoadBalancerPort::regrid );
+						     LoadBalancer::regrid );
       setSaveAsPIDX();
       m_pidx_restore_nth_rank = false;
     }

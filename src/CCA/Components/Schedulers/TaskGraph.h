@@ -41,7 +41,7 @@ namespace Uintah {
   class DetailedTask;
   class DetailedTasks;
   class Patch;
-  class LoadBalancerPort;
+  class LoadBalancer;
 
 /**************************************
 
@@ -321,7 +321,7 @@ class TaskGraph {
                             );
 
     SchedulerCommon      * m_scheduler;
-    LoadBalancerPort     * m_load_balancer;
+    LoadBalancer     * m_load_balancer;
     const ProcessorGroup * m_proc_group;
     Scheduler::tgType      m_type;
     DetailedTasks        * m_detailed_tasks{nullptr};

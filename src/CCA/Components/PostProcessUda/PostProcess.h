@@ -30,7 +30,7 @@
 #include <vector>
 
 namespace Uintah {
-  class LoadBalancerPort;
+  class LoadBalancer;
   class Module;
 
 
@@ -129,11 +129,8 @@ namespace Uintah {
 
     int                    d_timeIndex = 0;
 
-    LoadBalancerPort     * d_lb;
     const VarLabel       * delt_label;
     std::vector<Module*> d_Modules;
-
-
   };
 } // End namespace Uintah
 

@@ -23,7 +23,8 @@
  */
 
 #include <CCA/Components/Regridder/TiledRegridder.h>
-#include <CCA/Ports/LoadBalancerPort.h>
+#include <CCA/Ports/ApplicationInterface.h>
+#include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Scheduler.h>
 
 #include <Core/Exceptions/InternalError.h>
@@ -440,18 +441,18 @@ void TiledRegridder::problemSetup(const ProblemSpecP& params,
     }
   }
 
-// #ifdef HAVE_VISIT
-//   static bool initialized = false;
+#ifdef HAVE_VISIT
+  static bool initialized = false;
 
-//   // Running with VisIt so add in the variables that the user can
-//   // modify.
-//   if( d_sharedState->getVisIt() && !initialized ) {
-//     d_sharedState->d_debugStreams.push_back( &grid_dbg );
-//     d_sharedState->d_debugStreams.push_back( &rgtimes );
+  // Running with VisIt so add in the variables that the user can
+  // modify.
+  if( m_application->getVisIt() && !initialized ) {
+    m_application->getDebugStreams().push_back( &grid_dbg );
+    m_application->getDebugStreams().push_back( &rgtimes );
 
-//     initialized = true;
-//   }
-// #endif
+    initialized = true;
+  }
+#endif
 }
 
 //_________________________________________________________________

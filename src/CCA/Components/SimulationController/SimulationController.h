@@ -56,7 +56,7 @@
 namespace Uintah {
 
 class  DataArchive;
-class  LoadBalancerPort;
+class  LoadBalancer;
 class  Output;
 class  Regridder;
 class  ApplicationInterface;
@@ -181,7 +181,7 @@ public:
   ProblemSpecP          getProblemSpecP() { return m_ups; }
   ProblemSpecP          getGridProblemSpecP() { return m_grid_ps; }
   SchedulerP            getSchedulerP() { return m_scheduler; }
-  LoadBalancerPort*     getLoadBalancer() { return m_lb; }
+  LoadBalancer*     getLoadBalancer() { return m_loadBalancer; }
   Output*               getOutput() { return m_output; }
   ApplicationInterface* getApplicationInterface() { return m_app; }
   Regridder*            getRegridder() { return m_regridder; }
@@ -223,7 +223,8 @@ protected:
   ProblemSpecP           m_restart_ps{nullptr};  // Problem Spec for restarting
   SchedulerP             m_scheduler{nullptr};
   GridP                  m_current_gridP{nullptr};
-  LoadBalancerPort     * m_lb{nullptr};
+
+  LoadBalancer     * m_loadBalancer{nullptr};
   Output               * m_output{nullptr};
   ApplicationInterface * m_app{nullptr};
   Regridder            * m_regridder{nullptr};

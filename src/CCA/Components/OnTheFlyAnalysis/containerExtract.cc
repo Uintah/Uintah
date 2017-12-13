@@ -43,7 +43,7 @@
 #include <CCA/Components/ICE/ICEMaterial.h>
 #include <CCA/Components/OnTheFlyAnalysis/containerExtract.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
-#include <CCA/Ports/LoadBalancerPort.h>
+#include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -621,7 +621,7 @@ void containerExtract::doAnalysis(const ProcessorGroup* pg,
                              DataWarehouse* new_dw)
 {   
   UintahParallelComponent* DA = dynamic_cast<UintahParallelComponent*>(d_output);
-  LoadBalancerPort * lb = dynamic_cast<LoadBalancerPort*>( DA->getPort("load balancer"));
+  LoadBalancer * lb = dynamic_cast<LoadBalancer*>( DA->getPort("load balancer"));
 
   const Level* level = getLevel(patches);
   // the user may want to restart from an uda that wasn't using the DA module

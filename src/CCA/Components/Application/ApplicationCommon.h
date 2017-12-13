@@ -27,6 +27,7 @@
 
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <CCA/Ports/ApplicationInterface.h>
+#include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/SchedulerP.h>
 #include <CCA/Ports/SolverInterface.h>
 
@@ -307,6 +308,7 @@ WARNING
 
   protected:
     Scheduler*       m_scheduler{nullptr};
+    LoadBalancer* m_loadBalancer{nullptr};
     ModelMaker*      m_modelMaker{nullptr};
     SolverInterface* m_solver{nullptr};
     Regridder*       m_regridder{nullptr};

@@ -25,7 +25,7 @@
 #ifndef CCA_COMPONENTS_LOADBALANCERS_LOADBALANCERCOMMON_H
 #define CCA_COMPONENTS_LOADBALANCERS_LOADBALANCERCOMMON_H
 
-#include <CCA/Ports/LoadBalancerPort.h>
+#include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/SFC.h>
 
 #include <CCA/Components/SimulationController/RunTimeStatsEnums.h>
@@ -106,7 +106,7 @@ public:
 /// the load balancer subclasses.  The main function that sets load balancers
 /// apart is getPatchwiseProcessorAssignment - how it determines which patch
 /// to assign on which procesor.
-class LoadBalancerCommon : public LoadBalancerPort, public UintahParallelComponent {
+class LoadBalancerCommon : public LoadBalancer, public UintahParallelComponent {
 
 public:
 

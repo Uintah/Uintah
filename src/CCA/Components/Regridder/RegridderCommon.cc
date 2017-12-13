@@ -25,8 +25,9 @@
 //-- Uintah component includes --//
 #include <CCA/Components/Regridder/PerPatchVars.h>
 #include <CCA/Components/Regridder/RegridderCommon.h>
+#include <CCA/Ports/ApplicationInterface.h>
 #include <CCA/Ports/DataWarehouse.h>
-#include <CCA/Ports/LoadBalancerPort.h>
+#include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Scheduler.h>
 
 //-- Uintah framework includes --//
@@ -112,10 +113,12 @@ RegridderCommon::~RegridderCommon()
 void RegridderCommon::releaseComponents()
 {
   releasePort( "scheduler" );
-  m_scheduler  = nullptr;
-
   releasePort( "load balancer" );
-  m_loadBalancer  = nullptr;
+  releasePort( "application" );
+
+  m_scheduler    = nullptr;
+  m_loadBalancer = nullptr;
+  m_application  = nullptr;
 
   d_sharedState = nullptr;
 }
@@ -369,7 +372,22 @@ RegridderCommon::problemSetup(const ProblemSpecP& params, const GridP& oldGrid, 
   grid_ps_ = params->findBlock("Grid");
 
   m_scheduler = dynamic_cast< Scheduler * >( getPort( "scheduler" ) );
-  m_loadBalancer = dynamic_cast< LoadBalancerPort * >( getPort( "load balancer" ) );
+
+  if( !m_scheduler ) {
+    throw InternalError("dynamic_cast of 'm_scheduler' failed!", __FILE__, __LINE__);
+  }
+
+  m_loadBalancer = dynamic_cast<LoadBalancer*>( getPort("load balancer") );
+
+  if( !m_loadBalancer ) {
+    throw InternalError("dynamic_cast of 'm_loadBalancer' failed!", __FILE__, __LINE__);
+  }
+
+  m_application = dynamic_cast<ApplicationInterface*>( getPort("application") );
+
+  if( !m_application ) {
+    throw InternalError("dynamic_cast of 'm_application' failed!", __FILE__, __LINE__);
+  }
 
   ProblemSpecP amr_spec = params->findBlock("AMR");
   ProblemSpecP regrid_spec = amr_spec->findBlock("Regridder");

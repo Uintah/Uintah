@@ -26,7 +26,7 @@
 #include <CCA/Components/OnTheFlyAnalysis/FileInfoVar.h>
 
 #include <CCA/Ports/Scheduler.h>
-#include <CCA/Ports/LoadBalancerPort.h>
+#include <CCA/Ports/LoadBalancer.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 
 #include <Core/Grid/DbgOutput.h>
@@ -596,7 +596,7 @@ void MinMax::doAnalysis(const ProcessorGroup* pg,
   timer.start();
 
   UintahParallelComponent * DA = dynamic_cast<UintahParallelComponent*>(d_output);
-  LoadBalancerPort        * lb = dynamic_cast<LoadBalancerPort*>( DA->getPort("load balancer"));
+  LoadBalancer        * lb = dynamic_cast<LoadBalancer*>( DA->getPort("load balancer"));
     
   const Level* level = getLevel(patches);
   const LevelP levelP = getLevelP(patches);

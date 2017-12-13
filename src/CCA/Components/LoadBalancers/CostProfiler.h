@@ -76,7 +76,7 @@ namespace Uintah {
 
   class CostProfiler : public CostForecasterBase {
   public:
-    CostProfiler(const ProcessorGroup* myworld,ProfileDriver::FILTER_TYPE type, LoadBalancerPort *lb) : d_lb(lb), d_myworld(myworld), d_profiler(myworld,type,lb) {};
+    CostProfiler(const ProcessorGroup* myworld,ProfileDriver::FILTER_TYPE type, LoadBalancer *lb) : d_lb(lb), d_myworld(myworld), d_profiler(myworld,type,lb) {};
     void setMinPatchSize(const std::vector<IntVector> &min_patch_size);
     //add the contribution for region r on level l
     void addContribution(DetailedTask *task, double cost);
@@ -97,7 +97,7 @@ namespace Uintah {
 
   private:
 
-    LoadBalancerPort     * d_lb;
+    LoadBalancer     * d_lb;
     const ProcessorGroup * d_myworld;
     ProfileDriver          d_profiler;
 

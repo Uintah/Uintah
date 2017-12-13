@@ -709,6 +709,8 @@ main( int argc, char *argv[], char *env[] )
       LoadBalancerFactory::create( ups, world );
 
     loadBalancer->attachPort( "application", application );
+    simController->attachPort( "load balancer", loadBalancer );
+    appComp->attachPort( "load balancer", loadBalancer );
 
     //__________________________________
     // Output
@@ -725,9 +727,11 @@ main( int argc, char *argv[], char *env[] )
     //__________________________________
     // Scheduler
     SchedulerCommon* scheduler =
-      SchedulerFactory::create(ups, world, dataArchiver);
+      SchedulerFactory::create(ups, world);
 
     scheduler->attachPort( "load balancer", loadBalancer );
+    scheduler->attachPort( "output", dataArchiver );
+    scheduler->attachPort( "application", application );
     
     appComp->attachPort( "scheduler", scheduler );
     simController->attachPort( "scheduler", scheduler );
@@ -750,6 +754,7 @@ main( int argc, char *argv[], char *env[] )
       if (regridder) {
         regridder->attachPort("scheduler", scheduler);
         regridder->attachPort("load balancer", loadBalancer);
+	regridder->attachPort( "application", application );
 
         simController->attachPort("regridder", regridder);
         appComp->attachPort("regridder", regridder);

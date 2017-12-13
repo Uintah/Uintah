@@ -158,8 +158,6 @@ void PostProcessUda::scheduleInitialize(const LevelP& level,
   Dir fromDir( d_udaDir );
   m_output->postProcessUdaSetup( fromDir );
 
-  d_lb = sched->getLoadBalancer();
-
   vector<Module*>::iterator iter;
   for( iter  = d_Modules.begin(); iter != d_Modules.end(); iter++){
     Module* m = *iter;
@@ -191,7 +189,7 @@ void PostProcessUda::sched_readDataArchive(const LevelP& level,
                         &PostProcessUda::readDataArchive);
 
   GridP grid = level->getGrid();
-  const PatchSet* perProcPatches = d_lb->getPerProcessorPatchSet(grid);
+  const PatchSet* perProcPatches = m_loadBalancer->getPerProcessorPatchSet(grid);
   const PatchSubset* patches = perProcPatches->getSubset(d_myworld->myRank());
 
   vector<int> allMatls_vec;
@@ -289,13 +287,13 @@ void PostProcessUda::readDataArchive(const ProcessorGroup* pg,
    cout <<"    timeIndex: " << timeIndex << endl;
     GridP myGrid = d_dataArchive->queryGrid(timeIndex);
    old_dw->unfinalize();
-   d_dataArchive->postProcess_ReadUda(pg, timeIndex, myGrid, patches, old_dw, d_lb);
+   d_dataArchive->postProcess_ReadUda(pg, timeIndex, myGrid, patches, old_dw, m_loadBalancer);
    old_dw->refinalize();
   }
 #endif
 
   // new dw
-  d_dataArchive->postProcess_ReadUda(pg, d_timeIndex, d_oldGrid, patches, new_dw, d_lb);
+  d_dataArchive->postProcess_ReadUda(pg, d_timeIndex, d_oldGrid, patches, new_dw, m_loadBalancer);
   d_timeIndex++;
 //  new_dw->print();
 
@@ -313,7 +311,7 @@ void PostProcessUda::scheduleComputeStableTimeStep(const LevelP& level,
   t->computes( delt_label, level.get_rep() );
 
   GridP grid = level->getGrid();
-  const PatchSet* perProcPatches = d_lb->getPerProcessorPatchSet(grid);
+  const PatchSet* perProcPatches = m_loadBalancer->getPerProcessorPatchSet(grid);
 
   t->setType(Task::OncePerProc);
   sched->addTask( t, perProcPatches, m_sharedState->allMaterials() );
@@ -407,7 +405,7 @@ GridP PostProcessUda::getGrid()
   if (d_oldGrid == nullptr || !(*newGrid.get_rep() == *d_oldGrid.get_rep())) {
     d_gridChanged = true;
     d_oldGrid = newGrid;
-    d_lb->possiblyDynamicallyReallocate(newGrid, true);
+    m_loadBalancer->possiblyDynamicallyReallocate(newGrid, true);
   }
   return d_oldGrid;
 }

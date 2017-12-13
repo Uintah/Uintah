@@ -27,7 +27,7 @@
 #include <CCA/Components/PostProcessUda/PostProcess.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
 #include <CCA/Ports/DataWarehouse.h>
-#include <CCA/Ports/LoadBalancerPort.h>
+#include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Output.h>
 #include <CCA/Ports/ProblemSpecInterface.h>
 #include <CCA/Ports/Regridder.h>
@@ -214,8 +214,8 @@ AMRSimulationController::run()
   doInitialTimeStep();
 
   // Update the profiler weights
-  m_lb->finalizeContributions(m_current_gridP);
-  m_lb->resetCostForecaster();
+  m_loadBalancer->finalizeContributions(m_current_gridP);
+  m_loadBalancer->resetCostForecaster();
 
   // Done with all the initialization.
   m_scheduler->setInitTimestep(false);
@@ -242,15 +242,15 @@ AMRSimulationController::run()
   
 //   if( m_output->savingAsPIDX() ) {
 //     if( pidx_requested_nth_rank == -1 ) {
-//       pidx_requested_nth_rank = m_lb->getNthRank();
+//       pidx_requested_nth_rank = m_loadBalancer->getNthRank();
 
 //       if( pidx_requested_nth_rank > 1 ) {
 //         proc0cout << "Input file requests output to be saved by every "
 //                   << pidx_requested_nth_rank << "th processor.\n"
 //                   << "  - However, setting output to every processor "
 //                   << "until a checkpoint is reached." << std::endl;
-//         m_lb->setNthRank( 1 );
-//         m_lb->possiblyDynamicallyReallocate( m_current_gridP, LoadBalancerPort::regrid );
+//         m_loadBalancer->setNthRank( 1 );
+//         m_loadBalancer->possiblyDynamicallyReallocate( m_current_gridP, LoadBalancer::regrid );
 //         m_output->setSaveAsPIDX();
 //       }
 //     }
@@ -373,8 +373,8 @@ AMRSimulationController::run()
 //                     << ") - need to recompile with nth proc set to: "
 //                     << pidx_requested_nth_rank << std::endl;
 
-//           m_lb->setNthRank( pidx_requested_nth_rank );
-//           m_lb->possiblyDynamicallyReallocate( m_current_gridP, LoadBalancerPort::regrid );
+//           m_loadBalancer->setNthRank( pidx_requested_nth_rank );
+//           m_loadBalancer->possiblyDynamicallyReallocate( m_current_gridP, LoadBalancer::regrid );
 //           m_output->setSaveAsUDA();
 //           pidx_need_to_recompile = true;
 //         }
@@ -464,7 +464,7 @@ AMRSimulationController::run()
     m_recompile_taskgraph = ( m_recompile_taskgraph ||
 			      m_app->needRecompile   ( m_current_gridP ) ||
 			      m_output->needRecompile( m_current_gridP ) ||
-			      m_lb->needRecompile    ( m_current_gridP ) ||
+			      m_loadBalancer->needRecompile    ( m_current_gridP ) ||
 			      (m_regridder &&
 			       m_regridder->needRecompile( m_current_gridP )) );
 
@@ -479,7 +479,7 @@ AMRSimulationController::run()
 
       // Recompile taskgraph, re-assign BCs, reset recompile flag.      
       if (m_recompile_taskgraph) {
-        m_current_gridP->assignBCS(m_grid_ps, m_lb);
+        m_current_gridP->assignBCS(m_grid_ps, m_loadBalancer);
         m_current_gridP->performConsistencyCheck();
         m_recompile_taskgraph = false;
       }
@@ -493,8 +493,8 @@ AMRSimulationController::run()
 //           proc0cout << "This is the time step following a checkpoint - "
 //                     << "need to put the task graph back with a recompile - "
 //                     << "setting nth output to 1\n";
-//           m_lb->setNthRank( 1 );
-//           m_lb->possiblyDynamicallyReallocate( m_current_gridP, LoadBalancerPort::regrid );
+//           m_loadBalancer->setNthRank( 1 );
+//           m_loadBalancer->possiblyDynamicallyReallocate( m_current_gridP, LoadBalancer::regrid );
 //           m_output->setSaveAsPIDX();
 //           pidx_restore_nth_rank = false;
 //         }
@@ -566,7 +566,7 @@ AMRSimulationController::run()
     // }
 
     // Update the profiler weights
-    m_lb->finalizeContributions( m_current_gridP );
+    m_loadBalancer->finalizeContributions( m_current_gridP );
 
     // Done with the first time step.
     if( first ) {
@@ -611,14 +611,14 @@ AMRSimulationController::doInitialTimeStep()
   if( m_restarting ) {
 
     // for dynamic lb's, set up restart patch config
-    m_lb->possiblyDynamicallyReallocate( m_current_gridP, LoadBalancerPort::restart );
+    m_loadBalancer->possiblyDynamicallyReallocate( m_current_gridP, LoadBalancer::restart );
 
     // tsaad & bisaac: At this point, during a restart, a grid does
     // NOT have knowledge of the boundary conditions.  (See other
     // comments in SimulationController.cc for why that is the
     // case). Here, and given a legitimate load balancer, we can
     // assign the BCs to the grid in an efficient manner.
-    m_current_gridP->assignBCS( m_grid_ps, m_lb );
+    m_current_gridP->assignBCS( m_grid_ps, m_loadBalancer );
     m_current_gridP->performConsistencyCheck();
 
     m_app->restartInitialize();
@@ -629,7 +629,7 @@ AMRSimulationController::doInitialTimeStep()
 
     // Initialize the system var (time step and simulation time)
     m_app->scheduleInitializeSystemVars( m_current_gridP,
-					 m_lb->getPerProcessorPatchSet(m_current_gridP),
+					 m_loadBalancer->getPerProcessorPatchSet(m_current_gridP),
 					 m_scheduler );
 
     // Report all of the stats before doing any possible in-situ work
@@ -670,9 +670,9 @@ AMRSimulationController::doInitialTimeStep()
   }
   else /* if( !m_restarting ) */ {
     // for dynamic lb's, set up initial patch config
-    m_lb->possiblyDynamicallyReallocate( m_current_gridP, LoadBalancerPort::init );
+    m_loadBalancer->possiblyDynamicallyReallocate( m_current_gridP, LoadBalancer::init );
     
-    m_current_gridP->assignBCS( m_grid_ps, m_lb );
+    m_current_gridP->assignBCS( m_grid_ps, m_loadBalancer );
     m_current_gridP->performConsistencyCheck();
 
     bool needNewLevel = false;
@@ -720,7 +720,7 @@ AMRSimulationController::doInitialTimeStep()
       // Initialize the system var (time step and simulation time).
       // Must be done after the output.
       m_app->scheduleInitializeSystemVars( m_current_gridP,
-					   m_lb->getPerProcessorPatchSet(m_current_gridP),
+					   m_loadBalancer->getPerProcessorPatchSet(m_current_gridP),
 					   m_scheduler );
 
       // Report all of the stats before doing any possible in-situ work
@@ -779,7 +779,7 @@ AMRSimulationController::executeTimeStep( int totalFine )
     m_app->setDelTForAllLevels( m_scheduler, m_current_gridP, totalFine );
 
     // Standard data warehouse scrubbing.
-    if (m_scrub_datawarehouse && m_lb->getNthRank() == 1) {
+    if (m_scrub_datawarehouse && m_loadBalancer->getNthRank() == 1) {
       if (restartable) {
         m_scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubNonPermanent);
       }
@@ -793,7 +793,7 @@ AMRSimulationController::executeTimeStep( int totalFine )
     }
     // If not scrubbing or getNthRank requires the variables after
     // they would have been scrubbed so turn off all scrubbing.
-    else {  //if( !m_scrub_datawarehouse || m_lb->getNthRank() > 1 )
+    else {  //if( !m_scrub_datawarehouse || m_loadBalancer->getNthRank() > 1 )
       for (int i = 0; i <= totalFine; ++i) {
         m_scheduler->get_dw(i)->setScrubbing(DataWarehouse::ScrubNone);
       }
@@ -868,12 +868,12 @@ AMRSimulationController::doRegridding( bool initialTimeStep )
   
   m_app->setRegridTimeStep(false);
 
-  int lbstate = initialTimeStep ? LoadBalancerPort::init : LoadBalancerPort::regrid;
+  int lbstate = initialTimeStep ? LoadBalancer::init : LoadBalancer::regrid;
 
   if (m_current_gridP != oldGrid) {
     m_app->setRegridTimeStep(true);
      
-    m_lb->possiblyDynamicallyReallocate(m_current_gridP, lbstate);
+    m_loadBalancer->possiblyDynamicallyReallocate(m_current_gridP, lbstate);
 
     if(dbg_barrier.active()) {
       m_barrier_timer.reset( true );
@@ -881,7 +881,7 @@ AMRSimulationController::doRegridding( bool initialTimeStep )
       m_barrier_times[1] += m_barrier_timer().seconds();
     }
     
-    m_current_gridP->assignBCS( m_grid_ps, m_lb );
+    m_current_gridP->assignBCS( m_grid_ps, m_loadBalancer );
     m_current_gridP->performConsistencyCheck();
 
     //__________________________________
@@ -911,7 +911,7 @@ AMRSimulationController::doRegridding( bool initialTimeStep )
           for( Level::patch_iterator patchIter = level->patchesBegin(); patchIter < level->patchesEnd(); patchIter++ ) {
             const Patch* patch = *patchIter;
             amrout << "(Patch " << patch->getID()
-		   << " proc " << m_lb->getPatchwiseProcessorAssignment(patch)
+		   << " proc " << m_loadBalancer->getPatchwiseProcessorAssignment(patch)
 		   << ": box=" << patch->getExtraBox()
 		   << ", lowIndex=" << patch->getExtraCellLowIndex()
 		   << ", highIndex=" << patch->getExtraCellHighIndex() << ")\n";
@@ -1061,7 +1061,7 @@ AMRSimulationController::compileTaskGraph( int totalFine )
   // Update the system var (time step and simulation time). Must be
   // done after the output.
   m_app->scheduleUpdateSystemVars( m_current_gridP,
-                                   m_lb->getPerProcessorPatchSet(m_current_gridP),
+                                   m_loadBalancer->getPerProcessorPatchSet(m_current_gridP),
 				   m_scheduler );
 
   // Report all of the stats before doing any possible in-situ work
@@ -1195,7 +1195,7 @@ AMRSimulationController::subCycleExecute( int startDW,
   
   int newDWStride = dwStride/numSteps;
 
-  DataWarehouse::ScrubMode oldScrubbing = (/*m_lb->isDynamic() ||*/ m_app->restartableTimeSteps()) ?
+  DataWarehouse::ScrubMode oldScrubbing = (/*m_loadBalancer->isDynamic() ||*/ m_app->restartableTimeSteps()) ?
     DataWarehouse::ScrubNonPermanent : DataWarehouse::ScrubComplete;
 
   int curDW = startDW;
@@ -1302,6 +1302,6 @@ AMRSimulationController::scheduleComputeStableTimeStep()
   // Schedule the reduction of the time step and other variables on a
   // per patch basis to a per rank basis.
   m_app->scheduleReduceSystemVars( m_current_gridP,
-				   m_lb->getPerProcessorPatchSet(m_current_gridP),
+				   m_loadBalancer->getPerProcessorPatchSet(m_current_gridP),
 				   m_scheduler);
 }

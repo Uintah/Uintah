@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 #include <CCA/Components/Schedulers/Relocate.h>
-#include <CCA/Ports/LoadBalancerPort.h>
+#include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Containers/Array2.h>
 #include <Core/Grid/DbgOutput.h>
@@ -151,7 +151,7 @@ namespace Uintah {
     ScatterRecord* findOrInsertRecord(const Patch* from, const Patch* to, int matl, int curLevelIndex, ParticleSubset* pset);
     ScatterRecord* findRecord(const Patch* from, const Patch* to, int matl, int curLevelIndex);
     
-    void addNeighbor( LoadBalancerPort * lb, const ProcessorGroup * pg, const Patch * to );
+    void addNeighbor( LoadBalancer * lb, const ProcessorGroup * pg, const Patch * to );
 
     recvmaptype recvs;
     void saveRecv(const Patch* to, int matl, char* databuf, int bufsize, int numParticles);
@@ -168,7 +168,7 @@ namespace Uintah {
 void
 Relocate::scheduleParticleRelocation(       Scheduler                                  * sched,
                                       const ProcessorGroup                             * pg,
-                                            LoadBalancerPort                           * lb,
+                                            LoadBalancer                           * lb,
                                       const LevelP                                     & coarsestLevelwithParticles,
                                       const VarLabel                                   * posLabel,
                                       const std::vector<std::vector<const VarLabel*> > & otherLabels,
@@ -290,7 +290,7 @@ Relocate::scheduleParticleRelocation(       Scheduler                           
 void
 Relocate::scheduleParticleRelocation( Scheduler                                        * sched,
                                       const ProcessorGroup                             * pg,
-                                      LoadBalancerPort                                 * lb,
+                                      LoadBalancer                                 * lb,
                                       const LevelP                                     & coarsestLevelwithParticles,
                                       const VarLabel                                   * old_posLabel,
                                       const std::vector<std::vector<const VarLabel*> > & old_labels,
@@ -490,7 +490,7 @@ void MPIScatterProcessorRecord::sortPatches()
 }
 //______________________________________________________________________
 //
-void MPIScatterRecords::addNeighbor( LoadBalancerPort     * lb, 
+void MPIScatterRecords::addNeighbor( LoadBalancer     * lb, 
                                      const ProcessorGroup * pg,
                                      const Patch          * neighbor )
 {

@@ -45,7 +45,6 @@ using namespace Uintah;
 SchedulerCommon*
 SchedulerFactory::create( const ProblemSpecP   & ps
                         , const ProcessorGroup * world
-                        , const Output         * output
                         )
 {
   SchedulerCommon* sch  = nullptr;
@@ -70,19 +69,19 @@ SchedulerFactory::create( const ProblemSpecP   & ps
   /////////////////////////////////////////////////////////////////////
   // Check for specific scheduler request from the input file
   if (scheduler == "MPI") {
-    sch = scinew MPIScheduler(world, output, nullptr);
+    sch = scinew MPIScheduler(world, nullptr);
   }
 
   else if (scheduler == "DynamicMPI") {
-    sch = scinew DynamicMPIScheduler(world, output, nullptr);
+    sch = scinew DynamicMPIScheduler(world, nullptr);
   }
 
   else if (scheduler == "Unified") {
-    sch = scinew UnifiedScheduler(world, output, nullptr);
+    sch = scinew UnifiedScheduler(world, nullptr);
   }
 
   else if (scheduler == "KokkosOpenMP") {
-    sch = scinew KokkosOpenMPScheduler(world, output, nullptr);
+    sch = scinew KokkosOpenMPScheduler(world, nullptr);
   }
 
   else {

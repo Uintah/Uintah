@@ -187,7 +187,7 @@ WARNING
 
     ProblemSpecP        d_prob_spec;
     MaterialSet       * d_matlSet = nullptr;
-    LoadBalancerPort  * d_lb      = nullptr;
+    LoadBalancer  * d_lb      = nullptr;
   };
 }
 }

@@ -82,13 +82,13 @@ WARNING
 
 //! The Load Balancer is responsible for assigning tasks to do their work
 //! on specified processors.  Different subclasses differ in the way this is done.
-class LoadBalancerPort : public UintahParallelPort {
+class LoadBalancer : public UintahParallelPort {
 
 public:
     
-  LoadBalancerPort();
+  LoadBalancer();
 
-  virtual ~LoadBalancerPort();
+  virtual ~LoadBalancer();
 
   //! Assigns each task in tg to its corresponding processor.
   //! Uses the patchwise processor assignment.
@@ -185,10 +185,10 @@ public:
 private:
 
   // eliminate copy, assignment and move
-  LoadBalancerPort( const LoadBalancerPort & )            = delete;
-  LoadBalancerPort& operator=( const LoadBalancerPort & ) = delete;
-  LoadBalancerPort( LoadBalancerPort && )                 = delete;
-  LoadBalancerPort& operator=( LoadBalancerPort && )      = delete;
+  LoadBalancer( const LoadBalancer & )            = delete;
+  LoadBalancer& operator=( const LoadBalancer & ) = delete;
+  LoadBalancer( LoadBalancer && )                 = delete;
+  LoadBalancer& operator=( LoadBalancer && )      = delete;
 };
 
 } // End namespace Uintah

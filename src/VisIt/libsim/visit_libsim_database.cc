@@ -1849,7 +1849,7 @@ visit_handle visit_SimGetDomainList(const char *name, void *cbdata)
     
     TimeStepInfo* &stepInfo = sim->stepInfo;
     
-    LoadBalancerPort* lb = schedulerP->getLoadBalancer();
+    LoadBalancer* lb = sim->simController->getLoadBalancer();
     
     int cc = 0;
     int totalPatches = 0;

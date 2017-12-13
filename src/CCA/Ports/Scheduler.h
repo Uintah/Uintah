@@ -45,7 +45,7 @@
 
 namespace Uintah {
 
-  class LoadBalancerPort;
+  class LoadBalancer;
   class Task;
   class ApplicationInterface;
 
@@ -86,6 +86,8 @@ class Scheduler : public UintahParallelPort {
     // Only called by the SimulationController, and only once, and only
     // if the simulation has been "restarted".
     virtual void setGeneration( int id ) = 0;
+
+    virtual void getComponents() = 0;
 
     virtual void problemSetup( const ProblemSpecP     & prob_spec
 			                       , const SimulationStateP & state
@@ -138,9 +140,7 @@ class Scheduler : public UintahParallelPort {
 
     virtual const std::set<std::string>&                        getNotCheckPointVars() const = 0;    
 
-    virtual LoadBalancerPort * getLoadBalancer() = 0;
-
-    virtual void releaseLoadBalancer() = 0;
+    virtual LoadBalancer * getLoadBalancer() = 0;
 
     virtual DataWarehouse* get_dw( int idx ) = 0;
 

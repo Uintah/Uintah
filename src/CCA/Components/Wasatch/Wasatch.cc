@@ -1166,8 +1166,7 @@ namespace WasatchCore{
     const Uintah::PatchSet* const localPatches = get_patchset( USE_FOR_OPERATORS, level, sched );
     const GraphHelper* advSolGraphHelper = graphCategories_[ ADVANCE_SOLUTION ];
 
-    Uintah::LoadBalancerPort * lb              = sched->getLoadBalancer();
-    const Uintah::PatchSet   * perproc_patches = lb->getPerProcessorPatchSet( level );
+    const Uintah::PatchSet * perproc_patches = m_loadBalancer->getPerProcessorPatchSet( level );
 
     if ( timeIntegrator_.has_dual_time() ) {
       subsched_ = sched->createSubScheduler();
@@ -1526,8 +1525,7 @@ namespace WasatchCore{
     //________________________________________________________
     // add a task to populate a "field" with the current time.
     // This is required by the time integrator.
-    //    Uintah::LoadBalancerPort * lb = sched->getLoadBalancer();
-    //    const Uintah::PatchSet* localPatches = lb->getPerProcessorPatchSet(level);
+    //    const Uintah::PatchSet* localPatches = m_loadBalancer->getPerProcessorPatchSet(level);
     const Uintah::PatchSet* const localPatches = get_patchset( USE_FOR_TASKS, level, sched );
     {
       // add a task to update current simulation time
@@ -1602,8 +1600,7 @@ namespace WasatchCore{
     //________________________________________________________
     // add a task to populate a "field" with the current time.
     // This is required by the time integrator.
-//    Uintah::LoadBalancerPort * lb = sched->getLoadBalancer();
-//    const Uintah::PatchSet* localPatches = lb->getPerProcessorPatchSet(level);
+//    const Uintah::PatchSet* localPatches =  m_loadBalancer->getPerProcessorPatchSet(level);
     const Uintah::PatchSet* const localPatches = get_patchset( USE_FOR_TASKS, level, sched );
     {
       // add a task to update current simulation time
@@ -1812,13 +1809,13 @@ namespace WasatchCore{
     switch ( pss ) {
 
       case USE_FOR_TASKS:
-        // return sched->getLoadBalancer()->getPerProcessorPatchSet(level);
+        // return  m_loadBalancer->getPerProcessorPatchSet(level);
         return level->eachPatch();
         break;
 
       case USE_FOR_OPERATORS: {
         const int levelID = level->getID();
-        const Uintah::PatchSet* const allPatches = sched->getLoadBalancer()->getPerProcessorPatchSet(level);
+        const Uintah::PatchSet* const allPatches = m_loadBalancer->getPerProcessorPatchSet(level);
         const Uintah::PatchSubset* const localPatches = allPatches->getSubset( d_myworld->myRank() );
 
         std::map< int, const Uintah::PatchSet* >::iterator ip = patchesForOperators_.find( levelID );
@@ -1829,7 +1826,7 @@ namespace WasatchCore{
         // jcs: this results in "normal" scheduling and WILL NOT WORK FOR LINEAR SOLVES
         //      in that case, we need to use "gang" scheduling: addAll( localPatches )
         patches->addEach( localPatches->getVector() );
-        //     const std::set<int>& procs = sched->getLoadBalancer()->getNeighborhoodProcessors();
+        //     const std::set<int>& procs =  m_loadBalancer->getNeighborhoodProcessors();
         //     for( std::set<int>::const_iterator ip=procs.begin(); ip!=procs.end(); ++ip ){
         //       patches->addEach( allPatches->getSubset( *ip )->getVector() );
         //     }

@@ -29,7 +29,8 @@
 #include <CCA/Components/Schedulers/RuntimeStats.hpp>
 #include <CCA/Components/Schedulers/SendState.h>
 #include <CCA/Components/Schedulers/TaskGraph.h>
-#include <CCA/Ports/LoadBalancerPort.h>
+#include <CCA/Ports/ApplicationInterface.h>
+#include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Output.h>
 
 #include <Core/Grid/DbgOutput.h>
@@ -99,10 +100,9 @@ std::map<std::string, double> g_exec_times;
 //______________________________________________________________________
 //
 MPIScheduler::MPIScheduler( const ProcessorGroup * myworld
-                          , const Output         * oport
                           ,       MPIScheduler   * parentScheduler
                           )
-  : SchedulerCommon(myworld, oport)
+  : SchedulerCommon(myworld)
   , m_parent_scheduler{parentScheduler}
 {
 #ifdef UINTAH_ENABLE_KOKKOS
@@ -154,25 +154,25 @@ MPIScheduler::problemSetup( const ProblemSpecP     & prob_spec
 {
   SchedulerCommon::problemSetup(prob_spec, state);
 
-// #ifdef HAVE_VISIT
-//   static bool initialized = false;
+#ifdef HAVE_VISIT
+  static bool initialized = false;
 
-//   // Running with VisIt so add in the variables that the user can
-//   // modify.
-//   if( m_sharedState->getVisIt() && !initialized ) {
-//     m_sharedState->d_douts.push_back( &g_dbg );
-//     m_sharedState->d_douts.push_back( &g_send_stats );
-//     m_sharedState->d_douts.push_back( &g_reductions );
-//     m_sharedState->d_douts.push_back( &g_time_out );
-//     m_sharedState->d_douts.push_back( &g_task_level );
-//     m_sharedState->d_douts.push_back( &g_task_order );
-//     m_sharedState->d_douts.push_back( &g_task_dbg );
-//     m_sharedState->d_douts.push_back( &g_mpi_dbg  );
-//     m_sharedState->d_douts.push_back( &g_exec_out  );
+  // Running with VisIt so add in the variables that the user can
+  // modify.
+  if( m_application->getVisIt() && !initialized ) {
+    m_application->getDouts().push_back( &g_dbg );
+    m_application->getDouts().push_back( &g_send_stats );
+    m_application->getDouts().push_back( &g_reductions );
+    m_application->getDouts().push_back( &g_time_out );
+    m_application->getDouts().push_back( &g_task_level );
+    m_application->getDouts().push_back( &g_task_order );
+    m_application->getDouts().push_back( &g_task_dbg );
+    m_application->getDouts().push_back( &g_mpi_dbg  );
+    m_application->getDouts().push_back( &g_exec_out  );
 
-//     initialized = true;
-//   }
-// #endif
+    initialized = true;
+  }
+#endif
 }
 
 //______________________________________________________________________
@@ -180,9 +180,9 @@ MPIScheduler::problemSetup( const ProblemSpecP     & prob_spec
 SchedulerP
 MPIScheduler::createSubScheduler()
 {
-  UintahParallelPort * lbp      = getPort("load balancer");
-  MPIScheduler       * newsched = scinew MPIScheduler( d_myworld, m_out_port, this );
-  newsched->attachPort( "load balancer", lbp );
+  MPIScheduler * newsched = scinew MPIScheduler( d_myworld, this );
+
+  newsched->setComponents( this );
   newsched->m_sharedState = m_sharedState;
   return newsched;
 }
@@ -311,7 +311,7 @@ MPIScheduler::runTask( DetailedTask * dtask
       if (!m_is_copy_data_timestep &&
 	  dtask->getTask()->getType() != Task::Output) {
         // add contribution for patchlist
-        getLoadBalancer()->addContribution(dtask, total_task_time);
+        m_loadBalancer->addContribution(dtask, total_task_time);
       }
     }
   }
@@ -395,7 +395,7 @@ MPIScheduler::postMPISends( DetailedTask * dtask
      }
 
      // if we send/recv to an output task, don't send/recv if not an output timestep
-     if (req->m_to_tasks.front()->getTask()->getType() == Task::Output && !m_out_port->isOutputTimeStep() && !m_out_port->isCheckpointTimeStep()) {
+     if (req->m_to_tasks.front()->getTask()->getType() == Task::Output && !m_output->isOutputTimeStep() && !m_output->isCheckpointTimeStep()) {
        DOUT(g_dbg, "Rank-" << my_rank << "   Ignoring non-output-timestep send for " << *req);
        continue;
      }
@@ -408,24 +408,24 @@ MPIScheduler::postMPISends( DetailedTask * dtask
                << ", Ghost::direction: " << Ghost::getGhostTypeDir(req->m_req->m_gtype)
                << ", from dw " << dw->getID());
 
-      // the load balancer is used to determine where data was in the old DW on the prev timestep,
-      // so pass it in if the particle data is in the old DW
+      // the load balancer is used to determine where data was in the
+      // old DW on the prev timestep, so pass it in if the particle
+      // data is in the old DW
       const VarLabel        * posLabel;
       OnDemandDataWarehouse * posDW;
-      LoadBalancerPort      * lb = nullptr;
 
       if( !m_reloc_new_pos_label && m_parent_scheduler ) {
         posDW = m_dws[req->m_req->m_task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
         posLabel = m_parent_scheduler->m_reloc_new_pos_label;
       }
       else {
-        // on an output task (and only on one) we require particle variables from the NewDW
+        // on an output task (and only on one) we require particle
+        // variables from the NewDW
         if (req->m_to_tasks.front()->getTask()->getType() == Task::Output) {
           posDW = m_dws[req->m_req->m_task->mapDataWarehouse(Task::NewDW)].get_rep();
         }
         else {
           posDW = m_dws[req->m_req->m_task->mapDataWarehouse(Task::OldDW)].get_rep();
-          lb = getLoadBalancer();
         }
         posLabel = m_reloc_new_pos_label;
       }
@@ -435,7 +435,7 @@ MPIScheduler::postMPISends( DetailedTask * dtask
         top = top->m_parent_scheduler;
       }
 
-      dw->sendMPI( batch, posLabel, mpibuff, posDW, req, lb );
+      dw->sendMPI( batch, posLabel, mpibuff, posDW, req, m_loadBalancer );
     }
 
     // Post the send
@@ -585,8 +585,8 @@ void MPIScheduler::postMPIRecvs( DetailedTask * dtask
           continue;
         }
         // if we send/recv to an output task, don't send/recv if not an output timestep
-        if (req->m_to_tasks.front()->getTask()->getType() == Task::Output && !m_out_port->isOutputTimeStep()
-            && !m_out_port->isCheckpointTimeStep()) {
+        if (req->m_to_tasks.front()->getTask()->getType() == Task::Output && !m_output->isOutputTimeStep()
+            && !m_output->isCheckpointTimeStep()) {
           DOUT(g_dbg, "Rank-" << my_rank << "   Ignoring non-output-timestep receive for " << *req);
           continue;
         }
@@ -598,20 +598,20 @@ void MPIScheduler::postMPIRecvs( DetailedTask * dtask
 
         OnDemandDataWarehouse* posDW;
 
-        // The load balancer is used to determine where data was in the old dw on the prev timestep
-        // pass it in if the particle data is on the old dw
-        LoadBalancerPort * lb = nullptr;
+        // The load balancer is used to determine where data was in
+        // the old dw on the prev timestep pass it in if the particle
+        // data is on the old dw
         if (!m_reloc_new_pos_label && m_parent_scheduler) {
           posDW = m_dws[req->m_req->m_task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
         }
         else {
-          // On an output task (and only on one) we require particle variables from the NewDW
+          // On an output task (and only on one) we require particle
+          // variables from the NewDW
           if (req->m_to_tasks.front()->getTask()->getType() == Task::Output) {
             posDW = m_dws[req->m_req->m_task->mapDataWarehouse(Task::NewDW)].get_rep();
           }
           else {
             posDW = m_dws[req->m_req->m_task->mapDataWarehouse(Task::OldDW)].get_rep();
-            lb = getLoadBalancer();
           }
         }
 
@@ -620,7 +620,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask * dtask
           top = top->m_parent_scheduler;
         }
 
-        dw->recvMPI( batch, mpibuff, posDW, req, lb );
+        dw->recvMPI( batch, mpibuff, posDW, req, m_loadBalancer );
 
         if ( !req->isNonDataDependency() ) {
           m_task_graphs[m_current_task_graph]->getDetailedTasks()->setScrubCount(req->m_req, req->m_matl, req->m_from_patch, m_dws);
@@ -804,7 +804,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */
                       << " with " << dts->numTasks() << " tasks (" << ntasks << " local)");
 
   if( m_reloc_new_pos_label && m_dws[m_dwmap[Task::OldDW]] != nullptr ) {
-    m_dws[m_dwmap[Task::OldDW]]->exchangeParticleQuantities(dts, getLoadBalancer(), m_reloc_new_pos_label, iteration);
+    m_dws[m_dwmap[Task::OldDW]]->exchangeParticleQuantities(dts, m_loadBalancer, m_reloc_new_pos_label, iteration);
   }
 
   bool abort       = false;
@@ -955,7 +955,7 @@ MPIScheduler::outputTimingStats( const char* label )
     int numCells = 0, numParticles = 0;
     OnDemandDataWarehouseP dw = m_dws[m_dws.size() - 1];
     const GridP grid(const_cast<Grid*>(dw->getGrid()));
-    const PatchSubset* myPatches = getLoadBalancer()->getPerProcessorPatchSet(grid)->getSubset(my_rank);
+    const PatchSubset* myPatches = m_loadBalancer->getPerProcessorPatchSet(grid)->getSubset(my_rank);
     for (auto p = 0; p < myPatches->size(); p++) {
       const Patch* patch = myPatches->get(p);
       IntVector range = patch->getExtraCellHighIndex() - patch->getExtraCellLowIndex();

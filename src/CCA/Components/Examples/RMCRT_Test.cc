@@ -24,7 +24,7 @@
 #include <CCA/Components/Examples/ExamplesLabel.h>
 #include <CCA/Components/Examples/RMCRT_Test.h>
 #include <CCA/Components/Models/Radiation/RMCRT/Radiometer.h>
-#include <CCA/Ports/LoadBalancerPort.h>
+#include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/DataArchive/DataArchive.h>
 #include <Core/Exceptions/ParameterNotFound.h>

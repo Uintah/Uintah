@@ -40,7 +40,7 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Util/DOUT.hpp>
 
-#include <CCA/Ports/LoadBalancerPort.h>
+#include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Output.h>
 #include <CCA/Ports/ProblemSpecInterface.h>
 #include <CCA/Ports/Regridder.h>
@@ -308,6 +308,12 @@ SimulationController::getComponents( void )
     throw InternalError("dynamic_cast of 'm_scheduler' failed!", __FILE__, __LINE__);
   }
 
+  m_loadBalancer = dynamic_cast<LoadBalancer*>( getPort("load balancer") );
+
+  if( !m_loadBalancer ) {
+    throw InternalError("dynamic_cast of 'm_loadBalancer' failed!", __FILE__, __LINE__);
+  }
+
   m_regridder = dynamic_cast<Regridder*>( getPort("regridder") );
 
   if( m_app->isDynamicRegridding() && !m_regridder ) {
@@ -330,7 +336,7 @@ SimulationController::releaseComponents( void )
   releasePort( "load balancer" );
   releasePort( "regridder" );
   releasePort( "output" );
-
+ 
   m_app       = nullptr;
   m_scheduler = nullptr;
   m_regridder = nullptr;
@@ -507,6 +513,8 @@ SimulationController::schedulerSetup( void )
   // Now that the grid is completely set up, set up the scheduler.
   m_scheduler->setRunTimeStats( &m_runtime_stats );
 
+  m_scheduler->getComponents();
+  
   m_scheduler->problemSetup( m_ups, m_app->getSimulationStateP() );
 
   // Additional set up calls.
@@ -524,9 +532,7 @@ void
 SimulationController::loadBalancerSetup( void )
 {
   // Set up the load balancer.
-  m_lb = m_scheduler->getLoadBalancer();
-
-  m_lb->setRunTimeStats( &m_runtime_stats );
+  m_loadBalancer->setRunTimeStats( &m_runtime_stats );
 
   //  Set the dimensionality of the problem.
   IntVector low, high, size;
@@ -534,11 +540,11 @@ SimulationController::loadBalancerSetup( void )
 
   size = high - low - m_current_gridP->getLevel(0)->getExtraCells()*IntVector(2,2,2);
   
-  m_lb->setDimensionality(size[0] > 1, size[1] > 1, size[2] > 1);
+  m_loadBalancer->setDimensionality(size[0] > 1, size[1] > 1, size[2] > 1);
  
   // In addition, do this step after regridding setup as the minimum
   // patch size that the regridder will create will be known.
-  m_lb->problemSetup( m_ups, m_current_gridP, m_app->getSimulationStateP() );
+  m_loadBalancer->problemSetup( m_ups, m_current_gridP, m_app->getSimulationStateP() );
 }
 
 //______________________________________________________________________
@@ -575,7 +581,7 @@ SimulationController::timeStateSetup()
     m_restart_archive->restartInitialize( m_restart_index,
                                           m_current_gridP,
                                           m_scheduler->get_dw(1),
-                                          m_lb,
+                                          m_loadBalancer,
                                           &simTimeStart );
 
     // Set the time step to the restart time step.
@@ -660,7 +666,7 @@ SimulationController::ScheduleReportStats( bool header )
   task->requires(Task::NewDW, m_app->getDelTLabel() );
 
   m_scheduler->addTask(task,
-		       m_lb->getPerProcessorPatchSet(m_current_gridP),
+		       m_loadBalancer->getPerProcessorPatchSet(m_current_gridP),
 		       m_app->getSimulationStateP()->allMaterials() );
 
   // std::cerr << "*************" << __FUNCTION__ << "  " << __LINE__ << "  " << header << std::endl;
@@ -1083,7 +1089,7 @@ SimulationController::ScheduleCheckInSitu( bool first )
     task->requires(Task::NewDW, m_app->getDelTLabel() );
 
     m_scheduler->addTask(task,
-			 m_lb->getPerProcessorPatchSet(m_current_gridP),
+			 m_loadBalancer->getPerProcessorPatchSet(m_current_gridP),
 			 m_app->getSimulationStateP()->allMaterials() );
 
     // std::cerr << "*************" << __FUNCTION__ << "  " << __LINE__ << "  " << first << std::endl;

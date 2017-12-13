@@ -45,7 +45,7 @@ namespace Uintah {
 
 class DataWarehouse;
 class ApplicationInterface;
-class LoadBalancerPort;
+class LoadBalancer;
 
   /**************************************
      
@@ -406,8 +406,8 @@ class LoadBalancerPort;
     //! i.e., filebase.000
     std::string m_filebase { "" };
 
-    ApplicationInterface* m_application{nullptr};
-    LoadBalancerPort * m_loadBalancer{nullptr};
+    ApplicationInterface * m_application{nullptr};
+    LoadBalancer         * m_loadBalancer{nullptr};
     
     //! pointer to simulation state, to get time step and time info
     SimulationStateP m_sharedState;

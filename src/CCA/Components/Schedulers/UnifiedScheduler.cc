@@ -242,10 +242,9 @@ void init_threads( UnifiedScheduler * sched, int num_threads )
 //______________________________________________________________________
 //
 UnifiedScheduler::UnifiedScheduler( const ProcessorGroup   * myworld
-                                  , const Output           * oport
                                   ,       UnifiedScheduler * parentScheduler
                                   )
-  : MPIScheduler(myworld, oport, parentScheduler)
+  : MPIScheduler(myworld, parentScheduler)
 {
 
 #ifdef HAVE_CUDA
@@ -563,7 +562,7 @@ UnifiedScheduler::runTask( DetailedTask*         dtask
         if (!m_is_copy_data_timestep &&
 	    dtask->getTask()->getType() != Task::Output) {
           //add contribution for patchlist
-          getLoadBalancer()->addContribution(dtask, total_task_time);
+          m_loadBalancer->addContribution(dtask, total_task_time);
         }
       }
     }
@@ -661,7 +660,7 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
   m_abort_point = 987654;
 
   if( m_reloc_new_pos_label && m_dws[m_dwmap[Task::OldDW]] != nullptr ) {
-    m_dws[m_dwmap[Task::OldDW]]->exchangeParticleQuantities(m_detailed_tasks, getLoadBalancer(), m_reloc_new_pos_label, iteration);
+    m_dws[m_dwmap[Task::OldDW]]->exchangeParticleQuantities(m_detailed_tasks, m_loadBalancer, m_reloc_new_pos_label, iteration);
   }
 
   m_curr_iteration = iteration;
@@ -1307,7 +1306,7 @@ UnifiedScheduler::prepareGpuDependencies( DetailedTask          * dtask
                                         , OnDemandDataWarehouse * dw
                                         , OnDemandDataWarehouse * old_dw
                                         , const DetailedDep     * dep
-                                        , LoadBalancerPort      * lb
+                                        , LoadBalancer      * lb
                                         , DeviceVarDest           dest
                                         )
 {
@@ -4364,9 +4363,9 @@ UnifiedScheduler::findIntAndExtGpuDependencies( DetailedTask * dtask
         const VarLabel* posLabel;
         OnDemandDataWarehouse* posDW;
 
-        // the load balancer is used to determine where data was in the old dw on the prev timestep -
-        // pass it in if the particle data is on the old dw
-        LoadBalancerPort * lb = nullptr;
+        // the load balancer is used to determine where data was in
+        // the old dw on the prev timestep - pass it in if the
+        // particle data is on the old dw
 
         if (!m_reloc_new_pos_label && m_parent_scheduler) {
           posDW = m_dws[req->m_req->m_task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
@@ -4379,19 +4378,20 @@ UnifiedScheduler::findIntAndExtGpuDependencies( DetailedTask * dtask
           }
           else {
             posDW = m_dws[req->m_req->m_task->mapDataWarehouse(Task::OldDW)].get_rep();
-            lb = getLoadBalancer();
           }
           posLabel = m_reloc_new_pos_label;
         }
-        // Load information which will be used to later invoke a kernel to copy this range out of the GPU.
+        // Load information which will be used to later invoke a
+        // kernel to copy this range out of the GPU.
         prepareGpuDependencies(dtask, batch, posLabel, dw, posDW, req, lb, GpuUtilities::anotherDeviceSameMpiRank);
       }
     }  // end for (DependencyBatch * batch = task->getInteranlComputes() )
 
-    // Prepare external dependencies.  The only thing that needs to be prepared is
-    // getting ghost cell data from a GPU into a flat array and copied to host memory
-    // so that the MPI engine can treat it normally.
-    // That means this handles GPU->other node GPU and GPU->other node CPU.
+    // Prepare external dependencies.  The only thing that needs to be
+    // prepared is getting ghost cell data from a GPU into a flat
+    // array and copied to host memory so that the MPI engine can
+    // treat it normally.  That means this handles GPU->other node GPU
+    // and GPU->other node CPU.
     //
 
     for (DependencyBatch* batch = dtask->getComputes(); batch != 0;
@@ -4441,27 +4441,28 @@ UnifiedScheduler::findIntAndExtGpuDependencies( DetailedTask * dtask
         const VarLabel* posLabel;
         OnDemandDataWarehouse* posDW;
 
-        // the load balancer is used to determine where data was in the old dw on the prev timestep -
-        // pass it in if the particle data is on the old dw
-        LoadBalancerPort * lb = 0;
+        // the load balancer is used to determine where data was in
+        // the old dw on the prev timestep - pass it in if the
+        // particle data is on the old dw
 
         if (!m_reloc_new_pos_label && m_parent_scheduler) {
           posDW    = m_dws[req->m_req->m_task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
           posLabel = m_parent_scheduler->m_reloc_new_pos_label;
         }
         else {
-          // on an output task (and only on one) we require particle variables from the NewDW
+          // on an output task (and only on one) we require particle
+          // variables from the NewDW
           if (req->m_to_tasks.front()->getTask()->getType() == Task::Output) {
             posDW = m_dws[req->m_req->m_task->mapDataWarehouse(Task::NewDW)].get_rep();
           }
           else {
             posDW = m_dws[req->m_req->m_task->mapDataWarehouse(Task::OldDW)].get_rep();
-            lb    = getLoadBalancer();
           }
           posLabel = m_reloc_new_pos_label;
         }
-        // Load information which will be used to later invoke a kernel to copy this range out of the GPU.
-        prepareGpuDependencies(dtask, batch, posLabel, dw, posDW, req, lb, GpuUtilities::anotherMpiRank);
+        // Load information which will be used to later invoke a
+        // kernel to copy this range out of the GPU.
+        prepareGpuDependencies(dtask, batch, posLabel, dw, posDW, req, m_loadBalancer, GpuUtilities::anotherMpiRank);
       }
     }  // end for (DependencyBatch * batch = task->getComputes() )
   }

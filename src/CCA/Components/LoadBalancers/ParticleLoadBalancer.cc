@@ -697,7 +697,7 @@ ParticleLoadBalancer::needRecompile(const GridP& grid)
 //    dbg << d_myworld->myRank() << " DLB::NeedRecompile: check=" << do_check << " ts: " << timestep << " " << m_lb_timeStep_interval << " t " << time << " " << d_lbInterval << " last: " << m_last_lb_timeStep << " " << d_lastLbTime << endl;
 
   // if it determines we need to re-load-balance, recompile
-  if (do_check && possiblyDynamicallyReallocate(grid, LoadBalancerPort::check)) {
+  if (do_check && possiblyDynamicallyReallocate(grid, LoadBalancer::check)) {
     doing << d_myworld->myRank() << " PLB - scheduling recompile " <<endl;
     return true;
   }
@@ -788,8 +788,8 @@ bool ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int 
 
   // don't do on a restart unless procs changed between runs.  For restarts, this is 
   // called mainly to update the perProc Patch sets (at the bottom)
-  if (state != LoadBalancerPort::restart) {
-    if (state != LoadBalancerPort::check) {
+  if (state != LoadBalancer::restart) {
+    if (state != LoadBalancer::check) {
       force = true;
       if (m_lb_timeStep_interval != 0) {
         m_last_lb_timeStep = timeStep;
@@ -819,7 +819,7 @@ bool ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int 
       dynamicAllocate=true;
     }
 
-    if (dynamicAllocate || state != LoadBalancerPort::check) {
+    if (dynamicAllocate || state != LoadBalancer::check) {
       //d_oldAssignment = d_processorAssignment;
       changed = true;
       m_processor_assignment = m_temp_assignment;
@@ -854,9 +854,9 @@ bool ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int 
   m_temp_assignment.resize(0);
   
   // logic to setting flag
-  int flag = LoadBalancerPort::check;
-  if ( changed || state == LoadBalancerPort::restart){
-    flag = LoadBalancerPort::regrid;
+  int flag = LoadBalancer::check;
+  if ( changed || state == LoadBalancer::restart){
+    flag = LoadBalancer::regrid;
   }
   
   // this must be called here (it creates the new per-proc patch sets)
@@ -908,21 +908,21 @@ ParticleLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid, const Simul
   m_sfc.SetCleanup(BATCHERS);
   m_sfc.SetMergeParameters(3000,500,2,.15);  //Should do this by profiling
 
-// #ifdef HAVE_VISIT
-//   static bool initialized = false;
+#ifdef HAVE_VISIT
+  static bool initialized = false;
 
-//   // Running with VisIt so add in the variables that the user can
-//   // modify.
-//   if( m_sharedState->getVisIt() && !initialized ) {
-//     m_sharedState->d_debugStreams.push_back( &doing  );
-//     m_sharedState->d_debugStreams.push_back( &lb );
-//     m_sharedState->d_debugStreams.push_back( &dbg );
-//     m_sharedState->d_debugStreams.push_back( &stats  );
-//     m_sharedState->d_debugStreams.push_back( &times );
-//     m_sharedState->d_debugStreams.push_back( &lbout );
+  // Running with VisIt so add in the variables that the user can
+  // modify.
+  if( m_application->getVisIt() && !initialized ) {
+    m_application->getDebugStreams().push_back( &doing  );
+    m_application->getDebugStreams().push_back( &lb );
+    m_application->getDebugStreams().push_back( &dbg );
+    m_application->getDebugStreams().push_back( &stats  );
+    m_application->getDebugStreams().push_back( &times );
+    m_application->getDebugStreams().push_back( &lbout );
 
-//     initialized = true;
-//   }
-// #endif
+    initialized = true;
+  }
+#endif
 }
 

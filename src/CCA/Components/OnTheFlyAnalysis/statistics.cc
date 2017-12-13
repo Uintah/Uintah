@@ -421,7 +421,8 @@ void statistics::scheduleRestartInitialize(SchedulerP& sched,
   DataWarehouse* new_dw = sched->getLastDW();
 
   // Find the first patch on this level that this mpi rank owns.
-  const Uintah::PatchSet* const ps = sched->getLoadBalancer()->getPerProcessorPatchSet(level);
+  const Uintah::PatchSet* const ps =
+    sched->getLoadBalancer()->getPerProcessorPatchSet(level);
   int rank = Parallel::getMPIRank();
   const PatchSubset* myPatches = ps->getSubset(rank);
   const Patch* firstPatch = myPatches->get(0);

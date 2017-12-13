@@ -1,4 +1,3 @@
-
 /*
  * The MIT License
  *
@@ -123,11 +122,12 @@ ApplicationCommon::~ApplicationCommon()
 
 void ApplicationCommon::setComponents( const ApplicationCommon *parent )
 {
-  attachPort( "scheduler",  parent->m_scheduler );
-  attachPort( "modelMaker", parent->m_modelMaker );
-  attachPort( "solver",     parent->m_solver );
-  attachPort( "regridder",  parent->m_regridder );
-  attachPort( "output",     parent->m_output );
+  attachPort( "scheduler",     parent->m_scheduler );
+  attachPort( "load balancer", parent->m_loadBalancer );
+  attachPort( "modelMaker",    parent->m_modelMaker );
+  attachPort( "solver",        parent->m_solver );
+  attachPort( "regridder",     parent->m_regridder );
+  attachPort( "output",        parent->m_output );
 
   getComponents();
 }
@@ -136,8 +136,14 @@ void ApplicationCommon::getComponents()
 {
   m_scheduler = dynamic_cast<Scheduler*>( getPort("scheduler") );
 
-  if( isDynamicRegridding() && !m_scheduler ) {
+  if( !m_scheduler ) {
     throw InternalError("dynamic_cast of 'm_regridder' failed!", __FILE__, __LINE__);
+  }
+
+  m_loadBalancer = dynamic_cast<LoadBalancer*>( getPort("load balancer") );
+
+  if( !m_loadBalancer ) {
+    throw InternalError("dynamic_cast of 'm_loadBalancer' failed!", __FILE__, __LINE__);
   }
 
   m_modelMaker = dynamic_cast<ModelMaker*>( getPort("modelMaker") );
@@ -168,16 +174,18 @@ void ApplicationCommon::getComponents()
 void ApplicationCommon::releaseComponents()
 {
   releasePort( "scheduler" );
+  releasePort( "load balancer" );
   releasePort( "modelMaker" );
   releasePort( "solver" );
   releasePort( "regridder" );
   releasePort( "output" );
 
-  m_scheduler  = nullptr;
-  m_modelMaker = nullptr;
-  m_solver     = nullptr;
-  m_regridder  = nullptr;
-  m_output     = nullptr;
+  m_scheduler    = nullptr;
+  m_loadBalancer = nullptr;
+  m_modelMaker   = nullptr;
+  m_solver       = nullptr;
+  m_regridder    = nullptr;
+  m_output       = nullptr;
 }
 
 void ApplicationCommon::problemSetup( const ProblemSpecP &prob_spec )

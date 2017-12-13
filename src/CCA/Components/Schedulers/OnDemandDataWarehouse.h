@@ -436,7 +436,7 @@ class OnDemandDataWarehouse : public DataWarehouse {
                       size_t pidx_bufferSize);
 #endif
     void exchangeParticleQuantities( DetailedTasks    * dts,
-                                     LoadBalancerPort * lb,
+                                     LoadBalancer * lb,
                                      const VarLabel   * pos_var,
                                      int              iteration );
 
@@ -445,13 +445,13 @@ class OnDemandDataWarehouse : public DataWarehouse {
                   BufferInfo            & buffer,
                   OnDemandDataWarehouse * old_dw,
                   const DetailedDep     * dep,
-                  LoadBalancerPort      * lb );
+                  LoadBalancer      * lb );
 
     void recvMPI( DependencyBatch       * batch,
                   BufferInfo            & buffer,
                   OnDemandDataWarehouse * old_dw,
                   const DetailedDep     * dep,
-                  LoadBalancerPort      * lb);
+                  LoadBalancer      * lb);
 
     void reduceMPI(const VarLabel* label,
                    const Level* level,

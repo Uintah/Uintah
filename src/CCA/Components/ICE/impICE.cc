@@ -26,7 +26,7 @@
 #include <CCA/Components/ICE/ICEMaterial.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/ICE/BoundaryCond.h>
-#include <CCA/Ports/LoadBalancerPort.h>
+#include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/AMR.h>
 #include <Core/Grid/DbgOutput.h>
@@ -408,8 +408,7 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
   t->modifies(lb->vol_fracY_FCLabel);
   t->modifies(lb->vol_fracZ_FCLabel);  
   
-  LoadBalancerPort * loadBal         = sched->getLoadBalancer();
-  const PatchSet   * perproc_patches = loadBal->getPerProcessorPatchSet(level);
+  const PatchSet * perproc_patches = m_loadBalancer->getPerProcessorPatchSet(level);
 
   sched->addTask( t, perproc_patches, all_matls );
 }

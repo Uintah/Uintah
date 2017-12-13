@@ -27,7 +27,7 @@
 
 #include <CCA/Components/Regridder/PerPatchVars.h>
 #include <CCA/Ports/Scheduler.h>
-#include <CCA/Ports/LoadBalancerPort.h>
+#include <CCA/Ports/LoadBalancer.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Box.h>
 #include <Core/Grid/Grid.h>
@@ -439,7 +439,7 @@ void lineExtract::doAnalysis(const ProcessorGroup* pg,
                              DataWarehouse* new_dw)
 {   
   UintahParallelComponent * DA = dynamic_cast<UintahParallelComponent*>(d_output);
-  LoadBalancerPort        * lb = dynamic_cast<LoadBalancerPort*>( DA->getPort("load balancer"));
+  LoadBalancer        * lb = dynamic_cast<LoadBalancer*>( DA->getPort("load balancer"));
     
   const Level* level = getLevel(patches);
   

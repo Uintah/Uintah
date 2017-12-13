@@ -27,7 +27,6 @@
 
 //-- Uintah component includes --//
 #include <CCA/Ports/Regridder.h>
-#include <CCA/Ports/DataWarehouseP.h>
 
 //-- Uintah framework includes --//
 #include <Core/Parallel/UintahParallelComponent.h>
@@ -40,11 +39,12 @@
 
 namespace Uintah {
 
+  class ApplicationInterface;
   class DataWarehouse;
   class Patch;
   class VarLabel;
   class ProcessorGroup;
-  class LoadBalancerPort;
+  class LoadBalancer;
   class Scheduler;
 
   typedef std::vector<IntVector> SizeList;
@@ -176,9 +176,10 @@ namespace Uintah {
 
   protected:
 
-    ProblemSpecP       grid_ps_;
-    LoadBalancerPort * m_loadBalancer;
-    Scheduler        * m_scheduler;
+    ProblemSpecP           grid_ps_ {nullptr};
+    LoadBalancer     * m_loadBalancer {nullptr};
+    Scheduler            * m_scheduler    {nullptr};
+    ApplicationInterface * m_application  {nullptr};
 
     SimulationStateP d_sharedState;  ///< Shared global space, to keep track of timesteps
     bool d_isAdaptive;               ///< If false, do not regrid (stick with what you have)

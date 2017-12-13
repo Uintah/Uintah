@@ -34,7 +34,7 @@
 #include <CCA/Components/Solvers/AMR/HypreDriverStruct.h>
 #include <CCA/Components/Solvers/AMR/HypreSolverParams.h>
 #include <CCA/Components/Solvers/MatrixUtil.h>
-#include <CCA/Ports/LoadBalancerPort.h>
+#include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Scheduler.h>
 
 #include <Core/Exceptions/ConvergenceFailure.h>
