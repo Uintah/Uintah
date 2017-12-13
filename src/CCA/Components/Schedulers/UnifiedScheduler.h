@@ -162,7 +162,6 @@ class UnifiedScheduler : public MPIScheduler  {
                                ,       OnDemandDataWarehouse * dw
                                ,       OnDemandDataWarehouse * old_dw
                                , const DetailedDep           * dep
-                               ,       LoadBalancer      * lb
                                ,       DeviceVarDest           des
                                );
 

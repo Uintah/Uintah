@@ -1234,7 +1234,7 @@ UnifiedScheduler::runTasks( int thread_id )
           // it wasn't going to output data, but that would require more task graph recompilations,
           // which can be even costlier overall.  So we do the check here.)
 
-          if ((m_out_port->isOutputTimeStep() || m_out_port->isCheckpointTimeStep())
+          if ((m_output->isOutputTimeStep() || m_output->isCheckpointTimeStep())
               || ((readyTask->getTask()->getName() != "DataArchiver::outputVariables")
                   && (readyTask->getTask()->getName() != "DataArchiver::outputVariables(checkpoint)"))) {
             initiateD2H(readyTask);
@@ -1306,7 +1306,6 @@ UnifiedScheduler::prepareGpuDependencies( DetailedTask          * dtask
                                         , OnDemandDataWarehouse * dw
                                         , OnDemandDataWarehouse * old_dw
                                         , const DetailedDep     * dep
-                                        , LoadBalancer      * lb
                                         , DeviceVarDest           dest
                                         )
 {
@@ -4349,7 +4348,7 @@ UnifiedScheduler::findIntAndExtGpuDependencies( DetailedTask * dtask
         }
         // if we send/recv to an output task, don't send/recv if not an output timestep
         if (req->m_to_tasks.front()->getTask()->getType() == Task::Output
-            && !m_out_port->isOutputTimeStep() && !m_out_port->isCheckpointTimeStep()) {
+            && !m_output->isOutputTimeStep() && !m_output->isCheckpointTimeStep()) {
           if (gpu_stats.active()) {
             cerrLock.lock();
             gpu_stats << myRankThread()
@@ -4383,7 +4382,7 @@ UnifiedScheduler::findIntAndExtGpuDependencies( DetailedTask * dtask
         }
         // Load information which will be used to later invoke a
         // kernel to copy this range out of the GPU.
-        prepareGpuDependencies(dtask, batch, posLabel, dw, posDW, req, lb, GpuUtilities::anotherDeviceSameMpiRank);
+        prepareGpuDependencies(dtask, batch, posLabel, dw, posDW, req, GpuUtilities::anotherDeviceSameMpiRank);
       }
     }  // end for (DependencyBatch * batch = task->getInteranlComputes() )
 
@@ -4412,7 +4411,7 @@ UnifiedScheduler::findIntAndExtGpuDependencies( DetailedTask * dtask
           continue;
         }
         // if we send/recv to an output task, don't send/recv if not an output timestep
-        if (req->m_to_tasks.front()->getTask()->getType() == Task::Output && !m_out_port->isOutputTimeStep() && !m_out_port->isCheckpointTimeStep()) {
+        if (req->m_to_tasks.front()->getTask()->getType() == Task::Output && !m_output->isOutputTimeStep() && !m_output->isCheckpointTimeStep()) {
           if (gpu_stats.active()) {
             cerrLock.lock();
             {
@@ -4462,7 +4461,7 @@ UnifiedScheduler::findIntAndExtGpuDependencies( DetailedTask * dtask
         }
         // Load information which will be used to later invoke a
         // kernel to copy this range out of the GPU.
-        prepareGpuDependencies(dtask, batch, posLabel, dw, posDW, req, m_loadBalancer, GpuUtilities::anotherMpiRank);
+        prepareGpuDependencies(dtask, batch, posLabel, dw, posDW, req, GpuUtilities::anotherMpiRank);
       }
     }  // end for (DependencyBatch * batch = task->getComputes() )
   }
