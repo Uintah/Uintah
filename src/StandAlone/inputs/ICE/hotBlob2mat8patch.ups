@@ -147,7 +147,7 @@
     <!--____________________________________________________________________-->
    <DataArchiver>
       <filebase>hotBlob2mat8patch.uda</filebase>
-      <outputTimestepInterval>1</outputTimestepInterval>
+      <outputTimestepInterval>10</outputTimestepInterval>
       <save label="press_equil_CC"/>
       <save label="vol_frac_CC"/>
       <save label="sp_vol_CC"/>
