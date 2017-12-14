@@ -75,6 +75,8 @@ WARNING
     Regridder();
     virtual ~Regridder();
 
+    virtual std::string getName() = 0;
+
     // Methods for managing the components attached via the ports.
     virtual void setComponents( UintahParallelComponent *comp ) = 0;
     virtual void getComponents() = 0;
