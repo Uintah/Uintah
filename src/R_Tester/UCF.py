@@ -34,7 +34,7 @@ from helpers.modUPS import modUPS
 
 
 NIGHTLYTESTS = [  ("ice_perf_32KPatches",  "icePerf_32KPatches.ups",            10, "All", ["do_performance_test"]),
-                  ("PostProcessUda",       "N/A",                               8,  "All", [ "postProcessUda", "exactComparison"] ) )
+                  ("PostProcessUda",       "N/A",                               8,  "All", [ "postProcessUda", "exactComparison"] )
                ]
 
 LOCALTESTS = [ ("switchExample_impm_mpm", "Switcher/switchExample_impm_mpm.ups",1, "All", ["no_memoryTest"]),
