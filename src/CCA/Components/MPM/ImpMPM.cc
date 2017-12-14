@@ -445,7 +445,7 @@ void ImpMPM::scheduleSwitchInitialization(const LevelP& level,
     return;
   if (flags->d_useLoadCurves) {
     // Schedule the initialization of HeatFlux BCs per particle
-    if(UintahParallelComponent::d_myworld->myRank() == 0){
+    if(d_myworld->myRank() == 0){
       cout << " \n--------------------------------------------------------------"<< endl;
       cout << " ImpMPM: the heat flux BC cannot be applied on the timestep" << endl; 
       cout << " immediately after a component switch.  The computes/requires " << endl;
@@ -1758,7 +1758,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
     double frac_Norm  = dispIncNorm/(dispIncNormMax + 1.e-100);
     double frac_QNorm = dispIncQNorm/(dispIncQNorm0 + 1.e-100);
 
-    if(UintahParallelComponent::d_myworld->myRank() == 0){
+    if(d_myworld->myRank() == 0){
       cerr << "  dispIncNorm/dispIncNormMax = " << frac_Norm << "\n";
       cerr << "  dispIncQNorm/dispIncQNorm0 = "<< frac_QNorm << "\n";
     }
@@ -1777,17 +1777,17 @@ void ImpMPM::iterate(const ProcessorGroup*,
     if ((std::isnan(dispIncQNorm/dispIncQNorm0)||std::isnan(dispIncNorm/dispIncNormMax))
         && dispIncQNorm0!=0.){
       restart_nan=true;
-      if(UintahParallelComponent::d_myworld->myRank()==0)
+      if(d_myworld->myRank()==0)
         cerr << "Restarting due to a nan residual" << endl;
     }
     if (dispIncQNorm/(dispIncQNorm0 + 1e-100) < 0. ||dispIncNorm/(dispIncNormMax+1e-100) < 0.){
       restart_neg_residual=true;
-      if(UintahParallelComponent::d_myworld->myRank()==0)
+      if(d_myworld->myRank()==0)
         cerr << "Restarting due to a negative residual" << endl;
     }
     if (count > flags->d_max_num_iterations){
       restart_num_iters=true;
-      if(UintahParallelComponent::d_myworld->myRank()==0)
+      if(d_myworld->myRank()==0)
         cerr << "Restarting due to exceeding max number of iterations" << endl;
     }
     if (restart_nan || restart_neg_residual || restart_num_iters) {
@@ -2587,7 +2587,7 @@ void ImpMPM::createMatrix(const ProcessorGroup*,
                           DataWarehouse* new_dw)
 {
   map<int,int> dof_diag;
-  d_solver->createLocalToGlobalMapping(UintahParallelComponent::d_myworld,d_perproc_patches,patches,3,flags->d_8or27);
+  d_solver->createLocalToGlobalMapping(d_myworld,d_perproc_patches,patches,3,flags->d_8or27);
   int global_offset=0;
   int numMatls = m_sharedState->getNumMPMMatls();
   for(int pp=0;pp<patches->size();pp++){
@@ -2653,7 +2653,7 @@ void ImpMPM::createMatrix(const ProcessorGroup*,
        }
      } 
   }
-  d_solver->createMatrix(UintahParallelComponent::d_myworld,dof_diag);
+  d_solver->createMatrix(d_myworld,dof_diag);
 }
 
 void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,

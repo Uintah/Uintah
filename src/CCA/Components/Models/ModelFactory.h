@@ -64,6 +64,9 @@ WARNING
     ModelFactory(const ProcessorGroup* myworld);
     virtual ~ModelFactory();
 
+    // Methods for managing the components attached via the ports.
+    virtual void setComponents( UintahParallelComponent *parent ) {};
+    virtual void getComponents() {};
     virtual void releaseComponents() {};
     
     std::vector<ModelInterface*> getModels();

@@ -22,24 +22,30 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef Packages_Uintah_CCA_Components_Solvers_DirectSolve_h
-#define Packages_Uintah_CCA_Components_Solvers_DirectSolve_h
+#ifndef Packages_Uintah_CCA_Components_Solvers_SolverCommon_h
+#define Packages_Uintah_CCA_Components_Solvers_SolverCommon_h
 
-#include <CCA/Components/Solvers/SolverCommon.h>
+#include <CCA/Ports/SolverInterface.h>
+#include <Core/Parallel/UintahParallelComponent.h>
 
 namespace Uintah {
 
-  class DirectSolve : public SolverCommon { 
+  class SolverCommon : public UintahParallelComponent, public SolverInterface { 
 
   public:
 
-    DirectSolve(const ProcessorGroup* myworld);
-    virtual ~DirectSolve();
+    SolverCommon(const ProcessorGroup* myworld);
+    virtual ~SolverCommon();
     
-    virtual SolverParameters* readParameters(       ProblemSpecP     & params,
-					      const std::string      & name,
-					      const SimulationStateP & state );
+    // Methods for managing the components attached via the ports.
+    virtual void setComponents( UintahParallelComponent *comp ) {};
+    virtual void getComponents() {};
+    virtual void releaseComponents() {};
     
+    virtual SolverParameters* readParameters(       ProblemSpecP & params,
+					      const std::string  & name,
+					      const SimulationStateP & state ) = 0;
+
     virtual void scheduleSolve( const LevelP           & level,
 				      SchedulerP       & sched,
 				const MaterialSet      * matls,
@@ -52,17 +58,16 @@ namespace Uintah {
 				const VarLabel         * guess,
 				      Task::WhichDW      which_guess_dw,
 				const SolverParameters * params,
-				      bool               modifies_hypre = false );
-    
-    virtual std::string getName();
-    
-    // DirectSolve does not require initialization... but we need an empty
+				      bool               modifies_hypre = false ) = 0;
+                               
+    virtual std::string getName() = 0;
+
+    // SolverCommon does not require initialization... but we need an empty
     // routine to satisfy inheritance.
     virtual void scheduleInitialize( const LevelP      & level,
-				           SchedulerP  & sched,
-				     const MaterialSet * matls ) {}
+				     SchedulerP  & sched,
+				     const MaterialSet * matls ) = 0;
   };
-
 } // end namespace Uintah
 
-#endif // Packages_Uintah_CCA_Components_Solvers_DirectSolve_h
+#endif // Packages_Uintah_CCA_Components_Solvers_SolverCommon_h

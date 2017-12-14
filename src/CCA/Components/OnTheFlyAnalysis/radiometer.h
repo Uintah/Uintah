@@ -28,7 +28,6 @@
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
 #include <CCA/Components/Models/Radiation/RMCRT/RMCRTCommon.h>
 #include <CCA/Components/Models/Radiation/RMCRT/Radiometer.h>
-#include <CCA/Ports/Output.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/LevelP.h>
 
@@ -51,9 +50,9 @@ namespace Uintah {
 _____________________________________________________________________*/
   class OnTheFly_radiometer : public AnalysisModule {
   public:
-    OnTheFly_radiometer(ProblemSpecP& prob_spec,
-                        SimulationStateP& sharedState,
-		          Output* output);
+    OnTheFly_radiometer(const ProcessorGroup* myworld,
+			const SimulationStateP sharedState,
+			const ProblemSpecP& module_spec);
 
     OnTheFly_radiometer();
 
@@ -95,10 +94,6 @@ _____________________________________________________________________*/
                     DataWarehouse* new_dw);
 
     Radiometer* d_radiometer;
-
-    ProblemSpecP d_module_ps;
-    Output* d_output;
-    SimulationStateP d_sharedState;
   };
 }
 

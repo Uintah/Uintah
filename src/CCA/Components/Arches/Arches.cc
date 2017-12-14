@@ -86,9 +86,11 @@ Arches::~Arches()
   delete m_particlesHelper;
 
   if( m_analysis_modules.size() != 0 ) {
-    for( std::vector<AnalysisModule*>::iterator iter  = m_analysis_modules.begin();
+    for( std::vector<AnalysisModule*>::iterator iter = m_analysis_modules.begin();
          iter != m_analysis_modules.end(); iter++) {
-      delete *iter;
+      AnalysisModule* am = *iter;
+      am->releaseComponents();
+      delete am;
     }
   }
   releasePort("solver");
@@ -170,14 +172,16 @@ Arches::problemSetup( const ProblemSpecP     & params,
       throw InternalError("ARCHES:couldn't get output port", __FILE__, __LINE__);
     }
 
-    m_analysis_modules =
-      AnalysisModuleFactory::create(params, m_sharedState, m_output);
+    m_analysis_modules = AnalysisModuleFactory::create(d_myworld,
+						       m_sharedState,
+						       params);
 
     if(m_analysis_modules.size() != 0) {
       vector<AnalysisModule*>::iterator iter;
       for( iter  = m_analysis_modules.begin();
            iter != m_analysis_modules.end(); iter++) {
         AnalysisModule* am = *iter;
+	am->setComponents( dynamic_cast<ApplicationInterface*>( this ) );
         am->problemSetup(params, materials_ps, grid);
       }
     }

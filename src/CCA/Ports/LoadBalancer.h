@@ -44,6 +44,7 @@
 
 namespace Uintah {
 
+  class UintahParallelComponent;
   class Patch;
   class ProcessorGroup;
   class DetailedTasks;
@@ -90,6 +91,11 @@ public:
 
   virtual ~LoadBalancer();
 
+  // Methods for managing the components attached via the ports.
+  virtual void setComponents( UintahParallelComponent *comp ) = 0;
+  virtual void getComponents() = 0;
+  virtual void releaseComponents() = 0;
+  
   //! Assigns each task in tg to its corresponding processor.
   //! Uses the patchwise processor assignment.
   //! @see getPatchwiseProcessorAssignment.

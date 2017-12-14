@@ -122,7 +122,9 @@ SerialMPM::~SerialMPM()
     vector<AnalysisModule*>::iterator iter;
     for( iter  = d_analysisModules.begin();
          iter != d_analysisModules.end(); iter++){
-      delete *iter;
+      AnalysisModule* am = *iter;
+      am->releaseComponents();
+      delete am;
     }
   }
 
@@ -257,7 +259,7 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
   MPMPhysicalBCFactory::create(restart_mat_ps, grid, flags);
 
   bool needNormals=false;
-  contactModel = ContactFactory::create(UintahParallelComponent::d_myworld,
+  contactModel = ContactFactory::create(d_myworld,
                                         restart_mat_ps,m_sharedState,lb,flags,
                                         needNormals);
 
@@ -276,13 +278,16 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
   //  create analysis modules
   // call problemSetup
   if(!flags->d_with_ice && !flags->d_with_arches){ // mpmice or mpmarches handles this
-    d_analysisModules = AnalysisModuleFactory::create(prob_spec, m_sharedState, m_output);
+    d_analysisModules = AnalysisModuleFactory::create(d_myworld,
+						      m_sharedState,
+						      prob_spec);
 
     if(d_analysisModules.size() != 0){
       vector<AnalysisModule*>::iterator iter;
       for( iter  = d_analysisModules.begin();
            iter != d_analysisModules.end(); iter++){
         AnalysisModule* am = *iter;
+	am->setComponents( dynamic_cast<ApplicationInterface*>( this ) );
         am->problemSetup(prob_spec,restart_prob_spec, grid);
       }
     }
@@ -604,7 +609,7 @@ void SerialMPM::scheduleComputeStableTimeStep(const LevelP& level,
   // However, this task needs to do something in the case that MPM
   // is being run on more than one level.
   Task* t = 0;
-  cout_doing << UintahParallelComponent::d_myworld->myRank() << " MPM::scheduleComputeStableTimeStep \t\t\t\tL-" <<level->getIndex() << endl;
+  cout_doing << d_myworld->myRank() << " MPM::scheduleComputeStableTimeStep \t\t\t\tL-" <<level->getIndex() << endl;
 
   t = scinew Task("MPM::actuallyComputeStableTimestep",
                    this, &SerialMPM::actuallyComputeStableTimestep);
@@ -2501,7 +2506,7 @@ void SerialMPM::computeStressTensor(const ProcessorGroup*,
     if (cout_dbg.active())
       cout_dbg << " CM = " << cm;
 
-    cm->setWorld(UintahParallelComponent::d_myworld);
+    cm->setWorld(d_myworld);
     cm->computeStressTensor(patches, mpm_matl, old_dw, new_dw);
 
     if (cout_dbg.active())

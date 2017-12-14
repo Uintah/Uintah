@@ -100,8 +100,6 @@ AMRSimulationController::run()
 {
   MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::run()");
 
-  getComponents();
-
   bool first = true;
 
   // If VisIt has been included into the build, initialize the lib sim
@@ -924,7 +922,7 @@ AMRSimulationController::doRegridding( bool initialTimeStep )
 
     if( !initialTimeStep ) {
       schedulerTimer.start();
-      m_scheduler->scheduleAndDoDataCopy( m_current_gridP, m_app );
+      m_scheduler->scheduleAndDoDataCopy( m_current_gridP );
       schedulerTimer.stop();
     }
     

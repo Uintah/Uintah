@@ -74,7 +74,6 @@
 #include <Core/Math/Matrix3.h>                           // for Matrix3, swapbytes, etc
 #include <Core/Parallel/Parallel.h>                      // for proc0cout
 #include <Core/Parallel/ProcessorGroup.h>                // for ProcessorGroup
-#include <Core/Parallel/UintahParallelPort.h>            // for UintahParallelPort
 #include <Core/ProblemSpec/ProblemSpec.h>                // for Vector, IntVector, etc
 #include <Core/ProblemSpec/ProblemSpecP.h>               // for ProblemSpecP
 #include <Core/Util/DebugStream.h>                       // for DebugStream
@@ -381,7 +380,7 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
   MPMPhysicalBCFactory::create(mat_ps, grid, flags);
   
   bool needNorms;
-  contactModel = ContactFactory::create(UintahParallelComponent::d_myworld,
+  contactModel = ContactFactory::create(d_myworld,
                                         mat_ps,m_sharedState,lb,flags, needNorms);
 
   // Determine extents for coarser level particle data
@@ -2901,7 +2900,7 @@ void AMRMPM::computeStressTensor(const ProcessorGroup*,
 
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
 
-    cm->setWorld(UintahParallelComponent::d_myworld);
+    cm->setWorld(d_myworld);
     cm->computeStressTensor(patches, mpm_matl, old_dw, new_dw);
   }
 }

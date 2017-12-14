@@ -43,6 +43,7 @@
 
 namespace Uintah {
 
+  class UintahParallelComponent;
   class ProcessorGroup;
 
   class Patch;
@@ -81,6 +82,11 @@ WARNING
     Output();
     virtual ~Output();
       
+    // Methods for managing the components attached via the ports.
+    virtual void setComponents( UintahParallelComponent *comp ) = 0;
+    virtual void getComponents() = 0;
+    virtual void releaseComponents() = 0;
+
     //////////
     // Insert Documentation Here:
     virtual void problemSetup(const ProblemSpecP& params,

@@ -67,9 +67,9 @@ WARNING
 ****************************************/
   class vorticity : public AnalysisModule {
   public:
-    vorticity(ProblemSpecP& prob_spec,
-              SimulationStateP& sharedState,
-	      Output* output);
+    vorticity(const ProcessorGroup* myworld,
+	      const SimulationStateP sharedState,
+	      const ProblemSpecP& module_spec);
               
     vorticity();
                     
@@ -121,9 +121,6 @@ WARNING
        
     //__________________________________
     // global constants
-    SimulationStateP d_sharedState;
-    Output* d_output;
-    ProblemSpecP d_prob_spec;
     const Material* d_matl;
     MaterialSet* d_matl_set;
     const MaterialSubset* d_matl_sub;

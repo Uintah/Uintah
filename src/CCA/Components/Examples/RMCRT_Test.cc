@@ -101,7 +101,7 @@ RMCRT_Test::~RMCRT_Test ( void )
     delete d_old_uda;
   }
 
-  DOUT(g_rmcrt_test_dbg, UintahParallelComponent::d_myworld->myRank() << " Doing: RMCRT destructor ");
+  DOUT(g_rmcrt_test_dbg, d_myworld->myRank() << " Doing: RMCRT destructor ");
 
 }
 

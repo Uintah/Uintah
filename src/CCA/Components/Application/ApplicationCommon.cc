@@ -120,8 +120,10 @@ ApplicationCommon::~ApplicationCommon()
   m_sharedState = nullptr;
 }
 
-void ApplicationCommon::setComponents( const ApplicationCommon *parent )
+void ApplicationCommon::setComponents( UintahParallelComponent *comp )
 {
+  ApplicationCommon * parent = dynamic_cast<ApplicationCommon*>( comp );
+
   attachPort( "scheduler",     parent->m_scheduler );
   attachPort( "load balancer", parent->m_loadBalancer );
   attachPort( "modelMaker",    parent->m_modelMaker );

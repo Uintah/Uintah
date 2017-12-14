@@ -59,12 +59,6 @@
 #include <CCA/Components/Schedulers/SchedulerFactory.h>
 #include <CCA/Components/SimulationController/AMRSimulationController.h>
 #include <CCA/Components/Solvers/SolverFactory.h>
-#include <CCA/Components/Solvers/CGSolver.h>
-#include <CCA/Components/Solvers/DirectSolve.h>
-
-#ifdef HAVE_HYPRE
-#  include <CCA/Components/Solvers/HypreSolver.h>
-#endif
 
 #ifdef HAVE_CUDA
 #  include <CCA/Components/Schedulers/UnifiedScheduler.h>
@@ -713,24 +707,11 @@ main( int argc, char *argv[], char *env[] )
     appComp->attachPort( "load balancer", loadBalancer );
 
     //__________________________________
-    // Output
-    DataArchiver * dataArchiver = scinew DataArchiver( world, udaSuffix );
-
-    dataArchiver->attachPort( "application", application );
-    dataArchiver->attachPort( "load balancer", loadBalancer );
-    
-    dataArchiver->setUseLocalFileSystems( local_filesystem );
-
-    simController->attachPort( "output", dataArchiver );
-    appComp->attachPort( "output", dataArchiver );
-
-    //__________________________________
     // Scheduler
     SchedulerCommon* scheduler =
       SchedulerFactory::create(ups, world);
 
     scheduler->attachPort( "load balancer", loadBalancer );
-    scheduler->attachPort( "output", dataArchiver );
     scheduler->attachPort( "application", application );
     
     appComp->attachPort( "scheduler", scheduler );
@@ -743,6 +724,19 @@ main( int argc, char *argv[], char *env[] )
     if ( emit_graphs ) {
       scheduler->doEmitTaskGraphDocs();
     }
+
+    //__________________________________
+    // Output
+    DataArchiver * dataArchiver = scinew DataArchiver( world, udaSuffix );
+
+    dataArchiver->attachPort( "application", application );
+    dataArchiver->attachPort( "load balancer", loadBalancer );
+    
+    dataArchiver->setUseLocalFileSystems( local_filesystem );
+
+    simController->attachPort( "output", dataArchiver );
+    appComp->attachPort( "output", dataArchiver );
+    scheduler->attachPort( "output", dataArchiver );
 
     //__________________________________
     // Regridder - optional
@@ -775,6 +769,23 @@ main( int argc, char *argv[], char *env[] )
       }
     }
 
+    // Get all the components.
+    if ( modelMaker ) {
+      modelMaker->getComponents();
+    }
+
+    if( regridder ) {
+      regridder->getComponents();
+    }
+
+    scheduler->getComponents();
+    loadBalancer->getComponents();
+    solverComp->getComponents();
+    dataArchiver->getComponents();
+
+    appComp->getComponents();
+    simController->getComponents();
+    
     //__________________________________
     // Start the simulation controller
     if ( restart ) {
@@ -787,37 +798,39 @@ main( int argc, char *argv[], char *env[] )
 
     simController->run();
 
-    // Clean up.  Something has a handle to the scheduler and
-    // simulation state within the application component. As such,
-    // when they are deleted an ASSERT is thrown. So skip trying to
-    // delete them for now.
-    simController->releaseComponents();
-    appComp->releaseComponents();
+    // Clean up release all the components.
+    if ( modelMaker ) {
+      modelMaker->releaseComponents();
+    }
 
+    if( regridder ) {
+      regridder->releaseComponents();
+    }
+
+    dataArchiver->releaseComponents();
     scheduler->releaseComponents();
     loadBalancer->releaseComponents();
     solverComp->releaseComponents();
-    dataArchiver->releaseComponents();
+    appComp->releaseComponents();
+    simController->releaseComponents();
+
     
     scheduler->removeReference();
-
-    delete simController;
-   
-    if ( regridder ) {
-      regridder->releaseComponents();
-      delete regridder;
-    }
-
-    delete loadBalancer;
-    delete solver;
-    delete dataArchiver;
 
     if ( modelMaker ) {
       delete modelMaker;
     }
 
+    if ( regridder ) {
+      delete regridder;
+    }
+
+    delete dataArchiver;
     delete scheduler;
+    delete loadBalancer;
+    delete solver;   
     delete application;
+    delete simController;
   }
   
   catch (ProblemSetupException& e) {

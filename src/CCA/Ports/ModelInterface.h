@@ -25,7 +25,6 @@
 #ifndef UINTAH_HOMEBREW_ModelInterface_H
 #define UINTAH_HOMEBREW_ModelInterface_H
 
-#include <Core/Parallel/UintahParallelPort.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
@@ -69,10 +68,12 @@ WARNING
   
 ****************************************/
 
+  class UintahParallelComponent;
   class DataWarehouse;
   class Material;
   class ProcessorGroup;
   class VarLabel;
+  
   class ModelSetup {
     public:
     virtual void registerTransportedVariable(const MaterialSet* matlSet,
@@ -132,16 +133,21 @@ WARNING
   
   
    //________________________________________________
-   class ModelInterface : public UintahParallelPort {
+   class ModelInterface {
    public:
      ModelInterface(const ProcessorGroup* d_myworld);
      virtual ~ModelInterface();
 
-     virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
+     // Methods for managing the components attached via the ports.
+     virtual void setComponents( UintahParallelComponent *comp ) {};
+     virtual void getComponents() {};
+     virtual void releaseComponents() {};
       
      virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
 			       ModelSetup* setup, const bool isRestart) = 0;
       
+     virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
+
      virtual void scheduleInitialize(SchedulerP&,
 				     const LevelP& level,
 				     const ModelInfo*) = 0;

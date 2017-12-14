@@ -45,9 +45,9 @@
 
 namespace Uintah {
 
+  class UintahParallelComponent;
   class LoadBalancer;
   class Task;
-  class ApplicationInterface;
 
 /**************************************
 
@@ -82,12 +82,15 @@ class Scheduler : public UintahParallelPort {
     Scheduler();
 
     virtual ~Scheduler();
-   
+
     // Only called by the SimulationController, and only once, and only
     // if the simulation has been "restarted".
     virtual void setGeneration( int id ) = 0;
 
+    // Methods for managing the components attached via the ports.
+    virtual void setComponents( UintahParallelComponent *comp ) = 0;
     virtual void getComponents() = 0;
+    virtual void releaseComponents() = 0;
 
     virtual void problemSetup( const ProblemSpecP     & prob_spec
 			                       , const SimulationStateP & state
@@ -196,7 +199,7 @@ class Scheduler : public UintahParallelPort {
                                            ) = 0;
 
     //! Schedule copying data to new grid after regridding
-    virtual void scheduleAndDoDataCopy( const GridP & grid, ApplicationInterface * sim ) = 0;
+    virtual void scheduleAndDoDataCopy( const GridP & grid ) = 0;
 
     virtual void clearTaskMonitoring() = 0;
     virtual void scheduleTaskMonitoring( const LevelP& level ) = 0;

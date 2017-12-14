@@ -55,16 +55,13 @@ using namespace std;
 //  setenv SCI_DEBUG "FirstLawThermo_DBG_COUT:+" 
 static DebugStream cout_doing("FirstLawThermo",   false);
 static DebugStream cout_dbg("FirstLawThermo_dbg", false);
-//______________________________________________________________________              
-FirstLawThermo::FirstLawThermo(ProblemSpecP& module_spec,
-                               SimulationStateP& sharedState,
-                               Output* output)
+//______________________________________________________________________
+FirstLawThermo::FirstLawThermo(const ProcessorGroup* myworld,
+			       const SimulationStateP sharedState,
+			       const ProblemSpecP& module_spec)
                                
-  : AnalysisModule(module_spec, sharedState, output)
+  : AnalysisModule(myworld, sharedState, module_spec)
 {
-  d_sharedState  = sharedState;
-  d_prob_spec    = module_spec;
-  d_output = output;
   d_zeroMatl     = 0;
   d_zeroMatlSet  = 0;
   d_zeroPatch    = 0;
@@ -114,16 +111,12 @@ void FirstLawThermo::problemSetup(const ProblemSpecP&,
 {
   cout_doing << "Doing problemSetup \t\t\t\tFirstLawThermo" << endl;
   
-  if(!d_output){
-    throw InternalError("FirstLawThermo:couldn't get output port", __FILE__, __LINE__);
-  }
-  
   //__________________________________
   //  Read in timing information
-  d_prob_spec->require( "samplingFrequency", d_analysisFreq );
-  d_prob_spec->require( "timeStart",         d_StartTime );            
-  d_prob_spec->require( "timeStop",          d_StopTime );
-  d_prob_spec->get(     "engy_convt_factor", d_conversion );   // energy conversion factor in SI it KJ->J   
+  m_module_spec->require( "samplingFrequency", d_analysisFreq );
+  m_module_spec->require( "timeStart",         d_StartTime );            
+  m_module_spec->require( "timeStop",          d_StopTime );
+  m_module_spec->get(     "engy_convt_factor", d_conversion );   // energy conversion factor in SI it KJ->J   
   
   d_zeroMatl = scinew MaterialSubset();
   d_zeroMatl->add(0);
@@ -141,7 +134,7 @@ void FirstLawThermo::problemSetup(const ProblemSpecP&,
 
   //__________________________________
   // Loop over each face and find the extents
-  ProblemSpecP cv_ps = d_prob_spec->findBlock("controlVolume");
+  ProblemSpecP cv_ps = m_module_spec->findBlock("controlVolume");
 
   for( ProblemSpecP face_ps = cv_ps->findBlock( "Face" ); face_ps != nullptr; face_ps=face_ps->findNextBlock( "Face" ) ) {
  
@@ -186,7 +179,7 @@ void FirstLawThermo::problemSetup(const ProblemSpecP&,
   // If we are doing a restart, then use the "timestep.xml"
  
   // first try prob_spec
-  ProblemSpecP root_ps = d_prob_spec->getRootNode();  
+  ProblemSpecP root_ps = m_module_spec->getRootNode();  
   ProblemSpecP mat_ps = root_ps->findBlockWithOutAttribute( "MaterialProperties" );
   
   if ( !mat_ps && restart_prob_spec ){   // read in from checkpoint/timestep.xml on a restart
@@ -246,7 +239,7 @@ FirstLawThermo::initialize( const ProcessorGroup *,
     new_dw->put(fileInfo,    FL_lb->fileVarsStructLabel, 0, patch);
     
     if(patch->getGridIndex() == 0){   // only need to do this once
-      string udaDir = d_output->getOutputLocation();
+      string udaDir = m_output->getOutputLocation();
 
       //  Bulletproofing
       DIR *check = opendir(udaDir.c_str());
@@ -281,8 +274,8 @@ void FirstLawThermo::scheduleDoAnalysis(SchedulerP& sched,
                      this,&FirstLawThermo::compute_ICE_Contributions );
 
   Ghost::GhostType  gn  = Ghost::None;
-  const MaterialSet* all_matls = d_sharedState->allMaterials();
-  const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
+  const MaterialSet* all_matls = m_sharedState->allMaterials();
+  const MaterialSet* ice_matls = m_sharedState->allICEMaterials();
   const MaterialSubset* ice_ss = ice_matls->getUnion();
   
   t0->requires( Task::OldDW, FL_lb->lastCompTimeLabel );
@@ -306,7 +299,7 @@ void FirstLawThermo::scheduleDoAnalysis(SchedulerP& sched,
   Task* t1 = scinew Task( "FirstLawThermo::compute_MPM_Contributions", 
                      this,&FirstLawThermo::compute_MPM_Contributions );
 
-  const MaterialSet* mpm_matls = d_sharedState->allMPMMaterials();
+  const MaterialSet* mpm_matls = m_sharedState->allMPMMaterials();
   const MaterialSubset* mpm_ss = mpm_matls->getUnion();
   
   t1->requires( Task::OldDW, FL_lb->lastCompTimeLabel );
@@ -352,7 +345,7 @@ void FirstLawThermo::compute_ICE_Contributions(const ProcessorGroup* pg,
   
   double lastCompTime = analysisTime;
   double nextCompTime = lastCompTime + 1.0/d_analysisFreq;  
-  double now = d_sharedState->getElapsedSimTime();
+  double now = m_sharedState->getElapsedSimTime();
 
   if( now < nextCompTime  ){
     return;
@@ -377,7 +370,7 @@ void FirstLawThermo::compute_ICE_Contributions(const ProcessorGroup* pg,
     Vector dx = patch->dCell();
     double vol = dx.x() * dx.y() * dx.z();
 
-    int numICEmatls = d_sharedState->getNumICEMatls();
+    int numICEmatls = m_sharedState->getNumICEMatls();
     Ghost::GhostType gn  = Ghost::None;
 
     double ICE_totalIntEng = 0.0;
@@ -385,7 +378,7 @@ void FirstLawThermo::compute_ICE_Contributions(const ProcessorGroup* pg,
 
     for (int m = 0; m < numICEmatls; m++ ) {
 
-      ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
+      ICEMaterial* ice_matl = m_sharedState->getICEMaterial(m);
       int indx = ice_matl->getDWIndex();
       new_dw->get(rho_CC,  I_lb->rho_CCLabel,       indx, patch, gn,0);
       new_dw->get(temp_CC, I_lb->temp_CCLabel,      indx, patch, gn,0);
@@ -588,7 +581,7 @@ void FirstLawThermo::compute_MPM_Contributions(const ProcessorGroup* pg,
 
   double lastCompTime = analysisTime;
   double nextCompTime = lastCompTime + 1.0/d_analysisFreq;  
-  double now = d_sharedState->getElapsedSimTime();
+  double now = m_sharedState->getElapsedSimTime();
 
   if( now < nextCompTime  ){
     return;
@@ -600,11 +593,11 @@ void FirstLawThermo::compute_MPM_Contributions(const ProcessorGroup* pg,
 
     //__________________________________
     //  compute the thermal energy of the solids
-    int    numMPMMatls     = d_sharedState->getNumMPMMatls();
+    int    numMPMMatls     = m_sharedState->getNumMPMMatls();
     double MPM_totalIntEng = 0.0;
     
     for(int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
       constParticleVariable<double> pmassNew, pTempNew;
       
@@ -636,12 +629,10 @@ void FirstLawThermo::doAnalysis(const ProcessorGroup* pg,
                                 DataWarehouse* old_dw,
                                 DataWarehouse* new_dw)
 {
-
-  
   max_vartype lastTime;
   old_dw->get( lastTime, FL_lb->lastCompTimeLabel );
 
-  double now = d_sharedState->getElapsedSimTime();
+  double now = m_sharedState->getElapsedSimTime();
   double nextTime = lastTime + 1.0/d_analysisFreq;
   
   double time_dw  = lastTime;  
@@ -670,7 +661,7 @@ void FirstLawThermo::doAnalysis(const ProcessorGroup* pg,
         myFiles = fileInfo.get().get_rep()->files;
       } 
       
-      string udaDir = d_output->getOutputLocation();
+      string udaDir = m_output->getOutputLocation();
       string filename = udaDir + "/" + "1stLawThermo.dat";
       FILE *fp=nullptr;
 

@@ -71,14 +71,11 @@ static DebugStream cout_doing("MinMax_DOING_COUT", false);
        
 ______________________________________________________________________*/
           
-MinMax::MinMax( ProblemSpecP     & module_spec,
-                SimulationStateP & sharedState,
-                Output           * output )
-  : AnalysisModule(module_spec, sharedState, output)
+MinMax::MinMax( const ProcessorGroup* myworld,
+		const SimulationStateP sharedState,
+		const ProblemSpecP& module_spec )
+  : AnalysisModule(myworld, sharedState, module_spec)
 {
-  d_sharedState = sharedState;
-  d_prob_spec = module_spec;
-  d_output = output;
   d_matl_set = nullptr;
   d_zero_matl = nullptr;
   d_lb = scinew MinMaxLabel();
@@ -109,30 +106,27 @@ MinMax::~MinMax()
 
 //______________________________________________________________________
 //     P R O B L E M   S E T U P
-void MinMax::problemSetup(const ProblemSpecP& prob_spec,
+void MinMax::problemSetup(const ProblemSpecP&,
                           const ProblemSpecP&,
                           GridP& grid)
 {
   cout_doing << "Doing problemSetup \t\t\t\tMinMax" << endl;
   
-  int numMatls  = d_sharedState->getNumMatls();
-  if(!d_output){
-    throw InternalError("MinMax:couldn't get output port", __FILE__, __LINE__);
-  }
-                               
+  int numMatls  = m_sharedState->getNumMatls();
+
   d_lb->lastCompTimeLabel =  VarLabel::create("lastCompTime_minMax", 
-                                            max_vartype::getTypeDescription() );
+					      max_vartype::getTypeDescription() );
 
   d_lb->fileVarsStructLabel = VarLabel::create("FileInfo_minMax", 
-                                            PerPatch<FileInfoP>::getTypeDescription() );       
+					       PerPatch<FileInfoP>::getTypeDescription() );       
                                             
   //__________________________________
   //  Read in timing information
-  d_prob_spec->require("samplingFrequency", d_writeFreq);
-  d_prob_spec->require("timeStart",         d_startTime);            
-  d_prob_spec->require("timeStop",          d_stopTime);
+  m_module_spec->require("samplingFrequency", d_writeFreq);
+  m_module_spec->require("timeStart",         d_startTime);            
+  m_module_spec->require("timeStop",          d_stopTime);
 
-  ProblemSpecP vars_ps = d_prob_spec->findBlock("Variables");
+  ProblemSpecP vars_ps = m_module_spec->findBlock("Variables");
   if (!vars_ps){
     throw ProblemSetupException("MinMax: Couldn't find <Variables> tag", __FILE__, __LINE__);    
   } 
@@ -141,14 +135,14 @@ void MinMax::problemSetup(const ProblemSpecP& prob_spec,
   // The user can use either 
   //  <material>   atmosphere </material>
   //  <materialIndex> 1 </materialIndex>
-  if(d_prob_spec->findBlock("material") ){
-    d_matl = d_sharedState->parseAndLookupMaterial(d_prob_spec, "material");
-  } else if (d_prob_spec->findBlock("materialIndex") ){
+  if(m_module_spec->findBlock("material") ){
+    d_matl = m_sharedState->parseAndLookupMaterial(m_module_spec, "material");
+  } else if (m_module_spec->findBlock("materialIndex") ){
     int indx;
-    d_prob_spec->get("materialIndex", indx);
-    d_matl = d_sharedState->getMaterial(indx);
+    m_module_spec->get("materialIndex", indx);
+    d_matl = m_sharedState->getMaterial(indx);
   } else {
-    d_matl = d_sharedState->getMaterial(0);
+    d_matl = m_sharedState->getMaterial(0);
   }
   
   int defaultMatl = d_matl->getDWIndex();
@@ -280,7 +274,7 @@ void MinMax::problemSetup(const ProblemSpecP& prob_spec,
 //       aVar.labels.push_back( meMin );
 //       aVar.labels.push_back( meMax );
     
-//       d_sharedState->d_analysisVars.push_back(aVar);
+//       m_sharedState->d_analysisVars.push_back(aVar);
 //     }
 // #endif
   }
@@ -338,7 +332,7 @@ void MinMax::initialize(const ProcessorGroup*,
     new_dw->put(fileInfo,    d_lb->fileVarsStructLabel, 0, patch);
     
     if(patch->getGridIndex() == 0){   // only need to do this once
-      string udaDir = d_output->getOutputLocation();
+      string udaDir = m_output->getOutputLocation();
 
       //  Bulletproofing
       DIR *check = opendir(udaDir.c_str());
@@ -364,8 +358,6 @@ void MinMax::scheduleDoAnalysis(SchedulerP& sched,
 {
   printSchedule(level,cout_doing,"MinMax::scheduleDoAnalysis");
    
-  d_scheduler = sched;
-  
   // Tell the scheduler to not copy this variable to a new AMR grid and 
   // do not checkpoint it.
   sched->overrideVariableBehavior("FileInfo_minMax", false, false, false, true, true); 
@@ -468,15 +460,15 @@ void MinMax::computeMinMax(const ProcessorGroup* pg,
     lastWriteTime = writeTime;
   }
 
-  double now = d_sharedState->getElapsedSimTime();
+  double now = m_sharedState->getElapsedSimTime();
 
   // Get the delta t from the warehouse so time includes the current
   // time step.
-  DataWarehouse * dw = d_scheduler->get_dw(0);
+  DataWarehouse * dw = m_scheduler->get_dw(0);
   
   delt_vartype delt_var;
   if( dw->exists( getDelTLabel() ) ) {
-    d_scheduler->get_dw(0)->get( delt_var, getDelTLabel() );
+    m_scheduler->get_dw(0)->get( delt_var, getDelTLabel() );
     now += delt_var;
   }
 
@@ -581,7 +573,7 @@ void MinMax::computeMinMax(const ProcessorGroup* pg,
     }  // patches
   }  // time to write data
 
-  // d_sharedState->d_otherStats[OnTheFlyAnalysisMinMaxTime] += timer().seconds();
+  // m_sharedState->d_otherStats[OnTheFlyAnalysisMinMaxTime] += timer().seconds();
 }
 
 //______________________________________________________________________
@@ -595,9 +587,6 @@ void MinMax::doAnalysis(const ProcessorGroup* pg,
   Timers::Simple timer;
   timer.start();
 
-  UintahParallelComponent * DA = dynamic_cast<UintahParallelComponent*>(d_output);
-  LoadBalancer        * lb = dynamic_cast<LoadBalancer*>( DA->getPort("load balancer"));
-    
   const Level* level = getLevel(patches);
   const LevelP levelP = getLevelP(patches);
   int L_indx = level->getIndex();
@@ -609,15 +598,15 @@ void MinMax::doAnalysis(const ProcessorGroup* pg,
     lastWriteTime = writeTime;
   }
 
-  double now = d_sharedState->getElapsedSimTime();
+  double now = m_sharedState->getElapsedSimTime();
 
   // Get the delta t from the warehouse so time includes the current
   // time step.
-  DataWarehouse * dw = d_scheduler->get_dw(0);
+  DataWarehouse * dw = m_scheduler->get_dw(0);
   
   delt_vartype delt_var;
   if( dw->exists( getDelTLabel() ) ) {
-    d_scheduler->get_dw(0)->get( delt_var, getDelTLabel() );
+    m_scheduler->get_dw(0)->get( delt_var, getDelTLabel() );
     now += delt_var;
   }
 
@@ -648,7 +637,9 @@ void MinMax::doAnalysis(const ProcessorGroup* pg,
       myFiles = fileInfo.get().get_rep()->files;
     }    
 
-    int proc = lb->getPatchwiseProcessorAssignment(patch);
+    int proc =
+      m_scheduler->getLoadBalancer()->getPatchwiseProcessorAssignment(patch);
+    
     //__________________________________
     // write data if this processor owns this patch
     // and if it's time to write.  With AMR data the proc
@@ -676,7 +667,7 @@ void MinMax::doAnalysis(const ProcessorGroup* pg,
 
         //__________________________________
         // create the directory structure
-        string minmaxDir = d_output->getOutputLocation() + "/MinMax";
+        string minmaxDir = m_output->getOutputLocation() + "/MinMax";
 
         if( d_isDirCreated.count(minmaxDir) == 0){
           createDirectory(minmaxDir);
@@ -771,7 +762,7 @@ void MinMax::doAnalysis(const ProcessorGroup* pg,
     new_dw->put(max_vartype(lastWriteTime), d_lb->lastCompTimeLabel ); 
   }  // patches
 
-  // d_sharedState->d_otherStats[OnTheFlyAnalysisMinMaxTime] += timer().seconds();
+  // m_sharedState->d_otherStats[OnTheFlyAnalysisMinMaxTime] += timer().seconds();
 }
 
 
@@ -846,7 +837,7 @@ void MinMax::createFile(string& filename,  FILE*& fp, string& levelIndex)
   fprintf( fp,"#The reported min & max values are for this level %s \n", levelIndex.c_str() );
   fprintf( fp,"#Time                      min                       max\n" );
   
-  cout_doing << Parallel::getMPIRank() << " MinMax:Created file " << filename << endl;
+  cout_doing << d_myworld->myRank() << " MinMax:Created file " << filename << endl;
 
   cout << "OnTheFlyAnalysis MinMax results are located in " << filename << endl;
 }
@@ -857,7 +848,7 @@ MinMax::createDirectory(string& dirName)
 {
   DIR *check = opendir(dirName.c_str());
   if ( check == nullptr ) {
-    cout_doing << Parallel::getMPIRank() << " MinMax:Making directory " << dirName << endl;
+    cout_doing << d_myworld->myRank() << " MinMax:Making directory " << dirName << endl;
     MKDIR( dirName.c_str(), 0777 );
   } else {
     closedir(check);

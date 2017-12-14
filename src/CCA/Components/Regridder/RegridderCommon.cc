@@ -55,8 +55,8 @@ DebugStream rreason(    "RegridReason", false );
 //______________________________________________________________________
 //
 RegridderCommon::RegridderCommon(const ProcessorGroup* pg)
-    : Regridder(),
-      UintahParallelComponent(pg)
+  : UintahParallelComponent(pg),
+    Regridder()
 {
   rdbg << "RegridderCommon::RegridderCommon() BGN" << std::endl;
   d_filterType = FILTER_BOX;
@@ -105,6 +105,29 @@ RegridderCommon::~RegridderCommon()
 
   if(refine_flag_matls && refine_flag_matls->removeReference()){
     delete refine_flag_matls;
+  }
+}
+
+//______________________________________________________________________
+//
+void RegridderCommon::getComponents()
+{
+  m_scheduler = dynamic_cast< Scheduler * >( getPort( "scheduler" ) );
+
+  if( !m_scheduler ) {
+    throw InternalError("dynamic_cast of 'm_scheduler' failed!", __FILE__, __LINE__);
+  }
+
+  m_loadBalancer = dynamic_cast<LoadBalancer*>( getPort("load balancer") );
+
+  if( !m_loadBalancer ) {
+    throw InternalError("dynamic_cast of 'm_loadBalancer' failed!", __FILE__, __LINE__);
+  }
+
+  m_application = dynamic_cast<ApplicationInterface*>( getPort("application") );
+
+  if( !m_application ) {
+    throw InternalError("dynamic_cast of 'm_application' failed!", __FILE__, __LINE__);
   }
 }
 
@@ -367,29 +390,12 @@ void
 RegridderCommon::problemSetup(const ProblemSpecP& params, const GridP& oldGrid, const SimulationStateP& state)
 {
   rdbg << "RegridderCommon::problemSetup() BGN" << std::endl;
+
   d_sharedState = state;
 
   grid_ps_ = params->findBlock("Grid");
 
-  m_scheduler = dynamic_cast< Scheduler * >( getPort( "scheduler" ) );
-
-  if( !m_scheduler ) {
-    throw InternalError("dynamic_cast of 'm_scheduler' failed!", __FILE__, __LINE__);
-  }
-
-  m_loadBalancer = dynamic_cast<LoadBalancer*>( getPort("load balancer") );
-
-  if( !m_loadBalancer ) {
-    throw InternalError("dynamic_cast of 'm_loadBalancer' failed!", __FILE__, __LINE__);
-  }
-
-  m_application = dynamic_cast<ApplicationInterface*>( getPort("application") );
-
-  if( !m_application ) {
-    throw InternalError("dynamic_cast of 'm_application' failed!", __FILE__, __LINE__);
-  }
-
-  ProblemSpecP amr_spec = params->findBlock("AMR");
+  ProblemSpecP    amr_spec = params->findBlock("AMR");
   ProblemSpecP regrid_spec = amr_spec->findBlock("Regridder");
 
   d_isAdaptive = true;  // use if "adaptive" not there

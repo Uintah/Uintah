@@ -33,8 +33,6 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <vector>
 
-
-namespace Uintah {
 /**************************************
 
 CLASS
@@ -63,12 +61,21 @@ WARNING
   
 ****************************************/
 
+namespace Uintah {
+
+  class UintahParallelComponent;
+  
   class ModelInterface;
    class ModelMaker : public UintahParallelPort {
    public:
      ModelMaker();
      virtual ~ModelMaker();
            
+     // Methods for managing the components attached via the ports.
+     virtual void setComponents( UintahParallelComponent *parent ) = 0;
+     virtual void getComponents() = 0;
+     virtual void releaseComponents() = 0;
+    
      virtual std::vector<ModelInterface*> getModels() = 0;
      virtual void clearModels() = 0;
      //////////

@@ -31,7 +31,6 @@
 #include <CCA/Ports/SchedulerP.h>
 #include <CCA/Ports/SolverInterface.h>
 
-#include <Core/Parallel/UintahParallelPort.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
@@ -91,10 +90,13 @@ WARNING
     virtual ~ApplicationCommon();
   
     // Methods for managing the components attached via the ports.
-    virtual void setComponents( const ApplicationCommon *parent );
+    virtual void setComponents( UintahParallelComponent *comp );
     virtual void getComponents();
     virtual void releaseComponents();
 
+    virtual Scheduler *getScheduler() { return m_scheduler; }
+    virtual Output    *getOutput()    { return m_output; }
+    
     // Top level problem set up called by sus.
     virtual void problemSetup( const ProblemSpecP &prob_spec );
     

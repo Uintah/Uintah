@@ -59,9 +59,10 @@ namespace Uintah {
    ****************************************/
   class containerExtract : public AnalysisModule {
     public:
-      containerExtract(ProblemSpecP& prob_spec,
-          SimulationStateP& sharedState,
-          Output* output);
+      containerExtract(const ProcessorGroup* myworld,
+		       const SimulationStateP sharedState,
+		       const ProblemSpecP& module_spec);
+    
       containerExtract();
 
       virtual ~containerExtract();
@@ -144,10 +145,8 @@ namespace Uintah {
       double d_startTime;
       double d_stopTime;
       std::vector<VarLabel*> d_varLabels;
-      SimulationStateP d_sharedState;
       std::vector<container*> d_containers;
-      Output* d_output;
-      ProblemSpecP d_prob_spec;
+
       const Material* d_matl;
       MaterialSet* d_matl_set;
 
@@ -166,10 +165,6 @@ namespace Uintah {
       void createFile(std::string& filename, extractCell& e);
 
       void createDirectory(std::string& lineName, std::string& levelIndex);
-
-
-
-
   };
 
 }

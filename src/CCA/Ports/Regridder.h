@@ -38,6 +38,7 @@
 
 namespace Uintah {
 
+  class UintahParallelComponent;
   class VarLabel;
   
 /**************************************
@@ -73,6 +74,11 @@ WARNING
   public:
     Regridder();
     virtual ~Regridder();
+
+    // Methods for managing the components attached via the ports.
+    virtual void setComponents( UintahParallelComponent *comp ) = 0;
+    virtual void getComponents() = 0;
+    virtual void releaseComponents() = 0;
 
     //! Initialize with regridding parameters from ups file
     virtual void problemSetup(const ProblemSpecP& params, const GridP&,

@@ -24,19 +24,25 @@
 
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
 
+#include <CCA/Ports/ApplicationInterface.h>
+#include <CCA/Ports/Output.h>
+#include <CCA/Ports/Scheduler.h>
+
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
 
 using namespace Uintah;
 
-AnalysisModule::AnalysisModule()
-{
-}
+// NOTE: UintahParallelComponent is noramlly called with the ProcessorGroup
 
-AnalysisModule::AnalysisModule(ProblemSpecP& prob_spec, 
-			       SimulationStateP& sharedState,
-                               Output* dataArchiever)
+AnalysisModule::AnalysisModule( const ProcessorGroup* myworld,
+				const SimulationStateP sharedState,
+				const ProblemSpecP& module_spec ) :
+  UintahParallelComponent( myworld )
 {
+  m_sharedState = sharedState;
+  m_module_spec = module_spec;
+
   // delta t
   VarLabel* nonconstDelT =
     VarLabel::create(delT_name, delt_vartype::getTypeDescription() );
@@ -49,3 +55,37 @@ AnalysisModule::~AnalysisModule()
   VarLabel::destroy(m_delTLabel);
 }
     
+void AnalysisModule::setComponents( ApplicationInterface *comp )
+{
+  ApplicationInterface * parent = dynamic_cast<ApplicationInterface*>( comp );
+
+  attachPort( "scheduler", parent->getScheduler() );
+  attachPort( "output",    parent->getOutput() );
+
+  getComponents();
+}
+
+void AnalysisModule::getComponents()
+{
+  m_scheduler = dynamic_cast<Scheduler*>( getPort("scheduler") );
+
+  if( !m_scheduler ) {
+    throw InternalError("dynamic_cast of 'm_regridder' failed!", __FILE__, __LINE__);
+  }
+
+  m_output = dynamic_cast<Output*>( getPort("output") );
+
+  if( !m_output ) {
+    throw InternalError("dynamic_cast of 'm_output' failed!", __FILE__, __LINE__);
+  }
+}
+
+void AnalysisModule::releaseComponents()
+{
+  releasePort( "scheduler" );
+  releasePort( "output" );
+
+  m_scheduler    = nullptr;
+  m_output       = nullptr;
+}
+

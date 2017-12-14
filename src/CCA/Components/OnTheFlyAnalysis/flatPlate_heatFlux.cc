@@ -52,14 +52,11 @@ using namespace std;
 static DebugStream cout_doing("FLATPLATE_HEATFLUX_DOING_COUT", false);
 static DebugStream cout_dbg("FLATPLATE_HEATFLUX_DBG_COUT", false);
 //______________________________________________________________________
-flatPlate_heatFlux::flatPlate_heatFlux(ProblemSpecP& module_spec,
-                                       SimulationStateP& sharedState,
-                                       Output* output)
-  : AnalysisModule(module_spec, sharedState, output)
+flatPlate_heatFlux::flatPlate_heatFlux(const ProcessorGroup* myworld,
+				       const SimulationStateP sharedState,
+				       const ProblemSpecP& module_spec)
+  : AnalysisModule(myworld, sharedState, module_spec)
 {
-  d_sharedState  = sharedState;
-  d_prob_spec    = module_spec;
-  d_output = output;
   d_matl = nullptr;
   d_matl_set = nullptr;
   d_matl_sub = nullptr;
@@ -87,21 +84,17 @@ flatPlate_heatFlux::~flatPlate_heatFlux()
 
 //______________________________________________________________________
 //     P R O B L E M   S E T U P
-void flatPlate_heatFlux::problemSetup(const ProblemSpecP& prob_spec,
-                                      const ProblemSpecP& restart_prob_spec,
+void flatPlate_heatFlux::problemSetup(const ProblemSpecP& ,
+                                      const ProblemSpecP& ,
                                       GridP& grid)
 {
   cout_doing << "Doing problemSetup \t\t\t\tflatPlate_heatFlux" << endl;
-  
-  if(!d_output){
-    throw InternalError("flatPlate_heatFlux:couldn't get output port", __FILE__, __LINE__);
-  }
   
   v_lb->total_heatRateLabel =
     VarLabel::create("total_heatRate", sum_vartype::getTypeDescription());
 
   // determine which material index to compute
-  d_matl = d_sharedState->parseAndLookupMaterial(d_prob_spec, "material");
+  d_matl = m_sharedState->parseAndLookupMaterial(m_module_spec, "material");
   
   vector<int> m(1);
   m[0] = d_matl->getDWIndex();
@@ -110,7 +103,7 @@ void flatPlate_heatFlux::problemSetup(const ProblemSpecP& prob_spec,
   d_matl_set->addReference();
   d_matl_sub = d_matl_set->getUnion();
   
-  ProblemSpecP plane_ps = d_prob_spec->findBlock("plane"); 
+  ProblemSpecP plane_ps = m_module_spec->findBlock("plane"); 
   if (!plane_ps){
     throw ProblemSetupException("\n ERROR:flatPlate_heatFlux: Couldn't find <plane> tag \n", __FILE__, __LINE__);    
   }
@@ -201,7 +194,7 @@ void flatPlate_heatFlux::problemSetup(const ProblemSpecP& prob_spec,
 //     aVar.level = -1;
 //     aVar.labels.push_back( v_lb->total_heatRateLabel );
     
-//     d_sharedState->d_analysisVars.push_back(aVar);
+//     m_sharedState->d_analysisVars.push_back(aVar);
 //   }
 // #endif
 }

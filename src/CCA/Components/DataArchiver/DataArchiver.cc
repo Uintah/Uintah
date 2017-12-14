@@ -141,9 +141,33 @@ DataArchiver::~DataArchiver()
 //______________________________________________________________________
 //
 void
+DataArchiver::getComponents()
+{
+  m_application = dynamic_cast<ApplicationInterface*>( getPort("application") );
+
+  if( !m_application ) {
+    throw InternalError("dynamic_cast of 'm_application' failed!", __FILE__, __LINE__);
+  }
+
+  m_loadBalancer = dynamic_cast<LoadBalancer*>( getPort("load balancer") );
+
+  if( !m_loadBalancer ) {
+    throw InternalError("dynamic_cast of 'm_loadBalancer' failed!", __FILE__, __LINE__);
+  }
+}
+
+//______________________________________________________________________
+//
+void
 DataArchiver::releaseComponents()
 {
-  m_sharedState = nullptr;
+  releasePort( "application" );
+  releasePort( "load balancer" );
+
+  m_application  = nullptr;
+  m_loadBalancer = nullptr;
+
+  m_sharedState  = nullptr;
 }
 
 //______________________________________________________________________
@@ -155,18 +179,6 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
 {
   if (dbg.active()) {
     dbg << "Doing ProblemSetup \t\t\t\tDataArchiver\n";
-  }
-
-  m_application = dynamic_cast<ApplicationInterface*>( getPort("application") );
-
-  if( !m_application ) {
-    throw InternalError("dynamic_cast of 'm_application' failed!", __FILE__, __LINE__);
-  }
-
-  m_loadBalancer = dynamic_cast<LoadBalancer*>( getPort("load balancer") );
-
-  if( !m_loadBalancer ) {
-    throw InternalError("dynamic_cast of 'm_loadBalancer' failed!", __FILE__, __LINE__);
   }
 
   m_sharedState = sharedState;

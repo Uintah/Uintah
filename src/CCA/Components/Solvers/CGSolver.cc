@@ -52,9 +52,9 @@ using namespace std;
 using namespace Uintah;
 //__________________________________
 //  To turn on normal output
-//  setenv SCI_DEBUG "CGSOLVER_DOING_COUT:+"
+//  setenv SCI_DEBUG "SOLVER_DOING_COUT:+"
 
-static DebugStream cout_doing("CGSOLVER_DOING_COUT", false);
+static DebugStream cout_doing("SOLVER_DOING_COUT", false);
 
 void Mult(Array3<double>& B, const Array3<Stencil7>& A,
           const Array3<double>& X, CellIterator iter,
@@ -220,7 +220,7 @@ void ScMult_Add(Array3<double>& r, double s,
 namespace Uintah {
 
 CGSolver::CGSolver(const ProcessorGroup* myworld)
-  : UintahParallelComponent(myworld)
+  : SolverCommon(myworld)
 {
 }
 

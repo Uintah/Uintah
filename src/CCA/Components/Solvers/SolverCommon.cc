@@ -22,51 +22,18 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_HOMEBREW_SwitchingCriteria_H
-#define UINTAH_HOMEBREW_SwitchingCriteria_H
-
-#include <Core/Parallel/UintahParallelPort.h>
-#include <Core/Grid/SimulationStateP.h>
-#include <CCA/Ports/SchedulerP.h>
-#include <Core/Grid/LevelP.h>
-#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <CCA/Components/Solvers/SolverCommon.h>
+#include <Core/Parallel/ProcessorGroup.h>
 
 namespace Uintah {
 
-  class UintahParallelComponent;
-  class VarLabel;
-  
-  class SwitchingCriteria : public UintahParallelPort {
-    
-  public:
-    
-    SwitchingCriteria();
-    virtual ~SwitchingCriteria();
-  
-    virtual void problemSetup(const ProblemSpecP& params,
-                              const ProblemSpecP& restart_prob_spec,
-                              SimulationStateP& state) = 0;
-
-    virtual void scheduleInitialize(const LevelP& level, SchedulerP& sched)
-      {};
-    virtual void scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
-      {};
-
-    virtual void setSwitchLabel( const VarLabel* switch_label )
-    {
-      d_switch_label = switch_label;
-    }
-    
-  protected:
-
-    const VarLabel* d_switch_label;
-    
-  private:
-    
-    SwitchingCriteria(const SwitchingCriteria&);
-    SwitchingCriteria& operator=(const SwitchingCriteria&);
-    
-  };
+SolverCommon::SolverCommon(const ProcessorGroup* myworld)
+  : UintahParallelComponent(myworld)
+{
 }
 
-#endif
+SolverCommon::~SolverCommon()
+{
+}
+
+} // end namespace Uintah

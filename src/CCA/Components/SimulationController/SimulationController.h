@@ -164,6 +164,11 @@ public:
 
   virtual ~SimulationController();
 
+  // Methods for managing the components attached via the ports.
+  virtual void setComponents( UintahParallelComponent *comp ) {};
+  virtual void getComponents();
+  virtual void releaseComponents();
+
   //! Notifies (before calling run) the SimulationController
   //! that this is simulation is a restart.
   void doRestart( const std::string & restartFromDir
@@ -190,8 +195,6 @@ public:
   bool getRecompileTaskGraph() const { return m_recompile_taskgraph; }
   void setRecompileTaskGraph(bool val) { m_recompile_taskgraph = val; }
 
-  void releaseComponents();
-
   void ScheduleReportStats( bool header );
   void ReportStats(const ProcessorGroup*,
                    const PatchSubset*,
@@ -202,8 +205,6 @@ public:
 
 protected:
 
-  void getComponents();
-  
   void restartArchiveSetup();
   void outputSetup();
   void gridSetup();

@@ -58,13 +58,16 @@ namespace Uintah {
    *  @date    CSAFE days - circa 06/04 (updated 08/14)
    *  @brief   Parent class which takes care of common regridding functionality.
    */
-  class RegridderCommon : public Regridder, public UintahParallelComponent {
+  class RegridderCommon : public UintahParallelComponent, public Regridder {
 
   public:
 
     RegridderCommon(const ProcessorGroup* pg);
     virtual ~RegridderCommon();
 
+    // Methods for managing the components attached via the ports.
+    virtual void setComponents( UintahParallelComponent *comp ) {};
+    virtual void getComponents();
     virtual void releaseComponents();
 
     //! Initialize with regridding parameters from ups file

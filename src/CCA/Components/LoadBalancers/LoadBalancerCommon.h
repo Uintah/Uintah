@@ -114,6 +114,9 @@ public:
 
   virtual ~LoadBalancerCommon();
 
+  // Methods for managing the components attached via the ports.
+  virtual void setComponents( UintahParallelComponent *comp ) {};
+  virtual void getComponents();
   virtual void releaseComponents();
 
   //! Returns the MPI rank of the process on which the patch is to be executed.

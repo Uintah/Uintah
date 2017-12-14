@@ -82,6 +82,9 @@ class LoadBalancer;
     DataArchiver( const ProcessorGroup * myworld, int udaSuffix = -1 );
     virtual ~DataArchiver();
 
+    // Methods for managing the components attached via the ports.
+    virtual void setComponents( UintahParallelComponent *parent ) {};
+    virtual void getComponents();
     virtual void releaseComponents();
     
     static bool m_wereSavesAndCheckpointsInitialized;

@@ -56,14 +56,11 @@ using namespace std;
 static DebugStream cout_doing("particleExtract_DOING_COUT", false);
 static DebugStream cout_dbg("particleExtract_DBG_COUT", false);
 //______________________________________________________________________        
-particleExtract::particleExtract(ProblemSpecP& module_spec,
-                         SimulationStateP& sharedState,
-                         Output* output)
-  : AnalysisModule(module_spec, sharedState, output)
+particleExtract::particleExtract(const ProcessorGroup* myworld,
+				 const SimulationStateP sharedState,
+				 const ProblemSpecP& module_spec)
+  : AnalysisModule(myworld, sharedState, module_spec)
 {
-  d_sharedState  = sharedState;
-  d_prob_spec    = module_spec;
-  d_output = output;
   d_matl_set = 0;
   ps_lb = scinew particleExtractLabel();
   M_lb = scinew MPMLabel();
@@ -86,17 +83,13 @@ particleExtract::~particleExtract()
 
 //______________________________________________________________________
 //     P R O B L E M   S E T U P
-void particleExtract::problemSetup(const ProblemSpecP& prob_spec,
+void particleExtract::problemSetup(const ProblemSpecP& ,
                                    const ProblemSpecP& ,
                                    GridP& grid)
 {
   cout_doing << "Doing problemSetup \t\t\t\tparticleExtract" << endl;
 
-  d_matl = d_sharedState->parseAndLookupMaterial(d_prob_spec, "material");
-  
-  if(!d_output){
-    throw InternalError("particleExtract:couldn't get output port", __FILE__, __LINE__);
-  }
+  d_matl = m_sharedState->parseAndLookupMaterial(m_module_spec, "material");
   
   vector<int> m;
   m.push_back( d_matl->getDWIndex() );
@@ -121,14 +114,14 @@ void particleExtract::problemSetup(const ProblemSpecP& prob_spec,
                                              
   //__________________________________
   //  Read in timing information
-  d_prob_spec->require("samplingFrequency", d_writeFreq);
-  d_prob_spec->require("timeStart",         d_startTime);            
-  d_prob_spec->require("timeStop",          d_stopTime);
+  m_module_spec->require("samplingFrequency", d_writeFreq);
+  m_module_spec->require("timeStart",         d_startTime);            
+  m_module_spec->require("timeStop",          d_stopTime);
 
-  d_prob_spec->require("colorThreshold",    d_colorThreshold);
+  m_module_spec->require("colorThreshold",    d_colorThreshold);
   //__________________________________
   //  Read in variables label names
-  ProblemSpecP vars_ps = d_prob_spec->findBlock("Variables");
+  ProblemSpecP vars_ps = m_module_spec->findBlock("Variables");
   if (!vars_ps){
     throw ProblemSetupException("particleExtract: Couldn't find <Variables> tag", __FILE__, __LINE__);    
   } 
@@ -173,8 +166,8 @@ void particleExtract::problemSetup(const ProblemSpecP& prob_spec,
  
  // Tell the shared state that these variable need to be relocated
   int matl = d_matl->getDWIndex();
-  d_sharedState->d_particleState_preReloc[matl].push_back(ps_lb->filePointerLabel_preReloc);
-  d_sharedState->d_particleState[matl].push_back(ps_lb->filePointerLabel);
+  m_sharedState->d_particleState_preReloc[matl].push_back(ps_lb->filePointerLabel_preReloc);
+  m_sharedState->d_particleState[matl].push_back(ps_lb->filePointerLabel);
   
   //__________________________________
   //  Warning
@@ -244,7 +237,7 @@ void particleExtract::initialize(const ProcessorGroup*,
     
     
     if(patch->getGridIndex() == 0){   // only need to do this once
-      string udaDir = d_output->getOutputLocation();
+      string udaDir = m_output->getOutputLocation();
 
       //  Bulletproofing
       DIR *check = opendir(udaDir.c_str());
@@ -372,9 +365,6 @@ particleExtract::doAnalysis( const ProcessorGroup * pg,
                              DataWarehouse        * old_dw,
                              DataWarehouse        * new_dw )
 {   
-  UintahParallelComponent * DA = dynamic_cast<UintahParallelComponent*>(d_output);
-  LoadBalancer        * lb = dynamic_cast<LoadBalancer*>( DA->getPort("load balancer"));
-    
   const Level* level = getLevel(patches);
   
   // the user may want to restart from an uda that wasn't using the DA module
@@ -386,7 +376,7 @@ particleExtract::doAnalysis( const ProcessorGroup * pg,
     lastWriteTime = writeTime;
   }
 
-  double now = d_sharedState->getElapsedSimTime();
+  double now = m_sharedState->getElapsedSimTime();
   if(now < d_startTime || now > d_stopTime){
     return;
   }  
@@ -396,7 +386,9 @@ particleExtract::doAnalysis( const ProcessorGroup * pg,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     
-    int proc = lb->getPatchwiseProcessorAssignment(patch);
+    int proc =
+      m_scheduler->getLoadBalancer()->getPatchwiseProcessorAssignment(patch);
+
     cout_dbg << Parallel::getMPIRank() << "   working on patch " << patch->getID() << " which is on proc " << proc << endl;
     //__________________________________
     // write data if this processor owns this patch
@@ -487,7 +479,7 @@ particleExtract::doAnalysis( const ProcessorGroup * pg,
       }            
       
       // create the directory structure
-      string udaDir = d_output->getOutputLocation();
+      string udaDir = m_output->getOutputLocation();
       string pPath = udaDir + "/particleExtract";
 
       ostringstream li;
@@ -534,7 +526,7 @@ particleExtract::doAnalysis( const ProcessorGroup * pg,
           }
 
           // write particle position and time
-          double time = d_sharedState->getElapsedSimTime();
+          double time = m_sharedState->getElapsedSimTime();
           fprintf(fp,    "%E\t %E\t %E\t %E",time, px[idx].x(),px[idx].y(),px[idx].z());
 
 

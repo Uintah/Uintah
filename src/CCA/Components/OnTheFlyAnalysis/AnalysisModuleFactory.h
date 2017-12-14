@@ -33,17 +33,17 @@
 namespace Uintah {
   class AnalysisModule;
   
-  class AnalysisModuleFactory{
-    private:
-      AnalysisModuleFactory();
-      ~AnalysisModuleFactory();
-          
-    public:      
-      static
-       std::vector< AnalysisModule*> 
-        create(const ProblemSpecP& prob_spec,
-	       SimulationStateP sharedState,
-               Output* output);
+  class AnalysisModuleFactory {
+
+  private:
+    AnalysisModuleFactory();
+    ~AnalysisModuleFactory();
+    
+  public:      
+    static
+    std::vector< AnalysisModule*> create( const ProcessorGroup* myworld,
+					  const SimulationStateP sharedState,
+					  const ProblemSpecP& prob_spec );
   };
 }
 

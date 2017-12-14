@@ -65,9 +65,9 @@ WARNING
 ****************************************/
   class momentumAnalysis : public AnalysisModule {
   public:
-    momentumAnalysis(ProblemSpecP& prob_spec,
-                     SimulationStateP& sharedState,
-		     Output* output);
+    momentumAnalysis(const ProcessorGroup* myworld,
+		     const SimulationStateP sharedState,
+		     const ProblemSpecP& module_spec);
 
     momentumAnalysis();
 
@@ -203,10 +203,6 @@ WARNING
 
     //__________________________________
     // global constants
-    SimulationStateP d_sharedState;
-    Output* d_output;
-    ProblemSpecP d_prob_spec;
-
     MaterialSubset* d_zeroMatl;
     MaterialSubset* d_pressMatl;
     MaterialSet* d_zeroMatlSet;

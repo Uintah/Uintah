@@ -92,7 +92,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
 
     virtual ~SchedulerCommon();
 
-    virtual void setComponents( const SchedulerCommon *parent );
+    virtual void setComponents(  UintahParallelComponent *comp );
     virtual void getComponents();
     virtual void releaseComponents();
 
@@ -237,7 +237,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
 
     virtual void setPositionVar( const VarLabel* posLabel ) { m_reloc_new_pos_label = posLabel; }
 
-    virtual void scheduleAndDoDataCopy( const GridP & grid, ApplicationInterface * sim );
+    virtual void scheduleAndDoDataCopy( const GridP & grid );
 
     // Clear the recorded task monitoring attribute values.
     virtual void clearTaskMonitoring();

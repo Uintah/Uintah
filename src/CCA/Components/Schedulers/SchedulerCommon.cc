@@ -141,11 +141,13 @@ SchedulerCommon::~SchedulerCommon()
   }
 }
 
-void SchedulerCommon::setComponents( const SchedulerCommon *parent )
+void SchedulerCommon::setComponents( UintahParallelComponent *comp )
 {
-  attachPort( "load balancer",  parent->m_loadBalancer );
-  attachPort( "output",     parent->m_output );
-  attachPort( "application", parent->m_application );
+  SchedulerCommon *parent = dynamic_cast<SchedulerCommon*>( comp );
+
+  attachPort( "load balancer", parent->m_loadBalancer );
+  attachPort( "output",        parent->m_output );
+  attachPort( "application",   parent->m_application );
 
   getComponents();
 }
@@ -1432,7 +1434,7 @@ SchedulerCommon::finalizeTimestep()
 //______________________________________________________________________
 //
 void
-SchedulerCommon::scheduleAndDoDataCopy( const GridP & grid, ApplicationInterface * sim )
+SchedulerCommon::scheduleAndDoDataCopy( const GridP & grid )
 {
   Timers::Simple timer;
   timer.start();
@@ -1649,7 +1651,7 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP & grid, ApplicationInterface
 
       if (refinePatchSets[L]->size() > 0) {
         DOUT(g_schedulercommon_dbg, "Rank-" << d_myworld->myRank() << "  Calling scheduleRefine for patches " << *refinePatchSets[L].get_rep());
-        sim->scheduleRefine(refinePatchSets[L].get_rep(), sched);
+        m_application->scheduleRefine(refinePatchSets[L].get_rep(), sched);
       }
 
     } else {
@@ -1698,7 +1700,7 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP & grid, ApplicationInterface
     //__________________________________
     //  Component's shedule for refineInterfae
     if (L > 0) {
-      sim->scheduleRefineInterface(newLevel, sched, 0, 1);
+      m_application->scheduleRefineInterface(newLevel, sched, 0, 1);
     }
   }
 

@@ -82,6 +82,23 @@ LoadBalancerCommon::~LoadBalancerCommon()
 
 //______________________________________________________________________
 //
+void LoadBalancerCommon::getComponents()
+{
+  m_scheduler = dynamic_cast<Scheduler*>(getPort("scheduler"));
+
+  if( !m_scheduler ) {
+    throw InternalError("dynamic_cast of 'm_scheduler' failed!", __FILE__, __LINE__);
+  }
+
+  m_application = dynamic_cast<ApplicationInterface*>( getPort("application") );
+
+  if( !m_application ) {
+    throw InternalError("dynamic_cast of 'm_application' failed!", __FILE__, __LINE__);
+  }
+}
+
+//______________________________________________________________________
+//
 void LoadBalancerCommon::releaseComponents()
 {
   releasePort( "scheduler" );
@@ -844,18 +861,6 @@ LoadBalancerCommon::problemSetup( ProblemSpecP     & pspec
                                 )
 {
   m_sharedState = state;
-
-  m_scheduler = dynamic_cast<Scheduler*>(getPort("scheduler"));
-
-  if( !m_scheduler ) {
-    throw InternalError("dynamic_cast of 'm_scheduler' failed!", __FILE__, __LINE__);
-  }
-
-  m_application = dynamic_cast<ApplicationInterface*>( getPort("application") );
-
-  if( !m_application ) {
-    throw InternalError("dynamic_cast of 'm_application' failed!", __FILE__, __LINE__);
-  }
 
   ProblemSpecP p = pspec->findBlock("LoadBalancer");
   m_output_Nth_proc = 1;

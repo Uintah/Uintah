@@ -25,6 +25,7 @@
 #ifndef UINTAH_HOMEBREW_APPLICATIONINTERFACE_H
 #define UINTAH_HOMEBREW_APPLICATIONINTERFACE_H
 
+#include <CCA/Ports/Output.h>
 #include <CCA/Ports/SchedulerP.h>
 
 #include <Core/Parallel/UintahParallelPort.h>
@@ -67,8 +68,8 @@ WARNING
   
 ****************************************/
 
-  class ApplicationCommon;
-
+  class UintahParallelComponent;
+  
   class DataWarehouse;
 
   class SimulationTime;
@@ -77,6 +78,7 @@ WARNING
   class DebugStream;
   class Dout;
   
+
   class ApplicationInterface : public UintahParallelPort {
 
     // NOTE: ONLY CS infrasture should be a friend class - the actual
@@ -97,10 +99,13 @@ WARNING
     virtual ~ApplicationInterface();
     
     // Methods for managing the components attached via the ports.
-    virtual void setComponents( const ApplicationCommon *parent ) = 0;
+    virtual void setComponents( UintahParallelComponent *comp ) = 0;
     virtual void getComponents() = 0;
     virtual void releaseComponents() = 0;
 
+    virtual Scheduler *getScheduler() = 0;
+    virtual Output    *getOutput()    = 0;
+    
     // Top level problem set up called by sus.
     virtual void problemSetup( const ProblemSpecP &prob_spec ) = 0;
     

@@ -513,8 +513,6 @@ SimulationController::schedulerSetup( void )
   // Now that the grid is completely set up, set up the scheduler.
   m_scheduler->setRunTimeStats( &m_runtime_stats );
 
-  m_scheduler->getComponents();
-  
   m_scheduler->problemSetup( m_ups, m_app->getSimulationStateP() );
 
   // Additional set up calls.
@@ -552,8 +550,6 @@ SimulationController::loadBalancerSetup( void )
 void
 SimulationController::applicationSetup( void )
 {
-  m_app->getComponents();
-
   // Pass the m_restart_ps to the component's problemSetup.  For
   // restarting, pull the <MaterialProperties> from the m_restart_ps.
   // If the properties are not available, then pull the properties

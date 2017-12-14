@@ -33,8 +33,9 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR := CCA/Components/Solvers
 
 SRCS += \
-	$(SRCDIR)/CGSolver.cc \
-	$(SRCDIR)/DirectSolve.cc \
+	$(SRCDIR)/SolverCommon.cc  \
+	$(SRCDIR)/CGSolver.cc      \
+	$(SRCDIR)/DirectSolve.cc   \
 	$(SRCDIR)/SolverFactory.cc
 
 PSELIBS := \
@@ -57,9 +58,9 @@ ifeq ($(HAVE_HYPRE),yes)
   LIBS := $(LIBS) $(HYPRE_LIBRARY) 
 
   SRCS += $(SRCDIR)/HypreSolver.cc
-  
+
   SUBDIRS := $(SRCDIR)/AMR
-  
+
   include $(SCIRUN_SCRIPTS)/recurse.mk
 
 endif # HAVE_HYPRE

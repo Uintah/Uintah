@@ -66,9 +66,9 @@ WARNING
 ****************************************/
   class flatPlate_heatFlux : public AnalysisModule {
   public:
-    flatPlate_heatFlux(ProblemSpecP& prob_spec,
-		       SimulationStateP& sharedState,
-		       Output* output);
+    flatPlate_heatFlux(const ProcessorGroup* myworld,
+		       const SimulationStateP sharedState,
+		       const ProblemSpecP& module_spec);
               
     flatPlate_heatFlux();
                     
@@ -125,10 +125,6 @@ WARNING
        
     //__________________________________
     // global constants
-    SimulationStateP d_sharedState;
-    Output* d_output;
-    ProblemSpecP d_prob_spec;
-    
     const Material* d_matl;
     MaterialSet* d_matl_set;
     const MaterialSubset* d_matl_sub;

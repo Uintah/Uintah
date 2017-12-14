@@ -188,8 +188,12 @@ Switcher::Switcher( const ProcessorGroup * myworld,
   // there should be n-1 switching critiera specified.
   int num_switch_criteria = 0;
   for (int i = 0; i < num_components; i++) {
-    UintahParallelComponent* comp = dynamic_cast<UintahParallelComponent*>(getPort("application",i));
-    SwitchingCriteria* sw = dynamic_cast<SwitchingCriteria*>(comp->getPort("switch_criteria"));
+    UintahParallelComponent* comp =
+      dynamic_cast<UintahParallelComponent*>(getPort("application",i));
+
+    SwitchingCriteria* sw =
+      dynamic_cast<SwitchingCriteria*>(comp->getPort("switch_criteria"));
+
     if (sw) {
       num_switch_criteria++;
     }
@@ -199,11 +203,11 @@ Switcher::Switcher( const ProcessorGroup * myworld,
     throw  ProblemSetupException( "Do not have enough switching criteria specified for the number of components.", __FILE__, __LINE__ );
   }
   
-  //__________________________________
-  // Add the "None" SwitchCriteria to the last component, so the switchFlag label
-  // is computed in the last stage.
-
-  UintahParallelComponent* last_comp = dynamic_cast<UintahParallelComponent*>(getPort("application",num_components-1));
+  //__________________________________  
+  // Add the "None" SwitchCriteria to the last component, so the
+  // switchFlag label is computed in the last stage.
+  UintahParallelComponent* last_comp =
+    dynamic_cast<UintahParallelComponent*>(getPort("application",num_components-1));
 
   SwitchingCriteria* none_switch_criteria = scinew None();
   
@@ -539,7 +543,7 @@ void Switcher::scheduleCarryOverVars(const LevelP     & level,
         t->requires(Task::OldDW, var, matls, Ghost::None, 0);
         t->computes(var, matls);
      
-        if(UintahParallelComponent::d_myworld->myRank() == 0) {
+        if(d_myworld->myRank() == 0) {
           if (matls) {
             std::cout << d_myworld->myRank() << "  Carry over " << *var << "\t\tmatls: " << *matls << " on level " << L_indx << std::endl;
           }

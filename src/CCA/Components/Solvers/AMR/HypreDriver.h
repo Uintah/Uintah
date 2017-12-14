@@ -233,7 +233,7 @@ namespace Uintah {
                        Handle<HypreDriver>)
 
     {
-      DebugStream cout_doing("HYPRE_DOING_COUT", false);
+      DebugStream cout_doing("SOLVER_DOING_COUT", false);
       DebugStream cout_dbg("HYPRE_DBG", false);
       int mpiRank = Parallel::getMPIRank();
       cout_doing << mpiRank<< " HypreDriver::solve() BEGIN" << "\n";

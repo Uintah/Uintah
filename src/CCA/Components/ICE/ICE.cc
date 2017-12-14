@@ -188,7 +188,9 @@ ICE::~ICE()
     vector<AnalysisModule*>::iterator iter;
     for( iter  = d_analysisModules.begin();
          iter != d_analysisModules.end(); iter++){
-      delete *iter;
+      AnalysisModule* am = *iter;
+      am->releaseComponents();
+      delete am;
     }
   }
   
@@ -565,13 +567,16 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
   //__________________________________
   //  Set up data analysis modules
   if(!d_with_mpm){
-    d_analysisModules = AnalysisModuleFactory::create(prob_spec, m_sharedState, m_output);
+    d_analysisModules = AnalysisModuleFactory::create(d_myworld,
+						      m_sharedState,
+						      prob_spec);
 
     if( d_analysisModules.size() != 0 ) {
 
       vector<AnalysisModule*>::iterator iter;
       for( iter  = d_analysisModules.begin(); iter != d_analysisModules.end(); iter++) {
         AnalysisModule* am = *iter;
+	am->setComponents( dynamic_cast<ApplicationInterface*>( this ) );
         am->problemSetup(prob_spec, restart_prob_spec, grid);
       }
     }
@@ -2900,7 +2905,6 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
 //
 //    // get a handle on the GPU scheduler to query for device and host pointers, etc
 //    UnifiedScheduler* sched = dynamic_cast<UnifiedScheduler*>(getPort("scheduler"));  //UnifiedScheduler:: dynamic_cast<UnifiedScheduler*>(getPort("scheduler"));
-//    //UintahParallelPort* sched = getPort("scheduler");
 //    //MPIScheduler* sched2 = dynamic_cast<MPIScheduler*>(getPort("schedular"));
 //    for (int p = 0; p < patches->size(); p++) {
 //
@@ -2978,7 +2982,6 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
 //    //
 //    // get a handle on the GPU scheduler to query for device and host pointers, etc
 //    UnifiedScheduler* sched = dynamic_cast<UnifiedScheduler*>(getPort("scheduler"));  //UnifiedScheduler:: dynamic_cast<UnifiedScheduler*>(getPort("scheduler"));
-//    //UintahParallelPort* sched = getPort("scheduler");
 //    //MPIScheduler* sched2 = dynamic_cast<MPIScheduler*>(getPort("schedular"));
 //    for (int p = 0; p < patches->size(); p++) {
 //

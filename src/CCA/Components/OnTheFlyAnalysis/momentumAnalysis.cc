@@ -64,15 +64,11 @@ static DebugStream cout_dbg("momentumAnalysis_dbg", false);
 //______________________________________________________________________
 //______________________________________________________________________
 //
-momentumAnalysis::momentumAnalysis(ProblemSpecP& module_spec,
-                                   SimulationStateP& sharedState,
-                                   Output* output)
-
-  : AnalysisModule(module_spec, sharedState, output)
+momentumAnalysis::momentumAnalysis( const ProcessorGroup* myworld,
+				    const SimulationStateP sharedState,
+				    const ProblemSpecP& module_spec )
+  : AnalysisModule(myworld, sharedState, module_spec)
 {
-  d_sharedState  = sharedState;
-  d_prob_spec    = module_spec;
-  d_output = output;
   d_zeroMatl     = 0;
   d_zeroMatlSet  = 0;
   d_zeroPatch    = 0;
@@ -129,21 +125,17 @@ momentumAnalysis::~momentumAnalysis()
 //     P R O B L E M   S E T U P
 //______________________________________________________________________
 //
-void momentumAnalysis::problemSetup(const ProblemSpecP&,
-				    const ProblemSpecP& restart_prob_spec,
+void momentumAnalysis::problemSetup(const ProblemSpecP& ,
+				    const ProblemSpecP& ,
 				    GridP& grid)
 {
   cout_doing << "Doing problemSetup \t\t\t\tmomentumAnalysis" << endl;
 
-  if(!d_output){
-    throw InternalError("momentumAnalysis:couldn't get output port", __FILE__, __LINE__);
-  }
-
   //__________________________________
   //  Read in timing information
-  d_prob_spec->require( "samplingFrequency", d_analysisFreq );
-  d_prob_spec->require( "timeStart",         d_StartTime );
-  d_prob_spec->require( "timeStop",          d_StopTime );
+  m_module_spec->require( "samplingFrequency", d_analysisFreq );
+  m_module_spec->require( "timeStart",         d_StartTime );
+  m_module_spec->require( "timeStop",          d_StopTime );
 
   d_zeroMatl = scinew MaterialSubset();
   d_zeroMatl->add(0);
@@ -165,14 +157,14 @@ void momentumAnalysis::problemSetup(const ProblemSpecP&,
   //  <material>   atmosphere </material>
   //  <materialIndex> 1 </materialIndex>
   Material* matl;
-  if( d_prob_spec->findBlock("material") ){
-    matl = d_sharedState->parseAndLookupMaterial( d_prob_spec, "material" );
-  } else if ( d_prob_spec->findBlock("materialIndex") ){
+  if( m_module_spec->findBlock("material") ){
+    matl = m_sharedState->parseAndLookupMaterial( m_module_spec, "material" );
+  } else if ( m_module_spec->findBlock("materialIndex") ){
     int indx;
-    d_prob_spec->get("materialIndex", indx);
-    matl = d_sharedState->getMaterial(indx);
+    m_module_spec->get("materialIndex", indx);
+    matl = m_sharedState->getMaterial(indx);
   } else {
-    matl = d_sharedState->getMaterial(0);
+    matl = m_sharedState->getMaterial(0);
   }
 
   d_matlIndx = matl->getDWIndex();
@@ -210,7 +202,7 @@ void momentumAnalysis::problemSetup(const ProblemSpecP&,
 
   //__________________________________
   // Loop over each face and find the extents
-  ProblemSpecP ma_ps = d_prob_spec->findBlock("controlVolume");
+  ProblemSpecP ma_ps = m_module_spec->findBlock("controlVolume");
   if(! ma_ps) {
     throw ProblemSetupException("ERROR Radiometer: Couldn't find <controlVolume> xml node", __FILE__, __LINE__);
   }
@@ -293,7 +285,7 @@ void momentumAnalysis::initialize( const ProcessorGroup*,
     new_dw->put(fileInfo,    labels->fileVarsStruct, 0, patch);
 
     if(patch->getGridIndex() == 0){   // only need to do this once
-      string udaDir = d_output->getOutputLocation();
+      string udaDir = m_output->getOutputLocation();
 
       //  Bulletproofing
       DIR *check = opendir(udaDir.c_str());
@@ -400,7 +392,7 @@ void momentumAnalysis::integrateMomentumField(const ProcessorGroup* pg,
 
   double lastCompTime = analysisTime;
   double nextCompTime = lastCompTime + 1.0/d_analysisFreq;
-  double now = d_sharedState->getElapsedSimTime();
+  double now = m_sharedState->getElapsedSimTime();
 
   bool tsr = new_dw->timestepRestarted();  // ignore if a timestep restart has been requested.
 
@@ -567,7 +559,7 @@ void momentumAnalysis::doAnalysis(const ProcessorGroup* pg,
   max_vartype lastTime;
   old_dw->get( lastTime, labels->lastCompTime );
 
-  double now      = d_sharedState->getElapsedSimTime();
+  double now      = m_sharedState->getElapsedSimTime();
   double nextTime = lastTime + ( 1.0 / d_analysisFreq );
 
   double time_dw  = lastTime;
@@ -596,7 +588,7 @@ void momentumAnalysis::doAnalysis(const ProcessorGroup* pg,
         myFiles = fileInfo.get().get_rep()->files;
       }
 
-      string udaDir = d_output->getOutputLocation();
+      string udaDir = m_output->getOutputLocation();
       string filename = udaDir + "/" + "momentumAnalysis.dat";
       FILE *fp=nullptr;
 

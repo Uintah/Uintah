@@ -49,9 +49,9 @@ AnalysisModuleFactory::~AnalysisModuleFactory()
 }
 
 std::vector<AnalysisModule*>
-AnalysisModuleFactory::create(const ProblemSpecP& prob_spec,
-			      SimulationStateP sharedState,
-                              Output* output)
+AnalysisModuleFactory::create(const ProcessorGroup* myworld,
+			      const SimulationStateP sharedState,
+			      const ProblemSpecP& prob_spec)
 {
   string module("");
   ProblemSpecP da_ps = prob_spec->findBlock("DataAnalysis");
@@ -70,37 +70,37 @@ AnalysisModuleFactory::create(const ProblemSpecP& prob_spec,
       module = attributes["name"];
 
       if ( module == "statistics" ) {
-        modules.push_back( scinew statistics(          module_ps, sharedState, output) );
+        modules.push_back( scinew statistics(          myworld, sharedState, module_ps) );
       }
       else if ( module == "lineExtract" ) {
-        modules.push_back(scinew lineExtract(          module_ps, sharedState, output ) );
+        modules.push_back(scinew lineExtract(          myworld, sharedState, module_ps ) );
       }
       else if ( module == "planeExtract" ) {
-        modules.push_back( scinew planeExtract(        module_ps, sharedState, output ) );
+        modules.push_back( scinew planeExtract(        myworld, sharedState, module_ps ) );
       }
       else if ( module == "containerExtract" ) {
-        modules.push_back( scinew containerExtract(    module_ps, sharedState, output ) );
+        modules.push_back( scinew containerExtract(    myworld, sharedState, module_ps ) );
       }
       else if ( module == "momentumAnalysis" ) {
-        modules.push_back( scinew momentumAnalysis(    module_ps, sharedState, output ) );
+        modules.push_back( scinew momentumAnalysis(    myworld, sharedState, module_ps ) );
       }
       else if ( module == "particleExtract" ) {
-        modules.push_back( scinew particleExtract(     module_ps, sharedState, output ) );
+        modules.push_back( scinew particleExtract(     myworld, sharedState, module_ps ) );
       }
       else if ( module == "vorticity" ) {
-        modules.push_back( scinew vorticity(           module_ps, sharedState, output ) );
+        modules.push_back( scinew vorticity(           myworld, sharedState, module_ps ) );
       }
       else if ( module == "flatPlate_heatFlux" ) {
-        modules.push_back( scinew flatPlate_heatFlux(  module_ps, sharedState, output ) );
+        modules.push_back( scinew flatPlate_heatFlux(  myworld, sharedState, module_ps ) );
       }
       else if ( module == "firstLawThermo" ) {
-        modules.push_back( scinew FirstLawThermo(      module_ps, sharedState, output ) );
+        modules.push_back( scinew FirstLawThermo(      myworld, sharedState, module_ps ) );
       }
       else if ( module == "minMax" ) {
-        modules.push_back( scinew MinMax(              module_ps, sharedState, output ) );
+        modules.push_back( scinew MinMax(              myworld, sharedState, module_ps ) );
       }
       else if ( module == "radiometer" ) {
-        modules.push_back( scinew OnTheFly_radiometer( module_ps, sharedState, output ) );
+        modules.push_back( scinew OnTheFly_radiometer( myworld, sharedState, module_ps ) );
       }
       else {
         throw ProblemSetupException("\nERROR:<DataAnalysis> Unknown analysis module.  "+module,__FILE__, __LINE__);
