@@ -22,8 +22,9 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_SINGLELEVELREGRIDDER_H
-#define UINTAH_SINGLELEVELREGRIDDER_H
+#ifndef UINTAH_SINGLE_LEVEL_REGRIDDER_H
+#define UINTAH_SINGLE_LEVEL_REGRIDDER_H
+
 #include <CCA/Components/Regridder/RegridderCommon.h>
 #include <CCA/Components/Regridder/TiledRegridder.h>
 
@@ -48,18 +49,19 @@ DESCRIPTION
     SingleLevelRegridder(const ProcessorGroup* pg);
     virtual ~SingleLevelRegridder();
     
+    virtual std::string getName() { return std::string("Single Level"); }
+
     virtual Grid* regrid( Grid* oldGrid );
 		
     virtual void problemSetup(const ProblemSpecP& params,
-			         const GridP& grid,
-			         const SimulationStateP& state);
+			      const GridP& grid,
+			      const SimulationStateP& state);
 
     std::vector<IntVector> getMinPatchSize() {return d_tileSize;}
 
   protected:
     void problemSetup_BulletProofing(const int l);
     int d_level_index;              // perform regrid on this level index
-
   };
 
 } // End namespace Uintah

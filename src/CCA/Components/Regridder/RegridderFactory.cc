@@ -27,6 +27,8 @@
 #include <CCA/Components/Regridder/SingleLevelRegridder.h>
 #include <CCA/Components/Regridder/TiledRegridder.h>
 #include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Parallel/Parallel.h>
+#include <Core/Parallel/ProcessorGroup.h>
 
 //-- Uintah framework includes --//
 #include <Core/Parallel/ProcessorGroup.h>
@@ -52,9 +54,7 @@ RegridderCommon* RegridderFactory::create(       ProblemSpecP   & ps,
       std::string regridderName;
       regridderPS->getAttribute("type", regridderName);
 
-      if (world->myRank() == 0 && regridderName != "") {
-        std::cout << "Using Regridder " << regridderName << std::endl;
-      }
+      proc0cout << "Using Regridder: \t" << regridderName << std::endl;
 
       if (regridderName == "Tiled") {
         regridder = scinew TiledRegridder(world);

@@ -63,6 +63,9 @@ WARNING
   public:
     TiledRegridder(const ProcessorGroup* pg);
     virtual ~TiledRegridder();
+
+    virtual std::string getName() { return std::string("Tiled"); }
+
     //! Create a new Grid
     virtual Grid* regrid(Grid* oldGrid);
 		

@@ -65,6 +65,8 @@ namespace Uintah {
     RegridderCommon(const ProcessorGroup* pg);
     virtual ~RegridderCommon();
 
+    virtual std::string getName() = 0;
+
     // Methods for managing the components attached via the ports.
     virtual void setComponents( UintahParallelComponent *comp ) {};
     virtual void getComponents();
