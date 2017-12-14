@@ -37,44 +37,42 @@
 #include <iostream>
 
 using namespace Uintah;
-using namespace std;
 
 SolverInterface* SolverFactory::create(       ProblemSpecP   & ps,
                                         const ProcessorGroup * world,
-                                        const string         & cmdline )
+					      std::string      solverName )
 {
-  string solver = "CGSolver";
-
-  if( cmdline == "" ) {
+  if( solverName == "" ) {
     ProblemSpecP sol_ps = ps->findBlock( "Solver" );
     if( sol_ps ) {
-      sol_ps->getAttribute( "type", solver );
+      sol_ps->getAttribute( "type", solverName );
     }
-  }
-  else {
-    solver = cmdline;
+    else
+      solverName = "CGSolver";
   }
 
-  SolverInterface* solve = 0;
+  proc0cout << "Implicit Solver: \t" << solverName << std::endl;
 
-  if( solver == "CGSolver" ) {
-    solve = scinew CGSolver(world);
+  SolverInterface* solver = nullptr;
+
+  if( solverName == "CGSolver" ) {
+    solver = scinew CGSolver(world);
   }
-  else if (solver == "DirectSolver" || solver == "direct") {
-    solve = scinew DirectSolve(world);
+  else if (solverName == "DirectSolver" || solverName == "direct") {
+    solver = scinew DirectSolve(world);
   }
-  else if (solver == "HypreSolver" || solver == "hypre") {
+  else if (solverName == "HypreSolver" || solverName == "hypre") {
 #if HAVE_HYPRE
-    solve = scinew HypreSolver2(world);
+    solver = scinew HypreSolver2(world);
 #else
     ostringstream msg;
     msg << "Hypre solver not available, Hypre was not configured.\n";
     throw ProblemSetupException( msg.str(), __FILE__, __LINE__ );
 #endif
   }
-  else if (solver == "AMRSolver" || solver == "hypreamr") {
+  else if (solverName == "AMRSolver" || solverName == "hypreamr") {
 #if HAVE_HYPRE
-    solve = scinew AMRSolver(world);
+    solver = scinew AMRSolver(world);
 #else
     ostringstream msg;
     msg << "Hypre 1.9.0b solver not available, Hypre not configured.\n";
@@ -82,11 +80,11 @@ SolverInterface* SolverFactory::create(       ProblemSpecP   & ps,
 #endif
   }
   else {
-    ostringstream msg;
-    msg << "\nERROR: Unknown solver (" << solver
+    std::ostringstream msg;
+    msg << "\nERROR: Unknown solver (" << solverName
         << ") Valid Solvers: CGSolver, DirectSolver, HypreSolver, AMRSolver, hypreamr \n";
     throw ProblemSetupException( msg.str(), __FILE__, __LINE__ );
   }
 
-  return solve;
+  return solver;
 }

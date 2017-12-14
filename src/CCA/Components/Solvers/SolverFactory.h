@@ -74,8 +74,7 @@ namespace Uintah {
       // This function contains switches for all known solvers.
       static SolverInterface* create(       ProblemSpecP   & ps,
                                       const ProcessorGroup * world,
-                                      const std::string    & cmdline = "" );
-
+                                            std::string      solverName = "" );
     };
 } // End namespace Uintah
 
