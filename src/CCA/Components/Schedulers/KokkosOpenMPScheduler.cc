@@ -63,12 +63,10 @@ std::mutex g_scheduler_mutex{};        // main scheduler lock for multi-threaded
 //______________________________________________________________________
 //
 KokkosOpenMPScheduler::KokkosOpenMPScheduler( const ProcessorGroup   * myworld
-                                            , const Output           * oport
                                             ,       KokkosOpenMPScheduler * parentScheduler
                                             )
-  : MPIScheduler(myworld, oport, parentScheduler)
+  : MPIScheduler(myworld, parentScheduler)
 {
-
 }
 
 
@@ -193,7 +191,7 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
   m_abort_point = 987654;
 
   if( m_reloc_new_pos_label && m_dws[m_dwmap[Task::OldDW]] != nullptr ) {
-    m_dws[m_dwmap[Task::OldDW]]->exchangeParticleQuantities(m_detailed_tasks, getLoadBalancer(), m_reloc_new_pos_label, iteration);
+    m_dws[m_dwmap[Task::OldDW]]->exchangeParticleQuantities(m_detailed_tasks, m_loadBalancer, m_reloc_new_pos_label, iteration);
   }
 
   m_curr_iteration = iteration;

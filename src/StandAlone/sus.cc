@@ -59,12 +59,6 @@
 #include <CCA/Components/Schedulers/SchedulerFactory.h>
 #include <CCA/Components/SimulationController/AMRSimulationController.h>
 #include <CCA/Components/Solvers/SolverFactory.h>
-#include <CCA/Components/Solvers/CGSolver.h>
-#include <CCA/Components/Solvers/DirectSolve.h>
-
-#ifdef HAVE_HYPRE
-#  include <CCA/Components/Solvers/HypreSolver.h>
-#endif
 
 #ifdef HAVE_CUDA
 #  include <CCA/Components/Schedulers/UnifiedScheduler.h>
@@ -105,14 +99,6 @@
 #include <stdexcept>
 
 using namespace Uintah;
-
-
-#if defined( USE_LENNY_HACK )
-  // See Core/Malloc/Allocator.cc for more info.
-  namespace Uintah {
-    extern void shutdown();
-  };
-#endif
 
 
 namespace {
@@ -233,10 +219,6 @@ abortCleanupFunc()
 int
 main( int argc, char *argv[], char *env[] )
 {
-#if defined( USE_LENNY_HACK )
-  atexit( Uintah::shutdown );
-#endif
-
   sanityChecks();
 
 #if HAVE_IEEEFP_H
@@ -673,9 +655,9 @@ main( int argc, char *argv[], char *env[] )
     SimulationController* simController =
       scinew AMRSimulationController( world, ups );
 
-    // set sim. controller flags for reduce uda
+    // Set the simulation controller flags for reduce uda
     if ( postProcessUda ) {
-      simController->setPostProcessFlags( udaDir );
+      simController->setPostProcessFlags();
     }
     
 #ifdef HAVE_VISIT
@@ -720,24 +702,17 @@ main( int argc, char *argv[], char *env[] )
     LoadBalancerCommon* loadBalancer =
       LoadBalancerFactory::create( ups, world );
 
-    //__________________________________
-    // Output
-    DataArchiver * dataArchiver = scinew DataArchiver( world, udaSuffix );
-
-    dataArchiver->attachPort( "application", application );
-    dataArchiver->attachPort( "load balancer", loadBalancer );
-    
-    dataArchiver->setUseLocalFileSystems( local_filesystem );
-
-    simController->attachPort( "output", dataArchiver );
-    appComp->attachPort( "output", dataArchiver );
+    loadBalancer->attachPort( "application", application );
+    simController->attachPort( "load balancer", loadBalancer );
+    appComp->attachPort( "load balancer", loadBalancer );
 
     //__________________________________
     // Scheduler
     SchedulerCommon* scheduler =
-      SchedulerFactory::create(ups, world, dataArchiver);
+      SchedulerFactory::create(ups, world);
 
     scheduler->attachPort( "load balancer", loadBalancer );
+    scheduler->attachPort( "application", application );
     
     appComp->attachPort( "scheduler", scheduler );
     simController->attachPort( "scheduler", scheduler );
@@ -751,6 +726,19 @@ main( int argc, char *argv[], char *env[] )
     }
 
     //__________________________________
+    // Output
+    DataArchiver * dataArchiver = scinew DataArchiver( world, udaSuffix );
+
+    dataArchiver->attachPort( "application", application );
+    dataArchiver->attachPort( "load balancer", loadBalancer );
+    
+    dataArchiver->setUseLocalFileSystems( local_filesystem );
+
+    simController->attachPort( "output", dataArchiver );
+    appComp->attachPort( "output", dataArchiver );
+    scheduler->attachPort( "output", dataArchiver );
+
+    //__________________________________
     // Regridder - optional
     RegridderCommon* regridder = nullptr;
 
@@ -760,6 +748,7 @@ main( int argc, char *argv[], char *env[] )
       if (regridder) {
         regridder->attachPort("scheduler", scheduler);
         regridder->attachPort("load balancer", loadBalancer);
+	regridder->attachPort( "application", application );
 
         simController->attachPort("regridder", regridder);
         appComp->attachPort("regridder", regridder);
@@ -780,6 +769,23 @@ main( int argc, char *argv[], char *env[] )
       }
     }
 
+    // Get all the components.
+    if ( modelMaker ) {
+      modelMaker->getComponents();
+    }
+
+    if( regridder ) {
+      regridder->getComponents();
+    }
+
+    scheduler->getComponents();
+    loadBalancer->getComponents();
+    solverComp->getComponents();
+    dataArchiver->getComponents();
+
+    appComp->getComponents();
+    simController->getComponents();
+    
     //__________________________________
     // Start the simulation controller
     if ( restart ) {
@@ -792,37 +798,39 @@ main( int argc, char *argv[], char *env[] )
 
     simController->run();
 
-    // Clean up.  Something has a handle to the scheduler and
-    // simulation state within the application component. As such,
-    // when they are deleted an ASSERT is thrown. So skip trying to
-    // delete them for now.
-    simController->releaseComponents();
-    appComp->releaseComponents();
+    // Clean up release all the components.
+    if ( modelMaker ) {
+      modelMaker->releaseComponents();
+    }
 
+    if( regridder ) {
+      regridder->releaseComponents();
+    }
+
+    dataArchiver->releaseComponents();
     scheduler->releaseComponents();
     loadBalancer->releaseComponents();
     solverComp->releaseComponents();
-    dataArchiver->releaseComponents();
+    appComp->releaseComponents();
+    simController->releaseComponents();
+
     
     scheduler->removeReference();
-
-    delete simController;
-   
-    if ( regridder ) {
-      regridder->releaseComponents();
-      delete regridder;
-    }
-
-    delete loadBalancer;
-    delete solver;
-    delete dataArchiver;
 
     if ( modelMaker ) {
       delete modelMaker;
     }
 
+    if ( regridder ) {
+      delete regridder;
+    }
+
+    delete dataArchiver;
     delete scheduler;
+    delete loadBalancer;
+    delete solver;   
     delete application;
+    delete simController;
   }
   
   catch (ProblemSetupException& e) {

@@ -84,8 +84,10 @@ public:
   void releasePort( const std::string& name );
   unsigned int numConnections( const std::string& name );
 
+  // Methods for managing the components attached via the ports.
+  virtual void setComponents( UintahParallelComponent *comp ) = 0;
+  virtual void getComponents() = 0;
   virtual void releaseComponents() = 0;
-
 
 protected:
 

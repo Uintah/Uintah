@@ -25,6 +25,9 @@
 #include <CCA/Components/Schedulers/DynamicMPIScheduler.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Components/Schedulers/TaskGraph.h>
+#include <CCA/Ports/ApplicationInterface.h>
+#include <CCA/Ports/LoadBalancer.h>
+#include <CCA/Ports/Output.h>
 
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Util/DOUT.hpp>
@@ -50,10 +53,9 @@ Dout g_queue_length( "DynamicMPI_QueueLength", false);
 //______________________________________________________________________
 //
 DynamicMPIScheduler::DynamicMPIScheduler( const ProcessorGroup*      myworld
-                                        , const Output*              oport
                                         ,       DynamicMPIScheduler* parentScheduler
                                         )
-  : MPIScheduler( myworld, oport, parentScheduler )
+  : MPIScheduler( myworld, parentScheduler )
 {
   m_task_queue_alg =  MostMessages;
 }
@@ -109,18 +111,18 @@ DynamicMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec
 
   SchedulerCommon::problemSetup(prob_spec, state);
 
-// #ifdef HAVE_VISIT
-//   static bool initialized = false;
+#ifdef HAVE_VISIT
+  static bool initialized = false;
 
-//   // Running with VisIt so add in the variables that the user can
-//   // modify.
-//   if( m_sharedState->getVisIt() && !initialized ) {
-//     m_sharedState->d_douts.push_back( &g_dbg );
-//     m_sharedState->d_douts.push_back( &g_queue_length );
+  // Running with VisIt so add in the variables that the user can
+  // modify.
+  if( m_application->getVisIt() && !initialized ) {
+    m_application->getDouts().push_back( &g_dbg );
+    m_application->getDouts().push_back( &g_queue_length );
 
-//     initialized = true;
-//   }
-// #endif
+    initialized = true;
+  }
+#endif
 }
 
 //______________________________________________________________________
@@ -128,10 +130,8 @@ DynamicMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec
 SchedulerP
 DynamicMPIScheduler::createSubScheduler()
 {
-  UintahParallelPort  * lbp      = getPort("load balancer");
-  DynamicMPIScheduler * newsched = scinew DynamicMPIScheduler( d_myworld, m_out_port, this );
-  newsched->m_sharedState = m_sharedState;
-  newsched->attachPort( "load balancer", lbp );
+  DynamicMPIScheduler * newsched = scinew DynamicMPIScheduler( d_myworld, this );
+  newsched->setComponents( this );
   newsched->m_sharedState = m_sharedState;
   return newsched;
 }
@@ -188,7 +188,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/
   mpi_info_.reset( 0 );
 
   if( m_reloc_new_pos_label && m_dws[m_dwmap[Task::OldDW]] != nullptr ) {
-    m_dws[m_dwmap[Task::OldDW]]->exchangeParticleQuantities(dts, getLoadBalancer(), m_reloc_new_pos_label, iteration);
+    m_dws[m_dwmap[Task::OldDW]]->exchangeParticleQuantities(dts, m_loadBalancer, m_reloc_new_pos_label, iteration);
   }
 
 #if 0

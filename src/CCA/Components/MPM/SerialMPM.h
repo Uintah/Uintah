@@ -518,9 +518,6 @@ protected:
                                                   const PatchSet*,
                                                   const MaterialSet*);
 
-  bool needRecompile(double time, double dt,
-                     const GridP& grid);
-
   void readPrescribedDeformations(std::string filename);
 
   void readInsertParticlesFile(std::string filename);
@@ -600,7 +597,6 @@ protected:
 
 
   bool             d_fracture;
-  bool             d_recompile;
 
   MaterialSubset*  d_loadCurveIndex;
   

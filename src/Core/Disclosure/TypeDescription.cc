@@ -234,6 +234,7 @@ TypeDescription::toString( Type type )
     case Short27:             return "Short27";
     case Stencil4:            return "Stencil4";
     case Stencil7:            return "Stencil7";
+    case IntVector:           return "IntVector";
     case Unknown:             return "Unknown";
     case Other:               return "Other";
     default:

@@ -68,7 +68,7 @@ class MPIScheduler : public SchedulerCommon {
 
   public:
 
-            MPIScheduler( const ProcessorGroup* myworld, const Output* oport, MPIScheduler* parentScheduler = 0 );
+    MPIScheduler( const ProcessorGroup* myworld, MPIScheduler* parentScheduler = 0 );
 
     virtual ~MPIScheduler();
 

@@ -29,7 +29,7 @@
 #include <CCA/Components/Schedulers/MPIScheduler.h>
 #include <CCA/Components/Schedulers/RuntimeStats.hpp>
 #include <CCA/Components/Schedulers/SchedulerCommon.h>
-#include <CCA/Ports/LoadBalancerPort.h>
+#include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Scheduler.h>
 
 #include <Core/Exceptions/InternalError.h>
@@ -599,7 +599,7 @@ OnDemandDataWarehouse::sendMPI(       DependencyBatch       * batch,
                                       BufferInfo            & buffer,
                                       OnDemandDataWarehouse * old_dw,
                                 const DetailedDep           * dep,
-                                      LoadBalancerPort      * lb )
+                                      LoadBalancer      * lb )
 {
   if( dep->isNonDataDependency() ) {
     // A non-data dependency -- send an empty message.
@@ -695,7 +695,7 @@ OnDemandDataWarehouse::sendMPI(       DependencyBatch       * batch,
 //
 void
 OnDemandDataWarehouse::exchangeParticleQuantities(       DetailedTasks    * dts,
-                                                         LoadBalancerPort *  lb,
+                                                         LoadBalancer *  lb,
                                                    const VarLabel         * pos_var,
                                                          int                iteration )
 {
@@ -838,7 +838,7 @@ OnDemandDataWarehouse::recvMPI(       DependencyBatch       * batch,
                                       BufferInfo            & buffer,
                                       OnDemandDataWarehouse * old_dw,
                                 const DetailedDep           * dep,
-                                      LoadBalancerPort      * lb )
+                                      LoadBalancer      * lb )
 {
   if( dep->isNonDataDependency() ) {
     // A non-data dependency -- send an empty message.

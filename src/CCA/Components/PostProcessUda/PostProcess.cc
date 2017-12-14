@@ -24,6 +24,7 @@
 
 #include <CCA/Components/PostProcessUda/PostProcess.h>
 #include <CCA/Components/PostProcessUda/ModuleFactory.h>
+#include <Core/Exceptions/InternalError.h>
 
 #include <Core/Grid/SimpleMaterial.h>
 #include <Core/Util/DOUT.hpp>
@@ -36,7 +37,7 @@ Dout dbg_pp("postProcess", false);
 //______________________________________________________________________
 //
 PostProcessUda::PostProcessUda( const ProcessorGroup * myworld,
-			           const SimulationStateP sharedState,
+				    const SimulationStateP sharedState,
                                 const string         & udaDir ) :
   ApplicationCommon( myworld, sharedState ),
   d_udaDir(udaDir)
@@ -48,8 +49,8 @@ PostProcessUda::~PostProcessUda()
 {
   delete d_dataArchive;
 
-  for (unsigned int i = 0; i < d_savedLabels.size(); i++){
-    VarLabel::destroy(d_savedLabels[i]);
+  for (unsigned int i = 0; i < d_udaSavedLabels.size(); i++){
+    VarLabel::destroy(d_udaSavedLabels[i]);
   }
 
   if(d_Modules.size() != 0){
@@ -75,9 +76,9 @@ void PostProcessUda::problemSetup(const ProblemSpecP& prob_spec,
   proc0cout << "    - You must manually copy all On-the-Fly files/directories from the original uda\n";
   proc0cout << "      to the new uda, postProcessUda ignores them.\n\n";
   proc0cout << "    - The <outputInterval>, <outputTimestepInterval> tags are ignored and every\n";
-  proc0cout << "      timestep in the original uda is processed. \n";
+  proc0cout << "      timestep in the original uda is processed. \n\n";
   proc0cout << "    - Use a different uda name for the modifed uda to prevent confusion with the original uda.\n\n";
-  proc0cout << "    - In the timestep.xml files the follow non-essential entries will be changed:\n";
+  proc0cout << "    - In the new.uda/timestep.xml the follow non-essential entries will be changed:\n";
   proc0cout << "           numProcs:      Number of procs used during the reduceUda run.\n";
   proc0cout << "           oldDelt:       Difference in timesteps, i.e., time(TS) - time (TS-1), in physical time.\n";
   proc0cout << "           proc:          The processor to patch assignment.\n\n";
@@ -103,18 +104,14 @@ void PostProcessUda::problemSetup(const ProblemSpecP& prob_spec,
   //__________________________________
   //  Find timestep data from the original uda
   d_dataArchive = scinew DataArchive( d_udaDir, d_myworld->myRank(), d_myworld->nRanks() );
-  d_dataArchive->queryTimesteps( d_timesteps, d_times );
+  d_dataArchive->queryTimesteps( d_udaTimesteps, d_udaTimes );
   d_dataArchive->turnOffXMLCaching();
 
-  // try to add a time to d_times that will get us passed the end of the
-  // simulation -- yes this is a hack!!
-  d_times.push_back(10 * d_times[d_times.size() - 1]);
-  d_timesteps.push_back(999999999);
-
   proc0cout << "Time information from the original uda\n";
-  for (unsigned int t = 0; t< d_timesteps.size(); t++ ){
-    proc0cout << " *** timesteps " << d_timesteps[t] << " times: " << d_times[t] << endl;
+  for (unsigned int t = 0; t< d_udaTimesteps.size(); t++ ){
+    proc0cout << " *** timesteps " << d_udaTimesteps[t] << " times: " << d_udaTimes[t] << endl;
   }
+
 
   //__________________________________
   //  define the varLabels that will be saved
@@ -124,7 +121,7 @@ void PostProcessUda::problemSetup(const ProblemSpecP& prob_spec,
 
   proc0cout << "\nLabels discovered in the original uda\n";
   for (unsigned int i = 0; i < varNames.size(); i++) {
-    d_savedLabels.push_back( VarLabel::create( varNames[i], typeDescriptions[i] ) );
+    d_udaSavedLabels.push_back( VarLabel::create( varNames[i], typeDescriptions[i] ) );
     proc0cout << " *** Label: " << varNames[i] << endl;
   }
 
@@ -138,8 +135,18 @@ void PostProcessUda::problemSetup(const ProblemSpecP& prob_spec,
     m->problemSetup();
   }
 
-  proc0cout << "\n";
+  // Adjust the time state - done after it is read.
+  double t_start = d_udaTimes[0];
+  double t_end   = d_udaTimes[ d_udaTimes.size() -1 ];
+  getSimulationTime()->m_delt_factor = 1;
+  getSimulationTime()->m_delt_min    = 0;
+  getSimulationTime()->m_delt_max    = 1e99;
+  getSimulationTime()->m_init_time   = t_start;
+  getSimulationTime()->m_max_time    = t_end;
+  getSimulationTime()->m_max_delt_increase = 1e99;
+  getSimulationTime()->m_max_initial_delt  = 1e99;
 
+  proc0cout << "\n";
 }
 
 //______________________________________________________________________
@@ -147,43 +154,15 @@ void PostProcessUda::problemSetup(const ProblemSpecP& prob_spec,
 void PostProcessUda::scheduleInitialize(const LevelP& level,
                                         SchedulerP& sched)
 {
-  Task* t = scinew Task("PostProcessUda::initialize", this,
-                       &PostProcessUda::initialize);
-
-  t->computes( delt_label, level.get_rep() );
-
-  GridP grid = level->getGrid();
-  d_lb = sched->getLoadBalancer();
-
-  const PatchSet* perProcPatches = d_lb->getPerProcessorPatchSet(grid);
-  t->setType(Task::OncePerProc);
-
-  sched->addTask( t, perProcPatches, m_sharedState->allMaterials() );
+  // Misc setup calls
+  Dir fromDir( d_udaDir );
+  m_output->postProcessUdaSetup( fromDir );
 
   vector<Module*>::iterator iter;
   for( iter  = d_Modules.begin(); iter != d_Modules.end(); iter++){
     Module* m = *iter;
-    m->scheduleInitialize( sched, level);
+    m->scheduleInitialize( sched, level );
   }
-}
-
-//______________________________________________________________________
-//
-void PostProcessUda::scheduleRestartInitialize(const LevelP& level,
-                                               SchedulerP& sched)
-{
-}
-
-//______________________________________________________________________
-//
-void PostProcessUda::initialize(const ProcessorGroup* pg,
-			           const PatchSubset* patches,
-			           const MaterialSubset* /*matls*/,
-			           DataWarehouse* /*old_dw*/,
-			           DataWarehouse* new_dw)
-{
-  delt_vartype delt_var = 0.0;
-  new_dw->put( delt_var, delt_label );
 }
 
 //______________________________________________________________________
@@ -208,16 +187,16 @@ void PostProcessUda::sched_readDataArchive(const LevelP& level,
 {
   Task* t = scinew Task("PostProcessUda::readDataArchive", this,
                         &PostProcessUda::readDataArchive);
-                        
+
   GridP grid = level->getGrid();
-  const PatchSet* perProcPatches = d_lb->getPerProcessorPatchSet(grid);
+  const PatchSet* perProcPatches = m_loadBalancer->getPerProcessorPatchSet(grid);
   const PatchSubset* patches = perProcPatches->getSubset(d_myworld->myRank());
 
   vector<int> allMatls_vec;
   //__________________________________
   //  Loop over all saved labels
-  for (unsigned int i = 0; i < d_savedLabels.size(); i++) {
-    VarLabel* label = d_savedLabels[i];
+  for (unsigned int i = 0; i < d_udaSavedLabels.size(); i++) {
+    VarLabel* label = d_udaSavedLabels[i];
     string labelName = label->getName();
 
     // find the range of matls over these patches
@@ -225,7 +204,7 @@ void PostProcessUda::sched_readDataArchive(const LevelP& level,
 
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
-      ConsecutiveRangeSet matls = d_dataArchive->queryMaterials(labelName, patch, d_timeIndex);
+      ConsecutiveRangeSet matls = d_dataArchive->queryMaterials(labelName, patch, d_simTimestep);
       matlsRangeSet = matlsRangeSet.unioned(matls);
     }
 
@@ -238,17 +217,18 @@ void PostProcessUda::sched_readDataArchive(const LevelP& level,
       matls_vec.push_back(*iter);
       allMatls_vec.push_back(*iter);
     }
-    
+
     MaterialSet * matlSet = scinew MaterialSet();
     matlSet->addAll(matls_vec);
 
     //__________________________________
     // schedule the computes for each patch that
     // this processor owns. The DataArchiver::output task
-    // will then pick and choose which variables to write based on the input file
+    // will then pick and choose which variables to write to the new uda based on the input file
     t->computes(label, patches, matlSet->getUnion());
+   
   }  // loop savedLabels
-  
+
   // clean out duplicate entries in the material set
   sort( allMatls_vec.begin(), allMatls_vec.end() );
   vector<int>::iterator it;
@@ -258,7 +238,7 @@ void PostProcessUda::sched_readDataArchive(const LevelP& level,
   MaterialSet * allMatls = scinew MaterialSet();
   allMatls->addAll(allMatls_vec);
   allMatls->addReference();
-    
+
   t->setType(Task::OncePerProc);
   sched->addTask(t, perProcPatches, allMatls );
 }
@@ -272,20 +252,63 @@ void PostProcessUda::readDataArchive(const ProcessorGroup* pg,
                                      DataWarehouse* old_dw,
                                      DataWarehouse* new_dw)
 {
-  double time = d_times[d_timeIndex];
-  int timestep = d_timesteps[d_timeIndex];
-  proc0cout << "*** working on timestep: " << timestep << " physical time: " << time << endl;
+  double time  = d_udaTimes[d_simTimestep];
+  int udaTimestep = d_udaTimesteps[d_simTimestep];
+  proc0cout << "    *** working on uda timestep: " << udaTimestep << " simTimestep: " <<  m_sharedState->getCurrentTopLevelTimeStep() - 1 << " physical time: " << time << endl;
 
-#if 0
-  old_dw->unfinalize();
-  d_dataArchive->postProcess_ReadUda(pg, d_timeIndex-1, d_oldGrid, patches, old_dw, d_lb);
-  old_dw->refinalize();
-#endif
+  // populate the old_dw with variables from the uda.
+  // Only one timestep
 
-  d_dataArchive->postProcess_ReadUda(pg, d_timeIndex, d_oldGrid, patches, new_dw, d_lb);
-  d_timeIndex++;
-//  new_dw->print();
+  int old_dw_timestep = NOTUSED;
+  bool isSet    = false;
   
+  vector<Module*>::iterator iter;
+  for( iter  = d_Modules.begin(); iter != d_Modules.end(); iter++){
+    Module* m = *iter;
+    int tmp = m->getTimestep_OldDW();
+
+    // bulletproofing
+    if ( isSet && tmp != old_dw_timestep ){
+      ostringstream err;
+      err << "ERROR: PostProcessUda::readDataArchive.  The module (" << m->getName() << ") "
+          << "requested data from a previous timestep.  You can only specify one timestep for all modules.\n";
+      throw InternalError( err.str(), __FILE__, __LINE__ );
+    }
+    
+    if ( isSet == false && tmp != NOTUSED ){
+      old_dw_timestep = tmp;
+      isSet = true;
+    }
+  }
+  
+  proc0cout << "    __________________________________ PostProcessUda::readDataArchive: " << endl;
+
+  if( old_dw_timestep != NOTUSED && udaTimestep >= old_dw_timestep && udaTimestep > 1){
+    
+/*`==========TESTING==========*/
+    GridP myGrid = d_dataArchive->queryGrid(old_dw_timestep); 
+    
+    if( !( *myGrid.get_rep() == *d_oldGrid.get_rep() ) ){
+      proc0cout << "    myGrid != d_oldGrid" << endl;
+    }
+    
+    
+    myGrid = d_oldGrid;
+/*===========TESTING==========`*/
+    
+   proc0cout << "    OLD_DW  ";
+   old_dw->unfinalize();
+   d_dataArchive->postProcess_ReadUda(pg, old_dw_timestep, myGrid, patches, old_dw, m_loadBalancer);
+   old_dw->refinalize();
+  }
+
+  // new dw
+  proc0cout << "    NEW_DW  ";
+  d_dataArchive->postProcess_ReadUda(pg, d_simTimestep, d_oldGrid, patches, new_dw, m_loadBalancer);
+  d_simTimestep++;
+//  new_dw->print();
+
+  proc0cout << "    __________________________________ " << endl;
 }
 
 
@@ -300,7 +323,7 @@ void PostProcessUda::scheduleComputeStableTimeStep(const LevelP& level,
   t->computes( delt_label, level.get_rep() );
 
   GridP grid = level->getGrid();
-  const PatchSet* perProcPatches = d_lb->getPerProcessorPatchSet(grid);
+  const PatchSet* perProcPatches = m_loadBalancer->getPerProcessorPatchSet(grid);
 
   t->setType(Task::OncePerProc);
   sched->addTask( t, perProcPatches, m_sharedState->allMaterials() );
@@ -316,38 +339,40 @@ void PostProcessUda::computeDelT(const ProcessorGroup*,
                                  DataWarehouse* new_dw)
 
 {
-  ASSERT( d_timeIndex >= 0);
+  ASSERT( d_simTimestep >= 0);
 
-  double delt = d_times[d_timeIndex];
+  double delt = d_udaTimes[d_simTimestep];
 
-  if ( d_timeIndex > 0 ){
-    delt = d_times[d_timeIndex] - d_times[d_timeIndex-1];
+  if ( d_simTimestep < (int) d_udaTimes.size() ){
+    delt = d_udaTimes[d_simTimestep] - d_udaTimes[d_simTimestep-1];
+  } else {
+    delt = 9999;
   }
 
   delt_vartype delt_var = delt;
 
   new_dw->put(delt_var, delt_label);
-  proc0cout << "*** delT (" << delt << ")" <<endl;
+  proc0cout << "    *** delT (" << delt << ")\n" <<endl;
 }
 
 //______________________________________________________________________
 //    Returns the physical time of the last output
 double PostProcessUda::getMaxTime()
 {
-  if (d_times.size() <= 1){
+  if (d_udaTimes.size() <= 1){
     return 0;
   }else {
-    return d_times[d_times.size()-2]; // the last one is the hacked one, see problemSetup
+    return d_udaTimes[d_udaTimes.size()-2]; // the last one is the hacked one, see problemSetup
   }
 }
 //______________________________________________________________________
 //    Returns the physical time of the first output
 double PostProcessUda::getInitialTime()
 {
-  if (d_times.size() <= 1){
+  if (d_udaTimes.size() <= 1){
     return 0;
   }else {
-    return d_times[0];
+    return d_udaTimes[0];
   }
 }
 
@@ -366,7 +391,7 @@ PostProcessUda::needRecompile( const double   /* time */,
   vector<int> level_numMatls( numLevels );
 
   for (int L = 0; L < numLevels; L++) {
-    level_numMatls[L] = d_dataArchive->queryNumMaterials(*d_oldGrid->getLevel(L)->patchesBegin(), d_timeIndex);
+    level_numMatls[L] = d_dataArchive->queryNumMaterials(*d_oldGrid->getLevel(L)->patchesBegin(), d_simTimestep);
 
     if (L >=(int) d_numMatls.size() || d_numMatls[L] != level_numMatls[L] ) {
       recompile = true;
@@ -387,12 +412,16 @@ PostProcessUda::needRecompile( const double   /* time */,
 // called by the SimulationController once per timestep
 GridP PostProcessUda::getGrid()
 {
-  GridP newGrid = d_dataArchive->queryGrid(d_timeIndex);
+  GridP newGrid = d_dataArchive->queryGrid(d_simTimestep);
 
   if (d_oldGrid == nullptr || !(*newGrid.get_rep() == *d_oldGrid.get_rep())) {
     d_gridChanged = true;
     d_oldGrid = newGrid;
-    d_lb->possiblyDynamicallyReallocate(newGrid, true);
+    m_loadBalancer->possiblyDynamicallyReallocate(newGrid, true);
+    proc0cout << "    Grid has changed \n";
+  } 
+  else{
+    proc0cout << "    Grid has not changed \n";
   }
   return d_oldGrid;
 }

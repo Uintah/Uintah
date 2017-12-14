@@ -25,46 +25,43 @@
 #ifndef Packages_Uintah_CCA_Components_Solvers_DirectSolve_h
 #define Packages_Uintah_CCA_Components_Solvers_DirectSolve_h
 
-#include <CCA/Ports/SolverInterface.h>
-#include <Core/Parallel/UintahParallelComponent.h>
+#include <CCA/Components/Solvers/SolverCommon.h>
 
 namespace Uintah {
 
-class DirectSolve : public SolverInterface, public UintahParallelComponent { 
+  class DirectSolve : public SolverCommon { 
 
-public:
-  DirectSolve(const ProcessorGroup* myworld);
-  virtual ~DirectSolve();
+  public:
 
-  virtual void releaseComponents() {};
-  
-  virtual SolverParameters* readParameters(       ProblemSpecP & params,
-                                            const std::string  & name,
-					    const SimulationStateP & state );
-
-  virtual void scheduleSolve( const LevelP           & level,
-                                    SchedulerP       & sched,
-                              const MaterialSet      * matls,
-                              const VarLabel         * A,    
-                                    Task::WhichDW      which_A_dw,  
-                              const VarLabel         * x,
-                                    bool               modifies_x,
-                              const VarLabel         * b,    
-                                    Task::WhichDW      which_b_dw,  
-                              const VarLabel         * guess,
-                                    Task::WhichDW      which_guess_dw,
-                              const SolverParameters * params,
-                                    bool               modifies_hypre = false );
-                               
-  virtual std::string getName();
-
-  // DirectSolve does not require initialization... but we need an empty
-  // routine to satisfy inheritance.
-  virtual void scheduleInitialize( const LevelP      & level,
-                                         SchedulerP  & sched,
-                                   const MaterialSet * matls ) {}
-
-};
+    DirectSolve(const ProcessorGroup* myworld);
+    virtual ~DirectSolve();
+    
+    virtual SolverParameters* readParameters(       ProblemSpecP     & params,
+					      const std::string      & name,
+					      const SimulationStateP & state );
+    
+    virtual void scheduleSolve( const LevelP           & level,
+				      SchedulerP       & sched,
+				const MaterialSet      * matls,
+				const VarLabel         * A,    
+				      Task::WhichDW      which_A_dw,  
+				const VarLabel         * x,
+				      bool               modifies_x,
+				const VarLabel         * b,    
+				      Task::WhichDW      which_b_dw,  
+				const VarLabel         * guess,
+				      Task::WhichDW      which_guess_dw,
+				const SolverParameters * params,
+				      bool               modifies_hypre = false );
+    
+    virtual std::string getName();
+    
+    // DirectSolve does not require initialization... but we need an empty
+    // routine to satisfy inheritance.
+    virtual void scheduleInitialize( const LevelP      & level,
+				           SchedulerP  & sched,
+				     const MaterialSet * matls ) {}
+  };
 
 } // end namespace Uintah
 

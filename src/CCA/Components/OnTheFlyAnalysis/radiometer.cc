@@ -46,14 +46,11 @@ using namespace std;
 ______________________________________________________________________*/
 static DebugStream cout_doing("radiometer", false);
 
-OnTheFly_radiometer::OnTheFly_radiometer(ProblemSpecP& module_spec,
-                                         SimulationStateP& sharedState,
-                                         Output* output)
-  : AnalysisModule(module_spec, sharedState, output)
+OnTheFly_radiometer::OnTheFly_radiometer(const ProcessorGroup* myworld,
+					 const SimulationStateP sharedState,
+					 const ProblemSpecP& module_spec)
+  : AnalysisModule(myworld, sharedState, module_spec)
 {
-  d_sharedState = sharedState;
-  d_module_ps   = module_spec;
-  d_output = output;
 }
 
 //__________________________________
@@ -84,11 +81,11 @@ void OnTheFly_radiometer::problemSetup(const ProblemSpecP& ,
  
   Material* matl;
  
-  if( d_module_ps->findBlock("material") ){
-    matl = d_sharedState->parseAndLookupMaterial( d_module_ps, "material" );
-  } else if ( d_module_ps->findBlock("materialIndex") ){
+  if( m_module_spec->findBlock("material") ){
+    matl = d_sharedState->parseAndLookupMaterial( m_module_spec, "material" );
+  } else if ( m_module_spec->findBlock("materialIndex") ){
     int indx;
-    d_module_ps->get("materialIndex", indx);
+    m_module_spec->get("materialIndex", indx);
     matl = d_sharedState->getMaterial(indx);
   } else {
     matl = d_sharedState->getMaterial(0);
@@ -96,7 +93,7 @@ void OnTheFly_radiometer::problemSetup(const ProblemSpecP& ,
 
   int matl_index = matl->getDWIndex();
   
-  ProblemSpecP rad_ps = d_module_ps->findBlock("Radiometer");
+  ProblemSpecP rad_ps = m_module_spec->findBlock("Radiometer");
   if (!rad_ps){
     throw ProblemSetupException("ERROR Radiometer: Couldn't find <Radiometer> xml node", __FILE__, __LINE__);    
   }

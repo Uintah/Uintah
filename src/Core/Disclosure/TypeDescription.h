@@ -84,6 +84,7 @@ public:
   ,  Short27   // for Fracture
   ,  Stencil4
   ,  Stencil7
+  ,  IntVector
   ,  Unknown
   ,  Other
   };

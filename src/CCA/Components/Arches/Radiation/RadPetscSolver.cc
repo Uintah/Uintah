@@ -35,7 +35,7 @@
 #include <CCA/Components/Arches/Source.h>
 #include <CCA/Components/Arches/StencilMatrix.h>
 #include <CCA/Ports/DataWarehouse.h>
-#include <CCA/Ports/LoadBalancerPort.h>
+#include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/UintahPetscError.h>

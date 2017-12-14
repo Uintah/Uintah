@@ -54,25 +54,20 @@ WARNING
    * This interface is written for Hypre 1.9.0b (released 2005).
    --------------------------------------------------------------------------*/
 
-#include <CCA/Ports/SolverInterface.h>
-#include <Core/Parallel/UintahParallelComponent.h>
+#include <CCA/Components/Solvers/SolverCommon.h>
 
 namespace Uintah {
 
-  class AMRSolver :
-    public UintahParallelComponent, public SolverInterface { 
+  class AMRSolver : public SolverCommon { 
 
-   
   public:
 
     AMRSolver(const ProcessorGroup* myworld);
     virtual ~AMRSolver();
 
-    virtual void releaseComponents() {};
-    
-    virtual SolverParameters* readParameters(ProblemSpecP& params,
-                                             const std::string& name,
-                                             const SimulationStateP& state = nullptr);
+    virtual SolverParameters* readParameters(       ProblemSpecP     & params,
+                                              const std::string      & name,
+                                              const SimulationStateP & state );
 
     virtual void scheduleSolve( const LevelP           & level,
                                       SchedulerP       & sched,
@@ -91,13 +86,10 @@ namespace Uintah {
     virtual std::string getName();
     
     // AMRSolver does not require initialization... but we need an empty
-   // routine to satisfy inheritance.
+    // routine to satisfy inheritance.
     virtual void scheduleInitialize( const LevelP      & level,
                                            SchedulerP  & sched,
                                      const MaterialSet * matls ) {}
-
-  private:
-
   };
 }
 

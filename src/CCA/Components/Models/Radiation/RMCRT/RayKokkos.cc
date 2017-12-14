@@ -48,11 +48,19 @@
 #include <iostream>
 
 // TURN ON debug flag in src/Core/Math/MersenneTwister.h to compare with Ray:CPU
-#define DEBUG -9      // 1: divQ, 2: boundFlux, 3: scattering
-#define CUDA_PRINTF   // increase the printf buffer
+#define DEBUG -9          // 1: divQ, 2: boundFlux, 3: scattering
+#define FIXED_RAY_DIR -9  // Sets ray direction.  1: (0.7071,0.7071, 0), 2: (0.7071, 0, 0.7071), 3: (0, 0.7071, 0.7071)
+                          //                      4: (0.7071, 0.7071, 7071), 5: (1,0,0)  6: (0, 1, 0),   7: (0,0,1)
+#define SIGN 1            // Multiply the FIXED_RAY_DIRs by value
+#define FUZZ 1e-12        // Numerical fuzz
+#define CUDA_PRINTF       // increase the printf buffer
 
 /*______________________________________________________________________
-  TO DO
+  TO DO:
+  - Portable LHC sampling
+  - Portable random number generation
+  - Portable handling of Level
+  - Kokkos-ify boundary flux calculations
 
 Optimizations:
   - Create a LevelDB.  Push an pull the communicated variables
@@ -552,49 +560,50 @@ namespace {
 template <typename T>
 struct solveDivQFunctor {
 
-    bool                   m_latinHyperCube;
-    int                    m_d_nDivQRays;
-    bool                   m_d_isSeedRandom;
-    bool                   m_d_CCRays;
-    double                 m_DyDx;
-    double                 m_DzDx;
-    double                 m_d_sigmaScat;
-    double                 m_d_threshold;
-    KokkosView3<const T>   m_abskg;
-    KokkosView3<const T>   m_sigmaT4OverPi;
-    KokkosView3<const int> m_celltype;
-    int                    m_d_flowCell;
-    double                 m_Dx[3];
-    bool                   m_d_allowReflect;
-    KokkosView3<double>    m_divQ;
-    KokkosView3<double>    m_radiationVolq;
-    BlockRange             m_range;
+    bool                     m_latinHyperCube;
+    const Level            * m_level;
+    int                      m_d_nDivQRays;
+    bool                     m_d_isSeedRandom;
+    bool                     m_d_CCRays;
+    double                   m_d_sigmaScat;
+    double                   m_d_threshold;
+    double                   m_d_maxRayLength;
+    KokkosView3<const T>     m_abskg;
+    KokkosView3<const T>     m_sigmaT4OverPi;
+    KokkosView3<const int>   m_celltype;
+    int                      m_d_flowCell;
+    double                   m_Dx[3];
+    bool                     m_d_allowReflect;
+    KokkosView3<double>      m_divQ;
+    KokkosView3<double>      m_radiationVolq;
+    BlockRange               m_range;
 
-    solveDivQFunctor( bool                 & latinHyperCube,
-                      int                  & d_nDivQRays,
-                      bool                 & d_isSeedRandom,
-                      bool                 & d_CCRays,
-                      double               & DyDx,
-                      double               & DzDx,
-                      double               & d_sigmaScat,
-                      double               & d_threshold,
-                      constCCVariable< T > & abskg,
-                      constCCVariable< T > & sigmaT4OverPi,
-                      constCCVariable<int> & celltype,
-                      int                  & d_flowCell,
-                      Vector               & Dx,
-                      bool                 & d_allowReflect,
-                      CCVariable<double>   & divQ,
-                      CCVariable<double>   & radiationVolq,
-                      BlockRange           & range)
+    solveDivQFunctor( bool                 & latinHyperCube
+                    , const Level          * level
+                    , int                  & d_nDivQRays
+                    , bool                 & d_isSeedRandom
+                    , bool                 & d_CCRays
+                    , double               & d_sigmaScat
+                    , double               & d_threshold
+                    , double               & d_maxRayLength
+                    , constCCVariable< T > & abskg
+                    , constCCVariable< T > & sigmaT4OverPi
+                    , constCCVariable<int> & celltype
+                    , int                  & d_flowCell
+                    , Vector               & Dx
+                    , bool                 & d_allowReflect
+                    , CCVariable<double>   & divQ
+                    , CCVariable<double>   & radiationVolq
+                    , BlockRange           & range
+                    )
       : m_latinHyperCube ( latinHyperCube )
+      , m_level          ( level )
       , m_d_nDivQRays    ( d_nDivQRays )
       , m_d_isSeedRandom ( d_isSeedRandom )
       , m_d_CCRays       ( d_CCRays )
-      , m_DyDx           ( DyDx )
-      , m_DzDx           ( DzDx )
       , m_d_sigmaScat    ( d_sigmaScat )
       , m_d_threshold    ( d_threshold )
+      , m_d_maxRayLength ( d_maxRayLength )
       , m_abskg          ( abskg.getKokkosView() )
       , m_sigmaT4OverPi  ( sigmaT4OverPi.getKokkosView() )
       , m_celltype       ( celltype.getKokkosView() )
@@ -614,289 +623,273 @@ struct solveDivQFunctor {
 
       MTRand mTwister; //TODO: Can't this object just get passed in? Brad P Dec 10 2016
 
-      vector <int> m_rand_i( m_latinHyperCube ? m_d_nDivQRays : 0 );  // Only needed for LHC scheme
-
-      //for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-
-      //IntVector origin = *iter;
-
-      //if (d_rayDirSampleAlgo == LATIN_HYPER_CUBE){
-      //  randVector(rand_i, mTwister, origin);
-      //}
-      if ( m_latinHyperCube == true ) {
-
-        //____________________________________________________//
-        //==== START randVector(rand_i, mTwister, origin) ====//
-
-        //int max= int_array.size();
-        int max = m_rand_i.size();
-
-        //for (int i=0; i<max; i++){   // populate sequential array from 0 to max-1
-        //  int_array[i] = i;
-        //}
-        for ( int index = 0; index < max; index++ ) {  // Populate sequential array from 0 to max-1
-          m_rand_i[index] = index;
-        }
-
-        //if( d_isSeedRandom == false ){
-        //  mTwister.seed((cell.x() + cell.y() + cell.z()));
-        //}
-        if ( m_d_isSeedRandom == false ) {
-          mTwister.seed( i + j + k );
-        }
-
-        //for (int i=max-1; i>0; i--){  // fisher-yates shuffle starting with max-1
-        //  int rand_int =  mTwister.randInt(i);
-        //  int swap = int_array[i];
-        //  int_array[i] = int_array[rand_int];
-        //  int_array[rand_int] = swap;
-        //}
-        for ( int index = max - 1; index > 0; index-- ) {  // Fisher-yates shuffle starting with max-1
-          int rand_int       = mTwister.randInt( index );
-          int swap           = m_rand_i[index];
-          m_rand_i[index]    = m_rand_i[rand_int];
-          m_rand_i[rand_int] = swap;
-        }
-
-        //__________________________________________________//
-        //==== END randVector(rand_i, mTwister, origin) ====//
-
-      }
+      //________________________________________________________________________________________//
+      //==== START for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) ====//
 
       double sumI = 0;
 
+      double CC_pos[3] = { m_level->getAnchor().x() + ( m_Dx[0] * i ) + ( 0.5 * m_Dx[0] )
+                         , m_level->getAnchor().y() + ( m_Dx[1] * j ) + ( 0.5 * m_Dx[1] )
+                         , m_level->getAnchor().z() + ( m_Dx[2] * k ) + ( 0.5 * m_Dx[2] ) };
+
       // Ray loop
-      //for (int iRay=0; iRay < d_nDivQRays; iRay++){
       for ( int iRay = 0; iRay < m_d_nDivQRays; iRay++ ) {
+
+        // Don't compute in intrusions and walls
+        if ( m_celltype(i,j,k) != -1 ) { // Hard-coded for d_flowCell
+          continue;
+        }
 
         double direction_vector[3];
 
-        //if (d_rayDirSampleAlgo == LATIN_HYPER_CUBE){        // Latin-Hyper-Cube sampling
-        if ( m_latinHyperCube == true ) {  // Latin-Hyper-Cube sampling
+        //_________________________________________________________//
+        //==== START findRayDirection(mTwister, origin, iRay ) ====//
 
-          //direction_vector =findRayDirectionHyperCube(mTwister, origin, iRay, rand_i[iRay],iRay );
-
-          //_____________________________________________________________________________________//
-          //==== START findRayDirectionHyperCube(mTwister, origin, iRay, rand_i[iRay],iRay ) ====//
-
-          //if( d_isSeedRandom == false ){
-          //  m_mTwister.seed((i + j + k) * iRay + 1);
-          //}
-          if ( m_d_isSeedRandom == false ) {
-            mTwister.seed( (i + j + k) * iRay + 1 );
-          }
-
-          // Random Points On Sphere
-          //double plusMinus_one = 2.0 *(mTwister.randDblExc() + (double) rand_i[iRay])/d_nDivQRays - 1.0;  // add fuzz to avoid inf in 1/dirVector
-          //double r = sqrt(1.0 - plusMinus_one * plusMinus_one);     // Radius of circle at z
-          //double phi = 2.0 * M_PI * (mTwister.randDblExc() + (double) iRay)/d_nDivQRays;        // Uniform between 0-2Pi
-          double plusMinus_one = 2.0 * ( mTwister.randDblExc() + (double) m_rand_i[iRay] ) / m_d_nDivQRays - 1.0;  // Add fuzz to avoid inf in 1/dirVector
-          double r             = sqrt( 1.0 - plusMinus_one * plusMinus_one );                                      // Radius of circle at z
-          double phi           = 2.0 * M_PI * ( mTwister.randDblExc() + (double) iRay ) / m_d_nDivQRays;           // Uniform between 0-2Pi
-
-          direction_vector[0] = r * cos( phi );  // Convert to cartesian
-          direction_vector[1] = r * sin( phi );
-          direction_vector[2] = plusMinus_one;
-
-          //___________________________________________________________________________________//
-          //==== END findRayDirectionHyperCube(mTwister, origin, iRay, rand_i[iRay],iRay ) ====//
-
-        } else {  // Naive Monte-Carlo sampling
-
-          //direction_vector =findRayDirection(mTwister, origin, iRay );
-
-          //_________________________________________________________//
-          //==== START findRayDirection(mTwister, origin, iRay ) ====//
-
-          //if( d_isSeedRandom == false ){
-          //  mTwister.seed((origin.x() + origin.y() + origin.z()) * iRay +1);
-          //}
-          if ( m_d_isSeedRandom == false ) {
-            mTwister.seed( (i + j + k) * iRay + 1 );
-          }
-
-          // Random Points On Sphere
-          //double plusMinus_one = 2.0 * mTwister.randDblExc() - 1.0 + DBL_EPSILON;  // add fuzz to avoid inf in 1/dirVector
-          //double r = sqrt(1.0 - plusMinus_one * plusMinus_one);     // Radius of circle at z
-          //double theta = 2.0 * M_PI * mTwister.randDblExc();        // Uniform between 0-2Pi
-          double plusMinus_one = 2.0 * mTwister.randDblExc() - 1.0 + DBL_EPSILON;  // Add fuzz to avoid inf in 1/dirVector
-          double r             = sqrt( 1.0 - plusMinus_one * plusMinus_one );      // Radius of circle at z
-          double theta         = 2.0 * M_PI * mTwister.randDblExc();               // Uniform between 0-2Pi
-
-          direction_vector[0] = r * cos( theta );  // Convert to cartesian
-          direction_vector[1] = r * sin( theta );
-          direction_vector[2] = plusMinus_one;
-
-          //_______________________________________________________//
-          //==== END findRayDirection(mTwister, origin, iRay ) ====//
-
-        }  // end m_latinHyperCube
-
-        //Vector rayOrigin;
-        double rayOrigin[3];
-
-        //_______________________________________________________________________________//
-        //==== START ray_Origin( mTwister, origin, DyDx,  DzDx, d_CCRays, rayOrigin) ====//
-
-        //if( d_CCRays == false ){
-        if ( m_d_CCRays == false ) {
-
-          //rayOrigin[0] =   origin[0] +  mTwister.rand() ;             // FIX ME!!! This is not the physical location of the ray.
-          //rayOrigin[1] =   origin[1] +  mTwister.rand() * DyDx ;      // this is index space.
-          //rayOrigin[2] =   origin[2] +  mTwister.rand() * DzDx ;
-          rayOrigin[0] = i +  mTwister.rand() ;           // FIX ME!!! This is not the physical location of the ray.
-          rayOrigin[1] = j +  mTwister.rand() * m_DyDx ;  // This is index space.
-          rayOrigin[2] = k +  mTwister.rand() * m_DzDx ;
-
-        } else {
-
-          //rayOrigin[0] =   origin[0] +  0.5 ;
-          //rayOrigin[1] =   origin[1] +  0.5 * DyDx ;
-          //rayOrigin[2] =   origin[2] +  0.5 * DzDx ;
-          rayOrigin[0] = i +  0.5 ;
-          rayOrigin[1] = j +  0.5 * m_DyDx ;
-          rayOrigin[2] = k +  0.5 * m_DzDx ;
-
+        if ( m_d_isSeedRandom == false ) {
+          mTwister.seed( (i + j + k) * iRay + 1 );
         }
 
-        //_____________________________________________________________________________//
-        //==== END ray_Origin( mTwister, origin, DyDx,  DzDx, d_CCRays, rayOrigin) ====//
+        // Random Points On Sphere
+        double plusMinus_one = 2.0 * mTwister.randDblExc() - 1.0 + DBL_EPSILON; // Add fuzz to avoid inf in 1/dirVector
+        double r = sqrt( 1.0 - plusMinus_one * plusMinus_one );                 // Radius of circle at z
+        double theta = 2.0 * M_PI * mTwister.randDblExc();                      // Uniform betwen 0-2Pi
 
-        //________________________________________________________________________________________________________________________________//
-        //==== START updateSumI< T >( direction_vector, rayOrigin, origin, Dx,  sigmaT4OverPi, abskg, celltype, size, sumI, mTwister) ====//
+        direction_vector[0] = r * cos( theta ); // Convert to cartesian
+        direction_vector[1] = r * sin( theta );
+        direction_vector[2] = plusMinus_one;
 
-        //IntVector cur = origin;
-        //IntVector prevCell = cur;
+/*`==========DEBUGGING==========*/
+#if ( FIXED_RAY_DIR == 1)
+        direction_vector[0] = 0.707106781186548 * SIGN;
+        direction_vector[1] = 0.707106781186548 * SIGN;
+        direction_vector[2] = 0.0               * SIGN;
+#elif ( FIXED_RAY_DIR == 2 )
+        direction_vector[0] = 0.707106781186548 * SIGN;
+        direction_vector[1] = 0.0               * SIGN;
+        direction_vector[2] = 0.707106781186548 * SIGN;
+#elif ( FIXED_RAY_DIR == 3 )
+        direction_vector[0] = 0.0               * SIGN;
+        direction_vector[1] = 0.707106781186548 * SIGN;
+        direction_vector[2] = 0.707106781186548 * SIGN;
+#elif ( FIXED_RAY_DIR == 4 )
+        direction_vector[0] = 0.707106781186548 * SIGN;
+        direction_vector[1] = 0.707106781186548 * SIGN;
+        direction_vector[2] = 0.707106781186548 * SIGN;
+#elif ( FIXED_RAY_DIR == 5 )
+        direction_vector[0] = 1 * SIGN;
+        direction_vector[1] = 0 * SIGN;
+        direction_vector[2] = 0 * SIGN;
+#elif ( FIXED_RAY_DIR == 6 )
+        direction_vector[0] = 0 * SIGN;
+        direction_vector[1] = 1 * SIGN;
+        direction_vector[2] = 0 * SIGN;
+#elif ( FIXED_RAY_DIR == 7 )
+        direction_vector[0] = 0 * SIGN;
+        direction_vector[1] = 0 * SIGN;
+        direction_vector[2] = 1 * SIGN;
+#else
+#endif
+/*===========DEBUGGING==========`*/
+
+        //_______________________________________________________//
+        //==== END findRayDirection(mTwister, origin, iRay ) ====//
+
+        double rayOrigin[3];
+
+        //______________________________________________________________________//
+        //==== START ray_Origin( mTwister, CC_pos, Dx, d_CCRays, rayOrigin) ====//
+
+        if ( m_d_CCRays == false ) {
+
+          double x = mTwister.rand() * m_Dx[0];
+          double y = mTwister.rand() * m_Dx[1];
+          double z = mTwister.rand() * m_Dx[2];
+
+          double offset[3] = { x, y, z };  // Note you HAVE to compute the components separately to ensure that the
+                                           //  random numbers called in the x,y,z order - Todd
+
+          if ( offset[0] > m_Dx[0] ||
+               offset[1] > m_Dx[1] ||
+               offset[2] > m_Dx[2] ) {
+            std::cout << "  Warning:ray_Origin  The Mersenne twister random number generator has returned garbage (" << offset
+                      << ") Now forcing the ray origin to be located at the cell-center\n" ;
+            offset[0] = 0.5 * m_Dx[0];
+            offset[1] = 0.5 * m_Dx[1];
+            offset[2] = 0.5 * m_Dx[2];
+          }
+
+          rayOrigin[0] =  CC_pos[0] - 0.5 * m_Dx[0]  + offset[0];
+          rayOrigin[1] =  CC_pos[1] - 0.5 * m_Dx[1]  + offset[1];
+          rayOrigin[2] =  CC_pos[2] - 0.5 * m_Dx[2]  + offset[2];
+        }
+        else {
+          rayOrigin[0] = CC_pos[0];
+          rayOrigin[1] = CC_pos[1];
+          rayOrigin[2] = CC_pos[2];
+        }
+
+        //____________________________________________________________________//
+        //==== END ray_Origin( mTwister, CC_pos, Dx, d_CCRays, rayOrigin) ====//
+
+        //_______________________________________________________________________________________________________________________________________//
+        //==== START updateSumI< T >( level, direction_vector, rayOrigin, origin, Dx,  sigmaT4OverPi, abskg, celltype, size, sumI, mTwister) ====//
+
         int cur[3]      = { i, j, k };
         int prevCell[3] = { cur[0], cur[1], cur[2] };
 
         // Step and sign for ray marching
-        int  step[3];  // Gives +1 or -1 based on sign
-        bool sign[3];
+        int    step[3];  // Gives +1 or -1 based on sign
+        double sign[3];
 
-        //Vector inv_ray_direction = Vector(1.0)/direction_vector;
-        double inv_ray_direction[3] = { 1.0/direction_vector[0],
-                                        1.0/direction_vector[1],
-                                        1.0/direction_vector[2]  };
+        double inv_ray_direction[3] = { 1.0 / direction_vector[0]
+                                      , 1.0 / direction_vector[1]
+                                      , 1.0 / direction_vector[2] };
 
-        //findStepSize( step, sign, inv_ray_direction);
+/*`==========TESTING==========*/
+#if DEBUG == 1
+        if( isDbgCell(IntVector(i,j,k)) ) {
+          printf("        updateSumI: [%d,%d,%d] ray_dir [%g,%g,%g] ray_loc [%g,%g,%g]\n", i, j, k, direction_vector[0], direction_vector[1], direction_vector[2], rayOrigin[0], rayOrigin[1], rayOrigin[2]);
+        }
+#endif
+/*===========TESTING==========`*/
 
-        //____________________________________________________________//
-        //==== START findStepSize( step, sign, inv_ray_direction) ====//
+        //______________________________________________________//
+        //==== START raySignStep(sign, step, ray_direction) ====//
 
-        (inv_ray_direction[0] > 0) ? (step[0] = 1, sign[0] = 1) : (step[0] = -1, sign[0] = 0);
-        (inv_ray_direction[1] > 0) ? (step[1] = 1, sign[1] = 1) : (step[1] = -1, sign[1] = 0);
-        (inv_ray_direction[2] > 0) ? (step[2] = 1, sign[2] = 1) : (step[2] = -1, sign[2] = 0);
+        // Get new step and sign
+        for ( int d = 0; d < 3; d++ ) {
+          double me = copysign( (double)1.0, direction_vector[d] ); // +- 1
+          sign[d]   = fmax( 0.0, me ); // 0, 1
+          step[d]   = int( me );
+        }
 
-        //____________________________________________________________//
-        //==== END findStepSize( step, sign, inv_ray_direction) ====//
+        //____________________________________________________//
+        //==== END raySignStep(sign, step, ray_direction) ====//
 
-        //Vector D_DxRatio(1, Dx.y()/Dx.x(), Dx.z()/Dx.x() );
-        double D_DxRatio[3] = { 1, m_DyDx, m_DzDx };
+        double CC_pos[3] = { m_level->getAnchor().x() + ( m_Dx[0] * i ) + ( 0.5 * m_Dx[0] )
+                           , m_level->getAnchor().y() + ( m_Dx[1] * j ) + ( 0.5 * m_Dx[1] )
+                           , m_level->getAnchor().z() + ( m_Dx[2] * k ) + ( 0.5 * m_Dx[2] ) };
 
-        //Vector tMax;         // (mixing bools, ints and doubles)
-        //tMax.x( (origin[0] + sign[0]                - rayOrigin[0]) * inv_ray_direction[0] );
-        //tMax.y( (origin[1] + sign[1] * D_DxRatio[1] - rayOrigin[1]) * inv_ray_direction[1] );
-        //tMax.z( (origin[2] + sign[2] * D_DxRatio[2] - rayOrigin[2]) * inv_ray_direction[2] );
-        double tMax[3] = { (i + sign[0]                - rayOrigin[0]) * inv_ray_direction[0],     // Mixing bools, ints and doubles
-                           (j + sign[1] * D_DxRatio[1] - rayOrigin[1]) * inv_ray_direction[1],
-                           (k + sign[2] * D_DxRatio[2] - rayOrigin[2]) * inv_ray_direction[2]  };
+        // rayDx is the distance from bottom, left, back, corner of cell to ray
+        double rayDx[3];
+        rayDx[0] = rayOrigin[0] - ( CC_pos[0] - 0.5 * m_Dx[0] );
+        rayDx[1] = rayOrigin[1] - ( CC_pos[1] - 0.5 * m_Dx[1] );
+        rayDx[2] = rayOrigin[2] - ( CC_pos[2] - 0.5 * m_Dx[2] );
+
+        // tMax is the physical distance from the ray origin to each of the respective planes of intersection
+        double tMax[3];
+        tMax[0] = ( sign[0] * m_Dx[0] - rayDx[0] ) * inv_ray_direction[0];
+        tMax[1] = ( sign[1] * m_Dx[1] - rayDx[1] ) * inv_ray_direction[1];
+        tMax[2] = ( sign[2] * m_Dx[2] - rayDx[2] ) * inv_ray_direction[2];
 
         // Length of t to traverse one cell
-        //Vector tDelta = Abs(inv_ray_direction) * D_DxRatio;
-        double tDelta[3] = { Abs( inv_ray_direction[0] ) * D_DxRatio[0],
-                             Abs( inv_ray_direction[1] ) * D_DxRatio[1],
-                             Abs( inv_ray_direction[2] ) * D_DxRatio[2]  };
+        double tDelta[3];
+        tDelta[0] = fabs( inv_ray_direction[0] ) * m_Dx[0];
+        tDelta[1] = fabs( inv_ray_direction[1] ) * m_Dx[1];
+        tDelta[2] = fabs( inv_ray_direction[2] ) * m_Dx[2];
 
         // Initializes the following values for each ray
         bool   in_domain            = true;
         double tMax_prev            = 0;
         double intensity            = 1.0;
         double fs                   = 1.0;
-        int    nReflect             = 0;    // Number of reflections
+        int    nReflect             = 0;      // Number of reflections
         double optical_thickness    = 0;
         double expOpticalThick_prev = 1.0;
+        double rayLength_scatter    = 0.0;    // Ray length for each scattering event
+        double rayLength            = 0.0;    // Total length of the ray
+        double ray_location[3]      = { rayOrigin[0], rayOrigin[1], rayOrigin[2] };
 
 #ifdef RAY_SCATTER
-
-        //double scatCoeff = d_sigmaScat;       // [m^-1]  !! HACK !! This needs to come from data warehouse
-        double scatCoeff = m_d_sigmaScat;       // [m^-1]  !! HACK !! This needs to come from data warehouse
-
-        if ( scatCoeff == 0 ) scatCoeff = 1e-99;  // Avoid division by zero
+        double scatCoeff = fmax( m_d_sigmaScat, 1e-99 ); // avoid division by zero  [m^-1]
 
         // Determine the length at which scattering will occur
         // See CCA/Components/Arches/RMCRT/PaulasAttic/MCRT/ArchesRMCRT/ray.cc
         double scatLength = -log( mTwister.randDblExc() ) / scatCoeff;
-        double curLength  = 0;
+#endif
 
-#endif  // end RAY_SCATTER
+  //______________________________________________________________________
 
-        //+++++++Begin ray tracing+++++++++++++++++++
-        //Threshold while loop
-        //while ( intensity > d_threshold ){
-        while ( intensity > m_d_threshold ) {
+        while ( intensity > m_d_threshold && (rayLength < m_d_maxRayLength) ){
 
-          //DIR dir = NONE;
-          int dir = -9;
+          int dir = -9; // Hard-coded for NONE
 
-          while ( in_domain ) {
+          while ( in_domain && (rayLength < m_d_maxRayLength) ){
 
-            //prevCell = cur;
             prevCell[0] = cur[0];
             prevCell[1] = cur[1];
             prevCell[2] = cur[2];
 
-            double disMin = -9;  // Represents ray segment length.
+            double disMin = -9;          // Represents ray segment length.
 
-            //T abskg_prev         = abskg[prevCell];  // optimization
-            //T sigmaT4OverPi_prev = sigmaT4OverPi[prevCell];
             T abskg_prev         = m_abskg(         prevCell[0], prevCell[1], prevCell[2] );  // Optimization
             T sigmaT4OverPi_prev = m_sigmaT4OverPi( prevCell[0], prevCell[1], prevCell[2] );
 
             //__________________________________
             //  Determine which cell the ray will enter next
-            if ( tMax[0] < tMax[1] ) {    // X < Y
-              if ( tMax[0] < tMax[2] ) {  // X < Z
-                //dir = X;
-                dir = 0;
-              } else {
-                //dir = Z;
-                dir = 2;
+            dir = -9; // Hard-coded for NONE
+            if ( tMax[0] < tMax[1] ) {        // X < Y
+              if ( tMax[0] < tMax[2] ) {      // X < Z
+                dir = 0; // Hard-coded for X
               }
-            } else {
-              if ( tMax[1] < tMax[2] ) {   // Y < Z
-                //dir = Y;
-                dir = 1;
-              } else {
-                //dir = Z;
-                dir = 2;
+              else {
+                dir = 2; // Hard-coded for Z
+              }
+            }
+            else {
+              if ( tMax[1] < tMax[2] ) {       // Y < Z
+                dir = 1; // Hard-coded for Y
+              }
+              else {
+                dir = 2; // Hard-coded for Z
               }
             }
 
             //__________________________________
-            //  Update marching variables
-            cur[dir]  = cur[dir]  + step[dir];
-            disMin    = ( tMax[dir] - tMax_prev );
-            tMax_prev = tMax[dir];
-            tMax[dir] = tMax[dir] + tDelta[dir];
+            // Update marching variables
+            cur[dir]   = cur[dir] + step[dir];
+            disMin     = ( tMax[dir] - tMax_prev );
+            tMax_prev  = tMax[dir];
+            tMax[dir]  = tMax[dir] + tDelta[dir];
 
-            rayOrigin[0] = rayOrigin[0] + (disMin * direction_vector[0]);
-            rayOrigin[1] = rayOrigin[1] + (disMin * direction_vector[1]);
-            rayOrigin[2] = rayOrigin[2] + (disMin * direction_vector[2]);
+            // Occassionally disMin ~ -1e-15ish
+            if( disMin > -FUZZ && disMin < FUZZ ) {
+              disMin += FUZZ;
+            }
 
-            //in_domain = (celltype[cur] == d_flowCell);
+            rayLength += disMin;
+            rayLength_scatter += disMin;
+
+            ray_location[0] = ray_location[0] + ( disMin * direction_vector[0] );
+            ray_location[1] = ray_location[1] + ( disMin * direction_vector[1] );
+            ray_location[2] = ray_location[2] + ( disMin * direction_vector[2] );
+
             in_domain = ( m_celltype( cur[0], cur[1], cur[2] ) == m_d_flowCell );
 
-            //optical_thickness += Dx[0] * abskg_prev*disMin; // as long as tDeltaY,Z tMax.y(),Z and ray_location[1],[2]..
-            optical_thickness += m_Dx[0] * abskg_prev * disMin; // As long as tDeltaY,Z tMax.y(),Z and ray_location[1],[2]
-                                                                // were adjusted by DyDx  or DzDx, this line is now correct
-                                                                // for noncubic domains.
+            optical_thickness += abskg_prev * disMin;
 
-            //nRaySteps++;
             m_nRaySteps++;
+
+/*`==========TESTING==========*/
+#if ( DEBUG >= 1 )
+            if( isDbgCell(IntVector(i,j,k)){
+              printf( "            cur [%d,%d,%d] prev [%d,%d,%d]", cur[0], cur[1], cur[2], prevCell[0], prevCell[1], prevCell[2]);
+              printf( " dir %d ", dir );
+              printf( "tMax [%g,%g,%g] ",tMax[0],tMax[1], tMax[2]);
+              printf( "rayLoc [%g,%g,%g] ",ray_location[0],ray_location[1], ray_location[2]);
+              printf( "distanceTraveled %g tMax[dir]: %g tMax_prev: %g, Dx[dir]: %g\n",disMin, tMax[dir], tMax_prev, m_Dx[dir]);
+              printf( "            tDelta [%g,%g,%g] \n",tDelta[0],tDelta[1], tDelta[2]);
+
+   //         printf( "            abskg[prev] %g  \t sigmaT4OverPi[prev]: %g \n",m_abskg(prevCell[0],prevCell[1],prevCell[2]), m_sigmaT4OverPi(prevCell[0],prevCell[1],prevCell[2]));
+   //         printf( "            abskg[cur]  %g  \t sigmaT4OverPi[cur]:  %g  \t  cellType: %i\n", m_abskg(cur[0],cur[1],cur[2]), m_sigmaT4OverPi(cur[0],cur[1],cur[2]), m_celltype(cur[0],cur[1],cur[2]));
+              printf( "            optical_thickkness %g \t rayLength: %g\n", optical_thickness, rayLength);
+            }
+#endif
+/*===========TESTING==========`*/
 
             // Eqn 3-15(see below reference) while
             // Third term inside the parentheses is accounted for in Inet. Chi is accounted for in Inet calc.
+
             double expOpticalThick = exp( -optical_thickness );
 
             sumI += sigmaT4OverPi_prev * ( expOpticalThick_prev - expOpticalThick ) * fs;
@@ -904,146 +897,180 @@ struct solveDivQFunctor {
             expOpticalThick_prev = expOpticalThick;
 
 #ifdef RAY_SCATTER
-
-            //curLength += disMin * Dx[0];
-            curLength += disMin * m_Dx[0];
-
-            if ( curLength > scatLength && in_domain ) {
+            if (rayLength_scatter > scatLength && in_domain ) {
 
               // Get new scatLength for each scattering event
               scatLength = -log( mTwister.randDblExc() ) / scatCoeff;
 
-              //direction_vector     =  findRayDirection( mTwister, cur );
-
               //_________________________________________________//
               //==== START findRayDirection( mTwister, cur ) ====//
 
-              //if( d_isSeedRandom == false ){
-              //  mTwister.seed((cur.x() + cur.y() + cur.z()) * -9 +1);
-              //}
               if ( m_d_isSeedRandom == false ) {
                 mTwister.seed( (cur[0] + cur[1] + cur[2]) * -9 + 1 );
               }
 
               // Random Points On Sphere
-              //double plusMinus_one = 2.0 * mTwister.randDblExc() - 1.0 + DBL_EPSILON;  // add fuzz to avoid inf in 1/dirVector
-              //double r = sqrt(1.0 - plusMinus_one * plusMinus_one);     // Radius of circle at z
-              //double theta = 2.0 * M_PI * mTwister.randDblExc();        // Uniform between 0-2Pi
-              double plusMinus_one = 2.0 * mTwister.randDblExc() - 1.0 + DBL_EPSILON;  // Add fuzz to avoid inf in 1/dirVector
-              double r             = sqrt( 1.0 - plusMinus_one * plusMinus_one );      // Radius of circle at z
-              double theta         = 2.0 * M_PI * mTwister.randDblExc();               // Uniform between 0-2Pi
+              double plusMinus_one = 2.0 * mTwister.randDblExc() - 1.0 + DBL_EPSILON; // Add fuzz to avoid inf in 1/dirVector
+              double r = sqrt( 1.0 - plusMinus_one * plusMinus_one );                 // Radius of circle at z
+              double theta = 2.0 * M_PI * mTwister.randDblExc();                      // Uniform betwen 0-2Pi
 
-              //Vector direction_vector;
-              direction_vector[0] = r * cos( theta );  // Convert to cartesian
+              direction_vector[0] = r * cos( theta ); // Convert to cartesian
               direction_vector[1] = r * sin( theta );
               direction_vector[2] = plusMinus_one;
+
+/*`==========DEBUGGING==========*/
+#if ( FIXED_RAY_DIR == 1)
+              direction_vector[0] = 0.707106781186548 * SIGN;
+              direction_vector[1] = 0.707106781186548 * SIGN;
+              direction_vector[2] = 0.0               * SIGN;
+#elif ( FIXED_RAY_DIR == 2 )
+              direction_vector[0] = 0.707106781186548 * SIGN;
+              direction_vector[1] = 0.0               * SIGN;
+              direction_vector[2] = 0.707106781186548 * SIGN;
+#elif ( FIXED_RAY_DIR == 3 )
+              direction_vector[0] = 0.0               * SIGN;
+              direction_vector[1] = 0.707106781186548 * SIGN;
+              direction_vector[2] = 0.707106781186548 * SIGN;
+#elif ( FIXED_RAY_DIR == 4 )
+              direction_vector[0] = 0.707106781186548 * SIGN;
+              direction_vector[1] = 0.707106781186548 * SIGN;
+              direction_vector[2] = 0.707106781186548 * SIGN;
+#elif ( FIXED_RAY_DIR == 5 )
+              direction_vector[0] = 1 * SIGN;
+              direction_vector[1] = 0 * SIGN;
+              direction_vector[2] = 0 * SIGN;
+#elif ( FIXED_RAY_DIR == 6 )
+              direction_vector[0] = 0 * SIGN;
+              direction_vector[1] = 1 * SIGN;
+              direction_vector[2] = 0 * SIGN;
+#elif ( FIXED_RAY_DIR == 7 )
+              direction_vector[0] = 0 * SIGN;
+              direction_vector[1] = 0 * SIGN;
+              direction_vector[2] = 1 * SIGN;
+#else
+#endif
+/*===========DEBUGGING==========`*/
 
               //_______________________________________________//
               //==== END findRayDirection( mTwister, cur ) ====//
 
-              //inv_ray_direction = Vector(1.0)/direction_vector;
               inv_ray_direction[0] = 1.0 / direction_vector[0];
               inv_ray_direction[1] = 1.0 / direction_vector[1];
               inv_ray_direction[2] = 1.0 / direction_vector[2];
 
               // Get new step and sign
               int stepOld = step[dir];
-              //findStepSize( step, sign, inv_ray_direction);
 
-              //____________________________________________________________//
-              //==== START findStepSize( step, sign, inv_ray_direction) ====//
+              //______________________________________________________//
+              //==== START raySignStep(sign, step, ray_direction) ====//
 
-              (inv_ray_direction[0] > 0) ? (step[0] = 1, sign[0] = 1) : (step[0] = -1, sign[0] = 0);
-              (inv_ray_direction[1] > 0) ? (step[1] = 1, sign[1] = 1) : (step[1] = -1, sign[1] = 0);
-              (inv_ray_direction[2] > 0) ? (step[2] = 1, sign[2] = 1) : (step[2] = -1, sign[2] = 0);
+              // Get new step and sign
+              for ( int d = 0; d < 3; d++ ) {
+                double me = copysign( (double)1.0, direction_vector[d] ); // +- 1
+                sign[d]   = fmax( 0.0, me ); // 0, 1
+                step[d]   = int( me );
+              }
 
-              //__________________________________________________________//
-              //==== END findStepSize( step, sign, inv_ray_direction) ====//
+              //____________________________________________________//
+              //==== END raySignStep(sign, step, ray_direction) ====//
 
               // If sign[dir] changes sign, put ray back into prevCell (back scattering)
-              // A sign change only occurs when the product of old and new is negative
+              // a sign change only occurs when the product of old and new is negative
               if ( step[dir] * stepOld < 0 ) {
-                //cur = prevCell;
                 cur[0] = prevCell[0];
                 cur[1] = prevCell[1];
                 cur[2] = prevCell[2];
               }
 
-              // Get new tMax (mixing bools, ints and doubles)
-              //tMax.x( ( cur[0] + sign[0]                - rayOrigin[0]) * inv_ray_direction[0] );
-              //tMax.y( ( cur[1] + sign[1] * D_DxRatio[1] - rayOrigin[1]) * inv_ray_direction[1] );
-              //tMax.z( ( cur[2] + sign[2] * D_DxRatio[2] - rayOrigin[2]) * inv_ray_direction[2] );
-              tMax[0] = (cur[0] + sign[0]                - rayOrigin[0]) * inv_ray_direction[0];  // Mixing bools, ints and doubles
-              tMax[1] = (cur[1] + sign[1] * D_DxRatio[1] - rayOrigin[1]) * inv_ray_direction[1];
-              tMax[2] = (cur[2] + sign[2] * D_DxRatio[2] - rayOrigin[2]) * inv_ray_direction[2];
+              double CC_pos[3] = { m_level->getAnchor().x() + ( m_Dx[0] * cur[0] ) + ( 0.5 * m_Dx[0] )
+                                 , m_level->getAnchor().y() + ( m_Dx[1] * cur[1] ) + ( 0.5 * m_Dx[1] )
+                                 , m_level->getAnchor().z() + ( m_Dx[2] * cur[2] ) + ( 0.5 * m_Dx[2] ) };
+
+              rayDx[0] = ray_location[0] - ( CC_pos[0] - 0.5 * m_Dx[0] );
+              rayDx[1] = ray_location[1] - ( CC_pos[1] - 0.5 * m_Dx[1] );
+              rayDx[2] = ray_location[2] - ( CC_pos[2] - 0.5 * m_Dx[2] );
+
+              tMax[0] = ( sign[0] * m_Dx[0] - rayDx[0]) * inv_ray_direction[0];
+              tMax[1] = ( sign[1] * m_Dx[1] - rayDx[1]) * inv_ray_direction[1];
+              tMax[2] = ( sign[2] * m_Dx[2] - rayDx[2]) * inv_ray_direction[2];
 
               // Length of t to traverse one cell
-              //tDelta    = Abs(inv_ray_direction) * D_DxRatio;
-              tDelta[0] = Abs( inv_ray_direction[0] ) * D_DxRatio[0];
-              tDelta[1] = Abs( inv_ray_direction[1] ) * D_DxRatio[1];
-              tDelta[2] = Abs( inv_ray_direction[2] ) * D_DxRatio[2];
+              tDelta[0] = fabs( inv_ray_direction[0] ) * m_Dx[0];
+              tDelta[1] = fabs( inv_ray_direction[1] ) * m_Dx[1];
+              tDelta[2] = fabs( inv_ray_direction[2] ) * m_Dx[2];
+
+/*`==========TESTING==========*/
+#if (DEBUG == 3)
+              if( isDbgCell(IntVector(i,j,k)) ) {
+                double mytDelta[3] = { tDelta[0] / m_Dx[0],
+                                       tDelta[1] / m_Dx[1],
+                                       tDelta[2] / m_Dx[2]  };
+                double myrayLoc[3] = { ray_location[0] / m_Dx[0],
+                                       ray_location[1] / m_Dx[1],
+                                       ray_location[2] / m_Dx[2]  };
+                printf( "            Scatter: [%i, %i, %i], rayLength: %g, tmax: %g, %g, %g  tDelta: %g, %g, %g  ray_dir: %g, %g, %g\n",cur[0], cur[1], cur[2],rayLength, tMax[0] / Dx[0], tMax[1] / Dx[1], tMax[2] / Dx[2], mytDelta[0], mytDelta[1] , mytDelta[2], ray_direction[0], ray_direction[1], ray_direction[2]);
+                printf( "                    dir: %i sign: [%g, %g, %g], step [%i, %i, %i] cur: [%i, %i, %i], prevCell: [%i, %i, %i]\n", dir, sign[0], sign[1], sign[2], step[0], step[1], step[2], cur[0], cur[1], cur[2], prevCell[0], prevCell[1], prevCell[2] );
+                printf( "                    ray_location: [%g, %g, %g]\n", myrayLoc[0], myrayLoc[1], myrayLoc[2] );
+    //          printf("                     rayDx         [%g, %g, %g]  CC_pos[%g, %g, %g]\n", rayDx[0], rayDx[1], rayDx[2], CC_pos[0], CC_pos[1], CC_pos[2]);
+              }
+#endif
+/*===========TESTING==========`*/
 
               tMax_prev = 0;
-              curLength = 0;  // Allow for multiple scattering events per ray
+              rayLength_scatter = 0;  // allow for multiple scattering events per ray
             }
+#endif
 
-#endif // end RAY_SCATTER
+            //if( rayLength < 0 || std::isnan(rayLength) || std::isinf(rayLength) ) {
+            //  std::ostringstream warn;
+            //  warn<< "ERROR:RMCRTCommon::updateSumI   The ray length is non-physical (" << rayLength << ")"
+            //      << " origin: " << origin << " cur: " << cur << "\n";
+            //  throw InternalError( warn.str(), __FILE__, __LINE__ );
+            //}
+          }  //end domain while loop.  ++++++++++++++
+          //______________________________________________________________________
 
-          } // end domain while loop.  ++++++++++++++
 
-          //T wallEmissivity = abskg[cur];
-
-          //if (wallEmissivity > 1.0){       // Ensure wall emissivity doesn't exceed one
-          //  wallEmissivity = 1.0;
-          //}
-
-          T wallEmissivity = (m_abskg( cur[0], cur[1], cur[2] ) > 1.0) ? 1.0: m_abskg( cur[0], cur[1], cur[2] );  // Ensure wall emissivity doesn't exceed one
+          T wallEmissivity = ( m_abskg( cur[0], cur[1], cur[2] ) > 1.0 ) ? 1.0: m_abskg( cur[0], cur[1], cur[2] );  // Ensure wall emissivity doesn't exceed one
 
           intensity = exp( -optical_thickness );
 
-          //sumI += wallEmissivity * sigmaT4OverPi[cur] * intensity;
           sumI += wallEmissivity * m_sigmaT4OverPi( cur[0], cur[1], cur[2] ) * intensity;
 
-          //intensity = intensity * fs;
-
           // When a ray reaches the end of the domain, we force it to terminate.
-          //if(!d_allowReflect) intensity = 0;
           intensity = ( !m_d_allowReflect ) ? 0 : ( intensity * fs );
+
+/*`==========TESTING==========*/
+#if DEBUG  >= 0
+          if( isDbgCell(IntVector(i,j,k)) ) {
+             printf( "            cur [%d,%d,%d] intensity: %g expOptThick: %g, fs: %g allowReflect: %i\n",
+                    cur[0], cur[1], cur[2], intensity, exp(-optical_thickness), fs, m_d_allowReflect );
+          }
+#endif
+/*===========TESTING==========`*/
 
           //__________________________________
           //  Reflections
-          //if ( (intensity > d_threshold) && d_allowReflect){
-          if ( (intensity > m_d_threshold) && m_d_allowReflect ) {
+          if ( intensity > m_d_threshold && m_d_allowReflect ) {
 
-            //reflect( fs, cur, prevCell, abskg[cur], in_domain, step[dir], sign[dir], direction_vector[dir]);
+            //____________________________________________________________________________________________________________//
+            //==== START reflect( fs, cur, prevCell, abskg[cur], in_domain, step[dir], sign[dir], ray_direction[dir]) ====//
 
-            //_______________________________________________________________________________________________________________//
-            //==== START reflect( fs, cur, prevCell, abskg[cur], in_domain, step[dir], sign[dir], direction_vector[dir]) ====//
-
-            //fs *= (1 - abskg[cur]);
             fs *= ( 1 - m_abskg( cur[0], cur[1], cur[2] ) );
 
             // Put cur back inside the domain
-            //cur = prevCell;
             cur[0] = prevCell[0];
             cur[1] = prevCell[1];
             cur[2] = prevCell[2];
-
             in_domain = true;
 
             // Apply reflection condition
-            step[dir]             *= -1;              // Begin stepping in opposite direction
-            sign[dir]              =  1 - sign[dir];  // Swap sign from 1 to 0 or vice versa
-            //sign[dir] = (sign[dir]==1) ? 0 : 1;  //  swap sign from 1 to 0 or vice versa
+            step[dir] *= -1;                // begin stepping in opposite direction
+            sign[dir] *= -1;
             direction_vector[dir] *= -1;
 
-            //_____________________________________________________________________________________________________________//
-            //==== END reflect( fs, cur, prevCell, abskg[cur], in_domain, step[dir], sign[dir], direction_vector[dir]) ====//
-
             ++nReflect;
-
           }
-
         }  // end threshold while loop.
 
         //______________________________________________________________________________________________________________________________//
@@ -1053,11 +1080,19 @@ struct solveDivQFunctor {
 
       //__________________________________
       //  Compute divQ
-      //divQ[origin] = -4.0 * M_PI * abskg[origin] * ( sigmaT4OverPi[origin] - (sumI/d_nDivQRays) );
-      m_divQ( i, j, k ) = -4.0 * M_PI * m_abskg( i, j, k ) * ( m_sigmaT4OverPi( i, j, k ) - (sumI / m_d_nDivQRays) );
+      m_divQ( i, j, k ) = -4.0 * M_PI * m_abskg( i, j, k) * ( m_sigmaT4OverPi( i, j, k ) - ( sumI / m_d_nDivQRays ) );
 
       // radiationVolq is the incident energy per cell (W/m^3) and is necessary when particle heat transfer models (i.e. Shaddix) are used
-      m_radiationVolq( i, j, k ) = 4.0 * M_PI * (sumI / m_d_nDivQRays);
+      m_radiationVolq( i, j, k ) = 4.0 * M_PI * ( sumI / m_d_nDivQRays );
+
+/*`==========TESTING==========*/
+#if DEBUG == 1
+      if( isDbgCell(IntVector(i,j,k)) ) {
+        printf( "\n      [%d, %d, %d]  sumI: %g  divQ: %g radiationVolq: %g  abskg: %g,    sigmaT4: %g \n",
+                i, j, k, sumI, m_divQ(i,j,k), m_radiationVolq(i,j,k), m_abskg(i,j,k), m_sigmaT4OverPi(i,j,k));
+      }
+#endif
+/*===========TESTING==========`*/
 
     }  // end operator()
 };  // end solveDivQFunctor
@@ -1294,22 +1329,19 @@ Ray::rayTrace( const ProcessorGroup* pg,
 
     bool latinHyperCube = ( d_rayDirSampleAlgo == LATIN_HYPER_CUBE ) ? true : false;
 
-    double DyDx = Dx.y() / Dx.x();
-    double DzDx = Dx.z() / Dx.x();
-
     IntVector lo = patch->getCellLowIndex();
     IntVector hi = patch->getCellHighIndex();
 
     Uintah::BlockRange range(lo, hi);
 
     solveDivQFunctor<T> functor( latinHyperCube,
+                                 level,
                                  d_nDivQRays,
                                  d_isSeedRandom,
                                  d_CCRays,
-                                 DyDx,
-                                 DzDx,
                                  d_sigmaScat,
                                  d_threshold,
+                                 d_maxRayLength,
                                  abskg,
                                  sigmaT4OverPi,
                                  celltype,

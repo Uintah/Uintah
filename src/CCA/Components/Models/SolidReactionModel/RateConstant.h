@@ -25,7 +25,6 @@
 #ifndef UINTAH_HOMEBREW_RateConstant_H
 #define UINTAH_HOMEBREW_RateConstant_H
 
-#include <Core/Parallel/UintahParallelPort.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>

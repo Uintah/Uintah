@@ -28,7 +28,7 @@
 #include <CCA/Components/Solvers/SolverFactory.h>
 #include <CCA/Components/SwitchingCriteria/None.h>
 #include <CCA/Components/SwitchingCriteria/SwitchingCriteriaFactory.h>
-#include <CCA/Ports/LoadBalancerPort.h>
+#include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/ModelMaker.h>
 #include <CCA/Ports/Output.h>
 #include <CCA/Ports/Regridder.h>
@@ -188,8 +188,12 @@ Switcher::Switcher( const ProcessorGroup * myworld,
   // there should be n-1 switching critiera specified.
   int num_switch_criteria = 0;
   for (int i = 0; i < num_components; i++) {
-    UintahParallelComponent* comp = dynamic_cast<UintahParallelComponent*>(getPort("application",i));
-    SwitchingCriteria* sw = dynamic_cast<SwitchingCriteria*>(comp->getPort("switch_criteria"));
+    UintahParallelComponent* comp =
+      dynamic_cast<UintahParallelComponent*>(getPort("application",i));
+
+    SwitchingCriteria* sw =
+      dynamic_cast<SwitchingCriteria*>(comp->getPort("switch_criteria"));
+
     if (sw) {
       num_switch_criteria++;
     }
@@ -199,11 +203,11 @@ Switcher::Switcher( const ProcessorGroup * myworld,
     throw  ProblemSetupException( "Do not have enough switching criteria specified for the number of components.", __FILE__, __LINE__ );
   }
   
-  //__________________________________
-  // Add the "None" SwitchCriteria to the last component, so the switchFlag label
-  // is computed in the last stage.
-
-  UintahParallelComponent* last_comp = dynamic_cast<UintahParallelComponent*>(getPort("application",num_components-1));
+  //__________________________________  
+  // Add the "None" SwitchCriteria to the last component, so the
+  // switchFlag label is computed in the last stage.
+  UintahParallelComponent* last_comp =
+    dynamic_cast<UintahParallelComponent*>(getPort("application",num_components-1));
 
   SwitchingCriteria* none_switch_criteria = scinew None();
   
@@ -407,7 +411,7 @@ void Switcher::scheduleSwitchInitialization(const LevelP     & level,
 {
   if (d_doSwitching[level->getIndex()]) {
     printSchedule(level,dbg,"Switcher::scheduleSwitchInitialization");
-    d_app->switchInitialize(level,sched);
+    d_app->scheduleSwitchInitialization(level, sched);
   }
 }
 
@@ -426,7 +430,7 @@ void Switcher::scheduleSwitchTest(const LevelP     & level,
   
   // the component is responsible for determining when it is to switch.
   t->requires(Task::NewDW, d_switch_label);
-  sched->addTask(t,sched->getLoadBalancer()->getPerProcessorPatchSet(level),m_sharedState->allMaterials());
+  sched->addTask(t, m_loadBalancer->getPerProcessorPatchSet(level),m_sharedState->allMaterials());
 }
 
 //______________________________________________________________________
@@ -539,7 +543,7 @@ void Switcher::scheduleCarryOverVars(const LevelP     & level,
         t->requires(Task::OldDW, var, matls, Ghost::None, 0);
         t->computes(var, matls);
      
-        if(UintahParallelComponent::d_myworld->myRank() == 0) {
+        if(d_myworld->myRank() == 0) {
           if (matls) {
             std::cout << d_myworld->myRank() << "  Carry over " << *var << "\t\tmatls: " << *matls << " on level " << L_indx << std::endl;
           }
@@ -819,13 +823,12 @@ void Switcher::switchApplication( const ProblemSpecP     & restart_prob_spec,
 //______________________________________________________________________
 //  This is where the actual component switching takes place.
 bool
-Switcher::needRecompile(       double   simTime,
-                               double   delT,
-                         const GridP  & grid )
+Switcher::needRecompile( const GridP & grid )
 {
   dbg << "  Doing Switcher::needRecompile " << std::endl;
   
-  bool retval  = false;
+  m_recompile  = false;
+
   d_restarting = true;
   d_doSwitching.resize(grid->numLevels());
   
@@ -869,14 +872,15 @@ Switcher::needRecompile(       double   simTime,
 
     proc0cout << "__________________________________\n\n";
     
-    retval = true;
+    m_recompile = true;
   } 
   else {
     m_output->setSwitchState(false);
   }
-  retval |= d_app->needRecompile(simTime, delT, grid);
 
-  return retval;
+  m_recompile |= d_app->needRecompile(grid);
+
+  return m_recompile;
 }
 //______________________________________________________________________
 //

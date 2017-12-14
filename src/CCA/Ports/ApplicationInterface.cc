@@ -24,8 +24,6 @@
 
 
 #include <CCA/Ports/ApplicationInterface.h>
-#include <Core/Exceptions/InternalError.h>
-#include <Core/Grid/Task.h>
 
 using namespace Uintah;
 
@@ -36,74 +34,3 @@ ApplicationInterface::ApplicationInterface()
 ApplicationInterface::~ApplicationInterface()
 {
 }
-
-void
-ApplicationInterface::scheduleRefine(const PatchSet*, 
-                                    SchedulerP&)
-{
-  throw InternalError( "scheduleRefine not implemented for this component\n", __FILE__, __LINE__ );
-}
-
-void
-ApplicationInterface::scheduleRefineInterface(const LevelP&, 
-                                             SchedulerP&,
-                                             bool, bool)
-{
-  throw InternalError( "scheduleRefineInterface not implemented for this component\n", __FILE__, __LINE__ );
-}
-
-void
-ApplicationInterface::scheduleCoarsen(const LevelP&, 
-                                     SchedulerP&)
-{
-  throw InternalError( "scheduleCoarsen not implemented for this component\n", __FILE__, __LINE__ );
-}
-
-void
-ApplicationInterface::scheduleTimeAdvance(const LevelP&,
-                                         SchedulerP&)
-{
-  throw InternalError( "no simulation implemented?", __FILE__, __LINE__ );
-}
-
-void
-ApplicationInterface::scheduleErrorEstimate( const LevelP&,
-					     SchedulerP& )
-{
-  throw InternalError( "scheduleErrorEstimate not implemented for this component", __FILE__, __LINE__ );
-}
-
-void
-ApplicationInterface::scheduleInitialErrorEstimate(const LevelP& /*coarseLevel*/,
-                                                  SchedulerP& /*sched*/)
-{
-  throw InternalError("scheduleInitialErrorEstimate not implemented for this component", __FILE__, __LINE__);
-}
-
-double
-ApplicationInterface::recomputeTimeStep(double)
-{
-  throw InternalError("recomputeTimeStep not implemented for this component", __FILE__, __LINE__);
-}
-
-bool
-ApplicationInterface::restartableTimeSteps()
-{
-  return false;
-}
-
-double
-ApplicationInterface::getSubCycleProgress(DataWarehouse* fineDW)
-{
-  // DWs are always created in order of time.
-  int fineID = fineDW->getID();  
-  int coarseNewID = fineDW->getOtherDataWarehouse(Task::CoarseNewDW)->getID();
-  // need to do this check, on init timestep, old DW is nullptr, and getOtherDW will throw exception
-  if (fineID == coarseNewID) {
-    return 1.0;
-  }
-  int coarseOldID = fineDW->getOtherDataWarehouse(Task::CoarseOldDW)->getID();
-  
-  return ((double)fineID-coarseOldID) / (coarseNewID-coarseOldID);
-}
-

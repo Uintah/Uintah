@@ -26,6 +26,7 @@
 
 #include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>
 #include <CCA/Components/Schedulers/DetailedTasks.h>
+#include <CCA/Ports/ApplicationInterface.h>
 #include <CCA/Ports/Scheduler.h>
 
 #include <Core/DataArchive/DataArchive.h>
@@ -81,10 +82,30 @@ LoadBalancerCommon::~LoadBalancerCommon()
 
 //______________________________________________________________________
 //
+void LoadBalancerCommon::getComponents()
+{
+  m_scheduler = dynamic_cast<Scheduler*>(getPort("scheduler"));
+
+  if( !m_scheduler ) {
+    throw InternalError("dynamic_cast of 'm_scheduler' failed!", __FILE__, __LINE__);
+  }
+
+  m_application = dynamic_cast<ApplicationInterface*>( getPort("application") );
+
+  if( !m_application ) {
+    throw InternalError("dynamic_cast of 'm_application' failed!", __FILE__, __LINE__);
+  }
+}
+
+//______________________________________________________________________
+//
 void LoadBalancerCommon::releaseComponents()
 {
   releasePort( "scheduler" );
-  m_scheduler  = nullptr;
+  releasePort( "application" );
+
+  m_scheduler   = nullptr;
+  m_application = nullptr;
 
   m_sharedState = nullptr;
 }
@@ -841,8 +862,6 @@ LoadBalancerCommon::problemSetup( ProblemSpecP     & pspec
 {
   m_sharedState = state;
 
-  m_scheduler = dynamic_cast<Scheduler*>(getPort("scheduler"));
-
   ProblemSpecP p = pspec->findBlock("LoadBalancer");
   m_output_Nth_proc = 1;
 
@@ -850,29 +869,29 @@ LoadBalancerCommon::problemSetup( ProblemSpecP     & pspec
     p->getWithDefault("outputNthProc", m_output_Nth_proc, 1);
   }
 
-// #ifdef HAVE_VISIT
-//   static bool initialized = false;
+#ifdef HAVE_VISIT
+  static bool initialized = false;
 
-//   // Running with VisIt so add in the variables that the user can
-//   // modify.
-//   if( m_sharedState->getVisIt() && !initialized ) {
-//     SimulationState::interactiveVar var;
-//     var.name     = "LoadBalancer-DoSpaceCurve";
-//     var.type     = Uintah::TypeDescription::bool_type;
-//     var.value    = (void *) &m_do_space_curve;
-//     var.range[0] = 0;
-//     var.range[1] = 1;
-//     var.modifiable = true;
-//     var.recompile  = false;
-//     var.modified   = false;
-//     m_sharedState->d_UPSVars.push_back( var );
+  // Running with VisIt so add in the variables that the user can
+  // modify.
+  if( m_application->getVisIt() && !initialized ) {
+    ApplicationInterface::interactiveVar var;
+    var.name     = "LoadBalancer-DoSpaceCurve";
+    var.type     = Uintah::TypeDescription::bool_type;
+    var.value    = (void *) &m_do_space_curve;
+    var.range[0] = 0;
+    var.range[1] = 1;
+    var.modifiable = true;
+    var.recompile  = false;
+    var.modified   = false;
+    m_application->getUPSVars().push_back( var );
 
-// //    m_sharedState->d_debugStreams.push_back( &g_lb_dbg  );
-// //    m_sharedState->d_debugStreams.push_back( &g_neighborhood_dbg );
+    m_application->getDouts().push_back( &g_lb_dbg  );
+    m_application->getDouts().push_back( &g_neighborhood_dbg );
 
-//     initialized = true;
-//   }
-// #endif
+    initialized = true;
+  }
+#endif
 }
 
 //__________________________________

@@ -41,7 +41,7 @@
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <CCA/Ports/Scheduler.h>
-#include <CCA/Ports/LoadBalancerPort.h>
+#include <CCA/Ports/LoadBalancer.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Math/MinMax.h>
@@ -69,9 +69,9 @@ using namespace Uintah;
 
 //__________________________________
 //  To turn on normal output
-//  setenv SCI_DEBUG "HYPRE_DOING_COUT:+"
+//  setenv SCI_DEBUG "SOLVER_DOING_COUT:+"
 
-static DebugStream cout_doing("HYPRE_DOING_COUT", false);
+static DebugStream cout_doing("SOLVER_DOING_COUT", false);
 
 namespace Uintah {
 
@@ -1101,7 +1101,7 @@ namespace Uintah {
   //==============================================================================
 
   HypreSolver2::HypreSolver2(const ProcessorGroup* myworld)
-  : UintahParallelComponent(myworld)
+  : SolverCommon(myworld)
   {
     // Time Step
     m_timeStepLabel =
@@ -1342,7 +1342,7 @@ namespace Uintah {
     }
 
     task->requires(which_b_dw, b, Ghost::None, 0);
-    LoadBalancerPort * lb = sched->getLoadBalancer();
+    LoadBalancer * lb = sched->getLoadBalancer();
 
     if (modifies_hypre) {
       task->requires(Task::NewDW,hypre_solver_label);

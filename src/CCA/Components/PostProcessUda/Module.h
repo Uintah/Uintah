@@ -58,6 +58,13 @@ namespace Uintah {
 
     virtual void scheduleDoAnalysis_preReloc(SchedulerP   & sched,
                                              const LevelP & level) =0;
+                                             
+    // populate the old_dw with variables from timestep
+    enum {NOTUSED = -9};
+    virtual int getTimestep_OldDW(){ return NOTUSED; };
+    
+    virtual std::string getName()=0;
+    
     void readTimeStartStop(const ProblemSpecP & ps,
                            double & startTime,
                            double & stopTime);
@@ -71,10 +78,24 @@ namespace Uintah {
                           const VarLabel * label,
                           const int        matl,
                           const Patch    * patch );
-
     SimulationStateP   d_sharedState;
     DataArchive      * d_dataArchive   = nullptr;
     Output           * d_dataArchiver  = nullptr;
+    std::vector<double> d_udaTimes;                 // physical time pulled from uda:index.xml
+    
+    //__________________________________
+    //
+    class proc0patch0cout {
+      public:
+        proc0patch0cout( const int nTimesPerTimestep);
+                              
+        void print(const Patch * patch,
+                   std::ostringstream& msg);
+      private:
+        int d_count             =0;        
+        int d_nTimesPerTimestep =0;        
+    
+    };
   };
 }
 

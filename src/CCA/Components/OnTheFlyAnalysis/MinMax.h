@@ -60,9 +60,9 @@ GENERAL INFORMATION
   class MinMax : public AnalysisModule {
   public:
 
-    MinMax(ProblemSpecP& prob_spec,
-           SimulationStateP& sharedState,
-	   Output* output);
+    MinMax(const ProcessorGroup* myworld,
+	   const SimulationStateP sharedState,
+	   const ProblemSpecP& module_spec);
     MinMax();
                     
     virtual ~MinMax();
@@ -149,11 +149,6 @@ GENERAL INFORMATION
     };
      
     std::vector<varProperties> d_analyzeVars;
-    
-    SchedulerP       d_scheduler{nullptr};
-    SimulationStateP d_sharedState;
-    Output* d_output;
-    ProblemSpecP d_prob_spec;
     
     const Material*  d_matl;
     MaterialSet*     d_matl_set;

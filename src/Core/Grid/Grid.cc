@@ -1348,7 +1348,7 @@ Grid::getPatchByID( int patchid, int startingLevel ) const
 //______________________________________________________________________
 //
 void
-Grid::assignBCS( const ProblemSpecP & grid_ps, LoadBalancerPort * lb )
+Grid::assignBCS( const ProblemSpecP & grid_ps, LoadBalancer * lb )
 {
   for( int l = 0; l < numLevels(); l++ )
   {

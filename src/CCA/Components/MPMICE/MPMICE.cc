@@ -92,7 +92,6 @@ MPMICE::MPMICE(const ProcessorGroup* myworld,
  
   d_rigidMPM = false;
   d_testForNegTemps_mpm = true;
-  d_recompile = false;
 
   switch(mpmtype) {
   case RIGID_MPMICE:
@@ -140,7 +139,9 @@ MPMICE::~MPMICE()
     vector<AnalysisModule*>::iterator iter;
     for( iter  = d_analysisModules.begin();
          iter != d_analysisModules.end(); iter++){
-      delete *iter;
+      AnalysisModule* am = *iter;
+      am->releaseComponents();
+      delete am;
     }
   }
   
@@ -239,13 +240,16 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
   
   //__________________________________
   //  Set up data analysis modules
-  d_analysisModules = AnalysisModuleFactory::create(prob_spec, m_sharedState, m_output);
+  d_analysisModules = AnalysisModuleFactory::create(d_myworld,
+						    m_sharedState,
+						    prob_spec);
 
   if(d_analysisModules.size() != 0){
     vector<AnalysisModule*>::iterator iter;
     for( iter  = d_analysisModules.begin();
          iter != d_analysisModules.end(); iter++){
       AnalysisModule* am = *iter;
+      am->setComponents( dynamic_cast<ApplicationInterface*>( this ) );
       am->problemSetup(prob_spec, restart_prob_spec, grid);
     }
   }  
@@ -2386,17 +2390,6 @@ void MPMICE::binaryPressureSearch(  std::vector<constCCVariable<double> >& Temp,
     }
   }
 #endif
-}
-
-//______________________________________________________________________
-bool MPMICE::needRecompile(double time, double dt, const GridP& grid) {
-  if(d_recompile){
-    d_recompile = false;
-    return true;
-  }
-  else{
-    return false;
-  }
 }
 
 //______________________________________________________________________

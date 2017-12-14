@@ -529,7 +529,7 @@ Radiometer::getPatchSet( SchedulerP& sched,
   //__________________________________
   // find patches that contain radiometers
   std::vector<const Patch*> radiometer_patches;
-  LoadBalancerPort * lb = sched->getLoadBalancer();
+  LoadBalancer * lb = sched->getLoadBalancer();
   const PatchSet * procPatches = lb->getPerProcessorPatchSet(level);
 
   for (int m = 0; m < procPatches->size(); m++) {

@@ -28,6 +28,7 @@
 #include <CCA/Components/LoadBalancers/CostModelForecaster.h>
 #include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>
 #include <CCA/Components/Schedulers/DetailedTasks.h>
+#include <CCA/Ports/ApplicationInterface.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Regridder.h>
 #include <CCA/Ports/Scheduler.h>
@@ -64,9 +65,9 @@ ParticleLoadBalancer::ParticleLoadBalancer( const ProcessorGroup * myworld ) :
   LoadBalancerCommon(myworld)
 {
   m_lb_interval = 0.0;
-  m_last_lb_time = 0.0;
-  d_lbTimestepInterval = 0;
-  d_lastLbTimestep = 0;
+  m_last_lb_simTime = 0.0;
+  m_lb_timeStep_interval = 0;
+  m_last_lb_timeStep = 0;
   m_check_after_restart = false;
   d_pspec = 0;
 
@@ -668,23 +669,23 @@ bool ParticleLoadBalancer::thresholdExceeded(const vector<vector<double> >& cell
 }
 
 bool 
-ParticleLoadBalancer::needRecompile(double /*time*/, double /*delt*/, 
-                                    const GridP& grid)
+ParticleLoadBalancer::needRecompile(const GridP& grid)
 {
-  double time = m_sharedState->getElapsedSimTime();
-  int timestep = m_sharedState->getCurrentTopLevelTimeStep();
+  const int timeStep   = m_application->getTimeStep();
+  const double simTime = m_application->getSimTime();
 
   bool do_check = false;
 #if 1
-  if (d_lbTimestepInterval != 0 && timestep >= d_lastLbTimestep + d_lbTimestepInterval) {
-    d_lastLbTimestep = timestep;
+  if (m_lb_timeStep_interval != 0 &&
+      timeStep >= m_last_lb_timeStep + m_lb_timeStep_interval) {
+    m_last_lb_timeStep = timeStep;
     do_check = true;
   }
-  else if (m_lb_interval != 0 && time >= m_last_lb_time + m_lb_interval) {
-    m_last_lb_time = time;
+  else if (m_lb_interval != 0 && simTime >= m_last_lb_simTime + m_lb_interval) {
+    m_last_lb_simTime = simTime;
     do_check = true;
   }
-  else if (time == 0 || m_check_after_restart) {
+  else if (simTime == 0 || m_check_after_restart) {
     // do AFTER initialization timestep too (no matter how much init regridding),
     // so we can compensate for new particles
     do_check = true;
@@ -693,10 +694,10 @@ ParticleLoadBalancer::needRecompile(double /*time*/, double /*delt*/,
 #endif
 
 //  if (dbg.active() && d_myworld->myRank() == 0)
-//    dbg << d_myworld->myRank() << " DLB::NeedRecompile: check=" << do_check << " ts: " << timestep << " " << d_lbTimestepInterval << " t " << time << " " << d_lbInterval << " last: " << d_lastLbTimestep << " " << d_lastLbTime << endl;
+//    dbg << d_myworld->myRank() << " DLB::NeedRecompile: check=" << do_check << " ts: " << timestep << " " << m_lb_timeStep_interval << " t " << time << " " << d_lbInterval << " last: " << m_last_lb_timeStep << " " << d_lastLbTime << endl;
 
   // if it determines we need to re-load-balance, recompile
-  if (do_check && possiblyDynamicallyReallocate(grid, LoadBalancerPort::check)) {
+  if (do_check && possiblyDynamicallyReallocate(grid, LoadBalancer::check)) {
     doing << d_myworld->myRank() << " PLB - scheduling recompile " <<endl;
     return true;
   }
@@ -779,19 +780,22 @@ bool ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int 
   Timers::Simple timer;
   timer.start();
 
+  const int timeStep   = m_application->getTimeStep();
+  const double simTime = m_application->getSimTime();
+
   bool changed = false;
   bool force = false;
 
   // don't do on a restart unless procs changed between runs.  For restarts, this is 
   // called mainly to update the perProc Patch sets (at the bottom)
-  if (state != LoadBalancerPort::restart) {
-    if (state != LoadBalancerPort::check) {
+  if (state != LoadBalancer::restart) {
+    if (state != LoadBalancer::check) {
       force = true;
-      if (d_lbTimestepInterval != 0) {
-        d_lastLbTimestep = m_sharedState->getCurrentTopLevelTimeStep();
+      if (m_lb_timeStep_interval != 0) {
+        m_last_lb_timeStep = timeStep;
       }
       else if (m_lb_interval != 0) {
-        m_last_lb_time = m_sharedState->getElapsedSimTime();
+        m_last_lb_simTime = simTime;
       }
     }
     m_old_assignment = m_processor_assignment;
@@ -815,7 +819,7 @@ bool ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int 
       dynamicAllocate=true;
     }
 
-    if (dynamicAllocate || state != LoadBalancerPort::check) {
+    if (dynamicAllocate || state != LoadBalancer::check) {
       //d_oldAssignment = d_processorAssignment;
       changed = true;
       m_processor_assignment = m_temp_assignment;
@@ -850,9 +854,9 @@ bool ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int 
   m_temp_assignment.resize(0);
   
   // logic to setting flag
-  int flag = LoadBalancerPort::check;
-  if ( changed || state == LoadBalancerPort::restart){
-    flag = LoadBalancerPort::regrid;
+  int flag = LoadBalancer::check;
+  if ( changed || state == LoadBalancer::restart){
+    flag = LoadBalancer::regrid;
   }
   
   // this must be called here (it creates the new per-proc patch sets)
@@ -892,7 +896,7 @@ ParticleLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid, const Simul
    
   }
 
-  d_lbTimestepInterval = timestepInterval;
+  m_lb_timeStep_interval = timestepInterval;
   m_do_space_curve = spaceCurve;
   d_lbThreshold = threshold;
 
@@ -904,21 +908,21 @@ ParticleLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid, const Simul
   m_sfc.SetCleanup(BATCHERS);
   m_sfc.SetMergeParameters(3000,500,2,.15);  //Should do this by profiling
 
-// #ifdef HAVE_VISIT
-//   static bool initialized = false;
+#ifdef HAVE_VISIT
+  static bool initialized = false;
 
-//   // Running with VisIt so add in the variables that the user can
-//   // modify.
-//   if( m_sharedState->getVisIt() && !initialized ) {
-//     m_sharedState->d_debugStreams.push_back( &doing  );
-//     m_sharedState->d_debugStreams.push_back( &lb );
-//     m_sharedState->d_debugStreams.push_back( &dbg );
-//     m_sharedState->d_debugStreams.push_back( &stats  );
-//     m_sharedState->d_debugStreams.push_back( &times );
-//     m_sharedState->d_debugStreams.push_back( &lbout );
+  // Running with VisIt so add in the variables that the user can
+  // modify.
+  if( m_application->getVisIt() && !initialized ) {
+    m_application->getDebugStreams().push_back( &doing  );
+    m_application->getDebugStreams().push_back( &lb );
+    m_application->getDebugStreams().push_back( &dbg );
+    m_application->getDebugStreams().push_back( &stats  );
+    m_application->getDebugStreams().push_back( &times );
+    m_application->getDebugStreams().push_back( &lbout );
 
-//     initialized = true;
-//   }
-// #endif
+    initialized = true;
+  }
+#endif
 }
 

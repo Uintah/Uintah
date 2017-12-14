@@ -14,6 +14,9 @@ else :
 
 #______________________________________________________________________                            
 #  Test syntax: ( "folder name", "input file", # processors, "OS", ["flags1","flag2"])
+#
+#  OS:  Linux, Darwin, or ALL
+#
 #  flags: 
 #       gpu:                    - run test if machine is gpu enabled
 #       no_uda_comparison:      - skip the uda comparisons
@@ -28,7 +31,8 @@ else :
 #       abs_tolerance=[double]  - absolute tolerance used in comparisons
 #       rel_tolerance=[double]  - relative tolerance used in comparisons
 #       exactComparison         - set absolute/relative tolerance = 0  for uda comparisons
-#       startFromCheckpoint     - start test from checkpoint. (/home/csafe-tester/CheckPoints/..../testname.uda.000)
+#       postProcessRun          - start test from an existing uda in the checkpoints directory.  Compute new quantities and save them in a new uda
+#       startFromCheckpoint     - start test from checkpoint. (/home/rt/CheckPoints/..../testname.uda.000)
 #       sus_options="string"    - Additional command line options for sus command
 #
 #  Notes: 

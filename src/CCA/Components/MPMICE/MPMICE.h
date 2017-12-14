@@ -300,8 +300,6 @@ public:
                                DataWarehouse*, 
                                DataWarehouse*); 
 
-  virtual bool needRecompile(double time, double dt, const GridP& grid);
-
   virtual void scheduleSwitchTest(const LevelP& level, SchedulerP& sched);
 
   //__________________________________
@@ -419,7 +417,6 @@ protected:
   ICE*             d_ice;
   int              d_8or27;
   int              NGN;
-  bool             d_recompile;
   bool             d_testForNegTemps_mpm;
   bool             do_mlmpmice;
 

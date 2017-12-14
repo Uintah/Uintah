@@ -496,7 +496,7 @@ private:
     const int iend = m_eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
 
-      CT* rho_phi_ptr;
+      CT* rho_phi_ptr = nullptr;
       if ( m_premultiplier_name != "none" )
         rho_phi_ptr = tsk_info->get_const_uintah_field<CT>(m_premultiplier_name+m_eqn_names[ieqn]);
 

@@ -25,21 +25,19 @@
 #ifndef Packages_Uintah_CCA_Components_Solvers_CGSolver_h
 #define Packages_Uintah_CCA_Components_Solvers_CGSolver_h
 
-#include <CCA/Ports/SolverInterface.h>
-#include <Core/Parallel/UintahParallelComponent.h>
+#include <CCA/Components/Solvers/SolverCommon.h>
 
 namespace Uintah {
-  class CGSolver : public SolverInterface, public UintahParallelComponent { 
+
+  class CGSolver : public SolverCommon { 
 
   public:
 
     CGSolver( const ProcessorGroup * myworld );
     virtual ~CGSolver();
 
-    virtual void releaseComponents() {};
-
-    virtual SolverParameters* readParameters(       ProblemSpecP & params,
-                                              const std::string  & name,
+    virtual SolverParameters* readParameters(       ProblemSpecP     & params,
+                                              const std::string      & name,
                                               const SimulationStateP & state );
 
     virtual void scheduleSolve( const LevelP           & level,
@@ -63,7 +61,6 @@ namespace Uintah {
     virtual void scheduleInitialize( const LevelP      & level,
                                            SchedulerP  & sched,
                                      const MaterialSet * matls ) {}
-
   };
 
 } // end namespace Uintah

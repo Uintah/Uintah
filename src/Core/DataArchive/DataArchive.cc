@@ -1074,7 +1074,7 @@ void
 DataArchive::restartInitialize( const int                index,
                                 const GridP            & grid,
                                       DataWarehouse    * dw,
-                                      LoadBalancerPort * lb,
+                                      LoadBalancer * lb,
                                       double           * pTime )
 {
   vector<int>    ts_indices;
@@ -1184,7 +1184,7 @@ DataArchive::postProcess_ReadUda( const ProcessorGroup   * pg,
                                   const GridP            & grid,
                                   const PatchSubset      * patches,
                                         DataWarehouse    * dw,
-                                        LoadBalancerPort * lb )
+                                        LoadBalancer * lb )
 {
   vector<int>    timesteps;
   vector<double> times;
@@ -1207,13 +1207,11 @@ DataArchive::postProcess_ReadUda( const ProcessorGroup   * pg,
 
     varMap[names[i]] = vl;
   }
+  dw->setID( timeIndex );
+  
+  proc0cout << "   DataArchive:postProcess_ReadUda: udaTimestep " << timesteps[timeIndex] << " timeIndex: " << timeIndex << " dw ID: " << dw->getID() << endl;
 
   TimeData& timedata = getTimeData( timeIndex );
-
-  // set here instead of the SimCont because we need the DW ID to be set
-  // before saving particle subsets
-  dw->setID( timesteps[timeIndex] );
-
   // make sure to load all the data so we can iterate through it
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -1249,6 +1247,7 @@ DataArchive::postProcess_ReadUda( const ProcessorGroup   * pg,
     Variable* var = label->typeDescription()->createInstance();
     query( *var, key.name_, matl, patch, timeIndex, &data );
 
+    // particles
     ParticleVariableBase* particles;
     if ( (particles = dynamic_cast<ParticleVariableBase*>(var)) ) {
       if ( !dw->haveParticleSubset(matl, patch) ) {
@@ -1257,7 +1256,7 @@ DataArchive::postProcess_ReadUda( const ProcessorGroup   * pg,
         ASSERTEQ( dw->getParticleSubset(matl, patch), particles->getParticleSubset() );
       }
     }
-
+    
     dw->put( var, label, matl, patch );
     delete var;
   }

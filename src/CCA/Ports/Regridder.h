@@ -38,6 +38,7 @@
 
 namespace Uintah {
 
+  class UintahParallelComponent;
   class VarLabel;
   
 /**************************************
@@ -74,6 +75,11 @@ WARNING
     Regridder();
     virtual ~Regridder();
 
+    // Methods for managing the components attached via the ports.
+    virtual void setComponents( UintahParallelComponent *comp ) = 0;
+    virtual void getComponents() = 0;
+    virtual void releaseComponents() = 0;
+
     //! Initialize with regridding parameters from ups file
     virtual void problemSetup(const ProblemSpecP& params, const GridP&,
                               const SimulationStateP& state) = 0;
@@ -81,8 +87,7 @@ WARNING
     virtual void switchInitialize(const ProblemSpecP& params) = 0;
 
     //! Asks if we need to recompile the task graph.
-    virtual bool needRecompile(double time, double delt,
-                               const GridP& grid) = 0;
+    virtual bool needRecompile(const GridP& grid) = 0;
 
     //! Do we need to regrid this timestep?
     virtual bool needsToReGrid(const GridP&) = 0;

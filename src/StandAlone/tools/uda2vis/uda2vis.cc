@@ -36,7 +36,7 @@
 
 #include <CCA/Components/Regridder/PerPatchVars.h>
 #include <CCA/Ports/DataWarehouse.h>
-#include <CCA/Ports/LoadBalancerPort.h>
+#include <CCA/Ports/LoadBalancer.h>
 #include <Core/DataArchive/DataArchive.h>
 #include <Core/Grid/Variables/PerPatch.h>
 
@@ -85,6 +85,12 @@ int numComponents<Vector>()
 }
 
 template <>
+int numComponents<IntVector>()
+{
+  return 3;
+}
+
+template <>
 int numComponents<Stencil7>()
 {
   return 7;
@@ -116,6 +122,14 @@ void copyComponents(double *dest, const T &src)
 
 template <>
 void copyComponents<Vector>(double *dest, const Vector &src)
+{
+  dest[0] = (double)src[0];
+  dest[1] = (double)src[1];
+  dest[2] = (double)src[2];
+}
+
+template <>
+void copyComponents<IntVector>(double *dest, const IntVector &src)
 {
   dest[0] = (double)src[0];
   dest[1] = (double)src[1];
@@ -846,6 +860,9 @@ ParticleDataRaw* getParticleData(DataArchive *archive,
   case Uintah::TypeDescription::Vector:
     return readParticleData<Vector>(archive, patch, variable_name,
                                     material, timestep);
+  case Uintah::TypeDescription::IntVector:
+    return readParticleData<IntVector>(archive, patch, variable_name,
+				       material, timestep);
   case Uintah::TypeDescription::Stencil7:
     return readParticleData<Stencil7>(archive, patch, variable_name,
                                       material, timestep);
@@ -885,7 +902,7 @@ TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
                               bool useExtraCells)
 {
   DataWarehouse    * dw = schedulerP->getLastDW();
-  LoadBalancerPort * lb = schedulerP->getLoadBalancer();
+  LoadBalancer * lb = schedulerP->getLoadBalancer();
 
   int numLevels = gridP->numLevels();
   TimeStepInfo *stepInfo = new TimeStepInfo();
@@ -1659,6 +1676,8 @@ ParticleDataRaw* getParticleData(SchedulerP schedulerP,
     return readParticleData<Point>(schedulerP, patch, varLabel, material);
   case Uintah::TypeDescription::Vector:
     return readParticleData<Vector>(schedulerP, patch, varLabel, material);
+  case Uintah::TypeDescription::IntVector:
+    return readParticleData<IntVector>(schedulerP, patch, varLabel, material);
   case Uintah::TypeDescription::Stencil7:
     return readParticleData<Stencil7>(schedulerP, patch, varLabel, material);
   case Uintah::TypeDescription::Stencil4:

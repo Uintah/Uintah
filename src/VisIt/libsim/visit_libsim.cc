@@ -145,8 +145,8 @@ void visit_InitLibSim( visit_simulation_data *sim )
   sim->imageWidth    = 640;
   sim->imageFormat   = 2;
 
-  sim->stopAtTimestep = 0;
-  sim->stopAtLastTimestep = 0;
+  sim->stopAtTimeStep = 0;
+  sim->stopAtLastTimeStep = 0;
 
   sim->stepInfo = nullptr;
 
@@ -326,7 +326,7 @@ bool visit_CheckState( visit_simulation_data *sim )
       }
 
       // Check to see if the user wants to stop.
-      if( sim->cycle == sim->stopAtTimestep )
+      if( sim->cycle == sim->stopAtTimeStep )
       {
         sim->runMode = VISIT_SIMMODE_STOPPED;
       }
@@ -526,7 +526,7 @@ void visit_UpdateSimData( visit_simulation_data *sim,
 
   // Check to see if at the last iteration. If so stop so the
   // user can have once last chance see the data.
-  if( sim->stopAtLastTimestep && last )
+  if( sim->stopAtLastTimeStep && last )
   {
     sim->runMode = VISIT_SIMMODE_STOPPED;
 
@@ -595,7 +595,7 @@ void visit_Initialize( visit_simulation_data *sim )
   if( Parallel::usingMPI() )
     VisItSetGetDomainList(visit_SimGetDomainList, (void*) sim);
 
-  VisItUI_textChanged("MaxTimestep", visit_MaxTimestepCallback, (void*) sim);
+  VisItUI_textChanged("MaxTimeStep", visit_MaxTimeStepCallback, (void*) sim);
   VisItUI_textChanged("MaxTime",     visit_MaxTimeCallback,     (void*) sim);
   VisItUI_valueChanged("EndOnMaxTime",
                        visit_EndOnMaxTimeCallback, (void*) sim);
@@ -608,8 +608,8 @@ void visit_Initialize( visit_simulation_data *sim )
                       visit_UPSVariableCallback,             (void*) sim);
   VisItUI_cellChanged("OutputIntervalVariableTable",
                       visit_OutputIntervalVariableCallback,  (void*) sim);
-  VisItUI_valueChanged("ClampTimestepsToOutput",
-                       visit_ClampTimestepsToOutputCallback, (void*) sim);
+  VisItUI_valueChanged("ClampTimeStepsToOutput",
+                       visit_ClampTimeStepsToOutputCallback, (void*) sim);
         
   VisItUI_valueChanged("ImageGroupBox",
                        visit_ImageGenerateCallback, (void*) sim);
@@ -619,10 +619,10 @@ void visit_Initialize( visit_simulation_data *sim )
   VisItUI_textChanged("ImageWidth",     visit_ImageWidthCallback,  (void*) sim);
   VisItUI_valueChanged("ImageFormat",   visit_ImageFormatCallback, (void*) sim);
 
-  VisItUI_textChanged("StopAtTimestep",
-                      visit_StopAtTimestepCallback,      (void*) sim);
-  VisItUI_valueChanged("StopAtLastTimestep",
-                       visit_StopAtLastTimestepCallback, (void*) sim);
+  VisItUI_textChanged("StopAtTimeStep",
+                      visit_StopAtTimeStepCallback,      (void*) sim);
+  VisItUI_valueChanged("StopAtLastTimeStep",
+                       visit_StopAtLastTimeStepCallback, (void*) sim);
 
   VisItUI_cellChanged("StateVariableTable",
                       visit_StateVariableCallback, (void*) sim);

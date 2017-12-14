@@ -434,8 +434,11 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
     }
 
     //intrusions:
+    bool set_nonnormal_values = false; // Because this is post projection. Non-normal bc_values
+                                       // must be subject to the projection.
     d_boundaryCondition->setHattedIntrusionVelocity( patch, velocityVars.uVelRhoHat, velocityVars.vVelRhoHat,
-                                                     velocityVars.wVelRhoHat, constVelocityVars.density );
+                                                     velocityVars.wVelRhoHat, constVelocityVars.density,
+                                                     set_nonnormal_values );
 
     // boundary condition
     Patch::FaceType mface = Patch::xminus;
@@ -589,11 +592,11 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gaf, 2);
   tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gaf, 2);
   tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 2);
-  tsk->requires(Task::OldDW, d_lab->d_pressurePSLabel, gac, 1); 
-  tsk->requires(Task::OldDW, d_lab->d_turbViscosLabel, gac, 1); 
-  tsk->requires(Task::OldDW, d_lab->d_CCUVelocityLabel, gac, 1); 
-  tsk->requires(Task::OldDW, d_lab->d_CCVVelocityLabel, gac, 1); 
-  tsk->requires(Task::OldDW, d_lab->d_CCWVelocityLabel, gac, 1); 
+  tsk->requires(Task::OldDW, d_lab->d_pressurePSLabel, gac, 1);
+  tsk->requires(Task::OldDW, d_lab->d_turbViscosLabel, gac, 1);
+  tsk->requires(Task::OldDW, d_lab->d_CCUVelocityLabel, gac, 1);
+  tsk->requires(Task::OldDW, d_lab->d_CCVVelocityLabel, gac, 1);
+  tsk->requires(Task::OldDW, d_lab->d_CCWVelocityLabel, gac, 1);
 
 //#ifdef divergenceconstraint
 
@@ -739,11 +742,11 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     new_dw->get(constVelocityVars.uVelocity,   d_lab->d_uVelocitySPBCLabel, indx, patch, gaf, 2);
     new_dw->get(constVelocityVars.vVelocity,   d_lab->d_vVelocitySPBCLabel, indx, patch, gaf, 2);
     new_dw->get(constVelocityVars.wVelocity,   d_lab->d_wVelocitySPBCLabel, indx, patch, gaf, 2);
-    old_dw->get(constVelocityVars.pressure,       d_lab->d_pressurePSLabel,    indx, patch, gac, 1); 
-    old_dw->get(constVelocityVars.turbViscosity,  d_lab->d_turbViscosLabel,    indx, patch, gac, 1); 
-    old_dw->get(constVelocityVars.CCUVelocity,    d_lab->d_CCUVelocityLabel,   indx, patch, gac, 1); 
-    old_dw->get(constVelocityVars.CCVVelocity,    d_lab->d_CCVVelocityLabel,   indx, patch, gac, 1); 
-    old_dw->get(constVelocityVars.CCWVelocity,    d_lab->d_CCWVelocityLabel,   indx, patch, gac, 1); 
+    old_dw->get(constVelocityVars.pressure,       d_lab->d_pressurePSLabel,    indx, patch, gac, 1);
+    old_dw->get(constVelocityVars.turbViscosity,  d_lab->d_turbViscosLabel,    indx, patch, gac, 1);
+    old_dw->get(constVelocityVars.CCUVelocity,    d_lab->d_CCUVelocityLabel,   indx, patch, gac, 1);
+    old_dw->get(constVelocityVars.CCVVelocity,    d_lab->d_CCVVelocityLabel,   indx, patch, gac, 1);
+    old_dw->get(constVelocityVars.CCWVelocity,    d_lab->d_CCWVelocityLabel,   indx, patch, gac, 1);
 
 
     constCCVariable<double> old_divergence;
@@ -895,7 +898,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 
       d_boundaryCondition->wallStressLog(
                                                 patch,
-                                                &velocityVars, 
+                                                &velocityVars,
                                                 &constVelocityVars,
                                                 volFraction
                                               );
@@ -1129,8 +1132,11 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
                                        cellinfo, &velocityVars, &constVelocityVars, volFraction);
     }
 
+    bool set_nonnormal_values = true;
     d_boundaryCondition->setHattedIntrusionVelocity( patch, velocityVars.uVelRhoHat,
-                                                    velocityVars.vVelRhoHat, velocityVars.wVelRhoHat, constVelocityVars.new_density );
+                                                     velocityVars.vVelRhoHat, velocityVars.wVelRhoHat,
+                                                     constVelocityVars.new_density,
+                                                     set_nonnormal_values );
 
 
 
@@ -1298,7 +1304,9 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
                                                         new_uvel, new_vvel, new_wvel,
                                                         old_uvel, old_vvel, old_wvel );
 
-    d_boundaryCondition->setHattedIntrusionVelocity( patch, new_uvel, new_vvel, new_wvel, new_density );
+    bool set_nonnormal_values = true;
+    d_boundaryCondition->setHattedIntrusionVelocity( patch, new_uvel, new_vvel, new_wvel,
+                                                     new_density, set_nonnormal_values );
 
   }  // patches
 }

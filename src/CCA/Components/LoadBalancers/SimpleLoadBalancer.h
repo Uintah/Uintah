@@ -72,6 +72,7 @@ public:
     return getPatchwiseProcessorAssignment(patch);
   }
 
+  virtual bool needRecompile( const GridP& ) { return false; };
 
 private:
 

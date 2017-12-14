@@ -52,14 +52,11 @@ using namespace std;
 static DebugStream cout_doing("VORTICITY_DOING_COUT", false);
 static DebugStream cout_dbg("VORTICITY_DBG_COUT", false);
 //______________________________________________________________________
-vorticity::vorticity(ProblemSpecP& module_spec,
-                     SimulationStateP& sharedState,
-                     Output* output)
-  : AnalysisModule(module_spec, sharedState, output)
+vorticity::vorticity(const ProcessorGroup* myworld,
+		     const SimulationStateP sharedState,
+		     const ProblemSpecP& module_spec)
+  : AnalysisModule(myworld, sharedState, module_spec)
 {
-  d_sharedState = sharedState;
-  d_prob_spec = module_spec;
-  d_output = output;
   d_matl_set = 0;
   v_lb = scinew vorticityLabel();
   I_lb  = scinew ICELabel();
@@ -81,20 +78,16 @@ vorticity::~vorticity()
 
 //______________________________________________________________________
 //     P R O B L E M   S E T U P
-void vorticity::problemSetup(const ProblemSpecP& prob_spec,
+void vorticity::problemSetup(const ProblemSpecP& ,
                              const ProblemSpecP& ,
                              GridP& grid)
 {
   cout_doing << "Doing problemSetup \t\t\t\tvorticity" << endl;
   
-  if(!d_output){
-    throw InternalError("vorticity:couldn't get output port", __FILE__, __LINE__);
-  }
-  
   v_lb->vorticityLabel = VarLabel::create("vorticity", CCVariable<Vector>::getTypeDescription());
   
   // determine which material index to compute
-  d_matl = d_sharedState->parseAndLookupMaterial(d_prob_spec, "material");
+  d_matl = m_sharedState->parseAndLookupMaterial(m_module_spec, "material");
   
   vector<int> m(1);
   m[0] = d_matl->getDWIndex();

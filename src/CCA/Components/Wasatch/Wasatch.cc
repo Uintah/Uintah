@@ -1166,8 +1166,7 @@ namespace WasatchCore{
     const Uintah::PatchSet* const localPatches = get_patchset( USE_FOR_OPERATORS, level, sched );
     const GraphHelper* advSolGraphHelper = graphCategories_[ ADVANCE_SOLUTION ];
 
-    Uintah::LoadBalancerPort * lb              = sched->getLoadBalancer();
-    const Uintah::PatchSet   * perproc_patches = lb->getPerProcessorPatchSet( level );
+    const Uintah::PatchSet * perproc_patches = m_loadBalancer->getPerProcessorPatchSet( level );
 
     if ( timeIntegrator_.has_dual_time() ) {
       subsched_ = sched->createSubScheduler();
@@ -1312,6 +1311,38 @@ namespace WasatchCore{
         particlesHelper_->schedule_find_boundary_particles(level,sched);
       }
 
+       // -----------------------------------------------------------------------
+       // BOUNDARY CONDITIONS TREATMENT
+       // -----------------------------------------------------------------------
+       proc0cout << "------------------------------------------------" << std::endl
+       << "SETTING BOUNDARY CONDITIONS:" << std::endl;
+       proc0cout << "------------------------------------------------" << std::endl;
+       
+       typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
+       
+       for( EquationAdaptors::const_iterator ia=adaptors_.begin(); ia!=adaptors_.end(); ++ia ){
+          EqnTimestepAdaptorBase* const adaptor = *ia;
+          EquationBase* transEq = adaptor->equation();
+          std::string eqnLabel = transEq->solution_variable_name();
+          //______________________________________________________
+          // set up boundary conditions on this transport equation
+          try{
+             // only verify boundary conditions on the first stage!
+             if( isRestarting_ ) transEq->setup_boundary_conditions(*bcHelperMap_[level->getID()], graphCategories_);
+             proc0cout << "Setting BCs for transport equation '" << eqnLabel << "'" << std::endl;
+             transEq->apply_boundary_conditions(*advSolGraphHelper, *bcHelperMap_[level->getID()]);
+          }
+          catch( std::runtime_error& e ){
+             std::ostringstream msg;
+             msg << e.what()
+             << std::endl
+             << "ERORR while setting boundary conditions on equation '" << eqnLabel << "'"
+             << std::endl;
+             throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+          }
+       }
+       proc0cout << "------------------------------------------------" << std::endl;
+
 
       for( int iStage=1; iStage<=nRKStages_; iStage++ ){
         // jcs why do we need this instead of getting the level?
@@ -1333,39 +1364,6 @@ namespace WasatchCore{
         
         // Compute the cell type only when radiation is present. This may change in the future.
         if( doRadiation_ ) cellType_->schedule_carry_forward(allPatches,materials_,sched);
-
-
-        // -----------------------------------------------------------------------
-        // BOUNDARY CONDITIONS TREATMENT
-        // -----------------------------------------------------------------------
-        proc0cout << "------------------------------------------------" << std::endl
-                  << "SETTING BOUNDARY CONDITIONS:" << std::endl;
-        proc0cout << "------------------------------------------------" << std::endl;
-
-        typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
-
-        for( EquationAdaptors::const_iterator ia=adaptors_.begin(); ia!=adaptors_.end(); ++ia ){
-          EqnTimestepAdaptorBase* const adaptor = *ia;
-          EquationBase* transEq = adaptor->equation();
-          std::string eqnLabel = transEq->solution_variable_name();
-          //______________________________________________________
-          // set up boundary conditions on this transport equation
-          try{
-            // only verify boundary conditions on the first stage!
-            if( isRestarting_ && iStage < 2 ) transEq->setup_boundary_conditions(*bcHelperMap_[level->getID()], graphCategories_);
-            proc0cout << "Setting BCs for transport equation '" << eqnLabel << "'" << std::endl;
-            transEq->apply_boundary_conditions(*advSolGraphHelper, *bcHelperMap_[level->getID()]);
-          }
-          catch( std::runtime_error& e ){
-            std::ostringstream msg;
-            msg << e.what()
-                << std::endl
-                << "ERORR while setting boundary conditions on equation '" << eqnLabel << "'"
-                << std::endl;
-            throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-          }
-        }
-        proc0cout << "------------------------------------------------" << std::endl;
 
         //
         // process clipping on fields - must be done AFTER all bcs are applied
@@ -1527,8 +1525,7 @@ namespace WasatchCore{
     //________________________________________________________
     // add a task to populate a "field" with the current time.
     // This is required by the time integrator.
-    //    Uintah::LoadBalancerPort * lb = sched->getLoadBalancer();
-    //    const Uintah::PatchSet* localPatches = lb->getPerProcessorPatchSet(level);
+    //    const Uintah::PatchSet* localPatches = m_loadBalancer->getPerProcessorPatchSet(level);
     const Uintah::PatchSet* const localPatches = get_patchset( USE_FOR_TASKS, level, sched );
     {
       // add a task to update current simulation time
@@ -1603,8 +1600,7 @@ namespace WasatchCore{
     //________________________________________________________
     // add a task to populate a "field" with the current time.
     // This is required by the time integrator.
-//    Uintah::LoadBalancerPort * lb = sched->getLoadBalancer();
-//    const Uintah::PatchSet* localPatches = lb->getPerProcessorPatchSet(level);
+//    const Uintah::PatchSet* localPatches =  m_loadBalancer->getPerProcessorPatchSet(level);
     const Uintah::PatchSet* const localPatches = get_patchset( USE_FOR_TASKS, level, sched );
     {
       // add a task to update current simulation time
@@ -1813,13 +1809,13 @@ namespace WasatchCore{
     switch ( pss ) {
 
       case USE_FOR_TASKS:
-        // return sched->getLoadBalancer()->getPerProcessorPatchSet(level);
+        // return  m_loadBalancer->getPerProcessorPatchSet(level);
         return level->eachPatch();
         break;
 
       case USE_FOR_OPERATORS: {
         const int levelID = level->getID();
-        const Uintah::PatchSet* const allPatches = sched->getLoadBalancer()->getPerProcessorPatchSet(level);
+        const Uintah::PatchSet* const allPatches = m_loadBalancer->getPerProcessorPatchSet(level);
         const Uintah::PatchSubset* const localPatches = allPatches->getSubset( d_myworld->myRank() );
 
         std::map< int, const Uintah::PatchSet* >::iterator ip = patchesForOperators_.find( levelID );
@@ -1830,7 +1826,7 @@ namespace WasatchCore{
         // jcs: this results in "normal" scheduling and WILL NOT WORK FOR LINEAR SOLVES
         //      in that case, we need to use "gang" scheduling: addAll( localPatches )
         patches->addEach( localPatches->getVector() );
-        //     const std::set<int>& procs = sched->getLoadBalancer()->getNeighborhoodProcessors();
+        //     const std::set<int>& procs =  m_loadBalancer->getNeighborhoodProcessors();
         //     for( std::set<int>::const_iterator ip=procs.begin(); ip!=procs.end(); ++ip ){
         //       patches->addEach( allPatches->getSubset( *ip )->getVector() );
         //     }
@@ -1863,14 +1859,17 @@ namespace WasatchCore{
  int
  Wasatch::computeTaskGraphIndex()
  {
-   // component specifies task graph index  for next timestep. SimController passes this to scheduler for execution
+   // The component specifies task graph index for next
+   // timestep. SimController passes this to scheduler for execution.
    if (doRadiation_) {
 
-     // setup the correct task graph for execution
+     // Setup the correct task graph for execution.
      int time_step = m_sharedState->getCurrentTopLevelTimeStep();
 
-     // also do radiation solve on timestep 1
-     int task_graph_index = ((time_step % radCalcFrequency_ == 0) || (time_step == 1) ? Uintah::RMCRTCommon::TG_RMCRT : Uintah::RMCRTCommon::TG_CARRY_FORWARD);
+     // Also do radiation solve on timestep 1.
+     int task_graph_index =
+       ((time_step % radCalcFrequency_ == 0) ||
+	(time_step == 1) ? Uintah::RMCRTCommon::TG_RMCRT : Uintah::RMCRTCommon::TG_CARRY_FORWARD);
 
      return task_graph_index;
    }

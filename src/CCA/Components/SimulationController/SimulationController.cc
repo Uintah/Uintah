@@ -40,7 +40,7 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Util/DOUT.hpp>
 
-#include <CCA/Ports/LoadBalancerPort.h>
+#include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Output.h>
 #include <CCA/Ports/ProblemSpecInterface.h>
 #include <CCA/Ports/Regridder.h>
@@ -78,7 +78,6 @@ Uintah::Dout g_comp_timings(      "ComponentTimings",           false );
 Uintah::Dout g_indv_comp_timings( "IndividualComponentTimings", false );
 
 }
-
 
 namespace Uintah {
 
@@ -261,6 +260,10 @@ SimulationController::SimulationController( const ProcessorGroup * myworld
 
   ResetStats();
 
+#ifdef HAVE_VISIT
+  m_visitSimData = scinew visit_simulation_data();
+#endif
+
 } // end SimulationController constructor
 
 //______________________________________________________________________
@@ -274,15 +277,18 @@ SimulationController::~SimulationController()
 #ifdef USE_PAPI_COUNTERS
   delete m_papi_event_values;
 #endif
+
+#ifdef HAVE_VISIT
+  delete m_visitSimData;
+#endif
 }
   
 //______________________________________________________________________
 //
 void
-SimulationController::setPostProcessFlags( const std::string & fromDir )
+SimulationController::setPostProcessFlags()
 {
-  m_post_process_uda  = true;
-  m_from_dir          = fromDir;
+  m_post_process_uda = true;
 }
 
 //______________________________________________________________________
@@ -300,6 +306,12 @@ SimulationController::getComponents( void )
 
   if( !m_scheduler ) {
     throw InternalError("dynamic_cast of 'm_scheduler' failed!", __FILE__, __LINE__);
+  }
+
+  m_loadBalancer = dynamic_cast<LoadBalancer*>( getPort("load balancer") );
+
+  if( !m_loadBalancer ) {
+    throw InternalError("dynamic_cast of 'm_loadBalancer' failed!", __FILE__, __LINE__);
   }
 
   m_regridder = dynamic_cast<Regridder*>( getPort("regridder") );
@@ -324,7 +336,7 @@ SimulationController::releaseComponents( void )
   releasePort( "load balancer" );
   releasePort( "regridder" );
   releasePort( "output" );
-
+ 
   m_app       = nullptr;
   m_scheduler = nullptr;
   m_regridder = nullptr;
@@ -518,9 +530,7 @@ void
 SimulationController::loadBalancerSetup( void )
 {
   // Set up the load balancer.
-  m_lb = m_scheduler->getLoadBalancer();
-
-  m_lb->setRunTimeStats( &m_runtime_stats );
+  m_loadBalancer->setRunTimeStats( &m_runtime_stats );
 
   //  Set the dimensionality of the problem.
   IntVector low, high, size;
@@ -528,11 +538,11 @@ SimulationController::loadBalancerSetup( void )
 
   size = high - low - m_current_gridP->getLevel(0)->getExtraCells()*IntVector(2,2,2);
   
-  m_lb->setDimensionality(size[0] > 1, size[1] > 1, size[2] > 1);
+  m_loadBalancer->setDimensionality(size[0] > 1, size[1] > 1, size[2] > 1);
  
   // In addition, do this step after regridding setup as the minimum
   // patch size that the regridder will create will be known.
-  m_lb->problemSetup( m_ups, m_current_gridP, m_app->getSimulationStateP() );
+  m_loadBalancer->problemSetup( m_ups, m_current_gridP, m_app->getSimulationStateP() );
 }
 
 //______________________________________________________________________
@@ -540,8 +550,6 @@ SimulationController::loadBalancerSetup( void )
 void
 SimulationController::applicationSetup( void )
 {
-  m_app->getComponents();
-
   // Pass the m_restart_ps to the component's problemSetup.  For
   // restarting, pull the <MaterialProperties> from the m_restart_ps.
   // If the properties are not available, then pull the properties
@@ -569,7 +577,7 @@ SimulationController::timeStateSetup()
     m_restart_archive->restartInitialize( m_restart_index,
                                           m_current_gridP,
                                           m_scheduler->get_dw(1),
-                                          m_lb,
+                                          m_loadBalancer,
                                           &simTimeStart );
 
     // Set the time step to the restart time step.
@@ -578,8 +586,9 @@ SimulationController::timeStateSetup()
     // Set the simulation time to the restart simulation time.
     m_app->setSimTimeStart( simTimeStart );
 
-    // Set the delta T to the restart delta T.
-    m_app->restartDelT( m_restart_archive->getOldDelt( m_restart_index ) );
+    // Set the next delta T. Note the old delta T is a default and
+    // normally would not be used.
+    m_app->setNextDelT( m_restart_archive->getOldDelt( m_restart_index ) );
     
     // Tell the scheduler the generation of the re-started simulation.
     // (Add +1 because the scheduler will be starting on the next
@@ -589,11 +598,6 @@ SimulationController::timeStateSetup()
     // This delete is an enigma. If it is called then memory is not
     // leaked, but sometimes if is called, then everything segfaults.
     // delete m_restart_archive;
-  }
-  else /* if( !m_restarting ) */ {
-    m_app->setTimeStep( 0 );
-    m_app->setSimTimeStart( 0 );
-    m_app->setDelT( 0 );
   }
 }
 
@@ -644,9 +648,33 @@ void SimulationController::ResetStats( void )
 
 //______________________________________________________________________
 //
+void
+SimulationController::ScheduleReportStats( bool header )
+{
+  Task* task = scinew Task("SimulationController::ReportStats",
+                           this, &SimulationController::ReportStats, header);
+  
+  task->setType(Task::OncePerProc);
+
+  // Require delta T so that the task gets scheduled
+  // correctly. Otherwise the scheduler/taskgraph will toss an error :
+  // Caught std exception: map::at: key not found
+  task->requires(Task::NewDW, m_app->getDelTLabel() );
+
+  m_scheduler->addTask(task,
+		       m_loadBalancer->getPerProcessorPatchSet(m_current_gridP),
+		       m_app->getSimulationStateP()->allMaterials() );
+
+  // std::cerr << "*************" << __FUNCTION__ << "  " << __LINE__ << "  " << header << std::endl;
+}
 
 void
-SimulationController::ReportStats( bool header /* = false */ )
+SimulationController::ReportStats(const ProcessorGroup*,
+                                  const PatchSubset*,
+                                  const MaterialSubset*,
+                                        DataWarehouse*,
+                                        DataWarehouse*,
+                                        bool header )
 {
   // Get and reduce the performance runtime stats
   getMemoryStats();
@@ -658,17 +686,18 @@ SimulationController::ReportStats( bool header /* = false */ )
 
   // Reduce the MPI runtime stats.
   MPIScheduler * mpiScheduler = dynamic_cast<MPIScheduler*>( m_scheduler.get_rep() );
+
   if( mpiScheduler ) {
     mpiScheduler->mpi_info_.reduce( m_regridder && m_regridder->useDynamicDilation(), d_myworld );
   }
-  
+
   // Print the stats for this time step
   if( d_myworld->myRank() == 0 && header ) {
     std::ostringstream message;
-    message << std::endl;
-    message << "Simulation and run time stats are reported "
-            << "at the end of each time step" << std::endl;
-    message << "EMA == Wall time as an exponential moving average "
+    message << std::endl
+            << "Simulation and run time stats are reported "
+            << "at the end of each time step" << std::endl
+            << "EMA == Wall time as an exponential moving average "
             << "using a window of the last " << m_wall_timers.getWindow()
             << " time steps" << std::endl;
 
@@ -749,7 +778,7 @@ SimulationController::ReportStats( bool header /* = false */ )
 
       if (m_runtime_stats[e] > 0) {
         message << "rank: " << d_myworld->myRank() << " "
-	              << std::left << std::setw(19) << m_runtime_stats.getName(e) << " ["
+                      << std::left << std::setw(19) << m_runtime_stats.getName(e) << " ["
                 << m_runtime_stats.getUnits(e) << "]: " << m_runtime_stats[e] << "\n";
       }
     }
@@ -761,7 +790,7 @@ SimulationController::ReportStats( bool header /* = false */ )
     for (unsigned int i = 0; i < m_other_stat.size(); ++i) {
       if (m_other_stat[i] > 0) {
         message << "rank: " << d_myworld->myRank() << " "
-	              << std::left << std::setw(19) << m_other_stat.getName(i) << " ["
+                      << std::left << std::setw(19) << m_other_stat.getName(i) << " ["
                 << m_other_stat.getUnits(i) << "]: " << m_other_stat[i] << "\n";
       }
     }
@@ -777,14 +806,14 @@ SimulationController::ReportStats( bool header /* = false */ )
     message << std::left
             << "Timestep "   << std::setw(8)  << m_app->getTimeStep()
             << "Time="       << std::setw(12) << m_app->getSimTime()
-//            << "delT="       << setw(12) << m_app->getPrevDelT()
-            << "Next delT="  << std::setw(12) << m_app->getDelT()
+            // << "delT="       << std::setw(12) << m_app->getDelT()
+            << "Next delT="  << std::setw(12) << m_app->getNextDelT()
 
             << "Wall Time=" << std::setw(10) << m_wall_timers.GetWallTime()
-//            << "All Time steps= " << setw(12) << walltimers.TimeStep().seconds()
-//            << "Current Time Step= " << setw(12) << timeStep.seconds()
+            // << "All Time steps= " << std::setw(12) << walltimers.TimeStep().seconds()
+            // << "Current Time Step= " << std::setw(12) << timeStep.seconds()
             << "EMA="        << std::setw(12) << m_wall_timers.ExpMovingAverage().seconds()
-//            << "In-situ Time = " << setw(12) << walltimers.InSitu().seconds()
+           // << "In-situ Time = " << std::setw(12) << walltimers.InSitu().seconds()
       ;
 
     // Report on the memory used.
@@ -1021,7 +1050,7 @@ SimulationController::getPAPIStats( )
     for (std::map<int, PapiEvent>::iterator iter = m_papi_events.begin(); iter != m_papi_events.end(); ++iter) {
       if (iter->second.m_is_supported) {
         m_runtime_stats[ iter->second.m_sim_stat_name ] =
-	        static_cast<double>(m_papi_event_values[m_papi_events.find(iter->first)->second.m_event_value_idx]);
+                static_cast<double>(m_papi_event_values[m_papi_events.find(iter->first)->second.m_event_value_idx]);
       }
     }
   }
@@ -1039,12 +1068,42 @@ SimulationController::getPAPIStats( )
   
 //______________________________________________________________________
 //
-  
-#ifdef HAVE_VISIT
-bool
-SimulationController::CheckInSitu( visit_simulation_data * visitSimData,
-                                   bool                    first )
+void
+SimulationController::ScheduleCheckInSitu( bool first )
 {
+#ifdef HAVE_VISIT
+  if( getVisIt() ) {
+
+    Task* task = scinew Task("SimulationController::CheckInSitu",
+                             this, &SimulationController::CheckInSitu, first);
+    
+    task->setType(Task::OncePerProc);
+
+    // Require delta T so that the task gets scheduled
+    // correctly. Otherwise the scheduler/taskgraph will toss an error
+    // : Caught std exception: map::at: key not found
+    task->requires(Task::NewDW, m_app->getDelTLabel() );
+
+    m_scheduler->addTask(task,
+			 m_loadBalancer->getPerProcessorPatchSet(m_current_gridP),
+			 m_app->getSimulationStateP()->allMaterials() );
+
+    // std::cerr << "*************" << __FUNCTION__ << "  " << __LINE__ << "  " << first << std::endl;
+  }
+#endif      
+}
+
+//______________________________________________________________________
+//
+void
+SimulationController::CheckInSitu(const ProcessorGroup*,
+                                  const PatchSubset*,
+                                  const MaterialSubset*,
+                                        DataWarehouse*,
+                                        DataWarehouse*,
+                                        bool first)
+{
+#ifdef HAVE_VISIT
   // If VisIt has been included into the build, check the lib sim
   // state to see if there is a connection and if so check to see if
   // anything needs to be done.
@@ -1056,47 +1115,39 @@ SimulationController::CheckInSitu( visit_simulation_data * visitSimData,
     m_wall_timers.InSitu.start();
 
     // Update all of the simulation grid and time dependent variables.
-    visit_UpdateSimData( visitSimData, m_current_gridP,
-			 m_app->getSimTime(),
-			 m_app->getTimeStep(),
-			 m_app->getPrevDelT(),
-			 m_app->getDelT(),
+    visit_UpdateSimData( m_visitSimData, m_current_gridP,
+                         m_app->getSimTime(),
+                         m_app->getTimeStep(),
+                         m_app->getDelT(),
+                         m_app->getNextDelT(),
                          first,
-			 m_app->isLastTimeStep(m_wall_timers.GetWallTime()) );
+                         m_app->isLastTimeStep(m_wall_timers.GetWallTime()) );
 
     // Check the state - if the return value is true the user issued
     // a termination.
-    if( visit_CheckState( visitSimData ) ) {
-      return true;
+    if( visit_CheckState( m_visitSimData ) ) {
+      m_app->mayEndSimulation(true);
     }
+
+//     std::cerr << "*************" << __FUNCTION__ << "  " << __LINE__ << "  " << first << std::endl;
 
     // This function is no longer used as last is now used in the
     // UpdateSimData which in turn will flip the state.
       
     // Check to see if at the last iteration. If so stop so the
     // user can have once last chance see the data.
-    // if( visitSimData->stopAtLastTimeStep && last )
-    // visit_EndLibSim( visitSimData );
-
-    // The user may have adjusted delT so get it from the data
-    // warehouse. If not then this call is a no-op.
-    DataWarehouse* newDW = m_scheduler->getLastDW();
-    delt_vartype delT_var;
-    newDW->get( delT_var, m_app->getDelTLabel() );
-    m_app->setDelT( delT_var );
+    // if( m_visitSimData->stopAtLastTimeStep && last )
+    // visit_EndLibSim( m_visitSimData );
 
     // Add the modified variable information into index.xml file.
-    getOutput()->writeto_xml_files(m_app->getTimeStep(),
-				   visitSimData->modifiedVars);
+    m_output->writeto_xml_files(m_visitSimData->modifiedVars);
 
     m_wall_timers.InSitu.stop();
 
     // Note this timer is used as a laptimer.
     m_wall_timers.TimeStep.start();
   }
-
-  return false;
-}
 #endif
+}
 
 } // namespace Uintah

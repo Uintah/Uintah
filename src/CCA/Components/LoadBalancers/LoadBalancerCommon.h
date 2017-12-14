@@ -25,7 +25,7 @@
 #ifndef CCA_COMPONENTS_LOADBALANCERS_LOADBALANCERCOMMON_H
 #define CCA_COMPONENTS_LOADBALANCERS_LOADBALANCERCOMMON_H
 
-#include <CCA/Ports/LoadBalancerPort.h>
+#include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/SFC.h>
 
 #include <CCA/Components/SimulationController/RunTimeStatsEnums.h>
@@ -42,6 +42,8 @@
 #include <vector>
 
 namespace Uintah {
+
+class ApplicationInterface;
 
 /**************************************
 
@@ -104,7 +106,7 @@ public:
 /// the load balancer subclasses.  The main function that sets load balancers
 /// apart is getPatchwiseProcessorAssignment - how it determines which patch
 /// to assign on which procesor.
-class LoadBalancerCommon : public LoadBalancerPort, public UintahParallelComponent {
+class LoadBalancerCommon : public LoadBalancer, public UintahParallelComponent {
 
 public:
 
@@ -112,6 +114,9 @@ public:
 
   virtual ~LoadBalancerCommon();
 
+  // Methods for managing the components attached via the ports.
+  virtual void setComponents( UintahParallelComponent *comp ) {};
+  virtual void getComponents();
   virtual void releaseComponents();
 
   //! Returns the MPI rank of the process on which the patch is to be executed.
@@ -120,6 +125,8 @@ public:
   //! The implementation in LoadBalancerCommon.cc is for dynamice load balancers.
   //! The Simple and SingleProcessor override this function with default implementations.
   virtual int getOldProcessorAssignment( const Patch * patch );
+
+  virtual bool needRecompile( const GridP& ) = 0;
 
   /// Goes through the Detailed tasks and assigns each to its own processor.
   virtual void assignResources( DetailedTasks & tg );
@@ -202,6 +209,8 @@ public:
 
 protected:
 
+  ApplicationInterface* m_application{nullptr};
+  
   // Calls space-filling curve on level, and stores results in pre-allocated output
   void useSFC( const LevelP & level, int * output) ;
     
@@ -217,8 +226,11 @@ protected:
   virtual const PatchSet* createPerProcessorPatchSet( const GridP  & grid  );
   virtual const PatchSet* createOutputPatchSet(       const LevelP & level );
 
-  double m_last_lb_time{0.0};
+  int    m_lb_timeStep_interval{0};
+  int    m_last_lb_timeStep{0};
+
   double m_lb_interval{0.0};
+  double m_last_lb_simTime{0.0};
   bool   m_check_after_restart{false};
 
   // The assignment vectors are stored 0-n.  This stores the start patch number so we can

@@ -29,6 +29,7 @@
 #include <CCA/Components/Arches/ChemMix/MixingRxnModel.h>
 #include <CCA/Components/Arches/Properties.h>
 #include <CCA/Components/Arches/ChemMix/TableLookup.h>
+#include <CCA/Components/Arches/HandoffHelper.h>
 #include <CCA/Components/MPMArches/MPMArchesLabel.h>
 #include <CCA/Ports/Scheduler.h>
 
@@ -193,6 +194,7 @@ IntrusionBC::problemSetup( const ProblemSpecP& params, const int ilvl )
         } else if ( vel_type == "massflow" ){
 
           intrusion.type = IntrusionBC::INLET;
+          intrusion.velocity_inlet_type = IntrusionBC::MASSFLOW;
           intrusion.velocity_inlet_generator = scinew FlatVelProf();
 
           double flow_rate = 0.0;
@@ -486,11 +488,28 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
         MixingRxnModel* mixingTable = _table_lookup->get_table();
         StringVec iv_var_names = mixingTable->getAllIndepVars();
 
-        BCIterator::iterator iBC_iter = (iIntrusion->second.bc_cell_iterator).find(patchID);
+        BCIterator::iterator iBC_iter = (iIntrusion->second.interior_cell_iterator).find(patchID);
+
+        if ( iIntrusion->second.velocity_inlet_type == MASSFLOW ){
+          for ( auto i = iv_var_names.begin(); i != iv_var_names.end(); i++ ){
+
+            std::map<std::string, scalarInletBase*>::iterator scalar_iter
+              = iIntrusion->second.scalar_map.find( *i );
+
+            if ( scalar_iter == iIntrusion->second.scalar_map.end() ){
+              throw InvalidValue("Error: Cannot compute property values for IntrusionBC. Make sure all IV's are specified! ("+*i+")", __FILE__, __LINE__);
+            }
+
+            if ( !scalar_iter->second->is_flat() ){
+              throw InvalidValue("Error: Cannot use massfloat condition on velocity with non-flat condition on iv scalars! (see "+*i+" spec in input file)", __FILE__, __LINE__);
+            }
+
+          }
+        }
 
         // start face iterator
         bool found_valid_density = false;
-        double found_density = 0.0;
+        double flat_density = 0.0;
 
         for ( std::vector<IntVector>::iterator i = iBC_iter->second.begin(); i != iBC_iter->second.end(); i++){
 
@@ -502,16 +521,11 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
 
           for ( unsigned int niv = 0; niv < iv_var_names.size(); niv++ ){
 
-           // iv[niv] = 0.0;
+            std::map<std::string, scalarInletBase*>::iterator scalar_iter
+              = iIntrusion->second.scalar_map.find( iv_var_names[niv] );
 
-            std::map<std::string, scalarInletBase*>::iterator scalar_iter = iIntrusion->second.scalar_map.find( iv_var_names[niv] );
+            double scalar_var = scalar_iter->second->get_scalar( patch, c );
 
-            if ( scalar_iter == iIntrusion->second.scalar_map.end() ){
-              throw InvalidValue("Error: Cannot compute property values for IntrusionBC. Make sure all IV's are specified!", __FILE__, __LINE__);
-            }
-
-            double scalar_var = scalar_iter->second->get_scalar( c );
-            //iv[niv] = scalar_var;
             iv.push_back(scalar_var);
 
             cout_intrusiondebug << "IntrusionBC::For independent variable " << iv_var_names[niv] << ". Using value = " << scalar_var << std::endl;
@@ -523,7 +537,6 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
           double density = 0.0;
           typedef std::map<std::string, double> DMap;
           DMap inert_list;
-
 
           if ( does_post_mix ){
 
@@ -540,7 +553,8 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
                 throw InvalidValue("Error: Cannot compute property values for IntrusionBC. Make sure all participating inerts are specified!", __FILE__, __LINE__);
               }
 
-              double inert_value = scalar_iter->second->get_scalar( c );
+              double inert_value = scalar_iter->second->get_scalar( patch, c );
+
               inert_list.insert(std::make_pair(name,inert_value));
 
               cout_intrusiondebug << "IntrusionBC::For inert variable " << name << ". Using value = " << inert_value << std::endl;
@@ -548,8 +562,6 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
             }
 
             density = mixingTable->getTableValue(iv, "density",inert_list);
-
-            cout_intrusiondebug << "IntrusionBC::Got a value for density = " << density << std::endl;
 
             //get values for all other scalars that depend on a table lookup:
             for (std::map<std::string, scalarInletBase*>::iterator iter_lookup = iIntrusion->second.scalar_map.begin();
@@ -562,14 +574,13 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
 
                 std::string lookup_name = tab_scalar.get_depend_var_name();
 
-                double lookup_value = mixingTable->getTableValue(iv, lookup_name,inert_list);
+                double lookup_value = mixingTable->getTableValue(iv, lookup_name, inert_list);
 
                 cout_intrusiondebug << "IntrusionBC::Setting scalar " << iter_lookup->first << " to a lookup value of: " << lookup_value << std::endl;
 
-                tab_scalar.set_scalar_constant( lookup_value );
+                tab_scalar.set_scalar_constant( c, lookup_value );
 
               }
-
             }
 
           } else {
@@ -593,7 +604,7 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
 
                 cout_intrusiondebug << "IntrusionBC::Setting scalar " << iter_lookup->first << " to a lookup value of: " << lookup_value << std::endl;
 
-                tab_scalar.set_scalar_constant( lookup_value );
+                tab_scalar.set_scalar_constant( c, lookup_value );
 
               }
 
@@ -601,135 +612,24 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
           }
 
           iIntrusion->second.density_map.insert(std::make_pair(c, density));
+
+          cout_intrusiondebug << "IntrusionBC::Got a value for density = " << density << std::endl;
+
           //
           //Note: Using the last value of density to set the total intrusion density.
           //This is needed for mass flow inlet conditions but assumes a constant density across the face
           if ( std::abs(density) > 1e-10 ){
-            found_density = density;
+            flat_density = density;
             found_valid_density = true;
           }
 
         } // ... end of face iterator ...
 
         if ( found_valid_density ){
-          iIntrusion->second.density = found_density;
+          iIntrusion->second.density = flat_density;
         }
       }
-      if ( !iIntrusion->second.bc_face_iterator.empty() && iIntrusion->second.type != IntrusionBC::SIMPLE_WALL ){
 
-        MixingRxnModel* mixingTable = _table_lookup->get_table();
-        StringVec iv_var_names = mixingTable->getAllIndepVars();
-
-        BCIterator::iterator iBC_iter = (iIntrusion->second.bc_face_iterator).find(patchID);
-
-        // start face iterator
-        bool found_valid_density = false;
-        double found_density = 0.0;
-
-        for ( std::vector<IntVector>::iterator i = iBC_iter->second.begin(); i != iBC_iter->second.end(); i++){
-
-          IntVector c = *i;
-          iv.clear();
-
-          cout_intrusiondebug << "IntrusionBC::For Intrusion named: " << iIntrusion->second.name << std::endl;
-          cout_intrusiondebug << "IntrusionBC::At location = " << c << std::endl;
-
-          for ( unsigned int niv = 0; niv < iv_var_names.size(); niv++ ){
-
-           // iv[niv] = 0.0;
-
-            std::map<std::string, scalarInletBase*>::iterator scalar_iter = iIntrusion->second.scalar_map.find( iv_var_names[niv] );
-
-            if ( scalar_iter == iIntrusion->second.scalar_map.end() ){
-              throw InvalidValue("Error: Cannot compute property values for IntrusionBC. Make sure all IV's are specified!", __FILE__, __LINE__);
-            }
-
-            double scalar_var = scalar_iter->second->get_scalar( c );
-            //iv[niv] = scalar_var;
-            iv.push_back(scalar_var);
-
-            cout_intrusiondebug << "IntrusionBC::For independent variable " << iv_var_names[niv] << ". Using value = " << scalar_var << std::endl;
-
-          }
-
-          bool does_post_mix = mixingTable->doesPostMix();
-
-          double density = 0.0;
-          typedef std::map<std::string, double> DMap;
-          DMap inert_list;
-
-
-          if ( does_post_mix ){
-
-            cout_intrusiondebug << "IntrusionBC::Using inert stream mixing to look up properties" << std::endl;
-
-            typedef std::map<std::string, DMap > IMap;
-            IMap inert_map = mixingTable->getInertMap();
-            for ( IMap::iterator imap =  inert_map.begin();
-                                 imap != inert_map.end(); imap++ ){
-              std::string name = imap->first;
-              std::map<std::string, scalarInletBase*>::iterator scalar_iter = iIntrusion->second.scalar_map.find( name );
-
-              if ( scalar_iter == iIntrusion->second.scalar_map.end() ){
-                throw InvalidValue("Error: Cannot compute property values for IntrusionBC. Make sure all participating inerts are specified!", __FILE__, __LINE__);
-              }
-
-              double inert_value = scalar_iter->second->get_scalar( c );
-              inert_list.insert(std::make_pair(name,inert_value));
-
-              cout_intrusiondebug << "IntrusionBC::For inert variable " << name << ". Using value = " << inert_value << std::endl;
-
-            }
-
-            density = mixingTable->getTableValue(iv, "density",inert_list);
-
-            cout_intrusiondebug << "IntrusionBC::Got a value for density = " << density << std::endl;
-
-            //get values for all other scalars that depend on a table lookup:
-            for (std::map<std::string, scalarInletBase*>::iterator iter_lookup = iIntrusion->second.scalar_map.begin();
-                                                                   iter_lookup != iIntrusion->second.scalar_map.end();
-                                                                   iter_lookup++ ){
-
-              if ( iter_lookup->second->get_type() == scalarInletBase::TABULATED ){
-
-                tabulatedScalar& tab_scalar = dynamic_cast<tabulatedScalar&>(*iter_lookup->second);
-
-                std::string lookup_name = tab_scalar.get_depend_var_name();
-
-                double lookup_value = mixingTable->getTableValue(iv, lookup_name,inert_list);
-
-                cout_intrusiondebug << "IntrusionBC::Setting scalar " << iter_lookup->first << " to a lookup value of: " << lookup_value << std::endl;
-
-                tab_scalar.set_scalar_constant( lookup_value );
-
-              }
-
-            }
-
-          } else {
-
-            cout_intrusiondebug << "IntrusionBC::NOT using inert stream mixing to look up properties" << std::endl;
-
-            density = mixingTable->getTableValue(iv, "density");
-
-            //get values for all other scalars that depend on a table lookup:
-          }
-
-          iIntrusion->second.density_map.insert(std::make_pair(c, density));
-          //
-          //Note: Using the last value of density to set the total intrusion density.
-          //This is needed for mass flow inlet conditions but assumes a constant density across the face
-          if ( std::abs(density) > 1e-10 ){
-            found_density = density;
-            found_valid_density = true;
-          }
-
-        } // ... end of face iterator ...
-
-        if ( found_valid_density ){
-          iIntrusion->second.density = found_density;
-        }
-      }
     }
   }
 }
@@ -784,7 +684,7 @@ IntrusionBC::setIntrusionVelocities( const ProcessorGroup*,
         new_dw->get( area_var, iter->second.bc_area );
         double area = area_var;
 
-        if ( iter->second.mass_flow_rate != 0.0 ){
+        if ( iter->second.velocity_inlet_type == MASSFLOW ){
 
           V = iter->second.mass_flow_rate / ( iter->second.density * area );
 
@@ -1005,9 +905,6 @@ IntrusionBC::setCellType( const ProcessorGroup*,
 
             }
 
-
-
-
             if (!doing_restart) {
               if (curr_cell) {
 
@@ -1195,15 +1092,15 @@ IntrusionBC::printIntrusionInformation( const ProcessorGroup*,
 
         }
 
-        proc0cout << std::endl << " Scalar information: " << std::endl;
+        //proc0cout << std::endl << " Scalar information: " << std::endl;
 
-        for (std::map<std::string, scalarInletBase*>::iterator i_scalar = iter->second.scalar_map.begin();
-            i_scalar != iter->second.scalar_map.end(); i_scalar++) {
-
-          IntVector c(0, 0, 0);
-          proc0cout << "     -> " << i_scalar->first << ":   value = " << i_scalar->second->get_scalar(c) << std::endl;
-
-        }
+        // for (std::map<std::string, scalarInletBase*>::iterator i_scalar = iter->second.scalar_map.begin();
+        //     i_scalar != iter->second.scalar_map.end(); i_scalar++) {
+        //
+        //   IntVector c(0, 0, 0);
+        //   proc0cout << "     -> " << i_scalar->first << ":   value = " << i_scalar->second->get_scalar(patch, c) << std::endl;
+        //
+        // }
 
       }
 
@@ -1224,67 +1121,28 @@ IntrusionBC::setHattedVelocity( const Patch*  patch,
                                 SFCXVariable<double>& u,
                                 SFCYVariable<double>& v,
                                 SFCZVariable<double>& w,
-                                constCCVariable<double>& density )
+                                constCCVariable<double>& density,
+                                bool& set_nonnormal_values )
 {
-  // go through each intrusion
-  // go through the iterator for this patch
-  // set the velocities according to method chosen in input file
-  // exit
+
   const int p = patch->getID();
 
   if ( _intrusion_on ) {
 
     for ( IntrusionMap::iterator iIntrusion = _intrusion_map.begin(); iIntrusion != _intrusion_map.end(); ++iIntrusion ){
 
-      BCIterator::iterator  iBC_iter = (iIntrusion->second.bc_face_iterator).find(p);
+      if ( iIntrusion->second.type != SIMPLE_WALL ){
 
-      for ( std::vector<IntVector>::iterator i = iBC_iter->second.begin(); i != iBC_iter->second.end(); i++){
+        BCIterator::iterator  iBC_iter = (iIntrusion->second.bc_face_iterator).find(p);
+        std::vector<int> directions = iIntrusion->second.directions;
 
-        IntVector c = *i;
+        iIntrusion->second.velocity_inlet_generator->set_velocity( patch, iBC_iter, directions,
+                                                                   u, v, w, set_nonnormal_values );
 
-        for ( int idir = 0; idir < 6; idir++ ){
-
-          if ( iIntrusion->second.directions[idir] != 0 ){
-
-            iIntrusion->second.velocity_inlet_generator->set_velocity( idir, c, u, v, w, density,
-                iIntrusion->second.density );
-
-          }
-        }
       }
+
     }
   }
-}
-
-//_________________________________________
-void
-IntrusionBC::setScalar( const int p,
-                        const std::string scalar_name,
-                        CCVariable<double>& scalar ){
-
-  std::cout << " ERROR!  DANGER WILL ROBINSON!" << std::endl;
-  throw InvalidValue("Error: IntrusionBC::setScalar not implemented ", __FILE__, __LINE__);
-//  if ( _intrusion_on ) {
-//
-//    for ( IntrusionMap::iterator iIntrusion = _intrusion_map.begin(); iIntrusion != _intrusion_map.end(); ++iIntrusion ){
-//
-//      std::map<std::string,double>::iterator scalar_iter =  iIntrusion->second.varnames_values_map.find( scalar_name );
-//
-//      if ( scalar_iter == iIntrusion->second.varnames_values_map.end() ){
-//        throw InvalidValue("Error: Cannot match scalar value to scalar name in intrusion. ", __FILE__, __LINE__);
-//      }
-//
-//      if ( !iIntrusion->second.bc_face_iterator.empty() ) {
-//        BCIterator::iterator  iBC_iter = (iIntrusion->second.bc_face_iterator).find(p);
-//
-//        for ( std::vector<IntVector>::iterator i = iBC_iter->second.begin(); i != iBC_iter->second.end(); i++){
-//
-//          //scalar[*i] = scalar_iter->second;
-//
-//        }
-//      }
-//    }
-//  }
 }
 
 //_________________________________________
@@ -1311,16 +1169,22 @@ IntrusionBC::addScalarRHS( const Patch* patch,
 
       if ( iIntrusion->second.type != IntrusionBC::SIMPLE_WALL ){
 
-        //std::map<std::string,double>::iterator scalar_iter =  iIntrusion->second.varnames_values_map.find( scalar_name );
         std::map<std::string, scalarInletBase*>::iterator scalar_iter = iIntrusion->second.scalar_map.find( scalar_name );
 
-        //if ( scalar_iter == iIntrusion->second.varnames_values_map.end() ){
         bool found_bc = true;
         if ( scalar_iter == iIntrusion->second.scalar_map.end() ){
-          if ( !iIntrusion->second.ignore_missing_bc )
-            throw InvalidValue("Error: Cannot match scalar value to scalar name in intrusion: "+scalar_name, __FILE__, __LINE__);
+          if ( !iIntrusion->second.ignore_missing_bc ){
+            std::stringstream msg;
+            msg << "Error: Cannot match scalar value to scalar name in intrusion: " << scalar_name << std::endl
+            << "Use the <ignore_missing_bc/> tag if you wish to ignore/assume zero conditions for non-specified scalars " << std::endl;
+            throw InvalidValue(msg.str(), __FILE__, __LINE__);
+          }
           found_bc = false;
         }
+
+        Vector relative_xyz = scalar_iter->second->get_relative_xyz();
+        Point xyz(relative_xyz[0], relative_xyz[1], relative_xyz[2]);
+        IntVector rel_ijk = patch->getLevel()->getCellIndex( xyz );
 
         if ( !iIntrusion->second.interior_cell_iterator.empty() && found_bc ) {
 
@@ -1329,6 +1193,7 @@ IntrusionBC::addScalarRHS( const Patch* patch,
           for ( std::vector<IntVector>::iterator i = iBC_iter->second.begin(); i != iBC_iter->second.end(); i++){
 
             IntVector c = *i;
+            IntVector c_rel = c - rel_ijk;
 
             for ( int idir = 0; idir < 6; idir++ ){
 
@@ -1336,11 +1201,11 @@ IntrusionBC::addScalarRHS( const Patch* patch,
 
                 double face_den = 1.0;
 
-                const Vector V = iIntrusion->second.velocity_inlet_generator->get_velocity(c);
+                const Vector V = iIntrusion->second.velocity_inlet_generator->get_velocity(c, patch);
 
                 double face_vel = V[_iHelp[idir]];
 
-                scalar_iter->second->set_scalar_rhs( idir, c, RHS, face_den, face_vel, area );
+                scalar_iter->second->set_scalar_rhs( idir, c, c_rel, RHS, face_den, face_vel, area );
 
               }
             }
@@ -1375,16 +1240,23 @@ IntrusionBC::addScalarRHS( const Patch* patch,
 
       if ( iIntrusion->second.type != IntrusionBC::SIMPLE_WALL ){
 
-        //std::map<std::string,double>::iterator scalar_iter =  iIntrusion->second.varnames_values_map.find( scalar_name );
         std::map<std::string, scalarInletBase*>::iterator scalar_iter = iIntrusion->second.scalar_map.find( scalar_name );
 
-        //if ( scalar_iter == iIntrusion->second.varnames_values_map.end() ){
         bool found_bc = true;
         if ( scalar_iter == iIntrusion->second.scalar_map.end() ){
-          if ( !iIntrusion->second.ignore_missing_bc )
-            throw InvalidValue("Error: Cannot match scalar value to scalar name in intrusion: "+scalar_name, __FILE__, __LINE__);
+          if ( !iIntrusion->second.ignore_missing_bc ){
+            std::stringstream msg;
+            msg << "Error: Cannot match scalar value to scalar name in intrusion: " << scalar_name << std::endl
+            << "Use the <ignore_missing_bc/> tag if you wish to ignore/assume zero conditions for non-specified scalars " << std::endl;
+            throw InvalidValue(msg.str(), __FILE__, __LINE__);
+          }
           found_bc = false;
         }
+
+        // The relative_ijk value is (0,0,0) unless this BC is a handoff file type
+        Vector relative_xyz = scalar_iter->second->get_relative_xyz();
+        Point xyz(relative_xyz[0], relative_xyz[1], relative_xyz[2]);
+        IntVector rel_ijk = patch->getLevel()->getCellIndex( xyz );
 
         if ( !iIntrusion->second.interior_cell_iterator.empty() && found_bc ) {
 
@@ -1393,18 +1265,27 @@ IntrusionBC::addScalarRHS( const Patch* patch,
           for ( std::vector<IntVector>::iterator i = iBC_iter->second.begin(); i != iBC_iter->second.end(); i++){
 
             IntVector c = *i;
+            IntVector c_rel = *i - rel_ijk;
 
             for ( int idir = 0; idir < 6; idir++ ){
 
               if ( iIntrusion->second.directions[idir] != 0 ){
 
-                double face_den = iIntrusion->second.density;
+                //double face_den = iIntrusion->second.density;
+                auto den_iter = iIntrusion->second.density_map.find(c);
+                double face_den = 0.;
+                if ( den_iter != iIntrusion->second.density_map.end() ){
+                  face_den = den_iter->second;
+                } else {
+                  //throw InvalidValue("Error: Face density not found.",__FILE__, __LINE__);
+                  face_den = iIntrusion->second.density;
+                }
 
-                const Vector V = iIntrusion->second.velocity_inlet_generator->get_velocity(c);
+                const Vector V = iIntrusion->second.velocity_inlet_generator->get_velocity(c, patch);
 
                 double face_vel = V[_iHelp[idir]];
 
-                scalar_iter->second->set_scalar_rhs( idir, c, RHS, face_den, face_vel, area );
+                scalar_iter->second->set_scalar_rhs( idir, c, c_rel, RHS, face_den, face_vel, area );
 
               }
             }

@@ -93,6 +93,7 @@ SRCS += $(SRCDIR)/Arches.cc                    \
         $(SRCDIR)/TurbulenceModel.cc           \
         $(SRCDIR)/WBCHelper.cc                 \
         $(SRCDIR)/GridTools.cc                 \
+        $(SRCDIR)/HandoffHelper.cc             \
         $(SRCDIR)/TurbulenceModelPlaceholder.cc
 
 ifeq ($(HAVE_CUDA),yes)

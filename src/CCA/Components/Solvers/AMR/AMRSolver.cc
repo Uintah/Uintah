@@ -28,7 +28,7 @@
 #include <CCA/Components/Solvers/AMR/HypreDriver.h>
 #include <CCA/Components/Solvers/AMR/HypreSolverParams.h>
 #include <CCA/Components/Solvers/MatrixUtil.h>
-#include <CCA/Ports/LoadBalancerPort.h>
+#include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Scheduler.h>
 
 #include <Core/Exceptions/ConvergenceFailure.h>
@@ -51,14 +51,14 @@ using namespace Uintah;
 
 //__________________________________
 //  To turn on normal output
-//  setenv SCI_DEBUG "HYPRE_DOING_COUT:+"
+//  setenv SCI_DEBUG "SOLVER_DOING_COUT:+"
 
-static DebugStream cout_doing("HYPRE_DOING_COUT", false);
-static DebugStream cout_dbg("HYPRE_DBG", false);
+static DebugStream cout_doing("SOLVER_DOING_COUT", false);
+static DebugStream cout_dbg("SOLVER_DBG", false);
 
 
 AMRSolver::AMRSolver(const ProcessorGroup* myworld)
-  : UintahParallelComponent(myworld) {}
+  : SolverCommon(myworld) {}
   
 AMRSolver::~AMRSolver() {}
 
@@ -147,7 +147,7 @@ AMRSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
     interface = HypreSStruct;   /* A uniform grid */
   }
 
-  LoadBalancerPort * lb             = sched->getLoadBalancer();
+  LoadBalancer * lb             = sched->getLoadBalancer();
   const PatchSet   * perProcPatches = lb->getPerProcessorPatchSet(level->getGrid());
   
   HypreDriver* that = newHypreDriver(interface,level.get_rep(), matls, A, which_A_dw,x, modifies_x, b, which_b_dw, guess, which_guess_dw, dparams, perProcPatches);

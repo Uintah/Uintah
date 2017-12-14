@@ -69,9 +69,10 @@ WARNING
 ****************************************/
   class planeExtract : public AnalysisModule {
   public:
-    planeExtract(ProblemSpecP& prob_spec,
-                 SimulationStateP& sharedState,
-		   Output* output);
+    planeExtract(const ProcessorGroup* myworld,
+		 const SimulationStateP sharedState,
+		 const ProblemSpecP& module_spec);
+    
     planeExtract();
                     
     virtual ~planeExtract();
@@ -196,16 +197,11 @@ WARNING
     std::vector<VarLabel*> d_varLabels;
     std::vector<int> d_varMatl;
     
-    SimulationStateP d_sharedState;
     std::vector<plane*>   d_planes;
-    Output*          d_output;
-    ProblemSpecP     d_prob_spec;
     std::set<std::string> d_isDirCreated;
     
     MaterialSet*     d_matl_set;
-    MaterialSubset* d_zero_matl;
-    
-  
+    MaterialSubset* d_zero_matl;  
   };
 }
 

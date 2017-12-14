@@ -69,9 +69,10 @@ WARNING
 ****************************************/
   class lineExtract : public AnalysisModule {
   public:
-    lineExtract(ProblemSpecP& prob_spec,
-		SimulationStateP& sharedState,
-		Output* output);
+    lineExtract(const ProcessorGroup* myworld,
+		const SimulationStateP sharedState,
+		const ProblemSpecP& module_spec);
+    
     lineExtract();
                     
     virtual ~lineExtract();
@@ -141,17 +142,13 @@ WARNING
     double d_stopTime;
     std::vector<VarLabel*> d_varLabels;
     std::vector<int> d_varMatl;
-    SimulationStateP d_sharedState;
     std::vector<line*> d_lines;
-    Output* d_output;
-    ProblemSpecP d_prob_spec;
+
     const Material* d_matl;
     MaterialSet* d_matl_set;
     std::set<std::string> d_isDirCreated;
     
-    MaterialSubset* d_zero_matl;
-    
-  
+    MaterialSubset* d_zero_matl;  
   };
 }
 

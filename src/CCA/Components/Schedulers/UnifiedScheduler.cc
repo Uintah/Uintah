@@ -242,10 +242,9 @@ void init_threads( UnifiedScheduler * sched, int num_threads )
 //______________________________________________________________________
 //
 UnifiedScheduler::UnifiedScheduler( const ProcessorGroup   * myworld
-                                  , const Output           * oport
                                   ,       UnifiedScheduler * parentScheduler
                                   )
-  : MPIScheduler(myworld, oport, parentScheduler)
+  : MPIScheduler(myworld, parentScheduler)
 {
 
 #ifdef HAVE_CUDA
@@ -563,7 +562,7 @@ UnifiedScheduler::runTask( DetailedTask*         dtask
         if (!m_is_copy_data_timestep &&
 	    dtask->getTask()->getType() != Task::Output) {
           //add contribution for patchlist
-          getLoadBalancer()->addContribution(dtask, total_task_time);
+          m_loadBalancer->addContribution(dtask, total_task_time);
         }
       }
     }
@@ -661,7 +660,7 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
   m_abort_point = 987654;
 
   if( m_reloc_new_pos_label && m_dws[m_dwmap[Task::OldDW]] != nullptr ) {
-    m_dws[m_dwmap[Task::OldDW]]->exchangeParticleQuantities(m_detailed_tasks, getLoadBalancer(), m_reloc_new_pos_label, iteration);
+    m_dws[m_dwmap[Task::OldDW]]->exchangeParticleQuantities(m_detailed_tasks, m_loadBalancer, m_reloc_new_pos_label, iteration);
   }
 
   m_curr_iteration = iteration;
@@ -1235,7 +1234,7 @@ UnifiedScheduler::runTasks( int thread_id )
           // it wasn't going to output data, but that would require more task graph recompilations,
           // which can be even costlier overall.  So we do the check here.)
 
-          if ((m_out_port->isOutputTimestep() || m_out_port->isCheckpointTimestep())
+          if ((m_output->isOutputTimeStep() || m_output->isCheckpointTimeStep())
               || ((readyTask->getTask()->getName() != "DataArchiver::outputVariables")
                   && (readyTask->getTask()->getName() != "DataArchiver::outputVariables(checkpoint)"))) {
             initiateD2H(readyTask);
@@ -1307,7 +1306,6 @@ UnifiedScheduler::prepareGpuDependencies( DetailedTask          * dtask
                                         , OnDemandDataWarehouse * dw
                                         , OnDemandDataWarehouse * old_dw
                                         , const DetailedDep     * dep
-                                        , LoadBalancerPort      * lb
                                         , DeviceVarDest           dest
                                         )
 {
@@ -1685,7 +1683,7 @@ void UnifiedScheduler::turnIntoASuperPatch(GPUDataWarehouse* const gpudw,
     //This thread turned the lowest ID'd patch in the region into a superpatch.  Go through *neighbor* patches
     //in the superpatch region and flag them as being a superpatch as well (the copySuperPatchInfo call below
     //can also flag it as a superpatch.
-    for( int i = 0; i < neighbors.size(); i++) {
+    for( unsigned int i = 0; i < neighbors.size(); i++) {
       if (neighbors[i]->getRealPatch() != firstPatchInSuperPatch) {  //This if statement is because there is no need to merge itself
 
         //These neighbor patches may not have yet been handled by a prior task.  So go ahead and make sure they show up in the database
@@ -1792,9 +1790,12 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
 
       const int patchID = varIter->first.m_patchID;
       const Patch * patch = nullptr;
+      const Level* level = nullptr;
+
       for (int i = 0; i < numPatches; i++) {
         if (patches->get(i)->getID() == patchID) {
           patch = patches->get(i);
+          level = patch->getLevel();
         }
       }
       if (!patch) {
@@ -1802,7 +1803,6 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
         SCI_THROW( InternalError("UnifiedScheduler::initiateD2H() patch not found.", __FILE__, __LINE__));
       }
       const int matlID = varIter->first.m_matlIndex;
-      const Level* level = getLevel(patches.get_rep());
       int levelID = level->getID();
       if (curDependency->m_var->typeDescription()->getType() == TypeDescription::ReductionVariable) {
         levelID = -1;
@@ -2976,12 +2976,13 @@ UnifiedScheduler::ghostCellsProcessingReady( DetailedTask * dtask )
     const int numPatches = patches->size();
     const int patchID = varIter->first.m_patchID;
     const Patch * patch = nullptr;
+    const Level * level = nullptr;
     for (int i = 0; i < numPatches; i++) {
       if (patches->get(i)->getID() == patchID) {
         patch = patches->get(i);
+        level = patch->getLevel();
       }
     }
-    const Level* level = getLevel(patches.get_rep());
     int levelID = level->getID();
     if (curDependency->m_var->typeDescription()->getType() == TypeDescription::ReductionVariable) {
       levelID = -1;
@@ -3059,12 +3060,13 @@ UnifiedScheduler::allHostVarsProcessingReady( DetailedTask * dtask )
     const int numPatches = patches->size();
     const int patchID = varIter->first.m_patchID;
     const Patch * patch = nullptr;
+    const Level * level = nullptr;
     for (int i = 0; i < numPatches; i++) {
       if (patches->get(i)->getID() == patchID) {
         patch = patches->get(i);
+        level = patch->getLevel();
       }
     }
-    const Level* level = getLevel(patches.get_rep());
     int levelID = level->getID();
     if (curDependency->m_var->typeDescription()->getType() == TypeDescription::ReductionVariable) {
       levelID = -1;
@@ -3154,14 +3156,13 @@ UnifiedScheduler::allGPUVarsProcessingReady( DetailedTask * dtask )
     const int numPatches = patches->size();
     const int patchID = varIter->first.m_patchID;
     const Patch * patch = nullptr;
-
+    const Level * level = nullptr;
     for (int i = 0; i < numPatches; i++) {
       if (patches->get(i)->getID() == patchID) {
         patch = patches->get(i);
+        level = patch->getLevel();
       }
     }
-
-    const Level* level = getLevel(patches.get_rep());
     int levelID = level->getID();
     if (curDependency->m_var->typeDescription()->getType() == TypeDescription::ReductionVariable) {
       levelID = -1;
@@ -3341,7 +3342,7 @@ UnifiedScheduler::markDeviceComputesDataAsValid( DetailedTask * dtask )
         for (int j = 0; j < numMatls; j++) {
           int patchID = patches->get(i)->getID();
           int matlID = matls->get(j);
-          const Level* level = getLevel(patches.get_rep());
+          const Level* level = patches->get(i)->getLevel();
           int levelID = level->getID();
           if (gpudw->isAllocatedOnGPU(comp->m_var->getName().c_str(), patchID, matlID, levelID)) {
             gpudw->compareAndSwapSetValidOnGPU(comp->m_var->getName().c_str(), patchID, matlID, levelID);
@@ -3426,20 +3427,22 @@ UnifiedScheduler::initiateD2HForHugeGhostCells( DetailedTask * dtask )
         for (int j = 0; j < numMatls; ++j) {
           const int patchID = patches->get(i)->getID();
           const int matlID  = matls->get(j);
-          const Level* level = getLevel(patches.get_rep());
-          const int levelID = level->getID();
+
           const std::string compVarName = comp->m_var->getName();
 
           const Patch * patch = nullptr;
+          const Level* level = nullptr;
           for (int i = 0; i < numPatches; i++) {
             if (patches->get(i)->getID() == patchID) {
              patch = patches->get(i);
+             level = patch->getLevel();
             }
           }
           if (!patch) {
            printf("ERROR:\nUnifiedScheduler::initiateD2HForHugeGhostCells() patch not found.\n");
            SCI_THROW( InternalError("UnifiedScheduler::initiateD2HForHugeGhostCells() patch not found.", __FILE__, __LINE__));
           }
+          const int levelID = level->getID();
 
           const unsigned int deviceNum = GpuUtilities::getGpuIndexForPatch(patch);
           GPUDataWarehouse * gpudw = dw->getGPUDW(deviceNum);
@@ -3701,22 +3704,27 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
     int dwIndex = dependantVar->mapDataWarehouse();
     OnDemandDataWarehouseP dw = m_dws[dwIndex];
 
+    //Find the patch and level objects associated with the patchID
     const int patchID = varIter->first.m_patchID;
-    const Level* level = getLevel(patches.get_rep());
-    int levelID = level->getID();
-    if (dependantVar->m_var->typeDescription()->getType() == TypeDescription::ReductionVariable) {
-      levelID = -1;
-    }
     const Patch * patch = nullptr;
+    const Level * level = nullptr;
     for (int i = 0; i < numPatches; i++) {
       if (patches->get(i)->getID() == patchID) {
         patch = patches->get(i);
+        level = patch->getLevel();
       }
     }
+
     if (!patch) {
       printf("ERROR:\nUnifiedScheduler::initiateD2H() patch not found.\n");
       SCI_THROW( InternalError("UnifiedScheduler::initiateD2H() patch not found.", __FILE__, __LINE__));
     }
+
+    int levelID = level->getID();
+    if (dependantVar->m_var->typeDescription()->getType() == TypeDescription::ReductionVariable) {
+      levelID = -1;
+    }
+
     const int matlID = varIter->first.m_matlIndex;
 
     unsigned int deviceNum = GpuUtilities::getGpuIndexForPatch(patch);
@@ -4350,7 +4358,7 @@ UnifiedScheduler::findIntAndExtGpuDependencies( DetailedTask * dtask
         }
         // if we send/recv to an output task, don't send/recv if not an output timestep
         if (req->m_to_tasks.front()->getTask()->getType() == Task::Output
-            && !m_out_port->isOutputTimestep() && !m_out_port->isCheckpointTimestep()) {
+            && !m_output->isOutputTimeStep() && !m_output->isCheckpointTimeStep()) {
           if (gpu_stats.active()) {
             cerrLock.lock();
             gpu_stats << myRankThread()
@@ -4364,9 +4372,9 @@ UnifiedScheduler::findIntAndExtGpuDependencies( DetailedTask * dtask
         const VarLabel* posLabel;
         OnDemandDataWarehouse* posDW;
 
-        // the load balancer is used to determine where data was in the old dw on the prev timestep -
-        // pass it in if the particle data is on the old dw
-        LoadBalancerPort * lb = nullptr;
+        // the load balancer is used to determine where data was in
+        // the old dw on the prev timestep - pass it in if the
+        // particle data is on the old dw
 
         if (!m_reloc_new_pos_label && m_parent_scheduler) {
           posDW = m_dws[req->m_req->m_task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
@@ -4379,19 +4387,20 @@ UnifiedScheduler::findIntAndExtGpuDependencies( DetailedTask * dtask
           }
           else {
             posDW = m_dws[req->m_req->m_task->mapDataWarehouse(Task::OldDW)].get_rep();
-            lb = getLoadBalancer();
           }
           posLabel = m_reloc_new_pos_label;
         }
-        // Load information which will be used to later invoke a kernel to copy this range out of the GPU.
-        prepareGpuDependencies(dtask, batch, posLabel, dw, posDW, req, lb, GpuUtilities::anotherDeviceSameMpiRank);
+        // Load information which will be used to later invoke a
+        // kernel to copy this range out of the GPU.
+        prepareGpuDependencies(dtask, batch, posLabel, dw, posDW, req, GpuUtilities::anotherDeviceSameMpiRank);
       }
     }  // end for (DependencyBatch * batch = task->getInteranlComputes() )
 
-    // Prepare external dependencies.  The only thing that needs to be prepared is
-    // getting ghost cell data from a GPU into a flat array and copied to host memory
-    // so that the MPI engine can treat it normally.
-    // That means this handles GPU->other node GPU and GPU->other node CPU.
+    // Prepare external dependencies.  The only thing that needs to be
+    // prepared is getting ghost cell data from a GPU into a flat
+    // array and copied to host memory so that the MPI engine can
+    // treat it normally.  That means this handles GPU->other node GPU
+    // and GPU->other node CPU.
     //
 
     for (DependencyBatch* batch = dtask->getComputes(); batch != 0;
@@ -4412,7 +4421,7 @@ UnifiedScheduler::findIntAndExtGpuDependencies( DetailedTask * dtask
           continue;
         }
         // if we send/recv to an output task, don't send/recv if not an output timestep
-        if (req->m_to_tasks.front()->getTask()->getType() == Task::Output && !m_out_port->isOutputTimestep() && !m_out_port->isCheckpointTimestep()) {
+        if (req->m_to_tasks.front()->getTask()->getType() == Task::Output && !m_output->isOutputTimeStep() && !m_output->isCheckpointTimeStep()) {
           if (gpu_stats.active()) {
             cerrLock.lock();
             {
@@ -4441,27 +4450,28 @@ UnifiedScheduler::findIntAndExtGpuDependencies( DetailedTask * dtask
         const VarLabel* posLabel;
         OnDemandDataWarehouse* posDW;
 
-        // the load balancer is used to determine where data was in the old dw on the prev timestep -
-        // pass it in if the particle data is on the old dw
-        LoadBalancerPort * lb = 0;
+        // the load balancer is used to determine where data was in
+        // the old dw on the prev timestep - pass it in if the
+        // particle data is on the old dw
 
         if (!m_reloc_new_pos_label && m_parent_scheduler) {
           posDW    = m_dws[req->m_req->m_task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
           posLabel = m_parent_scheduler->m_reloc_new_pos_label;
         }
         else {
-          // on an output task (and only on one) we require particle variables from the NewDW
+          // on an output task (and only on one) we require particle
+          // variables from the NewDW
           if (req->m_to_tasks.front()->getTask()->getType() == Task::Output) {
             posDW = m_dws[req->m_req->m_task->mapDataWarehouse(Task::NewDW)].get_rep();
           }
           else {
             posDW = m_dws[req->m_req->m_task->mapDataWarehouse(Task::OldDW)].get_rep();
-            lb    = getLoadBalancer();
           }
           posLabel = m_reloc_new_pos_label;
         }
-        // Load information which will be used to later invoke a kernel to copy this range out of the GPU.
-        prepareGpuDependencies(dtask, batch, posLabel, dw, posDW, req, lb, GpuUtilities::anotherMpiRank);
+        // Load information which will be used to later invoke a
+        // kernel to copy this range out of the GPU.
+        prepareGpuDependencies(dtask, batch, posLabel, dw, posDW, req, GpuUtilities::anotherMpiRank);
       }
     }  // end for (DependencyBatch * batch = task->getComputes() )
   }

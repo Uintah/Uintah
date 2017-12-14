@@ -68,9 +68,10 @@ WARNING
 ****************************************/
   class particleExtract : public AnalysisModule {
   public:
-    particleExtract(ProblemSpecP& prob_spec,
-                    SimulationStateP& sharedState,
-		    Output* output);
+    particleExtract(const ProcessorGroup* myworld,
+		    const SimulationStateP sharedState,
+		    const ProblemSpecP& module_spec);
+    
     particleExtract();
                     
     virtual ~particleExtract();
@@ -140,14 +141,11 @@ WARNING
     double d_stopTime;
     double d_colorThreshold;
     std::vector<VarLabel*> d_varLabels;
-    SimulationStateP d_sharedState;
-    Output* d_output;
-    ProblemSpecP d_prob_spec;
+
     const Material* d_matl;
     MaterialSet* d_matl_set;
     MaterialSubset* d_matl_subset;
-    std::set<std::string> d_isDirCreated;
-        
+    std::set<std::string> d_isDirCreated;        
   };
 }
 

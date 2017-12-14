@@ -30,7 +30,7 @@
 #include <vector>
 
 namespace Uintah {
-  class LoadBalancerPort;
+  class LoadBalancer;
   class Module;
 
 
@@ -51,7 +51,7 @@ namespace Uintah {
                                      SchedulerP   & );
 
     virtual void scheduleRestartInitialize( const LevelP & level,
-                                            SchedulerP   & );
+                                            SchedulerP   & ){};
 
     virtual void restartInitialize() {}
 
@@ -87,11 +87,6 @@ namespace Uintah {
     PostProcessUda(const PostProcessUda&);
     PostProcessUda& operator=(const PostProcessUda&);
 
-    void initialize(const ProcessorGroup*,
-                    const PatchSubset* patches,
-                    const MaterialSubset* matls,
-                    DataWarehouse* /*old_dw*/,
-                    DataWarehouse* new_dw);
 
     void computeDelT(const ProcessorGroup*,
                      const PatchSubset* patches,
@@ -119,26 +114,23 @@ namespace Uintah {
                     const MaterialSubset* matls,
                     DataWarehouse* old_dw,
                     DataWarehouse* new_dw);
-
-
+                    
+    enum {NOTUSED = -9};
     std::string            d_udaDir;
     bool                   d_gridChanged;
 
-    std::vector<int>       d_timesteps;
+    std::vector<int>       d_udaTimesteps;
     std::vector<int>       d_numMatls;
-    std::vector<double>    d_times;
-    std::vector<VarLabel*> d_savedLabels;
+    std::vector<double>    d_udaTimes;
+    std::vector<VarLabel*> d_udaSavedLabels;
 
     GridP                  d_oldGrid;
     DataArchive          * d_dataArchive = nullptr;
 
-    int                    d_timeIndex = 0;
+    int                    d_simTimestep = 0;
 
-    LoadBalancerPort     * d_lb;
     const VarLabel       * delt_label;
     std::vector<Module*> d_Modules;
-
-
   };
 } // End namespace Uintah
 

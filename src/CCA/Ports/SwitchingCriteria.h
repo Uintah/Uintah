@@ -33,6 +33,7 @@
 
 namespace Uintah {
 
+  class UintahParallelComponent;
   class VarLabel;
   
   class SwitchingCriteria : public UintahParallelPort {
@@ -41,7 +42,7 @@ namespace Uintah {
     
     SwitchingCriteria();
     virtual ~SwitchingCriteria();
-
+  
     virtual void problemSetup(const ProblemSpecP& params,
                               const ProblemSpecP& restart_prob_spec,
                               SimulationStateP& state) = 0;

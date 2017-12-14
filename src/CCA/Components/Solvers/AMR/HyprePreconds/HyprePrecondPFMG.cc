@@ -38,9 +38,9 @@
 using namespace Uintah;
 //__________________________________
 //  To turn on normal output
-//  setenv SCI_DEBUG "HYPRE_DOING_COUT:+"
+//  setenv SCI_DEBUG "SOLVER_DOING_COUT:+"
 
-static DebugStream cout_doing("HYPRE_DOING_COUT", false);
+static DebugStream cout_doing("SOLVER_DOING_COUT", false);
 
 Priorities
 HyprePrecondPFMG::initPriority(void)

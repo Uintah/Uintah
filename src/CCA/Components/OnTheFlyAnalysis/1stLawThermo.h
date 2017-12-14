@@ -64,9 +64,9 @@ WARNING
 ****************************************/
   class FirstLawThermo : public AnalysisModule {
   public:
-    FirstLawThermo(ProblemSpecP& prob_spec,
-		   SimulationStateP& sharedState,
-		   Output* output);
+    FirstLawThermo(const ProcessorGroup* myworld,
+		   const SimulationStateP sharedState,
+		   const ProblemSpecP& module_spec);
               
     FirstLawThermo();
                     
@@ -159,10 +159,6 @@ WARNING
        
     //__________________________________
     // global constants
-    SimulationStateP d_sharedState;
-    Output* d_output;
-    ProblemSpecP d_prob_spec;
-    
     MaterialSubset* d_zeroMatl;
     MaterialSet* d_zeroMatlSet;
     PatchSet* d_zeroPatch;
@@ -171,8 +167,7 @@ WARNING
     double d_conversion;        // conversion of between KJ -> J in SI units.
     double d_analysisFreq; 
     double d_StartTime;
-    double d_StopTime;
-    
+    double d_StopTime;    
   };
 }
 

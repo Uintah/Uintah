@@ -137,7 +137,6 @@ ICE::ICE(const ProcessorGroup* myworld,
   d_SMALL_NUM               = 1.0e-100;                                     
   d_modelInfo               = 0;                                    
   d_modelSetup              = 0;                                   
-  d_recompile               = false;
   d_with_mpm                = false;
   d_with_rigid_mpm          = false;
   d_clampSpecificVolume     = false;
@@ -189,7 +188,9 @@ ICE::~ICE()
     vector<AnalysisModule*>::iterator iter;
     for( iter  = d_analysisModules.begin();
          iter != d_analysisModules.end(); iter++){
-      delete *iter;
+      AnalysisModule* am = *iter;
+      am->releaseComponents();
+      delete am;
     }
   }
   
@@ -566,13 +567,16 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
   //__________________________________
   //  Set up data analysis modules
   if(!d_with_mpm){
-    d_analysisModules = AnalysisModuleFactory::create(prob_spec, m_sharedState, m_output);
+    d_analysisModules = AnalysisModuleFactory::create(d_myworld,
+						      m_sharedState,
+						      prob_spec);
 
     if( d_analysisModules.size() != 0 ) {
 
       vector<AnalysisModule*>::iterator iter;
       for( iter  = d_analysisModules.begin(); iter != d_analysisModules.end(); iter++) {
         AnalysisModule* am = *iter;
+	am->setComponents( dynamic_cast<ApplicationInterface*>( this ) );
         am->problemSetup(prob_spec, restart_prob_spec, grid);
       }
     }
@@ -2901,7 +2905,6 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
 //
 //    // get a handle on the GPU scheduler to query for device and host pointers, etc
 //    UnifiedScheduler* sched = dynamic_cast<UnifiedScheduler*>(getPort("scheduler"));  //UnifiedScheduler:: dynamic_cast<UnifiedScheduler*>(getPort("scheduler"));
-//    //UintahParallelPort* sched = getPort("scheduler");
 //    //MPIScheduler* sched2 = dynamic_cast<MPIScheduler*>(getPort("schedular"));
 //    for (int p = 0; p < patches->size(); p++) {
 //
@@ -2979,7 +2982,6 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
 //    //
 //    // get a handle on the GPU scheduler to query for device and host pointers, etc
 //    UnifiedScheduler* sched = dynamic_cast<UnifiedScheduler*>(getPort("scheduler"));  //UnifiedScheduler:: dynamic_cast<UnifiedScheduler*>(getPort("scheduler"));
-//    //UintahParallelPort* sched = getPort("scheduler");
 //    //MPIScheduler* sched2 = dynamic_cast<MPIScheduler*>(getPort("schedular"));
 //    for (int p = 0; p < patches->size(); p++) {
 //
@@ -5662,7 +5664,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
       new_dw->get(sp_vol_L,    lb->sp_vol_L_CCLabel,      indx,patch,gac,2);
       new_dw->get(int_eng_L_ME,lb->eng_L_ME_CCLabel,      indx,patch,gac,2);
 
-      new_dw->allocateAndPut(mass_adv,    lb->mass_advLabel,   indx,patch);          
+      new_dw->allocateAndPut(mass_adv,    lb->mass_advLabel,   indx,patch);
       new_dw->allocateAndPut(mom_adv,     lb->mom_advLabel,    indx,patch);
       new_dw->allocateAndPut(int_eng_adv, lb->eng_advLabel,    indx,patch); 
       new_dw->allocateAndPut(sp_vol_adv,  lb->sp_vol_advLabel, indx,patch); 
@@ -6414,18 +6416,6 @@ ICE::refineBoundaries(const Patch*, SFCZVariable<double>&,
 {
   throw InternalError("trying to do AMR iwth the non-AMR component!", __FILE__, __LINE__);
 }
-
-bool ICE::needRecompile(double /*time*/, double /*dt*/, const GridP& /*grid*/)
-{
-  if(d_recompile){
-    d_recompile = false;
-    return true;
-  }
-  else{
-    return false;
-  }
-}
-
 
 /*______________________________________________________________________
           S C H E M A T I C   D I A G R A M S

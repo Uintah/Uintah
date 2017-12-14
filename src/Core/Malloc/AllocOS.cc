@@ -111,14 +111,14 @@ OSHunk* OSHunk::alloc(size_t size, bool returnable, Allocator* allocator)
 #else
 	 fprintf(stderr, "Allocator was using %u bytes.\n", allocator->sizealloc );
 #endif
-	 // If the allocator is already dieing, we will just quit to try
+	 // If the allocator is already dying, we will just quit to try
 	 // to avoid going into an infinite loop
-	 if(allocator->dieing)
+	 if(allocator->dying)
 	   exit(1);
 
-	 // Mark the allocator as dieing and unlock it so that allocations
+	 // Mark the allocator as dying and unlock it so that allocations
 	 // might succeed as we are shutting down
-	 allocator->dieing = true;
+	 allocator->dying = true;
 	 allocator->noninline_unlock();
        }
        abort();

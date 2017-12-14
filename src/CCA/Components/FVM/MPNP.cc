@@ -25,7 +25,7 @@
 
 #include <CCA/Components/FVM/MPNP.h>
 #include <CCA/Components/FVM/FVMBoundCond.h>
-#include <CCA/Ports/LoadBalancerPort.h>
+#include <CCA/Ports/LoadBalancer.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/Stencil7.h>

@@ -60,7 +60,7 @@ SolverInterface* SolverFactory::create(       ProblemSpecP   & ps,
   if( solver == "CGSolver" ) {
     solve = scinew CGSolver(world);
   }
-  else if (solver == "direct" || solver == "DirectSolver") {
+  else if (solver == "DirectSolver" || solver == "direct") {
     solve = scinew DirectSolve(world);
   }
   else if (solver == "HypreSolver" || solver == "hypre") {

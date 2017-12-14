@@ -100,7 +100,7 @@ public:
 
   virtual void scheduleRestartInitialize(const LevelP& level, SchedulerP& sched);
 
-  virtual void switchInitialize(const LevelP& level, SchedulerP&);
+  virtual void scheduleSwitchInitialization(const LevelP& level, SchedulerP&);
 
   //////////
   // Insert Documentation Here:

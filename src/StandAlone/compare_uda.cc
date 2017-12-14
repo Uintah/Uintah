@@ -36,6 +36,7 @@
 #include <Core/DataArchive/DataArchive.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
+#include <Core/Geometry/IntVector.h>
 #include <Core/Grid/Box.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
@@ -255,6 +256,20 @@ bool
 compare( Vector a, Vector b, double abs_tolerance, double rel_tolerance )
 {
   if(std::isnan(a.length()) || std::isnan(b.length())){
+    return false;
+  }
+
+  return compare(a.x(), b.x(), abs_tolerance, rel_tolerance) &&
+         compare(a.y(), b.y(), abs_tolerance, rel_tolerance) &&
+         compare(a.z(), b.z(), abs_tolerance, rel_tolerance);
+}
+
+bool
+compare( IntVector a, IntVector b, double abs_tolerance, double rel_tolerance )
+{
+//  if(std::isnan(a.length()) || std::isnan(b.length())){
+  if(std::isnan(a.x()*a.x()+a.y()*a.y()+a.z()*a.z()) || 
+     std::isnan(b.x()*b.x()+b.y()*b.y()+b.z()*b.z())){
     return false;
   }
 
@@ -631,6 +646,10 @@ compare(MaterialParticleVarData& data2, int matl, double time1, double time2,
       return compare(data2, dynamic_cast<ParticleVariable<Vector>*>(pvb1),
                      dynamic_cast<ParticleVariable<Vector>*>(pvb2), matl,
                      time1, time2, abs_tolerance, rel_tolerance);
+    case Uintah::TypeDescription::IntVector:
+      return compare(data2, dynamic_cast<ParticleVariable<IntVector>*>(pvb1),
+                     dynamic_cast<ParticleVariable<IntVector>*>(pvb2), matl,
+                     time1, time2, abs_tolerance, rel_tolerance);
     case Uintah::TypeDescription::Matrix3:
       return compare(data2, dynamic_cast<ParticleVariable<Matrix3>*>(pvb1),
                      dynamic_cast<ParticleVariable<Matrix3>*>(pvb2), matl,
@@ -804,6 +823,9 @@ void addParticleData(MaterialParticleDataMap& matlParticleDataMap,
             break;
           case Uintah::TypeDescription::Vector:
             pvb = scinew ParticleVariable<Vector>();
+            break;
+          case Uintah::TypeDescription::IntVector:
+            pvb = scinew ParticleVariable<IntVector>();
             break;
           case Uintah::TypeDescription::Matrix3:
             pvb = scinew ParticleVariable<Matrix3>();
@@ -1729,6 +1751,10 @@ main(int argc, char** argv)
                     break;
                   case Uintah::TypeDescription::Vector:
                     compareParticles<Vector>(da1, da2, var, matl, patch, patch2,
+                                             time1, tstep, abs_tolerance, rel_tolerance);
+                    break;
+                  case Uintah::TypeDescription::IntVector:
+                    compareParticles<IntVector>(da1, da2, var, matl, patch, patch2,
                                              time1, tstep, abs_tolerance, rel_tolerance);
                     break;
                   case Uintah::TypeDescription::Matrix3:

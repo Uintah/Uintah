@@ -25,8 +25,9 @@
 //-- Uintah component includes --//
 #include <CCA/Components/Regridder/PerPatchVars.h>
 #include <CCA/Components/Regridder/RegridderCommon.h>
+#include <CCA/Ports/ApplicationInterface.h>
 #include <CCA/Ports/DataWarehouse.h>
-#include <CCA/Ports/LoadBalancerPort.h>
+#include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Scheduler.h>
 
 //-- Uintah framework includes --//
@@ -54,8 +55,8 @@ DebugStream rreason(    "RegridReason", false );
 //______________________________________________________________________
 //
 RegridderCommon::RegridderCommon(const ProcessorGroup* pg)
-    : Regridder(),
-      UintahParallelComponent(pg)
+  : UintahParallelComponent(pg),
+    Regridder()
 {
   rdbg << "RegridderCommon::RegridderCommon() BGN" << std::endl;
   d_filterType = FILTER_BOX;
@@ -109,13 +110,38 @@ RegridderCommon::~RegridderCommon()
 
 //______________________________________________________________________
 //
+void RegridderCommon::getComponents()
+{
+  m_scheduler = dynamic_cast< Scheduler * >( getPort( "scheduler" ) );
+
+  if( !m_scheduler ) {
+    throw InternalError("dynamic_cast of 'm_scheduler' failed!", __FILE__, __LINE__);
+  }
+
+  m_loadBalancer = dynamic_cast<LoadBalancer*>( getPort("load balancer") );
+
+  if( !m_loadBalancer ) {
+    throw InternalError("dynamic_cast of 'm_loadBalancer' failed!", __FILE__, __LINE__);
+  }
+
+  m_application = dynamic_cast<ApplicationInterface*>( getPort("application") );
+
+  if( !m_application ) {
+    throw InternalError("dynamic_cast of 'm_application' failed!", __FILE__, __LINE__);
+  }
+}
+
+//______________________________________________________________________
+//
 void RegridderCommon::releaseComponents()
 {
   releasePort( "scheduler" );
-  m_scheduler  = nullptr;
-
   releasePort( "load balancer" );
-  m_loadBalancer  = nullptr;
+  releasePort( "application" );
+
+  m_scheduler    = nullptr;
+  m_loadBalancer = nullptr;
+  m_application  = nullptr;
 
   d_sharedState = nullptr;
 }
@@ -130,7 +156,7 @@ const MaterialSubset* RegridderCommon::refineFlagMaterials() const
 //______________________________________________________________________
 //
 bool
-RegridderCommon::needRecompile(double /*time*/, double /*delt*/, const GridP& /*grid*/)
+RegridderCommon::needRecompile( const GridP& /*grid*/ )
 {
   rdbg << "RegridderCommon::needRecompile() BGN" << std::endl;
   bool retval = d_newGrid;
@@ -364,14 +390,12 @@ void
 RegridderCommon::problemSetup(const ProblemSpecP& params, const GridP& oldGrid, const SimulationStateP& state)
 {
   rdbg << "RegridderCommon::problemSetup() BGN" << std::endl;
+
   d_sharedState = state;
 
   grid_ps_ = params->findBlock("Grid");
 
-  m_scheduler = dynamic_cast< Scheduler * >( getPort( "scheduler" ) );
-  m_loadBalancer = dynamic_cast< LoadBalancerPort * >( getPort( "load balancer" ) );
-
-  ProblemSpecP amr_spec = params->findBlock("AMR");
+  ProblemSpecP    amr_spec = params->findBlock("AMR");
   ProblemSpecP regrid_spec = amr_spec->findBlock("Regridder");
 
   d_isAdaptive = true;  // use if "adaptive" not there

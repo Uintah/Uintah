@@ -60,17 +60,15 @@ namespace Uintah {
 //! Controls the execution of an AMR Simulation
 class AMRSimulationController : public SimulationController {
 
-
 public:
 
   AMRSimulationController( const ProcessorGroup * myworld
                          ,       ProblemSpecP     pspec
                          );
 
-  virtual ~AMRSimulationController(){};
+  virtual ~AMRSimulationController() {};
 
   virtual void run();
-
 
 protected:
 
@@ -84,11 +82,7 @@ protected:
   //! If doing AMR do the regridding
   bool doRegridding( bool initialTimeStep );
 
-  //! Asks a variety of components if one of them needs the
-  //! taskgraph to recompile.
-  bool needRecompile();
-
-  void recompile( int totalFine );
+  void compileTaskGraph( int totalFine );
 
   //! Recursively schedule refinement, coarsening, and time
   //! advances for finer levels, compensating for time
@@ -117,7 +111,6 @@ protected:
   // Barrier timers used when running and regridding.
   Timers::Simple  m_barrier_timer;
   double          m_barrier_times[5];
-
 
 private:
 

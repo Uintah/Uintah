@@ -26,7 +26,6 @@
 #define __CONTACT_H__
 
 #include <CCA/Components/MPM/Contact/ContactMaterialSpec.h>
-#include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/SchedulerP.h>

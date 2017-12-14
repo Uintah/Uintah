@@ -72,7 +72,6 @@ Arches::Arches(const ProcessorGroup* myworld,
   m_physicalConsts      = 0;
   m_doing_restart        = false;
   m_with_mpmarches      = false;
-  m_recompile_taskgraph = false;
 
   //lagrangian particles:
   m_particlesHelper = scinew ArchesParticlesHelper();
@@ -87,9 +86,11 @@ Arches::~Arches()
   delete m_particlesHelper;
 
   if( m_analysis_modules.size() != 0 ) {
-    for( std::vector<AnalysisModule*>::iterator iter  = m_analysis_modules.begin();
+    for( std::vector<AnalysisModule*>::iterator iter = m_analysis_modules.begin();
          iter != m_analysis_modules.end(); iter++) {
-      delete *iter;
+      AnalysisModule* am = *iter;
+      am->releaseComponents();
+      delete am;
     }
   }
   releasePort("solver");
@@ -126,7 +127,7 @@ Arches::problemSetup( const ProblemSpecP     & params,
     assign_unique_boundary_names( bcProbSpec );
   }
 
-  db->getWithDefault("recompileTaskgraph",  m_recompile_taskgraph,false);
+  db->getWithDefault("recompileTaskgraph",  m_recompile, false);
 
   // physical constant
   m_physicalConsts = scinew PhysicalConstants();
@@ -171,14 +172,16 @@ Arches::problemSetup( const ProblemSpecP     & params,
       throw InternalError("ARCHES:couldn't get output port", __FILE__, __LINE__);
     }
 
-    m_analysis_modules =
-      AnalysisModuleFactory::create(params, m_sharedState, m_output);
+    m_analysis_modules = AnalysisModuleFactory::create(d_myworld,
+						       m_sharedState,
+						       params);
 
     if(m_analysis_modules.size() != 0) {
       vector<AnalysisModule*>::iterator iter;
       for( iter  = m_analysis_modules.begin();
            iter != m_analysis_modules.end(); iter++) {
         AnalysisModule* am = *iter;
+	am->setComponents( dynamic_cast<ApplicationInterface*>( this ) );
         am->problemSetup(params, materials_ps, grid);
       }
     }
@@ -278,12 +281,12 @@ Arches::scheduleTimeAdvance( const LevelP& level,
 
   if( isRegridTimeStep() ) { // needed for single level regridding on restarts
     m_doing_restart = true;                  // this task is called twice on a regrid.
-    m_recompile_taskgraph =true;
+    m_recompile = true;
     setRegridTimeStep(false);
   }
 
   if ( m_doing_restart ) {
-    if(m_recompile_taskgraph) {
+    if(m_recompile) {
       m_nlSolver->sched_restartInitializeTimeAdvance(level,sched);
     }
   }
@@ -318,27 +321,11 @@ Arches::scheduleAnalysis( const LevelP& level,
   }
 }
 
-//--------------------------------------------------------------------------------------------------
-bool Arches::needRecompile(double time, double dt,
-                           const GridP& grid)
-{
-  bool temp;
-  if ( m_recompile_taskgraph ) {
-    //Currently turning off recompile after.
-    temp = m_recompile_taskgraph;
-    proc0cout << "\n NOTICE: Recompiling task graph. \n \n";
-    m_recompile_taskgraph = false;
-    return temp;
-  }
-  else {
-    return m_recompile_taskgraph;
-  }
-}
-
 int Arches::computeTaskGraphIndex()
 {
-  // setup the task graph for execution on the next timestep
+  // Setup the task graph for execution on the next timestep.
   int time_step = m_sharedState->getCurrentTopLevelTimeStep();
+  
   return m_nlSolver->getTaskGraphIndex( time_step );
 }
 

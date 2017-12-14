@@ -44,6 +44,7 @@
 
 namespace Uintah {
 
+  class UintahParallelComponent;
   class Patch;
   class ProcessorGroup;
   class DetailedTasks;
@@ -82,14 +83,19 @@ WARNING
 
 //! The Load Balancer is responsible for assigning tasks to do their work
 //! on specified processors.  Different subclasses differ in the way this is done.
-class LoadBalancerPort : public UintahParallelPort {
+class LoadBalancer : public UintahParallelPort {
 
 public:
     
-  LoadBalancerPort();
+  LoadBalancer();
 
-  virtual ~LoadBalancerPort();
+  virtual ~LoadBalancer();
 
+  // Methods for managing the components attached via the ports.
+  virtual void setComponents( UintahParallelComponent *comp ) = 0;
+  virtual void getComponents() = 0;
+  virtual void releaseComponents() = 0;
+  
   //! Assigns each task in tg to its corresponding processor.
   //! Uses the patchwise processor assignment.
   //! @see getPatchwiseProcessorAssignment.
@@ -104,7 +110,7 @@ public:
 
   //! Determines if the Load Balancer requests a taskgraph recompile.
   //! Only possible for Dynamic Load Balancers.
-  virtual bool needRecompile( double, double, const GridP& ) { return false; }
+  virtual bool needRecompile( const GridP& ) = 0;
 
   //! In AMR, we need to tell the Load balancer that we're regridding
   //    virtual void doRegridTimeStep() {}
@@ -185,10 +191,10 @@ public:
 private:
 
   // eliminate copy, assignment and move
-  LoadBalancerPort( const LoadBalancerPort & )            = delete;
-  LoadBalancerPort& operator=( const LoadBalancerPort & ) = delete;
-  LoadBalancerPort( LoadBalancerPort && )                 = delete;
-  LoadBalancerPort& operator=( LoadBalancerPort && )      = delete;
+  LoadBalancer( const LoadBalancer & )            = delete;
+  LoadBalancer& operator=( const LoadBalancer & ) = delete;
+  LoadBalancer( LoadBalancer && )                 = delete;
+  LoadBalancer& operator=( LoadBalancer && )      = delete;
 };
 
 } // End namespace Uintah

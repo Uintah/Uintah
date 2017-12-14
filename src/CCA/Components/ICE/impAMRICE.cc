@@ -29,7 +29,7 @@
 #include <CCA/Components/ICE/ICEMaterial.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/ICE/BoundaryCond.h>
-#include <CCA/Ports/LoadBalancerPort.h>
+#include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Scheduler.h>
 
 #include <Core/Grid/Task.h>
@@ -338,8 +338,8 @@ void impAMRICE::scheduleMultiLevelPressureSolve(  SchedulerP& sched,
     t->modifies(lb->vol_frac_Z_FC_fluxLabel, patches, all_matls_sub); 
   }
   t->setType(Task::OncePerProc);
-  LoadBalancerPort * loadBal        = sched->getLoadBalancer();
-  const PatchSet   * perprocPatches = loadBal->getPerProcessorPatchSet( grid );
+
+  const PatchSet * perprocPatches = m_loadBalancer->getPerProcessorPatchSet( grid );
 
   sched->addTask(t, perprocPatches, all_matls);
   cout << d_myworld->myRank() << " proc_patches are " << *perprocPatches << "\n";
@@ -452,7 +452,7 @@ void impAMRICE::multiLevelPressureSolve(const ProcessorGroup* pg,
       
 #else
       const PatchSet* perProcPatches = 
-      d_subsched->getLoadBalancer()->getPerProcessorPatchSet(grid);
+	m_loadBalancer->getPerProcessorPatchSet(grid);
       schedule_bogus_imp_delP(d_subsched,  perProcPatches,        d_press_matl,
                               all_matls);   
 #endif

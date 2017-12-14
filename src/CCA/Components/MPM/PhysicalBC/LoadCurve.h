@@ -129,7 +129,8 @@ WARNING
    {
       ProblemSpecP loadCurve = ps->findBlock("load_curve");
       if (!loadCurve) 
-         throw ProblemSetupException("**ERROR** No load curve specified.", __FILE__, __LINE__);
+         throw ProblemSetupException("**ERROR** No load curve specified.", 
+                                      __FILE__, __LINE__);
       loadCurve->require("id", d_id);
       for( ProblemSpecP timeLoad = loadCurve->findBlock("time_point");
            timeLoad != nullptr;
@@ -153,9 +154,7 @@ WARNING
          time_ps->appendElement("time",d_time[i]);
          time_ps->appendElement("load",d_load[i]);
        }
-
      }
-   
 
 } // End namespace Uintah
 

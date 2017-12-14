@@ -232,13 +232,9 @@ public:
   
 
   ///////////////////////////////////////////////////////////////////////
-    // Function to return boolean for recompiling taskgraph
-
-    virtual bool needRecompile(double time, double dt,
-			       const GridP& grid);
-      virtual double recomputeTimeStep(double current_dt);
+  virtual double recomputeTimeStep(double current_dt);
       
-      virtual bool restartableTimeSteps();
+  virtual bool restartableTimeSteps();
 
  protected:
 
@@ -387,7 +383,6 @@ public:
   bool d_DORad;
   bool d_radiation;
   int nofTimesteps;
-  bool d_recompile;
   double prturb;
   double cpfluid;
   bool d_useCutCell;

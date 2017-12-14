@@ -34,7 +34,7 @@
 #include <CCA/Components/Solvers/AMR/HypreDriverStruct.h>
 #include <CCA/Components/Solvers/AMR/HypreSolverParams.h>
 #include <CCA/Components/Solvers/MatrixUtil.h>
-#include <CCA/Ports/LoadBalancerPort.h>
+#include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Scheduler.h>
 
 #include <Core/Exceptions/ConvergenceFailure.h>
@@ -56,9 +56,9 @@ using std::string;
 using namespace Uintah;
 //__________________________________
 //  To turn on normal output
-//  setenv SCI_DEBUG "HYPRE_DOING_COUT:+"
+//  setenv SCI_DEBUG "SOLVER_DOING_COUT:+"
 
-static DebugStream cout_doing("HYPRE_DOING_COUT", false);
+static DebugStream cout_doing("SOLVER_DOING_COUT", false);
 static DebugStream cout_dbg("HYPRE_DBG", false);
 
 //#####################################################################

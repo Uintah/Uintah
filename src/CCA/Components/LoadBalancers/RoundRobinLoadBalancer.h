@@ -64,6 +64,8 @@ public:
 
   virtual int getPatchwiseProcessorAssignment( const Patch * patch );
 
+  virtual bool needRecompile( const GridP& ) { return false; };
+
 private:
 
   // eliminate copy, assignment and move

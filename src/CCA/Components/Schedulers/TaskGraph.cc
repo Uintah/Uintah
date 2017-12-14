@@ -27,7 +27,7 @@
 #include <CCA/Components/Schedulers/SchedulerCommon.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Ports/DataWarehouse.h>
-#include <CCA/Ports/LoadBalancerPort.h>
+#include <CCA/Ports/LoadBalancer.h>
 
 #include <Core/Containers/FastHashTable.h>
 #include <Core/Disclosure/TypeDescription.h>
@@ -78,7 +78,7 @@ TaskGraph::TaskGraph(       SchedulerCommon   * sched
   , m_type{type}
   , m_index{index}
 {
-  m_load_balancer = dynamic_cast<LoadBalancerPort*>( m_scheduler->getPort("load balancer") );
+  m_load_balancer = dynamic_cast<LoadBalancer*>( m_scheduler->getPort("load balancer") );
 
 // #ifdef HAVE_VISIT
 //   static bool initialized = false;

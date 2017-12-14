@@ -26,22 +26,22 @@
 #define CCA_COMPONENTS_SCHEDULERS_SCHEDULERFACTORY_H
 
 #include <CCA/Components/Schedulers/SchedulerCommon.h>
-#include <CCA/Ports/Output.h>
 
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
 
-class SchedulerFactory {
-
-public:
-
-  // This function has a switch for all known schedulers
-  static SchedulerCommon* create( const ProblemSpecP   & ps
-                                , const ProcessorGroup * world
-                                , const Output         * ouput
-                                );
-};
+  class ProcessorGroup;
+  
+  class SchedulerFactory {
+    
+  public:
+    
+    // This function has a switch for all known schedulers
+    static SchedulerCommon* create( const ProblemSpecP   & ps
+				  , const ProcessorGroup * world
+				    );
+  };
 
 }  // namespace Uintah
 
