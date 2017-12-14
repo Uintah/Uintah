@@ -83,8 +83,7 @@ WARNING
     ModelFactory(const ModelFactory&);
     ModelFactory& operator=(const ModelFactory&);
 
-    std::vector<ModelInterface*> d_models;
-         
+    std::vector<ModelInterface*> d_models;         
   };
 }
 

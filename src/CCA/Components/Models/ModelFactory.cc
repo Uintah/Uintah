@@ -88,17 +88,23 @@ ModelFactory::makeModels( const ProblemSpecP& restart_prob_spec,
                           SimulationStateP&,
                           const bool doAMR )
 {
-  ProblemSpecP m = restart_prob_spec->findBlock("Models");
-  if(!m)
+  ProblemSpecP model_spec = restart_prob_spec->findBlock("Models");
+
+  if(!model_spec)
     return;
-  for(ProblemSpecP model_ps = m->findBlock("Model"); model_ps != nullptr; model_ps = model_ps->findNextBlock("Model")){
+  
+  for(ProblemSpecP model_ps = model_spec->findBlock("Model");
+      model_ps != nullptr; model_ps = model_ps->findNextBlock("Model")) {
+
     string type;
-    if(!model_ps->getAttribute("type", type)){
-      throw ProblemSetupException("Model does not specify type=\"name\"", __FILE__, __LINE__);
+
+    if(!model_ps->getAttribute("type", type)) {
+      throw ProblemSetupException("Model does not specify type=\"name\"",
+				  __FILE__, __LINE__);
     }
     
-#if !defined( NO_ICE ) && !defined( NO_MPM )
-    // ICE and MPM turned on
+#if !defined( NO_ICE )
+    // ICE turned on
     if(type == "SimpleRxn") {
       d_models.push_back(scinew SimpleRxn(d_myworld, model_ps));
     }
@@ -165,7 +171,8 @@ ModelFactory::makeModels( const ProblemSpecP& restart_prob_spec,
 void
 ModelFactory::outputProblemSpec(ProblemSpecP& models_ps)
 {
-  for (vector<ModelInterface*>::const_iterator it = d_models.begin(); it != d_models.end(); it++) {
+  for (vector<ModelInterface*>::const_iterator it = d_models.begin();
+       it != d_models.end(); it++) {
     (*it)->outputProblemSpec(models_ps);
   }
 }
