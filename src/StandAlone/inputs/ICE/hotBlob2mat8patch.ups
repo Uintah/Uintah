@@ -15,7 +15,7 @@
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            0.001         </maxTime>
+       <maxTime>            0.011         </maxTime>
        <initTime>           0.0         </initTime>
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
@@ -167,7 +167,7 @@
       <save label="KineticEnergy"/>
       <save label="TotalIntEng"/>
 
-      <checkpoint interval="0.0005" cycle="2"/>     
+      <checkpoint interval="0.005" cycle="2"/>     
    </DataArchiver>
    
     <!--____________________________________________________________________-->
