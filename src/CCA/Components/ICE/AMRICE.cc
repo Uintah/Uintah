@@ -240,17 +240,19 @@ void AMRICE::problemSetup(const ProblemSpecP& params,
   m_scheduler->overrideVariableBehavior("vol_frac_Z_FC_flux", false, false, true, false, false);
   
   //__________________________________
-  // MODELS
+  // Model Variables.
   vector<AMR_refluxVariable*>::iterator iter;
-  for( iter  = d_modelSetup->d_reflux_vars.begin();
-       iter != d_modelSetup->d_reflux_vars.end(); iter++){
-    AMR_refluxVariable* rvar = *iter;
-    string varLabelX = rvar->var_X_FC_flux->getName();
-    string varLabelY = rvar->var_Y_FC_flux->getName();
-    string varLabelZ = rvar->var_Z_FC_flux->getName();
-    m_scheduler->overrideVariableBehavior(varLabelX, false, false, true, false, false);
-    m_scheduler->overrideVariableBehavior(varLabelY, false, false, true, false, false);
-    m_scheduler->overrideVariableBehavior(varLabelZ, false, false, true, false, false);
+  if(d_modelSetup && d_modelSetup->d_reflux_vars.size() > 0){
+    for( iter  = d_modelSetup->d_reflux_vars.begin();
+	 iter != d_modelSetup->d_reflux_vars.end(); iter++){
+      AMR_refluxVariable* rvar = *iter;
+      string varLabelX = rvar->var_X_FC_flux->getName();
+      string varLabelY = rvar->var_Y_FC_flux->getName();
+      string varLabelZ = rvar->var_Z_FC_flux->getName();
+      m_scheduler->overrideVariableBehavior(varLabelX, false, false, true, false, false);
+      m_scheduler->overrideVariableBehavior(varLabelY, false, false, true, false, false);
+      m_scheduler->overrideVariableBehavior(varLabelZ, false, false, true, false, false);
+    }
   } 
 }
 //___________________________________________________________________              
@@ -627,7 +629,7 @@ void AMRICE::setBC_FineLevel(const ProcessorGroup*,
         delete_CustomBCs(d_BC_globalVars, BC_localVars);
 
         //__________________________________
-        //    Model Variables                     
+        // Model Variables.
         if(d_modelSetup && d_modelSetup->tvars.size() > 0){
           vector<TransportedVariable*>::iterator t_iter;
           for( t_iter  = d_modelSetup->tvars.begin();
@@ -815,7 +817,7 @@ void AMRICE::refine(const ProcessorGroup*,
                          invRefineRatio, finePatch, fineLevel, coarseLevel);
 
       //__________________________________
-      //    Model Variables                     
+      // Model Variables.
       if(d_modelSetup && d_modelSetup->tvars.size() > 0){
         vector<TransportedVariable*>::iterator t_iter;
         for( t_iter  = d_modelSetup->tvars.begin();
@@ -1064,7 +1066,7 @@ void AMRICE::coarsen(const ProcessorGroup*,
                          
                          
       //__________________________________
-      //    Model Variables                     
+      // Model Variables.
       if(d_modelSetup && d_modelSetup->tvars.size() > 0){
         vector<TransportedVariable*>::iterator t_iter;
         for( t_iter  = d_modelSetup->tvars.begin();
@@ -1135,7 +1137,7 @@ void AMRICE::scheduleReflux_computeCorrectionFluxes(const LevelP& coarseLevel,
   task->requires(Task::NewDW, lb->sp_vol_Y_FC_fluxLabel,
                0,Task::FineLevel, 0, Task::NormalDomain, gy, 1, fat);
   task->requires(Task::NewDW, lb->sp_vol_Z_FC_fluxLabel,
-               0,Task::FineLevel, 0, Task::NormalDomain, gz, 1, fat);             
+               0,Task::FineLevel, 0, Task::NormalDomain, gz, 1, fat);
 
   //__________________________________
   // Model Variables.
@@ -1237,7 +1239,7 @@ void AMRICE::reflux_computeCorrectionFluxes(const ProcessorGroup*,
                         coarsePatch, finePatch, coarseLevel, fineLevel,new_dw,
                         one_zero);
           //__________________________________
-          //    Model Variables
+          // Model Variables.
           if(d_modelSetup && d_modelSetup->d_reflux_vars.size() > 0){
             vector<AMR_refluxVariable*>::iterator iter;
             for( iter  = d_modelSetup->d_reflux_vars.begin();
@@ -1525,7 +1527,7 @@ void AMRICE::reflux_applyCorrectionFluxes(const ProcessorGroup*,
                         coarsePatch, finePatch, coarseLevel, fineLevel,new_dw,
                         one_zero);
           //__________________________________
-          //    Model Variables
+          // Model Variables.
           if(d_modelSetup && d_modelSetup->d_reflux_vars.size() > 0){
             vector<AMR_refluxVariable*>::iterator iter;
             for( iter  = d_modelSetup->d_reflux_vars.begin();
