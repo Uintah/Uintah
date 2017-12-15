@@ -118,7 +118,7 @@ void GetGlobalStats( Allocator *
                    , size_t    & highwater_mmap
                    );
 
-int  GetNbins(Allocator*);
+int  GetNbins( Allocator* );
 
 void GetBinStats( Allocator  *
                 , int         binno
@@ -157,6 +157,11 @@ void* operator new( size_t, Uintah::Allocator*, const char*, int );
 void* operator new[]( size_t, Uintah::Allocator*, const char*, int );
 #define scinew new( Uintah::default_allocator, __FILE__, __LINE__ )
 
+
+#else
+
+// define scinew to new when defined( DISABLE_SCI_MALLOC )
+#define scinew new
 
 #endif // DISABLE_SCI_MALLOC
 
