@@ -57,9 +57,10 @@
 
 /*______________________________________________________________________
   TO DO:
-  - Portable LHC sampling
   - Portable random number generation
-  - Portable handling of Level
+  - Portable handling of Views and variables used within functors
+  - Add GPU-specific setup for Kokkos::CUDA
+  - Portable LHC sampling
   - Kokkos-ify boundary flux calculations
 
 Optimizations:
@@ -1243,7 +1244,7 @@ Ray::rayTrace( const ProcessorGroup* pg,
     Vector Dx = patch->dCell();                   // cell spacing
 
     //______________________________________________________________________
-    //           R A D I O M E T E R
+    //         R A D I O M E T E R
     //______________________________________________________________________
 
     if (d_radiometer) {
@@ -1251,99 +1252,15 @@ Ray::rayTrace( const ProcessorGroup* pg,
     }
 
     //______________________________________________________________________
-    //          B O U N D A R Y F L U X
+    //         B O U N D A R Y F L U X
     //______________________________________________________________________
-    if( d_solveBoundaryFlux ) {
 
-      //__________________________________
-      //
-      vector <int> rand_i( d_rayDirSampleAlgo == LATIN_HYPER_CUBE ? d_nFluxRays : 0);  // only needed for LHC scheme
-
-      for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-        IntVector origin = *iter;
-
-        if (celltype[origin] != d_flowCell) {
-          continue;
-        }
-
-        // A given flow cell may have 0,1,2,3,4,5, or 6 faces that are adjacent to a wall.
-        // boundaryFaces is the vector that contains the list of which faces are adjacent to a wall
-        vector<int> boundaryFaces;
-        boundaryFaces.clear();
-
-        // determine if origin has one or more boundary faces, and if so, populate boundaryFaces vector
-        boundFlux[origin].p = has_a_boundary(origin, celltype, boundaryFaces);
-
-        Point CC_pos = level->getCellPosition(origin);
-        //__________________________________
-        // Loop over boundary faces of the cell and compute incident radiative flux
-        for (vector<int>::iterator it=boundaryFaces.begin() ; it < boundaryFaces.end(); it++ ){
-
-          int RayFace = *it;
-          int UintahFace[6] = {WEST,EAST,SOUTH,NORTH,BOT,TOP};
-
-          double sumI         = 0;
-          double sumProjI     = 0;
-          double sumI_prev    = 0;
-          double sumCosTheta  = 0;    // used to force sumCosTheta/nRays == 0.5 or  sum (d_Omega * cosTheta) == pi
-
-          if (d_rayDirSampleAlgo == LATIN_HYPER_CUBE){
-            randVector(rand_i, mTwister, origin);
-          }
-
-
-          //__________________________________
-          // Flux ray loop
-          for (int iRay=0; iRay < d_nFluxRays; iRay++){
-
-            Vector direction_vector;
-            Vector rayOrigin;
-            double cosTheta;
-
-            if ( d_rayDirSampleAlgo == LATIN_HYPER_CUBE ){        // Latin-Hyper-Cube sampling
-              rayDirectionHyperCube_cellFace( mTwister, origin, d_dirIndexOrder[RayFace], d_dirSignSwap[RayFace], iRay,
-                                              direction_vector, cosTheta, rand_i[iRay],iRay);
-            } else{                                               // Naive Monte-Carlo sampling
-              rayDirection_cellFace( mTwister, origin, d_dirIndexOrder[RayFace], d_dirSignSwap[RayFace], iRay,
-                                     direction_vector, cosTheta );
-            }
-
-            rayLocation_cellFace( mTwister, RayFace, Dx, CC_pos, rayOrigin);
-
-            updateSumI<T>( level, direction_vector, rayOrigin, origin, Dx, sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
-
-            sumProjI    += cosTheta * (sumI - sumI_prev);              // must subtract sumI_prev, since sumI accumulates intensity
-
-            sumCosTheta += cosTheta;
-
-            sumI_prev    = sumI;
-
-          } // end of flux ray loop
-
-          sumProjI = sumProjI * (double) d_nFluxRays/sumCosTheta/2.0; // This operation corrects for error in the first moment over a half range of the solid angle (Modest Radiative Heat Transfer page 545 1rst edition)
-
-          //__________________________________
-          //  Compute Net Flux to the boundary
-          int face = UintahFace[RayFace];
-          boundFlux[origin][ face ] = sumProjI * 2 *M_PI/ (double) d_nFluxRays;
-
-/*`==========TESTING==========*/
-#if (DEBUG == 2)
-          if( isDbgCell(origin) ) {
-            printf( "\n      [%d, %d, %d]  face: %d sumProjI:  %g BoundaryFlux: %g\n",
-                  origin.x(), origin.y(), origin.z(), face, sumProjI, boundFlux[origin][ face ]);
-          }
-#endif
-/*===========TESTING==========`*/
-
-        } // boundary faces loop
-      }  // end cell iterator
-    }   // end if d_solveBoundaryFlux
-
+// TODO: Kokkos-ify the boundary flux calculation
 
     //______________________________________________________________________
     //         S O L V E   D I V Q
     //______________________________________________________________________
+
     if ( d_solveDivQ ) {
 
       bool latinHyperCube = ( d_rayDirSampleAlgo == LATIN_HYPER_CUBE ) ? true : false;
@@ -2178,102 +2095,22 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
       }
     }
 
-
     int my_L = maxLevels - 1;
+
     //______________________________________________________________________
-    //          B O U N D A R Y F L U X
+    //         B O U N D A R Y F L U X
     //______________________________________________________________________
 
     unsigned long int nFluxRaySteps = 0;
-    if( d_solveBoundaryFlux){
 
-      //__________________________________
-      //
-      vector <int> rand_i( d_rayDirSampleAlgo == LATIN_HYPER_CUBE ? d_nFluxRays : 0);  // only needed for LHC scheme
-
-      for (CellIterator iter = finePatch->getCellIterator(); !iter.done(); iter++){
-        IntVector origin = *iter;
-
-        // A given flow cell may have 0,1,2,3,4,5, or 6 faces that are adjacent to a wall.
-        // boundaryFaces is the vector that contains the list of which faces are adjacent to a wall
-        vector<int> boundaryFaces;
-        boundaryFaces.clear();
-
-        // determine if origin has one or more boundary faces, and if so, populate boundaryFaces vector
-        boundFlux_fine[origin].p = has_a_boundary(origin, cellType[my_L], boundaryFaces);
-
-        Point CC_pos = fineLevel->getCellPosition(origin);
-        //__________________________________
-        // Loop over boundary faces of the cell and compute incident radiative flux
-        for (vector<int>::iterator it=boundaryFaces.begin() ; it < boundaryFaces.end(); it++ ){
-
-          int RayFace = *it;
-          int UintahFace[6] = {WEST,EAST,SOUTH,NORTH,BOT,TOP};
-
-          double sumI         = 0;
-          double sumProjI     = 0;
-          double sumI_prev    = 0;
-          double sumCosTheta  = 0;    // used to force sumCosTheta/nRays == 0.5 or  sum (d_Omega * cosTheta) == pi
-
-          if (d_rayDirSampleAlgo == LATIN_HYPER_CUBE){
-            randVector(rand_i, mTwister, origin);
-          }
-
-          //__________________________________
-          // Flux ray loop
-          for (int iRay=0; iRay < d_nFluxRays; iRay++){
-
-            Vector direction_vector;
-            Vector rayOrigin;
-            double cosTheta;
-
-            if ( d_rayDirSampleAlgo == LATIN_HYPER_CUBE ){        // Latin-Hyper-Cube sampling
-              rayDirectionHyperCube_cellFace( mTwister, origin, d_dirIndexOrder[RayFace], d_dirSignSwap[RayFace], iRay,
-                                              direction_vector, cosTheta, rand_i[iRay],iRay);
-            } else{                                               // Naive Monte-Carlo sampling
-              rayDirection_cellFace( mTwister, origin, d_dirIndexOrder[RayFace], d_dirSignSwap[RayFace], iRay,
-                                     direction_vector, cosTheta );
-            }
-
-            rayLocation_cellFace( mTwister, RayFace, Dx[my_L], CC_pos, rayOrigin);
-
-            updateSumI_ML< T >( direction_vector, rayOrigin, origin, Dx, domain_BB, maxLevels, fineLevel,
-                         fineLevel_ROI_Lo, fineLevel_ROI_Hi, regionLo, regionHi, sigmaT4OverPi, abskg, cellType,
-                         nFluxRaySteps, sumI, mTwister );
-
-            sumProjI    += cosTheta * (sumI - sumI_prev);              // must subtract sumI_prev, since sumI accumulates intensity
-
-            sumCosTheta += cosTheta;
-
-            sumI_prev    = sumI;
-
-          } // end of flux ray loop
-
-          sumProjI = sumProjI * (double) d_nFluxRays/sumCosTheta/2.0; // This operation corrects for error in the first moment over a half range of the solid angle (Modest Radiative Heat Transfer page 545 1rst edition)
-
-          //__________________________________
-          //  Compute Net Flux to the boundary
-          int face = UintahFace[RayFace];
-          boundFlux_fine[origin][ face ] = sumProjI * 2 *M_PI/ (double) d_nFluxRays;
-
-/*`==========TESTING==========*/
-#if (DEBUG == 2)
-          if( isDbgCell(origin) ) {
-            printf( "\n      [%d, %d, %d]  face: %d sumProjI:  %g BoundaryFlux: %g\n",
-                  origin.x(), origin.y(), origin.z(), face, sumProjI, boundFlux_fine[origin][ face ]);
-          }
-#endif
-/*===========TESTING==========`*/
-
-        } // boundary faces loop
-      }  // end cell iterator
-    }   // end if d_solveBoundaryFlux
+// TODO: Kokkos-ify the boundary flux calculation
 
     unsigned long int nRaySteps = 0;
 
     //______________________________________________________________________
     //         S O L V E   D I V Q
     //______________________________________________________________________
+
     if (d_solveDivQ) {
 
       IntVector lo = finePatch->getCellLowIndex();
@@ -3366,268 +3203,6 @@ void Ray::computeCellType( const ProcessorGroup*,
   }  // coarse patch loop
 }
 
-//______________________________________________________________________
-//  Multi-level
- template< class T>
- void Ray::updateSumI_ML ( Vector& ray_direction,
-                           Vector& ray_origin,
-                           const IntVector& origin,
-                           const vector<Vector>& Dx,
-                           const BBox& domain_BB,
-                           const int maxLevels,
-                           const Level* fineLevel,
-                           const IntVector& fineLevel_ROI_Lo,
-                           const IntVector& fineLevel_ROI_Hi,
-                           vector<IntVector>& regionLo,
-                           vector<IntVector>& regionHi,
-                           std::vector< constCCVariable< T > >& sigmaT4OverPi,
-                           std::vector< constCCVariable< T > >& abskg,
-                           std::vector< constCCVariable< int > >& cellType,
-                           unsigned long int& nRaySteps,
-                           double& sumI,
-                           MTRand& mTwister)
-{
-  int L       = maxLevels -1;  // finest level
-  int prevLev = L;
-
-  IntVector cur      = origin;
-  IntVector prevCell = cur;
-
-  int step[3];                                           // Gives +1 or -1 based on sign
-  double sign[3];
-
-  Vector inv_direction = Vector(1.0)/ray_direction;
-
-/*`==========TESTING==========*/
-#if DEBUG == 1
-  if( isDbgCell(origin) ) {
-    printf("        updateSumI_ML: [%d,%d,%d] ray_dir [%g,%g,%g] ray_loc [%g,%g,%g]\n", origin.x(), origin.y(), origin.z(),ray_direction.x(), ray_direction.y(), ray_direction.z(), ray_origin.x(), ray_origin.y(), ray_origin.z());
-  }
-#endif
-/*===========TESTING==========`*/
-
-  raySignStep(sign, step, ray_direction);
-
-  //__________________________________
-  // define tMax & tDelta on all levels
-  // go from finest to coarsest level so you can compare
-  // with 1L rayTrace results.
-
-  Point CC_posOrigin = fineLevel->getCellPosition(origin);
-
-  // rayDx is the distance from bottom, left, back, corner of cell to ray
-  Vector rayDx;
-  rayDx[0] = ray_origin.x() - ( CC_posOrigin.x() - 0.5*Dx[L][0] );
-  rayDx[1] = ray_origin.y() - ( CC_posOrigin.y() - 0.5*Dx[L][1] );
-  rayDx[2] = ray_origin.z() - ( CC_posOrigin.z() - 0.5*Dx[L][2] );
-
-  // tMax is the physical distance from the ray origin to each of the respective planes of intersection
-  Vector tMaxV;
-  tMaxV[0] = (sign[0] * Dx[L][0] - rayDx[0]) * inv_direction.x();
-  tMaxV[1] = (sign[1] * Dx[L][1] - rayDx[1]) * inv_direction.y();
-  tMaxV[2] = (sign[2] * Dx[L][2] - rayDx[2]) * inv_direction.z();
-
-  vector<Vector> tDelta(maxLevels);
-  for(int Lev = maxLevels-1; Lev>-1; Lev--){
-    //Length of t to traverse one cell
-    tDelta[Lev].x( std::fabs(inv_direction[0]) * Dx[Lev][0]);
-    tDelta[Lev].y( std::fabs(inv_direction[1]) * Dx[Lev][1] );
-    tDelta[Lev].z( std::fabs(inv_direction[2]) * Dx[Lev][2] );
-  }
-
-  //Initializes the following values for each ray
-  bool   in_domain      = true;
-  Vector tMaxV_prev     = Vector(0,0,0);
-  double old_length     = 0.0;
-
-  double intensity      = 1.0;
-  double fs             = 1.0;
-  int    nReflect       = 0;             // Number of reflections
-  bool   onFineLevel    = true;
-  const  Level* level   = fineLevel;
-  double optical_thickness     = 0;
-  double expOpticalThick_prev  = 1.0;    // exp(-opticalThick_prev)
-  double rayLength             = 0.0;
-  Vector ray_location          = ray_origin;
-  Point CC_pos                 = CC_posOrigin;
-
-  //______________________________________________________________________
-  //  Threshold  loop
-  while (intensity > d_threshold){
-    DIR dir = NONE;
-    while (in_domain){
-
-      prevCell = cur;
-      prevLev  = L;
-
-      //__________________________________
-      //  Determine the principal direction the ray is traveling
-      //
-      dir = NONE;
-      if ( tMaxV[0] < tMaxV[1] ){    // X < Y
-        if ( tMaxV[0] < tMaxV[2] ){  // X < Z
-          dir = X;
-        } else {
-          dir = Z;
-        }
-      } else {
-        if(tMaxV[1] <tMaxV[2] ){     // Y < Z
-          dir = Y;
-        } else {
-          dir = Z;
-        }
-      }
-
-      // next cell index and position
-      cur[dir]  = cur[dir] + step[dir];
-
-      //__________________________________
-      // Logic for moving between levels
-      // - Currently you can only move from fine to coarse level
-      // - Don't jump levels if ray is at edge of domain
-
-      CC_pos = level->getCellPosition(cur);           // position could be outside of domain
-      in_domain = domain_BB.inside(CC_pos);
-
-      bool ray_outside_ROI    = ( containsCell( fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir ) == false );
-      bool ray_outside_Region = ( containsCell( regionLo[L], regionHi[L], cur, dir ) == false );
-
-      bool jumpFinetoCoarserLevel   = ( onFineLevel &&  ray_outside_ROI && in_domain );
-      bool jumpCoarsetoCoarserLevel = ( (onFineLevel == false) && ray_outside_Region && (L > 0) && in_domain );
-
-//#define ML_DEBUG
-#if ( (DEBUG == 1 || DEBUG == 4) && defined(ML_DEBUG) )
-      if( isDbgCell(origin) ) {
-        printf( "        Ray: [%i,%i,%i] **jumpFinetoCoarserLevel %i jumpCoarsetoCoarserLevel %i containsCell: %i ", cur.x(), cur.y(), cur.z(), jumpFinetoCoarserLevel, jumpCoarsetoCoarserLevel,
-            containsCell(fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir));
-        printf( " onFineLevel: %i ray_outside_ROI: %i ray_outside_Region: %i in_domain: %i\n", onFineLevel, ray_outside_ROI, ray_outside_Region, in_domain );
-        printf( " L: %i regionLo: [%i,%i,%i], regionHi: [%i,%i,%i]\n",L,regionLo[L].x(),regionLo[L].y(),regionLo[L].z(),regionHi[L].x(),regionHi[L].y(),regionHi[L].z());
-      }
-#endif
-
-      if( jumpFinetoCoarserLevel ){
-        cur   = level->mapCellToCoarser(cur);
-        level = level->getCoarserLevel().get_rep();      // move to a coarser level
-        L     = level->getIndex();
-        onFineLevel = false;
-
-#if ( (DEBUG == 1 || DEBUG == 4) && defined(ML_DEBUG) )
-        if( isDbgCell(origin) ) {
-          printf( "        ** Jumping off fine patch switching Levels:  prev L: %i, L: %i, cur: [%i,%i,%i] \n",prevLev, L, cur.x(), cur.y(), cur.z());
-        }
-#endif
-      } else if ( jumpCoarsetoCoarserLevel ) {
-
-        IntVector c_old = cur;                          // needed for debugging
-        cur   = level->mapCellToCoarser(cur);
-        level = level->getCoarserLevel().get_rep();
-        L     = level->getIndex();
-#if ( (DEBUG == 1 || DEBUG == 4) && defined(ML_DEBUG) )
-        if( isDbgCell(origin) ) {
-          printf( "        ** Switching Levels:  prev L: %i, L: %i, cur: [%i,%i,%i], c_old: [%i,%i,%i]\n",prevLev, L, cur.x(), cur.y(), cur.z(), c_old.x(), c_old.y(), c_old.z());
-        }
-#endif
-      }
-
-
-
-
-      //__________________________________
-      //  update marching variables
-      double distanceTraveled = (tMaxV[dir] - old_length);
-      old_length     = tMaxV[dir];
-      tMaxV_prev     = tMaxV;
-      tMaxV[dir]     = tMaxV[dir] + tDelta[L][dir];
-
-      ray_location[0] = ray_location[0] + ( distanceTraveled  * ray_direction[0] );
-      ray_location[1] = ray_location[1] + ( distanceTraveled  * ray_direction[1] );
-      ray_location[2] = ray_location[2] + ( distanceTraveled  * ray_direction[2] );
-
-      //__________________________________
-      // when moving to a coarse level tmax will change only in the direction the ray is moving
-      if ( jumpFinetoCoarserLevel || jumpCoarsetoCoarserLevel ) {
-        double rayDx_Level = ray_location[dir] - ( CC_pos(dir) - 0.5*Dx[L][dir] );
-        double tMax_tmp    = ( sign[dir] * Dx[L][dir] - rayDx_Level ) * inv_direction[dir];
-        tMaxV        = tMaxV_prev;
-        tMaxV[dir]  += tMax_tmp;
-      }
-
-
-      // if the cell isn't a flow cell then terminate the ray
-      in_domain = in_domain && (cellType[L][cur] == d_flowCell);
-
-      rayLength         += distanceTraveled;
-      optical_thickness += abskg[prevLev][prevCell]*distanceTraveled;
-      nRaySteps++;
-
-/*`==========TESTING==========*/
-#ifdef FAST_EXP
-      double expOpticalThick = fast_exp(-optical_thickness);
-#else
-      double expOpticalThick = exp(-optical_thickness);
-#endif
-/*===========TESTING==========`*/
-
- /*`==========TESTING==========*/
-#if DEBUG == 1
-  if( isDbgCell( origin ) ){
-    printf( "            cur [%d,%d,%d] prev [%d,%d,%d]", cur.x(), cur.y(), cur.z(), prevCell.x(), prevCell.y(), prevCell.z());
-    printf( " dir %d ", dir );
-    printf( " cellType: %i ", cellType[L][cur] );
-//    printf( " stepSize [%i,%i,%i] ",step[0],step[1],step[2]);
-    printf( "tMax [%g,%g,%g] ", tMaxV[0],tMaxV[1], tMaxV[2]);
-    printf( "rayLoc [%4.5f,%4.5f,%4.5f] ",ray_location.x(),ray_location.y(), ray_location.z());
-    printf( "\tdistanceTraveled %4.5f tMax[dir]: %g tMax_prev[dir]: %g, Dx[dir]: %g\n",distanceTraveled, tMaxV[dir], tMaxV_prev[dir], Dx[L][dir]);
-    printf( "                tDelta [%g,%g,%g] \n",tDelta[L].x(),tDelta[L].y(), tDelta[L].z());
-
-//    printf( "inv_dir [%g,%g,%g] ",inv_direction.x(),inv_direction.y(), inv_direction.z());
-//    printf( "            abskg[prev] %g  \t sigmaT4OverPi[prev]: %g \n",abskg[prevLev][prevCell],  sigmaT4OverPi[prevLev][prevCell]);
-//    printf( "            abskg[cur]  %g  \t sigmaT4OverPi[cur]:  %g  \t  cellType: %i \n",abskg[L][cur], sigmaT4OverPi[L][cur], cellType[L][cur]);
-//    printf( "            Dx[prevLev].x  %g \n",  Dx[prevLev].x() );
-    printf( "                optical_thickkness %g \t rayLength: %g\n", optical_thickness, rayLength);
-  }
-#endif
-/*===========TESTING==========`*/
-
-      sumI += sigmaT4OverPi[prevLev][prevCell] * ( expOpticalThick_prev - expOpticalThick ) * fs;
-
-      expOpticalThick_prev = expOpticalThick;
-
-    } //end domain while loop.  ++++++++++++++
-
-    double wallEmissivity = abskg[L][cur];
-
-    if (wallEmissivity > 1.0){       // Ensure wall emissivity doesn't exceed one.
-      wallEmissivity = 1.0;
-    }
-
-    intensity = exp(-optical_thickness);
-
-    sumI += wallEmissivity * sigmaT4OverPi[L][cur] * intensity;
-
-    intensity = intensity * fs;
-
-    // when a ray reaches the end of the domain, we force it to terminate.
-    if(!d_allowReflect){
-      intensity = 0;
-    }
-
-/*`==========TESTING==========*/
-#if DEBUG == 1
-  if( isDbgCell(origin) ){
-    printf( "        intensity: %g OptThick: %g, fs: %g allowReflect: %i\n", intensity, optical_thickness, fs, d_allowReflect );
-  }
-#endif
-/*===========TESTING==========`*/
-
-    //__________________________________
-    //  Reflections
-    if (intensity > d_threshold && d_allowReflect ){
-      ++nReflect;
-      reflect( fs, cur, prevCell, abskg[L][cur], in_domain, step[dir], sign[dir], ray_direction[dir] );
-    }
-  }  // threshold while loop.
-}
 
 #if 0
 //---------------------------------------------------------------------------
@@ -3749,39 +3324,3 @@ template void Ray::setBoundaryConditions< float >( const ProcessorGroup*,
                                                    DataWarehouse* ,
                                                    Task::WhichDW ,
                                                    const bool );
-
-template void  Ray::updateSumI_ML< double> ( Vector&,
-                                             Vector&,
-                                             const IntVector&,
-                                             const vector<Vector>&,
-                                             const BBox&,
-                                             const int,
-                                             const Level* ,
-                                             const IntVector&,
-                                             const IntVector&,
-                                             vector<IntVector>&,
-                                             vector<IntVector>&,
-                                             std::vector< constCCVariable< double > >& sigmaT4OverPi,
-                                             std::vector< constCCVariable<double> >& abskg,
-                                             std::vector< constCCVariable< int > >& cellType,
-                                             unsigned long int& ,
-                                             double& ,
-                                             MTRand&);
-
-template void  Ray::updateSumI_ML< float> ( Vector&,
-                                            Vector&,
-                                            const IntVector&,
-                                            const vector<Vector>&,
-                                            const BBox&,
-                                            const int,
-                                            const Level* ,
-                                            const IntVector&,
-                                            const IntVector&,
-                                            vector<IntVector>&,
-                                            vector<IntVector>&,
-                                            std::vector< constCCVariable< float > >& sigmaT4OverPi,
-                                            std::vector< constCCVariable< float > >& abskg,
-                                            std::vector< constCCVariable< int > >& cellType,
-                                            unsigned long int& ,
-                                            double& ,
-                                            MTRand&);
