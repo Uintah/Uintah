@@ -35,7 +35,7 @@
  */
 
 #ifndef CORE_MALLOC_ALLOCATOR_H
-#define CORE_MALLOC_ALLOCATOR_H 1
+#define CORE_MALLOC_ALLOCATOR_H
 
 #include <sci_defs/malloc_defs.h>
 
@@ -77,24 +77,24 @@ namespace Uintah {
   
 struct Allocator;
 Allocator* MakeAllocator();
-void DestroyAllocator(Allocator*);
+void DestroyAllocator( Allocator* );
 
 extern Allocator* default_allocator;
 void MakeDefaultAllocator();
 
-void PrintTag(void*);
+void PrintTag( void* );
 
 // These functions are for use in tracking down memory leaks.  In the
 // MALLOC_STATS file, non-freed memory will be listed with the specified tag...
 
-const char* AllocatorSetDefaultTagMalloc(const char* tag);
-const char* AllocatorSetDefaultTagNew(const char* tag);
-int         AllocatorSetDefaultTagLineNumber(int line_number);
-void        AllocatorResetDefaultTagMalloc();
-void        AllocatorResetDefaultTagNew();
-void        AllocatorResetDefaultTagLineNumber();
-const char* AllocatorSetDefaultTag(const char* tag);
-void        AllocatorResetDefaultTag();
+const char * AllocatorSetDefaultTagMalloc( const char* tag );
+const char * AllocatorSetDefaultTagNew( const char* tag );
+      int    AllocatorSetDefaultTagLineNumber( int line_number );
+      void   AllocatorResetDefaultTagMalloc();
+      void   AllocatorResetDefaultTagNew();
+      void   AllocatorResetDefaultTagLineNumber();
+const char * AllocatorSetDefaultTag( const char* tag );
+      void   AllocatorResetDefaultTag();
 
 
 // append the num to the MallocStats file if MallocStats are dumped to a file
@@ -103,64 +103,67 @@ void AllocatorMallocStatsAppendNumber(int num);
   
 Allocator* DefaultAllocator();
 
-void GetGlobalStats( Allocator*,
-                     size_t& nalloc,
-                     size_t& sizealloc,
-                     size_t& nfree,
-                     size_t& sizefree,
-                     size_t& nfillbin,
-                     size_t& nmmap,
-                     size_t& sizemmap,
-                     size_t& nmunmap,
-                     size_t& sizemunmap,
-                     size_t& highwater_alloc,
-                     size_t& highwater_mmap,
-                     size_t& bytes_overhead,
-                     size_t& bytes_free,
-                     size_t& bytes_fragmented,
-                     size_t& bytes_inuse,
-                     size_t& bytes_inhunks );
+void GetGlobalStats( Allocator *
+                   , size_t    & nalloc
+                   , size_t    & sizealloc
+                   , size_t    & nfree
+                   , size_t    & sizefree
+                   , size_t    & nfillbin
+                   , size_t    & nmmap
+                   , size_t    & sizemmap
+                   , size_t    & nmunmap
+                   , size_t    & sizemunmap
+                   , size_t    & highwater_alloc
+                   , size_t    & highwater_mmap
+                   , size_t    & bytes_overhead
+                   , size_t    & bytes_free
+                   , size_t    & bytes_fragmented
+                   , size_t    & bytes_inuse
+                   , size_t    & bytes_inhunks
+                   );
 
-void GetGlobalStats( Allocator*,
-                     size_t& nalloc,
-                     size_t& sizealloc,
-                     size_t& nfree,
-                     size_t& sizefree,
-                     size_t& nfillbin,
-                     size_t& nmmap,
-                     size_t& sizemmap,
-                     size_t& nmunmap,
-                     size_t& sizemunmap,
-                     size_t& highwater_alloc,
-                     size_t& highwater_mmap );
+void GetGlobalStats( Allocator *
+                   , size_t    & nalloc
+                   , size_t    & sizealloc
+                   , size_t    & nfree
+                   , size_t    & sizefree
+                   , size_t    & nfillbin
+                   , size_t    & nmmap
+                   , size_t    & sizemmap
+                   , size_t&     nmunmap
+                   , size_t    & sizemunmap
+                   , size_t    & highwater_alloc
+                   , size_t    & highwater_mmap
+                   );
 
 int  GetNbins(Allocator*);
 
-void GetBinStats( Allocator*,
-                  int binno,
-                  size_t& minsize,
-                  size_t& maxsize,
-                  size_t& nalloc,
-                  size_t& nfree,
-                  size_t& ninlist );
+void GetBinStats( Allocator  *
+                , int         binno
+                , size_t    & minsize
+                , size_t    & maxsize
+                , size_t    & nalloc
+                , size_t    & nfree
+                , size_t    & ninlist
+                );
 
-void AuditAllocator(Allocator*);
+void AuditAllocator( Allocator* );
 
-void DumpAllocator(Allocator*, const char* filename = "alloc.dump");
+void DumpAllocator( Allocator*, const char* filename = "alloc.dump" );
 
   // Functions for locking and unlocking the allocator.  In the
   // pthreads implementation, these use a recursive lock that will
   // allow the same thread to lock and unlock the allocator until
   // UnLockAllocator is called.  In other implementations this just uses
   // the regular lock and unlock functions.
-  void LockAllocator(Allocator*);
-  void UnLockAllocator(Allocator*);
+  void LockAllocator( Allocator* );
+  void UnLockAllocator( Allocator* );
   
 } // End namespace Uintah
 
-   void* operator new(size_t, Uintah::Allocator*, const char*, int);
-   void* operator new[](size_t, Uintah::Allocator*, const char*, int);
-#  define scinew new(Uintah::default_allocator, __FILE__, __LINE__)
+   void* operator new( size_t, Uintah::Allocator*, const char*, int );
+   void* operator new[]( size_t, Uintah::Allocator*, const char*, int );
+#  define scinew new( Uintah::default_allocator, __FILE__, __LINE__ )
 
 #else  // MALLOC_TRACE
 
@@ -174,5 +177,5 @@ void DumpAllocator(Allocator*, const char* filename = "alloc.dump");
 
 #endif // MALLOC_TRACE
 
-#endif // CORE_MALLOC_ALLOCATOR_H 1
+#endif // CORE_MALLOC_ALLOCATOR_H
  

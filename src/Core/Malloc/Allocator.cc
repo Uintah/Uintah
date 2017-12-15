@@ -46,8 +46,7 @@
 
 #if !defined( DISABLE_SCI_MALLOC )
 
-//#define ALIGN 16
-const int ALIGN=16;
+static const int ALIGN = 16;
 
 #  include <Core/Malloc/AllocPriv.h>
 #  include <Core/Malloc/AllocOS.h>
@@ -97,8 +96,6 @@ namespace Uintah {
      static char trace_buffer[STATSIZE];
 #  endif
 
-Allocator* default_allocator=0;
-
 // Granularity of small things - 8 bytes
 // Anything smaller than this is considered "small"
 #define SMALL_THRESHOLD (512-8)
@@ -133,6 +130,8 @@ Allocator* default_allocator=0;
 static bool do_shutdown         = false;
 static int mallocStatsAppendNum = -1;
 
+Allocator* default_allocator = nullptr;
+
 
 //______________________________________________________________________________
 //
@@ -149,13 +148,13 @@ inline size_t Allocator::obj_maxsize( Tag* t )
 //______________________________________________________________________________
 //
 static void
-account_bin( Allocator* a
-           , AllocBin* bin
-           , FILE* out
-           , size_t& bytes_overhead
-           , size_t& bytes_free
-           , size_t& bytes_fragmented
-           , size_t& bytes_inuse
+account_bin( Allocator * a
+           , AllocBin  * bin
+           , FILE      * out
+           , size_t    & bytes_overhead
+           , size_t    & bytes_free
+           , size_t    & bytes_fragmented
+           , size_t    & bytes_inuse
            )
 {
   Tag* p = nullptr;
@@ -201,7 +200,7 @@ shutdown()
     if (!a->stats_out) {
       perror("fopen");
       fprintf(stderr, "cannot open stats file: %s, will not print stats\n", filename);
-      a->stats_out = 0;
+      a->stats_out = nullptr;
     }
   }
 
@@ -519,10 +518,10 @@ MakeAllocator()
   int nmedium = NMEDIUM_BINS;
   size += nmedium * sizeof(AllocBin);
 
-  OSHunk* alloc_hunk = OSHunk::alloc(size, false, 0);
+  OSHunk* alloc_hunk = OSHunk::alloc(size, false, nullptr);
   Allocator* a = (Allocator*)alloc_hunk->data;
   alloc_hunk->spaceleft = 0;
-  alloc_hunk->next = 0;
+  alloc_hunk->next = nullptr;
   alloc_hunk->ninuse = 1;
 
   a->hunks = alloc_hunk;
@@ -624,12 +623,11 @@ MakeAllocator()
       a->stats_out = stderr;
     }
     else {
+      // open stats_out at the end to make sure MPI processes have split
       //char filename[MAXPATHLEN];
       //sprintf(filename, statsfile, getpid());
       a->statsfile = statsfile;
 
-      // open stats_out at the end to make sure mpi processes have split
-      a->stats_out = nullptr;
     }
     if ((a->stats_out || statsfile) && !atexit_added) {
       std::atexit(shutdown);
@@ -640,7 +638,9 @@ MakeAllocator()
   }
 
   a->dying = false;
+
   return a;
+
 #  else
   return nullptr;
 #  endif // DISABLE_SCI_MALLOC
@@ -850,8 +850,9 @@ Allocator::alloc_big(       size_t   size
     if (strict) {
       // Fill in the data region with markers.
       unsigned int i = 0xffff5a5a;
-      for (unsigned int* p = (unsigned int*)d; p < (unsigned int*)sent2; p++)
+      for (unsigned int* p = (unsigned int*)d; p < (unsigned int*)sent2; p++) {
         *p++ = i;
+      }
     }
   }
 
@@ -1105,9 +1106,11 @@ void Allocator::free(void* dobj)
   else {
     // Put it in the free list...
     obj->next = obj_bin->free;
-    if (obj_bin->free)
+    if (obj_bin->free) {
       obj_bin->free->prev = obj;
-    obj->prev = 0;
+    }
+
+    obj->prev = nullptr;
     obj_bin->free = obj;
 
     // Setup the new sentinels...
@@ -1141,8 +1144,9 @@ void Allocator::fill_bin(AllocBin* bin)
     size_t tsize;
     tsize = bin->maxsize + OVERHEAD;
     unsigned int nalloc = (unsigned int)(SMALLEST_ALLOCSIZE / tsize);
-    if (nalloc < 1)
+    if (nalloc < 1) {
       nalloc = 1;
+    }
     size_t reqsize = nalloc * tsize;
 
     // Get the hunk...
@@ -1157,8 +1161,9 @@ void Allocator::fill_bin(AllocBin* bin)
       t->linenum = 0;
 #  endif
       t->next = bin->free;
-      if (bin->free)
+      if (bin->free) {
         bin->free->prev = t;
+      }
       t->prev = 0;
       bin->free = t;
       t->hunk = hunk;
@@ -1332,7 +1337,7 @@ Allocator::get_hunk(size_t reqsize, OSHunk*& ret_hunk, void*& ret_p)
 {
   // See if we have room in any of the current hunks...
   OSHunk* hunk;
-  for (hunk = hunks; hunk != 0; hunk = hunk->next) {
+  for (hunk = hunks; hunk != nullptr; hunk = hunk->next) {
     if (hunk->spaceleft >= reqsize) {
       break;
     }
@@ -1399,19 +1404,24 @@ PrintTag(void* dobj)
 //______________________________________________________________________________
 //
 void
-GetGlobalStats( Allocator* a,
-                size_t& nalloc, size_t& sizealloc,
-                size_t& nfree, size_t& sizefree,
-                size_t& nfillbin,
-                size_t& nmmap, size_t& sizemmap,
-                size_t& nmunmap, size_t& sizemunmap,
-                size_t& highwater_alloc, size_t& highwater_mmap,
-                size_t& bytes_overhead,
-                size_t& bytes_free,
-                size_t& bytes_fragmented,
-                size_t& bytes_inuse,
-                size_t& bytes_inhunks
-               )
+GetGlobalStats( Allocator * a
+              , size_t    & nalloc
+              , size_t    & sizealloc
+              , size_t    & nfree
+              , size_t    & sizefree
+              , size_t    & nfillbin
+              , size_t    & nmmap
+              , size_t    & sizemmap
+              , size_t    & nmunmap
+              , size_t    & sizemunmap
+              , size_t    & highwater_alloc
+              , size_t    & highwater_mmap
+              , size_t    & bytes_overhead
+              , size_t    & bytes_free
+              , size_t    & bytes_fragmented
+              , size_t    & bytes_inuse
+              , size_t    & bytes_inhunks
+              )
 {
   if (!a) {
     nalloc = sizealloc = nfree = sizefree = nfillbin = 0;
@@ -1473,18 +1483,18 @@ GetGlobalStats( Allocator* a,
 //______________________________________________________________________________
 // Shorter/faster version that doesn't do full accounting...
 void
-GetGlobalStats( Allocator* a,
-                size_t& nalloc,
-                size_t& sizealloc,
-                size_t& nfree,
-                size_t& sizefree,
-                size_t& nfillbin,
-                size_t& nmmap,
-                size_t& sizemmap,
-                size_t& nmunmap,
-                size_t& sizemunmap,
-                size_t& highwater_alloc,
-                size_t& highwater_mmap
+GetGlobalStats( Allocator * a
+              , size_t    & nalloc
+              , size_t    & sizealloc
+              , size_t    & nfree
+              , size_t    & sizefree
+              , size_t    & nfillbin
+              , size_t    & nmmap
+              , size_t    & sizemmap
+              , size_t    & nmunmap
+              , size_t    & sizemunmap
+              , size_t    & highwater_alloc
+              , size_t    & highwater_mmap
               )
 {
   if (!a) {
@@ -1517,20 +1527,20 @@ GetGlobalStats( Allocator* a,
 int
 GetNbins( Allocator* )
 {
-  return NSMALL_BINS+NMEDIUM_BINS+1;
+  return NSMALL_BINS + NMEDIUM_BINS + 1;
 }
 
 //______________________________________________________________________________
 //
 void
-GetBinStats( Allocator* a,
-             int binno,
-             size_t& minsize,
-             size_t& maxsize,
-             size_t& nalloc,
-             size_t& nfree,
-             size_t& ninlist
-             )
+GetBinStats( Allocator * a
+           , int         binno
+           , size_t    & minsize
+           , size_t    & maxsize
+           , size_t    & nalloc
+           , size_t    & nfree
+           , size_t    & ninlist
+           )
 {
   AllocBin* bin;
   if(binno < NSMALL_BINS) {
@@ -1570,13 +1580,13 @@ static void
 audit_bin(Allocator* a, AllocBin* bin)
 {
   Tag* p;
-  for (p = bin->free; p != 0; p = p->next) {
+  for (p = bin->free; p != nullptr; p = p->next) {
     if (p->next && p->next->prev != p) {
       AllocError("Free list confused");
     }
     a->audit(p, OBJFREE);
   }
-  for (p = bin->inuse; p != 0; p = p->next) {
+  for (p = bin->inuse; p != nullptr; p = p->next) {
     if (p->next && p->next->prev != p) {
       AllocError("Inuse list confused");
     }
@@ -1591,12 +1601,11 @@ AuditAllocator( Allocator* a )
 {
   a->lock();
   {
-    int i;
-    for (i = 0; i < NSMALL_BINS; i++) {
+    for (int i = 0; i < NSMALL_BINS; i++) {
       audit_bin(a, &a->small_bins[i]);
     }
 
-    for (i = 0; i < NMEDIUM_BINS; i++) {
+    for (int i = 0; i < NMEDIUM_BINS; i++) {
       audit_bin(a, &a->medium_bins[i]);
     }
 
@@ -1648,12 +1657,11 @@ DumpAllocator( Allocator* a, const char* filename )
 
   a->lock();
   {
-    int i;
-    for (i = 0; i < NSMALL_BINS; i++) {
+    for (int i = 0; i < NSMALL_BINS; i++) {
       dump_bin(a, &a->small_bins[i], fp);
     }
 
-    for (i = 0; i < NMEDIUM_BINS; i++) {
+    for (int i = 0; i < NMEDIUM_BINS; i++) {
       dump_bin(a, &a->medium_bins[i], fp);
     }
 
