@@ -23,7 +23,7 @@
  */
 
 //----- Ray.cc ----------------------------------------------
-#include <CCA/Components/Models/Radiation/RMCRT/Ray.h>
+#include <CCA/Components/Models/Radiation/RMCRT/RayKokkos.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
 
 #include <Core/Exceptions/InternalError.h>
@@ -32,9 +32,8 @@
 #include <Core/Grid/AMR_CoarsenRefine.h>
 #include <Core/Grid/BoundaryConditions/BCUtils.h>
 #include <Core/Grid/DbgOutput.h>
-#include <Core/Util/DOUT.hpp>
 #include <Core/Grid/Variables/PerPatch.h>
-#include <Core/Math/MersenneTwister.h>
+#include <Core/Util/DOUT.hpp>
 #include <Core/Util/Timers/Timers.hpp>
 
 #include <include/sci_defs/uintah_testdefs.h.in>
@@ -42,12 +41,17 @@
 #include <sci_defs/kokkos_defs.h>
 #include <sci_defs/visit_defs.h>
 
-#include <fstream>
-#include <vector>
-#include <string>
-#include <iostream>
+#include <Kokkos_Random.hpp>
 
-// TURN ON debug flag in src/Core/Math/MersenneTwister.h to compare with Ray:CPU
+#include <fstream>
+#include <iostream>
+#include <string>
+#include <vector>
+
+//__________________________________
+// To enable comparisons with Ray:CPU, define FIXED_RANDOM_NUM in src/Core/Math/MersenneTwister.h
+// To enable comparisons with Ray:GPU, define FIXED_RANDOM_NUM in src/CCA/Components/Models/Radiation/RMCRT/RayGPUKernel.cu
+
 #define DEBUG -9          // 1: divQ, 2: boundFlux, 3: scattering
 #define FIXED_RAY_DIR -9  // Sets ray direction.  1: (0.7071,0.7071, 0), 2: (0.7071, 0, 0.7071), 3: (0, 0.7071, 0.7071)
                           //                      4: (0.7071, 0.7071, 7071), 5: (1,0,0)  6: (0, 1, 0),   7: (0,0,1)
@@ -57,11 +61,11 @@
 
 /*______________________________________________________________________
   TO DO:
-  - Portable random number generation
   - Portable handling of Views and variables used within functors
   - Add GPU-specific setup for Kokkos::CUDA
   - Portable LHC sampling
   - Kokkos-ify boundary flux calculations
+  - Kokkos-ify the radiometer
 
 Optimizations:
   - Create a LevelDB.  Push an pull the communicated variables
@@ -70,7 +74,6 @@ Optimizations:
   - Temperatures af ints?
   - 2L flux coarsening on the boundaries
 ______________________________________________________________________*/
-
 
 
 //______________________________________________________________________
@@ -99,6 +102,7 @@ using std::string;
 extern Dout g_ray_dbg;
 Dout dbg_BC_ray("RAY_BC", false);
 
+
 //---------------------------------------------------------------------------
 // Class: Constructor.
 //---------------------------------------------------------------------------
@@ -121,7 +125,6 @@ Ray::Ray( const TypeDescription::Type FLT_DBL ) : RMCRTCommon( FLT_DBL)
   }
 
   d_PPTimerLabel = VarLabel::create( "Ray_PPTimer", PerPatch<double>::getTypeDescription() );
-  d_dbgCells.push_back( IntVector(0,0,0));
 
 
   //_____________________________________________
@@ -144,6 +147,7 @@ Ray::Ray( const TypeDescription::Type FLT_DBL ) : RMCRTCommon( FLT_DBL)
   d_dirSignSwap[TOP]      = IntVector( 1, 1, -1);
   d_dirSignSwap[BOT]      = IntVector( 1, 1,  1);
 }
+
 
 //---------------------------------------------------------------------------
 // Method: Destructor
@@ -413,6 +417,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
 // #endif
 }
 
+
 //______________________________________________________________________
 //  Method:  Check that the boundary conditions have been set for temperature
 //           and abskg
@@ -455,6 +460,7 @@ Ray::BC_bulletproofing( const ProblemSpecP& rmcrtps )
   }
 }
 
+
 //---------------------------------------------------------------------------
 // Method: Schedule the ray tracer
 // This task has both temporal and spatial scheduling and is tricky to follow
@@ -476,20 +482,16 @@ Ray::sched_rayTrace( const LevelP& level,
   int L = level->getIndex();
   Task::WhichDW abskg_dw = get_abskg_whichDW( L, d_abskgLabel );
 
-  if (Parallel::usingDevice()) {          // G P U
+  if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ) {
+    tsk = scinew Task( taskname, this, &Ray::rayTrace<double>, modifies_divQ, abskg_dw, sigma_dw, celltype_dw );
+  }
+  else {
+    tsk = scinew Task( taskname, this, &Ray::rayTrace<float>, modifies_divQ, abskg_dw, sigma_dw, celltype_dw );
+  }
 
-    if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ) {
-      tsk = scinew Task( taskname, this, &Ray::rayTraceGPU< double >,  modifies_divQ, d_sharedState, abskg_dw, sigma_dw, celltype_dw );
-    } else {
-      tsk = scinew Task( taskname, this, &Ray::rayTraceGPU< float >,  modifies_divQ, d_sharedState, abskg_dw, sigma_dw, celltype_dw);
-    }
-    tsk->usesDevice(true);
-  } else {                                // C P U
-    if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ) {
-      tsk = scinew Task( taskname, this, &Ray::rayTrace<double>, modifies_divQ, abskg_dw, sigma_dw, celltype_dw );
-    } else {
-      tsk = scinew Task( taskname, this, &Ray::rayTrace<float>, modifies_divQ, abskg_dw, sigma_dw, celltype_dw );
-    }
+  // Allow use of up to 4 GPU streams per patch
+  if ( Parallel::usingDevice() ) {
+    tsk->usesDevice(true, 4);
   }
 
   printSchedule(level,g_ray_dbg,"Ray::sched_rayTrace");
@@ -573,8 +575,11 @@ Ray::sched_rayTrace( const LevelP& level,
 //
 namespace {
 
-template <typename T>
+template <typename T, typename RandomGenerator>
 struct rayTrace_solveDivQFunctor {
+
+  typedef unsigned long int value_type;
+  typedef typename RandomGenerator::generator_type rnd_type;
 
   bool                     m_latinHyperCube;
   const Level            * m_level;
@@ -593,6 +598,7 @@ struct rayTrace_solveDivQFunctor {
   KokkosView3<double>      m_divQ;
   KokkosView3<double>      m_radiationVolq;
   BlockRange               m_range;
+  RandomGenerator          m_rand_pool;
 
   rayTrace_solveDivQFunctor( bool                 & latinHyperCube
                            , const Level          * level
@@ -632,12 +638,17 @@ struct rayTrace_solveDivQFunctor {
     m_Dx[0] = Dx.x();
     m_Dx[1] = Dx.y();
     m_Dx[2] = Dx.z();
+    
+    KokkosRandom<RandomGenerator> kokkosRand( d_isSeedRandom );
+
+    m_rand_pool = kokkosRand.getRandPool();
   }
 
     // This operator() replaces the cellIterator loop used to solve DivQ
     void operator() ( int i, int j, int k, unsigned long int & m_nRaySteps ) const {
 
-      MTRand mTwister; //TODO: Can't this object just get passed in? Brad P Dec 10 2016
+      // Each thread needs a unique state
+      rnd_type rand_gen = m_rand_pool.get_state();
 
       //________________________________________________________________________________________//
       //==== START for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) ====//
@@ -661,14 +672,10 @@ struct rayTrace_solveDivQFunctor {
         //_________________________________________________________//
         //==== START findRayDirection(mTwister, origin, iRay ) ====//
 
-        if ( m_d_isSeedRandom == false ) {
-          mTwister.seed( (i + j + k) * iRay + 1 );
-        }
-
         // Random Points On Sphere
-        double plusMinus_one = 2.0 * mTwister.randDblExc() - 1.0 + DBL_EPSILON; // Add fuzz to avoid inf in 1/dirVector
-        double r = sqrt( 1.0 - plusMinus_one * plusMinus_one );                 // Radius of circle at z
-        double theta = 2.0 * M_PI * mTwister.randDblExc();                      // Uniform betwen 0-2Pi
+        double plusMinus_one = 2.0 * ( m_d_isSeedRandom ? Kokkos::rand<rnd_type, double>::draw(rand_gen) : 0.3 ) - 1.0 + DBL_EPSILON; // Add fuzz to avoid inf in 1/dirVector
+        double r = sqrt( 1.0 - plusMinus_one * plusMinus_one );                                                                       // Radius of circle at z
+        double theta = 2.0 * M_PI * ( m_d_isSeedRandom ? Kokkos::rand<rnd_type, double>::draw(rand_gen) : 0.3 );                      // Uniform betwen 0-2Pi
 
         direction_vector[0] = r * cos( theta ); // Convert to cartesian
         direction_vector[1] = r * sin( theta );
@@ -717,9 +724,9 @@ struct rayTrace_solveDivQFunctor {
 
         if ( m_d_CCRays == false ) {
 
-          double x = mTwister.rand() * m_Dx[0];
-          double y = mTwister.rand() * m_Dx[1];
-          double z = mTwister.rand() * m_Dx[2];
+          double x = ( m_d_isSeedRandom ? Kokkos::rand<rnd_type, double>::draw(rand_gen) : 0.3 ) * m_Dx[0];
+          double y = ( m_d_isSeedRandom ? Kokkos::rand<rnd_type, double>::draw(rand_gen) : 0.3 ) * m_Dx[1];
+          double z = ( m_d_isSeedRandom ? Kokkos::rand<rnd_type, double>::draw(rand_gen) : 0.3 ) * m_Dx[2];
 
           double offset[3] = { x, y, z };  // Note you HAVE to compute the components separately to ensure that the
                                            //  random numbers called in the x,y,z order - Todd
@@ -727,7 +734,7 @@ struct rayTrace_solveDivQFunctor {
           if ( offset[0] > m_Dx[0] ||
                offset[1] > m_Dx[1] ||
                offset[2] > m_Dx[2] ) {
-            std::cout << "  Warning:ray_Origin  The Mersenne twister random number generator has returned garbage (" << offset
+            std::cout << "  Warning:ray_Origin  The Kokkos random number generator has returned garbage (" << offset
                       << ") Now forcing the ray origin to be located at the cell-center\n" ;
             offset[0] = 0.5 * m_Dx[0];
             offset[1] = 0.5 * m_Dx[1];
@@ -822,7 +829,7 @@ struct rayTrace_solveDivQFunctor {
 
         // Determine the length at which scattering will occur
         // See CCA/Components/Arches/RMCRT/PaulasAttic/MCRT/ArchesRMCRT/ray.cc
-        double scatLength = -log( mTwister.randDblExc() ) / scatCoeff;
+        double scatLength = -log( ( m_d_isSeedRandom ? Kokkos::rand<rnd_type, double>::draw(rand_gen) : 0.3 ) ) / scatCoeff;
 #endif
 
         //______________________________________________________________________
@@ -917,19 +924,15 @@ struct rayTrace_solveDivQFunctor {
             if ( rayLength_scatter > scatLength && in_domain ) {
 
               // Get new scatLength for each scattering event
-              scatLength = -log( mTwister.randDblExc() ) / scatCoeff;
+              scatLength = -log( ( m_d_isSeedRandom ? Kokkos::rand<rnd_type, double>::draw(rand_gen) : 0.3 ) ) / scatCoeff;
 
               //_________________________________________________//
               //==== START findRayDirection( mTwister, cur ) ====//
 
-              if ( m_d_isSeedRandom == false ) {
-                mTwister.seed( (cur[0] + cur[1] + cur[2]) * -9 + 1 );
-              }
-
               // Random Points On Sphere
-              double plusMinus_one = 2.0 * mTwister.randDblExc() - 1.0 + DBL_EPSILON; // Add fuzz to avoid inf in 1/dirVector
-              double r = sqrt( 1.0 - plusMinus_one * plusMinus_one );                 // Radius of circle at z
-              double theta = 2.0 * M_PI * mTwister.randDblExc();                      // Uniform betwen 0-2Pi
+              double plusMinus_one = 2.0 * ( m_d_isSeedRandom ? Kokkos::rand<rnd_type, double>::draw(rand_gen) : 0.3 ) - 1.0 + DBL_EPSILON; // Add fuzz to avoid inf in 1/dirVector
+              double r = sqrt( 1.0 - plusMinus_one * plusMinus_one );                                                                       // Radius of circle at z
+              double theta = 2.0 * M_PI * ( m_d_isSeedRandom ? Kokkos::rand<rnd_type, double>::draw(rand_gen) : 0.3 );                      // Uniform betwen 0-2Pi
 
               direction_vector[0] = r * cos( theta ); // Convert to cartesian
               direction_vector[1] = r * sin( theta );
@@ -1114,6 +1117,8 @@ struct rayTrace_solveDivQFunctor {
 #endif
 /*===========TESTING==========`*/
 
+      m_rand_pool.free_state(rand_gen);
+
     } // end operator()
   };  // end rayTrace_solveDivQFunctor
 }     // end namespace
@@ -1145,10 +1150,6 @@ Ray::rayTrace( const ProcessorGroup* pg,
       new_dw->put( ppTimer, d_PPTimerLabel, d_matl, patch);
     }
 #endif
-
-  //__________________________________
-  //
-  MTRand mTwister;
 
   DataWarehouse* abskg_dw    = new_dw->getOtherDataWarehouse(which_abskg_dw);
   DataWarehouse* sigmaT4_dw  = new_dw->getOtherDataWarehouse(which_sigmaT4_dw);
@@ -1247,9 +1248,7 @@ Ray::rayTrace( const ProcessorGroup* pg,
     //         R A D I O M E T E R
     //______________________________________________________________________
 
-    if (d_radiometer) {
-      d_radiometer->radiometerFlux< T >( patch, level, new_dw, mTwister, sigmaT4OverPi, abskg, celltype, modifies_divQ );
-    }
+// TODO: Kokkos-ify the radiometer
 
     //______________________________________________________________________
     //         B O U N D A R Y F L U X
@@ -1270,24 +1269,24 @@ Ray::rayTrace( const ProcessorGroup* pg,
 
       Uintah::BlockRange range(lo, hi);
 
-      rayTrace_solveDivQFunctor<T> functor( latinHyperCube
-                                          , level
-                                          , d_nDivQRays
-                                          , d_isSeedRandom
-                                          , d_CCRays
-                                          , d_sigmaScat
-                                          , d_threshold
-                                          , d_maxRayLength
-                                          , abskg
-                                          , sigmaT4OverPi
-                                          , celltype
-                                          , d_flowCell
-                                          , Dx
-                                          , d_allowReflect
-                                          , divQ
-                                          , radiationVolq
-                                          , range
-                                          );
+      rayTrace_solveDivQFunctor< T, Kokkos::Random_XorShift1024_Pool<Kokkos::OpenMP> > functor( latinHyperCube
+                                                                                              , level
+                                                                                              , d_nDivQRays
+                                                                                              , d_isSeedRandom
+                                                                                              , d_CCRays
+                                                                                              , d_sigmaScat
+                                                                                              , d_threshold
+                                                                                              , d_maxRayLength
+                                                                                              , abskg
+                                                                                              , sigmaT4OverPi
+                                                                                              , celltype
+                                                                                              , d_flowCell
+                                                                                              , Dx
+                                                                                              , d_allowReflect
+                                                                                              , divQ
+                                                                                              , radiationVolq
+                                                                                              , range
+                                                                                              );
 
       // This parallel_reduce replaces the cellIterator loop used to solve DivQ
       Uintah::parallel_reduce( range, functor, size );
@@ -1317,7 +1316,6 @@ Ray::rayTrace( const ProcessorGroup* pg,
 }  // end ray trace method
 
 
-
 //---------------------------------------------------------------------------
 // Ray tracing using the multilevel data onion scheme
 //---------------------------------------------------------------------------
@@ -1341,24 +1339,18 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
   string taskname = "";
 
   Task::WhichDW NotUsed = Task::None;
-  
-  if (Parallel::usingDevice()) {          // G P U
-    taskname = "Ray::rayTraceDataOnionGPU";
 
-    if (RMCRTCommon::d_FLT_DBL == TypeDescription::double_type) {
-      tsk = scinew Task(taskname, this, &Ray::rayTraceDataOnionGPU<double>, modifies_divQ, d_sharedState, NotUsed, sigma_dw, celltype_dw);
-    } else {
-      tsk = scinew Task(taskname, this, &Ray::rayTraceDataOnionGPU<float>, modifies_divQ, d_sharedState, NotUsed, sigma_dw, celltype_dw);
-    }
-    //Allow it to use up to 4 GPU streams per patch.
+  taskname = "Ray::rayTrace_dataOnion";
+  if (RMCRTCommon::d_FLT_DBL == TypeDescription::double_type) {
+    tsk = scinew Task(taskname, this, &Ray::rayTrace_dataOnion<double>, modifies_divQ, NotUsed, sigma_dw, celltype_dw);
+  }
+  else {
+    tsk = scinew Task(taskname, this, &Ray::rayTrace_dataOnion<float>, modifies_divQ, NotUsed, sigma_dw, celltype_dw);
+  }
+
+  // Allow use of up to 4 GPU streams per patch
+  if (Parallel::usingDevice()) {
     tsk->usesDevice(true, 4);
-  } else {                                // CPU
-    taskname = "Ray::rayTrace_dataOnion";
-    if (RMCRTCommon::d_FLT_DBL == TypeDescription::double_type) {
-      tsk = scinew Task(taskname, this, &Ray::rayTrace_dataOnion<double>, modifies_divQ, NotUsed, sigma_dw, celltype_dw);
-    } else {
-      tsk = scinew Task(taskname, this, &Ray::rayTrace_dataOnion<float>, modifies_divQ, NotUsed, sigma_dw, celltype_dw);
-    }
   }
 
   printSchedule(level, g_ray_dbg, taskname);
@@ -1451,8 +1443,11 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
 //
 namespace {
 
-template <typename T>
+template <typename T, typename RandomGenerator>
 struct rayTrace_dataOnion_solveDivQFunctor {
+
+  typedef unsigned long int value_type;
+  typedef typename RandomGenerator::generator_type rnd_type;
 
   const Level                       * m_fineLevel;
   const int                           m_maxLevels;
@@ -1475,6 +1470,7 @@ struct rayTrace_dataOnion_solveDivQFunctor {
   bool                                m_d_isSeedRandom;
   bool                                m_d_CCRays;
   int                                 m_d_flowCell;
+  RandomGenerator                     m_rand_pool;
 
   rayTrace_dataOnion_solveDivQFunctor( const Level                       * fineLevel
                                      , const int                           maxLevels
@@ -1519,12 +1515,17 @@ struct rayTrace_dataOnion_solveDivQFunctor {
     , m_d_isSeedRandom     ( d_isSeedRandom )
     , m_d_CCRays           ( d_CCRays )
     , m_d_flowCell         ( d_flowCell )
-  {}
+  {
+    KokkosRandom<RandomGenerator> kokkosRand( d_isSeedRandom );
+
+    m_rand_pool = kokkosRand.getRandPool();
+  }
 
     // This operator() replaces the cellIterator loop used to solve DivQ
     void operator() ( int i, int j, int k, unsigned long int & m_nRaySteps ) const {
 
-      MTRand mTwister;
+      // Each thread needs a unique state
+      rnd_type rand_gen = m_rand_pool.get_state();
 
       //____________________________________________________________________________________________//
       //==== START for (CellIterator iter = finePatch->getCellIterator(); !iter.done(); iter++) ====//
@@ -1553,14 +1554,10 @@ struct rayTrace_dataOnion_solveDivQFunctor {
         //________________________________________________________//
         //==== START findRayDirection(mTwister, origin, iRay) ====//
 
-        if ( m_d_isSeedRandom == false ) {
-          mTwister.seed( (i + j + k) * iRay + 1 );
-        }
-
         // Random Points On Sphere
-        double plusMinus_one = 2.0 * mTwister.randDblExc() - 1.0 + DBL_EPSILON; // Add fuzz to avoid inf in 1/dirVector
-        double r = sqrt( 1.0 - plusMinus_one * plusMinus_one );                 // Radius of circle at z
-        double theta = 2.0 * M_PI * mTwister.randDblExc();                      // Uniform betwen 0-2Pi
+        double plusMinus_one = 2.0 * ( m_d_isSeedRandom ? Kokkos::rand<rnd_type, double>::draw(rand_gen) : 0.3 ) - 1.0 + DBL_EPSILON; // Add fuzz to avoid inf in 1/dirVector
+        double r = sqrt( 1.0 - plusMinus_one * plusMinus_one );                                                                       // Radius of circle at z
+        double theta = 2.0 * M_PI * ( m_d_isSeedRandom ? Kokkos::rand<rnd_type, double>::draw(rand_gen) : 0.3 );                      // Uniform betwen 0-2Pi
 
         direction_vector[0] = r * cos( theta ); // Convert to cartesian
         direction_vector[1] = r * sin( theta );
@@ -1609,9 +1606,9 @@ struct rayTrace_dataOnion_solveDivQFunctor {
 
         if ( m_d_CCRays == false ) {
 
-          double x = mTwister.rand() * m_Dx[my_L][0];
-          double y = mTwister.rand() * m_Dx[my_L][1];
-          double z = mTwister.rand() * m_Dx[my_L][2];
+          double x = ( m_d_isSeedRandom ? Kokkos::rand<rnd_type, double>::draw(rand_gen) : 0.3 ) * m_Dx[my_L][0];
+          double y = ( m_d_isSeedRandom ? Kokkos::rand<rnd_type, double>::draw(rand_gen) : 0.3 ) * m_Dx[my_L][1];
+          double z = ( m_d_isSeedRandom ? Kokkos::rand<rnd_type, double>::draw(rand_gen) : 0.3 ) * m_Dx[my_L][2];
 
           double offset[3] = { x, y, z };  // Note you HAVE to compute the components separately to ensure that the
                                            //  random numbers called in the x,y,z order - Todd
@@ -1619,7 +1616,7 @@ struct rayTrace_dataOnion_solveDivQFunctor {
           if ( offset[0] > m_Dx[my_L][0] ||
                offset[1] > m_Dx[my_L][1] ||
                offset[2] > m_Dx[my_L][2] ) {
-            std::cout << "  Warning:ray_Origin  The Mersenne twister random number generator has returned garbage (" << offset
+            std::cout << "  Warning:ray_Origin  The Kokkos random number generator has returned garbage (" << offset
                       << ") Now forcing the ray origin to be located at the cell-center\n" ;
             offset[0] = 0.5 * m_Dx[my_L][0];
             offset[1] = 0.5 * m_Dx[my_L][1];
@@ -1945,6 +1942,8 @@ struct rayTrace_dataOnion_solveDivQFunctor {
 #endif
 /*===========TESTING==========`*/
 
+      m_rand_pool.free_state(rand_gen);
+
     }  // end operator()
   };   // end rayTrace_dataOnion_solveDivQFunctor
 }      // end namespace
@@ -1983,7 +1982,6 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
   int maxLevels    = fineLevel->getGrid()->numLevels();
   int levelPatchID = fineLevel->getPatch(0)->getID();
   LevelP level_0 = new_dw->getGrid()->getLevel(0);
-  MTRand mTwister;
 
   //__________________________________
   // retrieve the coarse level data
@@ -2051,9 +2049,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
 
     const Patch* finePatch = finePatches->get(p);
     printTask(finePatches, finePatch,g_ray_dbg,"Doing Ray::rayTrace_dataOnion");
-    if ( d_isSeedRandom == false ){
-      mTwister.seed(finePatch->getID());
-    }
+
      //__________________________________
     //  retrieve fine level data ( patch_based )
     if ( d_ROI_algo == patch_based ) {
@@ -2118,28 +2114,28 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
 
       Uintah::BlockRange range(lo, hi);
 
-      rayTrace_dataOnion_solveDivQFunctor<T> functor( fineLevel
-                                                    , maxLevels
-                                                    , Dx
-                                                    , domain_BB
-                                                    , fineLevel_ROI_Lo
-                                                    , fineLevel_ROI_Hi
-                                                    , regionLo
-                                                    , regionHi
-                                                    , sigmaT4OverPi
-                                                    , abskg
-                                                    , cellType
-                                                    , divQ_fine
-                                                    , abskg_fine
-                                                    , sigmaT4OverPi_fine
-                                                    , radiationVolq_fine
-                                                    , d_threshold
-                                                    , d_allowReflect
-                                                    , d_nDivQRays
-                                                    , d_isSeedRandom
-                                                    , d_CCRays
-                                                    , d_flowCell
-                                                    );
+      rayTrace_dataOnion_solveDivQFunctor< T, Kokkos::Random_XorShift1024_Pool<Kokkos::OpenMP> > functor( fineLevel
+                                                                                                        , maxLevels
+                                                                                                        , Dx
+                                                                                                        , domain_BB
+                                                                                                        , fineLevel_ROI_Lo
+                                                                                                        , fineLevel_ROI_Hi
+                                                                                                        , regionLo
+                                                                                                        , regionHi
+                                                                                                        , sigmaT4OverPi
+                                                                                                        , abskg
+                                                                                                        , cellType
+                                                                                                        , divQ_fine
+                                                                                                        , abskg_fine
+                                                                                                        , sigmaT4OverPi_fine
+                                                                                                        , radiationVolq_fine
+                                                                                                        , d_threshold
+                                                                                                        , d_allowReflect
+                                                                                                        , d_nDivQRays
+                                                                                                        , d_isSeedRandom
+                                                                                                        , d_CCRays
+                                                                                                        , d_flowCell
+                                                                                                        );
 
       // This parallel_reduce replaces the cellIterator loop used to solve DivQ
       Uintah::parallel_reduce( range, functor, nRaySteps );
@@ -2253,160 +2249,6 @@ Ray::computeExtents(LevelP level_0,
   }
 }
 
-//______________________________________________________________________
-// Compute the Ray direction from a cell face
-void Ray::rayDirection_cellFace( MTRand& mTwister,
-                                 const IntVector& origin,
-                                 const IntVector& indexOrder,
-                                 const IntVector& signOrder,
-                                 const int iRay,
-                                 Vector& directionVector,
-                                 double& cosTheta)
-{
-
-  if( d_isSeedRandom == false ){                 // !! This could use a compiler directive for speed-up
-    mTwister.seed((origin.x() + origin.y() + origin.z()) * iRay +1);
-  }
-
-  // Surface Way to generate a ray direction from the positive z face
-  double phi   = 2 * M_PI * mTwister.rand(); // azimuthal angle.  Range of 0 to 2pi
-  double theta = acos(mTwister.rand());      // polar angle for the hemisphere
-  cosTheta = cos(theta);
-
-  //Convert to Cartesian
-  Vector tmp;
-  tmp[0] =  sin(theta) * cos(phi);
-  tmp[1] =  sin(theta) * sin(phi);
-  tmp[2] =  cosTheta;
-
-  // Put direction vector as coming from correct face,
-  directionVector[0] = tmp[indexOrder[0]] * signOrder[0];
-  directionVector[1] = tmp[indexOrder[1]] * signOrder[1];
-  directionVector[2] = tmp[indexOrder[2]] * signOrder[2];
-}
-
-
-//______________________________________________________________________
-//  Uses stochastically selected regions in polar and azimuthal space to
-//  generate the Monte-Carlo directions. Samples Uniformly on a hemisphere
-//  and as hence does not include the cosine in the sample.
-//______________________________________________________________________
-void
-Ray::rayDirectionHyperCube_cellFace(MTRand& mTwister,
-                                 const IntVector& origin,
-                                 const IntVector& indexOrder,
-                                 const IntVector& signOrder,
-                                 const int iRay,
-                                 Vector& directionVector,
-                                 double& cosTheta,
-                                 const int bin_i,
-                                 const int bin_j)
-{
-  if( d_isSeedRandom == false ){                 // !! This could use a compiler directive for speed-up
-    mTwister.seed((origin.x() + origin.y() + origin.z()) * iRay +1);
-  }
-
- // randomly sample within each randomly selected region (may not be needed, alternatively choose center of subregion)
-  cosTheta = (mTwister.randDblExc() + (double) bin_i)/d_nFluxRays;
-
-  double theta = acos(cosTheta);      // polar angle for the hemisphere
-  double phi = 2.0 * M_PI * (mTwister.randDblExc() + (double) bin_j)/d_nFluxRays;        // Uniform betwen 0-2Pi
-
-  cosTheta = cos(theta);
-
-  //Convert to Cartesian
-  Vector tmp;
-  tmp[0] =  sin(theta) * cos(phi);
-  tmp[1] =  sin(theta) * sin(phi);
-  tmp[2] =  cosTheta;
-
-  //Put direction vector as coming from correct face,
-  directionVector[0] = tmp[indexOrder[0]] * signOrder[0];
-  directionVector[1] = tmp[indexOrder[1]] * signOrder[1];
-  directionVector[2] = tmp[indexOrder[2]] * signOrder[2];
-
-}
-
-//______________________________________________________________________
-//  Uses stochastically selected regions in polar and azimuthal space to
-//  generate the Monte-Carlo directions.  Samples uniformly on a sphere.
-//______________________________________________________________________
-Vector
-Ray::findRayDirectionHyperCube(MTRand& mTwister,
-                               const IntVector& origin,
-                               const int iRay,
-                               const int bin_i,
-                               const int bin_j)
-{
-  if( d_isSeedRandom == false ){
-    mTwister.seed((origin.x() + origin.y() + origin.z()) * iRay +1);
-  }
-
-  // Random Points On Sphere
-  double plusMinus_one = 2.0 *(mTwister.randDblExc() + (double) bin_i)/d_nDivQRays - 1.0;  // add fuzz to avoid inf in 1/dirVector
-  double r = sqrt(1.0 - plusMinus_one * plusMinus_one);     // Radius of circle at z
-  double phi = 2.0 * M_PI * (mTwister.randDblExc() + (double) bin_j)/d_nDivQRays;        // Uniform betwen 0-2Pi
-
-  Vector direction_vector;
-  direction_vector[0] = r*cos(phi);                       // Convert to cartesian
-  direction_vector[1] = r*sin(phi);
-  direction_vector[2] = plusMinus_one;
-
-  return direction_vector;
-}
-
-//______________________________________________________________________
-//
-//  Compute the Ray location on a cell face
-void Ray::rayLocation_cellFace( MTRand& mTwister,
-                                 const int face,
-                                 const Vector Dx,
-                                 const Point CC_pos,
-                                 Vector& rayOrigin)
-{
-  double cellOrigin[3];
-  // left, bottom, back corner of the cell
-  cellOrigin[X] = CC_pos.x() - 0.5 * Dx[X];
-  cellOrigin[Y] = CC_pos.y() - 0.5 * Dx[Y];
-  cellOrigin[Z] = CC_pos.z() - 0.5 * Dx[Z];
-
-  switch(face)
-  {
-    case WEST:
-      rayOrigin[X] = cellOrigin[X];
-      rayOrigin[Y] = cellOrigin[Y] + mTwister.rand() * Dx[Y];
-      rayOrigin[Z] = cellOrigin[Z] + mTwister.rand() * Dx[Z];
-      break;
-    case EAST:
-      rayOrigin[X] = cellOrigin[X] +  Dx[X];
-      rayOrigin[Y] = cellOrigin[Y] + mTwister.rand() * Dx[Y];
-      rayOrigin[Z] = cellOrigin[Z] + mTwister.rand() * Dx[Z];
-      break;
-    case SOUTH:
-      rayOrigin[X] = cellOrigin[X] + mTwister.rand() * Dx[X];
-      rayOrigin[Y] = cellOrigin[Y];
-      rayOrigin[Z] = cellOrigin[Z] + mTwister.rand() * Dx[Z];
-      break;
-    case NORTH:
-      rayOrigin[X] = cellOrigin[X] + mTwister.rand() * Dx[X];
-      rayOrigin[Y] = cellOrigin[Y] + Dx[Y];
-      rayOrigin[Z] = cellOrigin[Z] + mTwister.rand() * Dx[Z];
-      break;
-    case BOT:
-      rayOrigin[X] = cellOrigin[X] + mTwister.rand() * Dx[X];;
-      rayOrigin[Y] = cellOrigin[Y] + mTwister.rand() * Dx[Y];;
-      rayOrigin[Z] = cellOrigin[Z];
-      break;
-    case TOP:
-      rayOrigin[X] = cellOrigin[X] + mTwister.rand() * Dx[X];;
-      rayOrigin[Y] = cellOrigin[Y] + mTwister.rand() * Dx[Y];;
-      rayOrigin[Z] = cellOrigin[Z] + Dx[Z];
-      break;
-    default:
-      throw InternalError("Ray::rayLocation_cellFace,  Invalid FaceType Specified", __FILE__, __LINE__);
-      return;
-  }
-}
 
 //______________________________________________________________________
 //
@@ -2468,8 +2310,6 @@ Ray::has_a_boundary( const IntVector      & c,
 }
 
 
-
-
 //______________________________________________________________________
 inline bool
 Ray::containsCell(const IntVector &low,
@@ -2513,6 +2353,8 @@ Ray::sched_setBoundaryConditions( const LevelP& level,
 
   sched->addTask( tsk, level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT );
 }
+
+
 //---------------------------------------------------------------------------
 template<class T>
 void Ray::setBoundaryConditions( const ProcessorGroup*,
@@ -2595,6 +2437,7 @@ void Ray::setBoundaryConditions( const ProcessorGroup*,
     } // has a boundaryFace
   }
 }
+
 
 //______________________________________________________________________
 //  Set Boundary conditions
@@ -2694,6 +2537,7 @@ void Ray::setBC(CCVariable< T >& Q_CC,
   }  // faces loop
 }
 
+
 //______________________________________________________________________
 //
 void Ray::sched_Refine_Q( SchedulerP& sched,
@@ -2726,6 +2570,7 @@ void Ray::sched_Refine_Q( SchedulerP& sched,
     sched->addTask( task, patches, matls, RMCRTCommon::TG_RMCRT );
   }
 }
+
 
 //______________________________________________________________________
 //
@@ -2804,6 +2649,7 @@ void Ray::refine_Q( const ProcessorGroup*,
   }  // fine patch loop
 }
 
+
 //______________________________________________________________________
 // This task computes the extents of the fine level region of interest
 void Ray::sched_ROI_Extents ( const LevelP& level,
@@ -2836,6 +2682,7 @@ void Ray::sched_ROI_Extents ( const LevelP& level,
 
   scheduler->addTask( tsk, level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT );
 }
+
 
 //______________________________________________________________________
 //
@@ -2921,6 +2768,7 @@ void Ray::sched_CoarsenAll( const LevelP& coarseLevel,
   }
 }
 
+
 //______________________________________________________________________
 void Ray::sched_Coarsen_Q ( const LevelP& coarseLevel,
                             SchedulerP& sched,
@@ -2956,6 +2804,7 @@ void Ray::sched_Coarsen_Q ( const LevelP& coarseLevel,
 
   sched->addTask( tsk, coarseLevel->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT );
 }
+
 
 //______________________________________________________________________
 //
@@ -3106,6 +2955,7 @@ void Ray::coarsen_Q ( const ProcessorGroup*,
   }  // course patch loop
 }
 
+
 //______________________________________________________________________
 //
 void Ray::sched_computeCellType ( const LevelP& level,
@@ -3125,6 +2975,7 @@ void Ray::sched_computeCellType ( const LevelP& level,
   }
   sched->addTask( tsk, level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT );
 }
+
 
 //______________________________________________________________________
 //    Initialize cellType on the coarser Levels
