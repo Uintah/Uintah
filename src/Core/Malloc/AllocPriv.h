@@ -57,35 +57,34 @@ namespace Uintah {
 struct OSHunk;
 
 struct Sentinel {
-    unsigned int first_word;
-    unsigned int second_word;
+  unsigned int first_word;
+  unsigned int second_word;
 };
 
 struct AllocBin;
 
 struct Tag {
-//    Allocator* allocator;
-//    size_t size;
-    AllocBin* bin;
-    const char* tag;
+  AllocBin* bin;
+  const char* tag;
 #ifdef USE_TAG_LINENUM
   int linenum;
 #endif
-    Tag* next;
-    Tag* prev;
-    OSHunk* hunk;
-    size_t reqsize;
+  Tag* next;
+  Tag* prev;
+  OSHunk* hunk;
+  size_t reqsize;
 };
 
+
 struct AllocBin {
-    Tag* free;
-    Tag* inuse;
-    size_t maxsize;
-    size_t minsize;
-    int ninuse;
-    int ntotal;
-    size_t nalloc;
-    size_t nfree;
+  Tag* free;
+  Tag* inuse;
+  size_t maxsize;
+  size_t minsize;
+  int ninuse;
+  int ntotal;
+  size_t nalloc;
+  size_t nfree;
 };
 
 struct Allocator {
@@ -106,7 +105,7 @@ struct Allocator {
     // These (dont_lock et.al.) are added in an attempt to deal with some
     // bugs with current versions of glibc in linux.  If and when they get
     // resolved, this code should be removed.  The bug relates to mishandling
-    // of mutex's accross fork calls.
+    // of mutex's across fork calls.
     // This variable is initialized in initlock.
     //   James Bigler - 02/04/2003
     bool use_rlock;
@@ -139,9 +138,9 @@ struct Allocator {
     char* statsfile;
     OSHunk* hunks;
 
-    AllocBin* small_bins;
-    AllocBin* medium_bins;
-    AllocBin big_bin;
+    AllocBin * small_bins;
+    AllocBin * medium_bins;
+    AllocBin   big_bin;
 
     inline AllocBin* get_bin(size_t size);
     void fill_bin(AllocBin*);

@@ -98,8 +98,6 @@ AMRSimulationController::AMRSimulationController( const ProcessorGroup * myworld
 void
 AMRSimulationController::run()
 {
-  MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::run()");
-
   bool first = true;
 
   // If VisIt has been included into the build, initialize the lib sim
@@ -321,8 +319,6 @@ AMRSimulationController::run()
     }
 #endif
      
-    MALLOC_TRACE_TAG_SCOPE( "AMRSimulationController::run()::control loop" );
-
     if (dbg_barrier.active()) {
       for (int i = 0; i < 5; ++i) {
         m_barrier_times[i] = 0;
@@ -597,8 +593,6 @@ AMRSimulationController::run()
 void
 AMRSimulationController::doInitialTimeStep()
 {
-  MALLOC_TRACE_TAG_SCOPE( "AMRSimulationController::doInitialTimeStep()" );
-
   m_scheduler->mapDataWarehouse(Task::OldDW, 0);
   m_scheduler->mapDataWarehouse(Task::NewDW, 1);
   m_scheduler->mapDataWarehouse(Task::CoarseOldDW, 0);
@@ -762,8 +756,6 @@ AMRSimulationController::doInitialTimeStep()
 void
 AMRSimulationController::executeTimeStep( int totalFine )
 {
-  MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::executeTimeStep()");
-
   // If the time step needs to be restarted, this loop will execute multiple times.
   bool success = false;
 
@@ -839,8 +831,6 @@ AMRSimulationController::executeTimeStep( int totalFine )
 bool
 AMRSimulationController::doRegridding( bool initialTimeStep )
 {
-  MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::doRegridding()");
-
   Timers::Simple regriddingTimer;         // Regridding time
 
   regriddingTimer.start();
@@ -953,8 +943,6 @@ AMRSimulationController::doRegridding( bool initialTimeStep )
 void
 AMRSimulationController::compileTaskGraph( int totalFine )
 {
-  MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::compileTaskGraph()");
-
   Timers::Simple taskGraphTimer;
 
   taskGraphTimer.start();
@@ -1086,8 +1074,8 @@ AMRSimulationController::subCycleCompile( int startDW,
                                           int numLevel,
                                           int step )
 {
-  MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::subCycleCompile()");
   //amrout << "Start AMRSimulationController::subCycleCompile, level=" << numLevel << '\n';
+
   // We are on (the fine) level numLevel
   LevelP fineLevel = m_current_gridP->getLevel(numLevel);
   LevelP coarseLevel;
@@ -1175,13 +1163,12 @@ AMRSimulationController::subCycleExecute( int startDW,
                                           int levelNum,
                                           bool rootCycle )
 {
-  MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::subCycleExecutue()");
-
   // there are 2n+1 taskgraphs, n for the basic timestep, n for intermediate 
   // timestep work, and 1 for the errorEstimate and stableTimeStep, where n
   // is the number of levels.
   
   // amrout << "Start AMRSimulationController::subCycleExecute, level=" << numLevel << '\n';
+
   // We are on (the fine) level numLevel
   int numSteps;
   if (levelNum == 0 || m_app->isLockstepAMR()) {
@@ -1289,10 +1276,7 @@ AMRSimulationController::subCycleExecute( int startDW,
 void
 AMRSimulationController::scheduleComputeStableTimeStep()
 {
-  MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::scheduleComputeStableTimeStep()");
-
-  // Schedule the application to compute the next time step on a per
-  // patch basis.
+  // Schedule the application to compute the next time step on a per patch basis.
   for (int i = 0; i < m_current_gridP->numLevels(); i++) {
     m_app->scheduleComputeStableTimeStep(m_current_gridP->getLevel(i), m_scheduler);
   }

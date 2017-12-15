@@ -162,8 +162,6 @@ void TiledRegridder::ComputeTiles( vector<IntVector> &tiles,
 //
 Grid* TiledRegridder::regrid(Grid* oldGrid)
 {
-  MALLOC_TRACE_TAG_SCOPE("TiledRegridder::regrid");
-
   double rtimes[20]={0};
 
   if(rgtimes.active()) {
@@ -284,9 +282,6 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
 //
 Grid* TiledRegridder::CreateGrid(Grid* oldGrid, vector<vector<IntVector> > &tiles )
 {
-
-  MALLOC_TRACE_TAG_SCOPE("TiledRegridd::CreateGrid");
-
   Grid* newGrid = scinew Grid();
   Vector spacing = oldGrid->getLevel(0)->dCell();
   Point anchor =   oldGrid->getLevel(0)->getAnchor();
@@ -517,8 +512,6 @@ TiledRegridder::problemSetup_BulletProofing( const int L )
 //Create flags on level l-1 where ever tiles exist on level l+1 with boundary layers
 void TiledRegridder::CoarsenFlags(GridP oldGrid, int l, vector<IntVector> tiles)
 {
-  MALLOC_TRACE_TAG_SCOPE("TiledRegridder::CoarsenFlags");
-
   ASSERT(l-1>=0);
 
   DataWarehouse *dw=m_scheduler->getLastDW();

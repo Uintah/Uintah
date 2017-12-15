@@ -751,8 +751,6 @@ Level::getOverlapCellsInRegion( const selectType & patches,
 void
 Level::finalizeLevel()
 {
-  MALLOC_TRACE_TAG_SCOPE("Level::finalizeLevel");
-
   m_each_patch = scinew PatchSet();
   m_each_patch->addReference();
 
@@ -818,8 +816,6 @@ Level::finalizeLevel()
 void
 Level::finalizeLevel( bool periodicX, bool periodicY, bool periodicZ )
 {
-  MALLOC_TRACE_TAG_SCOPE("Level::finalizeLevel(periodic)");
-
   // set each_patch and all_patches before creating virtual patches
   m_each_patch = scinew PatchSet();
   m_each_patch->addReference();
@@ -932,8 +928,6 @@ Level::setBCTypes()
 
   const int nTimes = 3;
   double rtimes[ nTimes ] = { 0 };
-
-  MALLOC_TRACE_TAG_SCOPE("Level::setBCTypes");
 
   if (m_bvh != nullptr) {
     delete m_bvh;

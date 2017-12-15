@@ -764,8 +764,6 @@ Tag::update( TagP tag )
 void
 Tag::parseXmlTag( const xmlNode * xmlTag )
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpecReader::parseXmlTag");
-
   //  string name = to_char_ptr( xmlTag->name );
   string name = (const char *)( xmlTag->name );
   collapse( name );
@@ -1151,8 +1149,6 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
 void
 ProblemSpecReader::parseValidationFile()
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpecReader::parseValidationFile");
-
   dbg << "\n";
   dbg << "-------------------------------------------------------------------\n";
   dbg << "- Parsing ups_spec.xml\n";
@@ -1479,7 +1475,6 @@ Tag::validate( const ProblemSpec * ps, unsigned int depth /* = 0 */ )
   indent( inc_dbg, depth );
   inc_dbg << name << "\t\t\t" << getErrorInfo( ps->getNode() ) << "\n";
 
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpecReader::validate");
   if( !uintahSpec_g ) {
     throw ProblemSetupException( "Strange, UintahSpec_g does not exist...", __FILE__, __LINE__ );
   }
@@ -1778,7 +1773,6 @@ Tag::validate( const ProblemSpec * ps, unsigned int depth /* = 0 */ )
 void
 ProblemSpecReader::validateProblemSpec( ProblemSpecP & prob_spec )
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpecReader::validateProblemSpec");
   // qwerty: fixme: this comment is no longer correct... i think... Currently, the readInputFile() (and thus this validation) is called
   // multiple times (once for the initial .ups, but then again for 
   // saving data archives and such...)  this (temporary?) hack is used
@@ -1949,7 +1943,6 @@ ProblemSpecReader::readInputFile( const string & filename, bool validate /* = fa
 ProblemSpecP
 ProblemSpecReader::readInputFile( const string & filename, const vector<int> & patches, bool validate /* = false */ )
 {
-  MALLOC_TRACE_TAG_SCOPE( "ProblemSpecReader::readInputFile" );
   if( d_xmlData != nullptr ) {
     return d_xmlData;
   }
@@ -2090,8 +2083,6 @@ ProblemSpecReader::findFileNamePtr( const string & filename )
 void
 ProblemSpecReader::resolveIncludes( xmlNode * child, xmlNode * parent, int depth /* = 0 */ )
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpecReader::resolveIncludes");
-
   while( child != nullptr ) {
     if( child->type == XML_ELEMENT_NODE ) {
       string name1 = (const char *)(child->name);

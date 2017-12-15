@@ -282,8 +282,6 @@ ApplicationCommon::reduceSystemVars( const ProcessorGroup *,
                                            DataWarehouse  * /*old_dw*/,
                                            DataWarehouse  * new_dw )
 {
-  MALLOC_TRACE_TAG_SCOPE("ApplicationCommon::reduceSysVar()");
-
   // The goal of this task is to line up the delT across all levels.
   // If the coarse delT already exists (the one without an associated
   // level), then the application is not doing AMR.
@@ -429,8 +427,6 @@ ApplicationCommon::initializeSystemVars( const ProcessorGroup *,
 					       DataWarehouse  * /*old_dw*/,
 					       DataWarehouse  * new_dw )
 {
-  MALLOC_TRACE_TAG_SCOPE("ApplicationCommon::initializeSystemVar()");
-
   // std::cerr << "**********  " << __FUNCTION__ << "  " << __LINE__ << "  "
   //        << new_dw << std::endl;  
 
@@ -489,14 +485,12 @@ ApplicationCommon::updateSystemVars( const ProcessorGroup *,
                                            DataWarehouse  * /*old_dw*/,
                                            DataWarehouse  * new_dw )
 {
-  MALLOC_TRACE_TAG_SCOPE("ApplicationCommon::updateSystemVar()");
-
   // std::cerr << "**********  " << __FUNCTION__ << "  " << __LINE__ << "  "
   //        << new_dw << std::endl;  
 
   // If the time step is being restarted do not update the simulation
   // time. The time step does not get up dated here but is stored so
-  // it can be at the top of teh simcontroller loop.
+  // it can be at the top of the simcontroller loop.
   
   if (!new_dw->timestepRestarted())
   {

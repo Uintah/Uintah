@@ -57,7 +57,7 @@ static const int ALIGN = 16;
 #  elif defined(__linux) || defined(__APPLE__) 
 #    include <cstring>
 #  else
-#    error "Need bcopy idfdef for this architecture"
+#    error "Need bcopy ifdef for this architecture"
 #  endif
 
 #  include <sys/param.h>
@@ -69,12 +69,13 @@ static const int ALIGN = 16;
 #    include <pthread.h>
 #  endif
 
-/* we use UCONV to avoid compiler warnings. */
-// NOTE(boulos): On Darwin systems, even if it's not a 64-bit build
-// the compiler will generate warnings (so we use %lu for that case as
-// well)
-// SIZET is used for typecasting to ensure the types line up.  This helps work 
-// around portability issues with printf and types of size_t.
+// NOTE(boulos): On Darwin systems, even if it's not a 64-bit build the
+// compiler will generate warnings (so we use %lu for that case as well)
+//
+// we use UCONV to avoid compiler warnings.
+//
+// SIZET is used for typecasting to ensure the types line up.  This helps
+// work around portability issues with printf and types of size_t.
 #  if defined(SCI_64BITS) || defined(__APPLE__)
      typedef unsigned long SIZET;
 #    define UCONV "%lu"
@@ -83,14 +84,10 @@ static const int ALIGN = 16;
 #    define UCONV "%u"
 #  endif
 
+
 namespace Uintah {
 
-// Dd: For AIX
-#  ifdef STATSIZE
-#    undef STATSIZE
-#  endif
-
-#  define STATSIZE (4096+BUFSIZ)
+#  define STATSIZE           (4096+BUFSIZ)
 
 #  ifndef DISABLE_SCI_MALLOC
      static char trace_buffer[STATSIZE];
@@ -98,37 +95,37 @@ namespace Uintah {
 
 // Granularity of small things - 8 bytes
 // Anything smaller than this is considered "small"
-#define SMALL_THRESHOLD (512-8)
-#define SMALLEST_ALLOCSIZE (8*1024)
+#define SMALL_THRESHOLD      (512-8)
+#define SMALLEST_ALLOCSIZE   (8*1024)
 
-#define SMALL_BIN(size) (((size)+7)>>4)
-#define NSMALL_BINS ((SMALL_THRESHOLD+8)>>4)
-#define SMALL_BINSIZE(bin) (((bin)<<4)+8)
+#define SMALL_BIN(size)      (((size)+7)>>4)
+#define NSMALL_BINS          ((SMALL_THRESHOLD+8)>>4)
+#define SMALL_BINSIZE(bin)   (((bin)<<4)+8)
 
 // Granularity of medium things - 2k bytes
-#define MEDIUM_THRESHOLD (65536*8)
+#define MEDIUM_THRESHOLD     (65536*8)
 
-#define MEDIUM_BIN(size) (((size)-1)>>11)
-#define NMEDIUM_BINS ((MEDIUM_THRESHOLD)>>11)
-#define MEDIUM_BINSIZE(bin) (((bin)<<11)+2048)
+#define MEDIUM_BIN(size)     (((size)-1)>>11)
+#define NMEDIUM_BINS         ((MEDIUM_THRESHOLD)>>11)
+#define MEDIUM_BINSIZE(bin)  (((bin)<<11)+2048)
 
-#define OVERHEAD (sizeof(Tag)+sizeof(Sentinel)+sizeof(Sentinel))
+#define OVERHEAD             (sizeof(Tag)+sizeof(Sentinel)+sizeof(Sentinel))
 
-#define OBJFREE 1
-#define OBJINUSE 2
-#define OBJFREEING 3
-#define OBJMEMALIGNFREEING 4
+#define OBJFREE              1
+#define OBJINUSE             2
+#define OBJFREEING           3
+#define OBJMEMALIGNFREEING   4
 
-#define SENT_VAL_FREE 0xdeadbeef
-#define SENT_VAL_INUSE 0xbeefface
+#define SENT_VAL_FREE        0xdeadbeef
+#define SENT_VAL_INUSE       0xbeefface
 
 #define NORMAL_OS_ALLOC_SIZE (512*1024)
 
 // Objects bigger than this can't be allocated
-#define MAX_ALLOCSIZE (1024*1024*1024)
+#define MAX_ALLOCSIZE        (1024*1024*1024)
 
-static bool do_shutdown         = false;
-static int mallocStatsAppendNum = -1;
+static bool do_shutdown          = false;
+static int  mallocStatsAppendNum = -1;
 
 Allocator* default_allocator = nullptr;
 

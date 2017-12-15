@@ -624,7 +624,6 @@ void
 SerialMPM::scheduleTimeAdvance(const LevelP & level,
                                SchedulerP   & sched)
 {
-  MALLOC_TRACE_TAG_SCOPE("SerialMPM::scheduleTimeAdvance()");
   if (!flags->doMPMOnLevel(level->getIndex(), level->getGrid()->numLevels()))
     return;
 

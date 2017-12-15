@@ -387,7 +387,6 @@ void MPMICE::scheduleComputeStableTimeStep(const LevelP& level,
 void
 MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
 {
-  MALLOC_TRACE_TAG_SCOPE("MPMICE::scheduleTimeAdvance()");
   // Only do scheduling on level 0 for lockstep AMR
   if(inlevel->getIndex() > 0 && isLockstepAMR())
     return;

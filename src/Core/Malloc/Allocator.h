@@ -39,54 +39,34 @@
 
 #include <sci_defs/malloc_defs.h>
 
-// If ENABLE_SCI_TRACE is defined, DISABLE_SCI_MALLOC must also be defined.
-// The SCI trace facility will not work if SCI Malloc is turned on.
-//
-// For more information on using the SCI Memory Trace facility, see Trace.h.
+#if !defined( DISABLE_SCI_MALLOC )
 
-#if MALLOC_TRACE == 1 && ( !defined(DISABLE_SCI_MALLOC) || DISABLE_SCI_MALLOC != 1 )
-#  error MALLOC_TRACE and !DISABLE_SCI_MALLOC may not both be set!
-#endif
-
-#if defined( MALLOC_TRACE )
-
-//define define scinew to new so MallocTrace catches the calls
-#  define scinew new
-
-//include malloc trace functions
-#include "MallocTrace.h"
-
-//include problematic headers
-#include <algorithm>
-#include <valarray>
-
-//turn on tracing
-#include "MallocTraceOn.h"
-
-#elif !defined( DISABLE_SCI_MALLOC )
-#  include   <unistd.h>
-
-//set these macros to be blank so everything will compile without MallocTrace
-#define MALLOC_TRACE_TAG_SCOPE(tag) ;
-#define MALLOC_TRACE_TAG(tag) ;
-#define MALLOC_TRACE_LOG_FILE(file) ;
+// need unix standard header for OS memory stuff
+//  not part of standard C, so standard C++ lib doesn't include it with the other C headers
+#include <unistd.h>
 
 #include <cstdlib>
+
+
 
 namespace Uintah {
   
 struct Allocator;
-Allocator* MakeAllocator();
-void DestroyAllocator( Allocator* );
 
 extern Allocator* default_allocator;
+
+Allocator* MakeAllocator();
+
+void DestroyAllocator( Allocator* );
+
 void MakeDefaultAllocator();
 
 void PrintTag( void* );
 
+//------------------------------------------------------------------------------
 // These functions are for use in tracking down memory leaks.  In the
 // MALLOC_STATS file, non-freed memory will be listed with the specified tag...
-
+//------------------------------------------------------------------------------
 const char * AllocatorSetDefaultTagMalloc( const char* tag );
 const char * AllocatorSetDefaultTagNew( const char* tag );
       int    AllocatorSetDefaultTagLineNumber( int line_number );
@@ -97,9 +77,11 @@ const char * AllocatorSetDefaultTag( const char* tag );
       void   AllocatorResetDefaultTag();
 
 
+//------------------------------------------------------------------------------
 // append the num to the MallocStats file if MallocStats are dumped to a file
 // (negative appends nothing)
-void AllocatorMallocStatsAppendNumber(int num);
+//------------------------------------------------------------------------------
+void AllocatorMallocStatsAppendNumber( int num );
   
 Allocator* DefaultAllocator();
 
@@ -151,31 +133,32 @@ void AuditAllocator( Allocator* );
 
 void DumpAllocator( Allocator*, const char* filename = "alloc.dump" );
 
-  // Functions for locking and unlocking the allocator.  In the
-  // pthreads implementation, these use a recursive lock that will
-  // allow the same thread to lock and unlock the allocator until
-  // UnLockAllocator is called.  In other implementations this just uses
-  // the regular lock and unlock functions.
-  void LockAllocator( Allocator* );
-  void UnLockAllocator( Allocator* );
+
+//------------------------------------------------------------------------------
+// TODO: Standardize this with C++11, APH 12/15/17
+//
+// Functions for locking and unlocking the allocator.  In the
+// pthreads implementation, these use a recursive lock that will
+// allow the same thread to lock and unlock the allocator until
+// UnLockAllocator is called.  In other implementations this just uses
+// the regular lock and unlock functions.
+void LockAllocator( Allocator* );
+void UnLockAllocator( Allocator* );
   
+
 } // End namespace Uintah
 
-   void* operator new( size_t, Uintah::Allocator*, const char*, int );
-   void* operator new[]( size_t, Uintah::Allocator*, const char*, int );
-#  define scinew new( Uintah::default_allocator, __FILE__, __LINE__ )
 
-#else  // MALLOC_TRACE
+//------------------------------------------------------------------------------
+// TODO: This needs to go away, overriding global new without correspondingly overriding
+//       global delete is dicey. Need to find a  way to ditch Core/Malloc altogether and
+//       maintain functionality in nightly RT memory tests, APH 12/15/17
+void* operator new( size_t, Uintah::Allocator*, const char*, int );
+void* operator new[]( size_t, Uintah::Allocator*, const char*, int );
+#define scinew new( Uintah::default_allocator, __FILE__, __LINE__ )
 
-   // Not tracing and not using sci malloc...
-#  define scinew new
 
-//set these macros to be blank so everything will compile without MallocTrace
-#define MALLOC_TRACE_TAG_SCOPE(tag) ;
-#define MALLOC_TRACE_TAG(tag) ;
-#define MALLOC_TRACE_LOG_FILE(file) ;
-
-#endif // MALLOC_TRACE
+#endif // DISABLE_SCI_MALLOC
 
 #endif // CORE_MALLOC_ALLOCATOR_H
  

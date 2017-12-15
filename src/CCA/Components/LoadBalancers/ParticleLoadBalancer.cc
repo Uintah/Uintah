@@ -464,7 +464,6 @@ ParticleLoadBalancer::assignPatches( const vector<double> &previousProcCosts, co
 
 bool ParticleLoadBalancer::loadBalanceGrid(const GridP& grid, bool force)
 {
-  MALLOC_TRACE_TAG_SCOPE("ParticleLoadBalancer::loadBalanceGrid");
   doing << d_myworld->myRank() << "   APF\n";
   vector<vector<double> > cellCosts;
   vector<vector<double> > particleCosts;
@@ -711,7 +710,6 @@ ParticleLoadBalancer::needRecompile(const GridP& grid)
 //if it is not a regrid the patch information is stored in grid, if it is during a regrid the patch information is stored in patches
 void ParticleLoadBalancer::getCosts(const Grid* grid, vector<vector<double> >&particle_costs, vector<vector<double> > &cell_costs)
 {
-  MALLOC_TRACE_TAG_SCOPE("ParticleLoadBalancer::getCosts");
   particle_costs.clear();
   cell_costs.clear();
     
@@ -772,8 +770,6 @@ void ParticleLoadBalancer::getCosts(const Grid* grid, vector<vector<double> >&pa
 
 bool ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int state)
 {
-  MALLOC_TRACE_TAG_SCOPE("ParticleLoadBalancer::possiblyDynamicallyReallocate");
-
   if (d_myworld->myRank() == 0)
     dbg << d_myworld->myRank() << " In DLB, state " << state << endl;
 

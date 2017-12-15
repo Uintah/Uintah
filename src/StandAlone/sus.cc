@@ -646,7 +646,6 @@ main( int argc, char *argv[], char *env[] )
 
     //______________________________________________________________________
     // Create the components
-    MALLOC_TRACE_TAG("main():create components");
 
     //__________________________________
     // Simulation controller

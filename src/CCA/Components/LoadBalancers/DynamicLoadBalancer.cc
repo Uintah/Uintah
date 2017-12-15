@@ -989,8 +989,6 @@ DynamicLoadBalancer::getCosts( const Grid * grid, vector< vector<double> > & cos
 bool
 DynamicLoadBalancer::possiblyDynamicallyReallocate( const GridP & grid, int state )
 {
-  MALLOC_TRACE_TAG_SCOPE("DynamicLoadBalancer::possiblyDynamicallyReallocate");
-
   if (d_myworld->myRank() == 0) {
     dbg << d_myworld->myRank() << " In DLB, state " << state << endl;
   }
