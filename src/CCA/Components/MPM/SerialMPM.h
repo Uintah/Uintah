@@ -596,8 +596,6 @@ protected:
   std::vector<Vector> d_IPVelNew;
 
 
-  bool             d_fracture;
-
   MaterialSubset*  d_loadCurveIndex;
   
   std::vector<AnalysisModule*> d_analysisModules;

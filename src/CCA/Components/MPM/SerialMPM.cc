@@ -107,6 +107,8 @@ SerialMPM::SerialMPM( const ProcessorGroup* myworld,
   NGN     = 1;
   d_loadCurveIndex=0;
   d_switchCriteria = 0;
+
+  d_ndim = -1;
 }
 
 SerialMPM::~SerialMPM()
