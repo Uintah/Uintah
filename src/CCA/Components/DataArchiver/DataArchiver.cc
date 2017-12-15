@@ -3306,7 +3306,7 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
         }  // is checkpoint?
       }  //  Patches
 
-      rc = PIDX_appenm_anm_write_variable(pidx.file, pidx.varDesc[vc][m]);
+      rc = PIDX_append_and_write_variable(pidx.file, pidx.varDesc[vc][m]);
       pidx.checkReturnCode( rc,
 			    "DataArchiver::saveLabels_PIDX - PIDX_appenm_anm_write_variable failure",
 			    __FILE__, __LINE__);
