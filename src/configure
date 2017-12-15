@@ -34,8 +34,9 @@
 # ## FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # ## IN THE SOFTWARE.
 # ##
+#
 
-##
+## 
 ## IMPORTANT!!!  Configure developers, PLEASE READ:
 ##
 ## The following BULLET PROOFING needs to be placed manually into
@@ -52,7 +53,6 @@
 enable_option_checking=fatal
 
 
-#
 ## -------------------- ##
 ## M4sh Initialization. ##
 ## -------------------- ##
@@ -3019,6 +3019,21 @@ fi
   sci_arg_var_list="$sci_arg_var_list NVCC_LDFLAGS"
 
 
+##
+## IMPORTANT!!!  Configure developers, PLEASE READ:
+##
+## The following BULLET PROOFING needs to be placed manually into
+## configure every time after autoconf is run, and before configure is
+## checked in:
+##
+## To avoid allowing invalid arguments to configure, we have to manually
+## hack the 'configure' script after it has been 'autoconf'd, and add the
+## line "enable_option_checking=fatal".  There apparently is no way to do
+## this through autoconf macros... sigh.  Manually find this entire text
+## block (comment and all) in configure, MOVE IT ALL TO THE TOP OF THE FILE
+## (just after the MIT license), and uncomment the following line:
+##
+# enable_option_checking=fatal
 
 # Make sure we can run config.sub.
 $SHELL "$ac_aux_dir/config.sub" sun4 >/dev/null 2>&1 ||
@@ -31680,9 +31695,10 @@ _sci_includes=''
              LAPACK_LIB_FLAG="$altivec -framework vecLib"
           fi
        fi
+       if test "$HAVE_LAPACK" = no ; then
 
 ##
-## SCI_TRY_LINK (LAPACK):  lapack library
+## SCI_TRY_LINK (LAPACK):  lapack li brary
 ##
 ## arguments mean:
 ## arg 1 : variable base name (e.g., MATH)
@@ -31714,7 +31730,7 @@ _sci_includes=''
 ## Here are the specific values for this invocation:
 ##
 ## arg 1 : LAPACK
-## arg 2 : lapack library
+## arg 2 : lapack li brary
 ## arg 3 :
 ## arg 4 :
 ## arg 5 : lapack
@@ -31734,12 +31750,12 @@ _sci_includes=''
 ##      HAVE_LAPACK_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for lapack library.  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for lapack li brary.  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for lapack library (optional)" >&5
-$as_echo_n "checking for lapack library (optional)... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for lapack li brary (optional)" >&5
+$as_echo_n "checking for lapack li brary (optional)... " >&6; }
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -31749,7 +31765,7 @@ _sci_includes=
 
 if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for lapack library must be: optional or required or specific.  (You had optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for lapack li brary must be: optional or required or specific.  (You had optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If  (the -I paths) is blank, do nothing, else do the for statement.
@@ -32079,10 +32095,11 @@ _sci_libs=''
 _sci_includes=''
 
 ##
-## END of SCI_TRY_LINK (LAPACK):  lapack library
+## END of SCI_TRY_LINK (LAPACK):  lapack li brary
 ##
 
 
+       fi
        ;;
      *)
 

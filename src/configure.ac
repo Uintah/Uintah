@@ -54,7 +54,7 @@
 ##  --------------------------------------------------------------------
 
 ##  initialize configure 
-AC_INIT([Uintah],[2.0],[uintah-developer@gforge.sci.utah.edu])
+AC_INIT([Uintah],[2.1],[uintah-developer@gforge.sci.utah.edu])
 
 ##  require autoconf version 2.69
 ##     The reason to require the latest autoconf is to try and get everyone who
@@ -3180,7 +3180,9 @@ if test "$HAVE_LAPACK" != "yes"; then
              LAPACK_LIB_FLAG="$altivec -framework vecLib"
           fi
        fi
-       SCI_TRY_LINK(LAPACK,lapack library,,,lapack,$_sci_lib,$BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
+       if test "$HAVE_LAPACK" = no ; then
+       	  SCI_TRY_LINK(LAPACK,lapack li brary,,,lapack,$_sci_lib,$BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
+       fi
        ;;
      *)
        SCI_TRY_LINK(LAPACK,lapack library,,,lapack,$_sci_lib,$BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
