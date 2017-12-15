@@ -47,7 +47,7 @@
 #include <CCA/Components/MPM/SerialMPM.h>
 #include <CCA/Components/MPM/ShellMPM.h>
 #include <CCA/Components/MPMICE/MPMICE.h>
-#include <CCA/Components/Parent/ComponentFactory.h>
+#include <CCA/Components/Parent/ApplicationFactory.h>
 #include <CCA/Components/Parent/Switcher.h>
 #include <CCA/Components/PostProcessUda/PostProcess.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -106,10 +106,10 @@ using namespace Uintah;
 using namespace std;
 
 UintahParallelComponent *
-ComponentFactory::create( ProblemSpecP& prob_spec,
-			  const ProcessorGroup* myworld, 
-			  const SimulationStateP sharedState,
-                          string uda )
+ApplicationFactory::create( ProblemSpecP& prob_spec,
+			    const ProcessorGroup* myworld, 
+			    const SimulationStateP sharedState,
+			    string uda )
 {
   bool doAMR = false;
 

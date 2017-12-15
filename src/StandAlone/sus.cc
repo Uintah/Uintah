@@ -52,7 +52,7 @@
 #include <CCA/Components/DataArchiver/DataArchiver.h>
 #include <CCA/Components/LoadBalancers/LoadBalancerFactory.h>
 #include <CCA/Components/Models/ModelFactory.h>
-#include <CCA/Components/Parent/ComponentFactory.h>
+#include <CCA/Components/Parent/ApplicationFactory.h>
 #include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>
 #include <CCA/Components/PostProcessUda/PostProcess.h>
 #include <CCA/Components/Regridder/RegridderFactory.h>
@@ -667,7 +667,7 @@ main( int argc, char *argv[], char *env[] )
     //__________________________________
     // Component and application interface
     UintahParallelComponent* appComp =
-      ComponentFactory::create( ups, world, nullptr, udaDir );
+      ApplicationFactory::create( ups, world, nullptr, udaDir );
     
     ApplicationInterface* application =
       dynamic_cast<ApplicationInterface*>(appComp);

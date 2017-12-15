@@ -110,7 +110,7 @@ ICE::ICE(const ProcessorGroup* myworld,
 	 const SimulationStateP sharedState) :
   ApplicationCommon(myworld, sharedState)
 {
-  setModelMaker(true);
+  setNeedModelMaker(true);
       
   lb   = scinew ICELabel();
 
@@ -520,6 +520,9 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
   }  
     
   if(m_modelMaker){
+
+    // Clean up the old models.
+    m_modelMaker->clearModels();
 
     m_modelMaker->makeModels(orig_or_restart_ps, prob_spec, grid, m_sharedState, isAMR());
     d_models = m_modelMaker->getModels();

@@ -33,7 +33,7 @@ SRCDIR     := CCA/Components/Parent
 COMPONENTS := CCA/Components
 
 SRCS := $(SRCDIR)/Switcher.cc \
-        $(SRCDIR)/ComponentFactory.cc
+        $(SRCDIR)/ApplicationFactory.cc
 
 # ARCHES et. al. should have been seen by CCA/Components/sub.mk
 PSELIBS := \

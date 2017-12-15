@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/Parent/ComponentFactory.h>
+#include <CCA/Components/Parent/ApplicationFactory.h>
 #include <CCA/Components/Parent/Switcher.h>
 #include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>
 #include <CCA/Components/Solvers/SolverFactory.h>
@@ -94,8 +94,7 @@ Switcher::Switcher( const ProcessorGroup * myworld,
   //__________________________________
   //  loop over the subcomponents
   for(; child != nullptr; child = child->findNextBlock("subcomponent")) {
-    
-    
+
     //__________________________________
     //  Read in subcomponent ups file and store the filename
     std::string input_file("");
@@ -118,14 +117,14 @@ Switcher::Switcher( const ProcessorGroup * myworld,
     //__________________________________
     // create simulation port and attach it switcher component    
     UintahParallelComponent* comp =
-      ComponentFactory::create(subCompUps, myworld, m_sharedState, "");
+      ApplicationFactory::create(subCompUps, myworld, m_sharedState, "");
 
     ApplicationInterface* app = dynamic_cast<ApplicationInterface*>(comp);
     attachPort( "application", app );
 
     if( app->needModelMaker() )
-      setModelMaker( true );
-    
+      setNeedModelMaker( true );
+
     // Create solver port and attach it to the switcher component.
     SolverInterface * solver = SolverFactory::create( subCompUps, myworld );    
     attachPort( "sub_solver", solver );
@@ -173,15 +172,13 @@ Switcher::Switcher( const ProcessorGroup * myworld,
     
     proc0cout << "\n";
   }  // loop over subcomponents
-  
-  
+
   //__________________________________
   // Bulletproofing:
   if ( simComponents.count("mpm") && simComponents.count("rmpmice") ){
     throw ProblemSetupException("Switcher: The simulation subComponents rmpmice and mpm cannot be used together", __FILE__, __LINE__);
   }
-  
-  
+
   //__________________________________
   // Bulletproofing:
   // Make sure that a switching criteria was specified.  For n subcomponents,
@@ -848,10 +845,6 @@ Switcher::needRecompile( const GridP & grid )
     // Reseting the GeometryPieceFactory only (I believe) will ever
     // need to be done by the Switcher component...
     GeometryPieceFactory::resetFactory();
-
-    // Clean up the old models.
-    if( needModelMaker() )
-      m_modelMaker->clearModels();
 
     switchApplication( nullptr, grid );
     

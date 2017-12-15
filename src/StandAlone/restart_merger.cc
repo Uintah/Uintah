@@ -43,7 +43,7 @@
 #include <Core/Util/Environment.h>
 
 #include <CCA/Components/DataArchiver/DataArchiver.h>
-#include <CCA/Components/Parent/ComponentFactory.h>
+#include <CCA/Components/Parent/ApplicationFactory.h>
 #include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>
 #include <CCA/Components/SimulationController/AMRSimulationController.h>
 #include <CCA/Ports/ProblemSpecInterface.h>
@@ -132,8 +132,8 @@ main( int argc, char *argv[], char *env[] )
     const ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
 
     UintahParallelComponent * comp =
-      ComponentFactory::create( ups, world, nullptr, udafile[0] );
-    ApplicationInterface     * app  =
+      ApplicationFactory::create( ups, world, nullptr, udafile[0] );
+    ApplicationInterface    * app  =
       dynamic_cast<ApplicationInterface*>( comp );
 
     DataArchiver out_uda(world);

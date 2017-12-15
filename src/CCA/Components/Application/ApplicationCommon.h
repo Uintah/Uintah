@@ -229,7 +229,7 @@ WARNING
     virtual const VarLabel* getDelTLabel() const { return m_delTLabel; }
 
     //////////
-    virtual void setModelMaker(bool val) { m_needModelMaker = val; }
+    virtual void setNeedModelMaker(bool val) { m_needModelMaker = val; }
     virtual bool needModelMaker() const { return m_needModelMaker; }
     
     virtual void setAMR(bool val) { m_AMR = val; }

@@ -121,7 +121,7 @@ MPMICE::MPMICE(const ProcessorGroup* myworld,
                          // to MPM materials, for which its value is hardcoded,
                          // unlike the situation for ice materials
 
-  setModelMaker( d_ice->needModelMaker() );
+  setNeedModelMaker( d_ice->needModelMaker() );
   
   d_switchCriteria = 0;
 }
