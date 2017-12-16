@@ -61,7 +61,7 @@
 
 /*______________________________________________________________________
   TO DO:
-  - Portable handling of Views and variables used within functors
+  - Replace vectors with arrays of plain old data and views
   - Add GPU-specific setup for Kokkos::CUDA
   - Portable LHC sampling
   - Kokkos-ify boundary flux calculations
@@ -600,23 +600,23 @@ struct rayTrace_solveDivQFunctor {
   BlockRange               m_range;
   RandomGenerator          m_rand_pool;
 
-  rayTrace_solveDivQFunctor( bool                 & latinHyperCube
-                           , const Level          * level
-                           , int                  & d_nDivQRays
-                           , bool                 & d_isSeedRandom
-                           , bool                 & d_CCRays
-                           , double               & d_sigmaScat
-                           , double               & d_threshold
-                           , double               & d_maxRayLength
-                           , constCCVariable< T > & abskg
-                           , constCCVariable< T > & sigmaT4OverPi
-                           , constCCVariable<int> & celltype
-                           , int                  & d_flowCell
-                           , Vector               & Dx
-                           , bool                 & d_allowReflect
-                           , CCVariable<double>   & divQ
-                           , CCVariable<double>   & radiationVolq
-                           , BlockRange           & range
+  rayTrace_solveDivQFunctor( bool                   & latinHyperCube
+                           , const Level            * level
+                           , int                    & d_nDivQRays
+                           , bool                   & d_isSeedRandom
+                           , bool                   & d_CCRays
+                           , double                 & d_sigmaScat
+                           , double                 & d_threshold
+                           , double                 & d_maxRayLength
+                           , KokkosView3<const T>   & abskg
+                           , KokkosView3<const T>   & sigmaT4OverPi
+                           , KokkosView3<const int> & celltype
+                           , int                    & d_flowCell
+                           , double                   Dx[3]
+                           , bool                   & d_allowReflect
+                           , KokkosView3<double>    & divQ
+                           , KokkosView3<double>    & radiationVolq
+                           , BlockRange             & range
                            )
     : m_latinHyperCube ( latinHyperCube )
     , m_level          ( level )
@@ -626,18 +626,18 @@ struct rayTrace_solveDivQFunctor {
     , m_d_sigmaScat    ( d_sigmaScat )
     , m_d_threshold    ( d_threshold )
     , m_d_maxRayLength ( d_maxRayLength )
-    , m_abskg          ( abskg.getKokkosView() )
-    , m_sigmaT4OverPi  ( sigmaT4OverPi.getKokkosView() )
-    , m_celltype       ( celltype.getKokkosView() )
+    , m_abskg          ( abskg )
+    , m_sigmaT4OverPi  ( sigmaT4OverPi )
+    , m_celltype       ( celltype )
     , m_d_flowCell     ( d_flowCell )
     , m_d_allowReflect ( d_allowReflect )
-    , m_divQ           ( divQ.getKokkosView() )
-    , m_radiationVolq  ( radiationVolq.getKokkosView() )
+    , m_divQ           ( divQ )
+    , m_radiationVolq  ( radiationVolq )
     , m_range          ( range )
   {
-    m_Dx[0] = Dx.x();
-    m_Dx[1] = Dx.y();
-    m_Dx[2] = Dx.z();
+    m_Dx[0] = Dx[0];
+    m_Dx[1] = Dx[1];
+    m_Dx[2] = Dx[2];
     
     KokkosRandom<RandomGenerator> kokkosRand( d_isSeedRandom );
 
@@ -1157,12 +1157,16 @@ Ray::rayTrace( const ProcessorGroup* pg,
 
   constCCVariable< T > sigmaT4OverPi;
   constCCVariable< T > abskg;
-  constCCVariable<int>  celltype;
+  constCCVariable<int> celltype;
+
+  KokkosView3<const T>   sigmaT4OverPi_view;
+  KokkosView3<const T>   abskg_view;
+  KokkosView3<const int> celltype_view;
 
   if ( d_ROI_algo == entireDomain ){
-    abskg_dw->getLevel(   abskg ,         d_abskgLabel ,   d_matl , level );
-    sigmaT4_dw->getLevel( sigmaT4OverPi , d_sigmaT4Label,  d_matl , level );
-    celltype_dw->getLevel( celltype ,     d_cellTypeLabel, d_matl , level );
+    abskg_dw->getLevel(    abskg,         d_abskgLabel,    d_matl, level );
+    sigmaT4_dw->getLevel(  sigmaT4OverPi, d_sigmaT4Label,  d_matl, level );
+    celltype_dw->getLevel( celltype,      d_cellTypeLabel, d_matl, level );
   }
 
   // patch loop
@@ -1174,13 +1178,12 @@ Ray::rayTrace( const ProcessorGroup* pg,
     const Patch* patch = patches->get(p);
     printTask(patches,patch,g_ray_dbg,"Doing Ray::rayTrace");
 
-//    if ( d_isSeedRandom == false ){     Disable until the code compares with nightly GS -Todd
-//      mTwister.seed(patch->getID());
-//    }
-
-    CCVariable<double> divQ;
+    CCVariable<double>   divQ;
     CCVariable<Stencil7> boundFlux;
-    CCVariable<double> radiationVolq;
+    CCVariable<double>   radiationVolq;
+
+    KokkosView3<double> divQ_view;
+    KokkosView3<double> radiationVolq_view;
 
     if( modifies_divQ ){
       new_dw->getModifiable( divQ,         d_divQLabel,          d_matl, patch );
@@ -1241,6 +1244,12 @@ Ray::rayTrace( const ProcessorGroup* pg,
       }
     }
 
+    abskg_view         = abskg.getKokkosView();
+    sigmaT4OverPi_view = sigmaT4OverPi.getKokkosView();
+    celltype_view      = celltype.getKokkosView();
+    divQ_view          = divQ.getKokkosView();
+    radiationVolq_view = radiationVolq.getKokkosView();
+
     unsigned long int size = 0;                   // current size of PathIndex
     Vector Dx = patch->dCell();                   // cell spacing
 
@@ -1264,6 +1273,8 @@ Ray::rayTrace( const ProcessorGroup* pg,
 
       bool latinHyperCube = ( d_rayDirSampleAlgo == LATIN_HYPER_CUBE ) ? true : false;
 
+      double Dx_pod[3] = { Dx.x(), Dx.y(), Dx.z() };
+
       IntVector lo = patch->getCellLowIndex();
       IntVector hi = patch->getCellHighIndex();
 
@@ -1277,14 +1288,14 @@ Ray::rayTrace( const ProcessorGroup* pg,
                                                                                               , d_sigmaScat
                                                                                               , d_threshold
                                                                                               , d_maxRayLength
-                                                                                              , abskg
-                                                                                              , sigmaT4OverPi
-                                                                                              , celltype
+                                                                                              , abskg_view
+                                                                                              , sigmaT4OverPi_view
+                                                                                              , celltype_view
                                                                                               , d_flowCell
-                                                                                              , Dx
+                                                                                              , Dx_pod
                                                                                               , d_allowReflect
-                                                                                              , divQ
-                                                                                              , radiationVolq
+                                                                                              , divQ_view
+                                                                                              , radiationVolq_view
                                                                                               , range
                                                                                               );
 
@@ -1452,9 +1463,10 @@ struct rayTrace_dataOnion_solveDivQFunctor {
   const Level                       * m_fineLevel;
   const int                           m_maxLevels;
   const std::vector<Vector>           m_Dx;
-  const BBox                          m_domain_BB;
-  const IntVector                     m_fineLevel_ROI_Lo;
-  const IntVector                     m_fineLevel_ROI_Hi;
+  double                              m_domain_BB_Lo[3];
+  double                              m_domain_BB_Hi[3];
+  int                                 m_fineLevel_ROI_Lo[3];
+  int                                 m_fineLevel_ROI_Hi[3];
   std::vector<IntVector>              m_regionLo;
   std::vector<IntVector>              m_regionHi;
   std::vector<constCCVariable<T>>     m_sigmaT4OverPi;
@@ -1475,18 +1487,19 @@ struct rayTrace_dataOnion_solveDivQFunctor {
   rayTrace_dataOnion_solveDivQFunctor( const Level                       * fineLevel
                                      , const int                           maxLevels
                                      , const std::vector<Vector>         & Dx
-                                     , const BBox                        & domain_BB
-                                     , const IntVector                   & fineLevel_ROI_Lo
-                                     , const IntVector                   & fineLevel_ROI_Hi
+                                     , double                              domain_BB_Lo[3]
+                                     , double                              domain_BB_Hi[3]
+                                     , int                                 fineLevel_ROI_Lo[3]
+                                     , int                                 fineLevel_ROI_Hi[3]
                                      , std::vector<IntVector>            & regionLo
                                      , std::vector<IntVector>            & regionHi
                                      , std::vector<constCCVariable<T>>   & sigmaT4OverPi
                                      , std::vector<constCCVariable<T>>   & abskg
                                      , std::vector<constCCVariable<int>> & cellType
-                                     , CCVariable<double>                & divQ_fine
-                                     , constCCVariable< T >              & abskg_fine
-                                     , constCCVariable< T >              & sigmaT4OverPi_fine
-                                     , CCVariable<double>                & radiationVolq_fine
+                                     , KokkosView3<double>               & divQ_fine
+                                     , KokkosView3<const T>              & abskg_fine
+                                     , KokkosView3<const T>              & sigmaT4OverPi_fine
+                                     , KokkosView3<double>               & radiationVolq_fine
                                      , double                            & d_threshold
                                      , bool                              & d_allowReflect
                                      , int                               & d_nDivQRays
@@ -1497,18 +1510,15 @@ struct rayTrace_dataOnion_solveDivQFunctor {
     : m_fineLevel          ( fineLevel )
     , m_maxLevels          ( maxLevels )
     , m_Dx                 ( Dx )
-    , m_domain_BB          ( domain_BB )
-    , m_fineLevel_ROI_Lo   ( fineLevel_ROI_Lo )
-    , m_fineLevel_ROI_Hi   ( fineLevel_ROI_Hi )
     , m_regionLo           ( regionLo )
     , m_regionHi           ( regionHi )
     , m_sigmaT4OverPi      ( sigmaT4OverPi )
     , m_abskg              ( abskg )
     , m_cellType           ( cellType )
-    , m_divQ_fine          ( divQ_fine.getKokkosView() )
-    , m_abskg_fine         ( abskg_fine.getKokkosView() )
-    , m_sigmaT4OverPi_fine ( sigmaT4OverPi_fine.getKokkosView() )
-    , m_radiationVolq_fine ( radiationVolq_fine.getKokkosView() )
+    , m_divQ_fine          ( divQ_fine )
+    , m_abskg_fine         ( abskg_fine )
+    , m_sigmaT4OverPi_fine ( sigmaT4OverPi_fine )
+    , m_radiationVolq_fine ( radiationVolq_fine )
     , m_d_threshold        ( d_threshold )
     , m_d_allowReflect     ( d_allowReflect )
     , m_d_nDivQRays        ( d_nDivQRays )
@@ -1516,6 +1526,22 @@ struct rayTrace_dataOnion_solveDivQFunctor {
     , m_d_CCRays           ( d_CCRays )
     , m_d_flowCell         ( d_flowCell )
   {
+    m_domain_BB_Lo[0] = domain_BB_Lo[0];
+    m_domain_BB_Lo[1] = domain_BB_Lo[1];
+    m_domain_BB_Lo[2] = domain_BB_Lo[2];
+
+    m_domain_BB_Hi[0] = domain_BB_Hi[0];
+    m_domain_BB_Hi[1] = domain_BB_Hi[1];
+    m_domain_BB_Hi[2] = domain_BB_Hi[2];
+
+    m_fineLevel_ROI_Lo[0] = fineLevel_ROI_Lo[0];
+    m_fineLevel_ROI_Lo[1] = fineLevel_ROI_Lo[1];
+    m_fineLevel_ROI_Lo[2] = fineLevel_ROI_Lo[2];
+
+    m_fineLevel_ROI_Hi[0] = fineLevel_ROI_Hi[0];
+    m_fineLevel_ROI_Hi[1] = fineLevel_ROI_Hi[1];
+    m_fineLevel_ROI_Hi[2] = fineLevel_ROI_Hi[2];
+
     KokkosRandom<RandomGenerator> kokkosRand( d_isSeedRandom );
 
     m_rand_pool = kokkosRand.getRandPool();
@@ -1763,7 +1789,13 @@ struct rayTrace_dataOnion_solveDivQFunctor {
             CC_pos[0] = level->getAnchor().x() + ( m_Dx[L][0] * cur[0] ) + ( 0.5 * m_Dx[L][0] );
             CC_pos[1] = level->getAnchor().x() + ( m_Dx[L][1] * cur[1] ) + ( 0.5 * m_Dx[L][1] );
             CC_pos[2] = level->getAnchor().x() + ( m_Dx[L][2] * cur[2] ) + ( 0.5 * m_Dx[L][2] );
-            in_domain = m_domain_BB.inside(Point(CC_pos[0],CC_pos[1],CC_pos[2]));
+
+            in_domain = ( CC_pos[0] >= m_domain_BB_Lo[0] &&
+                          CC_pos[1] >= m_domain_BB_Lo[1] &&
+                          CC_pos[2] >= m_domain_BB_Lo[2] &&
+                          CC_pos[0] <= m_domain_BB_Hi[0] &&
+                          CC_pos[1] <= m_domain_BB_Hi[1] &&
+                          CC_pos[2] <= m_domain_BB_Hi[2]    );
 
             bool ray_outside_ROI    = ( ( m_fineLevel_ROI_Lo[dir] <= cur[dir] && m_fineLevel_ROI_Hi[dir] > cur[dir] ) == false );
             bool ray_outside_Region = ( ( m_regionLo[L][dir] <= cur[dir] && m_regionHi[L][dir] > cur[dir] ) == false );
@@ -1987,10 +2019,14 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
   // retrieve the coarse level data
   // compute the level dependent variables that are constant
   std::vector< constCCVariable< T > > abskg(maxLevels);
-  std::vector< constCCVariable< T > >sigmaT4OverPi(maxLevels);
-  std::vector< constCCVariable<int> >cellType(maxLevels);
+  std::vector< constCCVariable< T > > sigmaT4OverPi(maxLevels);
+  std::vector< constCCVariable<int> > cellType(maxLevels);
+
   constCCVariable< T > abskg_fine;
   constCCVariable< T > sigmaT4OverPi_fine;
+
+  KokkosView3<const T> abskg_fine_view;
+  KokkosView3<const T> sigmaT4OverPi_fine_view;
  
   DataWarehouse* sigmaT4_dw  = new_dw->getOtherDataWarehouse(which_sigmaT4_dw);
   DataWarehouse* celltype_dw = new_dw->getOtherDataWarehouse(which_celltype_dw);
@@ -2044,6 +2080,9 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
   BBox domain_BB;
   level_0->getInteriorSpatialRange(domain_BB);                 // edge of computational domain
 
+  double domain_BB_Lo[3] = { domain_BB.min().x(), domain_BB.min().y(), domain_BB.min().z() };
+  double domain_BB_Hi[3] = { domain_BB.max().x(), domain_BB.max().y(), domain_BB.max().z() };
+
   //  patch loop
   for (int p = 0; p < finePatches->size(); p++) {
 
@@ -2070,9 +2109,12 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
       sigmaT4OverPi_fine = sigmaT4OverPi[L];
     }
 
-    CCVariable<double> divQ_fine;
+    CCVariable<double>   divQ_fine;
     CCVariable<Stencil7> boundFlux_fine;
-    CCVariable<double> radiationVolq_fine;
+    CCVariable<double>   radiationVolq_fine;
+
+    KokkosView3<double> divQ_fine_view;
+    KokkosView3<double> radiationVolq_fine_view;
 
     if( modifies_divQ ){
       old_dw->getModifiable( divQ_fine,         d_divQLabel,          d_matl, finePatch );
@@ -2090,6 +2132,11 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
         boundFlux_fine[c].initialize(0.0);
       }
     }
+
+    abskg_fine_view         = abskg_fine.getKokkosView();
+    sigmaT4OverPi_fine_view = sigmaT4OverPi_fine.getKokkosView();
+    divQ_fine_view          = divQ_fine.getKokkosView();
+    radiationVolq_fine_view = radiationVolq_fine.getKokkosView();
 
     int my_L = maxLevels - 1;
 
@@ -2109,6 +2156,9 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
 
     if (d_solveDivQ) {
 
+      int fineLevel_ROI_Lo_pod[3] = { fineLevel_ROI_Lo.x(), fineLevel_ROI_Lo.y(), fineLevel_ROI_Lo.z() };
+      int fineLevel_ROI_Hi_pod[3] = { fineLevel_ROI_Hi.x(), fineLevel_ROI_Hi.y(), fineLevel_ROI_Hi.z() };
+
       IntVector lo = finePatch->getCellLowIndex();
       IntVector hi = finePatch->getCellHighIndex();
 
@@ -2117,18 +2167,19 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
       rayTrace_dataOnion_solveDivQFunctor< T, Kokkos::Random_XorShift1024_Pool<Kokkos::OpenMP> > functor( fineLevel
                                                                                                         , maxLevels
                                                                                                         , Dx
-                                                                                                        , domain_BB
-                                                                                                        , fineLevel_ROI_Lo
-                                                                                                        , fineLevel_ROI_Hi
+                                                                                                        , domain_BB_Lo
+                                                                                                        , domain_BB_Hi
+                                                                                                        , fineLevel_ROI_Lo_pod
+                                                                                                        , fineLevel_ROI_Hi_pod
                                                                                                         , regionLo
                                                                                                         , regionHi
                                                                                                         , sigmaT4OverPi
                                                                                                         , abskg
                                                                                                         , cellType
-                                                                                                        , divQ_fine
-                                                                                                        , abskg_fine
-                                                                                                        , sigmaT4OverPi_fine
-                                                                                                        , radiationVolq_fine
+                                                                                                        , divQ_fine_view
+                                                                                                        , abskg_fine_view
+                                                                                                        , sigmaT4OverPi_fine_view
+                                                                                                        , radiationVolq_fine_view
                                                                                                         , d_threshold
                                                                                                         , d_allowReflect
                                                                                                         , d_nDivQRays
