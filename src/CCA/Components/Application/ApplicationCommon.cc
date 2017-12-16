@@ -139,7 +139,7 @@ void ApplicationCommon::getComponents()
   m_scheduler = dynamic_cast<Scheduler*>( getPort("scheduler") );
 
   if( !m_scheduler ) {
-    throw InternalError("dynamic_cast of 'm_regridder' failed!", __FILE__, __LINE__);
+    throw InternalError("dynamic_cast of 'm_scheduler' failed!", __FILE__, __LINE__);
   }
 
   m_loadBalancer = dynamic_cast<LoadBalancer*>( getPort("load balancer") );
