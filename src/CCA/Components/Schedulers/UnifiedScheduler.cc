@@ -1992,7 +1992,7 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
                 ghost_host_low = iter->low;
                 ghost_host_high = iter->high;
                 ghost_host_size = ghost_host_high - ghost_host_low;
-              }else if (useGpuGhostCells) {
+              } else if (useGpuGhostCells) {
                 GPUDataWarehouse::GhostType throwaway1;
                 int throwaway2;
                 int3 ghost_host_low3, ghost_host_high3, ghost_host_size3;
@@ -2003,7 +2003,7 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
                 ghost_host_high = IntVector(ghost_host_high3.x, ghost_host_high3.y, ghost_host_high3.z);
                 ghost_host_size = IntVector(ghost_host_size3.x, ghost_host_size3.y, ghost_host_size3.z);
 
-              }else if (useCpuForeign || useCpuGhostCells) {
+              } else if (useCpuForeign || useCpuGhostCells) {
                 iter->validNeighbor->getSizes(ghost_host_low, ghost_host_high, ghost_host_offset, ghost_host_size, ghost_host_strides);
               }
               const size_t ghost_mem_size =  ghost_host_size.x() * ghost_host_size.y() * ghost_host_size.z() * elementDataSize;
@@ -2733,7 +2733,7 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
                     SCI_THROW(InternalError("Attempting to copy zero bytes to the GPU.  That shouldn't happen.", __FILE__, __LINE__));
                   }
 
-                  //Debug loop in case you need to see the data baing sent.
+                  //Debug loop in case you need to see the data being sent.
                   //if (it->second.m_varMemSize == 968) {
                   //  printf("UnifiedScheduler - d_data is %p\n", host_ptr);
                   //  for (int i = 0; i < 968/elementDataSize; i++) {
@@ -2944,71 +2944,131 @@ UnifiedScheduler::prepareGhostCellsIntoTaskDW( DetailedTask * dtask )
 bool
 UnifiedScheduler::ghostCellsProcessingReady( DetailedTask * dtask )
 {
-  const Task* task = dtask->getTask();
 
-  // Gather up all possible dependents from requires and computes and remove duplicates (we don't want to
-  // transfer some variables twice).
-  // Note: A task can only run on one level at a time.  It could run multiple patches and multiple
-  // materials, but a single task will never run multiple levels.
-  std::map<labelPatchMatlDependency, const Task::Dependency*> vars;
-  for (const Task::Dependency* dependantVar = task->getRequires(); dependantVar != 0; dependantVar = dependantVar->m_next) {
-    constHandle<PatchSubset> patches = dependantVar->getPatchesUnderDomain(dtask->getPatches());
-    constHandle<MaterialSubset> matls = dependantVar->getMaterialsUnderDomain(dtask->getMaterials());
-    const int numPatches = patches->size();
-    const int numMatls = matls->size();
-    for (int i = 0; i < numPatches; i++) {
-      for (int j = 0; j < numMatls; j++) {
-        labelPatchMatlDependency lpmd(dependantVar->m_var->getName().c_str(), patches->get(i)->getID(), matls->get(j), Task::Requires);
-        if (vars.find(lpmd) == vars.end()) {
-          vars.insert(std::map<labelPatchMatlDependency, const Task::Dependency*>::value_type(lpmd, dependantVar));
-        }
-      }
-    }
-  }
+//  // Gather up all possible dependents from requires and computes and remove duplicates (we don't want to
+//  // transfer some variables twice).
+//  // Note: A task can only run on one level at a time.  It could run multiple patches and multiple
+//  // materials, but a single task will never run multiple levels.
+//  std::map<labelPatchMatlDependency, const Task::Dependency*> vars;
+//  for (const Task::Dependency* dependantVar = task->getRequires(); dependantVar != 0; dependantVar = dependantVar->m_next) {
+//    constHandle<PatchSubset> patches = dependantVar->getPatchesUnderDomain(dtask->getPatches());
+//    constHandle<MaterialSubset> matls = dependantVar->getMaterialsUnderDomain(dtask->getMaterials());
+//    const int numPatches = patches->size();
+//    const int numMatls = matls->size();
+//    for (int i = 0; i < numPatches; i++) {
+//      for (int j = 0; j < numMatls; j++) {
+//        labelPatchMatlDependency lpmd(dependantVar->m_var->getName().c_str(), patches->get(i)->getID(), matls->get(j), Task::Requires);
+//        if (vars.find(lpmd) == vars.end()) {
+//          vars.insert(std::map<labelPatchMatlDependency, const Task::Dependency*>::value_type(lpmd, dependantVar));
+//        }
+//      }
+//    }
+//  }
+//
+//  // Go through all required vars for this detailed task, and look at all staging variables in each vars.
+//  // If every staging var is valid and ready, then the ghost cell copies within a GPU (GPU to GPU) still have the
+//  // green light to process.
+//  std::map<labelPatchMatlDependency, const Task::Dependency*>::iterator varIter;
+//  for (varIter = vars.begin(); varIter != vars.end(); ++varIter) {
+//    const Task::Dependency* curDependency = varIter->second;
+//
+//    constHandle<PatchSubset> patches = curDependency->getPatchesUnderDomain(dtask->getPatches());
+//    constHandle<MaterialSubset> matls = curDependency->getMaterialsUnderDomain(dtask->getMaterials());
+//    const int numPatches = patches->size();
+//    const int patchID = varIter->first.m_patchID;
+//    const Patch * patch = nullptr;
+//    const Level * level = nullptr;
+//    for (int i = 0; i < numPatches; i++) {
+//      if (patches->get(i)->getID() == patchID) {
+//        patch = patches->get(i);
+//        level = patch->getLevel();
+//      }
+//    }
+//    int levelID = level->getID();
+//    if (curDependency->m_var->typeDescription()->getType() == TypeDescription::ReductionVariable) {
+//      levelID = -1;
+//    }
+//    const int matlID = varIter->first.m_matlIndex;
+//    const int dwIndex = curDependency->mapDataWarehouse();
+//    OnDemandDataWarehouseP dw = m_dws[dwIndex];
+//    GPUDataWarehouse* gpudw = dw->getGPUDW(GpuUtilities::getGpuIndexForPatch(patch));
+//    if (curDependency->m_dep_type == Task::Requires) {
+//      if (curDependency->m_gtype != Ghost::None && curDependency->m_num_ghost_cells > 0) {
+//        if (!(gpudw->areAllStagingVarsValid(curDependency->m_var->getName().c_str(),patchID, matlID, levelID))) {
+//          if (gpu_stats.active()) {
+//            cerrLock.lock();
+//            {
+//              gpu_stats << myRankThread() << " UnifiedScheduler::ghostCellsProcessingReady() -"
+//                  // Task: " << dtask->getName()
+//                  << " Not all staging vars were ready for "
+//                  << curDependency->m_var->getName() << " patch " << patchID
+//                  << " material " << matlID << " level " << levelID << std::endl;
+//            }
+//            cerrLock.unlock();
+//          }
+//          return false;
+//        }
+//      }
+//    }
+//  }
 
-  // Go through each var, see if it's valid or valid with ghosts.
-  std::map<labelPatchMatlDependency, const Task::Dependency*>::iterator varIter;
-  for (varIter = vars.begin(); varIter != vars.end(); ++varIter) {
-    const Task::Dependency* curDependency = varIter->second;
+  // One additional check is necessary.  Some upcoming GPU to GPU ghost cell copies will occur from other patches
+  // not assigned to the task. For example, ghost cell data from another MPI rank is going to be assigned to a
+  // a different patch, but the ghost cell data needs to be copied into the patch variable assigned to this task.
+  // In another example, ghost cell data may be coming from another patch that is on the same MPI rank, but that other
+  // patch variable is being copied host-to-GPU by another scheduler thread processing another task.
+  // The best solution here is to investigate all upcoming ghost cell copies that need to occur, and verify that
+  // both the source and destination patches are valid in the memory space.
+  // Note: I bet this is more accurate than the above check, if so, remove the above loop.
 
-    constHandle<PatchSubset> patches = curDependency->getPatchesUnderDomain(dtask->getPatches());
-    constHandle<MaterialSubset> matls = curDependency->getMaterialsUnderDomain(dtask->getMaterials());
-    const int numPatches = patches->size();
-    const int patchID = varIter->first.m_patchID;
-    const Patch * patch = nullptr;
-    const Level * level = nullptr;
-    for (int i = 0; i < numPatches; i++) {
-      if (patches->get(i)->getID() == patchID) {
-        patch = patches->get(i);
-        level = patch->getLevel();
-      }
-    }
-    int levelID = level->getID();
-    if (curDependency->m_var->typeDescription()->getType() == TypeDescription::ReductionVariable) {
-      levelID = -1;
-    }
-    const int matlID = varIter->first.m_matlIndex;
-    const int dwIndex = curDependency->mapDataWarehouse();
-    OnDemandDataWarehouseP dw = m_dws[dwIndex];
-    GPUDataWarehouse* gpudw = dw->getGPUDW(GpuUtilities::getGpuIndexForPatch(patch));
-    if (curDependency->m_dep_type == Task::Requires) {
-      if (curDependency->m_gtype != Ghost::None && curDependency->m_num_ghost_cells > 0) {
-        if (!(gpudw->areAllStagingVarsValid(curDependency->m_var->getName().c_str(),patchID, matlID, levelID))) {
-          if (gpu_stats.active()) {
-            cerrLock.lock();
-            {
-              gpu_stats << myRankThread() << " UnifiedScheduler::ghostCellsProcessingReady() -"
-                  // Task: " << dtask->getName()
-                  << " Not all staging vars were ready for "
-                  << curDependency->m_var->getName() << " patch " << patchID
-                  << " material " << matlID << " level " << levelID << std::endl;
-            }
-            cerrLock.unlock();
+  const std::map<GpuUtilities::GhostVarsTuple, DeviceGhostCellsInfo> & ghostVarMap = dtask->getGhostVars().getMap();
+  std::map<GpuUtilities::GhostVarsTuple, DeviceGhostCellsInfo>::const_iterator it;
+  for (it = ghostVarMap.begin(); it != ghostVarMap.end(); ++it) {
+
+    GPUDataWarehouse* gpudw = m_dws[it->first.m_dataWarehouse]->getGPUDW(GpuUtilities::getGpuIndexForPatch(it->second.m_sourcePatchPointer));
+
+    //Check the source
+    if (it->second.m_sourceStaging) {
+      if (!(gpudw->areAllStagingVarsValid(it->first.m_label.c_str(),
+            it->second.m_sourcePatchPointer->getID(),
+            it->second.m_matlIndx,
+            it->first.m_levelIndx))) {
+        if (gpu_stats.active()) {
+          cerrLock.lock();
+          {
+            gpu_stats << myRankThread() << " UnifiedScheduler::ghostCellsProcessingReady() -"
+                // Task: " << dtask->getName()
+                << " Required staging variable for ghost cells not ready for "
+                << it->first.m_label << " patch " << it->second.m_sourcePatchPointer->getID()
+                << " material " << it->second.m_matlIndx << " level " << it->first.m_levelIndx << std::endl;
           }
-          return false;
+          cerrLock.unlock();
         }
+        printf("The ghost cells were NOT ready\n");
+        return false;
+      }
+    } else {
+      if (!(gpudw->isValidOnGPU(it->first.m_label.c_str(),
+            it->second.m_sourcePatchPointer->getID(),
+            it->second.m_matlIndx,
+            it->first.m_levelIndx))) {
+        if (gpu_stats.active()) {
+          cerrLock.lock();
+          {
+            gpu_stats << myRankThread() << " UnifiedScheduler::ghostCellsProcessingReady() -"
+                // Task: " << dtask->getName()
+                << " Required source varaible for ghost cells not ready for "
+                << it->first.m_label << " patch " << it->second.m_sourcePatchPointer->getID()
+                << " material " << it->second.m_matlIndx << " level " << it->first.m_levelIndx << std::endl;
+          }
+          cerrLock.unlock();
+        }
+        printf("The ghost cells were NOT ready\n");
+        return false;
       }
     }
+
+    //Check the destination?
   }
 
   //if we got there, then everything must be ready to go.
