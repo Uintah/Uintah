@@ -325,8 +325,8 @@ namespace Uintah {
       const VarLabel* pColorLabel_preReloc;
 
       // For Cohesive Zones
-      const VarLabel* czLengthLabel; 
-      const VarLabel* czLengthLabel_preReloc; 
+      const VarLabel* czAreaLabel; 
+      const VarLabel* czAreaLabel_preReloc; 
       const VarLabel* czNormLabel; 
       const VarLabel* czNormLabel_preReloc; 
       const VarLabel* czTangLabel; 

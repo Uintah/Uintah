@@ -885,7 +885,7 @@ void SerialMPM::scheduleAddCohesiveZoneForces(SchedulerP& sched,
 
   Ghost::GhostType  gan = Ghost::AroundNodes;
   t->requires(Task::OldDW, lb->pXLabel,                     cz_matls, gan,NGP);
-  t->requires(Task::NewDW, lb->czLengthLabel_preReloc,      cz_matls, gan,NGP);
+  t->requires(Task::NewDW, lb->czAreaLabel_preReloc,        cz_matls, gan,NGP);
   t->requires(Task::NewDW, lb->czForceLabel_preReloc,       cz_matls, gan,NGP);
   t->requires(Task::NewDW, lb->czTopMatLabel_preReloc,      cz_matls, gan,NGP);
   t->requires(Task::NewDW, lb->czBotMatLabel_preReloc,      cz_matls, gan,NGP);
@@ -1368,7 +1368,7 @@ void SerialMPM::scheduleUpdateCohesiveZones(SchedulerP& sched,
   t->requires(Task::NewDW, lb->gVelocityLabel,     mpm_matls,   gac,NGN);
   t->requires(Task::NewDW, lb->gMassLabel,         mpm_matls,   gac,NGN);
   t->requires(Task::OldDW, lb->pXLabel,            cz_matls,    gnone);
-  t->requires(Task::OldDW, lb->czLengthLabel,      cz_matls,    gnone);
+  t->requires(Task::OldDW, lb->czAreaLabel,        cz_matls,    gnone);
   t->requires(Task::OldDW, lb->czNormLabel,        cz_matls,    gnone);
   t->requires(Task::OldDW, lb->czTangLabel,        cz_matls,    gnone);
   t->requires(Task::OldDW, lb->czDispTopLabel,     cz_matls,    gnone);
@@ -1381,7 +1381,7 @@ void SerialMPM::scheduleUpdateCohesiveZones(SchedulerP& sched,
   t->requires(Task::OldDW, lb->czIDLabel,          cz_matls,    gnone);
 
   t->computes(lb->pXLabel_preReloc,           cz_matls);
-  t->computes(lb->czLengthLabel_preReloc,     cz_matls);
+  t->computes(lb->czAreaLabel_preReloc,       cz_matls);
   t->computes(lb->czNormLabel_preReloc,       cz_matls);
   t->computes(lb->czTangLabel_preReloc,       cz_matls);
   t->computes(lb->czDispTopLabel_preReloc,    cz_matls);
@@ -2435,13 +2435,13 @@ void SerialMPM::addCohesiveZoneForces(const ProcessorGroup*,
 
       // Get the arrays of particle values to be changed
       constParticleVariable<Point> czx;
-      constParticleVariable<double> czlength;
+      constParticleVariable<double> czarea;
       constParticleVariable<Vector> czforce;
       constParticleVariable<int> czTopMat, czBotMat;
       constParticleVariable<Matrix3> pDeformationMeasure;
 
       old_dw->get(czx,          lb->pXLabel,                          pset);
-      new_dw->get(czlength,     lb->czLengthLabel_preReloc,           pset);
+      new_dw->get(czarea,       lb->czAreaLabel_preReloc,             pset);
       new_dw->get(czforce,      lb->czForceLabel_preReloc,            pset);
       new_dw->get(czTopMat,     lb->czTopMatLabel_preReloc,           pset);
       new_dw->get(czBotMat,     lb->czBotMatLabel_preReloc,           pset);
@@ -2451,7 +2451,6 @@ void SerialMPM::addCohesiveZoneForces(const ProcessorGroup*,
           iter != pset->end(); iter++){
         particleIndex idx = *iter;
 
-//        double length = sqrt(czlength[idx]);
         Matrix3 size(0.1,0.,0.,0.,0.1,0.,0.,0.,0.1);
         Matrix3 defgrad;
         defgrad.Identity();
@@ -3835,8 +3834,8 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
       // Get the arrays of particle values to be changed
       constParticleVariable<Point> czx;
       ParticleVariable<Point> czx_new;
-      constParticleVariable<double> czlength;
-      ParticleVariable<double> czlength_new;
+      constParticleVariable<double> czarea;
+      ParticleVariable<double> czarea_new;
       constParticleVariable<long64> czids;
       ParticleVariable<long64> czids_new;
       constParticleVariable<Vector> cznorm, cztang, czDispTop;
@@ -3847,7 +3846,7 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
       ParticleVariable<int> czTopMat_new, czBotMat_new, czFailed_new;
 
       old_dw->get(czx,          lb->pXLabel,                         pset);
-      old_dw->get(czlength,     lb->czLengthLabel,                   pset);
+      old_dw->get(czarea,       lb->czAreaLabel,                     pset);
       old_dw->get(cznorm,       lb->czNormLabel,                     pset);
       old_dw->get(cztang,       lb->czTangLabel,                     pset);
       old_dw->get(czDispTop,    lb->czDispTopLabel,                  pset);
@@ -3860,7 +3859,7 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
       old_dw->get(czFailed,     lb->czFailedLabel,                   pset);
 
       new_dw->allocateAndPut(czx_new,      lb->pXLabel_preReloc,          pset);
-      new_dw->allocateAndPut(czlength_new, lb->czLengthLabel_preReloc,    pset);
+      new_dw->allocateAndPut(czarea_new,   lb->czAreaLabel_preReloc,      pset);
       new_dw->allocateAndPut(cznorm_new,   lb->czNormLabel_preReloc,      pset);
       new_dw->allocateAndPut(cztang_new,   lb->czTangLabel_preReloc,      pset);
       new_dw->allocateAndPut(czDispTop_new,lb->czDispTopLabel_preReloc,   pset);
@@ -3873,7 +3872,7 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
       new_dw->allocateAndPut(czFailed_new, lb->czFailedLabel_preReloc,    pset);
 
 
-      czlength_new.copyData(czlength);
+      czarea_new.copyData(czarea);
       czids_new.copyData(czids);
       czTopMat_new.copyData(czTopMat);
       czBotMat_new.copyData(czBotMat);
@@ -3898,7 +3897,7 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
           iter != pset->end(); iter++){
         particleIndex idx = *iter;
 
-//        double length = sqrt(czlength[idx]);
+//        double length = sqrt(czarea[idx]);
 //        Vector size(length,length,length);
         Matrix3 size(0.1,0.,0.,0.,0.1,0.,0.,0.,0.1);
         Matrix3 defgrad;
@@ -4014,9 +4013,9 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
                               * exp(-D_n/delta_n)
                               * exp(-D_t2*D_t2/(delta_s*delta_s));
 
-        czforce_new[idx]     = mass_correction_factor*(normal_stress*cznorm_new[idx]*czlength_new[idx]
-                             + tang1_stress*cztang_new[idx]*czlength_new[idx]
-                             + tang2_stress*cztang2*czlength_new[idx])
+        czforce_new[idx]     = mass_correction_factor*(normal_stress*cznorm_new[idx]*czarea_new[idx]
+                             + tang1_stress*cztang_new[idx]*czarea_new[idx]
+                             + tang2_stress*cztang2*czarea_new[idx])
                              * (1.0 - czf);
 
 /*

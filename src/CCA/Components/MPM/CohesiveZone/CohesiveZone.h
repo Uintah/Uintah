@@ -86,7 +86,7 @@ namespace Uintah {
 
     ParticleVariable<Point> czposition;
     ParticleVariable<Vector> cznormal, cztang, czdisptop, czdispbottom;
-    ParticleVariable<double> czlength;
+    ParticleVariable<double> czarea;
     ParticleVariable<long64> czID;
     ParticleVariable<Vector> czSeparation, czForce;
     ParticleVariable<int> czTopMat, czBotMat;

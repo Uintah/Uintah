@@ -775,9 +775,9 @@ MPMLabel::MPMLabel()
 		     NCVariable<Vector>::getTypeDescription());
 
   // For Cohesive Zones
-  czLengthLabel = VarLabel::create("cz.length",
+  czAreaLabel = VarLabel::create("cz.area",
                      ParticleVariable<double>::getTypeDescription());
-  czLengthLabel_preReloc = VarLabel::create("cz.length+",
+  czAreaLabel_preReloc = VarLabel::create("cz.area+",
                      ParticleVariable<double>::getTypeDescription());
 
   czNormLabel = VarLabel::create("cz.norm",
@@ -1133,8 +1133,8 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pColorLabel_preReloc);
 
   // For Cohesive Zones
-  VarLabel::destroy(czLengthLabel);
-  VarLabel::destroy(czLengthLabel_preReloc);
+  VarLabel::destroy(czAreaLabel);
+  VarLabel::destroy(czAreaLabel_preReloc);
   VarLabel::destroy(czNormLabel);
   VarLabel::destroy(czNormLabel_preReloc);
   VarLabel::destroy(czTangLabel);

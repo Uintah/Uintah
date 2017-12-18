@@ -85,7 +85,7 @@ CohesiveZone::createCohesiveZones(CZMaterial* matl,
       mpmMatlIndex.push_back(dwi);
     }
     
-     // Field for position, normal, tangential and length.
+    // Field for position, normal, tangential and area
     // Everything else is assumed to be zero.
     
     double p1,p2,p3,l4,n5,n6,n7,t8,t9,t10;
@@ -110,7 +110,7 @@ CohesiveZone::createCohesiveZones(CZMaterial* matl,
       if(patch->containsPoint(pos)){
         particleIndex pidx = start;
         czposition[pidx]  = pos;
-        czlength[pidx]    = l4;
+        czarea[pidx]      = l4;
         cznormal[pidx]    = Vector(n5,n6,n7);
         cztang[pidx]      = Vector(t8,t9,t10);
         czdisptop[pidx]   = Vector(0.0,0.0,0.0);
@@ -155,7 +155,7 @@ CohesiveZone::allocateVariables(particleIndex numCZs,
   ParticleSubset* subset = new_dw->createParticleSubset(numCZs,dwi,patch);
 
   new_dw->allocateAndPut(czposition,     d_lb->pXLabel,             subset);
-  new_dw->allocateAndPut(czlength,       d_lb->czLengthLabel,       subset); 
+  new_dw->allocateAndPut(czarea,         d_lb->czAreaLabel,         subset); 
   new_dw->allocateAndPut(cznormal,       d_lb->czNormLabel,         subset);
   new_dw->allocateAndPut(cztang,         d_lb->czTangLabel,         subset);
   new_dw->allocateAndPut(czdisptop,      d_lb->czDispTopLabel,      subset);
@@ -214,8 +214,8 @@ vector<const VarLabel* > CohesiveZone::returnCohesiveZoneStatePreReloc()
 //
 void CohesiveZone::registerPermanentCohesiveZoneState(CZMaterial* czmat)
 {
-  d_cz_state.push_back(d_lb->czLengthLabel);
-  d_cz_state_preReloc.push_back(d_lb->czLengthLabel_preReloc);
+  d_cz_state.push_back(d_lb->czAreaLabel);
+  d_cz_state_preReloc.push_back(d_lb->czAreaLabel_preReloc);
 
   d_cz_state.push_back(d_lb->czNormLabel);
   d_cz_state_preReloc.push_back(d_lb->czNormLabel_preReloc);
@@ -261,7 +261,7 @@ void CohesiveZone::scheduleInitialize(const LevelP& level,
   zeroth_matl->addReference();
 
   t->computes(d_lb->pXLabel);
-  t->computes(d_lb->czLengthLabel);
+  t->computes(d_lb->czAreaLabel);
   t->computes(d_lb->czNormLabel);
   t->computes(d_lb->czTangLabel);
   t->computes(d_lb->czDispTopLabel);
