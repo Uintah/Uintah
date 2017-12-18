@@ -25,7 +25,6 @@
 #ifndef UINTAH_HOMEBREW_APPLICATIONINTERFACE_H
 #define UINTAH_HOMEBREW_APPLICATIONINTERFACE_H
 
-#include <CCA/Ports/Output.h>
 #include <CCA/Ports/SchedulerP.h>
 
 #include <Core/Parallel/UintahParallelPort.h>
@@ -71,7 +70,9 @@ WARNING
   class UintahParallelComponent;
   
   class DataWarehouse;
-
+  class Regridder;
+  class Output;
+  
   class SimulationTime;
   class VarLabel;
 
@@ -104,6 +105,7 @@ WARNING
     virtual void releaseComponents() = 0;
 
     virtual Scheduler *getScheduler() = 0;
+    virtual Regridder *getRegridder() = 0;
     virtual Output    *getOutput()    = 0;
     
     // Top level problem set up called by sus.

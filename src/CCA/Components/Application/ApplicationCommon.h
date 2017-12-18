@@ -95,6 +95,7 @@ WARNING
     virtual void releaseComponents();
 
     virtual Scheduler *getScheduler() { return m_scheduler; }
+    virtual Regridder *getRegridder() { return m_regridder; }
     virtual Output    *getOutput()    { return m_output; }
     
     // Top level problem set up called by sus.
