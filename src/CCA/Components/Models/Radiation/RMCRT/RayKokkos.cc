@@ -49,10 +49,11 @@
 #include <vector>
 
 //__________________________________
-// To enable comparisons with Ray:CPU, define FIXED_RANDOM_NUM in src/Core/Math/MersenneTwister.h
-// To enable comparisons with Ray:GPU, define FIXED_RANDOM_NUM in src/CCA/Components/Models/Radiation/RMCRT/RayGPUKernel.cu
+// To enable comparisons with Ray:CPU, define FIXED_RANDOM_NUM both here and in src/Core/Math/MersenneTwister.h
+// To enable comparisons with Ray:GPU, define FIXED_RANDOM_NUM both here and in src/CCA/Components/Models/Radiation/RMCRT/RayGPUKernel.cu
 
 #define DEBUG -9          // 1: divQ, 2: boundFlux, 3: scattering
+#define FIXED_RANDOM_NUM  // Enable comparisons between implementations
 #define FIXED_RAY_DIR -9  // Sets ray direction.  1: (0.7071,0.7071, 0), 2: (0.7071, 0, 0.7071), 3: (0, 0.7071, 0.7071)
                           //                      4: (0.7071, 0.7071, 7071), 5: (1,0,0)  6: (0, 1, 0),   7: (0,0,1)
 #define SIGN 1            // Multiply the FIXED_RAY_DIRs by value
@@ -61,7 +62,6 @@
 
 /*______________________________________________________________________
   TO DO:
-  - Replace vectors with arrays of plain old data and views
   - Add GPU-specific setup for Kokkos::CUDA
   - Portable LHC sampling
   - Kokkos-ify boundary flux calculations
@@ -584,7 +584,6 @@ struct rayTrace_solveDivQFunctor {
   bool                     m_latinHyperCube;
   const Level            * m_level;
   int                      m_d_nDivQRays;
-  bool                     m_d_isSeedRandom;
   bool                     m_d_CCRays;
   double                   m_d_sigmaScat;
   double                   m_d_threshold;
@@ -592,7 +591,6 @@ struct rayTrace_solveDivQFunctor {
   KokkosView3<const T>     m_abskg;
   KokkosView3<const T>     m_sigmaT4OverPi;
   KokkosView3<const int>   m_celltype;
-  int                      m_d_flowCell;
   double                   m_Dx[3];
   bool                     m_d_allowReflect;
   KokkosView3<double>      m_divQ;
@@ -603,7 +601,6 @@ struct rayTrace_solveDivQFunctor {
   rayTrace_solveDivQFunctor( bool                   & latinHyperCube
                            , const Level            * level
                            , int                    & d_nDivQRays
-                           , bool                   & d_isSeedRandom
                            , bool                   & d_CCRays
                            , double                 & d_sigmaScat
                            , double                 & d_threshold
@@ -611,7 +608,6 @@ struct rayTrace_solveDivQFunctor {
                            , KokkosView3<const T>   & abskg
                            , KokkosView3<const T>   & sigmaT4OverPi
                            , KokkosView3<const int> & celltype
-                           , int                    & d_flowCell
                            , double                   Dx[3]
                            , bool                   & d_allowReflect
                            , KokkosView3<double>    & divQ
@@ -621,7 +617,6 @@ struct rayTrace_solveDivQFunctor {
     : m_latinHyperCube ( latinHyperCube )
     , m_level          ( level )
     , m_d_nDivQRays    ( d_nDivQRays )
-    , m_d_isSeedRandom ( d_isSeedRandom )
     , m_d_CCRays       ( d_CCRays )
     , m_d_sigmaScat    ( d_sigmaScat )
     , m_d_threshold    ( d_threshold )
@@ -629,7 +624,6 @@ struct rayTrace_solveDivQFunctor {
     , m_abskg          ( abskg )
     , m_sigmaT4OverPi  ( sigmaT4OverPi )
     , m_celltype       ( celltype )
-    , m_d_flowCell     ( d_flowCell )
     , m_d_allowReflect ( d_allowReflect )
     , m_divQ           ( divQ )
     , m_radiationVolq  ( radiationVolq )
@@ -639,16 +633,19 @@ struct rayTrace_solveDivQFunctor {
     m_Dx[1] = Dx[1];
     m_Dx[2] = Dx[2];
     
-    KokkosRandom<RandomGenerator> kokkosRand( d_isSeedRandom );
-
+#ifndef FIXED_RANDOM_NUM
+    KokkosRandom<RandomGenerator> kokkosRand( true );
     m_rand_pool = kokkosRand.getRandPool();
+#endif
   }
 
     // This operator() replaces the cellIterator loop used to solve DivQ
     void operator() ( int i, int j, int k, unsigned long int & m_nRaySteps ) const {
 
+#ifndef FIXED_RANDOM_NUM
       // Each thread needs a unique state
       rnd_type rand_gen = m_rand_pool.get_state();
+#endif
 
       //________________________________________________________________________________________//
       //==== START for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) ====//
@@ -663,7 +660,7 @@ struct rayTrace_solveDivQFunctor {
       for ( int iRay = 0; iRay < m_d_nDivQRays; iRay++ ) {
 
         // Don't compute in intrusions and walls
-        if ( m_celltype(i,j,k) != m_d_flowCell ) {
+        if ( m_celltype(i,j,k) != -1 ) { // Hard-coded for d_flowCell
           continue;
         }
 
@@ -673,9 +670,15 @@ struct rayTrace_solveDivQFunctor {
         //==== START findRayDirection(mTwister, origin, iRay ) ====//
 
         // Random Points On Sphere
-        double plusMinus_one = 2.0 * ( m_d_isSeedRandom ? Kokkos::rand<rnd_type, double>::draw(rand_gen) : 0.3 ) - 1.0 + DBL_EPSILON; // Add fuzz to avoid inf in 1/dirVector
-        double r = sqrt( 1.0 - plusMinus_one * plusMinus_one );                                                                       // Radius of circle at z
-        double theta = 2.0 * M_PI * ( m_d_isSeedRandom ? Kokkos::rand<rnd_type, double>::draw(rand_gen) : 0.3 );                      // Uniform betwen 0-2Pi
+#ifdef FIXED_RANDOM_NUM
+        double plusMinus_one = 2.0 * 0.3 - 1.0 + DBL_EPSILON;   // Add fuzz to avoid inf in 1/dirVector
+        double r = sqrt( 1.0 - plusMinus_one * plusMinus_one ); // Radius of circle at z
+        double theta = 2.0 * M_PI * 0.3;                        // Uniform betwen 0-2Pi
+#else
+        double plusMinus_one = 2.0 * Kokkos::rand<rnd_type, double>::draw(rand_gen) - 1.0 + DBL_EPSILON; // Add fuzz to avoid inf in 1/dirVector
+        double r = sqrt( 1.0 - plusMinus_one * plusMinus_one );                                          // Radius of circle at z
+        double theta = 2.0 * M_PI * Kokkos::rand<rnd_type, double>::draw(rand_gen);                      // Uniform betwen 0-2Pi
+#endif
 
         direction_vector[0] = r * cos( theta ); // Convert to cartesian
         direction_vector[1] = r * sin( theta );
@@ -724,9 +727,15 @@ struct rayTrace_solveDivQFunctor {
 
         if ( m_d_CCRays == false ) {
 
-          double x = ( m_d_isSeedRandom ? Kokkos::rand<rnd_type, double>::draw(rand_gen) : 0.3 ) * m_Dx[0];
-          double y = ( m_d_isSeedRandom ? Kokkos::rand<rnd_type, double>::draw(rand_gen) : 0.3 ) * m_Dx[1];
-          double z = ( m_d_isSeedRandom ? Kokkos::rand<rnd_type, double>::draw(rand_gen) : 0.3 ) * m_Dx[2];
+#ifdef FIXED_RANDOM_NUM
+          double x = 0.3 * m_Dx[0];
+          double y = 0.3 * m_Dx[1];
+          double z = 0.3 * m_Dx[2];
+#else
+          double x = Kokkos::rand<rnd_type, double>::draw(rand_gen) * m_Dx[0];
+          double y = Kokkos::rand<rnd_type, double>::draw(rand_gen) * m_Dx[1];
+          double z = Kokkos::rand<rnd_type, double>::draw(rand_gen) * m_Dx[2];
+#endif
 
           double offset[3] = { x, y, z };  // Note you HAVE to compute the components separately to ensure that the
                                            //  random numbers called in the x,y,z order - Todd
@@ -829,7 +838,11 @@ struct rayTrace_solveDivQFunctor {
 
         // Determine the length at which scattering will occur
         // See CCA/Components/Arches/RMCRT/PaulasAttic/MCRT/ArchesRMCRT/ray.cc
-        double scatLength = -log( ( m_d_isSeedRandom ? Kokkos::rand<rnd_type, double>::draw(rand_gen) : 0.3 ) ) / scatCoeff;
+#ifdef FIXED_RANDOM_NUM
+        double scatLength = -log( 0.3 ) / scatCoeff;
+#else
+        double scatLength = -log( Kokkos::rand<rnd_type, double>::draw(rand_gen) ) / scatCoeff;
+#endif
 #endif
 
         //______________________________________________________________________
@@ -888,7 +901,7 @@ struct rayTrace_solveDivQFunctor {
             ray_location[1] = ray_location[1] + ( disMin * direction_vector[1] );
             ray_location[2] = ray_location[2] + ( disMin * direction_vector[2] );
 
-            in_domain = ( m_celltype( cur[0], cur[1], cur[2] ) == m_d_flowCell );
+            in_domain = ( m_celltype( cur[0], cur[1], cur[2] ) == -1 ); // Hard-coded for d_flowCell
 
             optical_thickness += abskg_prev * disMin;
 
@@ -924,15 +937,25 @@ struct rayTrace_solveDivQFunctor {
             if ( rayLength_scatter > scatLength && in_domain ) {
 
               // Get new scatLength for each scattering event
-              scatLength = -log( ( m_d_isSeedRandom ? Kokkos::rand<rnd_type, double>::draw(rand_gen) : 0.3 ) ) / scatCoeff;
+#ifdef FIXED_RANDOM_NUM
+              scatLength = -log( 0.3 ) / scatCoeff;
+#else
+              scatLength = -log( Kokkos::rand<rnd_type, double>::draw(rand_gen) ) / scatCoeff;
+#endif
 
               //_________________________________________________//
               //==== START findRayDirection( mTwister, cur ) ====//
 
               // Random Points On Sphere
-              double plusMinus_one = 2.0 * ( m_d_isSeedRandom ? Kokkos::rand<rnd_type, double>::draw(rand_gen) : 0.3 ) - 1.0 + DBL_EPSILON; // Add fuzz to avoid inf in 1/dirVector
-              double r = sqrt( 1.0 - plusMinus_one * plusMinus_one );                                                                       // Radius of circle at z
-              double theta = 2.0 * M_PI * ( m_d_isSeedRandom ? Kokkos::rand<rnd_type, double>::draw(rand_gen) : 0.3 );                      // Uniform betwen 0-2Pi
+#ifdef FIXED_RANDOM_NUM
+              double plusMinus_one = 2.0 * 0.3 - 1.0 + DBL_EPSILON;   // Add fuzz to avoid inf in 1/dirVector
+              double r = sqrt( 1.0 - plusMinus_one * plusMinus_one ); // Radius of circle at z
+              double theta = 2.0 * M_PI * 0.3;                        // Uniform betwen 0-2Pi
+#else
+              double plusMinus_one = 2.0 * Kokkos::rand<rnd_type, double>::draw(rand_gen) - 1.0 + DBL_EPSILON; // Add fuzz to avoid inf in 1/dirVector
+              double r = sqrt( 1.0 - plusMinus_one * plusMinus_one );                                          // Radius of circle at z
+              double theta = 2.0 * M_PI * Kokkos::rand<rnd_type, double>::draw(rand_gen);                      // Uniform betwen 0-2Pi
+#endif
 
               direction_vector[0] = r * cos( theta ); // Convert to cartesian
               direction_vector[1] = r * sin( theta );
@@ -1117,7 +1140,9 @@ struct rayTrace_solveDivQFunctor {
 #endif
 /*===========TESTING==========`*/
 
+#ifndef FIXED_RANDOM_NUM
       m_rand_pool.free_state(rand_gen);
+#endif
 
     } // end operator()
   };  // end rayTrace_solveDivQFunctor
@@ -1283,7 +1308,6 @@ Ray::rayTrace( const ProcessorGroup* pg,
       rayTrace_solveDivQFunctor< T, Kokkos::Random_XorShift1024_Pool<Kokkos::OpenMP> > functor( latinHyperCube
                                                                                               , level
                                                                                               , d_nDivQRays
-                                                                                              , d_isSeedRandom
                                                                                               , d_CCRays
                                                                                               , d_sigmaScat
                                                                                               , d_threshold
@@ -1291,7 +1315,6 @@ Ray::rayTrace( const ProcessorGroup* pg,
                                                                                               , abskg_view
                                                                                               , sigmaT4OverPi_view
                                                                                               , celltype_view
-                                                                                              , d_flowCell
                                                                                               , Dx_pod
                                                                                               , d_allowReflect
                                                                                               , divQ_view
@@ -1454,24 +1477,23 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
 //
 namespace {
 
-template <typename T, typename RandomGenerator>
+template <typename T, typename RandomGenerator, int m_maxLevels>
 struct rayTrace_dataOnion_solveDivQFunctor {
 
   typedef unsigned long int value_type;
   typedef typename RandomGenerator::generator_type rnd_type;
 
   const Level                       * m_fineLevel;
-  const int                           m_maxLevels;
-  const std::vector<Vector>           m_Dx;
+  double                              m_Dx[m_maxLevels][3];
   double                              m_domain_BB_Lo[3];
   double                              m_domain_BB_Hi[3];
   int                                 m_fineLevel_ROI_Lo[3];
   int                                 m_fineLevel_ROI_Hi[3];
-  std::vector<IntVector>              m_regionLo;
-  std::vector<IntVector>              m_regionHi;
-  std::vector<constCCVariable<T>>     m_sigmaT4OverPi;
-  std::vector<constCCVariable<T>>     m_abskg;
-  std::vector<constCCVariable<int>>   m_cellType;
+  int                                 m_regionLo[m_maxLevels][3];
+  int                                 m_regionHi[m_maxLevels][3];
+  KokkosView3<const T>                m_sigmaT4OverPi[m_maxLevels];
+  KokkosView3<const T>                m_abskg[m_maxLevels];
+  KokkosView3<const int>              m_cellType[m_maxLevels];
   KokkosView3<double>                 m_divQ_fine;
   KokkosView3<const T>                m_abskg_fine;
   KokkosView3<const T>                m_sigmaT4OverPi_fine;
@@ -1479,23 +1501,20 @@ struct rayTrace_dataOnion_solveDivQFunctor {
   double                              m_d_threshold;
   bool                                m_d_allowReflect;
   int                                 m_d_nDivQRays;
-  bool                                m_d_isSeedRandom;
   bool                                m_d_CCRays;
-  int                                 m_d_flowCell;
   RandomGenerator                     m_rand_pool;
 
   rayTrace_dataOnion_solveDivQFunctor( const Level                       * fineLevel
-                                     , const int                           maxLevels
-                                     , const std::vector<Vector>         & Dx
+                                     , double                              Dx[m_maxLevels][3]
                                      , double                              domain_BB_Lo[3]
                                      , double                              domain_BB_Hi[3]
                                      , int                                 fineLevel_ROI_Lo[3]
                                      , int                                 fineLevel_ROI_Hi[3]
-                                     , std::vector<IntVector>            & regionLo
-                                     , std::vector<IntVector>            & regionHi
-                                     , std::vector<constCCVariable<T>>   & sigmaT4OverPi
-                                     , std::vector<constCCVariable<T>>   & abskg
-                                     , std::vector<constCCVariable<int>> & cellType
+                                     , int                                 regionLo[m_maxLevels][3]
+                                     , int                                 regionHi[m_maxLevels][3]
+                                     , KokkosView3<const T>                sigmaT4OverPi[m_maxLevels]
+                                     , KokkosView3<const T>                abskg[m_maxLevels]
+                                     , KokkosView3<const int>              cellType[m_maxLevels]
                                      , KokkosView3<double>               & divQ_fine
                                      , KokkosView3<const T>              & abskg_fine
                                      , KokkosView3<const T>              & sigmaT4OverPi_fine
@@ -1503,18 +1522,9 @@ struct rayTrace_dataOnion_solveDivQFunctor {
                                      , double                            & d_threshold
                                      , bool                              & d_allowReflect
                                      , int                               & d_nDivQRays
-                                     , bool                              & d_isSeedRandom
                                      , bool                              & d_CCRays
-                                     , int                               & d_flowCell
                                      )
     : m_fineLevel          ( fineLevel )
-    , m_maxLevels          ( maxLevels )
-    , m_Dx                 ( Dx )
-    , m_regionLo           ( regionLo )
-    , m_regionHi           ( regionHi )
-    , m_sigmaT4OverPi      ( sigmaT4OverPi )
-    , m_abskg              ( abskg )
-    , m_cellType           ( cellType )
     , m_divQ_fine          ( divQ_fine )
     , m_abskg_fine         ( abskg_fine )
     , m_sigmaT4OverPi_fine ( sigmaT4OverPi_fine )
@@ -1522,10 +1532,26 @@ struct rayTrace_dataOnion_solveDivQFunctor {
     , m_d_threshold        ( d_threshold )
     , m_d_allowReflect     ( d_allowReflect )
     , m_d_nDivQRays        ( d_nDivQRays )
-    , m_d_isSeedRandom     ( d_isSeedRandom )
     , m_d_CCRays           ( d_CCRays )
-    , m_d_flowCell         ( d_flowCell )
   {
+    for ( int L = 0; L < m_maxLevels; L++ ) {
+      m_Dx[L][0] = Dx[L][0];
+      m_Dx[L][1] = Dx[L][1];
+      m_Dx[L][2] = Dx[L][2];
+
+      m_regionLo[L][0] = regionLo[L][0];
+      m_regionLo[L][1] = regionLo[L][1];
+      m_regionLo[L][2] = regionLo[L][2];
+
+      m_regionHi[L][0] = regionHi[L][0];
+      m_regionHi[L][1] = regionHi[L][1];
+      m_regionHi[L][2] = regionHi[L][2];
+
+      m_sigmaT4OverPi[L] = sigmaT4OverPi[L];
+      m_abskg[L]         = abskg[L];
+      m_cellType[L]      = cellType[L];
+    }
+
     m_domain_BB_Lo[0] = domain_BB_Lo[0];
     m_domain_BB_Lo[1] = domain_BB_Lo[1];
     m_domain_BB_Lo[2] = domain_BB_Lo[2];
@@ -1542,16 +1568,19 @@ struct rayTrace_dataOnion_solveDivQFunctor {
     m_fineLevel_ROI_Hi[1] = fineLevel_ROI_Hi[1];
     m_fineLevel_ROI_Hi[2] = fineLevel_ROI_Hi[2];
 
-    KokkosRandom<RandomGenerator> kokkosRand( d_isSeedRandom );
-
+#ifndef FIXED_RANDOM_NUM
+    KokkosRandom<RandomGenerator> kokkosRand( true );
     m_rand_pool = kokkosRand.getRandPool();
+#endif
   }
 
     // This operator() replaces the cellIterator loop used to solve DivQ
     void operator() ( int i, int j, int k, unsigned long int & m_nRaySteps ) const {
 
+#ifndef FIXED_RANDOM_NUM
       // Each thread needs a unique state
       rnd_type rand_gen = m_rand_pool.get_state();
+#endif
 
       //____________________________________________________________________________________________//
       //==== START for (CellIterator iter = finePatch->getCellIterator(); !iter.done(); iter++) ====//
@@ -1571,7 +1600,7 @@ struct rayTrace_dataOnion_solveDivQFunctor {
         int my_L = m_maxLevels - 1;
 
         // Don't compute in intrusions and walls
-        if ( m_cellType[my_L][IntVector(i,j,k)] != m_d_flowCell ) {
+        if ( m_cellType[my_L]( i, j, k ) != -1 ) { // Hard-coded for d_flowCell
           continue;
         }
 
@@ -1581,9 +1610,15 @@ struct rayTrace_dataOnion_solveDivQFunctor {
         //==== START findRayDirection(mTwister, origin, iRay) ====//
 
         // Random Points On Sphere
-        double plusMinus_one = 2.0 * ( m_d_isSeedRandom ? Kokkos::rand<rnd_type, double>::draw(rand_gen) : 0.3 ) - 1.0 + DBL_EPSILON; // Add fuzz to avoid inf in 1/dirVector
-        double r = sqrt( 1.0 - plusMinus_one * plusMinus_one );                                                                       // Radius of circle at z
-        double theta = 2.0 * M_PI * ( m_d_isSeedRandom ? Kokkos::rand<rnd_type, double>::draw(rand_gen) : 0.3 );                      // Uniform betwen 0-2Pi
+#ifdef FIXED_RANDOM_NUM
+        double plusMinus_one = 2.0 * 0.3 - 1.0 + DBL_EPSILON;   // Add fuzz to avoid inf in 1/dirVector
+        double r = sqrt( 1.0 - plusMinus_one * plusMinus_one ); // Radius of circle at z
+        double theta = 2.0 * M_PI * 0.3;                        // Uniform betwen 0-2Pi
+#else
+        double plusMinus_one = 2.0 * Kokkos::rand<rnd_type, double>::draw(rand_gen) - 1.0 + DBL_EPSILON; // Add fuzz to avoid inf in 1/dirVector
+        double r = sqrt( 1.0 - plusMinus_one * plusMinus_one );                                          // Radius of circle at z
+        double theta = 2.0 * M_PI * Kokkos::rand<rnd_type, double>::draw(rand_gen);                      // Uniform betwen 0-2Pi
+#endif
 
         direction_vector[0] = r * cos( theta ); // Convert to cartesian
         direction_vector[1] = r * sin( theta );
@@ -1632,9 +1667,15 @@ struct rayTrace_dataOnion_solveDivQFunctor {
 
         if ( m_d_CCRays == false ) {
 
-          double x = ( m_d_isSeedRandom ? Kokkos::rand<rnd_type, double>::draw(rand_gen) : 0.3 ) * m_Dx[my_L][0];
-          double y = ( m_d_isSeedRandom ? Kokkos::rand<rnd_type, double>::draw(rand_gen) : 0.3 ) * m_Dx[my_L][1];
-          double z = ( m_d_isSeedRandom ? Kokkos::rand<rnd_type, double>::draw(rand_gen) : 0.3 ) * m_Dx[my_L][2];
+#ifdef FIXED_RANDOM_NUM
+          double x = 0.3 * m_Dx[my_L][0];
+          double y = 0.3 * m_Dx[my_L][1];
+          double z = 0.3 * m_Dx[my_L][2];
+#else
+          double x = Kokkos::rand<rnd_type, double>::draw(rand_gen) * m_Dx[my_L][0];
+          double y = Kokkos::rand<rnd_type, double>::draw(rand_gen) * m_Dx[my_L][1];
+          double z = Kokkos::rand<rnd_type, double>::draw(rand_gen) * m_Dx[my_L][2];
+#endif
 
           double offset[3] = { x, y, z };  // Note you HAVE to compute the components separately to ensure that the
                                            //  random numbers called in the x,y,z order - Todd
@@ -1722,12 +1763,12 @@ struct rayTrace_dataOnion_solveDivQFunctor {
         tMaxV[1] = ( sign[1] * m_Dx[L][1] - rayDx[1] ) * inv_direction[1];
         tMaxV[2] = ( sign[2] * m_Dx[L][2] - rayDx[2] ) * inv_direction[2];
 
-        vector<Vector> tDelta(m_maxLevels);
+        double tDelta[m_maxLevels][3];
         for ( int Lev = m_maxLevels - 1; Lev > -1; Lev-- ) {
           //Length of t to traverse one cell
-          tDelta[Lev].x( fabs( inv_direction[0] ) * m_Dx[Lev][0]);
-          tDelta[Lev].y( fabs( inv_direction[1] ) * m_Dx[Lev][1] );
-          tDelta[Lev].z( fabs( inv_direction[2] ) * m_Dx[Lev][2] );
+          tDelta[Lev][0] = fabs( inv_direction[0] ) * m_Dx[Lev][0];
+          tDelta[Lev][1] = fabs( inv_direction[1] ) * m_Dx[Lev][1];
+          tDelta[Lev][2] = fabs( inv_direction[2] ) * m_Dx[Lev][2];
         }
 
         //Initializes the following values for each ray
@@ -1787,8 +1828,11 @@ struct rayTrace_dataOnion_solveDivQFunctor {
             // - Don't jump levels if ray is at edge of domain
 
             CC_pos[0] = level->getAnchor().x() + ( m_Dx[L][0] * cur[0] ) + ( 0.5 * m_Dx[L][0] );
-            CC_pos[1] = level->getAnchor().x() + ( m_Dx[L][1] * cur[1] ) + ( 0.5 * m_Dx[L][1] );
-            CC_pos[2] = level->getAnchor().x() + ( m_Dx[L][2] * cur[2] ) + ( 0.5 * m_Dx[L][2] );
+            CC_pos[1] = level->getAnchor().y() + ( m_Dx[L][1] * cur[1] ) + ( 0.5 * m_Dx[L][1] );
+            CC_pos[2] = level->getAnchor().z() + ( m_Dx[L][2] * cur[2] ) + ( 0.5 * m_Dx[L][2] );
+
+            //________________________________________//
+            //==== START domain_BB.inside(CC_pos) ====//
 
             in_domain = ( CC_pos[0] >= m_domain_BB_Lo[0] &&
                           CC_pos[1] >= m_domain_BB_Lo[1] &&
@@ -1796,6 +1840,9 @@ struct rayTrace_dataOnion_solveDivQFunctor {
                           CC_pos[0] <= m_domain_BB_Hi[0] &&
                           CC_pos[1] <= m_domain_BB_Hi[1] &&
                           CC_pos[2] <= m_domain_BB_Hi[2]    );
+
+            //______________________________________//
+            //==== END domain_BB.inside(CC_pos) ====//
 
             bool ray_outside_ROI    = ( ( m_fineLevel_ROI_Lo[dir] <= cur[dir] && m_fineLevel_ROI_Hi[dir] > cur[dir] ) == false );
             bool ray_outside_Region = ( ( m_regionLo[L][dir] <= cur[dir] && m_regionHi[L][dir] > cur[dir] ) == false );
@@ -1873,10 +1920,10 @@ struct rayTrace_dataOnion_solveDivQFunctor {
             }
 
             // If the cell isn't a flow cell then terminate the ray
-            in_domain = in_domain && ( m_cellType[L][IntVector(cur[0],cur[1],cur[2])] == m_d_flowCell );
+            in_domain = in_domain && ( m_cellType[L]( cur[0], cur[1], cur[2] ) == -1 ); // Hard-coded for d_flowCell
 
             rayLength         += distanceTraveled;
-            optical_thickness += m_abskg[prevLev][IntVector(prevCell[0],prevCell[1],prevCell[2])] * distanceTraveled;
+            optical_thickness += m_abskg[prevLev]( prevCell[0], prevCell[1], prevCell[2] ) * distanceTraveled;
             m_nRaySteps++;
 
             double expOpticalThick = exp( -optical_thickness );
@@ -1886,12 +1933,12 @@ struct rayTrace_dataOnion_solveDivQFunctor {
             if ( isDbgCell(i,j,k) ) {
               printf( "            cur [%d,%d,%d] prev [%d,%d,%d]", cur[0], cur[1], cur[2], prevCell[0], prevCell[1], prevCell[2] );
               printf( " dir %d ", dir );
-              printf( " cellType: %i ", m_cellType[L][IntVector(cur[0],cur[1],cur[2])] );
+              printf( " cellType: %i ", m_cellType[L](cur[0],cur[1],cur[2]) );
         //    printf( " stepSize [%i,%i,%i] ", step[0], step[1], step[2] );
               printf( "tMax [%g,%g,%g] ", tMaxV[0],tMaxV[1], tMaxV[2] );
               printf( "rayLoc [%4.5f,%4.5f,%4.5f] ", ray_location[0], ray_location[1], ray_location[2] );
               printf( "\tdistanceTraveled %4.5f tMax[dir]: %g tMax_prev[dir]: %g, Dx[dir]: %g\n", distanceTraveled, tMaxV[dir], tMaxV_prev[dir], m_Dx[L][dir] );
-              printf( "                tDelta [%g,%g,%g] \n", tDelta[L].x(), tDelta[L].y(), tDelta[L].z() );
+              printf( "                tDelta [%g,%g,%g] \n", tDelta[L][0], tDelta[L][1], tDelta[L][2] );
         //    printf( "inv_dir [%g,%g,%g] ",inv_direction.x(),inv_direction.y(), inv_direction.z() );
         //    printf( "            abskg[prev] %g  \t sigmaT4OverPi[prev]: %g \n", abskg[prevLev][prevCell], sigmaT4OverPi[prevLev][prevCell] );
         //    printf( "            abskg[cur]  %g  \t sigmaT4OverPi[cur]:  %g  \t  cellType: %i \n",abskg[L][cur], sigmaT4OverPi[L][cur], cellType[L][cur] );
@@ -1901,7 +1948,7 @@ struct rayTrace_dataOnion_solveDivQFunctor {
 #endif
 /*===========TESTING==========`*/
 
-            sumI += m_sigmaT4OverPi[prevLev][IntVector(prevCell[0],prevCell[1],prevCell[2])] * ( expOpticalThick_prev - expOpticalThick ) * fs;
+            sumI += m_sigmaT4OverPi[prevLev]( prevCell[0], prevCell[1], prevCell[2] ) * ( expOpticalThick_prev - expOpticalThick ) * fs;
 
             expOpticalThick_prev = expOpticalThick;
 
@@ -1909,11 +1956,11 @@ struct rayTrace_dataOnion_solveDivQFunctor {
 
           //______________________________________________________________________
 
-          T wallEmissivity = ( m_abskg[L][IntVector(cur[0],cur[1],cur[2])] > 1.0 ) ? 1.0: m_abskg[L][IntVector(cur[0],cur[1],cur[2])];  // Ensure wall emissivity doesn't exceed one
+          T wallEmissivity = ( m_abskg[L]( cur[0], cur[1], cur[2] ) > 1.0 ) ? 1.0: m_abskg[L]( cur[0], cur[1], cur[2] );  // Ensure wall emissivity doesn't exceed one
 
           intensity = exp( -optical_thickness );
 
-          sumI += wallEmissivity * m_sigmaT4OverPi[L][IntVector(cur[0],cur[1],cur[2])] * intensity;
+          sumI += wallEmissivity * m_sigmaT4OverPi[L]( cur[0], cur[1], cur[2] ) * intensity;
 
           // When a ray reaches the end of the domain, we force it to terminate
           intensity = ( !m_d_allowReflect ) ? 0 : ( intensity * fs );
@@ -1934,7 +1981,7 @@ struct rayTrace_dataOnion_solveDivQFunctor {
             //______________________________________________________________________________________________________________//
             //==== START reflect(fs, cur, prevCell, abskg[L][cur], in_domain, step[dir], sign[dir], ray_direction[dir]) ====//
 
-            fs *= ( 1 - m_abskg[L][IntVector(cur[0],cur[1],cur[2])] );
+            fs *= ( 1 - m_abskg[L]( cur[0], cur[1], cur[2] ) );
 
             // Put cur back inside the domain
             cur[0] = prevCell[0];
@@ -1974,7 +2021,9 @@ struct rayTrace_dataOnion_solveDivQFunctor {
 #endif
 /*===========TESTING==========`*/
 
+#ifndef FIXED_RANDOM_NUM
       m_rand_pool.free_state(rand_gen);
+#endif
 
     }  // end operator()
   };   // end rayTrace_dataOnion_solveDivQFunctor
@@ -2022,6 +2071,10 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
   std::vector< constCCVariable< T > > sigmaT4OverPi(maxLevels);
   std::vector< constCCVariable<int> > cellType(maxLevels);
 
+  KokkosView3<const T>   abskg_view[maxLevels];
+  KokkosView3<const T>   sigmaT4OverPi_view[maxLevels];
+  KokkosView3<const int> cellType_view[maxLevels];
+
   constCCVariable< T > abskg_fine;
   constCCVariable< T > sigmaT4OverPi_fine;
 
@@ -2031,27 +2084,36 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
   DataWarehouse* sigmaT4_dw  = new_dw->getOtherDataWarehouse(which_sigmaT4_dw);
   DataWarehouse* celltype_dw = new_dw->getOtherDataWarehouse(which_celltype_dw);
 
-  vector<Vector> Dx(maxLevels);
+  double Dx[maxLevels][3];
 
-  for(int L = 0; L<maxLevels; L++) {
+  for ( int L = 0; L < maxLevels; L++ ) {
     LevelP level = new_dw->getGrid()->getLevel(L);
 
     if (level->hasFinerLevel() ) {                               // coarse level data
       DataWarehouse* abskg_dw = get_abskg_dw(L, d_abskgLabel, new_dw);
       
-      abskg_dw->getLevel(   abskg[L]   ,       d_abskgLabel ,   d_matl , level.get_rep() );
-      sigmaT4_dw->getLevel( sigmaT4OverPi[L] , d_sigmaT4Label,  d_matl , level.get_rep() );
-      celltype_dw->getLevel( cellType[L] ,     d_cellTypeLabel, d_matl , level.get_rep() );
+      abskg_dw->getLevel(    abskg[L],         d_abskgLabel ,   d_matl, level.get_rep() );
+      sigmaT4_dw->getLevel(  sigmaT4OverPi[L], d_sigmaT4Label,  d_matl, level.get_rep() );
+      celltype_dw->getLevel( cellType[L],      d_cellTypeLabel, d_matl, level.get_rep() );
       DOUT( g_ray_dbg, "    RT DataOnion: getting coarse level data L-" << L );
     }
-    Vector dx = level->dCell();
-    Dx[L] = dx;
+
+    Dx[L][0] = level->dCell().x();
+    Dx[L][1] = level->dCell().y();
+    Dx[L][2] = level->dCell().z();
   }
 
   IntVector fineLevel_ROI_Lo = IntVector( -9,-9,-9 );
   IntVector fineLevel_ROI_Hi = IntVector( -9,-9,-9 );
+
+  int fineLevel_ROI_Lo_pod[3] = { -9,-9,-9 };
+  int fineLevel_ROI_Hi_pod[3] = { -9,-9,-9 };
+
   vector<IntVector> regionLo( maxLevels );
   vector<IntVector> regionHi( maxLevels );
+
+  int regionLo_pod[maxLevels][3];
+  int regionHi_pod[maxLevels][3];
 
   //__________________________________
   //  retrieve fine level data & compute the extents (dynamic and fixed )
@@ -2065,9 +2127,9 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
                    fineLevel_ROI_Lo, fineLevel_ROI_Hi, regionLo,  regionHi);
 
     DOUT( g_ray_dbg, "    RT DataOnion:  getting fine level data across L-" << L << " " << fineLevel_ROI_Lo << " " << fineLevel_ROI_Hi );
-    abskg_dw->getRegion(   abskg[L]   ,       d_abskgLabel ,   d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
-    sigmaT4_dw->getRegion( sigmaT4OverPi[L] , d_sigmaT4Label,  d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
-    celltype_dw->getRegion( cellType[L] ,     d_cellTypeLabel, d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
+    abskg_dw->getRegion(    abskg[L],         d_abskgLabel ,   d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
+    sigmaT4_dw->getRegion(  sigmaT4OverPi[L], d_sigmaT4Label,  d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
+    celltype_dw->getRegion( cellType[L],      d_cellTypeLabel, d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
   }
 
   abskg_fine         = abskg[maxLevels-1];
@@ -2117,9 +2179,9 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
     KokkosView3<double> radiationVolq_fine_view;
 
     if( modifies_divQ ){
-      old_dw->getModifiable( divQ_fine,         d_divQLabel,          d_matl, finePatch );
-      new_dw->getModifiable( boundFlux_fine,    d_boundFluxLabel,     d_matl, finePatch );
-      old_dw->getModifiable( radiationVolq_fine,d_radiationVolqLabel, d_matl, finePatch );
+      old_dw->getModifiable( divQ_fine,          d_divQLabel,          d_matl, finePatch );
+      new_dw->getModifiable( boundFlux_fine,     d_boundFluxLabel,     d_matl, finePatch );
+      old_dw->getModifiable( radiationVolq_fine, d_radiationVolqLabel, d_matl, finePatch );
     }else{
       new_dw->allocateAndPut( divQ_fine,          d_divQLabel,          d_matl, finePatch );
       new_dw->allocateAndPut( boundFlux_fine,     d_boundFluxLabel,     d_matl, finePatch );
@@ -2137,6 +2199,28 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
     sigmaT4OverPi_fine_view = sigmaT4OverPi_fine.getKokkosView();
     divQ_fine_view          = divQ_fine.getKokkosView();
     radiationVolq_fine_view = radiationVolq_fine.getKokkosView();
+
+    for ( int L = 0; L < maxLevels; L++ ) {
+      abskg_view[L]         = abskg[L].getKokkosView();
+      sigmaT4OverPi_view[L] = sigmaT4OverPi[L].getKokkosView();
+      cellType_view[L]      = cellType[L].getKokkosView();
+
+      regionLo_pod[L][0] = regionLo[L][0];
+      regionLo_pod[L][1] = regionLo[L][1];
+      regionLo_pod[L][2] = regionLo[L][2];
+
+      regionHi_pod[L][0] = regionHi[L][0];
+      regionHi_pod[L][1] = regionHi[L][1];
+      regionHi_pod[L][2] = regionHi[L][2];
+    }
+
+    fineLevel_ROI_Lo_pod[0] = fineLevel_ROI_Lo.x();
+    fineLevel_ROI_Lo_pod[1] = fineLevel_ROI_Lo.y();
+    fineLevel_ROI_Lo_pod[2] = fineLevel_ROI_Lo.z();
+    
+    fineLevel_ROI_Hi_pod[0] = fineLevel_ROI_Hi.x();
+    fineLevel_ROI_Hi_pod[1] = fineLevel_ROI_Hi.y();
+    fineLevel_ROI_Hi_pod[2] = fineLevel_ROI_Hi.z();
 
     int my_L = maxLevels - 1;
 
@@ -2156,37 +2240,39 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
 
     if (d_solveDivQ) {
 
-      int fineLevel_ROI_Lo_pod[3] = { fineLevel_ROI_Lo.x(), fineLevel_ROI_Lo.y(), fineLevel_ROI_Lo.z() };
-      int fineLevel_ROI_Hi_pod[3] = { fineLevel_ROI_Hi.x(), fineLevel_ROI_Hi.y(), fineLevel_ROI_Hi.z() };
-
       IntVector lo = finePatch->getCellLowIndex();
       IntVector hi = finePatch->getCellHighIndex();
 
       Uintah::BlockRange range(lo, hi);
 
-      rayTrace_dataOnion_solveDivQFunctor< T, Kokkos::Random_XorShift1024_Pool<Kokkos::OpenMP> > functor( fineLevel
-                                                                                                        , maxLevels
-                                                                                                        , Dx
-                                                                                                        , domain_BB_Lo
-                                                                                                        , domain_BB_Hi
-                                                                                                        , fineLevel_ROI_Lo_pod
-                                                                                                        , fineLevel_ROI_Hi_pod
-                                                                                                        , regionLo
-                                                                                                        , regionHi
-                                                                                                        , sigmaT4OverPi
-                                                                                                        , abskg
-                                                                                                        , cellType
-                                                                                                        , divQ_fine_view
-                                                                                                        , abskg_fine_view
-                                                                                                        , sigmaT4OverPi_fine_view
-                                                                                                        , radiationVolq_fine_view
-                                                                                                        , d_threshold
-                                                                                                        , d_allowReflect
-                                                                                                        , d_nDivQRays
-                                                                                                        , d_isSeedRandom
-                                                                                                        , d_CCRays
-                                                                                                        , d_flowCell
-                                                                                                        );
+      const int m_maxLevels = 2;
+
+      //__________________________________
+      //  BULLETPROOFING
+      if ( maxLevels != m_maxLevels ) {
+        throw ProblemSetupException("\nERROR RMCRT:\nThe number of levels provided within the input file must match the rayTrace_dataOnion_solveDivQFunctor template parameter. Set m_maxLevels accordingly.", __FILE__, __LINE__);
+      }
+
+      rayTrace_dataOnion_solveDivQFunctor< T, Kokkos::Random_XorShift1024_Pool<Kokkos::OpenMP>, m_maxLevels > functor( fineLevel
+                                                                                                                     , Dx
+                                                                                                                     , domain_BB_Lo
+                                                                                                                     , domain_BB_Hi
+                                                                                                                     , fineLevel_ROI_Lo_pod
+                                                                                                                     , fineLevel_ROI_Hi_pod
+                                                                                                                     , regionLo_pod
+                                                                                                                     , regionHi_pod
+                                                                                                                     , sigmaT4OverPi_view
+                                                                                                                     , abskg_view
+                                                                                                                     , cellType_view
+                                                                                                                     , divQ_fine_view
+                                                                                                                     , abskg_fine_view
+                                                                                                                     , sigmaT4OverPi_fine_view
+                                                                                                                     , radiationVolq_fine_view
+                                                                                                                     , d_threshold
+                                                                                                                     , d_allowReflect
+                                                                                                                     , d_nDivQRays
+                                                                                                                     , d_CCRays
+                                                                                                                     );
 
       // This parallel_reduce replaces the cellIterator loop used to solve DivQ
       Uintah::parallel_reduce( range, functor, nRaySteps );
