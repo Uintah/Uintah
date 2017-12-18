@@ -230,7 +230,9 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
 
   if ( db->findBlock("DQMOM") ){
 
-    register_DQMOM(db->findBlock("DQMOM"));
+    if ( db->findBlock("DQMOM")->findBlock("kokkos_translate") ) {
+      register_DQMOM(db->findBlock("DQMOM"));
+    }
 
   }
 }
@@ -275,7 +277,9 @@ TransportFactory::build_all_tasks( ProblemSpecP& db )
   }
 
   if ( db->findBlock("DQMOM")){
-    build_DQMOM( db );
+    if ( db->findBlock("DQMOM")->findBlock("kokkos_translate") ){
+      build_DQMOM( db );
+    }
   }
 
   ProblemSpecP db_mom = db->findBlock("KMomentum");
@@ -527,7 +531,6 @@ void TransportFactory::build_DQMOM( ProblemSpecP db ){
     }
   } // end weights
 
-  int n_abscissas = 0;
   for ( ProblemSpecP db_ic = db_dqmom->findBlock("Ic"); db_ic != nullptr;
         db_ic =db_ic->findNextBlock("Ic") ){
 

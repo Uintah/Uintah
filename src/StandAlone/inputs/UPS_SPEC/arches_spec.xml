@@ -2065,6 +2065,9 @@
         <convection                   spec="OPTIONAL NO_DATA"
                                       attribute1="scheme REQUIRED STRING 'central, upwind, superbee, roe, vanleer'"/>
 
+        <kokkos_translate             spec="OPTIONAL NO_DATA"/> <!-- This activates DQMOM in the new task interface. If not present, then DQMOM is ignored -->
+        <!-- End new tags for new DQMOM interface -->
+
         <!-- Tags for verification of DQMOM AX=B solution procedure -->
         <Verify_Linear_Solver           spec="OPTIONAL NO_DATA">
             <A                          spec="REQUIRED STRING" />
