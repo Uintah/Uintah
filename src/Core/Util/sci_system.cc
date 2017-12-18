@@ -140,6 +140,11 @@ sci_system_linuxthreads(const char *line)
 
   sa.sa_handler = SIG_IGN;
   sa.sa_flags = 0;
+
+  //Note, if a compile fails on this step, try editing this next line to read:
+  //sigemptyset (&sa.sa_mask);    without the underscores
+  //and recompile.
+  //In my instance it fixed an apparent bug with glibc2.26?  https://github.com/telmich/gpm/issues/21
   __sigemptyset (&sa.sa_mask);
 
   if (sigaction (SIGINT, &sa, &intr) < 0)
