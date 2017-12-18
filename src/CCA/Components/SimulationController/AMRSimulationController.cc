@@ -559,6 +559,11 @@ AMRSimulationController::run()
     m_output->writeto_xml_files( m_current_gridP );
     // }
 
+    // ARS - FIX ME - SCHEDULE INSTEAD
+    ReportStats( nullptr, nullptr, nullptr, nullptr, nullptr, false );
+    
+    CheckInSitu(  nullptr, nullptr, nullptr, nullptr, nullptr, false );
+
     // Update the profiler weights
     m_loadBalancer->finalizeContributions( m_current_gridP );
 
@@ -626,10 +631,10 @@ AMRSimulationController::doInitialTimeStep()
 
     // Report all of the stats before doing any possible in-situ work
     // as that effects the lap timer for the time steps.
-    ScheduleReportStats( true );
+    // ScheduleReportStats( true );
     
     // If compiled with VisIt check the in-situ status for work.
-    ScheduleCheckInSitu( true );
+    // ScheduleCheckInSitu( true );
 
     taskGraphTimer.reset( true );
     m_scheduler->compile();
@@ -717,10 +722,10 @@ AMRSimulationController::doInitialTimeStep()
 
       // Report all of the stats before doing any possible in-situ work
       // as that effects the lap timer for the time steps.
-      ScheduleReportStats( true );
+      // ScheduleReportStats( true );
     
       // If compiled with VisIt check the in-situ status for work.
-      ScheduleCheckInSitu( true );
+      // ScheduleCheckInSitu( true );
     
       taskGraphTimer.reset( true );
       m_scheduler->compile();
@@ -749,6 +754,11 @@ AMRSimulationController::doInitialTimeStep()
     m_output->writeto_xml_files( m_current_gridP );
   }
 
+  // ARS - FIX ME - SCHEDULE INSTEAD
+  ReportStats( nullptr, nullptr, nullptr, nullptr, nullptr, true );
+  
+  CheckInSitu(  nullptr, nullptr, nullptr, nullptr, nullptr, true );
+  
 } // end doInitialTimeStep()
 
 //______________________________________________________________________
@@ -1052,10 +1062,10 @@ AMRSimulationController::compileTaskGraph( int totalFine )
 
   // Report all of the stats before doing any possible in-situ work
   // as that effects the lap timer for the time steps.
-  ScheduleReportStats( false );
+  // ScheduleReportStats( false );
 
   // If compiled with VisIt check the in-situ status for work.
-  ScheduleCheckInSitu( false );
+  // ScheduleCheckInSitu( false );
 
   m_scheduler->compile();
 
