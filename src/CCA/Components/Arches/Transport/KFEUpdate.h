@@ -26,6 +26,7 @@
  */
 
 #include <CCA/Components/Arches/Task/TaskInterface.h>
+#include <CCA/Components/Arches/Transport/TransportHelper.h>
 #include <CCA/Components/Arches/GridTools.h>
 #include <CCA/Components/Arches/Directives.h>
 
@@ -46,7 +47,7 @@ public:
     /** @brief Input file interface **/
     void problemSetup( ProblemSpecP& db );
 
-    void create_local_labels(){}
+    void create_local_labels();
 
     /** @brief Build instruction for this class **/
     class Builder : public TaskInterface::TaskBuilder {
@@ -69,7 +70,7 @@ public:
 
 protected:
 
-    void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const bool pack_tasks);
+    void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const bool pack_tasks){}
 
     void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const bool packed_tasks){}
 
@@ -79,7 +80,7 @@ protected:
 
     void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
@@ -96,28 +97,52 @@ private:
     typedef typename ArchesCore::VariableHelper<T>::ConstZFaceType CFZT;
 
     std::vector<std::string> _eqn_names;
+    std::map<std::string, double> m_scaling_info;
 
     int _time_order;
     std::vector<double> _alpha;
     std::vector<double> _beta;
     std::vector<double> _time_factor;
+    ArchesCore::EQUATION_CLASS m_eqn_class;
 
     ArchesCore::DIR m_dir;
+
+    std::string m_premultiplier_name;
 
   };
 
   //Function definitions:
+  //------------------------------------------------------------------------------------------------
   template <typename T>
   KFEUpdate<T>::KFEUpdate( std::string task_name, int matl_index ) :
   TaskInterface( task_name, matl_index ){}
 
+  //------------------------------------------------------------------------------------------------
   template <typename T>
   KFEUpdate<T>::~KFEUpdate()
   {
   }
 
+  //------------------------------------------------------------------------------------------------
+  template <typename T>
+  void KFEUpdate<T>::create_local_labels(){
+    for ( auto i = m_scaling_info.begin(); i != m_scaling_info.end(); i++ ){
+
+      register_new_variable<T>( i->first + "_unscaled" );
+
+    }
+  }
+
+  //------------------------------------------------------------------------------------------------
   template <typename T>
   void KFEUpdate<T>::problemSetup( ProblemSpecP& db ){
+
+    std::string eqn_class = "density_weighted";
+    if ( db->findAttribute("class") ){
+      db->getAttribute("class", eqn_class);
+    }
+    m_eqn_class = ArchesCore::assign_eqn_class_enum( eqn_class );
+    m_premultiplier_name = get_premultiplier_name( m_eqn_class );
 
     ProblemSpecP db_root = db->getRootNode();
     db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("TimeIntegrator")->getAttribute("order", _time_order);
@@ -181,6 +206,15 @@ private:
       eqn_db->getAttribute("label", scalar_name);
       _eqn_names.push_back(scalar_name);
 
+      //Scaling Constant
+      if ( eqn_db->findBlock("scaling") ){
+
+        double scaling_constant;
+        eqn_db->findBlock("scaling")->getAttribute("value", scaling_constant);
+        m_scaling_info.insert(std::make_pair(scalar_name, scaling_constant));
+
+      }
+
     }
 
     ArchesCore::VariableHelper<T> varhelp;
@@ -194,17 +228,11 @@ private:
 
   }
 
-
+  //------------------------------------------------------------------------------------------------
   template <typename T>
-  void KFEUpdate<T>::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool pack_tasks){
-  }
-
-  //This is the work for the task.  First, get the variables. Second, do the work!
-  template <typename T>
-  void KFEUpdate<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
-
-  template <typename T>
-  void KFEUpdate<T>::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){
+  void KFEUpdate<T>::register_timestep_eval(
+    std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
+    const int time_substep , const bool packed_tasks){
 
     typedef std::vector<std::string> SV;
     for ( SV::iterator i = _eqn_names.begin(); i != _eqn_names.end(); i++){
@@ -213,18 +241,29 @@ private:
         register_variable( *i, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry, time_substep );
 
       } else {
-        register_variable( "rho_"+*i, ArchesFieldContainer::MODIFIES, variable_registry, time_substep );
-        register_variable( "rho_"+*i, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry, time_substep );
-
+        std::string varname;
+        if ( m_premultiplier_name != "none" ){
+          varname = "rho_"+*i;
+        } else {
+          varname = *i;
+        }
+        register_variable( varname, ArchesFieldContainer::MODIFIES, variable_registry, time_substep );
+        register_variable( varname, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry, time_substep );
       }
       std::string rhs_name = *i + "_rhs";
       register_variable( rhs_name, ArchesFieldContainer::MODIFIES, variable_registry, time_substep );
       register_variable( *i+"_x_flux", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
       register_variable( *i+"_y_flux", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
       register_variable( *i+"_z_flux", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+
+      auto iscal = m_scaling_info.find(*i);
+      if ( iscal != m_scaling_info.end() ){
+        register_variable( *i+"_unscaled", ArchesFieldContainer::COMPUTES, variable_registry, time_substep );
+      }
     }
   }
 
+  //------------------------------------------------------------------------------------------------
   template <typename T>
   void KFEUpdate<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
@@ -237,20 +276,24 @@ private:
 
     const int time_substep = tsk_info->get_time_substep();
 
-    for ( SV::iterator i = _eqn_names.begin(); i != _eqn_names.end(); i++){
+    for ( SV::iterator ieqn = _eqn_names.begin(); ieqn != _eqn_names.end(); ieqn++){
 
-      std::string var_name;
-      if ((*i == "x-mom") || (*i == "y-mom") || (*i == "z-mom")){
-        var_name = *i;
+      std::string varname;
+      if ((*ieqn == "x-mom") || (*ieqn == "y-mom") || (*ieqn == "z-mom")){
+        varname = *ieqn;
       } else {
-        var_name = "rho_"+*i;
+        if ( m_premultiplier_name != "none" ){
+          varname = "rho_"+*ieqn;
+        } else {
+          varname = *ieqn;
+        }
       }
-      T& phi = *(tsk_info->get_uintah_field<T>(var_name));
-      T& rhs = *(tsk_info->get_uintah_field<T>(*i+"_rhs"));
-      CT& old_phi = *(tsk_info->get_const_uintah_field<CT>(var_name, ArchesFieldContainer::OLDDW));
-      CFXT& x_flux = *(tsk_info->get_const_uintah_field<CFXT>(*i+"_x_flux"));
-      CFYT& y_flux = *(tsk_info->get_const_uintah_field<CFYT>(*i+"_y_flux"));
-      CFZT& z_flux = *(tsk_info->get_const_uintah_field<CFZT>(*i+"_z_flux"));
+      T& phi = tsk_info->get_uintah_field_add<T>(varname);
+      T& rhs = tsk_info->get_uintah_field_add<T>(*ieqn+"_rhs");
+      CT& old_phi = tsk_info->get_const_uintah_field_add<CT>(varname, ArchesFieldContainer::OLDDW);
+      CFXT& x_flux = tsk_info->get_const_uintah_field_add<CFXT>(*ieqn+"_x_flux");
+      CFYT& y_flux = tsk_info->get_const_uintah_field_add<CFYT>(*ieqn+"_y_flux");
+      CFZT& z_flux = tsk_info->get_const_uintah_field_add<CFZT>(*ieqn+"_z_flux");
 
       Vector Dx = patch->dCell();
       double ax = Dx.y() * Dx.z();
@@ -263,6 +306,7 @@ private:
 #endif
 
       if ( time_substep == 0 ){
+
         auto fe_update = [&](int i, int j, int k){
 
           rhs(i,j,k) = rhs(i,j,k) - ( ax * ( x_flux(i+1,j,k) - x_flux(i,j,k) ) +
@@ -325,6 +369,27 @@ private:
 #ifdef DO_TIMINGS
       timer.stop("work");
 #endif
+
+    }
+
+    // unscaling
+    // work in progress
+    for ( auto ieqn = m_scaling_info.begin(); ieqn != m_scaling_info.end(); ieqn++ ){
+
+      std::string varname = ieqn->first;
+      std::string unscaled_varname = ieqn->first+"_unscaled";
+      const double scaling_constant = ieqn->second;
+
+      T& phi = tsk_info->get_uintah_field_add<T>( varname );
+      T& phi_unscaled = tsk_info->get_uintah_field_add<T>( unscaled_varname );
+
+      Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
+
+      Uintah::parallel_for( range, [&](int i, int j, int k){
+
+        phi_unscaled(i,j,k) = phi(i,j,k) * scaling_constant;
+
+      });
     }
   }
 }

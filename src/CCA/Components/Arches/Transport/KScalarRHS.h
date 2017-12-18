@@ -26,6 +26,7 @@
  */
 
 #include <CCA/Components/Arches/Task/TaskInterface.h>
+#include <CCA/Components/Arches/Transport/TransportHelper.h>
 #include <CCA/Components/Arches/GridTools.h>
 #include <CCA/Components/Arches/ConvectionHelper.h>
 #include <CCA/Components/Arches/Directives.h>
@@ -91,39 +92,6 @@ public:
 
 private:
 
-    enum EQUATION_CLASS {DENSITY_WEIGHTED, DQMOM_WA, DQMOM_W, NO_PREMULT};
-
-    void assign_eqn_class_enum( std::string my_class ){
-      if ( my_class == "density_weighted" ){
-        m_eqn_class = DENSITY_WEIGHTED;
-      } else if ( my_class == "dqmom_wa" ){
-        m_eqn_class = DQMOM_WA;
-      } else if ( my_class == "dqmom_w" ){
-        m_eqn_class = DQMOM_W;
-      } else if ( my_class == "volumetric"){
-        m_eqn_class = NO_PREMULT;
-      } else {
-        throw ProblemSetupException( "Error: eqn group type not recognized.",
-                                     __FILE__, __LINE__ );
-      }
-    }
-
-    inline std::string get_premultiplier_name(){
-
-      switch( m_eqn_class ){
-        case DENSITY_WEIGHTED:
-          return "rho_";
-        case DQMOM_WA:
-          return "weighted_";
-        case DQMOM_W:
-          return "none";
-        case NO_PREMULT:
-          return "none";
-        default:
-          return "none";
-      }
-    }
-
     typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
     typedef typename ArchesCore::VariableHelper<T>::XFaceType FXT;
     typedef typename ArchesCore::VariableHelper<T>::YFaceType FYT;
@@ -139,7 +107,7 @@ private:
     std::string m_z_velocity_name;
     std::string m_eps_name;
 
-    EQUATION_CLASS m_eqn_class;
+    ArchesCore::EQUATION_CLASS m_eqn_class;
 
     std::vector<std::string> m_eqn_names;
     std::vector<bool> m_do_diff;
@@ -158,6 +126,7 @@ private:
     };
 
     std::vector<std::vector<SourceInfo> > m_source_info;
+    std::map<std::string, double> m_scaling_info;
 
     std::vector<LIMITER> m_conv_scheme;
 
@@ -194,7 +163,8 @@ private:
     if ( input_db->findAttribute("class") ){
       input_db->getAttribute("class", eqn_class);
     }
-    assign_eqn_class_enum(eqn_class);
+
+    m_eqn_class = ArchesCore::assign_eqn_class_enum( eqn_class );
 
     for( ProblemSpecP db = input_db->findBlock("eqn"); db != nullptr; db = db->findNextBlock("eqn") ) {
 
@@ -205,13 +175,13 @@ private:
 
       //Check for something other than density weighted:
 
-      if ( db->findBlock("dqmom_wa")){
-        m_eqn_class = DQMOM_WA;
+      std::string eqn_class_str = "density_weighted";
+      if ( db->findBlock("dqmom")){
+        eqn_class_str = "dqmom";
       } else if ( db->findBlock("volumetric")){
-        m_eqn_class = NO_PREMULT;
-      } else {
-        m_eqn_class = DENSITY_WEIGHTED;
+        eqn_class_str = "volumetric";
       }
+      m_eqn_class = ArchesCore::assign_eqn_class_enum( eqn_class_str );
 
       //Convection
       if ( db->findBlock("convection")){
@@ -223,8 +193,10 @@ private:
       }
 
       //Diffusion
+      m_has_D = false;
       if ( db->findBlock("diffusion")){
         m_do_diff.push_back(true);
+        m_has_D = true;
       } else {
         m_do_diff.push_back(false);
       }
@@ -241,6 +213,15 @@ private:
         m_do_clip.push_back(false);
         m_low_clip.push_back(-999.9);
         m_high_clip.push_back(999.9);
+      }
+
+      //Scaling Constant
+      if ( db->findBlock("scaling")){
+
+        double scaling_constant;
+        db->findBlock("scaling")->getAttribute("value", scaling_constant);
+        m_scaling_info.insert(std::make_pair(eqn_name, scaling_constant));
+
       }
 
       //Initial Value
@@ -291,7 +272,7 @@ private:
     m_y_velocity_name = var_map.vvel_name;
     m_z_velocity_name = var_map.wvel_name;
 
-    m_premultiplier_name = get_premultiplier_name();
+    m_premultiplier_name = get_premultiplier_name(m_eqn_class);
 
     if ( input_db->findBlock("velocity") ){
       // can overide the global velocity space with this:
@@ -302,14 +283,21 @@ private:
 
     // Diffusion coeff -- assuming the same one across all eqns.
     m_D_name = "NA";
-    m_has_D = false;
 
-    if ( input_db->findBlock("diffusion_coef") ) {
-      input_db->findBlock("diffusion_coef")->getAttribute("label",m_D_name);
-      m_has_D = true;
+    if ( m_has_D ){
+      if ( input_db->findBlock("diffusion_coef") ) {
+        input_db->findBlock("diffusion_coef")->getAttribute("label",m_D_name);
+      } else {
+        std::stringstream msg;
+        msg << "Error: Diffusion specified for task " << _task_name << std::endl
+        << "but no diffusion coefficient label specified." << std::endl;
+        throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
+      }
     }
+
   }
 
+  //------------------------------------------------------------------------------------------------
   template <typename T, typename FluxXT, typename FluxYT, typename FluxZT>
   void
   KScalarRHS<T, FluxXT, FluxYT, FluxZT>::create_local_labels(){
@@ -343,6 +331,10 @@ private:
       register_variable(  m_eqn_names[ieqn]+"_y_flux", ArchesFieldContainer::COMPUTES , variable_registry, _task_name );
       register_variable(  m_eqn_names[ieqn]+"_z_flux", ArchesFieldContainer::COMPUTES , variable_registry, _task_name );
     }
+
+    for ( auto i = m_scaling_info.begin(); i != m_scaling_info.end(); i++ ){
+      register_variable( i->first+"_unscaled", ArchesFieldContainer::COMPUTES, variable_registry, _task_name );
+    }
   }
 
   //------------------------------------------------------------------------------------------------
@@ -375,6 +367,12 @@ private:
       }
 
     } //eqn loop
+
+    for ( auto i = m_scaling_info.begin(); i != m_scaling_info.end(); i++ ){
+      T& phi_unscaled = tsk_info->get_uintah_field_add<T>( i->first+"_unscaled");
+      phi_unscaled.initialize(0.0);
+    }
+
   }
 
   //------------------------------------------------------------------------------------------------

@@ -530,7 +530,8 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
 
     // require that we have weighted or unweighted explicitly specified as an attribute to DQMOM
     // type = "unweightedAbs" or type = "weighedAbs"
-    dqmom_db->getAttribute( "type", d_which_dqmom );
+    //dqmom_db->getAttribute( "type", d_which_dqmom );
+    d_which_dqmom = "weighedAbs";
 
     ProblemSpecP db_linear_solver = dqmom_db->findBlock("LinearSolver");
     if( db_linear_solver ) {

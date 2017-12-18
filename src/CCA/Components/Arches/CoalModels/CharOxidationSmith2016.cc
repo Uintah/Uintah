@@ -153,7 +153,7 @@ CharOxidationSmith2016::problemSetup(const ProblemSpecP& params, int qn)
   if(_p_density_varlabel == 0){
     throw ProblemSetupException("Error: Unable to find coal density label!!!! Looking for name: "+density_name, __FILE__, __LINE__);
   }
-  
+
   // create raw coal mass var label
   std::string rcmass_root = ParticleTools::parse_for_role_to_label(db, "raw_coal");
   std::string rcmass_name = ParticleTools::append_env( rcmass_root, d_quadNode );
@@ -274,16 +274,16 @@ CharOxidationSmith2016::problemSetup(const ProblemSpecP& params, int qn)
   }
   if (db_coal_props->findBlock("SmithChar2016")) {
     ProblemSpecP db_Smith = db_coal_props->findBlock("SmithChar2016");
-    db_Smith->getWithDefault("Sg0",_Sg0,9.35e5); //UNCERTAIN initial specific surface area [m^2/kg], range [1e3,1e6] 
+    db_Smith->getWithDefault("Sg0",_Sg0,9.35e5); //UNCERTAIN initial specific surface area [m^2/kg], range [1e3,1e6]
     db_Smith->getWithDefault("char_MW",_Mh,12.0); // kg char / kmole char
     _init_particle_density = ParticleTools::getInletParticleDensity( db );
     double ash_mass_frac = ParticleTools::getAshMassFraction( db );
     double initial_diameter = ParticleTools::getInletParticleSize( db, d_quadNode );
     double p_volume = M_PI/6.*initial_diameter*initial_diameter*initial_diameter; // particle volme [m^3]
     _mass_ash = p_volume*_init_particle_density*ash_mass_frac;
-    double initial_rc = (M_PI/6.0)*initial_diameter*initial_diameter*initial_diameter*_init_particle_density*(1.-ash_mass_frac); 
-    _rho_org_bulk = initial_rc / (p_volume*(1-_p_void0) - _mass_ash/_rho_ash_bulk) ; // bulk density of char [kg/m^3] 
-    _p_voidmin = 1. - (1/p_volume)*(initial_rc*(1.-_v_hiT)/_rho_org_bulk + _mass_ash/_rho_ash_bulk); // bulk density of char [kg/m^3] 
+    double initial_rc = (M_PI/6.0)*initial_diameter*initial_diameter*initial_diameter*_init_particle_density*(1.-ash_mass_frac);
+    _rho_org_bulk = initial_rc / (p_volume*(1-_p_void0) - _mass_ash/_rho_ash_bulk) ; // bulk density of char [kg/m^3]
+    _p_voidmin = 1. - (1/p_volume)*(initial_rc*(1.-_v_hiT)/_rho_org_bulk + _mass_ash/_rho_ash_bulk); // bulk density of char [kg/m^3]
     db_Smith->getWithDefault("surface_area_mult_factor",_S,1.0);
     _NUM_species = 0;
     for ( ProblemSpecP db_species = db_Smith->findBlock( "species" ); db_species != nullptr; db_species = db_species->findNextBlock( "species" ) ){
@@ -712,7 +712,7 @@ CharOxidationSmith2016::computeModel( const ProcessorGroup * pc,
     }
     if ( _char_birth_label != nullptr ){
       add_char_birth = true;
-      new_dw->get( char_birth, _rawcoal_birth_label, matlIndex, patch, gn, 0 );
+      new_dw->get( char_birth, _char_birth_label, matlIndex, patch, gn, 0 );
     }
     if ( _length_birth_varlabel != nullptr ){
       add_length_birth = true;
@@ -849,8 +849,8 @@ CharOxidationSmith2016::computeModel( const ProcessorGroup * pc,
         CO_CO2_ratio=CO_CO2_ratio*44.0/28.0; // [kmoles CO / kmoles CO2]
         CO2onCO=1./CO_CO2_ratio; // [kmoles CO2 / kmoles CO]
         for (int l=0; l<_NUM_reactions; l++) {
-          phi_l[l] = (_use_co2co_l[l]) ? (CO2onCO + 1)/(CO2onCO + 0.5) : _phi_l[l]; 
-          hrxn_l[l] = (_use_co2co_l[l]) ? (CO2onCO*_HF_CO2 + _HF_CO)/(1+CO2onCO) : _hrxn_l[l]; 
+          phi_l[l] = (_use_co2co_l[l]) ? (CO2onCO + 1)/(CO2onCO + 0.5) : _phi_l[l];
+          hrxn_l[l] = (_use_co2co_l[l]) ? (CO2onCO*_HF_CO2 + _HF_CO)/(1+CO2onCO) : _hrxn_l[l];
         }
         relative_velocity = sqrt( ( gas_vel.x() - part_vel.x() ) * ( gas_vel.x() - part_vel.x() ) +
                                          ( gas_vel.y() - part_vel.y() ) * ( gas_vel.y() - part_vel.y() ) +
@@ -862,9 +862,9 @@ CharOxidationSmith2016::computeModel( const ProcessorGroup * pc,
         p_area = M_PI * p_diam*p_diam; // particle surface area [m^2]
         p_volume = M_PI/6.*p_diam*p_diam*p_diam; // particle volme [m^3]
         p_void = std::max(1e-10, 1.-(1./p_volume)*((rc+ch)/_rho_org_bulk + _mass_ash/_rho_ash_bulk));    // current porosity. (-) required due to sign convention of char.
-        psi = 1./(_p_void0*(1.-_p_void0));	
+        psi = 1./(_p_void0*(1.-_p_void0));
         Sj =  _init_particle_density/p_rho*((1-p_void)/(1-_p_void0))*sqrt(1-std::min(1.0,psi*log((1-p_void)/(1-_p_void0))));
-        rp = 2 * p_void * (1. - p_void)/(p_rho * Sj * _Sg0); // average particle radius [m] 
+        rp = 2 * p_void * (1. - p_void)/(p_rho * Sj * _Sg0); // average particle radius [m]
         // Calculate oxidizer diffusion coefficient // effect diffusion through stagnant gas (see "Multicomponent Mass Transfer", Taylor and Krishna equation 6.1.14)
         for (int l=0; l<_NUM_reactions; l++) {
           sum_x_D=0;
@@ -967,7 +967,7 @@ CharOxidationSmith2016::computeModel( const ProcessorGroup * pc,
           reaction_rate_l[l](i,j,k)=rh_l_new[l];// [kg/m^2/s] this is for the intial guess during the next time-step
           // check to see if reaction rate is oxidizer limited.
           oxi_lim = (oxid_mass_frac[l] * gas_rho * surfaceAreaFraction) / (dt * w);// [kg/s/#] // here the surfaceAreaFraction parameter is allowing us to only consume the oxidizer multiplied by the weighted area fraction for the current particle.
-          rh_l_i = std::min(rh_l_new[l]*p_area*x_org*(1-p_void), oxi_lim);// [kg/s/#] 
+          rh_l_i = std::min(rh_l_new[l]*p_area*x_org*(1-p_void), oxi_lim);// [kg/s/#]
           char_mass_rate += -rh_l_i;// [kg/s/#]  negative sign because we are computing the destruction rate for the particles.
           d_mass += rh_l_i;
           co_s[l] = rh_l_i/(phi_l[l]*_Mh*k_r[l]*(1 + effectivenessF[l]*p_diam*p_rho*_Sg0*Sj/(6.*(1-p_void)))); //oxidizer concentration at particle surface [kmoles/m^3]
@@ -978,17 +978,17 @@ CharOxidationSmith2016::computeModel( const ProcessorGroup * pc,
           d_mass2 += r_h_ex[l]*_ksi + r_h_in[l];
           surface_rate_factor += r_h_ex[l];
         }
-        h_rxn_factor /= (d_mass + 1e-50); 
-        surface_rate_factor /= (d_mass + 1e-50); 
+        h_rxn_factor /= (d_mass + 1e-50);
+        surface_rate_factor /= (d_mass + 1e-50);
         h_rxn /= (d_mass2 + 1e-50); // [J/mole]
         // rate clipping for char_mass_rate
         if ( add_rawcoal_birth && add_char_birth ){
-          char_mass_rate = std::max( char_mass_rate, - ((rc+ch)/(dt) + (RHS + RHS_v)/(vol*w) + r_devol/w + char_birth(i,j,k)/w + rawcoal_birth(i,j,k)/w )); // [kg/s/#] 
+          char_mass_rate = std::max( char_mass_rate, - ((rc+ch)/(dt) + (RHS + RHS_v)/(vol*w) + r_devol/w + char_birth(i,j,k)/w + rawcoal_birth(i,j,k)/w )); // [kg/s/#]
         } else {
-          char_mass_rate = std::max( char_mass_rate, - ((rc+ch)/(dt) + (RHS + RHS_v)/(vol*w) + r_devol/w )); // [kg/s/#] 
+          char_mass_rate = std::max( char_mass_rate, - ((rc+ch)/(dt) + (RHS + RHS_v)/(vol*w) + r_devol/w )); // [kg/s/#]
         }
         char_mass_rate = std::min( 0.0, char_mass_rate); // [kg/s/#] make sure we aren't creating char.
-        
+
         // organic consumption rate
         char_rate(i,j,k) = (char_mass_rate*w)/(_char_scaling_constant*_weight_scaling_constant); // [kg/m^3/s - scaled]
         // off-gas production rate
@@ -998,14 +998,14 @@ CharOxidationSmith2016::computeModel( const ProcessorGroup * pc,
                                                                                                     // note: this model is designed to work with EnthalpyShaddix. The effect of ksi has already been added to Qreaction so we divide here.
         // particle shrinkage rate
         double updated_weight = std::max(w/_weight_scaling_constant + dt / vol * ( RHS_weight(i,j,k) ) , 1e-15);
-        double min_p_diam = std::pow( _mass_ash * 6 / _rho_ash_bulk / (1- _p_voidmin) / M_PI ,1./3.); 
+        double min_p_diam = std::pow( _mass_ash * 6 / _rho_ash_bulk / (1- _p_voidmin) / M_PI ,1./3.);
         if (add_length_birth){
           max_Size_rate = ( updated_weight * min_p_diam / _length_scaling_constant - weight_p_diam(i,j,k) ) / dt - ( RHS_length(i,j,k) / vol + length_birth(i,j,k));
         } else {
           max_Size_rate = ( updated_weight * min_p_diam / _length_scaling_constant - weight_p_diam(i,j,k) ) / dt - ( RHS_length(i,j,k) / vol);
         }
-        Size_rate = (x_org < 1e-8) ? 0.0 : w/_weight_scaling_constant * 2.*x_org * surface_rate_factor * char_mass_rate / _rho_org_bulk / p_area / x_org / (1-p_void) / _length_scaling_constant; // [m/s] 
-        particle_Size_rate(i,j,k) = std::max(max_Size_rate, Size_rate); // [m/s] -- these source terms are negative. 
+        Size_rate = (x_org < 1e-8) ? 0.0 : w/_weight_scaling_constant * 2.*x_org * surface_rate_factor * char_mass_rate / _rho_org_bulk / p_area / x_org / (1-p_void) / _length_scaling_constant; // [m/s]
+        particle_Size_rate(i,j,k) = std::max(max_Size_rate, Size_rate); // [m/s] -- these source terms are negative.
         surface_rate(i,j,k) = char_mass_rate/p_area;  // in [kg/(s # m^2)]
         PO2surf_(i,j,k) = 0.0; // multiple oxidizers, so we are leaving this empty.
       } // else statement
@@ -1018,7 +1018,7 @@ CharOxidationSmith2016::computeModel( const ProcessorGroup * pc,
 
 inline void
 CharOxidationSmith2016::root_function( std::vector<double> &F, std::vector<double> &rh_l, std::vector<double> &co_r,
-                                   double &gas_rho, double &cg, std::vector<double> &k_r, double &MW, 
+                                   double &gas_rho, double &cg, std::vector<double> &k_r, double &MW,
                                    double &r_devol, double &p_diam, std::vector<double> &Sh,
                                    std::vector<double> &D_oxid_mix_l,
                                    std::vector<double> &phi_l,
@@ -1042,7 +1042,7 @@ CharOxidationSmith2016::root_function( std::vector<double> &F, std::vector<doubl
     Bjm = std::min( 80.0 , rtot*p_diam/( D_oxid_mix_l[l] * gas_rho )); // [-] // this is the derived for mass flux  BSL chapter 22
     Fac = ( Bjm >= 1e-7 ) ?  Bjm/(exp(Bjm)-1.) : 1.0; // also from BSL chapter 22 the mass transfer correction factor.
     mtc_r = (Sh[l] * D_oxid_mix_l[l] * Fac) / p_diam; // [m/s]
-    Sfactor = 1 + effectivenessF[l]*p_diam*p_rho*_Sg0*Sj/(6.*(1.-p_void)); 
+    Sfactor = 1 + effectivenessF[l]*p_diam*p_rho*_Sg0*Sj/(6.*(1.-p_void));
     numerator =  _Mh * MW * phi_l[l] * k_r[l] * mtc_r * Sfactor * co_r[l] * cg; // [(#^2 kg-char kg-mix) / (s^2 m^6)]
     denominator = MW * cg * (k_r[l] * x_org * (1.-p_void) * Sfactor + mtc_r); // [(kg-mix #) / (m^3 s)]
     F[l] = rh_l[l] - numerator / ( denominator + rtot); // [kg-char/m^3/s]

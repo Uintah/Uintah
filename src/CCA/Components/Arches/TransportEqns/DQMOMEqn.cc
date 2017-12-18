@@ -88,6 +88,7 @@ DQMOMEqn::problemSetup( const ProblemSpecP& inputdb )
   ProblemSpecP db = inputdb;
 
   d_boundaryCond->problemSetup( db, d_eqnName );
+  unsigned int Nqn = ParticleTools::get_num_env( db, ParticleTools::DQMOM );
 
   ProblemSpecP db_root = db->getRootNode();
   ProblemSpecP dqmom_db = db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM");
@@ -124,7 +125,17 @@ DQMOMEqn::problemSetup( const ProblemSpecP& inputdb )
   d_addExtraSources = false;
   db->getWithDefault( "molecular_diffusivity", d_mol_diff, 0.0);
   if ( !d_weight ){
-    db->require( "nominal_values", d_nominal );
+
+    if ( db->findBlock("nominal_values") ){
+      db->require( "nominal_values", d_nominal );
+    } else {
+      d_nominal.resize(Nqn);
+      for ( auto i = d_nominal.begin(); i != d_nominal.end(); i++ ){
+        //putting a random value in here since it wasn't specified.
+        //If using birth, then this value should never be used.
+        *i = 101010101010.101010101010;
+      }
+    }
   }
 
   if ( d_convScheme == "upwind" ){
@@ -215,12 +226,16 @@ DQMOMEqn::problemSetup( const ProblemSpecP& inputdb )
   }
 
   // Scaling information:
-  db->require( "scaling_const", d_scalingConstant );
-
-  unsigned int Nqn = ParticleTools::get_num_env( db, ParticleTools::DQMOM );
-
-  if ( Nqn != d_scalingConstant.size() ){
-    throw InvalidValue("Error: The number of scaling constants isn't consistent with the number of environments for: "+d_ic_name, __FILE__, __LINE__);
+  if ( db->findBlock("scaling_const") ){
+    db->require("scaling_const", d_scalingConstant );
+    if ( Nqn != d_scalingConstant.size() ){
+      throw InvalidValue("Error: The number of scaling constants isn't consistent with the number of environments for: "+d_ic_name, __FILE__, __LINE__);
+    }
+  } else {
+    d_scalingConstant.resize(Nqn);
+    for ( auto i = d_scalingConstant.begin(); i != d_scalingConstant.end(); i++ ){
+      *i = 1.;
+    }
   }
 
   // Extra Source terms (for mms and other tests):

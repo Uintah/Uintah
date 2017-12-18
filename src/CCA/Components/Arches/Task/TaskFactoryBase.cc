@@ -8,6 +8,7 @@ using namespace Uintah;
 TaskFactoryBase::TaskFactoryBase()
 {
   _matl_index = 0; //Arches material
+  _tasks.clear();
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -24,10 +25,10 @@ TaskFactoryBase::~TaskFactoryBase()
   for (ABuildMap::iterator i = _atomic_builders.begin(); i != _atomic_builders.end(); i++ ){
     delete i->second;
   }
-  
+
   for (ATaskMap::iterator i = _atomic_tasks.begin(); i != _atomic_tasks.end(); i++ ){
      delete i->second;
-   } 
+   }
  }
 
 //--------------------------------------------------------------------------------------------------
@@ -42,6 +43,7 @@ TaskFactoryBase::register_task(std::string task_name,
   if ( i == _builders.end() ){
 
     _builders.insert(std::make_pair(task_name, builder ));
+
     //If we are creating a builder, we assume the task is "active"
     _active_tasks.push_back(task_name);
 

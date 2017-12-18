@@ -346,6 +346,9 @@ KokkosSolver::initialize( const LevelP& level, SchedulerP& sched, const bool doi
   // set the volume fractions
   m_task_factory_map["utility_factory"]->schedule_task( "vol_fraction_calc", TaskInterface::INITIALIZE, level, sched, matls );
 
+  // particle models
+  m_task_factory_map["particle_model_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
+
   //transport factory
   m_task_factory_map["transport_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
 
@@ -362,6 +365,8 @@ KokkosSolver::initialize( const LevelP& level, SchedulerP& sched, const bool doi
 
   //Need to apply BC's after everything is initialized
   m_task_factory_map["transport_factory"]->schedule_task_group( "scalar_rhs_builders", TaskInterface::BC, pack_tasks, level, sched, matls );
+
+  m_task_factory_map["transport_factory"]->schedule_task_group( "dqmom_eqns", TaskInterface::BC, pack_tasks, level, sched, matls );
 
   // variable that computed with density such as rho*u
   m_task_factory_map["initialize_factory"]->schedule_task_group( "rho_phi_tasks", TaskInterface::INITIALIZE, pack_tasks, level, sched, matls );
@@ -426,6 +431,7 @@ KokkosSolver::nonlinearSolve( const LevelP& level,
   BFM::iterator i_bc_fac = m_task_factory_map.find("boundary_condition_factory");
   BFM::iterator i_table_fac = m_task_factory_map.find("table_factory");
   BFM::iterator i_turb_model_fac = m_task_factory_map.find("turbulence_model_factory");
+  BFM::iterator i_particle_model_fac = m_task_factory_map.find("particle_model_factory");
 
   TaskFactoryBase::TaskMap all_bc_tasks = i_bc_fac->second->retrieve_all_tasks();
 
@@ -436,6 +442,9 @@ KokkosSolver::nonlinearSolve( const LevelP& level,
 
   i_util_fac->second->schedule_task( "vol_fraction_calc", TaskInterface::TIMESTEP_INITIALIZE, level,
     sched, matls );
+
+  i_particle_model_fac->second->schedule_task_group("all_tasks", TaskInterface::TIMESTEP_INITIALIZE,
+    pack_tasks, level, sched, matls );
 
   i_transport->second->schedule_task_group( "all_tasks", TaskInterface::TIMESTEP_INITIALIZE,
     pack_tasks, level, sched, matls );
@@ -505,6 +514,7 @@ KokkosSolver::SSPRKSolve( const LevelP& level, SchedulerP& sched ){
   BFM::iterator i_table_fac = m_task_factory_map.find("table_factory");
   BFM::iterator i_source_fac = m_task_factory_map.find("source_term_factory");
   BFM::iterator i_turb_model_fac = m_task_factory_map.find("turbulence_model_factory");
+  BFM::iterator i_particle_model_fac = m_task_factory_map.find("particle_model_factory");
 
   TaskFactoryBase::TaskMap all_bc_tasks = i_bc_fac->second->retrieve_all_tasks();
   TaskFactoryBase::TaskMap all_table_tasks = i_table_fac->second->retrieve_all_tasks();
@@ -516,7 +526,6 @@ KokkosSolver::SSPRKSolve( const LevelP& level, SchedulerP& sched ){
 
   for ( int time_substep = 0; time_substep < m_rk_order; time_substep++ ){
 
-
     // pre-update properties/source tasks)
     i_prop_fac->second->schedule_task_group( "pre_update_property_models",
       TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
@@ -524,6 +533,20 @@ KokkosSolver::SSPRKSolve( const LevelP& level, SchedulerP& sched ){
     // compute momentum closure
     i_turb_model_fac->second->schedule_task_group("momentum_closure",
       TaskInterface::TIMESTEP_EVAL, packed_info.turbulence, level, sched, matls, time_substep );
+
+    // compute all particle models.
+    i_particle_model_fac->second->schedule_task_group("all_tasks",
+      TaskInterface::TIMESTEP_EVAL, packed_info.turbulence, level, sched, matls, time_substep );
+
+    // ** DQMOM **
+    i_transport->second->schedule_task_group("dqmom_psi_builders",
+      TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
+
+    i_transport->second->schedule_task_group("dqmom_eqns",
+      TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
+
+    i_transport->second->schedule_task_group("dqmom_fe_update",
+      TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
 
    // (pre-update source terms)
     i_source_fac->second->schedule_task_group( "pre_update_source_tasks",

@@ -377,6 +377,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
   }
 }
 
+//--------------------------------------------------------------------------------------------------
 void
 ParticleModelFactory::build_all_tasks( ProblemSpecP& db )
 {
@@ -385,7 +386,8 @@ ParticleModelFactory::build_all_tasks( ProblemSpecP& db )
 
     ProblemSpecP db_pm = db->findBlock("ParticleModels");
 
-    for (ProblemSpecP db_model = db_pm->findBlock("model"); db_model != nullptr; db_model = db_model->findNextBlock("model")){
+    for (ProblemSpecP db_model = db_pm->findBlock("model"); db_model != nullptr;
+         db_model = db_model->findNextBlock("model")){
 
       std::string model_name;
       std::string type;
