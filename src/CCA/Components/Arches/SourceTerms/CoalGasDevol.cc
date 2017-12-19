@@ -4,11 +4,14 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <CCA/Components/Arches/SourceTerms/CoalGasDevol.h>
+#include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
+#include <CCA/Components/Arches/TransportEqns/EqnBase.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
 #include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
 #include <CCA/Components/Arches/CoalModels/ModelBase.h>
 //#include <CCA/Components/Arches/CoalModels/KobayashiSarofimDevol.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
+#include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
 
 #include <sci_defs/kokkos_defs.h>
 
@@ -35,6 +38,14 @@ CoalGasDevol::problemSetup(const ProblemSpecP& inputdb)
   ProblemSpecP db = inputdb;
 
   db->require( "devol_model_name", _devol_model_name );
+
+   m_dest_flag = false;
+  if (db->findBlock("devol_BirthDeath")) {
+    ProblemSpecP db_bd = db->findBlock("devol_BirthDeath");
+    db_bd->getWithDefault("retained_deposit_factor", m_retained_deposit_factor, 0.0);
+    m_dest_flag = true;
+    m_rcmass_root = ParticleTools::parse_for_role_to_label(db, "raw_coal");
+  }
 
   _source_grid_type = CC_SRC;
 
@@ -71,12 +82,61 @@ CoalGasDevol::sched_computeSource( const LevelP& level, SchedulerP& sched, int t
 
     const VarLabel* tempgasLabel_m = model.getGasSourceLabel();
     tsk->requires( Task::NewDW, tempgasLabel_m, Ghost::None, 0 );
+  
+    if (m_dest_flag){
+      // require RCmass birth/death   
+      std::string rcmassqn_name = ParticleTools::append_qn_env(m_rcmass_root, iqn );
+      EqnBase& temp_rcmass_eqn = dqmomFactory.retrieve_scalar_eqn(rcmassqn_name);
+      DQMOMEqn& rcmass_eqn = dynamic_cast<DQMOMEqn&>(temp_rcmass_eqn);
+      const std::string rawcoal_birth_name = rcmass_eqn.get_model_by_type( "BirthDeath" );
+      std::string rawcoal_birth_qn_name = ParticleTools::append_qn_env(rawcoal_birth_name, iqn);
+      const VarLabel* rcmass_birthdeath_varlabel=VarLabel::find(rawcoal_birth_qn_name);
+      tsk->requires( Task::NewDW, rcmass_birthdeath_varlabel, Ghost::None, 0 );
+    }
+    
 
   }
 
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
 
 }
+struct sumDevolGasDestSource{
+       sumDevolGasDestSource(constCCVariable<double>& _qn_gas_dest,
+                           CCVariable<double>& _devolSrc,
+                           double& _retained_deposit_factor,
+                           double& _w_scaling_constant,
+                           double& _rc_scaling_constant ) :
+#ifdef UINTAH_ENABLE_KOKKOS
+                           qn_gas_dest(_qn_gas_dest.getKokkosView()),
+                           devolSrc(_devolSrc.getKokkosView()),
+                           rc_scaling_constant(_rc_scaling_constant),
+                           w_scaling_constant(_w_scaling_constant),
+                           retained_deposit_factor(_retained_deposit_factor)
+#else
+                           qn_gas_dest(_qn_gas_dest),
+                           devolSrc(_devolSrc),
+                           rc_scaling_constant(_rc_scaling_constant),
+                           w_scaling_constant(_w_scaling_constant),
+                           retained_deposit_factor(_retained_deposit_factor)
+#endif
+                           {  }
+
+  void operator()(int i , int j, int k ) const {
+   devolSrc(i,j,k) += - (1.0-retained_deposit_factor)*qn_gas_dest(i,j,k)*w_scaling_constant*rc_scaling_constant; // minus sign because it is applied to the gas  
+  }
+
+  private:
+#ifdef UINTAH_ENABLE_KOKKOS
+   KokkosView3<const double> qn_gas_dest;
+   KokkosView3<double>  devolSrc;
+#else
+   constCCVariable<double>& qn_gas_dest;
+   CCVariable<double>& devolSrc;
+#endif
+  double rc_scaling_constant;
+  double w_scaling_constant;
+  double retained_deposit_factor;
+};
 struct sumDevolGasSource{
        sumDevolGasSource(constCCVariable<double>& _qn_gas_devol,
                            CCVariable<double>& _devolSrc) :
@@ -151,13 +211,31 @@ CoalGasDevol::computeSource( const ProcessorGroup* pc,
       const VarLabel* gasModelLabel = model.getGasSourceLabel();
 
       new_dw->get( qn_gas_devol, gasModelLabel, matlIndex, patch, gn, 0 );
-
       Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
-
-      sumDevolGasSource doSumDevolGas(qn_gas_devol,
-                                      devolSrc);
-
+      sumDevolGasSource doSumDevolGas(qn_gas_devol,devolSrc); 
       Uintah::parallel_for(range, doSumDevolGas);
+
+      if (m_dest_flag){
+        // get RCmass birth death, RC scaling constant and equation handle   
+        std::string rcmassqn_name = ParticleTools::append_qn_env(m_rcmass_root, iqn );
+        EqnBase& temp_rcmass_eqn = dqmomFactory.retrieve_scalar_eqn(rcmassqn_name);
+        DQMOMEqn& rcmass_eqn = dynamic_cast<DQMOMEqn&>(temp_rcmass_eqn);
+        double rc_scaling_constant = rcmass_eqn.getScalingConstant(iqn);
+        const std::string rawcoal_birth_name = rcmass_eqn.get_model_by_type( "BirthDeath" );
+        std::string rawcoal_birth_qn_name = ParticleTools::append_qn_env(rawcoal_birth_name, iqn);
+        const VarLabel* rcmass_birthdeath_varlabel=VarLabel::find(rawcoal_birth_qn_name);
+        // get weight scaling constant and equation handle 
+        std::string weightqn_name = ParticleTools::append_qn_env("w", iqn);
+        EqnBase& temp_weight_eqn = dqmomFactory.retrieve_scalar_eqn(weightqn_name);
+        DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(temp_weight_eqn);
+        double w_scaling_constant = weight_eqn.getScalingConstant(iqn);
+        
+        constCCVariable<double> qn_gas_dest;
+        new_dw->get( qn_gas_dest, rcmass_birthdeath_varlabel, matlIndex, patch, gn, 0 );
+        // sum the dest sources
+        sumDevolGasDestSource doSumDevolDestGas(qn_gas_dest,devolSrc,m_retained_deposit_factor,w_scaling_constant,rc_scaling_constant);  
+        Uintah::parallel_for(range, doSumDevolDestGas);
+      }
     }
   }
 }
@@ -206,7 +284,3 @@ CoalGasDevol::initialize( const ProcessorGroup* pc,
     }
   }
 }
-
-
-
-

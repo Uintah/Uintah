@@ -4,12 +4,15 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <CCA/Components/Arches/SourceTerms/CoalGasOxi.h>
+#include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
+#include <CCA/Components/Arches/TransportEqns/EqnBase.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
 #include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
 #include <CCA/Components/Arches/CoalModels/ModelBase.h>
 #include <CCA/Components/Arches/CoalModels/CharOxidationShaddix.h>
 #include <CCA/Components/Arches/CoalModels/CharOxidationSmith.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
+#include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
 
 #include <sci_defs/kokkos_defs.h>
 
@@ -36,6 +39,14 @@ CoalGasOxi::problemSetup(const ProblemSpecP& inputdb)
   ProblemSpecP db = inputdb;
 
   db->require( "char_oxidation_model_name", _oxi_model_name );
+
+   m_dest_flag = false;
+  if (db->findBlock("char_BirthDeath")) {
+    ProblemSpecP db_bd = db->findBlock("char_BirthDeath");
+    db_bd->getWithDefault("retained_deposit_factor", m_retained_deposit_factor, 0.0);
+    m_dest_flag = true;
+    m_charmass_root = ParticleTools::parse_for_role_to_label(db, "char");
+  }
 
   _source_grid_type = CC_SRC;
 
@@ -72,6 +83,18 @@ CoalGasOxi::sched_computeSource( const LevelP& level, SchedulerP& sched, int tim
 
     const VarLabel* tempgasLabel_m = model.getGasSourceLabel();
     tsk->requires( Task::NewDW, tempgasLabel_m, Ghost::None, 0 );
+  
+    if (m_dest_flag){
+      // require Charmass birth/death   
+      std::string charmassqn_name = ParticleTools::append_qn_env(m_charmass_root, iqn );
+      EqnBase& temp_charmass_eqn = dqmomFactory.retrieve_scalar_eqn(charmassqn_name);
+      DQMOMEqn& charmass_eqn = dynamic_cast<DQMOMEqn&>(temp_charmass_eqn);
+      const std::string char_birth_name = charmass_eqn.get_model_by_type( "BirthDeath" );
+      std::string char_birth_qn_name = ParticleTools::append_qn_env(char_birth_name, iqn);
+      const VarLabel* charmass_birthdeath_varlabel=VarLabel::find(char_birth_qn_name);
+      tsk->requires( Task::NewDW, charmass_birthdeath_varlabel, Ghost::None, 0 );
+    }
+    
 
   }
 
@@ -79,6 +102,43 @@ CoalGasOxi::sched_computeSource( const LevelP& level, SchedulerP& sched, int tim
 
 }
 
+struct sumCharOxyGasDestSource{
+       sumCharOxyGasDestSource(constCCVariable<double>& _qn_gas_dest,
+                           CCVariable<double>& _oxiSrc,
+                           double& _retained_deposit_factor,
+                           double& _w_scaling_constant,
+                           double& _char_scaling_constant ) :
+#ifdef UINTAH_ENABLE_KOKKOS
+                           qn_gas_dest(_qn_gas_dest.getKokkosView()),
+                           oxiSrc(_oxiSrc.getKokkosView()),
+                           char_scaling_constant(_char_scaling_constant),
+                           w_scaling_constant(_w_scaling_constant),
+                           retained_deposit_factor(_retained_deposit_factor)
+#else
+                           qn_gas_dest(_qn_gas_dest),
+                           oxiSrc(_oxiSrc),
+                           char_scaling_constant(_char_scaling_constant),
+                           w_scaling_constant(_w_scaling_constant),
+                           retained_deposit_factor(_retained_deposit_factor)
+#endif
+                           {  }
+
+  void operator()(int i , int j, int k ) const {
+   oxiSrc(i,j,k) +=  - (1.0-retained_deposit_factor)*qn_gas_dest(i,j,k)*w_scaling_constant*char_scaling_constant; // minus sign because it is applied to the gas 
+  }
+
+  private:
+#ifdef UINTAH_ENABLE_KOKKOS
+   KokkosView3<const double> qn_gas_dest;
+   KokkosView3<double>  oxiSrc;
+#else
+   constCCVariable<double>& qn_gas_dest;
+   CCVariable<double>& oxiSrc;
+#endif
+  double char_scaling_constant;
+  double w_scaling_constant;
+  double retained_deposit_factor;
+};
 struct sumCharOxyGasSource{
        sumCharOxyGasSource(constCCVariable<double>& _qn_gas_oxi,
                            CCVariable<double>& _oxiSrc) :
@@ -92,7 +152,7 @@ struct sumCharOxyGasSource{
                            {  }
 
   void operator()(int i , int j, int k ) const {
-   oxiSrc(i,j,k) += qn_gas_oxi(i,j,k); // All the work is performed in Char Oxidation model
+   oxiSrc(i,j,k) += qn_gas_oxi(i,j,k);
   }
 
   private:
@@ -104,8 +164,6 @@ struct sumCharOxyGasSource{
    CCVariable<double>& oxiSrc;
 #endif
 };
-
-
 //---------------------------------------------------------------------------
 // Method: Actually compute the source term
 //---------------------------------------------------------------------------
@@ -140,7 +198,6 @@ CoalGasOxi::computeSource( const ProcessorGroup* pc,
       oxiSrc.initialize(0.0);
     }
 
-
     for (int iqn = 0; iqn < dqmomFactory.get_quad_nodes(); iqn++){
       std::string model_name = _oxi_model_name;
       std::string node;
@@ -156,18 +213,34 @@ CoalGasOxi::computeSource( const ProcessorGroup* pc,
       const VarLabel* gasModelLabel = model.getGasSourceLabel();
 
       new_dw->get( qn_gas_oxi, gasModelLabel, matlIndex, patch, gn, 0 );
-
       Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
+      sumCharOxyGasSource doSumCharOxyGas(qn_gas_oxi,oxiSrc); 
+      Uintah::parallel_for(range, doSumCharOxyGas);
 
-      sumCharOxyGasSource doSumOxyGas(qn_gas_oxi,
-                                      oxiSrc);
-
-      Uintah::parallel_for(range, doSumOxyGas);
+      if (m_dest_flag){
+        // get Charmass birth death, RC scaling constant and equation handle   
+        std::string charmassqn_name = ParticleTools::append_qn_env(m_charmass_root, iqn );
+        EqnBase& temp_charmass_eqn = dqmomFactory.retrieve_scalar_eqn(charmassqn_name);
+        DQMOMEqn& charmass_eqn = dynamic_cast<DQMOMEqn&>(temp_charmass_eqn);
+        double char_scaling_constant = charmass_eqn.getScalingConstant(iqn);
+        const std::string char_birth_name = charmass_eqn.get_model_by_type( "BirthDeath" );
+        std::string char_birth_qn_name = ParticleTools::append_qn_env(char_birth_name, iqn);
+        const VarLabel* charmass_birthdeath_varlabel=VarLabel::find(char_birth_qn_name);
+        // get weight scaling constant and equation handle 
+        std::string weightqn_name = ParticleTools::append_qn_env("w", iqn);
+        EqnBase& temp_weight_eqn = dqmomFactory.retrieve_scalar_eqn(weightqn_name);
+        DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(temp_weight_eqn);
+        double w_scaling_constant = weight_eqn.getScalingConstant(iqn);
+        
+        constCCVariable<double> qn_gas_dest;
+        new_dw->get( qn_gas_dest, charmass_birthdeath_varlabel, matlIndex, patch, gn, 0 );
+        // sum the dest sources
+        sumCharOxyGasDestSource doSumCharOxyDestGas(qn_gas_dest,oxiSrc,m_retained_deposit_factor,w_scaling_constant,char_scaling_constant);  
+        Uintah::parallel_for(range, doSumCharOxyDestGas);
+      }
     }
   }
 }
-
-
 //---------------------------------------------------------------------------
 // Method: Schedule initialization
 //---------------------------------------------------------------------------
@@ -213,7 +286,3 @@ CoalGasOxi::initialize( const ProcessorGroup* pc,
     }
   }
 }
-
-
-
-

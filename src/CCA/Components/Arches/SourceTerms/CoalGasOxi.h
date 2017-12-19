@@ -62,8 +62,10 @@ class CoalGasOxi: public SourceTermBase {
   }; // class Builder 
 
 private:
-
+  std::string m_charmass_root;
   std::string _oxi_model_name; 
+  double m_retained_deposit_factor;// fraction of organic stays in the deposit 
+  bool m_dest_flag;// flag indicating whether or not deposition mass will be added to the gas phase. 
 
 }; // end CoalGasOxi
 } // end namespace Uintah

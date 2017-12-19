@@ -1823,6 +1823,9 @@
 
             <!-- Specs for coal gas devol model -->
             <devol_model_name           spec="REQUIRED STRING" need_applies_to="type coal_gas_devol" />
+            <devol_BirthDeath           spec="OPTIONAL NO_DATA" need_applies_to="type coal_gas_devol">
+              <retained_deposit_factor    spec="OPTIONAL DOUBLE"/>
+            </devol_BirthDeath>
 
             <!-- Spec for the heat transfer source -->
             <heat_model_name            spec="REQUIRED STRING" need_applies_to="type coal_gas_heat"/>
@@ -1844,6 +1847,9 @@
 
             <!-- Spec for the char oxidation source -->
             <char_oxidation_model_name  spec="REQUIRED STRING" need_applies_to="type coal_gas_oxi" />
+            <char_BirthDeath           spec="OPTIONAL NO_DATA" need_applies_to="type coal_gas_oxi">
+              <retained_deposit_factor    spec="OPTIONAL DOUBLE"/>
+            </char_BirthDeath>
 
             <!-- Multi-point constant injection -->
             <injector_region            spec="REQUIRED NO_DATA" need_applies_to="type fx_inject_src, fy_inject_src, fz_inject_src, cc_inject_src">
