@@ -34,7 +34,7 @@
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/SimulationState.h>
-#include <CCA/Components/MPM/MPMFlags.h>
+#include <CCA/Components/MPM/Core/MPMFlags.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 #include <Core/Geometry/Point.h>

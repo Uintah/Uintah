@@ -31,7 +31,7 @@
 #endif
 
 #include <CCA/Components/MPM/ImpMPM.h> 
-#include <CCA/Components/MPM/ImpMPMFlags.h> 
+#include <CCA/Components/MPM/Core/ImpMPMFlags.h> 
 // put here to avoid template problems
 #include <Core/Math/Matrix3.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
@@ -72,8 +72,8 @@
 #include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Output.h>
 #include <Core/Util/DebugStream.h>
-#include <CCA/Components/MPM/PetscSolver.h>
-#include <CCA/Components/MPM/SimpleSolver.h>
+#include <CCA/Components/MPM/Solver/PetscSolver.h>
+#include <CCA/Components/MPM/Solver/SimpleSolver.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Math/FastMatrix.h>

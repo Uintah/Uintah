@@ -25,7 +25,7 @@
 #ifndef _DAMAGEMODELFACTORY_H_
 #define _DAMAGEMODELFACTORY_H_
 
-#include <CCA/Components/MPM/MPMFlags.h>
+#include <CCA/Components/MPM/Core/MPMFlags.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <string>
 

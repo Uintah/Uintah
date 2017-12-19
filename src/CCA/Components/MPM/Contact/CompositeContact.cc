@@ -24,7 +24,7 @@
 
 #include <CCA/Components/MPM/Contact/CompositeContact.h>
 #include <Core/Labels/MPMLabel.h>
-#include <CCA/Components/MPM/MPMFlags.h>
+#include <CCA/Components/MPM/Core/MPMFlags.h>
 
 using namespace std;
 using namespace Uintah;

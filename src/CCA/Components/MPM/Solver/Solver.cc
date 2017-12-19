@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/MPM/Solver.h>
+#include <CCA/Components/MPM/Solver/Solver.h>
 
 using namespace Uintah;
 

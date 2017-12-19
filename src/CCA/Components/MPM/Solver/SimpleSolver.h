@@ -28,7 +28,7 @@
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/Array3.h>
 #include <Core/Math/Sparse.h>
-#include <CCA/Components/MPM/Solver.h>
+#include <CCA/Components/MPM/Solver/Solver.h>
 #include <map>
 #include <set>
 #include <vector>

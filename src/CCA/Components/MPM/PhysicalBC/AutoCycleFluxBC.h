@@ -25,7 +25,7 @@
 #ifndef UINTAH_CCA_COMPONENTS_MPM_PHYSICALBC_AUTOCYCLEFLUXBC_H
 #define UINTAH_CCA_COMPONENTS_MPM_PHYSICALBC_AUTOCYCLEFLUXBC_H
 
-#include <CCA/Components/MPM/MPMFlags.h>
+#include <CCA/Components/MPM/Core/MPMFlags.h>
 #include <CCA/Components/MPM/PhysicalBC/FluxBCModel.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Scheduler.h>

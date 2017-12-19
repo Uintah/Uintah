@@ -35,7 +35,7 @@
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/ViscoPlasticityModelFactory.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/MPMEquationOfStateFactory.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/PlasticityState.h>
-#include <CCA/Components/MPM/Solver.h>
+#include <CCA/Components/MPM/Solver/Solver.h>
 
 #include <CCA/Ports/DataWarehouse.h>
 

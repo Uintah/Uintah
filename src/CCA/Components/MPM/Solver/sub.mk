@@ -28,56 +28,17 @@
 # Makefile fragment for this subdirectory 
 
 
-include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
+SRCDIR   := CCA/Components/MPM/Solver
 
-SRCDIR	:= CCA/Components/MPM
-
-SRCS += $(SRCDIR)/SerialMPM.cc    \
-	$(SRCDIR)/RigidMPM.cc     \
-	$(SRCDIR)/MPMCommon.cc    \
-	$(SRCDIR)/ImpMPM.cc       \
-	$(SRCDIR)/ShellMPM.cc     \
-	$(SRCDIR)/AMRMPM.cc       
-
-SUBDIRS := \
-	$(SRCDIR)/Core              \
-	$(SRCDIR)/ConstitutiveModel \
-	$(SRCDIR)/Contact           \
-	$(SRCDIR)/ThermalContact    \
-	$(SRCDIR)/PhysicalBC        \
-	$(SRCDIR)/ParticleCreator   \
-	$(SRCDIR)/CohesiveZone      \
-	$(SRCDIR)/HeatConduction    \
-	$(SRCDIR)/MMS               \
-	$(SRCDIR)/Solver            \
-	$(SRCDIR)/Diffusion
-
-include $(SCIRUN_SCRIPTS)/recurse.mk
-
-PSELIBS := \
-	CCA/Components/Application \
-	CCA/Components/OnTheFlyAnalysis \
-	CCA/Ports           \
-	Core/Disclosure     \
-	Core/Exceptions     \
-	Core/Geometry       \
-	Core/GeometryPiece  \
-	Core/Grid           \
-	Core/Labels         \
-	Core/Math           \
-	Core/Parallel       \
-	Core/ProblemSpec    \
-	Core/Util           
-
-LIBS := $(XML2_LIBRARY) $(VT_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) \
-	$(LAPACK_LIBRARY) $(BLAS_LIBRARY) $(M_LIBRARY) $(THREAD_LIBRARY)
+SRCS     += \
+	$(SRCDIR)/SimpleSolver.cc \
+	$(SRCDIR)/Solver.cc       
 
 ifeq ($(HAVE_PETSC),yes)
+  SRCS += $(SRCDIR)/PetscSolver.cc 
   LIBS := $(LIBS) $(PETSC_LIBRARY) 
+  INCLUDES += $(PETSC_INCLUDE)
+else
+  SRCS += $(SRCDIR)/FakePetscSolver.cc
 endif
 
-ifneq ($(NO_FORTRAN),yes)
-  LIBS := $(LIBS) $(F_LIBRARY) 
-endif
-
-include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

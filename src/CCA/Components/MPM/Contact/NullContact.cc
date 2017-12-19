@@ -42,7 +42,7 @@
 #include <Core/Labels/MPMLabel.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <CCA/Components/MPM/MPMFlags.h>
+#include <CCA/Components/MPM/Core/MPMFlags.h>
 using namespace Uintah;
 
 NullContact::NullContact(const ProcessorGroup* myworld,

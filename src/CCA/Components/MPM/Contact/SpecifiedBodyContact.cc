@@ -24,7 +24,7 @@
 
 // SpecifiedBodyContact.cc
 #include <CCA/Components/MPM/Contact/SpecifiedBodyContact.h>
-#include <CCA/Components/MPM/MPMFlags.h>
+#include <CCA/Components/MPM/Core/MPMFlags.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Geometry/IntVector.h>

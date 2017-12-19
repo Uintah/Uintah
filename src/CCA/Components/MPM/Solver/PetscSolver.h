@@ -31,7 +31,7 @@
 #include <Core/Grid/Variables/Array3.h>
 #include <Core/Parallel/UintahMPI.h>
 
-#include <CCA/Components/MPM/Solver.h>
+#include <CCA/Components/MPM/Solver/Solver.h>
 
 #include <set>
 #include <map>

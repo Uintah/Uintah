@@ -25,7 +25,7 @@
 #ifndef UINTAH_CCA_COMPONENTS_MPM_PHYSICALBC_FLUXBCMODEL_H
 #define UINTAH_CCA_COMPONENTS_MPM_PHYSICALBC_FLUXBCMODEL_H
 
-#include <CCA/Components/MPM/MPMFlags.h>
+#include <CCA/Components/MPM/Core/MPMFlags.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Labels/MPMLabel.h>

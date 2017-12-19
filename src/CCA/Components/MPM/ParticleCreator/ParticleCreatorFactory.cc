@@ -26,7 +26,7 @@
 #include <CCA/Components/MPM/ParticleCreator/ImplicitParticleCreator.h>
 //#include <CCA/Components/MPM/ParticleCreator/MembraneParticleCreator.h>
 //#include <CCA/Components/MPM/ParticleCreator/ShellParticleCreator.h>
-#include <CCA/Components/MPM/MPMFlags.h>
+#include <CCA/Components/MPM/Core/MPMFlags.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Malloc/Allocator.h>
 #include <string>

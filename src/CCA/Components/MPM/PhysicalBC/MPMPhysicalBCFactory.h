@@ -28,7 +28,7 @@
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/Grid.h>
-#include <CCA/Components/MPM/MPMFlags.h>
+#include <CCA/Components/MPM/Core/MPMFlags.h>
 #include <vector>
 
 

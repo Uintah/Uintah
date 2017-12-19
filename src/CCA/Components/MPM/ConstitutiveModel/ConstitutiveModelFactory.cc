@@ -65,7 +65,7 @@
 //#include <CCA/Components/MPM/ConstitutiveModel/Biswajit/CamClay.h>
 #include <CCA/Components/MPM/ConstitutiveModel/RFElasticPlastic.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PortableTongeRamesh/TongeRameshPTR.h>
-#include <CCA/Components/MPM/MPMFlags.h>
+#include <CCA/Components/MPM/Core/MPMFlags.h>
 
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>

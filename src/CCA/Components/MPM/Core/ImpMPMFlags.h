@@ -25,7 +25,7 @@
 #ifndef __IMP_MPM_FLAGS_H__
 #define __IMP_MPM_FLAGS_H__
 
-#include <CCA/Components/MPM/MPMFlags.h>
+#include <CCA/Components/MPM/Core/MPMFlags.h>
 
 namespace Uintah {
 

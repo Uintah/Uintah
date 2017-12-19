@@ -24,7 +24,7 @@
 
 #include <CCA/Components/MPM/ConstitutiveModel/UCNH.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <CCA/Components/MPM/Solver.h>
+#include <CCA/Components/MPM/Solver/Solver.h>
 //#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/MPMEquationOfStateFactory.h>
 
 #include <CCA/Ports/DataWarehouse.h>

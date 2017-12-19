@@ -27,7 +27,7 @@
 
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/SchedulerP.h>
-#include <CCA/Components/MPM/MPMFlags.h>
+#include <CCA/Components/MPM/Core/MPMFlags.h>
 #include <CCA/Components/MPM/Contact/ContactMaterialSpec.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/SimulationStateP.h>

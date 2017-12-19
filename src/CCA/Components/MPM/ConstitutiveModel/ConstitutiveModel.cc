@@ -24,7 +24,7 @@
 
 #include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <CCA/Components/MPM/MPMFlags.h>
+#include <CCA/Components/MPM/Core/MPMFlags.h>
 #include <Core/Math/Matrix3.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Variables/ParticleVariable.h>

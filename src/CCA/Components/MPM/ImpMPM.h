@@ -33,9 +33,8 @@
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Labels/MPMLabel.h>
-#include <CCA/Components/MPM/ImpMPMFlags.h>
 #include <CCA/Components/MPM/MPMCommon.h>
-#include <CCA/Components/MPM/Solver.h>
+#include <CCA/Components/MPM/Solver/Solver.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <CCA/Ports/SwitchingCriteria.h>
 
@@ -46,6 +45,8 @@
 namespace Uintah {
 
  class DataWarehouse;
+ class ImpMPMFlags;
+ class ImpMPMLabel;
  class MPMLabel;
  class ProcessorGroup;
  class VarLabel;

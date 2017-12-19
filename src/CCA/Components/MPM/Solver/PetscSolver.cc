@@ -24,7 +24,7 @@
 
 //#define PETSC_USE_LOG
 
-#include <CCA/Components/MPM/PetscSolver.h>
+#include <CCA/Components/MPM/Solver/PetscSolver.h>
 #include <Core/Exceptions/UintahPetscError.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Grid/Patch.h>

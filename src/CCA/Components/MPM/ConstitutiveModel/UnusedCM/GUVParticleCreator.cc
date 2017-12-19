@@ -25,7 +25,7 @@
 #include <CCA/Components/MPM/ParticleCreator/GUVParticleCreator.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MPM/GeometrySpecification/GeometryObject.h>
-#include <CCA/Components/MPM/MPMFlags.h>
+#include <CCA/Components/MPM/Core/MPMFlags.h>
 #include <Core/Labels/MPMLabel.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Box.h>

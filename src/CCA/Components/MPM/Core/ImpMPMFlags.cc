@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/MPM/ImpMPMFlags.h>
+#include <CCA/Components/MPM/Core/ImpMPMFlags.h>
 #include <Core/Util/DebugStream.h>
 
 using namespace Uintah;
@@ -32,7 +32,6 @@ static DebugStream dbg("ImpMPMFlags", false);
 
 ImpMPMFlags::ImpMPMFlags(const ProcessorGroup* myworld) : MPMFlags(myworld)
 {
-
   d_conv_crit_disp   = 1.e-10;
   d_conv_crit_energy = 4.e-10;
   d_integrator = Implicit;

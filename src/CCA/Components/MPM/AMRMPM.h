@@ -26,7 +26,7 @@
 #define UINTAH_HOMEBREW_AMRMPM_H
 
 // make uintah CXX=/usr/bin/iwyu
-#include <CCA/Components/MPM/MPMFlags.h>      // for MPMFlags
+#include <CCA/Components/MPM/Core/MPMFlags.h>      // for MPMFlags
 #include <CCA/Components/MPM/SerialMPM.h>     // for SerialMPM, etc
 #include <CCA/Ports/SchedulerP.h>             // for SchedulerP
 #include <Core/Geometry/Vector.h>             // for Vector

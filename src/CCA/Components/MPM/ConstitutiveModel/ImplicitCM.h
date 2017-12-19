@@ -33,7 +33,7 @@
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Math/FastMatrix.h>
-#include <CCA/Components/MPM/MPMFlags.h>
+#include <CCA/Components/MPM/Core/MPMFlags.h>
 
 #include <vector>
 

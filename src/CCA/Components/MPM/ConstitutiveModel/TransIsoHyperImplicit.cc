@@ -24,7 +24,7 @@
 
 #include <CCA/Components/MPM/ConstitutiveModel/TransIsoHyperImplicit.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <CCA/Components/MPM/Solver.h>
+#include <CCA/Components/MPM/Solver/Solver.h>
 
 #include <CCA/Ports/DataWarehouse.h>
 

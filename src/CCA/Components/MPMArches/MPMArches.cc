@@ -34,7 +34,7 @@
 #include <CCA/Components/Arches/TurbulenceModel.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <CCA/Components/MPM/MPMBoundCond.h>
+#include <CCA/Components/MPM/Core/MPMBoundCond.h>
 #include <CCA/Components/MPM/ThermalContact/ThermalContact.h>
 #include <CCA/Components/MPMArches/CutCellInfo.h>
 #include <CCA/Components/MPMArches/CutCellInfoP.h>
