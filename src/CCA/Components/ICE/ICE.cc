@@ -236,8 +236,6 @@ ICE::~ICE()
   if(d_modelInfo){
     delete d_modelInfo;
   }
-
-  //  releasePort("solver");
 }
 
 bool ICE::restartableTimeSteps()
@@ -524,15 +522,19 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
     // Clean up the old models.
     m_modelMaker->clearModels();
 
-    m_modelMaker->makeModels(orig_or_restart_ps, prob_spec, grid, m_sharedState, isAMR());
+    m_modelMaker->makeModels(d_myworld, m_sharedState,
+			     orig_or_restart_ps, prob_spec);
+    
     d_models = m_modelMaker->getModels();
 
     d_modelSetup = scinew ICEModelSetup();
       
     // problem setup for each model  
     for(vector<ModelInterface*>::iterator iter = d_models.begin();
-       iter != d_models.end(); iter++){
-      (*iter)->problemSetup(grid, m_sharedState, d_modelSetup,isRestart);
+	                                  iter != d_models.end(); iter++){
+      ModelInterface* model = *iter;
+      model->setComponents( dynamic_cast<ApplicationInterface*>( this ) );
+      model->problemSetup(grid, d_modelSetup, isRestart);
       
       // An ICE model may adjust the output interval or the checkpoint
       // interval during a simulation.  For example in deflagration ->
@@ -781,11 +783,9 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
   // Models Initialization
   if(d_models.size() != 0){
     for(vector<ModelInterface*>::iterator iter = d_models.begin();
-       iter != d_models.end(); iter++){
+	                                  iter != d_models.end(); iter++){
       ModelInterface* model = *iter;
       model->scheduleInitialize(sched, level, d_modelInfo);
-      model->setRegridder( m_regridder );
-      model->setOutput( m_output );
     }
   }
   
@@ -796,7 +796,7 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
     for( iter  = d_analysisModules.begin();
          iter != d_analysisModules.end(); iter++){
       AnalysisModule* am = *iter;
-      am->scheduleInitialize( sched, level);
+      am->scheduleInitialize( sched, level );
     }
   }
  
@@ -847,16 +847,6 @@ void ICE::restartInitialize()
     }
   }
   
-  //__________________________________
-  // Models Initialization
-  if(d_models.size() != 0){
-    for(vector<ModelInterface*>::iterator iter = d_models.begin();
-       iter != d_models.end(); iter++){
-      ModelInterface* model = *iter;
-      model->setRegridder( m_regridder );
-      model->setOutput( m_output );
-    }
-  }  
   //__________________________________
   // ICE: Material specific flags
   int numMatls = m_sharedState->getNumICEMatls();
@@ -917,7 +907,7 @@ void ICE::scheduleComputeStableTimeStep(const LevelP& level,
   //  If model needs to further restrict the timestep
   if(d_models.size() != 0){
     for(vector<ModelInterface*>::iterator iter = d_models.begin();
-       iter != d_models.end(); iter++){
+	                                  iter != d_models.end(); iter++){
       ModelInterface* model = *iter;
       model->scheduleComputeStableTimeStep(sched, level, d_modelInfo);
     }
@@ -1127,9 +1117,9 @@ void ICE::scheduleComputeThermoTransportProperties(SchedulerP& sched,
   //  Each model *can* modify the properties
   if(d_models.size() != 0){
     for(vector<ModelInterface*>::iterator iter = d_models.begin();
-                                          iter != d_models.end(); iter++){
+	                                  iter != d_models.end(); iter++){
       ModelInterface* model = *iter;
-      if(model-> computesThermoTransportProps() ) {
+      if(model->computesThermoTransportProps() ) {
          model->scheduleModifyThermoTransportProperties(sched,level,ice_matls);
       } 
     }
@@ -1351,7 +1341,7 @@ void ICE::scheduleComputeModelSources(SchedulerP& sched,
     sched->addTask(task, level->eachPatch(), matls);
 
     for(vector<ModelInterface*>::iterator iter = d_models.begin();
-       iter != d_models.end(); iter++){
+	                                  iter != d_models.end(); iter++){
       ModelInterface* model = *iter;
       model->scheduleComputeModelSources(sched, level, d_modelInfo);
     }

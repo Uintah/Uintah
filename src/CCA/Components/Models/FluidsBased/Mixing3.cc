@@ -57,8 +57,10 @@
 using namespace Uintah;
 using namespace std;
 
-Mixing3::Mixing3(const ProcessorGroup* myworld, ProblemSpecP& params)
-  : ModelInterface(myworld), params(params)
+Mixing3::Mixing3(const ProcessorGroup* myworld,
+		 const SimulationStateP& sharedState,
+		 const ProblemSpecP& params)
+  : ModelInterface(myworld, sharedState), d_params(params)
 {
   mymatls = 0;
   gas = 0;

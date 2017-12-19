@@ -57,8 +57,10 @@
 using namespace Uintah;
 using namespace std;
 
-Mixing2::Mixing2(const ProcessorGroup* myworld, ProblemSpecP& params)
-  : ModelInterface(myworld), params(params)
+Mixing2::Mixing2(const ProcessorGroup* myworld,
+		 const SimulationStateP& sharedState,
+		 const ProblemSpecP& params)
+  : ModelInterface(myworld, sharedState), d_params(params)
 {
   mymatls = 0;
   gas = 0;
@@ -91,11 +93,10 @@ Mixing2::Region::Region(GeometryPiece* piece, ProblemSpecP& ps)
   ps->require("massFraction", initialMassFraction);
 }
 
-void Mixing2::problemSetup(GridP&, SimulationStateP& in_state,
+void Mixing2::problemSetup(GridP&,
                            ModelSetup* setup, const bool isRestart)
 {
-  sharedState = in_state;
-  matl = sharedState->parseAndLookupMaterial(params, "material");
+  matl = m_sharedState->parseAndLookupMaterial(d_params, "material");
 
   vector<int> m(1);
   m[0] = matl->getDWIndex();
@@ -105,9 +106,9 @@ void Mixing2::problemSetup(GridP&, SimulationStateP& in_state,
 
   // Parse the Cantera XML file
   string fname;
-  params->get("file", fname);
+  d_params->get("file", fname);
   string id;
-  params->get("id", id);
+  d_params->get("id", id);
   try {
     gas = scinew IdealGasMix(fname, id);
     int nsp = gas->nSpecies();
@@ -156,7 +157,7 @@ void Mixing2::problemSetup(GridP&, SimulationStateP& in_state,
   if(streams.size() == 0)
     throw ProblemSetupException("Mixing2 specified with no streams!", __FILE__, __LINE__);
 
-  for (ProblemSpecP child = params->findBlock("stream"); child != 0;
+  for (ProblemSpecP child = d_params->findBlock("stream"); child != 0;
        child = child->findNextBlock("stream")) {
     string name;
     child->getAttribute("name", name);
@@ -443,10 +444,10 @@ void Mixing2::computeModelSources(const ProcessorGroup*,
 #if 0
       {
         static ofstream outt("temp.dat");
-        outt << sharedState->getElapsedSimTime() << " " << temperature[IntVector(2,2,0)] << " " << temperature[IntVector(3,2,0)] << " " << temperature[IntVector(3,3,0)] << '\n';
+        outt << m_sharedState->getElapsedSimTime() << " " << temperature[IntVector(2,2,0)] << " " << temperature[IntVector(3,2,0)] << " " << temperature[IntVector(3,3,0)] << '\n';
         outt.flush();
         static ofstream outp("press.dat");
-        outp << sharedState->getElapsedSimTime() << " " << pressure[IntVector(2,2,0)] << " " << pressure[IntVector(3,2,0)] << " " << pressure[IntVector(3,3,0)] << '\n';
+        outp << m_sharedState->getElapsedSimTime() << " " << pressure[IntVector(2,2,0)] << " " << pressure[IntVector(3,2,0)] << " " << pressure[IntVector(3,3,0)] << '\n';
         outp.flush();
       }
 #endif

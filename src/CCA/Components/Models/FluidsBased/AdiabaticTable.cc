@@ -36,8 +36,11 @@
 #include <CCA/Components/Models/FluidsBased/TableFactory.h>
 #include <CCA/Components/Models/FluidsBased/TableInterface.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
+
+#include <CCA/Ports/Output.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/Regridder.h>
+
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Box.h>
@@ -54,8 +57,9 @@
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Math/MiscMath.h>
-#include <iostream>
 #include <Core/Util/DebugStream.h>
+
+#include <iostream>
 #include <cstdio>
 
 using namespace Uintah;
@@ -68,13 +72,14 @@ using namespace std;
 static DebugStream cout_doing("MODELS_DOING_COUT", false);
 static DebugStream cout_dbg("ADIABATIC_TABLE_DBG_COUT", false);
 
-//______________________________________________________________________              
+//______________________________________________________________________
 AdiabaticTable::AdiabaticTable(const ProcessorGroup* myworld, 
-                     ProblemSpecP& params,
-                     const bool doAMR)
-  : ModelInterface(myworld), params(params)
+			       const SimulationStateP& sharedState,
+			       const ProblemSpecP& params)
+  : ModelInterface(myworld, sharedState), d_params(params)
 {
-  d_doAMR = doAMR;
+  m_modelComputesThermoTransportProps = true;
+  
   d_scalar = 0;
   d_matl_set = 0;
   lb  = scinew ICELabel();
@@ -185,15 +190,13 @@ void AdiabaticTable::outputProblemSpec(ProblemSpecP& ps)
 
 //______________________________________________________________________
 //     P R O B L E M   S E T U P
-void AdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,
+void AdiabaticTable::problemSetup(GridP&,
                                   ModelSetup* setup, const bool isRestart)
 {
   cout_doing << "Doing problemSetup \t\t\t\tADIABATIC_TABLE" << endl;
 
-  d_sharedState = in_state;
-  
-  ProblemSpecP base_ps = params->findBlock("AdiabaticTable");
-  d_matl = d_sharedState->parseAndLookupMaterial(params, "material");
+  ProblemSpecP base_ps = d_params->findBlock("AdiabaticTable");
+  d_matl = m_sharedState->parseAndLookupMaterial(d_params, "material");
 
   vector<int> m(1);
   m[0] = d_matl->getDWIndex();
@@ -260,9 +263,6 @@ void AdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,
   d_scalar->sum_scalar_fLabel   = VarLabel::create("sum_scalar_f", 
                                             sum_vartype::getTypeDescription()); 
                                             
-                                            
-  d_modelComputesThermoTransportProps = true;
-  
   //__________________________________
   // Read in the constants for the scalar
   ProblemSpecP child = base_ps->findBlock("scalar");
@@ -299,7 +299,7 @@ void AdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,
 
   //__________________________________
   //  register the AMRrefluxing variables                               
-  if(d_doAMR){
+  if(m_AMR){
    setup->registerAMR_RefluxVariable(d_matl_set,
                                      d_scalar->scalar_CCLabel);
 
@@ -438,7 +438,7 @@ void AdiabaticTable::initialize(const ProcessorGroup*,
       }
     }
     
-    setBC(f,"scalar-f", patch, d_sharedState,indx, new_dw); 
+    setBC(f,"scalar-f", patch, m_sharedState,indx, new_dw); 
 
     //__________________________________
     // initialize other properties
@@ -495,7 +495,7 @@ void AdiabaticTable::initialize(const ProcessorGroup*,
       else
         eReleased[c] = temp[c] * cp - ref_temp[c] * icp;
     }
-    setBC(eReleased,"cumulativeEnergyReleased", patch, d_sharedState,indx, new_dw); 
+    setBC(eReleased,"cumulativeEnergyReleased", patch, m_sharedState,indx, new_dw); 
 
     //__________________________________
     //  Dump out a header for the probe point files
@@ -618,7 +618,7 @@ void AdiabaticTable::computeSpecificHeat(CCVariable<double>& cv_new,
   // refine_CFI tasks
   CellIterator iterator = patch->getExtraCellIterator();
   int levelIndex = patch->getLevel()->getIndex();
-  if(d_doAMR && levelIndex != 0){
+  if(m_AMR && levelIndex != 0){
     iterator = patch->getCellIterator();
   }
   
@@ -806,7 +806,7 @@ void AdiabaticTable::computeModelSources(const ProcessorGroup*,
       //__________________________________
       //  dump out the probe points
       if( d_usingProbePts ) {
-        double time = d_sharedState->getElapsedSimTime();
+        double time = m_sharedState->getElapsedSimTime();
         double nextDumpTime = oldProbeDumpTime + 1.0/d_probeFreq;
         
         if (time >= nextDumpTime){        // is it time to dump the points
@@ -978,7 +978,7 @@ void AdiabaticTable::scheduleErrorEstimate(const LevelP& coarseLevel,
   t->modifies(m_regridder->getRefineFlagLabel(),      m_regridder->refineFlagMaterials(), Task::OutOfDomain);
   t->modifies(m_regridder->getRefinePatchFlagLabel(), m_regridder->refineFlagMaterials(), Task::OutOfDomain);
   
-  sched->addTask(t, coarseLevel->eachPatch(), d_sharedState->allICEMaterials());
+  sched->addTask(t, coarseLevel->eachPatch(), m_sharedState->allICEMaterials());
 }
 /*_____________________________________________________________________
  Function~  AdiabaticTable::errorEstimate--

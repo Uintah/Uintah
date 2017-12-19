@@ -37,7 +37,6 @@
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MPM/Contact/FrictionContact.h>
-#include <CCA/Components/MPM/MPMBoundCond.h>
 #include <vector>
 #include <iostream>
 

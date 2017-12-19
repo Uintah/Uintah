@@ -69,10 +69,13 @@ WARNING
 
   class NonAdiabaticTable :public ModelInterface {
   public:
-    NonAdiabaticTable(const ProcessorGroup* myworld, ProblemSpecP& params);
+    NonAdiabaticTable(const ProcessorGroup* myworld,
+		      const SimulationStateP& sharedState,
+		      const ProblemSpecP& params);
+    
     virtual ~NonAdiabaticTable();
     
-    virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
+    virtual void problemSetup(GridP& grid,
                               ModelSetup* setup, const bool isRestart);
     
     virtual void scheduleInitialize(SchedulerP&,
@@ -136,7 +139,7 @@ WARNING
     NonAdiabaticTable(const NonAdiabaticTable&);
     NonAdiabaticTable& operator=(const NonAdiabaticTable&);
 
-    ProblemSpecP params;
+    ProblemSpecP d_params {nullptr};
 
     const Material* d_matl;
     MaterialSet* d_matl_set;
@@ -171,8 +174,6 @@ WARNING
     VarLabel* cumulativeEnergyReleased_CCLabel;
     VarLabel* cumulativeEnergyReleased_src_CCLabel;
     
-    SimulationStateP d_sharedState;
-    Output* dataArchiver;
     std::vector<Vector> d_probePts;
     std::vector<std::string> d_probePtsNames;
     bool d_usingProbePts;

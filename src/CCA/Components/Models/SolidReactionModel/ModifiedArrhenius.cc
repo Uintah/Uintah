@@ -22,13 +22,13 @@
  * IN THE SOFTWARE.
  */
 
-#include <cmath>
 #include <CCA/Components/Models/SolidReactionModel/ModifiedArrhenius.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+
+#include <cmath>
 
 using namespace Uintah;
 using namespace std;
-
-
 
 ModifiedArrhenius::ModifiedArrhenius(ProblemSpecP& params)
 {

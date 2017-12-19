@@ -65,9 +65,11 @@ namespace Uintah {
 
   class UintahParallelComponent;
   
+  class ProcessorGroup;;
   class ModelInterface;
-   class ModelMaker : public UintahParallelPort {
-   public:
+  
+  class ModelMaker : public UintahParallelPort {
+  public:
      ModelMaker();
      virtual ~ModelMaker();
            
@@ -77,14 +79,14 @@ namespace Uintah {
      virtual void releaseComponents() = 0;
     
      virtual std::vector<ModelInterface*> getModels() = 0;
-     virtual void clearModels() = 0;
+
+    virtual void clearModels() = 0;
      //////////
      // Insert Documentation Here:
-     virtual void makeModels(const ProblemSpecP& orig_or_restart_ps, 
-                             const ProblemSpecP& prob_spec,
-                             GridP& grid,
-                             SimulationStateP& sharedState,
-                             const bool doAMR) = 0;
+     virtual void makeModels(const ProcessorGroup   * myworld,
+			     const SimulationStateP   sharedState,
+			     const ProblemSpecP& orig_or_restart_ps, 
+                             const ProblemSpecP& prob_spec) = 0;
 
      virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
 

@@ -22,9 +22,11 @@
  * IN THE SOFTWARE.
  */
 
-#include <cmath>
 #include <CCA/Components/Models/SolidReactionModel/ProutTompkinsModel.h>
 #include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+
+#include <cmath>
 
 using namespace Uintah;
 using namespace std;

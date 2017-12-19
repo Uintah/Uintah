@@ -180,7 +180,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
                    SimulationStateP&   sharedState)
 {
 
-  d_sharedState = sharedState;
+  m_sharedState = sharedState;
   ProblemSpecP rmcrt_ps = rmcrtps;
   string rayDirSampleAlgo;
 
@@ -383,7 +383,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
 
 //   // Running with VisIt so add in the variables that the user can
 //   // modify.
-//   if( d_sharedState->getVisIt() && !initialized ) {
+//   if( m_sharedState->getVisIt() && !initialized ) {
 //     // variable 1 - Must start with the component name and have NO
 //     // spaces in the var name
 //     SimulationState::interactiveVar var;
@@ -395,7 +395,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
 //     var.modifiable = true;
 //     var.recompile  = false;
 //     var.modified   = false;
-//     d_sharedState->d_UPSVars.push_back( var );
+//     m_sharedState->d_UPSVars.push_back( var );
 
 //     // variable 2 - Must start with the component name and have NO
 //     // spaces in the var name
@@ -407,10 +407,10 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
 //     var.modifiable = true;
 //     var.recompile  = false;
 //     var.modified   = false;
-//     d_sharedState->d_UPSVars.push_back( var );
+//     m_sharedState->d_UPSVars.push_back( var );
     
-//     d_sharedState->d_douts.push_back( &g_ray_dbg );
-//     d_sharedState->d_douts.push_back( &dbg_BC_ray );
+//     m_sharedState->d_douts.push_back( &g_ray_dbg );
+//     m_sharedState->d_douts.push_back( &dbg_BC_ray );
 
 //     initialized = true;
 //   }

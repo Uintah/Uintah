@@ -62,12 +62,15 @@ WARNING
 
   class MassMomEng_src : public ModelInterface {
   public:
-    MassMomEng_src(const ProcessorGroup* myworld, ProblemSpecP& params);
+    MassMomEng_src(const ProcessorGroup* myworld,
+		   const SimulationStateP& sharedState,
+		   const ProblemSpecP& params);
+    
     virtual ~MassMomEng_src();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
 
-    virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
+    virtual void problemSetup(GridP& grid,
                               ModelSetup* setup, const bool isRestart);
       
     virtual void scheduleInitialize(SchedulerP&,
@@ -111,7 +114,7 @@ WARNING
     MassMomEng_src(const MassMomEng_src&);
     MassMomEng_src& operator=(const MassMomEng_src&);
 
-    ProblemSpecP params;
+    ProblemSpecP d_params;
     ICELabel* Ilb;
     MaterialSet* mymatls;
     Material* d_matl;
@@ -128,7 +131,6 @@ WARNING
     const VarLabel* totalMass_srcLabel;
     const VarLabel* totalMom_srcLabel;
     const VarLabel* totalEng_srcLabel;
-    SimulationStateP d_sharedState;
   };
 }
 

@@ -79,7 +79,7 @@ Radiometer::problemSetup( const ProblemSpecP& prob_spec,
                           SimulationStateP&   sharedState,
                           const bool getExtraInputs)
 {
-  d_sharedState = sharedState;
+  m_sharedState = sharedState;
   ProblemSpecP rad_ps = radps;
   Vector orient;
   rad_ps->getWithDefault( "VRViewAngle"    ,    d_viewAng,         180 );              // view angle of the radiometer in degrees

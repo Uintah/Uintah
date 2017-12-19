@@ -61,12 +61,15 @@ WARNING
 
   class LightTime : public ModelInterface {
   public:
-    LightTime(const ProcessorGroup* myworld, ProblemSpecP& params);
+    LightTime(const ProcessorGroup* myworld,
+	      const SimulationStateP& sharedState,
+	      const ProblemSpecP& params);
+    
     virtual ~LightTime();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
 
-    virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
+    virtual void problemSetup(GridP& grid,
                               ModelSetup* setup, const bool isRestart);
       
     virtual void scheduleInitialize(SchedulerP&,
@@ -125,10 +128,9 @@ WARNING
     const VarLabel* mag_grad_Fr_Label;   
     const VarLabel* delFLabel;
 
-    ProblemSpecP params;
+    ProblemSpecP d_params;
     const Material* matl0;
     const Material* matl1;
-    SimulationStateP d_sharedState;   
 
     ICELabel* Ilb;
     MaterialSet* mymatls;

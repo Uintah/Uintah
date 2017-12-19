@@ -62,12 +62,15 @@ WARNING
 
   class IandG : public ModelInterface {
   public:
-    IandG(const ProcessorGroup* myworld, ProblemSpecP& params);
+    IandG(const ProcessorGroup* myworld,
+	  const SimulationStateP& sharedState,
+	  const ProblemSpecP& params);
+    
     virtual ~IandG();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
 
-    virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
+    virtual void problemSetup(GridP& grid,
                               ModelSetup* setup, const bool isRestart);
       
     virtual void scheduleInitialize(SchedulerP&,
@@ -103,9 +106,9 @@ WARNING
   private:    
     void computeModelSources(const ProcessorGroup*, 
                              const PatchSubset* patches,
-                               const MaterialSubset* matls, 
+			     const MaterialSubset* matls, 
                              DataWarehouse*, 
-                               DataWarehouse* new_dw, 
+			     DataWarehouse* new_dw, 
                              const ModelInfo*);
 
     IandG(const IandG&);
@@ -116,10 +119,9 @@ WARNING
     const VarLabel* IandGterm2Label;   // diagnostic labels
     const VarLabel* IandGterm3Label;   // diagnostic labels
 
-    ProblemSpecP params;
+    ProblemSpecP d_params;
     const Material* matl0;
     const Material* matl1;
-    SimulationStateP d_sharedState;   
 
     ICELabel* Ilb;
     MaterialSet* mymatls;

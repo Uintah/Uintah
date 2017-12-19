@@ -41,8 +41,11 @@
 using namespace Uintah;
 using namespace std;
 
-TestModel::TestModel(const ProcessorGroup* myworld, ProblemSpecP& params)
-  : ModelInterface(myworld), params(params)
+TestModel::TestModel(const ProcessorGroup* myworld,
+		     const SimulationStateP& sharedState,
+		     const ProblemSpecP& params)
+  
+  : ModelInterface(myworld, sharedState), d_params(params)
 {
   mymatls = 0;
   MIlb  = scinew MPMICELabel();
@@ -66,17 +69,15 @@ TestModel::~TestModel()
 
 
 //______________________________________________________________________
-void TestModel::problemSetup(GridP&, SimulationStateP& sharedState,
-                             ModelSetup*, const bool isRestart )
+void TestModel::problemSetup(GridP&, ModelSetup*, const bool isRestart )
 {
-  d_sharedState = sharedState;
-  ProblemSpecP test_ps = params->findBlock("Test");
+  ProblemSpecP test_ps = d_params->findBlock("Test");
   if (!test_ps){
      throw ProblemSetupException("TestModel: Couldn't find <Test> tag", __FILE__, __LINE__);    
   }
   
-  matl0 = sharedState->parseAndLookupMaterial(test_ps, "fromMaterial");
-  matl1 = sharedState->parseAndLookupMaterial(test_ps, "toMaterial");
+  matl0 = m_sharedState->parseAndLookupMaterial(test_ps, "fromMaterial");
+  matl1 = m_sharedState->parseAndLookupMaterial(test_ps, "toMaterial");
   
   test_ps->require("rate", d_rate);
   test_ps->getWithDefault("startTime",   d_startTime, 0.0);
@@ -89,7 +90,7 @@ void TestModel::problemSetup(GridP&, SimulationStateP& sharedState,
   mymatls->addReference();
  
   // What flavor of matl it is.
-  Material* matl = sharedState->getMaterial( m[0] );
+  Material* matl = m_sharedState->getMaterial( m[0] );
   ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
   MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
   if (mpm_matl){
@@ -254,7 +255,7 @@ void TestModel::computeModelSources(const ProcessorGroup*,
     //__________________________________
     //  Do some work
     
-    double t  = d_sharedState->getElapsedSimTime();
+    double t  = m_sharedState->getElapsedSimTime();
     if (t >= d_startTime){
       for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
         IntVector c = *iter;

@@ -24,6 +24,8 @@
 
 #include <CCA/Components/MPM/ConstitutiveModel/ViscoScramImplicit.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Components/MPM/Solver.h>
+
 #include <Core/Math/Matrix3.h>
 #include <Core/Grid/Patch.h>
 #include <CCA/Ports/DataWarehouse.h>

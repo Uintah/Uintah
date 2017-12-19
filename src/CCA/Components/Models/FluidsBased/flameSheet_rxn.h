@@ -69,12 +69,15 @@ WARNING
   class ICELabel;
   class flameSheet_rxn : public ModelInterface {
   public:
-    flameSheet_rxn(const ProcessorGroup* myworld, ProblemSpecP& params);
+    flameSheet_rxn(const ProcessorGroup* myworld,
+		   const SimulationStateP& sharedState,
+		   const ProblemSpecP& params);
+    
     virtual ~flameSheet_rxn();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
     
-    virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
+    virtual void problemSetup(GridP& grid,
                               ModelSetup* setup, const bool isRestart);
     
     virtual void scheduleInitialize(SchedulerP&,
@@ -133,7 +136,7 @@ WARNING
     flameSheet_rxn(const flameSheet_rxn&);
     flameSheet_rxn& operator=(const flameSheet_rxn&);
 
-    ProblemSpecP params;
+    ProblemSpecP d_params;
 
     const Material* d_matl;
     MaterialSet* d_matl_set;
@@ -165,7 +168,6 @@ WARNING
     double d_diffusivity;
     int  d_smear_initialDistribution_knob;
     bool d_test_conservation;
-    SimulationStateP d_sharedState;
   };
 }
 

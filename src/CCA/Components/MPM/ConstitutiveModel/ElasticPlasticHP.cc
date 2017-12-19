@@ -43,8 +43,11 @@
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DeformationState.h>
 
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Core/Grid/Patch.h>
+#include <CCA/Components/MPM/Solver.h>
+
 #include <CCA/Ports/DataWarehouse.h>
+
+#include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/Task.h>

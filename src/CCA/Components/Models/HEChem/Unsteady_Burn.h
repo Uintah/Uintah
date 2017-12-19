@@ -67,13 +67,16 @@ WARNING
 
   class Unsteady_Burn : public ModelInterface {
   public:
-    Unsteady_Burn(const ProcessorGroup* myworld, ProblemSpecP& params,
+    Unsteady_Burn(const ProcessorGroup* myworld,
+		  const SimulationStateP& sharedState,
+		  const ProblemSpecP& params,
                   const ProblemSpecP& prob_spec);
+    
     virtual ~Unsteady_Burn();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
     
-    virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
+    virtual void problemSetup(GridP& grid,
                               ModelSetup* setup, const bool isRestart);
     
     virtual void scheduleInitialize(SchedulerP&,
@@ -135,7 +138,6 @@ WARNING
     ProblemSpecP d_prob_spec;
     const Material* matl0;
     const Material* matl1;
-    SimulationStateP d_sharedState;   
     
     MPMICELabel* MIlb;
     ICELabel* Ilb;

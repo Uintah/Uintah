@@ -27,7 +27,10 @@
 #include <CCA/Components/ICE/BoundaryCond.h>
 #include <CCA/Components/ICE/Diffusion.h>
 #include <CCA/Components/Models/FluidsBased/SimpleRxn.h>
+
+#include <CCA/Ports/Output.h>
 #include <CCA/Ports/Scheduler.h>
+
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/CellIterator.h>
@@ -52,11 +55,14 @@ using namespace std;
 //  SIMPLE_RXN_DBG:  dumps out during problemSetup 
 static DebugStream cout_doing("MODELS_DOING_COUT", false);
 static DebugStream cout_dbg("SIMPLE_RXN_DBG_COUT", false);
-//______________________________________________________________________              
+//______________________________________________________________________
 SimpleRxn::SimpleRxn(const ProcessorGroup* myworld, 
-                     ProblemSpecP& params)
-  : ModelInterface(myworld), params(params)
+		     const SimulationStateP & sharedState,
+                     const ProblemSpecP& params)
+  : ModelInterface(myworld, sharedState), d_params(params)
 {
+  m_modelComputesThermoTransportProps = true;
+  
   d_matl_set = 0;
   lb  = scinew ICELabel();
   Slb = scinew SimpleRxnLabel();
@@ -99,13 +105,11 @@ SimpleRxn::Region::Region(GeometryPieceP piece, ProblemSpecP& ps)
 //______________________________________________________________________
 //     P R O B L E M   S E T U P
 void
-SimpleRxn::problemSetup( GridP &,
-                         SimulationStateP & shared_state,
-                         ModelSetup       * setup, const bool isRestart )
+SimpleRxn::problemSetup( GridP &, ModelSetup * setup, const bool isRestart )
 {
   cout_doing << "Doing problemSetup \t\t\t\tSIMPLE_RXN" << endl;
-  d_sharedState = shared_state;
-  d_matl = d_sharedState->parseAndLookupMaterial(params, "material");
+
+  d_matl = m_sharedState->parseAndLookupMaterial(d_params, "material");
 
   vector<int> m(1);
   m[0] = d_matl->getDWIndex();
@@ -130,16 +134,14 @@ SimpleRxn::problemSetup( GridP &,
   Slb->lastProbeDumpTimeLabel =  VarLabel::create("lastProbeDumpTime", 
                                             max_vartype::getTypeDescription());
   Slb->sum_scalar_fLabel      =  VarLabel::create("sum_scalar_f", 
-                                            sum_vartype::getTypeDescription());                         
-  
-  d_modelComputesThermoTransportProps = true;
+                                            sum_vartype::getTypeDescription());
   
   setup->registerTransportedVariable(d_matl_set,
                                      d_scalar->scalar_CCLabel,
                                      d_scalar->scalar_source_CCLabel);  
   //__________________________________
   // Read in the constants for the scalar
-   ProblemSpecP child = params->findBlock("SimpleRxn")->findBlock("scalar");
+   ProblemSpecP child = d_params->findBlock("SimpleRxn")->findBlock("scalar");
    if (!child){
      throw ProblemSetupException("SimpleRxn: Couldn't find (SimpleRxn) or (scalar) tag", __FILE__, __LINE__);    
    }
@@ -308,7 +310,7 @@ void SimpleRxn::initialize(const ProcessorGroup*,
                               f, FakeDiffusivity, fakedelT);
     }
         
-    setBC( f, "scalar-f", patch, d_sharedState, indx, new_dw );
+    setBC( f, "scalar-f", patch, m_sharedState, indx, new_dw );
     
     //__________________________________
     // compute thermo-transport-physical quantities
@@ -569,7 +571,7 @@ void SimpleRxn::computeModelSources(const ProcessorGroup*,
       old_dw->get(lastDumpTime, Slb->lastProbeDumpTimeLabel);
       double oldProbeDumpTime = lastDumpTime;
       
-      double time = d_sharedState->getElapsedSimTime();
+      double time = m_sharedState->getElapsedSimTime();
       double nextDumpTime = oldProbeDumpTime + 1.0/d_probeFreq;
       
       if (time >= nextDumpTime){        // is it time to dump the points

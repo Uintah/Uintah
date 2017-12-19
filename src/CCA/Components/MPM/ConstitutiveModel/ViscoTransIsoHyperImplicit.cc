@@ -23,8 +23,12 @@
  */
 
 #include <CCA/Components/MPM/ConstitutiveModel/ViscoTransIsoHyperImplicit.h>
-#include <Core/Grid/Patch.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Components/MPM/Solver.h>
+
 #include <CCA/Ports/DataWarehouse.h>
+
+#include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/Task.h>
@@ -34,7 +38,6 @@
 #include <Core/Labels/MPMLabel.h>
 #include <Core/Math/Matrix3.h>
 #include <Core/Math/TangentModulusTensor.h> //added this for stiffness
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Malloc/Allocator.h>
 //#include <iostream>

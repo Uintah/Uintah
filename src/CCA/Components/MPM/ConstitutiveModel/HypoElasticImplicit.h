@@ -42,9 +42,11 @@
 #include <Core/Math/Matrix3.h>
 #include <vector>
 #include <Core/Disclosure/TypeDescription.h>
-#include <CCA/Components/MPM/Solver.h>
 
 namespace Uintah {
+
+  class Solver;
+  
       class HypoElasticImplicit : public ConstitutiveModel, public ImplicitCM {
       private:
          // Create datatype for storing model parameters

@@ -61,14 +61,16 @@ WARNING
 
   class ZeroOrder : public ModelInterface {
   public:
-    ZeroOrder(const ProcessorGroup* myworld, ProblemSpecP& params,
-          const ProblemSpecP& prob_spec);
+    ZeroOrder(const ProcessorGroup* myworld,
+	      const SimulationStateP& sharedState,
+	      const ProblemSpecP& params,
+	      const ProblemSpecP& prob_spec);
 
     virtual ~ZeroOrder();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
 
-    virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
+    virtual void problemSetup(GridP& grid,
                               ModelSetup* setup, const bool isRestart);
       
     virtual void scheduleInitialize(SchedulerP&,
@@ -122,7 +124,6 @@ WARNING
     ProblemSpecP d_prob_spec;
     const Material* matl0;
     const Material* matl1;
-    SimulationStateP d_sharedState;   
 
     ICELabel* Ilb;
     MaterialSet* mymatls;

@@ -36,8 +36,10 @@
 using namespace Uintah;
 using namespace std;
 
-MassMomEng_src::MassMomEng_src(const ProcessorGroup* myworld, ProblemSpecP& params)
-  : ModelInterface(myworld), params(params)
+MassMomEng_src::MassMomEng_src(const ProcessorGroup* myworld,
+			       const SimulationStateP& sharedState,
+			       const ProblemSpecP& params)
+  : ModelInterface(myworld, sharedState), d_params(params)
 {
   mymatls = 0;
   Ilb  = scinew ICELabel();
@@ -66,12 +68,12 @@ MassMomEng_src::~MassMomEng_src()
 }
 
 //______________________________________________________________________
-void MassMomEng_src::problemSetup(GridP&, SimulationStateP& sharedState,
+void MassMomEng_src::problemSetup(GridP&,
                                   ModelSetup*, const bool isRestart )
 {
-  d_sharedState = sharedState;
-  ProblemSpecP src_ps = params->findBlock("MassMomEng_src");
-  d_matl = sharedState->parseAndLookupMaterial(src_ps, "material");
+  ProblemSpecP src_ps = d_params->findBlock("MassMomEng_src");
+  d_matl = m_sharedState->parseAndLookupMaterial(src_ps, "material");
+
   src_ps->require("momentum_src", d_src->mom_src_rate);
   src_ps->require("mass_src",     d_src->mass_src_rate);
   src_ps->require("energy_src",   d_src->eng_src_rate);
@@ -162,7 +164,7 @@ void MassMomEng_src::computeModelSources(const ProcessorGroup*,
   double totalEng_src = 0.0;
   Vector totalMom_src(0,0,0);
 
-  double time = d_sharedState->getElapsedSimTime();
+  double time = m_sharedState->getElapsedSimTime();
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);  

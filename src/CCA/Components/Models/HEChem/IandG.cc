@@ -43,8 +43,10 @@ using namespace std;
 //  MODELS_DOING_COUT:   dumps when tasks are scheduled and performed
 static DebugStream cout_doing("MODELS_DOING_COUT", false);
 
-IandG::IandG(const ProcessorGroup* myworld, ProblemSpecP& params)
-  : ModelInterface(myworld), params(params)
+IandG::IandG(const ProcessorGroup* myworld,
+	     const SimulationStateP& sharedState,
+	     const ProblemSpecP& params)
+  : ModelInterface(myworld, sharedState), d_params(params)
 {
   mymatls = 0;
   Ilb  = scinew ICELabel();
@@ -75,13 +77,13 @@ IandG::~IandG()
     delete mymatls;
 }
 
-void IandG::problemSetup(GridP&, SimulationStateP& sharedState,
-                             ModelSetup*, const bool isRestart)
+void IandG::problemSetup(GridP&,
+			 ModelSetup*, const bool isRestart)
 {
-  ProblemSpecP IG_ps = params->findBlock("IandG");
-  d_sharedState = sharedState;
-  matl0 = sharedState->parseAndLookupMaterial(IG_ps, "fromMaterial");
-  matl1 = sharedState->parseAndLookupMaterial(IG_ps, "toMaterial");
+  ProblemSpecP IG_ps = d_params->findBlock("IandG");
+
+  matl0 = m_sharedState->parseAndLookupMaterial(IG_ps, "fromMaterial");
+  matl1 = m_sharedState->parseAndLookupMaterial(IG_ps, "toMaterial");
   IG_ps->require("I",  d_I);
   IG_ps->require("G1", d_G1);
   IG_ps->require("G2", d_G2);
@@ -327,12 +329,12 @@ void IandG::computeModelSources(const ProcessorGroup*,
 
     //__________________________________
     //  set symetric BC
-    setBC(mass_src_0, "set_if_sym_BC",patch, d_sharedState, m0, new_dw);
-    setBC(mass_src_1, "set_if_sym_BC",patch, d_sharedState, m1, new_dw);
-    setBC(term1, "set_if_sym_BC",patch, d_sharedState, m0, new_dw);
-    setBC(term2, "set_if_sym_BC",patch, d_sharedState, m0, new_dw);
-    setBC(term3, "set_if_sym_BC",patch, d_sharedState, m0, new_dw);
-    setBC(Fr,    "set_if_sym_BC",patch, d_sharedState, m0, new_dw);
+    setBC(mass_src_0, "set_if_sym_BC",patch, m_sharedState, m0, new_dw);
+    setBC(mass_src_1, "set_if_sym_BC",patch, m_sharedState, m1, new_dw);
+    setBC(term1, "set_if_sym_BC",patch, m_sharedState, m0, new_dw);
+    setBC(term2, "set_if_sym_BC",patch, m_sharedState, m0, new_dw);
+    setBC(term3, "set_if_sym_BC",patch, m_sharedState, m0, new_dw);
+    setBC(Fr,    "set_if_sym_BC",patch, m_sharedState, m0, new_dw);
   }
 }
 //______________________________________________________________________

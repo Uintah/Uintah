@@ -47,9 +47,11 @@ using namespace std;
 static DebugStream cout_doing("MODELS_DOING_COUT", false);
 
 ZeroOrder::ZeroOrder(const ProcessorGroup* myworld, 
-                     ProblemSpecP& params,
+		     const SimulationStateP& sharedState,
+                     const ProblemSpecP& params,
                      const ProblemSpecP& prob_spec)
-  : ModelInterface(myworld), d_params(params), d_prob_spec(prob_spec)
+  : ModelInterface(myworld, sharedState),
+    d_params(params), d_prob_spec(prob_spec)
 {
   mymatls = 0;
   Ilb  = scinew ICELabel();
@@ -84,9 +86,9 @@ ZeroOrder::~ZeroOrder()
 }
 //______________________________________________________________________
 //
-void ZeroOrder::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup*, const bool isRestart)
+void ZeroOrder::problemSetup(GridP&,
+			     ModelSetup*, const bool isRestart)
 {
-  d_sharedState = sharedState;
   ProblemSpecP ZO_ps = d_params->findBlock("ZeroOrder");
   ZO_ps->getWithDefault("ThresholdVolFrac",d_threshold_volFrac, 0.01);
   
@@ -113,8 +115,8 @@ void ZeroOrder::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup*,
     }
   }
   
-  matl0 = sharedState->parseAndLookupMaterial(ZO_ps, "fromMaterial");
-  matl1 = sharedState->parseAndLookupMaterial(ZO_ps, "toMaterial");
+  matl0 = m_sharedState->parseAndLookupMaterial(ZO_ps, "fromMaterial");
+  matl1 = m_sharedState->parseAndLookupMaterial(ZO_ps, "toMaterial");
 
   //__________________________________
   //  define the materialSet
@@ -285,8 +287,8 @@ void ZeroOrder::computeModelSources(const ProcessorGroup*,
 
     // Get the specific heat, this is the value from the input file
     double cv_rct = -1.0; 
-    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial *>(d_sharedState->getMaterial(m0));
-    ICEMaterial* ice_matl = dynamic_cast<ICEMaterial *>(d_sharedState->getMaterial(m0));
+    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial *>(m_sharedState->getMaterial(m0));
+    ICEMaterial* ice_matl = dynamic_cast<ICEMaterial *>(m_sharedState->getMaterial(m0));
     if(mpm_matl) {
       cv_rct = mpm_matl->getSpecificHeat();
     } else if(ice_matl){
@@ -335,10 +337,10 @@ void ZeroOrder::computeModelSources(const ProcessorGroup*,
 
     //__________________________________
     //  set symetric BC
-    setBC(mass_src_0, "set_if_sym_BC",patch, d_sharedState, m0, new_dw);
-    setBC(mass_src_1, "set_if_sym_BC",patch, d_sharedState, m1, new_dw);
-    setBC(delF,       "set_if_sym_BC",patch, d_sharedState, m0, new_dw);
-    setBC(Fr,         "set_if_sym_BC",patch, d_sharedState, m0, new_dw);
+    setBC(mass_src_0, "set_if_sym_BC",patch, m_sharedState, m0, new_dw);
+    setBC(mass_src_1, "set_if_sym_BC",patch, m_sharedState, m1, new_dw);
+    setBC(delF,       "set_if_sym_BC",patch, m_sharedState, m0, new_dw);
+    setBC(Fr,         "set_if_sym_BC",patch, m_sharedState, m0, new_dw);
   }
   //__________________________________
   //save total quantities

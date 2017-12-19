@@ -24,11 +24,14 @@
 
 #include <CCA/Components/MPM/ConstitutiveModel/ImplicitCM.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Core/Math/Matrix3.h>
+#include <CCA/Components/MPM/Solver.h>
 #include <CCA/Ports/DataWarehouse.h>
+
+#include <Core/Math/Matrix3.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Labels/MPMLabel.h>
 #include <Core/Malloc/Allocator.h>
+
 //#include <iostream>
 
 using namespace Uintah;

@@ -53,9 +53,11 @@ using namespace std;
 static DebugStream cout_doing("MODELS_DOING_COUT", false);
 
 Simple_Burn::Simple_Burn(const ProcessorGroup* myworld, 
+			 const SimulationStateP& sharedState,
                          const ProblemSpecP& params,
                          const ProblemSpecP& prob_spec)
-  : ModelInterface(myworld), d_params(params), d_prob_spec(prob_spec)
+  : ModelInterface(myworld, sharedState),
+    d_params(params), d_prob_spec(prob_spec)
 {
   mymatls = 0;
   Mlb  = scinew MPMLabel();
@@ -97,17 +99,15 @@ Simple_Burn::~Simple_Burn()
 }
 //______________________________________________________________________
 //
-void Simple_Burn::problemSetup(GridP&, SimulationStateP& sharedState,
+void Simple_Burn::problemSetup(GridP&,
                                ModelSetup*, const bool isRestart)
 {
-  d_sharedState = sharedState;
-  
   ProblemSpecP SB_ps = d_params->findBlock("Simple_Burn");
   SB_ps->require("ThresholdTemp",    d_thresholdTemp);
   SB_ps->require("ThresholdPressure",d_thresholdPress);
   
-  matl0 = sharedState->parseAndLookupMaterial(SB_ps, "fromMaterial");
-  matl1 = sharedState->parseAndLookupMaterial(SB_ps, "toMaterial");
+  matl0 = m_sharedState->parseAndLookupMaterial(SB_ps, "fromMaterial");
+  matl1 = m_sharedState->parseAndLookupMaterial(SB_ps, "toMaterial");
   
   SB_ps->require("Enthalpy",         d_Enthalpy);
   SB_ps->require("BurnCoeff",        d_BurnCoeff);
@@ -199,7 +199,7 @@ void Simple_Burn::scheduleComputeModelSources(SchedulerP& sched,
 
   // Used for getting temperature and volume fraction for all materials for
   //  for burning criteria
-  const MaterialSet* all_matls = d_sharedState->allMaterials();
+  const MaterialSet* all_matls = m_sharedState->allMaterials();
   const MaterialSubset* all_matls_sub = all_matls->getUnion();  
   Task::MaterialDomainSpec oms = Task::OutOfDomain;  //outside of mymatl set.
   t->requires(Task::OldDW, Ilb->temp_CCLabel,      all_matls_sub, oms, gac,1);
@@ -322,16 +322,16 @@ void Simple_Burn::computeModelSources(const ProcessorGroup*,
  
     IntVector nodeIdx[8];
     
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m0);
+    MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial(m0);
     double cv_solid = mpm_matl->getSpecificHeat();
    
 
     // Get all Temperatures for burning check
-    int numAllMatls = d_sharedState->getNumMatls();
+    int numAllMatls = m_sharedState->getNumMatls();
     std::vector<constCCVariable<double> >  vol_frac_CC(numAllMatls);
     std::vector<constCCVariable<double> >  temp_CC(numAllMatls);
     for (int m = 0; m < numAllMatls; m++) {
-      Material* matl = d_sharedState->getMaterial(m);
+      Material* matl = m_sharedState->getMaterial(m);
       int indx = matl->getDWIndex();
       old_dw->get(temp_CC[m],       MIlb->temp_CCLabel,    indx, patch, gac, 1);
       new_dw->get(vol_frac_CC[m],   Ilb->vol_frac_CCLabel, indx, patch, gac, 1);
@@ -416,8 +416,8 @@ void Simple_Burn::computeModelSources(const ProcessorGroup*,
 
     //__________________________________
     //  set symetric BC
-    setBC(mass_src_0, "set_if_sym_BC",patch, d_sharedState, m0, new_dw);
-    setBC(mass_src_1, "set_if_sym_BC",patch, d_sharedState, m1, new_dw);
+    setBC(mass_src_0, "set_if_sym_BC",patch, m_sharedState, m0, new_dw);
+    setBC(mass_src_1, "set_if_sym_BC",patch, m_sharedState, m1, new_dw);
    
   }
   //__________________________________

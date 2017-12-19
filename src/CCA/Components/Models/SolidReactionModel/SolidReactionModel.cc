@@ -22,20 +22,23 @@
  * IN THE SOFTWARE.
  */
 #include <CCA/Components/Models/SolidReactionModel/SolidReactionModel.h>
+
+#include <CCA/Components/ICE/ICEMaterial.h>
+#include <CCA/Components/ICE/BoundaryCond.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+
+#include <CCA/Ports/Output.h>
 #include <CCA/Ports/Scheduler.h>
-#include <Core/ProblemSpec/ProblemSpec.h>
+
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Material.h>
-#include <CCA/Components/ICE/ICEMaterial.h>
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Labels/ICELabel.h>
-#include <CCA/Components/ICE/BoundaryCond.h>
-#include <iostream>
+#include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Util/DebugStream.h>
 
 // Rate Models
@@ -51,6 +54,8 @@
 #include <CCA/Components/Models/SolidReactionModel/Arrhenius.h>
 #include <CCA/Components/Models/SolidReactionModel/ModifiedArrhenius.h>
 
+#include <iostream>
+
 using namespace Uintah;
 using namespace std;
 //__________________________________
@@ -58,9 +63,12 @@ using namespace std;
 //  MODELS_DOING_COUT:   dumps when tasks are scheduled and performed
 static DebugStream cout_doing("MODELS_DOING_COUT", false);
 
-SolidReactionModel::SolidReactionModel(const ProcessorGroup* myworld, ProblemSpecP& params,
+SolidReactionModel::SolidReactionModel(const ProcessorGroup* myworld,
+				       const SimulationStateP& sharedState,
+				       const ProblemSpecP& params,
                                        const ProblemSpecP& prob_spec)
-   : ModelInterface(myworld), d_params(params), d_prob_spec(prob_spec)
+  : ModelInterface(myworld, sharedState),
+    d_params(params), d_prob_spec(prob_spec)
 {
     mymatls = 0;
     Ilb  = scinew ICELabel();
@@ -108,11 +116,9 @@ void SolidReactionModel::outputProblemSpec(ProblemSpecP& ps)
     rateModel->outputProblemSpec(model_ps); 
 }
 
-void SolidReactionModel::problemSetup(GridP& grid,SimulationStateP& sharedState,
+void SolidReactionModel::problemSetup(GridP& grid,
                                       ModelSetup* setup, const bool isRestart)
 {  
-    d_sharedState = sharedState;
-
     // Get base includes
     d_params->require("fromMaterial",fromMaterial);
     d_params->require("toMaterial",  toMaterial);
@@ -169,8 +175,8 @@ void SolidReactionModel::problemSetup(GridP& grid,SimulationStateP& sharedState,
       }
     }
 
-    reactant = sharedState->parseAndLookupMaterial(d_params, "fromMaterial");
-    product  = sharedState->parseAndLookupMaterial(d_params, "toMaterial");
+    reactant = m_sharedState->parseAndLookupMaterial(d_params, "fromMaterial");
+    product  = m_sharedState->parseAndLookupMaterial(d_params, "toMaterial");
 
     //__________________________________
     //  define the materialSet
@@ -319,8 +325,8 @@ void SolidReactionModel::computeModelSources(const ProcessorGroup*,
 
         // Get the specific heat, this is the value from the input file
         double cv_rct = -1.0;
-        MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial *>(d_sharedState->getMaterial(m0));
-        ICEMaterial* ice_matl = dynamic_cast<ICEMaterial *>(d_sharedState->getMaterial(m0));
+        MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial *>(m_sharedState->getMaterial(m0));
+        ICEMaterial* ice_matl = dynamic_cast<ICEMaterial *>(m_sharedState->getMaterial(m0));
         if(mpm_matl) {
             cv_rct = mpm_matl->getSpecificHeat();
         } else if(ice_matl){
@@ -363,10 +369,10 @@ void SolidReactionModel::computeModelSources(const ProcessorGroup*,
 
         //__________________________________
         //  set symetric BC
-        setBC(mass_src_0, "set_if_sym_BC",patch, d_sharedState, m0, new_dw);
-        setBC(mass_src_1, "set_if_sym_BC",patch, d_sharedState, m1, new_dw);
-        setBC(delF,       "set_if_sym_BC",patch, d_sharedState, m0, new_dw);
-        setBC(Fr,         "set_if_sym_BC",patch, d_sharedState, m0, new_dw);
+        setBC(mass_src_0, "set_if_sym_BC",patch, m_sharedState, m0, new_dw);
+        setBC(mass_src_1, "set_if_sym_BC",patch, m_sharedState, m1, new_dw);
+        setBC(delF,       "set_if_sym_BC",patch, m_sharedState, m0, new_dw);
+        setBC(Fr,         "set_if_sym_BC",patch, m_sharedState, m0, new_dw);
     }
     //__________________________________
     //save total quantities

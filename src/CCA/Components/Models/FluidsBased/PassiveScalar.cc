@@ -55,13 +55,14 @@ using namespace std;
 //  PASSIVE_SCALAR_DBG:  dumps out during problemSetup 
 static DebugStream cout_doing("MODELS_DOING_COUT", false);
 static DebugStream cout_dbg("PASSIVE_SCALAR_DBG_COUT", false);
-//______________________________________________________________________              
+//______________________________________________________________________
 PassiveScalar::PassiveScalar(const ProcessorGroup* myworld, 
-                             ProblemSpecP& params,
-                             const bool doAMR)
-  : ModelInterface(myworld), params(params)
+			     const SimulationStateP& sharedState,
+                             const ProblemSpecP& params)
+  : ModelInterface(myworld, sharedState), d_params(params)
 {
-  d_doAMR = doAMR;
+  m_modelComputesThermoTransportProps = true;
+  
   d_matl_set = 0;
   lb  = scinew ICELabel();
   Slb = scinew PassiveScalarLabel();
@@ -144,15 +145,13 @@ PassiveScalar::interiorRegion::interiorRegion(GeometryPieceP piece, ProblemSpecP
 
 //______________________________________________________________________
 //     P R O B L E M   S E T U P
-void PassiveScalar::problemSetup(GridP&, SimulationStateP& in_state,
-                        ModelSetup* setup, const bool isRestart)
+void PassiveScalar::problemSetup(GridP&,
+				 ModelSetup* setup, const bool isRestart)
 {
   cout_doing << "Doing problemSetup \t\t\t\tPASSIVE_SCALAR" << endl;
 
-  d_sharedState = in_state;
-  
-  ProblemSpecP PS_ps = params->findBlock("PassiveScalar");
-  d_matl = d_sharedState->parseAndLookupMaterial(PS_ps, "material");
+  ProblemSpecP PS_ps = d_params->findBlock("PassiveScalar");
+  d_matl = m_sharedState->parseAndLookupMaterial(PS_ps, "material");
 
   vector<int> m(1);
   m[0] = d_matl->getDWIndex();
@@ -178,15 +177,13 @@ void PassiveScalar::problemSetup(GridP&, SimulationStateP& in_state,
   
   Slb->sum_scalar_fLabel      =     VarLabel::create("sum_scalar_f",    sum_vartype::getTypeDescription());
   
-  d_modelComputesThermoTransportProps = true;
-  
   setup->registerTransportedVariable(d_matl_set,
                                      d_scalar->scalar_CCLabel,
                                      d_scalar->scalar_source_CCLabel);  
 
   //__________________________________
   //  register the AMRrefluxing variables                               
-  if(d_doAMR){
+  if(m_AMR){
     setup->registerAMR_RefluxVariable(d_matl_set,
                                       d_scalar->scalar_CCLabel);
   }
@@ -462,7 +459,7 @@ void PassiveScalar::initialize(const ProcessorGroup*,
         }
       }  // sinusoidal Initialize  
     } // regions
-    setBC(f,"scalar-f", patch, d_sharedState,indx, new_dw);
+    setBC(f,"scalar-f", patch, m_sharedState,indx, new_dw);
   }  // patches
 }
 

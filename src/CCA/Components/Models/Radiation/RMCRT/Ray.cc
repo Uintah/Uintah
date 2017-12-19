@@ -151,7 +151,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
                    SimulationStateP&   sharedState)
 {
 
-  d_sharedState = sharedState;
+  m_sharedState = sharedState;
   ProblemSpecP rmcrt_ps = rmcrtps;
   string rayDirSampleAlgo;
 
@@ -183,7 +183,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   if( rad_ps ) {
     d_radiometer = scinew Radiometer( d_FLT_DBL );
     bool getExtraInputs = false;
-    d_radiometer->problemSetup( prob_spec, rad_ps, grid, sharedState, getExtraInputs );
+    d_radiometer->problemSetup( prob_spec, rad_ps, grid, m_sharedState, getExtraInputs );
   }
 
   //__________________________________
@@ -350,7 +350,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
 
 //   // Running with VisIt so add in the variables that the user can
 //   // modify.
-//   if( d_sharedState->getVisIt() && !initialized ) {
+//   if( m_sharedState->getVisIt() && !initialized ) {
 //     // variable 1 - Must start with the component name and have NO
 //     // spaces in the var name
 //     SimulationState::interactiveVar var;
@@ -362,7 +362,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
 //     var.modifiable = true;
 //     var.recompile  = false;
 //     var.modified   = false;
-//     d_sharedState->d_UPSVars.push_back( var );
+//     m_sharedState->d_UPSVars.push_back( var );
 
 //     // variable 2 - Must start with the component name and have NO
 //     // spaces in the var name
@@ -374,10 +374,10 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
 //     var.modifiable = true;
 //     var.recompile  = false;
 //     var.modified   = false;
-//     d_sharedState->d_UPSVars.push_back( var );
+//     m_sharedState->d_UPSVars.push_back( var );
     
-//     d_sharedState->d_douts.push_back( &g_ray_dbg );
-//     d_sharedState->d_douts.push_back( &dbg_BC_ray );
+//     m_sharedState->d_douts.push_back( &g_ray_dbg );
+//     m_sharedState->d_douts.push_back( &dbg_BC_ray );
 
 //     initialized = true;
 //   }
@@ -450,9 +450,9 @@ Ray::sched_rayTrace( const LevelP& level,
   if (Parallel::usingDevice()) {          // G P U
 
     if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ) {
-      tsk = scinew Task( taskname, this, &Ray::rayTraceGPU< double >,  modifies_divQ, d_sharedState, abskg_dw, sigma_dw, celltype_dw );
+      tsk = scinew Task( taskname, this, &Ray::rayTraceGPU< double >,  modifies_divQ, m_sharedState, abskg_dw, sigma_dw, celltype_dw );
     } else {
-      tsk = scinew Task( taskname, this, &Ray::rayTraceGPU< float >,  modifies_divQ, d_sharedState, abskg_dw, sigma_dw, celltype_dw);
+      tsk = scinew Task( taskname, this, &Ray::rayTraceGPU< float >,  modifies_divQ, m_sharedState, abskg_dw, sigma_dw, celltype_dw);
     }
     tsk->usesDevice(true);
   } else {                                // C P U
@@ -871,9 +871,9 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
     taskname = "Ray::rayTraceDataOnionGPU";
 
     if (RMCRTCommon::d_FLT_DBL == TypeDescription::double_type) {
-      tsk = scinew Task(taskname, this, &Ray::rayTraceDataOnionGPU<double>, modifies_divQ, d_sharedState, NotUsed, sigma_dw, celltype_dw);
+      tsk = scinew Task(taskname, this, &Ray::rayTraceDataOnionGPU<double>, modifies_divQ, m_sharedState, NotUsed, sigma_dw, celltype_dw);
     } else {
-      tsk = scinew Task(taskname, this, &Ray::rayTraceDataOnionGPU<float>, modifies_divQ, d_sharedState, NotUsed, sigma_dw, celltype_dw);
+      tsk = scinew Task(taskname, this, &Ray::rayTraceDataOnionGPU<float>, modifies_divQ, m_sharedState, NotUsed, sigma_dw, celltype_dw);
     }
     //Allow it to use up to 4 GPU streams per patch.
     tsk->usesDevice(true, 4);

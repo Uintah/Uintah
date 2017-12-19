@@ -66,13 +66,14 @@ WARNING
   class PassiveScalar :public ModelInterface {
   public:
     PassiveScalar(const ProcessorGroup* myworld, 
-                   ProblemSpecP& params,
-                  const bool doAMR);
+		  const SimulationStateP& sharedState,
+		  const ProblemSpecP& params);
+    
     virtual ~PassiveScalar();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
     
-    virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
+    virtual void problemSetup(GridP& grid,
                               ModelSetup* setup, const bool isRestart);
     
     virtual void scheduleInitialize(SchedulerP&,
@@ -144,7 +145,7 @@ WARNING
     PassiveScalar(const PassiveScalar&);
     PassiveScalar& operator=(const PassiveScalar&);
 
-    ProblemSpecP params;
+    ProblemSpecP d_params;
 
     const Material* d_matl;
     MaterialSet* d_matl_set;
@@ -212,11 +213,9 @@ WARNING
     
     PassiveScalarLabel* Slb;
     Scalar* d_scalar;
-    SimulationStateP d_sharedState;
-    
+
     //__________________________________
     // global constants
-    bool d_doAMR;
     bool d_test_conservation;
   };
 }

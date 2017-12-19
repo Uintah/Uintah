@@ -207,14 +207,6 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
   adjustOutputInterval( d_ice->adjustOutputInterval() );      
   adjustCheckpointInterval( d_ice->adjustCheckpointInterval() );
   
-  // some models may need to have access to MPMLabels
-  if(d_ice->d_models.size()){
-    for(vector<ModelInterface*>::iterator iter = d_ice->d_models.begin();
-       iter != d_ice->d_models.end(); iter++){
-      (*iter)->setMPMLabel(Mlb);
-    }
-  }
-  
   ProblemSpecP mpm_ps = 0;
   mpm_ps = prob_spec->findBlock("MPM");
   

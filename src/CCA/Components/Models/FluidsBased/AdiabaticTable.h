@@ -71,14 +71,14 @@ WARNING
   class AdiabaticTable :public ModelInterface {
   public:
     AdiabaticTable(const ProcessorGroup* myworld, 
-                   ProblemSpecP& params,
-                   const bool doAMR);
+		   const SimulationStateP& sharedState,
+                   const ProblemSpecP& params);
                    
     virtual ~AdiabaticTable();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
     
-    virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
+    virtual void problemSetup(GridP& grid,
                               ModelSetup* setup, const bool isRestart);
     
     virtual void scheduleInitialize(SchedulerP&,
@@ -156,7 +156,7 @@ WARNING
     AdiabaticTable(const AdiabaticTable&);
     AdiabaticTable& operator=(const AdiabaticTable&);
 
-    ProblemSpecP params;
+    ProblemSpecP d_params {nullptr};
 
     const Material* d_matl;
     MaterialSet* d_matl_set;
@@ -198,9 +198,6 @@ WARNING
     VarLabel* cumulativeEnergyReleased_CCLabel;
     VarLabel* cumulativeEnergyReleased_src_CCLabel;
     
-    SimulationStateP d_sharedState;
-    Output* dataArchiver;
-
     TableInterface* table;
     struct TableValue {
       void outputProblemSpec(ProblemSpecP& ps)
@@ -216,7 +213,6 @@ WARNING
     
     //__________________________________
     // global constants
-    bool d_doAMR;
     std::vector<Vector> d_probePts;
     std::vector<std::string> d_probePtsNames;
     bool d_usingProbePts;

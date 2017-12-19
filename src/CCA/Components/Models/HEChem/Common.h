@@ -31,14 +31,14 @@
 
 namespace Uintah {
 
-    //______________________________________________________________________
-    double computeSurfaceArea(Vector &rhoGradVector, Vector &dx);
-    //______________________________________________________________________
-    //
-    Vector computeDensityGradientVector(IntVector *nodeIdx, 
-                                              constNCVariable<double> &NCsolidMass, 
-                                              constNCVariable<double> &NC_CCweight, 
-                                              Vector &dx);
- }
+  //______________________________________________________________________
+  double computeSurfaceArea(Vector &rhoGradVector, Vector &dx);
+  //______________________________________________________________________
+  //
+  Vector computeDensityGradientVector(IntVector *nodeIdx, 
+				      constNCVariable<double> &NCsolidMass, 
+				      constNCVariable<double> &NC_CCweight, 
+				      Vector &dx);
+}
 
 #endif

@@ -55,16 +55,16 @@ using namespace std;
 static DebugStream cout_doing("MODELS_DOING_COUT", false);
 
 DDT0::DDT0(const ProcessorGroup* myworld,
-           ProblemSpecP& params,                       
+	   const SimulationStateP& sharedState,
+           const ProblemSpecP& params,
            const ProblemSpecP& prob_spec)              
-  : ModelInterface(myworld), d_prob_spec(prob_spec), d_params(params)
+  : ModelInterface(myworld, sharedState), d_params(params), d_prob_spec(prob_spec)
 {
   d_mymatls  = 0;
   d_one_matl = 0;
   Ilb  = scinew ICELabel();
   MIlb = scinew MPMICELabel();
   Mlb  = scinew MPMLabel();
-  
 
   //__________________________________
   //  diagnostic labels JWL++
@@ -123,10 +123,8 @@ DDT0::~DDT0()
 }
 //______________________________________________________________________
 //
-void DDT0::problemSetup(GridP&, SimulationStateP& sharedState,
-			     ModelSetup*, const bool isRestart)
+void DDT0::problemSetup(GridP&, ModelSetup*, const bool isRestart)
 {
-  d_sharedState = sharedState;
   ProblemSpecP ddt_ps = d_params->findBlock("DDT0");
   
   // Required for JWL++
@@ -139,8 +137,8 @@ void DDT0::problemSetup(GridP&, SimulationStateP& sharedState,
   ddt_ps->getWithDefault("ThresholdVolFrac",d_threshold_volFrac, 0.01);
 
   // Required for Simple Burn
-  d_matl0 = sharedState->parseAndLookupMaterial(ddt_ps, "fromMaterial");
-  d_matl1 = sharedState->parseAndLookupMaterial(ddt_ps, "toMaterial");
+  d_matl0 = m_sharedState->parseAndLookupMaterial(ddt_ps, "fromMaterial");
+  d_matl1 = m_sharedState->parseAndLookupMaterial(ddt_ps, "toMaterial");
   ddt_ps->require("Enthalpy",         d_Enthalpy);
   ddt_ps->require("BurnCoeff",        d_BurnCoeff);
   ddt_ps->require("refPressure",      d_refPress);
@@ -287,9 +285,9 @@ void DDT0::scheduleComputeModelSources(SchedulerP& sched,
   const MaterialSubset* react_matl = d_matl0->thisMaterial();
   const MaterialSubset* prod_matl  = d_matl1->thisMaterial();
 
-  const MaterialSubset* all_matls = d_sharedState->allMaterials()->getUnion();
-  const MaterialSubset* ice_matls = d_sharedState->allICEMaterials()->getUnion();
-  const MaterialSubset* mpm_matls = d_sharedState->allMPMMaterials()->getUnion();
+  const MaterialSubset* all_matls = m_sharedState->allMaterials()->getUnion();
+  const MaterialSubset* ice_matls = m_sharedState->allICEMaterials()->getUnion();
+  const MaterialSubset* mpm_matls = m_sharedState->allMPMMaterials()->getUnion();
   Task::MaterialDomainSpec oms = Task::OutOfDomain;
 
   proc0cout << "\nDDT0:scheduleComputeModelSources oneMatl " << *d_one_matl<< " react_matl " << *react_matl 
@@ -370,7 +368,7 @@ void DDT0::computeModelSources(const ProcessorGroup*,
   int m1 = d_matl1->getDWIndex();
   double totalBurnedMass = 0;
   double totalHeatReleased = 0;
-  int numAllMatls = d_sharedState->getNumMatls();
+  int numAllMatls = m_sharedState->getNumMatls();
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);  
@@ -430,7 +428,7 @@ void DDT0::computeModelSources(const ProcessorGroup*,
     old_dw->get(NC_CCweight,      MIlb->NC_CCweightLabel,  0,  patch,gac,1);   
     
     for(int m = 0; m < numAllMatls; m++) {
-      Material* matl = d_sharedState->getMaterial(m);
+      Material* matl = m_sharedState->getMaterial(m);
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
       int indx = matl->getDWIndex();
       if(ice_matl){
@@ -481,7 +479,7 @@ void DDT0::computeModelSources(const ProcessorGroup*,
       }
     }
     
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m0);
+    MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial(m0);
     double cv_rct = mpm_matl->getSpecificHeat();
          
     //__________________________________
@@ -632,10 +630,10 @@ void DDT0::computeModelSources(const ProcessorGroup*,
 
     //__________________________________
     //  set symetric BC
-    setBC(mass_src_0, "set_if_sym_BC",patch, d_sharedState, m0, new_dw);
-    setBC(mass_src_1, "set_if_sym_BC",patch, d_sharedState, m1, new_dw);
-    setBC(delF,       "set_if_sym_BC",patch, d_sharedState, m0, new_dw);  // I'm not sure you need these???? Todd
-    setBC(Fr,         "set_if_sym_BC",patch, d_sharedState, m0, new_dw);
+    setBC(mass_src_0, "set_if_sym_BC",patch, m_sharedState, m0, new_dw);
+    setBC(mass_src_1, "set_if_sym_BC",patch, m_sharedState, m1, new_dw);
+    setBC(delF,       "set_if_sym_BC",patch, m_sharedState, m0, new_dw);  // I'm not sure you need these???? Todd
+    setBC(Fr,         "set_if_sym_BC",patch, m_sharedState, m0, new_dw);
   }
   //__________________________________
   //save total quantities

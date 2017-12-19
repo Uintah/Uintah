@@ -49,8 +49,10 @@ using namespace std;
 //  MODELS_DOING_COUT:   dumps when tasks are scheduled and performed
 static DebugStream cout_doing("MODELS_DOING_COUT", false);
 
-LightTime::LightTime(const ProcessorGroup* myworld, ProblemSpecP& params)
-  : ModelInterface(myworld), params(params)
+LightTime::LightTime(const ProcessorGroup* myworld,
+		     const SimulationStateP& sharedState,
+		     const ProblemSpecP& params)
+  : ModelInterface(myworld, sharedState), d_params(params)
 {
   mymatls = 0;
   Ilb  = scinew ICELabel();
@@ -94,17 +96,15 @@ void LightTime::outputProblemSpec(ProblemSpecP& ps)
 }
 //__________________________________
 void LightTime::problemSetup(GridP&, 
-                             SimulationStateP& sharedState,
                              ModelSetup*, const bool isRestart)
 {
-  d_sharedState = sharedState;
-  ProblemSpecP lt_ps = params->findBlock("LightTime");
+  ProblemSpecP lt_ps = d_params->findBlock("LightTime");
   if (!lt_ps){
     throw ProblemSetupException("LightTime: Couldn't find <LightTime> tag", __FILE__, __LINE__);    
   }
   
-  matl0 = sharedState->parseAndLookupMaterial(lt_ps, "fromMaterial");
-  matl1 = sharedState->parseAndLookupMaterial(lt_ps, "toMaterial");
+  matl0 = m_sharedState->parseAndLookupMaterial(lt_ps, "fromMaterial");
+  matl1 = m_sharedState->parseAndLookupMaterial(lt_ps, "toMaterial");
   
   lt_ps->require("starting_location",    d_start_place);
   lt_ps->require("direction_if_plane",   d_direction);
@@ -277,7 +277,7 @@ void LightTime::computeModelSources(const ProcessorGroup*,
     new_dw->get(vol_frac_prd,  Ilb->vol_frac_CCLabel,  m1,patch,gn, 0);
 
     const Level* level = patch->getLevel();
-    double time = d_sharedState->getElapsedSimTime();
+    double time = m_sharedState->getElapsedSimTime();
     double delta_L = 1.5*pow(cell_vol,1./3.)/d_D;
 //    double delta_L = 1.5*dx.x()/d_D;
     double A=d_direction.x();
@@ -353,10 +353,10 @@ void LightTime::computeModelSources(const ProcessorGroup*,
 
     //__________________________________
     //  set symetric BC
-    setBC(mass_src_0, "set_if_sym_BC",patch, d_sharedState, m0, new_dw);
-    setBC(mass_src_1, "set_if_sym_BC",patch, d_sharedState, m1, new_dw);
-    setBC(delF,       "set_if_sym_BC",patch, d_sharedState, m0, new_dw);
-    setBC(Fr,         "set_if_sym_BC",patch, d_sharedState, m0, new_dw);
+    setBC(mass_src_0, "set_if_sym_BC",patch, m_sharedState, m0, new_dw);
+    setBC(mass_src_1, "set_if_sym_BC",patch, m_sharedState, m1, new_dw);
+    setBC(delF,       "set_if_sym_BC",patch, m_sharedState, m0, new_dw);
+    setBC(Fr,         "set_if_sym_BC",patch, m_sharedState, m0, new_dw);
   }
 }
 //______________________________________________________________________

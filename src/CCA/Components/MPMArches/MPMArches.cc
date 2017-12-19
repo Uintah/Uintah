@@ -183,8 +183,8 @@ void MPMArches::problemSetup(const ProblemSpecP& prob_spec,
   // cut cells do not currently support moving geometries
   calcVel = !dontCalcVel;
 
-  d_mpm->setMPMLabel(Mlb);
   d_mpm->problemSetup(prob_spec, materials_ps, grid);
+
   // set multimaterial label in Arches to access interface variables
   d_arches->setMPMArchesLabel(d_MAlb);
 

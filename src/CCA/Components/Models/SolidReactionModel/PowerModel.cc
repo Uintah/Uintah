@@ -22,8 +22,10 @@
  * IN THE SOFTWARE.
  */
 
-#include <cmath>
 #include <CCA/Components/Models/SolidReactionModel/PowerModel.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+
+#include <cmath>
 
 using namespace Uintah;
 using namespace std;

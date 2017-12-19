@@ -25,21 +25,11 @@
 #ifndef UINTAH_HOMEBREW_RateConstant_H
 #define UINTAH_HOMEBREW_RateConstant_H
 
-#include <Core/Grid/Variables/ComputeSet.h>
-#include <Core/Grid/GridP.h>
-#include <Core/Grid/LevelP.h>
-#include <Core/Labels/MPMLabel.h>
-#include <Core/Grid/SimulationStateP.h>
-#include <Core/Util/Handle.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
-#include <CCA/Ports/SchedulerP.h>
-#include <CCA/Ports/Output.h>
-
-#include <Core/Grid/Variables/CCVariable.h>
-
 
 namespace Uintah {
-    /**************************************
+
+  /**************************************
      
      CLASS
      RateConstant
@@ -65,27 +55,25 @@ namespace Uintah {
      
      WARNING
      
-     ****************************************/
-     class RateConstant {
-     public:
-         virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
+  ****************************************/
+  class RateConstant {
+  public:
+    virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
 
-         /// @brief Gets a rate constant given a temperature
-         /// @param T Temperature at which to get constant
-         /// @return rate Rate at given temperature
-         virtual double getConstant(double T) = 0;
+    /// @brief Gets a rate constant given a temperature
+    /// @param T Temperature at which to get constant
+    /// @return rate Rate at given temperature
+    virtual double getConstant(double T) = 0;
      
-         // This quiets compiler warnings
-         virtual ~RateConstant()
-         {
-         }
+    // This quiets compiler warnings
+    virtual ~RateConstant()
+    {
+    }
     
-     private:
+  private:
          
-     };
+  };
 
 } // End namespace Uintah
-
-
 
 #endif

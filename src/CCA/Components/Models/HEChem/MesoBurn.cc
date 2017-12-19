@@ -55,9 +55,11 @@ const double MesoBurn::EPSILON   = 1e-6;   /* stop epsilon for Bisection-Newton 
 const double ONE_YEAR_MICROSECONDS = 3.1536e13;
 
 MesoBurn::MesoBurn(const ProcessorGroup* myworld, 
-                   ProblemSpecP& params,
+		   const SimulationStateP& sharedState, 
+                   const ProblemSpecP& params,
                    const ProblemSpecP& prob_spec)
-  : ModelInterface(myworld), d_params(params), d_prob_spec(prob_spec) { 
+  : ModelInterface(myworld, sharedState),
+    d_params(params), d_prob_spec(prob_spec) { 
   mymatls = 0;
   Mlb  = scinew MPMLabel();
   Ilb  = scinew ICELabel();
@@ -119,11 +121,9 @@ MesoBurn::~MesoBurn(){
 
 //______________________________________________________________________
 void MesoBurn::problemSetup(GridP&, 
-                            SimulationStateP& sharedState, 
                             ModelSetup*, const bool isRestart){
-  d_sharedState = sharedState;
-  matl0 = sharedState->parseAndLookupMaterial(d_params, "fromMaterial");
-  matl1 = sharedState->parseAndLookupMaterial(d_params, "toMaterial");  
+  matl0 = m_sharedState->parseAndLookupMaterial(d_params, "fromMaterial");
+  matl1 = m_sharedState->parseAndLookupMaterial(d_params, "toMaterial");  
   
   // Burn parameters
   d_params->require("IdealGasConst",     R );
@@ -335,7 +335,7 @@ void MesoBurn::scheduleComputeModelSources(SchedulerP& sched,
   t->requires( Task::OldDW, mi->delT_Label, level.get_rep());
   
   // define material subsets  
-  const MaterialSet* all_matls = d_sharedState->allMaterials();
+  const MaterialSet* all_matls = m_sharedState->allMaterials();
   const MaterialSubset* all_matls_sub = all_matls->getUnion();
   
   MaterialSubset* one_matl     = scinew MaterialSubset();
@@ -479,7 +479,7 @@ void MesoBurn::computeParticleVariables(const ProcessorGroup*,
         inducedMass[c] += pMass[idx];
       }
     }    
-    setBC(pFlag, "zeroNeumann", patch, d_sharedState, m0, new_dw);
+    setBC(pFlag, "zeroNeumann", patch, m_sharedState, m0, new_dw);
   }
  
 }
@@ -506,7 +506,7 @@ void MesoBurn::computeModelSources(const ProcessorGroup*,
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gp;
   int ngc_p;
-  d_sharedState->getParticleGhostLayer(gp, ngc_p);
+  m_sharedState->getParticleGhostLayer(gp, ngc_p);
   
   /* Patch Iteration */
   for(int p=0;p<patches->size();p++){
@@ -559,11 +559,11 @@ void MesoBurn::computeModelSources(const ProcessorGroup*,
     surfTemp.initialize(0.0);
 
     /* All Material Data */
-    int numAllMatls = d_sharedState->getNumMatls();
+    int numAllMatls = m_sharedState->getNumMatls();
     std::vector<constCCVariable<double> >  vol_frac_CC(numAllMatls);
     std::vector<constCCVariable<double> >  temp_CC(numAllMatls);
     for (int m = 0; m < numAllMatls; m++) {
-      Material* matl = d_sharedState->getMaterial(m);
+      Material* matl = m_sharedState->getMaterial(m);
       int indx = matl->getDWIndex();
       old_dw->get(temp_CC[m],       MIlb->temp_CCLabel,    indx, patch, gac, 1);
       new_dw->get(vol_frac_CC[m],   Ilb->vol_frac_CCLabel, indx, patch, gac, 1);
@@ -668,8 +668,8 @@ void MesoBurn::computeModelSources(const ProcessorGroup*,
     }  // cell iterator
 
     /*  set symetric BC  */
-    setBC(mass_src_0, "set_if_sym_BC",patch, d_sharedState, m0, new_dw);
-    setBC(mass_src_1, "set_if_sym_BC",patch, d_sharedState, m1, new_dw); 
+    setBC(mass_src_0, "set_if_sym_BC",patch, m_sharedState, m0, new_dw);
+    setBC(mass_src_1, "set_if_sym_BC",patch, m_sharedState, m1, new_dw); 
   }
   //__________________________________
   //save total quantities

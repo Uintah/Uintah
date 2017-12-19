@@ -66,14 +66,16 @@ WARNING
 
   class DDT0 : public ModelInterface {
   public:
-    DDT0(const ProcessorGroup* myworld, ProblemSpecP& params,
-                const ProblemSpecP& prob_spec);
+    DDT0(const ProcessorGroup* myworld,
+	 const SimulationStateP& sharedState,
+	 const ProblemSpecP& params,
+	 const ProblemSpecP& prob_spec);
 
     virtual ~DDT0();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
 
-    virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
+    virtual void problemSetup(GridP& grid,
 			      ModelSetup* setup, const bool isRestart);
 
       
@@ -138,20 +140,19 @@ WARNING
     const VarLabel* totalMassConvertedLabel;
     const VarLabel* detonatingLabel;
 
-    const VarLabel* pCrackRadiusLabel;
+    const VarLabel* pCrackRadiusLabel {nullptr};
     
-    ProblemSpecP d_prob_spec;
-    ProblemSpecP d_params;
-    const Material* d_matl0;
-    const Material* d_matl1;
-    SimulationStateP d_sharedState;   
+    ProblemSpecP d_params {nullptr};
+    ProblemSpecP d_prob_spec {nullptr};
 
-    ICELabel* Ilb;
-    MPMICELabel* MIlb;
-    MPMLabel* Mlb;
-    MaterialSet* d_mymatls;
-    MaterialSubset* d_one_matl;
-   
+    const Material* d_matl0 {nullptr};
+    const Material* d_matl1 {nullptr};
+
+    ICELabel* Ilb {nullptr};
+    MPMICELabel* MIlb {nullptr};
+    MPMLabel* Mlb {nullptr};
+    MaterialSet* d_mymatls {nullptr};
+    MaterialSubset* d_one_matl {nullptr};   
 
     std::string fromMaterial, toMaterial;
     double d_G;

@@ -23,6 +23,9 @@
  */
 
 #include <CCA/Components/MPM/ConstitutiveModel/HypoElasticImplicit.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Components/MPM/Solver.h>
+
 #include <Core/Grid/Patch.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Variables/NCVariable.h>
@@ -32,7 +35,6 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Labels/MPMLabel.h>
 #include <Core/Math/Matrix3.h>
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <iostream>
 

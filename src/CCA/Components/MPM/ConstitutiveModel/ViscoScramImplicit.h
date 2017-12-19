@@ -42,12 +42,14 @@
 #include "ConstitutiveModel.h"        
 #include "ImplicitCM.h"
 #include <Core/Disclosure/TypeDescription.h>
-#include <CCA/Components/MPM/Solver.h>
 #include <vector>
 
 
 
 namespace Uintah {
+
+  class Solver;
+  
       class ViscoScramImplicit : public ConstitutiveModel, public ImplicitCM {
       public:
 

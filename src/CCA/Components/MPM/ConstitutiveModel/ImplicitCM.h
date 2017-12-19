@@ -26,16 +26,16 @@
 #define __IMPLICIT_CM_H__
 
 #include <Core/Grid/Variables/ComputeSet.h>
-#include <vector>
 #include <Core/Math/Matrix3.h>
 #include <Core/Math/Short27.h>
 #include <Core/Grid/Variables/Array3.h>
-#include <CCA/Components/MPM/Solver.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Math/FastMatrix.h>
 #include <CCA/Components/MPM/MPMFlags.h>
+
+#include <vector>
 
 namespace Uintah {
 
@@ -45,6 +45,7 @@ namespace Uintah {
   class MPMLabel;
   class MPMFlags;
   class MPMMaterial;
+  class Solver;
   class DataWarehouse;
   class ParticleSubset;
   class ParticleVariableBase;
@@ -103,12 +104,12 @@ namespace Uintah {
                   double Km[81][81]) const;
 
     void loadBMats(Array3<int> l2g, int dof[24], double B[6][24], 
-                   double Bnl[3][24], vector<Vector> d_S, 
-                   vector<IntVector> ni, double oodx[3]) const;
+                   double Bnl[3][24], std::vector<Vector> d_S, 
+                   std::vector<IntVector> ni, double oodx[3]) const;
 
     void loadBMatsGIMP(Array3<int> l2g, int dof[81], double B[6][81], 
-                       double Bnl[3][81], vector<Vector> d_S, 
-                       vector<IntVector> ni, double oodx[3]) const;
+                       double Bnl[3][81], std::vector<Vector> d_S, 
+                       std::vector<IntVector> ni, double oodx[3]) const;
 
     ///////////////////////////////////////////////////////////////////////
     /*! Initialize the common quantities that all the implicit constituive

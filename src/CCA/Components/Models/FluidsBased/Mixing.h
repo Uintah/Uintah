@@ -64,12 +64,15 @@ WARNING
 
   class Mixing : public ModelInterface {
   public:
-    Mixing(const ProcessorGroup* myworld, ProblemSpecP& params);
+    Mixing(const ProcessorGroup* myworld,
+	   const SimulationStateP& sharedState,
+	   const ProblemSpecP& params);
+    
     virtual ~Mixing();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
     
-    virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
+    virtual void problemSetup(GridP& grid,
                               ModelSetup* setup, const bool isRestart);
     
     virtual void scheduleInitialize(SchedulerP&,
@@ -119,7 +122,7 @@ WARNING
     Mixing(const Mixing&);
     Mixing& operator=(const Mixing&);
 
-    ProblemSpecP params;
+    ProblemSpecP d_params;
 
     const Material* matl;
     MaterialSet* mymatls;

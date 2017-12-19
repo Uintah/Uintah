@@ -25,21 +25,19 @@
 #ifndef UINTAH_HOMEBREW_ModelInterface_H
 #define UINTAH_HOMEBREW_ModelInterface_H
 
+#include <Core/Parallel/UintahParallelComponent.h>
+
+#include <CCA/Ports/SchedulerP.h>
+
+#include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
-#include <Core/Labels/MPMLabel.h>
+#include <Core/Grid/SimulationState.h>
 #include <Core/Grid/SimulationStateP.h>
-#include <Core/Util/Handle.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
-#include <CCA/Ports/SchedulerP.h>
-#include <CCA/Ports/Regridder.h>
-#include <CCA/Ports/Output.h>
-
-#include <Core/Grid/Variables/CCVariable.h>
 
 
-namespace Uintah {
 /**************************************
 
 CLASS
@@ -68,20 +66,25 @@ WARNING
   
 ****************************************/
 
-  class UintahParallelComponent;
+namespace Uintah {
+
+  class ApplicationInterface;
+  class Regridder;
+  class Output;
+
   class DataWarehouse;
   class Material;
   class ProcessorGroup;
   class VarLabel;
   
   class ModelSetup {
-    public:
+  public:
     virtual void registerTransportedVariable(const MaterialSet* matlSet,
 					     const VarLabel* var,
 					     const VarLabel* src) = 0;
                                         
     virtual void registerAMR_RefluxVariable(const MaterialSet* matlSet,
-					         const VarLabel* var) = 0;
+					    const VarLabel* var) = 0;
 
     virtual ~ModelSetup() {};
   };
@@ -97,8 +100,8 @@ WARNING
 	      const VarLabel* temperature, 
 	      const VarLabel* pressure,
 	      const VarLabel* specificVol,
-             const VarLabel* specific_heat,
-             const VarLabel* gamma)
+	      const VarLabel* specific_heat,
+	      const VarLabel* gamma)
       : delT_Label(delt), 
         modelMass_srcLabel(mass_source),
         modelMom_srcLabel(momentum_source),
@@ -111,8 +114,8 @@ WARNING
         sp_vol_CCLabel(specificVol),
         specific_heatLabel(specific_heat),
         gammaLabel(gamma)
-      {
-      }
+    {
+    }
     const VarLabel* delT_Label;
 
     const VarLabel* modelMass_srcLabel;
@@ -132,80 +135,87 @@ WARNING
   };  // class ModelInfo
   
   
-   //________________________________________________
-   class ModelInterface {
-   public:
-     ModelInterface(const ProcessorGroup* d_myworld);
-     virtual ~ModelInterface();
+  //________________________________________________
+  class ModelInterface : public UintahParallelComponent {
+  public:
+    ModelInterface(const ProcessorGroup* myworld,
+		   const SimulationStateP sharedState);
 
-     // Methods for managing the components attached via the ports.
-     virtual void setComponents( UintahParallelComponent *comp ) {};
-     virtual void getComponents() {};
-     virtual void releaseComponents() {};
-      
-     virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
-			       ModelSetup* setup, const bool isRestart) = 0;
-      
-     virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
+    virtual ~ModelInterface();
 
-     virtual void scheduleInitialize(SchedulerP&,
-				     const LevelP& level,
-				     const ModelInfo*) = 0;
+    // Methods for managing the components attached via the ports.
+    virtual void setComponents( UintahParallelComponent *comp ) {};
+    virtual void setComponents( ApplicationInterface *comp );
+    virtual void getComponents();
+    virtual void releaseComponents();
+      
+    virtual void problemSetup(GridP& grid,
+			      ModelSetup* setup, const bool isRestart) = 0;
+      
+    virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
 
-     virtual void restartInitialize() {}
+    virtual void scheduleInitialize(SchedulerP& scheduler,
+				    const LevelP& level,
+				    const ModelInfo*) = 0;
+
+    virtual void restartInitialize() {}
       
-     virtual void scheduleComputeStableTimeStep(SchedulerP& sched,
-						const LevelP& level,
-						const ModelInfo*) = 0;
+    virtual void scheduleComputeStableTimeStep(SchedulerP& scheduler,
+					       const LevelP& level,
+					       const ModelInfo*) = 0;
       
-     virtual void scheduleComputeModelSources(SchedulerP&,
-						    const LevelP& level,
-						    const ModelInfo*) = 0;
+    virtual void scheduleComputeModelSources(SchedulerP& scheduler,
+					     const LevelP& level,
+					     const ModelInfo*) = 0;
                                               
-     virtual void scheduleModifyThermoTransportProperties(SchedulerP&,
-                                                const LevelP&,
-                                                const MaterialSet*) = 0;
+    virtual void scheduleModifyThermoTransportProperties(SchedulerP& scheduler,
+							 const LevelP& level,
+							 const MaterialSet*) = 0;
                                                 
-     virtual void computeSpecificHeat(CCVariable<double>&,
+    virtual void computeSpecificHeat(CCVariable<double>&,
                                      const Patch* patch,
                                      DataWarehouse* new_dw,
                                      const int indx) = 0;
                                      
-     virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
-                                       SchedulerP& sched) =0;
+    virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
+                                       SchedulerP& sched) = 0;
                                                
-     virtual void scheduleTestConservation(SchedulerP&,
-                                           const PatchSet* patches,
-                                           const ModelInfo* mi)=0;
+    virtual void scheduleTestConservation(SchedulerP&,
+					  const PatchSet* patches,
+					  const ModelInfo* mi) = 0;
                                            
-     virtual void scheduleRefine(const PatchSet* patches,
-                                 SchedulerP& sched);
+    virtual void scheduleRefine(const PatchSet* patches,
+				SchedulerP& sched) {};
 
-     virtual void setMPMLabel(MPMLabel* MLB);
-                                               
-     virtual void setRegridder( Regridder* regridder ) { m_regridder = regridder; };
-     virtual void setOutput( Output* output ) { m_output = output; };
+    virtual void setAMR(bool val) { m_AMR = val; }
+    virtual bool isAMR() const { return m_AMR; }
+  
+    virtual void setDynamicRegridding(bool val) {m_dynamicRegridding = val; }
+    virtual bool isDynamicRegridding() const { return m_dynamicRegridding; }
 
-     virtual bool adjustOutputInterval()     const { return false; };
-     virtual bool adjustCheckpointInterval() const { return false; };
+    virtual bool adjustOutputInterval()     const { return false; };
+    virtual bool adjustCheckpointInterval() const { return false; };
 
-     virtual bool mayEndSimulation()         const { return false; };
+    virtual bool mayEndSimulation()         const { return false; };
           
-     bool computesThermoTransportProps() const;
-     bool d_modelComputesThermoTransportProps;
+    virtual bool computesThermoTransportProps() const
+    { return m_modelComputesThermoTransportProps; }
 
-   protected:
-     Regridder* m_regridder{nullptr};
-     Output* m_output{nullptr};
+  protected:
+    Scheduler * m_scheduler{nullptr};
+    Regridder * m_regridder {nullptr};
+    Output    * m_output {nullptr};
    
-     const ProcessorGroup* d_myworld;
-     
-   private:     
-     ModelInterface(const ModelInterface&);
-     ModelInterface& operator=(const ModelInterface&);
-   };
+    SimulationStateP m_sharedState{nullptr};
+    
+    bool m_AMR {false};
+    bool m_dynamicRegridding {false};
+    bool m_modelComputesThermoTransportProps {false};
+
+  private:     
+    ModelInterface(const ModelInterface&);
+    ModelInterface& operator=(const ModelInterface&);
+  };
 } // End namespace Uintah
    
-
-
 #endif

@@ -71,10 +71,13 @@ WARNING
   class GeometryPiece;
   class Mixing3 : public ModelInterface {
   public:
-    Mixing3(const ProcessorGroup* myworld, ProblemSpecP& params);
+    Mixing3(const ProcessorGroup* myworld,
+	    const SimulationStateP& sharedState,
+	    const ProblemSpecP& params);
+    
     virtual ~Mixing3();
     
-    virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
+    virtual void problemSetup(GridP& grid,
                               ModelSetup* setup, const bool isRestart);
     
     virtual void scheduleInitialize(SchedulerP&,
@@ -117,7 +120,7 @@ WARNING
     Mixing3(const Mixing3&);
     Mixing3& operator=(const Mixing3&);
 
-    ProblemSpecP params;
+    ProblemSpecP d_params;
 
     const Material* matl;
     MaterialSet* mymatls;
@@ -144,7 +147,6 @@ WARNING
 
     Cantera::IdealGasMix* gas;
     Cantera::Reactor* reactor;
-    SimulationStateP sharedState;
 
     double dtemp;
     double dpress;

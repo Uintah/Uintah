@@ -28,7 +28,6 @@
 #include <CCA/Components/Models/SolidReactionModel/RateConstant.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
-
 namespace Uintah {
     /**************************************
      

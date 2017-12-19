@@ -47,9 +47,11 @@ using namespace std;
 static DebugStream cout_doing("MODELS_DOING_COUT", false);
 
 JWLpp::JWLpp(const ProcessorGroup* myworld, 
-             ProblemSpecP& params,
+	     const SimulationStateP& sharedState,
+             const ProblemSpecP& params,
              const ProblemSpecP& prob_spec)
-  : ModelInterface(myworld), d_params(params), d_prob_spec(prob_spec)
+  : ModelInterface(myworld, sharedState),
+    d_params(params), d_prob_spec(prob_spec)
 {
   mymatls = 0;
   Ilb  = scinew ICELabel();
@@ -83,10 +85,11 @@ JWLpp::~JWLpp()
 }
 //______________________________________________________________________
 //
-void JWLpp::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup*, const bool isRestart)
+void JWLpp::problemSetup(GridP&,
+			 ModelSetup*, const bool isRestart)
 {
-  d_sharedState = sharedState;
   ProblemSpecP JWL_ps = d_params->findBlock("JWLpp");
+
   JWL_ps->getWithDefault("ThresholdVolFrac",d_threshold_volFrac, 0.01);
   
   JWL_ps->require("ThresholdPressure", d_threshold_pressure);
@@ -112,8 +115,8 @@ void JWLpp::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup*, con
     }
   }
   
-  matl0 = sharedState->parseAndLookupMaterial(JWL_ps, "fromMaterial");
-  matl1 = sharedState->parseAndLookupMaterial(JWL_ps, "toMaterial");
+  matl0 = m_sharedState->parseAndLookupMaterial(JWL_ps, "fromMaterial");
+  matl1 = m_sharedState->parseAndLookupMaterial(JWL_ps, "toMaterial");
 
   //__________________________________
   //  define the materialSet
@@ -284,8 +287,8 @@ void JWLpp::computeModelSources(const ProcessorGroup*,
 
     // Get the specific heat, this is the value from the input file
     double cv_rct = -1.0; 
-    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial *>(d_sharedState->getMaterial(m0));
-    ICEMaterial* ice_matl = dynamic_cast<ICEMaterial *>(d_sharedState->getMaterial(m0));
+    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial *>(m_sharedState->getMaterial(m0));
+    ICEMaterial* ice_matl = dynamic_cast<ICEMaterial *>(m_sharedState->getMaterial(m0));
     if(mpm_matl) {
       cv_rct = mpm_matl->getSpecificHeat();
     } else if(ice_matl){
@@ -334,10 +337,10 @@ void JWLpp::computeModelSources(const ProcessorGroup*,
 
     //__________________________________
     //  set symetric BC
-    setBC(mass_src_0, "set_if_sym_BC",patch, d_sharedState, m0, new_dw);
-    setBC(mass_src_1, "set_if_sym_BC",patch, d_sharedState, m1, new_dw);
-    setBC(delF,       "set_if_sym_BC",patch, d_sharedState, m0, new_dw);
-    setBC(Fr,         "set_if_sym_BC",patch, d_sharedState, m0, new_dw);
+    setBC(mass_src_0, "set_if_sym_BC",patch, m_sharedState, m0, new_dw);
+    setBC(mass_src_1, "set_if_sym_BC",patch, m_sharedState, m1, new_dw);
+    setBC(delF,       "set_if_sym_BC",patch, m_sharedState, m0, new_dw);
+    setBC(Fr,         "set_if_sym_BC",patch, m_sharedState, m0, new_dw);
   }
   //__________________________________
   //save total quantities

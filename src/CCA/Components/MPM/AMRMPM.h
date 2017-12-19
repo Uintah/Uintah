@@ -99,12 +99,6 @@ public:
   /// Schedule to mark initial flags for AMR regridding
   void scheduleInitialErrorEstimate(const LevelP& coarseLevel, SchedulerP& sched);
 
-
-//  void setMPMLabel(MPMLabel* Mlb) {
-//    delete lb;
-//    lb = Mlb;
-//  };
-
 //  enum IntegratorType {
 //    Explicit,
 //    Implicit,

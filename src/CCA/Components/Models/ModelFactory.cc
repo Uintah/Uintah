@@ -65,6 +65,7 @@ ModelFactory::~ModelFactory()
 {
   for (vector<ModelInterface*>::const_iterator it = d_models.begin();
        it != d_models.end(); it++) {
+    (*it)->releaseComponents();
     delete *it;
   }
 }
@@ -82,11 +83,10 @@ void ModelFactory::clearModels()
 }
 
 void
-ModelFactory::makeModels( const ProblemSpecP& restart_prob_spec,
-                          const ProblemSpecP& prob_spec,
-                          GridP&,
-                          SimulationStateP&,
-                          const bool doAMR )
+ModelFactory::makeModels( const ProcessorGroup   * myworld,
+			  const SimulationStateP   sharedState,
+			  const ProblemSpecP& restart_prob_spec,
+                          const ProblemSpecP& prob_spec )
 {
   ProblemSpecP model_spec = restart_prob_spec->findBlock("Models");
 
@@ -102,61 +102,61 @@ ModelFactory::makeModels( const ProblemSpecP& restart_prob_spec,
       throw ProblemSetupException("Model does not specify type=\"name\"",
 				  __FILE__, __LINE__);
     }
-    
+
 #if !defined( NO_ICE )
     // ICE turned on
     if(type == "SimpleRxn") {
-      d_models.push_back(scinew SimpleRxn(d_myworld, model_ps));
+      d_models.push_back(scinew SimpleRxn(myworld, sharedState, model_ps));
     }
     else if(type == "AdiabaticTable") {
-      d_models.push_back(scinew AdiabaticTable(d_myworld, model_ps,doAMR));
+      d_models.push_back(scinew AdiabaticTable(myworld, sharedState, model_ps));
     }
     else if(type == "Mixing") {
-      d_models.push_back(scinew Mixing(d_myworld, model_ps)); }
+      d_models.push_back(scinew Mixing(myworld, sharedState, model_ps)); }
     else if(type == "Test") {
-      d_models.push_back(scinew TestModel(d_myworld, model_ps));
+      d_models.push_back(scinew TestModel(myworld, sharedState, model_ps));
     }
     else if(type == "flameSheet_rxn") {
-      d_models.push_back(scinew flameSheet_rxn(d_myworld, model_ps));
+      d_models.push_back(scinew flameSheet_rxn(myworld, sharedState, model_ps));
     }
     else if(type == "mass_momentum_energy_src") {
-      d_models.push_back(scinew MassMomEng_src(d_myworld, model_ps));
+      d_models.push_back(scinew MassMomEng_src(myworld, sharedState, model_ps));
     }
     else if(type == "PassiveScalar") {
-      d_models.push_back(scinew PassiveScalar(d_myworld, model_ps, doAMR));
+      d_models.push_back(scinew PassiveScalar(myworld, sharedState, model_ps));
     }
     else if(type == "Simple_Burn") {
-      d_models.push_back(scinew Simple_Burn(d_myworld, model_ps, prob_spec));
+      d_models.push_back(scinew Simple_Burn(myworld, sharedState, model_ps, prob_spec));
     }
     else if(type == "Steady_Burn") {
-      d_models.push_back(scinew Steady_Burn(d_myworld, model_ps, prob_spec));
+      d_models.push_back(scinew Steady_Burn(myworld, sharedState, model_ps, prob_spec));
     }
     else if(type == "Unsteady_Burn") {
-      d_models.push_back(scinew Unsteady_Burn(d_myworld, model_ps, prob_spec));
+      d_models.push_back(scinew Unsteady_Burn(myworld, sharedState, model_ps, prob_spec));
     }
     else if(type == "MesoBurn") {
-      d_models.push_back(scinew MesoBurn(d_myworld, model_ps, prob_spec));
+      d_models.push_back(scinew MesoBurn(myworld, sharedState, model_ps, prob_spec));
     }
     else if(type == "IandG") {
-      d_models.push_back(scinew IandG(d_myworld, model_ps));
+      d_models.push_back(scinew IandG(myworld, sharedState, model_ps));
     }
     else if(type == "JWLpp") {
-      d_models.push_back(scinew JWLpp(d_myworld, model_ps, prob_spec));
+      d_models.push_back(scinew JWLpp(myworld, sharedState, model_ps, prob_spec));
     }
     else if(type == "ZeroOrder") {
-      d_models.push_back(scinew ZeroOrder(d_myworld, model_ps, prob_spec));
+      d_models.push_back(scinew ZeroOrder(myworld, sharedState, model_ps, prob_spec));
     }
     else if(type == "LightTime") {
-      d_models.push_back(scinew LightTime(d_myworld, model_ps));
+      d_models.push_back(scinew LightTime(myworld, sharedState, model_ps));
     }
     else if(type == "DDT0") {
-      d_models.push_back(scinew DDT0(d_myworld, model_ps, prob_spec));
+      d_models.push_back(scinew DDT0(myworld, sharedState, model_ps, prob_spec));
     }
     else if(type == "DDT1") {
-      d_models.push_back(scinew DDT1(d_myworld, model_ps, prob_spec));
+      d_models.push_back(scinew DDT1(myworld, sharedState, model_ps, prob_spec));
     }
     else if(type == "SolidReactionModel") {
-      d_models.push_back(scinew SolidReactionModel(d_myworld, model_ps, prob_spec));
+      d_models.push_back(scinew SolidReactionModel(myworld, sharedState, model_ps, prob_spec));
     }
     else {
       throw ProblemSetupException( "Unknown model: " + type, __FILE__, __LINE__ );

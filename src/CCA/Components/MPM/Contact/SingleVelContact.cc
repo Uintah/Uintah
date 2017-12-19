@@ -31,7 +31,6 @@
 // ensure that one can get the same answer using prescribed
 // contact as can be gotten using "automatic" contact.
 #include <CCA/Components/MPM/Contact/SingleVelContact.h>
-#include <CCA/Components/MPM/MPMBoundCond.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Grid/Variables/NCVariable.h>

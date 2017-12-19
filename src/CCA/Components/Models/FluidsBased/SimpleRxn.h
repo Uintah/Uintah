@@ -25,6 +25,7 @@
 
 #ifndef Packages_Uintah_CCA_Components_Examples_SimpleRxn_h
 #define Packages_Uintah_CCA_Components_Examples_SimpleRxn_h
+
 #include <CCA/Ports/ModelInterface.h>
 
 #include <Core/GeometryPiece/GeometryPiece.h>
@@ -71,12 +72,15 @@ WARNING
 
   class SimpleRxn :public ModelInterface {
   public:
-    SimpleRxn(const ProcessorGroup* myworld, ProblemSpecP& params);
+    SimpleRxn(const ProcessorGroup* myworld,
+	      const SimulationStateP& sharedState,
+	      const ProblemSpecP& params);
+    
     virtual ~SimpleRxn();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
     
-    virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
+    virtual void problemSetup(GridP& grid,
                               ModelSetup* setup, const bool isRestart);
     
     virtual void scheduleInitialize(SchedulerP&,
@@ -90,38 +94,38 @@ WARNING
                                                const ModelInfo*);
                                   
     virtual void scheduleComputeModelSources(SchedulerP&,
-                                                   const LevelP& level,
-                                                   const ModelInfo*);
+					     const LevelP& level,
+					     const ModelInfo*);
                                             
-   virtual void scheduleModifyThermoTransportProperties(SchedulerP&,
-                                                const LevelP&,
-                                                const MaterialSet*);
-                                                
-   virtual void computeSpecificHeat(CCVariable<double>&,
-                                    const Patch*,
-                                    DataWarehouse*,
-                                    const int);
-                                    
-   virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
-                                      SchedulerP& sched);
-                                      
-   virtual void scheduleTestConservation(SchedulerP&,
-                                         const PatchSet* patches,
+    virtual void scheduleModifyThermoTransportProperties(SchedulerP&,
+							 const LevelP&,
+							 const MaterialSet*);
+    
+    virtual void computeSpecificHeat(CCVariable<double>&,
+				     const Patch*,
+				     DataWarehouse*,
+				     const int);
+    
+    virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
+				       SchedulerP& sched);
+    
+    virtual void scheduleTestConservation(SchedulerP&,
+					  const PatchSet* patches,
                                          const ModelInfo* mi);
   private:
     ICELabel* lb;
                                                 
-   void modifyThermoTransportProperties(const ProcessorGroup*, 
-                                        const PatchSubset* patches,        
-                                        const MaterialSubset*,             
-                                        DataWarehouse*,                    
-                                        DataWarehouse* new_dw);             
-   
+    void modifyThermoTransportProperties(const ProcessorGroup*, 
+					 const PatchSubset* patches,        
+					 const MaterialSubset*,             
+					 DataWarehouse*,                    
+					 DataWarehouse* new_dw);             
+    
     void initialize(const ProcessorGroup*, 
                     const PatchSubset* patches,
-                      const MaterialSubset* matls, 
-                    DataWarehouse*, 
-                      DataWarehouse* new_dw);
+		    const MaterialSubset* matls, 
+		    DataWarehouse*, 
+		    DataWarehouse* new_dw);
                                    
     void computeModelSources(const ProcessorGroup*, 
                              const PatchSubset* patches,
@@ -140,7 +144,7 @@ WARNING
     SimpleRxn(const SimpleRxn&);
     SimpleRxn& operator=(const SimpleRxn&);
 
-    ProblemSpecP params;
+    ProblemSpecP d_params {nullptr};
 
     const Material* d_matl;
     MaterialSet* d_matl_set;
@@ -188,8 +192,6 @@ WARNING
     double d_viscosity_air;
     double d_viscosity_fuel;
     
-    SimulationStateP d_sharedState;
-    Output* dataArchiver;
     std::vector<Vector> d_probePts;
     std::vector<std::string> d_probePtsNames;
     bool d_usingProbePts;

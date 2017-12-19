@@ -23,8 +23,13 @@
  */
 
 #include <CCA/Components/MPM/ConstitutiveModel/UCNH.h>
-#include <Core/Grid/Patch.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Components/MPM/Solver.h>
+//#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/MPMEquationOfStateFactory.h>
+
 #include <CCA/Ports/DataWarehouse.h>
+
+#include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/Task.h>
@@ -32,8 +37,6 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Labels/MPMLabel.h>
 #include <Core/Math/Matrix3.h>
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-//#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/MPMEquationOfStateFactory.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Exceptions/InvalidValue.h>

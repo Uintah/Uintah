@@ -40,8 +40,10 @@
 using namespace Uintah;
 using namespace std;
 
-Mixing::Mixing(const ProcessorGroup* myworld, ProblemSpecP& params)
-  : ModelInterface(myworld), params(params)
+Mixing::Mixing(const ProcessorGroup* myworld,
+	       const SimulationStateP& sharedState,
+	       const ProblemSpecP& params)
+  : ModelInterface(myworld, sharedState), d_params(params)
 {
   mymatls = 0;
 }
@@ -101,10 +103,10 @@ void Mixing::outputProblemSpec(ProblemSpecP& ps)
 
 }
 
-void Mixing::problemSetup(GridP&, SimulationStateP& sharedState,
+void Mixing::problemSetup(GridP&,
                           ModelSetup* setup, const bool isRestart)
 {
-  matl = sharedState->parseAndLookupMaterial(params, "material");
+  matl = m_sharedState->parseAndLookupMaterial(d_params, "material");
 
   vector<int> m(1);
   m[0] = matl->getDWIndex();
@@ -114,7 +116,7 @@ void Mixing::problemSetup(GridP&, SimulationStateP& sharedState,
 
   // Parse the streams
   int index = 0;
-  for (ProblemSpecP child = params->findBlock("stream"); child != nullptr; child = child->findNextBlock("stream")) {
+  for (ProblemSpecP child = d_params->findBlock("stream"); child != nullptr; child = child->findNextBlock("stream")) {
     Stream* stream = scinew Stream();
     stream->index = index++;
     child->getAttribute("name", stream->name);
@@ -154,7 +156,7 @@ void Mixing::problemSetup(GridP&, SimulationStateP& sharedState,
   if(streams.size() == 0)
     throw ProblemSetupException("Mixing specified with no streams!", __FILE__, __LINE__);
 
-  for (ProblemSpecP child = params->findBlock("reaction"); child != nullptr; child = child->findNextBlock("reaction")) {
+  for (ProblemSpecP child = d_params->findBlock("reaction"); child != nullptr; child = child->findNextBlock("reaction")) {
     Reaction* rxn = scinew Reaction();
     string from;
     child->require("from", from);

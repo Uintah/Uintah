@@ -130,13 +130,6 @@ public:
 
   void scheduleSwitchTest(const LevelP& level, SchedulerP& sched);
   
-  void setMPMLabel(MPMLabel* Mlb)
-  {
-
-        delete lb;
-        lb = Mlb;
-  };
-
   enum IntegratorType {
     Explicit,
     Implicit 

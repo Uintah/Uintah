@@ -62,12 +62,15 @@ WARNING
 
   class TestModel : public ModelInterface {
   public:
-    TestModel(const ProcessorGroup* myworld, ProblemSpecP& params);
+    TestModel(const ProcessorGroup* myworld,
+	      const SimulationStateP& sharedState,
+	      const ProblemSpecP& params);
+    
     virtual ~TestModel();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
 
-    virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
+    virtual void problemSetup(GridP& grid,
                               ModelSetup* setup, const bool isRestart);
       
     virtual void scheduleInitialize(SchedulerP&,
@@ -111,7 +114,7 @@ WARNING
     TestModel(const TestModel&);
     TestModel& operator=(const TestModel&);
 
-    ProblemSpecP params;
+    ProblemSpecP d_params;
     const Material* matl0;
     const Material* matl1;
     MPMICELabel* MIlb;
@@ -123,7 +126,6 @@ WARNING
     
     const VarLabel* totalMassXLabel;
     const VarLabel* totalIntEngXLabel;
-    SimulationStateP d_sharedState;
   };
 }
 

@@ -26,14 +26,16 @@
 #ifndef Packages_Uintah_CCA_Components_Models_SolidReactionModel_h
 #define Packages_Uintah_CCA_Components_Models_SolidReactionModel_h
 
-#include <CCA/Components/Models/SolidReactionModel/RateConstant.h>
-#include <CCA/Components/Models/SolidReactionModel/RateModel.h>
 #include <CCA/Ports/ModelInterface.h>
 
 namespace Uintah {
-    class ICELabel;
-    
-    /**************************************
+
+  class RateConstant;
+  class RateModel;
+  
+  class ICELabel;
+
+  /**************************************
      
      CLASS
      SolidReactionModel
@@ -64,13 +66,16 @@ namespace Uintah {
     
     class SolidReactionModel : public ModelInterface {
     public:
-        SolidReactionModel(const ProcessorGroup* d_myworld, ProblemSpecP& params,
+        SolidReactionModel(const ProcessorGroup* d_myworld,
+			   const SimulationStateP& sharedState,
+			   const ProblemSpecP& params,
                            const ProblemSpecP& prob_spec);
-        virtual ~SolidReactionModel();
+
+      virtual ~SolidReactionModel();
         
         virtual void outputProblemSpec(ProblemSpecP& ps);
         
-        virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
+        virtual void problemSetup(GridP& grid,
                                   ModelSetup* setup, const bool isRestart);
         
         virtual void scheduleInitialize(SchedulerP&,
@@ -117,10 +122,10 @@ namespace Uintah {
         SolidReactionModel& operator=(const SolidReactionModel&);
         
         // Innards
-        RateConstant *rateConstant;  // k(T)
-        RateModel    *rateModel;     // f(a)
-        const Material* reactant;
-        const Material* product;
+        RateConstant *rateConstant {nullptr};  // k(T)
+        RateModel    *rateModel {nullptr};     // f(a)
+        const Material* reactant {nullptr};
+        const Material* product {nullptr};
         std::string fromMaterial;
         std::string toMaterial;
         double d_E0;                 // Enthalpy change for reaction in J/kg
@@ -134,7 +139,6 @@ namespace Uintah {
         const VarLabel* totalMassBurnedLabel;  
         const VarLabel* totalHeatReleasedLabel;
  
-
         // flags for the conservation test
         struct saveConservedVars{
           bool onOff;
@@ -143,13 +147,9 @@ namespace Uintah {
         };
         saveConservedVars* d_saveConservedVars;
 
-
         // Some Uintah Necessities
-        ProblemSpecP d_params;
-        ProblemSpecP d_prob_spec;
-        SimulationStateP d_sharedState;
-
-
+        ProblemSpecP d_params {nullptr};
+        ProblemSpecP d_prob_spec {nullptr};
 
         #define d_SMALL_NUM 1e-100
         #define d_TINY_RHO 1e-12

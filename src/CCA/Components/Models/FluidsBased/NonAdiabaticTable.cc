@@ -34,7 +34,10 @@
 #include <CCA/Components/Models/FluidsBased/NonAdiabaticTable.h>
 #include <CCA/Components/Models/FluidsBased/TableFactory.h>
 #include <CCA/Components/Models/FluidsBased/TableInterface.h>
+
+#include <CCA/Ports/Output.h>
 #include <CCA/Ports/Scheduler.h>
+
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/CellIterator.h>
@@ -47,8 +50,9 @@
 #include <Core/Labels/ICELabel.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Parallel/ProcessorGroup.h>
-#include <iostream>
 #include <Core/Util/DebugStream.h>
+
+#include <iostream>
 #include <cstdio>
 
 using namespace Uintah;
@@ -61,11 +65,14 @@ using namespace std;
 static DebugStream cout_doing("MODELS_DOING_COUT", false);
 static DebugStream cout_dbg("ADIABATIC_TABLE_DBG_COUT", false);
 
-//______________________________________________________________________              
+//______________________________________________________________________
 NonAdiabaticTable::NonAdiabaticTable(const ProcessorGroup* myworld, 
-                     ProblemSpecP& params)
-  : ModelInterface(myworld), params(params)
+				     const SimulationStateP & sharedState,
+				     const ProblemSpecP& params)
+  : ModelInterface(myworld, sharedState), d_params(params)
 {
+  m_modelComputesThermoTransportProps = true;
+
   d_scalar = 0;
   d_matl_set = 0;
   lb  = scinew ICELabel();
@@ -117,12 +124,11 @@ NonAdiabaticTable::Region::Region(GeometryPieceP piece, ProblemSpecP& ps)
 //     P R O B L E M   S E T U P
 void
 NonAdiabaticTable::problemSetup( GridP &,
-                                 SimulationStateP & shared_state,
-                                 ModelSetup       * setup , const bool isRestart)
+                                 ModelSetup * setup , const bool isRestart)
 {
   cout_doing << "Doing problemSetup \t\t\t\tADIABATIC_TABLE" << endl;
-  d_sharedState = shared_state;
-  d_matl = d_sharedState->parseAndLookupMaterial( params, "material" );
+
+  d_matl = m_sharedState->parseAndLookupMaterial( d_params, "material" );
 
   vector<int> m(1);
   m[0] = d_matl->getDWIndex();
@@ -131,19 +137,19 @@ NonAdiabaticTable::problemSetup( GridP &,
   d_matl_set->addReference();
 
   // Get parameters
-  params->getWithDefault("varianceScale", varianceScale, 0.0);
-  params->getWithDefault("varianceMax", varianceMax, 1.0);
+  d_params->getWithDefault("varianceScale", varianceScale, 0.0);
+  d_params->getWithDefault("varianceMax", varianceMax, 1.0);
   useVariance = (varianceScale != 0.0);
 
   //__________________________________
   //setup the table
   string tablename = "adiabatic";
-  table = TableFactory::readTable(params, tablename);
+  table = TableFactory::readTable(d_params, tablename);
   table->addIndependentVariable("F");
   if(useVariance)
     table->addIndependentVariable("Fvar");
   
-  for( ProblemSpecP child = params->findBlock("tableValue"); child != nullptr; child = child->findNextBlock("tableValue") ) {
+  for( ProblemSpecP child = d_params->findBlock("tableValue"); child != nullptr; child = child->findNextBlock("tableValue") ) {
     TableValue* tv = scinew TableValue;
     child->get(tv->name);
     tv->index = table->addDependentVariable(tv->name);
@@ -221,11 +227,10 @@ NonAdiabaticTable::problemSetup( GridP &,
                                                                   td_CCdouble);
   d_scalar->sum_scalar_fLabel   = VarLabel::create("sum_scalar_f", 
                                             sum_vartype::getTypeDescription());
-  d_modelComputesThermoTransportProps = true;
   
   //__________________________________
   // Read in the constants for the scalar
-   ProblemSpecP child = params->findBlock("scalar");
+   ProblemSpecP child = d_params->findBlock("scalar");
    if (!child){
      throw ProblemSetupException("NonAdiabaticTable: Couldn't find scalar tag", __FILE__, __LINE__);    
    }
@@ -369,7 +374,7 @@ void NonAdiabaticTable::initialize(const ProcessorGroup*,
       } // Over cells
     } // regions
     
-    setBC( f, "scalar-f", patch, d_sharedState, indx, new_dw );
+    setBC( f, "scalar-f", patch, m_sharedState, indx, new_dw );
 
     //__________________________________
     // initialize other properties
@@ -424,7 +429,7 @@ void NonAdiabaticTable::initialize(const ProcessorGroup*,
       else
         eReleased[c] = temp[c] * cp - ref_temp[c] * icp;
     }
-    setBC( eReleased, "cumulativeEnergyReleased", patch, d_sharedState,indx, new_dw );
+    setBC( eReleased, "cumulativeEnergyReleased", patch, m_sharedState,indx, new_dw );
 
     //__________________________________
     //  Dump out a header for the probe point files
@@ -791,7 +796,7 @@ void NonAdiabaticTable::computeModelSources(const ProcessorGroup*,
       //__________________________________
       //  dump out the probe points
       if (d_usingProbePts ) {
-        double time = d_sharedState->getElapsedSimTime();
+        double time = m_sharedState->getElapsedSimTime();
         double nextDumpTime = oldProbeDumpTime + 1.0/d_probeFreq;
         
         if (time >= nextDumpTime){        // is it time to dump the points
