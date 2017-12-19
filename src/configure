@@ -35,6 +35,22 @@
 # ## IN THE SOFTWARE.
 # ##
 #
+##
+## IMPORTANT!!!  Configure developers, PLEASE READ:
+##
+## The following BULLET PROOFING needs to be placed manually into
+## configure every time after autoconf is run, and before configure is
+## checked in:
+##
+## To avoid allowing invalid arguments to configure, we have to manually
+## hack the 'configure' script after it has been 'autoconf'd, and add the
+## line "enable_option_checking=fatal".  There apparently is no way to do
+## this through autoconf macros... sigh.  Manually find this entire text
+## block (comment and all) in configure, MOVE IT ALL TO THE TOP OF THE FILE
+## (just after the MIT license), and uncomment the following line:
+##
+enable_option_checking=fatal
+#
 ## -------------------- ##
 ## M4sh Initialization. ##
 ## -------------------- ##
@@ -3007,22 +3023,6 @@ fi
 
   sci_arg_var_list="$sci_arg_var_list NVCC_LDFLAGS"
 
-
-##
-## IMPORTANT!!!  Configure developers, PLEASE READ:
-##
-## The following BULLET PROOFING needs to be placed manually into
-## configure every time after autoconf is run, and before configure is
-## checked in:
-##
-## To avoid allowing invalid arguments to configure, we have to manually
-## hack the 'configure' script after it has been 'autoconf'd, and add the
-## line "enable_option_checking=fatal".  There apparently is no way to do
-## this through autoconf macros... sigh.  Manually find this entire text
-## block (comment and all) in configure, MOVE IT ALL TO THE TOP OF THE FILE
-## (just after the MIT license), and uncomment the following line:
-##
-# enable_option_checking=fatal
 
 # Make sure we can run config.sub.
 $SHELL "$ac_aux_dir/config.sub" sun4 >/dev/null 2>&1 ||
