@@ -26,7 +26,7 @@
 #define UINTAH_CCA_COMPONENTS_MPMFVM_ESCONDUCTIVITYMODEL_H
 
 #include <CCA/Components/FVM/FVMLabel.h>
-#include <CCA/Components/MPM/MPMFlags.h>
+#include <CCA/Components/MPM/Core/MPMFlags.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Grid/Ghost.h>

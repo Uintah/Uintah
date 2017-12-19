@@ -31,7 +31,7 @@
 #include <CCA/Components/FVM/ElectrostaticSolve.h>
 #include <CCA/Components/MPMFVM/ESConductivityModel.h>
 #include <CCA/Components/MPM/AMRMPM.h>
-#include <CCA/Components/MPM/MPMFlags.h>
+#include <CCA/Components/MPM/Core/MPMFlags.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Output.h>
 #include <CCA/Ports/Scheduler.h>

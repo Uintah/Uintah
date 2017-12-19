@@ -30,7 +30,7 @@
 #include <CCA/Components/FVM/FVMLabel.h>
 #include <CCA/Components/FVM/GaussSolve.h>
 #include <CCA/Components/MPM/AMRMPM.h>
-#include <CCA/Components/MPM/MPMFlags.h>
+#include <CCA/Components/MPM/Core/MPMFlags.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Output.h>
 #include <CCA/Ports/Scheduler.h>

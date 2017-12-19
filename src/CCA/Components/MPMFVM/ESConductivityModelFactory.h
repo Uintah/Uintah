@@ -26,7 +26,7 @@
 #define UINTAH_CCA_COMPONENTS_MPMFVM_ESCONDUCTIVITYMODELFACTORY_H
 
 #include <CCA/Components/FVM/FVMLabel.h>
-#include <CCA/Components/MPM/MPMFlags.h>
+#include <CCA/Components/MPM/Core/MPMFlags.h>
 #include <CCA/Components/MPMFVM/ESConductivityModel.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
