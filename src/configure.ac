@@ -3036,7 +3036,7 @@ if test "$HAVE_BLAS" != "yes"; then
   case $host in
     *-darwin*)
        if test "$yosemite_plus" = yes; then
-          SCI_TRY_LINK(BLAS,blas and cblas libraries-darwin (yosemite+),Accelerate/Accelerate.h,
+          SCI_TRY_LINK(BLAS,blas and cblas libraries-darwin (Accelerate framework),Accelerate/Accelerate.h,
                        $_sci_inc,cblas blas,$_sci_lib,-framework Accelerate $F_LIB_DIR_FLAG $F_LIB_FLAG,[
                                                                                 float x[]={0.7f};
                                                                                 float y[]={0.8f};
@@ -3051,7 +3051,7 @@ if test "$HAVE_BLAS" != "yes"; then
              DEF_ACCELERATE="#define HAVE_ACCELERATE 1"
           fi
        else
-          SCI_TRY_LINK(BLAS,blas and cblas libraries-darwin,vecLib/cblas.h,
+          SCI_TRY_LINK(BLAS,blas and cblas libraries-darwin (veclib framework),vecLib/cblas.h,
                        $_sci_inc,cblas blas,$_sci_lib,-framework vecLib $F_LIB_DIR_FLAG $F_LIB_FLAG,[
                                                                                 float x[]={0.7f};
                                                                                 float y[]={0.8f};
@@ -3181,7 +3181,7 @@ if test "$HAVE_LAPACK" != "yes"; then
           fi
        fi
        if test "$HAVE_LAPACK" = no ; then
-       	  SCI_TRY_LINK(LAPACK,lapack li brary,,,lapack,$_sci_lib,$BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
+       	  SCI_TRY_LINK(LAPACK,lapack library (OSX non-framework),,,lapack,$_sci_lib,$BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
        fi
        ;;
      *)
