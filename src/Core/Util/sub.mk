@@ -36,7 +36,6 @@ SRCS += \
         $(SRCDIR)/FileUtils.cc          \
         $(SRCDIR)/ProgressiveWarning.cc \
         $(SRCDIR)/RWS.cc                \
-        $(SRCDIR)/sci_system.cc         \
         $(SRCDIR)/SizeTypeConvert.cc    \
         $(SRCDIR)/soloader.cc           \
         $(SRCDIR)/StringUtil.cc         \
@@ -53,6 +52,6 @@ endif
 
 PSELIBS := Core/Containers Core/Exceptions Core/Malloc
 
-LIBS := $(DL_LIBRARY) $(Z_LIBRARY) $(THREAD_LIBRARY) $(SOCKET_LIBRARY) $(CUDA_LIBRARY)
+LIBS := $(DL_LIBRARY) $(Z_LIBRARY) $(CUDA_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

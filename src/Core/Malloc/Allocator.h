@@ -120,7 +120,7 @@ void GetGlobalStats( Allocator *
 
 int  GetNbins( Allocator* );
 
-void GetBinStats( Allocator  *
+void GetBinStats( Allocator *
                 , int         binno
                 , size_t    & minsize
                 , size_t    & maxsize
@@ -135,14 +135,9 @@ void DumpAllocator( Allocator*, const char* filename = "alloc.dump" );
 
 
 //------------------------------------------------------------------------------
-// TODO: Standardize this with C++11, APH 12/15/17
-//
-// Functions for locking and unlocking the allocator.  In the
-// pthreads implementation, these use a recursive lock that will
-// allow the same thread to lock and unlock the allocator until
-// UnLockAllocator is called.  In other implementations this just uses
-// the regular lock and unlock functions.
+// Functions for locking and unlocking the allocator.
 void LockAllocator( Allocator* );
+
 void UnLockAllocator( Allocator* );
   
 
@@ -158,12 +153,12 @@ void* operator new[]( size_t, Uintah::Allocator*, const char*, int );
 #define scinew new( Uintah::default_allocator, __FILE__, __LINE__ )
 
 
+// SCI_MALLOC is disabled
 #else
 
-// define scinew to new when defined( DISABLE_SCI_MALLOC )
-#define scinew new
+#define scinew new        // define scinew to new when defined( DISABLE_SCI_MALLOC )
 
-#endif // DISABLE_SCI_MALLOC
+#endif // !defined( DISABLE_SCI_MALLOC )
 
 #endif // CORE_MALLOC_ALLOCATOR_H
  

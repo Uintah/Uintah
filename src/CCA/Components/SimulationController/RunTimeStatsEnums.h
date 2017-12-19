@@ -58,7 +58,7 @@ namespace Uintah {
   // timing statistics to test load balance
   enum RunTimeStatsEnum
   {
-    // These five enumerators are used in SimulationController::printSimulationStats to determine the overhead time.
+    // These five enumerators are used in SimulationController::ReportStats to determine the overhead time.
       CompilationTime = 0
     , RegriddingTime
     , RegriddingCompilationTime

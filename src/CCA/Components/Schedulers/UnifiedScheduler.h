@@ -63,7 +63,7 @@ KEYWORDS
    Task Scheduler, Multi-threaded MPI, CPU, GPU
 
 DESCRIPTION
-   A multi-threaded scheduler that uses a combination of MPI + Pthreads
+   A multi-threaded scheduler that uses a combination of MPI + std::thread
    and offers support for GPU tasks. Dynamic scheduling with non-deterministic,
    out-of-order execution of tasks at runtime. One MPI rank per multi-core node.
    threads (std::thread) are pinned to individual CPU cores where these tasks are executed.

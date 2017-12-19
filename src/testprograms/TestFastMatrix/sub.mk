@@ -46,7 +46,6 @@ else
         $(MPI_LIBRARY)                    \
         $(F_LIBRARY)                      \
         $(LAPACK_LIBRARY) $(BLAS_LIBRARY) \
-        $(THREAD_LIBRARY)                 \
         $(CUDA_LIBRARY)                   
 endif
 

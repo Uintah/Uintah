@@ -53,7 +53,6 @@ ifeq ($(IS_STATIC_BUILD),yes)
 else
   LIBS := $(LAPACK_LIBRARY) \
           $(BLAS_LIBRARY)   \
-          $(THREAD_LIBRARY) \
 	        $(MPI_LIBRARY)    \
 	        $(XML2_LIBRARY)   \
 	        $(CUDA_LIBRARY)

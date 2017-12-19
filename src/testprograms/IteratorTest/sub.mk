@@ -38,14 +38,14 @@ endif
 PSELIBS := $(GPU_EXTRA_LINK) $(PSELIBS)
 
 ifeq ($(IS_STATIC_BUILD),yes)
-  LIBS := $(CORE_STATIC_LIBS) $(ZOLTAN_LIBRARY)    \
-          $(BOOST_LIBRARY)         \
-          $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY) \
-          $(TABPROPS_LIBRARY) $(RADPROPS_LIBRARY)  \
+  LIBS := $(CORE_STATIC_LIBS) $(ZOLTAN_LIBRARY)      \
+          $(BOOST_LIBRARY)                           \
+          $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY)   \
+          $(TABPROPS_LIBRARY) $(RADPROPS_LIBRARY)    \
           $(PAPI_LIBRARY) $(M_LIBRARY)
 
 else
-  LIBS := $(LAPACK_LIBRARY) $(BLAS_LIBRARY) $(THREAD_LIBRARY) \
+  LIBS := $(LAPACK_LIBRARY) $(BLAS_LIBRARY)          \
 	  $(MPI_LIBRARY) $(XML2_LIBRARY) $(CUDA_LIBRARY)
 endif
 

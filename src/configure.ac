@@ -646,12 +646,6 @@ SCI_ARG_ENABLE(verbose,
   [verbose="yes"],
   [verbose="no"])
   
-SCI_ARG_ENABLE(threads,
-  AC_HELP_STRING(--enable-threads,
-                 Specify a thread implementation (pthreads or irix)),
-  [threads="$enableval"],
-  [threads=${threads='unknown'}])
-  
 SCI_ARG_ENABLE(debug,
   AC_HELP_STRING(--enable-debug,
                  Turn on debugging (default is -g) or specify your own.
@@ -1603,10 +1597,6 @@ case $host in
     FFLAGS="$extra_cflags $FFLAGS"
     CFLAGS="$extra_cflags -D__USE_STD_IOSTREAM $CFLAGS"
     CXXFLAGS="-model ansi $extra_cflags -D__USE_STD_IOSTREAM $CXXFLAGS"
-    if test "$threads" != "none"; then
-      CFLAGS="$CFLAGS -pthread"
-      CXXFLAGS="$CXXFLAGS -pthread"
-    fi
     SOFLAGS="-warning_unresolved -update_registry \$(LIBDIR)/so_locations"
     LDFLAGS=""
     LDRUN_PREFIX="-rpath "
@@ -2178,79 +2168,8 @@ AC_SUBST(RT_LIB_FLAG)
 
 MPI_EXTRA_LIB_FLAG="$MPI_EXTRA_LIB_FLAG $RT_LIB_FLAG"
 
-##  --  check for the required thread library  ---------------------------
 
-SOCKET_LIBRARY=""
-
-case $host in
-  *)
-    if test "$threads" = "unknown"; then
-      threads=pthreads
-    elif test "$threads" != "pthreads" -a "$threads" != "none"; then
-      SCI_MSG_ERROR(unknown thread type for host $host: $threads. exiting.)
-    fi
-    ;;
-esac
-
-case $threads in
-   pthreads)
-      SCI_TRY_LINK(PTHREAD,pthread library and headers,pthread.h semaphore.h,,
-                   pthread,,,,required)
-
-      if test "$HAVE_PTHREAD" = "yes"; then
-        THREAD_LIB_FLAG="$PTHREAD_LIB_FLAG"
-        DEF_THREAD="#define SCI_PTHREAD 1"
-      fi
-
-      AC_MSG_CHECKING(for semaphore library)
-      old_LIBS="$LIBS"
-      SEMAPHORE_LIB_FLAG=unknown
-      for i in "" "$THREAD_LIB_FLAG" $RT_LIB_FLAG; do
-        LIBS="$old_LIBS $i"
-        AC_TRY_LINK([
-#include <semaphore.h>
-      ], [
-    sem_t sem;
-    sem_init(&sem, 0, 0);
-    sem_post(&sem);
-      ], [
-         SEMAPHORE_LIB_FLAG=$i
-         break
-         ])
-      done
-      if test "$SEMPAPHORE_LIB_FLAG" = unknown; then
-        AC_MSG_RESULT(not found)
-        AC_MSG_ERROR([semaphore library(sem_post, sem_wait, etc) needed for pthreads])
-      else
-        if test "$SEMAPHORE_LIB_FLAG" = "$THREAD_LIB_FLAG"; then
-          AC_MSG_RESULT(already in thread library: $THREAD_LIB_FLAG)
-          SEMAPHORE_LIB_FLAG=""
-        elif test "$SEMAPHORE_LIB_FLAG"; then
-          AC_MSG_RESULT($SEMAPHORE_LIB_FLAG)
-        else
-          AC_MSG_RESULT(none required)
-        fi
-      fi
-      LIBS="$old_LIBS"
-      ;;
-   none)
-      DEF_THREAD="#define SCI_NOTHREAD 1"
-      AC_MSG_WARN(threads disabled - software may work incorrectly)
-      ;;
-   *)
-      SCI_MSG_ERROR(unknown thread type for host $host: $threads. exiting.)
-      ;;
-esac      
-
-AC_SUBST(THREAD_LIB_FLAG)
-AC_SUBST(DEF_THREAD)
-sci_defs_files="$sci_defs_files include/sci_defs/thread_testdefs.h"
-
-AC_SUBST(SEMAPHORE_LIB_FLAG)
-
-AC_SUBST(CFLAGS)
-
-##  -- check for gcc atomic support
+##  -- check for gcc atomic support -----------------------------
 
 SCI_TRY_LINK(GCCSYNC,gcc style atomic operations ,,,,,,[ int x;   __sync_add_and_fetch(&x,1);],optional)
 if test "$HAVE_GCCSYNC" = "yes"; then
@@ -3356,7 +3275,7 @@ if test "$sci_required_mpi" = "yes" -a "$with_mpi" != "built-in"; then
         test_libs[[8]]="mpich pmpich"
         test_libs[[9]]="mpich"
         test_libs[[10]]="mpi_mt"
-	test_libs[[11]]="mpich-xl opa-xl mpl-xl pami-gcc SPI SPI_cnk rt pthread stdc++" # Vulcan@LLNL
+	      test_libs[[11]]="mpich-xl opa-xl mpl-xl pami-gcc SPI SPI_cnk rt stdc++" # Vulcan@LLNL
 
         unset other
         other[[0]]=""
@@ -3892,7 +3811,7 @@ EOF
 
   # for a static build, use the static CUDA runtime lib
   if test "$static" != "no" -o "$SO_OR_ARCHIVE_EXTENSION" = "a"; then
-     _cudart_lib="cudart_static dl pthread rt"
+     _cudart_lib="cudart_static dl rt"
   else
      _cudart_lib="cudart"
   fi

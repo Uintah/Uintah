@@ -51,9 +51,9 @@ ifeq ($(IS_STATIC_BUILD),yes)
           $(TABPROPS_LIBRARY) $(RADPROPS_LIBRARY)      \
           $(PAPI_LIBRARY) $(M_LIBRARY) $(PIDX_LIBRARY)
 else
-  LIBS := $(MPI_LIBRARY) $(BLAS_LIBRARY) $(THREAD_LIBRARY) $(XML2_LIBRARY) \
-          $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY)                         \
-          $(TABPROPS_LIBRARY) $(RADPROPS_LIBRARY)                          \
+  LIBS := $(MPI_LIBRARY) $(BLAS_LIBRARY) $(XML2_LIBRARY)     \
+          $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY)           \
+          $(TABPROPS_LIBRARY) $(RADPROPS_LIBRARY)            \
           $(CUDA_LIBRARY) $(BOOST_LIBRARY) $(PIDX_LIBRARY)
 endif
 

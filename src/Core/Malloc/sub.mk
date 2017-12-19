@@ -38,7 +38,7 @@ SRCS     += $(SRCDIR)/Allocator.cc \
             $(SRCDIR)/new.cc
 
 PSELIBS := 
-LIBS := $(THREAD_LIBRARY) $(Z_LIBRARY)
+LIBS := $(Z_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

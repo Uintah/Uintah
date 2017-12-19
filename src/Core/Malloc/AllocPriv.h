@@ -34,23 +34,12 @@
  *
  */
 
-#include <sci_defs/thread_defs.h>
 #include <sci_defs/malloc_defs.h>
 
 #include <cstdlib>
-#include <stdio.h>
+#include <mutex>
 
-#ifdef SCI_PTHREAD
-#  include <pthread.h>
-#else
-#  ifdef __sgi
-#    include <abi_mutex.h>
-#  else
-#    if !defined(SCI_NOTHREAD)
-#      error "No lock implementation for this architecture"
-#    endif
-#  endif
-#endif
+#include <stdio.h>
 
 namespace Uintah {
 
@@ -63,113 +52,94 @@ struct Sentinel {
 
 struct AllocBin;
 
+
 struct Tag {
-  AllocBin* bin;
-  const char* tag;
+  AllocBin   * bin;
+  const char * tag;
 #ifdef USE_TAG_LINENUM
-  int linenum;
+  int          linenum;
 #endif
-  Tag* next;
-  Tag* prev;
-  OSHunk* hunk;
-  size_t reqsize;
+  Tag        * next;
+  Tag        * prev;
+  OSHunk     * hunk;
+  size_t       reqsize;
 };
 
 
 struct AllocBin {
-  Tag* free;
-  Tag* inuse;
-  size_t maxsize;
-  size_t minsize;
-  int ninuse;
-  int ntotal;
-  size_t nalloc;
-  size_t nfree;
+  Tag    * free;
+  Tag    * inuse;
+  size_t   maxsize;
+  size_t   minsize;
+  int      ninuse;
+  int      ntotal;
+  size_t   nalloc;
+  size_t   nfree;
 };
 
+
 struct Allocator {
-#ifdef SCI_PTHREAD
-   pthread_mutex_t the_lock;
-#else
-# ifdef __sgi
-   abilock_t the_lock;
-# endif
-#endif
-    void initlock();
-    inline void lock();
-    inline void unlock();
-  void noninline_unlock();
 
-#ifdef SCI_PTHREAD
-    inline void rlock();
-    // These (dont_lock et.al.) are added in an attempt to deal with some
-    // bugs with current versions of glibc in linux.  If and when they get
-    // resolved, this code should be removed.  The bug relates to mishandling
-    // of mutex's across fork calls.
-    // This variable is initialized in initlock.
-    //   James Bigler - 02/04/2003
-    bool use_rlock;
-    // Current thread that has the lock
-    // I'm not sure what to initialize this to, but 0 seems a close enough bet
-    pthread_t owner;
-    bool owner_initialized;
-    // Number of locks held by owner
-    int lock_count;
+  void lock();
 
-#endif
-  
-    void* alloc_big(size_t size, const char* tag, int linenum);
-    
-    void* memalign(size_t alignment, size_t size, const char* tag);
-    void* alloc(size_t size, const char* tag, int linenum);
-#ifdef MALLOC_TRACE
-#  include <MallocTraceOff.h>
-#endif
-    void free(void*);
-    void* realloc(void* p, size_t size);
-#ifdef MALLOC_TRACE
-#  include <MallocTraceOn.h>
-#endif
+  void unlock();
 
-    int strict;
-    int lazy;
-    FILE* trace_out;
-    FILE* stats_out;
-    char* statsfile;
-    OSHunk* hunks;
+  void* alloc_big( size_t size, const char* tag, int linenum );
 
-    AllocBin * small_bins;
-    AllocBin * medium_bins;
-    AllocBin   big_bin;
+  void* memalign( size_t alignment, size_t size, const char* tag );
 
-    inline AllocBin* get_bin(size_t size);
-    void fill_bin(AllocBin*);
-    void get_hunk(size_t, OSHunk*&, void*&);
+  void* alloc( size_t size, const char* tag, int linenum );
 
-    void init_bin(AllocBin*, size_t maxsize, size_t minsize);
+  void free( void* );
 
-    void audit(Tag*, int);
-    size_t obj_maxsize(Tag*);
+  void* realloc( void* p, size_t size );
 
-    // Statistics...
-    size_t nalloc;
-    size_t nfree;
-    size_t sizealloc;
-    size_t sizefree;
+  inline AllocBin* get_bin( size_t size );
 
-    size_t nfillbin;
-    size_t nmmap;
-    size_t sizemmap;
-    size_t nmunmap;
-    size_t sizemunmap;
+  void fill_bin( AllocBin* );
 
-    size_t highwater_alloc;
-    size_t highwater_mmap;
+  void get_hunk( size_t, OSHunk*&, void*& );
 
-    size_t mysize;
+  void init_bin( AllocBin*, size_t maxsize, size_t minsize );
 
+  void audit( Tag*, int );
+
+  size_t obj_maxsize( Tag* );
+
+
+  int      strict;
+  int      lazy;
+  FILE   * stats_out;
+  char   * stats_out_filename;
+  OSHunk * hunks;
+
+  AllocBin * small_bins;
+  AllocBin * medium_bins;
+  AllocBin   big_bin;
+
+
+  // Statistics...
+  size_t nalloc;
+  size_t nfree;
+  size_t sizealloc;
+  size_t sizefree;
+
+  size_t nfillbin;
+  size_t nmmap;
+  size_t sizemmap;
+  size_t nmunmap;
+  size_t sizemunmap;
+
+  size_t highwater_alloc;
+  size_t highwater_mmap;
+
+  size_t mysize;
   size_t pagesize;
+
   bool dying;
+
+  std::mutex m_lock{};
+
 };
 
 void AllocError(const char*);

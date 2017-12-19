@@ -56,8 +56,7 @@ include $(SCIRUN_SCRIPTS)/recurse.mk
 
 PSELIBS := 
 
-LIBS := $(THREAD_LIBRARY)  \
-        $(M_LIBRARY) 
+LIBS := $(M_LIBRARY) 
 
 
 include $(SCIRUN_SCRIPTS)/largeso_epilogue.mk

@@ -67,10 +67,8 @@ ifeq ($(IS_STATIC_BUILD),yes)
           $(TABPROPS_LIBRARY) $(RADPROPS_LIBRARY)      \
           $(PAPI_LIBRARY) $(M_LIBRARY) $(PIDX_LIBRARY)
 else
-  # (Note, THREAD_LIBRARY must come after BLAS_LIBRARY.)
   LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(F_LIBRARY) \
-          $(BLAS_LIBRARY) $(THREAD_LIBRARY)                        \
-	  $(BOOST_LIBRARY) $(CUDA_LIBRARY) $(PIDX_LIBRARY)
+          $(BLAS_LIBRARY) $(BOOST_LIBRARY) $(CUDA_LIBRARY) $(PIDX_LIBRARY)
 endif
 
 include $(SCIRUN_SCRIPTS)/program.mk

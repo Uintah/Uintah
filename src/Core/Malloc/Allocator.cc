@@ -46,7 +46,7 @@
 
 #if !defined( DISABLE_SCI_MALLOC )
 
-static const int ALIGN = 16;
+static const int s_allocator_align = 16;
 
 #  include <Core/Malloc/AllocPriv.h>
 #  include <Core/Malloc/AllocOS.h>
@@ -64,10 +64,6 @@ static const int ALIGN = 16;
 // irix64 KCC stuff
 #  include <strings.h>
 #  include <cstdio>
-
-#  ifdef SCI_PTHREAD
-#    include <pthread.h>
-#  endif
 
 // NOTE(boulos): On Darwin systems, even if it's not a 64-bit build the
 // compiler will generate warnings (so we use %lu for that case as well)
@@ -88,10 +84,6 @@ static const int ALIGN = 16;
 namespace Uintah {
 
 #  define STATSIZE           (4096+BUFSIZ)
-
-#  ifndef DISABLE_SCI_MALLOC
-     static char trace_buffer[STATSIZE];
-#  endif
 
 // Granularity of small things - 8 bytes
 // Anything smaller than this is considered "small"
@@ -132,7 +124,8 @@ Allocator* default_allocator = nullptr;
 
 //______________________________________________________________________________
 //
-void AllocatorMallocStatsAppendNumber(int num)
+void
+AllocatorMallocStatsAppendNumber( int num )
 {
   mallocStatsAppendNum = num;
 }
@@ -144,7 +137,8 @@ inline size_t Allocator::obj_maxsize( Tag* t )
 
 //______________________________________________________________________________
 //
-static void
+static
+void
 account_bin( Allocator * a
            , AllocBin  * bin
            , FILE      * out
@@ -184,9 +178,9 @@ shutdown()
   static char stat_buffer[STATSIZE];
 
   Allocator* a = DefaultAllocator();
-  if (a->statsfile && !a->stats_out) {
+  if (a->stats_out_filename && !a->stats_out) {
     char filename[256];
-    strcpy(filename, a->statsfile);
+    strcpy(filename, a->stats_out_filename);
     if (mallocStatsAppendNum >= 0) {
       strcat(filename, ".");
       sprintf(filename + strlen(filename), "%i", mallocStatsAppendNum);
@@ -275,7 +269,8 @@ shutdown()
 
 //______________________________________________________________________________
 //
-inline AllocBin*
+inline
+AllocBin*
 Allocator::get_bin( size_t size )
 {
   if (size <= SMALL_THRESHOLD) {
@@ -291,194 +286,85 @@ Allocator::get_bin( size_t size )
   }
 }
 
-#  if defined(SCI_NOTHREAD) || defined(DISABLE_SCI_MALLOC)
-
-void Allocator::initlock()
-{
-}
-
-
-inline void Allocator::lock()
-{
-}
-
-inline void Allocator::unlock()
-{
-}
-
-
-void LockAllocator(Allocator * /*a*/)
-{
-}
-
-void UnLockAllocator(Allocator * /*a*/)
-{
-}
-#  else
-#    ifdef SCI_PTHREAD
-
-// I'm using this code to make sure that if a thread locks the allocator
-// that this thread is the only one who can use the allocator until
-// it unlocks the mutex.
-
-// These should be made part of the allocator class when verified that it
-// works.
+#if defined(DISABLE_SCI_MALLOC)
 
 //______________________________________________________________________________
 //
 void
 Allocator::initlock()
 {
-  // Set this to false.  We don't want to use a recursive mutex unless needed
-  use_rlock = false;
-  lock_count = 0;
-  owner = 0;
-  owner_initialized = false;
-
-  static pthread_mutex_t init = PTHREAD_MUTEX_INITIALIZER;
-  the_lock = init;
+  // do nothing
 }
+
 
 //______________________________________________________________________________
 //
-inline void
+void
 Allocator::lock()
 {
-  if (!use_rlock) {
-    // Lock the mutex
-    if (pthread_mutex_lock(&the_lock) != 0) {
-      perror("Allocator::lock: pthread_mutex_lock");
-      exit(-1);
-    }
-  }
-  else {
-    pthread_t me = pthread_self();
-    // pthread_equal returns a non zero value when they are equal
-    if (owner_initialized && pthread_equal(owner, me)) {
-      // Already have exclusive rights, so increment the lock count
-      lock_count++;
-      return;
-    }
-    // Lock the mutex
-    if (pthread_mutex_lock(&the_lock) != 0) {
-      perror("Allocator::lock: pthread_mutex_lock");
-      exit(-1);
-    }
-  }
+  // do nothing
+}
+
+
+//______________________________________________________________________________
+//
+void
+Allocator::unlock()
+{
+  // do nothing
 }
 
 //______________________________________________________________________________
 //
-inline void
-Allocator::rlock()
+void
+LockAllocator( Allocator * /*a*/ )
 {
-  pthread_t me = pthread_self();
-  // pthread_equal returns a non zero value when they are equal
-  if (owner_initialized && pthread_equal(owner, me)) {
-    // Already have exclusive rights, so increment the lock count
-    lock_count++;
-    return;
-  }
-  // Lock the mutex
-  if (pthread_mutex_lock(&the_lock) != 0) {
-    perror("Allocator::lock: pthread_mutex_lock");
-    exit(-1);
-  }
-  // Set the owner to the calling thread
-  owner = me;
-  owner_initialized = true;
-  use_rlock = true;
-  // Start the count at 1.
-  lock_count = 1;
-}
-
-inline void Allocator::unlock()
-{
-  if (!use_rlock) {
-    if(pthread_mutex_unlock(&the_lock) != 0) {
-      perror("pthread_mutex_lock");
-      exit(-1);
-    }
-  } else {
-    // If the lock_count is 0, then the thread is done using it.  Unlock it
-    // and go.
-    if(--lock_count == 0) {
-      // Again, I don't know what to initialize owner to, so I'll make sure
-      // that I set this flag to make sure we know if it is initialized.
-      owner = 0;
-      owner_initialized = false;
-      // Since this is the last unlock for this thread, we turn off the use
-      // of the recursive mutex.  If we want to use it again, we have to
-      // explicitly lock the allocator again.
-      use_rlock = false;
-      if(pthread_mutex_unlock(&the_lock) != 0) {
-        perror("pthread_mutex_lock");
-        exit(-1);
-      }
-    }
-  }
+  // do nothing
 }
 
 //______________________________________________________________________________
 //
-void LockAllocator(Allocator *a)
+void
+UnLockAllocator( Allocator * /*a*/ )
 {
-  a->rlock();
+  // do nothing
+}
+
+#  else
+
+//______________________________________________________________________________
+//
+void
+Allocator::lock()
+{
+  m_lock.lock();
 }
 
 //______________________________________________________________________________
 //
-void UnLockAllocator(Allocator *a)
+void
+Allocator::unlock()
 {
-  a->unlock();
-}
-
-#    else
-
-#      ifdef __sgi
-
-//______________________________________________________________________________
-//
-void Allocator::initlock()
-{
-  if(init_lock(&the_lock))
-    AllocError("Error initializing lock");
+  m_lock.unlock();
 }
 
 //______________________________________________________________________________
 //
-inline void Allocator::lock()
-{
-  spin_lock(&the_lock);
-}
-
-//______________________________________________________________________________
-//
-inline void Allocator::unlock()
-{
-  if(release_lock(&the_lock) != 0)
-    AllocError("Error unlocking lock");
-}
-
-//______________________________________________________________________________
-//
-void LockAllocator(Allocator *a)
+void
+LockAllocator( Allocator *a )
 {
   a->lock();
 }
 
 //______________________________________________________________________________
 //
-void UnLockAllocator(Allocator *a)
+void
+UnLockAllocator( Allocator *a )
 {
   a->unlock();
 }
 
-#      else  // !__sgi
-#        error ERROR: undefined allocator lock mode (Malloc/Allocator.cc).
-#      endif // __sgi
-#    endif // SCI_PTHREAD
-#  endif // SCI_NOTHREAD ||| DISABLE_SCI_MALLOC
+#  endif // DISABLE_SCI_MALLOC
 
 //______________________________________________________________________________
 //
@@ -493,7 +379,7 @@ MakeDefaultAllocator()
 //______________________________________________________________________________
 //
 void
-AllocError(const char* msg)
+AllocError( const char* msg )
 {
   fprintf(stderr, "Allocator error: %s\n", msg);
   abort();
@@ -565,49 +451,8 @@ MakeAllocator()
 
   a->pagesize = getpagesize();
 
-  // Setup the lock...
-  a->initlock();
 
-  // Must run this block of code before the MALLOC_STATS code
-  // because the "alloc" in the MALLOC_STATS block uses the
-  // "trace_out" var that is set here.
-
-  bool atexit_added = false;
-
-  if (getenv("MALLOC_TRACE")) {
-    // Set the default allocator, since the fopen below may call malloc.
-    if (!default_allocator) {
-      default_allocator = a;
-    }
-
-    char* tracefile = getenv("MALLOC_TRACE");
-    if (!tracefile || strlen(tracefile) == 0) {
-      a->trace_out = stderr;
-    }
-    else {
-      char filename[MAXPATHLEN];
-      sprintf(filename, tracefile, getpid());
-      a->trace_out = fopen(filename, "w");
-      setvbuf(a->trace_out, trace_buffer, _IOFBF, STATSIZE);
-      if (!a->trace_out) {
-        perror("fopen");
-        fprintf(stderr, "cannot open trace file: %s, not tracing\n", tracefile);
-        a->trace_out = nullptr;
-      }
-    }
-    if (a->trace_out) {
-      if (!a->stats_out) {
-        a->stats_out = a->trace_out;
-        std::atexit(shutdown);
-        atexit_added = true;
-      }
-    }
-  }
-  else {
-    a->trace_out = nullptr;
-  }
-
-  a->statsfile = nullptr;
+  a->stats_out_filename = nullptr;
   char* statsfile = getenv("MALLOC_STATS");
 
   if (statsfile) {
@@ -620,13 +465,20 @@ MakeAllocator()
       a->stats_out = stderr;
     }
     else {
-      // open stats_out at the end to make sure MPI processes have split
-      //char filename[MAXPATHLEN];
-      //sprintf(filename, statsfile, getpid());
-      a->statsfile = statsfile;
+
+      a->stats_out_filename = statsfile;
+
+//      char filename[MAXPATHLEN];
+//      sprintf(filename, statsfile, getpid());
+//      a->stats_out = fopen(filename, "w");
+//      if (!a->stats_out) {
+//        perror("fopen");
+//        fprintf(stderr, "cannot open trace file: %s, not tracing\n", statsfile);
+//        a->stats_out = nullptr;
+//      }
 
     }
-    if ((a->stats_out || statsfile) && !atexit_added) {
+    if ((a->stats_out || statsfile)) {
       std::atexit(shutdown);
     }
   }
@@ -738,14 +590,6 @@ Allocator::alloc( size_t size
       *p++ = i;
   }
 
-  if (trace_out) {
-#  ifdef USE_TAG_LINENUM
-    fprintf(trace_out, "A %p " UCONV " (%s:%d)\n", d, (SIZET)size, tag, linenum);
-#  else
-    fprintf(trace_out, "A %p " UCONV " (%s)\n", d, (SIZET)size, tag);
-#  endif
-  }
-
   return (void*)d;
 }
 
@@ -805,9 +649,9 @@ Allocator::alloc_big(       size_t   size
     size_t npages = (tsize + pagesize - 1) / pagesize;
     tsize = npages * pagesize;
     tsize -= sizeof(OSHunk);
-    unsigned long offset = sizeof(OSHunk) % ALIGN;
+    unsigned long offset = sizeof(OSHunk) % s_allocator_align;
     if (offset != 0) {
-      offset = ALIGN - offset;
+      offset = s_allocator_align - offset;
     }
 
     tsize -= offset;
@@ -917,14 +761,6 @@ Allocator::alloc_big(       size_t   size
     }
   }
 
-  if (trace_out) {
-#  ifdef USE_TAG_LINENUM
-    fprintf(trace_out, "A %p " UCONV " (%s:%d)\n", d, (SIZET)size, tag, linenum);
-#  else
-    fprintf(trace_out, "A %p " UCONV " (%s)\n",d, (SIZET)size, tag);
-#  endif
-  }
-
   return (void*)d;
 }
 
@@ -951,8 +787,8 @@ Allocator::realloc( void* dobj, size_t newsize )
   // Check the simple case first...
   AllocBin* oldbin = get_bin(oldobj->bin->maxsize);
   if (newsize <= obj_maxsize(oldobj) && newsize >= oldbin->minsize) {
-    size_t oldsize = oldobj->reqsize;
     oldobj->reqsize = newsize;
+
     // Setup the new sentinels...
     char* data = (char*)oldobj;
     data += sizeof(Tag);
@@ -969,13 +805,6 @@ Allocator::realloc( void* dobj, size_t newsize )
         *p++ = i;
     }
 
-    if (trace_out) {
-#  ifdef USE_TAG_LINENUM
-      fprintf(trace_out, "R %p " UCONV " %p " UCONV " (%s:%d)\n", dobj, (SIZET)oldsize, dobj, (SIZET)newsize, oldobj->tag, oldobj->linenum);
-#  else
-      fprintf(trace_out, "R %p " UCONV " %p " UCONV " (%s)\n", dobj, (SIZET)oldsize, dobj, (SIZET)newsize, oldobj->tag);
-#  endif
-    }
     return dobj;
   }
 
@@ -988,14 +817,6 @@ Allocator::realloc( void* dobj, size_t newsize )
 
   bcopy(dobj, nobj, minsize);
   free(dobj);
-
-  if (trace_out) {
-#  ifdef USE_TAG_LINENUM
-    fprintf(trace_out, "R %p " UCONV " %p " UCONV " (%s:%d)\n", dobj, (SIZET)oldsize, nobj, (SIZET)newsize, oldobj->tag, oldobj->linenum);
-#  else
-    fprintf(trace_out, "R %p " UCONV " %p " UCONV " (%s)\n", dobj, (SIZET)oldsize, nobj, (SIZET)newsize, oldobj->tag);
-#  endif
-  }
 
   return nobj;
 }
@@ -1033,7 +854,7 @@ Allocator::memalign(size_t alignment, size_t size, const char* ctag)
 
 //______________________________________________________________________________
 //
-void Allocator::free(void* dobj)
+void Allocator::free( void* dobj )
 {
   //    fprintf(stderr, "Freeing %x\n", dobj);
 
@@ -1058,15 +879,6 @@ void Allocator::free(void* dobj)
     free((void*)obj->prev);
 
     return;
-  }
-
-  // Make sure that it is still intact...
-  if (trace_out) {
-#  ifdef USE_TAG_LINENUM
-    fprintf(trace_out, "F %p " UCONV " (%s:%d)\n", dobj, (SIZET)obj->reqsize, obj->tag, obj->linenum);
-#  else
-    fprintf(trace_out, "F %p " UCONV " (%s)\n", dobj, (SIZET)obj->reqsize, obj->tag);
-#  endif
   }
 
   if (!lazy) {
@@ -1134,7 +946,7 @@ void Allocator::free(void* dobj)
 
 //______________________________________________________________________________
 //
-void Allocator::fill_bin(AllocBin* bin)
+void Allocator::fill_bin( AllocBin* bin )
 {
   nfillbin++;
   if (bin->maxsize <= MEDIUM_THRESHOLD) {
@@ -1192,7 +1004,7 @@ void Allocator::fill_bin(AllocBin* bin)
 //______________________________________________________________________________
 //
 void
-Allocator::init_bin(AllocBin* bin, size_t maxsize, size_t minsize)
+Allocator::init_bin( AllocBin* bin, size_t maxsize, size_t minsize )
 {
   bin->maxsize = maxsize;
   bin->minsize = minsize;
@@ -1218,7 +1030,7 @@ printObjectAllocMessage( Tag* obj )
 //______________________________________________________________________________
 //
 void
-Allocator::audit(Tag* obj, int what)
+Allocator::audit( Tag* obj, int what )
 {
   char* data = (char*)obj;
   data += sizeof(Tag);
@@ -1330,7 +1142,7 @@ Allocator::audit(Tag* obj, int what)
 //______________________________________________________________________________
 //
 void
-Allocator::get_hunk(size_t reqsize, OSHunk*& ret_hunk, void*& ret_p)
+Allocator::get_hunk( size_t reqsize, OSHunk*& ret_hunk, void*& ret_p )
 {
   // See if we have room in any of the current hunks...
   OSHunk* hunk;
@@ -1358,9 +1170,6 @@ Allocator::get_hunk(size_t reqsize, OSHunk*& ret_hunk, void*& ret_p)
   hunk->spaceleft -= reqsize;
   ret_p = hunk->curr;
   hunk->curr = (void*)((char*)hunk->curr + reqsize);
-  if (default_allocator && default_allocator->trace_out) {
-    fprintf(default_allocator->trace_out, "H %p %p " UCONV "\n", hunk, ret_p, (SIZET)reqsize);
-  }
 
   ret_hunk = hunk;
 }
@@ -1368,7 +1177,7 @@ Allocator::get_hunk(size_t reqsize, OSHunk*& ret_hunk, void*& ret_p)
 //______________________________________________________________________________
 //
 void
-PrintTag(void* dobj)
+PrintTag( void* dobj )
 {
   char* dd = (char*)dobj;
   dd -= sizeof(Sentinel);
@@ -1574,7 +1383,7 @@ DefaultAllocator()
 //______________________________________________________________________________
 //
 static void
-audit_bin(Allocator* a, AllocBin* bin)
+audit_bin( Allocator* a, AllocBin* bin )
 {
   Tag* p;
   for (p = bin->free; p != nullptr; p = p->next) {
@@ -1621,9 +1430,10 @@ void AuditDefaultAllocator()
 //______________________________________________________________________________
 //
 static void
-dump_bin( Allocator*,
-          AllocBin* bin,
-          FILE* fp )
+dump_bin( Allocator *
+        , AllocBin  * bin
+        , FILE      * fp
+        )
 {
   for (Tag* p = bin->inuse; p != nullptr; p = p->next) {
 #  ifdef USE_TAG_LINENUM
@@ -1667,14 +1477,6 @@ DumpAllocator( Allocator* a, const char* filename )
   a->unlock();
 
   fclose(fp);
-}
-
-//______________________________________________________________________________
-//
-void
-Allocator::noninline_unlock()
-{
-  unlock();
 }
 
 } // End namespace Uintah

@@ -45,7 +45,7 @@ ifeq ($(IS_STATIC_BUILD),yes)
           $(PAPI_LIBRARY) $(M_LIBRARY)
 
 else
-  LIBS := $(MPI_LIBRARY) $(BLAS_LIBRARY) $(THREAD_LIBRARY) $(CUDA_LIBRARY)
+  LIBS := $(MPI_LIBRARY) $(BLAS_LIBRARY) $(CUDA_LIBRARY)
 endif
 
 include $(SCIRUN_SCRIPTS)/program.mk

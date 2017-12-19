@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/MPM/Petsc/Solver/Solver.h>
+#include <CCA/Components/MPM/Solver/PetscSolver.h>
 #include <Core/Exceptions/InternalError.h>
 
 
