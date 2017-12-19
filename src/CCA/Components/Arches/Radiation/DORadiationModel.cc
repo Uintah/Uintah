@@ -666,7 +666,7 @@ struct computeAMatrix{
 //***************************************************************************
 // Sums the intensities to compute the 6 fluxes, and incident radiation
 //***************************************************************************
-template <typename constCCVar_or_CCVar>
+template <typename constCCVar_or_CCVar, typename constDouble_or_double>
 struct compute4Flux{
        compute4Flux( double  _omu, double _oeta, double _oxi, double  _wt,
                    constCCVar_or_CCVar &_intensity,  ///< intensity field corresponding to unit direction vector [mu eta xi]
@@ -712,7 +712,7 @@ struct compute4Flux{
        double  wt;     ///< ordinate weight
 
 #ifdef UINTAH_ENABLE_KOKKOS
-       KokkosView3<double> intensity; ///< intensity solution from linear solve
+       KokkosView3<constDouble_or_double> intensity; ///< intensity solution from linear solve
        KokkosView3<double> fluxX;   ///< x-directional flux ( positive or negative direction)
        KokkosView3<double> fluxY;   ///< y-directional flux ( positive or negative direction)
        KokkosView3<double> fluxZ;   ///< z-directional flux ( positive or negative direction)
@@ -978,7 +978,7 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
 
 
 
-      compute4Flux<CCVariable<double> > doFlux(wt[direcn]*abs(omu[direcn])*d_xfluxAdjust,wt[direcn]*abs(oeta[direcn])*d_yfluxAdjust,wt[direcn]*abs(oxi[direcn])*d_zfluxAdjust,
+      compute4Flux<CCVariable<double>, double> doFlux(wt[direcn]*abs(omu[direcn])*d_xfluxAdjust,wt[direcn]*abs(oeta[direcn])*d_yfluxAdjust,wt[direcn]*abs(oxi[direcn])*d_zfluxAdjust,
                                                                     wt[direcn],  vars->cenint,
                                                                     plusX ? vars->qfluxe :  vars->qfluxw,
                                                                     plusY ? vars->qfluxn :  vars->qfluxs,
@@ -1734,7 +1734,7 @@ DORadiationModel::computeFluxDiv(const Patch* patch,
       constCCVariable <double > intensity;
       new_dw->get(intensity,_IntensityLabels[direcn-1+iband*d_totalOrds] , matlIndex, patch, Ghost::None,0 );   // this should be a requires,  type restriction
 
-      compute4Flux<constCCVariable<double> > doFlux(wt[direcn]*abs(omu[direcn])*d_xfluxAdjust,wt[direcn]*abs(oeta[direcn])*d_yfluxAdjust,wt[direcn]*abs(oxi[direcn])*d_zfluxAdjust,
+      compute4Flux<constCCVariable<double>, const double> doFlux(wt[direcn]*abs(omu[direcn])*d_xfluxAdjust,wt[direcn]*abs(oeta[direcn])*d_yfluxAdjust,wt[direcn]*abs(oxi[direcn])*d_zfluxAdjust,
                                                     wt[direcn],  intensity,
                                                     _plusX[direcn-1]==1 ? fluxE :  fluxW,
                                                     _plusY[direcn-1]==1 ? fluxN :  fluxS,
