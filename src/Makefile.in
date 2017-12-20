@@ -72,13 +72,13 @@ endif
 # do not modify...
 #
 COMPONENTS      = CCA/Components
-CA              = CCA/Components/Arches
 ifeq ($(BUILD_ARCHES),yes)
+  CA = CCA/Components/Arches
+  ARCHES_LIBS        = $(COMPONENTS)/Arches
   ARCHES_SUB_LIBS = $(CA)/fortran 
   ifeq ($(BUILD_MPM),yes)
     MPMARCHES_LIB    = $(COMPONENTS)/MPMArches
   endif
-  ARCHES_LIBS        = $(COMPONENTS)/Arches
 endif
 
 ifeq ($(BUILD_FVM),yes)
@@ -89,14 +89,37 @@ ifeq ($(BUILD_FVM),yes)
 endif
 
 ifeq ($(BUILD_MPM),yes)
+  CM = CCA/Components/MPM
   MPM_LIB            = CCA/Components/MPM
+  MPM_SUB_LIBS = \
+	$(CM)/CohesiveZone      \
+	$(CM)/Core              \
+	$(CM)/HeatConduction    \
+	$(CM)/Materials         \
+	$(CM)/MMS               \
+	$(CM)/PhysicalBC        \
+        $(CM)/Solver            \
+	$(CM)/ThermalContact     
   ifeq ($(BUILD_ICE),yes)
+    CMI = CCA/Components/MPMICE
     MPMICE_LIB       = CCA/Components/MPMICE
+    MPMICE_SUB_LIBS = \
+	$(CI)/Core
   endif
 endif
 
 ifeq ($(BUILD_ICE),yes)
+  CI = CCA/Components/ICE
   ICE_LIB            = CCA/Components/ICE
+  ICE_SUB_LIBS = \
+	$(CI)/Advection         \
+	$(CI)/Core              \
+	$(CI)/CustomBCs         \
+	$(CI)/EOS               \
+	$(CI)/Materials         \
+	$(CI)/SpecificHeatModel \
+	$(CI)/TurbulenceModel   \
+	$(CI)/WallShearStressModel
 endif
 
 # Cover both cases when Wasatch lib should be built.
@@ -146,8 +169,11 @@ ALL_PSE_LIBS =                              \
         $(MPMARCHES_LIB)                    \
         $(FVM_LIB)                          \
         $(MPM_LIB)                          \
+        $(MPM_SUB_LIBS)                     \
         $(ICE_LIB)                          \
+        $(ICE_SUB_LIBS)                     \
         $(MPMICE_LIB)                       \
+        $(MPMICE_SUB_LIBS)                  \
         $(MPMFVM_LIB)                       \
         $(WASATCH_LIB)                      \
         $(HEAT_LIB)                         \
@@ -171,8 +197,11 @@ ALL_STATIC_PSE_LIBS =                   \
     $(MPMARCHES_LIB)                    \
     $(FVM_LIB)                          \
     $(MPM_LIB)                          \
+    $(MPM_SUB_LIBS)                     \
     $(ICE_LIB)                          \
+    $(ICE_SUB_LIBS)                     \
     $(MPMICE_LIB)                       \
+    $(MPMICE_SUB_LIBS)                  \
     $(MPMFVM_LIB)                       \
     $(WASATCH_LIB)                      \
     $(HEAT_LIB)                         \
