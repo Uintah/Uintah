@@ -29,6 +29,7 @@
 
 #include <CCA/Ports/ModelInterface.h>
 #include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Grid/Variables/NCVariable.h>
 
 namespace Uintah {
   class ICELabel;

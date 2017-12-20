@@ -32,8 +32,8 @@
 #include <CCA/Components/Arches/CellInformationP.h>
 #include <CCA/Components/Arches/NonlinearSolver.h>
 #include <CCA/Components/Arches/TurbulenceModel.h>
-#include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/ConstitutiveModel.h>
+#include <CCA/Components/MPM/Materials/MPMMaterial.h>
 #include <CCA/Components/MPM/Core/MPMBoundCond.h>
 #include <CCA/Components/MPM/ThermalContact/ThermalContact.h>
 #include <CCA/Components/MPMArches/CutCellInfo.h>

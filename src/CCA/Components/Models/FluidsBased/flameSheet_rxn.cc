@@ -22,27 +22,30 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/ICE/ICEMaterial.h>
-#include <CCA/Components/ICE/ConservationTest.h>
-#include <CCA/Components/ICE/Diffusion.h>
 #include <CCA/Components/Models/FluidsBased/flameSheet_rxn.h>
+
+#include <CCA/Components/ICE/Core/ConservationTest.h>
+#include <CCA/Components/ICE/Core/Diffusion.h>
+#include <CCA/Components/ICE/Materials/ICEMaterial.h>
+
 #include <CCA/Ports/Scheduler.h>
+
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Exceptions/InvalidValue.h>
+#include <Core/GeometryPiece/GeometryPieceFactory.h>
+#include <Core/GeometryPiece/UnionGeometryPiece.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Material.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/GeometryPiece/GeometryPieceFactory.h>
-#include <Core/GeometryPiece/UnionGeometryPiece.h>
-#include <Core/Labels/ICELabel.h>
+#include <CCA/Components/ICE/Core/ICELabel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-
 #include <Core/Math/MiscMath.h>
-#include <iostream>
 #include <Core/Util/DebugStream.h>
+
+#include <iostream>
 
 using namespace Uintah;
 using namespace std;

@@ -46,7 +46,6 @@
 namespace Uintah {
 
   class DataWarehouse;  
-  class ModelMaker;
   class Output;
   class Regridder;
 
@@ -230,9 +229,6 @@ WARNING
     virtual const VarLabel* getDelTLabel() const { return m_delTLabel; }
 
     //////////
-    virtual void setNeedModelMaker(bool val) { m_needModelMaker = val; }
-    virtual bool needModelMaker() const { return m_needModelMaker; }
-    
     virtual void setAMR(bool val) { m_AMR = val; }
     virtual bool isAMR() const { return m_AMR; }
   
@@ -312,7 +308,6 @@ WARNING
   protected:
     Scheduler*       m_scheduler{nullptr};
     LoadBalancer* m_loadBalancer{nullptr};
-    ModelMaker*      m_modelMaker{nullptr};
     SolverInterface* m_solver{nullptr};
     Regridder*       m_regridder{nullptr};
     Output*          m_output{nullptr};
@@ -320,7 +315,6 @@ WARNING
     bool m_recompile {false};
     
   private:
-    bool m_needModelMaker {false};
     bool m_AMR {false};
     bool m_lockstepAMR {false};
 

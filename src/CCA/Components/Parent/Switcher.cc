@@ -29,7 +29,6 @@
 #include <CCA/Components/SwitchingCriteria/None.h>
 #include <CCA/Components/SwitchingCriteria/SwitchingCriteriaFactory.h>
 #include <CCA/Ports/LoadBalancer.h>
-#include <CCA/Ports/ModelMaker.h>
 #include <CCA/Ports/Output.h>
 #include <CCA/Ports/Regridder.h>
 #include <CCA/Ports/Scheduler.h>
@@ -121,9 +120,6 @@ Switcher::Switcher( const ProcessorGroup * myworld,
 
     ApplicationInterface* app = dynamic_cast<ApplicationInterface*>(comp);
     attachPort( "application", app );
-
-    if( app->needModelMaker() )
-      setNeedModelMaker( true );
 
     // Create solver port and attach it to the switcher component.
     SolverInterface * solver = SolverFactory::create( subCompUps, myworld );    

@@ -31,27 +31,24 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := CCA/Components/ICE
 
-SRCS       += $(SRCDIR)/ICE.cc \
+SRCS += \
+       $(SRCDIR)/ICE.cc \
        $(SRCDIR)/AMRICE.cc \
-       $(SRCDIR)/ICEMaterial.cc \
-       $(SRCDIR)/Diffusion.cc \
-       $(SRCDIR)/BoundaryCond.cc \
        $(SRCDIR)/impICE.cc \
        $(SRCDIR)/impAMRICE.cc \
-       $(SRCDIR)/customInitialize.cc   \
-       $(SRCDIR)/ExchangeCoefficients.cc   	
-       
-SUBDIRS := $(SRCDIR)/EOS \
-       $(SRCDIR)/Advection \
-       $(SRCDIR)/CustomBCs \
-       $(SRCDIR)/SpecificHeatModel \
-       $(SRCDIR)/WallShearStressModel \
-       $(SRCDIR)/TurbulenceModel
-
-include $(SCIRUN_SCRIPTS)/recurse.mk          
+       $(SRCDIR)/customInitialize.cc
 
 PSELIBS := \
-       CCA/Components/Application \
+       $(SRCDIR)/Advection             \
+       $(SRCDIR)/Core                  \
+       $(SRCDIR)/CustomBCs             \
+       $(SRCDIR)/EOS                   \
+       $(SRCDIR)/Materials             \
+       $(SRCDIR)/SpecificHeatModel     \
+       $(SRCDIR)/TurbulenceModel       \
+       $(SRCDIR)/WallShearStressModel  \
+       CCA/Components/Application      \
+       CCA/Components/Models           \
        CCA/Components/OnTheFlyAnalysis \
        CCA/Ports                       \
        Core/Disclosure                 \
@@ -59,7 +56,6 @@ PSELIBS := \
        Core/Geometry                   \
        Core/GeometryPiece              \
        Core/Grid                       \
-       Core/Labels                     \
        Core/Math                       \
        Core/OS                         \
        Core/Parallel                   \
@@ -67,7 +63,8 @@ PSELIBS := \
        Core/Util                       
 
 ifeq ($(OS_NAME),Darwin)
-  PSELIBS += CCA/Components/MPM
+  PSELIBS += CCA/Components/MPM/Core \
+             CCA/Components/MPM/Materials
 endif
 
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
@@ -79,4 +76,17 @@ endif
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
+#### Handle subdirs that are their OWN SHARED LIBRARIES
+SUBDIRS := \
+	$(SRCDIR)/Advection         \
+	$(SRCDIR)/Core              \
+	$(SRCDIR)/CustomBCs         \
+	$(SRCDIR)/EOS               \
+	$(SRCDIR)/Materials         \
+	$(SRCDIR)/SpecificHeatModel \
+	$(SRCDIR)/TurbulenceModel   \
+	$(SRCDIR)/WallShearStressModel
+
+include $(SCIRUN_SCRIPTS)/recurse.mk
+#### End handle subdirs
 

@@ -26,7 +26,7 @@
 #ifndef Packages_Uintah_CCA_Components_ontheflyAnalysis_flatPlate_heatFlux_h
 #define Packages_Uintah_CCA_Components_ontheflyAnalysis_flatPlate_heatFlux_h
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Components/MPM/Materials/MPMMaterial.h>
 #include <CCA/Ports/Output.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/NCVariable.h>

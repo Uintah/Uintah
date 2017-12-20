@@ -32,10 +32,10 @@
 #include <Core/Grid/Ghost.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/SimulationState.h>
-#include <Core/Labels/MPMLabel.h>
+#include <CCA/Components/MPM/Core/MPMLabel.h>
 
 #include <string>
-#include <CCA/Components/MPM/Diffusion/ConductivityModels/ConductivityEquation.h>
+#include <CCA/Components/MPM/Materials/Diffusion/ConductivityModels/ConductivityEquation.h>
 
 namespace Uintah{
 /*************************************************

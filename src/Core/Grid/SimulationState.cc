@@ -33,9 +33,9 @@
 #include <Core/Grid/Variables/VarTypes.h>
 
 #include <CCA/Components/Arches/ArchesMaterial.h>
-#include <CCA/Components/ICE/ICEMaterial.h>
+#include <CCA/Components/ICE/Materials/ICEMaterial.h>
 #include <CCA/Components/MPM/CohesiveZone/CZMaterial.h>
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Components/MPM/Materials/MPMMaterial.h>
 #include <CCA/Components/Wasatch/WasatchMaterial.h>
 #include <CCA/Components/FVM/FVMMaterial.h>
 

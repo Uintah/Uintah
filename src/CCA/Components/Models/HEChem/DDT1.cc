@@ -23,28 +23,36 @@
  */
 
 
-#include <CCA/Components/ICE/BoundaryCond.h>
-#include <CCA/Components/ICE/ICEMaterial.h>
-#include <CCA/Components/Models/HEChem/Common.h>
 #include <CCA/Components/Models/HEChem/DDT1.h>
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Components/Models/HEChem/Common.h>
+
+#include <CCA/Components/ICE/Core/ICELabel.h>
+#include <CCA/Components/ICE/CustomBCs/BoundaryCond.h>
+#include <CCA/Components/ICE/Materials/ICEMaterial.h>
+#include <CCA/Components/MPM/Core/MPMLabel.h>
+#include <CCA/Components/MPM/Materials/MPMMaterial.h>
+#include <CCA/Components/MPMICE/Core/MPMICELabel.h>
+#include <CCA/Components/Regridder/PerPatchVars.h>
+
+#include <CCA/Ports/Regridder.h>
 #include <CCA/Ports/Scheduler.h>
-#include <Core/Exceptions/ProblemSetupException.h>
+
+#include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Material.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Grid/DbgOutput.h>
-#include <Core/Labels/ICELabel.h>
-#include <Core/Labels/MPMICELabel.h>
-#include <Core/Labels/MPMLabel.h>
-#include <Core/Parallel/Parallel.h>
+#include <Core/Exceptions/InvalidValue.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Util/DebugStream.h>
-#include <iostream>
 
+#include <iostream>
 
 using namespace Uintah;
 using namespace std;

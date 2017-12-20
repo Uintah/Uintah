@@ -49,9 +49,6 @@ namespace Uintah {
   private:
 
   };
-
-
-
 }
 
 #endif

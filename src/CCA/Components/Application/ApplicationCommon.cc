@@ -31,7 +31,6 @@
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/VarTypes.h>
 
-#include <CCA/Ports/ModelMaker.h>
 #include <CCA/Ports/Output.h>
 #include <CCA/Ports/Regridder.h>
 #include <CCA/Ports/Scheduler.h>
@@ -126,7 +125,6 @@ void ApplicationCommon::setComponents( UintahParallelComponent *comp )
 
   attachPort( "scheduler",     parent->m_scheduler );
   attachPort( "load balancer", parent->m_loadBalancer );
-  attachPort( "modelMaker",    parent->m_modelMaker );
   attachPort( "solver",        parent->m_solver );
   attachPort( "regridder",     parent->m_regridder );
   attachPort( "output",        parent->m_output );
@@ -146,12 +144,6 @@ void ApplicationCommon::getComponents()
 
   if( !m_loadBalancer ) {
     throw InternalError("dynamic_cast of 'm_loadBalancer' failed!", __FILE__, __LINE__);
-  }
-
-  m_modelMaker = dynamic_cast<ModelMaker*>( getPort("modelMaker") );
-
-  if( needModelMaker() && !m_modelMaker ) {
-    throw InternalError("dynamic_cast of 'm_modelMaker' failed!", __FILE__, __LINE__);
   }
 
   m_solver = dynamic_cast<SolverInterface*>( getPort("solver") );
@@ -177,14 +169,12 @@ void ApplicationCommon::releaseComponents()
 {
   releasePort( "scheduler" );
   releasePort( "load balancer" );
-  releasePort( "modelMaker" );
   releasePort( "solver" );
   releasePort( "regridder" );
   releasePort( "output" );
 
   m_scheduler    = nullptr;
   m_loadBalancer = nullptr;
-  m_modelMaker   = nullptr;
   m_solver       = nullptr;
   m_regridder    = nullptr;
   m_output       = nullptr;

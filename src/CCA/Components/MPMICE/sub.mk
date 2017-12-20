@@ -36,16 +36,21 @@ SRCS   += \
         $(SRCDIR)/MPMICE.cc \
 
 PSELIBS := \
-	CCA/Components/Application \
-	CCA/Components/MPM \
-	CCA/Components/ICE \
+	$(SRCDIR)/Core                  \
+	CCA/Components/Application      \
+	CCA/Components/MPM              \
+	CCA/Components/MPM/Core         \
+	CCA/Components/MPM/Materials    \
+	CCA/Components/ICE              \
+	CCA/Components/ICE/CustomBCs    \
+	CCA/Components/ICE/EOS          \
+	CCA/Components/ICE/Materials    \
 	CCA/Components/OnTheFlyAnalysis \
 	CCA/Ports          \
 	Core/Disclosure    \
 	Core/Exceptions    \
 	Core/Geometry      \
 	Core/Grid          \
-	Core/Labels        \
 	Core/Math          \
 	Core/Parallel      \
 	Core/ProblemSpec   \
@@ -55,3 +60,10 @@ LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
+
+#### Handle subdirs that are their OWN SHARED LIBRARIES
+SUBDIRS := \
+	$(SRCDIR)/Core
+
+include $(SCIRUN_SCRIPTS)/recurse.mk
+#### End handle subdirs

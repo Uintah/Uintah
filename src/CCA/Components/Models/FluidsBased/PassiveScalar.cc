@@ -23,9 +23,9 @@
  */
 
 
-#include <CCA/Components/ICE/ConservationTest.h>
-#include <CCA/Components/ICE/BoundaryCond.h>
-#include <CCA/Components/ICE/Diffusion.h>
+#include <CCA/Components/ICE/Core/ConservationTest.h>
+#include <CCA/Components/ICE/Core/Diffusion.h>
+#include <CCA/Components/ICE/CustomBCs/BoundaryCond.h>
 #include <CCA/Components/Models/FluidsBased/PassiveScalar.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
 #include <CCA/Ports/Scheduler.h>

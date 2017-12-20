@@ -52,23 +52,25 @@ PSELIBS :=                 \
         Core/GeometryPiece \
         Core/Grid          \
         Core/IO            \
-        Core/Labels        \
         Core/Math          \
         Core/Parallel      \
         Core/ProblemSpec   \
         Core/Util          
 
 ifneq ($(BUILD_ICE),no)
-  PSELIBS += CCA/Components/ICE
+  PSELIBS += CCA/Components/ICE/Core      \
+	     CCA/Components/ICE/CustomBCs \
+	     CCA/Components/ICE/Materials
 endif
 
 ifneq ($(BUILD_MPM),no)
-  PSELIBS += CCA/Components/MPM
+  PSELIBS += CCA/Components/MPM/Core      \
+	     CCA/Components/MPM/Materials
 endif
 
 ifneq ($(BUILD_MPM),no) 
+  PSELIBS += CCA/Components/MPMICE/Core
   ifneq ($(BUILD_ICE),no) 
-    PSELIBS += CCA/Components/MPMICE
     SUBDIRS += $(SRCDIR)/HEChem
     SUBDIRS += $(SRCDIR)/SolidReactionModel
   endif

@@ -24,19 +24,21 @@
  
 
 #include <CCA/Components/SwitchingCriteria/DDT1.h>
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Core/ProblemSpec/ProblemSpec.h>
+#include <CCA/Components/ICE/Core/ICELabel.h>
+#include <CCA/Components/MPM/Core/MPMLabel.h>
+#include <CCA/Components/MPMICE/Core/MPMICELabel.h>
+#include <CCA/Components/MPM/Materials/MPMMaterial.h>
+
+#include <CCA/Ports/Scheduler.h>
+
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <CCA/Ports/Scheduler.h>
-#include <Core/Labels/MPMLabel.h>
-#include <Core/Labels/MPMICELabel.h>
 #include <Core/Grid/Variables/CellIterator.h>
-#include <Core/Parallel/Parallel.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 
 #include <string>
 #include <iostream>

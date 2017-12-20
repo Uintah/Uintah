@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Components/MPM/Materials/MPMMaterial.h>
 #include <CCA/Components/MPMFVM/ESConductivityModel.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Vector.h>
@@ -40,7 +40,7 @@
 
 #include <vector>
 #include <iostream>
-#include <CCA/Components/MPM/Diffusion/DiffusionModels/ScalarDiffusionModel.h>
+#include <CCA/Components/MPM/Materials/Diffusion/DiffusionModels/ScalarDiffusionModel.h>
 
 using namespace Uintah;
 

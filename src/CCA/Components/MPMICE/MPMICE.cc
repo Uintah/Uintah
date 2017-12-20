@@ -23,12 +23,16 @@
  */
 
 // MPMICE.cc
+#include <CCA/Components/MPMICE/MPMICE.h>
+#include <CCA/Components/MPMICE/Core/MPMICELabel.h>
+
 #include <CCA/Components/ICE/AMRICE.h>
-#include <CCA/Components/ICE/BoundaryCond.h>
+#include <CCA/Components/ICE/Core/ICELabel.h>
+#include <CCA/Components/ICE/CustomBCs/BoundaryCond.h>
 #include <CCA/Components/ICE/EOS/EquationOfState.h>
 #include <CCA/Components/ICE/ICE.h>
-#include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
-#include <CCA/Components/MPMICE/MPMICE.h>
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/ConstitutiveModel.h>
+#include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <CCA/Components/MPM/Core/MPMBoundCond.h>
 #include <CCA/Components/MPM/RigidMPM.h>
 #include <CCA/Components/MPM/SerialMPM.h>
@@ -36,7 +40,6 @@
 #include <CCA/Components/MPM/ThermalContact/ThermalContact.h>
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModuleFactory.h>
 
-#include <CCA/Ports/ModelMaker.h>
 #include <CCA/Ports/Output.h>
 #include <CCA/Ports/Regridder.h>
 #include <CCA/Ports/Scheduler.h>
@@ -54,9 +57,6 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/Utils.h>
 #include <Core/Grid/DbgOutput.h>
-#include <Core/Labels/ICELabel.h>
-#include <Core/Labels/MPMICELabel.h>
-#include <Core/Labels/MPMLabel.h>
 #include <Core/Math/MiscMath.h>
 
 
@@ -121,8 +121,6 @@ MPMICE::MPMICE(const ProcessorGroup* myworld,
                          // to MPM materials, for which its value is hardcoded,
                          // unlike the situation for ice materials
 
-  setNeedModelMaker( d_ice->needModelMaker() );
-  
   d_switchCriteria = 0;
 }
 
@@ -144,7 +142,6 @@ MPMICE::~MPMICE()
       delete am;
     }
   }
-  
 }
 
 //__________________________________

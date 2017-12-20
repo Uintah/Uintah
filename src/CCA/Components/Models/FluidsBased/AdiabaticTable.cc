@@ -28,10 +28,10 @@
 // multimaterial checks in dynamic model
 // Avoid recomputation of variance
 
-#include <CCA/Components/ICE/ICEMaterial.h>
-#include <CCA/Components/ICE/ConservationTest.h>
-#include <CCA/Components/ICE/BoundaryCond.h>
-#include <CCA/Components/ICE/Diffusion.h>
+#include <CCA/Components/ICE/Core/ConservationTest.h>
+#include <CCA/Components/ICE/Core/Diffusion.h>
+#include <CCA/Components/ICE/CustomBCs/BoundaryCond.h>
+#include <CCA/Components/ICE/Materials/ICEMaterial.h>
 #include <CCA/Components/Models/FluidsBased/AdiabaticTable.h>
 #include <CCA/Components/Models/FluidsBased/TableFactory.h>
 #include <CCA/Components/Models/FluidsBased/TableInterface.h>
@@ -52,7 +52,7 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
 #include <Core/GeometryPiece/UnionGeometryPiece.h>
-#include <Core/Labels/ICELabel.h>
+#include <CCA/Components/ICE/Core/ICELabel.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Exceptions/InvalidValue.h>

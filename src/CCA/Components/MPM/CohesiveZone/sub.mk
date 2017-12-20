@@ -27,6 +27,7 @@
 # 
 # Makefile fragment for this subdirectory 
 
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := CCA/Components/MPM/CohesiveZone
 
@@ -34,6 +35,17 @@ SRCS     += \
 	$(SRCDIR)/CohesiveZone.cc \
 	$(SRCDIR)/CZMaterial.cc
 
-PSELIBS := Core/Grid \
-	Core/Datatypes \
-	Core/Util
+PSELIBS := \
+	CCA/Components/MPM/Core \
+	Core/Datatypes      \
+	Core/Disclosure     \
+	Core/Exceptions     \
+	Core/Geometry       \
+	Core/GeometryPiece  \
+	Core/Grid           \
+	Core/Math           \
+	Core/Parallel       \
+	Core/ProblemSpec    \
+	Core/Util           
+
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

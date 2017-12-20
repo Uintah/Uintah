@@ -33,33 +33,33 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR := CCA/Components/OnTheFlyAnalysis
 
 SRCS += \
-        $(SRCDIR)/AnalysisModuleFactory.cc   \
-        $(SRCDIR)/AnalysisModule.cc          \
-        $(SRCDIR)/1stLawThermo.cc            \
-        $(SRCDIR)/containerExtract.cc        \
-        $(SRCDIR)/flatPlate_heatFlux.cc      \
-        $(SRCDIR)/lineExtract.cc             \
-        $(SRCDIR)/MinMax.cc                  \
-        $(SRCDIR)/momentumAnalysis.cc        \
-        $(SRCDIR)/particleExtract.cc         \
-        $(SRCDIR)/planeExtract.cc            \
-        $(SRCDIR)/radiometer.cc              \
-        $(SRCDIR)/statistics.cc              \
+        $(SRCDIR)/AnalysisModuleFactory.cc \
+        $(SRCDIR)/AnalysisModule.cc        \
+        $(SRCDIR)/1stLawThermo.cc          \
+        $(SRCDIR)/containerExtract.cc      \
+        $(SRCDIR)/flatPlate_heatFlux.cc    \
+        $(SRCDIR)/lineExtract.cc           \
+        $(SRCDIR)/MinMax.cc                \
+        $(SRCDIR)/momentumAnalysis.cc      \
+        $(SRCDIR)/particleExtract.cc       \
+        $(SRCDIR)/planeExtract.cc          \
+        $(SRCDIR)/radiometer.cc            \
+        $(SRCDIR)/statistics.cc            \
         $(SRCDIR)/vorticity.cc
 
-
 PSELIBS := \
-        CCA/Ports                \
-        Core/Disclosure          \
-        Core/Exceptions          \
-        Core/Geometry            \
-        Core/GeometryPiece       \
-        Core/Grid                \
-        Core/Labels              \
-        Core/Math                \
-        Core/OS                  \
-        Core/Parallel            \
-        Core/ProblemSpec         \
+	CCA/Components/ICE/Core \
+	CCA/Components/MPM/Core \
+	CCA/Ports               \
+        Core/Disclosure         \
+        Core/Exceptions         \
+        Core/Geometry           \
+        Core/GeometryPiece      \
+        Core/Grid               \
+        Core/Math               \
+        Core/OS                 \
+        Core/Parallel           \
+        Core/ProblemSpec        \
         Core/Util
 
 LIBS := $(XML_LIBRARY) $(MPI_LIBRARY)

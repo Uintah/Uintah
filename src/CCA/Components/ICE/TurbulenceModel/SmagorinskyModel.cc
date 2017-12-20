@@ -23,8 +23,8 @@
  */
 
 
-#include <CCA/Components/ICE/BoundaryCond.h>
 #include <CCA/Components/ICE/TurbulenceModel/SmagorinskyModel.h>
+#include <CCA/Components/ICE/CustomBCs/BoundaryCond.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Grid/Patch.h>

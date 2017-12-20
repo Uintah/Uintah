@@ -27,23 +27,27 @@
 # 
 # Makefile fragment for this subdirectory 
 
-SRCDIR   := CCA/Components/ICE/Advection
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCS     += $(SRCDIR)/Advector.cc \
- 	$(SRCDIR)/FirstOrderAdvector.cc \
+SRCDIR := CCA/Components/ICE/Advection
+
+SRCS += $(SRCDIR)/Advector.cc \
+	$(SRCDIR)/FirstOrderAdvector.cc \
 	$(SRCDIR)/SecondOrderAdvector.cc \
- 	$(SRCDIR)/SecondOrderBase.cc \
+	$(SRCDIR)/SecondOrderBase.cc \
 	$(SRCDIR)/AdvectionFactory.cc
-	
-PSELIBS := \
-	CCA/Ports \
-	Core/Grid \
-	Core/Parallel \
-	Core/Exceptions \
-	Core/Math \
-	Core/Exceptions \
-	Core/Geometry 
 
-LIBS	:= 
+PSELIBS := \
+	Core/Disclosure     \
+	Core/Exceptions     \
+	Core/Geometry       \
+	Core/GeometryPiece  \
+	Core/Grid           \
+	Core/Math           \
+	Core/Parallel       \
+	Core/ProblemSpec    \
+	Core/Util           
+
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 

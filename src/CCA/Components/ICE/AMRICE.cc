@@ -24,7 +24,7 @@
 
 
 #include <CCA/Components/ICE/AMRICE.h>
-#include <CCA/Components/ICE/ICEMaterial.h>
+#include <CCA/Components/ICE/Materials/ICEMaterial.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
 #include <CCA/Ports/SolverInterface.h>
 #include <CCA/Ports/Scheduler.h>

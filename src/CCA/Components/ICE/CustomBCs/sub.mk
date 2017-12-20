@@ -27,24 +27,31 @@
 # 
 # Makefile fragment for this subdirectory 
 
-SRCDIR   := CCA/Components/ICE/CustomBCs
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCS     += $(SRCDIR)/C_BC_driver.cc \
-       $(SRCDIR)/microSlipBCs.cc \
-       $(SRCDIR)/LODI2.cc\
-       $(SRCDIR)/MMS_BCs.cc\
-       $(SRCDIR)/sine.cc\
-       $(SRCDIR)/inletVelocity.cc
-       
+SRCDIR := CCA/Components/ICE/CustomBCs
+
+SRCS += \
+	$(SRCDIR)/BoundaryCond.cc \
+	$(SRCDIR)/C_BC_driver.cc \
+        $(SRCDIR)/inletVelocity.cc \
+        $(SRCDIR)/LODI2.cc \
+        $(SRCDIR)/microSlipBCs.cc \
+        $(SRCDIR)/MMS_BCs.cc \
+        $(SRCDIR)/sine.cc
+
 PSELIBS := \
-	CCA/Ports \
-	Core/Grid \
-	Core/Parallel \
-	Core/Exceptions \
-	Core/Math \
-	Core/Exceptions \
-	Core/Geometry 
+	CCA/Components/ICE/EOS \
+	CCA/Components/ICE/Materials \
+	Core/Disclosure     \
+	Core/Exceptions     \
+	Core/Geometry       \
+	Core/GeometryPiece  \
+	Core/Grid           \
+	Core/Math           \
+	Core/Parallel       \
+	Core/ProblemSpec    \
+	Core/Util           
 
-LIBS	:= 
-
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

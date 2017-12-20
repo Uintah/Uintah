@@ -23,15 +23,23 @@
  */
  
 // make uintah CXX=/usr/bin/iwyu
+
+
 #include <CCA/Components/MPM/AMRMPM.h>
-#include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DamageModel.h>
-#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/ErosionModel.h>
-#include <CCA/Components/MPM/Contact/Contact.h>                     // for Contact
-#include <CCA/Components/MPM/Contact/ContactFactory.h>
-#include <CCA/Components/MPM/Core/MPMBoundCond.h>                        // for MPMBoundCond
-#include <CCA/Components/MPM/ParticleCreator/ParticleCreator.h>
+
+#include <CCA/Components/MPM/Core/MPMDiffusionLabel.h> // for MPMDiffusionLabel
+#include <CCA/Components/MPM/Core/MPMLabel.h>          // for MPMLabel
+#include <CCA/Components/MPM/Core/MPMBoundCond.h>      // for MPMBoundCond
+#include <CCA/Components/MPM/Materials/MPMMaterial.h>
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/ConstitutiveModel.h>
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/PlasticityModels/DamageModel.h>
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/PlasticityModels/ErosionModel.h>
+#include <CCA/Components/MPM/Materials/Contact/Contact.h> // for Contact
+#include <CCA/Components/MPM/Materials/Contact/ContactFactory.h>
+#include <CCA/Components/MPM/Materials/Diffusion/DiffusionInterfaces/SDInterfaceModel.h>
+#include <CCA/Components/MPM/Materials/Diffusion/DiffusionModels/ScalarDiffusionModel.h>
+#include <CCA/Components/MPM/Materials/Diffusion/SDInterfaceModelFactory.h>
+#include <CCA/Components/MPM/Materials/ParticleCreator/ParticleCreator.h>
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <CCA/Components/MPM/PhysicalBC/FluxBCModelFactory.h>
@@ -69,7 +77,6 @@
 #include <Core/Grid/Variables/Stencil7.h>                // for Stencil7
 #include <Core/Grid/Variables/VarLabel.h>                // for VarLabel
 #include <Core/Grid/Variables/VarTypes.h>                // for delt_vartype, etc
-#include <Core/Labels/MPMLabel.h>                        // for MPMLabel
 #include <Core/Malloc/Allocator.h>                       // for scinew
 #include <Core/Math/Matrix3.h>                           // for Matrix3, swapbytes, etc
 #include <Core/Parallel/Parallel.h>                      // for proc0cout
@@ -85,9 +92,6 @@
 #include <mpi.h>                                         // for Uintah::MPI::Pack_size
 #include <stdlib.h>                                      // for abs
 #include <string>                                        // for string, operator==, etc
-#include "Diffusion/DiffusionInterfaces/SDInterfaceModel.h"
-#include "Diffusion/DiffusionModels/ScalarDiffusionModel.h"
-#include "Diffusion/SDInterfaceModelFactory.h"
 
 using namespace Uintah;
 using namespace std;

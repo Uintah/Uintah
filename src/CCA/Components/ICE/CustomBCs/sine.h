@@ -26,7 +26,7 @@
 #define Packages_Uintah_CCA_Components_Ice_CustomBCs_Sine_h
 
 #include <CCA/Ports/DataWarehouse.h>
-#include <Core/Labels/ICELabel.h>
+#include <CCA/Components/ICE/Core/ICELabel.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/SimulationStateP.h>

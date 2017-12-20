@@ -22,11 +22,11 @@
  * IN THE SOFTWARE.
  */
 
-
-#include <CCA/Components/ICE/ConservationTest.h>
-#include <CCA/Components/ICE/BoundaryCond.h>
-#include <CCA/Components/ICE/Diffusion.h>
 #include <CCA/Components/Models/FluidsBased/SimpleRxn.h>
+
+#include <CCA/Components/ICE/Core/ConservationTest.h>
+#include <CCA/Components/ICE/Core/Diffusion.h>
+#include <CCA/Components/ICE/CustomBCs/BoundaryCond.h>
 
 #include <CCA/Ports/Output.h>
 #include <CCA/Ports/Scheduler.h>
@@ -41,7 +41,7 @@
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
 #include <Core/GeometryPiece/UnionGeometryPiece.h>
 #include <Core/Exceptions/ParameterNotFound.h>
-#include <Core/Labels/ICELabel.h>
+#include <CCA/Components/ICE/Core/ICELabel.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <iostream>
 #include <Core/Util/DebugStream.h>

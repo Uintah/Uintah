@@ -27,22 +27,26 @@
 # 
 # Makefile fragment for this subdirectory 
 
-SRCDIR   := CCA/Components/ICE/TurbulenceModel
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCS     += $(SRCDIR)/TurbulenceFactory.cc    \
-	          $(SRCDIR)/Turbulence.cc           \
-            $(SRCDIR)/DynamicModel.cc         \
-            $(SRCDIR)/SmagorinskyModel.cc    
+SRCDIR := CCA/Components/ICE/TurbulenceModel
+
+SRCS += $(SRCDIR)/TurbulenceFactory.cc    \
+	$(SRCDIR)/Turbulence.cc           \
+	$(SRCDIR)/DynamicModel.cc         \
+	$(SRCDIR)/SmagorinskyModel.cc    
 
 PSELIBS := \
-	CCA/Ports       \
-	Core/Grid       \
-	Core/Parallel   \
-	Core/Exceptions \
-	Core/Math       \
-	Core/Exceptions \
-	Core/Geometry 
+	CCA/Components/ICE/CustomBCs \
+	Core/Disclosure     \
+	Core/Exceptions     \
+	Core/Geometry       \
+	Core/GeometryPiece  \
+	Core/Grid           \
+	Core/Math           \
+	Core/Parallel       \
+	Core/ProblemSpec    \
+	Core/Util           
 
-LIBS	:= 
-
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

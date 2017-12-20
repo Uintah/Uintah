@@ -24,9 +24,13 @@
 
 
 #include <CCA/Components/Models/ModelFactory.h>
-#include <Core/ProblemSpec/ProblemSpec.h>
+
 #include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Malloc/Allocator.h>
+
 #include <CCA/Ports/ModelInterface.h>
+
 #include <CCA/Components/Models/FluidsBased/Mixing.h>
 #include <CCA/Components/Models/FluidsBased/AdiabaticTable.h>
 #include <CCA/Components/Models/FluidsBased/PassiveScalar.h>
@@ -34,6 +38,7 @@
 #include <CCA/Components/Models/FluidsBased/TestModel.h>
 #include <CCA/Components/Models/FluidsBased/flameSheet_rxn.h>
 #include <CCA/Components/Models/FluidsBased/MassMomEng_src.h>
+
 #if !defined( NO_ICE )
 #  include <CCA/Components/Models/HEChem/Simple_Burn.h>
 #  include <CCA/Components/Models/HEChem/Steady_Burn.h>
@@ -48,7 +53,6 @@
 #  include <CCA/Components/Models/SolidReactionModel/SolidReactionModel.h>
 #endif
 
-#include <Core/Malloc/Allocator.h>
 #include <sci_defs/uintah_defs.h>
 
 #include <iostream>
@@ -56,42 +60,18 @@
 using namespace Uintah;
 using namespace std;
 
-ModelFactory::ModelFactory(const ProcessorGroup* myworld)
-  : UintahParallelComponent(myworld)
-{
-}
-
-ModelFactory::~ModelFactory()
-{
-  for (vector<ModelInterface*>::const_iterator it = d_models.begin();
-       it != d_models.end(); it++) {
-    (*it)->releaseComponents();
-    delete *it;
-  }
-}
-
-vector<ModelInterface*> ModelFactory::getModels()
-{
-  //cout << "calling getModels: " << d_models.size() << " models returned" << endl;
-  return d_models;
-}
-
-void ModelFactory::clearModels()
-{
-  //cout << "clean up " << d_models.size() << " models" << endl;
-  d_models.clear();
-}
-
-void
+std::vector<ModelInterface*>
 ModelFactory::makeModels( const ProcessorGroup   * myworld,
 			  const SimulationStateP   sharedState,
 			  const ProblemSpecP& restart_prob_spec,
                           const ProblemSpecP& prob_spec )
 {
+  vector<ModelInterface*> d_models;
+
   ProblemSpecP model_spec = restart_prob_spec->findBlock("Models");
 
   if(!model_spec)
-    return;
+    return d_models;
   
   for(ProblemSpecP model_ps = model_spec->findBlock("Model");
       model_ps != nullptr; model_ps = model_ps->findNextBlock("Model")) {
@@ -166,13 +146,6 @@ ModelFactory::makeModels( const ProcessorGroup   * myworld,
     throw ProblemSetupException( type + " not supported in this build", __FILE__, __LINE__ );
 #endif
   }
-}
 
-void
-ModelFactory::outputProblemSpec(ProblemSpecP& models_ps)
-{
-  for (vector<ModelInterface*>::const_iterator it = d_models.begin();
-       it != d_models.end(); it++) {
-    (*it)->outputProblemSpec(models_ps);
-  }
+  return d_models;
 }

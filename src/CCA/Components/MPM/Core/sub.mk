@@ -27,10 +27,26 @@
 # 
 # Makefile fragment for this subdirectory 
 
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := CCA/Components/MPM/Core
 
 SRCS     += \
-	$(SRCDIR)/MPMFlags.cc  \
-	$(SRCDIR)/ImpMPMFlags.cc  \
-	$(SRCDIR)/MPMBoundCond.cc
+	$(SRCDIR)/MPMBoundCond.cc      \
+	$(SRCDIR)/MPMDiffusionLabel.cc \
+	$(SRCDIR)/MPMFlags.cc          \
+	$(SRCDIR)/MPMLabel.cc          \
+	$(SRCDIR)/ImpMPMFlags.cc
+
+PSELIBS := \
+	Core/Disclosure     \
+	Core/Exceptions     \
+	Core/Geometry       \
+	Core/GeometryPiece  \
+	Core/Grid           \
+	Core/Math           \
+	Core/Parallel       \
+	Core/ProblemSpec    \
+	Core/Util           
+
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

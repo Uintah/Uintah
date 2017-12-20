@@ -27,10 +27,11 @@
 # 
 # Makefile fragment for this subdirectory 
 
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := CCA/Components/MPM/Solver
+SRCDIR := CCA/Components/MPM/Solver
 
-SRCS     += \
+SRCS += \
 	$(SRCDIR)/SimpleSolver.cc \
 	$(SRCDIR)/Solver.cc       
 
@@ -42,3 +43,15 @@ else
   SRCS += $(SRCDIR)/FakePetscSolver.cc
 endif
 
+PSELIBS := \
+	Core/Disclosure     \
+	Core/Exceptions     \
+	Core/Geometry       \
+	Core/GeometryPiece  \
+	Core/Grid           \
+	Core/Math           \
+	Core/Parallel       \
+	Core/ProblemSpec    \
+	Core/Util           
+
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

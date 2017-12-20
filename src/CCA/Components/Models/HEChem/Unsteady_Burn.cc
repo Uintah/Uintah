@@ -23,27 +23,36 @@
  */
 
 #include <CCA/Components/Models/HEChem/Unsteady_Burn.h>
+
 #include <CCA/Components/Models/HEChem/Common.h>
+
+#include <CCA/Components/ICE/Core/ICELabel.h>
+#include <CCA/Components/ICE/CustomBCs/BoundaryCond.h>
+#include <CCA/Components/MPM/Core/MPMLabel.h>
+#include <CCA/Components/MPM/Materials/MPMMaterial.h>
+#include <CCA/Components/MPMICE/Core/MPMICELabel.h>
+
 #include <CCA/Ports/Scheduler.h>
-#include <Core/ProblemSpec/ProblemSpec.h>
+
+#include <Core/Grid/DbgOutput.h>
+#include <Core/Grid/Level.h>
 #include <Core/Grid/Material.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/CCVariable.h>
-#include <Core/Grid/Variables/ParticleVariable.h>
+#include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Grid/DbgOutput.h>
-#include <Core/Labels/MPMLabel.h>
-#include <Core/Labels/ICELabel.h>
-#include <Core/Labels/MPMICELabel.h>
-#include <CCA/Components/ICE/BoundaryCond.h>
 #include <Core/Exceptions/InvalidValue.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Util/DebugStream.h>
+
 #include <iostream>
 
 using namespace Uintah;
 using namespace std;
-
 
 //__________________________________   
 //  setenv SCI_DEBUG "MPMICE_NORMAL_COUT:+,MPMICE_DOING_COUT:+"

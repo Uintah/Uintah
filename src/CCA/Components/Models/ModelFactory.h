@@ -26,10 +26,10 @@
 #ifndef Packages_Uintah_CCA_Components_Examples_ModelFactory_h
 #define Packages_Uintah_CCA_Components_Examples_ModelFactory_h
 
-#include <Core/Parallel/UintahParallelComponent.h>
-#include <CCA/Ports/ModelMaker.h>
+#include <Core/Grid/SimulationStateP.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 
-namespace Uintah {
+#include <vector>
 
 /**************************************
 
@@ -59,30 +59,21 @@ WARNING
   
 ****************************************/
 
-  class ModelFactory : public UintahParallelComponent, public ModelMaker {
+namespace Uintah {
+
+  class ProcessorGroup;
+  class ModelInterface;
+
+  class ModelFactory {
+
   public:
-    ModelFactory(const ProcessorGroup* myworld);
-    virtual ~ModelFactory();
-
-    // Methods for managing the components attached via the ports.
-    virtual void setComponents( UintahParallelComponent *parent ) {};
-    virtual void getComponents() {};
-    virtual void releaseComponents() {};
+    // this function has a switch for all known components
     
-    std::vector<ModelInterface*> getModels();
-    void clearModels();
-    virtual void makeModels(const ProcessorGroup   * myworld,
-			    const SimulationStateP   sharedState,
-			    const ProblemSpecP& orig_or_restart_ps, 
-                            const ProblemSpecP& prob_spec);
-
-    virtual void outputProblemSpec(ProblemSpecP& ps);
-    
-  private:
-    ModelFactory(const ModelFactory&);
-    ModelFactory& operator=(const ModelFactory&);
-
-    std::vector<ModelInterface*> d_models;         
+    static std::vector<ModelInterface*>
+    makeModels(const ProcessorGroup   * myworld,
+	       const SimulationStateP   sharedState,
+	       const ProblemSpecP& orig_or_restart_ps, 
+	       const ProblemSpecP& prob_spec);
   };
 }
 

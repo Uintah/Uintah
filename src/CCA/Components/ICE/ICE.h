@@ -32,11 +32,12 @@
 #include <CCA/Components/ICE/Advection/Advector.h>
 #include <CCA/Components/Application/ApplicationCommon.h>
 
+#include <CCA/Components/ICE/Core/ExchangeCoefficients.h>
 #include <CCA/Components/ICE/customInitialize.h>
 #include <CCA/Components/ICE/CustomBCs/LODI2.h>
-#include <CCA/Components/ICE/BoundaryCond.h>
+#include <CCA/Components/ICE/CustomBCs/BoundaryCond.h>
 #include <CCA/Components/ICE/TurbulenceModel/Turbulence.h>
-#include <CCA/Components/ICE/ExchangeCoefficients.h>
+#include <CCA/Components/MPMICE/Core/MPMICELabel.h>
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
 
 #include <CCA/Ports/ModelInterface.h>
@@ -54,8 +55,7 @@
 #include <Core/Grid/Variables/Stencil7.h>
 #include <Core/Grid/Variables/Utils.h>
 
-#include <Core/Labels/ICELabel.h>
-#include <Core/Labels/MPMICELabel.h>
+#include <CCA/Components/ICE/Core/ICELabel.h>
 #include <Core/Math/FastMatrix.h>
 #include <Core/Math/UintahMiscMath.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
@@ -94,10 +94,10 @@ void launchIceEquilibrationKernelUnified(dim3 dimGrid,
 
 namespace Uintah {
 
-  class ModelMaker;
   class ModelInfo;
   class ModelInterface;
   class Turbulence;
+  class WallShearStress;
   class AnalysisModule;
 
     // The following two structs are used by computeEquilibrationPressure to store debug information:

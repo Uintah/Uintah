@@ -41,7 +41,6 @@ SUBDIRS := \
 	$(SRCDIR)/Geometry       \
 	$(SRCDIR)/GeometryPiece  \
 	$(SRCDIR)/Grid           \
-	$(SRCDIR)/Labels         \
 	$(SRCDIR)/IO             \
 	$(SRCDIR)/Malloc         \
 	$(SRCDIR)/Math           \

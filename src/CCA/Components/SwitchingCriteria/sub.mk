@@ -41,12 +41,14 @@ SRCS += \
         $(SRCDIR)/DDT1.cc                     
 
 PSELIBS := \
+        CCA/Components/ICE/Core    \
+        CCA/Components/MPM/Core    \
+        CCA/Components/MPMICE/Core \
         CCA/Ports        \
         Core/Disclosure  \
         Core/Exceptions  \
         Core/Geometry    \
         Core/Grid        \
-        Core/Labels      \
         Core/Math        \
         Core/Parallel    \
         Core/ProblemSpec \

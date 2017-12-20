@@ -38,7 +38,6 @@
  *        <li> <b>Regridder</b> </li>
  *        <li> <b>SolverInterface</b> </li>
  *        <li> <b>ApplicationInterface and UintahParallelComponent</b> (e.g. ICE, MPM, etc) </li>
- *        <li> <b>ModelMaker</b> </li>
  *        <li> <b>LoadBalancer</b> </li>
  *        <li> <b>DataArchiver</b> </li>
  *        <li> <b>Scheduler</b> and add reference (Schedulers are <b>RefCounted><b>) </li>
@@ -756,23 +755,7 @@ main( int argc, char *argv[], char *env[] )
       }
     }
 
-    //__________________________________
-    //  Model Maker - optional
-    ModelMaker* modelMaker = nullptr;
-
-    if (application->needModelMaker()) {
-      modelMaker = scinew ModelFactory(world);
-
-      if (modelMaker) {
-        appComp->attachPort("modelMaker", modelMaker);
-      }
-    }
-
     // Get all the components.
-    if ( modelMaker ) {
-      modelMaker->getComponents();
-    }
-
     if( regridder ) {
       regridder->getComponents();
     }
@@ -798,10 +781,6 @@ main( int argc, char *argv[], char *env[] )
     simController->run();
 
     // Clean up release all the components.
-    if ( modelMaker ) {
-      modelMaker->releaseComponents();
-    }
-
     if( regridder ) {
       regridder->releaseComponents();
     }
@@ -815,10 +794,6 @@ main( int argc, char *argv[], char *env[] )
 
     
     scheduler->removeReference();
-
-    if ( modelMaker ) {
-      delete modelMaker;
-    }
 
     if ( regridder ) {
       delete regridder;

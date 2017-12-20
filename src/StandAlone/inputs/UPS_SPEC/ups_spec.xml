@@ -330,7 +330,7 @@
       <volumeFraction          spec="OPTIONAL DOUBLE" />
       <affineTransformation_A0 spec="OPTIONAL VECTOR" /> <!-- If you like to add some new input variables to ... -->
       <affineTransformation_A1 spec="OPTIONAL VECTOR" /> <!-- "geom_object" section, you should also mention them in ... -->
-      <affineTransformation_A2 spec="OPTIONAL VECTOR" /> <!-- /src/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.cc -->
+      <affineTransformation_A2 spec="OPTIONAL VECTOR" /> <!-- /src/CCA/Components/MPM/Materials/ConstitutiveModel/MPMMaterial.cc -->
       <affineTransformation_b  spec="OPTIONAL VECTOR" />
 
       <null                   spec="OPTIONAL NO_DATA" /> <!-- FIXME: What is this? -->

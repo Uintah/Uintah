@@ -23,7 +23,7 @@
  */
 
 #include <CCA/Components/ICE/TurbulenceModel/DynamicModel.h>
-#include <CCA/Components/ICE/BoundaryCond.h>
+#include <CCA/Components/ICE/CustomBCs/BoundaryCond.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Geometry/IntVector.h>

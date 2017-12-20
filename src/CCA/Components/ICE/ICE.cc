@@ -32,21 +32,21 @@
 #include <CCA/Components/ICE/ICE.h>
 #include <CCA/Components/ICE/impAMRICE.h>
 #include <CCA/Components/ICE/CustomBCs/C_BC_driver.h>
-#include <CCA/Components/ICE/ConservationTest.h>
-#include <CCA/Components/ICE/Diffusion.h>
-#include <CCA/Components/ICE/ICEMaterial.h>
+#include <CCA/Components/ICE/Core/ConservationTest.h>
+#include <CCA/Components/ICE/Core/Diffusion.h>
+#include <CCA/Components/ICE/Materials/ICEMaterial.h>
 #include <CCA/Components/ICE/Advection/AdvectionFactory.h>
 #include <CCA/Components/ICE/TurbulenceModel/TurbulenceFactory.h>
 #include <CCA/Components/ICE/EOS/EquationOfState.h>
 #include <CCA/Components/ICE/SpecificHeatModel/SpecificHeat.h>
 #include <CCA/Components/ICE/WallShearStressModel/WallShearStress.h>
 #include <CCA/Components/ICE/WallShearStressModel/WallShearStressFactory.h>
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Components/Models/ModelFactory.h>
+#include <CCA/Components/MPM/Materials/MPMMaterial.h>
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModuleFactory.h>
 
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Scheduler.h>
-#include <CCA/Ports/ModelMaker.h>
 #include <CCA/Ports/Output.h>
 #include <CCA/Ports/Regridder.h>
 #include <CCA/Ports/SolverInterface.h>
@@ -110,8 +110,6 @@ ICE::ICE(const ProcessorGroup* myworld,
 	 const SimulationStateP sharedState) :
   ApplicationCommon(myworld, sharedState)
 {
-  setNeedModelMaker(true);
-      
   lb   = scinew ICELabel();
 
 #ifdef HAVE_HYPRE
@@ -203,6 +201,7 @@ ICE::~ICE()
   if (d_solver_parameters) {
     delete d_solver_parameters;
   }
+
   //__________________________________
   // MODELS
   cout_doing << d_myworld->myRank() << " Doing: destorying Model Machinery " << endl;
@@ -235,6 +234,13 @@ ICE::~ICE()
   // delete models
   if(d_modelInfo){
     delete d_modelInfo;
+  }
+
+  for(vector<ModelInterface*>::iterator iter = d_models.begin();
+	                                iter != d_models.end(); iter++){
+    ModelInterface* model = *iter;
+    model->releaseComponents();
+    delete model;
   }
 }
 
@@ -516,16 +522,21 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
   else if ( restart_prob_spec ) {
     orig_or_restart_ps = restart_prob_spec;
   }  
-    
-  if(m_modelMaker){
+
+  ProblemSpecP model_spec = orig_or_restart_ps->findBlock("Models");
+
+  if(model_spec) {
 
     // Clean up the old models.
-    m_modelMaker->clearModels();
+    for(vector<ModelInterface*>::iterator iter = d_models.begin();
+  	                                  iter != d_models.end(); iter++){
+      ModelInterface* model = *iter;
+      model->releaseComponents();
+      delete model;
+    }
 
-    m_modelMaker->makeModels(d_myworld, m_sharedState,
-			     orig_or_restart_ps, prob_spec);
-    
-    d_models = m_modelMaker->getModels();
+    d_models = ModelFactory::makeModels(d_myworld, m_sharedState,
+					orig_or_restart_ps, prob_spec);
 
     d_modelSetup = scinew ICEModelSetup();
       
@@ -720,8 +731,9 @@ ICE::outputProblemSpec( ProblemSpecP & root_ps )
 
   ProblemSpecP models_ps = root->appendChild("Models");
 
-  if (m_modelMaker) {
-    m_modelMaker->outputProblemSpec(models_ps);
+  for (vector<ModelInterface*>::const_iterator it = d_models.begin();
+       it != d_models.end(); it++) {
+    (*it)->outputProblemSpec(models_ps);
   }
 
   //__________________________________

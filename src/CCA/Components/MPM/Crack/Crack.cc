@@ -43,8 +43,8 @@
 #include <Core/Grid/SimulationStateP.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Task.h>
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
+#include <CCA/Components/MPM/Materials/MPMMaterial.h>
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/ConstitutiveModel.h>
 #include <CCA/Components/MPM/Crack/CrackGeometry.h>
 #include <CCA/Components/MPM/Crack/CrackGeometryFactory.h>
 #include <Core/Grid/Variables/VarTypes.h>

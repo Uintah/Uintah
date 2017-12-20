@@ -51,8 +51,13 @@ computeExternalForceForMMS : Computes the analytically determined body force for
   
 */
 
-
 #include <CCA/Components/MPM/MMS/MMS.h>
+
+#include <CCA/Components/MPM/Core/MPMDiffusionLabel.h>
+#include <CCA/Components/MPM/Core/MPMFlags.h>
+#include <CCA/Components/MPM/Core/MPMLabel.h>
+
+#include <CCA/Ports/DataWarehouse.h>
 
 using namespace Uintah;
 using namespace std;
