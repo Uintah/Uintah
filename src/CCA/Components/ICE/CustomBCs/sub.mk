@@ -32,16 +32,17 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR := CCA/Components/ICE/CustomBCs
 
 SRCS += \
-	$(SRCDIR)/BoundaryCond.cc \
-	$(SRCDIR)/C_BC_driver.cc \
+	$(SRCDIR)/BoundaryCond.cc  \
+	$(SRCDIR)/C_BC_driver.cc   \
         $(SRCDIR)/inletVelocity.cc \
-        $(SRCDIR)/LODI2.cc \
-        $(SRCDIR)/microSlipBCs.cc \
-        $(SRCDIR)/MMS_BCs.cc \
+        $(SRCDIR)/LODI2.cc         \
+        $(SRCDIR)/microSlipBCs.cc  \
+        $(SRCDIR)/MMS_BCs.cc       \
         $(SRCDIR)/sine.cc
 
 PSELIBS := \
-	CCA/Components/ICE/EOS \
+	CCA/Components/ICE/Core      \
+	CCA/Components/ICE/EOS       \
 	CCA/Components/ICE/Materials \
 	Core/Disclosure     \
 	Core/Exceptions     \
@@ -54,4 +55,3 @@ PSELIBS := \
 	Core/Util           
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
-

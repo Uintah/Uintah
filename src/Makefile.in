@@ -92,19 +92,19 @@ ifeq ($(BUILD_MPM),yes)
   CM = CCA/Components/MPM
   MPM_LIB            = CCA/Components/MPM
   MPM_SUB_LIBS = \
-	$(CM)/CohesiveZone      \
-	$(CM)/Core              \
 	$(CM)/HeatConduction    \
+	$(CM)/ThermalContact    \
+	$(CM)/CohesiveZone      \
 	$(CM)/Materials         \
 	$(CM)/MMS               \
 	$(CM)/PhysicalBC        \
         $(CM)/Solver            \
-	$(CM)/ThermalContact     
+	$(CM)/Core
   ifeq ($(BUILD_ICE),yes)
     CMI = CCA/Components/MPMICE
     MPMICE_LIB       = CCA/Components/MPMICE
     MPMICE_SUB_LIBS = \
-	$(CI)/Core
+	$(CMI)/Core
   endif
 endif
 
@@ -112,14 +112,14 @@ ifeq ($(BUILD_ICE),yes)
   CI = CCA/Components/ICE
   ICE_LIB            = CCA/Components/ICE
   ICE_SUB_LIBS = \
-	$(CI)/Advection         \
-	$(CI)/Core              \
-	$(CI)/CustomBCs         \
-	$(CI)/EOS               \
-	$(CI)/Materials         \
-	$(CI)/SpecificHeatModel \
-	$(CI)/TurbulenceModel   \
-	$(CI)/WallShearStressModel
+	$(CI)/Materials            \
+	$(CI)/CustomBCs            \
+	$(CI)/Advection            \
+	$(CI)/TurbulenceModel      \
+	$(CI)/WallShearStressModel \
+	$(CI)/EOS                  \
+	$(CI)/SpecificHeatModel    \
+	$(CI)/Core
 endif
 
 # Cover both cases when Wasatch lib should be built.

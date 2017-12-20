@@ -37,15 +37,16 @@ SRCS += $(SRCDIR)/TurbulenceFactory.cc    \
 	$(SRCDIR)/SmagorinskyModel.cc    
 
 PSELIBS := \
+	CCA/Components/ICE/Core      \
 	CCA/Components/ICE/CustomBCs \
-	Core/Disclosure     \
-	Core/Exceptions     \
-	Core/Geometry       \
-	Core/GeometryPiece  \
-	Core/Grid           \
-	Core/Math           \
-	Core/Parallel       \
-	Core/ProblemSpec    \
+	Core/Disclosure              \
+	Core/Exceptions              \
+	Core/Geometry                \
+	Core/GeometryPiece           \
+	Core/Grid                    \
+	Core/Math                    \
+	Core/Parallel                \
+	Core/ProblemSpec             \
 	Core/Util           
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

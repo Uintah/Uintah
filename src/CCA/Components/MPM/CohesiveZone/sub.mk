@@ -29,23 +29,24 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := CCA/Components/MPM/CohesiveZone
+SRCDIR := CCA/Components/MPM/CohesiveZone
 
-SRCS     += \
+SRCS += \
 	$(SRCDIR)/CohesiveZone.cc \
 	$(SRCDIR)/CZMaterial.cc
 
 PSELIBS := \
-	CCA/Components/MPM/Core \
-	Core/Datatypes      \
-	Core/Disclosure     \
-	Core/Exceptions     \
-	Core/Geometry       \
-	Core/GeometryPiece  \
-	Core/Grid           \
-	Core/Math           \
-	Core/Parallel       \
-	Core/ProblemSpec    \
+	CCA/Components/MPM/Core      \
+	CCA/Components/MPM/Materials \
+	Core/Datatypes               \
+	Core/Disclosure              \
+	Core/Exceptions              \
+	Core/Geometry                \
+	Core/GeometryPiece           \
+	Core/Grid                    \
+	Core/Math                    \
+	Core/Parallel                \
+	Core/ProblemSpec             \
 	Core/Util           
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

@@ -31,21 +31,22 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR := CCA/Components/ICE/Advection
 
-SRCS += $(SRCDIR)/Advector.cc \
-	$(SRCDIR)/FirstOrderAdvector.cc \
+SRCS += $(SRCDIR)/Advector.cc            \
+	$(SRCDIR)/FirstOrderAdvector.cc  \
 	$(SRCDIR)/SecondOrderAdvector.cc \
-	$(SRCDIR)/SecondOrderBase.cc \
+	$(SRCDIR)/SecondOrderBase.cc     \
 	$(SRCDIR)/AdvectionFactory.cc
 
 PSELIBS := \
-	Core/Disclosure     \
-	Core/Exceptions     \
-	Core/Geometry       \
-	Core/GeometryPiece  \
-	Core/Grid           \
-	Core/Math           \
-	Core/Parallel       \
-	Core/ProblemSpec    \
+	CCA/Components/ICE/Core \
+	Core/Disclosure         \
+	Core/Exceptions         \
+	Core/Geometry           \
+	Core/GeometryPiece      \
+	Core/Grid               \
+	Core/Math               \
+	Core/Parallel           \
+	Core/ProblemSpec        \
 	Core/Util           
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
