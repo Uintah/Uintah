@@ -153,6 +153,7 @@ ALL_PSE_CORE_LIBS =        \
 ALL_PSE_LIBS =                              \
         $(ALL_PSE_CORE_LIBS)                \
         CCA/Ports                           \
+	CCA/Components/Application          \
         CCA/Components/DataArchiver         \
         CCA/Components/Examples             \
         CCA/Components/LoadBalancers        \
@@ -191,8 +192,6 @@ ALL_STATIC_PSE_LIBS =                   \
     CCA/Components/LoadBalancers        \
     CCA/Components/SwitchingCriteria    \
     CCA/Components/Examples             \
-    CCA/Components/OnTheFlyAnalysis     \
-    CCA/Components/Models               \
                                         \
     $(ARCHES_LIBS)                      \
     $(ARCHES_SUB_LIBS)                  \
@@ -209,6 +208,9 @@ ALL_STATIC_PSE_LIBS =                   \
     $(HEAT_LIB)                         \
     $(PHASEFIELD_LIB)                   \
                                         \
+    CCA/Components/OnTheFlyAnalysis     \
+    CCA/Components/Models               \
+
     CCA/Components/Schedulers           \
     CCA/Components/PostProcessUda       \
                                         \
