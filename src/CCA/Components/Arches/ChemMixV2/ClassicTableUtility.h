@@ -146,7 +146,6 @@ loadMixingTable(fileTYPE &fp, const std::string & inputfile,  std::vector<std::s
     size = size*(*d_allIndepVarNum)[i];
   }
 
-
 #ifdef UINTAH_ENABLE_KOKKOS
     tempTableContainer table("ClassicMixingTable",loadAll ? d_varscount : d_savedDep_var.size(),size);
 #else
@@ -366,8 +365,7 @@ checkForConstants(std::stringstream &table_stream,
 }
 #endif
 
-//Interp_class* SCINEW_ClassicTable(std::string tableFileName, std::vector<std::string> requested_depVar_names={} );
-//static
+static
 Interp_class* SCINEW_ClassicTable(std::string tableFileName, std::vector<std::string> requested_depVar_names={} ){
   // Create sub-ProblemSpecP object
   //

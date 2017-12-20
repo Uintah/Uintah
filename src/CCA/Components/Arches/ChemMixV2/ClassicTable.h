@@ -122,13 +122,13 @@ struct ClassicTableInfo {
   template<class TYPE>
   void getState(std::vector< TYPE > &indep_storage,        
               std::vector<CCVariable<double> > &dep_storage,  std::vector<std::string> requestedInd_var,
-              const Patch* patch, const std::vector<int> depVar_indices ){
+              const Patch* patch, const std::vector<int> depVar_indices={} ){
 
 
-  std::vector<int>     index_map (indep_storage.size());
-  for (unsigned int ix = 0 ; ix<indep_storage.size(); ix++){
-    index_map[ix]=ix;
-  }
+    std::vector<int>     index_map (indep_storage.size());
+    for (unsigned int ix = 0 ; ix<indep_storage.size(); ix++){
+      index_map[ix]=ix;
+    }
 
     //assume all variables are being read in from table data structure ( i would rather prune the dat structure then use a map)
     std::vector<int> depVarIndexes;
