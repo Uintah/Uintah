@@ -27,30 +27,30 @@
 
 #include <CCA/Components/Application/ApplicationCommon.h>
 
-#include <CCA/Components/FVM/FVMLabel.h>
-#include <CCA/Components/FVM/ElectrostaticSolve.h>
-#include <CCA/Components/MPMFVM/ESConductivityModel.h>
-#include <CCA/Components/MPM/AMRMPM.h>
-#include <CCA/Components/MPM/Core/MPMFlags.h>
-#include <CCA/Ports/DataWarehouse.h>
-#include <CCA/Ports/Output.h>
-#include <CCA/Ports/Scheduler.h>
-#include <CCA/Ports/SwitchingCriteria.h>
-#include <Core/Geometry/IntVector.h>
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/Vector.h>
+#include <CCA/Ports/SchedulerP.h>
+
 #include <Core/Grid/Ghost.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
+#include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/Variables/ComputeSet.h>
-#include <CCA/Components/MPM/Core/MPMLabel.h>
-#include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 
-#include <vector>
 #include <string>
 
 namespace Uintah {
+
+  class AMRMPM;
+  class MPMLabel;
+  class FVMLabel;
+  class MPMFlags;
+  class ESConductivityModel;
+  class ElectrostaticSolve;
+
+  class ProcessorGroup;
+  class DataWarehouse;
+  class SwitchingCriteria;
+  
   class ESMPM : public ApplicationCommon {
     public:
       ESMPM(const ProcessorGroup* myworld,
@@ -83,7 +83,8 @@ namespace Uintah {
                                                    const MaterialSet* all_matls);
 
     protected:
-      virtual void initialize(const ProcessorGroup*, const PatchSubset* patches,
+      virtual void initialize(const ProcessorGroup*,
+			      const PatchSubset* patches,
                               const MaterialSubset* matls,
                               DataWarehouse*,
                               DataWarehouse* new_dw);
@@ -99,10 +100,10 @@ namespace Uintah {
       std::string d_cd_model_name;
 
       AMRMPM* d_amrmpm;
-      ElectrostaticSolve* d_esfvm;
       MPMLabel* d_mpm_lb;
       FVMLabel* d_fvm_lb;
       MPMFlags* d_mpm_flags;
+      ElectrostaticSolve* d_esfvm;
       ESConductivityModel* d_conductivity_model;
 
       MaterialSet* d_es_matlset;

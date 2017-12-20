@@ -22,10 +22,21 @@
  * IN THE SOFTWARE.
  */
 
+#include <CCA/Components/FVM/FVMLabel.h>
+
+#include <CCA/Components/MPM/Core/MPMDiffusionLabel.h>
+#include <CCA/Components/MPM/Core/MPMFlags.h>
+#include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
+#include <CCA/Components/MPM/Materials/Diffusion/DiffusionModels/ScalarDiffusionModel.h>
 #include <CCA/Components/MPMFVM/ESConductivityModel.h>
+
+#include <CCA/Ports/DataWarehouse.h>
+#include <CCA/Ports/Scheduler.h>
+
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Vector.h>
+
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Patch.h>
@@ -36,11 +47,11 @@
 #include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Grid/Variables/ParticleSubset.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
+
 #include <Core/Math/MiscMath.h>
 
 #include <vector>
 #include <iostream>
-#include <CCA/Components/MPM/Materials/Diffusion/DiffusionModels/ScalarDiffusionModel.h>
 
 using namespace Uintah;
 

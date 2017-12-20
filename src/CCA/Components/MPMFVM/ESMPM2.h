@@ -27,30 +27,29 @@
 
 #include <CCA/Components/Application/ApplicationCommon.h>
 
-#include <CCA/Components/FVM/FVMLabel.h>
-#include <CCA/Components/FVM/GaussSolve.h>
-#include <CCA/Components/MPM/AMRMPM.h>
-#include <CCA/Components/MPM/Core/MPMFlags.h>
-#include <CCA/Ports/DataWarehouse.h>
-#include <CCA/Ports/Output.h>
-#include <CCA/Ports/Scheduler.h>
-#include <CCA/Ports/SwitchingCriteria.h>
-#include <Core/Geometry/IntVector.h>
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/Vector.h>
+#include <CCA/Ports/SchedulerP.h>
+
 #include <Core/Grid/Ghost.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
-#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/Variables/ComputeSet.h>
-#include <CCA/Components/MPM/Core/MPMLabel.h>
-#include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 
-#include <vector>
 #include <string>
 
 namespace Uintah {
+
+  class AMRMPM;
+  class MPMLabel;
+  class FVMLabel;
+  class MPMFlags;
+  class GaussSolve;
+
+  class ProcessorGroup;
+  class DataWarehouse;
+  class SwitchingCriteria;
+
   class ESMPM2 : public ApplicationCommon {
     public:
       ESMPM2(const ProcessorGroup* myworld,
@@ -110,17 +109,16 @@ namespace Uintah {
       std::string d_cd_model_name;
 
       AMRMPM* d_amrmpm;
-      GaussSolve* d_gaufvm;
       MPMLabel* d_mpm_lb;
       FVMLabel* d_fvm_lb;
       MPMFlags* d_mpm_flags;
+      GaussSolve* d_gaufvm;
 
       MaterialSet* d_es_matlset;
       MaterialSubset* d_es_matl;
       SwitchingCriteria* d_switch_criteria;
 
       Ghost::GhostType d_gac;
-
   };
 }
 #endif

@@ -22,30 +22,32 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/MPM/Materials/MPMMaterial.h>
-#include <CCA/Components/MPM/PhysicalBC/FluxBCModel.h>
 #include <CCA/Components/MPMFVM/ESMPM2.h>
 
-#include <CCA/Ports/Output.h>
-#include <CCA/Ports/Regridder.h>
-#include <CCA/Ports/Scheduler.h>
-#include <CCA/Ports/SolverInterface.h>
+#include <CCA/Components/FVM/FVMLabel.h>
+#include <CCA/Components/FVM/GaussSolve.h>
 
+#include <CCA/Components/MPM/AMRMPM.h>
+#include <CCA/Components/MPM/Core/MPMFlags.h>
+#include <CCA/Components/MPM/Core/MPMLabel.h>
+#include <CCA/Components/MPM/Materials/MPMMaterial.h>
+#include <CCA/Components/MPM/PhysicalBC/FluxBCModel.h>
+
+#include <CCA/Ports/DataWarehouse.h>
+#include <CCA/Ports/Scheduler.h>
+#include <CCA/Ports/SwitchingCriteria.h>
+
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
 #include <Core/Grid/DbgOutput.h>
-#include <Core/Grid/Level.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/CCVariable.h>
-#include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/Variables/ParticleSubset.h>
-#include <Core/Grid/Variables/SFCXVariable.h>
-#include <Core/Grid/Variables/SFCYVariable.h>
-#include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Math/MiscMath.h>
+#include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Util/DebugStream.h>
 
-#include <iostream>
-#include <string>
 #include <vector>
 
 using namespace Uintah;

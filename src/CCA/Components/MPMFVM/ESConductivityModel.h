@@ -25,17 +25,14 @@
 #ifndef UINTAH_CCA_COMPONENTS_MPMFVM_ESCONDUCTIVITYMODEL_H
 #define UINTAH_CCA_COMPONENTS_MPMFVM_ESCONDUCTIVITYMODEL_H
 
-#include <CCA/Components/FVM/FVMLabel.h>
-#include <CCA/Components/MPM/Core/MPMFlags.h>
-#include <CCA/Ports/Scheduler.h>
+#include <CCA/Ports/SchedulerP.h>
+
 #include <Core/Geometry/Point.h>
 #include <Core/Grid/Ghost.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/SimulationState.h>
-#include <CCA/Components/MPM/Core/MPMLabel.h>
 
 #include <string>
-#include <CCA/Components/MPM/Materials/Diffusion/ConductivityModels/ConductivityEquation.h>
 
 namespace Uintah{
 /*************************************************
@@ -53,12 +50,20 @@ namespace Uintah{
  *
  *************************************************/
 
+  class FVMLabel;
+  class MPMFlags;
+  class MPMLabel;
 
+  class ConductivityEquation;
+  
+  class DataWarehouse;
+  
   class ESConductivityModel{
     public:
       ESConductivityModel(SimulationStateP& shared_state,
                           MPMFlags* mpm_flags,
-                          MPMLabel* mpm_lb, FVMLabel* fvm_lb,
+                          MPMLabel* mpm_lb,
+			  FVMLabel* fvm_lb,
                           std::string& model_type);
 
       virtual ~ESConductivityModel();
