@@ -60,7 +60,7 @@ namespace Uintah {
       }
       wt = 27.;
     } else {
-      throw InvalidValue("Error: Filter type not recognized: "+Type, __FILE__, __LINE__);
+      throw InvalidValue("Error: Filter type not recognized. ", __FILE__, __LINE__);
     }
     }
     void operator()(int i, int j, int k) const {
