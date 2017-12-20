@@ -28,13 +28,13 @@
 
 #include <CCA/Components/Application/ApplicationCommon.h>
 
-#include <Core/Util/RefCounted.h>
-#include <Core/Util/Handle.h>
+#include <CCA/Ports/SchedulerP.h>
+
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/Variables/ComputeSet.h>
-#include <Core/Grid/Variables/VarLabel.h>
-#include <CCA/Ports/SolverInterface.h>
-#include <CCA/Components/FVM/FVMLabel.h>
-#include <CCA/Components/FVM/FVMMaterial.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 
 namespace Uintah {
 
@@ -55,7 +55,14 @@ DESCRIPTION
 WARNING
   
 ****************************************/
+  class FVMLabel;
 
+  class SolverInterface;
+  class SolverParameters;
+
+  class DataWarehouse;
+  class ProcessorGroup;
+  
   class GaussSolve : public ApplicationCommon {
   public:
     GaussSolve(const ProcessorGroup* myworld,
@@ -90,6 +97,7 @@ WARNING
     void initialize(const ProcessorGroup*,
                     const PatchSubset* patches, const MaterialSubset* matls,
                     DataWarehouse* old_dw, DataWarehouse* new_dw);
+    
     void computeStableTimeStep(const ProcessorGroup*,
                                const PatchSubset* patches,
                                const MaterialSubset* matls,
@@ -112,8 +120,7 @@ WARNING
 
     void computeCharge(const ProcessorGroup* pg, const PatchSubset* patches,
                        const MaterialSubset* fvm_matls,
-                       DataWarehouse* old_dw,
-                       DataWarehouse* new_dw);
+                       DataWarehouse* old_dw, DataWarehouse* new_dw);
 
     void scheduleUpdateESPotential(SchedulerP& sched, const LevelP& level,
                                    const MaterialSet* es_matl);

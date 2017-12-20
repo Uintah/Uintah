@@ -34,7 +34,7 @@
 #include <Core/Grid/Level.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/Variables/ComputeSet.h>
-#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
 #include <string>
 

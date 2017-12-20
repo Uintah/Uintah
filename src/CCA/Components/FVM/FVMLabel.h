@@ -25,9 +25,10 @@
 #ifndef UINTAH_CCA_COMPONENTS_FVM_FVMLABEL_H
 #define UINTAH_CCA_COMPONENTS_FVM_FVMLABEL_H
 
-#include <Core/Grid/Variables/VarLabel.h>
+namespace Uintah {
 
-namespace Uintah{
+  class VarLabel;
+  
   class FVMLabel {
     public:
 	    FVMLabel();

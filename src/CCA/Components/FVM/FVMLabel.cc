@@ -23,6 +23,8 @@
  */
 
 #include <CCA/Components/FVM/FVMLabel.h>
+
+#include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
