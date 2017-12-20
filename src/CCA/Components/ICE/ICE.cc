@@ -527,7 +527,11 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
 
   if(model_spec) {
 
-    // Clean up the old models.
+    // Clean up the old models. NOTE This may not be neccessary as the
+    // ProblemSpec is only called once EXCEPT when doing switching.
+
+    // Also each application manages its own models. As such, they
+    // probably do not need to be regenerated after a switch.
     for(vector<ModelInterface*>::iterator iter = d_models.begin();
   	                                  iter != d_models.end(); iter++){
       ModelInterface* model = *iter;
@@ -731,9 +735,10 @@ ICE::outputProblemSpec( ProblemSpecP & root_ps )
 
   ProblemSpecP models_ps = root->appendChild("Models");
 
-  for (vector<ModelInterface*>::const_iterator it = d_models.begin();
-       it != d_models.end(); it++) {
-    (*it)->outputProblemSpec(models_ps);
+  for (vector<ModelInterface*>::const_iterator iter = d_models.begin();
+                                               iter != d_models.end(); iter++){
+    ModelInterface* model = *iter;
+    (*iter)->outputProblemSpec(models_ps);
   }
 
   //__________________________________

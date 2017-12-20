@@ -69,10 +69,11 @@ ifneq ($(BUILD_MPM),no)
 endif
 
 ifneq ($(BUILD_MPM),no) 
-  PSELIBS += CCA/Components/MPMICE/Core
   ifneq ($(BUILD_ICE),no) 
-    SUBDIRS += $(SRCDIR)/HEChem
-    SUBDIRS += $(SRCDIR)/SolidReactionModel
+    PSELIBS += CCA/Components/MPMICE/Core
+
+    SUBDIRS += $(SRCDIR)/HEChem             \
+               $(SRCDIR)/SolidReactionModel
   endif
 endif
 
