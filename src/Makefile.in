@@ -191,6 +191,8 @@ ALL_STATIC_PSE_LIBS =                   \
     CCA/Components/LoadBalancers        \
     CCA/Components/SwitchingCriteria    \
     CCA/Components/Examples             \
+    CCA/Components/OnTheFlyAnalysis     \
+    CCA/Components/Models               \
                                         \
     $(ARCHES_LIBS)                      \
     $(ARCHES_SUB_LIBS)                  \
@@ -208,8 +210,6 @@ ALL_STATIC_PSE_LIBS =                   \
     $(PHASEFIELD_LIB)                   \
                                         \
     CCA/Components/Schedulers           \
-    CCA/Components/OnTheFlyAnalysis     \
-    CCA/Components/Models               \
     CCA/Components/PostProcessUda       \
                                         \
     Core/Datatypes                      \
