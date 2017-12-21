@@ -58,7 +58,7 @@ if [ "$OS" = "Linux" ]; then
   fi
 
   #_________________
-  if [ "$MACHINE" == "maple.mech.utah.edu" ]; then
+  if [ "$MACHINE" == "maple" ]; then
 
     COMMON="       --with-mpi=/usr/installed/openmpi \\
       --enable-ice \\
@@ -70,7 +70,7 @@ if [ "$OS" = "Linux" ]; then
 
     ENV="       CC=mpicc \\
        CXX=mpic++ \\
-       F77=gfortran-4.8"
+       F77=gfortran"
        
     # execute a script (R_tester/modifySrc) that modifies src files
     MODIFY_SRC="true"
