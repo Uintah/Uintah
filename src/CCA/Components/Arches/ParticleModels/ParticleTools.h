@@ -358,8 +358,35 @@ namespace Uintah{
         }
         return false;
       }
-
-
+      
+      // This function retrieves the fluid temperature for use as the slagging temeprature in the wallHT model.
+      inline static double getRetainedDepositFactor(ProblemSpecP& db){ 
+        const ProblemSpecP params_root = db->getRootNode();
+        bool return_flag = true;
+        if(params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources")){
+          const ProblemSpecP sources = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources");
+          double retained_deposit_factor = 1.0;
+          for ( ProblemSpecP sourceBlock = sources->findBlock("src"); sourceBlock != nullptr;
+            sourceBlock = sourceBlock->findNextBlock("src") ) {
+            std::string tempTypeName;
+            sourceBlock->getAttribute("type",tempTypeName);
+            if (tempTypeName == "coal_gas_devol"){
+              std::string tempTypeName;
+              if(sourceBlock->findBlock("devol_BirthDeath")){
+                sourceBlock->findBlock("devol_BirthDeath")->getWithDefault("retained_deposit_factor", retained_deposit_factor, 1.0);
+                return_flag = false; 
+                return retained_deposit_factor;
+              }
+            }
+          }
+          if (return_flag){
+            return 1.0; //default behavior is 1.0
+          }
+        } else {
+          throw ProblemSetupException("Error: cannot find the Sources block which requries the devol source for obtaining retained_deposit_factor in arches block.",__FILE__,__LINE__);      
+        }
+        return false;
+        }
 
     private: 
   

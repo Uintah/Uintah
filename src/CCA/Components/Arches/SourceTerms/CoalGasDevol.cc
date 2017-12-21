@@ -42,7 +42,7 @@ CoalGasDevol::problemSetup(const ProblemSpecP& inputdb)
    m_dest_flag = false;
   if (db->findBlock("devol_BirthDeath")) {
     ProblemSpecP db_bd = db->findBlock("devol_BirthDeath");
-    db_bd->getWithDefault("retained_deposit_factor", m_retained_deposit_factor, 0.0);
+    db_bd->getWithDefault("retained_deposit_factor", m_retained_deposit_factor, 1.0);
     m_dest_flag = true;
     m_rcmass_root = ParticleTools::parse_for_role_to_label(db, "raw_coal");
   }

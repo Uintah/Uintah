@@ -74,7 +74,10 @@ private:
       std::string _ratedepz_name;
       double _user_specified_rho;
       double _relaxation_coe;
+      std::vector<double> _mass_ash;
+      double _retained_deposit_factor;
       std::string _diameter_base_name;
+      std::string _density_base_name;
       double _pi = std::acos(-1.);
 
   };

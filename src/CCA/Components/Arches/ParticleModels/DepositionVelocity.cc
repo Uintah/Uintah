@@ -64,6 +64,19 @@ DepositionVelocity::problemSetup( ProblemSpecP& db ){
   _fd.push_back(IntVector(0,0,1)); // +z face
   _fd.push_back(IntVector(0,0,0)); // -z face
   _diameter_base_name = ParticleTools::parse_for_role_to_label(db, "size");
+    
+  // Need a density
+  _density_base_name = ParticleTools::parse_for_role_to_label(db, "density");
+  double init_particle_density = ParticleTools::getInletParticleDensity( db );
+  double ash_mass_frac = ParticleTools::getAshMassFraction( db );
+  double initial_diameter = 0.0;
+  double p_volume = 0.0;
+  for ( int i = 0; i < _Nenv; i++ ){
+    initial_diameter = ParticleTools::getInletParticleSize( db, i );
+    p_volume = M_PI/6.*initial_diameter*initial_diameter*initial_diameter; // particle volme [m^3]
+    _mass_ash.push_back(p_volume*init_particle_density*ash_mass_frac);
+  }
+  _retained_deposit_factor = ParticleTools::getRetainedDepositFactor( db );
 }
 
 void
@@ -126,11 +139,13 @@ DepositionVelocity::register_timestep_eval(
     const std::string RateDepositionY = get_env_name(i, _ratedepy_name);
     const std::string RateDepositionZ = get_env_name(i, _ratedepz_name);
     const std::string diameter_name = get_env_name( i, _diameter_base_name );
+    const std::string density_name = get_env_name( i, _density_base_name );
 
     register_variable( RateDepositionX, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW , variable_registry );
     register_variable( RateDepositionY, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW , variable_registry );
     register_variable( RateDepositionZ, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW , variable_registry );
     register_variable( diameter_name , ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW , variable_registry );
+    register_variable( density_name , ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW , variable_registry );
   }
 
 }
@@ -154,11 +169,17 @@ DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   int total_flux_ind = 0;
   double total_area_face = 0.0;
   double flux = 0.0;
+  double mp = 0.0;
+  double mo = 0.0;
+  double marr = 0.0;
+  double X_corr = 0.0; 
   double rhoi = 0.0;
   double d_velocity = 0.0;
   double d_diam_num = 0.0;
   double d_diam_den = 0.0;
-  double particle_area = 0.0;
+  double particle_volume = 0.0;
+  double particle_diameter = 0.0;
+  double particle_density = 0.0;
 
   //double vel_i_ave = 0.0;
   IntVector lowPindex = patch->getCellLowIndex();
@@ -191,6 +212,7 @@ DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     const std::string RateDepositionY = get_env_name(i, _ratedepy_name);
     const std::string RateDepositionZ = get_env_name(i, _ratedepz_name);
     const std::string diameter_name  = get_env_name( i, _diameter_base_name );
+    const std::string density_name  = get_env_name( i, _density_base_name );
     constSFCXVariable<double>* vdep_x = tsk_info->get_const_uintah_field<constSFCXVariable<double> >(RateDepositionX);
     constSFCXVariable<double>& dep_x = *vdep_x;
     constSFCYVariable<double>* vdep_y = tsk_info->get_const_uintah_field<constSFCYVariable<double> >(RateDepositionY);
@@ -198,6 +220,7 @@ DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     constSFCZVariable<double>* vdep_z = tsk_info->get_const_uintah_field<constSFCZVariable<double> >(RateDepositionZ);
     constSFCZVariable<double>& dep_z = *vdep_z;
     constCCVariable<double>& dp = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( diameter_name ));
+    constCCVariable<double>& rhop = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( density_name ));
 
     for (CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++){
 
@@ -222,32 +245,54 @@ DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
         }
         if ( total_flux_ind>0 )
         {
-	        particle_area = _pi*dp[c]*dp[c];
           total_area_face = 0;
           d_velocity = 0;
           d_diam_num = 0;
           d_diam_den = 0;
           for ( int pp = 0; pp < total_flux_ind; pp++ ){
             if (container_flux_ind[pp]==0) {
+	            particle_diameter = dp[c+_d[container_flux_ind[pp]]];//m
+	            particle_volume = M_PI/6.*particle_diameter*particle_diameter*particle_diameter;//m^3
+              particle_density = rhop[c+_d[container_flux_ind[pp]]];
               flux = std::abs(dep_x[c+_fd[container_flux_ind[pp]]]);
             } else if (container_flux_ind[pp]==1) {
+	            particle_diameter = dp[c+_d[container_flux_ind[pp]]];//m
+	            particle_volume = M_PI/6.*particle_diameter*particle_diameter*particle_diameter;//m^3
+              particle_density = rhop[c+_d[container_flux_ind[pp]]];
               flux = std::abs(dep_x[c+_fd[container_flux_ind[pp]]]);
             } else if (container_flux_ind[pp]==2) {
+	            particle_diameter = dp[c+_d[container_flux_ind[pp]]];//m
+	            particle_volume = M_PI/6.*particle_diameter*particle_diameter*particle_diameter;//m^3
+              particle_density = rhop[c+_d[container_flux_ind[pp]]];
               flux = std::abs(dep_y[c+_fd[container_flux_ind[pp]]]);
             } else if (container_flux_ind[pp]==3) {
+	            particle_diameter = dp[c+_d[container_flux_ind[pp]]];//m
+	            particle_volume = M_PI/6.*particle_diameter*particle_diameter*particle_diameter;//m^3
+              particle_density = rhop[c+_d[container_flux_ind[pp]]];
               flux = std::abs(dep_y[c+_fd[container_flux_ind[pp]]]);
             } else if (container_flux_ind[pp]==4) {
+	            particle_diameter = dp[c+_d[container_flux_ind[pp]]];//m
+	            particle_volume = M_PI/6.*particle_diameter*particle_diameter*particle_diameter;//m^3
+              particle_density = rhop[c+_d[container_flux_ind[pp]]];
               flux = std::abs(dep_z[c+_fd[container_flux_ind[pp]]]);
             } else {
+	            particle_diameter = dp[c+_d[container_flux_ind[pp]]];//m
+	            particle_volume = M_PI/6.*particle_diameter*particle_diameter*particle_diameter;//m^3
+              particle_density = rhop[c+_d[container_flux_ind[pp]]];
               flux = std::abs(dep_z[c+_fd[container_flux_ind[pp]]]);
             }
+            mp = particle_volume*particle_density; // current mass of the particle [kg]
+            mo = mp - _mass_ash[i]; // current mass of organic in the particle [kg]
+            marr = mo * _retained_deposit_factor + _mass_ash[i]; // mass arriving at the wall [kg]. The remaining goes to the gas phase
+            X_corr = marr/mp; // correction factor to flux
+            flux = flux*X_corr;// arriving mass flux [kg/m^2/s] 
             rhoi = _user_specified_rho;
             // volumetric flow rate for particle i:
             d_velocity += (flux/rhoi) * area_face[container_flux_ind[pp]];
             // The total cell surface area exposed to radiation:
             total_area_face += area_face[container_flux_ind[pp]];
-	          d_diam_num += (flux/rhoi)*particle_area*dp[c];
-	          d_diam_den += (flux/rhoi)*particle_area;
+	          d_diam_num += (flux/rhoi)*area_face[container_flux_ind[pp]]*dp[c]; // m^3 / s * dp
+	          d_diam_den += (flux/rhoi)*area_face[container_flux_ind[pp]]; // m^3 / s
           }
           // compute the current deposit velocity for each particle: d_vel [m3/s * 1/m2 = m/s]
           d_velocity /= total_area_face; // area weighted incoming velocity to the cell for particle i.
@@ -263,7 +308,7 @@ DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   } // environment loop
   Uintah::parallel_for( range, [&](int i, int j, int k){
     deposit_velocity(i,j,k) = (1.0 - _relaxation_coe) * deposit_velocity_old(i,j,k) + _relaxation_coe * deposit_velocity(i,j,k); // time-average the deposition rate.
-    d_vol_ave(i,j,k)= (1.0 - _relaxation_coe) * d_vol_ave_old(i,j,k) +
+    d_vol_ave(i,j,k) = (1.0 - _relaxation_coe) * d_vol_ave_old(i,j,k) +
       _relaxation_coe * std::min(std::max(d_vol_ave_num(i,j,k)/(d_vol_ave_den(i,j,k)+1.0e-100),1e-8),0.1); // this is the time-averaged volume-averaged arriving particle size [m]
       // note here that when the flux is away from the wall the volume average size calculation can be negative.. so we simply set the particle size to 1e-8.
   });
