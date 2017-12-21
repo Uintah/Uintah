@@ -55,7 +55,8 @@ PSELIBS := \
         Core/ProblemSpec        \
         Core/Util
 
-ifneq ($(BUILD_ICE),no)
+# ICE analysis
+ifeq ($(BUILD_ICE),yes)
   SRCS += \
         $(SRCDIR)/containerExtract.cc \
         $(SRCDIR)/vorticity.cc
@@ -64,7 +65,8 @@ ifneq ($(BUILD_ICE),no)
              CCA/Components/ICE/Materials
 endif
 
-ifneq ($(BUILD_MPM),no)
+# MPM analysis
+ifeq ($(BUILD_MPM),yes)
   SRCS += \
         $(SRCDIR)/flatPlate_heatFlux.cc \
         $(SRCDIR)/particleExtract.cc
@@ -73,11 +75,10 @@ ifneq ($(BUILD_MPM),no)
              CCA/Components/MPM/Materials
 endif
 
-ifneq ($(BUILD_MPM),no)
-  ifneq ($(BUILD_ICE),no)
-    SRCS += \
+# MPM-ICE analysis
+ifeq ($(BUILD_MPM)$(BUILD_MPM),yesyes)
+  SRCS += \
         $(SRCDIR)/1stLawThermo.cc
-  endif
 endif
 
 LIBS := $(XML_LIBRARY) $(MPI_LIBRARY)

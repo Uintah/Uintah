@@ -48,25 +48,23 @@ PSELIBS := \
         Core/ProblemSpec \
         Core/Util        
 
-ifneq ($(BUILD_ICE),no)
+ifeq ($(BUILD_ICE),yes)
   PSELIBS += CCA/Components/ICE/Core \
              CCA/Components/ICE/Materials
 endif
 
-ifneq ($(BUILD_MPM),no)
+ifeq ($(BUILD_MPM),yes)
   PSELIBS += CCA/Components/MPM/Core \
              CCA/Components/MPM/Materials
 endif
 
-ifneq ($(BUILD_MPM),no)
-  ifneq ($(BUILD_ICE),no)
-    SRCS += \
+ifeq ($(BUILD_MPM)$(BUILD_ICE),yesyes)
+  SRCS += \
         $(SRCDIR)/SimpleBurn.cc \
         $(SRCDIR)/SteadyBurn.cc \
         $(SRCDIR)/DDT1.cc
 
-    PSELIBS += CCA/Components/MPMICE/Core
-  endif
+  PSELIBS += CCA/Components/MPMICE/Core
 endif
 
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY)

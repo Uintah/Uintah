@@ -70,79 +70,93 @@ endif
 
 # The following variables are used by the Fake* scripts... please
 # do not modify...
-#
-COMPONENTS      = CCA/Components
-ifeq ($(BUILD_ARCHES),yes)
-  CA = CCA/Components/Arches
-  ARCHES_LIBS        = $(COMPONENTS)/Arches
-  # WARNING: THESE LIBRARIES ARE LISTED IN A SPECIFIC ORDER TO SATISFY
-  #          THE NEEDS OF STATIC LINKING.  DO NOT ALPHABETIZE THEM!
-  ARCHES_SUB_LIBS = $(CA)/fortran 
-  ifeq ($(BUILD_MPM),yes)
-    MPMARCHES_LIB    = $(COMPONENTS)/MPMArches
-  endif
-endif
 
-ifeq ($(BUILD_FVM),yes)
-  FVM_LIB            = CCA/Components/FVM
-  ifeq ($(BUILD_MPM),yes)
-    MPMFVM_LIB       = CCA/Components/MPMFVM
-  endif
-endif
+COMPONENTS = CCA/Components
 
+# MPM
 ifeq ($(BUILD_MPM),yes)
-  CM = CCA/Components/MPM
-  MPM_LIB            = CCA/Components/MPM
+  MPM_LIB = $(COMPONENTS)/MPM
   # WARNING: THESE LIBRARIES ARE LISTED IN A SPECIFIC ORDER TO SATISFY
   #          THE NEEDS OF STATIC LINKING.  DO NOT ALPHABETIZE THEM!
+  MPM_DIR = $(COMPONENTS)/MPM
   MPM_SUB_LIBS = \
-	$(CM)/HeatConduction    \
-	$(CM)/ThermalContact    \
-	$(CM)/CohesiveZone      \
-	$(CM)/Materials         \
-	$(CM)/MMS               \
-	$(CM)/PhysicalBC        \
-        $(CM)/Solver            \
-	$(CM)/Core
-  ifeq ($(BUILD_ICE),yes)
-    CMI = CCA/Components/MPMICE
-    # WARNING: THESE LIBRARIES ARE LISTED IN A SPECIFIC ORDER TO SATISFY
-    #          THE NEEDS OF STATIC LINKING.  DO NOT ALPHABETIZE THEM!
-    MPMICE_LIB       = CCA/Components/MPMICE
-    MPMICE_SUB_LIBS = \
-	$(CMI)/Core
-  endif
+	$(MPM_DIR)/HeatConduction    \
+	$(MPM_DIR)/ThermalContact    \
+	$(MPM_DIR)/CohesiveZone      \
+	$(MPM_DIR)/Materials         \
+	$(MPM_DIR)/MMS               \
+	$(MPM_DIR)/PhysicalBC        \
+        $(MPM_DIR)/Solver            \
+	$(MPM_DIR)/Core
 endif
 
+# ICE
 ifeq ($(BUILD_ICE),yes)
-  CI = CCA/Components/ICE
-  ICE_LIB            = CCA/Components/ICE
+  ICE_LIB = $(COMPONENTS)/ICE
   # WARNING: THESE LIBRARIES ARE LISTED IN A SPECIFIC ORDER TO SATISFY
   #          THE NEEDS OF STATIC LINKING.  DO NOT ALPHABETIZE THEM!
+  ICE_DIR = $(COMPONENTS)/ICE
   ICE_SUB_LIBS = \
-	$(CI)/Materials            \
-	$(CI)/CustomBCs            \
-	$(CI)/Advection            \
-	$(CI)/TurbulenceModel      \
-	$(CI)/WallShearStressModel \
-	$(CI)/EOS                  \
-	$(CI)/SpecificHeatModel    \
-	$(CI)/Core
+	$(ICE_DIR)/Materials            \
+	$(ICE_DIR)/CustomBCs            \
+	$(ICE_DIR)/Advection            \
+	$(ICE_DIR)/TurbulenceModel      \
+	$(ICE_DIR)/WallShearStressModel \
+	$(ICE_DIR)/EOS                  \
+	$(ICE_DIR)/SpecificHeatModel    \
+	$(ICE_DIR)/Core
 endif
 
-# Cover both cases when Wasatch lib should be built.
+# MPM-ICE
+ifeq ($(BUILD_MPM)$(BUILD_ICE),yesyes)
+  MPMICE_LIB = $(COMPONENTS)/MPMICE
+  # WARNING: THESE LIBRARIES ARE LISTED IN A SPECIFIC ORDER TO SATISFY
+  #          THE NEEDS OF STATIC LINKING.  DO NOT ALPHABETIZE THEM!
+  MPMICE_DIR = $(COMPONENTS)/MPMICE
+  MPMICE_SUB_LIBS = \
+	$(MPMICE_DIR)/Core
+endif
+
+# FVM
+ifeq ($(BUILD_FVM),yes)
+  FVM_LIB = $(COMPONENTS)/FVM
+endif
+
+# MPM-FVM
+ifeq ($(BUILD_MPM)$(BUILD_FVM),yesyes)
+  MPMFVM_LIB = $(COMPONENTS)/MPMFVM
+endif
+
+# Arches 
+ifeq ($(BUILD_ARCHES),yes)
+  ARCHES_LIBS = $(COMPONENTS)/Arches
+  # WARNING: THESE LIBRARIES ARE LISTED IN A SPECIFIC ORDER TO SATISFY
+  #          THE NEEDS OF STATIC LINKING.  DO NOT ALPHABETIZE THEM!
+  ARCHES_DIR = $(COMPONENTS)/Arches
+  ARCHES_SUB_LIBS = $(ARCHES_DIR)/fortran 
+endif
+
+# MPM-Arches
+ifeq ($(BUILD_MPM)$(BUILD_ARCHES),yesyes)
+  MPMARCHES_LIB = $(COMPONENTS)/MPMArches
+endif
+
+# Wasatch
 ifeq ($(BUILD_WASATCH),yes)
-  WASATCH_LIB        = CCA/Components/Wasatch
+  WASATCH_LIB = $(COMPONENTS)/Wasatch
 endif
 
+# Heat
 ifeq ($(BUILD_HEAT),yes)
-  HEAT_LIB           = CCA/Components/Heat
+  HEAT_LIB = $(COMPONENTS)/Heat
 endif
 
+# Phase Field
 ifeq ($(BUILD_PHASEFIELD),yes)
-  PHASEFIELD_LIB     = CCA/Components/PhaseField
+  PHASEFIELD_LIB = $(COMPONENTS)/PhaseField
 endif
 
+# All PSE libs
 ALL_PSE_CORE_LIBS =        \
         Core/Containers    \
         Core/DataArchive   \
@@ -150,6 +164,7 @@ ALL_PSE_CORE_LIBS =        \
         Core/Exceptions    \
         Core/Geometry      \
         Core/GeometryPiece \
+        Core/IO            \
         Core/Grid          \
         Core/Malloc        \
         Core/Math          \
@@ -166,24 +181,26 @@ ALL_PSE_LIBS =                              \
         CCA/Components/Examples             \
         CCA/Components/LoadBalancers        \
         CCA/Components/Models               \
+        CCA/Components/OnTheFlyAnalysis     \
         CCA/Components/Parent               \
         CCA/Components/ProblemSpecification \
+        CCA/Components/PostProcessUda       \
         CCA/Components/Regridder            \
         CCA/Components/SimulationController \
         CCA/Components/Schedulers           \
         CCA/Components/Solvers              \
                                             \
-        $(ARCHES_LIBS)                      \
-        $(ARCHES_SUB_LIBS)                  \
-        $(MPMARCHES_LIB)                    \
-        $(FVM_LIB)                          \
         $(MPM_LIB)                          \
         $(MPM_SUB_LIBS)                     \
         $(ICE_LIB)                          \
         $(ICE_SUB_LIBS)                     \
         $(MPMICE_LIB)                       \
         $(MPMICE_SUB_LIBS)                  \
+        $(FVM_LIB)                          \
         $(MPMFVM_LIB)                       \
+        $(ARCHES_LIBS)                      \
+        $(ARCHES_SUB_LIBS)                  \
+        $(MPMARCHES_LIB)                    \
         $(WASATCH_LIB)                      \
         $(HEAT_LIB)                         \
         $(PHASEFIELD_LIB)                   \

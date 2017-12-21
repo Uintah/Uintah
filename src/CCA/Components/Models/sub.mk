@@ -55,7 +55,8 @@ PSELIBS :=                 \
         Core/ProblemSpec   \
         Core/Util          
 
-ifneq ($(BUILD_ICE),no)
+# ICE Models
+ifeq ($(BUILD_ICE),yes)
   SUBDIRS += $(SRCDIR)/FluidsBased
 
   PSELIBS += CCA/Components/ICE/Core      \
@@ -63,18 +64,18 @@ ifneq ($(BUILD_ICE),no)
 	     CCA/Components/ICE/Materials
 endif
 
-ifneq ($(BUILD_MPM),no)
+# MPM Models
+ifeq ($(BUILD_MPM),yes)
   PSELIBS += CCA/Components/MPM/Core      \
 	     CCA/Components/MPM/Materials
 endif
 
-ifneq ($(BUILD_MPM),no) 
-  ifneq ($(BUILD_ICE),no) 
-    PSELIBS += CCA/Components/MPMICE/Core
+# MPM - ICE Models
+ifeq ($(BUILD_MPM)$(BUILD_MPM),yesyes)
+  PSELIBS += CCA/Components/MPMICE/Core
 
-    SUBDIRS += $(SRCDIR)/HEChem             \
-               $(SRCDIR)/SolidReactionModel
-  endif
+  SUBDIRS += $(SRCDIR)/HEChem             \
+             $(SRCDIR)/SolidReactionModel
 endif
 
 ######################################################
