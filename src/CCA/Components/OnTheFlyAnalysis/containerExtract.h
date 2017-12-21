@@ -24,8 +24,9 @@
 
 #ifndef Packages_Uintah_CCA_Components_ontheflyAnalysis_containerExtract_h
 #define Packages_Uintah_CCA_Components_ontheflyAnalysis_containerExtract_h
+
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
-#include <CCA/Ports/Output.h>
+
 #include <Core/GeometryPiece/GeometryPiece.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
@@ -41,7 +42,8 @@
 
 namespace Uintah {
 
-
+  class DataWarehouse;
+  
   /**************************************
 
     CLASS

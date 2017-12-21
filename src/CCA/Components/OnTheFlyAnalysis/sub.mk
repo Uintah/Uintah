@@ -35,21 +35,14 @@ SRCDIR := CCA/Components/OnTheFlyAnalysis
 SRCS += \
         $(SRCDIR)/AnalysisModuleFactory.cc \
         $(SRCDIR)/AnalysisModule.cc        \
-        $(SRCDIR)/1stLawThermo.cc          \
-        $(SRCDIR)/containerExtract.cc      \
-        $(SRCDIR)/flatPlate_heatFlux.cc    \
         $(SRCDIR)/lineExtract.cc           \
         $(SRCDIR)/MinMax.cc                \
         $(SRCDIR)/momentumAnalysis.cc      \
-        $(SRCDIR)/particleExtract.cc       \
         $(SRCDIR)/planeExtract.cc          \
         $(SRCDIR)/radiometer.cc            \
-        $(SRCDIR)/statistics.cc            \
-        $(SRCDIR)/vorticity.cc
+        $(SRCDIR)/statistics.cc
 
 PSELIBS := \
-	CCA/Components/ICE/Core \
-	CCA/Components/MPM/Core \
 	CCA/Ports               \
         Core/Disclosure         \
         Core/Exceptions         \
@@ -61,6 +54,31 @@ PSELIBS := \
         Core/Parallel           \
         Core/ProblemSpec        \
         Core/Util
+
+ifneq ($(BUILD_ICE),no)
+  SRCS += \
+        $(SRCDIR)/containerExtract.cc \
+        $(SRCDIR)/vorticity.cc
+
+  PSELIBS += CCA/Components/ICE/Core \
+             CCA/Components/ICE/Materials
+endif
+
+ifneq ($(BUILD_MPM),no)
+  SRCS += \
+        $(SRCDIR)/flatPlate_heatFlux.cc \
+        $(SRCDIR)/particleExtract.cc
+
+  PSELIBS += CCA/Components/MPM/Core \
+             CCA/Components/MPM/Materials
+endif
+
+ifneq ($(BUILD_MPM),no)
+  ifneq ($(BUILD_ICE),no)
+    SRCS += \
+        $(SRCDIR)/1stLawThermo.cc
+  endif
+endif
 
 LIBS := $(XML_LIBRARY) $(MPI_LIBRARY)
 
