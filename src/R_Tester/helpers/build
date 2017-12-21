@@ -44,10 +44,8 @@ if [ "$OS" = "Linux" ]; then
       --with-boost=/usr/ \\
       --enable-gencode=52 \\
       --enable-ray-scatter \\
-      --enable-arches \\
-      --enable-ice \\
-      --enable-mpm \\
-      --enable-wasatch_3p='radprops,tabprops' \\"
+      --enable-all-components \\
+      --enable-wasatch_3p \\"
       # execute a script (R_tester/modifySrc) that modifies src files
       MODIFY_SRC="true"
     fi
