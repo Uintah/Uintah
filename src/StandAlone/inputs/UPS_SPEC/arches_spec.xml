@@ -1845,6 +1845,9 @@
 
             <!-- Spec for the heat transfer source -->
             <heat_model_name            spec="REQUIRED STRING" need_applies_to="type coal_gas_heat"/>
+            <heat_BirthDeath           spec="OPTIONAL NO_DATA" need_applies_to="type coal_gas_heat">
+              <retained_deposit_factor    spec="OPTIONAL DOUBLE"/>
+            </heat_BirthDeath>
 
             <!-- Tabulated reaction rate -->
             <rxn_rate                   spec="REQUIRED STRING" need_applies_to="type tab_rxn_rate" />

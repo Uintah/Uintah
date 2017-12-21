@@ -10,6 +10,7 @@
 #include <CCA/Components/Arches/CoalModels/ModelBase.h>
 #include <CCA/Components/Arches/CoalModels/SimpleHeatTransfer.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
+#include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
 
 #include <sci_defs/kokkos_defs.h>
 
@@ -36,6 +37,14 @@ CoalGasHeat::problemSetup(const ProblemSpecP& inputdb)
   ProblemSpecP db = inputdb;
 
   db->require( "heat_model_name", _heat_model_name );
+   
+  m_dest_flag = false;
+  if (db->findBlock("heat_BirthDeath")) {
+    ProblemSpecP db_bd = db->findBlock("heat_BirthDeath");
+    db_bd->getWithDefault("retained_deposit_factor", m_retained_deposit_factor, 1.0);
+    m_dest_flag = true;
+    m_enthalpy_root = ParticleTools::parse_for_role_to_label(db, "enthalpy");
+  }
 
   _source_grid_type = CC_SRC;
 
@@ -71,16 +80,22 @@ CoalGasHeat::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
 
     EqnBase& eqn = dqmomFactory.retrieve_scalar_eqn( weight_name );
 
-    const VarLabel* tempLabel_w = eqn.getTransportEqnLabel();
-    tsk->requires( Task::NewDW, tempLabel_w, Ghost::None, 0 );
-
     ModelBase& model = modelFactory.retrieve_model( model_name );
-
-    const VarLabel* tempLabel_m = model.getModelLabel();
-    tsk->requires( Task::NewDW, tempLabel_m, Ghost::None, 0 );
 
     const VarLabel* tempgasLabel_m = model.getGasSourceLabel();
     tsk->requires( Task::NewDW, tempgasLabel_m, Ghost::None, 0 );
+  
+    if (m_dest_flag){
+      // require enthalpy birth/death   
+      std::string enthalpyqn_name = ParticleTools::append_qn_env(m_enthalpy_root, iqn );
+      EqnBase& temp_enthalpy_eqn = dqmomFactory.retrieve_scalar_eqn(enthalpyqn_name);
+      DQMOMEqn& enthalpy_eqn = dynamic_cast<DQMOMEqn&>(temp_enthalpy_eqn);
+      const std::string enthalpy_birth_name = enthalpy_eqn.get_model_by_type( "BirthDeath" );
+      std::string enthalpy_birth_qn_name = ParticleTools::append_qn_env(enthalpy_birth_name, iqn);
+      const VarLabel* enthalpy_birthdeath_varlabel=VarLabel::find(enthalpy_birth_qn_name);
+      tsk->requires( Task::NewDW, enthalpy_birthdeath_varlabel, Ghost::None, 0 );
+    }
+    
 
   }
 
@@ -88,6 +103,43 @@ CoalGasHeat::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
 
 }
 
+struct sumHeatGasDestSource{
+       sumHeatGasDestSource(constCCVariable<double>& _qn_gas_dest,
+                           CCVariable<double>& _enthalpySrc,
+                           double& _retained_deposit_factor,
+                           double& _w_scaling_constant,
+                           double& _enthalpy_scaling_constant ) :
+#ifdef UINTAH_ENABLE_KOKKOS
+                           qn_gas_dest(_qn_gas_dest.getKokkosView()),
+                           enthalpySrc(_enthalpySrc.getKokkosView()),
+                           enthalpy_scaling_constant(_enthalpy_scaling_constant),
+                           w_scaling_constant(_w_scaling_constant),
+                           retained_deposit_factor(_retained_deposit_factor)
+#else
+                           qn_gas_dest(_qn_gas_dest),
+                           enthalpySrc(_enthalpySrc),
+                           enthalpy_scaling_constant(_enthalpy_scaling_constant),
+                           w_scaling_constant(_w_scaling_constant),
+                           retained_deposit_factor(_retained_deposit_factor)
+#endif
+                           {  }
+
+  void operator()(int i , int j, int k ) const {
+   enthalpySrc(i,j,k) += - (1.0-retained_deposit_factor)*qn_gas_dest(i,j,k)*w_scaling_constant*enthalpy_scaling_constant; // minus sign because it is applied to the gas  
+  }
+
+  private:
+#ifdef UINTAH_ENABLE_KOKKOS
+   KokkosView3<const double> qn_gas_dest;
+   KokkosView3<double>  enthalpySrc;
+#else
+   constCCVariable<double>& qn_gas_dest;
+   CCVariable<double>& enthalpySrc;
+#endif
+  double enthalpy_scaling_constant;
+  double w_scaling_constant;
+  double retained_deposit_factor;
+};
 struct sumEnthalpyGasSource{
        sumEnthalpyGasSource(constCCVariable<double>& _qn_gas_enthalpy,
                            CCVariable<double>& _enthalpySrc) :
@@ -164,13 +216,31 @@ CoalGasHeat::computeSource( const ProcessorGroup* pc,
       const VarLabel* gasModelLabel = model.getGasSourceLabel();
 
       new_dw->get( qn_gas_heat, gasModelLabel, matlIndex, patch, gn, 0 );
-
       Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
-
-      sumEnthalpyGasSource doSumEnthalpySource(qn_gas_heat,
-                                               heatSrc);
-
+      sumEnthalpyGasSource doSumEnthalpySource(qn_gas_heat,heatSrc);
       Uintah::parallel_for(range, doSumEnthalpySource);
+      
+      if (m_dest_flag){
+        // get enthalpy birth death, enthalpy scaling constant and equation handle   
+        std::string enthalpyqn_name = ParticleTools::append_qn_env(m_enthalpy_root, iqn );
+        EqnBase& temp_enthalpy_eqn = dqmomFactory.retrieve_scalar_eqn(enthalpyqn_name);
+        DQMOMEqn& enthalpy_eqn = dynamic_cast<DQMOMEqn&>(temp_enthalpy_eqn);
+        double enthalpy_scaling_constant = enthalpy_eqn.getScalingConstant(iqn);
+        const std::string enthalpy_birth_name = enthalpy_eqn.get_model_by_type( "BirthDeath" );
+        std::string enthalpy_birth_qn_name = ParticleTools::append_qn_env(enthalpy_birth_name, iqn);
+        const VarLabel* enthalpy_birthdeath_varlabel=VarLabel::find(enthalpy_birth_qn_name);
+        // get weight scaling constant and equation handle 
+        std::string weightqn_name = ParticleTools::append_qn_env("w", iqn);
+        EqnBase& temp_weight_eqn = dqmomFactory.retrieve_scalar_eqn(weightqn_name);
+        DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(temp_weight_eqn);
+        double w_scaling_constant = weight_eqn.getScalingConstant(iqn);
+        
+        constCCVariable<double> qn_gas_dest;
+        new_dw->get( qn_gas_dest, enthalpy_birthdeath_varlabel, matlIndex, patch, gn, 0 );
+        // sum the dest sources
+        sumHeatGasDestSource doSumHeatDestGas(qn_gas_dest,heatSrc,m_retained_deposit_factor,w_scaling_constant,enthalpy_scaling_constant);  
+        Uintah::parallel_for(range, doSumHeatDestGas);
+      }
     }
   }
 }
