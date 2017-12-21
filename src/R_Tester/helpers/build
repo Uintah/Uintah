@@ -58,17 +58,11 @@ if [ "$OS" = "Linux" ]; then
   fi
 
   #_________________
-  if [ "$MACHINE" == "cyrus.mech.utah.edu" ]; then
+  if [ "$MACHINE" == "maple.mech.utah.edu" ]; then
 
     COMMON="       --with-mpi=/usr/installed/openmpi \\
-      --with-cuda=/usr/local/cuda-7.5 \\
-      --with-boost=/usr \\
-      --enable-gencode=35 \\
-      --enable-ray-scatter \\
-      --enable-arches \\
       --enable-ice \\
-      --enable-mpm \\
-      --enable-wasatch_3p='radprops,tabprops' \\"
+      --enable-mpm \\"
 
     DBG_CONFIGURE="    --enable-debug \\
       --enable-64bit \\
