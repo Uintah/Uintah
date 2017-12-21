@@ -738,7 +738,7 @@ ICE::outputProblemSpec( ProblemSpecP & root_ps )
   for (vector<ModelInterface*>::const_iterator iter = d_models.begin();
                                                iter != d_models.end(); iter++){
     ModelInterface* model = *iter;
-    (*iter)->outputProblemSpec(models_ps);
+    model->outputProblemSpec(models_ps);
   }
 
   //__________________________________
