@@ -75,6 +75,8 @@ COMPONENTS      = CCA/Components
 ifeq ($(BUILD_ARCHES),yes)
   CA = CCA/Components/Arches
   ARCHES_LIBS        = $(COMPONENTS)/Arches
+  # WARNING: THESE LIBRARIES ARE LISTED IN A SPECIFIC ORDER TO SATISFY
+  #          THE NEEDS OF STATIC LINKING.  DO NOT ALPHABETIZE THEM!
   ARCHES_SUB_LIBS = $(CA)/fortran 
   ifeq ($(BUILD_MPM),yes)
     MPMARCHES_LIB    = $(COMPONENTS)/MPMArches
@@ -91,6 +93,8 @@ endif
 ifeq ($(BUILD_MPM),yes)
   CM = CCA/Components/MPM
   MPM_LIB            = CCA/Components/MPM
+  # WARNING: THESE LIBRARIES ARE LISTED IN A SPECIFIC ORDER TO SATISFY
+  #          THE NEEDS OF STATIC LINKING.  DO NOT ALPHABETIZE THEM!
   MPM_SUB_LIBS = \
 	$(CM)/HeatConduction    \
 	$(CM)/ThermalContact    \
@@ -102,6 +106,8 @@ ifeq ($(BUILD_MPM),yes)
 	$(CM)/Core
   ifeq ($(BUILD_ICE),yes)
     CMI = CCA/Components/MPMICE
+    # WARNING: THESE LIBRARIES ARE LISTED IN A SPECIFIC ORDER TO SATISFY
+    #          THE NEEDS OF STATIC LINKING.  DO NOT ALPHABETIZE THEM!
     MPMICE_LIB       = CCA/Components/MPMICE
     MPMICE_SUB_LIBS = \
 	$(CMI)/Core
@@ -111,6 +117,8 @@ endif
 ifeq ($(BUILD_ICE),yes)
   CI = CCA/Components/ICE
   ICE_LIB            = CCA/Components/ICE
+  # WARNING: THESE LIBRARIES ARE LISTED IN A SPECIFIC ORDER TO SATISFY
+  #          THE NEEDS OF STATIC LINKING.  DO NOT ALPHABETIZE THEM!
   ICE_SUB_LIBS = \
 	$(CI)/Materials            \
 	$(CI)/CustomBCs            \
@@ -180,8 +188,8 @@ ALL_PSE_LIBS =                              \
         $(HEAT_LIB)                         \
         $(PHASEFIELD_LIB)                   \
 
-  # WARNING: THESE LIBRARIES ARE LISTED IN A SPECIFIC ORDER TO SATISFY
-  #          THE NEEDS OF STATIC LINKING.  DO NOT ALPHABETIZE THEM!
+# WARNING: THESE LIBRARIES ARE LISTED IN A SPECIFIC ORDER TO SATISFY
+#          THE NEEDS OF STATIC LINKING.  DO NOT ALPHABETIZE THEM!
 ALL_STATIC_PSE_LIBS =                   \
     CCA/Components/Parent               \
     CCA/Components/Application          \
@@ -419,7 +427,7 @@ endif
        # Remove template instantiation files (old SGI compiler?)
 	for fname in $(patsubst %,%/ii_files, $(ALLOBJSUBDIRS)); \
 	  do if test -d $$fname; then rm -rf $$fname; fi; done
-	#
+       #
 	rm -f $(patsubst %,%/*~, $(ALLOBJSUBDIRS))
        #
        # this catches anything that slipped through

@@ -9,6 +9,8 @@
 
 # 3. There are some other gottas regarding svn ...
 
+# 4. There are different try servers
+
 # Note thsi script will automatically create a patch via svn (max 640 Mbytes).
 # It will contain context lines which are superfluous and make the patch
 # bigger than necessary.
