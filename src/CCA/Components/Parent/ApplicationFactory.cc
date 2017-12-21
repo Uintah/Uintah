@@ -140,10 +140,10 @@ ApplicationFactory::create( ProblemSpecP& prob_spec,
   }
 
   if( sim_comp == "" ) {
-    throw ProblemSetupException( "Could not determine the type of SimulationComponent...", __FILE__, __LINE__ );
+    throw ProblemSetupException("ERROR<Application>: Could not determine the type of the SimulationComponent.", __FILE__, __LINE__);
   }
    
-  proc0cout << "Simulation Component: \t'" << sim_comp << "'\n";
+  proc0cout << "Application Component: \t'" << sim_comp << "'\n";
 
   string turned_off_options;
 
@@ -404,7 +404,7 @@ ApplicationFactory::create( ProblemSpecP& prob_spec,
   } } } }
 #endif
   
-  throw ProblemSetupException("Unknown simulationComponent ('" + sim_comp + "'). Must specify -arches, -ice, -mpm, "
+  throw ProblemSetupException("ERROR<Application>: Unknown simulationComponent ('" + sim_comp + "'). Must specify -arches, -ice, -mpm, "
                               "-impm, -mpmice, -mpmarches, -burger, -wave, -poisson1, -poisson2, -poisson3 or -benchmark.\n"
                               "Note: the following components were turned off at configure time: " + turned_off_options + "\n"
                               "Make sure that the requested component is supported in this build.", __FILE__, __LINE__);

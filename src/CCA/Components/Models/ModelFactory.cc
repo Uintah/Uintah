@@ -58,11 +58,11 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Malloc/Allocator.h>
 
-
+#include <string>
+#include <vector>
 #include <iostream>
 
 using namespace Uintah;
-using namespace std;
 
 std::vector<ModelInterface*>
 ModelFactory::makeModels( const ProcessorGroup   * myworld,
@@ -70,7 +70,7 @@ ModelFactory::makeModels( const ProcessorGroup   * myworld,
 			  const ProblemSpecP& restart_prob_spec,
                           const ProblemSpecP& prob_spec )
 {
-  vector<ModelInterface*> d_models;
+  std::vector<ModelInterface*> d_models;
 
   ProblemSpecP model_spec = restart_prob_spec->findBlock("Models");
 
@@ -78,18 +78,24 @@ ModelFactory::makeModels( const ProcessorGroup   * myworld,
     return d_models;
   
   for(ProblemSpecP model_ps = model_spec->findBlock("Model");
-      model_ps != nullptr; model_ps = model_ps->findNextBlock("Model")) {
+                   model_ps != nullptr;
+                   model_ps = model_ps->findNextBlock("Model")) {
 
-    string type;
+    std::string type;
 
     if(!model_ps->getAttribute("type", type)) {
-      throw ProblemSetupException("Model does not specify type=\"name\"",
-				  __FILE__, __LINE__);
+      throw ProblemSetupException( "\nERROR<Model>: Could not determine the type of the model.\n", __FILE__, __LINE__ );
+    }
+    
+    // A no-op is need to make the conditionals work correctly if
+    // there are no models.
+    if( 0 )
+    {
     }
 
 #if !defined( NO_ICE )
     // ICE turned on
-    if(type == "SimpleRxn") {
+    else if(type == "SimpleRxn") {
       d_models.push_back(scinew SimpleRxn(myworld, sharedState, model_ps));
     }
     else if(type == "AdiabaticTable") {
@@ -146,13 +152,13 @@ ModelFactory::makeModels( const ProcessorGroup   * myworld,
     else if(type == "SolidReactionModel") {
       d_models.push_back(scinew SolidReactionModel(myworld, sharedState, model_ps, prob_spec));
     }
-    else {
-      throw ProblemSetupException( "Unknown model: " + type, __FILE__, __LINE__ );
-    }
-#else
-    // ICE and/or MPM turned off.
-    throw ProblemSetupException( type + " not supported in this build", __FILE__, __LINE__ );
 #endif
+
+    else {
+      std::ostringstream msg;
+      msg << "\nERROR<Model>: Unknown model : " << type << ".\n";
+      throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
+    }
   }
 
   return d_models;

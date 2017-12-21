@@ -27,7 +27,9 @@
 #include <CCA/Components/PostProcessUda/spatioTemporalAvg.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 
-using namespace std;
+#include <string>
+#include <iostream>
+
 using namespace Uintah;
 using namespace postProcess;
 
@@ -51,20 +53,21 @@ ModuleFactory::create(const ProblemSpecP& prob_spec,
  
 // scinew PostProcessCommon( sharedState, dataArchiver, dataArchive);
  
-  string module("");
+  std::string module("");
+  
   ProblemSpecP da_ps = prob_spec->findBlock("PostProcess");
 
-  vector<Module*> modules;
+  std::vector<Module*> modules;
  
   if (da_ps) {
   
     for( ProblemSpecP module_ps = da_ps->findBlock( "Module" ); module_ps != nullptr; module_ps = module_ps->findNextBlock( "Module" ) ) {
                         
       if( !module_ps ) {
-        throw ProblemSetupException( "\nERROR:<PostProcess>, could not find find <Module> tag \n", __FILE__, __LINE__ );
+        throw ProblemSetupException( "\nERROR<PostProcess>: Could not find find <Module> tag. \n", __FILE__, __LINE__ );
       }
       
-      map<string,string> attributes;
+      std::map<std::string, std::string> attributes;
       module_ps->getAttributes(attributes);
       module = attributes["type"];
 
@@ -78,7 +81,9 @@ ModuleFactory::create(const ProblemSpecP& prob_spec,
         // do nothing
       }      
       else {
-        throw ProblemSetupException("\nERROR:<PostProcess> Unknown analysis module.  "+module,__FILE__, __LINE__);
+	std::ostringstream msg;
+	msg << "\nERROR<PostProcess>: Unknown analysis module : " << module << ".\n";
+	throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
       }
     } 
   }

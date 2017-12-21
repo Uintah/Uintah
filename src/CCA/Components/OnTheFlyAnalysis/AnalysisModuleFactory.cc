@@ -49,7 +49,10 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/SimulationState.h>
 
-using namespace std;
+#include <string>
+#include <vector>
+#include <iostream>
+
 using namespace Uintah;
 
 AnalysisModuleFactory::AnalysisModuleFactory()
@@ -65,19 +68,22 @@ AnalysisModuleFactory::create(const ProcessorGroup* myworld,
 			      const SimulationStateP sharedState,
 			      const ProblemSpecP& prob_spec)
 {
-  string module("");
+  std::string module("");
   ProblemSpecP da_ps = prob_spec->findBlock("DataAnalysis");
 
-  vector<AnalysisModule*> modules;
+  std::vector<AnalysisModule*> modules;
  
   if (da_ps) {
   
-    for( ProblemSpecP module_ps = da_ps->findBlock( "Module" ); module_ps != nullptr; module_ps = module_ps->findNextBlock( "Module" ) ) {
+    for( ProblemSpecP module_ps = da_ps->findBlock( "Module" );
+	              module_ps != nullptr;
+	              module_ps = module_ps->findNextBlock( "Module" ) ) {
                         
       if( !module_ps ) {
-        throw ProblemSetupException( "\nERROR:<DataAnalysis>, could not find find <Module> tag \n", __FILE__, __LINE__ );
+        throw ProblemSetupException( "\nERROR<DataAnalysis>: Could not find find <Module> tag.\n", __FILE__, __LINE__ );
       }
-      map<string,string> attributes;
+      
+      std::map<std::string, std::string> attributes;
       module_ps->getAttributes(attributes);
       module = attributes["name"];
 
@@ -122,8 +128,11 @@ AnalysisModuleFactory::create(const ProcessorGroup* myworld,
         modules.push_back( scinew FirstLawThermo(      myworld, sharedState, module_ps ) );
       }
 #endif    
+
       else {
-        throw ProblemSetupException("\nERROR:<DataAnalysis> Unknown analysis module.  "+module,__FILE__, __LINE__);
+	std::ostringstream msg;
+	msg << "\nERROR<DataAnalysis>: Unknown analysis module : " << module << ".\n";
+	throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
       }
     } 
   }

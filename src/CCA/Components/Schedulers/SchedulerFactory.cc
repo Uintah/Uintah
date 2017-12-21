@@ -86,8 +86,8 @@ SchedulerFactory::create( const ProblemSpecP   & ps
 
   else {
     sch = nullptr;
-    std::string error = "Unknown scheduler: '" + scheduler
-                        + "' Please check UPS Spec for valid scheduler options (.../src/StandAlone/inputs/UPS_SPEC/ups_spec.xml)'";
+    std::string error = "\nERROR<Scheduler>: Unknown scheduler: '" + scheduler
+                        + "' Please check UPS Spec for valid scheduler options (.../src/StandAlone/inputs/UPS_SPEC/ups_spec.xml)'.\n";
     throw ProblemSetupException(error, __FILE__, __LINE__);
   }
 
@@ -95,18 +95,18 @@ SchedulerFactory::create( const ProblemSpecP   & ps
   //  bulletproofing
   // "-nthreads" at command line, something other than "Unified" specified in UPS file (w/ -do_not_validate)
   if ((Uintah::Parallel::getNumThreads() > 0) && (scheduler != "Unified")) {
-    throw ProblemSetupException("Unified Scheduler needed for '-nthreads <n>' option", __FILE__, __LINE__);
+    throw ProblemSetupException("\nERROR<Scheduler>: Unified Scheduler needed for '-nthreads <n>' option.\n", __FILE__, __LINE__);
   }
 
   // "-gpu" provided at command line, but not using "Unified"
   if ((scheduler != "Unified") && Uintah::Parallel::usingDevice()) {
-    std::string error = "\n \tTo use '-gpu' option you must invoke the Unified Scheduler.  Add '-nthreads <n>' to the sus command line.";
+    std::string error = "\nERROR<Scheduler>: To use '-gpu' option you must invoke the Unified Scheduler.  Add '-nthreads <n>' to the sus command line.\n";
     throw ProblemSetupException(error, __FILE__, __LINE__);
   }
 
   // "Unified" specified in UPS file, but "-nthreads" not given at command line
   if ((scheduler == "Unified") && !(Uintah::Parallel::getNumThreads() > 0)) {
-    std::string error = "\n \tAdd '-nthreads <n>' to the sus command line if you are specifying Unified in your input file.";
+    std::string error = "\nERROR<Scheduler>: Add '-nthreads <n>' to the sus command line if you are specifying Unified in your input file.\n";
     throw ProblemSetupException(error, __FILE__, __LINE__);
   }
 

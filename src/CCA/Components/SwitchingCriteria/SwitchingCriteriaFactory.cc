@@ -39,27 +39,29 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 
-
 #include <iostream>
 #include <string>
 
-using namespace std;
 using namespace Uintah;
 
 SwitchingCriteria* SwitchingCriteriaFactory::create(ProblemSpecP& ps,
                                                     const ProcessorGroup* world)
 {
-  string criteria("");
+  std::string criteria("");
+
   ProblemSpecP switch_ps = ps->findBlock("SwitchCriteria");
+
   if (switch_ps) {
-    map<string,string> attributes;
+    std::map<std::string, std::string> attributes;
     switch_ps->getAttributes(attributes);
     criteria = attributes["type"];
-  } else {
-    return 0;
+  }
+  else {
+    return nullptr;
   }
 
-  SwitchingCriteria* switch_criteria = 0;
+  SwitchingCriteria* switch_criteria = nullptr;
+  
   if (criteria == "none" || criteria == "None" || criteria == "NONE") {
     switch_criteria = scinew None();
   }
@@ -86,11 +88,10 @@ SwitchingCriteria* SwitchingCriteriaFactory::create(ProblemSpecP& ps,
 #endif  
 
   else {
-    ostringstream warn;
-    warn<<"\n ERROR:\n Unknown switching criteria (" << criteria << ")\n";
-    throw ProblemSetupException(warn.str(),__FILE__, __LINE__);
+    std::ostringstream msg;
+    msg << "\nERROR<SwitchCriteria>: Unknown switching criteria : " << criteria << ".\n";
+    throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
   }
 
   return switch_criteria;
-
 }
