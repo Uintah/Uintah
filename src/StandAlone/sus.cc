@@ -691,8 +691,6 @@ main( int argc, char *argv[], char *env[] )
     UintahParallelComponent* solverComp =
       dynamic_cast<UintahParallelComponent*>(solver);
 
-    proc0cout << "Implicit Solver: \t" << solver->getName() << "\n";
-
     appComp->attachPort( "solver", solver );
 
     //__________________________________
