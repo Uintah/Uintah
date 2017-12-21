@@ -23,17 +23,29 @@
  */
 
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModuleFactory.h>
-#include <CCA/Components/OnTheFlyAnalysis/1stLawThermo.h>
 #include <CCA/Components/OnTheFlyAnalysis/MinMax.h>
-#include <CCA/Components/OnTheFlyAnalysis/containerExtract.h>
-#include <CCA/Components/OnTheFlyAnalysis/flatPlate_heatFlux.h>
 #include <CCA/Components/OnTheFlyAnalysis/lineExtract.h>
 #include <CCA/Components/OnTheFlyAnalysis/momentumAnalysis.h>
-#include <CCA/Components/OnTheFlyAnalysis/particleExtract.h>
 #include <CCA/Components/OnTheFlyAnalysis/planeExtract.h>
 #include <CCA/Components/OnTheFlyAnalysis/radiometer.h>
 #include <CCA/Components/OnTheFlyAnalysis/statistics.h>
-#include <CCA/Components/OnTheFlyAnalysis/vorticity.h>
+
+#include <sci_defs/uintah_defs.h>
+
+#if !defined( NO_ICE )
+# include <CCA/Components/OnTheFlyAnalysis/containerExtract.h>
+# include <CCA/Components/OnTheFlyAnalysis/vorticity.h>
+#endif
+
+#if !defined( NO_MPM )
+#  include <CCA/Components/OnTheFlyAnalysis/flatPlate_heatFlux.h>
+#  include <CCA/Components/OnTheFlyAnalysis/particleExtract.h>
+#endif
+
+#if !defined( NO_ICE ) && !defined( NO_MPM )
+#  include <CCA/Components/OnTheFlyAnalysis/1stLawThermo.h>
+#endif
+
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/SimulationState.h>
 
@@ -78,23 +90,8 @@ AnalysisModuleFactory::create(const ProcessorGroup* myworld,
       else if ( module == "planeExtract" ) {
         modules.push_back( scinew planeExtract(        myworld, sharedState, module_ps ) );
       }
-      else if ( module == "containerExtract" ) {
-        modules.push_back( scinew containerExtract(    myworld, sharedState, module_ps ) );
-      }
       else if ( module == "momentumAnalysis" ) {
         modules.push_back( scinew momentumAnalysis(    myworld, sharedState, module_ps ) );
-      }
-      else if ( module == "particleExtract" ) {
-        modules.push_back( scinew particleExtract(     myworld, sharedState, module_ps ) );
-      }
-      else if ( module == "vorticity" ) {
-        modules.push_back( scinew vorticity(           myworld, sharedState, module_ps ) );
-      }
-      else if ( module == "flatPlate_heatFlux" ) {
-        modules.push_back( scinew flatPlate_heatFlux(  myworld, sharedState, module_ps ) );
-      }
-      else if ( module == "firstLawThermo" ) {
-        modules.push_back( scinew FirstLawThermo(      myworld, sharedState, module_ps ) );
       }
       else if ( module == "minMax" ) {
         modules.push_back( scinew MinMax(              myworld, sharedState, module_ps ) );
@@ -102,6 +99,29 @@ AnalysisModuleFactory::create(const ProcessorGroup* myworld,
       else if ( module == "radiometer" ) {
         modules.push_back( scinew OnTheFly_radiometer( myworld, sharedState, module_ps ) );
       }
+#if !defined( NO_ICE )
+      else if ( module == "containerExtract" ) {
+        modules.push_back( scinew containerExtract(    myworld, sharedState, module_ps ) );
+      }
+      else if ( module == "vorticity" ) {
+        modules.push_back( scinew vorticity(           myworld, sharedState, module_ps ) );
+      }
+#endif
+
+#if !defined( NO_MPM )
+      else if ( module == "particleExtract" ) {
+        modules.push_back( scinew particleExtract(     myworld, sharedState, module_ps ) );
+      }
+      else if ( module == "flatPlate_heatFlux" ) {
+        modules.push_back( scinew flatPlate_heatFlux(  myworld, sharedState, module_ps ) );
+      }
+#endif
+
+#if !defined( NO_ICE ) && !defined( NO_MPM )
+      else if ( module == "firstLawThermo" ) {
+        modules.push_back( scinew FirstLawThermo(      myworld, sharedState, module_ps ) );
+      }
+#endif    
       else {
         throw ProblemSetupException("\nERROR:<DataAnalysis> Unknown analysis module.  "+module,__FILE__, __LINE__);
       }

@@ -25,12 +25,6 @@
 
 #include <CCA/Components/Models/ModelFactory.h>
 
-#include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Malloc/Allocator.h>
-
-#include <CCA/Ports/ModelInterface.h>
-
 #include <CCA/Components/Models/FluidsBased/Mixing.h>
 #include <CCA/Components/Models/FluidsBased/AdiabaticTable.h>
 #include <CCA/Components/Models/FluidsBased/PassiveScalar.h>
@@ -38,6 +32,8 @@
 #include <CCA/Components/Models/FluidsBased/TestModel.h>
 #include <CCA/Components/Models/FluidsBased/flameSheet_rxn.h>
 #include <CCA/Components/Models/FluidsBased/MassMomEng_src.h>
+
+#include <sci_defs/uintah_defs.h>
 
 #if !defined( NO_ICE )
 #  include <CCA/Components/Models/HEChem/Simple_Burn.h>
@@ -53,7 +49,12 @@
 #  include <CCA/Components/Models/SolidReactionModel/SolidReactionModel.h>
 #endif
 
-#include <sci_defs/uintah_defs.h>
+#include <CCA/Ports/ModelInterface.h>
+
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Malloc/Allocator.h>
+
 
 #include <iostream>
 

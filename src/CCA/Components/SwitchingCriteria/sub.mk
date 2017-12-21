@@ -34,16 +34,10 @@ SRCDIR := CCA/Components/SwitchingCriteria
 SRCS += \
         $(SRCDIR)/SwitchingCriteriaFactory.cc \
         $(SRCDIR)/None.cc                     \
-        $(SRCDIR)/TimestepNumber.cc           \
-        $(SRCDIR)/SimpleBurn.cc               \
-        $(SRCDIR)/SteadyBurn.cc               \
         $(SRCDIR)/SteadyState.cc              \
-        $(SRCDIR)/DDT1.cc                     
+        $(SRCDIR)/TimestepNumber.cc
 
 PSELIBS := \
-        CCA/Components/ICE/Core    \
-        CCA/Components/MPM/Core    \
-        CCA/Components/MPMICE/Core \
         CCA/Ports        \
         Core/Disclosure  \
         Core/Exceptions  \
@@ -53,6 +47,27 @@ PSELIBS := \
         Core/Parallel    \
         Core/ProblemSpec \
         Core/Util        
+
+ifneq ($(BUILD_ICE),no)
+  PSELIBS += CCA/Components/ICE/Core \
+             CCA/Components/ICE/Materials
+endif
+
+ifneq ($(BUILD_MPM),no)
+  PSELIBS += CCA/Components/MPM/Core \
+             CCA/Components/MPM/Materials
+endif
+
+ifneq ($(BUILD_MPM),no)
+  ifneq ($(BUILD_ICE),no)
+    SRCS += \
+        $(SRCDIR)/SimpleBurn.cc \
+        $(SRCDIR)/SteadyBurn.cc \
+        $(SRCDIR)/DDT1.cc
+
+    PSELIBS += CCA/Components/MPMICE/Core
+  endif
+endif
 
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY)
 
