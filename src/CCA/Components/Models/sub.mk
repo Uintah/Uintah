@@ -40,9 +40,7 @@ ifeq ($(BUILD_MODELS_RADIATION),yes)
   RADIATION += $(SRCDIR)/Radiation
 endif
 
-
-SUBDIRS := $(SRCDIR)/FluidsBased \
-           $(RADIATION)
+SUBDIRS := $(RADIATION)
 
 PSELIBS :=                 \
         CCA/Ports          \
@@ -58,6 +56,8 @@ PSELIBS :=                 \
         Core/Util          
 
 ifneq ($(BUILD_ICE),no)
+  SUBDIRS += $(SRCDIR)/FluidsBased
+
   PSELIBS += CCA/Components/ICE/Core      \
 	     CCA/Components/ICE/CustomBCs \
 	     CCA/Components/ICE/Materials

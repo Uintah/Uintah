@@ -54,7 +54,12 @@ ifneq ($(BUILD_ICE),no)
        $(SRCDIR)/NonAdiabaticTable.cc  \
        $(SRCDIR)/PassiveScalar.cc      \
        $(SRCDIR)/SimpleRxn.cc          \
-       $(SRCDIR)/TestModel.cc          \
        $(SRCDIR)/MassMomEng_src.cc
 endif
 
+ifneq ($(BUILD_ICE),no) 
+  ifneq ($(BUILD_MPM),no) 
+    SRCS += \
+       $(SRCDIR)/TestModel.cc
+  endif
+endif

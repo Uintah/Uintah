@@ -25,17 +25,19 @@
 
 #include <CCA/Components/Models/ModelFactory.h>
 
-#include <CCA/Components/Models/FluidsBased/Mixing.h>
-#include <CCA/Components/Models/FluidsBased/AdiabaticTable.h>
-#include <CCA/Components/Models/FluidsBased/PassiveScalar.h>
-#include <CCA/Components/Models/FluidsBased/SimpleRxn.h>
-#include <CCA/Components/Models/FluidsBased/TestModel.h>
-#include <CCA/Components/Models/FluidsBased/flameSheet_rxn.h>
-#include <CCA/Components/Models/FluidsBased/MassMomEng_src.h>
-
 #include <sci_defs/uintah_defs.h>
 
 #if !defined( NO_ICE )
+#  include <CCA/Components/Models/FluidsBased/Mixing.h>
+#  include <CCA/Components/Models/FluidsBased/AdiabaticTable.h>
+#  include <CCA/Components/Models/FluidsBased/PassiveScalar.h>
+#  include <CCA/Components/Models/FluidsBased/SimpleRxn.h>
+#  include <CCA/Components/Models/FluidsBased/TestModel.h>
+#  include <CCA/Components/Models/FluidsBased/flameSheet_rxn.h>
+#  include <CCA/Components/Models/FluidsBased/MassMomEng_src.h>
+#endif
+
+#if !defined( NO_ICE ) && !defined( NO_MPM )
 #  include <CCA/Components/Models/HEChem/Simple_Burn.h>
 #  include <CCA/Components/Models/HEChem/Steady_Burn.h>
 #  include <CCA/Components/Models/HEChem/Unsteady_Burn.h>
@@ -46,6 +48,7 @@
 #  include <CCA/Components/Models/HEChem/LightTime.h>
 #  include <CCA/Components/Models/HEChem/DDT0.h>
 #  include <CCA/Components/Models/HEChem/DDT1.h>
+
 #  include <CCA/Components/Models/SolidReactionModel/SolidReactionModel.h>
 #endif
 
@@ -94,9 +97,6 @@ ModelFactory::makeModels( const ProcessorGroup   * myworld,
     }
     else if(type == "Mixing") {
       d_models.push_back(scinew Mixing(myworld, sharedState, model_ps)); }
-    else if(type == "Test") {
-      d_models.push_back(scinew TestModel(myworld, sharedState, model_ps));
-    }
     else if(type == "flameSheet_rxn") {
       d_models.push_back(scinew flameSheet_rxn(myworld, sharedState, model_ps));
     }
@@ -106,6 +106,13 @@ ModelFactory::makeModels( const ProcessorGroup   * myworld,
     else if(type == "PassiveScalar") {
       d_models.push_back(scinew PassiveScalar(myworld, sharedState, model_ps));
     }
+#endif
+
+#if !defined( NO_ICE ) && !defined( NO_MPM )    
+    else if(type == "Test") {
+      d_models.push_back(scinew TestModel(myworld, sharedState, model_ps));
+    }
+
     else if(type == "Simple_Burn") {
       d_models.push_back(scinew Simple_Burn(myworld, sharedState, model_ps, prob_spec));
     }
