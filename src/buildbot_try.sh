@@ -10,6 +10,14 @@
 # 3. There are some other gottas regarding svn ...
 
 # 4. There are different try servers
+#   --builder option 
+
+#   where option is one of the following:
+#     Linux-Optimize-Test-try
+#     Linux-Debug-Test-try
+#     Linux-Optimize-GPU-try
+
+#  If no builder is specified all will be used.
 
 # Note thsi script will automatically create a patch via svn (max 640 Mbytes).
 # It will contain context lines which are superfluous and make the patch
