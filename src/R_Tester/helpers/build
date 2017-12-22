@@ -64,10 +64,6 @@ if [ "$OS" = "Linux" ]; then
       --enable-ice \\
       --enable-mpm \\"
 
-    DBG_CONFIGURE="    --enable-debug \\
-      --enable-64bit \\
-      --enable-scinew-line-numbers \\"
-
     ENV="       CC=mpicc \\
        CXX=mpic++ \\
        F77=gfortran"
