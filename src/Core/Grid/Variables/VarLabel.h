@@ -23,148 +23,155 @@
  */
 
 
-#ifndef UINTAH_HOMEBREW_VarLabel_H
-#define UINTAH_HOMEBREW_VarLabel_H
+#ifndef CORE_GRID_VARIABLES_VARLABEL_H
+#define CORE_GRID_VARIABLES_VARLABEL_H
 
-#include <string>
-#include <iosfwd>
+
 #include <Core/Util/RefCounted.h>
 #include <Core/Geometry/IntVector.h>
 
+#include <string>
+#include <iosfwd>
+
+
 namespace Uintah {
 
-  class TypeDescription;
-  class Patch;
+class TypeDescription;
+class Patch;
 
-    /**************************************
-      
-      CLASS
-        VarLabel
-      
-        Short Description...
-      
-      GENERAL INFORMATION
-      
-        VarLabel.h
-      
-        Steven G. Parker
-        Department of Computer Science
-        University of Utah
-      
-        Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-      
-      
-      KEYWORDS
-        VarLabel
-      
-      DESCRIPTION
-        Long description...
-      
-      WARNING
-      
-      ****************************************/
-    
-  class VarLabel : public RefCounted {
-  public:
-    enum VarType {
-      Normal,
-      PositionVariable
-    };
+/**************************************
 
-    // Ensure the uniqueness of VarLabel names (same name, same object).
-    static VarLabel* create( const std::string       & name,
-                             const TypeDescription   * type_description,
-                             const Uintah::IntVector & boundaryLayer = Uintah::IntVector(0,0,0),
-                                   VarType             vartype = Normal );
+  CLASS
+    VarLabel
 
-    static bool destroy( const VarLabel * label );
+  GENERAL INFORMATION
 
-    inline const std::string & getName() const { return d_name;  }
-    std::string getFullName( int matlIndex, const Patch * patch ) const;
+    VarLabel.h
 
-    bool isPositionVariable() const {
-      return d_vartype == PositionVariable;
-    }
+    Steven G. Parker
+    Department of Computer Science
+    University of Utah
 
-    const TypeDescription * typeDescription() const {
-      return d_td;
-    }
 
-    Uintah::IntVector getBoundaryLayer() const {
-      return d_boundaryLayer;
-    }
+  KEYWORDS
+    VarLabel
 
-    void allowMultipleComputes();
+  DESCRIPTION
 
-    bool allowsMultipleComputes() const
-      { return d_allowMultipleComputes; }
-    
-    static VarLabel* find(const std::string& name);
-    static VarLabel* particlePositionLabel();
-    static void setParticlePositionName(const std::string& pPosName){d_particlePositionName = pPosName;}
-    static std::string& getParticlePositionName(){return d_particlePositionName;}
-    
-    class Compare {
-    public:
-      inline bool operator()(const VarLabel* v1, const VarLabel* v2) const {
-        // because of uniqueness, we can use pointer comparisons
-        //return v1 < v2;
-        // No we cannot, because we need the order to be the same on different processes
-        if(v1 == v2)
-          return false;
-        return v1->getName() < v2->getName();
-      }
-    private:
-    };
-    
-    bool equals(const VarLabel* v2) const {
-      // because of uniqueness, we can use pointer comparisons
-      return this == v2;
-      /* old way
-         if(this == v2)
-         return true;
-         return getName() == v2->getName();
-      */
-    }
+****************************************/
 
-    void setCompressionMode(std::string compressionMode)
-      { d_compressionMode = compressionMode; }
-    
-    const std::string& getCompressionMode() const {
-      return (d_compressionMode == "default") ?
-        d_defaultCompressionMode : d_compressionMode;
-    }
-     
-    static void setDefaultCompressionMode( const std::string & compressionMode ) {
-      d_defaultCompressionMode = compressionMode;
-    }
+class VarLabel : public RefCounted {
 
-    static void printAll(); // for debugging
-     
-    std::string d_name;
+public:
 
-    friend std::ostream & operator<<( std::ostream & out, const Uintah::VarLabel & vl );
-
-  private:
-    // You must use VarLabel::create.
-    VarLabel(const std::string&, const TypeDescription*,
-             const Uintah::IntVector& boundaryLayer, VarType vartype);
-    // You must use destroy.
-    ~VarLabel();   
-     
-    const   TypeDescription   * d_td;
-            Uintah::IntVector   d_boundaryLayer;
-            VarType             d_vartype;
-    mutable std::string         d_compressionMode;
-    static  std::string         d_defaultCompressionMode;
-    static  std::string         d_particlePositionName;
-    // Allow a variable of this label to be computed multiple
-    // times in a TaskGraph without complaining.
-    bool                        d_allowMultipleComputes;
-     
-    VarLabel( const VarLabel & );
-    VarLabel & operator=( const VarLabel & );
+  enum VarType {
+      Normal
+    , PositionVariable
   };
+
+  // Ensure the uniqueness of VarLabel names (same name, same object).
+  static VarLabel* create( const std::string       & name
+                         , const TypeDescription   * type_description
+                         , const IntVector         & boundaryLayer = IntVector(0,0,0)
+                         ,       VarType             vartype       = Normal
+                         );
+
+  static bool destroy( const VarLabel * label );
+
+  inline const std::string & getName() const { return m_name;  }
+
+  std::string getFullName( int matlIndex, const Patch * patch ) const;
+
+  bool isPositionVariable() const { return m_var_type == PositionVariable; }
+
+  const TypeDescription * typeDescription() const { return m_td; }
+
+  IntVector getBoundaryLayer() const { return m_boundary_layer; }
+
+  void allowMultipleComputes();
+
+  bool allowsMultipleComputes() const { return m_allow_multiple_computes; }
+
+  static VarLabel* find( const std::string& name );
+
+  static VarLabel* particlePositionLabel();
+
+  static void setParticlePositionName(const std::string& pPosName) { s_particle_position_name = pPosName; }
+
+  static std::string& getParticlePositionName() { return s_particle_position_name; }
+
+  class Compare {
+
+  public:
+
+    inline bool operator()(const VarLabel* v1, const VarLabel* v2) const {
+      // because of uniqueness, we can use pointer comparisons
+      //return v1 < v2;
+      // No we cannot, because we need the order to be the same on different processes
+      if(v1 == v2) {
+        return false;
+      }
+      return v1->getName() < v2->getName();
+    }
+
+  };
+
+  bool equals(const VarLabel* v2) const {
+    // because of uniqueness, we can use pointer comparisons
+    return this == v2;
+    /* old way
+       if(this == v2)
+       return true;
+       return getName() == v2->getName();
+    */
+  }
+
+  void setCompressionMode( std::string compressionMode ) { m_compression_mode = compressionMode; }
+
+  const std::string& getCompressionMode() const {
+    return (m_compression_mode == "default") ? s_default_compression_mode : m_compression_mode;
+  }
+
+  static void setDefaultCompressionMode( const std::string & compressionMode ) {
+    s_default_compression_mode = compressionMode;
+  }
+
+  static void printAll(); // for debugging
+
+  std::string m_name{""};
+
+  friend std::ostream & operator<<( std::ostream & out, const VarLabel & vl );
+
+
+private:
+
+  // You must use VarLabel::create.
+  VarLabel( const std::string     &
+          , const TypeDescription *
+          , const IntVector       & boundaryLayer
+          ,       VarType           vartype
+          );
+
+  // You must use destroy.
+  ~VarLabel(){};
+
+  const   TypeDescription   * m_td{nullptr};
+          IntVector           m_boundary_layer{IntVector(0,0,0)};
+          VarType             m_var_type{Normal};
+  mutable std::string         m_compression_mode{"default"};
+  static  std::string         s_default_compression_mode;
+  static  std::string         s_particle_position_name;
+
+  // Allow a variable of this label to be computed multiple times in a TaskGraph without complaining.
+  bool                        m_allow_multiple_computes{false};
+
+  // eliminate copy, assignment and move
+  VarLabel( const VarLabel & )            = delete;
+  VarLabel& operator=( const VarLabel & ) = delete;
+  VarLabel( VarLabel && )                 = delete;
+  VarLabel& operator=( VarLabel && )      = delete;
+};
+
 } // End namespace Uintah
 
-#endif
+#endif // CORE_GRID_VARIABLES_VARLABEL_H
