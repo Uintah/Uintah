@@ -185,7 +185,8 @@ void Steady_Burn::outputProblemSpec(ProblemSpecP& ps)
   SB_ps->appendElement("IgnitionTemp",      ignitionTemp);
 }
 //______________________________________________________________________
-void Steady_Burn::scheduleInitialize(SchedulerP& sched, const LevelP& level, const ModelInfo*){
+void Steady_Burn::scheduleInitialize(SchedulerP& sched,
+				     const LevelP& level){
   printSchedule(level, cout_doing,"Steady_Burn::scheduleInitialize");
   
   Task* t = scinew Task("Steady_Burn::initialize", this, &Steady_Burn::initialize);                        
@@ -213,15 +214,15 @@ void Steady_Burn::initialize(const ProcessorGroup*,
 }
 
 //______________________________________________________________________
-void Steady_Burn::scheduleComputeStableTimeStep(SchedulerP&, const LevelP&, const ModelInfo*){
+void Steady_Burn::scheduleComputeStableTimeStep(SchedulerP&,
+						const LevelP&){
   // None necessary...
 }
 
 //______________________________________________________________________
 // only perform this task on the finest level
 void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched, 
-                                              const LevelP& level, 
-                                              const ModelInfo* mi){
+                                              const LevelP& level){
   
   if (level->hasFinerLevel()){
     return;  
@@ -232,7 +233,7 @@ void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched,
   const MaterialSubset* react_matl = matl0->thisMaterial();  
 
   Task* t1 = scinew Task("Steady_Burn::computeNumPPC", this, 
-                         &Steady_Burn::computeNumPPC, mi);
+                         &Steady_Burn::computeNumPPC);
 
   printSchedule(level, cout_doing,"Steady_Burn::scheduleComputeNumPPC");  
 
@@ -244,10 +245,10 @@ void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched,
 
   //__________________________________
   Task* t = scinew Task("Steady_Burn::computeModelSources", this, 
-                        &Steady_Burn::computeModelSources, mi);
+                        &Steady_Burn::computeModelSources);
 
   printSchedule(level,cout_doing,"Steady_Burn::scheduleComputeModelSources");  
-  t->requires( Task::OldDW, mi->delT_Label, level.get_rep());
+  t->requires( Task::OldDW, Ilb->delTLabel, level.get_rep());
   
   // define material subsets  
   const MaterialSet* all_matls = m_sharedState->allMaterials();
@@ -270,12 +271,12 @@ void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched,
   t->requires(Task::NewDW, numPPCLabel,           react_matl, gac,1);
   /*     Misc      */
   t->requires(Task::NewDW,  Ilb->press_equil_CCLabel, one_matl, gac, 1);
-  t->requires(Task::OldDW,  MIlb->NC_CCweightLabel,   one_matl, gac, 1);  
+  t->requires(Task::OldDW,  Mlb->NC_CCweightLabel,   one_matl, gac, 1);  
   
-  t->modifies(mi->modelMass_srcLabel);
-  t->modifies(mi->modelMom_srcLabel);
-  t->modifies(mi->modelEng_srcLabel);
-  t->modifies(mi->modelVol_srcLabel); 
+  t->modifies(Ilb->modelMass_srcLabel);
+  t->modifies(Ilb->modelMom_srcLabel);
+  t->modifies(Ilb->modelEng_srcLabel);
+  t->modifies(Ilb->modelVol_srcLabel); 
   
   t->computes(BurningCellLabel, react_matl);
   t->computes(TsLabel,          react_matl);
@@ -313,8 +314,7 @@ void Steady_Burn::computeNumPPC(const ProcessorGroup*,
                                 const PatchSubset* patches,
                                 const MaterialSubset* /*matls*/,
                                 DataWarehouse* old_dw,
-                                DataWarehouse* new_dw,
-                                const ModelInfo* mi)
+                                DataWarehouse* new_dw)
 {
   int m0 = matl0->getDWIndex(); /* reactant material */
 
@@ -352,11 +352,10 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
                                       const PatchSubset* patches,
                                       const MaterialSubset* /*matls*/,
                                       DataWarehouse* old_dw,
-                                      DataWarehouse* new_dw,
-                                      const ModelInfo* mi)
+                                      DataWarehouse* new_dw)
 {
   delt_vartype delT;
-  old_dw->get(delT, mi->delT_Label,getLevel(patches));
+  old_dw->get(delT, Ilb->delTLabel,getLevel(patches));
   
   //ASSERT(matls->size() == 2);
   int m0 = matl0->getDWIndex(); /* reactant material */
@@ -381,16 +380,16 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
     CCVariable<double> sp_vol_src_0, sp_vol_src_1;
 
     /* reactant */
-    new_dw->getModifiable(mass_src_0,     mi->modelMass_srcLabel,  m0, patch);  
-    new_dw->getModifiable(momentum_src_0, mi->modelMom_srcLabel,   m0, patch); 
-    new_dw->getModifiable(energy_src_0,   mi->modelEng_srcLabel,   m0, patch);
-    new_dw->getModifiable(sp_vol_src_0,   mi->modelVol_srcLabel,   m0, patch);
+    new_dw->getModifiable(mass_src_0,     Ilb->modelMass_srcLabel,  m0, patch);  
+    new_dw->getModifiable(momentum_src_0, Ilb->modelMom_srcLabel,   m0, patch); 
+    new_dw->getModifiable(energy_src_0,   Ilb->modelEng_srcLabel,   m0, patch);
+    new_dw->getModifiable(sp_vol_src_0,   Ilb->modelVol_srcLabel,   m0, patch);
 
     /* product */
-    new_dw->getModifiable(mass_src_1,     mi->modelMass_srcLabel,  m1, patch); 
-    new_dw->getModifiable(momentum_src_1, mi->modelMom_srcLabel,   m1, patch); 
-    new_dw->getModifiable(energy_src_1,   mi->modelEng_srcLabel,   m1, patch); 
-    new_dw->getModifiable(sp_vol_src_1,   mi->modelVol_srcLabel,   m1, patch);
+    new_dw->getModifiable(mass_src_1,     Ilb->modelMass_srcLabel,  m1, patch); 
+    new_dw->getModifiable(momentum_src_1, Ilb->modelMom_srcLabel,   m1, patch); 
+    new_dw->getModifiable(energy_src_1,   Ilb->modelEng_srcLabel,   m1, patch); 
+    new_dw->getModifiable(sp_vol_src_1,   Ilb->modelVol_srcLabel,   m1, patch);
     
     constCCVariable<double>   press_CC, solidTemp, solidMass, solidSp_vol;
     constNCVariable<double>   NC_CCweight, NCsolidMass;
@@ -408,7 +407,7 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
     /* Product Data */   
     /* Misc */
     new_dw->get(press_CC,       Ilb->press_equil_CCLabel,    0, patch, gac, 1);
-    old_dw->get(NC_CCweight,    MIlb->NC_CCweightLabel,      0, patch, gac, 1);
+    old_dw->get(NC_CCweight,    Mlb->NC_CCweightLabel,      0, patch, gac, 1);
 
     CCVariable<double> BurningCell, surfTemp;
     new_dw->allocateAndPut(BurningCell, BurningCellLabel, m0, patch, gn, 0);
@@ -543,11 +542,13 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
  
 }
 
-void Steady_Burn::scheduleErrorEstimate(const LevelP&, SchedulerP&){
+void Steady_Burn::scheduleErrorEstimate(const LevelP&,
+					SchedulerP&){
   // Not implemented yet
 }
 
-void Steady_Burn::scheduleTestConservation(SchedulerP&, const PatchSet*, const ModelInfo*){
+void Steady_Burn::scheduleTestConservation(SchedulerP&,
+					   const PatchSet*){
   // Not implemented yet
 }
 

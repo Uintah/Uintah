@@ -31,13 +31,13 @@ SRCDIR   := CCA/Components/Models/HEChem
 
 SRCS	+= \
        $(SRCDIR)/Common.cc        \
-       $(SRCDIR)/Simple_Burn.cc   \
-       $(SRCDIR)/Steady_Burn.cc   \
-       $(SRCDIR)/Unsteady_Burn.cc \
        $(SRCDIR)/IandG.cc         \
        $(SRCDIR)/LightTime.cc     \
        $(SRCDIR)/JWLpp.cc         \
        $(SRCDIR)/ZeroOrder.cc     \
        $(SRCDIR)/DDT0.cc          \
        $(SRCDIR)/DDT1.cc          \
-       $(SRCDIR)/MesoBurn.cc
+       $(SRCDIR)/MesoBurn.cc      \
+       $(SRCDIR)/Simple_Burn.cc   \
+       $(SRCDIR)/Steady_Burn.cc   \
+       $(SRCDIR)/Unsteady_Burn.cc

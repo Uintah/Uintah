@@ -64,7 +64,7 @@ SimpleRxn::SimpleRxn(const ProcessorGroup* myworld,
   m_modelComputesThermoTransportProps = true;
   
   d_matl_set = 0;
-  lb  = scinew ICELabel();
+  Ilb  = scinew ICELabel();
   Slb = scinew SimpleRxnLabel();
 }
 
@@ -80,7 +80,7 @@ SimpleRxn::~SimpleRxn()
   VarLabel::destroy(d_scalar->diffusionCoefLabel);
   VarLabel::destroy(Slb->lastProbeDumpTimeLabel);
   VarLabel::destroy(Slb->sum_scalar_fLabel);
-  delete lb;
+  delete Ilb;
   delete Slb;
   
   for(vector<Region*>::iterator iter = d_scalar->regions.begin();
@@ -233,20 +233,19 @@ SimpleRxn::problemSetup( GridP &, ModelSetup * setup, const bool isRestart )
 //______________________________________________________________________
 //      S C H E D U L E   I N I T I A L I Z E
 void SimpleRxn::scheduleInitialize(SchedulerP& sched,
-                                   const LevelP& level,
-                                   const ModelInfo*)
+                                   const LevelP& level)
 {
   cout_doing << "SIMPLERXN::scheduleInitialize " << endl;
   Task* t = scinew Task("SimpleRxn::initialize", this, &SimpleRxn::initialize);
 
-  t->modifies(lb->sp_vol_CCLabel);
-  t->modifies(lb->rho_micro_CCLabel);
-  t->modifies(lb->rho_CCLabel);
-  t->modifies(lb->specific_heatLabel);
-  t->modifies(lb->gammaLabel);
-  t->modifies(lb->thermalCondLabel);
-  t->modifies(lb->viscosityLabel);
-  t->modifies(lb->press_CCLabel);
+  t->modifies(Ilb->sp_vol_CCLabel);
+  t->modifies(Ilb->rho_micro_CCLabel);
+  t->modifies(Ilb->rho_CCLabel);
+  t->modifies(Ilb->specific_heatLabel);
+  t->modifies(Ilb->gammaLabel);
+  t->modifies(Ilb->thermalCondLabel);
+  t->modifies(Ilb->viscosityLabel);
+  t->modifies(Ilb->press_CCLabel);
   
   t->computes(d_scalar->scalar_CCLabel);
   t->computes(Slb->lastProbeDumpTimeLabel);
@@ -270,13 +269,13 @@ void SimpleRxn::initialize(const ProcessorGroup*,
     CCVariable<double> press, rho_micro;
     constCCVariable<double> Temp;
     new_dw->allocateAndPut(f, d_scalar->scalar_CCLabel, indx, patch);
-    new_dw->getModifiable(rho_CC,      lb->rho_CCLabel,       indx,patch);
-    new_dw->getModifiable(sp_vol,      lb->sp_vol_CCLabel,    indx,patch);
-    new_dw->getModifiable(rho_micro,   lb->rho_micro_CCLabel, indx,patch);
-    new_dw->getModifiable(gamma,       lb->gammaLabel,        indx,patch);
-    new_dw->getModifiable(cv,          lb->specific_heatLabel,indx,patch);
-    new_dw->getModifiable(thermalCond, lb->thermalCondLabel,  indx,patch);
-    new_dw->getModifiable(viscosity,   lb->viscosityLabel,    indx,patch);
+    new_dw->getModifiable(rho_CC,      Ilb->rho_CCLabel,       indx,patch);
+    new_dw->getModifiable(sp_vol,      Ilb->sp_vol_CCLabel,    indx,patch);
+    new_dw->getModifiable(rho_micro,   Ilb->rho_micro_CCLabel, indx,patch);
+    new_dw->getModifiable(gamma,       Ilb->gammaLabel,        indx,patch);
+    new_dw->getModifiable(cv,          Ilb->specific_heatLabel,indx,patch);
+    new_dw->getModifiable(thermalCond, Ilb->thermalCondLabel,  indx,patch);
+    new_dw->getModifiable(viscosity,   Ilb->viscosityLabel,    indx,patch);
     //__________________________________
     //  initialize the scalar field in a region
     f.initialize(0);
@@ -364,10 +363,10 @@ void SimpleRxn::scheduleModifyThermoTransportProperties(SchedulerP& sched,
                    this,&SimpleRxn::modifyThermoTransportProperties);
                    
   t->requires(Task::OldDW, d_scalar->scalar_CCLabel, Ghost::None,0);  
-  t->modifies(lb->specific_heatLabel);
-  t->modifies(lb->gammaLabel);
-  t->modifies(lb->thermalCondLabel);
-  t->modifies(lb->viscosityLabel);
+  t->modifies(Ilb->specific_heatLabel);
+  t->modifies(Ilb->gammaLabel);
+  t->modifies(Ilb->thermalCondLabel);
+  t->modifies(Ilb->viscosityLabel);
   t->computes(d_scalar->diffusionCoefLabel);
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }
@@ -392,10 +391,10 @@ void SimpleRxn::modifyThermoTransportProperties(const ProcessorGroup*,
     new_dw->allocateAndPut(diffusionCoeff, 
                            d_scalar->diffusionCoefLabel,indx, patch);  
     
-    new_dw->getModifiable(gamma,       lb->gammaLabel,        indx,patch);
-    new_dw->getModifiable(cv,          lb->specific_heatLabel,indx,patch);
-    new_dw->getModifiable(thermalCond, lb->thermalCondLabel,  indx,patch);
-    new_dw->getModifiable(viscosity,   lb->viscosityLabel,    indx,patch);
+    new_dw->getModifiable(gamma,       Ilb->gammaLabel,        indx,patch);
+    new_dw->getModifiable(cv,          Ilb->specific_heatLabel,indx,patch);
+    new_dw->getModifiable(thermalCond, Ilb->thermalCondLabel,  indx,patch);
+    new_dw->getModifiable(viscosity,   Ilb->viscosityLabel,    indx,patch);
     
     old_dw->get(f_old,  d_scalar->scalar_CCLabel,  indx, patch, Ghost::None,0);
     
@@ -441,24 +440,23 @@ void SimpleRxn::computeSpecificHeat(CCVariable<double>& cv_new,
 
 //______________________________________________________________________
 void SimpleRxn::scheduleComputeModelSources(SchedulerP& sched,
-                                            const LevelP& level,
-                                            const ModelInfo* mi)
+                                            const LevelP& level)
 {
   cout_doing << "SIMPLE_RXN::scheduleComputeModelSources " << endl;
   Task* t = scinew Task("SimpleRxn::computeModelSources", 
-                   this,&SimpleRxn::computeModelSources, mi);
+                   this,&SimpleRxn::computeModelSources);
                      
   Ghost::GhostType  gn = Ghost::None;  
   Ghost::GhostType  gac = Ghost::AroundCells;
-  t->requires(Task::OldDW, mi->delT_Label, level.get_rep());
+  t->requires(Task::OldDW, Ilb->delTLabel, level.get_rep());
   t->requires(Task::NewDW, d_scalar->diffusionCoefLabel, gac,1);
   t->requires(Task::OldDW, d_scalar->scalar_CCLabel,     gac,1); 
-  t->requires(Task::OldDW, mi->rho_CCLabel,    gn);
-  t->requires(Task::OldDW, mi->temp_CCLabel,   gn);
+  t->requires(Task::OldDW, Ilb->rho_CCLabel,    gn);
+  t->requires(Task::OldDW, Ilb->temp_CCLabel,   gn);
   
   
-  t->modifies(mi->modelMom_srcLabel);
-  t->modifies(mi->modelEng_srcLabel);
+  t->modifies(Ilb->modelMom_srcLabel);
+  t->modifies(Ilb->modelEng_srcLabel);
   t->modifies(d_scalar->scalar_source_CCLabel);
   //__________________________________
   //  if dumping out probePts
@@ -474,12 +472,11 @@ void SimpleRxn::computeModelSources(const ProcessorGroup*,
                                     const PatchSubset* patches,
                                     const MaterialSubset* /*matls*/,
                                     DataWarehouse* old_dw,
-                                    DataWarehouse* new_dw,
-                                    const ModelInfo* mi)
+                                    DataWarehouse* new_dw)
 {
   const Level* level = getLevel(patches);
   delt_vartype delT;
-  old_dw->get(delT, mi->delT_Label, level);
+  old_dw->get(delT, Ilb->delTLabel, level);
   Ghost::GhostType gn = Ghost::None;         
   Ghost::GhostType gac = Ghost::AroundCells; 
   
@@ -494,14 +491,14 @@ void SimpleRxn::computeModelSources(const ProcessorGroup*,
     CCVariable<Vector> mom_src;
     
     int indx = d_matl->getDWIndex();
-    old_dw->get(rho_CC_old, mi->rho_CCLabel,               indx, patch, gn, 0);
+    old_dw->get(rho_CC_old, Ilb->rho_CCLabel,               indx, patch, gn, 0);
     old_dw->get(f_old,      d_scalar->scalar_CCLabel,      indx, patch, gac,1);
     new_dw->get(diff_coeff, d_scalar->diffusionCoefLabel,  indx, patch, gac,1);
     new_dw->allocateAndPut(f_src, d_scalar->scalar_source_CCLabel,
                                                            indx, patch);
                                                       
-    new_dw->getModifiable(mom_src,  mi->modelMom_srcLabel,indx,patch);
-    new_dw->getModifiable(eng_src,  mi->modelEng_srcLabel,indx,patch);
+    new_dw->getModifiable(mom_src,  Ilb->modelMom_srcLabel,indx,patch);
+    new_dw->getModifiable(eng_src,  Ilb->modelEng_srcLabel,indx,patch);
 
     //__________________________________
     // rho=1/(f/rho_fuel+(1-f)/rho_air)
@@ -596,21 +593,20 @@ void SimpleRxn::computeModelSources(const ProcessorGroup*,
 }
 //______________________________________________________________________
 void SimpleRxn::scheduleTestConservation(SchedulerP& sched,
-                                         const PatchSet* patches,
-                                         const ModelInfo* mi)
+                                         const PatchSet* patches)
 {
   if(d_test_conservation){
     cout_doing << "SIMPLE_RXN::scheduleTestConservation " << endl;
     Task* t = scinew Task("SimpleRxn::testConservation", 
-                     this,&SimpleRxn::testConservation, mi);
+                     this,&SimpleRxn::testConservation);
 
     Ghost::GhostType  gn = Ghost::None;
-    t->requires(Task::OldDW, mi->delT_Label, getLevel(patches) );
+    t->requires(Task::OldDW, Ilb->delTLabel, getLevel(patches) );
     t->requires(Task::NewDW, d_scalar->scalar_CCLabel, gn,0); 
-    t->requires(Task::NewDW, mi->rho_CCLabel,          gn,0);
-    t->requires(Task::NewDW, lb->uvel_FCMELabel,       gn,0); 
-    t->requires(Task::NewDW, lb->vvel_FCMELabel,       gn,0); 
-    t->requires(Task::NewDW, lb->wvel_FCMELabel,       gn,0); 
+    t->requires(Task::NewDW, Ilb->rho_CCLabel,          gn,0);
+    t->requires(Task::NewDW, Ilb->uvel_FCMELabel,       gn,0); 
+    t->requires(Task::NewDW, Ilb->vvel_FCMELabel,       gn,0); 
+    t->requires(Task::NewDW, Ilb->wvel_FCMELabel,       gn,0); 
     t->computes(Slb->sum_scalar_fLabel);
 
     sched->addTask(t, patches, d_matl_set);
@@ -622,12 +618,11 @@ void SimpleRxn::testConservation(const ProcessorGroup*,
                                  const PatchSubset* patches,
                                  const MaterialSubset* /*matls*/,
                                  DataWarehouse* old_dw,
-                                 DataWarehouse* new_dw,
-                                 const ModelInfo* mi)
+                                 DataWarehouse* new_dw)
 {
   const Level* level = getLevel(patches);
   delt_vartype delT;
-  old_dw->get(delT, mi->delT_Label, level);     
+  old_dw->get(delT, Ilb->delTLabel, level);     
   Ghost::GhostType gn = Ghost::None; 
   
   for(int p=0;p<patches->size();p++){
@@ -643,10 +638,10 @@ void SimpleRxn::testConservation(const ProcessorGroup*,
     constSFCZVariable<double> wvel_FC;
     int indx = d_matl->getDWIndex();
     new_dw->get(f,       d_scalar->scalar_CCLabel,indx,patch,gn,0);
-    new_dw->get(rho_CC,  mi->rho_CCLabel,         indx,patch,gn,0); 
-    new_dw->get(uvel_FC, lb->uvel_FCMELabel,      indx,patch,gn,0); 
-    new_dw->get(vvel_FC, lb->vvel_FCMELabel,      indx,patch,gn,0); 
-    new_dw->get(wvel_FC, lb->wvel_FCMELabel,      indx,patch,gn,0); 
+    new_dw->get(rho_CC,  Ilb->rho_CCLabel,         indx,patch,gn,0); 
+    new_dw->get(uvel_FC, Ilb->uvel_FCMELabel,      indx,patch,gn,0); 
+    new_dw->get(vvel_FC, Ilb->vvel_FCMELabel,      indx,patch,gn,0); 
+    new_dw->get(wvel_FC, Ilb->wvel_FCMELabel,      indx,patch,gn,0); 
     Vector dx = patch->dCell();
     double cellVol = dx.x()*dx.y()*dx.z();
 
@@ -669,15 +664,14 @@ void SimpleRxn::testConservation(const ProcessorGroup*,
 
 //__________________________________      
 void SimpleRxn::scheduleComputeStableTimeStep(SchedulerP&,
-                                      const LevelP&,
-                                      const ModelInfo*)
+					      const LevelP&)
 {
   // None necessary...
 }
 //______________________________________________________________________
 //
 void SimpleRxn::scheduleErrorEstimate(const LevelP&,
-                                       SchedulerP&)
+				      SchedulerP&)
 {
   // Not implemented yet
 }

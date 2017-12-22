@@ -57,7 +57,7 @@ ZeroOrder::ZeroOrder(const ProcessorGroup* myworld,
     d_params(params), d_prob_spec(prob_spec)
 {
   mymatls = 0;
-  Ilb  = scinew ICELabel();
+  Ilb = scinew ICELabel();
   d_saveConservedVars = scinew saveConservedVars();
   
   //__________________________________
@@ -155,16 +155,14 @@ void ZeroOrder::outputProblemSpec(ProblemSpecP& ps)
 //______________________________________________________________________
 //     
 void ZeroOrder::scheduleInitialize(SchedulerP&,
-                                   const LevelP&,
-                                   const ModelInfo*)
+                                   const LevelP&)
 {
   // None necessary...
 }
 //______________________________________________________________________
 //      
 void ZeroOrder::scheduleComputeStableTimeStep(SchedulerP&,
-                                              const LevelP&,
-                                              const ModelInfo*)
+                                              const LevelP&)
 {
   // None necessary...
 }
@@ -172,11 +170,10 @@ void ZeroOrder::scheduleComputeStableTimeStep(SchedulerP&,
 //______________________________________________________________________
 //     
 void ZeroOrder::scheduleComputeModelSources(SchedulerP& sched,
-                                            const LevelP& level,
-                                            const ModelInfo* mi)
+                                            const LevelP& level)
 {
   Task* t = scinew Task("ZeroOrder::computeModelSources", this, 
-                        &ZeroOrder::computeModelSources, mi);
+                        &ZeroOrder::computeModelSources);
   cout_doing << "ZeroOrder::scheduleComputeModelSources "<<  endl;  
 
   Ghost::GhostType  gn  = Ghost::None;
@@ -187,7 +184,7 @@ void ZeroOrder::scheduleComputeModelSources(SchedulerP& sched,
   one_matl->addReference();
   MaterialSubset* press_matl   = one_matl;
 
-  t->requires(Task::OldDW, mi->delT_Label,         level.get_rep());
+  t->requires(Task::OldDW, Ilb->delTLabel,         level.get_rep());
   //__________________________________
   // Products
   t->requires(Task::NewDW,  Ilb->rho_CCLabel,      prod_matl, gn);
@@ -204,10 +201,10 @@ void ZeroOrder::scheduleComputeModelSources(SchedulerP& sched,
   t->computes(reactedFractionLabel, react_matl);
   t->computes(delFLabel,            react_matl);
 
-  t->modifies(mi->modelMass_srcLabel);
-  t->modifies(mi->modelMom_srcLabel);
-  t->modifies(mi->modelEng_srcLabel);
-  t->modifies(mi->modelVol_srcLabel); 
+  t->modifies(Ilb->modelMass_srcLabel);
+  t->modifies(Ilb->modelMom_srcLabel);
+  t->modifies(Ilb->modelEng_srcLabel);
+  t->modifies(Ilb->modelVol_srcLabel); 
 
   if(d_saveConservedVars->mass ){
     t->computes(ZeroOrder::totalMassBurnedLabel);
@@ -226,12 +223,11 @@ void ZeroOrder::computeModelSources(const ProcessorGroup*,
                                     const PatchSubset* patches,
                                     const MaterialSubset*,
                                     DataWarehouse* old_dw,
-                                    DataWarehouse* new_dw,
-                                    const ModelInfo* mi)
+                                    DataWarehouse* new_dw)
 {
   delt_vartype delT;
   const Level* level = getLevel(patches);
-  old_dw->get(delT, mi->delT_Label, level);
+  old_dw->get(delT, Ilb->delTLabel, level);
 
   int m0 = matl0->getDWIndex(); /* reactant material */
   int m1 = matl1->getDWIndex(); /* product material */
@@ -248,15 +244,15 @@ void ZeroOrder::computeModelSources(const ProcessorGroup*,
     CCVariable<double> energy_src_0, energy_src_1;
     CCVariable<double> sp_vol_src_0, sp_vol_src_1;
 
-    new_dw->getModifiable(mass_src_0,    mi->modelMass_srcLabel,  m0,patch);
-    new_dw->getModifiable(momentum_src_0,mi->modelMom_srcLabel,   m0,patch);
-    new_dw->getModifiable(energy_src_0,  mi->modelEng_srcLabel,   m0,patch);
-    new_dw->getModifiable(sp_vol_src_0,  mi->modelVol_srcLabel,   m0,patch);
+    new_dw->getModifiable(mass_src_0,    Ilb->modelMass_srcLabel,  m0,patch);
+    new_dw->getModifiable(momentum_src_0,Ilb->modelMom_srcLabel,   m0,patch);
+    new_dw->getModifiable(energy_src_0,  Ilb->modelEng_srcLabel,   m0,patch);
+    new_dw->getModifiable(sp_vol_src_0,  Ilb->modelVol_srcLabel,   m0,patch);
 
-    new_dw->getModifiable(mass_src_1,    mi->modelMass_srcLabel,  m1,patch);
-    new_dw->getModifiable(momentum_src_1,mi->modelMom_srcLabel,   m1,patch);
-    new_dw->getModifiable(energy_src_1,  mi->modelEng_srcLabel,   m1,patch);
-    new_dw->getModifiable(sp_vol_src_1,  mi->modelVol_srcLabel,   m1,patch);
+    new_dw->getModifiable(mass_src_1,    Ilb->modelMass_srcLabel,  m1,patch);
+    new_dw->getModifiable(momentum_src_1,Ilb->modelMom_srcLabel,   m1,patch);
+    new_dw->getModifiable(energy_src_1,  Ilb->modelEng_srcLabel,   m1,patch);
+    new_dw->getModifiable(sp_vol_src_1,  Ilb->modelVol_srcLabel,   m1,patch);
 
     constCCVariable<double> press_CC, cv_reactant,rctVolFrac;
     constCCVariable<double> rctTemp,rctRho,rctSpvol,prodRho;
@@ -378,8 +374,7 @@ void ZeroOrder::scheduleErrorEstimate(const LevelP&,
 }
 //__________________________________
 void ZeroOrder::scheduleTestConservation(SchedulerP&,
-                                         const PatchSet*,                      
-                                         const ModelInfo*)                     
+                                         const PatchSet*)                     
 {
   // Not implemented yet
 }

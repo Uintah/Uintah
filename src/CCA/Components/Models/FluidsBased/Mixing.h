@@ -62,6 +62,8 @@ WARNING
   
 ****************************************/
 
+  class ICELabel;
+
   class Mixing : public ModelInterface {
   public:
     Mixing(const ProcessorGroup* myworld,
@@ -76,18 +78,15 @@ WARNING
                               ModelSetup* setup, const bool isRestart);
     
     virtual void scheduleInitialize(SchedulerP&,
-                                    const LevelP& level,
-                                    const ModelInfo*);
+                                    const LevelP& level);
 
     virtual void restartInitialize() {}
       
     virtual void scheduleComputeStableTimeStep(SchedulerP&,
-                                               const LevelP& level,
-                                               const ModelInfo*);
+                                               const LevelP& level);
       
     virtual void scheduleComputeModelSources(SchedulerP&,
-                                                   const LevelP& level,
-                                                   const ModelInfo*);
+                                                   const LevelP& level);
                                              
     virtual void scheduleModifyThermoTransportProperties(SchedulerP&,
                                                const LevelP&,
@@ -102,28 +101,28 @@ WARNING
                                       SchedulerP& sched);
                                   
    virtual void scheduleTestConservation(SchedulerP&,
-                                         const PatchSet* patches,
-                                         const ModelInfo* mi);
+                                         const PatchSet* patches);
 
   private:
     void initialize(const ProcessorGroup*, 
                     const PatchSubset* patches,
-                      const MaterialSubset* matls, 
+		    const MaterialSubset* matls, 
                     DataWarehouse*, 
-                      DataWarehouse* new_dw);
+		    DataWarehouse* new_dw);
                   
     void computeModelSources(const ProcessorGroup*, 
                              const PatchSubset* patches,
-                              const MaterialSubset* matls, 
+			     const MaterialSubset* matls, 
                              DataWarehouse*, 
-                              DataWarehouse* new_dw, 
-                             const ModelInfo*);
+			     DataWarehouse* new_dw);
 
     Mixing(const Mixing&);
     Mixing& operator=(const Mixing&);
 
     ProblemSpecP d_params;
 
+    ICELabel* Ilb;
+    
     const Material* matl;
     MaterialSet* mymatls;
 

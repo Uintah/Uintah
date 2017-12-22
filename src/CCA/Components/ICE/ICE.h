@@ -37,7 +37,6 @@
 #include <CCA/Components/ICE/CustomBCs/LODI2.h>
 #include <CCA/Components/ICE/CustomBCs/BoundaryCond.h>
 #include <CCA/Components/ICE/TurbulenceModel/Turbulence.h>
-#include <CCA/Components/MPMICE/Core/MPMICELabel.h>
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
 
 #include <CCA/Ports/ModelInterface.h>
@@ -94,13 +93,14 @@ void launchIceEquilibrationKernelUnified(dim3 dimGrid,
 
 namespace Uintah {
 
-  class ModelInfo;
   class ModelInterface;
   class Turbulence;
   class WallShearStress;
   class AnalysisModule;
 
-    // The following two structs are used by computeEquilibrationPressure to store debug information:
+  class MPMICELabel;
+  
+  // The following two structs are used by computeEquilibrationPressure to store debug information:
     //
     struct  EqPress_dbgMatl{
       int    mat;
@@ -1047,7 +1047,6 @@ namespace Uintah {
       //______________________________________________________________________
       //        models
       std::vector<ModelInterface*> d_models;
-      ModelInfo* d_modelInfo;
 
       struct TransportedVariable {
        const MaterialSubset* matls;
@@ -1057,6 +1056,7 @@ namespace Uintah {
        const VarLabel* var_Lagrangian;
        const VarLabel* var_adv;
       };
+      
       struct AMR_refluxVariable {
        const MaterialSubset* matls;
        const MaterialSet* matlSet;

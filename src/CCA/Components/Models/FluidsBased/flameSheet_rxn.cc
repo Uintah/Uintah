@@ -68,7 +68,7 @@ flameSheet_rxn::flameSheet_rxn(const ProcessorGroup* myworld,
   : ModelInterface(myworld, sharedState), d_params(params)
 {
   d_matl_set = 0;
-  lb  = scinew ICELabel();
+  Ilb = scinew ICELabel();
 }
 //__________________________________
 flameSheet_rxn::~flameSheet_rxn()
@@ -80,7 +80,7 @@ flameSheet_rxn::~flameSheet_rxn()
   VarLabel::destroy(d_scalar->scalar_CCLabel);
   VarLabel::destroy(d_scalar->scalar_source_CCLabel);
   VarLabel::destroy(d_scalar->sum_scalar_fLabel);
-  delete lb;
+  delete Ilb;
     
   for(vector<Region*>::iterator iter = d_scalar->regions.begin();
      iter != d_scalar->regions.end(); iter++){
@@ -226,8 +226,7 @@ void flameSheet_rxn::outputProblemSpec(ProblemSpecP& ps)
 
 //______________________________________________________________________
 void flameSheet_rxn::scheduleInitialize(SchedulerP& sched,
-                                            const LevelP& level,
-                                            const ModelInfo*)
+                                            const LevelP& level)
 {
   //__________________________________
   //  intialize the scalar field
@@ -285,22 +284,21 @@ void flameSheet_rxn::initialize(const ProcessorGroup*,
 
 //__________________________________
 void flameSheet_rxn::scheduleComputeModelSources(SchedulerP& sched,
-                                                      const LevelP& level,
-                                                      const ModelInfo* mi)
+                                                      const LevelP& level)
 {
   cout_doing << "FLAMESHEET::scheduleComputeModelSources " << endl;
   Task* t = scinew Task("flameSheet_rxn::computeModelSources",this, 
-                        &flameSheet_rxn::computeModelSources, mi);
+                        &flameSheet_rxn::computeModelSources);
                      
   Ghost::GhostType  gn = Ghost::None;  
   Ghost::GhostType  gac = Ghost::AroundCells; 
-  t->modifies(mi->modelEng_srcLabel);
-  t->requires(Task::OldDW, mi->rho_CCLabel,         gn);
-  t->requires(Task::OldDW, mi->temp_CCLabel,        gn);
-  t->requires(Task::NewDW, mi->specific_heatLabel,  gn);
-  t->requires(Task::NewDW, mi->gammaLabel,          gn);
+  t->modifies(Ilb->modelEng_srcLabel);
+  t->requires(Task::OldDW, Ilb->rho_CCLabel,         gn);
+  t->requires(Task::OldDW, Ilb->temp_CCLabel,        gn);
+  t->requires(Task::NewDW, Ilb->specific_heatLabel,  gn);
+  t->requires(Task::NewDW, Ilb->gammaLabel,          gn);
   t->requires(Task::OldDW, d_scalar->scalar_CCLabel, gac,1);
-  //t->requires(Task::OldDW, mi->delT_Label);   AMR
+  //t->requires(Task::OldDW, Ilb->delTLabel);   AMR
   
   t->modifies(d_scalar->scalar_source_CCLabel);
   sched->addTask(t, level->eachPatch(), d_matl_set);
@@ -310,12 +308,11 @@ void flameSheet_rxn::computeModelSources(const ProcessorGroup*,
                                            const PatchSubset* patches,
                                            const MaterialSubset* matls,
                                            DataWarehouse* old_dw,
-                                           DataWarehouse* new_dw,
-                                           const ModelInfo* mi)
+                                           DataWarehouse* new_dw)
 {
   const Level* level = getLevel(patches);
   delt_vartype delT;
-  old_dw->get(delT, mi->delT_Label,level);
+  old_dw->get(delT, Ilb->delTLabel,level);
  
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -335,12 +332,12 @@ void flameSheet_rxn::computeModelSources(const ProcessorGroup*,
     CCVariable<double> energySource;
     CCVariable<double> f_src;
     
-    old_dw->get(rho_CC,      mi->rho_CCLabel,         indx, patch, gn, 0);
-    old_dw->get(Temp_CC,     mi->temp_CCLabel,        indx, patch, gn, 0);
-    new_dw->get(cv,          mi->specific_heatLabel,  indx, patch, gn, 0);
-    new_dw->get(gamma,       mi->gammaLabel,          indx, patch, gn, 0);
+    old_dw->get(rho_CC,      Ilb->rho_CCLabel,         indx, patch, gn, 0);
+    old_dw->get(Temp_CC,     Ilb->temp_CCLabel,        indx, patch, gn, 0);
+    new_dw->get(cv,          Ilb->specific_heatLabel,  indx, patch, gn, 0);
+    new_dw->get(gamma,       Ilb->gammaLabel,          indx, patch, gn, 0);
     new_dw->getModifiable(energySource,   
-                             mi->modelEng_srcLabel,indx,patch);
+                             Ilb->modelEng_srcLabel,indx,patch);
                      
     old_dw->get(f_old,            d_scalar->scalar_CCLabel,       
                                                       indx, patch, gac, 1);
@@ -446,21 +443,20 @@ void flameSheet_rxn::computeModelSources(const ProcessorGroup*,
 }
 //______________________________________________________________________
 void flameSheet_rxn::scheduleTestConservation(SchedulerP& sched,
-                                            const PatchSet* patches,
-                                            const ModelInfo* mi)
+                                            const PatchSet* patches)
 {
   if(d_test_conservation){
     cout_doing << "PASSIVESCALAR::scheduleTestConservation " << endl;
     Task* t = scinew Task("flameSheet_rxn::testConservation", 
-                     this,&flameSheet_rxn::testConservation, mi);
+                     this,&flameSheet_rxn::testConservation);
 
     Ghost::GhostType  gn = Ghost::None;
     // compute sum(scalar_f * mass)
     t->requires(Task::NewDW, d_scalar->scalar_CCLabel, gn,0); 
-    t->requires(Task::NewDW, mi->rho_CCLabel,          gn,0);
-    t->requires(Task::NewDW, lb->uvel_FCMELabel,       gn,0); 
-    t->requires(Task::NewDW, lb->vvel_FCMELabel,       gn,0); 
-    t->requires(Task::NewDW, lb->wvel_FCMELabel,       gn,0); 
+    t->requires(Task::NewDW, Ilb->rho_CCLabel,          gn,0);
+    t->requires(Task::NewDW, Ilb->uvel_FCMELabel,       gn,0); 
+    t->requires(Task::NewDW, Ilb->vvel_FCMELabel,       gn,0); 
+    t->requires(Task::NewDW, Ilb->wvel_FCMELabel,       gn,0); 
     t->computes(d_scalar->sum_scalar_fLabel);
 
     sched->addTask(t, patches, d_matl_set);
@@ -472,12 +468,11 @@ void flameSheet_rxn::testConservation(const ProcessorGroup*,
                                      const PatchSubset* patches,
                                      const MaterialSubset* /*matls*/,
                                      DataWarehouse* old_dw,
-                                     DataWarehouse* new_dw,
-                                     const ModelInfo* mi)
+                                     DataWarehouse* new_dw)
 {
   const Level* level = getLevel(patches);
   delt_vartype delT;
-  old_dw->get(delT, mi->delT_Label, level);     
+  old_dw->get(delT, Ilb->delTLabel, level);     
   Ghost::GhostType gn = Ghost::None; 
   
   for(int p=0;p<patches->size();p++){
@@ -493,10 +488,10 @@ void flameSheet_rxn::testConservation(const ProcessorGroup*,
     constSFCZVariable<double> wvel_FC;
     int indx = d_matl->getDWIndex();
     new_dw->get(f,       d_scalar->scalar_CCLabel,indx,patch,gn,0);
-    new_dw->get(rho_CC,  mi->rho_CCLabel,         indx,patch,gn,0); 
-    new_dw->get(uvel_FC, lb->uvel_FCMELabel,      indx,patch,gn,0); 
-    new_dw->get(vvel_FC, lb->vvel_FCMELabel,      indx,patch,gn,0); 
-    new_dw->get(wvel_FC, lb->wvel_FCMELabel,      indx,patch,gn,0); 
+    new_dw->get(rho_CC,  Ilb->rho_CCLabel,         indx,patch,gn,0); 
+    new_dw->get(uvel_FC, Ilb->uvel_FCMELabel,      indx,patch,gn,0); 
+    new_dw->get(vvel_FC, Ilb->vvel_FCMELabel,      indx,patch,gn,0); 
+    new_dw->get(wvel_FC, Ilb->wvel_FCMELabel,      indx,patch,gn,0); 
     Vector dx = patch->dCell();
     double cellVol = dx.x()*dx.y()*dx.z();
 
@@ -517,8 +512,7 @@ void flameSheet_rxn::testConservation(const ProcessorGroup*,
 }
 //__________________________________      
 void flameSheet_rxn::scheduleComputeStableTimeStep(SchedulerP&,
-                                           const LevelP&,
-                                           const ModelInfo*)
+                                           const LevelP&)
 {
   // None necessary...
 }

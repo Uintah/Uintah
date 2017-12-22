@@ -66,7 +66,7 @@ Simple_Burn::Simple_Burn(const ProcessorGroup* myworld,
   mymatls = 0;
   Mlb  = scinew MPMLabel();
   Ilb  = scinew ICELabel();
-  MIlb  = scinew MPMICELabel();
+  MIlb = scinew MPMICELabel();
   
   d_saveConservedVars = scinew saveConservedVars();
   //__________________________________
@@ -163,16 +163,14 @@ void Simple_Burn::outputProblemSpec(ProblemSpecP& ps)
 //______________________________________________________________________
 //     
 void Simple_Burn::scheduleInitialize(SchedulerP&,
-                                     const LevelP&,
-                                     const ModelInfo*)
+                                     const LevelP&)
 {
   // None necessary...
 }
 //______________________________________________________________________
 //      
 void Simple_Burn::scheduleComputeStableTimeStep(SchedulerP&,
-                                              const LevelP&,
-                                              const ModelInfo*)
+                                              const LevelP&)
 {
   // None necessary...
 }
@@ -180,15 +178,14 @@ void Simple_Burn::scheduleComputeStableTimeStep(SchedulerP&,
 //______________________________________________________________________
 //     
 void Simple_Burn::scheduleComputeModelSources(SchedulerP& sched,
-                                                  const LevelP& level,
-                                                  const ModelInfo* mi)
+                                                  const LevelP& level)
 {
   if (level->hasFinerLevel()){  // only on finest level
     return;
   }  
  
   Task* t = scinew Task("Simple_Burn::computeModelSources",this, 
-                        &Simple_Burn::computeModelSources, mi);
+                        &Simple_Burn::computeModelSources);
                                             
   cout_doing << "SIMPLE_BURN::scheduleComputeModelSources "<<  endl;  
   
@@ -209,7 +206,7 @@ void Simple_Burn::scheduleComputeModelSources(SchedulerP& sched,
   t->requires(Task::OldDW, Ilb->temp_CCLabel,      all_matls_sub, oms, gac,1);
   t->requires(Task::NewDW, Ilb->vol_frac_CCLabel,  all_matls_sub, oms, gac,1);
 
-  t->requires( Task::OldDW, mi->delT_Label,       level.get_rep());
+  t->requires( Task::OldDW, Ilb->delTLabel,       level.get_rep());
   //__________________________________
   // Products
   t->requires(Task::OldDW,  Ilb->temp_CCLabel,    prod_matl, gn);       
@@ -219,7 +216,7 @@ void Simple_Burn::scheduleComputeModelSources(SchedulerP& sched,
   t->requires(Task::NewDW,  Ilb->TempZ_FCLabel,   prod_matl, gac,2);
     
   t->requires(Task::NewDW,  Ilb->press_equil_CCLabel, press_matl,gn);
-  t->requires(Task::OldDW,  MIlb->NC_CCweightLabel,   one_matl,  gac, 1);
+  t->requires(Task::OldDW,  Mlb->NC_CCweightLabel,   one_matl,  gac, 1);
   
   //__________________________________
   // Reactants
@@ -240,10 +237,10 @@ void Simple_Burn::scheduleComputeModelSources(SchedulerP& sched,
   }
   
   
-  t->modifies(mi->modelMass_srcLabel);
-  t->modifies(mi->modelMom_srcLabel);
-  t->modifies(mi->modelEng_srcLabel);
-  t->modifies(mi->modelVol_srcLabel); 
+  t->modifies(Ilb->modelMass_srcLabel);
+  t->modifies(Ilb->modelMom_srcLabel);
+  t->modifies(Ilb->modelEng_srcLabel);
+  t->modifies(Ilb->modelVol_srcLabel); 
   sched->addTask(t, level->eachPatch(), mymatls);
 
   if (one_matl->removeReference())
@@ -256,11 +253,10 @@ void Simple_Burn::computeModelSources(const ProcessorGroup*,
                                          const PatchSubset* patches,
                                          const MaterialSubset*,
                                          DataWarehouse* old_dw,
-                                         DataWarehouse* new_dw,
-                                         const ModelInfo* mi)
+                                         DataWarehouse* new_dw)
 {
   delt_vartype delT;
-  old_dw->get(delT, mi->delT_Label,getLevel(patches));
+  old_dw->get(delT, Ilb->delTLabel,getLevel(patches));
 
   int m0 = matl0->getDWIndex();
   int m1 = matl1->getDWIndex();
@@ -278,15 +274,15 @@ void Simple_Burn::computeModelSources(const ProcessorGroup*,
     CCVariable<double> sp_vol_src_0, sp_vol_src_1;
     CCVariable<double> onSurface, surfaceTemp;
     
-    new_dw->getModifiable(mass_src_0,    mi->modelMass_srcLabel,  m0,patch);
-    new_dw->getModifiable(momentum_src_0,mi->modelMom_srcLabel,   m0,patch);
-    new_dw->getModifiable(energy_src_0,  mi->modelEng_srcLabel,   m0,patch);
-    new_dw->getModifiable(sp_vol_src_0,  mi->modelVol_srcLabel,   m0,patch);
+    new_dw->getModifiable(mass_src_0,    Ilb->modelMass_srcLabel,  m0,patch);
+    new_dw->getModifiable(momentum_src_0,Ilb->modelMom_srcLabel,   m0,patch);
+    new_dw->getModifiable(energy_src_0,  Ilb->modelEng_srcLabel,   m0,patch);
+    new_dw->getModifiable(sp_vol_src_0,  Ilb->modelVol_srcLabel,   m0,patch);
 
-    new_dw->getModifiable(mass_src_1,    mi->modelMass_srcLabel,  m1,patch);
-    new_dw->getModifiable(momentum_src_1,mi->modelMom_srcLabel,   m1,patch);
-    new_dw->getModifiable(energy_src_1,  mi->modelEng_srcLabel,   m1,patch);
-    new_dw->getModifiable(sp_vol_src_1,  mi->modelVol_srcLabel,   m1,patch);
+    new_dw->getModifiable(mass_src_1,    Ilb->modelMass_srcLabel,  m1,patch);
+    new_dw->getModifiable(momentum_src_1,Ilb->modelMom_srcLabel,   m1,patch);
+    new_dw->getModifiable(energy_src_1,  Ilb->modelEng_srcLabel,   m1,patch);
+    new_dw->getModifiable(sp_vol_src_1,  Ilb->modelVol_srcLabel,   m1,patch);
  
     constCCVariable<double> press_CC,gasTemp,gasVol_frac;
     constCCVariable<double> solidTemp,solidMass,solidSp_vol;
@@ -305,7 +301,7 @@ void Simple_Burn::computeModelSources(const ProcessorGroup*,
     // Reactant data
     new_dw->get(solidTemp,       MIlb->temp_CCLabel, m0,patch,gn, 0);
     new_dw->get(solidMass,       MIlb->cMassLabel,   m0,patch,gn, 0);
-    new_dw->get(solidSp_vol,     Ilb->sp_vol_CCLabel,m0,patch,gn,0);
+    new_dw->get(solidSp_vol,     Ilb->sp_vol_CCLabel,m0,patch,gn, 0);
     new_dw->get(vel_CC,          MIlb->vel_CCLabel,  m0,patch,gn, 0);
     new_dw->get(NCsolidMass,     Mlb->gMassLabel,    m0,patch,gac,1);
 
@@ -319,7 +315,7 @@ void Simple_Burn::computeModelSources(const ProcessorGroup*,
     //__________________________________
     //   Misc.
     new_dw->get(press_CC,         Ilb->press_equil_CCLabel,0,  patch,gn, 0);
-    old_dw->get(NC_CCweight,     MIlb->NC_CCweightLabel,  0,   patch,gac,1);   
+    old_dw->get(NC_CCweight,     Mlb->NC_CCweightLabel,  0,   patch,gac,1);   
   
     new_dw->allocateAndPut(onSurface,  Simple_Burn::onSurfaceLabel,   0, patch);
     new_dw->allocateAndPut(surfaceTemp,Simple_Burn::surfaceTempLabel, 0, patch);
@@ -459,8 +455,7 @@ void Simple_Burn::scheduleErrorEstimate(const LevelP&,
 }
 //__________________________________
 void Simple_Burn::scheduleTestConservation(SchedulerP&,
-                                           const PatchSet*,                
-                                           const ModelInfo*)               
+                                           const PatchSet*)
 {
   // Not implemented yet
 }

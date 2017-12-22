@@ -75,8 +75,8 @@ MesoBurn::MesoBurn(const ProcessorGroup* myworld,
   : ModelInterface(myworld, sharedState),
     d_params(params), d_prob_spec(prob_spec) { 
   mymatls = 0;
-  Mlb  = scinew MPMLabel();
   Ilb  = scinew ICELabel();
+  Mlb  = scinew MPMLabel();
   MIlb = scinew MPMICELabel();
   d_saveConservedVars = scinew saveConservedVars();
 
@@ -246,8 +246,7 @@ void MesoBurn::outputProblemSpec(ProblemSpecP& ps)
 }
 //______________________________________________________________________
 void MesoBurn::scheduleInitialize(SchedulerP& sched, 
-                                  const LevelP& level, 
-                                  const ModelInfo*){
+                                  const LevelP& level){
   printSchedule(level, cout_doing,"MesoBurn::scheduleInitialize");
   
   Task* t = scinew Task("MesoBurn::initialize", this, &MesoBurn::initialize);                        
@@ -301,16 +300,14 @@ void MesoBurn::initialize(const ProcessorGroup*,
 
 //______________________________________________________________________
 void MesoBurn::scheduleComputeStableTimeStep(SchedulerP&, 
-                                             const LevelP&, 
-                                             const ModelInfo*){
+                                             const LevelP&){
   // None necessary...
 }
 
 //______________________________________________________________________
 // only perform this task on the finest level
 void MesoBurn::scheduleComputeModelSources(SchedulerP& sched,
-                                           const LevelP& level, 
-                                           const ModelInfo* mi){
+                                           const LevelP& level){
   
   if (level->hasFinerLevel()){
     return;  
@@ -321,11 +318,11 @@ void MesoBurn::scheduleComputeModelSources(SchedulerP& sched,
   const MaterialSubset* react_matl = matl0->thisMaterial();  
 
   Task* t1 = scinew Task("MesoBurn::computeParticleVariables", this, 
-                         &MesoBurn::computeParticleVariables, mi);
+                         &MesoBurn::computeParticleVariables);
 
   printSchedule(level, cout_doing,"MesoBurn::scheduleComputeParticleVariables");  
 
-  t1->requires( Task::OldDW, mi->delT_Label, level.get_rep());
+  t1->requires( Task::OldDW, Ilb->delTLabel, level.get_rep());
   t1->requires(Task::OldDW, Mlb->pXLabel, react_matl, gn);
   t1->requires(Task::OldDW, Mlb->pMassLabel, react_matl, gn);
   t1->requires(Task::OldDW, Mlb->pTemperatureLabel, react_matl, gn);
@@ -343,10 +340,10 @@ void MesoBurn::scheduleComputeModelSources(SchedulerP& sched,
 
   //__________________________________
   Task* t = scinew Task("MesoBurn::computeModelSources", this, 
-                        &MesoBurn::computeModelSources, mi);
+                        &MesoBurn::computeModelSources);
 
   printSchedule(level,cout_doing,"MesoBurn::scheduleComputeModelSources");  
-  t->requires( Task::OldDW, mi->delT_Label, level.get_rep());
+  t->requires( Task::OldDW, Ilb->delTLabel, level.get_rep());
   
   // define material subsets  
   const MaterialSet* all_matls = m_sharedState->allMaterials();
@@ -371,12 +368,12 @@ void MesoBurn::scheduleComputeModelSources(SchedulerP& sched,
   t->requires(Task::NewDW, inducedMassLabel,      react_matl, gn);
   /*     Misc      */
   t->requires(Task::NewDW,  Ilb->press_equil_CCLabel, one_matl, gac, 1);
-  t->requires(Task::OldDW,  MIlb->NC_CCweightLabel,   one_matl, gac, 1);  
+  t->requires(Task::OldDW,  Mlb->NC_CCweightLabel,   one_matl, gac, 1);  
   
-  t->modifies(mi->modelMass_srcLabel);
-  t->modifies(mi->modelMom_srcLabel);
-  t->modifies(mi->modelEng_srcLabel);
-  t->modifies(mi->modelVol_srcLabel); 
+  t->modifies(Ilb->modelMass_srcLabel);
+  t->modifies(Ilb->modelMom_srcLabel);
+  t->modifies(Ilb->modelEng_srcLabel);
+  t->modifies(Ilb->modelVol_srcLabel); 
   
   t->computes(BurningCellLabel, react_matl);
   t->computes(TsLabel,          react_matl);
@@ -421,11 +418,10 @@ void MesoBurn::computeParticleVariables(const ProcessorGroup*,
                                         const PatchSubset* patches,
                                         const MaterialSubset* /*matls*/,
                                         DataWarehouse* old_dw,
-                                        DataWarehouse* new_dw,
-                                        const ModelInfo* mi)
+                                        DataWarehouse* new_dw)
 {
   delt_vartype delT;
-  old_dw->get(delT, mi->delT_Label,getLevel(patches));
+  old_dw->get(delT, Ilb->delTLabel,getLevel(patches));
     
   int m0 = matl0->getDWIndex(); /* reactant material */
 
@@ -503,11 +499,10 @@ void MesoBurn::computeModelSources(const ProcessorGroup*,
                                    const PatchSubset* patches,
                                    const MaterialSubset* /*matls*/,
                                    DataWarehouse* old_dw,
-                                   DataWarehouse* new_dw,
-                                   const ModelInfo* mi)
+                                   DataWarehouse* new_dw)
 {
   delt_vartype delT;
-  old_dw->get(delT, mi->delT_Label,getLevel(patches));
+  old_dw->get(delT, Ilb->delTLabel,getLevel(patches));
   
   //ASSERT(matls->size() == 2);
   int m0 = matl0->getDWIndex(); /* reactant material */
@@ -533,16 +528,16 @@ void MesoBurn::computeModelSources(const ProcessorGroup*,
     CCVariable<double> sp_vol_src_0, sp_vol_src_1;
 
     /* reactant */
-    new_dw->getModifiable(mass_src_0,     mi->modelMass_srcLabel,  m0, patch);  
-    new_dw->getModifiable(momentum_src_0, mi->modelMom_srcLabel,   m0, patch); 
-    new_dw->getModifiable(energy_src_0,   mi->modelEng_srcLabel,   m0, patch);
-    new_dw->getModifiable(sp_vol_src_0,   mi->modelVol_srcLabel,   m0, patch);
+    new_dw->getModifiable(mass_src_0,     Ilb->modelMass_srcLabel,  m0, patch);  
+    new_dw->getModifiable(momentum_src_0, Ilb->modelMom_srcLabel,   m0, patch); 
+    new_dw->getModifiable(energy_src_0,   Ilb->modelEng_srcLabel,   m0, patch);
+    new_dw->getModifiable(sp_vol_src_0,   Ilb->modelVol_srcLabel,   m0, patch);
 
     /* product */
-    new_dw->getModifiable(mass_src_1,     mi->modelMass_srcLabel,  m1, patch); 
-    new_dw->getModifiable(momentum_src_1, mi->modelMom_srcLabel,   m1, patch); 
-    new_dw->getModifiable(energy_src_1,   mi->modelEng_srcLabel,   m1, patch); 
-    new_dw->getModifiable(sp_vol_src_1,   mi->modelVol_srcLabel,   m1, patch);
+    new_dw->getModifiable(mass_src_1,     Ilb->modelMass_srcLabel,  m1, patch); 
+    new_dw->getModifiable(momentum_src_1, Ilb->modelMom_srcLabel,   m1, patch); 
+    new_dw->getModifiable(energy_src_1,   Ilb->modelEng_srcLabel,   m1, patch); 
+    new_dw->getModifiable(sp_vol_src_1,   Ilb->modelVol_srcLabel,   m1, patch);
     
     constCCVariable<double>   press_CC, solidTemp, solidMass, solidSp_vol;
     constNCVariable<double>   NC_CCweight, NCsolidMass;
@@ -705,8 +700,7 @@ void MesoBurn::scheduleErrorEstimate(const LevelP&,
 }
 
 void MesoBurn::scheduleTestConservation(SchedulerP&, 
-                                        const PatchSet*, 
-                                        const ModelInfo*){
+                                        const PatchSet*){
   // Not implemented yet
 }
 

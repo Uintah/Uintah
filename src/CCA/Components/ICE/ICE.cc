@@ -43,6 +43,7 @@
 #include <CCA/Components/ICE/WallShearStressModel/WallShearStressFactory.h>
 #include <CCA/Components/Models/ModelFactory.h>
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
+#include <CCA/Components/MPMICE/Core/MPMICELabel.h>
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModuleFactory.h>
 
 #include <CCA/Ports/DataWarehouse.h>
@@ -133,7 +134,6 @@ ICE::ICE(const ProcessorGroup* myworld,
   d_dbgVar2                 = 0;                                    
   d_EVIL_NUM                = -9.99e30;                                      
   d_SMALL_NUM               = 1.0e-100;                                     
-  d_modelInfo               = 0;                                    
   d_modelSetup              = 0;                                   
   d_with_mpm                = false;
   d_with_rigid_mpm          = false;
@@ -232,10 +232,6 @@ ICE::~ICE()
   }
   
   // delete models
-  if(d_modelInfo){
-    delete d_modelInfo;
-  }
-
   for(vector<ModelInterface*>::iterator iter = d_models.begin();
 	                                iter != d_models.end(); iter++){
     ModelInterface* model = *iter;
@@ -569,19 +565,6 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
       string Labelname = tvar->var->getName();
       is_BC_specified(prob_spec, Labelname, tvar->matls);
     }
-    
-    d_modelInfo = scinew ModelInfo(lb->delTLabel,
-                               lb->modelMass_srcLabel,
-                               lb->modelMom_srcLabel,
-                               lb->modelEng_srcLabel,
-                               lb->modelVol_srcLabel,
-                               lb->rho_CCLabel,
-                               lb->vel_CCLabel,
-                               lb->temp_CCLabel,
-                               lb->press_CCLabel,
-                               lb->sp_vol_CCLabel,
-                               lb->specific_heatLabel,
-                               lb->gammaLabel);
   }
   
   //__________________________________
@@ -802,7 +785,7 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
     for(vector<ModelInterface*>::iterator iter = d_models.begin();
 	                                  iter != d_models.end(); iter++){
       ModelInterface* model = *iter;
-      model->scheduleInitialize(sched, level, d_modelInfo);
+      model->scheduleInitialize(sched, level);
     }
   }
   
@@ -926,7 +909,7 @@ void ICE::scheduleComputeStableTimeStep(const LevelP& level,
     for(vector<ModelInterface*>::iterator iter = d_models.begin();
 	                                  iter != d_models.end(); iter++){
       ModelInterface* model = *iter;
-      model->scheduleComputeStableTimeStep(sched, level, d_modelInfo);
+      model->scheduleComputeStableTimeStep(sched, level);
     }
   }
 }
@@ -1360,7 +1343,7 @@ void ICE::scheduleComputeModelSources(SchedulerP& sched,
     for(vector<ModelInterface*>::iterator iter = d_models.begin();
 	                                  iter != d_models.end(); iter++){
       ModelInterface* model = *iter;
-      model->scheduleComputeModelSources(sched, level, d_modelInfo);
+      model->scheduleComputeModelSources(sched, level);
     }
   }
 }
@@ -2070,7 +2053,7 @@ void ICE::scheduleTestConservation(SchedulerP& sched,
     for(vector<ModelInterface*>::iterator iter = d_models.begin();
                                           iter != d_models.end(); iter++){
       ModelInterface* model = *iter;
-      model->scheduleTestConservation(sched,patches,d_modelInfo);
+      model->scheduleTestConservation(sched,patches);
     }
   }
 }

@@ -53,7 +53,7 @@ ifeq ($(BUILD_ICE),yes)
        $(SRCDIR)/SimpleRxn.cc          \
        $(SRCDIR)/MassMomEng_src.cc
 
-#       $(SRCDIR)/Mixing2.cc \
+#       $(SRCDIR)/Mixing2.cc
 #       $(SRCDIR)/Mixing3.cc
 
 endif

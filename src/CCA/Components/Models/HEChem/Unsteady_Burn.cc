@@ -197,7 +197,9 @@ void Unsteady_Burn::outputProblemSpec(ProblemSpecP& ps)
 
 //______________________________________________________________________
 //
-void Unsteady_Burn::scheduleInitialize(SchedulerP& sched, const LevelP& level, const ModelInfo*){
+void Unsteady_Burn::scheduleInitialize(SchedulerP& sched,
+				       const LevelP& level){
+  
   printSchedule(level,cout_doing,"Unsteady_Burn::scheduleInitialize");
   Task* t = scinew Task("Unsteady_Burn::initialize", this, &Unsteady_Burn::initialize);                        
   const MaterialSubset* react_matl = matl0->thisMaterial();
@@ -247,27 +249,27 @@ void Unsteady_Burn::initialize(const ProcessorGroup*,
 }
 
 
-void Unsteady_Burn::scheduleComputeStableTimeStep(SchedulerP&, const LevelP&, const ModelInfo*){
+void Unsteady_Burn::scheduleComputeStableTimeStep(SchedulerP&,
+						  const LevelP&){
   // None necessary...
 }
 
 //______________________________________________________________________
 // only perform this task on the finest level
 void Unsteady_Burn::scheduleComputeModelSources(SchedulerP& sched,
-                                                const LevelP& level, 
-                                                const ModelInfo* mi){
+                                                const LevelP& level){
   if(level->hasFinerLevel()){
     return;  
   }
   
   Task* t = scinew Task("Unsteady_Burn::computeModelSources", this, 
-                        &Unsteady_Burn::computeModelSources, mi);
+                        &Unsteady_Burn::computeModelSources);
   
   printSchedule(level,cout_doing,"Unsteady_Burn::scheduleComputeModelSources");  
 
   Ghost::GhostType gac = Ghost::AroundCells;  
   Ghost::GhostType gn  = Ghost::None;
-  Ghost::GhostType  gp;
+  Ghost::GhostType gp;
   int ngc_p;
   m_sharedState->getParticleGhostLayer(gp, ngc_p);
 
@@ -280,7 +282,7 @@ void Unsteady_Burn::scheduleComputeModelSources(SchedulerP& sched,
     const MaterialSubset* ice_matls = m_sharedState->allICEMaterials()->getUnion();
     const MaterialSubset* mpm_matls = m_sharedState->allMPMMaterials()->getUnion();
   */
-  t->requires(Task::OldDW, mi->delT_Label,        level.get_rep());
+  t->requires(Task::OldDW, Ilb->delTLabel,        level.get_rep());
   t->requires(Task::OldDW, Ilb->temp_CCLabel,     gac,1);
   t->requires(Task::NewDW, Ilb->vol_frac_CCLabel, gac,1);
   /*     Products     */
@@ -292,7 +294,7 @@ void Unsteady_Burn::scheduleComputeModelSources(SchedulerP& sched,
   t->requires(Task::OldDW, Mlb->pXLabel,           react_matl, gp,ngc_p);
   /*     Misc      */
   t->requires(Task::NewDW, Ilb->press_equil_CCLabel, one_matl, gac, 1);
-  t->requires(Task::OldDW, MIlb->NC_CCweightLabel,   one_matl, gac, 1);  
+  t->requires(Task::OldDW, Mlb->NC_CCweightLabel,    one_matl, gac, 1);  
 
   t->requires(Task::OldDW, BurningCellLabel,       react_matl, gac, 1);     
   t->requires(Task::OldDW, TsLabel,                react_matl, gac, 1);     
@@ -306,10 +308,10 @@ void Unsteady_Burn::scheduleComputeModelSources(SchedulerP& sched,
   t->computes(PartBetaLabel,    react_matl);
   t->computes(PartTsLabel,      react_matl);
    
-  t->modifies(mi->modelMass_srcLabel);
-  t->modifies(mi->modelMom_srcLabel);
-  t->modifies(mi->modelEng_srcLabel);
-  t->modifies(mi->modelVol_srcLabel); 
+  t->modifies(Ilb->modelMass_srcLabel);
+  t->modifies(Ilb->modelMom_srcLabel);
+  t->modifies(Ilb->modelEng_srcLabel);
+  t->modifies(Ilb->modelVol_srcLabel); 
   
   if(d_saveConservedVars->mass ){
     t->computes(Unsteady_Burn::totalMassBurnedLabel);
@@ -342,11 +344,10 @@ void Unsteady_Burn::computeModelSources(const ProcessorGroup*,
                                       const PatchSubset* patches,
                                       const MaterialSubset* /*matls*/,
                                       DataWarehouse* old_dw,
-                                      DataWarehouse* new_dw,
-                                      const ModelInfo* mi){
+                                      DataWarehouse* new_dw){
   
   delt_vartype delT;
-  old_dw->get(delT, mi->delT_Label,getLevel(patches));
+  old_dw->get(delT, Ilb->delTLabel,getLevel(patches));
   
   //ASSERT(matls->size() == 2);
   int m0 = matl0->getDWIndex(); /* reactant material */
@@ -356,7 +357,7 @@ void Unsteady_Burn::computeModelSources(const ProcessorGroup*,
 
   Ghost::GhostType gn  = Ghost::None;    
   Ghost::GhostType gac = Ghost::AroundCells;  
-  Ghost::GhostType  gp;
+  Ghost::GhostType gp;
   int ngc_p;
   m_sharedState->getParticleGhostLayer(gp, ngc_p);
 
@@ -371,15 +372,15 @@ void Unsteady_Burn::computeModelSources(const ProcessorGroup*,
     CCVariable<double> sp_vol_src_0, sp_vol_src_1;
     
     /* reactant */
-    new_dw->getModifiable(mass_src_0,     mi->modelMass_srcLabel,  m0, patch);    
-    new_dw->getModifiable(momentum_src_0, mi->modelMom_srcLabel,   m0, patch); 
-    new_dw->getModifiable(energy_src_0,   mi->modelEng_srcLabel,   m0, patch);   
-    new_dw->getModifiable(sp_vol_src_0,   mi->modelVol_srcLabel,   m0, patch);   
+    new_dw->getModifiable(mass_src_0,     Ilb->modelMass_srcLabel,  m0, patch);
+    new_dw->getModifiable(momentum_src_0, Ilb->modelMom_srcLabel,   m0, patch); 
+    new_dw->getModifiable(energy_src_0,   Ilb->modelEng_srcLabel,   m0, patch);
+    new_dw->getModifiable(sp_vol_src_0,   Ilb->modelVol_srcLabel,   m0, patch);
     /* product */
-    new_dw->getModifiable(mass_src_1,     mi->modelMass_srcLabel,  m1, patch);   
-    new_dw->getModifiable(momentum_src_1, mi->modelMom_srcLabel,   m1, patch);   
-    new_dw->getModifiable(energy_src_1,   mi->modelEng_srcLabel,   m1, patch);   
-    new_dw->getModifiable(sp_vol_src_1,   mi->modelVol_srcLabel,   m1, patch);   
+    new_dw->getModifiable(mass_src_1,     Ilb->modelMass_srcLabel,  m1, patch);
+    new_dw->getModifiable(momentum_src_1, Ilb->modelMom_srcLabel,   m1, patch);
+    new_dw->getModifiable(energy_src_1,   Ilb->modelEng_srcLabel,   m1, patch); 
+    new_dw->getModifiable(sp_vol_src_1,   Ilb->modelVol_srcLabel,   m1, patch);
     
     constCCVariable<double>   press_CC, solidTemp, solidMass, solidSp_vol;
     constNCVariable<double>   NC_CCweight, NCsolidMass;
@@ -419,7 +420,7 @@ void Unsteady_Burn::computeModelSources(const ProcessorGroup*,
     /* Product Data */
     /* Misc */
     new_dw->get(press_CC,    Ilb->press_equil_CCLabel, 0, patch, gac, 1);
-    old_dw->get(NC_CCweight, MIlb->NC_CCweightLabel,   0, patch, gac, 1);
+    old_dw->get(NC_CCweight, Mlb->NC_CCweightLabel,   0, patch, gac, 1);
 
     new_dw->allocateAndPut(NewBurningCell, BurningCellLabel, m0, patch, gac, 1);
     new_dw->allocateAndPut(NewTs,          TsLabel,          m0, patch, gac, 1);
@@ -631,11 +632,13 @@ void Unsteady_Burn::computeModelSources(const ProcessorGroup*,
   }
 }
 
-void Unsteady_Burn::scheduleErrorEstimate(const LevelP&, SchedulerP&){
+void Unsteady_Burn::scheduleErrorEstimate(const LevelP&,
+					  SchedulerP&){
   // Not implemented yet
 }
 
-void Unsteady_Burn::scheduleTestConservation(SchedulerP&, const PatchSet*, const ModelInfo*){
+void Unsteady_Burn::scheduleTestConservation(SchedulerP&,
+					     const PatchSet*){
   // Not implemented yet
 }
 

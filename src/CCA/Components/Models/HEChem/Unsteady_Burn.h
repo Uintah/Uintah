@@ -80,8 +80,7 @@ WARNING
                               ModelSetup* setup, const bool isRestart);
     
     virtual void scheduleInitialize(SchedulerP&,
-                                    const LevelP& level,
-                                    const ModelInfo*);
+                                    const LevelP& level);
     
     virtual void initialize(const ProcessorGroup*,
                             const PatchSubset*,
@@ -92,12 +91,11 @@ WARNING
     virtual void restartInitialize() {}
     
     virtual void scheduleComputeStableTimeStep(SchedulerP&,
-                                               const LevelP& level,
-                                               const ModelInfo*);
+                                               const LevelP& level);
     
     virtual void scheduleComputeModelSources(SchedulerP&,
-                                             const LevelP& level,
-                                             const ModelInfo*);
+                                             const LevelP& level);
+    
     virtual void scheduleModifyThermoTransportProperties(SchedulerP&,
                                                          const LevelP&,
                                                          const MaterialSet*);
@@ -111,14 +109,15 @@ WARNING
                                        SchedulerP& sched);
     
     virtual void scheduleTestConservation(SchedulerP&,
-                                          const PatchSet* patches,
-                                          const ModelInfo* mi); 
+                                          const PatchSet* patches); 
     
  
   private:    
-    void computeModelSources(const ProcessorGroup*, const PatchSubset*,
-                             const MaterialSubset*, DataWarehouse*, 
-                             DataWarehouse*, const ModelInfo*);
+    void computeModelSources(const ProcessorGroup*,
+			     const PatchSubset*,
+                             const MaterialSubset*,
+			     DataWarehouse*, 
+                             DataWarehouse*);
 
     double computeBurnedMass(double To, double P, double Vc, double surfArea, double delT,
                              double solidMass, double& beta, double& Ts, Vector& dx);

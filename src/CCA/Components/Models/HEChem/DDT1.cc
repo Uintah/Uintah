@@ -75,8 +75,8 @@ DDT1::DDT1(const ProcessorGroup* myworld,
   d_mymatls  = 0;
   d_one_matl = 0;
   Ilb  = scinew ICELabel();
-  MIlb = scinew MPMICELabel();
   Mlb  = scinew MPMLabel();
+  MIlb = scinew MPMICELabel();
 
   d_adj_IO_Press = scinew adj_IO();
   d_adj_IO_Det   = scinew adj_IO();
@@ -436,8 +436,7 @@ void DDT1::outputProblemSpec(ProblemSpecP& ps)
 //______________________________________________________________________
 //     
 void DDT1::scheduleInitialize(SchedulerP& sched,
-                              const LevelP& level,
-                              const ModelInfo*)
+                              const LevelP& level)
 {
   printSchedule(level,cout_doing,"DDT1::scheduleInitialize");
   Task* t = scinew Task("DDT1::initialize", this, &DDT1::initialize);
@@ -510,8 +509,7 @@ void DDT1::initialize(const ProcessorGroup*,
 //______________________________________________________________________
 //      
 void DDT1::scheduleComputeStableTimeStep(SchedulerP&,
-                                         const LevelP&,
-                                         const ModelInfo*)
+                                         const LevelP&)
 {
   // None necessary...
 }
@@ -520,8 +518,7 @@ void DDT1::scheduleComputeStableTimeStep(SchedulerP&,
 //______________________________________________________________________
 //      
 void DDT1::scheduleComputeModelSources(SchedulerP& sched,
-                                       const LevelP& level,
-                                       const ModelInfo* mi)
+                                       const LevelP& level)
 {
   if (level->hasFinerLevel()){
     return;    // only schedule on the finest level
@@ -547,7 +544,7 @@ void DDT1::scheduleComputeModelSources(SchedulerP& sched,
   //
   // Task for computing the particles in a cell
   Task* t0 = scinew Task("DDT1::computeNumPPC", this, 
-                         &DDT1::computeNumPPC, mi);
+                         &DDT1::computeNumPPC);
     
   printSchedule(level,cout_doing,"DDT1::scheduleComputeNumPPC");  
     
@@ -566,7 +563,7 @@ void DDT1::scheduleComputeModelSources(SchedulerP& sched,
   //__________________________________
   //
   Task* t1 = scinew Task("DDT1::computeBurnLogic", this, 
-                         &DDT1::computeBurnLogic, mi);    
+                         &DDT1::computeBurnLogic);    
     
   printSchedule(level,cout_doing,"DDT1::computeBurnLogic");  
   if(d_useCrackModel){  
@@ -574,8 +571,8 @@ void DDT1::scheduleComputeModelSources(SchedulerP& sched,
   }
   //__________________________________
   // Requires
-  //__________________________________
-  t1->requires(Task::OldDW, mi->delT_Label,            level.get_rep());
+  //__________________________________ 
+  t1->requires(Task::OldDW, Ilb->delTLabel,            level.get_rep());
   t1->requires(Task::OldDW, Ilb->temp_CCLabel,         ice_matls, oms, gac,1);
   t1->requires(Task::NewDW, MIlb->temp_CCLabel,        mpm_matls, oms, gac,1);
   t1->requires(Task::NewDW, Ilb->vol_frac_CCLabel,     all_matls, oms, gac,1);
@@ -624,7 +621,7 @@ void DDT1::scheduleComputeModelSources(SchedulerP& sched,
   //__________________________________
   //
   Task* t2 = scinew Task("DDT1::computeModelSources", this, 
-                         &DDT1::computeModelSources, mi);
+                         &DDT1::computeModelSources);
                         
   if(d_useCrackModel){  // Because there is a particle loop already in computeNumPPC, 
                         //  we will put crack threshold determination there as well
@@ -637,7 +634,7 @@ void DDT1::scheduleComputeModelSources(SchedulerP& sched,
   //__________________________________
   // Requires
   //__________________________________
-  t2->requires(Task::OldDW, mi->delT_Label,            level.get_rep());
+  t2->requires(Task::OldDW, Ilb->delTLabel,            level.get_rep());
   t2->requires(Task::OldDW, Ilb->temp_CCLabel,         ice_matls, oms, gac,1);
   t2->requires(Task::NewDW, MIlb->temp_CCLabel,        mpm_matls, oms, gac,1);
   t2->requires(Task::NewDW, Ilb->vol_frac_CCLabel,     all_matls, oms, gac,1);
@@ -682,10 +679,10 @@ void DDT1::scheduleComputeModelSources(SchedulerP& sched,
   //__________________________________
   // Modifies  
   //__________________________________
-  t2->modifies(mi->modelMass_srcLabel);
-  t2->modifies(mi->modelMom_srcLabel);
-  t2->modifies(mi->modelEng_srcLabel);
-  t2->modifies(mi->modelVol_srcLabel); 
+  t2->modifies(Ilb->modelMass_srcLabel);
+  t2->modifies(Ilb->modelMom_srcLabel);
+  t2->modifies(Ilb->modelEng_srcLabel);
+  t2->modifies(Ilb->modelVol_srcLabel); 
 
   sched->addTask(t2, level->eachPatch(), d_mymatls);
 }
@@ -695,8 +692,7 @@ void DDT1::computeNumPPC(const ProcessorGroup*,
                          const PatchSubset* patches,
                          const MaterialSubset* /*matls*/,
                          DataWarehouse* old_dw,
-                         DataWarehouse* new_dw,
-                         const ModelInfo* mi)
+                         DataWarehouse* new_dw)
 {
     int m0 = d_matl0->getDWIndex(); /* reactant material */
     Ghost::GhostType  gac = Ghost::AroundCells;
@@ -755,12 +751,11 @@ void DDT1::computeBurnLogic(const ProcessorGroup*,
                             const PatchSubset* patches,
                             const MaterialSubset* matls,
                             DataWarehouse* old_dw,
-                            DataWarehouse* new_dw,
-                            const ModelInfo* mi)
+                            DataWarehouse* new_dw)
 {
   delt_vartype delT;
   const Level* level = getLevel(patches);
-  old_dw->get(delT, mi->delT_Label, level);
+  old_dw->get(delT, Ilb->delTLabel, level);
 
  
   int m0 = d_matl0->getDWIndex();
@@ -820,7 +815,7 @@ void DDT1::computeBurnLogic(const ProcessorGroup*,
     //__________________________________
     //   Misc.
     new_dw->get(press_CC,         Ilb->press_equil_CCLabel,0,  patch,gac,1);
-    old_dw->get(NC_CCweight,      MIlb->NC_CCweightLabel,  0,  patch,gac,1);   
+    old_dw->get(NC_CCweight,      Mlb->NC_CCweightLabel,  0,  patch,gac,1);   
    
     // Temperature and Vol_frac 
     for(int m = 0; m < numAllMatls; m++) {
@@ -1182,12 +1177,11 @@ void DDT1::computeModelSources(const ProcessorGroup*,
                                const PatchSubset* patches,
                                const MaterialSubset*,
                                DataWarehouse* old_dw,
-                               DataWarehouse* new_dw,
-                               const ModelInfo* mi)
+                               DataWarehouse* new_dw)
 {
   delt_vartype delT;
   const Level* level = getLevel(patches);
-  old_dw->get(delT, mi->delT_Label, level);
+  old_dw->get(delT, Ilb->delTLabel, level);
 
  
   int m0 = d_matl0->getDWIndex();
@@ -1258,7 +1252,7 @@ void DDT1::computeModelSources(const ProcessorGroup*,
     //__________________________________
     //   Misc.
     new_dw->get(press_CC,         Ilb->press_equil_CCLabel,0,  patch,gac,1);
-    old_dw->get(NC_CCweight,      MIlb->NC_CCweightLabel,  0,  patch,gac,1);   
+    old_dw->get(NC_CCweight,      Mlb->NC_CCweightLabel,  0,  patch,gac,1);   
    
     // Temperature and Vol_frac 
     for(int m = 0; m < numAllMatls; m++) {
@@ -1274,20 +1268,20 @@ void DDT1::computeModelSources(const ProcessorGroup*,
     }
     //__________________________________
     //  What is computed
-    new_dw->getModifiable(mass_src_0,    mi->modelMass_srcLabel,  m0,patch);
-    new_dw->getModifiable(momentum_src_0,mi->modelMom_srcLabel,   m0,patch);
-    new_dw->getModifiable(energy_src_0,  mi->modelEng_srcLabel,   m0,patch);
-    new_dw->getModifiable(sp_vol_src_0,  mi->modelVol_srcLabel,   m0,patch);
+    new_dw->getModifiable(mass_src_0,    Ilb->modelMass_srcLabel,  m0,patch);
+    new_dw->getModifiable(momentum_src_0,Ilb->modelMom_srcLabel,   m0,patch);
+    new_dw->getModifiable(energy_src_0,  Ilb->modelEng_srcLabel,   m0,patch);
+    new_dw->getModifiable(sp_vol_src_0,  Ilb->modelVol_srcLabel,   m0,patch);
 
-    new_dw->getModifiable(mass_src_1,    mi->modelMass_srcLabel,  m1,patch);
-    new_dw->getModifiable(momentum_src_1,mi->modelMom_srcLabel,   m1,patch);
-    new_dw->getModifiable(energy_src_1,  mi->modelEng_srcLabel,   m1,patch);
-    new_dw->getModifiable(sp_vol_src_1,  mi->modelVol_srcLabel,   m1,patch);
+    new_dw->getModifiable(mass_src_1,    Ilb->modelMass_srcLabel,  m1,patch);
+    new_dw->getModifiable(momentum_src_1,Ilb->modelMom_srcLabel,   m1,patch);
+    new_dw->getModifiable(energy_src_1,  Ilb->modelEng_srcLabel,   m1,patch);
+    new_dw->getModifiable(sp_vol_src_1,  Ilb->modelVol_srcLabel,   m1,patch);
     
-    new_dw->getModifiable(mass_src_2,    mi->modelMass_srcLabel,  m2,patch);
-    new_dw->getModifiable(momentum_src_2,mi->modelMom_srcLabel,   m2,patch);
-    new_dw->getModifiable(energy_src_2,  mi->modelEng_srcLabel,   m2,patch);
-    new_dw->getModifiable(sp_vol_src_2,  mi->modelVol_srcLabel,   m2,patch);
+    new_dw->getModifiable(mass_src_2,    Ilb->modelMass_srcLabel,  m2,patch);
+    new_dw->getModifiable(momentum_src_2,Ilb->modelMom_srcLabel,   m2,patch);
+    new_dw->getModifiable(energy_src_2,  Ilb->modelEng_srcLabel,   m2,patch);
+    new_dw->getModifiable(sp_vol_src_2,  Ilb->modelVol_srcLabel,   m2,patch);
 
     new_dw->allocateAndPut(burningCell,  burningLabel,            m0,patch);  
     new_dw->allocateAndPut(Fr,           reactedFractionLabel,    m0,patch);
@@ -1406,8 +1400,8 @@ void DDT1::computeModelSources(const ProcessorGroup*,
           double burnedMass = 0.0;
 
           burnedMass = computeBurnedMass(Tzero, Tsurf, productPress,
-                              rctSpvol[c], surfArea, delT,
-                              solidMass, min_mass_in_a_cell);
+					 rctSpvol[c], surfArea, delT,
+					 solidMass, min_mass_in_a_cell);
           
           // Store debug variables
           onSurface[c] = surfArea;
@@ -1448,8 +1442,8 @@ void DDT1::computeModelSources(const ProcessorGroup*,
           double burnedMass = 0.0;
 
           burnedMass = computeBurnedMass(Tzero, Tsurf, productPress,
-                              rctSpvol[c], surfArea, delT,
-                              solidMass, min_mass_in_a_cell);
+					 rctSpvol[c], surfArea, delT,
+					 solidMass, min_mass_in_a_cell);
 
           /* 
            // If cracking applies, add to mass
@@ -1755,8 +1749,7 @@ void DDT1::scheduleErrorEstimate(const LevelP&,
 }
 //__________________________________
 void DDT1::scheduleTestConservation(SchedulerP&,
-                                    const PatchSet*,                      
-                                    const ModelInfo*)                     
+                                    const PatchSet*)                     
 {
   // Not implemented yet
 }

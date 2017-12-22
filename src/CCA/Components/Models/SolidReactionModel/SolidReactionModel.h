@@ -79,18 +79,15 @@ namespace Uintah {
                                   ModelSetup* setup, const bool isRestart);
         
         virtual void scheduleInitialize(SchedulerP&,
-                                        const LevelP& level,
-                                        const ModelInfo*);
+                                        const LevelP& level);
         
         virtual void restartInitialize() {}
         
         virtual void scheduleComputeStableTimeStep(SchedulerP& sched,
-                                                   const LevelP& level,
-                                                   const ModelInfo*);
+                                                   const LevelP& level);
         
         virtual void scheduleComputeModelSources(SchedulerP&,
-                                                 const LevelP& level,
-                                                 const ModelInfo*);
+                                                 const LevelP& level);
         
         virtual void scheduleModifyThermoTransportProperties(SchedulerP&,
                                                              const LevelP&,
@@ -105,8 +102,7 @@ namespace Uintah {
                                            SchedulerP& sched);
         
         virtual void scheduleTestConservation(SchedulerP&,
-                                              const PatchSet* patches,
-                                              const ModelInfo* mi);    
+                                              const PatchSet* patches);    
         
     private:
 
@@ -114,8 +110,7 @@ namespace Uintah {
                                  const PatchSubset* patches,
                                  const MaterialSubset* matls,
                                  DataWarehouse*,
-                                 DataWarehouse* new_dw,
-                                 const ModelInfo*);
+                                 DataWarehouse* new_dw);
 
         // Functions
         SolidReactionModel(const SolidReactionModel&);

@@ -25,6 +25,7 @@
 
 #include <CCA/Components/Models/FluidsBased/TestModel.h>
 
+#include <CCA/Components/ICE/Core/ICELabel.h>
 #include <CCA/Components/ICE/Materials/ICEMaterial.h>
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
 #include <CCA/Components/MPMICE/Core/MPMICELabel.h>
@@ -50,13 +51,15 @@ TestModel::TestModel(const ProcessorGroup* myworld,
   : ModelInterface(myworld, sharedState), d_params(params)
 {
   mymatls = 0;
-  MIlb  = scinew MPMICELabel();
+  Ilb = scinew ICELabel();
+  MIlb = scinew MPMICELabel();
   totalMassXLabel = 0;
   totalIntEngXLabel = 0;
 }
 
 TestModel::~TestModel()
 {
+  delete Ilb;
   delete MIlb;
   if(mymatls && mymatls->removeReference())
     delete mymatls;
@@ -126,31 +129,28 @@ void TestModel::outputProblemSpec(ProblemSpecP& ps)
  
 //______________________________________________________________________
 void TestModel::scheduleInitialize(SchedulerP&,
-                                   const LevelP& level,
-                                   const ModelInfo*)
+                                   const LevelP& level)
 {
   // None necessary...
 }
 
 //______________________________________________________________________     
 void TestModel::scheduleComputeStableTimeStep(SchedulerP&,
-                                              const LevelP&,
-                                              const ModelInfo*)
+                                              const LevelP&)
 {
   // None necessary...
 }
 
 //__________________________________      
 void TestModel::scheduleComputeModelSources(SchedulerP& sched,
-                                                const LevelP& level,
-                                                const ModelInfo* mi)
+                                                const LevelP& level)
 {
   Task* t = scinew Task("TestModel::computeModelSources",this, 
-                        &TestModel::computeModelSources, mi);
-  t->modifies(mi->modelMass_srcLabel);
-  t->modifies(mi->modelMom_srcLabel);
-  t->modifies(mi->modelEng_srcLabel);
-  t->modifies(mi->modelVol_srcLabel);
+                        &TestModel::computeModelSources);
+  t->modifies(Ilb->modelMass_srcLabel);
+  t->modifies(Ilb->modelMom_srcLabel);
+  t->modifies(Ilb->modelEng_srcLabel);
+  t->modifies(Ilb->modelVol_srcLabel);
   Ghost::GhostType  gn  = Ghost::None;
   
   Task::WhichDW DW;
@@ -160,31 +160,30 @@ void TestModel::scheduleComputeModelSources(SchedulerP& sched,
     t->requires( DW, MIlb->cMassLabel,     matl0->thisMaterial(), gn);
   } else { 
     DW = Task::OldDW;             // ICE (pull data from old DW)
-    t->requires( DW, mi->rho_CCLabel,        matl0->thisMaterial(), gn);
-    t->requires( NDW,mi->specific_heatLabel, matl0->thisMaterial(), gn);
+    t->requires( DW, Ilb->rho_CCLabel,        matl0->thisMaterial(), gn);
+    t->requires( NDW,Ilb->specific_heatLabel, matl0->thisMaterial(), gn);
   } 
                                   // All matls
-  t->requires( DW,  mi->vel_CCLabel,    matl0->thisMaterial(), gn);
-  t->requires( DW,  mi->temp_CCLabel,   matl0->thisMaterial(), gn); 
-  t->requires( NDW, mi->sp_vol_CCLabel, matl0->thisMaterial(), gn);
+  t->requires( DW,  Ilb->vel_CCLabel,    matl0->thisMaterial(), gn);
+  t->requires( DW,  Ilb->temp_CCLabel,   matl0->thisMaterial(), gn); 
+  t->requires( NDW, Ilb->sp_vol_CCLabel, matl0->thisMaterial(), gn);
   
   t->computes(TestModel::totalMassXLabel);
   t->computes(TestModel::totalIntEngXLabel);
   
-  t->requires( Task::OldDW, mi->delT_Label, level.get_rep());
+  t->requires( Task::OldDW, Ilb->delTLabel, level.get_rep());
   sched->addTask(t, level->eachPatch(), mymatls);
 }
 
 //__________________________________
 void TestModel::computeModelSources(const ProcessorGroup*, 
-                                       const PatchSubset* patches,
-                                       const MaterialSubset* matls,
-                                       DataWarehouse* old_dw,
-                                       DataWarehouse* new_dw,
-                                       const ModelInfo* mi)
+				    const PatchSubset* patches,
+				    const MaterialSubset* matls,
+				    DataWarehouse* old_dw,
+				    DataWarehouse* new_dw)
 {
   delt_vartype delT;
-  old_dw->get(delT, mi->delT_Label, getLevel(patches));
+  old_dw->get(delT, Ilb->delTLabel, getLevel(patches));
   double dt = delT;
 
   ASSERT(matls->size() == 2);
@@ -203,15 +202,15 @@ void TestModel::computeModelSources(const ProcessorGroup*,
     CCVariable<double> sp_vol_src_0, sp_vol_src_1;
     
     new_dw->allocateTemporary(cv, patch);
-    new_dw->getModifiable(mass_src_0,   mi->modelMass_srcLabel, m0, patch);
-    new_dw->getModifiable(mom_src_0,    mi->modelMom_srcLabel,  m0, patch);
-    new_dw->getModifiable(eng_src_0,    mi->modelEng_srcLabel,  m0, patch);
-    new_dw->getModifiable(sp_vol_src_0, mi->modelVol_srcLabel,  m0, patch);
+    new_dw->getModifiable(mass_src_0,   Ilb->modelMass_srcLabel, m0, patch);
+    new_dw->getModifiable(mom_src_0,    Ilb->modelMom_srcLabel,  m0, patch);
+    new_dw->getModifiable(eng_src_0,    Ilb->modelEng_srcLabel,  m0, patch);
+    new_dw->getModifiable(sp_vol_src_0, Ilb->modelVol_srcLabel,  m0, patch);
 
-    new_dw->getModifiable(mass_src_1,   mi->modelMass_srcLabel, m1, patch);
-    new_dw->getModifiable(mom_src_1,    mi->modelMom_srcLabel,  m1, patch);
-    new_dw->getModifiable(eng_src_1,    mi->modelEng_srcLabel,  m1, patch);
-    new_dw->getModifiable(sp_vol_src_1, mi->modelVol_srcLabel,  m1, patch);
+    new_dw->getModifiable(mass_src_1,   Ilb->modelMass_srcLabel, m1, patch);
+    new_dw->getModifiable(mom_src_1,    Ilb->modelMom_srcLabel,  m1, patch);
+    new_dw->getModifiable(eng_src_1,    Ilb->modelEng_srcLabel,  m1, patch);
+    new_dw->getModifiable(sp_vol_src_1, Ilb->modelVol_srcLabel,  m1, patch);
                        
     //__________________________________
     //  Compute the mass and specific heat of matl 0
@@ -232,8 +231,8 @@ void TestModel::computeModelSources(const ProcessorGroup*,
     } else {
       dw = old_dw;            // ICE   (compute it from the density)
       constCCVariable<double> rho_tmp, cv_ice;
-      old_dw->get(rho_tmp, mi->rho_CCLabel,        m0, patch, gn, 0);
-      new_dw->get(cv_ice,  mi->specific_heatLabel, m0, patch, gn, 0);
+      old_dw->get(rho_tmp, Ilb->rho_CCLabel,        m0, patch, gn, 0);
+      new_dw->get(cv_ice,  Ilb->specific_heatLabel, m0, patch, gn, 0);
       
       cv.copyData(cv_ice);    
       
@@ -246,9 +245,9 @@ void TestModel::computeModelSources(const ProcessorGroup*,
     constCCVariable<Vector> vel_0;    // MPM  pull from new_dw
     constCCVariable<double> temp_0;   // ICE  pull from old_dw
     constCCVariable<double> sp_vol_0;
-    dw  ->  get(vel_0,    mi->vel_CCLabel,    m0, patch, gn, 0);    
-    dw  ->  get(temp_0,   mi->temp_CCLabel,   m0, patch, gn, 0);    
-    new_dw->get(sp_vol_0, mi->sp_vol_CCLabel, m0, patch, gn, 0);
+    dw  ->  get(vel_0,    Ilb->vel_CCLabel,    m0, patch, gn, 0);    
+    dw  ->  get(temp_0,   Ilb->temp_CCLabel,   m0, patch, gn, 0);    
+    new_dw->get(sp_vol_0, Ilb->sp_vol_CCLabel, m0, patch, gn, 0);
     
     double trate = d_rate*dt;
     if(trate > 1){
@@ -310,8 +309,7 @@ void TestModel::scheduleErrorEstimate(const LevelP&,
 }
 //__________________________________
 void TestModel::scheduleTestConservation(SchedulerP&,
-                                         const PatchSet*,
-                                         const ModelInfo*)
+                                         const PatchSet*)
 {
   // Not implemented yet
 }

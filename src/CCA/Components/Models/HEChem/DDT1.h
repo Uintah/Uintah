@@ -83,8 +83,7 @@ WARNING
 
       
     virtual void scheduleInitialize(SchedulerP&,
-				    const LevelP& level,
-				    const ModelInfo*);
+				    const LevelP& level);
 
     virtual void initialize(const ProcessorGroup*,
                             const PatchSubset*,
@@ -95,13 +94,11 @@ WARNING
     virtual void restartInitialize() {}
       
     virtual void scheduleComputeStableTimeStep(SchedulerP&,
-					       const LevelP& level,
-					       const ModelInfo*);
+					       const LevelP& level);
       
  
     virtual void scheduleComputeModelSources(SchedulerP&,
-						   const LevelP& level,
-						   const ModelInfo*);
+						   const LevelP& level);
                                              
     virtual void scheduleModifyThermoTransportProperties(SchedulerP&,
                                                const LevelP&,
@@ -119,8 +116,7 @@ WARNING
                                 SchedulerP& sched );
                                              
    virtual void scheduleTestConservation(SchedulerP&,
-                                         const PatchSet* patches,
-                                         const ModelInfo* mi);
+                                         const PatchSet* patches);
 
     
   virtual bool adjustOutputInterval()     const { return d_adj_IO_Press->onOff || d_adj_IO_Det->onOff; };
@@ -137,22 +133,19 @@ WARNING
                           const PatchSubset*,
                           const MaterialSubset*, 
                           DataWarehouse*, 
-                          DataWarehouse*, 
-                          const ModelInfo*);
+                          DataWarehouse*);
                              
     void computeModelSources(const ProcessorGroup*, 
                              const PatchSubset*,
                              const MaterialSubset*, 
                              DataWarehouse*, 
-                             DataWarehouse*, 
-                             const ModelInfo*);
+                             DataWarehouse*);
       
     void computeNumPPC(const ProcessorGroup*, 
                        const PatchSubset*,
                        const MaterialSubset*, 
                        DataWarehouse*, 
-                       DataWarehouse*, 
-                       const ModelInfo*);
+                       DataWarehouse*);
       
     double computeBurnedMass(double To, 
                              double& Ts,  

@@ -63,8 +63,9 @@ PSELIBS := \
        Core/Util                       
 
 ifeq ($(OS_NAME),Darwin)
-  PSELIBS += CCA/Components/MPM/Core \
-             CCA/Components/MPM/Materials
+  PSELIBS += CCA/Components/MPM/Core      \
+             CCA/Components/MPM/Materials \
+	     CCA/Components/MPMICE/Core
 endif
 
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
