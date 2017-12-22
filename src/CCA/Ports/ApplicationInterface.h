@@ -89,9 +89,16 @@ WARNING
     friend class AMRSimulationController;
     friend class DataArchiver;
 
+    friend class SchedulerCommon;
+    friend class DynamicMPIScheduler;
+    friend class MPIScheduler;
+    friend class UnifiedScheduler;
+
     friend class LoadBalancersCommon;
     friend class DynamicLoadBalancer;
     friend class ParticleLoadBalancer;
+
+    friend class RegridderCommon;
 
     friend class Switcher;
     
@@ -141,6 +148,7 @@ WARNING
     // execute this time step, this will be an index into the
     // scheduler's vector of task-graphs.
     virtual int computeTaskGraphIndex() = 0;
+    virtual int computeTaskGraphIndex( const int TimeStep ) = 0;
 
     // Schedule the inital switching.
     virtual void scheduleSwitchInitialization( const LevelP     & level,
@@ -206,8 +214,8 @@ WARNING
 
     // Recompute a time step if current time advance is not
     // converging.  The returned time is the new delta T.
-    virtual void   recomputeTimeStep() = 0;
-    virtual double recomputeTimeStep( double delt ) = 0;
+    virtual void   recomputeDelT() = 0;
+    virtual double recomputeDelT( const double delT ) = 0;
     virtual bool restartableTimeSteps() = 0;
 
     // Updates the tiem step and the delta T.

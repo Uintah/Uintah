@@ -249,9 +249,9 @@ bool ICE::restartableTimeSteps()
   return true;
 }
 
-double ICE::recomputeTimeStep(double current_dt)
+double ICE::recomputeDelT( const double delT )
 {
-  return current_dt * 0.75;
+  return delT * 0.75;
 }
 
 /* _____________________________________________________________________

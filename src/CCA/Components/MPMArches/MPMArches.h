@@ -232,7 +232,7 @@ public:
   
 
   ///////////////////////////////////////////////////////////////////////
-  virtual double recomputeTimeStep(double current_dt);
+  virtual double recomputeDelT(const double delT);
       
   virtual bool restartableTimeSteps();
 

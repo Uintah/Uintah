@@ -819,7 +819,7 @@ AMRSimulationController::executeTimeStep( int totalFine )
       }
 
       // Recompute the delta T.
-      m_app->recomputeTimeStep();
+      m_app->recomputeDelT();
 
       // Re-evaluate the outputting and checkpointing.
       m_output->reevaluate_OutputCheckPointTimeStep(m_app->getSimTime(), m_app->getDelT());

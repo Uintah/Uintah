@@ -800,7 +800,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */
 
   mpi_info_.reset( 0 );
 
-  DOUT(g_dbg, "Rank-" << my_rank << ", MPI Scheduler executing taskgraph: " << tgnum << ", timestep: " << m_sharedState->getCurrentTopLevelTimeStep()
+  DOUT(g_dbg, "Rank-" << my_rank << ", MPI Scheduler executing taskgraph: " << tgnum << ", timestep: " << m_application->getTimeStep()
                       << " with " << dts->numTasks() << " tasks (" << ntasks << " local)");
 
   if( m_reloc_new_pos_label && m_dws[m_dwmap[Task::OldDW]] != nullptr ) {
@@ -932,9 +932,9 @@ MPIScheduler::outputTimingStats( const char* label )
 
       // Report which timesteps TaskExecTime values have been accumulated over
       fout << "Reported values are cumulative over 10 timesteps ("
-           << m_sharedState->getCurrentTopLevelTimeStep()-9
+           << m_application->getTimeStep()-9
            << " through "
-           << m_sharedState->getCurrentTopLevelTimeStep()
+           << m_application->getTimeStep()
            << ")" << std::endl;
 
       for (auto iter = g_exec_times.begin(); iter != g_exec_times.end(); ++iter) {
@@ -1038,7 +1038,7 @@ MPIScheduler::outputTimingStats( const char* label )
 
     for (size_t file = 0; file < files.size(); ++file) {
       std::ofstream& out = *files[file];
-      out << "TimeStep " << m_sharedState->getCurrentTopLevelTimeStep() << std::endl;
+      out << "TimeStep " << m_application->getTimeStep() << std::endl;
       for (size_t i = 0; i < (*data[file]).size(); i++) {
         out << label << ": " << m_labels[i] << ": ";
         int len = static_cast<int>(strlen(m_labels[i]) + strlen("MPIScheduler: ") + strlen(": "));

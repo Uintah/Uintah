@@ -151,9 +151,9 @@ bool MPMICE::restartableTimeSteps()
   return true;
 }
 
-double MPMICE::recomputeTimeStep(double current_dt)
+double MPMICE::recomputeDelT(const double delT)
 {
-  return current_dt/2;
+  return delT / 2.0;
 } 
 //______________________________________________________________________
 //

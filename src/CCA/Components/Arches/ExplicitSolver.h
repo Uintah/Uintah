@@ -274,8 +274,8 @@ public:
   virtual void sched_getCCVelocities(const LevelP& level,
                                      SchedulerP&);
 
-  inline double recomputeTimeStep(double current_dt) {
-    return current_dt/2;
+  inline double recomputeDelT(const double delT) {
+    return delT / 2.0;
   }
 
   inline bool restartableTimeSteps() {

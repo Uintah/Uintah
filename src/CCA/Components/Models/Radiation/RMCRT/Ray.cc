@@ -82,6 +82,10 @@ Ray::Ray( const TypeDescription::Type FLT_DBL ) : RMCRTCommon( FLT_DBL)
 //  d_boundFluxFiltLabel   = VarLabel::create( "boundFluxFilt",    CCVariable<Stencil7>::getTypeDescription() );
 //  d_divQFiltLabel        = VarLabel::create( "divQFilt",         CCVariable<double>::getTypeDescription() );
 
+  // Time Step
+  m_timeStepLabel =
+    VarLabel::create(timeStep_name, timeStep_vartype::getTypeDescription() );
+
   // internal variables for RMCRT
   d_flaggedCellsLabel    = VarLabel::create( "flaggedCells",     CCVariable<int>::getTypeDescription() );
   d_ROI_LoCellLabel      = VarLabel::create( "ROI_loCell",       minvec_vartype::getTypeDescription() );
@@ -125,6 +129,8 @@ Ray::Ray( const TypeDescription::Type FLT_DBL ) : RMCRTCommon( FLT_DBL)
 //---------------------------------------------------------------------------
 Ray::~Ray()
 {
+  VarLabel::destroy( m_timeStepLabel );
+
   VarLabel::destroy( d_mag_grad_abskgLabel );
   VarLabel::destroy( d_mag_grad_sigmaT4Label );
   VarLabel::destroy( d_flaggedCellsLabel );

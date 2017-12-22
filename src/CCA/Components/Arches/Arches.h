@@ -107,13 +107,13 @@ public:
   virtual void scheduleAnalysis( const LevelP& level,
 				 SchedulerP&);
 
-  virtual int computeTaskGraphIndex();
+  virtual int computeTaskGraphIndex( const int timeStep );
 
   void setMPMArchesLabel(const MPMArchesLabel* MAlb){
     m_MAlab = MAlb;
   }
 
-  virtual double recomputeTimeStep(double current_dt);
+  virtual double recomputeDelT(const double delT);
 
   virtual bool restartableTimeSteps();
 

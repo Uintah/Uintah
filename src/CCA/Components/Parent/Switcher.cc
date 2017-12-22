@@ -933,9 +933,9 @@ bool Switcher::restartableTimeSteps()
 
 //______________________________________________________________________
 //
-double Switcher::recomputeTimeStep(double dt)
+double Switcher::recomputeDelT(const double delT)
 {
-  return d_app->recomputeTimeStep(dt);
+  return d_app->recomputeDelT( delT );
 }
 
 //______________________________________________________________________

@@ -214,6 +214,8 @@ namespace Uintah{
       std::map <int,IntVector> d_dirIndexOrder;
       std::map <int,IntVector> d_dirSignSwap;
 
+      const VarLabel* m_timeStepLabel {nullptr};
+      
       const VarLabel* d_mag_grad_abskgLabel;
       const VarLabel* d_mag_grad_sigmaT4Label;
       const VarLabel* d_flaggedCellsLabel;

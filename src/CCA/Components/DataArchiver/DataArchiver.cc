@@ -2546,17 +2546,8 @@ DataArchiver::outputReductionVars( const ProcessorGroup *,
   Timers::Simple timer;
   timer.start();
 
-  double simTime = m_sharedState->getElapsedSimTime();
-
-  // simTime_vartype simTime_var(0);
-  // if( old_dw )
-  //   old_dw->get( simTime_var, m_simTimeLabel );
-  // double simTime = simTime_var;
-
-  delt_vartype delt_var(0);
-  if( old_dw )
-    old_dw->get( delt_var, m_delTLabel );
-  double delT = delt_var;
+  const double simTime = m_application->getSimTime();
+  const double delT    = m_application->getDelT();
 
   // Dump the stuff in the reduction saveset into files in the uda
   // at every timestep
@@ -2631,13 +2622,8 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
     dbg << "  outputVariables task begin\n";
   }
 
-  double timeStep = m_sharedState->getCurrentTopLevelTimeStep();
+  const double timeStep = m_application->getTimeStep();
   
-  // timeStep_vartype timeStep_var(0);
-  // if( old_dw )
-  //   old_dw->get( timeStep_var, m_timeStepLabel );
-  // double timeStep = timeStep_var;
-
 #if SCI_ASSERTION_LEVEL >= 2
   // double-check to make sure only called once per level
   int levelid =

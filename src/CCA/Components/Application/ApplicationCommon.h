@@ -129,7 +129,8 @@ WARNING
     // Ask the application which primary task graph it wishes to
     // execute this time step, this will be an index into the
     // scheduler's vector of task-graphs.
-    virtual int computeTaskGraphIndex() { return 0; }
+    virtual int computeTaskGraphIndex();
+    virtual int computeTaskGraphIndex( const int timeStep ) { return 0; }
 
     // Schedule the inital switching.
     virtual void scheduleSwitchInitialization( const LevelP     & level,
@@ -181,11 +182,11 @@ WARNING
 					  const PatchSet   * perProcPatchSet,
 					        SchedulerP & scheduler);
     
-    void updateSystemVars( const ProcessorGroup *,
-			   const PatchSubset    * patches,
-			   const MaterialSubset * /*matls*/,
-			         DataWarehouse  * /*old_dw*/,
-			         DataWarehouse  * new_dw );
+    virtual void updateSystemVars( const ProcessorGroup *,
+				   const PatchSubset    * patches,
+				   const MaterialSubset * /*matls*/,
+				         DataWarehouse  * /*old_dw*/,
+				         DataWarehouse  * new_dw );
     
     // Methods used for scheduling AMR regridding.
     virtual void scheduleRefine( const PatchSet   * patches,
@@ -213,8 +214,9 @@ WARNING
 
     // Recompute a time step if current time advance is not
     // converging.  The returned time is the new delta T.
-    virtual void   recomputeTimeStep();
-    virtual double recomputeTimeStep( double delt );
+    virtual void   recomputeDelT();
+    virtual double recomputeDelT( const double delT );
+
     virtual bool restartableTimeSteps() { return false; }
 
     // Updates the time step and the delta T.

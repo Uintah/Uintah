@@ -4678,8 +4678,8 @@ void MPMArches::solveHeatEquations(const ProcessorGroup* pg,
 
 }
 
-double MPMArches::recomputeTimeStep(double current_dt) {
-  return d_arches->recomputeTimeStep(current_dt);
+double MPMArches::recomputeDelT(const double delT) {
+  return d_arches->recomputeDelT( delT );
 }
 
 bool MPMArches::restartableTimeSteps() {

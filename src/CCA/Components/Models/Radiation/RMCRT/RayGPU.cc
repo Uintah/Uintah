@@ -203,6 +203,13 @@ void Ray::rayTraceGPU(DetailedTask* dtask,
 
       RT_flags.nRaySteps = 0;
 
+      int timeStep = sharedState->getCurrentTopLevelTimeStep();
+
+      // int timeStep = 0;
+      // simTime_vartype timeStep_var;
+      // old_dw->get(timeStep_var, m_timeStepLabel);
+      // timeStep = timeStep_var;
+
       //__________________________________
       // set up and launch kernel
       launchRayTraceKernel<T>(dtask,
@@ -213,7 +220,7 @@ void Ray::rayTraceGPU(DetailedTask* dtask,
                               patchP,
                               (cudaStream_t*)stream,
                               RT_flags,
-                              sharedState->getCurrentTopLevelTimeStep(),
+                              timeStep,
                               abskg_gdw,
                               sigmaT4_gdw,
                               celltype_gdw,
@@ -459,6 +466,13 @@ void Ray::rayTraceDataOnionGPU( DetailedTask* dtask,
 
       RT_flags.nRaySteps = 0;
 
+      int timeStep = sharedState->getCurrentTopLevelTimeStep();
+
+      // int timeStep = 0;
+      // simTime_vartype timeStep_var;
+      // old_dw->get(timeStep_var, m_timeStepLabel);
+      // timeStep = timeStep_var;
+
       // set up and launch kernel
       for (int i = 0; i < numKernels; i++) {
         //__________________________________
@@ -476,7 +490,7 @@ void Ray::rayTraceDataOnionGPU( DetailedTask* dtask,
                                          fineLevel_ROI_Hi,
                                          (cudaStream_t*)dtask->getCudaStreamForThisTask(i),
                                          RT_flags,
-                                         sharedState->getCurrentTopLevelTimeStep(),
+                                         timeStep,
                                          abskg_gdw,
                                          sigmaT4_gdw,
                                          celltype_gdw,

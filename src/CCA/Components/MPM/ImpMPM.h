@@ -127,7 +127,7 @@ public:
                                     SchedulerP& sched);
 
   virtual bool restartableTimeSteps();
-  virtual double recomputeTimeStep(double new_dt);
+  virtual double recomputeDelT(const double delT);
 
   void scheduleSwitchTest(const LevelP& level, SchedulerP& sched);
   

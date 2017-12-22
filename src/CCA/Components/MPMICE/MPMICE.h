@@ -90,7 +90,7 @@ public:
   
   virtual bool restartableTimeSteps();
 
-  virtual double recomputeTimeStep(double current_dt); 
+  virtual double recomputeDelT(const double delT); 
           
   virtual void problemSetup(const ProblemSpecP& params, 
                             const ProblemSpecP& restart_prob_spec, 

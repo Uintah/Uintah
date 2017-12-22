@@ -3987,9 +3987,9 @@ void ImpMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
   }
 }
 
-double ImpMPM::recomputeTimeStep(double current_dt)
+double ImpMPM::recomputeDelT(const double delT )
 {
-  return current_dt*flags->d_delT_decrease_factor;
+  return delT * flags->d_delT_decrease_factor;
 }
 
 void ImpMPM::initialErrorEstimate(const ProcessorGroup*,

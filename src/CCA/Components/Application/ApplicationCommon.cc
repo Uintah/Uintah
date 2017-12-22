@@ -568,11 +568,24 @@ ApplicationCommon::getSubCycleProgress(DataWarehouse* fineDW)
 
 //______________________________________________________________________
 //
-void
-ApplicationCommon::recomputeTimeStep()
+int
+ApplicationCommon::computeTaskGraphIndex()
 {
-  // Get the new delT
-  double new_delT = recomputeTimeStep(m_delT);
+  // Call the actual application method which if defined overrides the
+  // virtual default method for the index
+  return computeTaskGraphIndex( m_timeStep );
+}
+
+//______________________________________________________________________
+//
+void
+ApplicationCommon::recomputeDelT()
+{
+  // Get the new delT from the actual application.
+
+  // Call the actual application method which if defined overrides the
+  // virtual default method for the delta T
+  double new_delT = recomputeDelT(m_delT);
 
   proc0cout << "Restarting time step at " << m_simTime
             << ", changing delT from " << m_delT
@@ -593,9 +606,9 @@ ApplicationCommon::recomputeTimeStep()
 //______________________________________________________________________
 //
 double
-ApplicationCommon::recomputeTimeStep(double)
+ApplicationCommon::recomputeDelT(const double delT)
 {
-  throw InternalError("recomputeTimestep is not implemented for this application", __FILE__, __LINE__);
+  throw InternalError("recomputeDelT is not implemented for this application", __FILE__, __LINE__);
 }
 
 //______________________________________________________________________
@@ -883,7 +896,7 @@ void ApplicationCommon::setTimeStep( int timeStep )
   m_scheduler->get_dw(1)->override(timeStep_vartype(m_timeStep),
                                    m_timeStepLabel );
   
-  m_sharedState->setCurrentTopLevelTimeStep( timeStep );
+  m_sharedState->setCurrentTopLevelTimeStep( m_timeStep );
 }
 
 //______________________________________________________________________
