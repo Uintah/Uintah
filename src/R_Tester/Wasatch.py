@@ -414,6 +414,12 @@ def getTestList(me) :
   else:
     print "\nERROR:Wasatch.py  getTestList:  The test list (%s) does not exist!\n\n" % me
     exit(1)
+    
+  # Limit the tests run on the nightly gpu_rt.  Brittle  
+  if environ['LOGNAME'] == "gpu_rt" and me == "NIGHTLYTESTS" :
+    print( "\nWARNING: running GPUTESTS not NIGHTLYTESTS\n" )
+    TESTS = GPUTESTS
+      
   return TESTS
 
 
