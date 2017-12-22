@@ -138,8 +138,6 @@ public:
 
   static void printAll(); // for debugging
 
-  std::string m_name{""};
-
   friend std::ostream & operator<<( std::ostream & out, const VarLabel & vl );
 
 
@@ -155,9 +153,11 @@ private:
   // You must use destroy.
   ~VarLabel(){};
 
+          std::string         m_name{""};
   const   TypeDescription   * m_td{nullptr};
           IntVector           m_boundary_layer{IntVector(0,0,0)};
           VarType             m_var_type{Normal};
+
   mutable std::string         m_compression_mode{"default"};
   static  std::string         s_default_compression_mode;
   static  std::string         s_particle_position_name;
