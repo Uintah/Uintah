@@ -232,14 +232,17 @@ IntrusionBC::problemSetup( const ProblemSpecP& params, const int ilvl )
           if ( scalar_type == "flat" ){
 
             scalar_bc = scinew constantScalar();
+            intrusion.scalar_inlet_type = IntrusionBC::FLAT;
 
           }  else if ( scalar_type == "from_file" ){
 
             scalar_bc = scinew scalarFromInput( scalar_label );
+            intrusion.scalar_inlet_type = IntrusionBC::HANDOFF;
 
           } else if ( scalar_type == "tabulated" ){
 
             scalar_bc = scinew tabulatedScalar();
+            intrusion.scalar_inlet_type = IntrusionBC::TABULATED;
 
           } else {
 
@@ -1079,15 +1082,20 @@ IntrusionBC::printIntrusionInformation( const ProcessorGroup*,
         area = area_var;
 
         proc0cout << " Intrusion name/type: " << iter->first << " / Inlet" << std::endl;
-        proc0cout << "           density  = " << iter->second.density << std::endl;
-        proc0cout << "         inlet area = " << area << std::endl << std::endl;
+        proc0cout << "         inlet area = " << area << " (based on cell area)" << std::endl;
+        if ( iter->second.velocity_inlet_type == IntrusionBC::MASSFLOW ){
+          proc0cout << "         density  = " << iter->second.density << std::endl;
+        } else {
+          proc0cout << "   (note: unable to report a single density because it may vary over the face of the inlet)" << std::endl;
 
-        proc0cout << " Active inlet directions (normals): " << std::endl;
+        }
+
+        proc0cout << "   Active inlet directions (normals): " << std::endl;
 
         for (int idir = 0; idir < 6; idir++) {
 
           if (iter->second.directions[idir] != 0) {
-            proc0cout << "   " << _dHelp[idir] << std::endl;
+            proc0cout << "         " << _dHelp[idir] << std::endl;
           }
 
         }
@@ -1104,9 +1112,7 @@ IntrusionBC::printIntrusionInformation( const ProcessorGroup*,
 
       }
 
-      proc0cout << std::endl;
-
-      proc0cout << " Solid T  = " << iter->second.temperature << std::endl;
+      proc0cout << "         Solid T  = " << iter->second.temperature << std::endl;
 
       proc0cout << " \n";
 

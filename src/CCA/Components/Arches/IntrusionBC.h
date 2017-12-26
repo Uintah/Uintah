@@ -871,6 +871,7 @@ namespace Uintah{
         // The name of the intrusion is the key value in the map that stores all intrusions
         INTRUSION_TYPE                type;
         INLET_TYPE                    velocity_inlet_type;
+        INLET_TYPE                    scalar_inlet_type;  
         std::vector<GeometryPieceP>   geometry;
         std::vector<const VarLabel*>  labels;
         std::map<std::string, double> varnames_values_map;
