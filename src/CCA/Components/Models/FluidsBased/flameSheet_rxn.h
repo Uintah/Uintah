@@ -26,7 +26,8 @@
 #ifndef Packages_Uintah_CCA_Components_Examples_flameSheet_rxn_h
 #define Packages_Uintah_CCA_Components_Examples_flameSheet_rxn_h
 
-#include <CCA/Ports/ModelInterface.h>
+#include <CCA/Components/Models/FluidsBased/FluidsBasedModel.h>
+
 #include <Core/GeometryPiece/GeometryPiece.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/CCVariable.h>
@@ -67,7 +68,7 @@ WARNING
   
 ****************************************/
   class ICELabel;
-  class flameSheet_rxn : public ModelInterface {
+  class flameSheet_rxn : public FluidsBasedModel {
   public:
     flameSheet_rxn(const ProcessorGroup* myworld,
 		   const SimulationStateP& sharedState,
@@ -78,7 +79,7 @@ WARNING
     virtual void outputProblemSpec(ProblemSpecP& ps);
     
     virtual void problemSetup(GridP& grid,
-                              ModelSetup* setup, const bool isRestart);
+                               const bool isRestart);
     
     virtual void scheduleInitialize(SchedulerP&,
                                     const LevelP& level);

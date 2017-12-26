@@ -26,7 +26,7 @@
 #ifndef Packages_Uintah_CCA_Components_Examples_NonAdiabaticTable_h
 #define Packages_Uintah_CCA_Components_Examples_NonAdiabaticTable_h
 
-#include <CCA/Ports/ModelInterface.h>
+#include <CCA/Components/Models/FluidsBased/FluidsBasedModel.h>
 
 #include <Core/GeometryPiece/GeometryPiece.h>
 #include <Core/Grid/Variables/ComputeSet.h>
@@ -67,7 +67,7 @@ WARNING
   
 ****************************************/
 
-  class NonAdiabaticTable :public ModelInterface {
+  class NonAdiabaticTable :public FluidsBasedModel {
   public:
     NonAdiabaticTable(const ProcessorGroup* myworld,
 		      const SimulationStateP& sharedState,
@@ -76,7 +76,7 @@ WARNING
     virtual ~NonAdiabaticTable();
     
     virtual void problemSetup(GridP& grid,
-                              ModelSetup* setup, const bool isRestart);
+                               const bool isRestart);
     
     virtual void scheduleInitialize(SchedulerP&,
                                     const LevelP& level);

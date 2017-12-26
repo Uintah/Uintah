@@ -109,7 +109,7 @@ Unsteady_Burn::~Unsteady_Burn(){
 
 //______________________________________________________________________
 //
-void Unsteady_Burn::problemSetup(GridP&, ModelSetup*, const bool isRestart) {
+void Unsteady_Burn::problemSetup(GridP&,  const bool isRestart) {
 
   ProblemSpecP USB_ps = d_params->findBlock("Unsteady_Burn");
   matl0 = m_sharedState->parseAndLookupMaterial(USB_ps, "fromMaterial");

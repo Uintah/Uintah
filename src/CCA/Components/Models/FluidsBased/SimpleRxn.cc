@@ -23,6 +23,7 @@
  */
 
 #include <CCA/Components/Models/FluidsBased/SimpleRxn.h>
+#include <CCA/Components/Models/FluidsBased/FluidsBasedModel.h>
 
 #include <CCA/Components/ICE/Core/ConservationTest.h>
 #include <CCA/Components/ICE/Core/Diffusion.h>
@@ -59,7 +60,7 @@ static DebugStream cout_dbg("SIMPLE_RXN_DBG_COUT", false);
 SimpleRxn::SimpleRxn(const ProcessorGroup* myworld, 
 		     const SimulationStateP & sharedState,
                      const ProblemSpecP& params)
-  : ModelInterface(myworld, sharedState), d_params(params)
+  : FluidsBasedModel(myworld, sharedState), d_params(params)
 {
   m_modelComputesThermoTransportProps = true;
   
@@ -105,7 +106,7 @@ SimpleRxn::Region::Region(GeometryPieceP piece, ProblemSpecP& ps)
 //______________________________________________________________________
 //     P R O B L E M   S E T U P
 void
-SimpleRxn::problemSetup( GridP &, ModelSetup * setup, const bool isRestart )
+SimpleRxn::problemSetup( GridP &, const bool isRestart )
 {
   cout_doing << "Doing problemSetup \t\t\t\tSIMPLE_RXN" << endl;
 
@@ -136,9 +137,10 @@ SimpleRxn::problemSetup( GridP &, ModelSetup * setup, const bool isRestart )
   Slb->sum_scalar_fLabel      =  VarLabel::create("sum_scalar_f", 
                                             sum_vartype::getTypeDescription());
   
-  setup->registerTransportedVariable(d_matl_set,
-                                     d_scalar->scalar_CCLabel,
-                                     d_scalar->scalar_source_CCLabel);  
+  registerTransportedVariable(d_matl_set,
+			      d_scalar->scalar_CCLabel,
+			      d_scalar->scalar_source_CCLabel);  
+
   //__________________________________
   // Read in the constants for the scalar
    ProblemSpecP child = d_params->findBlock("SimpleRxn")->findBlock("scalar");

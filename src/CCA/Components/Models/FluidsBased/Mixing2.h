@@ -26,7 +26,8 @@
 #ifndef Packages_Uintah_CCA_Components_Examples_Mixing2_h
 #define Packages_Uintah_CCA_Components_Examples_Mixing2_h
 
-#include <CCA/Ports/ModelInterface.h>
+#include <CCA/Components/Models/FluidsBased/FluidsBasedModel.h>
+
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <map>
 #include <vector>
@@ -69,7 +70,7 @@ WARNING
   class ICELabel;
 
   class GeometryPiece;
-  class Mixing2 : public ModelInterface {
+  class Mixing2 : public FluidsBasedModel {
   public:
     Mixing2(const ProcessorGroup* myworld,
 	    const SimulationStateP& sharedState,
@@ -79,7 +80,7 @@ WARNING
     
 
     virtual void problemSetup(GridP& grid,
-                              ModelSetup* setup, const bool isRestart);
+                               const bool isRestart);
     
     virtual void scheduleInitialize(SchedulerP&,
                                     const LevelP& level);

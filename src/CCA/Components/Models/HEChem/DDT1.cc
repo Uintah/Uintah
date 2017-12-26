@@ -170,7 +170,7 @@ bool DDT1::isDoubleEqual(double a, double b){
 }
 
 void DDT1::problemSetup(GridP&,
-			ModelSetup*, const bool isRestart)
+			 const bool isRestart)
 {
   ProblemSpecP time_ps = d_prob_spec->findBlock( "Time" );
 

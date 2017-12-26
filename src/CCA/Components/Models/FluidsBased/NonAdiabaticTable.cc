@@ -34,6 +34,7 @@
 #include <CCA/Components/Models/FluidsBased/NonAdiabaticTable.h>
 #include <CCA/Components/Models/FluidsBased/TableFactory.h>
 #include <CCA/Components/Models/FluidsBased/TableInterface.h>
+#include <CCA/Components/Models/FluidsBased/FluidsBasedModel.h>
 
 #include <CCA/Ports/Output.h>
 #include <CCA/Ports/Scheduler.h>
@@ -69,7 +70,7 @@ static DebugStream cout_dbg("ADIABATIC_TABLE_DBG_COUT", false);
 NonAdiabaticTable::NonAdiabaticTable(const ProcessorGroup* myworld, 
 				     const SimulationStateP & sharedState,
 				     const ProblemSpecP& params)
-  : ModelInterface(myworld, sharedState), d_params(params)
+  : FluidsBasedModel(myworld, sharedState), d_params(params)
 {
   m_modelComputesThermoTransportProps = true;
 
@@ -123,8 +124,7 @@ NonAdiabaticTable::Region::Region(GeometryPieceP piece, ProblemSpecP& ps)
 //______________________________________________________________________
 //     P R O B L E M   S E T U P
 void
-NonAdiabaticTable::problemSetup( GridP &,
-                                 ModelSetup * setup , const bool isRestart)
+NonAdiabaticTable::problemSetup( GridP &, const bool isRestart)
 {
   cout_doing << "Doing problemSetup \t\t\t\tADIABATIC_TABLE" << endl;
 
@@ -251,12 +251,14 @@ NonAdiabaticTable::problemSetup( GridP &,
      d_scalar->scalar_src_CCLabel = 0;
 
    // Tell ICE to transport the scalar and the energy
-   setup->registerTransportedVariable(d_matl_set,
-                                      d_scalar->scalar_CCLabel,
-                                      d_scalar->scalar_src_CCLabel);
-   setup->registerTransportedVariable(d_matl_set,
-                                      cumulativeEnergyReleased_CCLabel,
-                                      cumulativeEnergyReleased_src_CCLabel);
+   registerTransportedVariable(d_matl_set,
+			       d_scalar->scalar_CCLabel,
+			       d_scalar->scalar_src_CCLabel);
+
+   registerTransportedVariable(d_matl_set,
+			       cumulativeEnergyReleased_CCLabel,
+			       cumulativeEnergyReleased_src_CCLabel);
+
   //__________________________________
   //  Read in the geometry objects for the scalar
   if( !isRestart ){

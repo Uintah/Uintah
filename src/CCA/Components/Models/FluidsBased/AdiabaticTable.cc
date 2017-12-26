@@ -32,6 +32,7 @@
 #include <CCA/Components/ICE/Core/Diffusion.h>
 #include <CCA/Components/ICE/CustomBCs/BoundaryCond.h>
 #include <CCA/Components/ICE/Materials/ICEMaterial.h>
+#include <CCA/Components/Models/FluidsBased/FluidsBasedModel.h>
 #include <CCA/Components/Models/FluidsBased/AdiabaticTable.h>
 #include <CCA/Components/Models/FluidsBased/TableFactory.h>
 #include <CCA/Components/Models/FluidsBased/TableInterface.h>
@@ -76,7 +77,7 @@ static DebugStream cout_dbg("ADIABATIC_TABLE_DBG_COUT", false);
 AdiabaticTable::AdiabaticTable(const ProcessorGroup* myworld, 
 			       const SimulationStateP& sharedState,
 			       const ProblemSpecP& params)
-  : ModelInterface(myworld, sharedState), d_params(params)
+  : FluidsBasedModel(myworld, sharedState), d_params(params)
 {
   m_modelComputesThermoTransportProps = true;
   
@@ -191,7 +192,7 @@ void AdiabaticTable::outputProblemSpec(ProblemSpecP& ps)
 //______________________________________________________________________
 //     P R O B L E M   S E T U P
 void AdiabaticTable::problemSetup(GridP&,
-                                  ModelSetup* setup, const bool isRestart)
+                                   const bool isRestart)
 {
   cout_doing << "Doing problemSetup \t\t\t\tADIABATIC_TABLE" << endl;
 
@@ -290,22 +291,21 @@ void AdiabaticTable::problemSetup(GridP&,
 
   //__________________________________
   //  register transport variables scalar and the energy
-  setup->registerTransportedVariable(d_matl_set,
-                                     d_scalar->scalar_CCLabel,
-                                     d_scalar->scalar_src_CCLabel);
-  setup->registerTransportedVariable(d_matl_set,
-                                     cumulativeEnergyReleased_CCLabel,
-                                     cumulativeEnergyReleased_src_CCLabel);
+  registerTransportedVariable(d_matl_set,
+			      d_scalar->scalar_CCLabel,
+			      d_scalar->scalar_src_CCLabel);
+
+  registerTransportedVariable(d_matl_set,
+			      cumulativeEnergyReleased_CCLabel,
+			      cumulativeEnergyReleased_src_CCLabel);
 
   //__________________________________
   //  register the AMRrefluxing variables                               
   if(m_AMR){
-   setup->registerAMR_RefluxVariable(d_matl_set,
-                                     d_scalar->scalar_CCLabel);
-
-   setup->registerAMR_RefluxVariable(d_matl_set,
-                                     cumulativeEnergyReleased_CCLabel);
+   registerAMRRefluxVariable(d_matl_set, d_scalar->scalar_CCLabel);
+   registerAMRRefluxVariable(d_matl_set, cumulativeEnergyReleased_CCLabel);
   }
+  
   //__________________________________
   //  Read in the geometry objects for the scalar
   if(!isRestart){

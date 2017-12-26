@@ -107,7 +107,7 @@ Steady_Burn::~Steady_Burn(){
 
 //______________________________________________________________________
 void Steady_Burn::problemSetup(GridP&,
-			       ModelSetup*, const bool isRestart) {
+			        const bool isRestart) {
   ProblemSpecP SB_ps = d_params->findBlock("Steady_Burn");
   matl0 = m_sharedState->parseAndLookupMaterial(SB_ps, "fromMaterial");
   matl1 = m_sharedState->parseAndLookupMaterial(SB_ps, "toMaterial");  

@@ -135,7 +135,7 @@ MesoBurn::~MesoBurn(){
 
 //______________________________________________________________________
 void MesoBurn::problemSetup(GridP&, 
-                            ModelSetup*, const bool isRestart){
+                             const bool isRestart){
   matl0 = m_sharedState->parseAndLookupMaterial(d_params, "fromMaterial");
   matl1 = m_sharedState->parseAndLookupMaterial(d_params, "toMaterial");  
   

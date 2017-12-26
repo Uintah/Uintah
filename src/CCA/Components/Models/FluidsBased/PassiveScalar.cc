@@ -27,6 +27,7 @@
 #include <CCA/Components/ICE/Core/Diffusion.h>
 #include <CCA/Components/ICE/CustomBCs/BoundaryCond.h>
 #include <CCA/Components/Models/FluidsBased/PassiveScalar.h>
+#include <CCA/Components/Models/FluidsBased/FluidsBasedModel.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/Regridder.h>
@@ -59,7 +60,7 @@ static DebugStream cout_dbg("PASSIVE_SCALAR_DBG_COUT", false);
 PassiveScalar::PassiveScalar(const ProcessorGroup* myworld, 
 			     const SimulationStateP& sharedState,
                              const ProblemSpecP& params)
-  : ModelInterface(myworld, sharedState), d_params(params)
+  : FluidsBasedModel(myworld, sharedState), d_params(params)
 {
   m_modelComputesThermoTransportProps = true;
   
@@ -145,8 +146,7 @@ PassiveScalar::interiorRegion::interiorRegion(GeometryPieceP piece, ProblemSpecP
 
 //______________________________________________________________________
 //     P R O B L E M   S E T U P
-void PassiveScalar::problemSetup(GridP&,
-				 ModelSetup* setup, const bool isRestart)
+void PassiveScalar::problemSetup(GridP&, const bool isRestart)
 {
   cout_doing << "Doing problemSetup \t\t\t\tPASSIVE_SCALAR" << endl;
 
@@ -177,15 +177,14 @@ void PassiveScalar::problemSetup(GridP&,
   
   Slb->sum_scalar_fLabel      =     VarLabel::create("sum_scalar_f",    sum_vartype::getTypeDescription());
   
-  setup->registerTransportedVariable(d_matl_set,
-                                     d_scalar->scalar_CCLabel,
-                                     d_scalar->scalar_source_CCLabel);  
+  registerTransportedVariable(d_matl_set,
+			      d_scalar->scalar_CCLabel,
+			      d_scalar->scalar_source_CCLabel);  
 
   //__________________________________
   //  register the AMRrefluxing variables                               
   if(m_AMR){
-    setup->registerAMR_RefluxVariable(d_matl_set,
-                                      d_scalar->scalar_CCLabel);
+    registerAMRRefluxVariable(d_matl_set, d_scalar->scalar_CCLabel);
   }
   //__________________________________
   // Read in the constants for the scalar

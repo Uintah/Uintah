@@ -99,7 +99,7 @@ namespace Uintah {
   class AnalysisModule;
 
   class MPMICELabel;
-  
+
   // The following two structs are used by computeEquilibrationPressure to store debug information:
     //
     struct  EqPress_dbgMatl{
@@ -1047,45 +1047,6 @@ namespace Uintah {
       //______________________________________________________________________
       //        models
       std::vector<ModelInterface*> d_models;
-
-      struct TransportedVariable {
-       const MaterialSubset* matls;
-       const MaterialSet* matlSet;
-       const VarLabel* var;
-       const VarLabel* src;
-       const VarLabel* var_Lagrangian;
-       const VarLabel* var_adv;
-      };
-      
-      struct AMR_refluxVariable {
-       const MaterialSubset* matls;
-       const MaterialSet* matlSet;
-       const VarLabel* var;
-       const VarLabel* var_adv;
-       const VarLabel* var_X_FC_flux;
-       const VarLabel* var_Y_FC_flux;
-       const VarLabel* var_Z_FC_flux;
-
-       const VarLabel* var_X_FC_corr;
-       const VarLabel* var_Y_FC_corr;
-       const VarLabel* var_Z_FC_corr;
-      };
-
-      class ICEModelSetup : public ModelSetup {
-      public:
-       ICEModelSetup();
-       virtual ~ICEModelSetup();
-       virtual void registerTransportedVariable(const MaterialSet* matlSet,
-                                           const VarLabel* var,
-                                           const VarLabel* src);
-
-       virtual void registerAMR_RefluxVariable(const MaterialSet* matls,
-						     const VarLabel* var);
-
-       std::vector<TransportedVariable*> tvars;
-       std::vector<AMR_refluxVariable*> d_reflux_vars;
-      };
-      ICEModelSetup* d_modelSetup;
 
       //______________________________________________________________________
       //      FUNCTIONS

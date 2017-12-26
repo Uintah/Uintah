@@ -26,11 +26,12 @@
 #ifndef Packages_Uintah_CCA_Components_Examples_Mixing_h
 #define Packages_Uintah_CCA_Components_Examples_Mixing_h
 
+#include <CCA/Components/Models/FluidsBased/FluidsBasedModel.h>
+#include <CCA/Components/Models/FluidsBased/MaterialProperties.h>
+
 #include <Core/GeometryPiece/GeometryPiece.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 
-#include <CCA/Ports/ModelInterface.h>
-#include <CCA/Components/Models/FluidsBased/MaterialProperties.h>
 
 namespace Uintah {
 
@@ -64,7 +65,7 @@ WARNING
 
   class ICELabel;
 
-  class Mixing : public ModelInterface {
+  class Mixing : public FluidsBasedModel {
   public:
     Mixing(const ProcessorGroup* myworld,
 	   const SimulationStateP& sharedState,
@@ -75,7 +76,7 @@ WARNING
     virtual void outputProblemSpec(ProblemSpecP& ps);
     
     virtual void problemSetup(GridP& grid,
-                              ModelSetup* setup, const bool isRestart);
+                               const bool isRestart);
     
     virtual void scheduleInitialize(SchedulerP&,
                                     const LevelP& level);

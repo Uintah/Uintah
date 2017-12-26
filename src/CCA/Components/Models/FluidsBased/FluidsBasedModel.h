@@ -22,11 +22,10 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_HOMEBREW_ModelInterface_H
-#define UINTAH_HOMEBREW_ModelInterface_H
+#ifndef UINTAH_HOMEBREW_FluidsBasedModel_H
+#define UINTAH_HOMEBREW_FluidsBasedModel_H
 
-#include <Core/Parallel/UintahParallelComponent.h>
-
+#include <CCA/Ports/ModelInterface.h>
 #include <CCA/Ports/SchedulerP.h>
 
 #include <Core/Grid/Variables/CCVariable.h>
@@ -37,16 +36,17 @@
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
+
 /**************************************
 
 CLASS
-   ModelInterface
+   FluidsBasedModel
    
    Short description...
 
 GENERAL INFORMATION
 
-   ModelInterface.h
+   FluidsBasedModel.h
 
    Steven G. Parker
    Department of Computer Science
@@ -75,39 +75,57 @@ namespace Uintah {
   class Material;
   class ProcessorGroup;
   class VarLabel;
+
+
+  struct TransportedVariable {
+    const MaterialSubset* matls;
+    const MaterialSet* matlSet;
+    const VarLabel* var;
+    const VarLabel* src;
+    const VarLabel* var_Lagrangian;
+    const VarLabel* var_adv;
+  };
+      
+  struct AMRRefluxVariable {
+    const MaterialSubset* matls;
+    const MaterialSet* matlSet;
+    const VarLabel* var;
+    const VarLabel* var_adv;
+    const VarLabel* var_X_FC_flux;
+    const VarLabel* var_Y_FC_flux;
+    const VarLabel* var_Z_FC_flux;
+
+    const VarLabel* var_X_FC_corr;
+    const VarLabel* var_Y_FC_corr;
+    const VarLabel* var_Z_FC_corr;
+  };
   
   //________________________________________________
-  class ModelInterface : public UintahParallelComponent {
+  class FluidsBasedModel : public ModelInterface {
   public:
-    ModelInterface(const ProcessorGroup* myworld,
-		   const SimulationStateP sharedState);
+    FluidsBasedModel(const ProcessorGroup* myworld,
+  		const SimulationStateP sharedState);
 
-    virtual ~ModelInterface();
+    virtual ~FluidsBasedModel();
 
-    // Methods for managing the components attached via the ports.
-    virtual void setComponents( UintahParallelComponent *comp ) {};
-    virtual void setComponents( ApplicationInterface *comp );
-    virtual void getComponents();
-    virtual void releaseComponents();
-      
-    virtual void problemSetup(GridP& grid, const bool isRestart) = 0;
+    virtual void problemSetup(GridP& grid,
+  			       const bool isRestart) = 0;
       
     virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
 
     virtual void scheduleInitialize(SchedulerP& scheduler,
-				    const LevelP& level) = 0;
+  				    const LevelP& level) = 0;
 
-    virtual void restartInitialize() {}
       
     virtual void scheduleComputeStableTimeStep(SchedulerP& scheduler,
-					       const LevelP& level) = 0;
+  					       const LevelP& level) = 0;
       
     virtual void scheduleComputeModelSources(SchedulerP& scheduler,
-					     const LevelP& level) = 0;
+  					     const LevelP& level) = 0;
                                               
     virtual void scheduleModifyThermoTransportProperties(SchedulerP& scheduler,
-							 const LevelP& level,
-							 const MaterialSet*) = 0;
+  							 const LevelP& level,
+  							 const MaterialSet*) = 0;
                                                 
     virtual void computeSpecificHeat(CCVariable<double>&,
                                      const Patch* patch,
@@ -118,39 +136,26 @@ namespace Uintah {
                                        SchedulerP& sched) = 0;
                                                
     virtual void scheduleTestConservation(SchedulerP&,
-					  const PatchSet* patches) = 0;
-                                           
-    virtual void scheduleRefine(const PatchSet* patches,
-				SchedulerP& sched) {};
+  					  const PatchSet* patches) = 0;
 
-    virtual void setAMR(bool val) { m_AMR = val; }
-    virtual bool isAMR() const { return m_AMR; }
-  
-    virtual void setDynamicRegridding(bool val) {m_dynamicRegridding = val; }
-    virtual bool isDynamicRegridding() const { return m_dynamicRegridding; }
+    // Method specific to FluidsBasedModels
+    virtual void registerTransportedVariable(const MaterialSet* matlSet,
+  					     const VarLabel* var,
+  					     const VarLabel* src);
+                                        
+    virtual void registerAMRRefluxVariable(const MaterialSet* matlSet,
+  					   const VarLabel* var);
 
-    virtual bool adjustOutputInterval()     const { return false; };
-    virtual bool adjustCheckpointInterval() const { return false; };
+    virtual std::vector<TransportedVariable*> getTransportedVars() {return d_trans_vars; }
+    virtual std::vector<AMRRefluxVariable*> getAMRRefluxVars() { return d_reflux_vars; }
 
-    virtual bool mayEndSimulation()         const { return false; };
-          
-    virtual bool computesThermoTransportProps() const
-    { return m_modelComputesThermoTransportProps; }
-
-  protected:
-    Scheduler * m_scheduler {nullptr};
-    Regridder * m_regridder {nullptr};
-    Output    * m_output    {nullptr};
-   
-    SimulationStateP m_sharedState {nullptr};
-    
-    bool m_AMR {false};
-    bool m_dynamicRegridding {false};
-    bool m_modelComputesThermoTransportProps {false};
+  // protected:
+    std::vector<TransportedVariable*> d_trans_vars;
+    std::vector<AMRRefluxVariable*> d_reflux_vars;
 
   private:     
-    ModelInterface(const ModelInterface&);
-    ModelInterface& operator=(const ModelInterface&);
+    FluidsBasedModel(const FluidsBasedModel&);
+    FluidsBasedModel& operator=(const FluidsBasedModel&);
   };
 } // End namespace Uintah
    

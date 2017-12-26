@@ -26,7 +26,8 @@
 #ifndef Packages_Uintah_CCA_Components_Examples_PassiveScalar_h
 #define Packages_Uintah_CCA_Components_Examples_PassiveScalar_h
 
-#include <CCA/Ports/ModelInterface.h>
+#include <CCA/Components/Models/FluidsBased/FluidsBasedModel.h>
+
 #include <Core/GeometryPiece/GeometryPiece.h>
 #include <Core/Grid/Variables/VarTypes.h>
 
@@ -63,7 +64,7 @@ WARNING
   
 ****************************************/
   class ICELabel;
-  class PassiveScalar :public ModelInterface {
+  class PassiveScalar :public FluidsBasedModel {
   public:
     PassiveScalar(const ProcessorGroup* myworld, 
 		  const SimulationStateP& sharedState,
@@ -74,7 +75,7 @@ WARNING
     virtual void outputProblemSpec(ProblemSpecP& ps);
     
     virtual void problemSetup(GridP& grid,
-                              ModelSetup* setup, const bool isRestart);
+                               const bool isRestart);
     
     virtual void scheduleInitialize(SchedulerP&,
                                     const LevelP& level);

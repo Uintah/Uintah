@@ -108,7 +108,7 @@ void LightTime::outputProblemSpec(ProblemSpecP& ps)
 }
 //__________________________________
 void LightTime::problemSetup(GridP&, 
-                             ModelSetup*, const bool isRestart)
+                              const bool isRestart)
 {
   ProblemSpecP lt_ps = d_params->findBlock("LightTime");
   if (!lt_ps){

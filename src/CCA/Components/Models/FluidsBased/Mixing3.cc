@@ -61,7 +61,7 @@ using namespace std;
 Mixing3::Mixing3(const ProcessorGroup* myworld,
 		 const SimulationStateP& sharedState,
 		 const ProblemSpecP& params)
-  : ModelInterface(myworld, sharedState), d_params(params)
+  : FluidsBasedModel(myworld, sharedState), d_params(params)
 {
   Ilb = scinew ICELabel();
 
@@ -104,7 +104,7 @@ Mixing3::Region::Region(GeometryPiece* piece, ProblemSpecP& ps)
 }
 
 void Mixing3::problemSetup(GridP&, SimulationStateP& in_state,
-                           ModelSetup* setup, const bool isRestart)
+                            const bool isRestart)
 {
   sharedState = in_state;
   matl = sharedState->parseAndLookupMaterial(params, "material");
@@ -140,9 +140,10 @@ void Mixing3::problemSetup(GridP&, SimulationStateP& in_state,
       string mfsname = "massFractionSource-"+stream->name;
       stream->massFraction_source_CCLabel = VarLabel::create(mfsname, CCVariable<double>::getTypeDescription());
       
-      setup->registerTransportedVariable(mymatls,
-                                         stream->massFraction_CCLabel,
-                                         stream->massFraction_source_CCLabel);
+      registerTransportedVariable(mymatls,
+				  stream->massFraction_CCLabel,
+				  stream->massFraction_source_CCLabel);
+      
       streams.push_back(stream);
       names[stream->name] = stream;
     }

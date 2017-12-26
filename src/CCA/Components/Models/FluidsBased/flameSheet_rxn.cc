@@ -23,6 +23,7 @@
  */
 
 #include <CCA/Components/Models/FluidsBased/flameSheet_rxn.h>
+#include <CCA/Components/Models/FluidsBased/FluidsBasedModel.h>
 
 #include <CCA/Components/ICE/Core/ConservationTest.h>
 #include <CCA/Components/ICE/Core/Diffusion.h>
@@ -65,7 +66,7 @@ static DebugStream cout_doing("MODELS_DOING_COUT", false);
 flameSheet_rxn::flameSheet_rxn(const ProcessorGroup* myworld, 
 			       const SimulationStateP& sharedState,
                                const ProblemSpecP& params)
-  : ModelInterface(myworld, sharedState), d_params(params)
+  : FluidsBasedModel(myworld, sharedState), d_params(params)
 {
   d_matl_set = 0;
   Ilb = scinew ICELabel();
@@ -97,8 +98,7 @@ flameSheet_rxn::Region::Region(GeometryPieceP piece, ProblemSpecP& ps)
 }
 //______________________________________________________________________
 //    Problem Setup
-void flameSheet_rxn::problemSetup(GridP&,
-                                  ModelSetup* setup, const bool isRestart)
+void flameSheet_rxn::problemSetup(GridP&, const bool isRestart)
 {
   cout_doing << "Doing problemSetup \t\t\t\tFLAMESHEET" << endl;
 
@@ -127,11 +127,9 @@ void flameSheet_rxn::problemSetup(GridP&,
   d_scalar->sum_scalar_fLabel     =  VarLabel::create("sum_scalar_f", 
                                             sum_vartype::getTypeDescription());
                                             
-  setup->registerTransportedVariable(d_matl_set,
-                                    d_scalar->scalar_CCLabel,
-                                    d_scalar->scalar_source_CCLabel);
-
- 
+  registerTransportedVariable(d_matl_set,
+			      d_scalar->scalar_CCLabel,
+			      d_scalar->scalar_source_CCLabel);
 
   //__________________________________
   // Read in the constants for the scalar 

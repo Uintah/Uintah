@@ -37,6 +37,7 @@ ifneq ($(CANTERA_DIR),)
 endif
 
 SRCS += \
+       $(SRCDIR)/FluidsBasedModel.cc \
        $(SRCDIR)/ArchesTable.cc    \
        $(SRCDIR)/TableInterface.cc \
        $(SRCDIR)/TableFactory.cc 

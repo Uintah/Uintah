@@ -39,7 +39,7 @@ using namespace std;
 MassMomEng_src::MassMomEng_src(const ProcessorGroup* myworld,
 			       const SimulationStateP& sharedState,
 			       const ProblemSpecP& params)
-  : ModelInterface(myworld, sharedState), d_params(params)
+  : FluidsBasedModel(myworld, sharedState), d_params(params)
 {
   mymatls = 0;
   Ilb = scinew ICELabel();
@@ -68,8 +68,7 @@ MassMomEng_src::~MassMomEng_src()
 }
 
 //______________________________________________________________________
-void MassMomEng_src::problemSetup(GridP&,
-                                  ModelSetup*, const bool isRestart )
+void MassMomEng_src::problemSetup(GridP&, const bool isRestart )
 {
   ProblemSpecP src_ps = d_params->findBlock("MassMomEng_src");
   d_matl = m_sharedState->parseAndLookupMaterial(src_ps, "material");

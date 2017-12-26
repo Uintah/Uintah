@@ -24,6 +24,8 @@
 
 
 #include <CCA/Components/Models/FluidsBased/Mixing.h>
+#include <CCA/Components/Models/FluidsBased/FluidsBasedModel.h>
+
 #include <CCA/Components/ICE/Core/ICELabel.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -44,7 +46,7 @@ using namespace std;
 Mixing::Mixing(const ProcessorGroup* myworld,
 	       const SimulationStateP& sharedState,
 	       const ProblemSpecP& params)
-  : ModelInterface(myworld, sharedState), d_params(params)
+  : FluidsBasedModel(myworld, sharedState), d_params(params)
 {
   Ilb = scinew ICELabel();
 
@@ -108,7 +110,7 @@ void Mixing::outputProblemSpec(ProblemSpecP& ps)
 }
 
 void Mixing::problemSetup(GridP&,
-                          ModelSetup* setup, const bool isRestart)
+                           const bool isRestart)
 {
   matl = m_sharedState->parseAndLookupMaterial(d_params, "material");
 
@@ -149,12 +151,12 @@ void Mixing::problemSetup(GridP&,
       count++;
     }
     if(count == 0)
-      throw ProblemSetupException("Variable: "+stream->name+" does not have any initial value regions",
-                                  __FILE__, __LINE__);
+      throw ProblemSetupException("Variable: "+stream->name+" does not have any initial value regions", __FILE__, __LINE__);
 
-    setup->registerTransportedVariable(mymatls,
-                                       stream->massFraction_CCLabel,
-                                       stream->massFraction_source_CCLabel);
+    registerTransportedVariable(mymatls,
+				stream->massFraction_CCLabel,
+				stream->massFraction_source_CCLabel);
+
     streams.push_back(stream);
   }
   if(streams.size() == 0)

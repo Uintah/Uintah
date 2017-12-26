@@ -132,7 +132,7 @@ DDT0::~DDT0()
 }
 //______________________________________________________________________
 //
-void DDT0::problemSetup(GridP&, ModelSetup*, const bool isRestart)
+void DDT0::problemSetup(GridP&,  const bool isRestart)
 {
   ProblemSpecP ddt_ps = d_params->findBlock("DDT0");
   

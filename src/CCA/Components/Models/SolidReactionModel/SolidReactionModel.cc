@@ -117,7 +117,7 @@ void SolidReactionModel::outputProblemSpec(ProblemSpecP& ps)
 }
 
 void SolidReactionModel::problemSetup(GridP& grid,
-                                      ModelSetup* setup, const bool isRestart)
+                                       const bool isRestart)
 {  
     // Get base includes
     d_params->require("fromMaterial",fromMaterial);

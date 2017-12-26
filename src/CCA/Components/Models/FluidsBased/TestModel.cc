@@ -48,7 +48,7 @@ TestModel::TestModel(const ProcessorGroup* myworld,
 		     const SimulationStateP& sharedState,
 		     const ProblemSpecP& params)
   
-  : ModelInterface(myworld, sharedState), d_params(params)
+  : FluidsBasedModel(myworld, sharedState), d_params(params)
 {
   mymatls = 0;
   Ilb = scinew ICELabel();
@@ -74,7 +74,7 @@ TestModel::~TestModel()
 
 
 //______________________________________________________________________
-void TestModel::problemSetup(GridP&, ModelSetup*, const bool isRestart )
+void TestModel::problemSetup(GridP&,  const bool isRestart )
 {
   ProblemSpecP test_ps = d_params->findBlock("Test");
   if (!test_ps){
