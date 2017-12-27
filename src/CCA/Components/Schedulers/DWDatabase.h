@@ -105,6 +105,8 @@ public:
 
   void merge( const KeyDatabase<DomainType>& newDB );
 
+  void print( std::ostream & out, int rank ) const;
+
 private:
 
   using keyDBtype = hashmap<VarLabelMatl<DomainType>, int>;
@@ -483,6 +485,24 @@ KeyDatabase<DomainType>::clear()
 {
   m_keys.clear();
   m_key_count = 0;
+}
+
+//______________________________________________________________________
+//
+template<class DomainType>
+void
+KeyDatabase<DomainType>::print( std::ostream & out, int rank ) const
+{
+  for (auto keyiter = m_keys.begin(); keyiter != m_keys.end(); keyiter++) {
+    const VarLabelMatl<DomainType>& vlm = keyiter->first;
+    const DomainType* dom = vlm.domain_;
+    if (dom) {
+      out << rank << " Name: " << vlm.label_->getName() << "  domain: " << *dom << "  matl:" << vlm.matlIndex_ << '\n';
+    }
+    else {
+      out << rank << " Name: " << vlm.label_->getName() << "  domain: N/A  matl: " << vlm.matlIndex_ << '\n';
+    }
+  }
 }
 
 //______________________________________________________________________
