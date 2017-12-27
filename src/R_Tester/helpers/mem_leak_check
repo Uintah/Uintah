@@ -109,7 +109,7 @@ returnCode=0
 if [ $percent -gt "10" -a $abs -gt "1000000" ]; then
   echo "***Highwater memory usage test failed"
   echo " -- memory usage increased by %$percent ($abs bytes)" > $TMPDIR/highwater_shortmessage.txt
-  returnCode= 2
+  returnCode=2
 
 elif [ $percent -gt "0" ]; then
   echo " -- memory usage increased by %$percent ($abs bytes)" > $TMPDIR/highwater_shortmessage.txt
