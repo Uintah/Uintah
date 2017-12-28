@@ -343,8 +343,9 @@ Task::requires( WhichDW                dw
               )
 {
   TypeDescription::Type vartype = var->typeDescription()->getType();
+
   if (vartype == TypeDescription::SoleVariable) {
-    requires(dw, var, (const Level*)0, matls);
+    requires(dw, var, (const Level*) nullptr, matls);
   }
   else if (vartype == TypeDescription::PerPatch) {
     requires(dw, var, patches, ThisLevel, matls, NormalDomain, Ghost::None, 0);
@@ -364,18 +365,18 @@ Task::requires(       WhichDW          dw
               )
 {
   TypeDescription::Type vartype = var->typeDescription()->getType();
-  if(!(vartype == TypeDescription::PerPatch
-       || vartype == TypeDescription::ReductionVariable
-       || vartype == TypeDescription::SoleVariable)) {
-    SCI_THROW(InternalError("Requires should specify ghost type for this variable", __FILE__, __LINE__));
-  }
   
   if(vartype == TypeDescription::ReductionVariable) {
-    requires(dw, var, (const Level*)0, matls, NormalDomain, oldTG);
-  } else if(vartype == TypeDescription::SoleVariable) {
-    requires(dw, var, (const Level*)0, matls);
-  } else {
+    requires(dw, var, (const Level*) nullptr, matls, NormalDomain, oldTG);
+  }
+  else if(vartype == TypeDescription::SoleVariable) {
+    requires(dw, var, (const Level*) nullptr, matls);
+  }
+  else if(vartype == TypeDescription::PerPatch) {
     requires(dw, var, nullptr, ThisLevel, matls, NormalDomain, Ghost::None, 0, oldTG);
+  }
+  else {
+    SCI_THROW(InternalError("Requires should specify ghost type for this variable", __FILE__, __LINE__));
   }
 }
 
@@ -390,35 +391,39 @@ void Task::requires(       WhichDW              dw
                    )
 {
   TypeDescription::Type vartype = var->typeDescription()->getType();
-  if (!(vartype == TypeDescription::ReductionVariable || vartype == TypeDescription::SoleVariable)) {
+
+  if (vartype == TypeDescription::ReductionVariable ||
+      vartype == TypeDescription::SoleVariable) {
+
+    if (matls == nullptr) {
+      // default material for a reduction variable is the global material (-1)
+      matls = getGlobalMatlSubset();
+      matls_dom = OutOfDomain;
+    }
+    else if (matls->size() == 0) {
+      return;  // no materials, no dependency
+    }
+    
+    Dependency* dep = scinew Dependency(Requires, this, dw, var, oldTG, level, matls, matls_dom);
+    dep->m_next = nullptr;
+    
+    if (m_req_tail) {
+      m_req_tail->m_next = dep;
+    }
+    else {
+      m_req_head = dep;
+    }
+    m_req_tail = dep;
+    
+    if (dw == OldDW) {
+      m_requires_old_dw.insert(std::make_pair(var, dep));
+    }
+    else {
+      m_requires.insert(std::make_pair(var, dep));
+    }
+  }
+  else {
     SCI_THROW(InternalError("Requires should specify ghost type for this variable", __FILE__, __LINE__));
-  }
-
-  if (matls == nullptr) {
-    // default material for a reduction variable is the global material (-1)
-    matls = getGlobalMatlSubset();
-    matls_dom = OutOfDomain;
-  }
-  else if (matls->size() == 0) {
-    return;  // no materials, no dependency
-  }
-
-  Dependency* dep = scinew Dependency(Requires, this, dw, var, oldTG, level, matls, matls_dom);
-  dep->m_next = nullptr;
-
-  if (m_req_tail) {
-    m_req_tail->m_next = dep;
-  }
-  else {
-    m_req_head = dep;
-  }
-  m_req_tail = dep;
-
-  if (dw == OldDW) {
-    m_requires_old_dw.insert(std::make_pair(var, dep));
-  }
-  else {
-    m_requires.insert(std::make_pair(var, dep));
   }
 }
 
@@ -462,8 +467,10 @@ void Task::computes( const VarLabel       * var
                    )
 {
   TypeDescription::Type vartype = var->typeDescription()->getType();
-  if (vartype == TypeDescription::ReductionVariable || vartype == TypeDescription::SoleVariable) {
-    computes(var, (const Level*)nullptr, matls);
+
+  if (vartype == TypeDescription::ReductionVariable ||
+      vartype == TypeDescription::SoleVariable) {
+    computes(var, (const Level*) nullptr, matls);
   }
   else {
     computes(var, patches, ThisLevel, matls, NormalDomain);
@@ -507,31 +514,35 @@ void Task::computes( const VarLabel           * var
                    )
 {
   TypeDescription::Type vartype = var->typeDescription()->getType();
-  if (!(vartype == TypeDescription::ReductionVariable || vartype == TypeDescription::SoleVariable)) {
-    SCI_THROW(InternalError("Computes should only be used for reduction variable", __FILE__, __LINE__));
-  }
 
-  if (matls == nullptr) {
-    // default material for a reduction variable is the global material (-1)
-    matls = getGlobalMatlSubset();
-    matls_dom = OutOfDomain;
-  }
-  else if (matls->size() == 0) {
-    throw InternalError("Computes of an empty material set!", __FILE__, __LINE__);
-  }
+  if ( vartype == TypeDescription::ReductionVariable ||
+       vartype == TypeDescription::SoleVariable) {
 
-  Dependency* dep = scinew Dependency(Computes, this, NewDW, var, false, level, matls, matls_dom);
-  dep->m_next = nullptr;
+    if (matls == nullptr) {
+      // default material for a reduction variable is the global material (-1)
+      matls = getGlobalMatlSubset();
+      matls_dom = OutOfDomain;
+    }
+    else if (matls->size() == 0) {
+      throw InternalError("Computes of an empty material set!", __FILE__, __LINE__);
+    }
 
-  if (m_comp_tail) {
-    m_comp_tail->m_next = dep;
+    Dependency* dep = scinew Dependency(Computes, this, NewDW, var, false, level, matls, matls_dom);
+    dep->m_next = nullptr;
+
+    if (m_comp_tail) {
+      m_comp_tail->m_next = dep;
+    }
+    else {
+      m_comp_head = dep;
+    }
+    m_comp_tail = dep;
+
+    m_computes.insert(std::make_pair(var, dep));
   }
   else {
-    m_comp_head = dep;
+    SCI_THROW(InternalError("Computes should only be used for reduction variable", __FILE__, __LINE__));
   }
-  m_comp_tail = dep;
-
-  m_computes.insert(std::make_pair(var, dep));
 }
 
 //______________________________________________________________________
