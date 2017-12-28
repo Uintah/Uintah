@@ -38,6 +38,10 @@ namespace Uintah {
       MPMLabel();
       ~MPMLabel();
 
+      const VarLabel* timeStepLabel;
+      const VarLabel* simulationTimeLabel;
+      const VarLabel* delTLabel;
+      
       // Label containing subclasses.
       MPMDiffusionLabel* diffusion;
 
@@ -45,7 +49,6 @@ namespace Uintah {
       //   for the final particle update.
       const VarLabel* fAllParticlesUpdated;
 
-      const VarLabel* delTLabel;
       const VarLabel* doMechLabel;
 
       const VarLabel* partCountLabel;

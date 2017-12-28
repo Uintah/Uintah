@@ -31,7 +31,6 @@
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/PerPatch.h>
-#include <Core/Grid/Variables/SoleVariable.h>
 #include <Core/Malloc/Allocator.h>
 #include <iostream>
 using namespace Uintah;
@@ -39,6 +38,21 @@ using namespace std;
 
 MPMLabel::MPMLabel()
 {
+
+  // Time Step
+  timeStepLabel =
+    VarLabel::create(timeStep_name, timeStep_vartype::getTypeDescription() );
+
+  // Simulation Time
+  simulationTimeLabel =
+    VarLabel::create(simTime_name, simTime_vartype::getTypeDescription() );
+
+  // delta t
+  VarLabel* nonconstDelt =
+    VarLabel::create(delT_name, delt_vartype::getTypeDescription() );
+  nonconstDelt->allowMultipleComputes();
+  delTLabel = nonconstDelt;
+
 
   diffusion = scinew MPMDiffusionLabel();
 
@@ -519,8 +533,6 @@ MPMLabel::MPMLabel()
   // Reduction variables
   partCountLabel = VarLabel::create("particleCount",
 				   sumlong_vartype::getTypeDescription());
-
-  delTLabel = VarLabel::create( "delT", delt_vartype::getTypeDescription() );
 
   StrainEnergyLabel = VarLabel::create( "StrainEnergy",
 			sum_vartype::getTypeDescription() );
