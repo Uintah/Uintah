@@ -394,9 +394,9 @@ ApplicationCommon::scheduleInitializeSystemVars( const GridP      & grid,
   task->computes(m_simulationTimeLabel);
 
   scheduler->overrideVariableBehavior(m_timeStepLabel->getName(),
-                                      false, false, true, false, true);
+                                      false, false, false, true, true);
   scheduler->overrideVariableBehavior(m_simulationTimeLabel->getName(),
-                                      false, false, true, false, true);
+                                      false, false, false, true, true);
   // treatAsOld copyData noScrub notCopyData noCheckpoint
 
   // std::cerr << __FUNCTION__ << "  "
@@ -452,9 +452,9 @@ ApplicationCommon::scheduleUpdateSystemVars(const GridP& grid,
   task->computes(m_simulationTimeLabel);
 
   scheduler->overrideVariableBehavior(m_timeStepLabel->getName(),
-                                      false, false, true, false, true);
+                                      false, false, false, true, true);
   scheduler->overrideVariableBehavior(m_simulationTimeLabel->getName(),
-                                      false, false, true, false, true);
+                                      false, false, false, true, true);
   // treatAsOld copyData noScrub notCopyData noCheckpoint
 
   // std::cerr << __FUNCTION__ << "  "
