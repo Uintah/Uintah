@@ -160,7 +160,7 @@ void TiledRegridder::ComputeTiles( vector<IntVector> &tiles,
 }
 //______________________________________________________________________
 //
-Grid* TiledRegridder::regrid(Grid* oldGrid)
+Grid* TiledRegridder::regrid(Grid* oldGrid, const int timeStep)
 {
   double rtimes[20]={0};
 
@@ -235,7 +235,7 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
   timer.reset( true );
 
   d_newGrid = true;
-  d_lastRegridTimestep = d_sharedState->getCurrentTopLevelTimeStep();
+  d_lastRegridTimestep = timeStep;
 
   OutputGridStats(newGrid);
 
@@ -364,7 +364,6 @@ void TiledRegridder::problemSetup(const ProblemSpecP& params,
                                   const SimulationStateP& state)
 {
   RegridderCommon::problemSetup(params, oldGrid, state);
-  d_sharedState = state;
 
   ProblemSpecP amr_spec = params->findBlock("AMR");
   ProblemSpecP regrid_spec = amr_spec->findBlock("Regridder");

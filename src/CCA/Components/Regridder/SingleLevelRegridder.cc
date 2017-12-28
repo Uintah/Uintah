@@ -57,7 +57,7 @@ void SingleLevelRegridder::problemSetup(const ProblemSpecP& params,
 {
 
   RegridderCommon::problemSetup(params, oldGrid, state);
-  d_sharedState  = state;
+
   d_maxLevels = oldGrid->numLevels();
   
   // Compute the refinement ratio (RR).  The regridder's
@@ -141,7 +141,7 @@ void SingleLevelRegridder::problemSetup_BulletProofing(const int L)
 //  Reset the patch layout on the level of interest.  The other level's
 //  grid structures will remain constant
 // 
-Grid* SingleLevelRegridder::regrid(Grid* oldGrid)
+Grid* SingleLevelRegridder::regrid(Grid* oldGrid, const int timeStep)
 {
   vector< vector<IntVector> > tiles(min(oldGrid->numLevels()+1,d_maxLevels));
 

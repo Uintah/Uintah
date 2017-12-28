@@ -67,7 +67,7 @@ WARNING
     virtual std::string getName() { return std::string("Tiled"); }
 
     //! Create a new Grid
-    virtual Grid* regrid(Grid* oldGrid);
+    virtual Grid* regrid(Grid* oldGrid, const int timeStep);
 		
     virtual void problemSetup(const ProblemSpecP& params,
 			      const GridP& grid,

@@ -25,32 +25,20 @@
 #include <CCA/Components/SimulationController/AMRSimulationController.h>
 
 #include <CCA/Components/PostProcessUda/PostProcess.h>
-#include <CCA/Components/Regridder/PerPatchVars.h>
+
+#include <CCA/Ports/ApplicationInterface.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Output.h>
 #include <CCA/Ports/ProblemSpecInterface.h>
 #include <CCA/Ports/Regridder.h>
 #include <CCA/Ports/Scheduler.h>
-#include <CCA/Ports/ApplicationInterface.h>
 
-#include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Geometry/IntVector.h>
-#include <Core/Geometry/Vector.h>
 #include <Core/Grid/Box.h>
-#include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/SimulationTime.h>
-#include <Core/Grid/Task.h>
-#include <Core/Grid/Variables/PerPatch.h>
-#include <Core/Grid/Variables/ReductionVariable.h>
-#include <Core/Grid/Variables/SoleVariable.h>
-#include <Core/Grid/Variables/VarLabel.h>
-#include <Core/Grid/Variables/VarLabelMatl.h>
-#include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Math/MiscMath.h>
 #include <Core/OS/ProcessInfo.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
@@ -852,7 +840,8 @@ AMRSimulationController::doRegridding( bool initialTimeStep )
   }
     
   GridP oldGrid = m_current_gridP;
-  m_current_gridP = m_regridder->regrid(oldGrid.get_rep());
+  m_current_gridP =
+    m_regridder->regrid(oldGrid.get_rep(), m_app->getTimeStep());
   
   if(dbg_barrier.active()) {
     m_barrier_timer.reset( true );
@@ -886,14 +875,14 @@ AMRSimulationController::doRegridding( bool initialTimeStep )
     //  output regridding stats
     if (d_myworld->myRank() == 0) {
 
-      std::cout << "  REGRIDDING:";
+      proc0cout << "  REGRIDDING:";
 
       // amrout << "---------- OLD GRID ----------" << std::endl << *(oldGrid.get_rep());
       for (int i = 0; i < m_current_gridP->numLevels(); i++) {
-        std::cout << " Level " << i
+        proc0cout << " Level " << i
 		  << " has " << m_current_gridP->getLevel(i)->numPatches() << " patch(es).";
       }
-      std::cout << "\n";
+      proc0cout << "\n";
 
       if (amrout.active()) {
         amrout << "---------- NEW GRID ----------\n"
