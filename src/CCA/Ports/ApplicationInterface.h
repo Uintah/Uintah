@@ -219,7 +219,7 @@ WARNING
     virtual bool restartableTimeSteps() = 0;
 
     // Updates the tiem step and the delta T.
-    virtual void prepareForNextTimeStep( const GridP & grid ) = 0;
+    virtual void prepareForNextTimeStep() = 0;
 
     // Asks the application if it needs to be recompiled.
     virtual bool needRecompile( const GridP & grid ) = 0;
@@ -245,18 +245,18 @@ WARNING
      
     //////////
     virtual bool isRegridTimeStep() const = 0;
-    virtual void setRegridTimeStep(bool ans) = 0;
+    virtual void setRegridTimeStep(bool val) = 0;
     
     // Some applications can adjust the output interval.
-    virtual void adjustOutputInterval(bool ans) = 0;
+    virtual void adjustOutputInterval(bool val) = 0;
     virtual bool adjustOutputInterval() const = 0;
      
     // Some applications can adjust the checkpoint interval.
-    virtual void adjustCheckpointInterval(bool ans) = 0;
+    virtual void adjustCheckpointInterval(bool val) = 0;
     virtual bool adjustCheckpointInterval() const = 0;
 
     // Some applications can end the simulation early.
-    virtual void mayEndSimulation(bool ans) = 0;
+    virtual void mayEndSimulation(bool val) = 0;
     virtual bool mayEndSimulation() const = 0;
 
     // Access methods for member classes.
@@ -266,19 +266,19 @@ WARNING
     // The member methods are private as the child application should
     // ONLY get/set these values via the data warehouse.
   private:
-    virtual   void setDelT( double val ) = 0;
+    virtual   void setDelT( double delT ) = 0;
     virtual double getDelT() const = 0;
     virtual   void setDelTForAllLevels( SchedulerP& scheduler,
 					const GridP & grid,
 					const int totalFine ) = 0;
 
-    virtual   void setNextDelT( double val ) = 0;
+    virtual   void setNextDelT( double delT ) = 0;
     virtual double getNextDelT() const = 0;
     
-    virtual   void setSimTime( double val ) = 0;
+    virtual   void setSimTime( double simTime ) = 0;
     virtual double getSimTime() const = 0;
     
-    virtual   void setSimTimeStart( double val ) = 0;
+    virtual   void setSimTimeStart( double simTime ) = 0;
     virtual double getSimTimeStart() const = 0;
     
     // Returns the integer time step index of the simulation.  All
@@ -289,8 +289,8 @@ WARNING
     // SimulationController at the beginning of a simulation.  The
     // 'increment' function is called by the SimulationController at
     // the begining of each time step.
-    virtual void setTimeStep( int ts ) = 0;
-    virtual void incrementTimeStep( const GridP & grid ) = 0;
+    virtual void setTimeStep( int timeStep ) = 0;
+    virtual void incrementTimeStep() = 0;
     virtual int  getTimeStep() const = 0;
 
     virtual bool isLastTimeStep( double walltime ) const = 0;

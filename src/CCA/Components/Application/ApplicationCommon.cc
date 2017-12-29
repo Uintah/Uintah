@@ -381,9 +381,6 @@ ApplicationCommon::scheduleInitializeSystemVars( const GridP      & grid,
 						 const PatchSet   * perProcPatchSet,
 						       SchedulerP & scheduler)
 {
-  // std::cerr << "**********  " << __FUNCTION__ << "  " << __LINE__ << "  "
-  //        << std::endl;
-
   // Initialize the system vars which are on a per rank basis.
   Task* task = scinew Task("ApplicationCommon::initializeSystemVars", this,
                            &ApplicationCommon::initializeSystemVars);
@@ -399,12 +396,12 @@ ApplicationCommon::scheduleInitializeSystemVars( const GridP      & grid,
                                       false, false, false, true, true);
   // treatAsOld copyData noScrub notCopyData noCheckpoint
 
-  // std::cerr << __FUNCTION__ << "  "
-  //        << grid->numLevels() << "  " 
-  //        << scheduler->get_dw(0) << "  " 
-  //        << scheduler->get_dw(1) << "  " 
-  //        << scheduler->getLastDW() << std::endl;
-    
+  // std::cerr << "**********  " << __FUNCTION__ << "  " << __LINE__ << "  "
+  // 	    << grid->numLevels() << "  " 
+  // 	    << scheduler->get_dw(0) << "  " 
+  // 	    << scheduler->get_dw(1) << "  " 
+  // 	    << scheduler->getLastDW() << std::endl;
+  
   scheduler->addTask(task, perProcPatchSet, m_sharedState->allMaterials());
 }
 
@@ -457,11 +454,11 @@ ApplicationCommon::scheduleUpdateSystemVars(const GridP& grid,
                                       false, false, false, true, true);
   // treatAsOld copyData noScrub notCopyData noCheckpoint
 
-  // std::cerr << __FUNCTION__ << "  "
-  //        << grid->numLevels() << "  " 
-  //        << scheduler->get_dw(0) << "  " 
-  //        << scheduler->get_dw(1) << "  " 
-  //        << scheduler->getLastDW() << std::endl;
+  // std::cerr << "**********  " << __FUNCTION__ << "  " << __LINE__ << "  "
+  // 	    << grid->numLevels() << "  " 
+  // 	    << scheduler->get_dw(0) << "  " 
+  // 	    << scheduler->get_dw(1) << "  " 
+  // 	    << scheduler->getLastDW() << std::endl;
     
   scheduler->addTask(task, perProcPatchSet, m_sharedState->allMaterials());
 }
@@ -476,7 +473,7 @@ ApplicationCommon::updateSystemVars( const ProcessorGroup *,
                                            DataWarehouse  * new_dw )
 {
   // std::cerr << "**********  " << __FUNCTION__ << "  " << __LINE__ << "  "
-  //        << new_dw << std::endl;  
+  // 	    << new_dw << std::endl;  
 
   // If the time step is being restarted do not update the simulation
   // time. The time step does not get up dated here but is stored so
@@ -643,12 +640,12 @@ ApplicationCommon::needRecompile( const GridP& /*grid*/)
 //______________________________________________________________________
 //
 void
-ApplicationCommon::prepareForNextTimeStep( const GridP & grid )
+ApplicationCommon::prepareForNextTimeStep()
 {
   // Increment (by one) the current time step number so components
   // know what time step they are on and get the delta T that will be
   // used.
-  incrementTimeStep( grid );
+  incrementTimeStep();
 
   // Get the delta that will be used for the time step.
   delt_vartype delt_var;
@@ -659,15 +656,7 @@ ApplicationCommon::prepareForNextTimeStep( const GridP & grid )
 //______________________________________________________________________
 //
 void
-ApplicationCommon::setDelT( double val )
-{
-  m_delT = val;
-}
-
-//______________________________________________________________________
-//
-void
- ApplicationCommon::setDelTForAllLevels( SchedulerP& scheduler,
+ApplicationCommon::setDelTForAllLevels( SchedulerP& scheduler,
                                         const GridP & grid,
                                         const int totalFine )
 {
@@ -706,7 +695,7 @@ void
 //______________________________________________________________________
 //
 void
-ApplicationCommon::setNextDelT( double val )
+ApplicationCommon::setNextDelT( double delT )
 {
   // Only used for restarting.
 
@@ -731,11 +720,11 @@ ApplicationCommon::setNextDelT( double val )
   // All else fails use the previous delta T
   else
   {
-    m_nextDelT = val;
+    m_nextDelT = delT;
     m_scheduler->getLastDW()->override(delt_vartype(m_nextDelT), m_delTLabel);
   }
 
-  std::cerr << "*************" << __FUNCTION__ << "  " << __LINE__ << "  " << m_nextDelT << "  " << val << std::endl;
+  // std::cerr << "*************" << __FUNCTION__ << "  " << __LINE__ << "  " << m_nextDelT << "  " << delT << std::endl;
 }
 
 //______________________________________________________________________
@@ -892,8 +881,8 @@ void ApplicationCommon::setTimeStep( int timeStep )
 {
   m_timeStep = timeStep;
 
-  // Kludge to get the time step and simulation time on the inital DW.
-  m_scheduler->get_dw(1)->override(timeStep_vartype(m_timeStep),
+  // Kludge to get the time step on the inital DW.
+  m_scheduler->getLastDW()->override(timeStep_vartype(m_timeStep),
                                    m_timeStepLabel );
   
   m_sharedState->setCurrentTopLevelTimeStep( m_timeStep );
@@ -901,69 +890,27 @@ void ApplicationCommon::setTimeStep( int timeStep )
 
 //______________________________________________________________________
 //
-void ApplicationCommon::incrementTimeStep( const GridP & grid )
+void ApplicationCommon::incrementTimeStep()
 {
   ++m_timeStep;
 
   // Write the new time to the data warehouse
-  DataWarehouse* newDW = m_scheduler->getLastDW();  
+  DataWarehouse* newDW = m_scheduler->getLastDW();
 
   newDW->override(timeStep_vartype(m_timeStep), m_timeStepLabel );
 
   m_sharedState->setCurrentTopLevelTimeStep( m_timeStep );
-
-  return;
-  
-  // Compute number of dataWarehouses - multiplies by the time
-  // refinement ratio for each level.
-  int totalFine = 1;
-
-  if (!isLockstepAMR()) {
-    for (int i = 1; i < grid->numLevels(); ++i) {
-      totalFine *= grid->getLevel(i)->getRefinementRatioMaxDim();
-    }
-  }
-     
-  int skip = totalFine;
-
-  for (int i = 0; i < grid->numLevels(); ++i) {
-    const Level* level = grid->getLevel(i).get_rep();
-
-    if( isAMR() && i != 0 && !isLockstepAMR() ) {
-      int trr = level->getRefinementRatioMaxDim();
-      skip /= trr;
-    }
-
-    for (int idw = 0; idw < totalFine; idw += skip) {
-      DataWarehouse* dw = m_scheduler->get_dw(idw);
-
-      // std::cerr << "**********  " << __FUNCTION__ << "  " << __LINE__ << "  "
-      //                << "level " << i << "  dw " << idw << "  " << dw
-      //                << std::endl;
-
-      // Kludge to get the time step and simulation time on all DW.
-      if( dw )
-      {
-        dw->override(timeStep_vartype(getTimeStep()),
-                     getTimeStepLabel() );
-        
-        dw->override(simTime_vartype(getSimTime()),
-                     getSimTimeLabel() );
-        // std::cerr << "**********  " << __FUNCTION__ << "  " << __LINE__ << std::endl;
-      }
-    }
-  }
 }
 
 //______________________________________________________________________
 //
-void ApplicationCommon::setSimTime( double val )
+void ApplicationCommon::setSimTime( double simTime )
 {
-  m_simTime = val;
+  m_simTime = simTime;
 
-  // Kludge to get the time step and simulation time on all DW.
-  m_scheduler->get_dw(1)->override(simTime_vartype(m_simTime),
-                                   m_simulationTimeLabel );
+  // Kludge to get the simulation time on the inital DW.
+  m_scheduler->getLastDW()->override(simTime_vartype(m_simTime),
+				     m_simulationTimeLabel );
   
   m_sharedState->setElapsedSimTime( m_simTime );
 }

@@ -295,7 +295,7 @@ AMRSimulationController::run()
     // Increment (by one) the current time step number so components
     // know what time step they are on and get the delta T that will
     // be used.
-    m_app->prepareForNextTimeStep( m_current_gridP );
+    m_app->prepareForNextTimeStep();
 
     // Ready for the next time step. 
 
