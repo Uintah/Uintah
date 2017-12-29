@@ -369,7 +369,6 @@ OnDemandDataWarehouse::get(       SoleVariableBase& var,
   }
 
   d_levelDB.get( label, matlIndex, level, var );
-
 }
 
 //______________________________________________________________________
@@ -3221,7 +3220,6 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse*  from,
             if (!found && foundGPU) {
               found = true;
             }
-
           }
 #endif
           if (!found) {
@@ -3264,16 +3262,13 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse*  from,
         }
           break;
         case TypeDescription::ReductionVariable :
-          SCI_THROW(
-              InternalError("transferFrom doesn't work for reduction variable: "+var->getName(), __FILE__, __LINE__) );
+          SCI_THROW(InternalError("transferFrom doesn't work for reduction variable: "+var->getName(), __FILE__, __LINE__) );
           break;
         case TypeDescription::SoleVariable :
-          SCI_THROW(
-              InternalError("transferFrom doesn't work for sole variable: "+var->getName(), __FILE__, __LINE__) );
+          SCI_THROW(InternalError("transferFrom doesn't work for sole variable: "+var->getName(), __FILE__, __LINE__) );
           break;
         default :
-          SCI_THROW(
-              InternalError("Unknown variable type in transferFrom: "+var->getName(), __FILE__, __LINE__) );
+          SCI_THROW(InternalError("Unknown variable type in transferFrom: "+var->getName(), __FILE__, __LINE__) );
       }
     }
   }
