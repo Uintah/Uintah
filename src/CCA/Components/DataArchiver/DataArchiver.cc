@@ -119,23 +119,10 @@ DataArchiver::DataArchiver(const ProcessorGroup* myworld, int udaSuffix)
   m_numLevelsInOutput = 0;
 
   m_writeMeta = false;
-
-  // Time Step
-  m_timeStepLabel =
-    VarLabel::create(timeStep_name, timeStep_vartype::getTypeDescription() );
-  // Simulation Time
-  m_simTimeLabel =
-    VarLabel::create(simTime_name, simTime_vartype::getTypeDescription() );
-  // Simulation Time
-  m_delTLabel =
-    VarLabel::create(delT_name, delt_vartype::getTypeDescription() );
 }
 
 DataArchiver::~DataArchiver()
 {
-  VarLabel::destroy(m_timeStepLabel);
-  VarLabel::destroy(m_simTimeLabel);
-  VarLabel::destroy(m_delTLabel);
 }
 
 //______________________________________________________________________
@@ -1143,8 +1130,6 @@ DataArchiver::sched_allOutputTasks( const GridP      & grid,
     Task* task = scinew Task( "DataArchiver::outputVariables (CheckpointReduction)",
 			      this, &DataArchiver::outputVariables, CHECKPOINT_REDUCTION );
 
-    // task->requires( Task::OldDW, m_timeStepLabel);
-    
     for( int i = 0; i < (int) m_checkpointReductionLabels.size(); i++ ) {
       SaveItem& saveItem = m_checkpointReductionLabels[i];
       const VarLabel* var = saveItem.label;
@@ -2388,8 +2373,6 @@ DataArchiver::scheduleOutputTimeStep(       vector<SaveItem> & saveLabels,
     
     Task* task = scinew Task( taskName, this, &DataArchiver::outputVariables,
 			   isThisCheckpoint ? CHECKPOINT : OUTPUT );
-    
-    // task->requires( Task::OldDW, m_timeStepLabel);
     
     //__________________________________
     //
