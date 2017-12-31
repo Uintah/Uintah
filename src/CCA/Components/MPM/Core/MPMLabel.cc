@@ -871,6 +871,10 @@ MPMLabel::~MPMLabel()
     delete diffusion;
   }
 
+  VarLabel::destroy(timeStepLabel);
+  VarLabel::destroy(simulationTimeLabel);
+  VarLabel::destroy(delTLabel);
+
   VarLabel::destroy(fAllParticlesUpdated);
 
   VarLabel::destroy(heatRate_CCLabel);
@@ -1030,7 +1034,6 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(gNegChargeRateLabel);
 
   VarLabel::destroy(partCountLabel);
-  VarLabel::destroy(delTLabel);
   VarLabel::destroy(doMechLabel);
 
   VarLabel::destroy(AccStrainEnergyLabel);
