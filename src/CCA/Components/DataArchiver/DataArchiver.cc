@@ -1097,9 +1097,6 @@ DataArchiver::sched_allOutputTasks( const GridP      & grid,
     Task* task = scinew Task( "DataArchiver::outputReductionVars",
 			   this, &DataArchiver::outputReductionVars );
 
-    // task->requires( Task::OldDW, m_simTimeLabel );
-    task->requires( Task::OldDW, m_delTLabel );
-    
     for( int i=0; i<(int)m_saveReductionLabels.size(); ++i) {
       SaveItem& saveItem = m_saveReductionLabels[i];
       const VarLabel* var = saveItem.label;
