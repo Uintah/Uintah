@@ -1778,8 +1778,10 @@ DORadiationModel::computeFluxDiv(const Patch* patch,
          divQ(i,j,k)+= (abskt(i,j,k)-scatkt(i,j,k))*volQ(i,j,k) - 4.0*M_PI*emissSrc[0](i,j,k);
       });
     }else{
+      Vector Dx = patch->dCell();
+      double volume = Dx.x()* Dx.y()* Dx.z();  // have to do this because of multiplication of volume upstream, its avoided for scattering, since it has its own source terms.
       Uintah::parallel_for( range,   [&](int i, int j, int k){
-         divQ(i,j,k)+= (abskt(i,j,k))*volQ(i,j,k) - 4.0*M_PI*emissSrc[0](i,j,k);
+         divQ(i,j,k)+= abskt(i,j,k)*volQ(i,j,k) - 4.0*M_PI*emissSrc[0](i,j,k)/volume;
       });
     }
   }
