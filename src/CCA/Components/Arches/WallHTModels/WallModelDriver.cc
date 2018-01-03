@@ -1329,7 +1329,7 @@ WallModelDriver::CoalRegionHT::newton_solve(double &TW_new, double &T_shell, dou
   int NIter       = 15;
   double f0       = 0.0;
   double f1       = 0.0;
-  double T_max    = pow( (rad_q + extra_src)/_sigma_constant, 0.25); // if k/dx = 0.0;
+  double T_max    = pow( rad_q/_sigma_constant + extra_src/(Emiss*_sigma_constant), 0.25); // if k/dx = 0.0;
   double net_q, TW_guess, TW_tmp, TW_old;
   // new solve
   TW_guess = T_old;
