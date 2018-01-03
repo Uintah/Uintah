@@ -1199,7 +1199,7 @@ WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars,
                 newton_solve( TW_new, wi.T_slag, T_old, R_tot, rad_q, Emiss, extra_src_sum );
                 // now we can solve for the solid layer thickness given the new surface temperature. 
                 double qnet = Emiss*(rad_q - _sigma_constant * std::pow( TW_new, 4.0 )) + extra_src_sum;
-                qnet = qnet > 1e-8 ? qnet : 1e-8; // to avoid div by zero we set min at 1e-8
+                qnet = std::abs(qnet) > 1e-12 ? qnet : 1e-12; // to avoid div by zero and preserve the sign.
                 dy_dep_sb_s = k_sb_s*((TW_new-wi.T_inner)/qnet - R_wall - R_en - dy_dep_sb_l/k_sb_l);
               } else { // rad_q > rad_q_max
                 // regime 3 
@@ -1209,7 +1209,7 @@ WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars,
                 for ( int iterT=0; iterT < 100; iterT++) { // iterate tc until we reach a consistent solution.
                   dy_dep_sb_l_old = dy_dep_sb_l;  
                   double qnet = Emiss*(rad_q - _sigma_constant * std::pow( TW_new, 4.0 )) + extra_src_sum;
-                  qnet = qnet > 1e-8 ? qnet : 1e-8; // to avoid div by zero we set min at 1e-8
+                  qnet = std::abs(qnet) > 1e-12 ? qnet : 1e-12; // to avoid div by zero and preserve the sign.
                   R_tot = R_wall + R_en + dy_dep_sb_l/k_sb_l;
                   newton_solve( TW_new, wi.T_inner, T_old, R_tot, rad_q, Emiss, extra_src_sum );
                   T_i = TW_new - qnet * dy_dep_sb_l / k_sb_l;// this is the interface temperature between the liquid and the enamel. 
@@ -1233,7 +1233,6 @@ WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars,
               m_em_model->model(Emiss,wi.emissivity,vars.T_real[c],dp_arrival, tau_sint);
               vars.emissivity[c]=Emiss;
               net_q = Emiss * (rad_q - _sigma_constant * std::pow( vars.T_real[c], 4.0 )) + extra_src_sum;
-              net_q = net_q > 0 ? net_q : 0; 
               residual = 0.0;
               for ( int iterT=0; iterT < 100; iterT++) { // iterate tc until we reach a consistent solution.
                 k_sb_s_old = k_sb_s; 
@@ -1335,11 +1334,9 @@ WallModelDriver::CoalRegionHT::newton_solve(double &TW_new, double &T_shell, dou
   TW_guess = T_old;
   TW_old = TW_guess-delta;
   net_q = Emiss * (rad_q - _sigma_constant * pow( TW_old, 4 )) + extra_src;
-  net_q = net_q > 0 ? net_q : 0;
   f0 = - TW_old + T_shell + net_q * R_tot;
   TW_new = TW_guess+delta;
   net_q = Emiss * (rad_q - _sigma_constant * pow( TW_new, 4 )) + extra_src;
-  net_q = net_q > 0 ? net_q : 0;
   f1 = - TW_new + T_shell + net_q * R_tot;
   for ( int iterT=0; iterT < NIter; iterT++) {
     TW_tmp = TW_old;
@@ -1348,12 +1345,10 @@ WallModelDriver::CoalRegionHT::newton_solve(double &TW_new, double &T_shell, dou
     TW_new = max( T_shell , min( T_max, TW_new ) );
     if (std::abs(TW_new-TW_old) < d_tol){
       net_q = Emiss * (rad_q - _sigma_constant * pow( TW_new, 4 )) + extra_src;
-      net_q =  net_q > 0 ? net_q : 0;
       break;
     }
     f0    =  f1;
     net_q = Emiss * (rad_q - _sigma_constant * pow( TW_new, 4 )) + extra_src;
-    net_q =  net_q>0 ? net_q : 0;
     f1    = - TW_new + T_shell + net_q * R_tot;
   }
 }
