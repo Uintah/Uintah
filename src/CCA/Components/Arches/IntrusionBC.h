@@ -61,6 +61,9 @@ namespace Uintah{
                    TableLookup* table_lookup, int WALL );
       ~IntrusionBC();
 
+      /** @brief Return true if there is a velocity type inlet **/
+      bool has_intrusion_inlets(){ return _has_intrusion_inlets; };
+
       /** @brief Interface to input file */
       void problemSetup( const ProblemSpecP& params, const int ilvl );
 
@@ -150,7 +153,8 @@ namespace Uintah{
 
       /** @brief Sets the density in the intrusion for inlets */
       void setDensity( const Patch* patch,
-                       CCVariable<double>& density );
+                       CCVariable<double>& density, 
+                       constCCVariable<double>& old_density );
 
       /** @brief Sets the temperature field to that of the intrusion temperature */
       void sched_setIntrusionT( SchedulerP& sched,
@@ -501,6 +505,9 @@ namespace Uintah{
 
       //------------- velocity -----------------------
       //
+      void
+      getVelocityCondition( const Patch* patch, const IntVector ijk,
+                            bool& found_value, Vector& velocity );
 
       /** @brief A base class for velocity inlet conditons **/
       class VelInletBase {
@@ -561,6 +568,9 @@ namespace Uintah{
                                      bool& set_nonnormal_values ) = 0;
 
           virtual Vector get_velocity( const IntVector, const Patch* patch ) = 0;
+
+          virtual void get_velocity( const IntVector, const Patch* patch,
+                                     bool& found_value, Vector& velocity ) = 0;
 
           virtual void massflowrate_velocity( int d, const double value ) = 0;
 
@@ -634,9 +644,13 @@ namespace Uintah{
               IntVector c = *i;
               for ( int idir = 0; idir < 6; idir++ ){
                 if ( directions[idir] != 0 ){
-                  if ( std::abs(_bc_velocity[0]) > 1.e-16 ) u[c] = _bc_velocity[0];
-                  if ( std::abs(_bc_velocity[1]) > 1.e-16 ) v[c] = _bc_velocity[1];
-                  if ( std::abs(_bc_velocity[2]) > 1.e-16 ) w[c] = _bc_velocity[2];
+                   if ( idir == 0 || idir == 1 ){
+                     u[c] = _bc_velocity[0];
+                   } else if ( idir == 2 || idir == 3 ){
+                     v[c] = _bc_velocity[1];
+                   } else {
+                     w[c] = _bc_velocity[2];
+                   }
                 }
               }
             }
@@ -644,6 +658,14 @@ namespace Uintah{
 
           inline Vector get_velocity( const IntVector, const Patch* patch ){
             return _bc_velocity;
+          }
+
+          void get_velocity( const IntVector ijk, const Patch* patch,
+                             bool& found_value, Vector& velocity ){
+
+            found_value = true;
+            velocity = _bc_velocity;
+
           }
 
           void massflowrate_velocity( int d, const double v ){
@@ -754,73 +776,47 @@ namespace Uintah{
             Point xyz(m_relative_xyz[0], m_relative_xyz[1], m_relative_xyz[2]);
             IntVector rel_ijk = patch->getLevel()->getCellIndex( xyz );
 
-            if ( set_nonnormal_values ){
+            for ( std::vector<IntVector>::iterator i = iBC_iter->second.begin();
+                                                   i != iBC_iter->second.end();
+                                                   i++){
 
-              for ( std::vector<IntVector>::iterator i = iBC_iter->second.begin();
-                                                     i != iBC_iter->second.end();
-                                                     i++){
-
-                IntVector c = *i;
-                IntVector c_rel = *i - rel_ijk; //note that this is the relative index position
-                c_rel[_zeroed_index] = 0;
-
-                auto iter = m_handoff_information.vec_values.find(c_rel);
-
-                if ( iter != m_handoff_information.vec_values.end() ){
-
-                  Vector bc_value = m_handoff_information.vec_values[c_rel];
-
-                  if ( _flux_i == 0 ){
-
-                    //-x
-                    u[c] = bc_value[0];
-                    if ( patch->containsCell(c-IntVector(1,0,0)) ){
-                      if ( std::abs(bc_value[1]) > 1.e-16) v[c-IntVector(1,0,0)] = bc_value[1];
-                      if ( std::abs(bc_value[2]) > 1.e-16) w[c-IntVector(1,0,0)] = bc_value[2];
-                    }
-
-                  } else if ( _flux_i == 1 ){
-
-                    //+x
-                    u[c] = bc_value[0];
-                    if ( std::abs(bc_value[1]) > 1.e-16) v[c] = bc_value[1];
-                    if ( std::abs(bc_value[2]) > 1.e-16) w[c] = bc_value[2];
-
-                  } else if ( _flux_i == 2 ){
-
-                    //-y
-                    v[c] = bc_value[1];
-                    if ( patch->containsCell(c-IntVector(0,1,0)) ){
-                      if ( std::abs(bc_value[2]) > 1.e-16) w[c-IntVector(0,1,0)] = bc_value[2];
-                      if ( std::abs(bc_value[0]) > 1.e-16) u[c-IntVector(0,1,0)] = bc_value[0];
-                    }
-
-                  } else if ( _flux_i == 3 ){
-
-                    //+y
-                    v[c] = bc_value[1];
-                    if ( std::abs(bc_value[2]) > 1.e-16) w[c] = bc_value[2];
-                    if ( std::abs(bc_value[0]) > 1.e-16) u[c] = bc_value[0];
-
-                  } else if ( _flux_i == 4 ){
-
-                    //-z
-                    w[c] = bc_value[2];
-                    if ( patch->containsCell(c-IntVector(0,0,1)) ){
-                      if ( std::abs(bc_value[0]) > 1.e-16) u[c-IntVector(0,0,1)] = bc_value[0];
-                      if ( std::abs(bc_value[1]) > 1.e-16) v[c-IntVector(0,0,1)] = bc_value[1];
-                    }
-
-                  } else {
-
-                    //+z
-                    w[c] = bc_value[2];
-                    if ( std::abs(bc_value[0]) > 1.e-16) u[c] = bc_value[0];
-                    if ( std::abs(bc_value[1]) > 1.e-16) v[c] = bc_value[1];
-
-                  }
+              IntVector c = *i;
+              IntVector c_rel = *i - rel_ijk; //note that this is the relative index position
+              c_rel[_zeroed_index] = 0;
+              auto iter = m_handoff_information.vec_values.find(c_rel);
+              if ( iter != m_handoff_information.vec_values.end() ){
+                Vector bc_value = m_handoff_information.vec_values[c_rel];
+                if ( _flux_i == 0  || _flux_i == 1 ){
+                  //-x, +x
+                  u[c] = bc_value[0];
+                } else if ( _flux_i == 2 || _flux_i == 3 ){
+                  //-y, +y
+                  v[c] = bc_value[1];
+                } else if ( _flux_i == 4 || _flux_i == 5){
+                  //-z, +z
+                  w[c] = bc_value[2];
                 }
               }
+            }
+          }
+
+          void get_velocity( const IntVector ijk, const Patch* patch,
+                             bool& found_value, Vector& velocity ){
+
+            Point xyz(m_relative_xyz[0], m_relative_xyz[1], m_relative_xyz[2]);
+            IntVector rel_ijk = patch->getLevel()->getCellIndex( xyz );
+
+            IntVector c_rel = ijk - rel_ijk; //note that this is the relative index position
+
+            c_rel[_zeroed_index] = 0;
+
+            auto iter = m_handoff_information.vec_values.find(c_rel);
+
+            if ( iter != m_handoff_information.vec_values.end() ){
+              velocity = m_handoff_information.vec_values[c_rel];
+              found_value = true;
+            } else {
+              found_value = false;
             }
           }
 
@@ -871,7 +867,7 @@ namespace Uintah{
         // The name of the intrusion is the key value in the map that stores all intrusions
         INTRUSION_TYPE                type;
         INLET_TYPE                    velocity_inlet_type;
-        INLET_TYPE                    scalar_inlet_type;  
+        INLET_TYPE                    scalar_inlet_type;
         std::vector<GeometryPieceP>   geometry;
         std::vector<const VarLabel*>  labels;
         std::map<std::string, double> varnames_values_map;
@@ -950,6 +946,7 @@ namespace Uintah{
     private:
 
       std::vector<Boundary> _intrusions;
+      bool _has_intrusion_inlets{false};
       IntrusionMap _intrusion_map;
       Uintah::PatchSet* localPatches_{nullptr};
       const ArchesLabel* _lab;

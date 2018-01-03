@@ -3974,6 +3974,7 @@ BoundaryCondition::sched_setIntrusionDensity( SchedulerP& sched,
 {
   Task* tsk = scinew Task( "BoundaryCondition::setIntrusionDensity",
                            this, &BoundaryCondition::setIntrusionDensity);
+  tsk->requires( Task::NewDW, d_lab->d_densityCPLabel, Ghost::AroundCells, 1 );
   tsk->modifies( d_lab->d_densityCPLabel );
   sched->addTask( tsk, level->eachPatch(), matls );
 
@@ -3983,12 +3984,13 @@ void
 BoundaryCondition::setIntrusionDensity( const ProcessorGroup*,
                                         const PatchSubset* patches,
                                         const MaterialSubset*,
-                                        DataWarehouse*,
+                                        DataWarehouse* old_dw,
                                         DataWarehouse* new_dw)
 {
   for (int p = 0; p < patches->size(); p++) {
 
     if ( _using_new_intrusion ) {
+
       const Patch* patch = patches->get(p);
       const Level* level = patch->getLevel();
       const int ilvl = level->getID();
@@ -3996,9 +3998,12 @@ BoundaryCondition::setIntrusionDensity( const ProcessorGroup*,
       int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
       CCVariable<double> density;
+      constCCVariable<double> old_density; 
       new_dw->getModifiable( density, d_lab->d_densityCPLabel, indx, patch );
+      new_dw->get( old_density, d_lab->d_densityCPLabel, indx, patch, Ghost::AroundCells, 1 ); 
 
-      _intrusionBC[ilvl]->setDensity( patch, density );
+      _intrusionBC[ilvl]->setDensity( patch, density, old_density );
+
     }
   }
 }
@@ -4039,10 +4044,17 @@ BoundaryCondition::wallStressConstSmag( const Patch* p,
 
   constCCVariable<double> IsImag;
   const int indx = 0;
+  const Level* level = p->getLevel();
+  const int ilvl = level->getID();
 
   if ( dw->exists( d_lab->d_strainMagnitudeLabel, indx, p ) ){
 
     dw->get( IsImag, d_lab->d_strainMagnitudeLabel, indx, p, Ghost::AroundCells, 1 );
+
+    bool has_intrusion_inlets = false; 
+    if ( _using_new_intrusion ){ 
+      has_intrusion_inlets = _intrusionBC[ilvl]->has_intrusion_inlets();
+    }
 
     for (CellIterator iter=p->getCellIterator(); !iter.done(); iter++) {
       IntVector c = *iter;
@@ -4073,7 +4085,16 @@ BoundaryCondition::wallStressConstSmag( const Patch* p,
                                0;
           const double ISI = 0.5 * ( IsImag[c+IntVector(0,i_so,0)] + IsImag[c+IntVector(-1,i_so,0)] );
           const double mu_t = pow( csmag_wall * delta, 2.0 ) * rho[c] * ISI;
-          Su[c] -= 2.0 * area_ns * ( mu_t + viscos ) * uvel[c] / dy;
+          Vector velocity_cond(0,0,0);
+          if ( has_intrusion_inlets ){
+            bool has_condition = false;
+            _intrusionBC[ilvl]->getVelocityCondition( p, c, has_condition,
+                                                   velocity_cond );
+          }
+
+          Su[c] += 2.0 * area_ns * ( mu_t + viscos )
+                   * (velocity_cond[0] - uvel[c]) / dy;
+
         }
         // Y+
         if ( eps[yp] * eps[xmyp] < .5 ){
@@ -4082,8 +4103,18 @@ BoundaryCondition::wallStressConstSmag( const Patch* p,
                                0;
           const double ISI = 0.5*(IsImag[c+IntVector(0,-i_so,0)] + IsImag[c+IntVector(-1,-i_so,0)]);
           const double mu_t = pow( csmag_wall*delta, 2.0 ) * rho[c] * ISI;
-          Su[c] -= 2.0 * area_ns * ( mu_t + viscos ) * uvel[c] / dy;
+          Vector velocity_cond(0,0,0);
+          if ( has_intrusion_inlets ){
+            bool has_condition = false;
+            _intrusionBC[ilvl]->getVelocityCondition( p, yp, has_condition,
+                                                   velocity_cond );
+          }
+
+          Su[c] += 2.0 * area_ns * ( mu_t + viscos )
+                    * (velocity_cond[0] - uvel[c]) / dy;
+
         }
+
         // Z-
         if ( eps[zm] * eps[xmzm] < .5 ){
           const double i_so = ( eps[c+z_so] * eps[xm+z_so] > .5 ) ?
@@ -4091,8 +4122,19 @@ BoundaryCondition::wallStressConstSmag( const Patch* p,
                                0;
           const double ISI = 0.5 * ( IsImag[c+IntVector(0,0,i_so)] + IsImag[c+IntVector(-1,0,i_so)] );
           const double mu_t = pow( csmag_wall * delta, 2.0 ) * rho[c] * ISI;
-          Su[c] -= 2.0 * area_tb * ( mu_t + viscos ) * uvel[c] / dz;
+
+          Vector velocity_cond(0,0,0);
+          if ( has_intrusion_inlets ){
+            bool has_condition = false;
+            _intrusionBC[ilvl]->getVelocityCondition( p, c, has_condition,
+                                                   velocity_cond );
+          }
+
+          Su[c] += 2.0 * area_tb * ( mu_t + viscos )
+                   * (velocity_cond[0] - uvel[c]) / dz;
+
         }
+
         // Z+
         if ( eps[zp] * eps[xmzp] < .5 ){
           const double i_so = ( eps[c-z_so] * eps[xm-z_so] > .5 ) ?
@@ -4100,7 +4142,17 @@ BoundaryCondition::wallStressConstSmag( const Patch* p,
                                0;
           const double ISI = 0.5*(IsImag[c+IntVector(0,0,-i_so)] + IsImag[c+IntVector(-1,0,-i_so)]);
           const double mu_t = pow( csmag_wall*delta, 2.0 ) * rho[c] * ISI;
-          Su[c] -= 2.0 * area_tb * ( mu_t + viscos ) * uvel[c] / dy;
+
+          Vector velocity_cond(0,0,0);
+          if ( has_intrusion_inlets ){
+            bool has_condition = false;
+            _intrusionBC[ilvl]->getVelocityCondition( p, zp, has_condition,
+                                                   velocity_cond );
+          }
+
+          Su[c] += 2.0 * area_tb * ( mu_t + viscos )
+                    * (velocity_cond[0] - uvel[c]) / dz;
+
         }
       }
       //apply v-mom bc -
@@ -4112,7 +4164,16 @@ BoundaryCondition::wallStressConstSmag( const Patch* p,
                                0;
           const double ISI = 0.5 * ( IsImag[c+IntVector(i_so,0,0)] + IsImag[c+IntVector(i_so,-1,0)] );
           const double mu_t = pow( csmag_wall * delta, 2.0 ) * rho[c] * ISI;
-          Sv[c] -= 2.0 * area_ew * ( mu_t + viscos ) * vvel[c] / dx;
+          Vector velocity_cond(0,0,0);
+          if ( has_intrusion_inlets ){
+            bool has_condition = false;
+            _intrusionBC[ilvl]->getVelocityCondition( p, c, has_condition,
+                                                   velocity_cond );
+          }
+
+          Sv[c] += 2.0 * area_ew * ( mu_t + viscos )
+                    * (velocity_cond[1] - vvel[c] )/ dx;
+
         }
         // X+
         if ( eps[xp] * eps[xpym] < .5 ){
@@ -4121,7 +4182,16 @@ BoundaryCondition::wallStressConstSmag( const Patch* p,
                                0;
           const double ISI = 0.5 * ( IsImag[c+IntVector(-i_so,0,0)] + IsImag[c+IntVector(-i_so,-1,0)] );
           const double mu_t = pow( csmag_wall * delta, 2.0 ) * rho[c] * ISI;
-          Sv[c] -= 2.0 * area_ew * ( mu_t + viscos ) * vvel[c] / dx;
+          Vector velocity_cond(0,0,0);
+          if ( has_intrusion_inlets ){
+            bool has_condition = false;
+            _intrusionBC[ilvl]->getVelocityCondition( p, xp, has_condition,
+                                                   velocity_cond );
+          }
+
+          Sv[c] += 2.0 * area_ew * ( mu_t + viscos )
+                    * (velocity_cond[1] - vvel[c] )/ dx;
+
         }
         // Z-
         if ( eps[zm] * eps[ymzm] < .5 ){
@@ -4130,7 +4200,16 @@ BoundaryCondition::wallStressConstSmag( const Patch* p,
                                0;
           const double ISI = 0.5 * ( IsImag[c+IntVector(0,0,i_so)] + IsImag[c+IntVector(0,-1,i_so)] );
           const double mu_t = pow( csmag_wall * delta, 2.0 ) * rho[c] * ISI;
-          Sv[c] -= 2.0 * area_tb * ( mu_t + viscos ) * vvel[c] / dz;
+          Vector velocity_cond(0,0,0);
+          if ( has_intrusion_inlets ){
+            bool has_condition = false;
+            _intrusionBC[ilvl]->getVelocityCondition( p, c, has_condition,
+                                                   velocity_cond );
+          }
+
+          Sv[c] += 2.0 * area_tb * ( mu_t + viscos )
+            * ( velocity_cond[1] - vvel[c] ) / dz;
+
         }
         // Z+
         if ( eps[zp] * eps[ymzp] < .5 ){
@@ -4139,7 +4218,17 @@ BoundaryCondition::wallStressConstSmag( const Patch* p,
                                0;
           const double ISI = 0.5 * ( IsImag[c+IntVector(0,0,-i_so)] + IsImag[c+IntVector(0,-1,-i_so)] );
           const double mu_t = pow( csmag_wall * delta, 2.0 ) * rho[c] * ISI;
-          Sv[c] -= 2.0 * area_tb * ( mu_t + viscos ) * vvel[c] / dz;
+
+          Vector velocity_cond(0,0,0);
+          if ( has_intrusion_inlets ){
+            bool has_condition = false;
+            _intrusionBC[ilvl]->getVelocityCondition( p, zp, has_condition,
+                                                   velocity_cond );
+          }
+
+          Sv[c] += 2.0 * area_tb * ( mu_t + viscos )
+            * ( velocity_cond[1] - vvel[c] ) / dz;
+
         }
       }
       //apply w-mom bc -
@@ -4151,7 +4240,17 @@ BoundaryCondition::wallStressConstSmag( const Patch* p,
                                0;
           const double ISI = 0.5 * ( IsImag[c+IntVector(i_so,0,0)] + IsImag[c+IntVector(i_so,0,-1)] );
           const double mu_t = pow( csmag_wall * delta, 2.0 ) * rho[c] * ISI;
-          Sw[c] -= 2.0 * area_ew * ( mu_t + viscos ) * wvel[c] / dx;
+
+          Vector velocity_cond(0,0,0);
+          if ( has_intrusion_inlets ){
+            bool has_condition = false;
+            _intrusionBC[ilvl]->getVelocityCondition( p, c, has_condition,
+                                                   velocity_cond );
+          }
+
+          Sw[c] += 2.0 * area_ew * ( mu_t + viscos )
+            * ( velocity_cond[2] - wvel[c] ) / dx;
+
         }
         // X+
         if ( eps[xp] * eps[xpzm] < .5 ){
@@ -4160,7 +4259,17 @@ BoundaryCondition::wallStressConstSmag( const Patch* p,
                                0;
           const double ISI = 0.5 * ( IsImag[c+IntVector(-i_so,0,0)] + IsImag[c+IntVector(-i_so,0,-1)] );
           const double mu_t = pow( csmag_wall * delta, 2.0 ) * rho[c] * ISI;
-          Sw[c] -= 2.0 * area_ew * ( mu_t + viscos ) * wvel[c] / dx;
+
+          Vector velocity_cond(0,0,0);
+          if ( has_intrusion_inlets ){
+            bool has_condition = false;
+            _intrusionBC[ilvl]->getVelocityCondition( p, xp, has_condition,
+                                                   velocity_cond );
+          }
+
+          Sw[c] += 2.0 * area_ew * ( mu_t + viscos )
+            * ( velocity_cond[2] - wvel[c] ) / dx;
+
         }
         // Y-
         if ( eps[ym] * eps[ymzm] < .5 ){
@@ -4169,7 +4278,17 @@ BoundaryCondition::wallStressConstSmag( const Patch* p,
                                0;
           const double ISI = 0.5 * ( IsImag[c+IntVector(0,i_so,0)] + IsImag[c+IntVector(0,i_so,-1)] );
           const double mu_t = pow( csmag_wall * delta, 2.0 ) * rho[c] * ISI;
-          Sw[c] -= 2.0 * area_ns * ( mu_t + viscos ) * wvel[c] / dy;
+
+          Vector velocity_cond(0,0,0);
+          if ( has_intrusion_inlets ){
+            bool has_condition = false;
+            _intrusionBC[ilvl]->getVelocityCondition( p, c, has_condition,
+                                                   velocity_cond );
+          }
+
+          Sw[c] += 2.0 * area_ns * ( mu_t + viscos )
+            * ( velocity_cond[2] - wvel[c] ) / dy;
+
         }
         // Y+
         if ( eps[yp] * eps[ypzm] < .5 ){
@@ -4178,7 +4297,17 @@ BoundaryCondition::wallStressConstSmag( const Patch* p,
                                0;
           const double ISI = 0.5*(IsImag[c+IntVector(0,-i_so,0)] + IsImag[c+IntVector(0,-i_so,-1)]);
           const double mu_t = pow( csmag_wall*delta, 2.0 ) * rho[c] * ISI;
-          Sw[c] -= 2.0 * area_ns * ( mu_t + viscos ) * wvel[c] / dy;
+
+          Vector velocity_cond(0,0,0);
+          if ( has_intrusion_inlets ){
+            bool has_condition = false;
+            _intrusionBC[ilvl]->getVelocityCondition( p, yp, has_condition,
+                                                   velocity_cond );
+          }
+
+          Sw[c] += 2.0 * area_ns * ( mu_t + viscos )
+            * ( velocity_cond[2] - wvel[c] ) / dy;
+
         }
       }
     }// end cell loop

@@ -176,6 +176,8 @@ IntrusionBC::problemSetup( const ProblemSpecP& params, const int ilvl )
 
       if ( db_velocity ){
 
+        _has_intrusion_inlets = true;
+
         intrusion.has_velocity_model = true;
 
         std::string vel_type;
@@ -1131,7 +1133,7 @@ IntrusionBC::setHattedVelocity( const Patch*  patch,
                                 bool& set_nonnormal_values )
 {
 
-  const int p = patch->getID();
+  const int pID = patch->getID();
 
   if ( _intrusion_on ) {
 
@@ -1139,7 +1141,7 @@ IntrusionBC::setHattedVelocity( const Patch*  patch,
 
       if ( iIntrusion->second.type != SIMPLE_WALL ){
 
-        BCIterator::iterator  iBC_iter = (iIntrusion->second.bc_face_iterator).find(p);
+        BCIterator::iterator  iBC_iter = (iIntrusion->second.bc_face_iterator).find(pID);
         std::vector<int> directions = iIntrusion->second.directions;
 
         iIntrusion->second.velocity_inlet_generator->set_velocity( patch, iBC_iter, directions,
@@ -1147,6 +1149,36 @@ IntrusionBC::setHattedVelocity( const Patch*  patch,
 
       }
 
+    }
+  }
+}
+
+//------------------------------------------------------------------------------
+void
+IntrusionBC::getVelocityCondition( const Patch* patch, const IntVector ijk,
+                                   bool& found_value, Vector& velocity ){
+
+  if ( _intrusion_on ) {
+
+    const int pID = patch->getID();
+
+    for ( IntrusionMap::iterator iIntrusion = _intrusion_map.begin(); iIntrusion != _intrusion_map.end(); ++iIntrusion ){
+
+      if ( iIntrusion->second.type != SIMPLE_WALL ){
+
+        BCIterator::iterator  iBC_iter = (iIntrusion->second.bc_face_iterator).find(pID);
+
+        auto iter_ijk = std::find( iBC_iter->second.begin(), iBC_iter->second.end(), ijk);
+
+        if ( iter_ijk != iBC_iter->second.end() ){
+          found_value = true;
+          iIntrusion->second.velocity_inlet_generator->get_velocity( ijk, patch, found_value, velocity );
+        } else {
+          found_value = false;
+          velocity = Vector(0,0,0);
+        }
+
+      }
     }
   }
 }
@@ -1305,7 +1337,8 @@ IntrusionBC::addScalarRHS( const Patch* patch,
 //_________________________________________
 void
 IntrusionBC::setDensity( const Patch* patch,
-                         CCVariable<double>& density )
+                         CCVariable<double>& density, 
+                         constCCVariable<double>& old_density )
 {
   const int p = patch->getID();
 
@@ -1328,7 +1361,7 @@ IntrusionBC::setDensity( const Patch* patch,
 
               if ( iIntrusion->second.directions[idir] != 0 ){
 
-                density[ c ] = 2.0*iIntrusion->second.density - density[c+_dHelp[idir]];
+                density[ c ] = 2.0*iIntrusion->second.density - old_density[c+_dHelp[idir]];
 
               }
             }
