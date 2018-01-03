@@ -54,6 +54,7 @@ namespace Uintah{
         double time;
         double relax; // relaxation coefficient for updating surface temperature
         int em_model_type;
+        int num_extra_src;
         double delta_t;
         CCVariable<double> T;
         CCVariable<double> T_copy;
@@ -68,6 +69,7 @@ namespace Uintah{
         CCVariable<double> deposit_velocity;
         constCCVariable<double> deposit_velocity_old;
         constCCVariable<double> ave_deposit_velocity;
+        std::vector< constCCVariable<double> > extra_src;
         constCCVariable<double> d_vol_ave;
         constCCVariable<double> T_real_old;
         constCCVariable<double> T_old;
@@ -94,6 +96,8 @@ namespace Uintah{
     private:
       double _relax; // this is the global relaxation coefficient for any wallht type.
       std::string _dep_vel_name;
+      std::vector<std::string> _extra_src_flux_names;
+      int _num_extra_src;
       bool do_coal_region;
       int _calc_freq;                    ///< Wall heat transfer model calculation frequency
       std::string _T_label_name;         ///< Temperature label name
@@ -118,6 +122,7 @@ namespace Uintah{
       const VarLabel* _Total_HF_label;
       const VarLabel* _True_T_Label;
       const VarLabel* _ave_dep_vel_label;
+      std::vector< const VarLabel*> _extra_src_varlabels;
       const VarLabel* _deposit_velocity_label;
       const VarLabel* _deposit_thickness_label;
       const VarLabel* _deposit_thickness_sb_s_label;
@@ -200,6 +205,18 @@ namespace Uintah{
         std::string new_name;
         db->require( "deposit_velocity_name", new_name );
         return new_name;
+      }
+      
+      inline static std::vector<std::string> get_extra_src_flux_names( const ProblemSpecP& input_db ){
+        ProblemSpecP db = input_db;
+        std::vector<std::string> new_src_names;
+        for ( ProblemSpecP db_src = db->findBlock( "extra_src" ); db_src != nullptr; db_src = db_src->findNextBlock( "extra_src" ) ){
+          //get reaction rate params
+          std::string new_src;
+          new_src = db_src->getNodeValue();
+          new_src_names.push_back(new_src);
+        }
+        return new_src_names;
       }
 
       inline static int get_emissivity_model_type( const ProblemSpecP& input_db ){
@@ -825,7 +842,7 @@ namespace Uintah{
               std::vector<GeometryPieceP> geometry;
           };
 
-          inline void newton_solve(double &TW_new, double &T_shell, double &T_old, double &R_tot, double &rad_q, double &Emiss );
+          inline void newton_solve(double &TW_new, double &T_shell, double &T_old, double &R_tot, double &rad_q, double &Emiss, double &extra_src );
           inline void urbain_viscosity(double &visc, double &T, std::vector<double> &x_ash);
 
           std::vector<WallInfo> _regions;

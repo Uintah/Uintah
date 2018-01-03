@@ -1032,6 +1032,7 @@
             <geom_object/>
           </region>
           <deposit_velocity_name           spec="REQUIRED STRING" need_applies_to="type coal_region_ht"/>
+          <extra_src                       spec="MULTIPLE STRING" need_applies_to="type coal_region_ht"/> <!-- extra_src labels this will be added when computing the net heat flux. -->
           <coal_name                       spec="OPTIONAL STRING" need_applies_to="type coal_region_ht"/> <!-- this is the name corresponding to a given ash composition. -->
           <coordination_number             spec="OPTIONAL INTEGER" need_applies_to="type coal_region_ht"/> <!-- this is the coordination number for the pokluda sintering model, default is 2, int must be >=2. -->
           <emissivity_model_type           spec="OPTIONAL STRING" need_applies_to="type coal_region_ht"/> <!-- default is "constant" this uses wall_emissivity. "dynamic" will estimate the emissivity from a mie-theory based model. -->
