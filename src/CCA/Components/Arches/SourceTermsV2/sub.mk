@@ -33,6 +33,7 @@ SRCS += \
         $(SRCDIR)/MMS_Shunn.cc      			    \
         $(SRCDIR)/MMS_ShunnP3.cc      			    \
         $(SRCDIR)/GravityA.cc      			    \
+        $(SRCDIR)/CharOxidationPS.cc                        \
         $(SRCDIR)/SourceTermFactoryV2.cc
 
 ########################################################################
