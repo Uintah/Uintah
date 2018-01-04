@@ -283,6 +283,7 @@ KOKKOSTESTS = [
    ("isotropic_kokkos_wale"             , "kokkos_solver_tests/Verification/periodicTurb/isotropic_kokkos_wale.ups"              , 1   , "All"   , ["exactComparison", "no_restart"]), 
    ("isotropic_kokkos_dynSmag_packed"   , "kokkos_solver_tests/Verification/periodicTurb/isotropic_kokkos_dynSmag_packed.ups"    , 8   , "All"   , ["exactComparison", "no_restart"]), 
    ("isotropic_kokkos_dynSmag_unpacked" , "kokkos_solver_tests/Verification/periodicTurb/isotropic_kokkos_dynSmag_unpacked.ups"  , 8   , "All"   , ["exactComparison", "no_restart"]), 
+   ("char_modelps"                       , "kokkos_solver_tests/Verification/particleModels/char_modelps.ups"                     , 1   , "All"   , ["exactComparison"]), 
 ]
 
 CQMOMTESTS = [
