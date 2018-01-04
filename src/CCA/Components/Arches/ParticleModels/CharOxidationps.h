@@ -76,6 +76,7 @@ private:
     std::vector< std::string > m_surfacerate;
     //std::vector< std::string > m_PO2surf;
     std::vector< std::string > m_devolRC;
+    std::vector< std::string > m_surfAreaF_name;
 
     //bool m_add_rawcoal_birth;
     //bool m_add_length_birth;
@@ -125,7 +126,7 @@ private:
     std::vector<double> _MW_species;
     std::vector<int> _oxidizer_indices;
     double _S;
-    int _NUM_reactions; //
+    int _NUM_reactions{0}; //
 
     double _p_void0; // 
     double _rho_ash_bulk; // 
@@ -190,6 +191,7 @@ CharOxidationps<T>::problemSetup( ProblemSpecP& db ){
   // model  variables  
   std::string modelName = _task_name;//"char_rate";
   std::string delvol_model_name = "devol_rate";
+  std::string surfAreaF_root = "surfaceAreaFraction";
   
   for (int l=0; l<m_nQn_part; l++) {
     // Create a label for this model
@@ -210,6 +212,8 @@ CharOxidationps<T>::problemSetup( ProblemSpecP& db ){
     //std::string PO2surf_temp = modelName + "_PO2surf";
     //m_PO2surf.push_back( ParticleTools::append_env( PO2surf_temp, l));
     m_devolRC.push_back( ParticleTools::append_env( delvol_model_name, l));
+    m_surfAreaF_name.push_back( ParticleTools::append_env( surfAreaF_root, l));
+
   }
 
   _gasPressure=101325.; // Fix this
@@ -239,6 +243,7 @@ CharOxidationps<T>::problemSetup( ProblemSpecP& db ){
   // check for char mass and get scaling constant
   std::string char_root        = ParticleTools::parse_for_role_to_label(db, "char");
   number_density_name          = ParticleTools::parse_for_role_to_label(db, "total_number_density");
+  
   // check for particle velocity
   std::string up_root = ParticleTools::parse_for_role_to_label(db, "uvel");
   std::string vp_root = ParticleTools::parse_for_role_to_label(db, "vvel");
@@ -597,9 +602,13 @@ CharOxidationps<T>::register_timestep_eval( std::vector<ArchesFieldContainer::Va
   // other particle variables 
 
   register_variable( number_density_name,          ArchesFieldContainer::REQUIRES, 0,  ArchesFieldContainer::LATEST, variable_registry, time_substep);
+
   for (int l=0; l<m_nQn_part; l++) {
     // from devol model 
     register_variable( m_devolRC[l],  ArchesFieldContainer::REQUIRES, 0,  ArchesFieldContainer::LATEST, variable_registry, time_substep);
+
+    register_variable( m_surfAreaF_name[l],  ArchesFieldContainer::REQUIRES, 0,  ArchesFieldContainer::LATEST, variable_registry, time_substep);
+
     //birth terms
 
 //    if (m_add_char_birth) {
@@ -660,17 +669,17 @@ CharOxidationps<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
  Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
  CT& number_density = tsk_info->get_const_uintah_field_add< CT >(number_density_name); // total number density
 
- T& AreaSumF = tsk_info->get_uintah_field_add< T >("AreaSum",0);// temporal variable
+ //T& AreaSumF = tsk_info->get_uintah_field_add< T >("AreaSum",0);// temporal variable
 
- AreaSumF.initialize(0.0);
- for (int l=0; l<m_nQn_part; l++) {
-   CT& weight = tsk_info->get_const_uintah_field_add< CT >(m_weight_name[l]);
-   CT& length = tsk_info->get_const_uintah_field_add< CT >(m_particle_length[l]);
+ //AreaSumF.initialize(0.0);
+ //for (int l=0; l<m_nQn_part; l++) {
+ //  CT& weight = tsk_info->get_const_uintah_field_add< CT >(m_weight_name[l]);
+ //  CT& length = tsk_info->get_const_uintah_field_add< CT >(m_particle_length[l]);
 
-   Uintah::parallel_for(range,  [&]( int i,  int j, int k){
-     AreaSumF(i,j,k) +=  weight(i,j,k)*length(i,j,k)*length(i,j,k); // [#/m]
-   }); //end cell loop
- } 
+ //  Uintah::parallel_for(range,  [&]( int i,  int j, int k){
+ //    AreaSumF(i,j,k) +=  weight(i,j,k)*length(i,j,k)*length(i,j,k); // [#/m]
+ //  }); //end cell loop
+ //} 
 
  DenseMatrix* dfdrh = scinew DenseMatrix(_NUM_reactions,_NUM_reactions);
  InversionBase* invf;
@@ -740,6 +749,7 @@ CharOxidationps<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
    //CT& RHS_weight    = tsk_info->get_const_uintah_field_add< CT >(m_w_RHS[l]);
    //CT& RHS_length    = tsk_info->get_const_uintah_field_add< CT >(m_length_RHS[l]);
 
+   CT& surfAreaF    = tsk_info->get_const_uintah_field_add< CT >(m_surfAreaF_name[l]);
 
    std::vector<double> D_oxid_mix_l(_NUM_reactions);
    std::vector<double> D_kn(_NUM_reactions);
@@ -765,7 +775,7 @@ CharOxidationps<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
    std::vector<double> F_delta(_NUM_reactions);
    std::vector<double> r_h_ex(_NUM_reactions);
    std::vector<double> r_h_in(_NUM_reactions);
-
+   
    Uintah::parallel_for(range,  [&]( int i,  int j, int k){
    
      if (weight(i,j,k)/m_weight_scaling_constant[l] < _weight_small) {
@@ -811,7 +821,6 @@ CharOxidationps<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
          species_mass_frac[ns] = (*species[ns])(i,j,k);// [mass fraction]
        }
 
-       double surfaceAreaFraction = w*p_diam*p_diam/AreaSumF(i,j,k); // [-] this is the weighted area fraction for the current particle size.
        double CO_CO2_ratio        = 200.*exp(-9000./(_R_cal*p_T))*44.0/28.0; // [ kg CO / kg CO2] => [kmoles CO / kmoles CO2]
        double CO2onCO             = 1./CO_CO2_ratio; // [kmoles CO2 / kmoles CO]
 
@@ -959,6 +968,8 @@ CharOxidationps<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
        //double oxi_lim             = 0.0; // max rate due to reactions
        //double rh_l_i              = 0.0;
        
+       double surfaceAreaFraction = surfAreaF(i,j,k);//w*p_diam*p_diam/AreaSumF(i,j,k); // [-] this is the weighted area fraction for the current particle size.
+
        for (int r=0; r<_NUM_reactions; r++) {
          (*reaction_rate[m2 + r])(i,j,k) = rh_l_new[r];// [kg/m^2/s] this is for the intial guess during the next time-step
          // check to see if reaction rate is oxidizer limited.

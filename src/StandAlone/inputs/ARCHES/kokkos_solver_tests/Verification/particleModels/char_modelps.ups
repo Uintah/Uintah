@@ -30,6 +30,11 @@
     <save label="vcellY"/>
     <save label="wcellZ"/>
     <save label="number_density"/>
+    <save label="surfaceAreaFraction_0"/>
+    <save label="surfaceAreaFraction_1"/>
+    <save label="surfaceAreaFraction_2"/>
+    <save label="surfaceAreaFraction_3"/>
+    <save label="surfaceAreaFraction_4"/>
     <save label="w_0"/>
     <save label="w_1"/>
     <save label="w_2"/>
@@ -70,7 +75,7 @@
     <save label="rho_coal_2"/>
     <save label="rho_coal_3"/>
     <save label="rho_coal_4"/>
-    <!--save label="char_gas_reaction0_qn0"/>
+    <save label="char_gas_reaction0_qn0"/>
     <save label="char_gas_reaction1_qn0"/>
     <save label="char_gas_reaction2_qn0"/>
     <save label="char_gas_reaction0_qn1"/>
@@ -84,7 +89,7 @@
     <save label="char_gas_reaction2_qn3"/>
     <save label="char_gas_reaction0_qn4"/>
     <save label="char_gas_reaction1_qn4"/>
-    <save label="char_gas_reaction2_qn4"/-->
+    <save label="char_gas_reaction2_qn4"/>
     <checkpoint cycle="2" interval="1e-5"/>
     <compression>gzip</compression>
   </DataArchiver>
@@ -316,7 +321,8 @@
         <model label="rho_coal" type="coal_density">
           <model_type>dynamic_dqmom</model_type>
         </model>
-        <model label="number_density" type="total_number_density"/>
+        <!--model label="number_density" type="total_number_density"/-->
+        <model label="dqmom_variales" type="particle_variables_dqmom"/>
         <model label="char_ps" type="char_oxidation_ps"/>
       </ParticleModels>
       <BoundaryConditions>
