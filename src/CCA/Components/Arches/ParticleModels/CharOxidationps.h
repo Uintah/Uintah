@@ -700,8 +700,7 @@ CharOxidationps<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
    //T& PO2surf            = tsk_info->get_uintah_field_add< T >(m_PO2surf[l]);
 
   // reaction rate 
-   for (int r=0; r<_NUM_reactions; r++) {
-    
+   for (int r=0; r<_NUM_reactions; r++) {    
     T* reaction_rate_p        = tsk_info->get_uintah_field< T >(m_reaction_rate_names[m]);
     CT* old_reaction_rate_p   = tsk_info->get_const_uintah_field< CT >(m_reaction_rate_names[m]);
     m += 1;
@@ -822,8 +821,8 @@ CharOxidationps<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
        }
 
        double relative_velocity = std::sqrt( ( CCuVel(i,j,k) - up(i,j,k) ) * ( CCuVel(i,j,k) - up(i,j,k) ) +
-                                        ( CCvVel(i,j,k) - vp(i,j,k) ) * ( CCvVel(i,j,k) - up(i,j,k) ) +
-                                        ( CCwVel(i,j,k) - wp(i,j,k) ) * ( CCwVel(i,j,k) - up(i,j,k) )  );// [m/s]
+                                        ( CCvVel(i,j,k) - vp(i,j,k) ) * ( CCvVel(i,j,k) - vp(i,j,k) ) +
+                                        ( CCwVel(i,j,k) - wp(i,j,k) ) * ( CCwVel(i,j,k) - wp(i,j,k) )  );// [m/s]
 
        double Re_p     = relative_velocity * p_diam / ( _dynamic_visc / gas_rho ); // Reynolds number [-]
        double x_org    = (rc + ch) / (rc + ch + m_mass_ash[l] );
@@ -835,6 +834,8 @@ CharOxidationps<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
        double psi = 1./(_p_void0*(1.-_p_void0));	
        double Sj  =  _init_particle_density/p_rho*((1-p_void)/(1-_p_void0))*std::sqrt(1-std::min(1.0,psi*log((1-p_void)/(1-_p_void0))));
        double rp  = 2 * p_void * (1. - p_void)/(p_rho * Sj * _Sg0); // average particle radius [m] 
+
+
        // Calculate oxidizer diffusion coefficient // effect diffusion through stagnant gas (see "Multicomponent Mass Transfer", Taylor and Krishna equation 6.1.14)
        for (int r=0; r<_NUM_reactions; r++) {
          double sum_x_D = 0;
@@ -844,7 +845,7 @@ CharOxidationps<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
            sum_x   = (_oxid_l[r] != _species_names[ns]) ? sum_x + species_mass_frac[ns]/(_MW_species[ns]) : sum_x;
          }
          D_oxid_mix_l[r] = sum_x/sum_x_D * std::sqrt(CUBE( gas_T/_T0));
-         D_kn[r]         = 97.*rp*sqrt(p_T/_MW_species[l]);
+         D_kn[r]         = 97.*rp*sqrt(p_T/_MW_species[r]);
          D_eff[r]        = p_void / _tau/(1./D_kn[r] + 1./D_oxid_mix_l[r]);
        }
 
@@ -875,7 +876,7 @@ CharOxidationps<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
            for (int k=0; k<_NUM_reactions; k++) {
              rh_l_delta[k] = rh_l[k]; // why ? OD
            }
-           rh_l_delta[j] = rh_l[j]+delta;
+           rh_l_delta[j] = rh_l[j] + delta;
            rf->root_function(F_delta, rh_l_delta, co_r, gas_rho, cg, k_r, MW, r_devol_ns, p_diam, Sh,
                              D_oxid_mix_l, phi_l, p_void, effectivenessF, Sj, p_rho, x_org,_NUM_reactions, _Sg0, _Mh);
            //root_function( F_delta, rh_l_delta, co_r, gas_rho, cg, k_r, MW, r_devol_ns, p_diam, Sh, D_oxid_mix_l, phi_l, p_void, effectivenessF, Sj, p_rho, x_org);
@@ -886,18 +887,21 @@ CharOxidationps<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
          // invert Jacobian -> (dF_(n)/drh_(n))^-1
          invf->invert_mat(dfdrh); // simple matrix inversion for a 2x2 matrix.
          // get rh_(n+1)
-         double dominantRate=0.0;
+         double dominantRate = 0.0;
+         //double max_F = 1e-8;
          for (int r = 0; r <_NUM_reactions; r++) {
            for (int var=0; var<_NUM_reactions; var++) {
              rh_l_new[r] -= (*dfdrh)[r][var]*F[var];
            }
            dominantRate = std::max(dominantRate,std::abs(rh_l_new[r]));
+           //max_F = std::max(max_F,std::abs(F[r]));
          }
 
          double residual = 0.0;
 
          for (int r =0; r<_NUM_reactions; r++) {
            residual += std::abs(F[r])/dominantRate;
+           //residual += std::abs(F[r])/max_F;
 
          }
          // make sure rh_(n+1) is inbounds
@@ -905,13 +909,19 @@ CharOxidationps<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
            rh_l_new[r]=std::min(100000., std::max(0.0, rh_l_new[r])); // max rate adjusted based on pressure (empirical limit)
          }
          //if (residual < 1e-3) {
-         if (residual < 1e-3) {
-           std::cout << "residual: " <<" "<< residual << " " << "Number of iterations "<< count << " " <<" env " << l << " "  << i << ", " << j << ", " << k << "] " << std::endl;
+         if (residual < 1e-8) {
+           //std::cout << "residual: " <<" "<< residual << " " << "Number of iterations "<< count << " " <<" env " << l  << std::endl;
+           //std::cout << "F[0]: " << F[0] << std::endl;
+           //std::cout << "F[1]: " << F[1] << std::endl;
+           //std::cout << "F[2]: " << F[2] << std::endl;
            break;
          }
        } // end newton solve
        if (count > 90){
            std::cout << "warning no solution found in char ox: [env " << l << " "  << i << ", " << j << ", " << k << "] " << std::endl;
+           std::cout << "F[0]: " << F[0] << std::endl;
+           std::cout << "F[1]: " << F[1] << std::endl;
+           std::cout << "F[2]: " << F[2] << std::endl;
            std::cout << "p_void: " << p_void << std::endl;
            std::cout << "gas_rho: " << gas_rho << std::endl;
            std::cout << "gas_T: " << gas_T << std::endl;
@@ -924,17 +934,20 @@ CharOxidationps<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
            std::cout << "oxid_mass_frac[0]: " << oxid_mass_frac[0] << std::endl;
            std::cout << "oxid_mass_frac[1]: " << oxid_mass_frac[1] << std::endl;
            std::cout << "oxid_mass_frac[2]: " << oxid_mass_frac[2] << std::endl;
+           std::cout << "oxid_mole_frac[0]: " << oxid_mole_frac[0] << std::endl;
+           std::cout << "oxid_mole_frac[1]: " << oxid_mole_frac[1] << std::endl;
+           std::cout << "oxid_mole_frac[2]: " << oxid_mole_frac[2] << std::endl;
            std::cout << "D_oxid_mix_l[0]: " << D_oxid_mix_l[0] << std::endl;
            std::cout << "D_oxid_mix_l[1]: " << D_oxid_mix_l[1] << std::endl;
            std::cout << "D_oxid_mix_l[2]: " << D_oxid_mix_l[2] << std::endl;
            std::cout << "rh_l_new[0]: " << rh_l_new[0] << std::endl;
            std::cout << "rh_l_new[1]: " << rh_l_new[1] << std::endl;
            std::cout << "rh_l_new[2]: " << rh_l_new[2] << std::endl;
-                 std::cout << "org: " << rc + ch << std::endl;
-                 std::cout << "x_org: " << x_org << std::endl;
-                 std::cout << "p_rho: " << p_rho << std::endl;
-                 std::cout << "p_void0: " << _p_void0 << std::endl;
-                 std::cout << "psi: " << psi << std::endl;
+           std::cout << "org: " << rc + ch << std::endl;
+           std::cout << "x_org: " << x_org << std::endl;
+           std::cout << "p_rho: " << p_rho << std::endl;
+           std::cout << "p_void0: " << _p_void0 << std::endl;
+           std::cout << "psi: " << psi << std::endl;
        }
 
        double char_mass_rate      = 0.0;

@@ -285,7 +285,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
         TaskInterface::TaskBuilder* tsk = scinew TotNumDensity::Builder(task_name, 0);
         register_task( task_name, tsk );
 
-        _active_tasks.push_back(task_name);
+        //_active_tasks.push_back(task_name);
         _post_update_particle_tasks.push_back(task_name);
 
         temp_model_list.insert(temp_model_list.begin(), task_name); // order hack
@@ -305,7 +305,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
             FOWYDevol<CCVariable<double> >::Builder(task_name, 0, model_name, N);
 
             register_task( task_name, tsk );
-            _active_tasks.push_back(task_name);
+            //_active_tasks.push_back(task_name);
             _post_update_particle_tasks.push_back(task_name);
 
           } else {
@@ -332,7 +332,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
           ShaddixOxidation<CCVariable<double> >::Builder(task_name, 0, model_name, N);
 
           register_task( task_name, tsk );
-          _active_tasks.push_back(task_name);
+          //_active_tasks.push_back(task_name);
           _post_update_particle_tasks.push_back(task_name);
 
         } else {
@@ -354,7 +354,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
           ShaddixEnthalpy<CCVariable<double> >::Builder(task_name, 0, model_name, N);
 
           register_task( task_name, tsk );
-          _active_tasks.push_back(task_name);
+          //_active_tasks.push_back(task_name);
           _post_update_particle_tasks.push_back(task_name);
 
         } else {
