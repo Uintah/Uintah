@@ -40,6 +40,7 @@
 #include <CCA/Components/Arches/ParticleModels/ShaddixOxidation.h>
 #include <CCA/Components/Arches/ParticleModels/TotNumDensity.h>
 #include <CCA/Components/Arches/ParticleModels/CharOxidationps.h>
+#include <CCA/Components/Arches/ParticleModels/PartVariablesDQMOM.h>
 
 
 using namespace Uintah;
@@ -269,6 +270,11 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
         TaskInterface::TaskBuilder* tsk = scinew CharOxidationps< CCVariable<double> >::Builder(task_name,0);
         register_task( task_name, tsk );
         
+      } else if ( type == "particle_variables_dqmom" ) {
+
+        TaskInterface::TaskBuilder* tsk = scinew PartVariablesDQMOM::Builder(task_name,0);
+        register_task( task_name, tsk );
+
       } else if ( type == "rate_deposition" ) {
 
         TaskInterface::TaskBuilder* tsk = scinew RateDeposition::Builder(task_name,0,N);

@@ -39,7 +39,7 @@ namespace Uintah {
         numerator   =  Mh * MW * phi_l[l] * k_r[l] * mtc_r * Sfactor * co_r[l] * cg; // [(#^2 kg-char kg-mix) / (s^2 m^6)]
         denominator = MW * cg * (k_r[l] * x_org * (1.-p_void) * Sfactor + mtc_r); // [(kg-mix #) / (m^3 s)]
         F[l]        = rh_l[l] - numerator / ( denominator + rtot); // [kg-char/m^3/s]
-        double n_d = numerator / ( denominator + rtot);
+        //double n_d = numerator / ( denominator + rtot);
         //std::cout <<  " Num_reaction " << l << " F: " << F[l] << std::endl;
         //std::cout <<  " Num_reaction " << l << " rh_l: " << rh_l[l]  << std::endl;
         //std::cout <<  " Num_reaction " << l << " n_d: " << n_d  << std::endl;

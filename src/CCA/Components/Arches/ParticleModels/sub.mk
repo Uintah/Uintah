@@ -40,6 +40,7 @@ SRCS +=  \
          $(SRCDIR)/ParticleModelFactory.cc \
          $(SRCDIR)/ShaddixOxidation.cc     \
          $(SRCDIR)/CharOxidationps.cc     \
+         $(SRCDIR)/PartVariablesDQMOM.cc     \
          $(SRCDIR)/TotNumDensity.cc        
 
 
