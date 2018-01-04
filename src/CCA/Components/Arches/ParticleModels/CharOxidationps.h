@@ -10,6 +10,7 @@
 
 #define SQUARE(x) x*x
 #define CUBE(x) x*x*x
+
 namespace Uintah{
 
   template <typename T>
@@ -59,12 +60,12 @@ public:
 
 private:
     // constants
-    const double _R; // [J/ (K mol) ]
-    const double _R_cal; // [cal/ (K mol) ]
-    const double _HF_CO2; // [J/mol]
-    const double _HF_CO; // [J/mol]
-    const double _T0;
-    const double _tau; // tortuosity
+    double _R; // [J/ (K mol) ]
+    double _R_cal; // [cal/ (K mol) ]
+    double _HF_CO2; // [J/mol]
+    double _HF_CO; // [J/mol]
+    double _T0;
+    double _tau; // tortuosity
 
     int m_nQn_part;
     // model name lists
@@ -166,6 +167,12 @@ TaskInterface( task_name, matl_index ) {
 //--------------------------------------------------------------------------------------------------
 template<typename T>
 CharOxidationps<T>::~CharOxidationps(){
+}
+
+//--------------------------------------------------------------------------------------------------
+template<typename T> void
+CharOxidationps<T>::problemSetup( ProblemSpecP& db ){
+
   // Set constants
   // Enthalpy of formation (J/mol)
   _HF_CO2 = -393509.0;
@@ -176,18 +183,12 @@ CharOxidationps<T>::~CharOxidationps(){
   //binary diffsuion at 293 K
   _T0 = 293.0;
   _tau = 1.9598;    //tortuosity
-}
-
-//--------------------------------------------------------------------------------------------------
-template<typename T> void
-CharOxidationps<T>::problemSetup( ProblemSpecP& db ){
-
-
+  
   m_nQn_part = ParticleTools::get_num_env(db,ParticleTools::DQMOM);
 
   // get Char source term label and devol label from the devolatilization model
   // model  variables  
-  std::string modelName = "char_rate";
+  std::string modelName = _task_name;//"char_rate";
   std::string delvol_model_name = "devol_rate";
   for (int l=0; l<m_nQn_part; l++) {
     // Create a label for this model
@@ -398,9 +399,6 @@ CharOxidationps<T>::problemSetup( ProblemSpecP& db ){
     }
 
   // reactions 
-  std::string rate_name = "char_reaction";
-  std::stringstream str_l;
-  std::stringstream str_qn;
 
   for ( ProblemSpecP db_reaction = db_Smith->findBlock( "reaction" ); db_reaction != nullptr; db_reaction = db_reaction->findNextBlock( "reaction" ) ){
     //get reaction rate params
@@ -422,10 +420,27 @@ CharOxidationps<T>::problemSetup( ProblemSpecP& db ){
   }
 
   ChemHelper& helper = ChemHelper::self();
+
   diffusion_terms binary_diff_terms; // this allows access to the binary diff coefficients etc, in the header file.
+  int table_size;
+  table_size = binary_diff_terms.num_species;
+  
   // find indices specified by user.
   std::vector<int> specified_indices;
-
+  bool check_species;
+  for (int j=0; j<_NUM_species; j++) {
+    check_species = true;
+    for (int i=0; i<table_size; i++) {
+      if (_species_names[j]==binary_diff_terms.sp_name[i]){
+        specified_indices.push_back(i);
+        check_species = false;
+      }
+    }
+    if (check_species ) {
+      throw ProblemSetupException("Error: Species specified in SmithChar2016 oxidation species, not found in SmithChar2016 data-base (please add it).", __FILE__, __LINE__);
+    }
+  }
+  
   std::vector<double> temp_v;
   for (int i=0; i<_NUM_species; i++) {
     temp_v.clear();
@@ -447,7 +462,7 @@ CharOxidationps<T>::problemSetup( ProblemSpecP& db ){
 
   for (int l=0; l<m_nQn_part; l++) {
     for (int r=0; r<_NUM_reactions; r++) {
-     std::string rate_name = "char_reaction" + std::to_string(r) +"_qn"+ std::to_string(l); 
+     std::string rate_name = "char_gas_reaction" + std::to_string(r) +"_qn"+ std::to_string(l); 
      m_reaction_rate_names.push_back(rate_name);
     }
   }
@@ -490,13 +505,41 @@ CharOxidationps<T>::register_initialize( std::vector<ArchesFieldContainer::Varia
     //register_variable( m_PO2surf[l],      ArchesFieldContainer::COMPUTES, variable_registry );
   }
 
+
+  int nrtq = _NUM_reactions*m_nQn_part;// number of reaction x number of env
+
+  for (int l=0; l<nrtq; l++) {
+    register_variable( m_reaction_rate_names[l],   ArchesFieldContainer::COMPUTES, variable_registry );
+  }
+
 }
 
 //--------------------------------------------------------------------------------------------------
 template<typename T> void
 CharOxidationps<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
+
+  for (int l=0; l<m_nQn_part; l++) {
+    // model variables
+    T& char_rate          = tsk_info->get_uintah_field_add< T >(m_modelLabel[l]);
+    T& gas_char_rate      = tsk_info->get_uintah_field_add< T >(m_gasLabel[l]);
+    T& particle_temp_rate = tsk_info->get_uintah_field_add< T >(m_particletemp[l]);
+    T& particle_Size_rate = tsk_info->get_uintah_field_add< T >(m_particleSize[l]);
+    T& surface_rate       = tsk_info->get_uintah_field_add< T >(m_surfacerate[l]);
+    char_rate.initialize(0.0);
+    gas_char_rate.initialize(0.0);
+    particle_temp_rate.initialize(0.0);
+    particle_Size_rate.initialize(0.0);
+    surface_rate.initialize(0.0);
+  }
+  int nrtq = _NUM_reactions*m_nQn_part;// number of reaction x number of env
+  for (int r=0; r<nrtq; r++) {
+   T& reaction_rate        = tsk_info->get_uintah_field_add< T >(m_reaction_rate_names[r]);
+   reaction_rate.initialize(0.0);
+
+  }
 //  CCVariable<double>& char_rate          = tsk_info->get_uintah_field_add<CCVariable<double> >(d_modelLabel);
+ ///AreaSumF.initialize(0.0);
 
 }
 //--------------------------------------------------------------------------------------------------
@@ -526,7 +569,7 @@ CharOxidationps<T>::register_timestep_eval( std::vector<ArchesFieldContainer::Va
      
   }
 
-  register_variable( "AreaSum",      ArchesFieldContainer::COMPUTES, variable_registry , time_substep );
+  //register_variable( "AreaSum",      ArchesFieldContainer::COMPUTES, variable_registry , time_substep );
 
   int nrtq = _NUM_reactions*m_nQn_part;// number of reaction x number of env
   for (int l=0; l<nrtq; l++) {
@@ -573,7 +616,7 @@ CharOxidationps<T>::register_timestep_eval( std::vector<ArchesFieldContainer::Va
     register_variable( m_rcmass[l],                ArchesFieldContainer::REQUIRES, 0,  ArchesFieldContainer::LATEST, variable_registry, time_substep);
     register_variable( m_char_name[l],             ArchesFieldContainer::REQUIRES, 0,  ArchesFieldContainer::LATEST, variable_registry, time_substep);
     register_variable( m_weight_name[l],           ArchesFieldContainer::REQUIRES, 0,  ArchesFieldContainer::LATEST, variable_registry, time_substep);
-    register_variable( m_weightqn_name[l],         ArchesFieldContainer::REQUIRES, 0,  ArchesFieldContainer::LATEST, variable_registry, time_substep);
+    //register_variable( m_weightqn_name[l],         ArchesFieldContainer::REQUIRES, 0,  ArchesFieldContainer::LATEST, variable_registry, time_substep);
     register_variable( m_up_name[l],               ArchesFieldContainer::REQUIRES, 0,  ArchesFieldContainer::LATEST, variable_registry, time_substep);
     register_variable( m_vp_name[l],               ArchesFieldContainer::REQUIRES, 0,  ArchesFieldContainer::LATEST, variable_registry, time_substep);
     register_variable( m_wp_name[l],               ArchesFieldContainer::REQUIRES, 0,  ArchesFieldContainer::LATEST, variable_registry, time_substep);
@@ -638,9 +681,13 @@ CharOxidationps<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
  } else {
    throw InvalidValue("ERROR: CharOxidationSmith2016: Matrix inversion not implemented for the number of reactions being used.",__FILE__,__LINE__);
  }
+ //root function: find a better way of doing this 
+ RootFunctionBase* rf;
+ rf = scinew root_functionB;
+ 
 
  std::vector< T* > reaction_rate;
- std::vector< T* > old_reaction_rate;
+ std::vector< CT* > old_reaction_rate;
  int m = 0; // to access reaction list: try to see if I can do 2 D
  int m2 = 0; // to access reaction list: try to see if I can do 2 D
  for (int l=0; l<m_nQn_part; l++) {
@@ -743,10 +790,10 @@ CharOxidationps<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
        double ch         = char_mass(i,j,k);// [kg/#]
        double w          = weight(i,j,k);// [#/m^3]
        double MW         = 1./MWmix(i,j,k); // [kg mix / kmol mix] (MW in table is 1/MW).
-       double RHS        = RHS_source(i,j,k)*m_char_scaling_constant*m_weight_scaling_constant; // [kg/s]
-       double r_devol    = devolRC(i,j,k)*m_RC_scaling_constant*m_weight_scaling_constant; // [kg/m^3/s]
+       double RHS        = RHS_source(i,j,k)*m_char_scaling_constant[l]*m_weight_scaling_constant[l]; // [kg/s]
+       double r_devol    = devolRC(i,j,k)*m_RC_scaling_constant[l]*m_weight_scaling_constant[l]; // [kg/m^3/s]
        double r_devol_ns = -r_devol; // [kg/m^3/s]
-       double RHS_v      = RC_RHS_source(i,j,k)*m_RC_scaling_constant*m_weight_scaling_constant; // [kg/s]
+       double RHS_v      = RC_RHS_source(i,j,k)*m_RC_scaling_constant[l]*m_weight_scaling_constant[l]; // [kg/s]
 
        // populate temporary variable vectors
        double delta = 1e-6;
@@ -818,13 +865,17 @@ CharOxidationps<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
            rh_l[r]=rh_l_new[r];
          }
          // get F and Jacobian -> dF/drh
-         root_function( F, rh_l, co_r, gas_rho, cg, k_r, MW, r_devol_ns, p_diam, Sh, D_oxid_mix_l, phi_l, p_void, effectivenessF, Sj, p_rho, x_org);
+         rf->root_function(F, rh_l, co_r, gas_rho, cg, k_r, MW, r_devol_ns, p_diam, Sh,
+                            D_oxid_mix_l, phi_l, p_void, effectivenessF, Sj,p_rho, x_org, _NUM_reactions, _Sg0, _Mh);
+         //root_function( F, rh_l, co_r, gas_rho, cg, k_r, MW, r_devol_ns, p_diam, Sh, D_oxid_mix_l, phi_l, p_void, effectivenessF, Sj, p_rho, x_org);
          for (int j=0; j<_NUM_reactions; j++) {
            for (int k=0; k<_NUM_reactions; k++) {
              rh_l_delta[k] = rh_l[k];
            }
            rh_l_delta[j] = rh_l[j]+delta;
-           root_function( F_delta, rh_l_delta, co_r, gas_rho, cg, k_r, MW, r_devol_ns, p_diam, Sh, D_oxid_mix_l, phi_l, p_void, effectivenessF, Sj, p_rho, x_org);
+           rf->root_function(F_delta, rh_l_delta, co_r, gas_rho, cg, k_r, MW, r_devol_ns, p_diam, Sh,
+                             D_oxid_mix_l, phi_l, p_void, effectivenessF, Sj, p_rho, x_org,_NUM_reactions, _Sg0, _Mh);
+           //root_function( F_delta, rh_l_delta, co_r, gas_rho, cg, k_r, MW, r_devol_ns, p_diam, Sh, D_oxid_mix_l, phi_l, p_void, effectivenessF, Sj, p_rho, x_org);
            for (int l=0; l<_NUM_reactions; l++) {
              (*dfdrh)[l][j] = (F_delta[l] - F[l]) / delta;
            }
@@ -940,6 +991,7 @@ CharOxidationps<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     delete dfdrh;
     delete invf;
+    delete rf;
     ///
 
 }

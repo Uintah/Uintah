@@ -3,22 +3,24 @@
 
 namespace Uintah {
 
+  struct RootFunctionBase {
+    virtual void root_function( std::vector<double> & F, std::vector<double> & rh_l, std::vector<double> & co_r,
+                                   double & gas_rho, double & cg, std::vector<double> & k_r, double & MW, 
+                                   double & r_devol, double & p_diam, std::vector<double> & Sh,
+                                   std::vector<double> & D_oxid_mix_l, std::vector<double> & phi_l,
+                                   double & p_void, std::vector<double> & effectivenessF, double & Sj,
+                                   double & p_rho, double & x_org, int & NUM_reactions, double& Sg0, double& Mh )=0;
+    virtual ~RootFunctionBase(){}
+  };
 
-  struct root_function{
-    root_function( std::vector<double> & i_F, std::vector<double> & i_rh_l, std::vector<double> & i_co_r,
-                                   double & i_gas_rho, double & i_cg, std::vector<double> & i_k_r, double & i_MW, 
-                                   double & i_r_devol, double & i_p_diam, std::vector<double> & i_Sh,
-                                   std::vector<double> & i_D_oxid_mix_l, std::vector<double> & i_phi_l,
-                                   double & i_p_void, std::vector<double> & i_effectivenessF, double & i_Sj,
-                                   double & i_p_rho, double & i_x_org, int i_NUM_reactions, double i_Sg0, double i_Mh ):
-                                    F(i_F), rh_l(i_rh_l), co_r(i_co_r), gas_rho(i_gas_rho), 
-                                    cg(i_cg), k_r(i_k_r), MW(i_MW), r_devol(i_r_devol), 
-                                    p_diam(i_p_diam), Sh(i_Sh), D_oxid_mix_l(i_D_oxid_mix_l),phi_l(i_phi_l),
-                                    p_void(i_p_void), effectivenessF(i_effectivenessF), Sj(i_Sj), p_rho(i_p_rho),
-                                    x_org(i_x_org), NUM_reactions(i_NUM_reactions), Sg0(i_Sg0), Mh(i_Mh)
-    {}
-    void
-    operator() () { 
+  struct root_functionB : RootFunctionBase{
+    void root_function( std::vector<double> & F, std::vector<double> & rh_l, std::vector<double> & co_r,
+                                   double & gas_rho, double & cg, std::vector<double> & k_r, double & MW, 
+                                   double & r_devol, double & p_diam, std::vector<double> & Sh,
+                                   std::vector<double> & D_oxid_mix_l, std::vector<double> & phi_l,
+                                   double & p_void, std::vector<double> & effectivenessF, double & Sj,
+                                   double & p_rho, double & x_org, int & NUM_reactions, double& Sg0, double& Mh )
+    { 
       double rh = 0.0;
       double rtot = 0.0;
       double Sfactor = 0.0;
@@ -39,28 +41,7 @@ namespace Uintah {
         F[l]        = rh_l[l] - numerator / ( denominator + rtot); // [kg-char/m^3/s]
       }
     }
-    private:
-
-    std::vector<double> F;
-    std::vector<double> rh_l;
-    std::vector<double> co_r;
-    double gas_rho; 
-    double cg; 
-    std::vector<double> k_r; 
-    double MW; 
-    double r_devol; 
-    double p_diam;
-    std::vector<double> Sh;
-    std::vector<double> D_oxid_mix_l;
-    std::vector<double> phi_l;
-    double p_void; 
-    std::vector<double> effectivenessF; 
-    double Sj; 
-    double p_rho;
-    double x_org;
-    int NUM_reactions;
-    double Sg0;
-    double Mh;
+    ~root_functionB(){}
   };
 
 

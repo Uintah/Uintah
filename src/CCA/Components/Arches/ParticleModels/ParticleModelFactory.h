@@ -27,6 +27,10 @@ namespace Uintah{
 
         return _post_update_particle_tasks;
 
+      } else if ( subset == "char_oxidation_text"){
+
+        return _char_oxidation_text_tasks;
+
       } else if ( subset == _all_tasks_str ){
 
         return _active_tasks;
@@ -43,6 +47,7 @@ namespace Uintah{
 
     std::vector<std::string> _coal_models;                 ///< Tasks associated with coal
     std::vector<std::string> _post_update_particle_tasks;  ///< Tasks that execute after the timeave
+    std::vector<std::string> _char_oxidation_text_tasks; /// only for debug char oxidation
                                                             //  of the particle transport variables
 
   };

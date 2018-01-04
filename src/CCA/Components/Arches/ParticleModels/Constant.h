@@ -76,13 +76,26 @@ namespace Uintah{
 
     const int _N;                      //<<< The number of "environments"
     std::vector<double> _const;        //<<< constant source value/environment
+    bool m_add_qn;
+    bool m_add_RHS;
 
-    const std::string get_name(const int i, const std::string base_name){
+    const std::string get_name(const int i, const std::string base_name, 
+                               bool add_qn = false, bool m_add_RHS = false){
       std::stringstream out;
       std::string env;
       out << i;
       env = out.str();
-      return base_name + "_" + env;
+      std::string name;
+
+      if (add_qn) {
+        name = base_name + env ;
+      } else if (m_add_RHS) {
+        name = base_name + "qn" + env + "_RHS";
+      } else {
+        name = base_name + "_" + env;
+      }
+
+      return name ;
     }
 
   };
@@ -92,7 +105,7 @@ namespace Uintah{
   template <typename T>
   void Constant<T>::create_local_labels(){
     for ( int i = 0; i < _N; i++ ){
-      const std::string name = get_name(i, _base_var_name);
+      const std::string name = get_name(i, _base_var_name, m_add_qn, m_add_RHS);
       register_new_variable<T>(name);
     }
   }
@@ -109,7 +122,15 @@ namespace Uintah{
 
   template <typename T>
   void Constant<T>::problemSetup( ProblemSpecP& db ){
+    m_add_qn  = false;
+    m_add_RHS = false;
 
+    if (db->findBlock("add_qn")){
+      m_add_qn = true;  
+    } else if (db->findBlock("add_RHS")){
+      m_add_RHS = true;
+    }
+      
     db->require("constant",_const);
 
   }
@@ -120,7 +141,7 @@ namespace Uintah{
 
     for ( int ei = 0; ei < _N; ei++ ){
 
-      const std::string name = get_name(ei, _base_var_name);
+      const std::string name = get_name(ei, _base_var_name, m_add_qn, m_add_RHS);
       register_variable( name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry );
 
     }
@@ -131,7 +152,7 @@ namespace Uintah{
 
     for ( int ei = 0; ei < _N; ei++ ){
 
-      const std::string name = get_name(ei, _base_var_name);
+      const std::string name = get_name(ei, _base_var_name, m_add_qn, m_add_RHS);
       T& model_value = tsk_info->get_uintah_field_add<T>(name);
 
       Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
@@ -147,7 +168,7 @@ namespace Uintah{
     for ( int ei = 0; ei < _N; ei++ ){
 
       //dependent variables(s) or model values
-      const std::string name = get_name(ei, _base_var_name);
+      const std::string name = get_name(ei, _base_var_name, m_add_qn, m_add_RHS);
       register_variable( name, ArchesFieldContainer::COMPUTES, variable_registry );
 
     }
@@ -158,7 +179,7 @@ namespace Uintah{
 
     for ( int ei = 0; ei < _N; ei++ ){
 
-      const std::string name = get_name(ei, _base_var_name);
+      const std::string name = get_name(ei, _base_var_name, m_add_qn, m_add_RHS);
       T& model_value = tsk_info->get_uintah_field_add<T>(name);
 
       Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
