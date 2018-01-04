@@ -1,6 +1,9 @@
 #ifndef Uintah_Component_Arches_CharOxidationpsHelpe_h
 #define Uintah_Component_Arches_CharOxidationpsHelpe_h
 
+#include <algorithm>
+#include <numeric>
+
 namespace Uintah {
 
   struct RootFunctionBase {
