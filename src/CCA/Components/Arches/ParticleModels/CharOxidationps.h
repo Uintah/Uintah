@@ -905,7 +905,7 @@ CharOxidationps<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
            rh_l_new[r]=std::min(100000., std::max(0.0, rh_l_new[r])); // max rate adjusted based on pressure (empirical limit)
          }
          //if (residual < 1e-3) {
-         if (residual < 1e-12) {
+         if (residual < 1e-3) {
            std::cout << "residual: " <<" "<< residual << " " << "Number of iterations "<< count << " " <<" env " << l << " "  << i << ", " << j << ", " << k << "] " << std::endl;
            break;
          }
