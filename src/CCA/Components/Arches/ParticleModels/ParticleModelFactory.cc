@@ -224,7 +224,6 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
 
           register_task( task_name, tsk );
           _post_update_particle_tasks.push_back(task_name);
-          _char_oxidation_text_tasks.push_back(task_name);
 
           //else lagrangian particle type...need to add
         } else {
@@ -239,7 +238,6 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
         register_task( task_name, tsk );
 
         _coal_models.push_back(task_name);
-        _char_oxidation_text_tasks.push_back(task_name);
 
         _post_update_particle_tasks.push_back(task_name);
 
@@ -270,7 +268,6 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
       
         TaskInterface::TaskBuilder* tsk = scinew CharOxidationps< CCVariable<double> >::Builder(task_name,0);
         register_task( task_name, tsk );
-        _char_oxidation_text_tasks.push_back(task_name);
         
       } else if ( type == "rate_deposition" ) {
 

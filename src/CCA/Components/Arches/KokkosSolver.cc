@@ -388,8 +388,6 @@ KokkosSolver::initialize( const LevelP& level, SchedulerP& sched, const bool doi
   //source_term_kokkos_factory
   m_task_factory_map["source_term_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
 
-  // particle model facotry
-  m_task_factory_map["particle_model_factory"]->schedule_task_group( "char_oxidation_text", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
 
  // m_task_factory_map["boundary_condition_factory"]->schedule_task_group( "all_tasks", TaskInterface::BC, pack_tasks, level, sched, matls );
 
