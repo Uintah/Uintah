@@ -1557,6 +1557,7 @@
                                                                         total_number_density,
                                                                         fowy_devolatilization,
                                                                         shaddix_oxidation,
+                                                                        char_oxidation_ps,
                                                                         shaddix_enthalpy'">
 
             <!-- The grid parameter is used for templated properties -->
