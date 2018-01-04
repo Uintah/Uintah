@@ -7,6 +7,7 @@
 #include <CCA/Components/Arches/SourceTermsV2/MMS_Shunn.h>
 #include <CCA/Components/Arches/SourceTermsV2/MMS_ShunnP3.h>
 #include <CCA/Components/Arches/SourceTermsV2/MMS_scalar.h>
+#include <CCA/Components/Arches/SourceTermsV2/GravityA.h>
 
 using namespace Uintah;
 
@@ -129,6 +130,12 @@ SourceTermFactoryV2::register_all_tasks( ProblemSpecP& db )
       } else if ( type == "MMS_scalar" ) {
 
         TaskInterface::TaskBuilder* tsk = scinew MMS_scalar::Builder( name, 0 , _shared_state );
+        register_task( name, tsk );
+        _pre_update_source_tasks.push_back( name );
+
+      } else if ( type == "gravity" ) {
+
+        TaskInterface::TaskBuilder* tsk = scinew GravityA::Builder( name, 0  );
         register_task( name, tsk );
         _pre_update_source_tasks.push_back( name );
 
