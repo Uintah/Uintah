@@ -18,8 +18,8 @@
   </Time>
   <DataArchiver>
     <filebase>charps.uda</filebase>
-    <outputTimestepInterval>2</outputTimestepInterval>
-    <!--outputInitTimestep/-->
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
     <save label="uVel"/>
     <save label="vVel"/>
     <save label="wVel"/>
@@ -100,7 +100,7 @@
         <upper>[1.0,1.0,1.0]</upper>
         <resolution>[24,24,24]</resolution>
         <extraCells>[0,0,0]</extraCells>
-        <patches>[1,1,1]</patches>
+        <patches>[2,2,2]</patches>
       </Box>
       <periodic>[1,1,1]</periodic>
     </Level>
