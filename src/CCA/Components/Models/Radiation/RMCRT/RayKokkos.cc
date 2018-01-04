@@ -927,7 +927,7 @@ struct rayTrace_solveDivQFunctor {
               printf( " dir %d ", dir );
               printf( "tMax [%g,%g,%g] ", tMax[0], tMax[1], tMax[2] );
               printf( "rayLoc [%g,%g,%g] ", ray_location[0], ray_location[1], ray_location[2]);
-              printf( "distanceTraveled %g tMax[dir]: %g tMax_prev: %g, Dx[dir]: %g\n", disMin, tMax[dir], tMax_prev, m_Dx[dir] );
+              printf( "distanceTraveled %g tMax[dir]: %g tMax_prev: %g, Dx[dir]: %g\n", disMin, tMax[dir], tMax_prev, m_levelParams.Dx[dir] );
               printf( "            tDelta [%g,%g,%g] \n", tDelta[0], tDelta[1], tDelta[2] );
 
    //         printf( "            abskg[prev] %g  \t sigmaT4OverPi[prev]: %g \n", m_abskg(prevCell[0],prevCell[1],prevCell[2]), m_sigmaT4OverPi(prevCell[0],prevCell[1],prevCell[2]) );
@@ -2030,7 +2030,7 @@ struct rayTrace_dataOnion_solveDivQFunctor {
         //    printf( " stepSize [%i,%i,%i] ", step[0], step[1], step[2] );
               printf( "tMax [%g,%g,%g] ", tMaxV[0],tMaxV[1], tMaxV[2] );
               printf( "rayLoc [%4.5f,%4.5f,%4.5f] ", ray_location[0], ray_location[1], ray_location[2] );
-              printf( "\tdistanceTraveled %4.5f tMax[dir]: %g tMax_prev[dir]: %g, Dx[dir]: %g\n", distanceTraveled, tMaxV[dir], tMaxV_prev[dir], m_Dx[L][dir] );
+              printf( "\tdistanceTraveled %4.5f tMax[dir]: %g tMax_prev[dir]: %g, Dx[dir]: %g\n", distanceTraveled, tMaxV[dir], tMaxV_prev[dir], m_levelParamsML[L].Dx[dir] );
               printf( "                tDelta [%g,%g,%g] \n", tDelta[L][0], tDelta[L][1], tDelta[L][2] );
         //    printf( "inv_dir [%g,%g,%g] ",inv_direction.x(),inv_direction.y(), inv_direction.z() );
         //    printf( "            abskg[prev] %g  \t sigmaT4OverPi[prev]: %g \n", abskg[prevLev][prevCell], sigmaT4OverPi[prevLev][prevCell] );
