@@ -56,6 +56,151 @@ std::mutex rand_init_mutex{};
 
 namespace Uintah {
 
+struct RMCRT_flags{
+  struct xyz {
+    unsigned int x{0};
+    unsigned int y{0};
+    unsigned int z{0};
+  };
+  xyz finePatchLow;
+  xyz finePatchSize;
+  unsigned int startCell{0};
+  unsigned int endCell{0};
+  unsigned int cellsPerGroup{0};
+};
+
+
+struct LevelParams {
+  double Dx[3];                // cell spacing
+  double anchor[3];            // level anchor
+
+  LevelParams() = default;
+  //Allow only copying, which is needed for functors.
+  LevelParams(const LevelParams& rhs) {
+    this->Dx[0] = rhs.Dx[0];
+    this->Dx[1] = rhs.Dx[1];
+    this->Dx[2] = rhs.Dx[2];
+    this->anchor[0] = rhs.anchor[0];
+    this->anchor[1] = rhs.anchor[1];
+    this->anchor[2] = rhs.anchor[2];
+  }
+  void operator=(const LevelParams& rhs){
+    this->Dx[0] = rhs.Dx[0];
+    this->Dx[1] = rhs.Dx[1];
+    this->Dx[2] = rhs.Dx[2];
+    this->anchor[0] = rhs.anchor[0];
+    this->anchor[1] = rhs.anchor[1];
+    this->anchor[2] = rhs.anchor[2];
+  }
+
+  LevelParams(LevelParams&& rhs) = delete;
+
+  void operator=(LevelParams&& rhs) = delete;
+
+  //__________________________________
+  //  Portable version of level::getCellPosition()
+  KOKKOS_INLINE_FUNCTION
+  void getCellPosition(const int cell[3], double cellPos[3]) const
+  {
+    cellPos[0] = anchor[0] + (Dx[0] * cell[0]) + (0.5 * Dx[0]);
+    cellPos[1] = anchor[1] + (Dx[1] * cell[1]) + (0.5 * Dx[1]);
+    cellPos[2] = anchor[2] + (Dx[2] * cell[2]) + (0.5 * Dx[2]);
+  }
+
+  //__________________________________
+  //
+  KOKKOS_INLINE_FUNCTION
+  void print() const {
+    printf(" Dx: [%g,%g,%g]\n", Dx[0], Dx[1], Dx[2]);
+  }
+};
+
+struct LevelParamsML : public LevelParams {
+  int    regionLo[3];          // never use these regionLo/Hi in the kernel
+  int    regionHi[3];          // they vary on every patch and must be passed into the kernel
+  int    refinementRatio[3];
+  //int    index;                // level index
+  //bool   hasFinerLevel;
+
+  LevelParamsML() = default;
+  //Allow only copying, which is needed for functors.
+  LevelParamsML(const LevelParamsML& rhs) : LevelParams(rhs) {
+    this->regionLo[0] = rhs.regionLo[0];
+    this->regionLo[1] = rhs.regionLo[1];
+    this->regionLo[2] = rhs.regionLo[2];
+    this->regionHi[0] = rhs.regionHi[0];
+    this->regionHi[1] = rhs.regionHi[1];
+    this->regionHi[2] = rhs.regionHi[2];
+    this->refinementRatio[0] = rhs.refinementRatio[0];
+    this->refinementRatio[1] = rhs.refinementRatio[1];
+    this->refinementRatio[2] = rhs.refinementRatio[2];
+  }
+
+  void operator=(const LevelParamsML& rhs) {
+    LevelParams::operator=(rhs);
+    this->regionLo[0] = rhs.regionLo[0];
+    this->regionLo[1] = rhs.regionLo[1];
+    this->regionLo[2] = rhs.regionLo[2];
+    this->regionHi[0] = rhs.regionHi[0];
+    this->regionHi[1] = rhs.regionHi[1];
+    this->regionHi[2] = rhs.regionHi[2];
+    this->refinementRatio[0] = rhs.refinementRatio[0];
+    this->refinementRatio[1] = rhs.refinementRatio[1];
+    this->refinementRatio[2] = rhs.refinementRatio[2];
+  }
+  LevelParamsML(LevelParamsML&& rhs) = delete;
+  void operator=(LevelParamsML&& rhs) = delete;
+
+
+  //__________________________________
+  //  Portable version of level::mapCellToCoarser()
+  KOKKOS_INLINE_FUNCTION
+  void mapCellToCoarser(int idx[3]) const
+  {
+
+    //TODO, level::mapCellToCoarser has this code.  Do we need it here too?
+    //IntVector refinementRatio = m_refinement_ratio;
+    //while (--level_offset) {
+    //  refinementRatio = refinementRatio * m_grid->getLevel(m_index - level_offset)->m_refinement_ratio;
+    //}
+    //IntVector ratio = idx / refinementRatio;
+
+
+    int ratio[3];
+    ratio[0] = idx[0] / refinementRatio[0];
+    ratio[1] = idx[1] / refinementRatio[1];
+    ratio[2] = idx[2] / refinementRatio[2];
+
+    // If the fine cell index is negative
+    // you must add an offset to get the right
+    // coarse cell. -Todd
+    int offset[3] = {0,0,0};
+
+    if ( (idx[0] < 0) && (refinementRatio[0]  > 1 )){
+      offset[0] = (int)fmod( (double)idx[0], (double)refinementRatio[0] ) ;
+    }
+    if ( (idx[1] < 0) && (refinementRatio[1] > 1 )){
+      offset[1] = (int)fmod( (double)idx[1], (double)refinementRatio[1] ) ;
+    }
+    if ( (idx[2] < 0) && (refinementRatio[2] > 1)){
+      offset[2] = (int)fmod( (double)idx[2], (double)refinementRatio[2] ) ;
+    }
+    idx[0] = ratio[0] + offset[0];
+    idx[1] = ratio[1] + offset[1];
+    idx[2] = ratio[2] + offset[2];
+
+  }
+
+  //__________________________________
+  //
+  KOKKOS_INLINE_FUNCTION
+  void print() {
+    printf( " LevelParams: Dx: [%g,%g,%g] ", Dx[0], Dx[1], Dx[2]);
+    printf( " regionLo: [%i,%i,%i], regionHi: [%i,%i,%i] ",regionLo[0], regionLo[1], regionLo[2], regionHi[0], regionHi[1], regionHi[2]);
+    printf( " RefineRatio: [%i,%i,%i]\n",refinementRatio[0], refinementRatio[1], refinementRatio[2]);
+  }
+};
+
 class Ray : public RMCRTCommon  {
 
 public:
@@ -211,26 +356,38 @@ private:
 
   //__________________________________
   template<class T>
-  void rayTrace( const ProcessorGroup* pg,
+  void rayTrace( DetailedTask* dtask,
+                 Task::CallBackEvent event,
+                 const ProcessorGroup* pg,
                  const PatchSubset* patches,
                  const MaterialSubset* matls,
                  DataWarehouse* old_dw,
                  DataWarehouse* new_dw,
+                 void* old_TaskGpuDW,
+                 void* new_TaskGpuDW,
+                 void* stream,
+                 int deviceID,
                  bool modifies_divQ,
                  Task::WhichDW which_abskg_dw,
-                 Task::WhichDW whichd_sigmaT4_dw,
+                 Task::WhichDW which_sigmaT4_dw,
                  Task::WhichDW which_celltype_dw );
 
   //__________________________________
   template<class T>
-  void rayTrace_dataOnion( const ProcessorGroup* pg,
+  void rayTrace_dataOnion( DetailedTask* dtask,
+                           Task::CallBackEvent event,
+                           const ProcessorGroup* pg,
                            const PatchSubset* patches,
                            const MaterialSubset* matls,
                            DataWarehouse* old_dw,
                            DataWarehouse* new_dw,
+                           void* old_TaskGpuDW,
+                           void* new_TaskGpuDW,
+                           void* stream,
+                           int deviceID,
                            bool modifies_divQ,
                            Task::WhichDW which_abskg_dw,
-                           Task::WhichDW whichd_sigmaT4_dw,
+                           Task::WhichDW which_sigmaT4_dw,
                            Task::WhichDW which_celltype_dw );
 
   //__________________________________
