@@ -18,6 +18,7 @@ HTConvection::HTConvection( std::string src_name, ArchesLabel* field_labels,
                            vector<std::string> req_label_names, std::string type ) 
 : SourceTermBase(src_name, field_labels->d_sharedState, req_label_names, type), _field_labels(field_labels)
 {
+  _source_grid_type = CC_SRC;
 
   _src_label = VarLabel::create( src_name, CCVariable<double>::getTypeDescription() );
 
@@ -25,6 +26,7 @@ HTConvection::HTConvection( std::string src_name, ArchesLabel* field_labels,
 
 HTConvection::~HTConvection()
 {
+  VarLabel::destroy(ConWallHT_src_label);
 }
 //---------------------------------------------------------------------------
 // Method: Problem Setup
@@ -42,6 +44,11 @@ HTConvection::problemSetup(const ProblemSpecP& inputdb)
 
   std::string vol_frac= "volFraction";
   _volFraction_varlabel = VarLabel::find(vol_frac);
+  //source terms name,and ...
+  db->findBlock("ConWallHT_src")->getAttribute( "label", ConWallHT_src_name );
+  _mult_srcs.push_back( ConWallHT_src_name );
+  ConWallHT_src_label = VarLabel::create( ConWallHT_src_name, CCVariable<double>::getTypeDescription() );
+  
 
   /*  if (params_root->findBlock("PhysicalConstants")) {
   ProblemSpecP db_phys = params_root->findBlock("PhysicalConstants");
@@ -82,11 +89,13 @@ HTConvection::sched_computeSource( const LevelP& level, SchedulerP& sched, int t
   if (timeSubStep == 0) {
 
     tsk->computes(_src_label);
+    tsk->computes(ConWallHT_src_label);
     which_dw = Task::OldDW;
 
   } else {
 
     which_dw = Task::NewDW;
+    tsk->modifies(ConWallHT_src_label);
     tsk->modifies(_src_label);
 
   }
@@ -112,7 +121,9 @@ HTConvection::computeSource( const ProcessorGroup* pc,
   //patch loop
   for (int p=0; p < patches->size(); p++){
 
-    Ghost::GhostType  gac = Ghost::AroundCells;
+  
+    
+     Ghost::GhostType  gac = Ghost::AroundCells;
     const Patch* patch = patches->get(p);
     int archIndex = 0;
     int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
@@ -122,6 +133,7 @@ HTConvection::computeSource( const ProcessorGroup* pc,
     constCCVariable<double> volFraction;
 
     CCVariable<double> rate; 
+    CCVariable<double> ConWallHT_src;
 
     double rkg=0.0;
     double f_T_m=0.0; // face temperature on minus side
@@ -131,23 +143,41 @@ HTConvection::computeSource( const ProcessorGroup* pc,
     DataWarehouse* which_dw;
     if ( timeSubStep == 0 ){
       which_dw = old_dw;
-      new_dw->allocateAndPut( rate, _src_label, matlIndex, patch );
+      new_dw->allocateAndPut( rate,           _src_label,          matlIndex, patch );
+      new_dw->allocateAndPut( ConWallHT_src,   ConWallHT_src_label, matlIndex, patch );
       rate.initialize(0.0);
+      ConWallHT_src.initialize(0.0);
+
     } else {
       which_dw = new_dw;
       new_dw->getModifiable( rate, _src_label, matlIndex, patch );
+      new_dw->getModifiable( ConWallHT_src,ConWallHT_src_label, matlIndex, patch );
+
     }
 
     old_dw->get( volFraction , _volFraction_varlabel , matlIndex , patch , gac , 1 );
     which_dw->get(gasT ,       _gas_temperature_varlabel, matlIndex , patch , gac, 1 );
 
-    Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex());
+    Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
+    IntVector lowPindex = patch->getCellLowIndex();
+    IntVector highPindex = patch->getCellHighIndex();
+    //Pad for ghosts
+    lowPindex -= IntVector(1,1,1);
+    highPindex += IntVector(1,1,1);
+   
     Vector Dx = patch->dCell(); 
 
     Uintah::parallel_for(range, [&](int i, int j, int k) {
 
+       //bool exper=0;
+    //exper=patch->containsIndex(lowPindex, highPindex, IntVector(i,j,k) ); 
+     
+    double cellvol=Dx.x()*Dx.y()*Dx.z();
       double delta_n = 0.0; 
+      double total_area_face=0.0;
+
       rate(i,j,k)=0.0; 
+      ConWallHT_src(i,j,k)=0.0; 
 
       // for computing dT/dn we have 2 scenarios:
       // (1) cp is a wall:
@@ -158,49 +188,145 @@ HTConvection::computeSource( const ProcessorGroup* pc,
       //         gasT[c]              gasT[cm]
       // Note: Surface temperature of the wall is stored at the cell center.
 
-      if ( volFraction(i,j,k) > 0. ){ 
       
+      if ( volFraction(i,j,k) > 0. ){ 
+       // fluid cell  
+        if (patch->containsIndex(lowPindex, highPindex, IntVector(i+1,j,k) )){ 
         delta_n=Dx.x();
         f_T_p=gasT(i+1,j,k);
         f_T_m=gasT(i,j,k);
         dT_dn = (f_T_p - f_T_m) / delta_n;
         rkg = ThermalConductGas(f_T_p, f_T_m); // [=] J/s/m/K
-        rate(i,j,k) = volFraction(i+1,j,k) < 1.0 ?  rate(i,j,k)+rkg*dT_dn*_dTCorrectionFactor/delta_n :rate(i,j,k);// w/m^3
+        rate(i,j,k)          = volFraction(i+1,j,k) < 1.0 ?  rate(i,j,k)+rkg*dT_dn*_dTCorrectionFactor/delta_n :rate(i,j,k);// w/m^3
+        }
+       
 
+      if (patch->containsIndex(lowPindex, highPindex, IntVector(i-1,j,k) )) {
         f_T_p=gasT(i,j,k);
         f_T_m=gasT(i-1,j,k);
         dT_dn = (f_T_p - f_T_m) / delta_n;
         rkg = ThermalConductGas(f_T_p, f_T_m); // [=] J/s/m/K
         rate(i,j,k) = volFraction(i-1,j,k) < 1.0 ?  rate(i,j,k)-rkg*dT_dn*_dTCorrectionFactor/delta_n :rate(i,j,k);// w/m^3
+      }
+        
+
         // Next for the Y direction 
+        if (patch->containsIndex(lowPindex, highPindex, IntVector(i,j+1,k) )){ 
         delta_n=Dx.y();
         f_T_p=gasT(i,j+1,k);
         f_T_m=gasT(i,j,k);
         dT_dn = (f_T_p - f_T_m) / delta_n;
         rkg = ThermalConductGas(f_T_p, f_T_m); // [=] J/s/m/K
         rate(i,j,k) = volFraction(i,j+1,k) < 1.0 ?  rate(i,j,k)+rkg*dT_dn*_dTCorrectionFactor/delta_n :rate(i,j,k);// w/m^3
-
+        }
+       
+        if (patch->containsIndex(lowPindex, highPindex, IntVector(i,j-1,k) )){ 
         f_T_p=gasT(i,j,k);
         f_T_m=gasT(i,j-1,k);
         dT_dn = (f_T_p - f_T_m) / delta_n;
         rkg = ThermalConductGas(f_T_p, f_T_m); // [=] J/s/m/K
         rate(i,j,k) = volFraction(i,j-1,k) < 1.0 ?  rate(i,j,k)-rkg*dT_dn*_dTCorrectionFactor/delta_n :rate(i,j,k);// w/m^3
+        }
+
         // Next for the z direction 
+        if (patch->containsIndex(lowPindex, highPindex, IntVector(i,j,k+1) )){ 
         delta_n=Dx.z();
         f_T_p=gasT(i,j,k+1);
         f_T_m=gasT(i,j,k);
         dT_dn = (f_T_p - f_T_m) / delta_n;
         rkg = ThermalConductGas(f_T_p, f_T_m); // [=] J/s/m/K
         rate(i,j,k) = volFraction(i,j,k+1) < 1.0 ?  rate(i,j,k)+rkg*dT_dn*_dTCorrectionFactor/delta_n :rate(i,j,k);// w/m^3
+        }
 
+    
+        if (patch->containsIndex(lowPindex, highPindex, IntVector(i,j,k-1) )) {
         f_T_p=gasT(i,j,k);
         f_T_m=gasT(i,j,k-1);
         dT_dn = (f_T_p - f_T_m) / delta_n;
         rkg = ThermalConductGas(f_T_p, f_T_m); // [=] J/s/m/K
         rate(i,j,k) = volFraction(i,j,k-1) < 1.0 ?  rate(i,j,k)-rkg*dT_dn*_dTCorrectionFactor/delta_n :rate(i,j,k);// w/m^3
+       }      
+        
+   
+        
+        }// end for fluid cell
+
+      if(volFraction(i,j,k) < 1.0){
+  
+      // wall cells(i,j,k)
+      // x+ direction
+      //  std::cout<<i<<j<<k<<"\n";
+        if (patch->containsIndex(lowPindex, highPindex, IntVector(i+1,j,k) )){ 
+        delta_n=Dx.x();
+        f_T_p=gasT(i+1,j,k);
+        f_T_m=gasT(i,j,k);
+        dT_dn = (f_T_p - f_T_m) / delta_n;
+        rkg = ThermalConductGas(f_T_p, f_T_m); // [=] J/s/m/K
+        ConWallHT_src(i,j,k) = volFraction(i+1,j,k) > 0.0 ?  ConWallHT_src(i,j,k)+rkg*dT_dn*_dTCorrectionFactor/delta_n :ConWallHT_src(i,j,k);// w/m^3
+        total_area_face =      volFraction(i+1,j,k) > 0.0 ?  total_area_face+Dx.y()*Dx.z() :total_area_face;// w/m^3
+        }
+      
+ 
+      // x- direction 
+      if (patch->containsIndex(lowPindex, highPindex, IntVector(i-1,j,k) )) {
+        f_T_p=gasT(i,j,k);
+        f_T_m=gasT(i-1,j,k);
+        dT_dn = (f_T_p - f_T_m) / delta_n;
+        rkg = ThermalConductGas(f_T_p, f_T_m); // [=] J/s/m/K
+        ConWallHT_src(i,j,k) = volFraction(i-1,j,k) > 0.0 ?  ConWallHT_src(i,j,k)-rkg*dT_dn*_dTCorrectionFactor/delta_n :ConWallHT_src(i,j,k);// w/m^3
+        total_area_face =      volFraction(i-1,j,k) > 0.0 ?  total_area_face+Dx.y()*Dx.z() :total_area_face;// w/m^3
+       }
+
+
+        // Next for the Y+ direction 
+        if (patch->containsIndex(lowPindex, highPindex, IntVector(i,j+1,k) )){ 
+        delta_n=Dx.y();
+        f_T_p=gasT(i,j+1,k);
+        f_T_m=gasT(i,j,k);
+        dT_dn = (f_T_p - f_T_m) / delta_n;
+        rkg = ThermalConductGas(f_T_p, f_T_m); // [=] J/s/m/K
+        ConWallHT_src(i,j,k) = volFraction(i,j+1,k) > 0.0 ?  ConWallHT_src(i,j,k)+rkg*dT_dn*_dTCorrectionFactor/delta_n :ConWallHT_src(i,j,k);// w/m^3
+        total_area_face =      volFraction(i,j+1,k) > 0.0 ?  total_area_face+Dx.x()*Dx.z() :total_area_face;// w/m^3
+       } 
+
+
+        // Next for the Y- direction 
+        if (patch->containsIndex(lowPindex, highPindex, IntVector(i,j-1,k) )){ 
+
+        f_T_p=gasT(i,j,k);
+        f_T_m=gasT(i,j-1,k);
+        dT_dn = (f_T_p - f_T_m) / delta_n;
+        rkg = ThermalConductGas(f_T_p, f_T_m); // [=] J/s/m/K
+        ConWallHT_src(i,j,k) = volFraction(i,j-1,k) > 0.0 ?  ConWallHT_src(i,j,k)-rkg*dT_dn*_dTCorrectionFactor/delta_n :ConWallHT_src(i,j,k);// w/m^3
+        total_area_face =      volFraction(i,j-1,k) > 0.0 ?  total_area_face+Dx.x()*Dx.z() :total_area_face;// w/m^3
+        }
+
+        // Next for the z direction 
+        if (patch->containsIndex(lowPindex, highPindex, IntVector(i,j,k+1) )){ 
+        delta_n=Dx.z();
+        f_T_p=gasT(i,j,k+1);
+        f_T_m=gasT(i,j,k);
+        dT_dn = (f_T_p - f_T_m) / delta_n;
+        rkg = ThermalConductGas(f_T_p, f_T_m); // [=] J/s/m/K
+        ConWallHT_src(i,j,k) = volFraction(i,j,k+1) > 0.0 ?  ConWallHT_src(i,j,k)+rkg*dT_dn*_dTCorrectionFactor/delta_n :ConWallHT_src(i,j,k);// w/m^3
+        total_area_face =      volFraction(i,j,k+1) > 0.0 ?  total_area_face+Dx.x()*Dx.y() :total_area_face;// w/m^3
+        }
+
+
+        if (patch->containsIndex(lowPindex, highPindex, IntVector(i,j,k-1) )) {
+        f_T_p=gasT(i,j,k);
+        f_T_m=gasT(i,j,k-1);
+        dT_dn = (f_T_p - f_T_m) / delta_n;
+        rkg = ThermalConductGas(f_T_p, f_T_m); // [=] J/s/m/K
+        ConWallHT_src(i,j,k) = volFraction(i,j,k-1) > 0.0 ?  ConWallHT_src(i,j,k)-rkg*dT_dn*_dTCorrectionFactor/delta_n :ConWallHT_src(i,j,k);// w/m^3
+        total_area_face =      volFraction(i,j,k-1) > 0.0 ?  total_area_face+Dx.x()*Dx.y() :total_area_face;// w/m^3
+       }
+        ConWallHT_src(i,j,k) =total_area_face>0.0 ?  ConWallHT_src(i,j,k)/total_area_face:0.0;//W
+      
       }
 
-    }); // end cell loop 
+    }); // end fluid cell loop for computing the 
+  
   }// end patch loop
 }
 //---------------------------------------------------------------------------
@@ -219,6 +345,7 @@ HTConvection::sched_initialize( const LevelP& level, SchedulerP& sched )
   Task* tsk = scinew Task(taskname, this, &HTConvection::initialize);
 
   tsk->computes(_src_label);
+  tsk->computes(ConWallHT_src_label);
 
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
 
@@ -238,10 +365,12 @@ HTConvection::initialize( const ProcessorGroup* pc,
     int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<double> src;
-    new_dw->allocateAndPut( src, _src_label, matlIndex, patch ); 
+    CCVariable<double> ConWallHT_src;
+    new_dw->allocateAndPut( src,          _src_label, matlIndex, patch ); 
+    new_dw->allocateAndPut( ConWallHT_src, ConWallHT_src_label, matlIndex, patch ); 
 
     src.initialize(0.0); 
-
+    ConWallHT_src.initialize(0.0);
   }
 }
 

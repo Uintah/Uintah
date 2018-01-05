@@ -1857,6 +1857,9 @@
 
              <!-- Spec for dTcorrectionFractor for the gas phase convection heat flux near the wall -->
             <dTCorrectionFactor         spec="OPTIONAL STRING" need_applies_to="type ht_convection" />
+            <ConWallHT_src                     spec="REQUIRED NO_DATA"
+                                        attribute1="label REQUIRED STRING"
+                                        need_applies_to="type ht_convection"/> <!-- Convection SourceTerm for wall heat trasnfer -->
 
             <!-- Spec for constant and multi-point constant source term model -->
             <constant                   spec="OPTIONAL DOUBLE" need_applies_to="type constant_src, fx_inject_src, fy_inject_src, fz_inject_src, cc_inject_src" />

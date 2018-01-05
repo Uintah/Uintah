@@ -64,10 +64,14 @@ public:
 private:
 
   ArchesLabel* _field_labels;
+  std::string ConWallHT_src_name;
   double ThermalConductGas(double Tg, double Tp);
   const VarLabel* _volFraction_varlabel;
   const VarLabel* _gas_temperature_varlabel;
- 
+
+
+  const VarLabel* ConWallHT_src_label;
+  
   double  _dTCorrectionFactor; /// The correction factor for the thermal layer
   std::string _gas_temperature_name;    ///< string name for temperature (from table)
     

@@ -1407,6 +1407,9 @@
           <src label="heat_source">
             <weight>1</weight>
           </src>
+          <!--<src label="forgas_ConHT_loss">-->
+            <!--<weight>1</weight>-->
+          <!--</src>-->
         </Eqn>
         <Eqn label="coal_gas_mix_frac" type="CCscalar">
           <doDiff>true</doDiff>
@@ -1463,6 +1466,10 @@
           </src>
           <src label="heat_source" type="coal_gas_heat">
             <heat_model_name>heat</heat_model_name>
+          </src>
+          <src label="forgas_ConHT_loss" type="ht_convection">
+            <dTCorrectionFactor>2</dTCorrectionFactor>
+            <ConWallHT_src label="forwall_convht_src"/>
           </src>
           <src label="coal_gas_momentum" type="coal_gas_momentum">
           </src>
