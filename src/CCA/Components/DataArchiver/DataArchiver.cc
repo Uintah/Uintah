@@ -1374,8 +1374,10 @@ DataArchiver::findNext_OutputCheckPointTimeStep( const bool restart,
 
   const int timeStep = m_application->getTimeStep();
   const double simTime = m_application->getSimTime();
+#ifdef HAVE_PIDX
   const double delT = m_application->getNextDelT();
-
+#endif
+  
   if( restart )
   {
     // Output based on the simulaiton time.
