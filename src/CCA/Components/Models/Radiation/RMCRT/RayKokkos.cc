@@ -1673,8 +1673,6 @@ struct rayTrace_dataOnion_solveDivQFunctor {
     //____________________________________________________________________________________________//
     //==== START for (CellIterator iter = finePatch->getCellIterator(); !iter.done(); iter++) ====//
 
-    double sumI = 0;
-
     int L = m_maxLevels - 1;
 
     int i, j, k;
@@ -1684,6 +1682,8 @@ struct rayTrace_dataOnion_solveDivQFunctor {
     k = (threadID / (m_RT_flags.finePatchSize.x * m_RT_flags.finePatchSize.y)) + m_RT_flags.finePatchLow.z;
 
     while ( threadID < m_RT_flags.endCell ) {
+
+      double sumI = 0;
 
       double CC_pos[3];
       int ijk[3] = {i,j,k};
