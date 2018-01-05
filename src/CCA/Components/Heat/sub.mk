@@ -47,7 +47,6 @@ VTK_SRCS :=                        \
 PSELIBS :=                         \
         CCA/Components/Application \
         CCA/Components/Schedulers \
-        CCA/Components/Models     \
         CCA/Ports                 \
         Core/Disclosure           \
         Core/Exceptions           \
