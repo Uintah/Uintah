@@ -29,6 +29,7 @@
 
 #include <CCA/Ports/Scheduler.h>
 
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Grid/Ghost.h>
@@ -49,7 +50,7 @@
 using namespace Uintah;
 
 ElectrostaticSolve::ElectrostaticSolve(const ProcessorGroup* myworld,
-				       const SimulationStateP sharedState)
+                                       const SimulationStateP sharedState)
   : ApplicationCommon(myworld, sharedState)
 {
   d_lb = scinew FVMLabel();
@@ -103,16 +104,35 @@ void ElectrostaticSolve::problemSetup(const ProblemSpecP& prob_spec,
 
   ProblemSpecP fvm_ps = prob_spec->findBlock("FVM");
 
+  if( !fvm_ps ) {
+    throw ProblemSetupException("ERROR: Cannot find the FVM block",
+                                __FILE__, __LINE__);
+  }
+  
   d_solver_parameters = d_solver->readParameters(fvm_ps, "electrostatic_solver",
-                                             m_sharedState);
+                                                 m_sharedState);
+
   d_solver_parameters->setSolveOnExtraCells(false);
     
   fvm_ps->require("delt", d_delt);
 
-  ProblemSpecP mat_ps = root_ps->findBlockWithOutAttribute("MaterialProperties");
-  ProblemSpecP fvm_mat_ps = mat_ps->findBlock("FVM");
-
   if( !d_with_mpm ) {
+
+    ProblemSpecP mat_ps =
+      root_ps->findBlockWithOutAttribute("MaterialProperties");
+  
+    if( !mat_ps ) {
+      throw ProblemSetupException("ERROR: Cannot find the Material Properties block",
+                                  __FILE__, __LINE__);
+    }
+
+    ProblemSpecP fvm_mat_ps = mat_ps->findBlock("FVM");
+
+    if( !fvm_mat_ps ) {
+      throw ProblemSetupException("ERROR: Cannot find the FVM Materials Properties block",
+                                  __FILE__, __LINE__);
+    }
+
     for ( ProblemSpecP ps = fvm_mat_ps->findBlock("material"); ps != nullptr; ps = ps->findNextBlock("material") ) {
 
       FVMMaterial *mat = scinew FVMMaterial(ps, m_sharedState, FVMMaterial::ESPotential);
@@ -216,8 +236,6 @@ void ElectrostaticSolve::initialize(const ProcessorGroup*,
 
     }
   }
-
-
 }
 
 //______________________________________________________________________
@@ -475,7 +493,6 @@ void ElectrostaticSolve::updateESPotential(const ProcessorGroup*, const PatchSub
                         fcx_conductivity, fcy_conductivity, fcz_conductivity);
 
   } // end patch loop
-
 }
 
 void ElectrostaticSolve::scheduleComputeCurrent(SchedulerP& sched,
@@ -531,7 +548,5 @@ void ElectrostaticSolve::computeCurrent(const ProcessorGroup*,
       current.z( cc_cond[c] * (cc_pot[c + zoffset] - cc_pot[c - zoffset])/hz2) ;
       cell_current[c] = current;
     }
-
   } // end patch loop
-
 }
