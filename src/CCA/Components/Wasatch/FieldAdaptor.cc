@@ -200,7 +200,6 @@ namespace WasatchCore{
   declare_variants( so::YVolField );
   declare_variants( so::ZVolField );
 
-  declare_method( so::SingleValueField                );
   declare_method( SpatialOps::Particle::ParticleField );
 
   //------------------------------------------------------------------

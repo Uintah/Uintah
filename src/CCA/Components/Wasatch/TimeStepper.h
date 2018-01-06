@@ -87,7 +87,6 @@ namespace WasatchCore{
   private:
 
     typedef std::map<int, Expr::DualTime::BDFDualTimeIntegrator*> DTIntegratorMapT;
-    Uintah::SimulationStateP sharedState_;
 
     typedef std::set< FieldInfo<SpatialOps::SVolField              > > ScalarFields;
     typedef std::set< FieldInfo<SpatialOps::XVolField              > > XVolFields;
@@ -133,13 +132,11 @@ namespace WasatchCore{
     /**
      *  \brief Construct a TimeStepper object to advance equations forward in time
      *
-     *  \param sharedState
-     *  \param grafCat
+     *  \param graphCat
      *  \param timeInt the time integrator to use
      */
-    TimeStepper( Uintah::SimulationStateP sharedState,
-                 GraphCategories& grafCat,
-                 const TimeIntegrator timeInt);
+    TimeStepper( GraphCategories& graphCat,
+                 const TimeIntegrator timeInt );
 
     ~TimeStepper();
 

@@ -155,8 +155,7 @@ namespace Uintah {
   //------------------------------------------------------------------
   
   void ParticlesHelper::problem_setup(Uintah::ProblemSpecP uintahSpec,
-                                      Uintah::ProblemSpecP particleEqsSpec,
-                                      Uintah::SimulationStateP sharedState)
+                                      Uintah::ProblemSpecP particleEqsSpec)
   {
     using namespace Uintah;
     
@@ -178,7 +177,6 @@ namespace Uintah {
     destroyMe_.push_back(pIDLabel_);
 
     particleEqsSpec_ = particleEqsSpec;
-    sharedState_     = sharedState;
 
     //
     // set the position varlabels

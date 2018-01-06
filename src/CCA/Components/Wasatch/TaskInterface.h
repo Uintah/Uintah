@@ -119,7 +119,6 @@ namespace WasatchCore{
      *  \param materials the MaterialSet for the materials associated with this task
      *  \param info The PatchInfoMap object.
      *  \param rkStage the stage of the RK integrator (use 1 otherwise)
-     *  \param state information such as time step - required to determine if we are on the first timestep or not.
      *  \param ioFieldSet the fields that are required for output and should not
      *         be managed "externally" so that their memory is not reclaimed.
      *  \param lockAllFields if true, then all fiels will be persistent.
@@ -136,7 +135,6 @@ namespace WasatchCore{
                    const Uintah::MaterialSet   * const materials,
                    const PatchInfoMap          & info,
                    const int                     rkStage,
-                   Uintah::SimulationStateP      state,
                    const std::set<std::string> & ioFieldSet,
                    const bool                    lockAllFields = false );
 
@@ -151,7 +149,6 @@ namespace WasatchCore{
                     DTIntegratorMapT            & dualTimeIntegrators,
                     const std::vector<std::string> & varNames,
                     const std::vector<Expr::Tag>   & rhsTags,
-                    Uintah::SimulationStateP      state,
                     const std::set<std::string> & ioFieldSet,
                     const bool                    lockAllFields = false );
 

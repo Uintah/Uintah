@@ -223,7 +223,6 @@ namespace WasatchCore{
      *  \param materials - the list of materials that this task is to be associated with.
      *  \param info     - the PatchInfoMap object that holds patch-specific information (like operators).
      *  \param rkStage - the stage of the RK integrator that this is associated with
-     *  \param state
      *  \param ioFieldSet - the set of fields that are requested for IO.  This prevents these fields from being recycled internally.
      *  \param lockAllFields if true, then all fields will be marked persistent.
      *         Otherwise, memory will be reclaimed when possible.
@@ -236,7 +235,6 @@ namespace WasatchCore{
                      const Uintah::MaterialSet* const materials,
                      const PatchInfoMap& info,
                      const int rkStage,
-                     Uintah::SimulationStateP state,
                      const std::set<std::string>& ioFieldSet,
                      const bool lockAllFields=false);
 
@@ -260,7 +258,6 @@ namespace WasatchCore{
                                     const Uintah::MaterialSet* const materials,
                                     const PatchInfoMap& patchInfoMap,
                                     const int rkStage,
-                                    Uintah::SimulationStateP state,
                                     const std::set<std::string>& ioFieldSet,
                                     const bool lockAllFields )
     : scheduler_( sched ),
@@ -778,7 +775,6 @@ namespace WasatchCore{
                                DTIntegratorMapT& dualTimeIntegrators,
                                const std::vector<std::string> & varNames,
                                const std::vector<Expr::Tag>   & rhsTags,
-                               Uintah::SimulationStateP state,
                                const std::set<std::string>& ioFieldSet,
                                const bool lockAllFields)
   {
@@ -855,7 +851,7 @@ namespace WasatchCore{
       TreeMap& tl = tlpair.second;
       TreeTaskExecute* tskExec = scinew TreeTaskExecute( tl, tl.begin()->second->name(),
                                                         sched, patches, materials,
-                                                        info, 0, state,
+                                                        info, 0,
                                                         persistentFields, lockAllFields );
       execList_.push_back( tskExec );
       
@@ -878,7 +874,6 @@ namespace WasatchCore{
                                 const Uintah::MaterialSet* const materials,
                                 const PatchInfoMap& info,
                                 const int rkStage,
-                                Uintah::SimulationStateP state,
                                 const std::set<std::string>& ioFieldSet,
                                 const bool lockAllFields)
   {
@@ -925,7 +920,7 @@ namespace WasatchCore{
       TreeMap& tl = tlpair.second;
       execList_.push_back( scinew TreeTaskExecute( tl, tl.begin()->second->name(),
                                                    sched, patches, materials,
-                                                   info, rkStage, state,
+                                                   info, rkStage,
                                                    ioFieldSet, lockAllFields ) );
     }
 

@@ -819,6 +819,7 @@ namespace WasatchCore {
       }
     }
   }
+
   //------------------------------------------------------------------------------------------------
   
   void WasatchBCHelper::apply_nscbc_boundary_condition(const Expr::Tag& varTag,

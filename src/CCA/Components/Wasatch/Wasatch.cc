@@ -380,7 +380,7 @@ namespace WasatchCore{
     if( doParticles_ ){
       particlesHelper_ = scinew WasatchParticlesHelper();
       particlesHelper_->sync_with_wasatch(this);
-      particlesHelper_->problem_setup( uintahSpec, wasatchSpec_->findBlock("ParticleTransportEquations"), m_sharedState );
+      particlesHelper_->problem_setup( uintahSpec, wasatchSpec_->findBlock("ParticleTransportEquations") );
     }
 
     // setup names for all the boundary condition faces that do NOT have a name or that have duplicate names
@@ -728,7 +728,7 @@ namespace WasatchCore{
     }
 
     if( buildTimeIntegrator_ ){
-      timeStepper_ = scinew TimeStepper( m_sharedState, graphCategories_, timeIntegrator_ );
+      timeStepper_ = scinew TimeStepper( graphCategories_, timeIntegrator_ );
     }    
     
     //
@@ -981,7 +981,6 @@ namespace WasatchCore{
                                                           materials_,
                                                           patchInfoMap_,
                                                           1,
-                                                          m_sharedState,
                                                           persistentFields_ );
         //_______________________________________________________
         // create the TaskInterface and schedule this task for
@@ -1089,7 +1088,7 @@ namespace WasatchCore{
                                                         localPatches,
                                                         materials_,
                                                         patchInfoMap_,
-                                                        1, m_sharedState, persistentFields_ );
+                                                        1, persistentFields_ );
       task->schedule(1);
       taskInterfaceList_.push_back( task );
     }
@@ -1401,7 +1400,6 @@ namespace WasatchCore{
                                                          materials_,
                                                          patchInfoMap_,
                                                          1,
-                                                         m_sharedState,
                                                          persistentFields_ );
         task->schedule(1);
         taskInterfaceList_.push_back( task );
@@ -1569,7 +1567,6 @@ namespace WasatchCore{
     }
   }
   
-
   //---------------------------------------------------------------------------------
   
   void
