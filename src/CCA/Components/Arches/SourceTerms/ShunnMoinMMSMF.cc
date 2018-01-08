@@ -85,6 +85,8 @@ ShunnMoinMMSMF::sched_computeSource( const LevelP& level, SchedulerP& sched, int
 
   }
 
+  tsk->requires(Task::OldDW, _simulationTimeLabel);
+
   tsk->requires(which_dw, VarLabel::find("density"), Ghost::None, 0); 
 
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials()); 
@@ -101,6 +103,10 @@ ShunnMoinMMSMF::computeSource( const ProcessorGroup* pc,
                    DataWarehouse* new_dw, 
                    int timeSubStep )
 {
+//  double simTime = _sharedState->getElapsedSimTime();
+  simTime_vartype simTime;
+  old_dw->get( simTime, _simulationTimeLabel );
+
   for (int p=0; p < patches->size(); p++){
 
     const Patch* patch = patches->get(p);
@@ -110,7 +116,7 @@ ShunnMoinMMSMF::computeSource( const ProcessorGroup* pc,
     CCVariable<double> src; 
     constCCVariable<double> density; 
 
-    double time = _shared_state->getElapsedSimTime(); 
+    double time = simTime;
     double pi = acos(-1.0); 
 
     if ( timeSubStep ==0 ){  

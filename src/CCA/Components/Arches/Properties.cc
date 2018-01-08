@@ -303,6 +303,8 @@ Properties::sched_computeDrhodt(SchedulerP& sched,
                           &Properties::computeDrhodt,
                           timelabels);
 
+  tsk->requires( Task::OldDW, d_lab->d_timeStepLabel );
+
   Task::WhichDW parent_old_dw;
   if (timelabels->recursion){
     parent_old_dw = Task::ParentOldDW;
@@ -344,6 +346,11 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
                           DataWarehouse* new_dw,
                           const TimeIntegratorLabel* timelabels)
 {
+  // int timeStep = m_sharedState->getCurrentTopLevelTimeStep();
+
+  timeStep_vartype timeStep;
+  old_dw->get( timeStep, d_lab->d_timeStepLabel );
+
   DataWarehouse* parent_old_dw;
   if (timelabels->recursion){
     parent_old_dw = new_dw->getOtherDataWarehouse(Task::ParentOldDW);
@@ -352,7 +359,6 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
   }
 
   int drhodt_1st_order = 1;
-  int current_step = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
   if (d_MAlab){
     drhodt_1st_order = 2;
   }
@@ -417,7 +423,7 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
     drhodt.initialize(0.0);
 
     //__________________________________
-    if ((d_first_order_drhodt)||(current_step <= drhodt_1st_order)) {
+    if ((d_first_order_drhodt)||(timeStep <= (unsigned int)drhodt_1st_order)) {
 // 1st order drhodt
       for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
         for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {

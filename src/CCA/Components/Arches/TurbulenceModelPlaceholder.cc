@@ -127,8 +127,6 @@ TurbulenceModelPlaceholder::reComputeTurbSubmodel(const ProcessorGroup*,
                                         DataWarehouse* new_dw,
                                         const TimeIntegratorLabel* timelabels)
 {
-  //  double time = d_lab->d_sharedState->getElapsedSimTime();
-
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material

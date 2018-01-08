@@ -1714,6 +1714,8 @@ PicardNonlinearSolver::sched_probeData(SchedulerP& sched,
     tsk->requires(Task::NewDW, d_MAlab->totHtFluxZLabel,  gn, 0);
   }
 
+  tsk->requires(Task::OldDW, d_lab->d_simulationTimeLabel);
+
   sched->addTask(tsk, patches, matls);
   
 }
@@ -1724,16 +1726,17 @@ void
 PicardNonlinearSolver::probeData(const ProcessorGroup* ,
                                  const PatchSubset* patches,
                                  const MaterialSubset*,
-                                 DataWarehouse*,
+                                 DataWarehouse* old_dw,
                                  DataWarehouse* new_dw)
 {
+//  double simTime = d_lab->d_sharedState->getElapsedSimTime();
+  simTime_vartype simTime;
+  old_dw->get( simTime, d_lab->d_simulationTimeLabel );
 
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-    double time = d_lab->d_sharedState->getElapsedSimTime();
-
     constSFCXVariable<double> newUVel;
     constSFCYVariable<double> newVVel;
     constSFCZVariable<double> newWVel;
@@ -1821,14 +1824,14 @@ PicardNonlinearSolver::probeData(const ProcessorGroup* ,
         if (d_MAlab) {
           cerr.precision(16);
           cerr << "gas vol fraction: " << gasfraction[*iter] << endl;
-          cerr << " Solid Temperature at Location " << *iter << " At time " << time << ","<< tempSolid[*iter] << endl;
-          cerr << " Total Heat Rate at Location " << *iter << " At time " << time << ","<< totalHT[*iter] << endl;
-          cerr << " Total X-Dir Heat Rate at Location " << *iter << " At time " << time << ","<< totalHT_FCX[*iter] << endl;
-          cerr << " Total Y-Dir Heat Rate at Location " << *iter << " At time " << time << ","<< totalHT_FCY[*iter] << endl;
-          cerr << " Total Z-Dir Heat Rate at Location " << *iter << " At time " << time << ","<< totalHT_FCZ[*iter] << endl;
-          cerr << " Total X-Dir Heat Flux at Location " << *iter << " At time " << time << ","<< totHtFluxX[*iter] << endl;
-          cerr << " Total Y-Dir Heat Flux at Location " << *iter << " At time " << time << ","<< totHtFluxY[*iter] << endl;
-          cerr << " Total Z-Dir Heat Flux at Location " << *iter << " At time " << time << ","<< totHtFluxZ[*iter] << endl;
+          cerr << " Solid Temperature at Location " << *iter << " At time " << simTime << ","<< tempSolid[*iter] << endl;
+          cerr << " Total Heat Rate at Location " << *iter << " At time " << simTime << ","<< totalHT[*iter] << endl;
+          cerr << " Total X-Dir Heat Rate at Location " << *iter << " At time " << simTime << ","<< totalHT_FCX[*iter] << endl;
+          cerr << " Total Y-Dir Heat Rate at Location " << *iter << " At time " << simTime << ","<< totalHT_FCY[*iter] << endl;
+          cerr << " Total Z-Dir Heat Rate at Location " << *iter << " At time " << simTime << ","<< totalHT_FCZ[*iter] << endl;
+          cerr << " Total X-Dir Heat Flux at Location " << *iter << " At time " << simTime << ","<< totHtFluxX[*iter] << endl;
+          cerr << " Total Y-Dir Heat Flux at Location " << *iter << " At time " << simTime << ","<< totHtFluxY[*iter] << endl;
+          cerr << " Total Z-Dir Heat Flux at Location " << *iter << " At time " << simTime << ","<< totHtFluxZ[*iter] << endl;
         }
 
       }
@@ -2211,6 +2214,8 @@ PicardNonlinearSolver::sched_getDensityGuess(SchedulerP& sched,
                           &PicardNonlinearSolver::getDensityGuess,
                           timelabels);
 
+  // tsk->requires( Task::OldDW, d_lab->d_timeStepLabel );
+
   Task::WhichDW parent_old_dw;
   if (timelabels->recursion){ 
     parent_old_dw = Task::ParentOldDW;
@@ -2218,7 +2223,6 @@ PicardNonlinearSolver::sched_getDensityGuess(SchedulerP& sched,
     parent_old_dw = Task::OldDW;
   }
   
-
   Task::WhichDW old_values_dw;
   if (timelabels->use_old_values){
     old_values_dw = parent_old_dw;
@@ -2259,12 +2263,17 @@ PicardNonlinearSolver::getDensityGuess(const ProcessorGroup*,
                                        DataWarehouse* new_dw,
                                        const TimeIntegratorLabel* timelabels)
 {
+  // int timeStep = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
+  // timeStep_vartype timeStep;
+  // old_dw->get( timeStep, d_lab->d_timeStepLabel );
+
   DataWarehouse* parent_old_dw;
   if (timelabels->recursion){ 
     parent_old_dw = new_dw->getOtherDataWarehouse(Task::ParentOldDW);
   }else{
     parent_old_dw = old_dw;
   }
+
   delt_vartype delT;
   parent_old_dw->get(delT, d_lab->d_delTLabel );
   double delta_t = delT;
@@ -2316,8 +2325,7 @@ PicardNonlinearSolver::getDensityGuess(const ProcessorGroup*,
 
     
 // Need to skip first timestep since we start with unprojected velocities
-//    int currentTimeStep=d_lab->d_sharedState->getCurrentTopLevelTimeStep();
-//    if (currentTimeStep > 1) {
+//    if (timeStep > 1) {
       IntVector idxLo = patch->getFortranCellLowIndex();
       IntVector idxHi = patch->getFortranCellHighIndex();
       for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {

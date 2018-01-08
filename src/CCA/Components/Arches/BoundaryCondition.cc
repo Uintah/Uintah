@@ -883,10 +883,12 @@ BoundaryCondition::velRhoHatInletBC(const Patch* patch,
                                     ArchesVariables* vars,
                                     ArchesConstVariables* constvars,
                                     const int matl_index,
+                                    const int timeStep,
+                                    const double simTime,
                                     double time_shift)
 {
-  //double time = d_lab->d_sharedState->getElapsedSimTime();
-  //double current_time = time + time_shift;
+  //double simTime = d_lab->d_sharedState->getElapsedSimTime();
+  //double current_time = simTime + time_shift;
   // Get the low and high index for the patch and the variables
   IntVector idxLo = patch->getFortranCellLowIndex();
   IntVector idxHi = patch->getFortranCellHighIndex();
@@ -948,7 +950,8 @@ BoundaryCondition::velRhoHatInletBC(const Patch* patch,
 
           } else if (bc_iter->second.type == TURBULENT_INLET) {
 
-            setTurbInlet( patch, face, vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat, constvars->new_density, bound_ptr, bc_iter->second.TurbIn );
+            setTurbInlet( patch, face, vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat, constvars->new_density, bound_ptr, bc_iter->second.TurbIn,
+                          timeStep, simTime );
 
           } else if ( bc_iter->second.type == SWIRL ) {
 
@@ -2819,6 +2822,9 @@ BoundaryCondition::sched_setInitProfile(SchedulerP& sched,
   Task* tsk = scinew Task("BoundaryCondition::setInitProfile",
                           this, &BoundaryCondition::setInitProfile);
 
+  tsk->requires(Task::NewDW, d_lab->d_timeStepLabel);
+  tsk->requires(Task::NewDW, d_lab->d_simulationTimeLabel);
+
   tsk->modifies(d_lab->d_uVelocitySPBCLabel);
   tsk->modifies(d_lab->d_vVelocitySPBCLabel);
   tsk->modifies(d_lab->d_wVelocitySPBCLabel);
@@ -2850,6 +2856,12 @@ BoundaryCondition::setInitProfile(const ProcessorGroup*,
                                        DataWarehouse*,
                                        DataWarehouse* new_dw)
 {
+  timeStep_vartype timeStep;
+  new_dw->get(timeStep, d_lab->d_timeStepLabel );
+
+  simTime_vartype simTime;
+  new_dw->get(simTime, d_lab->d_simulationTimeLabel );
+
   for (int p = 0; p < patches->size(); p++) {
 
     const Patch* patch = patches->get(p);
@@ -2963,7 +2975,7 @@ BoundaryCondition::setInitProfile(const ProcessorGroup*,
 
               } else if ( bc_iter->second.type == TURBULENT_INLET ){
 
-                setTurbInlet( patch, face, uVelocity, vVelocity, wVelocity, density, bound_ptr, bc_iter->second.TurbIn );
+                setTurbInlet( patch, face, uVelocity, vVelocity, wVelocity, density, bound_ptr, bc_iter->second.TurbIn, timeStep, simTime );
 
               } else if ( bc_iter->second.type == WALL ) {
 
@@ -3058,14 +3070,16 @@ void BoundaryCondition::setSwirl( const Patch* patch, const Patch::FaceType& fac
 void BoundaryCondition::setTurbInlet( const Patch* patch, const Patch::FaceType& face,
                                       SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel,
                                       constCCVariable<double>& density,
-                                      Iterator bound_ptr, DigitalFilterInlet * TurbInlet )
+                                      Iterator bound_ptr, DigitalFilterInlet * TurbInlet,
+                                      const int timeStep,
+                                      const double simTime )
 {
   IntVector insideCellDir = patch->faceDirection(face);
 
   int j, k;
-  int ts = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
-  double elapTime = d_lab->d_sharedState->getElapsedSimTime();
-  int t = TurbInlet->getTimeIndex( ts, elapTime);
+  // int timeStep = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
+  // double simTime = d_lab->d_sharedState->getElapsedSimTime();
+  int t = TurbInlet->getTimeIndex( timeStep, simTime);
 
   IntVector shiftVec;
   shiftVec = TurbInlet->getOffsetVector( );

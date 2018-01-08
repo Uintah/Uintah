@@ -80,6 +80,8 @@ ShunnMoinMMSCont::sched_computeSource( const LevelP& level, SchedulerP& sched, i
 
   }
 
+  tsk->requires(Task::OldDW, _simulationTimeLabel);
+  
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials()); 
 
 }
@@ -94,6 +96,10 @@ ShunnMoinMMSCont::computeSource( const ProcessorGroup* pc,
                    DataWarehouse* new_dw, 
                    int timeSubStep )
 {
+//  double simTime = _sharedState->getElapsedSimTime();
+  simTime_vartype simTime;
+  old_dw->get( simTime, _simulationTimeLabel );
+
   //patch loop
   for (int p=0; p < patches->size(); p++){
 
@@ -102,7 +108,7 @@ ShunnMoinMMSCont::computeSource( const ProcessorGroup* pc,
     int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<double> src; 
-    double time = _shared_state->getElapsedSimTime(); 
+    double time = simTime;
     double pi = acos(-1.0);
     double t = _w * pi * time; 
 

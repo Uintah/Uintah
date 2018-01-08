@@ -1514,6 +1514,8 @@ namespace Uintah {
     doubleMap d_constants;     ///< List of constants in table header
     InertMasterMap d_inertMap; ///< List of inert streams for post table lookup mixing
 
+    const VarLabel* m_timeStepLabel;
+
     const VarLabel* m_denRefArrayLabel;
     const VarLabel* m_densityLabel;
     const VarLabel* m_volFractionLabel;

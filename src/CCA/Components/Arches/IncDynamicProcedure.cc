@@ -190,6 +190,7 @@ IncDynamicProcedure::sched_reComputeTurbSubmodel( SchedulerP& sched,
                     timelabels);
 
   // Requires
+  tsk->requires(Task::OldDW, d_lab->d_simulationTimeLabel);
   // Assuming one layer of ghost cells
   // initialize with the value of zero at the physical bc's
   // construct a stress tensor and stored as an array with the following order
@@ -1208,11 +1209,14 @@ void
 IncDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
                                         const PatchSubset* patches,
                                         const MaterialSubset*,
-                                        DataWarehouse*,
+                                        DataWarehouse* old_dw,
                                         DataWarehouse* new_dw,
                                         const TimeIntegratorLabel* timelabels)
 {
-//  double time = d_lab->d_sharedState->getElapsedSimTime();
+//  double simTime = d_lab->d_sharedState->getElapsedSimTime();
+  simTime_vartype simTime;
+  old_dw->get( simTime, d_lab->d_simulationTimeLabel );
+
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
@@ -1308,8 +1312,8 @@ IncDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
 
     double factor = 1.0;
 #if 0
-    if (time < 2.0)
-      factor = (time+0.000001)*0.5;
+    if (simTime < 2.0)
+      factor = (simTime+0.000001)*0.5;
 #endif
 
     if (d_MAlab) {

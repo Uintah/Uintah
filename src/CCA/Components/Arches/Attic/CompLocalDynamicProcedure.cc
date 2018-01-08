@@ -457,6 +457,8 @@ CompLocalDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
                             timelabels);
 
     // Requires
+    tsk->requires( Task::OldDW, d_lab->d_timeStepLabel );
+    
     // Assuming one layer of ghost cells
     // initialize with the value of zero at the physical bc's
     // construct a stress tensor and stored as an array with the following order
@@ -1465,7 +1467,6 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
                                         DataWarehouse* new_dw,
                                         const TimeIntegratorLabel* timelabels)
 {
-  //int nofTimeSteps=d_lab->d_sharedState->getCurrentTopLevelTimeStep();
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
@@ -2227,7 +2228,12 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
                                               DataWarehouse* new_dw,
                                               const TimeIntegratorLabel* timelabels)
 {
-  int nofTimeSteps=d_lab->d_sharedState->getCurrentTopLevelTimeStep();
+  timeStep_vartype timeStep;
+  old_dw->get( timeStep, d_lab->d_timeStepLabel );
+
+  int nofTimeSteps = timeStep;
+  // int nofTimeSteps=d_lab->d_sharedState->getCurrentTopLevelTimeStep();
+
   int initialTimeStep=2;
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);

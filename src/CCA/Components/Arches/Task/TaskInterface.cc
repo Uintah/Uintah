@@ -1,4 +1,5 @@
 #include <CCA/Components/Arches/Task/TaskInterface.h>
+#include <Core/Grid/Variables/VarTypes.h>
 
 //Uintah Includes:
 
@@ -70,12 +71,40 @@ void TaskInterface::schedule_task( const LevelP& level,
     default:
       throw InvalidValue("Arches Task Error: Cannot schedule task becuase of incomplete variable dependency: "+_task_name, __FILE__, __LINE__);
       break;
-
     }
   }
 
   //other variables:
-  tsk->requires(Task::OldDW, VarLabel::find("delT"));
+
+  // This method is called at both initialization and otherwise. At
+  // initialization the old DW, i.e. DW(0) will not exist so require
+  // the value from the new DW.  Otherwise for a normal time step get
+  // the time step from the old DW.
+
+  if( sched->get_dw(0) ) {
+    if( sched->get_dw(0)->exists( VarLabel::find(timeStep_name) ) )
+      tsk->requires(Task::OldDW, VarLabel::find(timeStep_name));
+
+    if( sched->get_dw(0)->exists( VarLabel::find(simTime_name) ) )
+      tsk->requires(Task::OldDW, VarLabel::find(simTime_name));
+
+    if( sched->get_dw(0)->exists( VarLabel::find(delT_name) ) )
+      tsk->requires(Task::OldDW, VarLabel::find(delT_name));
+  }
+
+  // Initialization only.
+  else if( sched->get_dw(1) ) {
+    if( sched->get_dw(1)->exists( VarLabel::find(timeStep_name) ) )
+      tsk->requires(Task::OldDW, VarLabel::find(timeStep_name));
+
+    if( sched->get_dw(1)->exists( VarLabel::find(simTime_name) ) )
+      tsk->requires(Task::NewDW, VarLabel::find(simTime_name));
+
+    // Do not check for delta T being in the warehouse as it is will
+    // not yet be written.
+    // if( sched->get_dw(1)->exists( VarLabel::find(delT_name) ) )
+      tsk->requires(Task::NewDW, VarLabel::find(delT_name));
+  }
 
   if ( counter > 0 ) {
     sched->addTask( tsk, level->eachPatch(), matls );
@@ -83,7 +112,6 @@ void TaskInterface::schedule_task( const LevelP& level,
   else {
     delete tsk;
   }
-
 }
 
 //====================================================================================
@@ -140,15 +168,18 @@ void TaskInterface::schedule_init( const LevelP& level,
     default:
       throw InvalidValue("Arches Task Error: Cannot schedule task because of incomplete variable dependency: "+_task_name, __FILE__, __LINE__);
       break;
-
     }
   }
+
+  //other variables:
+  tsk->requires(Task::NewDW, VarLabel::find(timeStep_name));
+  tsk->requires(Task::NewDW, VarLabel::find(simTime_name));
+  tsk->requires(Task::NewDW, VarLabel::find(delT_name));
 
   if ( counter > 0 )
     sched->addTask( tsk, level->eachPatch(), matls );
   else
     delete tsk;
-
 }
 
 //====================================================================================
@@ -188,18 +219,18 @@ void TaskInterface::schedule_timestep_init( const LevelP& level,
     default:
       throw InvalidValue("Arches Task Error: Cannot schedule task becuase of incomplete variable dependency: "+_task_name, __FILE__, __LINE__);
       break;
-
     }
   }
 
   //other variables:
-  tsk->requires(Task::OldDW, VarLabel::find("delT"));
+  tsk->requires(Task::OldDW, VarLabel::find(timeStep_name));
+  tsk->requires(Task::OldDW, VarLabel::find(simTime_name));
+  tsk->requires(Task::OldDW, VarLabel::find(delT_name));
 
   if ( counter > 0 )
     sched->addTask( tsk, level->eachPatch(), matls );
   else
     delete tsk;
-
 }
 
 //====================================================================================
@@ -213,6 +244,16 @@ void TaskInterface::do_task( const ProcessorGroup* pc,
                              VariableRegistry variable_registry,
                              int time_substep ){
 
+  // Get the current simTime and delT.
+  timeStep_vartype timeStep;
+  old_dw->get(timeStep, VarLabel::find(timeStep_name));
+    
+  simTime_vartype simTime;
+  old_dw->get(simTime, VarLabel::find(simTime_name));
+    
+  delt_vartype delT;
+  old_dw->get(delT, VarLabel::find(delT_name));
+
   for (int p = 0; p < patches->size(); p++) {
 
     const Patch* patch = patches->get(p);
@@ -220,11 +261,9 @@ void TaskInterface::do_task( const ProcessorGroup* pc,
     ArchesFieldContainer* field_container = scinew ArchesFieldContainer(patch, _matl_index, variable_registry, old_dw, new_dw);
 
     SchedToTaskInfo info;
-
-    //get the current dt
-    delt_vartype DT;
-    old_dw->get(DT, VarLabel::find("delT"));
-    info.dt = DT;
+    info.time = timeStep;
+    info.time = simTime;
+    info.dt = delT;
     info.time_substep = time_substep;
 
     ArchesTaskInfoManager* tsk_info_mngr = scinew ArchesTaskInfoManager(variable_registry, patch, info);
@@ -248,6 +287,32 @@ void TaskInterface::do_bcs( const ProcessorGroup* pc,
                             VariableRegistry variable_registry,
                             int time_substep ){
 
+  // This method is called at both initialization and otherwise. At
+  // initialization the old DW will not exist so get the value from
+  // the new DW.  Otherwise for a normal time step get the time step
+  // from the old DW.
+
+  // Get the current simTime and delT.
+  timeStep_vartype timeStep(0);
+  if( old_dw && old_dw->exists( VarLabel::find(timeStep_name) ) )
+    old_dw->get( timeStep, VarLabel::find(timeStep_name) );
+  else if( new_dw && new_dw->exists( VarLabel::find(timeStep_name) ) )
+    new_dw->get( timeStep, VarLabel::find(timeStep_name) );
+
+  simTime_vartype simTime(0);
+  if( old_dw && old_dw->exists( VarLabel::find(simTime_name) ) )
+    old_dw->get( simTime, VarLabel::find(simTime_name) );
+  else if( new_dw && new_dw->exists( VarLabel::find(simTime_name) ) )
+    new_dw->get( simTime, VarLabel::find(simTime_name) );
+
+  delt_vartype delT(0);
+  if( old_dw && old_dw->exists( VarLabel::find(delT_name) ) )
+    old_dw->get( delT, VarLabel::find(delT_name) );
+  else if( new_dw && new_dw->exists( VarLabel::find(delT_name) ) )
+    new_dw->get( delT, VarLabel::find(delT_name) );
+    
+  std::cerr << "*************" << delT << std::endl;
+  
   for (int p = 0; p < patches->size(); p++) {
 
     const Patch* patch = patches->get(p);
@@ -255,14 +320,9 @@ void TaskInterface::do_bcs( const ProcessorGroup* pc,
     ArchesFieldContainer* field_container = scinew ArchesFieldContainer(patch, _matl_index, variable_registry, old_dw, new_dw);
 
     SchedToTaskInfo info;
-
-    //These lines don't work because we are applying the BC in scheduleInitialize.
-    // During that phase, there is no valid DT. Need to work on this?
-    /// @TODO: Work on getting DT to the BC task.
-    //get the current dt
-    // delt_vartype DT;
-    // old_dw->get(DT, VarLabel::find("delT"));
-    // info.dt = DT;
+    info.time = timeStep;
+    info.time = simTime;
+    info.dt = delT;
     info.time_substep = time_substep;
 
     ArchesTaskInfoManager* tsk_info_mngr = scinew ArchesTaskInfoManager(variable_registry, patch, info);
@@ -285,6 +345,17 @@ void TaskInterface::do_init( const ProcessorGroup* pc,
                              DataWarehouse* new_dw,
                              VariableRegistry variable_registry ){
 
+  // Get the current simTime and delT.
+  timeStep_vartype timeStep;
+  new_dw->get(timeStep, VarLabel::find(timeStep_name));
+    
+  simTime_vartype simTime;
+  new_dw->get(simTime, VarLabel::find(simTime_name));
+
+  // No delta T on initialization.
+  // delt_vartype delT;
+  // new_dw->get(delT, VarLabel::find(delT_name));
+
   for (int p = 0; p < patches->size(); p++) {
 
     const Patch* patch = patches->get(p);
@@ -292,8 +363,8 @@ void TaskInterface::do_init( const ProcessorGroup* pc,
     ArchesFieldContainer* field_container = scinew ArchesFieldContainer(patch, _matl_index, variable_registry, old_dw, new_dw);
 
     SchedToTaskInfo info;
-
-    //get the current dt
+    info.timeStep = timeStep;
+    info.time = simTime;
     info.dt = 0;
     info.time_substep = 0;
 
@@ -317,6 +388,16 @@ void TaskInterface::do_restart_init( const ProcessorGroup* pc,
                                      DataWarehouse* new_dw,
                                      VariableRegistry variable_registry ){
 
+  // Get the current simTime and delT.
+  timeStep_vartype timeStep;
+  new_dw->get(timeStep, VarLabel::find(timeStep_name));
+    
+  simTime_vartype simTime;
+  new_dw->get(simTime, VarLabel::find(simTime_name));
+    
+  delt_vartype delT;
+  new_dw->get(delT, VarLabel::find(delT_name));
+
   for (int p = 0; p < patches->size(); p++) {
 
     const Patch* patch = patches->get(p);
@@ -324,9 +405,9 @@ void TaskInterface::do_restart_init( const ProcessorGroup* pc,
     ArchesFieldContainer* field_container = scinew ArchesFieldContainer(patch, _matl_index, variable_registry, old_dw, new_dw );
 
     SchedToTaskInfo info;
-
-    //get the current dt
-    info.dt = 0;
+    info.timeStep = timeStep;
+    info.time = simTime;
+    info.dt = delT;
     info.time_substep = 0;
 
     ArchesTaskInfoManager* tsk_info_mngr = scinew ArchesTaskInfoManager(variable_registry, patch, info);
@@ -349,6 +430,16 @@ void TaskInterface::do_timestep_init( const ProcessorGroup* pc,
                                       DataWarehouse* new_dw,
                                       VariableRegistry variable_registry ){
 
+  // Get the current simTime and delT.
+  timeStep_vartype timeStep;
+  old_dw->get(timeStep, VarLabel::find(timeStep_name));
+    
+  simTime_vartype simTime;
+  old_dw->get(simTime, VarLabel::find(simTime_name));
+    
+  delt_vartype delT;
+  old_dw->get(delT, VarLabel::find(delT_name));
+
   for (int p = 0; p < patches->size(); p++) {
 
     const Patch* patch = patches->get(p);
@@ -356,11 +447,9 @@ void TaskInterface::do_timestep_init( const ProcessorGroup* pc,
     ArchesFieldContainer* field_container = scinew ArchesFieldContainer(patch, _matl_index, variable_registry, old_dw, new_dw );
 
     SchedToTaskInfo info;
-
-    //get the current dt
-    delt_vartype DT;
-    old_dw->get(DT, VarLabel::find("delT"));
-    info.dt = DT;
+    info.timeStep = timeStep;
+    info.time = simTime;
+    info.dt = delT;
     info.time_substep = 0;
 
     ArchesTaskInfoManager* tsk_info_mngr = scinew ArchesTaskInfoManager(variable_registry, patch, info);
@@ -373,6 +462,5 @@ void TaskInterface::do_timestep_init( const ProcessorGroup* pc,
     //clean up
     delete tsk_info_mngr;
     delete field_container;
-
   }
 }

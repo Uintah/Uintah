@@ -55,6 +55,12 @@ _shared_state( shared_state )
   _T_copy_label = VarLabel::create( "T_copy", CC_double );
   _True_T_Label = VarLabel::create( "true_wall_temperature", CC_double);
 
+  // Time Step
+  _timeStepLabel = VarLabel::create(timeStep_name, timeStep_vartype::getTypeDescription());
+
+  // Simulation Time
+  _simulationTimeLabel = VarLabel::create(simTime_name, simTime_vartype::getTypeDescription());
+
   // delta t
   VarLabel* nonconstDelT =
     VarLabel::create(delT_name, delt_vartype::getTypeDescription() );
@@ -73,6 +79,8 @@ WallModelDriver::~WallModelDriver()
 
   }
 
+  VarLabel::destroy(_timeStepLabel);
+  VarLabel::destroy(_simulationTimeLabel);
   VarLabel::destroy(_delTLabel);
 
   VarLabel::destroy( _T_copy_label );
@@ -277,6 +285,8 @@ WallModelDriver::sched_doWallHT( const LevelP& level, SchedulerP& sched, const i
 
   }
 
+  task->requires( Task::OldDW, _timeStepLabel);
+  task->requires( Task::OldDW, _simulationTimeLabel);
   task->requires( Task::OldDW, _delTLabel, Ghost::None, 0);
   sched->addTask(task, level->eachPatch(), _shared_state->allArchesMaterials());
 
@@ -291,25 +301,31 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
                            DataWarehouse* new_dw,
                            const int time_subset )
 {
+  // int timeStep = _shared_state->getCurrentTopLevelTimeStep();
+
+  timeStep_vartype timeStep;
+  old_dw->get( timeStep, _timeStepLabel );
+
+  simTime_vartype simTime;
+  old_dw->get( simTime, _simulationTimeLabel );
+
+  delt_vartype delT;
+  old_dw->get( delT, _delTLabel );
 
   //patch loop
   for (int p=0; p < patches->size(); p++){
 
-    int timestep = _shared_state->getCurrentTopLevelTimeStep();
-
     const Patch* patch = patches->get(p);
     HTVariables vars;
     vars.relax = _relax;
-    vars.time = _shared_state->getElapsedSimTime();
-    delt_vartype DT;
-    old_dw->get(DT, _delTLabel);
-    vars.delta_t = DT;
+    vars.time = simTime;
+    vars.delta_t = delT;
 
     // Note: The local T_copy is necessary because boundary conditions are being applied
     // in the table lookup to T based on the conditions for the independent variables. These
     // BCs are being applied regardless of the type of wall temperature model.
 
-    if( time_subset == 0 && timestep % _calc_freq == 0 ){
+    if( time_subset == 0 && timeStep % _calc_freq == 0 ){
 
       // actually compute the wall HT model
 
@@ -389,7 +405,7 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
       //here for saftey and simplicity. Maybe rethink this if efficiency becomes an issue.
       vars.T_copy.copyData( vars.T );
 
-    } else if ( time_subset == 0 && timestep % _calc_freq != 0 ) {
+    } else if ( time_subset == 0 && timeStep % _calc_freq != 0 ) {
 
       // no ht solve this step:
       // 1) copy T_old (from OldDW) -> T   (to preserve BCs)

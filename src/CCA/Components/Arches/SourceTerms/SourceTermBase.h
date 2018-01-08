@@ -120,6 +120,7 @@ protected:
   std::string _type;                                      ///< Source type (eg, constant, westbrook dryer, .... )
   bool _compute_me;                                       ///< To indicate if calculating this source is needed or has already been computed.
   const VarLabel* _src_label;                             ///< Source varlabel
+  const VarLabel* _simulationTimeLabel;
   int _stage;                                             ///< At which stage should this be computed: 0) before table lookup 1) after table lookup 2) after RK ave
   SimulationStateP& _shared_state;                        ///< Local copy of sharedState
   std::vector<std::string> _required_labels;              ///< Vector of required labels

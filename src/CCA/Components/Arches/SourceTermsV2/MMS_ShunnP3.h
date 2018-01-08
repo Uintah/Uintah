@@ -297,7 +297,7 @@ void MMS_ShunnP3<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
 template <typename T>
 void MMS_ShunnP3<T>::compute_source( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  double time_d      = _shared_state->getElapsedSimTime();
+  double time_d      = tsk_info->get_time(); //_shared_state->getElapsedSimTime();
   int   time_substep = tsk_info->get_time_substep();
   double factor      = tsk_info->get_ssp_time_factor(time_substep);
   double dt          = tsk_info->get_dt();

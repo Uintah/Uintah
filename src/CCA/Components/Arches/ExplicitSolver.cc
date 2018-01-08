@@ -2134,7 +2134,15 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                                            d_timeIntegratorLabels[curr_level]);
     }
 
-    d_turbCounter = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
+    // d_turbCounter = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
+    timeStep_vartype timeStep(0);
+    if( sched->get_dw(0) && sched->get_dw(0)->exists( d_lab->d_timeStepLabel ) )
+      sched->get_dw(0)->get( timeStep, d_lab->d_timeStepLabel );
+    else if( sched->get_dw(1) && sched->get_dw(1)->exists( d_lab->d_timeStepLabel ) )
+      sched->get_dw(1)->get( timeStep, d_lab->d_timeStepLabel );
+
+    d_turbCounter = timeStep;
+    
     if ((d_turbCounter%d_turbModelCalcFreq == 0)&&
         ((curr_level==0)||((!(curr_level==0))&&d_turbModelRKsteps)))
       d_turbModel->sched_reComputeTurbSubmodel(sched, level, matls,
@@ -2963,6 +2971,8 @@ ExplicitSolver::sched_getDensityGuess(SchedulerP& sched,
                           &ExplicitSolver::getDensityGuess,
                           timelabels);
 
+  tsk->requires( Task::OldDW, d_lab->d_timeStepLabel );
+
   Task::WhichDW parent_old_dw;
   if (timelabels->recursion){
     parent_old_dw = Task::ParentOldDW;
@@ -3025,6 +3035,10 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
                                 DataWarehouse* new_dw,
                                 const TimeIntegratorLabel* timelabels)
 {
+  // int timeStep = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
+  timeStep_vartype timeStep;
+  old_dw->get( timeStep, d_lab->d_timeStepLabel );
+
   DataWarehouse* parent_old_dw;
   if (timelabels->recursion){
     parent_old_dw = new_dw->getOtherDataWarehouse(Task::ParentOldDW);
@@ -3105,8 +3119,7 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
     }
 
 // Need to skip first timestep since we start with unprojected velocities
-//    int currentTimeStep=d_lab->d_sharedState->getCurrentTopLevelTimeStep();
-//    if (currentTimeStep > 1) {
+//    if (timeStep > 1) {
 //
       if ( have_extra_srcs ){
 
