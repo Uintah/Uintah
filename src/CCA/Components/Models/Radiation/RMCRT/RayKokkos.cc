@@ -655,8 +655,9 @@ struct rayTrace_solveDivQFunctor {
     k = (threadID / (m_RT_flags.finePatchSize.x * m_RT_flags.finePatchSize.y)) + m_RT_flags.finePatchLow.z;
 
     while ( threadID < m_RT_flags.endCell ) {
-        //________________________________________________________________________________________//
-        //==== START for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) ====//
+
+      //________________________________________________________________________________________//
+      //==== START for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) ====//
 
       double sumI = 0;
 
@@ -1199,6 +1200,10 @@ Ray::rayTrace( DetailedTask* dtask,
       new_dw->put( ppTimer, d_PPTimerLabel, d_matl, patch);
     }
 #endif
+  
+  DataWarehouse* abskg_dw    = new_dw->getOtherDataWarehouse(which_abskg_dw);
+  DataWarehouse* sigmaT4_dw  = new_dw->getOtherDataWarehouse(which_sigmaT4_dw);
+  DataWarehouse* celltype_dw = new_dw->getOtherDataWarehouse(which_celltype_dw);
 
   //It seems these variables need to stay in scope for the entire run, otherwise something inside Uintah
   //apparently deallocates them mid-run.
@@ -1212,6 +1217,14 @@ Ray::rayTrace( DetailedTask* dtask,
   KokkosView3<double>    divQ_view;
   KokkosView3<double>    radiationVolq_view;
   KokkosView3<const int> celltype_view;
+  
+  if ( ! Parallel::usingDevice() ) {
+    if ( d_ROI_algo == entireDomain ) {
+      abskg_dw->getLevel(    abskg,         d_abskgLabel,    d_matl, level );
+      sigmaT4_dw->getLevel(  sigmaT4OverPi, d_sigmaT4Label,  d_matl, level );
+      celltype_dw->getLevel( celltype,      d_cellTypeLabel, d_matl, level );
+    }
+  }
 
   // patch loop
   for (int p=0; p < patches->size(); p++){
@@ -1222,49 +1235,38 @@ Ray::rayTrace( DetailedTask* dtask,
     const Patch* patch = patches->get(p);
     printTask(patches,patch,g_ray_dbg,"Doing Ray::rayTrace");
 
-    DataWarehouse* abskg_dw    = new_dw->getOtherDataWarehouse(which_abskg_dw);
-    DataWarehouse* sigmaT4_dw  = new_dw->getOtherDataWarehouse(which_sigmaT4_dw);
-    DataWarehouse* celltype_dw = new_dw->getOtherDataWarehouse(which_celltype_dw);
-
     //Get the variables from a Data Warehouse
     //See if its CPU or GPU execution, if so, get the right variables from the right data warehouse.
     if ( ! Parallel::usingDevice() ) {
-      if ( d_ROI_algo == entireDomain ){
-        abskg_dw->getLevel(    abskg,         d_abskgLabel,    d_matl, level );
-        sigmaT4_dw->getLevel(  sigmaT4OverPi, d_sigmaT4Label,  d_matl, level );
-        celltype_dw->getLevel( celltype,      d_cellTypeLabel, d_matl, level );
-      }
 
-      CCVariable<double> divQ;
+      CCVariable<double>   divQ;
       CCVariable<Stencil7> boundFlux;
-      CCVariable<double> radiationVolq;
-      if( modifies_divQ ){
+      CCVariable<double>   radiationVolq;
+
+      if ( modifies_divQ ) {
         new_dw->getModifiable( divQ,         d_divQLabel,          d_matl, patch );
         new_dw->getModifiable( boundFlux,    d_boundFluxLabel,     d_matl, patch );
         new_dw->getModifiable( radiationVolq,d_radiationVolqLabel, d_matl, patch );
-      }else{
+      }
+      else {
         new_dw->allocateAndPut( divQ,         d_divQLabel,          d_matl, patch );
         new_dw->allocateAndPut( boundFlux,    d_boundFluxLabel,     d_matl, patch );
         new_dw->allocateAndPut( radiationVolq,d_radiationVolqLabel, d_matl, patch );
         divQ.initialize( 0.0 );
         radiationVolq.initialize( 0.0 );
-        for (CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
+
+        for ( CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++ ) {
           IntVector c = *iter;
           boundFlux[c].initialize(0.0);
         }
       }
-      //Get the views for portability.
-      abskg_view         = abskg.getKokkosView();
-      sigmaT4OverPi_view = sigmaT4OverPi.getKokkosView();
-      celltype_view      = celltype.getKokkosView();
-      divQ_view          = divQ.getKokkosView();
-      radiationVolq_view = radiationVolq.getKokkosView();
 
       IntVector ROI_Lo = IntVector(-SHRT_MAX,-SHRT_MAX,-SHRT_MAX );
       IntVector ROI_Hi = IntVector( SHRT_MAX, SHRT_MAX, SHRT_MAX );
+
       //__________________________________
       //  If ray length distance is used
-      if ( d_ROI_algo == boundedRayLength ){
+      if ( d_ROI_algo == boundedRayLength ) {
 
         patch->computeVariableExtentsWithBoundaryCheck(CCVariable<double>::getTypeDescription()->getType(), IntVector(0,0,0),
                                                        Ghost::AroundCells, d_haloCells.x(), ROI_Lo, ROI_Hi);
@@ -1273,6 +1275,14 @@ Ray::rayTrace( DetailedTask* dtask,
         sigmaT4_dw->getRegion( sigmaT4OverPi,  d_sigmaT4Label,  d_matl, level, ROI_Lo, ROI_Hi );
         celltype_dw->getRegion( celltype,      d_cellTypeLabel, d_matl, level, ROI_Lo, ROI_Hi );
       }
+      
+      // Get the views for portability.
+      abskg_view         = abskg.getKokkosView();
+      sigmaT4OverPi_view = sigmaT4OverPi.getKokkosView();
+      celltype_view      = celltype.getKokkosView();
+      divQ_view          = divQ.getKokkosView();
+      radiationVolq_view = radiationVolq.getKokkosView();
+      
       //__________________________________
       //  BULLETPROOFING
       //if ( level->isNonCubic() ){
