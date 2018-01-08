@@ -391,6 +391,7 @@ void lineExtract::scheduleDoAnalysis(SchedulerP& sched,
   // do not checkpoint it.
   sched->overrideVariableBehavior("FileInfo_lineExtract", false, false, false, true, true); 
                      
+  t->requires(Task::OldDW, m_simulationTimeLabel);
   t->requires(Task::OldDW, ps_lb->lastWriteTimeLabel);
   t->requires(Task::OldDW, ps_lb->fileVarsStructLabel, d_zero_matl, Ghost::None, 0);
     
@@ -442,7 +443,12 @@ void lineExtract::doAnalysis(const ProcessorGroup* pg,
     lastWriteTime = writeTime;
   }
 
-  double now = m_sharedState->getElapsedSimTime();
+  // double now = m_sharedState->getElapsedSimTime();
+  
+  simTime_vartype simTimeVar;
+  old_dw->get(simTimeVar, m_simulationTimeLabel);
+  double now = simTimeVar;
+
   if(now < d_startTime || now > d_stopTime){
     return;
   }
@@ -642,8 +648,7 @@ void lineExtract::doAnalysis(const ProcessorGroup* pg,
 
           // write cell position and time
           Point here = patch->cellPosition(c);
-          double time = m_sharedState->getElapsedSimTime();
-          fprintf(fp,    "%E\t %E\t %E\t %E",here.x(),here.y(),here.z(), time);
+          fprintf(fp,    "%E\t %E\t %E\t %E",here.x(),here.y(),here.z(), now);
                   
            // WARNING If you change the order that these are written
            // out you must also change the order that the header is

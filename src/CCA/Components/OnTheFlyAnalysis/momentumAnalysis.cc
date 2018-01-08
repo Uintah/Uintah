@@ -328,6 +328,7 @@ void momentumAnalysis::scheduleDoAnalysis(SchedulerP& sched,
   matl_SS->add( d_matlIndx );
   matl_SS->addReference();
 
+  t0->requires( Task::OldDW, m_simulationTimeLabel );
   t0->requires( Task::OldDW, labels->lastCompTime );
   t0->requires( Task::OldDW, labels->delT, level.get_rep() );
 
@@ -358,6 +359,7 @@ void momentumAnalysis::scheduleDoAnalysis(SchedulerP& sched,
   Task* t1 = scinew Task("momentumAnalysis::doAnalysis",
                     this,&momentumAnalysis::doAnalysis );
 
+  t1->requires( Task::OldDW, m_simulationTimeLabel );
   t1->requires( Task::OldDW, labels->lastCompTime );
   t1->requires( Task::OldDW, labels->fileVarsStruct, d_zeroMatl, gn, 0 );
 
@@ -392,7 +394,12 @@ void momentumAnalysis::integrateMomentumField(const ProcessorGroup* pg,
 
   double lastCompTime = analysisTime;
   double nextCompTime = lastCompTime + 1.0/d_analysisFreq;
-  double now = m_sharedState->getElapsedSimTime();
+
+  // double now = m_sharedState->getElapsedSimTime();
+
+  simTime_vartype simTimeVar;
+  old_dw->get(simTimeVar, m_simulationTimeLabel);
+  double now = simTimeVar;
 
   bool tsr = new_dw->timestepRestarted();  // ignore if a timestep restart has been requested.
 
@@ -559,7 +566,11 @@ void momentumAnalysis::doAnalysis(const ProcessorGroup* pg,
   max_vartype lastTime;
   old_dw->get( lastTime, labels->lastCompTime );
 
-  double now      = m_sharedState->getElapsedSimTime();
+  simTime_vartype simTimeVar;
+  old_dw->get(simTimeVar, m_simulationTimeLabel);
+  double now = simTimeVar;
+
+  // double now = m_sharedState->getElapsedSimTime();
   double nextTime = lastTime + ( 1.0 / d_analysisFreq );
 
   double time_dw  = lastTime;

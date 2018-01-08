@@ -43,7 +43,15 @@ AnalysisModule::AnalysisModule( const ProcessorGroup* myworld,
   m_sharedState = sharedState;
   m_module_spec = module_spec;
 
-  // delta t
+  // Time Step
+  m_timeStepLabel =
+    VarLabel::create(timeStep_name, timeStep_vartype::getTypeDescription() );
+  
+  // Simulation Time
+  m_simulationTimeLabel =
+    VarLabel::create(simTime_name, simTime_vartype::getTypeDescription() );
+
+  // Delta t
   VarLabel* nonconstDelT =
     VarLabel::create(delT_name, delt_vartype::getTypeDescription() );
   nonconstDelT->allowMultipleComputes();
@@ -52,6 +60,8 @@ AnalysisModule::AnalysisModule( const ProcessorGroup* myworld,
 
 AnalysisModule::~AnalysisModule()
 {
+  VarLabel::destroy(m_timeStepLabel);
+  VarLabel::destroy(m_simulationTimeLabel);
   VarLabel::destroy(m_delTLabel);
 }
     

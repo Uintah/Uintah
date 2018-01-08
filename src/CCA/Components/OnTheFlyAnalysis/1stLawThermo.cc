@@ -278,6 +278,7 @@ void FirstLawThermo::scheduleDoAnalysis(SchedulerP& sched,
   const MaterialSet* ice_matls = m_sharedState->allICEMaterials();
   const MaterialSubset* ice_ss = ice_matls->getUnion();
   
+  t0->requires( Task::OldDW, m_simulationTimeLabel );
   t0->requires( Task::OldDW, FL_lb->lastCompTimeLabel );
   t0->requires( Task::OldDW, I_lb->delTLabel, level.get_rep() ); 
   
@@ -302,6 +303,7 @@ void FirstLawThermo::scheduleDoAnalysis(SchedulerP& sched,
   const MaterialSet* mpm_matls = m_sharedState->allMPMMaterials();
   const MaterialSubset* mpm_ss = mpm_matls->getUnion();
   
+  t1->requires( Task::OldDW, m_simulationTimeLabel );
   t1->requires( Task::OldDW, FL_lb->lastCompTimeLabel );
   t1->requires( Task::NewDW, M_lb->pMassLabel_preReloc,        mpm_ss, gn );
   t1->requires( Task::NewDW, M_lb->pTemperatureLabel_preReloc, mpm_ss, gn );
@@ -315,6 +317,7 @@ void FirstLawThermo::scheduleDoAnalysis(SchedulerP& sched,
   Task* t2 = scinew Task("FirstLawThermo::doAnalysis", 
                     this,&FirstLawThermo::doAnalysis );
                     
+  t2->requires( Task::OldDW, m_simulationTimeLabel );
   t2->requires( Task::OldDW, FL_lb->lastCompTimeLabel );
   t2->requires( Task::OldDW, FL_lb->fileVarsStructLabel, d_zeroMatl, gn, 0 );
   
@@ -345,7 +348,11 @@ void FirstLawThermo::compute_ICE_Contributions(const ProcessorGroup* pg,
   
   double lastCompTime = analysisTime;
   double nextCompTime = lastCompTime + 1.0/d_analysisFreq;  
-  double now = m_sharedState->getElapsedSimTime();
+  // double now = m_sharedState->getElapsedSimTime();
+
+  simTime_vartype simTimeVar;
+  old_dw->get(simTimeVar, m_simulationTimeLabel);
+  double now = simTimeVar;
 
   if( now < nextCompTime  ){
     return;
@@ -581,7 +588,11 @@ void FirstLawThermo::compute_MPM_Contributions(const ProcessorGroup* pg,
 
   double lastCompTime = analysisTime;
   double nextCompTime = lastCompTime + 1.0/d_analysisFreq;  
-  double now = m_sharedState->getElapsedSimTime();
+  // double now = m_sharedState->getElapsedSimTime();
+
+  simTime_vartype simTimeVar;
+  old_dw->get(simTimeVar, m_simulationTimeLabel);
+  double now = simTimeVar;
 
   if( now < nextCompTime  ){
     return;
@@ -632,7 +643,11 @@ void FirstLawThermo::doAnalysis(const ProcessorGroup* pg,
   max_vartype lastTime;
   old_dw->get( lastTime, FL_lb->lastCompTimeLabel );
 
-  double now = m_sharedState->getElapsedSimTime();
+  simTime_vartype simTimeVar;
+  old_dw->get(simTimeVar, m_simulationTimeLabel);
+  double now = simTimeVar;
+
+  // double now = m_sharedState->getElapsedSimTime();
   double nextTime = lastTime + 1.0/d_analysisFreq;
   
   double time_dw  = lastTime;  

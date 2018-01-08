@@ -334,6 +334,7 @@ void particleExtract::scheduleDoAnalysis(SchedulerP& sched,
                    this,&particleExtract::doAnalysis);
                      
                      
+  t->requires(Task::OldDW, m_simulationTimeLabel);
   t->requires(Task::OldDW, ps_lb->lastWriteTimeLabel);
   
   Ghost::GhostType gn = Ghost::None;
@@ -376,7 +377,12 @@ particleExtract::doAnalysis( const ProcessorGroup * pg,
     lastWriteTime = writeTime;
   }
 
-  double now = m_sharedState->getElapsedSimTime();
+  // double now = m_sharedState->getElapsedSimTime();
+
+  simTime_vartype simTimeVar;
+  old_dw->get(simTimeVar, m_simulationTimeLabel);
+  double now = simTimeVar;
+
   if(now < d_startTime || now > d_stopTime){
     return;
   }  
@@ -526,12 +532,11 @@ particleExtract::doAnalysis( const ProcessorGroup * pg,
           }
 
           // write particle position and time
-          double time = m_sharedState->getElapsedSimTime();
-          fprintf(fp,    "%E\t %E\t %E\t %E",time, px[idx].x(),px[idx].y(),px[idx].z());
+          fprintf(fp,    "%E\t %E\t %E\t %E",now, px[idx].x(),px[idx].y(),px[idx].z());
 
-
-           // WARNING  If you change the order that these are written out you must 
-           // also change the order that the header is written
+           // WARNING If you change the order that these are written
+           // out you must also change the order that the header is
+           // written
 
           // write <int> variables      
           for (unsigned int i=0 ; i <  integer_data.size(); i++) {

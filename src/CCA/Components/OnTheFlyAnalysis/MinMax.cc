@@ -72,8 +72,8 @@ static DebugStream cout_doing("MinMax_DOING_COUT", false);
 ______________________________________________________________________*/
           
 MinMax::MinMax( const ProcessorGroup* myworld,
-		const SimulationStateP sharedState,
-		const ProblemSpecP& module_spec )
+                const SimulationStateP sharedState,
+                const ProblemSpecP& module_spec )
   : AnalysisModule(myworld, sharedState, module_spec)
 {
   d_matl_set = nullptr;
@@ -115,10 +115,10 @@ void MinMax::problemSetup(const ProblemSpecP&,
   int numMatls  = m_sharedState->getNumMatls();
 
   d_lb->lastCompTimeLabel =  VarLabel::create("lastCompTime_minMax", 
-					      max_vartype::getTypeDescription() );
+                                              max_vartype::getTypeDescription() );
 
   d_lb->fileVarsStructLabel = VarLabel::create("FileInfo_minMax", 
-					       PerPatch<FileInfoP>::getTypeDescription() );       
+                                               PerPatch<FileInfoP>::getTypeDescription() );       
                                             
   //__________________________________
   //  Read in timing information
@@ -368,8 +368,9 @@ void MinMax::scheduleDoAnalysis(SchedulerP& sched,
   //__________________________________
   //  computeMinMax task;     
   Task* t0 = scinew Task( "MinMax::computeMinMax", 
-                     this,&MinMax::computeMinMax );
+                          this,&MinMax::computeMinMax );
                         
+  t0->requires( Task::OldDW, m_simulationTimeLabel );
   t0->requires( Task::OldDW, d_lb->lastCompTimeLabel );
  
   for ( unsigned int i =0 ; i < d_analyzeVars.size(); i++ ) {
@@ -408,8 +409,9 @@ void MinMax::scheduleDoAnalysis(SchedulerP& sched,
   // Only write data on patch 0 on each level
 
   Task* t1 = scinew Task( "MinMax::doAnalysis", 
-                       this,&MinMax::doAnalysis );      
+                          this,&MinMax::doAnalysis );      
                             
+  t1->requires( Task::OldDW, m_simulationTimeLabel );
   t1->requires( Task::OldDW, d_lb->lastCompTimeLabel );
   t1->requires( Task::OldDW, d_lb->fileVarsStructLabel, d_zero_matl, gn, 0 );
   
@@ -460,7 +462,11 @@ void MinMax::computeMinMax(const ProcessorGroup* pg,
     lastWriteTime = writeTime;
   }
 
-  double now = m_sharedState->getElapsedSimTime();
+  // double now = m_sharedState->getElapsedSimTime();
+
+  simTime_vartype simTimeVar;
+  old_dw->get(simTimeVar, m_simulationTimeLabel);
+  double now = simTimeVar;
 
   // Get the delta t from the warehouse so time includes the current
   // time step.
@@ -598,7 +604,11 @@ void MinMax::doAnalysis(const ProcessorGroup* pg,
     lastWriteTime = writeTime;
   }
 
-  double now = m_sharedState->getElapsedSimTime();
+  // double now = m_sharedState->getElapsedSimTime();
+
+  simTime_vartype simTimeVar;
+  old_dw->get(simTimeVar, m_simulationTimeLabel);
+  double now = simTimeVar;
 
   // Get the delta t from the warehouse so time includes the current
   // time step.
@@ -673,7 +683,7 @@ void MinMax::doAnalysis(const ProcessorGroup* pg,
           createDirectory(minmaxDir);
           d_isDirCreated.insert(minmaxDir);
         }
-	
+        
         ostringstream li;
         li<<"l"<<level->getIndex();
         string levelIndex = li.str();

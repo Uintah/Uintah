@@ -76,7 +76,7 @@ ifeq ($(BUILD_MPM),yes)
 endif
 
 # MPM-ICE analysis
-ifeq ($(BUILD_MPM)$(BUILD_MPM),yesyes)
+ifeq ($(BUILD_MPM)$(BUILD_ICE),yesyes)
   SRCS += \
         $(SRCDIR)/1stLawThermo.cc
 endif
