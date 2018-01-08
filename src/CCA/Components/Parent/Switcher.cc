@@ -51,6 +51,8 @@
 #include <Core/OS/Dir.h>
 #include <Core/Parallel/Parallel.h>
 
+#include <sci_defs/uintah_defs.h>
+
 using namespace Uintah;
 
 static DebugStream dbg("SWITCHER", false);
@@ -454,15 +456,20 @@ void Switcher::scheduleInitNewVars(const LevelP     & level,
     const MaterialSet* matls;
 
     std::string nextComp_matls = initVar->matlSetNames[i];
-    if (     nextComp_matls == "ice_matls" ){
+
+    if (nextComp_matls == "all_matls") {
+      matls = m_sharedState->allMaterials();
+    }
+#ifndef NO_ICE
+    else if (nextComp_matls == "ice_matls" ) {
       matls = m_sharedState->allICEMaterials();
     }
+#endif
+#ifndef NO_MPM
     else if (nextComp_matls == "mpm_matls" ) {
       matls = m_sharedState->allMPMMaterials();
     }
-    else if (nextComp_matls == "all_matls") {
-      matls = m_sharedState->allMaterials();
-    }
+#endif
     else {
       throw ProblemSetupException("Bad material set", __FILE__, __LINE__);
     }

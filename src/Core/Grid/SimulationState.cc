@@ -32,33 +32,38 @@
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
 
+#include <sci_defs/uintah_defs.h>
+
+#ifndef NO_ARCHES
 #include <CCA/Components/Arches/ArchesMaterial.h>
+#endif
+
+#ifndef NO_FVM
+#include <CCA/Components/FVM/FVMMaterial.h>
+#endif
+
+#ifndef NO_ICE
 #include <CCA/Components/ICE/Materials/ICEMaterial.h>
+#endif
+
+#ifndef NO_MPM
 #include <CCA/Components/MPM/CohesiveZone/CZMaterial.h>
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
+#endif
+
+#ifndef NO_WASATCH
 #include <CCA/Components/Wasatch/WasatchMaterial.h>
-#include <CCA/Components/FVM/FVMMaterial.h>
+#endif
 
 using namespace Uintah;
 
-static int count=0;
+int SimulationState::count = 0;  
 
 SimulationState::SimulationState()
 {
   if( count++ >= 1)
-    throw ProblemSetupException("Allocated multiple SimulationStates", __FILE__, __LINE__);
-
-  //__________________________________
-  all_mpm_matls     = 0;
-  all_cz_matls      = 0;
-  all_ice_matls     = 0;
-  all_wasatch_matls = 0;  
-  all_arches_matls  = 0;
-  all_fvm_matls     = 0;
-  all_matls         = 0;
-  
-  orig_all_matls    = 0;
-  allInOneMatl      = 0;
+    throw ProblemSetupException("Allocated multiple SimulationStates",
+				__FILE__, __LINE__);
 }
 //__________________________________
 //
@@ -87,6 +92,7 @@ void SimulationState::registerMaterial(Material* matl)
     named_matls[matl->getName()] = matl;
   }
 }
+
 //__________________________________
 //
 void SimulationState::registerMaterial(Material* matl,unsigned int index)
@@ -106,298 +112,12 @@ void SimulationState::registerMaterial(Material* matl,unsigned int index)
 
 //__________________________________
 //
-void SimulationState::registerMPMMaterial(MPMMaterial* matl)
-{
-  mpm_matls.push_back(matl);
-  registerMaterial(matl);
-}
-//__________________________________
-//
-void SimulationState::registerMPMMaterial(MPMMaterial* matl,unsigned int index)
-{
-  mpm_matls.push_back(matl);
-  registerMaterial(matl,index);
-}
-//__________________________________
-//
-void SimulationState::registerCZMaterial(CZMaterial* matl)
-{
-  cz_matls.push_back(matl);
-  registerMaterial(matl);
-}
-//__________________________________
-//
-void SimulationState::registerCZMaterial(CZMaterial* matl,unsigned int index)
-{
-  cz_matls.push_back(matl);
-  registerMaterial(matl,index);
-}
-//__________________________________
-//
-void SimulationState::registerArchesMaterial(ArchesMaterial* matl)
-{
-   arches_matls.push_back(matl);
-   registerMaterial(matl);
-}
-//__________________________________
-//
-void SimulationState::registerICEMaterial(ICEMaterial* matl)
-{
-   ice_matls.push_back(matl);
-   registerMaterial(matl);
-}
-//__________________________________
-//
-void SimulationState::registerICEMaterial(ICEMaterial* matl,unsigned int index)
-{
-   ice_matls.push_back(matl);
-   registerMaterial(matl,index);
-}
-//__________________________________
-//
-void SimulationState::registerWasatchMaterial(WasatchMaterial* matl)
-{
-  wasatch_matls.push_back(matl);
-  registerMaterial(matl);
-}
-//__________________________________
-//
-void SimulationState::registerWasatchMaterial(WasatchMaterial* matl,unsigned int index)
-{
-  wasatch_matls.push_back(matl);
-  registerMaterial(matl,index);
-}
-//__________________________________
-//
-void SimulationState::registerFVMMaterial(FVMMaterial* matl)
-{
-  fvm_matls.push_back(matl);
-  registerMaterial(matl);
-}
-//__________________________________
-//
-void SimulationState::registerFVMMaterial(FVMMaterial* matl,unsigned int index)
-{
-  fvm_matls.push_back(matl);
-  registerMaterial(matl,index);
-}
-//__________________________________
-//
 void SimulationState::registerSimpleMaterial(SimpleMaterial* matl)
 {
   simple_matls.push_back(matl);
   registerMaterial(matl);
 }
-//__________________________________
-//
-void SimulationState::finalizeMaterials()
-{
-  // MPM
-  if (all_mpm_matls && all_mpm_matls->removeReference()){
-    delete all_mpm_matls;
-  }
-  all_mpm_matls = scinew MaterialSet();
-  all_mpm_matls->addReference();
-  std::vector<int> tmp_mpm_matls(mpm_matls.size());
-  for( int i=0; i<(int)mpm_matls.size(); i++ ) {
-    tmp_mpm_matls[i] = mpm_matls[i]->getDWIndex();
-  }
-  all_mpm_matls->addAll(tmp_mpm_matls);
-  
-  // Cohesive Zone
-  if (all_cz_matls && all_cz_matls->removeReference()){
-    delete all_cz_matls;
-  }
-  all_cz_matls = scinew MaterialSet();
-  all_cz_matls->addReference();
-  std::vector<int> tmp_cz_matls(cz_matls.size());
-  for( int i=0; i<(int)cz_matls.size(); i++ ) {
-    tmp_cz_matls[i] = cz_matls[i]->getDWIndex();
-  }
-  all_cz_matls->addAll(tmp_cz_matls);
-  
-  // Arches Matls
-  if (all_arches_matls && all_arches_matls->removeReference()){
-    delete all_arches_matls;
-  }
-  all_arches_matls = scinew MaterialSet();
-  all_arches_matls->addReference();
-  std::vector<int> tmp_arches_matls(arches_matls.size());
-  for (int i = 0; i<(int)arches_matls.size();i++){
-    tmp_arches_matls[i] = arches_matls[i]->getDWIndex();
-  }
-  all_arches_matls->addAll(tmp_arches_matls);
 
-  // ICE Matls
-  if (all_ice_matls && all_ice_matls->removeReference()){
-    delete all_ice_matls;
-  }
-  all_ice_matls = scinew MaterialSet();
-  all_ice_matls->addReference();
-  std::vector<int> tmp_ice_matls(ice_matls.size());
-  for(int i=0;i<(int)ice_matls.size();i++) {
-    tmp_ice_matls[i] = ice_matls[i]->getDWIndex();
-  }
-  all_ice_matls->addAll(tmp_ice_matls);
-
-  // FVM Matls
-  if (all_fvm_matls && all_fvm_matls->removeReference()){
-    delete all_fvm_matls;
-  }
-  all_fvm_matls = scinew MaterialSet();
-  all_fvm_matls->addReference();
-  std::vector<int> tmp_fvm_matls(fvm_matls.size());
-  for(int i=0;i<(int)fvm_matls.size();i++) {
-    tmp_fvm_matls[i] = fvm_matls[i]->getDWIndex();
-  }
-  all_fvm_matls->addAll(tmp_fvm_matls);
-
-  // Wasatch Matls
-  if (all_wasatch_matls && all_wasatch_matls->removeReference()){
-    delete all_wasatch_matls;
-  }
-  all_wasatch_matls = scinew MaterialSet();
-  all_wasatch_matls->addReference();
-  std::vector<int> tmp_wasatch_matls(wasatch_matls.size());
-
-  for(int i=0;i<(int)wasatch_matls.size();i++){
-    tmp_wasatch_matls[i] = wasatch_matls[i]->getDWIndex();
-  }
-  all_wasatch_matls->addAll(tmp_wasatch_matls);
-  
-  // All Matls
-  if (all_matls && all_matls->removeReference()){
-    delete all_matls;
-  }
-  all_matls = scinew MaterialSet();
-  all_matls->addReference();
-  std::vector<int> tmp_matls(matls.size());
-  
-  for(int i=0; i<(int)matls.size(); i++) {
-    tmp_matls[i] = matls[i]->getDWIndex();
-  }
-  all_matls->addAll(tmp_matls);
-
-  if (orig_all_matls == 0) {
-    orig_all_matls = scinew MaterialSet();
-    orig_all_matls->addReference();
-    orig_all_matls->addAll(tmp_matls);
-  }
-
-  if (allInOneMatl && allInOneMatl->removeReference()){
-    delete allInOneMatl;
-  }
-  allInOneMatl = scinew MaterialSubset();
-  allInOneMatl->addReference();
-  // a material that represents all materials 
-  // (i.e. summed over all materials -- the whole enchilada)
-  allInOneMatl->add((int)matls.size());
-}
-//__________________________________
-//
-void SimulationState::clearMaterials()
-{
-  for (int i = 0; i < (int)matls.size(); i++){
-    old_matls.push_back(matls[i]);
-  }
-
-  if(all_matls && all_matls->removeReference()){
-    delete all_matls;
-  }
-  
-  if(all_mpm_matls && all_mpm_matls->removeReference()){
-    delete all_mpm_matls;
-  }
-
-  if(all_cz_matls && all_cz_matls->removeReference()){
-    delete all_cz_matls;
-  }
-
-  if (all_arches_matls && all_arches_matls->removeReference()){
-    delete all_arches_matls;
-  }
-
-  if(all_ice_matls && all_ice_matls->removeReference()){
-    delete all_ice_matls;
-  }
-  
-  if(all_fvm_matls && all_fvm_matls->removeReference()){
-    delete all_fvm_matls;
-  }
-
-  if(all_wasatch_matls && all_wasatch_matls->removeReference()){
-    delete all_wasatch_matls;
-  }
-
-  if (allInOneMatl && allInOneMatl->removeReference()) {
-    delete allInOneMatl;
-  }
-
-  matls.clear();
-  mpm_matls.clear();
-  cz_matls.clear();
-  arches_matls.clear();
-  ice_matls.clear();
-  wasatch_matls.clear();
-  simple_matls.clear();
-  fvm_matls.clear();
-  named_matls.clear();
-  d_particleState.clear();
-  d_particleState_preReloc.clear();
-  d_cohesiveZoneState.clear();
-  d_cohesiveZoneState_preReloc.clear();
-
-  all_matls         = 0;
-  all_mpm_matls     = 0;
-  all_cz_matls      = 0;
-  all_arches_matls  = 0;
-  all_ice_matls     = 0;
-  all_fvm_matls     = 0;
-  all_wasatch_matls = 0;
-  allInOneMatl      = 0;
-}
-//__________________________________
-//
-const MaterialSet* SimulationState::allMPMMaterials() const
-{
-  ASSERT(all_mpm_matls != 0);
-  return all_mpm_matls;
-}
-//__________________________________
-//
-const MaterialSet* SimulationState::allCZMaterials() const
-{
-  ASSERT(all_cz_matls != 0);
-  return all_cz_matls;
-}
-//__________________________________
-//
-const MaterialSet* SimulationState::allArchesMaterials() const
-{
-  ASSERT(all_arches_matls != 0);
-  return all_arches_matls;
-}
-//__________________________________
-//
-const MaterialSet* SimulationState::allICEMaterials() const
-{
-  ASSERT(all_ice_matls != 0);
-  return all_ice_matls;
-}
-//__________________________________
-//
-const MaterialSet* SimulationState::allFVMMaterials() const
-{
-  ASSERT(all_fvm_matls != 0);
-  return all_fvm_matls;
-}
-//__________________________________
-//
-const MaterialSet* SimulationState::allWasatchMaterials() const
-{
-  ASSERT(all_wasatch_matls != 0);
-  return all_wasatch_matls;
-}
 //__________________________________
 //
 const MaterialSet* SimulationState::allMaterials() const
@@ -412,6 +132,7 @@ const MaterialSet* SimulationState::originalAllMaterials() const
   ASSERT(orig_all_matls != 0);
   return orig_all_matls;
 }
+
 //__________________________________
 //
 void SimulationState::setOriginalMatlsFromRestart(MaterialSet* matls)
@@ -420,7 +141,7 @@ void SimulationState::setOriginalMatlsFromRestart(MaterialSet* matls)
     delete orig_all_matls;
   orig_all_matls = matls;
 }
-  
+
 //__________________________________
 //
 Material* SimulationState::getMaterialByName(const std::string& name) const
@@ -452,4 +173,313 @@ Material* SimulationState::parseAndLookupMaterial(ProblemSpecP& params,
     }
   }
   return result;
+}
+
+
+//__________________________________
+//
+#ifndef NO_ARCHES
+void SimulationState::registerArchesMaterial(ArchesMaterial* matl)
+{
+   arches_matls.push_back(matl);
+   registerMaterial(matl);
+}
+const MaterialSet* SimulationState::allArchesMaterials() const
+{
+  ASSERT(all_arches_matls != 0);
+  return all_arches_matls;
+}
+#endif
+//__________________________________
+//
+#ifndef NO_FVM
+void SimulationState::registerFVMMaterial(FVMMaterial* matl)
+{
+  fvm_matls.push_back(matl);
+  registerMaterial(matl);
+}
+
+void SimulationState::registerFVMMaterial(FVMMaterial* matl,unsigned int index)
+{
+  fvm_matls.push_back(matl);
+  registerMaterial(matl,index);
+}
+
+const MaterialSet* SimulationState::allFVMMaterials() const
+{
+  ASSERT(all_fvm_matls != 0);
+  return all_fvm_matls;
+}
+#endif
+//__________________________________
+//
+#ifndef NO_ICE
+void SimulationState::registerICEMaterial(ICEMaterial* matl)
+{
+   ice_matls.push_back(matl);
+   registerMaterial(matl);
+}
+
+void SimulationState::registerICEMaterial(ICEMaterial* matl,unsigned int index)
+{
+   ice_matls.push_back(matl);
+   registerMaterial(matl,index);
+}
+
+const MaterialSet* SimulationState::allICEMaterials() const
+{
+  ASSERT(all_ice_matls != 0);
+  return all_ice_matls;
+}
+#endif
+//__________________________________
+//
+#ifndef NO_MPM
+void SimulationState::registerCZMaterial(CZMaterial* matl)
+{
+  cz_matls.push_back(matl);
+  registerMaterial(matl);
+}
+
+void SimulationState::registerCZMaterial(CZMaterial* matl,unsigned int index)
+{
+  cz_matls.push_back(matl);
+  registerMaterial(matl,index);
+}
+
+const MaterialSet* SimulationState::allCZMaterials() const
+{
+  ASSERT(all_cz_matls != 0);
+  return all_cz_matls;
+}
+//__________________________________
+//
+void SimulationState::registerMPMMaterial(MPMMaterial* matl)
+{
+  mpm_matls.push_back(matl);
+  registerMaterial(matl);
+}
+
+void SimulationState::registerMPMMaterial(MPMMaterial* matl,unsigned int index)
+{
+  mpm_matls.push_back(matl);
+  registerMaterial(matl,index);
+}
+
+const MaterialSet* SimulationState::allMPMMaterials() const
+{
+  ASSERT(all_mpm_matls != 0);
+  return all_mpm_matls;
+}
+#endif
+//__________________________________
+//
+#ifndef NO_WASATCH
+void SimulationState::registerWasatchMaterial(WasatchMaterial* matl)
+{
+  wasatch_matls.push_back(matl);
+  registerMaterial(matl);
+}
+
+void SimulationState::registerWasatchMaterial(WasatchMaterial* matl,unsigned int index)
+{
+  wasatch_matls.push_back(matl);
+  registerMaterial(matl,index);
+}
+
+const MaterialSet* SimulationState::allWasatchMaterials() const
+{
+  ASSERT(all_wasatch_matls != 0);
+  return all_wasatch_matls;
+}
+#endif
+
+//__________________________________
+//
+void SimulationState::finalizeMaterials()
+{
+  // All Matls
+  if (all_matls && all_matls->removeReference()){
+    delete all_matls;
+  }
+  all_matls = scinew MaterialSet();
+  all_matls->addReference();
+  std::vector<int> tmp_matls(matls.size());
+  
+  for(int i=0; i<(int)matls.size(); i++) {
+    tmp_matls[i] = matls[i]->getDWIndex();
+  }
+  all_matls->addAll(tmp_matls);
+
+  if (orig_all_matls == 0) {
+    orig_all_matls = scinew MaterialSet();
+    orig_all_matls->addReference();
+    orig_all_matls->addAll(tmp_matls);
+  }
+
+  if (allInOneMatl && allInOneMatl->removeReference()){
+    delete allInOneMatl;
+  }
+  allInOneMatl = scinew MaterialSubset();
+  allInOneMatl->addReference();
+  // a material that represents all materials 
+  // (i.e. summed over all materials -- the whole enchilada)
+  allInOneMatl->add((int)matls.size());
+
+  // Arches Matls
+#ifndef NO_ARCHES
+  if (all_arches_matls && all_arches_matls->removeReference()){
+    delete all_arches_matls;
+  }
+  all_arches_matls = scinew MaterialSet();
+  all_arches_matls->addReference();
+  std::vector<int> tmp_arches_matls(arches_matls.size());
+  for (int i = 0; i<(int)arches_matls.size();i++){
+    tmp_arches_matls[i] = arches_matls[i]->getDWIndex();
+  }
+  all_arches_matls->addAll(tmp_arches_matls);
+#endif
+
+  // FVM Matls
+#ifndef NO_FVM
+  if (all_fvm_matls && all_fvm_matls->removeReference()){
+    delete all_fvm_matls;
+  }
+  all_fvm_matls = scinew MaterialSet();
+  all_fvm_matls->addReference();
+  std::vector<int> tmp_fvm_matls(fvm_matls.size());
+  for(int i=0;i<(int)fvm_matls.size();i++) {
+    tmp_fvm_matls[i] = fvm_matls[i]->getDWIndex();
+  }
+  all_fvm_matls->addAll(tmp_fvm_matls);
+#endif
+
+  // ICE Matls
+#ifndef NO_ICE
+  if (all_ice_matls && all_ice_matls->removeReference()){
+    delete all_ice_matls;
+  }
+  all_ice_matls = scinew MaterialSet();
+  all_ice_matls->addReference();
+  std::vector<int> tmp_ice_matls(ice_matls.size());
+  for(int i=0;i<(int)ice_matls.size();i++) {
+    tmp_ice_matls[i] = ice_matls[i]->getDWIndex();
+  }
+  all_ice_matls->addAll(tmp_ice_matls);
+#endif
+
+#ifndef NO_MPM
+  // Cohesive Zone
+  if (all_cz_matls && all_cz_matls->removeReference()){
+    delete all_cz_matls;
+  }
+  all_cz_matls = scinew MaterialSet();
+  all_cz_matls->addReference();
+  std::vector<int> tmp_cz_matls(cz_matls.size());
+  for( int i=0; i<(int)cz_matls.size(); i++ ) {
+    tmp_cz_matls[i] = cz_matls[i]->getDWIndex();
+  }
+  all_cz_matls->addAll(tmp_cz_matls);
+  
+  // MPM
+  if (all_mpm_matls && all_mpm_matls->removeReference()){
+    delete all_mpm_matls;
+  }
+  all_mpm_matls = scinew MaterialSet();
+  all_mpm_matls->addReference();
+  std::vector<int> tmp_mpm_matls(mpm_matls.size());
+  for( int i=0; i<(int)mpm_matls.size(); i++ ) {
+    tmp_mpm_matls[i] = mpm_matls[i]->getDWIndex();
+  }
+  all_mpm_matls->addAll(tmp_mpm_matls);
+#endif
+  
+  // Wasatch Matls
+#ifndef NO_WASATCH
+  if (all_wasatch_matls && all_wasatch_matls->removeReference()){
+    delete all_wasatch_matls;
+  }
+  all_wasatch_matls = scinew MaterialSet();
+  all_wasatch_matls->addReference();
+  std::vector<int> tmp_wasatch_matls(wasatch_matls.size());
+
+  for(int i=0;i<(int)wasatch_matls.size();i++){
+    tmp_wasatch_matls[i] = wasatch_matls[i]->getDWIndex();
+  }
+  all_wasatch_matls->addAll(tmp_wasatch_matls);
+#endif
+}
+
+//__________________________________
+//
+void SimulationState::clearMaterials()
+{
+  for (int i = 0; i < (int)matls.size(); i++){
+    old_matls.push_back(matls[i]);
+  }
+
+  if(all_matls && all_matls->removeReference()){
+    delete all_matls;
+    all_matls         = nullptr;
+  }
+  
+  if (allInOneMatl && allInOneMatl->removeReference()) {
+    delete allInOneMatl;
+    allInOneMatl      = nullptr;
+  }
+  matls.clear();
+  named_matls.clear();
+  simple_matls.clear();
+  
+#ifndef NO_ARCHES
+  if (all_arches_matls && all_arches_matls->removeReference()){
+    delete all_arches_matls;
+    all_arches_matls  = nullptr;
+  }
+  arches_matls.clear();
+#endif
+
+#ifndef NO_FVM
+  if(all_fvm_matls && all_fvm_matls->removeReference()){
+    delete all_fvm_matls;
+    all_fvm_matls     = nullptr;
+  }
+  fvm_matls.clear();
+#endif
+
+#ifndef NO_ICE
+  if(all_ice_matls && all_ice_matls->removeReference()){
+    delete all_ice_matls;
+    all_ice_matls     = nullptr;
+  }
+  ice_matls.clear();
+#endif
+  
+#ifndef NO_MPM
+  if(all_cz_matls && all_cz_matls->removeReference()){
+    delete all_cz_matls;
+    all_cz_matls      = nullptr;
+  }
+  cz_matls.clear();
+
+  if(all_mpm_matls && all_mpm_matls->removeReference()){
+    delete all_mpm_matls;
+    all_mpm_matls     = nullptr;
+  }
+  mpm_matls.clear();
+  
+  d_cohesiveZoneState.clear();
+  d_cohesiveZoneState_preReloc.clear();
+
+  d_particleState.clear();
+  d_particleState_preReloc.clear();
+#endif
+  
+#ifndef NO_WASATCH
+  if(all_wasatch_matls && all_wasatch_matls->removeReference()){
+    delete all_wasatch_matls;
+    all_wasatch_matls = nullptr;
+  }
+  wasatch_matls.clear();
+#endif
 }

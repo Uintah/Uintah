@@ -34,9 +34,8 @@ SRCDIR := CCA/Components/PhaseField
 SRCS += $(SRCDIR)/PhaseField.cc
 
 PSELIBS :=                         \
-       CCA/Components/Application  \
-       CCA/Components/Schedulers   \
-       CCA/Components/Models       \
+        CCA/Components/Application \
+        CCA/Components/Schedulers  \
         CCA/Ports                  \
         Core/Disclosure            \
         Core/Exceptions            \

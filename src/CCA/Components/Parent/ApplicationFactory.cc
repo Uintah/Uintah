@@ -38,21 +38,14 @@
 #include <CCA/Components/Examples/SolverTest1.h>
 #include <CCA/Components/Examples/SolverTest2.h>
 #include <CCA/Components/Examples/Wave.h>
-#include <CCA/Components/ICE/AMRICE.h>
-#include <CCA/Components/ICE/ICE.h>
-#include <CCA/Components/ICE/impAMRICE.h>
-#include <CCA/Components/MPM/AMRMPM.h>
-#include <CCA/Components/MPM/ImpMPM.h>
-#include <CCA/Components/MPM/RigidMPM.h>
-#include <CCA/Components/MPM/SerialMPM.h>
-#include <CCA/Components/MPM/ShellMPM.h>
-#include <CCA/Components/MPMICE/MPMICE.h>
+
 #include <CCA/Components/Parent/ApplicationFactory.h>
 #include <CCA/Components/Parent/Switcher.h>
 #include <CCA/Components/PostProcessUda/PostProcess.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
+
 #include <sci_defs/uintah_defs.h>
 #include <sci_defs/cuda_defs.h>
 
@@ -60,27 +53,14 @@
 #  include <CCA/Components/Examples/UnifiedSchedulerTest.h>
 #endif
 
-#if !defined(NO_ARCHES)
+#ifndef NO_ARCHES
 #  include <CCA/Components/Arches/Arches.h>
-#endif
-
-#if !defined(NO_MPM) && !defined(NO_ARCHES)
-#  include <CCA/Components/MPMArches/MPMArches.h>
-#endif
-
-#ifndef NO_WASATCH
-#  include <CCA/Components/Wasatch/Wasatch.h>
 #endif
 
 #ifndef NO_FVM
 #include <CCA/Components/FVM/ElectrostaticSolve.h>
 #include <CCA/Components/FVM/GaussSolve.h>
 #include <CCA/Components/FVM/MPNP.h>
-#endif
-
-#if !defined(NO_MPM) && !defined(NO_FVM)
-#include <CCA/Components/MPMFVM/ESMPM.h>
-#include <CCA/Components/MPMFVM/ESMPM2.h>
 #endif
 
 #ifndef NO_HEAT
@@ -94,10 +74,41 @@
 #  include <CCA/Components/Heat/AMRNCHeat3D.h>
 #endif
 
+#ifndef NO_ICE
+#include <CCA/Components/ICE/AMRICE.h>
+#include <CCA/Components/ICE/ICE.h>
+#include <CCA/Components/ICE/impAMRICE.h>
+#endif
+
+#ifndef NO_MPM
+#include <CCA/Components/MPM/AMRMPM.h>
+#include <CCA/Components/MPM/ImpMPM.h>
+#include <CCA/Components/MPM/RigidMPM.h>
+#include <CCA/Components/MPM/SerialMPM.h>
+#include <CCA/Components/MPM/ShellMPM.h>
+#endif
+
+#if !defined(NO_MPM) && !defined(NO_ARCHES)
+#  include <CCA/Components/MPMArches/MPMArches.h>
+#endif
+
+#if !defined(NO_MPM) && !defined(NO_FVM)
+#include <CCA/Components/MPMFVM/ESMPM.h>
+#include <CCA/Components/MPMFVM/ESMPM2.h>
+#endif
+
+#if !defined(NO_MPM) && !defined(NO_ICE)
+#include <CCA/Components/MPMICE/MPMICE.h>
+#endif
+
 #ifndef NO_PHASEFIELD
 #  include <CCA/Components/PhaseField/PhaseField.h>
 #  include <CCA/Components/PhaseField/AMRPhaseField.h>
 #endif 
+
+#ifndef NO_WASATCH
+#  include <CCA/Components/Wasatch/Wasatch.h>
+#endif
 
 #include <iosfwd>
 #include <string>
@@ -147,24 +158,95 @@ ApplicationFactory::create( ProblemSpecP& prob_spec,
 
   string turned_off_options;
 
-#ifndef NO_MPM
-  if (sim_comp == "mpm" || sim_comp == "MPM") {
-    return scinew SerialMPM(myworld, sharedState);
+  if (sim_comp == "benchmark" || sim_comp == "BENCHMARK") {
+    return scinew Benchmark(myworld, sharedState);
   } 
-  if (sim_comp == "rmpm" || sim_comp == "rigidmpm" || sim_comp == "RIGIDMPM") {
-    return scinew RigidMPM(myworld, sharedState);
+  if (sim_comp == "burger" || sim_comp == "BURGER") {
+    return scinew Burger(myworld, sharedState);
+  }
+  if (sim_comp == "dosweep" || sim_comp == "DOSWEEP") {
+    return scinew DOSweep(myworld, sharedState);
   } 
-  if (sim_comp == "amrmpm" || sim_comp == "AMRmpm" || sim_comp == "AMRMPM") {
-    return scinew AMRMPM(myworld, sharedState);
+  if (sim_comp == "heat" || sim_comp == "heat") {
+    if (doAMR)
+      return scinew AMRHeat(myworld, sharedState);
+    else
+      return scinew Heat(myworld, sharedState);
+  }
+  if (sim_comp == "particletest" || sim_comp == "PARTICLETEST") {
+    return scinew ParticleTest1(myworld, sharedState);
   } 
-  if (sim_comp == "smpm" || sim_comp == "shellmpm" || sim_comp == "SHELLMPM") {
-    return scinew ShellMPM(myworld, sharedState);
+  if (sim_comp == "poisson2" || sim_comp == "POISSON2") {
+    return scinew Poisson2(myworld, sharedState);
   } 
-  if (sim_comp == "impm" || sim_comp == "IMPM") {
-    return scinew ImpMPM(myworld, sharedState);
+  if (sim_comp == "poisson3" || sim_comp == "POISSON3") {
+    return scinew Poisson3(myworld, sharedState);
+  } 
+  if (sim_comp == "poisson4" || sim_comp == "POISSON4") {
+    return scinew Poisson4(myworld, sharedState);
+  }
+  if (sim_comp == "postProcessUda") {
+    return scinew PostProcessUda(myworld, sharedState, uda);
+  } 
+  if (sim_comp == "regriddertest" || sim_comp == "REGRIDDERTEST") {
+    return scinew RegridderTest(myworld, sharedState);
+  } 
+  if (sim_comp == "solvertest" || sim_comp == "SOLVERTEST") {
+    return scinew SolverTest1(myworld, sharedState);
+  }
+  if (sim_comp == "switcher" || sim_comp == "SWITCHER") {
+    return scinew Switcher(myworld, sharedState, prob_spec, uda);
+  } 
+  if (sim_comp == "wave" || sim_comp == "WAVE") {
+    if (doAMR)
+      return scinew AMRWave(myworld, sharedState);
+    else
+      return scinew Wave(myworld, sharedState);
+  }
+  
+#ifdef HAVE_CUDA
+  if (sim_comp == "unifiedschedulertest" || sim_comp == "UNIFIEDSCHEDULERTEST") {
+    return scinew UnifiedSchedulerTest(myworld, sharedState);
+  }
+#endif
+
+#ifdef HAVE_HYPRE
+  if (sim_comp == "solvertest2" || sim_comp == "SOLVERTEST2") {
+    return scinew SolverTest2(myworld, sharedState);
+  }
+#endif
+
+#ifndef NO_MODELS_RADIATION
+  if (sim_comp == "RMCRT_Test") {
+    return scinew RMCRT_Test(myworld, sharedState);
   }
 #else
-  turned_off_options += "MPM ";
+  turned_off_options += "RMCRT_Test ";
+#endif
+
+  
+#ifndef NO_ARCHES
+  if (sim_comp == "arches" || sim_comp == "ARCHES") {
+    return scinew Arches(myworld, sharedState);
+  } 
+#else
+  turned_off_options += "ARCHES ";
+#endif
+
+#ifndef NO_FVM
+  if (sim_comp == "electrostatic_solver"){
+    return scinew ElectrostaticSolve(myworld, sharedState);
+  }
+
+  if(sim_comp == "gauss_solver"){
+    return scinew GaussSolve(myworld, sharedState);
+  }
+
+  if(sim_comp == "mpnp"){
+    return scinew MPNP(myworld, sharedState);
+  }
+#else
+  turned_off_options += "FVM ";
 #endif
 
 #ifndef NO_ICE
@@ -188,26 +270,24 @@ ApplicationFactory::create( ProblemSpecP& prob_spec,
   turned_off_options += "ICE ";
 #endif
 
-#if !defined(NO_MPM) && !defined(NO_ICE)
-  if (sim_comp == "mpmice" || sim_comp == "MPMICE") {
-    return scinew MPMICE(myworld, sharedState, STAND_MPMICE, doAMR);
+#ifndef NO_MPM
+  if (sim_comp == "mpm" || sim_comp == "MPM") {
+    return scinew SerialMPM(myworld, sharedState);
   } 
-  if (sim_comp == "smpmice" || sim_comp == "shellmpmice" || sim_comp == "SHELLMPMICE") {
-    return scinew MPMICE(myworld, sharedState, SHELL_MPMICE, doAMR);
+  if (sim_comp == "rmpm" || sim_comp == "rigidmpm" || sim_comp == "RIGIDMPM") {
+    return scinew RigidMPM(myworld, sharedState);
   } 
-  if (sim_comp == "rmpmice" || sim_comp == "rigidmpmice" || sim_comp == "RIGIDMPMICE") {
-    return scinew MPMICE(myworld, sharedState, RIGID_MPMICE, doAMR);
+  if (sim_comp == "amrmpm" || sim_comp == "AMRmpm" || sim_comp == "AMRMPM") {
+    return scinew AMRMPM(myworld, sharedState);
   } 
+  if (sim_comp == "smpm" || sim_comp == "shellmpm" || sim_comp == "SHELLMPM") {
+    return scinew ShellMPM(myworld, sharedState);
+  } 
+  if (sim_comp == "impm" || sim_comp == "IMPM") {
+    return scinew ImpMPM(myworld, sharedState);
+  }
 #else
-  turned_off_options += "MPMICE ";
-#endif
-
-#ifndef NO_ARCHES
-  if (sim_comp == "arches" || sim_comp == "ARCHES") {
-    return scinew Arches(myworld, sharedState);
-  } 
-#else
-  turned_off_options += "ARCHES ";
+  turned_off_options += "MPM ";
 #endif
 
 #if !defined(NO_MPM) && !defined(NO_ARCHES)
@@ -216,22 +296,6 @@ ApplicationFactory::create( ProblemSpecP& prob_spec,
   } 
 #else
   turned_off_options += "MPMARCHES ";
-#endif
-
-#ifndef NO_FVM
-  if (sim_comp == "electrostatic_solver"){
-    return scinew ElectrostaticSolve(myworld, sharedState);
-  }
-
-  if(sim_comp == "gauss_solver"){
-    return scinew GaussSolve(myworld, sharedState);
-  }
-
-  if(sim_comp == "mpnp"){
-    return scinew MPNP(myworld, sharedState);
-  }
-#else
-  turned_off_options += "FVM ";
 #endif
 
 #if !defined(NO_MPM) && !defined(NO_FVM)
@@ -246,19 +310,19 @@ ApplicationFactory::create( ProblemSpecP& prob_spec,
   turned_off_options += "MPMFVM ";
 #endif
 
-  if (sim_comp == "burger" || sim_comp == "BURGER") {
-    return scinew Burger(myworld, sharedState);
-  }
-
-  if (sim_comp == "dosweep" || sim_comp == "DOSWEEP") {
-    return scinew DOSweep(myworld, sharedState);
+#if !defined(NO_MPM) && !defined(NO_ICE)
+  if (sim_comp == "mpmice" || sim_comp == "MPMICE") {
+    return scinew MPMICE(myworld, sharedState, STAND_MPMICE, doAMR);
   } 
-  if (sim_comp == "wave" || sim_comp == "WAVE") {
-    if (doAMR)
-      return scinew AMRWave(myworld, sharedState);
-    else
-      return scinew Wave(myworld, sharedState);
-  }
+  if (sim_comp == "smpmice" || sim_comp == "shellmpmice" || sim_comp == "SHELLMPMICE") {
+    return scinew MPMICE(myworld, sharedState, SHELL_MPMICE, doAMR);
+  } 
+  if (sim_comp == "rmpmice" || sim_comp == "rigidmpmice" || sim_comp == "RIGIDMPMICE") {
+    return scinew MPMICE(myworld, sharedState, RIGID_MPMICE, doAMR);
+  } 
+#else
+  turned_off_options += "MPMICE ";
+#endif
 
 #ifndef NO_WASATCH
   if (sim_comp == "wasatch") {
@@ -270,62 +334,7 @@ ApplicationFactory::create( ProblemSpecP& prob_spec,
     return scinew Poisson1(myworld, sharedState);
   }
 
-#ifdef HAVE_CUDA
-  if (sim_comp == "unifiedschedulertest" || sim_comp == "UNIFIEDSCHEDULERTEST") {
-    return scinew UnifiedSchedulerTest(myworld, sharedState);
-  }
-#endif
-
-  if (sim_comp == "regriddertest" || sim_comp == "REGRIDDERTEST") {
-    return scinew RegridderTest(myworld, sharedState);
-  } 
-  if (sim_comp == "poisson2" || sim_comp == "POISSON2") {
-    return scinew Poisson2(myworld, sharedState);
-  } 
-  if (sim_comp == "poisson3" || sim_comp == "POISSON3") {
-    return scinew Poisson3(myworld, sharedState);
-  } 
-  if (sim_comp == "poisson4" || sim_comp == "POISSON4") {
-    return scinew Poisson4(myworld, sharedState);
-  }
-  if (sim_comp == "benchmark" || sim_comp == "BENCHMARK") {
-    return scinew Benchmark(myworld, sharedState);
-  } 
-
-#ifndef NO_MODELS_RADIATION
-  if (sim_comp == "RMCRT_Test") {
-    return scinew RMCRT_Test(myworld, sharedState);
-  }
-#else
-  turned_off_options += "RMCRT_Test ";
-#endif
-
-  if (sim_comp == "particletest" || sim_comp == "PARTICLETEST") {
-    return scinew ParticleTest1(myworld, sharedState);
-  } 
-  if (sim_comp == "solvertest" || sim_comp == "SOLVERTEST") {
-    return scinew SolverTest1(myworld, sharedState);
-  }
-#ifdef HAVE_HYPRE
-  if (sim_comp == "solvertest2" || sim_comp == "SOLVERTEST2") {
-    return scinew SolverTest2(myworld, sharedState);
-  }
-#endif
-
-  if (sim_comp == "heat" || sim_comp == "heat") {
-    if (doAMR)
-      return scinew AMRHeat(myworld, sharedState);
-    else
-      return scinew Heat(myworld, sharedState);
-    }
-  if (sim_comp == "switcher" || sim_comp == "SWITCHER") {
-    return scinew Switcher(myworld, sharedState, prob_spec, uda);
-  } 
-  if (sim_comp == "postProcessUda") {
-    return scinew PostProcessUda(myworld, sharedState, uda);
-  } 
 #ifndef NO_HEAT
-
   if ( sim_comp == "fdheat" || sim_comp == "FDHEAT" ) {
     bool doNC;
     int verbosity;
@@ -403,7 +412,7 @@ ApplicationFactory::create( ProblemSpecP& prob_spec,
           return scinew CCPhaseField2D ( myworld, sharedState, verbosity );
   } } } }
 #endif
-  
+
   throw ProblemSetupException("ERROR<Application>: Unknown simulationComponent ('" + sim_comp + "'). Must specify -arches, -ice, -mpm, "
                               "-impm, -mpmice, -mpmarches, -burger, -wave, -poisson1, -poisson2, -poisson3 or -benchmark.\n"
                               "Note: the following components were turned off at configure time: " + turned_off_options + "\n"

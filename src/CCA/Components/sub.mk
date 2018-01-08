@@ -36,29 +36,9 @@ SRCDIR  := CCA/Components
 # do not modify...
 #
 
-# MPM
-ifeq ($(BUILD_MPM),yes)
-  MPM := $(SRCDIR)/MPM
-endif
-
-# ICE
-ifeq ($(BUILD_ICE),yes)
-  ICE := $(SRCDIR)/ICE
-endif
-
-# MPM-ICE
-ifeq ($(BUILD_MPM)$(BUILD_ICE),yesyes)
-  MPMICE := $(SRCDIR)/MPMICE
-endif
-
 # Arches
 ifeq ($(BUILD_ARCHES),yes)
   ARCHES   := $(SRCDIR)/Arches
-endif
-
-# MPM-Arches
-ifeq ($(BUILD_MPM)$(BUILD_ARCHES),yesyes)
-  MPMARCHES := $(SRCDIR)/MPMArches
 endif
 
 # FVM
@@ -66,19 +46,34 @@ ifeq ($(BUILD_FVM),yes)
   FVM :=$(SRCDIR)/FVM
 endif
 
+# Heat
+ifeq ($(BUILD_HEAT),yes)
+  HEAT := $(SRCDIR)/Heat
+endif
+
+# ICE
+ifeq ($(BUILD_ICE),yes)
+  ICE := $(SRCDIR)/ICE
+endif
+
+# MPM
+ifeq ($(BUILD_MPM),yes)
+  MPM := $(SRCDIR)/MPM
+endif
+
+# MPM-Arches
+ifeq ($(BUILD_MPM)$(BUILD_ARCHES),yesyes)
+  MPMARCHES := $(SRCDIR)/MPMArches
+endif
+
 # MPM-FVM
 ifeq ($(BUILD_MPM)$(BUILD_FVM),yesyes)
   MPMFVM := $(SRCDIR)/MPMFVM
 endif
 
-# Wasatch
-ifeq ($(BUILD_WASATCH),yes)
-  WASATCH := $(SRCDIR)/Wasatch
-endif
-
-# Heat
-ifeq ($(BUILD_HEAT),yes)
-  HEAT := $(SRCDIR)/Heat
+# MPM-ICE
+ifeq ($(BUILD_MPM)$(BUILD_ICE),yesyes)
+  MPMICE := $(SRCDIR)/MPMICE
 endif
 
 # PhaseField
@@ -86,17 +81,22 @@ ifeq ($(BUILD_PHASEFIELD),yes)
   PHASEFIELD := $(SRCDIR)/PhaseField
 endif
 
+# Wasatch
+ifeq ($(BUILD_WASATCH),yes)
+  WASATCH := $(SRCDIR)/Wasatch
+endif
+
 SUBDIRS := \
-        $(MPM)                         \
-        $(ICE)                         \
-        $(MPMICE)                      \
         $(ARCHES)                      \
-        $(MPMARCHES)                   \
         $(FVM)                         \
-        $(MPMFVM)                      \
-        $(WASATCH)                     \
         $(HEAT)                        \
+        $(ICE)                         \
+        $(MPM)                         \
+        $(MPMARCHES)                   \
+        $(MPMFVM)                      \
+        $(MPMICE)                      \
         $(PHASEFIELD)                  \
+        $(WASATCH)                     \
         $(SRCDIR)/Application          \
         $(SRCDIR)/DataArchiver         \
         $(SRCDIR)/Examples             \

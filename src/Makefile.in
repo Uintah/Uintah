@@ -88,6 +88,8 @@ ifeq ($(BUILD_MPM),yes)
 	$(MPM_DIR)/PhysicalBC        \
         $(MPM_DIR)/Solver            \
 	$(MPM_DIR)/Core
+
+#       $(MPM_DIR)/Crack
 endif
 
 # ICE

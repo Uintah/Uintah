@@ -35,9 +35,8 @@ COMPONENTS := CCA/Components
 SRCS := $(SRCDIR)/Switcher.cc \
         $(SRCDIR)/ApplicationFactory.cc
 
-# ARCHES et. al. should have been seen by CCA/Components/sub.mk
+# ARCHES et. al. should have been defined by CCA/Components/sub.mk
 PSELIBS := \
-        CCA/Components/Application         \
         CCA/Ports                          \
         Core/Containers                    \
         Core/Disclosure                    \
@@ -50,22 +49,21 @@ PSELIBS := \
         Core/ProblemSpec                   \
         Core/Util                          \
         $(ARCHES)                          \
-        $(MPMARCHES)                       \
+        $(FVM)                             \
+        $(HEAT)                            \
         $(ICE)                             \
         $(MPM)                             \
-        $(MPMICE)                          \
-        $(FVM)                             \
+        $(MPMARCHES)                       \
         $(MPMFVM)                          \
+        $(MPMICE)                          \
+        $(PHASEFIELD)                      \
+        $(WASATCH)                         \
         $(COMPONENTS)/Application          \
         $(COMPONENTS)/Examples             \
         $(COMPONENTS)/PostProcessUda       \
         $(COMPONENTS)/ProblemSpecification \
         $(COMPONENTS)/Solvers              \
-        $(COMPONENTS)/SwitchingCriteria    \
-        $(WASATCH)                         \
-        $(HEAT)                            \
-        $(PHASEFIELD)                      \
-        $(MORE_LIBS)
+        $(COMPONENTS)/SwitchingCriteria
 
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(BOOST_LIBRARY)
 
