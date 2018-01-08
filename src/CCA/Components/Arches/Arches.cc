@@ -112,8 +112,7 @@ Arches::problemSetup( const ProblemSpecP     & params,
   // Check for Lagrangian particles
   m_do_lagrangian_particles = m_arches_spec->findBlock("LagrangianParticles");
   if ( m_do_lagrangian_particles ) {
-    m_particlesHelper->problem_setup( params,m_arches_spec->findBlock("LagrangianParticles"),
-                                      m_sharedState);
+    m_particlesHelper->problem_setup( params,m_arches_spec->findBlock("LagrangianParticles") );
   }
 
   //  Multi-level related
