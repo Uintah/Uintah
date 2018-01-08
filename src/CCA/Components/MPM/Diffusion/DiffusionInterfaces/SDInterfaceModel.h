@@ -40,7 +40,8 @@ namespace Uintah {
 
   class SDInterfaceModel {
   public:
-    
+
+
     SDInterfaceModel(ProblemSpecP& ps, SimulationStateP& sS,
                      MPMFlags* mpm_flags, MPMLabel* mpm_lb);
 
@@ -70,6 +71,8 @@ namespace Uintah {
 
     const VarLabel* getInterfaceFluxLabel() const;
 
+    const VarLabel* getInterfaceFlagLabel() const;
+
   protected:
 
     void setBaseComputesAndRequiresDivergence(       Task             * task ,
@@ -81,6 +84,7 @@ namespace Uintah {
 
     // Stores dC/dt at the interface points.
     VarLabel* sdInterfaceRate;
+    VarLabel* sdInterfaceFlag;  // True means interface at node, false means no interface
 
     SDInterfaceModel(const SDInterfaceModel&);
     SDInterfaceModel& operator=(const SDInterfaceModel&);

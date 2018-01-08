@@ -92,8 +92,6 @@ namespace Uintah
             return (compareTrue);
       }
 
-      VarLabel* sdInterfaceRate;
-
       SimpleSDInterface(const SimpleSDInterface &);
       SimpleSDInterface&  operator=(const SimpleSDInterface&);
 

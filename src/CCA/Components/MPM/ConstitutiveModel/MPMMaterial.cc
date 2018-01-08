@@ -96,7 +96,7 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps,
 
   // Step 1 -- create the constitutive gmodel.
   bool ans;
-  d_cm = ConstitutiveModelFactory::create(ps,flags, ans);
+  d_cm = ConstitutiveModelFactory::create(ps, flags, ans);
   set_pLocalizedComputed( ans );
   
   if(!d_cm){

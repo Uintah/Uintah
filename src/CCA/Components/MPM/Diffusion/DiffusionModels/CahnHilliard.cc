@@ -127,7 +127,7 @@ namespace Uintah
       maxFlux = std::max(maxFlux,pFluxNew[pIdx].maxComponentMag());
     }
 
-    double delT_local = computeStableTimeStep(maxFlux, dx);
+    double delT_local = computeStableTimeStep(d_D0, dx);
     newDW->put(delt_vartype(delT_local), d_lb->delTLabel, patch->getLevel());
   }
 

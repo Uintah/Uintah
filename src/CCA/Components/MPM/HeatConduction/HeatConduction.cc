@@ -80,7 +80,7 @@ void HeatConduction::scheduleComputeInternalHeatRate(SchedulerP& sched,
   t->requires(Task::OldDW, d_lb->pTemperatureGradientLabel,       gan, NGP);
   t->requires(Task::OldDW, d_lb->pDeformationMeasureLabel,        gan, NGP);
   t->requires(Task::NewDW, d_lb->gMassLabel,                      gnone);
-  t->computes(d_sharedState->get_delt_label(), getLevel(patches));
+  t->modifies(d_sharedState->get_delt_label(), getLevel(patches));
   t->computes(d_lb->gdTdtLabel);
 
   sched->addTask(t, patches, matls);
@@ -166,11 +166,12 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
                                              DataWarehouse* old_dw,
                                              DataWarehouse* new_dw)
 {
-  double minTimestep = 1.0e+99;
-
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
+    delt_vartype curr_delt;
+    new_dw->get(curr_delt, d_lb->delTLabel, patch->getLevel());
+    double minTimestep = curr_delt;
     if (cout_doing.active())
       cout_doing <<"Doing computeInternalHeatRate on patch " << patch->getID()<<"\t\t MPM"<< endl;
     if (cout_heat.active())
@@ -196,7 +197,7 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
       double Cv = mpm_matl->getSpecificHeat();
       
       constParticleVariable<Point>  px;
-      constParticleVariable<double> pvol;
+      constParticleVariable<double> pvol, pmass;
       constParticleVariable<Matrix3> psize, deformationGradient;
       constParticleVariable<Vector>  pTempGrad;
       constNCVariable<double>       gTemperature,gMass;
@@ -209,6 +210,7 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
       old_dw->get(px,           d_lb->pXLabel,                         pset);
       old_dw->get(pvol,         d_lb->pVolumeLabel,                    pset);
       old_dw->get(psize,        d_lb->pSizeLabel,                      pset);
+      old_dw->get(pmass,        d_lb->pMassLabel,                      pset);
       old_dw->get(deformationGradient, d_lb->pDeformationMeasureLabel, pset);
       old_dw->get(pTempGrad,    d_lb->pTemperatureGradientLabel,       pset);
       new_dw->get(gMass,        d_lb->gMassLabel,        dwi, patch, gnone, 0);
@@ -227,9 +229,9 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
                                           psize[idx], deformationGradient[idx]);
 
         // Calculate k/(rho*Cv)
-        double alpha = kappa*pvol[idx]/Cv;
+        double alpha = kappa*pvol[idx]/(pmass[idx]*Cv);
         double timestepThisParticle= (dx2/(2.0*alpha)).minComponent();
-        minTimestep = min(minTimestep,timestepThisParticle);
+        minTimestep = std::min(minTimestep,timestepThisParticle);
         Vector dT_dx = pTempGrad[idx];
         double Tdot_cond = 0.0;
         IntVector node(0,0,0);
@@ -240,7 +242,8 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
           node = ni[k];
           if(patch->containsNode(node)){
             Vector div = d_S[k]*oodx;
-            Tdot_cond = Dot(div, dT_dx)*(alpha/gMass[node]);
+            Tdot_cond = Dot(div, dT_dx) * (alpha);
+//            Tdot_cond = Dot(div, dT_dx)*(alpha/gMass[node]);
             gdTdt[node] -= Tdot_cond;
 
            if (cout_heat.active()) {

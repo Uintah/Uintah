@@ -41,13 +41,11 @@ SimpleSDInterface::SimpleSDInterface(
                                                            mFlags, mpmLabel)
 
 {
-  sdInterfaceRate = VarLabel::create("g.dCdt_interface",
-                                     NCVariable<double>::getTypeDescription());
+
 }
 
 SimpleSDInterface::~SimpleSDInterface()
 {
-  VarLabel::destroy(sdInterfaceRate);
 }
 
 void SimpleSDInterface::addComputesAndRequiresInterpolated(
@@ -83,17 +81,21 @@ void SimpleSDInterface::addComputesAndRequiresDivergence(
                             &SimpleSDInterface::sdInterfaceDivergence);
 
 
-  Ghost::GhostType gp;
+  Ghost::GhostType typeGhost;
   int              numGhost;
-  d_shared_state->getParticleGhostLayer(gp, numGhost);
+  d_shared_state->getParticleGhostLayer(typeGhost, numGhost);
 
   // Everthing needs to register to calculate the basic interface flux rate
   setBaseComputesAndRequiresDivergence(task, matls->getUnion());
 
   task->requires(Task::OldDW, d_shared_state->get_delt_label());
 
-  task->requires(Task::NewDW, d_mpm_lb->gMassLabel,           gan, 1);
-  task->requires(Task::NewDW, d_mpm_lb->gConcentrationLabel,  gan, 1);
+  task->requires(Task::NewDW, d_mpm_lb->gVolumeLabel,                  gnone);
+  task->requires(Task::NewDW, d_mpm_lb->gVolumeLabel,
+                 d_shared_state->getAllInOneMatl(), Task::OutOfDomain, gnone);
+  task->requires(Task::NewDW, d_mpm_lb->gConcentrationLabel,           gnone);
+  task->requires(Task::NewDW, d_mpm_lb->gConcentrationLabel,
+                 d_shared_state->getAllInOneMatl(), Task::OutOfDomain, gnone);
 
 //  task->computes(sdInterfaceRate, mss);
 
@@ -114,37 +116,46 @@ void SimpleSDInterface::sdInterfaceDivergence(
   int               numGhost;
   d_shared_state->getParticleGhostLayer(typeGhost, numGhost);
 
-  StaticArray<constNCVariable<double> > gVolume(numMatls);
-  StaticArray<constNCVariable<double> > gConc(numMatls);  // C_i,j = gConc[j][i]
-
-  NCVariable<double> gTotalVolume;
-
   delt_vartype delT;
   oldDW->get(delT, d_shared_state->get_delt_label(), getLevel(patches) );
+  double delTInv = 1.0/delT;
 
   for (int patchIdx = 0; patchIdx < patches->size(); ++patchIdx)
   {
     const Patch* patch = patches->get(patchIdx);
+    int totalDWI = d_shared_state->getAllInOneMatl()->get(0);
+
+    constNCVariable<double>               gTotalVolume;
+    newDW->get(gTotalVolume, d_mpm_lb->gVolumeLabel, totalDWI, patch,
+               typeGhost, numGhost);
+
+    StaticArray<constNCVariable<double> > gVolume(numMatls);
+    StaticArray<constNCVariable<double> > gConc(numMatls);  // C_i,j = gConc[j][i]
 
     std::vector<NCVariable<double> > gdCdt_interface(numMatls);
+    NCVariable<double> gdCdt_interface_total;
+    newDW->allocateAndPut(gdCdt_interface_total,  sdInterfaceRate,  totalDWI, patch);
+    gdCdt_interface_total.initialize(0.0);
+
+    std::vector<NCVariable<int>    > gInterfaceFlag(numMatls);
+    NCVariable<double> gInterfaceFlagGlobal;
+    newDW->allocateAndPut(gInterfaceFlagGlobal,   sdInterfaceFlag,  totalDWI, patch);
+    gInterfaceFlagGlobal.initialize(false);
+    // Loop over materials and preload our arrays of material based nodal data
     std::vector<NCVariable<double> > gFluxAmount(numMatls);
 
     std::vector<double> massNormFactor(numMatls);
-    // Loop over materials and preload our arrays of material based nodal data
 
-    newDW->allocateTemporary(gTotalVolume, patch);
-    gTotalVolume.initialize(0);
-    for (int mIdx = 0; mIdx < numMatls; ++mIdx)
-    {
+    for (int mIdx = 0; mIdx < numMatls; ++mIdx) {
       int dwi = matls->get(mIdx);
-      newDW->get(gVolume[mIdx],
-                 d_mpm_lb->gVolumeLabel,         dwi, patch, typeGhost,   numGhost);
-      newDW->get(gConc[mIdx],
-                 d_mpm_lb->gConcentrationLabel,  dwi, patch, typeGhost,   numGhost);
+      newDW->get(gVolume[mIdx], d_mpm_lb->gVolumeLabel,             dwi, patch, typeGhost, numGhost);
+      newDW->get(gConc[mIdx],   d_mpm_lb->gConcentrationLabel,      dwi, patch, typeGhost, numGhost);
 
-      newDW->allocateAndPut(gdCdt_interface[mIdx],
-                            sdInterfaceRate,     dwi, patch, Ghost::None, 0);
+      newDW->allocateAndPut(gdCdt_interface[mIdx], sdInterfaceRate, dwi, patch, typeGhost, numGhost);
       gdCdt_interface[mIdx].initialize(0);
+
+      newDW->allocateAndPut(gInterfaceFlag[mIdx],  sdInterfaceFlag, dwi, patch, typeGhost, numGhost);
+      gInterfaceFlag[mIdx].initialize(false);
       // Not in place yet, but should be for mass normalization.
       //massNormFactor[mIdx] = mpm_matl->getMassNormFactor();
       massNormFactor[mIdx] = 1.0;
@@ -152,30 +163,33 @@ void SimpleSDInterface::sdInterfaceDivergence(
       newDW->allocateTemporary(gFluxAmount[mIdx], patch);
       gFluxAmount[mIdx].initialize(0.0);
 
-
       for (NodeIterator nIt = patch->getNodeIterator(); !nIt.done(); ++nIt) {
         IntVector node = *nIt;
-//        gConcMass[mIdx][node] = gMass[mIdx][node] * massNormFactor[mIdx];
         gFluxAmount[mIdx][node] = gVolume[mIdx][node] * massNormFactor[mIdx];
-//        gTotalMass[node] += gMass[mIdx][node];
-        gTotalVolume[node] += gVolume[mIdx][node];
       }
     }
 
-    // Calculate which nodes share an interface.
-    NCVariable<int> doInterface;
-    newDW->allocateTemporary(doInterface, patch);
-    doInterface.initialize(0);
+    // Determine nodes on an interfaace
+    const double minPresence = 1e-100; // Min volume for material presence
     for (NodeIterator nIt = patch->getNodeIterator(); !nIt.done(); ++nIt) {
-      IntVector node = *nIt;
-      int mIdx = 0;
-      while (mIdx < numMatls && doInterface[node] == 0) {
-//        double checkMass = gMass[mIdx][node];
-        double checkVolume = gVolume[mIdx][node];
-        if ((checkVolume > 1e-15) && checkVolume != gTotalVolume[node]) {
-          doInterface[node] = 1;
+      IntVector node            = *nIt;
+      int       materialIndex   = 0;
+      bool      interfaceFound  = false;
+      while ((materialIndex < numMatls) && !interfaceFound) {
+        double checkVolume = gVolume[materialIndex][node];
+        if ((checkVolume > minPresence) && checkVolume != gTotalVolume[node] ) {
+          interfaceFound = true;
         }
-        ++mIdx;
+        ++materialIndex;
+      }
+      // Tag interface on material grid for all materials present
+      if (interfaceFound) {
+        gInterfaceFlagGlobal[node] = true;
+        for (materialIndex = 0; materialIndex < numMatls; ++materialIndex) {
+          if (gVolume[materialIndex][node] > minPresence) {
+            gInterfaceFlag[materialIndex][node] = true;
+          }
+        }
       }
     }
 
@@ -183,22 +197,29 @@ void SimpleSDInterface::sdInterfaceDivergence(
       double numerator    = 0.0;
       double denominator  = 0.0;
       IntVector node = *nIt;
-
-      if (doInterface[node] == 1) {
+      if (gInterfaceFlagGlobal[node] == true) {
         for (int mIdx = 0; mIdx < numMatls; ++mIdx) {
-          // Break out if we're not working with this material contact
-          numerator   += (gConc[mIdx][node] * gFluxAmount[mIdx][node]);
-          denominator += gFluxAmount[mIdx][node];
+          if (gInterfaceFlag[mIdx][node] == true) {
+            numerator += (gConc[mIdx][node] * gFluxAmount[mIdx][node]);
+            denominator += gFluxAmount[mIdx][node];
+          }
         }
         double contactConcentration = numerator/denominator;
-
       // FIXME TODO -- Ensure gConc has already had the mass factor divided out
       // by now. -- JBH
         for (int mIdx = 0; mIdx < numMatls; ++mIdx) {
-          gdCdt_interface[mIdx][node] =
-              (contactConcentration - gConc[mIdx][node]) / delT;
+          double dCdt = delTInv *(contactConcentration - gConc[mIdx][node]);
+          gdCdt_interface[mIdx][node] = dCdt;
+          gdCdt_interface_total[node] += dCdt;
         } // Loop over materials
-      } // Do interface
+      }
+//        for (int mIdx = 0; mIdx < numMatls; ++mIdx) {
+//          if (gInterfaceFlag[mIdx][node]) {
+//          // Break out if we're not working with this material contact
+//            numerator   += (gConc[mIdx][node] * gFluxAmount[mIdx][node]);
+//            denominator += gFluxAmount[mIdx][node];
+//          }
+//      } // Do interface
     } // Loop over nodes
   } // Loop over patches
 }

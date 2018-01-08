@@ -3759,8 +3759,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
       double Cp=mpm_matl->getSpecificHeat();
 
-      double sdmMaxEffectiveConc;
-      double sdmMinEffectiveConc;
+      double sdmMaxEffectiveConc=-1e+99;
+      double sdmMinEffectiveConc=1e+99;
       if (flags->d_doScalarDiffusion) {
         // Grab min/max concentration and conc. tolerance for particle loop.
         ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();

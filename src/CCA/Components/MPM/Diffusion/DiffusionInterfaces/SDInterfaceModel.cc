@@ -39,11 +39,14 @@ SDInterfaceModel::SDInterfaceModel(ProblemSpecP& ps, SimulationStateP& sS,
 
   sdInterfaceRate = VarLabel::create("g.dCdt_interface",
                                      NCVariable<double>::getTypeDescription());
+  sdInterfaceFlag = VarLabel::create("g.interfaceFlag",
+                                     NCVariable<int>::getTypeDescription());
 }
 
 SDInterfaceModel::~SDInterfaceModel(){
 
   VarLabel::destroy(sdInterfaceRate);
+  VarLabel::destroy(sdInterfaceFlag);
 }
 
 void SDInterfaceModel::addComputesAndRequiresInterpolated(      SchedulerP  & sched   ,
@@ -80,6 +83,11 @@ void SDInterfaceModel::setBaseComputesAndRequiresDivergence(      Task          
                                                             const MaterialSubset * matls )
 {
   task->computes(sdInterfaceRate, matls);
+  task->computes(sdInterfaceRate,         d_shared_state->getAllInOneMatl(),
+                 Task::OutOfDomain);
+  task->computes(sdInterfaceFlag, matls);
+  task->computes(sdInterfaceFlag,         d_shared_state->getAllInOneMatl(),
+                 Task::OutOfDomain);
 }
 
 void SDInterfaceModel::sdInterfaceDivergence( const ProcessorGroup  *         ,
@@ -96,12 +104,27 @@ void SDInterfaceModel::sdInterfaceDivergence( const ProcessorGroup  *         ,
 
     const Patch* patch = patches->get(patchIdx);
     int numMatls = matls->size();
-    std::vector<NCVariable<double> > gdCdt_interface(numMatls);
+    NCVariable<double> gdCdt_interface_Total;
+    NCVariable<int>    gInterfaceFlag_Total;
+    // Initialize global references to interface flug and interface presence
+    new_dw->allocateAndPut(gdCdt_interface_Total, sdInterfaceRate,
+                           d_shared_state->getAllInOneMatl()->get(0), patch);
+    gdCdt_interface_Total.initialize(0.0);
+    new_dw->allocateAndPut(gInterfaceFlag_Total, sdInterfaceFlag,
+                           d_shared_state->getAllInOneMatl()->get(0), patch);
+    gInterfaceFlag_Total.initialize(false);
+
+    std::vector<NCVariable<double> >  gdCdt_interface(numMatls);
+    std::vector<NCVariable<int> >     gInterfaceFlag(numMatls);
     for (int mIdx = 0; mIdx < numMatls; ++mIdx) {
       int dwi = matls->get(mIdx);
-      new_dw->allocateAndPut(gdCdt_interface[mIdx],
-                             sdInterfaceRate, dwi, patch, typeGhost, numGhost);
-      gdCdt_interface[mIdx].initialize(0);
+      new_dw->allocateAndPut(gdCdt_interface[mIdx],       sdInterfaceRate,        dwi,
+                             patch);
+      new_dw->allocateAndPut(gInterfaceFlag[mIdx],        sdInterfaceFlag,        dwi,
+                             patch, typeGhost,  numGhost);
+      gdCdt_interface[mIdx].initialize(0.0);
+      // Per c++ std, false = 0;
+      gInterfaceFlag[mIdx].initialize(false);
     }
   }
 }
@@ -116,3 +139,8 @@ void SDInterfaceModel::outputProblemSpec(ProblemSpecP& ps)
 const VarLabel* SDInterfaceModel::getInterfaceFluxLabel() const {
   return sdInterfaceRate;
 }
+
+const VarLabel* SDInterfaceModel::getInterfaceFlagLabel() const {
+  return sdInterfaceFlag;
+}
+

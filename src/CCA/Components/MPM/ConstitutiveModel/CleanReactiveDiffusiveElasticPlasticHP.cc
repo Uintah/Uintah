@@ -367,7 +367,7 @@ void CleanReactionDiffusionEP::outputProblemSpec(ProblemSpecP  & ps            ,
   ProblemSpecP cm_ps = ps;
   if (output_cm_tag) {
     cm_ps = ps->appendChild("constitutive_model");
-    cm_ps->setAttribute("type","reactive_EP");
+    cm_ps->setAttribute("type","reactive_diffusive_EP");
   }
   
   cm_ps->appendElement("bulk_modulus",                  d_initialData.Bulk);
@@ -375,8 +375,9 @@ void CleanReactionDiffusionEP::outputProblemSpec(ProblemSpecP  & ps            ,
   //Reaction variables
   cm_ps->appendElement("heat_of_fusion",                d_dHFusion);
   double molarMass = 1.0/d_molesPerMass;
-  cm_ps->appendElement("molar_mass",                    1.0/molarMass);
+  cm_ps->appendElement("molar_mass",                    molarMass);
   cm_ps->appendElement("heat_of_reaction",              d_dHRxn);
+  cm_ps->appendElement("volume_expansion_coeff",  d_initialData.vol_exp_coeff);
 
   cm_ps->appendElement("coeff_thermal_expansion",       d_initialData.alpha);
   cm_ps->appendElement("taylor_quinney_coeff",          d_initialData.Chi);
@@ -457,7 +458,7 @@ CleanReactionDiffusionEP::initializeLocalMPMLabels()
   pLastReactionFlagLabel = VarLabel::create("p.lastReactionFlag",
     ParticleVariable<int>::getTypeDescription());
   pInitialMoles = VarLabel::create("p.initialMoles",
-    ParticleVariable<int>::getTypeDescription());
+    ParticleVariable<double>::getTypeDescription());
 
   pRotationLabel_preReloc = VarLabel::create("p.rotation+",
     ParticleVariable<Matrix3>::getTypeDescription());
@@ -838,6 +839,7 @@ void CleanReactionDiffusionEP::computeStressTensor(const PatchSubset   * patches
             << " patch = " << (patches->get(0))->getID();
   }
 
+  int timeStep = d_sharedState->getCurrentTopLevelTimeStep();
   // General stuff
   Matrix3 one;            one.Identity();
   Matrix3 zero(0.0);
@@ -964,8 +966,7 @@ void CleanReactionDiffusionEP::computeStressTensor(const PatchSubset   * patches
 
     // JBH - Thermodynamics / Phase Change/ Reaction
     ParticleVariable<double>  pDissipatedEnergy_new, pWorkEnergy_new;
-    ParticleVariable<double>  pHeatBuffer_new, pMeltProgress_new;
-    ParticleVariable<double>  pStartingMoles_new;
+    ParticleVariable<double>  pHeatBuffer_new, pMeltProgress_new, pStartingMoles_new;
     ParticleVariable<int>     pLastReactionFlag_new;
     new_dw->allocateAndPut(pDissipatedEnergy_new,
                            pDissipatedEnergyLabel_preReloc,       pset);
@@ -1167,13 +1168,15 @@ void CleanReactionDiffusionEP::computeStressTensor(const PatchSubset   * patches
         // From:  Mat Sci & Eng. A 299, 1-15, 2001 (K. Morsi)
         // -152 kJ/mol
         // == -152e6 micrograms mm^2/microsecond^2/mol (consistent units)
-        if (dwi == 1)
+        if (dwi == 1 && timeStep > 2)
         {
+          // TODO FIXME HACK The timestep limiter up top should not be there.
           //double dH_Rxn = -152.0e+6;
           //dH_Rxn = 0.0;
           // pReactionHeat_temp is the amount of heat energy generated presuming
           // 100% conversion of diffusant nickel into NiAl3
-          pReactionHeat_temp[idx] = -d_dHRxn * std::abs(dCdt) * pStartingMoles[idx];
+          pReactionHeat_temp[idx] = -d_dHRxn * std::abs(dCdt) *
+                                      pStartingMoles[idx];
           pdTdt[idx] += pReactionHeat_temp[idx] / (Cp * pMass[idx]);
 
           // Output generated heat for specific points.  HACK FIXME TODO
@@ -1186,11 +1189,6 @@ void CleanReactionDiffusionEP::computeStressTensor(const PatchSubset   * patches
             d_HeatGenOutputFile << " " << std::fixed << std::setw(2) << std::right << idx << " "
                                 << std::scientific << std::setw(8) << std::right << pReactionHeat_temp[idx] * delT << " ";
           }
-//          std::cout << " pdTdt 2 [" << idx << "]: " << pdTdt[idx] * delT << "\t";
-
-  //        if (dwi == 0 && (currStep%outputFreq==1))
-  //          std::cerr << std::fixed << std::setw(2) << std::right << idx << " "
-  //                    << std::scientific << std::setw(5) << std::right << pConcentration[idx] << " ";
         }
 
       }
