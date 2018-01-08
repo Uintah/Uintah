@@ -65,6 +65,7 @@ void TimestepNumber::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
   
   Task* t = scinew Task("switchTest", this, &TimestepNumber::switchTest);
 
+  t->requires(Task::OldDW, m_timeStepLabel);
   t->computes(d_switch_label);
   sched->addTask(t, level->eachPatch(), m_sharedState->allMaterials());
 }
@@ -77,13 +78,15 @@ void TimestepNumber::switchTest(const ProcessorGroup* group,
 {
   dbg << "Doing Switch Criteria:TimeStepNumber";
 
-  int timeStep = m_sharedState->getCurrentTopLevelTimeStep();
-
-  // int timeStep = 0;
-  // simTime_vartype timeStep_var;
-  // old_dw->get(timeStep_var, m_timeStepLabel);
-  // timeStep = timeStep_var;
+  // int timeStep = m_sharedState->getCurrentTopLevelTimeStep();
   
+  timeStep_vartype timeStep_var(0);
+  if( old_dw->exists(m_timeStepLabel))
+    old_dw->get(timeStep_var, m_timeStepLabel);
+  else if( new_dw->exists(m_timeStepLabel))
+      new_dw->get(timeStep_var, m_timeStepLabel);
+  int timeStep = timeStep_var;
+
   double sw = (timeStep == m_timeStep);
 
   dbg  << " is it time to switch components: " << sw << std::endl;
