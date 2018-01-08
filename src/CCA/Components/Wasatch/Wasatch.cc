@@ -109,7 +109,7 @@ namespace WasatchCore{
   //--------------------------------------------------------------------
 
   Wasatch::Wasatch( const Uintah::ProcessorGroup* myworld,
-		    const Uintah::SimulationStateP sharedState )
+                    const Uintah::SimulationStateP sharedState )
     : Uintah::ApplicationCommon( myworld, sharedState ),
       buildTimeIntegrator_ ( true ),
       buildWasatchMaterial_( true ),
@@ -540,11 +540,11 @@ namespace WasatchCore{
       Wasatch::need_pressure_solve( needPressureSolve );
       
       if( needPressureSolve && (m_solver->getName()).compare("hypre") != 0 ){
-	std::ostringstream msg;
-	msg << "  Invalid solver specified: "<< m_solver->getName() << std::endl
-	    << "  Wasatch currently works with hypre solver only. Please change your solver type." << std::endl
-	    << std::endl;
-	throw std::runtime_error( msg.str() );
+        std::ostringstream msg;
+        msg << "  Invalid solver specified: "<< m_solver->getName() << std::endl
+            << "  Wasatch currently works with hypre solver only. Please change your solver type." << std::endl
+            << std::endl;
+        throw std::runtime_error( msg.str() );
       }
     }
     
@@ -868,7 +868,7 @@ namespace WasatchCore{
           << "with a ParticleTemperature sub-block."
           << endl;
           throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-    	}
+        }
 
         // setup coal models
         proc0cout << "Setting up coal models" << std::endl;
@@ -1094,10 +1094,36 @@ namespace WasatchCore{
     }
     else{ // default
 
+      // int timeStep = m_sharedState->getCurrentTopLevelTimeStep();
+
+      // This method is called at both initialization and
+      // otherwise. At initialization the old DW, i.e. DW(0) will not
+      // exist. As such, get the time step from the new DW,
+      // i.e. DW(1).  Otherwise for a normal time step get the time
+      // step from the new DW.
+      Uintah::timeStep_vartype timeStep(0);
+      if( sched->get_dw(0) && sched->get_dw(0)->exists( getTimeStepLabel() ) )
+        sched->get_dw(0)->get( timeStep, getTimeStepLabel() );
+      else if( sched->get_dw(1) && sched->get_dw(1)->exists( getTimeStepLabel() ) )
+        sched->get_dw(1)->get( timeStep, getTimeStepLabel() );
+
       proc0cout << "Scheduling Task 'compute timestep' COMPUTES 'delT' in NEW data warehouse" << endl;
 
       Uintah::Task* task = scinew Uintah::Task( "compute timestep", this, &Wasatch::computeDelT );
 
+      // This method is called at both initialization and
+      // otherwise. At initialization the old DW, i.e. DW(0) will not
+      // exist so require the value from the new DW.  Otherwise for a
+      // normal time step require the time step from the old DW.
+      if(sched->get_dw(0) ) {
+        task->requires( Uintah::Task::OldDW, getTimeStepLabel() );
+        task->requires( Uintah::Task::OldDW, getSimTimeLabel() );
+      }
+      else if(sched->get_dw(1) ) {
+        task->requires( Uintah::Task::NewDW, getTimeStepLabel() );
+        task->requires( Uintah::Task::NewDW, getSimTimeLabel() );
+      }
+      
       // jcs it appears that for reduction variables we cannot specify the patches - only the materials.
       task->computes( getDelTLabel(),
                       level.get_rep() );
@@ -1109,7 +1135,8 @@ namespace WasatchCore{
       const bool useStableDT = slnGraphHelper->exprFactory->have_entry( tagNames.stableTimestep );
       // since the StableDT expression is only registered on the time_advance graph,
       // make the necessary checks before adding a requires for that
-      if( m_sharedState->getCurrentTopLevelTimeStep() > 0 ){
+
+      if( timeStep > 0 ){
         if( useStableDT ){
           task->requires(Uintah::Task::NewDW, Uintah::VarLabel::find(tagNames.stableTimestep.name()),  Uintah::Ghost::None, 0);
         }
@@ -1183,6 +1210,7 @@ namespace WasatchCore{
       dualTimeTask->hasSubScheduler();
 
       // we need the "outer" timestep for this temporary example
+      dualTimeTask->requires( Uintah::Task::OldDW, getTimeStepLabel() );
       dualTimeTask->requires( Uintah::Task::OldDW, getDelTLabel() );
       
       Expr::TagList timeTags;
@@ -1459,7 +1487,12 @@ namespace WasatchCore{
     //  Move data from parentOldDW to subSchedNewDW.
     const std::set<const Uintah::VarLabel*, Uintah::VarLabel::Compare>& initialRequires = subsched_->getInitialRequiredVars();
     for( std::set<const Uintah::VarLabel*>::const_iterator it=initialRequires.begin(); it!=initialRequires.end(); ++it ){
-      if( !(*it)->typeDescription()->isReductionVariable() ){ // avoid reduction vars
+
+      Uintah::TypeDescription::Type vartype = (*it)->typeDescription()->getType();
+
+      // avoid reduction and sole vars
+      if (vartype != TypeDescription::ReductionVariable &&
+          vartype != TypeDescription::SoleVariable){
         subNewDW->transferFrom(parentOldDW, *it, patches, matls, true);
       }
     }
@@ -1481,7 +1514,12 @@ namespace WasatchCore{
       parNewDW = subsched_->get_dw(1);
 
       for( std::set<const Uintah::VarLabel*>::const_iterator it=initialRequires.begin(); it!=initialRequires.end(); ++it ){
-        if (!(*it)->typeDescription()->isReductionVariable() ){ // avoid reduction vars
+
+        Uintah::TypeDescription::Type vartype = (*it)->typeDescription()->getType();
+
+        // avoid reduction and sole vars
+        if (vartype != TypeDescription::ReductionVariable &&
+            vartype != TypeDescription::SoleVariable){
           subNewDW->transferFrom(subOldDW, *it, patches, matls, true);
         }
       }
@@ -1500,12 +1538,23 @@ namespace WasatchCore{
     } while(c <= timeIntegrator_.dualTimeIterations && residual >= timeIntegrator_.dualTimeTolerance);
     
     totalDualTimeIterations_ += c - 1;
-    proc0cout << " Dual time iterations = " << c-1 << ". Residual = " << residual << ". Average iterations = " << (double) totalDualTimeIterations_/m_sharedState->getCurrentTopLevelTimeStep() << std::endl;
+
+    // int timeStep = m_sharedState->getCurrentTopLevelTimeStep();
+    
+    Uintah::timeStep_vartype timeStep;
+    parentOldDW->get( timeStep, getTimeStepLabel() );
+
+    proc0cout << " Dual time iterations = " << c-1 << ". Residual = " << residual << ". Average iterations = " << (double) totalDualTimeIterations_/timeStep << std::endl;
     
     // move dependencies to the parent DW
     const std::set<const Uintah::VarLabel*, Uintah::VarLabel::Compare>& computedVars = subsched_->getComputedVars();
     for (std::set<const Uintah::VarLabel*>::const_iterator it=computedVars.begin(); it!=computedVars.end(); ++it ){
-      if( !(*it)->typeDescription()->isReductionVariable() ){ // avoid reduction vars
+
+      Uintah::TypeDescription::Type vartype = (*it)->typeDescription()->getType();
+
+      // avoid reduction and sole vars
+      if (vartype != TypeDescription::ReductionVariable &&
+          vartype != TypeDescription::SoleVariable){
         std::string varname = (*it)->getName();
         if (varname == "dt" || varname == "time" || varname == "rkstage" || varname == "timestep" ) continue;
         parentNewDW->transferFrom(subNewDW, *it, patches, matls, true);
@@ -1531,6 +1580,9 @@ namespace WasatchCore{
       scinew Uintah::Task( "set initial time",
                            this,
                            &Wasatch::set_initial_time );
+
+      updateCurrentTimeTask->requires( Uintah::Task::NewDW, getTimeStepLabel() );
+      updateCurrentTimeTask->requires( Uintah::Task::NewDW, getSimTimeLabel() );
       
       const Uintah::TypeDescription* perPatchTD = Uintah::PerPatch<double>::getTypeDescription();
       tLabel_     = (!tLabel_      ) ? Uintah::VarLabel::create( TagNames::self().time.name(), perPatchTD )     : tLabel_    ;
@@ -1538,7 +1590,7 @@ namespace WasatchCore{
       
       updateCurrentTimeTask->computes( tLabel_     );
       updateCurrentTimeTask->computes( tStepLabel_ );
-      
+        
       sched->addTask( updateCurrentTimeTask, localPatches, materials_ );
     }
   }
@@ -1553,9 +1605,15 @@ namespace WasatchCore{
                              Uintah::DataWarehouse* const newDW )
   {
     // grab the timestep
-    const double simTime = m_sharedState->getElapsedSimTime();
-    const double timeStep = m_sharedState->getCurrentTopLevelTimeStep();
-    
+    // const double simTime = m_sharedState->getElapsedSimTime();
+    // const double timeStep = m_sharedState->getCurrentTopLevelTimeStep();
+
+    Uintah::timeStep_vartype timeStep(0);
+    newDW->get( timeStep, getTimeStepLabel() );
+
+    Uintah::simTime_vartype simTime(0);
+    newDW->get( simTime, getSimTimeLabel() );
+
     typedef Uintah::PerPatch<double> perPatchT;
     perPatchT tstep( timeStep );
     perPatchT time ( simTime  );
@@ -1606,6 +1664,8 @@ namespace WasatchCore{
                            this,
                            &Wasatch::update_current_time,
                           rkStage );
+      updateCurrentTimeTask->requires( (has_dual_time() ? Uintah::Task::ParentOldDW : Uintah::Task::OldDW), getTimeStepLabel() );
+      updateCurrentTimeTask->requires( (has_dual_time() ? Uintah::Task::ParentOldDW : Uintah::Task::OldDW), getSimTimeLabel() );
       updateCurrentTimeTask->requires( (has_dual_time() ? Uintah::Task::ParentOldDW : Uintah::Task::OldDW), getDelTLabel() );
       
       const Uintah::TypeDescription* perPatchTD = Uintah::PerPatch<double>::getTypeDescription();
@@ -1640,16 +1700,24 @@ namespace WasatchCore{
                                 Uintah::DataWarehouse* const newDW,
                                 const int rkStage )
   {
-    // grab the timestep
-    Uintah::delt_vartype deltat;
     Uintah::DataWarehouse* whichDW = has_dual_time() ? oldDW->getOtherDataWarehouse(Uintah::Task::ParentOldDW) : oldDW;
+
+    // grab the timestep
+    // const double simTime = m_sharedState->getElapsedSimTime();
+    // const double timeStep = m_sharedState->getCurrentTopLevelTimeStep();
+    
+    Uintah::timeStep_vartype timeStep;
+    whichDW->get( timeStep, getTimeStepLabel() );
+
+    Uintah::simTime_vartype simTime;
+    whichDW->get( simTime, getSimTimeLabel() );
+
+    Uintah::delt_vartype deltat;
     whichDW->get( deltat, getDelTLabel() );
+
     const Expr::Tag timeTag = TagNames::self().time;
     double rks = (double) rkStage;
     double* timeCor = timeIntegrator_.timeCorrection;
-    
-    const double simTime = m_sharedState->getElapsedSimTime();
-    const double timeStep = m_sharedState->getCurrentTopLevelTimeStep();
     
     typedef Uintah::PerPatch<double> perPatchT;
     perPatchT dt     (deltat );
@@ -1757,23 +1825,35 @@ namespace WasatchCore{
   Wasatch::computeDelT( const Uintah::ProcessorGroup*,
                         const Uintah::PatchSubset* patches,
                         const Uintah::MaterialSubset* matls,
-                        Uintah::DataWarehouse* old_dw,
-                        Uintah::DataWarehouse* new_dw )
+                        Uintah::DataWarehouse* oldDW,
+                        Uintah::DataWarehouse* newDW )
   {
+    // int timeStep = m_sharedState->getCurrentTopLevelTimeStep();
+    
+    // This method is called at both initialization and otherwise. At
+    // initialization the old DW will not exist so get the value from
+    // the new DW.  Otherwise for a normal time step get the time step
+    // from the old DW.
+    Uintah::timeStep_vartype timeStep(0);
+    if( oldDW && oldDW->exists( getTimeStepLabel() ) )
+      oldDW->get( timeStep, getTimeStepLabel() );
+    else if( newDW && newDW->exists( getTimeStepLabel() ) )
+      newDW->get( timeStep, getTimeStepLabel() );
+
     Uintah::delt_vartype deltat = 1.0;
     double val = 9999999999999.0;
     
     const GraphHelper* slnGraphHelper = graphCategories_[ADVANCE_SOLUTION];
     const TagNames& tagNames = TagNames::self();
     const bool useStableDT = slnGraphHelper->exprFactory->have_entry( tagNames.stableTimestep );
-    if( m_sharedState->getCurrentTopLevelTimeStep() > 0 ){
+    if( timeStep > 0 ){
       if( useStableDT ){
         //__________________
         // loop over patches
         for( int ip=0; ip<patches->size(); ++ip ){
           // grab the stable timestep value calculated by the StableDT expression
           Uintah::PerPatch<double> tempDtP;
-          new_dw->get(tempDtP, Uintah::VarLabel::find(tagNames.stableTimestep.name()), 0, patches->get(ip));          
+          newDW->get(tempDtP, Uintah::VarLabel::find(tagNames.stableTimestep.name()), 0, patches->get(ip));          
           val = std::min( val, tempDtP.get() );
         }
       }
@@ -1781,16 +1861,16 @@ namespace WasatchCore{
         // FOR FIXED dt: (min = max in input file)
         // if this is not the first timestep, then grab dt from the olddw.
         // This will avoid Uintah's message that it is setting dt to max dt/min dt
-        old_dw->get( deltat, getDelTLabel() );
+        oldDW->get( deltat, getDelTLabel() );
       }
     }
     
     if( useStableDT ){
-      new_dw->put(Uintah::delt_vartype(val),getDelTLabel(),
-                  Uintah::getLevel(patches) );
+      newDW->put(Uintah::delt_vartype(val),getDelTLabel(),
+                 Uintah::getLevel(patches) );
     }
     else{
-      new_dw->put( deltat,
+      newDW->put( deltat,
                   getDelTLabel(),
                   Uintah::getLevel(patches) );
     }
@@ -1864,7 +1944,7 @@ namespace WasatchCore{
      // Also do radiation solve on timestep 1.
      int task_graph_index =
        ((timeStep % radCalcFrequency_ == 0) ||
-	(timeStep == 1) ? Uintah::RMCRTCommon::TG_RMCRT : Uintah::RMCRTCommon::TG_CARRY_FORWARD);
+        (timeStep == 1) ? Uintah::RMCRTCommon::TG_RMCRT : Uintah::RMCRTCommon::TG_CARRY_FORWARD);
 
      return task_graph_index;
    }
