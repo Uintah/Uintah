@@ -71,7 +71,7 @@ ifeq ($(BUILD_MPM),yes)
 endif
 
 # MPM - ICE Models
-ifeq ($(BUILD_MPM)$(BUILD_MPM),yesyes)
+ifeq ($(BUILD_MPM)$(BUILD_ICE),yesyes)
   PSELIBS += CCA/Components/MPMICE/Core
 
   SUBDIRS += $(SRCDIR)/HEChem             \

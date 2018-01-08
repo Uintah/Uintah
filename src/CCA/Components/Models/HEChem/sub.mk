@@ -29,6 +29,8 @@
 
 SRCDIR   := CCA/Components/Models/HEChem
 
+ifeq ($(BUILD_MPM)$(BUILD_ICE),yesyes)
+
 SRCS	+= \
        $(SRCDIR)/Common.cc        \
        $(SRCDIR)/IandG.cc         \
@@ -41,3 +43,4 @@ SRCS	+= \
        $(SRCDIR)/Simple_Burn.cc   \
        $(SRCDIR)/Steady_Burn.cc   \
        $(SRCDIR)/Unsteady_Burn.cc
+endif

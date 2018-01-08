@@ -64,7 +64,7 @@ static DebugStream cout_doing("MODELS_DOING_COUT", false);
 const double DDT1::d_EPSILON   = 1e-6;   /* stop epsilon for Bisection-Newton method */
 
 DDT1::DDT1(const ProcessorGroup* myworld,
-	   const SimulationStateP& sharedState,
+           const SimulationStateP& sharedState,
            const ProblemSpecP& params,
            const ProblemSpecP& prob_spec)
   : ModelInterface(myworld, sharedState),
@@ -170,7 +170,7 @@ bool DDT1::isDoubleEqual(double a, double b){
 }
 
 void DDT1::problemSetup(GridP&,
-			 const bool isRestart)
+                         const bool isRestart)
 {
   ProblemSpecP time_ps = d_prob_spec->findBlock( "Time" );
 
@@ -548,6 +548,7 @@ void DDT1::scheduleComputeModelSources(SchedulerP& sched,
     
   printSchedule(level,cout_doing,"DDT1::scheduleComputeNumPPC");  
     
+  t0->requires(Task::OldDW, Ilb->timeStepLabel );
   t0->requires(Task::OldDW, Mlb->pXLabel,               react_matl, gn);
   t0->computes(numPPCLabel, react_matl);
   
@@ -634,6 +635,7 @@ void DDT1::scheduleComputeModelSources(SchedulerP& sched,
   //__________________________________
   // Requires
   //__________________________________
+  t2->requires(Task::OldDW, Ilb->timeStepLabel );
   t2->requires(Task::OldDW, Ilb->delTLabel,            level.get_rep());
   t2->requires(Task::OldDW, Ilb->temp_CCLabel,         ice_matls, oms, gac,1);
   t2->requires(Task::NewDW, MIlb->temp_CCLabel,        mpm_matls, oms, gac,1);
@@ -694,6 +696,11 @@ void DDT1::computeNumPPC(const ProcessorGroup*,
                          DataWarehouse* old_dw,
                          DataWarehouse* new_dw)
 {
+  timeStep_vartype timeStep;
+  old_dw->get(timeStep, Ilb->timeStepLabel );
+
+  bool isNotInitialTimeStep = (timeStep > 0);
+
     int m0 = d_matl0->getDWIndex(); /* reactant material */
     Ghost::GhostType  gac = Ghost::AroundCells;
     
@@ -741,7 +748,7 @@ void DDT1::computeNumPPC(const ProcessorGroup*,
             }
           } 
         }    
-        setBC(numPPC, "zeroNeumann", patch, m_sharedState, m0, new_dw);
+        setBC(numPPC, "zeroNeumann", patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
     }
 }
 
@@ -1179,6 +1186,11 @@ void DDT1::computeModelSources(const ProcessorGroup*,
                                DataWarehouse* old_dw,
                                DataWarehouse* new_dw)
 {
+  timeStep_vartype timeStep;
+  old_dw->get(timeStep, Ilb->timeStepLabel );
+
+  bool isNotInitialTimeStep = (timeStep > 0);
+
   delt_vartype delT;
   const Level* level = getLevel(patches);
   old_dw->get(delT, Ilb->delTLabel, level);
@@ -1400,8 +1412,8 @@ void DDT1::computeModelSources(const ProcessorGroup*,
           double burnedMass = 0.0;
 
           burnedMass = computeBurnedMass(Tzero, Tsurf, productPress,
-					 rctSpvol[c], surfArea, delT,
-					 solidMass, min_mass_in_a_cell);
+                                         rctSpvol[c], surfArea, delT,
+                                         solidMass, min_mass_in_a_cell);
           
           // Store debug variables
           onSurface[c] = surfArea;
@@ -1442,8 +1454,8 @@ void DDT1::computeModelSources(const ProcessorGroup*,
           double burnedMass = 0.0;
 
           burnedMass = computeBurnedMass(Tzero, Tsurf, productPress,
-					 rctSpvol[c], surfArea, delT,
-					 solidMass, min_mass_in_a_cell);
+                                         rctSpvol[c], surfArea, delT,
+                                         solidMass, min_mass_in_a_cell);
 
           /* 
            // If cracking applies, add to mass
@@ -1482,11 +1494,11 @@ void DDT1::computeModelSources(const ProcessorGroup*,
 
     //__________________________________
     //  set symetric BC
-    setBC(mass_src_0, "set_if_sym_BC",patch, m_sharedState, m0, new_dw);
-    setBC(mass_src_1, "set_if_sym_BC",patch, m_sharedState, m1, new_dw);
-    setBC(mass_src_2, "set_if_sym_BC",patch, m_sharedState, m2, new_dw);
-    setBC(delF,       "set_if_sym_BC",patch, m_sharedState, m0, new_dw);  // I'm not sure you need these???? Todd
-    setBC(Fr,         "set_if_sym_BC",patch, m_sharedState, m0, new_dw);
+    setBC(mass_src_0, "set_if_sym_BC",patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
+    setBC(mass_src_1, "set_if_sym_BC",patch, m_sharedState, m1, new_dw, isNotInitialTimeStep);
+    setBC(mass_src_2, "set_if_sym_BC",patch, m_sharedState, m2, new_dw, isNotInitialTimeStep);
+    setBC(delF,       "set_if_sym_BC",patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);  // I'm not sure you need these???? Todd
+    setBC(Fr,         "set_if_sym_BC",patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
   }
   //__________________________________
   //save total quantities

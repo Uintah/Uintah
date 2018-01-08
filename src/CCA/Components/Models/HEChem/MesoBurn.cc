@@ -69,7 +69,7 @@ const double MesoBurn::EPSILON   = 1e-6;   /* stop epsilon for Bisection-Newton 
 const double ONE_YEAR_MICROSECONDS = 3.1536e13;
 
 MesoBurn::MesoBurn(const ProcessorGroup* myworld, 
-		   const SimulationStateP& sharedState, 
+                   const SimulationStateP& sharedState, 
                    const ProblemSpecP& params,
                    const ProblemSpecP& prob_spec)
   : ModelInterface(myworld, sharedState),
@@ -322,7 +322,8 @@ void MesoBurn::scheduleComputeModelSources(SchedulerP& sched,
 
   printSchedule(level, cout_doing,"MesoBurn::scheduleComputeParticleVariables");  
 
-  t1->requires( Task::OldDW, Ilb->delTLabel, level.get_rep());
+  t1->requires(Task::OldDW, Ilb->timeStepLabel);
+  t1->requires(Task::OldDW, Ilb->delTLabel, level.get_rep());
   t1->requires(Task::OldDW, Mlb->pXLabel, react_matl, gn);
   t1->requires(Task::OldDW, Mlb->pMassLabel, react_matl, gn);
   t1->requires(Task::OldDW, Mlb->pTemperatureLabel, react_matl, gn);
@@ -343,6 +344,8 @@ void MesoBurn::scheduleComputeModelSources(SchedulerP& sched,
                         &MesoBurn::computeModelSources);
 
   printSchedule(level,cout_doing,"MesoBurn::scheduleComputeModelSources");  
+
+  t->requires( Task::OldDW, Ilb->timeStepLabel );
   t->requires( Task::OldDW, Ilb->delTLabel, level.get_rep());
   
   // define material subsets  
@@ -420,6 +423,11 @@ void MesoBurn::computeParticleVariables(const ProcessorGroup*,
                                         DataWarehouse* old_dw,
                                         DataWarehouse* new_dw)
 {
+  timeStep_vartype timeStep;
+  old_dw->get(timeStep, Ilb->timeStepLabel );
+
+  bool isNotInitialTimeStep = (timeStep > 0);
+
   delt_vartype delT;
   old_dw->get(delT, Ilb->delTLabel,getLevel(patches));
     
@@ -489,7 +497,7 @@ void MesoBurn::computeParticleVariables(const ProcessorGroup*,
         inducedMass[c] += pMass[idx];
       }
     }    
-    setBC(pFlag, "zeroNeumann", patch, m_sharedState, m0, new_dw);
+    setBC(pFlag, "zeroNeumann", patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
   }
  
 }
@@ -501,6 +509,11 @@ void MesoBurn::computeModelSources(const ProcessorGroup*,
                                    DataWarehouse* old_dw,
                                    DataWarehouse* new_dw)
 {
+  timeStep_vartype timeStep;
+  old_dw->get(timeStep, Ilb->timeStepLabel );
+
+  bool isNotInitialTimeStep = (timeStep > 0);
+
   delt_vartype delT;
   old_dw->get(delT, Ilb->delTLabel,getLevel(patches));
   
@@ -677,8 +690,8 @@ void MesoBurn::computeModelSources(const ProcessorGroup*,
     }  // cell iterator
 
     /*  set symetric BC  */
-    setBC(mass_src_0, "set_if_sym_BC",patch, m_sharedState, m0, new_dw);
-    setBC(mass_src_1, "set_if_sym_BC",patch, m_sharedState, m1, new_dw); 
+    setBC(mass_src_0, "set_if_sym_BC",patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
+    setBC(mass_src_1, "set_if_sym_BC",patch, m_sharedState, m1, new_dw, isNotInitialTimeStep); 
   }
   //__________________________________
   //save total quantities

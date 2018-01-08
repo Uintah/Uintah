@@ -58,7 +58,7 @@ static DebugStream cout_doing("MODELS_DOING_COUT", false);
 static DebugStream cout_dbg("SIMPLE_RXN_DBG_COUT", false);
 //______________________________________________________________________
 SimpleRxn::SimpleRxn(const ProcessorGroup* myworld, 
-		     const SimulationStateP & sharedState,
+                     const SimulationStateP & sharedState,
                      const ProblemSpecP& params)
   : FluidsBasedModel(myworld, sharedState), d_params(params)
 {
@@ -138,8 +138,8 @@ SimpleRxn::problemSetup( GridP &, const bool isRestart )
                                             sum_vartype::getTypeDescription());
   
   registerTransportedVariable(d_matl_set,
-			      d_scalar->scalar_CCLabel,
-			      d_scalar->scalar_source_CCLabel);  
+                              d_scalar->scalar_CCLabel,
+                              d_scalar->scalar_source_CCLabel);  
 
   //__________________________________
   // Read in the constants for the scalar
@@ -240,6 +240,8 @@ void SimpleRxn::scheduleInitialize(SchedulerP& sched,
   cout_doing << "SIMPLERXN::scheduleInitialize " << endl;
   Task* t = scinew Task("SimpleRxn::initialize", this, &SimpleRxn::initialize);
 
+  t->requires(Task::NewDW, Ilb->timeStepLabel );
+
   t->modifies(Ilb->sp_vol_CCLabel);
   t->modifies(Ilb->rho_micro_CCLabel);
   t->modifies(Ilb->rho_CCLabel);
@@ -262,6 +264,11 @@ void SimpleRxn::initialize(const ProcessorGroup*,
                            DataWarehouse*,
                            DataWarehouse* new_dw)
 {
+  timeStep_vartype timeStep;
+  new_dw->get(timeStep, VarLabel::find( timeStep_name) );
+
+  bool isNotInitialTimeStep = (timeStep > 0);
+
   cout_doing << "Doing Initialize \t\t\t\t\tSIMPLE_RXN" << endl;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -311,7 +318,7 @@ void SimpleRxn::initialize(const ProcessorGroup*,
                               f, FakeDiffusivity, fakedelT);
     }
         
-    setBC( f, "scalar-f", patch, m_sharedState, indx, new_dw );
+    setBC( f, "scalar-f", patch, m_sharedState, indx, new_dw, isNotInitialTimeStep );
     
     //__________________________________
     // compute thermo-transport-physical quantities
@@ -450,6 +457,7 @@ void SimpleRxn::scheduleComputeModelSources(SchedulerP& sched,
                      
   Ghost::GhostType  gn = Ghost::None;  
   Ghost::GhostType  gac = Ghost::AroundCells;
+  t->requires(Task::OldDW, Ilb->simulationTimeLabel);
   t->requires(Task::OldDW, Ilb->delTLabel, level.get_rep());
   t->requires(Task::NewDW, d_scalar->diffusionCoefLabel, gac,1);
   t->requires(Task::OldDW, d_scalar->scalar_CCLabel,     gac,1); 
@@ -477,8 +485,14 @@ void SimpleRxn::computeModelSources(const ProcessorGroup*,
                                     DataWarehouse* new_dw)
 {
   const Level* level = getLevel(patches);
+
+  simTime_vartype simTimeVar;
+  old_dw->get(simTimeVar, Ilb->simulationTimeLabel);
+  double simTime = simTimeVar;
+
   delt_vartype delT;
   old_dw->get(delT, Ilb->delTLabel, level);
+
   Ghost::GhostType gn = Ghost::None;         
   Ghost::GhostType gac = Ghost::AroundCells; 
   
@@ -570,10 +584,10 @@ void SimpleRxn::computeModelSources(const ProcessorGroup*,
       old_dw->get(lastDumpTime, Slb->lastProbeDumpTimeLabel);
       double oldProbeDumpTime = lastDumpTime;
       
-      double time = m_sharedState->getElapsedSimTime();
+      // double simTime = m_sharedState->getElapsedSimTime();
       double nextDumpTime = oldProbeDumpTime + 1.0/d_probeFreq;
       
-      if (time >= nextDumpTime){        // is it time to dump the points
+      if (simTime >= nextDumpTime){        // is it time to dump the points
         FILE *fp;
         string udaDir = m_output->getOutputLocation();
         IntVector cell_indx;
@@ -583,11 +597,11 @@ void SimpleRxn::computeModelSources(const ProcessorGroup*,
           if(patch->findCell(Point(d_probePts[i]),cell_indx) ) {
             string filename=udaDir + "/" + d_probePtsNames[i].c_str() + ".dat";
             fp = fopen(filename.c_str(), "a");
-            fprintf(fp, "%16.15E  %16.15E\n",time, f_old[cell_indx]);
+            fprintf(fp, "%16.15E  %16.15E\n", simTime, f_old[cell_indx]);
             fclose(fp);
           }
         }
-        oldProbeDumpTime = time;
+        oldProbeDumpTime = simTime;
       }  // time to dump
       new_dw->put(max_vartype(oldProbeDumpTime), Slb->lastProbeDumpTimeLabel);
     } // if(probePts)  
@@ -666,14 +680,14 @@ void SimpleRxn::testConservation(const ProcessorGroup*,
 
 //__________________________________      
 void SimpleRxn::scheduleComputeStableTimeStep(SchedulerP&,
-					      const LevelP&)
+                                              const LevelP&)
 {
   // None necessary...
 }
 //______________________________________________________________________
 //
 void SimpleRxn::scheduleErrorEstimate(const LevelP&,
-				      SchedulerP&)
+                                      SchedulerP&)
 {
   // Not implemented yet
 }

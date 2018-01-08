@@ -219,6 +219,7 @@ void SolidReactionModel::scheduleComputeModelSources(SchedulerP& sched,
   one_matl->addReference();
   MaterialSubset* press_matl   = one_matl;
 
+  t->requires(Task::OldDW, Ilb->timeStepLabel);
   t->requires(Task::OldDW, Ilb->delTLabel,         level.get_rep());
   //__________________________________
   // Products
@@ -260,6 +261,11 @@ void SolidReactionModel::computeModelSources(const ProcessorGroup*,
                                              DataWarehouse* old_dw,
                                              DataWarehouse* new_dw)
 {
+  timeStep_vartype timeStep;
+  old_dw->get(timeStep, Ilb->timeStepLabel );
+
+  bool isNotInitialTimeStep = (timeStep > 0);
+
     delt_vartype delT;
     const Level* level = getLevel(patches);
     old_dw->get(delT, Ilb->delTLabel, level);
@@ -365,10 +371,10 @@ void SolidReactionModel::computeModelSources(const ProcessorGroup*,
 
         //__________________________________
         //  set symetric BC
-        setBC(mass_src_0, "set_if_sym_BC",patch, m_sharedState, m0, new_dw);
-        setBC(mass_src_1, "set_if_sym_BC",patch, m_sharedState, m1, new_dw);
-        setBC(delF,       "set_if_sym_BC",patch, m_sharedState, m0, new_dw);
-        setBC(Fr,         "set_if_sym_BC",patch, m_sharedState, m0, new_dw);
+        setBC(mass_src_0, "set_if_sym_BC",patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
+        setBC(mass_src_1, "set_if_sym_BC",patch, m_sharedState, m1, new_dw, isNotInitialTimeStep);
+        setBC(delF,       "set_if_sym_BC",patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
+        setBC(Fr,         "set_if_sym_BC",patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
     }
     //__________________________________
     //save total quantities

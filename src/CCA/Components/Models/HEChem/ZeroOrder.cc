@@ -50,7 +50,7 @@ using namespace std;
 static DebugStream cout_doing("MODELS_DOING_COUT", false);
 
 ZeroOrder::ZeroOrder(const ProcessorGroup* myworld, 
-		     const SimulationStateP& sharedState,
+                     const SimulationStateP& sharedState,
                      const ProblemSpecP& params,
                      const ProblemSpecP& prob_spec)
   : ModelInterface(myworld, sharedState),
@@ -90,7 +90,7 @@ ZeroOrder::~ZeroOrder()
 //______________________________________________________________________
 //
 void ZeroOrder::problemSetup(GridP&,
-			      const bool isRestart)
+                              const bool isRestart)
 {
   ProblemSpecP ZO_ps = d_params->findBlock("ZeroOrder");
   ZO_ps->getWithDefault("ThresholdVolFrac",d_threshold_volFrac, 0.01);
@@ -184,6 +184,7 @@ void ZeroOrder::scheduleComputeModelSources(SchedulerP& sched,
   one_matl->addReference();
   MaterialSubset* press_matl   = one_matl;
 
+  t->requires(Task::OldDW, Ilb->timeStepLabel );
   t->requires(Task::OldDW, Ilb->delTLabel,         level.get_rep());
   //__________________________________
   // Products
@@ -225,6 +226,11 @@ void ZeroOrder::computeModelSources(const ProcessorGroup*,
                                     DataWarehouse* old_dw,
                                     DataWarehouse* new_dw)
 {
+  timeStep_vartype timeStep;
+  old_dw->get(timeStep, Ilb->timeStepLabel );
+
+  bool isNotInitialTimeStep = (timeStep > 0);
+
   delt_vartype delT;
   const Level* level = getLevel(patches);
   old_dw->get(delT, Ilb->delTLabel, level);
@@ -336,10 +342,10 @@ void ZeroOrder::computeModelSources(const ProcessorGroup*,
 
     //__________________________________
     //  set symetric BC
-    setBC(mass_src_0, "set_if_sym_BC",patch, m_sharedState, m0, new_dw);
-    setBC(mass_src_1, "set_if_sym_BC",patch, m_sharedState, m1, new_dw);
-    setBC(delF,       "set_if_sym_BC",patch, m_sharedState, m0, new_dw);
-    setBC(Fr,         "set_if_sym_BC",patch, m_sharedState, m0, new_dw);
+    setBC(mass_src_0, "set_if_sym_BC",patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
+    setBC(mass_src_1, "set_if_sym_BC",patch, m_sharedState, m1, new_dw, isNotInitialTimeStep);
+    setBC(delF,       "set_if_sym_BC",patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
+    setBC(Fr,         "set_if_sym_BC",patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
   }
   //__________________________________
   //save total quantities

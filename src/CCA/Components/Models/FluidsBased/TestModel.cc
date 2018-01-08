@@ -45,8 +45,8 @@ using namespace Uintah;
 using namespace std;
 
 TestModel::TestModel(const ProcessorGroup* myworld,
-		     const SimulationStateP& sharedState,
-		     const ProblemSpecP& params)
+                     const SimulationStateP& sharedState,
+                     const ProblemSpecP& params)
   
   : FluidsBasedModel(myworld, sharedState), d_params(params)
 {
@@ -143,7 +143,7 @@ void TestModel::scheduleComputeStableTimeStep(SchedulerP&,
 
 //__________________________________      
 void TestModel::scheduleComputeModelSources(SchedulerP& sched,
-                                                const LevelP& level)
+                                            const LevelP& level)
 {
   Task* t = scinew Task("TestModel::computeModelSources",this, 
                         &TestModel::computeModelSources);
@@ -172,16 +172,21 @@ void TestModel::scheduleComputeModelSources(SchedulerP& sched,
   t->computes(TestModel::totalIntEngXLabel);
   
   t->requires( Task::OldDW, Ilb->delTLabel, level.get_rep());
+  t->requires( Task::OldDW, Ilb->simulationTimeLabel );
   sched->addTask(t, level->eachPatch(), mymatls);
 }
 
 //__________________________________
 void TestModel::computeModelSources(const ProcessorGroup*, 
-				    const PatchSubset* patches,
-				    const MaterialSubset* matls,
-				    DataWarehouse* old_dw,
-				    DataWarehouse* new_dw)
+                                    const PatchSubset* patches,
+                                    const MaterialSubset* matls,
+                                    DataWarehouse* old_dw,
+                                    DataWarehouse* new_dw)
 {
+  simTime_vartype simTimeVar;
+  old_dw->get(simTimeVar, Ilb->simulationTimeLabel);
+  double simTime = simTimeVar;
+
   delt_vartype delT;
   old_dw->get(delT, Ilb->delTLabel, getLevel(patches));
   double dt = delT;
@@ -256,8 +261,9 @@ void TestModel::computeModelSources(const ProcessorGroup*,
     //__________________________________
     //  Do some work
     
-    double t  = m_sharedState->getElapsedSimTime();
-    if (t >= d_startTime){
+    // double simTime  = m_sharedState->getElapsedSimTime();
+    
+    if (simTime >= d_startTime){
       for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
         IntVector c = *iter;
         double massx = mass_0[c]*trate;

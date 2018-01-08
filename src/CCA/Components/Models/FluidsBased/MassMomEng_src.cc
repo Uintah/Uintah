@@ -37,8 +37,8 @@ using namespace Uintah;
 using namespace std;
 
 MassMomEng_src::MassMomEng_src(const ProcessorGroup* myworld,
-			       const SimulationStateP& sharedState,
-			       const ProblemSpecP& params)
+                               const SimulationStateP& sharedState,
+                               const ProblemSpecP& params)
   : FluidsBasedModel(myworld, sharedState), d_params(params)
 {
   mymatls = 0;
@@ -131,6 +131,7 @@ void MassMomEng_src::scheduleComputeModelSources(SchedulerP& sched,
   t->modifies(Ilb->modelEng_srcLabel);
   t->modifies(Ilb->modelVol_srcLabel);
   
+  t->requires(Task::OldDW, Ilb->simulationTimeLabel);
   t->requires(Task::OldDW, Ilb->delTLabel,        level.get_rep());
   t->requires(Task::NewDW, Ilb->sp_vol_CCLabel,   Ghost::None,0);
   t->requires(Task::NewDW, Ilb->vol_frac_CCLabel, Ghost::None,0);
@@ -145,11 +146,15 @@ void MassMomEng_src::scheduleComputeModelSources(SchedulerP& sched,
 
 //__________________________________
 void MassMomEng_src::computeModelSources(const ProcessorGroup*, 
-                                            const PatchSubset* patches,
-                                            const MaterialSubset* matls,
-                                            DataWarehouse* old_dw,
-                                            DataWarehouse* new_dw)
+                                         const PatchSubset* patches,
+                                         const MaterialSubset* matls,
+                                         DataWarehouse* old_dw,
+                                         DataWarehouse* new_dw)
 {
+  simTime_vartype simTimeVar;
+  old_dw->get(simTimeVar, Ilb->simulationTimeLabel);
+  double simTime = simTimeVar;
+
   delt_vartype delT;
   old_dw->get(delT, Ilb->delTLabel,getLevel(patches));
   double dt = delT;
@@ -159,12 +164,12 @@ void MassMomEng_src::computeModelSources(const ProcessorGroup*,
   double totalEng_src = 0.0;
   Vector totalMom_src(0,0,0);
 
-  double time = m_sharedState->getElapsedSimTime();
+  // double simTime = m_sharedState->getElapsedSimTime();
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);  
     
-    if(time>d_src->d_mme_src_t_start && time <=d_src->d_mme_src_t_final){
+    if(simTime>d_src->d_mme_src_t_start && simTime <=d_src->d_mme_src_t_final){
       Vector dx = patch->dCell();
       double vol = dx.x()*dx.y()*dx.z();
 

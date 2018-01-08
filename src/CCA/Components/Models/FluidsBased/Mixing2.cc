@@ -60,8 +60,8 @@ using namespace Uintah;
 using namespace std;
 
 Mixing2::Mixing2(const ProcessorGroup* myworld,
-		 const SimulationStateP& sharedState,
-		 const ProblemSpecP& params)
+                 const SimulationStateP& sharedState,
+                 const ProblemSpecP& params)
   : FluidsBasedModel(myworld, sharedState), d_params(params)
 {
   Ilb = scinew ICELabel();
@@ -146,8 +146,8 @@ void Mixing2::problemSetup(GridP&,
       stream->massFraction_source_CCLabel = VarLabel::create(mfsname, CCVariable<double>::getTypeDescription());
       
       registerTransportedVariable(mymatls,
-				  stream->massFraction_CCLabel,
-				  stream->massFraction_source_CCLabel);
+                                  stream->massFraction_CCLabel,
+                                  stream->massFraction_source_CCLabel);
       
       streams.push_back(stream);
       names[stream->name] = stream;
@@ -322,7 +322,7 @@ void Mixing2::scheduleComputeStableTimeStep(SchedulerP&,
       
 
 void Mixing2::scheduleComputeModelSources(SchedulerP& sched,
-					  const LevelP& level)
+                                          const LevelP& level)
 {
   Task* t = scinew Task("Mixing2::computeModelSources",this, 
                         &Mixing2::computeModelSources);
@@ -333,6 +333,7 @@ void Mixing2::scheduleComputeModelSources(SchedulerP& sched,
   t->requires(Task::NewDW, Ilb->specific_heatLabel, Ghost::None);
   t->requires(Task::NewDW, Ilb->gammaLabel,         Ghost::None);
   t->requires(Task::OldDW, Ilb->delTLabel,         level.get_rep());
+  t->requires(Task::OldDW, Ilb->simulationTimeLabel);
   
   for(vector<Stream*>::iterator iter = streams.begin();
       iter != streams.end(); iter++){
@@ -345,11 +346,15 @@ void Mixing2::scheduleComputeModelSources(SchedulerP& sched,
 }
 
 void Mixing2::computeModelSources(const ProcessorGroup*, 
-				  const PatchSubset* patches,
-				  const MaterialSubset* matls,
-				  DataWarehouse* old_dw,
-				  DataWarehouse* new_dw)
+                                  const PatchSubset* patches,
+                                  const MaterialSubset* matls,
+                                  DataWarehouse* old_dw,
+                                  DataWarehouse* new_dw)
 {
+  simTime_vartype simTimeVar;
+  old_dw->get(simTimeVar, lb->simulationTimeLabel);
+  double simTime = simTimeVar;
+
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     for(int m=0;m<matls->size();m++){
@@ -445,11 +450,13 @@ void Mixing2::computeModelSources(const ProcessorGroup*,
       cerr << "Mixing2 total energy: " << etotal << ", release rate=" << etotal/dt << '\n';
 #if 0
       {
+        // double simTime = m_sharedState->getElapsedSimTime();
+
         static ofstream outt("temp.dat");
-        outt << m_sharedState->getElapsedSimTime() << " " << temperature[IntVector(2,2,0)] << " " << temperature[IntVector(3,2,0)] << " " << temperature[IntVector(3,3,0)] << '\n';
+        outt << simTime << " " << temperature[IntVector(2,2,0)] << " " << temperature[IntVector(3,2,0)] << " " << temperature[IntVector(3,3,0)] << '\n';
         outt.flush();
         static ofstream outp("press.dat");
-        outp << m_sharedState->getElapsedSimTime() << " " << pressure[IntVector(2,2,0)] << " " << pressure[IntVector(3,2,0)] << " " << pressure[IntVector(3,3,0)] << '\n';
+        outp << simTime << " " << pressure[IntVector(2,2,0)] << " " << pressure[IntVector(3,2,0)] << " " << pressure[IntVector(3,3,0)] << '\n';
         outp.flush();
       }
 #endif
@@ -472,4 +479,3 @@ void Mixing2::scheduleErrorEstimate(const LevelP&,
 {
   // Not implemented yet
 }
-

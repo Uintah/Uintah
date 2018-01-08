@@ -59,8 +59,8 @@ using namespace std;
 static DebugStream cout_doing("MODELS_DOING_COUT", false);
 
 IandG::IandG(const ProcessorGroup* myworld,
-	     const SimulationStateP& sharedState,
-	     const ProblemSpecP& params)
+             const SimulationStateP& sharedState,
+             const ProblemSpecP& params)
   : ModelInterface(myworld, sharedState), d_params(params)
 {
   mymatls = 0;
@@ -93,7 +93,7 @@ IandG::~IandG()
 }
 
 void IandG::problemSetup(GridP&,
-			  const bool isRestart)
+                          const bool isRestart)
 {
   ProblemSpecP IG_ps = d_params->findBlock("IandG");
 
@@ -193,6 +193,7 @@ void IandG::scheduleComputeModelSources(SchedulerP& sched,
   one_matl->addReference();
   MaterialSubset* press_matl   = one_matl;
   
+  t->requires( Task::OldDW, Ilb->timeStepLabel );
   t->requires( Task::OldDW, Ilb->delTLabel,        level.get_rep());
   //__________________________________
   // Products
@@ -230,6 +231,11 @@ void IandG::computeModelSources(const ProcessorGroup*,
                          DataWarehouse* old_dw,
                          DataWarehouse* new_dw)
 {
+  timeStep_vartype timeStep;
+  old_dw->get(timeStep, Ilb->timeStepLabel );
+
+  bool isNotInitialTimeStep = (timeStep > 0);
+
   delt_vartype delT;
   old_dw->get(delT, Ilb->delTLabel);
 
@@ -340,12 +346,12 @@ void IandG::computeModelSources(const ProcessorGroup*,
 
     //__________________________________
     //  set symetric BC
-    setBC(mass_src_0, "set_if_sym_BC",patch, m_sharedState, m0, new_dw);
-    setBC(mass_src_1, "set_if_sym_BC",patch, m_sharedState, m1, new_dw);
-    setBC(term1, "set_if_sym_BC",patch, m_sharedState, m0, new_dw);
-    setBC(term2, "set_if_sym_BC",patch, m_sharedState, m0, new_dw);
-    setBC(term3, "set_if_sym_BC",patch, m_sharedState, m0, new_dw);
-    setBC(Fr,    "set_if_sym_BC",patch, m_sharedState, m0, new_dw);
+    setBC(mass_src_0, "set_if_sym_BC",patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
+    setBC(mass_src_1, "set_if_sym_BC",patch, m_sharedState, m1, new_dw, isNotInitialTimeStep);
+    setBC(term1, "set_if_sym_BC",patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
+    setBC(term2, "set_if_sym_BC",patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
+    setBC(term3, "set_if_sym_BC",patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
+    setBC(Fr,    "set_if_sym_BC",patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
   }
 }
 //______________________________________________________________________
@@ -376,4 +382,3 @@ void IandG::scheduleTestConservation(SchedulerP&,
 {
   // Not implemented yet
 }
-

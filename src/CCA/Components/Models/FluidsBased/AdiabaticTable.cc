@@ -75,8 +75,8 @@ static DebugStream cout_dbg("ADIABATIC_TABLE_DBG_COUT", false);
 
 //______________________________________________________________________
 AdiabaticTable::AdiabaticTable(const ProcessorGroup* myworld, 
-			       const SimulationStateP& sharedState,
-			       const ProblemSpecP& params)
+                               const SimulationStateP& sharedState,
+                               const ProblemSpecP& params)
   : FluidsBasedModel(myworld, sharedState), d_params(params)
 {
   m_modelComputesThermoTransportProps = true;
@@ -292,12 +292,12 @@ void AdiabaticTable::problemSetup(GridP&,
   //__________________________________
   //  register transport variables scalar and the energy
   registerTransportedVariable(d_matl_set,
-			      d_scalar->scalar_CCLabel,
-			      d_scalar->scalar_src_CCLabel);
+                              d_scalar->scalar_CCLabel,
+                              d_scalar->scalar_src_CCLabel);
 
   registerTransportedVariable(d_matl_set,
-			      cumulativeEnergyReleased_CCLabel,
-			      cumulativeEnergyReleased_src_CCLabel);
+                              cumulativeEnergyReleased_CCLabel,
+                              cumulativeEnergyReleased_src_CCLabel);
 
   //__________________________________
   //  register the AMRrefluxing variables                               
@@ -365,6 +365,8 @@ AdiabaticTable::scheduleInitialize(       SchedulerP & sched,
   cout_doing << "ADIABATIC_TABLE::scheduleInitialize\n";
   Task* t = scinew Task( "AdiabaticTable::initialize", this, &AdiabaticTable::initialize );
 
+  t->requires(Task::NewDW, Ilb->timeStepLabel );
+  
   t->modifies(Ilb->sp_vol_CCLabel);
   t->modifies(Ilb->rho_micro_CCLabel);
   t->modifies(Ilb->rho_CCLabel);
@@ -391,6 +393,11 @@ void AdiabaticTable::initialize(const ProcessorGroup*,
                            DataWarehouse*,
                            DataWarehouse* new_dw)
 {
+  timeStep_vartype timeStep;
+  new_dw->get(timeStep, VarLabel::find( timeStep_name) );
+
+  bool isNotInitialTimeStep = (timeStep > 0);
+
   cout_doing << "Doing Initialize \t\t\t\t\tADIABATIC_TABLE" << endl;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -437,7 +444,7 @@ void AdiabaticTable::initialize(const ProcessorGroup*,
       }
     }
     
-    setBC(f,"scalar-f", patch, m_sharedState,indx, new_dw); 
+    setBC(f,"scalar-f", patch, m_sharedState,indx, new_dw, isNotInitialTimeStep); 
 
     //__________________________________
     // initialize other properties
@@ -494,7 +501,7 @@ void AdiabaticTable::initialize(const ProcessorGroup*,
       else
         eReleased[c] = temp[c] * cp - ref_temp[c] * icp;
     }
-    setBC(eReleased,"cumulativeEnergyReleased", patch, m_sharedState,indx, new_dw); 
+    setBC(eReleased,"cumulativeEnergyReleased", patch, m_sharedState,indx, new_dw, isNotInitialTimeStep); 
 
     //__________________________________
     //  Dump out a header for the probe point files
@@ -634,6 +641,7 @@ void AdiabaticTable::scheduleComputeModelSources(SchedulerP& sched,
                     
   Ghost::GhostType  gn = Ghost::None;  
   Ghost::GhostType  gac = Ghost::AroundCells;
+  t->requires(Task::OldDW, Ilb->simulationTimeLabel);
   t->requires(Task::OldDW, Ilb->delTLabel,level.get_rep()); 
  
   //t->requires(Task::NewDW, d_scalar->diffusionCoefLabel, gac,1);
@@ -669,9 +677,14 @@ void AdiabaticTable::computeModelSources(const ProcessorGroup*,
                                          DataWarehouse* old_dw,
                                          DataWarehouse* new_dw)
 {
+  simTime_vartype simTimeVar;
+  old_dw->get(simTimeVar, Ilb->simulationTimeLabel);
+  double simTime = simTimeVar;
+
   delt_vartype delT;
   const Level* level = getLevel(patches);
   old_dw->get(delT, Ilb->delTLabel, level);
+
   Ghost::GhostType gn = Ghost::None;
     
   for(int p=0;p<patches->size();p++){
@@ -803,10 +816,10 @@ void AdiabaticTable::computeModelSources(const ProcessorGroup*,
       //__________________________________
       //  dump out the probe points
       if( d_usingProbePts ) {
-        double time = m_sharedState->getElapsedSimTime();
+        // double simTime = m_sharedState->getElapsedSimTime();
         double nextDumpTime = oldProbeDumpTime + 1.0/d_probeFreq;
         
-        if (time >= nextDumpTime){        // is it time to dump the points
+        if (simTime >= nextDumpTime){        // is it time to dump the points
           FILE *fp;
           string udaDir = m_output->getOutputLocation();
           IntVector cell_indx;
@@ -816,11 +829,11 @@ void AdiabaticTable::computeModelSources(const ProcessorGroup*,
             if(patch->findCell(Point(d_probePts[i]),cell_indx) ) {
               string filename=udaDir + "/" + d_probePtsNames[i].c_str() + ".dat";
               fp = fopen(filename.c_str(), "a");
-              fprintf(fp, "%16.15E  %16.15E\n",time, f_old[cell_indx]);
+              fprintf(fp, "%16.15E  %16.15E\n", simTime, f_old[cell_indx]);
               fclose(fp);
             }
           }
-          oldProbeDumpTime = time;
+          oldProbeDumpTime = simTime;
         }  // time to dump
       } // if(probePts)  
       

@@ -68,8 +68,8 @@ static DebugStream cout_dbg("ADIABATIC_TABLE_DBG_COUT", false);
 
 //______________________________________________________________________
 NonAdiabaticTable::NonAdiabaticTable(const ProcessorGroup* myworld, 
-				     const SimulationStateP & sharedState,
-				     const ProblemSpecP& params)
+                                     const SimulationStateP & sharedState,
+                                     const ProblemSpecP& params)
   : FluidsBasedModel(myworld, sharedState), d_params(params)
 {
   m_modelComputesThermoTransportProps = true;
@@ -252,12 +252,12 @@ NonAdiabaticTable::problemSetup( GridP &, const bool isRestart)
 
    // Tell ICE to transport the scalar and the energy
    registerTransportedVariable(d_matl_set,
-			       d_scalar->scalar_CCLabel,
-			       d_scalar->scalar_src_CCLabel);
+                               d_scalar->scalar_CCLabel,
+                               d_scalar->scalar_src_CCLabel);
 
    registerTransportedVariable(d_matl_set,
-			       cumulativeEnergyReleased_CCLabel,
-			       cumulativeEnergyReleased_src_CCLabel);
+                               cumulativeEnergyReleased_CCLabel,
+                               cumulativeEnergyReleased_src_CCLabel);
 
   //__________________________________
   //  Read in the geometry objects for the scalar
@@ -316,6 +316,8 @@ NonAdiabaticTable::scheduleInitialize(       SchedulerP & sched,
   cout_doing << "ADIABATIC_TABLE::scheduleInitialize\n";
   Task* t = scinew Task("NonAdiabaticTable::initialize", this, &NonAdiabaticTable::initialize);
 
+  t->requires(Task::NewDW, Ilb->timeStepLabel );
+  
   t->modifies(Ilb->sp_vol_CCLabel);
   t->modifies(Ilb->rho_micro_CCLabel);
   t->modifies(Ilb->rho_CCLabel);
@@ -339,6 +341,11 @@ void NonAdiabaticTable::initialize(const ProcessorGroup*,
                            DataWarehouse*,
                            DataWarehouse* new_dw)
 {
+  timeStep_vartype timeStep;
+  new_dw->get(timeStep, VarLabel::find( timeStep_name) );
+
+  bool isNotInitialTimeStep = (timeStep > 0);
+
   cout_doing << "Doing Initialize \t\t\t\t\tADIABATIC_TABLE" << endl;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -375,7 +382,7 @@ void NonAdiabaticTable::initialize(const ProcessorGroup*,
       } // Over cells
     } // regions
     
-    setBC( f, "scalar-f", patch, m_sharedState, indx, new_dw );
+    setBC( f, "scalar-f", patch, m_sharedState, indx, new_dw, isNotInitialTimeStep );
 
     //__________________________________
     // initialize other properties
@@ -430,7 +437,7 @@ void NonAdiabaticTable::initialize(const ProcessorGroup*,
       else
         eReleased[c] = temp[c] * cp - ref_temp[c] * icp;
     }
-    setBC( eReleased, "cumulativeEnergyReleased", patch, m_sharedState,indx, new_dw );
+    setBC( eReleased, "cumulativeEnergyReleased", patch, m_sharedState,indx, new_dw, isNotInitialTimeStep );
 
     //__________________________________
     //  Dump out a header for the probe point files
@@ -592,7 +599,7 @@ void NonAdiabaticTable::computeSpecificHeat(CCVariable<double>& cv_new,
 
 //______________________________________________________________________
 void NonAdiabaticTable::scheduleComputeModelSources(SchedulerP& sched,
-						    const LevelP& level)
+                                                    const LevelP& level)
 {
   cout_doing << "ADIABATIC_TABLE::scheduleComputeModelSources " << endl;
   Task* t = scinew Task("NonAdiabaticTable::computeModelSources", 
@@ -602,6 +609,7 @@ void NonAdiabaticTable::scheduleComputeModelSources(SchedulerP& sched,
   Ghost::GhostType  gac = Ghost::AroundCells;
  
   //t->requires(Task::NewDW, d_scalar->diffusionCoefLabel, gac,1);
+  t->requires(Task::OldDW, Ilb->simulationTimeLabel);
   t->requires(Task::OldDW, Ilb->delTLabel,           level.get_rep());
   t->requires(Task::OldDW, d_scalar->scalar_CCLabel, gac,1); 
   t->requires(Task::OldDW, Ilb->rho_CCLabel,          gn);
@@ -630,14 +638,20 @@ void NonAdiabaticTable::scheduleComputeModelSources(SchedulerP& sched,
 
 //______________________________________________________________________
 void NonAdiabaticTable::computeModelSources(const ProcessorGroup*, 
-                                         const PatchSubset* patches,
-                                         const MaterialSubset* matls,
-                                         DataWarehouse* old_dw,
-                                         DataWarehouse* new_dw)
+                                            const PatchSubset* patches,
+                                            const MaterialSubset* matls,
+                                            DataWarehouse* old_dw,
+                                            DataWarehouse* new_dw)
 {
-  delt_vartype delT;
   const Level* level = getLevel(patches);
+
+  simTime_vartype simTimeVar;
+  old_dw->get(simTimeVar, Ilb->simulationTimeLabel);
+  double simTime = simTimeVar;
+
+  delt_vartype delT;
   old_dw->get(delT, Ilb->delTLabel, level);
+
   Ghost::GhostType gn = Ghost::None;
     
   for(int p=0;p<patches->size();p++){
@@ -795,10 +809,10 @@ void NonAdiabaticTable::computeModelSources(const ProcessorGroup*,
       //__________________________________
       //  dump out the probe points
       if (d_usingProbePts ) {
-        double time = m_sharedState->getElapsedSimTime();
+        // double simTime = m_sharedState->getElapsedSimTime();
         double nextDumpTime = oldProbeDumpTime + 1.0/d_probeFreq;
         
-        if (time >= nextDumpTime){        // is it time to dump the points
+        if (simTime >= nextDumpTime){        // is it time to dump the points
           FILE *fp;
           string udaDir = m_output->getOutputLocation();
           IntVector cell_indx;
@@ -808,11 +822,11 @@ void NonAdiabaticTable::computeModelSources(const ProcessorGroup*,
             if(patch->findCell(Point(d_probePts[i]),cell_indx) ) {
               string filename=udaDir + "/" + d_probePtsNames[i].c_str() + ".dat";
               fp = fopen(filename.c_str(), "a");
-              fprintf(fp, "%16.15E  %16.15E\n",time, f_old[cell_indx]);
+              fprintf(fp, "%16.15E  %16.15E\n", simTime, f_old[cell_indx]);
               fclose(fp);
             }
           }
-          oldProbeDumpTime = time;
+          oldProbeDumpTime = simTime;
         }  // time to dump
       } // if(probePts)  
       
@@ -904,7 +918,7 @@ void NonAdiabaticTable::testConservation(const ProcessorGroup*,
 }
 //__________________________________      
 void NonAdiabaticTable::scheduleComputeStableTimeStep(SchedulerP&,
-						      const LevelP&)
+                                                      const LevelP&)
 {
   // None necessary...
 }
@@ -913,6 +927,6 @@ void NonAdiabaticTable::scheduleComputeStableTimeStep(SchedulerP&,
 //______________________________________________________________________
 //
 void NonAdiabaticTable::scheduleErrorEstimate(const LevelP&,
-					      SchedulerP&)
+                                              SchedulerP&)
 {
 }

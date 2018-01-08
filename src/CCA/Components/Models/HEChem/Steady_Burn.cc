@@ -62,7 +62,7 @@ static DebugStream cout_doing("MODELS_DOING_COUT", false);
 const double Steady_Burn::EPSILON   = 1e-6;   /* stop epsilon for Bisection-Newton method */
 
 Steady_Burn::Steady_Burn(const ProcessorGroup* myworld, 
-			 const  SimulationStateP& sharedState,
+                         const  SimulationStateP& sharedState,
                          const ProblemSpecP& params,
                          const ProblemSpecP& prob_spec)
   : ModelInterface(myworld, sharedState),
@@ -107,7 +107,7 @@ Steady_Burn::~Steady_Burn(){
 
 //______________________________________________________________________
 void Steady_Burn::problemSetup(GridP&,
-			        const bool isRestart) {
+                                const bool isRestart) {
   ProblemSpecP SB_ps = d_params->findBlock("Steady_Burn");
   matl0 = m_sharedState->parseAndLookupMaterial(SB_ps, "fromMaterial");
   matl1 = m_sharedState->parseAndLookupMaterial(SB_ps, "toMaterial");  
@@ -186,7 +186,7 @@ void Steady_Burn::outputProblemSpec(ProblemSpecP& ps)
 }
 //______________________________________________________________________
 void Steady_Burn::scheduleInitialize(SchedulerP& sched,
-				     const LevelP& level){
+                                     const LevelP& level){
   printSchedule(level, cout_doing,"Steady_Burn::scheduleInitialize");
   
   Task* t = scinew Task("Steady_Burn::initialize", this, &Steady_Burn::initialize);                        
@@ -215,7 +215,7 @@ void Steady_Burn::initialize(const ProcessorGroup*,
 
 //______________________________________________________________________
 void Steady_Burn::scheduleComputeStableTimeStep(SchedulerP&,
-						const LevelP&){
+                                                const LevelP&){
   // None necessary...
 }
 
@@ -237,6 +237,7 @@ void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched,
 
   printSchedule(level, cout_doing,"Steady_Burn::scheduleComputeNumPPC");  
 
+  t1->requires(Task::OldDW, Ilb->timeStepLabel);
   t1->requires(Task::OldDW, Mlb->pXLabel,          react_matl, gn);
   t1->computes(numPPCLabel, react_matl);
 
@@ -260,6 +261,8 @@ void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched,
   
   Task::MaterialDomainSpec oms = Task::OutOfDomain;  //outside of mymatl set.
 
+  t->requires(Task::OldDW, Ilb->timeStepLabel );
+  t->requires(Task::OldDW, Ilb->delTLabel,         level.get_rep());
   t->requires(Task::OldDW, Ilb->temp_CCLabel,      all_matls_sub, oms, gac,1);
   t->requires(Task::NewDW, Ilb->vol_frac_CCLabel,  all_matls_sub, oms, gac,1);
   /*     Products     */
@@ -316,6 +319,11 @@ void Steady_Burn::computeNumPPC(const ProcessorGroup*,
                                 DataWarehouse* old_dw,
                                 DataWarehouse* new_dw)
 {
+  timeStep_vartype timeStep;
+  old_dw->get(timeStep, Ilb->timeStepLabel );
+
+  bool isNotInitialTimeStep = (timeStep > 0);
+
   int m0 = matl0->getDWIndex(); /* reactant material */
 
   /* Patch Iteration */
@@ -342,7 +350,7 @@ void Steady_Burn::computeNumPPC(const ProcessorGroup*,
       patch->findCell(px[idx],c);
       pFlag[c] += 1.0;
     }    
-    setBC(pFlag, "zeroNeumann", patch, m_sharedState, m0, new_dw);
+    setBC(pFlag, "zeroNeumann", patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
   }
  
 }
@@ -354,6 +362,11 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
                                       DataWarehouse* old_dw,
                                       DataWarehouse* new_dw)
 {
+  timeStep_vartype timeStep;
+  old_dw->get(timeStep, Ilb->timeStepLabel );
+
+  bool isNotInitialTimeStep = (timeStep > 0);
+
   delt_vartype delT;
   old_dw->get(delT, Ilb->delTLabel,getLevel(patches));
   
@@ -527,8 +540,8 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
     }  // cell iterator
 
     /*  set symetric BC  */
-    setBC(mass_src_0, "set_if_sym_BC",patch, m_sharedState, m0, new_dw);
-    setBC(mass_src_1, "set_if_sym_BC",patch, m_sharedState, m1, new_dw); 
+    setBC(mass_src_0, "set_if_sym_BC",patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
+    setBC(mass_src_1, "set_if_sym_BC",patch, m_sharedState, m1, new_dw, isNotInitialTimeStep); 
   }
   //__________________________________
   //save total quantities
@@ -543,12 +556,12 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
 }
 
 void Steady_Burn::scheduleErrorEstimate(const LevelP&,
-					SchedulerP&){
+                                        SchedulerP&){
   // Not implemented yet
 }
 
 void Steady_Burn::scheduleTestConservation(SchedulerP&,
-					   const PatchSet*){
+                                           const PatchSet*){
   // Not implemented yet
 }
 

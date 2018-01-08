@@ -64,7 +64,7 @@ using namespace std;
 static DebugStream cout_doing("MODELS_DOING_COUT", false);
 
 DDT0::DDT0(const ProcessorGroup* myworld,
-	   const SimulationStateP& sharedState,
+           const SimulationStateP& sharedState,
            const ProblemSpecP& params,
            const ProblemSpecP& prob_spec)              
   : ModelInterface(myworld, sharedState), d_params(params), d_prob_spec(prob_spec)
@@ -303,6 +303,7 @@ void DDT0::scheduleComputeModelSources(SchedulerP& sched,
   //__________________________________
   // Requires
   //__________________________________
+  t->requires(Task::OldDW, Ilb->timeStepLabel );
   t->requires(Task::OldDW, Ilb->delTLabel,        level.get_rep());
   t->requires(Task::OldDW, Ilb->temp_CCLabel,     ice_matls, oms, gn);
   t->requires(Task::NewDW, Ilb->temp_CCLabel,     mpm_matls, oms, gn);
@@ -363,6 +364,10 @@ void DDT0::computeModelSources(const ProcessorGroup*,
                                 DataWarehouse* old_dw,
                                 DataWarehouse* new_dw)
 {
+  timeStep_vartype timeStep;
+  old_dw->get(timeStep, Ilb->timeStepLabel );
+
+  bool isNotInitialTimeStep = (timeStep > 0);
 
   delt_vartype delT;
   const Level* level = getLevel(patches);
@@ -404,7 +409,7 @@ void DDT0::computeModelSources(const ProcessorGroup*,
  
     std::vector<constCCVariable<double> > vol_frac_CC(numAllMatls);
     std::vector<constCCVariable<double> > temp_CC(numAllMatls);
-	    
+            
     Vector dx = patch->dCell();
     double cell_vol = dx.x()*dx.y()*dx.z();
     Ghost::GhostType  gn  = Ghost::None;
@@ -635,10 +640,10 @@ void DDT0::computeModelSources(const ProcessorGroup*,
 
     //__________________________________
     //  set symetric BC
-    setBC(mass_src_0, "set_if_sym_BC",patch, m_sharedState, m0, new_dw);
-    setBC(mass_src_1, "set_if_sym_BC",patch, m_sharedState, m1, new_dw);
-    setBC(delF,       "set_if_sym_BC",patch, m_sharedState, m0, new_dw);  // I'm not sure you need these???? Todd
-    setBC(Fr,         "set_if_sym_BC",patch, m_sharedState, m0, new_dw);
+    setBC(mass_src_0, "set_if_sym_BC",patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
+    setBC(mass_src_1, "set_if_sym_BC",patch, m_sharedState, m1, new_dw, isNotInitialTimeStep);
+    setBC(delF,       "set_if_sym_BC",patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);  // I'm not sure you need these???? Todd
+    setBC(Fr,         "set_if_sym_BC",patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
   }
   //__________________________________
   //save total quantities
@@ -668,13 +673,13 @@ void DDT0::computeSpecificHeat(CCVariable<double>&,
 //______________________________________________________________________
 //
 void DDT0::scheduleErrorEstimate(const LevelP&,
-				 SchedulerP&)
+                                 SchedulerP&)
 {
   // Not implemented yet
 }
 //__________________________________
 void DDT0::scheduleTestConservation(SchedulerP&,
-				    const PatchSet*)                     
+                                    const PatchSet*)                     
 {
   // Not implemented yet
 }

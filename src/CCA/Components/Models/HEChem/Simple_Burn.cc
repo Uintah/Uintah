@@ -57,7 +57,7 @@ using namespace std;
 static DebugStream cout_doing("MODELS_DOING_COUT", false);
 
 Simple_Burn::Simple_Burn(const ProcessorGroup* myworld, 
-			 const SimulationStateP& sharedState,
+                         const SimulationStateP& sharedState,
                          const ProblemSpecP& params,
                          const ProblemSpecP& prob_spec)
   : ModelInterface(myworld, sharedState),
@@ -206,6 +206,7 @@ void Simple_Burn::scheduleComputeModelSources(SchedulerP& sched,
   t->requires(Task::OldDW, Ilb->temp_CCLabel,      all_matls_sub, oms, gac,1);
   t->requires(Task::NewDW, Ilb->vol_frac_CCLabel,  all_matls_sub, oms, gac,1);
 
+  t->requires( Task::OldDW, Ilb->timeStepLabel );
   t->requires( Task::OldDW, Ilb->delTLabel,       level.get_rep());
   //__________________________________
   // Products
@@ -255,6 +256,11 @@ void Simple_Burn::computeModelSources(const ProcessorGroup*,
                                          DataWarehouse* old_dw,
                                          DataWarehouse* new_dw)
 {
+  timeStep_vartype timeStep;
+  old_dw->get(timeStep, Ilb->timeStepLabel );
+
+  bool isNotInitialTimeStep = (timeStep > 0);
+
   delt_vartype delT;
   old_dw->get(delT, Ilb->delTLabel,getLevel(patches));
 
@@ -416,8 +422,8 @@ void Simple_Burn::computeModelSources(const ProcessorGroup*,
 
     //__________________________________
     //  set symetric BC
-    setBC(mass_src_0, "set_if_sym_BC",patch, m_sharedState, m0, new_dw);
-    setBC(mass_src_1, "set_if_sym_BC",patch, m_sharedState, m1, new_dw);
+    setBC(mass_src_0, "set_if_sym_BC",patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
+    setBC(mass_src_1, "set_if_sym_BC",patch, m_sharedState, m1, new_dw, isNotInitialTimeStep);
    
   }
   //__________________________________

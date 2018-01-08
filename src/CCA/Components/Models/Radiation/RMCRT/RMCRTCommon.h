@@ -223,7 +223,6 @@ namespace Uintah{
       Ghost::GhostType d_gn{Ghost::None};
       Ghost::GhostType d_gac{Ghost::AroundCells};
 
-      SimulationStateP m_sharedState;
       TypeDescription::Type d_FLT_DBL;              // Is algorithm based on doubles or floats
       
       static std::vector<IntVector> d_dbgCells;     // cells that we're interrogating when DEBUG is on

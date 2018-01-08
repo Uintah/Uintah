@@ -153,11 +153,9 @@ Ray::~Ray()
 void
 Ray::problemSetup( const ProblemSpecP& prob_spec,
                    const ProblemSpecP& rmcrtps,
-                   const GridP& grid,
+                   const GridP&        grid,
                    SimulationStateP&   sharedState)
 {
-
-  m_sharedState = sharedState;
   ProblemSpecP rmcrt_ps = rmcrtps;
   string rayDirSampleAlgo;
 
@@ -189,7 +187,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   if( rad_ps ) {
     d_radiometer = scinew Radiometer( d_FLT_DBL );
     bool getExtraInputs = false;
-    d_radiometer->problemSetup( prob_spec, rad_ps, grid, m_sharedState, getExtraInputs );
+    d_radiometer->problemSetup( prob_spec, rad_ps, grid, getExtraInputs );
   }
 
   //__________________________________
@@ -455,10 +453,26 @@ Ray::sched_rayTrace( const LevelP& level,
 
   if (Parallel::usingDevice()) {          // G P U
 
+    // Pass the time step in which is used to generate what should be
+    // a unique seed. But it is not, see RayGPUKernel.cu. 
+
+    // The reason a timestep is passed in is that Todd liked random
+    // numbers that are in a sense repeatable.  But the same could be
+    // accomplished with repeatable random numbers passed in.
+
+    // int timeStep = m_sharedState->getCurrentTopLevelTimeStep();
+
+    timeStep_vartype timeStepVar(0);
+    if( sched->get_dw(0) && sched->get_dw(0)->exists( m_timeStepLabel ) )
+      sched->get_dw(0)->get( timeStepVar, m_timeStepLabel );
+    else if( sched->get_dw(1) && sched->get_dw(1)->exists( m_timeStepLabel ) )
+      sched->get_dw(1)->get( timeStepVar, m_timeStepLabel );
+    int timeStep = timeStepVar;
+    
     if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ) {
-      tsk = scinew Task( taskname, this, &Ray::rayTraceGPU< double >,  modifies_divQ, m_sharedState, abskg_dw, sigma_dw, celltype_dw );
+      tsk = scinew Task( taskname, this, &Ray::rayTraceGPU< double >, modifies_divQ, timeStep, abskg_dw, sigma_dw, celltype_dw );
     } else {
-      tsk = scinew Task( taskname, this, &Ray::rayTraceGPU< float >,  modifies_divQ, m_sharedState, abskg_dw, sigma_dw, celltype_dw);
+      tsk = scinew Task( taskname, this, &Ray::rayTraceGPU< float >, modifies_divQ, timeStep, abskg_dw, sigma_dw, celltype_dw);
     }
     tsk->usesDevice(true);
   } else {                                // C P U
@@ -469,7 +483,7 @@ Ray::sched_rayTrace( const LevelP& level,
     }
   }
 
-  printSchedule(level,g_ray_dbg,"Ray::sched_rayTrace");
+  printSchedule(level, g_ray_dbg, taskname);
 
   //__________________________________
   // Require an infinite number of ghost cells so you can access the entire domain.
@@ -538,7 +552,7 @@ Ray::sched_rayTrace( const LevelP& level,
     tsk->computes( d_PPTimerLabel );
   }
   sched->overrideVariableBehavior(d_PPTimerLabel->getName(),
-				  false, false, true, true, true);
+                                  false, false, true, true, true);
 #endif
 
   sched->addTask( tsk, level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT );
@@ -832,13 +846,13 @@ Ray::rayTrace( const ProcessorGroup* pg,
     
     if (patch->getGridIndex() == 0) {
       cout << endl
-	   << " RMCRT REPORT: Patch 0" << endl
-	   << " Used " << timer().milliseconds()
-	   << " milliseconds of CPU time. \n" << endl // Convert time to ms
-	   << " Size: " << size << endl
-	   << " Efficiency: " << size / timer().seconds()
-	   << " steps per sec" << endl
-	   << endl;
+           << " RMCRT REPORT: Patch 0" << endl
+           << " Used " << timer().milliseconds()
+           << " milliseconds of CPU time. \n" << endl // Convert time to ms
+           << " Size: " << size << endl
+           << " Efficiency: " << size / timer().seconds()
+           << " steps per sec" << endl
+           << endl;
     }
 #ifdef USE_TIMER    
     PerPatch< double > ppTimer = timer().seconds();
@@ -876,10 +890,19 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
   if (Parallel::usingDevice()) {          // G P U
     taskname = "Ray::rayTraceDataOnionGPU";
 
+    // int timeStep = m_sharedState->getCurrentTopLevelTimeStep();
+
+    timeStep_vartype timeStepVar(0);
+    if( sched->get_dw(0) && sched->get_dw(0)->exists( m_timeStepLabel ) )
+      sched->get_dw(0)->get( timeStepVar, m_timeStepLabel );
+    else if( sched->get_dw(1) && sched->get_dw(1)->exists( m_timeStepLabel ) )
+      sched->get_dw(1)->get( timeStepVar, m_timeStepLabel );
+    int timeStep = timeStepVar;
+    
     if (RMCRTCommon::d_FLT_DBL == TypeDescription::double_type) {
-      tsk = scinew Task(taskname, this, &Ray::rayTraceDataOnionGPU<double>, modifies_divQ, m_sharedState, NotUsed, sigma_dw, celltype_dw);
+      tsk = scinew Task(taskname, this, &Ray::rayTraceDataOnionGPU<double>, modifies_divQ, timeStep, NotUsed, sigma_dw, celltype_dw);
     } else {
-      tsk = scinew Task(taskname, this, &Ray::rayTraceDataOnionGPU<float>, modifies_divQ, m_sharedState, NotUsed, sigma_dw, celltype_dw);
+      tsk = scinew Task(taskname, this, &Ray::rayTraceDataOnionGPU<float>, modifies_divQ, timeStep, NotUsed, sigma_dw, celltype_dw);
     }
     //Allow it to use up to 4 GPU streams per patch.
     tsk->usesDevice(true, 4);
@@ -970,11 +993,10 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
     tsk->computes( d_PPTimerLabel );
   }
   sched->overrideVariableBehavior(d_PPTimerLabel->getName(),
-				  false, false, true, true, true);
+                                  false, false, true, true, true);
 #endif
                                 
   sched->addTask( tsk, level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT );
-
 }
 
 
@@ -1286,14 +1308,14 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
     
     if (finePatch->getGridIndex() == levelPatchID) {
       cout << endl
-	   << " RMCRT REPORT: Patch " << levelPatchID << endl
-	   << " Used "<< timer().milliseconds()
-	   << " milliseconds of CPU time. \n" << endl // Convert time to ms
-	   << " nRaySteps: " << nRaySteps
-	   << " nFluxRaySteps: " << nFluxRaySteps << endl
-	   << " Efficiency: " << nRaySteps / timer().seconds()
-	   << " steps per sec" << endl
-	   << endl;
+           << " RMCRT REPORT: Patch " << levelPatchID << endl
+           << " Used "<< timer().milliseconds()
+           << " milliseconds of CPU time. \n" << endl // Convert time to ms
+           << " nRaySteps: " << nRaySteps
+           << " nFluxRaySteps: " << nFluxRaySteps << endl
+           << " Efficiency: " << nRaySteps / timer().seconds()
+           << " steps per sec" << endl
+           << endl;
     }
 
 #ifdef USE_TIMER     

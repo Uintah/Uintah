@@ -58,7 +58,7 @@ static DebugStream cout_doing("MODELS_DOING_COUT", false);
 static DebugStream cout_dbg("PASSIVE_SCALAR_DBG_COUT", false);
 //______________________________________________________________________
 PassiveScalar::PassiveScalar(const ProcessorGroup* myworld, 
-			     const SimulationStateP& sharedState,
+                             const SimulationStateP& sharedState,
                              const ProblemSpecP& params)
   : FluidsBasedModel(myworld, sharedState), d_params(params)
 {
@@ -178,8 +178,8 @@ void PassiveScalar::problemSetup(GridP&, const bool isRestart)
   Slb->sum_scalar_fLabel      =     VarLabel::create("sum_scalar_f",    sum_vartype::getTypeDescription());
   
   registerTransportedVariable(d_matl_set,
-			      d_scalar->scalar_CCLabel,
-			      d_scalar->scalar_source_CCLabel);  
+                              d_scalar->scalar_CCLabel,
+                              d_scalar->scalar_source_CCLabel);  
 
   //__________________________________
   //  register the AMRrefluxing variables                               
@@ -308,6 +308,7 @@ void PassiveScalar::scheduleInitialize(SchedulerP& sched,
   Task* t = scinew Task("PassiveScalar::initialize", 
                   this, &PassiveScalar::initialize);
   
+  t->requires(Task::NewDW, Ilb->timeStepLabel );
   t->computes(d_scalar->scalar_CCLabel);
   
   sched->addTask(t, level->eachPatch(), d_matl_set);
@@ -320,6 +321,11 @@ void PassiveScalar::initialize(const ProcessorGroup*,
                                DataWarehouse*,
                                DataWarehouse* new_dw)
 {
+  timeStep_vartype timeStep;
+  new_dw->get(timeStep, VarLabel::find( timeStep_name) );
+
+  bool isNotInitialTimeStep = (timeStep > 0);
+
   cout_doing << "Doing Initialize \t\t\t\t\tPASSIVE_SCALAR" << endl;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -457,7 +463,7 @@ void PassiveScalar::initialize(const ProcessorGroup*,
         }
       }  // sinusoidal Initialize  
     } // regions
-    setBC(f,"scalar-f", patch, m_sharedState,indx, new_dw);
+    setBC(f,"scalar-f", patch, m_sharedState,indx, new_dw, isNotInitialTimeStep); 
   }  // patches
 }
 

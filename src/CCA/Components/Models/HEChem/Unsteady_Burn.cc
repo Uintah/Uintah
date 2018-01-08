@@ -64,7 +64,7 @@ const double Unsteady_Burn::INIT_TS   = 300.0;  /* initial surface temperature  
 const double Unsteady_Burn::INIT_BETA = 1.0e12; /* initial surface temperature gradient */
 
 Unsteady_Burn::Unsteady_Burn(const ProcessorGroup* myworld, 
-			     const  SimulationStateP& sharedState,
+                             const  SimulationStateP& sharedState,
                              const ProblemSpecP& params,
                              const ProblemSpecP& prob_spec)
   : ModelInterface(myworld, sharedState),
@@ -198,7 +198,7 @@ void Unsteady_Burn::outputProblemSpec(ProblemSpecP& ps)
 //______________________________________________________________________
 //
 void Unsteady_Burn::scheduleInitialize(SchedulerP& sched,
-				       const LevelP& level){
+                                       const LevelP& level){
   
   printSchedule(level,cout_doing,"Unsteady_Burn::scheduleInitialize");
   Task* t = scinew Task("Unsteady_Burn::initialize", this, &Unsteady_Burn::initialize);                        
@@ -250,7 +250,7 @@ void Unsteady_Burn::initialize(const ProcessorGroup*,
 
 
 void Unsteady_Burn::scheduleComputeStableTimeStep(SchedulerP&,
-						  const LevelP&){
+                                                  const LevelP&){
   // None necessary...
 }
 
@@ -282,6 +282,7 @@ void Unsteady_Burn::scheduleComputeModelSources(SchedulerP& sched,
     const MaterialSubset* ice_matls = m_sharedState->allICEMaterials()->getUnion();
     const MaterialSubset* mpm_matls = m_sharedState->allMPMMaterials()->getUnion();
   */
+  t->requires(Task::OldDW, Ilb->timeStepLabel );
   t->requires(Task::OldDW, Ilb->delTLabel,        level.get_rep());
   t->requires(Task::OldDW, Ilb->temp_CCLabel,     gac,1);
   t->requires(Task::NewDW, Ilb->vol_frac_CCLabel, gac,1);
@@ -346,6 +347,11 @@ void Unsteady_Burn::computeModelSources(const ProcessorGroup*,
                                       DataWarehouse* old_dw,
                                       DataWarehouse* new_dw){
   
+  timeStep_vartype timeStep;
+  old_dw->get(timeStep, Ilb->timeStepLabel );
+
+  bool isNotInitialTimeStep = (timeStep > 0);
+
   delt_vartype delT;
   old_dw->get(delT, Ilb->delTLabel,getLevel(patches));
   
@@ -459,7 +465,7 @@ void Unsteady_Burn::computeModelSources(const ProcessorGroup*,
       patch->findCell(px_gac[idx],c);
       pFlag[c] += 1.0;
     }
-    setBC(pFlag, "zeroNeumann", patch, m_sharedState, m0, new_dw);
+    setBC(pFlag, "zeroNeumann", patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
 
     /* Initialize Cell-Centered Ts and Beta with OLD Particle-Centered beta value, 
        The CC Beta takes the largest Particle-Centered Beta in the cell which
@@ -615,12 +621,12 @@ void Unsteady_Burn::computeModelSources(const ProcessorGroup*,
     }
 
     /*  set symetric BC  */
-    setBC(mass_src_0, "set_if_sym_BC", patch, m_sharedState, m0, new_dw);
-    setBC(mass_src_1, "set_if_sym_BC", patch, m_sharedState, m1, new_dw);
+    setBC(mass_src_0, "set_if_sym_BC", patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
+    setBC(mass_src_1, "set_if_sym_BC", patch, m_sharedState, m1, new_dw, isNotInitialTimeStep);
 
-    setBC(NewBurningCell, "set_if_sym_BC", patch, m_sharedState, m0, new_dw);
-    setBC(NewTs,          "set_if_sym_BC", patch, m_sharedState, m0, new_dw);
-    setBC(NewBeta,        "set_if_sym_BC", patch, m_sharedState, m0, new_dw); 
+    setBC(NewBurningCell, "set_if_sym_BC", patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
+    setBC(NewTs,          "set_if_sym_BC", patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
+    setBC(NewBeta,        "set_if_sym_BC", patch, m_sharedState, m0, new_dw, isNotInitialTimeStep); 
   }
   //__________________________________
   //save total quantities
@@ -633,12 +639,12 @@ void Unsteady_Burn::computeModelSources(const ProcessorGroup*,
 }
 
 void Unsteady_Burn::scheduleErrorEstimate(const LevelP&,
-					  SchedulerP&){
+                                          SchedulerP&){
   // Not implemented yet
 }
 
 void Unsteady_Burn::scheduleTestConservation(SchedulerP&,
-					     const PatchSet*){
+                                             const PatchSet*){
   // Not implemented yet
 }
 
