@@ -643,7 +643,11 @@ TaskGraph::remembercomps( DetailedTask     * task
   constHandle<PatchSubset> cached_patches;
 
   for (; comp != nullptr; comp = comp->m_next) {
-    if (comp->m_var->typeDescription()->isReductionVariable()) {
+    TypeDescription::Type vartype = comp->m_var->typeDescription()->getType();
+
+    // ARS - Treat sole vars the same as reduction vars??
+    if (vartype == TypeDescription::ReductionVariable ||
+	vartype == TypeDescription::SoleVariable) {
       // this is either the task computing the var, modifying it, or the reduction itself
       ct.remembercomp(task, comp, nullptr, comp->m_matls, m_proc_group);
     }
@@ -736,8 +740,14 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
   for (; req != nullptr; req = req->m_next) {
 
     // TODO figure if we need this, otherwise delete it - APH 06/30/17
+
+    // ARS reduction vars seem be handled below with type checks. I
+    // would say it is not not needed.
+    
 //    if(req->m_var->typeDescription()->isReductionVariable())
 //      continue;
+
+    // ARS - Should Reduction and Sole variables be treated the same??
 
     if (m_scheduler->isOldDW(req->mapDataWarehouse()) && !m_scheduler->isNewDW(req->mapDataWarehouse() + 1)) {
       continue;
@@ -746,10 +756,17 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
     DOUT(detaileddbg, "Rank-" << my_rank << "  req: " << *req);
 
     constHandle<PatchSubset> patches = req->getPatchesUnderDomain(dtask->d_patches);
-    if (req->m_var->typeDescription()->isReductionVariable() && m_scheduler->isNewDW(req->mapDataWarehouse())) {
+
+    TypeDescription::Type vartype = req->m_var->typeDescription()->getType();
+
+    // ARS - Treat sole vars the same as reduction vars??
+    if ((vartype == TypeDescription::ReductionVariable ||
+	 vartype == TypeDescription::SoleVariable) &&
+	m_scheduler->isNewDW(req->mapDataWarehouse())) {
       // make sure newdw reduction variable requires link up to the reduction tasks.
       patches = nullptr;
     }
+
     constHandle<MaterialSubset> matls = req->getMaterialsUnderDomain(dtask->d_matls);
 
     bool uses_SHRT_MAX = (req->m_num_ghost_cells == SHRT_MAX);
@@ -821,16 +838,11 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
       }
     }
 
-    // ARS - FIX ME
-    // if (patches)
-    //   std::cerr << " patches  " << patches->size() << std::endl;
-
-    // if( matls )
-    //   std::cerr << " matls  " << matls->size() << std::endl;
-
     if (patches && !patches->empty() && matls && !matls->empty()) {
 
-      if (req->m_var->typeDescription()->isReductionVariable()) {
+      // ARS - Treat sole vars the same as reduction vars??
+      if (vartype == TypeDescription::ReductionVariable ||
+	  vartype == TypeDescription::SoleVariable) {
         continue;
       }
 
@@ -985,7 +997,8 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
               DetailedTask* creator = nullptr;
               Task::Dependency* comp = nullptr;
 
-              // look in old dw or in old TG.  Legal to modify across TG boundaries
+              // look in old dw or in old TG.  Legal to modify across
+              // TG boundaries
               int proc = -1;
               if (m_scheduler->isOldDW(req->mapDataWarehouse())) {
                 ASSERT(!modifies);
@@ -997,15 +1010,18 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
 
                 if (!ct.findcomp(req, neighbor, matl, creator, comp, m_proc_group)) {
                   if (m_type == Scheduler::IntermediateTaskGraph && req->m_look_in_old_tg) {
-                    // same stuff as above - but do the check for findcomp first, as this is a "if you don't find it here, assign it
-                    // from the old TG" dependency
+                    // same stuff as above - but do the check for
+                    // findcomp first, as this is a "if you don't find
+                    // it here, assign it from the old TG" dependency
                     proc = findVariableLocation(req, fromNeighbor, matl, 0);
                     creator = m_detailed_tasks->getOldDWSendTask(proc);
                     comp = nullptr;
                   }
                   else {
 
-                    //if neither the patch or the neighbor are on this processor then the computing task doesn't exist so just continue
+                    //if neither the patch or the neighbor are on this
+                    //processor then the computing task doesn't exist
+                    //so just continue
                     if (m_load_balancer->getPatchwiseProcessorAssignment(patch)    != my_rank &&
                         m_load_balancer->getPatchwiseProcessorAssignment(neighbor) != my_rank) {
                       continue;
@@ -1025,13 +1041,15 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
 
               if (modifies && comp) {  // comp means NOT send-old-data tasks
 
-                // find the tasks that up to this point require the variable
-                // that we are modifying (i.e., the ones that use the computed
-                // variable before we modify it), and put a dependency between
-                // those tasks and this tasks
-                // i.e., the task that requires data computed by a task on this processor
-                // needs to finish its task before this task, which modifies the data
-                // computed by the same task
+                // find the tasks that up to this point require the
+                // variable that we are modifying (i.e., the ones that
+                // use the computed variable before we modify it), and
+                // put a dependency between those tasks and this tasks
+
+                // i.e., the task that requires data computed by a
+                // task on this processor needs to finish its task
+                // before this task, which modifies the data computed
+                // by the same task
                 std::list<DetailedTask*> requireBeforeModifiedTasks;
                 creator->findRequiringTasks(req->m_var, requireBeforeModifiedTasks);
 
@@ -1253,12 +1271,17 @@ TaskGraph::makeVarLabelMaterialMap( Scheduler::VarLabelMaterialMap * result )
       const VarLabel* label = comp->m_var;
       std::list<int>& matls = (*result)[label->getName()];
       const MaterialSubset* msubset = comp->m_matls;
+
+      TypeDescription::Type vartype = label->typeDescription()->getType();
+
       if (msubset) {
         for (int mm = 0; mm < msubset->size(); mm++) {
           matls.push_back(msubset->get(mm));
         }
       }
-      else if (label->typeDescription()->getType() == TypeDescription::ReductionVariable) {
+      // ARS - Treat sole vars the same as reduction vars??
+      else if (vartype == TypeDescription::ReductionVariable /* ||
+								vartype == TypeDescription::SoleVariable */) {      
         // Default to material -1 (global)
         matls.push_back(-1);
       }
@@ -1290,8 +1313,21 @@ CompTable::remembercomp( Data* newData, const ProcessorGroup* pg )
     DOUT(true,message.str());
   }
 
+  TypeDescription::Type vartype = newData->m_comp->m_var->typeDescription()->getType();
+  
   // can't have two computes for the same variable (need modifies)
-  if (newData->m_comp->m_dep_type != Task::Modifies && !newData->m_comp->m_var->typeDescription()->isReductionVariable()) {
+
+  // ARS A VarLabel can have the following condition added:
+  // allowMultipleComputes that allows multiple computes. As such why
+  // do we check specifically for a ReductionVariable var and skip it?
+  // Seems like we should use the conditional that is part of the
+  // label to skip.
+
+  
+  // ARS - Treat sole vars the same as reduction vars??
+  if (newData->m_comp->m_dep_type != Task::Modifies &&
+      vartype != TypeDescription::ReductionVariable /* &&
+						       vartype != TypeDescription::SoleVariable*/ ) {
     if (m_data.lookup(newData)) {
       std::cout << "Multiple compute found:\n";
       std::cout << "  matl: " << newData->m_matl << "\n";
