@@ -393,6 +393,7 @@ void DynamicModel::scheduleComputeVariance(SchedulerP& sched,
       Task* task = scinew Task("DynamicModel::computeVariance",this, 
                                &DynamicModel::computeVariance, s);
                                
+      task->requires(Task::OldDW, VarLabel::find( timeStep_name) );
       task->requires(Task::OldDW, s->scalar, Ghost::AroundCells, 1);
       task->computes(s->scalarVariance);
       sched->addTask(task, patches, s->matl_set);
@@ -408,6 +409,11 @@ void DynamicModel::computeVariance(const ProcessorGroup*,
                                    DataWarehouse* new_dw,
                                    FilterScalar* s)
 {
+  timeStep_vartype timeStep;
+  old_dw->get(timeStep, VarLabel::find( timeStep_name) );
+
+  bool isNotInitialTimeStep = (timeStep > 0);
+
   cout_doing << "Doing computeVariance "<< "\t\t\t DynamicModel" << endl;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -443,7 +449,7 @@ void DynamicModel::computeVariance(const ProcessorGroup*,
       }
       
       // I'm not sure if this is correct --Todd
-      setBC(fvar,s->scalarVariance->getName(),patch, d_sharedState, matl, new_dw);
+      setBC(fvar,s->scalarVariance->getName(),patch, d_sharedState, matl, new_dw, isNotInitialTimeStep);
     }
   }
 }

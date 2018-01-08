@@ -55,6 +55,7 @@ namespace Uintah {
     constCCVariable<double> press_CC;
     constCCVariable<double> rho_CC;
     std::string where;
+    double simTime;
     double delT;
   };
   //____________________________________________________________
@@ -139,8 +140,9 @@ namespace Uintah {
   double A     = gv->A;
   double omega = gv->omega;
   Vector vel_ref=gv->vel_ref;                                
-  double t     = sharedState->getElapsedSimTime();                         
-  t += lv->delT;     
+  double t     = lv->simTime + lv->delT;
+  // double t       = sharedState->getElapsedSimTime(); 
+  // t += lv->delT;     
   double change =   A * sin(omega*t);
                                              
   for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {  

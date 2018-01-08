@@ -164,6 +164,7 @@ void Smagorinsky_Model::scheduleComputeVariance(SchedulerP& sched,
       Task* task = scinew Task("Smagorinsky_Model::computeVariance",this, 
                                &Smagorinsky_Model::computeVariance, s);
                                
+      task->requires(Task::OldDW, VarLabel::find( timeStep_name) );
       task->requires(Task::OldDW, s->scalar, Ghost::AroundCells, 1);
       task->computes(s->scalarVariance);
       sched->addTask(task, patches, s->matl_set);
@@ -179,6 +180,11 @@ void Smagorinsky_Model::computeVariance(const ProcessorGroup*,
                                         DataWarehouse* new_dw,
                                         FilterScalar* s)
 {
+  timeStep_vartype timeStep;
+  old_dw->get(timeStep, VarLabel::find( timeStep_name) );
+
+  bool isNotInitialTimeStep = (timeStep > 0);
+
   cout_doing << "Doing computeVariance "<< "\t\t\t Smagorinsky_Model" << endl;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -211,7 +217,7 @@ void Smagorinsky_Model::computeVariance(const ProcessorGroup*,
         df *= inv_dx;
         fvar[c] = scale * df.length2();
       }
-      setBC(fvar,s->scalarVariance->getName(),patch, d_sharedState, matl, new_dw);
+      setBC(fvar,s->scalarVariance->getName(),patch, d_sharedState, matl, new_dw, isNotInitialTimeStep);
     }
   }
 }

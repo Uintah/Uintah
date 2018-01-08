@@ -192,8 +192,9 @@ int set_MMS_Velocity_BC(const Patch* patch,
     if(bc_kind == "MMS_1") {
       double nu = gv->viscosity;
       double A =  gv->A;
-      double t  = sharedState->getElapsedSimTime();
-      t += lv->delT;
+      double t = lv->simTime + lv->delT;
+      // double t  = sharedState->getElapsedSimTime();
+      // t += lv->delT;
       
       for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
         IntVector c = *bound_ptr;
@@ -271,9 +272,10 @@ int set_MMS_press_BC(const Patch* patch,
   if(bc_kind == "MMS_1") {
     double nu = gv->viscosity;
     double A =  gv->A;
-    double t =  sharedState->getElapsedSimTime();
+    double t = lv->simTime + lv->delT;
+    // double t =  sharedState->getElapsedSimTime();
+    // t += lv->delT;
     double p_ref = 101325;
-    t += lv->delT;
 
     for (bound_ptr.reset(); !bound_ptr.done();bound_ptr++) {
       IntVector c = *bound_ptr;

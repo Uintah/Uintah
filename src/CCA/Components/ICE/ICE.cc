@@ -59,8 +59,9 @@
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Task.h>
-#include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/SoleVariable.h>
+#include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/BoundaryConditions/BCUtils.h>
 
 #include <Core/Exceptions/ParameterNotFound.h>
@@ -109,7 +110,7 @@ static DebugStream ds_EqPress("DBG_EqPress",false);
 
 
 ICE::ICE(const ProcessorGroup* myworld,
-	 const SimulationStateP sharedState) :
+         const SimulationStateP sharedState) :
   ApplicationCommon(myworld, sharedState)
 {
   lb   = scinew ICELabel();
@@ -205,7 +206,7 @@ ICE::~ICE()
   //__________________________________
   // MODELS
   for(vector<ModelInterface*>::iterator m_iter  = d_models.begin();
-	                                m_iter != d_models.end(); m_iter++){
+                                        m_iter != d_models.end(); m_iter++){
     ModelInterface* model = *m_iter;
     model->releaseComponents();
     delete model;
@@ -261,7 +262,7 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
   ProblemSpecP cfd_ps = prob_spec->findBlock("CFD");
 
   if(!cfd_ps){
-    throw ProblemSetupException(                                                                    
+    throw ProblemSetupException(
      "\n Could not find the <CFD> section in the input file\n",__FILE__, __LINE__);    
   }
 
@@ -269,10 +270,9 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
   
   ProblemSpecP cfd_ice_ps = cfd_ps->findBlock("ICE");
   if(!cfd_ice_ps){
-    throw ProblemSetupException(                                                                    
+    throw ProblemSetupException(
      "\n Could not find the <CFD> <ICE> section in the input file\n",__FILE__, __LINE__);    
   }
-   
   
   cfd_ice_ps->get("max_iteration_equilibration",d_max_iter_equilibration);
   cfd_ice_ps->get("ClampSpecificVolume",        d_clampSpecificVolume);
@@ -301,7 +301,7 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
     d_delT_knob = 0.5;      // default value when running implicit
     d_solver_parameters = m_solver->readParameters(impSolver, 
                                                    "implicitPressure",
-						   m_sharedState);
+                                                   m_sharedState);
     d_solver_parameters->setSolveOnExtraCells(false);
     d_solver_parameters->setRestartTimestepOnFailure(true);
     impSolver->require("max_outer_iterations",      d_max_iter_implicit);
@@ -325,6 +325,10 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
     // bulletproofing
     double tol;
     ProblemSpecP p = impSolver->findBlock("Parameters");
+    if(!p){
+      throw ProblemSetupException("\n Could not find the <Parameters> section in the input file\n",__FILE__, __LINE__);    
+    }
+
     p->get("tolerance",tol);
     if(tol>= d_outer_iter_tolerance){
       ostringstream msg;
@@ -371,8 +375,16 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
     isRestart=true;
     mat_ps = restart_prob_spec->findBlockWithOutAttribute("MaterialProperties");
   }
+
+  if(!mat_ps){
+    throw ProblemSetupException("\n Could not find the <MaterialProperties> section in the input file\n",__FILE__, __LINE__);    
+  }
   
   ProblemSpecP ice_mat_ps = mat_ps->findBlock("ICE");  
+
+  if(!ice_mat_ps){
+    throw ProblemSetupException("\n Could not find the <ICE> <MaterialProperties> section in the input file\n",__FILE__, __LINE__);    
+  }
 
   for( ProblemSpecP ps = ice_mat_ps->findBlock("material"); ps != nullptr; ps = ps->findNextBlock("material") ) {
     string index("");
@@ -491,6 +503,10 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
     orig_or_restart_ps = restart_prob_spec;
   }  
 
+  if(!orig_or_restart_ps){
+    throw ProblemSetupException("\n Could not find the <MaterialProperties> section in the input file\n",__FILE__, __LINE__);    
+  }
+
   ProblemSpecP model_spec = orig_or_restart_ps->findBlock("Models");
 
   if(model_spec) {
@@ -501,18 +517,18 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
     // Also each application manages its own models. As such, they
     // probably do not need to be regenerated after a switch.
     for(vector<ModelInterface*>::iterator m_iter  = d_models.begin();
-  	                                  m_iter != d_models.end(); m_iter++){
+                                          m_iter != d_models.end(); m_iter++){
       ModelInterface* model = *m_iter;
       model->releaseComponents();
       delete model;
     }
 
     d_models = ModelFactory::makeModels(d_myworld, m_sharedState,
-					orig_or_restart_ps, prob_spec);
+                                        orig_or_restart_ps, prob_spec);
 
     // problem setup for each model  
     for(vector<ModelInterface*>::iterator m_iter  = d_models.begin();
-	                                  m_iter != d_models.end(); m_iter++){
+                                          m_iter != d_models.end(); m_iter++){
       ModelInterface* model = *m_iter;
       model->setComponents( dynamic_cast<ApplicationInterface*>( this ) );
       model->problemSetup(grid, isRestart);
@@ -535,14 +551,14 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
       FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( *m_iter );
 
       if( fb_model && fb_model->d_trans_vars.size()){
-	vector<TransportedVariable*>::iterator t_iter;
-	for(t_iter  = fb_model->d_trans_vars.begin();
-	    t_iter != fb_model->d_trans_vars.end(); t_iter++){
-	  TransportedVariable* tvar = *t_iter;
-	  
-	  string Labelname = tvar->var->getName();
-	  is_BC_specified(prob_spec, Labelname, tvar->matls);
-	}
+        vector<TransportedVariable*>::iterator t_iter;
+        for(t_iter  = fb_model->d_trans_vars.begin();
+            t_iter != fb_model->d_trans_vars.end(); t_iter++){
+          TransportedVariable* tvar = *t_iter;
+          
+          string Labelname = tvar->var->getName();
+          is_BC_specified(prob_spec, Labelname, tvar->matls);
+        }
       }
     }
   }
@@ -551,15 +567,15 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
   //  Set up data analysis modules
   if(!d_with_mpm){
     d_analysisModules = AnalysisModuleFactory::create(d_myworld,
-						      m_sharedState,
-						      prob_spec);
+                                                      m_sharedState,
+                                                      prob_spec);
 
     if( d_analysisModules.size() != 0 ) {
 
       vector<AnalysisModule*>::iterator iter;
       for( iter  = d_analysisModules.begin(); iter != d_analysisModules.end(); iter++) {
         AnalysisModule* am = *iter;
-	am->setComponents( dynamic_cast<ApplicationInterface*>( this ) );
+        am->setComponents( dynamic_cast<ApplicationInterface*>( this ) );
         am->problemSetup(prob_spec, restart_prob_spec, grid);
       }
     }
@@ -732,6 +748,8 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
 
   Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
   
+  t->requires(Task::NewDW, lb->timeStepLabel);
+  
   t->computes(lb->vel_CCLabel);
   t->computes(lb->rho_CCLabel); 
   t->computes(lb->temp_CCLabel);
@@ -763,7 +781,7 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
   // Models Initialization
   if(d_models.size() != 0){
     for(vector<ModelInterface*>::iterator m_iter  = d_models.begin();
-	                                  m_iter != d_models.end(); m_iter++){
+                                          m_iter != d_models.end(); m_iter++){
       ModelInterface* model = *m_iter;
       model->scheduleInitialize(sched, level);
     }
@@ -840,7 +858,6 @@ void ICE::restartInitialize()
     if(ice_matl->getViscosity() > 0.0){
       d_viscousFlow = true;
     }
-    
   }
   
   //__________________________________
@@ -887,7 +904,7 @@ void ICE::scheduleComputeStableTimeStep(const LevelP& level,
   //  If model needs to further restrict the timestep
   if(d_models.size() != 0){
     for(vector<ModelInterface*>::iterator m_iter  = d_models.begin();
-	                                  m_iter != d_models.end(); m_iter++){
+                                          m_iter != d_models.end(); m_iter++){
       ModelInterface* model = *m_iter;
       model->scheduleComputeStableTimeStep(sched, level);
     }
@@ -1031,7 +1048,7 @@ ICE::scheduleFinalizeTimestep( const LevelP& level, SchedulerP& sched)
 
 
   scheduleConservedtoPrimitive_Vars( sched, patches, ice_matls_sub,
-				     all_matls, "finalizeTimestep");
+                                     all_matls, "finalizeTimestep");
 
   cout_doing << "---------------------------------------------------------"<<endl;
 }
@@ -1097,7 +1114,7 @@ void ICE::scheduleComputeThermoTransportProperties(SchedulerP& sched,
   //  Each model *can* modify the properties
   if(d_models.size() != 0){
     for(vector<ModelInterface*>::iterator m_iter  = d_models.begin();
-	                                  m_iter != d_models.end(); m_iter++){
+                                          m_iter != d_models.end(); m_iter++){
       ModelInterface* model = *m_iter;
       if(model->computesThermoTransportProps() ) {
          model->scheduleModifyThermoTransportProperties(sched,level,ice_matls);
@@ -1138,6 +1155,8 @@ void ICE::scheduleComputePressure(SchedulerP& sched,
 
   Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
   Ghost::GhostType  gn = Ghost::None;
+  t->requires(Task::OldDW,lb->timeStepLabel);
+  t->requires(Task::OldDW,lb->simulationTimeLabel);
   t->requires(Task::OldDW,lb->delTLabel, getLevel(patches));  
   t->requires(Task::OldDW,lb->press_CCLabel, press_matl, oims, gn);
   t->requires(Task::OldDW,lb->rho_CCLabel,               gn);
@@ -1271,6 +1290,8 @@ void ICE::scheduleAddExchangeContributionToFCVel(SchedulerP& sched,
     pNewDW  = Task::ParentNewDW;
   }  
   
+  task->requires(Task::OldDW,lb->simulationTimeLabel);
+  task->requires(Task::OldDW,lb->delTLabel, getLevel(patches));  
   task->requires(pNewDW,     lb->sp_vol_CCLabel,    /*all_matls*/gac,1);
   task->requires(pNewDW,     lb->vol_frac_CCLabel,  /*all_matls*/gac,1);
   task->requires(Task::NewDW,lb->uvel_FCLabel,      /*all_matls*/gac,2);
@@ -1314,19 +1335,19 @@ void ICE::scheduleComputeModelSources(SchedulerP& sched,
     //__________________________________
     // Model with transported variables.
     for(vector<ModelInterface*>::iterator m_iter  = d_models.begin();
-	                                  m_iter != d_models.end(); m_iter++){
+                                          m_iter != d_models.end(); m_iter++){
       FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( *m_iter );
 
       if( fb_model && fb_model->d_trans_vars.size() ){
-	vector<TransportedVariable*>::iterator t_iter;
-	for(t_iter  = fb_model->d_trans_vars.begin();
-	    t_iter != fb_model->d_trans_vars.end(); t_iter++){
-	  TransportedVariable* tvar = *t_iter;
+        vector<TransportedVariable*>::iterator t_iter;
+        for(t_iter  = fb_model->d_trans_vars.begin();
+            t_iter != fb_model->d_trans_vars.end(); t_iter++){
+          TransportedVariable* tvar = *t_iter;
 
-	  if(tvar->src){
-	    task->computes(tvar->src, tvar->matls);
-	  }
-	}
+          if(tvar->src){
+            task->computes(tvar->src, tvar->matls);
+          }
+        }
       }
     }
 
@@ -1335,7 +1356,7 @@ void ICE::scheduleComputeModelSources(SchedulerP& sched,
     //__________________________________
     //  Models *can* compute their resources
     for(vector<ModelInterface*>::iterator m_iter  = d_models.begin();
-	                                  m_iter != d_models.end(); m_iter++){
+                                          m_iter != d_models.end(); m_iter++){
       ModelInterface* model = *m_iter;
       model->scheduleComputeModelSources(sched, level);
     }
@@ -1389,6 +1410,8 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gn = Ghost::None;  
   Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
+  task->requires( Task::OldDW, lb->timeStepLabel);
+  task->requires( Task::OldDW, lb->simulationTimeLabel);
   task->requires( Task::OldDW, lb->delTLabel,getLevel(patches));   
   task->requires( Task::NewDW, lb->vol_frac_CCLabel,   gac,2);
   task->requires( Task::NewDW, lb->uvel_FCMELabel,     gac,2);
@@ -1579,13 +1602,12 @@ void ICE::scheduleAccumulateEnergySourceSinks(SchedulerP& sched,
 
   t = scinew Task("ICE::accumulateEnergySourceSinks",
             this, &ICE::accumulateEnergySourceSinks);
-                     
 
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gn  = Ghost::None;
   Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
 
-  // t->requires(Task::OldDW, lb->simulationTimeLabel);
+  t->requires(Task::OldDW, lb->simulationTimeLabel);
   t->requires(Task::OldDW, lb->delTLabel, getLevel(patches));
   t->requires(Task::NewDW, lb->press_CCLabel,     press_matl,oims, gn);
   t->requires(Task::NewDW, lb->delP_DilatateLabel,press_matl,oims, gn);
@@ -1709,16 +1731,16 @@ void ICE::scheduleComputeLagrangian_Transported_Vars(SchedulerP& sched,
   if(d_models.size()){
 
     for(vector<ModelInterface*>::iterator m_iter  = d_models.begin();
-	                                  m_iter != d_models.end(); m_iter++){
+                                          m_iter != d_models.end(); m_iter++){
       FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( *m_iter );
 
-      if( fb_model && fb_model->d_trans_vars.size() ) {	
-	haveTransportVars = true;
-	break;
+      if( fb_model && fb_model->d_trans_vars.size() ) { 
+        haveTransportVars = true;
+        break;
       }
     }
   }
-	
+        
   if( haveTransportVars ) {
     cout_doing << d_myworld->myRank() << " ICE::scheduleComputeLagrangian_Transported_Vars" 
                << "\t\t\tL-"<<levelIndex<< endl;
@@ -1727,28 +1749,29 @@ void ICE::scheduleComputeLagrangian_Transported_Vars(SchedulerP& sched,
                      this,&ICE::computeLagrangian_Transported_Vars);
     Ghost::GhostType  gn  = Ghost::None;
 
+    t->requires(Task::OldDW,lb->timeStepLabel);
     t->requires(Task::NewDW,lb->mass_L_CCLabel, gn);
     
     // computes and requires for each transported variable
     for(vector<ModelInterface*>::iterator m_iter  = d_models.begin();
-	                                  m_iter != d_models.end(); m_iter++){
+                                          m_iter != d_models.end(); m_iter++){
       FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( *m_iter );
 
-      if( fb_model && fb_model->d_trans_vars.size() ) {	
-	vector<TransportedVariable*>::iterator t_iter;
-	for( t_iter  = fb_model->d_trans_vars.begin();
-	     t_iter != fb_model->d_trans_vars.end(); t_iter++){
-	  TransportedVariable* tvar = *t_iter;
-	  
-	  // require q_old
-	  t->requires(Task::OldDW, tvar->var,   tvar->matls, gn, 0);
-	  
-	  if(tvar->src){     // require q_src
-	    t->requires(Task::NewDW, tvar->src, tvar->matls, gn, 0);
-	  }
+      if( fb_model && fb_model->d_trans_vars.size() ) { 
+        vector<TransportedVariable*>::iterator t_iter;
+        for( t_iter  = fb_model->d_trans_vars.begin();
+             t_iter != fb_model->d_trans_vars.end(); t_iter++){
+          TransportedVariable* tvar = *t_iter;
+          
+          // require q_old
+          t->requires(Task::OldDW, tvar->var,   tvar->matls, gn, 0);
+          
+          if(tvar->src){     // require q_src
+            t->requires(Task::NewDW, tvar->src, tvar->matls, gn, 0);
+          }
 
-	  t->computes(tvar->var_Lagrangian, tvar->matls);
-	}
+          t->computes(tvar->var_Lagrangian, tvar->matls);
+        }
       }
     }
     sched->addTask(t, patches, matls);
@@ -1781,6 +1804,8 @@ void ICE::scheduleAddExchangeToMomentumAndEnergy(SchedulerP& sched,
 
   Ghost::GhostType  gn  = Ghost::None;
 //  Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
+  t->requires(Task::OldDW, lb->timeStepLabel);
+  t->requires(Task::OldDW, lb->simulationTimeLabel);
   t->requires(Task::OldDW, lb->delTLabel,getLevel(patches)); 
  
   if(d_exchCoeff->convective()){
@@ -1878,19 +1903,19 @@ void ICE::computesRequires_AMR_Refluxing(Task* task,
   // Model with reflux variables.
   if(d_models.size()){
     for(vector<ModelInterface*>::iterator m_iter  = d_models.begin();
-	                                  m_iter != d_models.end(); m_iter++){
+                                          m_iter != d_models.end(); m_iter++){
       FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( *m_iter );
 
       if( fb_model && fb_model->d_reflux_vars.size() ){
-	vector<AMRRefluxVariable*>::iterator r_iter;
-	for(r_iter  = fb_model->d_reflux_vars.begin();
-	    r_iter != fb_model->d_reflux_vars.end(); r_iter++){
-	  AMRRefluxVariable* rvar = *r_iter;
-	  
-	  task->computes(rvar->var_X_FC_flux); 
-	  task->computes(rvar->var_Y_FC_flux);
-	  task->computes(rvar->var_Z_FC_flux);
-	}
+        vector<AMRRefluxVariable*>::iterator r_iter;
+        for(r_iter  = fb_model->d_reflux_vars.begin();
+            r_iter != fb_model->d_reflux_vars.end(); r_iter++){
+          AMRRefluxVariable* rvar = *r_iter;
+          
+          task->computes(rvar->var_X_FC_flux); 
+          task->computes(rvar->var_Y_FC_flux);
+          task->computes(rvar->var_Z_FC_flux);
+        }
       }
     }
   } 
@@ -1932,19 +1957,19 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
   // Model with transported variables.
   if(d_models.size()){
     for(vector<ModelInterface*>::iterator m_iter  = d_models.begin();
-	                                  m_iter != d_models.end(); m_iter++){
+                                          m_iter != d_models.end(); m_iter++){
       FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( *m_iter );
 
       if( fb_model && fb_model->d_trans_vars.size() ){
-	vector<TransportedVariable*>::iterator t_iter;
+        vector<TransportedVariable*>::iterator t_iter;
     
-	for(t_iter  = fb_model->d_trans_vars.begin();
-	    t_iter != fb_model->d_trans_vars.end(); t_iter++){
-	  TransportedVariable* tvar = *t_iter;
+        for(t_iter  = fb_model->d_trans_vars.begin();
+            t_iter != fb_model->d_trans_vars.end(); t_iter++){
+          TransportedVariable* tvar = *t_iter;
 
-	  task->requires(Task::NewDW, tvar->var_Lagrangian, tvar->matls, gac, 2);
-	  task->computes(tvar->var_adv,   tvar->matls);
-	}
+          task->requires(Task::NewDW, tvar->var_Lagrangian, tvar->matls, gac, 2);
+          task->computes(tvar->var_adv,   tvar->matls);
+        }
       }
     }
   }
@@ -1962,12 +1987,6 @@ void ICE::scheduleConservedtoPrimitive_Vars(SchedulerP& sched,
 {
   ASSERT( where == "afterAdvection" || where == "finalizeTimestep");
   
-  // std::cerr << __FUNCTION__ << "  " << __LINE__ << "  "
-  // 	    << sched->get_dw(0) << "  " 
-  // 	    << sched->get_dw(1) << "  " 
-  // 	    << sched->getLastDW() << "  " 
-  // 	    << std::endl;
-
   int levelIndex = getLevel(patch_set)->getIndex();
   int numLevels = getLevel(patch_set)->getGrid()->numLevels();
   // single level problems we only need to perform this task once
@@ -1992,6 +2011,8 @@ void ICE::scheduleConservedtoPrimitive_Vars(SchedulerP& sched,
   string name = "ICE::conservedtoPrimitive_Vars:" + where;
 
   Task* task = scinew Task(name, this, &ICE::conservedtoPrimitive_Vars);
+  task->requires(Task::OldDW, lb->timeStepLabel);
+  task->requires(Task::OldDW, lb->simulationTimeLabel);
   task->requires(Task::OldDW, lb->delTLabel,getLevel(patch_set));     
   Ghost::GhostType  gn   = Ghost::None;
   task->requires(Task::NewDW, lb->mass_advLabel,      gn,0);
@@ -2024,25 +2045,25 @@ void ICE::scheduleConservedtoPrimitive_Vars(SchedulerP& sched,
   // Model with transported variables.
   if(d_models.size()){
     for(vector<ModelInterface*>::iterator m_iter  = d_models.begin();
-	                                  m_iter != d_models.end(); m_iter++){
+                                          m_iter != d_models.end(); m_iter++){
       FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( *m_iter );
 
-      if( fb_model && fb_model->d_trans_vars.size() ){	  
-	vector<TransportedVariable*>::iterator t_iter;
-	for(t_iter  = fb_model->d_trans_vars.begin();
-	    t_iter != fb_model->d_trans_vars.end(); t_iter++){
-	  TransportedVariable* tvar = *t_iter;
+      if( fb_model && fb_model->d_trans_vars.size() ){    
+        vector<TransportedVariable*>::iterator t_iter;
+        for(t_iter  = fb_model->d_trans_vars.begin();
+            t_iter != fb_model->d_trans_vars.end(); t_iter++){
+          TransportedVariable* tvar = *t_iter;
 
-	  task->requires(Task::NewDW, tvar->var_adv, tvar->matls, gn,0);
+          task->requires(Task::NewDW, tvar->var_adv, tvar->matls, gn,0);
       
-	  if( where == "afterAdvection"){
-	    task->computes(tvar->var,   tvar->matls);
-	  }
-	  if( where == "finalizeTimestep"){
-	    task->modifies(tvar->var,   tvar->matls, fat);
-	  }
+          if( where == "afterAdvection"){
+            task->computes(tvar->var,   tvar->matls);
+          }
+          if( where == "finalizeTimestep"){
+            task->modifies(tvar->var,   tvar->matls, fat);
+          }
       
-	}
+        }
       }
     }
   }
@@ -2309,10 +2330,14 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
                           DataWarehouse*, 
                           DataWarehouse* new_dw)
 {
+  timeStep_vartype timeStep;
+  new_dw->get(timeStep, lb->timeStepLabel);
+
+  bool isNotInitialTimeStep = (timeStep > 0);
+    
   const Level* level = getLevel(patches);
   int L_indx = level->getIndex();
-  
-  
+
   //__________________________________
   // find max index of all the ICE matls
   // you could have a 1 matl problem with a starting indx of 2
@@ -2415,13 +2440,14 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
       customInitialization( patch,rho_CC[indx], Temp_CC[indx],vel_CC[indx], press_CC,
                             ice_matl, d_customInitialize_basket);
 
-      setBC( rho_CC[indx],     "Density",     patch, m_sharedState, indx, new_dw );
-      setBC( rho_micro[indx],  "Density",     patch, m_sharedState, indx, new_dw );
-      setBC( Temp_CC[indx],    "Temperature", patch, m_sharedState, indx, new_dw );
-      setBC( speedSound[indx], "zeroNeumann", patch, m_sharedState, indx, new_dw ); 
-      setBC( vel_CC[indx],     "Velocity",    patch, m_sharedState, indx, new_dw ); 
+      setBC( rho_CC[indx],     "Density",     patch, m_sharedState, indx, new_dw, isNotInitialTimeStep );
+      setBC( rho_micro[indx],  "Density",     patch, m_sharedState, indx, new_dw, isNotInitialTimeStep );
+      setBC( Temp_CC[indx],    "Temperature", patch, m_sharedState, indx, new_dw, isNotInitialTimeStep );
+      setBC( speedSound[indx], "zeroNeumann", patch, m_sharedState, indx, new_dw, isNotInitialTimeStep );
+      setBC( vel_CC[indx],     "Velocity",    patch, m_sharedState, indx, new_dw, isNotInitialTimeStep );
       setBC( press_CC, rho_micro, placeHolder, d_surroundingMatl_indx, 
-            "rho_micro","Pressure", patch, m_sharedState, 0, new_dw);
+             "rho_micro","Pressure", patch, m_sharedState, 0, new_dw,
+             isNotInitialTimeStep);
             
       SpecificHeat *cvModel = ice_matl->getSpecificHeatModel();
       if(cvModel != 0) {
@@ -2622,6 +2648,11 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
                                        DataWarehouse* old_dw, 
                                        DataWarehouse* new_dw)
 {
+  timeStep_vartype timeStep;
+  old_dw->get(timeStep, lb->timeStepLabel);
+
+  bool isNotInitialTimeStep = (timeStep > 0);
+    
   const Level* level = getLevel(patches);
   int L_indx = level->getIndex();
 
@@ -2890,7 +2921,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
 
     setBC(press_new,   rho_micro, placeHolder, d_surroundingMatl_indx,
           "rho_micro", "Pressure", patch , m_sharedState, 0, new_dw,
-          d_BC_globalVars, BC_localVars);
+          d_BC_globalVars, BC_localVars, isNotInitialTimeStep);
 
     delete_CustomBCs(d_BC_globalVars, BC_localVars);
     
@@ -3138,6 +3169,11 @@ void ICE::computeEquilPressure_1_matl(const ProcessorGroup*,
                                       DataWarehouse* old_dw, 
                                       DataWarehouse* new_dw)
 {
+  timeStep_vartype timeStep;
+  old_dw->get(timeStep, lb->timeStepLabel);
+
+  bool isNotInitialTimeStep = (timeStep > 0);
+    
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
@@ -3206,7 +3242,7 @@ void ICE::computeEquilPressure_1_matl(const ProcessorGroup*,
     
     setBC(press_eq,   rho_micro, placeHolder, d_surroundingMatl_indx,
           "rho_micro", "Pressure", patch , m_sharedState, 0, new_dw, 
-          d_BC_globalVars, BC_localVars);
+          d_BC_globalVars, BC_localVars, isNotInitialTimeStep);
           
     delete_CustomBCs( d_BC_globalVars, BC_localVars );      
 
@@ -3872,6 +3908,11 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
                                           DataWarehouse* old_dw, 
                                           DataWarehouse* new_dw)
 {
+  timeStep_vartype timeStep;
+  old_dw->get(timeStep, lb->timeStepLabel);
+
+  bool isNotInitialTimeStep = (timeStep > 0);
+    
   const Level* level = getLevel(patches);
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);  
@@ -4021,7 +4062,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     
     setBC(press_CC, placeHolder, sp_vol_CC, d_surroundingMatl_indx,
           "sp_vol", "Pressure", patch ,m_sharedState, 0, new_dw,
-          d_BC_globalVars, BC_localVars );
+          d_BC_globalVars, BC_localVars, isNotInitialTimeStep );
 #if SET_CFI_BC          
     set_CFI_BC<double>(press_CC,patch);
 #endif   
@@ -4138,25 +4179,25 @@ void ICE::zeroModelSources(const ProcessorGroup*,
     // Model with transported variables.
     if(d_models.size()){
       for(vector<ModelInterface*>::iterator m_iter  = d_models.begin();
-	                                    m_iter != d_models.end(); m_iter++){
-	FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( *m_iter );
+                                            m_iter != d_models.end(); m_iter++){
+        FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( *m_iter );
 
-	if( fb_model && fb_model->d_trans_vars.size() ){
-	  vector<TransportedVariable*>::iterator t_iter;
-	  for(t_iter  = fb_model->d_trans_vars.begin();
-	      t_iter != fb_model->d_trans_vars.end(); t_iter++){
-	    TransportedVariable* tvar = *t_iter;
+        if( fb_model && fb_model->d_trans_vars.size() ){
+          vector<TransportedVariable*>::iterator t_iter;
+          for(t_iter  = fb_model->d_trans_vars.begin();
+              t_iter != fb_model->d_trans_vars.end(); t_iter++){
+            TransportedVariable* tvar = *t_iter;
 
-	    for(int m=0;m<tvar->matls->size();m++){
-	      int matl = tvar->matls->get(m);
-	      
-	      if(tvar->src){
-		CCVariable<double> model_src;
-		new_dw->allocateAndPut(model_src, tvar->src, matl, patch);
-		model_src.initialize(0.0);
-	      }
-	    }
-	  }
+            for(int m=0;m<tvar->matls->size();m++){
+              int matl = tvar->matls->get(m);
+              
+              if(tvar->src){
+                CCVariable<double> model_src;
+                new_dw->allocateAndPut(model_src, tvar->src, matl, patch);
+                model_src.initialize(0.0);
+              }
+            }
+          }
         }
       }  // matl loop
     }  // transported Variables
@@ -4582,13 +4623,12 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
                                   DataWarehouse* old_dw, 
                                   DataWarehouse* new_dw)
 {  
+  // double simTime = m_sharedState->getElapsedSimTime();
 
-  // simTime_vartype simTimeVar;
-  // old_dw->get(simTimeVar, lb->simulationTimeLabel);
-
-  // double simTime = simTimeVar;
-  double simTime = m_sharedState->getElapsedSimTime();
-
+  simTime_vartype simTimeVar;
+  old_dw->get(simTimeVar, lb->simulationTimeLabel);
+  double simTime = simTimeVar;
+  
   const Level* level = getLevel(patches);
   
   for(int p=0;p<patches->size();p++){
@@ -5060,6 +5100,11 @@ void ICE::computeLagrangian_Transported_Vars(const ProcessorGroup*,
                                              DataWarehouse* old_dw, 
                                              DataWarehouse* new_dw)
 {
+  timeStep_vartype timeStep;
+  old_dw->get(timeStep, lb->timeStepLabel);
+
+  bool isNotInitialTimeStep = (timeStep > 0);
+    
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
@@ -5080,50 +5125,51 @@ void ICE::computeLagrangian_Transported_Vars(const ProcessorGroup*,
     // Model with transported variables.
     if(d_models.size()){
       for(vector<ModelInterface*>::iterator m_iter  = d_models.begin();
-	                                    m_iter != d_models.end(); m_iter++){
-	FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( *m_iter );
+                                            m_iter != d_models.end(); m_iter++){
+        FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( *m_iter );
 
-	if( fb_model && fb_model->d_trans_vars.size() ){
-	  vector<TransportedVariable*>::iterator t_iter;
-	  for( t_iter  = fb_model->d_trans_vars.begin();
-	       t_iter != fb_model->d_trans_vars.end(); t_iter++){
-	    TransportedVariable* tvar = *t_iter;
+        if( fb_model && fb_model->d_trans_vars.size() ){
+          vector<TransportedVariable*>::iterator t_iter;
+          for( t_iter  = fb_model->d_trans_vars.begin();
+               t_iter != fb_model->d_trans_vars.end(); t_iter++){
+            TransportedVariable* tvar = *t_iter;
       
-	    for (int m = 0; m < numMatls; m++ ) {
-	      Material* matl = m_sharedState->getICEMaterial( m );
-	      int indx = matl->getDWIndex();
+            for (int m = 0; m < numMatls; m++ ) {
+              Material* matl = m_sharedState->getICEMaterial( m );
+              int indx = matl->getDWIndex();
        
-	      if(tvar->matls->contains(indx)){  
-		constCCVariable<double> q_old,q_src;
-		CCVariable<double> q_L_CC;
-		old_dw->get(q_old,             tvar->var, indx, patch, gn, 0);
-		new_dw->allocateAndPut(q_L_CC, tvar->var_Lagrangian, indx, patch);
+              if(tvar->matls->contains(indx)){  
+                constCCVariable<double> q_old,q_src;
+                CCVariable<double> q_L_CC;
+                old_dw->get(q_old,             tvar->var, indx, patch, gn, 0);
+                new_dw->allocateAndPut(q_L_CC, tvar->var_Lagrangian, indx, patch);
 
-		// initialize q_L to q_old
-		q_L_CC.copyData(q_old);
+                // initialize q_L to q_old
+                q_L_CC.copyData(q_old);
 
-		// If there's a source tack it on.     
-		if(tvar->src){
-		  new_dw->get(q_src,  tvar->src, indx, patch, gn, 0);
-		  for(CellIterator iter=patch->getCellIterator();!iter.done();iter++){
-		    IntVector c = *iter;                            
-		    q_L_CC[c]  += q_src[c];     // with source
-		  }
-		}
-		// Set boundary conditions on q_L_CC
-		// must use var Labelname not var_Lagrangian
-		string Labelname = tvar->var->getName();
-		setBC(q_L_CC, Labelname,  patch, m_sharedState, indx, new_dw);
+                // If there's a source tack it on.     
+                if(tvar->src){
+                  new_dw->get(q_src,  tvar->src, indx, patch, gn, 0);
+                  for(CellIterator iter=patch->getCellIterator();!iter.done();iter++){
+                    IntVector c = *iter;                            
+                    q_L_CC[c]  += q_src[c];     // with source
+                  }
+                }
+                // Set boundary conditions on q_L_CC
+                // must use var Labelname not var_Lagrangian
+                string Labelname = tvar->var->getName();
+                setBC(q_L_CC, Labelname,  patch, m_sharedState, indx, new_dw,
+                      isNotInitialTimeStep);
 
-		// multiply by mass so advection is conserved
-		for(CellIterator iter=patch->getExtraCellIterator();
-		    !iter.done();iter++){
-		  IntVector c = *iter;                            
-		  q_L_CC[c] *= mass_L[m][c];
-		}
-	      }
-	    }
-	  }
+                // multiply by mass so advection is conserved
+                for(CellIterator iter=patch->getExtraCellIterator();
+                    !iter.done();iter++){
+                  IntVector c = *iter;                            
+                  q_L_CC[c] *= mass_L[m][c];
+                }
+              }
+            }
+          }
         }  // tvar matl
       }  // ice matl loop
     }  // tvar loop
@@ -5140,6 +5186,11 @@ void ICE::addExchangeToMomentumAndEnergy_1matl(const ProcessorGroup*,
                                                DataWarehouse* old_dw,
                                                DataWarehouse* new_dw)
 {
+  timeStep_vartype timeStep;
+  old_dw->get(timeStep, lb->timeStepLabel);
+
+  bool isNotInitialTimeStep = (timeStep > 0);
+    
   const Level* level = getLevel(patches);
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -5207,9 +5258,9 @@ void ICE::addExchangeToMomentumAndEnergy_1matl(const ProcessorGroup*,
                           d_BC_globalVars, BC_localVars );
 
     setBC(vel_CC, "Velocity",   patch, m_sharedState, 
-                                       indx, new_dw,  d_BC_globalVars, BC_localVars);
+                                       indx, new_dw,  d_BC_globalVars, BC_localVars, isNotInitialTimeStep);
     setBC(Temp_CC,"Temperature",gamma, cv, patch, m_sharedState, 
-                                       indx, new_dw,  d_BC_globalVars, BC_localVars );
+                                       indx, new_dw,  d_BC_globalVars, BC_localVars, isNotInitialTimeStep );
 #if SET_CFI_BC                                         
 //      set_CFI_BC<Vector>(vel_CC[m],  patch);
 //      set_CFI_BC<double>(Temp_CC[m], patch);
@@ -5265,6 +5316,11 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
                                          DataWarehouse* old_dw,
                                          DataWarehouse* new_dw)
 {
+  timeStep_vartype timeStep;
+  old_dw->get(timeStep, lb->timeStepLabel);
+
+  bool isNotInitialTimeStep = (timeStep > 0);
+    
   const Level* level = getLevel(patches);
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -5573,9 +5629,9 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
                             d_BC_globalVars, BC_localVars);
        
       setBC(vel_CC[m], "Velocity",   patch, m_sharedState, indx, new_dw,
-                                                        d_BC_globalVars, BC_localVars);
+                                                        d_BC_globalVars, BC_localVars, isNotInitialTimeStep);
       setBC(Temp_CC[m],"Temperature",gamma[m], cv[m], patch, m_sharedState, 
-                                         indx, new_dw,  d_BC_globalVars, BC_localVars);
+                                         indx, new_dw,  d_BC_globalVars, BC_localVars, isNotInitialTimeStep);
 #if SET_CFI_BC                                         
 //      set_CFI_BC<Vector>(vel_CC[m],  patch);
 //      set_CFI_BC<double>(Temp_CC[m], patch);
@@ -5797,34 +5853,34 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
       //__________________________________
       // Model with transported variables.
       if(d_models.size()){
-	for(vector<ModelInterface*>::iterator m_iter  = d_models.begin();
-	                                      m_iter != d_models.end(); m_iter++){
-	  FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( *m_iter );
+        for(vector<ModelInterface*>::iterator m_iter  = d_models.begin();
+                                              m_iter != d_models.end(); m_iter++){
+          FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( *m_iter );
 
-	  if( fb_model && fb_model->d_trans_vars.size() ){
-	    vector<TransportedVariable*>::iterator t_iter;
-	    for(t_iter  = fb_model->d_trans_vars.begin();
-		t_iter != fb_model->d_trans_vars.end(); t_iter++){
-	      TransportedVariable* tvar = *t_iter;
-	      
-	      if(tvar->matls->contains(indx)){
-		string Labelname = tvar->var->getName();
-		CCVariable<double> q_adv;
-		constCCVariable<double> q_L_CC;
-		new_dw->allocateAndPut(q_adv, tvar->var_adv,     indx, patch);
-		new_dw->get(q_L_CC,   tvar->var_Lagrangian, indx, patch, gac, 2); 
-		q_adv.initialize(d_EVIL_NUM);
-		
-		varBasket->desc = Labelname;
-		varBasket->is_Q_massSpecific = true;
-		advector->advectQ(q_L_CC,mass_L,q_advected, varBasket);  
-		
-		for(CellIterator iter = patch->getCellIterator(); !iter.done();  iter++){
-		  IntVector c = *iter;
-		  q_adv[c] = (q_L_CC[c] + q_advected[c]) ;
-		}
-	      }
-	    }
+          if( fb_model && fb_model->d_trans_vars.size() ){
+            vector<TransportedVariable*>::iterator t_iter;
+            for(t_iter  = fb_model->d_trans_vars.begin();
+                t_iter != fb_model->d_trans_vars.end(); t_iter++){
+              TransportedVariable* tvar = *t_iter;
+              
+              if(tvar->matls->contains(indx)){
+                string Labelname = tvar->var->getName();
+                CCVariable<double> q_adv;
+                constCCVariable<double> q_L_CC;
+                new_dw->allocateAndPut(q_adv, tvar->var_adv,     indx, patch);
+                new_dw->get(q_L_CC,   tvar->var_Lagrangian, indx, patch, gac, 2); 
+                q_adv.initialize(d_EVIL_NUM);
+                
+                varBasket->desc = Labelname;
+                varBasket->is_Q_massSpecific = true;
+                advector->advectQ(q_L_CC,mass_L,q_advected, varBasket);  
+                
+                for(CellIterator iter = patch->getCellIterator(); !iter.done();  iter++){
+                  IntVector c = *iter;
+                  q_adv[c] = (q_L_CC[c] + q_advected[c]) ;
+                }
+              }
+            }
           }
         }
       } 
@@ -5845,6 +5901,11 @@ void ICE::conservedtoPrimitive_Vars(const ProcessorGroup* /*pg*/,
                                     DataWarehouse* old_dw,
                                     DataWarehouse* new_dw)
 {
+  timeStep_vartype timeStep;
+  old_dw->get(timeStep, lb->timeStepLabel);
+
+  bool isNotInitialTimeStep = (timeStep > 0);
+    
   const Level* level = getLevel(patches);
   int L_indx = level->getIndex();
 
@@ -5903,33 +5964,34 @@ void ICE::conservedtoPrimitive_Vars(const ProcessorGroup* /*pg*/,
       //__________________________________
       // Model with transported variables.
       if(d_models.size()){
-	for(vector<ModelInterface*>::iterator m_iter  = d_models.begin();
-	                                      m_iter != d_models.end(); m_iter++){
-	  FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( *m_iter );
+        for(vector<ModelInterface*>::iterator m_iter  = d_models.begin();
+                                              m_iter != d_models.end(); m_iter++){
+          FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( *m_iter );
 
-	  if( fb_model && fb_model->d_trans_vars.size() ){
-	    vector<TransportedVariable*>::iterator t_iter;
-	    for(t_iter  = fb_model->d_trans_vars.begin();
-		t_iter != fb_model->d_trans_vars.end(); t_iter++){
-	      TransportedVariable* tvar = *t_iter;
+          if( fb_model && fb_model->d_trans_vars.size() ){
+            vector<TransportedVariable*>::iterator t_iter;
+            for(t_iter  = fb_model->d_trans_vars.begin();
+                t_iter != fb_model->d_trans_vars.end(); t_iter++){
+              TransportedVariable* tvar = *t_iter;
           
-	      if(tvar->matls->contains(indx)){
-		string Labelname = tvar->var->getName();
-		CCVariable<double> q_CC;
-		constCCVariable<double> q_adv;
-		new_dw->allocateAndPut(q_CC, tvar->var,     indx, patch);
-		new_dw->get(q_adv,           tvar->var_adv, indx, patch, gn,0);
-		q_CC.initialize(0.0);
-		
-		for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
-		  IntVector c = *iter;
-		  q_CC[c] = q_adv[c]/mass_adv[c];
-		}
-		
-		//  Set Boundary Conditions
-		setBC(q_CC, Labelname,  patch, m_sharedState, indx, new_dw);  
-	      }
-	    }
+              if(tvar->matls->contains(indx)){
+                string Labelname = tvar->var->getName();
+                CCVariable<double> q_CC;
+                constCCVariable<double> q_adv;
+                new_dw->allocateAndPut(q_CC, tvar->var,     indx, patch);
+                new_dw->get(q_adv,           tvar->var_adv, indx, patch, gn,0);
+                q_CC.initialize(0.0);
+                
+                for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
+                  IntVector c = *iter;
+                  q_CC[c] = q_adv[c]/mass_adv[c];
+                }
+                
+                //  Set Boundary Conditions
+                setBC(q_CC, Labelname,  patch, m_sharedState, indx, new_dw,
+                      isNotInitialTimeStep);
+              }
+            }
           }
         }
       } 
@@ -5964,11 +6026,11 @@ void ICE::conservedtoPrimitive_Vars(const ProcessorGroup* /*pg*/,
                            d_BC_globalVars, BC_localVars );
        
       setBC(rho_CC, "Density",  placeHolder, placeHolder,
-            patch,m_sharedState, indx, new_dw, d_BC_globalVars, BC_localVars);
+            patch,m_sharedState, indx, new_dw, d_BC_globalVars, BC_localVars, isNotInitialTimeStep);
       setBC(vel_CC, "Velocity", 
-            patch,m_sharedState, indx, new_dw, d_BC_globalVars, BC_localVars);       
+            patch,m_sharedState, indx, new_dw, d_BC_globalVars, BC_localVars, isNotInitialTimeStep);
       setBC(temp_CC,"Temperature",gamma, cv,
-            patch,m_sharedState, indx, new_dw, d_BC_globalVars, BC_localVars );
+            patch,m_sharedState, indx, new_dw, d_BC_globalVars, BC_localVars, isNotInitialTimeStep );
             
       setSpecificVolBC(sp_vol_CC, "SpecificVol", false,rho_CC,vol_frac,
                        patch,m_sharedState, indx);     

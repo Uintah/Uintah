@@ -50,7 +50,6 @@
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
-#include <Core/Grid/Variables/SoleVariable.h>
 #include <Core/Grid/Variables/Stencil7.h>
 #include <Core/Grid/Variables/Utils.h>
 

@@ -71,6 +71,9 @@ void preprocess_CustomBCs(const string& where,
                           customBC_globalVars* gv,
                           customBC_localVars* lv)
 {
+  simTime_vartype simTime;
+  old_dw->get(simTime, lb->simulationTimeLabel);
+
   delt_vartype delT;
   const Level* level = patch->getLevel();
   old_dw->get(delT, lb->delTLabel, level);
@@ -103,6 +106,7 @@ void preprocess_CustomBCs(const string& where,
   //  method of manufactured solutions boundary conditions
   if( gv->using_MMS_BCs ){  
     lv->mms = scinew mms_localVars();
+    lv->mms->simTime = (double)simTime;
     lv->mms->delT = (double)delT;
     preprocess_MMS_BCs( new_dw,old_dw, lb,indx,patch, where,
                         lv->set_MMS_BCs, 
@@ -112,8 +116,8 @@ void preprocess_CustomBCs(const string& where,
   //  Sine boundary conditions
   if( gv->using_Sine_BCs ){  
     lv->sine = scinew sine_localVars();
-    lv->sine->delT = (double)delT;
-    gv->sine->delT= (double)delT;
+    lv->sine->simTime = (double)simTime;
+    gv->sine->delT = (double)delT;
     preprocess_Sine_BCs( new_dw,old_dw, lb,indx,patch, where,
                         lv->set_Sine_BCs, 
                         lv->sine);        

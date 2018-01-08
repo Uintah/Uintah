@@ -66,14 +66,16 @@ namespace Uintah {
                       const int mat_id,
                       DataWarehouse* new_dw,
                       customBC_globalVars* globalVars,
-                      customBC_localVars* localVars);
+                      customBC_localVars* localVars,
+                      const bool isNotInitialTimeStep);
             
    void setBC(CCVariable<double>& var,     
                       const std::string& type,     // stub function
                       const Patch* patch,  
                       SimulationStateP& sharedState,
                       const int mat_id,
-                      DataWarehouse* new_dw); 
+                      DataWarehouse* new_dw,
+                      const bool isNotInitialTimeStep);
   //__________________________________
   //  P R E S S U R E        
    void setBC(CCVariable<double>& press_CC,          
@@ -87,7 +89,8 @@ namespace Uintah {
                       const int mat_id, 
                       DataWarehouse* new_dw,
                       customBC_globalVars* globalVars,
-                      customBC_localVars* localVars);
+                      customBC_localVars* localVars,
+                      const bool isNotInitialTimeStep);
              
    void setBC(CCVariable<double>& press_CC,          
                       std::vector<CCVariable<double> >& rho_micro,
@@ -98,7 +101,8 @@ namespace Uintah {
                       const Patch* p, 
                       SimulationStateP& sharedState,
                       const int mat_id, 
-                      DataWarehouse* new_dw);
+                      DataWarehouse* new_dw,
+                      const bool isNotInitialTimeStep);
              
   //__________________________________
   //    V E C T O R   
@@ -109,14 +113,16 @@ namespace Uintah {
                       const int mat_id,
                       DataWarehouse* new_dw, 
                       customBC_globalVars* globalVars,
-                      customBC_localVars* localVars);
+                      customBC_localVars* localVars,
+                      const bool isNotInitialTimeStep);
              
    void setBC(CCVariable<Vector>& variable,  // stub function
                       const std::string& type,
                       const Patch* patch,
                       SimulationStateP& sharedState,
                       const int mat_id,
-                      DataWarehouse* new_dw);
+                      DataWarehouse* new_dw,
+                      const bool isNotInitialTimeStep);
 
   //__________________________________
   //    SPECIFC VOLUME
@@ -243,7 +249,7 @@ void setBC(T& vel_FC,
         Iterator bound_ptr;
         bool foundIterator = 
           getIteratorBCValueBCKind<Vector>( patch, face, child, desc, mat_id,
-					         bc_value, bound_ptr,bc_kind); 
+                                                 bc_value, bound_ptr,bc_kind); 
 
         if (foundIterator && (bc_kind != "LODI" || bc_kind != "Neumann") ) {
           //__________________________________

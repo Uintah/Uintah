@@ -1091,7 +1091,6 @@ vector<IntVector> dbgCells;
 #if 1
    dbgCells.push_back(IntVector(0,50,0));
 #endif
-double time = sharedState->getElapsedSimTime();
 /*===========TESTING==========`*/
      
   // shortcuts       

@@ -404,7 +404,8 @@ void get_rho_micro(std::vector<CCVariable<double> >& rho_micro,
                    const string& which_Var,
                    SimulationStateP& sharedState,
                    DataWarehouse* new_dw,
-                   customBC_globalVars* globalVars)
+                   customBC_globalVars* globalVars,
+                   const bool isNotInitialTimeStep)
 {
   BC_dbg << "-------- get_rho_micro: (" << which_Var <<")"<< endl;
   
@@ -413,13 +414,14 @@ void get_rho_micro(std::vector<CCVariable<double> >& rho_micro,
   }
   
   Vector gravity = globalVars->d_gravity; 
-//  int timestep = sharedState->getCurrentTopLevelTimeStep();
   int numICEMatls  = sharedState->getNumICEMatls();
     
-//  This doesn't work with AMR.  The refine/setBC_fineLevel task only refines ICE matls so we don't
-//  have access to sp_vol_mpm.
+
+//  This doesn't work with AMR.  The refine/setBC_fineLevel task only
+//  refines ICE matls so we don't have access to sp_vol_mpm.
 //
-//  if (timestep > 0 ) {
+//   bool isNotInitialTimeStep = (sharedState->getCurrentTopLevelTimeStep() > 0)//
+//  if (isNotInitialTimeStep) {
 //    numMatls += sharedState->getNumMPMMatls();
 //  }
       
@@ -493,9 +495,9 @@ void HydrostaticPressureAdjustment(CCVariable<double>& press_CC,
                                    const Patch* patch,
                                    const Patch::FaceType face,
                                    Iterator bound_ptr,
-                                   const bool isNotInitialTimestep)
+                                   const bool isNotInitialTimeStep)
 {  
-  if ( isNotInitialTimestep ){
+  if ( isNotInitialTimeStep ){
     const Level* level = patch->getLevel();
     GridP grid = level->getGrid();
     BBox b;
@@ -562,7 +564,8 @@ void setBC(CCVariable<double>& press_CC,
            const int mat_id,
            DataWarehouse* new_dw,
            customBC_globalVars* globalVars,
-           customBC_localVars* localVars)
+           customBC_localVars* localVars,
+           const bool isNotInitialTimeStep)
 {
   if(patch->hasBoundaryFaces() == false){
     return;
@@ -572,7 +575,7 @@ void setBC(CCVariable<double>& press_CC,
             << " mat_id = " << mat_id <<  ", Patch: "<< patch->getID() << endl;
 
   int numALLMatls = sharedState->getNumMatls();
-  bool isNotInitialTimestep = (sharedState->getCurrentTopLevelTimeStep() > 0);  
+  // bool isNotInitialTimeStep = (sharedState->getCurrentTopLevelTimeStep() > 0);  
   Vector gravity = globalVars->d_gravity;
   std::vector<CCVariable<double> > rho_micro(numALLMatls);
   
@@ -581,7 +584,8 @@ void setBC(CCVariable<double>& press_CC,
   }
   
   get_rho_micro(rho_micro, rho_micro_tmp, sp_vol_CC, 
-                patch, which_Var, sharedState,  new_dw, globalVars);
+                patch, which_Var, sharedState,  new_dw, globalVars,
+                isNotInitialTimeStep);
                 
   //__________________________________
   //  -Set the LODI BC's first, then let the other BC's wipe out what
@@ -603,7 +607,7 @@ void setBC(CCVariable<double>& press_CC,
     bool is_lodi_pressBC = patch->haveBC(face,mat_id,"LODI","Pressure");
     
     if(kind == "Pressure"       && is_lodi_pressBC 
-       && isNotInitialTimestep  && localVars->setLodiBcs){
+       && isNotInitialTimeStep  && localVars->setLodiBcs){
        
        nCells_LODI[face] += 
        FacePress_LODI(patch, press_CC, rho_micro, sharedState,face, localVars->lodi);
@@ -667,7 +671,7 @@ void setBC(CCVariable<double>& press_CC,
         
         if( globalVars->applyHydrostaticPress ){
           HydrostaticPressureAdjustment(press_CC, rho_micro, gravity, surroundingMatl_indx,
-                                        bc_kind, patch, face, bound_ptr, isNotInitialTimestep);
+                                        bc_kind, patch, face, bound_ptr, isNotInitialTimeStep);
         }
         //__________________________________
         //  debugging
@@ -688,7 +692,7 @@ void setBC(CCVariable<double>& press_CC,
     Patch::FaceIteratorType type = Patch::ExtraPlusEdgeCells;
     int nFaceCells = numFaceCells(patch,  type, face);
     
-    if(nCells != nFaceCells && (nCells_LODI[face] != nFaceCells && isNotInitialTimestep)){
+    if(nCells != nFaceCells && (nCells_LODI[face] != nFaceCells && isNotInitialTimeStep)){
       ostringstream warn;
       warn << "ERROR: ICE: SetBC(press_CC) Boundary conditions were not set correctly ("
            << patch->getFaceName(face) << ", " << bc_kind  << " numChildren: " << numChildren 
@@ -710,7 +714,8 @@ void setBC(CCVariable<double>& var_CC,
            const int mat_id,
            DataWarehouse*,
            customBC_globalVars* globalVars,
-           customBC_localVars* localVars)
+           customBC_localVars* localVars,
+           const bool isNotInitialTimeStep)
 {
 
   if(patch->hasBoundaryFaces() == false){
@@ -719,7 +724,7 @@ void setBC(CCVariable<double>& var_CC,
   cout_BC_CC << "-------- setBC (double) \t"<< desc << " mat_id = " 
              << mat_id <<  ", Patch: "<< patch->getID() << endl;
   Vector cell_dx = patch->dCell();
-  bool isNotInitialTimestep = (sharedState->getCurrentTopLevelTimeStep() > 0);
+  // bool isNotInitialTimeStep = (sharedState->getCurrentTopLevelTimeStep() > 0);
 
   //__________________________________
   //  -Set the LODI BC's first, then let the other BC's wipe out what
@@ -741,10 +746,10 @@ void setBC(CCVariable<double>& var_CC,
     bool is_tempBC_lodi=  patch->haveBC(face,mat_id,"LODI","Temperature");  
     bool is_rhoBC_lodi =  patch->haveBC(face,mat_id,"LODI","Density");
     
-    if( desc == "Temperature"  && is_tempBC_lodi  && isNotInitialTimestep && localVars->setLodiBcs ){
+    if( desc == "Temperature"  && is_tempBC_lodi  && isNotInitialTimeStep && localVars->setLodiBcs ){
       nCells_LODI[face] += FaceTemp_LODI(patch, face, var_CC, localVars->lodi, cell_dx, sharedState);
     }   
-    else if (desc == "Density"  && is_rhoBC_lodi  && isNotInitialTimestep && localVars->setLodiBcs){
+    else if (desc == "Density"  && is_rhoBC_lodi  && isNotInitialTimeStep && localVars->setLodiBcs){
       nCells_LODI[face] += FaceDensity_LODI(patch, face, var_CC, localVars->lodi, cell_dx);
     }
   }
@@ -813,7 +818,7 @@ void setBC(CCVariable<double>& var_CC,
         int P_dir =  patch->getFaceAxes(face)[0];  // principal direction
         
         if (gravity[P_dir] != 0 && desc == "Temperature" && ice_matl 
-             && isNotInitialTimestep) {
+             && isNotInitialTimeStep) {
           ice_matl->getEOS()->
               hydrostaticTempAdjustment(face, patch, bound_ptr, gravity,
                                         gamma, cv, cell_dx, var_CC);
@@ -839,7 +844,7 @@ void setBC(CCVariable<double>& var_CC,
     int nFaceCells = numFaceCells(patch,  type, face);
     
     bool throwEx = false;
-    if(nCells != nFaceCells && (nCells_LODI[face] != nFaceCells && isNotInitialTimestep)){
+    if(nCells != nFaceCells && (nCells_LODI[face] != nFaceCells && isNotInitialTimeStep)){
       if( desc == "set_if_sym_BC" && bc_kind == "NotSet"){
         throwEx = false;
       }else{
@@ -864,11 +869,12 @@ void setBC(CCVariable<double>& var_CC,
 void setBC(CCVariable<Vector>& var_CC,
            const string& desc,
            const Patch* patch,
-           SimulationStateP& sharedState, 
+           SimulationStateP& sharedState,
            const int mat_id,
            DataWarehouse* ,
            customBC_globalVars* globalVars,
-           customBC_localVars* localVars)
+           customBC_localVars* localVars,
+           const bool isNotInitialTimeStep)
 {
  if(patch->hasBoundaryFaces() == false){
     return;
@@ -876,7 +882,7 @@ void setBC(CCVariable<Vector>& var_CC,
   cout_BC_CC <<"-------- setBC (Vector_CC) \t"<< desc <<" mat_id = " 
               <<mat_id<<  ", Patch: "<< patch->getID() << endl;
   
-  bool isNotInitialTimestep = (sharedState->getCurrentTopLevelTimeStep() > 0);
+  // bool isNotInitialTimeStep = (sharedState->getCurrentTopLevelTimeStep() > 0);
   Vector cell_dx = patch->dCell();
   //__________________________________
   //  -Set the LODI BC's first, then let the other BC's wipe out what
@@ -897,7 +903,7 @@ void setBC(CCVariable<Vector>& var_CC,
     bool is_velBC_lodi   = patch->haveBC(face,mat_id,"LODI","Velocity");
     
     if( desc == "Velocity"      && is_velBC_lodi 
-        && isNotInitialTimestep && localVars->setLodiBcs) {
+        && isNotInitialTimeStep && localVars->setLodiBcs) {
         
       nCells_LODI[face] += FaceVel_LODI( patch, face, var_CC, localVars->lodi, cell_dx, sharedState);
     }
@@ -984,7 +990,7 @@ void setBC(CCVariable<Vector>& var_CC,
     int nFaceCells = numFaceCells(patch,  type, face);
     
     bool throwEx = false;
-    if(nCells != nFaceCells && (nCells_LODI[face] != nFaceCells && isNotInitialTimestep)){
+    if(nCells != nFaceCells && (nCells_LODI[face] != nFaceCells && isNotInitialTimeStep)){
       if( desc == "set_if_sym_BC" && bc_kind == "NotSet"){
         throwEx = false;
       }else{
@@ -1333,14 +1339,16 @@ void setBC(CCVariable<double>& var,
           const Patch* patch,  
           SimulationStateP& sharedState,
           const int mat_id,
-          DataWarehouse* new_dw)
+          DataWarehouse* new_dw,
+          const bool isNotInitialTimeStep)
 {
   customBC_globalVars* globalVars = scinew customBC_globalVars();
   customBC_localVars* localVars   = scinew customBC_localVars();
   constCCVariable<double> placeHolder;
   
   setBC(var, type, placeHolder, placeHolder, patch, sharedState, 
-        mat_id, new_dw, globalVars, localVars );
+        mat_id, new_dw, globalVars, localVars,
+        isNotInitialTimeStep );
   
   delete globalVars;
   delete localVars;
@@ -1355,13 +1363,15 @@ void setBC(CCVariable<double>& press_CC,
          const Patch* p, 
          SimulationStateP& sharedState,
          const int mat_id, 
-         DataWarehouse* new_dw) {
+         DataWarehouse* new_dw,
+         const bool isNotInitialTimeStep) {
          
   customBC_globalVars* globalVars = scinew customBC_globalVars();
   customBC_localVars* localVars   = scinew customBC_localVars();
   
   setBC(press_CC, rho_micro, sp_vol, surroundingMatl_indx,
-        whichVar, kind, p, sharedState, mat_id, new_dw, globalVars, localVars); 
+        whichVar, kind, p, sharedState, mat_id, new_dw, globalVars, localVars,
+        isNotInitialTimeStep); 
 
   delete globalVars;
   delete localVars;         
@@ -1372,12 +1382,14 @@ void setBC(CCVariable<Vector>& variable,
           const Patch* p,
           SimulationStateP& sharedState,
           const int mat_id,
-          DataWarehouse* new_dw)
+          DataWarehouse* new_dw,
+          const bool isNotInitialTimeStep)
 { 
   customBC_globalVars* globalVars  = scinew customBC_globalVars();
   customBC_localVars* localVars    = scinew customBC_localVars();
    
-  setBC( variable, type, p, sharedState, mat_id, new_dw,globalVars, localVars);
+  setBC( variable, type, p, sharedState, mat_id, new_dw,globalVars, localVars,
+         isNotInitialTimeStep);
   
   delete globalVars;
   delete localVars; 

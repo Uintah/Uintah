@@ -33,6 +33,7 @@
 #include <Core/Grid/Task.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/SoleVariable.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/Utils.h>
 #include <Core/Exceptions/ConvergenceFailure.h>
@@ -204,8 +205,9 @@ void ICE::scheduleUpdatePressure(  SchedulerP& sched,
   
   t = scinew Task("ICE::updatePressure", this, &ICE::updatePressure);
   
-  t->requires( Task::ParentOldDW, lb->delTLabel, getLevel(patches));
-  t->requires(Task::ParentNewDW, lb->press_equil_CCLabel,press_matl,oims,gn);       
+  t->requires(Task::ParentOldDW, lb->timeStepLabel);
+  t->requires(Task::ParentOldDW, lb->delTLabel, getLevel(patches));
+  t->requires(Task::ParentNewDW, lb->press_equil_CCLabel,press_matl,oims,gn);
   t->requires(Task::ParentNewDW, lb->sp_vol_CCLabel                     ,gn);
   t->requires(Task::OldDW,       lb->sum_imp_delPLabel,  press_matl,oims,gn);
   
@@ -215,7 +217,6 @@ void ICE::scheduleUpdatePressure(  SchedulerP& sched,
   if (level->getIndex() > 0){
     t->requires(Task::NewDW, lb->imp_delPLabel, 0,Task::CoarseLevel, press_matl, oims, gac,1);
   }  
-
 
   t->computes(lb->sum_imp_delPLabel, press_matl, oims);
  
@@ -351,7 +352,7 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
 
   //__________________________________
   // common Variables
-  // t->requires( Task::OldDW, lb->timeStepLabel);
+  t->requires( Task::OldDW, lb->timeStepLabel);
   t->requires( Task::OldDW, lb->delTLabel,level.get_rep());
   t->requires( Task::NewDW, lb->vol_frac_CCLabel,   gac,2); 
   t->requires( Task::NewDW, lb->sp_vol_CCLabel,     gac,1);
@@ -781,16 +782,21 @@ void ICE::updatePressure(const ProcessorGroup*,
                          DataWarehouse* old_dw,                         
                          DataWarehouse* new_dw)                         
 { 
+  // define parent_dw
+  DataWarehouse* parent_new_dw = 
+    new_dw->getOtherDataWarehouse(Task::ParentNewDW); 
+  DataWarehouse* parent_old_dw = 
+    new_dw->getOtherDataWarehouse(Task::ParentOldDW);
+
+  timeStep_vartype timeStep;
+  parent_old_dw->get(timeStep, lb->timeStepLabel);
+
+  bool isNotInitialTimeStep = (timeStep > 0);
+
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     
     printTask(patches, patch, cout_doing, "Doing ICE::updatePressure" );
-
-   // define parent_dw
-    DataWarehouse* parent_new_dw = 
-          new_dw->getOtherDataWarehouse(Task::ParentNewDW); 
-    DataWarehouse* parent_old_dw = 
-          new_dw->getOtherDataWarehouse(Task::ParentOldDW);
                     
     int numMatls  = m_sharedState->getNumMatls(); 
     Ghost::GhostType  gn = Ghost::None;
@@ -835,7 +841,7 @@ void ICE::updatePressure(const ProcessorGroup*,
 
     setBC(press_CC, placeHolder, sp_vol_CC, d_surroundingMatl_indx,
           "sp_vol", "Pressure", patch ,m_sharedState, 0, new_dw, 
-           d_BC_globalVars, BC_localVars );
+          d_BC_globalVars, BC_localVars, isNotInitialTimeStep );
            
     delete_CustomBCs(d_BC_globalVars, BC_localVars);
 
@@ -975,6 +981,11 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
       ParentOldDW->get(hypre_solverP_, hypre_solver_label);
       subNewDW->put(   hypre_solverP_, hypre_solver_label);
     } 
+    timeStep_vartype timeStepVar;
+    if (ParentOldDW->exists(lb->timeStepLabel)) {
+      ParentOldDW->get(timeStepVar, lb->timeStepLabel);
+      subNewDW->put(   timeStepVar, lb->timeStepLabel);
+    }
   }
 #endif
 
@@ -1074,12 +1085,12 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
               << " after solve " << max_RHS<< endl;
     
     // output files for debugging
-    // timeStep_vartype timeStepVar;
-    // ParentOldDW->get(timeStepVar, lb->timeStepLabel);
+    // double timeStep = m_sharedState->getCurrentTopLevelTimeStep();
 
-    // double timeStep = timeStepVar;
-    double timeStep = m_sharedState->getCurrentTopLevelTimeStep();
-    
+    timeStep_vartype timeStepVar;
+    ParentOldDW->get(timeStepVar, lb->timeStepLabel);
+    double timeStep = timeStepVar;
+
     int proc = d_myworld->myRank();
     ostringstream fname;
     
@@ -1140,6 +1151,11 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
       subNewDW->get(hypre_solverP_,hypre_solver_label);
       ParentNewDW->put(hypre_solverP_, hypre_solver_label);
     } 
+    timeStep_vartype timeStepVar;
+    if (subNewDW->exists(lb->timeStepLabel)) {
+      subNewDW->get(timeStepVar,lb->timeStepLabel);
+      ParentNewDW->put(timeStepVar, lb->timeStepLabel);
+    }
   }
 #endif
 
@@ -1148,32 +1164,32 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
   ParentNewDW->transferFrom(subNewDW,         // press
                     lb->matrixLabel,         patch_sub,  one_matl,     replace);
   ParentNewDW->transferFrom(subNewDW,
-                    lb->sum_imp_delPLabel,   patch_sub,  d_press_matl, replace); 
+                    lb->sum_imp_delPLabel,   patch_sub,  d_press_matl, replace);
   ParentNewDW->transferFrom(subNewDW,         // term2
                     lb->term2Label,          patch_sub,  one_matl,     replace);
   ParentNewDW->transferFrom(subNewDW,         // rhs
-                    lb->rhsLabel,            patch_sub,  one_matl,     replace);  
+                    lb->rhsLabel,            patch_sub,  one_matl,     replace);
                       
   ParentNewDW->transferFrom(subNewDW,         // uvel_FC
-                    lb->uvel_FCMELabel,      patch_sub,  all_matls_sub,replace); 
+                    lb->uvel_FCMELabel,      patch_sub,  all_matls_sub,replace);
   ParentNewDW->transferFrom(subNewDW,         // vvel_FC
-                    lb->vvel_FCMELabel,      patch_sub,  all_matls_sub,replace); 
+                    lb->vvel_FCMELabel,      patch_sub,  all_matls_sub,replace);
   ParentNewDW->transferFrom(subNewDW,         // wvel_FC
                     lb->wvel_FCMELabel,      patch_sub,  all_matls_sub,replace);
                     
   ParentNewDW->transferFrom(subNewDW,         // grad_impDelP_XFC
-                    lb->grad_dp_XFCLabel,     patch_sub, d_press_matl, replace); 
+                    lb->grad_dp_XFCLabel,     patch_sub, d_press_matl, replace);
   ParentNewDW->transferFrom(subNewDW,         // grad_impDelP_YFC
-                    lb->grad_dp_YFCLabel,     patch_sub, d_press_matl, replace); 
+                    lb->grad_dp_YFCLabel,     patch_sub, d_press_matl, replace);
   ParentNewDW->transferFrom(subNewDW,         // grad_impDelP_ZFC
                     lb->grad_dp_ZFCLabel,     patch_sub, d_press_matl, replace);
                      
   ParentNewDW->transferFrom(subNewDW,        // vol_fracX_FC
-                    lb->vol_fracX_FCLabel,   patch_sub, all_matls_sub,replace); 
+                    lb->vol_fracX_FCLabel,   patch_sub, all_matls_sub,replace);
   ParentNewDW->transferFrom(subNewDW,         // vol_fracY_FC
-                    lb->vol_fracY_FCLabel,   patch_sub, all_matls_sub,replace); 
+                    lb->vol_fracY_FCLabel,   patch_sub, all_matls_sub,replace);
   ParentNewDW->transferFrom(subNewDW,         // vol_fracZ_FC
-                    lb->vol_fracZ_FCLabel,   patch_sub, all_matls_sub,replace);                 
+                    lb->vol_fracZ_FCLabel,   patch_sub, all_matls_sub,replace);
     
   //__________________________________
   //  Turn scrubbing back on
