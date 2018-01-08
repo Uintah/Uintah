@@ -59,12 +59,10 @@ if [ "$MACHINE" == "uintah-build" ]; then
       "jthornock@gmail.com,"               \
       "derkhar@gmail.com,"                 \
       "bisaac2@gmail.com,"                 \
-      "allen@sci.utah.edu,"                \
-      "james.sutherland@chemeng.utah.edu," \
-      "tony.saad@chemeng.utah.edu")
+      "allen@sci.utah.edu" )
     IFS=""    # used to elimnate spaces between array elements
     DEFAULT_MAIL_TO=${names[*]}
-    export TEST_COMPONENTS="Examples ARCHES WASATCH"
+    export TEST_COMPONENTS="Examples ARCHES"
     IFS=" "
   fi
 fi
