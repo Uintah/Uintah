@@ -188,6 +188,8 @@ void PostProcessUda::sched_readDataArchive(const LevelP& level,
   Task* t = scinew Task("PostProcessUda::readDataArchive", this,
                         &PostProcessUda::readDataArchive);
 
+  t->requires(Task::OldDW, getTimeStepLabel());
+  
   GridP grid = level->getGrid();
   const PatchSet* perProcPatches = m_loadBalancer->getPerProcessorPatchSet(grid);
   const PatchSubset* patches = perProcPatches->getSubset(d_myworld->myRank());
@@ -252,9 +254,14 @@ void PostProcessUda::readDataArchive(const ProcessorGroup* pg,
                                      DataWarehouse* old_dw,
                                      DataWarehouse* new_dw)
 {
+  // int timeStep = m_sharedState->getCurrentTopLevelTimeStep();
+  
+  timeStep_vartype timeStep;
+  old_dw->get( timeStep, getTimeStepLabel() );
+  
   double time  = d_udaTimes[d_simTimestep];
   int udaTimestep = d_udaTimesteps[d_simTimestep];
-  proc0cout << "    *** working on uda timestep: " << udaTimestep << " simTimestep: " <<  m_sharedState->getCurrentTopLevelTimeStep() - 1 << " physical time: " << time << endl;
+  proc0cout << "    *** working on uda timestep: " << udaTimestep << " simTimestep: " <<  timeStep - 1 << " physical time: " << time << endl;
 
   // populate the old_dw with variables from the uda.
   // Only one timestep

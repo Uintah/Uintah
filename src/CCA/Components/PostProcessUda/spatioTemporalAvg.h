@@ -15,13 +15,12 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHEVERYWHERE THE
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-
 
 #ifndef Packages_Uintah_CCA_Components_PostProcessUda_spatioTemporalAvg_h
 #define Packages_Uintah_CCA_Components_PostProcessUda_spatioTemporalAvg_h
@@ -63,7 +62,7 @@ WARNING
   public:
     spatioTemporalAvg(ProblemSpecP    & prob_spec,
                       SimulationStateP& sharedState,
-		        Output          * dataArchiver,
+                      Output          * dataArchiver,
                       DataArchive     * dataArchive);
 
     spatioTemporalAvg(); 
@@ -119,7 +118,7 @@ WARNING
       }
 
       void print(){
-	const std::string name = Q_Label->getName();
+        const std::string name = Q_Label->getName();
         std::cout << name << " matl: " << matl << " subtype: " << subtype->getName() << " startTimestep: " << timestep <<"\n";
       };
 
@@ -157,7 +156,8 @@ WARNING
                              CellIterator        & iter,
                              constCCVariable< T >& Qvar,
                              constCCVariable< T >& Qvar_old,
-                             CCVariable< T >     & Qavg );
+                             CCVariable< T >     & Qavg,
+                             const int           & timeStep);
 
     template <class T>
     void query( const Patch         * patch,
@@ -175,6 +175,9 @@ WARNING
     enum Domain {EVERYWHERE, INTERIOR, BOUNDARIES};
     //__________________________________
     // global constants
+    const VarLabel* m_simulationTimeLabel;
+    const VarLabel* m_timeStepLabel;
+
     double    d_startTime  = 0;
     double    d_stopTime   = DBL_MAX;
     bool      d_doTemporalAvg = false;
