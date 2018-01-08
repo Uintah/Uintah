@@ -145,6 +145,8 @@ void AutoCycleFluxBC::scheduleApplyExternalScalarFlux(SchedulerP& sched, const P
   Task* t=scinew Task("AutoCycleFluxBC::applyExternalScalarFlux", this,
                       &AutoCycleFluxBC::applyExternalScalarFlux);
 
+  t->requires(Task::OldDW, d_mpm_lb->simulationTimeLabel);
+
   t->requires(Task::OldDW, d_mpm_lb->pXLabel,                 Ghost::None);
   t->requires(Task::OldDW, d_mpm_lb->pSizeLabel,              Ghost::None);
   if(d_mpm_flags->d_doScalarDiffusion){
@@ -182,10 +184,13 @@ void AutoCycleFluxBC::applyExternalScalarFlux(const ProcessorGroup* , const Patc
                                           DataWarehouse* new_dw)
 {
   // Get the current simulation time
-  double time = d_shared_state->getElapsedSimTime();
+  // double simTime = d_shared_state->getElapsedSimTime();
 
+  simTime_vartype simTime;
+  old_dw->get(simTime, d_mpm_lb->simulationTimeLabel);
+  
   if (cout_doing.active())
-    cout_doing << "Current Time (applyExternalScalarFlux) = " << time << std::endl;
+    cout_doing << "Current Time (applyExternalScalarFlux) = " << simTime << std::endl;
 
   // Calculate the flux at each particle for each flux bc
   std::vector<double> fluxPerPart;
@@ -305,7 +310,7 @@ void AutoCycleFluxBC::applyExternalScalarFlux(const ProcessorGroup* , const Patc
 #else
                 ScalarFluxBC* pbc = pbcP[loadCurveID];
                 double area = parea[idx].length();
-                pExternalScalarFlux[idx] += d_flux_sign * pbc->fluxPerParticle(time, area) / pvol[idx];
+                pExternalScalarFlux[idx] += d_flux_sign * pbc->fluxPerParticle(simTime, area) / pvol[idx];
 #endif
 #if defined USE_FLUX_RESTRICTION
                 if(d_mpm_flags->d_doScalarDiffusion){

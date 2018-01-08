@@ -66,6 +66,8 @@ void Crack::addComputesAndRequiresGetNodalSolutions(Task* t,
 {
   Ghost::GhostType  gan   = Ghost::AroundNodes;
   Ghost::GhostType  gnone = Ghost::None;
+
+  t->requires(Task::OldDW,lb->simulationTimeLabel);
   
   t->requires(Task::NewDW,lb->pMassLabel_preReloc,                gan,NGP);
   t->requires(Task::NewDW,lb->pStressLabel_preReloc,              gan,NGP);
@@ -98,6 +100,9 @@ void Crack::GetNodalSolutions(const ProcessorGroup*,
                               DataWarehouse* old_dw,
                               DataWarehouse* new_dw)
 {
+  simTime_vartype simTime;
+  old_dw->get(simTime, lb->simulationTimeLabel);
+  
   // Compute nodal solutions of stresses, displacement gradients,
   // strain energy density and  kinetic energy density by interpolating
   // particle's solutions to grid. Those variables will be used to calculate
@@ -110,11 +115,11 @@ void Crack::GetNodalSolutions(const ProcessorGroup*,
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
 
-    double time = d_sharedState->getElapsedSimTime();
+    // double simTime = d_sharedState->getElapsedSimTime();
 
     // Detect if calculating fracture parameters or
     // doing crack propagation at this time step
-    DetectIfDoingFractureAnalysisAtThisTimeStep(time);
+    DetectIfDoingFractureAnalysisAtThisTimeStep(simTime);
     
     int numMPMMatls = d_sharedState->getNumMPMMatls();
     for(int m = 0; m < numMPMMatls; m++){
@@ -244,6 +249,10 @@ void Crack::addComputesAndRequiresCalculateFractureParameters(Task* t,
   // Required for contour integral
   int NGC=NJ+NGN+1;
   Ghost::GhostType  gac = Ghost::AroundCells;
+
+  t->requires(Task::OldDW, lb->timeStepLabel);
+  t->requires(Task::OldDW, lb->simulationTimeLabel);
+
   t->requires(Task::NewDW, lb->gMassLabel,                gac,NGC);
   t->requires(Task::NewDW, lb->GMassLabel,                gac,NGC);
   t->requires(Task::NewDW, lb->GNumPatlsLabel,            gac,NGC);
@@ -810,7 +819,15 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
             delete [] cfK;
           } // End if(num>0)
         } // End of loop over ranks (i)
-        if(pid==0) OutputCrackFrontResults(m);
+        if(pid==0) {
+	  timeStep_vartype timeStep;
+	  old_dw->get(timeStep, lb->timeStepLabel);
+
+	  simTime_vartype simTime;
+	  old_dw->get(simTime, lb->simulationTimeLabel);
+
+	  OutputCrackFrontResults(m, timeStep, simTime);
+	}
       } // End if(calFractParameters || doCrackPropagation)
     } // End of loop over matls
     delete interpolator;
@@ -1101,7 +1118,8 @@ short Crack::PointInTriangle(const Point& p,const Point& pt1,
 }
 
 
-void Crack::OutputCrackFrontResults(const int& m)
+void Crack::OutputCrackFrontResults(const int& m,
+				    const int& timeStep, const double& simTime)
 {
   if(cfSegNodes[m].size()>0) {
     // Create output file name in format: CrackFrontResults.matXXX
@@ -1130,8 +1148,8 @@ void Crack::OutputCrackFrontResults(const int& m)
     ofstream outCrkFrt1(outFileName1, ios::app);
     ofstream outCrkFrt2(outFileName2, ios::app);
     
-    double time=d_sharedState->getElapsedSimTime();
-    int timestep=d_sharedState->getCurrentTopLevelTimeStep();
+    // double simTime=d_sharedState->getElapsedSimTime();
+    // int timestep=d_sharedState->getCurrentTopLevelTimeStep();
 
     int num=(int)cfSegNodes[m].size();
     int numSubCracks=0;
@@ -1142,8 +1160,8 @@ void Crack::OutputCrackFrontResults(const int& m)
         Point cp=cx[m][node];
         Vector cfJ = cfSegJ[m][i];
         Vector cfK = cfSegK[m][i];
-        outCrkFrt << setw(5) << timestep
-                  << setw(15) << time
+        outCrkFrt << setw(5) << timeStep
+                  << setw(15) << simTime
                   << setw(5)  << (i-1+2*numSubCracks)/2
                   << setw(10)  << node
                   << setw(15) << cp.x()
@@ -1162,8 +1180,8 @@ void Crack::OutputCrackFrontResults(const int& m)
        
         if(out3middlecracks) {
         if(i==2) {
-          outCrkFrt0 << setw(5) << timestep
-                    << setw(15) << time
+          outCrkFrt0 << setw(5) << timeStep
+                    << setw(15) << simTime
                     << setw(5)  << (i-1+2*numSubCracks)/2
                     << setw(10)  << node
                     << setw(15) << cp.x()
@@ -1180,8 +1198,8 @@ void Crack::OutputCrackFrontResults(const int& m)
         }
 
         if(i==4) {
-          outCrkFrt1 << setw(5) << timestep
-                     << setw(15) << time
+          outCrkFrt1 << setw(5) << timeStep
+                     << setw(15) << simTime
                      << setw(5)  << (i-1+2*numSubCracks)/2
                      << setw(10)  << node
                      << setw(15) << cp.x()
@@ -1198,8 +1216,8 @@ void Crack::OutputCrackFrontResults(const int& m)
         }
 
         if(i==6) {
-          outCrkFrt2 << setw(5) << timestep
-                     << setw(15) << time
+          outCrkFrt2 << setw(5) << timeStep
+                     << setw(15) << simTime
                      << setw(5)  << (i-1+2*numSubCracks)/2
                      << setw(10)  << node
                      << setw(15) << cp.x()

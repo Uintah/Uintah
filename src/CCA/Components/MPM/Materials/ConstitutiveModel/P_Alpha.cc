@@ -218,6 +218,11 @@ void P_Alpha::computeStressTensor(const PatchSubset* patches,
                                       DataWarehouse* old_dw,
                                       DataWarehouse* new_dw)
 {
+  // double simTime = d_sharedState->getElapsedSimTime();
+  
+  // simTime_vartype simTime(0);
+  // old_dw->get( simTime, lb->simulationTimeLabel );
+
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
     double se=0.;
@@ -420,8 +425,7 @@ void P_Alpha::computeStressTensor(const PatchSubset* patches,
           p = Ku*(1.-rho_max/rhoM);
       }
 
-//      double etime = d_sharedState->getElapsedSimTime();
-//      cout << "12345 " << " " << etime << " " << alpha << " " << ptemperature[idx] << " " << p << endl;
+//      cout << "12345 " << " " << simTime << " " << alpha << " " << ptemperature[idx] << " " << p << endl;
 
       // Compute artificial viscosity term
       if (flag->d_artificial_viscosity) {

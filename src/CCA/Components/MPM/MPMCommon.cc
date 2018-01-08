@@ -23,6 +23,8 @@
  */
 
 #include <CCA/Components/MPM/MPMCommon.h> 
+#include <CCA/Components/MPM/Core/MPMFlags.h>
+#include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/PlasticityModels/DamageModel.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/PlasticityModels/ErosionModel.h>
@@ -37,11 +39,14 @@ MPMCommon::MPMCommon(const ProcessorGroup* myworld,
 		     SimulationStateP sharedState) :
   ApplicationCommon(myworld, sharedState)
 {
+  lb = scinew MPMLabel();
 }
 
 MPMCommon::~MPMCommon()
 {
+  delete lb;
 }
+
 //______________________________________________________________________
 //
 void MPMCommon::materialProblemSetup(const ProblemSpecP& prob_spec, 
@@ -139,7 +144,9 @@ void MPMCommon::scheduleUpdateStress_DamageErosionModels(SchedulerP   & sched,
   
   Task* t = scinew Task("MPM::updateStress_DamageErosionModels", this, 
                         &MPMCommon::updateStress_DamageErosionModels);
-                        
+
+  t->requires(Task::OldDW, lb->simulationTimeLabel);
+  
   int numMatls = m_sharedState->getNumMPMMatls();
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = m_sharedState->getMPMMaterial(m);

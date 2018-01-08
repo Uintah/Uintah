@@ -85,12 +85,15 @@ void ConstantRate::computeFlux(
                                      DataWarehouse  * new_dw
                               )
 {
+  // Get the current simulation time
+  // double simTime = d_sharedState->getElapsedSimTime();
+
+  // simTime_vartype simTime;
+  // old_dw->get(simTime, d_lb->simulationTimeLabel);
 
   ParticleInterpolator*   interpolator = d_Mflag->d_interpolator->clone(patch);
   std::vector<IntVector>  ni(interpolator->size());
   std::vector<double>     S(interpolator->size());
-
-//  double current_time1 = d_sharedState->getElapsedSimTime();
 
   int dwi = matl->getDWIndex();
 //  Vector dx = patch->dCell();
@@ -134,6 +137,8 @@ void ConstantRate::scheduleComputeFlux(
                                       ) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
+
+  // task->requires(Task::OldDW, d_lb->simulationTimeLabel,);
 
   task->computes(d_lb->diffusion->pFlux_preReloc, matlset);
 }

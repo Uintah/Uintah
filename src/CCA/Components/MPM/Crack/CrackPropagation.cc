@@ -338,15 +338,24 @@ void Crack::addComputesAndRequiresConstructNewCrackFrontElems(Task* t,
                                 const MaterialSet* /*matls*/) const
 {
   // delT will be used to calculate crack propagation velocity  
-   t->requires(Task::OldDW, lb->delTLabel);
+  t->requires(Task::OldDW, lb->simulationTimeLabel);
+  t->requires(Task::OldDW, lb->delTLabel);
 }
 
 void Crack::ConstructNewCrackFrontElems(const ProcessorGroup*,
                       const PatchSubset* patches,
                       const MaterialSubset* /*matls*/,
-                      DataWarehouse* /*old_dw*/,
+                      DataWarehouse* old_dw,
                       DataWarehouse* /*new_dw*/)
 {
+  // double time=d_sharedState->getElapsedSimTime();
+
+  // simTime_vartype simTime;
+  // old_dw->get(simTime, lb->simulationTimeLabel);
+
+  // delt_vartype delT;
+  // old_dw->get(delT, lb->delTLabel, getLevel(patches) );
+	  
   for(int p=0; p<patches->size(); p++) {
     const Patch* patch = patches->get(p);
     Vector dx = patch->dCell();
@@ -421,26 +430,23 @@ void Crack::ConstructNewCrackFrontElems(const ProcessorGroup*,
 
           // Calculate crack propagation velocity
           double vc1=0.,vc2=0.,vcc=0.;
-          /*      
-          double time=d_sharedState->getElapsedSimTime();
-          delt_vartype delT;
-          old_dw->get(delT, lb->delTLabel, getLevel(patches) );
+	  /*
           if(sp) { // Record crack incremental and time instant 
             cfSegDis[m][2*i]=(p1p-p1).length();
-            cfSegTime[m][2*i]=time-delT;            
+            cfSegTime[m][2*i] =simTime-delT;            
           }
                   
           if(ep) { // Record crack incremental and time instant
             cfSegDis[m][2*i+1]=(p2p-p2).length();
-            cfSegTime[m][2*i+1]=time-delT;          
+            cfSegTime[m][2*i+1]=simTime-delT;          
           }
           
-          if(time>0.) {
-            vc1=cfSegDis[m][2*i]/(time-cfSegTime[m][2*i]);
-            vc2=cfSegDis[m][2*i+1]/(time-cfSegTime[m][2*i+1]);
+          if(simTime>0.) {
+            vc1=cfSegDis[m][2*i]/(simTime-cfSegTime[m][2*i]);
+            vc2=cfSegDis[m][2*i+1]/(simTime-cfSegTime[m][2*i+1]);
             vcc=(vc1+vc2)/2.;
           }  
-          */      
+	  */
           short CASE=0;             // No propagation
           if(l12/css[m]<0.25) {
             CASE=1;                 // Too short segment, drop it

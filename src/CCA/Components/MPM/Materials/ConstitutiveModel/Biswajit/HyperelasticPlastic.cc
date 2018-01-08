@@ -1081,6 +1081,15 @@ void HyperelasticPlastic::computeStressTensor(const PatchSubset* patches,
                                 DataWarehouse* old_dw,
                                 DataWarehouse* new_dw)
 { 
+  // double simTime = d_sharedState->getElapsedSimTime();
+
+  simTime_vartype simTime(0);
+  old_dw->get( simTime, lb->simulationTimeLabel );
+
+  // Get delT
+  delt_vartype delT;
+  old_dw->get( delT, lb->delTLabel, getLevel(patches));
+ 
   // Constants
   double onethird = (1.0/3.0), sqtwthds = sqrt(2.0/3.0);
   Matrix3 Identity;
@@ -1093,10 +1102,6 @@ void HyperelasticPlastic::computeStressTensor(const PatchSubset* patches,
   double flow     = 0.0;
   double K        = 0.0;
   
-  // Get delT
-  delt_vartype delT;
-  old_dw->get(delT, lb->delTLabel, getLevel(patches));
- 
   // Normal patch loop
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
@@ -1116,7 +1121,6 @@ void HyperelasticPlastic::computeStressTensor(const PatchSubset* patches,
     int dwi              = matl->getDWIndex();
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
     Vector dx            = patch->dCell();
-    double time = d_sharedState->getElapsedSimTime();
 
     // Particle and grid data universal to model type
     // Old data containers
@@ -1382,7 +1386,7 @@ void HyperelasticPlastic::computeStressTensor(const PatchSubset* patches,
           updateFailedParticlesAndModifyStress(defGrad, pFailureStrain[idx], 
                                            pLocalized[idx], pLocalized_new[idx],
                                            pTimeOfLoc[idx], pTimeOfLoc_new[idx],
-                                           pStress[idx], pParticleID[idx],time);
+                                           pStress[idx], pParticleID[idx],simTime);
           if (pLocalized_new[idx]>0){
             totalLocalizedParticle+=1;
           }
@@ -1957,6 +1961,11 @@ void HyperelasticPlastic::computeStressTensorImplicit(const PatchSubset* patches
                                         DataWarehouse* old_dw,
                                         DataWarehouse* new_dw)
 {
+  // double simTime = d_sharedState->getElapsedSimTime();
+  
+  simTime_vartype simTime(0);
+  oldDW->get( simTime, lb->simulationTimeLabel );
+
   // Constants
   double onethird = (1.0/3.0);
   double sqtwthds = sqrt(2.0/3.0);
@@ -2087,9 +2096,8 @@ void HyperelasticPlastic::computeStressTensorImplicit(const PatchSubset* patches
                                                         dx, pSize,interpolator);
       }
       
-      // Unused because no "active stress carried over from CNHImplicit    
-      double time = d_sharedState->getElapsedSimTime();
-    
+      // Unused because no "active stress carried over from CNHImplicit
+      
       for(iter = pset->begin(); iter != pset->end(); iter++){
         particleIndex idx = *iter;
       

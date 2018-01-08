@@ -1088,6 +1088,7 @@ void AMRMPM::scheduleComputeStressTensor(SchedulerP& sched,
     t->computes(lb->p_qLabel_preReloc, matlset);
   }
 
+  t->requires(Task::OldDW,lb->simulationTimeLabel);
   t->computes(lb->delTLabel,getLevel(patches));
   t->computes(lb->StrainEnergyLabel);
 

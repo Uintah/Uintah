@@ -131,7 +131,7 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
   // Read in boundary-condition types 
   ProblemSpecP grid_bc_ps = ps->findBlock("Grid")
                            ->findBlock("BoundaryConditions");
-  for(ProblemSpecP face_ps = grid_bc_ps->findBlock("Face"); face_ps != 0;
+  for(ProblemSpecP face_ps = grid_bc_ps->findBlock("Face"); face_ps!=nullptr;
                    face_ps = face_ps->findNextBlock("Face")) {
     map<string,string> values;
     face_ps->getAttributes(values);
@@ -152,7 +152,7 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
   int numMPMMatls=0;
   ProblemSpecP mpm_ps = 
     ps->findBlockWithOutAttribute("MaterialProperties")->findBlock("MPM");
-  for(ProblemSpecP mat_ps=mpm_ps->findBlock("material"); mat_ps!=0;
+  for(ProblemSpecP mat_ps=mpm_ps->findBlock("material"); mat_ps!=nullptr;
                    mat_ps=mat_ps->findNextBlock("material") ) numMPMMatls++;
   // Physical properties of cracks
   stressState.resize(numMPMMatls);
@@ -206,10 +206,10 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
  
   int m=0;  
   for(ProblemSpecP mat_ps=mpm_ps->findBlock("material");
-         mat_ps!=0; mat_ps=mat_ps->findNextBlock("material") ) {
+         mat_ps!=nullptr; mat_ps=mat_ps->findNextBlock("material") ) {
     ProblemSpecP crk_ps=mat_ps->findBlock("crack");
-    if(crk_ps==0) crackType[m]="NO_CRACK";
-    if(crk_ps!=0) {
+    if(crk_ps==nullptr) crackType[m]="NO_CRACK";
+    if(crk_ps!=nullptr) {
        // Crack surface contact type, either "friction", "stick" or "null"
        crk_ps->require("type",crackType[m]);
        if(crackType[m]!="friction" && crackType[m]!="stick" && crackType[m]!="null") {
@@ -250,7 +250,7 @@ void
 Crack::ReadCurvedQuadCracks(const int& m,const ProblemSpecP& geom_ps)
 {
   for(ProblemSpecP cquad_ps=geom_ps->findBlock("curved_quad");
-                 cquad_ps!=0; cquad_ps=cquad_ps->findNextBlock("curved_quad")) {
+                 cquad_ps!=nullptr; cquad_ps=cquad_ps->findNextBlock("curved_quad")) {
            
     // Four vertices of the curved quad
     Point p;
@@ -270,7 +270,7 @@ Crack::ReadCurvedQuadCracks(const int& m,const ProblemSpecP& geom_ps)
     // Characteristic points on two opposite cuvered sides
     vector<Point> ptsSide2,ptsSide4;                   
     ProblemSpecP side2_ps=cquad_ps->findBlock("points_curved_side2"); 
-    for(ProblemSpecP pt_ps=side2_ps->findBlock("point"); pt_ps!=0; 
+    for(ProblemSpecP pt_ps=side2_ps->findBlock("point"); pt_ps!=nullptr;
                      pt_ps=pt_ps->findNextBlock("point")) {  
       pt_ps->get("val",p); 
       ptsSide2.push_back(p);
@@ -278,7 +278,7 @@ Crack::ReadCurvedQuadCracks(const int& m,const ProblemSpecP& geom_ps)
     cquadPtsSide2[m].push_back(ptsSide2);
 
     ProblemSpecP side4_ps=cquad_ps->findBlock("points_curved_side4");
-    for(ProblemSpecP pt_ps=side4_ps->findBlock("point"); pt_ps!=0;
+    for(ProblemSpecP pt_ps=side4_ps->findBlock("point"); pt_ps!=nullptr;
                      pt_ps=pt_ps->findNextBlock("point")) {
       pt_ps->get("val",p); 
       ptsSide4.push_back(p);
@@ -326,7 +326,7 @@ void
 Crack::ReadQuadCracks(const int& m,const ProblemSpecP& geom_ps)
 {
   for(ProblemSpecP quad_ps=geom_ps->findBlock("quad");
-      quad_ps!=0; quad_ps=quad_ps->findNextBlock("quad")) {
+      quad_ps!=nullptr; quad_ps=quad_ps->findNextBlock("quad")) {
 
     // Four vertices (p1-p4) of the quad
     Point p1,p2,p3,p4,p5,p6,p7,p8;
@@ -386,7 +386,7 @@ void
 Crack::ReadTriangularCracks(const int& m,const ProblemSpecP& geom_ps)
 {
   for(ProblemSpecP tri_ps=geom_ps->findBlock("triangle");
-       tri_ps!=0; tri_ps=tri_ps->findNextBlock("triangle")) {
+       tri_ps!=nullptr; tri_ps=tri_ps->findNextBlock("triangle")) {
 
     // Three vertices (p1-p3) of the triangle
     Point p1,p2,p3,p4,p5,p6;
@@ -441,7 +441,7 @@ void
 Crack::ReadArcCracks(const int& m,const ProblemSpecP& geom_ps)
 {
   for(ProblemSpecP arc_ps=geom_ps->findBlock("arc");
-                   arc_ps!=0; arc_ps=arc_ps->findNextBlock("arc")) {
+                   arc_ps!=nullptr; arc_ps=arc_ps->findNextBlock("arc")) {
 
     // Three points on the arc
     Point p;    
@@ -468,7 +468,7 @@ void
 Crack::ReadEllipticCracks(const int& m,const ProblemSpecP& geom_ps)
 {
   for(ProblemSpecP ellipse_ps=geom_ps->findBlock("ellipse");
-      ellipse_ps!=0; ellipse_ps=ellipse_ps->findNextBlock("ellipse")) {
+      ellipse_ps!=nullptr; ellipse_ps=ellipse_ps->findNextBlock("ellipse")) {
 
     // Three points on the arc
     Point p; 
@@ -496,7 +496,7 @@ Crack::ReadPartialEllipticCracks(const int& m,
                                  const ProblemSpecP& geom_ps)
 {
   for(ProblemSpecP pellipse_ps=geom_ps->findBlock("partial_ellipse");
-                   pellipse_ps!=0; 
+                   pellipse_ps!=nullptr; 
                    pellipse_ps=pellipse_ps->findNextBlock("partial_ellipse")) {
 
     // Center,two points on major and minor axes

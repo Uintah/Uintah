@@ -179,7 +179,15 @@ void ProgramBurn::computeStressTensor(const PatchSubset* patches,
                                       DataWarehouse* old_dw,
                                       DataWarehouse* new_dw)
 {
-    for(int pp=0;pp<patches->size();pp++){
+  // double simTime = d_sharedState->getElapsedSimTime()
+    
+  simTime_vartype simTime(0);
+  old_dw->get( simTime, lb->simulationTimeLabel );
+
+  delt_vartype delT;
+  old_dw->get(delT, lb->delTLabel, getLevel(patches));
+
+  for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
     double p,se=0.;
     double c_dil=0.0;
@@ -203,9 +211,6 @@ void ProgramBurn::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<int>      pLocalized_new;
     constParticleVariable<long64> pParticleID;
 
-    delt_vartype delT;
-    old_dw->get(delT, lb->delTLabel, getLevel(patches));
-
     old_dw->get(px,                  lb->pXLabel,                  pset);
     old_dw->get(pmass,               lb->pMassLabel,               pset);
     old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
@@ -224,7 +229,7 @@ void ProgramBurn::computeStressTensor(const PatchSubset* patches,
     new_dw->get(deformationGradient_new,
                                   lb->pDeformationMeasureLabel_preReloc,  pset);
 
-    double time = d_sharedState->getElapsedSimTime() - d_initialData.d_T0;
+    double time = simTime - d_initialData.d_T0;
 
     double K = d_initialData.d_K;
     double n = d_initialData.d_n;

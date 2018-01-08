@@ -22,6 +22,7 @@
  * IN THE SOFTWARE.
  */
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/PlasticityModels/ErosionModel.h>
+#include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Math/Matrix3.h>
 #include <string.h>
 
@@ -226,8 +227,11 @@ ErosionModel::updateStress_Erosion( ParticleSubset * pset,
   pTimeOfLoc_new.copyData( pTimeOfLoc );
 
   // Get the current simulation time
-  double time = d_sharedState->getElapsedSimTime();
+  // double simTime = d_sharedState->getElapsedSimTime();
                          
+  simTime_vartype simTime(0);
+  old_dw->get( simTime, d_lb->simulationTimeLabel );
+
   //__________________________________
   // If the particle has failed, apply various erosion algorithms
   if ( d_algo != erosionAlgo::none ) {
@@ -240,9 +244,9 @@ ErosionModel::updateStress_Erosion( ParticleSubset * pset,
       particleIndex idx = *iter;
 
       if (pLocalized_old[idx] != pLocalized_new[idx]) {
-        pTimeOfLoc_new[idx] = time;
+        pTimeOfLoc_new[idx] = simTime;
       }
-      double failTime = time - pTimeOfLoc_new[idx];
+      double failTime = simTime - pTimeOfLoc_new[idx];
 
       //__________________________________
       //  modify the stress

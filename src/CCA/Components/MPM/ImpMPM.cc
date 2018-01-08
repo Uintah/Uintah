@@ -92,10 +92,9 @@ static DebugStream cout_doing("IMPM", false);
 
 
 ImpMPM::ImpMPM(const ProcessorGroup* myworld,
-	       const SimulationStateP sharedState) :
+               const SimulationStateP sharedState) :
   MPMCommon(myworld, sharedState)
 {
-  lb = scinew MPMLabel();
   flags = scinew ImpMPMFlags(myworld);
   d_nextOutputTime=0.;
   d_SMALL_NUM_MPM=1e-200;
@@ -122,7 +121,6 @@ bool ImpMPM::restartableTimeSteps()
 
 ImpMPM::~ImpMPM()
 {
-  delete lb;
   delete flags;
 
   if(d_perproc_patches && d_perproc_patches->removeReference()) { 
@@ -439,7 +437,7 @@ void ImpMPM::scheduleRestartInitialize(const LevelP& level,
 //______________________________________________________________________
 //
 void ImpMPM::scheduleSwitchInitialization(const LevelP& level,
-					  SchedulerP& sched)
+                                          SchedulerP& sched)
 {
   if (!flags->doMPMOnLevel(level->getIndex(), level->getGrid()->numLevels()))
     return;
@@ -917,6 +915,7 @@ void ImpMPM::scheduleApplyExternalLoads(SchedulerP& sched,
   Task* t=scinew Task("IMPM::applyExternalLoads",
                     this, &ImpMPM::applyExternalLoads);
                                                                                 
+  t->requires(Task::OldDW, lb->simulationTimeLabel);
   t->requires(Task::OldDW, lb->pExternalHeatFluxLabel,    Ghost::None);
   t->requires(Task::OldDW, lb->pXLabel,                Ghost::None);
   t->computes(             lb->pExtForceLabel_preReloc);
@@ -1466,6 +1465,7 @@ void ImpMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
                     this, &ImpMPM::interpolateToParticlesAndUpdate);
 
  
+  t->requires(Task::OldDW, lb->simulationTimeLabel);
   t->requires(Task::OldDW, lb->delTLabel );
 
   t->requires(Task::NewDW, lb->gAccelerationLabel,     Ghost::AroundCells,1);
@@ -1844,11 +1844,15 @@ void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
                                 DataWarehouse* old_dw,
                                 DataWarehouse* new_dw)
 {
+  simTime_vartype simTimeVar;
+  old_dw->get(simTimeVar, lb->simulationTimeLabel);
+  double simTime = simTimeVar;
+
   // Get the current simulation time
-  double time = m_sharedState->getElapsedSimTime();
+  // double simTime = m_sharedState->getElapsedSimTime();
 
   if (cout_doing.active())
-    cout_doing << "Current Time (applyExternalLoads) = " << time << endl;
+    cout_doing << "Current Time (applyExternalLoads) = " << simTime << endl;
                                                                                 
   // Calculate the force vector at each particle for each bc
   std::vector<double> forceMagPerPart;
@@ -1871,8 +1875,8 @@ void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
           dynamic_cast<PressureBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
         pbcP.push_back(pbc);
 
-        // Calculate the force per particle at current time
-        forceMagPerPart.push_back(pbc->forcePerParticle(time));
+        // Calculate the force per particle at current simulation time
+        forceMagPerPart.push_back(pbc->forcePerParticle(simTime));
 
       }
       if (bcs_type == "HeatFlux") {
@@ -1889,7 +1893,7 @@ void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
 
         // Calculate the force per particle at current time
 
-        heatFluxMagPerPart.push_back(hfbc->fluxPerParticle(time));
+        heatFluxMagPerPart.push_back(hfbc->fluxPerParticle(simTime));
       }
       if (bcs_type == "ArchesHeatFlux"){
         ArchesHeatFluxBC* ahfbc =
@@ -1905,7 +1909,7 @@ void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
 
         // Calculate the heat flux per particle at current time
 
-        heatFluxMagPerPart.push_back(ahfbc->fluxPerParticle(time));
+        heatFluxMagPerPart.push_back(ahfbc->fluxPerParticle(simTime));
       }
     }
   }
@@ -1971,7 +1975,7 @@ void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
               if (loadCurveID >= 0) {
                 PressureBC* pbc = pbcP[loadCurveID];
                 double force = forceMagPerPart[loadCurveID];
-                pExternalForce_new[idx] += pbc->getForceVector(px[idx],force,time);
+                pExternalForce_new[idx] += pbc->getForceVector(px[idx],force,simTime);
               }
             } // for k=0...
           }
@@ -3670,9 +3674,14 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       }
  
       if(mpm_matl->getIsRigid()) {
-	// Get the current simulation time
-	const double tcurr = m_sharedState->getElapsedSimTime();
-        if(tcurr >= d_stop_time){
+        // Get the current simulation time
+        simTime_vartype simTimeVar;
+        old_dw->get(simTimeVar, lb->simulationTimeLabel);
+        double simTime = simTimeVar;
+
+        // const double simTime = m_sharedState->getElapsedSimTime();
+        
+        if(simTime >= d_stop_time){
           for(ParticleSubset::iterator iter = pset->begin();
               iter != pset->end(); iter++){
             particleIndex idx = *iter;

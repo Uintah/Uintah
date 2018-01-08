@@ -140,13 +140,16 @@ void NonLinearDiff1::computeFlux(
                                        DataWarehouse  * new_dw
                                 )
 {
+  // Get the current simulation time
+  // double simTime = d_sharedState->getElapsedSimTime();
+
+  simTime_vartype simTime;
+  old_dw->get(simTime, d_lb->simulationTimeLabel);
+
   Ghost::GhostType gac = Ghost::AroundCells;
   ParticleInterpolator* interpolator = d_Mflag->d_interpolator->clone(patch);
   std::vector<IntVector> ni(interpolator->size());
   std::vector<double> S(interpolator->size());
-
-  // Get the current simulation time
-  double current_time1 = d_sharedState->getElapsedSimTime();
 
   int dwi = matl->getDWIndex();
   Vector dx = patch->dCell();
@@ -196,13 +199,13 @@ void NonLinearDiff1::computeFlux(
   double concentration = 0.0;
 
   if(d_use_diff_curve){
-    if(current_time1 > d_time_point2){
+    if(simTime > d_time_point2){
       d_diff_curve_index++;
       d_time_point1 = d_time_points[d_diff_curve_index];
       d_time_point2 = d_time_points[d_diff_curve_index+1];
       d_flux_direction = d_fd_directions[d_diff_curve_index];
     }
-    //cout << "Time: " << current_time1 << " t1: " << d_time_point1;
+    //cout << "Time: " << simTime << " t1: " << d_time_point1;
     //cout << ", t2: " << d_time_point2 << " fd: " << d_flux_direction << endl;
   }
   for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end();
@@ -310,6 +313,8 @@ void NonLinearDiff1::scheduleComputeFlux(Task* task, const MPMMaterial* matl,
   const MaterialSubset* matlset = matl->thisMaterial();
   Ghost::GhostType gnone = Ghost::None;
   Ghost::GhostType gac   = Ghost::AroundCells;
+  task->requires(Task::OldDW, d_lb->simulationTimeLabel);
+
   task->requires(Task::OldDW, d_lb->pXLabel,                        matlset, gnone);
   task->requires(Task::OldDW, d_lb->diffusion->pGradConcentration,  matlset, gnone);
   task->requires(Task::OldDW, d_lb->diffusion->pConcentration,      matlset, gnone);

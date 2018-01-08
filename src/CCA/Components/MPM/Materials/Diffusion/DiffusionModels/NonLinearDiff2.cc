@@ -114,6 +114,8 @@ void NonLinearDiff2::scheduleComputeFlux(
   const MaterialSubset* matlset = matl->thisMaterial();
   Ghost::GhostType gnone = Ghost::None;
 
+  // task->requires(Task::OldDW, d_lb->simulationTimeLabel,);
+
   task->requires(Task::OldDW, d_lb->pPosChargeLabel, matlset, gnone);
   task->requires(Task::OldDW, d_lb->pNegChargeLabel, matlset, gnone);
   task->requires(Task::OldDW, d_lb->pPosChargeGradLabel, matlset, gnone);
@@ -134,8 +136,11 @@ void NonLinearDiff2::computeFlux(
                                        DataWarehouse  * new_dw
                                 )
 {
+  // Get the current simulation time
+  // double simTime = d_sharedState->getElapsedSimTime();
 
-  //double current_time1 = d_sharedState->getElapsedSimTime();
+  // simTime_vartype simTime;
+  // old_dw->get(simTime, d_lb->simulationTimeLabel);
 
   int dwi = matl->getDWIndex();
   Vector dx = patch->dCell();

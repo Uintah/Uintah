@@ -172,13 +172,19 @@ void SpecifiedBodyContact::exMomInterpolated(const ProcessorGroup*,
                                              DataWarehouse* new_dw)
 {
 #if 0
+  // const double simTime = d_sharedState->getElapsedSimTime();
+  
+  simTime_vartype simTime;
+  old_dw->get(simTime, lb->simulationTimeLabel);
+
+  delt_vartype delT;
+  old_dw->get(delT, lb->delTLabel, getLevel(patches));
+  
   int numMatls = d_sharedState->getNumMPMMatls();
   ASSERTEQ(numMatls, matls->size());
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    delt_vartype delT;
-    old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
     // Retrieve necessary data from DataWarehouse
     std::vector<constNCVariable<double> > gmass(numMatls);
@@ -191,7 +197,6 @@ void SpecifiedBodyContact::exMomInterpolated(const ProcessorGroup*,
       new_dw->getModifiable(gvelocity[m],lb->gVelocityLabel,     dwi, patch);
       new_dw->getModifiable(frictionWork[m],lb->frictionalWorkLabel,dwi,patch);
     }
-    const double tcurr = d_sharedState->getElapsedSimTime();
     
     // three ways to get velocity 
     //   if > stop time, always use stop velocity
@@ -201,11 +206,11 @@ void SpecifiedBodyContact::exMomInterpolated(const ProcessorGroup*,
     
     bool  rigid_velocity = true;
     Vector requested_velocity( 0.0, 0.0, 0.0 );
-    if(tcurr>d_stop_time) {
+    if(simTime>d_stop_time) {
       requested_velocity = d_vel_after_stop;
       rigid_velocity = false;
     } else if(d_vel_profile.size()>0) {
-      requested_velocity = findVelFromProfile(tcurr);
+      requested_velocity = findVelFromProfile(simTime);
       rigid_velocity  = false;
     }
     
@@ -243,6 +248,12 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
                                        DataWarehouse* old_dw,
                                        DataWarehouse* new_dw)
 {
+  // set velocity to appropriate vel
+  // const double simTime = d_sharedState->getElapsedSimTime(); // FIXME: + dt ?
+    
+  simTime_vartype simTime;
+  old_dw->get(simTime, lb->simulationTimeLabel);
+
   Ghost::GhostType  gnone = Ghost::None;
   int numMatls = d_sharedState->getNumMPMMatls();
 
@@ -278,17 +289,14 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
     
-    // set velocity to appropriate vel
-    const double tcurr = d_sharedState->getElapsedSimTime(); // FIXME: + dt ?
-    
     bool  rigid_velocity = true;
     Vector requested_velocity(0.0, 0.0, 0.0);
-    if(tcurr>d_stop_time) {
+    if(simTime>d_stop_time) {
       rigid_velocity = false;
       requested_velocity = d_vel_after_stop;
     } else if(d_vel_profile.size()>0) {
       rigid_velocity = false;
-      requested_velocity = findVelFromProfile(tcurr);
+      requested_velocity = findVelFromProfile(simTime);
     }
 
     Vector reaction_force(0.0,0.0,0.0);
@@ -349,6 +357,8 @@ void SpecifiedBodyContact::addComputesAndRequiresInterpolated(SchedulerP & sched
                       this, &SpecifiedBodyContact::exMomInterpolated);
   
   const MaterialSubset* mss = ms->getUnion();
+  t->requires(Task::OldDW, lb->simulationTimeLabel);
+
   t->requires(Task::NewDW, lb->gMassLabel,          Ghost::None);
   t->modifies(             lb->gVelocityLabel,       mss);
   
@@ -368,6 +378,7 @@ void SpecifiedBodyContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
   z_matl->addReference();
   
   const MaterialSubset* mss = ms->getUnion();
+  t->requires(Task::OldDW, lb->simulationTimeLabel);
   t->requires(Task::OldDW, lb->delTLabel);    
   t->requires(Task::NewDW, lb->gMassLabel,             Ghost::None);
   t->requires(Task::NewDW, lb->gInternalForceLabel,    Ghost::None);

@@ -504,7 +504,6 @@ private:
   ImpMPM(const ImpMPM&);
   ImpMPM& operator=(const ImpMPM&);
 
-  MPMLabel* lb;
   ImpMPMFlags* flags;
 
   ImplicitHeatConduction* heatConductionModel;

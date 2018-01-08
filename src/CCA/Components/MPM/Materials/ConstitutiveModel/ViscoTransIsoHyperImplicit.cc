@@ -299,6 +299,18 @@ ViscoTransIsoHyperImplicit::computeStressTensorImplicit(const PatchSubset* patch
 //COMPUTES THE STRESS ON ALL THE PARTICLES IN A GIVEN PATCH FOR A GIVEN MATERIAL
 //CALLED ONCE PER TIME STEP CONTAINS A COPY OF computeStableTimeStep
 {
+  DataWarehouse* parent_old_dw =
+    new_dw->getOtherDataWarehouse(Task::ParentOldDW);
+
+  // Get the current simulation time
+  // double simTime = d_sharedState->getElapsedSimTime();
+
+  simTime_vartype simTime(0);
+  old_dw->get( simTime, lb->simulationTimeLabel );
+
+  delt_vartype delT;
+  parent_old_dw->get(delT, lb->delTLabel, getLevel(patches));
+  
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
 
@@ -345,12 +357,6 @@ ViscoTransIsoHyperImplicit::computeStressTensorImplicit(const PatchSubset* patch
     ParticleVariable<Matrix3> history4,history5,history6;
     constParticleVariable<Matrix3> history1_old,history2_old,history3_old;
     constParticleVariable<Matrix3> history4_old,history5_old,history6_old;
-
-    DataWarehouse* parent_old_dw =
-      new_dw->getOtherDataWarehouse(Task::ParentOldDW);
-
-    delt_vartype delT;
-    parent_old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
     pset = parent_old_dw->getParticleSubset(dwi, patch);
     parent_old_dw->get(px,                 lb->pXLabel,                  pset);
@@ -439,9 +445,6 @@ ViscoTransIsoHyperImplicit::computeStressTensorImplicit(const PatchSubset* patch
                                                         deformationGradient,
                                                         dx, psize,interpolator);
       }
-
-      // Get the current simulation time
-      double time = d_sharedState->getElapsedSimTime();
 
       for(ParticleSubset::iterator iter = pset->begin();
                                    iter != pset->end(); iter++){
@@ -532,7 +535,7 @@ ViscoTransIsoHyperImplicit::computeStressTensorImplicit(const PatchSubset* patch
         fiber_stress = (DY*dWdI4tilde*I4tilde
                         - Identity*(1./3.)*dWdI4tilde*I4tilde)*2./J;
         double p = Bulk*log(J)/J; // p -= qVisco;
-        double active_stress = d_active*(time+delT);
+        double active_stress = d_active*(simTime+delT);
         if (p >= -1.e-5 && p <= 1.e-5)
           p = 0.;
         pressure = Identity*(p + active_stress);
@@ -802,7 +805,16 @@ ViscoTransIsoHyperImplicit::computeStressTensorImplicit(const PatchSubset* patch
                                                         DataWarehouse* new_dw)
 //___________________the final one
 {
-   for(int pp=0;pp<patches->size();pp++){
+  // Get the current simulation time
+  // double simTime = d_sharedState->getElapsedSimTime();
+
+  simTime_vartype simTime(0);
+  old_dw->get( simTime, lb->simulationTimeLabel );
+
+  delt_vartype delT;
+  old_dw->get(delT, lb->delTLabel, getLevel(patches));
+  
+  for(int pp=0;pp<patches->size();pp++){
      const Patch* patch = patches->get(pp);
 
      Matrix3 Identity;
@@ -842,9 +854,6 @@ ViscoTransIsoHyperImplicit::computeStressTensorImplicit(const PatchSubset* patch
      ParticleVariable<Matrix3> history4,history5,history6;
      constParticleVariable<Matrix3> history1_old,history2_old,history3_old;
      constParticleVariable<Matrix3> history4_old,history5_old,history6_old;
-
-     delt_vartype delT;
-     old_dw->get(delT,lb->delTLabel, getLevel(patches));
 
      old_dw->get(px,                  lb->pXLabel,                  pset);
      old_dw->get(psize,               lb->pSizeLabel,               pset);
@@ -931,9 +940,6 @@ ViscoTransIsoHyperImplicit::computeStressTensorImplicit(const PatchSubset* patch
                                                         dx, psize,interpolator);
      }
 
-     // Get the current simulation time
-     double time = d_sharedState->getElapsedSimTime();
-
      for(ParticleSubset::iterator iter = pset->begin();
                                   iter != pset->end(); iter++){
         particleIndex idx = *iter;
@@ -996,7 +1002,7 @@ ViscoTransIsoHyperImplicit::computeStressTensorImplicit(const PatchSubset* patch
         double p = Bulk*log(J)/J; // p -= qVisco;
         if (p >= -1.e-5 && p <= 1.e-5)
           p = 0.;
-        double active_stress = d_active*(time+delT);
+        double active_stress = d_active*(simTime+delT);
         pressure = Identity*(p + active_stress);
         //Cauchy stress
         ElasticStress[idx] = pressure + deviatoric_stress + fiber_stress;

@@ -565,7 +565,6 @@ protected:
     }
   };
   
-  MPMLabel* lb;
   MPMFlags* flags;
 
   double           d_nextOutputTime;

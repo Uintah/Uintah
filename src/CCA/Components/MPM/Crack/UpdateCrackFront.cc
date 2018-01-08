@@ -134,7 +134,8 @@ void Crack::addComputesAndRequiresRecollectCrackFrontSegments(Task* t,
 {
   Ghost::GhostType  gac = Ghost::AroundCells;
   int NGC=2*NGN;
-  // t->requires(Task::OldDW, lb->timeStepLabel);
+  t->requires(Task::OldDW, lb->timeStepLabel);
+  
   t->requires(Task::NewDW, lb->gMassLabel, gac, NGC);
   t->requires(Task::NewDW, lb->GMassLabel, gac, NGC);
   t->requires(Task::OldDW,lb->pSizeLabel, Ghost::None);
@@ -361,10 +362,13 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
       // Save crack elements, crack nodes and crack-front nodes
       // for crack geometry visualization
       if(saveCrackGeometry) {
-	double timeStep = m_sharedState->getCurrentTopLevelTimeStep();
-	// timeStep_vartype timeStep;
-	// old_dw->get(timeStep, lb->timeStepLabel);
-        if(pid==0) OutputCrackGeometry(m,timeStep);
+        if(pid==0) {
+	  // double timeStep = m_sharedState->getCurrentTopLevelTimeStep();
+	  timeStep_vartype timeStep;
+	  old_dw->get(timeStep, lb->timeStepLabel);
+
+	  OutputCrackGeometry(m,timeStep);
+	}
       }
 
     } // End of loop over matls
@@ -373,10 +377,10 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
 }
 
 // Output cracks for visualization
-void Crack::OutputCrackGeometry(const int& m, const int& timestep)
+void Crack::OutputCrackGeometry(const int& m, const int& timeStep)
 {
   if(ce[m].size()>0) { // for the materials with cracks
-    bool timeToDump = dataArchiver->isOutputTimestep();
+    bool timeToDump = dataArchiver->isOutputTimeStep();
     if(timeToDump) {
       // Create output files in format:
       // ce.matXXX.timestepYYYYY (crack elems)
@@ -385,17 +389,17 @@ void Crack::OutputCrackGeometry(const int& m, const int& timestep)
       // Those files are stored in .uda.XXX/tXXXXX/crackData/
 
       char timestepbuf[10],matbuf[10];
-      sprintf(timestepbuf,"%d",timestep);
+      sprintf(timestepbuf,"%d",timeStep);
       sprintf(matbuf,"%d",m);
 
       // Create output directories
       char crackDir[200]="";
       strcat(crackDir,udaDir.c_str());
       strcat(crackDir,"/t");
-      if(timestep<10) strcat(crackDir,"0000");
-      else if(timestep<100) strcat(crackDir,"000");
-      else if(timestep<1000) strcat(crackDir,"00");
-      else if(timestep<10000) strcat(crackDir,"0");
+      if(timeStep<10) strcat(crackDir,"0000");
+      else if(timeStep<100) strcat(crackDir,"000");
+      else if(timeStep<1000) strcat(crackDir,"00");
+      else if(timeStep<10000) strcat(crackDir,"0");
       strcat(crackDir,timestepbuf);
       strcat(crackDir,"/crackData");
 

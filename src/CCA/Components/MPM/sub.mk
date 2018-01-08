@@ -61,6 +61,8 @@ PSELIBS := \
 	Core/ProblemSpec    \
 	Core/Util           
 
+#        $(SRCDIR)/Crack             \
+
 LIBS := $(XML2_LIBRARY) $(VT_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) \
 	$(LAPACK_LIBRARY) $(BLAS_LIBRARY) $(M_LIBRARY)
 
@@ -84,6 +86,8 @@ SUBDIRS := \
 	$(SRCDIR)/PhysicalBC        \
         $(SRCDIR)/Solver            \
 	$(SRCDIR)/ThermalContact     
+
+#        $(SRCDIR)/Crack             \
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 #### End handle subdirs
