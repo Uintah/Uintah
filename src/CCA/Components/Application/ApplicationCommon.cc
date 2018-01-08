@@ -48,10 +48,10 @@ ApplicationCommon::ApplicationCommon( const ProcessorGroup   * myworld,
 
   // If there are multiple applications the Switcher (which is an
   // application) will create the SimulationState and then pass that
-  // to the other applications.
+  // to the child applications.
 
   // If there are combined applications (aka MPMICE) it will create
-  // the SimulationState and then pass that to the other applications.
+  // the SimulationState and then pass that to the child applications.
 
   if (m_sharedState == nullptr) {
     m_sharedState = scinew SimulationState();
@@ -378,8 +378,8 @@ ApplicationCommon::reduceSystemVars( const ProcessorGroup *,
 //
 void
 ApplicationCommon::scheduleInitializeSystemVars( const GridP      & grid,
-						 const PatchSet   * perProcPatchSet,
-						       SchedulerP & scheduler)
+                                                 const PatchSet   * perProcPatchSet,
+                                                       SchedulerP & scheduler)
 {
   // Initialize the system vars which are on a per rank basis.
   Task* task = scinew Task("ApplicationCommon::initializeSystemVars", this,
@@ -397,10 +397,10 @@ ApplicationCommon::scheduleInitializeSystemVars( const GridP      & grid,
   // treatAsOld copyData noScrub notCopyData noCheckpoint
 
   // std::cerr << "**********  " << __FUNCTION__ << "  " << __LINE__ << "  "
-  // 	    << grid->numLevels() << "  " 
-  // 	    << scheduler->get_dw(0) << "  " 
-  // 	    << scheduler->get_dw(1) << "  " 
-  // 	    << scheduler->getLastDW() << std::endl;
+  //        << grid->numLevels() << "  " 
+  //        << scheduler->get_dw(0) << "  " 
+  //        << scheduler->get_dw(1) << "  " 
+  //        << scheduler->getLastDW() << std::endl;
   
   scheduler->addTask(task, perProcPatchSet, m_sharedState->allMaterials());
 }
@@ -409,10 +409,10 @@ ApplicationCommon::scheduleInitializeSystemVars( const GridP      & grid,
 //
 void
 ApplicationCommon::initializeSystemVars( const ProcessorGroup *,
-					 const PatchSubset    * patches,
-					 const MaterialSubset * /*matls*/,
-					       DataWarehouse  * /*old_dw*/,
-					       DataWarehouse  * new_dw )
+                                         const PatchSubset    * patches,
+                                         const MaterialSubset * /*matls*/,
+                                               DataWarehouse  * /*old_dw*/,
+                                               DataWarehouse  * new_dw )
 {
   // std::cerr << "**********  " << __FUNCTION__ << "  " << __LINE__ << "  "
   //        << new_dw << std::endl;  
@@ -420,12 +420,12 @@ ApplicationCommon::initializeSystemVars( const ProcessorGroup *,
   // Initialize the time step.
   new_dw->put(timeStep_vartype(m_timeStep), m_timeStepLabel);
 
-  m_sharedState->setCurrentTopLevelTimeStep( m_timeStep );  
+  // m_sharedState->setCurrentTopLevelTimeStep( m_timeStep );  
 
   // Initialize the simulation time.
   new_dw->put(simTime_vartype(m_simTime), m_simulationTimeLabel);
 
-  m_sharedState->setElapsedSimTime( m_simTime );
+  // m_sharedState->setElapsedSimTime( m_simTime );
 
   // std::cerr << "**********  " << __FUNCTION__ << "  " << __LINE__ << "  "
   //        << new_dw << std::endl;  
@@ -455,10 +455,10 @@ ApplicationCommon::scheduleUpdateSystemVars(const GridP& grid,
   // treatAsOld copyData noScrub notCopyData noCheckpoint
 
   // std::cerr << "**********  " << __FUNCTION__ << "  " << __LINE__ << "  "
-  // 	    << grid->numLevels() << "  " 
-  // 	    << scheduler->get_dw(0) << "  " 
-  // 	    << scheduler->get_dw(1) << "  " 
-  // 	    << scheduler->getLastDW() << std::endl;
+  //        << grid->numLevels() << "  " 
+  //        << scheduler->get_dw(0) << "  " 
+  //        << scheduler->get_dw(1) << "  " 
+  //        << scheduler->getLastDW() << std::endl;
     
   scheduler->addTask(task, perProcPatchSet, m_sharedState->allMaterials());
 }
@@ -473,7 +473,7 @@ ApplicationCommon::updateSystemVars( const ProcessorGroup *,
                                            DataWarehouse  * new_dw )
 {
   // std::cerr << "**********  " << __FUNCTION__ << "  " << __LINE__ << "  "
-  // 	    << new_dw << std::endl;  
+  //        << new_dw << std::endl;  
 
   // If the time step is being restarted do not update the simulation
   // time. The time step does not get up dated here but is stored so
@@ -485,13 +485,13 @@ ApplicationCommon::updateSystemVars( const ProcessorGroup *,
     // time step where it is over written.
     new_dw->put(timeStep_vartype(m_timeStep), m_timeStepLabel);
 
-    m_sharedState->setCurrentTopLevelTimeStep( m_timeStep );  
+    // m_sharedState->setCurrentTopLevelTimeStep( m_timeStep );  
     
     // // Update the simulation time.
     m_simTime += m_delT;
     new_dw->put(simTime_vartype(m_simTime), m_simulationTimeLabel);
 
-    m_sharedState->setElapsedSimTime( m_simTime );  
+    // m_sharedState->setElapsedSimTime( m_simTime );  
   }
 
   // std::cerr << "**********  " << __FUNCTION__ << "  " << __LINE__ << "  "
@@ -680,7 +680,8 @@ ApplicationCommon::setDelTForAllLevels( SchedulerP& scheduler,
       DataWarehouse* dw = scheduler->get_dw(idw);
       dw->override(delt_vartype(delT_fine), m_delTLabel, level);
       
-      // Kludge to get the time step and simulation time on all DW.
+      // In a similar fashion write the time step and simulation time
+      // to all DWs when running AMR grids.
       dw->override(timeStep_vartype(m_timeStep), m_timeStepLabel);
       
       dw->override(simTime_vartype(m_simTime), m_simulationTimeLabel);
@@ -694,12 +695,13 @@ ApplicationCommon::setDelTForAllLevels( SchedulerP& scheduler,
 
 //______________________________________________________________________
 //
+// This method is called only at restart -
+// see SimulationController::timeStateSetup().
+
 void
 ApplicationCommon::setNextDelT( double delT )
 {
-  // Only used for restarting.
-
-  // Check to see if the user has set a restart delT
+  // Restart - Check to see if the user has set a restart delT.
   if (m_simulationTime->m_override_restart_delt != 0) {
     proc0cout << "Overriding restart delT " << m_delT << " with "
               << m_simulationTime->m_override_restart_delt << "\n";
@@ -709,7 +711,7 @@ ApplicationCommon::setNextDelT( double delT )
     m_scheduler->getLastDW()->override(delt_vartype(m_nextDelT), m_delTLabel);
   }
 
-  // Otherwise get the next delta T from the archive.
+  // Restart - Otherwise get the next delta T from the archive.
   else if( m_scheduler->getLastDW()->exists( m_delTLabel ) )
   {
     delt_vartype delt_var;
@@ -717,7 +719,7 @@ ApplicationCommon::setNextDelT( double delT )
     m_nextDelT = delt_var;
   }
 
-  // All else fails use the previous delta T
+  // Restart - All else fails use the previous delta T.
   else
   {
     m_nextDelT = delT;
@@ -736,8 +738,9 @@ ApplicationCommon::validateNextDelT( DataWarehouse* newDW )
   // simulation time info parameters.
 
   // NOTE: This check is performed BEFORE the simulation time is
-  // updated. As such, the actual simulation time is the current
-  // simulation time plus the current delta T.
+  // updated. As such, being that the time step has completed, the
+  // actual simulation time is the current simulation time plus the
+  // current delta T.
 
   delt_vartype delt_var;
   newDW->get( delt_var, m_delTLabel );
@@ -877,15 +880,19 @@ ApplicationCommon::maybeLastTimeStep( double walltime ) const
 
 //______________________________________________________________________
 //
+// This method is called only at restart or initialization -
+// see SimulationController::timeStateSetup().
+
 void ApplicationCommon::setTimeStep( int timeStep )
 {
   m_timeStep = timeStep;
 
-  // Kludge to get the time step on the inital DW.
+  // Write the time step to the inital DW so apps can get to it when
+  // scheduling.
   m_scheduler->getLastDW()->override(timeStep_vartype(m_timeStep),
-                                   m_timeStepLabel );
+                                     m_timeStepLabel );
   
-  m_sharedState->setCurrentTopLevelTimeStep( m_timeStep );
+  // m_sharedState->setCurrentTopLevelTimeStep( m_timeStep );
 }
 
 //______________________________________________________________________
@@ -894,23 +901,29 @@ void ApplicationCommon::incrementTimeStep()
 {
   ++m_timeStep;
 
-  // Write the new time to the data warehouse
+  // Write the new time to the new data warehouse as the scheduler has
+  // not yet advanced to the next data warehouse - see
+  // SchedulerCommon::advanceDataWarehouse()
   DataWarehouse* newDW = m_scheduler->getLastDW();
 
   newDW->override(timeStep_vartype(m_timeStep), m_timeStepLabel );
 
-  m_sharedState->setCurrentTopLevelTimeStep( m_timeStep );
+  // m_sharedState->setCurrentTopLevelTimeStep( m_timeStep );
 }
 
 //______________________________________________________________________
 //
+// This method is called only at restart or initialization -
+// see SimulationController::timeStateSetup().
+
 void ApplicationCommon::setSimTime( double simTime )
 {
   m_simTime = simTime;
 
-  // Kludge to get the simulation time on the inital DW.
+  // Write the time step to the inital DW so apps can get to it when
+  // scheduling.
   m_scheduler->getLastDW()->override(simTime_vartype(m_simTime),
-				     m_simulationTimeLabel );
+                                     m_simulationTimeLabel );
   
-  m_sharedState->setElapsedSimTime( m_simTime );
+  // m_sharedState->setElapsedSimTime( m_simTime );
 }
