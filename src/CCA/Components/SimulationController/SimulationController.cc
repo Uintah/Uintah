@@ -580,24 +580,36 @@ SimulationController::timeStateSetup()
                                           m_loadBalancer,
                                           &simTimeStart );
 
-    // Set the time step to the restart time step.
+    // Set the time step to the restart time step which is immediately
+    // written to the DW.
     m_app->setTimeStep( m_restart_timestep );
 
-    // Set the simulation time to the restart simulation time.
+    // Set the simulation time to the restart simulation time which is
+    // immediately written to the DW.
     m_app->setSimTimeStart( simTimeStart );
 
-    // Set the next delta T. Note the old delta T is a default and
-    // normally would not be used.
+    // Set the next delta T which is immediately written to the DW.
+
+    // Note the old delta T is a default and normally would not be
+    // used.
     m_app->setNextDelT( m_restart_archive->getOldDelt( m_restart_index ) );
-    
+
     // Tell the scheduler the generation of the re-started simulation.
     // (Add +1 because the scheduler will be starting on the next
     // time step.)
     m_scheduler->setGeneration( m_restart_timestep + 1 );
-      
+
     // This delete is an enigma. If it is called then memory is not
     // leaked, but sometimes if is called, then everything segfaults.
     // delete m_restart_archive;
+  }
+  else
+  {
+    // Set the time step to 0 which is immediately written to the DW.
+    m_app->setTimeStep( 0 );
+
+    // Set the simulation time to 0 which is immediately written to the DW.
+    m_app->setSimTimeStart( 0 );
   }
 }
 
@@ -662,8 +674,8 @@ SimulationController::ScheduleReportStats( bool header )
   task->requires(Task::NewDW, m_app->getDelTLabel() );
 
   m_scheduler->addTask(task,
-		       m_loadBalancer->getPerProcessorPatchSet(m_current_gridP),
-		       m_app->getSimulationStateP()->allMaterials() );
+                       m_loadBalancer->getPerProcessorPatchSet(m_current_gridP),
+                       m_app->getSimulationStateP()->allMaterials() );
 
   // std::cerr << "*************" << __FUNCTION__ << "  " << __LINE__ << "  " << header << std::endl;
 }
@@ -1085,8 +1097,8 @@ SimulationController::ScheduleCheckInSitu( bool first )
     task->requires(Task::NewDW, m_app->getDelTLabel() );
 
     m_scheduler->addTask(task,
-			 m_loadBalancer->getPerProcessorPatchSet(m_current_gridP),
-			 m_app->getSimulationStateP()->allMaterials() );
+                         m_loadBalancer->getPerProcessorPatchSet(m_current_gridP),
+                         m_app->getSimulationStateP()->allMaterials() );
 
     // std::cerr << "*************" << __FUNCTION__ << "  " << __LINE__ << "  " << first << std::endl;
   }
