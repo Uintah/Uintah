@@ -28,6 +28,7 @@ endif
 
 SRCS +=  \
          $(SRCDIR)/DepositionVelocity.cc   \
+         $(SRCDIR)/DepositionEnthalpy.cc   \
          $(SRCDIR)/RateDeposition.cc       \
          $(SRCDIR)/BodyForce.cc            \
          $(SRCDIR)/CQMOMSourceWrapper.cc   \

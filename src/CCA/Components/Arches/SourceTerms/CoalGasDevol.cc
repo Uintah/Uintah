@@ -42,7 +42,6 @@ CoalGasDevol::problemSetup(const ProblemSpecP& inputdb)
    m_dest_flag = false;
   if (db->findBlock("devol_BirthDeath")) {
     ProblemSpecP db_bd = db->findBlock("devol_BirthDeath");
-    db_bd->getWithDefault("retained_deposit_factor", m_retained_deposit_factor, 1.0);
     m_dest_flag = true;
     m_rcmass_root = ParticleTools::parse_for_role_to_label(db, "raw_coal");
   }
@@ -103,26 +102,23 @@ CoalGasDevol::sched_computeSource( const LevelP& level, SchedulerP& sched, int t
 struct sumDevolGasDestSource{
        sumDevolGasDestSource(constCCVariable<double>& _qn_gas_dest,
                            CCVariable<double>& _devolSrc,
-                           double& _retained_deposit_factor,
                            double& _w_scaling_constant,
                            double& _rc_scaling_constant ) :
 #ifdef UINTAH_ENABLE_KOKKOS
                            qn_gas_dest(_qn_gas_dest.getKokkosView()),
                            devolSrc(_devolSrc.getKokkosView()),
                            rc_scaling_constant(_rc_scaling_constant),
-                           w_scaling_constant(_w_scaling_constant),
-                           retained_deposit_factor(_retained_deposit_factor)
+                           w_scaling_constant(_w_scaling_constant)
 #else
                            qn_gas_dest(_qn_gas_dest),
                            devolSrc(_devolSrc),
                            rc_scaling_constant(_rc_scaling_constant),
-                           w_scaling_constant(_w_scaling_constant),
-                           retained_deposit_factor(_retained_deposit_factor)
+                           w_scaling_constant(_w_scaling_constant)
 #endif
                            {  }
 
   void operator()(int i , int j, int k ) const {
-   devolSrc(i,j,k) += - (1.0-retained_deposit_factor)*qn_gas_dest(i,j,k)*w_scaling_constant*rc_scaling_constant; // minus sign because it is applied to the gas  
+   devolSrc(i,j,k) += - qn_gas_dest(i,j,k)*w_scaling_constant*rc_scaling_constant; // minus sign because it is applied to the gas  
   }
 
   private:
@@ -135,7 +131,6 @@ struct sumDevolGasDestSource{
 #endif
   double rc_scaling_constant;
   double w_scaling_constant;
-  double retained_deposit_factor;
 };
 struct sumDevolGasSource{
        sumDevolGasSource(constCCVariable<double>& _qn_gas_devol,
@@ -233,7 +228,7 @@ CoalGasDevol::computeSource( const ProcessorGroup* pc,
         constCCVariable<double> qn_gas_dest;
         new_dw->get( qn_gas_dest, rcmass_birthdeath_varlabel, matlIndex, patch, gn, 0 );
         // sum the dest sources
-        sumDevolGasDestSource doSumDevolDestGas(qn_gas_dest,devolSrc,m_retained_deposit_factor,w_scaling_constant,rc_scaling_constant);  
+        sumDevolGasDestSource doSumDevolDestGas(qn_gas_dest,devolSrc,w_scaling_constant,rc_scaling_constant);  
         Uintah::parallel_for(range, doSumDevolDestGas);
       }
     }

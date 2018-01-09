@@ -41,10 +41,28 @@ CoalGasHeat::problemSetup(const ProblemSpecP& inputdb)
   m_dest_flag = false;
   if (db->findBlock("heat_BirthDeath")) {
     ProblemSpecP db_bd = db->findBlock("heat_BirthDeath");
-    db_bd->getWithDefault("retained_deposit_factor", m_retained_deposit_factor, 1.0);
     m_dest_flag = true;
     m_enthalpy_root = ParticleTools::parse_for_role_to_label(db, "enthalpy");
-  }
+    m_temperature_root = ParticleTools::parse_for_role_to_label(db, "temperature");
+    ProblemSpecP db_root = db->getRootNode();
+    if ( db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties") ){
+      ProblemSpecP db_coal_props = db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties");
+      db_coal_props->require("ash_enthalpy", _Ha0);
+    } else {
+      throw ProblemSetupException("Error: <Coal> is missing the <Properties> section.", __FILE__, __LINE__);
+    }
+
+    int Nenv = ParticleTools::get_num_env(db,ParticleTools::DQMOM);
+    double ash_mass_frac = ParticleTools::getAshMassFraction( db );
+    double init_particle_density = ParticleTools::getInletParticleDensity( db );
+    double initial_diameter = 0.0;
+    double p_volume = 0.0;
+    for (int iqn = 0; iqn < Nenv; iqn++){
+        initial_diameter = ParticleTools::getInletParticleSize( db, iqn );
+        p_volume = M_PI/6.*initial_diameter*initial_diameter*initial_diameter; // particle volme [m^3]
+        _mass_ash_vec.push_back(p_volume*init_particle_density*ash_mass_frac);
+      }
+    }
 
   _source_grid_type = CC_SRC;
 
@@ -66,6 +84,7 @@ CoalGasHeat::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
 
   DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self();
   CoalModelFactory& modelFactory = CoalModelFactory::self();
+    
 
   for (int iqn = 0; iqn < dqmomFactory.get_quad_nodes(); iqn++){
     std::string weight_name = "w_qn";
@@ -94,6 +113,14 @@ CoalGasHeat::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
       std::string enthalpy_birth_qn_name = ParticleTools::append_qn_env(enthalpy_birth_name, iqn);
       const VarLabel* enthalpy_birthdeath_varlabel=VarLabel::find(enthalpy_birth_qn_name);
       tsk->requires( Task::NewDW, enthalpy_birthdeath_varlabel, Ghost::None, 0 );
+      // find unscaled unweighted particle enthalpy 
+      std::string enthalpy_name = ParticleTools::append_env(m_enthalpy_root, iqn );
+      const VarLabel* particle_enthalpy_varlabel = VarLabel::find(enthalpy_name);
+      tsk->requires( Task::NewDW, particle_enthalpy_varlabel, Ghost::None, 0 );
+      // find particle temperature
+      std::string temperature_name = ParticleTools::append_env( m_temperature_root, iqn );
+      const VarLabel* particle_temperature_varlabel = VarLabel::find(temperature_name);
+      tsk->requires( Task::NewDW, particle_temperature_varlabel, Ghost::None, 0 );
     }
     
 
@@ -105,40 +132,57 @@ CoalGasHeat::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
 
 struct sumHeatGasDestSource{
        sumHeatGasDestSource(constCCVariable<double>& _qn_gas_dest,
+                           constCCVariable<double>& _pT,
+                           constCCVariable<double>& _pE,
                            CCVariable<double>& _enthalpySrc,
-                           double& _retained_deposit_factor,
                            double& _w_scaling_constant,
-                           double& _enthalpy_scaling_constant ) :
+                           double& _enthalpy_scaling_constant,
+                           double& _Ha0,
+                           double& _mass_ash ) :
 #ifdef UINTAH_ENABLE_KOKKOS
                            qn_gas_dest(_qn_gas_dest.getKokkosView()),
+                           pT(_pT.getKokkosView()),
+                           pE(_pE.getKokkosView()),
                            enthalpySrc(_enthalpySrc.getKokkosView()),
-                           enthalpy_scaling_constant(_enthalpy_scaling_constant),
                            w_scaling_constant(_w_scaling_constant),
-                           retained_deposit_factor(_retained_deposit_factor)
+                           enthalpy_scaling_constant(_enthalpy_scaling_constant),
+                           Ha0(_Ha0),
+                           mass_ash(_mass_ash),
 #else
                            qn_gas_dest(_qn_gas_dest),
+                           pT(_pT),
+                           pE(_pE),
                            enthalpySrc(_enthalpySrc),
                            enthalpy_scaling_constant(_enthalpy_scaling_constant),
                            w_scaling_constant(_w_scaling_constant),
-                           retained_deposit_factor(_retained_deposit_factor)
+                           Ha0(_Ha0),
+                           mass_ash(_mass_ash)
 #endif
                            {  }
 
   void operator()(int i , int j, int k ) const {
-   enthalpySrc(i,j,k) += - (1.0-retained_deposit_factor)*qn_gas_dest(i,j,k)*w_scaling_constant*enthalpy_scaling_constant; // minus sign because it is applied to the gas  
+   double ash_enthalpy = -202849.0 + Ha0 + pT(i,j,k) * (593. + pT(i,j,k) * 0.293); // [J/kg]
+   double ash_enthalpy_frac = std::min(1.0,std::max(0.0, ash_enthalpy*mass_ash / pE(i,j,k))); // [J]/[J] - fraction is between 0.0 and 1.0.
+   enthalpySrc(i,j,k) += - (1.-ash_enthalpy_frac)*qn_gas_dest(i,j,k)*w_scaling_constant*enthalpy_scaling_constant; // minus sign because it is applied to the gas  
+   // note here that the ash enthalpy is being added to the net energy balance at the wall. 
   }
 
   private:
 #ifdef UINTAH_ENABLE_KOKKOS
    KokkosView3<const double> qn_gas_dest;
+   KokkosView3<const double> pT;
+   KokkosView3<const double> pE;
    KokkosView3<double>  enthalpySrc;
 #else
    constCCVariable<double>& qn_gas_dest;
+   constCCVariable<double>& pT;
+   constCCVariable<double>& pE;
    CCVariable<double>& enthalpySrc;
 #endif
   double enthalpy_scaling_constant;
   double w_scaling_constant;
-  double retained_deposit_factor;
+  double Ha0;
+  double mass_ash;
 };
 struct sumEnthalpyGasSource{
        sumEnthalpyGasSource(constCCVariable<double>& _qn_gas_enthalpy,
@@ -229,6 +273,12 @@ CoalGasHeat::computeSource( const ProcessorGroup* pc,
         const std::string enthalpy_birth_name = enthalpy_eqn.get_model_by_type( "BirthDeath" );
         std::string enthalpy_birth_qn_name = ParticleTools::append_qn_env(enthalpy_birth_name, iqn);
         const VarLabel* enthalpy_birthdeath_varlabel=VarLabel::find(enthalpy_birth_qn_name);
+        // find unscaled unweighted particle enthalpy 
+        std::string enthalpy_name = ParticleTools::append_env(m_enthalpy_root, iqn );
+        const VarLabel* particle_enthalpy_varlabel = VarLabel::find(enthalpy_name);
+        // find particle temperature
+        std::string temperature_name = ParticleTools::append_env( m_temperature_root, iqn );
+        const VarLabel* particle_temperature_varlabel = VarLabel::find(temperature_name);
         // get weight scaling constant and equation handle 
         std::string weightqn_name = ParticleTools::append_qn_env("w", iqn);
         EqnBase& temp_weight_eqn = dqmomFactory.retrieve_scalar_eqn(weightqn_name);
@@ -237,8 +287,12 @@ CoalGasHeat::computeSource( const ProcessorGroup* pc,
         
         constCCVariable<double> qn_gas_dest;
         new_dw->get( qn_gas_dest, enthalpy_birthdeath_varlabel, matlIndex, patch, gn, 0 );
+        constCCVariable<double> pT;
+        new_dw->get( pT, particle_temperature_varlabel, matlIndex, patch, gn, 0 );
+        constCCVariable<double> pE;
+        new_dw->get( pE, particle_enthalpy_varlabel, matlIndex, patch, gn, 0 );
         // sum the dest sources
-        sumHeatGasDestSource doSumHeatDestGas(qn_gas_dest,heatSrc,m_retained_deposit_factor,w_scaling_constant,enthalpy_scaling_constant);  
+        sumHeatGasDestSource doSumHeatDestGas(qn_gas_dest,pT,pE,heatSrc,w_scaling_constant,enthalpy_scaling_constant,_Ha0,_mass_ash_vec[iqn]);  
         Uintah::parallel_for(range, doSumHeatDestGas);
       }
     }

@@ -1,5 +1,5 @@
-#ifndef Uintah_Component_Arches_DepositionVelocity_h
-#define Uintah_Component_Arches_DepositionVelocity_h
+#ifndef Uintah_Component_Arches_DepositionEnthalpy_h
+#define Uintah_Component_Arches_DepositionEnthalpy_h
 
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 #include <Core/Grid/SimulationState.h>
@@ -7,12 +7,12 @@
 namespace Uintah{
 
   class Operators;
-  class DepositionVelocity : public TaskInterface {
+  class DepositionEnthalpy : public TaskInterface {
 
 public:
 
-    DepositionVelocity( std::string task_name, int matl_index, const int N, SimulationStateP shared_state );
-    ~DepositionVelocity();
+    DepositionEnthalpy( std::string task_name, int matl_index, const int N, SimulationStateP shared_state );
+    ~DepositionEnthalpy();
 
     void problemSetup( ProblemSpecP& db );
 
@@ -43,7 +43,7 @@ public:
     }
 
 
-    //Build instructions for this (DepositionVelocity) class.
+    //Build instructions for this (DepositionEnthalpy) class.
     class Builder : public TaskInterface::TaskBuilder {
 
       public:
@@ -51,8 +51,8 @@ public:
       Builder( std::string task_name, int matl_index, const int N, SimulationStateP shared_state ) : _task_name(task_name), _matl_index(matl_index), _Nenv(N), _shared_state(shared_state){}
       ~Builder(){}
 
-      DepositionVelocity* build()
-      { return scinew DepositionVelocity( _task_name, _matl_index, _Nenv, _shared_state ); }
+      DepositionEnthalpy* build()
+      { return scinew DepositionEnthalpy( _task_name, _matl_index, _Nenv, _shared_state ); }
 
       private:
 
@@ -72,14 +72,13 @@ private:
       std::string _ratedepx_name;
       std::string _ratedepy_name;
       std::string _ratedepz_name;
-      std::string _ash_mass_src;
-      double _user_specified_rho;
-      double _relaxation_coe;
+      std::string _ash_enthalpy_src;
       std::vector<double> _mass_ash;
-      double _retained_deposit_factor;
+      double _Ha0;
       std::string _diameter_base_name;
+      std::string _temperature_base_name;
+      std::string _gasT_name;
       std::string _density_base_name;
-      double _pi = std::acos(-1.);
 
   };
 }

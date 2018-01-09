@@ -92,8 +92,10 @@ class CoalGasHeat: public SourceTermBase {
 private:
 
   std::string m_enthalpy_root;
+  std::string m_temperature_root;
+  double _Ha0;
+  std::vector<double> _mass_ash_vec;
   std::string _heat_model_name; 
-  double m_retained_deposit_factor;// fraction of organic stays in the deposit 
   bool m_dest_flag;// flag indicating whether or not deposition mass will be added to the gas phase. 
 
 }; // end CoalGasHeat

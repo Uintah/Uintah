@@ -43,7 +43,6 @@ CoalGasOxi::problemSetup(const ProblemSpecP& inputdb)
    m_dest_flag = false;
   if (db->findBlock("char_BirthDeath")) {
     ProblemSpecP db_bd = db->findBlock("char_BirthDeath");
-    db_bd->getWithDefault("retained_deposit_factor", m_retained_deposit_factor, 1.0);
     m_dest_flag = true;
     m_charmass_root = ParticleTools::parse_for_role_to_label(db, "char");
   }
@@ -105,26 +104,23 @@ CoalGasOxi::sched_computeSource( const LevelP& level, SchedulerP& sched, int tim
 struct sumCharOxyGasDestSource{
        sumCharOxyGasDestSource(constCCVariable<double>& _qn_gas_dest,
                            CCVariable<double>& _oxiSrc,
-                           double& _retained_deposit_factor,
                            double& _w_scaling_constant,
                            double& _char_scaling_constant ) :
 #ifdef UINTAH_ENABLE_KOKKOS
                            qn_gas_dest(_qn_gas_dest.getKokkosView()),
                            oxiSrc(_oxiSrc.getKokkosView()),
                            char_scaling_constant(_char_scaling_constant),
-                           w_scaling_constant(_w_scaling_constant),
-                           retained_deposit_factor(_retained_deposit_factor)
+                           w_scaling_constant(_w_scaling_constant)
 #else
                            qn_gas_dest(_qn_gas_dest),
                            oxiSrc(_oxiSrc),
                            char_scaling_constant(_char_scaling_constant),
-                           w_scaling_constant(_w_scaling_constant),
-                           retained_deposit_factor(_retained_deposit_factor)
+                           w_scaling_constant(_w_scaling_constant)
 #endif
                            {  }
 
   void operator()(int i , int j, int k ) const {
-   oxiSrc(i,j,k) +=  - (1.0-retained_deposit_factor)*qn_gas_dest(i,j,k)*w_scaling_constant*char_scaling_constant; // minus sign because it is applied to the gas 
+   oxiSrc(i,j,k) +=  - qn_gas_dest(i,j,k)*w_scaling_constant*char_scaling_constant; // minus sign because it is applied to the gas 
   }
 
   private:
@@ -137,7 +133,6 @@ struct sumCharOxyGasDestSource{
 #endif
   double char_scaling_constant;
   double w_scaling_constant;
-  double retained_deposit_factor;
 };
 struct sumCharOxyGasSource{
        sumCharOxyGasSource(constCCVariable<double>& _qn_gas_oxi,
@@ -235,7 +230,7 @@ CoalGasOxi::computeSource( const ProcessorGroup* pc,
         constCCVariable<double> qn_gas_dest;
         new_dw->get( qn_gas_dest, charmass_birthdeath_varlabel, matlIndex, patch, gn, 0 );
         // sum the dest sources
-        sumCharOxyGasDestSource doSumCharOxyDestGas(qn_gas_dest,oxiSrc,m_retained_deposit_factor,w_scaling_constant,char_scaling_constant);  
+        sumCharOxyGasDestSource doSumCharOxyDestGas(qn_gas_dest,oxiSrc,w_scaling_constant,char_scaling_constant);  
         Uintah::parallel_for(range, doSumCharOxyDestGas);
       }
     }

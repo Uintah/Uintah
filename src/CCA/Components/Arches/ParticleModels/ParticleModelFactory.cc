@@ -32,6 +32,7 @@
 #include <CCA/Components/Arches/ParticleModels/CoalTemperature.h>
 #include <CCA/Components/Arches/ParticleModels/Constant.h>
 #include <CCA/Components/Arches/ParticleModels/DepositionVelocity.h>
+#include <CCA/Components/Arches/ParticleModels/DepositionEnthalpy.h>
 #include <CCA/Components/Arches/ParticleModels/DragModel.h>
 #include <CCA/Components/Arches/ParticleModels/ExampleParticleModel.h>
 #include <CCA/Components/Arches/ParticleModels/FOWYDevol.h>
@@ -106,8 +107,10 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
   std::vector<std::string> temp_model_list;
   bool has_rate_dep = false;
   bool has_rate_vel = false;
+  bool has_rate_enth = false;
   std::string rate_dep_name;
   std::string rate_vel_name;
+  std::string rate_enth_name;
 
   // hack continues below and is notated with "order hack" comments
 
@@ -265,6 +268,16 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
         has_rate_vel = true; // order hack
         rate_vel_name = task_name; // order hack
 
+      } else if ( type == "deposition_enthalpy" ) {
+
+        TaskInterface::TaskBuilder* tsk = scinew DepositionEnthalpy::Builder(task_name,0,N,_shared_state);
+        register_task( task_name, tsk );
+
+        _coal_models.push_back(task_name);
+        _post_update_particle_tasks.push_back(task_name);
+        has_rate_enth = true; // order hack
+        rate_enth_name = task_name; // order hack
+
       } else if ( type == "char_oxidation_ps" ) {
       
         TaskInterface::TaskBuilder* tsk = scinew CharOxidationps< CCVariable<double> >::Builder(task_name,0);
@@ -383,6 +396,9 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
     }
     if ( has_rate_vel ){
       temp_model_list.push_back(rate_vel_name);
+    }
+    if ( has_rate_enth ){
+      temp_model_list.push_back(rate_enth_name);
     }
 
     _post_update_particle_tasks = temp_model_list;
