@@ -1132,6 +1132,8 @@ the importance
 % \end{figure}
 
 %
+\iffalse           
+%The pinwheel example was never commited. 
 %__________________________________
 \newpage
 \section*{\center  Pinwheel}
@@ -1173,6 +1175,8 @@ mpirun -np 6 sus inputs/UintahRelease/MPMICE/pinWheel.ups
 \end{figure}
 
 Figure~\ref{pinwheel1} shows a visualization of the pinwheel alongside the air jet represented by the velocity vectors. The air jet contacts a fin on the wheel causing it to continuously rotate counterclockwise as seen by the colored velocity of the boxes.  
+
+\fi      
 
 %__________________________________
 \newpage
@@ -1228,6 +1232,7 @@ This modification occurs in interpolateToParticlesAndUpdate, around line 3450
 in this file.
 
 \item [Input file name:] \hfill \TT{lizardLung4.ups}
+\item [Instruction to run input file:] \hfill \newline Copy breathe.txt to the same directory as sus.
 \item [Command used to run input file:]\hfill 
 mpirun -np 16 sus inputs/UintahRelease/MPMICE/lizardLung4.ups
 
