@@ -144,9 +144,18 @@ namespace Uintah {
 
       // int timeStep = params->m_sharedState->getCurrentTopLevelTimeStep();
 
-      timeStep_vartype timeStep_var;
-      old_dw->get(timeStep_var, m_timeStepLabel);
-      int timeStep = timeStep_var;
+      timeStep_vartype timeStep(0);
+
+      if (new_dw->exists(m_timeStepLabel)) {
+        new_dw->get(timeStep, m_timeStepLabel);
+      }
+      else if (old_dw->exists(m_timeStepLabel)) {
+        old_dw->get(timeStep, m_timeStepLabel);
+        new_dw->put(timeStep, m_timeStepLabel);
+      }
+      else {
+        new_dw->put(timeStep, m_timeStepLabel);
+      }
 
       //________________________________________________________
       // Solve frequency
@@ -181,17 +190,6 @@ namespace Uintah {
       //________________________________________________________
       struct hypre_solver_struct* hypre_solver_s = 0;
       bool restart = false;
-
-      if (new_dw->exists(m_timeStepLabel)) {
-        new_dw->get(timeStep_var, m_timeStepLabel);
-      }
-      else if (old_dw->exists(m_timeStepLabel)) {
-        old_dw->get(timeStep_var, m_timeStepLabel);
-        new_dw->put(timeStep_var, m_timeStepLabel);
-      }
-      else {
-        new_dw->put(timeStep_var, m_timeStepLabel);
-      }
       
       if (new_dw->exists(hypre_solver_label)) {
         new_dw->get(d_hypre_solverP_,hypre_solver_label);
@@ -321,7 +319,9 @@ namespace Uintah {
           HYPRE_StructMatrixInitialize(*HA);
         }
 
-        // setup the coefficient matrix ONLY on the first timeStep, if we are doing a restart, or if we set setupFrequency != 0, or if UpdateCoefFrequency != 0
+        // setup the coefficient matrix ONLY on the first timeStep, if
+        // we are doing a restart, or if we set setupFrequency != 0,
+        // or if UpdateCoefFrequency != 0
         if (timeStep == 1 || restart || do_setup || updateCoefs) {
           for(int p=0;p<patches->size();p++) {
             const Patch* patch = patches->get(p);
@@ -940,7 +940,7 @@ namespace Uintah {
           if (timeStep > 2) {
             // alpha = 2/(N+1)
             // averaging window is 10 timeSteps.
-            double alpha = 2.0/(std::min(timeStep - 2, 10) + 1);
+            double alpha = 2.0/(std::min(int(timeStep) - 2, 10) + 1);
             movingAverage_ =
               alpha*solve_timer().seconds() + (1-alpha)*movingAverage_;
 
@@ -1126,8 +1126,7 @@ namespace Uintah {
   {
     HypreSolver2Params* hypreSolveParams = scinew HypreSolver2Params();
     hypreSolveParams->m_sharedState = state;
-    hypreSolveParams->m_variable = varname;
-    
+
     bool found=false;
     if(params){
       for( ProblemSpecP param = params->findBlock("Parameters"); param != nullptr; param = param->findNextBlock("Parameters")) {
@@ -1349,11 +1348,8 @@ namespace Uintah {
       task->requires(Task::OldDW,hypre_solver_label);
       task->computes(hypre_solver_label);
 
-      if( dparams->m_variable.find("implicit") != std::string::npos )
-      {
-        task->requires(Task::OldDW,m_timeStepLabel);
-        task->computes(m_timeStepLabel);
-      }
+      task->requires(Task::OldDW,m_timeStepLabel);
+      task->computes(m_timeStepLabel);
     }
     
     sched->overrideVariableBehavior(hypre_solver_label->getName(),false,false,
