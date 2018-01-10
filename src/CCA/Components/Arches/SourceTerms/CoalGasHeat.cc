@@ -147,7 +147,7 @@ struct sumHeatGasDestSource{
                            w_scaling_constant(_w_scaling_constant),
                            enthalpy_scaling_constant(_enthalpy_scaling_constant),
                            Ha0(_Ha0),
-                           mass_ash(_mass_ash),
+                           mass_ash(_mass_ash)
 #else
                            qn_gas_dest(_qn_gas_dest),
                            pT(_pT),
