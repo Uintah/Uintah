@@ -46,7 +46,7 @@
 using namespace Uintah;
 using namespace ExchangeModels;
 using namespace std;
-extern DebugStream dbg;
+extern DebugStream dbgExch;
 //______________________________________________________________________
 //
 ScalarExch::ScalarExch(const ProblemSpecP     & prob_spec,
@@ -81,7 +81,7 @@ void ScalarExch::sched_AddExch_VelFC( SchedulerP            & sched,
                             BC_globalVars, 
                             recursion);
 
-  printSchedule( patches, dbg, name );
+  printSchedule( patches, dbgExch, name );
   
   if(recursion) {
     task->requires(Task::ParentOldDW, Ilb->delTLabel,getLevel(patches));
@@ -251,7 +251,7 @@ void ScalarExch::addExch_VelFC( const ProcessorGroup * pg,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    printTask(patches, patch, dbg, "Doing ScalarExch::addExch_VelFC" );
+    printTask(patches, patch, dbgExch, "Doing ScalarExch::addExch_VelFC" );
 
     // change the definition of parent(old/new)DW
     // when implicit

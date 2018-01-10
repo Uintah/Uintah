@@ -34,11 +34,3 @@ SRCS     += $(SRCDIR)/ExchangeFactory.cc      \
             $(SRCDIR)/ExchangeCoefficients.cc \
             $(SRCDIR)/Scalar.cc             
 #            $(SRCDIR)/Slip.cc 
-
-PSELIBS := \
-	Core/Grid       \
-	Core/Parallel   \
-	Core/Exceptions \
-	Core/Math
-
-LIBS	:=

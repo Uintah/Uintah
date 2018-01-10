@@ -39,9 +39,7 @@
 using namespace Uintah;
 using namespace std;
 
-
-
-static DebugStream dbg("EXCHANGEMODELS", false);
+DebugStream dbgExch("EXCHANGEMODELS", false);
 
 //______________________________________________________________________
 //
@@ -72,7 +70,7 @@ void ExchangeModel::scheduleComputeSurfaceNormal( SchedulerP& sched,
 
   Task* t = scinew Task( name, this, &ExchangeModel::ComputeSurfaceNormalValues);
 
-  printSchedule( patches, dbg, name );
+  printSchedule( patches, dbgExch, name );
 
   Ghost::GhostType  gac  = Ghost::AroundCells;
   t->requires( Task::NewDW, MIlb->gMassLabel,       mpm_matls->getUnion,  gac, 1);
@@ -93,7 +91,7 @@ void ExchangeModel::ComputeSurfaceNormalValues( const ProcessorGroup*,
    for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    printTask(patches, patch, dbg, "Doing ExchangeModel::ComputeSurfaceNormalValues" );
+    printTask(patches, patch, dbgExch, "Doing ExchangeModel::ComputeSurfaceNormalValues" );
 
     Ghost::GhostType gac = Ghost::AroundCells;
     int numMPMMatls = d_sharedState->getNumMPMMatls();

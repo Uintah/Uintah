@@ -39,7 +39,7 @@ using namespace Uintah;
 using namespace ExchangeModels;
 using namespace std;
 
-extern DebugStream dbg;
+extern DebugStream dbgExch;
 //______________________________________________________________________
 //
 SlipExch::SlipExch(const ProblemSpecP     & exch_ps,
@@ -88,7 +88,7 @@ void SlipExch::scheduleAddExchangeToMomentumAndEnergy(SchedulerP           & sch
   string name = "SlipExch::addExchangeToMomentumAndEnergy_Slip";
   Task* t = scinew Task(name, this, &SlipExch::addExchangeToMomentumAndEnergy);
  
-  printSchedule( patches, dbg, name );
+  printSchedule( patches, dbgExch, name );
 
   Ghost::GhostType  gn  = Ghost::None;
   Ghost::GhostType  gac = Ghost::AroundCells;
@@ -141,7 +141,7 @@ void SlipExch::addExchangeToMomentumAndEnergy( const ProcessorGroup *,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    printTask(patches, patch, dbg,"Doing SlipExch::addExchangeToMomentumAndEnergy");
+    printTask(patches, patch, dbgExch,"Doing SlipExch::addExchangeToMomentumAndEnergy");
     
     int numMPMMatls = d_sharedState->getNumMPMMatls();
     int numICEMatls = d_sharedState->getNumICEMatls();

@@ -31,7 +31,7 @@
 using namespace Uintah;
 using namespace std;
 
-static DebugStream cout_norm("ICE_NORMAL_COUT", false);  
+extern DebugStream dbgExch;  
 
 ExchangeCoefficients::ExchangeCoefficients()
 {
@@ -80,7 +80,7 @@ void ExchangeCoefficients::problemSetup(ProblemSpecP& ps,
     
     // Bullet Proofing
     for (int i = 0; i<(int)d_K_mom.size(); i++) {
-      cout_norm << "K_mom = " << d_K_mom[i] << endl;
+      dbgExch << "K_mom = " << d_K_mom[i] << endl;
       if( d_K_mom[i] < 0.0 || d_K_mom[i] > 1e20 ) {
         ostringstream warn;
         warn<<"ERROR\n Momentum exchange coef. is either too big or negative\n";
@@ -95,7 +95,7 @@ void ExchangeCoefficients::problemSetup(ProblemSpecP& ps,
     
       // Bullet Proofing
       for (int i = 0; i<(int)d_K_heat.size(); i++) {
-        cout_norm << "K_heat = " << d_K_heat[i] << endl;
+        dbgExch << "K_heat = " << d_K_heat[i] << endl;
         if( d_K_heat[i] < 0.0 || d_K_heat[i] > 1e15 ) {
           ostringstream warn;
           warn<<"ERROR\n Heat exchange coef. is either too big or negative\n";
