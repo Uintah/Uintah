@@ -321,7 +321,7 @@ HTConvection::computeSource( const ProcessorGroup* pc,
         ConWallHT_src(i,j,k) = volFraction(i,j,k-1) > 0.0 ?  ConWallHT_src(i,j,k)-rkg*dT_dn*_dTCorrectionFactor/delta_n :ConWallHT_src(i,j,k);// w/m^3
         total_area_face =      volFraction(i,j,k-1) > 0.0 ?  total_area_face+Dx.x()*Dx.y() :total_area_face;// w/m^3
        }
-        ConWallHT_src(i,j,k) =total_area_face>0.0 ?  ConWallHT_src(i,j,k)/total_area_face:0.0;//W
+        ConWallHT_src(i,j,k) =total_area_face>0.0 ?  ConWallHT_src(i,j,k)/total_area_face*cellvol :0.0;//W/m2
       
       }
 
