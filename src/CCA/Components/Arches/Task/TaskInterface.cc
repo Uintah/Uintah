@@ -311,8 +311,6 @@ void TaskInterface::do_bcs( const ProcessorGroup* pc,
   else if( new_dw && new_dw->exists( VarLabel::find(delT_name) ) )
     new_dw->get( delT, VarLabel::find(delT_name) );
     
-  std::cerr << "*************" << delT << std::endl;
-  
   for (int p = 0; p < patches->size(); p++) {
 
     const Patch* patch = patches->get(p);
