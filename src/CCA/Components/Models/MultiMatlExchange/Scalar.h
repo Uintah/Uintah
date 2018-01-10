@@ -25,6 +25,7 @@
 #ifndef Models_MultiMatlExchange_Scalar_h
 #define Models_MultiMatlExchange_Scalar_h
 
+#include <CCA/Components/Models/MultiMatlExchange/ExchangeCoefficients.h>
 #include <CCA/Components/Models/MultiMatlExchange/ExchangeModel.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/SimulationStateP.h>
@@ -46,7 +47,7 @@ namespace ExchangeModels{
 
     virtual ~ScalarExch();
 
-    virtual void problemSetup();
+    virtual void problemSetup(const ProblemSpecP & prob_spec);
 
 
     virtual void sched_AddExch_VelFC(SchedulerP           & sched,         
@@ -89,6 +90,10 @@ namespace ExchangeModels{
                           std::vector< constSFC>               & vel_FC,
                           std::vector< SFC >                   & sp_vol_FC,
                           std::vector< SFC >                   & vel_FCME);
+
+    //__________________________________
+    //  variables
+    ExchangeCoefficients* d_exchCoeff;
 
   };
 }

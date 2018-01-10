@@ -41,7 +41,7 @@
 #include <ostream>                         // for operator<<, basic_ostream
 #include <vector>
 
-#define d_MAX_MATLS 16
+#define d_MAX_MATLS 8
 
 using namespace Uintah;
 using namespace ExchangeModels;
@@ -49,20 +49,24 @@ using namespace std;
 extern DebugStream dbgExch;
 //______________________________________________________________________
 //
-ScalarExch::ScalarExch(const ProblemSpecP     & prob_spec,
-                      const SimulationStateP & sharedState )
+ScalarExch::ScalarExch( const ProblemSpecP     & prob_spec,
+                        const SimulationStateP & sharedState )
   : ExchangeModel( prob_spec, sharedState )
 {
+  d_exchCoeff = scinew ExchangeCoefficients();
 }
 
 ScalarExch::~ScalarExch()
 {
+  delete d_exchCoeff;
 }
 
 //______________________________________________________________________
 //
-void ScalarExch::problemSetup()
+void ScalarExch::problemSetup(const ProblemSpecP & prob_spec)
 {
+  // read in the exchange coefficients
+  d_exchCoeff->problemSetup( prob_spec, d_numMatls );
 }
 
 //______________________________________________________________________
@@ -265,39 +269,39 @@ void ScalarExch::addExch_VelFC( const ProcessorGroup * pg,
       pOldDW  = old_dw;
     }
 
-    int numMatls = d_sharedState->getNumMatls();
     delt_vartype delT;
     pOldDW->get(delT, Ilb->delTLabel, level);
 
-    std::vector< constCCVariable<double> >   sp_vol_CC(numMatls);
-    std::vector< constCCVariable<double> >   vol_frac_CC(numMatls);
-    std::vector< constSFCXVariable<double> > uvel_FC(numMatls);
-    std::vector< constSFCYVariable<double> > vvel_FC(numMatls);
-    std::vector< constSFCZVariable<double> > wvel_FC(numMatls);
+    std::vector< constCCVariable<double> >   sp_vol_CC(d_numMatls);
+    std::vector< constCCVariable<double> >   vol_frac_CC(d_numMatls);
+    std::vector< constSFCXVariable<double> > uvel_FC(d_numMatls);
+    std::vector< constSFCYVariable<double> > vvel_FC(d_numMatls);
+    std::vector< constSFCZVariable<double> > wvel_FC(d_numMatls);
 
-    std::vector< SFCXVariable<double> > uvel_FCME(numMatls);
-    std::vector< SFCYVariable<double> > vvel_FCME(numMatls);
-    std::vector< SFCZVariable<double> > wvel_FCME(numMatls);
+    std::vector< SFCXVariable<double> > uvel_FCME(d_numMatls);
+    std::vector< SFCYVariable<double> > vvel_FCME(d_numMatls);
+    std::vector< SFCZVariable<double> > wvel_FCME(d_numMatls);
     
-    std::vector< SFCXVariable<double> > sp_vol_XFC(numMatls);
-    std::vector< SFCYVariable<double> > sp_vol_YFC(numMatls);
-    std::vector< SFCZVariable<double> > sp_vol_ZFC(numMatls);
+    std::vector< SFCXVariable<double> > sp_vol_XFC(d_numMatls);
+    std::vector< SFCYVariable<double> > sp_vol_YFC(d_numMatls);
+    std::vector< SFCZVariable<double> > sp_vol_ZFC(d_numMatls);
 
     // lowIndex is the same for all vel_FC
     IntVector lowIndex(patch->getExtraSFCXLowIndex());
 
     // Extract the momentum exchange coefficients
-    FastMatrix K(numMatls, numMatls), junk(numMatls, numMatls);
+    FastMatrix K(d_numMatls, d_numMatls), junk(d_numMatls, d_numMatls);
 
     K.zero();
-    #if 0
-    getConstantExchangeCoefficients( K, junk);
-    #endif
+    
+    d_exchCoeff->getConstantExchangeCoeff( K, junk);
+    
     Ghost::GhostType  gac = Ghost::AroundCells;
     
-    for(int m = 0; m < numMatls; m++) {
+    for(int m = 0; m < d_numMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
+      
       pNewDW->get( sp_vol_CC[m],    Ilb->sp_vol_CCLabel,  indx, patch,gac, 1 );
       pNewDW->get( vol_frac_CC[m],  Ilb->vol_frac_CCLabel,indx, patch,gac, 1 );
       new_dw->get( uvel_FC[m],      Ilb->uvel_FCLabel,    indx, patch,gac, 2 );
@@ -334,25 +338,25 @@ void ScalarExch::addExch_VelFC( const ProcessorGroup * pg,
     //  tack on exchange contribution
     vel_FC_exchange<constSFCXVariable<double>, SFCXVariable<double> >
                     (XFC_iterator,
-                    adj_offset[0],  numMatls,    K,
+                    adj_offset[0],  d_numMatls,    K,
                     delT,           vol_frac_CC, sp_vol_CC,
                     uvel_FC,        sp_vol_XFC,  uvel_FCME);
 
     vel_FC_exchange<constSFCYVariable<double>, SFCYVariable<double> >
                     (YFC_iterator,
-                    adj_offset[1],  numMatls,    K,
+                    adj_offset[1],  d_numMatls,    K,
                     delT,           vol_frac_CC, sp_vol_CC,
                     vvel_FC,        sp_vol_YFC,  vvel_FCME);
 
     vel_FC_exchange<constSFCZVariable<double>, SFCZVariable<double> >
                         (ZFC_iterator,
-                        adj_offset[2],  numMatls,    K,
+                        adj_offset[2],  d_numMatls,    K,
                         delT,           vol_frac_CC, sp_vol_CC,
                         wvel_FC,        sp_vol_ZFC,  wvel_FCME);
 
     //________________________________
     //  Boundary Conditons
-    for (int m = 0; m < numMatls; m++)  {
+    for (int m = 0; m < d_numMatls; m++)  {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
             

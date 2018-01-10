@@ -50,7 +50,7 @@ namespace Uintah {
 
     virtual ~ExchangeModel();
 
-    virtual void problemSetup() = 0;
+    virtual void problemSetup(const ProblemSpecP & prob_spec ) = 0;
                                
     virtual void sched_AddExch_VelFC(SchedulerP           & sched,        
                                      const PatchSet       * patches,      
@@ -98,7 +98,8 @@ namespace Uintah {
 #endif
 
     //__________________________________
-    //
+    // variables & objects needed by 
+    // the different exchange models.
     MPMLabel* Mlb;
     ICELabel* Ilb;
     MPMICELabel* MIlb;
@@ -107,7 +108,9 @@ namespace Uintah {
     const VarLabel* d_surfaceNormLabel;
 
     double d_SMALL_NUM = 1.0e-100;
+    int    d_numMatls  = -9;
     SimulationStateP  d_sharedState;
+    
   };
 }
 

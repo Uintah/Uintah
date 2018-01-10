@@ -37,6 +37,7 @@
 #include <CCA/Components/ICE/BoundaryCond.h>
 #include <CCA/Components/ICE/TurbulenceModel/Turbulence.h>
 #include <CCA/Components/Models/MultiMatlExchange/ExchangeCoefficients.h>
+#include <CCA/Components/Models/MultiMatlExchange/ExchangeModel.h>
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
 
 #include <CCA/Ports/ModelInterface.h>
@@ -182,12 +183,6 @@ using namespace ExchangeModels;
                                       const MaterialSubset*,
                                       const MaterialSubset*,
                                       const MaterialSet*);
-
-      void scheduleAddExchangeContributionToFCVel(SchedulerP&,
-                                            const PatchSet*,
-                                            const MaterialSubset*,
-                                            const MaterialSet*,
-                                            bool);
 
       void scheduleComputeDelPressAndUpdatePressCC(SchedulerP&,
                                              const PatchSet*,
@@ -477,26 +472,6 @@ using namespace ExchangeModels;
                                        constCCVariable<double>& press_CC,
                                        T& vel_FC,
                                        T& grad_dp_FC);
-
-      template<class constSFC, class SFC >
-        void add_vel_FC_exchange( CellIterator it,
-                                       IntVector adj_offset,
-                                       int numMatls,
-                                       FastMatrix & K,
-                                       double delT,
-                                       std::vector<constCCVariable<double> >& vol_frac_CC,
-                                       std::vector<constCCVariable<double> >& sp_vol_CC,
-                                       std::vector< constSFC >& vel_FC,
-                                       std::vector< SFC > & sp_vol_FC,
-                                       std::vector< SFC > & vel_FCME);
-
-
-      void addExchangeContributionToFCVel(const ProcessorGroup*,
-                                          const PatchSubset* patch,
-                                          const MaterialSubset* matls,
-                                          DataWarehouse*,
-                                          DataWarehouse*,
-                                          bool);
 
       void computeDelPressAndUpdatePressCC(const ProcessorGroup*,
                                            const PatchSubset* patches,
@@ -1019,8 +994,9 @@ using namespace ExchangeModels;
 
       std::string d_delT_scheme;
 
-      // exchange coefficients
+      // exchange Model
       ExchangeCoefficients* d_exchCoeff;
+      ExchangeModel* d_exchModel;
 
       // flags for the conservation test
        struct conservationTest_flags{

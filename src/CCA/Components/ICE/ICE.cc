@@ -41,6 +41,7 @@
 #include <CCA/Components/ICE/SpecificHeatModel/SpecificHeat.h>
 #include <CCA/Components/ICE/WallShearStressModel/WallShearStress.h>
 #include <CCA/Components/ICE/WallShearStressModel/WallShearStressFactory.h>
+#include <CCA/Components/Models/MultiMatlExchange/ExchangeFactory.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModuleFactory.h>
 
@@ -439,7 +440,7 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
   } 
 
   //_________________________________
-  // Exchange Coefficients
+  // Exchange Model - needs to be done after materials are initialized
   proc0cout << "numMatls " << m_sharedState->getNumMatls() << endl;
   
   d_exchCoeff->problemSetup( mat_ps, m_sharedState->getNumMatls() );
@@ -447,6 +448,9 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
   if (d_exchCoeff->d_heatExchCoeffModel != "constant"){
     proc0cout << "------------------------------Using Variable heat exchange coefficients"<< endl;
   }
+  
+  d_exchModel=ExchangeFactory::create( mat_ps, m_sharedState);
+  d_exchModel->problemSetup(mat_ps);
   
   //__________________________________
   // Set up turbulence and wall shear stress models - needs to be done after materials are initialized
@@ -963,8 +967,10 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
                                                           d_press_matl,    
                                                           all_matls);        
 
-  scheduleAddExchangeContributionToFCVel( sched, patches,ice_matls_sub,
+
+  d_exchModel->sched_AddExch_VelFC(       sched, patches,ice_matls_sub,
                                                          all_matls,
+                                                         d_BC_globalVars,
                                                          false);
                                                           
   if(d_impICE) {        //  I M P L I C I T
@@ -1259,57 +1265,6 @@ void ICE::scheduleComputeVel_FC(SchedulerP& sched,
   t->computes(lb->grad_P_YFCLabel);
   t->computes(lb->grad_P_ZFCLabel);
   sched->addTask(t, patches, all_matls);
-}
-/* _____________________________________________________________________
- Function~  ICE::scheduleAddExchangeContributionToFCVel--
-_____________________________________________________________________*/
-void ICE::scheduleAddExchangeContributionToFCVel(SchedulerP& sched,
-                                           const PatchSet* patches,
-                                           const MaterialSubset* ice_matls,
-                                           const MaterialSet* all_matls,
-                                           bool recursion)
-{
-  int levelIndex = getLevel(patches)->getIndex();
-  cout_doing << d_myworld->myRank() << " ICE::scheduleAddExchangeContributionToFCVel" 
-             << "\t\t\tL-" << levelIndex<< endl;
-  Task* task = scinew Task("ICE::addExchangeContributionToFCVel",
-                     this, &ICE::addExchangeContributionToFCVel, recursion);
-
-  if(recursion) {
-    task->requires(Task::ParentOldDW, lb->delTLabel,getLevel(patches));
-  } else {
-    task->requires(Task::OldDW, lb->delTLabel,getLevel(patches));
-  }
-
-  Ghost::GhostType  gac = Ghost::AroundCells;
-  
-  //__________________________________
-  // define parent data warehouse
-  // change the definition of parent(old/new)DW
-  // when using semi-implicit pressure solve
-  Task::WhichDW pNewDW = Task::NewDW;
-  if(recursion) {
-    pNewDW  = Task::ParentNewDW;
-  }  
-  
-  task->requires(pNewDW,     lb->sp_vol_CCLabel,    /*all_matls*/gac,1);
-  task->requires(pNewDW,     lb->vol_frac_CCLabel,  /*all_matls*/gac,1);
-  task->requires(Task::NewDW,lb->uvel_FCLabel,      /*all_matls*/gac,2);
-  task->requires(Task::NewDW,lb->vvel_FCLabel,      /*all_matls*/gac,2);
-  task->requires(Task::NewDW,lb->wvel_FCLabel,      /*all_matls*/gac,2);
-  
-
-  computesRequires_CustomBCs(task, "velFC_Exchange", lb, ice_matls,
-                                d_BC_globalVars, recursion);
-
-  task->computes(lb->sp_volX_FCLabel);
-  task->computes(lb->sp_volY_FCLabel);
-  task->computes(lb->sp_volZ_FCLabel); 
-  task->computes(lb->uvel_FCMELabel);
-  task->computes(lb->vvel_FCMELabel);
-  task->computes(lb->wvel_FCMELabel);
-  
-  sched->addTask(task, patches, all_matls);
 }
 
 /* _____________________________________________________________________
@@ -3560,255 +3515,6 @@ void ICE::updateVel_FC(const ProcessorGroup*,
 
     } // matls loop
   }  // patch loop
-}
-
-/* _____________________________________________________________________
- Function~  ICE::add_vel_FC_exchange--
- Purpose~   Add the exchange contribution to vel_FC and compute 
-            sp_vol_FC for implicit Pressure solve
-_____________________________________________________________________*/
-template<class constSFC, class SFC> 
-    void ICE::add_vel_FC_exchange( CellIterator iter,
-                                   IntVector adj_offset,
-                                   int numMatls,
-                                   FastMatrix& K,
-                                   double delT,
-                                   std::vector<constCCVariable<double> >& vol_frac_CC,
-                                   std::vector<constCCVariable<double> >& sp_vol_CC,
-                                   std::vector< constSFC> & vel_FC,
-                                   std::vector< SFC >& sp_vol_FC,
-                                   std::vector< SFC >& vel_FCME)        
-                                       
-{
-  //__________________________________
-  //          Single Material
-  if (numMatls == 1){
-
-    // put in tmp arrays for speed!
-    constCCVariable<double>& sp_vol_tmp = sp_vol_CC[0];
-    constSFC& vel_FC_tmp  = vel_FC[0];         
-    SFC& vel_FCME_tmp     = vel_FCME[0];
-    SFC& sp_vol_FC_tmp    = sp_vol_FC[0];
-
-    for(;!iter.done(); iter++){
-      IntVector c = *iter;
-      IntVector adj = c + adj_offset; 
-      double sp_vol     = sp_vol_tmp[c];
-      double sp_vol_adj = sp_vol_tmp[adj];
-      double sp_volFC   = 2.0 * (sp_vol_adj * sp_vol)/
-                                (sp_vol_adj + sp_vol);
-
-      sp_vol_FC_tmp[c] = sp_volFC;
-      vel_FCME_tmp[c] = vel_FC_tmp[c];
-    }
-  }
-  else{         // Multi-material
-    double b[MAX_MATLS], b_sp_vol[MAX_MATLS];
-    double vel[MAX_MATLS], tmp[MAX_MATLS];
-    FastMatrix a(numMatls, numMatls);
-  
-    for(;!iter.done(); iter++){
-      IntVector c = *iter;
-      IntVector adj = c + adj_offset; 
-
-      //__________________________________
-      //   Compute beta and off diagonal term of
-      //   Matrix A, this includes b[m][m].
-      //  You need to make sure that mom_exch_coeff[m][m] = 0
-
-      // - Form diagonal terms of Matrix (A)
-      //  - Form RHS (b) 
-      for(int m = 0; m < numMatls; m++)  {
-        b_sp_vol[m] = 2.0 * (sp_vol_CC[m][adj] * sp_vol_CC[m][c])/
-                            (sp_vol_CC[m][adj] + sp_vol_CC[m][c]);
-                            
-        tmp[m] = -0.5 * delT * (vol_frac_CC[m][adj] + vol_frac_CC[m][c]);
-        vel[m] = vel_FC[m][c];
-      }
-
-      for(int m = 0; m < numMatls; m++)  {
-        double betasum = 1;
-        double bsum    = 0;
-        double bm      = b_sp_vol[m];
-        double vm      = vel[m];
-        
-        for(int n = 0; n < numMatls; n++)  {
-          double b = bm * tmp[n] * K(n,m);
-          a(m,n)    = b;
-          betasum -= b;
-          bsum -= b * (vel[n] - vm);
-        }
-        a(m,m) = betasum;
-        b[m] = bsum;
-      }
-
-      //__________________________________
-      //  - solve and backout velocities
-
-      a.destructiveSolve(b, b_sp_vol);
-      //  For implicit solve we need sp_vol_FC
-      for(int m = 0; m < numMatls; m++) {
-        vel_FCME[m][c] = vel_FC[m][c] + b[m];
-        sp_vol_FC[m][c] = b_sp_vol[m];// only needed by implicit Pressure
-      }
-    }  // iterator
-  }  // multiple materials
-}
-
-/*_____________________________________________________________________
- Function~  addExchangeContributionToFCVel--
- Purpose~
-   This function adds the momentum exchange contribution to the 
-   existing face-centered velocities
-
-            
-                   (A)                              (X)
-| (1+b12 + b13)     -b12          -b23          |   |del_FC[1]  |    
-|                                               |   |           |    
-| -b21              (1+b21 + b23) -b32          |   |del_FC[2]  |    
-|                                               |   |           | 
-| -b31              -b32          (1+b31 + b32) |   |del_FC[2]  |
-
-                        =
-                        
-                        (B)
-| b12( uvel_FC[2] - uvel_FC[1] ) + b13 ( uvel_FC[3] -uvel_FC[1])    | 
-|                                                                   |
-| b21( uvel_FC[1] - uvel_FC[2] ) + b23 ( uvel_FC[3] -uvel_FC[2])    | 
-|                                                                   |
-| b31( uvel_FC[1] - uvel_FC[3] ) + b32 ( uvel_FC[2] -uvel_FC[3])    | 
- 
- References: see "A Cell-Centered ICE method for multiphase flow simulations"
- by Kashiwa, above equation 4.13.
- _____________________________________________________________________  */
-void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,  
-                                         const PatchSubset* patches,
-                                         const MaterialSubset* /*matls*/,
-                                         DataWarehouse* old_dw, 
-                                         DataWarehouse* new_dw,
-                                         bool recursion)
-{
-  const Level* level = getLevel(patches);
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-    
-    printTask(patches, patch, cout_doing, "Doing ICE::addExchangeContributionToFCVel" );
- 
-    // change the definition of parent(old/new)DW
-    // when implicit
-    DataWarehouse* pNewDW;
-    DataWarehouse* pOldDW;
-    if(recursion) {
-      pNewDW  = new_dw->getOtherDataWarehouse(Task::ParentNewDW);
-      pOldDW  = new_dw->getOtherDataWarehouse(Task::ParentOldDW); 
-    } else {
-      pNewDW  = new_dw;
-      pOldDW  = old_dw;
-    } 
-
-    int numMatls = m_sharedState->getNumMatls();
-    delt_vartype delT;
-    pOldDW->get(delT, lb->delTLabel, level);
-
-    std::vector<constCCVariable<double> > sp_vol_CC(numMatls);
-    std::vector<constCCVariable<double> > vol_frac_CC(numMatls);
-    std::vector<constSFCXVariable<double> > uvel_FC(numMatls);
-    std::vector<constSFCYVariable<double> > vvel_FC(numMatls);
-    std::vector<constSFCZVariable<double> > wvel_FC(numMatls);
-
-    std::vector<SFCXVariable<double> >uvel_FCME(numMatls),sp_vol_XFC(numMatls);
-    std::vector<SFCYVariable<double> >vvel_FCME(numMatls),sp_vol_YFC(numMatls);
-    std::vector<SFCZVariable<double> >wvel_FCME(numMatls),sp_vol_ZFC(numMatls);
-    
-    // lowIndex is the same for all vel_FC
-    IntVector lowIndex(patch->getExtraSFCXLowIndex()); 
-    
-    // Extract the momentum exchange coefficients
-    FastMatrix K(numMatls, numMatls), junk(numMatls, numMatls);
-
-    K.zero();
-    d_exchCoeff->getConstantExchangeCoeff( K, junk);
-    
-    Ghost::GhostType  gac = Ghost::AroundCells;    
-    for(int m = 0; m < numMatls; m++) {
-      Material* matl = m_sharedState->getMaterial( m );
-      int indx = matl->getDWIndex();
-      pNewDW->get(sp_vol_CC[m],    lb->sp_vol_CCLabel,  indx, patch,gac, 1);
-      pNewDW->get(vol_frac_CC[m],  lb->vol_frac_CCLabel,indx, patch,gac, 1);  
-      new_dw->get(uvel_FC[m],      lb->uvel_FCLabel,    indx, patch,gac, 2);  
-      new_dw->get(vvel_FC[m],      lb->vvel_FCLabel,    indx, patch,gac, 2);  
-      new_dw->get(wvel_FC[m],      lb->wvel_FCLabel,    indx, patch,gac, 2);  
-
-      new_dw->allocateAndPut(uvel_FCME[m], lb->uvel_FCMELabel, indx, patch);
-      new_dw->allocateAndPut(vvel_FCME[m], lb->vvel_FCMELabel, indx, patch);
-      new_dw->allocateAndPut(wvel_FCME[m], lb->wvel_FCMELabel, indx, patch);
-      
-      new_dw->allocateAndPut(sp_vol_XFC[m],lb->sp_volX_FCLabel,indx, patch);   
-      new_dw->allocateAndPut(sp_vol_YFC[m],lb->sp_volY_FCLabel,indx, patch);   
-      new_dw->allocateAndPut(sp_vol_ZFC[m],lb->sp_volZ_FCLabel,indx, patch); 
-
-      uvel_FCME[m].initialize(0.0,  lowIndex,patch->getExtraSFCXHighIndex());
-      vvel_FCME[m].initialize(0.0,  lowIndex,patch->getExtraSFCYHighIndex());
-      wvel_FCME[m].initialize(0.0,  lowIndex,patch->getExtraSFCZHighIndex());
-      
-      sp_vol_XFC[m].initialize(0.0, lowIndex,patch->getExtraSFCXHighIndex());
-      sp_vol_YFC[m].initialize(0.0, lowIndex,patch->getExtraSFCYHighIndex());
-      sp_vol_ZFC[m].initialize(0.0, lowIndex,patch->getExtraSFCZHighIndex());
-    }   
-    
-    vector<IntVector> adj_offset(3);
-    adj_offset[0] = IntVector(-1, 0, 0);    // X faces
-    adj_offset[1] = IntVector(0, -1, 0);    // Y faces
-    adj_offset[2] = IntVector(0,  0, -1);   // Z faces
-    
-    CellIterator XFC_iterator = patch->getSFCXIterator();
-    CellIterator YFC_iterator = patch->getSFCYIterator();
-    CellIterator ZFC_iterator = patch->getSFCZIterator();
-                                
-    //__________________________________
-    //  tack on exchange contribution
-    add_vel_FC_exchange<constSFCXVariable<double> ,
-                        SFCXVariable<double> >
-                        (XFC_iterator, 
-                        adj_offset[0],  numMatls,    K, 
-                        delT,           vol_frac_CC, sp_vol_CC,
-                        uvel_FC,        sp_vol_XFC,  uvel_FCME);
- 
-    add_vel_FC_exchange<constSFCYVariable<double> ,
-                        SFCYVariable<double> >
-                        (YFC_iterator, 
-                        adj_offset[1],  numMatls,    K, 
-                        delT,           vol_frac_CC, sp_vol_CC,
-                        vvel_FC,        sp_vol_YFC,  vvel_FCME);
-                        
-    add_vel_FC_exchange<constSFCZVariable<double> ,
-                        SFCZVariable<double> >
-                        (ZFC_iterator, 
-                        adj_offset[2],  numMatls,    K, 
-                        delT,           vol_frac_CC, sp_vol_CC,
-                        wvel_FC,        sp_vol_ZFC,  wvel_FCME);
-
-    //________________________________
-    //  Boundary Conditons 
-    for (int m = 0; m < numMatls; m++)  {
-      Material* matl = m_sharedState->getMaterial( m );
-      int indx = matl->getDWIndex();
-      customBC_localVars* BC_localVars   = scinew customBC_localVars();
-      BC_localVars->recursiveTask = recursion;
-      
-      preprocess_CustomBCs("velFC_Exchange",pOldDW, pNewDW, lb,  patch, indx,
-                            d_BC_globalVars, BC_localVars);
-      
-      setBC<SFCXVariable<double> >(uvel_FCME[m],"Velocity",patch,indx,
-                                    m_sharedState, d_BC_globalVars, BC_localVars); 
-      setBC<SFCYVariable<double> >(vvel_FCME[m],"Velocity",patch,indx,
-                                    m_sharedState, d_BC_globalVars, BC_localVars);
-      setBC<SFCZVariable<double> >(wvel_FCME[m],"Velocity",patch,indx,
-                                    m_sharedState, d_BC_globalVars, BC_localVars);
-      delete_CustomBCs(d_BC_globalVars, BC_localVars);
-    }
-    
-  }  // patch loop  
 }
 
 /*_____________________________________________________________________

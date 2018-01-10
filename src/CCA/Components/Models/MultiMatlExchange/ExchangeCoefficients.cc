@@ -24,6 +24,7 @@
 
 #include <CCA/Components/Models/MultiMatlExchange/ExchangeCoefficients.h>
 #include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Parallel/Parallel.h>
 #include <Core/Util/DebugStream.h>
 #include <iostream>
 #include <sstream>
@@ -49,7 +50,7 @@ ExchangeCoefficients::~ExchangeCoefficients()
 
 //______________________________________________________________________
 //
-void ExchangeCoefficients::problemSetup(ProblemSpecP& ps,
+void ExchangeCoefficients::problemSetup(const ProblemSpecP& matl_ps,
                                         const int numMatls)
 {
   d_numMatls = numMatls;
@@ -59,7 +60,7 @@ void ExchangeCoefficients::problemSetup(ProblemSpecP& ps,
 
   //__________________________________
   // Pull out the constant Coeff exchange coefficients
-  ProblemSpecP exch_ps = ps->findBlock("exchange_properties");
+  ProblemSpecP exch_ps = matl_ps->findBlock("exchange_properties");
   if (!exch_ps){
     throw ProblemSetupException("Cannot find exchange_properties tag", __FILE__, __LINE__);
   }
@@ -87,6 +88,7 @@ void ExchangeCoefficients::problemSetup(ProblemSpecP& ps,
   // Bullet Proofing
   for (int i = 0; i<(int)d_K_mom_V.size(); i++) {
     dbgExch << "K_mom = " << d_K_mom_V[i] << endl;
+    
     if( d_K_mom_V[i] < 0.0 || d_K_mom_V[i] > 1e20 ) {
       ostringstream warn;
       warn<<"ERROR\n Momentum exchange coef. is either too big or negative\n";
@@ -109,6 +111,10 @@ void ExchangeCoefficients::problemSetup(ProblemSpecP& ps,
     }
   }
 
+  if (d_heatExchCoeffModel != "constant"){
+    proc0cout << "------------------------------Using Variable heat exchange coefficients"<< endl;
+  }
+  
   //__________________________________
   //  convective heat transfer
   d_convective = false;

@@ -408,9 +408,10 @@ protected:
   MPMICE(const MPMICE&);
   MPMICE& operator=(const MPMICE&);
 
-  MPMLabel* Mlb;
-  ICELabel* Ilb;
-  MPMICELabel* MIlb;
+  MPMLabel*        Mlb;
+  ICELabel*        Ilb;
+  MPMICELabel*     MIlb;
+  ExchangeModel*   d_exchModel;
 
   bool             d_rigidMPM;
   SerialMPM*       d_mpm;

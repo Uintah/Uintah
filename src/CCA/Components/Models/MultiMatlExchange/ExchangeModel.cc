@@ -50,6 +50,7 @@ ExchangeModel::ExchangeModel(const ProblemSpecP     & prob_spec,
   MIlb = scinew MPMICELabel();
   Ilb  = scinew ICELabel();
   Mlb  = scinew MPMLabel();
+  d_numMatls  = sharedState->getNumMatls();
 }
 
 ExchangeModel::~ExchangeModel()

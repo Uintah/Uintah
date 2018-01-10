@@ -43,7 +43,7 @@ namespace ExchangeModels{
     ExchangeCoefficients();
     ~ExchangeCoefficients();
 
-    void problemSetup( ProblemSpecP& ps,
+    void problemSetup( const ProblemSpecP& ps,
                        const int numMatls );
 
     void outputProblemSpec( ProblemSpecP& ps );

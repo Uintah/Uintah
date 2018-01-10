@@ -42,19 +42,25 @@ ExchangeFactory::~ExchangeFactory()
 //______________________________________________________________________
 //
 ExchangeModel*
-ExchangeFactory::create(const ProblemSpecP     & prob_spec,
+ExchangeFactory::create(const ProblemSpecP     & matl_ps,
                         const SimulationStateP & sharedState)
 {
-  ProblemSpecP mat_ps   = prob_spec->findBlockWithOutAttribute("MaterialProperties");
-  ProblemSpecP exchg_ps = mat_ps->findBlock("exchange_properties");
+  int numMatls = sharedState->getNumMatls();
+  
+  //__________________________________
+  //    single matl 
+  if( numMatls == 1){
+    return ( scinew ExchangeModels::ScalarExch( matl_ps, sharedState) );
+  }
+  
+  ProblemSpecP exchg_ps = matl_ps->findBlock("exchange_properties");
   ProblemSpecP model_ps = exchg_ps->findBlock( "Model" );
 
-  // if a model isn't found then we're using the default ICE exchange model
+  //__________________________________
+  //    default model
   if( model_ps == nullptr ) {
-    return ( scinew ExchangeModels::ScalarExch( exchg_ps, sharedState) );
+    return ( scinew ExchangeModels::ScalarExch( matl_ps, sharedState) );
   }
-
-  cout << "    C " << model_ps->getNodeName() << endl;
   
   map<string,string> attributes;
   model_ps->getAttributes(attributes);
@@ -64,7 +70,7 @@ ExchangeFactory::create(const ProblemSpecP     & prob_spec,
 //    return ( scinew ExchangeModels::SlipExch( exchg_ps, sharedState) );
   }      
   else {
-    throw ProblemSetupException("\nERROR: Unknown momentum exchange model.  "+model,__FILE__, __LINE__);
+    throw ProblemSetupException("\nERROR: Unknown exchange model.  "+model,__FILE__, __LINE__);
   }
 
   return nullptr;
