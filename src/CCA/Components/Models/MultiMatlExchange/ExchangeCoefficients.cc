@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/ICE/ExchangeCoefficients.h>
+#include <CCA/Components/Models/MultiMatlExchange/ExchangeCoefficients.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Util/DebugStream.h>
 #include <iostream>

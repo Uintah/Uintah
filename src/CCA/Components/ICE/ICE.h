@@ -36,7 +36,7 @@
 #include <CCA/Components/ICE/CustomBCs/LODI2.h>
 #include <CCA/Components/ICE/BoundaryCond.h>
 #include <CCA/Components/ICE/TurbulenceModel/Turbulence.h>
-#include <CCA/Components/ICE/ExchangeCoefficients.h>
+#include <CCA/Components/Models/MultiMatlExchange/ExchangeCoefficients.h>
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
 
 #include <CCA/Ports/ModelInterface.h>

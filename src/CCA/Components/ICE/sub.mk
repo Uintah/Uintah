@@ -38,8 +38,7 @@ SRCS       += $(SRCDIR)/ICE.cc \
        $(SRCDIR)/BoundaryCond.cc \
        $(SRCDIR)/impICE.cc \
        $(SRCDIR)/impAMRICE.cc \
-       $(SRCDIR)/customInitialize.cc   \
-       $(SRCDIR)/ExchangeCoefficients.cc   	
+       $(SRCDIR)/customInitialize.cc   	
        
 SUBDIRS := $(SRCDIR)/EOS \
        $(SRCDIR)/Advection \

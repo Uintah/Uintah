@@ -42,6 +42,7 @@ endif
 
 
 SUBDIRS := $(SRCDIR)/FluidsBased \
+           $(SRCDIR)/MultiMatlExchange \
            $(RADIATION)
 
 PSELIBS :=                 \
