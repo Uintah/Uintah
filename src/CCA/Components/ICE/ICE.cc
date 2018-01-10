@@ -94,6 +94,7 @@ extern std::mutex cerrLock;
 
 using namespace std;
 using namespace Uintah;
+using namespace ExchangeModels;
 
 //__________________________________
 //  To turn on normal output
@@ -441,7 +442,7 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
   // Exchange Coefficients
   proc0cout << "numMatls " << m_sharedState->getNumMatls() << endl;
   
-  d_exchCoeff->problemSetup(mat_ps, m_sharedState);
+  d_exchCoeff->problemSetup( mat_ps, m_sharedState->getNumMatls() );
   
   if (d_exchCoeff->d_heatExchCoeffModel != "constant"){
     proc0cout << "------------------------------Using Variable heat exchange coefficients"<< endl;
@@ -689,7 +690,7 @@ void ICE::updateExchangeCoefficients(const ProblemSpecP& prob_spec,
   mat_ps->getAttribute("add",attr);
   
   if (attr == "true") {
-    d_exchCoeff->problemSetup( mat_ps, m_sharedState );
+    d_exchCoeff->problemSetup( mat_ps, m_sharedState->getNumMatls() );
   }
 }
 
@@ -3726,7 +3727,8 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
     FastMatrix K(numMatls, numMatls), junk(numMatls, numMatls);
 
     K.zero();
-    getConstantExchangeCoefficients( K, junk);
+    d_exchCoeff->getConstantExchangeCoeff( K, junk);
+    
     Ghost::GhostType  gac = Ghost::AroundCells;    
     for(int m = 0; m < numMatls; m++) {
       Material* matl = m_sharedState->getMaterial( m );
@@ -5241,7 +5243,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
     H.zero();
     a.zero();
 
-    getConstantExchangeCoefficients( K, H);
+    d_exchCoeff->getConstantExchangeCoeff( K, H);
 
     for (int m = 0; m < numALLMatls; m++) {
       Material* matl = m_sharedState->getMaterial( m );
@@ -5327,7 +5329,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
 
       //---------- E N E R G Y   E X C H A N G E   
       if(d_exchCoeff->d_heatExchCoeffModel != "constant"){
-        getVariableExchangeCoefficients( K, H, c, mass_L);
+        d_exchCoeff->getVariableExchangeCoeff( K, H, c, mass_L);
       }
       for(int m = 0; m < numALLMatls; m++) {
         tmp = delT*sp_vol_CC[m][c] / cv[m][c];
@@ -6152,121 +6154,6 @@ void ICE::hydrostaticPressureAdjustment(const Patch* patch,
 
     double press_hydro = rho_micro_CC[c] * gravity[dir] * dist_from_p_ref[dir];
     press_CC[c] += press_hydro;
-  }
-}
-
-/*_____________________________________________________________________
- Function~  ICE::getConstantExchangeCoefficients--
- This routine returns the constant exchange coefficients
- _____________________________________________________________________  */
-void ICE::getConstantExchangeCoefficients( FastMatrix& K, FastMatrix& H  )
-{
-  int numMatls  = m_sharedState->getNumMatls();
-
-  // The vector of exchange coefficients only contains the upper triagonal
-  // matrix
-
-  // Check if the # of coefficients = # of upper triangular terms needed
-  int num_coeff = ((numMatls)*(numMatls) - numMatls)/2;
-
-  vector<double> d_K_mom = d_exchCoeff->K_mom();
-  vector<double> d_K_heat = d_exchCoeff->K_heat();
-  vector<double>::iterator it_m=d_K_mom.begin();
-  vector<double>::iterator it_h=d_K_heat.begin();
-
-  //__________________________________
-  // bulletproofing
-  bool test = false;
-  string desc;
-  if (num_coeff != (int)d_K_mom.size()) {
-    test = true;
-    desc = "momentum";
-  }  
-  
-  if (num_coeff !=(int)d_K_heat.size() && d_exchCoeff->d_heatExchCoeffModel == "constant") {
-    test = true;
-    desc = desc + " energy";
-  }
-
-  if(test) {   
-    ostringstream warn;
-    warn << "\nThe number of exchange coefficients (" << desc << ") is incorrect.\n";
-    warn << "Here is the correct specification:\n";
-    for (int i = 0; i < numMatls; i++ ){
-      for (int j = i+1; j < numMatls; j++){
-        warn << i << "->" << j << ",\t"; 
-      }
-      warn << "\n";
-      for (int k = 0; k <= i; k++ ){
-        warn << "\t";
-      }
-    } 
-    throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-  }
-
-  //__________________________________
-  // Fill in the upper triangular matrix
-  // momentum
-  for (int i = 0; i < numMatls; i++ )  {
-    K(i,i) = 0.0;
-    for (int j = i + 1; j < numMatls; j++) {
-      K(i,j) = K(j,i) = *it_m++;
-    }
-  }
-  
-  // heat
-  if(d_exchCoeff->d_heatExchCoeffModel == "constant") {
-    for (int i = 0; i < numMatls; i++ )  {
-      H(i,i) = 0.0;
-      for (int j = i + 1; j < numMatls; j++) {
-        H(i,j) = H(j,i) = *it_h++;
-      }
-    }
-  }
-  
-  
-}
-
-/*_____________________________________________________________________
- Function~  ICE::getVariableExchangeCoefficients--
- This routine returns the  exchange coefficients
- _____________________________________________________________________  */
-void ICE::getVariableExchangeCoefficients( FastMatrix& ,
-                                           FastMatrix& H,
-                                           IntVector & c,
-                                           std::vector<constCCVariable<double> >& mass_L  )
-{
-  int numMatls  = m_sharedState->getNumMatls();
-
-  //__________________________________
-  // Momentum  (do nothing for now)
-  
-  //__________________________________
-  // Heat coefficient
-  for (int m = 0; m < numMatls; m++ )  {
-    H(m,m) = 0.0;
-    for (int n = m + 1; n < numMatls; n++) {    
-      double massRatioSqr = pow(mass_L[n][c]/mass_L[m][c], 2.0);  
-
-      // 1e5  is the lower limit clamp
-      // 1e12 is the upper limit clamp
-      if (massRatioSqr < 1e-12){
-        H(n,m) = H(m,n) = 1e12;
-      }
-      else if (massRatioSqr >= 1e-12 && massRatioSqr < 1e-5){
-        H(n,m) = H(m,n) = 1./massRatioSqr;
-      }
-      else if (massRatioSqr >= 1e-5 && massRatioSqr < 1e5){
-        H(n,m) = H(m,n) = 1e5;
-      }
-      else if (massRatioSqr >= 1e5 && massRatioSqr < 1e12){
-        H(n,m) = H(m,n) = massRatioSqr;
-      }
-      else if (massRatioSqr >= 1e12){
-        H(n,m) = H(m,n) = 1e12;
-      }
-
-    }
   }
 }
 

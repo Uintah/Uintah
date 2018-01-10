@@ -93,6 +93,7 @@ void launchIceEquilibrationKernelUnified(dim3 dimGrid,
 #define MAX_MATLS 16
 
 namespace Uintah {
+using namespace ExchangeModels;
 
   class ModelMaker;
   class ModelInfo;
@@ -842,14 +843,6 @@ namespace Uintah {
       void hydrostaticPressureAdjustment(const Patch* patch,
                       const CCVariable<double>& rho_micro_CC,
                       CCVariable<double>& press_CC);
-
-      void getConstantExchangeCoefficients( FastMatrix& K,
-                                    FastMatrix& H );
-
-      void getVariableExchangeCoefficients( FastMatrix& ,
-                                           FastMatrix& H,
-                                           IntVector & c,
-                                           std::vector<constCCVariable<double> >& mass  );
 
       IntVector upwindCell_X(const IntVector& c,
                              const double& var,
