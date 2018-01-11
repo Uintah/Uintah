@@ -74,8 +74,8 @@ SimulationTime::SimulationTime( const ProblemSpecP & params )
   if( !time_ps->get( "max_delt_increase", m_max_delt_increase ) ) {
     m_max_delt_increase = 0;
   }
-  else if( m_max_wall_time < 0 ) {
-    proc0cout << "Negative max_wall_time is not allowed.\n";
+  else if( m_max_delt_increase < 0 ) {
+    proc0cout << "Negative max_delt_increase is not allowed.\n";
     proc0cout << "resetting to 0 (i.e. the value is ignored)\n";
     m_max_delt_increase = 0;
   }
