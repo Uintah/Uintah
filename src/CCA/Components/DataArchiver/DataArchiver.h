@@ -449,11 +449,6 @@ class LoadBalancer;
      
     std::string m_particlePositionName{ "p.x" };
 
-
-    const VarLabel* m_timeStepLabel;
-    const VarLabel* m_simTimeLabel;
-    const VarLabel* m_delTLabel;
-    
     double m_elapsedWallTime {0};
     bool m_maybeLastTimeStep{false};
 

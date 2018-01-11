@@ -103,7 +103,7 @@ MomentumSolver::~MomentumSolver()
 //****************************************************************************
 void
 MomentumSolver::problemSetup(const ProblemSpecP& params,
-			     SimulationStateP & sharedState)
+                             SimulationStateP & sharedState)
 {
   ProblemSpecP db = params->findBlock("MomentumSolver");
 
@@ -327,6 +327,9 @@ MomentumSolver::sched_buildLinearMatrix(SchedulerP& sched,
                           this, &MomentumSolver::buildLinearMatrix,
                           timelabels, extraProjection);
 
+  tsk->requires(Task::OldDW, d_lab->d_timeStepLabel);
+  tsk->requires(Task::OldDW, d_lab->d_simulationTimeLabel);
+
   Task::WhichDW parent_old_dw;
   if (timelabels->recursion){
     parent_old_dw = Task::ParentOldDW;
@@ -374,6 +377,12 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
                                   const TimeIntegratorLabel* timelabels,
                                   bool extraProjection)
 {
+  timeStep_vartype timeStep;
+  old_dw->get(timeStep, d_lab->d_timeStepLabel );
+
+  simTime_vartype simTime;
+  old_dw->get(simTime, d_lab->d_simulationTimeLabel );
+  
   DataWarehouse* parent_old_dw;
   if (timelabels->recursion){
     parent_old_dw = new_dw->getOtherDataWarehouse(Task::ParentOldDW);
@@ -471,9 +480,7 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
     d_boundaryCondition->velRhoHatInletBC(patch,
                                           &velocityVars, &constVelocityVars,
                                           indx,
-                                          time_shift);
-
-
+                                          timeStep, simTime, time_shift);
   }
 }
 
@@ -530,6 +537,8 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
                           this, &MomentumSolver::buildLinearMatrixVelHat,
                           timelabels, curr_level);
 
+  tsk->requires(Task::OldDW, d_lab->d_timeStepLabel);
+  tsk->requires(Task::OldDW, d_lab->d_simulationTimeLabel);
 
   Task::WhichDW parent_old_dw;
   if (timelabels->recursion){
@@ -680,6 +689,12 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
                                         const TimeIntegratorLabel* timelabels,
                                         const int curr_level )
 {
+  timeStep_vartype timeStep;
+  old_dw->get(timeStep, d_lab->d_timeStepLabel );
+
+  simTime_vartype simTime;
+  old_dw->get(simTime, d_lab->d_simulationTimeLabel );
+
   DataWarehouse* parent_old_dw;
   if (timelabels->recursion){
     parent_old_dw = new_dw->getOtherDataWarehouse(Task::ParentOldDW);
@@ -1140,22 +1155,22 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 
 
 
-    double time_shift = 0.0;
-    time_shift = delta_t * timelabels->time_position_multiplier_before_average;
+    double time_shift =
+      delta_t * timelabels->time_position_multiplier_before_average;
+    
     d_boundaryCondition->velRhoHatInletBC(patch,
                                           &velocityVars, &constVelocityVars,
                                           indx,
-                                          time_shift);
+                                          timeStep, simTime, time_shift);
 
     d_boundaryCondition->velocityOutletPressureBC( patch,
-                                                        indx,
-                                                        velocityVars.uVelRhoHat,
-                                                        velocityVars.vVelRhoHat,
-                                                        velocityVars.wVelRhoHat,
-                                                        constVelocityVars.old_uVelocity,
-                                                        constVelocityVars.old_vVelocity,
-                                                        constVelocityVars.old_wVelocity );
-
+                                                   indx,
+                                                   velocityVars.uVelRhoHat,
+                                                   velocityVars.vVelRhoHat,
+                                                   velocityVars.wVelRhoHat,
+                                                   constVelocityVars.old_uVelocity,
+                                                   constVelocityVars.old_vVelocity,
+                                                   constVelocityVars.old_wVelocity );
   }
 }
 
@@ -1210,8 +1225,7 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->
-                     getArchesMaterial(archIndex)->getDWIndex();
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
     constCCVariable<double> old_density;
     constCCVariable<double> temp_density;

@@ -10,7 +10,7 @@ void HandoffHelper::readInputFile( std::string file_name, const int index, FFInf
   std::string varname="null";
   IntVector relative_ijk(0,0,0);
   Vector relative_xyz(0,0,0);
-  double default_value=0.;
+  // double default_value=0.;
   CellToValue values;
 
   gzFile file = gzopen( file_name.c_str(), "r" );
@@ -80,7 +80,7 @@ void HandoffHelper::readInputFile( std::string file_name, FFInfo& info ){
   std::string varname="null";
   IntVector relative_ijk(0,0,0);
   Vector relative_xyz(0,0,0);
-  double default_value=0.;
+  // double default_value=0.;
   CellToVector values;
 
   gzFile file = gzopen( file_name.c_str(), "r" );

@@ -26,7 +26,7 @@
 #define ICE_INLETVELOCITY_h
 
 #include <CCA/Ports/DataWarehouse.h>
-#include <Core/Labels/ICELabel.h>
+#include <CCA/Components/ICE/Core/ICELabel.h>
 #include <Core/Exceptions/InternalError.h>
 
 #include <Core/Grid/Patch.h>

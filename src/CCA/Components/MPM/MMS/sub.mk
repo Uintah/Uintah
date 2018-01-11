@@ -27,15 +27,23 @@
 # 
 # Makefile fragment for this subdirectory 
 
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := CCA/Components/MPM/MMS
 
 SRCS     += \
 	$(SRCDIR)/MMS.cc
 
-PSELIBS := Core/Grid \
-	CCA/Components/ICE \
-	CCA/Components/HETransformation \
-	Core/Datatypes \
-	Core/Util
+PSELIBS := \
+	CCA/Components/MPM/Core \
+	Core/Disclosure     \
+	Core/Exceptions     \
+	Core/Geometry       \
+	Core/GeometryPiece  \
+	Core/Grid           \
+	Core/Math           \
+	Core/Parallel       \
+	Core/ProblemSpec    \
+	Core/Util           
 
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

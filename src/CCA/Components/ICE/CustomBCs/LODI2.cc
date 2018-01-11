@@ -23,10 +23,10 @@
  */
 
 #include <CCA/Components/ICE/CustomBCs/LODI2.h>
-#include <CCA/Components/ICE/ICEMaterial.h>
+#include <CCA/Components/ICE/Materials/ICEMaterial.h>
 #include <CCA/Components/ICE/EOS/EquationOfState.h>
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
+#include <CCA/Components/MPM/Materials/MPMMaterial.h>
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/ConstitutiveModel.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/SimulationState.h>

@@ -26,7 +26,8 @@
 #ifndef Packages_Uintah_CCA_Components_Examples_MassMomEng_src_h
 #define Packages_Uintah_CCA_Components_Examples_MassMomEng_src_h
 
-#include <CCA/Ports/ModelInterface.h>
+#include <CCA/Components/Models/FluidsBased/FluidsBasedModel.h>
+
 #include <Core/Grid/Variables/ComputeSet.h>
 
 namespace Uintah {
@@ -60,7 +61,7 @@ WARNING
   
 ****************************************/
 
-  class MassMomEng_src : public ModelInterface {
+  class MassMomEng_src : public FluidsBasedModel {
   public:
     MassMomEng_src(const ProcessorGroup* myworld,
 		   const SimulationStateP& sharedState,
@@ -71,21 +72,18 @@ WARNING
     virtual void outputProblemSpec(ProblemSpecP& ps);
 
     virtual void problemSetup(GridP& grid,
-                              ModelSetup* setup, const bool isRestart);
+                               const bool isRestart);
       
     virtual void scheduleInitialize(SchedulerP&,
-                                        const LevelP& level,
-                                        const ModelInfo*);
+                                        const LevelP& level);
 
     virtual void restartInitialize() {}
       
     virtual void scheduleComputeStableTimeStep(SchedulerP&,
-                                                   const LevelP& level,
-                                                   const ModelInfo*);
+                                                   const LevelP& level);
       
     virtual void scheduleComputeModelSources(SchedulerP&,
-                                                const LevelP& level,
-                                                const ModelInfo*);
+                                                const LevelP& level);
                                              
     virtual void scheduleModifyThermoTransportProperties(SchedulerP&,
                                                          const LevelP&,
@@ -100,16 +98,14 @@ WARNING
                                       SchedulerP& sched);
                                       
    virtual void scheduleTestConservation(SchedulerP&,
-                                         const PatchSet* patches,
-                                         const ModelInfo* mi);
+                                         const PatchSet* patches);
 
   private:    
     void computeModelSources(const ProcessorGroup*, 
                              const PatchSubset* patches,
-                               const MaterialSubset* matls, 
+			     const MaterialSubset* matls, 
                              DataWarehouse*, 
-                               DataWarehouse* new_dw, 
-                             const ModelInfo*);
+			     DataWarehouse* new_dw);
 
     MassMomEng_src(const MassMomEng_src&);
     MassMomEng_src& operator=(const MassMomEng_src&);

@@ -25,11 +25,11 @@
 #ifndef Packages_Uintah_CCA_Components_Switching_SteadyState_h
 #define Packages_Uintah_CCA_Components_Switching_SteadyState_h
 
-#include <Core/ProblemSpec/ProblemSpecP.h>
 #include <CCA/Ports/SwitchingCriteria.h>
+
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/SimulationState.h>
-
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
 
@@ -38,7 +38,7 @@ namespace Uintah {
   class VarLabel;
 
   class SteadyState : public SwitchingCriteria
-    {
+  {
     public:
       // this function has a switch for all known SwitchingCriteria
     
@@ -64,9 +64,7 @@ namespace Uintah {
       void dummy(const ProcessorGroup*, const PatchSubset* patches,
                       const MaterialSubset* matls, DataWarehouse* old_dw,
                       DataWarehouse* new_dw);
-
-
-
+      
     private:
       unsigned int m_material;
       unsigned int m_numSteps;
@@ -76,7 +74,7 @@ namespace Uintah {
       const VarLabel* m_delTLabel;
       
       SimulationStateP m_sharedState; 
-    };
+  };
 } // End namespace Uintah
 
 #endif 

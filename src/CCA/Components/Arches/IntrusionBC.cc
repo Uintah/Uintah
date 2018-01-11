@@ -176,6 +176,8 @@ IntrusionBC::problemSetup( const ProblemSpecP& params, const int ilvl )
 
       if ( db_velocity ){
 
+        _has_intrusion_inlets = true;
+
         intrusion.has_velocity_model = true;
 
         std::string vel_type;
@@ -232,14 +234,17 @@ IntrusionBC::problemSetup( const ProblemSpecP& params, const int ilvl )
           if ( scalar_type == "flat" ){
 
             scalar_bc = scinew constantScalar();
+            intrusion.scalar_inlet_type = IntrusionBC::FLAT;
 
           }  else if ( scalar_type == "from_file" ){
 
             scalar_bc = scinew scalarFromInput( scalar_label );
+            intrusion.scalar_inlet_type = IntrusionBC::HANDOFF;
 
           } else if ( scalar_type == "tabulated" ){
 
             scalar_bc = scinew tabulatedScalar();
+            intrusion.scalar_inlet_type = IntrusionBC::TABULATED;
 
           } else {
 
@@ -1079,15 +1084,20 @@ IntrusionBC::printIntrusionInformation( const ProcessorGroup*,
         area = area_var;
 
         proc0cout << " Intrusion name/type: " << iter->first << " / Inlet" << std::endl;
-        proc0cout << "           density  = " << iter->second.density << std::endl;
-        proc0cout << "         inlet area = " << area << std::endl << std::endl;
+        proc0cout << "         inlet area = " << area << " (based on cell area)" << std::endl;
+        if ( iter->second.velocity_inlet_type == IntrusionBC::MASSFLOW ){
+          proc0cout << "         density  = " << iter->second.density << std::endl;
+        } else {
+          proc0cout << "   (note: unable to report a single density because it may vary over the face of the inlet)" << std::endl;
 
-        proc0cout << " Active inlet directions (normals): " << std::endl;
+        }
+
+        proc0cout << "   Active inlet directions (normals): " << std::endl;
 
         for (int idir = 0; idir < 6; idir++) {
 
           if (iter->second.directions[idir] != 0) {
-            proc0cout << "   " << _dHelp[idir] << std::endl;
+            proc0cout << "         " << _dHelp[idir] << std::endl;
           }
 
         }
@@ -1104,9 +1114,7 @@ IntrusionBC::printIntrusionInformation( const ProcessorGroup*,
 
       }
 
-      proc0cout << std::endl;
-
-      proc0cout << " Solid T  = " << iter->second.temperature << std::endl;
+      proc0cout << "         Solid T  = " << iter->second.temperature << std::endl;
 
       proc0cout << " \n";
 
@@ -1125,7 +1133,7 @@ IntrusionBC::setHattedVelocity( const Patch*  patch,
                                 bool& set_nonnormal_values )
 {
 
-  const int p = patch->getID();
+  const int pID = patch->getID();
 
   if ( _intrusion_on ) {
 
@@ -1133,7 +1141,7 @@ IntrusionBC::setHattedVelocity( const Patch*  patch,
 
       if ( iIntrusion->second.type != SIMPLE_WALL ){
 
-        BCIterator::iterator  iBC_iter = (iIntrusion->second.bc_face_iterator).find(p);
+        BCIterator::iterator  iBC_iter = (iIntrusion->second.bc_face_iterator).find(pID);
         std::vector<int> directions = iIntrusion->second.directions;
 
         iIntrusion->second.velocity_inlet_generator->set_velocity( patch, iBC_iter, directions,
@@ -1141,6 +1149,36 @@ IntrusionBC::setHattedVelocity( const Patch*  patch,
 
       }
 
+    }
+  }
+}
+
+//------------------------------------------------------------------------------
+void
+IntrusionBC::getVelocityCondition( const Patch* patch, const IntVector ijk,
+                                   bool& found_value, Vector& velocity ){
+
+  if ( _intrusion_on ) {
+
+    const int pID = patch->getID();
+
+    for ( IntrusionMap::iterator iIntrusion = _intrusion_map.begin(); iIntrusion != _intrusion_map.end(); ++iIntrusion ){
+
+      if ( iIntrusion->second.type != SIMPLE_WALL ){
+
+        BCIterator::iterator  iBC_iter = (iIntrusion->second.bc_face_iterator).find(pID);
+
+        auto iter_ijk = std::find( iBC_iter->second.begin(), iBC_iter->second.end(), ijk);
+
+        if ( iter_ijk != iBC_iter->second.end() ){
+          found_value = true;
+          iIntrusion->second.velocity_inlet_generator->get_velocity( ijk, patch, found_value, velocity );
+        } else {
+          found_value = false;
+          velocity = Vector(0,0,0);
+        }
+
+      }
     }
   }
 }
@@ -1182,11 +1220,11 @@ IntrusionBC::addScalarRHS( const Patch* patch,
           found_bc = false;
         }
 
-        Vector relative_xyz = scalar_iter->second->get_relative_xyz();
-        Point xyz(relative_xyz[0], relative_xyz[1], relative_xyz[2]);
-        IntVector rel_ijk = patch->getLevel()->getCellIndex( xyz );
-
         if ( !iIntrusion->second.interior_cell_iterator.empty() && found_bc ) {
+
+          Vector relative_xyz = scalar_iter->second->get_relative_xyz();
+          Point xyz(relative_xyz[0], relative_xyz[1], relative_xyz[2]);
+          IntVector rel_ijk = patch->getLevel()->getCellIndex( xyz );
 
           BCIterator::iterator  iBC_iter = (iIntrusion->second.interior_cell_iterator).find(p);
 
@@ -1253,12 +1291,12 @@ IntrusionBC::addScalarRHS( const Patch* patch,
           found_bc = false;
         }
 
-        // The relative_ijk value is (0,0,0) unless this BC is a handoff file type
-        Vector relative_xyz = scalar_iter->second->get_relative_xyz();
-        Point xyz(relative_xyz[0], relative_xyz[1], relative_xyz[2]);
-        IntVector rel_ijk = patch->getLevel()->getCellIndex( xyz );
-
         if ( !iIntrusion->second.interior_cell_iterator.empty() && found_bc ) {
+
+          // The relative_ijk value is (0,0,0) unless this BC is a handoff file type
+          Vector relative_xyz = scalar_iter->second->get_relative_xyz();
+          Point xyz(relative_xyz[0], relative_xyz[1], relative_xyz[2]);
+          IntVector rel_ijk = patch->getLevel()->getCellIndex( xyz );
 
           BCIterator::iterator  iBC_iter = (iIntrusion->second.interior_cell_iterator).find(p);
 
@@ -1299,7 +1337,8 @@ IntrusionBC::addScalarRHS( const Patch* patch,
 //_________________________________________
 void
 IntrusionBC::setDensity( const Patch* patch,
-                         CCVariable<double>& density )
+                         CCVariable<double>& density, 
+                         constCCVariable<double>& old_density )
 {
   const int p = patch->getID();
 
@@ -1322,7 +1361,7 @@ IntrusionBC::setDensity( const Patch* patch,
 
               if ( iIntrusion->second.directions[idir] != 0 ){
 
-                density[ c ] = 2.0*iIntrusion->second.density - density[c+_dHelp[idir]];
+                density[ c ] = 2.0*iIntrusion->second.density - old_density[c+_dHelp[idir]];
 
               }
             }

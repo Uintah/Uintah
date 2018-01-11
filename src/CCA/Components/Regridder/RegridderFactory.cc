@@ -26,11 +26,10 @@
 #include <CCA/Components/Regridder/RegridderFactory.h>
 #include <CCA/Components/Regridder/SingleLevelRegridder.h>
 #include <CCA/Components/Regridder/TiledRegridder.h>
-#include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Parallel/Parallel.h>
-#include <Core/Parallel/ProcessorGroup.h>
 
 //-- Uintah framework includes --//
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 
 using namespace Uintah;
@@ -54,7 +53,7 @@ RegridderCommon* RegridderFactory::create(       ProblemSpecP   & ps,
       std::string regridderName;
       regridderPS->getAttribute("type", regridderName);
 
-      proc0cout << "Using Regridder: \t" << regridderName << std::endl;
+      proc0cout << "Regridder: \t" << regridderName << std::endl;
 
       if (regridderName == "Tiled") {
         regridder = scinew TiledRegridder(world);
@@ -65,7 +64,7 @@ RegridderCommon* RegridderFactory::create(       ProblemSpecP   & ps,
     }
 
     if (regridder == nullptr) {
-      throw ProblemSetupException("No AMR Regridder block or type specified", __FILE__, __LINE__);
+      throw ProblemSetupException("\nERROR<Regridder>: No AMR Regridder block or type specified.\n", __FILE__, __LINE__);
     }
   }
 

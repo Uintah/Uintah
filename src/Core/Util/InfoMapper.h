@@ -30,8 +30,8 @@
 #include <Core/Parallel/UintahMPI.h>
 
 #include <iostream>
-#include <sstream>
 #include <map>
+#include <sstream>
 #include <vector>
 
 namespace Uintah {
@@ -47,7 +47,9 @@ struct double_int
 
 template<class E, class T>class InfoMapper
 {
+
 public:
+
   InfoMapper()
   {
     m_values.clear();
@@ -76,15 +78,14 @@ public:
 
   virtual void reset( const T val )
   {
-    for( unsigned int i=0; i<m_values.size(); ++i ) {
-      m_values[(E) i] = val;
+    for (unsigned int i = 0; i < m_values.size(); ++i) {
+      m_values[(E)i] = val;
     }
   };
 
   virtual void validKey( const E key ) const
   {
-    if( !exists( key ) )
-    {
+    if (!exists(key)) {
       std::stringstream msg;
       msg << "Requesting an undefined key (" << key << ") ";
       throw Uintah::InternalError( msg.str(), __FUNCTION__, __LINE__);
@@ -98,8 +99,7 @@ public:
 
   virtual bool exists( const std::string name ) const
   {
-    for( unsigned int i=0; i<m_names.size(); ++i )
-    {
+    for (unsigned int i = 0; i < m_names.size(); ++i) {
       if( name == m_names[(E) i] ) {
         return true;
       }
@@ -109,8 +109,7 @@ public:
 
   virtual void validate( const E lastKey ) const
   {
-    if( m_values.size() != (unsigned int) lastKey )
-    {
+    if (m_values.size() != (unsigned int)lastKey) {
       std::stringstream msg;
       msg << "The count does not match. Expected "
 	        << (unsigned int) lastKey << " values. But added "
@@ -122,18 +121,15 @@ public:
   virtual void insert( const E key, const std::string name,
 		                   const std::string units, const T value )
   {
-    if( !exists( key ) && !exists( name ) && (unsigned int) key == m_keys.size() )
-    {
-      m_keys[key] = (unsigned int) key;
-      m_values.push_back( value );
-      m_names.push_back( name );
-      m_units.push_back( units );
+    if (!exists(key) && !exists(name) && (unsigned int)key == m_keys.size()) {
+      m_keys[key] = (unsigned int)key;
+      m_values.push_back(value);
+      m_names.push_back(name);
+      m_units.push_back(units);
     }
-    else
-    {
+    else {
       std::stringstream msg;
-      msg << "Adding a key (" << key << ") with name, "
-	        << name << " that already exists.";
+      msg << "Adding a key (" << key << ") with name, " << name << " that already exists.";
       throw Uintah::InternalError( msg.str(), __FUNCTION__, __LINE__);
     }
   };
@@ -199,8 +195,7 @@ public:
 
   virtual E getKey( const std::string name ) const
   {
-    for( unsigned int i=0; i<m_names.size(); ++i )
-    {
+    for (unsigned int i = 0; i < m_names.size(); ++i) {
       if( name == m_names[(E) i] ) {
         return (E) i;
       }
@@ -318,73 +313,60 @@ public:
   {
     unsigned int nStats = InfoMapper<E, T>::m_keys.size();
 
-    if( nStats == 0 )
+    if (nStats == 0) {
       return;
-    
-    if( myWorld->nRanks() > 1)
-    {
-      m_node_sum.resize( nStats );
+    }
 
-      m_rank_average.resize( nStats );
-      m_rank_maximum.resize( nStats );
+    if (myWorld->nRanks() > 1) {
+      m_node_sum.resize(nStats);
+      m_rank_average.resize(nStats);
+      m_rank_maximum.resize(nStats);
 
       std::vector<double>      reduced( nStats );
-
       std::vector<double>      toReduce( nStats );
       std::vector<double_int>  toReduceMax( nStats );
 
       // Perform the reduction acrosss each processor node.
-      for( int n=0; n<myWorld->nNodes(); ++n )
-      {
-	// If this rank belongs to this node then pass the value.
-	if( n == myWorld->myNode() )
-	{
-	  for (size_t i=0; i<nStats; ++i)
-	    toReduce[i] = InfoMapper<E, T>::m_values[i];
-	}
-	// This rank is not on the current node so ignor the values.
-	else
-	{
-	  for (size_t i=0; i<nStats; ++i)
-	    toReduce[i] = 0;
-	}
+      for (int n = 0; n < myWorld->nNodes(); ++n) {
+        // If this rank belongs to this node then pass the value.
+        if (n == myWorld->myNode()) {
+          for (size_t i = 0; i < nStats; ++i) {
+            toReduce[i] = InfoMapper<E, T>::m_values[i];
+          }
+        }
+        // This rank is not on the current node so ignore the values.
+        else {
+          for (size_t i = 0; i < nStats; ++i) {
+            toReduce[i] = 0;
+          }
+        }
 	
-        Uintah::MPI::Allreduce( &toReduce[0], &reduced[0], nStats,
-				MPI_DOUBLE, MPI_SUM, myWorld->getComm() );
+        Uintah::MPI::Allreduce( &toReduce[0], &reduced[0], nStats, MPI_DOUBLE, MPI_SUM, myWorld->getComm() );
 
-	// If this rank belongs to this node then save the summation
-	// values.
-	if( n == myWorld->myNode() )
-	{
-	  for (size_t i=0; i<nStats; ++i)
-	    m_node_sum[i] = reduced[i];
-	}
+	      // If this rank belongs to this node then save the summation values.
+        if (n == myWorld->myNode()) {
+          for (size_t i = 0; i < nStats; ++i) {
+            m_node_sum[i] = reduced[i];
+          }
+        }
       }
 
       // Do the reductions across all ranks.
-      
+
       // A little ugly, but do it anyway so only one reduction is needed
       // for the sum and one for the maximum. 
-      for (size_t i=0; i<nStats; ++i)
-      {
+      for (size_t i = 0; i < nStats; ++i) {
         toReduce[i] = InfoMapper<E, T>::m_values[i];
-        toReduceMax[i] = double_int( InfoMapper<E, T>::m_values[i],
-				     myWorld->myRank() );
+        toReduceMax[i] = double_int(InfoMapper<E, T>::m_values[i], myWorld->myRank());
       }
 
-      if( allReduce )
-      {
-        Uintah::MPI::Allreduce( &toReduce[0],    &m_rank_average[0], nStats,
-				MPI_DOUBLE,     MPI_SUM,    myWorld->getComm() );
-        Uintah::MPI::Allreduce( &toReduceMax[0], &m_rank_maximum[0], nStats,
-				MPI_DOUBLE_INT, MPI_MAXLOC, myWorld->getComm() );
+      if (allReduce) {
+        Uintah::MPI::Allreduce(&toReduce[0], &m_rank_average[0], nStats, MPI_DOUBLE, MPI_SUM, myWorld->getComm());
+        Uintah::MPI::Allreduce(&toReduceMax[0], &m_rank_maximum[0], nStats, MPI_DOUBLE_INT, MPI_MAXLOC, myWorld->getComm());
       }
-      else
-      {
-        Uintah::MPI::Reduce( &toReduce[0],    &m_rank_average[0], nStats,
-			     MPI_DOUBLE,     MPI_SUM,    0, myWorld->getComm() );
-        Uintah::MPI::Reduce( &toReduceMax[0], &m_rank_maximum[0], nStats,
-			     MPI_DOUBLE_INT, MPI_MAXLOC, 0, myWorld->getComm() );
+      else {
+        Uintah::MPI::Reduce(&toReduce[0], &m_rank_average[0], nStats, MPI_DOUBLE, MPI_SUM, 0, myWorld->getComm());
+        Uintah::MPI::Reduce(&toReduceMax[0], &m_rank_maximum[0], nStats, MPI_DOUBLE_INT, MPI_MAXLOC, 0, myWorld->getComm());
       }
 
       // Calculate the averages.
@@ -393,28 +375,25 @@ public:
     }
 
     // Single rank so just copy the values.
-    else
-    {
-      m_node_sum.resize( nStats );
+    else {
+      m_node_sum.resize(nStats);
 
-      m_rank_average.resize( nStats );
-      m_rank_maximum.resize( nStats );
+      m_rank_average.resize(nStats);
+      m_rank_maximum.resize(nStats);
 
-      for (size_t i=0; i<nStats; ++i)
-      {
-	double val = InfoMapper<E, T>::m_values[i];
+      for (size_t i = 0; i < nStats; ++i) {
+        double val = InfoMapper<E, T>::m_values[i];
 
         m_node_sum[i] = val;
-
         m_rank_average[i] = val;
-        m_rank_maximum[i] = double_int( val, 0);
+        m_rank_maximum[i] = double_int(val, 0);
       }
     }
   };
 
 protected:
-  std::vector< double > m_node_sum;
 
+  std::vector< double >     m_node_sum;
   std::vector< double >     m_rank_average;
   std::vector< double_int > m_rank_maximum;
 };

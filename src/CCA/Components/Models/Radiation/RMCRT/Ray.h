@@ -214,6 +214,8 @@ namespace Uintah{
       std::map <int,IntVector> d_dirIndexOrder;
       std::map <int,IntVector> d_dirSignSwap;
 
+      const VarLabel* m_timeStepLabel {nullptr};
+      
       const VarLabel* d_mag_grad_abskgLabel;
       const VarLabel* d_mag_grad_sigmaT4Label;
       const VarLabel* d_flaggedCellsLabel;
@@ -250,7 +252,7 @@ namespace Uintah{
                         void* stream,
                         int deviceID,
                         bool modifies_divQ,
-                        SimulationStateP sharedState,
+                        int timeStep,
                         Task::WhichDW which_abskg_dw,
                         Task::WhichDW whichd_sigmaT4_dw,
                         Task::WhichDW which_celltype_dw);
@@ -281,7 +283,7 @@ namespace Uintah{
                                  void* stream,
                                  int deviceID,
                                  bool modifies_divQ,
-                                 SimulationStateP sharedState,
+				 int timeStep,
                                  Task::WhichDW which_abskg_dw,
                                  Task::WhichDW whichd_sigmaT4_dw,
                                  Task::WhichDW which_celltype_dw );

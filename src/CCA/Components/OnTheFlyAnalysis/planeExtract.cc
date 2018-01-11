@@ -55,8 +55,8 @@ static DebugStream cout_doing("PLANEEXTRACT_DOING_COUT", false);
 static DebugStream cout_dbg("PLANEEXTRACT_DBG_COUT", false);
 //______________________________________________________________________
 planeExtract::planeExtract(const ProcessorGroup* myworld,
-			   const SimulationStateP sharedState,
-			   const ProblemSpecP& module_spec )
+                           const SimulationStateP sharedState,
+                           const ProblemSpecP& module_spec )
   : AnalysisModule(myworld, sharedState, module_spec)
 {
   d_matl_set = 0;
@@ -388,6 +388,9 @@ void planeExtract::scheduleDoAnalysis(SchedulerP& sched,
   Task* t = scinew Task("planeExtract::doAnalysis", 
                    this,&planeExtract::doAnalysis);
                         
+  t->requires(Task::OldDW, m_timeStepLabel);
+  t->requires(Task::OldDW, m_simulationTimeLabel);
+
   t->requires(Task::OldDW, ps_lb->lastWriteTimeLabel);
   Ghost::GhostType gac = Ghost::AroundCells;
   
@@ -434,7 +437,11 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
     lastWriteTime = writeTime;
   }
 
-  double now = m_sharedState->getElapsedSimTime();
+  // double now = m_sharedState->getElapsedSimTime();
+
+  simTime_vartype simTimeVar;
+  old_dw->get(simTimeVar, m_simulationTimeLabel);
+  double now = simTimeVar;
   
   if(now < d_startTime || now > d_stopTime){
     new_dw->put(max_vartype(lastWriteTime), ps_lb->lastWriteTimeLabel);
@@ -472,8 +479,14 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
         string dirName = d_planes[p]->name;
         string planePath = udaDir + "/" + dirName;
         
+        // int ts = m_sharedState->getCurrentTopLevelTimeStep();
+ 
+        timeStep_vartype timeStep_var;      
+        old_dw->get(timeStep_var, m_timeStepLabel);
+        int ts = timeStep_var;
+
         ostringstream tname;
-        tname << "t" << std::setw(5) << std::setfill('0') << m_sharedState->getCurrentTopLevelTimeStep();
+        tname << "t" << std::setw(5) << std::setfill('0') << ts;
         string timestep = tname.str();
         
         ostringstream li;
@@ -966,4 +979,3 @@ inline bool planeExtract::containsCellInclusive(const IntVector &low,
 
   return (testLo && testHi );
 }
-

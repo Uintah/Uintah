@@ -39,22 +39,15 @@ SRCS += $(SRCDIR)/SerialMPM.cc    \
 	$(SRCDIR)/ShellMPM.cc     \
 	$(SRCDIR)/AMRMPM.cc       
 
-SUBDIRS := \
-	$(SRCDIR)/Core              \
-	$(SRCDIR)/ConstitutiveModel \
-	$(SRCDIR)/Contact           \
-	$(SRCDIR)/ThermalContact    \
-	$(SRCDIR)/PhysicalBC        \
-	$(SRCDIR)/ParticleCreator   \
-	$(SRCDIR)/CohesiveZone      \
-	$(SRCDIR)/HeatConduction    \
-	$(SRCDIR)/MMS               \
-	$(SRCDIR)/Solver            \
-	$(SRCDIR)/Diffusion
-
-include $(SCIRUN_SCRIPTS)/recurse.mk
-
 PSELIBS := \
+	$(SRCDIR)/CohesiveZone   \
+	$(SRCDIR)/Core           \
+	$(SRCDIR)/HeatConduction \
+	$(SRCDIR)/Materials      \
+	$(SRCDIR)/MMS            \
+	$(SRCDIR)/PhysicalBC     \
+	$(SRCDIR)/Solver         \
+	$(SRCDIR)/ThermalContact \
 	CCA/Components/Application \
 	CCA/Components/OnTheFlyAnalysis \
 	CCA/Ports           \
@@ -63,11 +56,12 @@ PSELIBS := \
 	Core/Geometry       \
 	Core/GeometryPiece  \
 	Core/Grid           \
-	Core/Labels         \
 	Core/Math           \
 	Core/Parallel       \
 	Core/ProblemSpec    \
 	Core/Util           
+
+#        $(SRCDIR)/Crack             \
 
 LIBS := $(XML2_LIBRARY) $(VT_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) \
 	$(LAPACK_LIBRARY) $(BLAS_LIBRARY) $(M_LIBRARY)
@@ -81,3 +75,19 @@ ifneq ($(NO_FORTRAN),yes)
 endif
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
+
+#### Handle subdirs that are their OWN SHARED LIBRARIES
+SUBDIRS := \
+	$(SRCDIR)/CohesiveZone      \
+	$(SRCDIR)/Core              \
+	$(SRCDIR)/HeatConduction    \
+	$(SRCDIR)/Materials         \
+	$(SRCDIR)/MMS               \
+	$(SRCDIR)/PhysicalBC        \
+        $(SRCDIR)/Solver            \
+	$(SRCDIR)/ThermalContact     
+
+#        $(SRCDIR)/Crack             \
+
+include $(SCIRUN_SCRIPTS)/recurse.mk
+#### End handle subdirs

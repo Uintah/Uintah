@@ -98,7 +98,9 @@ namespace Uintah {
     
     ProblemSpecP m_module_spec {nullptr};
 
-    const VarLabel *m_delTLabel {nullptr};
+    const VarLabel* m_timeStepLabel {nullptr};
+    const VarLabel* m_simulationTimeLabel {nullptr};
+    const VarLabel* m_delTLabel {nullptr};
   };
 }
 

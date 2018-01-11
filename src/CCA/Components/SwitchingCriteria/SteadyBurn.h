@@ -25,21 +25,23 @@
 #ifndef Packages_Uintah_CCA_Components_Switching_SteadyBurn_h
 #define Packages_Uintah_CCA_Components_Switching_SteadyBurn_h
 
-#include <Core/ProblemSpec/ProblemSpecP.h>
 #include <CCA/Ports/SwitchingCriteria.h>
+
+#include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/SimulationState.h>
-#include <Core/Labels/MPMLabel.h>
-#include <Core/Labels/MPMICELabel.h>
-#include <Core/Labels/ICELabel.h>
 
 namespace Uintah {
 
   class ProcessorGroup;
   class DataWarehouse;
 
+  class ICELabel;
+  class MPMLabel;
+  class MPMICELabel;
+
   class SteadyBurnCriteria : public SwitchingCriteria
-    {
+  {
     public:
       SteadyBurnCriteria(ProblemSpecP& ps);
       virtual ~SteadyBurnCriteria();
@@ -54,7 +56,6 @@ namespace Uintah {
                       const MaterialSubset* matls, DataWarehouse*,
                       DataWarehouse*);
 
-
     private:
       unsigned int d_material;
       double d_temperature;   
@@ -65,7 +66,7 @@ namespace Uintah {
       MPMICELabel* MIlb;
       ICELabel* Ilb;
       #define d_SMALL_NUM 1e-100
-    };
+  };
 } // End namespace Uintah
 
 #endif 

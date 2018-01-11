@@ -29,7 +29,6 @@
 #include <CCA/Components/SwitchingCriteria/None.h>
 #include <CCA/Components/SwitchingCriteria/SwitchingCriteriaFactory.h>
 #include <CCA/Ports/LoadBalancer.h>
-#include <CCA/Ports/ModelMaker.h>
 #include <CCA/Ports/Output.h>
 #include <CCA/Ports/Regridder.h>
 #include <CCA/Ports/Scheduler.h>
@@ -51,6 +50,8 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/OS/Dir.h>
 #include <Core/Parallel/Parallel.h>
+
+#include <sci_defs/uintah_defs.h>
 
 using namespace Uintah;
 
@@ -121,9 +122,6 @@ Switcher::Switcher( const ProcessorGroup * myworld,
 
     ApplicationInterface* app = dynamic_cast<ApplicationInterface*>(comp);
     attachPort( "application", app );
-
-    if( app->needModelMaker() )
-      setNeedModelMaker( true );
 
     // Create solver port and attach it to the switcher component.
     SolverInterface * solver = SolverFactory::create( subCompUps, myworld );    
@@ -458,15 +456,20 @@ void Switcher::scheduleInitNewVars(const LevelP     & level,
     const MaterialSet* matls;
 
     std::string nextComp_matls = initVar->matlSetNames[i];
-    if (     nextComp_matls == "ice_matls" ){
+
+    if (nextComp_matls == "all_matls") {
+      matls = m_sharedState->allMaterials();
+    }
+#ifndef NO_ICE
+    else if (nextComp_matls == "ice_matls" ) {
       matls = m_sharedState->allICEMaterials();
     }
+#endif
+#ifndef NO_MPM
     else if (nextComp_matls == "mpm_matls" ) {
       matls = m_sharedState->allMPMMaterials();
     }
-    else if (nextComp_matls == "all_matls") {
-      matls = m_sharedState->allMaterials();
-    }
+#endif
     else {
       throw ProblemSetupException("Bad material set", __FILE__, __LINE__);
     }
@@ -937,9 +940,9 @@ bool Switcher::restartableTimeSteps()
 
 //______________________________________________________________________
 //
-double Switcher::recomputeTimeStep(double dt)
+double Switcher::recomputeDelT(const double delT)
 {
-  return d_app->recomputeTimeStep(dt);
+  return d_app->recomputeDelT( delT );
 }
 
 //______________________________________________________________________

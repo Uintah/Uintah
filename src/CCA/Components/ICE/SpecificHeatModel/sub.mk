@@ -27,6 +27,8 @@
 # 
 # Makefile fragment for this subdirectory 
 
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
+
 SRCDIR   := CCA/Components/ICE/SpecificHeatModel
 
 SRCS     += $(SRCDIR)/SpecificHeatFactory.cc    \
@@ -37,14 +39,14 @@ SRCS     += $(SRCDIR)/SpecificHeatFactory.cc    \
             $(SRCDIR)/Polynomial.cc       
 
 PSELIBS := \
-	CCA/Ports       \
-	Core/Grid       \
-	Core/Parallel   \
-	Core/Exceptions \
-	Core/Math       \
-	Core/Exceptions \
-	Core/Geometry 
+	Core/Disclosure     \
+	Core/Exceptions     \
+	Core/Geometry       \
+	Core/GeometryPiece  \
+	Core/Grid           \
+	Core/Math           \
+	Core/Parallel       \
+	Core/ProblemSpec    \
+	Core/Util           
 
-LIBS	:= 
-
-
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

@@ -110,8 +110,7 @@
                                                                           wall_thermal_resistance'">
 
               <absorption_modifier        spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type partRadProperties gasRadProperties spectralProperties"/> <!-- multiplicative modifier on gas or particle absorption coefficients, does not affect scattering coefficients -->
-              <subModel                   spec="REQUIRED STRING  'constantCIF, basic, Coal'"   need_applies_to="type partRadProperties" />
-
+              <subModel                   spec="REQUIRED STRING  'constantCIF, basic, Coal,tabulated'"   need_applies_to="type partRadProperties" />
 
               <density_label              spec="REQUIRED STRING"  need_applies_to="type sootVolumeFrac" />    <!--density of the gas soot mixture-->
               <Ysoot_label                spec="REQUIRED STRING"  need_applies_to="type sootVolumeFrac" />    <!--mass fraction of soot-->
@@ -120,6 +119,7 @@
               <Temperature_ref            spec="OPTIONAL DOUBLE"  need_applies_to="type spectralProperties" /> <!--Reference temperature for walls and other grey object in system (use mean temp of system)-->
               <CO2_H2OMolarRatio_ref      spec="OPTIONAL DOUBLE"  need_applies_to="type spectralProperties" /> <!--Reference CO2/H2O ratio for walls and other grey object in system (use mean ratio of system)-->
 
+              <TablePath                  spec="OPTIONAL STRING"  need_applies_to="type partRadProperties" />    <!--location of table for look-up-->
               <part_temp_label            spec="REQUIRED STRING"  need_applies_to="type partRadProperties" />    <!--base label used for particle temp in DQMOM-->
               <part_size_label            spec="REQUIRED STRING"  need_applies_to="type partRadProperties" />    <!--base label used for particle size in DQMOM-->
               <model_type                 spec="OPTIONAL STRING 'planck, rossland'" need_applies_to="type partRadProperties"/> <!-- Type of absorption coefficient model-->
@@ -127,7 +127,7 @@
               <complex_ir_imag            spec="OPTIONAL DOUBLE 'negative'" need_applies_to="type partRadProperties"/> <!-- Imaginary part of the complex index of refraction -->
               <const_asymmFact            spec="OPTIONAL DOUBLE " need_applies_to="type partRadProperties"/> <!-- assymetry parameter used  for scattering -->
               <Qabs                       spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type  partRadProperties"/> <!-- fudge parameter for partcle absorption coefficient model "basic" default is 0.8 tested for SUFCO coal -->
-              <radiateAtGasTemp           spec="OPTIONAL BOOLEAN" need_applies_to="type  partRadProperties"/> <!-- forces particles and gas temperatures to be the same, in terms of radiation -->
+              <radiateAtGasTemp           spec="OPTIONAL BOOLEAN" need_applies_to="type partRadProperties"/> <!-- forces particles and gas temperatures to be the same, in terms of radiation -->
 
 
 
@@ -1032,6 +1032,7 @@
             <geom_object/>
           </region>
           <deposit_velocity_name           spec="REQUIRED STRING" need_applies_to="type coal_region_ht"/>
+          <extra_src                       spec="MULTIPLE STRING" need_applies_to="type coal_region_ht"/> <!-- extra_src labels this will be added when computing the net heat flux. -->
           <coal_name                       spec="OPTIONAL STRING" need_applies_to="type coal_region_ht"/> <!-- this is the name corresponding to a given ash composition. -->
           <coordination_number             spec="OPTIONAL INTEGER" need_applies_to="type coal_region_ht"/> <!-- this is the coordination number for the pokluda sintering model, default is 2, int must be >=2. -->
           <emissivity_model_type           spec="OPTIONAL STRING" need_applies_to="type coal_region_ht"/> <!-- default is "constant" this uses wall_emissivity. "dynamic" will estimate the emissivity from a mie-theory based model. -->
@@ -1551,11 +1552,14 @@
                                                                         coal_density,
                                                                         rate_deposition,
                                                                         deposition_velocity,
+                                                                        deposition_enthalpy,
                                                                         coal_temperature_nebo,
                                                                         coal_temperature,
                                                                         total_number_density,
                                                                         fowy_devolatilization,
                                                                         shaddix_oxidation,
+                                                                        char_oxidation_ps,
+                                                                        particle_variables_dqmom,
                                                                         shaddix_enthalpy'">
 
             <!-- The grid parameter is used for templated properties -->
@@ -1750,6 +1754,7 @@
                                                                            coal_gas_oxi_mom,
                                                                            ht_convection,
                                                                            zzNox_Solid,
+                                                                           psNox,
                                                                            coal_gas_heat,
                                                                            coal_gas_devol,
                                                                            coal_gas_devol_mom,
@@ -1776,31 +1781,46 @@
                                                                            shunn_moin_cont_mms'">
             <!-- Specs for ZZ NOx Model -->
             <A_BET                      spec="OPTIONAL STRING" need_applies_to="type zzNox_Solid"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- BET surface area of char particle m2/kg     -->
-            <NO_label                   spec="OPTIONAL STRING" need_applies_to="type zzNox_Solid"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- NO  label in ZZ NOx model -->
-            <HCN_label                  spec="OPTIONAL STRING" need_applies_to="type zzNox_Solid"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- HCN label in ZZ NOx model -->
-            <NH3_label                  spec="OPTIONAL STRING" need_applies_to="type zzNox_Solid"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- NH3 label in ZZ NOx model -->
+            <NO_label                   spec="OPTIONAL STRING" need_applies_to="type zzNox_Solid, psNox"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- NO  label in ZZ NOx model -->
+            <HCN_label                  spec="OPTIONAL STRING" need_applies_to="type zzNox_Solid, psNox"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- HCN label in ZZ NOx model -->
+            <NH3_label                  spec="OPTIONAL STRING" need_applies_to="type zzNox_Solid, psNox"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- NH3 label in ZZ NOx model -->
             <NSbeta1                    spec="OPTIONAL STRING" need_applies_to="type zzNox_Solid"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- FRACTION of volatile-N to NO -->
             <NSbeta2                    spec="OPTIONAL STRING" need_applies_to="type zzNox_Solid"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- FRACTION of volatile-N to HCN-->
             <NSbeta3                    spec="OPTIONAL STRING" need_applies_to="type zzNox_Solid"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- FRACTION of volatile-N to NH3-->
             <NSgamma1                   spec="OPTIONAL STRING" need_applies_to="type zzNox_Solid"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- FRACTION of char-N     to NO -->
             <NSgamma2                   spec="OPTIONAL STRING" need_applies_to="type zzNox_Solid"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- FRACTION of char-N     to HCN-->
             <NSgamma3                   spec="OPTIONAL STRING" need_applies_to="type zzNox_Solid"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- FRACTION of char-N     to NH3-->
+
+           <devol_to_HCN                 spec="OPTIONAL DOUBLE" need_applies_to="type psNox"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- BET surface area of char particle m2/kg     -->
+           <devol_to_NH3                 spec="OPTIONAL DOUBLE" need_applies_to="type psNox"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- NO  label in ZZ NOx model -->
+           <charOxy_to_HCN               spec="OPTIONAL DOUBLE" need_applies_to="type psNox"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- HCN label in ZZ NOx model -->
+           <charOxy_to_NH3               spec="OPTIONAL DOUBLE" need_applies_to="type psNox"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- NH3 label in ZZ NOx model -->
+           <Tar_to_HCN                   spec="OPTIONAL DOUBLE" need_applies_to="type psNox"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- FRACTION of volatile-N to NO -->
+           <Tar_to_NH3                   spec="OPTIONAL DOUBLE" need_applies_to="type psNox"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- FRACTION of volatile-N to HCN-->
+           <PreExpReburn                 spec="OPTIONAL DOUBLE" need_applies_to="type psNox"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- FRACTION of volatile-N to HCN-->
+           <ExpReburn                    spec="OPTIONAL DOUBLE" need_applies_to="type psNox"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- FRACTION of volatile-N to HCN-->
+           <Tar_src_label                spec="OPTIONAL STRING" need_applies_to="type psNox"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- NH3 label in ZZ NOx model -->
+           <Tar_fraction                 spec="OPTIONAL DOUBLE" need_applies_to="type psNox"/> <!-- PARAMETER FOR ZZ MODEL -->   <!-- NH3 label in ZZ NOx model -->
+
+
+
+
             <NO_src                     spec="REQUIRED NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        need_applies_to="type zzNox_Solid"/> <!-- SourceTerm for NO transport -->
+                                        need_applies_to="type zzNox_Solid,psNox"/> <!-- SourceTerm for NO transport -->
             <HCN_src                    spec="REQUIRED NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        need_applies_to="type zzNox_Solid"/> <!-- SourceTerm for HCN transport-->
+                                        need_applies_to="type zzNox_Solid,psNox"/> <!-- SourceTerm for HCN transport-->
             <NH3_src                    spec="REQUIRED NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        need_applies_to="type zzNox_Solid"/> <!-- SourceTerm for NH3-->
+                                        need_applies_to="type zzNox_Solid,psNox"/> <!-- SourceTerm for NH3-->
             <!-- Specs for BrownSootFormation model (type=brown_soot)-->
             <!-- mixture_fraction_label, and temperature_label are also required
                  but are listed below as they span other sources -->
             <!-- NOTE: The brown soot model assumes atmospheric pressure unless the table specifies
                        otherwise in the table header using the #KEY pressure=value pair. -->
             <tar_label                  spec="OPTIONAL STRING" need_applies_to="type brown_soot" />
-            <mix_mol_weight_label       spec="OPTIONAL STRING" need_applies_to="type brown_soot, zzNox_Solid" />
+            <mix_mol_weight_label       spec="OPTIONAL STRING" need_applies_to="type brown_soot, psNox, zzNox_Solid" />
             <Ysoot_label                spec="OPTIONAL STRING" need_applies_to="type brown_soot" />
             <Ns_label                   spec="OPTIONAL STRING" need_applies_to="type brown_soot" />
             <soot_off_gas_label       	spec="OPTIONAL STRING" need_applies_to="type brown_soot" />
@@ -1824,17 +1844,21 @@
             <!-- Specs for coal gas devol model -->
             <devol_model_name           spec="REQUIRED STRING" need_applies_to="type coal_gas_devol" />
             <devol_BirthDeath           spec="OPTIONAL NO_DATA" need_applies_to="type coal_gas_devol">
-              <retained_deposit_factor    spec="OPTIONAL DOUBLE"/>
             </devol_BirthDeath>
 
             <!-- Spec for the heat transfer source -->
             <heat_model_name            spec="REQUIRED STRING" need_applies_to="type coal_gas_heat"/>
+            <heat_BirthDeath           spec="OPTIONAL NO_DATA" need_applies_to="type coal_gas_heat">
+            </heat_BirthDeath>
 
             <!-- Tabulated reaction rate -->
             <rxn_rate                   spec="REQUIRED STRING" need_applies_to="type tab_rxn_rate" />
 
              <!-- Spec for dTcorrectionFractor for the gas phase convection heat flux near the wall -->
             <dTCorrectionFactor         spec="OPTIONAL STRING" need_applies_to="type ht_convection" />
+            <ConWallHT_src                     spec="REQUIRED NO_DATA"
+                                        attribute1="label REQUIRED STRING"
+                                        need_applies_to="type ht_convection"/> <!-- Convection SourceTerm for wall heat trasnfer -->
 
             <!-- Spec for constant and multi-point constant source term model -->
             <constant                   spec="OPTIONAL DOUBLE" need_applies_to="type constant_src, fx_inject_src, fy_inject_src, fz_inject_src, cc_inject_src" />
@@ -1848,7 +1872,6 @@
             <!-- Spec for the char oxidation source -->
             <char_oxidation_model_name  spec="REQUIRED STRING" need_applies_to="type coal_gas_oxi" />
             <char_BirthDeath           spec="OPTIONAL NO_DATA" need_applies_to="type coal_gas_oxi">
-              <retained_deposit_factor    spec="OPTIONAL DOUBLE"/>
             </char_BirthDeath>
 
             <!-- Multi-point constant injection -->
@@ -2004,17 +2027,17 @@
               </temperature_dependence>
 
             </flammability_limit>
-            <o2_label                   spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer, bowman_nox, brown_soot, zzNox_Solid"/> <!-- o2 label (default = O2) -->
+            <o2_label                   spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer, bowman_nox, brown_soot, psNox, zzNox_Solid"/> <!-- o2 label (default = O2) -->
             <oh_label                   spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer, bowman_nox, brown_soot"/> <!-- oh label (default = OH) -->
             <co2_label                  spec="OPTIONAL STRING" need_applies_to="type brown_soot"/> <!-- o2 label (default = O2) -->
-            <h2o_label                  spec="OPTIONAL STRING" need_applies_to="type brown_soot, zzNox_Solid"/> <!-- h2o label (default = H2O) -->
-            <n2_label                   spec="OPTIONAL STRING" need_applies_to="type bowman_nox, zzNox_Solid"/> <!-- n2 label (default = N2) -->
-            <co_label                   spec="OPTIONAL STRING" need_applies_to="type zzNox_Solid"/> <!-- co label (default = CO) -->
-            <h2_label                   spec="OPTIONAL STRING" need_applies_to="type zzNox_Solid"/> <!-- h2 label (default = H2) -->
+            <h2o_label                  spec="OPTIONAL STRING" need_applies_to="type brown_soot, psNox, zzNox_Solid"/> <!-- h2o label (default = H2O) -->
+            <n2_label                   spec="OPTIONAL STRING" need_applies_to="type bowman_nox, psNox, zzNox_Solid"/> <!-- n2 label (default = N2) -->
+            <co_label                   spec="OPTIONAL STRING" need_applies_to="type psNox, zzNox_Solid"/> <!-- co label (default = CO) -->
+            <h2_label                   spec="OPTIONAL STRING" need_applies_to="type psNox, zzNox_Solid"/> <!-- h2 label (default = H2) -->
             <temperature_label          spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer,
                                                                                      bowman_nox,
-                                                                                     brown_soot, zzNox_Solid"/> <!-- temperature label (default = temperature) -->
-            <density_label              spec="OPTIONAL STRING" need_applies_to="type moment2_mixture_fraction_src,zzNox_Solid,
+                                                                                     brown_soot, psNox, zzNox_Solid"/> <!-- temperature label (default = temperature) -->
+            <density_label              spec="OPTIONAL STRING" need_applies_to="type moment2_mixture_fraction_src, psNox, zzNox_Solid,
                                                                                      dissipation_src,
                                                                                      westbrook_dryer,
                                                                                      bowman_nox,

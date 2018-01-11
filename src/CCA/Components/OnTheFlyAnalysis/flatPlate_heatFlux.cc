@@ -29,7 +29,7 @@
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/NodeIterator.h>
-#include <Core/Labels/MPMLabel.h>
+#include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/DebugStream.h>

@@ -32,9 +32,9 @@
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <CCA/Ports/DataWarehouseP.h>
-#include <CCA/Components/ICE/ICEMaterial.h>
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <CCA/Components/MPM/Contact/Contact.h>
+#include <CCA/Components/ICE/Materials/ICEMaterial.h>
+#include <CCA/Components/MPM/Materials/MPMMaterial.h>
+#include <CCA/Components/MPM/Materials/Contact/Contact.h>
 #include <CCA/Components/MPM/SerialMPM.h>
 #include <CCA/Components/MPM/RigidMPM.h>
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
@@ -90,7 +90,7 @@ public:
   
   virtual bool restartableTimeSteps();
 
-  virtual double recomputeTimeStep(double current_dt); 
+  virtual double recomputeDelT(const double delT); 
           
   virtual void problemSetup(const ProblemSpecP& params, 
                             const ProblemSpecP& restart_prob_spec, 

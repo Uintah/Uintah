@@ -73,7 +73,7 @@ namespace Uintah {
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/Patch.h>
 
-#include <CCA/Components/MPM/Contact/Contact.h>
+#include <CCA/Components/MPM/Materials/Contact/Contact.h>
 #include <CCA/Components/MPM/SerialMPM.h>
 #include <CCA/Components/MPM/RigidMPM.h>
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
@@ -232,7 +232,7 @@ public:
   
 
   ///////////////////////////////////////////////////////////////////////
-  virtual double recomputeTimeStep(double current_dt);
+  virtual double recomputeDelT(const double delT);
       
   virtual bool restartableTimeSteps();
 

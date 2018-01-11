@@ -32,7 +32,7 @@
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Grid.h>
-#include <Core/Labels/ICELabel.h>
+#include <CCA/Components/ICE/Core/ICELabel.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Util/ProgressiveWarning.h>

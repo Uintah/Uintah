@@ -32,7 +32,7 @@
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/Patch.h>
-#include <Core/Labels/MPMLabel.h>
+#include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <CCA/Components/MPM/MPMCommon.h>
 #include <CCA/Components/MPM/Solver/Solver.h>
 #include <Core/Grid/Variables/ComputeSet.h>
@@ -127,7 +127,7 @@ public:
                                     SchedulerP& sched);
 
   virtual bool restartableTimeSteps();
-  virtual double recomputeTimeStep(double new_dt);
+  virtual double recomputeDelT(const double delT);
 
   void scheduleSwitchTest(const LevelP& level, SchedulerP& sched);
   
@@ -504,7 +504,6 @@ private:
   ImpMPM(const ImpMPM&);
   ImpMPM& operator=(const ImpMPM&);
 
-  MPMLabel* lb;
   ImpMPMFlags* flags;
 
   ImplicitHeatConduction* heatConductionModel;

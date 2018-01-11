@@ -6,7 +6,7 @@
  *
  * The MIT License
  *
- * Copyright (c) 2013-2017 The University of Utah
+ * Copyright (c) 2013-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -176,8 +176,7 @@ namespace Uintah {
      that MUST be called during Component::ProblemSetup
      */
     void problem_setup(Uintah::ProblemSpecP uintahSpec,
-                       Uintah::ProblemSpecP particleEqsSpec,
-                       Uintah::SimulationStateP sharedState);
+                       Uintah::ProblemSpecP particleEqsSpec);
     
     void set_materials(const Uintah::MaterialSet* const materials)
     {
@@ -308,7 +307,6 @@ namespace Uintah {
     const Uintah::MaterialSet* materials_;
     double pPerCell_; // number of initial particles per cell
     unsigned int maxParticles_; //number of maximum initial particles
-    Uintah::SimulationStateP sharedState_;
     Uintah::ProblemSpecP particleEqsSpec_;
     std::vector< std::map<int, Uintah::ParticleSubset*> > deleteSets_; // material [ patchID -> last particle ID ]
     std::vector< std::map<int, long64> > lastPIDPerMaterialPerPatch_;  // material [ patchID -> last particle ID ]

@@ -42,14 +42,12 @@ SRCS   += $(SRCDIR)/ElectrostaticSolve.cc \
 
 PSELIBS := \
        CCA/Components/Application      \
-       CCA/Components/OnTheFlyAnalysis \
        CCA/Ports                       \
        Core/Disclosure                 \
        Core/Exceptions                 \
        Core/Geometry                   \
        Core/GeometryPiece              \
        Core/Grid                       \
-       Core/Labels                     \
        Core/Math                       \
        Core/OS                         \
        Core/Parallel                   \

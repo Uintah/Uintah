@@ -23,11 +23,11 @@
  */
 
 #include <CCA/Components/MPM/RigidMPM.h>
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Components/MPM/Materials/MPMMaterial.h>
 #include <CCA/Components/MPM/Core/MPMFlags.h>
-#include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
-#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DamageModel.h>
-#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/ErosionModel.h>
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/ConstitutiveModel.h>
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/PlasticityModels/DamageModel.h>
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/PlasticityModels/ErosionModel.h>
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <CCA/Components/MPM/PhysicalBC/ForceBC.h>
 #include <CCA/Components/MPM/PhysicalBC/PressureBC.h>
@@ -43,7 +43,6 @@
 #include <Core/Grid/Variables/NodeIterator.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/SimulationState.h>
-#include <Core/Grid/Variables/SoleVariable.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Exceptions/ParameterNotFound.h>

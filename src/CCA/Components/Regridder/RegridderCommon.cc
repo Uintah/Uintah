@@ -162,7 +162,7 @@ RegridderCommon::needRecompile( const GridP& /*grid*/ )
   bool retval = d_newGrid;
 
   if (d_dynamicDilation) {
-    if (d_sharedState->getCurrentTopLevelTimeStep() - d_dilationTimestep > 5)  //make sure a semi-decent sample has been taken
+    if (m_application->getTimeStep() - d_dilationTimestep > 5)  //make sure a semi-decent sample has been taken
     {
       //compute the average overhead
 
@@ -189,7 +189,7 @@ RegridderCommon::needRecompile( const GridP& /*grid*/ )
           proc0cout << "Increasing Regrid Dilation to:" << newDilation << std::endl;
           d_cellRegridDilation = newDilation;
           //reset the dilation overhead
-          d_dilationTimestep = d_sharedState->getCurrentTopLevelTimeStep();
+          d_dilationTimestep = m_application->getTimeStep();
           retval = true;
         }
       }
@@ -210,7 +210,7 @@ RegridderCommon::needRecompile( const GridP& /*grid*/ )
           proc0cout << "Decreasing Regrid Dilation to:" << newDilation << std::endl;
           d_cellRegridDilation = newDilation;
           //reset the dilation overhead
-          d_dilationTimestep = d_sharedState->getCurrentTopLevelTimeStep();
+          d_dilationTimestep = m_application->getTimeStep();
           retval = true;
         }
       }
@@ -228,7 +228,7 @@ RegridderCommon::needsToReGrid(const GridP &oldGrid)
 {
   rdbg << "RegridderCommon::needsToReGrid() BGN" << std::endl;
 
-  int timeStepsSinceRegrid = d_sharedState->getCurrentTopLevelTimeStep() - d_lastRegridTimestep;
+  int timeStepsSinceRegrid = m_application->getTimeStep() - d_lastRegridTimestep;
 
   int retval = false;
 
@@ -302,7 +302,7 @@ RegridderCommon::needsToReGrid(const GridP &oldGrid)
   }
 
   if (retval == true) {
-    d_lastRegridTimestep = d_sharedState->getCurrentTopLevelTimeStep();
+    d_lastRegridTimestep = m_application->getTimeStep();
   }
 
   rdbg << "RegridderCommon::needsToReGrid( " << retval << " ) END" << std::endl;
@@ -735,8 +735,6 @@ RegridderCommon::scheduleDilation(const LevelP& level, const bool isLockstepAMR)
    }
    */
 
-  const MaterialSet* all_matls = d_sharedState->allMaterials();
-
   // dilate flagged cells on this level
   Task* dilate_stability_task = scinew Task("RegridderCommon::Dilate Stability", this, &RegridderCommon::Dilate,
                                             d_dilatedCellsStabilityLabel, filters[stability_depth], stability_depth);
@@ -752,6 +750,8 @@ RegridderCommon::scheduleDilation(const LevelP& level, const bool isLockstepAMR)
 
   dilate_stability_task->requires(Task::NewDW, m_refineFlagLabel, refine_flag_matls, Ghost::AroundCells, ngc_stability);
   dilate_regrid_task->requires(Task::NewDW, m_refineFlagLabel, refine_flag_matls, Ghost::AroundCells, ngc_regrid);
+
+  const MaterialSet* all_matls = d_sharedState->allMaterials();
 
   dilate_stability_task->computes(d_dilatedCellsStabilityLabel, refine_flag_matls);
   m_scheduler->addTask(dilate_stability_task, level->eachPatch(), all_matls);

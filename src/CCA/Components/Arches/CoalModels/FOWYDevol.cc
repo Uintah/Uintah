@@ -393,24 +393,24 @@ FOWYDevol::computeModel( const ProcessorGroup * pc,
          double charmassph=charmass(i,j,k);
          double weightph=weight(i,j,k);
    
-         //VERIFICATION
-         //rcmassph=1;
-         //temperatureph=300;
-         //charmassph=0.0;
-         //weightph=_rc_scaling_constant*_weight_scaling_constant;
-         //rcmass_init = 1;
-   
-   
          // m_init = m_residual_solid + m_h_off_gas + m_vol
          // m_vol = m_init - m_residual_solid - m_h_off_gas
          // but m_h_off_gas = - m_char
          // m_vol = m_init - m_residual_solid + m_char
    
          double m_vol = rcmass_init - (rcmassph+charmassph);
+         //VERIFICATION
+         //std::cout << "_T_mu: " << _T_mu << std::endl;
+         //std::cout << "_T_sigma: " << _T_sigma << std::endl;
+         //std::cout << "_T_hardened_bond: " << _T_hardened_bond << std::endl;
+         //std::cout << "_Tbp_graphite: " << _Tbp_graphite << std::endl;
+         //std::cout << "_v_hiT: " << _v_hiT << std::endl;
+         //temperatureph = 300.0;
+         //std::cout << "temperatureph: " << temperatureph << std::endl;
          double v_inf_local = 0.5*_v_hiT*(1.0 + std::erf( (temperatureph - _T_mu) / (std::sqrt(2.0) * _T_sigma)));
-         v_inf_local += (temperatureph > _T_hardened_bond) ? (temperatureph - _T_hardened_bond)/_Tbp_graphite : 0.0; // linear contribution
-         v_inf_local = std::min(1.0,v_inf_local);
-         // above hardened bond temperature.
+         //std::cout << "v_inf_local before : " << v_inf_local << std::endl;
+         v_inf_local = std::min(1.0,(temperatureph < _T_hardened_bond) ? v_inf_local : v_inf_local + (1.0 - _v_hiT)/(_Tbp_graphite - _T_hardened_bond)*(temperatureph - _T_hardened_bond) );
+         //std::cout << "v_inf_local after : " << v_inf_local << std::endl;
          v_inf(i,j,k) = v_inf_local; 
          double f_drive = std::max((rcmass_init*v_inf_local - m_vol) , 0.0);
          double zFact =std::min(std::max(f_drive/rcmass_init/_v_hiT,2.5e-5 ),1.0-2.5e-5  );

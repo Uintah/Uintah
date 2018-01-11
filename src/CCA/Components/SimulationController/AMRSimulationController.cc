@@ -25,32 +25,20 @@
 #include <CCA/Components/SimulationController/AMRSimulationController.h>
 
 #include <CCA/Components/PostProcessUda/PostProcess.h>
-#include <CCA/Components/Regridder/PerPatchVars.h>
+
+#include <CCA/Ports/ApplicationInterface.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Output.h>
 #include <CCA/Ports/ProblemSpecInterface.h>
 #include <CCA/Ports/Regridder.h>
 #include <CCA/Ports/Scheduler.h>
-#include <CCA/Ports/ApplicationInterface.h>
 
-#include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Geometry/IntVector.h>
-#include <Core/Geometry/Vector.h>
 #include <Core/Grid/Box.h>
-#include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/SimulationTime.h>
-#include <Core/Grid/Task.h>
-#include <Core/Grid/Variables/PerPatch.h>
-#include <Core/Grid/Variables/ReductionVariable.h>
-#include <Core/Grid/Variables/SoleVariable.h>
-#include <Core/Grid/Variables/VarLabel.h>
-#include <Core/Grid/Variables/VarLabelMatl.h>
-#include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Math/MiscMath.h>
 #include <Core/OS/ProcessInfo.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
@@ -87,8 +75,8 @@ namespace {
 
 
 AMRSimulationController::AMRSimulationController( const ProcessorGroup * myworld
-						  ,       ProblemSpecP     pspec
-						  )
+                                                  ,     ProblemSpecP     pspec
+                                                  )
   :  SimulationController( myworld, pspec )
 {
 }
@@ -293,7 +281,7 @@ AMRSimulationController::run()
     // at this point the delT, nextDelT, time step, sim time, and all
     // wall times are all in sync.
     m_output->findNext_OutputCheckPointTimeStep( first && m_restarting,
-						 m_current_gridP );
+                                                 m_current_gridP );
 
     // Reset the runtime performance stats.
     ResetStats();
@@ -307,7 +295,7 @@ AMRSimulationController::run()
     // Increment (by one) the current time step number so components
     // know what time step they are on and get the delta T that will
     // be used.
-    m_app->prepareForNextTimeStep( m_current_gridP );
+    m_app->prepareForNextTimeStep();
 
     // Ready for the next time step. 
 
@@ -394,8 +382,8 @@ AMRSimulationController::run()
     if (m_regridder) {
       // If not the first time step or restarting check for regridding
       if ((!first || m_restarting) &&
-	  m_regridder->needsToReGrid(m_current_gridP)) {
-	
+          m_regridder->needsToReGrid(m_current_gridP)) {
+        
         proc0cout << " Need to regrid." << std::endl;
         doRegridding( false );
       }
@@ -456,11 +444,11 @@ AMRSimulationController::run()
     // Various components can request a recompile including the
     // in-situ which will set the m_recompile_taskgraph flag.
     m_recompile_taskgraph = ( m_recompile_taskgraph ||
-			      m_app->needRecompile   ( m_current_gridP ) ||
-			      m_output->needRecompile( m_current_gridP ) ||
-			      m_loadBalancer->needRecompile    ( m_current_gridP ) ||
-			      (m_regridder &&
-			       m_regridder->needRecompile( m_current_gridP )) );
+                              m_app->needRecompile   ( m_current_gridP ) ||
+                              m_output->needRecompile( m_current_gridP ) ||
+                              m_loadBalancer->needRecompile    ( m_current_gridP ) ||
+                              (m_regridder &&
+                               m_regridder->needRecompile( m_current_gridP )) );
 
     // DAV THIS HAS BEEN MOVED INTO needRecompile ABOVE WHICH CALLS
     // m_output->needRecompile().
@@ -548,11 +536,11 @@ AMRSimulationController::run()
 //     // time step dumps using PIDX do not need to write the xml
 //     // information.      
 //     if( !m_output->savingAsPIDX() ||
-// 	(m_output->savingAsPIDX() && pidx_checkpointing) )
+//      (m_output->savingAsPIDX() && pidx_checkpointing) )
 // #endif    
       // {
-      // 	// If PIDX is not being used write timestep.xml for both
-      // 	// checkpoints and time step dumps.
+      //        // If PIDX is not being used write timestep.xml for both
+      //        // checkpoints and time step dumps.
 
 
     // ARS - CAN THIS BE SCHEDULED??
@@ -618,16 +606,18 @@ AMRSimulationController::doInitialTimeStep()
     m_current_gridP->assignBCS( m_grid_ps, m_loadBalancer );
     m_current_gridP->performConsistencyCheck();
 
+    // Initialize the system var (time step and simulation time). Must
+    // be done before all other application tasks as they may need
+    // these values.
+    m_app->scheduleInitializeSystemVars( m_current_gridP,
+                                         m_loadBalancer->getPerProcessorPatchSet(m_current_gridP),
+                                         m_scheduler );
+
     m_app->restartInitialize();
 
     for (int i = m_current_gridP->numLevels() - 1; i >= 0; i--) {
       m_app->scheduleRestartInitialize( m_current_gridP->getLevel(i), m_scheduler );
     }
-
-    // Initialize the system var (time step and simulation time)
-    m_app->scheduleInitializeSystemVars( m_current_gridP,
-					 m_loadBalancer->getPerProcessorPatchSet(m_current_gridP),
-					 m_scheduler );
 
     // Report all of the stats before doing any possible in-situ work
     // as that effects the lap timer for the time steps.
@@ -677,6 +667,13 @@ AMRSimulationController::doInitialTimeStep()
     do {
       proc0cout << "\nCompiling initialization taskgraph...\n";
 
+      // Initialize the system var (time step and simulation
+      // time). Must be done before all other application tasks as
+      // they may need these values.
+      m_app->scheduleInitializeSystemVars( m_current_gridP,
+                                           m_loadBalancer->getPerProcessorPatchSet(m_current_gridP),
+                                           m_scheduler );
+
       // Initialize the CFD and/or MPM data
       for( int i = m_current_gridP->numLevels() - 1; i >= 0; i-- ) {
         m_app->scheduleInitialize(m_current_gridP->getLevel(i), m_scheduler);
@@ -690,7 +687,7 @@ AMRSimulationController::doInitialTimeStep()
           // level, so don't dilate.
           if( i < m_regridder->maxLevels() - 1 ) {
             m_regridder->scheduleDilation(m_current_gridP->getLevel(i),
-					  m_app->isLockstepAMR());
+                                          m_app->isLockstepAMR());
           }
         }
       }
@@ -714,12 +711,6 @@ AMRSimulationController::doInitialTimeStep()
 
       m_output->sched_allOutputTasks( m_current_gridP, m_scheduler, recompile );
 
-      // Initialize the system var (time step and simulation time).
-      // Must be done after the output.
-      m_app->scheduleInitializeSystemVars( m_current_gridP,
-					   m_loadBalancer->getPerProcessorPatchSet(m_current_gridP),
-					   m_scheduler );
-
       // Report all of the stats before doing any possible in-situ work
       // as that effects the lap timer for the time steps.
       // ScheduleReportStats( true );
@@ -740,9 +731,9 @@ AMRSimulationController::doInitialTimeStep()
       m_scheduler->execute();
 
       needNewLevel =
-	( m_regridder && m_regridder->isAdaptive() &&
-	  m_current_gridP->numLevels() < m_regridder->maxLevels() &&
-	  doRegridding(true) );
+        ( m_regridder && m_regridder->isAdaptive() &&
+          m_current_gridP->numLevels() < m_regridder->maxLevels() &&
+          doRegridding(true) );
 
       if ( needNewLevel ) {
         m_scheduler->initialize( 1, 1 );
@@ -766,7 +757,8 @@ AMRSimulationController::doInitialTimeStep()
 void
 AMRSimulationController::executeTimeStep( int totalFine )
 {
-  // If the time step needs to be restarted, this loop will execute multiple times.
+  // If the time step needs to be restarted, this loop will execute
+  // multiple times.
   bool success = false;
 
   int tg_index = m_app->computeTaskGraphIndex();
@@ -819,7 +811,7 @@ AMRSimulationController::executeTimeStep( int totalFine )
       }
 
       // Recompute the delta T.
-      m_app->recomputeTimeStep();
+      m_app->recomputeDelT();
 
       // Re-evaluate the outputting and checkpointing.
       m_output->reevaluate_OutputCheckPointTimeStep(m_app->getSimTime(), m_app->getDelT());
@@ -852,7 +844,8 @@ AMRSimulationController::doRegridding( bool initialTimeStep )
   }
     
   GridP oldGrid = m_current_gridP;
-  m_current_gridP = m_regridder->regrid(oldGrid.get_rep());
+  m_current_gridP =
+    m_regridder->regrid(oldGrid.get_rep(), m_app->getTimeStep());
   
   if(dbg_barrier.active()) {
     m_barrier_timer.reset( true );
@@ -886,33 +879,33 @@ AMRSimulationController::doRegridding( bool initialTimeStep )
     //  output regridding stats
     if (d_myworld->myRank() == 0) {
 
-      std::cout << "  REGRIDDING:";
+      proc0cout << "  REGRIDDING:";
 
       // amrout << "---------- OLD GRID ----------" << std::endl << *(oldGrid.get_rep());
       for (int i = 0; i < m_current_gridP->numLevels(); i++) {
-        std::cout << " Level " << i
-		  << " has " << m_current_gridP->getLevel(i)->numPatches() << " patch(es).";
+        proc0cout << " Level " << i
+                  << " has " << m_current_gridP->getLevel(i)->numPatches() << " patch(es).";
       }
-      std::cout << "\n";
+      proc0cout << "\n";
 
       if (amrout.active()) {
         amrout << "---------- NEW GRID ----------\n"
-	       << "Grid has " << m_current_gridP->numLevels() << " level(s)\n";
+               << "Grid has " << m_current_gridP->numLevels() << " level(s)\n";
 
         for( int levelIndex = 0; levelIndex < m_current_gridP->numLevels(); levelIndex++ ) {
           LevelP level = m_current_gridP->getLevel( levelIndex );
 
           amrout << "  Level " << level->getID()
-		 << ", indx: " << level->getIndex()
-		 << " has " << level->numPatches() << " patch(es).\n";
+                 << ", indx: " << level->getIndex()
+                 << " has " << level->numPatches() << " patch(es).\n";
 
           for( Level::patch_iterator patchIter = level->patchesBegin(); patchIter < level->patchesEnd(); patchIter++ ) {
             const Patch* patch = *patchIter;
             amrout << "(Patch " << patch->getID()
-		   << " proc " << m_loadBalancer->getPatchwiseProcessorAssignment(patch)
-		   << ": box=" << patch->getExtraBox()
-		   << ", lowIndex=" << patch->getExtraCellLowIndex()
-		   << ", highIndex=" << patch->getExtraCellHighIndex() << ")\n";
+                   << " proc " << m_loadBalancer->getPatchwiseProcessorAssignment(patch)
+                   << ": box=" << patch->getExtraBox()
+                   << ", lowIndex=" << patch->getExtraCellLowIndex()
+                   << ", highIndex=" << patch->getExtraCellHighIndex() << ")\n";
           }
         }
       }
@@ -1058,7 +1051,7 @@ AMRSimulationController::compileTaskGraph( int totalFine )
   // done after the output.
   m_app->scheduleUpdateSystemVars( m_current_gridP,
                                    m_loadBalancer->getPerProcessorPatchSet(m_current_gridP),
-				   m_scheduler );
+                                   m_scheduler );
 
   // Report all of the stats before doing any possible in-situ work
   // as that effects the lap timer for the time steps.
@@ -1294,6 +1287,6 @@ AMRSimulationController::scheduleComputeStableTimeStep()
   // Schedule the reduction of the time step and other variables on a
   // per patch basis to a per rank basis.
   m_app->scheduleReduceSystemVars( m_current_gridP,
-				   m_loadBalancer->getPerProcessorPatchSet(m_current_gridP),
-				   m_scheduler);
+                                   m_loadBalancer->getPerProcessorPatchSet(m_current_gridP),
+                                   m_scheduler);
 }

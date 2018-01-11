@@ -31,7 +31,7 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
-#include <CCA/Components/MPM/Contact/Contact.h>
+#include <CCA/Components/MPM/Materials/Contact/Contact.h>
 #include <CCA/Components/MPM/SerialMPM.h>
 #include <Core/Geometry/Vector.h>
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>

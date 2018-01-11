@@ -74,7 +74,7 @@ public:
 
   virtual void computeTimestep( const LevelP& level, SchedulerP& sched ) = 0;
 
-  virtual double recomputeTimeStep(double current_dt) = 0;
+  virtual double recomputeDelT(const double delT) = 0;
 
   virtual bool restartableTimeSteps() = 0;
 

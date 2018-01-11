@@ -119,23 +119,10 @@ DataArchiver::DataArchiver(const ProcessorGroup* myworld, int udaSuffix)
   m_numLevelsInOutput = 0;
 
   m_writeMeta = false;
-
-  // Time Step
-  m_timeStepLabel =
-    VarLabel::create(timeStep_name, timeStep_vartype::getTypeDescription() );
-  // Simulation Time
-  m_simTimeLabel =
-    VarLabel::create(simTime_name, simTime_vartype::getTypeDescription() );
-  // Simulation Time
-  m_delTLabel =
-    VarLabel::create(delT_name, delt_vartype::getTypeDescription() );
 }
 
 DataArchiver::~DataArchiver()
 {
-  VarLabel::destroy(m_timeStepLabel);
-  VarLabel::destroy(m_simTimeLabel);
-  VarLabel::destroy(m_delTLabel);
 }
 
 //______________________________________________________________________
@@ -1110,9 +1097,6 @@ DataArchiver::sched_allOutputTasks( const GridP      & grid,
     Task* task = scinew Task( "DataArchiver::outputReductionVars",
 			   this, &DataArchiver::outputReductionVars );
 
-    // task->requires( Task::OldDW, m_simTimeLabel );
-    task->requires( Task::OldDW, m_delTLabel );
-    
     for( int i=0; i<(int)m_saveReductionLabels.size(); ++i) {
       SaveItem& saveItem = m_saveReductionLabels[i];
       const VarLabel* var = saveItem.label;
@@ -1143,8 +1127,6 @@ DataArchiver::sched_allOutputTasks( const GridP      & grid,
     Task* task = scinew Task( "DataArchiver::outputVariables (CheckpointReduction)",
 			      this, &DataArchiver::outputVariables, CHECKPOINT_REDUCTION );
 
-    // task->requires( Task::OldDW, m_timeStepLabel);
-    
     for( int i = 0; i < (int) m_checkpointReductionLabels.size(); i++ ) {
       SaveItem& saveItem = m_checkpointReductionLabels[i];
       const VarLabel* var = saveItem.label;
@@ -1392,8 +1374,10 @@ DataArchiver::findNext_OutputCheckPointTimeStep( const bool restart,
 
   const int timeStep = m_application->getTimeStep();
   const double simTime = m_application->getSimTime();
+#ifdef HAVE_PIDX
   const double delT = m_application->getNextDelT();
-
+#endif
+  
   if( restart )
   {
     // Output based on the simulaiton time.
@@ -2389,8 +2373,6 @@ DataArchiver::scheduleOutputTimeStep(       vector<SaveItem> & saveLabels,
     Task* task = scinew Task( taskName, this, &DataArchiver::outputVariables,
 			   isThisCheckpoint ? CHECKPOINT : OUTPUT );
     
-    // task->requires( Task::OldDW, m_timeStepLabel);
-    
     //__________________________________
     //
     vector< SaveItem >::iterator saveIter;
@@ -2546,17 +2528,8 @@ DataArchiver::outputReductionVars( const ProcessorGroup *,
   Timers::Simple timer;
   timer.start();
 
-  double simTime = m_sharedState->getElapsedSimTime();
-
-  // simTime_vartype simTime_var(0);
-  // if( old_dw )
-  //   old_dw->get( simTime_var, m_simTimeLabel );
-  // double simTime = simTime_var;
-
-  delt_vartype delt_var(0);
-  if( old_dw )
-    old_dw->get( delt_var, m_delTLabel );
-  double delT = delt_var;
+  const double simTime = m_application->getSimTime();
+  const double delT    = m_application->getDelT();
 
   // Dump the stuff in the reduction saveset into files in the uda
   // at every timestep
@@ -2631,13 +2604,8 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
     dbg << "  outputVariables task begin\n";
   }
 
-  double timeStep = m_sharedState->getCurrentTopLevelTimeStep();
+  const double timeStep = m_application->getTimeStep();
   
-  // timeStep_vartype timeStep_var(0);
-  // if( old_dw )
-  //   old_dw->get( timeStep_var, m_timeStepLabel );
-  // double timeStep = timeStep_var;
-
 #if SCI_ASSERTION_LEVEL >= 2
   // double-check to make sure only called once per level
   int levelid =

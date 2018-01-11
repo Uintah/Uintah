@@ -51,7 +51,7 @@ DESCRIPTION
     
     virtual std::string getName() { return std::string("Single Level"); }
 
-    virtual Grid* regrid( Grid* oldGrid );
+    virtual Grid* regrid( Grid* oldGrid, const int timeStep);
 		
     virtual void problemSetup(const ProblemSpecP& params,
 			      const GridP& grid,

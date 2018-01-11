@@ -33,6 +33,7 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 
+#include <string>
 #include <iostream>
 
 using namespace Uintah;
@@ -79,12 +80,14 @@ LoadBalancerFactory::create( const ProblemSpecP   & ps
   }
   else {
     bal = nullptr;
-    throw ProblemSetupException("Unknown load balancer", __FILE__, __LINE__);
+
+    std::ostringstream msg;
+    msg << "\nERROR<Loadbalancer>: Unknown load balancer : " << loadbalancer << ".\n";
+    throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
   }
 
   // Output which LOAD BALANCER will be used
   proc0cout << "Load Balancer: \t\t" << loadbalancer << std::endl;
 
   return bal;
-
 }

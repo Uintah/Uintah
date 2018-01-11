@@ -55,7 +55,7 @@ void Ray::rayTraceGPU(DetailedTask* dtask,
                       void* stream,
                       int deviceID,
                       bool modifies_divQ,
-                      SimulationStateP sharedState,
+                      int timeStep,
                       Task::WhichDW which_abskg_dw,
                       Task::WhichDW which_sigmaT4_dw,
                       Task::WhichDW which_celltype_dw)
@@ -72,12 +72,12 @@ void Ray::rayTraceGPU(DetailedTask* dtask,
     //
     //GPUDataWarehouse* old_taskgdw = nullptr;
     //if (oldTaskGpuDW) {
-    //	old_taskgdw = static_cast<GPUDataWarehouse*>(oldTaskGpuDW)->getdevice_ptr();
+    //  old_taskgdw = static_cast<GPUDataWarehouse*>(oldTaskGpuDW)->getdevice_ptr();
     //}
 
     //GPUDataWarehouse* new_taskgdw = nullptr;
     //if (newTaskGpuDW) {
-    //	new_taskgdw = static_cast<GPUDataWarehouse*>(newTaskGpuDW)->getdevice_ptr();
+    //  new_taskgdw = static_cast<GPUDataWarehouse*>(newTaskGpuDW)->getdevice_ptr();
     //}
 
     GPUDataWarehouse* abskg_gdw = nullptr;
@@ -213,7 +213,7 @@ void Ray::rayTraceGPU(DetailedTask* dtask,
                               patchP,
                               (cudaStream_t*)stream,
                               RT_flags,
-                              sharedState->getCurrentTopLevelTimeStep(),
+                              timeStep,
                               abskg_gdw,
                               sigmaT4_gdw,
                               celltype_gdw,
@@ -243,26 +243,25 @@ void Ray::rayTraceGPU(DetailedTask* dtask,
 //---------------------------------------------------------------------------
 template<class T>
 void Ray::rayTraceDataOnionGPU( DetailedTask* dtask,
-                               Task::CallBackEvent event,
-                               const ProcessorGroup* pg,
-                               const PatchSubset* finePatches,
-                               const MaterialSubset* matls,
-                               DataWarehouse* old_dw,
-                               DataWarehouse* new_dw,
-                               void* oldTaskGpuDW,
-                               void* newTaskGpuDW,
-                               void* stream,
-                               int deviceID,
-                               bool modifies_divQ,
-                               SimulationStateP sharedState,
-                               Task::WhichDW which_abskg_dw,
-                               Task::WhichDW which_sigmaT4_dw,
-                               Task::WhichDW which_celltype_dw)
+                                Task::CallBackEvent event,
+                                const ProcessorGroup* pg,
+                                const PatchSubset* finePatches,
+                                const MaterialSubset* matls,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw,
+                                void* oldTaskGpuDW,
+                                void* newTaskGpuDW,
+                                void* stream,
+                                int deviceID,
+                                bool modifies_divQ,
+                                int timeStep,
+                                Task::WhichDW which_abskg_dw,
+                                Task::WhichDW which_sigmaT4_dw,
+                                Task::WhichDW which_celltype_dw)
 {
   if (event == Task::GPU) {
 
 #ifdef HAVE_CUDA
-
     //__________________________________
     //  bulletproofing   FIX ME 
     const Level* fineLevel = getLevel(finePatches);
@@ -357,8 +356,6 @@ void Ray::rayTraceDataOnionGPU( DetailedTask* dtask,
     RT_flags.whichROI_algo     = d_ROI_algo;
     RT_flags.rayDirSampleAlgo  = d_rayDirSampleAlgo;
 
-    double start = clock();
-        
     //______________________________________________________________________
     //  patch loop
     int numPatches = finePatches->size();
@@ -476,7 +473,7 @@ void Ray::rayTraceDataOnionGPU( DetailedTask* dtask,
                                          fineLevel_ROI_Hi,
                                          (cudaStream_t*)dtask->getCudaStreamForThisTask(i),
                                          RT_flags,
-                                         sharedState->getCurrentTopLevelTimeStep(),
+                                         timeStep,
                                          abskg_gdw,
                                          sigmaT4_gdw,
                                          celltype_gdw,
@@ -505,7 +502,7 @@ void Ray::rayTraceGPU< float > ( DetailedTask* dtask,
                                  void* stream,
                                  int deviceID,
                                  bool,
-                                 SimulationStateP sharedState,
+                                 int timeStep,
                                  Task::WhichDW,
                                  Task::WhichDW,
                                  Task::WhichDW);
@@ -523,7 +520,7 @@ void Ray::rayTraceGPU< double > ( DetailedTask* dtask,
                                   void* stream,
                                   int deviceID,
                                   bool,
-                                  SimulationStateP sharedState,
+                                  int timeStep,
                                   Task::WhichDW,
                                   Task::WhichDW,
                                   Task::WhichDW);
@@ -541,7 +538,7 @@ void Ray::rayTraceDataOnionGPU< float > ( DetailedTask* dtask,
                                           void* stream,
                                           int deviceID,
                                           bool,
-                                          SimulationStateP sharedState,
+                                          int timeStep,
                                           Task::WhichDW,
                                           Task::WhichDW,
                                           Task::WhichDW);
@@ -559,7 +556,7 @@ void Ray::rayTraceDataOnionGPU< double > ( DetailedTask* dtask,
                                            void* stream,
                                            int deviceID,
                                            bool,
-                                           SimulationStateP sharedState,
+                                           int timeStep,
                                            Task::WhichDW,
                                            Task::WhichDW,
                                            Task::WhichDW);

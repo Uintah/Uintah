@@ -30,6 +30,8 @@
 #include <Core/Util/RefCounted.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
+#include <sci_defs/uintah_defs.h>
+
 #include <map>
 #include <vector>
 
@@ -37,13 +39,14 @@ namespace Uintah {
 
 class VarLabel;
 class Material; 
-class ICEMaterial;
-class MPMMaterial;
-class CZMaterial;
-class ArchesMaterial; 
-class WasatchMaterial;
-class FVMMaterial;
 class SimpleMaterial;
+
+class ArchesMaterial; 
+class FVMMaterial;
+class ICEMaterial;
+class CZMaterial;
+class MPMMaterial;
+class WasatchMaterial;
   
 /**************************************
       
@@ -80,73 +83,22 @@ public:
   ~SimulationState();
 
   void clearMaterials();
+  void finalizeMaterials();
 
   void registerSimpleMaterial(SimpleMaterial*);
-  void registerMPMMaterial(MPMMaterial*);
-  void registerMPMMaterial(MPMMaterial*,unsigned int index);
-  void registerCZMaterial(CZMaterial*);
-  void registerCZMaterial(CZMaterial*,unsigned int index);
-  void registerArchesMaterial(ArchesMaterial*);
-  void registerICEMaterial(ICEMaterial*);
-  void registerICEMaterial(ICEMaterial*,unsigned int index);
-  void registerWasatchMaterial(WasatchMaterial*);
-  void registerWasatchMaterial(WasatchMaterial*,unsigned int index);
-  void registerFVMMaterial(FVMMaterial*);
-  void registerFVMMaterial(FVMMaterial*,unsigned int index);
-
+  
   int getNumMatls() const {
     return (int)matls.size();
   }
-  int getNumMPMMatls() const {
-    return (int)mpm_matls.size();
-  }
-  int getNumCZMatls() const {
-    return (int)cz_matls.size();
-  }
-  int getNumArchesMatls() const {
-    return (int)arches_matls.size();
-  }
-  int getNumICEMatls() const {
-    return (int)ice_matls.size();
-  }
-  int getNumWasatchMatls() const {
-    return (int)wasatch_matls.size();
-  }
-  int getNumFVMMatls() const {
-    return (int)fvm_matls.size();
-  }
+
   MaterialSubset* getAllInOneMatl() {
     return allInOneMatl;
   }
+
   Material* getMaterial(int idx) const {
     return matls[idx];
   }
-  MPMMaterial* getMPMMaterial(int idx) const {
-    return mpm_matls[idx];
-  }
-  CZMaterial* getCZMaterial(int idx) const {
-    return cz_matls[idx];
-  }
-  ArchesMaterial* getArchesMaterial(int idx) const {
-    return arches_matls[idx];
-  }
-  ICEMaterial* getICEMaterial(int idx) const {
-    return ice_matls[idx];
-  }
-  WasatchMaterial* getWasatchMaterial(int idx) const {
-    return wasatch_matls[idx];
-  }
-  FVMMaterial* getFVMMaterial(int idx) const {
-    return fvm_matls[idx];
-  }
 
-  void finalizeMaterials();
-  const MaterialSet* allMPMMaterials() const;
-  const MaterialSet* allCZMaterials() const;
-  const MaterialSet* allArchesMaterials() const;
-  const MaterialSet* allICEMaterials() const;
-  const MaterialSet* allFVMMaterials() const;
-  const MaterialSet* allWasatchMaterials() const;
   const MaterialSet* allMaterials() const;
   const MaterialSet* originalAllMaterials() const;
 
@@ -156,6 +108,77 @@ public:
                                    const std::string& name) const;
   Material* getMaterialByName(const std::string& name) const;
 
+  
+#ifndef NO_ARCHES
+  void registerArchesMaterial(ArchesMaterial*);
+  int getNumArchesMatls() const {
+    return (int)arches_matls.size();
+  }
+  ArchesMaterial* getArchesMaterial(int idx) const {
+    return arches_matls[idx];
+  }
+  const MaterialSet* allArchesMaterials() const;
+#endif
+
+#ifndef NO_FVM
+  void registerFVMMaterial(FVMMaterial*);
+  void registerFVMMaterial(FVMMaterial*,unsigned int index);
+  int getNumFVMMatls() const {
+    return (int)fvm_matls.size();
+  }
+  FVMMaterial* getFVMMaterial(int idx) const {
+    return fvm_matls[idx];
+  }
+  const MaterialSet* allFVMMaterials() const;
+#endif
+
+#ifndef NO_ICE
+  void registerICEMaterial(ICEMaterial*);
+  void registerICEMaterial(ICEMaterial*,unsigned int index);
+  int getNumICEMatls() const {
+    return (int)ice_matls.size();
+  }
+  ICEMaterial* getICEMaterial(int idx) const {
+    return ice_matls[idx];
+  }
+  const MaterialSet* allICEMaterials() const;
+#endif
+
+#ifndef NO_MPM
+  void registerCZMaterial(CZMaterial*);
+  void registerCZMaterial(CZMaterial*,unsigned int index);  
+  int getNumCZMatls() const {
+    return (int)cz_matls.size();
+  }
+  CZMaterial* getCZMaterial(int idx) const {
+    return cz_matls[idx];
+  }
+  const MaterialSet* allCZMaterials() const;
+
+  void registerMPMMaterial(MPMMaterial*);
+  void registerMPMMaterial(MPMMaterial*,unsigned int index);
+  int getNumMPMMatls() const {
+    return (int)mpm_matls.size();
+  }
+  MPMMaterial* getMPMMaterial(int idx) const {
+    return mpm_matls[idx];
+  }
+  const MaterialSet* allMPMMaterials() const;
+#endif
+
+#ifndef NO_WASATCH
+  void registerWasatchMaterial(WasatchMaterial*);
+  void registerWasatchMaterial(WasatchMaterial*,unsigned int index);
+  int getNumWasatchMatls() const {
+    return (int)wasatch_matls.size();
+  }
+  WasatchMaterial* getWasatchMaterial(int idx) const {
+    return wasatch_matls[idx];
+  }
+  const MaterialSet* allWasatchMaterials() const;
+#endif
+
+#ifndef NO_MPM
   // Particle state
   inline void setParticleGhostLayer(Ghost::GhostType type, int ngc) {
     particle_ghost_type = type;
@@ -172,70 +195,79 @@ public:
 
   std::vector<std::vector<const VarLabel* > > d_cohesiveZoneState;
   std::vector<std::vector<const VarLabel* > > d_cohesiveZoneState_preReloc;
-
-  // Misc state that should be moved.
-  double getElapsedSimTime() const { return d_elapsed_sim_time; }
-  void   setElapsedSimTime(double t) { d_elapsed_sim_time = t; }
-
-  int  getCurrentTopLevelTimeStep() const { return d_topLevelTimeStep; }
-  void setCurrentTopLevelTimeStep( int ts ) { d_topLevelTimeStep = ts; }
+#endif
 
 private:
 
   SimulationState( const SimulationState& );
   SimulationState& operator=( const SimulationState& );
       
+  static int count;
+
   void registerMaterial( Material* );
   void registerMaterial( Material*, unsigned int index );
 
-  std::vector<Material*>        matls;
-  std::vector<MPMMaterial*>     mpm_matls;
-  std::vector<CZMaterial*>      cz_matls;
-  std::vector<ArchesMaterial*>  arches_matls;
-  std::vector<ICEMaterial*>     ice_matls;
-  std::vector<WasatchMaterial*> wasatch_matls;
-  std::vector<SimpleMaterial*>  simple_matls;
-  std::vector<FVMMaterial*>     fvm_matls;
+  std::map<std::string, Material*> named_matls;
 
+  std::vector<Material*>        matls;
+  std::vector<SimpleMaterial*>  simple_matls;
+  MaterialSet * all_matls{nullptr};
+  
   //! in switcher we need to clear the materials, but don't 
   //! delete them yet or we might have VarLabel problems when 
   //! CMs are destroyed.  Store them here until the end
   std::vector<Material*> old_matls;
 
-  std::map<std::string, Material*> named_matls;
+  // keep track of the original materials if switching
+  MaterialSet    * orig_all_matls{nullptr};
+  MaterialSubset * allInOneMatl{nullptr};
 
-  MaterialSet * all_mpm_matls{nullptr};
-  MaterialSet * all_cz_matls{nullptr};
-  MaterialSet * all_ice_matls{nullptr};
-  MaterialSet * all_wasatch_matls{nullptr};
+#ifndef NO_ARCHES
+  std::vector<ArchesMaterial*>  arches_matls;
   MaterialSet * all_arches_matls{nullptr};
+#endif
+
+#ifndef NO_FVM
+  std::vector<FVMMaterial*>     fvm_matls;
   MaterialSet * all_fvm_matls{nullptr};
-  MaterialSet * all_matls{nullptr};
+#endif
 
-  // keep track of the original materials if you switch
-  MaterialSet    * orig_all_matls;
-  MaterialSubset * allInOneMatl;
+#ifndef NO_ICE
+  std::vector<ICEMaterial*>     ice_matls;
+  MaterialSet * all_ice_matls{nullptr};
+#endif
 
+#ifndef NO_MPM
+  std::vector<CZMaterial*>      cz_matls;
+  std::vector<MPMMaterial*>     mpm_matls;
+  MaterialSet * all_cz_matls{nullptr};
+  MaterialSet * all_mpm_matls{nullptr};
+#endif
+
+#ifndef NO_WASATCH
+  std::vector<WasatchMaterial*> wasatch_matls;
+  MaterialSet * all_wasatch_matls{nullptr};
+#endif
+
+#ifndef NO_MPM
   //! so all components can know how many particle ghost cells to ask for
   Ghost::GhostType particle_ghost_type{Ghost::None};
   int particle_ghost_layer{0};
+#endif
 
   // Misc state that should be moved.
 
-  // The time step that the top level (w.r.t. AMR) is at during a
-  // simulation.  Usually corresponds to the Data Warehouse generation
-  // number (it does for non-restarted, non-amr simulations).  I'm going to
-  // attempt to make sure that it does also for restarts.
-
-  // NOTE THIS VALUE IS SET THE APPLICATION COMMON IT IS HERE ONLY FOR
+  // NOTE THESE VALUES ARE SET THE APPLICATION COMMON AND ARE HERE ONLY FOR
   // SHARED STATE COMMUNICATION.
-  int    d_topLevelTimeStep{0};
+public:
+  // double getElapsedSimTime() const { return d_elapsed_sim_time; }
+  // void   setElapsedSimTime(double t) { d_elapsed_sim_time = t; }
 
-  // The elapsed simulation time.
-
-  // NOTE THIS VALUE IS SET THE APPLICATION COMMON IT IS HERE ONLY FOR
-  // SHARED STATE COMMUNICATION.
-  double d_elapsed_sim_time{0};
+  // int  getCurrentTopLevelTimeStep() const { return d_topLevelTimeStep; }
+  // void setCurrentTopLevelTimeStep( int ts ) { d_topLevelTimeStep = ts; }
+private:
+  // int    d_topLevelTimeStep{0};  // The time step.
+  // double d_elapsed_sim_time{0};  // The elapsed simulation time.
   
 }; // end class SimulationState
 

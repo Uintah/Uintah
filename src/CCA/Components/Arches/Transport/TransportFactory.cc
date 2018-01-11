@@ -526,6 +526,10 @@ void TransportFactory::build_DQMOM( ProblemSpecP db ){
       std::vector<std::string> scaling_constants;
       db_weight->require("scaling_const", scaling_constants);
 
+      if ( scaling_constants.size() != nQn ){
+        throw ProblemSetupException("Error: number of scaling constants != number quadrature nodes.", __FILE__, __LINE__); 
+      }
+
       eqn_db->appendChild("scaling")->setAttribute("value", scaling_constants[i]);
 
     }

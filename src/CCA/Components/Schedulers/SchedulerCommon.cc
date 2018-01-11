@@ -612,9 +612,8 @@ SchedulerCommon::printTrackedVars( DetailedTask * dtask, int when )
     return;
   }
 
-  if (m_sharedState &&
-      (m_tracking_start_time > m_sharedState->getElapsedSimTime() ||
-       m_tracking_end_time   < m_sharedState->getElapsedSimTime())) {
+  if( m_tracking_start_time > m_application->getSimTime() ||
+      m_tracking_end_time   < m_application->getSimTime() ) {
     return;
   }
 

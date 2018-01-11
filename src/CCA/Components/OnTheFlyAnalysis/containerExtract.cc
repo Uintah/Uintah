@@ -40,10 +40,11 @@
   *  - validate against ups_spec.xml
   **/
 
-#include <CCA/Components/ICE/ICEMaterial.h>
 #include <CCA/Components/OnTheFlyAnalysis/containerExtract.h>
+#include <CCA/Components/ICE/Materials/ICEMaterial.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
 #include <CCA/Ports/LoadBalancer.h>
+#include <CCA/Ports/Output.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -586,6 +587,7 @@ void containerExtract::scheduleDoAnalysis(SchedulerP& sched,
   Task* t = scinew Task("containerExtract::doAnalysis", 
                    this,&containerExtract::doAnalysis);
                      
+  t->requires(Task::OldDW, m_simulationTimeLabel);
   t->requires(Task::OldDW, ps_lb->lastWriteTimeLabel);
   
   Ghost::GhostType gac = Ghost::AroundCells;
@@ -620,7 +622,12 @@ void containerExtract::doAnalysis(const ProcessorGroup* pg,
     lastWriteTime = writeTime;
   }
 
-  double now = m_sharedState->getElapsedSimTime();
+  // double now = m_sharedState->getElapsedSimTime();  
+
+  simTime_vartype simTimeVar;
+  old_dw->get(simTimeVar, m_simulationTimeLabel);
+  double now = simTimeVar;
+
   if(now < d_startTime || now > d_stopTime){
     return;
   }
@@ -778,8 +785,7 @@ void containerExtract::doAnalysis(const ProcessorGroup* pg,
           }
 
           Point here = patch->cellPosition(c);
-          double time = m_sharedState->getElapsedSimTime();
-          fprintf(fp,    "%E\t %E\t %E\t %E",here.x(),here.y(),here.z(), time);
+          fprintf(fp,    "%E\t %E\t %E\t %E",here.x(),here.y(),here.z(), now);
 
 
           /* Find out which vector contains the variable and print it out. */

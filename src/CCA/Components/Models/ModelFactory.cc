@@ -24,17 +24,20 @@
 
 
 #include <CCA/Components/Models/ModelFactory.h>
-#include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Exceptions/ProblemSetupException.h>
-#include <CCA/Ports/ModelInterface.h>
-#include <CCA/Components/Models/FluidsBased/Mixing.h>
-#include <CCA/Components/Models/FluidsBased/AdiabaticTable.h>
-#include <CCA/Components/Models/FluidsBased/PassiveScalar.h>
-#include <CCA/Components/Models/FluidsBased/SimpleRxn.h>
-#include <CCA/Components/Models/FluidsBased/TestModel.h>
-#include <CCA/Components/Models/FluidsBased/flameSheet_rxn.h>
-#include <CCA/Components/Models/FluidsBased/MassMomEng_src.h>
+
+#include <sci_defs/uintah_defs.h>
+
 #if !defined( NO_ICE )
+#  include <CCA/Components/Models/FluidsBased/Mixing.h>
+#  include <CCA/Components/Models/FluidsBased/AdiabaticTable.h>
+#  include <CCA/Components/Models/FluidsBased/PassiveScalar.h>
+#  include <CCA/Components/Models/FluidsBased/SimpleRxn.h>
+#  include <CCA/Components/Models/FluidsBased/TestModel.h>
+#  include <CCA/Components/Models/FluidsBased/flameSheet_rxn.h>
+#  include <CCA/Components/Models/FluidsBased/MassMomEng_src.h>
+#endif
+
+#if !defined( NO_ICE ) && !defined( NO_MPM )
 #  include <CCA/Components/Models/HEChem/Simple_Burn.h>
 #  include <CCA/Components/Models/HEChem/Steady_Burn.h>
 #  include <CCA/Components/Models/HEChem/Unsteady_Burn.h>
@@ -45,67 +48,54 @@
 #  include <CCA/Components/Models/HEChem/LightTime.h>
 #  include <CCA/Components/Models/HEChem/DDT0.h>
 #  include <CCA/Components/Models/HEChem/DDT1.h>
+
 #  include <CCA/Components/Models/SolidReactionModel/SolidReactionModel.h>
 #endif
 
-#include <Core/Malloc/Allocator.h>
-#include <sci_defs/uintah_defs.h>
+#include <CCA/Ports/ModelInterface.h>
 
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Malloc/Allocator.h>
+
+#include <string>
+#include <vector>
 #include <iostream>
 
 using namespace Uintah;
-using namespace std;
 
-ModelFactory::ModelFactory(const ProcessorGroup* myworld)
-  : UintahParallelComponent(myworld)
-{
-}
-
-ModelFactory::~ModelFactory()
-{
-  for (vector<ModelInterface*>::const_iterator it = d_models.begin();
-       it != d_models.end(); it++) {
-    (*it)->releaseComponents();
-    delete *it;
-  }
-}
-
-vector<ModelInterface*> ModelFactory::getModels()
-{
-  //cout << "calling getModels: " << d_models.size() << " models returned" << endl;
-  return d_models;
-}
-
-void ModelFactory::clearModels()
-{
-  //cout << "clean up " << d_models.size() << " models" << endl;
-  d_models.clear();
-}
-
-void
+std::vector<ModelInterface*>
 ModelFactory::makeModels( const ProcessorGroup   * myworld,
 			  const SimulationStateP   sharedState,
 			  const ProblemSpecP& restart_prob_spec,
                           const ProblemSpecP& prob_spec )
 {
+  std::vector<ModelInterface*> d_models;
+
   ProblemSpecP model_spec = restart_prob_spec->findBlock("Models");
 
   if(!model_spec)
-    return;
+    return d_models;
   
   for(ProblemSpecP model_ps = model_spec->findBlock("Model");
-      model_ps != nullptr; model_ps = model_ps->findNextBlock("Model")) {
+                   model_ps != nullptr;
+                   model_ps = model_ps->findNextBlock("Model")) {
 
-    string type;
+    std::string type;
 
     if(!model_ps->getAttribute("type", type)) {
-      throw ProblemSetupException("Model does not specify type=\"name\"",
-				  __FILE__, __LINE__);
+      throw ProblemSetupException( "\nERROR<Model>: Could not determine the type of the model.\n", __FILE__, __LINE__ );
+    }
+    
+    // A no-op is need to make the conditionals work correctly if
+    // there are no models.
+    if( 0 )
+    {
     }
 
 #if !defined( NO_ICE )
     // ICE turned on
-    if(type == "SimpleRxn") {
+    else if(type == "SimpleRxn") {
       d_models.push_back(scinew SimpleRxn(myworld, sharedState, model_ps));
     }
     else if(type == "AdiabaticTable") {
@@ -113,9 +103,6 @@ ModelFactory::makeModels( const ProcessorGroup   * myworld,
     }
     else if(type == "Mixing") {
       d_models.push_back(scinew Mixing(myworld, sharedState, model_ps)); }
-    else if(type == "Test") {
-      d_models.push_back(scinew TestModel(myworld, sharedState, model_ps));
-    }
     else if(type == "flameSheet_rxn") {
       d_models.push_back(scinew flameSheet_rxn(myworld, sharedState, model_ps));
     }
@@ -125,6 +112,13 @@ ModelFactory::makeModels( const ProcessorGroup   * myworld,
     else if(type == "PassiveScalar") {
       d_models.push_back(scinew PassiveScalar(myworld, sharedState, model_ps));
     }
+#endif
+
+#if !defined( NO_ICE ) && !defined( NO_MPM )    
+    else if(type == "Test") {
+      d_models.push_back(scinew TestModel(myworld, sharedState, model_ps));
+    }
+
     else if(type == "Simple_Burn") {
       d_models.push_back(scinew Simple_Burn(myworld, sharedState, model_ps, prob_spec));
     }
@@ -158,21 +152,14 @@ ModelFactory::makeModels( const ProcessorGroup   * myworld,
     else if(type == "SolidReactionModel") {
       d_models.push_back(scinew SolidReactionModel(myworld, sharedState, model_ps, prob_spec));
     }
-    else {
-      throw ProblemSetupException( "Unknown model: " + type, __FILE__, __LINE__ );
-    }
-#else
-    // ICE and/or MPM turned off.
-    throw ProblemSetupException( type + " not supported in this build", __FILE__, __LINE__ );
 #endif
-  }
-}
 
-void
-ModelFactory::outputProblemSpec(ProblemSpecP& models_ps)
-{
-  for (vector<ModelInterface*>::const_iterator it = d_models.begin();
-       it != d_models.end(); it++) {
-    (*it)->outputProblemSpec(models_ps);
+    else {
+      std::ostringstream msg;
+      msg << "\nERROR<Model>: Unknown model : " << type << ".\n";
+      throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
+    }
   }
+
+  return d_models;
 }

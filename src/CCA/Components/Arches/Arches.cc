@@ -112,8 +112,7 @@ Arches::problemSetup( const ProblemSpecP     & params,
   // Check for Lagrangian particles
   m_do_lagrangian_particles = m_arches_spec->findBlock("LagrangianParticles");
   if ( m_do_lagrangian_particles ) {
-    m_particlesHelper->problem_setup( params,m_arches_spec->findBlock("LagrangianParticles"),
-                                      m_sharedState);
+    m_particlesHelper->problem_setup( params,m_arches_spec->findBlock("LagrangianParticles") );
   }
 
   //  Multi-level related
@@ -321,17 +320,16 @@ Arches::scheduleAnalysis( const LevelP& level,
   }
 }
 
-int Arches::computeTaskGraphIndex()
+int Arches::computeTaskGraphIndex( const int timeStep )
 {
   // Setup the task graph for execution on the next timestep.
-  int time_step = m_sharedState->getCurrentTopLevelTimeStep();
   
-  return m_nlSolver->getTaskGraphIndex( time_step );
+  return m_nlSolver->getTaskGraphIndex( timeStep );
 }
 
 //--------------------------------------------------------------------------------------------------
-double Arches::recomputeTimeStep(double current_dt) {
-  return m_nlSolver->recomputeTimeStep(current_dt);
+double Arches::recomputeDelT(const double delT ) {
+  return m_nlSolver->recomputeDelT( delT );
 }
 
 //--------------------------------------------------------------------------------------------------

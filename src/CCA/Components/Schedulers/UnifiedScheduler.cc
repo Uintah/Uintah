@@ -1366,7 +1366,7 @@ UnifiedScheduler::prepareGpuDependencies( DetailedTask          * dtask
       GPUDataWarehouse* gpudw = nullptr;
       if (fromDeviceIndex != -1) {
         gpudw = dw->getGPUDW(fromDeviceIndex);
-        if (!gpudw->isValidOnGPU(label->d_name.c_str(), fromPatch->getID(), matlIndx, levelID)) {
+        if (!gpudw->isValidOnGPU(label->getName().c_str(), fromPatch->getID(), matlIndx, levelID)) {
           continue;
         }
       } else {

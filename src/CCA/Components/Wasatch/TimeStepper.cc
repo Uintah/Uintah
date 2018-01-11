@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2017 The University of Utah
+ * Copyright (c) 2012-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -76,11 +76,9 @@ namespace WasatchCore{
   
   //==================================================================
 
-  TimeStepper::TimeStepper( Uintah::SimulationStateP sharedState,
-                            GraphCategories& graphCat,
+  TimeStepper::TimeStepper( GraphCategories& graphCat,
                             const TimeIntegrator timeInt )
-    : sharedState_        ( sharedState ),
-      solnGraphHelper_    ( graphCat[ADVANCE_SOLUTION] ),
+    : solnGraphHelper_    ( graphCat[ADVANCE_SOLUTION] ),
       postProcGraphHelper_( graphCat[POSTPROCESSING] ),
       timeInt_            ( timeInt )
   {}
@@ -142,7 +140,7 @@ namespace WasatchCore{
                                                      *(solnGraphHelper_->exprFactory),
                                                      level, sched, patches, materials,
                                                      patchInfoMap,
-                                                     rkStage, sharedState_, persistentFields );
+                                                     rkStage, persistentFields );
 
       taskInterfaceList_.push_back( rhsTask );
       rhsTask->schedule( rkStage ); // must be scheduled after coordHelper_
@@ -201,7 +199,6 @@ namespace WasatchCore{
                                                     dualTimeIntegrators_,
                                                     varNames,
                                                     rhsTags,
-                                                    sharedState_,
                                                     persistentFields );
 
       taskInterfaceList_.push_back( rhsTask );

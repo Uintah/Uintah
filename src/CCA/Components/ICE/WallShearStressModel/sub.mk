@@ -27,14 +27,25 @@
 # 
 # Makefile fragment for this subdirectory 
 
-SRCDIR   := CCA/Components/ICE/WallShearStressModel
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCS     += $(SRCDIR)/WallShearStressFactory.cc    \
-	     $(SRCDIR)/WallShearStress.cc           \
-            $(SRCDIR)/logLawModel.cc               \
-            $(SRCDIR)/smoothWall.cc
+SRCDIR := CCA/Components/ICE/WallShearStressModel
 
-PSELIBS :=  
-LIBS	:= 
+SRCS += $(SRCDIR)/WallShearStressFactory.cc \
+	$(SRCDIR)/WallShearStress.cc        \
+        $(SRCDIR)/logLawModel.cc            \
+        $(SRCDIR)/smoothWall.cc
 
+PSELIBS := \
+	Core/Disclosure     \
+	Core/Exceptions     \
+	Core/Geometry       \
+	Core/GeometryPiece  \
+	Core/Grid           \
+	Core/Math           \
+	Core/Parallel       \
+	Core/ProblemSpec    \
+	Core/Util           
+
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

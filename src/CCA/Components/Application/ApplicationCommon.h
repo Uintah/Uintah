@@ -46,7 +46,6 @@
 namespace Uintah {
 
   class DataWarehouse;  
-  class ModelMaker;
   class Output;
   class Regridder;
 
@@ -130,7 +129,8 @@ WARNING
     // Ask the application which primary task graph it wishes to
     // execute this time step, this will be an index into the
     // scheduler's vector of task-graphs.
-    virtual int computeTaskGraphIndex() { return 0; }
+    virtual int computeTaskGraphIndex();
+    virtual int computeTaskGraphIndex( const int timeStep ) { return 0; }
 
     // Schedule the inital switching.
     virtual void scheduleSwitchInitialization( const LevelP     & level,
@@ -182,11 +182,11 @@ WARNING
 					  const PatchSet   * perProcPatchSet,
 					        SchedulerP & scheduler);
     
-    void updateSystemVars( const ProcessorGroup *,
-			   const PatchSubset    * patches,
-			   const MaterialSubset * /*matls*/,
-			         DataWarehouse  * /*old_dw*/,
-			         DataWarehouse  * new_dw );
+    virtual void updateSystemVars( const ProcessorGroup *,
+				   const PatchSubset    * patches,
+				   const MaterialSubset * /*matls*/,
+				         DataWarehouse  * /*old_dw*/,
+				         DataWarehouse  * new_dw );
     
     // Methods used for scheduling AMR regridding.
     virtual void scheduleRefine( const PatchSet   * patches,
@@ -214,12 +214,13 @@ WARNING
 
     // Recompute a time step if current time advance is not
     // converging.  The returned time is the new delta T.
-    virtual void   recomputeTimeStep();
-    virtual double recomputeTimeStep( double delt );
+    virtual void   recomputeDelT();
+    virtual double recomputeDelT( const double delT );
+
     virtual bool restartableTimeSteps() { return false; }
 
     // Updates the time step and the delta T.
-    virtual void prepareForNextTimeStep( const GridP & grid );
+    virtual void prepareForNextTimeStep();
 
     // Asks the application if it needs to be recompiled.
     virtual bool needRecompile( const GridP & grid );
@@ -230,9 +231,6 @@ WARNING
     virtual const VarLabel* getDelTLabel() const { return m_delTLabel; }
 
     //////////
-    virtual void setNeedModelMaker(bool val) { m_needModelMaker = val; }
-    virtual bool needModelMaker() const { return m_needModelMaker; }
-    
     virtual void setAMR(bool val) { m_AMR = val; }
     virtual bool isAMR() const { return m_AMR; }
   
@@ -248,18 +246,18 @@ WARNING
      
     //////////
     virtual bool isRegridTimeStep() const { return m_isRegridTimeStep; }
-    virtual void setRegridTimeStep(bool ans) { m_isRegridTimeStep = ans; }
+    virtual void setRegridTimeStep(bool val) { m_isRegridTimeStep = val; }
 
     // Some applications can adjust the output interval.
-    virtual void adjustOutputInterval(bool ans) { m_adjustOutputInterval = ans; }
+    virtual void adjustOutputInterval(bool val) { m_adjustOutputInterval = val; }
     virtual bool adjustOutputInterval() const { return m_adjustOutputInterval; }
      
     // Some applications can adjust the checkpoint interval.
-    virtual void adjustCheckpointInterval(bool ans) { m_adjustCheckpointInterval = ans; }
+    virtual void adjustCheckpointInterval(bool val) { m_adjustCheckpointInterval = val; }
     virtual bool adjustCheckpointInterval() const { return m_adjustCheckpointInterval; }
 
     // Some applications can end the simulation early.
-    virtual void mayEndSimulation(bool ans) { m_mayEndSimulation = ans; }
+    virtual void mayEndSimulation(bool val) { m_mayEndSimulation = val; }
     virtual bool mayEndSimulation() const { return m_mayEndSimulation; }
 
     // Access methods for member classes.
@@ -274,24 +272,24 @@ WARNING
     // the values via the data warehouse.
     
     //////////
-    virtual   void setDelT( double val );
+    virtual   void setDelT( double delT ) { m_delT = delT; }
     virtual double getDelT() const { return m_delT; }
     virtual   void setDelTForAllLevels( SchedulerP& scheduler,
 					const GridP & grid,
 					const int totalFine );
 
-    virtual   void setNextDelT( double val );
+    virtual   void setNextDelT( double delT );
     virtual double getNextDelT() const { return m_nextDelT; }
     virtual   void validateNextDelT( DataWarehouse  * new_dw );
 
     //////////
-    virtual   void setSimTime( double val );
+    virtual   void setSimTime( double simTime );
     virtual double getSimTime() const { return m_simTime; };
 
-    virtual   void setSimTimeStart( double val )
+    virtual   void setSimTimeStart( double simTime )
     {
-      m_simTimeStart = val;
-      setSimTime(val);
+      m_simTimeStart = simTime;
+      setSimTime(simTime);
     }
     
     virtual double getSimTimeStart() const { return m_simTimeStart; }
@@ -303,7 +301,7 @@ WARNING
     // beginning of a simulation.  The 'increment' function is called by
     // the SimulationController at the beginning of each time step.
     virtual void setTimeStep( int timeStep );
-    virtual void incrementTimeStep( const GridP & grid );
+    virtual void incrementTimeStep();
     virtual int  getTimeStep() const { return m_timeStep; }
 
     virtual bool isLastTimeStep( double walltime ) const;
@@ -312,7 +310,6 @@ WARNING
   protected:
     Scheduler*       m_scheduler{nullptr};
     LoadBalancer* m_loadBalancer{nullptr};
-    ModelMaker*      m_modelMaker{nullptr};
     SolverInterface* m_solver{nullptr};
     Regridder*       m_regridder{nullptr};
     Output*          m_output{nullptr};
@@ -320,7 +317,6 @@ WARNING
     bool m_recompile {false};
     
   private:
-    bool m_needModelMaker {false};
     bool m_AMR {false};
     bool m_lockstepAMR {false};
 

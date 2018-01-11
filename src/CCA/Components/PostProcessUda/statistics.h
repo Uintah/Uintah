@@ -62,7 +62,7 @@ WARNING
   public:
     statistics(ProblemSpecP    & prob_spec,
                SimulationStateP& sharedState,
-	        Output          * dataArchiver,
+               Output          * dataArchiver,
                DataArchive     * dataArchive);
 
     statistics();
@@ -129,7 +129,7 @@ WARNING
       }
 
       void print(){
-	const std::string name = Q_Label->getName();
+        const std::string name = Q_Label->getName();
         std::cout << name << " matl: " << matl << " subtype: " << subtype->getName() << " startTimestep: " << timestep <<"\n";
       };
 
@@ -174,6 +174,9 @@ WARNING
 
     //__________________________________
     // global constants
+    const VarLabel* m_simulationTimeLabel;
+    const VarLabel* m_timeStepLabel;
+
     double    d_startTime    = 0;
     double    d_stopTime     = DBL_MAX;
     IntVector d_monitorCell  = IntVector(-9,-9,-9);         // Cell to output

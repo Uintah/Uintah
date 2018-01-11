@@ -29,6 +29,8 @@
 
 SRCDIR   := CCA/Components/Models/SolidReactionModel
 
+ifeq ($(BUILD_MPM)$(BUILD_ICE),yesyes)
+
 SRCS	+= \
        $(SRCDIR)/SolidReactionModel.cc       \
        $(SRCDIR)/NthOrderModel.cc            \
@@ -41,3 +43,4 @@ SRCS	+= \
        $(SRCDIR)/Arrhenius.cc                \
        $(SRCDIR)/ModifiedArrhenius.cc
 
+endif

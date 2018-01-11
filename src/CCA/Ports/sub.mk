@@ -36,7 +36,6 @@ SRCS += \
         $(SRCDIR)/DataWarehouse.cc        \
         $(SRCDIR)/LoadBalancer.cc     \
         $(SRCDIR)/ModelInterface.cc       \
-        $(SRCDIR)/ModelMaker.cc           \
         $(SRCDIR)/Output.cc               \
         $(SRCDIR)/ProblemSpecInterface.cc \
         $(SRCDIR)/Regridder.cc            \

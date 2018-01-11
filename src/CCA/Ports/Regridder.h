@@ -123,7 +123,7 @@ WARNING
     virtual int maxLevels() = 0;
 
     //! Create a new Grid
-    virtual Grid* regrid(Grid* oldGrid) = 0;
+    virtual Grid* regrid(Grid* oldGrid, const int timeStep) = 0;
 
     //! If the Regridder set up the load balance in the process of Regridding
     virtual bool isLoadBalanced() { return false; }

@@ -51,16 +51,20 @@ computeExternalForceForMMS : Computes the analytically determined body force for
 
 */
 
+#include <Core/Grid/Variables/ParticleVariable.h>
 
 #ifndef __MMS_H__
 #define __MMS_H__
 
-#include <CCA/Components/MPM/SerialMPM.h>
 #include <cmath>
 #include <iostream>
 
 namespace Uintah {
 
+  class MPMFlags;
+  class MPMLabel;
+  class DataWarehouse;
+  
   class MMS {
 
   public :

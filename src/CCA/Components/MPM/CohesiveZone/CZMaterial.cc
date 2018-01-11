@@ -26,7 +26,7 @@
 
 #include <CCA/Components/MPM/CohesiveZone/CZMaterial.h>
 #include <Core/Geometry/IntVector.h>
-#include <Core/Labels/MPMLabel.h>
+#include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>

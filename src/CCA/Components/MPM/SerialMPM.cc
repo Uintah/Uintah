@@ -21,19 +21,21 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-#include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DamageModel.h>
-#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/ErosionModel.h>
-#include <CCA/Components/MPM/Contact/Contact.h>
-#include <CCA/Components/MPM/Contact/ContactFactory.h>
+#include <CCA/Components/MPM/SerialMPM.h>
+
+#include <CCA/Components/MPM/Core/MPMDiffusionLabel.h>
+#include <CCA/Components/MPM/Core/MPMBoundCond.h>
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/ConstitutiveModel.h>
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/PlasticityModels/DamageModel.h>
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/PlasticityModels/ErosionModel.h>
+#include <CCA/Components/MPM/Materials/MPMMaterial.h>
+#include <CCA/Components/MPM/Materials/Contact/Contact.h>
+#include <CCA/Components/MPM/Materials/Contact/ContactFactory.h>
 #include <CCA/Components/MPM/CohesiveZone/CZMaterial.h>
 #include <CCA/Components/MPM/HeatConduction/HeatConduction.h>
-#include <CCA/Components/MPM/Core/MPMBoundCond.h>
-#include <CCA/Components/MPM/ParticleCreator/ParticleCreator.h>
+#include <CCA/Components/MPM/Materials/ParticleCreator/ParticleCreator.h>
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <CCA/Components/MPM/PhysicalBC/PressureBC.h>
-#include <CCA/Components/MPM/SerialMPM.h>
 #include <CCA/Components/MPM/MMS/MMS.h>
 #include <CCA/Components/MPM/ThermalContact/ThermalContact.h>
 #include <CCA/Components/MPM/ThermalContact/ThermalContactFactory.h>
@@ -95,7 +97,6 @@ SerialMPM::SerialMPM( const ProcessorGroup* myworld,
 		      const SimulationStateP sharedState) :
   MPMCommon( myworld, sharedState )
 {
-  lb = scinew MPMLabel();
   flags = scinew MPMFlags(myworld);
 
   d_nextOutputTime=0.;
@@ -111,7 +112,6 @@ SerialMPM::SerialMPM( const ProcessorGroup* myworld,
 
 SerialMPM::~SerialMPM()
 {
-  delete lb;
   delete flags;
   delete contactModel;
   delete thermalContactModel;
@@ -731,6 +731,8 @@ void SerialMPM::scheduleApplyExternalLoads(SchedulerP& sched,
   Task* t=scinew Task("MPM::applyExternalLoads",
                     this, &SerialMPM::applyExternalLoads);
 
+  t->requires(Task::OldDW, lb->simulationTimeLabel);
+
   if (!flags->d_mms_type.empty()) {
     //MMS problems need displacements
     t->requires(Task::OldDW, lb->pDispLabel,            Ghost::None);
@@ -957,6 +959,7 @@ void SerialMPM::scheduleComputeStressTensor(SchedulerP& sched,
     t->computes(lb->p_qLabel_preReloc, matlset);
   }
 
+  t->requires(Task::OldDW, lb->simulationTimeLabel);
   t->computes(lb->delTLabel,getLevel(patches));
 
   if (flags->d_reductionVars->accStrainEnergy ||
@@ -1411,6 +1414,7 @@ void SerialMPM::scheduleInsertParticles(SchedulerP& sched,
     Task* t=scinew Task("MPM::insertParticles",this,
                   &SerialMPM::insertParticles);
 
+    t->requires(Task::OldDW, lb->simulationTimeLabel);
     t->requires(Task::OldDW, lb->delTLabel );
 
     t->modifies(lb->pXLabel_preReloc);
@@ -1517,6 +1521,7 @@ SerialMPM::scheduleSetPrescribedMotion(       SchedulerP  & sched,
   const MaterialSubset* mss = matls->getUnion();
   t->modifies(             lb->gAccelerationLabel,     mss);
   t->modifies(             lb->gVelocityStarLabel,     mss);
+  t->requires(Task::OldDW, lb->simulationTimeLabel);
   t->requires(Task::OldDW, lb->delTLabel );
   if(!flags->d_doGridReset){
     t->requires(Task::OldDW, lb->gDisplacementLabel,    Ghost::None);
@@ -2949,15 +2954,16 @@ void SerialMPM::setPrescribedMotion(const ProcessorGroup*,
                                     DataWarehouse* old_dw,
                                     DataWarehouse* new_dw)
 {
+  // Get the current simulation time
+  simTime_vartype simTimeVar;
+  old_dw->get(simTimeVar, lb->simulationTimeLabel);
+  double time = simTimeVar;
 
-
+  // double time = m_sharedState->getElapsedSimTime();
 
  for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing, "Doing setPrescribedMotion");
-
-    // Get the current simulation time
-    double time = m_sharedState->getElapsedSimTime();
 
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches) );
@@ -3117,7 +3123,11 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
                                    DataWarehouse* new_dw)
 {
   // Get the current simulation time
-  double time = m_sharedState->getElapsedSimTime();
+  simTime_vartype simTimeVar;
+  old_dw->get(simTimeVar, lb->simulationTimeLabel);
+  double time = simTimeVar;
+
+  // double time = m_sharedState->getElapsedSimTime();
 
   if (cout_doing.active())
     cout_doing << "Current Time (applyExternalLoads) = " << time << endl;
@@ -3811,7 +3821,12 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
     }
 
 /*
-    double time = m_sharedState->getElapsedSimTime();
+    // Get the current simulation time
+    simTime_vartype simTimeVar;
+    old_dw->get(simTimeVar, lb->simulationTimeLabel);
+    double time = simTimeVar;
+
+    // double time = m_sharedState->getElapsedSimTime();
     string outfile_name = "force_sep.dat";
     ofstream dest;
     dest.open(outfile_name.c_str(),ios::app);
@@ -4049,7 +4064,11 @@ void SerialMPM::insertParticles(const ProcessorGroup*,
     printTask(patches, patch,cout_doing, "Doing insertParticles");
 
     // Get the current simulation time
-    double time = m_sharedState->getElapsedSimTime();
+    simTime_vartype simTimeVar;
+    old_dw->get(simTimeVar, lb->simulationTimeLabel);
+    double time = simTimeVar;
+
+    // double time = m_sharedState->getElapsedSimTime();
 
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches) );

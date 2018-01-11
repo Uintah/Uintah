@@ -54,7 +54,6 @@ namespace Uintah{
       void  problemSetup( const ProblemSpecP& prob_spec,
                           const ProblemSpecP& rmcrt_ps,
                           const GridP& grid,
-                          SimulationStateP& sharedState,
                           const bool getExtraInputs );
 
       /** @brief Algorithm for tracing rays from radiometer location*/

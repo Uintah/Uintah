@@ -25,20 +25,22 @@
 #ifndef Packages_Uintah_CCA_Components_Switching_SimpleBurn_h
 #define Packages_Uintah_CCA_Components_Switching_SimpleBurn_h
 
-#include <Core/ProblemSpec/ProblemSpecP.h>
 #include <CCA/Ports/SwitchingCriteria.h>
+
+#include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/SimulationState.h>
-#include <Core/Labels/MPMLabel.h>
-#include <Core/Labels/MPMICELabel.h>
 
 namespace Uintah {
 
   class ProcessorGroup;
   class DataWarehouse;
 
+  class MPMLabel;
+  class MPMICELabel;
+
   class SimpleBurnCriteria : public SwitchingCriteria
-    {
+  {
     public:
       SimpleBurnCriteria(ProblemSpecP& ps);
       virtual ~SimpleBurnCriteria();
@@ -53,7 +55,6 @@ namespace Uintah {
                       const MaterialSubset* matls, DataWarehouse*,
                       DataWarehouse*);
 
-
     private:
       unsigned int d_material;
       double d_temperature;
@@ -63,7 +64,7 @@ namespace Uintah {
       MPMICELabel* MIlb;
       #define d_SMALL_NUM 1e-100
       #define d_TINY_RHO 1e-12
-    };
+  };
 } // End namespace Uintah
 
 #endif 

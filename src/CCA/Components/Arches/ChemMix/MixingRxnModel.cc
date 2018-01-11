@@ -66,6 +66,9 @@ m_sharedState(sharedState)
 
   m_matl_index = 0;
 
+  // Time Step
+  m_timeStepLabel = VarLabel::create(timeStep_name, timeStep_vartype::getTypeDescription());
+
 }
 
 //---------------------------------------------------------------------------
@@ -79,6 +82,8 @@ MixingRxnModel::~MixingRxnModel()
   }
   delete _iv_transform;
   VarLabel::destroy(m_denRefArrayLabel);
+
+  VarLabel::destroy(m_timeStepLabel);
 }
 
 //---------------------------------------------------------------------------

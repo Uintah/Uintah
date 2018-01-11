@@ -36,6 +36,7 @@
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Task.h>
+#include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
@@ -133,6 +134,11 @@ SmagorinskyModel::sched_reComputeTurbSubmodel(SchedulerP& sched,
     tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, gn, 0);
   }
 
+  if( sched->get_dw(0) )
+    tsk->requires(Task::OldDW, d_lab->d_simulationTimeLabel);
+  else if( sched->get_dw(1) )
+    tsk->requires(Task::NewDW, d_lab->d_simulationTimeLabel);
+  
   tsk->modifies(d_lab->d_viscosityCTSLabel);
   tsk->modifies(d_lab->d_turbViscosLabel);
 
@@ -147,15 +153,22 @@ void
 SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
                                         const PatchSubset* patches,
                                         const MaterialSubset*,
-                                        DataWarehouse*,
+                                        DataWarehouse* old_dw,
                                         DataWarehouse* new_dw,
                                         const TimeIntegratorLabel* timelabels)
 {
-//  double time = d_lab->d_sharedState->getElapsedSimTime();
+//  double simTime = d_lab->d_sharedState->getElapsedSimTime();
+
+  simTime_vartype simTime;
+  if( old_dw && old_dw->exists( d_lab->d_simulationTimeLabel ) )
+    old_dw->get( simTime, d_lab->d_simulationTimeLabel );
+  else if( new_dw && new_dw->exists( d_lab->d_simulationTimeLabel ) )
+    new_dw->get( simTime, d_lab->d_simulationTimeLabel );
+
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
     constSFCXVariable<double> uVelocity;
     constSFCYVariable<double> vVelocity;
@@ -199,8 +212,8 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
     IntVector idxHi = patch->getFortranCellHighIndex();
     double CF = d_CF;
 #if 0
-    if (time < 2.0 ) 
-      CF *= (time+ 0.0001)*0.5;
+    if (simTime < 2.0 ) 
+      CF *= (simTime+ 0.0001)*0.5;
 #endif      
 
     Vector Dx = patch->dCell(); 

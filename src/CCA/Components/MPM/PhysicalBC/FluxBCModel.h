@@ -28,7 +28,7 @@
 #include <CCA/Components/MPM/Core/MPMFlags.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Scheduler.h>
-#include <Core/Labels/MPMLabel.h>
+#include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/ComputeSet.h>

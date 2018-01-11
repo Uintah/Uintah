@@ -23,8 +23,8 @@
  */
 
 #include <CCA/Components/ICE/WallShearStressModel/logLawModel.h>
-#include <CCA/Components/ICE/BoundaryCond.h>
 
+#include <Core/Grid/SimulationState.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/DbgOutput.h>

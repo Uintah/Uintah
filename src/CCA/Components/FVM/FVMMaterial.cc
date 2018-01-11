@@ -24,12 +24,14 @@
 
 
 #include <CCA/Components/FVM/FVMMaterial.h>
-#include <Core/ProblemSpec/ProblemSpec.h>
+
 #include <Core/Exceptions/ParameterNotFound.h>
-#include <Core/GeometryPiece/FileGeometryPiece.h>
+#include <Core/Grid/Patch.h>
+
 #include <Core/GeometryPiece/GeometryObject.h>
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
 #include <Core/GeometryPiece/UnionGeometryPiece.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 
 #include <list>
 #include <vector>

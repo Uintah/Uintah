@@ -23,39 +23,48 @@
  */
 
 
-
-#include <CCA/Components/ICE/BoundaryCond.h>
-#include <CCA/Components/ICE/ICEMaterial.h>
-#include <CCA/Components/Models/HEChem/Common.h>
 #include <CCA/Components/Models/HEChem/DDT0.h>
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Components/Models/HEChem/Common.h>
+
+#include <CCA/Components/ICE/Core/ICELabel.h>
+#include <CCA/Components/ICE/CustomBCs/BoundaryCond.h>
+#include <CCA/Components/ICE/Materials/ICEMaterial.h>
+#include <CCA/Components/MPM/Core/MPMLabel.h>
+#include <CCA/Components/MPM/Materials/MPMMaterial.h>
+#include <CCA/Components/MPMICE/Core/MPMICELabel.h>
+#include <CCA/Components/Regridder/PerPatchVars.h>
+
+#include <CCA/Ports/Regridder.h>
 #include <CCA/Ports/Scheduler.h>
-#include <Core/Exceptions/ProblemSetupException.h>
+
+#include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Material.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/NCVariable.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Grid/DbgOutput.h>
-#include <Core/Labels/ICELabel.h>
-#include <Core/Labels/MPMICELabel.h>
-#include <Core/Labels/MPMLabel.h>
-#include <Core/Parallel/Parallel.h>
+#include <Core/Exceptions/InvalidValue.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Util/DebugStream.h>
-#include <iostream>
 
+#include <iostream>
 
 using namespace Uintah;
 using namespace std;
+
 //__________________________________
 //  setenv SCI_DEBUG "MODELS_DOING_COUT:+"
 //  MODELS_DOING_COUT:   dumps when tasks are scheduled and performed
 static DebugStream cout_doing("MODELS_DOING_COUT", false);
 
 DDT0::DDT0(const ProcessorGroup* myworld,
-	   const SimulationStateP& sharedState,
+           const SimulationStateP& sharedState,
            const ProblemSpecP& params,
            const ProblemSpecP& prob_spec)              
   : ModelInterface(myworld, sharedState), d_params(params), d_prob_spec(prob_spec)
@@ -63,8 +72,8 @@ DDT0::DDT0(const ProcessorGroup* myworld,
   d_mymatls  = 0;
   d_one_matl = 0;
   Ilb  = scinew ICELabel();
-  MIlb = scinew MPMICELabel();
   Mlb  = scinew MPMLabel();
+  MIlb = scinew MPMICELabel();
 
   //__________________________________
   //  diagnostic labels JWL++
@@ -100,8 +109,8 @@ DDT0::DDT0(const ProcessorGroup* myworld,
 DDT0::~DDT0()
 {
   delete Ilb;
-  delete MIlb;
   delete Mlb;
+  delete MIlb;
 
   // JWL++
   VarLabel::destroy(reactedFractionLabel);
@@ -123,7 +132,7 @@ DDT0::~DDT0()
 }
 //______________________________________________________________________
 //
-void DDT0::problemSetup(GridP&, ModelSetup*, const bool isRestart)
+void DDT0::problemSetup(GridP&,  const bool isRestart)
 {
   ProblemSpecP ddt_ps = d_params->findBlock("DDT0");
   
@@ -225,8 +234,7 @@ void DDT0::outputProblemSpec(ProblemSpecP& ps)
 //______________________________________________________________________
 //     
 void DDT0::scheduleInitialize(SchedulerP& sched,
-                               const LevelP& level,
-                               const ModelInfo*)
+                               const LevelP& level)
 {
   printSchedule(level,cout_doing,"DDT0::scheduleInitialize");
   Task* t = scinew Task("DDT0::initialize", this, &DDT0::initialize);
@@ -261,8 +269,7 @@ void DDT0::initialize(const ProcessorGroup*,
 //______________________________________________________________________
 //      
 void DDT0::scheduleComputeStableTimeStep(SchedulerP&,
-                                          const LevelP&,
-                                          const ModelInfo*)
+                                          const LevelP&)
 {
   // None necessary...
 }
@@ -270,15 +277,14 @@ void DDT0::scheduleComputeStableTimeStep(SchedulerP&,
 //______________________________________________________________________
 //     
 void DDT0::scheduleComputeModelSources(SchedulerP& sched,
-                                       const LevelP& level,
-                                       const ModelInfo* mi)
+                                       const LevelP& level)
 {
   if (level->hasFinerLevel()){
     return;    // only schedule on the finest level
   }
 
   Task* t = scinew Task("DDT0::computeModelSources", this, 
-                        &DDT0::computeModelSources, mi);
+                        &DDT0::computeModelSources);
   cout_doing << "DDT0::scheduleComputeModelSources "<<  endl;  
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gn  = Ghost::None;
@@ -297,7 +303,8 @@ void DDT0::scheduleComputeModelSources(SchedulerP& sched,
   //__________________________________
   // Requires
   //__________________________________
-  t->requires(Task::OldDW, mi->delT_Label,        level.get_rep());
+  t->requires(Task::OldDW, Ilb->timeStepLabel );
+  t->requires(Task::OldDW, Ilb->delTLabel,        level.get_rep());
   t->requires(Task::OldDW, Ilb->temp_CCLabel,     ice_matls, oms, gn);
   t->requires(Task::NewDW, Ilb->temp_CCLabel,     mpm_matls, oms, gn);
   t->requires(Task::NewDW, Ilb->vol_frac_CCLabel, all_matls, oms, gn);
@@ -310,7 +317,7 @@ void DDT0::scheduleComputeModelSources(SchedulerP& sched,
   // Products
   t->requires(Task::NewDW,  Ilb->rho_CCLabel,         prod_matl,   gn); 
   t->requires(Task::NewDW,  Ilb->press_equil_CCLabel, d_one_matl,  gn);
-  t->requires(Task::OldDW,  MIlb->NC_CCweightLabel,   d_one_matl,  gac, 1);
+  t->requires(Task::OldDW,  Mlb->NC_CCweightLabel,    d_one_matl,  gac, 1);
 
   //__________________________________
   // Reactants
@@ -342,10 +349,10 @@ void DDT0::scheduleComputeModelSources(SchedulerP& sched,
   //__________________________________
   // Modifies  
   //__________________________________
-  t->modifies(mi->modelMass_srcLabel);
-  t->modifies(mi->modelMom_srcLabel);
-  t->modifies(mi->modelEng_srcLabel);
-  t->modifies(mi->modelVol_srcLabel); 
+  t->modifies(Ilb->modelMass_srcLabel);
+  t->modifies(Ilb->modelMom_srcLabel);
+  t->modifies(Ilb->modelEng_srcLabel);
+  t->modifies(Ilb->modelVol_srcLabel); 
 
   sched->addTask(t, level->eachPatch(), d_mymatls);
 }
@@ -355,13 +362,16 @@ void DDT0::computeModelSources(const ProcessorGroup*,
                                 const PatchSubset* patches,
                                 const MaterialSubset*,
                                 DataWarehouse* old_dw,
-                                DataWarehouse* new_dw,
-                                const ModelInfo* mi)
+                                DataWarehouse* new_dw)
 {
+  timeStep_vartype timeStep;
+  old_dw->get(timeStep, Ilb->timeStepLabel );
+
+  bool isNotInitialTimeStep = (timeStep > 0);
 
   delt_vartype delT;
   const Level* level = getLevel(patches);
-  old_dw->get(delT, mi->delT_Label, level);
+  old_dw->get(delT, Ilb->delTLabel, level);
 
  
   int m0 = d_matl0->getDWIndex();
@@ -399,7 +409,7 @@ void DDT0::computeModelSources(const ProcessorGroup*,
  
     std::vector<constCCVariable<double> > vol_frac_CC(numAllMatls);
     std::vector<constCCVariable<double> > temp_CC(numAllMatls);
-	    
+            
     Vector dx = patch->dCell();
     double cell_vol = dx.x()*dx.y()*dx.z();
     Ghost::GhostType  gn  = Ghost::None;
@@ -411,7 +421,7 @@ void DDT0::computeModelSources(const ProcessorGroup*,
     new_dw->get(rctvel_CC,     MIlb->vel_CCLabel,     m0,patch,gn, 0);
     new_dw->get(rctRho,        Ilb->rho_CCLabel,      m0,patch,gn, 0);
     new_dw->get(rctSpvol,      Ilb->sp_vol_CCLabel,   m0,patch,gn, 0);
-    new_dw->get(rctMass_NC,    Mlb->gMassLabel,       m0,patch,gac,1);
+    new_dw->get(rctMass_NC,    MIlb->gMassLabel,      m0,patch,gac,1);
     new_dw->get(rctVolFrac,    Ilb->vol_frac_CCLabel, m0,patch,gn, 0);
     if(d_useCrackModel){
       old_dw->get(px,          Mlb->pXLabel,      pset);
@@ -425,7 +435,7 @@ void DDT0::computeModelSources(const ProcessorGroup*,
     //__________________________________
     //   Misc.
     new_dw->get(press_CC,         Ilb->press_equil_CCLabel,0,  patch,gn, 0);
-    old_dw->get(NC_CCweight,      MIlb->NC_CCweightLabel,  0,  patch,gac,1);   
+    old_dw->get(NC_CCweight,      Mlb->NC_CCweightLabel,  0,  patch,gac,1);   
     
     for(int m = 0; m < numAllMatls; m++) {
       Material* matl = m_sharedState->getMaterial(m);
@@ -441,15 +451,15 @@ void DDT0::computeModelSources(const ProcessorGroup*,
    
     //__________________________________
     //  What is computed
-    new_dw->getModifiable(mass_src_0,    mi->modelMass_srcLabel,  m0,patch);
-    new_dw->getModifiable(momentum_src_0,mi->modelMom_srcLabel,   m0,patch);
-    new_dw->getModifiable(energy_src_0,  mi->modelEng_srcLabel,   m0,patch);
-    new_dw->getModifiable(sp_vol_src_0,  mi->modelVol_srcLabel,   m0,patch);
+    new_dw->getModifiable(mass_src_0,    Ilb->modelMass_srcLabel,  m0,patch);
+    new_dw->getModifiable(momentum_src_0,Ilb->modelMom_srcLabel,   m0,patch);
+    new_dw->getModifiable(energy_src_0,  Ilb->modelEng_srcLabel,   m0,patch);
+    new_dw->getModifiable(sp_vol_src_0,  Ilb->modelVol_srcLabel,   m0,patch);
 
-    new_dw->getModifiable(mass_src_1,    mi->modelMass_srcLabel,  m1,patch);
-    new_dw->getModifiable(momentum_src_1,mi->modelMom_srcLabel,   m1,patch);
-    new_dw->getModifiable(energy_src_1,  mi->modelEng_srcLabel,   m1,patch);
-    new_dw->getModifiable(sp_vol_src_1,  mi->modelVol_srcLabel,   m1,patch);
+    new_dw->getModifiable(mass_src_1,    Ilb->modelMass_srcLabel,  m1,patch);
+    new_dw->getModifiable(momentum_src_1,Ilb->modelMom_srcLabel,   m1,patch);
+    new_dw->getModifiable(energy_src_1,  Ilb->modelEng_srcLabel,   m1,patch);
+    new_dw->getModifiable(sp_vol_src_1,  Ilb->modelVol_srcLabel,   m1,patch);
     
     new_dw->allocateAndPut(burning,    burningLabel,           m0, patch);  
     new_dw->allocateAndPut(detonating, detonatingLabel,        m0, patch);
@@ -630,10 +640,10 @@ void DDT0::computeModelSources(const ProcessorGroup*,
 
     //__________________________________
     //  set symetric BC
-    setBC(mass_src_0, "set_if_sym_BC",patch, m_sharedState, m0, new_dw);
-    setBC(mass_src_1, "set_if_sym_BC",patch, m_sharedState, m1, new_dw);
-    setBC(delF,       "set_if_sym_BC",patch, m_sharedState, m0, new_dw);  // I'm not sure you need these???? Todd
-    setBC(Fr,         "set_if_sym_BC",patch, m_sharedState, m0, new_dw);
+    setBC(mass_src_0, "set_if_sym_BC",patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
+    setBC(mass_src_1, "set_if_sym_BC",patch, m_sharedState, m1, new_dw, isNotInitialTimeStep);
+    setBC(delF,       "set_if_sym_BC",patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);  // I'm not sure you need these???? Todd
+    setBC(Fr,         "set_if_sym_BC",patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
   }
   //__________________________________
   //save total quantities
@@ -663,14 +673,13 @@ void DDT0::computeSpecificHeat(CCVariable<double>&,
 //______________________________________________________________________
 //
 void DDT0::scheduleErrorEstimate(const LevelP&,
-                                  SchedulerP&)
+                                 SchedulerP&)
 {
   // Not implemented yet
 }
 //__________________________________
 void DDT0::scheduleTestConservation(SchedulerP&,
-                                     const PatchSet*,                      
-                                     const ModelInfo*)                     
+                                    const PatchSet*)                     
 {
   // Not implemented yet
 }

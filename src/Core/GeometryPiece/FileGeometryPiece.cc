@@ -55,7 +55,7 @@ void FileGeometryPiece::checkFileType(std::ifstream & source, string& fileType, 
     // the file is ascii
     if( fileType != "text" ){
       std::ostringstream warn;
-      warn << "ERROR: opening MPM geometry file (" << file_name+")\n" 
+      warn << "ERROR: opening geometry file (" << file_name+")\n" 
            << "In the ups file you've specified that the file format is bin or " << fileType << "\n"
            << "However this is a text file.\n";
       throw ProblemSetupException(warn.str(),__FILE__, __LINE__);
@@ -64,7 +64,7 @@ void FileGeometryPiece::checkFileType(std::ifstream & source, string& fileType, 
     // the file is binary
     if( fileType != "bin" && fileType != "lsb" && fileType != "msb" ){
       std::ostringstream warn;
-      warn << "ERROR: opening MPM geometry file (" << file_name+")\n" 
+      warn << "ERROR: opening geometry file (" << file_name+")\n" 
            << "In the ups file you've specified that the file format is bin or " << fileType << "\n"
            << "However this is a binary file.  Please correct this inconsistency.\n";
       throw ProblemSetupException(warn.str(),__FILE__, __LINE__);
@@ -130,7 +130,7 @@ FileGeometryPiece::FileGeometryPiece( ProblemSpecP & ps )
     string file_name = numbered_str(d_file_name+".", 0);
     std::ifstream source(file_name.c_str());
     if (!source ){
-      throw ProblemSetupException("ERROR: opening MPM geometry file '"+file_name+"'\nFailed to find points file",
+      throw ProblemSetupException("ERROR: opening geometry file '"+file_name+"'\nFailed to find points file",
                                   __FILE__, __LINE__);
     }
 
@@ -145,7 +145,7 @@ FileGeometryPiece::FileGeometryPiece( ProblemSpecP & ps )
 
     std::ifstream source(d_file_name.c_str());
     if (!source ){
-      throw ProblemSetupException("ERROR: opening MPM geometry file '"+d_file_name+"'\nFailed to find points file",
+      throw ProblemSetupException("ERROR: opening geometry file '"+d_file_name+"'\nFailed to find points file",
                                   __FILE__, __LINE__);
     }
 

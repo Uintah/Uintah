@@ -117,6 +117,8 @@ NIGHTLYTESTS = [
    ("coal_channel_hi_vel"               , "Coal/coal_channel_hi_vel.ups"                            , 1   , "All"   , ["exactComparison"     , "no_cuda"]) , 
    ("1GW_RT"                            , "Coal/1GW_RT.ups"                                         , 2   , "All"   , ["exactComparison"     , "no_cuda"]) , 
    ("1GW_em_tc"                         , "Coal/1GW_em_tc.ups"                                      , 2   , "All"   , ["exactComparison"     , "no_cuda"]) , 
+   ("mass_energy_balance"               , "Coal/mass_energy_balance.ups"                            , 2   , "All"   , ["exactComparison"     , "no_cuda"]) , 
+   ("mass_energy_balance_Tfluid"        , "Coal/mass_energy_balance_Tfluid.ups"                     , 2   , "All"   , ["exactComparison"     , "no_cuda"]) , 
    ("coal_RadPropsPlanck"               , "Coal/coal_RadPropsPlanck.ups"                            , 1   , "All"   , ["exactComparison"     , "no_cuda"]) , 
    ("OFC4"                              , "Coal/OFC4.ups"                                           , 3   , "All"   , ["exactComparison"     ,"do_performance_test",  "no_cuda"   ]) ,
    ("OFC4c"                             , "Coal/OFC4.ups"                                           , 3   , "All"   , ["exactComparison"     , "no_cuda"]) ,
@@ -203,6 +205,8 @@ LOCALTESTS = [
    ("coal_channel_hi_vel"               , "Coal/coal_channel_hi_vel.ups"                            , 1   , "All"  , ["exactComparison"   , "no_cuda"]) , 
    ("1GW_RT"                            , "Coal/1GW_RT.ups"                                         , 2   , "All"  , ["exactComparison"   , "no_cuda"]) , 
    ("1GW_em_tc"                         , "Coal/1GW_em_tc.ups"                                      , 2   , "All"  , ["exactComparison"   , "no_cuda"]) , 
+   ("mass_energy_balance"               , "Coal/mass_energy_balance.ups"                            , 2   , "All"  , ["exactComparison"     , "no_cuda"]) , 
+   ("mass_energy_balance_Tfluid"        , "Coal/mass_energy_balance_Tfluid.ups"                     , 2   , "All"  , ["exactComparison"     , "no_cuda"]) , 
    ("OFC4_smith"                        , "Coal/OFC4_smith.ups"                                     , 3   , "All"  , ["exactComparison"   , "no_cuda"]) , 
    ("OFC_smith2016"                     , "Coal/OFC_smith2016.ups"                                  , 3   , "All"  , ["exactComparison"   , "no_cuda"]) ,
    ("OFC4_hybrid"                       , "Coal/OFC4_hybrid.ups"                                    , 3   , "All"  , ["exactComparison"   , "no_cuda"]) , 
@@ -236,6 +240,8 @@ COALTESTS = [
    ("OFC4"                              , "Coal/OFC4.ups"                        , 3   , "All"  , ["exactComparison"   ,  "no_cuda"]) ,
    ("coal_channel_hi_vel"               , "Coal/coal_channel_hi_vel.ups"         , 1   , "All"  , ["exactComparison"   ,  "no_cuda"]) , 
    ("1GW_RT"                            , "Coal/1GW_RT.ups"                      , 2   , "All" , ["exactComparison"    ,  "no_cuda"]) , 
+   ("mass_energy_balance"               , "Coal/mass_energy_balance.ups"         , 2   , "All"   , ["exactComparison"     , "no_cuda"]) , 
+   ("mass_energy_balance_Tfluid"        , "Coal/mass_energy_balance_Tfluid.ups"  , 2   , "All"   , ["exactComparison"     , "no_cuda"]) , 
    ("1GW_em_tc"                         , "Coal/1GW_em_tc.ups"                   , 2   , "All"  , ["exactComparison"     , "no_cuda"]) , 
    ("OFC4_smith"                        , "Coal/OFC4_smith.ups"                  , 3   , "All"  , ["exactComparison"   ,  "no_cuda"]) , 
    ("OFC_smith2016"                     , "Coal/OFC_smith2016.ups"               , 3   , "All"  , ["exactComparison"      , "no_cuda"]) ,
@@ -283,6 +289,9 @@ KOKKOSTESTS = [
    ("isotropic_kokkos_wale"             , "kokkos_solver_tests/Verification/periodicTurb/isotropic_kokkos_wale.ups"              , 1   , "All"   , ["exactComparison", "no_restart"]), 
    ("isotropic_kokkos_dynSmag_packed"   , "kokkos_solver_tests/Verification/periodicTurb/isotropic_kokkos_dynSmag_packed.ups"    , 8   , "All"   , ["exactComparison", "no_restart"]), 
    ("isotropic_kokkos_dynSmag_unpacked" , "kokkos_solver_tests/Verification/periodicTurb/isotropic_kokkos_dynSmag_unpacked.ups"  , 8   , "All"   , ["exactComparison", "no_restart"]), 
+   ("char_modelps"                       , "kokkos_solver_tests/Verification/particleModels/char_modelps.ups"                    , 8   , "All"   , ["exactComparison"]), 
+   ("dqmom_example_char"                 , "kokkos_solver_tests/Verification/particleModels/dqmom_example_char.ups"              , 8   , "All"   , ["exactComparison"]), 
+   ("dqmom_example"                      , "kokkos_solver_tests/dqmom_example.ups"                                               , 1   , "All"   , ["exactComparison"]), 
 ]
 
 CQMOMTESTS = [

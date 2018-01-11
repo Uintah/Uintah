@@ -6,7 +6,7 @@
  *
  * The MIT License
  *
- * Copyright (c) 2013-2017 The University of Utah
+ * Copyright (c) 2013-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -155,8 +155,7 @@ namespace Uintah {
   //------------------------------------------------------------------
   
   void ParticlesHelper::problem_setup(Uintah::ProblemSpecP uintahSpec,
-                                      Uintah::ProblemSpecP particleEqsSpec,
-                                      Uintah::SimulationStateP sharedState)
+                                      Uintah::ProblemSpecP particleEqsSpec)
   {
     using namespace Uintah;
     
@@ -178,7 +177,6 @@ namespace Uintah {
     destroyMe_.push_back(pIDLabel_);
 
     particleEqsSpec_ = particleEqsSpec;
-    sharedState_     = sharedState;
 
     //
     // set the position varlabels

@@ -27,7 +27,6 @@
 
 #include <CCA/Components/Application/ApplicationCommon.h>
 
-#include <CCA/Components/MPM/Core/MPMFlags.h>
 #include <CCA/Ports/DataWarehouseP.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/LevelP.h>
@@ -39,6 +38,9 @@
 namespace Uintah {
 
   class ProcessorGroup;
+
+  class MPMFlags;
+  class MPMLabel;
   
   class MPMCommon : public ApplicationCommon
   {
@@ -56,6 +58,8 @@ namespace Uintah {
     void scheduleUpdateStress_DamageErosionModels(SchedulerP        & sched,
                                                   const PatchSet    * patches,
                                                   const MaterialSet * matls );
+  protected:
+    MPMLabel* lb {nullptr};
   private:
     MPMFlags*             d_flags       = nullptr;
     

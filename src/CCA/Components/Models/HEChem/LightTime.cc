@@ -22,40 +22,52 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/ICE/BoundaryCond.h>
 #include <CCA/Components/Models/HEChem/LightTime.h>
+#include <CCA/Components/Models/HEChem/Common.h>
+
+#include <CCA/Components/ICE/Core/ICELabel.h>
+#include <CCA/Components/ICE/CustomBCs/BoundaryCond.h>
+#include <CCA/Components/MPM/Core/MPMLabel.h>
+#include <CCA/Components/MPM/Materials/MPMMaterial.h>
+#include <CCA/Components/MPMICE/Core/MPMICELabel.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
-#include <Core/Exceptions/ProblemSetupException.h>
-#include <CCA/Ports/Scheduler.h>
+
 #include <CCA/Ports/Regridder.h>
-#include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Grid/Variables/CellIterator.h>
-#include <Core/Grid/Variables/CCVariable.h>
-#include <Core/Grid/Variables/PerPatch.h>
+#include <CCA/Ports/Scheduler.h>
+
+#include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Material.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Labels/ICELabel.h>
+#include <Core/Exceptions/InvalidValue.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Util/DebugStream.h>
 
 #include <iostream>
-#include <Core/Util/DebugStream.h>
-#include <Core/Math/MiscMath.h>
 
 using namespace Uintah;
 using namespace std;
+
 //__________________________________
 //  setenv SCI_DEBUG "MODELS_NORMAL_COUT:+,MODELS_DOING_COUT:+"
 //  MODELS_DOING_COUT:   dumps when tasks are scheduled and performed
 static DebugStream cout_doing("MODELS_DOING_COUT", false);
 
 LightTime::LightTime(const ProcessorGroup* myworld,
-		     const SimulationStateP& sharedState,
-		     const ProblemSpecP& params)
+                     const SimulationStateP& sharedState,
+                     const ProblemSpecP& params)
   : ModelInterface(myworld, sharedState), d_params(params)
 {
   mymatls = 0;
-  Ilb  = scinew ICELabel();
+  Ilb = scinew ICELabel();
   //__________________________________
   //  diagnostic labels
   reactedFractionLabel= VarLabel::create("F",
@@ -96,7 +108,7 @@ void LightTime::outputProblemSpec(ProblemSpecP& ps)
 }
 //__________________________________
 void LightTime::problemSetup(GridP&, 
-                             ModelSetup*, const bool isRestart)
+                              const bool isRestart)
 {
   ProblemSpecP lt_ps = d_params->findBlock("LightTime");
   if (!lt_ps){
@@ -132,8 +144,7 @@ void LightTime::problemSetup(GridP&,
 //______________________________________________________________________
 //     
 void LightTime::scheduleInitialize(SchedulerP& sched,
-                               const LevelP& level,
-                               const ModelInfo*)
+                               const LevelP& level)
 {
   cout_doing << "LightTime::scheduleInitialize " << endl;
   Task* t = scinew Task("LightTime::initialize", this, &LightTime::initialize);
@@ -166,8 +177,7 @@ void LightTime::initialize(const ProcessorGroup*,
 //______________________________________________________________________
 //      
 void LightTime::scheduleComputeStableTimeStep(SchedulerP&,
-                                          const LevelP&,
-                                          const ModelInfo*)
+                                          const LevelP&)
 {
   // None necessary...
 }
@@ -175,18 +185,19 @@ void LightTime::scheduleComputeStableTimeStep(SchedulerP&,
 //______________________________________________________________________
 //     
 void LightTime::scheduleComputeModelSources(SchedulerP& sched,
-                                            const LevelP& level,
-                                            const ModelInfo* mi)
+                                            const LevelP& level)
 {
   Task* t = scinew Task("LightTime::computeModelSources", this, 
-                        &LightTime::computeModelSources, mi);
+                        &LightTime::computeModelSources);
   cout_doing << "LightTime::scheduleComputeModelSources "<<  endl;  
   
   Ghost::GhostType  gn  = Ghost::None;
   const MaterialSubset* react_matl = matl0->thisMaterial();
   const MaterialSubset* prod_matl  = matl1->thisMaterial();
   
-  t->requires( Task::OldDW, mi->delT_Label,        level.get_rep());
+  t->requires( Task::OldDW, Ilb->timeStepLabel );
+  t->requires( Task::OldDW, Ilb->simulationTimeLabel );
+  t->requires( Task::OldDW, Ilb->delTLabel,        level.get_rep());
   //__________________________________
   // Products
   t->requires(Task::NewDW,  Ilb->rho_CCLabel,      prod_matl, gn);
@@ -204,10 +215,10 @@ void LightTime::scheduleComputeModelSources(SchedulerP& sched,
   t->computes(reactedFractionLabel, react_matl);
   t->computes(delFLabel,            react_matl);
 
-  t->modifies(mi->modelMass_srcLabel);
-  t->modifies(mi->modelMom_srcLabel);
-  t->modifies(mi->modelEng_srcLabel);
-  t->modifies(mi->modelVol_srcLabel); 
+  t->modifies(Ilb->modelMass_srcLabel);
+  t->modifies(Ilb->modelMom_srcLabel);
+  t->modifies(Ilb->modelEng_srcLabel);
+  t->modifies(Ilb->modelVol_srcLabel); 
   sched->addTask(t, level->eachPatch(), mymatls);
 }
 
@@ -217,12 +228,21 @@ void LightTime::computeModelSources(const ProcessorGroup*,
                                     const PatchSubset* patches,
                                     const MaterialSubset*,
                                     DataWarehouse* old_dw,
-                                    DataWarehouse* new_dw,
-                                    const ModelInfo* mi)
+                                    DataWarehouse* new_dw)
 {
   const Level* level = getLevel(patches);
+
+  timeStep_vartype timeStep;
+  old_dw->get(timeStep, Ilb->timeStepLabel );
+
+  bool isNotInitialTimeStep = (timeStep > 0);
+
+  simTime_vartype simTimeVar;
+  old_dw->get(simTimeVar, Ilb->simulationTimeLabel);
+  double simTime = simTimeVar;
+
   delt_vartype delT;
-  old_dw->get(delT, mi->delT_Label,level);
+  old_dw->get(delT, Ilb->delTLabel,level);
 
   int m0 = matl0->getDWIndex();
   int m1 = matl1->getDWIndex();
@@ -237,15 +257,15 @@ void LightTime::computeModelSources(const ProcessorGroup*,
     CCVariable<double> energy_src_0, energy_src_1;
     CCVariable<double> sp_vol_src_0, sp_vol_src_1;
 
-    new_dw->getModifiable(mass_src_0,    mi->modelMass_srcLabel,  m0,patch);
-    new_dw->getModifiable(momentum_src_0,mi->modelMom_srcLabel,   m0,patch);
-    new_dw->getModifiable(energy_src_0,  mi->modelEng_srcLabel,   m0,patch);
-    new_dw->getModifiable(sp_vol_src_0,  mi->modelVol_srcLabel,   m0,patch);
+    new_dw->getModifiable(mass_src_0,    Ilb->modelMass_srcLabel,  m0,patch);
+    new_dw->getModifiable(momentum_src_0,Ilb->modelMom_srcLabel,   m0,patch);
+    new_dw->getModifiable(energy_src_0,  Ilb->modelEng_srcLabel,   m0,patch);
+    new_dw->getModifiable(sp_vol_src_0,  Ilb->modelVol_srcLabel,   m0,patch);
 
-    new_dw->getModifiable(mass_src_1,    mi->modelMass_srcLabel,  m1,patch);
-    new_dw->getModifiable(momentum_src_1,mi->modelMom_srcLabel,   m1,patch);
-    new_dw->getModifiable(energy_src_1,  mi->modelEng_srcLabel,   m1,patch);
-    new_dw->getModifiable(sp_vol_src_1,  mi->modelVol_srcLabel,   m1,patch);
+    new_dw->getModifiable(mass_src_1,    Ilb->modelMass_srcLabel,  m1,patch);
+    new_dw->getModifiable(momentum_src_1,Ilb->modelMom_srcLabel,   m1,patch);
+    new_dw->getModifiable(energy_src_1,  Ilb->modelEng_srcLabel,   m1,patch);
+    new_dw->getModifiable(sp_vol_src_1,  Ilb->modelVol_srcLabel,   m1,patch);
 
     constCCVariable<double> vol_frac_rct, vol_frac_prd;
     constCCVariable<double> cv_reactant;
@@ -277,7 +297,7 @@ void LightTime::computeModelSources(const ProcessorGroup*,
     new_dw->get(vol_frac_prd,  Ilb->vol_frac_CCLabel,  m1,patch,gn, 0);
 
     const Level* level = patch->getLevel();
-    double time = m_sharedState->getElapsedSimTime();
+    // double simTime = m_sharedState->getElapsedSimTime();
     double delta_L = 1.5*pow(cell_vol,1./3.)/d_D;
 //    double delta_L = 1.5*dx.x()/d_D;
     double A=d_direction.x();
@@ -310,8 +330,8 @@ void LightTime::computeModelSources(const ProcessorGroup*,
         VF_SUM = .99;
       }
       if((vol_frac_rct[c] + vol_frac_prd[c]) > VF_SUM){
-        if (time >= t_b && rctRho[c] > d_TINY_RHO){
-          Fr[c] = (time - t_b)/delta_L;
+        if (simTime >= t_b && rctRho[c] > d_TINY_RHO){
+          Fr[c] = (simTime - t_b)/delta_L;
 
           if(Fr[c] > .96) {
             Fr[c] = 1.0;
@@ -353,10 +373,10 @@ void LightTime::computeModelSources(const ProcessorGroup*,
 
     //__________________________________
     //  set symetric BC
-    setBC(mass_src_0, "set_if_sym_BC",patch, m_sharedState, m0, new_dw);
-    setBC(mass_src_1, "set_if_sym_BC",patch, m_sharedState, m1, new_dw);
-    setBC(delF,       "set_if_sym_BC",patch, m_sharedState, m0, new_dw);
-    setBC(Fr,         "set_if_sym_BC",patch, m_sharedState, m0, new_dw);
+    setBC(mass_src_0, "set_if_sym_BC",patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
+    setBC(mass_src_1, "set_if_sym_BC",patch, m_sharedState, m1, new_dw, isNotInitialTimeStep);
+    setBC(delF,       "set_if_sym_BC",patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
+    setBC(Fr,         "set_if_sym_BC",patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
   }
 }
 //______________________________________________________________________
@@ -452,16 +472,15 @@ void LightTime::scheduleModifyThermoTransportProperties(SchedulerP&,
   // do nothing      
 }
 void LightTime::computeSpecificHeat(CCVariable<double>&,
-                                const Patch*,   
-                                DataWarehouse*, 
-                                const int)      
+                                    const Patch*,
+                                    DataWarehouse*,
+                                    const int)
 {
   //do nothing
 }
 //__________________________________
 void LightTime::scheduleTestConservation(SchedulerP&,
-                                         const PatchSet*,                      
-                                         const ModelInfo*)                     
+                                         const PatchSet*)
 {
   // Not implemented yet
 }

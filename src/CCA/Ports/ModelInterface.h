@@ -37,7 +37,6 @@
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
-
 /**************************************
 
 CLASS
@@ -77,64 +76,6 @@ namespace Uintah {
   class ProcessorGroup;
   class VarLabel;
   
-  class ModelSetup {
-  public:
-    virtual void registerTransportedVariable(const MaterialSet* matlSet,
-					     const VarLabel* var,
-					     const VarLabel* src) = 0;
-                                        
-    virtual void registerAMR_RefluxVariable(const MaterialSet* matlSet,
-					    const VarLabel* var) = 0;
-
-    virtual ~ModelSetup() {};
-  };
-  class ModelInfo {
-  public:
-    ModelInfo(const VarLabel* delt, 
-	      const VarLabel* mass_source,
-	      const VarLabel* momentum_source, 
-	      const VarLabel* energy_source,
-	      const VarLabel* sp_vol_source,
-	      const VarLabel* density, 
-	      const VarLabel* velocity,
-	      const VarLabel* temperature, 
-	      const VarLabel* pressure,
-	      const VarLabel* specificVol,
-	      const VarLabel* specific_heat,
-	      const VarLabel* gamma)
-      : delT_Label(delt), 
-        modelMass_srcLabel(mass_source),
-        modelMom_srcLabel(momentum_source),
-        modelEng_srcLabel(energy_source),
-        modelVol_srcLabel(sp_vol_source),
-        rho_CCLabel(density), 
-        vel_CCLabel(velocity),
-        temp_CCLabel(temperature), 
-        press_CCLabel(pressure),
-        sp_vol_CCLabel(specificVol),
-        specific_heatLabel(specific_heat),
-        gammaLabel(gamma)
-    {
-    }
-    const VarLabel* delT_Label;
-
-    const VarLabel* modelMass_srcLabel;
-    const VarLabel* modelMom_srcLabel;
-    const VarLabel* modelEng_srcLabel;
-    const VarLabel* modelVol_srcLabel;
-    const VarLabel* rho_CCLabel;
-    const VarLabel* vel_CCLabel;
-    const VarLabel* temp_CCLabel;
-    const VarLabel* press_CCLabel;
-    const VarLabel* sp_vol_CCLabel;
-    const VarLabel* specific_heatLabel;
-    const VarLabel* gammaLabel;
-  private:
-    ModelInfo(const ModelInfo&);
-    ModelInfo& operator=(const ModelInfo&);
-  };  // class ModelInfo
-  
-  
   //________________________________________________
   class ModelInterface : public UintahParallelComponent {
   public:
@@ -149,24 +90,20 @@ namespace Uintah {
     virtual void getComponents();
     virtual void releaseComponents();
       
-    virtual void problemSetup(GridP& grid,
-			      ModelSetup* setup, const bool isRestart) = 0;
+    virtual void problemSetup(GridP& grid, const bool isRestart) = 0;
       
     virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
 
     virtual void scheduleInitialize(SchedulerP& scheduler,
-				    const LevelP& level,
-				    const ModelInfo*) = 0;
+				    const LevelP& level) = 0;
 
     virtual void restartInitialize() {}
       
     virtual void scheduleComputeStableTimeStep(SchedulerP& scheduler,
-					       const LevelP& level,
-					       const ModelInfo*) = 0;
+					       const LevelP& level) = 0;
       
     virtual void scheduleComputeModelSources(SchedulerP& scheduler,
-					     const LevelP& level,
-					     const ModelInfo*) = 0;
+					     const LevelP& level) = 0;
                                               
     virtual void scheduleModifyThermoTransportProperties(SchedulerP& scheduler,
 							 const LevelP& level,
@@ -181,8 +118,7 @@ namespace Uintah {
                                        SchedulerP& sched) = 0;
                                                
     virtual void scheduleTestConservation(SchedulerP&,
-					  const PatchSet* patches,
-					  const ModelInfo* mi) = 0;
+					  const PatchSet* patches) = 0;
                                            
     virtual void scheduleRefine(const PatchSet* patches,
 				SchedulerP& sched) {};
@@ -202,11 +138,11 @@ namespace Uintah {
     { return m_modelComputesThermoTransportProps; }
 
   protected:
-    Scheduler * m_scheduler{nullptr};
+    Scheduler * m_scheduler {nullptr};
     Regridder * m_regridder {nullptr};
-    Output    * m_output {nullptr};
+    Output    * m_output    {nullptr};
    
-    SimulationStateP m_sharedState{nullptr};
+    SimulationStateP m_sharedState {nullptr};
     
     bool m_AMR {false};
     bool m_dynamicRegridding {false};

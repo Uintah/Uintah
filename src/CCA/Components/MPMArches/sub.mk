@@ -40,22 +40,23 @@ SUBDIRS := $(SRCDIR)/fortran
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
 PSELIBS := \
-	CCA/Components/Application \
+	CCA/Components/Application      \
+	CCA/Components/Arches           \
+	CCA/Components/Arches/fortran   \
+	CCA/Components/MPM              \
+	CCA/Components/MPM/Core         \
+	CCA/Components/MPM/Materials    \
+	CCA/Components/OnTheFlyAnalysis \
 	CCA/Ports          \
 	Core/Grid          \
 	Core/Util          \
-	Core/Labels        \
 	Core/Disclosure    \
 	Core/Parallel      \
 	Core/ProblemSpec   \
 	Core/Exceptions    \
 	Core/Math          \
-	CCA/Components/MPM \
-	CCA/Components/Arches \
-	CCA/Components/Arches/fortran \
-	CCA/Components/OnTheFlyAnalysis \
-	Core/Exceptions \
-	Core/Util       \
+	Core/Exceptions    \
+	Core/Util          \
 	Core/Geometry   
 
 LIBS := $(XML2_LIBRARY) $(PETSC_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) \

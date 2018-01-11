@@ -439,6 +439,8 @@ PressureSolver::sched_setGuessForX(SchedulerP& sched,
                           &PressureSolver::setGuessForX,
                           timelabels, extraProjection);
 
+  tsk->requires( Task::OldDW, d_lab->d_timeStepLabel );
+
   Ghost::GhostType  gn = Ghost::None;
 
   if (!extraProjection){
@@ -511,13 +513,16 @@ PressureSolver::setGuessForX ( const ProcessorGroup* pg,
   //__________________________________
   // set outputfile name
   string desc  = timelabels->integrator_step_name;
-  int timestep = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
+
+  // int timeStep = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
+  timeStep_vartype timeStep;
+  old_dw->get( timeStep, d_lab->d_timeStepLabel );
+
   d_iteration ++;
 
   ostringstream fname;
-  fname << "." << desc.c_str() << "." << timestep << "." << d_iteration;
+  fname << "." << desc.c_str() << "." << timeStep << "." << d_iteration;
   d_hypreSolver_parameters->setOutputFileName(fname.str());
-
 }
 
 

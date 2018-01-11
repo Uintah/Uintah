@@ -59,7 +59,7 @@ Source::~Source()
 //****************************************************************************
 // Problem Setup
 //****************************************************************************
-void 
+void
 Source::problemSetup(const ProblemSpecP& params)
 {
   ProblemSpecP params_non_constant = params;
@@ -85,47 +85,47 @@ Source::problemSetup(const ProblemSpecP& params)
     throw InvalidValue("current MMS "
                        "not supported: " + d_mms, __FILE__, __LINE__);
 }
- 
+
 
 //****************************************************************************
 // Velocity source calculation
 //****************************************************************************
-void 
+void
 Source::calculateVelocitySource(const Patch* patch,
                                 double delta_t,
                                 CellInformation* cellinfo,
                                 ArchesVariables* vars,
                                 ArchesConstVariables* constvars)
 {
-  
+
   //get index component of gravity
   Vector gravity = d_physicalConsts->getGravity();
   double grav;
-  
+
   // ignore faces that lie on the edge of the computational domain
   // in the principal direction
   IntVector noNeighborsLow = patch->noNeighborsLow();
   IntVector noNeighborsHigh = patch->noNeighborsHigh();
-  
+
   //__________________________________
-  //      X DIR  
-  // computes remaining diffusion term and also computes 
+  //      X DIR
+  // computes remaining diffusion term and also computes
   // source due to gravity...need to pass ipref, jpref and kpref
   grav = gravity.x();
-  
+
   IntVector oci(-1,0,0);  //one cell inward.  Only offset at the edge of the computational domain.
   IntVector idxLoU = patch->getSFCXLowIndex() - noNeighborsLow * oci;
   IntVector idxHiU = patch->getSFCXHighIndex()+ noNeighborsHigh * oci - IntVector(1,1,1);
 
   vars->uVelLinearSrc.initialize(0.0);
   vars->uVelNonlinearSrc.initialize(0.0);
-  
+
   fort_uvelsrc(idxLoU, idxHiU, constvars->uVelocity, constvars->old_uVelocity,
                vars->uVelNonlinearSrc, vars->uVelLinearSrc,
                constvars->vVelocity, constvars->wVelocity, constvars->density,
                constvars->viscosity, constvars->old_density,
                constvars->denRefArray,
-               grav, delta_t,  cellinfo->ceeu, cellinfo->cweu, 
+               grav, delta_t,  cellinfo->ceeu, cellinfo->cweu,
                cellinfo->cwwu, cellinfo->cnn, cellinfo->csn, cellinfo->css,
                cellinfo->ctt, cellinfo->cbt, cellinfo->cbb, cellinfo->sewu,
                cellinfo->sew, cellinfo->sns, cellinfo->stb, cellinfo->dxpw,
@@ -134,16 +134,16 @@ Source::calculateVelocitySource(const Patch* patch,
 
 
   //__________________________________
-  //      Y DIR  
-  // computes remaining diffusion term and also computes 
+  //      Y DIR
+  // computes remaining diffusion term and also computes
   // source due to gravity...need to pass ipref, jpref and kpref
   grav = gravity.y();
-  
+
   oci = IntVector(0,-1,0);  // one cell inward.  Only offset at the edge of the computational domain.
   IntVector idxLoV = patch->getSFCYLowIndex() - noNeighborsLow * oci;
   IntVector idxHiV = patch->getSFCYHighIndex()+ noNeighborsHigh * oci - IntVector(1,1,1);
 
-  
+
   fort_vvelsrc(idxLoV, idxHiV, constvars->vVelocity, constvars->old_vVelocity,
                vars->vVelNonlinearSrc, vars->vVelLinearSrc,
                constvars->uVelocity, constvars->wVelocity, constvars->density,
@@ -156,20 +156,20 @@ Source::calculateVelocitySource(const Patch* patch,
                cellinfo->sew, cellinfo->snsv, cellinfo->sns, cellinfo->stb,
                cellinfo->dyps, cellinfo->fac1v, cellinfo->fac2v,
                cellinfo->fac3v, cellinfo->fac4v, cellinfo->jnsdv,
-               cellinfo->jssdv); 
+               cellinfo->jssdv);
 
-        
+
   //__________________________________
   //      Z DIR
-  // computes remaining diffusion term and also computes 
+  // computes remaining diffusion term and also computes
   // source due to gravity...need to pass ipref, jpref and kpref
   grav = gravity.z();
-  
-  oci = IntVector(0,0,-1); //one cell inward.  Only offset at the edge of the computational domain. 
+
+  oci = IntVector(0,0,-1); //one cell inward.  Only offset at the edge of the computational domain.
   IntVector idxLoW = patch->getSFCZLowIndex() - noNeighborsLow * oci;
   IntVector idxHiW = patch->getSFCZHighIndex()+ noNeighborsHigh * oci - IntVector(1,1,1);
 
-  
+
   fort_wvelsrc(idxLoW, idxHiW, constvars->wVelocity, constvars->old_wVelocity,
                vars->wVelNonlinearSrc, vars->wVelLinearSrc,
                constvars->uVelocity, constvars->vVelocity, constvars->density,
@@ -182,14 +182,14 @@ Source::calculateVelocitySource(const Patch* patch,
                cellinfo->sew, cellinfo->sns, cellinfo->stbw,
                cellinfo->stb, cellinfo->dzpb, cellinfo->fac1w,
                cellinfo->fac2w, cellinfo->fac3w, cellinfo->fac4w,
-               cellinfo->ktsdw, cellinfo->kbsdw); 
+               cellinfo->ktsdw, cellinfo->kbsdw);
 
 }
 
 //****************************************************************************
 // Pressure source calculation
 //****************************************************************************
-void 
+void
 Source::calculatePressureSourcePred(const ProcessorGroup* ,
                                     const Patch* patch,
                                     double delta_t,
@@ -200,10 +200,10 @@ Source::calculatePressureSourcePred(const ProcessorGroup* ,
   IntVector idxLo = patch->getFortranCellLowIndex();
   IntVector idxHi = patch->getFortranCellHighIndex();
 
-  Vector DX = patch->dCell(); 
+  Vector DX = patch->dCell();
   double dx = DX.x();
-  double dy = DX.y(); 
-  double dz = DX.z(); 
+  double dy = DX.y();
+  double dz = DX.z();
 
 #ifdef divergenceconstraint
   fort_pressrcpred_var(idxLo, idxHi, vars->pressNonlinearSrc,
@@ -216,87 +216,88 @@ Source::calculatePressureSourcePred(const ProcessorGroup* ,
                    constvars->vVelRhoHat, constvars->wVelRhoHat, delta_t,
                    dx, dy, dz);
 #endif
- 
+
   for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
     IntVector c = *iter;
     vars->pressNonlinearSrc[c] -= constvars->filterdrhodt[c]/delta_t;
   }
+
 }
 
 
 //****************************************************************************
-// Compute the mass source term due to continuity and utilization of the 
+// Compute the mass source term due to continuity and utilization of the
 // conservative form of the pde
 //****************************************************************************
 template<class T> void
-Source::compute_massSource(CellIterator iter, IntVector D, 
-                           constCCVariable<double> eps, 
+Source::compute_massSource(CellIterator iter, IntVector D,
+                           constCCVariable<double> eps,
                            const T& vel,
                            StencilMatrix<T>& velCoeff,
                            T& velNonLinearSrc,
-                           StencilMatrix<T>& velConvectCoeff) 
+                           StencilMatrix<T>& velConvectCoeff)
 {
   //__________________________________
   // examine each element of the matrix
-  for(; !iter.done();iter++) { 
+  for(; !iter.done();iter++) {
     IntVector c = *iter;
-    
+
     double tiny=1e-20;
-    
+
     for(int e = 1; e <= 6; e++){          // N S E W T B
       if( fabs(velCoeff[e][c]) < tiny ){ //  1 2 3 4 5 6
         velConvectCoeff[e][c] = 0.0;
       }
     }
   }
-  
+
   //__________________________________
   // mass src term
-  for(iter.reset(); !iter.done();iter++) { 
+  for(iter.reset(); !iter.done();iter++) {
     IntVector c = *iter;
     double difference = velConvectCoeff[Arches::AN][c] - velConvectCoeff[Arches::AS][c]
                       + velConvectCoeff[Arches::AE][c] - velConvectCoeff[Arches::AW][c]
                       + velConvectCoeff[Arches::AT][c] - velConvectCoeff[Arches::AB][c];
- 
+
     velNonLinearSrc[c] = velNonLinearSrc[c] - difference * vel[c] * eps[c] * eps[c+D];
-    
+
   }
 }
 
 //****************************************************************************
-// 
+//
 //****************************************************************************
-void 
-Source::modifyVelMassSource(const Patch* patch, constCCVariable<double> volFraction, 
+void
+Source::modifyVelMassSource(const Patch* patch, constCCVariable<double> volFraction,
                             ArchesVariables* vars,
                             ArchesConstVariables* constvars)
 {
   //__________________________________
   //    X dir
   CellIterator iter = patch->getSFCXIterator();
-  IntVector D = IntVector(-1,0,0); 
-  compute_massSource<SFCXVariable<double> >(iter, D, volFraction, 
-                                            constvars->uVelocity, 
+  IntVector D = IntVector(-1,0,0);
+  compute_massSource<SFCXVariable<double> >(iter, D, volFraction,
+                                            constvars->uVelocity,
                                             vars->uVelocityCoeff,
-                                            vars->uVelNonlinearSrc, 
+                                            vars->uVelNonlinearSrc,
                                             vars->uVelocityConvectCoeff);
   //__________________________________
   //    Y dir
   iter = patch->getSFCYIterator();
-  D = IntVector(0,-1,0); 
-  compute_massSource<SFCYVariable<double> >(iter, D, volFraction, 
-                                            constvars->vVelocity, 
+  D = IntVector(0,-1,0);
+  compute_massSource<SFCYVariable<double> >(iter, D, volFraction,
+                                            constvars->vVelocity,
                                             vars->vVelocityCoeff,
-                                            vars->vVelNonlinearSrc, 
-                                            vars->vVelocityConvectCoeff);  
+                                            vars->vVelNonlinearSrc,
+                                            vars->vVelocityConvectCoeff);
   //__________________________________
   //    Z dir
   iter = patch->getSFCZIterator();
-  D = IntVector(0,0,-1); 
-  compute_massSource<SFCZVariable<double> >(iter, D, volFraction, 
-                                            constvars->wVelocity, 
+  D = IntVector(0,0,-1);
+  compute_massSource<SFCZVariable<double> >(iter, D, volFraction,
+                                            constvars->wVelocity,
                                             vars->wVelocityCoeff,
-                                            vars->wVelNonlinearSrc, 
+                                            vars->wVelNonlinearSrc,
                                             vars->wVelocityConvectCoeff);
 }
 
@@ -304,7 +305,7 @@ Source::modifyVelMassSource(const Patch* patch, constCCVariable<double> volFract
 //****************************************************************************
 // Add the momentum source from continuous solid-gas momentum exchange
 //****************************************************************************
-void 
+void
 Source::computemmMomentumSource(const ProcessorGroup*,
                                 const Patch* patch,
                                 CellInformation*,
@@ -313,16 +314,16 @@ Source::computemmMomentumSource(const ProcessorGroup*,
 {
   //__________________________________
   //    X dir
-  CellIterator iter = patch->getSFCXIterator(); 
-  for(; !iter.done();iter++) { 
+  CellIterator iter = patch->getSFCXIterator();
+  for(; !iter.done();iter++) {
     IntVector c = *iter;
     vars->uVelNonlinearSrc[c]  += constvars->mmuVelSu[c];
     vars->uVelLinearSrc[c]     += constvars->mmuVelSp[c];
   }
   //__________________________________
   //    Y dir
-  iter = patch->getSFCYIterator(); 
-  for(; !iter.done();iter++) { 
+  iter = patch->getSFCYIterator();
+  for(; !iter.done();iter++) {
     IntVector c = *iter;
     vars->vVelNonlinearSrc[c]  += constvars->mmvVelSu[c];
     vars->vVelLinearSrc[c]     += constvars->mmvVelSp[c];
@@ -330,8 +331,8 @@ Source::computemmMomentumSource(const ProcessorGroup*,
 
   //__________________________________
   //    Z dir
-  iter = patch->getSFCZIterator(); 
-  for(; !iter.done();iter++) { 
+  iter = patch->getSFCZIterator();
+  for(; !iter.done();iter++) {
     IntVector c = *iter;
     vars->wVelNonlinearSrc[c]  += constvars->mmwVelSu[c];
     vars->wVelLinearSrc[c]     += constvars->mmwVelSp[c];

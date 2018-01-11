@@ -23,7 +23,7 @@
  */
 
 #include <CCA/Components/MPM/HeatConduction/ImplicitHeatConduction.h>
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Components/MPM/Materials/MPMMaterial.h>
 #include <CCA/Components/MPM/Solver/PetscSolver.h>
 #include <CCA/Components/MPM/Solver/SimpleSolver.h>
 #include <CCA/Components/MPM/Core/MPMFlags.h>
@@ -31,7 +31,7 @@
 #include <Core/Grid/Variables/NodeIterator.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Labels/MPMLabel.h>
+#include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <Core/Grid/Task.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/LinearInterpolator.h>

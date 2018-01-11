@@ -25,7 +25,6 @@
 #ifndef UINTAH_CCA_COMPONENTS_FVM_FVMBOUNDCOND_H
 #define UINTAH_CCA_COMPONENTS_FVM_FVMBOUNDCOND_H
 
-#include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/Stencil7.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
@@ -33,6 +32,9 @@
 #include <Core/Grid/Variables/SFCZVariable.h>
 
 namespace Uintah{
+
+  class Patch;
+  
   class FVMBoundCond{
     public:
       FVMBoundCond();
@@ -58,7 +60,6 @@ namespace Uintah{
       void setG1BoundaryConditions(const Patch* patch, int dwi,
                                    CCVariable<Stencil7>& A,
                                    CCVariable<double>& rhs);
-
   };
 }
 #endif

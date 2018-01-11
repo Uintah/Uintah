@@ -23,10 +23,12 @@
  */
 
 #include <CCA/Components/FVM/FVMBoundCond.h>
+
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BCUtils.h>
+#include <Core/Grid/Patch.h>
+
 #include <vector>
-#include <iostream>
 #include <string>
 
 using namespace Uintah;

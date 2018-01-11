@@ -23,13 +23,13 @@
  */
 
 #include <CCA/Components/OnTheFlyAnalysis/vorticity.h>
-#include <CCA/Components/ICE/ICEMaterial.h>
+#include <CCA/Components/ICE/Materials/ICEMaterial.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/CellIterator.h>
-#include <Core/Labels/ICELabel.h>
+#include <CCA/Components/ICE/Core/ICELabel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 
 #include <Core/Exceptions/InternalError.h>

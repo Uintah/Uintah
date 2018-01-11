@@ -95,6 +95,8 @@ namespace Uintah {
       MaterialSubset* d_symTensorMatl;
 
       // Delta t label
+      const VarLabel* d_timeStepLabel;
+      const VarLabel* d_simulationTimeLabel;
       const VarLabel* d_delTLabel;
 
       // Cell Information

@@ -84,6 +84,12 @@ statistics::statistics(ProblemSpecP    & module_spec,
   : Module(module_spec, sharedState, dataArchiver, dataArchive)
 {
   d_prob_spec = module_spec;
+
+  // Time Step
+  m_timeStepLabel = VarLabel::create(timeStep_name, timeStep_vartype::getTypeDescription());
+
+  // Simulation Time
+  m_simulationTimeLabel = VarLabel::create(simTime_name, simTime_vartype::getTypeDescription());
 }
 
 //______________________________________________________________________
@@ -108,6 +114,9 @@ statistics::~statistics()
       VarLabel::destroy( Q.Qsum4_Label );
     }
   }
+
+  VarLabel::destroy(m_timeStepLabel);
+  VarLabel::destroy(m_simulationTimeLabel);
 }
 
 //______________________________________________________________________
@@ -283,6 +292,9 @@ void statistics::scheduleDoAnalysis(SchedulerP   & sched,
   Task* t = scinew Task("statistics::doAnalysis",
                    this,&statistics::doAnalysis);
 
+  t->requires( Task::OldDW, m_timeStepLabel);
+  t->requires( Task::OldDW, m_simulationTimeLabel);
+
   Ghost::GhostType  gn  = Ghost::None;
 
   for ( unsigned int i =0 ; i < d_Qstats.size(); i++ ) {
@@ -367,9 +379,12 @@ void statistics::computeStatsWrapper( DataWarehouse* old_dw,
                                       const Patch*    patch,
                                       Qstats& Q)
 {
-  double now = d_sharedState->getElapsedSimTime();
+//   double simTime = d_sharedState->getElapsedSimTime();
 
-  if(now < d_startTime || now > d_stopTime){
+  simTime_vartype simTime;
+  old_dw->get( simTime, m_simulationTimeLabel );
+
+  if(simTime < d_startTime || simTime > d_stopTime){
     //proc0cout << " IGNORING------------DataAnalysis: Statistics" << endl;
     allocateAndZeroStats<T>( new_dw, patch, Q);
     allocateAndZeroSums<T>(  new_dw, patch, Q);
@@ -390,6 +405,11 @@ void statistics::computeStats( DataWarehouse* old_dw,
                                const Patch*    patch,
                                Qstats& Q)
 {
+  // int timeStep = m_sharedState->getCurrentTopLevelTimeStep();
+  
+  timeStep_vartype timeStep;
+  old_dw->get( timeStep, m_timeStepLabel );
+
   static proc0patch0cout mesg( d_Qstats.size() );
   ostringstream msg;
   msg <<"    statistics::computeStats( "<< Q.Q_Label->getName() << " )\n";
@@ -417,13 +437,11 @@ void statistics::computeStats( DataWarehouse* old_dw,
   new_dw->allocateAndPut( Qmean,     Q.Qmean_Label,     matl, patch );
   new_dw->allocateAndPut( Qvariance, Q.Qvariance_Label, matl, patch );
 
-  int ts = d_sharedState->getCurrentTopLevelTimeStep();
-
-  Q.setStart(ts);
+  Q.setStart(timeStep);
   int Q_ts = Q.getStart();
-  int timestep = ts - Q_ts + 1;
+  int ts = timeStep - Q_ts + 1;
 
-  T nTimesteps(timestep);
+  T nTimesteps(ts);
 
   //__________________________________
   //  Lower order stats  1st and 2nd
@@ -444,8 +462,9 @@ void statistics::computeStats( DataWarehouse* old_dw,
   //  debugging
   if ( d_monitorCell != IntVector(-9,-9,-9) && patch->containsCell (d_monitorCell) ){
     IntVector c = d_monitorCell;
-    cout << "  stats:  " << c <<  setw(10)<< Q.Q_Label->getName() << " timestep: " << timestep
-         <<"\t topLevelTimestep " <<  d_sharedState->getCurrentTopLevelTimeStep()
+    cout << "  stats:  " << c <<  setw(10) << Q.Q_Label->getName()
+	 << " time step: " << ts
+         <<"\t time step " <<  timeStep
          << " d_startTime: " << d_startTime << "\n"
          <<"\t Q_var: " << Qvar[c]
          <<"\t Qsum: "  << Qsum[c]

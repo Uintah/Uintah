@@ -23,9 +23,9 @@
  */
 #include <CCA/Components/Models/SolidReactionModel/SolidReactionModel.h>
 
-#include <CCA/Components/ICE/ICEMaterial.h>
-#include <CCA/Components/ICE/BoundaryCond.h>
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Components/ICE/CustomBCs/BoundaryCond.h>
+#include <CCA/Components/ICE/Materials/ICEMaterial.h>
+#include <CCA/Components/MPM/Materials/MPMMaterial.h>
 
 #include <CCA/Ports/Output.h>
 #include <CCA/Ports/Scheduler.h>
@@ -37,7 +37,7 @@
 #include <Core/Grid/Material.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Labels/ICELabel.h>
+#include <CCA/Components/ICE/Core/ICELabel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Util/DebugStream.h>
 
@@ -71,7 +71,7 @@ SolidReactionModel::SolidReactionModel(const ProcessorGroup* myworld,
     d_params(params), d_prob_spec(prob_spec)
 {
     mymatls = 0;
-    Ilb  = scinew ICELabel();
+    Ilb = scinew ICELabel();
     d_saveConservedVars = scinew saveConservedVars(); 
 
     // Labels
@@ -117,7 +117,7 @@ void SolidReactionModel::outputProblemSpec(ProblemSpecP& ps)
 }
 
 void SolidReactionModel::problemSetup(GridP& grid,
-                                      ModelSetup* setup, const bool isRestart)
+                                       const bool isRestart)
 {  
     // Get base includes
     d_params->require("fromMaterial",fromMaterial);
@@ -192,26 +192,23 @@ void SolidReactionModel::problemSetup(GridP& grid,
 }
 
 void SolidReactionModel::scheduleInitialize(SchedulerP&,
-                                            const LevelP& level,
-                                            const ModelInfo*)
+                                            const LevelP& level)
 {
    // None necessary... 
 }
 
 
 void SolidReactionModel::scheduleComputeStableTimeStep(SchedulerP& sched,
-                                                       const LevelP& level,
-                                                       const ModelInfo*)
+                                                       const LevelP& level)
 {
    // None necessary... 
 }
 
 void SolidReactionModel::scheduleComputeModelSources(SchedulerP& sched,
-                                                     const LevelP& level,
-                                                     const ModelInfo* mi)
+                                                     const LevelP& level)
 {
   Task* t = scinew Task("SolidReactionModel::computeModelSources", this,
-                        &SolidReactionModel::computeModelSources, mi);
+                        &SolidReactionModel::computeModelSources);
   cout_doing << "SolidReactionModel::scheduleComputeModelSources "<<  endl;
 
   Ghost::GhostType  gn  = Ghost::None;
@@ -222,7 +219,8 @@ void SolidReactionModel::scheduleComputeModelSources(SchedulerP& sched,
   one_matl->addReference();
   MaterialSubset* press_matl   = one_matl;
 
-  t->requires(Task::OldDW, mi->delT_Label,         level.get_rep());
+  t->requires(Task::OldDW, Ilb->timeStepLabel);
+  t->requires(Task::OldDW, Ilb->delTLabel,         level.get_rep());
   //__________________________________
   // Products
   t->requires(Task::NewDW,  Ilb->rho_CCLabel,      prod_matl, gn);
@@ -239,10 +237,10 @@ void SolidReactionModel::scheduleComputeModelSources(SchedulerP& sched,
   t->computes(reactedFractionLabel, react_matl);
   t->computes(delFLabel,            react_matl);
 
-  t->modifies(mi->modelMass_srcLabel);
-  t->modifies(mi->modelMom_srcLabel);
-  t->modifies(mi->modelEng_srcLabel);
-  t->modifies(mi->modelVol_srcLabel);
+  t->modifies(Ilb->modelMass_srcLabel);
+  t->modifies(Ilb->modelMom_srcLabel);
+  t->modifies(Ilb->modelEng_srcLabel);
+  t->modifies(Ilb->modelVol_srcLabel);
 
   if(d_saveConservedVars->mass ){
     t->computes(SolidReactionModel::totalMassBurnedLabel);
@@ -261,12 +259,16 @@ void SolidReactionModel::computeModelSources(const ProcessorGroup*,
                                              const PatchSubset* patches,
                                              const MaterialSubset* matls,
                                              DataWarehouse* old_dw,
-                                             DataWarehouse* new_dw,
-                                             const ModelInfo* mi)
+                                             DataWarehouse* new_dw)
 {
+  timeStep_vartype timeStep;
+  old_dw->get(timeStep, Ilb->timeStepLabel );
+
+  bool isNotInitialTimeStep = (timeStep > 0);
+
     delt_vartype delT;
     const Level* level = getLevel(patches);
-    old_dw->get(delT, mi->delT_Label, level);
+    old_dw->get(delT, Ilb->delTLabel, level);
 
     int m0 = reactant->getDWIndex(); /* reactant material */
     int m1 = product->getDWIndex();  /* product material */
@@ -283,15 +285,15 @@ void SolidReactionModel::computeModelSources(const ProcessorGroup*,
         CCVariable<double> energy_src_0, energy_src_1;
         CCVariable<double> sp_vol_src_0, sp_vol_src_1;
 
-        new_dw->getModifiable(mass_src_0,    mi->modelMass_srcLabel,  m0,patch);
-        new_dw->getModifiable(momentum_src_0,mi->modelMom_srcLabel,   m0,patch);
-        new_dw->getModifiable(energy_src_0,  mi->modelEng_srcLabel,   m0,patch);
-        new_dw->getModifiable(sp_vol_src_0,  mi->modelVol_srcLabel,   m0,patch);
+        new_dw->getModifiable(mass_src_0,    Ilb->modelMass_srcLabel,  m0,patch);
+        new_dw->getModifiable(momentum_src_0,Ilb->modelMom_srcLabel,   m0,patch);
+        new_dw->getModifiable(energy_src_0,  Ilb->modelEng_srcLabel,   m0,patch);
+        new_dw->getModifiable(sp_vol_src_0,  Ilb->modelVol_srcLabel,   m0,patch);
 
-        new_dw->getModifiable(mass_src_1,    mi->modelMass_srcLabel,  m1,patch);
-        new_dw->getModifiable(momentum_src_1,mi->modelMom_srcLabel,   m1,patch);
-        new_dw->getModifiable(energy_src_1,  mi->modelEng_srcLabel,   m1,patch);
-        new_dw->getModifiable(sp_vol_src_1,  mi->modelVol_srcLabel,   m1,patch);
+        new_dw->getModifiable(mass_src_1,    Ilb->modelMass_srcLabel,  m1,patch);
+        new_dw->getModifiable(momentum_src_1,Ilb->modelMom_srcLabel,   m1,patch);
+        new_dw->getModifiable(energy_src_1,  Ilb->modelEng_srcLabel,   m1,patch);
+        new_dw->getModifiable(sp_vol_src_1,  Ilb->modelVol_srcLabel,   m1,patch);
 
         constCCVariable<double> press_CC, cv_reactant,rctVolFrac;
         constCCVariable<double> rctTemp,rctRho,rctSpvol,prodRho;
@@ -369,10 +371,10 @@ void SolidReactionModel::computeModelSources(const ProcessorGroup*,
 
         //__________________________________
         //  set symetric BC
-        setBC(mass_src_0, "set_if_sym_BC",patch, m_sharedState, m0, new_dw);
-        setBC(mass_src_1, "set_if_sym_BC",patch, m_sharedState, m1, new_dw);
-        setBC(delF,       "set_if_sym_BC",patch, m_sharedState, m0, new_dw);
-        setBC(Fr,         "set_if_sym_BC",patch, m_sharedState, m0, new_dw);
+        setBC(mass_src_0, "set_if_sym_BC",patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
+        setBC(mass_src_1, "set_if_sym_BC",patch, m_sharedState, m1, new_dw, isNotInitialTimeStep);
+        setBC(delF,       "set_if_sym_BC",patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
+        setBC(Fr,         "set_if_sym_BC",patch, m_sharedState, m0, new_dw, isNotInitialTimeStep);
     }
     //__________________________________
     //save total quantities
@@ -408,8 +410,7 @@ void SolidReactionModel::scheduleErrorEstimate(const LevelP& coarseLevel,
 }
 
 void SolidReactionModel::scheduleTestConservation(SchedulerP&,
-                                                  const PatchSet* patches,
-                                                  const ModelInfo* mi)
+                                                  const PatchSet* patches)
 {
     // Not implemented yet   
 }

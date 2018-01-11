@@ -23,10 +23,10 @@
  */
 
 #include <CCA/Components/MPM/ThermalContact/NullThermalContact.h>
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Components/MPM/Materials/MPMMaterial.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Task.h>
-#include <Core/Labels/MPMLabel.h>
+#include <CCA/Components/MPM/Core/MPMLabel.h>
 
 using namespace Uintah;
 

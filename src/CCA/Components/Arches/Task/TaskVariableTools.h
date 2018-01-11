@@ -22,6 +22,7 @@ namespace Uintah{
      *         pass into the task exe. **/
     struct SchedToTaskInfo{
       int time_substep{99};
+      int timeStep{0};
       double time{0.0};
       double dt{0.};
       bool packed_tasks{false};
@@ -49,6 +50,9 @@ namespace Uintah{
 
         /** @brief return the dt **/
         inline const double get_dt(){ return _tsk_info.dt; };
+        
+        /** @brief return the time step **/
+        inline const int get_timeStep(){ return _tsk_info.timeStep; };
         
         /** @brief return the time **/
         inline const double get_time(){ return _tsk_info.time; };

@@ -23,6 +23,8 @@
  */
 
 #include <sci_defs/hypre_defs.h>
+
+#include <CCA/Components/Solvers/AMR/AMRSolver.h>
 #include <CCA/Components/Solvers/SolverFactory.h>
 #include <CCA/Components/Solvers/CGSolver.h>
 #include <CCA/Components/Solvers/DirectSolve.h>
@@ -31,9 +33,9 @@
 #  include <CCA/Components/Solvers/HypreSolver.h>
 #endif
 
-#include <CCA/Components/Solvers/AMR/AMRSolver.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Exceptions/ProblemSetupException.h>
+
 #include <iostream>
 
 using namespace Uintah;
@@ -66,7 +68,7 @@ SolverInterface* SolverFactory::create(       ProblemSpecP   & ps,
     solver = scinew HypreSolver2(world);
 #else
     std::ostringstream msg;
-    msg << "Hypre solver not available, Hypre was not configured.\n";
+    msg << "\nERROR<Solver>: Hypre solver not available, Hypre was not configured.\n";
     throw ProblemSetupException( msg.str(), __FILE__, __LINE__ );
 #endif
   }
@@ -75,13 +77,13 @@ SolverInterface* SolverFactory::create(       ProblemSpecP   & ps,
     solver = scinew AMRSolver(world);
 #else
     std::ostringstream msg;
-    msg << "Hypre 1.9.0b solver not available, Hypre not configured.\n";
+    msg << "\nERROR<Solver>: Hypre 1.9.0b solver not available, Hypre not configured.\n";
     throw ProblemSetupException( msg.str(), __FILE__, __LINE__ );
 #endif
   }
   else {
     std::ostringstream msg;
-    msg << "\nERROR: Unknown solver (" << solverName
+    msg << "\nERROR<Solver>: Unknown solver (" << solverName
         << ") Valid Solvers: CGSolver, DirectSolver, HypreSolver, AMRSolver, hypreamr \n";
     throw ProblemSetupException( msg.str(), __FILE__, __LINE__ );
   }

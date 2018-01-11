@@ -25,11 +25,12 @@
 #ifndef _CUSTOMINITIALIZE_H
 #define _CUSTOMINITIALIZE_H
 
-#include <CCA/Components/ICE/ICEMaterial.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Patch.h>
 
 namespace Uintah {
+
+  class ICEMaterial;
   
  // multiple vortices
   struct vortices{   

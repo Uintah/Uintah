@@ -22,32 +22,26 @@
  * IN THE SOFTWARE.
  */
 
-
 #include <CCA/Components/FVM/GaussSolve.h>
+
 #include <CCA/Components/FVM/FVMBoundCond.h>
-#include <CCA/Ports/LoadBalancer.h>
-#include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Grid/Variables/Stencil7.h>
-#include <Core/Grid/Variables/NCVariable.h>
-#include <Core/Grid/Variables/CCVariable.h>
-#include <Core/Grid/Variables/SFCXVariable.h>
-#include <Core/Grid/Variables/SFCYVariable.h>
-#include <Core/Grid/Variables/SFCZVariable.h>
-#include <Core/Grid/Variables/SoleVariable.h>
-#include <Core/Grid/Variables/CellIterator.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Grid/Task.h>
+#include <CCA/Components/FVM/FVMLabel.h>
+#include <CCA/Components/FVM/FVMMaterial.h>
+
+#include <CCA/Ports/Scheduler.h>
+
+#include <Core/Geometry/IntVector.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Grid/Ghost.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
-#include <Core/Grid/Ghost.h>
-#include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Geometry/Vector.h>
-#include <CCA/Ports/Scheduler.h>
-#include <Core/Malloc/Allocator.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/Stencil7.h>
+#include <Core/Grid/Task.h>
 
-#include <iostream>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Parallel/ProcessorGroup.h>
 
 using namespace Uintah;
 

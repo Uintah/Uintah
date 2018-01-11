@@ -27,18 +27,32 @@
 # 
 # Makefile fragment for this subdirectory 
 
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := CCA/Components/MPM/PhysicalBC
 
 SRCS     += \
-	$(SRCDIR)/MPMPhysicalBCFactory.cc 	\
-	$(SRCDIR)/FluxBCModelFactory.cc     \
-	$(SRCDIR)/ForceBC.cc              	\
-	$(SRCDIR)/PressureBC.cc          	\
-	$(SRCDIR)/ScalarFluxBC.cc          	\
-	$(SRCDIR)/HeatFluxBC.cc             \
-	$(SRCDIR)/FluxBCModel.cc            \
-	$(SRCDIR)/AutoCycleFluxBC.cc        \
-	$(SRCDIR)/ArchesHeatFluxBC.cc		\
+	$(SRCDIR)/MPMPhysicalBCFactory.cc  \
+	$(SRCDIR)/FluxBCModelFactory.cc    \
+	$(SRCDIR)/ForceBC.cc               \
+	$(SRCDIR)/PressureBC.cc            \
+	$(SRCDIR)/ScalarFluxBC.cc          \
+	$(SRCDIR)/HeatFluxBC.cc            \
+	$(SRCDIR)/FluxBCModel.cc           \
+	$(SRCDIR)/AutoCycleFluxBC.cc       \
+	$(SRCDIR)/ArchesHeatFluxBC.cc	   \
 	$(SRCDIR)/PolynomialData.cc		
 
+PSELIBS := \
+	CCA/Components/MPM/Core \
+	Core/Disclosure     \
+	Core/Exceptions     \
+	Core/Geometry       \
+	Core/GeometryPiece  \
+	Core/Grid           \
+	Core/Math           \
+	Core/Parallel       \
+	Core/ProblemSpec    \
+	Core/Util           
+
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

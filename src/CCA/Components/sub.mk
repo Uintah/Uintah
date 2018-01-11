@@ -36,51 +36,67 @@ SRCDIR  := CCA/Components
 # do not modify...
 #
 
-ifeq ($(BUILD_WASATCH),yes)
-  WASATCH := $(SRCDIR)/Wasatch
-endif
-ifeq ($(BUILD_MPM),yes)
-  MPM      := $(SRCDIR)/MPM
-  ifeq ($(BUILD_ICE),yes)
-    MPMICE := $(SRCDIR)/MPMICE
-  endif
-endif
-ifeq ($(BUILD_ICE),yes)
-  ICE      := $(SRCDIR)/ICE
-endif
+# Arches
 ifeq ($(BUILD_ARCHES),yes)
   ARCHES   := $(SRCDIR)/Arches
-	ifeq ($(BUILD_MPM),yes)
-		MPMARCHES := $(SRCDIR)/MPMArches
-	endif
 endif
 
+# FVM
 ifeq ($(BUILD_FVM),yes)
   FVM :=$(SRCDIR)/FVM
-  ifeq ($(BUILD_MPM),yes)
-    MPMFVM := $(SRCDIR)/MPMFVM
-  endif
 endif
 
+# Heat
 ifeq ($(BUILD_HEAT),yes)
   HEAT := $(SRCDIR)/Heat
 endif
 
+# ICE
+ifeq ($(BUILD_ICE),yes)
+  ICE := $(SRCDIR)/ICE
+endif
+
+# MPM
+ifeq ($(BUILD_MPM),yes)
+  MPM := $(SRCDIR)/MPM
+endif
+
+# MPM-Arches
+ifeq ($(BUILD_MPM)$(BUILD_ARCHES),yesyes)
+  MPMARCHES := $(SRCDIR)/MPMArches
+endif
+
+# MPM-FVM
+ifeq ($(BUILD_MPM)$(BUILD_FVM),yesyes)
+  MPMFVM := $(SRCDIR)/MPMFVM
+endif
+
+# MPM-ICE
+ifeq ($(BUILD_MPM)$(BUILD_ICE),yesyes)
+  MPMICE := $(SRCDIR)/MPMICE
+endif
+
+# PhaseField
 ifeq ($(BUILD_PHASEFIELD),yes)
   PHASEFIELD := $(SRCDIR)/PhaseField
 endif
 
+# Wasatch
+ifeq ($(BUILD_WASATCH),yes)
+  WASATCH := $(SRCDIR)/Wasatch
+endif
+
 SUBDIRS := \
-        $(MPM)                         \
-        $(ICE)                         \
-        $(MPMICE)                      \
         $(ARCHES)                      \
-        $(MPMARCHES)                   \
-        $(WASATCH)                     \
         $(FVM)                         \
-        $(MPMFVM)                      \
         $(HEAT)                        \
+        $(ICE)                         \
+        $(MPM)                         \
+        $(MPMARCHES)                   \
+        $(MPMFVM)                      \
+        $(MPMICE)                      \
         $(PHASEFIELD)                  \
+        $(WASATCH)                     \
         $(SRCDIR)/Application          \
         $(SRCDIR)/DataArchiver         \
         $(SRCDIR)/Examples             \
@@ -96,6 +112,4 @@ SUBDIRS := \
         $(SRCDIR)/Solvers              \
         $(SRCDIR)/SwitchingCriteria    
 
-
 include $(SCIRUN_SCRIPTS)/recurse.mk
-

@@ -26,21 +26,23 @@
 #ifndef Packages_Uintah_CCA_Components_Switching_DDT1_h
 #define Packages_Uintah_CCA_Components_Switching_DDT1_h
 
-#include <Core/ProblemSpec/ProblemSpecP.h>
 #include <CCA/Ports/SwitchingCriteria.h>
+
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/SimulationState.h>
-#include <Core/Labels/MPMLabel.h>
-#include <Core/Labels/MPMICELabel.h>
-#include <Core/Labels/ICELabel.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
 
   class ProcessorGroup;
   class DataWarehouse;
 
+  class ICELabel;
+  class MPMLabel;
+  class MPMICELabel;
+
   class DDT1Criteria : public SwitchingCriteria
-    {
+  {
     public:
       DDT1Criteria(ProblemSpecP& ps);
       virtual ~DDT1Criteria();
@@ -55,7 +57,6 @@ namespace Uintah {
                       const MaterialSubset* matls, DataWarehouse*,
                       DataWarehouse*);
 
-
     private:
       unsigned int d_material;
       double d_temperature;   
@@ -66,7 +67,7 @@ namespace Uintah {
       MPMICELabel* MIlb;
       ICELabel* Ilb;
       #define d_SMALL_NUM 1e-100
-    };
+  };
 } // End namespace Uintah
 
 #endif 

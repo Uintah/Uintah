@@ -56,8 +56,8 @@ static DebugStream cout_dbg("STATISTICS_DBG_COUT", false);
 
 //______________________________________________________________________
 statistics::statistics( const ProcessorGroup* myworld,
-			const SimulationStateP sharedState,
-			const ProblemSpecP& module_spec )
+                        const SimulationStateP sharedState,
+                        const ProblemSpecP& module_spec )
   : AnalysisModule(myworld, sharedState, module_spec)
 {
   d_matlSet     = 0;
@@ -560,8 +560,11 @@ void statistics::scheduleDoAnalysis(SchedulerP& sched,
   Task* t = scinew Task("statistics::doAnalysis",
                    this,&statistics::doAnalysis);
 
+  t->requires(Task::OldDW, m_timeStepLabel);
+  t->requires(Task::OldDW, m_simulationTimeLabel);
+  
   Ghost::GhostType  gn  = Ghost::None;
-
+  
   for ( unsigned int i =0 ; i < d_Qstats.size(); i++ ) {
     Qstats Q = d_Qstats[i];
 
@@ -579,8 +582,8 @@ void statistics::scheduleDoAnalysis(SchedulerP& sched,
 #ifdef HAVE_VISIT
     if( required )
     {
-      t->requires( Task::OldDW, Q.Qmean_Label,  matSubSet, gn, 0 );
-      t->requires( Task::OldDW, Q.Qmean2_Label, matSubSet, gn, 0 );
+      t->requires( Task::OldDW, Q.Qmean_Label,     matSubSet, gn, 0 );
+      t->requires( Task::OldDW, Q.Qmean2_Label,    matSubSet, gn, 0 );
       t->requires( Task::OldDW, Q.Qvariance_Label, matSubSet, gn, 0 );
     }
 #endif
@@ -601,10 +604,10 @@ void statistics::scheduleDoAnalysis(SchedulerP& sched,
 #ifdef HAVE_VISIT
       if( required )
       {
-	t->requires( Task::OldDW, Q.Qmean3_Label,  matSubSet, gn, 0 );
-	t->requires( Task::OldDW, Q.Qmean4_Label, matSubSet, gn, 0 );
-	t->requires( Task::OldDW, Q.Qskewness_Label, matSubSet, gn, 0 );
-	t->requires( Task::OldDW, Q.Qkurtosis_Label, matSubSet, gn, 0 );
+        t->requires( Task::OldDW, Q.Qmean3_Label,    matSubSet, gn, 0 );
+        t->requires( Task::OldDW, Q.Qmean4_Label,    matSubSet, gn, 0 );
+        t->requires( Task::OldDW, Q.Qskewness_Label, matSubSet, gn, 0 );
+        t->requires( Task::OldDW, Q.Qkurtosis_Label, matSubSet, gn, 0 );
       }
 #endif
 
@@ -698,7 +701,11 @@ void statistics::computeStatsWrapper( DataWarehouse* old_dw,
                                       const Patch*    patch,
                                       Qstats& Q)
 {
-  double now = m_sharedState->getElapsedSimTime();
+  // double now = m_sharedState->getElapsedSimTime();
+  
+  simTime_vartype simTimeVar;
+  old_dw->get(simTimeVar, m_simulationTimeLabel);
+  double now = simTimeVar;
 
   if(now < d_startTime || now > d_stopTime){
 
@@ -746,8 +753,12 @@ void statistics::computeStats( DataWarehouse* old_dw,
   new_dw->allocateAndPut( Qmean2,    Q.Qmean2_Label,    matl, patch );
   new_dw->allocateAndPut( Qvariance, Q.Qvariance_Label, matl, patch );
 
-  int ts = m_sharedState->getCurrentTopLevelTimeStep();
+  // int ts = m_sharedState->getCurrentTopLevelTimeStep();
   
+  timeStep_vartype timeStep_var;      
+  old_dw->get(timeStep_var, m_timeStepLabel);
+  int ts = timeStep_var;
+
   Q.setStart(ts);
   int Q_ts = Q.getStart();
   int timestep = ts - Q_ts + 1;
@@ -773,8 +784,8 @@ void statistics::computeStats( DataWarehouse* old_dw,
     //  debugging
     if ( c == d_monitorCell ){
       cout << "  stats:  " << d_monitorCell <<  setw(10)<< Q.Q_Label->getName() << " nTimestep: " << nTimesteps
-           <<"\t topLevelTimestep " <<  m_sharedState->getCurrentTopLevelTimeStep()
-           << " d_startTimestep: " << d_startTimeTimestep
+           <<"\t timestep " << ts
+           << " d_startTimeStep: " << d_startTimeTimestep
            <<"\t Q_var: " << me
            <<"\t Qsum: "  << Qsum[c]
            <<"\t Qmean: " << Qmean[c] << endl;
@@ -841,7 +852,11 @@ void statistics::computeReynoldsStressWrapper( DataWarehouse* old_dw,
                                                const Patch*    patch,
                                                Qstats& Q)
 {
-  double now = m_sharedState->getElapsedSimTime();
+  // double now = m_sharedState->getElapsedSimTime();
+
+  simTime_vartype simTimeVar;
+  old_dw->get(simTimeVar, m_simulationTimeLabel);
+  double now = simTimeVar;
 
   if(now < d_startTime || now > d_stopTime){
 
@@ -893,8 +908,12 @@ void statistics::computeReynoldsStress( DataWarehouse* old_dw,
   new_dw->allocateAndPut( Qmean,     d_velMean_Label,   matl, patch );
   new_dw->allocateAndPut( uv_vw_wu,  d_velPrime_Label,  matl, patch );
   
-  int ts = m_sharedState->getCurrentTopLevelTimeStep();
+  // int ts = m_sharedState->getCurrentTopLevelTimeStep();
   
+  timeStep_vartype timeStep_var;      
+  old_dw->get(timeStep_var, m_timeStepLabel);
+  int ts = timeStep_var;
+
   Q.setStart(ts);
   int Q_ts = Q.getStart();
   int timestep = ts - Q_ts + 1;
@@ -920,7 +939,7 @@ void statistics::computeReynoldsStress( DataWarehouse* old_dw,
     //  debugging
     if ( c == d_monitorCell ){
       cout << "  ReynoldsStress stats:  \n \t \t"<< d_monitorCell << " nTimestep: " << nTimesteps.x()
-           <<  " topLevelTimestep " <<  m_sharedState->getCurrentTopLevelTimeStep()
+           <<  " timestep " << ts
            << " d_startTimeTimestepReynoldsStress: " << d_startTimeTimestepReynoldsStress
            <<"\n \t \t"<<Q.Q_Label->getName()<< ": " << vel[c]<< " vel_CC_mean: " << vel_mean[c]
            <<"\n \t \tuv_vw_wu: " << me << ",  uv_vw_wu_sum: " << Qsum[c]<< ",  uv_vw_wu_mean: " << Qmean[c]

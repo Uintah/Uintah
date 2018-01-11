@@ -32,8 +32,8 @@
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
 
-#include <Core/Labels/MPMLabel.h>
-#include <Core/Labels/ICELabel.h>
+#include <CCA/Components/MPM/Core/MPMLabel.h>
+#include <CCA/Components/ICE/Core/ICELabel.h>
 #include <map>
 
 namespace Uintah {

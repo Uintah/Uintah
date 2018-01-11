@@ -46,7 +46,18 @@ using namespace std;
 //****************************************************************************
 ArchesLabel::ArchesLabel()
 {
+  // Time Step
+  d_timeStepLabel = VarLabel::create(timeStep_name, timeStep_vartype::getTypeDescription());
 
+  // Simulation Time
+  d_simulationTimeLabel = VarLabel::create(simTime_name, simTime_vartype::getTypeDescription());
+
+  // delta t
+  VarLabel* nonconstDelT =
+    VarLabel::create(delT_name, delt_vartype::getTypeDescription() );
+  nonconstDelT->allowMultipleComputes();
+  d_delTLabel = nonconstDelT;
+  
    // shortcuts
   const TypeDescription* CC_double = CCVariable<double>::getTypeDescription();
   const TypeDescription* CC_Vector = CCVariable<Vector>::getTypeDescription();
@@ -88,12 +99,6 @@ ArchesLabel::ArchesLabel()
     d_symTensorMatl->add(i);
   }
   d_symTensorMatl->addReference();
-
-  // delta t
-  VarLabel* nonconstDelT =
-    VarLabel::create(delT_name, delt_vartype::getTypeDescription() );
-  nonconstDelT->allowMultipleComputes();
-  d_delTLabel = nonconstDelT;
 
   // Cell Information
   d_cellInfoLabel = VarLabel::create("cellInformation",
@@ -294,6 +299,8 @@ ArchesLabel::~ArchesLabel()
     VarLabel::destroy(iA->second);
   }
 
+  VarLabel::destroy(d_timeStepLabel);
+  VarLabel::destroy(d_simulationTimeLabel);
   VarLabel::destroy(d_delTLabel);
 
   VarLabel::destroy(d_strainMagnitudeLabel);

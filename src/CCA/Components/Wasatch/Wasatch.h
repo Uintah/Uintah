@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2010-2017 The University of Utah
+ * Copyright (c) 2010-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -281,7 +281,7 @@ namespace WasatchCore{
                                          Uintah::SchedulerP& /*scheduler*/,
                                          bool, bool);
 
-    virtual int computeTaskGraphIndex();
+    virtual int computeTaskGraphIndex( const int timeStep );
 
     const EquationAdaptors& equation_adaptors() const{ return adaptors_; }
     GraphCategories& graph_categories(){ return graphCategories_; }

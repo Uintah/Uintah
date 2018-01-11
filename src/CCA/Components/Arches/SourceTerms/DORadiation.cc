@@ -486,7 +486,6 @@ DORadiation::computeSource( const ProcessorGroup* pc,
 {
   _DO_model->d_linearSolver->matrixCreate( _perproc_patches, patches );
 
-    //int timestep = _labels->d_sharedState->getCurrentTopLevelTimeStep(); 
     bool do_radiation = false;
     if ( _all_rk ) {
       do_radiation = true;

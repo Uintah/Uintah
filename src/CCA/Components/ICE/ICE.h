@@ -32,11 +32,11 @@
 #include <CCA/Components/ICE/Advection/Advector.h>
 #include <CCA/Components/Application/ApplicationCommon.h>
 
+#include <CCA/Components/ICE/Core/ExchangeCoefficients.h>
 #include <CCA/Components/ICE/customInitialize.h>
 #include <CCA/Components/ICE/CustomBCs/LODI2.h>
-#include <CCA/Components/ICE/BoundaryCond.h>
+#include <CCA/Components/ICE/CustomBCs/BoundaryCond.h>
 #include <CCA/Components/ICE/TurbulenceModel/Turbulence.h>
-#include <CCA/Components/ICE/ExchangeCoefficients.h>
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
 
 #include <CCA/Ports/ModelInterface.h>
@@ -50,12 +50,10 @@
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
-#include <Core/Grid/Variables/SoleVariable.h>
 #include <Core/Grid/Variables/Stencil7.h>
 #include <Core/Grid/Variables/Utils.h>
 
-#include <Core/Labels/ICELabel.h>
-#include <Core/Labels/MPMICELabel.h>
+#include <CCA/Components/ICE/Core/ICELabel.h>
 #include <Core/Math/FastMatrix.h>
 #include <Core/Math/UintahMiscMath.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
@@ -94,13 +92,14 @@ void launchIceEquilibrationKernelUnified(dim3 dimGrid,
 
 namespace Uintah {
 
-  class ModelMaker;
-  class ModelInfo;
   class ModelInterface;
   class Turbulence;
+  class WallShearStress;
   class AnalysisModule;
 
-    // The following two structs are used by computeEquilibrationPressure to store debug information:
+  class MPMICELabel;
+
+  // The following two structs are used by computeEquilibrationPressure to store debug information:
     //
     struct  EqPress_dbgMatl{
       int    mat;
@@ -129,7 +128,7 @@ namespace Uintah {
 
       virtual bool restartableTimeSteps();
 
-      virtual double recomputeTimeStep(double current_dt);
+      virtual double recomputeDelT(const double delT);
 
       virtual void problemSetup(const ProblemSpecP& params,
                                 const ProblemSpecP& restart_prob_spec,
@@ -1047,45 +1046,6 @@ namespace Uintah {
       //______________________________________________________________________
       //        models
       std::vector<ModelInterface*> d_models;
-      ModelInfo* d_modelInfo;
-
-      struct TransportedVariable {
-       const MaterialSubset* matls;
-       const MaterialSet* matlSet;
-       const VarLabel* var;
-       const VarLabel* src;
-       const VarLabel* var_Lagrangian;
-       const VarLabel* var_adv;
-      };
-      struct AMR_refluxVariable {
-       const MaterialSubset* matls;
-       const MaterialSet* matlSet;
-       const VarLabel* var;
-       const VarLabel* var_adv;
-       const VarLabel* var_X_FC_flux;
-       const VarLabel* var_Y_FC_flux;
-       const VarLabel* var_Z_FC_flux;
-
-       const VarLabel* var_X_FC_corr;
-       const VarLabel* var_Y_FC_corr;
-       const VarLabel* var_Z_FC_corr;
-      };
-
-      class ICEModelSetup : public ModelSetup {
-      public:
-       ICEModelSetup();
-       virtual ~ICEModelSetup();
-       virtual void registerTransportedVariable(const MaterialSet* matlSet,
-                                           const VarLabel* var,
-                                           const VarLabel* src);
-
-       virtual void registerAMR_RefluxVariable(const MaterialSet* matls,
-						     const VarLabel* var);
-
-       std::vector<TransportedVariable*> tvars;
-       std::vector<AMR_refluxVariable*> d_reflux_vars;
-      };
-      ICEModelSetup* d_modelSetup;
 
       //______________________________________________________________________
       //      FUNCTIONS

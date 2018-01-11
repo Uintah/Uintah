@@ -40,25 +40,22 @@ SRCS   += $(SRCDIR)/ESMPM.cc \
 
 PSELIBS := \
        CCA/Components/Application      \
-       CCA/Components/MPM              \
        CCA/Components/FVM              \
-       CCA/Components/OnTheFlyAnalysis \
+       CCA/Components/MPM              \
+       CCA/Components/MPM/Core         \
+       CCA/Components/MPM/Materials    \
        CCA/Ports                       \
        Core/Disclosure                 \
        Core/Exceptions                 \
        Core/Geometry                   \
        Core/GeometryPiece              \
        Core/Grid                       \
-       Core/Labels                     \
        Core/Math                       \
        Core/OS                         \
        Core/Parallel                   \
        Core/ProblemSpec                \
        Core/Util                       
 
-
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
-
-

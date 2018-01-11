@@ -257,7 +257,9 @@ void setVel( const Patch* patch, const Patch::FaceType& face,
 void setTurbInlet( const Patch* patch, const Patch::FaceType& face,
                    SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel,
                    constCCVariable<double>& density,
-                   Iterator bound_iter, DigitalFilterInlet * TurbIn );
+                   Iterator bound_iter, DigitalFilterInlet * TurbIn,
+                   const int timeStep,
+                   const double simTime  );
 
 template<class d0T, class d1T, class d2T>
 void setSwirl( const Patch* patch, const Patch::FaceType& face,
@@ -559,6 +561,8 @@ void velRhoHatInletBC(const Patch* patch,
                       ArchesVariables* vars,
                       ArchesConstVariables* constvars,
                       const int matl_index,
+                      const int timeStep,
+                      const double simTime,
                       double time_shift);
 
 void velRhoHatOutletPressureBC( const Patch* patch,
