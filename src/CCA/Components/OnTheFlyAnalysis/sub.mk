@@ -32,6 +32,8 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR := CCA/Components/OnTheFlyAnalysis
 
+# Generic analysis modules only -
+# Applicaion specific analysis modules are addd below
 SRCS += \
         $(SRCDIR)/AnalysisModuleFactory.cc \
         $(SRCDIR)/AnalysisModule.cc        \
@@ -55,7 +57,7 @@ PSELIBS := \
         Core/ProblemSpec        \
         Core/Util
 
-# ICE analysis
+# ICE analysis modules
 ifeq ($(BUILD_ICE),yes)
   SRCS += \
         $(SRCDIR)/containerExtract.cc \
@@ -65,7 +67,7 @@ ifeq ($(BUILD_ICE),yes)
              CCA/Components/ICE/Materials
 endif
 
-# MPM analysis
+# MPM analysis modules
 ifeq ($(BUILD_MPM),yes)
   SRCS += \
         $(SRCDIR)/flatPlate_heatFlux.cc \
@@ -75,7 +77,7 @@ ifeq ($(BUILD_MPM),yes)
              CCA/Components/MPM/Materials
 endif
 
-# MPM-ICE analysis
+# MPM-ICE analysis modules
 ifeq ($(BUILD_MPM)$(BUILD_ICE),yesyes)
   SRCS += \
         $(SRCDIR)/1stLawThermo.cc

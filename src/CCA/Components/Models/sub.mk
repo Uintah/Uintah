@@ -34,13 +34,13 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCS    += \
        $(SRCDIR)/ModelFactory.cc
 
-RADIATION :=
+# Generic models only -
+# Applicaion specific models are added below
+SUBDIRS :=
 
 ifeq ($(BUILD_MODELS_RADIATION),yes)
-  RADIATION += $(SRCDIR)/Radiation
+  SUBDIRS += $(SRCDIR)/Radiation
 endif
-
-SUBDIRS := $(RADIATION)
 
 PSELIBS :=                 \
         CCA/Ports          \
@@ -75,7 +75,9 @@ ifeq ($(BUILD_MPM)$(BUILD_ICE),yesyes)
   PSELIBS += CCA/Components/MPMICE/Core
 
   SUBDIRS += $(SRCDIR)/HEChem             \
+             $(SRCDIR)/MultiMatlExchange  \
              $(SRCDIR)/SolidReactionModel
+
 endif
 
 ######################################################
