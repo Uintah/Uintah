@@ -4957,7 +4957,7 @@ void SerialMPM::scheduleComputeNormals(SchedulerP   & sched,
   t->requires(Task::OldDW, lb->pSizeLabel,               gp, ngc_p);
   t->requires(Task::OldDW, lb->pStressLabel,             gp, ngc_p);
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel, gp, ngc_p);
-  t->requires(Task::NewDW, lb->gMassLabel,             Ghost::AroundNodes, 1);
+  t->requires(Task::NewDW, lb->gMassLabel,             Ghost::None);
   t->requires(Task::NewDW, lb->gVolumeLabel,           Ghost::None);
   t->requires(Task::OldDW, lb->NC_CCweightLabel,z_matl,Ghost::None);
 
@@ -4985,6 +4985,7 @@ void SerialMPM::computeNormals(const ProcessorGroup *,
 
   int numMPMMatls = d_sharedState->getNumMPMMatls();
   StaticArray<constNCVariable<double> >  gmass(numMPMMatls);
+  StaticArray<constNCVariable<double> >  gvolume(numMPMMatls);
   StaticArray<NCVariable<Point> >        gposition(numMPMMatls);
   StaticArray<NCVariable<Vector> >       gvelocity(numMPMMatls);
   StaticArray<NCVariable<Vector> >       gsurfnorm(numMPMMatls);
@@ -5012,7 +5013,8 @@ void SerialMPM::computeNormals(const ProcessorGroup *,
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
-      new_dw->get(gmass[m],                lb->gMassLabel,     dwi,patch,gan,1);
+      new_dw->get(gmass[m],                lb->gMassLabel,   dwi,patch,gnone,0);
+      new_dw->get(gvolume[m],              lb->gVolumeLabel, dwi,patch,gnone,0);
 
       new_dw->allocateAndPut(gsurfnorm[m],    lb->gSurfNormLabel,    dwi,patch);
       new_dw->allocateAndPut(gposition[m],    lb->gPositionLabel,    dwi,patch);
@@ -5047,12 +5049,13 @@ void SerialMPM::computeNormals(const ProcessorGroup *,
           NN = interpolator->findCellAndWeightsAndShapeDerivatives(
                           px[idx],ni,S,d_S,psize[idx],deformationGradient[idx]);
           double rho = pmass[idx]/pvolume[idx];
+          Matrix3 stressvol  = pstress[idx]*pvolume[idx];
           for(int k = 0; k < NN; k++) {
             if (patch->containsNode(ni[k])){
               Vector G(d_S[k].x(),d_S[k].y(),0.0);
               gsurfnorm[m][ni[k]] += rho * G;
               gposition[m][ni[k]] += px[idx].asVector()*pmass[idx] * S[k];
-              gstress[m][ni[k]]   += pstress[idx] * S[k];
+              gstress[m][ni[k]]   += stressvol * S[k];
             }
           }
         }
@@ -5062,17 +5065,22 @@ void SerialMPM::computeNormals(const ProcessorGroup *,
 
           NN = interpolator->findCellAndWeightsAndShapeDerivatives(
                           px[idx],ni,S,d_S,psize[idx],deformationGradient[idx]);
+          Matrix3 stressvol  = pstress[idx]*pvolume[idx];
           for(int k = 0; k < NN; k++) {
             if (patch->containsNode(ni[k])){
               Vector grad(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
                           d_S[k].z()*oodx[2]);
               gsurfnorm[m][ni[k]] += pmass[idx] * grad;
               gposition[m][ni[k]] += px[idx].asVector()*pmass[idx] * S[k];
-              gstress[m][ni[k]]   += pstress[idx] * S[k];
+              gstress[m][ni[k]]   += stressvol * S[k];
             }
           }
         }
       } // axisymmetric conditional
+      for(NodeIterator iter =patch->getNodeIterator();!iter.done();iter++){
+        IntVector c = *iter;
+        gstress[m][c] /= gvolume[m][c];
+      }
     }   // matl loop
 
     // Make normal vectors colinear by setting all norms to be

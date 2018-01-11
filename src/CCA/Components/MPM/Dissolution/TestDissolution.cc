@@ -108,16 +108,17 @@ void TestDissolution::computeMassBurnFraction(const ProcessorGroup*,
 
     // Retrieve necessary data from DataWarehouse
     StaticArray<constNCVariable<double> > gmass(numMatls),gvolume(numMatls);
+    StaticArray<constNCVariable<double> > gnormtrac(numMatls);
     StaticArray<constNCVariable<Matrix3> > gStress(numMatls);
     NCVariable<double>  massBurnRate;
     constNCVariable<double> NC_CCweight;
     old_dw->get(NC_CCweight,  lb->NC_CCweightLabel,0, patch, gnone,0);
     for(int m=0;m<matls->size();m++){
       int dwi = matls->get(m);
-      new_dw->get(gmass[m],   lb->gMassLabel,    dwi, patch, gnone,0);
-      new_dw->get(gvolume[m], lb->gVolumeLabel,  dwi, patch, gnone,0);
-      new_dw->get(gStress[m], lb->gStressForSavingLabel,
-                                                 dwi, patch, gnone,0);
+      new_dw->get(gmass[m],     lb->gMassLabel,         dwi, patch, gnone, 0);
+      new_dw->get(gvolume[m],   lb->gVolumeLabel,       dwi, patch, gnone, 0);
+      new_dw->get(gStress[m],   lb->gStressLabel,       dwi, patch, gnone, 0);
+      new_dw->get(gnormtrac[m], lb->gNormTractionLabel, dwi, patch, gnone, 0);
     }
 
     int dwiMM = matls->get(d_material);
@@ -141,11 +142,12 @@ void TestDissolution::computeMassBurnFraction(const ProcessorGroup*,
 //      double mdVol   = gvolume[md][c]*8.0*NC_CCweight[c];
 //      double volFrac = (mdVol+sumOtherVol)/cellVol;
 
-      double pressure = gStress[md][c].Trace()/(-3.);
+//      double pressure = gStress[md][c].Trace()/(-3.);
 
       if(gmass[md][c] >  1.e-100  &&
          gmass[md][c] != sumMass  && 
-         pressure > d_PressThresh){ // && volFrac > 0.6){
+        -gnormtrac[md][c] > d_PressThresh){ // Compressive stress is negative
+//         pressure > d_PressThresh){ // && volFrac > 0.6){
           double rho = gmass[md][c]/gvolume[md][c];
           massBurnRate[c] += d_rate*area*rho*2.0*NC_CCweight[c];
       }
@@ -165,11 +167,10 @@ void TestDissolution::addComputesAndRequiresMassBurnFrac(SchedulerP & sched,
   z_matl->add(0);
   z_matl->addReference();
 
-  t->requires(Task::NewDW, lb->gMassLabel,           Ghost::None);
-  t->requires(Task::NewDW, lb->gVolumeLabel,         Ghost::None);
-  t->requires(Task::NewDW, lb->gMassLabel, d_sharedState->getAllInOneMatl(),
-              Task::OutOfDomain, Ghost::None);
-  t->requires(Task::NewDW, lb->gStressForSavingLabel,Ghost::None);
+  t->requires(Task::NewDW, lb->gMassLabel,               Ghost::None);
+  t->requires(Task::NewDW, lb->gVolumeLabel,             Ghost::None);
+  t->requires(Task::NewDW, lb->gStressLabel,             Ghost::None);
+  t->requires(Task::NewDW, lb->gNormTractionLabel,       Ghost::None);
   t->requires(Task::OldDW, lb->NC_CCweightLabel,z_matl,  Ghost::None);
 
   t->modifies(lb->massBurnFractionLabel, mss);
