@@ -378,7 +378,6 @@
                                                 mpnp,
                                                 esmpm,
                                                 esmpm2,
-                                                advectslabs,
                                                 unifiedschedulertest, poisson1,
                                                 poisson2, poisson3, poisson4, benchmark,
                                                 rigidmpmice,reduce_uda, rmpmice,smpm,
@@ -1089,10 +1088,6 @@
     <verbosity                spec="OPTIONAL INTEGER"/>
     <ws_test                  spec="OPTIONAL BOOLEAN"/>
   </PhaseField>
-
-  <AdvectSlabs                spec="OPTIONAL NO_DATA" >
-    <delt                     spec="REQUIRED DOUBLE" />
-  </AdvectSlabs>
   
   <UnifiedSchedulerTest       spec="OPTIONAL NO_DATA" >
     <delt                     spec="REQUIRED DOUBLE" />
