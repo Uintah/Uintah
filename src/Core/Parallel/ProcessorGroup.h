@@ -67,30 +67,13 @@ public:
 
   ~ProcessorGroup(){};
 
-  int nNodes() const
-  {
-    return m_nNodes;
-  }
 
-  int myNode() const
-  {
-    return m_node;
-  }
+  int nNodes() const { return m_nNodes; } // Returns the total number of nodes this MPI session is running on.
+  int myNode() const { return m_node; }
+  int nRanks() const { return m_nRanks; } // Returns the total number of MPI ranks in this MPI session.
+  int myRank() const { return m_rank; }
 
-  int nRanks() const
-  {
-    return m_nRanks;
-  }
-
-  int myRank() const
-  {
-    return m_rank;
-  }
-
-  MPI_Comm getComm() const
-  {
-    return m_comm;
-  }
+  MPI_Comm getComm() const { return m_comm; }
 
   MPI_Comm getGlobalComm( int comm_idx ) const
   {
@@ -120,11 +103,11 @@ private:
   ProcessorGroup( ProcessorGroup && )                 = delete;
   ProcessorGroup& operator=( ProcessorGroup && )      = delete;
 
-  int  m_node;
-  int  m_nNodes;
+  int  m_node;   // Node this rank is executing on.
+  int  m_nNodes; // Total number of nodes this MPI session is running on.
 
-  int  m_rank;
-  int  m_nRanks;
+  int  m_rank;   // MPI rank of this process.
+  int  m_nRanks; // Total number of MPI Ranks.
 
   int  m_threads;
 

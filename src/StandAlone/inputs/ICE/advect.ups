@@ -137,7 +137,7 @@
               <lower>        [0,0,0]    </lower>
               <upper>        [5,5,5]    </upper>
               <extraCells>   [1,1,1]    </extraCells>
-              <patches>      [1,1,1]    </patches>
+              <patches>      [2,2,1]    </patches>
            </Box>
            <spacing>         [1,1,1]    </spacing>
        </Level>
