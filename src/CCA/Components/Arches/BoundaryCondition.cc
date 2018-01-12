@@ -4077,11 +4077,6 @@ BoundaryCondition::wallStressConstSmag( const Patch* p,
       has_intrusion_inlets = _intrusionBC[ilvl]->has_intrusion_inlets();
     }
 
-    bool has_intrusion_inlets = false;
-    if ( _using_new_intrusion ){
-      has_intrusion_inlets = _intrusionBC[ilvl]->has_intrusion_inlets();
-    }
-
     for (CellIterator iter=p->getCellIterator(); !iter.done(); iter++) {
       IntVector c = *iter;
       IntVector xm = *iter - IntVector(1,0,0);
