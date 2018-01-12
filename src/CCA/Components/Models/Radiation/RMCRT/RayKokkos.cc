@@ -80,10 +80,10 @@ ______________________________________________________________________*/
 //
 bool isDbgCell( const int i, const int j, const int k )
 {
-  int dbgCell[2][3] = { {0,0,0}, {5,5,5} };
+  int dbgCell[2][3] = { {0,0,1}, {5,5,5} };
 
-  for ( int i = 0; i < 2; i++ ) {
-    if ( i == dbgCell[i][0] && j == dbgCell[i][1] && k == dbgCell[i][2] ) {
+  for ( int idx = 0; idx < 2; idx++ ) {
+    if ( i == dbgCell[idx][0] && j == dbgCell[idx][1] && k == dbgCell[idx][2] ) {
       return true;
     }
   }
