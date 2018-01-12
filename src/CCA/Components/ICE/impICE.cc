@@ -271,10 +271,11 @@ void ICE::scheduleRecomputeVel_FC(SchedulerP& sched,
   sched->addTask(t, patches, all_matls);
   
   //__________________________________
-  //  added exchange to 
-  scheduleAddExchangeContributionToFCVel( sched, patches,ice_matls,
-                                                         all_matls,
-                                                         recursion);
+  //  add exchange contribution
+  d_exchModel->sched_AddExch_VelFC( sched, patches, ice_matls,
+                                                    all_matls,
+                                                    d_BC_globalVars,
+                                                    recursion);
 } 
 /*___________________________________________________________________
  Function~  ICE::scheduleComputeDel_P--

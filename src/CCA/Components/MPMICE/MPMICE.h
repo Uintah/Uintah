@@ -33,6 +33,7 @@
 #include <Core/Grid/Variables/NCVariable.h>
 #include <CCA/Ports/DataWarehouseP.h>
 #include <CCA/Components/ICE/Materials/ICEMaterial.h>
+#include <CCA/Components/Models/MultiMatlExchange/ExchangeModel.h>
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
 #include <CCA/Components/MPM/Materials/Contact/Contact.h>
 #include <CCA/Components/MPM/SerialMPM.h>
@@ -408,9 +409,10 @@ protected:
   MPMICE(const MPMICE&);
   MPMICE& operator=(const MPMICE&);
 
-  MPMLabel* Mlb;
-  ICELabel* Ilb;
-  MPMICELabel* MIlb;
+  MPMLabel*        Mlb;
+  ICELabel*        Ilb;
+  MPMICELabel*     MIlb;
+  ExchangeModel*   d_exchModel;
 
   bool             d_rigidMPM;
   SerialMPM*       d_mpm;

@@ -32,11 +32,12 @@
 #include <CCA/Components/ICE/Advection/Advector.h>
 #include <CCA/Components/Application/ApplicationCommon.h>
 
-#include <CCA/Components/ICE/Core/ExchangeCoefficients.h>
 #include <CCA/Components/ICE/customInitialize.h>
 #include <CCA/Components/ICE/CustomBCs/LODI2.h>
 #include <CCA/Components/ICE/CustomBCs/BoundaryCond.h>
 #include <CCA/Components/ICE/TurbulenceModel/Turbulence.h>
+#include <CCA/Components/Models/MultiMatlExchange/ExchangeCoefficients.h>
+#include <CCA/Components/Models/MultiMatlExchange/ExchangeModel.h>
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
 
 #include <CCA/Ports/ModelInterface.h>
@@ -91,6 +92,7 @@ void launchIceEquilibrationKernelUnified(dim3 dimGrid,
 #define MAX_MATLS 16
 
 namespace Uintah {
+using namespace ExchangeModels;
 
   class ModelInterface;
   class Turbulence;
@@ -180,12 +182,6 @@ namespace Uintah {
                                       const MaterialSubset*,
                                       const MaterialSubset*,
                                       const MaterialSet*);
-
-      void scheduleAddExchangeContributionToFCVel(SchedulerP&,
-                                            const PatchSet*,
-                                            const MaterialSubset*,
-                                            const MaterialSet*,
-                                            bool);
 
       void scheduleComputeDelPressAndUpdatePressCC(SchedulerP&,
                                              const PatchSet*,
@@ -475,26 +471,6 @@ namespace Uintah {
                                        constCCVariable<double>& press_CC,
                                        T& vel_FC,
                                        T& grad_dp_FC);
-
-      template<class constSFC, class SFC >
-        void add_vel_FC_exchange( CellIterator it,
-                                       IntVector adj_offset,
-                                       int numMatls,
-                                       FastMatrix & K,
-                                       double delT,
-                                       std::vector<constCCVariable<double> >& vol_frac_CC,
-                                       std::vector<constCCVariable<double> >& sp_vol_CC,
-                                       std::vector< constSFC >& vel_FC,
-                                       std::vector< SFC > & sp_vol_FC,
-                                       std::vector< SFC > & vel_FCME);
-
-
-      void addExchangeContributionToFCVel(const ProcessorGroup*,
-                                          const PatchSubset* patch,
-                                          const MaterialSubset* matls,
-                                          DataWarehouse*,
-                                          DataWarehouse*,
-                                          bool);
 
       void computeDelPressAndUpdatePressCC(const ProcessorGroup*,
                                            const PatchSubset* patches,
@@ -842,14 +818,6 @@ namespace Uintah {
                       const CCVariable<double>& rho_micro_CC,
                       CCVariable<double>& press_CC);
 
-      void getConstantExchangeCoefficients( FastMatrix& K,
-                                    FastMatrix& H );
-
-      void getVariableExchangeCoefficients( FastMatrix& ,
-                                           FastMatrix& H,
-                                           IntVector & c,
-                                           std::vector<constCCVariable<double> >& mass  );
-
       IntVector upwindCell_X(const IntVector& c,
                              const double& var,
                              double is_logical_R_face );
@@ -1025,8 +993,9 @@ namespace Uintah {
 
       std::string d_delT_scheme;
 
-      // exchange coefficients
+      // exchange Model
       ExchangeCoefficients* d_exchCoeff;
+      ExchangeModel* d_exchModel;
 
       // flags for the conservation test
        struct conservationTest_flags{
