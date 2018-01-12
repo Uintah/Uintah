@@ -18,6 +18,7 @@
    </Time>
 
     <MPM>
+       <DoExplicitHeatConduction>false</DoExplicitHeatConduction>
        <time_integrator>explicit</time_integrator>
        <interpolator>gimp</interpolator>
        <artificial_viscosity>true</artificial_viscosity>
