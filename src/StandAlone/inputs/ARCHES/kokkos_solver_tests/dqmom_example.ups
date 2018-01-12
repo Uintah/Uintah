@@ -17,7 +17,7 @@
     <max_Timesteps>5</max_Timesteps>
   </Time>
   <DataArchiver>
-    <filebase>x-mom-minus.uda</filebase>
+    <filebase>dqmom_example.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
     <save label="x-mom"/>
@@ -50,6 +50,32 @@
     <save label="a_model_0"/>
     <save label="w_qn0"/>
     <save label="w_qn0_unscaled"/>
+    <save label="w_qn0_rhs"/>
+    <save label="w_qn1"/>
+    <save label="w_qn1_unscaled"/>
+    <save label="w_qn1_rhs"/>
+    <save label="w_qn2"/>
+    <save label="w_qn2_unscaled"/>
+    <save label="w_qn2_rhs"/>
+    <save label="w_qn3"/>
+    <save label="w_qn3_unscaled"/>
+    <save label="w_qn3_rhs"/>
+    <save label="raw_coal_qn0"/>
+    <save label="raw_coal_qn0_rhs"/>
+    <save label="raw_coal_qn1"/>
+    <save label="raw_coal_qn1_rhs"/>
+    <save label="raw_coal_qn2"/>
+    <save label="raw_coal_qn2_rhs"/>
+    <save label="raw_coal_qn3"/>
+    <save label="raw_coal_qn3_rhs"/>
+    <save label="char_mass_qn0"/>
+    <save label="char_mass_qn0_rhs"/>
+    <save label="char_mass_qn1"/>
+    <save label="char_mass_qn1_rhs"/>
+    <save label="char_mass_qn2"/>
+    <save label="char_mass_qn2_rhs"/>
+    <save label="char_mass_qn3"/>
+    <save label="char_mass_qn3_rhs"/>
     <checkpoint cycle="2" interval="2e-3"/>
     <compression>gzip</compression>
   </DataArchiver>

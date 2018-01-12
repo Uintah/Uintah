@@ -186,11 +186,13 @@ IntrusionBC::problemSetup( const ProblemSpecP& params, const int ilvl )
         if ( vel_type == "flat" ){
 
           intrusion.type = IntrusionBC::INLET;
+          intrusion.velocity_inlet_type = IntrusionBC::FLAT;
           intrusion.velocity_inlet_generator = scinew FlatVelProf();
 
         } else if ( vel_type == "from_file" ){
 
           intrusion.type = IntrusionBC::INLET;
+          intrusion.velocity_inlet_type = IntrusionBC::HANDOFF;
           intrusion.velocity_inlet_generator = scinew InputFileVelocity();
 
         } else if ( vel_type == "massflow" ){
@@ -1337,7 +1339,7 @@ IntrusionBC::addScalarRHS( const Patch* patch,
 //_________________________________________
 void
 IntrusionBC::setDensity( const Patch* patch,
-                         CCVariable<double>& density, 
+                         CCVariable<double>& density,
                          constCCVariable<double>& old_density )
 {
   const int p = patch->getID();
