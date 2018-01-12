@@ -25,6 +25,7 @@
 #include <CCA/Components/Examples/Poisson1.h>
 #include <CCA/Components/Examples/ExamplesLabel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Grid/Variables/KokkosViews.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/NodeIterator.h>
 #include <Core/Grid/SimulationState.h>
@@ -42,6 +43,54 @@
 
 using namespace std;
 using namespace Uintah;
+
+//A sample supporting three modes of execution:
+//Kokkos CPU (UINTAH_ENABLE_KOKKOS is defined, but HAVE_CUDA is not defined)
+//Kokkos GPU (UINTAH_ENABLE_KOKKOS is defined and HAVE_CUDA is defined)
+//Legacy Uintah CPU (UINTAH_ENABLE_KOKKOS is not defined and HAVE_CUDA is not defined)
+struct TimeAdvanceFunctor {
+
+  typedef double value_type;
+
+  //Declare the vars
+#ifdef UINTAH_ENABLE_KOKKOS //Both CPU and GPU Kokkos runs need this.
+  KokkosView3<const double> m_phi;
+  KokkosView3<double> m_newphi;
+#else  //Just do this the legacy CPU way.
+  constNCVariable<double> & m_phi;
+  NCVariable<double> & m_newphi;
+#endif
+
+//Retrieve the vars
+#ifdef UINTAH_ENABLE_KOKKOS
+  TimeAdvanceFunctor(KokkosView3<const double> & phi,
+                     KokkosView3<double> & newphi)
+
+      : m_phi( phi )
+      , m_newphi( newphi ) {}
+#else
+  TimeAdvanceFunctor(constNCVariable<double> & phi,
+                     NCVariable<double> & newphi)
+      : m_phi(phi),
+        m_newphi(newphi) {}
+#endif
+
+#ifdef UINTAH_ENABLE_KOKKOS
+  KOKKOS_INLINE_FUNCTION
+#endif
+  void operator()(const int i,
+                  const int j,
+                  const int k,
+                  double & residual) const
+  {
+    m_newphi(i, j, k) = (1. / 6)
+        * (m_phi(i + 1, j, k) + m_phi(i - 1, j, k) + m_phi(i, j + 1, k) +
+           m_phi(i, j - 1, k) + m_phi(i, j, k + 1) + m_phi(i, j, k - 1));
+    //printf("At (%d,%d,%d), m_phi is %g and m_newphi is %g\n", i, j, k, m_phi(i,j,k), m_newphi(i,j,k));
+    double diff = m_newphi(i, j, k) - m_phi(i, j, k);
+    residual += diff * diff;
+  }
+};
 
 Poisson1::Poisson1(const ProcessorGroup* myworld,
 		   const SimulationStateP sharedState) :
@@ -112,10 +161,17 @@ void Poisson1::scheduleTimeAdvance(const LevelP& level,
 {
   Task* task = scinew Task("Poisson1::timeAdvance", this, &Poisson1::timeAdvance);
 
+#if defined(HAVE_CUDA) && defined(UINTAH_ENABLE_KOKKOS)
+  if (Uintah::Parallel::usingDevice()) {
+    task->usesDevice(true);
+  }
+#endif
+
   task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
-  task->computes(phi_label);
+  task->computesWithScratchGhost(phi_label, nullptr, Uintah::Task::NormalDomain, Ghost::AroundNodes, 1);
   task->computes(residual_label);
   sched->addTask(task, level->eachPatch(), m_sharedState->allMaterials());
+
 }
 
 //______________________________________________________________________
@@ -174,66 +230,56 @@ void Poisson1::initialize(const ProcessorGroup*,
 
 //______________________________________________________________________
 //
-namespace {
-
-struct TimeAdvanceFunctor {
-#ifdef UINTAH_ENABLE_KOKKOS
-  KokkosView3<const double> m_phi;
-  KokkosView3<double> m_newphi;
-#else
-  constNCVariable<double> & m_phi;
-  NCVariable<double> & m_newphi;
-#endif
-
-  typedef double value_type;
-
-  TimeAdvanceFunctor(constNCVariable<double> & phi,
-                     NCVariable<double> & newphi)
-#ifdef UINTAH_ENABLE_KOKKOS
-      : m_phi( phi.getKokkosView() )
-      , m_newphi( newphi.getKokkosView() )
-#else
-      : m_phi(phi),
-        m_newphi(newphi)
-#endif
-  {
-  }
-
-  void operator()(int i,
-                  int j,
-                  int k,
-                  double & residual) const
-  {
-    m_newphi(i, j, k) = (1. / 6)
-        * (m_phi(i + 1, j, k) + m_phi(i - 1, j, k) + m_phi(i, j + 1, k) +
-           m_phi(i, j - 1, k) + m_phi(i, j, k + 1) + m_phi(i, j, k - 1));
-
-    double diff = m_newphi(i, j, k) - m_phi(i, j, k);
-    residual += diff * diff;
-  }
-};
-
-}  // namespace
 
 //______________________________________________________________________
 //
-void Poisson1::timeAdvance(const ProcessorGroup*,
-                           const PatchSubset* patches,
-                           const MaterialSubset* matls,
-                           DataWarehouse* old_dw,
-                           DataWarehouse* new_dw)
+void Poisson1::timeAdvance(DetailedTask* task,
+                            Task::CallBackEvent event,
+                            const ProcessorGroup* pg,
+                            const PatchSubset* patches,
+                            const MaterialSubset* matls,
+                            DataWarehouse* old_dw,
+                            DataWarehouse* new_dw,
+                            void* old_TaskGpuDW,
+                            void* new_TaskGpuDW,
+                            void* stream,
+                            int deviceID)
 {
+
   int matl = 0;
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
+//Get the data.
+#if !defined(UINTAH_ENABLE_KOKKOS)
+    // The legacy Uintah CPU way
     constNCVariable<double> phi;
-
-    old_dw->get(phi, phi_label, matl, patch, Ghost::AroundNodes, 1);
     NCVariable<double> newphi;
-
+    old_dw->get(phi, phi_label, matl, patch, Ghost::AroundNodes, 1);
     new_dw->allocateAndPut(newphi, phi_label, matl, patch);
     newphi.copyPatch(phi, newphi.getLowIndex(), newphi.getHighIndex());
 
+#elif !defined(HAVE_CUDA) && defined(UINTAH_ENABLE_KOKKOS)
+    // Grab the variables then grab the Kokkos Views
+    constNCVariable<double> NC_phi;
+    NCVariable<double> NC_newphi;
+    old_dw->get(NC_phi, phi_label, matl, patch, Ghost::AroundNodes, 1);
+    new_dw->allocateAndPut(NC_newphi, phi_label, matl, patch);
+    NC_newphi.copyPatch(NC_phi, NC_newphi.getLowIndex(), NC_newphi.getHighIndex());
+    KokkosView3<const double> phi = NC_phi.getKokkosView();
+    KokkosView3<double> newphi = NC_newphi.getKokkosView();
+
+#elif defined(HAVE_CUDA) && defined(UINTAH_ENABLE_KOKKOS)
+    //Note: this will only work if the task's using_device is set to true.
+    //This section was only put here for future boilerplace
+    // Get the variables directly from the GPU Data Warehouse, we can avoid
+    // creating a temporary GPUGridVariable.
+    //TODO: Need to copy patch faces (or just zero them out), we don't have anything like that yet, so
+    //this will pull in garbage data from halos
+    KokkosView3<const double> phi = old_dw->getGPUDW()->getKokkosView<const double>(phi_label->getName().c_str(), patch->getID(),  matl, 0);
+    KokkosView3<double> newphi    = new_dw->getGPUDW()->getKokkosView<double>(phi_label->getName().c_str(), patch->getID(),  matl, 0);
+#endif
+
+    //Prepare the range
     double residual = 0;
     IntVector l = patch->getNodeLowIndex();
     IntVector h = patch->getNodeHighIndex();
@@ -248,8 +294,8 @@ void Poisson1::timeAdvance(const ProcessorGroup*,
     Uintah::BlockRange range(l, h);
 
     TimeAdvanceFunctor func(phi, newphi);
-    Uintah::parallel_reduce(range, func, residual);
 
-    new_dw->put(sum_vartype(residual), residual_label);
+    Uintah::parallel_reduce(range, func, residual);
+    //new_dw->put(sum_vartype(residual), residual_label);
   }
 }

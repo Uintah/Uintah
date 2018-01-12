@@ -31,6 +31,9 @@
 #include <Core/Geometry/IntVector.h>
 
 #include <sci_defs/kokkos_defs.h>
+#ifdef UINTAH_ENABLE_KOKKOS
+#include <Core/Grid/Variables/KokkosViews.h>
+#endif
 
 #if SCI_ASSERTION_LEVEL >= 3
 // test the range and throw a more informative exception
@@ -71,53 +74,6 @@ WARNING
 ****************************************/
 
 namespace Uintah {
-
-#ifdef UINTAH_ENABLE_KOKKOS
-template <typename T>
-struct KokkosView3
-{
-  using view_type = Kokkos::View<T***, Kokkos::LayoutStride, Kokkos::MemoryTraits<Kokkos::Unmanaged> >;
-  using reference_type = typename view_type::reference_type;
-
-  template< typename IType, typename JType, typename KType >
-  KOKKOS_FORCEINLINE_FUNCTION
-  reference_type operator()(const IType & i, const JType & j, const KType & k ) const
-  { return m_view( i - m_i, j - m_j, k - m_k ); }
-
-  KokkosView3( const view_type & v, int i, int j, int k )
-    : m_view(v)
-    , m_i(i)
-    , m_j(j)
-    , m_k(k)
-  {}
-
-  KokkosView3() = default;
-
-  template <typename U, typename = std::enable_if< std::is_same<U,T>::value || std::is_same<const U,T>::value> >
-  KokkosView3( const KokkosView3<U> & v)
-    : m_view(v.m_view)
-    , m_i(v.m_i)
-    , m_j(v.m_j)
-    , m_k(v.m_k)
-  {}
-
-  template <typename U, typename = std::enable_if< std::is_same<U,T>::value || std::is_same<const U,T>::value> >
-  KokkosView3 & operator=( const KokkosView3<U> & v)
-  {
-    m_view = v.m_view;
-    m_i = v.m_i;
-    m_j = v.m_j;
-    m_k = v.m_k;
-    return *this;
-  }
-
-  view_type m_view;
-  int       m_i;
-  int       m_j;
-  int       m_k;
-};
-#endif //UINTAH_ENABLE_KOKKOS
-
 
 template<class T> class Array3Window : public RefCounted {
    public:

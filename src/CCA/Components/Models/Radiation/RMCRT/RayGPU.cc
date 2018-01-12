@@ -31,6 +31,7 @@
   #include <CCA/Components/Models/Radiation/RMCRT/RayGPU.cuh>
 #endif
 #include <iostream>
+#include <cmath>
 
 #define BLOCKSIZE 16 //The GPU 1L still uses this, the ML/DO doesn't
 

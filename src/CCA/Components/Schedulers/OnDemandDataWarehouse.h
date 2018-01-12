@@ -503,8 +503,7 @@ class OnDemandDataWarehouse : public DataWarehouse {
                                          IntVector& siz, IntVector& strides);
 
    void getValidNeighbors(const VarLabel* label, int matlIndex, const Patch* patch,
-           Ghost::GhostType gtype, int numGhostCells, std::vector<ValidNeighbors>& validNeighbors,
-           bool ignoreMissingNeighbors = false);
+           Ghost::GhostType gtype, int numGhostCells, std::vector<ValidNeighbors>& validNeighbors);
 
    void logMemoryUse(std::ostream& out,
                       unsigned long& total,

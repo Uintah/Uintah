@@ -106,9 +106,12 @@ protected: // class Task
                        ) = 0;
   };
 
-
-private: // class Task
-
+// Nvidia's nvcc compiler version 8 and 9 have a bug where it can't compile std::tuples with more than 2 template parameters
+// The following uses std::tuple if nvcc version 8 or 9 is NOT used, otherwise, the variatic templates are manually unwrapped.
+// Not that we can can't use the unwrapped templates exclusively, Alan H mentioned the justification for going to variatic
+// templates was to avoid another bug elsewhere.  -- Brad P. Jan 10 2018
+#if !(defined (__CUDACC_VER_MAJOR__) && __CUDACC_VER_MAJOR__ >=8)
+  private: // class Task
   // CPU Action constructor
   template<typename T, typename... Args>
   class Action : public ActionBase {
@@ -263,7 +266,706 @@ private: // class Task
       }
 
   };  // end GPU (device) Action constructor
+#else
 
+private:
+
+  // begin old CPU only Action constructors
+  template<class T>
+  class Action : public ActionBase {
+
+      T* ptr;
+      void (T::*pmf)(const ProcessorGroup* pg,
+                     const PatchSubset* patches,
+                     const MaterialSubset* matls,
+                     DataWarehouse* fromDW,
+                     DataWarehouse* toDW);
+    public:
+      // class Action
+      Action(T* ptr,
+             void (T::*pmf)(const ProcessorGroup* pg,
+                            const PatchSubset* patches,
+                            const MaterialSubset* matls,
+                            DataWarehouse* fromDW,
+                            DataWarehouse*toDW))
+          : ptr(ptr), pmf(pmf)
+      {
+      }
+      virtual ~Action()
+      {
+      }
+
+      //////////
+      // Insert Documentation Here:
+      virtual void doit(DetailedTask* task,
+                        CallBackEvent event,
+                        const ProcessorGroup* pg,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* fromDW,
+                        DataWarehouse* toDW,
+                        void* oldTaskGpuDW,
+                        void* newTaskGpuDW,
+                        void* stream,
+                        int deviceID)
+      {
+        (ptr->*pmf)(pg, patches, matls, fromDW, toDW);
+      }
+  };  // end class Action
+
+  template<class T, class Arg1>
+  class Action1 : public ActionBase {
+
+      T* ptr;
+      void (T::*pmf)(const ProcessorGroup* pg,
+                     const PatchSubset* patches,
+                     const MaterialSubset* matls,
+                     DataWarehouse* fromDW,
+                     DataWarehouse* toDW,
+                     Arg1 arg1);
+      Arg1 arg1;
+    public:
+      // class Action1
+      Action1(T* ptr,
+              void (T::*pmf)(const ProcessorGroup* pg,
+                             const PatchSubset* patches,
+                             const MaterialSubset* matls,
+                             DataWarehouse* fromDW,
+                             DataWarehouse* toDW,
+                             Arg1 arg1),
+              Arg1 arg1)
+          : ptr(ptr), pmf(pmf), arg1(arg1)
+      {
+      }
+      virtual ~Action1()
+      {
+      }
+
+      //////////
+      // Insert Documentation Here:
+      virtual void doit(DetailedTask* task,
+                        CallBackEvent event,
+                        const ProcessorGroup* pg,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* fromDW,
+                        DataWarehouse* toDW,
+                        void* oldTaskGpuDW,
+                        void* newTaskGpuDW,
+                        void* stream,
+                        int deviceID)
+      {
+        (ptr->*pmf)(pg, patches, matls, fromDW, toDW, arg1);
+      }
+  };  // end class Action1
+
+  template<class T, class Arg1, class Arg2>
+  class Action2 : public ActionBase {
+
+      T* ptr;
+      void (T::*pmf)(const ProcessorGroup* pg,
+                     const PatchSubset* patches,
+                     const MaterialSubset* matls,
+                     DataWarehouse* fromDW,
+                     DataWarehouse* toDW,
+                     Arg1 arg1,
+                     Arg2 arg2);
+      Arg1 arg1;
+      Arg2 arg2;
+    public:
+      // class Action2
+      Action2(T* ptr,
+              void (T::*pmf)(const ProcessorGroup*,
+                             const PatchSubset* patches,
+                             const MaterialSubset* matls,
+                             DataWarehouse*,
+                             DataWarehouse*,
+                             Arg1,
+                             Arg2),
+              Arg1 arg1,
+              Arg2 arg2)
+          : ptr(ptr), pmf(pmf), arg1(arg1), arg2(arg2)
+      {
+      }
+      virtual ~Action2()
+      {
+      }
+
+      //////////
+      // Insert Documentation Here:
+      virtual void doit(DetailedTask* task,
+                        CallBackEvent event,
+                        const ProcessorGroup* pg,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* fromDW,
+                        DataWarehouse* toDW,
+                        void* oldTaskGpuDW,
+                        void* newTaskGpuDW,
+                        void* stream,
+                        int deviceID)
+      {
+        (ptr->*pmf)(pg, patches, matls, fromDW, toDW, arg1, arg2);
+      }
+  };  // end class Action2
+
+  template<class T, class Arg1, class Arg2, class Arg3>
+  class Action3 : public ActionBase {
+
+      T* ptr;
+      void (T::*pmf)(const ProcessorGroup* pg,
+                     const PatchSubset* patches,
+                     const MaterialSubset* matls,
+                     DataWarehouse* fromDW,
+                     DataWarehouse* toDW,
+                     Arg1 arg1,
+                     Arg2 arg2,
+                     Arg3 arg3);
+      Arg1 arg1;
+      Arg2 arg2;
+      Arg3 arg3;
+    public:
+      // class Action3
+      Action3(T* ptr,
+              void (T::*pmf)(const ProcessorGroup* pg,
+                             const PatchSubset* patches,
+                             const MaterialSubset* matls,
+                             DataWarehouse* fromDW,
+                             DataWarehouse* toDW,
+                             Arg1,
+                             Arg2,
+                             Arg3),
+              Arg1 arg1,
+              Arg2 arg2,
+              Arg3 arg3)
+          : ptr(ptr), pmf(pmf), arg1(arg1), arg2(arg2), arg3(arg3)
+      {
+      }
+      virtual ~Action3()
+      {
+      }
+
+      //////////
+      // Insert Documentation Here:
+      virtual void doit(DetailedTask* task,
+                        CallBackEvent event,
+                        const ProcessorGroup* pg,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* fromDW,
+                        DataWarehouse* toDW,
+                        void* oldTaskGpuDW,
+                        void* newTaskGpuDW,
+                        void* stream,
+                        int deviceID)
+      {
+        (ptr->*pmf)(pg, patches, matls, fromDW, toDW, arg1, arg2, arg3);
+      }
+  };  // end Action3
+
+  template<class T, class Arg1, class Arg2, class Arg3, class Arg4>
+  class Action4 : public ActionBase {
+
+      T* ptr;
+      void (T::*pmf)(const ProcessorGroup* pg,
+                     const PatchSubset* patches,
+                     const MaterialSubset* matls,
+                     DataWarehouse* fromDW,
+                     DataWarehouse* toDW,
+                     Arg1 arg1,
+                     Arg2 arg2,
+                     Arg3 arg3,
+                     Arg4 arg4);
+      Arg1 arg1;
+      Arg2 arg2;
+      Arg3 arg3;
+      Arg4 arg4;
+    public:
+      // class Action4
+      Action4(T* ptr,
+              void (T::*pmf)(const ProcessorGroup* pg,
+                             const PatchSubset* patches,
+                             const MaterialSubset* matls,
+                             DataWarehouse* fromDW,
+                             DataWarehouse* toDW,
+                             Arg1,
+                             Arg2,
+                             Arg3,
+                             Arg4),
+              Arg1 arg1,
+              Arg2 arg2,
+              Arg3 arg3,
+              Arg4 arg4)
+          : ptr(ptr), pmf(pmf), arg1(arg1), arg2(arg2), arg3(arg3), arg4(arg4)
+      {
+      }
+      virtual ~Action4()
+      {
+      }
+
+      //////////
+      // Insert Documentation Here:
+      virtual void doit(DetailedTask* task,
+                        CallBackEvent event,
+                        const ProcessorGroup* pg,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* fromDW,
+                        DataWarehouse* toDW,
+                        void* oldTaskGpuDW,
+                        void* newTaskGpuDW,
+                        void* stream,
+                        int deviceID)
+      {
+        (ptr->*pmf)(pg, patches, matls, fromDW, toDW, arg1, arg2, arg3, arg4);
+      }
+  };  // end Action4
+
+  template<class T, class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
+  class Action5 : public ActionBase {
+
+      T* ptr;
+      void (T::*pmf)(const ProcessorGroup* pg,
+                     const PatchSubset* patches,
+                     const MaterialSubset* matls,
+                     DataWarehouse* fromDW,
+                     DataWarehouse* toDW,
+                     Arg1 arg1,
+                     Arg2 arg2,
+                     Arg3 arg3,
+                     Arg4 arg4,
+                     Arg5 arg5);
+      Arg1 arg1;
+      Arg2 arg2;
+      Arg3 arg3;
+      Arg4 arg4;
+      Arg5 arg5;
+    public:
+      // class Action5
+      Action5(T* ptr,
+              void (T::*pmf)(const ProcessorGroup* pg,
+                             const PatchSubset* patches,
+                             const MaterialSubset* matls,
+                             DataWarehouse* fromDW,
+                             DataWarehouse* toDW,
+                             Arg1,
+                             Arg2,
+                             Arg3,
+                             Arg4,
+                             Arg5),
+              Arg1 arg1,
+              Arg2 arg2,
+              Arg3 arg3,
+              Arg4 arg4,
+              Arg5 arg5)
+          : ptr(ptr), pmf(pmf), arg1(arg1), arg2(arg2), arg3(arg3), arg4(arg4), arg5(arg5)
+      {
+      }
+      virtual ~Action5()
+      {
+      }
+
+      //////////
+      // Insert Documentation Here:
+      virtual void doit(DetailedTask* task,
+                        CallBackEvent event,
+                        const ProcessorGroup* pg,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* fromDW,
+                        DataWarehouse* toDW,
+                        void* oldTaskGpuDW,
+                        void* newTaskGpuDW,
+                        void* stream,
+                        int deviceID)
+      {
+        (ptr->*pmf)(pg, patches, matls, fromDW, toDW, arg1, arg2, arg3, arg4, arg5);
+      }
+  };  // end Action5
+  // end old CPU only Action constructors
+
+  // ------------------------------------------------------------------------
+
+  // begin Device Action constructors
+  template<class T>
+  class ActionDevice : public ActionBase {
+      T* ptr;
+      void (T::*pmf)(DetailedTask* task,
+                     CallBackEvent event,
+                     const ProcessorGroup* pg,
+                     const PatchSubset* patches,
+                     const MaterialSubset* matls,
+                     DataWarehouse* fromDW,
+                     DataWarehouse* toDW,
+                     void* oldTaskGpuDW,
+                     void* newTaskGpuDW,
+                     void* stream,
+                     int deviceID);
+    public:
+      // class ActionDevice
+      ActionDevice( T * ptr,
+                    void (T::*pmf)(DetailedTask* task,
+                                   CallBackEvent event,
+                                   const ProcessorGroup* pg,
+                                   const PatchSubset* patches,
+                                   const MaterialSubset* matls,
+                                   DataWarehouse* fromDW,
+                                   DataWarehouse* toDW,
+                                   void* oldTaskGpuDW,
+                                   void* newTaskGpuDW,
+                                   void* stream,
+                                   int deviceID) ) :
+        ptr(ptr), pmf(pmf)
+      {
+      }
+      virtual ~ActionDevice()
+      {
+      }
+
+      //////////
+      // Insert Documentation Here:
+      virtual void doit(DetailedTask* task,
+                        CallBackEvent event,
+                        const ProcessorGroup* pg,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* fromDW,
+                        DataWarehouse* toDW,
+                        void* oldTaskGpuDW,
+                        void* newTaskGpuDW,
+                        void* stream,
+                        int deviceID)
+      {
+        (ptr->*pmf)(task, event, pg, patches, matls, fromDW, toDW, oldTaskGpuDW, newTaskGpuDW, stream, deviceID);
+      }
+  };  // end class ActionDevice
+
+  template<class T, class Arg1>
+  class ActionDevice1 : public ActionBase {
+      T* ptr;
+      void (T::*pmf)(DetailedTask* task,
+                      CallBackEvent event,
+                      const ProcessorGroup* pg,
+                      const PatchSubset* patches,
+                      const MaterialSubset* matls,
+                            DataWarehouse* fromDW,
+                            DataWarehouse* toDW,
+                            void* oldTaskGpuDW,
+                            void* newTaskGpuDW,
+                            void* stream,
+                            int deviceID,
+                            Arg1 arg1);
+      Arg1 arg1;
+    public:
+      // class ActionDevice1
+      ActionDevice1(T* ptr,
+                    void (T::*pmf)(DetailedTask* task,
+                                   CallBackEvent event,
+                                   const ProcessorGroup* pg,
+                                   const PatchSubset* patches,
+                                   const MaterialSubset* matls,
+                                   DataWarehouse* fromDW,
+                                   DataWarehouse* toDW,
+                                   void* oldTaskGpuDW,
+                                   void* newTaskGpuDW,
+                                   void* stream,
+                                   int deviceID,
+                                   Arg1 arg1),
+                    Arg1 arg1)
+          : ptr(ptr), pmf(pmf), arg1(arg1)
+      {
+      }
+      virtual ~ActionDevice1()
+      {
+      }
+
+      //////////
+      // Insert Documentation Here:
+      virtual void doit(DetailedTask* task,
+                        CallBackEvent event,
+                        const ProcessorGroup* pg,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* fromDW,
+                        DataWarehouse* toDW,
+                        void* oldTaskGpuDW,
+                        void* newTaskGpuDW,
+                        void* stream,
+                        int deviceID)
+      {
+        (ptr->*pmf)(task, event, pg, patches, matls, fromDW, toDW, oldTaskGpuDW, newTaskGpuDW, stream, deviceID, arg1);
+      }
+  };  // end class ActionDevice1
+
+  template<class T, class Arg1, class Arg2>
+  class ActionDevice2 : public ActionBase {
+      T* ptr;
+      void (T::*pmf)(DetailedTask* task,
+                     CallBackEvent event,
+                     const ProcessorGroup* pg,
+                     const PatchSubset* patches,
+                     const MaterialSubset* matls,
+                     DataWarehouse* fromDW,
+                     DataWarehouse* toDW,
+                     void* oldTaskGpuDW,
+                     void* newTaskGpuDW,
+                     void* stream,
+                     int deviceID,
+                     Arg1 arg1,
+                     Arg2 arg2);
+      Arg1 arg1;
+      Arg2 arg2;
+    public:
+      // class ActionDevice2
+      ActionDevice2(T* ptr,
+                    void (T::*pmf)(DetailedTask* task,
+                                   CallBackEvent event,
+                                   const ProcessorGroup* pg,
+                                   const PatchSubset* patches,
+                                   const MaterialSubset* matls,
+                                   DataWarehouse* fromDW,
+                                   DataWarehouse* toDW,
+                                   void* oldTaskGpuDW,
+                                   void* newTaskGpuDW,
+                                   void* stream,
+                                   int deviceID,
+                                   Arg1 arg1,
+                                   Arg2 arg2),
+                    Arg1 arg1,
+                    Arg2 arg2)
+          : ptr(ptr), pmf(pmf), arg1(arg1), arg2(arg2)
+      {
+      }
+      virtual ~ActionDevice2()
+      {
+      }
+
+      //////////
+      // Insert Documentation Here:
+      virtual void doit(DetailedTask* task,
+                        CallBackEvent event,
+                        const ProcessorGroup* pg,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* fromDW,
+                        DataWarehouse* toDW,
+                        void* oldTaskGpuDW,
+                        void* newTaskGpuDW,
+                        void* stream,
+                        int deviceID)
+      {
+        (ptr->*pmf)(task, event, pg, patches, matls, fromDW, toDW, oldTaskGpuDW, newTaskGpuDW, stream, deviceID, arg1, arg2);
+      }
+  };  // end class ActionDevice2
+
+  template<class T, class Arg1, class Arg2, class Arg3>
+  class ActionDevice3 : public ActionBase {
+      T* ptr;
+      void (T::*pmf)(DetailedTask* task,
+                     CallBackEvent event,
+                     const ProcessorGroup* pg,
+                     const PatchSubset* patches,
+                     const MaterialSubset* matls,
+                     DataWarehouse* fromDW,
+                     DataWarehouse* toDW,
+                     void* oldTaskGpuDW,
+                     void* newTaskGpuDW,
+                     void* stream,
+                     int deviceID,
+                     Arg1 arg1,
+                     Arg2 arg2,
+                     Arg3 arg3);
+      Arg1 arg1;
+      Arg2 arg2;
+      Arg3 arg3;
+
+    public:
+      // class ActionDevice3
+      ActionDevice3(T* ptr,
+                    void (T::*pmf)(DetailedTask* task,
+                                   CallBackEvent event,
+                                   const ProcessorGroup* pg,
+                                   const PatchSubset* patches,
+                                   const MaterialSubset* matls,
+                                   DataWarehouse* fromDW,
+                                   DataWarehouse* toDW,
+                                   void* oldTaskGpuDW,
+                                   void* newTaskGpuDW,
+                                   void* stream,
+                                   int deviceID,
+                                   Arg1 arg1,
+                                   Arg2 arg2,
+                                   Arg3 arg3),
+                    Arg1 arg1,
+                    Arg2 arg2,
+                    Arg3 arg3)
+          : ptr(ptr), pmf(pmf), arg1(arg1), arg2(arg2), arg3(arg3)
+      {
+      }
+      virtual ~ActionDevice3()
+      {
+      }
+
+      //////////
+      // Insert Documentation Here:
+      virtual void doit(       Task *task,
+                               CallBackEvent    event,
+                         const ProcessorGroup * pg,
+                         const PatchSubset    * patches,
+                         const MaterialSubset * matls,
+                               DataWarehouse  * fromDW,
+                               DataWarehouse  * toDW,
+                               void* oldTaskGpuDW,
+                               void* newTaskGpuDW,
+                               void           * stream,
+                               int              deviceID)
+      {
+        (ptr->*pmf)(task, event, pg, patches, matls, fromDW, toDW, oldTaskGpuDW, newTaskGpuDW, stream, deviceID, arg1, arg2, arg3);
+      }
+  };  // end class ActionDevice3
+
+  template<class T, class Arg1, class Arg2, class Arg3, class Arg4>
+  class ActionDevice4 : public ActionBase {
+      T* ptr;
+      void (T::*pmf)(DetailedTask* task,
+                     CallBackEvent event,
+                     const ProcessorGroup* pg,
+                     const PatchSubset* patches,
+                     const MaterialSubset* matls,
+                     DataWarehouse* fromDW,
+                     DataWarehouse* toDW,
+                     void* oldTaskGpuDW,
+                     void* newTaskGpuDW,
+                     void* stream,
+                     int deviceID,
+                     Arg1 arg1,
+                     Arg2 arg2,
+                     Arg3 arg3,
+                     Arg4 arg4);
+      Arg1 arg1;
+      Arg2 arg2;
+      Arg3 arg3;
+      Arg4 arg4;
+    public:
+      // class ActionDevice4
+      ActionDevice4(T* ptr,
+                    void (T::*pmf)(DetailedTask* task,
+                                   CallBackEvent event,
+                                   const ProcessorGroup* pg,
+                                   const PatchSubset* patches,
+                                   const MaterialSubset* matls,
+                                   DataWarehouse* fromDW,
+                                   DataWarehouse* toDW,
+                                   void* oldTaskGpuDW,
+                                   void* newTaskGpuDW,
+                                   void * stream,
+                                   int deviceID,
+                                   Arg1 arg1,
+                                   Arg2 arg2,
+                                   Arg3 arg3,
+                                   Arg4 arg4),
+                    Arg1 arg1,
+                    Arg2 arg2,
+                    Arg3 arg3,
+                    Arg4 arg4)
+          : ptr(ptr), pmf(pmf), arg1(arg1), arg2(arg2), arg3(arg3), arg4(arg4)
+      {
+      }
+      virtual ~ActionDevice4()
+      {
+      }
+
+      //////////
+      // Insert Documentation Here:
+      virtual void doit(DetailedTask* task,
+                        CallBackEvent event,
+                        const ProcessorGroup* pg,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* fromDW,
+                        DataWarehouse* toDW,
+                        void* oldTaskGpuDW,
+                        void* newTaskGpuDW,
+                        void* stream,
+                        int deviceID)
+      {
+        (ptr->*pmf)(task, event, pg, patches, matls, fromDW, toDW, oldTaskGpuDW, newTaskGpuDW, stream, deviceID, arg1, arg2, arg3, arg4);
+      }
+  };  // end class ActionDevice4
+
+  template<class T, class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
+  class ActionDevice5 : public ActionBase {
+      T* ptr;
+      void (T::*pmf)(DetailedTask* task,
+                     CallBackEvent event,
+                     const ProcessorGroup* pg,
+                     const PatchSubset* patches,
+                     const MaterialSubset* matls,
+                     DataWarehouse* fromDW,
+                     DataWarehouse* toDW,
+                     void* oldTaskGpuDW,
+                     void* newTaskGpuDW,
+                     void* stream,
+                     int deviceID,
+                     Arg1 arg1,
+                     Arg2 arg2,
+                     Arg3 arg3,
+                     Arg4 arg4,
+                     Arg5 arg5);
+      Arg1 arg1;
+      Arg2 arg2;
+      Arg3 arg3;
+      Arg4 arg4;
+      Arg5 arg5;
+    public:
+      // class ActionDevice5
+      ActionDevice5( T* ptr,
+                     void (T::*pmf)(DetailedTask* task,
+                                    CallBackEvent event,
+                                    const ProcessorGroup* pg,
+                                    const PatchSubset* patches,
+                                    const MaterialSubset* matls,
+                                    DataWarehouse * fromDW,
+                                    DataWarehouse * toDW,
+                                    void* oldTaskGpuDW,
+                                    void* newTaskGpuDW,
+                                    void* stream,
+                                    int deviceID,
+                                    Arg1 arg1,
+                                    Arg2 arg2,
+                                    Arg3 arg3,
+                                    Arg4 arg4,
+                                    Arg5 arg5),
+                    Arg1 arg1,
+                    Arg2 arg2,
+                    Arg3 arg3,
+                    Arg4 arg4,
+                    Arg5 arg5)
+          : ptr(ptr), pmf(pmf), arg1(arg1), arg2(arg2), arg3(arg3), arg4(arg4), arg5(arg5)
+      {
+      }
+      virtual ~ActionDevice5()
+      {
+      }
+
+      //////////
+      // Insert Documentation Here:
+      virtual void doit(DetailedTask* task,
+                        CallBackEvent event,
+                        const ProcessorGroup* pg,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* fromDW,
+                        DataWarehouse* toDW,
+                        void* oldTaskGpuDW,
+                        void* newTaskGpuDW,
+                        void* stream,
+                        int deviceID)
+      {
+        (ptr->*pmf)(task, event, pg, patches, matls, fromDW, toDW, oldTaskGpuDW, newTaskGpuDW, stream, deviceID, arg1, arg2, arg3, arg4, arg5);
+      }
+  };  // end class ActionDevice5
+#endif
 
 
 public: // class Task
@@ -303,6 +1005,11 @@ public: // class Task
     initialize();
   }
 
+// Nvidia's nvcc compiler version 8 and 9 have a bug where it can't compile std::tuples with more than 2 template parameters
+// The following uses std::tuple if nvcc version 8 or 9 is NOT used, otherwise, the variatic templates are manually unwrapped.
+// Not that we can can't use the unwrapped templates exclusively, Alan H mentioned the justification for going to variatic
+// templates was to avoid another bug elsewhere.  -- Brad P. Jan 10 2018
+#if !(defined (__CUDACC_VER_MAJOR__) && __CUDACC_VER_MAJOR__ >=8)
   // CPU Task constructor
   template<typename T, typename... Args>
   Task( const std::string & taskName
@@ -348,6 +1055,298 @@ public: // class Task
     initialize();
     d_tasktype = Normal;
   }
+#else
+  // begin CPU only Task constructors
+  template<class T>
+  Task(const std::string& taskName,
+       T* ptr,
+       void (T::*pmf)(const ProcessorGroup* pg,
+                      const PatchSubset* patches,
+                      const MaterialSubset* matls,
+                      DataWarehouse* fromDW,
+                      DataWarehouse* toDW))
+      : m_task_name(taskName), m_action(scinew Action<T>(ptr, pmf))
+  {
+    d_tasktype = Normal;
+    initialize();
+  }
+
+  template<class T, class Arg1>
+  Task(const std::string& taskName,
+       T* ptr,
+       void (T::*pmf)(const ProcessorGroup* pg,
+                      const PatchSubset* patches,
+                      const MaterialSubset* matls,
+                      DataWarehouse* fromDW,
+                      DataWarehouse* toDW,
+                      Arg1 arg1),
+       Arg1 arg1)
+      : m_task_name(taskName), m_action(scinew Action1<T, Arg1>(ptr, pmf, arg1))
+  {
+    d_tasktype = Normal;
+    initialize();
+  }
+
+  template<class T, class Arg1, class Arg2>
+  Task(const std::string& taskName,
+       T* ptr,
+       void (T::*pmf)(const ProcessorGroup* pg,
+                      const PatchSubset* patches,
+                      const MaterialSubset* matls,
+                      DataWarehouse* fromDW,
+                      DataWarehouse* toDW,
+                      Arg1,
+                      Arg2),
+       Arg1 arg1,
+       Arg2 arg2)
+      :
+        m_task_name(taskName),
+          m_action(scinew Action2<T, Arg1, Arg2>(ptr, pmf, arg1, arg2))
+  {
+    d_tasktype = Normal;
+    initialize();
+  }
+
+  template<class T, class Arg1, class Arg2, class Arg3>
+  Task(const std::string& taskName,
+       T* ptr,
+       void (T::*pmf)(const ProcessorGroup* pg,
+                      const PatchSubset* patches,
+                      const MaterialSubset* matls,
+                      DataWarehouse* fromDW,
+                      DataWarehouse* toDW,
+                      Arg1,
+                      Arg2,
+                      Arg3),
+       Arg1 arg1,
+       Arg2 arg2,
+       Arg3 arg3)
+      :
+        m_task_name(taskName),
+          m_action(scinew Action3<T, Arg1, Arg2, Arg3>(ptr, pmf, arg1, arg2, arg3))
+  {
+    d_tasktype = Normal;
+    initialize();
+  }
+
+  template<class T, class Arg1, class Arg2, class Arg3, class Arg4>
+  Task(const std::string& taskName,
+       T* ptr,
+       void (T::*pmf)(const ProcessorGroup* pg,
+                      const PatchSubset* patches,
+                      const MaterialSubset* matls,
+                      DataWarehouse* fromDW,
+                      DataWarehouse* toDW,
+                      Arg1,
+                      Arg2,
+                      Arg3,
+                      Arg4),
+       Arg1 arg1,
+       Arg2 arg2,
+       Arg3 arg3,
+       Arg4 arg4)
+      :
+        m_task_name(taskName),
+          m_action(scinew Action4<T, Arg1, Arg2, Arg3, Arg4>(ptr, pmf, arg1, arg2, arg3, arg4))
+  {
+    d_tasktype = Normal;
+    initialize();
+  }
+
+  template<class T, class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
+  Task(const std::string& taskName,
+       T* ptr,
+       void (T::*pmf)(const ProcessorGroup* pg,
+                      const PatchSubset* patches,
+                      const MaterialSubset* matls,
+                      DataWarehouse* fromDW,
+                      DataWarehouse* toDW,
+                      Arg1,
+                      Arg2,
+                      Arg3,
+                      Arg4,
+                      Arg5),
+       Arg1 arg1,
+       Arg2 arg2,
+       Arg3 arg3,
+       Arg4 arg4,
+       Arg5 arg5)
+      :
+        m_task_name(taskName),
+          m_action(scinew Action5<T, Arg1, Arg2, Arg3, Arg4, Arg5>(ptr, pmf, arg1, arg2, arg3, arg4, arg5))
+  {
+    d_tasktype = Normal;
+    initialize();
+  }
+  // end CPU only Task constructors
+
+
+
+  // begin Device Task constructors
+  template<class T>
+  Task(
+       const std::string& taskName,
+       T* ptr,
+       void (T::*pmf)(DetailedTask* task,
+                      CallBackEvent event,
+                      const ProcessorGroup* pg,
+                      const PatchSubset* patches,
+                      const MaterialSubset* matls,
+                      DataWarehouse* fromDW,
+                      DataWarehouse* toDW,
+                      void* old_TaskGpuDW,
+                      void* new_TaskGpuDW,
+                      void* stream,
+                      int deviceID))
+      :
+        m_task_name(taskName),
+          m_action(scinew ActionDevice<T>(ptr, pmf))
+  {
+    initialize();
+    d_tasktype = Normal;
+  }
+
+  template<class T, class Arg1>
+  Task(
+       const std::string& taskName,
+       T* ptr,
+       void (T::*pmf)(DetailedTask* task,
+                      CallBackEvent event,
+                      const ProcessorGroup* pg,
+                      const PatchSubset* patches,
+                      const MaterialSubset* matls,
+                      DataWarehouse* fromDW,
+                      DataWarehouse* toDW,
+                      void* oldTaskGpuDW,
+                      void* newTaskGpuDW,
+                      void* stream,
+                      int deviceID,
+                      Arg1 arg1),
+       Arg1 arg1)
+      :
+        m_task_name(taskName),
+          m_action(scinew ActionDevice1<T, Arg1>(ptr, pmf, arg1))
+  {
+    initialize();
+    d_tasktype = Normal;
+  }
+
+  template<class T, class Arg1, class Arg2>
+  Task(const std::string& taskName,
+       T* ptr,
+       void (T::*pmf)(DetailedTask* task,
+                      CallBackEvent event,
+                      const ProcessorGroup* pg,
+                      const PatchSubset* patches,
+                      const MaterialSubset* matls,
+                      DataWarehouse* fromDW,
+                      DataWarehouse* toDW,
+                      void* oldTaskGpuDW,
+                      void* newTaskGpuDW,
+                      void* stream,
+                      int deviceID,
+                      Arg1 arg1,
+                      Arg2 arg2),
+       Arg1 arg1,
+       Arg2 arg2)
+      :
+        m_task_name(taskName),
+          m_action(scinew ActionDevice2<T, Arg1, Arg2>(ptr, pmf, arg1, arg2))
+  {
+    initialize();
+    d_tasktype = Normal;
+  }
+
+  template<class T, class Arg1, class Arg2, class Arg3>
+  Task(const std::string& taskName,
+       T* ptr,
+       void (T::*pmf)(DetailedTask* task,
+                      CallBackEvent event,
+                      const ProcessorGroup* pg,
+                      const PatchSubset* patches,
+                      const MaterialSubset* matls,
+                      DataWarehouse* fromDW,
+                      DataWarehouse* toDW,
+                      void* oldTaskGpuDW,
+                      void* newTaskGpuDW,
+                      void* stream,
+                      int deviceID,
+                      Arg1 arg1,
+                      Arg2 arg2,
+                      Arg3 arg3),
+       Arg1 arg1,
+       Arg2 arg2,
+       Arg3 arg3)
+      :
+        m_task_name(taskName),
+          m_action(scinew ActionDevice3<T, Arg1, Arg2, Arg3>(ptr, pmf, arg1, arg2, arg3))
+  {
+    initialize();
+    d_tasktype = Normal;
+  }
+
+  template<class T, class Arg1, class Arg2, class Arg3, class Arg4>
+  Task(const std::string& taskName,
+       T* ptr,
+       void (T::*pmf)(DetailedTask* task,
+                      CallBackEvent event,
+                      const ProcessorGroup* pg,
+                      const PatchSubset* patches,
+                      const MaterialSubset* matls,
+                      DataWarehouse* fromDW,
+                      DataWarehouse* toDW,
+                      void* oldTaskGpuDW,
+                      void* newTaskGpuDW,
+                      void* stream,
+                      int deviceID,
+                      Arg1 arg1,
+                      Arg2 arg2,
+                      Arg3 arg3,
+                      Arg4 arg4),
+       Arg1 arg1,
+       Arg2 arg2,
+       Arg3 arg3,
+       Arg4 arg4)
+      :
+        m_task_name(taskName),
+          m_action(scinew ActionDevice4<T, Arg1, Arg2, Arg3, Arg4>(ptr, pmf, arg1, arg2, arg3, arg4))
+  {
+    initialize();
+    d_tasktype = Normal;
+  }
+
+  template<class T, class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
+  Task(const std::string& taskName,
+       T* ptr,
+       void (T::*pmf)(DetailedTask* task,
+                      CallBackEvent event,
+                      const ProcessorGroup* pg,
+                      const PatchSubset* patches,
+                      const MaterialSubset* matls,
+                      DataWarehouse* fromDW,
+                      DataWarehouse* toDW,
+                      void* oldTaskGpuDW,
+                      void* newTaskGpuDW,
+                      void* stream,
+                      int deviceID,
+                      Arg1 arg1,
+                      Arg2 arg2,
+                      Arg3 arg3,
+                      Arg4 arg4,
+                      Arg5 arg5),
+       Arg1 arg1,
+       Arg2 arg2,
+       Arg3 arg3,
+       Arg4 arg4,
+       Arg5 arg5)
+      :
+        m_task_name(taskName),
+          m_action(scinew ActionDevice5<T, Arg1, Arg2, Arg3, Arg4, Arg5>(ptr, pmf, arg1, arg2, arg3, arg4, arg5))
+  {
+    initialize();
+    d_tasktype = Normal;
+  }
+#endif
 
   void initialize();
 
@@ -843,4 +1842,5 @@ protected: // class Task
 // This must be at the bottom
 #include <CCA/Ports/DataWarehouse.h>
 
+//#endif // Using CUDA
 #endif // CORE_GRID_TASK_H

@@ -58,11 +58,12 @@ ifeq ($(BUILD_MODELS_RADIATION),yes)
   SRCS += $(SRCDIR)/RMCRT_Test.cc       
 endif
 
-ifeq ($(HAVE_CUDA),yes)
-  SRCS += $(SRCDIR)/UnifiedSchedulerTest.cc        \
-          $(SRCDIR)/UnifiedSchedulerTestKernel.cu
-  DLINK_FILES += \
-          CCA/Components/Examples/UnifiedSchedulerTestKernel.o 
+ifneq ($(HAVE_KOKKOS),yes)
+  ifeq ($(HAVE_CUDA),yes)
+    SRCS += $(SRCDIR)/UnifiedSchedulerTest.cc
+    SRCS += $(SRCDIR)/UnifiedSchedulerTestKernel.cu
+    DLINK_FILES += CCA/Components/Examples/UnifiedSchedulerTestKernel.o
+  endif          
 endif
 
 PSELIBS := \

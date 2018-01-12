@@ -34,6 +34,11 @@
 #include <Core/Grid/Variables/GridVariableBase.h>
 #include <Core/Grid/Variables/GPUPerPatch.h>
 
+#ifdef UINTAH_ENABLE_KOKKOS
+#include <Kokkos_Core.hpp>
+#include <Core/Grid/Variables/KokkosViews.h>
+#endif //UINTAH_ENABLE_KOKKOS
+
 #include <map> //for host code only.
 #include <mutex>
 #include <string>
@@ -357,6 +362,44 @@ public:
 
   };
 
+#ifdef UINTAH_ENABLE_KOKKOS
+  //methods for Kokkos
+  template <typename T>
+  __host__ inline KokkosView3<T> getKokkosView(char const* label, const int patchID, const int8_t matlIndx, const int8_t levelIndx) {
+
+    // host code
+    int3 var_offset{0,0,0};
+    int3 var_size{0,0,0};
+    T* data_ptr{nullptr};
+
+    varLock->lock();
+    labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
+    if (varPointers->find(lpml) != varPointers->end()) {
+      allVarPointersInfo vp = varPointers->at(lpml);
+      var_offset = vp.var->device_offset;
+      var_size = vp.var->device_size;
+      data_ptr = reinterpret_cast<T*>(vp.var->device_ptr);
+    }
+    else {
+      printf("Error in getKokkosView() - I'm GPUDW with name: \"%s\" at %p \n", _internalName, this);
+      printf("Couldn't find an entry for label %s patch %d matl %d level %d\n", label, patchID, matlIndx, levelIndx);
+      exit(-1);
+      //printGetError("GPUDataWarehouse::getKokkosView(...)", label, -1, patchID, matlIndx);
+    }
+    varLock->unlock();
+
+      //return KokkosView3<T>(  Kokkos::subview(  KokkosData<T, Kokkos::CudaSpace>(data_ptr, var_size.x, var_size.y, var_size.z)
+      return KokkosView3<T>(  Kokkos::subview(  KokkosData<T>(data_ptr, var_size.x, var_size.y, var_size.z)
+                               , Kokkos::pair<int,int>( 0, var_size.x )
+                               , Kokkos::pair<int,int>( 0, var_size.y )
+                               , Kokkos::pair<int,int>( 0, var_size.z ) )
+                            , var_offset.x
+                            , var_offset.y
+                            , var_offset.z
+                           );
+
+  }
+#endif //UINTAH_ENABLE_KOKKOS
 
   //______________________________________________________________________
   // GPU GridVariable methods
@@ -507,6 +550,11 @@ private:
   }
   HOST_DEVICE void printGetError( const char* msg, char const* label, int8_t matlIndx, const int patchID, int8_t levelIndx);
   HOST_DEVICE void printGetLevelError(const char* msg, char const* label, int8_t levelIndx, int8_t matlIndx);
+
+  __device__ bool isThread0_Blk0();
+  __device__ bool isThread0();
+  __device__ void printThread();
+  __device__ void printBlock();
 
 
   std::map<labelPatchMatlLevel, allVarPointersInfo> *varPointers;

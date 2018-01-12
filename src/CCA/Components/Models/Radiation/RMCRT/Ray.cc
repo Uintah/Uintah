@@ -45,6 +45,7 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <cmath>
 
 // TURN ON debug flag in src/Core/Math/MersenneTwister.h to compare with Ray:CPU
 #define DEBUG -9      // 1: divQ, 2: boundFlux, 3: scattering
@@ -81,7 +82,6 @@ Ray::Ray( const TypeDescription::Type FLT_DBL ) : RMCRTCommon( FLT_DBL)
 {
 //  d_boundFluxFiltLabel   = VarLabel::create( "boundFluxFilt",    CCVariable<Stencil7>::getTypeDescription() );
 //  d_divQFiltLabel        = VarLabel::create( "divQFilt",         CCVariable<double>::getTypeDescription() );
-
   // Time Step
   m_timeStepLabel =
     VarLabel::create(timeStep_name, timeStep_vartype::getTypeDescription() );
@@ -451,6 +451,7 @@ Ray::sched_rayTrace( const LevelP& level,
   int L = level->getIndex();
   Task::WhichDW abskg_dw = get_abskg_whichDW( L, d_abskgLabel );
 
+#ifdef HAVE_CUDA
   if (Parallel::usingDevice()) {          // G P U
 
     // Pass the time step in which is used to generate what should be
@@ -476,13 +477,15 @@ Ray::sched_rayTrace( const LevelP& level,
     }
     tsk->usesDevice(true);
   } else {                                // C P U
+#endif
     if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ) {
       tsk = scinew Task( taskname, this, &Ray::rayTrace<double>, modifies_divQ, abskg_dw, sigma_dw, celltype_dw );
     } else {
       tsk = scinew Task( taskname, this, &Ray::rayTrace<float>, modifies_divQ, abskg_dw, sigma_dw, celltype_dw );
     }
+#ifdef HAVE_CUDA
   }
-
+#endif
   printSchedule(level, g_ray_dbg, taskname);
 
   //__________________________________
@@ -668,14 +671,13 @@ Ray::rayTrace( const ProcessorGroup* pg,
         IntVector c = *iter;
 
         if ( std::isinf( abskg[c] )         || std::isnan( abskg[c] )  ||
-             std::isinf( sigmaT4OverPi[c] ) || std::isnan( sigmaT4OverPi[c] ) ||
-             std::isinf( celltype[c] )      || std::isnan( celltype[c] ) ){
+             std::isinf( sigmaT4OverPi[c] ) || std::isnan( sigmaT4OverPi[c] ) ) {
           std::ostringstream warn;
-          warn<< "ERROR:Ray::rayTrace   abskg or sigmaT4 or cellType is non-physical \n"
+          warn<< "ERROR:Ray::rayTrace   abskg or sigmaT4 is non-physical \n"
               << "     c:   " << c << " location: " << level->getCellPosition(c) << "\n"
               << "     ROI: " << ROI_Lo << " "<< ROI_Hi << "\n"
               << "          " << *patch << "\n"
-              << " ( abskg[c]: " << abskg[c] << ", sigmaT4OverPi[c]: " << sigmaT4OverPi[c] << ", celltype[c]: " << celltype[c] << ")\n";
+              << " ( abskg[c]: " << abskg[c] << ", sigmaT4OverPi[c]: " << sigmaT4OverPi[c] << ")\n";
 
           cout << warn.str() << endl;
           throw InternalError( warn.str(), __FILE__, __LINE__ );
@@ -886,7 +888,7 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
   string taskname = "";
 
   Task::WhichDW NotUsed = Task::None;
-  
+#ifdef HAVE_CUDA
   if (Parallel::usingDevice()) {          // G P U
     taskname = "Ray::rayTraceDataOnionGPU";
 
@@ -906,14 +908,17 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
     }
     //Allow it to use up to 4 GPU streams per patch.
     tsk->usesDevice(true, 4);
-  } else {                                // CPU
+  } else {                                // C P U
+#endif
     taskname = "Ray::rayTrace_dataOnion";
     if (RMCRTCommon::d_FLT_DBL == TypeDescription::double_type) {
       tsk = scinew Task(taskname, this, &Ray::rayTrace_dataOnion<double>, modifies_divQ, NotUsed, sigma_dw, celltype_dw);
     } else {
       tsk = scinew Task(taskname, this, &Ray::rayTrace_dataOnion<float>, modifies_divQ, NotUsed, sigma_dw, celltype_dw);
     }
+#ifdef HAVE_CUDA
   }
+#endif
 
   printSchedule(level, g_ray_dbg, taskname);
 

@@ -169,6 +169,7 @@ void UnifiedSchedulerTest::initialize(const ProcessorGroup* pg,
           double value = bc->getValue();
           for (nbound_ptr.reset(); !nbound_ptr.done(); nbound_ptr++) {
             phi[*nbound_ptr] = value;
+//            printf("cpu - patchID %d - initializing for (%d, %d, %d)\n", patch->getID(), (*nbound_ptr).x(), (*nbound_ptr).y(), (*nbound_ptr).z());
           }
           delete bcb;
         }
@@ -232,7 +233,7 @@ void UnifiedSchedulerTest::timeAdvanceUnified(DetailedTask* task,
                 * (phi[n + IntVector(1, 0, 0)] + phi[n + IntVector(-1, 0, 0)] + phi[n + IntVector(0, 1, 0)]
                 + phi[n + IntVector(0, -1, 0)] + phi[n + IntVector(0, 0, 1)] + phi[n + IntVector(0, 0, -1)]);
         //if (n.x() == 1 && n.y() == 1 && n.z() == 1) {
-        //  printf("cpu - newphi(%d, %d, %d) is %1.6lf from %1.6lf %1.6lf %1.6lf %1.6lf %1.6lf %1.6lf\n", n.x(), n.y(), n.z(), newphi[n], phi[n + IntVector(-1, 0, 0)], phi[n + IntVector(1, 0, 0)], phi[n + IntVector(0, -1, 0)], phi[n + IntVector(0, 1, 0)], phi[n + IntVector(0, 0, -1)], phi[n + IntVector(0, 0, 1)]);
+//          printf("cpu - patchID %d - newphi(%d, %d, %d) is %1.6lf from %1.6lf %1.6lf %1.6lf %1.6lf %1.6lf %1.6lf\n", patch->getID(), n.x(), n.y(), n.z(), newphi[n], phi[n + IntVector(-1, 0, 0)], phi[n + IntVector(1, 0, 0)], phi[n + IntVector(0, -1, 0)], phi[n + IntVector(0, 1, 0)], phi[n + IntVector(0, 0, -1)], phi[n + IntVector(0, 0, 1)]);
         //}
         //if (n.x() == 1 && n.y() == 1 && (n.z() == 9 || n.z() == 10)) {
         //  printf("cpu - newphi(%d, %d, %d) is %1.6lf from %1.6lf %1.6lf %1.6lf %1.6lf %1.6lf %1.6lf\n", n.x(), n.y(), n.z(), newphi[n], phi[n + IntVector(-1, 0, 0)], phi[n + IntVector(1, 0, 0)], phi[n + IntVector(0, -1, 0)], phi[n + IntVector(0, 1, 0)], phi[n + IntVector(0, 0, -1)], phi[n + IntVector(0, 0, 1)]);
@@ -245,6 +246,8 @@ void UnifiedSchedulerTest::timeAdvanceUnified(DetailedTask* task,
   }  //end CPU
 
   // When Task is scheduled to GPU
+  // The Legacy GPU/Non-Kokkos way
+#if defined(HAVE_CUDA) && !defined(UINTAH_ENABLE_KOKKOS)
   if (event == Task::GPU) {
     // Do time steps
     int numPatches = patches->size();
@@ -308,6 +311,7 @@ void UnifiedSchedulerTest::timeAdvanceUnified(DetailedTask* task,
 
     } // end patch for loop
   } //end GPU
+#endif
     /*
     int numPatches = patches->size();
         for (int p = 0; p < numPatches; p++) {

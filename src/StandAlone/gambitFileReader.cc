@@ -32,6 +32,7 @@
 #include <vector>                   
 #include <cmath>
 #include <cstdlib>
+
 #define d_SMALL_NUM 1e-100;
 using namespace std;
 
@@ -184,14 +185,15 @@ int main()
       exit(1);
     }
     
-    if (!std::isfinite(nodeIndx[y].n1) || 
-	!std::isfinite(nodeIndx[y].n2) || !std::isfinite(nodeIndx[y].n3)) {
-      cout << "I've detected a number that isn't finite"<<endl;
-      cout << nodeIndx[y].n1 << " " <<
-	nodeIndx[y].n2 << " " << nodeIndx[y].n3 <<endl; 
-      cout << " Now exiting "<<endl;
-      exit(1);        
-    } 
+// Commenting out, ints are always finite, by definition.
+//    if (!std::isfinite(nodeIndx[y].n1) ||
+//	!std::isfinite(nodeIndx[y].n2) || !std::isfinite(nodeIndx[y].n3)) {
+//      cout << "I've detected a number that isn't finite"<<endl;
+//      cout << nodeIndx[y].n1 << " " <<
+//	nodeIndx[y].n2 << " " << nodeIndx[y].n3 <<endl;
+//      cout << " Now exiting "<<endl;
+//      exit(1);
+//    }
   }
   
   //__________________________________

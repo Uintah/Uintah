@@ -764,7 +764,7 @@ DetailedTask::checkCudaStreamDoneForThisTask( unsigned int device_id ) const
     SCI_THROW(InternalError("Detected CUDA kernel execution failure on Task: " + getName() , __FILE__, __LINE__));
     return false;
   } else { //other error
-    printf("Waiting for 60\n");
+    printf("\nAn CUDA error occurred with error code %d.\n\nWaiting for 60 seconds\n", retVal);
 
     int sleepTime = 60;
 

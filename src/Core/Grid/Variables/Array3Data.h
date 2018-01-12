@@ -35,6 +35,8 @@
 
 #ifdef UINTAH_ENABLE_KOKKOS
 #include <Kokkos_Core.hpp>
+#include <Core/Grid/Variables/KokkosViews.h>
+
 #endif //UINTAH_ENABLE_KOKKOS
 
 namespace Uintah {
@@ -64,11 +66,6 @@ namespace Uintah {
     WARNING
 
    ****************************************/
-
-#ifdef UINTAH_ENABLE_KOKKOS
-template <typename T>
-using KokkosData = Kokkos::View<T***, Kokkos::LayoutLeft, Kokkos::MemoryTraits<Kokkos::Unmanaged> >;
-#endif //UINTAH_ENABLE_KOKKOS
 
   template<class T> class Array3Data : public RefCounted {
     public:
@@ -115,6 +112,9 @@ using KokkosData = Kokkos::View<T***, Kokkos::LayoutLeft, Kokkos::MemoryTraits<K
       inline KokkosData<T> getKokkosData() const {
         return KokkosData<T>(d_data, d_size.x(), d_size.y(), d_size.z());
       }
+      //inline KokkosData<T, Kokkos::HostSpace> getKokkosData() const {
+      //  return KokkosData<T, Kokkos::HostSpace>(d_data, d_size.x(), d_size.y(), d_size.z());
+      //}
 #endif //UINTAH_ENABLE_KOKKOS
 
 

@@ -30,9 +30,7 @@
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
 
-#include <math.h>
-
-using namespace std;
+#include <cmath>
 
 #define d_SMALLNUM 1e-100
 

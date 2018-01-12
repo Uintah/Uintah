@@ -233,9 +233,11 @@ compare( long64 a,
          double /* abs_tolerance */,
          double /* rel_tolerance */)
 {
-  if(std::isnan(a) || std::isnan(b)){
-    return false;
-  }
+
+//  Commenting out, integers can't be nan
+//  if(std::isnan(a) || std::isnan(b)){
+//    return false;
+//  }
 
   return (a == b); // longs should use an exact comparison
 }
@@ -245,9 +247,10 @@ compare( int a, int b,
          double /* abs_tolerance */,
          double /* rel_tolerance */ )
 {
-  if(std::isnan(a) || std::isnan(b)){
-    return false;
-  }
+//  Commenting out, integers can't be nan
+//  if(std::isnan(a) || std::isnan(b)){
+//    return false;
+//  }
 
   return (a == b); // int should use an exact comparison
 }
@@ -268,10 +271,11 @@ bool
 compare( IntVector a, IntVector b, double abs_tolerance, double rel_tolerance )
 {
 //  if(std::isnan(a.length()) || std::isnan(b.length())){
-  if(std::isnan(a.x()*a.x()+a.y()*a.y()+a.z()*a.z()) || 
-     std::isnan(b.x()*b.x()+b.y()*b.y()+b.z()*b.z())){
-    return false;
-  }
+//  Commenting out, integers can't be nan
+//  if(std::isnan(a.x()*a.x()+a.y()*a.y()+a.z()*a.z()) ||
+//     std::isnan(b.x()*b.x()+b.y()*b.y()+b.z()*b.z())){
+//    return false;
+//  }
 
   return compare(a.x(), b.x(), abs_tolerance, rel_tolerance) &&
          compare(a.y(), b.y(), abs_tolerance, rel_tolerance) &&

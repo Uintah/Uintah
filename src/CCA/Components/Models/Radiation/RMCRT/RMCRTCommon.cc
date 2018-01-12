@@ -31,6 +31,7 @@
 #include <Core/Math/MersenneTwister.h>
 #include <Core/Util/DOUT.hpp>
 #include <fstream>
+#include <cmath>
 
 #define DEBUG -9             // 1: divQ, 2: boundFlux, 3: scattering
 #define FIXED_RAY_DIR -9    // Sets ray direction.  1: (0.7071,0.7071, 0), 2: (0.7071, 0, 0.7071), 3: (0, 0.7071, 0.7071)

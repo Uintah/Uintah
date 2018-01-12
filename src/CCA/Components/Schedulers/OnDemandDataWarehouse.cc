@@ -2919,10 +2919,7 @@ OnDemandDataWarehouse::getSizesForVar(const VarLabel*         label,
 
 //This method will retrieve those neighbors, and also the
 //regions (indicated in low and high) which constitute the ghost cells.
-//Data is return in the ValidNeighbors vector.
-//ignoreMissingNeighbors is designed for the Unified Scheduler so that it can request what
-//neighbor patches *should* be, and those neighbor patches we hope are found in the
-//host side DW (this one) or the GPU DW
+//Data is returned in the ValidNeighbors vector.
 //TODO, This method might create a reference to the neighbor, and so these references
 //need to be deleted afterward. (It's not pretty, but it seemed to be the best option.)
 void OnDemandDataWarehouse::getValidNeighbors(const VarLabel* label,
@@ -2930,8 +2927,7 @@ void OnDemandDataWarehouse::getValidNeighbors(const VarLabel* label,
                             const Patch* patch,
                             Ghost::GhostType gtype,
                             int numGhostCells,
-                            std::vector<ValidNeighbors>& validNeighbors,
-                            bool ignoreMissingNeighbors){
+                            std::vector<ValidNeighbors>& validNeighbors){
 
   Patch::VariableBasis basis = Patch::translateTypeToBasis(label->typeDescription()->getType(), false);
 

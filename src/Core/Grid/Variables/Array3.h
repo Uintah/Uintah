@@ -210,31 +210,51 @@ public:
     return d_window;
   }
 
-#ifdef UINTAH_ENABLE_KOKKOS
+
+
+
+#if defined(UINTAH_ENABLE_KOKKOS)
   inline KokkosView3<T> getKokkosView() const
   {
     return m_view;
   }
+#endif
 
-  KOKKOS_FORCEINLINE_FUNCTION
+//For now, if it's a homogeneous only Kokkos environment, use Kokkos Views
+//If it's a legacy environment or a CUDA environment, use the original way of accessing data.
+#if defined(UINTAH_ENABLE_KOKKOS) && !defined(HAVE_CUDA)
+
+  //Note: Dan Sunderland used a Kokkos define KOKKOS_FORCEINLINE_FUNCTION,
+  //however, this caused problems when trying to compile with CUDA, as it tried
+  //to put a __device__ __host__ header (needed for GPU builds)
+  //instead of __attribute__((always_inline)) (which makes sense in a CPU build as
+  //Array3.h won't ever run on the GPU).
+  //I couldn't find a way to ask Kokkos to be smart and choose a non-CUDA version
+  //here, so I'll just explicitly provide the gcc one as this will never be compiled
+  //as CUDA code.  Brad Peterson Nov 23 2017
+  //KOKKOS_FORCEINLINE_FUNCTION
+  __attribute__((always_inline))
     const T& operator[](const IntVector& idx) const
     {
       return m_view(idx[0],idx[1],idx[2]);
     }
 
-  KOKKOS_FORCEINLINE_FUNCTION
+  //KOKKOS_FORCEINLINE_FUNCTION
+  __attribute__((always_inline))
     T& operator[](const IntVector& idx)
     {
       return m_view(idx[0],idx[1],idx[2]);
     }
 
-  KOKKOS_FORCEINLINE_FUNCTION
+  //KOKKOS_FORCEINLINE_FUNCTION
+  __attribute__((always_inline))
     const T& operator()(int i, int j, int k) const
     {
       return m_view(i,j,k);
     }
 
-  KOKKOS_FORCEINLINE_FUNCTION
+  //KOKKOS_FORCEINLINE_FUNCTION
+  __attribute__((always_inline))
     T& operator()(int i, int j, int k)
     {
       return m_view(i,j,k);
@@ -350,6 +370,7 @@ protected:
 private:
   Array3Window<T>* d_window{nullptr};
 #if defined(UINTAH_ENABLE_KOKKOS)
+  //Array3 variables should never go outside of HostSpace.
   KokkosView3<T> m_view{};
 #endif
 };

@@ -49,7 +49,7 @@
 #include <sci_defs/uintah_defs.h>
 #include <sci_defs/cuda_defs.h>
 
-#ifdef HAVE_CUDA
+#if defined(HAVE_CUDA) && !defined(UINTAH_ENABLE_KOKKOS)
 #  include <CCA/Components/Examples/UnifiedSchedulerTest.h>
 #endif
 
@@ -204,7 +204,7 @@ ApplicationFactory::create( ProblemSpecP& prob_spec,
       return scinew Wave(myworld, sharedState);
   }
   
-#ifdef HAVE_CUDA
+#if defined(HAVE_CUDA) && !defined(UINTAH_ENABLE_KOKKOS)
   if (sim_comp == "unifiedschedulertest" || sim_comp == "UNIFIEDSCHEDULERTEST") {
     return scinew UnifiedSchedulerTest(myworld, sharedState);
   }
