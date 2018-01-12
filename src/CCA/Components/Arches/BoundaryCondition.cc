@@ -4012,9 +4012,9 @@ BoundaryCondition::setIntrusionDensity( const ProcessorGroup*,
       int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
       CCVariable<double> density;
-      constCCVariable<double> old_density; 
+      constCCVariable<double> old_density;
       new_dw->getModifiable( density, d_lab->d_densityCPLabel, indx, patch );
-      new_dw->get( old_density, d_lab->d_densityCPLabel, indx, patch, Ghost::AroundCells, 1 ); 
+      new_dw->get( old_density, d_lab->d_densityCPLabel, indx, patch, Ghost::AroundCells, 1 );
 
       _intrusionBC[ilvl]->setDensity( patch, density, old_density );
 
@@ -4025,7 +4025,12 @@ BoundaryCondition::setIntrusionDensity( const ProcessorGroup*,
 void
 BoundaryCondition::sched_wallStressConstSmag( Task::WhichDW dw, Task* tsk ){
 
-  tsk->requires( dw, d_lab->d_strainMagnitudeLabel, Ghost::AroundCells, 1 );
+  const VarLabel* IsImag_label = VarLabel::find("strainMagnitudeLabel");
+  if ( IsImag_label != nullptr ){
+    tsk->requires( dw, IsImag_label, Ghost::AroundCells, 1 );
+  } else {
+    throw InvalidValue("Error: Strain rate mag. not found for const Smag. wall model.", __FILE__, __LINE__ );
+  }
 
 }
 
@@ -4061,12 +4066,19 @@ BoundaryCondition::wallStressConstSmag( const Patch* p,
   const Level* level = p->getLevel();
   const int ilvl = level->getID();
 
-  if ( dw->exists( d_lab->d_strainMagnitudeLabel, indx, p ) ){
+  const VarLabel* IsImag_label = VarLabel::find("strainMagnitudeLabel");
 
-    dw->get( IsImag, d_lab->d_strainMagnitudeLabel, indx, p, Ghost::AroundCells, 1 );
+  if ( dw->exists( IsImag_label, indx, p ) ){
 
-    bool has_intrusion_inlets = false; 
-    if ( _using_new_intrusion ){ 
+    dw->get( IsImag, IsImag_label, indx, p, Ghost::AroundCells, 1 );
+
+    bool has_intrusion_inlets = false;
+    if ( _using_new_intrusion ){
+      has_intrusion_inlets = _intrusionBC[ilvl]->has_intrusion_inlets();
+    }
+
+    bool has_intrusion_inlets = false;
+    if ( _using_new_intrusion ){
       has_intrusion_inlets = _intrusionBC[ilvl]->has_intrusion_inlets();
     }
 
